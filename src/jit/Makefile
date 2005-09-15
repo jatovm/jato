@@ -1,0 +1,15 @@
+TEST_EXEC=run_all_tests
+ALLTESTS=all_test.c
+
+all: test
+
+tags:
+	exuberant-ctags -R
+
+test:
+	sh make-tests.sh > $(ALLTESTS)
+	gcc -Wall -I. -I.. $(ALLTESTS) CuTest.c statement-test.c statement.c -o $(TEST_EXEC)
+	./$(TEST_EXEC)
+
+clean:
+	rm -rf $(TEST_EXEC) $(ALLTESTS) tags

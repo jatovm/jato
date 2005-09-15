@@ -1,0 +1,332 @@
+JamVM 1.3.0 released on 31st March 2005
+=======================================
+
+A summary of changes since 1.2.5:
+
+- Ported to Mac OS X/Darwin.  JamVM has been built and tested on Mac OS X
+  10.3 (Panther), where it works "out-of-the-box".  It should also work
+  on 10.2 (Jaguar) but you will need to install Fink (for dlopen
+  compatibility).  Note only G3 and G4 machines have been tested.
+
+    - As part of this, the source layout/build has been changed to more
+      easily support different os/shared architectures
+
+- The os.arch property now reports the machine architecture as follows:
+    - arm  : ARM architecture (e.g. it previously reported armv5tel)
+    - i386 : IA32 (i586, i686, etc.)
+    - ppc  : PowerPC
+
+- The ldc bytecode now handles "constant class" as specified in JSR 202
+  (and introduced in Java 1.5)
+
+- Command line options have been changed to be compatible with Sun Java.
+  This particularly affects bootclasspath, which must now be given using
+  the new syntax.  Two new options are implemented :
+    - verbose:jni
+    - showversion
+
+- Default heap sizes have been increased (again) to better reflect desktop
+  application heap usage :
+    - minimum heap is now 2Mb
+    - maximum heap is now 128Mb
+
+- A race condition in class-loading has been fixed.  This fixes a SEGV
+  with the latest postgreSQL JDBC driver.  It also fixes a SEGV when
+  starting Eclipse on a P4 with hyper-threading enabled
+
+- A race condition on VM initialisation has been fixed (helper threads
+  starting when a GC cycle has already started in the main thread).
+
+
+JamVM 1.2.5 released on 1st March 2005
+======================================
+
+- Substantially modified the interpreter to implement direct-dispatching.
+  This considerably speeds-up dispatch, improving performance by 60% to
+  100% across all platforms.  However, the rewritten method code takes
+  up on average 4 times the memory.  Direct-dispatching is enabled
+  by default on all platforms.
+
+    - The direct-dispatched interpreter also supports stack-caching.
+      This is enabled by default on PowerPC and ARM.
+
+    - A further optimisation is prefetching.  This is enabled by
+      default only on PowerPC.
+
+    - In all 7 interpreter variants are possible, controlled by the
+      configure options --enable-int-threading, --enable-int-direct,
+      --enable-int-caching and --enable-int-prefetch.  For example,
+      
+      ./configure --disable-int-direct
+
+      will revert to the indirect-dispatched interpreter as in JamVM
+      1.2.4.
+
+- Backwards compatibility with Classpath 0.13 removed (for example,
+  VMSecurityManager).
+
+- Fixed a SEGV that occurs when an abstract class does not implement
+  all methods specified in the interfaces it implements, also implements
+  a finalize method which is inherited by a concrete class.  When the
+  VM creates the dummy "miranda" methods, the finalizer method pointer
+  is left pointing to rubbish.  This occurs with the latest postgreSQL
+  JDBC driver.
+
+
+JamVM 1.2.4 released on 23rd January 2005
+=========================================
+
+A summary of changes since 1.2.3:
+
+- Updated to be compatible with Classpath-0.13 and Classpath from
+  CVS (as of 22nd January).
+
+- JNI enhancements introduced in JNI 1.4 implemented (NOT using
+  minimal implementation of simply returning NULL)
+
+- Fix for setting locale when LANG is invalid (i.e. not locale-gen'ed)
+
+- Fix for void method invocation using JNI (perform virtual method
+  lookup).  This only affected methods with void return type.
+
+- Fix for JNIEnv.  JNIEnv pointer is now constant across calls from
+  the same thread.
+
+- Implemented new VMStackWalker class, with optimised native methods.
+  This class is needed for the CVS version of Classpath.
+
+- Default system properties can now be overridden via the command
+  line (using -D)
+
+- BOOTCLASSPATH environment variable can now be used to specify
+  the classpath used by the bootstrap class loader.  This overrides
+  the default path.  BOOTCLASSPATH has lower priority than the command
+  line and is ignored if -bootclasspath, -bootclasspath/a or
+  -bootclasspath/p is used.
+
+- NoClassDefFoundErrors thrown by the VM are now chained, and
+  show the exception that caused the error.
+
+
+JamVM 1.2.3 released on 23rd December 2004
+==========================================
+
+- Fix the mistake in JamVM 1.2.2 that broke Swing/AWT :)
+
+- Sets the locale specified in the environment and defines
+  System properties user.language and user.region appropriately
+
+- PowerPC platforms : bug fix for JNI methods with very large
+  numbers of arguments (e.g. 14 integer/reference arguments).
+
+- Consistency checks for zip/jar files loaded by bootstrap class
+  loader.  A bad zip shouldn't crash the VM.
+
+- Endian check for platforms without endian.h (e.g. cygwin)
+
+- JamVM's VM classes are now installed and loaded from a zip file
+  (unless zip support is disabled in the bootstrap loader).  This
+  stops old classes being left around from a previous version.
+
+
+JamVM 1.2.2 released on 14th December 2004
+==========================================
+
+This release is primarily intended to align JamVM with recent changes
+made to GNU Classpath's VM interface.  As of now, JamVM 1.2.2 again
+works with Classpath from CVS, and Classpath-0.12.  A couple of
+minor bug-fixes have also been made.
+
+- Native methods for new VM integration class VMSystemProperties
+  implemented, and changes to VMRuntime.
+
+- Bug fix for DCONST_1 on ARM machines using mixed-endian doubles
+  (bug was introduced in new interpreter).
+
+- Added check for VFP soft-floating point on ARM (in addition to FPA).
+
+- Bug fix for arraycopy and boolean arrays.
+
+- Bug fix for JNI function GetStringUTFLength.
+
+
+JamVM 1.2.1 released on 2nd December 2004
+=========================================
+
+- Standalone jar files can now be executed via the -jar command line option
+
+- Updated to use Classpath-0.12 
+	- Merged changes to reference VMClassLoader, reflect/Method
+	- Now uses Classpath's system class loader
+	- VMAccessController implemented
+
+- 5-10% interpreter speed improvement
+
+- Improved ARM platform support
+	- Big Endian systems
+	- Soft floating point
+
+- SMP memory barriers on Intel and PowerPC
+
+- Fix for certain Unicode chars in JNI method names
+
+- Intel FP bug fix (Debian bug no. 260410).  Use double (64-bit) rather
+  than extended (80-bit) precision
+
+- Memory leak when two threads compete to load a class (rare race
+  condition)
+
+- Handle SIGPIPE, stopping the VM aborting.
+
+
+JamVM 1.2.0 released on 9th September 2004
+==========================================
+
+- Substantially rewritten the interpreter to use "stack-caching".  This is
+  an optimisation to eliminate most of the intermediate loads and stores to
+  the operand stack.  On desktop PowerPC (e.g. PPC750fx, MPC7447 with large,
+  on-chip L2 cache at full processor speed) it achieves a speed increase of
+  between 15 and 30%.  On ARM (XScale PXA250) it achieves a speed-up of 
+  50%.  Unfortunately, due to the addressing modes of the IA32 (Pentium, etc.)
+  and the code produced by gcc, it is actually slower than the old interpreter!
+  Because of this, stack-caching is disabled by default on IA32.
+
+- Zip/Jar support is implemented in the bootstrap class loader.  This means
+  glibj.zip no longer needs to be unzipped.  This includes resources.
+
+- Fix for edge-conditions in floating-point to integer conversion (floating-
+  point value greater than int/long range).
+
+- Fix for very large array allocation, where the required memory overflows a
+  32 bit int (fixes the SEGV with Mauve).
+
+- Several other minor bug-fixes (e.g. ExceptionCheck was missed out of the JNI
+  i/f table).
+
+
+JamVM 1.1.4 released on 21st May 2004
+=====================================
+
+- JNI enhancements introduced in Java 1.2 implemented.
+
+- Updated to use GNU Classpath 0.09.
+
+- Pre-compiled VM classes will now be rebuilt automatically if Java sources
+  change.  Fix to enable build directory to be different to source directory.
+
+- Deprecated compiler warnings in gcc >= 3.3.3 fixed (use of cast expressions
+  as lvalues).  JamVM now also builds with gcc 3.5.0.
+
+- Minor bug-fixes and speed optimisations.
+
+- Eclipse now starts up.
+
+
+JamVM 1.1.3 released on 12th April 2004
+=======================================
+
+JamVM 1.1.3 is primarily another bug-fix release.  New functionality will
+be included in JamVM 1.1.4.
+
+- Resolution fixes to make JamVM 100% compatible with code produced
+  by javac in JDK >= 1.4 and Jikes 1.19.
+
+- New command line options -bootclasspath/a and -bootclasspath/p to prepend
+  or append entries to the default bootstrap class loader.
+
+- Default initial heap size increased to 1Mb from 256K.  "Hello World" will
+  work with a heap of 75K, but this better reflects desktop application heap
+  usage.  In an embedded environment -ms can be used to specify a smaller
+  initial heap (e.g. -ms256k).
+
+- Bug fix for private method invocation via JNI and reflection.
+
+- Several other minor bug-fixes.
+
+
+JamVM 1.1.2 released on 29th March 2004
+=======================================
+
+JamVM 1.1.2 is primarily a bug-fix release.  No new major functionality is
+included, but many, many bugs have been fixed.  If JamVM didn't work for you
+before, give this release a go!  Off the top of my head and in no
+particular order:
+
+ - Arraycopy and instanceof fixed for arrays involving different dimensions
+   and Object element type
+
+ - Array/inner class/primitive class access flags correctly set (important
+   for serialization)
+
+ - Reflection API : method invoke on interface methods now works
+
+ - JNI : method invoke on interface methods now works
+
+ - getResource/getResources implemented for bootstrap class loader
+
+ - ClassLoader.findLoadedClass now handles classes initiated by a
+   class loader
+
+ - The thread contextClassLoader is now set
+
+ - The protection domain is now set for a class
+
+ - Many other minor bugs 
+
+JamVM now uses VMRuntime and will now only work with Classpath 0.08.
+
+
+JamVM 1.1.1 released on 25th January 2004
+=========================================
+
+- Now supports classes compiled for target >= 1.2.  In the past, javac inserted
+  synthetic methods for interface methods not implemented by abstract classes.
+  These are not produced if javac is used with -target 1.2, which is now the
+  default with JDK 1.4.  JamVM now inserts these methods if they are not
+  supplied by the compiler.
+  
+- Class loader changes.  JamVM now records initiating loaders so user-defined
+  class loaders should be referred to less.
+
+- Updated to use classpath 0.07.
+
+- Java 2 style application class loader/bootstrap class loader split
+	 - new command line options -bootclasspath and -classpath (or -cp)
+	 - Jar and Zip archives can now be specified in the classpath.
+
+- bug fixes (integration of Classpath 0.06 in JamVM 1.1.0 broke instanceOf)
+
+- Re-worked stack overflow handling.  Previously, the first thread overflow
+  would be trapped, but further overflows would not.  A thread may now catch
+  StackOverflowException and repeatedly overflow.
+
+
+JamVM 1.1.0 released on 17th November 2003
+==========================================
+
+There's been quite a few changes, including performance improvements and more of
+the specification is now implemented (should be everything now but Runtime.exec),
+as well as the usual bug-fixes.
+
+- Interface method tables are now implemented.  This means an interface method
+  invocation should now be almost as fast as a normal virtual method.
+
+- The full Reflection API is implemented (Constructor, Field, Method, etc.)
+  with primitive widening and wrapping and inner class support.
+
+- Updated to use Classpath-0.06 rather than 0.04 (note JamVM won't work with
+  0.04 anymore).
+
+- Ported to the ARM architecture.
+
+- Re-worked exception printing - now supports 1.4 style StackTraceElements.
+
+- Interpreter optimisations (more "fast" bytecodes).
+
+- Command line system properties can now be specified (-Dname=value).
+
+
+JamVM 1.0.0 released on 12th March 2003
+=======================================
+
+- INITIAL RELEASE
