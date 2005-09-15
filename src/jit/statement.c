@@ -2,16 +2,15 @@
  * Copyright (C) 2005  Pekka Enberg
  */
 
-#include <jam.h>
 #include <statement.h>
 
 #include <stdlib.h>
 #include <assert.h>
 
-static void convert_to_stmt(char code[], size_t count, struct statement *stmt)
+static void convert_to_stmt(struct classblock *cb, char code[], size_t count, struct statement *stmt)
 {
 	assert(count > 0);
-	char opc = code[0];
+	unsigned char opc = code[0];
 	switch (opc) {
 		case OPC_NOP:
 			stmt->type = STMT_NOP;
@@ -64,20 +63,21 @@ static void convert_to_stmt(char code[], size_t count, struct statement *stmt)
 			break;
 		case OPC_LDC_QUICK:
 			assert(count > 1);
+			unsigned char cp_idx = code[1];
 			stmt->type = STMT_ASSIGN;
 			stmt->operand.type = CONST_INT;
-			stmt->operand.value = code[1];
+			stmt->operand.value = CP_INFO((&cb->constant_pool), cp_idx);
 			break;
 	};
 }
 
-struct statement *stmt_from_bytecode(char code[], size_t count)
+struct statement *stmt_from_bytecode(struct classblock *cb, char code[], size_t count)
 {
 	struct statement *ret = malloc(sizeof(*ret));
 	if (!ret)
 		return NULL;
 
-	convert_to_stmt(code, count, ret);
+	convert_to_stmt(cb, code, count, ret);
 
 	return ret;
 }

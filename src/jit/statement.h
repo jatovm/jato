@@ -3,6 +3,7 @@
 
 #include <constant.h>
 #include <stddef.h>
+#include <jam.h>
 
 enum statement_type {
 	STMT_NOP,
@@ -14,6 +15,6 @@ struct statement {
 	struct constant operand;
 };
 
-extern struct statement *stmt_from_bytecode(char *code, size_t count);
+extern struct statement *stmt_from_bytecode(struct classblock *cb, char *code, size_t count);
 
 #endif
