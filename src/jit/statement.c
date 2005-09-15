@@ -64,9 +64,20 @@ static void convert_to_stmt(struct classblock *cb, char code[], size_t count, st
 		case OPC_LDC_QUICK:
 			assert(count > 1);
 			unsigned char cp_idx = code[1];
+			struct constant_pool *cp = &cb->constant_pool;
 			stmt->type = STMT_ASSIGN;
-			stmt->operand.type = CONST_INT;
-			stmt->operand.value = CP_INFO((&cb->constant_pool), cp_idx);
+			if (CP_TYPE(cp, cp_idx) == CONSTANT_Integer) {
+				stmt->operand.type = CONST_INT;
+				stmt->operand.value = CP_INFO(cp, cp_idx);
+			} else {
+				stmt->operand.type = CONST_FLOAT;
+				union {
+					u4 value;
+					float fvalue;
+				} val;
+				val.value = CP_INFO(cp, cp_idx);
+				stmt->operand.fvalue = val.fvalue;
+			}
 			break;
 	};
 }

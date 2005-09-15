@@ -79,17 +79,27 @@ void test_convert_lconst(CuTest *ct)
 	assert_stmt_operand_long(ct, CONST_LONG, 1, OPC_LCONST_1);
 }
 
+static void __assert_stmt_operand_double(CuTest *ct,
+					 struct classblock *cb,
+				         enum constant_type expected_const_type,
+				         double expected_value,
+				         char *actual, size_t count)
+{
+	struct statement *stmt = stmt_from_bytecode(cb, actual, count);
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
+	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
+	CuAssertDblEquals(ct, expected_value, stmt->operand.fvalue, 0.01f);
+	free(stmt);
+}
+
 static void assert_stmt_operand_double(CuTest *ct,
 				       enum constant_type expected_const_type,
 				       double expected_value,
 				       char actual)
 {
 	char code[] = { actual };
-	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code));
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
-	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
-	CuAssertDblEquals(ct, expected_value, stmt->operand.fvalue, 0.01f);
-	free(stmt);
+	__assert_stmt_operand_double(ct, NULL, expected_const_type,
+				     expected_value, code, sizeof(code));
 }
 
 void test_convert_fconst(CuTest *ct)
@@ -158,7 +168,36 @@ static void assert_stmt_for_ldc(CuTest *ct, int expected_value)
 				   code, sizeof(code));
 }
 
+static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
+{
+	union {
+		u4 value;
+		float fvalue;
+	} val;
+	val.fvalue = expected_value;
+	ConstantPoolEntry cp_infos[] = { val.value };
+	u1 cp_types[] = { CONSTANT_Float };
+
+	struct classblock cb = {
+		.constant_pool_count = sizeof(cp_infos),
+		.constant_pool.info = cp_infos,
+		.constant_pool.type = cp_types
+	};
+	char code[] = { OPC_LDC_QUICK, 0x00 };
+	__assert_stmt_operand_double(ct, &cb, CONST_FLOAT, expected_value,
+				   code, sizeof(code));
+}
+
+#define INT_MIN (-INT_MAX - 1)
+#define INT_MAX 2147483647
+
 void test_convert_ldc(CuTest *ct)
 {
-	assert_stmt_for_ldc(ct, 0x0001);
+	assert_stmt_for_ldc(ct, 0);
+	assert_stmt_for_ldc(ct, 1);
+	assert_stmt_for_ldc(ct, INT_MIN);
+	assert_stmt_for_ldc(ct, INT_MAX);
+	assert_stmt_for_ldc_float(ct, 0.01f);
+	assert_stmt_for_ldc_float(ct, 1.0f);
+	assert_stmt_for_ldc_float(ct, -1.0f);
 }
