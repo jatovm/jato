@@ -171,7 +171,7 @@ static void assert_stmt_for_ldc(CuTest *ct, int expected_value)
 
 static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 {
-	u4 value = *((u4*) &expected_value);
+	u4 value = *(u4*) &expected_value;
 	ConstantPoolEntry cp_infos[] = { cpu_to_be32(value) };
 	u1 cp_types[] = { CONSTANT_Float };
 

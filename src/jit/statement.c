@@ -60,7 +60,7 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t c
 			assert(count > 2);
 			stmt->type = STMT_ASSIGN;
 			stmt->operand.type = CONST_INT;
-			stmt->operand.value = (short)(be16_to_cpu(*((u2*) &code[1])));
+			stmt->operand.value = (short) be16_to_cpu(*(u2*) &code[1]);
 			break;
 		case OPC_LDC_QUICK:
 			assert(count > 1);
@@ -73,7 +73,7 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t c
 			} else {
 				stmt->operand.type = CONST_FLOAT;
 				u4 value = be32_to_cpu(CP_INFO(cp, cp_idx));
-				stmt->operand.fvalue = *((float *) &value);
+				stmt->operand.fvalue = *(float *) &value;
 			}
 			break;
 	};
