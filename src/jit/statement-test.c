@@ -10,7 +10,7 @@
 
 static void assert_stmt_type(CuTest *ct, enum statement_type expected, char actual)
 {
-	char code[] = { actual };
+	unsigned char code[] = { actual };
 	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code));
 	CuAssertIntEquals(ct, expected, stmt->type);
 	free(stmt);
@@ -26,7 +26,7 @@ static void assert_stmt_const_operand(CuTest *ct,
 				      enum constant_type expected_const_type,
 				      char actual)
 {
-	char code[] = { actual };
+	unsigned char code[] = { actual };
 	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code));
 	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
 	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
@@ -56,7 +56,7 @@ static void assert_stmt_operand_long(CuTest *ct,
 				     unsigned long long expected_value,
 				     char actual)
 {
-	char code[] = { actual };
+	unsigned char code[] = { actual };
 	__assert_stmt_operand_long(ct, NULL, STMT_ASSIGN,
 				   expected_const_type, expected_value,
 				   code, sizeof(code));
@@ -97,7 +97,7 @@ static void assert_stmt_operand_double(CuTest *ct,
 				       double expected_value,
 				       char actual)
 {
-	char code[] = { actual };
+	unsigned char code[] = { actual };
 	__assert_stmt_operand_double(ct, NULL, expected_const_type,
 				     expected_value, code, sizeof(code));
 }
@@ -119,7 +119,7 @@ static void assert_stmt_for_bipush(CuTest *ct,
 				   char expected_value,
 				   char actual)
 {
-	char code[] = { actual, expected_value };
+	unsigned char code[] = { actual, expected_value };
 	__assert_stmt_operand_long(ct, NULL, STMT_ASSIGN, CONST_INT, expected_value,
 				   code, sizeof(code));
 }
@@ -137,7 +137,7 @@ static void assert_stmt_for_sipush(CuTest *ct,
 				   char second,
 				   char actual)
 {
-	char code[] = { actual, first, second };
+	unsigned char code[] = { actual, first, second };
 	__assert_stmt_operand_long(ct, NULL, STMT_ASSIGN, CONST_INT, expected_value,
 				   code, sizeof(code));
 }
@@ -163,7 +163,7 @@ static void assert_stmt_for_ldc(CuTest *ct, int expected_value)
 		.constant_pool.info = cp_infos,
 		.constant_pool.type = cp_types
 	};
-	char code[] = { OPC_LDC_QUICK, 0x00 };
+	unsigned char code[] = { OPC_LDC_QUICK, 0x00 };
 	__assert_stmt_operand_long(ct, &cb, STMT_ASSIGN, CONST_INT, expected_value,
 				   code, sizeof(code));
 }
@@ -183,7 +183,7 @@ static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 		.constant_pool.info = cp_infos,
 		.constant_pool.type = cp_types
 	};
-	char code[] = { OPC_LDC_QUICK, 0x00 };
+	unsigned char code[] = { OPC_LDC_QUICK, 0x00 };
 	__assert_stmt_operand_double(ct, &cb, CONST_FLOAT, expected_value,
 				   code, sizeof(code));
 }
