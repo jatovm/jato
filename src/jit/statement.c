@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static void convert_to_stmt(struct classblock *cb, char code[], size_t count, struct statement *stmt)
+static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t count, struct statement *stmt)
 {
 	assert(count > 0);
 	unsigned char opc = code[0];
@@ -53,13 +53,13 @@ static void convert_to_stmt(struct classblock *cb, char code[], size_t count, st
 			assert(count > 1);
 			stmt->type = STMT_ASSIGN;
 			stmt->operand.type = CONST_INT;
-			stmt->operand.value = code[1];
+			stmt->operand.value = (char)code[1];
 			break;
 		case OPC_SIPUSH:
 			assert(count > 2);
 			stmt->type = STMT_ASSIGN;
 			stmt->operand.type = CONST_INT;
-			stmt->operand.value = code[1] << 8 | (unsigned char)code[2];
+			stmt->operand.value = (short)(code[1] << 8 | code[2]);
 			break;
 		case OPC_LDC_QUICK:
 			assert(count > 1);
@@ -82,7 +82,7 @@ static void convert_to_stmt(struct classblock *cb, char code[], size_t count, st
 	};
 }
 
-struct statement *stmt_from_bytecode(struct classblock *cb, char code[], size_t count)
+struct statement *stmt_from_bytecode(struct classblock *cb, unsigned char *code, size_t count)
 {
 	struct statement *ret = malloc(sizeof(*ret));
 	if (!ret)

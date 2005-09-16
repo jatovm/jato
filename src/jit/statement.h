@@ -15,6 +15,6 @@ struct statement {
 	struct constant operand;
 };
 
-extern struct statement *stmt_from_bytecode(struct classblock *cb, char *code, size_t count);
+extern struct statement *stmt_from_bytecode(struct classblock *cb, unsigned char *code, size_t count);
 
 #endif
