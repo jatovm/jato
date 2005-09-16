@@ -3,6 +3,7 @@
  */
 
 #include <statement.h>
+#include <byteorder.h>
 
 #include <stdlib.h>
 #include <assert.h>
@@ -59,7 +60,7 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t c
 			assert(count > 2);
 			stmt->type = STMT_ASSIGN;
 			stmt->operand.type = CONST_INT;
-			stmt->operand.value = (short)(code[1] << 8 | code[2]);
+			stmt->operand.value = (short)(be16_to_cpu(*((u2*) &code[1])));
 			break;
 		case OPC_LDC_QUICK:
 			assert(count > 1);
@@ -71,12 +72,8 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t c
 				stmt->operand.value = CP_INFO(cp, cp_idx);
 			} else {
 				stmt->operand.type = CONST_FLOAT;
-				union {
-					u4 value;
-					float fvalue;
-				} val;
-				val.value = CP_INFO(cp, cp_idx);
-				stmt->operand.fvalue = val.fvalue;
+				u4 value = be32_to_cpu(CP_INFO(cp, cp_idx));
+				stmt->operand.fvalue = *((float *) &value);
 			}
 			break;
 	};

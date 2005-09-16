@@ -4,6 +4,7 @@
 
 #include <statement.h>
 #include <constant.h>
+#include <byteorder.h>
 
 #include <CuTest.h>
 #include <stdlib.h>
@@ -170,12 +171,8 @@ static void assert_stmt_for_ldc(CuTest *ct, int expected_value)
 
 static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 {
-	union {
-		u4 value;
-		float fvalue;
-	} val;
-	val.fvalue = expected_value;
-	ConstantPoolEntry cp_infos[] = { val.value };
+	u4 value = *((u4*) &expected_value);
+	ConstantPoolEntry cp_infos[] = { cpu_to_be32(value) };
 	u1 cp_types[] = { CONSTANT_Float };
 
 	struct classblock cb = {
