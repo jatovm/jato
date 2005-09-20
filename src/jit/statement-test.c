@@ -22,23 +22,6 @@ void test_convert_nop(CuTest *ct)
 	assert_stmt_type(ct, STMT_NOP, OPC_NOP);
 }
 
-static void assert_stmt_const_operand(CuTest *ct,
-				      enum statement_type expected_stmt_type,
-				      enum constant_type expected_const_type,
-				      char actual)
-{
-	unsigned char code[] = { actual };
-	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code));
-	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
-	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
-	free(stmt);
-}
-
-void test_convert_aconst_null(CuTest *ct)
-{
-	assert_stmt_const_operand(ct, STMT_ASSIGN, CONST_NULL, OPC_ACONST_NULL);
-}
-
 static void __assert_stmt_operand_long(CuTest *ct, struct classblock *cb,
 				       enum statement_type expected_stmt_type,
 				       enum constant_type expected_const_type,
@@ -61,6 +44,11 @@ static void assert_stmt_operand_long(CuTest *ct,
 	__assert_stmt_operand_long(ct, NULL, STMT_ASSIGN,
 				   expected_const_type, expected_value,
 				   code, sizeof(code));
+}
+
+void test_convert_aconst_null(CuTest *ct)
+{
+	assert_stmt_operand_long(ct, CONST_NULL, 0, OPC_ACONST_NULL);
 }
 
 void test_convert_iconst(CuTest *ct)
