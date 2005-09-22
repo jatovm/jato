@@ -5,6 +5,7 @@
 #include <statement.h>
 #include <constant.h>
 #include <byteorder.h>
+#include <operand-stack.h>
 
 #include <CuTest.h>
 #include <stdlib.h>
@@ -12,7 +13,7 @@
 static void assert_stmt_type(CuTest *ct, enum statement_type expected, char actual)
 {
 	unsigned char code[] = { actual };
-	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code));
+	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), NULL);
 	CuAssertIntEquals(ct, expected, stmt->type);
 	free(stmt);
 }
@@ -22,16 +23,24 @@ void test_convert_nop(CuTest *ct)
 	assert_stmt_type(ct, STMT_NOP, OPC_NOP);
 }
 
+static void assert_stmt_type_and_operand(CuTest *ct, struct statement *stmt,
+					 enum statement_type expected_stmt_type,
+					 enum constant_type expected_const_type,
+					 unsigned long long expected_value)
+{
+	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
+	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
+	CuAssertIntEquals(ct, expected_value, stmt->operand.value);
+}
+
 static void __assert_stmt_operand_long(CuTest *ct, struct classblock *cb,
 				       enum statement_type expected_stmt_type,
 				       enum constant_type expected_const_type,
 				       unsigned long long expected_value,
 				       char *actual, size_t count)
 {
-	struct statement *stmt = stmt_from_bytecode(cb, actual, count);
-	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
-	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
-	CuAssertIntEquals(ct, expected_value, stmt->operand.value);
+	struct statement *stmt = stmt_from_bytecode(cb, actual, count, NULL);
+	assert_stmt_type_and_operand(ct, stmt, expected_stmt_type, expected_const_type, expected_value);
 	free(stmt);
 }
 
@@ -84,7 +93,7 @@ static void assert_stmt_operand_double(CuTest *ct,
 				       char actual)
 {
 	unsigned char code[] = { actual };
-	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code));
+	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), NULL);
 	__assert_stmt_operand_double(ct, stmt, expected_const_type, expected_value);
 	free(stmt);
 }
@@ -151,8 +160,12 @@ static void assert_stmt_for_ldc(CuTest *ct, int expected_value)
 		.constant_pool.type = cp_types
 	};
 	unsigned char code[] = { OPC_LDC_QUICK, 0x00 };
-	__assert_stmt_operand_long(ct, &cb, STMT_ASSIGN, CONST_INT, expected_value,
-				   code, sizeof(code));
+	struct operand_stack stack;
+	struct statement *stmt = stmt_from_bytecode(&cb, code, sizeof(code), &stack);
+	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, CONST_INT, expected_value);
+	CuAssertIntEquals(ct, stack.top, stmt->target);
+	CuAssertIntEquals(ct, stack.top, stmt->target);
+	free(stmt);
 }
 
 static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
@@ -167,8 +180,10 @@ static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 		.constant_pool.type = cp_types
 	};
 	unsigned char code[] = { OPC_LDC_QUICK, 0x00 };
-	struct statement *stmt = stmt_from_bytecode(&cb, code, sizeof(code));
+	struct operand_stack stack;
+	struct statement *stmt = stmt_from_bytecode(&cb, code, sizeof(code), &stack);
 	__assert_stmt_operand_double(ct, stmt, CONST_FLOAT, expected_value);
+	CuAssertIntEquals(ct, stack.top, stmt->target);
 	free(stmt);
 }
 

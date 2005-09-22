@@ -4,11 +4,14 @@
 
 #include <statement.h>
 #include <byteorder.h>
+#include <operand-stack.h>
 
 #include <stdlib.h>
 #include <assert.h>
 
-static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t count, struct statement *stmt)
+static void convert_to_stmt(struct classblock *cb, unsigned char *code,
+			    size_t count, struct statement *stmt,
+			    struct operand_stack *stack)
 {
 	assert(count > 0);
 	unsigned char opc = code[0];
@@ -67,6 +70,7 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t c
 			unsigned char cp_idx = code[1];
 			struct constant_pool *cp = &cb->constant_pool;
 			stmt->type = STMT_ASSIGN;
+			stack->top = stmt->target;
 			if (CP_TYPE(cp, cp_idx) == CONSTANT_Integer) {
 				stmt->operand.type = CONST_INT;
 				stmt->operand.value = CP_INFO(cp, cp_idx);
@@ -79,13 +83,15 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code, size_t c
 	};
 }
 
-struct statement *stmt_from_bytecode(struct classblock *cb, unsigned char *code, size_t count)
+struct statement *stmt_from_bytecode(struct classblock *cb,
+				     unsigned char *code, size_t count,
+				     struct operand_stack *stack)
 {
 	struct statement *ret = malloc(sizeof(*ret));
 	if (!ret)
 		return NULL;
 
-	convert_to_stmt(cb, code, count, ret);
+	convert_to_stmt(cb, code, count, ret, stack);
 
 	return ret;
 }
