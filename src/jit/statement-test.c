@@ -69,16 +69,13 @@ void test_convert_lconst(CuTest *ct)
 }
 
 static void __assert_stmt_operand_double(CuTest *ct,
-					 struct classblock *cb,
+					 struct statement *stmt,
 				         enum constant_type expected_const_type,
-				         double expected_value,
-				         char *actual, size_t count)
+				         double expected_value)
 {
-	struct statement *stmt = stmt_from_bytecode(cb, actual, count);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
 	CuAssertDblEquals(ct, expected_value, stmt->operand.fvalue, 0.01f);
-	free(stmt);
 }
 
 static void assert_stmt_operand_double(CuTest *ct,
@@ -87,8 +84,9 @@ static void assert_stmt_operand_double(CuTest *ct,
 				       char actual)
 {
 	unsigned char code[] = { actual };
-	__assert_stmt_operand_double(ct, NULL, expected_const_type,
-				     expected_value, code, sizeof(code));
+	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code));
+	__assert_stmt_operand_double(ct, stmt, expected_const_type, expected_value);
+	free(stmt);
 }
 
 void test_convert_fconst(CuTest *ct)
@@ -169,8 +167,9 @@ static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 		.constant_pool.type = cp_types
 	};
 	unsigned char code[] = { OPC_LDC_QUICK, 0x00 };
-	__assert_stmt_operand_double(ct, &cb, CONST_FLOAT, expected_value,
-				   code, sizeof(code));
+	struct statement *stmt = stmt_from_bytecode(&cb, code, sizeof(code));
+	__assert_stmt_operand_double(ct, stmt, CONST_FLOAT, expected_value);
+	free(stmt);
 }
 
 #define INT_MIN (-INT_MAX - 1)
