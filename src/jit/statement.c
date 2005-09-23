@@ -73,7 +73,7 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			stack_push(stack, stmt->target);
 			if (CP_TYPE(cp, cp_idx) == CONSTANT_Integer) {
 				stmt->operand.type = CONST_INT;
-				stmt->operand.value = CP_INFO(cp, cp_idx);
+				stmt->operand.value = be32_to_cpu(CP_INFO(cp, cp_idx));
 			} else if (CP_TYPE(cp, cp_idx) == CONSTANT_Float) {
 				stmt->operand.type = CONST_FLOAT;
 				u4 value = be32_to_cpu(CP_INFO(cp, cp_idx));

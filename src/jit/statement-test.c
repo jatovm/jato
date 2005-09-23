@@ -170,7 +170,7 @@ static struct statement *create_stmt_for_ldc(ConstantPoolEntry *cp_infos,
 
 static void assert_stmt_for_ldc(CuTest *ct, int expected_value)
 {
-	ConstantPoolEntry cp_infos[] = { expected_value };
+	ConstantPoolEntry cp_infos[] = { cpu_to_be32(expected_value) };
 	u1 cp_types[] = { CONSTANT_Integer };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
