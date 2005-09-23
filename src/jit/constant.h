@@ -7,6 +7,7 @@ enum constant_type {
 	CONST_LONG,
 	CONST_FLOAT,
 	CONST_DOUBLE,
+	CONST_REFERENCE
 };
 
 struct constant {

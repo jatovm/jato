@@ -74,10 +74,15 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			if (CP_TYPE(cp, cp_idx) == CONSTANT_Integer) {
 				stmt->operand.type = CONST_INT;
 				stmt->operand.value = CP_INFO(cp, cp_idx);
-			} else {
+			} else if (CP_TYPE(cp, cp_idx) == CONSTANT_Float) {
 				stmt->operand.type = CONST_FLOAT;
 				u4 value = be32_to_cpu(CP_INFO(cp, cp_idx));
 				stmt->operand.fvalue = *(float *) &value;
+			} else if (CP_TYPE(cp, cp_idx) == CONSTANT_String) {
+				stmt->operand.type = CONST_REFERENCE;
+				stmt->operand.value = be32_to_cpu(CP_INFO(cp, cp_idx));
+			} else {
+				assert(!"unknown constant type");
 			}
 			break;
 	};
