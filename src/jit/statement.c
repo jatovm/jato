@@ -70,7 +70,7 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			unsigned char cp_idx = code[1];
 			struct constant_pool *cp = &cb->constant_pool;
 			stmt->type = STMT_ASSIGN;
-			stack->top = stmt->target;
+			stack_push(stack, stmt->target);
 			if (CP_TYPE(cp, cp_idx) == CONSTANT_Integer) {
 				stmt->operand.type = CONST_INT;
 				stmt->operand.value = CP_INFO(cp, cp_idx);
