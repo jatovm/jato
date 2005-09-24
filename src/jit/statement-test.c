@@ -155,8 +155,11 @@ void test_convert_sipush(CuTest *ct)
 	assert_stmt_for_sipush(ct, MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
 }
 
-static struct statement *create_stmt_for_ldc(ConstantPoolEntry *cp_infos,
+static struct statement *create_stmt_with_constant_pool(ConstantPoolEntry *cp_infos,
 					     size_t nr_cp_infos, u1 *cp_types,
+					     unsigned char opcode,
+					     unsigned char index1,
+					     unsigned char index2,
 					     struct operand_stack *stack)
 {
 	struct classblock cb = {
@@ -164,18 +167,18 @@ static struct statement *create_stmt_for_ldc(ConstantPoolEntry *cp_infos,
 		.constant_pool.info = cp_infos,
 		.constant_pool.type = cp_types
 	};
-	unsigned char code[] = { OPC_LDC_QUICK, 0x00 };
+	unsigned char code[] = { opcode, index1, index2 };
 	return stmt_from_bytecode(&cb, code, sizeof(code), stack);
 }
 
-static void assert_stmt_for_ldc(CuTest *ct, int expected_value)
+static void assert_stmt_for_ldc_int(CuTest *ct, enum constant_type expected_const_type, long expected_value, u1 cp_type)
 {
 	ConstantPoolEntry cp_infos[] = { cpu_to_be32(expected_value) };
-	u1 cp_types[] = { CONSTANT_Integer };
+	u1 cp_types[] = { cp_type };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_for_ldc(cp_infos, sizeof(cp_infos), cp_types, &stack);
-	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, CONST_INT, expected_value);
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC, 0x00, 0x00, &stack);
+	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, expected_const_type, expected_value);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -188,21 +191,8 @@ static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 	u1 cp_types[] = { CONSTANT_Float };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_for_ldc(cp_infos, sizeof(cp_infos), cp_types, &stack);
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC, 0x00, 0x00, &stack);
 	__assert_stmt_operand_double(ct, stmt, CONST_FLOAT, expected_value);
-	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free(stmt);
-}
-
-static void assert_stmt_for_ldc_string(CuTest *ct, unsigned long expected_ref)
-{
-	ConstantPoolEntry cp_infos[] = { cpu_to_be32(expected_ref) };
-	u1 cp_types[] = { CONSTANT_String };
-	struct operand_stack stack = OPERAND_STACK_INIT;
-
-	struct statement *stmt = create_stmt_for_ldc(cp_infos, sizeof(cp_infos), cp_types, &stack);
-	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, CONST_REFERENCE, expected_ref);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -213,13 +203,55 @@ static void assert_stmt_for_ldc_string(CuTest *ct, unsigned long expected_ref)
 
 void test_convert_ldc(CuTest *ct)
 {
-	assert_stmt_for_ldc(ct, 0);
-	assert_stmt_for_ldc(ct, 1);
-	assert_stmt_for_ldc(ct, INT_MIN);
-	assert_stmt_for_ldc(ct, INT_MAX);
+	assert_stmt_for_ldc_int(ct, CONST_INT, 0, CONSTANT_Integer);
+	assert_stmt_for_ldc_int(ct, CONST_INT, 1, CONSTANT_Integer);
+	assert_stmt_for_ldc_int(ct, CONST_INT, INT_MIN, CONSTANT_Integer);
+	assert_stmt_for_ldc_int(ct, CONST_INT, INT_MAX, CONSTANT_Integer);
 	assert_stmt_for_ldc_float(ct, 0.01f);
 	assert_stmt_for_ldc_float(ct, 1.0f);
 	assert_stmt_for_ldc_float(ct, -1.0f);
-	assert_stmt_for_ldc_string(ct, 0);
-	assert_stmt_for_ldc_string(ct, 0xDEADBEEF);
+	assert_stmt_for_ldc_int(ct, CONST_REFERENCE, 0xDEADBEEF, CONSTANT_String);
+}
+
+static void assert_stmt_for_ldc_w_int(CuTest *ct, enum constant_type expected_const_type, long expected_value, u1 cp_type)
+{
+	ConstantPoolEntry cp_infos[257];
+	cp_infos[256] = cpu_to_be32(expected_value);
+	u1 cp_types[257];
+	cp_types[256] = cp_type;
+	struct operand_stack stack = OPERAND_STACK_INIT;
+
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC_W, 0x01, 0x00, &stack);
+	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, expected_const_type, expected_value);
+	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free(stmt);
+}
+
+static void assert_stmt_for_ldc_w_float(CuTest *ct, float expected_value)
+{
+	u4 value = *(u4*) &expected_value;
+	ConstantPoolEntry cp_infos[257];
+	cp_infos[256] = cpu_to_be32(value);
+	u1 cp_types[257];
+	cp_types[256] = CONSTANT_Float;
+	struct operand_stack stack = OPERAND_STACK_INIT;
+
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC_W, 0x01, 0x00, &stack);
+	__assert_stmt_operand_double(ct, stmt, CONST_FLOAT, expected_value);
+	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free(stmt);
+}
+
+void test_convert_ldc_w(CuTest *ct)
+{
+	assert_stmt_for_ldc_w_int(ct, CONST_INT, 0, CONSTANT_Integer);
+	assert_stmt_for_ldc_w_int(ct, CONST_INT, 1, CONSTANT_Integer);
+	assert_stmt_for_ldc_w_int(ct, CONST_INT, INT_MIN, CONSTANT_Integer);
+	assert_stmt_for_ldc_w_int(ct, CONST_INT, INT_MAX, CONSTANT_Integer);
+	assert_stmt_for_ldc_w_float(ct, 0.01f);
+	assert_stmt_for_ldc_w_float(ct, 1.0f);
+	assert_stmt_for_ldc_w_float(ct, -1.0f);
+	assert_stmt_for_ldc_w_int(ct, CONST_REFERENCE, 0xDEADBEEF, CONSTANT_String);
 }

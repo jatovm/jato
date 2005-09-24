@@ -9,8 +9,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static void convert_ldc(struct constant_pool *cp, unsigned char cp_idx,
-			struct statement *stmt)
+/* Convert LDC_<x> operations.  */
+static void convert_ldc_x(struct constant_pool *cp, unsigned long cp_idx,
+			  struct statement *stmt)
 {
 	stmt->type = STMT_ASSIGN;
 	u1 type = CP_TYPE(cp, cp_idx);
@@ -89,9 +90,14 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			stmt->operand.type = CONST_INT;
 			stmt->operand.value = (short) be16_to_cpu(*(u2*) &code[1]);
 			break;
-		case OPC_LDC_QUICK:
+		case OPC_LDC:
 			assert(count > 1);
-			convert_ldc(&cb->constant_pool, code[1], stmt);
+			convert_ldc_x(&cb->constant_pool, code[1], stmt);
+			stack_push(stack, stmt->target);
+			break;
+		case OPC_LDC_W:
+			assert(count > 2);
+			convert_ldc_x(&cb->constant_pool, be16_to_cpu(*(u2*) &code[1]), stmt);
 			stack_push(stack, stmt->target);
 			break;
 	};
