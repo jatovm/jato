@@ -9,6 +9,33 @@
 #include <stdlib.h>
 #include <assert.h>
 
+static void convert_ldc(struct classblock *cb, unsigned char *code,
+			struct statement *stmt)
+{
+	unsigned char cp_idx = code[1];
+	struct constant_pool *cp = &cb->constant_pool;
+
+	stmt->type = STMT_ASSIGN;
+	u1 type = CP_TYPE(cp, cp_idx);
+	ConstantPoolEntry entry = be32_to_cpu(CP_INFO(cp, cp_idx));
+	switch (type) {
+		case CONSTANT_Integer:
+			stmt->operand.type = CONST_INT;
+			stmt->operand.value = entry;
+			break;
+		case CONSTANT_Float:
+			stmt->operand.type = CONST_FLOAT;
+			stmt->operand.fvalue = *(float *) &entry;
+			break;
+		case CONSTANT_String:
+			stmt->operand.type = CONST_REFERENCE;
+			stmt->operand.value = entry;
+			break;
+		default:
+			assert(!"unknown constant type");
+	}
+}
+
 static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			    size_t count, struct statement *stmt,
 			    struct operand_stack *stack)
@@ -67,23 +94,8 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			break;
 		case OPC_LDC_QUICK:
 			assert(count > 1);
-			unsigned char cp_idx = code[1];
-			struct constant_pool *cp = &cb->constant_pool;
-			stmt->type = STMT_ASSIGN;
+			convert_ldc(cb, code, stmt);
 			stack_push(stack, stmt->target);
-			if (CP_TYPE(cp, cp_idx) == CONSTANT_Integer) {
-				stmt->operand.type = CONST_INT;
-				stmt->operand.value = be32_to_cpu(CP_INFO(cp, cp_idx));
-			} else if (CP_TYPE(cp, cp_idx) == CONSTANT_Float) {
-				stmt->operand.type = CONST_FLOAT;
-				u4 value = be32_to_cpu(CP_INFO(cp, cp_idx));
-				stmt->operand.fvalue = *(float *) &value;
-			} else if (CP_TYPE(cp, cp_idx) == CONSTANT_String) {
-				stmt->operand.type = CONST_REFERENCE;
-				stmt->operand.value = be32_to_cpu(CP_INFO(cp, cp_idx));
-			} else {
-				assert(!"unknown constant type");
-			}
 			break;
 	};
 }
