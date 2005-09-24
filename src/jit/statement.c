@@ -9,12 +9,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static void convert_ldc(struct classblock *cb, unsigned char *code,
+static void convert_ldc(struct constant_pool *cp, unsigned char cp_idx,
 			struct statement *stmt)
 {
-	unsigned char cp_idx = code[1];
-	struct constant_pool *cp = &cb->constant_pool;
-
 	stmt->type = STMT_ASSIGN;
 	u1 type = CP_TYPE(cp, cp_idx);
 	ConstantPoolEntry entry = be32_to_cpu(CP_INFO(cp, cp_idx));
@@ -94,7 +91,7 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			break;
 		case OPC_LDC_QUICK:
 			assert(count > 1);
-			convert_ldc(cb, code, stmt);
+			convert_ldc(&cb->constant_pool, code[1], stmt);
 			stack_push(stack, stmt->target);
 			break;
 	};
