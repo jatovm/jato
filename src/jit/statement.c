@@ -15,7 +15,7 @@ static void convert_ldc_x(struct constant_pool *cp, unsigned long cp_idx,
 {
 	stmt->type = STMT_ASSIGN;
 	u1 type = CP_TYPE(cp, cp_idx);
-	ConstantPoolEntry entry = be32_to_cpu(CP_INFO(cp, cp_idx));
+	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
 	switch (type) {
 		case CONSTANT_Integer:
 			stmt->operand.type = CONST_INT;
@@ -28,6 +28,14 @@ static void convert_ldc_x(struct constant_pool *cp, unsigned long cp_idx,
 		case CONSTANT_String:
 			stmt->operand.type = CONST_REFERENCE;
 			stmt->operand.value = entry;
+			break;
+		case CONSTANT_Long:
+			stmt->operand.type = CONST_LONG;
+			stmt->operand.value = entry;
+			break;
+		case CONSTANT_Double:
+			stmt->operand.type = CONST_DOUBLE;
+			stmt->operand.fvalue = *(double *) &entry;
 			break;
 		default:
 			assert(!"unknown constant type");
@@ -100,6 +108,13 @@ static void convert_to_stmt(struct classblock *cb, unsigned char *code,
 			convert_ldc_x(&cb->constant_pool, be16_to_cpu(*(u2*) &code[1]), stmt);
 			stack_push(stack, stmt->target);
 			break;
+		case OPC_LDC2_W:
+			assert(count > 2);
+			convert_ldc_x(&cb->constant_pool, be16_to_cpu(*(u2*) &code[1]), stmt);
+			stack_push(stack, stmt->target);
+			break;
+		default:
+			assert(!"unknown opcode");
 	};
 }
 

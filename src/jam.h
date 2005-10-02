@@ -307,7 +307,7 @@ typedef unsigned short          u2;
 typedef unsigned int            u4;
 typedef unsigned long long      u8;
 
-typedef u4 ConstantPoolEntry;
+typedef u8 ConstantPoolEntry;
 
 typedef struct constant_pool {
     volatile u1 *type;

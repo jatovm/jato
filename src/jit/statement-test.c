@@ -28,7 +28,7 @@ void test_convert_nop(CuTest *ct)
 static void assert_stmt_type_and_operand(CuTest *ct, struct statement *stmt,
 					 enum statement_type expected_stmt_type,
 					 enum constant_type expected_const_type,
-					 unsigned long long expected_value)
+					 long long expected_value)
 {
 	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
 	CuAssertIntEquals(ct, expected_const_type, stmt->operand.type);
@@ -38,7 +38,7 @@ static void assert_stmt_type_and_operand(CuTest *ct, struct statement *stmt,
 static void __assert_stmt_operand_long(CuTest *ct, struct classblock *cb,
 				       enum statement_type expected_stmt_type,
 				       enum constant_type expected_const_type,
-				       unsigned long long expected_value,
+				       long long expected_value,
 				       char *actual, size_t count)
 {
 	struct operand_stack stack = OPERAND_STACK_INIT;
@@ -50,7 +50,7 @@ static void __assert_stmt_operand_long(CuTest *ct, struct classblock *cb,
 
 static void assert_stmt_operand_long(CuTest *ct,
 				     enum constant_type expected_const_type,
-				     unsigned long long expected_value,
+				     long long expected_value,
 				     char actual)
 {
 	unsigned char code[] = { actual };
@@ -134,7 +134,7 @@ void test_convert_bipush(CuTest *ct)
 }
 
 static void assert_stmt_for_sipush(CuTest *ct,
-				   unsigned long long expected_value,
+				   long long expected_value,
 				   char first,
 				   char second,
 				   char actual)
@@ -173,7 +173,7 @@ static struct statement *create_stmt_with_constant_pool(ConstantPoolEntry *cp_in
 
 static void assert_stmt_for_ldc_int(CuTest *ct, enum constant_type expected_const_type, long expected_value, u1 cp_type)
 {
-	ConstantPoolEntry cp_infos[] = { cpu_to_be32(expected_value) };
+	ConstantPoolEntry cp_infos[] = { cpu_to_be64(expected_value) };
 	u1 cp_types[] = { cp_type };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
@@ -187,7 +187,7 @@ static void assert_stmt_for_ldc_int(CuTest *ct, enum constant_type expected_cons
 static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 {
 	u4 value = *(u4*) &expected_value;
-	ConstantPoolEntry cp_infos[] = { cpu_to_be32(value) };
+	ConstantPoolEntry cp_infos[] = { cpu_to_be64(value) };
 	u1 cp_types[] = { CONSTANT_Float };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
@@ -198,8 +198,8 @@ static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 	free(stmt);
 }
 
-#define INT_MIN (-INT_MAX - 1)
 #define INT_MAX 2147483647
+#define INT_MIN (-INT_MAX - 1)
 
 void test_convert_ldc(CuTest *ct)
 {
@@ -216,7 +216,7 @@ void test_convert_ldc(CuTest *ct)
 static void assert_stmt_for_ldc_w_int(CuTest *ct, enum constant_type expected_const_type, long expected_value, u1 cp_type)
 {
 	ConstantPoolEntry cp_infos[257];
-	cp_infos[256] = cpu_to_be32(expected_value);
+	cp_infos[256] = cpu_to_be64(expected_value);
 	u1 cp_types[257];
 	cp_types[256] = cp_type;
 	struct operand_stack stack = OPERAND_STACK_INIT;
@@ -232,7 +232,7 @@ static void assert_stmt_for_ldc_w_float(CuTest *ct, float expected_value)
 {
 	u4 value = *(u4*) &expected_value;
 	ConstantPoolEntry cp_infos[257];
-	cp_infos[256] = cpu_to_be32(value);
+	cp_infos[256] = cpu_to_be64(value);
 	u1 cp_types[257];
 	cp_types[256] = CONSTANT_Float;
 	struct operand_stack stack = OPERAND_STACK_INIT;
@@ -254,4 +254,49 @@ void test_convert_ldc_w(CuTest *ct)
 	assert_stmt_for_ldc_w_float(ct, 1.0f);
 	assert_stmt_for_ldc_w_float(ct, -1.0f);
 	assert_stmt_for_ldc_w_int(ct, CONST_REFERENCE, 0xDEADBEEF, CONSTANT_String);
+}
+
+static void assert_stmt_for_ldc2_w_long(CuTest *ct, enum constant_type expected_const_type, long long expected_value, u1 cp_type)
+{
+	ConstantPoolEntry cp_infos[257];
+	cp_infos[256] = cpu_to_be64(expected_value);
+	u1 cp_types[257];
+	cp_types[256] = cp_type;
+	struct operand_stack stack = OPERAND_STACK_INIT;
+
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC2_W, 0x01, 0x00, &stack);
+	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, expected_const_type, expected_value);
+	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free(stmt);
+}
+
+static void assert_stmt_for_ldc2_w_double(CuTest *ct, double expected_value)
+{
+	u8 value = *(u8*) &expected_value;
+	ConstantPoolEntry cp_infos[257];
+	cp_infos[256] = cpu_to_be64(value);
+	u1 cp_types[257];
+	cp_types[256] = CONSTANT_Double;
+	struct operand_stack stack = OPERAND_STACK_INIT;
+
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC2_W, 0x01, 0x00, &stack);
+	__assert_stmt_operand_double(ct, stmt, CONST_DOUBLE, expected_value);
+	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free(stmt);
+}
+
+#define LONG_MAX ((long long) 2<<63)
+#define LONG_MIN (-LONG_MAX - 1)
+
+void test_convert_ldc2_w(CuTest *ct)
+{
+	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, 0, CONSTANT_Long);
+	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, 1, CONSTANT_Long);
+	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, LONG_MIN, CONSTANT_Long);
+	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, LONG_MAX, CONSTANT_Long);
+	assert_stmt_for_ldc2_w_double(ct, 0.01f);
+	assert_stmt_for_ldc2_w_double(ct, 1.0f);
+	assert_stmt_for_ldc2_w_double(ct, -1.0f);
 }
