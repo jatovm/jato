@@ -213,7 +213,7 @@ void test_convert_ldc(CuTest *ct)
 	assert_stmt_for_ldc_int(ct, CONST_REFERENCE, 0xDEADBEEF, CONSTANT_String);
 }
 
-static void assert_stmt_for_ldc_w_int(CuTest *ct, enum constant_type expected_const_type, long expected_value, u1 cp_type)
+static void assert_stmt_for_ldc_x_long(CuTest *ct, enum constant_type expected_const_type, long long expected_value, u1 cp_type, unsigned char opcode)
 {
 	ConstantPoolEntry cp_infos[257];
 	cp_infos[256] = cpu_to_be64(expected_value);
@@ -221,70 +221,61 @@ static void assert_stmt_for_ldc_w_int(CuTest *ct, enum constant_type expected_co
 	cp_types[256] = cp_type;
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC_W, 0x01, 0x00, &stack);
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, opcode, 0x01, 0x00, &stack);
 	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, expected_const_type, expected_value);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
 }
 
-static void assert_stmt_for_ldc_w_float(CuTest *ct, float expected_value)
+static void __assert_stmt_for_ldc_x_double(CuTest *ct,
+					   enum constant_type expected_constant_type,
+					   double expected_value, u1 cp_type,
+					   u8 value, unsigned long opcode)
 {
-	u4 value = *(u4*) &expected_value;
 	ConstantPoolEntry cp_infos[257];
 	cp_infos[256] = cpu_to_be64(value);
 	u1 cp_types[257];
-	cp_types[256] = CONSTANT_Float;
+	cp_types[256] = cp_type;
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC_W, 0x01, 0x00, &stack);
-	__assert_stmt_operand_double(ct, stmt, CONST_FLOAT, expected_value);
+	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, opcode, 0x01, 0x00, &stack);
+	__assert_stmt_operand_double(ct, stmt, expected_constant_type, expected_value);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
+}
+
+static void assert_stmt_for_ldc_x_float(CuTest *ct,
+					 enum constant_type expected_constant_type,
+					 float expected_value, u1 cp_type,
+					 unsigned long opcode)
+{
+	u4 value = *(u4*) &expected_value;
+	__assert_stmt_for_ldc_x_double(ct, expected_constant_type,
+				       expected_value, cp_type, value, opcode);
 }
 
 void test_convert_ldc_w(CuTest *ct)
 {
-	assert_stmt_for_ldc_w_int(ct, CONST_INT, 0, CONSTANT_Integer);
-	assert_stmt_for_ldc_w_int(ct, CONST_INT, 1, CONSTANT_Integer);
-	assert_stmt_for_ldc_w_int(ct, CONST_INT, INT_MIN, CONSTANT_Integer);
-	assert_stmt_for_ldc_w_int(ct, CONST_INT, INT_MAX, CONSTANT_Integer);
-	assert_stmt_for_ldc_w_float(ct, 0.01f);
-	assert_stmt_for_ldc_w_float(ct, 1.0f);
-	assert_stmt_for_ldc_w_float(ct, -1.0f);
-	assert_stmt_for_ldc_w_int(ct, CONST_REFERENCE, 0xDEADBEEF, CONSTANT_String);
+	assert_stmt_for_ldc_x_long(ct, CONST_INT, 0, CONSTANT_Integer, OPC_LDC_W);
+	assert_stmt_for_ldc_x_long(ct, CONST_INT, 1, CONSTANT_Integer, OPC_LDC_W);
+	assert_stmt_for_ldc_x_long(ct, CONST_INT, INT_MIN, CONSTANT_Integer, OPC_LDC_W);
+	assert_stmt_for_ldc_x_long(ct, CONST_INT, INT_MAX, CONSTANT_Integer, OPC_LDC_W);
+	assert_stmt_for_ldc_x_float(ct, CONST_FLOAT, 0.01f, CONSTANT_Float, OPC_LDC_W);
+	assert_stmt_for_ldc_x_float(ct, CONST_FLOAT, 1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_stmt_for_ldc_x_float(ct, CONST_FLOAT, -1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_stmt_for_ldc_x_long(ct, CONST_REFERENCE, 0xDEADBEEF, CONSTANT_String, OPC_LDC_W);
 }
 
-static void assert_stmt_for_ldc2_w_long(CuTest *ct, enum constant_type expected_const_type, long long expected_value, u1 cp_type)
-{
-	ConstantPoolEntry cp_infos[257];
-	cp_infos[256] = cpu_to_be64(expected_value);
-	u1 cp_types[257];
-	cp_types[256] = cp_type;
-	struct operand_stack stack = OPERAND_STACK_INIT;
-
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC2_W, 0x01, 0x00, &stack);
-	assert_stmt_type_and_operand(ct, stmt, STMT_ASSIGN, expected_const_type, expected_value);
-	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free(stmt);
-}
-
-static void assert_stmt_for_ldc2_w_double(CuTest *ct, double expected_value)
+static void assert_stmt_for_ldc_x_double(CuTest *ct,
+					  enum constant_type expected_constant_type,
+					  double expected_value, u1 cp_type,
+					  unsigned long opcode)
 {
 	u8 value = *(u8*) &expected_value;
-	ConstantPoolEntry cp_infos[257];
-	cp_infos[256] = cpu_to_be64(value);
-	u1 cp_types[257];
-	cp_types[256] = CONSTANT_Double;
-	struct operand_stack stack = OPERAND_STACK_INIT;
-
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC2_W, 0x01, 0x00, &stack);
-	__assert_stmt_operand_double(ct, stmt, CONST_DOUBLE, expected_value);
-	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free(stmt);
+	__assert_stmt_for_ldc_x_double(ct, expected_constant_type,
+				       expected_value, cp_type, value, opcode);
 }
 
 #define LONG_MAX ((long long) 2<<63)
@@ -292,11 +283,11 @@ static void assert_stmt_for_ldc2_w_double(CuTest *ct, double expected_value)
 
 void test_convert_ldc2_w(CuTest *ct)
 {
-	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, 0, CONSTANT_Long);
-	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, 1, CONSTANT_Long);
-	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, LONG_MIN, CONSTANT_Long);
-	assert_stmt_for_ldc2_w_long(ct, CONST_LONG, LONG_MAX, CONSTANT_Long);
-	assert_stmt_for_ldc2_w_double(ct, 0.01f);
-	assert_stmt_for_ldc2_w_double(ct, 1.0f);
-	assert_stmt_for_ldc2_w_double(ct, -1.0f);
+	assert_stmt_for_ldc_x_long(ct, CONST_LONG, 0, CONSTANT_Long, OPC_LDC2_W);
+	assert_stmt_for_ldc_x_long(ct, CONST_LONG, 1, CONSTANT_Long, OPC_LDC2_W);
+	assert_stmt_for_ldc_x_long(ct, CONST_LONG, LONG_MIN, CONSTANT_Long, OPC_LDC2_W);
+	assert_stmt_for_ldc_x_long(ct, CONST_LONG, LONG_MAX, CONSTANT_Long, OPC_LDC2_W);
+	assert_stmt_for_ldc_x_double(ct, CONST_DOUBLE, 0.01f, CONSTANT_Double, OPC_LDC2_W);
+	assert_stmt_for_ldc_x_double(ct, CONST_DOUBLE, 1.0f, CONSTANT_Double, OPC_LDC2_W);
+	assert_stmt_for_ldc_x_double(ct, CONST_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
 }
