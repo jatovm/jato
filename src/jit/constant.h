@@ -2,7 +2,6 @@
 #define __CONSTANT_H
 
 enum constant_type {
-	CONST_NULL,
 	CONST_INT,
 	CONST_LONG,
 	CONST_FLOAT,

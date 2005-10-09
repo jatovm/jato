@@ -20,7 +20,7 @@ static void convert_aconst_null(struct classblock *cb, unsigned char *code,
 				struct operand_stack *stack)
 {
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_NULL;
+	stmt->operand.o_const.type = CONST_REFERENCE;
 }
 
 static void convert_iconst(struct classblock *cb, unsigned char *code, size_t len,

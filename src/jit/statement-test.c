@@ -62,7 +62,7 @@ static void assert_stmt_operand_long(CuTest *ct,
 
 void test_convert_aconst_null(CuTest *ct)
 {
-	assert_stmt_operand_long(ct, CONST_NULL, 0, OPC_ACONST_NULL);
+	assert_stmt_operand_long(ct, CONST_REFERENCE, 0, OPC_ACONST_NULL);
 }
 
 void test_convert_iconst(CuTest *ct)
