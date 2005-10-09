@@ -1,7 +1,7 @@
 #ifndef __STATEMENT_H
 #define __STATEMENT_H
 
-#include <constant.h>
+#include <operand.h>
 #include <stddef.h>
 #include <jam.h>
 
@@ -15,7 +15,7 @@ enum statement_type {
 struct statement {
 	enum statement_type type;	/* Type of the statement.  */
 	unsigned long target;		/* Target temporary of the statement.  */
-	struct constant operand;	/* Operand of the statement.  */
+	struct operand operand;		/* Operand of the statement.  */
 };
 
 extern struct statement *stmt_from_bytecode(struct classblock *,
