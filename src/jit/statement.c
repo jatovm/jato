@@ -156,6 +156,24 @@ static void convert_lload(struct classblock *cb, unsigned char *code, size_t len
 	convert_load(code, len, LOCAL_VARIABLE_LONG, stmt, stack);
 }
 
+static void convert_fload(struct classblock *cb, unsigned char *code, size_t len,
+			  struct statement *stmt, struct operand_stack *stack)
+{
+	convert_load(code, len, LOCAL_VARIABLE_FLOAT, stmt, stack);
+}
+
+static void convert_dload(struct classblock *cb, unsigned char *code, size_t len,
+			  struct statement *stmt, struct operand_stack *stack)
+{
+	convert_load(code, len, LOCAL_VARIABLE_DOUBLE, stmt, stack);
+}
+
+static void convert_aload(struct classblock *cb, unsigned char *code, size_t len,
+			  struct statement *stmt, struct operand_stack *stack)
+{
+	convert_load(code, len, LOCAL_VARIABLE_REFERENCE, stmt, stack);
+}
+
 typedef void (*convert_fn_t)(struct classblock *, unsigned char *, size_t,
 			     struct statement *, struct operand_stack *stack);
 
@@ -183,6 +201,9 @@ static convert_fn_t converters[] = {
 	[OPC_LDC2_W]		= convert_ldc2_w,
 	[OPC_ILOAD]		= convert_iload,
 	[OPC_LLOAD]		= convert_lload,
+	[OPC_FLOAD]		= convert_fload,
+	[OPC_DLOAD]		= convert_dload,
+	[OPC_ALOAD]		= convert_aload,
 };
 
 static void convert_to_stmt(struct classblock *cb, unsigned char *code,

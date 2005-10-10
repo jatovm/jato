@@ -294,7 +294,7 @@ void test_convert_ldc2_w(CuTest *ct)
 	assert_stmt_for_ldc_x_double(ct, CONST_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
 }
 
-static void assert_stmt_for_load_long(CuTest *ct, unsigned char opc,
+static void assert_stmt_for_load(CuTest *ct, unsigned char opc,
 				  enum local_variable_type expected_local_variable_type,
 				  unsigned char expected_index)
 {
@@ -312,14 +312,35 @@ static void assert_stmt_for_load_long(CuTest *ct, unsigned char opc,
 
 void test_convert_iload(CuTest *ct)
 {
-	assert_stmt_for_load_long(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x00);
-	assert_stmt_for_load_long(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x01);
-	assert_stmt_for_load_long(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0xFF);
+	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x00);
+	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x01);
+	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0xFF);
 }
 
 void test_convert_lload(CuTest *ct)
 {
-	assert_stmt_for_load_long(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x00);
-	assert_stmt_for_load_long(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x01);
-	assert_stmt_for_load_long(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0xFF);
+	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x00);
+	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x01);
+	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0xFF);
+}
+
+void test_convert_fload(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VARIABLE_FLOAT, 0x00);
+	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VARIABLE_FLOAT, 0x01);
+	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VARIABLE_FLOAT, 0xFF);
+}
+
+void test_convert_dload(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VARIABLE_DOUBLE, 0x00);
+	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VARIABLE_DOUBLE, 0x01);
+	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VARIABLE_DOUBLE, 0xFF);
+}
+
+void test_convert_aload(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0x00);
+	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0x01);
+	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0xFF);
 }
