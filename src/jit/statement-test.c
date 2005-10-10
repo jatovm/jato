@@ -294,15 +294,17 @@ void test_convert_ldc2_w(CuTest *ct)
 	assert_stmt_for_ldc_x_double(ct, CONST_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
 }
 
-static void assert_stmt_for_iload(CuTest *ct, unsigned char expected_index)
+static void assert_stmt_for_load_long(CuTest *ct, unsigned char opc,
+				  enum local_variable_type expected_local_variable_type,
+				  unsigned char expected_index)
 {
-	unsigned char code[] = { OPC_ILOAD, expected_index };
+	unsigned char code[] = { opc, expected_index };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	CuAssertIntEquals(ct, OPERAND_LOCAL_VARIABLE, stmt->operand.o_type);
 	CuAssertIntEquals(ct, expected_index, stmt->operand.o_local.lv_index);
-	CuAssertIntEquals(ct, LOCAL_VARIABLE_INT, stmt->operand.o_local.lv_type);
+	CuAssertIntEquals(ct, expected_local_variable_type, stmt->operand.o_local.lv_type);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -310,6 +312,14 @@ static void assert_stmt_for_iload(CuTest *ct, unsigned char expected_index)
 
 void test_convert_iload(CuTest *ct)
 {
-	assert_stmt_for_iload(ct, 0x00);
-	assert_stmt_for_iload(ct, 0x01);
+	assert_stmt_for_load_long(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x00);
+	assert_stmt_for_load_long(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x01);
+	assert_stmt_for_load_long(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0xFF);
+}
+
+void test_convert_lload(CuTest *ct)
+{
+	assert_stmt_for_load_long(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x00);
+	assert_stmt_for_load_long(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x01);
+	assert_stmt_for_load_long(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0xFF);
 }

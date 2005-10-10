@@ -133,15 +133,27 @@ static void convert_ldc2_w(struct classblock *cb, unsigned char *code, size_t le
 	stack_push(stack, stmt->target);
 }
 
-static void convert_iload(struct classblock *cb, unsigned char *code, size_t len,
-			  struct statement *stmt, struct operand_stack *stack)
+static void convert_load(unsigned char *code, size_t len, enum local_variable_type lv_type,
+			 struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
 	stmt->type = STMT_ASSIGN;
 	stmt->operand.o_type = OPERAND_LOCAL_VARIABLE;
-	stmt->operand.o_local.lv_type = LOCAL_VARIABLE_INT;
+	stmt->operand.o_local.lv_type = lv_type;
 	stmt->operand.o_local.lv_index = code[1];
 	stack_push(stack, stmt->target);
+}
+
+static void convert_iload(struct classblock *cb, unsigned char *code, size_t len,
+			  struct statement *stmt, struct operand_stack *stack)
+{
+	convert_load(code, len, LOCAL_VARIABLE_INT, stmt, stack);
+}
+
+static void convert_lload(struct classblock *cb, unsigned char *code, size_t len,
+			  struct statement *stmt, struct operand_stack *stack)
+{
+	convert_load(code, len, LOCAL_VARIABLE_LONG, stmt, stack);
 }
 
 typedef void (*convert_fn_t)(struct classblock *, unsigned char *, size_t,
@@ -170,6 +182,7 @@ static convert_fn_t converters[] = {
 	[OPC_LDC_W]		= convert_ldc_w,
 	[OPC_LDC2_W]		= convert_ldc2_w,
 	[OPC_ILOAD]		= convert_iload,
+	[OPC_LLOAD]		= convert_lload,
 };
 
 static void convert_to_stmt(struct classblock *cb, unsigned char *code,
