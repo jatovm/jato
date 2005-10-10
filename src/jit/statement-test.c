@@ -344,3 +344,43 @@ void test_convert_aload(CuTest *ct)
 	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0x01);
 	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0xFF);
 }
+
+void test_convert_iload_x(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_ILOAD_0, LOCAL_VARIABLE_INT, 0x00);
+	assert_stmt_for_load(ct, OPC_ILOAD_1, LOCAL_VARIABLE_INT, 0x01);
+	assert_stmt_for_load(ct, OPC_ILOAD_2, LOCAL_VARIABLE_INT, 0x02);
+	assert_stmt_for_load(ct, OPC_ILOAD_3, LOCAL_VARIABLE_INT, 0x03);
+}
+
+void test_convert_lload_x(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_LLOAD_0, LOCAL_VARIABLE_LONG, 0x00);
+	assert_stmt_for_load(ct, OPC_LLOAD_1, LOCAL_VARIABLE_LONG, 0x01);
+	assert_stmt_for_load(ct, OPC_LLOAD_2, LOCAL_VARIABLE_LONG, 0x02);
+	assert_stmt_for_load(ct, OPC_LLOAD_3, LOCAL_VARIABLE_LONG, 0x03);
+}
+
+void test_convert_fload_x(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_FLOAD_0, LOCAL_VARIABLE_FLOAT, 0x00);
+	assert_stmt_for_load(ct, OPC_FLOAD_1, LOCAL_VARIABLE_FLOAT, 0x01);
+	assert_stmt_for_load(ct, OPC_FLOAD_2, LOCAL_VARIABLE_FLOAT, 0x02);
+	assert_stmt_for_load(ct, OPC_FLOAD_3, LOCAL_VARIABLE_FLOAT, 0x03);
+}
+
+void test_convert_dload_x(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_DLOAD_0, LOCAL_VARIABLE_DOUBLE, 0x00);
+	assert_stmt_for_load(ct, OPC_DLOAD_1, LOCAL_VARIABLE_DOUBLE, 0x01);
+	assert_stmt_for_load(ct, OPC_DLOAD_2, LOCAL_VARIABLE_DOUBLE, 0x02);
+	assert_stmt_for_load(ct, OPC_DLOAD_3, LOCAL_VARIABLE_DOUBLE, 0x03);
+}
+
+void test_convert_aload_x(CuTest *ct)
+{
+	assert_stmt_for_load(ct, OPC_ALOAD_0, LOCAL_VARIABLE_REFERENCE, 0x00);
+	assert_stmt_for_load(ct, OPC_ALOAD_1, LOCAL_VARIABLE_REFERENCE, 0x01);
+	assert_stmt_for_load(ct, OPC_ALOAD_2, LOCAL_VARIABLE_REFERENCE, 0x02);
+	assert_stmt_for_load(ct, OPC_ALOAD_3, LOCAL_VARIABLE_REFERENCE, 0x03);
+}

@@ -133,15 +133,21 @@ static void convert_ldc2_w(struct classblock *cb, unsigned char *code, size_t le
 	stack_push(stack, stmt->target);
 }
 
+static void __convert_load(unsigned char lv_index, enum local_variable_type lv_type,
+			   struct statement *stmt, struct operand_stack *stack)
+{
+	stmt->type = STMT_ASSIGN;
+	stmt->operand.o_type = OPERAND_LOCAL_VARIABLE;
+	stmt->operand.o_local.lv_type = lv_type;
+	stmt->operand.o_local.lv_index = lv_index;
+	stack_push(stack, stmt->target);
+}
+
 static void convert_load(unsigned char *code, size_t len, enum local_variable_type lv_type,
 			 struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
-	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_type = OPERAND_LOCAL_VARIABLE;
-	stmt->operand.o_local.lv_type = lv_type;
-	stmt->operand.o_local.lv_index = code[1];
-	stack_push(stack, stmt->target);
+	__convert_load(code[1], lv_type, stmt, stack);
 }
 
 static void convert_iload(struct classblock *cb, unsigned char *code, size_t len,
@@ -174,6 +180,41 @@ static void convert_aload(struct classblock *cb, unsigned char *code, size_t len
 	convert_load(code, len, LOCAL_VARIABLE_REFERENCE, stmt, stack);
 }
 
+static void convert_iload_x(struct classblock *cb, unsigned char *code, size_t len,
+			    struct statement *stmt, struct operand_stack *stack)
+{
+	assert(len > 1);
+	__convert_load(code[0]-OPC_ILOAD_0, LOCAL_VARIABLE_INT, stmt, stack);
+}
+
+static void convert_lload_x(struct classblock *cb, unsigned char *code, size_t len,
+			    struct statement *stmt, struct operand_stack *stack)
+{
+	assert(len > 1);
+	__convert_load(code[0]-OPC_LLOAD_0, LOCAL_VARIABLE_LONG, stmt, stack);
+}
+
+static void convert_fload_x(struct classblock *cb, unsigned char *code, size_t len,
+			    struct statement *stmt, struct operand_stack *stack)
+{
+	assert(len > 1);
+	__convert_load(code[0]-OPC_FLOAD_0, LOCAL_VARIABLE_FLOAT, stmt, stack);
+}
+
+static void convert_dload_x(struct classblock *cb, unsigned char *code, size_t len,
+			    struct statement *stmt, struct operand_stack *stack)
+{
+	assert(len > 1);
+	__convert_load(code[0]-OPC_DLOAD_0, LOCAL_VARIABLE_DOUBLE, stmt, stack);
+}
+
+static void convert_aload_x(struct classblock *cb, unsigned char *code, size_t len,
+			    struct statement *stmt, struct operand_stack *stack)
+{
+	assert(len > 1);
+	__convert_load(code[0]-OPC_ALOAD_0, LOCAL_VARIABLE_REFERENCE, stmt, stack);
+}
+
 typedef void (*convert_fn_t)(struct classblock *, unsigned char *, size_t,
 			     struct statement *, struct operand_stack *stack);
 
@@ -204,6 +245,26 @@ static convert_fn_t converters[] = {
 	[OPC_FLOAD]		= convert_fload,
 	[OPC_DLOAD]		= convert_dload,
 	[OPC_ALOAD]		= convert_aload,
+	[OPC_ILOAD_0]		= convert_iload_x,
+	[OPC_ILOAD_1]		= convert_iload_x,
+	[OPC_ILOAD_2]		= convert_iload_x,
+	[OPC_ILOAD_3]		= convert_iload_x,
+	[OPC_LLOAD_0]		= convert_lload_x,
+	[OPC_LLOAD_1]		= convert_lload_x,
+	[OPC_LLOAD_2]		= convert_lload_x,
+	[OPC_LLOAD_3]		= convert_lload_x,
+	[OPC_FLOAD_0]		= convert_fload_x,
+	[OPC_FLOAD_1]		= convert_fload_x,
+	[OPC_FLOAD_2]		= convert_fload_x,
+	[OPC_FLOAD_3]		= convert_fload_x,
+	[OPC_DLOAD_0]		= convert_dload_x,
+	[OPC_DLOAD_1]		= convert_dload_x,
+	[OPC_DLOAD_2]		= convert_dload_x,
+	[OPC_DLOAD_3]		= convert_dload_x,
+	[OPC_ALOAD_0]		= convert_aload_x,
+	[OPC_ALOAD_1]		= convert_aload_x,
+	[OPC_ALOAD_2]		= convert_aload_x,
+	[OPC_ALOAD_3]		= convert_aload_x,
 };
 
 static void convert_to_stmt(struct classblock *cb, unsigned char *code,
