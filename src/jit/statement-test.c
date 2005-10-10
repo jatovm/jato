@@ -302,6 +302,7 @@ static void assert_stmt_for_iload(CuTest *ct, unsigned char expected_index)
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	CuAssertIntEquals(ct, OPERAND_LOCAL_VARIABLE, stmt->operand.o_type);
 	CuAssertIntEquals(ct, expected_index, stmt->operand.o_local.lv_index);
+	CuAssertIntEquals(ct, LOCAL_VARIABLE_INT, stmt->operand.o_local.lv_type);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);

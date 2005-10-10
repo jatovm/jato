@@ -1,7 +1,21 @@
 #ifndef __LOCAL_VARIABLE_H
 #define __LOCAL_VARIABLE_H
 
+enum local_variable_type {
+	LOCAL_VARIABLE_BOOLEAN,
+	LOCAL_VARIABLE_BYTE,
+	LOCAL_VARIABLE_CHAR,
+	LOCAL_VARIABLE_SHORT,
+	LOCAL_VARIABLE_INT,
+	LOCAL_VARIABLE_FLOAT,
+	LOCAL_VARIABLE_REFERENCE,
+	LOCAL_VARIABLE_RETURN_ADDRESS,
+	LOCAL_VARIABLE_LONG,
+	LOCAL_VARIABLE_DOUBLE
+};
+
 struct local_variable {
+	enum local_variable_type lv_type;
 	unsigned long lv_index;
 };
 
