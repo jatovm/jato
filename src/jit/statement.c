@@ -139,7 +139,7 @@ static void convert_iload(struct classblock *cb, unsigned char *code, size_t len
 	assert(len > 1);
 	stmt->type = STMT_ASSIGN;
 	stmt->operand.o_type = OPERAND_LOCAL_VARIABLE;
-	stmt->operand.o_local.l_index = code[1];
+	stmt->operand.o_local.lv_index = code[1];
 	stack_push(stack, stmt->target);
 }
 
