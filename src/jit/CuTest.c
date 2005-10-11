@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <backtrace.h>
 
 #include "CuTest.h"
 
@@ -137,6 +138,7 @@ static void CuFailInternal(CuTest* tc, const char* file, int line, CuString* str
 
 	sprintf(buf, "%s:%d: ", file, line);
 	CuStringInsert(string, buf, 0);
+	print_trace();
 
 	tc->failed = 1;
 	tc->message = string->buffer;
