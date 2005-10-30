@@ -10,13 +10,16 @@ struct operand_stack;
 enum statement_type {
 	STMT_NOP,
 	STMT_ASSIGN,
+	STMT_ARRAY_ASSIGN,
 	STMT_NULL_CHECK,
+	STMT_ARRAY_CHECK,
 };
 
 struct statement {
 	enum statement_type type;	/* Type of the statement.  */
 	unsigned long target;		/* Target temporary of the statement.  */
 	struct operand s_left;		/* Left operand of the statement.  */
+	struct operand s_right;		/* Left operand of the statement.  */
 	struct statement *next;		/* Next statement. */
 };
 

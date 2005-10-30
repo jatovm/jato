@@ -215,6 +215,13 @@ static void convert_aload_x(struct classblock *cb, unsigned char *code, size_t l
 	__convert_load(code[0]-OPC_ALOAD_0, LOCAL_VARIABLE_REFERENCE, stmt, stack);
 }
 
+static void set_temporary_operand(struct operand *operand,
+				  unsigned long temporary)
+{
+	operand->o_type = OPERAND_TEMPORARY;
+	operand->o_temporary = temporary;
+}
+
 static void convert_iaload(struct classblock *cb, unsigned char *code, size_t len,
 			   struct statement *stmt, struct operand_stack *stack)
 {
@@ -222,15 +229,25 @@ static void convert_iaload(struct classblock *cb, unsigned char *code, size_t le
 	unsigned long arrayref = stack_pop(stack);
 
 	assert(len > 0);
-	stmt->type = STMT_NULL_CHECK;
-	stmt->s_left.o_type = OPERAND_TEMPORARY;
-	stmt->s_left.o_temporary = arrayref;
 
-	stmt->next = malloc(sizeof(struct statement));
-	assert(stmt->next);
-	stmt->next->type = STMT_ASSIGN;
-	stmt->next->s_left.o_type = OPERAND_TEMPORARY;
-	stmt->next->s_left.o_temporary = index;
+	struct statement *assign = malloc(sizeof(struct statement));
+	assert(assign);
+	assign->type = STMT_ARRAY_ASSIGN;
+	set_temporary_operand(&assign->s_left, arrayref);
+	set_temporary_operand(&assign->s_right, index);
+
+	stack_push(stack, assign->target);
+
+	struct statement *arraycheck = malloc(sizeof(struct statement));
+	assert(arraycheck);
+	arraycheck->type = STMT_ARRAY_CHECK;
+	set_temporary_operand(&arraycheck->s_left, arrayref);
+	set_temporary_operand(&arraycheck->s_right, index);
+	arraycheck->next = assign;
+
+	stmt->type = STMT_NULL_CHECK;
+	set_temporary_operand(&stmt->s_left, arrayref);
+	stmt->next = arraycheck;
 }
 
 typedef void (*convert_fn_t)(struct classblock *, unsigned char *, size_t,

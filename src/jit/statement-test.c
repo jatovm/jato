@@ -412,10 +412,22 @@ static void assert_convert_iaload(CuTest *ct, unsigned long arrayref, unsigned l
 	stack_push(&stack, arrayref);
 	stack_push(&stack, index);
 	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), &stack);
-	CuAssertIntEquals(ct, STMT_NULL_CHECK, stmt->type);
-	assert_temporary_operand(ct, arrayref, &stmt->s_left);
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->next->type);
-	assert_temporary_operand(ct, index, &stmt->next->s_left);
+
+	struct statement *nullcheck = stmt;
+	CuAssertIntEquals(ct, STMT_NULL_CHECK, nullcheck->type);
+	assert_temporary_operand(ct, arrayref, &nullcheck->s_left);
+
+	struct statement *arraycheck = stmt->next;
+	CuAssertIntEquals(ct, STMT_ARRAY_CHECK, arraycheck->type);
+	assert_temporary_operand(ct, arrayref, &arraycheck->s_left);
+	assert_temporary_operand(ct, index, &arraycheck->s_right);
+
+	struct statement *assign = arraycheck->next;
+	CuAssertIntEquals(ct, STMT_ARRAY_ASSIGN, assign->type);
+	assert_temporary_operand(ct, arrayref, &assign->s_left);
+	assert_temporary_operand(ct, index, &assign->s_right);
+	CuAssertIntEquals(ct, stack_pop(&stack), assign->target);
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 }
 
 void test_convert_iaload(CuTest *ct)
