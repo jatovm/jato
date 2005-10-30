@@ -10,27 +10,20 @@
 #include <CuTest.h>
 #include <stdlib.h>
 
-static void assert_stmt_type(CuTest *ct, enum statement_type expected, char actual)
+void test_convert_nop(CuTest *ct)
 {
-	unsigned char code[] = { actual };
+	unsigned char code[] = { OPC_NOP };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), &stack);
-	CuAssertIntEquals(ct, expected, stmt->type);
+	CuAssertIntEquals(ct, STMT_NOP, stmt->type);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
 }
 
-void test_convert_nop(CuTest *ct)
-{
-	assert_stmt_type(ct, STMT_NOP, OPC_NOP);
-}
-
-static void assert_stmt_type_and_const_operand(CuTest *ct, struct statement *stmt,
-					 enum statement_type expected_stmt_type,
+static void assert_long_long_const_operand(CuTest *ct, struct statement *stmt,
 					 enum constant_type expected_const_type,
 					 long long expected_value)
 {
-	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
 	CuAssertIntEquals(ct, OPERAND_CONSTANT, stmt->operand.o_type);
 	CuAssertIntEquals(ct, expected_const_type, stmt->operand.o_const.type);
 	CuAssertIntEquals(ct, expected_value, stmt->operand.o_const.value);
@@ -44,7 +37,8 @@ static void __assert_stmt_operand_long(CuTest *ct, struct classblock *cb,
 {
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt = stmt_from_bytecode(cb, actual, count, NULL);
-	assert_stmt_type_and_const_operand(ct, stmt, expected_stmt_type, expected_const_type, expected_value);
+	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
+	assert_long_long_const_operand(ct, stmt, expected_const_type, expected_value);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
 }
@@ -82,15 +76,14 @@ void test_convert_lconst(CuTest *ct)
 	assert_stmt_operand_long(ct, CONST_LONG, 1, OPC_LCONST_1);
 }
 
-static void __assert_stmt_operand_double(CuTest *ct,
-					 struct statement *stmt,
-				         enum constant_type expected_const_type,
-				         double expected_value)
+static void assert_double_const_operand(CuTest *ct,
+					   enum constant_type expected_const_type,
+					   double expected_value,
+					   struct operand *operand)
 {
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
-	CuAssertIntEquals(ct, OPERAND_CONSTANT, stmt->operand.o_type);
-	CuAssertIntEquals(ct, expected_const_type, stmt->operand.o_const.type);
-	CuAssertDblEquals(ct, expected_value, stmt->operand.o_const.fvalue, 0.01f);
+	CuAssertIntEquals(ct, OPERAND_CONSTANT, operand->o_type);
+	CuAssertIntEquals(ct, expected_const_type, operand->o_const.type);
+	CuAssertDblEquals(ct, expected_value, operand->o_const.fvalue, 0.01f);
 }
 
 static void assert_stmt_operand_double(CuTest *ct,
@@ -101,7 +94,8 @@ static void assert_stmt_operand_double(CuTest *ct,
 	unsigned char code[] = { actual };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), &stack);
-	__assert_stmt_operand_double(ct, stmt, expected_const_type, expected_value);
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
+	assert_double_const_operand(ct, expected_const_type, expected_value, &stmt->operand);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
 }
@@ -173,14 +167,19 @@ static struct statement *create_stmt_with_constant_pool(ConstantPoolEntry *cp_in
 	return stmt_from_bytecode(&cb, code, sizeof(code), stack);
 }
 
-static void assert_stmt_for_ldc_int(CuTest *ct, enum constant_type expected_const_type, long expected_value, u1 cp_type)
+static void assert_stmt_for_ldc_int(CuTest *ct, enum constant_type expected_const_type,
+				    long expected_value, u1 cp_type)
 {
 	ConstantPoolEntry cp_infos[] = { cpu_to_be64(expected_value) };
 	u1 cp_types[] = { cp_type };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC, 0x00, 0x00, &stack);
-	assert_stmt_type_and_const_operand(ct, stmt, STMT_ASSIGN, expected_const_type, expected_value);
+	struct statement *stmt =
+		create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos),
+					       cp_types, OPC_LDC, 0x00, 0x00,
+					       &stack);
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
+	assert_long_long_const_operand(ct, stmt, expected_const_type, expected_value);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -193,8 +192,12 @@ static void assert_stmt_for_ldc_float(CuTest *ct, float expected_value)
 	u1 cp_types[] = { CONSTANT_Float };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, OPC_LDC, 0x00, 0x00, &stack);
-	__assert_stmt_operand_double(ct, stmt, CONST_FLOAT, expected_value);
+	struct statement *stmt =
+		create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos),
+					       cp_types, OPC_LDC, 0x00, 0x00,
+					       &stack);
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
+	assert_double_const_operand(ct, CONST_FLOAT, expected_value, &stmt->operand);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -215,7 +218,9 @@ void test_convert_ldc(CuTest *ct)
 	assert_stmt_for_ldc_int(ct, CONST_REFERENCE, 0xDEADBEEF, CONSTANT_String);
 }
 
-static void assert_stmt_for_ldc_x_long(CuTest *ct, enum constant_type expected_const_type, long long expected_value, u1 cp_type, unsigned char opcode)
+static void assert_stmt_for_ldc_x_long(CuTest *ct, enum constant_type expected_const_type,
+				       long long expected_value, u1 cp_type,
+				       unsigned char opcode)
 {
 	ConstantPoolEntry cp_infos[257];
 	cp_infos[256] = cpu_to_be64(expected_value);
@@ -223,8 +228,12 @@ static void assert_stmt_for_ldc_x_long(CuTest *ct, enum constant_type expected_c
 	cp_types[256] = cp_type;
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, opcode, 0x01, 0x00, &stack);
-	assert_stmt_type_and_const_operand(ct, stmt, STMT_ASSIGN, expected_const_type, expected_value);
+	struct statement *stmt =
+		create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos),
+					       cp_types, opcode, 0x01, 0x00,
+					       &stack);
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
+	assert_long_long_const_operand(ct, stmt, expected_const_type, expected_value);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -241,8 +250,12 @@ static void __assert_stmt_for_ldc_x_double(CuTest *ct,
 	cp_types[256] = cp_type;
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos), cp_types, opcode, 0x01, 0x00, &stack);
-	__assert_stmt_operand_double(ct, stmt, expected_constant_type, expected_value);
+	struct statement *stmt =
+		create_stmt_with_constant_pool(cp_infos, sizeof(cp_infos),
+					       cp_types, opcode, 0x01, 0x00,
+					       &stack);
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
+	assert_double_const_operand(ct, expected_constant_type, expected_value, &stmt->operand);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
