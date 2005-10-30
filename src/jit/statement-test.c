@@ -405,9 +405,10 @@ static void assert_temporary_operand(CuTest *ct, unsigned long expected,
 	CuAssertIntEquals(ct, expected, operand->o_temporary);
 }
 
-static void assert_convert_iaload(CuTest *ct, unsigned long arrayref, unsigned long index)
+static void assert_convert_x_aload(CuTest *ct, unsigned char opc,
+				   unsigned long arrayref, unsigned long index)
 {
-	unsigned char code[] = { OPC_IALOAD };
+	unsigned char code[] = { opc };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	stack_push(&stack, arrayref);
 	stack_push(&stack, index);
@@ -432,6 +433,30 @@ static void assert_convert_iaload(CuTest *ct, unsigned long arrayref, unsigned l
 
 void test_convert_iaload(CuTest *ct)
 {
-	assert_convert_iaload(ct, 0, 1);
-	assert_convert_iaload(ct, 1, 2);
+	assert_convert_x_aload(ct, OPC_IALOAD, 0, 1);
+	assert_convert_x_aload(ct, OPC_IALOAD, 1, 2);
+}
+
+void test_convert_laload(CuTest *ct)
+{
+	assert_convert_x_aload(ct, OPC_LALOAD, 0, 1);
+	assert_convert_x_aload(ct, OPC_LALOAD, 1, 2);
+}
+
+void test_convert_faload(CuTest *ct)
+{
+	assert_convert_x_aload(ct, OPC_FALOAD, 0, 1);
+	assert_convert_x_aload(ct, OPC_FALOAD, 1, 2);
+}
+
+void test_convert_daload(CuTest *ct)
+{
+	assert_convert_x_aload(ct, OPC_DALOAD, 0, 1);
+	assert_convert_x_aload(ct, OPC_DALOAD, 1, 2);
+}
+
+void test_convert_aaload(CuTest *ct)
+{
+	assert_convert_x_aload(ct, OPC_AALOAD, 0, 1);
+	assert_convert_x_aload(ct, OPC_AALOAD, 1, 2);
 }

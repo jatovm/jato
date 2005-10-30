@@ -222,8 +222,8 @@ static void set_temporary_operand(struct operand *operand,
 	operand->o_temporary = temporary;
 }
 
-static void convert_iaload(struct classblock *cb, unsigned char *code, size_t len,
-			   struct statement *stmt, struct operand_stack *stack)
+static void convert_x_aload(struct classblock *cb, unsigned char *code, size_t len,
+			    struct statement *stmt, struct operand_stack *stack)
 {
 	unsigned long index = stack_pop(stack);
 	unsigned long arrayref = stack_pop(stack);
@@ -300,7 +300,11 @@ static convert_fn_t converters[] = {
 	[OPC_ALOAD_1]		= convert_aload_x,
 	[OPC_ALOAD_2]		= convert_aload_x,
 	[OPC_ALOAD_3]		= convert_aload_x,
-	[OPC_IALOAD]		= convert_iaload,
+	[OPC_IALOAD]		= convert_x_aload,
+	[OPC_LALOAD]		= convert_x_aload,
+	[OPC_FALOAD]		= convert_x_aload,
+	[OPC_DALOAD]		= convert_x_aload,
+	[OPC_AALOAD]		= convert_x_aload,
 };
 
 static void convert_to_stmt(struct classblock *cb, unsigned char *code,
