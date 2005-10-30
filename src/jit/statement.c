@@ -222,6 +222,15 @@ static void set_temporary_operand(struct operand *operand,
 	operand->o_temporary = temporary;
 }
 
+static void set_arrayref_operand(struct operand *operand,
+				 unsigned long arrayref,
+				 unsigned long index)
+{
+	operand->o_type = OPERAND_ARRAYREF;
+	operand->o_arrayref = arrayref; 
+	operand->o_index = index;
+}
+
 static void convert_x_aload(struct classblock *cb, unsigned char *code, size_t len,
 			    struct statement *stmt, struct operand_stack *stack)
 {
@@ -232,9 +241,8 @@ static void convert_x_aload(struct classblock *cb, unsigned char *code, size_t l
 
 	struct statement *assign = malloc(sizeof(struct statement));
 	assert(assign);
-	assign->type = STMT_ARRAY_ASSIGN;
-	set_temporary_operand(&assign->s_left, arrayref);
-	set_temporary_operand(&assign->s_right, index);
+	assign->type = STMT_ASSIGN;
+	set_arrayref_operand(&assign->s_left, arrayref, index);
 
 	stack_push(stack, assign->target);
 

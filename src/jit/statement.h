@@ -10,7 +10,6 @@ struct operand_stack;
 enum statement_type {
 	STMT_NOP,
 	STMT_ASSIGN,
-	STMT_ARRAY_ASSIGN,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 };

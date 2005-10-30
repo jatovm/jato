@@ -405,6 +405,15 @@ static void assert_temporary_operand(CuTest *ct, unsigned long expected,
 	CuAssertIntEquals(ct, expected, operand->o_temporary);
 }
 
+static void assert_arrayref_operand(CuTest *ct, unsigned long expected_arrayref,
+				    unsigned long expected_index,
+				    struct operand *operand)
+{
+	CuAssertIntEquals(ct, OPERAND_ARRAYREF, operand->o_type);
+	CuAssertIntEquals(ct, expected_arrayref, operand->o_arrayref);
+	CuAssertIntEquals(ct, expected_index, operand->o_index);
+}
+
 static void assert_convert_x_aload(CuTest *ct, unsigned char opc,
 				   unsigned long arrayref, unsigned long index)
 {
@@ -424,9 +433,8 @@ static void assert_convert_x_aload(CuTest *ct, unsigned char opc,
 	assert_temporary_operand(ct, index, &arraycheck->s_right);
 
 	struct statement *assign = arraycheck->next;
-	CuAssertIntEquals(ct, STMT_ARRAY_ASSIGN, assign->type);
-	assert_temporary_operand(ct, arrayref, &assign->s_left);
-	assert_temporary_operand(ct, index, &assign->s_right);
+	CuAssertIntEquals(ct, STMT_ASSIGN, assign->type);
+	assert_arrayref_operand(ct, arrayref, index, &assign->s_left);
 	CuAssertIntEquals(ct, stack_pop(&stack), assign->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 }
