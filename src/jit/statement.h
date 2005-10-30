@@ -16,7 +16,7 @@ enum statement_type {
 struct statement {
 	enum statement_type type;	/* Type of the statement.  */
 	unsigned long target;		/* Target temporary of the statement.  */
-	struct operand operand;		/* Operand of the statement.  */
+	struct operand s_left;		/* Left operand of the statement.  */
 	struct statement *next;		/* Next statement. */
 };
 

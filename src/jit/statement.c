@@ -20,7 +20,7 @@ static void convert_aconst_null(struct classblock *cb, unsigned char *code,
 				struct operand_stack *stack)
 {
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_REFERENCE;
+	stmt->s_left.o_const.type = CONST_REFERENCE;
 }
 
 static void convert_iconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -28,8 +28,8 @@ static void convert_iconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_INT;
-	stmt->operand.o_const.value = code[0]-OPC_ICONST_0;
+	stmt->s_left.o_const.type = CONST_INT;
+	stmt->s_left.o_const.value = code[0]-OPC_ICONST_0;
 }
 
 static void convert_lconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -37,8 +37,8 @@ static void convert_lconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_LONG;
-	stmt->operand.o_const.value = code[0]-OPC_LCONST_0;
+	stmt->s_left.o_const.type = CONST_LONG;
+	stmt->s_left.o_const.value = code[0]-OPC_LCONST_0;
 }
 
 static void convert_fconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -46,8 +46,8 @@ static void convert_fconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_FLOAT;
-	stmt->operand.o_const.fvalue = code[0]-OPC_FCONST_0;
+	stmt->s_left.o_const.type = CONST_FLOAT;
+	stmt->s_left.o_const.fvalue = code[0]-OPC_FCONST_0;
 }
 
 static void convert_dconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -55,8 +55,8 @@ static void convert_dconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_DOUBLE;
-	stmt->operand.o_const.fvalue = code[0]-OPC_DCONST_0;
+	stmt->s_left.o_const.type = CONST_DOUBLE;
+	stmt->s_left.o_const.fvalue = code[0]-OPC_DCONST_0;
 }
 
 static void convert_bipush(struct classblock *cb, unsigned char *code, size_t len,
@@ -64,8 +64,8 @@ static void convert_bipush(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 1);
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_INT;
-	stmt->operand.o_const.value = (char)code[1];
+	stmt->s_left.o_const.type = CONST_INT;
+	stmt->s_left.o_const.value = (char)code[1];
 }
 
 static void convert_sipush(struct classblock *cb, unsigned char *code, size_t len,
@@ -73,8 +73,8 @@ static void convert_sipush(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 2);
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_const.type = CONST_INT;
-	stmt->operand.o_const.value = (short) be16_to_cpu(*(u2*) &code[1]);
+	stmt->s_left.o_const.type = CONST_INT;
+	stmt->s_left.o_const.value = (short) be16_to_cpu(*(u2*) &code[1]);
 }
 
 static void __convert_ldc(struct constant_pool *cp, unsigned long cp_idx,
@@ -85,24 +85,24 @@ static void __convert_ldc(struct constant_pool *cp, unsigned long cp_idx,
 	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
 	switch (type) {
 		case CONSTANT_Integer:
-			stmt->operand.o_const.type = CONST_INT;
-			stmt->operand.o_const.value = entry;
+			stmt->s_left.o_const.type = CONST_INT;
+			stmt->s_left.o_const.value = entry;
 			break;
 		case CONSTANT_Float:
-			stmt->operand.o_const.type = CONST_FLOAT;
-			stmt->operand.o_const.fvalue = *(float *) &entry;
+			stmt->s_left.o_const.type = CONST_FLOAT;
+			stmt->s_left.o_const.fvalue = *(float *) &entry;
 			break;
 		case CONSTANT_String:
-			stmt->operand.o_const.type = CONST_REFERENCE;
-			stmt->operand.o_const.value = entry;
+			stmt->s_left.o_const.type = CONST_REFERENCE;
+			stmt->s_left.o_const.value = entry;
 			break;
 		case CONSTANT_Long:
-			stmt->operand.o_const.type = CONST_LONG;
-			stmt->operand.o_const.value = entry;
+			stmt->s_left.o_const.type = CONST_LONG;
+			stmt->s_left.o_const.value = entry;
 			break;
 		case CONSTANT_Double:
-			stmt->operand.o_const.type = CONST_DOUBLE;
-			stmt->operand.o_const.fvalue = *(double *) &entry;
+			stmt->s_left.o_const.type = CONST_DOUBLE;
+			stmt->s_left.o_const.fvalue = *(double *) &entry;
 			break;
 		default:
 			assert(!"unknown constant type");
@@ -137,9 +137,9 @@ static void __convert_load(unsigned char lv_index, enum local_variable_type lv_t
 			   struct statement *stmt, struct operand_stack *stack)
 {
 	stmt->type = STMT_ASSIGN;
-	stmt->operand.o_type = OPERAND_LOCAL_VARIABLE;
-	stmt->operand.o_local.lv_type = lv_type;
-	stmt->operand.o_local.lv_index = lv_index;
+	stmt->s_left.o_type = OPERAND_LOCAL_VARIABLE;
+	stmt->s_left.o_local.lv_type = lv_type;
+	stmt->s_left.o_local.lv_index = lv_index;
 	stack_push(stack, stmt->target);
 }
 
@@ -223,14 +223,14 @@ static void convert_iaload(struct classblock *cb, unsigned char *code, size_t le
 
 	assert(len > 0);
 	stmt->type = STMT_NULL_CHECK;
-	stmt->operand.o_type = OPERAND_TEMPORARY;
-	stmt->operand.o_temporary = arrayref;
+	stmt->s_left.o_type = OPERAND_TEMPORARY;
+	stmt->s_left.o_temporary = arrayref;
 
 	stmt->next = malloc(sizeof(struct statement));
 	assert(stmt->next);
 	stmt->next->type = STMT_ASSIGN;
-	stmt->next->operand.o_type = OPERAND_TEMPORARY;
-	stmt->next->operand.o_temporary = index;
+	stmt->next->s_left.o_type = OPERAND_TEMPORARY;
+	stmt->next->s_left.o_temporary = index;
 }
 
 typedef void (*convert_fn_t)(struct classblock *, unsigned char *, size_t,
