@@ -384,3 +384,29 @@ void test_convert_aload_x(CuTest *ct)
 	assert_stmt_for_load(ct, OPC_ALOAD_2, LOCAL_VARIABLE_REFERENCE, 0x02);
 	assert_stmt_for_load(ct, OPC_ALOAD_3, LOCAL_VARIABLE_REFERENCE, 0x03);
 }
+
+static void assert_temporary_operand(CuTest *ct, unsigned long expected,
+				     struct operand *operand)
+{
+	CuAssertIntEquals(ct, OPERAND_TEMPORARY, operand->o_type);
+	CuAssertIntEquals(ct, expected, operand->o_temporary);
+}
+
+static void assert_convert_iaload(CuTest *ct, unsigned long arrayref, unsigned long index)
+{
+	unsigned char code[] = { OPC_IALOAD };
+	struct operand_stack stack = OPERAND_STACK_INIT;
+	stack_push(&stack, arrayref);
+	stack_push(&stack, index);
+	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), &stack);
+	CuAssertIntEquals(ct, STMT_NULL_CHECK, stmt->type);
+	assert_temporary_operand(ct, arrayref, &stmt->operand);
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->next->type);
+	assert_temporary_operand(ct, index, &stmt->next->operand);
+}
+
+void test_convert_iaload(CuTest *ct)
+{
+	assert_convert_iaload(ct, 0, 1);
+	assert_convert_iaload(ct, 1, 2);
+}

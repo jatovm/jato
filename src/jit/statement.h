@@ -9,13 +9,15 @@ struct operand_stack;
 
 enum statement_type {
 	STMT_NOP,
-	STMT_ASSIGN
+	STMT_ASSIGN,
+	STMT_NULL_CHECK,
 };
 
 struct statement {
 	enum statement_type type;	/* Type of the statement.  */
 	unsigned long target;		/* Target temporary of the statement.  */
 	struct operand operand;		/* Operand of the statement.  */
+	struct statement *next;		/* Next statement. */
 };
 
 extern struct statement *stmt_from_bytecode(struct classblock *,

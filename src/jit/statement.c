@@ -215,6 +215,24 @@ static void convert_aload_x(struct classblock *cb, unsigned char *code, size_t l
 	__convert_load(code[0]-OPC_ALOAD_0, LOCAL_VARIABLE_REFERENCE, stmt, stack);
 }
 
+static void convert_iaload(struct classblock *cb, unsigned char *code, size_t len,
+			   struct statement *stmt, struct operand_stack *stack)
+{
+	unsigned long index = stack_pop(stack);
+	unsigned long arrayref = stack_pop(stack);
+
+	assert(len > 0);
+	stmt->type = STMT_NULL_CHECK;
+	stmt->operand.o_type = OPERAND_TEMPORARY;
+	stmt->operand.o_temporary = arrayref;
+
+	stmt->next = malloc(sizeof(struct statement));
+	assert(stmt->next);
+	stmt->next->type = STMT_ASSIGN;
+	stmt->next->operand.o_type = OPERAND_TEMPORARY;
+	stmt->next->operand.o_temporary = index;
+}
+
 typedef void (*convert_fn_t)(struct classblock *, unsigned char *, size_t,
 			     struct statement *, struct operand_stack *stack);
 
@@ -265,6 +283,7 @@ static convert_fn_t converters[] = {
 	[OPC_ALOAD_1]		= convert_aload_x,
 	[OPC_ALOAD_2]		= convert_aload_x,
 	[OPC_ALOAD_3]		= convert_aload_x,
+	[OPC_IALOAD]		= convert_iaload,
 };
 
 static void convert_to_stmt(struct classblock *cb, unsigned char *code,
