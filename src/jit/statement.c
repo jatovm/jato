@@ -20,7 +20,7 @@ static void convert_aconst_null(struct classblock *cb, unsigned char *code,
 				struct operand_stack *stack)
 {
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_const.type = CONST_REFERENCE;
+	stmt->s_left.constant.type = CONST_REFERENCE;
 }
 
 static void convert_iconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -28,8 +28,8 @@ static void convert_iconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_const.type = CONST_INT;
-	stmt->s_left.o_const.value = code[0]-OPC_ICONST_0;
+	stmt->s_left.constant.type = CONST_INT;
+	stmt->s_left.constant.value = code[0]-OPC_ICONST_0;
 }
 
 static void convert_lconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -37,8 +37,8 @@ static void convert_lconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_const.type = CONST_LONG;
-	stmt->s_left.o_const.value = code[0]-OPC_LCONST_0;
+	stmt->s_left.constant.type = CONST_LONG;
+	stmt->s_left.constant.value = code[0]-OPC_LCONST_0;
 }
 
 static void convert_fconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -46,8 +46,8 @@ static void convert_fconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_const.type = CONST_FLOAT;
-	stmt->s_left.o_const.fvalue = code[0]-OPC_FCONST_0;
+	stmt->s_left.constant.type = CONST_FLOAT;
+	stmt->s_left.constant.fvalue = code[0]-OPC_FCONST_0;
 }
 
 static void convert_dconst(struct classblock *cb, unsigned char *code, size_t len,
@@ -55,8 +55,8 @@ static void convert_dconst(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 0);
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_const.type = CONST_DOUBLE;
-	stmt->s_left.o_const.fvalue = code[0]-OPC_DCONST_0;
+	stmt->s_left.constant.type = CONST_DOUBLE;
+	stmt->s_left.constant.fvalue = code[0]-OPC_DCONST_0;
 }
 
 static void convert_bipush(struct classblock *cb, unsigned char *code, size_t len,
@@ -64,8 +64,8 @@ static void convert_bipush(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 1);
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_const.type = CONST_INT;
-	stmt->s_left.o_const.value = (char)code[1];
+	stmt->s_left.constant.type = CONST_INT;
+	stmt->s_left.constant.value = (char)code[1];
 }
 
 static void convert_sipush(struct classblock *cb, unsigned char *code, size_t len,
@@ -73,8 +73,8 @@ static void convert_sipush(struct classblock *cb, unsigned char *code, size_t le
 {
 	assert(len > 2);
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_const.type = CONST_INT;
-	stmt->s_left.o_const.value = (short) be16_to_cpu(*(u2*) &code[1]);
+	stmt->s_left.constant.type = CONST_INT;
+	stmt->s_left.constant.value = (short) be16_to_cpu(*(u2*) &code[1]);
 }
 
 static void __convert_ldc(struct constant_pool *cp, unsigned long cp_idx,
@@ -85,24 +85,24 @@ static void __convert_ldc(struct constant_pool *cp, unsigned long cp_idx,
 	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
 	switch (type) {
 		case CONSTANT_Integer:
-			stmt->s_left.o_const.type = CONST_INT;
-			stmt->s_left.o_const.value = entry;
+			stmt->s_left.constant.type = CONST_INT;
+			stmt->s_left.constant.value = entry;
 			break;
 		case CONSTANT_Float:
-			stmt->s_left.o_const.type = CONST_FLOAT;
-			stmt->s_left.o_const.fvalue = *(float *) &entry;
+			stmt->s_left.constant.type = CONST_FLOAT;
+			stmt->s_left.constant.fvalue = *(float *) &entry;
 			break;
 		case CONSTANT_String:
-			stmt->s_left.o_const.type = CONST_REFERENCE;
-			stmt->s_left.o_const.value = entry;
+			stmt->s_left.constant.type = CONST_REFERENCE;
+			stmt->s_left.constant.value = entry;
 			break;
 		case CONSTANT_Long:
-			stmt->s_left.o_const.type = CONST_LONG;
-			stmt->s_left.o_const.value = entry;
+			stmt->s_left.constant.type = CONST_LONG;
+			stmt->s_left.constant.value = entry;
 			break;
 		case CONSTANT_Double:
-			stmt->s_left.o_const.type = CONST_DOUBLE;
-			stmt->s_left.o_const.fvalue = *(double *) &entry;
+			stmt->s_left.constant.type = CONST_DOUBLE;
+			stmt->s_left.constant.fvalue = *(double *) &entry;
 			break;
 		default:
 			assert(!"unknown constant type");
@@ -133,102 +133,102 @@ static void convert_ldc2_w(struct classblock *cb, unsigned char *code, size_t le
 	stack_push(stack, stmt->target);
 }
 
-static void __convert_load(unsigned char lv_index, enum local_variable_type lv_type,
+static void __convert_load(unsigned char index, enum local_variable_type type,
 			   struct statement *stmt, struct operand_stack *stack)
 {
 	stmt->type = STMT_ASSIGN;
-	stmt->s_left.o_type = OPERAND_LOCAL_VARIABLE;
-	stmt->s_left.o_local.lv_type = lv_type;
-	stmt->s_left.o_local.lv_index = lv_index;
+	stmt->s_left.type = OPERAND_LOCAL_VAR;
+	stmt->s_left.local_var.type = type;
+	stmt->s_left.local_var.index = index;
 	stack_push(stack, stmt->target);
 }
 
-static void convert_load(unsigned char *code, size_t len, enum local_variable_type lv_type,
+static void convert_load(unsigned char *code, size_t len, enum local_variable_type type,
 			 struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
-	__convert_load(code[1], lv_type, stmt, stack);
+	__convert_load(code[1], type, stmt, stack);
 }
 
 static void convert_iload(struct classblock *cb, unsigned char *code, size_t len,
 			  struct statement *stmt, struct operand_stack *stack)
 {
-	convert_load(code, len, LOCAL_VARIABLE_INT, stmt, stack);
+	convert_load(code, len, LOCAL_VAR_INT, stmt, stack);
 }
 
 static void convert_lload(struct classblock *cb, unsigned char *code, size_t len,
 			  struct statement *stmt, struct operand_stack *stack)
 {
-	convert_load(code, len, LOCAL_VARIABLE_LONG, stmt, stack);
+	convert_load(code, len, LOCAL_VAR_LONG, stmt, stack);
 }
 
 static void convert_fload(struct classblock *cb, unsigned char *code, size_t len,
 			  struct statement *stmt, struct operand_stack *stack)
 {
-	convert_load(code, len, LOCAL_VARIABLE_FLOAT, stmt, stack);
+	convert_load(code, len, LOCAL_VAR_FLOAT, stmt, stack);
 }
 
 static void convert_dload(struct classblock *cb, unsigned char *code, size_t len,
 			  struct statement *stmt, struct operand_stack *stack)
 {
-	convert_load(code, len, LOCAL_VARIABLE_DOUBLE, stmt, stack);
+	convert_load(code, len, LOCAL_VAR_DOUBLE, stmt, stack);
 }
 
 static void convert_aload(struct classblock *cb, unsigned char *code, size_t len,
 			  struct statement *stmt, struct operand_stack *stack)
 {
-	convert_load(code, len, LOCAL_VARIABLE_REFERENCE, stmt, stack);
+	convert_load(code, len, LOCAL_VAR_REFERENCE, stmt, stack);
 }
 
 static void convert_iload_x(struct classblock *cb, unsigned char *code, size_t len,
 			    struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
-	__convert_load(code[0]-OPC_ILOAD_0, LOCAL_VARIABLE_INT, stmt, stack);
+	__convert_load(code[0]-OPC_ILOAD_0, LOCAL_VAR_INT, stmt, stack);
 }
 
 static void convert_lload_x(struct classblock *cb, unsigned char *code, size_t len,
 			    struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
-	__convert_load(code[0]-OPC_LLOAD_0, LOCAL_VARIABLE_LONG, stmt, stack);
+	__convert_load(code[0]-OPC_LLOAD_0, LOCAL_VAR_LONG, stmt, stack);
 }
 
 static void convert_fload_x(struct classblock *cb, unsigned char *code, size_t len,
 			    struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
-	__convert_load(code[0]-OPC_FLOAD_0, LOCAL_VARIABLE_FLOAT, stmt, stack);
+	__convert_load(code[0]-OPC_FLOAD_0, LOCAL_VAR_FLOAT, stmt, stack);
 }
 
 static void convert_dload_x(struct classblock *cb, unsigned char *code, size_t len,
 			    struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
-	__convert_load(code[0]-OPC_DLOAD_0, LOCAL_VARIABLE_DOUBLE, stmt, stack);
+	__convert_load(code[0]-OPC_DLOAD_0, LOCAL_VAR_DOUBLE, stmt, stack);
 }
 
 static void convert_aload_x(struct classblock *cb, unsigned char *code, size_t len,
 			    struct statement *stmt, struct operand_stack *stack)
 {
 	assert(len > 1);
-	__convert_load(code[0]-OPC_ALOAD_0, LOCAL_VARIABLE_REFERENCE, stmt, stack);
+	__convert_load(code[0]-OPC_ALOAD_0, LOCAL_VAR_REFERENCE, stmt, stack);
 }
 
 static void set_temporary_operand(struct operand *operand,
 				  unsigned long temporary)
 {
-	operand->o_type = OPERAND_TEMPORARY;
-	operand->o_temporary = temporary;
+	operand->type = OPERAND_TEMPORARY;
+	operand->temporary = temporary;
 }
 
 static void set_arrayref_operand(struct operand *operand,
 				 unsigned long arrayref,
 				 unsigned long index)
 {
-	operand->o_type = OPERAND_ARRAYREF;
-	operand->o_arrayref = arrayref; 
-	operand->o_index = index;
+	operand->type = OPERAND_ARRAYREF;
+	operand->arrayref = arrayref; 
+	operand->array_index = index;
 }
 
 static void convert_x_aload(struct classblock *cb, unsigned char *code, size_t len,

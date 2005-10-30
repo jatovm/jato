@@ -6,27 +6,27 @@
 
 enum operand_type {
 	OPERAND_CONSTANT,
-	OPERAND_LOCAL_VARIABLE,
+	OPERAND_LOCAL_VAR,
 	OPERAND_TEMPORARY,
 	OPERAND_ARRAYREF,
 };
 
 struct operand {
-	enum operand_type o_type;
+	enum operand_type type;
 	union {
 		/* OPERAND_CONSTANT */
-		struct constant o_const;
+		struct constant constant;
 
-		/* OPERAND_LOCAL_VARIABLE */
-		struct local_variable o_local;
+		/* OPERAND_LOCAL_VAR */
+		struct local_variable local_var;
 
 		/* OPERAND_TEMPORARY */
-		unsigned long o_temporary;
+		unsigned long temporary;
 
 		/* OPERAND_ARRAYREF */
 		struct {
-			unsigned long o_arrayref;
-			unsigned long o_index;
+			unsigned long arrayref;
+			unsigned long array_index;
 		};
 	};
 };

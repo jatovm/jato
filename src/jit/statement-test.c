@@ -24,9 +24,9 @@ static void assert_long_long_const_operand(CuTest *ct, struct statement *stmt,
 					 enum constant_type expected_const_type,
 					 long long expected_value)
 {
-	CuAssertIntEquals(ct, OPERAND_CONSTANT, stmt->s_left.o_type);
-	CuAssertIntEquals(ct, expected_const_type, stmt->s_left.o_const.type);
-	CuAssertIntEquals(ct, expected_value, stmt->s_left.o_const.value);
+	CuAssertIntEquals(ct, OPERAND_CONSTANT, stmt->s_left.type);
+	CuAssertIntEquals(ct, expected_const_type, stmt->s_left.constant.type);
+	CuAssertIntEquals(ct, expected_value, stmt->s_left.constant.value);
 }
 
 static void __assert_stmt_operand_long(CuTest *ct, struct classblock *cb,
@@ -81,9 +81,9 @@ static void assert_double_const_operand(CuTest *ct,
 					   double expected_value,
 					   struct operand *operand)
 {
-	CuAssertIntEquals(ct, OPERAND_CONSTANT, operand->o_type);
-	CuAssertIntEquals(ct, expected_const_type, operand->o_const.type);
-	CuAssertDblEquals(ct, expected_value, operand->o_const.fvalue, 0.01f);
+	CuAssertIntEquals(ct, OPERAND_CONSTANT, operand->type);
+	CuAssertIntEquals(ct, expected_const_type, operand->constant.type);
+	CuAssertDblEquals(ct, expected_value, operand->constant.fvalue, 0.01f);
 }
 
 static void assert_stmt_operand_double(CuTest *ct,
@@ -315,9 +315,9 @@ static void assert_stmt_for_load(CuTest *ct, unsigned char opc,
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt = stmt_from_bytecode(NULL, code, sizeof(code), &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
-	CuAssertIntEquals(ct, OPERAND_LOCAL_VARIABLE, stmt->s_left.o_type);
-	CuAssertIntEquals(ct, expected_index, stmt->s_left.o_local.lv_index);
-	CuAssertIntEquals(ct, expected_local_variable_type, stmt->s_left.o_local.lv_type);
+	CuAssertIntEquals(ct, OPERAND_LOCAL_VAR, stmt->s_left.type);
+	CuAssertIntEquals(ct, expected_index, stmt->s_left.local_var.index);
+	CuAssertIntEquals(ct, expected_local_variable_type, stmt->s_left.local_var.type);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -325,93 +325,93 @@ static void assert_stmt_for_load(CuTest *ct, unsigned char opc,
 
 void test_convert_iload(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x00);
-	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0x01);
-	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VARIABLE_INT, 0xFF);
+	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VAR_INT, 0x00);
+	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VAR_INT, 0x01);
+	assert_stmt_for_load(ct, OPC_ILOAD, LOCAL_VAR_INT, 0xFF);
 }
 
 void test_convert_lload(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x00);
-	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0x01);
-	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VARIABLE_LONG, 0xFF);
+	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VAR_LONG, 0x00);
+	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VAR_LONG, 0x01);
+	assert_stmt_for_load(ct, OPC_LLOAD, LOCAL_VAR_LONG, 0xFF);
 }
 
 void test_convert_fload(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VARIABLE_FLOAT, 0x00);
-	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VARIABLE_FLOAT, 0x01);
-	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VARIABLE_FLOAT, 0xFF);
+	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VAR_FLOAT, 0x00);
+	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VAR_FLOAT, 0x01);
+	assert_stmt_for_load(ct, OPC_FLOAD, LOCAL_VAR_FLOAT, 0xFF);
 }
 
 void test_convert_dload(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VARIABLE_DOUBLE, 0x00);
-	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VARIABLE_DOUBLE, 0x01);
-	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VARIABLE_DOUBLE, 0xFF);
+	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VAR_DOUBLE, 0x00);
+	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VAR_DOUBLE, 0x01);
+	assert_stmt_for_load(ct, OPC_DLOAD, LOCAL_VAR_DOUBLE, 0xFF);
 }
 
 void test_convert_aload(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0x00);
-	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0x01);
-	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VARIABLE_REFERENCE, 0xFF);
+	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VAR_REFERENCE, 0x00);
+	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VAR_REFERENCE, 0x01);
+	assert_stmt_for_load(ct, OPC_ALOAD, LOCAL_VAR_REFERENCE, 0xFF);
 }
 
 void test_convert_iload_x(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_ILOAD_0, LOCAL_VARIABLE_INT, 0x00);
-	assert_stmt_for_load(ct, OPC_ILOAD_1, LOCAL_VARIABLE_INT, 0x01);
-	assert_stmt_for_load(ct, OPC_ILOAD_2, LOCAL_VARIABLE_INT, 0x02);
-	assert_stmt_for_load(ct, OPC_ILOAD_3, LOCAL_VARIABLE_INT, 0x03);
+	assert_stmt_for_load(ct, OPC_ILOAD_0, LOCAL_VAR_INT, 0x00);
+	assert_stmt_for_load(ct, OPC_ILOAD_1, LOCAL_VAR_INT, 0x01);
+	assert_stmt_for_load(ct, OPC_ILOAD_2, LOCAL_VAR_INT, 0x02);
+	assert_stmt_for_load(ct, OPC_ILOAD_3, LOCAL_VAR_INT, 0x03);
 }
 
 void test_convert_lload_x(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_LLOAD_0, LOCAL_VARIABLE_LONG, 0x00);
-	assert_stmt_for_load(ct, OPC_LLOAD_1, LOCAL_VARIABLE_LONG, 0x01);
-	assert_stmt_for_load(ct, OPC_LLOAD_2, LOCAL_VARIABLE_LONG, 0x02);
-	assert_stmt_for_load(ct, OPC_LLOAD_3, LOCAL_VARIABLE_LONG, 0x03);
+	assert_stmt_for_load(ct, OPC_LLOAD_0, LOCAL_VAR_LONG, 0x00);
+	assert_stmt_for_load(ct, OPC_LLOAD_1, LOCAL_VAR_LONG, 0x01);
+	assert_stmt_for_load(ct, OPC_LLOAD_2, LOCAL_VAR_LONG, 0x02);
+	assert_stmt_for_load(ct, OPC_LLOAD_3, LOCAL_VAR_LONG, 0x03);
 }
 
 void test_convert_fload_x(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_FLOAD_0, LOCAL_VARIABLE_FLOAT, 0x00);
-	assert_stmt_for_load(ct, OPC_FLOAD_1, LOCAL_VARIABLE_FLOAT, 0x01);
-	assert_stmt_for_load(ct, OPC_FLOAD_2, LOCAL_VARIABLE_FLOAT, 0x02);
-	assert_stmt_for_load(ct, OPC_FLOAD_3, LOCAL_VARIABLE_FLOAT, 0x03);
+	assert_stmt_for_load(ct, OPC_FLOAD_0, LOCAL_VAR_FLOAT, 0x00);
+	assert_stmt_for_load(ct, OPC_FLOAD_1, LOCAL_VAR_FLOAT, 0x01);
+	assert_stmt_for_load(ct, OPC_FLOAD_2, LOCAL_VAR_FLOAT, 0x02);
+	assert_stmt_for_load(ct, OPC_FLOAD_3, LOCAL_VAR_FLOAT, 0x03);
 }
 
 void test_convert_dload_x(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_DLOAD_0, LOCAL_VARIABLE_DOUBLE, 0x00);
-	assert_stmt_for_load(ct, OPC_DLOAD_1, LOCAL_VARIABLE_DOUBLE, 0x01);
-	assert_stmt_for_load(ct, OPC_DLOAD_2, LOCAL_VARIABLE_DOUBLE, 0x02);
-	assert_stmt_for_load(ct, OPC_DLOAD_3, LOCAL_VARIABLE_DOUBLE, 0x03);
+	assert_stmt_for_load(ct, OPC_DLOAD_0, LOCAL_VAR_DOUBLE, 0x00);
+	assert_stmt_for_load(ct, OPC_DLOAD_1, LOCAL_VAR_DOUBLE, 0x01);
+	assert_stmt_for_load(ct, OPC_DLOAD_2, LOCAL_VAR_DOUBLE, 0x02);
+	assert_stmt_for_load(ct, OPC_DLOAD_3, LOCAL_VAR_DOUBLE, 0x03);
 }
 
 void test_convert_aload_x(CuTest *ct)
 {
-	assert_stmt_for_load(ct, OPC_ALOAD_0, LOCAL_VARIABLE_REFERENCE, 0x00);
-	assert_stmt_for_load(ct, OPC_ALOAD_1, LOCAL_VARIABLE_REFERENCE, 0x01);
-	assert_stmt_for_load(ct, OPC_ALOAD_2, LOCAL_VARIABLE_REFERENCE, 0x02);
-	assert_stmt_for_load(ct, OPC_ALOAD_3, LOCAL_VARIABLE_REFERENCE, 0x03);
+	assert_stmt_for_load(ct, OPC_ALOAD_0, LOCAL_VAR_REFERENCE, 0x00);
+	assert_stmt_for_load(ct, OPC_ALOAD_1, LOCAL_VAR_REFERENCE, 0x01);
+	assert_stmt_for_load(ct, OPC_ALOAD_2, LOCAL_VAR_REFERENCE, 0x02);
+	assert_stmt_for_load(ct, OPC_ALOAD_3, LOCAL_VAR_REFERENCE, 0x03);
 }
 
 static void assert_temporary_operand(CuTest *ct, unsigned long expected,
 				     struct operand *operand)
 {
-	CuAssertIntEquals(ct, OPERAND_TEMPORARY, operand->o_type);
-	CuAssertIntEquals(ct, expected, operand->o_temporary);
+	CuAssertIntEquals(ct, OPERAND_TEMPORARY, operand->type);
+	CuAssertIntEquals(ct, expected, operand->temporary);
 }
 
 static void assert_arrayref_operand(CuTest *ct, unsigned long expected_arrayref,
 				    unsigned long expected_index,
 				    struct operand *operand)
 {
-	CuAssertIntEquals(ct, OPERAND_ARRAYREF, operand->o_type);
-	CuAssertIntEquals(ct, expected_arrayref, operand->o_arrayref);
-	CuAssertIntEquals(ct, expected_index, operand->o_index);
+	CuAssertIntEquals(ct, OPERAND_ARRAYREF, operand->type);
+	CuAssertIntEquals(ct, expected_arrayref, operand->arrayref);
+	CuAssertIntEquals(ct, expected_index, operand->array_index);
 }
 
 static void assert_convert_x_aload(CuTest *ct, unsigned char opc,
