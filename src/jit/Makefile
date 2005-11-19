@@ -1,5 +1,5 @@
-TEST_EXEC=run_all_tests
-ALLTESTS=all_test.c
+TESTRUNNER=test-runner
+TEST_SUITE=test-suite.c
 
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall 
@@ -22,12 +22,12 @@ $(HARNESS):
 tags:
 	exuberant-ctags -R
 
-gen-alltests:
-	sh make-tests.sh > $(ALLTESTS)
+gen-suite:
+	sh make-tests.sh > $(TEST_SUITE)
 
-test: $(OBJS) $(TESTS) $(HARNESS) gen-alltests
-	$(CC) $(CCFLAGS) $(INCLUDE) $(ALLTESTS) $(OBJS) $(TESTS) $(HARNESS) -o $(TEST_EXEC)
-	./$(TEST_EXEC)
+test: $(OBJS) $(TESTS) $(HARNESS) gen-suite
+	$(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(OBJS) $(TESTS) $(HARNESS) -o $(TESTRUNNER)
+	./$(TESTRUNNER)
 
 clean:
-	rm -rf $(TEST_EXEC) $(ALLTESTS) $(OBJS) $(HARNESS) $(TESTS) tags
+	rm -rf $(TESTRUNNER) $(TEST_SUITE) $(OBJS) $(HARNESS) $(TESTS) tags
