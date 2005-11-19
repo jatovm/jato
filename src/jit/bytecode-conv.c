@@ -271,9 +271,9 @@ static struct statement *convert_aload_x(struct classblock *cb,
 			      stack);
 }
 
-static struct statement *convert_x_aload(struct classblock *cb,
-					 unsigned char *code, size_t len,
-					 struct operand_stack *stack)
+static struct statement *convert_xaload(struct classblock *cb,
+					unsigned char *code, size_t len,
+					struct operand_stack *stack)
 {
 	unsigned long index = stack_pop(stack);
 	unsigned long arrayref = stack_pop(stack);
@@ -353,11 +353,11 @@ static convert_fn_t converters[] = {
 	[OPC_ALOAD_1] = convert_aload_x,
 	[OPC_ALOAD_2] = convert_aload_x,
 	[OPC_ALOAD_3] = convert_aload_x,
-	[OPC_IALOAD] = convert_x_aload,
-	[OPC_LALOAD] = convert_x_aload,
-	[OPC_FALOAD] = convert_x_aload,
-	[OPC_DALOAD] = convert_x_aload,
-	[OPC_AALOAD] = convert_x_aload,
+	[OPC_IALOAD] = convert_xaload,
+	[OPC_LALOAD] = convert_xaload,
+	[OPC_FALOAD] = convert_xaload,
+	[OPC_DALOAD] = convert_xaload,
+	[OPC_AALOAD] = convert_xaload,
 };
 
 static struct statement *convert_to_stmt(struct classblock *cb,
