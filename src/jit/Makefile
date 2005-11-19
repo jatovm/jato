@@ -5,7 +5,7 @@ CC = gcc
 CCFLAGS = -rdynamic -g -Wall 
 INCLUDE = -I. -I..
 OBJS = bytecode-conv.o
-TESTS = operand-stack-test.o statement-test.o
+TESTS = bytecode-conv-test.o operand-stack-test.o
 HARNESS = CuTest.o backtrace.o
 
 %.o: %.c
@@ -30,4 +30,4 @@ test: $(OBJS) $(TESTS) $(HARNESS) gen-alltests
 	./$(TEST_EXEC)
 
 clean:
-	rm -rf $(TEST_EXEC) $(ALLTESTS) $(OBJS) tags
+	rm -rf $(TEST_EXEC) $(ALLTESTS) $(OBJS) $(HARNESS) $(TESTS) tags
