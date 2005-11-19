@@ -1,15 +1,33 @@
 TEST_EXEC=run_all_tests
 ALLTESTS=all_test.c
 
+CC = gcc
+CCFLAGS = -rdynamic -g -Wall 
+INCLUDE = -I. -I..
+OBJS = bytecode-conv.o
+TESTS = operand-stack-test.o statement-test.o
+HARNESS = CuTest.o backtrace.o
+
+%.o: %.c
+	$(CC) $(CCFLAGS) $(INCLUDE) -c $< -o $@
+
 all: test
+
+$(OBJS):
+
+$(TESTS):
+
+$(HARNESS):
 
 tags:
 	exuberant-ctags -R
 
-test:
+gen-alltests:
 	sh make-tests.sh > $(ALLTESTS)
-	gcc -rdynamic -g -Wall -I. -I.. $(ALLTESTS) CuTest.c operand-stack-test.c statement-test.c bytecode-conv.c backtrace.c -o $(TEST_EXEC)
+
+test: $(OBJS) $(TESTS) $(HARNESS) gen-alltests
+	$(CC) $(CCFLAGS) $(INCLUDE) $(ALLTESTS) $(OBJS) $(TESTS) $(HARNESS) -o $(TEST_EXEC)
 	./$(TEST_EXEC)
 
 clean:
-	rm -rf $(TEST_EXEC) $(ALLTESTS) tags
+	rm -rf $(TEST_EXEC) $(ALLTESTS) $(OBJS) tags
