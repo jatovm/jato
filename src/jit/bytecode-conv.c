@@ -41,7 +41,6 @@ static struct statement *convert_iconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	assert(len > 0);
 	if (stmt)
 		operand_set_const(&stmt->s_left, CONST_INT,
 				  code[0] - OPC_ICONST_0);
@@ -53,7 +52,6 @@ static struct statement *convert_lconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	assert(len > 0);
 	if (stmt)
 		operand_set_const(&stmt->s_left, CONST_LONG,
 				  code[0] - OPC_LCONST_0);
@@ -65,7 +63,6 @@ static struct statement *convert_fconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	assert(len > 0);
 	if (stmt)
 		operand_set_fconst(&stmt->s_left, CONST_FLOAT,
 				   code[0] - OPC_FCONST_0);
@@ -77,7 +74,6 @@ static struct statement *convert_dconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	assert(len > 0);
 	if (stmt)
 		operand_set_fconst(&stmt->s_left, CONST_DOUBLE,
 				   code[0] - OPC_DCONST_0);
@@ -89,7 +85,6 @@ static struct statement *convert_bipush(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	assert(len > 1);
 	if (stmt)
 		operand_set_const(&stmt->s_left, CONST_INT, (char)code[1]);
 	return stmt;
@@ -100,7 +95,6 @@ static struct statement *convert_sipush(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	assert(len > 2);
 	if (stmt)
 		operand_set_const(&stmt->s_left, CONST_INT,
 				  (short)be16_to_cpu(*(u2 *) & code[1]));
@@ -144,7 +138,6 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 static struct statement *convert_ldc(struct classblock *cb, unsigned char *code,
 				     size_t len, struct operand_stack *stack)
 {
-	assert(len > 1);
 	struct statement *stmt = __convert_ldc(&cb->constant_pool, code[1]);
 	if (stmt)
 		stack_push(stack, stmt->target);
@@ -155,7 +148,6 @@ static struct statement *convert_ldc_w(struct classblock *cb,
 				       unsigned char *code, size_t len,
 				       struct operand_stack *stack)
 {
-	assert(len > 2);
 	struct statement *stmt =
 	    __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]));
 	if (stmt)
@@ -167,7 +159,6 @@ static struct statement *convert_ldc2_w(struct classblock *cb,
 					unsigned char *code, size_t len,
 					struct operand_stack *stack)
 {
-	assert(len > 2);
 	struct statement *stmt =
 	    __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]));
 	if (stmt)
@@ -191,7 +182,6 @@ static struct statement *convert_load(unsigned char *code, size_t len,
 				      enum local_variable_type type,
 				      struct operand_stack *stack)
 {
-	assert(len > 1);
 	return __convert_load(code[1], type, stack);
 }
 
@@ -234,7 +224,6 @@ static struct statement *convert_iload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	assert(len > 1);
 	return __convert_load(code[0] - OPC_ILOAD_0, LOCAL_VAR_INT, stack);
 }
 
@@ -242,7 +231,6 @@ static struct statement *convert_lload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	assert(len > 1);
 	return __convert_load(code[0] - OPC_LLOAD_0, LOCAL_VAR_LONG, stack);
 }
 
@@ -250,7 +238,6 @@ static struct statement *convert_fload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	assert(len > 1);
 	return __convert_load(code[0] - OPC_FLOAD_0, LOCAL_VAR_FLOAT, stack);
 }
 
@@ -258,7 +245,6 @@ static struct statement *convert_dload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	assert(len > 1);
 	return __convert_load(code[0] - OPC_DLOAD_0, LOCAL_VAR_DOUBLE, stack);
 }
 
@@ -266,7 +252,6 @@ static struct statement *convert_aload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	assert(len > 1);
 	return __convert_load(code[0] - OPC_ALOAD_0, LOCAL_VAR_REFERENCE,
 			      stack);
 }
@@ -277,10 +262,8 @@ static struct statement *convert_xaload(struct classblock *cb,
 {
 	unsigned long index = stack_pop(stack);
 	unsigned long arrayref = stack_pop(stack);
-
-	assert(len > 0);
-
 	struct statement *assign = malloc(sizeof(struct statement));
+
 	assert(assign);
 	assign->type = STMT_ASSIGN;
 	operand_set_arrayref(&assign->s_left, arrayref, index);
@@ -306,68 +289,73 @@ typedef struct statement *(*convert_fn_t) (struct classblock *,
 					   unsigned char *, size_t,
 					   struct operand_stack * stack);
 
-static convert_fn_t converters[] = {
-	[OPC_NOP] = convert_nop,
-	[OPC_ACONST_NULL] = convert_aconst_null,
-	[OPC_ICONST_M1] = convert_iconst,
-	[OPC_ICONST_0] = convert_iconst,
-	[OPC_ICONST_1] = convert_iconst,
-	[OPC_ICONST_2] = convert_iconst,
-	[OPC_ICONST_3] = convert_iconst,
-	[OPC_ICONST_4] = convert_iconst,
-	[OPC_ICONST_5] = convert_iconst,
-	[OPC_LCONST_0] = convert_lconst,
-	[OPC_LCONST_1] = convert_lconst,
-	[OPC_FCONST_0] = convert_fconst,
-	[OPC_FCONST_1] = convert_fconst,
-	[OPC_FCONST_2] = convert_fconst,
-	[OPC_DCONST_0] = convert_dconst,
-	[OPC_DCONST_1] = convert_dconst,
-	[OPC_BIPUSH] = convert_bipush,
-	[OPC_SIPUSH] = convert_sipush,
-	[OPC_LDC] = convert_ldc,
-	[OPC_LDC_W] = convert_ldc_w,
-	[OPC_LDC2_W] = convert_ldc2_w,
-	[OPC_ILOAD] = convert_iload,
-	[OPC_LLOAD] = convert_lload,
-	[OPC_FLOAD] = convert_fload,
-	[OPC_DLOAD] = convert_dload,
-	[OPC_ALOAD] = convert_aload,
-	[OPC_ILOAD_0] = convert_iload_x,
-	[OPC_ILOAD_1] = convert_iload_x,
-	[OPC_ILOAD_2] = convert_iload_x,
-	[OPC_ILOAD_3] = convert_iload_x,
-	[OPC_LLOAD_0] = convert_lload_x,
-	[OPC_LLOAD_1] = convert_lload_x,
-	[OPC_LLOAD_2] = convert_lload_x,
-	[OPC_LLOAD_3] = convert_lload_x,
-	[OPC_FLOAD_0] = convert_fload_x,
-	[OPC_FLOAD_1] = convert_fload_x,
-	[OPC_FLOAD_2] = convert_fload_x,
-	[OPC_FLOAD_3] = convert_fload_x,
-	[OPC_DLOAD_0] = convert_dload_x,
-	[OPC_DLOAD_1] = convert_dload_x,
-	[OPC_DLOAD_2] = convert_dload_x,
-	[OPC_DLOAD_3] = convert_dload_x,
-	[OPC_ALOAD_0] = convert_aload_x,
-	[OPC_ALOAD_1] = convert_aload_x,
-	[OPC_ALOAD_2] = convert_aload_x,
-	[OPC_ALOAD_3] = convert_aload_x,
-	[OPC_IALOAD] = convert_xaload,
-	[OPC_LALOAD] = convert_xaload,
-	[OPC_FALOAD] = convert_xaload,
-	[OPC_DALOAD] = convert_xaload,
-	[OPC_AALOAD] = convert_xaload,
+struct converter {
+	convert_fn_t convert;
+	unsigned long require;
+};
+
+static struct converter converters[] = {
+	[OPC_NOP] = { .convert = convert_nop, .require = 1 },
+	[OPC_ACONST_NULL] = { .convert = convert_aconst_null, .require = 1 },
+	[OPC_ICONST_M1] = { .convert = convert_iconst, .require = 1 },
+	[OPC_ICONST_0] = { .convert = convert_iconst, .require = 1 },
+	[OPC_ICONST_1] = { .convert = convert_iconst, .require = 1 },
+	[OPC_ICONST_2] = { .convert = convert_iconst, .require = 1 },
+	[OPC_ICONST_3] = { .convert = convert_iconst, .require = 1 },
+	[OPC_ICONST_4] = { .convert = convert_iconst, .require = 1 },
+	[OPC_ICONST_5] = { .convert = convert_iconst, .require = 1 },
+	[OPC_LCONST_0] = { .convert = convert_lconst, .require = 1 },
+	[OPC_LCONST_1] = { .convert = convert_lconst, .require = 1 },
+	[OPC_FCONST_0] = { .convert = convert_fconst, .require = 1 },
+	[OPC_FCONST_1] = { .convert = convert_fconst, .require = 1 },
+	[OPC_FCONST_2] = { .convert = convert_fconst, .require = 1 },
+	[OPC_DCONST_0] = { .convert = convert_dconst, .require = 1 },
+	[OPC_DCONST_1] = { .convert = convert_dconst, .require = 1 },
+	[OPC_BIPUSH] = { .convert = convert_bipush, .require = 2 },
+	[OPC_SIPUSH] = { .convert = convert_sipush, .require = 2 },
+	[OPC_LDC] = { .convert = convert_ldc, .require = 2 },
+	[OPC_LDC_W] = { .convert = convert_ldc_w, .require = 3 },
+	[OPC_LDC2_W] = { .convert = convert_ldc2_w, .require = 3 },
+	[OPC_ILOAD] = { .convert = convert_iload, .require = 2 },
+	[OPC_LLOAD] = { .convert = convert_lload, .require = 2 },
+	[OPC_FLOAD] = { .convert = convert_fload, .require = 2 },
+	[OPC_DLOAD] = { .convert = convert_dload, .require = 2 },
+	[OPC_ALOAD] = { .convert = convert_aload, .require = 2 },
+	[OPC_ILOAD_0] = { .convert = convert_iload_x, .require = 2 },
+	[OPC_ILOAD_1] = { .convert = convert_iload_x, .require = 2 },
+	[OPC_ILOAD_2] = { .convert = convert_iload_x, .require = 2 },
+	[OPC_ILOAD_3] = { .convert = convert_iload_x, .require = 2 },
+	[OPC_LLOAD_0] = { .convert = convert_lload_x, .require = 2 },
+	[OPC_LLOAD_1] = { .convert = convert_lload_x, .require = 2 },
+	[OPC_LLOAD_2] = { .convert = convert_lload_x, .require = 2 },
+	[OPC_LLOAD_3] = { .convert = convert_lload_x, .require = 2 },
+	[OPC_FLOAD_0] = { .convert = convert_fload_x, .require = 2 },
+	[OPC_FLOAD_1] = { .convert = convert_fload_x, .require = 2 },
+	[OPC_FLOAD_2] = { .convert = convert_fload_x, .require = 2 },
+	[OPC_FLOAD_3] = { .convert = convert_fload_x, .require = 2 },
+	[OPC_DLOAD_0] = { .convert = convert_dload_x, .require = 2 },
+	[OPC_DLOAD_1] = { .convert = convert_dload_x, .require = 2 },
+	[OPC_DLOAD_2] = { .convert = convert_dload_x, .require = 2 },
+	[OPC_DLOAD_3] = { .convert = convert_dload_x, .require = 2 },
+	[OPC_ALOAD_0] = { .convert = convert_aload_x, .require = 2 },
+	[OPC_ALOAD_1] = { .convert = convert_aload_x, .require = 2 },
+	[OPC_ALOAD_2] = { .convert = convert_aload_x, .require = 2 },
+	[OPC_ALOAD_3] = { .convert = convert_aload_x, .require = 2 },
+	[OPC_IALOAD] = { .convert = convert_xaload, .require = 1 },
+	[OPC_LALOAD] = { .convert = convert_xaload, .require = 1 },
+	[OPC_FALOAD] = { .convert = convert_xaload, .require = 1 },
+	[OPC_DALOAD] = { .convert = convert_xaload, .require = 1 },
+	[OPC_AALOAD] = { .convert = convert_xaload, .require = 1 },
 };
 
 static struct statement *convert_to_stmt(struct classblock *cb,
 					 unsigned char *code, size_t count,
 					 struct operand_stack *stack)
 {
-	assert(count > 0);
-	convert_fn_t convert = converters[code[0]];
-	assert(convert);
-	return convert(cb, code, count, stack);
+	struct converter *converter = &converters[code[0]];
+	if (!converter || count < converter->require)
+		return NULL;
+	return converter->convert(cb, code, count, stack);
 }
 
 struct statement *stmt_from_bytecode(struct classblock *cb,
