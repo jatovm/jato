@@ -31,4 +31,46 @@ struct operand {
 	};
 };
 
+static inline void operand_set_const(struct operand *operand,
+				     enum constant_type type,
+				     unsigned long value)
+{
+	operand->type = OPERAND_CONSTANT;
+	operand->constant.type = type;
+	operand->constant.value = value;
+}
+
+static inline void operand_set_fconst(struct operand *operand,
+				      enum constant_type type, double fvalue)
+{
+	operand->type = OPERAND_CONSTANT;
+	operand->constant.type = type;
+	operand->constant.fvalue = fvalue;
+}
+
+static inline void operand_set_local_var(struct operand *operand,
+					 enum local_variable_type type,
+					 unsigned long index)
+{
+	operand->type = OPERAND_LOCAL_VAR;
+	operand->local_var.type = type;
+	operand->local_var.index = index;
+}
+
+static inline void operand_set_temporary(struct operand *operand,
+					 unsigned long temporary)
+{
+	operand->type = OPERAND_TEMPORARY;
+	operand->temporary = temporary;
+}
+
+static inline void operand_set_arrayref(struct operand *operand,
+					unsigned long arrayref,
+					unsigned long index)
+{
+	operand->type = OPERAND_ARRAYREF;
+	operand->arrayref = arrayref;
+	operand->array_index = index;
+}
+
 #endif
