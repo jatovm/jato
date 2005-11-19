@@ -8,7 +8,7 @@ tags:
 
 test:
 	sh make-tests.sh > $(ALLTESTS)
-	gcc -rdynamic -g -Wall -I. -I.. $(ALLTESTS) CuTest.c operand-stack-test.c statement-test.c statement.c backtrace.c -o $(TEST_EXEC)
+	gcc -rdynamic -g -Wall -I. -I.. $(ALLTESTS) CuTest.c operand-stack-test.c statement-test.c bytecode-conv.c backtrace.c -o $(TEST_EXEC)
 	./$(TEST_EXEC)
 
 clean:
