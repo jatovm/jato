@@ -40,7 +40,7 @@ static void operand_set_fconst(struct operand *operand, enum constant_type type,
 	operand->constant.fvalue = fvalue;
 }
 
-static void operand_set_local(struct operand *operand,
+static void operand_set_local_var(struct operand *operand,
 			      enum local_variable_type type,
 			      unsigned long index)
 {
@@ -220,7 +220,7 @@ static struct statement *__convert_load(unsigned char index,
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		operand_set_local(&stmt->s_left, type, index);
+		operand_set_local_var(&stmt->s_left, type, index);
 		stack_push(stack, stmt->target);
 	}
 	return stmt;
