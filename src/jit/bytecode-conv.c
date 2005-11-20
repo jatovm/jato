@@ -351,19 +351,12 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_AALOAD, convert_xaload, 1),
 };
 
-static struct statement *convert_to_stmt(struct classblock *cb,
-					 unsigned char *code, size_t count,
-					 struct operand_stack *stack)
+struct statement *convert_bytecode_to_stmts(struct classblock *cb,
+					    unsigned char *code, size_t count,
+					    struct operand_stack *stack)
 {
 	struct converter *converter = &converters[code[0]];
 	if (!converter || count < converter->require)
 		return NULL;
 	return converter->convert(cb, code, count, stack);
-}
-
-struct statement *stmt_from_bytecode(struct classblock *cb,
-				     unsigned char *code, size_t count,
-				     struct operand_stack *stack)
-{
-	return convert_to_stmt(cb, code, count, stack);
 }

@@ -22,8 +22,8 @@ struct statement {
 	struct statement *next;		/* Next statement. */
 };
 
-extern struct statement *stmt_from_bytecode(struct classblock *,
-					    unsigned char *,
-					    size_t, struct operand_stack *);
+extern struct statement *convert_bytecode_to_stmts(struct classblock *,
+						   unsigned char *, size_t,
+						   struct operand_stack *);
 
 #endif

@@ -56,7 +56,8 @@ static void __assert_converted_const_stmt(CuTest * ct, struct classblock *cb,
 					  char *actual, size_t count)
 {
 	struct operand_stack stack = OPERAND_STACK_INIT;
-	struct statement *stmt = stmt_from_bytecode(cb, actual, count, NULL);
+	struct statement *stmt =
+	    convert_bytecode_to_stmts(cb, actual, count, NULL);
 	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
 	assert_const_operand(ct, expected_const_type, expected_value,
 			     &stmt->s_left);
@@ -81,7 +82,7 @@ static void assert_converted_fconst_stmt(CuTest * ct,
 	unsigned char code[] = { actual };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt =
-	    stmt_from_bytecode(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	assert_fconst_operand(ct, expected_const_type, expected_value,
 			      &stmt->s_left);
@@ -94,7 +95,7 @@ void test_convert_nop(CuTest * ct)
 	unsigned char code[] = { OPC_NOP };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt =
-	    stmt_from_bytecode(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	CuAssertIntEquals(ct, STMT_NOP, stmt->type);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
@@ -170,12 +171,13 @@ void test_convert_sipush(CuTest * ct)
 	assert_converted_sipush_stmt(ct, MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
 }
 
-static struct statement *create_stmt_with_cp(ConstantPoolEntry * cp_infos,
-					     size_t nr_cp_infos, u1 * cp_types,
-					     unsigned char opcode,
-					     unsigned char index1,
-					     unsigned char index2,
-					     struct operand_stack *stack)
+static struct statement *convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,
+						  size_t nr_cp_infos,
+						  u1 * cp_types,
+						  unsigned char opcode,
+						  unsigned char index1,
+						  unsigned char index2,
+						  struct operand_stack *stack)
 {
 	struct classblock cb = {
 		.constant_pool_count = sizeof(cp_infos),
@@ -183,7 +185,7 @@ static struct statement *create_stmt_with_cp(ConstantPoolEntry * cp_infos,
 		.constant_pool.type = cp_types
 	};
 	unsigned char code[] = { opcode, index1, index2 };
-	return stmt_from_bytecode(&cb, code, sizeof(code), stack);
+	return convert_bytecode_to_stmts(&cb, code, sizeof(code), stack);
 }
 
 static void assert_converted_ldc_stmt(CuTest * ct,
@@ -194,10 +196,11 @@ static void assert_converted_ldc_stmt(CuTest * ct,
 	u1 cp_types[] = { cp_type };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_cp(cp_infos, sizeof(cp_infos),
-						     cp_types, OPC_LDC, 0x00,
-						     0x00,
-						     &stack);
+	struct statement *stmt =
+	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
+				     cp_types, OPC_LDC, 0x00,
+				     0x00,
+				     &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	assert_const_operand(ct, expected_const_type, expected_value,
 			     &stmt->s_left);
@@ -213,10 +216,11 @@ static void assert_converted_ldc_stmt_float(CuTest * ct, float expected_value)
 	u1 cp_types[] = { CONSTANT_Float };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_cp(cp_infos, sizeof(cp_infos),
-						     cp_types, OPC_LDC, 0x00,
-						     0x00,
-						     &stack);
+	struct statement *stmt =
+	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
+				     cp_types, OPC_LDC, 0x00,
+				     0x00,
+				     &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	assert_fconst_operand(ct, CONST_FLOAT, expected_value, &stmt->s_left);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
@@ -251,10 +255,11 @@ static void assert_converted_ldc_x_stmt(CuTest * ct,
 	cp_types[256] = cp_type;
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_cp(cp_infos, sizeof(cp_infos),
-						     cp_types, opcode, 0x01,
-						     0x00,
-						     &stack);
+	struct statement *stmt =
+	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
+				     cp_types, opcode, 0x01,
+				     0x00,
+				     &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	assert_const_operand(ct, expected_const_type, expected_value,
 			     &stmt->s_left);
@@ -276,10 +281,11 @@ static void __assert_converted_ldc_x_stmt_double(CuTest * ct,
 	cp_types[256] = cp_type;
 	struct operand_stack stack = OPERAND_STACK_INIT;
 
-	struct statement *stmt = create_stmt_with_cp(cp_infos, sizeof(cp_infos),
-						     cp_types, opcode, 0x01,
-						     0x00,
-						     &stack);
+	struct statement *stmt =
+	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
+				     cp_types, opcode, 0x01,
+				     0x00,
+				     &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	assert_fconst_operand(ct, expected_constant_type, expected_value,
 			      &stmt->s_left);
@@ -361,7 +367,7 @@ static void assert_converted_load_stmt(CuTest * ct, unsigned char opc,
 	unsigned char code[] = { opc, expected_index };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt =
-	    stmt_from_bytecode(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	CuAssertIntEquals(ct, OPERAND_LOCAL_VAR, stmt->s_left.type);
 	CuAssertIntEquals(ct, expected_index, stmt->s_left.local_var.index);
@@ -456,7 +462,7 @@ static void assert_converted_x_aload(CuTest * ct, unsigned char opc,
 	stack_push(&stack, arrayref);
 	stack_push(&stack, index);
 	struct statement *stmt =
-	    stmt_from_bytecode(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 
 	struct statement *nullcheck = stmt;
 	CuAssertIntEquals(ct, STMT_NULL_CHECK, nullcheck->type);
