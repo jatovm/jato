@@ -16,7 +16,7 @@ static struct statement *alloc_stmt(enum statement_type type)
 {
 	struct statement *stmt = malloc(sizeof(*stmt));
 	if (stmt)
-		stmt->type = type;
+		stmt->s_type = type;
 	return stmt;
 }
 
@@ -34,7 +34,7 @@ static struct statement *convert_aconst_null(struct classblock *cb,
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_REFERENCE, 0);
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -47,7 +47,7 @@ static struct statement *convert_iconst(struct classblock *cb,
 	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_INT,
 				  code[0] - OPC_ICONST_0);
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -60,7 +60,7 @@ static struct statement *convert_lconst(struct classblock *cb,
 	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_LONG,
 				  code[0] - OPC_LCONST_0);
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -73,7 +73,7 @@ static struct statement *convert_fconst(struct classblock *cb,
 	if (stmt) {
 		operand_set_fconst(&stmt->s_left, CONST_FLOAT,
 				   code[0] - OPC_FCONST_0);
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -86,7 +86,7 @@ static struct statement *convert_dconst(struct classblock *cb,
 	if (stmt) {
 		operand_set_fconst(&stmt->s_left, CONST_DOUBLE,
 				   code[0] - OPC_DCONST_0);
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -98,7 +98,7 @@ static struct statement *convert_bipush(struct classblock *cb,
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_INT, (char)code[1]);
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -111,7 +111,7 @@ static struct statement *convert_sipush(struct classblock *cb,
 	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_INT,
 				  (short)be16_to_cpu(*(u2 *) & code[1]));
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -147,7 +147,7 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 		default:
 			assert(!"unknown constant type");
 		}
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -179,7 +179,7 @@ static struct statement *__convert_load(unsigned char index,
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_local_var(&stmt->s_left, type, index);
-		stack_push(stack, stmt->target);
+		stack_push(stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -268,25 +268,23 @@ static struct statement *convert_xaload(struct classblock *cb,
 {
 	unsigned long index = stack_pop(stack);
 	unsigned long arrayref = stack_pop(stack);
-	struct statement *assign = malloc(sizeof(struct statement));
+	struct statement *assign = alloc_stmt(STMT_ASSIGN);
 
 	assert(assign);
-	assign->type = STMT_ASSIGN;
 	operand_set_arrayref(&assign->s_left, arrayref, index);
 
-	stack_push(stack, assign->target);
+	stack_push(stack, assign->s_target);
 
-	struct statement *arraycheck = malloc(sizeof(struct statement));
+	struct statement *arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	assert(arraycheck);
-	arraycheck->type = STMT_ARRAY_CHECK;
 	operand_set_temporary(&arraycheck->s_left, arrayref);
 	operand_set_temporary(&arraycheck->s_right, index);
-	arraycheck->next = assign;
+	arraycheck->s_next = assign;
 
 	struct statement *nullcheck = alloc_stmt(STMT_NULL_CHECK);
 	if (nullcheck) {
 		operand_set_temporary(&nullcheck->s_left, arrayref);
-		nullcheck->next = arraycheck;
+		nullcheck->s_next = arraycheck;
 	}
 	return nullcheck;
 }

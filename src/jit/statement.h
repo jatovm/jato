@@ -15,11 +15,11 @@ enum statement_type {
 };
 
 struct statement {
-	enum statement_type type;	/* Type of the statement.  */
-	unsigned long target;		/* Target temporary of the statement.  */
+	enum statement_type s_type;	/* Type of the statement.  */
+	unsigned long s_target;		/* Target temporary of the statement.  */
 	struct operand s_left;		/* Left operand of the statement.  */
 	struct operand s_right;		/* Left operand of the statement.  */
-	struct statement *next;		/* Next statement. */
+	struct statement *s_next;	/* Next statement. */
 };
 
 extern struct statement *convert_bytecode_to_stmts(struct classblock *,
