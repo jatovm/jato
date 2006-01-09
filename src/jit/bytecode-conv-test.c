@@ -491,6 +491,19 @@ void test_convert_aload_x(CuTest * ct)
 	assert_xload_stmt(ct, OPC_ALOAD_3, LOCAL_VAR_REFERENCE, 0x03);
 }
 
+static void assert_null_check_stmt(CuTest *ct, unsigned long expected_ref, struct statement *actual)
+{
+	CuAssertIntEquals(ct, STMT_NULL_CHECK, actual->type);
+	assert_temporary_operand(ct, expected_ref, &actual->s_left);
+}
+
+static void assert_arraycheck_stmt(CuTest *ct, unsigned long expected_arrayref, unsigned long expected_index, struct statement *actual)
+{
+	CuAssertIntEquals(ct, STMT_ARRAY_CHECK, actual->type);
+	assert_temporary_operand(ct, expected_arrayref, &actual->s_left);
+	assert_temporary_operand(ct, expected_index, &actual->s_right);
+}
+
 static void assert_xaload_stmts(CuTest * ct, unsigned char opc,
 				unsigned long arrayref, unsigned long index)
 {
@@ -502,17 +515,15 @@ static void assert_xaload_stmts(CuTest * ct, unsigned char opc,
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 
 	struct statement *nullcheck = stmt;
-	CuAssertIntEquals(ct, STMT_NULL_CHECK, nullcheck->type);
-	assert_temporary_operand(ct, arrayref, &nullcheck->s_left);
-
 	struct statement *arraycheck = stmt->next;
-	CuAssertIntEquals(ct, STMT_ARRAY_CHECK, arraycheck->type);
-	assert_temporary_operand(ct, arrayref, &arraycheck->s_left);
-	assert_temporary_operand(ct, index, &arraycheck->s_right);
-
 	struct statement *assign = arraycheck->next;
+
+	assert_null_check_stmt(ct, arrayref, nullcheck);
+	assert_arraycheck_stmt(ct, arrayref, index, arraycheck);
+
 	CuAssertIntEquals(ct, STMT_ASSIGN, assign->type);
 	assert_arrayref_operand(ct, arrayref, index, &assign->s_left);
+
 	CuAssertIntEquals(ct, stack_pop(&stack), assign->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 }
