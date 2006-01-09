@@ -117,7 +117,8 @@ static struct statement *convert_sipush(struct classblock *cb,
 }
 
 static struct statement *__convert_ldc(struct constant_pool *cp,
-				       unsigned long cp_idx)
+				       unsigned long cp_idx,
+				       struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
@@ -146,6 +147,7 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 		default:
 			assert(!"unknown constant type");
 		}
+		stack_push(stack, stmt->target);
 	}
 	return stmt;
 }
@@ -153,32 +155,21 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 static struct statement *convert_ldc(struct classblock *cb, unsigned char *code,
 				     size_t len, struct operand_stack *stack)
 {
-	struct statement *stmt = __convert_ldc(&cb->constant_pool, code[1]);
-	if (stmt)
-		stack_push(stack, stmt->target);
-	return stmt;
+	return __convert_ldc(&cb->constant_pool, code[1], stack);
 }
 
 static struct statement *convert_ldc_w(struct classblock *cb,
 				       unsigned char *code, size_t len,
 				       struct operand_stack *stack)
 {
-	struct statement *stmt =
-	    __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]));
-	if (stmt)
-		stack_push(stack, stmt->target);
-	return stmt;
+	return __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]), stack);
 }
 
 static struct statement *convert_ldc2_w(struct classblock *cb,
 					unsigned char *code, size_t len,
 					struct operand_stack *stack)
 {
-	struct statement *stmt =
-	    __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]));
-	if (stmt)
-		stack_push(stack, stmt->target);
-	return stmt;
+	return __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]), stack);
 }
 
 static struct statement *__convert_load(unsigned char index,
