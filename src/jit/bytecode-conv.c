@@ -1,7 +1,8 @@
 /*
- * Java bytecode to three-address code conversion
- * 
  * Copyright (C) 2005  Pekka Enberg
+ *
+ * This file contains functions for converting Java bytecode to three-address
+ * code.
  */
 
 #include <statement.h>
