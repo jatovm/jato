@@ -17,13 +17,14 @@ enum statement_type {
 struct statement {
 	enum statement_type s_type;	/* Type of the statement.  */
 	unsigned long s_target;		/* Target temporary of the statement.  */
-	struct operand s_left;		/* Left operand of the statement.  */
-	struct operand s_right;		/* Left operand of the statement.  */
+	struct operand *s_left;		/* Left operand of the statement.  */
+	struct operand *s_right;	/* Left operand of the statement.  */
 	struct statement *s_next;	/* Next statement. */
 };
 
 extern struct statement *convert_bytecode_to_stmts(struct classblock *,
 						   unsigned char *, size_t,
 						   struct operand_stack *);
+extern void free_stmt(struct statement *);
 
 #endif
