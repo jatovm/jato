@@ -353,8 +353,7 @@ void test_convert_ldc2_w(CuTest * ct)
 }
 
 static void assert_xload_stmt(CuTest * ct, unsigned char opc,
-			      enum local_variable_type
-			      expected_local_variable_type,
+			      enum jvm_type expected_jvm_type,
 			      unsigned char expected_index)
 {
 	unsigned char code[] = { opc, expected_index };
@@ -364,7 +363,7 @@ static void assert_xload_stmt(CuTest * ct, unsigned char opc,
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->type);
 	CuAssertIntEquals(ct, OPERAND_LOCAL_VAR, stmt->s_left.type);
 	CuAssertIntEquals(ct, expected_index, stmt->s_left.local_var.index);
-	CuAssertIntEquals(ct, expected_local_variable_type,
+	CuAssertIntEquals(ct, expected_jvm_type,
 			  stmt->s_left.local_var.type);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
@@ -373,77 +372,77 @@ static void assert_xload_stmt(CuTest * ct, unsigned char opc,
 
 void test_convert_iload(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_ILOAD, LOCAL_VAR_INT, 0x00);
-	assert_xload_stmt(ct, OPC_ILOAD, LOCAL_VAR_INT, 0x01);
-	assert_xload_stmt(ct, OPC_ILOAD, LOCAL_VAR_INT, 0xFF);
+	assert_xload_stmt(ct, OPC_ILOAD, J_INT, 0x00);
+	assert_xload_stmt(ct, OPC_ILOAD, J_INT, 0x01);
+	assert_xload_stmt(ct, OPC_ILOAD, J_INT, 0xFF);
 }
 
 void test_convert_lload(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_LLOAD, LOCAL_VAR_LONG, 0x00);
-	assert_xload_stmt(ct, OPC_LLOAD, LOCAL_VAR_LONG, 0x01);
-	assert_xload_stmt(ct, OPC_LLOAD, LOCAL_VAR_LONG, 0xFF);
+	assert_xload_stmt(ct, OPC_LLOAD, J_LONG, 0x00);
+	assert_xload_stmt(ct, OPC_LLOAD, J_LONG, 0x01);
+	assert_xload_stmt(ct, OPC_LLOAD, J_LONG, 0xFF);
 }
 
 void test_convert_fload(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_FLOAD, LOCAL_VAR_FLOAT, 0x00);
-	assert_xload_stmt(ct, OPC_FLOAD, LOCAL_VAR_FLOAT, 0x01);
-	assert_xload_stmt(ct, OPC_FLOAD, LOCAL_VAR_FLOAT, 0xFF);
+	assert_xload_stmt(ct, OPC_FLOAD, J_FLOAT, 0x00);
+	assert_xload_stmt(ct, OPC_FLOAD, J_FLOAT, 0x01);
+	assert_xload_stmt(ct, OPC_FLOAD, J_FLOAT, 0xFF);
 }
 
 void test_convert_dload(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_DLOAD, LOCAL_VAR_DOUBLE, 0x00);
-	assert_xload_stmt(ct, OPC_DLOAD, LOCAL_VAR_DOUBLE, 0x01);
-	assert_xload_stmt(ct, OPC_DLOAD, LOCAL_VAR_DOUBLE, 0xFF);
+	assert_xload_stmt(ct, OPC_DLOAD, J_DOUBLE, 0x00);
+	assert_xload_stmt(ct, OPC_DLOAD, J_DOUBLE, 0x01);
+	assert_xload_stmt(ct, OPC_DLOAD, J_DOUBLE, 0xFF);
 }
 
 void test_convert_aload(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_ALOAD, LOCAL_VAR_REFERENCE, 0x00);
-	assert_xload_stmt(ct, OPC_ALOAD, LOCAL_VAR_REFERENCE, 0x01);
-	assert_xload_stmt(ct, OPC_ALOAD, LOCAL_VAR_REFERENCE, 0xFF);
+	assert_xload_stmt(ct, OPC_ALOAD, J_REFERENCE, 0x00);
+	assert_xload_stmt(ct, OPC_ALOAD, J_REFERENCE, 0x01);
+	assert_xload_stmt(ct, OPC_ALOAD, J_REFERENCE, 0xFF);
 }
 
 void test_convert_iload_x(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_ILOAD_0, LOCAL_VAR_INT, 0x00);
-	assert_xload_stmt(ct, OPC_ILOAD_1, LOCAL_VAR_INT, 0x01);
-	assert_xload_stmt(ct, OPC_ILOAD_2, LOCAL_VAR_INT, 0x02);
-	assert_xload_stmt(ct, OPC_ILOAD_3, LOCAL_VAR_INT, 0x03);
+	assert_xload_stmt(ct, OPC_ILOAD_0, J_INT, 0x00);
+	assert_xload_stmt(ct, OPC_ILOAD_1, J_INT, 0x01);
+	assert_xload_stmt(ct, OPC_ILOAD_2, J_INT, 0x02);
+	assert_xload_stmt(ct, OPC_ILOAD_3, J_INT, 0x03);
 }
 
 void test_convert_lload_x(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_LLOAD_0, LOCAL_VAR_LONG, 0x00);
-	assert_xload_stmt(ct, OPC_LLOAD_1, LOCAL_VAR_LONG, 0x01);
-	assert_xload_stmt(ct, OPC_LLOAD_2, LOCAL_VAR_LONG, 0x02);
-	assert_xload_stmt(ct, OPC_LLOAD_3, LOCAL_VAR_LONG, 0x03);
+	assert_xload_stmt(ct, OPC_LLOAD_0, J_LONG, 0x00);
+	assert_xload_stmt(ct, OPC_LLOAD_1, J_LONG, 0x01);
+	assert_xload_stmt(ct, OPC_LLOAD_2, J_LONG, 0x02);
+	assert_xload_stmt(ct, OPC_LLOAD_3, J_LONG, 0x03);
 }
 
 void test_convert_fload_x(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_FLOAD_0, LOCAL_VAR_FLOAT, 0x00);
-	assert_xload_stmt(ct, OPC_FLOAD_1, LOCAL_VAR_FLOAT, 0x01);
-	assert_xload_stmt(ct, OPC_FLOAD_2, LOCAL_VAR_FLOAT, 0x02);
-	assert_xload_stmt(ct, OPC_FLOAD_3, LOCAL_VAR_FLOAT, 0x03);
+	assert_xload_stmt(ct, OPC_FLOAD_0, J_FLOAT, 0x00);
+	assert_xload_stmt(ct, OPC_FLOAD_1, J_FLOAT, 0x01);
+	assert_xload_stmt(ct, OPC_FLOAD_2, J_FLOAT, 0x02);
+	assert_xload_stmt(ct, OPC_FLOAD_3, J_FLOAT, 0x03);
 }
 
 void test_convert_dload_x(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_DLOAD_0, LOCAL_VAR_DOUBLE, 0x00);
-	assert_xload_stmt(ct, OPC_DLOAD_1, LOCAL_VAR_DOUBLE, 0x01);
-	assert_xload_stmt(ct, OPC_DLOAD_2, LOCAL_VAR_DOUBLE, 0x02);
-	assert_xload_stmt(ct, OPC_DLOAD_3, LOCAL_VAR_DOUBLE, 0x03);
+	assert_xload_stmt(ct, OPC_DLOAD_0, J_DOUBLE, 0x00);
+	assert_xload_stmt(ct, OPC_DLOAD_1, J_DOUBLE, 0x01);
+	assert_xload_stmt(ct, OPC_DLOAD_2, J_DOUBLE, 0x02);
+	assert_xload_stmt(ct, OPC_DLOAD_3, J_DOUBLE, 0x03);
 }
 
 void test_convert_aload_x(CuTest * ct)
 {
-	assert_xload_stmt(ct, OPC_ALOAD_0, LOCAL_VAR_REFERENCE, 0x00);
-	assert_xload_stmt(ct, OPC_ALOAD_1, LOCAL_VAR_REFERENCE, 0x01);
-	assert_xload_stmt(ct, OPC_ALOAD_2, LOCAL_VAR_REFERENCE, 0x02);
-	assert_xload_stmt(ct, OPC_ALOAD_3, LOCAL_VAR_REFERENCE, 0x03);
+	assert_xload_stmt(ct, OPC_ALOAD_0, J_REFERENCE, 0x00);
+	assert_xload_stmt(ct, OPC_ALOAD_1, J_REFERENCE, 0x01);
+	assert_xload_stmt(ct, OPC_ALOAD_2, J_REFERENCE, 0x02);
+	assert_xload_stmt(ct, OPC_ALOAD_3, J_REFERENCE, 0x03);
 }
 
 static void assert_null_check_stmt(CuTest *ct, unsigned long expected_ref, struct statement *actual)

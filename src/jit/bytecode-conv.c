@@ -173,7 +173,7 @@ static struct statement *convert_ldc2_w(struct classblock *cb,
 }
 
 static struct statement *__convert_load(unsigned char index,
-					enum local_variable_type type,
+					enum jvm_type type,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
@@ -185,7 +185,7 @@ static struct statement *__convert_load(unsigned char index,
 }
 
 static struct statement *convert_load(unsigned char *code, size_t len,
-				      enum local_variable_type type,
+				      enum jvm_type type,
 				      struct operand_stack *stack)
 {
 	return __convert_load(code[1], type, stack);
@@ -195,70 +195,70 @@ static struct statement *convert_iload(struct classblock *cb,
 				       unsigned char *code, size_t len,
 				       struct operand_stack *stack)
 {
-	return convert_load(code, len, LOCAL_VAR_INT, stack);
+	return convert_load(code, len, J_INT, stack);
 }
 
 static struct statement *convert_lload(struct classblock *cb,
 				       unsigned char *code, size_t len,
 				       struct operand_stack *stack)
 {
-	return convert_load(code, len, LOCAL_VAR_LONG, stack);
+	return convert_load(code, len, J_LONG, stack);
 }
 
 static struct statement *convert_fload(struct classblock *cb,
 				       unsigned char *code, size_t len,
 				       struct operand_stack *stack)
 {
-	return convert_load(code, len, LOCAL_VAR_FLOAT, stack);
+	return convert_load(code, len, J_FLOAT, stack);
 }
 
 static struct statement *convert_dload(struct classblock *cb,
 				       unsigned char *code, size_t len,
 				       struct operand_stack *stack)
 {
-	return convert_load(code, len, LOCAL_VAR_DOUBLE, stack);
+	return convert_load(code, len, J_DOUBLE, stack);
 }
 
 static struct statement *convert_aload(struct classblock *cb,
 				       unsigned char *code, size_t len,
 				       struct operand_stack *stack)
 {
-	return convert_load(code, len, LOCAL_VAR_REFERENCE, stack);
+	return convert_load(code, len, J_REFERENCE, stack);
 }
 
 static struct statement *convert_iload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	return __convert_load(code[0] - OPC_ILOAD_0, LOCAL_VAR_INT, stack);
+	return __convert_load(code[0] - OPC_ILOAD_0, J_INT, stack);
 }
 
 static struct statement *convert_lload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	return __convert_load(code[0] - OPC_LLOAD_0, LOCAL_VAR_LONG, stack);
+	return __convert_load(code[0] - OPC_LLOAD_0, J_LONG, stack);
 }
 
 static struct statement *convert_fload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	return __convert_load(code[0] - OPC_FLOAD_0, LOCAL_VAR_FLOAT, stack);
+	return __convert_load(code[0] - OPC_FLOAD_0, J_FLOAT, stack);
 }
 
 static struct statement *convert_dload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	return __convert_load(code[0] - OPC_DLOAD_0, LOCAL_VAR_DOUBLE, stack);
+	return __convert_load(code[0] - OPC_DLOAD_0, J_DOUBLE, stack);
 }
 
 static struct statement *convert_aload_x(struct classblock *cb,
 					 unsigned char *code, size_t len,
 					 struct operand_stack *stack)
 {
-	return __convert_load(code[0] - OPC_ALOAD_0, LOCAL_VAR_REFERENCE,
+	return __convert_load(code[0] - OPC_ALOAD_0, J_REFERENCE,
 			      stack);
 }
 

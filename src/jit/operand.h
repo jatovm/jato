@@ -49,7 +49,7 @@ static inline void operand_set_fconst(struct operand *operand,
 }
 
 static inline void operand_set_local_var(struct operand *operand,
-					 enum local_variable_type type,
+					 enum jvm_type type,
 					 unsigned long index)
 {
 	operand->type = OPERAND_LOCAL_VAR;
