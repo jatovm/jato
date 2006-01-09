@@ -47,14 +47,40 @@ static void assert_arrayref_operand(CuTest * ct,
 	CuAssertIntEquals(ct, expected_index, operand->array_index);
 }
 
-static void assert_empty_operand_stack(CuTest * ct, unsigned char actual)
+static void assert_stmt_target_on_operand_stack(CuTest * ct,
+						unsigned char *actual,
+						size_t len)
 {
-	unsigned char code[] = { actual };
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt =
-	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(NULL, actual, len, &stack);
+	CuAssertIntEquals(ct, stack_pop(&stack), stmt->target);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free(stmt);
+}
+
+static void assert_stmt_target_on_operand_stack_1(CuTest * ct,
+						  unsigned char actual)
+{
+	unsigned char code[] = { actual };
+	assert_stmt_target_on_operand_stack(ct, code, 1);
+}
+
+static void assert_stmt_target_on_operand_stack_2(CuTest * ct,
+						  unsigned char byte_1,
+						  unsigned char byte_2)
+{
+	unsigned char code[] = { byte_1, byte_2 };
+	assert_stmt_target_on_operand_stack(ct, code, 2);
+}
+
+static void assert_stmt_target_on_operand_stack_3(CuTest * ct,
+						  unsigned char byte_1,
+						  unsigned char byte_2,
+						  unsigned char byte_3)
+{
+	unsigned char code[] = { byte_1, byte_2, byte_3 };
+	assert_stmt_target_on_operand_stack(ct, code, 3);
 }
 
 static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
@@ -67,7 +93,7 @@ static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
 {
 	struct operand_stack stack = OPERAND_STACK_INIT;
 	struct statement *stmt =
-	    convert_bytecode_to_stmts(cb, actual, count, NULL);
+	    convert_bytecode_to_stmts(cb, actual, count, &stack);
 	CuAssertIntEquals(ct, expected_stmt_type, stmt->type);
 	assert_const_operand(ct, expected_const_type, expected_value,
 			     &stmt->s_left);
@@ -112,51 +138,51 @@ void test_convert_nop(CuTest * ct)
 void test_convert_aconst_null(CuTest * ct)
 {
 	assert_const_stmt(ct, CONST_REFERENCE, 0, OPC_ACONST_NULL);
-	assert_empty_operand_stack(ct, OPC_ACONST_NULL);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ACONST_NULL);
 }
 
 void test_convert_iconst(CuTest * ct)
 {
 	assert_const_stmt(ct, CONST_INT, -1, OPC_ICONST_M1);
-	assert_empty_operand_stack(ct, OPC_ICONST_M1);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ICONST_M1);
 	assert_const_stmt(ct, CONST_INT, 0, OPC_ICONST_0);
-	assert_empty_operand_stack(ct, OPC_ICONST_0);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ICONST_0);
 	assert_const_stmt(ct, CONST_INT, 1, OPC_ICONST_1);
-	assert_empty_operand_stack(ct, OPC_ICONST_1);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ICONST_1);
 	assert_const_stmt(ct, CONST_INT, 2, OPC_ICONST_2);
-	assert_empty_operand_stack(ct, OPC_ICONST_2);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ICONST_2);
 	assert_const_stmt(ct, CONST_INT, 3, OPC_ICONST_3);
-	assert_empty_operand_stack(ct, OPC_ICONST_3);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ICONST_3);
 	assert_const_stmt(ct, CONST_INT, 4, OPC_ICONST_4);
-	assert_empty_operand_stack(ct, OPC_ICONST_4);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ICONST_4);
 	assert_const_stmt(ct, CONST_INT, 5, OPC_ICONST_5);
-	assert_empty_operand_stack(ct, OPC_ICONST_5);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_ICONST_5);
 }
 
 void test_convert_lconst(CuTest * ct)
 {
 	assert_const_stmt(ct, CONST_LONG, 0, OPC_LCONST_0);
-	assert_empty_operand_stack(ct, OPC_LCONST_0);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_LCONST_0);
 	assert_const_stmt(ct, CONST_LONG, 1, OPC_LCONST_1);
-	assert_empty_operand_stack(ct, OPC_LCONST_1);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_LCONST_1);
 }
 
 void test_convert_fconst(CuTest * ct)
 {
 	assert_fconst_stmt(ct, CONST_FLOAT, 0, OPC_FCONST_0);
-	assert_empty_operand_stack(ct, OPC_FCONST_0);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_FCONST_0);
 	assert_fconst_stmt(ct, CONST_FLOAT, 1, OPC_FCONST_1);
-	assert_empty_operand_stack(ct, OPC_FCONST_1);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_FCONST_1);
 	assert_fconst_stmt(ct, CONST_FLOAT, 2, OPC_FCONST_2);
-	assert_empty_operand_stack(ct, OPC_FCONST_2);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_FCONST_2);
 }
 
 void test_convert_dconst(CuTest * ct)
 {
 	assert_fconst_stmt(ct, CONST_DOUBLE, 0, OPC_DCONST_0);
-	assert_empty_operand_stack(ct, OPC_DCONST_0);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_DCONST_0);
 	assert_fconst_stmt(ct, CONST_DOUBLE, 1, OPC_DCONST_1);
-	assert_empty_operand_stack(ct, OPC_DCONST_1);
+	assert_stmt_target_on_operand_stack_1(ct, OPC_DCONST_1);
 }
 
 static void assert_bipush_stmt(CuTest * ct, char expected_value, char actual)
@@ -171,7 +197,7 @@ void test_convert_bipush(CuTest * ct)
 	assert_bipush_stmt(ct, 0x00, OPC_BIPUSH);
 	assert_bipush_stmt(ct, 0x01, OPC_BIPUSH);
 	assert_bipush_stmt(ct, 0xFF, OPC_BIPUSH);
-	assert_empty_operand_stack(ct, OPC_BIPUSH);
+	assert_stmt_target_on_operand_stack_2(ct, OPC_BIPUSH, 0x00);
 }
 
 static void assert_sipush_stmt(CuTest * ct,
@@ -192,7 +218,7 @@ void test_convert_sipush(CuTest * ct)
 	assert_sipush_stmt(ct, 1, 0x00, 0x01, OPC_SIPUSH);
 	assert_sipush_stmt(ct, MIN_SHORT, 0x80, 0x00, OPC_SIPUSH);
 	assert_sipush_stmt(ct, MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
-	assert_empty_operand_stack(ct, OPC_SIPUSH);
+	assert_stmt_target_on_operand_stack_3(ct, OPC_SIPUSH, 0x00, 0x00);
 }
 
 static struct statement *convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,

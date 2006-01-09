@@ -32,8 +32,10 @@ static struct statement *convert_aconst_null(struct classblock *cb,
 					     struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt)
+	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_REFERENCE, 0);
+		stack_push(stack, stmt->target);
+	}
 	return stmt;
 }
 
@@ -42,9 +44,11 @@ static struct statement *convert_iconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt)
+	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_INT,
 				  code[0] - OPC_ICONST_0);
+		stack_push(stack, stmt->target);
+	}
 	return stmt;
 }
 
@@ -53,9 +57,11 @@ static struct statement *convert_lconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt)
+	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_LONG,
 				  code[0] - OPC_LCONST_0);
+		stack_push(stack, stmt->target);
+	}
 	return stmt;
 }
 
@@ -64,9 +70,11 @@ static struct statement *convert_fconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt)
+	if (stmt) {
 		operand_set_fconst(&stmt->s_left, CONST_FLOAT,
 				   code[0] - OPC_FCONST_0);
+		stack_push(stack, stmt->target);
+	}
 	return stmt;
 }
 
@@ -75,9 +83,11 @@ static struct statement *convert_dconst(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt)
+	if (stmt) {
 		operand_set_fconst(&stmt->s_left, CONST_DOUBLE,
 				   code[0] - OPC_DCONST_0);
+		stack_push(stack, stmt->target);
+	}
 	return stmt;
 }
 
@@ -86,8 +96,10 @@ static struct statement *convert_bipush(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt)
+	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_INT, (char)code[1]);
+		stack_push(stack, stmt->target);
+	}
 	return stmt;
 }
 
@@ -96,9 +108,11 @@ static struct statement *convert_sipush(struct classblock *cb,
 					struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt)
+	if (stmt) {
 		operand_set_const(&stmt->s_left, CONST_INT,
 				  (short)be16_to_cpu(*(u2 *) & code[1]));
+		stack_push(stack, stmt->target);
+	}
 	return stmt;
 }
 
