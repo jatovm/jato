@@ -515,3 +515,21 @@ void test_convert_aaload(CuTest * ct)
 	assert_xaload_stmts(ct, OPC_AALOAD, 0, 1);
 	assert_xaload_stmts(ct, OPC_AALOAD, 1, 2);
 }
+
+void test_convert_baload(CuTest * ct)
+{
+	assert_xaload_stmts(ct, OPC_BALOAD, 0, 1);
+	assert_xaload_stmts(ct, OPC_BALOAD, 1, 2);
+}
+
+void test_convert_caload(CuTest * ct)
+{
+	assert_xaload_stmts(ct, OPC_CALOAD, 0, 1);
+	assert_xaload_stmts(ct, OPC_CALOAD, 1, 2);
+}
+
+void test_convert_saload(CuTest * ct)
+{
+	assert_xaload_stmts(ct, OPC_SALOAD, 0, 1);
+	assert_xaload_stmts(ct, OPC_SALOAD, 1, 2);
+}

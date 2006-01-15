@@ -345,6 +345,9 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_FALOAD, convert_xaload, 1),
 	DECLARE_CONVERTER(OPC_DALOAD, convert_xaload, 1),
 	DECLARE_CONVERTER(OPC_AALOAD, convert_xaload, 1),
+	DECLARE_CONVERTER(OPC_BALOAD, convert_xaload, 1),
+	DECLARE_CONVERTER(OPC_CALOAD, convert_xaload, 1),
+	DECLARE_CONVERTER(OPC_SALOAD, convert_xaload, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
