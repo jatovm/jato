@@ -533,3 +533,59 @@ void test_convert_saload(CuTest * ct)
 	assert_xaload_stmts(ct, OPC_SALOAD, 0, 1);
 	assert_xaload_stmts(ct, OPC_SALOAD, 1, 2);
 }
+
+static void assert_xstore_stmt(CuTest * ct, unsigned char opc,
+			       enum jvm_type expected_jvm_type,
+			       unsigned char expected_index,
+			       unsigned long expected_temporary)
+{
+	unsigned char code[] = { opc, expected_index };
+	struct operand_stack stack = OPERAND_STACK_INIT;
+	stack_push(&stack, expected_temporary);
+
+	struct statement *stmt =
+	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+
+	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
+
+	CuAssertIntEquals(ct, OPERAND_TEMPORARY, stmt->s_left->type);
+	CuAssertIntEquals(ct, expected_temporary, stmt->s_left->temporary);
+
+	CuAssertIntEquals(ct, OPERAND_LOCAL_VAR, stmt->s_target->type);
+	CuAssertIntEquals(ct, expected_index, stmt->s_target->local_var.index);
+	CuAssertIntEquals(ct, expected_jvm_type, stmt->s_target->local_var.type);
+
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+
+	free_stmt(stmt);
+}
+
+void test_convert_istore(CuTest * ct)
+{
+	assert_xstore_stmt(ct, OPC_ISTORE, J_INT, 0x00, 0x01);
+	assert_xstore_stmt(ct, OPC_ISTORE, J_INT, 0x01, 0x02);
+}
+
+void test_convert_lstore(CuTest * ct)
+{
+	assert_xstore_stmt(ct, OPC_LSTORE, J_LONG, 0x00, 0x01);
+	assert_xstore_stmt(ct, OPC_LSTORE, J_LONG, 0x01, 0x02);
+}
+
+void test_convert_fstore(CuTest * ct)
+{
+	assert_xstore_stmt(ct, OPC_FSTORE, J_FLOAT, 0x00, 0x01);
+	assert_xstore_stmt(ct, OPC_FSTORE, J_FLOAT, 0x01, 0x02);
+}
+
+void test_convert_dstore(CuTest * ct)
+{
+	assert_xstore_stmt(ct, OPC_DSTORE, J_DOUBLE, 0x00, 0x01);
+	assert_xstore_stmt(ct, OPC_DSTORE, J_DOUBLE, 0x01, 0x02);
+}
+
+void test_convert_astore(CuTest * ct)
+{
+	assert_xstore_stmt(ct, OPC_ASTORE, J_REFERENCE, 0x00, 0x01);
+	assert_xstore_stmt(ct, OPC_ASTORE, J_REFERENCE, 0x01, 0x02);
+}

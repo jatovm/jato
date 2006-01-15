@@ -281,6 +281,54 @@ static struct statement *convert_xaload(struct classblock *cb,
 	return nullcheck;
 }
 
+static struct statement *convert_store(enum jvm_type type,
+				       unsigned long index,
+				       struct operand_stack *stack)
+{
+	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
+	if (stmt) {
+		operand_set_local_var(stmt->s_target, type, index);
+		stmt->s_left->type = OPERAND_TEMPORARY;
+		stmt->s_left->temporary = stack_pop(stack);
+	}
+	return stmt;
+}
+
+static struct statement *convert_istore(struct classblock *cb,
+					unsigned char *code, size_t len,
+					struct operand_stack *stack)
+{
+	return convert_store(J_INT, code[1], stack);
+}
+
+static struct statement *convert_lstore(struct classblock *cb,
+					unsigned char *code, size_t len,
+					struct operand_stack *stack)
+{
+	return convert_store(J_LONG, code[1], stack);
+}
+
+static struct statement *convert_fstore(struct classblock *cb,
+					unsigned char *code, size_t len,
+					struct operand_stack *stack)
+{
+	return convert_store(J_FLOAT, code[1], stack);
+}
+
+static struct statement *convert_dstore(struct classblock *cb,
+					unsigned char *code, size_t len,
+					struct operand_stack *stack)
+{
+	return convert_store(J_DOUBLE, code[1], stack);
+}
+
+static struct statement *convert_astore(struct classblock *cb,
+					unsigned char *code, size_t len,
+					struct operand_stack *stack)
+{
+	return convert_store(J_REFERENCE, code[1], stack);
+}
+
 typedef struct statement *(*convert_fn_t) (struct classblock *,
 					   unsigned char *, size_t,
 					   struct operand_stack * stack);
@@ -348,6 +396,11 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_BALOAD, convert_xaload, 1),
 	DECLARE_CONVERTER(OPC_CALOAD, convert_xaload, 1),
 	DECLARE_CONVERTER(OPC_SALOAD, convert_xaload, 1),
+	DECLARE_CONVERTER(OPC_ISTORE, convert_istore, 1),
+	DECLARE_CONVERTER(OPC_LSTORE, convert_lstore, 1),
+	DECLARE_CONVERTER(OPC_FSTORE, convert_fstore, 1),
+	DECLARE_CONVERTER(OPC_DSTORE, convert_dstore, 1),
+	DECLARE_CONVERTER(OPC_ASTORE, convert_astore, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
