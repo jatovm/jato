@@ -22,9 +22,11 @@ struct statement {
 	struct statement *s_next;	/* Next statement. */
 };
 
-extern struct statement *convert_bytecode_to_stmts(struct classblock *,
-						   unsigned char *, size_t,
-						   struct operand_stack *);
-extern void free_stmt(struct statement *);
+struct statement *convert_bytecode_to_stmts(struct classblock *,
+					    unsigned char *, size_t,
+					    struct operand_stack *);
+
+struct statement *alloc_stmt(enum statement_type);
+void free_stmt(struct statement *);
 
 #endif
