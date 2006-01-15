@@ -3,6 +3,7 @@
  */
 
 #include <statement.h>
+#include <stdlib.h>
 
 struct statement *alloc_stmt(enum statement_type type)
 {
@@ -20,16 +21,23 @@ struct statement *alloc_stmt(enum statement_type type)
 	if (!stmt->s_right)
 		goto failed;
 
+	stmt->s_target = malloc(sizeof(struct operand));
+	if (!stmt->s_target)
+		goto failed;
+
 	return stmt;
 
   failed:
-	free(stmt->s_left);
-	free(stmt->s_right);
-	free(stmt);
+	free_stmt(stmt);
 	return NULL;
 }
 
 void free_stmt(struct statement *stmt)
 {
-	free(stmt);
+	if (stmt) {
+		free(stmt->s_target);
+		free(stmt->s_left);
+		free(stmt->s_right);
+		free(stmt);
+	}
 }
