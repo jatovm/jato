@@ -183,31 +183,31 @@ static struct statement *convert_aload(struct conversion_context *context)
 	return __convert_load(context->code[1], J_REFERENCE, context->stack);
 }
 
-static struct statement *convert_iload_x(struct conversion_context *context)
+static struct statement *convert_iload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_ILOAD_0, J_INT,
 			      context->stack);
 }
 
-static struct statement *convert_lload_x(struct conversion_context *context)
+static struct statement *convert_lload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_LLOAD_0, J_LONG,
 			      context->stack);
 }
 
-static struct statement *convert_fload_x(struct conversion_context *context)
+static struct statement *convert_fload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_FLOAD_0, J_FLOAT,
 			      context->stack);
 }
 
-static struct statement *convert_dload_x(struct conversion_context *context)
+static struct statement *convert_dload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_DLOAD_0, J_DOUBLE,
 			      context->stack);
 }
 
-static struct statement *convert_aload_x(struct conversion_context *context)
+static struct statement *convert_aload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_ALOAD_0, J_REFERENCE,
 			      context->stack);
@@ -276,6 +276,36 @@ static struct statement *convert_astore(struct conversion_context *context)
 	return __convert_store(J_REFERENCE, context->code[1], context->stack);
 }
 
+static struct statement *convert_istore_n(struct conversion_context *context)
+{
+	return __convert_store(J_INT, context->code[0] - OPC_ISTORE_0,
+			       context->stack);
+}
+
+static struct statement *convert_lstore_n(struct conversion_context *context)
+{
+	return __convert_store(J_LONG, context->code[0] - OPC_LSTORE_0,
+			       context->stack);
+}
+
+static struct statement *convert_fstore_n(struct conversion_context *context)
+{
+	return __convert_store(J_FLOAT, context->code[0] - OPC_FSTORE_0,
+			       context->stack);
+}
+
+static struct statement *convert_dstore_n(struct conversion_context *context)
+{
+	return __convert_store(J_DOUBLE, context->code[0] - OPC_DSTORE_0,
+			       context->stack);
+}
+
+static struct statement *convert_astore_n(struct conversion_context *context)
+{
+	return __convert_store(J_REFERENCE, context->code[0] - OPC_ASTORE_0,
+			       context->stack);
+}
+
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
@@ -313,26 +343,26 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_FLOAD, convert_fload, 2),
 	DECLARE_CONVERTER(OPC_DLOAD, convert_dload, 2),
 	DECLARE_CONVERTER(OPC_ALOAD, convert_aload, 2),
-	DECLARE_CONVERTER(OPC_ILOAD_0, convert_iload_x, 2),
-	DECLARE_CONVERTER(OPC_ILOAD_1, convert_iload_x, 2),
-	DECLARE_CONVERTER(OPC_ILOAD_2, convert_iload_x, 2),
-	DECLARE_CONVERTER(OPC_ILOAD_3, convert_iload_x, 2),
-	DECLARE_CONVERTER(OPC_LLOAD_0, convert_lload_x, 2),
-	DECLARE_CONVERTER(OPC_LLOAD_1, convert_lload_x, 2),
-	DECLARE_CONVERTER(OPC_LLOAD_2, convert_lload_x, 2),
-	DECLARE_CONVERTER(OPC_LLOAD_3, convert_lload_x, 2),
-	DECLARE_CONVERTER(OPC_FLOAD_0, convert_fload_x, 2),
-	DECLARE_CONVERTER(OPC_FLOAD_1, convert_fload_x, 2),
-	DECLARE_CONVERTER(OPC_FLOAD_2, convert_fload_x, 2),
-	DECLARE_CONVERTER(OPC_FLOAD_3, convert_fload_x, 2),
-	DECLARE_CONVERTER(OPC_DLOAD_0, convert_dload_x, 2),
-	DECLARE_CONVERTER(OPC_DLOAD_1, convert_dload_x, 2),
-	DECLARE_CONVERTER(OPC_DLOAD_2, convert_dload_x, 2),
-	DECLARE_CONVERTER(OPC_DLOAD_3, convert_dload_x, 2),
-	DECLARE_CONVERTER(OPC_ALOAD_0, convert_aload_x, 2),
-	DECLARE_CONVERTER(OPC_ALOAD_1, convert_aload_x, 2),
-	DECLARE_CONVERTER(OPC_ALOAD_2, convert_aload_x, 2),
-	DECLARE_CONVERTER(OPC_ALOAD_3, convert_aload_x, 2),
+	DECLARE_CONVERTER(OPC_ILOAD_0, convert_iload_n, 2),
+	DECLARE_CONVERTER(OPC_ILOAD_1, convert_iload_n, 2),
+	DECLARE_CONVERTER(OPC_ILOAD_2, convert_iload_n, 2),
+	DECLARE_CONVERTER(OPC_ILOAD_3, convert_iload_n, 2),
+	DECLARE_CONVERTER(OPC_LLOAD_0, convert_lload_n, 2),
+	DECLARE_CONVERTER(OPC_LLOAD_1, convert_lload_n, 2),
+	DECLARE_CONVERTER(OPC_LLOAD_2, convert_lload_n, 2),
+	DECLARE_CONVERTER(OPC_LLOAD_3, convert_lload_n, 2),
+	DECLARE_CONVERTER(OPC_FLOAD_0, convert_fload_n, 2),
+	DECLARE_CONVERTER(OPC_FLOAD_1, convert_fload_n, 2),
+	DECLARE_CONVERTER(OPC_FLOAD_2, convert_fload_n, 2),
+	DECLARE_CONVERTER(OPC_FLOAD_3, convert_fload_n, 2),
+	DECLARE_CONVERTER(OPC_DLOAD_0, convert_dload_n, 2),
+	DECLARE_CONVERTER(OPC_DLOAD_1, convert_dload_n, 2),
+	DECLARE_CONVERTER(OPC_DLOAD_2, convert_dload_n, 2),
+	DECLARE_CONVERTER(OPC_DLOAD_3, convert_dload_n, 2),
+	DECLARE_CONVERTER(OPC_ALOAD_0, convert_aload_n, 2),
+	DECLARE_CONVERTER(OPC_ALOAD_1, convert_aload_n, 2),
+	DECLARE_CONVERTER(OPC_ALOAD_2, convert_aload_n, 2),
+	DECLARE_CONVERTER(OPC_ALOAD_3, convert_aload_n, 2),
 	DECLARE_CONVERTER(OPC_IALOAD, convert_array_load, 1),
 	DECLARE_CONVERTER(OPC_LALOAD, convert_array_load, 1),
 	DECLARE_CONVERTER(OPC_FALOAD, convert_array_load, 1),
@@ -346,6 +376,26 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_FSTORE, convert_fstore, 1),
 	DECLARE_CONVERTER(OPC_DSTORE, convert_dstore, 1),
 	DECLARE_CONVERTER(OPC_ASTORE, convert_astore, 1),
+	DECLARE_CONVERTER(OPC_ISTORE_0, convert_istore_n, 1),
+	DECLARE_CONVERTER(OPC_ISTORE_1, convert_istore_n, 1),
+	DECLARE_CONVERTER(OPC_ISTORE_2, convert_istore_n, 1),
+	DECLARE_CONVERTER(OPC_ISTORE_3, convert_istore_n, 1),
+	DECLARE_CONVERTER(OPC_LSTORE_0, convert_lstore_n, 1),
+	DECLARE_CONVERTER(OPC_LSTORE_1, convert_lstore_n, 1),
+	DECLARE_CONVERTER(OPC_LSTORE_2, convert_lstore_n, 1),
+	DECLARE_CONVERTER(OPC_LSTORE_3, convert_lstore_n, 1),
+	DECLARE_CONVERTER(OPC_FSTORE_0, convert_fstore_n, 1),
+	DECLARE_CONVERTER(OPC_FSTORE_1, convert_fstore_n, 1),
+	DECLARE_CONVERTER(OPC_FSTORE_2, convert_fstore_n, 1),
+	DECLARE_CONVERTER(OPC_FSTORE_3, convert_fstore_n, 1),
+	DECLARE_CONVERTER(OPC_DSTORE_0, convert_dstore_n, 1),
+	DECLARE_CONVERTER(OPC_DSTORE_1, convert_dstore_n, 1),
+	DECLARE_CONVERTER(OPC_DSTORE_2, convert_dstore_n, 1),
+	DECLARE_CONVERTER(OPC_DSTORE_3, convert_dstore_n, 1),
+	DECLARE_CONVERTER(OPC_ASTORE_0, convert_astore_n, 1),
+	DECLARE_CONVERTER(OPC_ASTORE_1, convert_astore_n, 1),
+	DECLARE_CONVERTER(OPC_ASTORE_2, convert_astore_n, 1),
+	DECLARE_CONVERTER(OPC_ASTORE_3, convert_astore_n, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,

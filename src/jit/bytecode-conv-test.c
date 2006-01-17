@@ -589,3 +589,43 @@ void test_convert_astore(CuTest * ct)
 	assert_store_stmt(ct, OPC_ASTORE, J_REFERENCE, 0x00, 0x01);
 	assert_store_stmt(ct, OPC_ASTORE, J_REFERENCE, 0x01, 0x02);
 }
+
+void test_convert_istore_n(CuTest * ct)
+{
+	assert_store_stmt(ct, OPC_ISTORE_0, J_INT, 0x00, 0xFF);
+	assert_store_stmt(ct, OPC_ISTORE_1, J_INT, 0x01, 0xFF);
+	assert_store_stmt(ct, OPC_ISTORE_2, J_INT, 0x02, 0xFF);
+	assert_store_stmt(ct, OPC_ISTORE_3, J_INT, 0x03, 0xFF);
+}
+
+void test_convert_lstore_n(CuTest * ct)
+{
+	assert_store_stmt(ct, OPC_LSTORE_0, J_LONG, 0x00, 0xFF);
+	assert_store_stmt(ct, OPC_LSTORE_1, J_LONG, 0x01, 0xFF);
+	assert_store_stmt(ct, OPC_LSTORE_2, J_LONG, 0x02, 0xFF);
+	assert_store_stmt(ct, OPC_LSTORE_3, J_LONG, 0x03, 0xFF);
+}
+
+void test_convert_fstore_n(CuTest * ct)
+{
+	assert_store_stmt(ct, OPC_FSTORE_0, J_FLOAT, 0x00, 0xFF);
+	assert_store_stmt(ct, OPC_FSTORE_1, J_FLOAT, 0x01, 0xFF);
+	assert_store_stmt(ct, OPC_FSTORE_2, J_FLOAT, 0x02, 0xFF);
+	assert_store_stmt(ct, OPC_FSTORE_3, J_FLOAT, 0x03, 0xFF);
+}
+
+void test_convert_dstore_n(CuTest * ct)
+{
+	assert_store_stmt(ct, OPC_DSTORE_0, J_DOUBLE, 0x00, 0xFF);
+	assert_store_stmt(ct, OPC_DSTORE_1, J_DOUBLE, 0x01, 0xFF);
+	assert_store_stmt(ct, OPC_DSTORE_2, J_DOUBLE, 0x02, 0xFF);
+	assert_store_stmt(ct, OPC_DSTORE_3, J_DOUBLE, 0x03, 0xFF);
+}
+
+void test_convert_astore_n(CuTest * ct)
+{
+	assert_store_stmt(ct, OPC_ASTORE_0, J_REFERENCE, 0x00, 0xFF);
+	assert_store_stmt(ct, OPC_ASTORE_1, J_REFERENCE, 0x01, 0xFF);
+	assert_store_stmt(ct, OPC_ASTORE_2, J_REFERENCE, 0x02, 0xFF);
+	assert_store_stmt(ct, OPC_ASTORE_3, J_REFERENCE, 0x03, 0xFF);
+}
