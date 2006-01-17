@@ -10,7 +10,6 @@
 #include <operand-stack.h>
 
 #include <stdlib.h>
-#include <assert.h>
 
 struct conversion_context {
 	struct classblock *cb;
@@ -95,35 +94,39 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 				       struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		u1 type = CP_TYPE(cp, cp_idx);
-		ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
-		switch (type) {
-		case CONSTANT_Integer:
-			operand_set_const(stmt->s_left, CONST_INT, entry);
-			break;
-		case CONSTANT_Float:
-			operand_set_fconst(stmt->s_left, CONST_FLOAT,
-					   *(float *)&entry);
-			break;
-		case CONSTANT_String:
-			operand_set_const(stmt->s_left, CONST_REFERENCE,
-					  entry);
-			break;
-		case CONSTANT_Long:
-			operand_set_const(stmt->s_left, CONST_LONG, entry);
-			break;
-		case CONSTANT_Double:
-			operand_set_fconst(stmt->s_left, CONST_DOUBLE,
-					   *(double *)&entry);
-			stmt->s_left->constant.type = CONST_DOUBLE;
-			break;
-		default:
-			assert(!"unknown constant type");
-		}
-		stack_push(stack, stmt->s_target->temporary);
+	if (!stmt)
+		goto failed;
+
+	u1 type = CP_TYPE(cp, cp_idx);
+	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
+	switch (type) {
+	case CONSTANT_Integer:
+		operand_set_const(stmt->s_left, CONST_INT, entry);
+		break;
+	case CONSTANT_Float:
+		operand_set_fconst(stmt->s_left, CONST_FLOAT,
+				   *(float *)&entry);
+		break;
+	case CONSTANT_String:
+		operand_set_const(stmt->s_left, CONST_REFERENCE, entry);
+		break;
+	case CONSTANT_Long:
+		operand_set_const(stmt->s_left, CONST_LONG, entry);
+		break;
+	case CONSTANT_Double:
+		operand_set_fconst(stmt->s_left, CONST_DOUBLE,
+				   *(double *)&entry);
+		stmt->s_left->constant.type = CONST_DOUBLE;
+		break;
+	default:
+		goto failed;
 	}
+	stack_push(stack, stmt->s_target->temporary);
+
 	return stmt;
+failed:
+	free_stmt(stmt);
+	return NULL;
 }
 
 static struct statement *convert_ldc(struct conversion_context *context)
@@ -215,27 +218,42 @@ static struct statement *convert_aload_n(struct conversion_context *context)
 
 static struct statement *convert_array_load(struct conversion_context *context)
 {
-	unsigned long index = stack_pop(context->stack);
-	unsigned long arrayref = stack_pop(context->stack);
-	struct statement *assign = alloc_stmt(STMT_ASSIGN);
+	unsigned long index, arrayref;
+	struct statement *assign, *arraycheck, *nullcheck;
 
-	assert(assign);
+	index = stack_pop(context->stack);
+	arrayref = stack_pop(context->stack);
+
+	assign = alloc_stmt(STMT_ASSIGN);
+	if (!assign)
+		goto failed;
+
 	operand_set_arrayref(assign->s_left, arrayref, index);
 
-	stack_push(context->stack, assign->s_target->temporary);
+	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
+	if (!arraycheck)
+		goto failed;
 
-	struct statement *arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
-	assert(arraycheck);
 	operand_set_temporary(arraycheck->s_left, arrayref);
 	operand_set_temporary(arraycheck->s_right, index);
 	arraycheck->s_next = assign;
 
-	struct statement *nullcheck = alloc_stmt(STMT_NULL_CHECK);
-	if (nullcheck) {
-		operand_set_temporary(nullcheck->s_left, arrayref);
-		nullcheck->s_next = arraycheck;
-	}
+	nullcheck = alloc_stmt(STMT_NULL_CHECK);
+	if (!nullcheck)
+		goto failed;
+
+	operand_set_temporary(nullcheck->s_left, arrayref);
+	nullcheck->s_next = arraycheck;
+
+	stack_push(context->stack, assign->s_target->temporary);
+
 	return nullcheck;
+
+failed:
+	free_stmt(assign);
+	free_stmt(arraycheck);
+	free_stmt(nullcheck);
+	return NULL;
 }
 
 static struct statement *__convert_store(enum jvm_type type,
@@ -306,30 +324,45 @@ static struct statement *convert_astore_n(struct conversion_context *context)
 			       context->stack);
 }
 
-static struct statement *convert_array_store(struct conversion_context *context)
+static struct statement *
+convert_array_store(struct conversion_context *context)
 {
-	unsigned long value = stack_pop(context->stack);
-	unsigned long index = stack_pop(context->stack);
-	unsigned long arrayref = stack_pop(context->stack);
+	unsigned long value, index, arrayref;
+	struct statement *assign, *arraycheck, *nullcheck;
+	
+	value = stack_pop(context->stack);
+	index = stack_pop(context->stack);
+	arrayref = stack_pop(context->stack);
 
-	struct statement *assign = alloc_stmt(STMT_ASSIGN);
+	assign = alloc_stmt(STMT_ASSIGN);
+	if (!assign)
+		goto failed;
 
-	assert(assign);
 	operand_set_arrayref(assign->s_target, arrayref, index);
 	operand_set_temporary(assign->s_left, value);
 
-	struct statement *arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
-	assert(arraycheck);
+	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
+	if (!arraycheck)
+		goto failed;
+
 	operand_set_temporary(arraycheck->s_left, arrayref);
 	operand_set_temporary(arraycheck->s_right, index);
 	arraycheck->s_next = assign;
 
-	struct statement *nullcheck = alloc_stmt(STMT_NULL_CHECK);
-	if (nullcheck) {
-		operand_set_temporary(nullcheck->s_left, arrayref);
-		nullcheck->s_next = arraycheck;
-	}
+	nullcheck = alloc_stmt(STMT_NULL_CHECK);
+	if (!nullcheck)
+		goto failed;
+
+	operand_set_temporary(nullcheck->s_left, arrayref);
+	nullcheck->s_next = arraycheck;
+
 	return nullcheck;
+
+ failed:
+	free_stmt(assign);
+	free_stmt(arraycheck);
+	free_stmt(nullcheck);
+	return NULL;
 }
 
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
