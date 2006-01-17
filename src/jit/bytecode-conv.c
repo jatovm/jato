@@ -365,6 +365,12 @@ convert_array_store(struct conversion_context *context)
 	return NULL;
 }
 
+static struct statement *convert_pop(struct conversion_context *context)
+{
+	stack_pop(context->stack);
+	return NULL;
+}
+
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
@@ -463,6 +469,8 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_BASTORE, convert_array_store, 1),
 	DECLARE_CONVERTER(OPC_CASTORE, convert_array_store, 1),
 	DECLARE_CONVERTER(OPC_SASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_POP, convert_pop, 1),
+	DECLARE_CONVERTER(OPC_POP2, convert_pop, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,

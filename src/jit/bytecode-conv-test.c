@@ -704,3 +704,18 @@ void test_convert_sastore(CuTest * ct)
 	assert_array_store_stmts(ct, OPC_SASTORE, 0, 1, 2);
 	assert_array_store_stmts(ct, OPC_SASTORE, 2, 3, 4);
 }
+
+static void assert_pop_operand_stack(CuTest * ct, unsigned char opc)
+{
+	unsigned char code[] = { opc };
+	struct operand_stack stack = OPERAND_STACK_INIT;
+	stack_push(&stack, 1);
+	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+}
+
+void test_convert_pop(CuTest * ct)
+{
+	assert_pop_operand_stack(ct, OPC_POP);
+	assert_pop_operand_stack(ct, OPC_POP2);
+}
