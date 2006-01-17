@@ -629,3 +629,78 @@ void test_convert_astore_n(CuTest * ct)
 	assert_store_stmt(ct, OPC_ASTORE_2, J_REFERENCE, 0x02, 0xFF);
 	assert_store_stmt(ct, OPC_ASTORE_3, J_REFERENCE, 0x03, 0xFF);
 }
+
+static void assert_array_store_stmts(CuTest * ct, unsigned char opc,
+				     unsigned long arrayref,
+				     unsigned long index,
+				     unsigned long value)
+{
+	unsigned char code[] = { opc };
+	struct operand_stack stack = OPERAND_STACK_INIT;
+	stack_push(&stack, arrayref);
+	stack_push(&stack, index);
+	stack_push(&stack, value);
+
+	struct statement *stmt =
+	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+
+	struct statement *nullcheck = stmt;
+	struct statement *arraycheck = stmt->s_next;
+	struct statement *assign = arraycheck->s_next;
+
+	assert_null_check_stmt(ct, arrayref, nullcheck);
+	assert_arraycheck_stmt(ct, arrayref, index, arraycheck);
+	CuAssertIntEquals(ct, STMT_ASSIGN, assign->s_type);
+	assert_arrayref_operand(ct, arrayref, index, assign->s_target);
+	CuAssertIntEquals(ct, value, assign->s_left->temporary);
+
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+}
+
+void test_convert_iastore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_IASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_IASTORE, 2, 3, 4);
+}
+
+void test_convert_lastore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_LASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_LASTORE, 2, 3, 4);
+}
+
+void test_convert_fastore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_FASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_FASTORE, 2, 3, 4);
+}
+
+void test_convert_dastore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_DASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_DASTORE, 2, 3, 4);
+}
+
+void test_convert_aastore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_AASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_AASTORE, 2, 3, 4);
+}
+
+void test_convert_bastore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_BASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_BASTORE, 2, 3, 4);
+}
+
+void test_convert_castore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_CASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_CASTORE, 2, 3, 4);
+}
+
+void test_convert_sastore(CuTest * ct)
+{
+	assert_array_store_stmts(ct, OPC_SASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, OPC_SASTORE, 2, 3, 4);
+}

@@ -306,6 +306,32 @@ static struct statement *convert_astore_n(struct conversion_context *context)
 			       context->stack);
 }
 
+static struct statement *convert_array_store(struct conversion_context *context)
+{
+	unsigned long value = stack_pop(context->stack);
+	unsigned long index = stack_pop(context->stack);
+	unsigned long arrayref = stack_pop(context->stack);
+
+	struct statement *assign = alloc_stmt(STMT_ASSIGN);
+
+	assert(assign);
+	operand_set_arrayref(assign->s_target, arrayref, index);
+	operand_set_temporary(assign->s_left, value);
+
+	struct statement *arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
+	assert(arraycheck);
+	operand_set_temporary(arraycheck->s_left, arrayref);
+	operand_set_temporary(arraycheck->s_right, index);
+	arraycheck->s_next = assign;
+
+	struct statement *nullcheck = alloc_stmt(STMT_NULL_CHECK);
+	if (nullcheck) {
+		operand_set_temporary(nullcheck->s_left, arrayref);
+		nullcheck->s_next = arraycheck;
+	}
+	return nullcheck;
+}
+
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
@@ -396,6 +422,14 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_ASTORE_1, convert_astore_n, 1),
 	DECLARE_CONVERTER(OPC_ASTORE_2, convert_astore_n, 1),
 	DECLARE_CONVERTER(OPC_ASTORE_3, convert_astore_n, 1),
+	DECLARE_CONVERTER(OPC_IASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_LASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_FASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_DASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_AASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_BASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_CASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_SASTORE, convert_array_store, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
