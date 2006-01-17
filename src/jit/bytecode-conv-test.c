@@ -405,7 +405,7 @@ void test_convert_aload(CuTest * ct)
 	assert_load_stmt(ct, OPC_ALOAD, J_REFERENCE, 0xFF);
 }
 
-void test_convert_iload_x(CuTest * ct)
+void test_convert_iload_n(CuTest * ct)
 {
 	assert_load_stmt(ct, OPC_ILOAD_0, J_INT, 0x00);
 	assert_load_stmt(ct, OPC_ILOAD_1, J_INT, 0x01);
@@ -413,7 +413,7 @@ void test_convert_iload_x(CuTest * ct)
 	assert_load_stmt(ct, OPC_ILOAD_3, J_INT, 0x03);
 }
 
-void test_convert_lload_x(CuTest * ct)
+void test_convert_lload_n(CuTest * ct)
 {
 	assert_load_stmt(ct, OPC_LLOAD_0, J_LONG, 0x00);
 	assert_load_stmt(ct, OPC_LLOAD_1, J_LONG, 0x01);
@@ -421,7 +421,7 @@ void test_convert_lload_x(CuTest * ct)
 	assert_load_stmt(ct, OPC_LLOAD_3, J_LONG, 0x03);
 }
 
-void test_convert_fload_x(CuTest * ct)
+void test_convert_fload_n(CuTest * ct)
 {
 	assert_load_stmt(ct, OPC_FLOAD_0, J_FLOAT, 0x00);
 	assert_load_stmt(ct, OPC_FLOAD_1, J_FLOAT, 0x01);
@@ -429,7 +429,7 @@ void test_convert_fload_x(CuTest * ct)
 	assert_load_stmt(ct, OPC_FLOAD_3, J_FLOAT, 0x03);
 }
 
-void test_convert_dload_x(CuTest * ct)
+void test_convert_dload_n(CuTest * ct)
 {
 	assert_load_stmt(ct, OPC_DLOAD_0, J_DOUBLE, 0x00);
 	assert_load_stmt(ct, OPC_DLOAD_1, J_DOUBLE, 0x01);
@@ -437,7 +437,7 @@ void test_convert_dload_x(CuTest * ct)
 	assert_load_stmt(ct, OPC_DLOAD_3, J_DOUBLE, 0x03);
 }
 
-void test_convert_aload_x(CuTest * ct)
+void test_convert_aload_n(CuTest * ct)
 {
 	assert_load_stmt(ct, OPC_ALOAD_0, J_REFERENCE, 0x00);
 	assert_load_stmt(ct, OPC_ALOAD_1, J_REFERENCE, 0x01);
