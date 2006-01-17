@@ -23,7 +23,7 @@ struct statement {
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *,
-					    unsigned char *, size_t,
+					    unsigned char *, unsigned long,
 					    struct operand_stack *);
 
 struct statement *alloc_stmt(enum statement_type);

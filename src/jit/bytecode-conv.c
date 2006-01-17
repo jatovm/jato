@@ -12,98 +12,89 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static struct statement *convert_nop(struct classblock *cb,
-				     unsigned char *code, size_t len,
-				     struct operand_stack *stack)
+struct conversion_context {
+	struct classblock *cb;
+	unsigned char *code;
+	unsigned long len;
+	struct operand_stack *stack;
+};
+
+static struct statement *convert_nop(struct conversion_context *context)
 {
 	return alloc_stmt(STMT_NOP);
 }
 
-static struct statement *convert_aconst_null(struct classblock *cb,
-					     unsigned char *code, size_t len,
-					     struct operand_stack *stack)
+static struct statement *convert_aconst_null(struct conversion_context *context)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_const(stmt->s_left, CONST_REFERENCE, 0);
-		stack_push(stack, stmt->s_target->temporary);
+		stack_push(context->stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
 
-static struct statement *convert_iconst(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_iconst(struct conversion_context *context)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_const(stmt->s_left, CONST_INT,
-				  code[0] - OPC_ICONST_0);
-		stack_push(stack, stmt->s_target->temporary);
+				  context->code[0] - OPC_ICONST_0);
+		stack_push(context->stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
 
-static struct statement *convert_lconst(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_lconst(struct conversion_context *context)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_const(stmt->s_left, CONST_LONG,
-				  code[0] - OPC_LCONST_0);
-		stack_push(stack, stmt->s_target->temporary);
+				  context->code[0] - OPC_LCONST_0);
+		stack_push(context->stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
 
-static struct statement *convert_fconst(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_fconst(struct conversion_context *context)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_fconst(stmt->s_left, CONST_FLOAT,
-				   code[0] - OPC_FCONST_0);
-		stack_push(stack, stmt->s_target->temporary);
+				   context->code[0] - OPC_FCONST_0);
+		stack_push(context->stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
 
-static struct statement *convert_dconst(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_dconst(struct conversion_context *context)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_fconst(stmt->s_left, CONST_DOUBLE,
-				   code[0] - OPC_DCONST_0);
-		stack_push(stack, stmt->s_target->temporary);
+				   context->code[0] - OPC_DCONST_0);
+		stack_push(context->stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
 
-static struct statement *convert_bipush(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_bipush(struct conversion_context *context)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		operand_set_const(stmt->s_left, CONST_INT, (char)code[1]);
-		stack_push(stack, stmt->s_target->temporary);
+		operand_set_const(stmt->s_left, CONST_INT, (char)context->code[1]);
+		stack_push(context->stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
 
-static struct statement *convert_sipush(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_sipush(struct conversion_context *context)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_const(stmt->s_left, CONST_INT,
-				  (short)be16_to_cpu(*(u2 *) & code[1]));
-		stack_push(stack, stmt->s_target->temporary);
+				  (short)be16_to_cpu(*(u2 *) & context->code[1]));
+		stack_push(context->stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
@@ -144,24 +135,24 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	return stmt;
 }
 
-static struct statement *convert_ldc(struct classblock *cb, unsigned char *code,
-				     size_t len, struct operand_stack *stack)
+static struct statement *convert_ldc(struct conversion_context *context)
 {
-	return __convert_ldc(&cb->constant_pool, code[1], stack);
+	return __convert_ldc(&context->cb->constant_pool, context->code[1],
+			     context->stack);
 }
 
-static struct statement *convert_ldc_w(struct classblock *cb,
-				       unsigned char *code, size_t len,
-				       struct operand_stack *stack)
+static struct statement *convert_ldc_w(struct conversion_context *context)
 {
-	return __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]), stack);
+	return __convert_ldc(&context->cb->constant_pool,
+			     be16_to_cpu(*(u2 *) & context->code[1]),
+			     context->stack);
 }
 
-static struct statement *convert_ldc2_w(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_ldc2_w(struct conversion_context *context)
 {
-	return __convert_ldc(&cb->constant_pool, be16_to_cpu(*(u2 *) & code[1]), stack);
+	return __convert_ldc(&context->cb->constant_pool,
+			     be16_to_cpu(*(u2 *) & context->code[1]),
+			     context->stack);
 }
 
 static struct statement *__convert_load(unsigned char index,
@@ -176,96 +167,77 @@ static struct statement *__convert_load(unsigned char index,
 	return stmt;
 }
 
-static struct statement *convert_load(unsigned char *code, size_t len,
-				      enum jvm_type type,
-				      struct operand_stack *stack)
+static struct statement *convert_load(struct conversion_context *context,
+				      enum jvm_type type)
 {
-	return __convert_load(code[1], type, stack);
+	return __convert_load(context->code[1], type, context->stack);
 }
 
-static struct statement *convert_iload(struct classblock *cb,
-				       unsigned char *code, size_t len,
-				       struct operand_stack *stack)
+static struct statement *convert_iload(struct conversion_context *context)
 {
-	return convert_load(code, len, J_INT, stack);
+	return convert_load(context, J_INT);
 }
 
-static struct statement *convert_lload(struct classblock *cb,
-				       unsigned char *code, size_t len,
-				       struct operand_stack *stack)
+static struct statement *convert_lload(struct conversion_context *context)
 {
-	return convert_load(code, len, J_LONG, stack);
+	return convert_load(context, J_LONG);
 }
 
-static struct statement *convert_fload(struct classblock *cb,
-				       unsigned char *code, size_t len,
-				       struct operand_stack *stack)
+static struct statement *convert_fload(struct conversion_context *context)
 {
-	return convert_load(code, len, J_FLOAT, stack);
+	return convert_load(context, J_FLOAT);
 }
 
-static struct statement *convert_dload(struct classblock *cb,
-				       unsigned char *code, size_t len,
-				       struct operand_stack *stack)
+static struct statement *convert_dload(struct conversion_context *context)
 {
-	return convert_load(code, len, J_DOUBLE, stack);
+	return convert_load(context, J_DOUBLE);
 }
 
-static struct statement *convert_aload(struct classblock *cb,
-				       unsigned char *code, size_t len,
-				       struct operand_stack *stack)
+static struct statement *convert_aload(struct conversion_context *context)
 {
-	return convert_load(code, len, J_REFERENCE, stack);
+	return convert_load(context, J_REFERENCE);
 }
 
-static struct statement *convert_iload_x(struct classblock *cb,
-					 unsigned char *code, size_t len,
-					 struct operand_stack *stack)
+static struct statement *convert_iload_x(struct conversion_context *context)
 {
-	return __convert_load(code[0] - OPC_ILOAD_0, J_INT, stack);
+	return __convert_load(context->code[0] - OPC_ILOAD_0, J_INT,
+			      context->stack);
 }
 
-static struct statement *convert_lload_x(struct classblock *cb,
-					 unsigned char *code, size_t len,
-					 struct operand_stack *stack)
+static struct statement *convert_lload_x(struct conversion_context *context)
 {
-	return __convert_load(code[0] - OPC_LLOAD_0, J_LONG, stack);
+	return __convert_load(context->code[0] - OPC_LLOAD_0, J_LONG,
+			      context->stack);
 }
 
-static struct statement *convert_fload_x(struct classblock *cb,
-					 unsigned char *code, size_t len,
-					 struct operand_stack *stack)
+static struct statement *convert_fload_x(struct conversion_context *context)
 {
-	return __convert_load(code[0] - OPC_FLOAD_0, J_FLOAT, stack);
+	return __convert_load(context->code[0] - OPC_FLOAD_0, J_FLOAT,
+			      context->stack);
 }
 
-static struct statement *convert_dload_x(struct classblock *cb,
-					 unsigned char *code, size_t len,
-					 struct operand_stack *stack)
+static struct statement *convert_dload_x(struct conversion_context *context)
 {
-	return __convert_load(code[0] - OPC_DLOAD_0, J_DOUBLE, stack);
+	return __convert_load(context->code[0] - OPC_DLOAD_0, J_DOUBLE,
+			      context->stack);
 }
 
-static struct statement *convert_aload_x(struct classblock *cb,
-					 unsigned char *code, size_t len,
-					 struct operand_stack *stack)
+static struct statement *convert_aload_x(struct conversion_context *context)
 {
-	return __convert_load(code[0] - OPC_ALOAD_0, J_REFERENCE,
-			      stack);
+	return __convert_load(context->code[0] - OPC_ALOAD_0, J_REFERENCE,
+			      context->stack);
 }
 
-static struct statement *convert_xaload(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_xaload(struct conversion_context *context)
 {
-	unsigned long index = stack_pop(stack);
-	unsigned long arrayref = stack_pop(stack);
+	unsigned long index = stack_pop(context->stack);
+	unsigned long arrayref = stack_pop(context->stack);
 	struct statement *assign = alloc_stmt(STMT_ASSIGN);
 
 	assert(assign);
 	operand_set_arrayref(assign->s_left, arrayref, index);
 
-	stack_push(stack, assign->s_target->temporary);
+	stack_push(context->stack, assign->s_target->temporary);
 
 	struct statement *arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	assert(arraycheck);
@@ -294,44 +266,32 @@ static struct statement *convert_store(enum jvm_type type,
 	return stmt;
 }
 
-static struct statement *convert_istore(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_istore(struct conversion_context *context)
 {
-	return convert_store(J_INT, code[1], stack);
+	return convert_store(J_INT, context->code[1], context->stack);
 }
 
-static struct statement *convert_lstore(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_lstore(struct conversion_context *context)
 {
-	return convert_store(J_LONG, code[1], stack);
+	return convert_store(J_LONG, context->code[1], context->stack);
 }
 
-static struct statement *convert_fstore(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_fstore(struct conversion_context *context)
 {
-	return convert_store(J_FLOAT, code[1], stack);
+	return convert_store(J_FLOAT, context->code[1], context->stack);
 }
 
-static struct statement *convert_dstore(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_dstore(struct conversion_context *context)
 {
-	return convert_store(J_DOUBLE, code[1], stack);
+	return convert_store(J_DOUBLE, context->code[1], context->stack);
 }
 
-static struct statement *convert_astore(struct classblock *cb,
-					unsigned char *code, size_t len,
-					struct operand_stack *stack)
+static struct statement *convert_astore(struct conversion_context *context)
 {
-	return convert_store(J_REFERENCE, code[1], stack);
+	return convert_store(J_REFERENCE, context->code[1], context->stack);
 }
 
-typedef struct statement *(*convert_fn_t) (struct classblock *,
-					   unsigned char *, size_t,
-					   struct operand_stack * stack);
+typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
 	convert_fn_t convert;
@@ -404,11 +364,19 @@ static struct converter converters[] = {
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
-					    unsigned char *code, size_t count,
+					    unsigned char *code,
+					    unsigned long len, 
 					    struct operand_stack *stack)
 {
 	struct converter *converter = &converters[code[0]];
-	if (!converter || count < converter->require)
+	if (!converter || len < converter->require)
 		return NULL;
-	return converter->convert(cb, code, count, stack);
+
+	struct conversion_context context = {
+		.cb = cb,
+		.code = code,
+		.len = len,
+		.stack = stack
+	};
+	return converter->convert(&context);
 }
