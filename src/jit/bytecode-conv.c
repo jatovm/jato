@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2005  Pekka Enberg
+ * Copyright (C) 2005-2006  Pekka Enberg
  *
- * This file contains functions for converting Java bytecode to three-address
- * code.
+ * This file contains functions for converting Java bytecode to immediate
+ * language of the JIT compiler.
  */
 
 #include <statement.h>
@@ -24,79 +24,70 @@ static struct statement *convert_nop(struct conversion_context *context)
 	return alloc_stmt(STMT_NOP);
 }
 
-static struct statement *convert_aconst_null(struct conversion_context *context)
+static struct statement *__convert_const(enum constant_type constant_type,
+					 unsigned long long value,
+					 struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		operand_set_const(stmt->s_left, CONST_REFERENCE, 0);
-		stack_push(context->stack, stmt->s_target->temporary);
+		operand_set_const(stmt->s_left, constant_type, value);
+		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
+}
+
+static struct statement *convert_aconst_null(struct conversion_context *context)
+{
+	return __convert_const(CONST_REFERENCE, 0, context->stack);
 }
 
 static struct statement *convert_iconst(struct conversion_context *context)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		operand_set_const(stmt->s_left, CONST_INT,
-				  context->code[0] - OPC_ICONST_0);
-		stack_push(context->stack, stmt->s_target->temporary);
-	}
-	return stmt;
+	return __convert_const(CONST_INT, context->code[0] - OPC_ICONST_0,
+			       context->stack);
 }
 
 static struct statement *convert_lconst(struct conversion_context *context)
 {
+	return __convert_const(CONST_LONG, context->code[0] - OPC_LCONST_0,
+			       context->stack);
+}
+
+static struct statement *__convert_fconst(enum constant_type constant_type,
+					  double value,
+					  struct operand_stack *stack)
+{
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		operand_set_const(stmt->s_left, CONST_LONG,
-				  context->code[0] - OPC_LCONST_0);
-		stack_push(context->stack, stmt->s_target->temporary);
+		operand_set_fconst(stmt->s_left, constant_type, value);
+		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
 }
 
 static struct statement *convert_fconst(struct conversion_context *context)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		operand_set_fconst(stmt->s_left, CONST_FLOAT,
-				   context->code[0] - OPC_FCONST_0);
-		stack_push(context->stack, stmt->s_target->temporary);
-	}
-	return stmt;
+	return __convert_fconst(CONST_FLOAT, context->code[0] - OPC_FCONST_0,
+				context->stack);
 }
 
 static struct statement *convert_dconst(struct conversion_context *context)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		operand_set_fconst(stmt->s_left, CONST_DOUBLE,
-				   context->code[0] - OPC_DCONST_0);
-		stack_push(context->stack, stmt->s_target->temporary);
-	}
-	return stmt;
+	return __convert_fconst(CONST_DOUBLE, context->code[0] - OPC_DCONST_0,
+				context->stack);
 }
 
 static struct statement *convert_bipush(struct conversion_context *context)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		operand_set_const(stmt->s_left, CONST_INT, (char)context->code[1]);
-		stack_push(context->stack, stmt->s_target->temporary);
-	}
-	return stmt;
+	return __convert_const(CONST_INT, (char)context->code[1],
+			       context->stack);
 }
 
 static struct statement *convert_sipush(struct conversion_context *context)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		operand_set_const(stmt->s_left, CONST_INT,
-				  (short)be16_to_cpu(*(u2 *) & context->code[1]));
-		stack_push(context->stack, stmt->s_target->temporary);
-	}
-	return stmt;
+	return __convert_const(CONST_INT,
+			       (short)be16_to_cpu(*(u2 *) & context->code[1]),
+			       context->stack);
 }
 
 static struct statement *__convert_ldc(struct constant_pool *cp,
@@ -167,35 +158,29 @@ static struct statement *__convert_load(unsigned char index,
 	return stmt;
 }
 
-static struct statement *convert_load(struct conversion_context *context,
-				      enum jvm_type type)
-{
-	return __convert_load(context->code[1], type, context->stack);
-}
-
 static struct statement *convert_iload(struct conversion_context *context)
 {
-	return convert_load(context, J_INT);
+	return __convert_load(context->code[1], J_INT, context->stack);
 }
 
 static struct statement *convert_lload(struct conversion_context *context)
 {
-	return convert_load(context, J_LONG);
+	return __convert_load(context->code[1], J_LONG, context->stack);
 }
 
 static struct statement *convert_fload(struct conversion_context *context)
 {
-	return convert_load(context, J_FLOAT);
+	return __convert_load(context->code[1], J_FLOAT, context->stack);
 }
 
 static struct statement *convert_dload(struct conversion_context *context)
 {
-	return convert_load(context, J_DOUBLE);
+	return __convert_load(context->code[1], J_DOUBLE, context->stack);
 }
 
 static struct statement *convert_aload(struct conversion_context *context)
 {
-	return convert_load(context, J_REFERENCE);
+	return __convert_load(context->code[1], J_REFERENCE, context->stack);
 }
 
 static struct statement *convert_iload_x(struct conversion_context *context)
@@ -228,7 +213,7 @@ static struct statement *convert_aload_x(struct conversion_context *context)
 			      context->stack);
 }
 
-static struct statement *convert_xaload(struct conversion_context *context)
+static struct statement *convert_array_load(struct conversion_context *context)
 {
 	unsigned long index = stack_pop(context->stack);
 	unsigned long arrayref = stack_pop(context->stack);
@@ -253,9 +238,9 @@ static struct statement *convert_xaload(struct conversion_context *context)
 	return nullcheck;
 }
 
-static struct statement *convert_store(enum jvm_type type,
-				       unsigned long index,
-				       struct operand_stack *stack)
+static struct statement *__convert_store(enum jvm_type type,
+					 unsigned long index,
+					 struct operand_stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
@@ -268,27 +253,27 @@ static struct statement *convert_store(enum jvm_type type,
 
 static struct statement *convert_istore(struct conversion_context *context)
 {
-	return convert_store(J_INT, context->code[1], context->stack);
+	return __convert_store(J_INT, context->code[1], context->stack);
 }
 
 static struct statement *convert_lstore(struct conversion_context *context)
 {
-	return convert_store(J_LONG, context->code[1], context->stack);
+	return __convert_store(J_LONG, context->code[1], context->stack);
 }
 
 static struct statement *convert_fstore(struct conversion_context *context)
 {
-	return convert_store(J_FLOAT, context->code[1], context->stack);
+	return __convert_store(J_FLOAT, context->code[1], context->stack);
 }
 
 static struct statement *convert_dstore(struct conversion_context *context)
 {
-	return convert_store(J_DOUBLE, context->code[1], context->stack);
+	return __convert_store(J_DOUBLE, context->code[1], context->stack);
 }
 
 static struct statement *convert_astore(struct conversion_context *context)
 {
-	return convert_store(J_REFERENCE, context->code[1], context->stack);
+	return __convert_store(J_REFERENCE, context->code[1], context->stack);
 }
 
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
@@ -348,14 +333,14 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_ALOAD_1, convert_aload_x, 2),
 	DECLARE_CONVERTER(OPC_ALOAD_2, convert_aload_x, 2),
 	DECLARE_CONVERTER(OPC_ALOAD_3, convert_aload_x, 2),
-	DECLARE_CONVERTER(OPC_IALOAD, convert_xaload, 1),
-	DECLARE_CONVERTER(OPC_LALOAD, convert_xaload, 1),
-	DECLARE_CONVERTER(OPC_FALOAD, convert_xaload, 1),
-	DECLARE_CONVERTER(OPC_DALOAD, convert_xaload, 1),
-	DECLARE_CONVERTER(OPC_AALOAD, convert_xaload, 1),
-	DECLARE_CONVERTER(OPC_BALOAD, convert_xaload, 1),
-	DECLARE_CONVERTER(OPC_CALOAD, convert_xaload, 1),
-	DECLARE_CONVERTER(OPC_SALOAD, convert_xaload, 1),
+	DECLARE_CONVERTER(OPC_IALOAD, convert_array_load, 1),
+	DECLARE_CONVERTER(OPC_LALOAD, convert_array_load, 1),
+	DECLARE_CONVERTER(OPC_FALOAD, convert_array_load, 1),
+	DECLARE_CONVERTER(OPC_DALOAD, convert_array_load, 1),
+	DECLARE_CONVERTER(OPC_AALOAD, convert_array_load, 1),
+	DECLARE_CONVERTER(OPC_BALOAD, convert_array_load, 1),
+	DECLARE_CONVERTER(OPC_CALOAD, convert_array_load, 1),
+	DECLARE_CONVERTER(OPC_SALOAD, convert_array_load, 1),
 	DECLARE_CONVERTER(OPC_ISTORE, convert_istore, 1),
 	DECLARE_CONVERTER(OPC_LSTORE, convert_lstore, 1),
 	DECLARE_CONVERTER(OPC_FSTORE, convert_fstore, 1),
