@@ -371,6 +371,45 @@ static struct statement *convert_pop(struct conversion_context *context)
 	return NULL;
 }
 
+static struct statement *convert_dup(struct conversion_context *context)
+{
+	unsigned long value = stack_pop(context->stack);
+	stack_push(context->stack, value);
+	stack_push(context->stack, value);
+	return NULL;
+}
+
+static struct statement *convert_dup_x1(struct conversion_context *context)
+{
+	unsigned long value1 = stack_pop(context->stack);
+	unsigned long value2 = stack_pop(context->stack);
+	stack_push(context->stack, value1);
+	stack_push(context->stack, value2);
+	stack_push(context->stack, value1);
+	return NULL;
+}
+
+static struct statement *convert_dup_x2(struct conversion_context *context)
+{
+	unsigned long value1 = stack_pop(context->stack);
+	unsigned long value2 = stack_pop(context->stack);
+	unsigned long value3 = stack_pop(context->stack);
+	stack_push(context->stack, value1);
+	stack_push(context->stack, value3);
+	stack_push(context->stack, value2);
+	stack_push(context->stack, value1);
+	return NULL;
+}
+
+static struct statement *convert_swap(struct conversion_context *context)
+{
+	unsigned long value1 = stack_pop(context->stack);
+	unsigned long value2 = stack_pop(context->stack);
+	stack_push(context->stack, value1);
+	stack_push(context->stack, value2);
+	return NULL;
+}
+
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
@@ -471,6 +510,13 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_SASTORE, convert_array_store, 1),
 	DECLARE_CONVERTER(OPC_POP, convert_pop, 1),
 	DECLARE_CONVERTER(OPC_POP2, convert_pop, 1),
+	DECLARE_CONVERTER(OPC_DUP, convert_dup, 1),
+	DECLARE_CONVERTER(OPC_DUP_X1, convert_dup_x1, 1),
+	DECLARE_CONVERTER(OPC_DUP_X2, convert_dup_x2, 1),
+	DECLARE_CONVERTER(OPC_DUP2, convert_dup, 1),
+	DECLARE_CONVERTER(OPC_DUP2_X1, convert_dup_x1, 1),
+	DECLARE_CONVERTER(OPC_DUP2_X2, convert_dup_x2, 1),
+	DECLARE_CONVERTER(OPC_SWAP, convert_swap, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
