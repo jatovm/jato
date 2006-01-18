@@ -18,6 +18,12 @@ struct conversion_context {
 	struct operand_stack *stack;
 };
 
+static unsigned long alloc_temporary(void)
+{
+	static unsigned long temporary;
+	return ++temporary;
+}
+
 static struct statement *convert_nop(struct conversion_context *context)
 {
 	return alloc_stmt(STMT_NOP);
@@ -30,6 +36,7 @@ static struct statement *__convert_const(enum constant_type constant_type,
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_const(stmt->s_left, constant_type, value);
+		operand_set_temporary(stmt->s_target, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
@@ -59,6 +66,7 @@ static struct statement *__convert_fconst(enum constant_type constant_type,
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_fconst(stmt->s_left, constant_type, value);
+		operand_set_temporary(stmt->s_target, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
@@ -121,6 +129,7 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	default:
 		goto failed;
 	}
+	operand_set_temporary(stmt->s_target, alloc_temporary());
 	stack_push(stack, stmt->s_target->temporary);
 
 	return stmt;
@@ -156,6 +165,7 @@ static struct statement *__convert_load(unsigned char index,
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		operand_set_local_var(stmt->s_left, type, index);
+		operand_set_temporary(stmt->s_target, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
@@ -245,6 +255,7 @@ static struct statement *convert_array_load(struct conversion_context *context)
 	operand_set_temporary(nullcheck->s_left, arrayref);
 	nullcheck->s_next = arraycheck;
 
+	operand_set_temporary(assign->s_target, alloc_temporary());
 	stack_push(context->stack, assign->s_target->temporary);
 
 	return nullcheck;
