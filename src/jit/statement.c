@@ -15,15 +15,15 @@ struct statement *alloc_stmt(enum statement_type type)
 
 	stmt->s_type = type;
 
-	stmt->s_left = malloc(sizeof(struct operand));
+	stmt->s_left = malloc(sizeof(struct expression));
 	if (!stmt->s_left)
 		goto failed;
 
-	stmt->s_right = malloc(sizeof(struct operand));
+	stmt->s_right = malloc(sizeof(struct expression));
 	if (!stmt->s_right)
 		goto failed;
 
-	stmt->s_target = malloc(sizeof(struct operand));
+	stmt->s_target = malloc(sizeof(struct expression));
 	if (!stmt->s_target)
 		goto failed;
 

@@ -1,7 +1,7 @@
 #ifndef __STATEMENT_H
 #define __STATEMENT_H
 
-#include <operand.h>
+#include <expression.h>
 #include <stddef.h>
 #include <jam.h>
 
@@ -16,9 +16,9 @@ enum statement_type {
 
 struct statement {
 	enum statement_type s_type;	/* Type of the statement.  */
-	struct operand *s_target;	/* Target temporary of the statement.  */
-	struct operand *s_left;		/* Left operand of the statement.  */
-	struct operand *s_right;	/* Left operand of the statement.  */
+	struct expression *s_target;	/* Target temporary of the statement.  */
+	struct expression *s_left;		/* Left expression of the statement.  */
+	struct expression *s_right;	/* Left expression of the statement.  */
 	struct statement *s_next;	/* Next statement. */
 };
 
