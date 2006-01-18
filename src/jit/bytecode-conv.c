@@ -7,7 +7,7 @@
 
 #include <statement.h>
 #include <byteorder.h>
-#include <operand-stack.h>
+#include <stack.h>
 
 #include <stdlib.h>
 
@@ -15,7 +15,7 @@ struct conversion_context {
 	struct classblock *cb;
 	unsigned char *code;
 	unsigned long len;
-	struct operand_stack *stack;
+	struct stack *stack;
 };
 
 static unsigned long alloc_temporary(void)
@@ -31,7 +31,7 @@ static struct statement *convert_nop(struct conversion_context *context)
 
 static struct statement *__convert_const(enum constant_type constant_type,
 					 unsigned long long value,
-					 struct operand_stack *stack)
+					 struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
@@ -61,7 +61,7 @@ static struct statement *convert_lconst(struct conversion_context *context)
 
 static struct statement *__convert_fconst(enum constant_type constant_type,
 					  double value,
-					  struct operand_stack *stack)
+					  struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
@@ -99,7 +99,7 @@ static struct statement *convert_sipush(struct conversion_context *context)
 
 static struct statement *__convert_ldc(struct constant_pool *cp,
 				       unsigned long cp_idx,
-				       struct operand_stack *stack)
+				       struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (!stmt)
@@ -160,7 +160,7 @@ static struct statement *convert_ldc2_w(struct conversion_context *context)
 
 static struct statement *__convert_load(unsigned char index,
 					enum jvm_type type,
-					struct operand_stack *stack)
+					struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
@@ -269,12 +269,12 @@ failed:
 
 static struct statement *__convert_store(enum jvm_type type,
 					 unsigned long index,
-					 struct operand_stack *stack)
+					 struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		expression_set_local_var(stmt->s_target, type, index);
-		stmt->s_left->type = OPERAND_TEMPORARY;
+		stmt->s_left->type = TEMPORARY;
 		stmt->s_left->temporary = stack_pop(stack);
 	}
 	return stmt;
@@ -533,7 +533,7 @@ static struct converter converters[] = {
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
 					    unsigned char *code,
 					    unsigned long len, 
-					    struct operand_stack *stack)
+					    struct stack *stack)
 {
 	struct converter *converter = &converters[code[0]];
 	if (!converter || len < converter->require)

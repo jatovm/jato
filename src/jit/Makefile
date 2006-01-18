@@ -5,7 +5,7 @@ CC = gcc
 CCFLAGS = -rdynamic -g -Wall 
 INCLUDE = -I. -I..
 OBJS = bytecode-conv.o statement.o
-TESTS = bytecode-conv-test.o operand-stack-test.o
+TESTS = bytecode-conv-test.o stack-test.o
 HARNESS = CuTest.o backtrace.o
 
 %.o: %.c

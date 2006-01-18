@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <jam.h>
 
-struct operand_stack;
+struct stack;
 
 enum statement_type {
 	STMT_NOP,
@@ -24,7 +24,7 @@ struct statement {
 
 struct statement *convert_bytecode_to_stmts(struct classblock *,
 					    unsigned char *, unsigned long,
-					    struct operand_stack *);
+					    struct stack *);
 
 struct statement *alloc_stmt(enum statement_type);
 void free_stmt(struct statement *);
