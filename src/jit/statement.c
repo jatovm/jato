@@ -4,6 +4,7 @@
 
 #include <statement.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct statement *alloc_stmt(enum statement_type type)
 {
