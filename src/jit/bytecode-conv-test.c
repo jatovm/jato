@@ -484,6 +484,8 @@ static void assert_array_load_stmts(CuTest * ct, unsigned char opc,
 
 	CuAssertIntEquals(ct, stack_pop(&stack), assign->s_target->temporary);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+
+	free_stmt(stmt);
 }
 
 void test_convert_iaload(CuTest * ct)
@@ -655,6 +657,8 @@ static void assert_array_store_stmts(CuTest * ct, unsigned char opc,
 	CuAssertIntEquals(ct, value, assign->s_left->temporary);
 
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+
+	free_stmt(stmt);
 }
 
 void test_convert_iastore(CuTest * ct)
