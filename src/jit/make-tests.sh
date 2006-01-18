@@ -14,6 +14,7 @@ echo '
 
 #include "CuTest.h"
 #include <stdio.h>
+#include <stdlib.h>
 '
 
 cat $FILES | grep '^void test_' | 
@@ -42,6 +43,8 @@ echo \
     CuSuiteSummary(suite, output);
     CuSuiteDetails(suite, output);
     printf("%s\n", output->buffer);
+    CuStringFree(output);
+    CuSuiteFree(suite);
 }
 
 int main(void)
