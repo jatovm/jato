@@ -29,13 +29,13 @@ static struct statement *convert_nop(struct conversion_context *context)
 	return alloc_stmt(STMT_NOP);
 }
 
-static struct statement *__convert_const(enum constant_type constant_type,
+static struct statement *__convert_const(enum jvm_type jvm_type,
 					 unsigned long long value,
 					 struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		expression_set_const(stmt->s_left, constant_type, value);
+		expression_set_const(stmt->s_left, jvm_type, value);
 		expression_set_temporary(stmt->s_target, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
@@ -44,28 +44,28 @@ static struct statement *__convert_const(enum constant_type constant_type,
 
 static struct statement *convert_aconst_null(struct conversion_context *context)
 {
-	return __convert_const(CONST_REFERENCE, 0, context->stack);
+	return __convert_const(J_REFERENCE, 0, context->stack);
 }
 
 static struct statement *convert_iconst(struct conversion_context *context)
 {
-	return __convert_const(CONST_INT, context->code[0] - OPC_ICONST_0,
+	return __convert_const(J_INT, context->code[0] - OPC_ICONST_0,
 			       context->stack);
 }
 
 static struct statement *convert_lconst(struct conversion_context *context)
 {
-	return __convert_const(CONST_LONG, context->code[0] - OPC_LCONST_0,
+	return __convert_const(J_LONG, context->code[0] - OPC_LCONST_0,
 			       context->stack);
 }
 
-static struct statement *__convert_fconst(enum constant_type constant_type,
+static struct statement *__convert_fconst(enum jvm_type jvm_type,
 					  double value,
 					  struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		expression_set_fconst(stmt->s_left, constant_type, value);
+		expression_set_fconst(stmt->s_left, jvm_type, value);
 		expression_set_temporary(stmt->s_target, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
@@ -74,25 +74,25 @@ static struct statement *__convert_fconst(enum constant_type constant_type,
 
 static struct statement *convert_fconst(struct conversion_context *context)
 {
-	return __convert_fconst(CONST_FLOAT, context->code[0] - OPC_FCONST_0,
+	return __convert_fconst(J_FLOAT, context->code[0] - OPC_FCONST_0,
 				context->stack);
 }
 
 static struct statement *convert_dconst(struct conversion_context *context)
 {
-	return __convert_fconst(CONST_DOUBLE, context->code[0] - OPC_DCONST_0,
+	return __convert_fconst(J_DOUBLE, context->code[0] - OPC_DCONST_0,
 				context->stack);
 }
 
 static struct statement *convert_bipush(struct conversion_context *context)
 {
-	return __convert_const(CONST_INT, (char)context->code[1],
+	return __convert_const(J_INT, (char)context->code[1],
 			       context->stack);
 }
 
 static struct statement *convert_sipush(struct conversion_context *context)
 {
-	return __convert_const(CONST_INT,
+	return __convert_const(J_INT,
 			       (short)be16_to_cpu(*(u2 *) & context->code[1]),
 			       context->stack);
 }
@@ -109,22 +109,22 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
 	switch (type) {
 	case CONSTANT_Integer:
-		expression_set_const(stmt->s_left, CONST_INT, entry);
+		expression_set_const(stmt->s_left, J_INT, entry);
 		break;
 	case CONSTANT_Float:
-		expression_set_fconst(stmt->s_left, CONST_FLOAT,
+		expression_set_fconst(stmt->s_left, J_FLOAT,
 				   *(float *)&entry);
 		break;
 	case CONSTANT_String:
-		expression_set_const(stmt->s_left, CONST_REFERENCE, entry);
+		expression_set_const(stmt->s_left, J_REFERENCE, entry);
 		break;
 	case CONSTANT_Long:
-		expression_set_const(stmt->s_left, CONST_LONG, entry);
+		expression_set_const(stmt->s_left, J_LONG, entry);
 		break;
 	case CONSTANT_Double:
-		expression_set_fconst(stmt->s_left, CONST_DOUBLE,
+		expression_set_fconst(stmt->s_left, J_DOUBLE,
 				   *(double *)&entry);
-		stmt->s_left->constant.type = CONST_DOUBLE;
+		stmt->s_left->jvm_type = J_DOUBLE;
 		break;
 	default:
 		goto failed;
