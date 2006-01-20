@@ -1,13 +1,12 @@
 #ifndef __EXPRESSION_H
 #define __EXPRESSION_H
 
-#include <local-variable.h>
 #include <jvm_types.h>
 
 enum expression_type {
 	EXPR_VALUE,
 	EXPR_FVALUE,
-	LOCAL_VAR,
+	EXPR_LOCAL,
 	TEMPORARY,
 	ARRAYREF,
 };
@@ -22,8 +21,8 @@ struct expression {
 		/* EXPR_FVALUE */
 		double fvalue;
 
-		/* LOCAL_VAR */
-		struct local_variable local_var;
+		/* EXPR_LOCAL */
+		unsigned long local_index;
 
 		/* TEMPORARY */
 		unsigned long temporary;
@@ -57,9 +56,9 @@ static inline void expression_set_local_var(struct expression *expression,
 					 enum jvm_type type,
 					 unsigned long index)
 {
-	expression->type = LOCAL_VAR;
-	expression->local_var.type = type;
-	expression->local_var.index = index;
+	expression->type = EXPR_LOCAL;
+	expression->jvm_type = type;
+	expression->local_index = index;
 }
 
 static inline void expression_set_temporary(struct expression *expression,

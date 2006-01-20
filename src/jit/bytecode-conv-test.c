@@ -360,10 +360,10 @@ static void assert_load_stmt(CuTest * ct, unsigned char opc,
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
-	CuAssertIntEquals(ct, LOCAL_VAR, stmt->s_left->type);
-	CuAssertIntEquals(ct, expected_index, stmt->s_left->local_var.index);
+	CuAssertIntEquals(ct, EXPR_LOCAL, stmt->s_left->type);
+	CuAssertIntEquals(ct, expected_index, stmt->s_left->local_index);
 	CuAssertIntEquals(ct, expected_jvm_type,
-			  stmt->s_left->local_var.type);
+			  stmt->s_left->jvm_type);
 	CuAssertIntEquals(ct, stack_pop(&stack), stmt->s_target->temporary);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 	free_stmt(stmt);
@@ -552,9 +552,9 @@ static void assert_store_stmt(CuTest * ct, unsigned char opc,
 	CuAssertIntEquals(ct, TEMPORARY, stmt->s_left->type);
 	CuAssertIntEquals(ct, expected_temporary, stmt->s_left->temporary);
 
-	CuAssertIntEquals(ct, LOCAL_VAR, stmt->s_target->type);
-	CuAssertIntEquals(ct, expected_index, stmt->s_target->local_var.index);
-	CuAssertIntEquals(ct, expected_jvm_type, stmt->s_target->local_var.type);
+	CuAssertIntEquals(ct, EXPR_LOCAL, stmt->s_target->type);
+	CuAssertIntEquals(ct, expected_index, stmt->s_target->local_index);
+	CuAssertIntEquals(ct, expected_jvm_type, stmt->s_target->jvm_type);
 
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
