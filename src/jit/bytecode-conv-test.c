@@ -631,7 +631,9 @@ void test_convert_astore_n(CuTest * ct)
 	assert_store_stmt(ct, OPC_ASTORE_3, J_REFERENCE, 0x03, 0xFF);
 }
 
-static void assert_array_store_stmts(CuTest * ct, unsigned char opc,
+static void assert_array_store_stmts(CuTest * ct,
+				     enum jvm_type expected_type,
+				     unsigned char opc,
 				     unsigned long arrayref,
 				     unsigned long index,
 				     unsigned long value)
@@ -653,6 +655,7 @@ static void assert_array_store_stmts(CuTest * ct, unsigned char opc,
 	assert_arraycheck_stmt(ct, arrayref, index, arraycheck);
 
 	CuAssertIntEquals(ct, STMT_ASSIGN, assign->s_type);
+	CuAssertIntEquals(ct, expected_type, assign->s_target->jvm_type);
 	assert_array_deref_expr(ct, arrayref, index, assign->s_target);
 	assert_temporary_expr(ct, value, assign->s_left);
 
@@ -663,50 +666,50 @@ static void assert_array_store_stmts(CuTest * ct, unsigned char opc,
 
 void test_convert_iastore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_IASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_IASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_INT, OPC_IASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_INT, OPC_IASTORE, 2, 3, 4);
 }
 
 void test_convert_lastore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_LASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_LASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_LONG, OPC_LASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_LONG, OPC_LASTORE, 2, 3, 4);
 }
 
 void test_convert_fastore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_FASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_FASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_FLOAT, OPC_FASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_FLOAT, OPC_FASTORE, 2, 3, 4);
 }
 
 void test_convert_dastore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_DASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_DASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_DOUBLE, OPC_DASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_DOUBLE, OPC_DASTORE, 2, 3, 4);
 }
 
 void test_convert_aastore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_AASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_AASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_REFERENCE, OPC_AASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_REFERENCE, OPC_AASTORE, 2, 3, 4);
 }
 
 void test_convert_bastore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_BASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_BASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_INT, OPC_BASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_INT, OPC_BASTORE, 2, 3, 4);
 }
 
 void test_convert_castore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_CASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_CASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_CHAR, OPC_CASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_CHAR, OPC_CASTORE, 2, 3, 4);
 }
 
 void test_convert_sastore(CuTest * ct)
 {
-	assert_array_store_stmts(ct, OPC_SASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, OPC_SASTORE, 2, 3, 4);
+	assert_array_store_stmts(ct, J_SHORT, OPC_SASTORE, 0, 1, 2);
+	assert_array_store_stmts(ct, J_SHORT, OPC_SASTORE, 2, 3, 4);
 }
 
 static void assert_pop_stack(CuTest * ct, unsigned char opc)

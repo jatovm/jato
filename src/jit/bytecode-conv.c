@@ -335,7 +335,7 @@ static struct statement *convert_astore_n(struct conversion_context *context)
 }
 
 static struct statement *
-convert_array_store(struct conversion_context *context)
+convert_array_store(struct conversion_context *context, enum jvm_type type)
 {
 	unsigned long value, index, arrayref;
 	struct statement *assign, *arraycheck, *nullcheck;
@@ -348,14 +348,14 @@ convert_array_store(struct conversion_context *context)
 	if (!assign)
 		goto failed;
 
-	assign->s_target = array_deref_expr(J_INT /* FIXME */, arrayref, index);
-	assign->s_left = temporary_expr(J_INT /* FIXME */, value);
+	assign->s_target = array_deref_expr(type, arrayref, index);
+	assign->s_left = temporary_expr(type, value);
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed;
 
-	arraycheck->s_left = array_deref_expr(J_INT /* FIXME */, arrayref, index);
+	arraycheck->s_left = array_deref_expr(type, arrayref, index);
 	arraycheck->s_next = assign;
 
 	nullcheck = alloc_stmt(STMT_NULL_CHECK);
@@ -372,6 +372,46 @@ convert_array_store(struct conversion_context *context)
 	free_stmt(arraycheck);
 	free_stmt(nullcheck);
 	return NULL;
+}
+
+static struct statement *convert_iastore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_INT);
+}
+
+static struct statement *convert_lastore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_LONG);
+}
+
+static struct statement *convert_fastore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_FLOAT);
+}
+
+static struct statement *convert_dastore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_DOUBLE);
+}
+
+static struct statement *convert_aastore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_REFERENCE);
+}
+
+static struct statement *convert_bastore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_INT);
+}
+
+static struct statement *convert_castore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_CHAR);
+}
+
+static struct statement *convert_sastore(struct conversion_context *context)
+{
+	return convert_array_store(context, J_SHORT);
 }
 
 static struct statement *convert_pop(struct conversion_context *context)
@@ -509,14 +549,14 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_ASTORE_1, convert_astore_n, 1),
 	DECLARE_CONVERTER(OPC_ASTORE_2, convert_astore_n, 1),
 	DECLARE_CONVERTER(OPC_ASTORE_3, convert_astore_n, 1),
-	DECLARE_CONVERTER(OPC_IASTORE, convert_array_store, 1),
-	DECLARE_CONVERTER(OPC_LASTORE, convert_array_store, 1),
-	DECLARE_CONVERTER(OPC_FASTORE, convert_array_store, 1),
-	DECLARE_CONVERTER(OPC_DASTORE, convert_array_store, 1),
-	DECLARE_CONVERTER(OPC_AASTORE, convert_array_store, 1),
-	DECLARE_CONVERTER(OPC_BASTORE, convert_array_store, 1),
-	DECLARE_CONVERTER(OPC_CASTORE, convert_array_store, 1),
-	DECLARE_CONVERTER(OPC_SASTORE, convert_array_store, 1),
+	DECLARE_CONVERTER(OPC_IASTORE, convert_iastore, 1),
+	DECLARE_CONVERTER(OPC_LASTORE, convert_lastore, 1),
+	DECLARE_CONVERTER(OPC_FASTORE, convert_fastore, 1),
+	DECLARE_CONVERTER(OPC_DASTORE, convert_dastore, 1),
+	DECLARE_CONVERTER(OPC_AASTORE, convert_aastore, 1),
+	DECLARE_CONVERTER(OPC_BASTORE, convert_bastore, 1),
+	DECLARE_CONVERTER(OPC_CASTORE, convert_castore, 1),
+	DECLARE_CONVERTER(OPC_SASTORE, convert_sastore, 1),
 	DECLARE_CONVERTER(OPC_POP, convert_pop, 1),
 	DECLARE_CONVERTER(OPC_POP2, convert_pop, 1),
 	DECLARE_CONVERTER(OPC_DUP, convert_dup, 1),
