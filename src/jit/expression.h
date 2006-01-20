@@ -7,8 +7,8 @@ enum expression_type {
 	EXPR_VALUE,
 	EXPR_FVALUE,
 	EXPR_LOCAL,
-	TEMPORARY,
-	ARRAYREF,
+	EXPR_TEMPORARY,
+	EXPR_ARRAY_DEREF,
 };
 
 struct expression {
@@ -24,10 +24,10 @@ struct expression {
 		/* EXPR_LOCAL */
 		unsigned long local_index;
 
-		/* TEMPORARY */
+		/* EXPR_TEMPORARY */
 		unsigned long temporary;
 
-		/* ARRAYREF */
+		/* EXPR_ARRAY_DEREF */
 		struct {
 			unsigned long arrayref;
 			unsigned long array_index;
@@ -64,7 +64,7 @@ static inline void expression_set_local_var(struct expression *expression,
 static inline void expression_set_temporary(struct expression *expression,
 					 unsigned long temporary)
 {
-	expression->type = TEMPORARY;
+	expression->type = EXPR_TEMPORARY;
 	expression->temporary = temporary;
 }
 
@@ -72,7 +72,7 @@ static inline void expression_set_arrayref(struct expression *expression,
 					unsigned long arrayref,
 					unsigned long index)
 {
-	expression->type = ARRAYREF;
+	expression->type = EXPR_ARRAY_DEREF;
 	expression->arrayref = arrayref;
 	expression->array_index = index;
 }

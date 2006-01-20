@@ -274,8 +274,7 @@ static struct statement *__convert_store(enum jvm_type type,
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		expression_set_local_var(stmt->s_target, type, index);
-		stmt->s_left->type = TEMPORARY;
-		stmt->s_left->temporary = stack_pop(stack);
+		expression_set_temporary(stmt->s_left, stack_pop(stack));
 	}
 	return stmt;
 }

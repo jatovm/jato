@@ -32,7 +32,7 @@ static void assert_fconst_expression(CuTest * ct,
 static void assert_temporary_expression(CuTest * ct, unsigned long expected,
 				     struct expression *expression)
 {
-	CuAssertIntEquals(ct, TEMPORARY, expression->type);
+	CuAssertIntEquals(ct, EXPR_TEMPORARY, expression->type);
 	CuAssertIntEquals(ct, expected, expression->temporary);
 }
 
@@ -41,7 +41,7 @@ static void assert_arrayref_expression(CuTest * ct,
 				    unsigned long expected_index,
 				    struct expression *expression)
 {
-	CuAssertIntEquals(ct, ARRAYREF, expression->type);
+	CuAssertIntEquals(ct, EXPR_ARRAY_DEREF, expression->type);
 	CuAssertIntEquals(ct, expected_arrayref, expression->arrayref);
 	CuAssertIntEquals(ct, expected_index, expression->array_index);
 }
@@ -549,7 +549,7 @@ static void assert_store_stmt(CuTest * ct, unsigned char opc,
 
 	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
 
-	CuAssertIntEquals(ct, TEMPORARY, stmt->s_left->type);
+	CuAssertIntEquals(ct, EXPR_TEMPORARY, stmt->s_left->type);
 	CuAssertIntEquals(ct, expected_temporary, stmt->s_left->temporary);
 
 	CuAssertIntEquals(ct, EXPR_LOCAL, stmt->s_target->type);
