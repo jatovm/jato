@@ -60,8 +60,7 @@ static struct statement *convert_lconst(struct conversion_context *context)
 }
 
 static struct statement *__convert_fconst(enum jvm_type jvm_type,
-					  double value,
-					  struct stack *stack)
+					  double value, struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
@@ -86,8 +85,7 @@ static struct statement *convert_dconst(struct conversion_context *context)
 
 static struct statement *convert_bipush(struct conversion_context *context)
 {
-	return __convert_const(J_INT, (char)context->code[1],
-			       context->stack);
+	return __convert_const(J_INT, (char)context->code[1], context->stack);
 }
 
 static struct statement *convert_sipush(struct conversion_context *context)
@@ -126,11 +124,12 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	default:
 		goto failed;
 	}
-	stmt->s_target = temporary_expr(stmt->s_left->jvm_type, alloc_temporary());
+	stmt->s_target =
+	    temporary_expr(stmt->s_left->jvm_type, alloc_temporary());
 	stack_push(stack, stmt->s_target->temporary);
 
 	return stmt;
-failed:
+      failed:
 	free_stmt(stmt);
 	return NULL;
 }
@@ -156,8 +155,7 @@ static struct statement *convert_ldc2_w(struct conversion_context *context)
 }
 
 static struct statement *__convert_load(unsigned char index,
-					enum jvm_type type,
-					struct stack *stack)
+					enum jvm_type type, struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
@@ -257,7 +255,7 @@ static struct statement *convert_array_load(struct conversion_context *context,
 
 	return nullcheck;
 
-failed:
+      failed:
 	free_stmt(assign);
 	free_stmt(arraycheck);
 	free_stmt(nullcheck);
@@ -315,7 +313,7 @@ static struct statement *__convert_store(enum jvm_type type,
 	stmt->s_target = local_expr(type, index);
 	stmt->s_left = temporary_expr(type, stack_pop(stack));
 	return stmt;
-failed:
+      failed:
 	free_stmt(stmt);
 	return NULL;
 }
@@ -375,12 +373,12 @@ static struct statement *convert_astore_n(struct conversion_context *context)
 			       context->stack);
 }
 
-static struct statement *
-convert_array_store(struct conversion_context *context, enum jvm_type type)
+static struct statement *convert_array_store(struct conversion_context *context,
+					     enum jvm_type type)
 {
 	unsigned long value, index, arrayref;
 	struct statement *assign, *arraycheck, *nullcheck;
-	
+
 	value = stack_pop(context->stack);
 	index = stack_pop(context->stack);
 	arrayref = stack_pop(context->stack);
@@ -408,7 +406,7 @@ convert_array_store(struct conversion_context *context, enum jvm_type type)
 
 	return nullcheck;
 
- failed:
+      failed:
 	free_stmt(assign);
 	free_stmt(arraycheck);
 	free_stmt(nullcheck);
@@ -611,7 +609,7 @@ static struct converter converters[] = {
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
 					    unsigned char *code,
-					    unsigned long len, 
+					    unsigned long len,
 					    struct stack *stack)
 {
 	struct converter *converter = &converters[code[0]];
