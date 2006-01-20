@@ -35,8 +35,8 @@ static struct statement *__convert_const(enum jvm_type jvm_type,
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		expression_set_const(stmt->s_left, jvm_type, value);
-		expression_set_temporary(stmt->s_target, alloc_temporary());
+		stmt->s_left = value_expr(jvm_type, value);
+		stmt->s_target = temporary_expr(jvm_type, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
@@ -65,8 +65,8 @@ static struct statement *__convert_fconst(enum jvm_type jvm_type,
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		expression_set_fconst(stmt->s_left, jvm_type, value);
-		expression_set_temporary(stmt->s_target, alloc_temporary());
+		stmt->s_left = fvalue_expr(jvm_type, value);
+		stmt->s_target = temporary_expr(jvm_type, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
@@ -109,27 +109,24 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
 	switch (type) {
 	case CONSTANT_Integer:
-		expression_set_const(stmt->s_left, J_INT, entry);
+		stmt->s_left = value_expr(J_INT, entry);
 		break;
 	case CONSTANT_Float:
-		expression_set_fconst(stmt->s_left, J_FLOAT,
-				   *(float *)&entry);
+		stmt->s_left = fvalue_expr(J_FLOAT, *(float *)&entry);
 		break;
 	case CONSTANT_String:
-		expression_set_const(stmt->s_left, J_REFERENCE, entry);
+		stmt->s_left = value_expr(J_REFERENCE, entry);
 		break;
 	case CONSTANT_Long:
-		expression_set_const(stmt->s_left, J_LONG, entry);
+		stmt->s_left = value_expr(J_LONG, entry);
 		break;
 	case CONSTANT_Double:
-		expression_set_fconst(stmt->s_left, J_DOUBLE,
-				   *(double *)&entry);
-		stmt->s_left->jvm_type = J_DOUBLE;
+		stmt->s_left = fvalue_expr(J_DOUBLE, *(double *)&entry);
 		break;
 	default:
 		goto failed;
 	}
-	expression_set_temporary(stmt->s_target, alloc_temporary());
+	stmt->s_target = temporary_expr(stmt->s_left->jvm_type, alloc_temporary());
 	stack_push(stack, stmt->s_target->temporary);
 
 	return stmt;
@@ -164,8 +161,8 @@ static struct statement *__convert_load(unsigned char index,
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		expression_set_local_var(stmt->s_left, type, index);
-		expression_set_temporary(stmt->s_target, alloc_temporary());
+		stmt->s_left = local_expr(type, index);
+		stmt->s_target = temporary_expr(type, alloc_temporary());
 		stack_push(stack, stmt->s_target->temporary);
 	}
 	return stmt;
@@ -238,25 +235,24 @@ static struct statement *convert_array_load(struct conversion_context *context)
 	if (!assign)
 		goto failed;
 
-	expression_set_arrayref(assign->s_left, arrayref, index);
+	assign->s_left = array_deref_expr(J_INT /* FIXME */, arrayref, index);
+	assign->s_target = temporary_expr(J_INT /* FIXME */, alloc_temporary());
+
+	stack_push(context->stack, assign->s_target->temporary);
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed;
 
-	expression_set_temporary(arraycheck->s_left, arrayref);
-	expression_set_temporary(arraycheck->s_right, index);
+	arraycheck->s_left = array_deref_expr(J_INT /* FIXME */, arrayref, index);
 	arraycheck->s_next = assign;
 
 	nullcheck = alloc_stmt(STMT_NULL_CHECK);
 	if (!nullcheck)
 		goto failed;
 
-	expression_set_temporary(nullcheck->s_left, arrayref);
+	nullcheck->s_left = value_expr(J_REFERENCE, arrayref);
 	nullcheck->s_next = arraycheck;
-
-	expression_set_temporary(assign->s_target, alloc_temporary());
-	stack_push(context->stack, assign->s_target->temporary);
 
 	return nullcheck;
 
@@ -272,11 +268,15 @@ static struct statement *__convert_store(enum jvm_type type,
 					 struct stack *stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		expression_set_local_var(stmt->s_target, type, index);
-		expression_set_temporary(stmt->s_left, stack_pop(stack));
-	}
+	if (!stmt)
+		goto failed;
+
+	stmt->s_target = local_expr(type, index);
+	stmt->s_left = temporary_expr(type, stack_pop(stack));
 	return stmt;
+failed:
+	free_stmt(stmt);
+	return NULL;
 }
 
 static struct statement *convert_istore(struct conversion_context *context)
@@ -348,22 +348,21 @@ convert_array_store(struct conversion_context *context)
 	if (!assign)
 		goto failed;
 
-	expression_set_arrayref(assign->s_target, arrayref, index);
-	expression_set_temporary(assign->s_left, value);
+	assign->s_target = array_deref_expr(J_INT /* FIXME */, arrayref, index);
+	assign->s_left = temporary_expr(J_INT /* FIXME */, value);
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed;
 
-	expression_set_temporary(arraycheck->s_left, arrayref);
-	expression_set_temporary(arraycheck->s_right, index);
+	arraycheck->s_left = array_deref_expr(J_INT /* FIXME */, arrayref, index);
 	arraycheck->s_next = assign;
 
 	nullcheck = alloc_stmt(STMT_NULL_CHECK);
 	if (!nullcheck)
 		goto failed;
 
-	expression_set_temporary(nullcheck->s_left, arrayref);
+	nullcheck->s_left = value_expr(J_REFERENCE, arrayref);
 	nullcheck->s_next = arraycheck;
 
 	return nullcheck;

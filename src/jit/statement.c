@@ -12,26 +12,9 @@ struct statement *alloc_stmt(enum statement_type type)
 	if (!stmt)
 		return NULL;
 	memset(stmt, 0, sizeof(*stmt));
-
 	stmt->s_type = type;
 
-	stmt->s_left = malloc(sizeof(struct expression));
-	if (!stmt->s_left)
-		goto failed;
-
-	stmt->s_right = malloc(sizeof(struct expression));
-	if (!stmt->s_right)
-		goto failed;
-
-	stmt->s_target = malloc(sizeof(struct expression));
-	if (!stmt->s_target)
-		goto failed;
-
 	return stmt;
-
-  failed:
-	free_stmt(stmt);
-	return NULL;
 }
 
 void free_stmt(struct statement *stmt)

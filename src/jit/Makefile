@@ -4,7 +4,7 @@ TEST_SUITE=test-suite.c
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall 
 INCLUDE = -I. -I..
-OBJS = bytecode-conv.o statement.o
+OBJS = bytecode-conv.o statement.o expression.o
 TESTS = bytecode-conv-test.o stack-test.o
 HARNESS = CuTest.o backtrace.o
 
