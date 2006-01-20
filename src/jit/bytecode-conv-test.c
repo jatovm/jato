@@ -460,8 +460,11 @@ static void assert_arraycheck_stmt(CuTest *ct,
 	assert_array_deref_expr(ct, expected_arrayref, expected_index, actual->s_left);
 }
 
-static void assert_array_load_stmts(CuTest * ct, unsigned char opc,
-				unsigned long arrayref, unsigned long index)
+static void assert_array_load_stmts(CuTest * ct,
+				    enum jvm_type expected_type,
+				    unsigned char opc,
+				    unsigned long arrayref,
+				    unsigned long index)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
@@ -479,6 +482,7 @@ static void assert_array_load_stmts(CuTest * ct, unsigned char opc,
 	assert_arraycheck_stmt(ct, arrayref, index, arraycheck);
 
 	CuAssertIntEquals(ct, STMT_ASSIGN, assign->s_type);
+	CuAssertIntEquals(ct, expected_type, assign->s_left->jvm_type);
 	assert_array_deref_expr(ct, arrayref, index, assign->s_left);
 
 	CuAssertIntEquals(ct, stack_pop(&stack), assign->s_target->temporary);
@@ -489,50 +493,50 @@ static void assert_array_load_stmts(CuTest * ct, unsigned char opc,
 
 void test_convert_iaload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_IALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_IALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_INT, OPC_IALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_INT, OPC_IALOAD, 1, 2);
 }
 
 void test_convert_laload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_LALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_LALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_LONG, OPC_LALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_LONG, OPC_LALOAD, 1, 2);
 }
 
 void test_convert_faload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_FALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_FALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_FLOAT, OPC_FALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_FLOAT, OPC_FALOAD, 1, 2);
 }
 
 void test_convert_daload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_DALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_DALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_DOUBLE, OPC_DALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_DOUBLE, OPC_DALOAD, 1, 2);
 }
 
 void test_convert_aaload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_AALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_AALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_REFERENCE, OPC_AALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_REFERENCE, OPC_AALOAD, 1, 2);
 }
 
 void test_convert_baload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_BALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_BALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_INT, OPC_BALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_INT, OPC_BALOAD, 1, 2);
 }
 
 void test_convert_caload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_CALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_CALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_CHAR, OPC_CALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_CHAR, OPC_CALOAD, 1, 2);
 }
 
 void test_convert_saload(CuTest * ct)
 {
-	assert_array_load_stmts(ct, OPC_SALOAD, 0, 1);
-	assert_array_load_stmts(ct, OPC_SALOAD, 1, 2);
+	assert_array_load_stmts(ct, J_SHORT, OPC_SALOAD, 0, 1);
+	assert_array_load_stmts(ct, J_SHORT, OPC_SALOAD, 1, 2);
 }
 
 static void assert_store_stmt(CuTest * ct, unsigned char opc,
