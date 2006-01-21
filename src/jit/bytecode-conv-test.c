@@ -59,7 +59,8 @@ static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
 
 	convert_bytecode_to_stmts(cb, actual, count, &stack);
 
-	assert_value_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
+	expr = stack_pop(&stack);
+	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
 	free_expression(expr);
@@ -84,8 +85,8 @@ static void assert_fconst_stmt(CuTest * ct,
 	unsigned char code[] = { actual };
 
 	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-
-	assert_fvalue_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
+	expr = stack_pop(&stack);
+	assert_fvalue_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
 	free_expression(expr);
@@ -192,18 +193,22 @@ static void assert_ldc_stmt(CuTest * ct,
 			    enum jvm_type expected_jvm_type,
 			    long expected_value, u1 cp_type)
 {
+	struct expression *expr;
 	ConstantPoolEntry cp_infos[] = { cpu_to_be64(expected_value) };
 	u1 cp_types[] = { cp_type };
 	struct stack stack = STACK_INIT;
 
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
 				 OPC_LDC, 0x00, 0x00, &stack);
-	assert_value_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
+	expr = stack_pop(&stack);
+	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free_expression(expr);
 }
 
 static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
 {
+	struct expression *expr;
 	u4 value = *(u4 *) & expected_value;
 	ConstantPoolEntry cp_infos[] = { cpu_to_be64(value) };
 	u1 cp_types[] = { CONSTANT_Float };
@@ -211,8 +216,10 @@ static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
 
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
 				 OPC_LDC, 0x00, 0x00, &stack);
-	assert_fvalue_expr(ct, J_FLOAT, expected_value, stack_pop(&stack));
+	expr = stack_pop(&stack);
+	assert_fvalue_expr(ct, J_FLOAT, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free_expression(expr);
 }
 
 #define INT_MAX 2147483647
@@ -235,6 +242,7 @@ static void assert_ldcw_stmt(CuTest * ct,
 			     long long expected_value, u1 cp_type,
 			     unsigned char opcode)
 {
+	struct expression *expr;
 	ConstantPoolEntry cp_infos[257];
 	cp_infos[256] = cpu_to_be64(expected_value);
 	u1 cp_types[257];
@@ -243,8 +251,10 @@ static void assert_ldcw_stmt(CuTest * ct,
 
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
 				 0x01, 0x00, &stack);
-	assert_value_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
+	expr = stack_pop(&stack);
+	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free_expression(expr);
 }
 
 static void __assert_ldcw_stmt_double(CuTest * ct,
