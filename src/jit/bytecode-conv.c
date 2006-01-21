@@ -15,7 +15,7 @@ struct conversion_context {
 	struct classblock *cb;
 	unsigned char *code;
 	unsigned long len;
-	struct stack *stack;
+	struct stack *expr_stack;
 };
 
 static unsigned long alloc_temporary(void)
@@ -31,42 +31,42 @@ static struct statement *convert_nop(struct conversion_context *context)
 
 static struct statement *__convert_const(enum jvm_type jvm_type,
 					 unsigned long long value,
-					 struct stack *stack)
+					 struct stack *expr_stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		stmt->s_left = value_expr(jvm_type, value);
 		stmt->s_target = temporary_expr(jvm_type, alloc_temporary());
-		stack_push(stack, stmt->s_target->temporary);
+		stack_push(expr_stack, stmt->s_target);
 	}
 	return stmt;
 }
 
 static struct statement *convert_aconst_null(struct conversion_context *context)
 {
-	return __convert_const(J_REFERENCE, 0, context->stack);
+	return __convert_const(J_REFERENCE, 0, context->expr_stack);
 }
 
 static struct statement *convert_iconst(struct conversion_context *context)
 {
 	return __convert_const(J_INT, context->code[0] - OPC_ICONST_0,
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *convert_lconst(struct conversion_context *context)
 {
 	return __convert_const(J_LONG, context->code[0] - OPC_LCONST_0,
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *__convert_fconst(enum jvm_type jvm_type,
-					  double value, struct stack *stack)
+					  double value, struct stack *expr_stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		stmt->s_left = fvalue_expr(jvm_type, value);
 		stmt->s_target = temporary_expr(jvm_type, alloc_temporary());
-		stack_push(stack, stmt->s_target->temporary);
+		stack_push(expr_stack, stmt->s_target);
 	}
 	return stmt;
 }
@@ -74,30 +74,30 @@ static struct statement *__convert_fconst(enum jvm_type jvm_type,
 static struct statement *convert_fconst(struct conversion_context *context)
 {
 	return __convert_fconst(J_FLOAT, context->code[0] - OPC_FCONST_0,
-				context->stack);
+				context->expr_stack);
 }
 
 static struct statement *convert_dconst(struct conversion_context *context)
 {
 	return __convert_fconst(J_DOUBLE, context->code[0] - OPC_DCONST_0,
-				context->stack);
+				context->expr_stack);
 }
 
 static struct statement *convert_bipush(struct conversion_context *context)
 {
-	return __convert_const(J_INT, (char)context->code[1], context->stack);
+	return __convert_const(J_INT, (char)context->code[1], context->expr_stack);
 }
 
 static struct statement *convert_sipush(struct conversion_context *context)
 {
 	return __convert_const(J_INT,
 			       (short)be16_to_cpu(*(u2 *) & context->code[1]),
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *__convert_ldc(struct constant_pool *cp,
 				       unsigned long cp_idx,
-				       struct stack *stack)
+				       struct stack *expr_stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (!stmt)
@@ -126,7 +126,7 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	}
 	stmt->s_target =
 	    temporary_expr(stmt->s_left->jvm_type, alloc_temporary());
-	stack_push(stack, stmt->s_target->temporary);
+	stack_push(expr_stack, stmt->s_target);
 
 	return stmt;
       failed:
@@ -137,98 +137,98 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 static struct statement *convert_ldc(struct conversion_context *context)
 {
 	return __convert_ldc(&context->cb->constant_pool, context->code[1],
-			     context->stack);
+			     context->expr_stack);
 }
 
 static struct statement *convert_ldc_w(struct conversion_context *context)
 {
 	return __convert_ldc(&context->cb->constant_pool,
 			     be16_to_cpu(*(u2 *) & context->code[1]),
-			     context->stack);
+			     context->expr_stack);
 }
 
 static struct statement *convert_ldc2_w(struct conversion_context *context)
 {
 	return __convert_ldc(&context->cb->constant_pool,
 			     be16_to_cpu(*(u2 *) & context->code[1]),
-			     context->stack);
+			     context->expr_stack);
 }
 
 static struct statement *__convert_load(unsigned char index,
-					enum jvm_type type, struct stack *stack)
+					enum jvm_type type, struct stack *expr_stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
 		stmt->s_left = local_expr(type, index);
 		stmt->s_target = temporary_expr(type, alloc_temporary());
-		stack_push(stack, stmt->s_target->temporary);
+		stack_push(expr_stack, stmt->s_target);
 	}
 	return stmt;
 }
 
 static struct statement *convert_iload(struct conversion_context *context)
 {
-	return __convert_load(context->code[1], J_INT, context->stack);
+	return __convert_load(context->code[1], J_INT, context->expr_stack);
 }
 
 static struct statement *convert_lload(struct conversion_context *context)
 {
-	return __convert_load(context->code[1], J_LONG, context->stack);
+	return __convert_load(context->code[1], J_LONG, context->expr_stack);
 }
 
 static struct statement *convert_fload(struct conversion_context *context)
 {
-	return __convert_load(context->code[1], J_FLOAT, context->stack);
+	return __convert_load(context->code[1], J_FLOAT, context->expr_stack);
 }
 
 static struct statement *convert_dload(struct conversion_context *context)
 {
-	return __convert_load(context->code[1], J_DOUBLE, context->stack);
+	return __convert_load(context->code[1], J_DOUBLE, context->expr_stack);
 }
 
 static struct statement *convert_aload(struct conversion_context *context)
 {
-	return __convert_load(context->code[1], J_REFERENCE, context->stack);
+	return __convert_load(context->code[1], J_REFERENCE, context->expr_stack);
 }
 
 static struct statement *convert_iload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_ILOAD_0, J_INT,
-			      context->stack);
+			      context->expr_stack);
 }
 
 static struct statement *convert_lload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_LLOAD_0, J_LONG,
-			      context->stack);
+			      context->expr_stack);
 }
 
 static struct statement *convert_fload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_FLOAD_0, J_FLOAT,
-			      context->stack);
+			      context->expr_stack);
 }
 
 static struct statement *convert_dload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_DLOAD_0, J_DOUBLE,
-			      context->stack);
+			      context->expr_stack);
 }
 
 static struct statement *convert_aload_n(struct conversion_context *context)
 {
 	return __convert_load(context->code[0] - OPC_ALOAD_0, J_REFERENCE,
-			      context->stack);
+			      context->expr_stack);
 }
 
 static struct statement *convert_array_load(struct conversion_context *context,
 					    enum jvm_type type)
 {
-	unsigned long index, arrayref;
+	struct expression *index, *arrayref;
 	struct statement *assign, *arraycheck, *nullcheck;
 
-	index = stack_pop(context->stack);
-	arrayref = stack_pop(context->stack);
+	index = stack_pop(context->expr_stack);
+	arrayref = stack_pop(context->expr_stack);
 
 	assign = alloc_stmt(STMT_ASSIGN);
 	if (!assign)
@@ -237,7 +237,7 @@ static struct statement *convert_array_load(struct conversion_context *context,
 	assign->s_left = array_deref_expr(type, arrayref, index);
 	assign->s_target = temporary_expr(type, alloc_temporary());
 
-	stack_push(context->stack, assign->s_target->temporary);
+	stack_push(context->expr_stack, assign->s_target);
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
@@ -250,7 +250,7 @@ static struct statement *convert_array_load(struct conversion_context *context,
 	if (!nullcheck)
 		goto failed;
 
-	nullcheck->s_left = value_expr(J_REFERENCE, arrayref);
+	nullcheck->s_left = arrayref;
 	nullcheck->s_next = arraycheck;
 
 	return nullcheck;
@@ -304,14 +304,14 @@ static struct statement *convert_saload(struct conversion_context *context)
 
 static struct statement *__convert_store(enum jvm_type type,
 					 unsigned long index,
-					 struct stack *stack)
+					 struct stack *expr_stack)
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (!stmt)
 		goto failed;
 
 	stmt->s_target = local_expr(type, index);
-	stmt->s_left = temporary_expr(type, stack_pop(stack));
+	stmt->s_left = stack_pop(expr_stack);
 	return stmt;
       failed:
 	free_stmt(stmt);
@@ -320,75 +320,75 @@ static struct statement *__convert_store(enum jvm_type type,
 
 static struct statement *convert_istore(struct conversion_context *context)
 {
-	return __convert_store(J_INT, context->code[1], context->stack);
+	return __convert_store(J_INT, context->code[1], context->expr_stack);
 }
 
 static struct statement *convert_lstore(struct conversion_context *context)
 {
-	return __convert_store(J_LONG, context->code[1], context->stack);
+	return __convert_store(J_LONG, context->code[1], context->expr_stack);
 }
 
 static struct statement *convert_fstore(struct conversion_context *context)
 {
-	return __convert_store(J_FLOAT, context->code[1], context->stack);
+	return __convert_store(J_FLOAT, context->code[1], context->expr_stack);
 }
 
 static struct statement *convert_dstore(struct conversion_context *context)
 {
-	return __convert_store(J_DOUBLE, context->code[1], context->stack);
+	return __convert_store(J_DOUBLE, context->code[1], context->expr_stack);
 }
 
 static struct statement *convert_astore(struct conversion_context *context)
 {
-	return __convert_store(J_REFERENCE, context->code[1], context->stack);
+	return __convert_store(J_REFERENCE, context->code[1], context->expr_stack);
 }
 
 static struct statement *convert_istore_n(struct conversion_context *context)
 {
 	return __convert_store(J_INT, context->code[0] - OPC_ISTORE_0,
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *convert_lstore_n(struct conversion_context *context)
 {
 	return __convert_store(J_LONG, context->code[0] - OPC_LSTORE_0,
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *convert_fstore_n(struct conversion_context *context)
 {
 	return __convert_store(J_FLOAT, context->code[0] - OPC_FSTORE_0,
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *convert_dstore_n(struct conversion_context *context)
 {
 	return __convert_store(J_DOUBLE, context->code[0] - OPC_DSTORE_0,
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *convert_astore_n(struct conversion_context *context)
 {
 	return __convert_store(J_REFERENCE, context->code[0] - OPC_ASTORE_0,
-			       context->stack);
+			       context->expr_stack);
 }
 
 static struct statement *convert_array_store(struct conversion_context *context,
 					     enum jvm_type type)
 {
-	unsigned long value, index, arrayref;
+	struct expression *value, *index, *arrayref;
 	struct statement *assign, *arraycheck, *nullcheck;
 
-	value = stack_pop(context->stack);
-	index = stack_pop(context->stack);
-	arrayref = stack_pop(context->stack);
+	value = stack_pop(context->expr_stack);
+	index = stack_pop(context->expr_stack);
+	arrayref = stack_pop(context->expr_stack);
 
 	assign = alloc_stmt(STMT_ASSIGN);
 	if (!assign)
 		goto failed;
 
 	assign->s_target = array_deref_expr(type, arrayref, index);
-	assign->s_left = temporary_expr(type, value);
+	assign->s_left = value;
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
@@ -401,7 +401,7 @@ static struct statement *convert_array_store(struct conversion_context *context,
 	if (!nullcheck)
 		goto failed;
 
-	nullcheck->s_left = value_expr(J_REFERENCE, arrayref);
+	nullcheck->s_left = arrayref;
 	nullcheck->s_next = arraycheck;
 
 	return nullcheck;
@@ -455,46 +455,46 @@ static struct statement *convert_sastore(struct conversion_context *context)
 
 static struct statement *convert_pop(struct conversion_context *context)
 {
-	stack_pop(context->stack);
+	stack_pop(context->expr_stack);
 	return NULL;
 }
 
 static struct statement *convert_dup(struct conversion_context *context)
 {
-	unsigned long value = stack_pop(context->stack);
-	stack_push(context->stack, value);
-	stack_push(context->stack, value);
+	void *value = stack_pop(context->expr_stack);
+	stack_push(context->expr_stack, value);
+	stack_push(context->expr_stack, value);
 	return NULL;
 }
 
 static struct statement *convert_dup_x1(struct conversion_context *context)
 {
-	unsigned long value1 = stack_pop(context->stack);
-	unsigned long value2 = stack_pop(context->stack);
-	stack_push(context->stack, value1);
-	stack_push(context->stack, value2);
-	stack_push(context->stack, value1);
+	void *value1 = stack_pop(context->expr_stack);
+	void *value2 = stack_pop(context->expr_stack);
+	stack_push(context->expr_stack, value1);
+	stack_push(context->expr_stack, value2);
+	stack_push(context->expr_stack, value1);
 	return NULL;
 }
 
 static struct statement *convert_dup_x2(struct conversion_context *context)
 {
-	unsigned long value1 = stack_pop(context->stack);
-	unsigned long value2 = stack_pop(context->stack);
-	unsigned long value3 = stack_pop(context->stack);
-	stack_push(context->stack, value1);
-	stack_push(context->stack, value3);
-	stack_push(context->stack, value2);
-	stack_push(context->stack, value1);
+	void *value1 = stack_pop(context->expr_stack);
+	void *value2 = stack_pop(context->expr_stack);
+	void *value3 = stack_pop(context->expr_stack);
+	stack_push(context->expr_stack, value1);
+	stack_push(context->expr_stack, value3);
+	stack_push(context->expr_stack, value2);
+	stack_push(context->expr_stack, value1);
 	return NULL;
 }
 
 static struct statement *convert_swap(struct conversion_context *context)
 {
-	unsigned long value1 = stack_pop(context->stack);
-	unsigned long value2 = stack_pop(context->stack);
-	stack_push(context->stack, value1);
-	stack_push(context->stack, value2);
+	void *value1 = stack_pop(context->expr_stack);
+	void *value2 = stack_pop(context->expr_stack);
+	stack_push(context->expr_stack, value1);
+	stack_push(context->expr_stack, value2);
 	return NULL;
 }
 
@@ -610,7 +610,7 @@ static struct converter converters[] = {
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
 					    unsigned char *code,
 					    unsigned long len,
-					    struct stack *stack)
+					    struct stack *expr_stack)
 {
 	struct converter *converter = &converters[code[0]];
 	if (!converter || len < converter->require)
@@ -620,7 +620,7 @@ struct statement *convert_bytecode_to_stmts(struct classblock *cb,
 		.cb = cb,
 		.code = code,
 		.len = len,
-		.stack = stack
+		.expr_stack = expr_stack
 	};
 	return converter->convert(&context);
 }

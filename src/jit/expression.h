@@ -29,8 +29,8 @@ struct expression {
 
 		/* EXPR_ARRAY_DEREF */
 		struct {
-			unsigned long arrayref;
-			unsigned long array_index;
+			struct expression *arrayref;
+			struct expression *array_index;
 		};
 	};
 };
@@ -40,7 +40,7 @@ struct expression *value_expr(enum jvm_type, unsigned long long);
 struct expression *fvalue_expr(enum jvm_type, double);
 struct expression *local_expr(enum jvm_type, unsigned long);
 struct expression *temporary_expr(enum jvm_type, unsigned long);
-struct expression *array_deref_expr(enum jvm_type, unsigned long, unsigned long);
+struct expression *array_deref_expr(enum jvm_type, struct expression *, struct expression *);
 void free_expression(struct expression *);
 
 #endif

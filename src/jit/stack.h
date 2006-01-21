@@ -8,18 +8,18 @@ enum { MAX_ELEMENTS = 255 };
 
 struct stack {
 	unsigned long nr_elements;
-	unsigned long elements[MAX_ELEMENTS];
+	void *elements[MAX_ELEMENTS];
 };
 
 #define STACK_INIT { .nr_elements = 0 }
 
-static inline unsigned long stack_pop(struct stack * stack)
+static inline void *stack_pop(struct stack * stack)
 {
 	assert(stack->nr_elements);
 	return stack->elements[--stack->nr_elements];
 }
 
-static inline void stack_push(struct stack * stack, unsigned long entry)
+static inline void stack_push(struct stack * stack, void *entry)
 {
 	assert(stack->nr_elements < MAX_ELEMENTS);
 	stack->elements[stack->nr_elements++] = entry;

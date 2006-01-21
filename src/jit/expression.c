@@ -52,8 +52,9 @@ struct expression *temporary_expr(enum jvm_type jvm_type, unsigned long temporar
 	return expr;
 }
 
-struct expression *array_deref_expr(enum jvm_type jvm_type, unsigned long arrayref,
-				    unsigned long array_index)
+struct expression *array_deref_expr(enum jvm_type jvm_type,
+				    struct expression *arrayref,
+				    struct expression *array_index)
 {
 	struct expression *expr = alloc_expression(EXPR_ARRAY_DEREF, jvm_type);
 	if (expr) {

@@ -10,8 +10,8 @@
 void test_stack_retains_elements(CuTest *ct)
 {
 	struct stack stack = STACK_INIT;
-	stack_push(&stack, 0);
-	stack_push(&stack, 1);
-	CuAssertIntEquals(ct, 1, stack_pop(&stack));
-	CuAssertIntEquals(ct, 0, stack_pop(&stack));
+	stack_push(&stack, (void *)0);
+	stack_push(&stack, (void *)1);
+	CuAssertPtrEquals(ct, (void *)1, stack_pop(&stack));
+	CuAssertPtrEquals(ct, (void *)0, stack_pop(&stack));
 }
