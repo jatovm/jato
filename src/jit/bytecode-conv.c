@@ -60,13 +60,11 @@ static struct statement *convert_lconst(struct conversion_context *context)
 static struct statement *__convert_fconst(enum jvm_type jvm_type,
 					  double value, struct stack *expr_stack)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		stmt->s_left = fvalue_expr(jvm_type, value);
-		stmt->s_target = temporary_expr(jvm_type, alloc_temporary());
-		stack_push(expr_stack, stmt->s_target);
-	}
-	return stmt;
+	struct expression *expr = fvalue_expr(jvm_type, value);
+	if (expr)
+		stack_push(expr_stack, expr);
+
+	return 0;
 }
 
 static struct statement *convert_fconst(struct conversion_context *context)

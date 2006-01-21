@@ -79,18 +79,16 @@ static void assert_fconst_stmt(CuTest * ct,
 			       enum jvm_type expected_jvm_type,
 			       double expected_value, char actual)
 {
-	unsigned char code[] = { actual };
+	struct expression *expr;
 	struct stack stack = STACK_INIT;
-	struct statement *stmt =
-	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
-	assert_fvalue_expr(ct, expected_jvm_type, expected_value,
-			      stmt->s_left);
+	unsigned char code[] = { actual };
 
-	assert_temporary_expr(ct, stmt->s_target->temporary, stack_pop(&stack));
+	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+
+	assert_fvalue_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
-	free_stmt(stmt);
+	free_expression(expr);
 }
 
 void test_convert_nop(CuTest * ct)
