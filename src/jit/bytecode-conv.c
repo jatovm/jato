@@ -2,7 +2,7 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  *
  * This file contains functions for converting Java bytecode to immediate
- * language of the JIT compiler.
+ * representation of the JIT compiler.
  */
 
 #include <statement.h>
