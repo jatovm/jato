@@ -95,38 +95,33 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 				       unsigned long cp_idx,
 				       struct stack *expr_stack)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (!stmt)
-		goto failed;
+	struct expression *expr;
 
 	u1 type = CP_TYPE(cp, cp_idx);
 	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
 	switch (type) {
 	case CONSTANT_Integer:
-		stmt->s_left = value_expr(J_INT, entry);
+		expr = value_expr(J_INT, entry);
 		break;
 	case CONSTANT_Float:
-		stmt->s_left = fvalue_expr(J_FLOAT, *(float *)&entry);
+		expr = fvalue_expr(J_FLOAT, *(float *)&entry);
 		break;
 	case CONSTANT_String:
-		stmt->s_left = value_expr(J_REFERENCE, entry);
+		expr = value_expr(J_REFERENCE, entry);
 		break;
 	case CONSTANT_Long:
-		stmt->s_left = value_expr(J_LONG, entry);
+		expr = value_expr(J_LONG, entry);
 		break;
 	case CONSTANT_Double:
-		stmt->s_left = fvalue_expr(J_DOUBLE, *(double *)&entry);
+		expr = fvalue_expr(J_DOUBLE, *(double *)&entry);
 		break;
 	default:
-		goto failed;
+		expr = NULL;
 	}
-	stmt->s_target =
-	    temporary_expr(stmt->s_left->jvm_type, alloc_temporary());
-	stack_push(expr_stack, stmt->s_target);
 
-	return stmt;
-      failed:
-	free_stmt(stmt);
+	if (expr)
+		stack_push(expr_stack, expr);
+
 	return NULL;
 }
 

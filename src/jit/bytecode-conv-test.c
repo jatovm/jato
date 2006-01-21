@@ -196,17 +196,10 @@ static void assert_ldc_stmt(CuTest * ct,
 	u1 cp_types[] = { cp_type };
 	struct stack stack = STACK_INIT;
 
-	struct statement *stmt =
-	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
-				     cp_types, OPC_LDC, 0x00,
-				     0x00,
-				     &stack);
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
-	assert_value_expr(ct, expected_jvm_type, expected_value,
-			     stmt->s_left);
-	assert_temporary_expr(ct, stmt->s_target->temporary, stack_pop(&stack));
+	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
+				 OPC_LDC, 0x00, 0x00, &stack);
+	assert_value_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_stmt(stmt);
 }
 
 static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
@@ -216,16 +209,10 @@ static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
 	u1 cp_types[] = { CONSTANT_Float };
 	struct stack stack = STACK_INIT;
 
-	struct statement *stmt =
-	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
-				     cp_types, OPC_LDC, 0x00,
-				     0x00,
-				     &stack);
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
-	assert_fvalue_expr(ct, J_FLOAT, expected_value, stmt->s_left);
-	assert_temporary_expr(ct, stmt->s_target->temporary, stack_pop(&stack));
+	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
+				 OPC_LDC, 0x00, 0x00, &stack);
+	assert_fvalue_expr(ct, J_FLOAT, expected_value, stack_pop(&stack));
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_stmt(stmt);
 }
 
 #define INT_MAX 2147483647
@@ -254,22 +241,14 @@ static void assert_ldcw_stmt(CuTest * ct,
 	cp_types[256] = cp_type;
 	struct stack stack = STACK_INIT;
 
-	struct statement *stmt =
-	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
-				     cp_types, opcode, 0x01,
-				     0x00,
-				     &stack);
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
-	assert_value_expr(ct, expected_jvm_type, expected_value,
-			     stmt->s_left);
-	assert_temporary_expr(ct, stmt->s_target->temporary, stack_pop(&stack));
+	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
+				 0x01, 0x00, &stack);
+	assert_value_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_stmt(stmt);
 }
 
 static void __assert_ldcw_stmt_double(CuTest * ct,
-				      enum jvm_type
-				      expected_jvm_type,
+				      enum jvm_type expected_jvm_type,
 				      double expected_value,
 				      u1 cp_type, u8 value,
 				      unsigned long opcode)
@@ -280,17 +259,10 @@ static void __assert_ldcw_stmt_double(CuTest * ct,
 	cp_types[256] = cp_type;
 	struct stack stack = STACK_INIT;
 
-	struct statement *stmt =
-	    convert_bytecode_with_cp(cp_infos, sizeof(cp_infos),
-				     cp_types, opcode, 0x01,
-				     0x00,
-				     &stack);
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
-	assert_fvalue_expr(ct, expected_jvm_type, expected_value,
-			      stmt->s_left);
-	assert_temporary_expr(ct, stmt->s_target->temporary, stack_pop(&stack));
+	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
+				 0x01, 0x00, &stack);
+	assert_fvalue_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_stmt(stmt);
 }
 
 static void assert_ldcw_stmt_float(CuTest * ct,
