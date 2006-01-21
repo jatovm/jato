@@ -33,13 +33,11 @@ static struct statement *__convert_const(enum jvm_type jvm_type,
 					 unsigned long long value,
 					 struct stack *expr_stack)
 {
-	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
-	if (stmt) {
-		stmt->s_left = value_expr(jvm_type, value);
-		stmt->s_target = temporary_expr(jvm_type, alloc_temporary());
-		stack_push(expr_stack, stmt->s_target);
-	}
-	return stmt;
+	struct expression *expr = value_expr(jvm_type, value);
+	if (expr)
+		stack_push(expr_stack, expr);
+
+	return NULL;
 }
 
 static struct statement *convert_aconst_null(struct conversion_context *context)

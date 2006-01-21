@@ -54,17 +54,15 @@ static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
 				long long expected_value,
 				char *actual, size_t count)
 {
+	struct expression *expr;
 	struct stack stack = STACK_INIT;
-	struct statement *stmt =
-	    convert_bytecode_to_stmts(cb, actual, count, &stack);
-	CuAssertIntEquals(ct, expected_stmt_type, stmt->s_type);
-	assert_value_expr(ct, expected_jvm_type, expected_value,
-			     stmt->s_left);
 
-	assert_temporary_expr(ct, stmt->s_target->temporary, stack_pop(&stack));
+	convert_bytecode_to_stmts(cb, actual, count, &stack);
+
+	assert_value_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
-	free_stmt(stmt);
+	free_expression(expr);
 }
 
 static void assert_const_stmt(CuTest * ct,
