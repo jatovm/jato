@@ -6,61 +6,57 @@
 #include <byteorder.h>
 #include <stack.h>
 
-#include <CuTest.h>
+#include <libharness.h>
 #include <stdlib.h>
 
-static void assert_value_expr(CuTest * ct,
-				 enum jvm_type expected_jvm_type,
-				 long long expected_value,
-				 struct expression *expression)
+static void assert_value_expr(enum jvm_type expected_jvm_type,
+			      long long expected_value,
+			      struct expression *expression)
 {
-	CuAssertIntEquals(ct, EXPR_VALUE, expression->type);
-	CuAssertIntEquals(ct, expected_jvm_type, expression->jvm_type);
-	CuAssertIntEquals(ct, expected_value, expression->value);
+	assert_int_equals(EXPR_VALUE, expression->type);
+	assert_int_equals(expected_jvm_type, expression->jvm_type);
+	assert_int_equals(expected_value, expression->value);
 }
 
-static void assert_fvalue_expr(CuTest * ct,
-				  enum jvm_type expected_jvm_type,
-				  double expected_value,
+static void assert_fvalue_expr(enum jvm_type expected_jvm_type,
+			       double expected_value,
+			       struct expression *expression)
+{
+	assert_int_equals(EXPR_FVALUE, expression->type);
+	assert_int_equals(expected_jvm_type, expression->jvm_type);
+	assert_float_equals(expected_value, expression->fvalue, 0.01f);
+}
+
+static void assert_temporary_expr(unsigned long expected,
 				  struct expression *expression)
 {
-	CuAssertIntEquals(ct, EXPR_FVALUE, expression->type);
-	CuAssertIntEquals(ct, expected_jvm_type, expression->jvm_type);
-	CuAssertDblEquals(ct, expected_value, expression->fvalue, 0.01f);
+	assert_int_equals(EXPR_TEMPORARY, expression->type);
+	assert_int_equals(expected, expression->temporary);
 }
 
-static void assert_temporary_expr(CuTest * ct, unsigned long expected,
-				     struct expression *expression)
-{
-	CuAssertIntEquals(ct, EXPR_TEMPORARY, expression->type);
-	CuAssertIntEquals(ct, expected, expression->temporary);
-}
-
-static void assert_array_deref_expr(CuTest * ct,
-				    struct expression *expected_arrayref,
+static void assert_array_deref_expr(struct expression *expected_arrayref,
 				    struct expression *expected_index,
 				    struct expression *expression)
 {
-	CuAssertIntEquals(ct, EXPR_ARRAY_DEREF, expression->type);
-	CuAssertPtrEquals(ct, expected_arrayref, expression->arrayref);
-	CuAssertPtrEquals(ct, expected_index, expression->array_index);
+	assert_int_equals(EXPR_ARRAY_DEREF, expression->type);
+	assert_ptr_equals(expected_arrayref, expression->arrayref);
+	assert_ptr_equals(expected_index, expression->array_index);
 }
 
-static void assert_binop_expr(CuTest * ct,
-			      enum jvm_type jvm_type,
-			      enum operator operator,
+static void assert_binop_expr(enum jvm_type jvm_type,
+			      enum operator  operator,
 			      struct expression *left,
 			      struct expression *right,
 			      struct expression *expression)
 {
-	CuAssertIntEquals(ct, EXPR_BINOP, expression->type);
-	CuAssertIntEquals(ct, jvm_type, expression->jvm_type);
-	CuAssertIntEquals(ct, operator, expression->operator);
-	CuAssertPtrEquals(ct, left, expression->left);
-	CuAssertPtrEquals(ct, right, expression->right);
+	assert_int_equals(EXPR_BINOP, expression->type);
+	assert_int_equals(jvm_type, expression->jvm_type);
+	assert_int_equals(operator, expression->operator);
+	assert_ptr_equals(left, expression->left);
+	assert_ptr_equals(right, expression->right);
 }
 
-static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
+static void __assert_const_stmt(struct classblock *cb,
 				enum statement_type
 				expected_stmt_type,
 				enum jvm_type
@@ -74,24 +70,22 @@ static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
 	convert_bytecode_to_stmts(cb, actual, count, &stack);
 
 	expr = stack_pop(&stack);
-	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_value_expr(expected_jvm_type, expected_value, expr);
+	assert_int_equals(true, stack_is_empty(&stack));
 
 	expr_put(expr);
 }
 
-static void assert_const_stmt(CuTest * ct,
-			      enum jvm_type expected_jvm_type,
+static void assert_const_stmt(enum jvm_type expected_jvm_type,
 			      long long expected_value, char actual)
 {
 	unsigned char code[] = { actual };
-	__assert_const_stmt(ct, NULL, STMT_ASSIGN,
+	__assert_const_stmt(NULL, STMT_ASSIGN,
 			    expected_jvm_type, expected_value,
 			    code, sizeof(code));
 }
 
-static void assert_fconst_stmt(CuTest * ct,
-			       enum jvm_type expected_jvm_type,
+static void assert_fconst_stmt(enum jvm_type expected_jvm_type,
 			       double expected_value, char actual)
 {
 	struct expression *expr;
@@ -100,90 +94,89 @@ static void assert_fconst_stmt(CuTest * ct,
 
 	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	expr = stack_pop(&stack);
-	assert_fvalue_expr(ct, expected_jvm_type, expected_value, expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
+	assert_int_equals(true, stack_is_empty(&stack));
 
 	expr_put(expr);
 }
 
-void test_convert_nop(CuTest * ct)
+void test_convert_nop(void)
 {
 	unsigned char code[] = { OPC_NOP };
 	struct stack stack = STACK_INIT;
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertIntEquals(ct, STMT_NOP, stmt->s_type);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_int_equals(STMT_NOP, stmt->s_type);
+	assert_int_equals(true, stack_is_empty(&stack));
 	free_stmt(stmt);
 }
 
-void test_convert_aconst_null(CuTest * ct)
+void test_convert_aconst_null(void)
 {
-	assert_const_stmt(ct, J_REFERENCE, 0, OPC_ACONST_NULL);
+	assert_const_stmt(J_REFERENCE, 0, OPC_ACONST_NULL);
 }
 
-void test_convert_iconst(CuTest * ct)
+void test_convert_iconst(void)
 {
-	assert_const_stmt(ct, J_INT, -1, OPC_ICONST_M1);
-	assert_const_stmt(ct, J_INT, 0, OPC_ICONST_0);
-	assert_const_stmt(ct, J_INT, 1, OPC_ICONST_1);
-	assert_const_stmt(ct, J_INT, 2, OPC_ICONST_2);
-	assert_const_stmt(ct, J_INT, 3, OPC_ICONST_3);
-	assert_const_stmt(ct, J_INT, 4, OPC_ICONST_4);
-	assert_const_stmt(ct, J_INT, 5, OPC_ICONST_5);
+	assert_const_stmt(J_INT, -1, OPC_ICONST_M1);
+	assert_const_stmt(J_INT, 0, OPC_ICONST_0);
+	assert_const_stmt(J_INT, 1, OPC_ICONST_1);
+	assert_const_stmt(J_INT, 2, OPC_ICONST_2);
+	assert_const_stmt(J_INT, 3, OPC_ICONST_3);
+	assert_const_stmt(J_INT, 4, OPC_ICONST_4);
+	assert_const_stmt(J_INT, 5, OPC_ICONST_5);
 }
 
-void test_convert_lconst(CuTest * ct)
+void test_convert_lconst(void)
 {
-	assert_const_stmt(ct, J_LONG, 0, OPC_LCONST_0);
-	assert_const_stmt(ct, J_LONG, 1, OPC_LCONST_1);
+	assert_const_stmt(J_LONG, 0, OPC_LCONST_0);
+	assert_const_stmt(J_LONG, 1, OPC_LCONST_1);
 }
 
-void test_convert_fconst(CuTest * ct)
+void test_convert_fconst(void)
 {
-	assert_fconst_stmt(ct, J_FLOAT, 0, OPC_FCONST_0);
-	assert_fconst_stmt(ct, J_FLOAT, 1, OPC_FCONST_1);
-	assert_fconst_stmt(ct, J_FLOAT, 2, OPC_FCONST_2);
+	assert_fconst_stmt(J_FLOAT, 0, OPC_FCONST_0);
+	assert_fconst_stmt(J_FLOAT, 1, OPC_FCONST_1);
+	assert_fconst_stmt(J_FLOAT, 2, OPC_FCONST_2);
 }
 
-void test_convert_dconst(CuTest * ct)
+void test_convert_dconst(void)
 {
-	assert_fconst_stmt(ct, J_DOUBLE, 0, OPC_DCONST_0);
-	assert_fconst_stmt(ct, J_DOUBLE, 1, OPC_DCONST_1);
+	assert_fconst_stmt(J_DOUBLE, 0, OPC_DCONST_0);
+	assert_fconst_stmt(J_DOUBLE, 1, OPC_DCONST_1);
 }
 
-static void assert_bipush_stmt(CuTest * ct, char expected_value, char actual)
+static void assert_bipush_stmt(char expected_value, char actual)
 {
 	unsigned char code[] = { actual, expected_value };
-	__assert_const_stmt(ct, NULL, STMT_ASSIGN, J_INT,
+	__assert_const_stmt(NULL, STMT_ASSIGN, J_INT,
 			    expected_value, code, sizeof(code));
 }
 
-void test_convert_bipush(CuTest * ct)
+void test_convert_bipush(void)
 {
-	assert_bipush_stmt(ct, 0x00, OPC_BIPUSH);
-	assert_bipush_stmt(ct, 0x01, OPC_BIPUSH);
-	assert_bipush_stmt(ct, 0xFF, OPC_BIPUSH);
+	assert_bipush_stmt(0x00, OPC_BIPUSH);
+	assert_bipush_stmt(0x01, OPC_BIPUSH);
+	assert_bipush_stmt(0xFF, OPC_BIPUSH);
 }
 
-static void assert_sipush_stmt(CuTest * ct,
-			       long long expected_value,
+static void assert_sipush_stmt(long long expected_value,
 			       char first, char second, char actual)
 {
 	unsigned char code[] = { actual, first, second };
-	__assert_const_stmt(ct, NULL, STMT_ASSIGN, J_INT,
+	__assert_const_stmt(NULL, STMT_ASSIGN, J_INT,
 			    expected_value, code, sizeof(code));
 }
 
 #define MIN_SHORT (-32768)
 #define MAX_SHORT 32767
 
-void test_convert_sipush(CuTest * ct)
+void test_convert_sipush(void)
 {
-	assert_sipush_stmt(ct, 0, 0x00, 0x00, OPC_SIPUSH);
-	assert_sipush_stmt(ct, 1, 0x00, 0x01, OPC_SIPUSH);
-	assert_sipush_stmt(ct, MIN_SHORT, 0x80, 0x00, OPC_SIPUSH);
-	assert_sipush_stmt(ct, MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
+	assert_sipush_stmt(0, 0x00, 0x00, OPC_SIPUSH);
+	assert_sipush_stmt(1, 0x00, 0x01, OPC_SIPUSH);
+	assert_sipush_stmt(MIN_SHORT, 0x80, 0x00, OPC_SIPUSH);
+	assert_sipush_stmt(MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
 }
 
 static struct statement *convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,
@@ -203,8 +196,7 @@ static struct statement *convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,
 	return convert_bytecode_to_stmts(&cb, code, sizeof(code), stack);
 }
 
-static void assert_ldc_stmt(CuTest * ct,
-			    enum jvm_type expected_jvm_type,
+static void assert_ldc_stmt(enum jvm_type expected_jvm_type,
 			    long expected_value, u1 cp_type)
 {
 	struct expression *expr;
@@ -215,12 +207,12 @@ static void assert_ldc_stmt(CuTest * ct,
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
 				 OPC_LDC, 0x00, 0x00, &stack);
 	expr = stack_pop(&stack);
-	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_value_expr(expected_jvm_type, expected_value, expr);
+	assert_int_equals(true, stack_is_empty(&stack));
 	expr_put(expr);
 }
 
-static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
+static void assert_ldc_stmt_float(float expected_value)
 {
 	struct expression *expr;
 	u4 value = *(u4 *) & expected_value;
@@ -231,28 +223,27 @@ static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
 				 OPC_LDC, 0x00, 0x00, &stack);
 	expr = stack_pop(&stack);
-	assert_fvalue_expr(ct, J_FLOAT, expected_value, expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_fvalue_expr(J_FLOAT, expected_value, expr);
+	assert_int_equals(true, stack_is_empty(&stack));
 	expr_put(expr);
 }
 
 #define INT_MAX 2147483647
 #define INT_MIN (-INT_MAX - 1)
 
-void test_convert_ldc(CuTest * ct)
+void test_convert_ldc(void)
 {
-	assert_ldc_stmt(ct, J_INT, 0, CONSTANT_Integer);
-	assert_ldc_stmt(ct, J_INT, 1, CONSTANT_Integer);
-	assert_ldc_stmt(ct, J_INT, INT_MIN, CONSTANT_Integer);
-	assert_ldc_stmt(ct, J_INT, INT_MAX, CONSTANT_Integer);
-	assert_ldc_stmt_float(ct, 0.01f);
-	assert_ldc_stmt_float(ct, 1.0f);
-	assert_ldc_stmt_float(ct, -1.0f);
-	assert_ldc_stmt(ct, J_REFERENCE, 0xDEADBEEF, CONSTANT_String);
+	assert_ldc_stmt(J_INT, 0, CONSTANT_Integer);
+	assert_ldc_stmt(J_INT, 1, CONSTANT_Integer);
+	assert_ldc_stmt(J_INT, INT_MIN, CONSTANT_Integer);
+	assert_ldc_stmt(J_INT, INT_MAX, CONSTANT_Integer);
+	assert_ldc_stmt_float(0.01f);
+	assert_ldc_stmt_float(1.0f);
+	assert_ldc_stmt_float(-1.0f);
+	assert_ldc_stmt(J_REFERENCE, 0xDEADBEEF, CONSTANT_String);
 }
 
-static void assert_ldcw_stmt(CuTest * ct,
-			     enum jvm_type expected_jvm_type,
+static void assert_ldcw_stmt(enum jvm_type expected_jvm_type,
 			     long long expected_value, u1 cp_type,
 			     unsigned char opcode)
 {
@@ -266,13 +257,12 @@ static void assert_ldcw_stmt(CuTest * ct,
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
 				 0x01, 0x00, &stack);
 	expr = stack_pop(&stack);
-	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_value_expr(expected_jvm_type, expected_value, expr);
+	assert_int_equals(true, stack_is_empty(&stack));
 	expr_put(expr);
 }
 
-static void __assert_ldcw_stmt_double(CuTest * ct,
-				      enum jvm_type expected_jvm_type,
+static void __assert_ldcw_stmt_double(enum jvm_type expected_jvm_type,
 				      double expected_value,
 				      u1 cp_type, u8 value,
 				      unsigned long opcode)
@@ -287,179 +277,167 @@ static void __assert_ldcw_stmt_double(CuTest * ct,
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
 				 0x01, 0x00, &stack);
 	expr = stack_pop(&stack);
-	assert_fvalue_expr(ct, expected_jvm_type, expected_value, expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
+	assert_int_equals(true, stack_is_empty(&stack));
 	expr_put(expr);
 }
 
-static void assert_ldcw_stmt_float(CuTest * ct,
-				   enum jvm_type expected_jvm_type,
+static void assert_ldcw_stmt_float(enum jvm_type expected_jvm_type,
 				   float expected_value, u1 cp_type,
 				   unsigned long opcode)
 {
 	u4 value = *(u4 *) & expected_value;
-	__assert_ldcw_stmt_double(ct, expected_jvm_type,
+	__assert_ldcw_stmt_double(expected_jvm_type,
 				  expected_value, cp_type, value, opcode);
 }
 
-static void assert_ldcw_stmt_double(CuTest * ct,
-				    enum jvm_type
+static void assert_ldcw_stmt_double(enum jvm_type
 				    expected_jvm_type,
 				    double expected_value,
 				    u1 cp_type, unsigned long opcode)
 {
 	u8 value = *(u8 *) & expected_value;
-	__assert_ldcw_stmt_double(ct, expected_jvm_type,
+	__assert_ldcw_stmt_double(expected_jvm_type,
 				  expected_value, cp_type, value, opcode);
 }
 
-void test_convert_ldc_w(CuTest * ct)
+void test_convert_ldc_w(void)
 {
-	assert_ldcw_stmt(ct, J_INT, 0, CONSTANT_Integer, OPC_LDC_W);
-	assert_ldcw_stmt(ct, J_INT, 1, CONSTANT_Integer, OPC_LDC_W);
-	assert_ldcw_stmt(ct, J_INT, INT_MIN, CONSTANT_Integer, OPC_LDC_W);
-	assert_ldcw_stmt(ct, J_INT, INT_MAX, CONSTANT_Integer, OPC_LDC_W);
-	assert_ldcw_stmt_float(ct, J_FLOAT, 0.01f, CONSTANT_Float,
-			       OPC_LDC_W);
-	assert_ldcw_stmt_float(ct, J_FLOAT, 1.0f, CONSTANT_Float,
-			       OPC_LDC_W);
-	assert_ldcw_stmt_float(ct, J_FLOAT, -1.0f, CONSTANT_Float,
-			       OPC_LDC_W);
-	assert_ldcw_stmt(ct, J_REFERENCE, 0xDEADBEEF, CONSTANT_String,
-			 OPC_LDC_W);
+	assert_ldcw_stmt(J_INT, 0, CONSTANT_Integer, OPC_LDC_W);
+	assert_ldcw_stmt(J_INT, 1, CONSTANT_Integer, OPC_LDC_W);
+	assert_ldcw_stmt(J_INT, INT_MIN, CONSTANT_Integer, OPC_LDC_W);
+	assert_ldcw_stmt(J_INT, INT_MAX, CONSTANT_Integer, OPC_LDC_W);
+	assert_ldcw_stmt_float(J_FLOAT, 0.01f, CONSTANT_Float, OPC_LDC_W);
+	assert_ldcw_stmt_float(J_FLOAT, 1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_ldcw_stmt_float(J_FLOAT, -1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_ldcw_stmt(J_REFERENCE, 0xDEADBEEF, CONSTANT_String, OPC_LDC_W);
 }
 
 #define LONG_MAX ((long long) 2<<63)
 #define LONG_MIN (-LONG_MAX - 1)
 
-void test_convert_ldc2_w(CuTest * ct)
+void test_convert_ldc2_w(void)
 {
-	assert_ldcw_stmt(ct, J_LONG, 0, CONSTANT_Long, OPC_LDC2_W);
-	assert_ldcw_stmt(ct, J_LONG, 1, CONSTANT_Long, OPC_LDC2_W);
-	assert_ldcw_stmt(ct, J_LONG, LONG_MIN, CONSTANT_Long, OPC_LDC2_W);
-	assert_ldcw_stmt(ct, J_LONG, LONG_MAX, CONSTANT_Long, OPC_LDC2_W);
-	assert_ldcw_stmt_double(ct, J_DOUBLE, 0.01f, CONSTANT_Double,
-				OPC_LDC2_W);
-	assert_ldcw_stmt_double(ct, J_DOUBLE, 1.0f, CONSTANT_Double,
-				OPC_LDC2_W);
-	assert_ldcw_stmt_double(ct, J_DOUBLE, -1.0f, CONSTANT_Double,
-				OPC_LDC2_W);
+	assert_ldcw_stmt(J_LONG, 0, CONSTANT_Long, OPC_LDC2_W);
+	assert_ldcw_stmt(J_LONG, 1, CONSTANT_Long, OPC_LDC2_W);
+	assert_ldcw_stmt(J_LONG, LONG_MIN, CONSTANT_Long, OPC_LDC2_W);
+	assert_ldcw_stmt(J_LONG, LONG_MAX, CONSTANT_Long, OPC_LDC2_W);
+	assert_ldcw_stmt_double(J_DOUBLE, 0.01f, CONSTANT_Double, OPC_LDC2_W);
+	assert_ldcw_stmt_double(J_DOUBLE, 1.0f, CONSTANT_Double, OPC_LDC2_W);
+	assert_ldcw_stmt_double(J_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
 }
 
-static void assert_load_stmt(CuTest * ct, unsigned char opc,
-			      enum jvm_type expected_jvm_type,
-			      unsigned char expected_index)
+static void assert_load_stmt(unsigned char opc,
+			     enum jvm_type expected_jvm_type,
+			     unsigned char expected_index)
 {
 	unsigned char code[] = { opc, expected_index };
 	struct stack stack = STACK_INIT;
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
-	CuAssertIntEquals(ct, EXPR_LOCAL, stmt->s_left->type);
-	CuAssertIntEquals(ct, expected_index, stmt->s_left->local_index);
-	CuAssertIntEquals(ct, expected_jvm_type,
-			  stmt->s_left->jvm_type);
-	assert_temporary_expr(ct, stmt->s_target->temporary, stack_pop(&stack));
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_int_equals(STMT_ASSIGN, stmt->s_type);
+	assert_int_equals(EXPR_LOCAL, stmt->s_left->type);
+	assert_int_equals(expected_index, stmt->s_left->local_index);
+	assert_int_equals(expected_jvm_type, stmt->s_left->jvm_type);
+	assert_temporary_expr(stmt->s_target->temporary, stack_pop(&stack));
+	assert_int_equals(true, stack_is_empty(&stack));
 	free_stmt(stmt);
 }
 
-void test_convert_iload(CuTest * ct)
+void test_convert_iload(void)
 {
-	assert_load_stmt(ct, OPC_ILOAD, J_INT, 0x00);
-	assert_load_stmt(ct, OPC_ILOAD, J_INT, 0x01);
-	assert_load_stmt(ct, OPC_ILOAD, J_INT, 0xFF);
+	assert_load_stmt(OPC_ILOAD, J_INT, 0x00);
+	assert_load_stmt(OPC_ILOAD, J_INT, 0x01);
+	assert_load_stmt(OPC_ILOAD, J_INT, 0xFF);
 }
 
-void test_convert_lload(CuTest * ct)
+void test_convert_lload(void)
 {
-	assert_load_stmt(ct, OPC_LLOAD, J_LONG, 0x00);
-	assert_load_stmt(ct, OPC_LLOAD, J_LONG, 0x01);
-	assert_load_stmt(ct, OPC_LLOAD, J_LONG, 0xFF);
+	assert_load_stmt(OPC_LLOAD, J_LONG, 0x00);
+	assert_load_stmt(OPC_LLOAD, J_LONG, 0x01);
+	assert_load_stmt(OPC_LLOAD, J_LONG, 0xFF);
 }
 
-void test_convert_fload(CuTest * ct)
+void test_convert_fload(void)
 {
-	assert_load_stmt(ct, OPC_FLOAD, J_FLOAT, 0x00);
-	assert_load_stmt(ct, OPC_FLOAD, J_FLOAT, 0x01);
-	assert_load_stmt(ct, OPC_FLOAD, J_FLOAT, 0xFF);
+	assert_load_stmt(OPC_FLOAD, J_FLOAT, 0x00);
+	assert_load_stmt(OPC_FLOAD, J_FLOAT, 0x01);
+	assert_load_stmt(OPC_FLOAD, J_FLOAT, 0xFF);
 }
 
-void test_convert_dload(CuTest * ct)
+void test_convert_dload(void)
 {
-	assert_load_stmt(ct, OPC_DLOAD, J_DOUBLE, 0x00);
-	assert_load_stmt(ct, OPC_DLOAD, J_DOUBLE, 0x01);
-	assert_load_stmt(ct, OPC_DLOAD, J_DOUBLE, 0xFF);
+	assert_load_stmt(OPC_DLOAD, J_DOUBLE, 0x00);
+	assert_load_stmt(OPC_DLOAD, J_DOUBLE, 0x01);
+	assert_load_stmt(OPC_DLOAD, J_DOUBLE, 0xFF);
 }
 
-void test_convert_aload(CuTest * ct)
+void test_convert_aload(void)
 {
-	assert_load_stmt(ct, OPC_ALOAD, J_REFERENCE, 0x00);
-	assert_load_stmt(ct, OPC_ALOAD, J_REFERENCE, 0x01);
-	assert_load_stmt(ct, OPC_ALOAD, J_REFERENCE, 0xFF);
+	assert_load_stmt(OPC_ALOAD, J_REFERENCE, 0x00);
+	assert_load_stmt(OPC_ALOAD, J_REFERENCE, 0x01);
+	assert_load_stmt(OPC_ALOAD, J_REFERENCE, 0xFF);
 }
 
-void test_convert_iload_n(CuTest * ct)
+void test_convert_iload_n(void)
 {
-	assert_load_stmt(ct, OPC_ILOAD_0, J_INT, 0x00);
-	assert_load_stmt(ct, OPC_ILOAD_1, J_INT, 0x01);
-	assert_load_stmt(ct, OPC_ILOAD_2, J_INT, 0x02);
-	assert_load_stmt(ct, OPC_ILOAD_3, J_INT, 0x03);
+	assert_load_stmt(OPC_ILOAD_0, J_INT, 0x00);
+	assert_load_stmt(OPC_ILOAD_1, J_INT, 0x01);
+	assert_load_stmt(OPC_ILOAD_2, J_INT, 0x02);
+	assert_load_stmt(OPC_ILOAD_3, J_INT, 0x03);
 }
 
-void test_convert_lload_n(CuTest * ct)
+void test_convert_lload_n(void)
 {
-	assert_load_stmt(ct, OPC_LLOAD_0, J_LONG, 0x00);
-	assert_load_stmt(ct, OPC_LLOAD_1, J_LONG, 0x01);
-	assert_load_stmt(ct, OPC_LLOAD_2, J_LONG, 0x02);
-	assert_load_stmt(ct, OPC_LLOAD_3, J_LONG, 0x03);
+	assert_load_stmt(OPC_LLOAD_0, J_LONG, 0x00);
+	assert_load_stmt(OPC_LLOAD_1, J_LONG, 0x01);
+	assert_load_stmt(OPC_LLOAD_2, J_LONG, 0x02);
+	assert_load_stmt(OPC_LLOAD_3, J_LONG, 0x03);
 }
 
-void test_convert_fload_n(CuTest * ct)
+void test_convert_fload_n(void)
 {
-	assert_load_stmt(ct, OPC_FLOAD_0, J_FLOAT, 0x00);
-	assert_load_stmt(ct, OPC_FLOAD_1, J_FLOAT, 0x01);
-	assert_load_stmt(ct, OPC_FLOAD_2, J_FLOAT, 0x02);
-	assert_load_stmt(ct, OPC_FLOAD_3, J_FLOAT, 0x03);
+	assert_load_stmt(OPC_FLOAD_0, J_FLOAT, 0x00);
+	assert_load_stmt(OPC_FLOAD_1, J_FLOAT, 0x01);
+	assert_load_stmt(OPC_FLOAD_2, J_FLOAT, 0x02);
+	assert_load_stmt(OPC_FLOAD_3, J_FLOAT, 0x03);
 }
 
-void test_convert_dload_n(CuTest * ct)
+void test_convert_dload_n(void)
 {
-	assert_load_stmt(ct, OPC_DLOAD_0, J_DOUBLE, 0x00);
-	assert_load_stmt(ct, OPC_DLOAD_1, J_DOUBLE, 0x01);
-	assert_load_stmt(ct, OPC_DLOAD_2, J_DOUBLE, 0x02);
-	assert_load_stmt(ct, OPC_DLOAD_3, J_DOUBLE, 0x03);
+	assert_load_stmt(OPC_DLOAD_0, J_DOUBLE, 0x00);
+	assert_load_stmt(OPC_DLOAD_1, J_DOUBLE, 0x01);
+	assert_load_stmt(OPC_DLOAD_2, J_DOUBLE, 0x02);
+	assert_load_stmt(OPC_DLOAD_3, J_DOUBLE, 0x03);
 }
 
-void test_convert_aload_n(CuTest * ct)
+void test_convert_aload_n(void)
 {
-	assert_load_stmt(ct, OPC_ALOAD_0, J_REFERENCE, 0x00);
-	assert_load_stmt(ct, OPC_ALOAD_1, J_REFERENCE, 0x01);
-	assert_load_stmt(ct, OPC_ALOAD_2, J_REFERENCE, 0x02);
-	assert_load_stmt(ct, OPC_ALOAD_3, J_REFERENCE, 0x03);
+	assert_load_stmt(OPC_ALOAD_0, J_REFERENCE, 0x00);
+	assert_load_stmt(OPC_ALOAD_1, J_REFERENCE, 0x01);
+	assert_load_stmt(OPC_ALOAD_2, J_REFERENCE, 0x02);
+	assert_load_stmt(OPC_ALOAD_3, J_REFERENCE, 0x03);
 }
 
-static void assert_null_check_stmt(CuTest *ct, struct expression *expected,
+static void assert_null_check_stmt(struct expression *expected,
 				   struct statement *actual)
 {
-	CuAssertIntEquals(ct, STMT_NULL_CHECK, actual->s_type);
-	assert_value_expr(ct, J_REFERENCE, expected->value, actual->s_left);
+	assert_int_equals(STMT_NULL_CHECK, actual->s_type);
+	assert_value_expr(J_REFERENCE, expected->value, actual->s_left);
 }
 
-static void assert_arraycheck_stmt(CuTest *ct,
-				   struct expression *expected_arrayref,
+static void assert_arraycheck_stmt(struct expression *expected_arrayref,
 				   struct expression *expected_index,
 				   struct statement *actual)
 {
-	CuAssertIntEquals(ct, STMT_ARRAY_CHECK, actual->s_type);
-	assert_array_deref_expr(ct, expected_arrayref, expected_index, actual->s_left);
+	assert_int_equals(STMT_ARRAY_CHECK, actual->s_type);
+	assert_array_deref_expr(expected_arrayref, expected_index,
+				actual->s_left);
 }
 
-static void assert_array_load_stmts(CuTest * ct,
-				    enum jvm_type expected_type,
+static void assert_array_load_stmts(enum jvm_type expected_type,
 				    unsigned char opc,
-				    unsigned long arrayref,
-				    unsigned long index)
+				    unsigned long arrayref, unsigned long index)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
@@ -478,73 +456,73 @@ static void assert_array_load_stmts(CuTest * ct,
 	struct statement *arraycheck = stmt->s_next;
 	struct statement *assign = arraycheck->s_next;
 
-	assert_null_check_stmt(ct, arrayref_expr, nullcheck);
-	assert_arraycheck_stmt(ct, arrayref_expr, index_expr, arraycheck);
+	assert_null_check_stmt(arrayref_expr, nullcheck);
+	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
 
-	CuAssertIntEquals(ct, STMT_ASSIGN, assign->s_type);
-	CuAssertIntEquals(ct, expected_type, assign->s_left->jvm_type);
-	assert_array_deref_expr(ct, arrayref_expr, index_expr, assign->s_left);
+	assert_int_equals(STMT_ASSIGN, assign->s_type);
+	assert_int_equals(expected_type, assign->s_left->jvm_type);
+	assert_array_deref_expr(arrayref_expr, index_expr, assign->s_left);
 
 	temporary_expr = stack_pop(&stack);
-	assert_temporary_expr(ct, assign->s_target->temporary, temporary_expr);
+	assert_temporary_expr(assign->s_target->temporary, temporary_expr);
 	expr_put(temporary_expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_int_equals(true, stack_is_empty(&stack));
 
 	free_stmt(stmt);
 }
 
-void test_convert_iaload(CuTest * ct)
+void test_convert_iaload(void)
 {
-	assert_array_load_stmts(ct, J_INT, OPC_IALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_INT, OPC_IALOAD, 1, 2);
+	assert_array_load_stmts(J_INT, OPC_IALOAD, 0, 1);
+	assert_array_load_stmts(J_INT, OPC_IALOAD, 1, 2);
 }
 
-void test_convert_laload(CuTest * ct)
+void test_convert_laload(void)
 {
-	assert_array_load_stmts(ct, J_LONG, OPC_LALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_LONG, OPC_LALOAD, 1, 2);
+	assert_array_load_stmts(J_LONG, OPC_LALOAD, 0, 1);
+	assert_array_load_stmts(J_LONG, OPC_LALOAD, 1, 2);
 }
 
-void test_convert_faload(CuTest * ct)
+void test_convert_faload(void)
 {
-	assert_array_load_stmts(ct, J_FLOAT, OPC_FALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_FLOAT, OPC_FALOAD, 1, 2);
+	assert_array_load_stmts(J_FLOAT, OPC_FALOAD, 0, 1);
+	assert_array_load_stmts(J_FLOAT, OPC_FALOAD, 1, 2);
 }
 
-void test_convert_daload(CuTest * ct)
+void test_convert_daload(void)
 {
-	assert_array_load_stmts(ct, J_DOUBLE, OPC_DALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_DOUBLE, OPC_DALOAD, 1, 2);
+	assert_array_load_stmts(J_DOUBLE, OPC_DALOAD, 0, 1);
+	assert_array_load_stmts(J_DOUBLE, OPC_DALOAD, 1, 2);
 }
 
-void test_convert_aaload(CuTest * ct)
+void test_convert_aaload(void)
 {
-	assert_array_load_stmts(ct, J_REFERENCE, OPC_AALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_REFERENCE, OPC_AALOAD, 1, 2);
+	assert_array_load_stmts(J_REFERENCE, OPC_AALOAD, 0, 1);
+	assert_array_load_stmts(J_REFERENCE, OPC_AALOAD, 1, 2);
 }
 
-void test_convert_baload(CuTest * ct)
+void test_convert_baload(void)
 {
-	assert_array_load_stmts(ct, J_INT, OPC_BALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_INT, OPC_BALOAD, 1, 2);
+	assert_array_load_stmts(J_INT, OPC_BALOAD, 0, 1);
+	assert_array_load_stmts(J_INT, OPC_BALOAD, 1, 2);
 }
 
-void test_convert_caload(CuTest * ct)
+void test_convert_caload(void)
 {
-	assert_array_load_stmts(ct, J_CHAR, OPC_CALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_CHAR, OPC_CALOAD, 1, 2);
+	assert_array_load_stmts(J_CHAR, OPC_CALOAD, 0, 1);
+	assert_array_load_stmts(J_CHAR, OPC_CALOAD, 1, 2);
 }
 
-void test_convert_saload(CuTest * ct)
+void test_convert_saload(void)
 {
-	assert_array_load_stmts(ct, J_SHORT, OPC_SALOAD, 0, 1);
-	assert_array_load_stmts(ct, J_SHORT, OPC_SALOAD, 1, 2);
+	assert_array_load_stmts(J_SHORT, OPC_SALOAD, 0, 1);
+	assert_array_load_stmts(J_SHORT, OPC_SALOAD, 1, 2);
 }
 
-static void assert_store_stmt(CuTest * ct, unsigned char opc,
-			       enum jvm_type expected_jvm_type,
-			       unsigned char expected_index,
-			       unsigned long expected_temporary)
+static void assert_store_stmt(unsigned char opc,
+			      enum jvm_type expected_jvm_type,
+			      unsigned char expected_index,
+			      unsigned long expected_temporary)
 {
 	unsigned char code[] = { opc, expected_index };
 	struct stack stack = STACK_INIT;
@@ -554,96 +532,94 @@ static void assert_store_stmt(CuTest * ct, unsigned char opc,
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 
-	CuAssertIntEquals(ct, STMT_ASSIGN, stmt->s_type);
+	assert_int_equals(STMT_ASSIGN, stmt->s_type);
 
-	CuAssertIntEquals(ct, EXPR_TEMPORARY, stmt->s_left->type);
-	CuAssertIntEquals(ct, expected_temporary, stmt->s_left->temporary);
+	assert_int_equals(EXPR_TEMPORARY, stmt->s_left->type);
+	assert_int_equals(expected_temporary, stmt->s_left->temporary);
 
-	CuAssertIntEquals(ct, EXPR_LOCAL, stmt->s_target->type);
-	CuAssertIntEquals(ct, expected_index, stmt->s_target->local_index);
-	CuAssertIntEquals(ct, expected_jvm_type, stmt->s_target->jvm_type);
+	assert_int_equals(EXPR_LOCAL, stmt->s_target->type);
+	assert_int_equals(expected_index, stmt->s_target->local_index);
+	assert_int_equals(expected_jvm_type, stmt->s_target->jvm_type);
 
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_int_equals(true, stack_is_empty(&stack));
 
 	free_stmt(stmt);
 }
 
-void test_convert_istore(CuTest * ct)
+void test_convert_istore(void)
 {
-	assert_store_stmt(ct, OPC_ISTORE, J_INT, 0x00, 0x01);
-	assert_store_stmt(ct, OPC_ISTORE, J_INT, 0x01, 0x02);
+	assert_store_stmt(OPC_ISTORE, J_INT, 0x00, 0x01);
+	assert_store_stmt(OPC_ISTORE, J_INT, 0x01, 0x02);
 }
 
-void test_convert_lstore(CuTest * ct)
+void test_convert_lstore(void)
 {
-	assert_store_stmt(ct, OPC_LSTORE, J_LONG, 0x00, 0x01);
-	assert_store_stmt(ct, OPC_LSTORE, J_LONG, 0x01, 0x02);
+	assert_store_stmt(OPC_LSTORE, J_LONG, 0x00, 0x01);
+	assert_store_stmt(OPC_LSTORE, J_LONG, 0x01, 0x02);
 }
 
-void test_convert_fstore(CuTest * ct)
+void test_convert_fstore(void)
 {
-	assert_store_stmt(ct, OPC_FSTORE, J_FLOAT, 0x00, 0x01);
-	assert_store_stmt(ct, OPC_FSTORE, J_FLOAT, 0x01, 0x02);
+	assert_store_stmt(OPC_FSTORE, J_FLOAT, 0x00, 0x01);
+	assert_store_stmt(OPC_FSTORE, J_FLOAT, 0x01, 0x02);
 }
 
-void test_convert_dstore(CuTest * ct)
+void test_convert_dstore(void)
 {
-	assert_store_stmt(ct, OPC_DSTORE, J_DOUBLE, 0x00, 0x01);
-	assert_store_stmt(ct, OPC_DSTORE, J_DOUBLE, 0x01, 0x02);
+	assert_store_stmt(OPC_DSTORE, J_DOUBLE, 0x00, 0x01);
+	assert_store_stmt(OPC_DSTORE, J_DOUBLE, 0x01, 0x02);
 }
 
-void test_convert_astore(CuTest * ct)
+void test_convert_astore(void)
 {
-	assert_store_stmt(ct, OPC_ASTORE, J_REFERENCE, 0x00, 0x01);
-	assert_store_stmt(ct, OPC_ASTORE, J_REFERENCE, 0x01, 0x02);
+	assert_store_stmt(OPC_ASTORE, J_REFERENCE, 0x00, 0x01);
+	assert_store_stmt(OPC_ASTORE, J_REFERENCE, 0x01, 0x02);
 }
 
-void test_convert_istore_n(CuTest * ct)
+void test_convert_istore_n(void)
 {
-	assert_store_stmt(ct, OPC_ISTORE_0, J_INT, 0x00, 0xFF);
-	assert_store_stmt(ct, OPC_ISTORE_1, J_INT, 0x01, 0xFF);
-	assert_store_stmt(ct, OPC_ISTORE_2, J_INT, 0x02, 0xFF);
-	assert_store_stmt(ct, OPC_ISTORE_3, J_INT, 0x03, 0xFF);
+	assert_store_stmt(OPC_ISTORE_0, J_INT, 0x00, 0xFF);
+	assert_store_stmt(OPC_ISTORE_1, J_INT, 0x01, 0xFF);
+	assert_store_stmt(OPC_ISTORE_2, J_INT, 0x02, 0xFF);
+	assert_store_stmt(OPC_ISTORE_3, J_INT, 0x03, 0xFF);
 }
 
-void test_convert_lstore_n(CuTest * ct)
+void test_convert_lstore_n(void)
 {
-	assert_store_stmt(ct, OPC_LSTORE_0, J_LONG, 0x00, 0xFF);
-	assert_store_stmt(ct, OPC_LSTORE_1, J_LONG, 0x01, 0xFF);
-	assert_store_stmt(ct, OPC_LSTORE_2, J_LONG, 0x02, 0xFF);
-	assert_store_stmt(ct, OPC_LSTORE_3, J_LONG, 0x03, 0xFF);
+	assert_store_stmt(OPC_LSTORE_0, J_LONG, 0x00, 0xFF);
+	assert_store_stmt(OPC_LSTORE_1, J_LONG, 0x01, 0xFF);
+	assert_store_stmt(OPC_LSTORE_2, J_LONG, 0x02, 0xFF);
+	assert_store_stmt(OPC_LSTORE_3, J_LONG, 0x03, 0xFF);
 }
 
-void test_convert_fstore_n(CuTest * ct)
+void test_convert_fstore_n(void)
 {
-	assert_store_stmt(ct, OPC_FSTORE_0, J_FLOAT, 0x00, 0xFF);
-	assert_store_stmt(ct, OPC_FSTORE_1, J_FLOAT, 0x01, 0xFF);
-	assert_store_stmt(ct, OPC_FSTORE_2, J_FLOAT, 0x02, 0xFF);
-	assert_store_stmt(ct, OPC_FSTORE_3, J_FLOAT, 0x03, 0xFF);
+	assert_store_stmt(OPC_FSTORE_0, J_FLOAT, 0x00, 0xFF);
+	assert_store_stmt(OPC_FSTORE_1, J_FLOAT, 0x01, 0xFF);
+	assert_store_stmt(OPC_FSTORE_2, J_FLOAT, 0x02, 0xFF);
+	assert_store_stmt(OPC_FSTORE_3, J_FLOAT, 0x03, 0xFF);
 }
 
-void test_convert_dstore_n(CuTest * ct)
+void test_convert_dstore_n(void)
 {
-	assert_store_stmt(ct, OPC_DSTORE_0, J_DOUBLE, 0x00, 0xFF);
-	assert_store_stmt(ct, OPC_DSTORE_1, J_DOUBLE, 0x01, 0xFF);
-	assert_store_stmt(ct, OPC_DSTORE_2, J_DOUBLE, 0x02, 0xFF);
-	assert_store_stmt(ct, OPC_DSTORE_3, J_DOUBLE, 0x03, 0xFF);
+	assert_store_stmt(OPC_DSTORE_0, J_DOUBLE, 0x00, 0xFF);
+	assert_store_stmt(OPC_DSTORE_1, J_DOUBLE, 0x01, 0xFF);
+	assert_store_stmt(OPC_DSTORE_2, J_DOUBLE, 0x02, 0xFF);
+	assert_store_stmt(OPC_DSTORE_3, J_DOUBLE, 0x03, 0xFF);
 }
 
-void test_convert_astore_n(CuTest * ct)
+void test_convert_astore_n(void)
 {
-	assert_store_stmt(ct, OPC_ASTORE_0, J_REFERENCE, 0x00, 0xFF);
-	assert_store_stmt(ct, OPC_ASTORE_1, J_REFERENCE, 0x01, 0xFF);
-	assert_store_stmt(ct, OPC_ASTORE_2, J_REFERENCE, 0x02, 0xFF);
-	assert_store_stmt(ct, OPC_ASTORE_3, J_REFERENCE, 0x03, 0xFF);
+	assert_store_stmt(OPC_ASTORE_0, J_REFERENCE, 0x00, 0xFF);
+	assert_store_stmt(OPC_ASTORE_1, J_REFERENCE, 0x01, 0xFF);
+	assert_store_stmt(OPC_ASTORE_2, J_REFERENCE, 0x02, 0xFF);
+	assert_store_stmt(OPC_ASTORE_3, J_REFERENCE, 0x03, 0xFF);
 }
 
-static void assert_array_store_stmts(CuTest * ct,
-				     enum jvm_type expected_type,
+static void assert_array_store_stmts(enum jvm_type expected_type,
 				     unsigned char opc,
 				     unsigned long arrayref,
-				     unsigned long index,
-				     unsigned long value)
+				     unsigned long index, unsigned long value)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
@@ -664,123 +640,123 @@ static void assert_array_store_stmts(CuTest * ct,
 	struct statement *arraycheck = nullcheck->s_next;
 	struct statement *assign = arraycheck->s_next;
 
-	assert_null_check_stmt(ct, arrayref_expr, nullcheck);
-	assert_arraycheck_stmt(ct, arrayref_expr, index_expr, arraycheck);
+	assert_null_check_stmt(arrayref_expr, nullcheck);
+	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
 
-	CuAssertIntEquals(ct, STMT_ASSIGN, assign->s_type);
-	CuAssertIntEquals(ct, expected_type, assign->s_target->jvm_type);
-	assert_array_deref_expr(ct, arrayref_expr, index_expr, assign->s_target);
-	assert_temporary_expr(ct, value, assign->s_left);
+	assert_int_equals(STMT_ASSIGN, assign->s_type);
+	assert_int_equals(expected_type, assign->s_target->jvm_type);
+	assert_array_deref_expr(arrayref_expr, index_expr, assign->s_target);
+	assert_temporary_expr(value, assign->s_left);
 
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_int_equals(true, stack_is_empty(&stack));
 	free_stmt(stmt);
 }
 
-void test_convert_iastore(CuTest * ct)
+void test_convert_iastore(void)
 {
-	assert_array_store_stmts(ct, J_INT, OPC_IASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_INT, OPC_IASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_INT, OPC_IASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_INT, OPC_IASTORE, 2, 3, 4);
 }
 
-void test_convert_lastore(CuTest * ct)
+void test_convert_lastore(void)
 {
-	assert_array_store_stmts(ct, J_LONG, OPC_LASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_LONG, OPC_LASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_LONG, OPC_LASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_LONG, OPC_LASTORE, 2, 3, 4);
 }
 
-void test_convert_fastore(CuTest * ct)
+void test_convert_fastore(void)
 {
-	assert_array_store_stmts(ct, J_FLOAT, OPC_FASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_FLOAT, OPC_FASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_FLOAT, OPC_FASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_FLOAT, OPC_FASTORE, 2, 3, 4);
 }
 
-void test_convert_dastore(CuTest * ct)
+void test_convert_dastore(void)
 {
-	assert_array_store_stmts(ct, J_DOUBLE, OPC_DASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_DOUBLE, OPC_DASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_DOUBLE, OPC_DASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_DOUBLE, OPC_DASTORE, 2, 3, 4);
 }
 
-void test_convert_aastore(CuTest * ct)
+void test_convert_aastore(void)
 {
-	assert_array_store_stmts(ct, J_REFERENCE, OPC_AASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_REFERENCE, OPC_AASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_REFERENCE, OPC_AASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_REFERENCE, OPC_AASTORE, 2, 3, 4);
 }
 
-void test_convert_bastore(CuTest * ct)
+void test_convert_bastore(void)
 {
-	assert_array_store_stmts(ct, J_INT, OPC_BASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_INT, OPC_BASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_INT, OPC_BASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_INT, OPC_BASTORE, 2, 3, 4);
 }
 
-void test_convert_castore(CuTest * ct)
+void test_convert_castore(void)
 {
-	assert_array_store_stmts(ct, J_CHAR, OPC_CASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_CHAR, OPC_CASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_CHAR, OPC_CASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_CHAR, OPC_CASTORE, 2, 3, 4);
 }
 
-void test_convert_sastore(CuTest * ct)
+void test_convert_sastore(void)
 {
-	assert_array_store_stmts(ct, J_SHORT, OPC_SASTORE, 0, 1, 2);
-	assert_array_store_stmts(ct, J_SHORT, OPC_SASTORE, 2, 3, 4);
+	assert_array_store_stmts(J_SHORT, OPC_SASTORE, 0, 1, 2);
+	assert_array_store_stmts(J_SHORT, OPC_SASTORE, 2, 3, 4);
 }
 
-static void assert_pop_stack(CuTest * ct, unsigned char opc)
+static void assert_pop_stack(unsigned char opc)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, (void *)1);
 	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_int_equals(true, stack_is_empty(&stack));
 }
 
-void test_convert_pop(CuTest * ct)
+void test_convert_pop(void)
 {
-	assert_pop_stack(ct, OPC_POP);
-	assert_pop_stack(ct, OPC_POP2);
+	assert_pop_stack(OPC_POP);
+	assert_pop_stack(OPC_POP2);
 }
 
-static void assert_dup_stack(CuTest * ct, unsigned char opc, void *expected)
+static void assert_dup_stack(unsigned char opc, void *expected)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, expected);
 	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(&stack), expected);
+	assert_ptr_equals(stack_pop(&stack), expected);
+	assert_int_equals(true, stack_is_empty(&stack));
 }
 
-void test_convert_dup(CuTest * ct)
+void test_convert_dup(void)
 {
-	assert_dup_stack(ct, OPC_DUP, (void *)1);
-	assert_dup_stack(ct, OPC_DUP, (void *)2);
-	assert_dup_stack(ct, OPC_DUP2, (void *)1);
-	assert_dup_stack(ct, OPC_DUP2, (void *)2);
+	assert_dup_stack(OPC_DUP, (void *)1);
+	assert_dup_stack(OPC_DUP, (void *)2);
+	assert_dup_stack(OPC_DUP2, (void *)1);
+	assert_dup_stack(OPC_DUP2, (void *)2);
 }
 
-static void assert_dup_x1_stack(CuTest * ct, unsigned char opc,
-					void *expected1, void *expected2)
+static void assert_dup_x1_stack(unsigned char opc,
+				void *expected1, void *expected2)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, expected2);
 	stack_push(&stack, expected1);
 	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected1);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected2);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected1);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(&stack), expected1);
+	assert_ptr_equals(stack_pop(&stack), expected2);
+	assert_ptr_equals(stack_pop(&stack), expected1);
+	assert_int_equals(true, stack_is_empty(&stack));
 }
 
-void test_convert_dup_x1(CuTest * ct)
+void test_convert_dup_x1(void)
 {
-	assert_dup_x1_stack(ct, OPC_DUP_X1, (void *)1, (void *)2);
-	assert_dup_x1_stack(ct, OPC_DUP_X1, (void *)2, (void *)3);
-	assert_dup_x1_stack(ct, OPC_DUP2_X1, (void *)1, (void *)2);
-	assert_dup_x1_stack(ct, OPC_DUP2_X1, (void *)2, (void *)3);
+	assert_dup_x1_stack(OPC_DUP_X1, (void *)1, (void *)2);
+	assert_dup_x1_stack(OPC_DUP_X1, (void *)2, (void *)3);
+	assert_dup_x1_stack(OPC_DUP2_X1, (void *)1, (void *)2);
+	assert_dup_x1_stack(OPC_DUP2_X1, (void *)2, (void *)3);
 }
 
-static void assert_dup_x2_stack(CuTest * ct, unsigned char opc,
+static void assert_dup_x2_stack(unsigned char opc,
 				void *expected1, void *expected2,
 				void *expected3)
 {
@@ -790,22 +766,22 @@ static void assert_dup_x2_stack(CuTest * ct, unsigned char opc,
 	stack_push(&stack, expected2);
 	stack_push(&stack, expected1);
 	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected1);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected2);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected3);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected1);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(&stack), expected1);
+	assert_ptr_equals(stack_pop(&stack), expected2);
+	assert_ptr_equals(stack_pop(&stack), expected3);
+	assert_ptr_equals(stack_pop(&stack), expected1);
+	assert_int_equals(true, stack_is_empty(&stack));
 }
 
-void test_convert_dup_x2(CuTest * ct)
+void test_convert_dup_x2(void)
 {
-	assert_dup_x2_stack(ct, OPC_DUP_X2, (void *)1, (void *)2, (void *)3);
-	assert_dup_x2_stack(ct, OPC_DUP_X2, (void *)2, (void *)3, (void *)4);
-	assert_dup_x2_stack(ct, OPC_DUP2_X2, (void *)1, (void *)2, (void *)3);
-	assert_dup_x2_stack(ct, OPC_DUP2_X2, (void *)2, (void *)3, (void *)4);
+	assert_dup_x2_stack(OPC_DUP_X2, (void *)1, (void *)2, (void *)3);
+	assert_dup_x2_stack(OPC_DUP_X2, (void *)2, (void *)3, (void *)4);
+	assert_dup_x2_stack(OPC_DUP2_X2, (void *)1, (void *)2, (void *)3);
+	assert_dup_x2_stack(OPC_DUP2_X2, (void *)2, (void *)3, (void *)4);
 }
 
-static void assert_swap_stack(CuTest * ct, unsigned char opc,
+static void assert_swap_stack(unsigned char opc,
 			      void *expected1, void *expected2)
 {
 	unsigned char code[] = { opc };
@@ -814,25 +790,25 @@ static void assert_swap_stack(CuTest * ct, unsigned char opc,
 	stack_push(&stack, expected2);
 
 	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected1);
-	CuAssertPtrEquals(ct, stack_pop(&stack), expected2);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(&stack), expected1);
+	assert_ptr_equals(stack_pop(&stack), expected2);
+	assert_int_equals(true, stack_is_empty(&stack));
 }
 
-void test_convert_swap(CuTest * ct)
+void test_convert_swap(void)
 {
-	assert_swap_stack(ct, OPC_SWAP, (void *)1, (void *)2);
-	assert_swap_stack(ct, OPC_SWAP, (void *)2, (void *)3);
+	assert_swap_stack(OPC_SWAP, (void *)1, (void *)2);
+	assert_swap_stack(OPC_SWAP, (void *)2, (void *)3);
 }
 
-static void assert_iadd_expr(CuTest * ct, enum jvm_type jvm_type,
-			     enum operator operator, unsigned char opc)
+static void assert_iadd_expr(enum jvm_type jvm_type, enum operator  operator,
+			     unsigned char opc)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
 	struct expression *left, *right, *expr;
 	struct statement *stmt;
-		
+
 	left = temporary_expr(jvm_type, 1);
 	right = temporary_expr(jvm_type, 2);
 
@@ -842,13 +818,13 @@ static void assert_iadd_expr(CuTest * ct, enum jvm_type jvm_type,
 	stmt = convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	expr = stack_pop(&stack);
 
-	assert_binop_expr(ct, jvm_type, operator, left, right, expr);
-	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	assert_binop_expr(jvm_type, operator, left, right, expr);
+	assert_int_equals(true, stack_is_empty(&stack));
 
 	expr_put(expr);
 }
 
-void test_convert_iadd(CuTest * ct)
+void test_convert_iadd(void)
 {
-	assert_iadd_expr(ct, J_INT, OP_ADD, OPC_IADD);
+	assert_iadd_expr(J_INT, OP_ADD, OPC_IADD);
 }

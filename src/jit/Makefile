@@ -6,7 +6,7 @@ CCFLAGS = -rdynamic -g -Wall
 INCLUDE = -I. -I..
 OBJS = bytecode-conv.o statement.o expression.o
 TESTS = bytecode-conv-test.o stack-test.o
-HARNESS = CuTest.o backtrace.o
+HARNESS = libharness.o backtrace.o
 
 %.o: %.c
 	$(CC) $(CCFLAGS) $(INCLUDE) -c $< -o $@

@@ -12,44 +12,37 @@ echo '
 
 /* This is auto-generated code. Edit at your own peril. */
 
-#include "CuTest.h"
+#include <libharness.h>
 #include <stdio.h>
 #include <stdlib.h>
 '
 
 cat $FILES | grep '^void test_' | 
     sed -e 's/(.*$//' \
-        -e 's/$/(CuTest*);/' \
+        -e 's/$/(void);/' \
         -e 's/^/extern /'
 
 echo \
 '
 
-void RunAllTests(void) 
+static void run_tests(void) 
 {
-    CuString *output = CuStringNew();
-    CuSuite* suite = CuSuiteNew();
 
 '
 cat $FILES | grep '^void test_' | 
     sed -e 's/^void //' \
         -e 's/(.*$//' \
-        -e 's/^/    SUITE_ADD_TEST(suite, /' \
-        -e 's/$/);/'
+        -e 's/^/    /' \
+        -e 's/$/();/'
 
 echo \
 '
-    CuSuiteRun(suite);
-    CuSuiteSummary(suite, output);
-    CuSuiteDetails(suite, output);
-    printf("%s\n", output->buffer);
-    CuStringFree(output);
-    CuSuiteFree(suite);
+    print_test_suite_results();
 }
 
 int main(void)
 {
-    RunAllTests();
+    run_tests();
     return 0;
 }
 '

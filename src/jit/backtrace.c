@@ -12,8 +12,6 @@ void print_trace(void)
 	size = backtrace(array, 10);
 	strings = backtrace_symbols(array, size);
 
-	printf("Obtained %zd stack frames.\n", size);
-
 	for (i = 0; i < size; i++)
 		printf("%s\n", strings[i]);
 
