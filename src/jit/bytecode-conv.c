@@ -647,6 +647,56 @@ static struct statement *convert_dneg(struct conversion_context *context)
 	return convert_unary_op(context, J_DOUBLE, OP_NEG);
 }
 
+static struct statement *convert_ishl(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_SHL);
+}
+
+static struct statement *convert_lshl(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_SHL);
+}
+
+static struct statement *convert_ishr(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_SHR);
+}
+
+static struct statement *convert_lshr(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_SHR);
+}
+
+static struct statement *convert_iand(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_AND);
+}
+
+static struct statement *convert_land(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_AND);
+}
+
+static struct statement *convert_ior(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_OR);
+}
+
+static struct statement *convert_lor(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_OR);
+}
+
+static struct statement *convert_ixor(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_XOR);
+}
+
+static struct statement *convert_lxor(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_XOR);
+}
+
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
@@ -778,6 +828,16 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_LNEG, convert_lneg, 1),
 	DECLARE_CONVERTER(OPC_FNEG, convert_fneg, 1),
 	DECLARE_CONVERTER(OPC_DNEG, convert_dneg, 1),
+	DECLARE_CONVERTER(OPC_ISHL, convert_ishl, 1),
+	DECLARE_CONVERTER(OPC_LSHL, convert_lshl, 1),
+	DECLARE_CONVERTER(OPC_ISHR, convert_ishr, 1),
+	DECLARE_CONVERTER(OPC_LSHR, convert_lshr, 1),
+	DECLARE_CONVERTER(OPC_IAND, convert_iand, 1),
+	DECLARE_CONVERTER(OPC_LAND, convert_land, 1),
+	DECLARE_CONVERTER(OPC_IOR, convert_ior, 1),
+	DECLARE_CONVERTER(OPC_LOR, convert_lor, 1),
+	DECLARE_CONVERTER(OPC_IXOR, convert_ixor, 1),
+	DECLARE_CONVERTER(OPC_LXOR, convert_lxor, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,

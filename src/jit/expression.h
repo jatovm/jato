@@ -9,6 +9,11 @@ enum binary_operator {
 	OP_MUL,
 	OP_DIV,
 	OP_REM,
+	OP_SHL,
+	OP_SHR,
+	OP_AND,
+	OP_OR,
+	OP_XOR,
 };
 
 enum unary_operator {

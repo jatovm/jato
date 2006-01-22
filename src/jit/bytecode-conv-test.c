@@ -910,3 +910,33 @@ void test_convert_neg(void)
 	assert_unary_op_expr_and_stack(J_FLOAT, OP_NEG, OPC_FNEG);
 	assert_unary_op_expr_and_stack(J_DOUBLE, OP_NEG, OPC_DNEG);
 }
+
+void test_convert_shl(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_SHL, OPC_ISHL);
+	assert_binop_expr_and_stack(J_LONG, OP_SHL, OPC_LSHL);
+}
+
+void test_convert_shr(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_SHR, OPC_ISHR);
+	assert_binop_expr_and_stack(J_LONG, OP_SHR, OPC_LSHR);
+}
+
+void test_convert_and(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_AND, OPC_IAND);
+	assert_binop_expr_and_stack(J_LONG, OP_AND, OPC_LAND);
+}
+
+void test_convert_or(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_OR, OPC_IOR);
+	assert_binop_expr_and_stack(J_LONG, OP_OR, OPC_LOR);
+}
+
+void test_convert_xor(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_XOR, OPC_IXOR);
+	assert_binop_expr_and_stack(J_LONG, OP_XOR, OPC_LXOR);
+}
