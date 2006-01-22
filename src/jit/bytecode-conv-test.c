@@ -44,7 +44,7 @@ static void assert_array_deref_expr(struct expression *expected_arrayref,
 }
 
 static void assert_binop_expr(enum jvm_type jvm_type,
-			      enum operator   operator,
+			      enum operator operator,
 			      struct expression *left,
 			      struct expression *right,
 			      struct expression *expression)
@@ -809,7 +809,7 @@ void test_convert_swap(void)
 }
 
 static void assert_binop_expr_and_stack(enum jvm_type jvm_type,
-					enum operator  operator,
+					enum operator operator,
 					unsigned char opc)
 {
 	unsigned char code[] = { opc };
