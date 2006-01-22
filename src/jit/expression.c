@@ -41,6 +41,10 @@ void free_expression(struct expression *expr)
 			if (expr->right)
 				expr_put(expr->right);
 			break;
+		case EXPR_UNARY_OP:
+			if (expr->expression)
+				expr_put(expr->expression);
+			break;
 	};
 	free(expr);
 }
@@ -106,15 +110,27 @@ struct expression *array_deref_expr(enum jvm_type jvm_type,
 }
 
 struct expression *binop_expr(enum jvm_type jvm_type,
-			      enum operator operator,
+			      enum binary_operator binary_operator,
 			      struct expression *left,
 			      struct expression *right)
 {
 	struct expression *expr = alloc_expression(EXPR_BINOP, jvm_type);
 	if (expr) {
-		expr->operator = operator;
+		expr->binary_operator = binary_operator;
 		expr->left = left;
 		expr->right = right;
+	}
+	return expr;
+}
+
+struct expression *unary_op_expr(enum jvm_type jvm_type,
+				 enum unary_operator unary_operator,
+				 struct expression *expression)
+{
+	struct expression *expr = alloc_expression(EXPR_UNARY_OP, jvm_type);
+	if (expr) {
+		expr->unary_operator = unary_operator;
+		expr->expression = expression;
 	}
 	return expr;
 }

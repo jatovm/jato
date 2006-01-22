@@ -44,16 +44,27 @@ static void assert_array_deref_expr(struct expression *expected_arrayref,
 }
 
 static void assert_binop_expr(enum jvm_type jvm_type,
-			      enum operator operator,
+			      enum binary_operator binary_operator,
 			      struct expression *left,
 			      struct expression *right,
 			      struct expression *expression)
 {
 	assert_int_equals(EXPR_BINOP, expression->type);
 	assert_int_equals(jvm_type, expression->jvm_type);
-	assert_int_equals(operator, expression->operator);
+	assert_int_equals(binary_operator, expression->binary_operator);
 	assert_ptr_equals(left, expression->left);
 	assert_ptr_equals(right, expression->right);
+}
+
+static void assert_unary_op_expr(enum jvm_type jvm_type,
+				 enum unary_operator unary_operator,
+				 struct expression *expression,
+				 struct expression *unary_expression)
+{
+	assert_int_equals(EXPR_UNARY_OP, unary_expression->type);
+	assert_int_equals(jvm_type, unary_expression->jvm_type);
+	assert_int_equals(unary_operator, unary_expression->unary_operator);
+	assert_ptr_equals(expression, unary_expression->expression);
 }
 
 static void __assert_const_expr_and_stack(struct classblock *cb,
@@ -809,7 +820,7 @@ void test_convert_swap(void)
 }
 
 static void assert_binop_expr_and_stack(enum jvm_type jvm_type,
-					enum operator operator,
+					enum binary_operator binary_operator,
 					unsigned char opc)
 {
 	unsigned char code[] = { opc };
@@ -826,7 +837,7 @@ static void assert_binop_expr_and_stack(enum jvm_type jvm_type,
 	stmt = convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	expr = stack_pop(&stack);
 
-	assert_binop_expr(jvm_type, operator, left, right, expr);
+	assert_binop_expr(jvm_type, binary_operator, left, right, expr);
 	assert_true(stack_is_empty(&stack));
 
 	expr_put(expr);
@@ -870,4 +881,32 @@ void test_convert_rem(void)
 	assert_binop_expr_and_stack(J_LONG, OP_REM, OPC_LREM);
 	assert_binop_expr_and_stack(J_FLOAT, OP_REM, OPC_FREM);
 	assert_binop_expr_and_stack(J_DOUBLE, OP_REM, OPC_DREM);
+}
+
+static void assert_unary_op_expr_and_stack(enum jvm_type jvm_type,
+					   enum unary_operator unary_operator,
+					   unsigned char opc)
+{
+	unsigned char code[] = { opc };
+	struct stack stack = STACK_INIT;
+	struct expression *expression, *unary_expression;
+
+	expression = temporary_expr(jvm_type, 1);
+	stack_push(&stack, expression);
+
+	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	unary_expression = stack_pop(&stack);
+
+	assert_unary_op_expr(jvm_type, unary_operator, expression, unary_expression);
+	assert_true(stack_is_empty(&stack));
+
+	expr_put(unary_expression);
+}
+
+void test_convert_neg(void)
+{
+	assert_unary_op_expr_and_stack(J_INT, OP_NEG, OPC_INEG);
+	assert_unary_op_expr_and_stack(J_LONG, OP_NEG, OPC_LNEG);
+	assert_unary_op_expr_and_stack(J_FLOAT, OP_NEG, OPC_FNEG);
+	assert_unary_op_expr_and_stack(J_DOUBLE, OP_NEG, OPC_DNEG);
 }

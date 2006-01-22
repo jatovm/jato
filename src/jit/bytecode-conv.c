@@ -498,14 +498,14 @@ static struct statement *convert_swap(struct conversion_context *context)
 
 static struct statement *convert_binop(struct conversion_context *context,
 				       enum jvm_type jvm_type,
-				       enum operator operator)
+				       enum binary_operator binary_operator)
 {
 	struct expression *left, *right, *expr;
 
 	right = stack_pop(context->expr_stack);
 	left = stack_pop(context->expr_stack);
 
-	expr = binop_expr(jvm_type, operator, left, right);
+	expr = binop_expr(jvm_type, binary_operator, left, right);
 	if (expr)
 		stack_push(context->expr_stack, expr);
 	
@@ -610,6 +610,41 @@ static struct statement *convert_frem(struct conversion_context *context)
 static struct statement *convert_drem(struct conversion_context *context)
 {
 	return convert_binop(context, J_DOUBLE, OP_REM);
+}
+
+static struct statement *convert_unary_op(struct conversion_context *context,
+					  enum jvm_type jvm_type,
+					  enum unary_operator unary_operator)
+{
+	struct expression *expression, *expr;
+
+	expression = stack_pop(context->expr_stack);
+
+	expr = unary_op_expr(jvm_type, unary_operator, expression);
+	if (expr)
+		stack_push(context->expr_stack, expr);
+	
+	return NULL;
+}
+
+static struct statement *convert_ineg(struct conversion_context *context)
+{
+	return convert_unary_op(context, J_INT, OP_NEG);
+}
+
+static struct statement *convert_lneg(struct conversion_context *context)
+{
+	return convert_unary_op(context, J_LONG, OP_NEG);
+}
+
+static struct statement *convert_fneg(struct conversion_context *context)
+{
+	return convert_unary_op(context, J_FLOAT, OP_NEG);
+}
+
+static struct statement *convert_dneg(struct conversion_context *context)
+{
+	return convert_unary_op(context, J_DOUBLE, OP_NEG);
 }
 
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
@@ -739,6 +774,10 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_LREM, convert_lrem, 1),
 	DECLARE_CONVERTER(OPC_FREM, convert_frem, 1),
 	DECLARE_CONVERTER(OPC_DREM, convert_drem, 1),
+	DECLARE_CONVERTER(OPC_INEG, convert_ineg, 1),
+	DECLARE_CONVERTER(OPC_LNEG, convert_lneg, 1),
+	DECLARE_CONVERTER(OPC_FNEG, convert_fneg, 1),
+	DECLARE_CONVERTER(OPC_DNEG, convert_dneg, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
