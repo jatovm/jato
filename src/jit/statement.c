@@ -22,9 +22,12 @@ void free_stmt(struct statement *stmt)
 {
 	if (stmt) {
 		free_stmt(stmt->s_next);
-		free_expression(stmt->s_target);
-		free_expression(stmt->s_left);
-		free_expression(stmt->s_right);
+		if (stmt->s_target)
+			expr_put(stmt->s_target);
+		if (stmt->s_left)
+			expr_put(stmt->s_left);
+		if (stmt->s_right)
+			expr_put(stmt->s_right);
 		free(stmt);
 	}
 }

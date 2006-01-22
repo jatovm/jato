@@ -12,8 +12,49 @@ struct expression *alloc_expression(enum expression_type type,
 	if (expr) {
 		expr->type = type;
 		expr->jvm_type = jvm_type;
+		expr->refcount = 1;
 	}
 	return expr;
+}
+
+void free_expression(struct expression *expr)
+{
+	if (!expr)
+		return;
+
+	switch (expr->type) {
+		case EXPR_VALUE:
+		case EXPR_FVALUE:
+		case EXPR_LOCAL:
+		case EXPR_TEMPORARY:
+			/* nothing to do */
+			break;
+		case EXPR_ARRAY_DEREF:
+			if (expr->arrayref)
+				expr_put(expr->arrayref);
+			if (expr->array_index)
+				expr_put(expr->array_index);
+			break;
+		case EXPR_BINOP:
+			if (expr->left)
+				expr_put(expr->left);
+			if (expr->right)
+				expr_put(expr->right);
+			break;
+	};
+	free(expr);
+}
+
+void expr_get(struct expression *expr)
+{
+	expr->refcount++;
+}
+
+void expr_put(struct expression *expr)
+{
+	expr->refcount--;
+	if (expr->refcount == 0)
+		free_expression(expr);
 }
 
 struct expression *value_expr(enum jvm_type jvm_type, unsigned long long value)
@@ -76,12 +117,4 @@ struct expression *binop_expr(enum jvm_type jvm_type,
 		expr->right = right;
 	}
 	return expr;
-}
-
-void free_expression(struct expression *expr)
-{
-	if (!expr)
-		return;
-
-	free(expr);
 }

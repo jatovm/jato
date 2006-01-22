@@ -18,6 +18,7 @@ enum expression_type {
 
 struct expression {
 	enum expression_type type;
+	unsigned long refcount;
 	enum jvm_type jvm_type;
 	union {
 		/* EXPR_VALUE */
@@ -48,12 +49,16 @@ struct expression {
 };
 
 struct expression *alloc_expression(enum expression_type, enum jvm_type);
+void free_expression(struct expression *);
+
+void expr_get(struct expression *);
+void expr_put(struct expression *);
+
 struct expression *value_expr(enum jvm_type, unsigned long long);
 struct expression *fvalue_expr(enum jvm_type, double);
 struct expression *local_expr(enum jvm_type, unsigned long);
 struct expression *temporary_expr(enum jvm_type, unsigned long);
 struct expression *array_deref_expr(enum jvm_type, struct expression *, struct expression *);
 struct expression *binop_expr(enum jvm_type, enum operator, struct expression *, struct expression *);
-void free_expression(struct expression *);
 
 #endif

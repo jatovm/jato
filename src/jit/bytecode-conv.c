@@ -228,12 +228,15 @@ static struct statement *convert_array_load(struct conversion_context *context,
 	assign->s_left = array_deref_expr(type, arrayref, index);
 	assign->s_target = temporary_expr(type, alloc_temporary());
 
+	expr_get(assign->s_target);
 	stack_push(context->expr_stack, assign->s_target);
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed;
 
+	expr_get(arrayref);
+	expr_get(index);
 	arraycheck->s_left = array_deref_expr(type, arrayref, index);
 	arraycheck->s_next = assign;
 
@@ -241,6 +244,7 @@ static struct statement *convert_array_load(struct conversion_context *context,
 	if (!nullcheck)
 		goto failed;
 
+	expr_get(arrayref);
 	nullcheck->s_left = arrayref;
 	nullcheck->s_next = arraycheck;
 
@@ -385,6 +389,8 @@ static struct statement *convert_array_store(struct conversion_context *context,
 	if (!arraycheck)
 		goto failed;
 
+	expr_get(arrayref);
+	expr_get(index);
 	arraycheck->s_left = array_deref_expr(type, arrayref, index);
 	arraycheck->s_next = assign;
 
@@ -392,6 +398,7 @@ static struct statement *convert_array_store(struct conversion_context *context,
 	if (!nullcheck)
 		goto failed;
 
+	expr_get(arrayref);
 	nullcheck->s_left = arrayref;
 	nullcheck->s_next = arraycheck;
 

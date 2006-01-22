@@ -77,7 +77,7 @@ static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
 	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
-	free_expression(expr);
+	expr_put(expr);
 }
 
 static void assert_const_stmt(CuTest * ct,
@@ -103,7 +103,7 @@ static void assert_fconst_stmt(CuTest * ct,
 	assert_fvalue_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
-	free_expression(expr);
+	expr_put(expr);
 }
 
 void test_convert_nop(CuTest * ct)
@@ -217,7 +217,7 @@ static void assert_ldc_stmt(CuTest * ct,
 	expr = stack_pop(&stack);
 	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_expression(expr);
+	expr_put(expr);
 }
 
 static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
@@ -233,7 +233,7 @@ static void assert_ldc_stmt_float(CuTest * ct, float expected_value)
 	expr = stack_pop(&stack);
 	assert_fvalue_expr(ct, J_FLOAT, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_expression(expr);
+	expr_put(expr);
 }
 
 #define INT_MAX 2147483647
@@ -268,7 +268,7 @@ static void assert_ldcw_stmt(CuTest * ct,
 	expr = stack_pop(&stack);
 	assert_value_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_expression(expr);
+	expr_put(expr);
 }
 
 static void __assert_ldcw_stmt_double(CuTest * ct,
@@ -289,7 +289,7 @@ static void __assert_ldcw_stmt_double(CuTest * ct,
 	expr = stack_pop(&stack);
 	assert_fvalue_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
-	free_expression(expr);
+	expr_put(expr);
 }
 
 static void assert_ldcw_stmt_float(CuTest * ct,
@@ -463,7 +463,7 @@ static void assert_array_load_stmts(CuTest * ct,
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
-	struct expression *arrayref_expr, *index_expr;
+	struct expression *arrayref_expr, *index_expr, *temporary_expr;
 
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
@@ -485,7 +485,9 @@ static void assert_array_load_stmts(CuTest * ct,
 	CuAssertIntEquals(ct, expected_type, assign->s_left->jvm_type);
 	assert_array_deref_expr(ct, arrayref_expr, index_expr, assign->s_left);
 
-	assert_temporary_expr(ct, assign->s_target->temporary, stack_pop(&stack));
+	temporary_expr = stack_pop(&stack);
+	assert_temporary_expr(ct, assign->s_target->temporary, temporary_expr);
+	expr_put(temporary_expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
 	free_stmt(stmt);
@@ -843,7 +845,7 @@ static void assert_iadd_expr(CuTest * ct, enum jvm_type jvm_type,
 	assert_binop_expr(ct, jvm_type, operator, left, right, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
 
-	free_expression(expr);
+	expr_put(expr);
 }
 
 void test_convert_iadd(CuTest * ct)
