@@ -489,6 +489,20 @@ static struct statement *convert_swap(struct conversion_context *context)
 	return NULL;
 }
 
+static struct statement *convert_iadd(struct conversion_context *context)
+{
+	struct expression *left, *right, *expr;
+
+	right = stack_pop(context->expr_stack);
+	left = stack_pop(context->expr_stack);
+
+	expr = binop_expr(J_INT, OP_ADD, left, right);
+	if (expr)
+		stack_push(context->expr_stack, expr);
+	
+	return NULL;
+}
+
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
@@ -596,6 +610,7 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_DUP2_X1, convert_dup_x1, 1),
 	DECLARE_CONVERTER(OPC_DUP2_X2, convert_dup_x2, 1),
 	DECLARE_CONVERTER(OPC_SWAP, convert_swap, 1),
+	DECLARE_CONVERTER(OPC_IADD, convert_iadd, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,

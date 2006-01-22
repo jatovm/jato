@@ -3,12 +3,17 @@
 
 #include <jvm_types.h>
 
+enum operator {
+	OP_ADD,
+};
+
 enum expression_type {
 	EXPR_VALUE,
 	EXPR_FVALUE,
 	EXPR_LOCAL,
 	EXPR_TEMPORARY,
 	EXPR_ARRAY_DEREF,
+	EXPR_BINOP,
 };
 
 struct expression {
@@ -32,6 +37,13 @@ struct expression {
 			struct expression *arrayref;
 			struct expression *array_index;
 		};
+
+		/* EXPR_BINOP */
+		struct {
+			enum operator operator;
+			struct expression *left;
+			struct expression *right;
+		};
 	};
 };
 
@@ -41,6 +53,7 @@ struct expression *fvalue_expr(enum jvm_type, double);
 struct expression *local_expr(enum jvm_type, unsigned long);
 struct expression *temporary_expr(enum jvm_type, unsigned long);
 struct expression *array_deref_expr(enum jvm_type, struct expression *, struct expression *);
+struct expression *binop_expr(enum jvm_type, enum operator, struct expression *, struct expression *);
 void free_expression(struct expression *);
 
 #endif

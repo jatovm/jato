@@ -46,6 +46,20 @@ static void assert_array_deref_expr(CuTest * ct,
 	CuAssertPtrEquals(ct, expected_index, expression->array_index);
 }
 
+static void assert_binop_expr(CuTest * ct,
+			      enum jvm_type jvm_type,
+			      enum operator operator,
+			      struct expression *left,
+			      struct expression *right,
+			      struct expression *expression)
+{
+	CuAssertIntEquals(ct, EXPR_BINOP, expression->type);
+	CuAssertIntEquals(ct, jvm_type, expression->jvm_type);
+	CuAssertIntEquals(ct, operator, expression->operator);
+	CuAssertPtrEquals(ct, left, expression->left);
+	CuAssertPtrEquals(ct, right, expression->right);
+}
+
 static void __assert_const_stmt(CuTest * ct, struct classblock *cb,
 				enum statement_type
 				expected_stmt_type,
@@ -268,11 +282,14 @@ static void __assert_ldcw_stmt_double(CuTest * ct,
 	u1 cp_types[257];
 	cp_types[256] = cp_type;
 	struct stack stack = STACK_INIT;
+	struct expression *expr;
 
 	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
 				 0x01, 0x00, &stack);
-	assert_fvalue_expr(ct, expected_jvm_type, expected_value, stack_pop(&stack));
+	expr = stack_pop(&stack);
+	assert_fvalue_expr(ct, expected_jvm_type, expected_value, expr);
 	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+	free_expression(expr);
 }
 
 static void assert_ldcw_stmt_float(CuTest * ct,
@@ -804,4 +821,32 @@ void test_convert_swap(CuTest * ct)
 {
 	assert_swap_stack(ct, OPC_SWAP, (void *)1, (void *)2);
 	assert_swap_stack(ct, OPC_SWAP, (void *)2, (void *)3);
+}
+
+static void assert_iadd_expr(CuTest * ct, enum jvm_type jvm_type,
+			     enum operator operator, unsigned char opc)
+{
+	unsigned char code[] = { opc };
+	struct stack stack = STACK_INIT;
+	struct expression *left, *right, *expr;
+	struct statement *stmt;
+		
+	left = temporary_expr(jvm_type, 1);
+	right = temporary_expr(jvm_type, 2);
+
+	stack_push(&stack, left);
+	stack_push(&stack, right);
+
+	stmt = convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	expr = stack_pop(&stack);
+
+	assert_binop_expr(ct, jvm_type, operator, left, right, expr);
+	CuAssertIntEquals(ct, true, stack_is_empty(&stack));
+
+	free_expression(expr);
+}
+
+void test_convert_iadd(CuTest * ct)
+{
+	assert_iadd_expr(ct, J_INT, OP_ADD, OPC_IADD);
 }

@@ -64,7 +64,24 @@ struct expression *array_deref_expr(enum jvm_type jvm_type,
 	return expr;
 }
 
+struct expression *binop_expr(enum jvm_type jvm_type,
+			      enum operator operator,
+			      struct expression *left,
+			      struct expression *right)
+{
+	struct expression *expr = alloc_expression(EXPR_BINOP, jvm_type);
+	if (expr) {
+		expr->operator = operator;
+		expr->left = left;
+		expr->right = right;
+	}
+	return expr;
+}
+
 void free_expression(struct expression *expr)
 {
+	if (!expr)
+		return;
+
 	free(expr);
 }

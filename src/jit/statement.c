@@ -2,6 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
+#include <expression.h>
 #include <statement.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,9 +22,9 @@ void free_stmt(struct statement *stmt)
 {
 	if (stmt) {
 		free_stmt(stmt->s_next);
-		free(stmt->s_target);
-		free(stmt->s_left);
-		free(stmt->s_right);
+		free_expression(stmt->s_target);
+		free_expression(stmt->s_left);
+		free_expression(stmt->s_right);
 		free(stmt);
 	}
 }
