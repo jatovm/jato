@@ -5,6 +5,10 @@
 
 enum operator {
 	OP_ADD,
+	OP_SUB,
+	OP_MUL,
+	OP_DIV,
+	OP_REM,
 };
 
 enum expression_type {

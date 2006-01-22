@@ -801,8 +801,9 @@ void test_convert_swap(void)
 	assert_swap_stack(OPC_SWAP, (void *)2, (void *)3);
 }
 
-static void assert_iadd_expr(enum jvm_type jvm_type, enum operator  operator,
-			     unsigned char opc)
+static void assert_binop_expr_and_stack(enum jvm_type jvm_type,
+					enum operator operator,
+					unsigned char opc)
 {
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
@@ -824,7 +825,42 @@ static void assert_iadd_expr(enum jvm_type jvm_type, enum operator  operator,
 	expr_put(expr);
 }
 
-void test_convert_iadd(void)
+void test_convert_add(void)
 {
-	assert_iadd_expr(J_INT, OP_ADD, OPC_IADD);
+	assert_binop_expr_and_stack(J_INT, OP_ADD, OPC_IADD);
+	assert_binop_expr_and_stack(J_LONG, OP_ADD, OPC_LADD);
+	assert_binop_expr_and_stack(J_FLOAT, OP_ADD, OPC_FADD);
+	assert_binop_expr_and_stack(J_DOUBLE, OP_ADD, OPC_DADD);
+}
+
+void test_convert_sub(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_SUB, OPC_ISUB);
+	assert_binop_expr_and_stack(J_LONG, OP_SUB, OPC_LSUB);
+	assert_binop_expr_and_stack(J_FLOAT, OP_SUB, OPC_FSUB);
+	assert_binop_expr_and_stack(J_DOUBLE, OP_SUB, OPC_DSUB);
+}
+
+void test_convert_mul(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_MUL, OPC_IMUL);
+	assert_binop_expr_and_stack(J_LONG, OP_MUL, OPC_LMUL);
+	assert_binop_expr_and_stack(J_FLOAT, OP_MUL, OPC_FMUL);
+	assert_binop_expr_and_stack(J_DOUBLE, OP_MUL, OPC_DMUL);
+}
+
+void test_convert_div(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_DIV, OPC_IDIV);
+	assert_binop_expr_and_stack(J_LONG, OP_DIV, OPC_LDIV);
+	assert_binop_expr_and_stack(J_FLOAT, OP_DIV, OPC_FDIV);
+	assert_binop_expr_and_stack(J_DOUBLE, OP_DIV, OPC_DDIV);
+}
+
+void test_convert_rem(void)
+{
+	assert_binop_expr_and_stack(J_INT, OP_REM, OPC_IREM);
+	assert_binop_expr_and_stack(J_LONG, OP_REM, OPC_LREM);
+	assert_binop_expr_and_stack(J_FLOAT, OP_REM, OPC_FREM);
+	assert_binop_expr_and_stack(J_DOUBLE, OP_REM, OPC_DREM);
 }

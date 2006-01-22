@@ -496,18 +496,120 @@ static struct statement *convert_swap(struct conversion_context *context)
 	return NULL;
 }
 
-static struct statement *convert_iadd(struct conversion_context *context)
+static struct statement *convert_binop(struct conversion_context *context,
+				       enum jvm_type jvm_type,
+				       enum operator operator)
 {
 	struct expression *left, *right, *expr;
 
 	right = stack_pop(context->expr_stack);
 	left = stack_pop(context->expr_stack);
 
-	expr = binop_expr(J_INT, OP_ADD, left, right);
+	expr = binop_expr(jvm_type, operator, left, right);
 	if (expr)
 		stack_push(context->expr_stack, expr);
 	
 	return NULL;
+}
+
+static struct statement *convert_iadd(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_ADD);
+}
+
+static struct statement *convert_ladd(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_ADD);
+}
+
+static struct statement *convert_fadd(struct conversion_context *context)
+{
+	return convert_binop(context, J_FLOAT, OP_ADD);
+}
+
+static struct statement *convert_dadd(struct conversion_context *context)
+{
+	return convert_binop(context, J_DOUBLE, OP_ADD);
+}
+
+static struct statement *convert_isub(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_SUB);
+}
+
+static struct statement *convert_lsub(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_SUB);
+}
+
+static struct statement *convert_fsub(struct conversion_context *context)
+{
+	return convert_binop(context, J_FLOAT, OP_SUB);
+}
+
+static struct statement *convert_dsub(struct conversion_context *context)
+{
+	return convert_binop(context, J_DOUBLE, OP_SUB);
+}
+
+static struct statement *convert_imul(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_MUL);
+}
+
+static struct statement *convert_lmul(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_MUL);
+}
+
+static struct statement *convert_fmul(struct conversion_context *context)
+{
+	return convert_binop(context, J_FLOAT, OP_MUL);
+}
+
+static struct statement *convert_dmul(struct conversion_context *context)
+{
+	return convert_binop(context, J_DOUBLE, OP_MUL);
+}
+
+static struct statement *convert_idiv(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_DIV);
+}
+
+static struct statement *convert_ldiv(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_DIV);
+}
+
+static struct statement *convert_fdiv(struct conversion_context *context)
+{
+	return convert_binop(context, J_FLOAT, OP_DIV);
+}
+
+static struct statement *convert_ddiv(struct conversion_context *context)
+{
+	return convert_binop(context, J_DOUBLE, OP_DIV);
+}
+
+static struct statement *convert_irem(struct conversion_context *context)
+{
+	return convert_binop(context, J_INT, OP_REM);
+}
+
+static struct statement *convert_lrem(struct conversion_context *context)
+{
+	return convert_binop(context, J_LONG, OP_REM);
+}
+
+static struct statement *convert_frem(struct conversion_context *context)
+{
+	return convert_binop(context, J_FLOAT, OP_REM);
+}
+
+static struct statement *convert_drem(struct conversion_context *context)
+{
+	return convert_binop(context, J_DOUBLE, OP_REM);
 }
 
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
@@ -618,6 +720,25 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_DUP2_X2, convert_dup_x2, 1),
 	DECLARE_CONVERTER(OPC_SWAP, convert_swap, 1),
 	DECLARE_CONVERTER(OPC_IADD, convert_iadd, 1),
+	DECLARE_CONVERTER(OPC_LADD, convert_ladd, 1),
+	DECLARE_CONVERTER(OPC_FADD, convert_fadd, 1),
+	DECLARE_CONVERTER(OPC_DADD, convert_dadd, 1),
+	DECLARE_CONVERTER(OPC_ISUB, convert_isub, 1),
+	DECLARE_CONVERTER(OPC_LSUB, convert_lsub, 1),
+	DECLARE_CONVERTER(OPC_FSUB, convert_fsub, 1),
+	DECLARE_CONVERTER(OPC_DSUB, convert_dsub, 1),
+	DECLARE_CONVERTER(OPC_IMUL, convert_imul, 1),
+	DECLARE_CONVERTER(OPC_LMUL, convert_lmul, 1),
+	DECLARE_CONVERTER(OPC_FMUL, convert_fmul, 1),
+	DECLARE_CONVERTER(OPC_DMUL, convert_dmul, 1),
+	DECLARE_CONVERTER(OPC_IDIV, convert_idiv, 1),
+	DECLARE_CONVERTER(OPC_LDIV, convert_ldiv, 1),
+	DECLARE_CONVERTER(OPC_FDIV, convert_fdiv, 1),
+	DECLARE_CONVERTER(OPC_DDIV, convert_ddiv, 1),
+	DECLARE_CONVERTER(OPC_IREM, convert_irem, 1),
+	DECLARE_CONVERTER(OPC_LREM, convert_lrem, 1),
+	DECLARE_CONVERTER(OPC_FREM, convert_frem, 1),
+	DECLARE_CONVERTER(OPC_DREM, convert_drem, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,
