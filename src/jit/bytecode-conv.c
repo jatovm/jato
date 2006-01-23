@@ -149,9 +149,9 @@ static struct statement *__convert_load(unsigned char index,
 {
 	struct statement *stmt = alloc_stmt(STMT_ASSIGN);
 	if (stmt) {
-		stmt->s_left = local_expr(type, index);
-		stmt->s_target = temporary_expr(type, alloc_temporary());
-		stack_push(expr_stack, stmt->s_target);
+		stmt->right = local_expr(type, index);
+		stmt->left = temporary_expr(type, alloc_temporary());
+		stack_push(expr_stack, stmt->left);
 	}
 	return stmt;
 }
@@ -224,11 +224,11 @@ static struct statement *convert_array_load(struct conversion_context *context,
 	if (!assign)
 		goto failed;
 
-	assign->s_left = array_deref_expr(type, arrayref, index);
-	assign->s_target = temporary_expr(type, alloc_temporary());
+	assign->right = array_deref_expr(type, arrayref, index);
+	assign->left = temporary_expr(type, alloc_temporary());
 
-	expr_get(assign->s_target);
-	stack_push(context->expr_stack, assign->s_target);
+	expr_get(assign->left);
+	stack_push(context->expr_stack, assign->left);
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
@@ -236,16 +236,16 @@ static struct statement *convert_array_load(struct conversion_context *context,
 
 	expr_get(arrayref);
 	expr_get(index);
-	arraycheck->s_left = array_deref_expr(type, arrayref, index);
-	arraycheck->s_next = assign;
+	arraycheck->expression = array_deref_expr(type, arrayref, index);
+	arraycheck->next = assign;
 
 	nullcheck = alloc_stmt(STMT_NULL_CHECK);
 	if (!nullcheck)
 		goto failed;
 
 	expr_get(arrayref);
-	nullcheck->s_left = arrayref;
-	nullcheck->s_next = arraycheck;
+	nullcheck->expression = arrayref;
+	nullcheck->next = arraycheck;
 
 	return nullcheck;
 
@@ -304,8 +304,8 @@ static struct statement *__convert_store(enum jvm_type type,
 	if (!stmt)
 		goto failed;
 
-	stmt->s_target = local_expr(type, index);
-	stmt->s_left = stack_pop(expr_stack);
+	stmt->left = local_expr(type, index);
+	stmt->right = stack_pop(expr_stack);
 	return stmt;
       failed:
 	free_stmt(stmt);
@@ -381,8 +381,8 @@ static struct statement *convert_array_store(struct conversion_context *context,
 	if (!assign)
 		goto failed;
 
-	assign->s_target = array_deref_expr(type, arrayref, index);
-	assign->s_left = value;
+	assign->left = array_deref_expr(type, arrayref, index);
+	assign->right = value;
 
 	arraycheck = alloc_stmt(STMT_ARRAY_CHECK);
 	if (!arraycheck)
@@ -390,16 +390,16 @@ static struct statement *convert_array_store(struct conversion_context *context,
 
 	expr_get(arrayref);
 	expr_get(index);
-	arraycheck->s_left = array_deref_expr(type, arrayref, index);
-	arraycheck->s_next = assign;
+	arraycheck->expression = array_deref_expr(type, arrayref, index);
+	arraycheck->next = assign;
 
 	nullcheck = alloc_stmt(STMT_NULL_CHECK);
 	if (!nullcheck)
 		goto failed;
 
 	expr_get(arrayref);
-	nullcheck->s_left = arrayref;
-	nullcheck->s_next = arraycheck;
+	nullcheck->expression = arrayref;
+	nullcheck->next = arraycheck;
 
 	return nullcheck;
 
@@ -709,7 +709,7 @@ static struct statement *convert_iinc(struct conversion_context *context)
 	if (!local_expression)
 		goto failed;
 
-	assign->s_left = local_expression;
+	assign->left = local_expression;
 
 	const_expression = value_expr(J_INT, context->code[2]);
 	if (!const_expression)
@@ -725,7 +725,7 @@ static struct statement *convert_iinc(struct conversion_context *context)
 		goto failed;
 	}
 
-	assign->s_right = binop_expression;
+	assign->right = binop_expression;
 
 	return assign;
 

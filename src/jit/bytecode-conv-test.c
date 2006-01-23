@@ -126,7 +126,7 @@ void test_convert_nop(void)
 	struct stack stack = STACK_INIT;
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	assert_int_equals(STMT_NOP, stmt->s_type);
+	assert_int_equals(STMT_NOP, stmt->type);
 	assert_true(stack_is_empty(&stack));
 	free_stmt(stmt);
 }
@@ -362,9 +362,9 @@ static void assert_load_stmt(unsigned char opc,
 	struct stack stack = STACK_INIT;
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
-	assert_int_equals(STMT_ASSIGN, stmt->s_type);
-	assert_local_expr(expected_jvm_type, expected_index, stmt->s_left);
-	assert_temporary_expr(stmt->s_target->temporary, stack_pop(&stack));
+	assert_int_equals(STMT_ASSIGN, stmt->type);
+	assert_local_expr(expected_jvm_type, expected_index, stmt->right);
+	assert_temporary_expr(stmt->left->temporary, stack_pop(&stack));
 	assert_true(stack_is_empty(&stack));
 	free_stmt(stmt);
 }
@@ -447,17 +447,17 @@ void test_convert_aload_n(void)
 static void assert_null_check_stmt(struct expression *expected,
 				   struct statement *actual)
 {
-	assert_int_equals(STMT_NULL_CHECK, actual->s_type);
-	assert_value_expr(J_REFERENCE, expected->value, actual->s_left);
+	assert_int_equals(STMT_NULL_CHECK, actual->type);
+	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
 }
 
 static void assert_arraycheck_stmt(struct expression *expected_arrayref,
 				   struct expression *expected_index,
 				   struct statement *actual)
 {
-	assert_int_equals(STMT_ARRAY_CHECK, actual->s_type);
+	assert_int_equals(STMT_ARRAY_CHECK, actual->type);
 	assert_array_deref_expr(expected_arrayref, expected_index,
-				actual->s_left);
+				actual->expression);
 }
 
 static void assert_array_load_stmts(enum jvm_type expected_type,
@@ -478,18 +478,18 @@ static void assert_array_load_stmts(enum jvm_type expected_type,
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 
 	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = stmt->s_next;
-	struct statement *assign = arraycheck->s_next;
+	struct statement *arraycheck = stmt->next;
+	struct statement *assign = arraycheck->next;
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
 
-	assert_int_equals(STMT_ASSIGN, assign->s_type);
-	assert_int_equals(expected_type, assign->s_left->jvm_type);
-	assert_array_deref_expr(arrayref_expr, index_expr, assign->s_left);
+	assert_int_equals(STMT_ASSIGN, assign->type);
+	assert_int_equals(expected_type, assign->right->jvm_type);
+	assert_array_deref_expr(arrayref_expr, index_expr, assign->right);
 
 	temporary_expr = stack_pop(&stack);
-	assert_temporary_expr(assign->s_target->temporary, temporary_expr);
+	assert_temporary_expr(assign->left->temporary, temporary_expr);
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(&stack));
 
@@ -557,9 +557,9 @@ static void assert_store_stmt(unsigned char opc,
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 
-	assert_int_equals(STMT_ASSIGN, stmt->s_type);
-	assert_temporary_expr(expected_temporary, stmt->s_left);
-	assert_local_expr(expected_jvm_type, expected_index, stmt->s_target);
+	assert_int_equals(STMT_ASSIGN, stmt->type);
+	assert_temporary_expr(expected_temporary, stmt->right);
+	assert_local_expr(expected_jvm_type, expected_index, stmt->left);
 
 	assert_true(stack_is_empty(&stack));
 
@@ -657,16 +657,16 @@ static void assert_array_store_stmts(enum jvm_type expected_type,
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 
 	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = nullcheck->s_next;
-	struct statement *assign = arraycheck->s_next;
+	struct statement *arraycheck = nullcheck->next;
+	struct statement *assign = arraycheck->next;
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
 
-	assert_int_equals(STMT_ASSIGN, assign->s_type);
-	assert_int_equals(expected_type, assign->s_target->jvm_type);
-	assert_array_deref_expr(arrayref_expr, index_expr, assign->s_target);
-	assert_temporary_expr(value, assign->s_left);
+	assert_int_equals(STMT_ASSIGN, assign->type);
+	assert_int_equals(expected_type, assign->left->jvm_type);
+	assert_array_deref_expr(arrayref_expr, index_expr, assign->left);
+	assert_temporary_expr(value, assign->right);
 
 	assert_true(stack_is_empty(&stack));
 	free_stmt(stmt);
@@ -951,10 +951,10 @@ static void assert_iinc_stmt(unsigned char expected_index, unsigned char expecte
 	struct expression *local_expression, *const_expression;
 
 	assign_stmt = convert_bytecode_to_stmts(NULL, code, 3, &stack);
-	local_expression = assign_stmt->s_left;
+	local_expression = assign_stmt->left;
 	assert_local_expr(J_INT, expected_index, local_expression);
-	const_expression = assign_stmt->s_right->right;
-	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression, assign_stmt->s_right);
+	const_expression = assign_stmt->right->right;
+	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression, assign_stmt->right);
 	assert_local_expr(J_INT, expected_index, local_expression);
 	assert_value_expr(J_INT, expected_value, const_expression);
 

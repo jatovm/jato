@@ -13,21 +13,29 @@ struct statement *alloc_stmt(enum statement_type type)
 	if (!stmt)
 		return NULL;
 	memset(stmt, 0, sizeof(*stmt));
-	stmt->s_type = type;
+	stmt->type = type;
 
 	return stmt;
 }
 
 void free_stmt(struct statement *stmt)
 {
-	if (stmt) {
-		free_stmt(stmt->s_next);
-		if (stmt->s_target)
-			expr_put(stmt->s_target);
-		if (stmt->s_left)
-			expr_put(stmt->s_left);
-		if (stmt->s_right)
-			expr_put(stmt->s_right);
-		free(stmt);
-	}
+	if (!stmt)
+		return;
+
+	free_stmt(stmt->next);
+	switch (stmt->type) {
+		case STMT_NOP:
+			/* nothing to do */
+			break;
+		case STMT_ASSIGN:
+			expr_put(stmt->left);
+			expr_put(stmt->right);
+			break;
+		case STMT_NULL_CHECK:
+		case STMT_ARRAY_CHECK:
+			expr_put(stmt->expression);
+			break;
+	};
+	free(stmt);
 }

@@ -15,11 +15,17 @@ enum statement_type {
 };
 
 struct statement {
-	enum statement_type s_type;	/* Type of the statement.  */
-	struct expression *s_target;	/* Target temporary of the statement.  */
-	struct expression *s_left;		/* Left expression of the statement.  */
-	struct expression *s_right;	/* Left expression of the statement.  */
-	struct statement *s_next;	/* Next statement. */
+	enum statement_type type;
+	union {
+		/* STMT_ASSIGN */
+		struct {
+			struct expression *left;
+			struct expression *right;
+		};
+		/* STMT_NULL_CHECK, STMT_ARRAY_CHECK */
+		struct expression *expression;
+	};
+	struct statement *next;
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *,
