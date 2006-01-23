@@ -1,5 +1,8 @@
 /*
  * Copyright (C) 2006  Pekka Enberg
+ *
+ * This file is released under the GPL version 2. Please refer to the file
+ * LICENSE for details.
  */
 
 #include <expression.h>
@@ -8,7 +11,7 @@
 struct expression *alloc_expression(enum expression_type type,
 				    enum jvm_type jvm_type)
 {
-	struct expression *expr = malloc(sizeof(*expr));
+	struct expression *expr = malloc(sizeof *expr);
 	if (expr) {
 		expr->type = type;
 		expr->jvm_type = jvm_type;
@@ -23,28 +26,28 @@ void free_expression(struct expression *expr)
 		return;
 
 	switch (expr->type) {
-		case EXPR_VALUE:
-		case EXPR_FVALUE:
-		case EXPR_LOCAL:
-		case EXPR_TEMPORARY:
-			/* nothing to do */
-			break;
-		case EXPR_ARRAY_DEREF:
-			if (expr->arrayref)
-				expr_put(expr->arrayref);
-			if (expr->array_index)
-				expr_put(expr->array_index);
-			break;
-		case EXPR_BINOP:
-			if (expr->left)
-				expr_put(expr->left);
-			if (expr->right)
-				expr_put(expr->right);
-			break;
-		case EXPR_UNARY_OP:
-			if (expr->expression)
-				expr_put(expr->expression);
-			break;
+	case EXPR_VALUE:
+	case EXPR_FVALUE:
+	case EXPR_LOCAL:
+	case EXPR_TEMPORARY:
+		/* nothing to do */
+		break;
+	case EXPR_ARRAY_DEREF:
+		if (expr->arrayref)
+			expr_put(expr->arrayref);
+		if (expr->array_index)
+			expr_put(expr->array_index);
+		break;
+	case EXPR_BINOP:
+		if (expr->left)
+			expr_put(expr->left);
+		if (expr->right)
+			expr_put(expr->right);
+		break;
+	case EXPR_UNARY_OP:
+		if (expr->expression)
+			expr_put(expr->expression);
+		break;
 	};
 	free(expr);
 }
@@ -88,7 +91,8 @@ struct expression *local_expr(enum jvm_type jvm_type, unsigned long local_index)
 	return expr;
 }
 
-struct expression *temporary_expr(enum jvm_type jvm_type, unsigned long temporary)
+struct expression *temporary_expr(enum jvm_type jvm_type,
+				  unsigned long temporary)
 {
 	struct expression *expr = alloc_expression(EXPR_TEMPORARY, jvm_type);
 	if (expr)
@@ -111,8 +115,7 @@ struct expression *array_deref_expr(enum jvm_type jvm_type,
 
 struct expression *binop_expr(enum jvm_type jvm_type,
 			      enum binary_operator binary_operator,
-			      struct expression *left,
-			      struct expression *right)
+			      struct expression *left, struct expression *right)
 {
 	struct expression *expr = alloc_expression(EXPR_BINOP, jvm_type);
 	if (expr) {

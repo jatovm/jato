@@ -32,7 +32,7 @@ struct statement *convert_bytecode_to_stmts(struct classblock *,
 					    unsigned char *, unsigned long,
 					    struct stack *);
 
-struct statement *alloc_stmt(enum statement_type);
-void free_stmt(struct statement *);
+struct statement *alloc_statement(enum statement_type);
+void free_statement(struct statement *);
 
 #endif

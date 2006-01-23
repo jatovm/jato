@@ -128,7 +128,7 @@ void test_convert_nop(void)
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	assert_int_equals(STMT_NOP, stmt->type);
 	assert_true(stack_is_empty(&stack));
-	free_stmt(stmt);
+	free_statement(stmt);
 }
 
 void test_convert_aconst_null(void)
@@ -366,7 +366,7 @@ static void assert_load_stmt(unsigned char opc,
 	assert_local_expr(expected_jvm_type, expected_index, stmt->right);
 	assert_temporary_expr(stmt->left->temporary, stack_pop(&stack));
 	assert_true(stack_is_empty(&stack));
-	free_stmt(stmt);
+	free_statement(stmt);
 }
 
 void test_convert_iload(void)
@@ -493,7 +493,7 @@ static void assert_array_load_stmts(enum jvm_type expected_type,
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(&stack));
 
-	free_stmt(stmt);
+	free_statement(stmt);
 }
 
 void test_convert_iaload(void)
@@ -563,7 +563,7 @@ static void assert_store_stmt(unsigned char opc,
 
 	assert_true(stack_is_empty(&stack));
 
-	free_stmt(stmt);
+	free_statement(stmt);
 }
 
 void test_convert_istore(void)
@@ -669,7 +669,7 @@ static void assert_array_store_stmts(enum jvm_type expected_type,
 	assert_temporary_expr(value, assign->right);
 
 	assert_true(stack_is_empty(&stack));
-	free_stmt(stmt);
+	free_statement(stmt);
 }
 
 void test_convert_iastore(void)
@@ -958,7 +958,7 @@ static void assert_iinc_stmt(unsigned char expected_index, unsigned char expecte
 	assert_local_expr(J_INT, expected_index, local_expression);
 	assert_value_expr(J_INT, expected_value, const_expression);
 
-	free_stmt(assign_stmt);
+	free_statement(assign_stmt);
 }
 
 void test_convert_iinc(void)
