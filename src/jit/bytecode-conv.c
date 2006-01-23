@@ -234,9 +234,8 @@ static struct statement *convert_array_load(struct conversion_context *context,
 	if (!arraycheck)
 		goto failed;
 
-	expr_get(arrayref);
-	expr_get(index);
-	arraycheck->expression = array_deref_expr(type, arrayref, index);
+	expr_get(assign->right);
+	arraycheck->expression = assign->right;
 	arraycheck->next = assign;
 
 	nullcheck = alloc_stmt(STMT_NULL_CHECK);
@@ -388,9 +387,8 @@ static struct statement *convert_array_store(struct conversion_context *context,
 	if (!arraycheck)
 		goto failed;
 
-	expr_get(arrayref);
-	expr_get(index);
-	arraycheck->expression = array_deref_expr(type, arrayref, index);
+	expr_get(assign->left);
+	arraycheck->expression = assign->left;
 	arraycheck->next = assign;
 
 	nullcheck = alloc_stmt(STMT_NULL_CHECK);
