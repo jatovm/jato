@@ -696,6 +696,44 @@ static struct statement *convert_lxor(struct conversion_context *context)
 	return convert_binop(context, J_LONG, OP_XOR);
 }
 
+static struct statement *convert_iinc(struct conversion_context *context)
+{
+	struct statement *assign;
+	struct expression *local_expression, *binop_expression, *const_expression;
+
+	assign = alloc_stmt(STMT_ASSIGN);
+	if (!assign)
+		goto failed;
+
+	local_expression = local_expr(J_INT, context->code[1]);
+	if (!local_expression)
+		goto failed;
+
+	assign->s_left = local_expression;
+
+	const_expression = value_expr(J_INT, context->code[2]);
+	if (!const_expression)
+		goto failed;
+
+	expr_get(local_expression);
+
+	binop_expression = binop_expr(J_INT, OP_ADD, local_expression,
+				      const_expression);
+	if (!binop_expression) {
+		expr_put(local_expression);
+		expr_put(const_expression);
+		goto failed;
+	}
+
+	assign->s_right = binop_expression;
+
+	return assign;
+
+failed:
+	free_stmt(assign);	
+	return NULL;
+}
+
 typedef struct statement *(*convert_fn_t) (struct conversion_context *);
 
 struct converter {
@@ -837,6 +875,7 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_LOR, convert_lor, 1),
 	DECLARE_CONVERTER(OPC_IXOR, convert_ixor, 1),
 	DECLARE_CONVERTER(OPC_LXOR, convert_lxor, 1),
+	DECLARE_CONVERTER(OPC_IINC, convert_iinc, 3),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,

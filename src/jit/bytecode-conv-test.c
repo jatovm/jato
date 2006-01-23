@@ -27,6 +27,15 @@ static void assert_fvalue_expr(enum jvm_type expected_jvm_type,
 	assert_float_equals(expected_value, expression->fvalue, 0.01f);
 }
 
+static void assert_local_expr(enum jvm_type expected_jvm_type,
+			      unsigned long expected_index,
+			      struct expression *expression)
+{
+	assert_int_equals(EXPR_LOCAL, expression->type);
+	assert_int_equals(expected_jvm_type, expression->jvm_type);
+	assert_int_equals(expected_index, expression->local_index);
+}
+
 static void assert_temporary_expr(unsigned long expected,
 				  struct expression *expression)
 {
@@ -354,9 +363,7 @@ static void assert_load_stmt(unsigned char opc,
 	struct statement *stmt =
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 	assert_int_equals(STMT_ASSIGN, stmt->s_type);
-	assert_int_equals(EXPR_LOCAL, stmt->s_left->type);
-	assert_int_equals(expected_index, stmt->s_left->local_index);
-	assert_int_equals(expected_jvm_type, stmt->s_left->jvm_type);
+	assert_local_expr(expected_jvm_type, expected_index, stmt->s_left);
 	assert_temporary_expr(stmt->s_target->temporary, stack_pop(&stack));
 	assert_true(stack_is_empty(&stack));
 	free_stmt(stmt);
@@ -551,13 +558,8 @@ static void assert_store_stmt(unsigned char opc,
 	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
 
 	assert_int_equals(STMT_ASSIGN, stmt->s_type);
-
-	assert_int_equals(EXPR_TEMPORARY, stmt->s_left->type);
-	assert_int_equals(expected_temporary, stmt->s_left->temporary);
-
-	assert_int_equals(EXPR_LOCAL, stmt->s_target->type);
-	assert_int_equals(expected_index, stmt->s_target->local_index);
-	assert_int_equals(expected_jvm_type, stmt->s_target->jvm_type);
+	assert_temporary_expr(expected_temporary, stmt->s_left);
+	assert_local_expr(expected_jvm_type, expected_index, stmt->s_target);
 
 	assert_true(stack_is_empty(&stack));
 
@@ -939,4 +941,28 @@ void test_convert_xor(void)
 {
 	assert_binop_expr_and_stack(J_INT, OP_XOR, OPC_IXOR);
 	assert_binop_expr_and_stack(J_LONG, OP_XOR, OPC_LXOR);
+}
+
+static void assert_iinc_stmt(unsigned char expected_index, unsigned char expected_value)
+{
+	unsigned char code[] = { OPC_IINC, expected_index, expected_value };
+	struct stack stack = STACK_INIT;
+	struct statement *assign_stmt;
+	struct expression *local_expression, *const_expression;
+
+	assign_stmt = convert_bytecode_to_stmts(NULL, code, 3, &stack);
+	local_expression = assign_stmt->s_left;
+	assert_local_expr(J_INT, expected_index, local_expression);
+	const_expression = assign_stmt->s_right->right;
+	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression, assign_stmt->s_right);
+	assert_local_expr(J_INT, expected_index, local_expression);
+	assert_value_expr(J_INT, expected_value, const_expression);
+
+	free_stmt(assign_stmt);
+}
+
+void test_convert_iinc(void)
+{
+	assert_iinc_stmt(0, 1);
+	assert_iinc_stmt(1, 2);
 }
