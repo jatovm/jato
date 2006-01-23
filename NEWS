@@ -1,3 +1,244 @@
+JamVM 1.4.2 released on 22nd January 2006
+=========================================
+
+A summary of changes since 1.4.1:
+
+- JamVM now supports class garbage-collection and unloading.  It is
+  implemented according to the clarifications to the JLS.  This states
+  that a class may be unloaded if and only if its class loader is
+  unreachable.  As the loader is reachable while any classes defined
+  by it are reachable, the class loader and all its classes will be
+  collected together.
+
+- Bug-fix for field name/type lookup and obfuscated code.  Previously
+  a minor optimisation halted the search if a name was found with the
+  wrong type (as a class cannot have two fields with the same name).
+  However, this breaks obfuscated code which renames variables.  With 
+  field resolution the optimisation is redundant, as fields are only
+  looked up once.
+
+- Added stub for VMClassLoader.defineClassWithTransformers.  This is
+  a change in the VM interface in the generics branch of Classpath
+  0.20.
+
+- Various build changes :
+    - fix errors/warnings on Open/Free BSD.  Part of this is a move
+      to using config.h.
+
+    - find Java compiler via path (try ecj, then jikes, gcj, javac).
+
+- Fixed a minor garbage-collector bug.  Scan phase could SEGV if a GC
+  occurred when a reference class was partially created.
+
+
+JamVM 1.4.1 released on 28th November 2005
+==========================================
+
+A summary of changes since 1.4.0:
+
+- As part of the GC optimisations in 1.4.0 some redundant checks were
+  removed.  One of these was hiding a garbage-collector bug.  Classes
+  that have not been linked should not be scanned, as their static
+  fields have not been initialised.  The bug only manifested itself
+  in certain applications, as the window between loading and linking
+  is normally small.  Found with Tomcat, but also seen with Ant.
+  
+- Fix for an array overrun in VMAccessController.getStack (native
+  method) on 64-bit machines.
+
+- Support for FreeBSD.
+
+- Support for OpenBSD (added in 1.3.3 but not previously mentioned).
+
+- A couple of Mauve fixes relating to changing daemon status on threads
+  that have died.
+
+
+JamVM 1.4.0 released on 20th November 2005
+==========================================
+
+A summary of changes since 1.3.3:
+
+- Support for Soft/Weak/Phantom References
+    - As specified in the specification, Weak and Phantom References are
+      cleared as soon as they become weakly or phantom reachable.  It is
+      left up to the VM when Soft References (which are softly reachable)
+      are cleared; only they must be cleared before throwing OutOfMemoryError.
+      JamVM clears them as a last resort, when the heap is fully expanded,
+      and insufficient memory can be reclaimed.
+
+    - To support Soft/Weak/Phantom references a Reference Handler thread
+      is now created on VM start-up.  This is additional to the Finaliser
+      thread.
+
+- Garbage Collector optimisations
+    - Re-implementation of object reference scanning via reference offset
+      lists.  Previously, references were scanned by finding references
+      by following the class hierarchy.
+
+    - As part of this the object layout has changed.
+
+- Added Java language-level access checks (e.g. access to private/protected
+  and package-private methods and fields).  This includes access via
+  reflection.
+
+- Fix for inheritance of inaccessible methods.
+
+- Linux PowerPC build fix (this was quickly fixed in CVS).
+
+- FFI fix.  The size of ffi-type-uint on 64-bit platforms has changed between
+  libffi 2.00-beta and later versions.  This only affected AMD64, as this
+  is the only platform that uses libffi.
+
+- Fix for initiating loaders and array classes.
+
+- Mauve tests.  Many extra VM-level Mauve tests now pass (35+).  These
+  are mostly concerned with testing boundary-conditions in class-loading,
+  Class.forName() and Thread.sleep().  Extra tests pass due to the
+  implementation of Soft/Weak/PhantomReferences and access checks.
+
+- Classpath-0.19 merge.
+    - Merged in changes to GNU Classpath's VM reference classes and
+      JamVM's classes.
+
+- Support for kfreebsd and Linux-powerpc64.
+
+- Many other code tidy-ups.
+
+
+JamVM 1.3.3 released on 12th September 2005
+===========================================
+
+A summary of changes since 1.3.2:
+
+- JamVM is now 64-bit "clean".
+
+- As part of the changes above, JamVM has been ported to:
+
+    - AMD64 under Linux:
+        - JamVM should also work on Pentium 4 with EM64T technology.
+
+    - PowerPC64 under Mac OS X:
+        - to build a 64-bit executable CFLAGS must include the flag -arch
+          ppc64.  If no option is given a 32-bit executable is built by
+          default.
+
+    - JamVM should also work on PowerPC64 under Linux, if the --enable-ffi
+      flag is given to configure, but I have been unable to test.
+
+- LibFFI is now supported.  Upto now, all ports required the native
+  calling convention to be written "by hand" for each new architecture/
+  platform.  Generic calling-convention code is now supported via libffi.
+  Currently this is only used for AMD64/Linux, but can be enabled for
+  all platforms using --enable-ffi.  The "hand-written" routines should
+  be faster, and are used by default, but this will make porting to new
+  architectures/platforms easier.
+
+- Bug-fix enabling heaps larger than 2Gb to be specified on 32-bit
+  architectures.  On 64-bit machines, heap sizes > 4Gb are now
+  supported.
+
+- Bug-fix for JNI return values smaller than 4 bytes (e.g.  byte, short,
+  etc.) on big-endian machines.
+
+- Under Mac OS X multiple DLL extensions will now be tried.  Classpath
+  libraries end in .dylib, but native JNI libraries end in .jnilib.
+  Both are now supported.
+
+- Backwards compatibility workarounds for Classpath-0.17 removed.  JamVM
+  will now only work with Classpath-0.18 and CVS (as of 12th September).
+
+
+JamVM 1.3.2 released on 29th July 2005
+======================================
+
+JamVM 1.3.2 is a minor feature/bug-fix release.  A summary of changes since
+1.3.1:
+
+- Updated to be compatible with Classpath-0.17 and Classpath from
+  CVS (as of 28th July).
+
+- Shutdown hooks are now ran on VM termination, either normally, or via user
+  interruption (i.e ctrl-C).
+
+- Revised GC allocation failure policy
+    - Using a simple heuristic the GC attempts to maintain at least 25% heap
+      free.  If it fails the heap is expanded, regardless of whether the
+      allocation request could be satisfied.  This reduces frequent garbage
+      collection cycles when GC returns only a limited amount of memory.
+
+- Revised Object finalization
+    - during GC a thread could deadlock waiting for finalization.  This
+      occurred when a finalizer (running in the finalizer thread) attempted
+      to grab a lock the thread is holding.
+
+    - a minor bug fix where finalized objects waiting for the finalizer to 
+      be ran could keep alive other finalized objects (if it had the only
+      reference to it).
+
+    - a minor bug fix where objects waiting for finalization could be lost
+      (i.e. finalize() method not called).  This only happened when >1000
+      objects were outstanding.
+
+    - VMRuntime.runFinalization() implemented.  This enables a thread to force
+      finalization.
+
+- In certain circumstances a class loader would be unmarked during GC,
+  enabling it to be collected.  This resulted in a SEGV.
+
+- JNI FindClass now uses the current class loader, not the first non-null on
+  the stack.
+
+- VMClass.getModifiers() now handles inner class attributes.
+
+- Fix to enable build directory to be different to source directory (this was
+  broken in 1.3.0).
+
+
+JamVM 1.3.1 released on 12th June 2005
+======================================
+
+A summary of changes since 1.3.0:
+
+- Re-worked thread suspension enable/disable code
+    - implemented a fast enable/disable suspend mechanism for critical code
+      sections, which is now used in hash table access and heap allocation :
+        - much faster object allocation
+        - much faster primitive array allocation
+        - faster string interning
+
+    - removed some minor potential (as yet unseen) race conditions
+
+- Integrated all outstanding patches
+    - generics branch patch, implementing VMClass.isEnum(), isAnnotation()
+       and isSynthetic()
+
+    - Boot library path patch (support for system property
+      gnu.classpath.boot.library.path)
+
+- Enabled different min/max heap values for each architecture
+    - ARM values are back to the defaults for JamVM 1.2.5.  Default max heap
+      of 128Mb is too large for typical embedded ARM systems.
+
+- Fixed the new compiler warnings from gcc-4.0 (under Mac OS X) related
+  to char/signed char usage.
+
+- Fixed compiler error on gcc-4.0 under Mac OS X 10.4 (duplicate definitions
+  of wait).
+
+- Fixed rare, potential dead-lock in direct.c when preparing methods
+
+- Fixed a bug in VMClassLoader.defineClass(), where offset or length is wrong.
+
+- Fixed bug in DCONST_1 on mixed-endian ARM architectures (this bug was
+  fixed in JamVM 1.2.2 but it crept back in, due to the new interpreter
+   in JamVM 1.2.5).
+
+- Improved thread dump (produced via SIGQUIT, or ctrl-\).
+
+- Several other minor bug-fixes, and code tidy-ups.
+
+
 JamVM 1.3.0 released on 31st March 2005
 =======================================
 

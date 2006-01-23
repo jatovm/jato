@@ -1,4 +1,5 @@
-GLIBJ_ZIP = ${with_classpath_install_dir}/share/classpath/glibj.zip
+@use_zip_yes@ GLIBJ_ZIP = ${with_classpath_install_dir}/share/classpath/glibj.zip
+@use_zip_no@ GLIBJ_ZIP = ${with_classpath_install_dir}/share/classpath/
 
 SUBDIRS = jamvm java gnu
 EXTRA_DIST = classes.zip README
@@ -24,7 +25,7 @@ inst_classes.zip: classes.zip
 
 classes.zip: $(JAVA_FILES)
 	-mkdir classes
-	jikes -bootclasspath ${GLIBJ_ZIP} -d classes $(JAVA_FILES)
+	$(JAVAC) -bootclasspath ${GLIBJ_ZIP} -d classes $(JAVA_FILES)
 	cd classes && zip -r ../classes.zip .
 	rm -rf classes
 

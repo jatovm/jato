@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
@@ -29,11 +29,12 @@
 #include "lock.h"
 
 #ifdef TRACETHREAD
-#define TRACE(x) printf x; fflush(stdout)
+#define TRACE(x) printf x
 #else
 #define TRACE(x)
 #endif
 
+/* Size of Java stack to use if no size is given */
 static int dflt_stack_size;
 
 /* Thread create/destroy lock and condvar */
@@ -130,11 +131,17 @@ int threadIsInterrupted(Thread *thread) {
 }
 
 void threadSleep(Thread *thread, long long ms, int ns) {
-    if(ms > 0 || ns > 0) {
-        monitorLock(&sleep_mon, thread);
-        monitorWait(&sleep_mon, thread, ms, ns);
-        monitorUnlock(&sleep_mon, thread);
-    }
+
+   /* A sleep of zero should just yield, but a wait
+      of zero is "forever".  Therefore wait for a tiny
+      amount -- this should yield and we also get the
+      interrupted checks. */
+    if(ms == 0 &&  ns == 0)
+        ns = 1;
+
+    monitorLock(&sleep_mon, thread);
+    monitorWait(&sleep_mon, thread, ms, ns);
+    monitorUnlock(&sleep_mon, thread);
 }
 
 void threadYield(Thread *thread) {
@@ -211,7 +218,7 @@ void initialiseJavaStack(ExecEnv *ee) {
 
    mb->max_stack = 0;
    top->mb = mb;
-   top->ostack = (u4*)(top+1);
+   top->ostack = (uintptr_t*)(top+1);
    top->prev = 0;
 
    ee->stack = stack;
@@ -278,33 +285,45 @@ void *threadStart(void *arg) {
     /* remove thread from thread group */
     executeMethod(group, (CLASS_CB(group->class))->method_table[rmveThrd_mtbl_idx], jThread);
 
+    /* set VMThread ref in Thread object to null - operations after this
+       point will result in an IllegalThreadStateException */
+    INST_DATA(jThread)[vmthread_offset] = 0;
+
+    /* Disable suspend to protect lock operation */
+    disableSuspend0(thread, &group);
+
+    /* Grab global lock, and update thread structures protected by
+       it (thread list, thread ID and number of daemon threads) */
+    pthread_mutex_lock(&lock);
+
+    /* remove from thread list... */
+    if((thread->prev->next = thread->next))
+        thread->next->prev = thread->prev;
+
+    /* Recycle the threads thread ID */
+    freeThreadID(thread->id);
+
+    /* Handle daemon thread status */
+    if(!INST_DATA(jThread)[daemon_offset])
+        non_daemon_thrds--;
+
+    pthread_mutex_unlock(&lock);
+
     /* notify any threads waiting on VMThread object -
        these are joining this thread */
-
     objectLock(vmthread);
     objectNotifyAll(vmthread);
     objectUnlock(vmthread);
 
-    disableSuspend0(thread, &group);
-    pthread_mutex_lock(&lock);
-
-    /* remove from thread list... */
-
-    if((thread->prev->next = thread->next))
-        thread->next->prev = thread->prev;
-
-    if(!INST_DATA(jThread)[daemon_offset])
-        non_daemon_thrds--;
-
-    freeThreadID(thread->id);
-
-    pthread_mutex_unlock(&lock);
-    enableSuspend(thread);
-
+    /* Free structures */
     INST_DATA(vmthread)[vmData_offset] = 0;
     free(thread);
     free(ee->stack);
     free(ee);
+
+    /* If no more daemon threads notify the main thread (which
+       may be waiting to exit VM).  Note, this is not protected
+       by lock, but main thread checks again */
 
     if(non_daemon_thrds == 0) {
         /* No need to bother with disabling suspension
@@ -346,9 +365,9 @@ void createJavaThread(Object *jThread, long long stack_size) {
     ee->thread = jThread;
     ee->stack_size = stack_size;
 
-    INST_DATA(vmthread)[vmData_offset] = (u4)thread;
-    INST_DATA(vmthread)[thread_offset] = (u4)jThread;
-    INST_DATA(jThread)[vmthread_offset] = (u4)vmthread;
+    INST_DATA(vmthread)[vmData_offset] = (uintptr_t)thread;
+    INST_DATA(vmthread)[thread_offset] = (uintptr_t)jThread;
+    INST_DATA(jThread)[vmthread_offset] = (uintptr_t)vmthread;
     pthread_mutex_unlock(&lock);
 
     if(pthread_create(&thread->tid, &attributes, threadStart, thread)) {
@@ -408,14 +427,14 @@ Thread *attachThread(char *name, char is_daemon, void *stack_base, Thread *threa
     vmthread = allocObject(vmthread_class);
     ee->thread = allocObject(thread_class);
 
-    INST_DATA(vmthread)[vmData_offset] = (u4)thread;
-    INST_DATA(vmthread)[thread_offset] = (u4)ee->thread;
+    INST_DATA(vmthread)[vmData_offset] = (uintptr_t)thread;
+    INST_DATA(vmthread)[thread_offset] = (uintptr_t)ee->thread;
 
     INST_DATA(ee->thread)[daemon_offset] = is_daemon;
-    INST_DATA(ee->thread)[name_offset] = (u4)Cstr2String(name);
+    INST_DATA(ee->thread)[name_offset] = (uintptr_t)Cstr2String(name);
     INST_DATA(ee->thread)[group_offset] = INST_DATA(main_ee.thread)[group_offset];
     INST_DATA(ee->thread)[priority_offset] = NORM_PRIORITY;
-    INST_DATA(ee->thread)[vmthread_offset] = (u4)vmthread;
+    INST_DATA(ee->thread)[vmthread_offset] = (uintptr_t)vmthread;
 
     /* add to thread list... */
 
@@ -464,6 +483,8 @@ void createVMThread(char *name, void (*start)(Thread*)) {
     memset(thread, 0, sizeof(Thread));
     pthread_create(&tid, &attributes, shell, args);
 
+    /* Wait for thread to start */
+
     pthread_mutex_lock(&lock);
     while(thread->state == 0)
         pthread_cond_wait(&cv, &lock);
@@ -479,16 +500,24 @@ void suspendAllThreads(Thread *self) {
     for(thread = &main_thread; thread != NULL; thread = thread->next) {
         if(thread == self)
             continue;
+
         thread->suspend = TRUE;
-        if(!thread->blocking)
+        MBARRIER();
+
+        if(!thread->blocking) {
+            TRACE(("Sending suspend signal to thread 0x%x id: %d\n", thread, thread->id));
             pthread_kill(thread->tid, SIGUSR1);
+        }
     }
 
     for(thread = &main_thread; thread != NULL; thread = thread->next) {
         if(thread == self)
             continue;
-        while(!thread->blocking && thread->state != SUSPENDED)
+
+        while(thread->blocking != SUSP_BLOCKING && thread->state != SUSPENDED) {
+            TRACE(("Waiting for thread 0x%x id: %d to suspend\n", thread, thread->id));
             sched_yield();
+        }
     }
 
     TRACE(("All threads suspended...\n"));
@@ -504,14 +533,21 @@ void resumeAllThreads(Thread *self) {
     for(thread = &main_thread; thread != NULL; thread = thread->next) {
         if(thread == self)
             continue;
+
         thread->suspend = FALSE;
-        if(!thread->blocking)
+        MBARRIER();
+
+        if(!thread->blocking) {
+            TRACE(("Sending resume signal to thread 0x%x id: %d\n", thread, thread->id));
             pthread_kill(thread->tid, SIGUSR1);
+        }
     }
 
     for(thread = &main_thread; thread != NULL; thread = thread->next) {
-        while(thread->state == SUSPENDED)
+        while(thread->state == SUSPENDED) {
+            TRACE(("Waiting for thread 0x%x id: %d to resume\n", thread, thread->id));
             sched_yield();
+        }
     }
 
     TRACE(("All threads resumed...\n"));
@@ -520,22 +556,24 @@ void resumeAllThreads(Thread *self) {
 
 static void suspendLoop(Thread *thread) {
     char old_state = thread->state;
-    sigset_t mask;
     sigjmp_buf env;
+    sigset_t mask;
 
     sigsetjmp(env, FALSE);
 
     thread->stack_top = &env;
     thread->state = SUSPENDED;
+    MBARRIER();
 
     sigfillset(&mask);
     sigdelset(&mask, SIGUSR1);
     sigdelset(&mask, SIGTERM);
 
-    while(thread->suspend)
+    while(thread->suspend && !thread->blocking)
         sigsuspend(&mask);
 
     thread->state = old_state;
+    MBARRIER();
 }
 
 static void suspendHandler(int sig) {
@@ -543,65 +581,127 @@ static void suspendHandler(int sig) {
     suspendLoop(thread);
 }
 
+/* The "slow" disable.  Normally used when a thread enters
+   a blocking code section, such as waiting on a lock.  */
+
 void disableSuspend0(Thread *thread, void *stack_top) {
     sigset_t mask;
+
+    thread->stack_top = stack_top;
+    thread->blocking = SUSP_BLOCKING;
+    MBARRIER();
 
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &mask, NULL);
-
-    thread->stack_top = stack_top;
-    thread->blocking = TRUE;
 }
 
 void enableSuspend(Thread *thread) {
     sigset_t mask;
 
-    sigemptyset(&mask);
-
     thread->blocking = FALSE;
+    MBARRIER();
 
-    if(thread->suspend)
+    if(thread->suspend) {
+        TRACE(("Thread 0x%x id: %d is self suspending\n", thread, thread->id));
         suspendLoop(thread);
+        TRACE(("Thread 0x%x id: %d resumed\n", thread, thread->id));
+    }
 
+    sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
 }
 
-void *dumpThreadsLoop(void *arg) {
-    Thread *thread, dummy;
+/* Fast disable/enable suspend doesn't modify the signal mask
+   or save the thread context.  It's used in critical code
+   sections where the thread cannot be suspended (such as
+   modifying the loaded classes hash table).  Thread supension
+   blocks until the thread self-suspends.  */
+
+void fastEnableSuspend(Thread *thread) {
+
+    thread->blocking = FALSE;
+    MBARRIER();
+
+    if(thread->suspend) {
+        sigset_t mask;
+
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGUSR1);
+        pthread_sigmask(SIG_BLOCK, &mask, NULL);
+
+        TRACE(("Thread 0x%x id: %d is fast self suspending\n", thread, thread->id));
+        suspendLoop(thread);
+        TRACE(("Thread 0x%x id: %d resumed\n", thread, thread->id));
+
+        pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
+    }
+}
+
+void dumpThreadsLoop(Thread *self) {
+    Thread *thread;
     sigset_t mask;
     int sig;
-
-    if(main_exited)
-        return NULL;
 
     sigemptyset(&mask);
     sigaddset(&mask, SIGQUIT);
     sigaddset(&mask, SIGINT);
 
+    disableSuspend0(self, &self);
     for(;;) {
         sigwait(&mask, &sig);
 
         if(sig == SIGINT)
             exitVM(0);
 
-        suspendAllThreads(&dummy);
-        printf("Thread Dump\n-----------\n\n");
+        suspendAllThreads(self);
+        printf("\n------ JamVM version %s Full Thread Dump -------\n", VERSION);
+
         for(thread = &main_thread; thread != NULL; thread = thread->next) {
-            char *name = String2Cstr((Object*)(INST_DATA(thread->ee->thread)[name_offset]));
-            printf("Thread: %s 0x%x tid: %d state: %d\n", name, (int)thread, (int)thread->tid, thread->state);
+            uintptr_t *thr_data = INST_DATA(thread->ee->thread);
+            char *name = String2Cstr((Object*)thr_data[name_offset]);
+            int priority = thr_data[priority_offset];
+            int daemon = thr_data[daemon_offset];
+            Frame *last = thread->ee->last_frame;
+
+            printf("\n\"%s\"%s priority: %d tid: %p id: %d state: %d\n",
+                  name, daemon ? " (daemon)" : "", priority,
+                  thread->tid, thread->id, thread->state);
             free(name);
+
+            while(last->prev != NULL) {
+                for(; last->mb != NULL; last = last->prev) {
+                    MethodBlock *mb = last->mb;
+                    ClassBlock *cb = CLASS_CB(mb->class);
+                    char *dot_name = slash2dots(cb->name);
+
+                    printf("\tat %s.%s(", dot_name, mb->name);
+                    free(dot_name);
+
+                    if(mb->access_flags & ACC_NATIVE)
+                        printf("Native method");
+                    else
+                        if(cb->source_file_name == NULL)
+                            printf("Unknown source");
+                        else {
+                            int line = mapPC2LineNo(mb, last->last_pc);
+                            printf("%s", cb->source_file_name);
+                            if(line != -1)
+                                printf(":%d", line);
+                        }
+                    printf(")\n");
+                }
+                last = last->prev;
+            }
         }
-        resumeAllThreads(&dummy);
+        resumeAllThreads(self);
     }
-    return NULL;
 }
 
 static void initialiseSignals() {
     struct sigaction act;
     sigset_t mask;
-    pthread_t tid;
 
     act.sa_handler = suspendHandler;
     sigemptyset(&act.sa_mask);
@@ -614,7 +714,10 @@ static void initialiseSignals() {
     sigaddset(&mask, SIGPIPE);
     sigprocmask(SIG_BLOCK, &mask, NULL);
 
-    pthread_create(&tid, &attributes, dumpThreadsLoop, NULL);
+    /* The signal handler thread must be a valid Java-level
+       thread, as it needs to run the shutdown hooks in
+       the event of user-termination of the VM */
+    createVMThread("Signal Handler", dumpThreadsLoop);
 }
 
 /* garbage collection support */
@@ -640,8 +743,24 @@ int systemIdle(Thread *self) {
     return TRUE;
 }
 
+extern char VM_initing;
+
 void exitVM(int status) {
     main_exited = TRUE;
+
+    /* Execute System.exit() to run any registered shutdown hooks.
+       In the unlikely event that System.exit() can't be found, or
+       it returns, fall through and exit. */
+
+    if(!VM_initing) {
+        Class *system = findSystemClass("java/lang/System");
+        if(system) {
+            MethodBlock *exit = findMethod(system, "exit", "(I)V");
+            if(exit)
+                executeStaticMethod(system, exit, status);
+        }
+    }
+
     exit(status);
 }
 
@@ -663,7 +782,7 @@ void mainThreadWaitToExitVM() {
 void mainThreadSetContextClassLoader(Object *loader) {
     FieldBlock *fb = findField(thread_class, "contextClassLoader", "Ljava/lang/ClassLoader;");
     if(fb != NULL)
-        INST_DATA(main_ee.thread)[fb->offset] = (u4)loader;
+        INST_DATA(main_ee.thread)[fb->offset] = (uintptr_t)loader;
 }
 
 void initialiseMainThread(int stack_size) {
@@ -714,10 +833,8 @@ void initialiseMainThread(int stack_size) {
 
     /* findField and findMethod do not throw an exception... */
     if((vmData == NULL) || (run == NULL) || (daemon == NULL) || (name == NULL) ||
-           (group == NULL) || (priority == NULL) || (vmThread == NULL) || (thread == NULL)) {
-	fprintf(stderr, "vmData %p, run %p, daemon %p, name %p, group %p, priority %p, vmThread %p, thread %p\n", vmData, run, daemon, name, group, priority, vmThread, thread);
+           (group == NULL) || (priority == NULL) || (vmThread == NULL) || (thread == NULL))
         goto error;
-    }
 
     vmthread_offset = vmThread->offset;
     thread_offset = thread->offset;
@@ -731,13 +848,13 @@ void initialiseMainThread(int stack_size) {
     vmthread = allocObject(vmthread_class);
     main_ee.thread = allocObject(thread_class);
 
-    INST_DATA(vmthread)[vmData_offset] = (u4)&main_thread;
-    INST_DATA(vmthread)[thread_offset] = (u4)main_ee.thread;
+    INST_DATA(vmthread)[vmData_offset] = (uintptr_t)&main_thread;
+    INST_DATA(vmthread)[thread_offset] = (uintptr_t)main_ee.thread;
 
     INST_DATA(main_ee.thread)[daemon_offset] = FALSE;
-    INST_DATA(main_ee.thread)[name_offset] = (u4)Cstr2String("main");
+    INST_DATA(main_ee.thread)[name_offset] = (uintptr_t)Cstr2String("main");
     INST_DATA(main_ee.thread)[priority_offset] = NORM_PRIORITY;
-    INST_DATA(main_ee.thread)[vmthread_offset] = (u4)vmthread;
+    INST_DATA(main_ee.thread)[vmthread_offset] = (uintptr_t)vmthread;
 
     thrdGrp_class = findSystemClass("java/lang/ThreadGroup");
     if(exceptionOccured()) {
@@ -749,10 +866,8 @@ void initialiseMainThread(int stack_size) {
     remove_thread = findMethod(thrdGrp_class, "removeThread", "(Ljava/lang/Thread;)V");
 
     /* findField and findMethod do not throw an exception... */
-    if((root == NULL) || (remove_thread == NULL)) {
-        fprintf(stderr, "root: %p, remove_thread %p\n", root, remove_thread);
+    if((root == NULL) || (remove_thread == NULL))
         goto error;
-    }
 
     rmveThrd_mtbl_idx = remove_thread->method_table_index;
 

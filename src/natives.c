@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #ifdef NO_JNI
@@ -47,20 +47,20 @@ void initialiseNatives() {
 
 /* java.lang.VMObject */
 
-u4 *getClass(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getClass(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *ob = (Object*)*ostack;
-    *ostack++ = (u4)ob->class;
+    *ostack++ = (uintptr_t)ob->class;
     return ostack;
 }
 
-u4 *jamClone(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *jamClone(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *ob = (Object*)*ostack;
-    *ostack++ = (u4)cloneObject(ob);
+    *ostack++ = (uintptr_t)cloneObject(ob);
     return ostack;
 }
 
 /* static method wait(Ljava/lang/Object;JI)V */
-u4 *wait(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *jamWait(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *obj = (Object *)ostack[0];
     long long ms = *((long long *)&ostack[1]);
     int ns = ostack[3];
@@ -70,14 +70,14 @@ u4 *wait(Class *class, MethodBlock *mb, u4 *ostack) {
 }
 
 /* static method notify(Ljava/lang/Object;)V */
-u4 *notify(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *notify(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *obj = (Object *)*ostack;
     objectNotify(obj);
     return ostack;
 }
 
 /* static method notifyAll(Ljava/lang/Object;)V */
-u4 *notifyAll(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *notifyAll(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *obj = (Object *)*ostack;
     objectNotifyAll(obj);
     return ostack;
@@ -86,7 +86,7 @@ u4 *notifyAll(Class *class, MethodBlock *mb, u4 *ostack) {
 /* java.lang.VMSystem */
 
 /* arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V */
-u4 *arraycopy(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *arraycopy(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *src = (Object *)ostack[0];
     int start1 = ostack[1];
     Object *dest = (Object *)ostack[2];
@@ -98,14 +98,15 @@ u4 *arraycopy(Class *class, MethodBlock *mb, u4 *ostack) {
     else {
         ClassBlock *scb = CLASS_CB(src->class);
         ClassBlock *dcb = CLASS_CB(dest->class);
-        unsigned int *sdata = INST_DATA(src);            
-        unsigned int *ddata = INST_DATA(dest);            
+        char *sdata = ARRAY_DATA(src);            
+        char *ddata = ARRAY_DATA(dest);            
 
         if((scb->name[0] != '[') || (dcb->name[0] != '['))
             goto storeExcep; 
 
         if((start1 < 0) || (start2 < 0) || (length < 0)
-                        || ((start1 + length) > sdata[0]) || ((start2 + length) > ddata[0])) {
+                        || ((start1 + length) > ARRAY_LEN(src))
+                        || ((start2 + length) > ARRAY_LEN(dest))) {
             signalException("java/lang/ArrayIndexOutOfBoundsException", NULL);
             return ostack;
         }
@@ -124,9 +125,11 @@ u4 *arraycopy(Class *class, MethodBlock *mb, u4 *ostack) {
                     break;
                 case 'I':
                 case 'F':
+                    size = 4;
+                    break;
                 case 'L':
                 case '[':
-                    size = 4;
+                    size = sizeof(Object*);
                     break;
                 case 'J':
                 case 'D':
@@ -134,9 +137,7 @@ u4 *arraycopy(Class *class, MethodBlock *mb, u4 *ostack) {
                     break;
             } 
 
-            memmove(((char *)&ddata[1]) + start2*size,
-                    ((char *)&sdata[1]) + start1*size,
-                    length*size);
+            memmove(ddata + start2*size, sdata + start1*size, length*size);
         } else {
             Object **sob, **dob;
             int i;
@@ -153,8 +154,8 @@ u4 *arraycopy(Class *class, MethodBlock *mb, u4 *ostack) {
             if(scb->dim > dcb->dim)
                 goto storeExcep;
 
-            sob = (Object**)&sdata[start1+1];
-            dob = (Object**)&ddata[start2+1];
+            sob = &((Object**)sdata)[start1];
+            dob = &((Object**)ddata)[start2];
 
             for(i = 0; i < length; i++) {
                 if((*sob != NULL) && !arrayStoreCheck(dest->class, (*sob)->class))
@@ -170,42 +171,43 @@ storeExcep:
     return ostack;
 }
 
-u4 *identityHashCode(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *identityHashCode(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     return ++ostack;
 }
 
 /* java.lang.VMRuntime */
 
-u4 *freeMemory(Class *class, MethodBlock *mb, u4 *ostack) {
-    *(u8*)ostack = (u8) freeHeapMem();
+uintptr_t *freeMemory(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    *(u8*)ostack = freeHeapMem();
     return ostack + 2;
 }
 
-u4 *totalMemory(Class *class, MethodBlock *mb, u4 *ostack) {
-    *(u8*)ostack = (u8) totalHeapMem();
+uintptr_t *totalMemory(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    *(u8*)ostack = totalHeapMem();
     return ostack + 2;
 }
 
-u4 *maxMemory(Class *class, MethodBlock *mb, u4 *ostack) {
-    *(u8*)ostack = (u8) maxHeapMem();
+uintptr_t *maxMemory(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    *(u8*)ostack = maxHeapMem();
     return ostack + 2;
 }
 
-u4 *gc(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *gc(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     gc1();
     return ostack;
 }
 
-u4 *runFinalization(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *runFinalization(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    runFinalizers();
     return ostack;
 }
 
-u4 *exitInternal(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *exitInternal(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     int status = ostack[0];
-    exitVM(status);
+    exit(status);
 }
 
-u4 *nativeLoad(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *nativeLoad(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     char *name = String2Cstr((Object*)ostack[0]);
 
     ostack[0] = resolveDll(name);
@@ -214,24 +216,24 @@ u4 *nativeLoad(Class *class, MethodBlock *mb, u4 *ostack) {
     return ostack+1;
 }
 
-u4 *nativeGetLibname(Class *class, MethodBlock *mb, u4 *ostack) {
-    char *path = String2Cstr((Object*)ostack[0]);
-    char *name = String2Cstr((Object*)ostack[1]);
-    char *lib = getDllName(path, name);
-    free(path);
+uintptr_t *mapLibraryName(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    char *name = String2Cstr((Object*)ostack[0]);
+    char *lib = getDllName(name);
     free(name);
-    *ostack++ = (u4)Cstr2String(lib);
+
+    *ostack++ = (uintptr_t)Cstr2String(lib);
     free(lib);
+
     return ostack;
 }
 
-u4 *propertiesPreInit(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *propertiesPreInit(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *properties = (Object *)*ostack;
     addDefaultProperties(properties);
     return ostack;
 }
 
-u4 *propertiesPostInit(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *propertiesPostInit(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *properties = (Object *)*ostack;
     addCommandLineProperties(properties);
     return ostack;
@@ -241,51 +243,69 @@ u4 *propertiesPostInit(Class *class, MethodBlock *mb, u4 *ostack) {
 
 #define GET_CLASS(vmClass) (Class*)vmClass
 
-u4 *isInstance(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isInstance(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(ostack[0]);
     Object *ob = (Object*)ostack[1];
 
-    *ostack++ = ob == NULL ? FALSE : (u4)isInstanceOf(clazz, ob->class);
+    *ostack++ = ob == NULL ? FALSE : (uintptr_t)isInstanceOf(clazz, ob->class);
     return ostack;
 }
 
-u4 *isAssignableFrom(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isAssignableFrom(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(ostack[0]);
     Class *clazz2 = (Class*)ostack[1];
 
     if(clazz2 == NULL)
         signalException("java/lang/NullPointerException", NULL);
     else
-        *ostack++ = (u4)isInstanceOf(clazz, clazz2);
+        *ostack++ = (uintptr_t)isInstanceOf(clazz, clazz2);
 
     return ostack;
 }
 
-u4 *isInterface(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isInterface(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
     *ostack++ = IS_INTERFACE(cb) ? TRUE : FALSE;
     return ostack;
 }
 
-u4 *isPrimitive(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isPrimitive(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
     *ostack++ = IS_PRIMITIVE(cb) ? TRUE : FALSE;
     return ostack;
 }
 
-u4 *isArray(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isArray(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
     *ostack++ = IS_ARRAY(cb) ? TRUE : FALSE;
     return ostack;
 }
 
-u4 *getSuperclass(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isSynthetic(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
-    *ostack++ = (u4) (IS_PRIMITIVE(cb) || IS_INTERFACE(cb) ? NULL : cb->super);
+    *ostack++ = IS_SYNTHETIC(cb) ? TRUE : FALSE;
     return ostack;
 }
 
-u4 *getComponentType(Class *clazz, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isAnnotation(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
+    *ostack++ = IS_ANNOTATION(cb) ? TRUE : FALSE;
+    return ostack;
+}
+
+uintptr_t *isEnum(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
+    *ostack++ = IS_ENUM(cb) ? TRUE : FALSE;
+    return ostack;
+}
+
+uintptr_t *getSuperclass(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
+    *ostack++ = (uintptr_t) (IS_PRIMITIVE(cb) || IS_INTERFACE(cb) ? NULL : cb->super);
+    return ostack;
+}
+
+uintptr_t *getComponentType(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
     Class *class = GET_CLASS(ostack[0]);
     ClassBlock *cb = CLASS_CB(class);
     Class *componentType = NULL;
@@ -301,71 +321,78 @@ u4 *getComponentType(Class *clazz, MethodBlock *mb, u4 *ostack) {
                 break;
         }
  
-    *ostack++ = (u4) componentType;
+    *ostack++ = (uintptr_t) componentType;
     return ostack;
 }
 
-u4 *getName(Class *class, MethodBlock *mb, u4 *ostack) {
-    unsigned char *dot_name = slash2dots(CLASS_CB((GET_CLASS(*ostack)))->name);
+uintptr_t *getName(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    char *dot_name = slash2dots(CLASS_CB((GET_CLASS(*ostack)))->name);
     Object *string = createString(dot_name);
-    *ostack++ = (u4)string;
+    *ostack++ = (uintptr_t)string;
     free(dot_name);
     return ostack;
 }
 
-u4 *getDeclaredClasses(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getDeclaredClasses(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(ostack[0]);
     int public = ostack[1];
-    *ostack++ = (u4) getClassClasses(clazz, public);
+    *ostack++ = (uintptr_t) getClassClasses(clazz, public);
     return ostack;
 }
 
-u4 *getDeclaringClass0(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getDeclaringClass0(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(ostack[0]);
-    *ostack++ = (u4) getDeclaringClass(clazz);
+    *ostack++ = (uintptr_t) getDeclaringClass(clazz);
     return ostack;
 }
 
-u4 *getDeclaredConstructors(Class *class, MethodBlock *mb, u4 *ostack) {
-    Class *clazz = GET_CLASS(ostack[0]);
-    int public = ostack[1];
-    *ostack++ = (u4) getClassConstructors(clazz, public);
-    return ostack;
-}
-
-u4 *getDeclaredMethods(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getDeclaredConstructors(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(ostack[0]);
     int public = ostack[1];
-    *ostack++ = (u4) getClassMethods(clazz, public);
+    *ostack++ = (uintptr_t) getClassConstructors(clazz, public);
     return ostack;
 }
 
-u4 *getDeclaredFields(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getDeclaredMethods(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(ostack[0]);
     int public = ostack[1];
-    *ostack++ = (u4) getClassFields(clazz, public);
+    *ostack++ = (uintptr_t) getClassMethods(clazz, public);
     return ostack;
 }
 
-u4 *getInterfaces(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getDeclaredFields(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(ostack[0]);
-    *ostack++ = (u4) getClassInterfaces(clazz);
+    int public = ostack[1];
+    *ostack++ = (uintptr_t) getClassFields(clazz, public);
     return ostack;
 }
 
-u4 *getClassLoader(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getInterfaces(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    Class *clazz = GET_CLASS(ostack[0]);
+    *ostack++ = (uintptr_t) getClassInterfaces(clazz);
+    return ostack;
+}
+
+uintptr_t *getClassLoader(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = GET_CLASS(*ostack);
-    *ostack++ = (u4)CLASS_CB(clazz)->class_loader;
+    *ostack++ = (uintptr_t)CLASS_CB(clazz)->class_loader;
     return ostack;
 }
 
-u4 *getClassModifiers(Class *class, MethodBlock *mb, u4 *ostack) {
-    Class *clazz = GET_CLASS(*ostack);
-    *ostack++ = (u4)CLASS_CB(clazz)->access_flags;
+uintptr_t *getClassModifiers(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    Class *clazz = GET_CLASS(ostack[0]);
+    int ignore_inner_attrs = ostack[1];
+    ClassBlock *cb = CLASS_CB(clazz);
+
+    if(!ignore_inner_attrs && cb->declaring_class)
+        *ostack++ = (uintptr_t)cb->inner_access_flags;
+    else
+        *ostack++ = (uintptr_t)cb->access_flags;
+
     return ostack;
 }
 
-u4 *forName0(u4 *ostack, int resolve, Object *loader) {
+uintptr_t *forName0(uintptr_t *ostack, int resolve, Object *loader) {
     Object *string = (Object *)ostack[0];
     Class *class = NULL;
     int len, i = 0;
@@ -378,6 +405,9 @@ u4 *forName0(u4 *ostack, int resolve, Object *loader) {
 
     cstr = String2Cstr(string);
     len = strlen(cstr);
+
+    /* Check the classname to see if it's valid.  It can be
+       a 'normal' class or an array class, starting with a [ */
 
     if(cstr[0] == '[') {
         for(; cstr[i] == '['; i++);
@@ -394,7 +424,7 @@ u4 *forName0(u4 *ostack, int resolve, Object *loader) {
                     goto out;
                 break;
             case 'L':
-                if(cstr[len-1] != ';')
+                if(cstr[i+1] == '[' || cstr[len-1] != ';')
                     goto out;
                 break;
             default:
@@ -402,8 +432,17 @@ u4 *forName0(u4 *ostack, int resolve, Object *loader) {
                 break;
         }
     }
-    for(; i < len; i++)
-        if(cstr[i]=='.') cstr[i]='/';
+
+    /* Scan the classname and convert it to internal form
+       by converting dots to slashes.  Reject classnames
+       containing slashes, as this is an invalid character */
+
+    for(; i < len; i++) {
+        if(cstr[i] == '/')
+            goto out;
+        if(cstr[i] == '.')
+            cstr[i] = '/';
+    }
 
     class = findClassFromClassLoader(cstr, loader);
 
@@ -417,33 +456,23 @@ out:
             initClass(class);
 
     free(cstr);
-    *ostack++ = (u4)class;
+    *ostack++ = (uintptr_t)class;
     return ostack;
 }
 
-u4 *forName(Class *clazz, MethodBlock *mb, u4 *ostack) {
-    Object *loader = getCurrentClassLoader();
-    return forName0(ostack, TRUE, loader);
+uintptr_t *forName(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
+    int init = ostack[1];
+    Object *loader = (Object*)ostack[2];
+    return forName0(ostack, init, loader);
 }
 
-u4 *loadArrayClass(Class *clazz, MethodBlock *mb, u4 *ostack) {
-    Object *loader = (Object*)ostack[1];
-    return forName0(ostack, FALSE, loader);
-}
-
-u4 *initialize(Class *class, MethodBlock *mb, u4 *ostack) {
-    Class *clazz = GET_CLASS(ostack[0]);
-    initClass(clazz);
-    return ostack;
-}
-
-u4 *throwException(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *throwException(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *excep = (Object *)ostack[0];
     setException(excep);
     return ostack;
 }
 
-u4 *hasClassInitializer(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *hasClassInitializer(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = (Class*)ostack[0];
     *ostack++ = findMethod(clazz, "<clinit>", "()V") == NULL ? FALSE : TRUE;
     return ostack;
@@ -451,68 +480,32 @@ u4 *hasClassInitializer(Class *class, MethodBlock *mb, u4 *ostack) {
 
 /* java.lang.VMThrowable */
 
-u4 *fillInStackTrace(Class *class, MethodBlock *mb, u4 *ostack) {
-    *ostack++ = (u4) setStackTrace();
+uintptr_t *fillInStackTrace(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    *ostack++ = (uintptr_t) setStackTrace();
     return ostack;
 }
 
-u4 *getStackTrace(Class *class, MethodBlock *m, u4 *ostack) {
+uintptr_t *getStackTrace(Class *class, MethodBlock *m, uintptr_t *ostack) {
     Object *this = (Object *)*ostack;
-    *ostack++ = (u4) convertStackTrace(this);
+    *ostack++ = (uintptr_t) convertStackTrace(this);
     return ostack;
 }
 
 /* gnu.classpath.VMStackWalker */
 
-Frame *skipFrames(Frame *last) {
-
-loop:
-    /* Skip the frame with the found class, and
-       check if the previous is a dummy frame */
-    if((last = last->prev)->mb == NULL) {
-
-        /* Skip the dummy frame, and check if
-         * we're at the top of the stack */
-        if((last = last->prev)->prev == NULL)
-            return NULL;
-
-        /* Check if we were invoked via reflection */
-        if(last->mb->class == getReflectMethodClass()) {
-
-            /* There will be two frames for invoke.  Skip
-               the first, and jump back.  This also handles
-               recursive invocation via reflection. */
-
-            last = last->prev;
-            goto loop;
-        }
-    }
-    return last;
-}
-
-Class *getCallingClass0() {
-    Frame *last = getExecEnv()->last_frame->prev;
-
-    if((last->mb == NULL && (last = last->prev)->prev == NULL) ||
-             (last = skipFrames(last)) == NULL)
-        return NULL;
-
-    return last->mb->class;
-}
-
-u4 *getCallingClass(Class *class, MethodBlock *mb, u4 *ostack) {
-    *ostack++ = (int) getCallingClass0();
+uintptr_t *getCallingClass(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    *ostack++ = (uintptr_t) getCallerCallerClass();
     return ostack;
 }
 
-u4 *getCallingClassLoader(Class *clazz, MethodBlock *mb, u4 *ostack) {
-    Class *class = getCallingClass0();
+uintptr_t *getCallingClassLoader(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
+    Class *class = getCallerCallerClass();
 
-    *ostack++ = (int) (class ? CLASS_CB(class)->class_loader : NULL);
+    *ostack++ = (uintptr_t) (class ? CLASS_CB(class)->class_loader : NULL);
     return ostack;
 }
 
-u4 *getClassContext(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getClassContext(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *class_class = findArrayClass("[Ljava/lang/Class;");
     Object *array;
     Frame *last;
@@ -520,8 +513,8 @@ u4 *getClassContext(Class *class, MethodBlock *mb, u4 *ostack) {
     if(class_class == NULL)
         return ostack;
 
-    if((last = skipFrames(getExecEnv()->last_frame)) == NULL)
-        array = allocArray(class_class, 0, 4); 
+    if((last = getCallerFrame(getExecEnv()->last_frame)) == NULL)
+        array = allocArray(class_class, 0, sizeof(Class*)); 
     else {
         Frame *bottom = last;
         int depth = 0;
@@ -530,65 +523,74 @@ u4 *getClassContext(Class *class, MethodBlock *mb, u4 *ostack) {
             for(; last->mb != NULL; last = last->prev, depth++);
         } while((last = last->prev)->prev != NULL);
     
-        array = allocArray(class_class, depth, 4);
+        array = allocArray(class_class, depth, sizeof(Class*));
 
         if(array != NULL) {
-            int *data = INST_DATA(array);
+            Class **data = ARRAY_DATA(array);
 
-            depth = 1;
             do {
                 for(; bottom->mb != NULL; bottom = bottom->prev)
-                    data[depth++] = (int)bottom->mb->class;
+                    *data++ = bottom->mb->class;
             } while((bottom = bottom->prev)->prev != NULL);
         }
     }
 
-    *ostack++ = (int)array;
+    *ostack++ = (uintptr_t)array;
     return ostack;
 }
 
 /* java.lang.VMClassLoader */
 
 /* loadClass(Ljava/lang/String;I)Ljava/lang/Class; */
-u4 *loadClass(Class *clazz, MethodBlock *mb, u4 *ostack) {
+uintptr_t *loadClass(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
     int resolve = ostack[1];
     return forName0(ostack, resolve, NULL);
 }
 
 /* getPrimitiveClass(C)Ljava/lang/Class; */
-u4 *getPrimitiveClass(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getPrimitiveClass(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     char prim_type = *ostack;
-    *ostack++ = (u4)findPrimitiveClass(prim_type);
+    *ostack++ = (uintptr_t)findPrimitiveClass(prim_type);
     return ostack;
 }
 
-u4 *defineClass0(Class *clazz, MethodBlock *mb, u4 *ostack) {
+uintptr_t *defineClass0(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
     Object *class_loader = (Object *)ostack[0];
     Object *string = (Object *)ostack[1];
     Object *array = (Object *)ostack[2];
     int offset = ostack[3];
     int data_len = ostack[4];
     int pd = ostack[5];
-    char *data = ((char*)INST_DATA(array)) + 4;
-    char *cstr = string ? String2Cstr(string) : NULL;
-    int len = string ? strlen(cstr) : 0;
-    Class *class;
-    int i;
+    Class *class = NULL;
 
-    for(i = 0; i < len; i++)
-        if(cstr[i]=='.') cstr[i]='/';
+    if(array == NULL)
+        signalException("java/lang/NullPointerException", NULL);
+    else
+        if((offset < 0) || (data_len < 0) ||
+                           ((offset + data_len) > ARRAY_LEN(array)))
+            signalException("java/lang/ArrayIndexOutOfBoundsException", NULL);
+        else {
+            char *data = ARRAY_DATA(array);
+            char *cstr = string ? String2Cstr(string) : NULL;
+            int len = string ? strlen(cstr) : 0;
+            int i;
 
-    if((class = defineClass(cstr, data, offset, data_len, class_loader)) != NULL) {
-        INST_DATA(class)[pd_offset] = pd;
-        linkClass(class);
-    }
+            for(i = 0; i < len; i++)
+                if(cstr[i]=='.') cstr[i]='/';
 
-    free(cstr);
-    *ostack++ = (u4) class;
+            if((class = defineClass(cstr, data, offset, data_len, class_loader)) != NULL) {
+                INST_DATA(class)[pd_offset] = pd;
+                linkClass(class);
+            }
+
+            free(cstr);
+        }
+
+    *ostack++ = (uintptr_t) class;
     return ostack;
 }
 
-u4 *findLoadedClass(Class *clazz, MethodBlock *mb, u4 *ostack) {
+uintptr_t *findLoadedClass(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
     Object *class_loader = (Object *)ostack[0];
     Object *string = (Object *)ostack[1];
     Class *class;
@@ -609,57 +611,61 @@ u4 *findLoadedClass(Class *clazz, MethodBlock *mb, u4 *ostack) {
     class = findHashedClass(cstr, class_loader);
 
     free(cstr);
-    *ostack++ = (u4) class;
+    *ostack++ = (uintptr_t) class;
     return ostack;
 }
 
-u4 *resolveClass0(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *resolveClass0(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *clazz = (Class *)*ostack;
     initClass(clazz);
     return ostack;
 }
 
-u4 *getBootClassPathSize(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getBootClassPathSize(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     *ostack++ = bootClassPathSize();
     return ostack;
 }
 
-u4 *getBootClassPathResource(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getBootClassPathResource(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *string = (Object *) ostack[0];
     char *filename = String2Cstr(string);
     int index = ostack[1];
 
-    *ostack++ = (u4) bootClassPathResource(filename, index);
+    *ostack++ = (uintptr_t) bootClassPathResource(filename, index);
     return ostack;
 }
 
 /* java.lang.reflect.Constructor */
 
-u4 *constructNative(Class *class, MethodBlock *mb2, u4 *ostack) {
+uintptr_t *constructNative(Class *class, MethodBlock *mb2, uintptr_t *ostack) {
     Object *array = (Object*)ostack[1]; 
-    Object *paramTypes = (Object*)ostack[3];
-    MethodBlock *mb = (MethodBlock*)ostack[4]; 
+    Class *decl_class = (Class*)ostack[2];
+    Object *param_types = (Object*)ostack[3];
+    MethodBlock *mb = &(CLASS_CB(decl_class)->methods[ostack[4]]); 
+    int no_access_check = ostack[5]; 
     Object *ob = allocObject(mb->class);
 
-    if(ob) invoke(ob, mb, array, paramTypes);
+    if(ob) invoke(ob, mb, array, param_types, !no_access_check);
 
-    *ostack++ = (u4) ob;
+    *ostack++ = (uintptr_t) ob;
     return ostack;
 }
 
-u4 *getMethodModifiers(Class *class, MethodBlock *mb2, u4 *ostack) {
-    MethodBlock *mb = (MethodBlock*)ostack[1]; 
-    *ostack++ = (u4) mb->access_flags;
+uintptr_t *getMethodModifiers(Class *class, MethodBlock *mb2, uintptr_t *ostack) {
+    Class *decl_class = (Class*)ostack[1];
+    MethodBlock *mb = &(CLASS_CB(decl_class)->methods[ostack[2]]); 
+    *ostack++ = (uintptr_t) mb->access_flags;
     return ostack;
 }
 
-u4 *getFieldModifiers(Class *class, MethodBlock *mb, u4 *ostack) {
-    FieldBlock *fb = (FieldBlock*)ostack[1]; 
-    *ostack++ = (u4) fb->access_flags;
+uintptr_t *getFieldModifiers(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    Class *decl_class = (Class*)ostack[1];
+    FieldBlock *fb = &(CLASS_CB(decl_class)->fields[ostack[2]]); 
+    *ostack++ = (uintptr_t) fb->access_flags;
     return ostack;
 }
 
-Object *getAndCheckObject(u4 *ostack, Class *type) {
+Object *getAndCheckObject(uintptr_t *ostack, Class *type) {
     Object *ob = (Object*)ostack[1];
 
     if(ob == NULL) {
@@ -674,10 +680,16 @@ Object *getAndCheckObject(u4 *ostack, Class *type) {
     return ob;
 }
 
-u4 *getPntr2Field(u4 *ostack) {
+uintptr_t *getPntr2Field(uintptr_t *ostack) {
     Class *decl_class = (Class *)ostack[2];
-    FieldBlock *fb = (FieldBlock*)ostack[4]; 
+    FieldBlock *fb = &(CLASS_CB(decl_class)->fields[ostack[4]]); 
+    int no_access_check = ostack[5];
     Object *ob;
+
+    if(!no_access_check && !checkFieldAccess(fb, getCallerCallerClass())) {
+        signalException("java/lang/IllegalAccessException", "field is not accessible");
+        return NULL;
+    }
 
     if(fb->access_flags & ACC_STATIC) {
         initClass(decl_class);
@@ -690,22 +702,22 @@ u4 *getPntr2Field(u4 *ostack) {
     return &(INST_DATA(ob)[fb->offset]);
 }
 
-u4 *getField(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getField(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *field_type = (Class *)ostack[3];
-    u4 *field;
+    uintptr_t *field;
 
     /* If field is static, getPntr2Field also initialises the field's declaring class */
     if((field = getPntr2Field(ostack)) != NULL)
-        *ostack++ = (u4) createWrapperObject(field_type, field);
+        *ostack++ = (uintptr_t) createWrapperObject(field_type, field);
     return ostack;
 }
 
-u4 *getPrimitiveField(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getPrimitiveField(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *field_type = (Class *)ostack[3];
-    int type_no = ostack[5]; 
+    int type_no = ostack[6]; 
 
     ClassBlock *type_cb = CLASS_CB(field_type);
-    u4 *field;
+    uintptr_t *field;
 
     /* If field is static, getPntr2Field also initialises the field's declaring class */
     if(((field = getPntr2Field(ostack)) != NULL) && (!(IS_PRIMITIVE(type_cb)) ||
@@ -714,10 +726,10 @@ u4 *getPrimitiveField(Class *class, MethodBlock *mb, u4 *ostack) {
     return ostack;
 }
 
-u4 *setField(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *setField(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *field_type = (Class *)ostack[3];
-    Object *value = (Object*)ostack[5];
-    u4 *field;
+    Object *value = (Object*)ostack[6];
+    uintptr_t *field;
 
     /* If field is static, getPntr2Field also initialises the field's declaring class */
     if(((field = getPntr2Field(ostack)) != NULL) &&
@@ -727,39 +739,47 @@ u4 *setField(Class *class, MethodBlock *mb, u4 *ostack) {
     return ostack;
 }
 
-u4 *setPrimitiveField(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *setPrimitiveField(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *field_type = (Class *)ostack[3];
-    int type_no = ostack[5]; 
+    int type_no = ostack[6]; 
 
     ClassBlock *type_cb = CLASS_CB(field_type);
-    u4 *field;
+    uintptr_t *field;
 
     /* If field is static, getPntr2Field also initialises the field's declaring class */
     if(((field = getPntr2Field(ostack)) != NULL) && (!(IS_PRIMITIVE(type_cb)) ||
-                 (widenPrimitiveValue(type_no, getPrimTypeIndex(type_cb), &ostack[6], field) == NULL)))
+                 (widenPrimitiveValue(type_no, getPrimTypeIndex(type_cb), &ostack[7], field) == NULL)))
         signalException("java/lang/IllegalArgumentException", "field type mismatch");
     return ostack;
 }
 
 /* java.lang.reflect.Method */
 
-u4 *invokeNative(Class *class, MethodBlock *mb2, u4 *ostack) {
+uintptr_t *invokeNative(Class *class, MethodBlock *mb2, uintptr_t *ostack) {
     Object *array = (Object*)ostack[2]; 
-    Object *paramTypes = (Object*)ostack[4];
-    Class *retType = (Class*)ostack[5];
-    MethodBlock *mb = (MethodBlock*)ostack[6]; 
+    Class *decl_class = (Class*)ostack[3];
+    Object *param_types = (Object*)ostack[4];
+    Class *ret_type = (Class*)ostack[5];
+    MethodBlock *mb = &(CLASS_CB(decl_class)->methods[ostack[6]]); 
+    int no_access_check = ostack[7]; 
     Object *ob = NULL;
-    u4 *ret;
+    uintptr_t *ret;
 
+    /* If it's a static method, class may not be initialised */
     if(mb->access_flags & ACC_STATIC)
-        initClass(mb->class);
-    else
-        if(((ob = getAndCheckObject(ostack, mb->class)) == NULL) ||
+        initClass(decl_class);
+    else {
+        /* Interfaces are not normally initialsed. */
+        if(IS_INTERFACE(CLASS_CB(decl_class)))
+            initClass(decl_class);
+
+        if(((ob = getAndCheckObject(ostack, decl_class)) == NULL) ||
                                      ((mb = lookupVirtualMethod(ob, mb)) == NULL))
             return ostack;
+    }
  
-    if((ret = (u4*) invoke(ob, mb, array, paramTypes)) != NULL)
-        *ostack++ = (u4) createWrapperObject(retType, ret);
+    if((ret = (uintptr_t*) invoke(ob, mb, array, param_types, !no_access_check)) != NULL)
+        *ostack++ = (uintptr_t) createWrapperObject(ret_type, ret);
 
     return ostack;
 }
@@ -767,22 +787,22 @@ u4 *invokeNative(Class *class, MethodBlock *mb2, u4 *ostack) {
 /* java.lang.VMString */
 
 /* static method - intern(Ljava/lang/String;)Ljava/lang/String; */
-u4 *intern(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *intern(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *string = (Object*)ostack[0];
-    ostack[0] = (u4)findInternedString(string);
+    ostack[0] = (uintptr_t)findInternedString(string);
     return ostack+1;
 }
 
 /* java.lang.VMThread */
 
 /* static method currentThread()Ljava/lang/Thread; */
-u4 *currentThread(Class *class, MethodBlock *mb, u4 *ostack) {
-    *ostack++ = (u4)getExecEnv()->thread;
+uintptr_t *currentThread(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    *ostack++ = (uintptr_t)getExecEnv()->thread;
     return ostack;
 }
 
 /* static method create(Ljava/lang/Thread;J)V */
-u4 *create(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *create(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *this = (Object *)ostack[0];
     long long stack_size = *((long long*)&ostack[1]);
     createJavaThread(this, stack_size);
@@ -790,18 +810,17 @@ u4 *create(Class *class, MethodBlock *mb, u4 *ostack) {
 }
 
 /* static method sleep(JI)V */
-u4 *jamSleep(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *jamSleep(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     long long ms = *((long long *)&ostack[0]);
     int ns = ostack[2];
     Thread *thread = threadSelf();
 
     threadSleep(thread, ms, ns);
-
     return ostack;
 }
 
 /* instance method interrupt()V */
-u4 *interrupt(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *interrupt(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *this = (Object *)*ostack;
     Thread *thread = threadSelf0(this);
     if(thread)
@@ -810,7 +829,7 @@ u4 *interrupt(Class *class, MethodBlock *mb, u4 *ostack) {
 }
 
 /* instance method isAlive()Z */
-u4 *isAlive(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isAlive(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *this = (Object *)*ostack;
     Thread *thread = threadSelf0(this);
     *ostack++ = thread ? threadIsAlive(thread) : FALSE;
@@ -818,14 +837,14 @@ u4 *isAlive(Class *class, MethodBlock *mb, u4 *ostack) {
 }
 
 /* static method yield()V */
-u4 *yield(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *yield(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Thread *thread = threadSelf();
     threadYield(thread);
     return ostack;
 }
 
 /* instance method isInterrupted()Z */
-u4 *isInterrupted(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *isInterrupted(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *this = (Object *)*ostack;
     Thread *thread = threadSelf0(this);
     *ostack++ = thread ? threadIsInterrupted(thread) : FALSE;
@@ -833,19 +852,19 @@ u4 *isInterrupted(Class *class, MethodBlock *mb, u4 *ostack) {
 }
 
 /* static method interrupted()Z */
-u4 *interrupted(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *interrupted(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Thread *thread = threadSelf();
     *ostack++ = threadInterrupted(thread);
     return ostack;
 }
 
 /* instance method nativeSetPriority(I)V */
-u4 *nativeSetPriority(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *nativeSetPriority(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     return ostack+1;
 }
 
 /* instance method holdsLock(Ljava/lang/Object;)Z */
-u4 *holdsLock(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *holdsLock(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *ob = (Object *)ostack[0];
     if(ob == NULL)
         signalException("java/lang/NullPointerException", NULL);
@@ -857,58 +876,54 @@ u4 *holdsLock(Class *class, MethodBlock *mb, u4 *ostack) {
 /* java.security.VMAccessController */
 
 /* instance method getStack()[[Ljava/lang/Object; */
-u4 *getStack(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *getStack(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *object_class = findArrayClass("[[Ljava/lang/Object;");
     Class *class_class = findArrayClass("[Ljava/lang/Class;");
     Class *string_class = findArrayClass("[Ljava/lang/String;");
     Object *stack, *names, *classes;
     Frame *frame;
-    int depth = 0;
+    int depth;
 
     if(object_class == NULL || class_class == NULL || string_class == NULL)
       return ostack;
 
     frame = getExecEnv()->last_frame;
+    depth = 0;
 
     do {
         for(; frame->mb != NULL; frame = frame->prev, depth++);
     } while((frame = frame->prev)->prev != NULL);
 
-    stack = allocArray(object_class, 2, 4);
-    classes = allocArray(class_class, depth, 4);
-    names = allocArray(string_class, depth, 4);
+    stack = allocArray(object_class, 2, sizeof(Object*));
+    classes = allocArray(class_class, depth, sizeof(Object*));
+    names = allocArray(string_class, depth, sizeof(Object*));
 
     if(stack != NULL && names != NULL && classes != NULL) {
-        int *dcl = INST_DATA(classes);
-        int *dnm = INST_DATA(names);
+        Class **dcl = ARRAY_DATA(classes);
+        Object **dnm = ARRAY_DATA(names);
+        Object **stk = ARRAY_DATA(stack);
 
         frame = getExecEnv()->last_frame;
-        depth = 1;
 
         do {
-            for(; frame->mb != NULL; frame = frame->prev, depth++) {
-                dcl[depth] = (int) frame->mb->class;
-                dnm[depth] = (int) createString(frame->mb->name);
+            for(; frame->mb != NULL; frame = frame->prev) {
+                *dcl++ = frame->mb->class;
+                *dnm++ = createString(frame->mb->name);
             }
         } while((frame = frame->prev)->prev != NULL);
 
-        INST_DATA(stack)[1] = (int) classes;
-        INST_DATA(stack)[2] = (int) names;
+        stk[0] = classes;
+        stk[1] = names;
     }
 
-    *ostack++ = (int) stack;
-    return ostack;
-}
-
-u4 *currentClassLoader(Class *class, MethodBlock *mb, u4 *ostack) {
-    *ostack++ = (u4) getCurrentClassLoader();
+    *ostack++ = (uintptr_t) stack;
     return ostack;
 }
 
 VMMethod vm_object[] = {
     {"getClass",                    getClass},
     {"clone",                       jamClone},
-    {"wait",                        wait},
+    {"wait",                        jamWait},
     {"notify",                      notify},
     {"notifyAll",                   notifyAll},
     {NULL,                          NULL}
@@ -928,7 +943,7 @@ VMMethod vm_runtime[] = {
     {"runFinalization",             runFinalization},
     {"exit",                        exitInternal},
     {"nativeLoad",                  nativeLoad},
-    {"nativeGetLibname",            nativeGetLibname},
+    {"mapLibraryName",              mapLibraryName},
     {NULL,                          NULL}
 };
 
@@ -938,6 +953,9 @@ VMMethod vm_class[] = {
     {"isInterface",                 isInterface},
     {"isPrimitive",                 isPrimitive},
     {"isArray",                     isArray},
+    {"isSynthetic",                 isSynthetic},
+    {"isAnnotation",                isAnnotation},
+    {"isEnum",                      isEnum},
     {"getSuperclass",               getSuperclass},
     {"getComponentType",            getComponentType},
     {"getName",                     getName},
@@ -950,8 +968,6 @@ VMMethod vm_class[] = {
     {"getClassLoader",              getClassLoader},
     {"getModifiers",                getClassModifiers},
     {"forName",                     forName},
-    {"loadArrayClass",              loadArrayClass},
-    {"initialize",                  initialize},
     {"throwException",              throwException},
     {"hasClassInitializer",         hasClassInitializer},
     {NULL,                          NULL}
@@ -1046,11 +1062,6 @@ VMMethod vm_access_controller[] = {
     {NULL,                          NULL}
 };
 
-VMMethod vm_object_input_stream[] = {
-    {"currentClassLoader",          currentClassLoader},
-    {NULL,                          NULL}
-};
-
 VMClass native_methods[] = {
     {"java/lang/VMClass",                vm_class},
     {"java/lang/VMObject",               vm_object},
@@ -1065,7 +1076,6 @@ VMClass native_methods[] = {
     {"java/lang/reflect/Constructor",    vm_reflect_constructor},
     {"java/security/VMAccessController", vm_access_controller},
     {"gnu/classpath/VMSystemProperties", vm_system_properties},
-    {"java/io/ObjectInputStream",        vm_object_input_stream},
     {"gnu/classpath/VMStackWalker",      vm_stack_walker},
     {NULL,                               NULL}
 };

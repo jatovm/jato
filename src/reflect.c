@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
@@ -31,9 +31,11 @@ static Class *class_array_class, *cons_array_class, *cons_reflect_class, *method
 static Class *method_reflect_class, *field_array_class, *field_reflect_class;
 static MethodBlock *cons_init_mb, *method_init_mb, *field_init_mb;
 static int cons_slot_offset, method_slot_offset, field_slot_offset;
+static int cons_class_offset, method_class_offset, field_class_offset;
 
 static int initReflection() {
     FieldBlock *cons_slot_fb, *mthd_slot_fb, *fld_slot_fb;
+    FieldBlock *cons_class_fb, *mthd_class_fb, *fld_class_fb;
 
     class_array_class = findArrayClass("[Ljava/lang/Class;");
     cons_array_class = findArrayClass("[Ljava/lang/reflect/Constructor;");
@@ -59,14 +61,21 @@ static int initReflection() {
     cons_slot_fb = findField(cons_reflect_class, "slot", "I");
     mthd_slot_fb = findField(method_reflect_class, "slot", "I");
     fld_slot_fb = findField(field_reflect_class, "slot", "I");
+    cons_class_fb = findField(cons_reflect_class, "declaringClass", "Ljava/lang/Class;");
+    mthd_class_fb = findField(method_reflect_class, "declaringClass", "Ljava/lang/Class;");
+    fld_class_fb = findField(field_reflect_class, "declaringClass", "Ljava/lang/Class;");
 
     if(!cons_init_mb || ! method_init_mb || !field_init_mb ||
-           !cons_slot_fb || !mthd_slot_fb || !fld_slot_fb)
+           !cons_slot_fb || !mthd_slot_fb || !fld_slot_fb ||
+           !cons_class_fb || !mthd_class_fb || !fld_class_fb)
         return FALSE;
 
     cons_slot_offset = cons_slot_fb->offset; 
     method_slot_offset = mthd_slot_fb->offset; 
     field_slot_offset = fld_slot_fb->offset; 
+    cons_class_offset = cons_class_fb->offset; 
+    method_class_offset = mthd_class_fb->offset; 
+    field_class_offset = fld_class_fb->offset; 
 
     return inited = TRUE;
 }
@@ -115,10 +124,10 @@ Object *convertSig2ClassArray(char **sig_pntr, Class *declaring_class) {
             while(*++sig != ';');
     }
 
-    if((array = allocArray(class_array_class, no_params, 4)) == NULL)
+    if((array = allocArray(class_array_class, no_params, sizeof(Class*))) == NULL)
         return NULL;
 
-    params = (Class**)&INST_DATA(array)[1];
+    params = ARRAY_DATA(array);
 
     *sig_pntr += 1;
     while(**sig_pntr != ')')
@@ -133,10 +142,10 @@ Object *getExceptionTypes(MethodBlock *mb) {
     Object *array;
     Class **excps;
 
-    if((array = allocArray(class_array_class, mb->throw_table_size, 4)) == NULL)
+    if((array = allocArray(class_array_class, mb->throw_table_size, sizeof(Class*))) == NULL)
         return NULL;
 
-    excps = (Class**)&INST_DATA(array)[1];
+    excps = ARRAY_DATA(array);
 
     for(i = 0; i < mb->throw_table_size; i++)
         if((excps[i] = resolveClass(mb->class, mb->throw_table[i], FALSE)) == NULL)
@@ -161,7 +170,8 @@ Object *createConstructorObject(MethodBlock *mb) {
         if((classes == NULL) || (exceps == NULL))
             return NULL;
 
-        executeMethod(reflect_ob, cons_init_mb, mb->class, classes, exceps, mb);
+        executeMethod(reflect_ob, cons_init_mb, mb->class, classes, exceps,
+                      mb - CLASS_CB(mb->class)->methods);
     }
 
     return reflect_ob;
@@ -182,9 +192,9 @@ Object *getClassConstructors(Class *class, int public) {
             count++;
     }
 
-    if((array = allocArray(cons_array_class, count, 4)) == NULL)
+    if((array = allocArray(cons_array_class, count, sizeof(Object*))) == NULL)
         return NULL;
-    cons = (Object**)&INST_DATA(array)[1];
+    cons = ARRAY_DATA(array);
 
     for(i = 0, j = 0; j < count; i++) {
         MethodBlock *mb = &cb->methods[i];
@@ -218,7 +228,8 @@ Object *createMethodObject(MethodBlock *mb) {
         if((classes == NULL) || (exceps == NULL) || (name == NULL) || (ret == NULL))
             return NULL;
 
-        executeMethod(reflect_ob, method_init_mb, mb->class, classes, exceps, ret, name, mb);
+        executeMethod(reflect_ob, method_init_mb, mb->class, classes, exceps, ret, name,
+                      mb - CLASS_CB(mb->class)->methods);
     }
 
     return reflect_ob;
@@ -240,9 +251,9 @@ Object *getClassMethods(Class *class, int public) {
             count++;
     }
 
-    if((array = allocArray(method_array_class, count, 4)) == NULL)
+    if((array = allocArray(method_array_class, count, sizeof(Object*))) == NULL)
         return NULL;
-    methods = (Object**)&INST_DATA(array)[1];
+    methods = ARRAY_DATA(array);
 
     for(i = 0, j = 0; j < count; i++) {
         MethodBlock *mb = &cb->methods[i];
@@ -274,7 +285,8 @@ Object *createFieldObject(FieldBlock *fb) {
         if((type == NULL) || (name == NULL))
             return NULL;
 
-        executeMethod(reflect_ob, field_init_mb, fb->class, type, name, fb);
+        executeMethod(reflect_ob, field_init_mb, fb->class, type, name,
+                      fb - CLASS_CB(fb->class)->fields);
     }
 
     return reflect_ob;
@@ -296,9 +308,9 @@ Object *getClassFields(Class *class, int public) {
             if(cb->fields[i].access_flags & ACC_PUBLIC)
                 count++;
 
-    if((array = allocArray(field_array_class, count, 4)) == NULL)
+    if((array = allocArray(field_array_class, count, sizeof(Object*))) == NULL)
         return NULL;
-    fields = (Object**)&INST_DATA(array)[1];
+    fields = ARRAY_DATA(array);
 
     for(i = 0, j = 0; j < count; i++) {
         FieldBlock *fb = &cb->fields[i];
@@ -318,16 +330,17 @@ Object *getClassInterfaces(Class *class) {
     if(!inited && !initReflection())
         return NULL;
 
-    if((array = allocArray(class_array_class, cb->interfaces_count, 4)) == NULL)
+    if((array = allocArray(class_array_class, cb->interfaces_count, sizeof(Class*))) == NULL)
         return NULL;
 
-    memcpy(&INST_DATA(array)[1], cb->interfaces, cb->interfaces_count * 4);
+    memcpy(ARRAY_DATA(array), cb->interfaces, cb->interfaces_count * sizeof(Class*));
     return array;
 }
 
 Object *getClassClasses(Class *class, int public) {
     ClassBlock *cb = CLASS_CB(class);
     int i, j, count = 0;
+    Class **classes;
     Object *array;
 
     if(!inited && !initReflection())
@@ -337,17 +350,18 @@ Object *getClassClasses(Class *class, int public) {
         Class *iclass;
         if((iclass = resolveClass(class, cb->inner_classes[i], FALSE)) == NULL)
             return NULL;
-        if(!public || (CLASS_CB(iclass)->access_flags & ACC_PUBLIC))
+        if(!public || (CLASS_CB(iclass)->inner_access_flags & ACC_PUBLIC))
             count++;
     }
 
-    if((array = allocArray(class_array_class, count, 4)) == NULL)
+    if((array = allocArray(class_array_class, count, sizeof(Class*))) == NULL)
         return NULL;
 
-    for(i = 0, j = 1; j <= count; i++) {
+    classes = ARRAY_DATA(array);
+    for(i = 0, j = 0; j < count; i++) {
         Class *iclass = resolveClass(class, cb->inner_classes[i], FALSE);
-        if(!public || (CLASS_CB(iclass)->access_flags & ACC_PUBLIC))
-            INST_DATA(array)[j++] = (u4)iclass;
+        if(!public || (CLASS_CB(iclass)->inner_access_flags & ACC_PUBLIC))
+            classes[j++] = iclass;
     }
 
     return array;
@@ -385,14 +399,14 @@ int getWrapperPrimTypeIndex(Object *arg) {
     return 0;
 }
 
-Object *createWrapperObject(Class *type, u4 *pntr) {
+Object *createWrapperObject(Class *type, uintptr_t *pntr) {
     static char *wrapper_suffix[] = {"Boolean", "Byte", "Character", "Short",
                                     "Integer", "Float", "Long", "Double"};
     char wrapper_name[20] = "java/lang/";
     ClassBlock *type_cb = CLASS_CB(type);
 
     if(IS_PRIMITIVE(type_cb)) {
-        int idx = type_cb->flags - CLASS_PRIM - 1;
+        int idx = type_cb->state - CLASS_PRIM - 1;
         if(idx == -1) /* void */
             return NULL;
         else {
@@ -412,7 +426,7 @@ Object *createWrapperObject(Class *type, u4 *pntr) {
         return (Object*)*pntr;
 }
 
-u4 *widenPrimitiveValue(int src_idx, int dest_idx, u4 *src, u4 *dest) {
+uintptr_t *widenPrimitiveValue(int src_idx, int dest_idx, uintptr_t *src, uintptr_t *dest) {
 
 #define err 0
 #define U4 1
@@ -470,37 +484,44 @@ illegal_arg:
     return NULL;
 }
 
-u4 *unwrapAndWidenObject(Class *type, Object *arg, u4 *pntr) {
+uintptr_t *unwrapAndWidenObject(Class *type, Object *arg, uintptr_t *pntr) {
     ClassBlock *type_cb = CLASS_CB(type);
 
     if(IS_PRIMITIVE(type_cb)) {
         int formal_idx = getPrimTypeIndex(type_cb);
         int actual_idx = getWrapperPrimTypeIndex(arg);
-        u4 *data = INST_DATA(arg);
+        uintptr_t *data = INST_DATA(arg);
 
         return widenPrimitiveValue(actual_idx, formal_idx, data, pntr);
     }
 
     if((arg == NULL) || isInstanceOf(type, arg->class)) {
-        *pntr++ = (u4) arg;
+        *pntr++ = (uintptr_t) arg;
         return pntr;
     }
 
     return NULL;
 }
 
-Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_types) {
-    Object **args = (Object**)(INST_DATA(arg_array)+1);
-    Class **types = (Class**)(INST_DATA(param_types)+1);
-    int args_len = arg_array ? *INST_DATA(arg_array) : 0;
-    int types_len = *INST_DATA(param_types);
+Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_types,
+               int check_access) {
+
+    Object **args = ARRAY_DATA(arg_array);
+    Class **types = ARRAY_DATA(param_types);
+    int args_len = arg_array ? ARRAY_LEN(arg_array) : 0;
+    int types_len = ARRAY_LEN(param_types);
 
     ExecEnv *ee = getExecEnv();
+    uintptr_t *sp;
     void *ret;
-    u4 *sp;
     int i;
 
     Object *excep;
+
+    if(check_access && !checkMethodAccess(mb, getCallerCallerClass())) {
+        signalException("java/lang/IllegalAccessException", "method is not accessible");
+        return NULL;
+    }
 
     if(args_len != types_len) {
         signalException("java/lang/IllegalArgumentException", "wrong number of args");
@@ -509,7 +530,7 @@ Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_typ
 
     CREATE_TOP_FRAME(ee, mb->class, mb, sp, ret);
 
-    if(ob) *sp++ = (u4)ob;
+    if(ob) *sp++ = (uintptr_t)ob;
 
     for(i = 0; i < args_len; i++)
         if((sp = unwrapAndWidenObject(*types++, *args++, sp)) == NULL) {
@@ -574,14 +595,16 @@ Object *createReflectFieldObject(FieldBlock *fb) {
 }
 
 MethodBlock *mbFromReflectObject(Object *reflect_ob) {
-    if(reflect_ob->class == cons_reflect_class)
-        return (MethodBlock*)INST_DATA(reflect_ob)[cons_slot_offset];
+    int slot = reflect_ob->class == cons_reflect_class ? cons_slot_offset : method_slot_offset;
+    int class = reflect_ob->class == cons_reflect_class ? cons_class_offset : method_class_offset;
+    Class *decl_class = (Class*)INST_DATA(reflect_ob)[class];
 
-    return (MethodBlock*)INST_DATA(reflect_ob)[method_slot_offset];
+    return &(CLASS_CB(decl_class)->methods[INST_DATA(reflect_ob)[slot]]);
 }
 
 FieldBlock *fbFromReflectObject(Object *reflect_ob) {
-    return (FieldBlock*)INST_DATA(reflect_ob)[field_slot_offset];
+    Class *decl_class = (Class*)INST_DATA(reflect_ob)[field_class_offset];
+    return &(CLASS_CB(decl_class)->fields[INST_DATA(reflect_ob)[field_slot_offset]]);
 }
 
 /* Needed for stack walking */

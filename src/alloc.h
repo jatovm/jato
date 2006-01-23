@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,23 +15,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#define HEADER_SIZE		sizeof(uintptr_t)
 #define LOG_OBJECT_GRAIN	3
-#define HEADER_SIZE		4
 #define FLC_BIT			2
 
-#define clear_flc_bit(o) { \
-	unsigned int *hdr = (unsigned int*)(((char*)o)-HEADER_SIZE); \
-        *hdr  &= ~FLC_BIT; \
-	MBARRIER(); \
+#define clearFlcBit(obj) {                                             \
+	uintptr_t *hdr = (uintptr_t*)(((char*)obj)-HEADER_SIZE);       \
+        *hdr &= ~FLC_BIT;                                              \
+	MBARRIER();                                                    \
 }
 
-#define set_flc_bit(o) { \
-	unsigned int *hdr = (unsigned int*)(((char*)o)-HEADER_SIZE); \
-        *hdr  |= FLC_BIT; \
-	MBARRIER(); \
+#define setFlcBit(obj) {                                               \
+	uintptr_t *hdr = (uintptr_t*)(((char*)obj)-HEADER_SIZE);       \
+        *hdr |= FLC_BIT;                                               \
+	MBARRIER();                                                    \
 }
 
-#define test_flc_bit(o) *(unsigned int*)(((char*)o)-HEADER_SIZE) & FLC_BIT
+#define testFlcBit(obj) *(uintptr_t*)(((char*)obj)-HEADER_SIZE) & FLC_BIT

@@ -101,7 +101,7 @@ final class VMRuntime
      *
      * @see #finalize()
      */
-    static void runFinalization() {}
+    static native void runFinalization();
 
     /**
      * Run finalization on all finalizable Objects (even live ones). This
@@ -162,12 +162,7 @@ final class VMRuntime
      * @param libname the short version of the library name
      * @return the full filename
      */
-    static native String nativeGetLibname(String pathname, String libname);
-
-    static String mapLibraryName(String libname)
-    {
-        return nativeGetLibname("", libname);
-    }
+    static native String mapLibraryName(String libname);
 
     /**
      * Execute a process. The command line has already been tokenized, and

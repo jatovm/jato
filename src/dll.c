@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
@@ -25,7 +25,6 @@
 #include "jam.h"
 
 #ifndef NO_JNI
-#include <dlfcn.h>
 #include "hash.h"
 #include "jni.h"
 #include "natives.h"
@@ -35,7 +34,8 @@
 static int verbose;
 
 extern int nativeExtraArg(MethodBlock *mb);
-extern u4 *callJNIMethod(void *env, Class *class, char *sig, int extra, u4 *ostack, unsigned char *native_func, int args);
+extern uintptr_t *callJNIMethod(void *env, Class *class, char *sig, int extra,
+                                uintptr_t *ostack, unsigned char *native_func, int args);
 extern struct _JNINativeInterface Jam_JNINativeInterface;
 extern int initJNILrefs();
 extern JavaVM invokeIntf; 
@@ -52,7 +52,7 @@ void *lookupLoadedDlls(MethodBlock *mb);
 #define TRACE(x)
 #endif
 
-char *mangleString(unsigned char *utf8) {
+char *mangleString(char *utf8) {
     int len = utf8Len(utf8);
     unsigned short *unicode = (unsigned short*) sysMalloc(len * 2);
     char *mangled, *mngldPtr;
@@ -202,14 +202,14 @@ void *resolveNativeMethod(MethodBlock *mb) {
     return func;
 }
 
-u4 *resolveNativeWrapper(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *resolveNativeWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     void *func = resolveNativeMethod(mb);
 
     if(func == NULL) {
         signalException("java/lang/UnsatisfiedLinkError", mb->name);
         return ostack;
     }
-    return (*(u4 *(*)(Class*, MethodBlock*, u4*))func)(class, mb, ostack);
+    return (*(uintptr_t *(*)(Class*, MethodBlock*, uintptr_t*))func)(class, mb, ostack);
 }
 
 void initialiseDll(int verbosedll) {
@@ -252,14 +252,14 @@ int resolveDll(char *name) {
 
     if(dll == NULL) {
         DllEntry *dll2;
-        void *onload, *handle = dlopen(name, RTLD_LAZY);
+        void *onload, *handle = nativeLibOpen(name);
 
         if(handle == NULL)
             return 0;
 
         TRACE(("<DLL: Successfully opened library %s>\n",name));
 
-        if((onload = dlsym(handle, "JNI_OnLoad")) != NULL) {
+        if((onload = nativeLibSym(handle, "JNI_OnLoad")) != NULL) {
             int ver = (*(jint (*)(JavaVM*, void*))onload)(&invokeIntf, NULL);
 
             if(ver != JNI_VERSION_1_2 && ver != JNI_VERSION_1_4) {
@@ -286,33 +286,25 @@ int resolveDll(char *name) {
 }
 
 char *getDllPath() {
-    char *env = getenv("LD_LIBRARY_PATH");
-    char *cp_path = CLASSPATH_INSTALL_DIR"/lib/classpath";
-
-    if(env) {
-        char *buff = sysMalloc(strlen(env) + strlen(cp_path) + 2);
-
-        sprintf(buff, "%s:%s", cp_path, env);
-        return buff;
-    }
-
-    return cp_path;
+    char *env = nativeLibPath();
+    return env ? env : "";
 }
 
-char *getDllName(char *path, char *name) {
-   char *buff = sysMalloc(strlen(path) + strlen(name) + 8);
+char *getBootDllPath() {
+    return CLASSPATH_INSTALL_DIR"/lib/classpath";
+}
 
-   sprintf(buff, "%s/lib%s.so", path, name);
-   return buff;
+char *getDllName(char *name) {
+   return nativeLibMapName(name);
 }
 
 void *lookupLoadedDlls0(char *name) {
     TRACE(("<DLL: Looking up %s in loaded DLL's>\n", name));
 
-#define ITERATE(ptr)                                   \
-{                                                      \
-    void *sym = dlsym(((DllEntry*)ptr)->handle, name); \
-    if(sym) return sym;                                \
+#define ITERATE(ptr)                                          \
+{                                                             \
+    void *sym = nativeLibSym(((DllEntry*)ptr)->handle, name); \
+    if(sym) return sym;                                       \
 }
 
     hashIterate(hash_table);
@@ -321,7 +313,7 @@ void *lookupLoadedDlls0(char *name) {
 
 static void *env = &Jam_JNINativeInterface;
 
-u4 *callJNIWrapper(Class *class, MethodBlock *mb, u4 *ostack) {
+uintptr_t *callJNIWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     TRACE(("<DLL: Calling JNI method %s.%s%s>\n", CLASS_CB(class)->name, mb->name, mb->type));
 
     if(!initJNILrefs())

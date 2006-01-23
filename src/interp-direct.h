@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #ifndef THREADED
@@ -109,13 +109,18 @@ label(opcode, level)
     pc++;                               \
     DISPATCH_FIRST
 
+#ifdef USE_CACHE
 #define DEF_OPC_RW(op)                  \
     DEF_OPC(op, 0)                      \
     DEF_OPC(op, 1)                      \
     DEF_OPC(op, 2)
+#else
+#define DEF_OPC_RW(op)                  \
+    DEF_OPC(op, 0)
+#endif
 
 #define PREPARE_MB(mb)                  \
-    if((unsigned int)mb->code & 0x3)    \
+    if((uintptr_t)mb->code & 0x3)       \
         prepare(mb, handlers)
 
 #define ARRAY_TYPE(pc)        pc->operand.i

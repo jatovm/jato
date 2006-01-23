@@ -1,15 +1,16 @@
-JamVM 1.3.0
+JamVM 1.4.2
 ===========
 
-Welcome to the thirteenth release of JamVM!
+Welcome to the nineteenth release of JamVM!
 
 JamVM is a new Java Virtual Machine which conforms to the JVM
 specification version 2 (blue book).  In comparison to most other
 VM's (free and commercial) it is extremely small, with a stripped
-executable on PowerPC of only ~135K, and Intel 100K.  However, unlike
+executable on PowerPC of only ~150K, and Intel 110K.  However, unlike
 other small VMs (e.g. KVM) it is designed to support the full
-specification, and includes support for object finalisation, the
-Java Native Interface (JNI) and the Reflection API.
+specification, and includes support for object finalisation, 
+soft/weak/phantom references, the Java Native Interface (JNI) and
+the Reflection API.
 
 Supported Architectures
 =======================
@@ -18,26 +19,46 @@ JamVM currently only includes an interpreter (keeps it small).  This
 means it is easy to port to new architectures as most of the code
 is written in C.  So far, JamVM has been built and tested on :
 
-- PowerPC: my main platform, so this is the most tested.
-        Supported platforms :
-            - LinuxPPC
-            - Mac OS X/Darwin : built and tested on Mac OS X 10.3
-              (Panther) G3 and G4 systems.  It should also work
-              on 10.2, but you may need to install Fink.
+Linux
+-----
 
-- i386: built and tested on i586, i686 (Pentium III), Pentium IV.
-        At least an i486 is needed because JamVM uses the cmpxchg
-        instruction, which was first introduced on the i486.
+- PowerPC: my main platform, so this is the most tested.  Built
+           and tested on G3 and G4 systems.
+
+- i386: built and tested on i586, i686 (Pentium III), Pentium 4
+        Athlon.  At least an i486 is needed because JamVM uses
+        the cmpxchg instruction, which was first introduced on
+        the i486.
 
 - ARM: ported and tested on the iPAQ running Linux (3950, with xscale
        PXA250 processor, though it should work on StrongARM).  Little
        and Big Endian machines are supported, and soft/kernel
        FP emulation.
 
-JamVM has only been built and tested on Linux (ARM/i386) and Linux and
-Mac OS X (PowerPC).  It may work on other Unix systems with the above
-processors "as is" as long as they support Posix threads, but I haven't
-tested.
+- AMD64: built and tested on an AMD Athlon 64.  It should also
+         work on Pentium 4 supporting EM64T technology (but I
+         haven't tested).
+
+Mac OS X/Darwin
+---------------
+
+- PowerPC: built and tested on Mac OS X 10.3 (Panther) and 10.4
+           (Tiger) on G3, G4 and G5 systems.  It should also work
+           on 10.2, but you may need to install Fink.  Note, gcc-3.3
+           gives better performance than gcc-4.0.
+
+- PowerPC64 (a.k.a G5):
+           to build a 64-bit executable CFLAGS must include
+           the flag -arch ppc64.  If no option is given a 32-bit
+           executable is built by default.
+
+BSD Variants
+------------
+
+OpenBSD  : i386, powerpc, ARM, AMD64 (x86_64).
+FreeBSD  : i386, powerpc, ARM, AMD64 (x86_64).
+KFreeBSD : i386
+
 
 Class Libraries
 ===============
@@ -45,14 +66,14 @@ Class Libraries
 JamVM is designed to use the GNU classpath Java class library (see
 http://www.gnu.org/software/classpath).  A number of classes are
 reference classes which must be modified for a particular VM.  These are
-provided and built along with JamVM (see INSTALL).  JamVM 1.3.0 works with
-Classpath version 0.14 (the latest development snapshot).  It should
+provided and built along with JamVM (see INSTALL).  JamVM 1.4.2 works with
+Classpath version 0.20 (the latest development snapshot).  It should
 also work with the latest version direct from CVS (but check the
 Classpath mailing lists for possible patches).  Later snapshots of Classpath
 may also work, if no modifications have been made to the VM interface.
 
-Note, JamVM 1.3.0 will not work with versions of Classpath earlier than
-0.14, nor will it work with the class library from Sun or IBM's Virtual
+Note, JamVM 1.4.1 will not work with versions of Classpath earlier than
+0.18, nor will it work with the class library from Sun or IBM's Virtual
 Machines.
 
 Building and Installing
@@ -91,8 +112,7 @@ Testing
 Currently JamVM has been used to run fairly major command-line programs
 including Javac, SPECJvm 98 benchmark suite, jBYTEmark and Mauve.  It has
 also been successfully used with Jetty (a Java-based web server and servlet
-container).
-
+container) and Eclipse.
 
 FEEDBACK
 ========
@@ -100,8 +120,6 @@ FEEDBACK
 I welcome feedback of any kind, e.g. bug reports, suggestions, etc.  I'm always
 interested to hear how and if people are using JamVM so even if you don't have
 a problem drop me an email (email address at the bottom).
-
-
 
 JamVM "Features"
 ================
@@ -134,6 +152,11 @@ particular order, is given below.
 - Full object finalisation support within the garbage collector
   (with finaliser thread)
 
+- Full GC support for Soft, Weak and Phantom References.  References
+  are enqueued using a seperate thread (the reference handler)
+
+- Full GC support for class-unloading
+
 - Garbage collector can run synchronously or asynchronously within its
   own thread
 
@@ -153,4 +176,4 @@ particular order, is given below.
 That's it!
 
 Robert Lougher <rob@lougher.demon.co.uk>
-28th March 2005.
+22nd January 2006.

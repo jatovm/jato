@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
 #include <string.h>
 #include "jam.h"
-#include "arch.h"
 
 MethodBlock *findMethod(Class *class, char *methodname, char *type) {
    ClassBlock *cb = CLASS_CB(class);
@@ -35,8 +34,9 @@ MethodBlock *findMethod(Class *class, char *methodname, char *type) {
    return NULL;
 }
 
-/* A class can't have two fields with the same name but different types - 
-   so we give up if we find a field with the right name but wrong type...
+/* As a Java program can't have two fields with the same name but different types,
+   we used to give up if we found a field with the right name but wrong type.
+   However, obfuscators rename fields, breaking this optimisation.
 */
 FieldBlock *findField(Class *class, char *fieldname, char *type) {
     ClassBlock *cb = CLASS_CB(class);
@@ -44,13 +44,8 @@ FieldBlock *findField(Class *class, char *fieldname, char *type) {
     int i;
 
     for(i = 0; i < cb->fields_count; i++,fb++)
-        if(strcmp(fb->name, fieldname) == 0) {
-           if(strcmp(fb->type, type) == 0)
-               return fb;
-           else
-               return NULL;
-        }
-    printf("could not find field '%s' in class '%s'\n", fieldname, cb->name);
+        if(strcmp(fb->name, fieldname) == 0 && (strcmp(fb->type, type) == 0))
+            return fb;
 
     return NULL;
 }
@@ -119,9 +114,14 @@ retry:
             if(resolved_class == NULL)
                 return NULL;
 
+            if(!checkClassAccess(resolved_class, class)) {
+                signalException("java/lang/IllegalAccessException", "class is not accessible");
+                return NULL;
+            }
+
             CP_TYPE(cp, cp_index) = CONSTANT_Locked;
             MBARRIER();
-            CP_INFO(cp, cp_index) = (u4)resolved_class;
+            CP_INFO(cp, cp_index) = (uintptr_t)resolved_class;
             MBARRIER();
             CP_TYPE(cp, cp_index) = CONSTANT_Resolved;
 
@@ -180,11 +180,16 @@ retry:
                     return NULL;
                 }
 
+                if(!checkMethodAccess(mb, class)) {
+                    signalException("java/lang/IllegalAccessException", "method is not accessible");
+                    return NULL;
+                }
+
                 initClass(mb->class);
 
                 CP_TYPE(cp, cp_index) = CONSTANT_Locked;
                 MBARRIER();
-                CP_INFO(cp, cp_index) = (u4)mb;
+                CP_INFO(cp, cp_index) = (uintptr_t)mb;
                 MBARRIER();
                 CP_TYPE(cp, cp_index) = CONSTANT_Resolved;
             } else
@@ -244,7 +249,7 @@ retry:
             if(mb) {
                 CP_TYPE(cp, cp_index) = CONSTANT_Locked;
                 MBARRIER();
-                CP_INFO(cp, cp_index) = (u4)mb;
+                CP_INFO(cp, cp_index) = (uintptr_t)mb;
                 MBARRIER();
                 CP_TYPE(cp, cp_index) = CONSTANT_Resolved;
             } else
@@ -289,11 +294,16 @@ retry:
             fb = lookupField(resolved_class, fieldname, fieldtype);
 
             if(fb) {
+                if(!checkFieldAccess(fb, class)) {
+                    signalException("java/lang/IllegalAccessException", "field is not accessible");
+                    return NULL;
+                }
+
                 initClass(fb->class);
 
                 CP_TYPE(cp, cp_index) = CONSTANT_Locked;
                 MBARRIER();
-                CP_INFO(cp, cp_index) = (u4)fb;
+                CP_INFO(cp, cp_index) = (uintptr_t)fb;
                 MBARRIER();
                 CP_TYPE(cp, cp_index) = CONSTANT_Resolved;
             } else
@@ -306,7 +316,7 @@ retry:
     return fb;
 }
 
-u4 resolveSingleConstant(Class *class, int cp_index) {
+uintptr_t resolveSingleConstant(Class *class, int cp_index) {
     ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
 
 retry:
@@ -330,7 +340,7 @@ retry:
             if(string) {
                 CP_TYPE(cp, cp_index) = CONSTANT_Locked;
                 MBARRIER();
-                CP_INFO(cp, cp_index) = (u4)findInternedString(string);
+                CP_INFO(cp, cp_index) = (uintptr_t)findInternedString(string);
                 MBARRIER();
                 CP_TYPE(cp, cp_index) = CONSTANT_Resolved;
             }

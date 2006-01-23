@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,12 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #ifndef CREATING
 #include <pthread.h>
 #include <setjmp.h>
+#include <stdlib.h>
 
 /* Thread states */
 
@@ -36,6 +37,11 @@
 #define NORM_PRIORITY  5
 #define MAX_PRIORITY  10
 
+/* Enable/Disable suspend modes */
+
+#define SUSP_BLOCKING 1
+#define SUSP_CRITICAL 2
+
 typedef struct thread Thread;
 
 typedef struct monitor {
@@ -46,7 +52,7 @@ typedef struct monitor {
     int waiting;
     int notifying;
     int interrupting;
-    int entering;
+    uintptr_t entering;
     struct monitor *next;
     Object *obj;
 } Monitor;
@@ -88,6 +94,7 @@ extern void createVMThread(char *name, void (*start)(Thread*));
 
 extern void disableSuspend0(Thread *thread, void *stack_top);
 extern void enableSuspend(Thread *thread);
+extern void fastEnableSuspend(Thread *thread);
 
 #define disableSuspend(thread)          \
 {                                       \
@@ -95,6 +102,12 @@ extern void enableSuspend(Thread *thread);
     env = alloca(sizeof(sigjmp_buf));   \
     sigsetjmp(*env, FALSE);             \
     disableSuspend0(thread, (void*)env);\
+}
+
+#define fastDisableSuspend(thread)      \
+{                                       \
+    thread->blocking = SUSP_CRITICAL;   \
+    MBARRIER();                         \
 }
 
 typedef struct {
@@ -116,15 +129,36 @@ typedef pthread_mutex_t VMLock;
     self->state = RUNNING;       \
 }
 
+#define tryLockVMLock(lock, self) \
+    (pthread_mutex_trylock(&lock) == 0)
+
 #define unlockVMLock(lock, self) if(self) pthread_mutex_unlock(&lock)
 
 #define lockVMWaitLock(wait_lock, self) lockVMLock(wait_lock.lock, self)
 #define unlockVMWaitLock(wait_lock, self) unlockVMLock(wait_lock.lock, self)
-#define waitVMWaitLock(wait_lock, self) {              \
-    self->state = WAITING;                             \
-    pthread_cond_wait(&wait_lock.cv, &wait_lock.lock); \
-    self->state = RUNNING;                             \
+
+#define waitVMWaitLock(wait_lock, self) {                        \
+    self->state = WAITING;                                       \
+    pthread_cond_wait(&wait_lock.cv, &wait_lock.lock);           \
+    self->state = RUNNING;                                       \
 }
+
+#define timedWaitVMWaitLock(wait_lock, self, ms) {               \
+    struct timeval tv;                                           \
+    struct timespec ts;                                          \
+    gettimeofday(&tv, 0);                                        \
+    ts.tv_sec = tv.tv_sec + ms/1000;                             \
+    ts.tv_nsec = (tv.tv_usec + ((ms%1000)*1000))*1000;           \
+    if(ts.tv_nsec > 999999999L) {                                \
+        ts.tv_sec++;                                             \
+        ts.tv_nsec -= 1000000000L;                               \
+    }                                                            \
+    self->state = WAITING;                                       \
+    pthread_cond_timedwait(&wait_lock.cv, &wait_lock.lock, &ts); \
+    self->state = RUNNING;                                       \
+}
+
 #define notifyVMWaitLock(wait_lock, self) pthread_cond_signal(&wait_lock.cv)
 #define notifyAllVMWaitLock(wait_lock, self) pthread_cond_broadcast(&wait_lock.cv)
 #endif
+

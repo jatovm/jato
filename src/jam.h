@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,10 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdarg.h>
+#include <inttypes.h>
+
+/* Architecture dependent definitions */
+#include "arch.h"
+
+/* Configure options */
+#include "config.h"
 
 #ifndef TRUE
 #define         TRUE    1
@@ -282,6 +289,9 @@
 #define ACC_NATIVE              0x0100
 #define ACC_INTERFACE           0x0200
 #define ACC_ABSTRACT            0x0400
+#define ACC_SYNTHETIC           0x1000
+#define ACC_ANNOTATION          0x2000
+#define ACC_ENUM                0x4000
 #define ACC_MIRANDA             0x0800
 
 #define T_BOOLEAN               4
@@ -293,21 +303,34 @@
 #define T_INT                   10
 #define T_LONG                  11
 
-#define CLASS_LOADED            0
-#define CLASS_LINKED            1
-#define CLASS_BAD               2
-#define CLASS_INITING           3
-#define CLASS_INITED            4
+/* Class states */
 
-#define CLASS_ARRAY             5
-#define CLASS_PRIM              6
+#define CLASS_LOADED            1
+#define CLASS_LINKED            2
+#define CLASS_BAD               3
+#define CLASS_INITING           4
+#define CLASS_INITED            5
+
+#define CLASS_ARRAY             6
+#define CLASS_PRIM              7
+
+/* Class flags */
+
+#define REFERENCE               1
+#define SOFT_REFERENCE          2
+#define WEAK_REFERENCE          4
+#define PHANTOM_REFERENCE       8
+#define FINALIZED               16 
+#define CLASS_LOADER            32
+#define CLASS_CLASH             64
+#define VMTHROWABLE             128
 
 typedef unsigned char           u1;
 typedef unsigned short          u2;
 typedef unsigned int            u4;
 typedef unsigned long long      u8;
 
-typedef u8 ConstantPoolEntry;
+typedef uintptr_t ConstantPoolEntry;
 
 typedef struct constant_pool {
     volatile u1 *type;
@@ -327,18 +350,18 @@ typedef struct line_no_table_entry {
 } LineNoTableEntry;
 
 typedef struct class {
-   unsigned int lock;
+   uintptr_t lock;
    struct class *class;
 } Class;
 
 typedef struct object {
-   unsigned int lock;
+   uintptr_t lock;
    struct class *class;
 } Object;
 
 #ifdef DIRECT
 typedef union ins_operand {
-    u4 u;
+    uintptr_t u;
     int i;
     struct {
         signed short i1;
@@ -358,7 +381,7 @@ typedef union ins_operand {
 
 typedef struct instruction {
 #ifdef DIRECT_DEBUG
-    char opcode;
+    unsigned char opcode;
     char cache_depth;
     short bytecode_pc;
 #endif
@@ -384,9 +407,9 @@ typedef struct lookup_table {
     LookupEntry *entries;
 } LookupTable;
 
-typedef Instruction* CodePntr;
+typedef Instruction *CodePntr;
 #else
-typedef unsigned char* CodePntr;
+typedef unsigned char *CodePntr;
 #endif
 
 typedef struct methodblock {
@@ -416,7 +439,7 @@ typedef struct fieldblock {
    char *type;
    u2 access_flags;
    u2 constant;
-   u4 static_value;
+   uintptr_t static_value;
    u4 offset;
 } FieldBlock;
 
@@ -425,16 +448,22 @@ typedef struct itable_entry {
    int *offsets;
 } ITableEntry;
 
+typedef struct refs_offsets_entry {
+    int start;
+    int end;
+} RefsOffsetsEntry;
+
 #define CLASS_PAD_SIZE 4
 
 typedef struct classblock {
-   int pad[CLASS_PAD_SIZE];
+   uintptr_t pad[CLASS_PAD_SIZE];
    char *name;
    char *super_name;
    char *source_file_name;
    Class *super;
+   u1 state;
+   u1 flags;
    u2 access_flags;
-   u2 flags;
    u2 interfaces_count;
    u2 fields_count;
    u2 methods_count;
@@ -448,23 +477,23 @@ typedef struct classblock {
    MethodBlock **method_table;
    int imethod_table_size;
    ITableEntry *imethod_table;
-   MethodBlock *finalizer;
    Class *element_class;
    int initing_tid;
    int dim;
    Object *class_loader;
    u2 declaring_class;
+   u2 inner_access_flags;
    u2 inner_class_count;
    u2 *inner_classes;
-   Object **initiating_loaders;
-   int init_loaders_count;
+   int refs_offsets_size;
+   RefsOffsetsEntry *refs_offsets_table;
 } ClassBlock;
 
 typedef struct frame {
    MethodBlock *mb;
    CodePntr last_pc;
-   u4 *lvars;
-   u4 *ostack;
+   uintptr_t *lvars;
+   uintptr_t *ostack;
    struct frame *prev;
 } Frame;
 
@@ -472,7 +501,7 @@ typedef struct jni_frame {
    MethodBlock *mb;
    Object **next_ref;
    Object **lrefs;
-   u4 *ostack;
+   uintptr_t *ostack;
    struct frame *prev;
 } JNIFrame;
 
@@ -492,13 +521,30 @@ typedef struct prop {
 } Property;
 
 #define CLASS_CB(classRef)              ((ClassBlock*)(classRef+1))
-#define INST_DATA(objectRef)            ((u4*)(objectRef+1))
+#define INST_DATA(objectRef)            ((uintptr_t*)(objectRef+1))
+
+#define ARRAY_DATA(arrayRef)            ((void*)(((u4*)(arrayRef+1))+1))
+#define ARRAY_LEN(arrayRef)             *(u4*)(arrayRef+1)
 
 #define IS_CLASS(object)                (!object->class || (object->class == java_lang_Class))
 
 #define IS_INTERFACE(cb)                (cb->access_flags & ACC_INTERFACE)
-#define IS_ARRAY(cb)                    (cb->flags == CLASS_ARRAY)
-#define IS_PRIMITIVE(cb)                (cb->flags >= CLASS_PRIM)
+#define IS_SYNTHETIC(cb)                (cb->access_flags & ACC_SYNTHETIC)
+#define IS_ANNOTATION(cb)               (cb->access_flags & ACC_ANNOTATION)
+#define IS_ENUM(cb)                     (cb->access_flags & ACC_ENUM)
+#define IS_ARRAY(cb)                    (cb->state == CLASS_ARRAY)
+#define IS_PRIMITIVE(cb)                (cb->state >= CLASS_PRIM)
+
+#define IS_FINALIZED(cb)                (cb->flags & FINALIZED)
+#define IS_REFERENCE(cb)		(cb->flags & REFERENCE)
+#define IS_SOFT_REFERENCE(cb)		(cb->flags & SOFT_REFERENCE)
+#define IS_WEAK_REFERENCE(cb)		(cb->flags & WEAK_REFERENCE)
+#define IS_PHANTOM_REFERENCE(cb)	(cb->flags & PHANTOM_REFERENCE)
+#define IS_CLASS_LOADER(cb)		(cb->flags & CLASS_LOADER)
+#define IS_CLASS_DUP(cb)		(cb->flags & CLASS_CLASH)
+#define IS_VMTHROWABLE(cb)		(cb->flags & VMTHROWABLE)
+
+#define IS_SPECIAL(cb)			(cb->flags & (REFERENCE | CLASS_LOADER))
 
 /* Macros for accessing constant pool entries */
 
@@ -531,10 +577,14 @@ typedef struct prop {
 #define MIN_STACK 2*KB
 
 /* default minimum size of object heap */
+#ifndef DEFAULT_MIN_HEAP
 #define DEFAULT_MIN_HEAP 2*MB
+#endif
 
 /* default maximum size of object heap */
+#ifndef DEFAULT_MAX_HEAP
 #define DEFAULT_MAX_HEAP 128*MB
+#endif
 
 /* default size of the Java stack */
 #define DEFAULT_STACK 64*KB
@@ -547,22 +597,23 @@ typedef struct prop {
 
 /* Alloc */
 
-extern void initialiseAlloc(int min, int max, int verbose);
+extern void initialiseAlloc(unsigned long min, unsigned long max, int verbose);
 extern void initialiseGC(int noasyncgc);
 extern Class *allocClass();
 extern Object *allocObject(Class *class);
 extern Object *allocTypeArray(int type, int size);
 extern Object *allocArray(Class *class, int size, int el_size);
-extern Object *allocMultiArray(Class *array_class, int dim, int *count);
+extern Object *allocMultiArray(Class *array_class, int dim, intptr_t *count);
 extern Object *cloneObject(Object *ob);
-extern void markObject(Object *ob);
+extern void markRoot(Object *ob);
+extern void markObject(Object *ob, int mark, int mark_soft_refs);
 
-extern int gc0();
 extern void gc1();
+extern void runFinalizers();
 
-extern int freeHeapMem();
-extern int totalHeapMem();
-extern int maxHeapMem();
+extern unsigned long freeHeapMem();
+extern unsigned long totalHeapMem();
+extern unsigned long maxHeapMem();
 
 extern void *sysMalloc(int n);
 extern void *sysRealloc(void *ptr, int n);
@@ -583,7 +634,6 @@ extern Class *findPrimitiveClass(char);
 extern Class *findArrayClassFromClassLoader(char *, Object *);
 
 extern Object *getSystemClassLoader();
-extern Object *getCurrentClassLoader();
 
 extern int bootClassPathSize();
 extern Object *bootClassPathResource(char *filename, int index);
@@ -595,6 +645,9 @@ extern Object *bootClassPathResource(char *filename, int index);
 extern Class *findClassFromClassLoader(char *, Object *);
 #define findClassFromClass(name, class) \
                     findClassFromClassLoader(name, CLASS_CB(class)->class_loader)
+
+extern void freeClassData(Class *class);
+extern void freeClassLoaderData(Object *class_loader);
 
 extern char *getClassPath();
 extern char *getBootClassPath();
@@ -611,11 +664,12 @@ extern Class *resolveClass(Class *class, int index, int init);
 extern MethodBlock *resolveMethod(Class *class, int index);
 extern MethodBlock *resolveInterfaceMethod(Class *class, int index);
 extern FieldBlock *resolveField(Class *class, int index);
-extern u4 resolveSingleConstant(Class *class, int index);
+extern uintptr_t resolveSingleConstant(Class *class, int index);
 extern int peekIsFieldLong(Class *class, int index);
 
 /* cast */
 
+extern char isSubClassOf(Class *class, Class *test);
 extern char isInstanceOf(Class *class, Class *test);
 extern char arrayStoreCheck(Class *class, Class *test);
 
@@ -641,6 +695,7 @@ extern void printException();
 extern CodePntr findCatchBlock(Class *exception);
 extern Object *setStackTrace();
 extern Object *convertStackTrace(Object *vmthrwble);
+extern int mapPC2LineNo(MethodBlock *mb, CodePntr pc_pntr);
 extern void initialiseException();
 
 #define exceptionOccured0(ee) \
@@ -651,35 +706,35 @@ extern void initialiseException();
 
 /* interp */
 
-extern u4 *executeJava();
+extern uintptr_t *executeJava();
+extern void initialiseInterpreter();
 
 /* String */
 
 extern Object *findInternedString(Object *string);
-extern Object *createString(unsigned char *utf8);
-extern Object *createStringFromUnicode(short *unicode, int len);
+extern Object *createString(char *utf8);
+extern Object *createStringFromUnicode(unsigned short *unicode, int len);
 extern char *String2Cstr(Object *string);
 extern int getStringLen(Object *string);
-extern short *getStringChars(Object *string);
+extern unsigned short *getStringChars(Object *string);
 extern Object *getStringCharsArray(Object *string);
 extern int getStringUtf8Len(Object *string);
 extern char *String2Utf8(Object *string);
 extern char *StringRegion2Utf8(Object *string, int start, int len, char *utf8);
 extern void initialiseString();
 
-#define Cstr2String(cstr) \
-    createString((unsigned char *)cstr)
+#define Cstr2String(cstr) createString(cstr)
 
 /* Utf8 */
 
-extern int utf8Len(unsigned char *utf8);
-extern int utf8Hash(unsigned char *utf8);
-extern int utf8Comp(unsigned char *utf81, unsigned char *utf82);
-extern void convertUtf8(unsigned char *utf8, short *buff);
-extern unsigned char *findUtf8String(unsigned char *string);
-extern int utf8CharLen(short *unicode, int len);
-extern char *unicode2Utf8(short *unicode, int len, char *utf8);
-extern unsigned char *slash2dots(unsigned char *utf8);
+extern int utf8Len(char *utf8);
+extern int utf8Hash(char *utf8);
+extern int utf8Comp(char *utf81, char *utf82);
+extern void convertUtf8(char *utf8, unsigned short *buff);
+extern char *findUtf8String(char *string);
+extern int utf8CharLen(unsigned short *unicode, int len);
+extern char *unicode2Utf8(unsigned short *unicode, int len, char *utf8);
+extern char *slash2dots(char *utf8);
 extern void initialiseUtf8();
 
 /* Dll */
@@ -687,10 +742,18 @@ extern void initialiseUtf8();
 extern void *resolveNativeMethod(MethodBlock *mb);
 extern int resolveDll(char *name);
 extern char *getDllPath();
-extern char *getDllName(char *path, char *name);
+extern char *getBootDllPath();
+extern char *getDllName(char *name);
 extern void initialiseDll(int verbose);
 
-extern u4 *resolveNativeWrapper(Class *class, MethodBlock *mb, u4 *ostack);
+extern uintptr_t *resolveNativeWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack);
+
+/* Dll OS */
+
+extern char *nativeLibPath();
+extern void *nativeLibOpen(char *path);
+extern char *nativeLibMapName(char *name);
+extern void *nativeLibSym(void *handle, char *symbol);
 
 /* Threading */
 
@@ -715,10 +778,11 @@ extern Object *getClassInterfaces(Class *class);
 extern Object *getClassClasses(Class *class, int public);
 extern Class *getDeclaringClass(Class *class);
 
-extern Object *createWrapperObject(Class *type, u4 *pntr);
-extern u4 *widenPrimitiveValue(int src_idx, int dest_idx, u4 *src, u4 *dest);
-extern u4 *unwrapAndWidenObject(Class *type, Object *arg, u4 *pntr);
-extern Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_types);
+extern Object *createWrapperObject(Class *type, uintptr_t *pntr);
+extern uintptr_t *widenPrimitiveValue(int src_idx, int dest_idx, uintptr_t *src, uintptr_t *dest);
+extern uintptr_t *unwrapAndWidenObject(Class *type, Object *arg, uintptr_t *pntr);
+extern Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_types,
+                      int check_access);
 
 extern MethodBlock *mbFromReflectObject(Object *reflect_ob);
 extern FieldBlock *fbFromReflectObject(Object *reflect_ob);
@@ -728,7 +792,7 @@ extern Object *createReflectMethodObject(MethodBlock *mb);
 extern Object *createReflectFieldObject(FieldBlock *fb);
 extern Class *getReflectMethodClass();
 
-#define getPrimTypeIndex(cb) (cb->flags - CLASS_PRIM)
+#define getPrimTypeIndex(cb) (cb->state - CLASS_PRIM)
 
 /* jni */
 
@@ -739,6 +803,17 @@ extern void *getJNIInterface();
 
 extern void addCommandLineProperties(Object *properties);
 extern void addDefaultProperties(Object *properties);
+
+/* access */
+
+extern int checkClassAccess(Class *class1, Class *class2);
+extern int checkMethodAccess(MethodBlock *mb, Class *class);
+extern int checkFieldAccess(FieldBlock *fb, Class *class);
+
+/* frame */
+
+extern Frame *getCallerFrame(Frame *last);
+extern Class *getCallerCallerClass();
 
 /* native */
 

@@ -124,10 +124,10 @@ extends AccessibleObject implements Member
    * @see Modifier
    */
   public int getModifiers() {
-      return getFieldModifiers(slot);
+      return getFieldModifiers(declaringClass, slot);
   }
 
-  public native int getFieldModifiers(int slot);
+  public native int getFieldModifiers(Class declaringClass, int slot);
 
   /**
    * Gets the type of this field.
@@ -231,10 +231,10 @@ extends AccessibleObject implements Member
    * @see #getDouble(Object)
    */
   public Object get(Object o) throws IllegalAccessException {
-    return getField(o, declaringClass, type, slot);
+    return getField(o, declaringClass, type, slot, flag);
   }
 
-  private native Object getField(Object o, Class declaringClass, Class type, int slot)
+  private native Object getField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck)
       throws IllegalAccessException;
   /**
    * Get the value of this boolean Field. If the field is static,
@@ -255,7 +255,7 @@ extends AccessibleObject implements Member
    */
   public boolean getBoolean(Object o)
     throws IllegalAccessException {
-        return getZField(o, declaringClass, type, slot, 1);
+        return getZField(o, declaringClass, type, slot, flag, 1);
     }
 
   /**
@@ -277,7 +277,7 @@ extends AccessibleObject implements Member
    */
   public byte getByte(Object o)
     throws IllegalAccessException {
-        return getBField(o, declaringClass, type, slot, 2);
+        return getBField(o, declaringClass, type, slot, flag, 2);
     }
 
   /**
@@ -297,7 +297,7 @@ extends AccessibleObject implements Member
    */
   public char getChar(Object o)
     throws IllegalAccessException {
-        return getCField(o, declaringClass, type, slot, 3);
+        return getCField(o, declaringClass, type, slot, flag, 3);
     }
 
   /**
@@ -319,7 +319,7 @@ extends AccessibleObject implements Member
    */
   public short getShort(Object o)
     throws IllegalAccessException {
-        return getSField(o, declaringClass, type, slot, 4);
+        return getSField(o, declaringClass, type, slot, flag, 4);
     }
 
   /**
@@ -341,7 +341,7 @@ extends AccessibleObject implements Member
    */
   public int getInt(Object o)
     throws IllegalAccessException {
-        return getIField(o, declaringClass, type, slot, 5);
+        return getIField(o, declaringClass, type, slot, flag, 5);
     }
 
   /**
@@ -363,7 +363,7 @@ extends AccessibleObject implements Member
    */
   public long getLong(Object o)
     throws IllegalAccessException {
-        return getJField(o, declaringClass, type, slot, 7);
+        return getJField(o, declaringClass, type, slot, flag, 7);
     }
 
   /**
@@ -385,7 +385,7 @@ extends AccessibleObject implements Member
    */
   public float getFloat(Object o)
     throws IllegalAccessException {
-        return getFField(o, declaringClass, type, slot, 6);
+        return getFField(o, declaringClass, type, slot, flag, 6);
     }
 
   /**
@@ -408,7 +408,7 @@ extends AccessibleObject implements Member
    */
   public double getDouble(Object o)
     throws IllegalAccessException {
-        return getDField(o, declaringClass, type, slot, 8);
+        return getDField(o, declaringClass, type, slot, flag, 8);
     }
 
   /**
@@ -457,10 +457,10 @@ extends AccessibleObject implements Member
    * @see #setDouble(Object, double)
    */
   public void set(Object o, Object value) throws IllegalAccessException {
-    setField(o, declaringClass, type, slot, value);
+    setField(o, declaringClass, type, slot, flag, value);
   }
 
-  private native void setField(Object o, Class declaringClass, Class type, int slot, Object value)
+  private native void setField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, Object value)
       throws IllegalAccessException;
   /**
    * Set this boolean Field. If the field is static, <code>o</code> will be
@@ -480,7 +480,7 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setBoolean(Object o, boolean value) throws IllegalAccessException {
-      setZField(o, declaringClass, type, slot, 1, value);
+      setZField(o, declaringClass, type, slot, flag, 1, value);
   }
 
   /**
@@ -501,7 +501,7 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setByte(Object o, byte value) throws IllegalAccessException {
-      setBField(o, declaringClass, type, slot, 2, value);
+      setBField(o, declaringClass, type, slot, flag, 2, value);
   }
 
   /**
@@ -522,7 +522,7 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setChar(Object o, char value) throws IllegalAccessException {
-      setCField(o, declaringClass, type, slot, 3, value);
+      setCField(o, declaringClass, type, slot, flag, 3, value);
   }
 
   /**
@@ -543,7 +543,7 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setShort(Object o, short value) throws IllegalAccessException {
-      setSField(o, declaringClass, type, slot, 4, value);
+      setSField(o, declaringClass, type, slot, flag, 4, value);
   }
 
   /**
@@ -564,7 +564,7 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setInt(Object o, int value) throws IllegalAccessException {
-      setIField(o, declaringClass, type, slot, 5, value);
+      setIField(o, declaringClass, type, slot, flag, 5, value);
   }
 
   /**
@@ -585,7 +585,7 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setLong(Object o, long value) throws IllegalAccessException {
-      setJField(o, declaringClass, type, slot, 7, value);
+      setJField(o, declaringClass, type, slot, flag, 7, value);
   }
 
   /**
@@ -606,7 +606,7 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setFloat(Object o, float value) throws IllegalAccessException {
-      setFField(o, declaringClass, type, slot, 6, value);
+      setFField(o, declaringClass, type, slot, flag, 6, value);
   }
 
   /**
@@ -627,24 +627,24 @@ extends AccessibleObject implements Member
    * @see #set(Object, Object)
    */
   public void setDouble(Object o, double value) throws IllegalAccessException {
-      setDField(o, declaringClass, type, slot, 8, value);
+      setDField(o, declaringClass, type, slot, flag, 8, value);
   }
 
-  private native double getDField(Object o, Class declaringClass, Class type, int slot, int type_no);
-  private native int getIField(Object o, Class declaringClass, Class type, int slot, int type_no);
-  private native long getJField(Object o, Class declaringClass, Class type, int slot, int type_no);
-  private native boolean getZField(Object o, Class declaringClass, Class type, int slot, int type_no);
-  private native float getFField(Object o, Class declaringClass, Class type, int slot, int type_no);
-  private native char getCField(Object o, Class declaringClass, Class type, int slot, int type_no);
-  private native short getSField(Object o, Class declaringClass, Class type, int slot, int type_no);
-  private native byte getBField(Object o, Class declaringClass, Class type, int slot, int type_no);
+  private native double getDField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
+  private native int getIField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
+  private native long getJField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
+  private native boolean getZField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
+  private native float getFField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
+  private native char getCField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
+  private native short getSField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
+  private native byte getBField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
 
-  private native void setDField(Object o, Class declaringClass, Class type, int slot, int type_no, double v);
-  private native void setIField(Object o, Class declaringClass, Class type, int slot, int type_no, int i);
-  private native void setJField(Object o, Class declaringClass, Class type, int slot, int type_no, long j);
-  private native void setZField(Object o, Class declaringClass, Class type, int slot, int type_no, boolean z);
-  private native void setFField(Object o, Class declaringClass, Class type, int slot, int type_no, float f);
-  private native void setCField(Object o, Class declaringClass, Class type, int slot, int type_no, char c);
-  private native void setSField(Object o, Class declaringClass, Class type, int slot, int type_no, short s);
-  private native void setBField(Object o, Class declaringClass, Class type, int slot, int type_no, byte b);
+  private native void setDField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, double v);
+  private native void setIField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, int i);
+  private native void setJField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, long j);
+  private native void setZField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, boolean z);
+  private native void setFField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, float f);
+  private native void setCField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, char c);
+  private native void setSField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, short s);
+  private native void setBField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, byte b);
 }

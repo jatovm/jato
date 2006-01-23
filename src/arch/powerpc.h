@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #define OS_ARCH "ppc"
@@ -30,6 +30,25 @@
 /* Needed for i386 -- empty here */
 #define FPU_HACK
 
+#ifdef __ppc64__
+#define COMPARE_AND_SWAP(addr, old_val, new_val) \
+({                                               \
+    int result, read_val;                        \
+    __asm__ __volatile__ ("                      \
+                li %0,0\n                        \
+        1:      ldarx %1,0,%2\n                  \
+                cmpd %3,%1\n                     \
+                bne- 2f\n                        \
+                stdcx. %4,0,%2\n                 \
+                bne- 1b\n                        \
+                li %0,1\n                        \
+        2:"                                      \
+    : "=&r" (result), "=&r" (read_val)           \
+    : "r" (addr), "r" (old_val), "r" (new_val)   \
+    : "cc", "memory");                           \
+    result;                                      \
+})
+#else
 #define COMPARE_AND_SWAP(addr, old_val, new_val) \
 ({                                               \
     int result, read_val;                        \
@@ -47,6 +66,7 @@
     : "cc", "memory");                           \
     result;                                      \
 })
+#endif
 
 #define ATOMIC_READ(addr) *addr
 #define ATOMIC_WRITE(addr, value) *addr = value

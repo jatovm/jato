@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
@@ -23,13 +23,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <limits.h>
 
 #include "jam.h"
 #include "thread.h"
 #include "hash.h"
 #include "alloc.h"
-
-#include "arch.h"
 
 /* Trace lock operations and inflation/deflation */
 #ifdef TRACELOCK
@@ -41,7 +40,7 @@
 #define UN_USED -1
 
 #define HASHTABSZE 1<<5
-#define HASH(obj) ((int) obj >> LOG_OBJECT_GRAIN)
+#define HASH(obj) ((uintptr_t) obj >> LOG_OBJECT_GRAIN)
 #define COMPARE(obj, mon, hash1, hash2) hash1 == hash2
 #define PREPARE(obj) allocMonitor(obj)
 #define FOUND(ptr) COMPARE_AND_SWAP(&ptr->entering, UN_USED, 0)
@@ -75,8 +74,8 @@
     Monitor *mon = (Monitor *)ptr;                    \
     char res = ATOMIC_READ(&mon->entering) == UN_USED;\
     if(res) {                                         \
-        TRACE(("Scavenging monitor 0x%x (obj 0x%x)",  \
-                          mon, mon->obj));            \
+        TRACE(("Scavenging monitor %p (obj %p)", mon, \
+                                          mon->obj)); \
         mon->next = mon_free_list;                    \
         mon_free_list = mon;                          \
     }                                                 \
@@ -151,16 +150,22 @@ int monitorWait(Monitor *mon, Thread *self, long long ms, int ns) {
 
     if(timed) {
         struct timeval tv;
+        long long seconds;
 
         gettimeofday(&tv, 0);
 
-        ts.tv_sec = tv.tv_sec + ms/1000;
+        seconds = tv.tv_sec + ms/1000;
         ts.tv_nsec = (tv.tv_usec + ((ms%1000)*1000))*1000 + ns;
 
         if(ts.tv_nsec > 999999999L) {
-            ts.tv_sec++;
+            seconds++;
             ts.tv_nsec -= 1000000000L;
         }
+
+        /* If the number of seconds is too large just set
+           it to the max value instead of truncating.
+           Depending on result, we may not wait at all */
+       ts.tv_sec = seconds > LONG_MAX ? LONG_MAX : seconds;
     }
 
     self->wait_mon = mon;
@@ -253,7 +258,7 @@ Monitor *allocMonitor(Object *obj) {
 }
 
 Monitor *findMonitor(Object *obj) {
-    int lockword = ATOMIC_READ(&obj->lock);
+    uintptr_t lockword = ATOMIC_READ(&obj->lock);
 
     if(lockword & SHAPE_BIT)
         return (Monitor*) (lockword & ~SHAPE_BIT);
@@ -266,19 +271,19 @@ Monitor *findMonitor(Object *obj) {
 }
 
 static void inflate(Object *obj, Monitor *mon, Thread *self) {
-    TRACE(("Thread 0x%x is inflating obj 0x%x...\n", self, obj));
-    clear_flc_bit(obj);
+    TRACE(("Thread %p is inflating obj %p...\n", self, obj));
+    clearFlcBit(obj);
     monitorNotifyAll(mon, self);
-    ATOMIC_WRITE(&obj->lock, (int) mon | SHAPE_BIT);
+    ATOMIC_WRITE(&obj->lock, (uintptr_t) mon | SHAPE_BIT);
 }
 
 void objectLock(Object *obj) {
     Thread *self = threadSelf();
-    unsigned int thin_locked = self->id<<TID_SHIFT;
-    int entering, lockword;
+    uintptr_t thin_locked = self->id<<TID_SHIFT;
+    uintptr_t entering, lockword;
     Monitor *mon;
 
-    TRACE(("Thread 0x%x lock on obj 0x%x...\n", self, obj));
+    TRACE(("Thread %p lock on obj %p...\n", self, obj));
 
     if(COMPARE_AND_SWAP(&obj->lock, 0, thin_locked)) {
         /* This barrier is not needed for the thin-locking implementation --
@@ -324,7 +329,7 @@ try_again2:
                     !(COMPARE_AND_SWAP(&mon->entering, entering, entering-1)));
 
     while((ATOMIC_READ(&obj->lock) & SHAPE_BIT) == 0) {
-        set_flc_bit(obj);
+        setFlcBit(obj);
 
         if(COMPARE_AND_SWAP(&obj->lock, 0, thin_locked))
             inflate(obj, mon, self);
@@ -335,10 +340,10 @@ try_again2:
 
 void objectUnlock(Object *obj) {
     Thread *self = threadSelf();
-    int lockword = ATOMIC_READ(&obj->lock);
-    unsigned int thin_locked = self->id<<TID_SHIFT;
+    uintptr_t lockword = ATOMIC_READ(&obj->lock);
+    uintptr_t thin_locked = self->id<<TID_SHIFT;
 
-    TRACE(("Thread 0x%x unlock on obj 0x%x...\n", self, obj));
+    TRACE(("Thread %p unlock on obj %p...\n", self, obj));
 
     if(lockword == thin_locked) {
         /* This barrier is not needed for the thin-locking implementation --
@@ -350,7 +355,7 @@ void objectUnlock(Object *obj) {
         UNLOCK_MBARRIER();
 
 retry:
-        if(test_flc_bit(obj)) {
+        if(testFlcBit(obj)) {
             Monitor *mon = findMonitor(obj);
 
             if(!monitorTryLock(mon, self)) {
@@ -358,7 +363,7 @@ retry:
                 goto retry;
             }
 
-            if(test_flc_bit(obj) && (mon->obj == obj))
+            if(testFlcBit(obj) && (mon->obj == obj))
                 monitorNotify(mon, self);
 
             monitorUnlock(mon, self);
@@ -372,7 +377,7 @@ retry:
 
                 if((mon->count == 0) && (ATOMIC_READ(&mon->entering) == 0) &&
                                 (mon->waiting == 0)) {
-                    TRACE(("Thread 0x%x is deflating obj 0x%x...\n", self, obj));
+                    TRACE(("Thread %p is deflating obj %p...\n", self, obj));
 
                     /* This barrier is not needed for the thin-locking implementation --
                        it's a requirement of the Java memory model. */
@@ -388,11 +393,11 @@ retry:
 }
 
 void objectWait(Object *obj, long long ms, int ns) {
-    int lockword = ATOMIC_READ(&obj->lock);
+    uintptr_t lockword = ATOMIC_READ(&obj->lock);
     Thread *self = threadSelf();
     Monitor *mon;
 
-    TRACE(("Thread 0x%x Wait on obj 0x%x...\n", self, obj));
+    TRACE(("Thread %p Wait on obj %p...\n", self, obj));
 
     if((lockword & SHAPE_BIT) == 0) {
         int tid = (lockword&TID_MASK)>>TID_SHIFT;
@@ -414,10 +419,10 @@ not_owner:
 }
 
 void objectNotify(Object *obj) {
-    int lockword = ATOMIC_READ(&obj->lock);
+    uintptr_t lockword = ATOMIC_READ(&obj->lock);
     Thread *self = threadSelf();
 
-    TRACE(("Thread 0x%x Notify on obj 0x%x...\n", self, obj));
+    TRACE(("Thread %p Notify on obj %p...\n", self, obj));
 
     if((lockword & SHAPE_BIT) == 0) {
         int tid = (lockword&TID_MASK)>>TID_SHIFT;
@@ -433,10 +438,10 @@ void objectNotify(Object *obj) {
 }
 
 void objectNotifyAll(Object *obj) {
-    int lockword = ATOMIC_READ(&obj->lock);
+    uintptr_t lockword = ATOMIC_READ(&obj->lock);
     Thread *self = threadSelf();
 
-    TRACE(("Thread 0x%x NotifyAll on obj 0x%x...\n", self, obj));
+    TRACE(("Thread %p NotifyAll on obj %p...\n", self, obj));
 
     if((lockword & SHAPE_BIT) == 0) {
         int tid = (lockword&TID_MASK)>>TID_SHIFT;
@@ -452,7 +457,7 @@ void objectNotifyAll(Object *obj) {
 }
 
 int objectLockedByCurrent(Object *obj) {
-    int lockword = ATOMIC_READ(&obj->lock);
+    uintptr_t lockword = ATOMIC_READ(&obj->lock);
     Thread *self = threadSelf();
 
     if((lockword & SHAPE_BIT) == 0) {

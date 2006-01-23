@@ -15,7 +15,7 @@
 ;
 ; You should have received a copy of the GNU General Public License
 ; along with this program; if not, write to the Free Software
-; Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+; Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 ;
 
 .section __TEXT,__text,regular,pure_instructions
@@ -48,46 +48,46 @@
 
 _callJNIMethod:
         mr r11,r1
-        stwux r11, r1, r6
+        stdux r11, r1, r6
 
         mflr r0
-        stw r0,8(r11)
-        stw r14,-4(r11)
-        stw r15,-8(r11)
-        stw r16,-12(r11)
-        stw r17,-16(r11)
-        stw r18,-20(r11)
-        stw r19,-24(r11)
-        stw r20,-28(r11)
-
-        ; Set lr to function ptr, for calling later        
-        mtlr r8
+        std r0,16(r11)
+        std r14,-8(r11)
+        std r15,-16(r11)
+        std r16,-24(r11)
+        std r17,-32(r11)
+        std r18,-40(r11)
+        std r19,-48(r11)
+        std r20,-56(r11)
 
         ; setup signature and stack pntrs
         mr r14,r5
-        addi r15,r7,-4
+        addi r15,r7,-8
 
         ; save pntr to first stack arg for return value
         mr r16,r15
 
         ; if instance method set r4 to object pntr
         ; (first stack argument)
-        cmpi cr0,r4,0
+        cmpdi cr0,r4,0
         bne static
 
-        lwzu r4,4(r15)
+        ldu r4,8(r15)
 
 static:
-        lis r17,ha16(other0)
-        la r17,lo16(other0)(r17)
-        lis r18,ha16(float0)
-        la r18,lo16(float0)(r18)
-        lis r19,ha16(long0)
-        la r19,lo16(long0)(r19)
+        bl get_pc
+
+get_pc:
+        mflr r20
+        la r17,lo16(other0-get_pc)(r20)
+        la r18,lo16(float0-get_pc)(r20)
+
+        ; Set lr to function ptr, for calling later        
+        mtlr r8
 
         ; Setup pointer to parameter area for args which
         ; do not fit into registers
-        addi r12,r1,52
+        addi r12,r1,104
 
         ; Initialise gpr register count
         li r20,0
@@ -122,59 +122,40 @@ skip_ref:
         bne skip_ref
 
 out2:
-        lwzu r0,4(r15)
+        ldu r0,8(r15)
         cmpi cr0,r20,5
-        bgt stack_push_1
+        bgt stack_push
 
-skip_regs_1:
+skip_regs:
         addi r20,r20,1
         addi r17,r17,8
-        addi r19,r19,12
         bctr
-
-stack_push_1:
-        stwu r0,4(r12)
-        b next
 
 do_long:
-        mtctr r19
-        lwzu r0,4(r15)
-        lwzu r11,4(r15)
+        ld r0,8(r15)
+        addi r15,r15,16
         cmpi cr0,r20,5
-        bgt stack_push_2
+        ble skip_regs
 
-skip_regs_2:
-        addi r20,r20,2
-        addi r17,r17,16
-        addi r19,r19,24
-        bctr
-
-stack_push_2:
-        stwu r0,4(r12)
-        stwu r11,4(r12)
+stack_push:
+        stdu r0,8(r12)
         b next
 
 do_double:
-        mtctr r18
-        lfdu f0,4(r15)
-        addi r18,r18,8
-        addi r15,r15,4
-
-        cmpi cr0,r20,5
-        ble skip_regs_2
-
-        addi r12,r12,8
-        bctr
+        lfd f0,8(r15)
+        addi r15,r15,16
+        b do_float_1
 
 do_float:
+        lfsu f0,8(r15)
+
+do_float_1:
         mtctr r18
-        lfsu f0,4(r15)
         addi r18,r18,8
-
         cmpi cr0,r20,5
-        ble skip_regs_1
+        ble skip_regs
 
-        addi r12,r12,4
+        addi r12,r12,8
         bctr
 
 other0:
@@ -189,26 +170,6 @@ other0:
         mr r9,r0
         b next
         mr r10,r0
-        b next
-
-long0:
-        mr r5,r0
-        mr r6,r11
-        b next
-        mr r6,r0
-        mr r7,r11
-        b next
-        mr r7,r0
-        mr r8,r11
-        b next
-        mr r8,r0
-        mr r9,r11
-        b next
-        mr r9,r0
-        mr r10,r11
-        b next
-        mr r10,r0
-        stwu r11,4(r12)
         b next
 
 float0:
@@ -240,12 +201,7 @@ float0:
         b next
 
         addi r18,r18,-8
-        cmpi cr0,r0,70 ; 'F'
-        bne store_double
-        stfs f0,0(r12)
-        b next
-store_double:
-        stfd f0,-4(r12)
+        stfd f0,0(r12)
         b next
 
 finish:
@@ -264,34 +220,34 @@ finish:
         beq cr1, ret_double
         beq cr5, ret_float
 
-        stwu r3, 4(r16)
+        stdu r3, 8(r16)
         bne cr6, return
 
-        stwu r4, 4(r16)
+        addi r16,r16,8
         b return
 
 ret_double:
-        stfdu f1,4(r16)
-        addi r16,r16,4
+        stfdu f1,8(r16)
+        addi r16,r16,8
         b return
 
 ret_float:
-        stfsu f1,4(r16)
+        stfsu f1,8(r16)
 
 return:
-        addi r3,r16,4
+        addi r3,r16,8
 
-        lwz r11,0(r1)
-        lwz r0,8(r11)
+        ld r11,0(r1)
+        ld r0,16(r11)
         mtlr r0
 
-        lwz r14,-4(r11)
-        lwz r15,-8(r11)
-        lwz r16,-12(r11)
-        lwz r17,-16(r11)
-        lwz r18,-20(r11)
-        lwz r19,-24(r11)
-        lwz r20,-28(r11)
+        ld r14,-8(r11)
+        ld r15,-16(r11)
+        ld r16,-24(r11)
+        ld r17,-32(r11)
+        ld r18,-40(r11)
+        ld r19,-48(r11)
+        ld r20,-56(r11)
         
         mr r1,r11
         blr

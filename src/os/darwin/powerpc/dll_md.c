@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,11 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <stdio.h>
 #include "../../../jam.h"
+
+#ifndef USE_FFI
+#include <stdio.h>
 
 /*
  This function calculates the size of the params area needed
@@ -30,7 +32,7 @@
 
 int nativeExtraArg(MethodBlock *mb) {
     int params = (mb->args_count + 1 +
-                 ((mb->access_flags & ACC_STATIC) ? 1 : 0) + 7 + 6) * -4;
+                 ((mb->access_flags & ACC_STATIC) ? 1 : 0) + 7 + 6) * -sizeof(uintptr_t);
 
 #ifdef DEBUG_DLL
     printf("<nativExtraArg %s%s : %d>\n", mb->name, mb->type, params);
@@ -38,3 +40,4 @@ int nativeExtraArg(MethodBlock *mb) {
 
     return params;
 }
+#endif

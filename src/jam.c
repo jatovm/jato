@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
@@ -40,8 +40,8 @@ Property *commandline_props;
 int commandline_props_count = 0;
 
 static int java_stack = DEFAULT_STACK;
-static int min_heap   = DEFAULT_MIN_HEAP;
-static int max_heap   = DEFAULT_MAX_HEAP;
+static unsigned long min_heap   = DEFAULT_MIN_HEAP;
+static unsigned long max_heap   = DEFAULT_MAX_HEAP;
 
 char VM_initing = TRUE;
 extern void initialisePlatform();
@@ -114,7 +114,7 @@ void showUsage(char *name) {
 
 void showVersionAndCopyright() {
     printf("JamVM version %s\n", VERSION);
-    printf("Copyright (C) 2003-2005 Robert Lougher <rob@lougher.demon.co.uk>\n\n");
+    printf("Copyright (C) 2003-2006 Robert Lougher <rob@lougher.demon.co.uk>\n\n");
     printf("This program is free software; you can redistribute it and/or\n");
     printf("modify it under the terms of the GNU General Public License\n");
     printf("as published by the Free Software Foundation; either version 2,\n");
@@ -125,9 +125,9 @@ void showVersionAndCopyright() {
     printf("GNU General Public License for more details.\n");
 }
 
-int parseMemValue(char *str) {
+unsigned long parseMemValue(char *str) {
     char *end;
-    long n = strtol(str, &end, 0);
+    unsigned long n = strtol(str, &end, 0);
 
     switch(end[0]) {
         case '\0':
@@ -314,12 +314,13 @@ int main(int argc, char *argv[]) {
 
     /* Create the String array holding the command line args */
 
+    i = class_arg + 1;
     if((array_class = findArrayClass("[Ljava/lang/String;")) &&
-           (array = allocArray(array_class, argc-class_arg-1, 4)))  {
-        u4 *args = INST_DATA(array)-class_arg;
+           (array = allocArray(array_class, argc - i, sizeof(Object*))))  {
+        Object **args = (Object**)ARRAY_DATA(array) - i;
 
-        for(i = class_arg+1; i < argc; i++)
-            if(!(args[i] = (u4)Cstr2String(argv[i])))
+        for(; i < argc; i++)
+            if(!(args[i] = Cstr2String(argv[i])))
                 break;
 
         /* Call the main method */
@@ -332,6 +333,7 @@ int main(int argc, char *argv[]) {
     if((status = exceptionOccured() ? 1 : 0))
         printException();
 
+    /* Wait for all but daemon threads to die */
     mainThreadWaitToExitVM();
     exitVM(status);
 }

@@ -1,4 +1,4 @@
-JamVM 1.3.0 Installation
+JamVM 1.4.2 Installation
 ========================
 
 This section describes how to configure, build and install JamVM on
@@ -12,16 +12,18 @@ Getting the Files
 You must already have the compressed tar file containing the source
 code for JamVM (you're reading this!).  For JamVM to run, it must also
 have a class library containing the system classes and the associated
-native methods (e.g. java.lang.Object).  JamVM 1.3.0 has been written to
+native methods (e.g. java.lang.Object).  JamVM 1.4.2 has been written to
 use GNU Classpath.  It is compatible with the latest snapshot version
-0.14.  It should also be compatible with the CVS version, and later
+0.20.  It should also be compatible with the CVS version, and later
 snapshots, as long as the VM interface has remained the same.  As this
-has changed between 0.13 and 0.14 JamVM will not work with earlier
-versions.
+changed between 0.17 and 0.18 JamVM will not work with versions earlier
+than 0.18. (Note, the VM interface of the generics branch of Classpath
+changed in 0.20, so JamVM 1.4.2 will only work with the latest version
+of the generics branch).
 
 Classpath can be obtained from the following URL:
 
-ftp://ftp.gnu.org/gnu/classpath/classpath-0.14.tar.gz
+ftp://ftp.gnu.org/gnu/classpath/classpath-0.20.tar.gz
 
 The class library consists of the Java classes and the shared libraries
 containing the native methods.  To build the Java classes you must have
@@ -53,7 +55,7 @@ make install
 
 This installs an executable of JamVM with debug information (-g).
 Alternatively, to install a version with no symbols (which is much
-smaller, around 135K on PowerPC and 100K on Intel) type :-
+smaller, around 150K on PowerPC and 110K on Intel) type :-
 
 make install-strip
 

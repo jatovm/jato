@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,14 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
+/* Must be included first to get configure options */
+#include "jam.h"
 
 #ifdef DIRECT
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <string.h>
-#include "jam.h"
 
 #include "thread.h"
 #include "interp.h"
@@ -38,12 +40,16 @@
     operand.uui.u2 = opcode;   \
     operand.uui.i = ins_cache;
 
+/* Used to indicate that stack depth
+   has not been calculated yet */
 #define DEPTH_UNKNOWN -1
 
+/* Method preparation states */
 #define PREPARED   0
 #define UNPREPARED 1
 #define PREPARING  2
 
+/* Global lock for method preparation */
 static VMWaitLock prepare_lock;
 
 void initialiseDirect() {
@@ -71,14 +77,17 @@ void prepare(MethodBlock *mb, const void ***handlers) {
        and contention to prepare a method is unlikely. */
 
     Thread *self = threadSelf();
+
+    disableSuspend(self);
     lockVMWaitLock(prepare_lock, self);
 
 retry:
     code = mb->code;
 
-    switch((unsigned int)code & 0x3) {
+    switch((uintptr_t)code & 0x3) {
         case PREPARED:
             unlockVMWaitLock(prepare_lock, self);
+            enableSuspend(self);
             return;
 
         case UNPREPARED:
@@ -94,6 +103,7 @@ retry:
 
     TRACE(("Preparing %s.%s%s\n", CLASS_CB(mb->class)->name, mb->name, mb->type));
 
+    /* Method is unprepared, so bottom bit of pntr will be set */
     code--;
 
 #ifdef USE_CACHE
@@ -113,7 +123,7 @@ retry:
         int pc;
 
         if(pass == 1)
-            new_code = sysMalloc(ins_count * sizeof(Instruction));
+            new_code = sysMalloc((ins_count + 1) * sizeof(Instruction));
 
         for(ins_count = 0, pc = 0; pc < code_len; ins_count++) {
             Operand operand;
@@ -274,6 +284,7 @@ retry:
                 case OPC_LREM: case OPC_LAND: case OPC_LOR:
                 case OPC_LXOR: case OPC_LSHL: case OPC_LSHR:
                 case OPC_LUSHR: case OPC_F2L: case OPC_D2L:
+                case OPC_I2L:
 #ifdef USE_CACHE
                     cache = 2;
                     pc += 1;
@@ -287,12 +298,12 @@ retry:
                 case OPC_CASTORE: case OPC_SASTORE: case OPC_POP2:
                 case OPC_FADD: case OPC_DADD: case OPC_FSUB:
                 case OPC_DSUB: case OPC_FMUL: case OPC_DMUL:
-                case OPC_FDIV: case OPC_DDIV: case OPC_I2L:
-                case OPC_I2F: case OPC_I2D: case OPC_L2I:
-                case OPC_L2F: case OPC_L2D: case OPC_F2D:
-                case OPC_D2F: case OPC_FREM: case OPC_DREM:
-                case OPC_LNEG: case OPC_FNEG: case OPC_DNEG:
-                case OPC_MONITORENTER: case OPC_MONITOREXIT:
+                case OPC_FDIV: case OPC_DDIV: case OPC_I2F:
+                case OPC_I2D: case OPC_L2F: case OPC_L2D:
+                case OPC_F2D: case OPC_D2F: case OPC_FREM:
+                case OPC_DREM: case OPC_LNEG: case OPC_FNEG:
+                case OPC_DNEG: case OPC_MONITORENTER:
+                case OPC_MONITOREXIT:
 #ifdef USE_CACHE
                     cache = 0;
                     pc += 1;
@@ -332,7 +343,7 @@ retry:
                 case OPC_I2S: case OPC_ISHL: case OPC_ISHR:
                 case OPC_IUSHR: case OPC_LCMP: case OPC_DCMPG:
                 case OPC_DCMPL: case OPC_FCMPG: case OPC_FCMPL:
-                case OPC_ARRAYLENGTH:
+                case OPC_ARRAYLENGTH: case OPC_L2I:
 #ifdef USE_CACHE
                     cache = 1;
 #endif
@@ -711,7 +722,7 @@ retry:
                             operand.ii.i1 = READ_U2_OP(code + pc + 1); 
                             operand.ii.i2 = READ_S2_OP(code + pc + 3);
                             pc += 6;
-            		        break;
+                            break;
                     }
                 }
             }
@@ -746,6 +757,7 @@ retry:
     mb->code = new_code;
     notifyAllVMWaitLock(prepare_lock, self);
     unlockVMWaitLock(prepare_lock, self);
+    enableSuspend(self);
 
     /* We don't need the old bytecode stream anymore */
     free(code);

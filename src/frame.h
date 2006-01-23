@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #define CREATE_TOP_FRAME(ee, class, mb, sp, ret)                \
@@ -23,11 +23,11 @@
     Frame *last = ee->last_frame;                               \
     Frame *dummy = (Frame *)(last->ostack+last->mb->max_stack); \
     Frame *new_frame;                                           \
-    u4 *new_ostack;                                             \
+    uintptr_t *new_ostack;                                      \
                                                                 \
-    ret = (void*) (sp = (u4*)(dummy+1));                        \
+    ret = (void*) (sp = (uintptr_t*)(dummy+1));                 \
     new_frame = (Frame *)(sp + mb->max_locals);                 \
-    new_ostack = (u4 *)(new_frame + 1);                         \
+    new_ostack = (uintptr_t *)(new_frame + 1);                  \
                                                                 \
     if((char*)(new_ostack + mb->max_stack) > ee->stack_end) {   \
         if(ee->overflow++) {                                    \

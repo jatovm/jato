@@ -1,48 +1,53 @@
-#
-# Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
-#
-# This file is part of JamVM.
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2,
-# or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-#
+/*
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
+ *
+ * This file is part of JamVM.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2,
+ * or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+#include  "config.h"
+
+#ifndef USE_FFI
         .section ".text"
         .align 2
         .globl callJNIMethod
 
-#########################################################
-# Function called with arguments
-# r3 = JNIEnv
-# r4 = Class if static or NULL 
-# r5 = sig
-# r6 = extra args
-# r7 = stack
-# r8 = func pntr
-#
-# Registers used as follows :
-# r0 general scratch
-# r3,r4 passed through to native func
-# r5-r10 first 6 integer stack args passed to func
-# fp1-fp8 first 8 float/double args passed to func
-# r11 holds high word for long arg handling
-# r12 points to stack area for args which overflow regs
-# r14 signature pointer
-# r15 operand stack pointer
-# r16 saved stack pntr for return arg
-# r17 jump address for next integer register
-# r18 jump address for next float register
-# r19 jump address for next long register pair
+/********************************************************
+ Function called with arguments
+ r3 = JNIEnv
+ r4 = Class if static or NULL 
+ r5 = sig
+ r6 = extra args
+ r7 = stack
+ r8 = func pntr
+
+ Registers used as follows :
+ r0 general scratch
+ r3,r4 passed through to native func
+ r5-r10 first 6 integer stack args passed to func
+ fp1-fp8 first 8 float/double args passed to func
+ r11 holds high word for long arg handling
+ r12 points to stack area for args which overflow regs
+ r14 signature pointer
+ r15 operand stack pointer
+ r16 saved stack pntr for return arg
+ r17 jump address for next integer register
+ r18 jump address for next float register
+ r19 jump address for next long register pair
+*/
 
 callJNIMethod:
         stwu 1,-32(1)
@@ -55,25 +60,25 @@ callJNIMethod:
         stw 18,12(1)
         stw 19,8(1)
         
-        # Set lr to function ptr, for calling later
+        /* Set lr to function ptr, for calling later */
         mtlr 8
 
-        # setup signature and stack pntrs
+        /* setup signature and stack pntrs */
         mr 14,5
         addi 15,7,-4
 
-        # save pntr to first stack arg for return value
+        /* save pntr to first stack arg for return value */
         mr 16,15
 
-        # if instance method set r4 to object pntr
-        # (first stack argument)
+        /* if instance method set r4 to object pntr
+           (first stack argument) */
         cmpi 0,4,0
         bne static
         lwzu 4,4(15)
 
 static:
-        # Calc bytes for extra args, round up to 16 bytes
-        # and adjust stack pointer
+        /* Calc bytes for extra args, round up to 16 bytes
+           and adjust stack pointer */
 
         cmpi 0,6,0
         beq none
@@ -218,6 +223,7 @@ float0:
         bne store_double
         stfsu 0,4(12)
         b next
+
 store_double:
         ori 12,12,4
         stfdu 0,4(12)
@@ -225,10 +231,11 @@ store_double:
         b next
 
 finish:
-        # We've set up the args, so now call the function
+        /* We've set up the args, so now call the function */
+
         blrl
 
-        # Handle return value
+        /* Handle return value */
 
         lbz 0,1(14)
 
@@ -272,3 +279,4 @@ return:
         
         mr 1,11
         blr
+#endif

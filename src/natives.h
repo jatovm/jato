@@ -15,12 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 typedef struct vm_method {
     char *methodname;
-    u4* (*method)(Class *, MethodBlock *, u4 *);
+    uintptr_t *(*method)(Class *, MethodBlock *, uintptr_t *);
 } VMMethod;
 
 typedef struct vm_class {

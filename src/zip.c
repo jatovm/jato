@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include "jam.h"
@@ -98,8 +98,8 @@ ZipFile *processArchive(char *path) {
     len = lseek(fd, 0, SEEK_END);
 
     /* Mmap the file into memory */
-    if((data = (char*)mmap(0, len, PROT_READ | PROT_WRITE, MAP_FILE |
-                                   MAP_PRIVATE, fd, 0)) == MAP_FAILED)
+    if((data = (unsigned char*)mmap(0, len, PROT_READ | PROT_WRITE, MAP_FILE |
+                                            MAP_PRIVATE, fd, 0)) == MAP_FAILED)
         goto error;
 
     /* Locate the end of central directory record by searching backwards for
@@ -165,8 +165,8 @@ ZipFile *processArchive(char *path) {
         comment_len = READ_LE_SHORT(pntr + CEN_FILE_COMMENTLEN_OFFSET);
 
         /* The pathname starts after the fixed part of the dir entry */
-        pathname = pntr += CEN_FILE_HEADER_LEN;
-        term = pntr += path_len;
+        pathname = (char*)(pntr += CEN_FILE_HEADER_LEN);
+        term = (char*)(pntr += path_len);
 
         /* Skip rest of variable fields -- should then be pointing to next
            sig.  If no extra or comment fields, pntr == term */
@@ -214,10 +214,10 @@ char *findArchiveDirEntry(char *pathname, ZipFile *zip) {
 
 char *findArchiveEntry(char *pathname, ZipFile *zip, int *uncomp_len) {
     int offset, path_len, comp_len, extra_len, comp_method;
-    char *decomp_buff, *comp_data;
+    unsigned char *decomp_buff, *comp_data;
     unsigned char *dir_entry;
 
-    if((dir_entry = findArchiveDirEntry(pathname, zip)) == NULL)
+    if((dir_entry = (unsigned char *)findArchiveDirEntry(pathname, zip)) == NULL)
         return NULL;
 
     /* Found the file -- the pathname points directly into the
@@ -253,13 +253,13 @@ char *findArchiveEntry(char *pathname, ZipFile *zip, int *uncomp_len) {
         return NULL;
 
     comp_data = zip->data + offset;
-    decomp_buff = (char *) sysMalloc(*uncomp_len);
+    decomp_buff = sysMalloc(*uncomp_len);
 
     switch(comp_method) {
         case COMP_STORED:
             /* Data isn't compressed, so just return it "as is" */
             memcpy(decomp_buff, comp_data, comp_len);
-            return decomp_buff;
+            return (char*)decomp_buff;
 
         case COMP_DEFLATED: {
             z_stream stream;
@@ -282,7 +282,7 @@ char *findArchiveEntry(char *pathname, ZipFile *zip, int *uncomp_len) {
             inflateEnd(&stream);
 
             if(err == Z_STREAM_END || (err == Z_OK && stream.avail_in == 0))
-                return decomp_buff;
+                return (char*)decomp_buff;
             break;
         }
 

@@ -98,22 +98,21 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	struct expression *expr;
 
 	u1 type = CP_TYPE(cp, cp_idx);
-	ConstantPoolEntry entry = be64_to_cpu(CP_INFO(cp, cp_idx));
 	switch (type) {
 	case CONSTANT_Integer:
-		expr = value_expr(J_INT, entry);
+		expr = value_expr(J_INT, CP_INTEGER(cp, cp_idx));
 		break;
 	case CONSTANT_Float:
-		expr = fvalue_expr(J_FLOAT, *(float *)&entry);
+		expr = fvalue_expr(J_FLOAT, CP_FLOAT(cp, cp_idx));
 		break;
 	case CONSTANT_String:
-		expr = value_expr(J_REFERENCE, entry);
+		expr = value_expr(J_REFERENCE, CP_LONG(cp, cp_idx));
 		break;
 	case CONSTANT_Long:
-		expr = value_expr(J_LONG, entry);
+		expr = value_expr(J_LONG, CP_LONG(cp, cp_idx));
 		break;
 	case CONSTANT_Double:
-		expr = fvalue_expr(J_DOUBLE, *(double *)&entry);
+		expr = fvalue_expr(J_DOUBLE, CP_DOUBLE(cp, cp_idx));
 		break;
 	default:
 		expr = NULL;

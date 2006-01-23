@@ -1,6 +1,6 @@
 /* VMClassLoader.java -- Reference implementation of native interface
    required by ClassLoader
-   Copyright (C) 1998, 2001, 2002 Free Software Foundation
+   Copyright (C) 1998, 2001, 2002, 2004, 2005, 2006 Free Software Foundation
 
 This file is part of GNU Classpath.
 
@@ -16,8 +16,8 @@ General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Classpath; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-02111-1307 USA.
+Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
 
 Linking this library statically or dynamically with other modules is
 making a combined work based on this library.  Thus, the terms and
@@ -44,16 +44,17 @@ implementation to work with JamVM.
 
 package java.lang;
 
-import java.security.ProtectionDomain;
-import java.net.URL;
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.HashMap;
-import java.lang.reflect.Constructor;
+import gnu.classpath.SystemProperties;
+import gnu.classpath.Configuration;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.ProtectionDomain;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -62,12 +63,49 @@ import java.util.Vector;
  * on behalf of java.lang.ClassLoader.
  *
  * @author John Keiser
- * @author Mark Wielaard <mark@klomp.org>
- * @author Eric Blake <ebb9@email.byu.edu>
+ * @author Mark Wielaard (mark@klomp.org)
+ * @author Eric Blake (ebb9@email.byu.edu)
  */
 final class VMClassLoader
 {
-  static final native Class findLoadedClass(ClassLoader cl, String name);
+  /** packages loaded by the bootstrap class loader */
+  static final HashMap definedPackages = new HashMap();
+
+  /**
+   * Converts the array string of native package names to
+   * Packages. The packages are then put into the
+   * definedPackages hashMap
+   */
+  static
+  {
+    String[] packages = getBootPackages();
+    
+    if( packages != null)
+      {
+        String specName = 
+              SystemProperties.getProperty("java.specification.name");
+        String vendor =
+              SystemProperties.getProperty("java.specification.vendor");
+        String version =
+              SystemProperties.getProperty("java.specification.version");
+        
+        Package p;
+              
+        for(int i = 0; i < packages.length; i++)
+          {
+            p = new Package(packages[i],
+                  specName,
+                  vendor,
+                  version,
+                  "GNU Classpath",
+                  "GNU",
+                  Configuration.CLASSPATH_VERSION,
+                  null);
+
+            definedPackages.put(packages[i], p);
+          }
+      }
+  }
 
   /**
    * Helper to define a class using a string of bytes. This assumes that
@@ -85,6 +123,27 @@ final class VMClassLoader
                                  byte[] data, int offset, int len,
                                  ProtectionDomain pd)
     throws ClassFormatError;
+
+  /**
+   * Call the transformers of the possible Instrumentation object. This
+   * implementation assumes the instrumenter is a
+   * <code>InstrumentationImpl</code> object. VM implementors would
+   * have to redefine this method if they provide their own implementation
+   * of the <code>Instrumentation</code> interface.
+   *
+   * @param loader the initiating loader
+   * @param name the name of the class
+   * @param data the data representing the classfile, in classfile format
+   * @param offset the offset into the data where the classfile starts
+   * @param len the length of the classfile data in the array
+   * @param pd the protection domain
+   * @return the new data representing the classfile
+   */
+  static final Class defineClassWithTransformers(ClassLoader loader,
+      String name, byte[] data, int offset, int len, ProtectionDomain pd)
+  {
+    return defineClass(loader, name, data, offset, len, pd);
+  }
 
   /**
    * Helper to resolve all references to other classes from this class.
@@ -146,6 +205,17 @@ final class VMClassLoader
 
     return list.elements();
   }
+
+  /**
+   * Returns a String[] of native package names. The default
+   * implementation returns an empty array, or you may decide
+   * this needs native help.
+   */
+  private static String[] getBootPackages()
+  {
+    return new String[0];
+  }
+
   /**
    * Helper to get a package from the bootstrap class loader.  The default
    * implementation of returning null may be adequate, or you may decide
@@ -156,19 +226,19 @@ final class VMClassLoader
    */
   static Package getPackage(String name)
   {
-    return null;
+    return (Package)definedPackages.get(name);
   }
 
   /**
-   * Helper to get all packages from the bootstrap class loader.  The default
-   * implementation of returning an empty array may be adequate, or you may
-   * decide that this needs some native help.
+   * Helper to get all packages from the bootstrap class loader.  
    *
    * @return all named packages, if any exist
    */
   static Package[] getPackages()
   {
-    return new Package[0];
+    Package[] packages = new Package[definedPackages.size()];
+    definedPackages.values().toArray(packages);
+    return packages;
   }
 
   /**
@@ -240,6 +310,15 @@ final class VMClassLoader
   {
     return ClassLoader.defaultGetSystemClassLoader();
   }
+
+  /**
+   * Find the class if this class loader previously defined this class
+   * or if this class loader has been recorded as the initiating class loader
+   * for this class.
+   */
+  static native Class findLoadedClass(ClassLoader cl, String name);
+
+  /* Native helper functions */
 
   private static native int getBootClassPathSize();
   private static native String getBootClassPathResource(String name, int index);

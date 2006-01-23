@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include "thread.h"
@@ -36,7 +36,7 @@ extern void resizeHash(HashTable *table, int new_size);
 
 #define initHashTable(table, initial_size, create_lock)                            \
 {                                                                                  \
-    table.hash_table = (HashEntry*)malloc(sizeof(HashEntry)*initial_size);         \
+    table.hash_table = (HashEntry*)sysMalloc(sizeof(HashEntry)*initial_size);      \
     memset(table.hash_table, 0, sizeof(HashEntry)*initial_size);                   \
     table.hash_size = initial_size;                                                \
     table.hash_count = 0;                                                          \
@@ -65,8 +65,13 @@ extern void resizeHash(HashTable *table, int new_size);
                                                                                    \
     Thread *self;                                                                  \
     if(locked) {                                                                   \
-        disableSuspend(self = threadSelf());                                       \
-        lockVMLock(table.lock, self);                                              \
+        self = threadSelf();                                                       \
+        if(!tryLockVMLock(table.lock, self)) {                                     \
+            disableSuspend(self);                                                  \
+            lockVMLock(table.lock, self);                                          \
+            enableSuspend(self);                                                   \
+        }                                                                          \
+        fastDisableSuspend(self);                                                  \
     }                                                                              \
                                                                                    \
     i = hash & (table.hash_size - 1);                                              \
@@ -110,8 +115,8 @@ extern void resizeHash(HashTable *table, int new_size);
         }                                                                          \
                                                                                    \
     if(locked) {                                                                   \
+        fastEnableSuspend(self);                                                   \
         unlockVMLock(table.lock, self);                                            \
-        enableSuspend(self);                                                       \
     }                                                                              \
 }
 
@@ -125,3 +130,7 @@ extern void resizeHash(HashTable *table, int new_size);
             ITERATE(data);                                                         \
     }                                                                              \
 }
+
+#define freeHashTable(table)                                                       \
+    free(table.hash_table);
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,11 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <string.h>
 #include <stdlib.h>
 #include <sys/utsname.h>
+
+#include "jam.h"
 
 /* If we have endian.h include it.  Otherwise, include sys/param.h
    if we have it. If the BYTE_ORDER macro is still undefined, we
@@ -35,9 +38,6 @@
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
 #endif
-
-#include "jam.h"
-#include "arch.h"
 
 extern Property *commandline_props;
 extern int commandline_props_count;
@@ -119,11 +119,12 @@ void addDefaultProperties(Object *properties) {
     uname(&info);
     setProperty(properties, "java.vm.name", "JamVM");
     setProperty(properties, "java.vm.version", VERSION);
+    setProperty(properties, "java.runtime.version", VERSION);
     setProperty(properties, "java.vm.vendor", "Robert Lougher");
     setProperty(properties, "java.vm.vendor.url", "http://jamvm.sourceforge.net");
     setProperty(properties, "java.version", "1.4.2");
     setProperty(properties, "java.vendor", "GNU Classpath");
-    setProperty(properties, "java.vendor.url", "http://gnu.classpath.org");
+    setProperty(properties, "java.vendor.url", "http://www.classpath.org");
     setProperty(properties, "java.home", INSTALL_DIR);
     setProperty(properties, "java.specification.version", "1.4");
     setProperty(properties, "java.specification.vendor", "Sun Microsystems, Inc.");
@@ -134,6 +135,7 @@ void addDefaultProperties(Object *properties) {
     setProperty(properties, "java.class.version", "48.0");
     setProperty(properties, "java.class.path", getClassPath());
     setProperty(properties, "java.boot.class.path", getBootClassPath());
+    setProperty(properties, "gnu.classpath.boot.library.path", getBootDllPath());
     setProperty(properties, "java.library.path", getDllPath());
     setProperty(properties, "java.io.tmpdir", "/tmp");
     setProperty(properties, "java.compiler", "");

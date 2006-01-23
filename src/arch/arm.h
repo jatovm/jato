@@ -15,10 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #define OS_ARCH "arm"
+
+/* Override default min and max heap sizes.  ARM machines are
+   usually embedded, and the standard defaults are too large. */
+#define DEFAULT_MAX_HEAP 16*MB
+#define DEFAULT_MIN_HEAP 1*MB
 
 #ifdef DIRECT
 #define HANDLER_TABLE_T static const void

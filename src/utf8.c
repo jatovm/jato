@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
  *
  * This file is part of JamVM.
  *
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <string.h>
@@ -47,27 +47,27 @@ static HashTable hash_table;
         c = x;                                        \
 }
 
-int utf8Len(unsigned char *utf8) {
+int utf8Len(char *utf8) {
     int count;
 
     for(count = 0; *utf8; count++) {
         int x = *utf8;
-        utf8 += (x & 0x80) ? ((x & 0x20) ?  3 : 2) : 1;
+        utf8 += (x & 0x80) ? ((x & 0x20) ? 3 : 2) : 1;
     }
 
     return count;
 }
 
-void convertUtf8(unsigned char *utf8, short *buff) {
+void convertUtf8(char *utf8, unsigned short *buff) {
     while(*utf8)
         GET_UTF8_CHAR(utf8, *buff++);
 }
 
-int utf8Hash(unsigned char *utf8) {
+int utf8Hash(char *utf8) {
     int hash = 0;
 
     while(*utf8) {
-        short c;
+        unsigned short c;
         GET_UTF8_CHAR(utf8, c);
         hash = hash * 37 + c;
     }
@@ -75,9 +75,9 @@ int utf8Hash(unsigned char *utf8) {
     return hash;
 }
 
-int utf8Comp(unsigned char *ptr, unsigned char *ptr2) {
+int utf8Comp(char *ptr, char *ptr2) {
     while(*ptr && *ptr2) {
-        short c, c2;
+        unsigned short c, c2;
 
         GET_UTF8_CHAR(ptr, c);
         GET_UTF8_CHAR(ptr2, c2);
@@ -90,8 +90,8 @@ int utf8Comp(unsigned char *ptr, unsigned char *ptr2) {
     return TRUE;
 }
 
-unsigned char *findUtf8String(unsigned char *string) {
-    unsigned char *interned;
+char *findUtf8String(char *string) {
+    char *interned;
 
     /* Add if absent, no scavenge, locked */
     findHashEntry(hash_table, string, interned, TRUE, FALSE, TRUE);
@@ -99,9 +99,9 @@ unsigned char *findUtf8String(unsigned char *string) {
     return interned;
 }
 
-unsigned char *slash2dots(unsigned char *utf8) {
+char *slash2dots(char *utf8) {
     int len = utf8Len(utf8);
-    unsigned char *conv = (unsigned char*)sysMalloc(len+1);
+    char *conv = (char*)sysMalloc(len+1);
     int i;
 
     for(i = 0; i <= len; i++)
@@ -121,22 +121,22 @@ void initialiseUtf8() {
 #ifndef NO_JNI
 /* Functions used by JNI */
 
-int utf8CharLen(short *unicode, int len) {
+int utf8CharLen(unsigned short *unicode, int len) {
     int count = 1;
 
     for(; len > 0; len--) {
-        short c = *unicode++;
+        unsigned short c = *unicode++;
         count += c > 0x7f ? (c > 0x7ff ? 3 : 2) : 1;
     }
 
     return count;
 }
 
-char *unicode2Utf8(short *unicode, int len, char *utf8) {
+char *unicode2Utf8(unsigned short *unicode, int len, char *utf8) {
     char *ptr = utf8;
 
     for(; len > 0; len--) {
-        short c = *unicode++;
+        unsigned short c = *unicode++;
         if((c == 0) || (c > 0x7f)) {
             if(c > 0x7ff) {
                 *ptr++ = (c >> 12) | 0xe0;

@@ -129,10 +129,10 @@ extends AccessibleObject implements Member
    * @see Modifier
    */
   public int getModifiers() {
-      return getMethodModifiers(slot);
+      return getMethodModifiers(declaringClass, slot);
   }
 
-  private native int getMethodModifiers(int slot);
+  private native int getMethodModifiers(Class declaringClass, int slot);
 
   /**
    * Gets the return type of this method.
@@ -352,14 +352,15 @@ extends AccessibleObject implements Member
   public Object invoke(Object o, Object[] args)
     throws IllegalAccessException, InvocationTargetException
   {
-    return invokeNative(o, args, declaringClass, parameterTypes, returnType, slot);
+    return invokeNative(o, args, declaringClass, parameterTypes, returnType, slot, flag);
   }
 
   /*
    * NATIVE HELPERS
    */
 
-  private native Object invokeNative(Object o, Object[] args,
-                    Class declaringClass, Class[] parameterTypes, Class returnType, int slot)
+  private native Object invokeNative(Object o, Object[] args, Class declaringClass,
+                                     Class[] parameterTypes, Class returnType,
+                                     int slot, boolean noAccessCheck)
     throws IllegalAccessException, InvocationTargetException;
 }

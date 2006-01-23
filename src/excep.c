@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
@@ -46,6 +46,7 @@ void initialiseException() {
             fprintf(stderr, "Error initialising VM (initialiseException)\n");
             exitVM(1);
         }
+        CLASS_CB(vmthrow_class)->flags |= VMTHROWABLE;
         backtrace_offset = bcktrce->offset;
         inited = TRUE;
     }
@@ -184,8 +185,8 @@ int mapPC2LineNo(MethodBlock *mb, CodePntr pc_pntr) {
 Object *setStackTrace() {
     Frame *bottom, *last = getExecEnv()->last_frame;
     Object *array, *vmthrwble;
+    uintptr_t *data;
     int depth = 0;
-    int *data;
 
     if(!inited)
         initialiseException();
@@ -201,28 +202,29 @@ Object *setStackTrace() {
         for(; last->mb != NULL; last = last->prev, depth++);
     } while((last = last->prev)->prev != NULL);
     
-    if((array = allocTypeArray(T_INT, depth*2)) == NULL)
+    if((array = allocTypeArray(sizeof(uintptr_t) == 4 ? T_INT : T_LONG, depth*2)) == NULL)
         return NULL;
 
-    data = INST_DATA(array);
-    depth = 1;
+    data = ARRAY_DATA(array);
+    depth = 0;
     do {
         for(; bottom->mb != NULL; bottom = bottom->prev) {
-            data[depth++] = (int)bottom->mb;
-            data[depth++] = (int)bottom->last_pc;
+            data[depth++] = (uintptr_t)bottom->mb;
+            data[depth++] = (uintptr_t)bottom->last_pc;
         }
     } while((bottom = bottom->prev)->prev != NULL);
 
     if((vmthrwble = allocObject(vmthrow_class)))
-        INST_DATA(vmthrwble)[backtrace_offset] = (int)array;
+        INST_DATA(vmthrwble)[backtrace_offset] = (uintptr_t)array;
 
     return vmthrwble;
 }
 
 Object *convertStackTrace(Object *vmthrwble) {
     Object *array, *ste_array;
-    int *src, *dest, depth;
-    int i, j;
+    int depth, i, j;
+    uintptr_t *src;
+    Object **dest;
 
     if(!inited)
         initialiseException();
@@ -230,19 +232,19 @@ Object *convertStackTrace(Object *vmthrwble) {
     if((array = (Object *)INST_DATA(vmthrwble)[backtrace_offset]) == NULL)
         return NULL;
 
-    src = &(INST_DATA(array)[1]);
-    depth = *INST_DATA(array);
+    src = ARRAY_DATA(array);
+    depth = ARRAY_LEN(array);
 
-    if((ste_array = allocArray(ste_array_class, depth/2, 4)) == NULL)
+    if((ste_array = allocArray(ste_array_class, depth/2, sizeof(Object*))) == NULL)
         return NULL;
 
-    dest = &(INST_DATA(ste_array)[1]);
+    dest = ARRAY_DATA(ste_array);
 
     for(i = 0, j = 0; i < depth; j++) {
         MethodBlock *mb = (MethodBlock*)src[i++];
         CodePntr pc = (CodePntr)src[i++];
         ClassBlock *cb = CLASS_CB(mb->class);
-        unsigned char *dot_name = slash2dots(cb->name);
+        char *dot_name = slash2dots(cb->name);
 
         int isNative = mb->access_flags & ACC_NATIVE ? TRUE : FALSE;
         Object *filename = isNative ? NULL : (cb->source_file_name ?
@@ -261,8 +263,26 @@ Object *convertStackTrace(Object *vmthrwble) {
         if(exceptionOccured())
             return NULL;
 
-        dest[j] = (int) ste;
+        dest[j] = ste;
     }
 
     return ste_array;
+}
+
+/* GC support for marking classes referenced by a VMThrowable.
+   In rare circumstances a stack backtrace may hold the only
+   reference to a class */
+
+void *markVMThrowable(Object *vmthrwble, int mark, int mark_soft_refs) {
+    Object *array;
+
+    if((array = (Object *)INST_DATA(vmthrwble)[backtrace_offset]) != NULL) {
+        uintptr_t *src = ARRAY_DATA(array);
+        int i, depth = ARRAY_LEN(array);
+
+        for(i = 0; i < depth; i += 2) {
+            MethodBlock *mb = (MethodBlock*)src[i];
+            markObject((Object*)mb->class, mark, mark_soft_refs);
+        }
+    }
 }

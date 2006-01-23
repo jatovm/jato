@@ -199,7 +199,7 @@ static struct statement *convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,
 						  struct stack *stack)
 {
 	struct classblock cb = {
-		.constant_pool_count = sizeof(cp_infos),
+		.constant_pool_count = nr_cp_infos,
 		.constant_pool.info = cp_infos,
 		.constant_pool.type = cp_types
 	};
@@ -208,14 +208,14 @@ static struct statement *convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,
 }
 
 static void assert_ldc_expr_and_stack(enum jvm_type expected_jvm_type,
-				      long expected_value, u1 cp_type)
+				      long long expected_value, u1 cp_type)
 {
 	struct expression *expr;
-	ConstantPoolEntry cp_infos[] = { cpu_to_be64(expected_value) };
+	u8 cp_infos[] = { expected_value };
 	u1 cp_types[] = { cp_type };
 	struct stack stack = STACK_INIT;
 
-	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
+	convert_bytecode_with_cp((void *)cp_infos, 8, cp_types,
 				 OPC_LDC, 0x00, 0x00, &stack);
 	expr = stack_pop(&stack);
 	assert_value_expr(expected_jvm_type, expected_value, expr);
@@ -227,11 +227,11 @@ static void assert_ldc_fexpr_and_stack(float expected_value)
 {
 	struct expression *expr;
 	u4 value = *(u4 *) & expected_value;
-	ConstantPoolEntry cp_infos[] = { cpu_to_be64(value) };
+	u8 cp_infos[] = { value };
 	u1 cp_types[] = { CONSTANT_Float };
 	struct stack stack = STACK_INIT;
 
-	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types,
+	convert_bytecode_with_cp((void *)cp_infos, 8, cp_types,
 				 OPC_LDC, 0x00, 0x00, &stack);
 	expr = stack_pop(&stack);
 	assert_fvalue_expr(J_FLOAT, expected_value, expr);
@@ -259,13 +259,13 @@ static void assert_ldcw_expr_and_stack(enum jvm_type expected_jvm_type,
 				       unsigned char opcode)
 {
 	struct expression *expr;
-	ConstantPoolEntry cp_infos[257];
-	cp_infos[256] = cpu_to_be64(expected_value);
+	u8 cp_infos[129];
+	cp_infos[128] = expected_value;
 	u1 cp_types[257];
 	cp_types[256] = cp_type;
 	struct stack stack = STACK_INIT;
 
-	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
+	convert_bytecode_with_cp((void *)cp_infos, 256, cp_types, opcode,
 				 0x01, 0x00, &stack);
 	expr = stack_pop(&stack);
 	assert_value_expr(expected_jvm_type, expected_value, expr);
@@ -278,14 +278,14 @@ static void assert_ldcw_fexpr_and_stack(enum jvm_type expected_jvm_type,
 					u1 cp_type, u8 value,
 					unsigned long opcode)
 {
-	ConstantPoolEntry cp_infos[257];
-	cp_infos[256] = cpu_to_be64(value);
+	u8 cp_infos[129];
+	cp_infos[128] = value;
 	u1 cp_types[257];
 	cp_types[256] = cp_type;
 	struct stack stack = STACK_INIT;
 	struct expression *expr;
 
-	convert_bytecode_with_cp(cp_infos, sizeof(cp_infos), cp_types, opcode,
+	convert_bytecode_with_cp((void *)cp_infos, 256, cp_types, opcode,
 				 0x01, 0x00, &stack);
 	expr = stack_pop(&stack);
 	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
