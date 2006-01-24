@@ -28,6 +28,7 @@ enum expression_type {
 	EXPR_ARRAY_DEREF,
 	EXPR_BINOP,
 	EXPR_UNARY_OP,
+	EXPR_CONVERSION,
 };
 
 struct expression {
@@ -65,6 +66,11 @@ struct expression {
 			enum unary_operator unary_operator;
 			struct expression *expression;
 		};
+
+		/* EXPR_CONVERSION */
+		struct {
+			struct expression *from_expression;
+		};
 	};
 };
 
@@ -81,5 +87,6 @@ struct expression *temporary_expr(enum jvm_type, unsigned long);
 struct expression *array_deref_expr(enum jvm_type, struct expression *, struct expression *);
 struct expression *binop_expr(enum jvm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum jvm_type, enum unary_operator, struct expression *);
+struct expression *conversion_expr(enum jvm_type, struct expression *);
 
 #endif

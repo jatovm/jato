@@ -807,6 +807,96 @@ static struct statement *convert_iinc(struct compilation_unit *compilation_unit)
 	return NULL;
 }
 
+static struct statement *convert_conversion(struct compilation_unit *compilation_unit,
+					    enum jvm_type to_type)
+{
+	struct expression *from_expression, *conversion_expression;
+
+	from_expression = stack_pop(compilation_unit->expr_stack);
+
+	conversion_expression = conversion_expr(to_type, from_expression);
+	if (conversion_expression)
+		stack_push(compilation_unit->expr_stack,
+			   conversion_expression);
+
+	return NULL;
+}
+
+static struct statement *convert_i2l(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_LONG);
+}
+
+static struct statement *convert_i2f(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_FLOAT);
+}
+
+static struct statement *convert_i2d(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_DOUBLE);
+}
+
+static struct statement *convert_l2i(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_INT);
+}
+
+static struct statement *convert_l2f(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_FLOAT);
+}
+
+static struct statement *convert_l2d(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_DOUBLE);
+}
+
+static struct statement *convert_f2i(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_INT);
+}
+
+static struct statement *convert_f2l(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_LONG);
+}
+
+static struct statement *convert_f2d(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_DOUBLE);
+}
+
+static struct statement *convert_d2i(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_INT);
+}
+
+static struct statement *convert_d2l(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_LONG);
+}
+
+static struct statement *convert_d2f(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_FLOAT);
+}
+
+static struct statement *convert_i2b(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_BYTE);
+}
+
+static struct statement *convert_i2c(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_CHAR);
+}
+
+static struct statement *convert_i2s(struct compilation_unit *compilation_unit)
+{
+	return convert_conversion(compilation_unit, J_SHORT);
+}
+
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
 
 struct converter {
@@ -949,6 +1039,21 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_IXOR, convert_ixor, 1),
 	DECLARE_CONVERTER(OPC_LXOR, convert_lxor, 1),
 	DECLARE_CONVERTER(OPC_IINC, convert_iinc, 3),
+	DECLARE_CONVERTER(OPC_I2L, convert_i2l, 1),
+	DECLARE_CONVERTER(OPC_I2F, convert_i2f, 1),
+	DECLARE_CONVERTER(OPC_I2D, convert_i2d, 1),
+	DECLARE_CONVERTER(OPC_L2I, convert_l2i, 1),
+	DECLARE_CONVERTER(OPC_L2F, convert_l2f, 1),
+	DECLARE_CONVERTER(OPC_L2D, convert_l2d, 1),
+	DECLARE_CONVERTER(OPC_F2I, convert_f2i, 1),
+	DECLARE_CONVERTER(OPC_F2L, convert_f2l, 1),
+	DECLARE_CONVERTER(OPC_F2D, convert_f2d, 1),
+	DECLARE_CONVERTER(OPC_D2I, convert_d2i, 1),
+	DECLARE_CONVERTER(OPC_D2L, convert_d2l, 1),
+	DECLARE_CONVERTER(OPC_D2F, convert_d2f, 1),
+	DECLARE_CONVERTER(OPC_I2B, convert_i2b, 1),
+	DECLARE_CONVERTER(OPC_I2C, convert_i2c, 1),
+	DECLARE_CONVERTER(OPC_I2S, convert_i2s, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,

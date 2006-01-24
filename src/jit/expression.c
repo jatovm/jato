@@ -48,6 +48,10 @@ void free_expression(struct expression *expr)
 		if (expr->expression)
 			expr_put(expr->expression);
 		break;
+	case EXPR_CONVERSION:
+		if (expr->from_expression)
+			expr_put(expr->from_expression);
+		break;
 	};
 	free(expr);
 }
@@ -135,5 +139,14 @@ struct expression *unary_op_expr(enum jvm_type jvm_type,
 		expr->unary_operator = unary_operator;
 		expr->expression = expression;
 	}
+	return expr;
+}
+
+struct expression *conversion_expr(enum jvm_type jvm_type,
+				   struct expression *from_expression)
+{
+	struct expression *expr = alloc_expression(EXPR_CONVERSION, jvm_type);
+	if (expr)
+		expr->from_expression = from_expression;
 	return expr;
 }
