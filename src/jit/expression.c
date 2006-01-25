@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006  Pekka Enberg
+ * Copybinary_right (C) 2006  Pekka Enberg
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
@@ -39,14 +39,14 @@ void free_expression(struct expression *expr)
 			expr_put(expr->array_index);
 		break;
 	case EXPR_BINOP:
-		if (expr->left)
-			expr_put(expr->left);
-		if (expr->right)
-			expr_put(expr->right);
+		if (expr->binary_left)
+			expr_put(expr->binary_left);
+		if (expr->binary_right)
+			expr_put(expr->binary_right);
 		break;
 	case EXPR_UNARY_OP:
-		if (expr->expression)
-			expr_put(expr->expression);
+		if (expr->unary_expression)
+			expr_put(expr->unary_expression);
 		break;
 	case EXPR_CONVERSION:
 		if (expr->from_expression)
@@ -119,25 +119,25 @@ struct expression *array_deref_expr(enum jvm_type jvm_type,
 
 struct expression *binop_expr(enum jvm_type jvm_type,
 			      enum binary_operator binary_operator,
-			      struct expression *left, struct expression *right)
+			      struct expression *binary_left, struct expression *binary_right)
 {
 	struct expression *expr = alloc_expression(EXPR_BINOP, jvm_type);
 	if (expr) {
 		expr->binary_operator = binary_operator;
-		expr->left = left;
-		expr->right = right;
+		expr->binary_left = binary_left;
+		expr->binary_right = binary_right;
 	}
 	return expr;
 }
 
 struct expression *unary_op_expr(enum jvm_type jvm_type,
 				 enum unary_operator unary_operator,
-				 struct expression *expression)
+				 struct expression *unary_expression)
 {
 	struct expression *expr = alloc_expression(EXPR_UNARY_OP, jvm_type);
 	if (expr) {
 		expr->unary_operator = unary_operator;
-		expr->expression = expression;
+		expr->unary_expression = unary_expression;
 	}
 	return expr;
 }

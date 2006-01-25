@@ -57,14 +57,14 @@ struct expression {
 		/* EXPR_BINOP */
 		struct {
 			enum binary_operator binary_operator;
-			struct expression *left;
-			struct expression *right;
+			struct expression *binary_left;
+			struct expression *binary_right;
 		};
 
 		/* EXPR_UNARY_OP */
 		struct {
 			enum unary_operator unary_operator;
-			struct expression *expression;
+			struct expression *unary_expression;
 		};
 
 		/* EXPR_CONVERSION */

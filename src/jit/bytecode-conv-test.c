@@ -54,15 +54,15 @@ static void assert_array_deref_expr(struct expression *expected_arrayref,
 
 static void assert_binop_expr(enum jvm_type jvm_type,
 			      enum binary_operator binary_operator,
-			      struct expression *left,
-			      struct expression *right,
+			      struct expression *binary_left,
+			      struct expression *binary_right,
 			      struct expression *expression)
 {
 	assert_int_equals(EXPR_BINOP, expression->type);
 	assert_int_equals(jvm_type, expression->jvm_type);
 	assert_int_equals(binary_operator, expression->binary_operator);
-	assert_ptr_equals(left, expression->left);
-	assert_ptr_equals(right, expression->right);
+	assert_ptr_equals(binary_left, expression->binary_left);
+	assert_ptr_equals(binary_right, expression->binary_right);
 }
 
 static void assert_unary_op_expr(enum jvm_type jvm_type,
@@ -73,7 +73,7 @@ static void assert_unary_op_expr(enum jvm_type jvm_type,
 	assert_int_equals(EXPR_UNARY_OP, unary_expression->type);
 	assert_int_equals(jvm_type, unary_expression->jvm_type);
 	assert_int_equals(unary_operator, unary_expression->unary_operator);
-	assert_ptr_equals(expression, unary_expression->expression);
+	assert_ptr_equals(expression, unary_expression->unary_expression);
 }
 
 static void assert_conversion_expr(enum jvm_type expected_type,
@@ -962,7 +962,7 @@ static void assert_iinc_stmt(unsigned char expected_index, unsigned char expecte
 	assign_stmt = convert_bytecode_to_stmts(NULL, code, 3, &stack);
 	local_expression = assign_stmt->left;
 	assert_local_expr(J_INT, expected_index, local_expression);
-	const_expression = assign_stmt->right->right;
+	const_expression = assign_stmt->right->binary_right;
 	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression, assign_stmt->right);
 	assert_local_expr(J_INT, expected_index, local_expression);
 	assert_value_expr(J_INT, expected_value, const_expression);
