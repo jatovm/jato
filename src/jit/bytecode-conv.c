@@ -897,6 +897,21 @@ static struct statement *convert_i2s(struct compilation_unit *compilation_unit)
 	return convert_conversion(compilation_unit, J_SHORT);
 }
 
+static struct statement *convert_lcmp(struct compilation_unit *compilation_unit)
+{
+	return convert_binop(compilation_unit, J_INT, OP_CMP);
+}
+
+static struct statement *convert_xcmpl(struct compilation_unit *compilation_unit)
+{
+	return convert_binop(compilation_unit, J_INT, OP_CMPL);
+}
+
+static struct statement *convert_xcmpg(struct compilation_unit *compilation_unit)
+{
+	return convert_binop(compilation_unit, J_INT, OP_CMPG);
+}
+
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
 
 struct converter {
@@ -1054,6 +1069,11 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_I2B, convert_i2b, 1),
 	DECLARE_CONVERTER(OPC_I2C, convert_i2c, 1),
 	DECLARE_CONVERTER(OPC_I2S, convert_i2s, 1),
+	DECLARE_CONVERTER(OPC_LCMP, convert_lcmp, 1),
+	DECLARE_CONVERTER(OPC_FCMPL, convert_xcmpl, 1),
+	DECLARE_CONVERTER(OPC_FCMPG, convert_xcmpg, 1),
+	DECLARE_CONVERTER(OPC_DCMPL, convert_xcmpl, 1),
+	DECLARE_CONVERTER(OPC_DCMPG, convert_xcmpg, 1),
 };
 
 struct statement *convert_bytecode_to_stmts(struct classblock *cb,

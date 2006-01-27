@@ -1029,3 +1029,33 @@ void test_convert_int_narrowing(void)
 	assert_conversion_expr_stack(OPC_I2C, J_INT, J_CHAR);
 	assert_conversion_expr_stack(OPC_I2S, J_INT, J_SHORT);
 }
+
+static void assert_cmp_expr_stack(unsigned char opc, enum binary_operator op,
+				  enum jvm_type type)
+{
+	unsigned char code[] = { opc };
+	struct stack expr_stack = STACK_INIT;
+	struct expression *left, *right, *cmp_expression;
+
+	left = temporary_expr(type, 1);
+	right = temporary_expr(type, 2);
+
+	stack_push(&expr_stack, left);
+	stack_push(&expr_stack, right);
+
+	convert_bytecode_to_stmts(NULL, code, 1, &expr_stack);
+	cmp_expression = stack_pop(&expr_stack);
+	assert_binop_expr(J_INT, op, left, right, cmp_expression);
+	assert_true(stack_is_empty(&expr_stack));
+
+	expr_put(cmp_expression);
+}
+
+void test_convert_cmp(void)
+{
+	assert_cmp_expr_stack(OPC_LCMP, OP_CMP, J_LONG);
+	assert_cmp_expr_stack(OPC_FCMPL, OP_CMPL, J_FLOAT);
+	assert_cmp_expr_stack(OPC_FCMPG, OP_CMPG, J_FLOAT);
+	assert_cmp_expr_stack(OPC_DCMPL, OP_CMPL, J_DOUBLE);
+	assert_cmp_expr_stack(OPC_DCMPG, OP_CMPG, J_DOUBLE);
+}

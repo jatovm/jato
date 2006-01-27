@@ -14,6 +14,9 @@ enum binary_operator {
 	OP_AND,
 	OP_OR,
 	OP_XOR,
+	OP_CMP,
+	OP_CMPL,
+	OP_CMPG,
 };
 
 enum unary_operator {
