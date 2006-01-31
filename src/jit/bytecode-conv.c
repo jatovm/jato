@@ -1070,7 +1070,16 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_DCMPG, convert_xcmpg, 1),
 };
 
-int convert_bytecode_to_stmts(struct compilation_unit *compilation_unit)
+/**
+ *	convert_to_ir - Convert bytecode to intermediate representation.
+ *	@compilation_unit: compilation unit to convert.
+ *
+ *	This function converts bytecode in a compilation unit to intermediate
+ *	representation of the JIT compiler.
+ *
+ *	Returns 1 if conversion succeeded; 0 otherwise.
+ */
+int convert_to_ir(struct compilation_unit *compilation_unit)
 {
 	struct statement *stmt;
 	struct converter *converter = &converters[compilation_unit->code[0]];

@@ -11,6 +11,6 @@ struct compilation_unit {
 	struct statement *stmt;
 };
 
-int convert_bytecode_to_stmts(struct compilation_unit *);
+int convert_to_ir(struct compilation_unit *);
 
 #endif
