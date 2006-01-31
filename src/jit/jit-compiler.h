@@ -12,9 +12,11 @@ struct basic_block {
 	struct statement *stmt;
 };
 
+#define MAX_BASIC_BLOCKS 1
+
 struct compilation_unit {
 	struct classblock *cb;
-	struct basic_block basic_block;
+	struct basic_block basic_blocks[MAX_BASIC_BLOCKS];
 	struct stack *expr_stack;
 };
 
