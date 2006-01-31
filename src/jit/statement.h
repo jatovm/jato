@@ -28,10 +28,6 @@ struct statement {
 	struct statement *next;
 };
 
-struct statement *convert_bytecode_to_stmts(struct classblock *,
-					    unsigned char *, unsigned long,
-					    struct stack *);
-
 struct statement *alloc_statement(enum statement_type);
 void free_statement(struct statement *);
 

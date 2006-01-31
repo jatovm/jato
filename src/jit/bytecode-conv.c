@@ -11,15 +11,9 @@
 #include <statement.h>
 #include <byteorder.h>
 #include <stack.h>
+#include <jit-compiler.h>
 
 #include <stdlib.h>
-
-struct compilation_unit {
-	struct classblock *cb;
-	unsigned char *code;
-	unsigned long len;
-	struct stack *expr_stack;
-};
 
 static unsigned long alloc_temporary(void)
 {
@@ -1076,20 +1070,11 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_DCMPG, convert_xcmpg, 1),
 };
 
-struct statement *convert_bytecode_to_stmts(struct classblock *cb,
-					    unsigned char *code,
-					    unsigned long len,
-					    struct stack *expr_stack)
+struct statement *convert_bytecode_to_stmts(struct compilation_unit *compilation_unit)
 {
-	struct converter *converter = &converters[code[0]];
-	if (!converter || len < converter->require)
+	struct converter *converter = &converters[compilation_unit->code[0]];
+	if (!converter || compilation_unit->len < converter->require)
 		return NULL;
 
-	struct compilation_unit compilation_unit = {
-		.cb = cb,
-		.code = code,
-		.len = len,
-		.expr_stack = expr_stack
-	};
-	return converter->convert(&compilation_unit);
+	return converter->convert(compilation_unit);
 }

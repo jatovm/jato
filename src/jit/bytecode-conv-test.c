@@ -5,6 +5,7 @@
 #include <statement.h>
 #include <byteorder.h>
 #include <stack.h>
+#include <jit-compiler.h>
 
 #include <libharness.h>
 #include <stdlib.h>
@@ -96,7 +97,13 @@ static void __assert_const_expr_and_stack(struct classblock *cb,
 	struct expression *expr;
 	struct stack stack = STACK_INIT;
 
-	convert_bytecode_to_stmts(cb, actual, count, &stack);
+	struct compilation_unit compilation_unit = {
+		.cb = cb,
+		.code = actual,
+		.len = count,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 
 	expr = stack_pop(&stack);
 	assert_value_expr(expected_jvm_type, expected_value, expr);
@@ -121,7 +128,12 @@ static void assert_fconst_expr_and_stack(enum jvm_type expected_jvm_type,
 	struct stack stack = STACK_INIT;
 	unsigned char code[] = { actual };
 
-	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	expr = stack_pop(&stack);
 	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
 	assert_true(stack_is_empty(&stack));
@@ -133,8 +145,13 @@ void test_convert_nop(void)
 {
 	unsigned char code[] = { OPC_NOP };
 	struct stack stack = STACK_INIT;
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
 	struct statement *stmt =
-	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(&compilation_unit);
 	assert_int_equals(STMT_NOP, stmt->type);
 	assert_true(stack_is_empty(&stack));
 	free_statement(stmt);
@@ -222,7 +239,13 @@ static struct statement *convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,
 		.constant_pool.type = cp_types
 	};
 	unsigned char code[] = { opcode, index1, index2 };
-	return convert_bytecode_to_stmts(&cb, code, sizeof(code), stack);
+	struct compilation_unit compilation_unit = {
+		.cb = &cb,
+		.code = code,
+		.len = 3,
+		.expr_stack = stack,
+	};
+	return convert_bytecode_to_stmts(&compilation_unit);
 }
 
 static void assert_ldc_expr_and_stack(enum jvm_type expected_jvm_type,
@@ -369,8 +392,13 @@ static void assert_load_stmt(unsigned char opc,
 {
 	unsigned char code[] = { opc, expected_index };
 	struct stack stack = STACK_INIT;
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 2,
+		.expr_stack = &stack,
+	};
 	struct statement *stmt =
-	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(&compilation_unit);
 	assert_int_equals(STMT_ASSIGN, stmt->type);
 	assert_local_expr(expected_jvm_type, expected_index, stmt->right);
 	assert_temporary_expr(stmt->left->temporary, stack_pop(&stack));
@@ -483,8 +511,13 @@ static void assert_array_load_stmts(enum jvm_type expected_type,
 	stack_push(&stack, arrayref_expr);
 	stack_push(&stack, index_expr);
 
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
 	struct statement *stmt =
-	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(&compilation_unit);
 
 	struct statement *nullcheck = stmt;
 	struct statement *arraycheck = stmt->next;
@@ -563,8 +596,13 @@ static void assert_store_stmt(unsigned char opc,
 
 	stack_push(&stack, temporary_expr(J_INT, expected_temporary));
 
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 2,
+		.expr_stack = &stack,
+	};
 	struct statement *stmt =
-	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(&compilation_unit);
 
 	assert_int_equals(STMT_ASSIGN, stmt->type);
 	assert_temporary_expr(expected_temporary, stmt->right);
@@ -662,8 +700,13 @@ static void assert_array_store_stmts(enum jvm_type expected_type,
 	stack_push(&stack, index_expr);
 	stack_push(&stack, expr);
 
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
 	struct statement *stmt =
-	    convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	    convert_bytecode_to_stmts(&compilation_unit);
 
 	struct statement *nullcheck = stmt;
 	struct statement *arraycheck = nullcheck->next;
@@ -734,7 +777,12 @@ static void assert_pop_stack(unsigned char opc)
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, (void *)1);
-	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	assert_true(stack_is_empty(&stack));
 }
 
@@ -749,7 +797,12 @@ static void assert_dup_stack(unsigned char opc, void *expected)
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, expected);
-	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	assert_ptr_equals(stack_pop(&stack), expected);
 	assert_ptr_equals(stack_pop(&stack), expected);
 	assert_true(stack_is_empty(&stack));
@@ -770,7 +823,12 @@ static void assert_dup_x1_stack(unsigned char opc,
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, expected2);
 	stack_push(&stack, expected1);
-	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	assert_ptr_equals(stack_pop(&stack), expected1);
 	assert_ptr_equals(stack_pop(&stack), expected2);
 	assert_ptr_equals(stack_pop(&stack), expected1);
@@ -794,7 +852,12 @@ static void assert_dup_x2_stack(unsigned char opc,
 	stack_push(&stack, expected3);
 	stack_push(&stack, expected2);
 	stack_push(&stack, expected1);
-	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	assert_ptr_equals(stack_pop(&stack), expected1);
 	assert_ptr_equals(stack_pop(&stack), expected2);
 	assert_ptr_equals(stack_pop(&stack), expected3);
@@ -818,7 +881,12 @@ static void assert_swap_stack(unsigned char opc,
 	stack_push(&stack, expected1);
 	stack_push(&stack, expected2);
 
-	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	assert_ptr_equals(stack_pop(&stack), expected1);
 	assert_ptr_equals(stack_pop(&stack), expected2);
 	assert_true(stack_is_empty(&stack));
@@ -845,7 +913,12 @@ static void assert_binop_expr_and_stack(enum jvm_type jvm_type,
 	stack_push(&stack, left);
 	stack_push(&stack, right);
 
-	stmt = convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	stmt = convert_bytecode_to_stmts(&compilation_unit);
 	expr = stack_pop(&stack);
 
 	assert_binop_expr(jvm_type, binary_operator, left, right, expr);
@@ -905,7 +978,12 @@ static void assert_unary_op_expr_and_stack(enum jvm_type jvm_type,
 	expression = temporary_expr(jvm_type, 1);
 	stack_push(&stack, expression);
 
-	convert_bytecode_to_stmts(NULL, code, sizeof(code), &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	unary_expression = stack_pop(&stack);
 
 	assert_unary_op_expr(jvm_type, unary_operator, expression, unary_expression);
@@ -959,7 +1037,12 @@ static void assert_iinc_stmt(unsigned char expected_index, unsigned char expecte
 	struct statement *assign_stmt;
 	struct expression *local_expression, *const_expression;
 
-	assign_stmt = convert_bytecode_to_stmts(NULL, code, 3, &stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 3,
+		.expr_stack = &stack,
+	};
+	assign_stmt = convert_bytecode_to_stmts(&compilation_unit);
 	local_expression = assign_stmt->left;
 	assert_local_expr(J_INT, expected_index, local_expression);
 	const_expression = assign_stmt->right->binary_right;
@@ -987,7 +1070,12 @@ static void assert_conversion_expr_stack(unsigned char opc,
 	expression = temporary_expr(from_type, 1);
 	stack_push(&expr_stack, expression);
 
-	convert_bytecode_to_stmts(NULL, code, 1, &expr_stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &expr_stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	conversion_expression = stack_pop(&expr_stack);
 	assert_conversion_expr(to_type, expression, conversion_expression);
 	assert_true(stack_is_empty(&expr_stack));
@@ -1043,7 +1131,12 @@ static void assert_cmp_expr_stack(unsigned char opc, enum binary_operator op,
 	stack_push(&expr_stack, left);
 	stack_push(&expr_stack, right);
 
-	convert_bytecode_to_stmts(NULL, code, 1, &expr_stack);
+	struct compilation_unit compilation_unit = {
+		.code = code,
+		.len = 1,
+		.expr_stack = &expr_stack,
+	};
+	convert_bytecode_to_stmts(&compilation_unit);
 	cmp_expression = stack_pop(&expr_stack);
 	assert_binop_expr(J_INT, op, left, right, cmp_expression);
 	assert_true(stack_is_empty(&expr_stack));
