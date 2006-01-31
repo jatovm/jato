@@ -1070,11 +1070,15 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_DCMPG, convert_xcmpg, 1),
 };
 
-struct statement *convert_bytecode_to_stmts(struct compilation_unit *compilation_unit)
+int convert_bytecode_to_stmts(struct compilation_unit *compilation_unit)
 {
+	struct statement *stmt;
 	struct converter *converter = &converters[compilation_unit->code[0]];
-	if (!converter || compilation_unit->len < converter->require)
-		return NULL;
 
-	return converter->convert(compilation_unit);
+	if (!converter || compilation_unit->len < converter->require)
+		return 0;
+
+	stmt = converter->convert(compilation_unit);
+	compilation_unit->stmt = stmt;
+	return 1;
 }

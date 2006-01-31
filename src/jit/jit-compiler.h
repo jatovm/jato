@@ -8,8 +8,9 @@ struct compilation_unit {
 	unsigned char *code;
 	unsigned long len;
 	struct stack *expr_stack;
+	struct statement *stmt;
 };
 
-struct statement *convert_bytecode_to_stmts(struct compilation_unit *);
+int convert_bytecode_to_stmts(struct compilation_unit *);
 
 #endif
