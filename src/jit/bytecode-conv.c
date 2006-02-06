@@ -260,7 +260,7 @@ static struct statement *convert_array_load(struct compilation_unit
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
-		goto failed;
+		goto failed_arraycheck;
 
 	expr_get(assign->right);
 	arraycheck->expression = assign->right;
@@ -268,7 +268,7 @@ static struct statement *convert_array_load(struct compilation_unit
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
-		goto failed;
+		goto failed_nullcheck;
 
 	expr_get(arrayref);
 	nullcheck->expression = arrayref;
@@ -276,10 +276,11 @@ static struct statement *convert_array_load(struct compilation_unit
 
 	return nullcheck;
 
-      failed:
-	free_statement(assign);
+      failed_nullcheck:
 	free_statement(arraycheck);
-	free_statement(nullcheck);
+      failed_arraycheck:
+	free_statement(assign);
+      failed:
 	return NULL;
 }
 
@@ -440,7 +441,7 @@ static struct statement *convert_array_store(struct compilation_unit
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
-		goto failed;
+		goto failed_arraycheck;
 
 	expr_get(assign->left);
 	arraycheck->expression = assign->left;
@@ -448,7 +449,7 @@ static struct statement *convert_array_store(struct compilation_unit
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
-		goto failed;
+		goto failed_nullcheck;
 
 	expr_get(arrayref);
 	nullcheck->expression = arrayref;
@@ -456,10 +457,11 @@ static struct statement *convert_array_store(struct compilation_unit
 
 	return nullcheck;
 
-      failed:
-	free_statement(assign);
+      failed_nullcheck:
 	free_statement(arraycheck);
-	free_statement(nullcheck);
+      failed_arraycheck:
+	free_statement(assign);
+      failed:
 	return NULL;
 }
 
