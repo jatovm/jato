@@ -2,7 +2,7 @@ TESTRUNNER=test-runner
 TEST_SUITE=test-suite.c
 
 CC = gcc
-CCFLAGS = -rdynamic -g -Wall 
+CCFLAGS = -rdynamic -g -Wall -Os
 INCLUDE = -I. -I..
 OBJS = bytecode-conv.o statement.o expression.o
 TESTS = bytecode-conv-test.o stack-test.o
