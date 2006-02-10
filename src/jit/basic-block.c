@@ -25,7 +25,12 @@ void free_basic_block(struct basic_block *bb)
 
 struct basic_block *bb_split(struct basic_block *bb, unsigned long offset)
 {
-	struct basic_block *new_block = alloc_basic_block(offset, bb->end);
+	struct basic_block *new_block;
+
+	if (offset < bb->start || offset >= bb->end)
+		return NULL;
+
+	new_block = alloc_basic_block(offset, bb->end);
 	if (new_block)
 		bb->end = offset;
 	return new_block;

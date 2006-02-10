@@ -5,6 +5,14 @@
 #include <basic-block.h>
 
 #include <libharness.h>
+#include <stddef.h>
+
+void test_split_with_out_of_range_offset(void)
+{
+	struct basic_block *block = alloc_basic_block(1, 2);
+	assert_ptr_equals(NULL, bb_split(block, 0));
+	assert_ptr_equals(NULL, bb_split(block, 2));
+}
 
 void test_split_basic_block(void)
 {
