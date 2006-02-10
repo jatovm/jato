@@ -99,7 +99,8 @@ static void __assert_const_expr_and_stack(struct classblock *cb,
 
 	struct compilation_unit compilation_unit = {
 		.cb = cb,
-		.basic_blocks[0] = BASIC_BLOCK_INIT(actual, count),
+		.code = actual,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, count),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -128,7 +129,8 @@ static void assert_fconst_expr_and_stack(enum jvm_type expected_jvm_type,
 	unsigned char code[] = { actual };
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -144,7 +146,8 @@ void test_convert_nop(void)
 	unsigned char code[] = { OPC_NOP };
 	struct stack stack = STACK_INIT;
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	struct statement *stmt;
@@ -238,7 +241,8 @@ static void convert_bytecode_with_cp(ConstantPoolEntry * cp_infos,
 	unsigned char code[] = { opcode, index1, index2 };
 	struct compilation_unit compilation_unit = {
 		.cb = &cb,
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 3),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 3),
 		.expr_stack = stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -390,7 +394,8 @@ static void assert_load_stmt(unsigned char opc,
 	struct stack stack = STACK_INIT;
 	struct statement *stmt;
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 2),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 2),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -508,7 +513,8 @@ static void assert_array_load_stmts(enum jvm_type expected_type,
 	stack_push(&stack, index_expr);
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	struct statement *stmt;
@@ -593,7 +599,8 @@ static void assert_store_stmt(unsigned char opc,
 	stack_push(&stack, temporary_expr(J_INT, expected_temporary));
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 2),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 2),
 		.expr_stack = &stack,
 	};
 	struct statement *stmt;
@@ -697,7 +704,8 @@ static void assert_array_store_stmts(enum jvm_type expected_type,
 	stack_push(&stack, expr);
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	struct statement *stmt;
@@ -774,7 +782,8 @@ static void assert_pop_stack(unsigned char opc)
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, (void *)1);
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -793,7 +802,8 @@ static void assert_dup_stack(unsigned char opc, void *expected)
 	struct stack stack = STACK_INIT;
 	stack_push(&stack, expected);
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -818,7 +828,8 @@ static void assert_dup_x1_stack(unsigned char opc,
 	stack_push(&stack, expected2);
 	stack_push(&stack, expected1);
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -846,7 +857,8 @@ static void assert_dup_x2_stack(unsigned char opc,
 	stack_push(&stack, expected2);
 	stack_push(&stack, expected1);
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -874,7 +886,8 @@ static void assert_swap_stack(unsigned char opc,
 	stack_push(&stack, expected2);
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -905,7 +918,8 @@ static void assert_binop_expr_and_stack(enum jvm_type jvm_type,
 	stack_push(&stack, right);
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -970,7 +984,8 @@ static void assert_unary_op_expr_and_stack(enum jvm_type jvm_type,
 	stack_push(&stack, expression);
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -1028,7 +1043,8 @@ static void assert_iinc_stmt(unsigned char expected_index, unsigned char expecte
 	struct expression *local_expression, *const_expression;
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 3),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 3),
 		.expr_stack = &stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -1061,7 +1077,8 @@ static void assert_conversion_expr_stack(unsigned char opc,
 	stack_push(&expr_stack, expression);
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &expr_stack,
 	};
 	convert_to_ir(&compilation_unit);
@@ -1121,7 +1138,8 @@ static void assert_cmp_expr_stack(unsigned char opc, enum binary_operator op,
 	stack_push(&expr_stack, right);
 
 	struct compilation_unit compilation_unit = {
-		.basic_blocks[0] = BASIC_BLOCK_INIT(code, 1),
+		.code = code,
+		.basic_blocks[0] = BASIC_BLOCK_INIT(0, 1),
 		.expr_stack = &expr_stack,
 	};
 	convert_to_ir(&compilation_unit);

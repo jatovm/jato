@@ -3,12 +3,12 @@
 
 #include <stack.h>
 
-#define BASIC_BLOCK_INIT(_code, _len) \
-	{ .code = _code, .len = _len }
+#define BASIC_BLOCK_INIT(_start, _end) \
+	{ .start = _start, .end = _end }
 
 struct basic_block {
-	unsigned long len;
-	unsigned char *code;
+	unsigned long start;
+	unsigned long end;
 	struct statement *stmt;
 };
 
@@ -16,6 +16,7 @@ struct basic_block {
 
 struct compilation_unit {
 	struct classblock *cb;
+	unsigned char *code;
 	struct basic_block basic_blocks[MAX_BASIC_BLOCKS];
 	struct stack *expr_stack;
 };
