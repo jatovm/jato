@@ -1,16 +1,8 @@
 #ifndef __JIT_COMPILER_H
 #define __JIT_COMPILER_H
 
+#include <basic-block.h>
 #include <stack.h>
-
-#define BASIC_BLOCK_INIT(_start, _end) \
-	{ .start = _start, .end = _end }
-
-struct basic_block {
-	unsigned long start;
-	unsigned long end;
-	struct statement *stmt;
-};
 
 #define MAX_BASIC_BLOCKS 1
 
