@@ -8,10 +8,12 @@
 #include <stddef.h>
 
 static void assert_basic_block(unsigned long start, unsigned long end,
+			       struct basic_block *next,
 			       struct basic_block *bb)
 {
 	assert_int_equals(start, bb->start);
 	assert_int_equals(end, bb->end);
+	assert_ptr_equals(next, bb->next);
 }
 
 void test_split_with_out_of_range_offset(void)
@@ -30,11 +32,9 @@ void test_split_basic_block(void)
 	b1->next = b2;
 	split = bb_split(b1, 2);
 
-	assert_basic_block(0, 2, b1);
-	assert_ptr_equals(split, b1->next);
-	assert_basic_block(2, 3, split);
-	assert_ptr_equals(b2, split->next);
-	assert_basic_block(3, 5, b2);
+	assert_basic_block(0, 2, split, b1);
+	assert_basic_block(2, 3, b2, split);
+	assert_basic_block(3, 5, NULL, b2);
 
 	free_basic_block(b1);
 	free_basic_block(split);
