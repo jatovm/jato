@@ -23,14 +23,22 @@ void test_split_with_out_of_range_offset(void)
 
 void test_split_basic_block(void)
 {
-	struct basic_block *block = alloc_basic_block(0, 3);
-	struct basic_block *bottom = bb_split(block, 2);
+	struct basic_block *b1, *b2, *split;
+	
+	b1 = alloc_basic_block(0, 3);
+	b2 = alloc_basic_block(3, 5);
+	b1->next = b2;
+	split = bb_split(b1, 2);
 
-	assert_basic_block(0, 2, block);
-	assert_basic_block(2, 3, bottom);
+	assert_basic_block(0, 2, b1);
+	assert_ptr_equals(split, b1->next);
+	assert_basic_block(2, 3, split);
+	assert_ptr_equals(b2, split->next);
+	assert_basic_block(3, 5, b2);
 
-	free_basic_block(block);
-	free_basic_block(bottom);
+	free_basic_block(b1);
+	free_basic_block(split);
+	free_basic_block(b2);
 }
 
 void test_find_basic_block(void)
