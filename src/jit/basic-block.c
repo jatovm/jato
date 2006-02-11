@@ -35,3 +35,15 @@ struct basic_block *bb_split(struct basic_block *bb, unsigned long offset)
 		bb->end = offset;
 	return new_block;
 }
+
+struct basic_block *bb_find(struct basic_block *bb_list, unsigned long offset)
+{
+	struct basic_block *bb = bb_list;
+
+	while (bb) {
+		if (offset >= bb->start && offset < bb->end)
+			break;
+		bb = bb->next;
+	}
+	return bb;
+}

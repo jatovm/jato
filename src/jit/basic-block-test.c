@@ -32,3 +32,29 @@ void test_split_basic_block(void)
 	free_basic_block(block);
 	free_basic_block(bottom);
 }
+
+void test_find_basic_block(void)
+{
+	struct basic_block *b1 = alloc_basic_block(0, 3);
+	struct basic_block *b2 = alloc_basic_block(3, 5);
+	struct basic_block *b3 = alloc_basic_block(5, 6);
+
+	b1->next = b2;
+	b2->next = b3;
+
+	assert_ptr_equals(b1, bb_find(b1, 2));
+	assert_ptr_equals(b2, bb_find(b1, 3));
+	assert_ptr_equals(b3, bb_find(b1, 5));
+
+	free_basic_block(b1);
+	free_basic_block(b2);
+	free_basic_block(b3);
+}
+
+void test_no_basic_block_when_offset_out_of_range(void)
+{
+	struct basic_block *block = alloc_basic_block(1, 2);
+	assert_ptr_equals(NULL, bb_find(block, 0));
+	assert_ptr_equals(NULL, bb_find(block, 2));
+	free_basic_block(block);
+}
