@@ -7,6 +7,13 @@
 #include <libharness.h>
 #include <stddef.h>
 
+static void assert_basic_block(unsigned long start, unsigned long end,
+			       struct basic_block *bb)
+{
+	assert_int_equals(start, bb->start);
+	assert_int_equals(end, bb->end);
+}
+
 void test_split_with_out_of_range_offset(void)
 {
 	struct basic_block *block = alloc_basic_block(1, 2);
@@ -18,10 +25,10 @@ void test_split_basic_block(void)
 {
 	struct basic_block *block = alloc_basic_block(0, 3);
 	struct basic_block *bottom = bb_split(block, 2);
-	assert_int_equals(0, block->start);
-	assert_int_equals(2, block->end);
-	assert_int_equals(2, bottom->start);
-	assert_int_equals(3, bottom->end);
+
+	assert_basic_block(0, 2, block);
+	assert_basic_block(2, 3, bottom);
+
 	free_basic_block(block);
 	free_basic_block(bottom);
 }
