@@ -61,4 +61,6 @@ void test_multiple_branches(void)
 
 	build_cfg(cu);
 	assert_int_equals(4, nr_bblocks(cu->entry_bb));
+
+	free_compilation_unit(cu);
 }

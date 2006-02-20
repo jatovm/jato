@@ -14,7 +14,7 @@ unsigned long *alloc_bitmap(unsigned long bits)
 {
 	unsigned long *bitmap, size;
 
-	size = ALIGN(bits, BITS_PER_LONG) / sizeof(unsigned long);
+	size = ALIGN(bits, BITS_PER_LONG) / 8;
 	bitmap = malloc(size);
 	if (bitmap)
 		memset(bitmap, 0, size);
@@ -23,7 +23,7 @@ unsigned long *alloc_bitmap(unsigned long bits)
 
 static inline unsigned long *addr_of(unsigned long *bitmap, unsigned long bit)
 {
-	return bitmap + (bit / sizeof(unsigned long));
+	return bitmap + (bit / BITS_PER_LONG);
 }
 
 int test_bit(unsigned long *bitmap, unsigned long bit)

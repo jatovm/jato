@@ -12,6 +12,7 @@
 #include <jit-compiler.h>
 #include <bytecodes.h>
 #include <bitmap.h>
+#include <stdlib.h>
 	
 static void bb_end_after_branch(struct compilation_unit *cu,
 			       unsigned long *branch_targets)
@@ -59,4 +60,6 @@ void build_cfg(struct compilation_unit *cu)
 	cu->entry_bb = alloc_basic_block(0, cu->code_len);
 	bb_end_after_branch(cu, branch_targets);
 	bb_start_at_branch_target(cu, branch_targets);
+
+	free(branch_targets);
 }
