@@ -1236,16 +1236,16 @@ unsigned char bytecode_sizes[] = {
  *
  *	Returns 1 if conversion succeeded; 0 otherwise.
  */
-int convert_to_ir(struct compilation_unit *compilation_unit)
+int convert_to_ir(struct compilation_unit *cu)
 {
 	struct statement *stmt;
-	unsigned char opc = compilation_unit->code[0];
+	unsigned char opc = cu->code[0];
 	struct converter *converter = &converters[opc];
 
-	if (!converter || compilation_unit->basic_blocks[0].end < bytecode_sizes[opc])
+	if (!cu->entry_bb || !converter || cu->code_len < bytecode_sizes[opc])
 		return 0;
 
-	stmt = converter->convert(compilation_unit);
-	compilation_unit->basic_blocks[0].stmt = stmt;
+	stmt = converter->convert(cu);
+	cu->entry_bb->stmt = stmt;
 	return 1;
 }

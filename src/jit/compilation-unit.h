@@ -8,7 +8,6 @@ struct compilation_unit {
 	struct classblock *cb;
 	unsigned char *code;
 	unsigned long code_len;
-	struct basic_block basic_blocks[1];
 	struct basic_block *entry_bb;
 	struct stack *expr_stack;
 };

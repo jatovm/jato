@@ -95,8 +95,7 @@ alloc_simple_compilation_unit(unsigned char *code, unsigned long code_len,
 	if (cu) {
 		cu->code = code;
 		cu->code_len = code_len;
-		cu->basic_blocks[0].start = 0;
-		cu->basic_blocks[0].end = code_len;
+		cu->entry_bb = alloc_basic_block(0, code_len);
 		cu->expr_stack = expr_stack;
 	}
 	return cu;
@@ -165,7 +164,7 @@ void test_convert_nop(void)
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->basic_blocks[0].stmt;
+	stmt = cu->entry_bb->stmt;
 	assert_int_equals(STMT_NOP, stmt->type);
 	assert_true(stack_is_empty(&stack));
 
@@ -424,7 +423,7 @@ static void assert_load_stmt(unsigned char opc,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->basic_blocks[0].stmt;
+	stmt = cu->entry_bb->stmt;
 	assert_int_equals(STMT_ASSIGN, stmt->type);
 	assert_local_expr(expected_jvm_type, expected_index, stmt->right);
 	assert_temporary_expr(stmt->left->temporary, stack_pop(&stack));
@@ -544,7 +543,7 @@ static void assert_array_load_stmts(enum jvm_type expected_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->basic_blocks[0].stmt;
+	stmt = cu->entry_bb->stmt;
 
 	struct statement *nullcheck = stmt;
 	struct statement *arraycheck = stmt->next;
@@ -629,7 +628,7 @@ static void assert_store_stmt(unsigned char opc,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->basic_blocks[0].stmt;
+	stmt = cu->entry_bb->stmt;
 
 	assert_int_equals(STMT_ASSIGN, stmt->type);
 	assert_temporary_expr(expected_temporary, stmt->right);
@@ -733,7 +732,7 @@ static void assert_array_store_stmts(enum jvm_type expected_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->basic_blocks[0].stmt;
+	stmt = cu->entry_bb->stmt;
 
 	struct statement *nullcheck = stmt;
 	struct statement *arraycheck = nullcheck->next;
@@ -954,7 +953,7 @@ static void assert_binop_expr_and_stack(enum jvm_type jvm_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->basic_blocks[0].stmt;
+	stmt = cu->entry_bb->stmt;
 	expr = stack_pop(&stack);
 
 	assert_binop_expr(jvm_type, binary_operator, left, right, expr);
@@ -1073,16 +1072,11 @@ static void assert_iinc_stmt(unsigned char expected_index, unsigned char expecte
 	struct statement *assign_stmt;
 	struct expression *local_expression, *const_expression;
 	struct compilation_unit *cu;
-	
-	cu = alloc_compilation_unit();
-	cu->code = code;
-	cu->code_len = ARRAY_SIZE(code);
-	cu->basic_blocks[0].start = 0;
-	cu->basic_blocks[0].end = 3;
-	cu->expr_stack = &stack;
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	assign_stmt = cu->basic_blocks[0].stmt;
+	assign_stmt = cu->entry_bb->stmt;
 	local_expression = assign_stmt->left;
 	assert_local_expr(J_INT, expected_index, local_expression);
 	const_expression = assign_stmt->right->binary_right;
@@ -1112,12 +1106,7 @@ static void assert_conversion_expr_stack(unsigned char opc,
 	expression = temporary_expr(from_type, 1);
 	stack_push(&expr_stack, expression);
 
-	cu = alloc_compilation_unit();
-	cu->code = code;
-	cu->code_len = ARRAY_SIZE(code);
-	cu->basic_blocks[0].start = 0;
-	cu->basic_blocks[0].end = 1;
-	cu->expr_stack = &expr_stack,
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
 
 	convert_to_ir(cu);
 	conversion_expression = stack_pop(&expr_stack);
@@ -1177,12 +1166,8 @@ static void assert_cmp_expr_stack(unsigned char opc, enum binary_operator op,
 	stack_push(&expr_stack, left);
 	stack_push(&expr_stack, right);
 
-	cu = alloc_compilation_unit();
-	cu->code = code;
-	cu->code_len = ARRAY_SIZE(code);
-	cu->basic_blocks[0].start = 0;
-	cu->basic_blocks[0].end = 1;
-	cu->expr_stack = &expr_stack;
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+
 	convert_to_ir(cu);
 	cmp_expression = stack_pop(&expr_stack);
 	assert_binop_expr(J_INT, op, left, right, cmp_expression);
