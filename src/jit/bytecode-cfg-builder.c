@@ -3,6 +3,9 @@
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
+ *
+ * The file contains functions for building a control-flow graph of a bytecode
+ * stream.
  */
 
 #include <jam.h>
@@ -10,7 +13,7 @@
 #include <bytecodes.h>
 #include <bitmap.h>
 	
-static void split_after_branch(struct compilation_unit *cu,
+static void bb_end_after_branch(struct compilation_unit *cu,
 			       unsigned long *branch_targets)
 {
 	struct basic_block *bb;
@@ -29,8 +32,8 @@ static void split_after_branch(struct compilation_unit *cu,
 	}
 }
 
-static void split_branch_targets(struct compilation_unit *cu,
-				 unsigned long *branch_targets)
+static void bb_start_at_branch_target(struct compilation_unit *cu,
+				      unsigned long *branch_targets)
 {
 	unsigned long offset = 0;
 
@@ -50,6 +53,6 @@ void build_cfg(struct compilation_unit *cu)
 	branch_targets = alloc_bitmap(cu->code_len);
 
 	cu->entry_bb = alloc_basic_block(0, cu->code_len);
-	split_after_branch(cu, branch_targets);
-	split_branch_targets(cu, branch_targets);
+	bb_end_after_branch(cu, branch_targets);
+	bb_start_at_branch_target(cu, branch_targets);
 }
