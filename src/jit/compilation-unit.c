@@ -21,6 +21,12 @@ struct compilation_unit *alloc_compilation_unit(void)
 
 void free_compilation_unit(struct compilation_unit *cu)
 {
-	free_basic_block(cu->entry_bb);
+	struct basic_block *bb = cu->entry_bb;
+
+	while (bb) {
+		struct basic_block *prev = bb;
+		bb = bb->next;
+		free_basic_block(prev);
+	}
 	free(cu);
 }

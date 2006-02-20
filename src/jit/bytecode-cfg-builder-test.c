@@ -27,19 +27,20 @@ static unsigned char default_string[9] = {
 void test_branch_opcode_ends_basic_block(void)
 {
 	struct basic_block *bb1, *bb2;
-	struct compilation_unit cu = {
-		.code = default_string,
-		.code_len = ARRAY_SIZE(default_string),
-	};
-	build_cfg(&cu);
-	assert_int_equals(2, nr_bblocks(cu.entry_bb));
+	struct compilation_unit *cu;
+	
+	cu = alloc_compilation_unit();
+	cu->code = default_string,
+	cu->code_len = ARRAY_SIZE(default_string),
 
-	bb1 = cu.entry_bb;
+	build_cfg(cu);
+	assert_int_equals(2, nr_bblocks(cu->entry_bb));
+
+	bb1 = cu->entry_bb;
 	bb2 = bb1->next;
 
 	assert_basic_block(0, 4, bb2, bb1);
 	assert_basic_block(4, 9, NULL, bb2);
 
-	free_basic_block(bb1);
-	free_basic_block(bb2);
+	free_compilation_unit(cu);
 }
