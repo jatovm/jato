@@ -39,4 +39,7 @@ void test_branch_opcode_ends_basic_block(void)
 
 	assert_basic_block(0, 4, bb2, bb1);
 	assert_basic_block(4, 9, NULL, bb2);
+
+	free_basic_block(bb1);
+	free_basic_block(bb2);
 }

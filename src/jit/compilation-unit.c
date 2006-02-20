@@ -21,5 +21,6 @@ struct compilation_unit *alloc_compilation_unit(void)
 
 void free_compilation_unit(struct compilation_unit *cu)
 {
-	free(cu->entry_bb);
+	free_basic_block(cu->entry_bb);
+	free(cu);
 }

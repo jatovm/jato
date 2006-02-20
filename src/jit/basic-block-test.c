@@ -13,6 +13,7 @@ void test_split_with_out_of_range_offset(void)
 	struct basic_block *block = alloc_basic_block(1, 2);
 	assert_ptr_equals(NULL, bb_split(block, 0));
 	assert_ptr_equals(NULL, bb_split(block, 2));
+	free_basic_block(block);
 }
 
 void test_split_basic_block(void)
@@ -67,4 +68,7 @@ void test_nr_bblocks(void)
 	assert_int_equals(1, nr_bblocks(entry_bb));
 	entry_bb->next = second_bb;
 	assert_int_equals(2, nr_bblocks(entry_bb));
+
+	free_basic_block(entry_bb);
+	free_basic_block(second_bb);
 }
