@@ -7,17 +7,19 @@
 
 #include <jam.h>
 #include <jit-compiler.h>
+#include <bytecodes.h>
 
 void build_cfg(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
-	unsigned long offset = 0;
+	unsigned long prev, offset = 0;
 
 	cu->entry_bb = bb = alloc_basic_block(offset, cu->code_len);
 	while (offset < cu->code_len) {
-		unsigned long prev_offset = offset;
+		prev = offset;
 		offset += bytecode_sizes[cu->code[offset]];
-		if (cu->code[prev_offset] == OPC_IFNONNULL)
+
+		if (bytecode_is_branch(cu->code[prev]))
 			bb_split(bb, offset);
 	}
 }
