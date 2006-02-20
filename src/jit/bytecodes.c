@@ -10,6 +10,16 @@
 #include <jam.h>
 #include <bytecodes.h>
 
+static unsigned char bytecode_sizes[];
+
+unsigned long bytecode_size(unsigned char *bc_start)
+{
+	if (*bc_start == OPC_WIDE)
+		return bytecode_sizes[OPC_WIDE] + bytecode_sizes[*++bc_start];
+
+	return bytecode_sizes[*bc_start];
+}
+
 bool bytecode_is_branch(unsigned char opc)
 {
 	bool branch;
@@ -44,7 +54,7 @@ bool bytecode_is_branch(unsigned char opc)
 	return branch;
 }
 
-unsigned char bytecode_sizes[] = {
+static unsigned char bytecode_sizes[] = {
 	[OPC_NOP] = 1,
 	[OPC_ACONST_NULL] = 1,
 	[OPC_ICONST_M1] = 1,
@@ -99,11 +109,11 @@ unsigned char bytecode_sizes[] = {
 	[OPC_BALOAD] = 1,
 	[OPC_CALOAD] = 1,
 	[OPC_SALOAD] = 1,
-	[OPC_ISTORE] = 1,
-	[OPC_LSTORE] = 1,
-	[OPC_FSTORE] = 1,
-	[OPC_DSTORE] = 1,
-	[OPC_ASTORE] = 1,
+	[OPC_ISTORE] = 2,
+	[OPC_LSTORE] = 2,
+	[OPC_FSTORE] = 2,
+	[OPC_DSTORE] = 2,
+	[OPC_ASTORE] = 2,
 	[OPC_ISTORE_0] = 1,
 	[OPC_ISTORE_1] = 1,
 	[OPC_ISTORE_2] = 1,
@@ -196,6 +206,14 @@ unsigned char bytecode_sizes[] = {
 	[OPC_FCMPG] = 1,
 	[OPC_DCMPL] = 1,
 	[OPC_DCMPG] = 1,
+	[OPC_IFEQ] = 3,
+	[OPC_IFNE] = 3,
+	[OPC_IFLT] = 3,
+	[OPC_IFGE] = 3,
+	[OPC_IFGT] = 3,
+	[OPC_IFLE] = 3,
+	[OPC_RET] = 2,
+	[OPC_WIDE] = 3,
 	[OPC_IFNONNULL] = 3,
 	[OPC_ARETURN] = 1,
 };

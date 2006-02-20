@@ -3,8 +3,7 @@
 
 #include <stdbool.h>
 
-extern unsigned char bytecode_sizes[];
-
+unsigned long bytecode_size(unsigned char *);
 bool bytecode_is_branch(unsigned char);
 
 #endif

@@ -17,7 +17,7 @@ void build_cfg(struct compilation_unit *cu)
 	cu->entry_bb = bb = alloc_basic_block(offset, cu->code_len);
 	while (offset < cu->code_len) {
 		prev = offset;
-		offset += bytecode_sizes[cu->code[offset]];
+		offset += bytecode_size(cu->code + offset);
 
 		if (bytecode_is_branch(cu->code[prev]))
 			bb_split(bb, offset);

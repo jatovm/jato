@@ -36,3 +36,37 @@ void test_is_branch_opcode(void)
 	assert_true(bytecode_is_branch(OPC_GOTO_W));
 	assert_true(bytecode_is_branch(OPC_JSR_W));
 }
+
+static void assert_bytecode_size(unsigned long expected_len, unsigned char opc)
+{
+	unsigned char code[] = { opc, 0x00, 0x00 };
+	assert_int_equals(expected_len, bytecode_size(code));
+}
+
+void test_size_of_bytecode(void)
+{
+	assert_bytecode_size(1, OPC_NOP);
+	assert_bytecode_size(3, OPC_IFEQ);
+}
+
+static void assert_wide_bytecode_size(unsigned long expected_len, unsigned char opc)
+{
+	unsigned char code[] = { OPC_WIDE, opc, 0x00, 0x00, 0x00 };
+	assert_int_equals(expected_len, bytecode_size(code));
+}
+
+void test_size_of_wide_bytecode(void)
+{
+	assert_wide_bytecode_size(5, OPC_ILOAD);
+	assert_wide_bytecode_size(5, OPC_FLOAD);
+	assert_wide_bytecode_size(5, OPC_ALOAD);
+	assert_wide_bytecode_size(5, OPC_LLOAD);
+	assert_wide_bytecode_size(5, OPC_DLOAD);
+	assert_wide_bytecode_size(5, OPC_ISTORE);
+	assert_wide_bytecode_size(5, OPC_FSTORE);
+	assert_wide_bytecode_size(5, OPC_ASTORE);
+	assert_wide_bytecode_size(5, OPC_LSTORE);
+	assert_wide_bytecode_size(5, OPC_DSTORE);
+	assert_wide_bytecode_size(5, OPC_RET);
+	assert_wide_bytecode_size(6, OPC_IINC);
+}

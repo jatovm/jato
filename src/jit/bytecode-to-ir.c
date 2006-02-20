@@ -1086,7 +1086,7 @@ int convert_to_ir(struct compilation_unit *cu)
 	unsigned char opc = cu->code[0];
 	struct converter *converter = &converters[opc];
 
-	if (!cu->entry_bb || !converter || cu->code_len < bytecode_sizes[opc])
+	if (!cu->entry_bb || !converter || cu->code_len < bytecode_size(cu->code))
 		return 0;
 
 	stmt = converter->convert(cu);
