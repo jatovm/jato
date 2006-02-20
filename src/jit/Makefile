@@ -4,7 +4,7 @@ TEST_SUITE=test-suite.c
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Os
 INCLUDE = -I. -I..
-OBJS = basic-block.o bitmap.o bytecode-cfg-builder.o bytecode-to-ir.o statement.o expression.o
+OBJS = basic-block.o bitmap.o bytecode-cfg-builder.o bytecode-to-ir.o compilation-unit.o statement.o expression.o
 TESTS = basic-block-test.o bitmap-test.o bytecode-cfg-builder-test.o bytecode-to-ir-test.o stack-test.o
 HARNESS = libharness.o backtrace.o
 

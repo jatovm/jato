@@ -1,17 +1,9 @@
 #ifndef __JIT_COMPILER_H
 #define __JIT_COMPILER_H
 
+#include <compilation-unit.h>
 #include <basic-block.h>
 #include <stack.h>
-
-struct compilation_unit {
-	struct classblock *cb;
-	unsigned char *code;
-	unsigned long code_len;
-	struct basic_block basic_blocks[1];
-	struct basic_block *entry_bb;
-	struct stack *expr_stack;
-};
 
 extern unsigned char bytecode_sizes[];
 
