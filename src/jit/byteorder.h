@@ -4,10 +4,13 @@
 #ifndef __BYTEORDER_H
 #define __BYTEORDER_H
 
-static inline u2 be16_to_cpu(u2 val)
+static inline u2 swab16(u2 val)
 {
 	return ((val & 0xFF00U) >> 8) | ((val & 0x00FFU) << 8);
 }
+
+static inline u2 be16_to_cpu(u2 val) { return swab16(val); }
+static inline u2 cpu_to_be16(u2 val) { return swab16(val); }
 
 static inline u4 swab32(u4 val)
 {

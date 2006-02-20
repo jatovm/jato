@@ -5,5 +5,6 @@
 
 unsigned long bytecode_size(unsigned char *);
 bool bytecode_is_branch(unsigned char);
+unsigned long bytecode_br_target(unsigned char *);
 
 #endif

@@ -9,6 +9,7 @@
 
 #include <jam.h>
 #include <bytecodes.h>
+#include <byteorder.h>
 
 static unsigned char bytecode_sizes[];
 
@@ -52,6 +53,32 @@ bool bytecode_is_branch(unsigned char opc)
 			branch = false;
 	};
 	return branch;
+}
+
+static unsigned long bytecode_br_target16(unsigned char* code)
+{
+	u2 target = *(u2 *) code;
+	return be16_to_cpu(target);
+}
+
+static unsigned long bytecode_br_target32(unsigned char* code)
+{
+	u4 target = *(u4 *) code;
+	return be32_to_cpu(target);
+}
+
+/**
+ *	bytecode_br_target - Return branch opcode target offset.
+ *	@code: start of branch bytecode.
+ */
+unsigned long bytecode_br_target(unsigned char *code)
+{
+	unsigned char opc = *code;
+
+	if (opc == OPC_GOTO_W || opc == OPC_JSR_W)
+		return bytecode_br_target32(code + 1);
+
+	return bytecode_br_target16(code + 1);
 }
 
 static unsigned char bytecode_sizes[] = {

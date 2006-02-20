@@ -2,9 +2,11 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
+#include <system.h>
 #include <jam.h>
 #include <libharness.h>
 #include <bytecodes.h>
+#include <byteorder.h>
 
 static void assert_bytecode_size(unsigned long expected_len, unsigned char opc)
 {
@@ -69,4 +71,37 @@ void test_is_branch_opcode(void)
 	assert_true(bytecode_is_branch(OPC_IFNONNULL));
 	assert_true(bytecode_is_branch(OPC_GOTO_W));
 	assert_true(bytecode_is_branch(OPC_JSR_W));
+}
+
+static void assert_branch_target(u2 expected, unsigned char opc)
+{
+	unsigned char code[] = { opc, (expected & 0xFF00) >> 8, (expected & 0x00FF) };
+	assert_int_equals(expected, bytecode_br_target(code));
+}
+
+void test_branch_target(void)
+{
+	assert_branch_target(0x0001, OPC_IFEQ);
+	assert_branch_target(0xFFFF, OPC_IFEQ);
+	assert_branch_target(0x1000, OPC_IFNE);
+}
+
+static void assert_wide_branch_target(u4 expected, unsigned char opc)
+{
+	unsigned char code[] = {
+		opc,
+		(expected & 0xFF000000UL) >> 24,
+		(expected & 0x00FF0000UL) >> 16,
+		(expected & 0x0000FF00UL) >> 8,
+		 expected & 0x000000FFUL
+	};
+	assert_int_equals(expected, bytecode_br_target(code));
+}
+
+void test_wide_branch_target(void)
+{
+	assert_wide_branch_target(0x00000001UL, OPC_GOTO_W);
+	assert_wide_branch_target(0xFFFFFFFFUL, OPC_GOTO_W);
+	assert_wide_branch_target(0x00FFFF00UL, OPC_GOTO_W);
+	assert_wide_branch_target(0x00000001UL, OPC_JSR_W);
 }
