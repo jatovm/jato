@@ -8,13 +8,7 @@
 #include <libharness.h>
 #include <basic-block-assert.h>
 
-/*
-    public String defaultString(String s) {
-        if (s == null)
-            s = "";
-        return s;
-    }
- */
+/* public String defaultString(String s) { if (s == null) { s = ""; } return s; } */
 static unsigned char default_string[9] = {
 	/* 0 */ OPC_ALOAD_1,
 	/* 1 */ OPC_IFNONNULL, 0x00, 0x07,
@@ -45,4 +39,26 @@ void test_branch_opcode_ends_basic_block(void)
 	assert_basic_block(7, 9, NULL, bb3);
 
 	free_compilation_unit(cu);
+}
+
+/* public boolean greaterThanZero(int i) { return i > 0; } */ 
+static unsigned char greater_than_zero[10] = {
+	/* 0 */ OPC_ILOAD_1,
+	/* 1 */ OPC_IFLE, 0x00, 0x08,
+	/* 4 */ OPC_ICONST_1,
+	/* 5 */ OPC_GOTO, 0x00, 0x09,
+	/* 8 */ OPC_ICONST_0,
+	/* 9 */ OPC_IRETURN,
+};
+
+void test_multiple_branches(void)
+{
+	struct compilation_unit *cu;
+
+	cu = alloc_compilation_unit();
+	cu->code = greater_than_zero,
+	cu->code_len = ARRAY_SIZE(greater_than_zero),
+
+	build_cfg(cu);
+	assert_int_equals(4, nr_bblocks(cu->entry_bb));
 }

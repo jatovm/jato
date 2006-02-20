@@ -27,7 +27,7 @@ static void bb_end_after_branch(struct compilation_unit *cu,
 
 		if (bytecode_is_branch(cu->code[prev])) {
 			set_bit(branch_targets, bytecode_br_target(&cu->code[prev]));
-			bb_split(bb, offset);
+			bb = bb_split(bb, offset);
 		}
 	}
 }
@@ -39,8 +39,12 @@ static void bb_start_at_branch_target(struct compilation_unit *cu,
 
 	while (offset < cu->code_len) {
 		if (test_bit(branch_targets, offset)) {
-			struct basic_block *bb = bb_find(cu->entry_bb, offset);
-			bb_split(bb, offset);
+			struct basic_block *bb;
+			
+			bb = bb_find(cu->entry_bb, offset);
+
+			if (bb->start != offset)
+				bb_split(bb, offset);
 		}
 		offset += bytecode_size(cu->code + offset);
 	}
