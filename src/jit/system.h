@@ -1,6 +1,8 @@
 #ifndef __JIT_SYSTEM_H
 #define __JIT_SYSTEM_H
 
+#include <stddef.h>
+
 #define BITS_PER_LONG (sizeof(unsigned long) * 8)
 
 /* Macros stolen shamelessly from Linux kernel. */

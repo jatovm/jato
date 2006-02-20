@@ -1222,6 +1222,8 @@ unsigned char bytecode_sizes[] = {
 	[OPC_FCMPG] = 1,
 	[OPC_DCMPL] = 1,
 	[OPC_DCMPG] = 1,
+	[OPC_IFNONNULL] = 3,
+	[OPC_ARETURN] = 1,
 };
 
 

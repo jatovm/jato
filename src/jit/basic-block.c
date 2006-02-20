@@ -51,3 +51,15 @@ struct basic_block *bb_find(struct basic_block *bb_list, unsigned long offset)
 	}
 	return bb;
 }
+
+unsigned long nr_bblocks(struct basic_block *entry_bb)
+{
+	unsigned long ret = 0;
+	struct basic_block *bb = entry_bb;
+	while (bb) {
+		ret++;
+		bb = bb->next;
+	}
+
+	return ret;
+}

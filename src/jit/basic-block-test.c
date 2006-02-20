@@ -3,18 +3,10 @@
  */
 
 #include <basic-block.h>
+#include <basic-block-assert.h>
 
 #include <libharness.h>
 #include <stddef.h>
-
-static void assert_basic_block(unsigned long start, unsigned long end,
-			       struct basic_block *next,
-			       struct basic_block *bb)
-{
-	assert_int_equals(start, bb->start);
-	assert_int_equals(end, bb->end);
-	assert_ptr_equals(next, bb->next);
-}
 
 void test_split_with_out_of_range_offset(void)
 {
@@ -65,4 +57,14 @@ void test_no_basic_block_when_offset_out_of_range(void)
 	assert_ptr_equals(NULL, bb_find(block, 0));
 	assert_ptr_equals(NULL, bb_find(block, 2));
 	free_basic_block(block);
+}
+
+void test_nr_bblocks(void)
+{
+	struct basic_block *entry_bb = alloc_basic_block(0, 3);
+	struct basic_block *second_bb = alloc_basic_block(3, 5);
+
+	assert_int_equals(1, nr_bblocks(entry_bb));
+	entry_bb->next = second_bb;
+	assert_int_equals(2, nr_bblocks(entry_bb));
 }

@@ -4,15 +4,18 @@
 #include <basic-block.h>
 #include <stack.h>
 
-#define MAX_BASIC_BLOCKS 1
-
 struct compilation_unit {
 	struct classblock *cb;
 	unsigned char *code;
-	struct basic_block basic_blocks[MAX_BASIC_BLOCKS];
+	unsigned long code_len;
+	struct basic_block basic_blocks[1];
+	struct basic_block *entry_bb;
 	struct stack *expr_stack;
 };
 
+extern unsigned char bytecode_sizes[];
+
+void build_cfg(struct compilation_unit *);
 int convert_to_ir(struct compilation_unit *);
 
 #endif
