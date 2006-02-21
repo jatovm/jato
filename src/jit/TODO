@@ -1,4 +1,5 @@
 - Bytecode to IR conversion
+	* Replace STMT_NULLCHECK and STMT_ARRAYCHECK with STMT_IF and STMT_THROW
 	* Basic block successors and precedessors
 	* Converting whole basic block
 	* bytecode_size() for TABLESWITCH and LOOKUPSWITCH
