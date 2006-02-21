@@ -17,7 +17,7 @@ void test_bitmap_is_initially_zeroed(void)
 	free(bitmap);
 }
 
-void test_bitmap_retains_state(void)
+void test_bitmap_retains_set_bit(void)
 {
 	unsigned long *bitmap = alloc_bitmap(8);
 
