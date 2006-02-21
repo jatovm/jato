@@ -1298,24 +1298,24 @@ void test_convert_if_acmp(void)
 
 void test_convert_goto(void)
 {
-	struct basic_block *target_bb, *true_bb;
+	struct basic_block *goto_bb, *target_bb;
 	struct statement *goto_stmt;
 	struct compilation_unit *cu;
 	struct stack expr_stack = STACK_INIT;
 	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
 
-	target_bb = alloc_basic_block(0, 1);
-	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET+1);
-	target_bb->next = true_bb;
+	goto_bb = alloc_basic_block(0, 1);
+	target_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET+1);
+	goto_bb->next = target_bb;
 
-	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), target_bb, &expr_stack);
+	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), goto_bb, &expr_stack);
 
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));
 
-	goto_stmt = target_bb->stmt;
+	goto_stmt = goto_bb->stmt;
 	assert_int_equals(STMT_GOTO, goto_stmt->type);
-	assert_ptr_equals(true_bb->label_stmt, goto_stmt->goto_target);
+	assert_ptr_equals(target_bb->label_stmt, goto_stmt->goto_target);
 
 	free_compilation_unit(cu);
 }
