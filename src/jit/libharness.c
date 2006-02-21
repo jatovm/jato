@@ -52,6 +52,13 @@ void __assert_false(const char *file, int line, bool condition)
 		fail(file, line, "Expected false, but was true");
 }
 
+void __assert_not_null(const char *file, int line, void *ptr)
+{
+	nr_asserts++;
+	if (!ptr)
+		fail(file, line, "Expected not null, but was null");
+}
+
 void __assert_int_equals(const char *file, int line, long long expected,
 			 long long actual)
 {

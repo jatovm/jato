@@ -1213,7 +1213,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 {
 	struct expression *if_value;
 	struct basic_block *stmt_bb, *true_bb;
-	struct statement *if_stmt, *true_stmt;
+	struct statement *if_stmt;
 	struct compilation_unit *cu;
 	struct stack expr_stack = STACK_INIT;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
@@ -1234,12 +1234,9 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));
 
-	true_stmt = true_bb->stmt;
-	assert_int_equals(STMT_LABEL, true_stmt->type);
-
 	if_stmt = stmt_bb->stmt;
 	assert_int_equals(STMT_IF, if_stmt->type);
-	assert_ptr_equals(true_stmt, if_stmt->if_true);
+	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);
 	assert_ptr_equals(if_value, if_stmt->if_conditional->binary_left);
 	assert_value_expr(J_INT, 0, if_stmt->if_conditional->binary_right);
@@ -1263,7 +1260,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 {
 	struct expression *if_value1, *if_value2;
 	struct basic_block *stmt_bb, *true_bb;
-	struct statement *if_stmt, *true_stmt;
+	struct statement *if_stmt;
 	struct compilation_unit *cu;
 	struct stack expr_stack = STACK_INIT;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
@@ -1287,12 +1284,9 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));
 
-	true_stmt = true_bb->stmt;
-	assert_int_equals(STMT_LABEL, true_stmt->type);
-
 	if_stmt = stmt_bb->stmt;
 	assert_int_equals(STMT_IF, if_stmt->type);
-	assert_ptr_equals(true_stmt, if_stmt->if_true);
+	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	assert_binop_expr(jvm_type, expected_operator, if_value1, if_value2,
 			  if_stmt->if_conditional);
 

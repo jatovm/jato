@@ -15,6 +15,7 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 	struct basic_block *bb = malloc(sizeof(*bb));
 	if (bb) {
 		memset(bb, 0, sizeof(*bb));
+		bb->label_stmt = alloc_statement(STMT_LABEL);
 		bb->start = start;
 		bb->end = end;
 		bb->next = NULL;
@@ -24,6 +25,7 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 
 void free_basic_block(struct basic_block *bb)
 {
+	free_statement(bb->label_stmt);
 	free_statement(bb->stmt);
 	free(bb);
 }

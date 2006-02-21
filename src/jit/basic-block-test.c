@@ -4,9 +4,18 @@
 
 #include <basic-block.h>
 #include <basic-block-assert.h>
+#include <statement.h>
 
 #include <libharness.h>
 #include <stddef.h>
+
+void test_basic_block_has_label_stmt(void)
+{
+	struct basic_block *b = alloc_basic_block(1, 2);
+	assert_not_null(b->label_stmt);
+	assert_int_equals(STMT_LABEL, b->label_stmt->type);
+	free_basic_block(b);
+}
 
 void test_split_with_out_of_range_offset(void)
 {

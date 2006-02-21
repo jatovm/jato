@@ -6,6 +6,7 @@ struct statement;
 struct basic_block {
 	unsigned long start;
 	unsigned long end;
+	struct statement *label_stmt;
 	struct statement *stmt;
 	struct basic_block *next;
 };

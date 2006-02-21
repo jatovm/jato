@@ -877,33 +877,27 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 {
 	struct basic_block *true_bb;
 	struct expression *if_conditional;
-	struct statement *if_stmt, *if_true;
+	struct statement *if_stmt;
 	unsigned long if_target;
 
 	if_target = bytecode_br_target(&cu->code[0]);
 	true_bb = bb_find(cu->entry_bb, if_target);
 
-	true_bb->stmt = if_true = alloc_statement(STMT_LABEL);
-	if (!if_true)
-		goto failed_if_true;
-
 	if_conditional = binop_expr(jvm_type, binop, binary_left, binary_right);
 	if (!if_conditional)
-		goto failed_if_conditional;
+		goto failed;
 
 	if_stmt = alloc_statement(STMT_IF);
 	if (!if_stmt)
-		goto failed_if_stmt;
+		goto failed_put_expr;
 
-	if_stmt->if_true = if_true;
+	if_stmt->if_true = true_bb->label_stmt;
 	if_stmt->if_conditional = if_conditional;
 
 	return if_stmt;
-      failed_if_stmt:
+      failed_put_expr:
 	expr_put(if_conditional);
-      failed_if_conditional:
-	free_statement(if_true);
-      failed_if_true:
+      failed:
 	return NULL;
 }
 
