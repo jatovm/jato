@@ -908,15 +908,16 @@ static struct statement *convert_xcmpg(struct compilation_unit *compilation_unit
 	return convert_binop(compilation_unit, J_INT, OP_CMPG);
 }
 
-static struct statement *convert_if(struct compilation_unit *cu,
-				    enum binary_operator binop)
+static struct statement *__convert_if(struct compilation_unit *cu,
+				      enum binary_operator binop,
+				      struct expression *binary_left,
+				      struct expression *binary_right)
 {
 	struct basic_block *true_bb;
-	struct expression *if_value, *if_conditional, *zero_value;
+	struct expression *if_conditional;
 	struct statement *if_stmt, *if_true;
 	unsigned long if_target;
 
-	if_value = stack_pop(cu->expr_stack);
 	if_target = bytecode_br_target(&cu->code[0]);
 	true_bb = bb_find(cu->entry_bb, if_target);
 
@@ -924,11 +925,7 @@ static struct statement *convert_if(struct compilation_unit *cu,
 	if (!if_true)
 		goto failed_if_true;
 
-	zero_value = value_expr(J_INT, 0);
-	if (!zero_value)
-		goto failed_zero_value;
-	
-	if_conditional = binop_expr(J_INT, binop, if_value, zero_value); 
+	if_conditional = binop_expr(J_INT, binop, binary_left, binary_right);
 	if (!if_conditional)
 		goto failed_if_conditional;
 
@@ -942,14 +939,29 @@ static struct statement *convert_if(struct compilation_unit *cu,
 	return if_stmt;
 failed_if_stmt:
 	expr_put(if_conditional);
-	zero_value = NULL;
 failed_if_conditional:
-	if (zero_value)
-		expr_put(zero_value);
-failed_zero_value:
 	free_statement(if_true);
 failed_if_true:
 	return NULL;
+}
+
+static struct statement *convert_if(struct compilation_unit *cu,
+				    enum binary_operator binop)
+{
+	struct statement *stmt;
+	struct expression *if_value, *zero_value;
+
+	zero_value = value_expr(J_INT, 0);
+	if (!zero_value)
+		return NULL;
+
+	if_value = stack_pop(cu->expr_stack);
+	stmt = __convert_if(cu, binop, if_value, zero_value);
+	if (!stmt) {
+		expr_put(zero_value);
+		return NULL;
+	}
+	return stmt;
 }
 
 static struct statement *convert_ifeq(struct compilation_unit *cu)
@@ -980,6 +992,48 @@ static struct statement *convert_ifgt(struct compilation_unit *cu)
 static struct statement *convert_ifle(struct compilation_unit *cu)
 {
 	return convert_if(cu, OP_LE);
+}
+
+static struct statement *convert_if_cmp(struct compilation_unit *cu,
+					enum jvm_type jvm_type,
+					enum binary_operator binop)
+{
+	struct expression *if_value1, *if_value2;
+
+	if_value2 = stack_pop(cu->expr_stack);
+	if_value1 = stack_pop(cu->expr_stack);
+
+	return __convert_if(cu, binop, if_value1, if_value2);
+}
+
+static struct statement *convert_if_icmpeq(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_INT, OP_EQ);
+}
+
+static struct statement *convert_if_icmpne(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_INT, OP_NE);
+}
+
+static struct statement *convert_if_icmplt(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_INT, OP_LT);
+}
+
+static struct statement *convert_if_icmpge(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_INT, OP_GE);
+}
+
+static struct statement *convert_if_icmpgt(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_INT, OP_GT);
+}
+
+static struct statement *convert_if_icmple(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_INT, OP_LE);
 }
 
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
@@ -1149,6 +1203,12 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_IFGE, convert_ifge),
 	DECLARE_CONVERTER(OPC_IFGT, convert_ifgt),
 	DECLARE_CONVERTER(OPC_IFLE, convert_ifle),
+	DECLARE_CONVERTER(OPC_IF_ICMPEQ, convert_if_icmpeq),
+	DECLARE_CONVERTER(OPC_IF_ICMPNE, convert_if_icmpne),
+	DECLARE_CONVERTER(OPC_IF_ICMPLT, convert_if_icmplt),
+	DECLARE_CONVERTER(OPC_IF_ICMPGE, convert_if_icmpge),
+	DECLARE_CONVERTER(OPC_IF_ICMPGT, convert_if_icmpgt),
+	DECLARE_CONVERTER(OPC_IF_ICMPLE, convert_if_icmple),
 };
 
 /**

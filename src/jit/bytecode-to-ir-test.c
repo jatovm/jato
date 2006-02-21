@@ -1237,3 +1237,54 @@ void test_convert_if(void)
 	assert_convert_if(OP_GT, OPC_IFGT);
 	assert_convert_if(OP_LE, OPC_IFLE);
 }
+
+static void assert_convert_if_cmp(enum binary_operator expected_operator,
+				  unsigned char opc)
+{
+	struct expression *if_value1, *if_value2;
+	struct basic_block *stmt_bb, *true_bb;
+	struct statement *if_stmt, *true_stmt;
+	struct compilation_unit *cu;
+	struct stack expr_stack = STACK_INIT;
+	unsigned char code[] = { opc, 0, TARGET_OFFSET };
+
+	stmt_bb = alloc_basic_block(0, 1);
+	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET+1);
+	stmt_bb->next = true_bb;
+
+	cu = alloc_compilation_unit();
+	cu->code = code;
+	cu->code_len = ARRAY_SIZE(code);
+	cu->entry_bb = stmt_bb;
+	cu->expr_stack = &expr_stack;
+
+	if_value1 = temporary_expr(J_INT, 1);
+	stack_push(&expr_stack, if_value1);
+
+	if_value2 = temporary_expr(J_INT, 2);
+	stack_push(&expr_stack, if_value2);
+
+	convert_to_ir(cu);
+	assert_true(stack_is_empty(&expr_stack));
+
+	true_stmt = true_bb->stmt;
+	assert_int_equals(STMT_LABEL, true_stmt->type);
+
+	if_stmt = stmt_bb->stmt;
+	assert_int_equals(STMT_IF, if_stmt->type);
+	assert_ptr_equals(true_stmt, if_stmt->if_true);
+	assert_binop_expr(J_INT, expected_operator, if_value1, if_value2,
+			  if_stmt->if_conditional);
+
+	free_compilation_unit(cu);
+}
+
+void test_convert_if_icmp(void)
+{
+	assert_convert_if_cmp(OP_EQ, OPC_IF_ICMPEQ);
+	assert_convert_if_cmp(OP_NE, OPC_IF_ICMPNE);
+	assert_convert_if_cmp(OP_LT, OPC_IF_ICMPLT);
+	assert_convert_if_cmp(OP_GE, OPC_IF_ICMPGE);
+	assert_convert_if_cmp(OP_GT, OPC_IF_ICMPGT);
+	assert_convert_if_cmp(OP_LE, OPC_IF_ICMPLE);
+}
