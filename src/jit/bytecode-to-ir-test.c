@@ -280,11 +280,30 @@ static void assert_ldc_expr_and_stack(enum jvm_type expected_jvm_type,
 	free_compilation_unit(cu);
 }
 
+static u4 float_to_cpu32(float fvalue)
+{
+	union {
+		float fvalue;
+		u4 value;
+	} v;
+	v.fvalue = fvalue;
+	return v.value;
+}
+
+static u8 double_to_cpu64(double fvalue)
+{
+	union {
+		double fvalue;
+		u8 value;
+	} v;
+	v.fvalue = fvalue;
+	return v.value;
+}
+
 static void assert_ldc_fexpr_and_stack(float expected_value)
 {
 	struct expression *expr;
-	u4 value = *(u4 *) & expected_value;
-	u8 cp_infos[] = { value };
+	u8 cp_infos[] = { float_to_cpu32(expected_value) };
 	u1 cp_types[] = { CONSTANT_Float };
 	unsigned char code[] = { OPC_LDC, 0x00, 0x00 };
 	struct stack stack = STACK_INIT;
@@ -369,7 +388,7 @@ static void assert_ldcw_float_expr_and_stack(enum jvm_type expected_jvm_type,
 					     float expected_value, u1 cp_type,
 					     unsigned long opcode)
 {
-	u4 value = *(u4 *) & expected_value;
+	u4 value = float_to_cpu32(expected_value);
 	assert_ldcw_fexpr_and_stack(expected_jvm_type,
 				    expected_value, cp_type, value, opcode);
 }
@@ -379,7 +398,7 @@ static void assert_ldcw_double_expr_and_stack(enum jvm_type
 					      double expected_value,
 					      u1 cp_type, unsigned long opcode)
 {
-	u8 value = *(u8 *) & expected_value;
+	u8 value = double_to_cpu64(expected_value);
 	assert_ldcw_fexpr_and_stack(expected_jvm_type,
 				    expected_value, cp_type, value, opcode);
 }
