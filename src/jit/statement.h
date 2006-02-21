@@ -10,6 +10,7 @@ enum statement_type {
 	STMT_ASSIGN,
 	STMT_IF,
 	STMT_LABEL,
+	STMT_GOTO,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 };
@@ -27,6 +28,10 @@ struct statement {
 		struct {
 			struct expression *if_conditional;
 			struct statement *if_true;
+		};
+		/* STMT_GOTO */
+		struct {
+			struct statement *goto_target;
 		};
 		/* STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct expression *expression;

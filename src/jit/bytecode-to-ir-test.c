@@ -1308,3 +1308,31 @@ void test_convert_if_acmp(void)
 	assert_convert_if_cmp(OP_EQ, J_REFERENCE, OPC_IF_ACMPEQ);
 	assert_convert_if_cmp(OP_NE, J_REFERENCE, OPC_IF_ACMPNE);
 }
+
+void test_convert_goto(void)
+{
+	struct basic_block *stmt_bb, *true_bb;
+	struct statement *goto_stmt;
+	struct compilation_unit *cu;
+	struct stack expr_stack = STACK_INIT;
+	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
+
+	stmt_bb = alloc_basic_block(0, 1);
+	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET+1);
+	stmt_bb->next = true_bb;
+
+	cu = alloc_compilation_unit();
+	cu->code = code;
+	cu->code_len = ARRAY_SIZE(code);
+	cu->entry_bb = stmt_bb;
+	cu->expr_stack = &expr_stack;
+
+	convert_to_ir(cu);
+	assert_true(stack_is_empty(&expr_stack));
+
+	goto_stmt = stmt_bb->stmt;
+	assert_int_equals(STMT_GOTO, goto_stmt->type);
+	assert_ptr_equals(true_bb->label_stmt, goto_stmt->goto_target);
+
+	free_compilation_unit(cu);
+}

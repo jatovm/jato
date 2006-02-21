@@ -1002,6 +1002,21 @@ static struct statement *convert_if_acmpne(struct compilation_unit *cu)
 	return convert_if_cmp(cu, J_REFERENCE, OP_NE);
 }
 
+static struct statement *convert_goto(struct compilation_unit *cu)
+{
+	struct basic_block *target_bb;
+	struct statement *goto_stmt;
+	unsigned long goto_target;
+
+	goto_target = bytecode_br_target(&cu->code[0]);
+	target_bb = bb_find(cu->entry_bb, goto_target);
+
+	goto_stmt = alloc_statement(STMT_GOTO);
+	if (goto_stmt)
+		goto_stmt->goto_target = target_bb->label_stmt;
+	return goto_stmt;
+}
+
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
 
 struct converter {
@@ -1177,6 +1192,7 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_IF_ICMPLE, convert_if_icmple),
 	DECLARE_CONVERTER(OPC_IF_ACMPEQ, convert_if_acmpeq),
 	DECLARE_CONVERTER(OPC_IF_ACMPNE, convert_if_acmpne),
+	DECLARE_CONVERTER(OPC_GOTO, convert_goto),
 };
 
 /**
