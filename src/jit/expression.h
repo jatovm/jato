@@ -25,6 +25,11 @@ enum binary_operator {
 
 	/* Conditionals */
 	OP_EQ,
+	OP_NE,
+	OP_LT,
+	OP_GE,
+	OP_GT,
+	OP_LE,
 };
 
 enum unary_operator {
