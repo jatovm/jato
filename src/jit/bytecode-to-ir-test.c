@@ -98,14 +98,9 @@ static struct compilation_unit *
 alloc_simple_compilation_unit(unsigned char *code, unsigned long code_len,
 			      struct stack *expr_stack)
 {
-	struct compilation_unit *cu = alloc_compilation_unit();
-	if (cu) {
-		cu->code = code;
-		cu->code_len = code_len;
-		cu->entry_bb = alloc_basic_block(0, code_len);
-		cu->expr_stack = expr_stack;
-	}
-	return cu;
+	return alloc_compilation_unit(code, code_len,
+				      alloc_basic_block(0, code_len),
+				      expr_stack);
 }
 
 static void __assert_const_expr_and_stack(struct classblock *cb,
@@ -1222,11 +1217,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET+1);
 	stmt_bb->next = true_bb;
 
-	cu = alloc_compilation_unit();
-	cu->code = code;
-	cu->code_len = ARRAY_SIZE(code);
-	cu->entry_bb = stmt_bb;
-	cu->expr_stack = &expr_stack;
+	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb, &expr_stack);
 
 	if_value = temporary_expr(J_INT, 1);
 	stack_push(&expr_stack, if_value);
@@ -1269,11 +1260,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET+1);
 	stmt_bb->next = true_bb;
 
-	cu = alloc_compilation_unit();
-	cu->code = code;
-	cu->code_len = ARRAY_SIZE(code);
-	cu->entry_bb = stmt_bb;
-	cu->expr_stack = &expr_stack;
+	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb, &expr_stack);
 
 	if_value1 = temporary_expr(jvm_type, 1);
 	stack_push(&expr_stack, if_value1);
@@ -1311,26 +1298,22 @@ void test_convert_if_acmp(void)
 
 void test_convert_goto(void)
 {
-	struct basic_block *stmt_bb, *true_bb;
+	struct basic_block *target_bb, *true_bb;
 	struct statement *goto_stmt;
 	struct compilation_unit *cu;
 	struct stack expr_stack = STACK_INIT;
 	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
 
-	stmt_bb = alloc_basic_block(0, 1);
+	target_bb = alloc_basic_block(0, 1);
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET+1);
-	stmt_bb->next = true_bb;
+	target_bb->next = true_bb;
 
-	cu = alloc_compilation_unit();
-	cu->code = code;
-	cu->code_len = ARRAY_SIZE(code);
-	cu->entry_bb = stmt_bb;
-	cu->expr_stack = &expr_stack;
+	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), target_bb, &expr_stack);
 
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));
 
-	goto_stmt = stmt_bb->stmt;
+	goto_stmt = target_bb->stmt;
 	assert_int_equals(STMT_GOTO, goto_stmt->type);
 	assert_ptr_equals(true_bb->label_stmt, goto_stmt->goto_target);
 

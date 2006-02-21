@@ -12,7 +12,10 @@ struct compilation_unit {
 	struct stack *expr_stack;
 };
 
-struct compilation_unit *alloc_compilation_unit(void);
+struct compilation_unit *alloc_compilation_unit(unsigned char *,
+						unsigned long,
+						struct basic_block *,
+						struct stack *);
 void free_compilation_unit(struct compilation_unit *);
 
 #endif

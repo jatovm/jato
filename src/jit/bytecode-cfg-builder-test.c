@@ -23,9 +23,8 @@ void test_branch_opcode_ends_basic_block(void)
 	struct basic_block *bb1, *bb2, *bb3;
 	struct compilation_unit *cu;
 	
-	cu = alloc_compilation_unit();
-	cu->code = default_string,
-	cu->code_len = ARRAY_SIZE(default_string),
+	cu = alloc_compilation_unit(default_string,
+				    ARRAY_SIZE(default_string), NULL, NULL);
 
 	build_cfg(cu);
 	assert_int_equals(3, nr_bblocks(cu->entry_bb));
@@ -55,9 +54,8 @@ void test_multiple_branches(void)
 {
 	struct compilation_unit *cu;
 
-	cu = alloc_compilation_unit();
-	cu->code = greater_than_zero,
-	cu->code_len = ARRAY_SIZE(greater_than_zero),
+	cu = alloc_compilation_unit(greater_than_zero,
+				    ARRAY_SIZE(greater_than_zero), NULL, NULL);
 
 	build_cfg(cu);
 	assert_int_equals(4, nr_bblocks(cu->entry_bb));
