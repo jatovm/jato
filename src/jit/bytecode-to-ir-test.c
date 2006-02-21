@@ -1239,6 +1239,7 @@ void test_convert_if(void)
 }
 
 static void assert_convert_if_cmp(enum binary_operator expected_operator,
+				  enum jvm_type jvm_type,
 				  unsigned char opc)
 {
 	struct expression *if_value1, *if_value2;
@@ -1258,10 +1259,10 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	cu->entry_bb = stmt_bb;
 	cu->expr_stack = &expr_stack;
 
-	if_value1 = temporary_expr(J_INT, 1);
+	if_value1 = temporary_expr(jvm_type, 1);
 	stack_push(&expr_stack, if_value1);
 
-	if_value2 = temporary_expr(J_INT, 2);
+	if_value2 = temporary_expr(jvm_type, 2);
 	stack_push(&expr_stack, if_value2);
 
 	convert_to_ir(cu);
@@ -1273,7 +1274,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	if_stmt = stmt_bb->stmt;
 	assert_int_equals(STMT_IF, if_stmt->type);
 	assert_ptr_equals(true_stmt, if_stmt->if_true);
-	assert_binop_expr(J_INT, expected_operator, if_value1, if_value2,
+	assert_binop_expr(jvm_type, expected_operator, if_value1, if_value2,
 			  if_stmt->if_conditional);
 
 	free_compilation_unit(cu);
@@ -1281,10 +1282,16 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 
 void test_convert_if_icmp(void)
 {
-	assert_convert_if_cmp(OP_EQ, OPC_IF_ICMPEQ);
-	assert_convert_if_cmp(OP_NE, OPC_IF_ICMPNE);
-	assert_convert_if_cmp(OP_LT, OPC_IF_ICMPLT);
-	assert_convert_if_cmp(OP_GE, OPC_IF_ICMPGE);
-	assert_convert_if_cmp(OP_GT, OPC_IF_ICMPGT);
-	assert_convert_if_cmp(OP_LE, OPC_IF_ICMPLE);
+	assert_convert_if_cmp(OP_EQ, J_INT, OPC_IF_ICMPEQ);
+	assert_convert_if_cmp(OP_NE, J_INT, OPC_IF_ICMPNE);
+	assert_convert_if_cmp(OP_LT, J_INT, OPC_IF_ICMPLT);
+	assert_convert_if_cmp(OP_GE, J_INT, OPC_IF_ICMPGE);
+	assert_convert_if_cmp(OP_GT, J_INT, OPC_IF_ICMPGT);
+	assert_convert_if_cmp(OP_LE, J_INT, OPC_IF_ICMPLE);
+}
+
+void test_convert_if_acmp(void)
+{
+	assert_convert_if_cmp(OP_EQ, J_REFERENCE, OPC_IF_ACMPEQ);
+	assert_convert_if_cmp(OP_NE, J_REFERENCE, OPC_IF_ACMPNE);
 }

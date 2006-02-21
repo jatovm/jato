@@ -909,6 +909,7 @@ static struct statement *convert_xcmpg(struct compilation_unit *compilation_unit
 }
 
 static struct statement *__convert_if(struct compilation_unit *cu,
+				      enum jvm_type jvm_type,
 				      enum binary_operator binop,
 				      struct expression *binary_left,
 				      struct expression *binary_right)
@@ -925,7 +926,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	if (!if_true)
 		goto failed_if_true;
 
-	if_conditional = binop_expr(J_INT, binop, binary_left, binary_right);
+	if_conditional = binop_expr(jvm_type, binop, binary_left, binary_right);
 	if (!if_conditional)
 		goto failed_if_conditional;
 
@@ -956,7 +957,7 @@ static struct statement *convert_if(struct compilation_unit *cu,
 		return NULL;
 
 	if_value = stack_pop(cu->expr_stack);
-	stmt = __convert_if(cu, binop, if_value, zero_value);
+	stmt = __convert_if(cu, J_INT, binop, if_value, zero_value);
 	if (!stmt) {
 		expr_put(zero_value);
 		return NULL;
@@ -1003,7 +1004,7 @@ static struct statement *convert_if_cmp(struct compilation_unit *cu,
 	if_value2 = stack_pop(cu->expr_stack);
 	if_value1 = stack_pop(cu->expr_stack);
 
-	return __convert_if(cu, binop, if_value1, if_value2);
+	return __convert_if(cu, jvm_type, binop, if_value1, if_value2);
 }
 
 static struct statement *convert_if_icmpeq(struct compilation_unit *cu)
@@ -1034,6 +1035,16 @@ static struct statement *convert_if_icmpgt(struct compilation_unit *cu)
 static struct statement *convert_if_icmple(struct compilation_unit *cu)
 {
 	return convert_if_cmp(cu, J_INT, OP_LE);
+}
+
+static struct statement *convert_if_acmpeq(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_REFERENCE, OP_EQ);
+}
+
+static struct statement *convert_if_acmpne(struct compilation_unit *cu)
+{
+	return convert_if_cmp(cu, J_REFERENCE, OP_NE);
 }
 
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
@@ -1209,6 +1220,8 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_IF_ICMPGE, convert_if_icmpge),
 	DECLARE_CONVERTER(OPC_IF_ICMPGT, convert_if_icmpgt),
 	DECLARE_CONVERTER(OPC_IF_ICMPLE, convert_if_icmple),
+	DECLARE_CONVERTER(OPC_IF_ACMPEQ, convert_if_acmpeq),
+	DECLARE_CONVERTER(OPC_IF_ACMPNE, convert_if_acmpne),
 };
 
 /**
