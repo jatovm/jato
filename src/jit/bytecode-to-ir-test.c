@@ -175,7 +175,6 @@ void test_convert_nop(void)
 	assert_int_equals(STMT_NOP, stmt->type);
 	assert_true(stack_is_empty(&stack));
 
-	free_statement(stmt);
 	free_compilation_unit(cu);
 }
 
@@ -436,7 +435,6 @@ static void assert_load_stmt(unsigned char opc,
 	assert_temporary_expr(stmt->left->temporary, stack_pop(&stack));
 	assert_true(stack_is_empty(&stack));
 
-	free_statement(stmt);
 	free_compilation_unit(cu);
 }
 
@@ -568,7 +566,6 @@ static void assert_array_load_stmts(enum jvm_type expected_type,
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(&stack));
 
-	free_statement(stmt);
 	free_compilation_unit(cu);
 }
 
@@ -643,7 +640,6 @@ static void assert_store_stmt(unsigned char opc,
 
 	assert_true(stack_is_empty(&stack));
 
-	free_statement(stmt);
 	free_compilation_unit(cu);
 }
 
@@ -755,7 +751,6 @@ static void assert_array_store_stmts(enum jvm_type expected_type,
 
 	assert_true(stack_is_empty(&stack));
 
-	free_statement(stmt);
 	free_compilation_unit(cu);
 }
 
@@ -1091,7 +1086,6 @@ static void assert_iinc_stmt(unsigned char expected_index, unsigned char expecte
 	assert_local_expr(J_INT, expected_index, local_expression);
 	assert_value_expr(J_INT, expected_value, const_expression);
 
-	free_statement(assign_stmt);
 	free_compilation_unit(cu);
 }
 
@@ -1228,7 +1222,5 @@ void test_convert_ifeq(void)
 	assert_ptr_equals(if_value, if_stmt->if_conditional->binary_left);
 	assert_value_expr(J_INT, 0, if_stmt->if_conditional->binary_right);
 
-	free_statement(if_stmt);
-	free_statement(true_stmt);
 	free_compilation_unit(cu);
 }

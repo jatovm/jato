@@ -6,12 +6,15 @@
  */
 
 #include <basic-block.h>
+#include <statement.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 {
 	struct basic_block *bb = malloc(sizeof(*bb));
 	if (bb) {
+		memset(bb, 0, sizeof(*bb));
 		bb->start = start;
 		bb->end = end;
 		bb->next = NULL;
@@ -21,6 +24,7 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 
 void free_basic_block(struct basic_block *bb)
 {
+	free_statement(bb->stmt);
 	free(bb);
 }
 
