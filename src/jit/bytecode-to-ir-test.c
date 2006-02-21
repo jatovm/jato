@@ -54,15 +54,22 @@ static void assert_array_deref_expr(struct expression *expected_arrayref,
 	assert_ptr_equals(expected_index, expression->array_index);
 }
 
+static void __assert_binop_expr(enum jvm_type jvm_type,
+				enum binary_operator binary_operator,
+				struct expression *expression)
+{
+	assert_int_equals(EXPR_BINOP, expression->type);
+	assert_int_equals(jvm_type, expression->jvm_type);
+	assert_int_equals(binary_operator, expression->binary_operator);
+}
+
 static void assert_binop_expr(enum jvm_type jvm_type,
 			      enum binary_operator binary_operator,
 			      struct expression *binary_left,
 			      struct expression *binary_right,
 			      struct expression *expression)
 {
-	assert_int_equals(EXPR_BINOP, expression->type);
-	assert_int_equals(jvm_type, expression->jvm_type);
-	assert_int_equals(binary_operator, expression->binary_operator);
+	__assert_binop_expr(jvm_type, binary_operator, expression);
 	assert_ptr_equals(binary_left, expression->binary_left);
 	assert_ptr_equals(binary_right, expression->binary_right);
 }
@@ -1184,4 +1191,44 @@ void test_convert_cmp(void)
 	assert_cmp_expr_stack(OPC_FCMPG, OP_CMPG, J_FLOAT);
 	assert_cmp_expr_stack(OPC_DCMPL, OP_CMPL, J_DOUBLE);
 	assert_cmp_expr_stack(OPC_DCMPG, OP_CMPG, J_DOUBLE);
+}
+
+void test_convert_ifeq(void)
+{
+	struct expression *if_value;
+	struct basic_block *stmt_bb, *true_bb;
+	struct statement *if_stmt, *true_stmt;
+	struct compilation_unit *cu;
+	struct stack expr_stack = STACK_INIT;
+	unsigned char code[] = { OPC_IFEQ, 0x00, 0x02 };
+
+	stmt_bb = alloc_basic_block(0, 1);
+	true_bb = alloc_basic_block(2, 3);
+	stmt_bb->next = true_bb;
+
+	cu = alloc_compilation_unit();
+	cu->code = code;
+	cu->code_len = ARRAY_SIZE(code);
+	cu->entry_bb = stmt_bb;
+	cu->expr_stack = &expr_stack;
+
+	if_value = temporary_expr(J_INT, 1);
+	stack_push(&expr_stack, if_value);
+
+	convert_to_ir(cu);
+	assert_true(stack_is_empty(&expr_stack));
+
+	true_stmt = true_bb->stmt;
+	assert_int_equals(STMT_LABEL, true_stmt->type);
+
+	if_stmt = stmt_bb->stmt;
+	assert_int_equals(STMT_IF, if_stmt->type);
+	assert_ptr_equals(true_stmt, if_stmt->if_true);
+	__assert_binop_expr(J_INT, OP_EQ, if_stmt->if_conditional);
+	assert_ptr_equals(if_value, if_stmt->if_conditional->binary_left);
+	assert_value_expr(J_INT, 0, if_stmt->if_conditional->binary_right);
+
+	free_statement(if_stmt);
+	free_statement(true_stmt);
+	free_compilation_unit(cu);
 }

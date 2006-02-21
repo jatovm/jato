@@ -35,6 +35,11 @@ void free_statement(struct statement *stmt)
 		expr_put(stmt->left);
 		expr_put(stmt->right);
 		break;
+	case STMT_IF:
+		expr_put(stmt->if_conditional);
+		break;
+	case STMT_LABEL:
+		break;
 	case STMT_NULL_CHECK:
 	case STMT_ARRAY_CHECK:
 		expr_put(stmt->expression);

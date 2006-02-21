@@ -908,6 +908,49 @@ static struct statement *convert_xcmpg(struct compilation_unit *compilation_unit
 	return convert_binop(compilation_unit, J_INT, OP_CMPG);
 }
 
+static struct statement *convert_ifeq(struct compilation_unit *cu)
+{
+	struct basic_block *true_bb;
+	struct expression *if_value, *if_conditional, *zero_value;
+	struct statement *if_stmt, *if_true;
+	unsigned long if_target;
+
+	if_value = stack_pop(cu->expr_stack);
+	if_target = bytecode_br_target(&cu->code[0]);
+	true_bb = bb_find(cu->entry_bb, if_target);
+
+	true_bb->stmt = if_true = alloc_statement(STMT_LABEL);
+	if (!if_true)
+		goto failed_if_true;
+
+	zero_value = value_expr(J_INT, 0);
+	if (!zero_value)
+		goto failed_zero_value;
+	
+	if_conditional = binop_expr(J_INT, OP_EQ, if_value, zero_value); 
+	if (!if_conditional)
+		goto failed_if_conditional;
+
+	if_stmt = alloc_statement(STMT_IF);
+	if (!if_stmt)
+		goto failed_if_stmt;
+
+	if_stmt->if_true = if_true;
+	if_stmt->if_conditional = if_conditional;
+
+	return if_stmt;
+failed_if_stmt:
+	expr_put(if_conditional);
+	zero_value = NULL;
+failed_if_conditional:
+	if (zero_value)
+		expr_put(zero_value);
+failed_zero_value:
+	free_statement(if_true);
+failed_if_true:
+	return NULL;
+}
+
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
 
 struct converter {
@@ -1069,6 +1112,7 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_FCMPG, convert_xcmpg),
 	DECLARE_CONVERTER(OPC_DCMPL, convert_xcmpl),
 	DECLARE_CONVERTER(OPC_DCMPG, convert_xcmpg),
+	DECLARE_CONVERTER(OPC_IFEQ, convert_ifeq),
 };
 
 /**

@@ -4,19 +4,27 @@
 #include <jvm_types.h>
 
 enum binary_operator {
+	/* Arithmetic */
 	OP_ADD,
 	OP_SUB,
 	OP_MUL,
 	OP_DIV,
 	OP_REM,
+
+	/* Bitwise */
 	OP_SHL,
 	OP_SHR,
 	OP_AND,
 	OP_OR,
 	OP_XOR,
+
+	/* Comparison */
 	OP_CMP,
 	OP_CMPL,
 	OP_CMPG,
+
+	/* Conditionals */
+	OP_EQ,
 };
 
 enum unary_operator {

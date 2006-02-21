@@ -5,11 +5,11 @@
 #include <stddef.h>
 #include <jam.h>
 
-struct stack;
-
 enum statement_type {
 	STMT_NOP,
 	STMT_ASSIGN,
+	STMT_IF,
+	STMT_LABEL,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 };
@@ -17,10 +17,16 @@ enum statement_type {
 struct statement {
 	enum statement_type type;
 	union {
+		/* STMT_NOP and STMT_LABEL have no fields.  */
 		/* STMT_ASSIGN */
 		struct {
 			struct expression *left;
 			struct expression *right;
+		};
+		/* STMT_IF */
+		struct {
+			struct expression *if_conditional;
+			struct statement *if_true;
 		};
 		/* STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct expression *expression;
