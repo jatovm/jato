@@ -28,7 +28,8 @@ reg:	EXPR_TEMPORARY	0
 
 reg:	EXPR_ADD(reg, reg) 1
 {
-	insn = alloc_insn(ADD, 2, 1);
+	insn = alloc_insn(ADD, tree->binary_right->temporary,
+			  tree->binary_left->temporary);
 }
 
 %%

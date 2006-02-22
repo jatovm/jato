@@ -16,15 +16,21 @@ static void assert_insn(enum insn_opcode insn_op,
 	assert_int_equals(dest, insn->dest);
 }
 
-void test_insn_select(void)
+static void assert_rewrite_binop_expr(unsigned long left, unsigned long right)
 {
 	struct insn *insn;
 	struct expression *expr;
 
-	expr = binop_expr(J_INT, ADD, temporary_expr(J_INT, 1),
-			  temporary_expr(J_INT, 2));
+	expr = binop_expr(J_INT, ADD, temporary_expr(J_INT, left),
+			  temporary_expr(J_INT, right));
 	insn = insn_select(expr);
-	assert_insn(ADD, 2, 1, insn);
+	assert_insn(ADD, right, left, insn);
 	free_insn(insn);
 	expr_put(expr);
+}
+
+void test_rewrite_add_expr(void)
+{
+	assert_rewrite_binop_expr(1, 2);
+	assert_rewrite_binop_expr(2, 1);
 }
