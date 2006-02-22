@@ -4,6 +4,29 @@ Introduction
 This is a simple JIT compiler for Java built on top of JamVM.
 
 
+How can I try it out
+--------------------
+
+You need git to download jamvm-sources. To compile jit-jamvm and run the
+unit tests, follow these instructions:
+
+  1. Download jit-jamvm sources the first time:
+  
+    % git clone http://www.laughingpanda.org/~penberg/pub/scm/jit-jamvm.git jit-jamvm
+
+  2. Compile monoburg
+
+    % cd jit-jamvm/monoburg/
+    % make
+
+  3. Compile jit-jamvm and run unit tests:
+
+    % cd jit-jamvm/ 
+    % ./configure
+    % cd src/jit/
+    % make
+
+
 License
 -------
 

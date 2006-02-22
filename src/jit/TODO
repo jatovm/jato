@@ -7,6 +7,8 @@
 	  basic-block boundary (e.g. the 'x ? y : z' expression).
 - Instruction selection
 	* Monoburg
+	* Fix all GCC warnings from Monoburg generated code
+	* Remove dependency to glib
 - Register allocation
 	* Linear scan register allocator [Poletto99]
 - JIT code execution
