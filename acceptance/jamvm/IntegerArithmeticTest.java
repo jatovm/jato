@@ -24,6 +24,13 @@ public class IntegerArithmeticTest {
         assertEquals(3, add(1, 2));
     }
 
+    public static void testIntegerAdditionOverflow() {
+        assertEquals(Integer.MAX_VALUE, add(0, Integer.MAX_VALUE));
+        assertEquals(Integer.MIN_VALUE, add(1, Integer.MAX_VALUE));
+        assertEquals(Integer.MIN_VALUE, add(0, Integer.MIN_VALUE));
+        assertEquals(Integer.MAX_VALUE, add(1, Integer.MIN_VALUE));
+    }
+
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail("Expected '" + expected + "', but was '" + actual + "'.");
