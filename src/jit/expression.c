@@ -7,12 +7,15 @@
 
 #include <expression.h>
 #include <stdlib.h>
+#include <string.h>
+#include <glib.h>
 
 struct expression *alloc_expression(enum expression_type type,
 				    enum jvm_type jvm_type)
 {
 	struct expression *expr = malloc(sizeof *expr);
 	if (expr) {
+		memset(expr, 0, sizeof *expr);
 		expr->type = type;
 		expr->jvm_type = jvm_type;
 		expr->refcount = 1;
@@ -53,6 +56,8 @@ void free_expression(struct expression *expr)
 			expr_put(expr->from_expression);
 		break;
 	};
+	if (expr->state)
+		g_free(expr->state);
 	free(expr);
 }
 

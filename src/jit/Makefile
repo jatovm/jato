@@ -2,10 +2,11 @@ TESTRUNNER=test-runner
 TEST_SUITE=test-suite.c
 
 CC = gcc
-CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
-INCLUDE = -I. -I..
-OBJS = basic-block.o bitmap.o bytecodes.o bytecode-cfg-builder.o bytecode-to-ir.o compilation-unit.o statement.o expression.o
-TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o bytecode-cfg-builder-test.o bytecode-to-ir-test.o stack-test.o
+CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+INCLUDE = -I. -I.. -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
+LIBS = -lglib-2.0
+OBJS = basic-block.o bitmap.o bytecodes.o bytecode-cfg-builder.o bytecode-to-ir.o compilation-unit.o instruction.o insn-selector.o statement.o expression.o
+TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o bytecode-cfg-builder-test.o bytecode-to-ir-test.o insn-selector-test.o stack-test.o
 HARNESS = libharness.o backtrace.o
 
 %.o: %.c
@@ -19,6 +20,9 @@ $(TESTS):
 
 $(HARNESS):
 
+insn-selector.c: insn-selector.brg
+	../../monoburg/monoburg insn-selector.brg > insn-selector.c
+
 tags:
 	exuberant-ctags -R
 
@@ -26,8 +30,8 @@ gen-suite:
 	sh make-tests.sh > $(TEST_SUITE)
 
 test: $(OBJS) $(TESTS) $(HARNESS) gen-suite
-	$(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(OBJS) $(TESTS) $(HARNESS) -o $(TESTRUNNER)
+	$(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(LIBS) $(OBJS) $(TESTS) $(HARNESS) -o $(TESTRUNNER)
 	./$(TESTRUNNER)
 
 clean:
-	rm -rf $(TESTRUNNER) $(TEST_SUITE) $(OBJS) $(HARNESS) $(TESTS) tags
+	rm -rf insn-selector.c $(TESTRUNNER) $(TEST_SUITE) *.o tags

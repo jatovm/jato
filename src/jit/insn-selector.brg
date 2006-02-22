@@ -1,0 +1,71 @@
+/*
+ * Copyright (C) 2006  Pekka Enberg
+ *
+ * This file is released under the GPL version 2. Please refer to the file
+ * LICENSE for details.
+ */
+
+#include <expression.h>
+#include <instruction.h>
+#include <insn-selector.h>
+#include <string.h>
+#include <stdio.h>
+
+#define MBTREE_TYPE struct expression
+#define MBTREE_OP(t) ((t)->type)
+#define MBTREE_LEFT(t) ((t)->binary_left)
+#define MBTREE_RIGHT(t) ((t)->binary_right)
+
+static struct insn *insn;
+
+%%
+
+%term EXPR_TEMPORARY=3 EXPR_ADD=5
+
+%start reg
+
+reg:	EXPR_TEMPORARY	0
+
+reg:	EXPR_ADD(reg, reg) 1
+{
+	insn = alloc_insn(ADD, 2, 1);
+}
+
+%%
+
+static int non_terminal(struct expression *tree)
+{
+	return tree->binary_left || tree->binary_right;
+}
+
+static void emit_code(struct expression *tree, int goal)
+{
+	struct expression *kids[2];
+	int ern;
+	const guint16 *nts;
+	int i;
+
+	ern = mono_burg_rule(tree->state, goal);
+	nts = mono_burg_nts[ern];
+	mono_burg_kids(tree, ern, kids);
+
+	for (i = 0; nts[i]; i++) 
+		emit_code(kids[i], nts[i]);
+
+	if (non_terminal(tree)) {
+		if (mono_burg_func[ern])
+			mono_burg_func[ern](tree, NULL);
+		else
+			printf("no code for rule %s\n", mono_burg_rule_string[ern]);
+	} else
+		if (mono_burg_func[ern])
+			printf("unused code in rule %s\n", mono_burg_rule_string[ern]);
+}
+
+struct insn *insn_select(struct expression *expr)
+{
+	mono_burg_label(expr, NULL);
+	emit_code(expr, MB_NTERM_reg);
+	
+	return insn;
+}
