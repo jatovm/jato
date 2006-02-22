@@ -3,6 +3,8 @@
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
+ *
+ * This file contains BURG specification for IA-32.
  */
 
 #include <expression.h>
