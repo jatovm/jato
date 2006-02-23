@@ -41,6 +41,9 @@ void free_statement(struct statement *stmt)
 	case STMT_LABEL:
 	case STMT_GOTO:
 		break;
+	case STMT_RETURN:
+		expr_put(stmt->return_value);
+		break;
 	case STMT_NULL_CHECK:
 	case STMT_ARRAY_CHECK:
 		expr_put(stmt->expression);

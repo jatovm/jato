@@ -31,6 +31,13 @@ static u8 double_to_cpu64(double fvalue)
 	return v.value;
 }
 
+static void assert_return_stmt(struct expression *return_value,
+			       struct statement *stmt)
+{
+	assert_int_equals(STMT_RETURN, stmt->type);
+	assert_ptr_equals(return_value, stmt->return_value);
+}
+
 static void assert_value_expr(enum jvm_type expected_jvm_type,
 			      long long expected_value,
 			      struct expression *expression)
@@ -1324,4 +1331,32 @@ void test_convert_goto(void)
 	assert_ptr_equals(target_bb->label_stmt, goto_stmt->goto_target);
 
 	free_compilation_unit(cu);
+}
+
+static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
+{
+	struct expression *return_value;
+	struct stack expr_stack = STACK_INIT;
+	struct compilation_unit *cu;
+	unsigned char code[] = { opc };
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+
+	return_value = temporary_expr(jvm_type, 0);
+	stack_push(&expr_stack, return_value);
+
+	convert_to_ir(cu);
+	assert_true(stack_is_empty(&expr_stack));
+	assert_return_stmt(return_value, cu->entry_bb->stmt);
+
+	free_compilation_unit(cu);
+}
+
+void test_convert_return(void)
+{
+	assert_convert_return(J_INT, OPC_IRETURN);
+	assert_convert_return(J_LONG, OPC_LRETURN);
+	assert_convert_return(J_FLOAT, OPC_FRETURN);
+	assert_convert_return(J_DOUBLE, OPC_DRETURN);
+	assert_convert_return(J_REFERENCE, OPC_ARETURN);
 }

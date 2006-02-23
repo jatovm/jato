@@ -263,5 +263,10 @@ static unsigned char bytecode_sizes[] = {
 	[OPC_PUTFIELD] = 3,
 	[OPC_WIDE] = 3,
 	[OPC_IFNONNULL] = 3,
+	[OPC_IRETURN] = 1,
+	[OPC_LRETURN] = 1,
+	[OPC_FRETURN] = 1,
+	[OPC_DRETURN] = 1,
 	[OPC_ARETURN] = 1,
+	[OPC_RETURN] = 1,
 };

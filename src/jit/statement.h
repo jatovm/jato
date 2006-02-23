@@ -11,6 +11,7 @@ enum statement_type {
 	STMT_IF,
 	STMT_LABEL,
 	STMT_GOTO,
+	STMT_RETURN,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 };
@@ -19,19 +20,20 @@ struct statement {
 	enum statement_type type;
 	union {
 		/* STMT_NOP and STMT_LABEL have no fields.  */
-		/* STMT_ASSIGN */
-		struct {
+		
+		struct /* STMT_ASSIGN */ {
 			struct expression *left;
 			struct expression *right;
 		};
-		/* STMT_IF */
-		struct {
+		struct /* STMT_IF */ {
 			struct expression *if_conditional;
 			struct statement *if_true;
 		};
-		/* STMT_GOTO */
-		struct {
+		struct /* STMT_GOTO */ {
 			struct statement *goto_target;
+		};
+		struct /* STMT_RETURN */ {
+			struct expression *return_value;
 		};
 		/* STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct expression *expression;

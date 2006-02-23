@@ -1017,6 +1017,14 @@ static struct statement *convert_goto(struct compilation_unit *cu)
 	return goto_stmt;
 }
 
+static struct statement *convert_return(struct compilation_unit *cu)
+{
+	struct statement *return_stmt = alloc_statement(STMT_RETURN);
+	if (return_stmt)
+		return_stmt->return_value = stack_pop(cu->expr_stack);
+	return return_stmt;
+}
+
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
 
 struct converter {
@@ -1193,6 +1201,11 @@ static struct converter converters[] = {
 	DECLARE_CONVERTER(OPC_IF_ACMPEQ, convert_if_acmpeq),
 	DECLARE_CONVERTER(OPC_IF_ACMPNE, convert_if_acmpne),
 	DECLARE_CONVERTER(OPC_GOTO, convert_goto),
+	DECLARE_CONVERTER(OPC_IRETURN, convert_return),
+	DECLARE_CONVERTER(OPC_LRETURN, convert_return),
+	DECLARE_CONVERTER(OPC_FRETURN, convert_return),
+	DECLARE_CONVERTER(OPC_DRETURN, convert_return),
+	DECLARE_CONVERTER(OPC_ARETURN, convert_return),
 };
 
 /**
