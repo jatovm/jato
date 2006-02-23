@@ -4,6 +4,7 @@
 
 #include <basic-block.h>
 #include <basic-block-assert.h>
+#include <instruction.h>
 #include <statement.h>
 
 #include <libharness.h>
@@ -80,4 +81,20 @@ void test_nr_bblocks(void)
 
 	free_basic_block(entry_bb);
 	free_basic_block(second_bb);
+}
+
+void test_bb_insert_insn(void)
+{
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn1 = alloc_insn(ADD, 0, 1);
+	struct insn *insn2 = alloc_insn(MOV, 0, 1);
+
+	bb_insert_insn(bb, insn1);
+	assert_ptr_equals(insn1, bb->insn);
+
+	bb_insert_insn(bb, insn2);
+	assert_ptr_equals(insn1, bb->insn);
+	assert_ptr_equals(insn2, bb->insn->next);
+	
+	free_basic_block(bb);
 }

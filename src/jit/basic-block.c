@@ -91,3 +91,16 @@ unsigned long nr_bblocks(struct basic_block *entry_bb)
 
 	return ret;
 }
+
+void bb_insert_insn(struct basic_block *bb, struct insn *insn)
+{
+	struct insn *current = bb->insn;
+
+	if (!current) {
+		bb->insn = insn;
+		return;
+	}
+	while (current->next)
+		current = current->next;
+	current->next = insn;
+}
