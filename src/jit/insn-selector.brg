@@ -23,23 +23,21 @@
 
 %%
 
-%term EXPR_TEMPORARY=3 EXPR_ADD=5
+%term EXPR_LOCAL=2 EXPR_ADD=5
 
 %start reg
 
-reg:	EXPR_TEMPORARY	0
-
-reg:	EXPR_ADD(reg, reg) 1
+reg:	EXPR_LOCAL	1
 {
-	bb_insert_insn(s, alloc_insn(ADD, tree->binary_right->temporary, tree->binary_left->temporary));
+	bb_insert_insn(s, alloc_insn(MOV, 1, 0));
+}
+
+reg:	EXPR_ADD(EXPR_LOCAL, reg) 1
+{
+	bb_insert_insn(s, alloc_insn(ADD, 2, 0));
 }
 
 %%
-
-static int non_terminal(struct expression *tree)
-{
-	return tree->binary_left || tree->binary_right;
-}
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)
 {
@@ -55,14 +53,10 @@ static void emit_code(struct basic_block *bb, MBState *state, int goal)
 	for (i = 0; nts[i]; i++) 
 		emit_code(bb, kids[i], nts[i]);
 
-	if (non_terminal(state->tree)) {
-		if (mono_burg_func[ern])
-			mono_burg_func[ern](state, state->tree, bb);
-		else
-			printf("no code for rule %s\n", mono_burg_rule_string[ern]);
-	} else
-		if (mono_burg_func[ern])
-			printf("unused code in rule %s\n", mono_burg_rule_string[ern]);
+	if (mono_burg_func[ern])
+		mono_burg_func[ern](state, state->tree, bb);
+	else
+		printf("no code for rule %s\n", mono_burg_rule_string[ern]);
 }
 
 static void free_state(MBState *state)

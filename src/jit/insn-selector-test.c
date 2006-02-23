@@ -17,21 +17,23 @@ static void assert_insn(enum insn_opcode insn_op,
 	assert_int_equals(dest, insn->dest);
 }
 
-static void assert_rewrite_binop_expr(unsigned long left, unsigned long right)
+static void assert_rewrite_binop_expr(unsigned long target,
+				      unsigned long left_local,
+				      unsigned long right_local)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct expression *expr;
 
-	expr = binop_expr(J_INT, ADD, temporary_expr(J_INT, left),
-			  temporary_expr(J_INT, right));
+	expr = binop_expr(J_INT, ADD, local_expr(J_INT, left_local),
+			  local_expr(J_INT, right_local));
 	insn_select(bb, expr);
-	assert_insn(ADD, right, left, bb->insn);
+	assert_insn(MOV, left_local, target, bb->insn);
+	assert_insn(ADD, right_local, target, bb->insn->next);
 	expr_put(expr);
 	free_basic_block(bb);
 }
 
 void test_rewrite_add_expr(void)
 {
-	assert_rewrite_binop_expr(1, 2);
-	assert_rewrite_binop_expr(2, 1);
+	assert_rewrite_binop_expr(0, 1, 2);
 }
