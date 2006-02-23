@@ -456,6 +456,7 @@ static void assert_convert_load(unsigned char opc,
 	assert_local_expr(expected_jvm_type, expected_index, expr);
 	assert_true(stack_is_empty(&expr_stack));
 
+	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
