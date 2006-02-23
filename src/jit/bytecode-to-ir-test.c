@@ -31,13 +31,6 @@ static u8 double_to_cpu64(double fvalue)
 	return v.value;
 }
 
-static void assert_return_stmt(struct expression *return_value,
-			       struct statement *stmt)
-{
-	assert_int_equals(STMT_RETURN, stmt->type);
-	assert_ptr_equals(return_value, stmt->return_value);
-}
-
 static void assert_value_expr(enum jvm_type expected_jvm_type,
 			      long long expected_value,
 			      struct expression *expression)
@@ -72,11 +65,13 @@ static void assert_temporary_expr(unsigned long expected,
 	assert_int_equals(expected, expression->temporary);
 }
 
-static void assert_array_deref_expr(struct expression *expected_arrayref,
+static void assert_array_deref_expr(enum jvm_type expected_jvm_type,
+				    struct expression *expected_arrayref,
 				    struct expression *expected_index,
 				    struct expression *expression)
 {
 	assert_int_equals(EXPR_ARRAY_DEREF, expression->type);
+	assert_int_equals(expected_jvm_type, expression->jvm_type);
 	assert_ptr_equals(expected_arrayref, expression->arrayref);
 	assert_ptr_equals(expected_index, expression->array_index);
 }
@@ -122,6 +117,35 @@ static void assert_conv_expr(enum jvm_type expected_type,
 			  conversion_expression->from_expression);
 }
 
+static void assert_store_stmt(struct statement *stmt)
+{
+	assert_int_equals(STMT_STORE, stmt->type);
+}
+
+static void assert_return_stmt(struct expression *return_value,
+			       struct statement *stmt)
+{
+	assert_int_equals(STMT_RETURN, stmt->type);
+	assert_ptr_equals(return_value, stmt->return_value);
+}
+
+static void assert_null_check_stmt(struct expression *expected,
+				   struct statement *actual)
+{
+	assert_int_equals(STMT_NULL_CHECK, actual->type);
+	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
+}
+
+static void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
+				   struct expression *expected_arrayref,
+				   struct expression *expected_index,
+				   struct statement *actual)
+{
+	assert_int_equals(STMT_ARRAY_CHECK, actual->type);
+	assert_array_deref_expr(expected_jvm_type, expected_arrayref,
+				expected_index, actual->expression);
+}
+
 static struct compilation_unit *alloc_simple_compilation_unit(unsigned char
 							      *code,
 							      unsigned long
@@ -135,8 +159,6 @@ static struct compilation_unit *alloc_simple_compilation_unit(unsigned char
 }
 
 static void __assert_convert_const(struct classblock *cb,
-				   enum statement_type
-				   expected_stmt_type,
 				   enum jvm_type
 				   expected_jvm_type,
 				   long long expected_value,
@@ -163,8 +185,7 @@ static void assert_convert_const(enum jvm_type expected_jvm_type,
 				 long long expected_value, char actual)
 {
 	unsigned char code[] = { actual };
-	__assert_convert_const(NULL, STMT_STORE,
-			       expected_jvm_type, expected_value,
+	__assert_convert_const(NULL, expected_jvm_type, expected_value,
 			       code, sizeof(code));
 }
 
@@ -240,7 +261,7 @@ void test_convert_dconst(void)
 static void assert_convert_bipush(char expected_value, char actual)
 {
 	unsigned char code[] = { actual, expected_value };
-	__assert_convert_const(NULL, STMT_STORE, J_INT,
+	__assert_convert_const(NULL, J_INT,
 			       expected_value, code, sizeof(code));
 }
 
@@ -255,7 +276,7 @@ static void assert_convert_sipush(long long expected_value,
 				  char first, char second, char actual)
 {
 	unsigned char code[] = { actual, first, second };
-	__assert_convert_const(NULL, STMT_STORE, J_INT,
+	__assert_convert_const(NULL, J_INT,
 			       expected_value, code, sizeof(code));
 }
 
@@ -535,22 +556,6 @@ void test_convert_aload_n(void)
 	assert_convert_load(OPC_ALOAD_3, J_REFERENCE, 0x03);
 }
 
-static void assert_null_check_stmt(struct expression *expected,
-				   struct statement *actual)
-{
-	assert_int_equals(STMT_NULL_CHECK, actual->type);
-	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
-}
-
-static void assert_arraycheck_stmt(struct expression *expected_arrayref,
-				   struct expression *expected_index,
-				   struct statement *actual)
-{
-	assert_int_equals(STMT_ARRAY_CHECK, actual->type);
-	assert_array_deref_expr(expected_arrayref, expected_index,
-				actual->expression);
-}
-
 static void assert_convert_array_load(enum jvm_type expected_type,
 				      unsigned char opc,
 				      unsigned long arrayref,
@@ -578,11 +583,11 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	struct statement *store_stmt = arraycheck->next;
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
-	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
+	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr, arraycheck);
 
-	assert_int_equals(STMT_STORE, store_stmt->type);
-	assert_int_equals(expected_type, store_stmt->store_src->jvm_type);
-	assert_array_deref_expr(arrayref_expr, index_expr, store_stmt->store_src);
+	assert_store_stmt(store_stmt);
+	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
+				store_stmt->store_src);
 
 	temporary_expr = stack_pop(&stack);
 	assert_temporary_expr(store_stmt->store_dest->temporary, temporary_expr);
@@ -657,7 +662,7 @@ static void assert_convert_store(unsigned char opc,
 	convert_to_ir(cu);
 	stmt = cu->entry_bb->stmt;
 
-	assert_int_equals(STMT_STORE, stmt->type);
+	assert_store_stmt(stmt);
 	assert_temporary_expr(expected_temporary, stmt->store_src);
 	assert_local_expr(expected_jvm_type, expected_index, stmt->store_dest);
 
@@ -765,11 +770,12 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 	struct statement *store_stmt = arraycheck->next;
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
-	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
+	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr,
+			       arraycheck);
 
-	assert_int_equals(STMT_STORE, store_stmt->type);
-	assert_int_equals(expected_type, store_stmt->store_dest->jvm_type);
-	assert_array_deref_expr(arrayref_expr, index_expr, store_stmt->store_dest);
+	assert_store_stmt(store_stmt);
+	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
+				store_stmt->store_dest);
 	assert_temporary_expr(value, store_stmt->store_src);
 
 	assert_true(stack_is_empty(&stack));
