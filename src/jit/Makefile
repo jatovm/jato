@@ -21,7 +21,7 @@ $(TESTS):
 $(HARNESS):
 
 insn-selector.c: insn-selector.brg
-	../../monoburg/monoburg insn-selector.brg > insn-selector.c
+	../../monoburg/monoburg -e insn-selector.brg > insn-selector.c
 
 tags:
 	exuberant-ctags -R

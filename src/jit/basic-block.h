@@ -1,6 +1,7 @@
 #ifndef __JIT_BASIC_BLOCK_H
 #define __JIT_BASIC_BLOCK_H
 
+struct insn;
 struct statement;
 
 struct basic_block {
@@ -8,6 +9,7 @@ struct basic_block {
 	unsigned long end;
 	struct statement *label_stmt;
 	struct statement *stmt;
+	struct insn *insn;
 	struct basic_block *next;
 };
 

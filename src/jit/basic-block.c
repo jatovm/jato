@@ -8,6 +8,7 @@
  */
 
 #include <basic-block.h>
+#include <instruction.h>
 #include <statement.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +28,7 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 
 void free_basic_block(struct basic_block *bb)
 {
+	free_insn(bb->insn);
 	free_statement(bb->label_stmt);
 	free_statement(bb->stmt);
 	free(bb);

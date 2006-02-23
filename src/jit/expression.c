@@ -56,8 +56,6 @@ void free_expression(struct expression *expr)
 			expr_put(expr->from_expression);
 		break;
 	};
-	if (expr->state)
-		g_free(expr->state);
 	free(expr);
 }
 

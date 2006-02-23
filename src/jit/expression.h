@@ -51,7 +51,6 @@ struct expression {
 	enum expression_type type;
 	unsigned long refcount;
 	enum jvm_type jvm_type;
-	void *state;
 	union {
 		/* EXPR_VALUE */
 		unsigned long long value;

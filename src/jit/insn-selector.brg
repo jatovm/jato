@@ -7,18 +7,19 @@
  * This file contains BURG specification for IA-32.
  */
 
+#include <basic-block.h>
 #include <expression.h>
 #include <instruction.h>
 #include <insn-selector.h>
 #include <string.h>
 #include <stdio.h>
 
+#define MBCGEN_TYPE struct basic_block
+#define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct expression
 #define MBTREE_OP(t) ((t)->type)
 #define MBTREE_LEFT(t) ((t)->binary_left)
 #define MBTREE_RIGHT(t) ((t)->binary_right)
-
-static struct insn *insn;
 
 %%
 
@@ -30,8 +31,8 @@ reg:	EXPR_TEMPORARY	0
 
 reg:	EXPR_ADD(reg, reg) 1
 {
-	insn = alloc_insn(ADD, tree->binary_right->temporary,
-			  tree->binary_left->temporary);
+	s->insn = alloc_insn(ADD, tree->binary_right->temporary,
+			     tree->binary_left->temporary);
 }
 
 %%
@@ -41,23 +42,23 @@ static int non_terminal(struct expression *tree)
 	return tree->binary_left || tree->binary_right;
 }
 
-static void emit_code(struct expression *tree, int goal)
+static void emit_code(struct basic_block *bb, MBState *state, int goal)
 {
-	struct expression *kids[2];
+	MBState *kids[2];
 	int ern;
 	const guint16 *nts;
 	int i;
 
-	ern = mono_burg_rule(tree->state, goal);
+	ern = mono_burg_rule(state, goal);
 	nts = mono_burg_nts[ern];
-	mono_burg_kids(tree, ern, kids);
+	mono_burg_kids(state, ern, kids);
 
 	for (i = 0; nts[i]; i++) 
-		emit_code(kids[i], nts[i]);
+		emit_code(bb, kids[i], nts[i]);
 
-	if (non_terminal(tree)) {
+	if (non_terminal(state->tree)) {
 		if (mono_burg_func[ern])
-			mono_burg_func[ern](tree, NULL);
+			mono_burg_func[ern](state, state->tree, bb);
 		else
 			printf("no code for rule %s\n", mono_burg_rule_string[ern]);
 	} else
@@ -65,10 +66,23 @@ static void emit_code(struct expression *tree, int goal)
 			printf("unused code in rule %s\n", mono_burg_rule_string[ern]);
 }
 
-struct insn *insn_select(struct expression *expr)
+static void free_state(MBState *state)
 {
-	mono_burg_label(expr, NULL);
-	emit_code(expr, MB_NTERM_reg);
-	
-	return insn;
+	if (!state)
+		return;
+
+	free_state(state->left);
+	free_state(state->right);
+
+	g_free(state);
+}
+
+void insn_select(struct basic_block *bb, struct expression *expr)
+{
+	MBState *state;
+
+	state = mono_burg_label(expr, bb);
+	emit_code(bb, state, MB_NTERM_reg);
+
+	free_state(state);
 }
