@@ -2,7 +2,7 @@ TESTRUNNER=test-runner
 TEST_SUITE=test-suite.c
 
 CC = gcc
-CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
 INCLUDE = -I. -I.. -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
 LIBS = -lglib-2.0
 OBJS = basic-block.o bitmap.o bytecodes.o bytecode-cfg-builder.o bytecode-to-ir.o compilation-unit.o instruction.o insn-selector.o statement.o expression.o
