@@ -437,18 +437,17 @@ static void assert_convert_load(unsigned char opc,
 				unsigned char expected_index)
 {
 	unsigned char code[] = { opc, expected_index };
-	struct stack stack = STACK_INIT;
-	struct statement *stmt;
+	struct stack expr_stack = STACK_INIT;
+	struct expression *expr;
 	struct compilation_unit *cu;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
 
 	convert_to_ir(cu);
-	stmt = cu->entry_bb->stmt;
-	assert_int_equals(STMT_ASSIGN, stmt->type);
-	assert_local_expr(expected_jvm_type, expected_index, stmt->right);
-	assert_temporary_expr(stmt->left->temporary, stack_pop(&stack));
-	assert_true(stack_is_empty(&stack));
+
+	expr = stack_pop(&expr_stack);
+	assert_local_expr(expected_jvm_type, expected_index, expr);
+	assert_true(stack_is_empty(&expr_stack));
 
 	free_compilation_unit(cu);
 }

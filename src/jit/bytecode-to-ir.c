@@ -147,13 +147,13 @@ static struct statement *__convert_load(unsigned char index,
 					enum jvm_type type,
 					struct stack *expr_stack)
 {
-	struct statement *stmt = alloc_statement(STMT_ASSIGN);
-	if (stmt) {
-		stmt->right = local_expr(type, index);
-		stmt->left = temporary_expr(type, alloc_temporary());
-		stack_push(expr_stack, stmt->left);
-	}
-	return stmt;
+	struct expression *expr;
+
+	expr = local_expr(type, index);
+	if (expr)
+		stack_push(expr_stack, expr);
+
+	return NULL;
 }
 
 static struct statement *convert_iload(struct compilation_unit *cu)
