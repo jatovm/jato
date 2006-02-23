@@ -7,7 +7,7 @@
 
 enum statement_type {
 	STMT_NOP,
-	STMT_ASSIGN,
+	STMT_STORE,
 	STMT_IF,
 	STMT_LABEL,
 	STMT_GOTO,
@@ -21,9 +21,9 @@ struct statement {
 	union {
 		/* STMT_NOP and STMT_LABEL have no fields.  */
 		
-		struct /* STMT_ASSIGN */ {
-			struct expression *left;
-			struct expression *right;
+		struct /* STMT_STORE */ {
+			struct expression *store_dest;
+			struct expression *store_src;
 		};
 		struct /* STMT_IF */ {
 			struct expression *if_conditional;

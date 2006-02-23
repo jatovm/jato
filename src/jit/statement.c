@@ -31,9 +31,9 @@ void free_statement(struct statement *stmt)
 	case STMT_NOP:
 		/* nothing to do */
 		break;
-	case STMT_ASSIGN:
-		expr_put(stmt->left);
-		expr_put(stmt->right);
+	case STMT_STORE:
+		expr_put(stmt->store_dest);
+		expr_put(stmt->store_src);
 		break;
 	case STMT_IF:
 		expr_put(stmt->if_conditional);

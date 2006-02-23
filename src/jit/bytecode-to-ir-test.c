@@ -163,7 +163,7 @@ static void assert_convert_const(enum jvm_type expected_jvm_type,
 				 long long expected_value, char actual)
 {
 	unsigned char code[] = { actual };
-	__assert_convert_const(NULL, STMT_ASSIGN,
+	__assert_convert_const(NULL, STMT_STORE,
 			       expected_jvm_type, expected_value,
 			       code, sizeof(code));
 }
@@ -240,7 +240,7 @@ void test_convert_dconst(void)
 static void assert_convert_bipush(char expected_value, char actual)
 {
 	unsigned char code[] = { actual, expected_value };
-	__assert_convert_const(NULL, STMT_ASSIGN, J_INT,
+	__assert_convert_const(NULL, STMT_STORE, J_INT,
 			       expected_value, code, sizeof(code));
 }
 
@@ -255,7 +255,7 @@ static void assert_convert_sipush(long long expected_value,
 				  char first, char second, char actual)
 {
 	unsigned char code[] = { actual, first, second };
-	__assert_convert_const(NULL, STMT_ASSIGN, J_INT,
+	__assert_convert_const(NULL, STMT_STORE, J_INT,
 			       expected_value, code, sizeof(code));
 }
 
@@ -575,17 +575,17 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 
 	struct statement *nullcheck = stmt;
 	struct statement *arraycheck = stmt->next;
-	struct statement *assign = arraycheck->next;
+	struct statement *store_stmt = arraycheck->next;
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
 
-	assert_int_equals(STMT_ASSIGN, assign->type);
-	assert_int_equals(expected_type, assign->right->jvm_type);
-	assert_array_deref_expr(arrayref_expr, index_expr, assign->right);
+	assert_int_equals(STMT_STORE, store_stmt->type);
+	assert_int_equals(expected_type, store_stmt->store_src->jvm_type);
+	assert_array_deref_expr(arrayref_expr, index_expr, store_stmt->store_src);
 
 	temporary_expr = stack_pop(&stack);
-	assert_temporary_expr(assign->left->temporary, temporary_expr);
+	assert_temporary_expr(store_stmt->store_dest->temporary, temporary_expr);
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(&stack));
 
@@ -657,9 +657,9 @@ static void assert_convert_store(unsigned char opc,
 	convert_to_ir(cu);
 	stmt = cu->entry_bb->stmt;
 
-	assert_int_equals(STMT_ASSIGN, stmt->type);
-	assert_temporary_expr(expected_temporary, stmt->right);
-	assert_local_expr(expected_jvm_type, expected_index, stmt->left);
+	assert_int_equals(STMT_STORE, stmt->type);
+	assert_temporary_expr(expected_temporary, stmt->store_src);
+	assert_local_expr(expected_jvm_type, expected_index, stmt->store_dest);
 
 	assert_true(stack_is_empty(&stack));
 
@@ -762,15 +762,15 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 
 	struct statement *nullcheck = stmt;
 	struct statement *arraycheck = nullcheck->next;
-	struct statement *assign = arraycheck->next;
+	struct statement *store_stmt = arraycheck->next;
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(arrayref_expr, index_expr, arraycheck);
 
-	assert_int_equals(STMT_ASSIGN, assign->type);
-	assert_int_equals(expected_type, assign->left->jvm_type);
-	assert_array_deref_expr(arrayref_expr, index_expr, assign->left);
-	assert_temporary_expr(value, assign->right);
+	assert_int_equals(STMT_STORE, store_stmt->type);
+	assert_int_equals(expected_type, store_stmt->store_dest->jvm_type);
+	assert_array_deref_expr(arrayref_expr, index_expr, store_stmt->store_dest);
+	assert_temporary_expr(value, store_stmt->store_src);
 
 	assert_true(stack_is_empty(&stack));
 
@@ -1096,19 +1096,19 @@ static void assert_iinc_stmt(unsigned char expected_index,
 {
 	unsigned char code[] = { OPC_IINC, expected_index, expected_value };
 	struct stack stack = STACK_INIT;
-	struct statement *assign_stmt;
+	struct statement *store_stmt;
 	struct expression *local_expression, *const_expression;
 	struct compilation_unit *cu;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	assign_stmt = cu->entry_bb->stmt;
-	local_expression = assign_stmt->left;
+	store_stmt = cu->entry_bb->stmt;
+	local_expression = store_stmt->store_dest;
 	assert_local_expr(J_INT, expected_index, local_expression);
-	const_expression = assign_stmt->right->binary_right;
+	const_expression = store_stmt->store_src->binary_right;
 	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression,
-			  assign_stmt->right);
+			  store_stmt->store_src);
 	assert_local_expr(J_INT, expected_index, local_expression);
 	assert_value_expr(J_INT, expected_value, const_expression);
 

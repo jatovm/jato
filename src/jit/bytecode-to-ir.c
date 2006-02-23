@@ -215,28 +215,28 @@ static struct statement *convert_array_load(struct compilation_unit
 					    *cu, enum jvm_type type)
 {
 	struct expression *index, *arrayref;
-	struct statement *assign, *arraycheck, *nullcheck;
+	struct statement *store_stmt, *arraycheck, *nullcheck;
 
 	index = stack_pop(cu->expr_stack);
 	arrayref = stack_pop(cu->expr_stack);
 
-	assign = alloc_statement(STMT_ASSIGN);
-	if (!assign)
+	store_stmt = alloc_statement(STMT_STORE);
+	if (!store_stmt)
 		goto failed;
 
-	assign->right = array_deref_expr(type, arrayref, index);
-	assign->left = temporary_expr(type, alloc_temporary());
+	store_stmt->store_src = array_deref_expr(type, arrayref, index);
+	store_stmt->store_dest = temporary_expr(type, alloc_temporary());
 
-	expr_get(assign->left);
-	stack_push(cu->expr_stack, assign->left);
+	expr_get(store_stmt->store_dest);
+	stack_push(cu->expr_stack, store_stmt->store_dest);
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed_arraycheck;
 
-	expr_get(assign->right);
-	arraycheck->expression = assign->right;
-	arraycheck->next = assign;
+	expr_get(store_stmt->store_src);
+	arraycheck->expression = store_stmt->store_src;
+	arraycheck->next = store_stmt;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
@@ -251,7 +251,7 @@ static struct statement *convert_array_load(struct compilation_unit
       failed_nullcheck:
 	free_statement(arraycheck);
       failed_arraycheck:
-	free_statement(assign);
+	free_statement(store_stmt);
       failed:
 	return NULL;
 }
@@ -308,12 +308,12 @@ static struct statement *__convert_store(enum jvm_type type,
 					 unsigned long index,
 					 struct stack *expr_stack)
 {
-	struct statement *stmt = alloc_statement(STMT_ASSIGN);
+	struct statement *stmt = alloc_statement(STMT_STORE);
 	if (!stmt)
 		goto failed;
 
-	stmt->left = local_expr(type, index);
-	stmt->right = stack_pop(expr_stack);
+	stmt->store_dest = local_expr(type, index);
+	stmt->store_src = stack_pop(expr_stack);
 	return stmt;
       failed:
 	free_statement(stmt);
@@ -389,26 +389,26 @@ static struct statement *convert_array_store(struct compilation_unit
 					     *cu, enum jvm_type type)
 {
 	struct expression *value, *index, *arrayref;
-	struct statement *assign, *arraycheck, *nullcheck;
+	struct statement *store_stmt, *arraycheck, *nullcheck;
 
 	value = stack_pop(cu->expr_stack);
 	index = stack_pop(cu->expr_stack);
 	arrayref = stack_pop(cu->expr_stack);
 
-	assign = alloc_statement(STMT_ASSIGN);
-	if (!assign)
+	store_stmt = alloc_statement(STMT_STORE);
+	if (!store_stmt)
 		goto failed;
 
-	assign->left = array_deref_expr(type, arrayref, index);
-	assign->right = value;
+	store_stmt->store_dest = array_deref_expr(type, arrayref, index);
+	store_stmt->store_src = value;
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed_arraycheck;
 
-	expr_get(assign->left);
-	arraycheck->expression = assign->left;
-	arraycheck->next = assign;
+	expr_get(store_stmt->store_dest);
+	arraycheck->expression = store_stmt->store_dest;
+	arraycheck->next = store_stmt;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
@@ -423,7 +423,7 @@ static struct statement *convert_array_store(struct compilation_unit
       failed_nullcheck:
 	free_statement(arraycheck);
       failed_arraycheck:
-	free_statement(assign);
+	free_statement(store_stmt);
       failed:
 	return NULL;
 }
@@ -728,19 +728,19 @@ static struct statement *convert_lxor(struct compilation_unit *cu)
 
 static struct statement *convert_iinc(struct compilation_unit *cu)
 {
-	struct statement *assign;
+	struct statement *store_stmt;
 	struct expression *local_expression, *binop_expression,
 	    *const_expression;
 
-	assign = alloc_statement(STMT_ASSIGN);
-	if (!assign)
+	store_stmt = alloc_statement(STMT_STORE);
+	if (!store_stmt)
 		goto failed;
 
 	local_expression = local_expr(J_INT, cu->code[1]);
 	if (!local_expression)
 		goto failed;
 
-	assign->left = local_expression;
+	store_stmt->store_dest = local_expression;
 
 	const_expression = value_expr(J_INT, cu->code[2]);
 	if (!const_expression)
@@ -756,12 +756,12 @@ static struct statement *convert_iinc(struct compilation_unit *cu)
 		goto failed;
 	}
 
-	assign->right = binop_expression;
+	store_stmt->store_src = binop_expression;
 
-	return assign;
+	return store_stmt;
 
       failed:
-	free_statement(assign);
+	free_statement(store_stmt);
 	return NULL;
 }
 
