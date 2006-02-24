@@ -1,0 +1,10 @@
+For the most part, follow the Linux coding style. Please refer to to the file
+/usr/src/linux/Documentation/CodingStyle for details.
+
+  - Write unit tests for code, preferably test-first because that way we
+    end up with cleaner code and better tests.
+  - Use tabs for indentation. Tabs are eight characters. Not following this
+    rule breaks diff.
+  - Typedefs for structs and unions are obfuscating, so don't use them.
+  - Use enum for enumerations.
+  - Prefer static inline functions to macros.
