@@ -42,7 +42,7 @@ static void bb_start_at_branch_target(struct compilation_unit *cu,
 		if (test_bit(branch_targets, offset)) {
 			struct basic_block *bb;
 			
-			bb = bb_find(cu->entry_bb, offset);
+			bb = find_bb(cu, offset);
 
 			if (bb->start != offset)
 				bb_split(bb, offset);

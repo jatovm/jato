@@ -883,7 +883,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	unsigned long if_target;
 
 	if_target = bytecode_br_target(&cu->code[0]);
-	true_bb = bb_find(cu->entry_bb, if_target);
+	true_bb = find_bb(cu, if_target);
 
 	if_conditional = binop_expr(jvm_type, binop, binary_left, binary_right);
 	if (!if_conditional)
@@ -1011,7 +1011,7 @@ static struct statement *convert_goto(struct compilation_unit *cu)
 	unsigned long goto_target;
 
 	goto_target = bytecode_br_target(&cu->code[0]);
-	target_bb = bb_find(cu->entry_bb, goto_target);
+	target_bb = find_bb(cu, goto_target);
 
 	goto_stmt = alloc_statement(STMT_GOTO);
 	if (goto_stmt)

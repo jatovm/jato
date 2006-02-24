@@ -47,9 +47,9 @@ void free_compilation_unit(struct compilation_unit *cu)
  * 	Find the basic block that contains the given offset and returns a
  * 	pointer to it.
  */
-struct basic_block *bb_find(struct basic_block *bb_list, unsigned long offset)
+struct basic_block *find_bb(struct compilation_unit *cu, unsigned long offset)
 {
-	struct basic_block *bb = bb_list;
+	struct basic_block *bb = cu->entry_bb;
 
 	while (bb) {
 		if (offset >= bb->start && offset < bb->end)
