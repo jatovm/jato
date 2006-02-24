@@ -32,7 +32,7 @@ static void free_stmt_list(struct list_head *head)
 {
 	struct statement *stmt, *tmp;
 
-	list_for_each_entry_safe(stmt, tmp, head, stmts)
+	list_for_each_entry_safe(stmt, tmp, head, stmt_list_node)
 		free_statement(stmt);
 }
 
@@ -40,7 +40,7 @@ static void free_insn_list(struct list_head *head)
 {
 	struct insn *insn, *tmp;
 
-	list_for_each_entry_safe(insn, tmp, head, insns)
+	list_for_each_entry_safe(insn, tmp, head, insn_list_node)
 		free_insn(insn);
 }
 
@@ -112,10 +112,10 @@ unsigned long nr_bblocks(struct basic_block *entry_bb)
 
 void bb_insert_stmt(struct basic_block *bb, struct statement *stmt)
 {
-	list_add_tail(&stmt->stmts, &bb->stmt_list);
+	list_add_tail(&stmt->stmt_list_node, &bb->stmt_list);
 }
 
 void bb_insert_insn(struct basic_block *bb, struct insn *insn)
 {
-	list_add_tail(&insn->insns, &bb->insn_list);
+	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }

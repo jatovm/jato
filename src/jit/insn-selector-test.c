@@ -19,7 +19,7 @@ static void assert_insn(enum insn_opcode insn_op,
 
 static struct insn *to_insn(struct list_head *head)
 {
-	return list_entry(head, struct insn, insns);
+	return list_entry(head, struct insn, insn_list_node);
 }
 
 static void assert_rewrite_binop_expr(unsigned long target,

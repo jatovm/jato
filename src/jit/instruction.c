@@ -15,7 +15,7 @@ struct insn *alloc_insn(enum insn_opcode insn_op,
 	struct insn *insn = malloc(sizeof *insn);
 	if (insn) {
 		memset(insn, 0, sizeof *insn);
-		INIT_LIST_HEAD(&insn->insns);
+		INIT_LIST_HEAD(&insn->insn_list_node);
 		insn->insn_op = insn_op;
 		insn->src = src;
 		insn->dest = dest;

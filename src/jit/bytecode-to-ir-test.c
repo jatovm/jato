@@ -211,7 +211,7 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 
 static struct statement *to_stmt(struct list_head *head)
 {
-	return list_entry(head, struct statement, stmts);
+	return list_entry(head, struct statement, stmt_list_node);
 }
 
 void test_convert_nop(void)
@@ -587,8 +587,8 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	stmt = to_stmt(cu->entry_bb->stmt_list.next);
 
 	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = to_stmt(nullcheck->stmts.next);
-	struct statement *store_stmt = to_stmt(arraycheck->stmts.next);
+	struct statement *arraycheck = to_stmt(nullcheck->stmt_list_node.next);
+	struct statement *store_stmt = to_stmt(arraycheck->stmt_list_node.next);
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr, arraycheck);
@@ -774,8 +774,8 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 	stmt = to_stmt(cu->entry_bb->stmt_list.next);
 
 	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = to_stmt(nullcheck->stmts.next);
-	struct statement *store_stmt = to_stmt(arraycheck->stmts.next);
+	struct statement *arraycheck = to_stmt(nullcheck->stmt_list_node.next);
+	struct statement *store_stmt = to_stmt(arraycheck->stmt_list_node.next);
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr,

@@ -15,7 +15,7 @@ struct statement *alloc_statement(enum statement_type type)
 	struct statement *stmt = malloc(sizeof *stmt);
 	if (stmt) {
 		memset(stmt, 0, sizeof *stmt);
-		INIT_LIST_HEAD(&stmt->stmts);
+		INIT_LIST_HEAD(&stmt->stmt_list_node);
 		stmt->type = type;
 	}
 

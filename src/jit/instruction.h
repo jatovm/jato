@@ -12,7 +12,7 @@ struct insn {
 	enum insn_opcode insn_op;
 	unsigned long src;
 	unsigned long dest;
-	struct list_head insns;
+	struct list_head insn_list_node;
 };
 
 struct insn *alloc_insn(enum insn_opcode, unsigned long, unsigned long);

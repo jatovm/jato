@@ -39,7 +39,7 @@ struct statement {
 		/* STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct expression *expression;
 	};
-	struct list_head stmts;
+	struct list_head stmt_list_node;
 };
 
 struct statement *alloc_statement(enum statement_type);
