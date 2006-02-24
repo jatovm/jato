@@ -37,3 +37,25 @@ void free_compilation_unit(struct compilation_unit *cu)
 	}
 	free(cu);
 }
+
+
+/**
+ * 	bb_find - Find basic block containing @offset.
+ * 	@bb_list: First basic block in list.
+ * 	@offset: Offset to find.
+ * 
+ * 	Find the basic block that contains the given offset and returns a
+ * 	pointer to it.
+ */
+struct basic_block *bb_find(struct basic_block *bb_list, unsigned long offset)
+{
+	struct basic_block *bb = bb_list;
+
+	while (bb) {
+		if (offset >= bb->start && offset < bb->end)
+			break;
+		bb = bb->next;
+	}
+	return bb;
+}
+

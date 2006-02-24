@@ -78,26 +78,6 @@ struct basic_block *bb_split(struct basic_block *bb, unsigned long offset)
 	return new_block;
 }
 
-/**
- * 	bb_find - Find basic block containing @offset.
- * 	@bb_list: First basic block in list.
- * 	@offset: Offset to find.
- * 
- * 	Find the basic block that contains the given offset and returns a
- * 	pointer to it.
- */
-struct basic_block *bb_find(struct basic_block *bb_list, unsigned long offset)
-{
-	struct basic_block *bb = bb_list;
-
-	while (bb) {
-		if (offset >= bb->start && offset < bb->end)
-			break;
-		bb = bb->next;
-	}
-	return bb;
-}
-
 unsigned long nr_bblocks(struct basic_block *entry_bb)
 {
 	unsigned long ret = 0;
