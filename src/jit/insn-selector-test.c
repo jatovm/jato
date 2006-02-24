@@ -17,6 +17,11 @@ static void assert_insn(enum insn_opcode insn_op,
 	assert_int_equals(dest, insn->dest);
 }
 
+static struct insn *to_insn(struct list_head *head)
+{
+	return list_entry(head, struct insn, insns);
+}
+
 static void assert_rewrite_binop_expr(unsigned long target,
 				      unsigned long left_local,
 				      unsigned long right_local)
@@ -27,8 +32,8 @@ static void assert_rewrite_binop_expr(unsigned long target,
 	expr = binop_expr(J_INT, ADD, local_expr(J_INT, left_local),
 			  local_expr(J_INT, right_local));
 	insn_select(bb, expr);
-	assert_insn(MOV, left_local, target, bb->insn);
-	assert_insn(ADD, right_local, target, bb->insn->next);
+	assert_insn(MOV, left_local, target, to_insn(bb->insn_list.next));
+	assert_insn(ADD, right_local, target, to_insn(bb->insn_list.next->next));
 	expr_put(expr);
 	free_basic_block(bb);
 }

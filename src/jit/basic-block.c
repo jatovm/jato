@@ -18,6 +18,7 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 	struct basic_block *bb = malloc(sizeof(*bb));
 	if (bb) {
 		memset(bb, 0, sizeof(*bb));
+		INIT_LIST_HEAD(&bb->insn_list);
 		bb->label_stmt = alloc_statement(STMT_LABEL);
 		bb->start = start;
 		bb->end = end;
@@ -28,7 +29,11 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 
 void free_basic_block(struct basic_block *bb)
 {
-	free_insn(bb->insn);
+	struct insn *insn, *tmp;
+
+	list_for_each_entry_safe(insn, tmp, &bb->insn_list, insns)
+		free_insn(insn);
+
 	free_statement(bb->label_stmt);
 	free_statement(bb->stmt);
 	free(bb);
@@ -94,13 +99,5 @@ unsigned long nr_bblocks(struct basic_block *entry_bb)
 
 void bb_insert_insn(struct basic_block *bb, struct insn *insn)
 {
-	struct insn *current = bb->insn;
-
-	if (!current) {
-		bb->insn = insn;
-		return;
-	}
-	while (current->next)
-		current = current->next;
-	current->next = insn;
+	list_add_tail(&insn->insns, &bb->insn_list);
 }

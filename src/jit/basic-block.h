@@ -1,6 +1,8 @@
 #ifndef __JIT_BASIC_BLOCK_H
 #define __JIT_BASIC_BLOCK_H
 
+#include <list.h>
+
 struct insn;
 struct statement;
 
@@ -9,7 +11,7 @@ struct basic_block {
 	unsigned long end;
 	struct statement *label_stmt;
 	struct statement *stmt;
-	struct insn *insn;
+	struct list_head insn_list;
 	struct basic_block *next;
 };
 
