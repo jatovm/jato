@@ -236,7 +236,6 @@ static struct statement *convert_array_load(struct compilation_unit
 
 	expr_get(store_stmt->store_src);
 	arraycheck->expression = store_stmt->store_src;
-	arraycheck->next = store_stmt;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
@@ -244,9 +243,11 @@ static struct statement *convert_array_load(struct compilation_unit
 
 	expr_get(arrayref);
 	nullcheck->expression = arrayref;
-	nullcheck->next = arraycheck;
 
-	return nullcheck;
+	bb_insert_stmt(cu->entry_bb, nullcheck);
+	bb_insert_stmt(cu->entry_bb, arraycheck);
+
+	return store_stmt;
 
       failed_nullcheck:
 	free_statement(arraycheck);
@@ -408,7 +409,6 @@ static struct statement *convert_array_store(struct compilation_unit
 
 	expr_get(store_stmt->store_dest);
 	arraycheck->expression = store_stmt->store_dest;
-	arraycheck->next = store_stmt;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
@@ -416,9 +416,11 @@ static struct statement *convert_array_store(struct compilation_unit
 
 	expr_get(arrayref);
 	nullcheck->expression = arrayref;
-	nullcheck->next = arraycheck;
 
-	return nullcheck;
+	bb_insert_stmt(cu->entry_bb, nullcheck);
+	bb_insert_stmt(cu->entry_bb, arraycheck);
+
+	return store_stmt;
 
       failed_nullcheck:
 	free_statement(arraycheck);
@@ -1228,6 +1230,7 @@ int convert_to_ir(struct compilation_unit *cu)
 		return 0;
 
 	stmt = converter->convert(cu);
-	cu->entry_bb->stmt = stmt;
+	if (stmt)
+		bb_insert_stmt(cu->entry_bb, stmt);
 	return 1;
 }

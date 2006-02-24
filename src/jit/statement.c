@@ -13,10 +13,11 @@
 struct statement *alloc_statement(enum statement_type type)
 {
 	struct statement *stmt = malloc(sizeof *stmt);
-	if (!stmt)
-		return NULL;
-	memset(stmt, 0, sizeof *stmt);
-	stmt->type = type;
+	if (stmt) {
+		memset(stmt, 0, sizeof *stmt);
+		INIT_LIST_HEAD(&stmt->stmts);
+		stmt->type = type;
+	}
 
 	return stmt;
 }
@@ -26,7 +27,6 @@ void free_statement(struct statement *stmt)
 	if (!stmt)
 		return;
 
-	free_statement(stmt->next);
 	switch (stmt->type) {
 	case STMT_NOP:
 		/* nothing to do */

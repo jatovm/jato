@@ -1,6 +1,7 @@
 #ifndef __STATEMENT_H
 #define __STATEMENT_H
 
+#include <list.h>
 #include <expression.h>
 #include <stddef.h>
 #include <jam.h>
@@ -38,7 +39,7 @@ struct statement {
 		/* STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct expression *expression;
 	};
-	struct statement *next;
+	struct list_head stmts;
 };
 
 struct statement *alloc_statement(enum statement_type);

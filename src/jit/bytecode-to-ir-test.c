@@ -7,6 +7,7 @@
 #include <byteorder.h>
 #include <stack.h>
 #include <jit-compiler.h>
+#include <list.h>
 
 #include <libharness.h>
 #include <stdlib.h>
@@ -208,16 +209,23 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 	free_compilation_unit(cu);
 }
 
+static struct statement *to_stmt(struct list_head *head)
+{
+	return list_entry(head, struct statement, stmts);
+}
+
 void test_convert_nop(void)
 {
 	unsigned char code[] = { OPC_NOP };
 	struct stack stack = STACK_INIT;
 	struct compilation_unit *cu;
+	struct statement *stmt;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	assert_int_equals(STMT_NOP, cu->entry_bb->stmt->type);
+	stmt = to_stmt(cu->entry_bb->stmt_list.next);
+	assert_int_equals(STMT_NOP, stmt->type);
 	assert_true(stack_is_empty(&stack));
 
 	free_compilation_unit(cu);
@@ -576,11 +584,11 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->entry_bb->stmt;
+	stmt = to_stmt(cu->entry_bb->stmt_list.next);
 
 	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = stmt->next;
-	struct statement *store_stmt = arraycheck->next;
+	struct statement *arraycheck = to_stmt(nullcheck->stmts.next);
+	struct statement *store_stmt = to_stmt(arraycheck->stmts.next);
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr, arraycheck);
@@ -660,7 +668,7 @@ static void assert_convert_store(unsigned char opc,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->entry_bb->stmt;
+	stmt = to_stmt(cu->entry_bb->stmt_list.next);
 
 	assert_store_stmt(stmt);
 	assert_temporary_expr(expected_temporary, stmt->store_src);
@@ -763,11 +771,11 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->entry_bb->stmt;
+	stmt = to_stmt(cu->entry_bb->stmt_list.next);
 
 	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = nullcheck->next;
-	struct statement *store_stmt = arraycheck->next;
+	struct statement *arraycheck = to_stmt(nullcheck->stmts.next);
+	struct statement *store_stmt = to_stmt(arraycheck->stmts.next);
 
 	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr,
@@ -972,7 +980,6 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 	unsigned char code[] = { opc };
 	struct stack stack = STACK_INIT;
 	struct expression *left, *right, *expr;
-	struct statement *stmt;
 	struct compilation_unit *cu;
 
 	left = temporary_expr(jvm_type, 1);
@@ -984,7 +991,6 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	stmt = cu->entry_bb->stmt;
 	expr = stack_pop(&stack);
 
 	assert_binop_expr(jvm_type, binary_operator, left, right, expr);
@@ -1109,7 +1115,7 @@ static void assert_iinc_stmt(unsigned char expected_index,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	store_stmt = cu->entry_bb->stmt;
+	store_stmt = to_stmt(cu->entry_bb->stmt_list.next);
 	local_expression = store_stmt->store_dest;
 	assert_local_expr(J_INT, expected_index, local_expression);
 	const_expression = store_stmt->store_src->binary_right;
@@ -1244,7 +1250,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));
 
-	if_stmt = stmt_bb->stmt;
+	if_stmt = to_stmt(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, if_stmt->type);
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);
@@ -1290,7 +1296,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));
 
-	if_stmt = stmt_bb->stmt;
+	if_stmt = to_stmt(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, if_stmt->type);
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	assert_binop_expr(jvm_type, expected_operator, if_value1, if_value2,
@@ -1333,7 +1339,7 @@ void test_convert_goto(void)
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));
 
-	goto_stmt = goto_bb->stmt;
+	goto_stmt = to_stmt(goto_bb->stmt_list.next);
 	assert_int_equals(STMT_GOTO, goto_stmt->type);
 	assert_ptr_equals(target_bb->label_stmt, goto_stmt->goto_target);
 
@@ -1346,6 +1352,7 @@ static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 	struct stack expr_stack = STACK_INIT;
 	struct compilation_unit *cu;
 	unsigned char code[] = { opc };
+	struct statement *ret_stmt;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
 
@@ -1353,8 +1360,9 @@ static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 	stack_push(&expr_stack, return_value);
 
 	convert_to_ir(cu);
+	ret_stmt = to_stmt(cu->entry_bb->stmt_list.next);
 	assert_true(stack_is_empty(&expr_stack));
-	assert_return_stmt(return_value, cu->entry_bb->stmt);
+	assert_return_stmt(return_value, ret_stmt);
 
 	free_compilation_unit(cu);
 }
