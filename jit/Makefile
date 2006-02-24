@@ -3,7 +3,7 @@ TEST_SUITE=test-suite.c
 
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
-INCLUDE = -I. -I.. -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
+INCLUDE = -I. -I../src -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
 LIBS = -lglib-2.0
 OBJS = basic-block.o bitmap.o bytecodes.o bytecode-cfg-builder.o bytecode-to-ir.o compilation-unit.o instruction.o insn-selector.o statement.o expression.o
 TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o bytecode-cfg-builder-test.o bytecode-to-ir-test.o compilation-unit-test.o insn-selector-test.o list-test.o stack-test.o
@@ -21,7 +21,7 @@ $(TESTS):
 $(HARNESS):
 
 insn-selector.c: insn-selector.brg
-	../../monoburg/monoburg -e insn-selector.brg > insn-selector.c
+	../monoburg/monoburg -e insn-selector.brg > insn-selector.c
 
 tags:
 	exuberant-ctags -R
