@@ -21,9 +21,9 @@ unit tests, follow these instructions:
 
   3. Compile jit-jamvm and run unit tests:
 
-    % cd jit-jamvm/ 
+    % cd jit-jamvm/
     % ./configure
-    % cd src/jit/
+    % cd jit/
     % make
 
 
