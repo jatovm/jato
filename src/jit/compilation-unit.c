@@ -18,6 +18,9 @@ struct compilation_unit *alloc_compilation_unit(unsigned char *code,
 	struct compilation_unit *cu = malloc(sizeof *cu);
 	if (cu) {
 		memset(cu, 0, sizeof *cu);
+		INIT_LIST_HEAD(&cu->bb_list);
+		if (entry_bb)
+			list_add_tail(&entry_bb->bb_list_node, &cu->bb_list);
 		cu->code = code;
 		cu->code_len = code_len;
 		cu->entry_bb = entry_bb;
@@ -28,16 +31,13 @@ struct compilation_unit *alloc_compilation_unit(unsigned char *code,
 
 void free_compilation_unit(struct compilation_unit *cu)
 {
-	struct basic_block *bb = cu->entry_bb;
+	struct basic_block *bb, *tmp_bb;
 
-	while (bb) {
-		struct basic_block *prev = bb;
-		bb = bb->next;
-		free_basic_block(prev);
-	}
+	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
+		free_basic_block(bb);
+
 	free(cu);
 }
-
 
 /**
  * 	bb_find - Find basic block containing @offset.
@@ -49,13 +49,22 @@ void free_compilation_unit(struct compilation_unit *cu)
  */
 struct basic_block *find_bb(struct compilation_unit *cu, unsigned long offset)
 {
-	struct basic_block *bb = cu->entry_bb;
+	struct basic_block *bb;
 
-	while (bb) {
+	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
 		if (offset >= bb->start && offset < bb->end)
-			break;
-		bb = bb->next;
+			return bb;
 	}
-	return bb;
+	return NULL;
 }
 
+unsigned long nr_bblocks(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	unsigned long nr = 0;
+
+	list_for_each_entry(bb, &cu->bb_list, bb_list_node)
+		nr++;
+
+	return nr;
+}

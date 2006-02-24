@@ -1239,10 +1239,10 @@ static void assert_convert_if(enum binary_operator expected_operator,
 
 	stmt_bb = alloc_basic_block(0, 1);
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
-	stmt_bb->next = true_bb;
 
 	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb,
 				    &expr_stack);
+	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
 	if_value = temporary_expr(J_INT, 1);
 	stack_push(&expr_stack, if_value);
@@ -1282,10 +1282,10 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 
 	stmt_bb = alloc_basic_block(0, 1);
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
-	stmt_bb->next = true_bb;
 
 	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb,
 				    &expr_stack);
+	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
 	if_value1 = temporary_expr(jvm_type, 1);
 	stack_push(&expr_stack, if_value1);
@@ -1331,10 +1331,10 @@ void test_convert_goto(void)
 
 	goto_bb = alloc_basic_block(0, 1);
 	target_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
-	goto_bb->next = target_bb;
 
 	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), goto_bb,
 				    &expr_stack);
+	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(&expr_stack));

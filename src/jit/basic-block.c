@@ -20,10 +20,10 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 		memset(bb, 0, sizeof(*bb));
 		INIT_LIST_HEAD(&bb->stmt_list);
 		INIT_LIST_HEAD(&bb->insn_list);
+		INIT_LIST_HEAD(&bb->bb_list_node);
 		bb->label_stmt = alloc_statement(STMT_LABEL);
 		bb->start = start;
 		bb->end = end;
-		bb->next = NULL;
 	}
 	return bb;
 }
@@ -70,24 +70,9 @@ struct basic_block *bb_split(struct basic_block *bb, unsigned long offset)
 		return NULL;
 
 	new_block = alloc_basic_block(offset, bb->end);
-	if (new_block) {
-		new_block->next = bb->next;
-		bb->next = new_block;
+	if (new_block)
 		bb->end = offset;
-	}
 	return new_block;
-}
-
-unsigned long nr_bblocks(struct basic_block *entry_bb)
-{
-	unsigned long ret = 0;
-	struct basic_block *bb = entry_bb;
-	while (bb) {
-		ret++;
-		bb = bb->next;
-	}
-
-	return ret;
 }
 
 void bb_insert_stmt(struct basic_block *bb, struct statement *stmt)

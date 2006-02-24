@@ -29,6 +29,7 @@ static void bb_end_after_branch(struct compilation_unit *cu,
 		if (bytecode_is_branch(cu->code[prev])) {
 			set_bit(branch_targets, bytecode_br_target(&cu->code[prev]));
 			bb = bb_split(bb, offset);
+			list_add_tail(&bb->bb_list_node, &cu->bb_list);
 		}
 	}
 }
@@ -44,8 +45,10 @@ static void bb_start_at_branch_target(struct compilation_unit *cu,
 			
 			bb = find_bb(cu, offset);
 
-			if (bb->start != offset)
-				bb_split(bb, offset);
+			if (bb->start != offset) {
+				bb = bb_split(bb, offset);
+				list_add_tail(&bb->bb_list_node, &cu->bb_list);
+			}
 		}
 		offset += bytecode_size(cu->code + offset);
 	}
@@ -58,6 +61,7 @@ void build_cfg(struct compilation_unit *cu)
 	branch_targets = alloc_bitmap(cu->code_len);
 
 	cu->entry_bb = alloc_basic_block(0, cu->code_len);
+	list_add_tail(&cu->entry_bb->bb_list_node, &cu->bb_list);
 	bb_end_after_branch(cu, branch_targets);
 	bb_start_at_branch_target(cu, branch_targets);
 

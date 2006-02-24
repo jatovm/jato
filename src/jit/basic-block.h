@@ -12,13 +12,12 @@ struct basic_block {
 	struct statement *label_stmt;
 	struct list_head stmt_list;
 	struct list_head insn_list;
-	struct basic_block *next;
+	struct list_head bb_list_node;
 };
 
 struct basic_block *alloc_basic_block(unsigned long, unsigned long);
 void free_basic_block(struct basic_block *);
 struct basic_block *bb_split(struct basic_block *, unsigned long);
-unsigned long nr_bblocks(struct basic_block *);
 void bb_insert_stmt(struct basic_block *, struct statement *);
 void bb_insert_insn(struct basic_block *, struct insn *);
 

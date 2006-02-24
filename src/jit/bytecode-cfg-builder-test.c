@@ -18,6 +18,11 @@ static unsigned char default_string[9] = {
 	/* 8 */ OPC_ARETURN,
 };
 
+struct basic_block *to_basic_block(struct list_head *head)
+{
+	return list_entry(head, struct basic_block, bb_list_node);
+}
+
 void test_branch_opcode_ends_basic_block(void)
 {
 	struct basic_block *bb1, *bb2, *bb3;
@@ -27,15 +32,15 @@ void test_branch_opcode_ends_basic_block(void)
 				    ARRAY_SIZE(default_string), NULL, NULL);
 
 	build_cfg(cu);
-	assert_int_equals(3, nr_bblocks(cu->entry_bb));
+	assert_int_equals(3, nr_bblocks(cu));
 
 	bb1 = cu->entry_bb;
-	bb2 = bb1->next;
-	bb3 = bb2->next;
+	bb2 = to_basic_block(bb1->bb_list_node.next);
+	bb3 = to_basic_block(bb2->bb_list_node.next);
 
-	assert_basic_block(0, 4,  bb2, bb1);
-	assert_basic_block(4, 7,  bb3, bb2);
-	assert_basic_block(7, 9, NULL, bb3);
+	assert_basic_block(0, 4, bb1);
+	assert_basic_block(4, 7, bb2);
+	assert_basic_block(7, 9, bb3);
 
 	free_compilation_unit(cu);
 }
@@ -58,7 +63,7 @@ void test_multiple_branches(void)
 				    ARRAY_SIZE(greater_than_zero), NULL, NULL);
 
 	build_cfg(cu);
-	assert_int_equals(4, nr_bblocks(cu->entry_bb));
+	assert_int_equals(4, nr_bblocks(cu));
 
 	free_compilation_unit(cu);
 }
