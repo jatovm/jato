@@ -1166,14 +1166,9 @@ static int convert_return(struct compilation_unit *cu,
 
 typedef int (*convert_fn_t) (struct compilation_unit *, struct basic_block *);
 
-struct converter {
-	convert_fn_t convert;
-};
+#define DECLARE_CONVERTER(opc, fn) [opc] = fn
 
-#define DECLARE_CONVERTER(opc, fn) \
-		[opc] = { .convert = fn }
-
-static struct converter converters[] = {
+static convert_fn_t converters[] = {
 	DECLARE_CONVERTER(OPC_NOP, convert_nop),
 	DECLARE_CONVERTER(OPC_ACONST_NULL, convert_aconst_null),
 	DECLARE_CONVERTER(OPC_ICONST_M1, convert_iconst),
@@ -1360,11 +1355,11 @@ static struct converter converters[] = {
 int convert_to_ir(struct compilation_unit *cu)
 {
 	unsigned char opc = cu->code[0];
-	struct converter *converter = &converters[opc];
+	convert_fn_t convert = converters[opc];
 
-	if (!cu->entry_bb || !converter
+	if (!cu->entry_bb || !convert
 	    || cu->code_len < bytecode_size(cu->code))
-		return 0;
+		return -EINVAL;
 
-	return converter->convert(cu, cu->entry_bb);
+	return convert(cu, cu->entry_bb);
 }
