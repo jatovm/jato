@@ -9,12 +9,15 @@
 #include <insn-selector.h>
 
 static void assert_insn(enum insn_opcode insn_op,
-			unsigned long src, unsigned long dest,
+			enum reg src_base_reg,
+			unsigned long src_displacement,
+			enum reg dest_reg,
 			struct insn *insn)
 {
 	assert_int_equals(insn_op, insn->insn_op);
-	assert_int_equals(src, insn->src);
-	assert_int_equals(dest, insn->dest);
+	assert_int_equals(src_base_reg, insn->src.base_reg);
+	assert_int_equals(src_displacement, insn->src.displacement);
+	assert_int_equals(dest_reg, insn->dest.reg);
 }
 
 static struct insn *to_insn(struct list_head *head)
@@ -22,9 +25,11 @@ static struct insn *to_insn(struct list_head *head)
 	return list_entry(head, struct insn, insn_list_node);
 }
 
-static void assert_rewrite_binop_expr(unsigned long target,
+static void assert_rewrite_binop_expr(enum reg dest_reg,
 				      unsigned long left_local,
-				      unsigned long right_local)
+				      unsigned long right_local,
+				      unsigned long left_displacement,
+				      unsigned long right_displacement)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct expression *expr;
@@ -32,13 +37,13 @@ static void assert_rewrite_binop_expr(unsigned long target,
 	expr = binop_expr(J_INT, ADD, local_expr(J_INT, left_local),
 			  local_expr(J_INT, right_local));
 	insn_select(bb, expr);
-	assert_insn(MOV, left_local, target, to_insn(bb->insn_list.next));
-	assert_insn(ADD, right_local, target, to_insn(bb->insn_list.next->next));
+	assert_insn(MOV, REG_EBP, right_displacement, REG_EAX, to_insn(bb->insn_list.next));
+	assert_insn(ADD, REG_EBP, left_displacement, REG_EAX, to_insn(bb->insn_list.next->next));
 	expr_put(expr);
 	free_basic_block(bb);
 }
 
 void test_rewrite_add_expr(void)
 {
-	assert_rewrite_binop_expr(0, 1, 2);
+	assert_rewrite_binop_expr(REG_EAX, 0, 1, 8, 12);
 }

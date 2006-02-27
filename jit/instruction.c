@@ -10,15 +10,18 @@
 #include <string.h>
 
 struct insn *alloc_insn(enum insn_opcode insn_op,
-			unsigned long src, unsigned long dest)
+			enum reg src_base_reg,
+			unsigned long src_displacement,
+			enum reg dest_reg)
 {
 	struct insn *insn = malloc(sizeof *insn);
 	if (insn) {
 		memset(insn, 0, sizeof *insn);
 		INIT_LIST_HEAD(&insn->insn_list_node);
 		insn->insn_op = insn_op;
-		insn->src = src;
-		insn->dest = dest;
+		insn->src.base_reg = src_base_reg;
+		insn->src.displacement = src_displacement;
+		insn->dest.reg = dest_reg;
 	}
 	return insn;
 }

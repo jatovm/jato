@@ -3,6 +3,21 @@
 
 #include <list.h>
 
+enum reg {
+	REG_EAX,
+	REG_EBP,
+};
+
+struct operand {
+	union {
+		enum reg reg;
+		struct {
+			enum reg base_reg;
+			unsigned long displacement;
+		};
+	};
+};
+
 enum insn_opcode {
 	ADD,
 	MOV,
@@ -10,12 +25,12 @@ enum insn_opcode {
 
 struct insn {
 	enum insn_opcode insn_op;
-	unsigned long src;
-	unsigned long dest;
+	struct operand src;
+	struct operand dest;
 	struct list_head insn_list_node;
 };
 
-struct insn *alloc_insn(enum insn_opcode, unsigned long, unsigned long);
+struct insn *alloc_insn(enum insn_opcode, enum reg, unsigned long, enum reg);
 void free_insn(struct insn *);
 
 #endif
