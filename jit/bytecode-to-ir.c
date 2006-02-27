@@ -1352,11 +1352,30 @@ static convert_fn_t converters[] = {
  */
 int convert_to_ir(struct compilation_unit *cu)
 {
-	unsigned char opc = cu->code[0];
-	convert_fn_t convert = converters[opc];
-
-	if (!cu->entry_bb || !convert || cu->code_len < bytecode_size(cu->code))
+	int err = 0;
+	unsigned long offset = 0;
+	
+	if (!cu->entry_bb)
 		return -EINVAL;
 
-	return convert(cu, cu->entry_bb, 0);
+	while (offset < cu->code_len) {
+		unsigned char opc = cu->code[offset];
+		convert_fn_t convert = converters[opc];
+		unsigned long opc_size;
+		
+		opc_size = bytecode_size(cu->code);
+
+		if (!convert || cu->code_len-offset < opc_size) {
+			err = -EINVAL;
+			goto out;
+		}
+
+		err = convert(cu, cu->entry_bb, offset);
+		if (err)
+			goto out;
+
+		offset += opc_size;
+	}
+  out:
+	return err;
 }

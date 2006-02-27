@@ -468,16 +468,16 @@ void test_convert_ldc2_w(void)
 					  OPC_LDC2_W);
 }
 
-static void assert_convert_load(unsigned char opc,
-				enum jvm_type expected_jvm_type,
-				unsigned char expected_index)
+static void __assert_convert_load(unsigned char *code,
+				  unsigned long size,
+				  enum jvm_type expected_jvm_type,
+				  unsigned char expected_index)
 {
-	unsigned char code[] = { opc, expected_index };
 	struct stack expr_stack = STACK_INIT;
 	struct expression *expr;
 	struct compilation_unit *cu;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+	cu = alloc_simple_compilation_unit(code, size, &expr_stack);
 
 	convert_to_ir(cu);
 
@@ -487,6 +487,15 @@ static void assert_convert_load(unsigned char opc,
 
 	expr_put(expr);
 	free_compilation_unit(cu);
+}
+
+static void assert_convert_load(unsigned char opc,
+				enum jvm_type expected_jvm_type,
+				unsigned char expected_index)
+{
+	unsigned char code[] = { opc, expected_index };
+	__assert_convert_load(code, ARRAY_SIZE(code), expected_jvm_type,
+			      expected_index);
 }
 
 void test_convert_iload(void)
@@ -524,44 +533,53 @@ void test_convert_aload(void)
 	assert_convert_load(OPC_ALOAD, J_REFERENCE, 0xFF);
 }
 
+static void assert_convert_load_n(unsigned char opc,
+				  enum jvm_type expected_jvm_type,
+				  unsigned char expected_index)
+{
+	unsigned char code[] = { opc };
+	__assert_convert_load(code, ARRAY_SIZE(code), expected_jvm_type,
+			      expected_index);
+}
+
 void test_convert_iload_n(void)
 {
-	assert_convert_load(OPC_ILOAD_0, J_INT, 0x00);
-	assert_convert_load(OPC_ILOAD_1, J_INT, 0x01);
-	assert_convert_load(OPC_ILOAD_2, J_INT, 0x02);
-	assert_convert_load(OPC_ILOAD_3, J_INT, 0x03);
+	assert_convert_load_n(OPC_ILOAD_0, J_INT, 0x00);
+	assert_convert_load_n(OPC_ILOAD_1, J_INT, 0x01);
+	assert_convert_load_n(OPC_ILOAD_2, J_INT, 0x02);
+	assert_convert_load_n(OPC_ILOAD_3, J_INT, 0x03);
 }
 
 void test_convert_lload_n(void)
 {
-	assert_convert_load(OPC_LLOAD_0, J_LONG, 0x00);
-	assert_convert_load(OPC_LLOAD_1, J_LONG, 0x01);
-	assert_convert_load(OPC_LLOAD_2, J_LONG, 0x02);
-	assert_convert_load(OPC_LLOAD_3, J_LONG, 0x03);
+	assert_convert_load_n(OPC_LLOAD_0, J_LONG, 0x00);
+	assert_convert_load_n(OPC_LLOAD_1, J_LONG, 0x01);
+	assert_convert_load_n(OPC_LLOAD_2, J_LONG, 0x02);
+	assert_convert_load_n(OPC_LLOAD_3, J_LONG, 0x03);
 }
 
 void test_convert_fload_n(void)
 {
-	assert_convert_load(OPC_FLOAD_0, J_FLOAT, 0x00);
-	assert_convert_load(OPC_FLOAD_1, J_FLOAT, 0x01);
-	assert_convert_load(OPC_FLOAD_2, J_FLOAT, 0x02);
-	assert_convert_load(OPC_FLOAD_3, J_FLOAT, 0x03);
+	assert_convert_load_n(OPC_FLOAD_0, J_FLOAT, 0x00);
+	assert_convert_load_n(OPC_FLOAD_1, J_FLOAT, 0x01);
+	assert_convert_load_n(OPC_FLOAD_2, J_FLOAT, 0x02);
+	assert_convert_load_n(OPC_FLOAD_3, J_FLOAT, 0x03);
 }
 
 void test_convert_dload_n(void)
 {
-	assert_convert_load(OPC_DLOAD_0, J_DOUBLE, 0x00);
-	assert_convert_load(OPC_DLOAD_1, J_DOUBLE, 0x01);
-	assert_convert_load(OPC_DLOAD_2, J_DOUBLE, 0x02);
-	assert_convert_load(OPC_DLOAD_3, J_DOUBLE, 0x03);
+	assert_convert_load_n(OPC_DLOAD_0, J_DOUBLE, 0x00);
+	assert_convert_load_n(OPC_DLOAD_1, J_DOUBLE, 0x01);
+	assert_convert_load_n(OPC_DLOAD_2, J_DOUBLE, 0x02);
+	assert_convert_load_n(OPC_DLOAD_3, J_DOUBLE, 0x03);
 }
 
 void test_convert_aload_n(void)
 {
-	assert_convert_load(OPC_ALOAD_0, J_REFERENCE, 0x00);
-	assert_convert_load(OPC_ALOAD_1, J_REFERENCE, 0x01);
-	assert_convert_load(OPC_ALOAD_2, J_REFERENCE, 0x02);
-	assert_convert_load(OPC_ALOAD_3, J_REFERENCE, 0x03);
+	assert_convert_load_n(OPC_ALOAD_0, J_REFERENCE, 0x00);
+	assert_convert_load_n(OPC_ALOAD_1, J_REFERENCE, 0x01);
+	assert_convert_load_n(OPC_ALOAD_2, J_REFERENCE, 0x02);
+	assert_convert_load_n(OPC_ALOAD_3, J_REFERENCE, 0x03);
 }
 
 static void assert_convert_array_load(enum jvm_type expected_type,
@@ -653,19 +671,18 @@ void test_convert_saload(void)
 	assert_convert_array_load(J_SHORT, OPC_SALOAD, 1, 2);
 }
 
-static void assert_convert_store(unsigned char opc,
-				 enum jvm_type expected_jvm_type,
-				 unsigned char expected_index,
-				 unsigned long expected_temporary)
+static void __assert_convert_store(unsigned char *code, unsigned long size,
+				   enum jvm_type expected_jvm_type,
+				   unsigned char expected_index,
+				   unsigned long expected_temporary)
 {
-	unsigned char code[] = { opc, expected_index };
 	struct stack stack = STACK_INIT;
 	struct statement *stmt;
 	struct compilation_unit *cu;
 
 	stack_push(&stack, temporary_expr(J_INT, expected_temporary));
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+	cu = alloc_simple_compilation_unit(code, size, &stack);
 
 	convert_to_ir(cu);
 	stmt = to_stmt(cu->entry_bb->stmt_list.next);
@@ -677,6 +694,16 @@ static void assert_convert_store(unsigned char opc,
 	assert_true(stack_is_empty(&stack));
 
 	free_compilation_unit(cu);
+}
+
+static void assert_convert_store(unsigned char opc,
+				 enum jvm_type expected_jvm_type,
+				 unsigned char expected_index,
+				 unsigned long expected_temporary)
+{
+	unsigned char code[] = { opc, expected_index };
+	__assert_convert_store(code, ARRAY_SIZE(code), expected_jvm_type,
+			       expected_index, expected_temporary);
 }
 
 void test_convert_istore(void)
@@ -709,44 +736,54 @@ void test_convert_astore(void)
 	assert_convert_store(OPC_ASTORE, J_REFERENCE, 0x01, 0x02);
 }
 
+static void assert_convert_store_n(unsigned char opc,
+				 enum jvm_type expected_jvm_type,
+				 unsigned char expected_index,
+				 unsigned long expected_temporary)
+{
+	unsigned char code[] = { opc };
+	__assert_convert_store(code, ARRAY_SIZE(code), expected_jvm_type,
+			       expected_index, expected_temporary);
+}
+
 void test_convert_istore_n(void)
 {
-	assert_convert_store(OPC_ISTORE_0, J_INT, 0x00, 0xFF);
-	assert_convert_store(OPC_ISTORE_1, J_INT, 0x01, 0xFF);
-	assert_convert_store(OPC_ISTORE_2, J_INT, 0x02, 0xFF);
-	assert_convert_store(OPC_ISTORE_3, J_INT, 0x03, 0xFF);
+	assert_convert_store_n(OPC_ISTORE_0, J_INT, 0x00, 0xFF);
+	assert_convert_store_n(OPC_ISTORE_1, J_INT, 0x01, 0xFF);
+	assert_convert_store_n(OPC_ISTORE_2, J_INT, 0x02, 0xFF);
+	assert_convert_store_n(OPC_ISTORE_3, J_INT, 0x03, 0xFF);
 }
 
 void test_convert_lstore_n(void)
 {
-	assert_convert_store(OPC_LSTORE_0, J_LONG, 0x00, 0xFF);
-	assert_convert_store(OPC_LSTORE_1, J_LONG, 0x01, 0xFF);
-	assert_convert_store(OPC_LSTORE_2, J_LONG, 0x02, 0xFF);
-	assert_convert_store(OPC_LSTORE_3, J_LONG, 0x03, 0xFF);
+	assert_convert_store_n(OPC_LSTORE_0, J_LONG, 0x00, 0xFF);
+	assert_convert_store_n(OPC_LSTORE_1, J_LONG, 0x01, 0xFF);
+	assert_convert_store_n(OPC_LSTORE_2, J_LONG, 0x02, 0xFF);
+	assert_convert_store_n(OPC_LSTORE_3, J_LONG, 0x03, 0xFF);
 }
 
 void test_convert_fstore_n(void)
 {
-	assert_convert_store(OPC_FSTORE_0, J_FLOAT, 0x00, 0xFF);
-	assert_convert_store(OPC_FSTORE_1, J_FLOAT, 0x01, 0xFF);
-	assert_convert_store(OPC_FSTORE_2, J_FLOAT, 0x02, 0xFF);
-	assert_convert_store(OPC_FSTORE_3, J_FLOAT, 0x03, 0xFF);
+	assert_convert_store_n(OPC_FSTORE_0, J_FLOAT, 0x00, 0xFF);
+	assert_convert_store_n(OPC_FSTORE_1, J_FLOAT, 0x01, 0xFF);
+	assert_convert_store_n(OPC_FSTORE_2, J_FLOAT, 0x02, 0xFF);
+	assert_convert_store_n(OPC_FSTORE_3, J_FLOAT, 0x03, 0xFF);
 }
 
 void test_convert_dstore_n(void)
 {
-	assert_convert_store(OPC_DSTORE_0, J_DOUBLE, 0x00, 0xFF);
-	assert_convert_store(OPC_DSTORE_1, J_DOUBLE, 0x01, 0xFF);
-	assert_convert_store(OPC_DSTORE_2, J_DOUBLE, 0x02, 0xFF);
-	assert_convert_store(OPC_DSTORE_3, J_DOUBLE, 0x03, 0xFF);
+	assert_convert_store_n(OPC_DSTORE_0, J_DOUBLE, 0x00, 0xFF);
+	assert_convert_store_n(OPC_DSTORE_1, J_DOUBLE, 0x01, 0xFF);
+	assert_convert_store_n(OPC_DSTORE_2, J_DOUBLE, 0x02, 0xFF);
+	assert_convert_store_n(OPC_DSTORE_3, J_DOUBLE, 0x03, 0xFF);
 }
 
 void test_convert_astore_n(void)
 {
-	assert_convert_store(OPC_ASTORE_0, J_REFERENCE, 0x00, 0xFF);
-	assert_convert_store(OPC_ASTORE_1, J_REFERENCE, 0x01, 0xFF);
-	assert_convert_store(OPC_ASTORE_2, J_REFERENCE, 0x02, 0xFF);
-	assert_convert_store(OPC_ASTORE_3, J_REFERENCE, 0x03, 0xFF);
+	assert_convert_store_n(OPC_ASTORE_0, J_REFERENCE, 0x00, 0xFF);
+	assert_convert_store_n(OPC_ASTORE_1, J_REFERENCE, 0x01, 0xFF);
+	assert_convert_store_n(OPC_ASTORE_2, J_REFERENCE, 0x02, 0xFF);
+	assert_convert_store_n(OPC_ASTORE_3, J_REFERENCE, 0x03, 0xFF);
 }
 
 static void assert_convert_array_store(enum jvm_type expected_type,
@@ -1374,4 +1411,19 @@ void test_convert_return(void)
 	assert_convert_return(J_FLOAT, OPC_FRETURN);
 	assert_convert_return(J_DOUBLE, OPC_DRETURN);
 	assert_convert_return(J_REFERENCE, OPC_ARETURN);
+}
+
+void test_converts_complete_basic_block(void)
+{
+	struct stack expr_stack = STACK_INIT;
+	struct compilation_unit *cu;
+	unsigned char code[] = { OPC_ILOAD_0, OPC_ILOAD_1, OPC_IADD, OPC_IRETURN };
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+	convert_to_ir(cu);
+
+	assert_false(list_is_empty(&cu->entry_bb->stmt_list));
+	assert_true(stack_is_empty(&expr_stack));
+	
+	free_compilation_unit(cu);
 }
