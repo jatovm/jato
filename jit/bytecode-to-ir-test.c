@@ -172,20 +172,20 @@ static void __assert_convert_const(struct classblock *cb,
 				   enum jvm_type
 				   expected_jvm_type,
 				   long long expected_value,
-				   char *actual, size_t count)
+				   unsigned char *code, size_t code_len)
 {
 	struct expression *expr;
-	struct stack stack = STACK_INIT;
+	struct stack expr_stack = STACK_INIT;
 	struct compilation_unit *cu;
 
-	cu = alloc_simple_compilation_unit(actual, count, &stack);
+	cu = alloc_simple_compilation_unit(code, code_len, &expr_stack);
 	cu->cb = cb;
 
 	convert_to_ir(cu);
 
-	expr = stack_pop(&stack);
+	expr = stack_pop(&expr_stack);
 	assert_value_expr(expected_jvm_type, expected_value, expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(&expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -196,7 +196,7 @@ static void assert_convert_const(enum jvm_type expected_jvm_type,
 {
 	unsigned char code[] = { actual };
 	__assert_convert_const(NULL, expected_jvm_type, expected_value,
-			       code, sizeof(code));
+			       code, ARRAY_SIZE(code));
 }
 
 static void assert_convert_fconst(enum jvm_type expected_jvm_type,
@@ -279,7 +279,7 @@ static void assert_convert_bipush(char expected_value, char actual)
 {
 	unsigned char code[] = { actual, expected_value };
 	__assert_convert_const(NULL, J_INT,
-			       expected_value, code, sizeof(code));
+			       expected_value, code, ARRAY_SIZE(code));
 }
 
 void test_convert_bipush(void)
@@ -294,7 +294,7 @@ static void assert_convert_sipush(long long expected_value,
 {
 	unsigned char code[] = { actual, first, second };
 	__assert_convert_const(NULL, J_INT,
-			       expected_value, code, sizeof(code));
+			       expected_value, code, ARRAY_SIZE(code));
 }
 
 #define MIN_SHORT (-32768)
