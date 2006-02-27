@@ -264,8 +264,9 @@ static struct statement *convert_array_load(struct compilation_unit *cu,
 
 	bb_insert_stmt(bb, nullcheck);
 	bb_insert_stmt(bb, arraycheck);
+	bb_insert_stmt(bb, store_stmt);
 
-	return store_stmt;
+	return NULL;
 
       failed_nullcheck:
 	free_statement(arraycheck);
@@ -334,7 +335,8 @@ static struct statement *convert_store(struct compilation_unit *cu,
 
 	stmt->store_dest = local_expr(type, index);
 	stmt->store_src = stack_pop(cu->expr_stack);
-	return stmt;
+	bb_insert_stmt(bb, stmt);
+	return NULL;
       failed:
 	free_statement(stmt);
 	return NULL;
@@ -437,8 +439,9 @@ static struct statement *convert_array_store(struct compilation_unit *cu,
 
 	bb_insert_stmt(bb, nullcheck);
 	bb_insert_stmt(bb, arraycheck);
+	bb_insert_stmt(bb, store_stmt);
 
-	return store_stmt;
+	return NULL;
 
       failed_nullcheck:
 	free_statement(arraycheck);
@@ -815,8 +818,9 @@ static struct statement *convert_iinc(struct compilation_unit *cu,
 	}
 
 	store_stmt->store_src = binop_expression;
+	bb_insert_stmt(bb, store_stmt);
 
-	return store_stmt;
+	return NULL;
 
       failed:
 	free_statement(store_stmt);
@@ -996,7 +1000,8 @@ static struct statement *convert_if(struct compilation_unit *cu,
 		expr_put(zero_value);
 		return NULL;
 	}
-	return stmt;
+	bb_insert_stmt(bb, stmt);
+	return NULL;
 }
 
 static struct statement *convert_ifeq(struct compilation_unit *cu,
@@ -1040,12 +1045,15 @@ static struct statement *convert_if_cmp(struct compilation_unit *cu,
 					enum jvm_type jvm_type,
 					enum binary_operator binop)
 {
+	struct statement *stmt;
 	struct expression *if_value1, *if_value2;
 
 	if_value2 = stack_pop(cu->expr_stack);
 	if_value1 = stack_pop(cu->expr_stack);
 
-	return __convert_if(cu, bb, jvm_type, binop, if_value1, if_value2);
+	stmt = __convert_if(cu, bb, jvm_type, binop, if_value1, if_value2);
+	bb_insert_stmt(bb, stmt);
+	return NULL;
 }
 
 static struct statement *convert_if_icmpeq(struct compilation_unit *cu,
@@ -1107,18 +1115,22 @@ static struct statement *convert_goto(struct compilation_unit *cu,
 	target_bb = find_bb(cu, goto_target);
 
 	goto_stmt = alloc_statement(STMT_GOTO);
-	if (goto_stmt)
+	if (goto_stmt) {
 		goto_stmt->goto_target = target_bb->label_stmt;
-	return goto_stmt;
+		bb_insert_stmt(bb, goto_stmt);
+	}
+	return NULL;
 }
 
 static struct statement *convert_return(struct compilation_unit *cu,
 					struct basic_block *bb)
 {
 	struct statement *return_stmt = alloc_statement(STMT_RETURN);
-	if (return_stmt)
+	if (return_stmt) {
 		return_stmt->return_value = stack_pop(cu->expr_stack);
-	return return_stmt;
+		bb_insert_stmt(bb, return_stmt);
+	}
+	return NULL;
 }
 
 typedef struct statement *(*convert_fn_t) (struct compilation_unit *,
@@ -1325,7 +1337,5 @@ int convert_to_ir(struct compilation_unit *cu)
 		return 0;
 
 	stmt = converter->convert(cu, cu->entry_bb);
-	if (stmt)
-		bb_insert_stmt(cu->entry_bb, stmt);
 	return 1;
 }
