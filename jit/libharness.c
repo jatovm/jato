@@ -84,6 +84,32 @@ void __assert_ptr_equals(const char *file, int line, void *expected,
 		fail(file, line, "Expected %p, but was %p\n", expected, actual);
 }
 
+static void format_mem(char *str, unsigned long str_size, const void *buffer,
+		       unsigned long buffer_size)
+{
+	int i = 0;
+	const unsigned char *current = buffer;
+
+	while (str_size && buffer_size) {
+		i += sprintf(str+i, "%02x ", *current++);
+		str_size -= i;
+		buffer_size--;
+	}
+}
+
+void __assert_mem_equals(const char *file, int line, const void *expected,
+			 const void *actual, unsigned long size)
+{
+	nr_asserts++;
+	if (memcmp(expected, actual, size)) {
+		char expected_str[256];
+		char actual_str[256];
+		format_mem(expected_str, 256, expected, size);
+		format_mem(actual_str, 256, actual, size);
+		fail(file, line, "Expected %s, but was %s.\n", expected_str, actual_str);
+	}
+}
+
 void __assert_str_equals(const char *file, int line, const char *expected,
 			 const char *actual)
 {

@@ -16,13 +16,8 @@ static void assert_insn(enum insn_opcode insn_op,
 {
 	assert_int_equals(insn_op, insn->insn_op);
 	assert_int_equals(src_base_reg, insn->src.base_reg);
-	assert_int_equals(src_displacement, insn->src.displacement);
+	assert_int_equals(src_displacement, insn->src.disp);
 	assert_int_equals(dest_reg, insn->dest.reg);
-}
-
-static struct insn *to_insn(struct list_head *head)
-{
-	return list_entry(head, struct insn, insn_list_node);
 }
 
 static void assert_rewrite_binop_expr(enum reg dest_reg,

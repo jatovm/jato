@@ -22,6 +22,9 @@ void print_test_suite_results(void);
 #define assert_ptr_equals(expected, actual) \
 	__assert_ptr_equals(__FILE__, __LINE__, (expected), (actual))
 
+#define assert_mem_equals(expected, actual, size) \
+	__assert_mem_equals(__FILE__, __LINE__, (expected), (actual), (size))
+
 #define assert_str_equals(expected, actual) \
 	__assert_str_equals(__FILE__, __LINE__, (expected), (actual))
 
@@ -32,6 +35,7 @@ void __assert_not_null(const char *, int, void *);
 void __assert_int_equals(const char *, int, long long, long long);
 void __assert_float_equals(const char *, int, long double, long double, long double);
 void __assert_ptr_equals(const char *, int, void *, void *);
+void __assert_mem_equals(const char *, int, const void *, const void *, unsigned long);
 void __assert_str_equals(const char *, int, const char *, const char *);
 
 #endif

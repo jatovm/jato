@@ -20,7 +20,7 @@ struct insn *alloc_insn(enum insn_opcode insn_op,
 		INIT_LIST_HEAD(&insn->insn_list_node);
 		insn->insn_op = insn_op;
 		insn->src.base_reg = src_base_reg;
-		insn->src.displacement = src_displacement;
+		insn->src.disp = src_displacement;
 		insn->dest.reg = dest_reg;
 	}
 	return insn;
