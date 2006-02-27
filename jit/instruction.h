@@ -34,7 +34,7 @@ struct insn {
 };
 
 
-static inline struct insn *to_insn(struct list_head *head)
+static inline struct insn *insn_entry(struct list_head *head)
 {
 	return list_entry(head, struct insn, insn_list_node);
 }

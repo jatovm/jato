@@ -39,7 +39,7 @@ static unsigned char register_to_modrm(enum reg reg)
 void assemble(struct basic_block *bb, unsigned char *buffer,
 	      unsigned long buffer_size)
 {
-	struct insn *insn = to_insn(bb->insn_list.next);
+	struct insn *insn = insn_entry(bb->insn_list.next);
 
 	buffer[0] = 0x8b;
 	buffer[1] = register_to_modrm(insn->dest.reg);

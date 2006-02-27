@@ -32,8 +32,8 @@ static void assert_rewrite_binop_expr(enum reg dest_reg,
 	expr = binop_expr(J_INT, ADD, local_expr(J_INT, left_local),
 			  local_expr(J_INT, right_local));
 	insn_select(bb, expr);
-	assert_insn(MOV, REG_EBP, right_displacement, REG_EAX, to_insn(bb->insn_list.next));
-	assert_insn(ADD, REG_EBP, left_displacement, REG_EAX, to_insn(bb->insn_list.next->next));
+	assert_insn(MOV, REG_EBP, right_displacement, REG_EAX, insn_entry(bb->insn_list.next));
+	assert_insn(ADD, REG_EBP, left_displacement, REG_EAX, insn_entry(bb->insn_list.next->next));
 	expr_put(expr);
 	free_basic_block(bb);
 }
