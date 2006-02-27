@@ -22,7 +22,8 @@ static unsigned long alloc_temporary(void)
 	return ++temporary;
 }
 
-static struct statement *convert_nop(struct compilation_unit *cu)
+static struct statement *convert_nop(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
 	return alloc_statement(STMT_NOP);
 }
@@ -38,18 +39,21 @@ static struct statement *__convert_const(enum jvm_type jvm_type,
 	return NULL;
 }
 
-static struct statement *convert_aconst_null(struct compilation_unit *cu)
+static struct statement *convert_aconst_null(struct compilation_unit *cu,
+					     struct basic_block *bb)
 {
 	return __convert_const(J_REFERENCE, 0, cu->expr_stack);
 }
 
-static struct statement *convert_iconst(struct compilation_unit *cu)
+static struct statement *convert_iconst(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_const(J_INT, cu->code[0] - OPC_ICONST_0,
 			       cu->expr_stack);
 }
 
-static struct statement *convert_lconst(struct compilation_unit *cu)
+static struct statement *convert_lconst(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_const(J_LONG, cu->code[0] - OPC_LCONST_0,
 			       cu->expr_stack);
@@ -66,24 +70,28 @@ static struct statement *__convert_fconst(enum jvm_type jvm_type,
 	return 0;
 }
 
-static struct statement *convert_fconst(struct compilation_unit *cu)
+static struct statement *convert_fconst(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_fconst(J_FLOAT,
 				cu->code[0] - OPC_FCONST_0, cu->expr_stack);
 }
 
-static struct statement *convert_dconst(struct compilation_unit *cu)
+static struct statement *convert_dconst(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_fconst(J_DOUBLE,
 				cu->code[0] - OPC_DCONST_0, cu->expr_stack);
 }
 
-static struct statement *convert_bipush(struct compilation_unit *cu)
+static struct statement *convert_bipush(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_const(J_INT, (char)cu->code[1], cu->expr_stack);
 }
 
-static struct statement *convert_sipush(struct compilation_unit *cu)
+static struct statement *convert_sipush(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_const(J_INT,
 			       (short)be16_to_cpu(*(u2 *) & cu->code[1]),
@@ -123,27 +131,31 @@ static struct statement *__convert_ldc(struct constant_pool *cp,
 	return NULL;
 }
 
-static struct statement *convert_ldc(struct compilation_unit *cu)
+static struct statement *convert_ldc(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
 	return __convert_ldc(&cu->cb->constant_pool,
 			     cu->code[1], cu->expr_stack);
 }
 
-static struct statement *convert_ldc_w(struct compilation_unit *cu)
+static struct statement *convert_ldc_w(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
 	return __convert_ldc(&cu->cb->constant_pool,
 			     be16_to_cpu(*(u2 *) & cu->code[1]),
 			     cu->expr_stack);
 }
 
-static struct statement *convert_ldc2_w(struct compilation_unit *cu)
+static struct statement *convert_ldc2_w(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_ldc(&cu->cb->constant_pool,
 			     be16_to_cpu(*(u2 *) & cu->code[1]),
 			     cu->expr_stack);
 }
 
-static struct statement *__convert_load(unsigned char index,
+static struct statement *__convert_load(struct basic_block *bb,
+					unsigned char index,
 					enum jvm_type type,
 					struct stack *expr_stack)
 {
@@ -156,63 +168,74 @@ static struct statement *__convert_load(unsigned char index,
 	return NULL;
 }
 
-static struct statement *convert_iload(struct compilation_unit *cu)
+static struct statement *convert_iload(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
-	return __convert_load(cu->code[1], J_INT, cu->expr_stack);
+	return __convert_load(bb, cu->code[1], J_INT, cu->expr_stack);
 }
 
-static struct statement *convert_lload(struct compilation_unit *cu)
+static struct statement *convert_lload(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
-	return __convert_load(cu->code[1], J_LONG, cu->expr_stack);
+	return __convert_load(bb, cu->code[1], J_LONG, cu->expr_stack);
 }
 
-static struct statement *convert_fload(struct compilation_unit *cu)
+static struct statement *convert_fload(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
-	return __convert_load(cu->code[1], J_FLOAT, cu->expr_stack);
+	return __convert_load(bb, cu->code[1], J_FLOAT, cu->expr_stack);
 }
 
-static struct statement *convert_dload(struct compilation_unit *cu)
+static struct statement *convert_dload(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
-	return __convert_load(cu->code[1], J_DOUBLE, cu->expr_stack);
+	return __convert_load(bb, cu->code[1], J_DOUBLE, cu->expr_stack);
 }
 
-static struct statement *convert_aload(struct compilation_unit *cu)
+static struct statement *convert_aload(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
-	return __convert_load(cu->code[1], J_REFERENCE, cu->expr_stack);
+	return __convert_load(bb, cu->code[1], J_REFERENCE, cu->expr_stack);
 }
 
-static struct statement *convert_iload_n(struct compilation_unit *cu)
+static struct statement *convert_iload_n(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return __convert_load(cu->code[0] - OPC_ILOAD_0, J_INT, cu->expr_stack);
-}
-
-static struct statement *convert_lload_n(struct compilation_unit *cu)
-{
-	return __convert_load(cu->code[0] - OPC_LLOAD_0, J_LONG,
+	return __convert_load(bb, cu->code[0] - OPC_ILOAD_0, J_INT,
 			      cu->expr_stack);
 }
 
-static struct statement *convert_fload_n(struct compilation_unit *cu)
+static struct statement *convert_lload_n(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return __convert_load(cu->code[0] - OPC_FLOAD_0, J_FLOAT,
+	return __convert_load(bb, cu->code[0] - OPC_LLOAD_0, J_LONG,
 			      cu->expr_stack);
 }
 
-static struct statement *convert_dload_n(struct compilation_unit *cu)
+static struct statement *convert_fload_n(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return __convert_load(cu->code[0] - OPC_DLOAD_0, J_DOUBLE,
+	return __convert_load(bb, cu->code[0] - OPC_FLOAD_0, J_FLOAT,
 			      cu->expr_stack);
 }
 
-static struct statement *convert_aload_n(struct compilation_unit
-					 *cu)
+static struct statement *convert_dload_n(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return __convert_load(cu->code[0] - OPC_ALOAD_0,
+	return __convert_load(bb, cu->code[0] - OPC_DLOAD_0, J_DOUBLE,
+			      cu->expr_stack);
+}
+
+static struct statement *convert_aload_n(struct compilation_unit *cu,
+					 struct basic_block *bb)
+{
+	return __convert_load(bb, cu->code[0] - OPC_ALOAD_0,
 			      J_REFERENCE, cu->expr_stack);
 }
 
-static struct statement *convert_array_load(struct compilation_unit
-					    *cu, enum jvm_type type)
+static struct statement *convert_array_load(struct compilation_unit *cu,
+					    struct basic_block *bb,
+					    enum jvm_type type)
 {
 	struct expression *index, *arrayref;
 	struct statement *store_stmt, *arraycheck, *nullcheck;
@@ -244,8 +267,8 @@ static struct statement *convert_array_load(struct compilation_unit
 	expr_get(arrayref);
 	nullcheck->expression = arrayref;
 
-	bb_insert_stmt(cu->entry_bb, nullcheck);
-	bb_insert_stmt(cu->entry_bb, arraycheck);
+	bb_insert_stmt(bb, nullcheck);
+	bb_insert_stmt(bb, arraycheck);
 
 	return store_stmt;
 
@@ -257,52 +280,52 @@ static struct statement *convert_array_load(struct compilation_unit
 	return NULL;
 }
 
-static struct statement *convert_iaload(struct compilation_unit
-					*cu)
+static struct statement *convert_iaload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_INT);
+	return convert_array_load(cu, bb, J_INT);
 }
 
-static struct statement *convert_laload(struct compilation_unit
-					*cu)
+static struct statement *convert_laload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_LONG);
+	return convert_array_load(cu, bb, J_LONG);
 }
 
-static struct statement *convert_faload(struct compilation_unit
-					*cu)
+static struct statement *convert_faload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_FLOAT);
+	return convert_array_load(cu, bb, J_FLOAT);
 }
 
-static struct statement *convert_daload(struct compilation_unit
-					*cu)
+static struct statement *convert_daload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_DOUBLE);
+	return convert_array_load(cu, bb, J_DOUBLE);
 }
 
-static struct statement *convert_aaload(struct compilation_unit
-					*cu)
+static struct statement *convert_aaload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_REFERENCE);
+	return convert_array_load(cu, bb, J_REFERENCE);
 }
 
-static struct statement *convert_baload(struct compilation_unit
-					*cu)
+static struct statement *convert_baload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_INT);
+	return convert_array_load(cu, bb, J_INT);
 }
 
-static struct statement *convert_caload(struct compilation_unit
-					*cu)
+static struct statement *convert_caload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_CHAR);
+	return convert_array_load(cu, bb, J_CHAR);
 }
 
-static struct statement *convert_saload(struct compilation_unit
-					*cu)
+static struct statement *convert_saload(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
-	return convert_array_load(cu, J_SHORT);
+	return convert_array_load(cu, bb, J_SHORT);
 }
 
 static struct statement *__convert_store(enum jvm_type type,
@@ -321,73 +344,74 @@ static struct statement *__convert_store(enum jvm_type type,
 	return NULL;
 }
 
-static struct statement *convert_istore(struct compilation_unit
-					*cu)
+static struct statement *convert_istore(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_store(J_INT, cu->code[1], cu->expr_stack);
 }
 
-static struct statement *convert_lstore(struct compilation_unit
-					*cu)
+static struct statement *convert_lstore(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_store(J_LONG, cu->code[1], cu->expr_stack);
 }
 
-static struct statement *convert_fstore(struct compilation_unit
-					*cu)
+static struct statement *convert_fstore(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_store(J_FLOAT, cu->code[1], cu->expr_stack);
 }
 
-static struct statement *convert_dstore(struct compilation_unit
-					*cu)
+static struct statement *convert_dstore(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_store(J_DOUBLE, cu->code[1], cu->expr_stack);
 }
 
-static struct statement *convert_astore(struct compilation_unit
-					*cu)
+static struct statement *convert_astore(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	return __convert_store(J_REFERENCE, cu->code[1], cu->expr_stack);
 }
 
-static struct statement *convert_istore_n(struct compilation_unit
-					  *cu)
+static struct statement *convert_istore_n(struct compilation_unit *cu,
+					  struct basic_block *bb)
 {
 	return __convert_store(J_INT, cu->code[0] - OPC_ISTORE_0,
 			       cu->expr_stack);
 }
 
-static struct statement *convert_lstore_n(struct compilation_unit
-					  *cu)
+static struct statement *convert_lstore_n(struct compilation_unit *cu,
+					  struct basic_block *bb)
 {
 	return __convert_store(J_LONG, cu->code[0] - OPC_LSTORE_0,
 			       cu->expr_stack);
 }
 
-static struct statement *convert_fstore_n(struct compilation_unit
-					  *cu)
+static struct statement *convert_fstore_n(struct compilation_unit *cu,
+					  struct basic_block *bb)
 {
 	return __convert_store(J_FLOAT,
 			       cu->code[0] - OPC_FSTORE_0, cu->expr_stack);
 }
 
-static struct statement *convert_dstore_n(struct compilation_unit
-					  *cu)
+static struct statement *convert_dstore_n(struct compilation_unit *cu,
+					  struct basic_block *bb)
 {
 	return __convert_store(J_DOUBLE,
 			       cu->code[0] - OPC_DSTORE_0, cu->expr_stack);
 }
 
-static struct statement *convert_astore_n(struct compilation_unit
-					  *cu)
+static struct statement *convert_astore_n(struct compilation_unit *cu,
+					  struct basic_block *bb)
 {
 	return __convert_store(J_REFERENCE,
 			       cu->code[0] - OPC_ASTORE_0, cu->expr_stack);
 }
 
-static struct statement *convert_array_store(struct compilation_unit
-					     *cu, enum jvm_type type)
+static struct statement *convert_array_store(struct compilation_unit *cu,
+					     struct basic_block *bb,
+					     enum jvm_type type)
 {
 	struct expression *value, *index, *arrayref;
 	struct statement *store_stmt, *arraycheck, *nullcheck;
@@ -417,8 +441,8 @@ static struct statement *convert_array_store(struct compilation_unit
 	expr_get(arrayref);
 	nullcheck->expression = arrayref;
 
-	bb_insert_stmt(cu->entry_bb, nullcheck);
-	bb_insert_stmt(cu->entry_bb, arraycheck);
+	bb_insert_stmt(bb, nullcheck);
+	bb_insert_stmt(bb, arraycheck);
 
 	return store_stmt;
 
@@ -430,61 +454,63 @@ static struct statement *convert_array_store(struct compilation_unit
 	return NULL;
 }
 
-static struct statement *convert_iastore(struct compilation_unit
-					 *cu)
+static struct statement *convert_iastore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_INT);
+	return convert_array_store(cu, bb, J_INT);
 }
 
-static struct statement *convert_lastore(struct compilation_unit
-					 *cu)
+static struct statement *convert_lastore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_LONG);
+	return convert_array_store(cu, bb, J_LONG);
 }
 
-static struct statement *convert_fastore(struct compilation_unit
-					 *cu)
+static struct statement *convert_fastore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_FLOAT);
+	return convert_array_store(cu, bb, J_FLOAT);
 }
 
-static struct statement *convert_dastore(struct compilation_unit
-					 *cu)
+static struct statement *convert_dastore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_DOUBLE);
+	return convert_array_store(cu, bb, J_DOUBLE);
 }
 
-static struct statement *convert_aastore(struct compilation_unit
-					 *cu)
+static struct statement *convert_aastore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_REFERENCE);
+	return convert_array_store(cu, bb, J_REFERENCE);
 }
 
-static struct statement *convert_bastore(struct compilation_unit
-					 *cu)
+static struct statement *convert_bastore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_INT);
+	return convert_array_store(cu, bb, J_INT);
 }
 
-static struct statement *convert_castore(struct compilation_unit
-					 *cu)
+static struct statement *convert_castore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_CHAR);
+	return convert_array_store(cu, bb, J_CHAR);
 }
 
-static struct statement *convert_sastore(struct compilation_unit
-					 *cu)
+static struct statement *convert_sastore(struct compilation_unit *cu,
+					 struct basic_block *bb)
 {
-	return convert_array_store(cu, J_SHORT);
+	return convert_array_store(cu, bb, J_SHORT);
 }
 
-static struct statement *convert_pop(struct compilation_unit *cu)
+static struct statement *convert_pop(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
 	stack_pop(cu->expr_stack);
 	return NULL;
 }
 
-static struct statement *convert_dup(struct compilation_unit *cu)
+static struct statement *convert_dup(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
 	void *value = stack_pop(cu->expr_stack);
 	stack_push(cu->expr_stack, value);
@@ -492,8 +518,8 @@ static struct statement *convert_dup(struct compilation_unit *cu)
 	return NULL;
 }
 
-static struct statement *convert_dup_x1(struct compilation_unit
-					*cu)
+static struct statement *convert_dup_x1(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	void *value1 = stack_pop(cu->expr_stack);
 	void *value2 = stack_pop(cu->expr_stack);
@@ -503,8 +529,8 @@ static struct statement *convert_dup_x1(struct compilation_unit
 	return NULL;
 }
 
-static struct statement *convert_dup_x2(struct compilation_unit
-					*cu)
+static struct statement *convert_dup_x2(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	void *value1 = stack_pop(cu->expr_stack);
 	void *value2 = stack_pop(cu->expr_stack);
@@ -516,7 +542,8 @@ static struct statement *convert_dup_x2(struct compilation_unit
 	return NULL;
 }
 
-static struct statement *convert_swap(struct compilation_unit *cu)
+static struct statement *convert_swap(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
 	void *value1 = stack_pop(cu->expr_stack);
 	void *value2 = stack_pop(cu->expr_stack);
@@ -525,8 +552,8 @@ static struct statement *convert_swap(struct compilation_unit *cu)
 	return NULL;
 }
 
-static struct statement *convert_binop(struct compilation_unit
-				       *cu,
+static struct statement *convert_binop(struct compilation_unit *cu,
+				       struct basic_block *bb,
 				       enum jvm_type jvm_type,
 				       enum binary_operator binary_operator)
 {
@@ -542,108 +569,128 @@ static struct statement *convert_binop(struct compilation_unit
 	return NULL;
 }
 
-static struct statement *convert_iadd(struct compilation_unit *cu)
+static struct statement *convert_iadd(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_ADD);
+	return convert_binop(cu, bb, J_INT, OP_ADD);
 }
 
-static struct statement *convert_ladd(struct compilation_unit *cu)
+static struct statement *convert_ladd(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_ADD);
+	return convert_binop(cu, bb, J_LONG, OP_ADD);
 }
 
-static struct statement *convert_fadd(struct compilation_unit *cu)
+static struct statement *convert_fadd(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_FLOAT, OP_ADD);
+	return convert_binop(cu, bb, J_FLOAT, OP_ADD);
 }
 
-static struct statement *convert_dadd(struct compilation_unit *cu)
+static struct statement *convert_dadd(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_DOUBLE, OP_ADD);
+	return convert_binop(cu, bb, J_DOUBLE, OP_ADD);
 }
 
-static struct statement *convert_isub(struct compilation_unit *cu)
+static struct statement *convert_isub(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_SUB);
+	return convert_binop(cu, bb, J_INT, OP_SUB);
 }
 
-static struct statement *convert_lsub(struct compilation_unit *cu)
+static struct statement *convert_lsub(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_SUB);
+	return convert_binop(cu, bb, J_LONG, OP_SUB);
 }
 
-static struct statement *convert_fsub(struct compilation_unit *cu)
+static struct statement *convert_fsub(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_FLOAT, OP_SUB);
+	return convert_binop(cu, bb, J_FLOAT, OP_SUB);
 }
 
-static struct statement *convert_dsub(struct compilation_unit *cu)
+static struct statement *convert_dsub(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_DOUBLE, OP_SUB);
+	return convert_binop(cu, bb, J_DOUBLE, OP_SUB);
 }
 
-static struct statement *convert_imul(struct compilation_unit *cu)
+static struct statement *convert_imul(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_MUL);
+	return convert_binop(cu, bb, J_INT, OP_MUL);
 }
 
-static struct statement *convert_lmul(struct compilation_unit *cu)
+static struct statement *convert_lmul(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_MUL);
+	return convert_binop(cu, bb, J_LONG, OP_MUL);
 }
 
-static struct statement *convert_fmul(struct compilation_unit *cu)
+static struct statement *convert_fmul(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_FLOAT, OP_MUL);
+	return convert_binop(cu, bb, J_FLOAT, OP_MUL);
 }
 
-static struct statement *convert_dmul(struct compilation_unit *cu)
+static struct statement *convert_dmul(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_DOUBLE, OP_MUL);
+	return convert_binop(cu, bb, J_DOUBLE, OP_MUL);
 }
 
-static struct statement *convert_idiv(struct compilation_unit *cu)
+static struct statement *convert_idiv(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_DIV);
+	return convert_binop(cu, bb, J_INT, OP_DIV);
 }
 
-static struct statement *convert_ldiv(struct compilation_unit *cu)
+static struct statement *convert_ldiv(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_DIV);
+	return convert_binop(cu, bb, J_LONG, OP_DIV);
 }
 
-static struct statement *convert_fdiv(struct compilation_unit *cu)
+static struct statement *convert_fdiv(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_FLOAT, OP_DIV);
+	return convert_binop(cu, bb, J_FLOAT, OP_DIV);
 }
 
-static struct statement *convert_ddiv(struct compilation_unit *cu)
+static struct statement *convert_ddiv(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_DOUBLE, OP_DIV);
+	return convert_binop(cu, bb, J_DOUBLE, OP_DIV);
 }
 
-static struct statement *convert_irem(struct compilation_unit *cu)
+static struct statement *convert_irem(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_REM);
+	return convert_binop(cu, bb, J_INT, OP_REM);
 }
 
-static struct statement *convert_lrem(struct compilation_unit *cu)
+static struct statement *convert_lrem(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_REM);
+	return convert_binop(cu, bb, J_LONG, OP_REM);
 }
 
-static struct statement *convert_frem(struct compilation_unit *cu)
+static struct statement *convert_frem(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_FLOAT, OP_REM);
+	return convert_binop(cu, bb, J_FLOAT, OP_REM);
 }
 
-static struct statement *convert_drem(struct compilation_unit *cu)
+static struct statement *convert_drem(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_DOUBLE, OP_REM);
+	return convert_binop(cu, bb, J_DOUBLE, OP_REM);
 }
 
-static struct statement *convert_unary_op(struct compilation_unit
-					  *cu,
+static struct statement *convert_unary_op(struct compilation_unit *cu,
+					  struct basic_block *bb,
 					  enum jvm_type jvm_type,
 					  enum unary_operator unary_operator)
 {
@@ -658,77 +705,92 @@ static struct statement *convert_unary_op(struct compilation_unit
 	return NULL;
 }
 
-static struct statement *convert_ineg(struct compilation_unit *cu)
+static struct statement *convert_ineg(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_unary_op(cu, J_INT, OP_NEG);
+	return convert_unary_op(cu, bb, J_INT, OP_NEG);
 }
 
-static struct statement *convert_lneg(struct compilation_unit *cu)
+static struct statement *convert_lneg(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_unary_op(cu, J_LONG, OP_NEG);
+	return convert_unary_op(cu, bb, J_LONG, OP_NEG);
 }
 
-static struct statement *convert_fneg(struct compilation_unit *cu)
+static struct statement *convert_fneg(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_unary_op(cu, J_FLOAT, OP_NEG);
+	return convert_unary_op(cu, bb, J_FLOAT, OP_NEG);
 }
 
-static struct statement *convert_dneg(struct compilation_unit *cu)
+static struct statement *convert_dneg(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_unary_op(cu, J_DOUBLE, OP_NEG);
+	return convert_unary_op(cu, bb, J_DOUBLE, OP_NEG);
 }
 
-static struct statement *convert_ishl(struct compilation_unit *cu)
+static struct statement *convert_ishl(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_SHL);
+	return convert_binop(cu, bb, J_INT, OP_SHL);
 }
 
-static struct statement *convert_lshl(struct compilation_unit *cu)
+static struct statement *convert_lshl(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_SHL);
+	return convert_binop(cu, bb, J_LONG, OP_SHL);
 }
 
-static struct statement *convert_ishr(struct compilation_unit *cu)
+static struct statement *convert_ishr(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_SHR);
+	return convert_binop(cu, bb, J_INT, OP_SHR);
 }
 
-static struct statement *convert_lshr(struct compilation_unit *cu)
+static struct statement *convert_lshr(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_SHR);
+	return convert_binop(cu, bb, J_LONG, OP_SHR);
 }
 
-static struct statement *convert_iand(struct compilation_unit *cu)
+static struct statement *convert_iand(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_AND);
+	return convert_binop(cu, bb, J_INT, OP_AND);
 }
 
-static struct statement *convert_land(struct compilation_unit *cu)
+static struct statement *convert_land(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_AND);
+	return convert_binop(cu, bb, J_LONG, OP_AND);
 }
 
-static struct statement *convert_ior(struct compilation_unit *cu)
+static struct statement *convert_ior(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_OR);
+	return convert_binop(cu, bb, J_INT, OP_OR);
 }
 
-static struct statement *convert_lor(struct compilation_unit *cu)
+static struct statement *convert_lor(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_OR);
+	return convert_binop(cu, bb, J_LONG, OP_OR);
 }
 
-static struct statement *convert_ixor(struct compilation_unit *cu)
+static struct statement *convert_ixor(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_XOR);
+	return convert_binop(cu, bb, J_INT, OP_XOR);
 }
 
-static struct statement *convert_lxor(struct compilation_unit *cu)
+static struct statement *convert_lxor(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_LONG, OP_XOR);
+	return convert_binop(cu, bb, J_LONG, OP_XOR);
 }
 
-static struct statement *convert_iinc(struct compilation_unit *cu)
+static struct statement *convert_iinc(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
 	struct statement *store_stmt;
 	struct expression *local_expression, *binop_expression,
@@ -768,6 +830,7 @@ static struct statement *convert_iinc(struct compilation_unit *cu)
 }
 
 static struct statement *convert_conversion(struct compilation_unit *cu,
+					    struct basic_block *bb,
 					    enum jvm_type to_type)
 {
 	struct expression *from_expression, *conversion_expression;
@@ -781,97 +844,116 @@ static struct statement *convert_conversion(struct compilation_unit *cu,
 	return NULL;
 }
 
-static struct statement *convert_i2l(struct compilation_unit *cu)
+static struct statement *convert_i2l(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_LONG);
+	return convert_conversion(cu, bb, J_LONG);
 }
 
-static struct statement *convert_i2f(struct compilation_unit *cu)
+static struct statement *convert_i2f(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_FLOAT);
+	return convert_conversion(cu, bb, J_FLOAT);
 }
 
-static struct statement *convert_i2d(struct compilation_unit *cu)
+static struct statement *convert_i2d(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_DOUBLE);
+	return convert_conversion(cu, bb, J_DOUBLE);
 }
 
-static struct statement *convert_l2i(struct compilation_unit *cu)
+static struct statement *convert_l2i(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_INT);
+	return convert_conversion(cu, bb, J_INT);
 }
 
-static struct statement *convert_l2f(struct compilation_unit *cu)
+static struct statement *convert_l2f(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_FLOAT);
+	return convert_conversion(cu, bb, J_FLOAT);
 }
 
-static struct statement *convert_l2d(struct compilation_unit *cu)
+static struct statement *convert_l2d(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_DOUBLE);
+	return convert_conversion(cu, bb, J_DOUBLE);
 }
 
-static struct statement *convert_f2i(struct compilation_unit *cu)
+static struct statement *convert_f2i(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_INT);
+	return convert_conversion(cu, bb, J_INT);
 }
 
-static struct statement *convert_f2l(struct compilation_unit *cu)
+static struct statement *convert_f2l(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_LONG);
+	return convert_conversion(cu, bb, J_LONG);
 }
 
-static struct statement *convert_f2d(struct compilation_unit *cu)
+static struct statement *convert_f2d(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_DOUBLE);
+	return convert_conversion(cu, bb, J_DOUBLE);
 }
 
-static struct statement *convert_d2i(struct compilation_unit *cu)
+static struct statement *convert_d2i(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_INT);
+	return convert_conversion(cu, bb, J_INT);
 }
 
-static struct statement *convert_d2l(struct compilation_unit *cu)
+static struct statement *convert_d2l(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_LONG);
+	return convert_conversion(cu, bb, J_LONG);
 }
 
-static struct statement *convert_d2f(struct compilation_unit *cu)
+static struct statement *convert_d2f(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_FLOAT);
+	return convert_conversion(cu, bb, J_FLOAT);
 }
 
-static struct statement *convert_i2b(struct compilation_unit *cu)
+static struct statement *convert_i2b(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_BYTE);
+	return convert_conversion(cu, bb, J_BYTE);
 }
 
-static struct statement *convert_i2c(struct compilation_unit *cu)
+static struct statement *convert_i2c(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_CHAR);
+	return convert_conversion(cu, bb, J_CHAR);
 }
 
-static struct statement *convert_i2s(struct compilation_unit *cu)
+static struct statement *convert_i2s(struct compilation_unit *cu,
+				     struct basic_block *bb)
 {
-	return convert_conversion(cu, J_SHORT);
+	return convert_conversion(cu, bb, J_SHORT);
 }
 
-static struct statement *convert_lcmp(struct compilation_unit *cu)
+static struct statement *convert_lcmp(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_CMP);
+	return convert_binop(cu, bb, J_INT, OP_CMP);
 }
 
-static struct statement *convert_xcmpl(struct compilation_unit *cu)
+static struct statement *convert_xcmpl(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_CMPL);
+	return convert_binop(cu, bb, J_INT, OP_CMPL);
 }
 
-static struct statement *convert_xcmpg(struct compilation_unit *cu)
+static struct statement *convert_xcmpg(struct compilation_unit *cu,
+				       struct basic_block *bb)
 {
-	return convert_binop(cu, J_INT, OP_CMPG);
+	return convert_binop(cu, bb, J_INT, OP_CMPG);
 }
 
 static struct statement *__convert_if(struct compilation_unit *cu,
+				      struct basic_block *bb,
 				      enum jvm_type jvm_type,
 				      enum binary_operator binop,
 				      struct expression *binary_left,
@@ -904,6 +986,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 }
 
 static struct statement *convert_if(struct compilation_unit *cu,
+				    struct basic_block *bb,
 				    enum binary_operator binop)
 {
 	struct statement *stmt;
@@ -914,7 +997,7 @@ static struct statement *convert_if(struct compilation_unit *cu,
 		return NULL;
 
 	if_value = stack_pop(cu->expr_stack);
-	stmt = __convert_if(cu, J_INT, binop, if_value, zero_value);
+	stmt = __convert_if(cu, bb, J_INT, binop, if_value, zero_value);
 	if (!stmt) {
 		expr_put(zero_value);
 		return NULL;
@@ -922,37 +1005,44 @@ static struct statement *convert_if(struct compilation_unit *cu,
 	return stmt;
 }
 
-static struct statement *convert_ifeq(struct compilation_unit *cu)
+static struct statement *convert_ifeq(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_if(cu, OP_EQ);
+	return convert_if(cu, bb, OP_EQ);
 }
 
-static struct statement *convert_ifne(struct compilation_unit *cu)
+static struct statement *convert_ifne(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_if(cu, OP_NE);
+	return convert_if(cu, bb, OP_NE);
 }
 
-static struct statement *convert_iflt(struct compilation_unit *cu)
+static struct statement *convert_iflt(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_if(cu, OP_LT);
+	return convert_if(cu, bb, OP_LT);
 }
 
-static struct statement *convert_ifge(struct compilation_unit *cu)
+static struct statement *convert_ifge(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_if(cu, OP_GE);
+	return convert_if(cu, bb, OP_GE);
 }
 
-static struct statement *convert_ifgt(struct compilation_unit *cu)
+static struct statement *convert_ifgt(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_if(cu, OP_GT);
+	return convert_if(cu, bb, OP_GT);
 }
 
-static struct statement *convert_ifle(struct compilation_unit *cu)
+static struct statement *convert_ifle(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
-	return convert_if(cu, OP_LE);
+	return convert_if(cu, bb, OP_LE);
 }
 
 static struct statement *convert_if_cmp(struct compilation_unit *cu,
+					struct basic_block *bb,
 					enum jvm_type jvm_type,
 					enum binary_operator binop)
 {
@@ -961,50 +1051,59 @@ static struct statement *convert_if_cmp(struct compilation_unit *cu,
 	if_value2 = stack_pop(cu->expr_stack);
 	if_value1 = stack_pop(cu->expr_stack);
 
-	return __convert_if(cu, jvm_type, binop, if_value1, if_value2);
+	return __convert_if(cu, bb, jvm_type, binop, if_value1, if_value2);
 }
 
-static struct statement *convert_if_icmpeq(struct compilation_unit *cu)
+static struct statement *convert_if_icmpeq(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_INT, OP_EQ);
+	return convert_if_cmp(cu, bb, J_INT, OP_EQ);
 }
 
-static struct statement *convert_if_icmpne(struct compilation_unit *cu)
+static struct statement *convert_if_icmpne(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_INT, OP_NE);
+	return convert_if_cmp(cu, bb, J_INT, OP_NE);
 }
 
-static struct statement *convert_if_icmplt(struct compilation_unit *cu)
+static struct statement *convert_if_icmplt(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_INT, OP_LT);
+	return convert_if_cmp(cu, bb, J_INT, OP_LT);
 }
 
-static struct statement *convert_if_icmpge(struct compilation_unit *cu)
+static struct statement *convert_if_icmpge(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_INT, OP_GE);
+	return convert_if_cmp(cu, bb, J_INT, OP_GE);
 }
 
-static struct statement *convert_if_icmpgt(struct compilation_unit *cu)
+static struct statement *convert_if_icmpgt(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_INT, OP_GT);
+	return convert_if_cmp(cu, bb, J_INT, OP_GT);
 }
 
-static struct statement *convert_if_icmple(struct compilation_unit *cu)
+static struct statement *convert_if_icmple(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_INT, OP_LE);
+	return convert_if_cmp(cu, bb, J_INT, OP_LE);
 }
 
-static struct statement *convert_if_acmpeq(struct compilation_unit *cu)
+static struct statement *convert_if_acmpeq(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_REFERENCE, OP_EQ);
+	return convert_if_cmp(cu, bb, J_REFERENCE, OP_EQ);
 }
 
-static struct statement *convert_if_acmpne(struct compilation_unit *cu)
+static struct statement *convert_if_acmpne(struct compilation_unit *cu,
+					   struct basic_block *bb)
 {
-	return convert_if_cmp(cu, J_REFERENCE, OP_NE);
+	return convert_if_cmp(cu, bb, J_REFERENCE, OP_NE);
 }
 
-static struct statement *convert_goto(struct compilation_unit *cu)
+static struct statement *convert_goto(struct compilation_unit *cu,
+				      struct basic_block *bb)
 {
 	struct basic_block *target_bb;
 	struct statement *goto_stmt;
@@ -1019,7 +1118,8 @@ static struct statement *convert_goto(struct compilation_unit *cu)
 	return goto_stmt;
 }
 
-static struct statement *convert_return(struct compilation_unit *cu)
+static struct statement *convert_return(struct compilation_unit *cu,
+					struct basic_block *bb)
 {
 	struct statement *return_stmt = alloc_statement(STMT_RETURN);
 	if (return_stmt)
@@ -1027,7 +1127,8 @@ static struct statement *convert_return(struct compilation_unit *cu)
 	return return_stmt;
 }
 
-typedef struct statement *(*convert_fn_t) (struct compilation_unit *);
+typedef struct statement *(*convert_fn_t) (struct compilation_unit *,
+					   struct basic_block *);
 
 struct converter {
 	convert_fn_t convert;
@@ -1229,7 +1330,7 @@ int convert_to_ir(struct compilation_unit *cu)
 	    || cu->code_len < bytecode_size(cu->code))
 		return 0;
 
-	stmt = converter->convert(cu);
+	stmt = converter->convert(cu, cu->entry_bb);
 	if (stmt)
 		bb_insert_stmt(cu->entry_bb, stmt);
 	return 1;
