@@ -1404,13 +1404,30 @@ static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 	free_compilation_unit(cu);
 }
 
-void test_convert_return(void)
+void test_convert_non_void_return(void)
 {
 	assert_convert_return(J_INT, OPC_IRETURN);
 	assert_convert_return(J_LONG, OPC_LRETURN);
 	assert_convert_return(J_FLOAT, OPC_FRETURN);
 	assert_convert_return(J_DOUBLE, OPC_DRETURN);
 	assert_convert_return(J_REFERENCE, OPC_ARETURN);
+}
+
+void test_convert_void_return(void)
+{
+	struct stack expr_stack = STACK_INIT;
+	struct compilation_unit *cu;
+	unsigned char code[] = { OPC_RETURN };
+	struct statement *ret_stmt;
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+
+	convert_to_ir(cu);
+	ret_stmt = to_stmt(cu->entry_bb->stmt_list.next);
+	assert_true(stack_is_empty(&expr_stack));
+	assert_return_stmt(NULL, ret_stmt);
+
+	free_compilation_unit(cu);
 }
 
 void test_converts_complete_basic_block(void)

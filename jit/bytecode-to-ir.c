@@ -1149,14 +1149,28 @@ static int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
 	return 0;
 }
 
-static int convert_return(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+static int convert_non_void_return(struct compilation_unit *cu,
+				   struct basic_block *bb,
+				   unsigned long offset)
 {
 	struct statement *return_stmt = alloc_statement(STMT_RETURN);
 	if (!return_stmt)
 		return -ENOMEM;
 
 	return_stmt->return_value = stack_pop(cu->expr_stack);
+	bb_insert_stmt(bb, return_stmt);
+	return 0;
+}
+
+static int convert_void_return(struct compilation_unit *cu,
+			       struct basic_block *bb,
+			       unsigned long offset)
+{
+	struct statement *return_stmt = alloc_statement(STMT_RETURN);
+	if (!return_stmt)
+		return -ENOMEM;
+
+	return_stmt->return_value = NULL;
 	bb_insert_stmt(bb, return_stmt);
 	return 0;
 }
@@ -1333,11 +1347,12 @@ static convert_fn_t converters[] = {
 	DECLARE_CONVERTER(OPC_IF_ACMPEQ, convert_if_acmpeq),
 	DECLARE_CONVERTER(OPC_IF_ACMPNE, convert_if_acmpne),
 	DECLARE_CONVERTER(OPC_GOTO, convert_goto),
-	DECLARE_CONVERTER(OPC_IRETURN, convert_return),
-	DECLARE_CONVERTER(OPC_LRETURN, convert_return),
-	DECLARE_CONVERTER(OPC_FRETURN, convert_return),
-	DECLARE_CONVERTER(OPC_DRETURN, convert_return),
-	DECLARE_CONVERTER(OPC_ARETURN, convert_return),
+	DECLARE_CONVERTER(OPC_IRETURN, convert_non_void_return),
+	DECLARE_CONVERTER(OPC_LRETURN, convert_non_void_return),
+	DECLARE_CONVERTER(OPC_FRETURN, convert_non_void_return),
+	DECLARE_CONVERTER(OPC_DRETURN, convert_non_void_return),
+	DECLARE_CONVERTER(OPC_ARETURN, convert_non_void_return),
+	DECLARE_CONVERTER(OPC_RETURN, convert_void_return),
 };
 
 /**
