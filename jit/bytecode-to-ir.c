@@ -67,7 +67,7 @@ static struct statement *__convert_fconst(enum jvm_type jvm_type,
 	if (expr)
 		stack_push(expr_stack, expr);
 
-	return 0;
+	return NULL;
 }
 
 static struct statement *convert_fconst(struct compilation_unit *cu,
