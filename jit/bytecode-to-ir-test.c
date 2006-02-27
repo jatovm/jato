@@ -1383,6 +1383,14 @@ void test_convert_goto(void)
 	free_compilation_unit(cu);
 }
 
+/* MISSING: jsr */
+
+/* MISSING: ret */
+
+/* MISSING: tableswitch */
+
+/* MISSING: lookupswitch */
+
 static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 {
 	struct expression *return_value;
@@ -1430,12 +1438,58 @@ void test_convert_void_return(void)
 	free_compilation_unit(cu);
 }
 
+/* MISSING: getstatic */
+
+/* MISSING: putstatic */
+
+/* MISSING: getfield */
+
+/* MISSING: putfield */
+
+/* MISSING: invokevirtual */
+
+/* MISSING: invokespecial */
+
+/* MISSING: invokestatic */
+
+/* MISSING: invokeinterface */
+
+/* MISSING: new */
+
+/* MISSING: newarray */
+
+/* MISSING: anewarray */
+
+/* MISSING: arraylength */
+
+/* MISSING: athrow */
+
+/* MISSING: checkcast */
+
+/* MISSING: instanceof */
+
+/* MISSING: monitorenter */
+
+/* MISSING: monitorexit */
+
+/* MISSING: wide */
+
+/* MISSING: multianewarray */
+
+/* MISSING: ifnull */
+
+/* MISSING: ifnonnull */
+
+/* MISSING: goto_w */
+
+/* MISSING: jsr_w */
+
 void test_converts_complete_basic_block(void)
 {
 	struct stack expr_stack = STACK_INIT;
 	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_ILOAD_0, OPC_ILOAD_1, OPC_IADD, OPC_IRETURN };
-
+ 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
 	convert_to_ir(cu);
 
