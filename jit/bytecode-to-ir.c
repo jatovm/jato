@@ -1175,6 +1175,30 @@ static int convert_void_return(struct compilation_unit *cu,
 	return 0;
 }
 
+static int convert_getstatic(struct compilation_unit *cu,
+			     struct basic_block *bb,
+			     unsigned long offset)
+{
+	struct constant_pool *cp;
+	unsigned short index;
+	struct expression *value;
+	u1 type;
+
+	cp = &cu->cb->constant_pool;
+	index = be16_to_cpu(*(u2 *) & cu->code[offset + 1]);
+	type = CP_TYPE(cp, index);
+	
+	if (type != CONSTANT_Resolved)
+		return -EINVAL;
+	
+	value = field_expr(J_REFERENCE, (struct fieldblock *) CP_INFO(cp, index));
+	if (!value)
+		return -ENOMEM;
+
+	stack_push(cu->expr_stack, value);
+	return 0;
+}
+
 typedef int (*convert_fn_t) (struct compilation_unit *, struct basic_block *,
 			     unsigned long);
 
@@ -1353,6 +1377,7 @@ static convert_fn_t converters[] = {
 	DECLARE_CONVERTER(OPC_DRETURN, convert_non_void_return),
 	DECLARE_CONVERTER(OPC_ARETURN, convert_non_void_return),
 	DECLARE_CONVERTER(OPC_RETURN, convert_void_return),
+	DECLARE_CONVERTER(OPC_GETSTATIC, convert_getstatic),
 };
 
 /**

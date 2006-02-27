@@ -118,6 +118,15 @@ static void assert_conv_expr(enum jvm_type expected_type,
 			  conversion_expression->from_expression);
 }
 
+static void assert_field_expr(enum jvm_type expected_type,
+			      struct fieldblock *expected_field,
+			      struct expression *field_expression)
+{
+	assert_int_equals(EXPR_FIELD, field_expression->type);
+	assert_int_equals(expected_type, field_expression->jvm_type);
+	assert_ptr_equals(expected_field, field_expression->field);
+}
+
 static void assert_store_stmt(struct statement *stmt)
 {
 	assert_int_equals(STMT_STORE, stmt->type);
@@ -1438,7 +1447,26 @@ void test_convert_void_return(void)
 	free_compilation_unit(cu);
 }
 
-/* MISSING: getstatic */
+void test_convert_getstatic(void)
+{
+	struct fieldblock fb;
+	struct expression *expr;
+	u8 cp_infos[] = { (unsigned long) &fb };
+	u1 cp_types[] = { CONSTANT_Resolved };
+	unsigned char code[] = { OPC_GETSTATIC, 0x00, 0x00 };
+	struct stack expr_stack = STACK_INIT;
+	struct compilation_unit *cu;
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+
+	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+	expr = stack_pop(&expr_stack);
+	assert_field_expr(J_REFERENCE, &fb, expr);
+	assert_true(stack_is_empty(&expr_stack));
+
+	expr_put(expr);
+	free_compilation_unit(cu);
+}
 
 /* MISSING: putstatic */
 

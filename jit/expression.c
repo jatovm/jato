@@ -55,6 +55,9 @@ void free_expression(struct expression *expr)
 		if (expr->from_expression)
 			expr_put(expr->from_expression);
 		break;
+	case EXPR_FIELD:
+		/* nothing to do */
+		break;
 	};
 	free(expr);
 }
@@ -151,5 +154,14 @@ struct expression *conversion_expr(enum jvm_type jvm_type,
 	struct expression *expr = alloc_expression(EXPR_CONVERSION, jvm_type);
 	if (expr)
 		expr->from_expression = from_expression;
+	return expr;
+}
+
+struct expression *field_expr(enum jvm_type jvm_type,
+			      struct fieldblock *field)
+{
+	struct expression *expr = alloc_expression(EXPR_FIELD, jvm_type);
+	if (expr)
+		expr->field = field;
 	return expr;
 }
