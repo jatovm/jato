@@ -1,13 +1,14 @@
 - Bytecode to IR conversion
+	* INVOKESPECIAL
+	* INVOKESTATIC
+	* Converting whole compilation unit
+	* GETSTATIC type parsing
 	* Replace STMT_NULLCHECK and STMT_ARRAYCHECK with STMT_IF and STMT_THROW
 	* Basic block successors and precedessors
-	* Converting whole basic block
 	* bytecode_size() for TABLESWITCH and LOOKUPSWITCH
 	* Bytecode sequences where expression stack is non-empty in
 	  basic-block boundary (e.g. the 'x ? y : z' expression).
 - Instruction selection
-	* Monoburg
-	* Fix all GCC warnings from Monoburg generated code
 	* Remove dependency to glib
 - Register allocation
 	* Linear scan register allocator [Poletto99]
