@@ -8,9 +8,52 @@
  * instruction sequence.
  */
 
+#include <errno.h>
 #include <x86-objcode.h>
 #include <basic-block.h>
 #include <instruction.h>
+
+static void x86_emit_push_ebp(unsigned char *buffer)
+{
+	buffer[0] = 0x55;
+}
+
+static void x86_emit_mov_esp_ebp(unsigned char *buffer)
+{
+	buffer[0] = 0x89;
+	buffer[1] = 0xe5;
+}
+
+int x86_emit_prolog(unsigned char *buffer, unsigned long buffer_size)
+{
+	if (buffer_size < 3)
+		return -EINVAL;
+	
+	x86_emit_push_ebp(buffer);
+	x86_emit_mov_esp_ebp(buffer + 1);
+	
+	return 0;
+}
+
+static void x86_emit_pop_ebp(unsigned char *buffer)
+{
+	buffer[0] = 0x5d;
+}
+
+static void x86_emit_ret(unsigned char *buffer)
+{
+	buffer[0] = 0xc3;
+}
+
+int x86_emit_epilog(unsigned char *buffer, unsigned long buffer_size)
+{
+	if (buffer_size < 2)
+		return -EINVAL;
+
+	x86_emit_pop_ebp(buffer);
+	x86_emit_ret(buffer + 1);
+	return 0;
+}
 
 static unsigned char register_to_modrm(enum reg reg)
 {

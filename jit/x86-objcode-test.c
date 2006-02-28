@@ -8,6 +8,24 @@
 #include <basic-block.h>
 #include <instruction.h>
 
+void test_emit_prolog(void)
+{
+	unsigned char expected[] = { 0x55, 0x89, 0xe5 };
+	unsigned char actual[3];
+	
+	x86_emit_prolog(actual, ARRAY_SIZE(actual));
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+}
+
+void test_emit_epilog(void)
+{
+	unsigned char expected[] = { 0x5d, 0xc3 };
+	unsigned char actual[2];
+	
+	x86_emit_epilog(actual, ARRAY_SIZE(actual));
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+}
+
 static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 				       enum reg src_base_reg,
 				       unsigned long src_disp,
