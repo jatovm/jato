@@ -3,6 +3,6 @@
 
 struct basic_block;
 
-void assemble(struct basic_block *, unsigned char *, unsigned long);
+void x86_emit_obj_code(struct basic_block *, unsigned char *, unsigned long);
 
 #endif

@@ -51,8 +51,8 @@ static unsigned char to_x86_opcode(enum insn_opcode opcode)
 	return ret;
 }
 
-void assemble(struct basic_block *bb, unsigned char *buffer,
-	      unsigned long buffer_size)
+void x86_emit_obj_code(struct basic_block *bb, unsigned char *buffer,
+		       unsigned long buffer_size)
 {
 	struct insn *insn = insn_entry(bb->insn_list.next);
 

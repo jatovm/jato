@@ -21,7 +21,7 @@ static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 
 	bb = alloc_basic_block(0, 1);
 	bb_insert_insn(bb, x86_op_membase_reg(insn_opcode, src_base_reg, src_disp, dest_reg));
-	assemble(bb, actual, ARRAY_SIZE(actual));
+	x86_emit_obj_code(bb, actual, ARRAY_SIZE(actual));
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 	
 	free_basic_block(bb);
