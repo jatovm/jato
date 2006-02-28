@@ -13,4 +13,7 @@
 - Register allocation
 	* Linear scan register allocator [Poletto99]
 - JIT code execution
-	* mprotect(2)
+	* alloc_exec() allocates complete pages which is wasteful. Intel
+	  optimization guide recommends 16-byte alignment for branch targets
+	  so make alloc_exec() return smaller memory blocks.
+	* JIT trampolines.
