@@ -4,7 +4,7 @@
 
 #include <libharness.h>
 #include <system.h>
-#include <assembler.h>
+#include <x86-objcode.h>
 #include <basic-block.h>
 #include <instruction.h>
 
