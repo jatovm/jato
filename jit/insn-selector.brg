@@ -29,12 +29,12 @@
 
 reg:	EXPR_LOCAL	1
 {
-	bb_insert_insn(s, alloc_insn(MOV, REG_EBP, 12, REG_EAX));
+	bb_insert_insn(s, x86_op_membase_reg(MOV, REG_EBP, 12, REG_EAX));
 }
 
 reg:	EXPR_ADD(EXPR_LOCAL, reg) 1
 {
-	bb_insert_insn(s, alloc_insn(ADD, REG_EBP, 8, REG_EAX));
+	bb_insert_insn(s, x86_op_membase_reg(ADD, REG_EBP, 8, REG_EAX));
 }
 
 %%
