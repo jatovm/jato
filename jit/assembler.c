@@ -36,12 +36,27 @@ static unsigned char register_to_modrm(enum reg reg)
 	return ret;
 }
 
+static unsigned char to_x86_opcode(enum insn_opcode opcode)
+{
+	unsigned char ret = 0;
+
+	switch (opcode) {
+	case MOV:
+		ret = 0x8b;
+		break;
+	case ADD:
+		ret = 0x03;
+		break;
+	}
+	return ret;
+}
+
 void assemble(struct basic_block *bb, unsigned char *buffer,
 	      unsigned long buffer_size)
 {
 	struct insn *insn = insn_entry(bb->insn_list.next);
 
-	buffer[0] = 0x8b;
+	buffer[0] = to_x86_opcode(insn->insn_op);
 	buffer[1] = register_to_modrm(insn->dest.reg);
 	buffer[2] = insn->src.disp;
 }
