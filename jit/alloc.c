@@ -21,7 +21,7 @@
  *	alloc_exec - Allocate executable memory.
  *	@size: size of the allocated memory block.
  *
- *	This function allocates @size amouont of memory and ensures the region
+ *	This function allocates @size amount of memory and ensures the region
  *	is executable. The allocated memory is released with free(3).
  *
  * 	Returns a pointer to executable memory region with at least @size
