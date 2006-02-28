@@ -11,6 +11,7 @@
 #include <expression.h>
 #include <instruction.h>
 #include <insn-selector.h>
+#include <statement.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -70,9 +71,20 @@ static void free_state(MBState *state)
 	g_free(state);
 }
 
-void insn_select(struct basic_block *bb, struct expression *expr)
+void insn_select(struct basic_block *bb)
 {
+	struct expression *expr = NULL;
+	struct statement *stmt;
 	MBState *state;
+
+	stmt = list_entry(bb->stmt_list.next, struct statement, stmt_list_node);
+	switch (stmt->type) {
+		case STMT_RETURN:
+			expr = stmt->return_value;
+			break;
+		default:
+			break;
+	};
 
 	state = mono_burg_label(expr, bb);
 	emit_code(bb, state, MB_NTERM_reg);

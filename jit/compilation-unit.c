@@ -36,6 +36,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
 		free_basic_block(bb);
 
+	free(cu->objcode);
 	free(cu);
 }
 

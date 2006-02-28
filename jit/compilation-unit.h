@@ -12,6 +12,7 @@ struct compilation_unit {
 	struct basic_block *entry_bb;
 	struct list_head bb_list;
 	struct stack *expr_stack;
+	void *objcode;
 };
 
 struct compilation_unit *alloc_compilation_unit(unsigned char *,

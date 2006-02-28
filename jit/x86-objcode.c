@@ -97,9 +97,13 @@ static unsigned char to_x86_opcode(enum insn_opcode opcode)
 void x86_emit_obj_code(struct basic_block *bb, unsigned char *buffer,
 		       unsigned long buffer_size)
 {
-	struct insn *insn = insn_entry(bb->insn_list.next);
+	unsigned long offset = 0;
+	struct insn *insn;
 
-	buffer[0] = to_x86_opcode(insn->insn_op);
-	buffer[1] = register_to_modrm(insn->dest.reg);
-	buffer[2] = insn->src.disp;
+	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
+		buffer[offset] = to_x86_opcode(insn->insn_op);
+		buffer[offset+1] = register_to_modrm(insn->dest.reg);
+		buffer[offset+2] = insn->src.disp;
+		offset += 3;
+	}
 }

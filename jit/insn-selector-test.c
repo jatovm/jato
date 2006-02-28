@@ -7,6 +7,7 @@
 #include <expression.h>
 #include <instruction.h>
 #include <insn-selector.h>
+#include <statement.h>
 
 static void assert_insn(enum insn_opcode insn_op,
 			enum reg src_base_reg,
@@ -28,13 +29,18 @@ static void assert_rewrite_binop_expr(enum reg dest_reg,
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct expression *expr;
+	struct statement *stmt;
 
 	expr = binop_expr(J_INT, ADD, local_expr(J_INT, left_local),
 			  local_expr(J_INT, right_local));
-	insn_select(bb, expr);
+	stmt = alloc_statement(STMT_RETURN);
+	stmt->return_value = expr;
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
 	assert_insn(MOV, REG_EBP, right_displacement, REG_EAX, insn_entry(bb->insn_list.next));
 	assert_insn(ADD, REG_EBP, left_displacement, REG_EAX, insn_entry(bb->insn_list.next->next));
-	expr_put(expr);
+
 	free_basic_block(bb);
 }
 
