@@ -11,18 +11,14 @@
 #include <string.h>
 
 struct compilation_unit *alloc_compilation_unit(unsigned char *code,
-						unsigned long code_len,
-						struct basic_block *entry_bb)
+						unsigned long code_len)
 {
 	struct compilation_unit *cu = malloc(sizeof *cu);
 	if (cu) {
 		memset(cu, 0, sizeof *cu);
 		INIT_LIST_HEAD(&cu->bb_list);
-		if (entry_bb)
-			list_add_tail(&entry_bb->bb_list_node, &cu->bb_list);
 		cu->code = code;
 		cu->code_len = code_len;
-		cu->entry_bb = entry_bb;
 		cu->expr_stack = alloc_stack();
 	}
 	return cu;

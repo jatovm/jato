@@ -9,15 +9,13 @@ struct compilation_unit {
 	struct classblock *cb;
 	unsigned char *code;
 	unsigned long code_len;
-	struct basic_block *entry_bb;
 	struct list_head bb_list;
 	struct stack *expr_stack;
 	void *objcode;
 };
 
 struct compilation_unit *alloc_compilation_unit(unsigned char *,
-						unsigned long,
-						struct basic_block *);
+						unsigned long);
 void free_compilation_unit(struct compilation_unit *);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 unsigned long nr_bblocks(struct compilation_unit *);

@@ -45,9 +45,9 @@ int jit_compile(struct compilation_unit *cu)
 		return -ENOMEM;
 	}
 	memset(cu->objcode, 0, OBJCODE_SIZE);
-	insn_select(cu->entry_bb);
+	insn_select(bb_entry(cu->bb_list.next));
 	x86_emit_prolog(cu->objcode, OBJCODE_SIZE);
-	x86_emit_obj_code(cu->entry_bb, cu->objcode+3, OBJCODE_SIZE-3);
+	x86_emit_obj_code(bb_entry(cu->bb_list.next), cu->objcode+3, OBJCODE_SIZE-3);
 	x86_emit_epilog(cu->objcode+9, OBJCODE_SIZE-9);
 
 	return 0;

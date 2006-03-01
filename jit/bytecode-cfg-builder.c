@@ -15,12 +15,13 @@
 #include <stdlib.h>
 	
 static void bb_end_after_branch(struct compilation_unit *cu,
-			       unsigned long *branch_targets)
+				struct basic_block *entry_bb,
+				unsigned long *branch_targets)
 {
 	struct basic_block *bb;
 	unsigned long prev, offset = 0;
 
-	bb = cu->entry_bb;
+	bb = entry_bb;
 
 	while (offset < cu->code_len) {
 		prev = offset;
@@ -57,12 +58,13 @@ static void bb_start_at_branch_target(struct compilation_unit *cu,
 void build_cfg(struct compilation_unit *cu)
 {
 	unsigned long *branch_targets;
+	struct basic_block *entry_bb;
 
 	branch_targets = alloc_bitmap(cu->code_len);
 
-	cu->entry_bb = alloc_basic_block(0, cu->code_len);
-	list_add_tail(&cu->entry_bb->bb_list_node, &cu->bb_list);
-	bb_end_after_branch(cu, branch_targets);
+	entry_bb = alloc_basic_block(0, cu->code_len);
+	list_add_tail(&entry_bb->bb_list_node, &cu->bb_list);
+	bb_end_after_branch(cu, entry_bb, branch_targets);
 	bb_start_at_branch_target(cu, branch_targets);
 
 	free(branch_targets);

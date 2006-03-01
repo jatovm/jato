@@ -18,25 +18,20 @@ static unsigned char default_string[9] = {
 	/* 8 */ OPC_ARETURN,
 };
 
-struct basic_block *to_basic_block(struct list_head *head)
-{
-	return list_entry(head, struct basic_block, bb_list_node);
-}
-
 void test_branch_opcode_ends_basic_block(void)
 {
 	struct basic_block *bb1, *bb2, *bb3;
 	struct compilation_unit *cu;
 	
 	cu = alloc_compilation_unit(default_string,
-				    ARRAY_SIZE(default_string), NULL);
+				    ARRAY_SIZE(default_string));
 
 	build_cfg(cu);
 	assert_int_equals(3, nr_bblocks(cu));
 
-	bb1 = cu->entry_bb;
-	bb2 = to_basic_block(bb1->bb_list_node.next);
-	bb3 = to_basic_block(bb2->bb_list_node.next);
+	bb1 = bb_entry(cu->bb_list.next);
+	bb2 = bb_entry(bb1->bb_list_node.next);
+	bb3 = bb_entry(bb2->bb_list_node.next);
 
 	assert_basic_block(0, 4, bb1);
 	assert_basic_block(4, 7, bb2);
@@ -60,7 +55,7 @@ void test_multiple_branches(void)
 	struct compilation_unit *cu;
 
 	cu = alloc_compilation_unit(greater_than_zero,
-				    ARRAY_SIZE(greater_than_zero), NULL);
+				    ARRAY_SIZE(greater_than_zero));
 
 	build_cfg(cu);
 	assert_int_equals(4, nr_bblocks(cu));

@@ -1394,9 +1394,9 @@ int convert_to_ir(struct compilation_unit *cu)
 {
 	int err = 0;
 	unsigned long offset = 0;
-	
-	if (!cu->entry_bb)
-		return -EINVAL;
+	struct basic_block *entry_bb;
+
+	entry_bb = list_entry(cu->bb_list.next, struct basic_block, bb_list_node);
 
 	while (offset < cu->code_len) {
 		unsigned char opc = cu->code[offset];
@@ -1410,7 +1410,7 @@ int convert_to_ir(struct compilation_unit *cu)
 			goto out;
 		}
 
-		err = convert(cu, cu->entry_bb, offset);
+		err = convert(cu, entry_bb, offset);
 		if (err)
 			goto out;
 
