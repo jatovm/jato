@@ -14,10 +14,12 @@ unsigned char sum_bytecode[] = { OPC_ILOAD_0, OPC_ILOAD_1, OPC_IADD, OPC_IRETURN
 
 void test_executing_jit_compiled_function(void)
 {
+	struct stack expr_stack = STACK_INIT;
 	struct compilation_unit *cu;
 	sum_fn function;
 	
-	cu = jit_compile(sum_bytecode, ARRAY_SIZE(sum_bytecode));
+	cu = alloc_compilation_unit(sum_bytecode, ARRAY_SIZE(sum_bytecode), NULL, &expr_stack);
+	jit_compile(cu);
 	function = cu->objcode;
 
 	assert_int_equals(1, function(0, 1));
