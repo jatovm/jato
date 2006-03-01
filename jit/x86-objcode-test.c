@@ -12,8 +12,10 @@ void test_emit_prolog(void)
 {
 	unsigned char expected[] = { 0x55, 0x89, 0xe5 };
 	unsigned char actual[3];
-	
-	x86_emit_prolog(actual, ARRAY_SIZE(actual));
+	struct insn_sequence is;
+
+	init_insn_sequence(&is, actual, 3);
+	x86_emit_prolog(&is);
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 }
 
@@ -21,8 +23,10 @@ void test_emit_epilog(void)
 {
 	unsigned char expected[] = { 0x5d, 0xc3 };
 	unsigned char actual[2];
+	struct insn_sequence is;
 	
-	x86_emit_epilog(actual, ARRAY_SIZE(actual));
+	init_insn_sequence(&is, actual, 2);
+	x86_emit_epilog(&is);
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 }
 
@@ -36,10 +40,13 @@ static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 	struct basic_block *bb;
 	unsigned char expected[] = { opcode, modrm, src_disp };
 	unsigned char actual[3];
+	struct insn_sequence is;
 
 	bb = alloc_basic_block(0, 1);
 	bb_insert_insn(bb, x86_op_membase_reg(insn_opcode, src_base_reg, src_disp, dest_reg));
-	x86_emit_obj_code(bb, actual, ARRAY_SIZE(actual));
+
+	init_insn_sequence(&is, actual, 3);
+	x86_emit_obj_code(bb, &is);
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 	
 	free_basic_block(bb);

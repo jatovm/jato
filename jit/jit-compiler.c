@@ -37,18 +37,22 @@ static void dump_objcode(unsigned char *buffer, unsigned long size)
 
 int jit_compile(struct compilation_unit *cu)
 {
+	struct insn_sequence is;
+
 	build_cfg(cu);
 	convert_to_ir(cu);
+	insn_select(bb_entry(cu->bb_list.next));
+
 	cu->objcode = alloc_exec(OBJCODE_SIZE);
 	if (!cu->objcode) {
 		free_compilation_unit(cu);
 		return -ENOMEM;
 	}
 	memset(cu->objcode, 0, OBJCODE_SIZE);
-	insn_select(bb_entry(cu->bb_list.next));
-	x86_emit_prolog(cu->objcode, OBJCODE_SIZE);
-	x86_emit_obj_code(bb_entry(cu->bb_list.next), cu->objcode+3, OBJCODE_SIZE-3);
-	x86_emit_epilog(cu->objcode+9, OBJCODE_SIZE-9);
+	init_insn_sequence(&is, cu->objcode, OBJCODE_SIZE);
+	x86_emit_prolog(&is);
+	x86_emit_obj_code(bb_entry(cu->bb_list.next), &is);
+	x86_emit_epilog(&is);
 
 	cu->is_compiled = true;
 

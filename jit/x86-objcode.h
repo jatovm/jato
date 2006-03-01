@@ -3,8 +3,19 @@
 
 struct basic_block;
 
-int x86_emit_prolog(unsigned char *, unsigned long);
-int x86_emit_epilog(unsigned char *, unsigned long);
-void x86_emit_obj_code(struct basic_block *, unsigned char *, unsigned long);
+struct insn_sequence {
+	unsigned char *current, *end;
+};
+
+static inline void init_insn_sequence(struct insn_sequence *is, void *code,
+				      unsigned long size)
+{
+	is->current = code;
+	is->end = code + size;
+}
+
+void x86_emit_prolog(struct insn_sequence *);
+void x86_emit_epilog(struct insn_sequence *);
+void x86_emit_obj_code(struct basic_block *, struct insn_sequence *);
 
 #endif

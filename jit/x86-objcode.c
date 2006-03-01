@@ -8,51 +8,49 @@
  * instruction sequence.
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <x86-objcode.h>
 #include <basic-block.h>
 #include <instruction.h>
 
-static void x86_emit_push_ebp(unsigned char *buffer)
+static inline void x86_emit(struct insn_sequence *is, unsigned char c)
 {
-	buffer[0] = 0x55;
+	assert(is->current != is->end);
+	*(is->current++) = c;
 }
 
-static void x86_emit_mov_esp_ebp(unsigned char *buffer)
+static void x86_emit_push_ebp(struct insn_sequence *is)
 {
-	buffer[0] = 0x89;
-	buffer[1] = 0xe5;
+	x86_emit(is, 0x55);
 }
 
-int x86_emit_prolog(unsigned char *buffer, unsigned long buffer_size)
+static void x86_emit_mov_esp_ebp(struct insn_sequence *is)
 {
-	if (buffer_size < 3)
-		return -EINVAL;
-	
-	x86_emit_push_ebp(buffer);
-	x86_emit_mov_esp_ebp(buffer + 1);
-	
-	return 0;
+	x86_emit(is, 0x89);
+	x86_emit(is, 0xe5);
 }
 
-static void x86_emit_pop_ebp(unsigned char *buffer)
+void x86_emit_prolog(struct insn_sequence *is)
 {
-	buffer[0] = 0x5d;
+	x86_emit_push_ebp(is);
+	x86_emit_mov_esp_ebp(is);
 }
 
-static void x86_emit_ret(unsigned char *buffer)
+static void x86_emit_pop_ebp(struct insn_sequence *is)
 {
-	buffer[0] = 0xc3;
+	x86_emit(is, 0x5d);
 }
 
-int x86_emit_epilog(unsigned char *buffer, unsigned long buffer_size)
+static void x86_emit_ret(struct insn_sequence *is)
 {
-	if (buffer_size < 2)
-		return -EINVAL;
+	x86_emit(is, 0xc3);
+}
 
-	x86_emit_pop_ebp(buffer);
-	x86_emit_ret(buffer + 1);
-	return 0;
+void x86_emit_epilog(struct insn_sequence *is)
+{
+	x86_emit_pop_ebp(is);
+	x86_emit_ret(is);
 }
 
 static unsigned char register_to_modrm(enum reg reg)
@@ -94,16 +92,13 @@ static unsigned char to_x86_opcode(enum insn_opcode opcode)
 	return ret;
 }
 
-void x86_emit_obj_code(struct basic_block *bb, unsigned char *buffer,
-		       unsigned long buffer_size)
+void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 {
-	unsigned long offset = 0;
 	struct insn *insn;
 
 	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
-		buffer[offset] = to_x86_opcode(insn->insn_op);
-		buffer[offset+1] = register_to_modrm(insn->dest.reg);
-		buffer[offset+2] = insn->src.disp;
-		offset += 3;
+		x86_emit(is, to_x86_opcode(insn->insn_op));
+		x86_emit(is, register_to_modrm(insn->dest.reg));
+		x86_emit(is, insn->src.disp);
 	}
 }
