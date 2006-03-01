@@ -30,6 +30,101 @@ void test_emit_epilog(void)
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 }
 
+static void assert_emit_push_imm32(unsigned long imm)
+{
+	unsigned char expected[] = {
+		0x68,
+		(imm & 0x000000ffUL),
+		(imm & 0x0000ff00UL) >>  8,
+		(imm & 0x00ff0000UL) >> 16,
+		(imm & 0xff000000UL) >> 24,
+	};
+	unsigned char actual[5];
+	struct insn_sequence is;
+
+	init_insn_sequence(&is, actual, ARRAY_SIZE(actual));
+	x86_emit_push_imm32(&is, imm);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+}
+
+void test_emit_push_imm32(void)
+{
+	assert_emit_push_imm32(0x0);
+	assert_emit_push_imm32(0xdeadbeef);
+}
+
+static void assert_emit_call_backward(void *call_target,
+				      void *code,
+				      unsigned long code_size)
+{
+	signed long disp = call_target - code - 5;
+	unsigned char expected[] = {
+		0xe8,
+		(disp & 0x000000ffUL),
+		(disp & 0x0000ff00UL) >>  8,
+		(disp & 0x00ff0000UL) >> 16,
+		(disp & 0xff000000UL) >> 24,
+	};
+	struct insn_sequence is;
+	
+	init_insn_sequence(&is, code, code_size);
+	x86_emit_call(&is, call_target);
+	assert_mem_equals(expected, code, ARRAY_SIZE(expected));
+}
+
+void test_emit_call_backward(void)
+{
+	unsigned char before_code[3];
+	unsigned char code[5];
+	assert_emit_call_backward(before_code, code, ARRAY_SIZE(code));
+}
+
+void test_emit_call_forward(void)
+{
+	unsigned char code[5];
+	unsigned char after_code[3];
+	assert_emit_call_backward(after_code, code, ARRAY_SIZE(code));
+}
+
+static void assert_emit_add_imm8_reg(unsigned char imm8, unsigned char modrm, enum reg reg)
+{
+	unsigned char expected[] = { 0x83, modrm, imm8 };
+	unsigned char actual[3];
+	struct insn_sequence is;
+
+	init_insn_sequence(&is, actual, ARRAY_SIZE(actual));
+	x86_emit_add_imm8_reg(&is, imm8, reg);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+}
+
+void test_emit_add_imm8_reg(void)
+{
+	assert_emit_add_imm8_reg(0x04, 0xc0, REG_EAX);
+	assert_emit_add_imm8_reg(0x04, 0xc3, REG_EBX);
+	assert_emit_add_imm8_reg(0x04, 0xc1, REG_ECX);
+	assert_emit_add_imm8_reg(0x04, 0xc2, REG_EDX);
+	assert_emit_add_imm8_reg(0x04, 0xc4, REG_ESP);
+	assert_emit_add_imm8_reg(0x08, 0xc4, REG_ESP);
+	assert_emit_add_imm8_reg(0x04, 0xc5, REG_EBP);
+}
+
+static void assert_emit_indirect_jump_reg(unsigned char modrm, enum reg reg)
+{
+	unsigned char expected[] = { 0xff, modrm };
+	unsigned char actual[2];
+	struct insn_sequence is;
+
+	init_insn_sequence(&is, actual, ARRAY_SIZE(actual));
+	x86_emit_indirect_jump_reg(&is, reg);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+}
+
+void test_emit_indirect_jump_reg(void)
+{
+	assert_emit_indirect_jump_reg(0xe0, REG_EAX);
+	assert_emit_indirect_jump_reg(0xe3, REG_EBX);
+}
+
 static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 				       enum reg src_base_reg,
 				       unsigned long src_disp,

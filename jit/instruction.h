@@ -9,6 +9,7 @@ enum reg {
 	REG_ECX,
 	REG_EDX,
 	REG_EBP,
+	REG_ESP,
 };
 
 struct operand {
