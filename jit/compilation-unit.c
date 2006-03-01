@@ -12,8 +12,7 @@
 
 struct compilation_unit *alloc_compilation_unit(unsigned char *code,
 						unsigned long code_len,
-						struct basic_block *entry_bb,
-						struct stack *expr_stack)
+						struct basic_block *entry_bb)
 {
 	struct compilation_unit *cu = malloc(sizeof *cu);
 	if (cu) {
@@ -24,7 +23,7 @@ struct compilation_unit *alloc_compilation_unit(unsigned char *code,
 		cu->code = code;
 		cu->code_len = code_len;
 		cu->entry_bb = entry_bb;
-		cu->expr_stack = expr_stack;
+		cu->expr_stack = alloc_stack();
 	}
 	return cu;
 }
@@ -36,6 +35,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
 		free_basic_block(bb);
 
+	free_stack(cu->expr_stack);
 	free(cu->objcode);
 	free(cu);
 }

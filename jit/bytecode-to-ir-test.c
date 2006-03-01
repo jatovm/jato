@@ -164,8 +164,7 @@ static struct compilation_unit *alloc_simple_compilation_unit(unsigned char
 							      *expr_stack)
 {
 	return alloc_compilation_unit(code, code_len,
-				      alloc_basic_block(0, code_len),
-				      expr_stack);
+				      alloc_basic_block(0, code_len));
 }
 
 static void __assert_convert_const(struct classblock *cb,
@@ -183,9 +182,9 @@ static void __assert_convert_const(struct classblock *cb,
 
 	convert_to_ir(cu);
 
-	expr = stack_pop(&expr_stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_value_expr(expected_jvm_type, expected_value, expr);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -210,9 +209,9 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_to_ir(cu);
-	expr = stack_pop(&stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -235,7 +234,7 @@ void test_convert_nop(void)
 	convert_to_ir(cu);
 	stmt = to_stmt(cu->entry_bb->stmt_list.next);
 	assert_int_equals(STMT_NOP, stmt->type);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -334,9 +333,9 @@ static void assert_convert_ldc(enum jvm_type expected_jvm_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
-	expr = stack_pop(&stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_value_expr(expected_jvm_type, expected_value, expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -354,9 +353,9 @@ static void assert_convert_ldc_f(float expected_value)
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
-	expr = stack_pop(&stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_fvalue_expr(J_FLOAT, expected_value, expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -393,9 +392,9 @@ static void assert_convert_ldcw(enum jvm_type expected_jvm_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
-	expr = stack_pop(&stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_value_expr(expected_jvm_type, expected_value, expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -417,9 +416,9 @@ static void assert_convert_ldcw_f(enum jvm_type expected_jvm_type,
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
-	expr = stack_pop(&stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -490,9 +489,9 @@ static void __assert_convert_load(unsigned char *code,
 
 	convert_to_ir(cu);
 
-	expr = stack_pop(&expr_stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_local_expr(expected_jvm_type, expected_index, expr);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -602,13 +601,13 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	struct statement *stmt;
 	struct compilation_unit *cu;
 
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
 
-	stack_push(&stack, arrayref_expr);
-	stack_push(&stack, index_expr);
-
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+	stack_push(cu->expr_stack, arrayref_expr);
+	stack_push(cu->expr_stack, index_expr);
 
 	convert_to_ir(cu);
 	stmt = to_stmt(cu->entry_bb->stmt_list.next);
@@ -624,10 +623,10 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
 				store_stmt->store_src);
 
-	temporary_expr = stack_pop(&stack);
+	temporary_expr = stack_pop(cu->expr_stack);
 	assert_temporary_expr(store_stmt->store_dest->temporary, temporary_expr);
 	expr_put(temporary_expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -689,9 +688,9 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	struct statement *stmt;
 	struct compilation_unit *cu;
 
-	stack_push(&stack, temporary_expr(J_INT, expected_temporary));
-
 	cu = alloc_simple_compilation_unit(code, size, &stack);
+
+	stack_push(cu->expr_stack, temporary_expr(J_INT, expected_temporary));
 
 	convert_to_ir(cu);
 	stmt = to_stmt(cu->entry_bb->stmt_list.next);
@@ -700,7 +699,7 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	assert_temporary_expr(expected_temporary, stmt->store_src);
 	assert_local_expr(expected_jvm_type, expected_index, stmt->store_dest);
 
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -806,15 +805,15 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 	struct statement *stmt;
 	struct compilation_unit *cu;
 
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
 	expr = temporary_expr(expected_type, value);
 
-	stack_push(&stack, arrayref_expr);
-	stack_push(&stack, index_expr);
-	stack_push(&stack, expr);
-
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+	stack_push(cu->expr_stack, arrayref_expr);
+	stack_push(cu->expr_stack, index_expr);
+	stack_push(cu->expr_stack, expr);
 
 	convert_to_ir(cu);
 	stmt = to_stmt(cu->entry_bb->stmt_list.next);
@@ -832,7 +831,7 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 				store_stmt->store_dest);
 	assert_temporary_expr(value, store_stmt->store_src);
 
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -891,11 +890,10 @@ static void assert_pop_stack(unsigned char opc)
 	struct stack stack = STACK_INIT;
 	struct compilation_unit *cu;
 
-	stack_push(&stack, (void *)1);
-
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+	stack_push(cu->expr_stack, (void *)1);
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -912,14 +910,14 @@ static void assert_dup_stack(unsigned char opc, void *expected)
 	struct stack stack = STACK_INIT;
 	struct compilation_unit *cu;
 
-	stack_push(&stack, expected);
-
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
+	stack_push(cu->expr_stack, expected);
+
 	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(&stack), expected);
-	assert_ptr_equals(stack_pop(&stack), expected);
-	assert_true(stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected);
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected);
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -939,16 +937,16 @@ static void assert_dup_x1_stack(unsigned char opc,
 	struct stack stack = STACK_INIT;
 	struct compilation_unit *cu;
 
-	stack_push(&stack, expected2);
-	stack_push(&stack, expected1);
-
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
+	stack_push(cu->expr_stack, expected2);
+	stack_push(cu->expr_stack, expected1);
+
 	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(&stack), expected1);
-	assert_ptr_equals(stack_pop(&stack), expected2);
-	assert_ptr_equals(stack_pop(&stack), expected1);
-	assert_true(stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected2);
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -969,18 +967,18 @@ static void assert_dup_x2_stack(unsigned char opc,
 	struct stack stack = STACK_INIT;
 	struct compilation_unit *cu;
 
-	stack_push(&stack, expected3);
-	stack_push(&stack, expected2);
-	stack_push(&stack, expected1);
-
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
+	stack_push(cu->expr_stack, expected3);
+	stack_push(cu->expr_stack, expected2);
+	stack_push(cu->expr_stack, expected1);
+
 	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(&stack), expected1);
-	assert_ptr_equals(stack_pop(&stack), expected2);
-	assert_ptr_equals(stack_pop(&stack), expected3);
-	assert_ptr_equals(stack_pop(&stack), expected1);
-	assert_true(stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected2);
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected3);
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -1000,15 +998,15 @@ static void assert_swap_stack(unsigned char opc,
 	struct stack stack = STACK_INIT;
 	struct compilation_unit *cu;
 
-	stack_push(&stack, expected1);
-	stack_push(&stack, expected2);
-
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
+	stack_push(cu->expr_stack, expected1);
+	stack_push(cu->expr_stack, expected2);
+
 	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(&stack), expected1);
-	assert_ptr_equals(stack_pop(&stack), expected2);
-	assert_true(stack_is_empty(&stack));
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
+	assert_ptr_equals(stack_pop(cu->expr_stack), expected2);
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
@@ -1028,19 +1026,19 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 	struct expression *left, *right, *expr;
 	struct compilation_unit *cu;
 
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+
 	left = temporary_expr(jvm_type, 1);
 	right = temporary_expr(jvm_type, 2);
 
-	stack_push(&stack, left);
-	stack_push(&stack, right);
-
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
+	stack_push(cu->expr_stack, left);
+	stack_push(cu->expr_stack, right);
 
 	convert_to_ir(cu);
-	expr = stack_pop(&stack);
+	expr = stack_pop(cu->expr_stack);
 
 	assert_binop_expr(jvm_type, binary_operator, left, right, expr);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -1095,17 +1093,17 @@ static void assert_convert_unop(enum jvm_type jvm_type,
 	struct expression *expression, *unary_expression;
 	struct compilation_unit *cu;
 
-	expression = temporary_expr(jvm_type, 1);
-	stack_push(&stack, expression);
-
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &stack);
 
+	expression = temporary_expr(jvm_type, 1);
+	stack_push(cu->expr_stack, expression);
+
 	convert_to_ir(cu);
-	unary_expression = stack_pop(&stack);
+	unary_expression = stack_pop(cu->expr_stack);
 
 	assert_unary_op_expr(jvm_type, unary_operator, expression,
 			     unary_expression);
-	assert_true(stack_is_empty(&stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(unary_expression);
 	free_compilation_unit(cu);
@@ -1188,15 +1186,15 @@ static void assert_conversion_expr_stack(unsigned char opc,
 	struct expression *expression, *conversion_expression;
 	struct compilation_unit *cu;
 
-	expression = temporary_expr(from_type, 1);
-	stack_push(&expr_stack, expression);
-
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
 
+	expression = temporary_expr(from_type, 1);
+	stack_push(cu->expr_stack, expression);
+
 	convert_to_ir(cu);
-	conversion_expression = stack_pop(&expr_stack);
+	conversion_expression = stack_pop(cu->expr_stack);
 	assert_conv_expr(to_type, expression, conversion_expression);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(conversion_expression);
 	free_compilation_unit(cu);
@@ -1245,18 +1243,18 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 	struct expression *left, *right, *cmp_expression;
 	struct compilation_unit *cu;
 
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+
 	left = temporary_expr(type, 1);
 	right = temporary_expr(type, 2);
 
-	stack_push(&expr_stack, left);
-	stack_push(&expr_stack, right);
-
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
+	stack_push(cu->expr_stack, left);
+	stack_push(cu->expr_stack, right);
 
 	convert_to_ir(cu);
-	cmp_expression = stack_pop(&expr_stack);
+	cmp_expression = stack_pop(cu->expr_stack);
 	assert_binop_expr(J_INT, op, left, right, cmp_expression);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(cmp_expression);
 	free_compilation_unit(cu);
@@ -1280,21 +1278,19 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	struct basic_block *stmt_bb, *true_bb;
 	struct statement *if_stmt;
 	struct compilation_unit *cu;
-	struct stack expr_stack = STACK_INIT;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
 
 	stmt_bb = alloc_basic_block(0, 1);
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
 
-	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb,
-				    &expr_stack);
+	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
 	if_value = temporary_expr(J_INT, 1);
-	stack_push(&expr_stack, if_value);
+	stack_push(cu->expr_stack, if_value);
 
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	if_stmt = to_stmt(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, if_stmt->type);
@@ -1323,24 +1319,22 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	struct basic_block *stmt_bb, *true_bb;
 	struct statement *if_stmt;
 	struct compilation_unit *cu;
-	struct stack expr_stack = STACK_INIT;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
 
 	stmt_bb = alloc_basic_block(0, 1);
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
 
-	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb,
-				    &expr_stack);
+	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), stmt_bb);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
 	if_value1 = temporary_expr(jvm_type, 1);
-	stack_push(&expr_stack, if_value1);
+	stack_push(cu->expr_stack, if_value1);
 
 	if_value2 = temporary_expr(jvm_type, 2);
-	stack_push(&expr_stack, if_value2);
+	stack_push(cu->expr_stack, if_value2);
 
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	if_stmt = to_stmt(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, if_stmt->type);
@@ -1372,18 +1366,16 @@ void test_convert_goto(void)
 	struct basic_block *goto_bb, *target_bb;
 	struct statement *goto_stmt;
 	struct compilation_unit *cu;
-	struct stack expr_stack = STACK_INIT;
 	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
 
 	goto_bb = alloc_basic_block(0, 1);
 	target_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
 
-	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), goto_bb,
-				    &expr_stack);
+	cu = alloc_compilation_unit(code, ARRAY_SIZE(code), goto_bb);
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	goto_stmt = to_stmt(goto_bb->stmt_list.next);
 	assert_int_equals(STMT_GOTO, goto_stmt->type);
@@ -1411,11 +1403,11 @@ static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
 
 	return_value = temporary_expr(jvm_type, 0);
-	stack_push(&expr_stack, return_value);
+	stack_push(cu->expr_stack, return_value);
 
 	convert_to_ir(cu);
 	ret_stmt = to_stmt(cu->entry_bb->stmt_list.next);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 	assert_return_stmt(return_value, ret_stmt);
 
 	free_compilation_unit(cu);
@@ -1441,7 +1433,7 @@ void test_convert_void_return(void)
 
 	convert_to_ir(cu);
 	ret_stmt = to_stmt(cu->entry_bb->stmt_list.next);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 	assert_return_stmt(NULL, ret_stmt);
 
 	free_compilation_unit(cu);
@@ -1460,9 +1452,9 @@ void test_convert_getstatic(void)
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code), &expr_stack);
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
-	expr = stack_pop(&expr_stack);
+	expr = stack_pop(cu->expr_stack);
 	assert_field_expr(J_REFERENCE, &fb, expr);
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -1522,7 +1514,7 @@ void test_converts_complete_basic_block(void)
 	convert_to_ir(cu);
 
 	assert_false(list_is_empty(&cu->entry_bb->stmt_list));
-	assert_true(stack_is_empty(&expr_stack));
+	assert_true(stack_is_empty(cu->expr_stack));
 	
 	free_compilation_unit(cu);
 }

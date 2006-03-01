@@ -13,6 +13,9 @@ struct stack {
 
 #define STACK_INIT { .nr_elements = 0 }
 
+struct stack *alloc_stack(void);
+void free_stack(struct stack *);
+
 static inline void *stack_pop(struct stack * stack)
 {
 	assert(stack->nr_elements);

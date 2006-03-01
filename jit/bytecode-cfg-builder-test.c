@@ -29,7 +29,7 @@ void test_branch_opcode_ends_basic_block(void)
 	struct compilation_unit *cu;
 	
 	cu = alloc_compilation_unit(default_string,
-				    ARRAY_SIZE(default_string), NULL, NULL);
+				    ARRAY_SIZE(default_string), NULL);
 
 	build_cfg(cu);
 	assert_int_equals(3, nr_bblocks(cu));
@@ -60,7 +60,7 @@ void test_multiple_branches(void)
 	struct compilation_unit *cu;
 
 	cu = alloc_compilation_unit(greater_than_zero,
-				    ARRAY_SIZE(greater_than_zero), NULL, NULL);
+				    ARRAY_SIZE(greater_than_zero), NULL);
 
 	build_cfg(cu);
 	assert_int_equals(4, nr_bblocks(cu));

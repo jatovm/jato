@@ -17,8 +17,7 @@ struct compilation_unit {
 
 struct compilation_unit *alloc_compilation_unit(unsigned char *,
 						unsigned long,
-						struct basic_block *,
-						struct stack *);
+						struct basic_block *);
 void free_compilation_unit(struct compilation_unit *);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 unsigned long nr_bblocks(struct compilation_unit *);

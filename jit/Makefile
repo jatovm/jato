@@ -7,7 +7,7 @@ INCLUDE = -I. -I../src -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
 LIBS = -lglib-2.0
 OBJS = alloc.o basic-block.o bitmap.o bytecodes.o bytecode-cfg-builder.o \
 	bytecode-to-ir.o compilation-unit.o jit-compiler.o instruction.o \
-	insn-selector.o statement.o expression.o x86-objcode.o
+	insn-selector.o stack.o statement.o expression.o x86-objcode.o
 TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o \
 	bytecode-cfg-builder-test.o bytecode-to-ir-test.o \
 	compilation-unit-test.o insn-selector-test.o jit-compiler-test.o \
