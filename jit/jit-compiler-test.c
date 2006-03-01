@@ -26,3 +26,30 @@ void test_executing_jit_compiled_function(void)
 	
 	free_compilation_unit(cu);
 }
+
+void test_magic_trampoline_compiles_uncompiled(void)
+{
+	struct compilation_unit *cu;
+	cu = alloc_compilation_unit(sum_bytecode, ARRAY_SIZE(sum_bytecode));
+
+	assert_false(cu->is_compiled);
+	jit_magic_trampoline(cu);
+	assert_not_null(cu->objcode);
+	assert_true(cu->is_compiled);
+	
+	free_compilation_unit(cu);
+}
+
+void test_magic_trampoline_compiles_once(void)
+{
+	void *objcode;
+	struct compilation_unit *cu;
+
+	cu = alloc_compilation_unit(sum_bytecode, ARRAY_SIZE(sum_bytecode));
+	jit_magic_trampoline(cu);
+	objcode = cu->objcode;
+	jit_magic_trampoline(cu);
+	assert_ptr_equals(objcode, cu->objcode);
+
+	free_compilation_unit(cu);
+}

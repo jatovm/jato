@@ -4,6 +4,8 @@
 #include <list.h>
 #include <basic-block.h>
 #include <stack.h>
+#include <stdbool.h>
+#include <pthread.h>
 
 struct compilation_unit {
 	struct classblock *cb;
@@ -12,6 +14,8 @@ struct compilation_unit {
 	struct list_head bb_list;
 	struct stack *expr_stack;
 	void *objcode;
+	bool is_compiled;
+	pthread_mutex_t mutex;
 };
 
 struct compilation_unit *alloc_compilation_unit(unsigned char *,

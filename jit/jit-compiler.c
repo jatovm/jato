@@ -50,5 +50,17 @@ int jit_compile(struct compilation_unit *cu)
 	x86_emit_obj_code(bb_entry(cu->bb_list.next), cu->objcode+3, OBJCODE_SIZE-3);
 	x86_emit_epilog(cu->objcode+9, OBJCODE_SIZE-9);
 
+	cu->is_compiled = true;
+
 	return 0;
+}
+
+void jit_magic_trampoline(struct compilation_unit *cu)
+{
+	pthread_mutex_lock(&cu->mutex);
+
+	if (!cu->is_compiled)
+		jit_compile(cu);
+
+	pthread_mutex_unlock(&cu->mutex);
 }

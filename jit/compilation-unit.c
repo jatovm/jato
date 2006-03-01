@@ -20,6 +20,8 @@ struct compilation_unit *alloc_compilation_unit(unsigned char *code,
 		cu->code = code;
 		cu->code_len = code_len;
 		cu->expr_stack = alloc_stack();
+		cu->is_compiled = false;
+		pthread_mutex_init(&cu->mutex, NULL);
 	}
 	return cu;
 }
@@ -31,6 +33,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
 		free_basic_block(bb);
 
+	pthread_mutex_destroy(&cu->mutex);
 	free_stack(cu->expr_stack);
 	free(cu->objcode);
 	free(cu);
