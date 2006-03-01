@@ -16,4 +16,5 @@
 	* alloc_exec() allocates complete pages which is wasteful. Intel
 	  optimization guide recommends 16-byte alignment for branch targets
 	  so make alloc_exec() return smaller memory blocks.
-	* JIT trampolines.
+	* Patch call instruction in the caller to avoid redundant JIT
+	  trampoline calls after target method has been compiled.
