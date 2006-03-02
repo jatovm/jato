@@ -1459,43 +1459,49 @@ void test_convert_getstatic(void)
 
 /* MISSING: invokespecial */
 
-void test_convert_invokestatic(void)
+static void assert_convert_invokestatic(int nr_args)
 {
 	struct methodblock mb;
 	u8 cp_infos[] = { (unsigned long) &mb };
 	u1 cp_types[] = { CONSTANT_Resolved };
 	unsigned char code[] = {
 		OPC_INVOKESTATIC, 0x00, 0x00,
-		OPC_IRETURN };
+		OPC_IRETURN
+	};
 	struct compilation_unit *cu;
 	struct statement *stmt;
-	struct expression *param1, *param2;
-	struct expression *actual_param1, *actual_param2;
+	struct expression *param[nr_args];
+	struct expression *expr;
+	int i;
 
-	mb.args_count = 2;
+	mb.args_count = nr_args;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
-	
-	param1 = value_expr(J_INT, 1);
-	param2 = value_expr(J_INT, 2);
 
-	stack_push(cu->expr_stack, param1);
-	stack_push(cu->expr_stack, param2);
+	for (i = 0; i < nr_args; i++) {
+		param[i] = value_expr(J_INT, i);
+		stack_push(cu->expr_stack, param[i]);
+	}
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt->type);
 	assert_call_expr(J_INT, &mb, stmt->return_value);
 
-	actual_param1 = list_entry(stmt->return_value->args_list.next, struct expression, list_node);
-	actual_param2 = list_entry(stmt->return_value->args_list.next->next, struct expression, list_node);
+	i = 0;
 
-	assert_ptr_equals(param1, actual_param1);
-	assert_ptr_equals(param2, actual_param2);
+	list_for_each_entry(expr, &stmt->return_value->args_list, list_node)
+		assert_ptr_equals(param[i++], expr);
 
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
+}
+
+void test_convert_invokestatic(void)
+{
+	assert_convert_invokestatic(0);
+	assert_convert_invokestatic(2);
 }
 
 /* MISSING: invokeinterface */
