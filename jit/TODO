@@ -1,6 +1,8 @@
 - Bytecode to IR conversion
-	* INVOKESPECIAL
+	* Field & method resolution
+	* Method return type
 	* INVOKESTATIC
+	* INVOKESPECIAL
 	* Converting whole compilation unit
 	* GETSTATIC type parsing
 	* Replace STMT_NULLCHECK and STMT_ARRAYCHECK with STMT_IF and STMT_THROW

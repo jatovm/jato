@@ -14,7 +14,6 @@
 #include <jit-compiler.h>
 #include <bytecodes.h>
 #include <errno.h>
-
 #include <stdlib.h>
 
 static unsigned long alloc_temporary(void)
@@ -1175,6 +1174,11 @@ static int convert_void_return(struct compilation_unit *cu,
 	return 0;
 }
 
+static unsigned short cp_index(unsigned char *code)
+{
+	return be16_to_cpu(*(u2 *) code);
+}
+
 static int convert_getstatic(struct compilation_unit *cu,
 			     struct basic_block *bb,
 			     unsigned long offset)
@@ -1185,7 +1189,7 @@ static int convert_getstatic(struct compilation_unit *cu,
 	u1 type;
 
 	cp = &cu->cb->constant_pool;
-	index = be16_to_cpu(*(u2 *) & cu->code[offset + 1]);
+	index = cp_index(cu->code + offset + 1);
 	type = CP_TYPE(cp, index);
 	
 	if (type != CONSTANT_Resolved)
@@ -1194,6 +1198,38 @@ static int convert_getstatic(struct compilation_unit *cu,
 	value = field_expr(J_REFERENCE, (struct fieldblock *) CP_INFO(cp, index));
 	if (!value)
 		return -ENOMEM;
+
+	stack_push(cu->expr_stack, value);
+	return 0;
+}
+
+static int convert_invokestatic(struct compilation_unit *cu,
+				struct basic_block *bb,
+				unsigned long offset)
+{
+	struct methodblock *mb;
+	struct constant_pool *cp;
+	unsigned short index;
+	struct expression *value;
+	u1 type;
+	int i;
+
+	cp = &cu->cb->constant_pool;
+	index = cp_index(cu->code + offset + 1);
+	type = CP_TYPE(cp, index);
+	
+	if (type != CONSTANT_Resolved)
+		return -EINVAL;
+	
+	mb = (struct methodblock *) CP_INFO(cp, index);
+	value = call_expr(J_INT, mb);
+	if (!value)
+		return -ENOMEM;
+
+	for (i = 0; i < mb->args_count; i++) {
+		struct expression *param = stack_pop(cu->expr_stack);
+		list_add(&param->list_node, &value->args_list);
+	}
 
 	stack_push(cu->expr_stack, value);
 	return 0;
@@ -1378,6 +1414,7 @@ static convert_fn_t converters[] = {
 	DECLARE_CONVERTER(OPC_ARETURN, convert_non_void_return),
 	DECLARE_CONVERTER(OPC_RETURN, convert_void_return),
 	DECLARE_CONVERTER(OPC_GETSTATIC, convert_getstatic),
+	DECLARE_CONVERTER(OPC_INVOKESTATIC, convert_invokestatic),
 };
 
 /**
@@ -1403,7 +1440,7 @@ int convert_to_ir(struct compilation_unit *cu)
 		convert_fn_t convert = converters[opc];
 		unsigned long opc_size;
 		
-		opc_size = bytecode_size(cu->code);
+		opc_size = bytecode_size(cu->code+offset);
 
 		if (!convert || cu->code_len-offset < opc_size) {
 			err = -EINVAL;

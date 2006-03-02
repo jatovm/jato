@@ -127,6 +127,15 @@ static void assert_field_expr(enum jvm_type expected_type,
 	assert_ptr_equals(expected_field, field_expression->field);
 }
 
+static void assert_call_expr(enum jvm_type expected_type,
+			     struct methodblock *expected_method,
+			     struct expression *call_expression)
+{
+	assert_int_equals(EXPR_CALL, call_expression->type);
+	assert_int_equals(expected_type, call_expression->jvm_type);
+	assert_ptr_equals(expected_method, call_expression->target_method);
+}
+
 static void assert_store_stmt(struct statement *stmt)
 {
 	assert_int_equals(STMT_STORE, stmt->type);
@@ -1450,7 +1459,44 @@ void test_convert_getstatic(void)
 
 /* MISSING: invokespecial */
 
-/* MISSING: invokestatic */
+void test_convert_invokestatic(void)
+{
+	struct methodblock mb;
+	u8 cp_infos[] = { (unsigned long) &mb };
+	u1 cp_types[] = { CONSTANT_Resolved };
+	unsigned char code[] = {
+		OPC_INVOKESTATIC, 0x00, 0x00,
+		OPC_IRETURN };
+	struct compilation_unit *cu;
+	struct statement *stmt;
+	struct expression *param1, *param2;
+	struct expression *actual_param1, *actual_param2;
+
+	mb.args_count = 2;
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	
+	param1 = value_expr(J_INT, 1);
+	param2 = value_expr(J_INT, 2);
+
+	stack_push(cu->expr_stack, param1);
+	stack_push(cu->expr_stack, param2);
+	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_int_equals(STMT_RETURN, stmt->type);
+	assert_call_expr(J_INT, &mb, stmt->return_value);
+
+	actual_param1 = list_entry(stmt->return_value->args_list.next, struct expression, list_node);
+	actual_param2 = list_entry(stmt->return_value->args_list.next->next, struct expression, list_node);
+
+	assert_ptr_equals(param1, actual_param1);
+	assert_ptr_equals(param2, actual_param2);
+
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	free_compilation_unit(cu);
+}
 
 /* MISSING: invokeinterface */
 
