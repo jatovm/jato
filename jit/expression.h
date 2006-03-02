@@ -2,6 +2,7 @@
 #define __EXPRESSION_H
 
 #include <jvm_types.h>
+#include <list.h>
 
 enum binary_operator {
 	/* Arithmetic */
@@ -46,12 +47,14 @@ enum expression_type {
 	EXPR_UNARY_OP,
 	EXPR_CONVERSION,
 	EXPR_FIELD,
+	EXPR_CALL,
 };
 
 struct expression {
 	enum expression_type type;
 	unsigned long refcount;
 	enum jvm_type jvm_type;
+	struct list_head list_node;
 	union {
 		/* EXPR_VALUE */
 		unsigned long long value;
@@ -93,6 +96,12 @@ struct expression {
 		struct {
 			struct fieldblock *field;
 		};
+		
+		/* EXPR_CALL */
+		struct {
+			struct methodblock *target_method;
+			struct list_head args_list;
+		};
 	};
 };
 
@@ -111,5 +120,6 @@ struct expression *binop_expr(enum jvm_type, enum binary_operator, struct expres
 struct expression *unary_op_expr(enum jvm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum jvm_type, struct expression *);
 struct expression *field_expr(enum jvm_type, struct fieldblock *);
+struct expression *call_expr(enum jvm_type, struct methodblock *);
 
 #endif

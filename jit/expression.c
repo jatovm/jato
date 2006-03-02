@@ -16,11 +16,20 @@ struct expression *alloc_expression(enum expression_type type,
 	struct expression *expr = malloc(sizeof *expr);
 	if (expr) {
 		memset(expr, 0, sizeof *expr);
+		INIT_LIST_HEAD(&expr->list_node);
 		expr->type = type;
 		expr->jvm_type = jvm_type;
 		expr->refcount = 1;
 	}
 	return expr;
+}
+
+static void free_expression_list(struct list_head *head)
+{
+	struct expression *expr, *tmp;
+
+	list_for_each_entry_safe(expr, tmp, head, list_node)
+		expr_put(expr);
 }
 
 void free_expression(struct expression *expr)
@@ -57,6 +66,9 @@ void free_expression(struct expression *expr)
 		break;
 	case EXPR_FIELD:
 		/* nothing to do */
+		break;
+	case EXPR_CALL:
+		free_expression_list(&expr->args_list);
 		break;
 	};
 	free(expr);
@@ -163,5 +175,16 @@ struct expression *field_expr(enum jvm_type jvm_type,
 	struct expression *expr = alloc_expression(EXPR_FIELD, jvm_type);
 	if (expr)
 		expr->field = field;
+	return expr;
+}
+
+struct expression *call_expr(enum jvm_type jvm_type,
+			     struct methodblock *target_method)
+{
+	struct expression *expr = alloc_expression(EXPR_CALL, jvm_type);
+	if (expr) {
+		INIT_LIST_HEAD(&expr->args_list);
+		expr->target_method = target_method;
+	}
 	return expr;
 }
