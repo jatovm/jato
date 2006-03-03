@@ -1240,7 +1240,18 @@ static int convert_invokestatic(struct compilation_unit *cu,
 		list_add(&param->list_node, &value->args_list);
 	}
 
-	stack_push(cu->expr_stack, value);
+	if (mb->type[0] == 'V') {
+		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
+		if (!expr_stmt) {
+			expr_put(value);
+			return -ENOMEM;
+		}
+			
+		expr_stmt->expression = value;
+		bb_insert_stmt(bb, expr_stmt);
+	} else
+		stack_push(cu->expr_stack, value);
+
 	return 0;
 }
 

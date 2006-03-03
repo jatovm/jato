@@ -1501,6 +1501,7 @@ static void assert_convert_invokestatic(int nr_args)
 	struct statement *stmt;
 	struct expression *args[nr_args];
 
+	mb.type = "I";
 	mb.args_count = nr_args;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
@@ -1523,6 +1524,29 @@ void test_convert_invokestatic(void)
 	assert_convert_invokestatic(2);
 }
 
+void test_convert_invokestatic_for_void_return_type(void)
+{
+	struct methodblock mb;
+	unsigned char code[] = {
+		OPC_INVOKESTATIC, 0x00, 0x00,
+	};
+	struct compilation_unit *cu;
+	struct statement *stmt;
+
+	mb.type = "V";
+	mb.args_count = 0;
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	convert_ir_invoke(cu, &mb);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_int_equals(STMT_EXPRESSION, stmt->type);
+	assert_invoke_expr(J_INT, &mb, stmt->expression);
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	free_compilation_unit(cu);
+}
+
 void test_convert_invokestatic_when_return_value_is_discarded(void)
 {
 	struct methodblock mb;
@@ -1533,6 +1557,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 	struct compilation_unit *cu;
 	struct statement *stmt;
 
+	mb.type = "I";
 	mb.args_count = 0;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
