@@ -1459,40 +1459,56 @@ void test_convert_getstatic(void)
 
 /* MISSING: invokespecial */
 
+static void push_args(struct compilation_unit *cu,
+		      struct expression **args, int nr_args)
+{
+	int i;
+
+	for (i = 0; i < nr_args; i++) {
+		args[i] = value_expr(J_INT, i);
+		stack_push(cu->expr_stack, args[i]);
+	}
+}
+
+static void assert_args(struct expression **args, struct list_head *head)
+{
+	struct expression *expr;
+	int i = 0;
+
+	list_for_each_entry(expr, head, list_node)
+		assert_ptr_equals(args[i++], expr);
+}
+
+static void convert_ir_invoke(struct compilation_unit *cu, struct methodblock *mb)
+{
+	u8 cp_infos[] = { (unsigned long) mb };
+	u1 cp_types[] = { CONSTANT_Resolved };
+
+	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+}
+
 static void assert_convert_invokestatic(int nr_args)
 {
 	struct methodblock mb;
-	u8 cp_infos[] = { (unsigned long) &mb };
-	u1 cp_types[] = { CONSTANT_Resolved };
 	unsigned char code[] = {
 		OPC_INVOKESTATIC, 0x00, 0x00,
 		OPC_IRETURN
 	};
 	struct compilation_unit *cu;
 	struct statement *stmt;
-	struct expression *param[nr_args];
-	struct expression *expr;
-	int i;
+	struct expression *args[nr_args];
 
 	mb.args_count = nr_args;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
 
-	for (i = 0; i < nr_args; i++) {
-		param[i] = value_expr(J_INT, i);
-		stack_push(cu->expr_stack, param[i]);
-	}
-	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+	push_args(cu, args, nr_args);
+	convert_ir_invoke(cu, &mb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt->type);
 	assert_invoke_expr(J_INT, &mb, stmt->return_value);
-
-	i = 0;
-
-	list_for_each_entry(expr, &stmt->return_value->args_list, list_node)
-		assert_ptr_equals(param[i++], expr);
-
+	assert_args(args, &stmt->return_value->args_list);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
