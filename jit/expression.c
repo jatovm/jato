@@ -67,7 +67,7 @@ void free_expression(struct expression *expr)
 	case EXPR_FIELD:
 		/* nothing to do */
 		break;
-	case EXPR_CALL:
+	case EXPR_INVOKE:
 		free_expression_list(&expr->args_list);
 		break;
 	};
@@ -178,10 +178,10 @@ struct expression *field_expr(enum jvm_type jvm_type,
 	return expr;
 }
 
-struct expression *call_expr(enum jvm_type jvm_type,
+struct expression *invoke_expr(enum jvm_type jvm_type,
 			     struct methodblock *target_method)
 {
-	struct expression *expr = alloc_expression(EXPR_CALL, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_INVOKE, jvm_type);
 	if (expr) {
 		INIT_LIST_HEAD(&expr->args_list);
 		expr->target_method = target_method;

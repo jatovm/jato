@@ -1222,7 +1222,7 @@ static int convert_invokestatic(struct compilation_unit *cu,
 		return -EINVAL;
 	
 	mb = (struct methodblock *) CP_INFO(cp, index);
-	value = call_expr(J_INT, mb);
+	value = invoke_expr(J_INT, mb);
 	if (!value)
 		return -ENOMEM;
 

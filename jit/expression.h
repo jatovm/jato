@@ -47,7 +47,7 @@ enum expression_type {
 	EXPR_UNARY_OP,
 	EXPR_CONVERSION,
 	EXPR_FIELD,
-	EXPR_CALL,
+	EXPR_INVOKE,
 };
 
 struct expression {
@@ -97,7 +97,7 @@ struct expression {
 			struct fieldblock *field;
 		};
 		
-		/* EXPR_CALL */
+		/* EXPR_INVOKE */
 		struct {
 			struct methodblock *target_method;
 			struct list_head args_list;
@@ -120,6 +120,6 @@ struct expression *binop_expr(enum jvm_type, enum binary_operator, struct expres
 struct expression *unary_op_expr(enum jvm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum jvm_type, struct expression *);
 struct expression *field_expr(enum jvm_type, struct fieldblock *);
-struct expression *call_expr(enum jvm_type, struct methodblock *);
+struct expression *invoke_expr(enum jvm_type, struct methodblock *);
 
 #endif

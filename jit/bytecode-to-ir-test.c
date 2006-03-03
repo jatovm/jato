@@ -127,13 +127,13 @@ static void assert_field_expr(enum jvm_type expected_type,
 	assert_ptr_equals(expected_field, field_expression->field);
 }
 
-static void assert_call_expr(enum jvm_type expected_type,
-			     struct methodblock *expected_method,
-			     struct expression *call_expression)
+static void assert_invoke_expr(enum jvm_type expected_type,
+			       struct methodblock *expected_method,
+			       struct expression *invoke_expression)
 {
-	assert_int_equals(EXPR_CALL, call_expression->type);
-	assert_int_equals(expected_type, call_expression->jvm_type);
-	assert_ptr_equals(expected_method, call_expression->target_method);
+	assert_int_equals(EXPR_INVOKE, invoke_expression->type);
+	assert_int_equals(expected_type, invoke_expression->jvm_type);
+	assert_ptr_equals(expected_method, invoke_expression->target_method);
 }
 
 static void assert_store_stmt(struct statement *stmt)
@@ -1486,7 +1486,7 @@ static void assert_convert_invokestatic(int nr_args)
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt->type);
-	assert_call_expr(J_INT, &mb, stmt->return_value);
+	assert_invoke_expr(J_INT, &mb, stmt->return_value);
 
 	i = 0;
 
