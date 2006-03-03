@@ -56,48 +56,68 @@ struct expression {
 	enum jvm_type jvm_type;
 	struct list_head list_node;
 	union {
-		/* EXPR_VALUE */
+		/*  EXPR_VALUE represents an integer or reference constant
+		    expression (see JLS 15.28.). This expression type can be
+		    used as an rvalue only.  */
 		unsigned long long value;
 
-		/* EXPR_FVALUE */
+		/*  EXPR_FVALUE represents a floating-point constant
+		    expression (see JLS 15.28.). This expression type can be
+		    used as an rvalue only.  */
 		double fvalue;
 
-		/* EXPR_LOCAL */
+		/*  EXPR_LOCAL represents a local variable or parameter
+		    expression (see JLS 15.14. and 6.5.6.). This expression
+		    type can be used as both lvalue and rvalue.  */
 		unsigned long local_index;
 
-		/* EXPR_TEMPORARY */
+		/*  EXPR_TEMPORARY represents a compiler-generated temporary
+		    expression. This expression type can be used as both
+		    lvalue and rvalue.  */
 		unsigned long temporary;
 
-		/* EXPR_ARRAY_DEREF */
+		/*  EXPR_ARRAY_DEREF represents an array access expression
+		    (see JLS 15.13.). This expression type can be used as
+		    both lvalue and rvalue.  */
 		struct {
 			struct expression *arrayref;
 			struct expression *array_index;
 		};
 
-		/* EXPR_BINOP */
+		/*  EXPR_BINOP represents an binary operation expression (see
+		    JLS 15.17., 15.18., 15.19., 15.20., 15.21., 15.22.). This
+		    expression type can be used as an rvalue only.  */
 		struct {
 			enum binary_operator binary_operator;
 			struct expression *binary_left;
 			struct expression *binary_right;
 		};
 
-		/* EXPR_UNARY_OP */
+		/*  EXPR_UNARY_OP represents an unary operation expression
+		    (see JLS 15.15.). This expression type can be used as an
+		    rvalue only.  */
 		struct {
 			enum unary_operator unary_operator;
 			struct expression *unary_expression;
 		};
 
-		/* EXPR_CONVERSION */
+		/*  EXPR_CONVERSION represents a type conversion (see JLS
+		    5.1.).  This expression type can be used as an rvalue
+		    only.  */
 		struct {
 			struct expression *from_expression;
 		};
 
-		/* EXPR_FIELD */
+		/*  EXPR_FIELD represents a field access expression (see JLS
+		    15.11.). This expression type can be used as both lvalue
+		    and rvalue.  */
 		struct {
 			struct fieldblock *field;
 		};
 		
-		/* EXPR_INVOKE */
+		/*  EXPR_INVOKE represents a method invocation expression (see
+		    JLS 15.12.). This expression type can contain side-effects
+		    and can be used as an rvalue only.  */
 		struct {
 			struct methodblock *target_method;
 			struct list_head args_list;
