@@ -1212,6 +1212,40 @@ static int convert_getstatic(struct compilation_unit *cu,
 	return 0;
 }
 
+static int convert_putstatic(struct compilation_unit *cu,
+			     struct basic_block *bb,
+			     unsigned long offset)
+{
+	struct constant_pool *cp;
+	unsigned short index;
+	struct statement *store_stmt;
+	struct expression *dest, *src;
+	u1 type;
+
+	cp = &cu->cb->constant_pool;
+	index = cp_index(cu->code + offset + 1);
+	type = CP_TYPE(cp, index);
+	
+	if (type != CONSTANT_Resolved)
+		return -EINVAL;
+
+	src = stack_pop(cu->expr_stack);
+	dest = field_expr(J_REFERENCE, (struct fieldblock *) CP_INFO(cp, index));
+	if (!dest)
+		return -ENOMEM;
+	
+	store_stmt = alloc_statement(STMT_STORE);
+	if (!store_stmt) {
+		expr_put(dest);
+		return -ENOMEM;
+	}
+	store_stmt->store_dest = dest;
+	store_stmt->store_src = src;
+	bb_insert_stmt(bb, store_stmt);
+	
+	return 0;
+}
+
 static int convert_invokestatic(struct compilation_unit *cu,
 				struct basic_block *bb,
 				unsigned long offset)
@@ -1437,6 +1471,7 @@ static convert_fn_t converters[] = {
 	DECLARE_CONVERTER(OPC_ARETURN, convert_non_void_return),
 	DECLARE_CONVERTER(OPC_RETURN, convert_void_return),
 	DECLARE_CONVERTER(OPC_GETSTATIC, convert_getstatic),
+	DECLARE_CONVERTER(OPC_PUTSTATIC, convert_putstatic),
 	DECLARE_CONVERTER(OPC_INVOKESTATIC, convert_invokestatic),
 };
 

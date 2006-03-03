@@ -1432,18 +1432,24 @@ void test_convert_void_return(void)
 	free_compilation_unit(cu);
 }
 
+static void convert_ir_field(struct compilation_unit *cu, struct fieldblock *fb)
+{
+	u8 cp_infos[] = { (unsigned long) fb };
+	u1 cp_types[] = { CONSTANT_Resolved };
+
+	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+}
+
 void test_convert_getstatic(void)
 {
 	struct fieldblock fb;
 	struct expression *expr;
-	u8 cp_infos[] = { (unsigned long) &fb };
-	u1 cp_types[] = { CONSTANT_Resolved };
 	unsigned char code[] = { OPC_GETSTATIC, 0x00, 0x00 };
 	struct compilation_unit *cu;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
 
-	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+	convert_ir_field(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
 	assert_field_expr(J_REFERENCE, &fb, expr);
 	assert_true(stack_is_empty(cu->expr_stack));
@@ -1452,7 +1458,27 @@ void test_convert_getstatic(void)
 	free_compilation_unit(cu);
 }
 
-/* MISSING: putstatic */
+void test_convert_putstatic(void)
+{
+	struct fieldblock fb;
+	struct statement *stmt;
+	unsigned char code[] = { OPC_PUTSTATIC, 0x00, 0x00 };
+	struct compilation_unit *cu;
+	struct expression *value;
+
+	value = value_expr(J_REFERENCE, 0xdeadbeef);
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	stack_push(cu->expr_stack, value);
+	convert_ir_field(cu, &fb);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_store_stmt(stmt);
+	assert_field_expr(J_REFERENCE, &fb, stmt->store_dest);
+	assert_ptr_equals(value, stmt->store_src);
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	free_compilation_unit(cu);
+}
 
 /* MISSING: getfield */
 
