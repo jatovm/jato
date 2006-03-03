@@ -1241,11 +1241,11 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	}
 
 	if (mb->type[0] == 'V') {
-		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
-		if (!expr_stmt) {
-			expr_put(value);
-			return -ENOMEM;
-		}
+		struct statement *expr_stmt;
+		
+		expr_stmt = alloc_statement(STMT_EXPRESSION);
+		if (!expr_stmt)
+			goto failed;
 			
 		expr_stmt->expression = value;
 		bb_insert_stmt(bb, expr_stmt);
@@ -1253,6 +1253,9 @@ static int convert_invokestatic(struct compilation_unit *cu,
 		stack_push(cu->expr_stack, value);
 
 	return 0;
+  failed:
+	expr_put(value);
+	return -ENOMEM;
 }
 
 typedef int (*convert_fn_t) (struct compilation_unit *, struct basic_block *,
