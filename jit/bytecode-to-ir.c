@@ -1193,10 +1193,36 @@ static unsigned short cp_index(unsigned char *code)
 	return be16_to_cpu(*(u2 *) code);
 }
 
+static enum jvm_type str_to_type(char *type)
+{
+	switch (type[0]) {
+	case 'B':
+		return J_BYTE;
+	case 'C':
+		return J_CHAR;
+	case 'D':
+		return J_DOUBLE;
+	case 'F':
+		return J_FLOAT;
+	case 'I':
+		return J_INT;
+	case 'J':
+		return J_LONG;
+	case 'S':
+		return J_SHORT;
+	case 'Z':
+		return J_BOOLEAN;
+	default:
+		break;
+	};
+	return J_REFERENCE;
+}
+
 static int convert_getstatic(struct compilation_unit *cu,
 			     struct basic_block *bb,
 			     unsigned long offset)
 {
+	struct fieldblock *fb;
 	struct constant_pool *cp;
 	unsigned short index;
 	struct expression *value;
@@ -1208,8 +1234,9 @@ static int convert_getstatic(struct compilation_unit *cu,
 	
 	if (type != CONSTANT_Resolved)
 		return -EINVAL;
-	
-	value = field_expr(J_REFERENCE, cp_info_ptr(cp, index));
+
+	fb = cp_info_ptr(cp, index);
+	value = field_expr(str_to_type(fb->type), fb);
 	if (!value)
 		return -ENOMEM;
 
@@ -1221,6 +1248,7 @@ static int convert_putstatic(struct compilation_unit *cu,
 			     struct basic_block *bb,
 			     unsigned long offset)
 {
+	struct fieldblock *fb;
 	struct constant_pool *cp;
 	unsigned short index;
 	struct statement *store_stmt;
@@ -1234,8 +1262,9 @@ static int convert_putstatic(struct compilation_unit *cu,
 	if (type != CONSTANT_Resolved)
 		return -EINVAL;
 
+	fb = cp_info_ptr(cp, index);
 	src = stack_pop(cu->expr_stack);
-	dest = field_expr(J_REFERENCE, cp_info_ptr(cp, index));
+	dest = field_expr(str_to_type(fb->type), fb);
 	if (!dest)
 		return -ENOMEM;
 	

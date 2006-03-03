@@ -1440,25 +1440,42 @@ static void convert_ir_field(struct compilation_unit *cu, struct fieldblock *fb)
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 }
 
-void test_convert_getstatic(void)
+static void assert_convert_getstatic(enum jvm_type expected_jvm_type,
+				     char *field_type)
 {
 	struct fieldblock fb;
 	struct expression *expr;
 	unsigned char code[] = { OPC_GETSTATIC, 0x00, 0x00 };
 	struct compilation_unit *cu;
 
+	fb.type = field_type;
+
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
 
 	convert_ir_field(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
-	assert_field_expr(J_REFERENCE, &fb, expr);
+	assert_field_expr(expected_jvm_type, &fb, expr);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
-void test_convert_putstatic(void)
+void test_convert_getstatic(void)
+{
+	assert_convert_getstatic(J_BYTE, "B");
+	assert_convert_getstatic(J_CHAR, "C");
+	assert_convert_getstatic(J_DOUBLE, "D");
+	assert_convert_getstatic(J_FLOAT, "F");
+	assert_convert_getstatic(J_INT, "I");
+	assert_convert_getstatic(J_LONG, "J");
+	assert_convert_getstatic(J_REFERENCE, "Ljava/lang/Object;");
+	assert_convert_getstatic(J_SHORT, "S");
+	assert_convert_getstatic(J_BOOLEAN, "Z");
+}
+
+static void assert_convert_putstatic(enum jvm_type expected_jvm_type,
+				     char *field_type)
 {
 	struct fieldblock fb;
 	struct statement *stmt;
@@ -1466,18 +1483,32 @@ void test_convert_putstatic(void)
 	struct compilation_unit *cu;
 	struct expression *value;
 
-	value = value_expr(J_REFERENCE, 0xdeadbeef);
+	fb.type = field_type;
+	value = value_expr(expected_jvm_type, 0xdeadbeef);
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
 	stack_push(cu->expr_stack, value);
 	convert_ir_field(cu, &fb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_field_expr(J_REFERENCE, &fb, stmt->store_dest);
+	assert_field_expr(expected_jvm_type, &fb, stmt->store_dest);
 	assert_ptr_equals(value, stmt->store_src);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
+}
+
+void test_convert_putstatic(void)
+{
+	assert_convert_putstatic(J_BYTE, "B");
+	assert_convert_putstatic(J_CHAR, "C");
+	assert_convert_putstatic(J_DOUBLE, "D");
+	assert_convert_putstatic(J_FLOAT, "F");
+	assert_convert_putstatic(J_INT, "I");
+	assert_convert_putstatic(J_LONG, "J");
+	assert_convert_putstatic(J_REFERENCE, "Ljava/lang/Object;");
+	assert_convert_putstatic(J_SHORT, "S");
+	assert_convert_putstatic(J_BOOLEAN, "Z");
 }
 
 /* MISSING: getfield */
