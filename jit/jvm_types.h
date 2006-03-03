@@ -2,6 +2,7 @@
 #define __JVM_TYPES_H
 
 enum jvm_type {
+	J_VOID,
 	J_REFERENCE,
 	J_BYTE,
 	J_SHORT,

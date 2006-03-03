@@ -1196,6 +1196,8 @@ static unsigned short cp_index(unsigned char *code)
 static enum jvm_type str_to_type(char *type)
 {
 	switch (type[0]) {
+	case 'V':
+		return J_VOID;
 	case 'B':
 		return J_BYTE;
 	case 'C':
@@ -1299,7 +1301,7 @@ static int convert_invokestatic(struct compilation_unit *cu,
 		return -EINVAL;
 	
 	mb = cp_info_ptr(cp, index);
-	value = invoke_expr(J_INT, mb);
+	value = invoke_expr(str_to_type(mb->type), mb);
 	if (!value)
 		return -ENOMEM;
 

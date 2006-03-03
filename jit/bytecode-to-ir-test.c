@@ -1547,7 +1547,8 @@ static void convert_ir_invoke(struct compilation_unit *cu, struct methodblock *m
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 }
 
-static void assert_convert_invokestatic(int nr_args)
+static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
+					char *return_type, int nr_args)
 {
 	struct methodblock mb;
 	unsigned char code[] = {
@@ -1558,7 +1559,7 @@ static void assert_convert_invokestatic(int nr_args)
 	struct statement *stmt;
 	struct expression *args[nr_args];
 
-	mb.type = "I";
+	mb.type = return_type;
 	mb.args_count = nr_args;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
@@ -1568,7 +1569,7 @@ static void assert_convert_invokestatic(int nr_args)
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt->type);
-	assert_invoke_expr(J_INT, &mb, stmt->return_value);
+	assert_invoke_expr(expected_jvm_type, &mb, stmt->return_value);
 	assert_args(args, &stmt->return_value->args_list);
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -1577,8 +1578,9 @@ static void assert_convert_invokestatic(int nr_args)
 
 void test_convert_invokestatic(void)
 {
-	assert_convert_invokestatic(0);
-	assert_convert_invokestatic(2);
+	assert_convert_invokestatic(J_BYTE, "B", 0);
+	assert_convert_invokestatic(J_INT, "I", 0);
+	assert_convert_invokestatic(J_INT, "I", 2);
 }
 
 void test_convert_invokestatic_for_void_return_type(void)
@@ -1598,7 +1600,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt->type);
-	assert_invoke_expr(J_INT, &mb, stmt->expression);
+	assert_invoke_expr(J_VOID, &mb, stmt->expression);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
