@@ -22,6 +22,11 @@ static unsigned long alloc_temporary(void)
 	return ++temporary;
 }
 
+static void *cp_info_ptr(struct constant_pool *cp, unsigned short idx)
+{
+	return (void *) CP_INFO(cp, idx);
+}
+
 static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
 		       unsigned long offset)
 {
@@ -1204,7 +1209,7 @@ static int convert_getstatic(struct compilation_unit *cu,
 	if (type != CONSTANT_Resolved)
 		return -EINVAL;
 	
-	value = field_expr(J_REFERENCE, (struct fieldblock *) CP_INFO(cp, index));
+	value = field_expr(J_REFERENCE, cp_info_ptr(cp, index));
 	if (!value)
 		return -ENOMEM;
 
@@ -1230,7 +1235,7 @@ static int convert_putstatic(struct compilation_unit *cu,
 		return -EINVAL;
 
 	src = stack_pop(cu->expr_stack);
-	dest = field_expr(J_REFERENCE, (struct fieldblock *) CP_INFO(cp, index));
+	dest = field_expr(J_REFERENCE, cp_info_ptr(cp, index));
 	if (!dest)
 		return -ENOMEM;
 	
@@ -1264,7 +1269,7 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	if (type != CONSTANT_Resolved)
 		return -EINVAL;
 	
-	mb = (struct methodblock *) CP_INFO(cp, index);
+	mb = cp_info_ptr(cp, index);
 	value = invoke_expr(J_INT, mb);
 	if (!value)
 		return -ENOMEM;
