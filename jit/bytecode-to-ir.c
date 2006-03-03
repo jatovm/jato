@@ -509,7 +509,16 @@ static int convert_sastore(struct compilation_unit *cu, struct basic_block *bb,
 static int convert_pop(struct compilation_unit *cu, struct basic_block *bb,
 		       unsigned long offset)
 {
-	stack_pop(cu->expr_stack);
+	struct expression *expr = stack_pop(cu->expr_stack);
+	
+	if (expr->type == EXPR_INVOKE) {
+		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
+		if (!expr_stmt)
+			return -ENOMEM;
+			
+		expr_stmt->expression = expr;
+		bb_insert_stmt(bb, expr_stmt);
+	}
 	return 0;
 }
 

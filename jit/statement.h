@@ -13,6 +13,7 @@ enum statement_type {
 	STMT_LABEL,
 	STMT_GOTO,
 	STMT_RETURN,
+	STMT_EXPRESSION,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 };
@@ -36,7 +37,7 @@ struct statement {
 		struct /* STMT_RETURN */ {
 			struct expression *return_value;
 		};
-		/* STMT_NULL_CHECK, STMT_ARRAY_CHECK */
+		/* STMT_EXPRESSION, STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct expression *expression;
 	};
 	struct list_head stmt_list_node;

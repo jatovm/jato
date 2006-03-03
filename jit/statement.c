@@ -45,6 +45,7 @@ void free_statement(struct statement *stmt)
 		if (stmt->return_value)
 			expr_put(stmt->return_value);
 		break;
+	case STMT_EXPRESSION:
 	case STMT_NULL_CHECK:
 	case STMT_ARRAY_CHECK:
 		expr_put(stmt->expression);

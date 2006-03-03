@@ -887,12 +887,15 @@ static void assert_pop_stack(unsigned char opc)
 {
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
+	struct expression *expr;
 
+	expr = value_expr(J_INT, 1);
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
-	stack_push(cu->expr_stack, (void *)1);
+	stack_push(cu->expr_stack, expr);
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(cu->expr_stack));
 
+	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
@@ -1518,6 +1521,29 @@ void test_convert_invokestatic(void)
 {
 	assert_convert_invokestatic(0);
 	assert_convert_invokestatic(2);
+}
+
+void test_convert_invokestatic_when_return_value_is_discarded(void)
+{
+	struct methodblock mb;
+	unsigned char code[] = {
+		OPC_INVOKESTATIC, 0x00, 0x00,
+		OPC_POP
+	};
+	struct compilation_unit *cu;
+	struct statement *stmt;
+
+	mb.args_count = 0;
+
+	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	convert_ir_invoke(cu, &mb);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_int_equals(STMT_EXPRESSION, stmt->type);
+	assert_invoke_expr(J_INT, &mb, stmt->expression);
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	free_compilation_unit(cu);
 }
 
 /* MISSING: invokeinterface */
