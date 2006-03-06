@@ -47,12 +47,9 @@ typedef int32_t		gint32;
 typedef void * gpointer;
 
 #define g_new(struct_type, n_structs) \
-	((struct_type *) malloc (((size_t) sizeof (struct_type)) * ((size_t) (n_structs))))
+	(malloc (((size_t) sizeof (struct_type)) * ((size_t) (n_structs))))
 #define g_free(mem) \
-	do { \
-	if (mem) \
-		free(mem); \
-	} while (0)
+	free(mem);
 #define g_assert(expr) \
 	assert(expr)
 #define g_assert_not_reached() \
