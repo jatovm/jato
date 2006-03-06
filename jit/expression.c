@@ -16,7 +16,6 @@ struct expression *alloc_expression(enum expression_type type,
 	struct expression *expr = malloc(sizeof *expr);
 	if (expr) {
 		memset(expr, 0, sizeof *expr);
-		INIT_LIST_HEAD(&expr->list_node);
 		expr->op = type << EXPR_TYPE_SHIFT;
 		expr->jvm_type = jvm_type;
 		expr->refcount = 1;

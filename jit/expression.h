@@ -66,7 +66,6 @@ struct expression {
 	unsigned long op;
 	unsigned long refcount;
 	enum jvm_type jvm_type;
-	struct list_head list_node;
 	union {
 		struct {
 			struct expression *kids[2];
