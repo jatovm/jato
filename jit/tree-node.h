@@ -10,6 +10,8 @@
 #define BIN_OP_SHIFT	8UL
 #define UNARY_OP_MASK	0x00FF0000UL
 #define UNARY_OP_SHIFT	12UL
+#define STMT_TYPE_MASK	0xFF000000UL
+#define STMT_TYPE_SHIFT	24UL
 		
 struct tree_node {
 	struct tree_node *kids[2];

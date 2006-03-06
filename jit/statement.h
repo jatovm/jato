@@ -19,8 +19,9 @@ enum statement_type {
 };
 
 struct statement {
-	enum statement_type _type;
 	union {
+		struct tree_node node;
+
 		/* STMT_NOP and STMT_LABEL have no fields.  */
 		
 		struct /* STMT_STORE */ {
@@ -45,7 +46,7 @@ struct statement {
 
 static inline enum statement_type stmt_type(struct statement *stmt)
 {
-	return stmt->_type;
+	return (stmt->node.op & STMT_TYPE_MASK) >> STMT_TYPE_SHIFT;
 }
 
 struct statement *alloc_statement(enum statement_type);

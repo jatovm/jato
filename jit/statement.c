@@ -16,7 +16,7 @@ struct statement *alloc_statement(enum statement_type type)
 	if (stmt) {
 		memset(stmt, 0, sizeof *stmt);
 		INIT_LIST_HEAD(&stmt->stmt_list_node);
-		stmt->_type = type;
+		stmt->node.op = type << STMT_TYPE_SHIFT;
 	}
 
 	return stmt;
