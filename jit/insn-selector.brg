@@ -17,6 +17,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static void expr_panic(enum expression_type type, const char *str_type)
+{
+	printf("%02x is %s\n", type, str_type);
+	abort();
+}
+
 static bool is_leaf_expr(enum expression_type type)
 {
 	switch (type) {
@@ -33,24 +39,12 @@ static bool is_leaf_expr(enum expression_type type)
 	return false;
 }
 
-static void panic_leaf(enum expression_type type)
-{
-	printf("%02x is leaf\n", type);
-	abort();
-}
-
 static struct expression *tree_left(struct expression *tree)
 {
 	if (is_leaf_expr(tree->type))
-		panic_leaf(tree->type);
+		expr_panic(tree->type, "leaf");
 
 	return tree->kids[0];
-}
-
-static void panic_unary(enum expression_type type)
-{
-	printf("%02x is unary\n", type);
-	abort();
 }
 
 static bool is_unary_expr(enum expression_type type)
@@ -70,10 +64,10 @@ static bool is_unary_expr(enum expression_type type)
 static struct expression *tree_right(struct expression *tree)
 {
 	if (is_leaf_expr(tree->type))
-		panic_leaf(tree->type);
+		expr_panic(tree->type, "leaf");
 
 	if (is_unary_expr(tree->type))
-		panic_unary(tree->type);
+		expr_panic(tree->type, "unary");
 
 	return tree->kids[1];
 }
