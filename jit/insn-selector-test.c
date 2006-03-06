@@ -48,3 +48,40 @@ void test_rewrite_add_expr(void)
 {
 	assert_rewrite_binop_expr(REG_EAX, 0, 1, 8, 12);
 }
+
+void test_select_insn_for_invoke_without_args(void)
+{
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct statement *stmt;
+	struct insn *insn;
+
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = invoke_expr(J_INT, NULL);
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	insn = insn_entry(bb->insn_list.next);
+	assert_int_equals(INSN_CALL, insn->insn_op);
+
+	free_basic_block(bb);
+}
+
+void test_select_insn_for_args_list(void)
+{
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct statement *stmt;
+
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = args_list_expr(
+		arg_expr(value_expr(J_INT, 0x01)),
+		arg_expr(value_expr(J_INT, 0x02)));
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	assert_int_equals(INSN_PUSH, insn_entry(bb->insn_list.next)->insn_op);
+	assert_int_equals(INSN_PUSH, insn_entry(bb->insn_list.next->next)->insn_op);
+
+	free_basic_block(bb);
+}

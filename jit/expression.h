@@ -48,6 +48,8 @@ enum expression_type {
 	EXPR_CONVERSION,
 	EXPR_FIELD,
 	EXPR_INVOKE,
+	EXPR_ARGS_LIST,
+	EXPR_ARG,
 };
 
 struct expression {
@@ -56,6 +58,10 @@ struct expression {
 	enum jvm_type jvm_type;
 	struct list_head list_node;
 	union {
+		struct {
+			struct expression *kids[2];
+		};
+
 		/*  EXPR_VALUE represents an integer or reference constant
 		    expression (see JLS 15.28.). This expression type can be
 		    used as an rvalue only.  */
@@ -88,9 +94,9 @@ struct expression {
 		    JLS 15.17., 15.18., 15.19., 15.20., 15.21., 15.22.). This
 		    expression type can be used as an rvalue only.  */
 		struct {
-			enum binary_operator binary_operator;
 			struct expression *binary_left;
 			struct expression *binary_right;
+			enum binary_operator binary_operator;
 		};
 
 		/*  EXPR_UNARY_OP represents an unary operation expression
@@ -119,8 +125,23 @@ struct expression {
 		    JLS 15.12.). This expression type can contain side-effects
 		    and can be used as an rvalue only.  */
 		struct {
+			struct expression *args_list;
 			struct methodblock *target_method;
-			struct list_head args_list;
+		};
+
+		/*  EXPR_ARGS_LIST represents list of arguments passed to
+		    method. This expression does not evaluate to a value and
+		    is used for instruction selection only.  */
+		struct {
+			struct expression *args_left;
+			struct expression *args_right;
+		};
+
+		/*  EXPR_ARG represents an argument passed to method. This
+		    expression does not evaluate to a value and is used for
+		    instruction selection only.  */
+		struct {
+			struct expression *arg_expression;
 		};
 	};
 };
@@ -141,5 +162,7 @@ struct expression *unary_op_expr(enum jvm_type, enum unary_operator, struct expr
 struct expression *conversion_expr(enum jvm_type, struct expression *);
 struct expression *field_expr(enum jvm_type, struct fieldblock *);
 struct expression *invoke_expr(enum jvm_type, struct methodblock *);
+struct expression *args_list_expr(struct expression *, struct expression *);
+struct expression *arg_expr(struct expression *);
 
 #endif

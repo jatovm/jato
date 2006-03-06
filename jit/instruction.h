@@ -25,6 +25,8 @@ struct operand {
 enum insn_opcode {
 	ADD,
 	MOV,
+	INSN_CALL,
+	INSN_PUSH,
 };
 
 struct insn {
@@ -40,6 +42,7 @@ static inline struct insn *insn_entry(struct list_head *head)
 	return list_entry(head, struct insn, insn_list_node);
 }
 
+struct insn *alloc_insn(enum insn_opcode);
 struct insn *x86_op_membase_reg(enum insn_opcode, enum reg, unsigned long, enum reg);
 void free_insn(struct insn *);
 

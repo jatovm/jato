@@ -7,6 +7,7 @@
  * This file contains BURG specification for IA-32.
  */
 
+#include <assert.h>
 #include <basic-block.h>
 #include <expression.h>
 #include <instruction.h>
@@ -14,19 +15,85 @@
 #include <statement.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+static bool is_leaf_expr(enum expression_type type)
+{
+	switch (type) {
+	case EXPR_VALUE:
+	case EXPR_FVALUE:
+	case EXPR_LOCAL:
+	case EXPR_TEMPORARY:
+	case EXPR_ARRAY_DEREF:
+	case EXPR_FIELD:
+		return true;
+	default:	
+		break;
+	}
+	return false;
+}
+
+static void panic_leaf(enum expression_type type)
+{
+	printf("%02x is leaf\n", type);
+	abort();
+}
+
+static struct expression *tree_left(struct expression *tree)
+{
+	if (is_leaf_expr(tree->type))
+		panic_leaf(tree->type);
+
+	return tree->kids[0];
+}
+
+static void panic_unary(enum expression_type type)
+{
+	printf("%02x is unary\n", type);
+	abort();
+}
+
+static bool is_unary_expr(enum expression_type type)
+{
+	switch (type) {
+	case EXPR_UNARY_OP:
+	case EXPR_CONVERSION:
+	case EXPR_INVOKE:
+	case EXPR_ARG:
+		return true;
+	default:
+		break;
+	}
+	return false;
+}
+
+static struct expression *tree_right(struct expression *tree)
+{
+	if (is_leaf_expr(tree->type))
+		panic_leaf(tree->type);
+
+	if (is_unary_expr(tree->type))
+		panic_unary(tree->type);
+
+	return tree->kids[1];
+}
 
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct expression
 #define MBTREE_OP(t) ((t)->type)
-#define MBTREE_LEFT(t) ((t)->binary_left)
-#define MBTREE_RIGHT(t) ((t)->binary_right)
+#define MBTREE_LEFT(t) tree_left(t)
+#define MBTREE_RIGHT(t) tree_right(t)
 
 %%
 
-%term EXPR_LOCAL=2 EXPR_ADD=5
+%term EXPR_VALUE=0 EXPR_LOCAL=2 EXPR_ADD=5 EXPR_INVOKE=9 EXPR_ARGS_LIST=10 EXPR_ARG=11
 
 %start reg
+
+reg:	EXPR_VALUE	0
+{
+}
 
 reg:	EXPR_LOCAL	1
 {
@@ -36,6 +103,22 @@ reg:	EXPR_LOCAL	1
 reg:	EXPR_ADD(EXPR_LOCAL, reg) 1
 {
 	bb_insert_insn(s, x86_op_membase_reg(ADD, REG_EBP, 8, REG_EAX));
+}
+
+reg:	EXPR_INVOKE 1
+{
+	struct insn *insn = alloc_insn(INSN_CALL);
+	bb_insert_insn(s, insn);
+}
+
+reg: 	EXPR_ARG(reg)
+{
+	struct insn *insn = alloc_insn(INSN_PUSH);
+	bb_insert_insn(s, insn);
+}
+
+reg:	EXPR_ARGS_LIST(reg, reg)
+{
 }
 
 %%
@@ -82,8 +165,11 @@ void insn_select(struct basic_block *bb)
 		case STMT_RETURN:
 			expr = stmt->return_value;
 			break;
-		default:
+		case STMT_EXPRESSION:
+			expr = stmt->expression;
 			break;
+		default:
+			assert(!"unknown statement type");
 	};
 
 	state = mono_burg_label(expr, bb);

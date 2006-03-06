@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static struct insn *alloc_insn(enum insn_opcode insn_op)
+struct insn *alloc_insn(enum insn_opcode insn_op)
 {
 	struct insn *insn = malloc(sizeof *insn);
 	if (insn) {

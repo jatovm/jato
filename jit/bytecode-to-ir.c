@@ -1282,6 +1282,14 @@ static int convert_putstatic(struct compilation_unit *cu,
 	return 0;
 }
 
+static struct expression *insert_arg(struct expression *root, struct expression *expr)
+{
+	if (!root)
+		return arg_expr(expr);
+
+	return args_list_expr(arg_expr(expr), root);
+}
+
 static int convert_invokestatic(struct compilation_unit *cu,
 				struct basic_block *bb,
 				unsigned long offset)
@@ -1305,11 +1313,10 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	if (!value)
 		return -ENOMEM;
 
-	for (i = 0; i < mb->args_count; i++) {
-		struct expression *param = stack_pop(cu->expr_stack);
-		list_add(&param->list_node, &value->args_list);
-	}
-
+	for (i = 0; i < mb->args_count; i++)
+		value->args_list = insert_arg(value->args_list,
+					      stack_pop(cu->expr_stack));
+	
 	if (mb->type[0] == 'V') {
 		struct statement *expr_stmt;
 		

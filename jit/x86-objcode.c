@@ -169,6 +169,12 @@ static unsigned char to_x86_opcode(enum insn_opcode opcode)
 	case ADD:
 		ret = 0x03;
 		break;
+	case INSN_CALL:
+		assert(!"unknown opcode INSN_CALL");
+		break;
+	case INSN_PUSH:
+		assert(!"unknwon opcode INSN_PUSH");
+		break;
 	}
 	return ret;
 }

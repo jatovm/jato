@@ -1530,13 +1530,30 @@ static void push_args(struct compilation_unit *cu,
 	}
 }
 
-static void assert_args(struct expression **args, struct list_head *head)
+static void assert_args(struct expression **expected_args,
+			int nr_args,
+			struct expression *args_list)
 {
-	struct expression *expr;
-	int i = 0;
+	int i;
+	struct expression *tree = args_list;
+	struct expression *actual_args[nr_args];
 
-	list_for_each_entry(expr, head, list_node)
-		assert_ptr_equals(args[i++], expr);
+	i = 0;
+	while (i < nr_args) {
+		if (tree->type == EXPR_ARGS_LIST) {
+			actual_args[i++] = tree->kids[0]->arg_expression;
+			tree = tree->kids[1];
+		} else if (tree->type == EXPR_ARG) {
+			actual_args[i++] = tree->arg_expression;
+			break;
+		} else
+			assert_true(false);
+	}
+
+	assert_int_equals(i, nr_args);
+	
+	for (i = 0; i < nr_args; i++)
+		assert_ptr_equals(expected_args[i], actual_args[i]);
 }
 
 static void convert_ir_invoke(struct compilation_unit *cu, struct methodblock *mb)
@@ -1570,7 +1587,7 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 
 	assert_int_equals(STMT_RETURN, stmt->type);
 	assert_invoke_expr(expected_jvm_type, &mb, stmt->return_value);
-	assert_args(args, &stmt->return_value->args_list);
+	assert_args(args, nr_args, stmt->return_value->args_list);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
@@ -1580,7 +1597,10 @@ void test_convert_invokestatic(void)
 {
 	assert_convert_invokestatic(J_BYTE, "B", 0);
 	assert_convert_invokestatic(J_INT, "I", 0);
+	assert_convert_invokestatic(J_INT, "I", 1);
 	assert_convert_invokestatic(J_INT, "I", 2);
+	assert_convert_invokestatic(J_INT, "I", 3);
+	assert_convert_invokestatic(J_INT, "I", 5);
 }
 
 void test_convert_invokestatic_for_void_return_type(void)

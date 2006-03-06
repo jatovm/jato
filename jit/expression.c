@@ -24,14 +24,6 @@ struct expression *alloc_expression(enum expression_type type,
 	return expr;
 }
 
-static void free_expression_list(struct list_head *head)
-{
-	struct expression *expr, *tmp;
-
-	list_for_each_entry_safe(expr, tmp, head, list_node)
-		expr_put(expr);
-}
-
 void free_expression(struct expression *expr)
 {
 	if (!expr)
@@ -68,7 +60,15 @@ void free_expression(struct expression *expr)
 		/* nothing to do */
 		break;
 	case EXPR_INVOKE:
-		free_expression_list(&expr->args_list);
+		if (expr->args_list)
+			expr_put(expr->args_list);
+		break;
+	case EXPR_ARGS_LIST:
+		expr_put(expr->args_left);
+		expr_put(expr->args_right);
+		break;
+	case EXPR_ARG:
+		expr_put(expr->arg_expression);
 		break;
 	};
 	free(expr);
@@ -183,8 +183,26 @@ struct expression *invoke_expr(enum jvm_type jvm_type,
 {
 	struct expression *expr = alloc_expression(EXPR_INVOKE, jvm_type);
 	if (expr) {
-		INIT_LIST_HEAD(&expr->args_list);
 		expr->target_method = target_method;
 	}
+	return expr;
+}
+
+struct expression *args_list_expr(struct expression *args_left,
+				  struct expression *args_right)
+{
+	struct expression *expr = alloc_expression(EXPR_ARGS_LIST, J_VOID);
+	if (expr) {
+		expr->args_left = args_left;
+		expr->args_right = args_right;
+	}
+	return expr;
+}
+
+struct expression *arg_expr(struct expression *arg_expression)
+{
+	struct expression *expr = alloc_expression(EXPR_ARG, J_VOID);
+	if (expr)
+		expr->arg_expression = arg_expression;
 	return expr;
 }
