@@ -46,7 +46,7 @@ static struct expression *tree_left(struct expression *tree)
 	if (is_leaf_expr(type))
 		expr_panic(type, "leaf");
 
-	return tree->kids[0];
+	return tree->node.kids[0];
 }
 
 static bool is_unary_expr(enum expression_type type)
@@ -73,7 +73,7 @@ static struct expression *tree_right(struct expression *tree)
 	if (is_unary_expr(type))
 		expr_panic(type, "unary");
 
-	return tree->kids[1];
+	return tree->node.kids[1];
 }
 
 #define MBCGEN_TYPE struct basic_block

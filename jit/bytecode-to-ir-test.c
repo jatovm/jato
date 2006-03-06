@@ -1541,8 +1541,8 @@ static void assert_args(struct expression **expected_args,
 	i = 0;
 	while (i < nr_args) {
 		if (expr_type(tree) == EXPR_ARGS_LIST) {
-			actual_args[i++] = tree->kids[0]->arg_expression;
-			tree = tree->kids[1];
+			actual_args[i++] = tree->node.kids[0]->arg_expression;
+			tree = tree->node.kids[1];
 		} else if (expr_type(tree) == EXPR_ARG) {
 			actual_args[i++] = tree->arg_expression;
 			break;

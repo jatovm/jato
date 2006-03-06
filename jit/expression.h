@@ -61,15 +61,17 @@ enum expression_type {
 #define BIN_OP_SHIFT	8UL
 #define UNARY_OP_MASK	0x00FF0000UL
 #define UNARY_OP_SHIFT	12UL
+		
+struct tree_node {
+	struct expression *kids[2];
+	unsigned long op;
+};
 
 struct expression {
-	unsigned long op;
 	unsigned long refcount;
 	enum jvm_type jvm_type;
 	union {
-		struct {
-			struct expression *kids[2];
-		};
+		struct tree_node node;
 
 		/*  EXPR_VALUE represents an integer or reference constant
 		    expression (see JLS 15.28.). This expression type can be
@@ -155,17 +157,17 @@ struct expression {
 
 static inline enum expression_type expr_type(struct expression *expr)
 {
-	return (expr->op & EXPR_TYPE_MASK) >> EXPR_TYPE_SHIFT;
+	return (expr->node.op & EXPR_TYPE_MASK) >> EXPR_TYPE_SHIFT;
 }
 
 static inline enum binary_operator expr_bin_op(struct expression *expr)
 {
-	return (expr->op & BIN_OP_MASK) >> BIN_OP_SHIFT;
+	return (expr->node.op & BIN_OP_MASK) >> BIN_OP_SHIFT;
 }
 
 static inline enum unary_operator expr_unary_op(struct expression *expr)
 {
-	return (expr->op & UNARY_OP_MASK) >> UNARY_OP_SHIFT;
+	return (expr->node.op & UNARY_OP_MASK) >> UNARY_OP_SHIFT;
 }
 
 struct expression *alloc_expression(enum expression_type, enum jvm_type);
