@@ -41,8 +41,10 @@ static bool is_leaf_expr(enum expression_type type)
 
 static struct expression *tree_left(struct expression *tree)
 {
-	if (is_leaf_expr(tree->type))
-		expr_panic(tree->type, "leaf");
+	enum expression_type type = expr_type(tree);
+
+	if (is_leaf_expr(type))
+		expr_panic(type, "leaf");
 
 	return tree->kids[0];
 }
@@ -63,11 +65,13 @@ static bool is_unary_expr(enum expression_type type)
 
 static struct expression *tree_right(struct expression *tree)
 {
-	if (is_leaf_expr(tree->type))
-		expr_panic(tree->type, "leaf");
+	enum expression_type type = expr_type(tree);
 
-	if (is_unary_expr(tree->type))
-		expr_panic(tree->type, "unary");
+	if (is_leaf_expr(type))
+		expr_panic(type, "leaf");
+
+	if (is_unary_expr(type))
+		expr_panic(type, "unary");
 
 	return tree->kids[1];
 }
@@ -75,7 +79,7 @@ static struct expression *tree_right(struct expression *tree)
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct expression
-#define MBTREE_OP(t) ((t)->type)
+#define MBTREE_OP(t) expr_type(t)
 #define MBTREE_LEFT(t) tree_left(t)
 #define MBTREE_RIGHT(t) tree_right(t)
 

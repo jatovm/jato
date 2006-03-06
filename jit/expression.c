@@ -17,7 +17,7 @@ struct expression *alloc_expression(enum expression_type type,
 	if (expr) {
 		memset(expr, 0, sizeof *expr);
 		INIT_LIST_HEAD(&expr->list_node);
-		expr->type = type;
+		expr->_type = type;
 		expr->jvm_type = jvm_type;
 		expr->refcount = 1;
 	}
@@ -29,7 +29,7 @@ void free_expression(struct expression *expr)
 	if (!expr)
 		return;
 
-	switch (expr->type) {
+	switch (expr_type(expr)) {
 	case EXPR_VALUE:
 	case EXPR_FVALUE:
 	case EXPR_LOCAL:
@@ -141,7 +141,7 @@ struct expression *binop_expr(enum jvm_type jvm_type,
 {
 	struct expression *expr = alloc_expression(EXPR_BINOP, jvm_type);
 	if (expr) {
-		expr->binary_operator = binary_operator;
+		expr->_binary_operator = binary_operator;
 		expr->binary_left = binary_left;
 		expr->binary_right = binary_right;
 	}
@@ -154,7 +154,7 @@ struct expression *unary_op_expr(enum jvm_type jvm_type,
 {
 	struct expression *expr = alloc_expression(EXPR_UNARY_OP, jvm_type);
 	if (expr) {
-		expr->unary_operator = unary_operator;
+		expr->_unary_operator = unary_operator;
 		expr->unary_expression = unary_expression;
 	}
 	return expr;

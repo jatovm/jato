@@ -36,7 +36,7 @@ static void assert_value_expr(enum jvm_type expected_jvm_type,
 			      long long expected_value,
 			      struct expression *expression)
 {
-	assert_int_equals(EXPR_VALUE, expression->type);
+	assert_int_equals(EXPR_VALUE, expr_type(expression));
 	assert_int_equals(expected_jvm_type, expression->jvm_type);
 	assert_int_equals(expected_value, expression->value);
 }
@@ -45,7 +45,7 @@ static void assert_fvalue_expr(enum jvm_type expected_jvm_type,
 			       double expected_value,
 			       struct expression *expression)
 {
-	assert_int_equals(EXPR_FVALUE, expression->type);
+	assert_int_equals(EXPR_FVALUE, expr_type(expression));
 	assert_int_equals(expected_jvm_type, expression->jvm_type);
 	assert_float_equals(expected_value, expression->fvalue, 0.01f);
 }
@@ -54,7 +54,7 @@ static void assert_local_expr(enum jvm_type expected_jvm_type,
 			      unsigned long expected_index,
 			      struct expression *expression)
 {
-	assert_int_equals(EXPR_LOCAL, expression->type);
+	assert_int_equals(EXPR_LOCAL, expr_type(expression));
 	assert_int_equals(expected_jvm_type, expression->jvm_type);
 	assert_int_equals(expected_index, expression->local_index);
 }
@@ -62,7 +62,7 @@ static void assert_local_expr(enum jvm_type expected_jvm_type,
 static void assert_temporary_expr(unsigned long expected,
 				  struct expression *expression)
 {
-	assert_int_equals(EXPR_TEMPORARY, expression->type);
+	assert_int_equals(EXPR_TEMPORARY, expr_type(expression));
 	assert_int_equals(expected, expression->temporary);
 }
 
@@ -71,7 +71,7 @@ static void assert_array_deref_expr(enum jvm_type expected_jvm_type,
 				    struct expression *expected_index,
 				    struct expression *expression)
 {
-	assert_int_equals(EXPR_ARRAY_DEREF, expression->type);
+	assert_int_equals(EXPR_ARRAY_DEREF, expr_type(expression));
 	assert_int_equals(expected_jvm_type, expression->jvm_type);
 	assert_ptr_equals(expected_arrayref, expression->arrayref);
 	assert_ptr_equals(expected_index, expression->array_index);
@@ -81,9 +81,9 @@ static void __assert_binop_expr(enum jvm_type jvm_type,
 				enum binary_operator binary_operator,
 				struct expression *expression)
 {
-	assert_int_equals(EXPR_BINOP, expression->type);
+	assert_int_equals(EXPR_BINOP, expr_type(expression));
 	assert_int_equals(jvm_type, expression->jvm_type);
-	assert_int_equals(binary_operator, expression->binary_operator);
+	assert_int_equals(binary_operator, expr_bin_op(expression));
 }
 
 static void assert_binop_expr(enum jvm_type jvm_type,
@@ -102,9 +102,9 @@ static void assert_unary_op_expr(enum jvm_type jvm_type,
 				 struct expression *expression,
 				 struct expression *unary_expression)
 {
-	assert_int_equals(EXPR_UNARY_OP, unary_expression->type);
+	assert_int_equals(EXPR_UNARY_OP, expr_type(unary_expression));
 	assert_int_equals(jvm_type, unary_expression->jvm_type);
-	assert_int_equals(unary_operator, unary_expression->unary_operator);
+	assert_int_equals(unary_operator, expr_unary_op(unary_expression));
 	assert_ptr_equals(expression, unary_expression->unary_expression);
 }
 
@@ -112,7 +112,7 @@ static void assert_conv_expr(enum jvm_type expected_type,
 			     struct expression *expected_expression,
 			     struct expression *conversion_expression)
 {
-	assert_int_equals(EXPR_CONVERSION, conversion_expression->type);
+	assert_int_equals(EXPR_CONVERSION, expr_type(conversion_expression));
 	assert_int_equals(expected_type, conversion_expression->jvm_type);
 	assert_ptr_equals(expected_expression,
 			  conversion_expression->from_expression);
@@ -122,7 +122,7 @@ static void assert_field_expr(enum jvm_type expected_type,
 			      struct fieldblock *expected_field,
 			      struct expression *field_expression)
 {
-	assert_int_equals(EXPR_FIELD, field_expression->type);
+	assert_int_equals(EXPR_FIELD, expr_type(field_expression));
 	assert_int_equals(expected_type, field_expression->jvm_type);
 	assert_ptr_equals(expected_field, field_expression->field);
 }
@@ -131,7 +131,7 @@ static void assert_invoke_expr(enum jvm_type expected_type,
 			       struct methodblock *expected_method,
 			       struct expression *invoke_expression)
 {
-	assert_int_equals(EXPR_INVOKE, invoke_expression->type);
+	assert_int_equals(EXPR_INVOKE, expr_type(invoke_expression));
 	assert_int_equals(expected_type, invoke_expression->jvm_type);
 	assert_ptr_equals(expected_method, invoke_expression->target_method);
 }
@@ -1540,10 +1540,10 @@ static void assert_args(struct expression **expected_args,
 
 	i = 0;
 	while (i < nr_args) {
-		if (tree->type == EXPR_ARGS_LIST) {
+		if (expr_type(tree) == EXPR_ARGS_LIST) {
 			actual_args[i++] = tree->kids[0]->arg_expression;
 			tree = tree->kids[1];
-		} else if (tree->type == EXPR_ARG) {
+		} else if (expr_type(tree) == EXPR_ARG) {
 			actual_args[i++] = tree->arg_expression;
 			break;
 		} else

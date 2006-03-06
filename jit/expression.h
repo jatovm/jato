@@ -53,7 +53,7 @@ enum expression_type {
 };
 
 struct expression {
-	enum expression_type type;
+	enum expression_type _type;
 	unsigned long refcount;
 	enum jvm_type jvm_type;
 	struct list_head list_node;
@@ -96,15 +96,15 @@ struct expression {
 		struct {
 			struct expression *binary_left;
 			struct expression *binary_right;
-			enum binary_operator binary_operator;
+			enum binary_operator _binary_operator;
 		};
 
 		/*  EXPR_UNARY_OP represents an unary operation expression
 		    (see JLS 15.15.). This expression type can be used as an
 		    rvalue only.  */
 		struct {
-			enum unary_operator unary_operator;
 			struct expression *unary_expression;
+			enum unary_operator _unary_operator;
 		};
 
 		/*  EXPR_CONVERSION represents a type conversion (see JLS
@@ -145,6 +145,21 @@ struct expression {
 		};
 	};
 };
+
+static inline enum expression_type expr_type(struct expression *expr)
+{
+	return expr->_type;
+}
+
+static inline enum binary_operator expr_bin_op(struct expression *expr)
+{
+	return expr->_binary_operator;
+}
+
+static inline enum unary_operator expr_unary_op(struct expression *expr)
+{
+	return expr->_unary_operator;
+}
 
 struct expression *alloc_expression(enum expression_type, enum jvm_type);
 void free_expression(struct expression *);
