@@ -1,5 +1,6 @@
 CC = gcc
-CCFLAGS = -rdynamic -g -Wall -Wundef -Werror -Os -std=gnu99
+CCFLAGS = -rdynamic -g -Wall -Wundef -Werror -Os -std=gnu99 \
+	-DYYENABLE_NLS=0 -DYYLTYPE_IS_TRIVIAL=0
 INCLUDE = -I. -I.. -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
 LIBS = -lglib-2.0
 OBJS = monoburg.o parser.o
