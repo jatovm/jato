@@ -10,8 +10,6 @@
 	* bytecode_size() for TABLESWITCH and LOOKUPSWITCH
 	* Bytecode sequences where expression stack is non-empty in
 	  basic-block boundary (e.g. the 'x ? y : z' expression).
-- Instruction selection
-	* Remove dependency to glib
 - Register allocation
 	* Linear scan register allocator [Poletto99]
 - JIT code execution

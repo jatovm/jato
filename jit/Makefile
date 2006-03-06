@@ -3,8 +3,8 @@ TEST_SUITE=test-suite.c
 
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
-INCLUDE = -I. -I../src -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
-LIBS = -lglib-2.0
+INCLUDE = -I. -I../src -I./glib
+LIBS =
 OBJS = alloc.o basic-block.o bitmap.o bytecodes.o bytecode-cfg-builder.o \
 	bytecode-to-ir.o compilation-unit.o jit-compiler.o instruction.o \
 	insn-selector.o stack.o statement.o expression.o x86-objcode.o
