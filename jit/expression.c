@@ -17,7 +17,7 @@ struct expression *alloc_expression(enum expression_type type,
 	if (expr) {
 		memset(expr, 0, sizeof *expr);
 		INIT_LIST_HEAD(&expr->list_node);
-		expr->_type = type;
+		expr->op = type << EXPR_TYPE_SHIFT;
 		expr->jvm_type = jvm_type;
 		expr->refcount = 1;
 	}
@@ -141,7 +141,7 @@ struct expression *binop_expr(enum jvm_type jvm_type,
 {
 	struct expression *expr = alloc_expression(EXPR_BINOP, jvm_type);
 	if (expr) {
-		expr->_binary_operator = binary_operator;
+		expr->op |= binary_operator << BIN_OP_SHIFT;
 		expr->binary_left = binary_left;
 		expr->binary_right = binary_right;
 	}
@@ -154,7 +154,7 @@ struct expression *unary_op_expr(enum jvm_type jvm_type,
 {
 	struct expression *expr = alloc_expression(EXPR_UNARY_OP, jvm_type);
 	if (expr) {
-		expr->_unary_operator = unary_operator;
+		expr->op |= unary_operator << UNARY_OP_SHIFT;
 		expr->unary_expression = unary_expression;
 	}
 	return expr;

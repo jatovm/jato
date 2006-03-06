@@ -52,8 +52,18 @@ enum expression_type {
 	EXPR_ARG,
 };
 
+/*  Expression type, binary operator, and unary operator are encoded to
+    single field because BURG grammar needs all of them to distinguish
+    between tree node types.   */
+#define EXPR_TYPE_MASK	0x000000FFUL
+#define EXPR_TYPE_SHIFT	0UL
+#define BIN_OP_MASK	0x0000FF00UL
+#define BIN_OP_SHIFT	8UL
+#define UNARY_OP_MASK	0x00FF0000UL
+#define UNARY_OP_SHIFT	12UL
+
 struct expression {
-	enum expression_type _type;
+	unsigned long op;
 	unsigned long refcount;
 	enum jvm_type jvm_type;
 	struct list_head list_node;
@@ -96,7 +106,6 @@ struct expression {
 		struct {
 			struct expression *binary_left;
 			struct expression *binary_right;
-			enum binary_operator _binary_operator;
 		};
 
 		/*  EXPR_UNARY_OP represents an unary operation expression
@@ -104,7 +113,6 @@ struct expression {
 		    rvalue only.  */
 		struct {
 			struct expression *unary_expression;
-			enum unary_operator _unary_operator;
 		};
 
 		/*  EXPR_CONVERSION represents a type conversion (see JLS
@@ -148,17 +156,17 @@ struct expression {
 
 static inline enum expression_type expr_type(struct expression *expr)
 {
-	return expr->_type;
+	return (expr->op & EXPR_TYPE_MASK) >> EXPR_TYPE_SHIFT;
 }
 
 static inline enum binary_operator expr_bin_op(struct expression *expr)
 {
-	return expr->_binary_operator;
+	return (expr->op & BIN_OP_MASK) >> BIN_OP_SHIFT;
 }
 
 static inline enum unary_operator expr_unary_op(struct expression *expr)
 {
-	return expr->_unary_operator;
+	return (expr->op & UNARY_OP_MASK) >> UNARY_OP_SHIFT;
 }
 
 struct expression *alloc_expression(enum expression_type, enum jvm_type);
