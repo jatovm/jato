@@ -73,8 +73,8 @@ static void assert_array_deref_expr(enum jvm_type expected_jvm_type,
 {
 	assert_int_equals(EXPR_ARRAY_DEREF, expr_type(expression));
 	assert_int_equals(expected_jvm_type, expression->jvm_type);
-	assert_ptr_equals(expected_arrayref, expression->arrayref);
-	assert_ptr_equals(expected_index, expression->array_index);
+	assert_ptr_equals(expected_arrayref, to_expr(expression->arrayref));
+	assert_ptr_equals(expected_index, to_expr(expression->array_index));
 }
 
 static void __assert_binop_expr(enum jvm_type jvm_type,
@@ -93,8 +93,8 @@ static void assert_binop_expr(enum jvm_type jvm_type,
 			      struct expression *expression)
 {
 	__assert_binop_expr(jvm_type, binary_operator, expression);
-	assert_ptr_equals(binary_left, expression->binary_left);
-	assert_ptr_equals(binary_right, expression->binary_right);
+	assert_ptr_equals(binary_left, to_expr(expression->binary_left));
+	assert_ptr_equals(binary_right, to_expr(expression->binary_right));
 }
 
 static void assert_unary_op_expr(enum jvm_type jvm_type,
@@ -105,7 +105,7 @@ static void assert_unary_op_expr(enum jvm_type jvm_type,
 	assert_int_equals(EXPR_UNARY_OP, expr_type(unary_expression));
 	assert_int_equals(jvm_type, unary_expression->jvm_type);
 	assert_int_equals(unary_operator, expr_unary_op(unary_expression));
-	assert_ptr_equals(expression, unary_expression->unary_expression);
+	assert_ptr_equals(expression, to_expr(unary_expression->unary_expression));
 }
 
 static void assert_conv_expr(enum jvm_type expected_type,
@@ -115,7 +115,7 @@ static void assert_conv_expr(enum jvm_type expected_type,
 	assert_int_equals(EXPR_CONVERSION, expr_type(conversion_expression));
 	assert_int_equals(expected_type, conversion_expression->jvm_type);
 	assert_ptr_equals(expected_expression,
-			  conversion_expression->from_expression);
+			  to_expr(conversion_expression->from_expression));
 }
 
 static void assert_field_expr(enum jvm_type expected_type,
@@ -1156,7 +1156,7 @@ static void assert_iinc_stmt(unsigned char expected_index,
 	store_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 	local_expression = store_stmt->store_dest;
 	assert_local_expr(J_INT, expected_index, local_expression);
-	const_expression = store_stmt->store_src->binary_right;
+	const_expression = to_expr(store_stmt->store_src->binary_right);
 	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression,
 			  store_stmt->store_src);
 	assert_local_expr(J_INT, expected_index, local_expression);
@@ -1289,8 +1289,8 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	assert_int_equals(STMT_IF, if_stmt->type);
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);
-	assert_ptr_equals(if_value, if_stmt->if_conditional->binary_left);
-	assert_value_expr(J_INT, 0, if_stmt->if_conditional->binary_right);
+	assert_ptr_equals(if_value, to_expr(if_stmt->if_conditional->binary_left));
+	assert_value_expr(J_INT, 0, to_expr(if_stmt->if_conditional->binary_right));
 
 	free_compilation_unit(cu);
 }
@@ -1541,10 +1541,11 @@ static void assert_args(struct expression **expected_args,
 	i = 0;
 	while (i < nr_args) {
 		if (expr_type(tree) == EXPR_ARGS_LIST) {
-			actual_args[i++] = tree->node.kids[0]->arg_expression;
-			tree = tree->node.kids[1];
+			struct expression *expr = to_expr(tree->node.kids[0]);
+			actual_args[i++] = to_expr(expr->arg_expression);
+			tree = to_expr(tree->node.kids[1]);
 		} else if (expr_type(tree) == EXPR_ARG) {
-			actual_args[i++] = tree->arg_expression;
+			actual_args[i++] = to_expr(tree->arg_expression);
 			break;
 		} else
 			assert_true(false);
@@ -1587,7 +1588,7 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 
 	assert_int_equals(STMT_RETURN, stmt->type);
 	assert_invoke_expr(expected_jvm_type, &mb, stmt->return_value);
-	assert_args(args, nr_args, stmt->return_value->args_list);
+	assert_args(args, nr_args, to_expr(stmt->return_value->args_list));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);

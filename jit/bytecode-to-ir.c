@@ -1297,7 +1297,7 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	struct methodblock *mb;
 	struct constant_pool *cp;
 	unsigned short index;
-	struct expression *value;
+	struct expression *value, *args_list = NULL;
 	u1 type;
 	int i;
 
@@ -1314,9 +1314,11 @@ static int convert_invokestatic(struct compilation_unit *cu,
 		return -ENOMEM;
 
 	for (i = 0; i < mb->args_count; i++)
-		value->args_list = insert_arg(value->args_list,
-					      stack_pop(cu->expr_stack));
-	
+		args_list = insert_arg(args_list, stack_pop(cu->expr_stack));
+
+	if (args_list)
+		value->args_list = &args_list->node;
+
 	if (mb->type[0] == 'V') {
 		struct statement *expr_stmt;
 		

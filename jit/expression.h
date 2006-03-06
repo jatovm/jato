@@ -63,7 +63,7 @@ enum expression_type {
 #define UNARY_OP_SHIFT	12UL
 		
 struct tree_node {
-	struct expression *kids[2];
+	struct tree_node *kids[2];
 	unsigned long op;
 };
 
@@ -97,30 +97,30 @@ struct expression {
 		    (see JLS 15.13.). This expression type can be used as
 		    both lvalue and rvalue.  */
 		struct {
-			struct expression *arrayref;
-			struct expression *array_index;
+			struct tree_node *arrayref;
+			struct tree_node *array_index;
 		};
 
 		/*  EXPR_BINOP represents an binary operation expression (see
 		    JLS 15.17., 15.18., 15.19., 15.20., 15.21., 15.22.). This
 		    expression type can be used as an rvalue only.  */
 		struct {
-			struct expression *binary_left;
-			struct expression *binary_right;
+			struct tree_node *binary_left;
+			struct tree_node *binary_right;
 		};
 
 		/*  EXPR_UNARY_OP represents an unary operation expression
 		    (see JLS 15.15.). This expression type can be used as an
 		    rvalue only.  */
 		struct {
-			struct expression *unary_expression;
+			struct tree_node *unary_expression;
 		};
 
 		/*  EXPR_CONVERSION represents a type conversion (see JLS
 		    5.1.).  This expression type can be used as an rvalue
 		    only.  */
 		struct {
-			struct expression *from_expression;
+			struct tree_node *from_expression;
 		};
 
 		/*  EXPR_FIELD represents a field access expression (see JLS
@@ -134,7 +134,7 @@ struct expression {
 		    JLS 15.12.). This expression type can contain side-effects
 		    and can be used as an rvalue only.  */
 		struct {
-			struct expression *args_list;
+			struct tree_node *args_list;
 			struct methodblock *target_method;
 		};
 
@@ -142,18 +142,23 @@ struct expression {
 		    method. This expression does not evaluate to a value and
 		    is used for instruction selection only.  */
 		struct {
-			struct expression *args_left;
-			struct expression *args_right;
+			struct tree_node *args_left;
+			struct tree_node *args_right;
 		};
 
 		/*  EXPR_ARG represents an argument passed to method. This
 		    expression does not evaluate to a value and is used for
 		    instruction selection only.  */
 		struct {
-			struct expression *arg_expression;
+			struct tree_node *arg_expression;
 		};
 	};
 };
+
+static inline struct expression *to_expr(struct tree_node *node)
+{
+	return container_of(node, struct expression, node);
+}
 
 static inline enum expression_type expr_type(struct expression *expr)
 {
