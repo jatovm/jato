@@ -16,7 +16,7 @@ struct statement *alloc_statement(enum statement_type type)
 	if (stmt) {
 		memset(stmt, 0, sizeof *stmt);
 		INIT_LIST_HEAD(&stmt->stmt_list_node);
-		stmt->type = type;
+		stmt->_type = type;
 	}
 
 	return stmt;
@@ -27,7 +27,7 @@ void free_statement(struct statement *stmt)
 	if (!stmt)
 		return;
 
-	switch (stmt->type) {
+	switch (stmt_type(stmt)) {
 	case STMT_NOP:
 		/* nothing to do */
 		break;

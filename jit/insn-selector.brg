@@ -159,7 +159,7 @@ void insn_select(struct basic_block *bb)
 	MBState *state;
 
 	stmt = list_entry(bb->stmt_list.next, struct statement, stmt_list_node);
-	switch (stmt->type) {
+	switch (stmt_type(stmt)) {
 		case STMT_RETURN:
 			expr = stmt->return_value;
 			break;

@@ -19,7 +19,7 @@ enum statement_type {
 };
 
 struct statement {
-	enum statement_type type;
+	enum statement_type _type;
 	union {
 		/* STMT_NOP and STMT_LABEL have no fields.  */
 		
@@ -42,6 +42,11 @@ struct statement {
 	};
 	struct list_head stmt_list_node;
 };
+
+static inline enum statement_type stmt_type(struct statement *stmt)
+{
+	return stmt->_type;
+}
 
 struct statement *alloc_statement(enum statement_type);
 void free_statement(struct statement *);

@@ -138,20 +138,20 @@ static void assert_invoke_expr(enum jvm_type expected_type,
 
 static void assert_store_stmt(struct statement *stmt)
 {
-	assert_int_equals(STMT_STORE, stmt->type);
+	assert_int_equals(STMT_STORE, stmt_type(stmt));
 }
 
 static void assert_return_stmt(struct expression *return_value,
 			       struct statement *stmt)
 {
-	assert_int_equals(STMT_RETURN, stmt->type);
+	assert_int_equals(STMT_RETURN, stmt_type(stmt));
 	assert_ptr_equals(return_value, stmt->return_value);
 }
 
 static void assert_null_check_stmt(struct expression *expected,
 				   struct statement *actual)
 {
-	assert_int_equals(STMT_NULL_CHECK, actual->type);
+	assert_int_equals(STMT_NULL_CHECK, stmt_type(actual));
 	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
 }
 
@@ -160,7 +160,7 @@ static void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
 				   struct expression *expected_index,
 				   struct statement *actual)
 {
-	assert_int_equals(STMT_ARRAY_CHECK, actual->type);
+	assert_int_equals(STMT_ARRAY_CHECK, stmt_type(actual));
 	assert_array_deref_expr(expected_jvm_type, expected_arrayref,
 				expected_index, actual->expression);
 }
@@ -240,7 +240,7 @@ void test_convert_nop(void)
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_int_equals(STMT_NOP, stmt->type);
+	assert_int_equals(STMT_NOP, stmt_type(stmt));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
@@ -1286,7 +1286,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	if_stmt = stmt_entry(stmt_bb->stmt_list.next);
-	assert_int_equals(STMT_IF, if_stmt->type);
+	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);
 	assert_ptr_equals(if_value, to_expr(if_stmt->if_conditional->binary_left));
@@ -1331,7 +1331,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	if_stmt = stmt_entry(stmt_bb->stmt_list.next);
-	assert_int_equals(STMT_IF, if_stmt->type);
+	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	assert_binop_expr(jvm_type, expected_operator, if_value1, if_value2,
 			  if_stmt->if_conditional);
@@ -1373,7 +1373,7 @@ void test_convert_goto(void)
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	goto_stmt = stmt_entry(goto_bb->stmt_list.next);
-	assert_int_equals(STMT_GOTO, goto_stmt->type);
+	assert_int_equals(STMT_GOTO, stmt_type(goto_stmt));
 	assert_ptr_equals(target_bb->label_stmt, goto_stmt->goto_target);
 
 	free_compilation_unit(cu);
@@ -1586,7 +1586,7 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 	convert_ir_invoke(cu, &mb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
-	assert_int_equals(STMT_RETURN, stmt->type);
+	assert_int_equals(STMT_RETURN, stmt_type(stmt));
 	assert_invoke_expr(expected_jvm_type, &mb, stmt->return_value);
 	assert_args(args, nr_args, to_expr(stmt->return_value->args_list));
 	assert_true(stack_is_empty(cu->expr_stack));
@@ -1620,7 +1620,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 	convert_ir_invoke(cu, &mb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
-	assert_int_equals(STMT_EXPRESSION, stmt->type);
+	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_VOID, &mb, stmt->expression);
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -1644,7 +1644,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 	convert_ir_invoke(cu, &mb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
-	assert_int_equals(STMT_EXPRESSION, stmt->type);
+	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_INT, &mb, stmt->expression);
 	assert_true(stack_is_empty(cu->expr_stack));
 
