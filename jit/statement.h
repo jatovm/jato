@@ -29,8 +29,8 @@ struct statement {
 			struct tree_node *store_src;
 		};
 		struct /* STMT_IF */ {
-			struct expression *if_conditional;
-			struct statement *if_true;
+			struct tree_node *if_conditional;
+			struct tree_node *if_true;
 		};
 		struct /* STMT_GOTO */ {
 			struct statement *goto_target;
@@ -43,6 +43,11 @@ struct statement {
 	};
 	struct list_head stmt_list_node;
 };
+
+static inline struct statement *to_stmt(struct tree_node *node)
+{
+	return container_of(node, struct statement, node);
+}
 
 static inline enum statement_type stmt_type(struct statement *stmt)
 {

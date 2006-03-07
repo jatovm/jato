@@ -36,7 +36,7 @@ void free_statement(struct statement *stmt)
 		expr_put(to_expr(stmt->store_src));
 		break;
 	case STMT_IF:
-		expr_put(stmt->if_conditional);
+		expr_put(to_expr(stmt->if_conditional));
 		break;
 	case STMT_LABEL:
 	case STMT_GOTO:

@@ -1020,8 +1020,8 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	if (!if_stmt)
 		goto failed_put_expr;
 
-	if_stmt->if_true = true_bb->label_stmt;
-	if_stmt->if_conditional = if_conditional;
+	if_stmt->if_true = &true_bb->label_stmt->node;
+	if_stmt->if_conditional = &if_conditional->node;
 
 	return if_stmt;
       failed_put_expr:

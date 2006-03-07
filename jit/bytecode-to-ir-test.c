@@ -1288,9 +1288,9 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	if_stmt = stmt_entry(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
-	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);
-	assert_ptr_equals(if_value, to_expr(if_stmt->if_conditional->binary_left));
-	assert_value_expr(J_INT, 0, to_expr(if_stmt->if_conditional->binary_right));
+	__assert_binop_expr(J_INT, expected_operator, to_expr(if_stmt->if_conditional));
+	assert_ptr_equals(if_value, to_expr(to_expr(if_stmt->if_conditional)->binary_left));
+	assert_value_expr(J_INT, 0, to_expr(to_expr(if_stmt->if_conditional)->binary_right));
 
 	free_compilation_unit(cu);
 }
@@ -1334,7 +1334,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	assert_binop_expr(jvm_type, expected_operator, if_value1, if_value2,
-			  if_stmt->if_conditional);
+			  to_expr(if_stmt->if_conditional));
 
 	free_compilation_unit(cu);
 }
