@@ -69,6 +69,9 @@ void free_expression(struct expression *expr)
 	case EXPR_ARG:
 		expr_put(to_expr(expr->arg_expression));
 		break;
+	case EXPR_LAST:
+		assert(!"EXPR_LAST is not a real type. Don't use it");
+		break;
 	};
 	free(expr);
 }

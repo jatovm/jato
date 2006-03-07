@@ -5,39 +5,6 @@
 #include <jvm_types.h>
 #include <tree-node.h>
 
-enum binary_operator {
-	/* Arithmetic */
-	OP_ADD,
-	OP_SUB,
-	OP_MUL,
-	OP_DIV,
-	OP_REM,
-
-	/* Bitwise */
-	OP_SHL,
-	OP_SHR,
-	OP_AND,
-	OP_OR,
-	OP_XOR,
-
-	/* Comparison */
-	OP_CMP,
-	OP_CMPL,
-	OP_CMPG,
-
-	/* Conditionals */
-	OP_EQ,
-	OP_NE,
-	OP_LT,
-	OP_GE,
-	OP_GT,
-	OP_LE,
-};
-
-enum unary_operator {
-	OP_NEG,
-};
-
 enum expression_type {
 	EXPR_VALUE,
 	EXPR_FVALUE,
@@ -51,6 +18,36 @@ enum expression_type {
 	EXPR_INVOKE,
 	EXPR_ARGS_LIST,
 	EXPR_ARG,
+	EXPR_LAST,	/* Not a real type. Keep this last. */
+};
+
+enum binary_operator {
+	OP_ADD = EXPR_LAST,
+	OP_SUB,
+	OP_MUL,
+	OP_DIV,
+	OP_REM,
+
+	OP_SHL,
+	OP_SHR,
+	OP_AND,
+	OP_OR,
+	OP_XOR,
+
+	OP_CMP,
+	OP_CMPL,
+	OP_CMPG,
+
+	OP_EQ,
+	OP_NE,
+	OP_LT,
+	OP_GE,
+	OP_GT,
+	OP_LE,
+};
+
+enum unary_operator {
+	OP_NEG,
 };
 
 struct expression {
