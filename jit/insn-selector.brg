@@ -39,14 +39,15 @@ static bool is_leaf_expr(enum expression_type type)
 	return false;
 }
 
-static struct expression *tree_left(struct expression *tree)
+static struct tree_node *tree_left(struct tree_node *tree)
 {
-	enum expression_type type = expr_type(tree);
+	struct expression *expr = to_expr(tree);
+	enum expression_type type = expr_type(expr);
 
 	if (is_leaf_expr(type))
 		expr_panic(type, "leaf");
 
-	return to_expr(tree->node.kids[0]);
+	return tree->kids[0];
 }
 
 static bool is_unary_expr(enum expression_type type)
@@ -63,9 +64,10 @@ static bool is_unary_expr(enum expression_type type)
 	return false;
 }
 
-static struct expression *tree_right(struct expression *tree)
+static struct tree_node *tree_right(struct tree_node *tree)
 {
-	enum expression_type type = expr_type(tree);
+	struct expression *expr = to_expr(tree);
+	enum expression_type type = expr_type(expr);
 
 	if (is_leaf_expr(type))
 		expr_panic(type, "leaf");
@@ -73,13 +75,13 @@ static struct expression *tree_right(struct expression *tree)
 	if (is_unary_expr(type))
 		expr_panic(type, "unary");
 
-	return to_expr(tree->node.kids[1]);
+	return tree->kids[1];
 }
 
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
-#define MBTREE_TYPE struct expression
-#define MBTREE_OP(t) expr_type(t)
+#define MBTREE_TYPE struct tree_node
+#define MBTREE_OP(t) expr_type(to_expr(t))
 #define MBTREE_LEFT(t) tree_left(t)
 #define MBTREE_RIGHT(t) tree_right(t)
 
@@ -154,23 +156,23 @@ static void free_state(MBState *state)
 
 void insn_select(struct basic_block *bb)
 {
-	struct expression *expr = NULL;
+	struct tree_node *tree = NULL;
 	struct statement *stmt;
 	MBState *state;
 
 	stmt = list_entry(bb->stmt_list.next, struct statement, stmt_list_node);
 	switch (stmt_type(stmt)) {
 		case STMT_RETURN:
-			expr = to_expr(stmt->return_value);
+			tree = stmt->return_value;
 			break;
 		case STMT_EXPRESSION:
-			expr = to_expr(stmt->expression);
+			tree = stmt->expression;
 			break;
 		default:
 			assert(!"unknown statement type");
 	};
 
-	state = mono_burg_label(expr, bb);
+	state = mono_burg_label(tree, bb);
 	emit_code(bb, state, MB_NTERM_reg);
 
 	free_state(state);
