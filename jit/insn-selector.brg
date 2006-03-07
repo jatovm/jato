@@ -17,73 +17,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void expr_panic(enum expression_type type, const char *str_type)
-{
-	printf("%02x is %s\n", type, str_type);
-	abort();
-}
-
-static bool is_leaf_expr(enum expression_type type)
-{
-	switch (type) {
-	case EXPR_VALUE:
-	case EXPR_FVALUE:
-	case EXPR_LOCAL:
-	case EXPR_TEMPORARY:
-	case EXPR_ARRAY_DEREF:
-	case EXPR_FIELD:
-		return true;
-	default:	
-		break;
-	}
-	return false;
-}
-
-static struct tree_node *tree_left(struct tree_node *tree)
-{
-	struct expression *expr = to_expr(tree);
-	enum expression_type type = expr_type(expr);
-
-	if (is_leaf_expr(type))
-		expr_panic(type, "leaf");
-
-	return tree->kids[0];
-}
-
-static bool is_unary_expr(enum expression_type type)
-{
-	switch (type) {
-	case EXPR_UNARY_OP:
-	case EXPR_CONVERSION:
-	case EXPR_INVOKE:
-	case EXPR_ARG:
-		return true;
-	default:
-		break;
-	}
-	return false;
-}
-
-static struct tree_node *tree_right(struct tree_node *tree)
-{
-	struct expression *expr = to_expr(tree);
-	enum expression_type type = expr_type(expr);
-
-	if (is_leaf_expr(type))
-		expr_panic(type, "leaf");
-
-	if (is_unary_expr(type))
-		expr_panic(type, "unary");
-
-	return tree->kids[1];
-}
-
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct tree_node
 #define MBTREE_OP(t) tree_op(t)
-#define MBTREE_LEFT(t) tree_left(t)
-#define MBTREE_RIGHT(t) tree_right(t)
+#define MBTREE_LEFT(t) tree->kids[0]
+#define MBTREE_RIGHT(t) tree->kids[1]
 
 #define MBMAX_OPCODES OP_LAST
 
