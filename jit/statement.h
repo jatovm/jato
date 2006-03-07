@@ -39,7 +39,7 @@ struct statement {
 			struct tree_node *return_value;
 		};
 		/* STMT_EXPRESSION, STMT_NULL_CHECK, STMT_ARRAY_CHECK */
-		struct expression *expression;
+		struct tree_node *expression;
 	};
 	struct list_head stmt_list_node;
 };

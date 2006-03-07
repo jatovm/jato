@@ -49,7 +49,7 @@ void free_statement(struct statement *stmt)
 	case STMT_NULL_CHECK:
 	case STMT_ARRAY_CHECK:
 		if (stmt->expression)
-			expr_put(stmt->expression);
+			expr_put(to_expr(stmt->expression));
 		break;
 	};
 	free(stmt);

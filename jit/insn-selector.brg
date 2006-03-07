@@ -164,7 +164,7 @@ void insn_select(struct basic_block *bb)
 			expr = to_expr(stmt->return_value);
 			break;
 		case STMT_EXPRESSION:
-			expr = stmt->expression;
+			expr = to_expr(stmt->expression);
 			break;
 		default:
 			assert(!"unknown statement type");

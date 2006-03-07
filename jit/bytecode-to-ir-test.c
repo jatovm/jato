@@ -155,7 +155,7 @@ static void assert_null_check_stmt(struct expression *expected,
 				   struct statement *actual)
 {
 	assert_int_equals(STMT_NULL_CHECK, stmt_type(actual));
-	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
+	assert_value_expr(J_REFERENCE, expected->value, to_expr(actual->expression));
 }
 
 static void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
@@ -165,7 +165,7 @@ static void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
 {
 	assert_int_equals(STMT_ARRAY_CHECK, stmt_type(actual));
 	assert_array_deref_expr(expected_jvm_type, expected_arrayref,
-				expected_index, actual->expression);
+				expected_index, to_expr(actual->expression));
 }
 
 static struct compilation_unit *
@@ -1624,7 +1624,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_invoke_expr(J_VOID, &mb, stmt->expression);
+	assert_invoke_expr(J_VOID, &mb, to_expr(stmt->expression));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
@@ -1648,7 +1648,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_invoke_expr(J_INT, &mb, stmt->expression);
+	assert_invoke_expr(J_INT, &mb, to_expr(stmt->expression));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);

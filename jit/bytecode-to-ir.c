@@ -273,14 +273,14 @@ static int convert_array_load(struct compilation_unit *cu,
 		goto failed_arraycheck;
 
 	expr_get(src_expr);
-	arraycheck->expression = src_expr;
+	arraycheck->expression = &src_expr->node;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
 		goto failed_nullcheck;
 
 	expr_get(arrayref);
-	nullcheck->expression = arrayref;
+	nullcheck->expression = &arrayref->node;
 
 	bb_insert_stmt(bb, nullcheck);
 	bb_insert_stmt(bb, arraycheck);
@@ -452,14 +452,14 @@ static int convert_array_store(struct compilation_unit *cu,
 		goto failed_arraycheck;
 
 	expr_get(dest_expr);
-	arraycheck->expression = dest_expr;
+	arraycheck->expression = &dest_expr->node;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
 		goto failed_nullcheck;
 
 	expr_get(arrayref);
-	nullcheck->expression = arrayref;
+	nullcheck->expression = &arrayref->node;
 
 	bb_insert_stmt(bb, nullcheck);
 	bb_insert_stmt(bb, arraycheck);
@@ -533,7 +533,7 @@ static int convert_pop(struct compilation_unit *cu, struct basic_block *bb,
 		if (!expr_stmt)
 			return -ENOMEM;
 			
-		expr_stmt->expression = expr;
+		expr_stmt->expression = &expr->node;
 		bb_insert_stmt(bb, expr_stmt);
 	}
 	return 0;
@@ -1340,7 +1340,7 @@ static int convert_invokestatic(struct compilation_unit *cu,
 		if (!expr_stmt)
 			goto failed;
 			
-		expr_stmt->expression = value;
+		expr_stmt->expression = &value->node;
 		bb_insert_stmt(bb, expr_stmt);
 	} else
 		stack_push(cu->expr_stack, value);

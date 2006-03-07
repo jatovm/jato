@@ -52,11 +52,13 @@ void test_rewrite_add_expr(void)
 void test_select_insn_for_invoke_without_args(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct expression *expr;
 	struct statement *stmt;
 	struct insn *insn;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
-	stmt->expression = invoke_expr(J_INT, NULL);
+	expr = invoke_expr(J_INT, NULL);
+	stmt->expression = &expr->node;
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
@@ -70,12 +72,14 @@ void test_select_insn_for_invoke_without_args(void)
 void test_select_insn_for_args_list(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct expression *expr;
 	struct statement *stmt;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
-	stmt->expression = args_list_expr(
+	expr = args_list_expr(
 		arg_expr(value_expr(J_INT, 0x01)),
 		arg_expr(value_expr(J_INT, 0x02)));
+	stmt->expression = &expr->node;
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
