@@ -52,7 +52,7 @@ $(TESTS):
 $(HARNESS):
 
 quiet_cmd_monoburg = MONOBURG $@
-      cmd_monoburg = $(MONOBURG) -e $< > $@
+      cmd_monoburg = $(MONOBURG) -p -e $< > $@
 
 insn-selector.c: insn-selector.brg
 	$(call cmd,monoburg)

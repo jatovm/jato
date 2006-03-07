@@ -85,9 +85,11 @@ static struct tree_node *tree_right(struct tree_node *tree)
 #define MBTREE_LEFT(t) tree_left(t)
 #define MBTREE_RIGHT(t) tree_right(t)
 
+#define MBMAX_OPCODES 11
+
 %%
 
-%term EXPR_VALUE=0 EXPR_LOCAL=2 EXPR_ADD=5 EXPR_INVOKE=9 EXPR_ARGS_LIST=10 EXPR_ARG=11
+%term EXPR_VALUE=0 EXPR_LOCAL=2 EXPR_BINOP=5 EXPR_INVOKE=9 EXPR_ARGS_LIST=10 EXPR_ARG=11
 
 %start reg
 
@@ -100,7 +102,7 @@ reg:	EXPR_LOCAL	1
 	bb_insert_insn(s, x86_op_membase_reg(MOV, REG_EBP, 12, REG_EAX));
 }
 
-reg:	EXPR_ADD(EXPR_LOCAL, reg) 1
+reg:	EXPR_BINOP(EXPR_LOCAL, reg) 1
 {
 	bb_insert_insn(s, x86_op_membase_reg(ADD, REG_EBP, 8, REG_EAX));
 }
@@ -159,6 +161,8 @@ void insn_select(struct basic_block *bb)
 	struct tree_node *tree = NULL;
 	struct statement *stmt;
 	MBState *state;
+
+	mono_burg_init();
 
 	stmt = list_entry(bb->stmt_list.next, struct statement, stmt_list_node);
 	switch (stmt_type(stmt)) {
