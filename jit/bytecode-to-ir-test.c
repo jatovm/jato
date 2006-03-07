@@ -145,7 +145,10 @@ static void assert_return_stmt(struct expression *return_value,
 			       struct statement *stmt)
 {
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));
-	assert_ptr_equals(return_value, stmt->return_value);
+	if (stmt->return_value)
+		assert_ptr_equals(return_value, to_expr(stmt->return_value));
+	else
+		assert_ptr_equals(NULL, stmt->return_value);
 }
 
 static void assert_null_check_stmt(struct expression *expected,
@@ -1587,8 +1590,8 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));
-	assert_invoke_expr(expected_jvm_type, &mb, stmt->return_value);
-	assert_args(args, nr_args, to_expr(stmt->return_value->args_list));
+	assert_invoke_expr(expected_jvm_type, &mb, to_expr(stmt->return_value));
+	assert_args(args, nr_args, to_expr(to_expr(stmt->return_value)->args_list));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);

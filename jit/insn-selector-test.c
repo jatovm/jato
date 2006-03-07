@@ -34,7 +34,7 @@ static void assert_rewrite_binop_expr(enum reg dest_reg,
 	expr = binop_expr(J_INT, ADD, local_expr(J_INT, left_local),
 			  local_expr(J_INT, right_local));
 	stmt = alloc_statement(STMT_RETURN);
-	stmt->return_value = expr;
+	stmt->return_value = &expr->node;
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);

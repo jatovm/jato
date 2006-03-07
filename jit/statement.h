@@ -33,10 +33,10 @@ struct statement {
 			struct tree_node *if_true;
 		};
 		struct /* STMT_GOTO */ {
-			struct statement *goto_target;
+			struct tree_node *goto_target;
 		};
 		struct /* STMT_RETURN */ {
-			struct expression *return_value;
+			struct tree_node *return_value;
 		};
 		/* STMT_EXPRESSION, STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct expression *expression;

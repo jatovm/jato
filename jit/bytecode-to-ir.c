@@ -1169,7 +1169,7 @@ static int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
 	if (!goto_stmt)
 		return -ENOMEM;
 
-	goto_stmt->goto_target = target_bb->label_stmt;
+	goto_stmt->goto_target = &target_bb->label_stmt->node;
 	bb_insert_stmt(bb, goto_stmt);
 	return 0;
 }
@@ -1178,11 +1178,13 @@ static int convert_non_void_return(struct compilation_unit *cu,
 				   struct basic_block *bb,
 				   unsigned long offset)
 {
+	struct expression *expr;
 	struct statement *return_stmt = alloc_statement(STMT_RETURN);
 	if (!return_stmt)
 		return -ENOMEM;
 
-	return_stmt->return_value = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->expr_stack);
+	return_stmt->return_value = &expr->node;
 	bb_insert_stmt(bb, return_stmt);
 	return 0;
 }
