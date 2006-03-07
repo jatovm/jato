@@ -31,7 +31,7 @@ static void assert_rewrite_binop_expr(enum reg dest_reg,
 	struct expression *expr;
 	struct statement *stmt;
 
-	expr = binop_expr(J_INT, ADD, local_expr(J_INT, left_local),
+	expr = binop_expr(J_INT, OP_ADD, local_expr(J_INT, left_local),
 			  local_expr(J_INT, right_local));
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;

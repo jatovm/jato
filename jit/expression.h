@@ -44,6 +44,8 @@ enum binary_operator {
 	OP_GE,
 	OP_GT,
 	OP_LE,
+
+	OP_LAST,	/* Not a real operator. Keep this last. */
 };
 
 enum unary_operator {
