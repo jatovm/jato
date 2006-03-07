@@ -25,8 +25,8 @@ struct statement {
 		/* STMT_NOP and STMT_LABEL have no fields.  */
 		
 		struct /* STMT_STORE */ {
-			struct expression *store_dest;
-			struct expression *store_src;
+			struct tree_node *store_dest;
+			struct tree_node *store_src;
 		};
 		struct /* STMT_IF */ {
 			struct expression *if_conditional;

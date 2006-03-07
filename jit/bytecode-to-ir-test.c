@@ -622,10 +622,10 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 
 	assert_store_stmt(store_stmt);
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
-				store_stmt->store_src);
+				to_expr(store_stmt->store_src));
 
 	temporary_expr = stack_pop(cu->expr_stack);
-	assert_temporary_expr(store_stmt->store_dest->temporary, temporary_expr);
+	assert_temporary_expr(to_expr(store_stmt->store_dest)->temporary, temporary_expr);
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -696,8 +696,8 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_temporary_expr(expected_temporary, stmt->store_src);
-	assert_local_expr(expected_jvm_type, expected_index, stmt->store_dest);
+	assert_temporary_expr(expected_temporary, to_expr(stmt->store_src));
+	assert_local_expr(expected_jvm_type, expected_index, to_expr(stmt->store_dest));
 
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -827,8 +827,8 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 
 	assert_store_stmt(store_stmt);
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
-				store_stmt->store_dest);
-	assert_temporary_expr(value, store_stmt->store_src);
+				to_expr(store_stmt->store_dest));
+	assert_temporary_expr(value, to_expr(store_stmt->store_src));
 
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -1154,11 +1154,11 @@ static void assert_iinc_stmt(unsigned char expected_index,
 
 	convert_to_ir(cu);
 	store_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	local_expression = store_stmt->store_dest;
+	local_expression = to_expr(store_stmt->store_dest);
 	assert_local_expr(J_INT, expected_index, local_expression);
-	const_expression = to_expr(store_stmt->store_src->binary_right);
+	const_expression = to_expr(to_expr(store_stmt->store_src)->binary_right);
 	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression,
-			  store_stmt->store_src);
+			  to_expr(store_stmt->store_src));
 	assert_local_expr(J_INT, expected_index, local_expression);
 	assert_value_expr(J_INT, expected_value, const_expression);
 
@@ -1491,8 +1491,8 @@ static void assert_convert_putstatic(enum jvm_type expected_jvm_type,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_field_expr(expected_jvm_type, &fb, stmt->store_dest);
-	assert_ptr_equals(value, stmt->store_src);
+	assert_field_expr(expected_jvm_type, &fb, to_expr(stmt->store_dest));
+	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);

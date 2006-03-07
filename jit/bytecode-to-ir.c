@@ -249,6 +249,7 @@ static int convert_array_load(struct compilation_unit *cu,
 			      struct basic_block *bb, enum jvm_type type)
 {
 	struct expression *index, *arrayref;
+	struct expression *src_expr, *dest_expr;
 	struct statement *store_stmt, *arraycheck, *nullcheck;
 
 	index = stack_pop(cu->expr_stack);
@@ -258,18 +259,21 @@ static int convert_array_load(struct compilation_unit *cu,
 	if (!store_stmt)
 		goto failed;
 
-	store_stmt->store_src = array_deref_expr(type, arrayref, index);
-	store_stmt->store_dest = temporary_expr(type, alloc_temporary());
+	src_expr = array_deref_expr(type, arrayref, index);
+	dest_expr = temporary_expr(type, alloc_temporary());
+	
+	store_stmt->store_src = &src_expr->node;
+	store_stmt->store_dest = &dest_expr->node;
 
-	expr_get(store_stmt->store_dest);
-	stack_push(cu->expr_stack, store_stmt->store_dest);
+	expr_get(dest_expr);
+	stack_push(cu->expr_stack, dest_expr);
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed_arraycheck;
 
-	expr_get(store_stmt->store_src);
-	arraycheck->expression = store_stmt->store_src;
+	expr_get(src_expr);
+	arraycheck->expression = src_expr;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
@@ -344,12 +348,16 @@ static int convert_store(struct compilation_unit *cu,
 			 struct basic_block *bb,
 			 enum jvm_type type, unsigned long index)
 {
+	struct expression *src_expr, *dest_expr;
 	struct statement *stmt = alloc_statement(STMT_STORE);
 	if (!stmt)
 		goto failed;
 
-	stmt->store_dest = local_expr(type, index);
-	stmt->store_src = stack_pop(cu->expr_stack);
+	dest_expr = local_expr(type, index);
+	src_expr = stack_pop(cu->expr_stack);
+
+	stmt->store_dest = &dest_expr->node;
+	stmt->store_src = &src_expr->node;
 	bb_insert_stmt(bb, stmt);
 	return 0;
       failed:
@@ -423,6 +431,7 @@ static int convert_array_store(struct compilation_unit *cu,
 {
 	struct expression *value, *index, *arrayref;
 	struct statement *store_stmt, *arraycheck, *nullcheck;
+	struct expression *src_expr, *dest_expr;
 
 	value = stack_pop(cu->expr_stack);
 	index = stack_pop(cu->expr_stack);
@@ -432,15 +441,18 @@ static int convert_array_store(struct compilation_unit *cu,
 	if (!store_stmt)
 		goto failed;
 
-	store_stmt->store_dest = array_deref_expr(type, arrayref, index);
-	store_stmt->store_src = value;
+	dest_expr = array_deref_expr(type, arrayref, index);
+	src_expr = value;
+
+	store_stmt->store_dest = &dest_expr->node;
+	store_stmt->store_src = &src_expr->node;
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
 		goto failed_arraycheck;
 
-	expr_get(store_stmt->store_dest);
-	arraycheck->expression = store_stmt->store_dest;
+	expr_get(dest_expr);
+	arraycheck->expression = dest_expr;
 
 	nullcheck = alloc_statement(STMT_NULL_CHECK);
 	if (!nullcheck)
@@ -835,7 +847,7 @@ static int convert_iinc(struct compilation_unit *cu, struct basic_block *bb,
 	if (!local_expression)
 		goto failed;
 
-	store_stmt->store_dest = local_expression;
+	store_stmt->store_dest = &local_expression->node;
 
 	const_expression = value_expr(J_INT, cu->code[offset + 2]);
 	if (!const_expression)
@@ -851,7 +863,7 @@ static int convert_iinc(struct compilation_unit *cu, struct basic_block *bb,
 		goto failed;
 	}
 
-	store_stmt->store_src = binop_expression;
+	store_stmt->store_src = &binop_expression->node;
 	bb_insert_stmt(bb, store_stmt);
 
 	return 0;
@@ -1275,8 +1287,8 @@ static int convert_putstatic(struct compilation_unit *cu,
 		expr_put(dest);
 		return -ENOMEM;
 	}
-	store_stmt->store_dest = dest;
-	store_stmt->store_src = src;
+	store_stmt->store_dest = &dest->node;
+	store_stmt->store_src = &src->node;
 	bb_insert_stmt(bb, store_stmt);
 	
 	return 0;
