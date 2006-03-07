@@ -18,8 +18,6 @@ struct tree_node {
 	unsigned long op;
 };
 
-#include <stdio.h>
-
 static inline int tree_op(struct tree_node *node)
 {
 	if (node->op & BIN_OP_MASK)
