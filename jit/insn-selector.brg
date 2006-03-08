@@ -24,13 +24,13 @@
 #define MBTREE_LEFT(t) tree->kids[0]
 #define MBTREE_RIGHT(t) tree->kids[1]
 
-#define MBMAX_OPCODES OP_LAST
+#define MBMAX_OPCODES STMT_LAST
 
 %%
 
-%termprefix EXPR_ OP_
+%termprefix EXPR_ OP_ STMT_
 
-%start reg
+%start stmt
 
 reg:	EXPR_VALUE	0
 {
@@ -59,6 +59,14 @@ reg: 	EXPR_ARG(reg)
 }
 
 reg:	EXPR_ARGS_LIST(reg, reg)
+{
+}
+
+stmt:	STMT_RETURN(reg)
+{
+}
+
+stmt:	STMT_EXPRESSION(reg)
 {
 }
 
@@ -97,26 +105,15 @@ static void free_state(MBState *state)
 
 void insn_select(struct basic_block *bb)
 {
-	struct tree_node *tree = NULL;
 	struct statement *stmt;
 	MBState *state;
 
 	mono_burg_init();
 
 	stmt = list_entry(bb->stmt_list.next, struct statement, stmt_list_node);
-	switch (stmt_type(stmt)) {
-		case STMT_RETURN:
-			tree = stmt->return_value;
-			break;
-		case STMT_EXPRESSION:
-			tree = stmt->expression;
-			break;
-		default:
-			assert(!"unknown statement type");
-	};
-
-	state = mono_burg_label(tree, bb);
-	emit_code(bb, state, MB_NTERM_reg);
+	
+	state = mono_burg_label(&stmt->node, bb);
+	emit_code(bb, state, MB_NTERM_stmt);
 
 	free_state(state);
 }

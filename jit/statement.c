@@ -5,6 +5,7 @@
  * LICENSE for details.
  */
 
+#include <assert.h>
 #include <expression.h>
 #include <statement.h>
 #include <stdlib.h>
@@ -50,6 +51,9 @@ void free_statement(struct statement *stmt)
 	case STMT_ARRAY_CHECK:
 		if (stmt->expression)
 			expr_put(to_expr(stmt->expression));
+		break;
+	case STMT_LAST:
+		assert(!"STMT_LAST is not a real type. Don't use it!");
 		break;
 	};
 	free(stmt);

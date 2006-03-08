@@ -7,7 +7,7 @@
 #include <jam.h>
 
 enum statement_type {
-	STMT_NOP,
+	STMT_NOP = OP_LAST,
 	STMT_STORE,
 	STMT_IF,
 	STMT_LABEL,
@@ -16,6 +16,7 @@ enum statement_type {
 	STMT_EXPRESSION,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
+	STMT_LAST,	/* Not a real type. Keep this last.  */
 };
 
 struct statement {
