@@ -27,6 +27,17 @@ unit tests, follow these instructions:
     % make
 
 
+Development
+-----------
+
+If you use git for development, please remember to add your committer name
+and email to .git/config file.  The format is as follows:
+
+  [user]
+    name = Pekka Enberg
+    email = penberg@cs.helsinki.fi
+
+
 License
 -------
 
