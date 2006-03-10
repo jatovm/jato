@@ -18,3 +18,8 @@
 	  so make alloc_exec() return smaller memory blocks.
 	* Patch call instruction in the caller to avoid redundant JIT
 	  trampoline calls after target method has been compiled.
+- Code Optimization
+	* Constant propagation and folding
+	* Dead code elimination
+	* Devirtualization
+	* Method inlining
