@@ -34,106 +34,127 @@ static u8 double_to_cpu64(double fvalue)
 
 static void assert_value_expr(enum jvm_type expected_jvm_type,
 			      long long expected_value,
-			      struct expression *expression)
+			      struct tree_node *node)
 {
-	assert_int_equals(EXPR_VALUE, expr_type(expression));
-	assert_int_equals(expected_jvm_type, expression->jvm_type);
-	assert_int_equals(expected_value, expression->value);
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_VALUE, expr_type(expr));
+	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_int_equals(expected_value, expr->value);
 }
 
 static void assert_fvalue_expr(enum jvm_type expected_jvm_type,
 			       double expected_value,
-			       struct expression *expression)
+			       struct tree_node *node)
 {
-	assert_int_equals(EXPR_FVALUE, expr_type(expression));
-	assert_int_equals(expected_jvm_type, expression->jvm_type);
-	assert_float_equals(expected_value, expression->fvalue, 0.01f);
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_FVALUE, expr_type(expr));
+	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_float_equals(expected_value, expr->fvalue, 0.01f);
 }
 
 static void assert_local_expr(enum jvm_type expected_jvm_type,
 			      unsigned long expected_index,
-			      struct expression *expression)
+			      struct tree_node *node)
 {
-	assert_int_equals(EXPR_LOCAL, expr_type(expression));
-	assert_int_equals(expected_jvm_type, expression->jvm_type);
-	assert_int_equals(expected_index, expression->local_index);
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_LOCAL, expr_type(expr));
+	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_int_equals(expected_index, expr->local_index);
 }
 
 static void assert_temporary_expr(unsigned long expected,
-				  struct expression *expression)
+				  struct tree_node *node)
 {
-	assert_int_equals(EXPR_TEMPORARY, expr_type(expression));
-	assert_int_equals(expected, expression->temporary);
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_TEMPORARY, expr_type(expr));
+	assert_int_equals(expected, expr->temporary);
 }
 
 static void assert_array_deref_expr(enum jvm_type expected_jvm_type,
 				    struct expression *expected_arrayref,
 				    struct expression *expected_index,
-				    struct expression *expression)
+				    struct tree_node *node)
 {
-	assert_int_equals(EXPR_ARRAY_DEREF, expr_type(expression));
-	assert_int_equals(expected_jvm_type, expression->jvm_type);
-	assert_ptr_equals(expected_arrayref, to_expr(expression->arrayref));
-	assert_ptr_equals(expected_index, to_expr(expression->array_index));
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_ARRAY_DEREF, expr_type(expr));
+	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_ptr_equals(expected_arrayref, to_expr(expr->arrayref));
+	assert_ptr_equals(expected_index, to_expr(expr->array_index));
 }
 
 static void __assert_binop_expr(enum jvm_type jvm_type,
 				enum binary_operator binary_operator,
-				struct expression *expression)
+				struct tree_node *node)
 {
-	assert_int_equals(EXPR_BINOP, expr_type(expression));
-	assert_int_equals(jvm_type, expression->jvm_type);
-	assert_int_equals(binary_operator, expr_bin_op(expression));
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_BINOP, expr_type(expr));
+	assert_int_equals(jvm_type, expr->jvm_type);
+	assert_int_equals(binary_operator, expr_bin_op(expr));
 }
 
 static void assert_binop_expr(enum jvm_type jvm_type,
 			      enum binary_operator binary_operator,
 			      struct expression *binary_left,
 			      struct expression *binary_right,
-			      struct expression *expression)
+			      struct tree_node *node)
 {
-	__assert_binop_expr(jvm_type, binary_operator, expression);
-	assert_ptr_equals(binary_left, to_expr(expression->binary_left));
-	assert_ptr_equals(binary_right, to_expr(expression->binary_right));
+	struct expression *expr = to_expr(node);
+
+	__assert_binop_expr(jvm_type, binary_operator, node);
+	assert_ptr_equals(binary_left, to_expr(expr->binary_left));
+	assert_ptr_equals(binary_right, to_expr(expr->binary_right));
 }
 
 static void assert_unary_op_expr(enum jvm_type jvm_type,
 				 enum unary_operator unary_operator,
 				 struct expression *expression,
-				 struct expression *unary_expression)
+				 struct tree_node *node)
 {
-	assert_int_equals(EXPR_UNARY_OP, expr_type(unary_expression));
-	assert_int_equals(jvm_type, unary_expression->jvm_type);
-	assert_int_equals(unary_operator, expr_unary_op(unary_expression));
-	assert_ptr_equals(expression, to_expr(unary_expression->unary_expression));
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_UNARY_OP, expr_type(expr));
+	assert_int_equals(jvm_type, expr->jvm_type);
+	assert_int_equals(unary_operator, expr_unary_op(expr));
+	assert_ptr_equals(expression, to_expr(expr->unary_expression));
 }
 
 static void assert_conv_expr(enum jvm_type expected_type,
 			     struct expression *expected_expression,
-			     struct expression *conversion_expression)
+			     struct tree_node *node)
 {
-	assert_int_equals(EXPR_CONVERSION, expr_type(conversion_expression));
-	assert_int_equals(expected_type, conversion_expression->jvm_type);
-	assert_ptr_equals(expected_expression,
-			  to_expr(conversion_expression->from_expression));
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_CONVERSION, expr_type(expr));
+	assert_int_equals(expected_type, expr->jvm_type);
+	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
 }
 
 static void assert_field_expr(enum jvm_type expected_type,
 			      struct fieldblock *expected_field,
-			      struct expression *field_expression)
+			      struct tree_node *node)
 {
-	assert_int_equals(EXPR_FIELD, expr_type(field_expression));
-	assert_int_equals(expected_type, field_expression->jvm_type);
-	assert_ptr_equals(expected_field, field_expression->field);
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_FIELD, expr_type(expr));
+	assert_int_equals(expected_type, expr->jvm_type);
+	assert_ptr_equals(expected_field, expr->field);
 }
 
 static void assert_invoke_expr(enum jvm_type expected_type,
 			       struct methodblock *expected_method,
-			       struct expression *invoke_expression)
+			       struct tree_node *node)
 {
-	assert_int_equals(EXPR_INVOKE, expr_type(invoke_expression));
-	assert_int_equals(expected_type, invoke_expression->jvm_type);
-	assert_ptr_equals(expected_method, invoke_expression->target_method);
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_INVOKE, expr_type(expr));
+	assert_int_equals(expected_type, expr->jvm_type);
+	assert_ptr_equals(expected_method, expr->target_method);
 }
 
 static void assert_store_stmt(struct statement *stmt)
@@ -155,7 +176,7 @@ static void assert_null_check_stmt(struct expression *expected,
 				   struct statement *actual)
 {
 	assert_int_equals(STMT_NULL_CHECK, stmt_type(actual));
-	assert_value_expr(J_REFERENCE, expected->value, to_expr(actual->expression));
+	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
 }
 
 static void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
@@ -165,7 +186,7 @@ static void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
 {
 	assert_int_equals(STMT_ARRAY_CHECK, stmt_type(actual));
 	assert_array_deref_expr(expected_jvm_type, expected_arrayref,
-				expected_index, to_expr(actual->expression));
+				expected_index, actual->expression);
 }
 
 static struct compilation_unit *
@@ -195,7 +216,7 @@ static void __assert_convert_const(struct classblock *cb,
 	convert_to_ir(cu);
 
 	expr = stack_pop(cu->expr_stack);
-	assert_value_expr(expected_jvm_type, expected_value, expr);
+	assert_value_expr(expected_jvm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -221,7 +242,7 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 
 	convert_to_ir(cu);
 	expr = stack_pop(cu->expr_stack);
-	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
+	assert_fvalue_expr(expected_jvm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -343,7 +364,7 @@ static void assert_convert_ldc(enum jvm_type expected_jvm_type,
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 	expr = stack_pop(cu->expr_stack);
-	assert_value_expr(expected_jvm_type, expected_value, expr);
+	assert_value_expr(expected_jvm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -362,7 +383,7 @@ static void assert_convert_ldc_f(float expected_value)
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 	expr = stack_pop(cu->expr_stack);
-	assert_fvalue_expr(J_FLOAT, expected_value, expr);
+	assert_fvalue_expr(J_FLOAT, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -400,7 +421,7 @@ static void assert_convert_ldcw(enum jvm_type expected_jvm_type,
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
 	expr = stack_pop(cu->expr_stack);
-	assert_value_expr(expected_jvm_type, expected_value, expr);
+	assert_value_expr(expected_jvm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -423,7 +444,7 @@ static void assert_convert_ldcw_f(enum jvm_type expected_jvm_type,
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
 	expr = stack_pop(cu->expr_stack);
-	assert_fvalue_expr(expected_jvm_type, expected_value, expr);
+	assert_fvalue_expr(expected_jvm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -495,7 +516,7 @@ static void __assert_convert_load(unsigned char *code,
 	convert_to_ir(cu);
 
 	expr = stack_pop(cu->expr_stack);
-	assert_local_expr(expected_jvm_type, expected_index, expr);
+	assert_local_expr(expected_jvm_type, expected_index, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -604,6 +625,7 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	struct expression *arrayref_expr, *index_expr, *temporary_expr;
 	struct statement *stmt;
 	struct compilation_unit *cu;
+	unsigned long expected_temporary;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
 
@@ -625,10 +647,12 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 
 	assert_store_stmt(store_stmt);
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
-				to_expr(store_stmt->store_src));
+				store_stmt->store_src);
 
 	temporary_expr = stack_pop(cu->expr_stack);
-	assert_temporary_expr(to_expr(store_stmt->store_dest)->temporary, temporary_expr);
+
+	expected_temporary = to_expr(store_stmt->store_dest)->temporary;
+	assert_temporary_expr(expected_temporary, &temporary_expr->node);
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -699,8 +723,8 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_temporary_expr(expected_temporary, to_expr(stmt->store_src));
-	assert_local_expr(expected_jvm_type, expected_index, to_expr(stmt->store_dest));
+	assert_temporary_expr(expected_temporary, stmt->store_src);
+	assert_local_expr(expected_jvm_type, expected_index, stmt->store_dest);
 
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -830,8 +854,8 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 
 	assert_store_stmt(store_stmt);
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
-				to_expr(store_stmt->store_dest));
-	assert_temporary_expr(value, to_expr(store_stmt->store_src));
+				store_stmt->store_dest);
+	assert_temporary_expr(value, store_stmt->store_src);
 
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -1036,7 +1060,7 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 	convert_to_ir(cu);
 	expr = stack_pop(cu->expr_stack);
 
-	assert_binop_expr(jvm_type, binary_operator, left, right, expr);
+	assert_binop_expr(jvm_type, binary_operator, left, right, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -1100,7 +1124,7 @@ static void assert_convert_unop(enum jvm_type jvm_type,
 	unary_expression = stack_pop(cu->expr_stack);
 
 	assert_unary_op_expr(jvm_type, unary_operator, expression,
-			     unary_expression);
+			     &unary_expression->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(unary_expression);
@@ -1150,18 +1174,19 @@ static void assert_iinc_stmt(unsigned char expected_index,
 {
 	unsigned char code[] = { OPC_IINC, expected_index, expected_value };
 	struct statement *store_stmt;
-	struct expression *local_expression, *const_expression;
+	struct tree_node *local_expression, *const_expression;
 	struct compilation_unit *cu;
 
 	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
 
 	convert_to_ir(cu);
 	store_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	local_expression = to_expr(store_stmt->store_dest);
-	assert_local_expr(J_INT, expected_index, local_expression);
-	const_expression = to_expr(to_expr(store_stmt->store_src)->binary_right);
-	assert_binop_expr(J_INT, OP_ADD, local_expression, const_expression,
-			  to_expr(store_stmt->store_src));
+	local_expression = store_stmt->store_dest;
+	const_expression = to_expr(store_stmt->store_src)->binary_right;
+
+	assert_binop_expr(J_INT, OP_ADD, to_expr(local_expression),
+			  to_expr(const_expression),
+			  store_stmt->store_src);
 	assert_local_expr(J_INT, expected_index, local_expression);
 	assert_value_expr(J_INT, expected_value, const_expression);
 
@@ -1189,7 +1214,7 @@ static void assert_conversion_expr_stack(unsigned char opc,
 
 	convert_to_ir(cu);
 	conversion_expression = stack_pop(cu->expr_stack);
-	assert_conv_expr(to_type, expression, conversion_expression);
+	assert_conv_expr(to_type, expression, &conversion_expression->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(conversion_expression);
@@ -1248,7 +1273,7 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 
 	convert_to_ir(cu);
 	cmp_expression = stack_pop(cu->expr_stack);
-	assert_binop_expr(J_INT, op, left, right, cmp_expression);
+	assert_binop_expr(J_INT, op, left, right, &cmp_expression->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(cmp_expression);
@@ -1291,9 +1316,9 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	if_stmt = stmt_entry(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
-	__assert_binop_expr(J_INT, expected_operator, to_expr(if_stmt->if_conditional));
+	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);
 	assert_ptr_equals(if_value, to_expr(to_expr(if_stmt->if_conditional)->binary_left));
-	assert_value_expr(J_INT, 0, to_expr(to_expr(if_stmt->if_conditional)->binary_right));
+	assert_value_expr(J_INT, 0, to_expr(if_stmt->if_conditional)->binary_right);
 
 	free_compilation_unit(cu);
 }
@@ -1337,7 +1362,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	assert_binop_expr(jvm_type, expected_operator, if_value1, if_value2,
-			  to_expr(if_stmt->if_conditional));
+			  if_stmt->if_conditional);
 
 	free_compilation_unit(cu);
 }
@@ -1457,7 +1482,7 @@ static void assert_convert_getstatic(enum jvm_type expected_jvm_type,
 
 	convert_ir_field(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
-	assert_field_expr(expected_jvm_type, &fb, expr);
+	assert_field_expr(expected_jvm_type, &fb, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -1494,7 +1519,7 @@ static void assert_convert_putstatic(enum jvm_type expected_jvm_type,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_field_expr(expected_jvm_type, &fb, to_expr(stmt->store_dest));
+	assert_field_expr(expected_jvm_type, &fb, stmt->store_dest);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -1590,7 +1615,7 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));
-	assert_invoke_expr(expected_jvm_type, &mb, to_expr(stmt->return_value));
+	assert_invoke_expr(expected_jvm_type, &mb, stmt->return_value);
 	assert_args(args, nr_args, to_expr(to_expr(stmt->return_value)->args_list));
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -1624,7 +1649,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_invoke_expr(J_VOID, &mb, to_expr(stmt->expression));
+	assert_invoke_expr(J_VOID, &mb, stmt->expression);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
@@ -1648,7 +1673,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_invoke_expr(J_INT, &mb, to_expr(stmt->expression));
+	assert_invoke_expr(J_INT, &mb, stmt->expression);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
