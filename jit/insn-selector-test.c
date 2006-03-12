@@ -21,11 +21,11 @@ static void assert_insn(enum insn_opcode insn_op,
 	assert_int_equals(dest_reg, insn->dest.reg);
 }
 
-static void assert_rewrite_binop_expr(enum reg dest_reg,
-				      unsigned long left_local,
-				      unsigned long right_local,
-				      unsigned long left_displacement,
-				      unsigned long right_displacement)
+static void assert_insns_for_add(enum reg dest_reg,
+				 unsigned long left_local,
+				 unsigned long right_local,
+				 unsigned long left_displacement,
+				 unsigned long right_displacement)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct expression *expr;
@@ -44,9 +44,9 @@ static void assert_rewrite_binop_expr(enum reg dest_reg,
 	free_basic_block(bb);
 }
 
-void test_rewrite_add_expr(void)
+void test_select_insns_for_add(void)
 {
-	assert_rewrite_binop_expr(REG_EAX, 0, 1, 8, 12);
+	assert_insns_for_add(REG_EAX, 0, 1, 8, 12);
 }
 
 void test_select_insn_for_invoke_without_args(void)
