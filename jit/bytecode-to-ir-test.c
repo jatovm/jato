@@ -1569,9 +1569,9 @@ static void assert_args(struct expression **expected_args,
 	i = 0;
 	while (i < nr_args) {
 		if (expr_type(tree) == EXPR_ARGS_LIST) {
-			struct expression *expr = to_expr(tree->node.kids[0]);
+			struct expression *expr = to_expr(tree->node.kids[1]);
 			actual_args[i++] = to_expr(expr->arg_expression);
-			tree = to_expr(tree->node.kids[1]);
+			tree = to_expr(tree->node.kids[0]);
 		} else if (expr_type(tree) == EXPR_ARG) {
 			actual_args[i++] = to_expr(tree->arg_expression);
 			break;

@@ -1301,7 +1301,7 @@ static struct expression *insert_arg(struct expression *root, struct expression 
 	if (!root)
 		return arg_expr(expr);
 
-	return args_list_expr(arg_expr(expr), root);
+	return args_list_expr(root, arg_expr(expr));
 }
 
 static int convert_invokestatic(struct compilation_unit *cu,
