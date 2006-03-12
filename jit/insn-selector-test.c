@@ -69,6 +69,14 @@ void test_select_insn_for_invoke_without_args(void)
 	free_basic_block(bb);
 }
 
+static void assert_insn_imm(enum insn_opcode expected_opc,
+			    unsigned long expected_imm,
+			    struct insn *insn)
+{
+	assert_int_equals(expected_opc, insn->insn_op);
+	assert_int_equals(expected_imm, insn->operand.imm);
+}
+
 void test_select_insn_for_args_list(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
@@ -77,15 +85,15 @@ void test_select_insn_for_args_list(void)
 
 	stmt = alloc_statement(STMT_EXPRESSION);
 	expr = args_list_expr(
-		arg_expr(value_expr(J_INT, 0x01)),
-		arg_expr(value_expr(J_INT, 0x02)));
+		arg_expr(value_expr(J_INT, 0x02)),
+		arg_expr(value_expr(J_INT, 0x01)));
 	stmt->expression = &expr->node;
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
 
-	assert_int_equals(INSN_PUSH, insn_entry(bb->insn_list.next)->insn_op);
-	assert_int_equals(INSN_PUSH, insn_entry(bb->insn_list.next->next)->insn_op);
+	assert_insn_imm(INSN_PUSH, 0x02, insn_entry(bb->insn_list.next));
+	assert_insn_imm(INSN_PUSH, 0x01, insn_entry(bb->insn_list.next->next));
 
 	free_basic_block(bb);
 }

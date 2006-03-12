@@ -19,6 +19,7 @@ struct operand {
 			enum reg base_reg;
 			unsigned long disp;	/* displacement */
 		};
+		unsigned long imm;
 	};
 };
 
@@ -31,8 +32,13 @@ enum insn_opcode {
 
 struct insn {
 	enum insn_opcode insn_op;
-	struct operand src;
-	struct operand dest;
+	union {
+		struct {
+			struct operand src;
+			struct operand dest;
+		};
+		struct operand operand;
+	};
 	struct list_head insn_list_node;
 };
 

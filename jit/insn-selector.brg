@@ -52,10 +52,14 @@ reg:	EXPR_INVOKE 1
 	bb_insert_insn(s, insn);
 }
 
-reg: 	EXPR_ARG(reg)
+reg:	EXPR_ARG(EXPR_VALUE)
 {
+	struct expression *expr = to_expr(tree);
 	struct insn *insn = alloc_insn(INSN_PUSH);
-	bb_insert_insn(s, insn);
+	if (insn) {
+		insn->operand.imm = to_expr(expr->arg_expression)->value;
+		bb_insert_insn(s, insn);
+	}
 }
 
 reg:	EXPR_ARGS_LIST(reg, reg)
