@@ -1,25 +1,31 @@
-- Bytecode to IR conversion
-	* Field & method resolution
-	* Method return type
-	* INVOKESTATIC
-	* INVOKESPECIAL
-	* Converting whole compilation unit
-	* GETSTATIC type parsing
-	* Replace STMT_NULLCHECK and STMT_ARRAYCHECK with STMT_IF and STMT_THROW
-	* Basic block successors and precedessors
-	* bytecode_size() for TABLESWITCH and LOOKUPSWITCH
-	* Bytecode sequences where expression stack is non-empty in
+  - Bytecode to IR conversion
+	+ Field & method resolution
+	+ Method return type
+	+ INVOKESTATIC
+	+ INVOKESPECIAL
+	+ Better object and array type parsing for {GET|PUT|INVOKE}STATIC
+	+ Converting whole compilation unit
+	+ Replace STMT_NULLCHECK and STMT_ARRAYCHECK with STMT_IF and STMT_THROW
+	+ Basic block successors and precedessors
+	+ bytecode_size() for TABLESWITCH and LOOKUPSWITCH
+	+ Bytecode sequences where expression stack is non-empty in
 	  basic-block boundary (e.g. the 'x ? y : z' expression).
-- Register allocation
-	* Linear scan register allocator [Poletto99]
-- JIT code execution
-	* alloc_exec() allocates complete pages which is wasteful. Intel
+  - Instruction selection
+	+ INVOKESTATIC
+	    o Clean up parameters from stack in caller
+	    o Call target to JIT trampoline
+	    o CALL return value
+	    o Code emission
+  - Register allocation
+	+ Linear scan register allocator [Poletto99]
+  - JIT code execution
+	+ alloc_exec() allocates complete pages which is wasteful. Intel
 	  optimization guide recommends 16-byte alignment for branch targets
 	  so make alloc_exec() return smaller memory blocks.
-	* Patch call instruction in the caller to avoid redundant JIT
+	+ Patch call instruction in the caller to avoid redundant JIT
 	  trampoline calls after target method has been compiled.
-- Code Optimization
-	* Constant propagation and folding
-	* Dead code elimination
-	* Devirtualization
-	* Method inlining
+  - Code Optimization
+	+ Constant propagation and folding
+	+ Dead code elimination
+	+ Devirtualization
+	+ Method inlining
