@@ -46,13 +46,17 @@ reg:	OP_ADD(EXPR_LOCAL, reg) 1
 	bb_insert_insn(s, x86_op_membase_reg(ADD, REG_EBP, 8, REG_EAX));
 }
 
-reg:	EXPR_INVOKE 1
+reg:	EXPR_INVOKE(arg) 1
 {
 	struct insn *insn = alloc_insn(INSN_CALL);
 	bb_insert_insn(s, insn);
 }
 
-reg:	EXPR_ARG(EXPR_VALUE)
+arg:	EXPR_NO_ARGS
+{
+}
+
+arg:	EXPR_ARG(EXPR_VALUE)
 {
 	struct expression *expr = to_expr(tree);
 	struct insn *insn = alloc_insn(INSN_PUSH);
@@ -62,7 +66,7 @@ reg:	EXPR_ARG(EXPR_VALUE)
 	}
 }
 
-reg:	EXPR_ARGS_LIST(reg, reg)
+arg:	EXPR_ARGS_LIST(arg, arg)
 {
 }
 

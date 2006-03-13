@@ -69,6 +69,9 @@ void free_expression(struct expression *expr)
 	case EXPR_ARG:
 		expr_put(to_expr(expr->arg_expression));
 		break;
+	case EXPR_NO_ARGS:
+		/* nothing to do */
+		break;
 	case EXPR_LAST:
 		assert(!"EXPR_LAST is not a real type. Don't use it");
 		break;
@@ -207,4 +210,9 @@ struct expression *arg_expr(struct expression *arg_expression)
 	if (expr)
 		expr->arg_expression = &arg_expression->node;
 	return expr;
+}
+
+struct expression *no_args_expr(void)
+{
+	return alloc_expression(EXPR_NO_ARGS, J_VOID);
 }

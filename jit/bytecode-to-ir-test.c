@@ -1558,6 +1558,11 @@ static void push_args(struct compilation_unit *cu,
 	}
 }
 
+static void assert_no_args(struct expression *args_list)
+{
+	assert_int_equals(EXPR_NO_ARGS, expr_type(args_list));
+}
+
 static void assert_args(struct expression **expected_args,
 			int nr_args,
 			struct expression *args_list)
@@ -1604,6 +1609,7 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct expression *args[nr_args];
+	struct expression *args_list_expression;
 
 	mb.type = return_type;
 	mb.args_count = nr_args;
@@ -1616,7 +1622,14 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));
 	assert_invoke_expr(expected_jvm_type, &mb, stmt->return_value);
-	assert_args(args, nr_args, to_expr(to_expr(stmt->return_value)->args_list));
+
+	args_list_expression = to_expr(to_expr(stmt->return_value)->args_list);
+
+	if (nr_args)
+		assert_args(args, nr_args, args_list_expression);
+	else
+		assert_no_args(args_list_expression);
+
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);

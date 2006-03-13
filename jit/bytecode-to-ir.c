@@ -1327,6 +1327,9 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	if (!value)
 		return -ENOMEM;
 
+	if (!mb->args_count)
+		args_list = no_args_expr();
+
 	for (i = 0; i < mb->args_count; i++)
 		args_list = insert_arg(args_list, stack_pop(cu->expr_stack));
 

@@ -18,6 +18,7 @@ enum expression_type {
 	EXPR_INVOKE,
 	EXPR_ARGS_LIST,
 	EXPR_ARG,
+	EXPR_NO_ARGS,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -137,6 +138,12 @@ struct expression {
 		struct {
 			struct tree_node *arg_expression;
 		};
+
+		/*  EXPR_NO_ARGS is used for EXPR_INVOKE expression type when
+		    there are no arguments to pass.  */
+		struct {
+			/* Nothing. */
+		};
 	};
 };
 
@@ -178,5 +185,6 @@ struct expression *field_expr(enum jvm_type, struct fieldblock *);
 struct expression *invoke_expr(enum jvm_type, struct methodblock *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
+struct expression *no_args_expr(void);
 
 #endif

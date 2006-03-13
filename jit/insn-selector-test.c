@@ -49,15 +49,26 @@ void test_select_insns_for_add(void)
 	assert_insns_for_add(REG_EAX, 0, 1, 8, 12);
 }
 
+static void assert_insn_imm(enum insn_opcode expected_opc,
+			    unsigned long expected_imm,
+			    struct insn *insn)
+{
+	assert_int_equals(expected_opc, insn->insn_op);
+	assert_int_equals(expected_imm, insn->operand.imm);
+}
+
 void test_select_insn_for_invoke_without_args(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
-	struct expression *expr;
+	struct expression *expr, *args_list;
 	struct statement *stmt;
 	struct insn *insn;
 
-	stmt = alloc_statement(STMT_EXPRESSION);
+	args_list = no_args_expr();
 	expr = invoke_expr(J_INT, NULL);
+	expr->args_list = &args_list->node;
+
+	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 	bb_insert_stmt(bb, stmt);
 
@@ -69,31 +80,27 @@ void test_select_insn_for_invoke_without_args(void)
 	free_basic_block(bb);
 }
 
-static void assert_insn_imm(enum insn_opcode expected_opc,
-			    unsigned long expected_imm,
-			    struct insn *insn)
-{
-	assert_int_equals(expected_opc, insn->insn_op);
-	assert_int_equals(expected_imm, insn->operand.imm);
-}
-
-void test_select_insn_for_args_list(void)
+void test_select_insn_for_invoke_with_args_list(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
-	struct expression *expr;
+	struct expression *invoke_expression, *args_list_expression;
 	struct statement *stmt;
 
-	stmt = alloc_statement(STMT_EXPRESSION);
-	expr = args_list_expr(
+	args_list_expression = args_list_expr(
 		arg_expr(value_expr(J_INT, 0x02)),
 		arg_expr(value_expr(J_INT, 0x01)));
-	stmt->expression = &expr->node;
+	invoke_expression = invoke_expr(J_INT, NULL);
+	invoke_expression->args_list = &args_list_expression->node;
+
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &invoke_expression->node;
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
 
 	assert_insn_imm(INSN_PUSH, 0x02, insn_entry(bb->insn_list.next));
 	assert_insn_imm(INSN_PUSH, 0x01, insn_entry(bb->insn_list.next->next));
+	assert_int_equals(INSN_CALL, insn_entry(bb->insn_list.next->next->next)->insn_op);
 
 	free_basic_block(bb);
 }
