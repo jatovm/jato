@@ -4,7 +4,7 @@ TEST_SUITE=test-suite.c
 MONOBURG=../monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
-INCLUDE = -I. -I../src -I./glib
+INCLUDE = -I. -I../src -I./glib -I../include
 LIBS =
 OBJS = alloc.o basic-block.o bitmap.o bytecodes.o bytecode-cfg-builder.o \
 	bytecode-to-ir.o compilation-unit.o jit-compiler.o instruction.o \
@@ -45,7 +45,15 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 
 all: test
 
-$(OBJS):
+ARCH_H = ../include/vm/arch.h
+
+quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
+      cmd_ln_arch_h = ln -fsn ../../src/arch/i386.h $@
+
+$(ARCH_H):
+	$(call cmd,ln_arch_h)
+
+$(OBJS): $(ARCH_H)
 
 $(TESTS):
 

@@ -4,7 +4,7 @@
 #include <list.h>
 #include <expression.h>
 #include <stddef.h>
-#include <jam.h>
+#include <vm/vm.h>
 
 enum statement_type {
 	STMT_NOP = OP_LAST,

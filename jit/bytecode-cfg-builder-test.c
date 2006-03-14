@@ -3,7 +3,7 @@
  */
 
 #include <system.h>
-#include <jam.h>
+#include <vm/vm.h>
 #include <jit-compiler.h>
 #include <libharness.h>
 #include <basic-block-assert.h>

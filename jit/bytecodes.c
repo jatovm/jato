@@ -7,7 +7,7 @@
  * The file contains utility functions for parsing a bytecode stream.
  */
 
-#include <jam.h>
+#include <vm/vm.h>
 #include <bytecodes.h>
 #include <byteorder.h>
 

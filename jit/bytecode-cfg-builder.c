@@ -8,7 +8,7 @@
  * stream.
  */
 
-#include <jam.h>
+#include <vm/vm.h>
 #include <jit-compiler.h>
 #include <bytecodes.h>
 #include <bitmap.h>

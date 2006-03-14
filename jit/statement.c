@@ -5,6 +5,7 @@
  * LICENSE for details.
  */
 
+#include <vm/vm.h>
 #include <assert.h>
 #include <expression.h>
 #include <statement.h>

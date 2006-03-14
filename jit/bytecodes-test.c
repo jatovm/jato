@@ -3,7 +3,7 @@
  */
 
 #include <system.h>
-#include <jam.h>
+#include <vm/vm.h>
 #include <libharness.h>
 #include <bytecodes.h>
 #include <byteorder.h>

@@ -6,7 +6,7 @@
 #include <system.h>
 #include <jit-compiler.h>
 #include <compilation-unit.h>
-#include <jam.h>
+#include <vm/vm.h>
 
 typedef int (*sum_fn)(int, int);
 
