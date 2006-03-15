@@ -29,3 +29,5 @@
 	+ Dead code elimination
 	+ Devirtualization
 	+ Method inlining
+  - Interpreter
+	+ Execution profiling for targeting JIT compilation
