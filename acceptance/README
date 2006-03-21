@@ -1,0 +1,18 @@
+How to run the acceptance test?
+-------------------------------
+
+Prequisites:
+
+  - Jikes Compiler
+  - GNU classpath (installed in /usr/local/classpath/)
+
+To run the tests, execute the following commands:
+
+  cd lib
+  make
+  cd ../monoburg
+  make
+  cd ../jato
+  make
+  cd ../acceptance
+  sh run-acceptance-tests.sh
