@@ -16,7 +16,7 @@ find jamvm/ -name "*.java" | xargs javac
 GLIBJ=$GNU_CLASSPATH_ROOT/share/classpath/glibj.zip
 
 ../jato/jato -Xbootclasspath:../lib/classes.zip:$GLIBJ -cp . jamvm.IntegerArithmeticTest
-if [ $? != 0 ]; then
+if [ $? != 1 ]; then
   echo "Tests FAILED."
 else
   echo "Tests OK."

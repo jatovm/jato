@@ -24,6 +24,7 @@
 #include <stdarg.h>
 
 #include <vm/vm.h>
+#include <jit/jit.h>
 
 /* Setup default values for command line args */
 
@@ -274,6 +275,8 @@ exit:
     exit(status);
 }
 
+typedef void (*java_main_fn)(void);
+
 int main(int argc, char *argv[]) {
     Class *array_class, *main_class;
     Object *system_loader, *array;
@@ -324,8 +327,11 @@ int main(int argc, char *argv[]) {
                 break;
 
         /* Call the main method */
-        if(i == argc)
-            executeStaticMethod(main_class, mb, array);
+        if(i == argc) {
+	    java_main_fn java_main = jit_prepare_for_exec(mb);
+	    java_main();
+            //executeStaticMethod(main_class, mb, array);
+	}
     }
 
     /* ExceptionOccured returns the exception or NULL, which is OK

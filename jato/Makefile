@@ -5,7 +5,7 @@ EXECUTABLE = jato
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
-INCLUDE = -I. -I../src -I./glib -I../include
+INCLUDE = -I. -I../src -I./glib -I../include -I../jit -I../jit/glib
 LIBS = -lpthread -lm -ldl -lz
 OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../src/direct.o ../src/dll.o ../src/excep.o ../src/execute.o \
@@ -14,7 +14,12 @@ OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../src/resolve.o ../src/string.o ../src/thread.o ../src/utf8.o \
 	../src/zip.o ../src/dll_ffi.o ../src/frame.o \
 	../src/os/linux/dll_os.o ../src/os/linux/i386/dll_md.o \
-	../src/os/linux/i386/init.o
+	../src/os/linux/i386/init.o ../jit/jit.o ../jit/compilation-unit.o \
+	../jit/stack.o ../jit/basic-block.o ../jit/statement.o \
+	../jit/instruction.o ../jit/expression.o ../jit/jit-compiler.o \
+	../jit/x86-objcode.o ../jit/alloc.o ../jit/bytecode-to-ir.o \
+	../jit/bytecodes.o ../jit/bytecode-cfg-builder.o ../jit/bitmap.o \
+	../jit/insn-selector.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
 # as parameter to make.

@@ -10,7 +10,7 @@ package jamvm;
  * @author Pekka Enberg
  */
 public class IntegerArithmeticTest {
-    private static int failed;
+    private static int retval = 1;
 
     public static int add(int a, int b) {
         return a + b;
@@ -37,12 +37,12 @@ public class IntegerArithmeticTest {
 
     private static void fail(String msg) {
         System.out.println(msg);
-        failed = 1;
+        retval = 0;
     }
 
     public static void main(String[] args) {
         testIntegerAddition();
         testIntegerAdditionOverflow();
-        System.exit(failed);
+        System.exit(retval);
     }
 }

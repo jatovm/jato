@@ -415,6 +415,9 @@ typedef Instruction *CodePntr;
 typedef unsigned char *CodePntr;
 #endif
 
+struct compilation_unit;
+struct jit_trampoline;
+
 typedef struct methodblock {
    Class *class;
    char *name;
@@ -434,6 +437,8 @@ typedef struct methodblock {
    ExceptionTableEntry *exception_table;
    LineNoTableEntry *line_no_table;
    int method_table_index;
+   struct compilation_unit *compilation_unit;
+   struct jit_trampoline *trampoline;
 } MethodBlock;
 
 typedef struct fieldblock {
