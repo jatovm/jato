@@ -20,10 +20,10 @@ BOOTCLASSPATH=../lib/classes.zip:$GLIBJ
 find jamvm/ -name "*.java" | xargs jikes -cp $BOOTCLASSPATH
 
 ../jato/jato -Xbootclasspath:$BOOTCLASSPATH -cp . jamvm.IntegerArithmeticTest
-if [ $? != 1 ]; then
-  echo "Tests FAILED."
-else
+if [ $? == 0 ]; then
   echo "Tests OK."
+else
+  echo "Tests FAILED. Program exited with error code $?."
 fi
 
 find jamvm/ -name "*.class" | xargs rm -f
