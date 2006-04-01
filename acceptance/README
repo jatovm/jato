@@ -16,3 +16,12 @@ To run the tests, execute the following commands:
   make
   cd ../acceptance
   sh run-acceptance-tests.sh
+
+
+How to run acceptance tests under GDB?
+--------------------------------------
+
+NTPL threads cause problems while running Jato under gdb. You should
+set the following environment variable before starting the debugger:
+
+  export LD_ASSUME_KERNEL=2.4.1
