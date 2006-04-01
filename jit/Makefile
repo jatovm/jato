@@ -11,9 +11,11 @@ OBJS = alloc.o basic-block.o bitmap.o bytecodes.o bytecode-arithmetic-converters
 	jit-compiler.o instruction.o insn-selector.o stack.o statement.o \
 	expression.o x86-objcode.o jit.o
 TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o \
-	bytecode-cfg-builder-test.o bytecode-to-ir-test.o \
-	compilation-unit-test.o insn-selector-test.o jit-compiler-test.o \
-	list-test.o stack-test.o x86-objcode-test.o jit-test.o
+	bytecode-arithmetic-converters-test.o bytecode-cfg-builder-test.o \
+	bytecode-converter-fixture.o bytecode-to-ir-test.o \
+	compilation-unit-test.o insn-selector-test.o \
+	jit-compiler-test.o list-test.o stack-test.o x86-objcode-test.o \
+	jit-test.o
 HARNESS = libharness.o backtrace.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
