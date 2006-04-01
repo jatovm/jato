@@ -1,5 +1,7 @@
 #!/bin/sh
 
+make -C ../jato
+
 # make sure that we have built jamvm classes
 if [ ! -f ../lib/classes.zip ]; then
   make -C ../lib
@@ -11,11 +13,13 @@ if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d $GNU_CLASSPATH_ROOT; then
   exit
 fi
 
-find jamvm/ -name "*.java" | xargs javac
-
 GLIBJ=$GNU_CLASSPATH_ROOT/share/classpath/glibj.zip
 
-../jato/jato -Xbootclasspath:../lib/classes.zip:$GLIBJ -cp . jamvm.IntegerArithmeticTest
+BOOTCLASSPATH=../lib/classes.zip:$GLIBJ
+
+find jamvm/ -name "*.java" | xargs jikes -cp $BOOTCLASSPATH
+
+../jato/jato -Xbootclasspath:$BOOTCLASSPATH -cp . jamvm.IntegerArithmeticTest
 if [ $? != 1 ]; then
   echo "Tests FAILED."
 else
