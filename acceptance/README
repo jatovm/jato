@@ -18,10 +18,18 @@ To run the tests, execute the following commands:
   sh run-acceptance-tests.sh
 
 
-How to run acceptance tests under GDB?
---------------------------------------
+How to launch Java applications with Jato under GDB?
+----------------------------------------------------
 
 NTPL threads cause problems while running Jato under gdb. You should
 set the following environment variable before starting the debugger:
 
   export LD_ASSUME_KERNEL=2.4.1
+
+To set up boot classpath for Jato, set the following environment variable:
+
+  export BOOTCLASSPATH=<JATO_ROOT>/lib/classes.zip:/usr/local/classpath/share/classpath/glibj.zip
+
+Finally, to launch a Java application with Jato under gdb:
+
+  gdb --args <JATO_ROOT>/jato/jato <class>
