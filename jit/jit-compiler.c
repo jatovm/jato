@@ -17,23 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#if 0
-static void dump_objcode(unsigned char *buffer, unsigned long size)
-{
-	unsigned long i, col;
-
-	col = 0;
-	for (i = 0; i < size; i++) {
-		printf("%02x ", buffer[i]);
-		if (col++ == 15) {
-			printf("\n");
-			col = 0;
-		}
-	}
-	printf("\n");
-}
-#endif
-
 #define OBJCODE_SIZE 256
 
 int jit_compile(struct compilation_unit *cu)
