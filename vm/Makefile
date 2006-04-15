@@ -1,1 +1,1 @@
-objs	:= buffer.o
+objs	:= backtrace.o buffer.o

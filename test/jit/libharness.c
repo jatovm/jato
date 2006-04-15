@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <backtrace.h>
+#include <vm/backtrace.h>
 
 static unsigned long nr_asserts;
 static unsigned long nr_failed;
