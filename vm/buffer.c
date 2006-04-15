@@ -5,6 +5,8 @@
  * LICENSE for details.
  */
 
+#include <stdio.h>
+
 void print_buffer(unsigned char *buffer, unsigned long size)
 {
 	unsigned long i, col;
