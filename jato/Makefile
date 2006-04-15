@@ -19,7 +19,8 @@ OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../jit/instruction.o ../jit/expression.o ../jit/jit-compiler.o \
 	../jit/x86-objcode.o ../jit/alloc.o ../jit/bytecode-to-ir.o \
 	../jit/bytecodes.o ../jit/bytecode-cfg-builder.o ../jit/bitmap.o \
-	../jit/insn-selector.o ../jit/bytecode-arithmetic-converters.o
+	../jit/insn-selector.o ../jit/bytecode-arithmetic-converters.o \
+	../vm/backtrace.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
 # as parameter to make.

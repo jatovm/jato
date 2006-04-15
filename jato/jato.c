@@ -22,7 +22,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <signal.h>
 
+#include <vm/backtrace.h>
 #include <vm/vm.h>
 #include <jit/jit.h>
 
@@ -275,6 +277,17 @@ exit:
     exit(status);
 }
 
+void install_sighandlers(void) {
+    struct sigaction sa;
+ 
+    sa.sa_handler = (void *)bt_sighandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART | SA_SIGINFO;
+       
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGUSR1, &sa, NULL);
+}
+
 typedef void (*java_main_fn)(void);
 
 int main(int argc, char *argv[]) {
@@ -284,6 +297,8 @@ int main(int argc, char *argv[]) {
     char *cpntr;
     int status;
     int i;
+
+    install_sighandlers();
 
     int class_arg = parseCommandLine(argc, argv);
 
