@@ -1,15 +1,17 @@
 TESTRUNNER=test-runner
 TEST_SUITE=test-suite.c
 
-MONOBURG=../monoburg/monoburg
+objdir=../../jit/
+
+MONOBURG=../../monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
-INCLUDE = -I. -I../src -I./glib -I../include
+INCLUDE = -I. -I../../jit/ -I../../src -I../../jit/glib -I../../include
 LIBS =
-OBJS = alloc.o basic-block.o bitmap.o bytecodes.o bytecode-arithmetic-converters.o \
-	bytecode-cfg-builder.o bytecode-to-ir.o compilation-unit.o \
-	jit-compiler.o instruction.o insn-selector.o stack.o statement.o \
-	expression.o x86-objcode.o jit.o
+OBJS = $(objdir)alloc.o $(objdir)basic-block.o $(objdir)bitmap.o $(objdir)bytecodes.o $(objdir)bytecode-arithmetic-converters.o \
+	$(objdir)bytecode-cfg-builder.o $(objdir)bytecode-to-ir.o $(objdir)compilation-unit.o \
+	$(objdir)jit-compiler.o $(objdir)instruction.o $(objdir)insn-selector.o $(objdir)stack.o $(objdir)statement.o \
+	$(objdir)expression.o $(objdir)x86-objcode.o $(objdir)jit.o
 TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o \
 	bytecode-arithmetic-converters-test.o bytecode-cfg-builder-test.o \
 	bytecode-converter-fixture.o bytecode-to-ir-test.o \
@@ -48,7 +50,7 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 
 all: test
 
-ARCH_H = ../include/vm/arch.h
+ARCH_H = ../../include/vm/arch.h
 
 quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
       cmd_ln_arch_h = ln -fsn ../../src/arch/i386.h $@
@@ -65,7 +67,7 @@ $(HARNESS):
 quiet_cmd_monoburg = MONOBURG $@
       cmd_monoburg = $(MONOBURG) -p -e $< > $@
 
-insn-selector.c: insn-selector.brg
+../../jit/insn-selector.c: ../../jit/insn-selector.brg
 	$(call cmd,monoburg)
 
 quiet_cmd_tags = TAGS
