@@ -20,6 +20,7 @@ void test_jit_prepare_for_exec_returns_trampoline_objcode(void)
 	mb.compilation_unit = NULL;
 	void *actual = jit_prepare_for_exec(&mb);
 	assert_not_null(mb.compilation_unit);
+	assert_ptr_equals(CLASS_CB(mb.class), mb.compilation_unit->cb);
 	assert_not_null(mb.trampoline);
 	assert_ptr_equals(mb.trampoline->objcode, actual);
 }
