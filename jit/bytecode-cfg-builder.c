@@ -8,10 +8,12 @@
  * stream.
  */
 
-#include <vm/vm.h>
 #include <jit-compiler.h>
 #include <bytecodes.h>
-#include <bitmap.h>
+
+#include <vm/bitmap.h>
+#include <vm/vm.h>
+
 #include <stdlib.h>
 	
 static void bb_end_after_branch(struct compilation_unit *cu,

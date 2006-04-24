@@ -2,9 +2,9 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <bitmap.h>
-#include <libharness.h>
+#include <vm/bitmap.h>
 #include <stdlib.h>
+#include <libharness.h>
 
 void test_bitmap_is_initially_zeroed(void)
 {

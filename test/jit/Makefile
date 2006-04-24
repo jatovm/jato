@@ -8,7 +8,7 @@ CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
 INCLUDE = -I. -I../../jit/ -I../../src -I../../jit/glib -I../../include
 LIBS =
-OBJS = $(objdir)alloc.o $(objdir)basic-block.o $(objdir)bitmap.o $(objdir)bytecodes.o $(objdir)bytecode-arithmetic-converters.o \
+OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)bytecodes.o $(objdir)bytecode-arithmetic-converters.o \
 	$(objdir)bytecode-cfg-builder.o $(objdir)bytecode-to-ir.o $(objdir)compilation-unit.o \
 	$(objdir)jit-compiler.o $(objdir)instruction.o $(objdir)insn-selector.o $(objdir)stack.o $(objdir)statement.o \
 	$(objdir)expression.o $(objdir)x86-objcode.o $(objdir)jit.o

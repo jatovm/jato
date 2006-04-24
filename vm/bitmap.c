@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include <bitmap.h>
+#include <vm/bitmap.h>
 #include <vm/system.h>
 
 #include <stdlib.h>
