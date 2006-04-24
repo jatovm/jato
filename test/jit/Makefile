@@ -77,7 +77,7 @@ tags:
 	$(call cmd,tags)
 
 quiet_cmd_gensuite = GENSUITE $@
-      cmd_gensuite = sh make-tests.sh > $@
+      cmd_gensuite = sh ../scripts/make-tests.sh > $@
 
 test-suite.c:
 	$(call cmd,gensuite)
