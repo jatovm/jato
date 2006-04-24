@@ -8,9 +8,7 @@
 #include <pthread.h>
 
 struct compilation_unit {
-	struct classblock *cb;
-	unsigned char *code;
-	unsigned long code_len;
+	struct methodblock *method;
 	struct list_head bb_list;
 	struct stack *expr_stack;
 	void *objcode;
@@ -18,8 +16,7 @@ struct compilation_unit {
 	pthread_mutex_t mutex;
 };
 
-struct compilation_unit *alloc_compilation_unit(unsigned char *,
-						unsigned long);
+struct compilation_unit *alloc_compilation_unit(struct methodblock *);
 void free_compilation_unit(struct compilation_unit *);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 unsigned long nr_bblocks(struct compilation_unit *);

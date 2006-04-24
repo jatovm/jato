@@ -10,14 +10,14 @@
 #include <jvm_types.h>
 #include <libharness.h>
 
-struct compilation_unit *alloc_simple_compilation_unit(unsigned char *code,
-						       unsigned long code_len)
+struct compilation_unit *
+alloc_simple_compilation_unit(struct methodblock *method)
 {
 	struct compilation_unit *cu;
 	struct basic_block *bb;
 
-	cu = alloc_compilation_unit(code, code_len);
-	bb = alloc_basic_block(0, code_len);
+	cu = alloc_compilation_unit(method);
+	bb = alloc_basic_block(0, method->code_size);
 	list_add_tail(&bb->bb_list_node, &cu->bb_list);
 	return cu;
 }

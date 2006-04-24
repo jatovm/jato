@@ -61,14 +61,16 @@ static int convert_aconst_null(struct compilation_unit *cu,
 static int convert_iconst(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return __convert_const(J_INT, cu->code[offset] - OPC_ICONST_0,
+	unsigned char *code = cu->method->code;
+	return __convert_const(J_INT, code[offset] - OPC_ICONST_0,
 			       cu->expr_stack);
 }
 
 static int convert_lconst(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return __convert_const(J_LONG, cu->code[offset] - OPC_LCONST_0,
+	unsigned char *code = cu->method->code;
+	return __convert_const(J_LONG, code[offset] - OPC_LCONST_0,
 			       cu->expr_stack);
 }
 
@@ -86,32 +88,35 @@ static int __convert_fconst(enum jvm_type jvm_type,
 static int convert_fconst(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
+	unsigned char *code = cu->method->code;
 	return __convert_fconst(J_FLOAT,
-				cu->code[offset] - OPC_FCONST_0,
+				code[offset] - OPC_FCONST_0,
 				cu->expr_stack);
 }
 
 static int convert_dconst(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
+	unsigned char *code = cu->method->code;
 	return __convert_fconst(J_DOUBLE,
-				cu->code[offset] - OPC_DCONST_0,
+				code[offset] - OPC_DCONST_0,
 				cu->expr_stack);
 }
 
 static int convert_bipush(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return __convert_const(J_INT, (char)cu->code[offset + 1],
+	unsigned char *code = cu->method->code;
+	return __convert_const(J_INT, (char)code[offset + 1],
 			       cu->expr_stack);
 }
 
 static int convert_sipush(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
+	unsigned char *code = cu->method->code;
 	return __convert_const(J_INT,
-			       (short)be16_to_cpu(*(u2 *) & cu->
-						  code[offset + 1]),
+			       (short)be16_to_cpu(*(u2 *) & code[offset + 1]),
 			       cu->expr_stack);
 }
 
@@ -151,23 +156,29 @@ static int __convert_ldc(struct constant_pool *cp,
 static int convert_ldc(struct compilation_unit *cu, struct basic_block *bb,
 		       unsigned long offset)
 {
-	return __convert_ldc(&cu->cb->constant_pool,
-			     cu->code[offset + 1], cu->expr_stack);
+	struct classblock *cb = CLASS_CB(cu->method->class);
+	unsigned char *code = cu->method->code;
+	return __convert_ldc(&cb->constant_pool,
+			     code[offset + 1], cu->expr_stack);
 }
 
 static int convert_ldc_w(struct compilation_unit *cu, struct basic_block *bb,
 			 unsigned long offset)
 {
-	return __convert_ldc(&cu->cb->constant_pool,
-			     be16_to_cpu(*(u2 *) & cu->code[offset + 1]),
+	struct classblock *cb = CLASS_CB(cu->method->class);
+	unsigned char *code = cu->method->code;
+	return __convert_ldc(&cb->constant_pool,
+			     be16_to_cpu(*(u2 *) & code[offset + 1]),
 			     cu->expr_stack);
 }
 
 static int convert_ldc2_w(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return __convert_ldc(&cu->cb->constant_pool,
-			     be16_to_cpu(*(u2 *) & cu->code[offset + 1]),
+	struct classblock *cb = CLASS_CB(cu->method->class);
+	unsigned char *code = cu->method->code;
+	return __convert_ldc(&cb->constant_pool,
+			     be16_to_cpu(*(u2 *) & code[offset + 1]),
 			     cu->expr_stack);
 }
 
@@ -188,61 +199,71 @@ static int convert_load(struct compilation_unit *cu,
 static int convert_iload(struct compilation_unit *cu, struct basic_block *bb,
 			 unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset + 1], J_INT);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset + 1], J_INT);
 }
 
 static int convert_lload(struct compilation_unit *cu, struct basic_block *bb,
 			 unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset + 1], J_LONG);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset + 1], J_LONG);
 }
 
 static int convert_fload(struct compilation_unit *cu, struct basic_block *bb,
 			 unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset + 1], J_FLOAT);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset + 1], J_FLOAT);
 }
 
 static int convert_dload(struct compilation_unit *cu, struct basic_block *bb,
 			 unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset + 1], J_DOUBLE);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset + 1], J_DOUBLE);
 }
 
 static int convert_aload(struct compilation_unit *cu, struct basic_block *bb,
 			 unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset + 1], J_REFERENCE);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset + 1], J_REFERENCE);
 }
 
 static int convert_iload_n(struct compilation_unit *cu, struct basic_block *bb,
 			   unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset] - OPC_ILOAD_0, J_INT);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset] - OPC_ILOAD_0, J_INT);
 }
 
 static int convert_lload_n(struct compilation_unit *cu, struct basic_block *bb,
 			   unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset] - OPC_LLOAD_0, J_LONG);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset] - OPC_LLOAD_0, J_LONG);
 }
 
 static int convert_fload_n(struct compilation_unit *cu, struct basic_block *bb,
 			   unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset] - OPC_FLOAD_0, J_FLOAT);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset] - OPC_FLOAD_0, J_FLOAT);
 }
 
 static int convert_dload_n(struct compilation_unit *cu, struct basic_block *bb,
 			   unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset] - OPC_DLOAD_0, J_DOUBLE);
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset] - OPC_DLOAD_0, J_DOUBLE);
 }
 
 static int convert_aload_n(struct compilation_unit *cu, struct basic_block *bb,
 			   unsigned long offset)
 {
-	return convert_load(cu, bb, cu->code[offset] - OPC_ALOAD_0,
+	unsigned char *code = cu->method->code;
+	return convert_load(cu, bb, code[offset] - OPC_ALOAD_0,
 			    J_REFERENCE);
 }
 
@@ -369,62 +390,72 @@ static int convert_store(struct compilation_unit *cu,
 static int convert_istore(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return convert_store(cu, bb, J_INT, cu->code[offset + 1]);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_INT, code[offset + 1]);
 }
 
 static int convert_lstore(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return convert_store(cu, bb, J_LONG, cu->code[offset + 1]);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_LONG, code[offset + 1]);
 }
 
 static int convert_fstore(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return convert_store(cu, bb, J_FLOAT, cu->code[offset + 1]);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_FLOAT, code[offset + 1]);
 }
 
 static int convert_dstore(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return convert_store(cu, bb, J_DOUBLE, cu->code[offset + 1]);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_DOUBLE, code[offset + 1]);
 }
 
 static int convert_astore(struct compilation_unit *cu, struct basic_block *bb,
 			  unsigned long offset)
 {
-	return convert_store(cu, bb, J_REFERENCE, cu->code[offset + 1]);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_REFERENCE, code[offset + 1]);
 }
 
 static int convert_istore_n(struct compilation_unit *cu, struct basic_block *bb,
 			    unsigned long offset)
 {
-	return convert_store(cu, bb, J_INT, cu->code[offset] - OPC_ISTORE_0);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_INT, code[offset] - OPC_ISTORE_0);
 }
 
 static int convert_lstore_n(struct compilation_unit *cu, struct basic_block *bb,
 			    unsigned long offset)
 {
-	return convert_store(cu, bb, J_LONG, cu->code[offset] - OPC_LSTORE_0);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_LONG, code[offset] - OPC_LSTORE_0);
 }
 
 static int convert_fstore_n(struct compilation_unit *cu, struct basic_block *bb,
 			    unsigned long offset)
 {
-	return convert_store(cu, bb, J_FLOAT, cu->code[offset] - OPC_FSTORE_0);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_FLOAT, code[offset] - OPC_FSTORE_0);
 }
 
 static int convert_dstore_n(struct compilation_unit *cu, struct basic_block *bb,
 			    unsigned long offset)
 {
-	return convert_store(cu, bb, J_DOUBLE, cu->code[offset] - OPC_DSTORE_0);
+	unsigned char *code = cu->method->code;
+	return convert_store(cu, bb, J_DOUBLE, code[offset] - OPC_DSTORE_0);
 }
 
 static int convert_astore_n(struct compilation_unit *cu, struct basic_block *bb,
 			    unsigned long offset)
 {
+	unsigned char *code = cu->method->code;
 	return convert_store(cu, bb, J_REFERENCE,
-			     cu->code[offset] - OPC_ASTORE_0);
+			     code[offset] - OPC_ASTORE_0);
 }
 
 static int convert_array_store(struct compilation_unit *cu,
@@ -712,7 +743,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	struct statement *if_stmt;
 	unsigned long if_target;
 
-	if_target = bytecode_br_target(&cu->code[offset]);
+	if_target = bytecode_br_target(cu->method->code + offset);
 	true_bb = find_bb(cu, if_target);
 
 	if_conditional = binop_expr(jvm_type, binop, binary_left, binary_right);
@@ -865,7 +896,7 @@ static int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
 	struct statement *goto_stmt;
 	unsigned long goto_target;
 
-	goto_target = bytecode_br_target(&cu->code[offset]);
+	goto_target = bytecode_br_target(cu->method->code + offset);
 	target_bb = find_bb(cu, goto_target);
 
 	goto_stmt = alloc_statement(STMT_GOTO);
@@ -942,13 +973,15 @@ static int convert_getstatic(struct compilation_unit *cu,
 			     unsigned long offset)
 {
 	struct fieldblock *fb;
+	struct classblock *cb;
 	struct constant_pool *cp;
 	unsigned short index;
 	struct expression *value;
 	u1 type;
 
-	cp = &cu->cb->constant_pool;
-	index = cp_index(cu->code + offset + 1);
+	cb = CLASS_CB(cu->method->class);
+	cp = &cb->constant_pool;
+	index = cp_index(cu->method->code + offset + 1);
 	type = CP_TYPE(cp, index);
 	
 	if (type != CONSTANT_Resolved)
@@ -968,14 +1001,16 @@ static int convert_putstatic(struct compilation_unit *cu,
 			     unsigned long offset)
 {
 	struct fieldblock *fb;
+	struct classblock *cb;
 	struct constant_pool *cp;
 	unsigned short index;
 	struct statement *store_stmt;
 	struct expression *dest, *src;
 	u1 type;
 
-	cp = &cu->cb->constant_pool;
-	index = cp_index(cu->code + offset + 1);
+	cb = CLASS_CB(cu->method->class);
+	cp = &cb->constant_pool;
+	index = cp_index(cu->method->code + offset + 1);
 	type = CP_TYPE(cp, index);
 	
 	if (type != CONSTANT_Resolved)
@@ -1012,14 +1047,16 @@ static int convert_invokestatic(struct compilation_unit *cu,
 				unsigned long offset)
 {
 	struct methodblock *mb;
+	struct classblock *cb;
 	struct constant_pool *cp;
 	unsigned short index;
 	struct expression *value, *args_list = NULL;
 	u1 type;
 	int i;
 
-	cp = &cu->cb->constant_pool;
-	index = cp_index(cu->code + offset + 1);
+	cb = CLASS_CB(cu->method->class);
+	cp = &cb->constant_pool;
+	index = cp_index(cu->method->code + offset + 1);
 	type = CP_TYPE(cp, index);
 	
 	if (type != CONSTANT_Resolved)
@@ -1258,14 +1295,15 @@ int convert_to_ir(struct compilation_unit *cu)
 
 	entry_bb = list_entry(cu->bb_list.next, struct basic_block, bb_list_node);
 
-	while (offset < cu->code_len) {
-		unsigned char opc = cu->code[offset];
+	while (offset < cu->method->code_size) {
+		unsigned char *code = cu->method->code;
+		unsigned char opc = code[offset];
 		convert_fn_t convert = converters[opc];
 		unsigned long opc_size;
 		
-		opc_size = bytecode_size(cu->code+offset);
+		opc_size = bytecode_size(code + offset);
 
-		if (!convert || cu->code_len-offset < opc_size) {
+		if (!convert || cu->method->code_size-offset < opc_size) {
 			err = -EINVAL;
 			goto out;
 		}

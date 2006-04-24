@@ -32,18 +32,14 @@ static u8 double_to_cpu64(double fvalue)
 	return v.value;
 }
 
-static void __assert_convert_const(struct classblock *cb,
-				   enum jvm_type
-				   expected_jvm_type,
+static void __assert_convert_const(enum jvm_type expected_jvm_type,
 				   long long expected_value,
-				   unsigned char *code, size_t code_len)
+				   struct methodblock *method)
 {
 	struct expression *expr;
 	struct compilation_unit *cu;
 
-	cu = alloc_simple_compilation_unit(code, code_len);
-	cu->cb = cb;
-
+	cu = alloc_simple_compilation_unit(method);
 	convert_to_ir(cu);
 
 	expr = stack_pop(cu->expr_stack);
@@ -58,8 +54,11 @@ static void assert_convert_const(enum jvm_type expected_jvm_type,
 				 long long expected_value, char actual)
 {
 	unsigned char code[] = { actual };
-	__assert_convert_const(NULL, expected_jvm_type, expected_value,
-			       code, ARRAY_SIZE(code));
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	__assert_convert_const(expected_jvm_type, expected_value, &method);
 }
 
 static void assert_convert_fconst(enum jvm_type expected_jvm_type,
@@ -67,10 +66,13 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 {
 	struct expression *expr;
 	unsigned char code[] = { actual };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
-
+	cu = alloc_simple_compilation_unit(&method);
 	convert_to_ir(cu);
 	expr = stack_pop(cu->expr_stack);
 	assert_fvalue_expr(expected_jvm_type, expected_value, &expr->node);
@@ -83,10 +85,14 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 void test_convert_nop(void)
 {
 	unsigned char code[] = { OPC_NOP };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 	struct statement *stmt;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -134,8 +140,11 @@ void test_convert_dconst(void)
 static void assert_convert_bipush(char expected_value, char actual)
 {
 	unsigned char code[] = { actual, expected_value };
-	__assert_convert_const(NULL, J_INT,
-			       expected_value, code, ARRAY_SIZE(code));
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	__assert_convert_const(J_INT, expected_value, &method);
 }
 
 void test_convert_bipush(void)
@@ -149,8 +158,11 @@ static void assert_convert_sipush(long long expected_value,
 				  char first, char second, char actual)
 {
 	unsigned char code[] = { actual, first, second };
-	__assert_convert_const(NULL, J_INT,
-			       expected_value, code, ARRAY_SIZE(code));
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	__assert_convert_const(J_INT, expected_value, &method);
 }
 
 #define MIN_SHORT (-32768)
@@ -173,7 +185,9 @@ static void convert_ir_const(struct compilation_unit *cu,
 		.constant_pool.info = cp_infos,
 		.constant_pool.type = cp_types
 	};
-	cu->cb = &cb;
+	struct class *class[2];
+	class[1] = (void *) &cb;
+	cu->method->class = (void *)class;
 	convert_to_ir(cu);
 }
 
@@ -185,8 +199,12 @@ static void assert_convert_ldc(enum jvm_type expected_jvm_type,
 	u1 cp_types[] = { cp_type };
 	unsigned char code[] = { OPC_LDC, 0x00, 0x00 };
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 	expr = stack_pop(cu->expr_stack);
@@ -204,8 +222,12 @@ static void assert_convert_ldc_f(float expected_value)
 	u1 cp_types[] = { CONSTANT_Float };
 	unsigned char code[] = { OPC_LDC, 0x00, 0x00 };
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 	expr = stack_pop(cu->expr_stack);
@@ -242,8 +264,12 @@ static void assert_convert_ldcw(enum jvm_type expected_jvm_type,
 	cp_types[256] = cp_type;
 	unsigned char code[] = { opcode, 0x01, 0x00 };
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
 	expr = stack_pop(cu->expr_stack);
@@ -265,8 +291,12 @@ static void assert_convert_ldcw_f(enum jvm_type expected_jvm_type,
 	unsigned char code[] = { opcode, 0x01, 0x00 };
 	struct expression *expr;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
 	expr = stack_pop(cu->expr_stack);
@@ -336,8 +366,12 @@ static void __assert_convert_load(unsigned char *code,
 {
 	struct expression *expr;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = size,
+	};
 
-	cu = alloc_simple_compilation_unit(code, size);
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_to_ir(cu);
 
@@ -450,10 +484,14 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	unsigned char code[] = { opc };
 	struct expression *arrayref_expr, *index_expr, *temporary_expr;
 	struct statement *stmt;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 	unsigned long expected_temporary;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
@@ -540,8 +578,12 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 {
 	struct statement *stmt;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = size,
+	};
 
-	cu = alloc_simple_compilation_unit(code, size);
+	cu = alloc_simple_compilation_unit(&method);
 
 	stack_push(cu->expr_stack, temporary_expr(J_INT, expected_temporary));
 
@@ -656,8 +698,12 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 	struct expression *arrayref_expr, *index_expr, *expr;
 	struct statement *stmt;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
@@ -739,11 +785,15 @@ void test_convert_sastore(void)
 static void assert_pop_stack(unsigned char opc)
 {
 	unsigned char code[] = { opc };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 	struct expression *expr;
 
 	expr = value_expr(J_INT, 1);
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 	stack_push(cu->expr_stack, expr);
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(cu->expr_stack));
@@ -762,8 +812,12 @@ static void assert_dup_stack(unsigned char opc, void *expected)
 {
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	stack_push(cu->expr_stack, expected);
 
@@ -788,8 +842,12 @@ static void assert_dup_x1_stack(unsigned char opc,
 {
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	stack_push(cu->expr_stack, expected2);
 	stack_push(cu->expr_stack, expected1);
@@ -817,8 +875,12 @@ static void assert_dup_x2_stack(unsigned char opc,
 {
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	stack_push(cu->expr_stack, expected3);
 	stack_push(cu->expr_stack, expected2);
@@ -847,8 +909,12 @@ static void assert_swap_stack(unsigned char opc,
 {
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	stack_push(cu->expr_stack, expected1);
 	stack_push(cu->expr_stack, expected2);
@@ -874,8 +940,12 @@ static void assert_conversion_expr_stack(unsigned char opc,
 	unsigned char code[] = { opc };
 	struct expression *expression, *conversion_expression;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	expression = temporary_expr(from_type, 1);
 	stack_push(cu->expr_stack, expression);
@@ -930,8 +1000,12 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 	unsigned char code[] = { opc };
 	struct expression *left, *right, *cmp_expression;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	left = temporary_expr(type, 1);
 	right = temporary_expr(type, 2);
@@ -967,11 +1041,15 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	struct statement *if_stmt;
 	struct compilation_unit *cu;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
 	stmt_bb = alloc_basic_block(0, 1);
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
 
-	cu = alloc_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_compilation_unit(&method);
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
@@ -1009,11 +1087,15 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	struct statement *if_stmt;
 	struct compilation_unit *cu;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
 	stmt_bb = alloc_basic_block(0, 1);
 	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
 
-	cu = alloc_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_compilation_unit(&method);
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
@@ -1057,11 +1139,15 @@ void test_convert_goto(void)
 	struct statement *goto_stmt;
 	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 
 	goto_bb = alloc_basic_block(0, 1);
 	target_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
 
-	cu = alloc_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_compilation_unit(&method);
 	list_add_tail(&goto_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 
@@ -1088,9 +1174,13 @@ static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 	struct expression *return_value;
 	struct compilation_unit *cu;
 	unsigned char code[] = { opc };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct statement *ret_stmt;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	return_value = temporary_expr(jvm_type, 0);
 	stack_push(cu->expr_stack, return_value);
@@ -1116,9 +1206,13 @@ void test_convert_void_return(void)
 {
 	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_RETURN };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct statement *ret_stmt;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_to_ir(cu);
 	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -1142,11 +1236,15 @@ static void assert_convert_getstatic(enum jvm_type expected_jvm_type,
 	struct fieldblock fb;
 	struct expression *expr;
 	unsigned char code[] = { OPC_GETSTATIC, 0x00, 0x00 };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 
 	fb.type = field_type;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_field(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
@@ -1176,12 +1274,16 @@ static void assert_convert_putstatic(enum jvm_type expected_jvm_type,
 	struct fieldblock fb;
 	struct statement *stmt;
 	unsigned char code[] = { OPC_PUTSTATIC, 0x00, 0x00 };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 	struct expression *value;
 
 	fb.type = field_type;
 	value = value_expr(expected_jvm_type, 0xdeadbeef);
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 	stack_push(cu->expr_stack, value);
 	convert_ir_field(cu, &fb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -1269,6 +1371,10 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 		OPC_INVOKESTATIC, 0x00, 0x00,
 		OPC_IRETURN
 	};
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct expression *args[nr_args];
@@ -1277,7 +1383,7 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 	mb.type = return_type;
 	mb.args_count = nr_args;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	push_args(cu, args, nr_args);
 	convert_ir_invoke(cu, &mb);
@@ -1314,13 +1420,17 @@ void test_convert_invokestatic_for_void_return_type(void)
 	unsigned char code[] = {
 		OPC_INVOKESTATIC, 0x00, 0x00,
 	};
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 	struct statement *stmt;
 
 	mb.type = "V";
 	mb.args_count = 0;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 	convert_ir_invoke(cu, &mb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
@@ -1338,13 +1448,17 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 		OPC_INVOKESTATIC, 0x00, 0x00,
 		OPC_POP
 	};
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
 	struct compilation_unit *cu;
 	struct statement *stmt;
 
 	mb.type = "I";
 	mb.args_count = 0;
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 	convert_ir_invoke(cu, &mb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
@@ -1391,8 +1505,12 @@ void test_converts_complete_basic_block(void)
 {
 	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_ILOAD_0, OPC_ILOAD_1, OPC_IADD, OPC_IRETURN };
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
  
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 	convert_to_ir(cu);
 
 	assert_false(list_is_empty(&bb_entry(cu->bb_list.next)->stmt_list));

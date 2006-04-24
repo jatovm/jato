@@ -22,9 +22,12 @@ void test_branch_opcode_ends_basic_block(void)
 {
 	struct basic_block *bb1, *bb2, *bb3;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = default_string,
+		.code_size = ARRAY_SIZE(default_string)
+	};
 	
-	cu = alloc_compilation_unit(default_string,
-				    ARRAY_SIZE(default_string));
+	cu = alloc_compilation_unit(&method);
 
 	build_cfg(cu);
 	assert_int_equals(3, nr_bblocks(cu));
@@ -53,9 +56,12 @@ static unsigned char greater_than_zero[10] = {
 void test_multiple_branches(void)
 {
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = greater_than_zero,
+		.code_size = ARRAY_SIZE(greater_than_zero) 
+	};
 
-	cu = alloc_compilation_unit(greater_than_zero,
-				    ARRAY_SIZE(greater_than_zero));
+	cu = alloc_compilation_unit(&method);
 
 	build_cfg(cu);
 	assert_int_equals(4, nr_bblocks(cu));

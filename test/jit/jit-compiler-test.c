@@ -16,8 +16,12 @@ void test_executing_jit_compiled_function(void)
 {
 	struct compilation_unit *cu;
 	sum_fn function;
+	struct methodblock method = {
+		.code = sum_bytecode,
+		.code_size = ARRAY_SIZE(sum_bytecode)
+	};
 	
-	cu = alloc_compilation_unit(sum_bytecode, ARRAY_SIZE(sum_bytecode));
+	cu = alloc_compilation_unit(&method);
 	jit_compile(cu);
 	function = cu->objcode;
 
@@ -31,7 +35,11 @@ void test_magic_trampoline_compiles_uncompiled(void)
 {
 	void *objcode;
 	struct compilation_unit *cu;
-	cu = alloc_compilation_unit(sum_bytecode, ARRAY_SIZE(sum_bytecode));
+	struct methodblock method = {
+		.code = sum_bytecode,
+		.code_size = ARRAY_SIZE(sum_bytecode)
+	};
+	cu = alloc_compilation_unit(&method);
 
 	assert_false(cu->is_compiled);
 	objcode = jit_magic_trampoline(cu);
@@ -46,8 +54,12 @@ void test_magic_trampoline_compiles_once(void)
 {
 	void *objcode;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = sum_bytecode,
+		.code_size = ARRAY_SIZE(sum_bytecode)
+	};
 
-	cu = alloc_compilation_unit(sum_bytecode, ARRAY_SIZE(sum_bytecode));
+	cu = alloc_compilation_unit(&method);
 	jit_magic_trampoline(cu);
 	objcode = cu->objcode;
 	jit_magic_trampoline(cu);
@@ -61,8 +73,12 @@ void test_jit_method_trampoline_compiles_and_invokes_method(void)
 	struct compilation_unit *cu;
 	struct jit_trampoline *t;
 	sum_fn function;
+	struct methodblock method = {
+		.code = sum_bytecode,
+		.code_size = ARRAY_SIZE(sum_bytecode)
+	};
 
-	cu = alloc_compilation_unit(sum_bytecode, ARRAY_SIZE(sum_bytecode));
+	cu = alloc_compilation_unit(&method);
 	t = build_jit_trampoline(cu);
 
 	function = t->objcode;

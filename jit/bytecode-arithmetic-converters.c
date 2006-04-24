@@ -260,18 +260,19 @@ int convert_iinc(struct compilation_unit *cu, struct basic_block *bb,
 	struct statement *store_stmt;
 	struct expression *local_expression, *binop_expression,
 	    *const_expression;
+	unsigned char *code = cu->method->code;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)
 		goto failed;
 
-	local_expression = local_expr(J_INT, cu->code[offset + 1]);
+	local_expression = local_expr(J_INT, code[offset + 1]);
 	if (!local_expression)
 		goto failed;
 
 	store_stmt->store_dest = &local_expression->node;
 
-	const_expression = value_expr(J_INT, cu->code[offset + 2]);
+	const_expression = value_expr(J_INT, code[offset + 2]);
 	if (!const_expression)
 		goto failed;
 

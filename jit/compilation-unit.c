@@ -10,15 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct compilation_unit *alloc_compilation_unit(unsigned char *code,
-						unsigned long code_len)
+struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 {
 	struct compilation_unit *cu = malloc(sizeof *cu);
 	if (cu) {
 		memset(cu, 0, sizeof *cu);
 		INIT_LIST_HEAD(&cu->bb_list);
-		cu->code = code;
-		cu->code_len = code_len;
+		cu->method = method;
 		cu->expr_stack = alloc_stack();
 		cu->is_compiled = false;
 		pthread_mutex_init(&cu->mutex, NULL);

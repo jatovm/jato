@@ -34,8 +34,12 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 	unsigned char code[] = { opc };
 	struct expression *left, *right, *expr;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code)
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	left = temporary_expr(jvm_type, 1);
 	right = temporary_expr(jvm_type, 2);
@@ -100,8 +104,12 @@ static void assert_convert_unop(enum jvm_type jvm_type,
 	unsigned char code[] = { opc };
 	struct expression *expression, *unary_expression;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code)
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	expression = temporary_expr(jvm_type, 1);
 	stack_push(cu->expr_stack, expression);
@@ -162,8 +170,12 @@ static void assert_iinc_stmt(unsigned char expected_index,
 	struct statement *store_stmt;
 	struct tree_node *local_expression, *const_expression;
 	struct compilation_unit *cu;
+	struct methodblock method = {
+		.code = code,
+		.code_size = ARRAY_SIZE(code)
+	};
 
-	cu = alloc_simple_compilation_unit(code, ARRAY_SIZE(code));
+	cu = alloc_simple_compilation_unit(&method);
 
 	convert_to_ir(cu);
 	store_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);

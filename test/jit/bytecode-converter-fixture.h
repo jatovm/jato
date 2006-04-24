@@ -2,14 +2,14 @@
 #define __BYTECODE_CONVERTER_FIXTURE_H
 
 struct compilation_unit;
+struct methodblock;
 
 static inline struct statement *stmt_entry(struct list_head *head)
 {
 	return list_entry(head, struct statement, stmt_list_node);
 }
 
-struct compilation_unit *alloc_simple_compilation_unit(unsigned char *,
-						       unsigned long);
+struct compilation_unit *alloc_simple_compilation_unit(struct methodblock *);
 void assert_value_expr(enum jvm_type, long long, struct tree_node *);
 void assert_fvalue_expr(enum jvm_type, double, struct tree_node *);
 void assert_local_expr(enum jvm_type, unsigned long, struct tree_node *);
