@@ -2,7 +2,7 @@
  * Copyright (C) 2005  Pekka Enberg
  */
 
-#include <system.h>
+#include <vm/system.h>
 #include <statement.h>
 #include <byteorder.h>
 #include <stack.h>

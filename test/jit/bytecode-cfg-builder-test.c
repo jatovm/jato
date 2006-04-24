@@ -2,7 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <system.h>
+#include <vm/system.h>
 #include <vm/vm.h>
 #include <jit-compiler.h>
 #include <libharness.h>

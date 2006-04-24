@@ -11,7 +11,8 @@
 
 #define _XOPEN_SOURCE 600
 
-#include <system.h>
+#include <vm/system.h>
+
 #include <stddef.h>
 #include <sys/mman.h>
 #include <unistd.h>

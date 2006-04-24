@@ -2,13 +2,16 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <libharness.h>
 #include <jit/jit.h>
-#include <vm/vm.h>
-#include <system.h>
-#include <stddef.h>
 #include <compilation-unit.h>
 #include <jit-compiler.h>
+
+#include <vm/vm.h>
+#include <vm/system.h>
+
+#include <stddef.h>
+
+#include <libharness.h>
 
 static char java_main[] = { OPC_RETURN };
 

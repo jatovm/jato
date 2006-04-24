@@ -2,11 +2,13 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <libharness.h>
-#include <system.h>
 #include <x86-objcode.h>
 #include <basic-block.h>
 #include <instruction.h>
+
+#include <vm/system.h>
+
+#include <libharness.h>
 
 void test_emit_prolog(void)
 {

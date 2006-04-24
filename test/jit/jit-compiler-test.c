@@ -2,11 +2,13 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <libharness.h>
-#include <system.h>
-#include <jit-compiler.h>
 #include <compilation-unit.h>
+#include <jit-compiler.h>
+
+#include <vm/system.h>
 #include <vm/vm.h>
+
+#include <libharness.h>
 
 typedef int (*sum_fn)(int, int);
 

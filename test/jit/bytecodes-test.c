@@ -2,8 +2,9 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <system.h>
+#include <vm/system.h>
 #include <vm/vm.h>
+
 #include <libharness.h>
 #include <bytecodes.h>
 #include <byteorder.h>

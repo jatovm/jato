@@ -1,7 +1,8 @@
 #ifndef __EXPRESSION_H
 #define __EXPRESSION_H
 
-#include <system.h>
+#include <vm/system.h>
+
 #include <jvm_types.h>
 #include <tree-node.h>
 

@@ -2,12 +2,13 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <system.h>
 #include <statement.h>
 #include <byteorder.h>
 #include <stack.h>
 #include <jit-compiler.h>
+
 #include <vm/list.h>
+#include <vm/system.h>
 
 #include <libharness.h>
 #include <stdlib.h>

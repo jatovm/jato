@@ -6,7 +6,8 @@
  */
 
 #include <bitmap.h>
-#include <system.h>
+#include <vm/system.h>
+
 #include <stdlib.h>
 #include <string.h>
 
