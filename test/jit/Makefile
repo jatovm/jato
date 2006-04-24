@@ -6,7 +6,7 @@ objdir=../../jit/
 MONOBURG=../../monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
-INCLUDE = -I. -I../../jit/ -I../../src -I../../jit/glib -I../../include
+INCLUDE = -I. -I../libharness/ -I../../jit/ -I../../src -I../../jit/glib -I../../include
 LIBS =
 OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)bytecodes.o $(objdir)bytecode-arithmetic-converters.o \
 	$(objdir)bytecode-cfg-builder.o $(objdir)bytecode-to-ir.o $(objdir)compilation-unit.o \
@@ -18,7 +18,7 @@ TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o \
 	compilation-unit-test.o insn-selector-test.o \
 	jit-compiler-test.o list-test.o stack-test.o x86-objcode-test.o \
 	jit-test.o
-HARNESS = libharness.o ../../vm/backtrace.o
+HARNESS = ../libharness/libharness.o ../../vm/backtrace.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
 # as parameter to make.
