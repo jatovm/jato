@@ -7,7 +7,7 @@
 #include <byteorder.h>
 #include <stack.h>
 #include <jit-compiler.h>
-#include <list.h>
+#include <vm/list.h>
 #include <bytecode-converter-fixture.h>
 #include <libharness.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 #ifndef __STATEMENT_H
 #define __STATEMENT_H
 
-#include <list.h>
+#include <vm/list.h>
 #include <expression.h>
 #include <stddef.h>
 #include <vm/vm.h>

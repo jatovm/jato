@@ -1,7 +1,7 @@
 #ifndef __JIT_INSTRUCTION_H
 #define __JIT_INSTRUCTION_H
 
-#include <list.h>
+#include <vm/list.h>
 
 enum reg {
 	REG_EAX,

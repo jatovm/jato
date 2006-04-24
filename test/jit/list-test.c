@@ -3,7 +3,7 @@
  */
 
 #include <libharness.h>
-#include <list.h>
+#include <vm/list.h>
 
 void test_list_retains_elements(void)
 {

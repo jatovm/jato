@@ -1,7 +1,7 @@
 #ifndef __JIT_COMPILATION_UNIT_H
 #define __JIT_COMPILATION_UNIT_H
 
-#include <list.h>
+#include <vm/list.h>
 #include <basic-block.h>
 #include <stack.h>
 #include <stdbool.h>

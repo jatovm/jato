@@ -1,7 +1,7 @@
 #ifndef __JIT_BASIC_BLOCK_H
 #define __JIT_BASIC_BLOCK_H
 
-#include <list.h>
+#include <vm/list.h>
 
 struct insn;
 struct statement;
