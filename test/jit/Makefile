@@ -11,7 +11,7 @@ LIBS =
 OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)bytecodes.o $(objdir)arithmetic-bc.o \
 	$(objdir)bytecode-cfg-builder.o $(objdir)bytecode-to-ir.o $(objdir)compilation-unit.o \
 	$(objdir)jit-compiler.o $(objdir)instruction.o $(objdir)insn-selector.o $(objdir)stack.o $(objdir)statement.o \
-	$(objdir)expression.o $(objdir)x86-objcode.o $(objdir)jit.o $(objdir)load-store-bc.o
+	$(objdir)expression.o $(objdir)x86-objcode.o $(objdir)jit.o $(objdir)load-store-bc.o $(objdir)ostack-bc.o
 TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o \
 	arithmetic-bc-test.o bytecode-cfg-builder-test.o \
 	bytecode-converter-fixture.o bytecode-to-ir-test.o \
