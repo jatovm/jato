@@ -6,6 +6,7 @@
 
 #include <jit/load-store-bc.h>
 #include <jit/arithmetic-bc.h>
+#include <jit/typeconv-bc.h>
 #include <jit/ostack-bc.h>
 
 #endif
