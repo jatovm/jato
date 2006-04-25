@@ -14,14 +14,10 @@
 #include <jit-compiler.h>
 #include <bytecodes.h>
 #include <jit/bytecode-converters.h>
+#include <vm/const-pool.h>
 
 #include <errno.h>
 #include <stdlib.h>
-
-static void *cp_info_ptr(struct constant_pool *cp, unsigned short idx)
-{
-	return (void *) CP_INFO(cp, idx);
-}
 
 static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
 		       unsigned long offset)
@@ -239,104 +235,6 @@ static int convert_void_return(struct compilation_unit *cu,
 
 	return_stmt->return_value = NULL;
 	bb_insert_stmt(bb, return_stmt);
-	return 0;
-}
-
-static unsigned short cp_index(unsigned char *code)
-{
-	return be16_to_cpu(*(u2 *) code);
-}
-
-static enum jvm_type str_to_type(char *type)
-{
-	switch (type[0]) {
-	case 'V':
-		return J_VOID;
-	case 'B':
-		return J_BYTE;
-	case 'C':
-		return J_CHAR;
-	case 'D':
-		return J_DOUBLE;
-	case 'F':
-		return J_FLOAT;
-	case 'I':
-		return J_INT;
-	case 'J':
-		return J_LONG;
-	case 'S':
-		return J_SHORT;
-	case 'Z':
-		return J_BOOLEAN;
-	default:
-		break;
-	};
-	return J_REFERENCE;
-}
-
-static int convert_getstatic(struct compilation_unit *cu,
-			     struct basic_block *bb,
-			     unsigned long offset)
-{
-	struct fieldblock *fb;
-	struct classblock *cb;
-	struct constant_pool *cp;
-	unsigned short index;
-	struct expression *value;
-	u1 type;
-
-	cb = CLASS_CB(cu->method->class);
-	cp = &cb->constant_pool;
-	index = cp_index(cu->method->code + offset + 1);
-	type = CP_TYPE(cp, index);
-	
-	if (type != CONSTANT_Resolved)
-		return -EINVAL;
-
-	fb = cp_info_ptr(cp, index);
-	value = field_expr(str_to_type(fb->type), fb);
-	if (!value)
-		return -ENOMEM;
-
-	stack_push(cu->expr_stack, value);
-	return 0;
-}
-
-static int convert_putstatic(struct compilation_unit *cu,
-			     struct basic_block *bb,
-			     unsigned long offset)
-{
-	struct fieldblock *fb;
-	struct classblock *cb;
-	struct constant_pool *cp;
-	unsigned short index;
-	struct statement *store_stmt;
-	struct expression *dest, *src;
-	u1 type;
-
-	cb = CLASS_CB(cu->method->class);
-	cp = &cb->constant_pool;
-	index = cp_index(cu->method->code + offset + 1);
-	type = CP_TYPE(cp, index);
-	
-	if (type != CONSTANT_Resolved)
-		return -EINVAL;
-
-	fb = cp_info_ptr(cp, index);
-	src = stack_pop(cu->expr_stack);
-	dest = field_expr(str_to_type(fb->type), fb);
-	if (!dest)
-		return -ENOMEM;
-	
-	store_stmt = alloc_statement(STMT_STORE);
-	if (!store_stmt) {
-		expr_put(dest);
-		return -ENOMEM;
-	}
-	store_stmt->store_dest = &dest->node;
-	store_stmt->store_src = &src->node;
-	bb_insert_stmt(bb, store_stmt);
-	
 	return 0;
 }
 

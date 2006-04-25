@@ -20,7 +20,8 @@ OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../jit/x86-objcode.o ../jit/alloc.o ../jit/bytecode-to-ir.o \
 	../jit/bytecodes.o ../jit/bytecode-cfg-builder.o ../vm/bitmap.o \
 	../jit/insn-selector.o ../jit/arithmetic-bc.o ../jit/load-store-bc.o \
-	../vm/backtrace.o ../jit/ostack-bc.o ../jit/typeconv-bc.o
+	../vm/backtrace.o ../jit/ostack-bc.o ../jit/typeconv-bc.o \
+	../jit/object-bc.o ../jit/jvm_types.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
 # as parameter to make.

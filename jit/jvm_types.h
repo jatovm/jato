@@ -15,4 +15,6 @@ enum jvm_type {
 	J_RETURN_ADDRESS,
 };
 
+extern enum jvm_type str_to_type(char *);
+
 #endif

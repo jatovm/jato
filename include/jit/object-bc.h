@@ -1,0 +1,2 @@
+DECLARE_CONVERTER(convert_getstatic)
+DECLARE_CONVERTER(convert_putstatic)
