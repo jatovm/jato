@@ -5,5 +5,6 @@
 	extern int name(struct compilation_unit *, struct basic_block *, unsigned long);
 
 #include <jit/load-store-bc.h>
+#include <jit/arithmetic-bc.h>
 
 #endif

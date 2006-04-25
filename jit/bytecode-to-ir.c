@@ -13,8 +13,8 @@
 #include <stack.h>
 #include <jit-compiler.h>
 #include <bytecodes.h>
-#include <bytecode-arithmetic-converters.h>
 #include <jit/bytecode-converters.h>
+
 #include <errno.h>
 #include <stdlib.h>
 
