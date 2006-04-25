@@ -9,6 +9,7 @@
 #include <jit-compiler.h>
 #include <vm/list.h>
 #include <bytecode-converter-fixture.h>
+#include <jit/bytecode-converters.h>
 #include <libharness.h>
 #include <stdlib.h>
 

@@ -14,14 +14,9 @@
 #include <jit-compiler.h>
 #include <bytecodes.h>
 #include <bytecode-arithmetic-converters.h>
+#include <jit/bytecode-converters.h>
 #include <errno.h>
 #include <stdlib.h>
-
-static unsigned long alloc_temporary(void)
-{
-	static unsigned long temporary;
-	return ++temporary;
-}
 
 static void *cp_info_ptr(struct constant_pool *cp, unsigned short idx)
 {
@@ -39,520 +34,6 @@ static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
 
 	bb_insert_stmt(bb, stmt);
 	return 0;
-}
-
-static int __convert_const(enum jvm_type jvm_type,
-			   unsigned long long value, struct stack *expr_stack)
-{
-	struct expression *expr = value_expr(jvm_type, value);
-	if (!expr)
-		return -ENOMEM;
-
-	stack_push(expr_stack, expr);
-	return 0;
-}
-
-static int convert_aconst_null(struct compilation_unit *cu,
-			       struct basic_block *bb, unsigned long offset)
-{
-	return __convert_const(J_REFERENCE, 0, cu->expr_stack);
-}
-
-static int convert_iconst(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return __convert_const(J_INT, code[offset] - OPC_ICONST_0,
-			       cu->expr_stack);
-}
-
-static int convert_lconst(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return __convert_const(J_LONG, code[offset] - OPC_LCONST_0,
-			       cu->expr_stack);
-}
-
-static int __convert_fconst(enum jvm_type jvm_type,
-			    double value, struct stack *expr_stack)
-{
-	struct expression *expr = fvalue_expr(jvm_type, value);
-	if (!expr)
-		return -ENOMEM;
-
-	stack_push(expr_stack, expr);
-	return 0;
-}
-
-static int convert_fconst(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return __convert_fconst(J_FLOAT,
-				code[offset] - OPC_FCONST_0,
-				cu->expr_stack);
-}
-
-static int convert_dconst(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return __convert_fconst(J_DOUBLE,
-				code[offset] - OPC_DCONST_0,
-				cu->expr_stack);
-}
-
-static int convert_bipush(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return __convert_const(J_INT, (char)code[offset + 1],
-			       cu->expr_stack);
-}
-
-static int convert_sipush(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return __convert_const(J_INT,
-			       (short)be16_to_cpu(*(u2 *) & code[offset + 1]),
-			       cu->expr_stack);
-}
-
-static int __convert_ldc(struct constant_pool *cp,
-			 unsigned long cp_idx, struct stack *expr_stack)
-{
-	struct expression *expr;
-
-	u1 type = CP_TYPE(cp, cp_idx);
-	switch (type) {
-	case CONSTANT_Integer:
-		expr = value_expr(J_INT, CP_INTEGER(cp, cp_idx));
-		break;
-	case CONSTANT_Float:
-		expr = fvalue_expr(J_FLOAT, CP_FLOAT(cp, cp_idx));
-		break;
-	case CONSTANT_String:
-		expr = value_expr(J_REFERENCE, CP_LONG(cp, cp_idx));
-		break;
-	case CONSTANT_Long:
-		expr = value_expr(J_LONG, CP_LONG(cp, cp_idx));
-		break;
-	case CONSTANT_Double:
-		expr = fvalue_expr(J_DOUBLE, CP_DOUBLE(cp, cp_idx));
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	if (!expr)
-		return -ENOMEM;
-
-	stack_push(expr_stack, expr);
-	return 0;
-}
-
-static int convert_ldc(struct compilation_unit *cu, struct basic_block *bb,
-		       unsigned long offset)
-{
-	struct classblock *cb = CLASS_CB(cu->method->class);
-	unsigned char *code = cu->method->code;
-	return __convert_ldc(&cb->constant_pool,
-			     code[offset + 1], cu->expr_stack);
-}
-
-static int convert_ldc_w(struct compilation_unit *cu, struct basic_block *bb,
-			 unsigned long offset)
-{
-	struct classblock *cb = CLASS_CB(cu->method->class);
-	unsigned char *code = cu->method->code;
-	return __convert_ldc(&cb->constant_pool,
-			     be16_to_cpu(*(u2 *) & code[offset + 1]),
-			     cu->expr_stack);
-}
-
-static int convert_ldc2_w(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	struct classblock *cb = CLASS_CB(cu->method->class);
-	unsigned char *code = cu->method->code;
-	return __convert_ldc(&cb->constant_pool,
-			     be16_to_cpu(*(u2 *) & code[offset + 1]),
-			     cu->expr_stack);
-}
-
-static int convert_load(struct compilation_unit *cu,
-			struct basic_block *bb,
-			unsigned char index, enum jvm_type type)
-{
-	struct expression *expr;
-
-	expr = local_expr(type, index);
-	if (!expr)
-		return -ENOMEM;
-
-	stack_push(cu->expr_stack, expr);
-	return 0;
-}
-
-static int convert_iload(struct compilation_unit *cu, struct basic_block *bb,
-			 unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset + 1], J_INT);
-}
-
-static int convert_lload(struct compilation_unit *cu, struct basic_block *bb,
-			 unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset + 1], J_LONG);
-}
-
-static int convert_fload(struct compilation_unit *cu, struct basic_block *bb,
-			 unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset + 1], J_FLOAT);
-}
-
-static int convert_dload(struct compilation_unit *cu, struct basic_block *bb,
-			 unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset + 1], J_DOUBLE);
-}
-
-static int convert_aload(struct compilation_unit *cu, struct basic_block *bb,
-			 unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset + 1], J_REFERENCE);
-}
-
-static int convert_iload_n(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset] - OPC_ILOAD_0, J_INT);
-}
-
-static int convert_lload_n(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset] - OPC_LLOAD_0, J_LONG);
-}
-
-static int convert_fload_n(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset] - OPC_FLOAD_0, J_FLOAT);
-}
-
-static int convert_dload_n(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset] - OPC_DLOAD_0, J_DOUBLE);
-}
-
-static int convert_aload_n(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_load(cu, bb, code[offset] - OPC_ALOAD_0,
-			    J_REFERENCE);
-}
-
-static int convert_array_load(struct compilation_unit *cu,
-			      struct basic_block *bb, enum jvm_type type)
-{
-	struct expression *index, *arrayref;
-	struct expression *src_expr, *dest_expr;
-	struct statement *store_stmt, *arraycheck, *nullcheck;
-
-	index = stack_pop(cu->expr_stack);
-	arrayref = stack_pop(cu->expr_stack);
-
-	store_stmt = alloc_statement(STMT_STORE);
-	if (!store_stmt)
-		goto failed;
-
-	src_expr = array_deref_expr(type, arrayref, index);
-	dest_expr = temporary_expr(type, alloc_temporary());
-	
-	store_stmt->store_src = &src_expr->node;
-	store_stmt->store_dest = &dest_expr->node;
-
-	expr_get(dest_expr);
-	stack_push(cu->expr_stack, dest_expr);
-
-	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
-	if (!arraycheck)
-		goto failed_arraycheck;
-
-	expr_get(src_expr);
-	arraycheck->expression = &src_expr->node;
-
-	nullcheck = alloc_statement(STMT_NULL_CHECK);
-	if (!nullcheck)
-		goto failed_nullcheck;
-
-	expr_get(arrayref);
-	nullcheck->expression = &arrayref->node;
-
-	bb_insert_stmt(bb, nullcheck);
-	bb_insert_stmt(bb, arraycheck);
-	bb_insert_stmt(bb, store_stmt);
-
-	return 0;
-
-      failed_nullcheck:
-	free_statement(arraycheck);
-      failed_arraycheck:
-	free_statement(store_stmt);
-      failed:
-	return -ENOMEM;
-}
-
-static int convert_iaload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_INT);
-}
-
-static int convert_laload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_LONG);
-}
-
-static int convert_faload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_FLOAT);
-}
-
-static int convert_daload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_DOUBLE);
-}
-
-static int convert_aaload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_REFERENCE);
-}
-
-static int convert_baload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_INT);
-}
-
-static int convert_caload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_CHAR);
-}
-
-static int convert_saload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	return convert_array_load(cu, bb, J_SHORT);
-}
-
-static int convert_store(struct compilation_unit *cu,
-			 struct basic_block *bb,
-			 enum jvm_type type, unsigned long index)
-{
-	struct expression *src_expr, *dest_expr;
-	struct statement *stmt = alloc_statement(STMT_STORE);
-	if (!stmt)
-		goto failed;
-
-	dest_expr = local_expr(type, index);
-	src_expr = stack_pop(cu->expr_stack);
-
-	stmt->store_dest = &dest_expr->node;
-	stmt->store_src = &src_expr->node;
-	bb_insert_stmt(bb, stmt);
-	return 0;
-      failed:
-	free_statement(stmt);
-	return -ENOMEM;
-}
-
-static int convert_istore(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_INT, code[offset + 1]);
-}
-
-static int convert_lstore(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_LONG, code[offset + 1]);
-}
-
-static int convert_fstore(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_FLOAT, code[offset + 1]);
-}
-
-static int convert_dstore(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_DOUBLE, code[offset + 1]);
-}
-
-static int convert_astore(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_REFERENCE, code[offset + 1]);
-}
-
-static int convert_istore_n(struct compilation_unit *cu, struct basic_block *bb,
-			    unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_INT, code[offset] - OPC_ISTORE_0);
-}
-
-static int convert_lstore_n(struct compilation_unit *cu, struct basic_block *bb,
-			    unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_LONG, code[offset] - OPC_LSTORE_0);
-}
-
-static int convert_fstore_n(struct compilation_unit *cu, struct basic_block *bb,
-			    unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_FLOAT, code[offset] - OPC_FSTORE_0);
-}
-
-static int convert_dstore_n(struct compilation_unit *cu, struct basic_block *bb,
-			    unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_DOUBLE, code[offset] - OPC_DSTORE_0);
-}
-
-static int convert_astore_n(struct compilation_unit *cu, struct basic_block *bb,
-			    unsigned long offset)
-{
-	unsigned char *code = cu->method->code;
-	return convert_store(cu, bb, J_REFERENCE,
-			     code[offset] - OPC_ASTORE_0);
-}
-
-static int convert_array_store(struct compilation_unit *cu,
-			       struct basic_block *bb, enum jvm_type type)
-{
-	struct expression *value, *index, *arrayref;
-	struct statement *store_stmt, *arraycheck, *nullcheck;
-	struct expression *src_expr, *dest_expr;
-
-	value = stack_pop(cu->expr_stack);
-	index = stack_pop(cu->expr_stack);
-	arrayref = stack_pop(cu->expr_stack);
-
-	store_stmt = alloc_statement(STMT_STORE);
-	if (!store_stmt)
-		goto failed;
-
-	dest_expr = array_deref_expr(type, arrayref, index);
-	src_expr = value;
-
-	store_stmt->store_dest = &dest_expr->node;
-	store_stmt->store_src = &src_expr->node;
-
-	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
-	if (!arraycheck)
-		goto failed_arraycheck;
-
-	expr_get(dest_expr);
-	arraycheck->expression = &dest_expr->node;
-
-	nullcheck = alloc_statement(STMT_NULL_CHECK);
-	if (!nullcheck)
-		goto failed_nullcheck;
-
-	expr_get(arrayref);
-	nullcheck->expression = &arrayref->node;
-
-	bb_insert_stmt(bb, nullcheck);
-	bb_insert_stmt(bb, arraycheck);
-	bb_insert_stmt(bb, store_stmt);
-
-	return 0;
-
-      failed_nullcheck:
-	free_statement(arraycheck);
-      failed_arraycheck:
-	free_statement(store_stmt);
-      failed:
-	return -ENOMEM;
-}
-
-static int convert_iastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_INT);
-}
-
-static int convert_lastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_LONG);
-}
-
-static int convert_fastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_FLOAT);
-}
-
-static int convert_dastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_DOUBLE);
-}
-
-static int convert_aastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_REFERENCE);
-}
-
-static int convert_bastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_INT);
-}
-
-static int convert_castore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_CHAR);
-}
-
-static int convert_sastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
-{
-	return convert_array_store(cu, bb, J_SHORT);
 }
 
 static int convert_pop(struct compilation_unit *cu, struct basic_block *bb,
@@ -1097,184 +578,184 @@ static int convert_invokestatic(struct compilation_unit *cu,
 typedef int (*convert_fn_t) (struct compilation_unit *, struct basic_block *,
 			     unsigned long);
 
-#define DECLARE_CONVERTER(opc, fn) [opc] = fn
+#define MAP_BYTECODE_TO(opc, fn) [opc] = fn
 
 static convert_fn_t converters[] = {
-	DECLARE_CONVERTER(OPC_NOP, convert_nop),
-	DECLARE_CONVERTER(OPC_ACONST_NULL, convert_aconst_null),
-	DECLARE_CONVERTER(OPC_ICONST_M1, convert_iconst),
-	DECLARE_CONVERTER(OPC_ICONST_0, convert_iconst),
-	DECLARE_CONVERTER(OPC_ICONST_1, convert_iconst),
-	DECLARE_CONVERTER(OPC_ICONST_2, convert_iconst),
-	DECLARE_CONVERTER(OPC_ICONST_3, convert_iconst),
-	DECLARE_CONVERTER(OPC_ICONST_4, convert_iconst),
-	DECLARE_CONVERTER(OPC_ICONST_5, convert_iconst),
-	DECLARE_CONVERTER(OPC_LCONST_0, convert_lconst),
-	DECLARE_CONVERTER(OPC_LCONST_1, convert_lconst),
-	DECLARE_CONVERTER(OPC_FCONST_0, convert_fconst),
-	DECLARE_CONVERTER(OPC_FCONST_1, convert_fconst),
-	DECLARE_CONVERTER(OPC_FCONST_2, convert_fconst),
-	DECLARE_CONVERTER(OPC_DCONST_0, convert_dconst),
-	DECLARE_CONVERTER(OPC_DCONST_1, convert_dconst),
-	DECLARE_CONVERTER(OPC_BIPUSH, convert_bipush),
-	DECLARE_CONVERTER(OPC_SIPUSH, convert_sipush),
-	DECLARE_CONVERTER(OPC_LDC, convert_ldc),
-	DECLARE_CONVERTER(OPC_LDC_W, convert_ldc_w),
-	DECLARE_CONVERTER(OPC_LDC2_W, convert_ldc2_w),
-	DECLARE_CONVERTER(OPC_ILOAD, convert_iload),
-	DECLARE_CONVERTER(OPC_LLOAD, convert_lload),
-	DECLARE_CONVERTER(OPC_FLOAD, convert_fload),
-	DECLARE_CONVERTER(OPC_DLOAD, convert_dload),
-	DECLARE_CONVERTER(OPC_ALOAD, convert_aload),
-	DECLARE_CONVERTER(OPC_ILOAD_0, convert_iload_n),
-	DECLARE_CONVERTER(OPC_ILOAD_1, convert_iload_n),
-	DECLARE_CONVERTER(OPC_ILOAD_2, convert_iload_n),
-	DECLARE_CONVERTER(OPC_ILOAD_3, convert_iload_n),
-	DECLARE_CONVERTER(OPC_LLOAD_0, convert_lload_n),
-	DECLARE_CONVERTER(OPC_LLOAD_1, convert_lload_n),
-	DECLARE_CONVERTER(OPC_LLOAD_2, convert_lload_n),
-	DECLARE_CONVERTER(OPC_LLOAD_3, convert_lload_n),
-	DECLARE_CONVERTER(OPC_FLOAD_0, convert_fload_n),
-	DECLARE_CONVERTER(OPC_FLOAD_1, convert_fload_n),
-	DECLARE_CONVERTER(OPC_FLOAD_2, convert_fload_n),
-	DECLARE_CONVERTER(OPC_FLOAD_3, convert_fload_n),
-	DECLARE_CONVERTER(OPC_DLOAD_0, convert_dload_n),
-	DECLARE_CONVERTER(OPC_DLOAD_1, convert_dload_n),
-	DECLARE_CONVERTER(OPC_DLOAD_2, convert_dload_n),
-	DECLARE_CONVERTER(OPC_DLOAD_3, convert_dload_n),
-	DECLARE_CONVERTER(OPC_ALOAD_0, convert_aload_n),
-	DECLARE_CONVERTER(OPC_ALOAD_1, convert_aload_n),
-	DECLARE_CONVERTER(OPC_ALOAD_2, convert_aload_n),
-	DECLARE_CONVERTER(OPC_ALOAD_3, convert_aload_n),
-	DECLARE_CONVERTER(OPC_IALOAD, convert_iaload),
-	DECLARE_CONVERTER(OPC_LALOAD, convert_laload),
-	DECLARE_CONVERTER(OPC_FALOAD, convert_faload),
-	DECLARE_CONVERTER(OPC_DALOAD, convert_daload),
-	DECLARE_CONVERTER(OPC_AALOAD, convert_aaload),
-	DECLARE_CONVERTER(OPC_BALOAD, convert_baload),
-	DECLARE_CONVERTER(OPC_CALOAD, convert_caload),
-	DECLARE_CONVERTER(OPC_SALOAD, convert_saload),
-	DECLARE_CONVERTER(OPC_ISTORE, convert_istore),
-	DECLARE_CONVERTER(OPC_LSTORE, convert_lstore),
-	DECLARE_CONVERTER(OPC_FSTORE, convert_fstore),
-	DECLARE_CONVERTER(OPC_DSTORE, convert_dstore),
-	DECLARE_CONVERTER(OPC_ASTORE, convert_astore),
-	DECLARE_CONVERTER(OPC_ISTORE_0, convert_istore_n),
-	DECLARE_CONVERTER(OPC_ISTORE_1, convert_istore_n),
-	DECLARE_CONVERTER(OPC_ISTORE_2, convert_istore_n),
-	DECLARE_CONVERTER(OPC_ISTORE_3, convert_istore_n),
-	DECLARE_CONVERTER(OPC_LSTORE_0, convert_lstore_n),
-	DECLARE_CONVERTER(OPC_LSTORE_1, convert_lstore_n),
-	DECLARE_CONVERTER(OPC_LSTORE_2, convert_lstore_n),
-	DECLARE_CONVERTER(OPC_LSTORE_3, convert_lstore_n),
-	DECLARE_CONVERTER(OPC_FSTORE_0, convert_fstore_n),
-	DECLARE_CONVERTER(OPC_FSTORE_1, convert_fstore_n),
-	DECLARE_CONVERTER(OPC_FSTORE_2, convert_fstore_n),
-	DECLARE_CONVERTER(OPC_FSTORE_3, convert_fstore_n),
-	DECLARE_CONVERTER(OPC_DSTORE_0, convert_dstore_n),
-	DECLARE_CONVERTER(OPC_DSTORE_1, convert_dstore_n),
-	DECLARE_CONVERTER(OPC_DSTORE_2, convert_dstore_n),
-	DECLARE_CONVERTER(OPC_DSTORE_3, convert_dstore_n),
-	DECLARE_CONVERTER(OPC_ASTORE_0, convert_astore_n),
-	DECLARE_CONVERTER(OPC_ASTORE_1, convert_astore_n),
-	DECLARE_CONVERTER(OPC_ASTORE_2, convert_astore_n),
-	DECLARE_CONVERTER(OPC_ASTORE_3, convert_astore_n),
-	DECLARE_CONVERTER(OPC_IASTORE, convert_iastore),
-	DECLARE_CONVERTER(OPC_LASTORE, convert_lastore),
-	DECLARE_CONVERTER(OPC_FASTORE, convert_fastore),
-	DECLARE_CONVERTER(OPC_DASTORE, convert_dastore),
-	DECLARE_CONVERTER(OPC_AASTORE, convert_aastore),
-	DECLARE_CONVERTER(OPC_BASTORE, convert_bastore),
-	DECLARE_CONVERTER(OPC_CASTORE, convert_castore),
-	DECLARE_CONVERTER(OPC_SASTORE, convert_sastore),
-	DECLARE_CONVERTER(OPC_POP, convert_pop),
-	DECLARE_CONVERTER(OPC_POP2, convert_pop),
-	DECLARE_CONVERTER(OPC_DUP, convert_dup),
-	DECLARE_CONVERTER(OPC_DUP_X1, convert_dup_x1),
-	DECLARE_CONVERTER(OPC_DUP_X2, convert_dup_x2),
-	DECLARE_CONVERTER(OPC_DUP2, convert_dup),
-	DECLARE_CONVERTER(OPC_DUP2_X1, convert_dup_x1),
-	DECLARE_CONVERTER(OPC_DUP2_X2, convert_dup_x2),
-	DECLARE_CONVERTER(OPC_SWAP, convert_swap),
-	DECLARE_CONVERTER(OPC_IADD, convert_iadd),
-	DECLARE_CONVERTER(OPC_LADD, convert_ladd),
-	DECLARE_CONVERTER(OPC_FADD, convert_fadd),
-	DECLARE_CONVERTER(OPC_DADD, convert_dadd),
-	DECLARE_CONVERTER(OPC_ISUB, convert_isub),
-	DECLARE_CONVERTER(OPC_LSUB, convert_lsub),
-	DECLARE_CONVERTER(OPC_FSUB, convert_fsub),
-	DECLARE_CONVERTER(OPC_DSUB, convert_dsub),
-	DECLARE_CONVERTER(OPC_IMUL, convert_imul),
-	DECLARE_CONVERTER(OPC_LMUL, convert_lmul),
-	DECLARE_CONVERTER(OPC_FMUL, convert_fmul),
-	DECLARE_CONVERTER(OPC_DMUL, convert_dmul),
-	DECLARE_CONVERTER(OPC_IDIV, convert_idiv),
-	DECLARE_CONVERTER(OPC_LDIV, convert_ldiv),
-	DECLARE_CONVERTER(OPC_FDIV, convert_fdiv),
-	DECLARE_CONVERTER(OPC_DDIV, convert_ddiv),
-	DECLARE_CONVERTER(OPC_IREM, convert_irem),
-	DECLARE_CONVERTER(OPC_LREM, convert_lrem),
-	DECLARE_CONVERTER(OPC_FREM, convert_frem),
-	DECLARE_CONVERTER(OPC_DREM, convert_drem),
-	DECLARE_CONVERTER(OPC_INEG, convert_ineg),
-	DECLARE_CONVERTER(OPC_LNEG, convert_lneg),
-	DECLARE_CONVERTER(OPC_FNEG, convert_fneg),
-	DECLARE_CONVERTER(OPC_DNEG, convert_dneg),
-	DECLARE_CONVERTER(OPC_ISHL, convert_ishl),
-	DECLARE_CONVERTER(OPC_LSHL, convert_lshl),
-	DECLARE_CONVERTER(OPC_ISHR, convert_ishr),
-	DECLARE_CONVERTER(OPC_LSHR, convert_lshr),
-	DECLARE_CONVERTER(OPC_IAND, convert_iand),
-	DECLARE_CONVERTER(OPC_LAND, convert_land),
-	DECLARE_CONVERTER(OPC_IOR, convert_ior),
-	DECLARE_CONVERTER(OPC_LOR, convert_lor),
-	DECLARE_CONVERTER(OPC_IXOR, convert_ixor),
-	DECLARE_CONVERTER(OPC_LXOR, convert_lxor),
-	DECLARE_CONVERTER(OPC_IINC, convert_iinc),
-	DECLARE_CONVERTER(OPC_I2L, convert_i2l),
-	DECLARE_CONVERTER(OPC_I2F, convert_i2f),
-	DECLARE_CONVERTER(OPC_I2D, convert_i2d),
-	DECLARE_CONVERTER(OPC_L2I, convert_l2i),
-	DECLARE_CONVERTER(OPC_L2F, convert_l2f),
-	DECLARE_CONVERTER(OPC_L2D, convert_l2d),
-	DECLARE_CONVERTER(OPC_F2I, convert_f2i),
-	DECLARE_CONVERTER(OPC_F2L, convert_f2l),
-	DECLARE_CONVERTER(OPC_F2D, convert_f2d),
-	DECLARE_CONVERTER(OPC_D2I, convert_d2i),
-	DECLARE_CONVERTER(OPC_D2L, convert_d2l),
-	DECLARE_CONVERTER(OPC_D2F, convert_d2f),
-	DECLARE_CONVERTER(OPC_I2B, convert_i2b),
-	DECLARE_CONVERTER(OPC_I2C, convert_i2c),
-	DECLARE_CONVERTER(OPC_I2S, convert_i2s),
-	DECLARE_CONVERTER(OPC_LCMP, convert_lcmp),
-	DECLARE_CONVERTER(OPC_FCMPL, convert_xcmpl),
-	DECLARE_CONVERTER(OPC_FCMPG, convert_xcmpg),
-	DECLARE_CONVERTER(OPC_DCMPL, convert_xcmpl),
-	DECLARE_CONVERTER(OPC_DCMPG, convert_xcmpg),
-	DECLARE_CONVERTER(OPC_IFEQ, convert_ifeq),
-	DECLARE_CONVERTER(OPC_IFNE, convert_ifne),
-	DECLARE_CONVERTER(OPC_IFLT, convert_iflt),
-	DECLARE_CONVERTER(OPC_IFGE, convert_ifge),
-	DECLARE_CONVERTER(OPC_IFGT, convert_ifgt),
-	DECLARE_CONVERTER(OPC_IFLE, convert_ifle),
-	DECLARE_CONVERTER(OPC_IF_ICMPEQ, convert_if_icmpeq),
-	DECLARE_CONVERTER(OPC_IF_ICMPNE, convert_if_icmpne),
-	DECLARE_CONVERTER(OPC_IF_ICMPLT, convert_if_icmplt),
-	DECLARE_CONVERTER(OPC_IF_ICMPGE, convert_if_icmpge),
-	DECLARE_CONVERTER(OPC_IF_ICMPGT, convert_if_icmpgt),
-	DECLARE_CONVERTER(OPC_IF_ICMPLE, convert_if_icmple),
-	DECLARE_CONVERTER(OPC_IF_ACMPEQ, convert_if_acmpeq),
-	DECLARE_CONVERTER(OPC_IF_ACMPNE, convert_if_acmpne),
-	DECLARE_CONVERTER(OPC_GOTO, convert_goto),
-	DECLARE_CONVERTER(OPC_IRETURN, convert_non_void_return),
-	DECLARE_CONVERTER(OPC_LRETURN, convert_non_void_return),
-	DECLARE_CONVERTER(OPC_FRETURN, convert_non_void_return),
-	DECLARE_CONVERTER(OPC_DRETURN, convert_non_void_return),
-	DECLARE_CONVERTER(OPC_ARETURN, convert_non_void_return),
-	DECLARE_CONVERTER(OPC_RETURN, convert_void_return),
-	DECLARE_CONVERTER(OPC_GETSTATIC, convert_getstatic),
-	DECLARE_CONVERTER(OPC_PUTSTATIC, convert_putstatic),
-	DECLARE_CONVERTER(OPC_INVOKESTATIC, convert_invokestatic),
+	MAP_BYTECODE_TO(OPC_NOP, convert_nop),
+	MAP_BYTECODE_TO(OPC_ACONST_NULL, convert_aconst_null),
+	MAP_BYTECODE_TO(OPC_ICONST_M1, convert_iconst),
+	MAP_BYTECODE_TO(OPC_ICONST_0, convert_iconst),
+	MAP_BYTECODE_TO(OPC_ICONST_1, convert_iconst),
+	MAP_BYTECODE_TO(OPC_ICONST_2, convert_iconst),
+	MAP_BYTECODE_TO(OPC_ICONST_3, convert_iconst),
+	MAP_BYTECODE_TO(OPC_ICONST_4, convert_iconst),
+	MAP_BYTECODE_TO(OPC_ICONST_5, convert_iconst),
+	MAP_BYTECODE_TO(OPC_LCONST_0, convert_lconst),
+	MAP_BYTECODE_TO(OPC_LCONST_1, convert_lconst),
+	MAP_BYTECODE_TO(OPC_FCONST_0, convert_fconst),
+	MAP_BYTECODE_TO(OPC_FCONST_1, convert_fconst),
+	MAP_BYTECODE_TO(OPC_FCONST_2, convert_fconst),
+	MAP_BYTECODE_TO(OPC_DCONST_0, convert_dconst),
+	MAP_BYTECODE_TO(OPC_DCONST_1, convert_dconst),
+	MAP_BYTECODE_TO(OPC_BIPUSH, convert_bipush),
+	MAP_BYTECODE_TO(OPC_SIPUSH, convert_sipush),
+	MAP_BYTECODE_TO(OPC_LDC, convert_ldc),
+	MAP_BYTECODE_TO(OPC_LDC_W, convert_ldc_w),
+	MAP_BYTECODE_TO(OPC_LDC2_W, convert_ldc2_w),
+	MAP_BYTECODE_TO(OPC_ILOAD, convert_iload),
+	MAP_BYTECODE_TO(OPC_LLOAD, convert_lload),
+	MAP_BYTECODE_TO(OPC_FLOAD, convert_fload),
+	MAP_BYTECODE_TO(OPC_DLOAD, convert_dload),
+	MAP_BYTECODE_TO(OPC_ALOAD, convert_aload),
+	MAP_BYTECODE_TO(OPC_ILOAD_0, convert_iload_n),
+	MAP_BYTECODE_TO(OPC_ILOAD_1, convert_iload_n),
+	MAP_BYTECODE_TO(OPC_ILOAD_2, convert_iload_n),
+	MAP_BYTECODE_TO(OPC_ILOAD_3, convert_iload_n),
+	MAP_BYTECODE_TO(OPC_LLOAD_0, convert_lload_n),
+	MAP_BYTECODE_TO(OPC_LLOAD_1, convert_lload_n),
+	MAP_BYTECODE_TO(OPC_LLOAD_2, convert_lload_n),
+	MAP_BYTECODE_TO(OPC_LLOAD_3, convert_lload_n),
+	MAP_BYTECODE_TO(OPC_FLOAD_0, convert_fload_n),
+	MAP_BYTECODE_TO(OPC_FLOAD_1, convert_fload_n),
+	MAP_BYTECODE_TO(OPC_FLOAD_2, convert_fload_n),
+	MAP_BYTECODE_TO(OPC_FLOAD_3, convert_fload_n),
+	MAP_BYTECODE_TO(OPC_DLOAD_0, convert_dload_n),
+	MAP_BYTECODE_TO(OPC_DLOAD_1, convert_dload_n),
+	MAP_BYTECODE_TO(OPC_DLOAD_2, convert_dload_n),
+	MAP_BYTECODE_TO(OPC_DLOAD_3, convert_dload_n),
+	MAP_BYTECODE_TO(OPC_ALOAD_0, convert_aload_n),
+	MAP_BYTECODE_TO(OPC_ALOAD_1, convert_aload_n),
+	MAP_BYTECODE_TO(OPC_ALOAD_2, convert_aload_n),
+	MAP_BYTECODE_TO(OPC_ALOAD_3, convert_aload_n),
+	MAP_BYTECODE_TO(OPC_IALOAD, convert_iaload),
+	MAP_BYTECODE_TO(OPC_LALOAD, convert_laload),
+	MAP_BYTECODE_TO(OPC_FALOAD, convert_faload),
+	MAP_BYTECODE_TO(OPC_DALOAD, convert_daload),
+	MAP_BYTECODE_TO(OPC_AALOAD, convert_aaload),
+	MAP_BYTECODE_TO(OPC_BALOAD, convert_baload),
+	MAP_BYTECODE_TO(OPC_CALOAD, convert_caload),
+	MAP_BYTECODE_TO(OPC_SALOAD, convert_saload),
+	MAP_BYTECODE_TO(OPC_ISTORE, convert_istore),
+	MAP_BYTECODE_TO(OPC_LSTORE, convert_lstore),
+	MAP_BYTECODE_TO(OPC_FSTORE, convert_fstore),
+	MAP_BYTECODE_TO(OPC_DSTORE, convert_dstore),
+	MAP_BYTECODE_TO(OPC_ASTORE, convert_astore),
+	MAP_BYTECODE_TO(OPC_ISTORE_0, convert_istore_n),
+	MAP_BYTECODE_TO(OPC_ISTORE_1, convert_istore_n),
+	MAP_BYTECODE_TO(OPC_ISTORE_2, convert_istore_n),
+	MAP_BYTECODE_TO(OPC_ISTORE_3, convert_istore_n),
+	MAP_BYTECODE_TO(OPC_LSTORE_0, convert_lstore_n),
+	MAP_BYTECODE_TO(OPC_LSTORE_1, convert_lstore_n),
+	MAP_BYTECODE_TO(OPC_LSTORE_2, convert_lstore_n),
+	MAP_BYTECODE_TO(OPC_LSTORE_3, convert_lstore_n),
+	MAP_BYTECODE_TO(OPC_FSTORE_0, convert_fstore_n),
+	MAP_BYTECODE_TO(OPC_FSTORE_1, convert_fstore_n),
+	MAP_BYTECODE_TO(OPC_FSTORE_2, convert_fstore_n),
+	MAP_BYTECODE_TO(OPC_FSTORE_3, convert_fstore_n),
+	MAP_BYTECODE_TO(OPC_DSTORE_0, convert_dstore_n),
+	MAP_BYTECODE_TO(OPC_DSTORE_1, convert_dstore_n),
+	MAP_BYTECODE_TO(OPC_DSTORE_2, convert_dstore_n),
+	MAP_BYTECODE_TO(OPC_DSTORE_3, convert_dstore_n),
+	MAP_BYTECODE_TO(OPC_ASTORE_0, convert_astore_n),
+	MAP_BYTECODE_TO(OPC_ASTORE_1, convert_astore_n),
+	MAP_BYTECODE_TO(OPC_ASTORE_2, convert_astore_n),
+	MAP_BYTECODE_TO(OPC_ASTORE_3, convert_astore_n),
+	MAP_BYTECODE_TO(OPC_IASTORE, convert_iastore),
+	MAP_BYTECODE_TO(OPC_LASTORE, convert_lastore),
+	MAP_BYTECODE_TO(OPC_FASTORE, convert_fastore),
+	MAP_BYTECODE_TO(OPC_DASTORE, convert_dastore),
+	MAP_BYTECODE_TO(OPC_AASTORE, convert_aastore),
+	MAP_BYTECODE_TO(OPC_BASTORE, convert_bastore),
+	MAP_BYTECODE_TO(OPC_CASTORE, convert_castore),
+	MAP_BYTECODE_TO(OPC_SASTORE, convert_sastore),
+	MAP_BYTECODE_TO(OPC_POP, convert_pop),
+	MAP_BYTECODE_TO(OPC_POP2, convert_pop),
+	MAP_BYTECODE_TO(OPC_DUP, convert_dup),
+	MAP_BYTECODE_TO(OPC_DUP_X1, convert_dup_x1),
+	MAP_BYTECODE_TO(OPC_DUP_X2, convert_dup_x2),
+	MAP_BYTECODE_TO(OPC_DUP2, convert_dup),
+	MAP_BYTECODE_TO(OPC_DUP2_X1, convert_dup_x1),
+	MAP_BYTECODE_TO(OPC_DUP2_X2, convert_dup_x2),
+	MAP_BYTECODE_TO(OPC_SWAP, convert_swap),
+	MAP_BYTECODE_TO(OPC_IADD, convert_iadd),
+	MAP_BYTECODE_TO(OPC_LADD, convert_ladd),
+	MAP_BYTECODE_TO(OPC_FADD, convert_fadd),
+	MAP_BYTECODE_TO(OPC_DADD, convert_dadd),
+	MAP_BYTECODE_TO(OPC_ISUB, convert_isub),
+	MAP_BYTECODE_TO(OPC_LSUB, convert_lsub),
+	MAP_BYTECODE_TO(OPC_FSUB, convert_fsub),
+	MAP_BYTECODE_TO(OPC_DSUB, convert_dsub),
+	MAP_BYTECODE_TO(OPC_IMUL, convert_imul),
+	MAP_BYTECODE_TO(OPC_LMUL, convert_lmul),
+	MAP_BYTECODE_TO(OPC_FMUL, convert_fmul),
+	MAP_BYTECODE_TO(OPC_DMUL, convert_dmul),
+	MAP_BYTECODE_TO(OPC_IDIV, convert_idiv),
+	MAP_BYTECODE_TO(OPC_LDIV, convert_ldiv),
+	MAP_BYTECODE_TO(OPC_FDIV, convert_fdiv),
+	MAP_BYTECODE_TO(OPC_DDIV, convert_ddiv),
+	MAP_BYTECODE_TO(OPC_IREM, convert_irem),
+	MAP_BYTECODE_TO(OPC_LREM, convert_lrem),
+	MAP_BYTECODE_TO(OPC_FREM, convert_frem),
+	MAP_BYTECODE_TO(OPC_DREM, convert_drem),
+	MAP_BYTECODE_TO(OPC_INEG, convert_ineg),
+	MAP_BYTECODE_TO(OPC_LNEG, convert_lneg),
+	MAP_BYTECODE_TO(OPC_FNEG, convert_fneg),
+	MAP_BYTECODE_TO(OPC_DNEG, convert_dneg),
+	MAP_BYTECODE_TO(OPC_ISHL, convert_ishl),
+	MAP_BYTECODE_TO(OPC_LSHL, convert_lshl),
+	MAP_BYTECODE_TO(OPC_ISHR, convert_ishr),
+	MAP_BYTECODE_TO(OPC_LSHR, convert_lshr),
+	MAP_BYTECODE_TO(OPC_IAND, convert_iand),
+	MAP_BYTECODE_TO(OPC_LAND, convert_land),
+	MAP_BYTECODE_TO(OPC_IOR, convert_ior),
+	MAP_BYTECODE_TO(OPC_LOR, convert_lor),
+	MAP_BYTECODE_TO(OPC_IXOR, convert_ixor),
+	MAP_BYTECODE_TO(OPC_LXOR, convert_lxor),
+	MAP_BYTECODE_TO(OPC_IINC, convert_iinc),
+	MAP_BYTECODE_TO(OPC_I2L, convert_i2l),
+	MAP_BYTECODE_TO(OPC_I2F, convert_i2f),
+	MAP_BYTECODE_TO(OPC_I2D, convert_i2d),
+	MAP_BYTECODE_TO(OPC_L2I, convert_l2i),
+	MAP_BYTECODE_TO(OPC_L2F, convert_l2f),
+	MAP_BYTECODE_TO(OPC_L2D, convert_l2d),
+	MAP_BYTECODE_TO(OPC_F2I, convert_f2i),
+	MAP_BYTECODE_TO(OPC_F2L, convert_f2l),
+	MAP_BYTECODE_TO(OPC_F2D, convert_f2d),
+	MAP_BYTECODE_TO(OPC_D2I, convert_d2i),
+	MAP_BYTECODE_TO(OPC_D2L, convert_d2l),
+	MAP_BYTECODE_TO(OPC_D2F, convert_d2f),
+	MAP_BYTECODE_TO(OPC_I2B, convert_i2b),
+	MAP_BYTECODE_TO(OPC_I2C, convert_i2c),
+	MAP_BYTECODE_TO(OPC_I2S, convert_i2s),
+	MAP_BYTECODE_TO(OPC_LCMP, convert_lcmp),
+	MAP_BYTECODE_TO(OPC_FCMPL, convert_xcmpl),
+	MAP_BYTECODE_TO(OPC_FCMPG, convert_xcmpg),
+	MAP_BYTECODE_TO(OPC_DCMPL, convert_xcmpl),
+	MAP_BYTECODE_TO(OPC_DCMPG, convert_xcmpg),
+	MAP_BYTECODE_TO(OPC_IFEQ, convert_ifeq),
+	MAP_BYTECODE_TO(OPC_IFNE, convert_ifne),
+	MAP_BYTECODE_TO(OPC_IFLT, convert_iflt),
+	MAP_BYTECODE_TO(OPC_IFGE, convert_ifge),
+	MAP_BYTECODE_TO(OPC_IFGT, convert_ifgt),
+	MAP_BYTECODE_TO(OPC_IFLE, convert_ifle),
+	MAP_BYTECODE_TO(OPC_IF_ICMPEQ, convert_if_icmpeq),
+	MAP_BYTECODE_TO(OPC_IF_ICMPNE, convert_if_icmpne),
+	MAP_BYTECODE_TO(OPC_IF_ICMPLT, convert_if_icmplt),
+	MAP_BYTECODE_TO(OPC_IF_ICMPGE, convert_if_icmpge),
+	MAP_BYTECODE_TO(OPC_IF_ICMPGT, convert_if_icmpgt),
+	MAP_BYTECODE_TO(OPC_IF_ICMPLE, convert_if_icmple),
+	MAP_BYTECODE_TO(OPC_IF_ACMPEQ, convert_if_acmpeq),
+	MAP_BYTECODE_TO(OPC_IF_ACMPNE, convert_if_acmpne),
+	MAP_BYTECODE_TO(OPC_GOTO, convert_goto),
+	MAP_BYTECODE_TO(OPC_IRETURN, convert_non_void_return),
+	MAP_BYTECODE_TO(OPC_LRETURN, convert_non_void_return),
+	MAP_BYTECODE_TO(OPC_FRETURN, convert_non_void_return),
+	MAP_BYTECODE_TO(OPC_DRETURN, convert_non_void_return),
+	MAP_BYTECODE_TO(OPC_ARETURN, convert_non_void_return),
+	MAP_BYTECODE_TO(OPC_RETURN, convert_void_return),
+	MAP_BYTECODE_TO(OPC_GETSTATIC, convert_getstatic),
+	MAP_BYTECODE_TO(OPC_PUTSTATIC, convert_putstatic),
+	MAP_BYTECODE_TO(OPC_INVOKESTATIC, convert_invokestatic),
 };
 
 /**
