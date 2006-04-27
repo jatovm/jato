@@ -251,22 +251,16 @@ static int convert_invokestatic(struct compilation_unit *cu,
 				unsigned long offset)
 {
 	struct methodblock *mb;
-	struct classblock *cb;
-	struct constant_pool *cp;
 	unsigned short index;
 	struct expression *value, *args_list = NULL;
-	u1 type;
 	int i;
 
-	cb = CLASS_CB(cu->method->class);
-	cp = &cb->constant_pool;
 	index = cp_index(cu->method->code + offset + 1);
-	type = CP_TYPE(cp, index);
 	
-	if (type != CONSTANT_Resolved)
+	mb = resolveMethod(cu->method->class, index);
+	if (!mb)
 		return -EINVAL;
-	
-	mb = cp_info_ptr(cp, index);
+
 	value = invoke_expr(str_to_type(mb->type), mb);
 	if (!value)
 		return -ENOMEM;

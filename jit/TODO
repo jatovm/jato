@@ -4,7 +4,6 @@
   - Unit and acceptance tests should be runnable from source directory root
     with one command
   - Bytecode to IR conversion
-	+ Field & method resolution
 	+ Method return type
 	+ INVOKESTATIC
 	+ INVOKESPECIAL

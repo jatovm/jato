@@ -20,21 +20,15 @@ int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 		      unsigned long offset)
 {
 	struct fieldblock *fb;
-	struct classblock *cb;
-	struct constant_pool *cp;
 	unsigned short index;
 	struct expression *value;
-	u1 type;
 
-	cb = CLASS_CB(cu->method->class);
-	cp = &cb->constant_pool;
 	index = cp_index(cu->method->code + offset + 1);
-	type = CP_TYPE(cp, index);
-	
-	if (type != CONSTANT_Resolved)
+
+	fb = resolveField(cu->method->class, index);
+	if (!fb)
 		return -EINVAL;
 
-	fb = cp_info_ptr(cp, index);
 	value = field_expr(str_to_type(fb->type), fb);
 	if (!value)
 		return -ENOMEM;
@@ -47,22 +41,16 @@ int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 		      unsigned long offset)
 {
 	struct fieldblock *fb;
-	struct classblock *cb;
-	struct constant_pool *cp;
 	unsigned short index;
 	struct statement *store_stmt;
 	struct expression *dest, *src;
-	u1 type;
 
-	cb = CLASS_CB(cu->method->class);
-	cp = &cb->constant_pool;
 	index = cp_index(cu->method->code + offset + 1);
-	type = CP_TYPE(cp, index);
-	
-	if (type != CONSTANT_Resolved)
+
+	fb = resolveField(cu->method->class, index);
+	if (!fb)
 		return -EINVAL;
 
-	fb = cp_info_ptr(cp, index);
 	src = stack_pop(cu->expr_stack);
 	dest = field_expr(str_to_type(fb->type), fb);
 	if (!dest)
