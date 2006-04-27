@@ -9,10 +9,11 @@
  */
 
 #include <statement.h>
-#include <byteorder.h>
+#include <vm/byteorder.h>
 #include <stack.h>
 #include <jit-compiler.h>
 #include <bytecodes.h>
+
 #include <errno.h>
 
 static int convert_binop(struct compilation_unit *cu,

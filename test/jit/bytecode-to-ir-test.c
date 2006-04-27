@@ -4,7 +4,6 @@
 
 #include <vm/system.h>
 #include <statement.h>
-#include <byteorder.h>
 #include <stack.h>
 #include <jit-compiler.h>
 #include <vm/list.h>

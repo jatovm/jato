@@ -1,6 +1,8 @@
 #ifndef __VM_CONST_POOL_H
 #define __VM_CONST_POOL_H
 
+#include <vm/byteorder.h>
+
 static inline void *cp_info_ptr(struct constant_pool *cp, unsigned short idx)
 {
 	return (void *) CP_INFO(cp, idx);

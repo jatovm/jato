@@ -9,7 +9,7 @@
 
 #include <vm/vm.h>
 #include <bytecodes.h>
-#include <byteorder.h>
+#include <vm/byteorder.h>
 
 static unsigned char bytecode_sizes[];
 

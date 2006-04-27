@@ -4,6 +4,8 @@
 #ifndef __BYTEORDER_H
 #define __BYTEORDER_H
 
+#include <vm/vm.h>
+
 static inline u2 swab16(u2 val)
 {
 	return ((val & 0xFF00U) >> 8) | ((val & 0x00FFU) << 8);
