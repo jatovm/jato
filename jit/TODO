@@ -1,3 +1,8 @@
+  - Move headers from jit/ to include/jit/ and include/vm/
+  - Move non-JIT specific code to vm/
+  - Fix Makefiles for jato/ and test/jit/ to use generic build
+  - Unit and acceptance tests should be runnable from source directory root
+    with one command
   - Bytecode to IR conversion
 	+ Field & method resolution
 	+ Method return type
