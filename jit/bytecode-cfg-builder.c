@@ -14,6 +14,7 @@
 #include <vm/bitmap.h>
 #include <vm/vm.h>
 
+#include <errno.h>
 #include <stdlib.h>
 	
 static void bb_end_after_branch(struct compilation_unit *cu,
@@ -58,12 +59,14 @@ static void bb_start_at_branch_target(struct compilation_unit *cu,
 	}
 }
 
-void build_cfg(struct compilation_unit *cu)
+int build_cfg(struct compilation_unit *cu)
 {
 	unsigned long *branch_targets;
 	struct basic_block *entry_bb;
 
 	branch_targets = alloc_bitmap(cu->method->code_size);
+	if (!branch_targets)
+		return -ENOMEM;
 
 	entry_bb = alloc_basic_block(0, cu->method->code_size);
 	list_add_tail(&entry_bb->bb_list_node, &cu->bb_list);
@@ -71,4 +74,6 @@ void build_cfg(struct compilation_unit *cu)
 	bb_start_at_branch_target(cu, branch_targets);
 
 	free(branch_targets);
+
+	return 0;
 }

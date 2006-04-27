@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include <alloc.h>
+#include <vm/alloc.h>
 #include <compilation-unit.h>
 #include <errno.h>
 #include <jit-compiler.h>
@@ -21,16 +21,23 @@
 
 int jit_compile(struct compilation_unit *cu)
 {
+	int err = 0;
 	struct insn_sequence is;
 
-	build_cfg(cu);
-	convert_to_ir(cu);
+	err = build_cfg(cu);
+	if (err)
+		goto out;
+
+	err = convert_to_ir(cu);
+	if (err)
+		goto out;
+
 	insn_select(bb_entry(cu->bb_list.next));
 
 	cu->objcode = alloc_exec(OBJCODE_SIZE);
 	if (!cu->objcode) {
-		free_compilation_unit(cu);
-		return -ENOMEM;
+		err = -ENOMEM;
+		goto out;
 	}
 	memset(cu->objcode, 0, OBJCODE_SIZE);
 	init_insn_sequence(&is, cu->objcode, OBJCODE_SIZE);
@@ -40,7 +47,14 @@ int jit_compile(struct compilation_unit *cu)
 
 	cu->is_compiled = true;
 
-	return 0;
+  out:
+	if (err) {
+		struct classblock *cb = CLASS_CB(cu->method->class);
+		printf("%s: Failed to compile method `%s' in class `%s', error: %i\n",
+		       __FUNCTION__, cu->method->name, cb->name, err);
+	}
+
+	return err;
 }
 
 void *jit_magic_trampoline(struct compilation_unit *cu)
