@@ -2,7 +2,7 @@
  * Copyright (C) 2005  Pekka Enberg
  */
 
-#include <stack.h>
+#include <vm/stack.h>
 
 #include <libharness.h>
 #include <stdlib.h>

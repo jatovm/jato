@@ -2,13 +2,14 @@
  * Copyright (C) 2005  Pekka Enberg
  */
 
-#include <vm/system.h>
-#include <statement.h>
-#include <stack.h>
 #include <jit-compiler.h>
-#include <vm/list.h>
-#include <bytecode-converter-fixture.h>
 #include <jit/bytecode-converters.h>
+#include <statement.h>
+#include <vm/list.h>
+#include <vm/stack.h>
+#include <vm/system.h>
+
+#include <bytecode-converter-fixture.h>
 #include <libharness.h>
 #include <stdlib.h>
 

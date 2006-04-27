@@ -5,7 +5,8 @@
  * LICENSE for details.
  */
 
-#include <stack.h>
+#include <vm/stack.h>
+
 #include <stdlib.h>
 #include <string.h>
 

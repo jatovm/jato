@@ -3,7 +3,7 @@
 
 #include <compilation-unit.h>
 #include <basic-block.h>
-#include <stack.h>
+#include <vm/stack.h>
 
 struct compilation_unit;
 

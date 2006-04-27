@@ -10,7 +10,7 @@
 
 #include <statement.h>
 #include <vm/byteorder.h>
-#include <stack.h>
+#include <vm/stack.h>
 #include <jit-compiler.h>
 #include <bytecodes.h>
 

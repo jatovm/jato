@@ -3,7 +3,7 @@
 
 #include <vm/list.h>
 #include <basic-block.h>
-#include <stack.h>
+#include <vm/stack.h>
 #include <stdbool.h>
 #include <pthread.h>
 

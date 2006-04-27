@@ -15,7 +15,7 @@ OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../src/zip.o ../src/dll_ffi.o ../src/frame.o \
 	../src/os/linux/dll_os.o ../src/os/linux/i386/dll_md.o \
 	../src/os/linux/i386/init.o ../jit/jit.o ../jit/compilation-unit.o \
-	../jit/stack.o ../jit/basic-block.o ../jit/statement.o \
+	../vm/stack.o ../jit/basic-block.o ../jit/statement.o \
 	../jit/instruction.o ../jit/expression.o ../jit/jit-compiler.o \
 	../jit/x86-objcode.o ../jit/alloc.o ../jit/bytecode-to-ir.o \
 	../jit/bytecodes.o ../jit/bytecode-cfg-builder.o ../vm/bitmap.o \

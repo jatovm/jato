@@ -3,10 +3,9 @@
  */
 
 #include <statement.h>
-#include <stack.h>
 #include <jit-compiler.h>
-
 #include <vm/list.h>
+#include <vm/stack.h>
 #include <vm/system.h>
 
 #include <libharness.h>
