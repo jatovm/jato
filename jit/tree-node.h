@@ -18,11 +18,21 @@ struct tree_node {
 	unsigned long op;
 };
 
+static inline int node_is_stmt(struct tree_node *node)
+{
+	return node->op & STMT_TYPE_MASK;
+}
+
+static inline int node_is_binop(struct tree_node *node)
+{
+	return node->op & BIN_OP_MASK;
+}
+
 static inline int tree_op(struct tree_node *node)
 {
-	if (node->op & STMT_TYPE_MASK)
+	if (node_is_stmt(node))
 		return (node->op & STMT_TYPE_MASK) >> STMT_TYPE_SHIFT;
-	else if (node->op & BIN_OP_MASK)
+	else if (node_is_binop(node))
 		return (node->op & BIN_OP_MASK) >> BIN_OP_SHIFT;
 
 	return (node->op & EXPR_TYPE_MASK) >> EXPR_TYPE_SHIFT;

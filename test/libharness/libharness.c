@@ -115,5 +115,5 @@ void __assert_str_equals(const char *file, int line, const char *expected,
 {
 	nr_asserts++;
 	if (strcmp(expected, actual))
-		fail(file, line, "Expected %s, but was %s\n", expected, actual);
+		fail(file, line, "Expected '%s' (length %lu), but was '%s' (length %lu)\n", expected, strlen(expected), actual, strlen(actual));
 }
