@@ -228,11 +228,10 @@ static int convert_void_return(struct compilation_unit *cu,
 			       struct basic_block *bb,
 			       unsigned long offset)
 {
-	struct statement *return_stmt = alloc_statement(STMT_RETURN);
+	struct statement *return_stmt = alloc_statement(STMT_VOID_RETURN);
 	if (!return_stmt)
 		return -ENOMEM;
 
-	return_stmt->return_value = NULL;
 	bb_insert_stmt(bb, return_stmt);
 	return 0;
 }

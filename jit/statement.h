@@ -13,6 +13,7 @@ enum statement_type {
 	STMT_LABEL,
 	STMT_GOTO,
 	STMT_RETURN,
+	STMT_VOID_RETURN,
 	STMT_EXPRESSION,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
@@ -23,7 +24,7 @@ struct statement {
 	union {
 		struct tree_node node;
 
-		/* STMT_NOP and STMT_LABEL have no fields.  */
+		/* STMT_NOP, STMT_LABEL, and STMT_VOID_RETURN have no fields.  */
 		
 		struct /* STMT_STORE */ {
 			struct tree_node *store_dest;

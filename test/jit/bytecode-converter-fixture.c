@@ -137,10 +137,13 @@ void assert_store_stmt(struct statement *stmt)
 void assert_return_stmt(struct expression *return_value, struct statement *stmt)
 {
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));
-	if (stmt->return_value)
-		assert_ptr_equals(return_value, to_expr(stmt->return_value));
-	else
-		assert_ptr_equals(NULL, stmt->return_value);
+	assert_ptr_equals(return_value, to_expr(stmt->return_value));
+}
+
+void assert_void_return_stmt(struct statement *stmt)
+{
+	assert_int_equals(STMT_VOID_RETURN, stmt_type(stmt));
+	assert_ptr_equals(NULL, stmt->return_value);
 }
 
 void assert_null_check_stmt(struct expression *expected,

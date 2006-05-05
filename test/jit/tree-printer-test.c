@@ -111,6 +111,15 @@ void test_should_print_return_statement(void)
 	assert_print_stmt("RETURN:\n  return_value: [local int 0]\n", stmt);
 }
 
+void test_should_print_void_return_statement(void)
+{
+	struct statement *stmt;
+
+	stmt = alloc_statement(STMT_VOID_RETURN);
+
+	assert_print_stmt("VOID_RETURN\n", stmt);
+}
+
 void test_should_print_expression_statement(void)
 {
 	struct expression *expression;

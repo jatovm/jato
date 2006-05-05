@@ -74,6 +74,10 @@ stmt:	STMT_RETURN(reg)
 {
 }
 
+stmt:	STMT_VOID_RETURN
+{
+}
+
 stmt:	STMT_EXPRESSION(reg)
 {
 }

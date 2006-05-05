@@ -44,6 +44,18 @@ static void assert_insns_for_add(enum reg dest_reg,
 	free_basic_block(bb);
 }
 
+void test_should_select_nothing_for_void_return_statement(void)
+{
+	struct statement *stmt;
+	struct basic_block *bb = alloc_basic_block(0, 1);
+
+	stmt = alloc_statement(STMT_VOID_RETURN);
+	bb_insert_stmt(bb, stmt);
+	insn_select(bb);
+	assert_true(list_is_empty(&bb->insn_list));
+	free_basic_block(bb);
+}
+
 void test_select_insns_for_add(void)
 {
 	assert_insns_for_add(REG_EAX, 0, 1, 8, 12);

@@ -196,6 +196,12 @@ static int print_return_stmt(int lvl, struct string *str,
 	return err;
 }
 
+static int print_void_return_stmt(int lvl, struct string *str,
+				  struct statement *stmt)
+{
+	return append_formatted(lvl, str, "VOID_RETURN\n");
+}
+
 static int print_expr_stmt(int lvl, struct string *str, const char *type_name,
 			   struct statement *stmt)
 {
@@ -238,6 +244,7 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_LABEL] = print_label_stmt,
 	[STMT_GOTO] = print_goto_stmt,
 	[STMT_RETURN] = print_return_stmt,
+	[STMT_VOID_RETURN] = print_void_return_stmt,
 	[STMT_EXPRESSION] = print_expression_stmt,
 	[STMT_NULL_CHECK] = print_null_check_stmt,
 	[STMT_ARRAY_CHECK] = print_array_check_stmt,

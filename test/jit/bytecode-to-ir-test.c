@@ -1218,7 +1218,7 @@ void test_convert_void_return(void)
 	convert_to_ir(cu);
 	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 	assert_true(stack_is_empty(cu->expr_stack));
-	assert_return_stmt(NULL, ret_stmt);
+	assert_void_return_stmt(ret_stmt);
 
 	free_compilation_unit(cu);
 }

@@ -28,6 +28,7 @@ void assert_invoke_expr(enum jvm_type, struct methodblock *,
 
 void assert_store_stmt(struct statement *);
 void assert_return_stmt(struct expression *, struct statement *);
+void assert_void_return_stmt(struct statement *);
 void assert_null_check_stmt(struct expression *, struct statement *);
 void assert_arraycheck_stmt(enum jvm_type, struct expression *,
 			    struct expression *, struct statement *);
