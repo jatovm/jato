@@ -1,5 +1,6 @@
 #!/bin/sh
 
+make -C ..
 make -C ../jato
 
 # make sure that we have built jamvm classes
