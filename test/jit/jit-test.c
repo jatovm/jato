@@ -25,4 +25,7 @@ void test_jit_prepare_for_exec_returns_trampoline_objcode(void)
 	assert_not_null(mb.compilation_unit);
 	assert_not_null(mb.trampoline);
 	assert_ptr_equals(mb.trampoline->objcode, actual);
+
+	free_compilation_unit(mb.compilation_unit);
+	free_jit_trampoline(mb.trampoline);
 }
