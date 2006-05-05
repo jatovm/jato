@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include <expression.h>
+#include <jit/expression.h>
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>

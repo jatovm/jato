@@ -9,7 +9,7 @@
 #include <compilation-unit.h>
 #include <errno.h>
 #include <jit-compiler.h>
-#include <statement.h>
+#include <jit/statement.h>
 #include <insn-selector.h>
 #include <x86-objcode.h>
 

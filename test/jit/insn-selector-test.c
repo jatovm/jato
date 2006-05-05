@@ -4,10 +4,10 @@
 
 #include <libharness.h>
 #include <basic-block.h>
-#include <expression.h>
+#include <jit/expression.h>
 #include <instruction.h>
 #include <insn-selector.h>
-#include <statement.h>
+#include <jit/statement.h>
 
 static void assert_insn(enum insn_opcode insn_op,
 			enum reg src_base_reg,

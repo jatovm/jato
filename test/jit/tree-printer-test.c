@@ -4,7 +4,7 @@
 
 #include <jit/tree-printer.h>
 #include <jvm_types.h>
-#include <statement.h>
+#include <jit/statement.h>
 #include <vm/string.h>
 
 #include <libharness.h>

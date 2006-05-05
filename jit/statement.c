@@ -7,8 +7,8 @@
 
 #include <vm/vm.h>
 #include <assert.h>
-#include <expression.h>
-#include <statement.h>
+#include <jit/expression.h>
+#include <jit/statement.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -4,9 +4,9 @@
 
 #include <compilation-unit.h>
 #include <basic-block.h>
-#include <tree-node.h>
-#include <expression.h>
-#include <statement.h>
+#include <jit/tree-node.h>
+#include <jit/expression.h>
+#include <jit/statement.h>
 #include <jvm_types.h>
 #include <libharness.h>
 

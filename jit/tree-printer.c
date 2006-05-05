@@ -9,8 +9,8 @@
  */
 
 #include <jit/tree-printer.h>
-#include <statement.h>
-#include <tree-node.h>
+#include <jit/statement.h>
+#include <jit/tree-node.h>
 #include <vm/string.h>
 
 #include <stdio.h>

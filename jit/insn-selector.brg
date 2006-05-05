@@ -9,10 +9,10 @@
 
 #include <assert.h>
 #include <basic-block.h>
-#include <expression.h>
+#include <jit/expression.h>
 #include <instruction.h>
 #include <insn-selector.h>
-#include <statement.h>
+#include <jit/statement.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

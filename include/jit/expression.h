@@ -4,7 +4,7 @@
 #include <vm/system.h>
 
 #include <jvm_types.h>
-#include <tree-node.h>
+#include <jit/tree-node.h>
 
 enum expression_type {
 	EXPR_VALUE,

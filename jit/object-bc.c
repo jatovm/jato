@@ -8,7 +8,7 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include <statement.h>
+#include <jit/statement.h>
 #include <vm/stack.h>
 #include <jit-compiler.h>
 #include <bytecodes.h>

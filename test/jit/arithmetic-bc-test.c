@@ -2,7 +2,7 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <statement.h>
+#include <jit/statement.h>
 #include <jit-compiler.h>
 #include <vm/list.h>
 #include <vm/stack.h>

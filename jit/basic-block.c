@@ -9,7 +9,7 @@
 
 #include <basic-block.h>
 #include <instruction.h>
-#include <statement.h>
+#include <jit/statement.h>
 #include <stdlib.h>
 #include <string.h>
 

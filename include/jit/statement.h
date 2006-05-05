@@ -2,7 +2,7 @@
 #define __STATEMENT_H
 
 #include <vm/list.h>
-#include <expression.h>
+#include <jit/expression.h>
 #include <stddef.h>
 #include <vm/vm.h>
 
