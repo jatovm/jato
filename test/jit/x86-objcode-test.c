@@ -140,7 +140,7 @@ static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 	struct insn_sequence is;
 
 	bb = alloc_basic_block(0, 1);
-	bb_insert_insn(bb, x86_op_membase_reg(insn_opcode, src_base_reg, src_disp, dest_reg));
+	bb_insert_insn(bb, membase_reg_insn(insn_opcode, src_base_reg, src_disp, dest_reg));
 
 	init_insn_sequence(&is, actual, 3);
 	x86_emit_obj_code(bb, &is);

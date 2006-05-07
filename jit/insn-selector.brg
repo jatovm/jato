@@ -38,18 +38,17 @@ reg:	EXPR_VALUE	0
 
 reg:	EXPR_LOCAL	1
 {
-	bb_insert_insn(s, x86_op_membase_reg(INSN_MOV, REG_EBP, 12, REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(INSN_MOV, REG_EBP, 12, REG_EAX));
 }
 
 reg:	OP_ADD(EXPR_LOCAL, reg) 1
 {
-	bb_insert_insn(s, x86_op_membase_reg(INSN_ADD, REG_EBP, 8, REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(INSN_ADD, REG_EBP, 8, REG_EAX));
 }
 
 reg:	EXPR_INVOKE(arg) 1
 {
-	struct insn *insn = alloc_insn(INSN_CALL);
-	bb_insert_insn(s, insn);
+	bb_insert_insn(s, imm_insn(INSN_CALL, /* FIXME */0xdeadbeef));
 }
 
 arg:	EXPR_NO_ARGS
@@ -59,11 +58,9 @@ arg:	EXPR_NO_ARGS
 arg:	EXPR_ARG(EXPR_VALUE)
 {
 	struct expression *expr = to_expr(tree);
-	struct insn *insn = alloc_insn(INSN_PUSH);
-	if (insn) {
-		insn->operand.imm = to_expr(expr->arg_expression)->value;
-		bb_insert_insn(s, insn);
-	}
+	unsigned long long imm = to_expr(expr->arg_expression)->value;
+
+	bb_insert_insn(s, imm_insn(INSN_PUSH, imm));
 }
 
 arg:	EXPR_ARGS_LIST(arg, arg)

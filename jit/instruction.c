@@ -20,10 +20,15 @@ struct insn *alloc_insn(enum insn_opcode insn_op)
 	return insn;
 }
 
-struct insn *x86_op_membase_reg(enum insn_opcode insn_op,
-				enum reg src_base_reg,
-				unsigned long src_disp,
-				enum reg dest_reg)
+void free_insn(struct insn *insn)
+{
+	free(insn);
+}
+
+struct insn *membase_reg_insn(enum insn_opcode insn_op,
+			      enum reg src_base_reg,
+			      unsigned long src_disp,
+			      enum reg dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_op);
 	if (insn) {
@@ -34,7 +39,11 @@ struct insn *x86_op_membase_reg(enum insn_opcode insn_op,
 	return insn;
 }
 
-void free_insn(struct insn *insn)
+struct insn *imm_insn(enum insn_opcode insn_op, unsigned long imm)
 {
-	free(insn);
+	struct insn *insn = alloc_insn(insn_op);
+	if (insn)
+		insn->operand.imm = imm;
+
+	return insn;
 }
