@@ -1407,12 +1407,12 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 
 void test_convert_invokestatic(void)
 {
-	assert_convert_invokestatic(J_BYTE, "B", 0);
-	assert_convert_invokestatic(J_INT, "I", 0);
-	assert_convert_invokestatic(J_INT, "I", 1);
-	assert_convert_invokestatic(J_INT, "I", 2);
-	assert_convert_invokestatic(J_INT, "I", 3);
-	assert_convert_invokestatic(J_INT, "I", 5);
+	assert_convert_invokestatic(J_BYTE, "()B", 0);
+	assert_convert_invokestatic(J_INT, "()I", 0);
+	assert_convert_invokestatic(J_INT, "()I", 1);
+	assert_convert_invokestatic(J_INT, "()I", 2);
+	assert_convert_invokestatic(J_INT, "()I", 3);
+	assert_convert_invokestatic(J_INT, "()I", 5);
 }
 
 void test_convert_invokestatic_for_void_return_type(void)
@@ -1428,7 +1428,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 	struct compilation_unit *cu;
 	struct statement *stmt;
 
-	mb.type = "V";
+	mb.type = "()V";
 	mb.args_count = 0;
 
 	cu = alloc_simple_compilation_unit(&method);
@@ -1456,7 +1456,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 	struct compilation_unit *cu;
 	struct statement *stmt;
 
-	mb.type = "I";
+	mb.type = "()I";
 	mb.args_count = 0;
 
 	cu = alloc_simple_compilation_unit(&method);

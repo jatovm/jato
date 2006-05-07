@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
 		       unsigned long offset)
@@ -251,6 +252,7 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	struct methodblock *mb;
 	unsigned short index;
 	struct expression *value, *args_list = NULL;
+	char *return_type;
 	int i;
 
 	index = cp_index(cu->method->code + offset + 1);
@@ -259,7 +261,8 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	if (!mb)
 		return -EINVAL;
 
-	value = invoke_expr(str_to_type(mb->type), mb);
+	return_type = mb->type + (strlen(mb->type)-1);
+	value = invoke_expr(str_to_type(return_type), mb);
 	if (!value)
 		return -ENOMEM;
 
@@ -272,7 +275,7 @@ static int convert_invokestatic(struct compilation_unit *cu,
 	if (args_list)
 		value->args_list = &args_list->node;
 
-	if (mb->type[0] == 'V') {
+	if (value->jvm_type == J_VOID) {
 		struct statement *expr_stmt;
 		
 		expr_stmt = alloc_statement(STMT_EXPRESSION);
