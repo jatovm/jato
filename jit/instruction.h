@@ -24,8 +24,8 @@ struct operand {
 };
 
 enum insn_opcode {
-	ADD,
-	MOV,
+	INSN_ADD,
+	INSN_MOV,
 	INSN_CALL,
 	INSN_PUSH,
 };

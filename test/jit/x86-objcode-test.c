@@ -151,14 +151,14 @@ static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 
 void test_emit_mov_membase_reg(void)
 {
-	assert_emit_op_membase_reg(MOV, REG_EBP,  8, REG_EAX, 0x8b, 0x45);
-	assert_emit_op_membase_reg(MOV, REG_EBP, 12, REG_EAX, 0x8b, 0x45);
-	assert_emit_op_membase_reg(MOV, REG_EBP,  8, REG_EBX, 0x8b, 0x5D);
-	assert_emit_op_membase_reg(MOV, REG_EBP,  8, REG_ECX, 0x8b, 0x4D);
-	assert_emit_op_membase_reg(MOV, REG_EBP,  8, REG_EDX, 0x8b, 0x55);
+	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_EAX, 0x8b, 0x45);
+	assert_emit_op_membase_reg(INSN_MOV, REG_EBP, 12, REG_EAX, 0x8b, 0x45);
+	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_EBX, 0x8b, 0x5D);
+	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_ECX, 0x8b, 0x4D);
+	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_EDX, 0x8b, 0x55);
 }
 
 void test_emit_add_membase_reg(void)
 {
-	assert_emit_op_membase_reg(ADD, REG_EBP, 4, REG_EAX, 0x03, 0x45);
+	assert_emit_op_membase_reg(INSN_ADD, REG_EBP, 4, REG_EAX, 0x03, 0x45);
 }

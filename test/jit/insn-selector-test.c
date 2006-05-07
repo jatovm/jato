@@ -38,8 +38,8 @@ static void assert_insns_for_add(enum reg dest_reg,
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
-	assert_insn(MOV, REG_EBP, right_displacement, REG_EAX, insn_entry(bb->insn_list.next));
-	assert_insn(ADD, REG_EBP, left_displacement, REG_EAX, insn_entry(bb->insn_list.next->next));
+	assert_insn(INSN_MOV, REG_EBP, right_displacement, REG_EAX, insn_entry(bb->insn_list.next));
+	assert_insn(INSN_ADD, REG_EBP, left_displacement, REG_EAX, insn_entry(bb->insn_list.next->next));
 
 	free_basic_block(bb);
 }

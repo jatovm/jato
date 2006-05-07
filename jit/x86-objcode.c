@@ -163,10 +163,10 @@ static unsigned char to_x86_opcode(enum insn_opcode opcode)
 	unsigned char ret = 0;
 
 	switch (opcode) {
-	case MOV:
+	case INSN_MOV:
 		ret = 0x8b;
 		break;
-	case ADD:
+	case INSN_ADD:
 		ret = 0x03;
 		break;
 	case INSN_CALL:
