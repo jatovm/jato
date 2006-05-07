@@ -20,7 +20,9 @@ BOOTCLASSPATH=../lib/classes.zip:$GLIBJ
 
 find jamvm/ -name "*.java" | xargs jikes -cp $BOOTCLASSPATH
 
-../jato/jato -Xbootclasspath:$BOOTCLASSPATH -cp . jamvm.IntegerArithmeticTest
+../jato/jato \
+	-Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
+	-Xbootclasspath:$BOOTCLASSPATH -cp . jamvm.IntegerArithmeticTest
 if [ $? == 0 ]; then
   echo "Tests OK."
 else

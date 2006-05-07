@@ -3,6 +3,9 @@
   - Fix Makefiles for jato/ and test/jit/ to use generic build
   - Unit and acceptance tests should be runnable from source directory root
     with one command
+  - Change compile-time GNU classpath installation directory dependency to
+    runtime. Better error reporting when GNU classpath Java and native
+    libraries are not found.
   - Bytecode to IR conversion
 	+ Method return type
 	+ INVOKESTATIC
