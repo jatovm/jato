@@ -81,7 +81,8 @@ static int simple_expr(struct expression *expr)
 	enum expression_type type = expr_type(expr);
 
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
-	    || type == EXPR_TEMPORARY || type == EXPR_NO_ARGS;
+	    || type == EXPR_TEMPORARY || type == EXPR_FIELD
+	    || type == EXPR_NO_ARGS;
 }
 
 static int __tree_print(int, struct tree_node *, struct string *);
