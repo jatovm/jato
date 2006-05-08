@@ -98,7 +98,7 @@ void test_select_insn_for_invoke_without_args(void)
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_int_equals(INSN_CALL, insn->insn_op);
+	assert_imm_insn(INSN_CALL, 0xdeadbeef, insn);
 
 	free_basic_block(bb);
 }
