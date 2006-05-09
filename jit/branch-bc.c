@@ -16,7 +16,6 @@
 #include <errno.h>
 
 static struct statement *__convert_if(struct compilation_unit *cu,
-				      struct basic_block *bb,
 				      unsigned long offset,
 				      enum jvm_type jvm_type,
 				      enum binary_operator binop,
@@ -61,7 +60,7 @@ int convert_if(struct compilation_unit *cu,
 		return -ENOMEM;
 
 	if_value = stack_pop(cu->expr_stack);
-	stmt = __convert_if(cu, bb, offset, J_INT, binop, if_value, zero_value);
+	stmt = __convert_if(cu, offset, J_INT, binop, if_value, zero_value);
 	if (!stmt) {
 		expr_put(zero_value);
 		return -ENOMEM;
@@ -117,8 +116,7 @@ int convert_if_cmp(struct compilation_unit *cu,
 	if_value2 = stack_pop(cu->expr_stack);
 	if_value1 = stack_pop(cu->expr_stack);
 
-	stmt =
-	    __convert_if(cu, bb, offset, jvm_type, binop, if_value1, if_value2);
+	stmt = __convert_if(cu, offset, jvm_type, binop, if_value1, if_value2);
 	if (!stmt)
 		return -ENOMEM;
 
