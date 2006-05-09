@@ -9,6 +9,7 @@
 #include <jit/typeconv-bc.h>
 #include <jit/object-bc.h>
 #include <jit/ostack-bc.h>
+#include <jit/branch-bc.h>
 #include <jit/invoke-bc.h>
 
 #endif
