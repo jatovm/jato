@@ -105,10 +105,10 @@ int convert_ifle(struct compilation_unit *cu, struct basic_block *bb,
 	return convert_if(cu, bb, offset, OP_LE);
 }
 
-int convert_if_cmp(struct compilation_unit *cu,
-		   struct basic_block *bb,
-		   unsigned long offset,
-		   enum jvm_type jvm_type, enum binary_operator binop)
+static int convert_if_cmp(struct compilation_unit *cu,
+			  struct basic_block *bb,
+			  unsigned long offset,
+			  enum jvm_type jvm_type, enum binary_operator binop)
 {
 	struct statement *stmt;
 	struct expression *if_value1, *if_value2;
