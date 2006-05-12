@@ -12,6 +12,7 @@
 #include <jit/expression.h>
 #include <instruction.h>
 #include <insn-selector.h>
+#include <jit/jit.h>
 #include <jit/statement.h>
 #include <string.h>
 #include <stdio.h>
@@ -48,7 +49,10 @@ reg:	OP_ADD(EXPR_LOCAL, reg) 1
 
 reg:	EXPR_INVOKE(arg) 1
 {
-	bb_insert_insn(s, rel_insn(OPC_CALL, /* FIXME */0xdeadbeef));
+	struct expression *expr = to_expr(tree);
+	void *target = jit_prepare_for_exec(expr->target_method);
+
+	bb_insert_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
 }
 
 arg:	EXPR_NO_ARGS

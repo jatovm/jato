@@ -8,6 +8,7 @@
 #include <instruction.h>
 #include <insn-selector.h>
 #include <jit/statement.h>
+#include <jit-compiler.h>
 
 static void assert_disp_reg_insn(enum insn_opcode insn_op,
 				    enum reg src_base_reg,
@@ -89,13 +90,14 @@ void test_should_select_nothing_for_void_return_statement(void)
 
 void test_select_insn_for_invoke_without_args(void)
 {
+	struct methodblock mb;
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct expression *expr, *args_list;
 	struct statement *stmt;
 	struct insn *insn;
 
 	args_list = no_args_expr();
-	expr = invoke_expr(J_INT, NULL);
+	expr = invoke_expr(J_INT, &mb);
 	expr->args_list = &args_list->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -105,13 +107,16 @@ void test_select_insn_for_invoke_without_args(void)
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_rel_insn(OPC_CALL, 0xdeadbeef, insn);
+	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
 
+	free_jit_trampoline(mb.trampoline);
+	free_compilation_unit(mb.compilation_unit);
 	free_basic_block(bb);
 }
 
 void test_select_insn_for_invoke_with_args_list(void)
 {
+	struct methodblock mb;
 	struct insn *insn;
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct expression *invoke_expression, *args_list_expression;
@@ -120,7 +125,7 @@ void test_select_insn_for_invoke_with_args_list(void)
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr
 						       (J_INT, 0x01)));
-	invoke_expression = invoke_expr(J_INT, NULL);
+	invoke_expression = invoke_expr(J_INT, &mb);
 	invoke_expression->args_list = &args_list_expression->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -136,7 +141,9 @@ void test_select_insn_for_invoke_with_args_list(void)
 	assert_imm_insn(OPC_PUSH, 0x01, insn);
 
 	insn = insn_next(insn);
-	assert_rel_insn(OPC_CALL, 0xdeadbeef, insn);
+	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
 
+	free_jit_trampoline(mb.trampoline);
+	free_compilation_unit(mb.compilation_unit);
 	free_basic_block(bb);
 }
