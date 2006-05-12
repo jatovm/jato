@@ -48,7 +48,7 @@ reg:	OP_ADD(EXPR_LOCAL, reg) 1
 
 reg:	EXPR_INVOKE(arg) 1
 {
-	bb_insert_insn(s, imm_insn(OPC_CALL, /* FIXME */0xdeadbeef));
+	bb_insert_insn(s, rel_insn(OPC_CALL, /* FIXME */0xdeadbeef));
 }
 
 arg:	EXPR_NO_ARGS

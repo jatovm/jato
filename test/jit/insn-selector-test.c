@@ -27,6 +27,13 @@ static void assert_imm_insn(enum insn_opcode expected_opc,
 	assert_int_equals(expected_imm, insn->operand.imm);
 }
 
+static void assert_rel_insn(enum insn_opcode expected_opc,
+			    unsigned long expected_imm, struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, AM_REL), insn->type);
+	assert_int_equals(expected_imm, insn->operand.rel);
+}
+
 static struct insn *insn_next(struct insn *insn)
 {
 	return insn_entry(insn->insn_list_node.next);
@@ -98,7 +105,7 @@ void test_select_insn_for_invoke_without_args(void)
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_imm_insn(OPC_CALL, 0xdeadbeef, insn);
+	assert_rel_insn(OPC_CALL, 0xdeadbeef, insn);
 
 	free_basic_block(bb);
 }
@@ -129,7 +136,7 @@ void test_select_insn_for_invoke_with_args_list(void)
 	assert_imm_insn(OPC_PUSH, 0x01, insn);
 
 	insn = insn_next(insn);
-	assert_imm_insn(OPC_CALL, 0xdeadbeef, insn);
+	assert_rel_insn(OPC_CALL, 0xdeadbeef, insn);
 
 	free_basic_block(bb);
 }

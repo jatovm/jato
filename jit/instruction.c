@@ -45,3 +45,12 @@ struct insn *imm_insn(enum insn_opcode insn_op, unsigned long imm)
 
 	return insn;
 }
+
+struct insn *rel_insn(enum insn_opcode insn_op, unsigned long rel)
+{
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, AM_REL));
+	if (insn)
+		insn->operand.rel = rel;
+
+	return insn;
+}

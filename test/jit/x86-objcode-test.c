@@ -55,10 +55,11 @@ void test_emit_push_imm32(void)
 	assert_emit_push_imm32(0xdeadbeef);
 }
 
-static void assert_emit_call_backward(void *call_target,
-				      void *code,
-				      unsigned long code_size)
+static void assert_emit_call(void *call_target,
+			     void *code,
+			     unsigned long code_size)
 {
+	struct basic_block *bb;
 	signed long disp = call_target - code - 5;
 	unsigned char expected[] = {
 		0xe8,
@@ -68,24 +69,29 @@ static void assert_emit_call_backward(void *call_target,
 		(disp & 0xff000000UL) >> 24,
 	};
 	struct insn_sequence is;
+
+	bb = alloc_basic_block(0, 1);
+	bb_insert_insn(bb, rel_insn(OPC_CALL, (unsigned long) call_target));
 	
 	init_insn_sequence(&is, code, code_size);
-	x86_emit_call(&is, call_target);
+	x86_emit_obj_code(bb, &is);
 	assert_mem_equals(expected, code, ARRAY_SIZE(expected));
+
+	free_basic_block(bb);
 }
 
 void test_emit_call_backward(void)
 {
 	unsigned char before_code[3];
 	unsigned char code[5];
-	assert_emit_call_backward(before_code, code, ARRAY_SIZE(code));
+	assert_emit_call(before_code, code, ARRAY_SIZE(code));
 }
 
 void test_emit_call_forward(void)
 {
 	unsigned char code[5];
 	unsigned char after_code[3];
-	assert_emit_call_backward(after_code, code, ARRAY_SIZE(code));
+	assert_emit_call(after_code, code, ARRAY_SIZE(code));
 }
 
 static void assert_emit_add_imm8_reg(unsigned char imm8, unsigned char modrm, enum reg reg)

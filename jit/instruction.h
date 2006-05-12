@@ -20,6 +20,7 @@ struct operand {
 			unsigned long disp;	/* displacement */
 		};
 		unsigned long imm;
+		unsigned long rel;
 	};
 };
 
@@ -34,6 +35,7 @@ enum insn_opcode {
  *	The type of an operand is called an addressing mode.
  */
 enum addressing_mode {
+	AM_REL,		/* Relative. Only used as an addressing mode for code.  */
 	AM_REG,		/* Register */
 	AM_IMM,		/* Immediate */
 	AM_DISP,	/* Displacement */
@@ -63,6 +65,7 @@ enum insn_type {
 	INSN_PUSH_IMM		= DEFINE_INSN_TYPE(OPC_PUSH, AM_IMM),
 	INSN_MOV_DISP_REG	= DEFINE_INSN_TYPE_2(OPC_MOV, AM_DISP, AM_REG),
 	INSN_ADD_DISP_REG	= DEFINE_INSN_TYPE_2(OPC_ADD, AM_DISP, AM_REG),
+	INSN_CALL_REL		= DEFINE_INSN_TYPE(OPC_CALL, AM_REL),
 };
 
 struct insn {
@@ -85,6 +88,7 @@ static inline struct insn *insn_entry(struct list_head *head)
 
 struct insn *disp_reg_insn(enum insn_opcode, enum reg, unsigned long, enum reg);
 struct insn *imm_insn(enum insn_opcode, unsigned long);
+struct insn *rel_insn(enum insn_opcode, unsigned long);
 
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
