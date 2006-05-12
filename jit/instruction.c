@@ -37,6 +37,15 @@ struct insn *disp_reg_insn(enum insn_opcode insn_op, enum reg src_base_reg,
 	return insn;
 }
 
+struct insn *reg_insn(enum insn_opcode insn_op, enum reg reg)
+{
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, AM_REG));
+	if (insn)
+		insn->operand.reg = reg;
+
+	return insn;
+}
+
 struct insn *imm_insn(enum insn_opcode insn_op, unsigned long imm)
 {
 	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, AM_IMM));

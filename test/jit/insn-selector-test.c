@@ -21,6 +21,13 @@ static void assert_disp_reg_insn(enum insn_opcode insn_op,
 	assert_int_equals(dest_reg, insn->dest.reg);
 }
 
+static void assert_reg_insn(enum insn_opcode expected_opc,
+			    enum reg expected_reg, struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, AM_REG), insn->type);
+	assert_int_equals(expected_reg, insn->operand.reg);
+}
+
 static void assert_imm_insn(enum insn_opcode expected_opc,
 			    unsigned long expected_imm, struct insn *insn)
 {
@@ -139,6 +146,42 @@ void test_select_insn_for_invoke_with_args_list(void)
 
 	insn = insn_next(insn);
 	assert_imm_insn(OPC_PUSH, 0x01, insn);
+
+	insn = insn_next(insn);
+	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
+
+	free_jit_trampoline(mb.trampoline);
+	free_compilation_unit(mb.compilation_unit);
+	free_basic_block(bb);
+}
+
+void test_should_push_invoke_return_value_as_parameter(void)
+{
+	struct expression *no_args, *arg, *invoke, *nested_invoke;
+	struct statement *stmt;
+	struct methodblock mb, nested_mb;
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
+
+	no_args = no_args_expr();
+	nested_invoke = invoke_expr(J_INT, &nested_mb);
+	nested_invoke->args_list = &no_args->node;
+
+	arg = arg_expr(nested_invoke);
+	invoke = invoke_expr(J_INT, &mb);
+	invoke->args_list = &arg->node;
+
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &invoke->node;
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	insn = insn_entry(bb->insn_list.next);
+	assert_rel_insn(OPC_CALL, (unsigned long) nested_mb.trampoline->objcode, insn);
+
+	insn = insn_next(insn);
+	assert_reg_insn(OPC_PUSH, REG_EAX, insn);
 
 	insn = insn_next(insn);
 	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);

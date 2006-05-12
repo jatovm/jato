@@ -18,7 +18,7 @@ static inline void init_insn_sequence(struct insn_sequence *is, void *code,
 
 void x86_emit_prolog(struct insn_sequence *);
 void x86_emit_epilog(struct insn_sequence *);
-void x86_emit_push_imm32(struct insn_sequence *, int);
+void x86_emit_push_imm32(struct insn_sequence *, unsigned long);
 void x86_emit_call(struct insn_sequence *, void *);
 void x86_emit_ret(struct insn_sequence *);
 void x86_emit_add_imm8_reg(struct insn_sequence *, unsigned char, enum reg);

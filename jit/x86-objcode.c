@@ -78,9 +78,9 @@ static inline void x86_emit_disp8_reg(struct insn_sequence *is,
 	x86_emit(is, disp8);
 }
 
-static void x86_emit_push_ebp(struct insn_sequence *is)
+static void x86_emit_push_reg(struct insn_sequence *is, enum reg reg)
 {
-	x86_emit(is, 0x55);
+	x86_emit(is, 0x50 + encode_reg(reg));
 }
 
 static void x86_emit_mov_reg_reg(struct insn_sequence *is, enum reg src_reg,
@@ -101,7 +101,7 @@ void x86_emit_mov_disp8_reg(struct insn_sequence *is, enum reg base_reg,
 
 void x86_emit_prolog(struct insn_sequence *is)
 {
-	x86_emit_push_ebp(is);
+	x86_emit_push_reg(is, REG_EBP);
 	x86_emit_mov_reg_reg(is, REG_ESP, REG_EBP);
 }
 
@@ -124,7 +124,7 @@ static void x86_emit_imm32(struct insn_sequence *is, int imm)
 	x86_emit(is, imm_buf.b[3]);
 }
 
-void x86_emit_push_imm32(struct insn_sequence *is, int imm)
+void x86_emit_push_imm32(struct insn_sequence *is, unsigned long imm)
 {
 	x86_emit(is, 0x68);
 	x86_emit_imm32(is, imm);
@@ -174,16 +174,22 @@ void x86_emit_indirect_jump_reg(struct insn_sequence *is, enum reg reg)
 static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 {
 	switch (insn->type) {
-	case INSN_MOV_DISP_REG:
-		x86_emit_mov_disp8_reg(is, insn->src.reg, insn->src.disp,
-				       insn->dest.reg);
-		break;
 	case INSN_ADD_DISP_REG:
 		x86_emit_add_disp8_reg(is, insn->src.reg, insn->src.disp,
 				       insn->dest.reg);
 		break;
 	case INSN_CALL_REL:
 		x86_emit_call(is, (void *)insn->operand.rel);
+		break;
+	case INSN_MOV_DISP_REG:
+		x86_emit_mov_disp8_reg(is, insn->src.reg, insn->src.disp,
+				       insn->dest.reg);
+		break;
+	case INSN_PUSH_IMM:
+		x86_emit_push_imm32(is, insn->operand.imm);
+		break;
+	case INSN_PUSH_REG:
+		x86_emit_push_reg(is, insn->operand.reg);
 		break;
 	default:
 		assert(!"unknown opcode");

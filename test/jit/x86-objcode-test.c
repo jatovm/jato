@@ -34,6 +34,7 @@ void test_emit_epilog(void)
 
 static void assert_emit_push_imm32(unsigned long imm)
 {
+	struct basic_block *bb;
 	unsigned char expected[] = {
 		0x68,
 		(imm & 0x000000ffUL),
@@ -44,15 +45,49 @@ static void assert_emit_push_imm32(unsigned long imm)
 	unsigned char actual[5];
 	struct insn_sequence is;
 
+	bb = alloc_basic_block(0, 1);
+	bb_insert_insn(bb, imm_insn(OPC_PUSH, imm));
 	init_insn_sequence(&is, actual, ARRAY_SIZE(actual));
-	x86_emit_push_imm32(&is, imm);
+
+	x86_emit_obj_code(bb, &is);
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+
+	free_basic_block(bb);
 }
 
 void test_emit_push_imm32(void)
 {
 	assert_emit_push_imm32(0x0);
 	assert_emit_push_imm32(0xdeadbeef);
+}
+
+static void assert_emit_push_reg(unsigned char expected_opc, enum reg actual_reg)
+{
+	struct basic_block *bb;
+	unsigned char expected[] = {
+		expected_opc,
+	};
+	unsigned char actual[1];
+	struct insn_sequence is;
+
+	bb = alloc_basic_block(0, 1);
+	bb_insert_insn(bb, reg_insn(OPC_PUSH, actual_reg));
+	init_insn_sequence(&is, actual, ARRAY_SIZE(actual));
+
+	x86_emit_obj_code(bb, &is);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+
+	free_basic_block(bb);
+}
+
+void test_emit_push_reg(void)
+{
+	assert_emit_push_reg(0x50, REG_EAX);
+	assert_emit_push_reg(0x53, REG_EBX);
+	assert_emit_push_reg(0x51, REG_ECX);
+	assert_emit_push_reg(0x52, REG_EDX);
+	assert_emit_push_reg(0x55, REG_EBP);
+	assert_emit_push_reg(0x54, REG_ESP);
 }
 
 static void assert_emit_call(void *call_target,

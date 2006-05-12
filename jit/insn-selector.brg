@@ -67,6 +67,11 @@ arg:	EXPR_ARG(EXPR_VALUE)
 	bb_insert_insn(s, imm_insn(OPC_PUSH, imm));
 }
 
+arg:	EXPR_ARG(reg)
+{
+	bb_insert_insn(s, reg_insn(OPC_PUSH, REG_EAX));
+}
+
 arg:	EXPR_ARGS_LIST(arg, arg)
 {
 }
