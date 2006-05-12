@@ -14,10 +14,68 @@
 #include <basic-block.h>
 #include <instruction.h>
 
+/*
+ *	encode_reg:	Encode register to be used in IA-32 instruction.
+ *	@reg: Register to encode.
+ *
+ *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
+ */
+static unsigned char encode_reg(enum reg reg)
+{
+	unsigned char ret = 0;
+
+	switch (reg) {
+	case REG_EAX:
+		ret = 0x00;
+		break;
+	case REG_EBX:
+		ret = 0x03;
+		break;
+	case REG_ECX:
+		ret = 0x01;
+		break;
+	case REG_EDX:
+		ret = 0x02;
+		break;
+	case REG_ESP:
+		ret = 0x04;
+		break;
+	case REG_EBP:
+		ret = 0x05;
+		break;
+	}
+	return ret;
+}
+
+/**
+ *	x86_mod_rm:	Encode a ModR/M byte of an IA-32 instruction.
+ *	@mod: The mod field of the byte.
+ *	@reg_opcode: The reg/opcode field of the byte.
+ *	@rm: The r/m field of the byte.
+ */
+static inline unsigned char x86_mod_rm(unsigned char mod,
+				       unsigned char reg_opcode,
+				       unsigned char rm)
+{
+	return ((mod & 0x3) << 6) | ((reg_opcode & 0x7) << 3) | (rm & 0x7);
+}
+
 static inline void x86_emit(struct insn_sequence *is, unsigned char c)
 {
 	assert(is->current != is->end);
 	*(is->current++) = c;
+}
+
+static inline void x86_emit_disp8_reg(struct insn_sequence *is,
+				      unsigned char opc, enum reg base_reg,
+				      unsigned char disp8, enum reg dest_reg)
+{
+	unsigned char mod_rm;
+	
+	mod_rm = x86_mod_rm(0x01, encode_reg(dest_reg), encode_reg(base_reg));
+	x86_emit(is, opc);
+	x86_emit(is, mod_rm);
+	x86_emit(is, disp8);
 }
 
 static void x86_emit_push_ebp(struct insn_sequence *is)
@@ -25,16 +83,26 @@ static void x86_emit_push_ebp(struct insn_sequence *is)
 	x86_emit(is, 0x55);
 }
 
-static void x86_emit_mov_esp_ebp(struct insn_sequence *is)
+static void x86_emit_mov_reg_reg(struct insn_sequence *is, enum reg src_reg,
+				 enum reg dest_reg)
 {
+	unsigned char mod_rm;
+	
+	mod_rm = x86_mod_rm(0x03, encode_reg(src_reg), encode_reg(dest_reg));
 	x86_emit(is, 0x89);
-	x86_emit(is, 0xe5);
+	x86_emit(is, mod_rm);
+}
+
+void x86_emit_mov_disp8_reg(struct insn_sequence *is, enum reg base_reg,
+			    unsigned char disp8, enum reg dest_reg)
+{
+	x86_emit_disp8_reg(is, 0x8b, base_reg, disp8, dest_reg);
 }
 
 void x86_emit_prolog(struct insn_sequence *is)
 {
 	x86_emit_push_ebp(is);
-	x86_emit_mov_esp_ebp(is);
+	x86_emit_mov_reg_reg(is, REG_ESP, REG_EBP);
 }
 
 static void x86_emit_pop_ebp(struct insn_sequence *is)
@@ -83,96 +151,36 @@ void x86_emit_epilog(struct insn_sequence *is)
 	x86_emit_ret(is);
 }
 
-static unsigned char opcode_reg_mem(enum reg reg)
+void x86_emit_add_disp8_reg(struct insn_sequence *is, enum reg base_reg,
+			    unsigned char disp8, enum reg dest_reg)
 {
-	unsigned char ret = 0;
-
-	switch (reg) {
-	case REG_EAX:
-		ret = 0x00;
-		break;
-	case REG_EBX:
-		ret = 0x03;
-		break;
-	case REG_ECX:
-		ret = 0x01;
-		break;
-	case REG_EDX:
-		ret = 0x02;
-		break;
-	case REG_ESP:
-		ret = 0x04;
-		break;
-	case REG_EBP:
-		ret = 0x05;
-		break;
-	}
-	return ret;
-}
-
-static inline unsigned char x86_modrm(unsigned char mod,
-				      unsigned char reg_opcode,
-				      unsigned char reg_mem)
-{
-	return ((mod & 0x3) << 6) | ((reg_opcode & 0x7) << 3) | (reg_mem & 0x7);
+	x86_emit_disp8_reg(is, 0x03, base_reg, disp8, dest_reg);
 }
 
 void x86_emit_add_imm8_reg(struct insn_sequence *is, unsigned char imm8,
 			   enum reg reg)
 {
 	x86_emit(is, 0x83);
-	x86_emit(is, x86_modrm(0x3, 0x00, opcode_reg_mem(reg)));
+	x86_emit(is, x86_mod_rm(0x3, 0x00, encode_reg(reg)));
 	x86_emit(is, imm8);
 }
 
 void x86_emit_indirect_jump_reg(struct insn_sequence *is, enum reg reg)
 {
 	x86_emit(is, 0xff);
-	x86_emit(is, x86_modrm(0x3, 0x04, opcode_reg_mem(reg)));
-}
-
-static unsigned char disp_ebp_imm8(enum reg reg)
-{
-	unsigned char ret = 0;
-
-	switch (reg) {
-	case REG_EAX:
-		ret = 0x45;
-		break;
-	case REG_EBX:
-		ret = 0x5d;
-		break;
-	case REG_ECX:
-		ret = 0x4d;
-		break;
-	case REG_EDX:
-		ret = 0x55;
-		break;
-	case REG_ESP:
-		ret = 0x65;
-		break;
-	case REG_EBP:
-		ret = 0x6d;
-		break;
-	}
-	return ret;
-}
-
-static void x86_emit_disp_reg_insn(struct insn_sequence *is, unsigned char opc, struct insn *insn)
-{
-	x86_emit(is, opc);
-	x86_emit(is, disp_ebp_imm8(insn->dest.reg));
-	x86_emit(is, insn->src.disp);
+	x86_emit(is, x86_mod_rm(0x3, 0x04, encode_reg(reg)));
 }
 
 static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 {
 	switch (insn->type) {
 	case INSN_MOV_DISP_REG:
-		x86_emit_disp_reg_insn(is, 0x8b, insn);
+		x86_emit_mov_disp8_reg(is, insn->src.reg, insn->src.disp,
+				       insn->dest.reg);
 		break;
 	case INSN_ADD_DISP_REG:
-		x86_emit_disp_reg_insn(is, 0x03, insn);
+		x86_emit_add_disp8_reg(is, insn->src.reg, insn->src.disp,
+				       insn->dest.reg);
 		break;
 	default:
 		assert(!"unknown opcode");
