@@ -112,3 +112,11 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 	}
 	return tramp;
 }
+
+void *jit_prepare_for_exec(struct methodblock *mb)
+{
+	mb->compilation_unit = alloc_compilation_unit(mb);
+	mb->trampoline = build_jit_trampoline(mb->compilation_unit);
+
+	return mb->trampoline->objcode;
+}

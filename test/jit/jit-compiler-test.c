@@ -90,3 +90,20 @@ void test_jit_method_trampoline_compiles_and_invokes_method(void)
 	free_jit_trampoline(t);
 	free_compilation_unit(cu);
 }
+
+static char java_main[] = { OPC_RETURN };
+
+void test_jit_prepare_for_exec_returns_trampoline_objcode(void)
+{
+	struct methodblock mb;
+	mb.code = java_main;
+	mb.code_size = ARRAY_SIZE(java_main);
+	mb.compilation_unit = NULL;
+	void *actual = jit_prepare_for_exec(&mb);
+	assert_not_null(mb.compilation_unit);
+	assert_not_null(mb.trampoline);
+	assert_ptr_equals(mb.trampoline->objcode, actual);
+
+	free_compilation_unit(mb.compilation_unit);
+	free_jit_trampoline(mb.trampoline);
+}
