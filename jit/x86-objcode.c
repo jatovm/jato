@@ -158,31 +158,32 @@ static unsigned char disp_ebp_imm8(enum reg reg)
 	return ret;
 }
 
-static unsigned char to_x86_opcode(enum insn_type type)
+static void x86_emit_disp_reg_insn(struct insn_sequence *is, unsigned char opc, struct insn *insn)
 {
-	unsigned char ret = 0;
+	x86_emit(is, opc);
+	x86_emit(is, disp_ebp_imm8(insn->dest.reg));
+	x86_emit(is, insn->src.disp);
+}
 
-	switch (type) {
+static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
+{
+	switch (insn->type) {
 	case INSN_MOV_DISP_REG:
-		ret = 0x8b;
+		x86_emit_disp_reg_insn(is, 0x8b, insn);
 		break;
 	case INSN_ADD_DISP_REG:
-		ret = 0x03;
+		x86_emit_disp_reg_insn(is, 0x03, insn);
 		break;
 	default:
 		assert(!"unknown opcode");
 		break;
 	}
-	return ret;
 }
 
 void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 {
 	struct insn *insn;
 
-	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
-		x86_emit(is, to_x86_opcode(insn->type));
-		x86_emit(is, disp_ebp_imm8(insn->dest.reg));
-		x86_emit(is, insn->src.disp);
-	}
+	list_for_each_entry(insn, &bb->insn_list, insn_list_node)
+		x86_emit_insn(is, insn);
 }
