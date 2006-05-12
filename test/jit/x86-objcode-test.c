@@ -127,7 +127,7 @@ void test_emit_indirect_jump_reg(void)
 	assert_emit_indirect_jump_reg(0xe3, REG_EBX);
 }
 
-static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
+static void assert_emit_op_disp_reg(enum insn_opcode insn_opcode,
 				       enum reg src_base_reg,
 				       unsigned long src_disp,
 				       enum reg dest_reg,
@@ -140,7 +140,7 @@ static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 	struct insn_sequence is;
 
 	bb = alloc_basic_block(0, 1);
-	bb_insert_insn(bb, membase_reg_insn(insn_opcode, src_base_reg, src_disp, dest_reg));
+	bb_insert_insn(bb, disp_reg_insn(insn_opcode, src_base_reg, src_disp, dest_reg));
 
 	init_insn_sequence(&is, actual, 3);
 	x86_emit_obj_code(bb, &is);
@@ -149,16 +149,16 @@ static void assert_emit_op_membase_reg(enum insn_opcode insn_opcode,
 	free_basic_block(bb);
 }
 
-void test_emit_mov_membase_reg(void)
+void test_emit_mov_disp_reg(void)
 {
-	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_EAX, 0x8b, 0x45);
-	assert_emit_op_membase_reg(INSN_MOV, REG_EBP, 12, REG_EAX, 0x8b, 0x45);
-	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_EBX, 0x8b, 0x5D);
-	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_ECX, 0x8b, 0x4D);
-	assert_emit_op_membase_reg(INSN_MOV, REG_EBP,  8, REG_EDX, 0x8b, 0x55);
+	assert_emit_op_disp_reg(OPC_MOV, REG_EBP,  8, REG_EAX, 0x8b, 0x45);
+	assert_emit_op_disp_reg(OPC_MOV, REG_EBP, 12, REG_EAX, 0x8b, 0x45);
+	assert_emit_op_disp_reg(OPC_MOV, REG_EBP,  8, REG_EBX, 0x8b, 0x5D);
+	assert_emit_op_disp_reg(OPC_MOV, REG_EBP,  8, REG_ECX, 0x8b, 0x4D);
+	assert_emit_op_disp_reg(OPC_MOV, REG_EBP,  8, REG_EDX, 0x8b, 0x55);
 }
 
-void test_emit_add_membase_reg(void)
+void test_emit_add_disp_reg(void)
 {
-	assert_emit_op_membase_reg(INSN_ADD, REG_EBP, 4, REG_EAX, 0x03, 0x45);
+	assert_emit_op_disp_reg(OPC_ADD, REG_EBP, 4, REG_EAX, 0x03, 0x45);
 }

@@ -62,11 +62,11 @@ void x86_emit_push_imm32(struct insn_sequence *is, int imm)
 	x86_emit_imm32(is, imm);
 }
 
-#define INSN_CALL_SIZE 5
+#define CALL_INSN_SIZE 5
 
 void x86_emit_call(struct insn_sequence *is, void *call_target)
 {
-	int disp = call_target - (void *) is->current - INSN_CALL_SIZE;
+	int disp = call_target - (void *) is->current - CALL_INSN_SIZE;
 
 	x86_emit(is, 0xe8);
 	x86_emit_imm32(is, disp);
@@ -131,7 +131,7 @@ void x86_emit_indirect_jump_reg(struct insn_sequence *is, enum reg reg)
 	x86_emit(is, x86_modrm(0x3, 0x04, opcode_reg_mem(reg)));
 }
 
-static unsigned char membase_ebp_imm8(enum reg reg)
+static unsigned char disp_ebp_imm8(enum reg reg)
 {
 	unsigned char ret = 0;
 
@@ -158,22 +158,19 @@ static unsigned char membase_ebp_imm8(enum reg reg)
 	return ret;
 }
 
-static unsigned char to_x86_opcode(enum insn_opcode opcode)
+static unsigned char to_x86_opcode(enum insn_type type)
 {
 	unsigned char ret = 0;
 
-	switch (opcode) {
-	case INSN_MOV:
+	switch (type) {
+	case INSN_MOV_DISP_REG:
 		ret = 0x8b;
 		break;
-	case INSN_ADD:
+	case INSN_ADD_DISP_REG:
 		ret = 0x03;
 		break;
-	case INSN_CALL:
-		assert(!"unknown opcode INSN_CALL");
-		break;
-	case INSN_PUSH:
-		assert(!"unknwon opcode INSN_PUSH");
+	default:
+		assert(!"unknown opcode");
 		break;
 	}
 	return ret;
@@ -184,8 +181,8 @@ void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 	struct insn *insn;
 
 	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
-		x86_emit(is, to_x86_opcode(insn->insn_op));
-		x86_emit(is, membase_ebp_imm8(insn->dest.reg));
+		x86_emit(is, to_x86_opcode(insn->type));
+		x86_emit(is, disp_ebp_imm8(insn->dest.reg));
 		x86_emit(is, insn->src.disp);
 	}
 }

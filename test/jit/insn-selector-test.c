@@ -9,12 +9,12 @@
 #include <insn-selector.h>
 #include <jit/statement.h>
 
-static void assert_membase_reg_insn(enum insn_opcode insn_op,
+static void assert_disp_reg_insn(enum insn_opcode insn_op,
 				    enum reg src_base_reg,
 				    unsigned long src_displacement,
 				    enum reg dest_reg, struct insn *insn)
 {
-	assert_int_equals(insn_op, insn->insn_op);
+	assert_int_equals(DEFINE_INSN_TYPE_2(insn_op, AM_DISP, AM_REG), insn->type);
 	assert_int_equals(src_base_reg, insn->src.base_reg);
 	assert_int_equals(src_displacement, insn->src.disp);
 	assert_int_equals(dest_reg, insn->dest.reg);
@@ -23,7 +23,7 @@ static void assert_membase_reg_insn(enum insn_opcode insn_op,
 static void assert_imm_insn(enum insn_opcode expected_opc,
 			    unsigned long expected_imm, struct insn *insn)
 {
-	assert_int_equals(expected_opc, insn->insn_op);
+	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, AM_IMM), insn->type);
 	assert_int_equals(expected_imm, insn->operand.imm);
 }
 
@@ -52,11 +52,11 @@ static void assert_add_insns(enum reg dest_reg,
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_membase_reg_insn(INSN_MOV, REG_EBP, right_displacement, REG_EAX,
+	assert_disp_reg_insn(OPC_MOV, REG_EBP, right_displacement, REG_EAX,
 				insn);
 
 	insn = insn_next(insn);
-	assert_membase_reg_insn(INSN_ADD, REG_EBP, left_displacement, REG_EAX,
+	assert_disp_reg_insn(OPC_ADD, REG_EBP, left_displacement, REG_EAX,
 				insn);
 
 	free_basic_block(bb);
@@ -98,7 +98,7 @@ void test_select_insn_for_invoke_without_args(void)
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_imm_insn(INSN_CALL, 0xdeadbeef, insn);
+	assert_imm_insn(OPC_CALL, 0xdeadbeef, insn);
 
 	free_basic_block(bb);
 }
@@ -123,13 +123,13 @@ void test_select_insn_for_invoke_with_args_list(void)
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_imm_insn(INSN_PUSH, 0x02, insn);
+	assert_imm_insn(OPC_PUSH, 0x02, insn);
 
 	insn = insn_next(insn);
-	assert_imm_insn(INSN_PUSH, 0x01, insn);
+	assert_imm_insn(OPC_PUSH, 0x01, insn);
 
 	insn = insn_next(insn);
-	assert_imm_insn(INSN_CALL, 0xdeadbeef, insn);
+	assert_imm_insn(OPC_CALL, 0xdeadbeef, insn);
 
 	free_basic_block(bb);
 }

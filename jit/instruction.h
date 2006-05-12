@@ -24,14 +24,49 @@ struct operand {
 };
 
 enum insn_opcode {
-	INSN_ADD,
-	INSN_MOV,
-	INSN_CALL,
-	INSN_PUSH,
+	OPC_ADD,
+	OPC_MOV,
+	OPC_CALL,
+	OPC_PUSH,
+};
+
+/*
+ *	The type of an operand is called an addressing mode.
+ */
+enum addressing_mode {
+	AM_REG,		/* Register */
+	AM_IMM,		/* Immediate */
+	AM_DISP,	/* Displacement */
+};
+
+#define OPERAND_1_AM_SHIFT 8UL
+#define OPERAND_2_AM_SHIFT 16UL
+
+/*
+ *	1-operand instruction type
+ */
+#define DEFINE_INSN_TYPE(opc, am) \
+	(((am) << OPERAND_1_AM_SHIFT) | (opc))
+
+/*
+ *	2-operand instruction type
+ */
+#define DEFINE_INSN_TYPE_2(opc, am1, am2) \
+	(((am1) << OPERAND_2_AM_SHIFT) | ((am2) << OPERAND_1_AM_SHIFT) | (opc))
+
+/*
+ *	Instruction type identifies the opcode, number of operands, and
+ *	addressing modes of the operands of an instruction.
+ */
+enum insn_type {
+	INSN_PUSH_REG		= DEFINE_INSN_TYPE(OPC_PUSH, AM_REG),
+	INSN_PUSH_IMM		= DEFINE_INSN_TYPE(OPC_PUSH, AM_IMM),
+	INSN_MOV_DISP_REG	= DEFINE_INSN_TYPE_2(OPC_MOV, AM_DISP, AM_REG),
+	INSN_ADD_DISP_REG	= DEFINE_INSN_TYPE_2(OPC_ADD, AM_DISP, AM_REG),
 };
 
 struct insn {
-	enum insn_opcode insn_op;
+	enum insn_type type;
 	union {
 		struct {
 			struct operand src;
@@ -48,10 +83,10 @@ static inline struct insn *insn_entry(struct list_head *head)
 	return list_entry(head, struct insn, insn_list_node);
 }
 
-struct insn *membase_reg_insn(enum insn_opcode, enum reg, unsigned long, enum reg);
+struct insn *disp_reg_insn(enum insn_opcode, enum reg, unsigned long, enum reg);
 struct insn *imm_insn(enum insn_opcode, unsigned long);
 
-struct insn *alloc_insn(enum insn_opcode);
+struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
 #endif
