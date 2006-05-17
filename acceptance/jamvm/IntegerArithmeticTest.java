@@ -31,12 +31,12 @@ public class IntegerArithmeticTest {
 
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
-            fail("Expected '" + expected + "', but was '" + actual + "'.");
+            fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
         }
     }
 
-    private static void fail(String msg) {
-        System.out.println(msg);
+    private static void fail(/*String msg*/) {
+        //System.out.println(msg);
         retval = 1;
     }
 
