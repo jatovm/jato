@@ -13,13 +13,13 @@ OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)byteco
 	$(objdir)jit-compiler.o $(objdir)instruction.o $(objdir)insn-selector.o ../../vm/stack.o $(objdir)statement.o \
 	$(objdir)expression.o $(objdir)x86-objcode.o $(objdir)load-store-bc.o $(objdir)ostack-bc.o \
 	$(objdir)typeconv-bc.o $(objdir)object-bc.o $(objdir)jvm_types.o $(objdir)tree-printer.o ../../vm/string.o \
-	$(objdir)/branch-bc.o $(objdir)/invoke-bc.o
+	$(objdir)/branch-bc.o $(objdir)/invoke-bc.o $(objdir)x86-frame.o
 TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o \
 	arithmetic-bc-test.o bytecode-cfg-builder-test.o \
 	bytecode-converter-fixture.o bytecode-to-ir-test.o \
 	compilation-unit-test.o insn-selector-test.o \
 	jit-compiler-test.o list-test.o stack-test.o x86-objcode-test.o \
-	resolve-stub.o tree-printer-test.o string-test.o
+	resolve-stub.o tree-printer-test.o string-test.o x86-frame-test.o
 HARNESS = ../libharness/libharness.o ../../vm/backtrace.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed

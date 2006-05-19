@@ -14,6 +14,7 @@
 #include <jit/expression.h>
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
+#include <jit/x86-frame.h>
 #include <vm/string.h>
 
 #include <assert.h>
@@ -42,12 +43,17 @@ reg:	EXPR_VALUE	0
 
 reg:	EXPR_LOCAL	1
 {
-	bb_insert_insn(s, disp_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX));
+	struct expression *expr = to_expr(tree);
+	unsigned long disp = frame_local_offset(expr);
+	bb_insert_insn(s, disp_reg_insn(OPC_MOV, REG_EBP, disp, REG_EAX));
 }
 
 reg:	OP_ADD(EXPR_LOCAL, reg) 1
 {
-	bb_insert_insn(s, disp_reg_insn(OPC_ADD, REG_EBP, 8, REG_EAX));
+	struct expression *expr = to_expr(tree);
+	unsigned long disp = frame_local_offset(to_expr(expr->binary_left));
+
+	bb_insert_insn(s, disp_reg_insn(OPC_ADD, REG_EBP, disp, REG_EAX));
 }
 
 reg:	EXPR_INVOKE(arg) 1
@@ -58,9 +64,12 @@ reg:	EXPR_INVOKE(arg) 1
 	bb_insert_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
 }
 
-reg:	OP_EQ(EXPR_LOCAL, reg) 1
+reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
-	bb_insert_insn(s, disp_reg_insn(OPC_CMP, REG_EBP, 8, REG_EAX));
+	struct expression *expr = to_expr(tree);
+	unsigned long disp = frame_local_offset(to_expr(expr->binary_right));
+
+	bb_insert_insn(s, disp_reg_insn(OPC_CMP, REG_EBP, disp, REG_EAX));
 }
 
 arg:	EXPR_NO_ARGS

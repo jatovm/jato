@@ -205,12 +205,11 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 
 	insn_select(bb);
 
-	/* FIXME: Local variables should be the other way around; 8 before 12 */
 	insn = insn_entry(bb->insn_list.next);
-	assert_disp_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
+	assert_disp_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
 
 	insn = insn_next(insn);
-	assert_disp_reg_insn(OPC_CMP, REG_EBP, 8, REG_EAX, insn);
+	assert_disp_reg_insn(OPC_CMP, REG_EBP, 12, REG_EAX, insn);
 
 	insn = insn_next(insn);
 	assert_rel_insn(OPC_JE, 0xdeadbeef /* FIXME */, insn);
