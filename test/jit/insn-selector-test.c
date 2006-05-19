@@ -190,3 +190,30 @@ void test_should_push_invoke_return_value_as_parameter(void)
 	free_compilation_unit(mb.compilation_unit);
 	free_basic_block(bb);
 }
+
+void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
+{
+	struct expression *expr;
+	struct statement *stmt;
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
+
+	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), local_expr(J_INT, 1));
+	stmt = alloc_statement(STMT_IF);
+	stmt->expression = &expr->node;
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	/* FIXME: Local variables should be the other way around; 8 before 12 */
+	insn = insn_entry(bb->insn_list.next);
+	assert_disp_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_disp_reg_insn(OPC_CMP, REG_EBP, 8, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_rel_insn(OPC_JE, 0xdeadbeef /* FIXME */, insn);
+
+	free_basic_block(bb);
+}

@@ -58,6 +58,11 @@ reg:	EXPR_INVOKE(arg) 1
 	bb_insert_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
 }
 
+reg:	OP_EQ(EXPR_LOCAL, reg) 1
+{
+	bb_insert_insn(s, disp_reg_insn(OPC_CMP, REG_EBP, 8, REG_EAX));
+}
+
 arg:	EXPR_NO_ARGS
 {
 }
@@ -89,6 +94,11 @@ stmt:	STMT_VOID_RETURN
 
 stmt:	STMT_EXPRESSION(reg)
 {
+}
+
+stmt:	STMT_IF(reg)
+{
+	bb_insert_insn(s, rel_insn(OPC_JE, 0xdeadbeef));
 }
 
 %%
