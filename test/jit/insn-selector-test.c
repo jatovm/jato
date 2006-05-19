@@ -47,19 +47,14 @@ static struct insn *insn_next(struct insn *insn)
 	return insn_entry(insn->insn_list_node.next);
 }
 
-static void assert_add_insns(enum reg dest_reg,
-			     unsigned long left_local,
-			     unsigned long right_local,
-			     unsigned long left_displacement,
-			     unsigned long right_displacement)
+void test_select_mov_and_add_insns_for_add_binop(void)
 {
-	struct insn *insn;
 	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
 	struct expression *expr;
 	struct statement *stmt;
 
-	expr = binop_expr(J_INT, OP_ADD, local_expr(J_INT, left_local),
-			  local_expr(J_INT, right_local));
+	expr = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 	bb_insert_stmt(bb, stmt);
@@ -67,25 +62,18 @@ static void assert_add_insns(enum reg dest_reg,
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_disp_reg_insn(OPC_MOV, REG_EBP, right_displacement, REG_EAX,
-				insn);
+	assert_disp_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
 
 	insn = insn_next(insn);
-	assert_disp_reg_insn(OPC_ADD, REG_EBP, left_displacement, REG_EAX,
-				insn);
+	assert_disp_reg_insn(OPC_ADD, REG_EBP, 8, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
 
-void test_select_insns_for_add(void)
-{
-	assert_add_insns(REG_EAX, 0, 1, 8, 12);
-}
-
 void test_should_select_nothing_for_void_return_statement(void)
 {
-	struct statement *stmt;
 	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct statement *stmt;
 
 	stmt = alloc_statement(STMT_VOID_RETURN);
 	bb_insert_stmt(bb, stmt);
@@ -95,13 +83,13 @@ void test_should_select_nothing_for_void_return_statement(void)
 	free_basic_block(bb);
 }
 
-void test_select_insn_for_invoke_without_args(void)
+void test_select_call_insn_for_invoke_without_args(void)
 {
-	struct methodblock mb;
 	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
 	struct expression *expr, *args_list;
 	struct statement *stmt;
-	struct insn *insn;
+	struct methodblock mb;
 
 	args_list = no_args_expr();
 	expr = invoke_expr(J_INT, &mb);
@@ -121,13 +109,13 @@ void test_select_insn_for_invoke_without_args(void)
 	free_basic_block(bb);
 }
 
-void test_select_insn_for_invoke_with_args_list(void)
+void test_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 {
-	struct methodblock mb;
-	struct insn *insn;
 	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
 	struct expression *invoke_expression, *args_list_expression;
 	struct statement *stmt;
+	struct methodblock mb;
 
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr
@@ -155,13 +143,13 @@ void test_select_insn_for_invoke_with_args_list(void)
 	free_basic_block(bb);
 }
 
-void test_should_push_invoke_return_value_as_parameter(void)
+void test_should_select_push_insn_for_invoke_return_value(void)
 {
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
 	struct expression *no_args, *arg, *invoke, *nested_invoke;
 	struct statement *stmt;
 	struct methodblock mb, nested_mb;
-	struct basic_block *bb = alloc_basic_block(0, 1);
-	struct insn *insn;
 
 	no_args = no_args_expr();
 	nested_invoke = invoke_expr(J_INT, &nested_mb);
@@ -193,10 +181,10 @@ void test_should_push_invoke_return_value_as_parameter(void)
 
 void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 {
-	struct expression *expr;
-	struct statement *stmt;
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct insn *insn;
+	struct expression *expr;
+	struct statement *stmt;
 
 	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_IF);
