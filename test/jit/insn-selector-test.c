@@ -57,7 +57,48 @@ static struct insn *insn_next(struct insn *insn)
 	return insn_entry(insn->insn_list_node.next);
 }
 
-void test_select_mov_and_add_insns_for_add_binop(void)
+void test_should_select_insn_for_every_statement(void)
+{
+	struct insn *insn;
+	struct expression *expr1, *expr2;
+	struct statement *stmt1, *stmt2;
+	struct basic_block *bb = alloc_basic_block(0, 1);
+
+	/*
+	 * Yeah, this expression tree forest isn't a sane 'program'
+	 * but that's not what we're testing for here...
+	 */
+	expr1 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
+
+	stmt1 = alloc_statement(STMT_EXPRESSION);
+	stmt1->expression = &expr1->node;
+
+	expr2 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 2), local_expr(J_INT, 3));
+
+	stmt2 = alloc_statement(STMT_RETURN);
+	stmt2->return_value = &expr2->node;
+
+	bb_insert_stmt(bb, stmt1);
+	bb_insert_stmt(bb, stmt2);
+
+	insn_select(bb);
+
+	insn = insn_entry(bb->insn_list.next);
+	assert_disp_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_disp_reg_insn(OPC_ADD, REG_EBP, 8, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_disp_reg_insn(OPC_MOV, REG_EBP, 20, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_disp_reg_insn(OPC_ADD, REG_EBP, 16, REG_EAX, insn);
+
+	free_basic_block(bb);
+}
+
+void test_should_select_mov_and_add_insns_for_add_binop(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct insn *insn;
@@ -93,7 +134,7 @@ void test_should_select_nothing_for_void_return_statement(void)
 	free_basic_block(bb);
 }
 
-void test_select_call_insn_for_invoke_without_args(void)
+void test_should_select_call_insn_for_invoke_without_args(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct insn *insn;
@@ -119,7 +160,7 @@ void test_select_call_insn_for_invoke_without_args(void)
 	free_basic_block(bb);
 }
 
-void test_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
+void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct insn *insn;

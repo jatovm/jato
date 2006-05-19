@@ -168,12 +168,10 @@ void insn_select(struct basic_block *bb)
 
 	mono_burg_init();
 
-	stmt = list_entry(bb->stmt_list.next, struct statement, stmt_list_node);
-
-	print_tree(&stmt->node);
-
-	state = mono_burg_label(&stmt->node, bb);
-	emit_code(bb, state, MB_NTERM_stmt);
-
-	free_state(state);
+	list_for_each_entry(stmt, &bb->stmt_list, stmt_list_node) {
+		print_tree(&stmt->node);
+		state = mono_burg_label(&stmt->node, bb);
+		emit_code(bb, state, MB_NTERM_stmt);
+		free_state(state);
+	}
 }
