@@ -7,16 +7,19 @@
  * This file contains BURG specification for IA-32.
  */
 
-#include <assert.h>
 #include <basic-block.h>
-#include <jit/expression.h>
-#include <instruction.h>
 #include <insn-selector.h>
+#include <instruction.h>
 #include <jit-compiler.h>
+#include <jit/expression.h>
 #include <jit/statement.h>
-#include <string.h>
+#include <jit/tree-printer.h>
+#include <vm/string.h>
+
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
@@ -121,6 +124,20 @@ static void free_state(MBState *state)
 	g_free(state);
 }
 
+#if 0
+static void print_tree(struct tree_node *node)
+{
+	struct string *str = alloc_str();
+	tree_print(node, str);
+	printf(str->value);
+	free_str(str);
+}
+#else
+static inline void print_tree(struct tree_node *node)
+{
+}
+#endif
+
 void insn_select(struct basic_block *bb)
 {
 	struct statement *stmt;
@@ -129,7 +146,9 @@ void insn_select(struct basic_block *bb)
 	mono_burg_init();
 
 	stmt = list_entry(bb->stmt_list.next, struct statement, stmt_list_node);
-	
+
+	print_tree(&stmt->node);
+
 	state = mono_burg_label(&stmt->node, bb);
 	emit_code(bb, state, MB_NTERM_stmt);
 
