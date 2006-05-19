@@ -1,0 +1,9 @@
+TODO
+
+IntegerArithmeticTest
+---------------------
+
+  - Conditional jump target is hardcoded to 0xdeadbeef.
+  - The field->static_value field for retVal is being resolved to NULL.
+  - We need support for OPC_NEW for assertEquals() and fail().
+  - JNI support for System.exit() is missing.
