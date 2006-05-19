@@ -203,3 +203,30 @@ void test_emit_add_disp_reg(void)
 {
 	assert_emit_op_disp_reg(OPC_ADD, REG_EBP, 4, REG_EAX, 0x03, 0x45);
 }
+
+void test_emit_cmp_disp_reg(void)
+{
+	assert_emit_op_disp_reg(OPC_CMP, REG_EBP, 8, REG_EAX, 0x3b, 0x45);
+}
+
+static void assert_emit_rel8(enum insn_opcode insn_opcode, unsigned char opcode, unsigned char rel8)
+{
+	struct basic_block *bb;
+	unsigned char expected[] = { opcode, rel8 };
+	unsigned char actual[2];
+	struct insn_sequence is;
+
+	bb = alloc_basic_block(0, 1);
+	bb_insert_insn(bb, rel_insn(insn_opcode, rel8));
+
+	init_insn_sequence(&is, actual, 2);
+	x86_emit_obj_code(bb, &is);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+	
+	free_basic_block(bb);
+}
+
+void test_emit_je_rel(void)
+{
+	assert_emit_rel8(OPC_JE, 0x74, 0x01);
+}

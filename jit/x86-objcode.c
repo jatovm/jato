@@ -165,10 +165,22 @@ void x86_emit_add_imm8_reg(struct insn_sequence *is, unsigned char imm8,
 	x86_emit(is, imm8);
 }
 
+void x86_emit_cmp_disp8_reg(struct insn_sequence *is, enum reg base_reg,
+			    unsigned char disp8, enum reg dest_reg)
+{
+	x86_emit_disp8_reg(is, 0x3b, base_reg, disp8, dest_reg);
+}
+
 void x86_emit_indirect_jump_reg(struct insn_sequence *is, enum reg reg)
 {
 	x86_emit(is, 0xff);
 	x86_emit(is, x86_mod_rm(0x3, 0x04, encode_reg(reg)));
+}
+
+void x86_emit_je_rel(struct insn_sequence *is, unsigned char rel8)
+{
+	x86_emit(is, 0x74);
+	x86_emit(is, rel8);
 }
 
 static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
@@ -180,6 +192,13 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_CALL_REL:
 		x86_emit_call(is, (void *)insn->operand.rel);
+		break;
+	case INSN_CMP_DISP_REG:
+		x86_emit_cmp_disp8_reg(is, insn->src.reg, insn->src.disp,
+				       insn->dest.reg);
+		break;
+	case INSN_JE_REL:
+		x86_emit_je_rel(is, insn->operand.rel);
 		break;
 	case INSN_MOV_DISP_REG:
 		x86_emit_mov_disp8_reg(is, insn->src.reg, insn->src.disp,
