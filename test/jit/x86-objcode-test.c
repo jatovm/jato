@@ -43,10 +43,20 @@ static void assert_emit_insn_2(unsigned char opcode, unsigned char extra,
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
-static void assert_emit_insn_3(unsigned char opcode, unsigned long modrm,
+static void assert_emit_insn_3(unsigned char opcode, unsigned char modrm,
 			       unsigned char extra, struct insn *insn)
 {
 	unsigned char expected[] = { opcode, modrm, extra };
+
+	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
+}
+
+static void assert_emit_insn_6(unsigned char opcode, unsigned char modrm,
+			       unsigned char b1, unsigned char b2,
+			       unsigned char b3, unsigned char b4,
+			       struct insn *insn)
+{
+	unsigned char expected[] = { opcode, modrm, b1, b2, b3, b4 };
 
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
@@ -190,6 +200,13 @@ void test_emit_indirect_jump_reg(void)
 	assert_emit_indirect_jump_reg(0xe3, REG_EBX);
 }
 
+void test_emit_mov_imm(void)
+{
+	assert_emit_insn_6(0x8b, 0x05, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX));
+	assert_emit_insn_6(0x8b, 0x1d, 0xbe, 0xba, 0xfe, 0xca, imm_reg_insn(OPC_MOV, 0xcafebabe, REG_EBX));
+	assert_emit_insn_6(0x8b, 0x0d, 0xbe, 0xba, 0xfe, 0xca, imm_reg_insn(OPC_MOV, 0xcafebabe, REG_ECX));
+}
+
 void test_emit_mov_disp_reg(void)
 {
 	assert_emit_insn_3(0x8b, 0x45, 0x08, disp_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EAX));
@@ -205,6 +222,11 @@ void test_emit_add_disp_reg(void)
 	assert_emit_insn_3(0x03, 0x45, 0x04, disp_reg_insn(OPC_ADD, REG_EBP, 0x04, REG_EAX));
 }
 
+void test_emit_add_imm(void)
+{
+	assert_emit_insn_3(0x83, 0xc0, 0x01, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
+}
+
 void test_emit_cmp_disp_reg(void)
 {
 	assert_emit_insn_3(0x3b, 0x45, 0x08, disp_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));
@@ -213,9 +235,4 @@ void test_emit_cmp_disp_reg(void)
 void test_emit_je_rel(void)
 {
 	assert_emit_insn_2(0x74, 0x01, rel_insn(OPC_JE, 0x01));
-}
-
-void test_emit_insn_3(void)
-{
-	assert_emit_insn_3(0x83, 0xc0, 0x01, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
 }

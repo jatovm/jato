@@ -258,3 +258,27 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 
 	free_basic_block(bb);
 }
+
+void test_should_select_mov_insns_for_field_lookup(void)
+{
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
+	struct expression *expr;
+	struct statement *stmt;
+	struct fieldblock field = { .static_value = 0xdeadbeef };
+
+	expr = field_expr(J_INT, &field);
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &expr->node;
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	insn = insn_entry(bb->insn_list.next);
+	assert_imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_disp_reg_insn(OPC_MOV, REG_EAX, 0x00, REG_EAX, insn);
+
+	free_basic_block(bb);
+}

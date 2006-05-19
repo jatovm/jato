@@ -76,6 +76,14 @@ reg:	OP_EQ(reg, EXPR_LOCAL) 1
 	bb_insert_insn(s, disp_reg_insn(OPC_CMP, REG_EBP, disp, REG_EAX));
 }
 
+reg:	EXPR_FIELD 1
+{
+	struct expression *expr = to_expr(tree);
+
+	bb_insert_insn(s, imm_reg_insn(OPC_MOV, expr->field->static_value, REG_EAX));
+	bb_insert_insn(s, disp_reg_insn(OPC_MOV, REG_EAX, 0x00, REG_EAX));
+}
+
 arg:	EXPR_NO_ARGS
 {
 }
