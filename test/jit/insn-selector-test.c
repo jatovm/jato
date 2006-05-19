@@ -35,6 +35,16 @@ static void assert_imm_insn(enum insn_opcode expected_opc,
 	assert_int_equals(expected_imm, insn->operand.imm);
 }
 
+static void assert_imm_reg_insn(enum insn_opcode expected_opc,
+				unsigned long expected_imm,
+				enum reg expected_reg,
+				struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE_2(expected_opc, AM_IMM, AM_REG), insn->type);
+	assert_int_equals(expected_imm, insn->src.imm);
+	assert_int_equals(expected_reg, insn->dest.reg);
+}
+
 static void assert_rel_insn(enum insn_opcode expected_opc,
 			    unsigned long expected_imm, struct insn *insn)
 {
@@ -89,7 +99,7 @@ void test_select_call_insn_for_invoke_without_args(void)
 	struct insn *insn;
 	struct expression *expr, *args_list;
 	struct statement *stmt;
-	struct methodblock mb;
+	struct methodblock mb = { .args_count = 0 };
 
 	args_list = no_args_expr();
 	expr = invoke_expr(J_INT, &mb);
@@ -115,7 +125,7 @@ void test_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 	struct insn *insn;
 	struct expression *invoke_expression, *args_list_expression;
 	struct statement *stmt;
-	struct methodblock mb;
+	struct methodblock mb = { .args_count = 2 };
 
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr
@@ -138,6 +148,9 @@ void test_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 	insn = insn_next(insn);
 	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
 
+	insn = insn_next(insn);
+	assert_imm_reg_insn(OPC_ADD, 8, REG_ESP, insn);
+
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
 	free_basic_block(bb);
@@ -149,7 +162,7 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 	struct insn *insn;
 	struct expression *no_args, *arg, *invoke, *nested_invoke;
 	struct statement *stmt;
-	struct methodblock mb, nested_mb;
+	struct methodblock mb = { .args_count = 1 }, nested_mb = { .args_count = 0 };
 
 	no_args = no_args_expr();
 	nested_invoke = invoke_expr(J_INT, &nested_mb);

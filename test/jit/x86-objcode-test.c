@@ -230,3 +230,27 @@ void test_emit_je_rel(void)
 {
 	assert_emit_rel8(OPC_JE, 0x74, 0x01);
 }
+
+static void assert_emit_op_imm_reg(enum insn_opcode insn_opcode, enum reg reg,
+				   unsigned char opcode,
+				   unsigned long modrm, unsigned char imm8)
+{
+	struct basic_block *bb;
+	unsigned char expected[] = { opcode, modrm, imm8 };
+	unsigned char actual[3];
+	struct insn_sequence is;
+
+	bb = alloc_basic_block(0, 1);
+	bb_insert_insn(bb, imm_reg_insn(insn_opcode, imm8, reg));
+
+	init_insn_sequence(&is, actual, 3);
+	x86_emit_obj_code(bb, &is);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+	
+	free_basic_block(bb);
+}
+
+void test_emit_imm_reg_add(void)
+{
+	assert_emit_op_imm_reg(OPC_ADD, REG_EAX, 0x83, 0xc0, 0x01);
+}

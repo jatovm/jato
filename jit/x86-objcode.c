@@ -190,6 +190,9 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		x86_emit_add_disp8_reg(is, insn->src.reg, insn->src.disp,
 				       insn->dest.reg);
 		break;
+	case INSN_ADD_IMM_REG:
+		x86_emit_add_imm8_reg(is, insn->src.imm, insn->dest.reg);
+		break;
 	case INSN_CALL_REL:
 		x86_emit_call(is, (void *)insn->operand.rel);
 		break;

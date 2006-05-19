@@ -59,9 +59,13 @@ reg:	OP_ADD(EXPR_LOCAL, reg) 1
 reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr = to_expr(tree);
-	void *target = jit_prepare_for_exec(expr->target_method);
+	struct methodblock *method = expr->target_method;
+	void *target = jit_prepare_for_exec(method);
 
 	bb_insert_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
+
+	if (method->args_count)
+		bb_insert_insn(s, imm_reg_insn(OPC_ADD, method->args_count * sizeof(unsigned long), REG_ESP));
 }
 
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
