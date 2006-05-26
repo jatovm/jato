@@ -14,7 +14,7 @@ unit tests, follow these instructions:
   
     % git clone http://www.laughingpanda.org/~penberg/pub/scm/jit-jamvm.git jit-jamvm
 
-  2. Compile monoburg
+  2. Compile monoburg (you need glib and bison installed on your system)
 
     % cd jit-jamvm/monoburg/
     % make
