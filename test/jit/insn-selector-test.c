@@ -230,6 +230,10 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
+
+	free_jit_trampoline(nested_mb.trampoline);
+	free_compilation_unit(nested_mb.compilation_unit);
+
 	free_basic_block(bb);
 }
 
