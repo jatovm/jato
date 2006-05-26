@@ -181,15 +181,18 @@ static void convert_ir_const(struct compilation_unit *cu,
 			     ConstantPoolEntry * cp_infos,
 			     size_t nr_cp_infos, u1 * cp_types)
 {
-	struct classblock cb = {
-		.constant_pool_count = nr_cp_infos,
-		.constant_pool.info = cp_infos,
-		.constant_pool.type = cp_types
-	};
-	struct class *class[2];
-	class[1] = (void *) &cb;
-	cu->method->class = (void *)class;
+	struct class *class = malloc(sizeof(struct classblock) + sizeof(struct class));
+	struct classblock *cb = CLASS_CB(class);
+	struct constant_pool *constant_pool = &cb->constant_pool;
+
+	cb->constant_pool_count = nr_cp_infos;
+	constant_pool->info = cp_infos;
+	constant_pool->type = cp_types;
+
+	cu->method->class = class;
 	convert_to_ir(cu);
+
+	free(class);
 }
 
 static void assert_convert_ldc(enum jvm_type expected_jvm_type,
