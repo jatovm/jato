@@ -52,6 +52,13 @@ static void assert_rel_insn(enum insn_opcode expected_opc,
 	assert_int_equals(expected_imm, insn->operand.rel);
 }
 
+static void assert_branch_insn(enum insn_opcode expected_opc,
+			       struct statement *if_true, struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, AM_BRANCH), insn->type);
+	assert_ptr_equals(if_true, insn->branch_target);
+}
+
 static struct insn *insn_next(struct insn *insn)
 {
 	return insn_entry(insn->insn_list_node.next);
@@ -239,14 +246,18 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 
 void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb, *true_bb;
 	struct insn *insn;
 	struct expression *expr;
 	struct statement *stmt;
 
+	bb = alloc_basic_block(0, 1);
+	true_bb = alloc_basic_block(1, 2);
+
 	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_IF);
 	stmt->expression = &expr->node;
+	stmt->if_true = &true_bb->label_stmt->node;
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
@@ -258,7 +269,8 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 	assert_disp_reg_insn(OPC_CMP, REG_EBP, 12, REG_EAX, insn);
 
 	insn = insn_next(insn);
-	assert_rel_insn(OPC_JE, 0xdeadbeef /* FIXME */, insn);
+
+	assert_branch_insn(OPC_JE, to_stmt(stmt->if_true), insn);
 
 	free_basic_block(bb);
 }

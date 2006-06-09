@@ -119,7 +119,9 @@ stmt:	STMT_EXPRESSION(reg)
 
 stmt:	STMT_IF(reg)
 {
-	bb_insert_insn(s, rel_insn(OPC_JE, 0xdeadbeef));
+	struct statement *stmt = to_stmt(tree);
+
+	bb_insert_insn(s, branch_insn(OPC_JE, to_stmt(stmt->if_true)));
 }
 
 %%

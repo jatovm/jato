@@ -15,6 +15,7 @@ struct insn *alloc_insn(enum insn_type type)
 	if (insn) {
 		memset(insn, 0, sizeof *insn);
 		INIT_LIST_HEAD(&insn->insn_list_node);
+		INIT_LIST_HEAD(&insn->branch_list_node);
 		insn->type = type;
 	}
 	return insn;
@@ -71,6 +72,15 @@ struct insn *rel_insn(enum insn_opcode insn_op, unsigned long rel)
 	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, AM_REL));
 	if (insn)
 		insn->operand.rel = rel;
+
+	return insn;
+}
+
+struct insn *branch_insn(enum insn_opcode insn_op, struct statement *if_true)
+{
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, AM_BRANCH));
+	if (insn)
+		insn->branch_target = if_true;
 
 	return insn;
 }

@@ -13,6 +13,12 @@
 #include <x86-objcode.h>
 #include <basic-block.h>
 #include <instruction.h>
+#include <jit/statement.h>
+
+static inline unsigned long is_offset(struct insn_sequence *is)
+{
+	return is->current - is->start;
+}
 
 /*
  *	encode_reg:	Encode register to be used in IA-32 instruction.
@@ -190,8 +196,35 @@ void x86_emit_je_rel(struct insn_sequence *is, unsigned char rel8)
 	x86_emit(is, rel8);
 }
 
+static unsigned char branch_rel_addr(unsigned long branch_offset,
+				     unsigned long target_offset)
+{
+	return target_offset - branch_offset - 2;
+}
+
+static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
+{
+	struct basic_block *target_bb;
+	unsigned char addr = 0;
+
+	target_bb = insn->branch_target->bb;
+
+	if (!list_is_empty(&target_bb->insn_list)) {
+		struct insn *target_insn =
+			list_entry(target_bb->insn_list.next, struct insn,
+				   insn_list_node);
+
+		addr = branch_rel_addr(insn->offset, target_insn->offset);
+	} else
+		list_add(&insn->branch_list_node, &insn->branch_target->branch_list);
+
+	x86_emit_je_rel(is, addr);
+}
+
 static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 {
+	insn->offset = is_offset(is); 
+
 	switch (insn->type) {
 	case INSN_ADD_DISP_REG:
 		x86_emit_add_disp8_reg(is, insn->src.reg, insn->src.disp,
@@ -207,8 +240,8 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		x86_emit_cmp_disp8_reg(is, insn->src.reg, insn->src.disp,
 				       insn->dest.reg);
 		break;
-	case INSN_JE_REL:
-		x86_emit_je_rel(is, insn->operand.rel);
+	case INSN_JE_BRANCH:
+		x86_emit_branch(is, insn);
 		break;
 	case INSN_MOV_DISP_REG:
 		x86_emit_mov_disp8_reg(is, insn->src.reg, insn->src.disp,
@@ -229,10 +262,31 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 	}
 }
 
+static void x86_backpatch_branches(struct insn_sequence *is,
+				   struct list_head *unresolved,
+				   unsigned long target_off)
+{
+	struct insn *insn, *tmp;
+
+	list_for_each_entry_safe(insn, tmp, unresolved, branch_list_node) {
+		unsigned long addr;
+
+		addr = branch_rel_addr(insn->offset, target_off);
+		is->start[insn->offset + 1] = addr;
+
+		list_del(&insn->branch_list_node);
+	}
+}
+
 void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 {
 	struct insn *insn;
+	struct list_head *unresolved;
 
-	list_for_each_entry(insn, &bb->insn_list, insn_list_node)
+	unresolved = &bb->label_stmt->branch_list;
+	x86_backpatch_branches(is, unresolved, is_offset(is));
+
+	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
 		x86_emit_insn(is, insn);
+	}
 }

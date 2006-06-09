@@ -22,6 +22,7 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 		INIT_LIST_HEAD(&bb->insn_list);
 		INIT_LIST_HEAD(&bb->bb_list_node);
 		bb->label_stmt = alloc_statement(STMT_LABEL);
+		bb->label_stmt->bb = bb;
 		bb->start = start;
 		bb->end = end;
 	}

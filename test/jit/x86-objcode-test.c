@@ -5,7 +5,8 @@
 #include <x86-objcode.h>
 #include <basic-block.h>
 #include <instruction.h>
-
+#include <jit/statement.h>
+#include <vm/list.h>
 #include <vm/system.h>
 
 #include <libharness.h>
@@ -41,6 +42,14 @@ static void assert_emit_insn_2(unsigned char opcode, unsigned char extra,
 	unsigned char expected[] = { opcode, extra };
 
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
+}
+
+static void assert_mem_insn_2(unsigned char expected_opc,
+			      unsigned char expected_extra, const char *actual)
+{
+	unsigned char expected[] = { expected_opc, expected_extra };
+
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 }
 
 static void assert_emit_insn_3(unsigned char opcode, unsigned char modrm,
@@ -232,7 +241,94 @@ void test_emit_cmp_disp_reg(void)
 	assert_emit_insn_3(0x3b, 0x45, 0x08, disp_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));
 }
 
-void test_emit_je_rel(void)
+void test_should_use_zero_as_target_branch_for_forward_branches(void)
 {
-	assert_emit_insn_2(0x74, 0x01, rel_insn(OPC_JE, 0x01));
+	struct basic_block *bb = alloc_basic_block(0, 1);
+
+	assert_emit_insn_2(0x74, 0x00, branch_insn(OPC_JE, bb->label_stmt));
+}
+
+static void assert_emits_branch_target(unsigned char expected_target,
+				       struct basic_block *target_bb)
+{
+	struct insn *insn;
+	struct basic_block *branch_bb;
+	struct insn_sequence is;
+	char code[16];
+
+	insn = branch_insn(OPC_JE, target_bb->label_stmt);
+	branch_bb = alloc_basic_block(1, 2);
+
+	init_insn_sequence(&is, code, 16);
+
+	x86_emit_obj_code(target_bb, &is);
+
+	bb_insert_insn(branch_bb, insn);
+	x86_emit_obj_code(branch_bb, &is);
+
+	assert_mem_insn_2(0x74, expected_target, code + insn->offset);
+
+	free_basic_block(branch_bb);
+}
+
+void test_should_emit_target_for_backward_branches(void)
+{
+	struct basic_block *target_bb = alloc_basic_block(0, 1);
+
+	bb_insert_insn(target_bb, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
+	assert_emits_branch_target(0xfb, target_bb);
+
+	bb_insert_insn(target_bb, imm_reg_insn(OPC_ADD, 0x02, REG_EBX));
+	assert_emits_branch_target(0xf8, target_bb);
+
+	free_basic_block(target_bb);
+}
+
+void test_should_add_self_to_unresolved_list_for_forward_branches(void)
+{
+	struct basic_block *bb;
+	struct statement *if_true;
+	struct insn *insn;
+
+	bb = alloc_basic_block(0, 1);
+	if_true = bb->label_stmt;
+	insn = branch_insn(OPC_JE, if_true);
+
+	assert_emit_insn_2(0x74, 0x00, insn);
+
+	assert_ptr_equals(insn, list_entry(if_true->branch_list.next,
+					   struct insn, branch_list_node));
+}
+
+static void assert_backpatches_branches(unsigned char expected_target,
+					struct basic_block *branch_bb,
+					struct basic_block *target_bb)
+{
+	char code[16];
+	struct insn_sequence is;
+
+	init_insn_sequence(&is, code, 16);
+
+	x86_emit_obj_code(branch_bb, &is);
+	assert_mem_insn_2(0x74, 0x00, code);
+
+	x86_emit_obj_code(target_bb, &is);
+	assert_mem_insn_2(0x74, expected_target, code);
+}
+
+void test_should_backpatch_unresolved_branches_when_emitting_target(void)
+{
+	struct basic_block *target_bb, *branch_bb;
+
+	branch_bb = alloc_basic_block(0, 1);
+	target_bb = alloc_basic_block(1, 2);
+
+	bb_insert_insn(branch_bb, branch_insn(OPC_JE, target_bb->label_stmt));
+	assert_backpatches_branches(0x00, branch_bb, target_bb);
+
+	bb_insert_insn(branch_bb, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
+	assert_backpatches_branches(0x03, branch_bb, target_bb);
+
+	free_basic_block(branch_bb);
+	free_basic_block(target_bb);
 }

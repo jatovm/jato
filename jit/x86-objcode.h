@@ -6,13 +6,15 @@
 struct basic_block;
 
 struct insn_sequence {
-	unsigned char *current, *end;
+	unsigned char *start;
+	unsigned char *current;
+	unsigned char *end;
 };
 
 static inline void init_insn_sequence(struct insn_sequence *is, void *code,
 				      unsigned long size)
 {
-	is->current = code;
+	is->start = is->current = code;
 	is->end = code + size;
 }
 

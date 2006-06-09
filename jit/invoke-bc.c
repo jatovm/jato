@@ -38,6 +38,8 @@ int convert_void_return(struct compilation_unit *cu,
 	if (!return_stmt)
 		return -ENOMEM;
 
+	return_stmt->return_value = NULL;
+
 	bb_insert_stmt(bb, return_stmt);
 	return 0;
 }

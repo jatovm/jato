@@ -3,6 +3,8 @@
 
 #include <vm/list.h>
 
+struct statement;
+
 enum reg {
 	REG_EAX,
 	REG_EBX,
@@ -41,6 +43,7 @@ enum addressing_mode {
 	AM_REG,		/* Register */
 	AM_IMM,		/* Immediate */
 	AM_DISP,	/* Displacement */
+	AM_BRANCH,	/* Branch -- HACK */
 };
 
 #define OPERAND_1_AM_SHIFT 8UL
@@ -67,7 +70,7 @@ enum insn_type {
 	INSN_ADD_IMM_REG	= DEFINE_INSN_TYPE_2(OPC_ADD, AM_IMM, AM_REG),
 	INSN_CALL_REL		= DEFINE_INSN_TYPE(OPC_CALL, AM_REL),
 	INSN_CMP_DISP_REG	= DEFINE_INSN_TYPE_2(OPC_CMP, AM_DISP, AM_REG),
-	INSN_JE_REL		= DEFINE_INSN_TYPE(OPC_JE, AM_REL),
+	INSN_JE_BRANCH		= DEFINE_INSN_TYPE(OPC_JE, AM_BRANCH),
 	INSN_MOV_DISP_REG	= DEFINE_INSN_TYPE_2(OPC_MOV, AM_DISP, AM_REG),
 	INSN_MOV_IMM_REG	= DEFINE_INSN_TYPE_2(OPC_MOV, AM_IMM, AM_REG),
 	INSN_PUSH_IMM		= DEFINE_INSN_TYPE(OPC_PUSH, AM_IMM),
@@ -83,7 +86,10 @@ struct insn {
 		};
 		struct operand operand;
 	};
+	struct statement *branch_target;
 	struct list_head insn_list_node;
+	struct list_head branch_list_node;
+	unsigned long offset;
 };
 
 
@@ -97,6 +103,7 @@ struct insn *reg_insn(enum insn_opcode, enum reg);
 struct insn *imm_reg_insn(enum insn_opcode, unsigned long, enum reg);
 struct insn *imm_insn(enum insn_opcode, unsigned long);
 struct insn *rel_insn(enum insn_opcode, unsigned long);
+struct insn *branch_insn(enum insn_opcode, struct statement *);
 
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
