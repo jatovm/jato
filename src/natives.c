@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -29,6 +29,7 @@
 #include <errno.h>
 
 #include "jam.h"
+#include "alloc.h"
 #include "thread.h"
 #include "lock.h"
 #include "natives.h"
@@ -133,6 +134,7 @@ uintptr_t *arraycopy(Class *class, MethodBlock *mb, uintptr_t *ostack) {
                     break;
                 case 'J':
                 case 'D':
+		default:
                     size = 8;
                     break;
             } 
@@ -172,10 +174,19 @@ storeExcep:
 }
 
 uintptr_t *identityHashCode(Class *class, MethodBlock *mb, uintptr_t *ostack) {
-    return ++ostack;
+    Object *ob = (Object*)*ostack;
+    uintptr_t addr = getObjectHashcode(ob);
+
+    *ostack++ = addr & 0xffffffff;
+    return ostack;
 }
 
 /* java.lang.VMRuntime */
+
+uintptr_t *availableProcessors(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    *ostack++ = nativeAvailableProcessors();
+    return ostack;
+}
 
 uintptr_t *freeMemory(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     *(u8*)ostack = freeHeapMem();
@@ -281,21 +292,53 @@ uintptr_t *isArray(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     return ostack;
 }
 
-uintptr_t *isSynthetic(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+uintptr_t *isMember(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
-    *ostack++ = IS_SYNTHETIC(cb) ? TRUE : FALSE;
+    *ostack++ = IS_MEMBER(cb) ? TRUE : FALSE;
     return ostack;
 }
 
-uintptr_t *isAnnotation(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+uintptr_t *isLocal(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
-    *ostack++ = IS_ANNOTATION(cb) ? TRUE : FALSE;
+    *ostack++ = IS_LOCAL(cb) ? TRUE : FALSE;
     return ostack;
 }
 
-uintptr_t *isEnum(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+uintptr_t *isAnonymous(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
-    *ostack++ = IS_ENUM(cb) ? TRUE : FALSE;
+    *ostack++ = IS_ANONYMOUS(cb) ? TRUE : FALSE;
+    return ostack;
+}
+
+uintptr_t *getEnclosingClass0(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    Class *clazz = GET_CLASS(ostack[0]);
+    *ostack++ = (uintptr_t) getEnclosingClass(clazz);
+    return ostack;
+}
+
+uintptr_t *getEnclosingMethod0(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    Class *clazz = GET_CLASS(ostack[0]);
+    *ostack++ = (uintptr_t) getEnclosingMethodObject(clazz);
+    return ostack;
+}
+
+uintptr_t *getEnclosingConstructor(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    Class *clazz = GET_CLASS(ostack[0]);
+    *ostack++ = (uintptr_t) getEnclosingConstructorObject(clazz);
+    return ostack;
+}
+
+uintptr_t *getClassSignature(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    ClassBlock *cb = CLASS_CB(GET_CLASS(ostack[0]));
+    Object *string = NULL;
+
+    if(cb->signature != NULL) {
+        char *dot_name = slash2dots(cb->signature);
+        string = createString(dot_name);
+        free(dot_name);
+    }
+
+    *ostack++ = (uintptr_t)string;
     return ostack;
 }
 
@@ -403,7 +446,7 @@ uintptr_t *forName0(uintptr_t *ostack, int resolve, Object *loader) {
         return ostack;
     }
 
-    cstr = String2Cstr(string);
+    cstr = String2Utf8(string);
     len = strlen(cstr);
 
     /* Check the classname to see if it's valid.  It can be
@@ -560,7 +603,7 @@ uintptr_t *defineClass0(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
     Object *array = (Object *)ostack[2];
     int offset = ostack[3];
     int data_len = ostack[4];
-    int pd = ostack[5];
+    uintptr_t pd = ostack[5];
     Class *class = NULL;
 
     if(array == NULL)
@@ -571,7 +614,7 @@ uintptr_t *defineClass0(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
             signalException("java/lang/ArrayIndexOutOfBoundsException", NULL);
         else {
             char *data = ARRAY_DATA(array);
-            char *cstr = string ? String2Cstr(string) : NULL;
+            char *cstr = string ? String2Utf8(string) : NULL;
             int len = string ? strlen(cstr) : 0;
             int i;
 
@@ -658,10 +701,40 @@ uintptr_t *getMethodModifiers(Class *class, MethodBlock *mb2, uintptr_t *ostack)
     return ostack;
 }
 
+uintptr_t *getMethodSignature(Class *class, MethodBlock *mb2, uintptr_t *ostack) {
+    Class *decl_class = (Class*)ostack[1];
+    MethodBlock *mb = &(CLASS_CB(decl_class)->methods[ostack[2]]); 
+    Object *string = NULL;
+
+    if(mb->signature != NULL) {
+        char *dot_name = slash2dots(mb->signature);
+        string = createString(dot_name);
+        free(dot_name);
+    }
+
+    *ostack++ = (uintptr_t)string;
+    return ostack;
+}
+
 uintptr_t *getFieldModifiers(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Class *decl_class = (Class*)ostack[1];
     FieldBlock *fb = &(CLASS_CB(decl_class)->fields[ostack[2]]); 
     *ostack++ = (uintptr_t) fb->access_flags;
+    return ostack;
+}
+
+uintptr_t *getFieldSignature(Class *class, MethodBlock *mb, uintptr_t *ostack) {
+    Class *decl_class = (Class*)ostack[1];
+    FieldBlock *fb = &(CLASS_CB(decl_class)->fields[ostack[2]]); 
+    Object *string = NULL;
+
+    if(fb->signature != NULL) {
+        char *dot_name = slash2dots(fb->signature);
+        string = createString(dot_name);
+        free(dot_name);
+    }
+
+    *ostack++ = (uintptr_t)string;
     return ostack;
 }
 
@@ -672,11 +745,13 @@ Object *getAndCheckObject(uintptr_t *ostack, Class *type) {
         signalException("java/lang/NullPointerException", NULL);
         return NULL;
     }
+
     if(!isInstanceOf(type, ob->class)) {
         signalException("java/lang/IllegalArgumentException",
                         "object is not an instance of declaring class");
         return NULL;
     }
+
     return ob;
 }
 
@@ -709,6 +784,7 @@ uintptr_t *getField(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     /* If field is static, getPntr2Field also initialises the field's declaring class */
     if((field = getPntr2Field(ostack)) != NULL)
         *ostack++ = (uintptr_t) createWrapperObject(field_type, field);
+
     return ostack;
 }
 
@@ -723,6 +799,7 @@ uintptr_t *getPrimitiveField(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     if(((field = getPntr2Field(ostack)) != NULL) && (!(IS_PRIMITIVE(type_cb)) ||
                  ((ostack = widenPrimitiveValue(getPrimTypeIndex(type_cb), type_no, field, ostack)) == NULL)))
         signalException("java/lang/IllegalArgumentException", "field type mismatch");
+
     return ostack;
 }
 
@@ -750,6 +827,7 @@ uintptr_t *setPrimitiveField(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     if(((field = getPntr2Field(ostack)) != NULL) && (!(IS_PRIMITIVE(type_cb)) ||
                  (widenPrimitiveValue(type_no, getPrimTypeIndex(type_cb), &ostack[7], field) == NULL)))
         signalException("java/lang/IllegalArgumentException", "field type mismatch");
+
     return ostack;
 }
 
@@ -936,6 +1014,7 @@ VMMethod vm_system[] = {
 };
 
 VMMethod vm_runtime[] = {
+    {"availableProcessors",         availableProcessors},
     {"freeMemory",                  freeMemory},
     {"totalMemory",                 totalMemory},
     {"maxMemory",                   maxMemory},
@@ -953,9 +1032,13 @@ VMMethod vm_class[] = {
     {"isInterface",                 isInterface},
     {"isPrimitive",                 isPrimitive},
     {"isArray",                     isArray},
-    {"isSynthetic",                 isSynthetic},
-    {"isAnnotation",                isAnnotation},
-    {"isEnum",                      isEnum},
+    {"isMemberClass",               isMember},
+    {"isLocalClass",                isLocal},
+    {"isAnonymousClass",            isAnonymous},
+    {"getEnclosingClass",           getEnclosingClass0},
+    {"getEnclosingMethod",          getEnclosingMethod0},
+    {"getEnclosingConstructor",     getEnclosingConstructor},
+    {"getClassSignature",           getClassSignature},
     {"getSuperclass",               getSuperclass},
     {"getComponentType",            getComponentType},
     {"getName",                     getName},
@@ -1012,17 +1095,20 @@ VMMethod vm_classloader[] = {
 VMMethod vm_reflect_constructor[] = {
     {"constructNative",             constructNative},
     {"getConstructorModifiers",     getMethodModifiers},
+    {"getSignature",                getMethodSignature},
     {NULL,                          NULL}
 };
 
 VMMethod vm_reflect_method[] = {
     {"invokeNative",                invokeNative},
     {"getMethodModifiers",          getMethodModifiers},
+    {"getSignature",                getMethodSignature},
     {NULL,                          NULL}
 };
 
 VMMethod vm_reflect_field[] = {
     {"getFieldModifiers",           getFieldModifiers},
+    {"getSignature",                getFieldSignature},
     {"getField",                    getField},
     {"setField",                    setField},
     {"setZField",                   setPrimitiveField},

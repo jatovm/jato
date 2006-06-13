@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/utsname.h>
 
 #include "jam.h"
@@ -113,19 +114,39 @@ void setEndianProperty(Object *properties) {
 #endif
 }
 
-void addDefaultProperties(Object *properties) {
+void setUserDirProperty(Object *properties) {
+    char *cwd = getcwd(NULL, 0);
+
+    setProperty(properties, "user.dir", cwd);
+
+    if(cwd != NULL)
+        free(cwd);
+}
+
+void setOSProperties(Object *properties) {
     struct utsname info;
 
     uname(&info);
+    setProperty(properties, "os.arch", OS_ARCH);
+    setProperty(properties, "os.name", info.sysname);
+    setProperty(properties, "os.version", info.release);
+}
+
+char *getJavaHome() {
+    char *env = getenv("JAVA_HOME");
+    return env ? env : INSTALL_DIR;
+}
+
+void addDefaultProperties(Object *properties) {
     setProperty(properties, "java.vm.name", "JamVM");
     setProperty(properties, "java.vm.version", VERSION);
     setProperty(properties, "java.runtime.version", VERSION);
     setProperty(properties, "java.vm.vendor", "Robert Lougher");
     setProperty(properties, "java.vm.vendor.url", "http://jamvm.sourceforge.net");
-    setProperty(properties, "java.version", "1.4.2");
+    setProperty(properties, "java.version", JAVA_COMPAT_VERSION);
     setProperty(properties, "java.vendor", "GNU Classpath");
     setProperty(properties, "java.vendor.url", "http://www.classpath.org");
-    setProperty(properties, "java.home", INSTALL_DIR);
+    setProperty(properties, "java.home", getJavaHome());
     setProperty(properties, "java.specification.version", "1.4");
     setProperty(properties, "java.specification.vendor", "Sun Microsystems, Inc.");
     setProperty(properties, "java.specification.name", "Java Platform API Specification");
@@ -140,17 +161,15 @@ void addDefaultProperties(Object *properties) {
     setProperty(properties, "java.io.tmpdir", "/tmp");
     setProperty(properties, "java.compiler", "");
     setProperty(properties, "java.ext.dirs", "");
-    setProperty(properties, "os.name", info.sysname);
-    setProperty(properties, "os.arch", OS_ARCH);
-    setProperty(properties, "os.version", info.release);
     setProperty(properties, "file.separator", "/");
     setProperty(properties, "path.separator", ":");
     setProperty(properties, "line.separator", "\n");
     setProperty(properties, "user.name", getenv("USER"));
     setProperty(properties, "user.home", getenv("HOME"));
-    setProperty(properties, "user.dir", getenv("PWD"));
 
+    setOSProperties(properties);
     setEndianProperty(properties);
+    setUserDirProperty(properties);
     setLocaleProperties(properties);
 }
 

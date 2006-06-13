@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -61,10 +61,10 @@ void prepare(MethodBlock *mb, const void ***handlers) {
 #ifdef USE_CACHE
     signed char cache_depth[code_len];
 #endif
-    Instruction *new_code;
+    Instruction *new_code = NULL;
     unsigned char *code;
     short map[code_len];
-    int ins_count;
+    int ins_count = 0;
     int pass;
     int i;
 
@@ -180,6 +180,8 @@ retry:
                     exitVM(1);
 
                 case OPC_ALOAD_0:
+                {
+                    FieldBlock *fb;
 #ifdef USE_CACHE
                     if(cache < 2) 
                         cache++;
@@ -188,13 +190,16 @@ retry:
                        rewrite it to ALOAD_THIS.  This will be rewritten in the interpreter
                        to GETFIELD_THIS */
 
-                    if((code[++pc] == OPC_GETFIELD) && !(mb->access_flags & ACC_STATIC)) {
-                        opcode = OPC_ALOAD_THIS;
-                        REWRITE_OPERAND(cache);
+                    if((code[++pc] == OPC_GETFIELD) && !(mb->access_flags & ACC_STATIC)
+                                    && (fb = resolveField(mb->class, READ_U2_OP(code + pc)))
+                                    && !((*fb->type == 'J') || (*fb->type == 'D'))) {
+                        opcode = OPC_GETFIELD_THIS;
+                        operand.i = fb->offset;
+                        pc += 3;
                     } else
                         opcode = OPC_ILOAD_0;
                     break;
-
+                }
                 case OPC_SIPUSH:
                     operand.i = READ_S2_OP(code + pc);
 #ifdef USE_CACHE

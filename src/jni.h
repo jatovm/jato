@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -18,6 +18,8 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef __JNI_H__
+#define __JNI_H__
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -338,3 +340,4 @@ struct _JNIInvokeInterface {
 #undef GET_STATIC_FIELD
 #undef SET_STATIC_FIELD
 #undef FIELD_OP
+#endif

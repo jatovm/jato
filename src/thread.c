@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -243,8 +243,8 @@ void *threadStart(void *arg) {
      * be waiting on lock when we're added to the thread
      * list, and now liable for suspension */
 
-    thread->stack_base = &group;
-    disableSuspend0(thread, &group);
+    thread->stack_base = &thread;
+    disableSuspend0(thread, &excep);
 
     pthread_mutex_lock(&lock);
     thread->id = genThreadID();
@@ -254,6 +254,7 @@ void *threadStart(void *arg) {
     thread->state = STARTED;
     pthread_cond_broadcast(&cv);
 
+    /* Wait for the thread to start running */
     while(thread->state != RUNNING)
         pthread_cond_wait(&cv, &lock);
     pthread_mutex_unlock(&lock);
@@ -262,24 +263,24 @@ void *threadStart(void *arg) {
     enableSuspend(thread);
     executeMethod(jThread, run);
 
-    /* Call thread group's uncaughtException if exception
-     * is of type java.lang.Throwable */
-
+    /* Get the thread's group */
     group = (Object *)INST_DATA(jThread)[group_offset];
+
+    /* If there's an uncaught exception, call uncaughtException on the thread's
+       exception handler, or the thread's group if this is unset */
     if((excep = exceptionOccured())) {
-        Class *throwable;
-        MethodBlock *uncaught_exp;
-       
-        clearException();
-        throwable = findSystemClass0("java/lang/Throwable");
-        if(throwable && isInstanceOf(throwable, excep->class)
-                     && (uncaught_exp = lookupMethod(group->class, "uncaughtException",
-                                                      "(Ljava/lang/Thread;Ljava/lang/Throwable;)V")))
-            executeMethod(group, uncaught_exp, jThread, excep);
-        else {
-            setException(excep);
+        FieldBlock *fb = findField(thread_class, "exceptionHandler", "Ljava/lang/Thread$UncaughtExceptionHandler;");
+        Object *thread_handler = fb == NULL ? NULL : (Object *)INST_DATA(jThread)[fb->offset];
+        Object *handler = thread_handler == NULL ? group : thread_handler;
+
+        MethodBlock *uncaught_exp = lookupMethod(handler->class, "uncaughtException",
+                                                      "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
+
+        if(uncaught_exp) {
+            clearException();
+            executeMethod(handler, uncaught_exp, jThread, excep);
+        } else
             printException();
-        }
     }
 
     /* remove thread from thread group */
@@ -290,7 +291,7 @@ void *threadStart(void *arg) {
     INST_DATA(jThread)[vmthread_offset] = 0;
 
     /* Disable suspend to protect lock operation */
-    disableSuspend0(thread, &group);
+    disableSuspend0(thread, &excep);
 
     /* Grab global lock, and update thread structures protected by
        it (thread list, thread ID and number of daemon threads) */
@@ -300,7 +301,7 @@ void *threadStart(void *arg) {
     if((thread->prev->next = thread->next))
         thread->next->prev = thread->prev;
 
-    /* Recycle the threads thread ID */
+    /* Recycle the thread's thread ID */
     freeThreadID(thread->id);
 
     /* Handle daemon thread status */
@@ -818,6 +819,7 @@ void initialiseMainThread(int stack_size) {
 
     /* As we're initialising, VM will abort if Thread can't be found */
     thread_class = findSystemClass0("java/lang/Thread");
+    registerStaticClassRef(&thread_class);
 
     vmThread = findField(thread_class, "vmThread", "Ljava/lang/VMThread;");
     daemon = findField(thread_class, "daemon", "Z");
@@ -828,6 +830,8 @@ void initialiseMainThread(int stack_size) {
     run = findMethod(thread_class, "run", "()V");
 
     vmthread_class = findSystemClass0("java/lang/VMThread");
+    registerStaticClassRef(&vmthread_class);
+
     thread = findField(vmthread_class, "thread", "Ljava/lang/Thread;");
     vmData = findField(vmthread_class, "vmData", "I");
 

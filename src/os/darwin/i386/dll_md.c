@@ -48,16 +48,20 @@ int nativeExtraArg(MethodBlock *mb) {
 }
 
 u4 *callJNIMethod(void *env, Class *class, char *sig, int ret_type, u4 *ostack, unsigned char *f, int args) {
+    int tot_args = args + 1 + (class ? 1 : 0);
+    int aligned = (tot_args + 3) & ~0x3;
     u4 *opntr = ostack + args;
     int i;
+
+    /* The Darwin/i386 ABI requires the stack to be 16-byte aligned.
+       Pad the beginning of the parameter area to ensure this. */
+    asm volatile ("subl %0,%%esp" :: "r" ((aligned - tot_args) * sizeof(u4)) : "cc", "sp");
 
     for(i = 0; i < args; i++)
         asm volatile ("pushl %0" :: "m" (*--opntr) : "sp");
 
-    if(class) {
+    if(class)
         asm volatile ("pushl %0" :: "m" (class) : "sp");
-	args++;
-    }
 
     asm volatile ("pushl %0" :: "m" (env) : "sp");
 
@@ -86,7 +90,7 @@ u4 *callJNIMethod(void *env, Class *class, char *sig, int ret_type, u4 *ostack, 
             break;
     }
 
-    asm volatile ("addl %0,%%esp" :: "r" ((args + 1) * sizeof(u4)) : "cc", "sp");
+    asm volatile ("addl %0,%%esp" :: "r" (aligned * sizeof(u4)) : "cc", "sp");
     return ostack;
 }
 #endif

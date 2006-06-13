@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -48,6 +48,14 @@ static int initReflection() {
     if(!cons_array_class || !cons_reflect_class || !method_array_class ||
           !method_reflect_class || !field_array_class || !field_reflect_class)
         return FALSE;
+
+    registerStaticClassRef(&class_array_class);
+    registerStaticClassRef(&cons_array_class);
+    registerStaticClassRef(&method_array_class);
+    registerStaticClassRef(&field_array_class);
+    registerStaticClassRef(&cons_reflect_class);
+    registerStaticClassRef(&method_reflect_class);
+    registerStaticClassRef(&field_reflect_class);
 
     cons_init_mb = findMethod(cons_reflect_class, "<init>",
                "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;I)V");
@@ -370,6 +378,53 @@ Object *getClassClasses(Class *class, int public) {
 Class *getDeclaringClass(Class *class) {
     ClassBlock *cb = CLASS_CB(class);
     return cb->declaring_class ? resolveClass(class, cb->declaring_class, FALSE) : NULL;
+}
+
+Class *getEnclosingClass(Class *class) {
+    ClassBlock *cb = CLASS_CB(class);
+    return cb->enclosing_class ? resolveClass(class, cb->enclosing_class, FALSE) : NULL;
+}
+
+MethodBlock *getEnclosingMethod(Class *class) {
+    Class *enclosing_class = getEnclosingClass(class);
+
+    if(enclosing_class != NULL) {
+        ClassBlock *cb = CLASS_CB(class);
+
+        if(cb->enclosing_method) {
+            ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
+            char *methodname = CP_UTF8(cp, CP_NAME_TYPE_NAME(cp, cb->enclosing_method));
+            char *methodtype = CP_UTF8(cp, CP_NAME_TYPE_TYPE(cp, cb->enclosing_method));
+            MethodBlock *mb = findMethod(enclosing_class, methodname, methodtype);
+
+            if(mb != NULL)
+                return mb;
+
+            /* The "reference implementation" throws an InternalError if a method
+               with the name and type cannot be found in the enclosing class */
+            signalException("java/lang/InternalError", "Enclosing method doesn't exist");
+        }
+    }
+
+    return NULL;
+}
+
+Object *getEnclosingMethodObject(Class *class) {
+    MethodBlock *mb = getEnclosingMethod(class);
+
+    if(mb != NULL && strcmp(mb->name, "<init>") != 0)
+        return createMethodObject(mb);
+
+    return NULL;
+}
+
+Object *getEnclosingConstructorObject(Class *class) {
+    MethodBlock *mb = getEnclosingMethod(class);
+
+    if(mb != NULL && strcmp(mb->name, "<init>") == 0)
+        return createConstructorObject(mb);
+
+    return NULL;
 }
 
 int getWrapperPrimTypeIndex(Object *arg) {

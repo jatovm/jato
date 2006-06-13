@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -257,7 +257,7 @@ int resolveDll(char *name) {
         if(handle == NULL)
             return 0;
 
-        TRACE(("<DLL: Successfully opened library %s>\n",name));
+        TRACE(("<DLL: Successfully opened library %s>\n", name));
 
         if((onload = nativeLibSym(handle, "JNI_OnLoad")) != NULL) {
             int ver = (*(jint (*)(JavaVM*, void*))onload)(&invokeIntf, NULL);

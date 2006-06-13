@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -18,28 +18,8 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <dlfcn.h>
-
-#include "../../jam.h"
-
-char *nativeLibPath() {
-    return getenv("LD_LIBRARY_PATH");
+void setDoublePrecision() {
 }
 
-void *nativeLibOpen(char *path) {
-    return dlopen(path, RTLD_LAZY);
-}
-
-void *nativeLibSym(void *handle, char *symbol) {
-    return dlsym(handle, symbol);
-}
-
-char *nativeLibMapName(char *name) {
-   char *buff = sysMalloc(strlen(name) + sizeof("lib.so") + 1);
-
-   sprintf(buff, "lib%s.so", name);
-   return buff;
+void initialisePlatform() {
 }

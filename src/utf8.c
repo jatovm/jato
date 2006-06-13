@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -100,7 +100,7 @@ char *findUtf8String(char *string) {
 }
 
 char *slash2dots(char *utf8) {
-    int len = utf8Len(utf8);
+    int len = strlen(utf8);
     char *conv = (char*)sysMalloc(len+1);
     int i;
 

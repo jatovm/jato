@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -136,7 +136,7 @@ uintptr_t *executeJava() {
         L(185,level), &&unused, L(187,level), L(188,level), L(189,level),     \
         L(190,level), L(191,level), L(192,level), L(193,level), L(194,level), \
         L(195,level), I(196,level), L(197,level), L(198,level), L(199,level), \
-        L(200,level), L(201,level), &&unused, L(203,level), I(204,level),     \
+        L(200,level), L(201,level), &&unused, L(203,level), L(204,level),     \
         &&unused, L(206,level), L(207,level), L(208,level), L(209,level),     \
         L(210,level), L(211,level), L(212,level), L(213,level), L(214,level), \
         L(215,level), L(216,level), &&unused, &&unused, &&unused, &&unused,   \
@@ -542,21 +542,10 @@ rewrite_lock:
 #endif
 
 #ifdef DIRECT
-#define ALOAD_THIS(level)                                  \
-    if(handlers[pc->operand.uui.u1]                        \
-               [OPC_GETFIELD_QUICK] == pc[1].handler) {    \
-        OPCODE_REWRITE(OPC_GETFIELD_THIS,                  \
-                       pc->operand.uui.i, pc->operand);    \
-            REDISPATCH                                     \
-    }
-#ifdef PREFETCH
+#define ALOAD_THIS(level)
+
 #define GETFIELD_THIS(level)                               \
-    next_handler = pc[2].handler;                          \
-    PUSH_##level(INST_DATA(this)[(++pc)->operand.i], 4);
-#else /* PREFETCH */
-#define GETFIELD_THIS(level)                               \
-    PUSH_##level(INST_DATA(this)[(++pc)->operand.i], 4);
-#endif /* PREFETCH */
+    PUSH_##level(INST_DATA(this)[pc->operand.i], 4);
 #else /* DIRECT */
 #define ALOAD_THIS(level)                                  \
     if(pc[1] == OPC_GETFIELD_QUICK) {                      \
@@ -1410,7 +1399,13 @@ rewrite_lock:
         if(exceptionOccured0(ee))
             goto throwException;
 
-        OPCODE_REWRITE(OPC_LDC_QUICK, cache, operand);
+        if(CP_TYPE(cp, idx) == CONSTANT_ResolvedClass ||
+           CP_TYPE(cp, idx) == CONSTANT_ResolvedString) {
+            operand.i = idx;
+            OPCODE_REWRITE(OPC_LDC_W_QUICK, cache, operand);
+        } else
+            OPCODE_REWRITE(OPC_LDC_QUICK, cache, operand);
+
         REDISPATCH
     }
 
@@ -1436,7 +1431,7 @@ rewrite_lock:
         for(i = 0; (i < table->num_entries) && (key != table->entries[i].key); i++);
 
         pc = (i == table->num_entries ? table->deflt
-                                     : table->entries[i].handler);
+                                      : table->entries[i].handler);
         DISPATCH_FIRST
     }
 

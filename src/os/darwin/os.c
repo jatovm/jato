@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -22,8 +22,22 @@
 #include <string.h>
 #include <stdlib.h>
 #include <dlfcn.h>
+#include <sys/sysctl.h>
 
 #include "../../jam.h"
+
+int nativeAvailableProcessors() {
+    int processors, mib[2];
+    size_t len = sizeof(processors);
+
+    mib[0] = CTL_HW;
+    mib[1] = HW_AVAILCPU;
+
+    if(sysctl(mib, 2, &processors, &len, NULL, 0) == -1)
+        return 1;
+    else
+        return processors;
+}
 
 char *nativeLibPath() {
     return getenv("LD_LIBRARY_PATH");
@@ -32,6 +46,10 @@ char *nativeLibPath() {
 /* GNU Classpath's libraries end in .dylib because it
    uses libtool, but JNI libraries normally end in
    .jnilib under Mac OS X.  We try both.
+
+   On Mac OS X/Intel libtool seems to use a .so ending.
+   This is wrong, but a workaround for now is to _also_
+   try .so! 
 */
 
 void *nativeLibOpen(char *path) {
@@ -44,7 +62,12 @@ void *nativeLibOpen(char *path) {
 
     if((handle = dlopen(buff, RTLD_LAZY)) == NULL) {
         strcpy(buff + len, ".jnilib");
-        handle = dlopen(buff, RTLD_LAZY);
+
+        if((handle = dlopen(buff, RTLD_LAZY)) == NULL) {
+            strcpy(buff + len, ".so");
+
+            handle = dlopen(buff, RTLD_LAZY);
+        }
     }
 
     return handle;

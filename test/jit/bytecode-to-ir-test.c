@@ -181,7 +181,7 @@ static void convert_ir_const(struct compilation_unit *cu,
 			     ConstantPoolEntry * cp_infos,
 			     size_t nr_cp_infos, u1 * cp_types)
 {
-	struct class *class = malloc(sizeof(struct classblock) + sizeof(struct class));
+	struct object *class = malloc(sizeof(struct classblock) + sizeof(struct object));
 	struct classblock *cb = CLASS_CB(class);
 	struct constant_pool *constant_pool = &cb->constant_pool;
 

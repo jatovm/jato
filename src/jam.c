@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -32,6 +32,11 @@ static int verbosegc = FALSE;
 static int verbosedll = FALSE;
 static int verboseclass = FALSE;
 
+/* Whether compaction has been given on the command line,
+   and the value if it has */
+static int compact_specified = FALSE;
+static int do_compact;
+
 static char *classpath = NULL;
 static char *bootpath = NULL;
 static char bootpathopt;
@@ -60,7 +65,7 @@ void initVM() {
     initialiseMainThread(java_stack);
     initialiseException();
     initialiseString();
-    initialiseGC(noasyncgc);
+    initialiseGC(noasyncgc, compact_specified, do_compact);
     initialiseJNI();
     initialiseNatives();
 
@@ -87,6 +92,8 @@ void showNonStandardOptions() {
     printf("  -Xbootclasspath/p:%s\n", BCP_MESSAGE);
     printf("\t\t   locations are prepended to the bootstrap class path\n");
     printf("  -Xnoasyncgc\t   turn off asynchronous garbage collection\n");
+    printf("  -Xcompactalways  always compact the heap when garbage-collecting\n");
+    printf("  -Xnocompact\t   turn off heap-compaction\n");
     printf("  -Xms<size>\t   set the initial size of the heap (default = %dM)\n", DEFAULT_MIN_HEAP/MB);
     printf("  -Xmx<size>\t   set the maximum size of the heap (default = %dM)\n", DEFAULT_MAX_HEAP/MB);
     printf("  -Xss<size>\t   set the Java stack size for each thread (default = %dK)\n", DEFAULT_STACK/KB);
@@ -113,8 +120,9 @@ void showUsage(char *name) {
 }
 
 void showVersionAndCopyright() {
+    printf("java version \"%s\"\n", JAVA_COMPAT_VERSION);
     printf("JamVM version %s\n", VERSION);
-    printf("Copyright (C) 2003-2006 Robert Lougher <rob@lougher.demon.co.uk>\n\n");
+    printf("Copyright (C) 2003-2006 Robert Lougher <rob@lougher.org.uk>\n\n");
     printf("This program is free software; you can redistribute it and/or\n");
     printf("modify it under the terms of the GNU General Public License\n");
     printf("as published by the Free Software Foundation; either version 2,\n");
@@ -259,8 +267,15 @@ int parseCommandLine(int argc, char *argv[]) {
             bootpathopt = argv[i][16];
             bootpath = argv[i] + 18;
 
-        } else if(strncmp(argv[i], "-jar", 4) == 0) {
+        } else if(strcmp(argv[i], "-jar") == 0) {
             is_jar = TRUE;
+
+        } else if(strcmp(argv[i], "-Xnocompact") == 0) {
+            compact_specified = TRUE;
+            do_compact = FALSE;
+
+        } else if(strcmp(argv[i], "-Xcompactalways") == 0) {
+            compact_specified = do_compact = TRUE;
 
         } else {
             printf("Unrecognised command line option: %s\n", argv[i]);

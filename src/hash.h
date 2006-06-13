@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -127,6 +127,17 @@ extern void resizeHash(HashTable *table, int new_size);
     for(i = table.hash_size-1; i >= 0; i--) {                                      \
         void *data = table.hash_table[i].data;                                     \
         if(data)                                                                   \
+            ITERATE(data);                                                         \
+    }                                                                              \
+}
+
+#define hashIterateP(table)                                                        \
+{                                                                                  \
+    int i;                                                                         \
+                                                                                   \
+    for(i = table.hash_size-1; i >= 0; i--) {                                      \
+        void **data = &table.hash_table[i].data;                                   \
+        if(*data)                                                                  \
             ITERATE(data);                                                         \
     }                                                                              \
 }

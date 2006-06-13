@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -87,14 +87,14 @@ FieldBlock *lookupField(Class *class, char *fieldname, char *fieldtype) {
 
 Class *resolveClass(Class *class, int cp_index, int init) {
     ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
-    Class *resolved_class;
+    Class *resolved_class = NULL;
 
 retry:
     switch(CP_TYPE(cp, cp_index)) {
         case CONSTANT_Locked:
             goto retry;
 
-        case CONSTANT_Resolved:
+        case CONSTANT_ResolvedClass:
             resolved_class = (Class *)CP_INFO(cp, cp_index);
             break;
 
@@ -123,7 +123,7 @@ retry:
             MBARRIER();
             CP_INFO(cp, cp_index) = (uintptr_t)resolved_class;
             MBARRIER();
-            CP_TYPE(cp, cp_index) = CONSTANT_Resolved;
+            CP_TYPE(cp, cp_index) = CONSTANT_ResolvedClass;
 
             break;
         }
@@ -137,7 +137,7 @@ retry:
 
 MethodBlock *resolveMethod(Class *class, int cp_index) {
     ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
-    MethodBlock *mb;
+    MethodBlock *mb = NULL;
 
 retry:
     switch(CP_TYPE(cp, cp_index)) {
@@ -204,7 +204,7 @@ retry:
 
 MethodBlock *resolveInterfaceMethod(Class *class, int cp_index) {
     ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
-    MethodBlock *mb;
+    MethodBlock *mb = NULL;
 
 retry:
     switch(CP_TYPE(cp, cp_index)) {
@@ -264,7 +264,7 @@ retry:
 
 FieldBlock *resolveField(Class *class, int cp_index) {
     ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
-    FieldBlock *fb;
+    FieldBlock *fb = NULL;
 
 retry:
     switch(CP_TYPE(cp, cp_index)) {
@@ -342,7 +342,7 @@ retry:
                 MBARRIER();
                 CP_INFO(cp, cp_index) = (uintptr_t)findInternedString(string);
                 MBARRIER();
-                CP_TYPE(cp, cp_index) = CONSTANT_Resolved;
+                CP_TYPE(cp, cp_index) = CONSTANT_ResolvedString;
             }
 
             break;
@@ -395,7 +395,7 @@ MethodBlock *lookupVirtualMethod(Object *ob, MethodBlock *mb) {
 #ifdef DIRECT
 int peekIsFieldLong(Class *class, int cp_index) {
     ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
-    char *type;
+    char *type = NULL;
 
 retry:
     switch(CP_TYPE(cp, cp_index)) {

@@ -18,6 +18,10 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+/* This is needed on Linux/i386.  Find out if it's
+   needed on Darwin/i386, and how to set it. */
+void setDoublePrecision() {
+}
+
 void initialisePlatform() {
-    /* Nothing to do for powerpc */
 }

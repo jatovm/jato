@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -65,6 +65,9 @@ void initialiseJNI() {
     buffImpl_class = findSystemClass0("java/nio/DirectByteBufferImpl");
     rawdata_class = findSystemClass0(sizeof(uintptr_t) == 4 ? "gnu/classpath/Pointer32"
                                                             : "gnu/classpath/Pointer64");
+
+    registerStaticClassRef(&buffImpl_class);
+    registerStaticClassRef(&rawdata_class);
 
     buffImpl_init_mb = findMethod(buffImpl_class, "<init>",
                       "(Ljava/lang/Object;Lgnu/classpath/Pointer;III)V");
@@ -258,7 +261,7 @@ void markJNIGlobalRefs() {
 
     for(i = 0; i < global_ref_next; i++)
         if(global_ref_table[i])
-            markRoot(global_ref_table[i]);
+            markConservativeRoot(global_ref_table[i]);
 
     unlockVMLock(global_ref_lock, self);
 }
@@ -1234,21 +1237,25 @@ struct _JNINativeInterface Jam_JNINativeInterface = {
 jint Jam_DestroyJavaVM(JavaVM *vm) {
     fprintf(stderr, "JNI - FatalError: DestroyJavaVM unimplemented.\n");
     exitVM(1);
+    return 0;
 }
 
 jint Jam_AttachCurrentThread(JavaVM *vm, void **penv, void *args) {
     fprintf(stderr, "JNI - FatalError: AttachCurrentThread unimplemented.\n");
     exitVM(1);
+    return 0;
 }
 
 jint Jam_AttachCurrentThreadAsDaemon(JavaVM *vm, void **penv, void *args) {
     fprintf(stderr, "JNI - FatalError: AttachCurrentThreadAsDaemon unimplemented.\n");
     exitVM(1);
+    return 0;
 }
 
 jint Jam_DetachCurrentThread(JavaVM *vm) {
     fprintf(stderr, "JNI - FatalError: DetachCurrentThread unimplemented.\n");
     exitVM(1);
+    return 0;
 }
 
 struct _JNINativeInterface Jam_JNINativeInterface;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -48,6 +48,12 @@ void initialiseException() {
         }
         CLASS_CB(vmthrow_class)->flags |= VMTHROWABLE;
         backtrace_offset = bcktrce->offset;
+
+        registerStaticClassRef(&ste_class);
+        registerStaticClassRef(&ste_array_class);
+        registerStaticClassRef(&vmthrow_class);
+        registerStaticClassRef(&throw_class);
+
         inited = TRUE;
     }
 }
@@ -273,7 +279,7 @@ Object *convertStackTrace(Object *vmthrwble) {
    In rare circumstances a stack backtrace may hold the only
    reference to a class */
 
-void *markVMThrowable(Object *vmthrwble, int mark, int mark_soft_refs) {
+void markVMThrowable(Object *vmthrwble, int mark, int mark_soft_refs) {
     Object *array;
 
     if((array = (Object *)INST_DATA(vmthrwble)[backtrace_offset]) != NULL) {
@@ -282,7 +288,7 @@ void *markVMThrowable(Object *vmthrwble, int mark, int mark_soft_refs) {
 
         for(i = 0; i < depth; i += 2) {
             MethodBlock *mb = (MethodBlock*)src[i];
-            markObject((Object*)mb->class, mark, mark_soft_refs);
+            markObject(mb->class, mark, mark_soft_refs);
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -33,3 +33,4 @@ extern void objectNotify(Object *ob);
 extern void objectNotifyAll(Object *ob);
 extern void objectWait(Object *ob, long long ms, int ns);
 extern int objectLockedByCurrent(Object *ob);
+extern void threadMonitorCache();

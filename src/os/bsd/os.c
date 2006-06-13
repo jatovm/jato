@@ -18,32 +18,43 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "jam.h"
-#include "hash.h"
+#include <dlfcn.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 
-void resizeHash(HashTable *table, int new_size) {
-    HashEntry *new_table = (HashEntry*)sysMalloc(sizeof(HashEntry)*new_size);
-    int i;
+#include "../../jam.h"
 
-    memset(new_table, 0, sizeof(HashEntry)*new_size);
+int nativeAvailableProcessors() {
+    int processors, mib[2];
+    size_t len = sizeof(processors);
 
-    for(i = table->hash_size-1; i >= 0; i--) {
-        void *ptr = table->hash_table[i].data;
-        if(ptr != NULL) {
-            int hash = table->hash_table[i].hash;
-            int new_index = hash & (new_size - 1);
+    mib[0] = CTL_HW;
+    mib[1] = HW_NCPU;
 
-            while(new_table[new_index].data != NULL)
-                new_index = (new_index+1) & (new_size - 1);
+    if(sysctl(mib, 2, &processors, &len, NULL, 0) == -1)
+        return 1;
+    else
+        return processors;
+}
 
-            new_table[new_index].hash = hash;
-            new_table[new_index].data = ptr;
-        }
-    }
+char *nativeLibPath() {
+    return getenv("LD_LIBRARY_PATH");
+}
 
-    free(table->hash_table);
-    table->hash_table = new_table;
-    table->hash_size = new_size;
+void *nativeLibOpen(char *path) {
+    return dlopen(path, RTLD_LAZY);
+}
+
+void *nativeLibSym(void *handle, char *symbol) {
+    return dlsym(handle, symbol);
+}
+
+char *nativeLibMapName(char *name) {
+   char *buff = sysMalloc(strlen(name) + sizeof("lib.so") + 1);
+
+   sprintf(buff, "lib%s.so", name);
+   return buff;
 }

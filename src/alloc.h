@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005 Robert Lougher <rob@lougher.demon.co.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -22,16 +22,18 @@
 #define LOG_OBJECT_GRAIN	3
 #define FLC_BIT			2
 
-#define clearFlcBit(obj) {                                             \
-	uintptr_t *hdr = (uintptr_t*)(((char*)obj)-HEADER_SIZE);       \
-        *hdr &= ~FLC_BIT;                                              \
-	MBARRIER();                                                    \
+#define HDR_ADDRESS(obj) (uintptr_t*)(((char*)obj)-HEADER_SIZE)
+
+#define clearFlcBit(obj) {                      \
+	uintptr_t *hdr_addr = HDR_ADDRESS(obj); \
+        *hdr_addr &= ~FLC_BIT;                  \
+	MBARRIER();                             \
 }
 
-#define setFlcBit(obj) {                                               \
-	uintptr_t *hdr = (uintptr_t*)(((char*)obj)-HEADER_SIZE);       \
-        *hdr |= FLC_BIT;                                               \
-	MBARRIER();                                                    \
+#define setFlcBit(obj) {                        \
+	uintptr_t *hdr_addr = HDR_ADDRESS(obj); \
+        *hdr_addr |= FLC_BIT;                   \
+	MBARRIER();                             \
 }
 
-#define testFlcBit(obj) *(uintptr_t*)(((char*)obj)-HEADER_SIZE) & FLC_BIT
+#define testFlcBit(obj) *HDR_ADDRESS(obj) & FLC_BIT
