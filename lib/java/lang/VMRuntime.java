@@ -39,7 +39,6 @@ package java.lang;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
 
 /**
  * VMRuntime represents the interface to the Virtual Machine.
@@ -59,7 +58,7 @@ final class VMRuntime
      *
      * @return the number of processors available, at least 1
      */
-    static int availableProcessors() {return 1; }
+    static native int availableProcessors();
 
     /**
      * Find out how much memory is still free for allocating Objects on the heap.
@@ -148,9 +147,9 @@ final class VMRuntime
      * already been mapped to a true filename.
      *
      * @param filename the file to load
+     * @param loader class loader, or <code>null</code> for the boot loader
      * @return 0 on failure, nonzero on success
      */
-    static native int nativeLoad(String filename);
     static native int nativeLoad(String filename, ClassLoader loader);
 
     /**

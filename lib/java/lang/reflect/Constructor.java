@@ -1,5 +1,5 @@
 /* java.lang.reflect.Constructor - reflection of Java constructors
-   Copyright (C) 1998, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1998, 2001, 2004, 2005 Free Software Foundation, Inc.
 
 This file is part of GNU Classpath.
 
@@ -15,8 +15,8 @@ General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Classpath; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-02111-1307 USA.
+Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
 
 Linking this library statically or dynamically with other modules is
 making a combined work based on this library.  Thus, the terms and
@@ -42,6 +42,8 @@ This Classpath reference implementation has been modified to work with JamVM.
 
 package java.lang.reflect;
 
+import gnu.java.lang.ClassHelper;
+import gnu.java.lang.reflect.MethodSignatureParser;
 import java.util.Arrays;
 
 /**
@@ -71,15 +73,16 @@ import java.util.Arrays;
  * @author Robert Lougher
  * @see Member
  * @see Class
- * @see java.lang.Class#getConstructor(Object[])
- * @see java.lang.Class#getDeclaredConstructor(Object[])
+ * @see java.lang.Class#getConstructor(Class[])
+ * @see java.lang.Class#getDeclaredConstructor(Class[])
  * @see java.lang.Class#getConstructors()
  * @see java.lang.Class#getDeclaredConstructors()
  * @since 1.1
  * @status updated to 1.4
  */
 public final class Constructor
-extends AccessibleObject implements Member
+  extends AccessibleObject
+  implements GenericDeclaration, Member
 {
   private Class declaringClass;
   private int slot;
@@ -121,6 +124,13 @@ extends AccessibleObject implements Member
   }
 
   /**
+   * Return the raw modifiers for this constructor.  In particular
+   * this will include the synthetic and varargs bits.
+   * @return the constructor's modifiers
+   */
+  private native int getConstructorModifiers(Class declaringClass, int slot);
+
+  /**
    * Gets the modifiers this constructor uses.  Use the <code>Modifier</code>
    * class to interpret the values. A constructor can only have a subset of the
    * following modifiers: public, private, protected.
@@ -128,11 +138,31 @@ extends AccessibleObject implements Member
    * @return an integer representing the modifiers to this Member
    * @see Modifier
    */
-  public int getModifiers() {
+  public int getModifiers()
+  {
       return getConstructorModifiers(declaringClass, slot);
   }
 
-  private native int getConstructorModifiers(Class declaringClass, int slot);
+  /**
+   * Return true if this constructor is synthetic, false otherwise.
+   * A synthetic member is one which is created by the compiler,
+   * and which does not appear in the user's source code.
+   * @since 1.5
+   */
+  public boolean isSynthetic()
+  {
+    return (getConstructorModifiers(declaringClass, slot) & Modifier.SYNTHETIC) != 0;
+  }
+
+  /**
+   * Return true if this is a varargs constructor, that is if
+   * the constructor takes a variable number of arguments.
+   * @since 1.5
+   */
+  public boolean isVarArgs()
+  {
+    return (getConstructorModifiers(declaringClass, slot) & Modifier.VARARGS) != 0;
+  }
 
   /**
    * Get the parameter list for this constructor, in declaration order. If the
@@ -207,15 +237,15 @@ extends AccessibleObject implements Member
   public String toString()
   {
     // 128 is a reasonable buffer initial size for constructor
-    StringBuffer sb = new StringBuffer(128);
+    StringBuilder sb = new StringBuilder(128);
     Modifier.toString(getModifiers(), sb).append(' ');
     sb.append(getDeclaringClass().getName()).append('(');
     Class[] c = getParameterTypes();
     if (c.length > 0)
       {
-        sb.append(c[0].getName());
+        sb.append(ClassHelper.getUserName(c[0]));
         for (int i = 1; i < c.length; i++)
-          sb.append(',').append(c[i].getName());
+          sb.append(',').append(ClassHelper.getUserName(c[i]));
       }
     sb.append(')');
     c = getExceptionTypes();
@@ -227,7 +257,46 @@ extends AccessibleObject implements Member
       }
     return sb.toString();
   }
- 
+
+  /* FIXME[GENERICS]: Add X extends GenericDeclaration and TypeVariable<X> */
+  static void addTypeParameters(StringBuilder sb, TypeVariable[] typeArgs)
+  {
+    if (typeArgs.length == 0)
+      return;
+    sb.append('<');
+    for (int i = 0; i < typeArgs.length; ++i)
+      {
+        if (i > 0)
+          sb.append(',');
+        sb.append(typeArgs[i]);
+      }
+    sb.append("> ");
+  }
+
+  public String toGenericString()
+  {
+    StringBuilder sb = new StringBuilder(128);
+    Modifier.toString(getModifiers(), sb).append(' ');
+    addTypeParameters(sb, getTypeParameters());
+    sb.append(getDeclaringClass().getName()).append('(');
+    Type[] types = getGenericParameterTypes();
+    if (types.length > 0)
+      {
+        sb.append(types[0]);
+        for (int i = 1; i < types.length; ++i)
+          sb.append(',').append(types[i]);
+      }
+    sb.append(')');
+    types = getGenericExceptionTypes();
+    if (types.length > 0)
+      {
+        sb.append(" throws ").append(types[0]);
+        for (int i = 1; i < types.length; i++)
+          sb.append(',').append(types[i]);
+      }
+    return sb.toString();
+  }
+
   /**
    * Create a new instance by invoking the constructor. Arguments are
    * automatically unwrapped and widened, if needed.<p>
@@ -266,8 +335,79 @@ extends AccessibleObject implements Member
   }
 
   private native Object constructNative(Object[] args, Class declaringClass,
-                                        Class[] parameterTypes, int slot,
-                                        boolean noAccessCheck)
+					Class[] parameterTypes, int slot,
+					boolean noAccessCheck)
     throws InstantiationException, IllegalAccessException,
            InvocationTargetException;
+
+  /**
+   * Returns an array of <code>TypeVariable</code> objects that represents
+   * the type variables declared by this constructor, in declaration order.
+   * An array of size zero is returned if this constructor has no type
+   * variables.
+   *
+   * @return the type variables associated with this constructor.
+   * @throws GenericSignatureFormatError if the generic signature does
+   *         not conform to the format specified in the Virtual Machine
+   *         specification, version 3.
+   * @since 1.5
+   */
+  /* FIXME[GENERICS]: Add <Constructor<T>> */
+  public TypeVariable[] getTypeParameters()
+  {
+    String sig = getSignature(declaringClass, slot);
+    if (sig == null)
+      return new TypeVariable[0];
+    MethodSignatureParser p = new MethodSignatureParser(this, sig);
+    return p.getTypeParameters();
+  }
+
+  /**
+   * Return the String in the Signature attribute for this constructor. If there
+   * is no Signature attribute, return null.
+   */
+  private native String getSignature(Class declaringClass, int slot);
+
+  /**
+   * Returns an array of <code>Type</code> objects that represents
+   * the exception types declared by this constructor, in declaration order.
+   * An array of size zero is returned if this constructor declares no
+   * exceptions.
+   *
+   * @return the exception types declared by this constructor. 
+   * @throws GenericSignatureFormatError if the generic signature does
+   *         not conform to the format specified in the Virtual Machine
+   *         specification, version 3.
+   * @since 1.5
+   */
+  public Type[] getGenericExceptionTypes()
+  {
+    String sig = getSignature(declaringClass, slot);
+    if (sig == null)
+      return getExceptionTypes();
+    MethodSignatureParser p = new MethodSignatureParser(this, sig);
+    return p.getGenericExceptionTypes();
+  }
+
+  /**
+   * Returns an array of <code>Type</code> objects that represents
+   * the parameter list for this constructor, in declaration order.
+   * An array of size zero is returned if this constructor takes no
+   * parameters.
+   *
+   * @return a list of the types of the constructor's parameters
+   * @throws GenericSignatureFormatError if the generic signature does
+   *         not conform to the format specified in the Virtual Machine
+   *         specification, version 3.
+   * @since 1.5
+   */
+  public Type[] getGenericParameterTypes()
+  {
+    String sig = getSignature(declaringClass, slot);
+    if (sig == null)
+      return getParameterTypes();
+    MethodSignatureParser p = new MethodSignatureParser(this, sig);
+    return p.getGenericParameterTypes();
+  }
 }
+
