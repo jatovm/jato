@@ -78,10 +78,13 @@ reg:	OP_EQ(reg, EXPR_LOCAL) 1
 
 reg:	EXPR_FIELD 1
 {
+	unsigned long offset;
 	struct expression *expr = to_expr(tree);
 
-	bb_insert_insn(s, imm_reg_insn(OPC_MOV, expr->field->static_value, REG_EAX));
-	bb_insert_insn(s, disp_reg_insn(OPC_MOV, REG_EAX, 0x00, REG_EAX));
+	offset = offsetof(struct fieldblock, static_value);
+
+	bb_insert_insn(s, imm_reg_insn(OPC_MOV, (unsigned long) expr->field, REG_EAX));
+	bb_insert_insn(s, disp_reg_insn(OPC_MOV, REG_EAX, offset, REG_EAX));
 }
 
 arg:	EXPR_NO_ARGS
@@ -129,11 +132,11 @@ stmt:	STMT_STORE(EXPR_FIELD, EXPR_VALUE)
 	store_dest = to_expr(stmt->store_dest);
 	store_src  = to_expr(stmt->store_src);
 
-	field_offset = (unsigned long) store_dest->field->static_value;
+	field_offset = offsetof(struct fieldblock, static_value);
 	field_value  = store_src->value;
 
-	bb_insert_insn(s, imm_reg_insn(OPC_MOV, field_offset, REG_EAX));
-	bb_insert_insn(s, imm_disp_insn(OPC_MOV, field_value, REG_EAX, 0));
+	bb_insert_insn(s, imm_reg_insn(OPC_MOV, (unsigned long) store_dest->field, REG_EAX));
+	bb_insert_insn(s, imm_disp_insn(OPC_MOV, field_value, REG_EAX, field_offset));
 }
 
 stmt:	STMT_IF(reg)

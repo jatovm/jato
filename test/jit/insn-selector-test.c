@@ -293,7 +293,8 @@ void test_should_select_mov_insns_for_field_load(void)
 	struct insn *insn;
 	struct expression *expr;
 	struct statement *stmt;
-	struct fieldblock field = { .static_value = 0xdeadbeef };
+	struct fieldblock field;
+	unsigned long expected_disp;
 
 	expr = field_expr(J_INT, &field);
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -303,10 +304,11 @@ void test_should_select_mov_insns_for_field_load(void)
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX, insn);
+	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
 
 	insn = insn_next(insn);
-	assert_disp_reg_insn(OPC_MOV, REG_EAX, 0x00, REG_EAX, insn);
+	expected_disp = offsetof(struct fieldblock, static_value);
+	assert_disp_reg_insn(OPC_MOV, REG_EAX, expected_disp, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
@@ -318,7 +320,8 @@ void test_should_select_mov_insn_for_field_store(void)
 	struct expression *store_target;
 	struct expression *store_value;
 	struct statement *stmt;
-	struct fieldblock field = { .static_value = 0xdeadbeef };
+	struct fieldblock field;
+	unsigned long expected_disp;
 
 	store_target = field_expr(J_INT, &field);
 	store_value  = value_expr(J_INT, 0xcafebabe);
@@ -330,10 +333,11 @@ void test_should_select_mov_insn_for_field_store(void)
 	insn_select(bb);
 
 	insn = insn_entry(bb->insn_list.next);
-	assert_imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX, insn);
+	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
 
 	insn = insn_next(insn);
-	assert_imm_regbase_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0x00, insn);
+	expected_disp = offsetof(struct fieldblock, static_value);
+	assert_imm_regbase_insn(OPC_MOV, 0xcafebabe, REG_EAX, expected_disp, insn);
 
 	free_basic_block(bb);
 }
