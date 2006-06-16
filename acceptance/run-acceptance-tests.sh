@@ -1,4 +1,22 @@
-#!/bin/sh
+#!/bin/bash
+
+HAS_FAILURES=0
+
+function run_java {
+  JAVA_CLASS=$1
+  EXPECTED=$2
+
+  ../jato/jato \
+      -Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
+      -Xbootclasspath:$BOOTCLASSPATH -cp . $JAVA_CLASS
+
+  ACTUAL=$?
+
+  if [ "$ACTUAL" != "$EXPECTED" ]; then
+    HAS_FAILURES=1
+    echo "$JAVA_CLASS FAILED. Expected $EXPECTED, but was: $ACTUAL."
+  fi
+}
 
 make -C ..
 make -C ../jato
@@ -20,13 +38,14 @@ BOOTCLASSPATH=../lib/classes.zip:$GLIBJ
 
 find jamvm/ -name "*.java" | xargs jikes -cp $BOOTCLASSPATH
 
-../jato/jato \
-	-Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
-	-Xbootclasspath:$BOOTCLASSPATH -cp . jamvm.IntegerArithmeticTest
-if [ $? == 0 ]; then
-  echo "Tests OK."
-else
-  echo "Tests FAILED. Program exited with error code $?."
-fi
+run_java jamvm.ExitStatusIsZeroTest 0
+run_java jamvm.ExitStatusIsOneTest 1
+run_java jamvm.IntegerArithmeticTest 0
 
 find jamvm/ -name "*.class" | xargs rm -f
+
+if [ "$HAS_FAILURES" == "0" ]; then
+  echo "Tests OK."
+else
+  echo "Tests FAILED."
+fi
