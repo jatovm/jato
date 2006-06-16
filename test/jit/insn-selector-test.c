@@ -45,6 +45,18 @@ static void assert_imm_reg_insn(enum insn_opcode expected_opc,
 	assert_int_equals(expected_reg, insn->dest.reg);
 }
 
+static void assert_imm_regbase_insn(enum insn_opcode expected_opc,
+				    unsigned long expected_imm,
+				    enum reg expected_base_reg,
+				    unsigned long expected_disp,
+				    struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE_2(expected_opc, AM_IMM, AM_DISP), insn->type);
+	assert_int_equals(expected_imm, insn->src.imm);
+	assert_int_equals(expected_base_reg, insn->dest.base_reg);
+	assert_int_equals(expected_disp, insn->dest.disp);
+}
+
 static void assert_rel_insn(enum insn_opcode expected_opc,
 			    unsigned long expected_imm, struct insn *insn)
 {
@@ -275,7 +287,7 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_mov_insns_for_field_lookup(void)
+void test_should_select_mov_insns_for_field_load(void)
 {
 	struct basic_block *bb = alloc_basic_block(0, 1);
 	struct insn *insn;
@@ -295,6 +307,33 @@ void test_should_select_mov_insns_for_field_lookup(void)
 
 	insn = insn_next(insn);
 	assert_disp_reg_insn(OPC_MOV, REG_EAX, 0x00, REG_EAX, insn);
+
+	free_basic_block(bb);
+}
+
+void test_should_select_mov_insn_for_field_store(void)
+{
+	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct insn *insn;
+	struct expression *store_target;
+	struct expression *store_value;
+	struct statement *stmt;
+	struct fieldblock field = { .static_value = 0xdeadbeef };
+
+	store_target = field_expr(J_INT, &field);
+	store_value  = value_expr(J_INT, 0xcafebabe);
+	stmt = alloc_statement(STMT_STORE);
+	stmt->store_dest = &store_target->node;
+	stmt->store_src  = &store_value->node;
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	insn = insn_entry(bb->insn_list.next);
+	assert_imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_imm_regbase_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0x00, insn);
 
 	free_basic_block(bb);
 }

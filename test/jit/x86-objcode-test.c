@@ -70,6 +70,16 @@ static void assert_emit_insn_6(unsigned char opcode, unsigned char modrm,
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
+static void assert_emit_insn_7(unsigned char opcode, unsigned char modrm,
+			       unsigned char b1, unsigned char b2,
+			       unsigned char b3, unsigned char b4,
+			       unsigned char b5, struct insn *insn)
+{
+	unsigned char expected[] = { opcode, modrm, b1, b2, b3, b4, b5 };
+
+	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
+}
+
 void test_emit_prolog(void)
 {
 	unsigned char expected[] = { 0x55, 0x89, 0xe5 };
@@ -214,6 +224,14 @@ void test_emit_mov_imm(void)
 	assert_emit_insn_6(0x8b, 0x05, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX));
 	assert_emit_insn_6(0x8b, 0x1d, 0xbe, 0xba, 0xfe, 0xca, imm_reg_insn(OPC_MOV, 0xcafebabe, REG_EBX));
 	assert_emit_insn_6(0x8b, 0x0d, 0xbe, 0xba, 0xfe, 0xca, imm_reg_insn(OPC_MOV, 0xcafebabe, REG_ECX));
+}
+
+void test_emit_mov_imm_disp(void)
+{
+	assert_emit_insn_6(0xc7, 0x00, 0xbe, 0xba, 0xfe, 0xca, imm_disp_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0));
+	assert_emit_insn_6(0xc7, 0x03, 0xef, 0xbe, 0xad, 0xde, imm_disp_insn(OPC_MOV, 0xdeadbeef, REG_EBX, 0));
+	assert_emit_insn_7(0xc7, 0x40, 0x08, 0xbe, 0xba, 0xfe, 0xca, imm_disp_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0x08));
+	assert_emit_insn_7(0xc7, 0x43, 0x0c, 0xbe, 0xba, 0xfe, 0xca, imm_disp_insn(OPC_MOV, 0xcafebabe, REG_EBX, 0x0c));
 }
 
 void test_emit_mov_disp_reg(void)

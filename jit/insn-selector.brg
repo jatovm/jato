@@ -117,6 +117,25 @@ stmt:	STMT_EXPRESSION(reg)
 {
 }
 
+stmt:	STMT_STORE(EXPR_FIELD, EXPR_VALUE)
+{
+	struct statement *stmt;
+	struct expression *store_dest;
+	struct expression *store_src;
+	unsigned long field_offset;
+	unsigned long field_value;
+
+	stmt = to_stmt(tree);
+	store_dest = to_expr(stmt->store_dest);
+	store_src  = to_expr(stmt->store_src);
+
+	field_offset = (unsigned long) store_dest->field->static_value;
+	field_value  = store_src->value;
+
+	bb_insert_insn(s, imm_reg_insn(OPC_MOV, field_offset, REG_EAX));
+	bb_insert_insn(s, imm_disp_insn(OPC_MOV, field_value, REG_EAX, 0));
+}
+
 stmt:	STMT_IF(reg)
 {
 	struct statement *stmt = to_stmt(tree);

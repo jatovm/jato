@@ -73,6 +73,7 @@ enum insn_type {
 	INSN_JE_BRANCH		= DEFINE_INSN_TYPE(OPC_JE, AM_BRANCH),
 	INSN_MOV_DISP_REG	= DEFINE_INSN_TYPE_2(OPC_MOV, AM_DISP, AM_REG),
 	INSN_MOV_IMM_REG	= DEFINE_INSN_TYPE_2(OPC_MOV, AM_IMM, AM_REG),
+	INSN_MOV_IMM_DISP	= DEFINE_INSN_TYPE_2(OPC_MOV, AM_IMM, AM_DISP),
 	INSN_PUSH_IMM		= DEFINE_INSN_TYPE(OPC_PUSH, AM_IMM),
 	INSN_PUSH_REG		= DEFINE_INSN_TYPE(OPC_PUSH, AM_REG),
 };
@@ -101,6 +102,7 @@ static inline struct insn *insn_entry(struct list_head *head)
 struct insn *disp_reg_insn(enum insn_opcode, enum reg, unsigned long, enum reg);
 struct insn *reg_insn(enum insn_opcode, enum reg);
 struct insn *imm_reg_insn(enum insn_opcode, unsigned long, enum reg);
+struct insn *imm_disp_insn(enum insn_opcode, unsigned long, enum reg, unsigned long);
 struct insn *imm_insn(enum insn_opcode, unsigned long);
 struct insn *rel_insn(enum insn_opcode, unsigned long);
 struct insn *branch_insn(enum insn_opcode, struct statement *);

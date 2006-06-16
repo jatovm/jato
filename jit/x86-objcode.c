@@ -126,6 +126,25 @@ void x86_emit_mov_imm32_reg(struct insn_sequence *is, unsigned long imm, enum re
 	x86_emit_imm32(is, imm);
 }
 
+static void x86_emit_mov_imm_disp(struct insn_sequence *is,
+				  struct operand *imm_operand,
+				  struct operand *membase_operand)
+{
+	unsigned long mod = 0x00;
+
+	x86_emit(is, 0xc7);
+
+	if (membase_operand->disp != 0)
+		mod = 0x01;
+	
+	x86_emit(is, x86_mod_rm(mod, 0x00, encode_reg(membase_operand->base_reg)));
+
+	if (membase_operand->disp != 0)
+		x86_emit(is, membase_operand->disp);
+
+	x86_emit_imm32(is, imm_operand->imm);
+}
+
 void x86_emit_prolog(struct insn_sequence *is)
 {
 	x86_emit_push_reg(is, REG_EBP);
@@ -249,6 +268,9 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_MOV_IMM_REG:
 		x86_emit_mov_imm32_reg(is, insn->src.imm, insn->dest.reg);
+		break;
+	case INSN_MOV_IMM_DISP:
+		x86_emit_mov_imm_disp(is, &insn->src, &insn->dest); 
 		break;
 	case INSN_PUSH_IMM:
 		x86_emit_push_imm32(is, insn->operand.imm);
