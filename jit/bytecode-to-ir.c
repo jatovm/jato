@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
@@ -228,24 +229,38 @@ static convert_fn_t converters[] = {
 int convert_to_ir(struct compilation_unit *cu)
 {
 	int err = 0;
+	unsigned long code_size = cu->method->code_size;
+	unsigned char *code = cu->method->code;
 	unsigned long offset = 0;
 	struct basic_block *entry_bb;
 
 	entry_bb = list_entry(cu->bb_list.next, struct basic_block, bb_list_node);
 
-	while (offset < cu->method->code_size) {
-		unsigned char *code = cu->method->code;
+	while (offset < code_size) {
 		unsigned char opc = code[offset];
-		convert_fn_t convert = converters[opc];
 		unsigned long opc_size;
-		
-		opc_size = bytecode_size(code + offset);
+		convert_fn_t convert;
 
-		if (!convert || cu->method->code_size-offset < opc_size) {
+		convert = converters[opc];
+		if (!convert) {
+			printf("%s: Unknown bytecode instruction 0x%x in "
+			       "method '%s' at offset %lu.\n",
+			       __FUNCTION__, opc, cu->method->name, offset);
 			err = -EINVAL;
 			goto out;
 		}
 
+		opc_size = bytecode_size(code + offset);
+		if (opc_size > code_size-offset) {
+			printf("%s: Premature end of bytecode stream in "
+			       "method '%s' (code_size: %lu, offset: %lu, "
+			       "opc_size: %lu, opc: 0x%x)\n.",
+			       __FUNCTION__, cu->method->name, code_size,
+			       offset, opc_size, opc);
+			err = -EINVAL;
+			goto out;
+		}
+	
 		err = convert(cu, entry_bb, offset);
 		if (err)
 			goto out;
