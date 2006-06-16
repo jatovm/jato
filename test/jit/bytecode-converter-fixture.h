@@ -1,6 +1,9 @@
 #ifndef __BYTECODE_CONVERTER_FIXTURE_H
 #define __BYTECODE_CONVERTER_FIXTURE_H
 
+#include <jit/statement.h>
+#include <vm/list.h>
+
 struct compilation_unit;
 struct methodblock;
 
@@ -33,4 +36,5 @@ void assert_null_check_stmt(struct expression *, struct statement *);
 void assert_arraycheck_stmt(enum jvm_type, struct expression *,
 			    struct expression *, struct statement *);
 
+void convert_ir_const(struct compilation_unit *, ConstantPoolEntry *, size_t, u1 *);
 #endif

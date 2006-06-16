@@ -7,8 +7,10 @@
 #include <jit/tree-node.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
+#include <jit-compiler.h>
 #include <jvm_types.h>
 #include <libharness.h>
+#include <stdlib.h>
 
 struct compilation_unit *
 alloc_simple_compilation_unit(struct methodblock *method)
@@ -161,4 +163,22 @@ void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
 	assert_int_equals(STMT_ARRAY_CHECK, stmt_type(actual));
 	assert_array_deref_expr(expected_jvm_type, expected_arrayref,
 				expected_index, actual->expression);
+}
+
+void convert_ir_const(struct compilation_unit *cu,
+		      ConstantPoolEntry *cp_infos,
+		      size_t nr_cp_infos, u1 *cp_types)
+{
+	struct object *class = malloc(sizeof(struct classblock) + sizeof(struct object));
+	struct classblock *cb = CLASS_CB(class);
+	struct constant_pool *constant_pool = &cb->constant_pool;
+
+	cb->constant_pool_count = nr_cp_infos;
+	constant_pool->info = cp_infos;
+	constant_pool->type = cp_types;
+
+	cu->method->class = class;
+	convert_to_ir(cu);
+
+	free(class);
 }
