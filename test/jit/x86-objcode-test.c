@@ -228,25 +228,25 @@ void test_emit_mov_imm(void)
 
 void test_emit_mov_imm_disp(void)
 {
-	assert_emit_insn_6(0xc7, 0x00, 0xbe, 0xba, 0xfe, 0xca, imm_disp_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0));
-	assert_emit_insn_6(0xc7, 0x03, 0xef, 0xbe, 0xad, 0xde, imm_disp_insn(OPC_MOV, 0xdeadbeef, REG_EBX, 0));
-	assert_emit_insn_7(0xc7, 0x40, 0x08, 0xbe, 0xba, 0xfe, 0xca, imm_disp_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0x08));
-	assert_emit_insn_7(0xc7, 0x43, 0x0c, 0xbe, 0xba, 0xfe, 0xca, imm_disp_insn(OPC_MOV, 0xcafebabe, REG_EBX, 0x0c));
+	assert_emit_insn_6(0xc7, 0x00, 0xbe, 0xba, 0xfe, 0xca, imm_membase_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0));
+	assert_emit_insn_6(0xc7, 0x03, 0xef, 0xbe, 0xad, 0xde, imm_membase_insn(OPC_MOV, 0xdeadbeef, REG_EBX, 0));
+	assert_emit_insn_7(0xc7, 0x40, 0x08, 0xbe, 0xba, 0xfe, 0xca, imm_membase_insn(OPC_MOV, 0xcafebabe, REG_EAX, 0x08));
+	assert_emit_insn_7(0xc7, 0x43, 0x0c, 0xbe, 0xba, 0xfe, 0xca, imm_membase_insn(OPC_MOV, 0xcafebabe, REG_EBX, 0x0c));
 }
 
 void test_emit_mov_disp_reg(void)
 {
-	assert_emit_insn_3(0x8b, 0x45, 0x08, disp_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EAX));
-	assert_emit_insn_3(0x8b, 0x45, 0x0c, disp_reg_insn(OPC_MOV, REG_EBP, 0x0c, REG_EAX));
+	assert_emit_insn_3(0x8b, 0x45, 0x08, membase_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EAX));
+	assert_emit_insn_3(0x8b, 0x45, 0x0c, membase_reg_insn(OPC_MOV, REG_EBP, 0x0c, REG_EAX));
 
-	assert_emit_insn_3(0x8b, 0x5D, 0x08, disp_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EBX));
-	assert_emit_insn_3(0x8b, 0x4D, 0x08, disp_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_ECX));
-	assert_emit_insn_3(0x8b, 0x55, 0x08, disp_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EDX));
+	assert_emit_insn_3(0x8b, 0x5D, 0x08, membase_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EBX));
+	assert_emit_insn_3(0x8b, 0x4D, 0x08, membase_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_ECX));
+	assert_emit_insn_3(0x8b, 0x55, 0x08, membase_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EDX));
 }
 
 void test_emit_add_disp_reg(void)
 {
-	assert_emit_insn_3(0x03, 0x45, 0x04, disp_reg_insn(OPC_ADD, REG_EBP, 0x04, REG_EAX));
+	assert_emit_insn_3(0x03, 0x45, 0x04, membase_reg_insn(OPC_ADD, REG_EBP, 0x04, REG_EAX));
 }
 
 void test_emit_add_imm(void)
@@ -256,7 +256,7 @@ void test_emit_add_imm(void)
 
 void test_emit_cmp_disp_reg(void)
 {
-	assert_emit_insn_3(0x3b, 0x45, 0x08, disp_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));
+	assert_emit_insn_3(0x3b, 0x45, 0x08, membase_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));
 }
 
 void test_should_use_zero_as_target_branch_for_forward_branches(void)

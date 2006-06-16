@@ -45,7 +45,7 @@ reg:	EXPR_LOCAL	1
 {
 	struct expression *expr = to_expr(tree);
 	unsigned long disp = frame_local_offset(expr);
-	bb_insert_insn(s, disp_reg_insn(OPC_MOV, REG_EBP, disp, REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EBP, disp, REG_EAX));
 }
 
 reg:	OP_ADD(EXPR_LOCAL, reg) 1
@@ -53,7 +53,7 @@ reg:	OP_ADD(EXPR_LOCAL, reg) 1
 	struct expression *expr = to_expr(tree);
 	unsigned long disp = frame_local_offset(to_expr(expr->binary_left));
 
-	bb_insert_insn(s, disp_reg_insn(OPC_ADD, REG_EBP, disp, REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(OPC_ADD, REG_EBP, disp, REG_EAX));
 }
 
 reg:	EXPR_INVOKE(arg) 1
@@ -73,7 +73,7 @@ reg:	OP_EQ(reg, EXPR_LOCAL) 1
 	struct expression *expr = to_expr(tree);
 	unsigned long disp = frame_local_offset(to_expr(expr->binary_right));
 
-	bb_insert_insn(s, disp_reg_insn(OPC_CMP, REG_EBP, disp, REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(OPC_CMP, REG_EBP, disp, REG_EAX));
 }
 
 reg:	EXPR_FIELD 1
@@ -84,7 +84,7 @@ reg:	EXPR_FIELD 1
 	offset = offsetof(struct fieldblock, static_value);
 
 	bb_insert_insn(s, imm_reg_insn(OPC_MOV, (unsigned long) expr->field, REG_EAX));
-	bb_insert_insn(s, disp_reg_insn(OPC_MOV, REG_EAX, offset, REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offset, REG_EAX));
 }
 
 arg:	EXPR_NO_ARGS
@@ -136,7 +136,7 @@ stmt:	STMT_STORE(EXPR_FIELD, EXPR_VALUE)
 	field_value  = store_src->value;
 
 	bb_insert_insn(s, imm_reg_insn(OPC_MOV, (unsigned long) store_dest->field, REG_EAX));
-	bb_insert_insn(s, imm_disp_insn(OPC_MOV, field_value, REG_EAX, field_offset));
+	bb_insert_insn(s, imm_membase_insn(OPC_MOV, field_value, REG_EAX, field_offset));
 }
 
 stmt:	STMT_IF(reg)
