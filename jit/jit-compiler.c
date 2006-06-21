@@ -101,15 +101,9 @@ void free_jit_trampoline(struct jit_trampoline *tramp)
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 {
 	struct jit_trampoline *tramp = alloc_jit_trampoline();
-	if (tramp) {
-		struct insn_sequence is;
-		init_insn_sequence(&is, tramp->objcode, TRAMP_OBJSIZE);
-
-		x86_emit_push_imm32(&is, (unsigned long) cu);
-		x86_emit_call(&is, jit_magic_trampoline);
-		x86_emit_add_imm8_reg(&is, 0x04, REG_ESP);
-		x86_emit_indirect_jump_reg(&is, REG_EAX);
-	}
+	if (tramp)
+		x86_emit_trampoline(cu, jit_magic_trampoline, tramp->objcode,
+				    TRAMP_OBJSIZE);
 	return tramp;
 }
 

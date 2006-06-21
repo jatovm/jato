@@ -156,7 +156,7 @@ static void x86_emit_pop_ebp(struct insn_sequence *is)
 	x86_emit(is, 0x5d);
 }
 
-void x86_emit_push_imm32(struct insn_sequence *is, unsigned long imm)
+static void x86_emit_push_imm32(struct insn_sequence *is, unsigned long imm)
 {
 	x86_emit(is, 0x68);
 	x86_emit_imm32(is, imm);
@@ -164,7 +164,7 @@ void x86_emit_push_imm32(struct insn_sequence *is, unsigned long imm)
 
 #define CALL_INSN_SIZE 5
 
-void x86_emit_call(struct insn_sequence *is, void *call_target)
+static void x86_emit_call(struct insn_sequence *is, void *call_target)
 {
 	int disp = call_target - (void *) is->current - CALL_INSN_SIZE;
 
@@ -189,7 +189,7 @@ void x86_emit_add_disp8_reg(struct insn_sequence *is, enum reg base_reg,
 	x86_emit_disp8_reg(is, 0x03, base_reg, disp8, dest_reg);
 }
 
-void x86_emit_add_imm8_reg(struct insn_sequence *is, unsigned char imm8,
+static void x86_emit_add_imm8_reg(struct insn_sequence *is, unsigned char imm8,
 			   enum reg reg)
 {
 	x86_emit(is, 0x83);
@@ -203,7 +203,7 @@ void x86_emit_cmp_disp8_reg(struct insn_sequence *is, enum reg base_reg,
 	x86_emit_disp8_reg(is, 0x3b, base_reg, disp8, dest_reg);
 }
 
-void x86_emit_indirect_jump_reg(struct insn_sequence *is, enum reg reg)
+static void x86_emit_indirect_jump_reg(struct insn_sequence *is, enum reg reg)
 {
 	x86_emit(is, 0xff);
 	x86_emit(is, x86_mod_rm(0x3, 0x04, encode_reg(reg)));
@@ -312,3 +312,16 @@ void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 		x86_emit_insn(is, insn);
 	}
 }
+
+void x86_emit_trampoline(struct compilation_unit *cu, void *call_target,
+			 void *buffer, unsigned long size)
+{
+	struct insn_sequence is;
+	init_insn_sequence(&is, buffer, size);
+
+	x86_emit_push_imm32(&is, (unsigned long) cu);
+	x86_emit_call(&is, call_target);
+	x86_emit_add_imm8_reg(&is, 0x04, REG_ESP);
+	x86_emit_indirect_jump_reg(&is, REG_EAX);
+}
+
