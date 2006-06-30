@@ -9,7 +9,7 @@
 #include <vm/stack.h>
 #include <vm/system.h>
 
-#include <bytecode-converter-fixture.h>
+#include <bc-test-utils.h>
 #include <libharness.h>
 #include <stdlib.h>
 

@@ -2,7 +2,7 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <bytecode-converter-fixture.h>
+#include <bc-test-utils.h>
 #include <compilation-unit.h>
 #include <jit/expression.h>
 #include <jvm_types.h>

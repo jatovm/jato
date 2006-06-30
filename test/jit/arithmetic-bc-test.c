@@ -11,7 +11,7 @@
 #include <libharness.h>
 #include <stdlib.h>
 
-#include <bytecode-converter-fixture.h>
+#include <bc-test-utils.h>
 
 static void assert_unary_op_expr(enum jvm_type jvm_type,
 				 enum unary_operator unary_operator,

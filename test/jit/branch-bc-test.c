@@ -11,7 +11,7 @@
 #include <vm/list.h>
 #include <vm/vm.h>
 
-#include <bytecode-converter-fixture.h>
+#include <bc-test-utils.h>
 #include <libharness.h>
 
 #define TARGET_OFFSET 2

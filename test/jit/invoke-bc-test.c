@@ -3,7 +3,7 @@
  */
 
 #include <basic-block.h>
-#include <bytecode-converter-fixture.h>
+#include <bc-test-utils.h>
 #include <compilation-unit.h>
 #include <jit/statement.h>
 #include <vm/stack.h>

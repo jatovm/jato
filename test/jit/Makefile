@@ -15,13 +15,12 @@ OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)byteco
 	$(objdir)typeconv-bc.o $(objdir)object-bc.o $(objdir)jvm_types.o $(objdir)tree-printer.o ../../vm/string.o \
 	$(objdir)/branch-bc.o $(objdir)/invoke-bc.o $(objdir)x86-frame.o
 
-TESTS	= arithmetic-bc-test.o basic-block-test.o bitmap-test.o \
-	  branch-bc-test.o bytecode-cfg-builder-test.o \
-	  bytecode-converter-fixture.o bytecode-to-ir-test.o \
-	  bytecodes-test.o compilation-unit-test.o insn-selector-test.o \
-	  invoke-bc-test.o jit-compiler-test.o list-test.o object-bc-test.o \
-	  resolve-stub.o stack-test.o string-test.o tree-printer-test.o \
-	  x86-frame-test.o x86-objcode-test.o
+TESTS	= arithmetic-bc-test.o basic-block-test.o bc-test-utils.o \
+	  bitmap-test.o branch-bc-test.o bytecode-cfg-builder-test.o \
+	  bytecode-to-ir-test.o bytecodes-test.o compilation-unit-test.o \
+	  insn-selector-test.o invoke-bc-test.o \jit-compiler-test.o \
+	  list-test.o object-bc-test.o resolve-stub.o stack-test.o \
+	  string-test.o tree-printer-test.o x86-frame-test.o x86-objcode-test.o
 
 HARNESS = ../libharness/libharness.o ../../vm/backtrace.o
 
