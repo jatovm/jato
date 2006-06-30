@@ -4,6 +4,7 @@
 
 #include <compilation-unit.h>
 #include <basic-block.h>
+#include <bc-test-utils.h>
 #include <jit/tree-node.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
@@ -181,4 +182,9 @@ void convert_ir_const(struct compilation_unit *cu,
 	convert_to_ir(cu);
 
 	free(class);
+}
+
+struct statement *first_stmt(struct compilation_unit *cu)
+{
+	return stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 }

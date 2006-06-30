@@ -213,6 +213,7 @@ static convert_fn_t converters[] = {
 	MAP_BYTECODE_TO(OPC_RETURN, convert_void_return),
 	MAP_BYTECODE_TO(OPC_GETSTATIC, convert_getstatic),
 	MAP_BYTECODE_TO(OPC_PUTSTATIC, convert_putstatic),
+	MAP_BYTECODE_TO(OPC_INVOKEVIRTUAL, convert_invokevirtual),
 	MAP_BYTECODE_TO(OPC_INVOKESTATIC, convert_invokestatic),
 };
 

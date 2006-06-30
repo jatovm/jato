@@ -37,4 +37,7 @@ void assert_arraycheck_stmt(enum jvm_type, struct expression *,
 			    struct expression *, struct statement *);
 
 void convert_ir_const(struct compilation_unit *, ConstantPoolEntry *, size_t, u1 *);
+
+struct statement *first_stmt(struct compilation_unit *cu);
+
 #endif

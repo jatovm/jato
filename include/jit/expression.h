@@ -17,6 +17,7 @@ enum expression_type {
 	EXPR_CONVERSION,
 	EXPR_FIELD,
 	EXPR_INVOKE,
+	EXPR_INVOKEVIRTUAL,
 	EXPR_ARGS_LIST,
 	EXPR_ARG,
 	EXPR_NO_ARGS,
@@ -118,11 +119,25 @@ struct expression {
 		};
 		
 		/*  EXPR_INVOKE represents a method invocation expression (see
-		    JLS 15.12.). This expression type can contain side-effects
-		    and can be used as an rvalue only.  */
+		    JLS 15.12.) for which the target method can be determined
+		    statically.  This expression type can contain side-effects
+		    and can be used as an rvalue only.  See also the
+		    EXPR_INVOKEVIRTUAL expression type.  */
 		struct {
 			struct tree_node *args_list;
 			struct methodblock *target_method;
+		};
+
+		/*  EXPR_INVOKEVIRTUAL represents a method invocation (see
+		    JLS 15.12.) for which the target method has to be
+		    determined from instance class vtable at the call site.
+		    The first argument in the argument list is always the
+		    object reference for the invocation.  This expression type
+		    can contain side-effects and can be used as an rvalue
+		    only.  See also the EXPR_INVOKE expression type.  */
+		struct {
+			struct tree_node *args_list;
+			unsigned long method_index;
 		};
 
 		/*  EXPR_ARGS_LIST represents list of arguments passed to
@@ -184,6 +199,7 @@ struct expression *unary_op_expr(enum jvm_type, enum unary_operator, struct expr
 struct expression *conversion_expr(enum jvm_type, struct expression *);
 struct expression *field_expr(enum jvm_type, struct fieldblock *);
 struct expression *invoke_expr(enum jvm_type, struct methodblock *);
+struct expression *invokevirtual_expr(enum jvm_type, unsigned long);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);

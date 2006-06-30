@@ -1,3 +1,4 @@
 DECLARE_CONVERTER(convert_non_void_return)
 DECLARE_CONVERTER(convert_void_return)
+DECLARE_CONVERTER(convert_invokevirtual)
 DECLARE_CONVERTER(convert_invokestatic)

@@ -2,6 +2,7 @@
 #define __LIBHARNESS_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 void print_test_suite_results(void);
 
