@@ -225,6 +225,8 @@ void test_should_use_zero_as_target_branch_for_forward_branches(void)
 	struct basic_block *bb = alloc_basic_block(0, 1);
 
 	assert_emit_insn_2(0x74, 0x00, branch_insn(OPC_JE, bb->label_stmt));
+
+	free_basic_block(bb);
 }
 
 static void assert_emits_branch_target(unsigned char expected_target,
@@ -277,6 +279,8 @@ void test_should_add_self_to_unresolved_list_for_forward_branches(void)
 
 	assert_ptr_equals(insn, list_entry(if_true->branch_list.next,
 					   struct insn, branch_list_node));
+
+	free_basic_block(bb);
 }
 
 static void assert_backpatches_branches(unsigned char expected_target,

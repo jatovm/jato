@@ -285,6 +285,7 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 	assert_branch_insn(OPC_JE, to_stmt(stmt->if_true), insn);
 
 	free_basic_block(bb);
+	free_basic_block(true_bb);
 }
 
 void test_should_select_mov_insns_for_field_load(void)
