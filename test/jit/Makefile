@@ -19,7 +19,7 @@ TESTS = basic-block-test.o bitmap-test.o bytecodes-test.o \
 	bytecode-converter-fixture.o bytecode-to-ir-test.o \
 	compilation-unit-test.o insn-selector-test.o \
 	jit-compiler-test.o list-test.o stack-test.o x86-objcode-test.o \
-	resolve-stub.o tree-printer-test.o string-test.o x86-frame-test.o branch-bc-test.o object-bc-test.o
+	resolve-stub.o tree-printer-test.o string-test.o x86-frame-test.o branch-bc-test.o object-bc-test.o invoke-bc-test.o
 HARNESS = ../libharness/libharness.o ../../vm/backtrace.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
