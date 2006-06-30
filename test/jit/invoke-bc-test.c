@@ -10,7 +10,6 @@
 #include <vm/stack.h>
 
 #include <libharness.h>
-#include <stdlib.h>
 
 /* MISSING: invokevirtual */
 
@@ -92,22 +91,17 @@ create_invokevirtual_unit(char *type, unsigned long nr_args,
 		.type = type,
 		.args_count = nr_args,
 	};
-	struct expression *objectref_expr;
-	struct methodblock *method;
-	struct compilation_unit *cu;
 	unsigned char code[] = {
 		OPC_INVOKEVIRTUAL, (method_index >> 8) & 0xff, method_index & 0xff,
 	};
-
-	method = malloc(sizeof *method);
-	*method = (struct methodblock) {
+	struct methodblock method = {
 		.code = code,
 		.code_size = ARRAY_SIZE(code),
-		.type = type,
-		.args_count = nr_args,
 	};
+	struct expression *objectref_expr;
+	struct compilation_unit *cu;
 
-	cu = alloc_simple_compilation_unit(method);
+	cu = alloc_simple_compilation_unit(&method);
 
 	objectref_expr = value_expr(J_REFERENCE, objectref);
 	stack_push(cu->expr_stack, objectref_expr);
@@ -116,12 +110,6 @@ create_invokevirtual_unit(char *type, unsigned long nr_args,
 
 	convert_ir_invoke(cu, &target_method, method_index);
 	return cu;
-}
-
-static void free_invokevirtual_unit(struct compilation_unit *cu)
-{
-	free(cu->method);
-	free_compilation_unit(cu);
 }
 
 void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
@@ -137,7 +125,7 @@ void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
 
 	assert_int_equals(EXPR_INVOKEVIRTUAL, expr_type(invoke_expr));
 
-	free_invokevirtual_unit(cu);
+	free_compilation_unit(cu);
 }
 
 void test_invokevirtual_should_parse_method_index_for_expr(void)
@@ -154,7 +142,7 @@ void test_invokevirtual_should_parse_method_index_for_expr(void)
 
 	assert_int_equals(0xcafe, invoke_expr->method_index);
 
-	free_invokevirtual_unit(cu);
+	free_compilation_unit(cu);
 }
 
 void test_invokevirtual_should_pass_objectref_as_first_argument(void)
@@ -172,7 +160,7 @@ void test_invokevirtual_should_pass_objectref_as_first_argument(void)
 
 	assert_value_expr(J_REFERENCE, 0xdeadbeef, arg_expr->arg_expression);
 
-	free_invokevirtual_unit(cu);
+	free_compilation_unit(cu);
 }
 
 static void assert_invokevirtual_with_args(unsigned long nr_args)
@@ -194,7 +182,7 @@ static void assert_invokevirtual_with_args(unsigned long nr_args)
 
 	assert_args(args, ARRAY_SIZE(args), second_arg);
 
-	free_invokevirtual_unit(cu);
+	free_compilation_unit(cu);
 }
 
 void test_invokevirtual_should_parse_passed_arguments(void)
@@ -213,7 +201,8 @@ static void assert_invokevirtual_return_type(enum jvm_type expected, char *type)
 	invoke_expr = stack_pop(cu->expr_stack);
 	assert_int_equals(expected, invoke_expr->jvm_type);
 
-	free_invokevirtual_unit(cu);
+	expr_put(invoke_expr);
+	free_compilation_unit(cu);
 }
 
 void test_invokevirtual_should_parse_return_type(void)
