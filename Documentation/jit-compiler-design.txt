@@ -1,0 +1,48 @@
+
+				JIT Compiler Design
+
+
+  Copyright (C) 2006 Pekka Enberg
+
+  This file is released under the GPLv2.
+
+
+Introduction
+============
+
+The compiler is divided into the following passes: control-flow graph
+construction, bytecode parsing, instruction selection, and code
+emission.  The compiler analyzes the given bytecode sequence to find
+basic blocks for constructing the control-flow graph.  This pass is
+done first to simplify parsing of bytecode branches.  Bytecode
+sequence is then parsed and converted to an expression tree. The tree
+is given to the instruction selector to lower the IR to three-address
+code.  Code emission phase converts that sequence to machine code
+which can be executed.
+
+Programs are compiled one method at a time.  Invocation of a method is
+replaced with an invocation of a special per-method JIT trampoline
+that is responsible for compiling the actual target method upon first
+invocation.
+
+
+Intermediate Representations
+============================
+
+The compiler has two intermediate representation types: expression
+trees and instruction list. The former is constructed from the
+bytecode sequence of a method in compiler front-end whereas the latter
+is the result of instruction selection. Instruction lists are
+translated to executable machine code.
+
+The JIT compiler operates on one method at a time called a compilation
+unit.  A compilation unit is made up of one or more basic blocks which
+represent straight-line code.  Each basic block has a list of one or
+more statements that can either be standalone or operate on one or two
+expression trees.
+
+The instruction selector emits three-address code that is a sequence
+of instructions.  This intermediate representation is very close to
+IA-32 machine code with the exception of branch targets which are
+represented as pointers to instructions.  They're converted to real
+machine code targets via back-patching during code emission.
