@@ -29,11 +29,11 @@ invocation.
 Intermediate Representations
 ============================
 
-The compiler has two intermediate representation types: expression
-trees and instruction list. The former is constructed from the
-bytecode sequence of a method in compiler front-end whereas the latter
-is the result of instruction selection. Instruction lists are
-translated to executable machine code.
+The compiler has two intermediate representations: expression tree and
+three-address code.  The expression tree is constructed from bytecode
+sequence of a method whereas three-address code is the result of
+instruction selection.  Three-address code is translated to executable
+machine code.
 
 The JIT compiler operates on one method at a time called a compilation
 unit.  A compilation unit is made up of one or more basic blocks which
