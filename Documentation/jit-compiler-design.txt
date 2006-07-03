@@ -41,8 +41,9 @@ represent straight-line code.  Each basic block has a list of one or
 more statements that can either be standalone or operate on one or two
 expression trees.
 
-The instruction selector emits three-address code that is a sequence
-of instructions.  This intermediate representation is very close to
-IA-32 machine code with the exception of branch targets which are
-represented as pointers to instructions.  They're converted to real
-machine code targets via back-patching during code emission.
+The instruction selector emits three-address code for a compilation
+unit from the expression tree.  This intermediate representation is
+essentially a sequence of instructions that mimic the native
+instruction set.  One notable exception is branch targets which are
+represented as pointers to instructions.  The pointers are converted
+to real machine code targets with back-patching during code emission.
