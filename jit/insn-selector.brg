@@ -31,6 +31,9 @@
 
 #define MBMAX_OPCODES STMT_LAST
 
+#define MONOBURG_LOG 1
+#define HAVE_ARRAY_ELEM_INIT 1
+
 %%
 
 %termprefix EXPR_ OP_ STMT_
@@ -156,7 +159,7 @@ static void emit_code(struct basic_block *bb, MBState *state, int goal)
 	int i;
 
 	ern = mono_burg_rule(state, goal);
-	nts = mono_burg_nts[ern];
+	nts = mono_burg_nts_data + mono_burg_nts[ern];
 	mono_burg_kids(state, ern, kids);
 
 	for (i = 0; nts[i]; i++) 
