@@ -24,14 +24,14 @@ static void assert_membase_reg_insn(enum insn_opcode insn_op,
 static void assert_reg_insn(enum insn_opcode expected_opc,
 			    enum reg expected_reg, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, OPERAND_REGISTER), insn->type);
+	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_REGISTER), insn->type);
 	assert_int_equals(expected_reg, insn->operand.reg);
 }
 
 static void assert_imm_insn(enum insn_opcode expected_opc,
 			    unsigned long expected_imm, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, OPERAND_IMMEDIATE), insn->type);
+	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_IMMEDIATE), insn->type);
 	assert_int_equals(expected_imm, insn->operand.imm);
 }
 
@@ -60,14 +60,14 @@ static void assert_imm_regbase_insn(enum insn_opcode expected_opc,
 static void assert_rel_insn(enum insn_opcode expected_opc,
 			    unsigned long expected_imm, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, OPERAND_RELATIVE), insn->type);
+	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_RELATIVE), insn->type);
 	assert_int_equals(expected_imm, insn->operand.rel);
 }
 
 static void assert_branch_insn(enum insn_opcode expected_opc,
 			       struct statement *if_true, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE(expected_opc, OPERAND_BRANCH), insn->type);
+	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_BRANCH), insn->type);
 	assert_ptr_equals(if_true, insn->branch_target);
 }
 
@@ -83,10 +83,6 @@ void test_should_select_insn_for_every_statement(void)
 	struct statement *stmt1, *stmt2;
 	struct basic_block *bb = alloc_basic_block(0, 1);
 
-	/*
-	 * Yeah, this expression tree forest isn't a sane 'program'
-	 * but that's not what we're testing for here...
-	 */
 	expr1 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
 
 	stmt1 = alloc_statement(STMT_EXPRESSION);

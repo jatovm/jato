@@ -63,7 +63,7 @@ struct insn *imm_membase_insn(enum insn_opcode insn_op, unsigned long imm,
 
 struct insn *reg_insn(enum insn_opcode insn_op, enum reg reg)
 {
-	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, OPERAND_REGISTER));
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_1(insn_op, OPERAND_REGISTER));
 	if (insn)
 		insn->operand.reg = reg;
 
@@ -72,7 +72,7 @@ struct insn *reg_insn(enum insn_opcode insn_op, enum reg reg)
 
 struct insn *imm_insn(enum insn_opcode insn_op, unsigned long imm)
 {
-	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, OPERAND_IMMEDIATE));
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_1(insn_op, OPERAND_IMMEDIATE));
 	if (insn)
 		insn->operand.imm = imm;
 
@@ -81,7 +81,7 @@ struct insn *imm_insn(enum insn_opcode insn_op, unsigned long imm)
 
 struct insn *rel_insn(enum insn_opcode insn_op, unsigned long rel)
 {
-	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, OPERAND_RELATIVE));
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_1(insn_op, OPERAND_RELATIVE));
 	if (insn)
 		insn->operand.rel = rel;
 
@@ -90,7 +90,7 @@ struct insn *rel_insn(enum insn_opcode insn_op, unsigned long rel)
 
 struct insn *branch_insn(enum insn_opcode insn_op, struct statement *if_true)
 {
-	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE(insn_op, OPERAND_BRANCH));
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_1(insn_op, OPERAND_BRANCH));
 	if (insn)
 		insn->branch_target = if_true;
 
