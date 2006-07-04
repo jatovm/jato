@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
 
         /* Call the main method */
         if(i == argc) {
-	    java_main_fn java_main = jit_prepare_for_exec(mb);
+	    java_main_fn java_main = mb->trampoline->objcode;
 	    java_main();
             //executeStaticMethod(main_class, mb, array);
 	}

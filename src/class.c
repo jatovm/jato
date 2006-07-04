@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <jit-compiler.h>
 
 #include "jam.h"
 #include "sig.h"
@@ -426,6 +427,7 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
                     } else
                         ptr += attr_length;
         }
+	jit_prepare_for_exec(method);
     }
 
     READ_U2(attr_count, ptr, len);

@@ -157,6 +157,8 @@ void test_should_select_call_insn_for_invoke_without_args(void)
 	struct statement *stmt;
 	struct methodblock mb = { .args_count = 0 };
 
+	jit_prepare_for_exec(&mb);
+
 	args_list = no_args_expr();
 	expr = invoke_expr(J_INT, &mb);
 	expr->args_list = &args_list->node;
@@ -182,6 +184,8 @@ void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 	struct expression *invoke_expression, *args_list_expression;
 	struct statement *stmt;
 	struct methodblock mb = { .args_count = 2 };
+
+	jit_prepare_for_exec(&mb);
 
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr
@@ -219,6 +223,9 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 	struct expression *no_args, *arg, *invoke, *nested_invoke;
 	struct statement *stmt;
 	struct methodblock mb = { .args_count = 1 }, nested_mb = { .args_count = 0 };
+
+	jit_prepare_for_exec(&mb);
+	jit_prepare_for_exec(&nested_mb);
 
 	no_args = no_args_expr();
 	nested_invoke = invoke_expr(J_INT, &nested_mb);

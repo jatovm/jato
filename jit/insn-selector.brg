@@ -63,7 +63,7 @@ reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr = to_expr(tree);
 	struct methodblock *method = expr->target_method;
-	void *target = jit_prepare_for_exec(method);
+	void *target = method->trampoline->objcode;
 
 	bb_insert_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
 
