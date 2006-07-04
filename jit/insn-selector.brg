@@ -71,6 +71,26 @@ reg:	EXPR_INVOKE(arg) 1
 		bb_insert_insn(s, imm_reg_insn(OPC_ADD, method->args_count * sizeof(unsigned long), REG_ESP));
 }
 
+reg:	EXPR_INVOKEVIRTUAL(arg) 1
+{
+	unsigned long method_table_offset;
+	unsigned long method_offset;
+	struct expression *expr = to_expr(tree);
+
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX));
+
+	method_table_offset = sizeof(struct object) + offsetof(struct classblock, method_table);
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_table_offset, REG_EAX));
+
+	method_offset = expr->method_index * sizeof(void *);
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_offset, REG_EAX));
+
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX));
+	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct jit_trampoline, objcode), REG_EAX));
+	bb_insert_insn(s, reg_insn(OPC_JMP, REG_EAX));
+}
+
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
 	struct expression *expr = to_expr(tree);

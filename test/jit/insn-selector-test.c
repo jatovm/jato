@@ -259,6 +259,59 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 	free_basic_block(bb);
 }
 
+void test_should_select_indirect_jmp_for_invokevirtual(void)
+{
+	unsigned long objectref;
+	unsigned long method_index;
+	struct expression *invoke_expr, *args;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
+
+	objectref = 0xdeadbeef;
+	method_index = 0xcafe;
+
+	args = arg_expr(value_expr(J_REFERENCE, objectref));
+	invoke_expr = invokevirtual_expr(J_VOID, method_index);
+	invoke_expr->args_list = &args->node;
+
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &invoke_expr->node;
+
+	bb = alloc_basic_block(0, 1);
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	insn = insn_entry(bb->insn_list.next);
+	assert_imm_insn(OPC_PUSH, objectref, insn);
+
+	insn = insn_next(insn);
+	assert_membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EAX,
+				sizeof(struct object) + offsetof(struct classblock, method_table),
+				REG_EAX, insn);
+	
+	insn = insn_next(insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EAX, method_index * sizeof(void *), REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct jit_trampoline, objcode), REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_reg_insn(OPC_JMP, REG_EAX, insn);
+	
+	free_basic_block(bb);
+}
+
 void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 {
 	struct basic_block *bb, *true_bb;

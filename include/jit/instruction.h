@@ -41,6 +41,7 @@ enum insn_opcode {
 	OPC_CALL,
 	OPC_CMP,
 	OPC_JE,
+	OPC_JMP,
 	OPC_MOV,
 	OPC_PUSH,
 };
