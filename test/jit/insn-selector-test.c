@@ -68,7 +68,7 @@ static void assert_branch_insn(enum insn_opcode expected_opc,
 			       struct statement *if_true, struct insn *insn)
 {
 	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_BRANCH), insn->type);
-	assert_ptr_equals(if_true, insn->branch_target);
+	assert_ptr_equals(if_true, insn->operand.branch_target);
 }
 
 static struct insn *insn_next(struct insn *insn)

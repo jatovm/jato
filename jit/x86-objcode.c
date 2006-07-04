@@ -226,7 +226,7 @@ static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
 	struct basic_block *target_bb;
 	unsigned char addr = 0;
 
-	target_bb = insn->branch_target->bb;
+	target_bb = insn->operand.branch_target->bb;
 
 	if (!list_is_empty(&target_bb->insn_list)) {
 		struct insn *target_insn =
@@ -235,7 +235,7 @@ static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
 
 		addr = branch_rel_addr(insn->offset, target_insn->offset);
 	} else
-		list_add(&insn->branch_list_node, &insn->branch_target->branch_list);
+		list_add(&insn->branch_list_node, &insn->operand.branch_target->branch_list);
 
 	x86_emit_je_rel(is, addr);
 }

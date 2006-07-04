@@ -92,7 +92,7 @@ struct insn *branch_insn(enum insn_opcode insn_op, struct statement *if_true)
 {
 	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_1(insn_op, OPERAND_BRANCH));
 	if (insn)
-		insn->branch_target = if_true;
+		insn->operand.branch_target = if_true;
 
 	return insn;
 }

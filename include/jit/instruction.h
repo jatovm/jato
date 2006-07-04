@@ -16,13 +16,23 @@ enum reg {
 
 struct operand {
 	union {
+		/* OPERAND_REGISTER */
 		enum reg reg;
+
+		/* OPERAND_MEMBASE */
 		struct {
 			enum reg base_reg;
 			unsigned long disp;	/* displacement */
 		};
+
+		/* OPERAND_IMMEDIATE */
 		unsigned long imm;
+
+		/* OPERAND_RELATIVE */
 		unsigned long rel;
+
+		/* OPERAND_BRANCH */
+		struct statement *branch_target;
 	};
 };
 
@@ -83,7 +93,6 @@ struct insn {
 		};
 		struct operand operand;
 	};
-	struct statement *branch_target;
 	struct list_head insn_list_node;
 	struct list_head branch_list_node;
 	unsigned long offset;
