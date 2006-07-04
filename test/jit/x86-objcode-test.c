@@ -4,7 +4,7 @@
 
 #include <x86-objcode.h>
 #include <basic-block.h>
-#include <instruction.h>
+#include <jit/instruction.h>
 #include <jit/statement.h>
 #include <vm/list.h>
 #include <vm/system.h>

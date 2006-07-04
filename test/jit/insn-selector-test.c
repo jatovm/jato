@@ -5,7 +5,7 @@
 #include <libharness.h>
 #include <basic-block.h>
 #include <jit/expression.h>
-#include <instruction.h>
+#include <jit/instruction.h>
 #include <insn-selector.h>
 #include <jit/statement.h>
 #include <jit-compiler.h>

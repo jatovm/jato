@@ -8,7 +8,7 @@
  */
 
 #include <basic-block.h>
-#include <instruction.h>
+#include <jit/instruction.h>
 #include <jit/statement.h>
 #include <stdlib.h>
 #include <string.h>

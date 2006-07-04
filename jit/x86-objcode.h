@@ -1,7 +1,7 @@
 #ifndef __JIT_X86_OBJCODE_H
 #define __JIT_X86_OBJCODE_H
 
-#include <instruction.h>
+#include <jit/instruction.h>
 
 struct basic_block;
 struct compilation_unit;

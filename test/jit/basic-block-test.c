@@ -4,7 +4,7 @@
 
 #include <basic-block.h>
 #include <basic-block-assert.h>
-#include <instruction.h>
+#include <jit/instruction.h>
 #include <jit/statement.h>
 
 #include <libharness.h>

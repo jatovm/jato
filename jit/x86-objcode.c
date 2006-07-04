@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <x86-objcode.h>
 #include <basic-block.h>
-#include <instruction.h>
+#include <jit/instruction.h>
 #include <jit/statement.h>
 
 static inline unsigned long is_offset(struct insn_sequence *is)
