@@ -245,7 +245,7 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 	insn->offset = is_offset(is); 
 
 	switch (insn->type) {
-	case INSN_ADD_DISP_REG:
+	case INSN_ADD_MEMBASE_REG:
 		x86_emit_add_disp8_reg(is, insn->src.reg, insn->src.disp,
 				       insn->dest.reg);
 		break;
@@ -255,21 +255,21 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 	case INSN_CALL_REL:
 		x86_emit_call(is, (void *)insn->operand.rel);
 		break;
-	case INSN_CMP_DISP_REG:
+	case INSN_CMP_MEMBASE_REG:
 		x86_emit_cmp_disp8_reg(is, insn->src.reg, insn->src.disp,
 				       insn->dest.reg);
 		break;
 	case INSN_JE_BRANCH:
 		x86_emit_branch(is, insn);
 		break;
-	case INSN_MOV_DISP_REG:
+	case INSN_MOV_MEMBASE_REG:
 		x86_emit_mov_disp8_reg(is, insn->src.reg, insn->src.disp,
 				       insn->dest.reg);
 		break;
 	case INSN_MOV_IMM_REG:
 		x86_emit_mov_imm32_reg(is, insn->src.imm, insn->dest.reg);
 		break;
-	case INSN_MOV_IMM_DISP:
+	case INSN_MOV_IMM_MEMBASE:
 		x86_emit_mov_imm_disp(is, &insn->src, &insn->dest); 
 		break;
 	case INSN_PUSH_IMM:
