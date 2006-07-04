@@ -11,14 +11,21 @@
 #include <bytecodes.h>
 #include <vm/byteorder.h>
 
+#include <assert.h>
+
 static unsigned char bytecode_sizes[];
 
 unsigned long bytecode_size(unsigned char *bc_start)
 {
-	if (*bc_start == OPC_WIDE)
-		return bytecode_sizes[OPC_WIDE] + bytecode_sizes[*++bc_start];
+	unsigned long size;
 
-	return bytecode_sizes[*bc_start];
+	if (*bc_start == OPC_WIDE)
+		size = bytecode_sizes[OPC_WIDE] + bytecode_sizes[*++bc_start];
+	else
+		size = bytecode_sizes[*bc_start];
+
+	assert(size > 0);
+	return size;
 }
 
 bool bytecode_is_branch(unsigned char opc)

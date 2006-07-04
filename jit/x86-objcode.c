@@ -240,6 +240,13 @@ static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
 	x86_emit_je_rel(is, addr);
 }
 
+static void x86_emit_indirect_jmp(struct insn_sequence *is,
+				  struct operand *operand)
+{
+	x86_emit(is, 0xff);
+	x86_emit(is, x86_mod_rm(3, 4, encode_reg(operand->reg)));
+}
+
 static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 {
 	insn->offset = is_offset(is); 
@@ -261,6 +268,9 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_JE_BRANCH:
 		x86_emit_branch(is, insn);
+		break;
+	case INSN_JMP_REGISTER:
+		x86_emit_indirect_jmp(is, &insn->operand);
 		break;
 	case INSN_MOV_MEMBASE_REG:
 		x86_emit_mov_disp8_reg(is, insn->src.reg, insn->src.disp,

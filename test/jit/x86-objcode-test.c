@@ -180,6 +180,13 @@ void test_emit_call_forward(void)
 	assert_emit_call(after_code, code, ARRAY_SIZE(code));
 }
 
+void test_emit_indirect_call(void)
+{
+	assert_emit_insn_2(0xff, 0xe0, reg_insn(OPC_JMP, REG_EAX));
+	assert_emit_insn_2(0xff, 0xe3, reg_insn(OPC_JMP, REG_EBX));
+	assert_emit_insn_2(0xff, 0xe1, reg_insn(OPC_JMP, REG_ECX));
+}
+
 void test_emit_mov_imm(void)
 {
 	assert_emit_insn_6(0x8b, 0x05, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX));
