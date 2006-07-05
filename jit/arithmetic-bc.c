@@ -261,7 +261,7 @@ int convert_iinc(struct compilation_unit *cu, struct basic_block *bb,
 	struct statement *store_stmt;
 	struct expression *local_expression, *binop_expression,
 	    *const_expression;
-	unsigned char *code = cu->method->code;
+	unsigned char *code = cu->method->jit_code;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)

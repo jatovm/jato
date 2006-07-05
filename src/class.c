@@ -368,8 +368,13 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
                 READ_U2(method->max_locals, ptr, len);
 
                 READ_U4(code_length, ptr, len);
-                method->code = (char *)sysMalloc(code_length);
+
+                method->code = sysMalloc(code_length);
                 memcpy(method->code, ptr, code_length);
+
+                method->jit_code = sysMalloc(code_length);
+                memcpy(method->jit_code, ptr, code_length);
+
                 ptr += code_length;
 
                 method->code_size = code_length;

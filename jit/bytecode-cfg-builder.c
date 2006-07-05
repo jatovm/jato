@@ -23,7 +23,7 @@ static void bb_end_after_branch(struct compilation_unit *cu,
 {
 	struct basic_block *bb;
 	unsigned long prev, offset = 0;
-	unsigned char *code = cu->method->code;
+	unsigned char *code = cu->method->jit_code;
 
 	bb = entry_bb;
 
@@ -55,7 +55,7 @@ static void bb_start_at_branch_target(struct compilation_unit *cu,
 				list_add_tail(&bb->bb_list_node, &cu->bb_list);
 			}
 		}
-		offset += bytecode_size(cu->method->code + offset);
+		offset += bytecode_size(cu->method->jit_code + offset);
 	}
 }
 

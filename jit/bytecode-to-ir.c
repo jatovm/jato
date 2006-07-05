@@ -229,7 +229,7 @@ int convert_to_ir(struct compilation_unit *cu)
 {
 	int err = 0;
 	unsigned long code_size = cu->method->code_size;
-	unsigned char *code = cu->method->code;
+	unsigned char *code = cu->method->jit_code;
 	unsigned long offset = 0;
 	struct basic_block *entry_bb;
 

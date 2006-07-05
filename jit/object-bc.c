@@ -22,7 +22,7 @@ int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 	unsigned short index;
 	struct expression *value;
 
-	index = cp_index(cu->method->code + offset + 1);
+	index = cp_index(cu->method->jit_code + offset + 1);
 
 	fb = resolveField(cu->method->class, index);
 	if (!fb)
@@ -44,7 +44,7 @@ int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 	struct statement *store_stmt;
 	struct expression *dest, *src;
 
-	index = cp_index(cu->method->code + offset + 1);
+	index = cp_index(cu->method->jit_code + offset + 1);
 
 	fb = resolveField(cu->method->class, index);
 	if (!fb)

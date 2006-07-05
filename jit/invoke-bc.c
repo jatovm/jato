@@ -50,7 +50,7 @@ static struct expression *insert_arg(struct expression *root,
 	if (!root)
 		return arg_expr(expr);
 
-	return args_list_expr(root, arg_expr(expr));
+	return args_list_expr(arg_expr(expr), root);
 }
 
 static struct expression *convert_args(struct stack *expr_stack,
@@ -107,7 +107,7 @@ int convert_invokevirtual(struct compilation_unit *cu,
 	struct expression *invoke_expr;
 	struct expression *args_list;
 
-	method_index = cp_index(cu->method->code + offset + 1);
+	method_index = cp_index(cu->method->jit_code + offset + 1);
 
 	target_method = resolveMethod(cu->method->class, method_index);
 	if (!target_method)
@@ -144,7 +144,7 @@ int convert_invokestatic(struct compilation_unit *cu,
 	struct expression *inv_expr;
 	struct expression *args_list;
 
-	method_index = cp_index(cu->method->code + offset + 1);
+	method_index = cp_index(cu->method->jit_code + offset + 1);
 
 	target_method = resolveMethod(cu->method->class, method_index);
 	if (!target_method)

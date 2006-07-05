@@ -66,6 +66,12 @@ static inline unsigned char x86_mod_rm(unsigned char mod,
 	return ((mod & 0x3) << 6) | ((reg_opcode & 0x7) << 3) | (rm & 0x7);
 }
 
+static inline unsigned char x86_sib(unsigned char scale, unsigned char index,
+				    unsigned char base)
+{
+	return ((scale & 0x3) << 6) | ((index & 0x7) << 3) | (base & 0x7);
+}
+
 static inline void x86_emit(struct insn_sequence *is, unsigned char c)
 {
 	assert(is->current != is->end);
@@ -76,11 +82,23 @@ static inline void x86_emit_disp8_reg(struct insn_sequence *is,
 				      unsigned char opc, enum reg base_reg,
 				      unsigned char disp8, enum reg dest_reg)
 {
-	unsigned char mod_rm;
-	
-	mod_rm = x86_mod_rm(0x01, encode_reg(dest_reg), encode_reg(base_reg));
+	unsigned char rm, mod_rm;
+	int needs_sib;
+
+	needs_sib = (base_reg == REG_ESP);
+
+	if (needs_sib)
+		rm = 0x04;
+	else
+		rm = encode_reg(base_reg);
+
+	mod_rm = x86_mod_rm(0x01, encode_reg(dest_reg), rm);
 	x86_emit(is, opc);
 	x86_emit(is, mod_rm);
+
+	if (needs_sib)
+		x86_emit(is, x86_sib(0x00, 0x04, encode_reg(base_reg)));
+
 	x86_emit(is, disp8);
 }
 

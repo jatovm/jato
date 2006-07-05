@@ -25,7 +25,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	struct compilation_unit *cu;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -71,7 +71,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	struct compilation_unit *cu;
 	unsigned char code[] = { opc, 0, TARGET_OFFSET };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -123,7 +123,7 @@ void test_convert_goto(void)
 	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 

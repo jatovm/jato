@@ -56,7 +56,7 @@ static void assert_convert_const(enum jvm_type expected_jvm_type,
 {
 	unsigned char code[] = { actual };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	__assert_convert_const(expected_jvm_type, expected_value, &method);
@@ -68,7 +68,7 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 	struct expression *expr;
 	unsigned char code[] = { actual };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
@@ -87,7 +87,7 @@ void test_convert_nop(void)
 {
 	unsigned char code[] = { OPC_NOP };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
@@ -142,7 +142,7 @@ static void assert_convert_bipush(char expected_value, char actual)
 {
 	unsigned char code[] = { actual, expected_value };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	__assert_convert_const(J_INT, expected_value, &method);
@@ -160,7 +160,7 @@ static void assert_convert_sipush(long long expected_value,
 {
 	unsigned char code[] = { actual, first, second };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	__assert_convert_const(J_INT, expected_value, &method);
@@ -186,7 +186,7 @@ static void assert_convert_ldc(enum jvm_type expected_jvm_type,
 	unsigned char code[] = { OPC_LDC, 0x00, 0x00 };
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -209,7 +209,7 @@ static void assert_convert_ldc_f(float expected_value)
 	unsigned char code[] = { OPC_LDC, 0x00, 0x00 };
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -251,7 +251,7 @@ static void assert_convert_ldcw(enum jvm_type expected_jvm_type,
 	unsigned char code[] = { opcode, 0x01, 0x00 };
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -278,7 +278,7 @@ static void assert_convert_ldcw_f(enum jvm_type expected_jvm_type,
 	struct expression *expr;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -353,7 +353,7 @@ static void __assert_convert_load(unsigned char *code,
 	struct expression *expr;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = size,
 	};
 
@@ -471,7 +471,7 @@ static void assert_convert_array_load(enum jvm_type expected_type,
 	struct expression *arrayref_expr, *index_expr, *temporary_expr;
 	struct statement *stmt;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
@@ -565,7 +565,7 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	struct statement *stmt;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = size,
 	};
 
@@ -685,7 +685,7 @@ static void assert_convert_array_store(enum jvm_type expected_type,
 	struct statement *stmt;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -772,7 +772,7 @@ static void assert_pop_stack(unsigned char opc)
 {
 	unsigned char code[] = { opc };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
@@ -799,7 +799,7 @@ static void assert_dup_stack(unsigned char opc, void *expected)
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -829,7 +829,7 @@ static void assert_dup_x1_stack(unsigned char opc,
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -862,7 +862,7 @@ static void assert_dup_x2_stack(unsigned char opc,
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -896,7 +896,7 @@ static void assert_swap_stack(unsigned char opc,
 	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -927,7 +927,7 @@ static void assert_conversion_expr_stack(unsigned char opc,
 	struct expression *expression, *conversion_expression;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -987,7 +987,7 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 	struct expression *left, *right, *cmp_expression;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
@@ -1031,7 +1031,7 @@ static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 	struct compilation_unit *cu;
 	unsigned char code[] = { opc };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct statement *ret_stmt;
@@ -1063,7 +1063,7 @@ void test_convert_void_return(void)
 	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_RETURN };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct statement *ret_stmt;
@@ -1117,7 +1117,7 @@ void test_converts_complete_basic_block(void)
 	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_ILOAD_0, OPC_ILOAD_1, OPC_IADD, OPC_IRETURN };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
  

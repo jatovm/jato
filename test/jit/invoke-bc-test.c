@@ -50,9 +50,9 @@ static void assert_args(struct expression **expected_args,
 	i = 0;
 	while (i < nr_args) {
 		if (expr_type(tree) == EXPR_ARGS_LIST) {
-			struct expression *expr = to_expr(tree->node.kids[1]);
+			struct expression *expr = to_expr(tree->node.kids[0]);
 			actual_args[i++] = to_expr(expr->arg_expression);
-			tree = to_expr(tree->node.kids[0]);
+			tree = to_expr(tree->node.kids[1]);
 		} else if (expr_type(tree) == EXPR_ARG) {
 			actual_args[i++] = to_expr(tree->arg_expression);
 			break;
@@ -95,7 +95,7 @@ create_invokevirtual_unit(char *type, unsigned long nr_args,
 		OPC_INVOKEVIRTUAL, (method_index >> 8) & 0xff, method_index & 0xff,
 	};
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct expression *objectref_expr;
@@ -178,7 +178,7 @@ static void assert_invokevirtual_with_args(unsigned long nr_args)
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
 	args_list_expr = to_expr(invoke_expr->args_list);
-	second_arg = to_expr(args_list_expr->args_left);
+	second_arg = to_expr(args_list_expr->args_right);
 
 	assert_args(args, ARRAY_SIZE(args), second_arg);
 
@@ -223,7 +223,7 @@ static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 		OPC_IRETURN
 	};
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
@@ -266,7 +266,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 		OPC_INVOKESTATIC, 0x00, 0x00,
 	};
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
@@ -294,7 +294,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 		OPC_POP
 	};
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;

@@ -60,6 +60,14 @@ static void assert_emit_insn_3(unsigned char opcode, unsigned char modrm,
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
+static void assert_emit_insn_4(unsigned char opcode, unsigned char modrm,
+			       unsigned char b1, unsigned char b2, struct insn *insn)
+{
+	unsigned char expected[] = { opcode, modrm, b1, b2 };
+
+	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
+}
+
 static void assert_emit_insn_6(unsigned char opcode, unsigned char modrm,
 			       unsigned char b1, unsigned char b2,
 			       unsigned char b3, unsigned char b4,
@@ -210,6 +218,7 @@ void test_emit_mov_disp_reg(void)
 	assert_emit_insn_3(0x8b, 0x5D, 0x08, membase_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EBX));
 	assert_emit_insn_3(0x8b, 0x4D, 0x08, membase_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_ECX));
 	assert_emit_insn_3(0x8b, 0x55, 0x08, membase_reg_insn(OPC_MOV, REG_EBP, 0x08, REG_EDX));
+	assert_emit_insn_4(0x8b,  0x44, 0x24, 0x00, membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX));
 }
 
 void test_emit_add_disp_reg(void)

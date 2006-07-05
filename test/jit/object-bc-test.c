@@ -26,7 +26,7 @@ static void assert_convert_getstatic(enum jvm_type expected_jvm_type,
 	struct expression *expr;
 	unsigned char code[] = { OPC_GETSTATIC, 0x00, 0x00 };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
@@ -64,7 +64,7 @@ static void assert_convert_putstatic(enum jvm_type expected_jvm_type,
 	struct statement *stmt;
 	unsigned char code[] = { OPC_PUTSTATIC, 0x00, 0x00 };
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;

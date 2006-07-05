@@ -23,7 +23,7 @@ void test_branch_opcode_ends_basic_block(void)
 	struct basic_block *bb1, *bb2, *bb3;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = default_string,
+		.jit_code = default_string,
 		.code_size = ARRAY_SIZE(default_string)
 	};
 	
@@ -57,7 +57,7 @@ void test_multiple_branches(void)
 {
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = greater_than_zero,
+		.jit_code = greater_than_zero,
 		.code_size = ARRAY_SIZE(greater_than_zero) 
 	};
 

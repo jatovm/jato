@@ -434,6 +434,7 @@ typedef struct methodblock {
    int native_extra_arg;
    void *native_invoker;
    void *code;
+   void *jit_code;
    unsigned int code_size;
    u2 *throw_table;
    ExceptionTableEntry *exception_table;

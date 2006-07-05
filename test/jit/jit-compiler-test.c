@@ -19,7 +19,7 @@ void test_executing_jit_compiled_function(void)
 	struct compilation_unit *cu;
 	sum_fn function;
 	struct methodblock method = {
-		.code = sum_bytecode,
+		.jit_code = sum_bytecode,
 		.code_size = ARRAY_SIZE(sum_bytecode)
 	};
 	
@@ -38,7 +38,7 @@ void test_magic_trampoline_compiles_uncompiled(void)
 	void *objcode;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = sum_bytecode,
+		.jit_code = sum_bytecode,
 		.code_size = ARRAY_SIZE(sum_bytecode)
 	};
 	cu = alloc_compilation_unit(&method);
@@ -57,7 +57,7 @@ void test_magic_trampoline_compiles_once(void)
 	void *objcode;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = sum_bytecode,
+		.jit_code = sum_bytecode,
 		.code_size = ARRAY_SIZE(sum_bytecode)
 	};
 
@@ -76,7 +76,7 @@ void test_jit_method_trampoline_compiles_and_invokes_method(void)
 	struct jit_trampoline *t;
 	sum_fn function;
 	struct methodblock method = {
-		.code = sum_bytecode,
+		.jit_code = sum_bytecode,
 		.code_size = ARRAY_SIZE(sum_bytecode)
 	};
 
@@ -96,7 +96,7 @@ static char java_main[] = { OPC_RETURN };
 void test_jit_prepare_for_exec_returns_trampoline_objcode(void)
 {
 	struct methodblock mb;
-	mb.code = java_main;
+	mb.jit_code = java_main;
 	mb.code_size = ARRAY_SIZE(java_main);
 	mb.compilation_unit = NULL;
 	void *actual = jit_prepare_for_exec(&mb);

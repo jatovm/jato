@@ -34,7 +34,7 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 	struct expression *left, *right, *expr;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code)
 	};
 
@@ -104,7 +104,7 @@ static void assert_convert_unop(enum jvm_type jvm_type,
 	struct expression *expression, *unary_expression;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code)
 	};
 
@@ -170,7 +170,7 @@ static void assert_iinc_stmt(unsigned char expected_index,
 	struct tree_node *local_expression, *const_expression;
 	struct compilation_unit *cu;
 	struct methodblock method = {
-		.code = code,
+		.jit_code = code,
 		.code_size = ARRAY_SIZE(code)
 	};
 

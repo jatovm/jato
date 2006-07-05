@@ -454,6 +454,26 @@ static int print_invoke_expr(int lvl, struct string *str,
 	return err;
 }
 
+static int print_invokevirtual_expr(int lvl, struct string *str,
+				    struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "INVOKEVIRTUAL:\n");
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "method_index", "%lu",
+				 expr->method_index);
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "args_list", expr->args_list);
+
+      out:
+	return err;
+}
+
 static int print_args_list_expr(int lvl, struct string *str,
 				struct expression *expr)
 {
@@ -507,6 +527,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_CONVERSION] = print_conversion_expr,
 	[EXPR_FIELD] = print_field_expr,
 	[EXPR_INVOKE] = print_invoke_expr,
+	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_ARGS_LIST] = print_args_list_expr,
 	[EXPR_ARG] = print_arg_expr,
 	[EXPR_NO_ARGS] = print_no_args_expr,
