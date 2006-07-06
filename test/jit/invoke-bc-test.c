@@ -50,9 +50,9 @@ static void assert_args(struct expression **expected_args,
 	i = 0;
 	while (i < nr_args) {
 		if (expr_type(tree) == EXPR_ARGS_LIST) {
-			struct expression *expr = to_expr(tree->node.kids[0]);
+			struct expression *expr = to_expr(tree->node.kids[1]);
 			actual_args[i++] = to_expr(expr->arg_expression);
-			tree = to_expr(tree->node.kids[1]);
+			tree = to_expr(tree->node.kids[0]);
 		} else if (expr_type(tree) == EXPR_ARG) {
 			actual_args[i++] = to_expr(tree->arg_expression);
 			break;
@@ -178,7 +178,7 @@ static void assert_invokevirtual_with_args(unsigned long nr_args)
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
 	args_list_expr = to_expr(invoke_expr->args_list);
-	second_arg = to_expr(args_list_expr->args_right);
+	second_arg = to_expr(args_list_expr->args_left);
 
 	assert_args(args, ARRAY_SIZE(args), second_arg);
 
