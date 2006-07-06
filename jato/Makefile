@@ -6,7 +6,7 @@ CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
 INCLUDE = -I. -I../src -I./glib -I../include -I../jit -I../jit/glib
-LIBS = -lpthread -lm -ldl -lz
+LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
 OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../src/direct.o ../src/dll.o ../src/excep.o ../src/execute.o \
 	../src/hash.o ../src/interp.o ../src/jni.o ../src/lock.o \
@@ -22,7 +22,8 @@ OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../jit/insn-selector.o ../jit/arithmetic-bc.o ../jit/load-store-bc.o \
 	../vm/backtrace.o ../jit/ostack-bc.o ../jit/typeconv-bc.o \
 	../jit/object-bc.o ../jit/jvm_types.o ../vm/string.o ../jit/tree-printer.o \
-	../jit/branch-bc.o ../jit/invoke-bc.o ../jit/x86-frame.o
+	../jit/branch-bc.o ../jit/invoke-bc.o ../jit/x86-frame.o ../jit/disass-common.o \
+	../jit/disass.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
 # as parameter to make.
