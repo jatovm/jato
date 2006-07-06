@@ -139,8 +139,7 @@ static void x86_emit_imm32(struct insn_sequence *is, int imm)
 
 void x86_emit_mov_imm32_reg(struct insn_sequence *is, unsigned long imm, enum reg reg)
 {
-	x86_emit(is, 0x8b);
-	x86_emit(is, x86_mod_rm(0x00, encode_reg(reg), 0x05));
+	x86_emit(is, 0xb8 + encode_reg(reg));
 	x86_emit_imm32(is, imm);
 }
 
