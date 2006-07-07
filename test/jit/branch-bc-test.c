@@ -143,3 +143,13 @@ void test_convert_goto(void)
 
 	free_compilation_unit(cu);
 }
+
+void test_convert_ifnull(void)
+{
+	assert_convert_if(OP_EQ, OPC_IFNULL);
+}
+
+void test_convert_ifnonnull(void)
+{
+	assert_convert_if(OP_NE, OPC_IFNONNULL);
+}

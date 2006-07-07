@@ -190,3 +190,15 @@ int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
 	bb_insert_stmt(bb, goto_stmt);
 	return 0;
 }
+
+int convert_ifnull(struct compilation_unit *cu, struct basic_block *bb,
+		   unsigned long offset)
+{
+	return convert_if(cu, bb, offset, OP_EQ);
+}
+
+int convert_ifnonnull(struct compilation_unit *cu, struct basic_block *bb,
+		   unsigned long offset)
+{
+	return convert_if(cu, bb, offset, OP_NE);
+}

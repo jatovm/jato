@@ -213,6 +213,8 @@ static convert_fn_t converters[] = {
 	[OPC_PUTSTATIC] = convert_putstatic,
 	[OPC_INVOKEVIRTUAL] = convert_invokevirtual,
 	[OPC_INVOKESTATIC] = convert_invokestatic,
+	[OPC_IFNULL] = convert_ifnull,
+	[OPC_IFNONNULL] = convert_ifnonnull,
 };
 
 /**
