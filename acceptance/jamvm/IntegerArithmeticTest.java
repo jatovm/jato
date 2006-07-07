@@ -43,6 +43,6 @@ public class IntegerArithmeticTest {
     public static void main(String[] args) {
         testIntegerAddition();
         testIntegerAdditionOverflow();
-        System.exit(retval);
+        Runtime.getRuntime().halt(retval);
     }
 }

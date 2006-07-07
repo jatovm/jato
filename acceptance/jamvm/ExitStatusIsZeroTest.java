@@ -11,6 +11,6 @@ package jamvm;
  */
 public class ExitStatusIsZeroTest {
     public static void main(String[] args) {
-        System.exit(0);
+        Runtime.getRuntime().halt(0);
     }
 }

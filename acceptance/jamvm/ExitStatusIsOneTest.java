@@ -11,6 +11,6 @@ package jamvm;
  */
 public class ExitStatusIsOneTest {
     public static void main(String[] args) {
-        System.exit(1);
+        Runtime.getRuntime().halt(1);
     }
 }
