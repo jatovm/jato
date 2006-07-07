@@ -85,11 +85,13 @@ static struct compilation_unit *
 create_invokevirtual_unit(char *type, unsigned long nr_args,
 			  unsigned long objectref,
 			  unsigned short method_index,
+			  unsigned short method_table_idx,
 			  struct expression **args)
 {
 	struct methodblock target_method = {
 		.type = type,
 		.args_count = nr_args,
+		.method_table_index = method_table_idx,
 	};
 	unsigned char code[] = {
 		OPC_INVOKEVIRTUAL, (method_index >> 8) & 0xff, method_index & 0xff,
@@ -118,7 +120,7 @@ void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
 	struct statement *stmt;
 	struct expression *invoke_expr;
 
-	cu = create_invokevirtual_unit("()V", 1, 0, 0, NULL);
+	cu = create_invokevirtual_unit("()V", 1, 0, 0, 0, NULL);
 
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
@@ -134,13 +136,13 @@ void test_invokevirtual_should_parse_method_index_for_expr(void)
 	struct statement *stmt;
 	struct expression *invoke_expr;
 
-	cu = create_invokevirtual_unit("()V", 1, 0, 0xcafe, NULL);
+	cu = create_invokevirtual_unit("()V", 1, 0, 0xcafe, 0xbabe, NULL);
 
 	stmt = first_stmt(cu);
 	assert_not_null(stmt->expression);
 	invoke_expr = to_expr(stmt->expression);
 
-	assert_int_equals(0xcafe, invoke_expr->method_index);
+	assert_int_equals(0xbabe, invoke_expr->method_index);
 
 	free_compilation_unit(cu);
 }
@@ -152,7 +154,7 @@ void test_invokevirtual_should_pass_objectref_as_first_argument(void)
 	struct expression *invoke_expr;
 	struct expression *arg_expr;
 
-	cu = create_invokevirtual_unit("()V", 1, 0xdeadbeef, 0, NULL);
+	cu = create_invokevirtual_unit("()V", 1, 0xdeadbeef, 0, 0, NULL);
 
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
@@ -173,7 +175,7 @@ static void assert_invokevirtual_with_args(unsigned long nr_args)
 	struct expression *second_arg;
 
 	create_args(args, ARRAY_SIZE(args));
-	cu = create_invokevirtual_unit("()V", nr_args+1, 0, 0, args);
+	cu = create_invokevirtual_unit("()V", nr_args+1, 0, 0, 0, args);
 
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
@@ -197,7 +199,7 @@ static void assert_invokevirtual_return_type(enum jvm_type expected, char *type)
 	struct compilation_unit *cu;
 	struct expression *invoke_expr;
 
-	cu = create_invokevirtual_unit(type, 1, 0, 0, NULL);
+	cu = create_invokevirtual_unit(type, 1, 0, 0, 0, NULL);
 	invoke_expr = stack_pop(cu->expr_stack);
 	assert_int_equals(expected, invoke_expr->jvm_type);
 

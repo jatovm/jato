@@ -114,7 +114,7 @@ int convert_invokevirtual(struct compilation_unit *cu,
 		return -EINVAL;
 
 	return_type = method_return_type(target_method);
-	invoke_expr = invokevirtual_expr(return_type, method_index);
+	invoke_expr = invokevirtual_expr(return_type, target_method->method_table_index);
 	if(!invoke_expr)
 		return -ENOMEM;
 
