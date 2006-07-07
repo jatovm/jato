@@ -13,9 +13,7 @@
 #include <jit-compiler.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
-#include <jit/tree-printer.h>
 #include <jit/x86-frame.h>
-#include <vm/string.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -219,20 +217,6 @@ static void free_state(MBState *state)
 	g_free(state);
 }
 
-#if 0
-static void print_tree(struct tree_node *node)
-{
-	struct string *str = alloc_str();
-	tree_print(node, str);
-	printf(str->value);
-	free_str(str);
-}
-#else
-static inline void print_tree(struct tree_node *node)
-{
-}
-#endif
-
 void insn_select(struct basic_block *bb)
 {
 	struct statement *stmt;
@@ -241,7 +225,6 @@ void insn_select(struct basic_block *bb)
 	mono_burg_init();
 
 	list_for_each_entry(stmt, &bb->stmt_list, stmt_list_node) {
-		print_tree(&stmt->node);
 		state = mono_burg_label(&stmt->node, bb);
 		emit_code(bb, state, MB_NTERM_stmt);
 		free_state(state);

@@ -55,6 +55,7 @@ char VM_initing = TRUE;
 extern void initialisePlatform();
 
 extern int show_disasm;
+extern int show_tree;
 
 void initVM() {
     /* Perform platform dependent initialisation */
@@ -282,8 +283,12 @@ int parseCommandLine(int argc, char *argv[]) {
         } else if(strcmp(argv[i], "-Xcompactalways") == 0) {
             compact_specified = do_compact = TRUE;
 
-	} else if(strcmp(argv[i], "-Xdisasm") == 0) {
-	    show_disasm = 1;
+        } else if(strcmp(argv[i], "-Xdisasm") == 0) {
+          show_disasm = 1;
+
+        } else if(strcmp(argv[i], "-Xdumptree") == 0) {
+          show_tree = 1;
+
         } else {
             printf("Unrecognised command line option: %s\n", argv[i]);
             break;

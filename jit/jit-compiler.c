@@ -12,6 +12,8 @@
 #include <jit/statement.h>
 #include <insn-selector.h>
 #include <x86-objcode.h>
+#include <vm/string.h>
+#include <jit/tree-printer.h>
 
 #include "disass.h"
 
@@ -22,11 +24,38 @@
 #define OBJCODE_SIZE 256
 
 int show_disasm;
+int show_tree;
+
+static void print_method_info(struct methodblock *method)
+{
+	printf("Method: %s, Class: %s\n", method->name, CLASS_CB(method->class)->name);
+}
 
 static void print_disasm(struct methodblock *method, void *start, void *end)
 {
-	printf("Method: %s, Class: %s\n", method->name, CLASS_CB(method->class)->name);
+	print_method_info(method);
 	disassemble(start, end);
+	printf("\n");
+}
+
+static void print_tree(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	struct statement *stmt;
+	struct string *str;
+	
+	print_method_info(cu->method);
+
+	str = alloc_str();
+
+	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+		list_for_each_entry(stmt, &bb->stmt_list, stmt_list_node)
+			tree_print(&stmt->node, str);
+	}
+
+	printf(str->value);
+	printf("\n");
+	free_str(str);
 }
 
 int jit_compile(struct compilation_unit *cu)
@@ -41,6 +70,9 @@ int jit_compile(struct compilation_unit *cu)
 	err = convert_to_ir(cu);
 	if (err)
 		goto out;
+
+	if (show_tree)
+		print_tree(cu);
 
 	insn_select(bb_entry(cu->bb_list.next));
 
