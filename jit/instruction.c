@@ -27,7 +27,7 @@ void free_insn(struct insn *insn)
 }
 
 struct insn *membase_reg_insn(enum insn_opcode insn_op, enum reg src_base_reg,
-			   unsigned long src_disp, enum reg dest_reg)
+			      long src_disp, enum reg dest_reg)
 {
 	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_2(insn_op, OPERAND_MEMBASE, OPERAND_REGISTER));
 	if (insn) {
@@ -39,7 +39,7 @@ struct insn *membase_reg_insn(enum insn_opcode insn_op, enum reg src_base_reg,
 }
 
 struct insn *reg_membase_insn(enum insn_opcode insn_op, enum reg src_reg,
-			      enum reg dest_base_reg, unsigned long dest_disp)
+			      enum reg dest_base_reg, long dest_disp)
 {
 	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_2(insn_op, OPERAND_REGISTER, OPERAND_MEMBASE));
 	if (insn) {
@@ -62,7 +62,7 @@ struct insn *imm_reg_insn(enum insn_opcode insn_op, unsigned long imm,
 }
 
 struct insn *imm_membase_insn(enum insn_opcode insn_op, unsigned long imm,
-			   enum reg base_reg, unsigned long disp)
+			   enum reg base_reg, long disp)
 {
 	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_2(insn_op, OPERAND_IMMEDIATE, OPERAND_MEMBASE));
 	if (insn) {

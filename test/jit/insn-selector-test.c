@@ -12,7 +12,7 @@
 
 static void assert_membase_reg_insn(enum insn_opcode insn_op,
 				    enum reg src_base_reg,
-				    unsigned long src_displacement,
+				    long src_displacement,
 				    enum reg dest_reg,
 				    struct insn *insn)
 {
@@ -25,7 +25,7 @@ static void assert_membase_reg_insn(enum insn_opcode insn_op,
 static void assert_reg_membase_insn(enum insn_opcode insn_op,
 				    enum reg src_reg,
 				    enum reg dest_reg,
-				    unsigned long dest_displacement,
+				    long dest_displacement,
 				    struct insn *insn)
 {
 	assert_int_equals(DEFINE_INSN_TYPE_2(insn_op, OPERAND_REGISTER, OPERAND_MEMBASE), insn->type);
@@ -61,7 +61,7 @@ static void assert_imm_reg_insn(enum insn_opcode expected_opc,
 static void assert_imm_membase_insn(enum insn_opcode expected_opc,
 				    unsigned long expected_imm,
 				    enum reg expected_base_reg,
-				    unsigned long expected_disp,
+				    long expected_disp,
 				    struct insn *insn)
 {
 	assert_int_equals(DEFINE_INSN_TYPE_2(expected_opc, OPERAND_IMMEDIATE, OPERAND_MEMBASE), insn->type);
@@ -367,7 +367,7 @@ void test_should_select_mov_insns_for_field_load(void)
 	struct expression *expr;
 	struct statement *stmt;
 	struct fieldblock field;
-	unsigned long expected_disp;
+	long expected_disp;
 
 	expr = field_expr(J_INT, &field);
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -394,7 +394,7 @@ void test_should_select_mov_insn_for_field_store(void)
 	struct expression *store_value;
 	struct statement *stmt;
 	struct fieldblock field;
-	unsigned long expected_disp;
+	long expected_disp;
 
 	store_target = field_expr(J_INT, &field);
 	store_value  = value_expr(J_INT, 0xcafebabe);
@@ -415,7 +415,7 @@ void test_should_select_mov_insn_for_field_store(void)
 	free_basic_block(bb);
 }
 
-static void assert_store_field_to_local(unsigned long expected_disp, unsigned long local_idx)
+static void assert_store_field_to_local(long expected_disp, unsigned long local_idx)
 {
 	struct fieldblock field;
 	struct expression *store_dest, *store_src;

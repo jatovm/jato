@@ -22,7 +22,7 @@ struct operand {
 		/* OPERAND_MEMBASE */
 		struct {
 			enum reg base_reg;
-			unsigned long disp;	/* displacement */
+			long disp;	/* displacement */
 		};
 
 		/* OPERAND_IMMEDIATE */
@@ -106,11 +106,11 @@ static inline struct insn *insn_entry(struct list_head *head)
 	return list_entry(head, struct insn, insn_list_node);
 }
 
-struct insn *membase_reg_insn(enum insn_opcode, enum reg, unsigned long, enum reg);
-struct insn *reg_membase_insn(enum insn_opcode, enum reg, enum reg, unsigned long);
+struct insn *membase_reg_insn(enum insn_opcode, enum reg, long, enum reg);
+struct insn *reg_membase_insn(enum insn_opcode, enum reg, enum reg, long);
 struct insn *reg_insn(enum insn_opcode, enum reg);
 struct insn *imm_reg_insn(enum insn_opcode, unsigned long, enum reg);
-struct insn *imm_membase_insn(enum insn_opcode, unsigned long, enum reg, unsigned long);
+struct insn *imm_membase_insn(enum insn_opcode, unsigned long, enum reg, long);
 struct insn *imm_insn(enum insn_opcode, unsigned long);
 struct insn *rel_insn(enum insn_opcode, unsigned long);
 struct insn *branch_insn(enum insn_opcode, struct statement *);
