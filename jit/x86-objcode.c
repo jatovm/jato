@@ -183,9 +183,9 @@ void x86_emit_prolog(struct insn_sequence *is)
 	x86_emit_mov_reg_reg(is, REG_ESP, REG_EBP);
 }
 
-static void x86_emit_pop_ebp(struct insn_sequence *is)
+static void x86_emit_pop_reg(struct insn_sequence *is, enum reg reg)
 {
-	x86_emit(is, 0x5d);
+	x86_emit(is, 0x58 + encode_reg(reg));
 }
 
 static void x86_emit_push_imm32(struct insn_sequence *is, unsigned long imm)
@@ -211,7 +211,7 @@ void x86_emit_ret(struct insn_sequence *is)
 
 void x86_emit_epilog(struct insn_sequence *is)
 {
-	x86_emit_pop_ebp(is);
+	x86_emit_pop_reg(is, REG_EBP);
 	x86_emit_ret(is);
 }
 
