@@ -132,7 +132,7 @@ void test_emit_epilog_no_locals(void)
 
 void test_emit_epilog_has_locals(void)
 {
-	unsigned char expected[] = { 0x81, 0xc4, 0x80, 0x00, 0x00, 0x00, 0x5d, 0xc3 };
+	unsigned char expected[] = { 0xc9, 0xc3 };
 	unsigned char actual[ARRAY_SIZE(expected)];
 	struct insn_sequence is;
 	
