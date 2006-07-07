@@ -177,10 +177,20 @@ static void x86_emit_mov_imm_disp(struct insn_sequence *is,
 	x86_emit_imm32(is, imm_operand->imm);
 }
 
-void x86_emit_prolog(struct insn_sequence *is)
+static void x86_emit_sub_imm_reg(struct insn_sequence *is, unsigned long imm, enum reg reg)
+{
+	x86_emit(is, 0x81);
+	x86_emit(is, x86_mod_rm(0x03, 0x05, encode_reg(reg)));
+	x86_emit_imm32(is, imm);
+}
+
+void x86_emit_prolog(struct insn_sequence *is, unsigned long nr_locals)
 {
 	x86_emit_push_reg(is, REG_EBP);
 	x86_emit_mov_reg_reg(is, REG_ESP, REG_EBP);
+
+	if (nr_locals)
+		x86_emit_sub_imm_reg(is, nr_locals, REG_ESP);
 }
 
 static void x86_emit_pop_reg(struct insn_sequence *is, enum reg reg)
@@ -209,8 +219,18 @@ void x86_emit_ret(struct insn_sequence *is)
 	x86_emit(is, 0xc3);
 }
 
-void x86_emit_epilog(struct insn_sequence *is)
+static void x86_emit_add_imm_reg(struct insn_sequence *is, unsigned long imm, enum reg reg)
 {
+	x86_emit(is, 0x81);
+	x86_emit(is, x86_mod_rm(0x03, 0x00, encode_reg(reg)));
+	x86_emit_imm32(is, imm);
+}
+
+void x86_emit_epilog(struct insn_sequence *is, unsigned long nr_locals)
+{
+	if (nr_locals)
+		x86_emit_add_imm_reg(is, nr_locals, REG_ESP);
+
 	x86_emit_pop_reg(is, REG_EBP);
 	x86_emit_ret(is);
 }

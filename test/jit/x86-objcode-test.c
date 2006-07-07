@@ -97,25 +97,47 @@ static void assert_emit_insn_7(unsigned char opcode, unsigned char modrm,
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
-void test_emit_prolog(void)
+void test_emit_prolog_no_locals(void)
 {
 	unsigned char expected[] = { 0x55, 0x89, 0xe5 };
 	unsigned char actual[3];
 	struct insn_sequence is;
 
 	init_insn_sequence(&is, actual, 3);
-	x86_emit_prolog(&is);
+	x86_emit_prolog(&is, 0);
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 }
 
-void test_emit_epilog(void)
+void test_emit_prolog_has_locals(void)
+{
+	unsigned char expected[] = { 0x55, 0x89, 0xe5, 0x81, 0xec, 0x80, 0x00, 0x00, 0x00 };
+	unsigned char actual[ARRAY_SIZE(expected)];
+	struct insn_sequence is;
+
+	init_insn_sequence(&is, actual, ARRAY_SIZE(expected));
+	x86_emit_prolog(&is, 0x80);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+}
+
+void test_emit_epilog_no_locals(void)
 {
 	unsigned char expected[] = { 0x5d, 0xc3 };
 	unsigned char actual[2];
 	struct insn_sequence is;
 	
 	init_insn_sequence(&is, actual, 2);
-	x86_emit_epilog(&is);
+	x86_emit_epilog(&is, 0);
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+}
+
+void test_emit_epilog_has_locals(void)
+{
+	unsigned char expected[] = { 0x81, 0xc4, 0x80, 0x00, 0x00, 0x00, 0x5d, 0xc3 };
+	unsigned char actual[ARRAY_SIZE(expected)];
+	struct insn_sequence is;
+	
+	init_insn_sequence(&is, actual, ARRAY_SIZE(expected));
+	x86_emit_epilog(&is, 0x80);
 	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 }
 

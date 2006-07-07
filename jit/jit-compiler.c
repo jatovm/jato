@@ -51,9 +51,9 @@ int jit_compile(struct compilation_unit *cu)
 	}
 	memset(cu->objcode, 0, OBJCODE_SIZE);
 	init_insn_sequence(&is, cu->objcode, OBJCODE_SIZE);
-	x86_emit_prolog(&is);
+	x86_emit_prolog(&is, 0);
 	x86_emit_obj_code(bb_entry(cu->bb_list.next), &is);
-	x86_emit_epilog(&is);
+	x86_emit_epilog(&is, 0);
 
 	if (show_disasm)
 		print_disasm(cu->method, is.start, is.current);
