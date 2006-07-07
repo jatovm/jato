@@ -163,6 +163,22 @@ stmt:	STMT_STORE(EXPR_FIELD, EXPR_VALUE)
 	bb_insert_insn(s, imm_membase_insn(OPC_MOV, field_value, REG_EAX, field_offset));
 }
 
+stmt:	STMT_STORE(EXPR_LOCAL, reg)
+{
+	struct statement *stmt;
+	struct expression *local;
+	unsigned long disp;
+
+	stmt = to_stmt(tree);
+	local = to_expr(stmt->store_dest);
+
+	/* FIXME: Only works if method has no arguments. We should figure out
+	   what index is the first real local variable and map that to
+	   $-0x04(%esp) instead.  */
+	disp = (local->local_index + 1) * -4;
+	bb_insert_insn(s, reg_membase_insn(OPC_MOV, REG_EAX, REG_ESP, disp));
+}
+
 stmt:	STMT_IF(reg)
 {
 	struct statement *stmt = to_stmt(tree);

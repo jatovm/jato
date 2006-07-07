@@ -13,12 +13,25 @@
 static void assert_membase_reg_insn(enum insn_opcode insn_op,
 				    enum reg src_base_reg,
 				    unsigned long src_displacement,
-				    enum reg dest_reg, struct insn *insn)
+				    enum reg dest_reg,
+				    struct insn *insn)
 {
 	assert_int_equals(DEFINE_INSN_TYPE_2(insn_op, OPERAND_MEMBASE, OPERAND_REGISTER), insn->type);
 	assert_int_equals(src_base_reg, insn->src.base_reg);
 	assert_int_equals(src_displacement, insn->src.disp);
 	assert_int_equals(dest_reg, insn->dest.reg);
+}
+
+static void assert_reg_membase_insn(enum insn_opcode insn_op,
+				    enum reg src_reg,
+				    enum reg dest_reg,
+				    unsigned long dest_displacement,
+				    struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE_2(insn_op, OPERAND_REGISTER, OPERAND_MEMBASE), insn->type);
+	assert_int_equals(src_reg, insn->src.reg);
+	assert_int_equals(dest_reg, insn->dest.base_reg);
+	assert_int_equals(dest_displacement, insn->dest.disp);
 }
 
 static void assert_reg_insn(enum insn_opcode expected_opc,
@@ -45,7 +58,7 @@ static void assert_imm_reg_insn(enum insn_opcode expected_opc,
 	assert_int_equals(expected_reg, insn->dest.reg);
 }
 
-static void assert_imm_regbase_insn(enum insn_opcode expected_opc,
+static void assert_imm_membase_insn(enum insn_opcode expected_opc,
 				    unsigned long expected_imm,
 				    enum reg expected_base_reg,
 				    unsigned long expected_disp,
@@ -397,7 +410,45 @@ void test_should_select_mov_insn_for_field_store(void)
 
 	insn = insn_next(insn);
 	expected_disp = offsetof(struct fieldblock, static_value);
-	assert_imm_regbase_insn(OPC_MOV, 0xcafebabe, REG_EAX, expected_disp, insn);
+	assert_imm_membase_insn(OPC_MOV, 0xcafebabe, REG_EAX, expected_disp, insn);
 
 	free_basic_block(bb);
+}
+
+static void assert_store_field_to_local(unsigned long expected_disp, unsigned long local_idx)
+{
+	struct fieldblock field;
+	struct expression *store_dest, *store_src;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
+
+	store_dest = local_expr(J_INT, local_idx);
+	store_src  = field_expr(J_INT, &field);
+
+	stmt = alloc_statement(STMT_STORE);
+	stmt->store_dest = &store_dest->node;
+	stmt->store_src  = &store_src->node;
+
+	bb = alloc_basic_block(0, 1);
+	bb_insert_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	insn = insn_entry(bb->insn_list.next);
+	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct fieldblock, static_value), REG_EAX, insn);
+
+	insn = insn_next(insn);
+	assert_reg_membase_insn(OPC_MOV, REG_EAX, REG_ESP, expected_disp, insn);
+
+	free_basic_block(bb);
+}
+
+void test_store_field_to_local(void)
+{
+	assert_store_field_to_local(-4, 0);
+	assert_store_field_to_local(-8, 1);
 }

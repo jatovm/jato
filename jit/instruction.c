@@ -38,6 +38,18 @@ struct insn *membase_reg_insn(enum insn_opcode insn_op, enum reg src_base_reg,
 	return insn;
 }
 
+struct insn *reg_membase_insn(enum insn_opcode insn_op, enum reg src_reg,
+			      enum reg dest_base_reg, unsigned long dest_disp)
+{
+	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_2(insn_op, OPERAND_REGISTER, OPERAND_MEMBASE));
+	if (insn) {
+		insn->src.reg = src_reg;
+		insn->dest.base_reg = dest_base_reg;
+		insn->dest.disp = dest_disp;
+	}
+	return insn;
+}
+
 struct insn *imm_reg_insn(enum insn_opcode insn_op, unsigned long imm,
 			  enum reg reg)
 {

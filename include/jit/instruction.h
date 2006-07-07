@@ -107,6 +107,7 @@ static inline struct insn *insn_entry(struct list_head *head)
 }
 
 struct insn *membase_reg_insn(enum insn_opcode, enum reg, unsigned long, enum reg);
+struct insn *reg_membase_insn(enum insn_opcode, enum reg, enum reg, unsigned long);
 struct insn *reg_insn(enum insn_opcode, enum reg);
 struct insn *imm_reg_insn(enum insn_opcode, unsigned long, enum reg);
 struct insn *imm_membase_insn(enum insn_opcode, unsigned long, enum reg, unsigned long);
