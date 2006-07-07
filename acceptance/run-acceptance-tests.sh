@@ -1,6 +1,7 @@
 #!/bin/bash
 
 HAS_FAILURES=0
+JAVA_OPTS=$*
 
 function run_java {
   JAVA_CLASS=$1
@@ -8,7 +9,7 @@ function run_java {
 
   ../jato/jato \
       -Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
-      -Xbootclasspath:$BOOTCLASSPATH -cp . $JAVA_CLASS
+      -Xbootclasspath:$BOOTCLASSPATH $JAVA_OPTS -cp . $JAVA_CLASS
 
   ACTUAL=$?
 
