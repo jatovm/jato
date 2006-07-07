@@ -79,8 +79,9 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 
 	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX));
 	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX));
+	bb_insert_insn(s, imm_reg_insn(OPC_ADD, sizeof(struct object), REG_EAX));
 
-	method_table_offset = sizeof(struct object) + offsetof(struct classblock, method_table);
+	method_table_offset = offsetof(struct classblock, method_table);
 	bb_insert_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_table_offset, REG_EAX));
 
 	method_offset = expr->method_index * sizeof(void *);

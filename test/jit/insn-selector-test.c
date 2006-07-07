@@ -293,8 +293,11 @@ void test_should_select_indirect_jmp_for_invokevirtual(void)
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX, insn);
 
 	insn = insn_next(insn);
+	assert_imm_reg_insn(OPC_ADD, sizeof(struct object), REG_EAX, insn);
+
+	insn = insn_next(insn);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX,
-				sizeof(struct object) + offsetof(struct classblock, method_table),
+				offsetof(struct classblock, method_table),
 				REG_EAX, insn);
 	
 	insn = insn_next(insn);
