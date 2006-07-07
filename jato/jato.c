@@ -54,6 +54,8 @@ static unsigned long max_heap   = DEFAULT_MAX_HEAP;
 char VM_initing = TRUE;
 extern void initialisePlatform();
 
+extern int show_disasm;
+
 void initVM() {
     /* Perform platform dependent initialisation */
     initialisePlatform();
@@ -280,6 +282,8 @@ int parseCommandLine(int argc, char *argv[]) {
         } else if(strcmp(argv[i], "-Xcompactalways") == 0) {
             compact_specified = do_compact = TRUE;
 
+	} else if(strcmp(argv[i], "-Xdisasm") == 0) {
+	    show_disasm = 1;
         } else {
             printf("Unrecognised command line option: %s\n", argv[i]);
             break;

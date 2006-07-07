@@ -13,11 +13,21 @@
 #include <insn-selector.h>
 #include <x86-objcode.h>
 
+#include "disass.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #define OBJCODE_SIZE 256
+
+int show_disasm;
+
+static void print_disasm(struct methodblock *method, void *start, void *end)
+{
+	printf("Method: %s, Class: %s\n", method->name, CLASS_CB(method->class)->name);
+	disassemble(start, end);
+}
 
 int jit_compile(struct compilation_unit *cu)
 {
@@ -44,6 +54,9 @@ int jit_compile(struct compilation_unit *cu)
 	x86_emit_prolog(&is);
 	x86_emit_obj_code(bb_entry(cu->bb_list.next), &is);
 	x86_emit_epilog(&is);
+
+	if (show_disasm)
+		print_disasm(cu->method, is.start, is.current);
 
 	cu->is_compiled = true;
 
