@@ -3,7 +3,7 @@
  */
 
 #include <libharness.h>
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <jit/expression.h>
 #include <jit/instruction.h>
 #include <insn-selector.h>

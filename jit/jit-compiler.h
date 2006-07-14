@@ -2,7 +2,7 @@
 #define __JIT_COMPILER_H
 
 #include <jit/compilation-unit.h>
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <vm/stack.h>
 
 struct methodblock;

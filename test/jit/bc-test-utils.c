@@ -3,7 +3,7 @@
  */
 
 #include <jit/compilation-unit.h>
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <bc-test-utils.h>
 #include <jit/tree-node.h>
 #include <jit/expression.h>

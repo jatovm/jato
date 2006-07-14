@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <x86-objcode.h>
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <jit/instruction.h>
 #include <jit/statement.h>
 

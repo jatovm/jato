@@ -2,7 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <basic-block-assert.h>
 #include <jit/instruction.h>
 #include <jit/statement.h>

@@ -7,7 +7,7 @@
  * This file contains functions for basic block operations.
  */
 
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <jit/instruction.h>
 #include <jit/statement.h>
 #include <stdlib.h>

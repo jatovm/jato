@@ -2,7 +2,7 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit-compiler.h>
 #include <jit/bytecode-converters.h>
