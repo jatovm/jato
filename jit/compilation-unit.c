@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 
 #include <stdlib.h>
 #include <string.h>

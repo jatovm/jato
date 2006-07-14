@@ -3,7 +3,7 @@
  */
 
 #include <libharness.h>
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <vm/vm.h>
 
 void test_find_basic_block(void)

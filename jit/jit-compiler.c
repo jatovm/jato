@@ -6,7 +6,7 @@
  */
 
 #include <vm/alloc.h>
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <errno.h>
 #include <jit-compiler.h>
 #include <jit/statement.h>

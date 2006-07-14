@@ -3,7 +3,7 @@
  */
 
 #include <basic-block.h>
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <jit-compiler.h>
 #include <jit/bytecode-converters.h>
 #include <jit/expression.h>

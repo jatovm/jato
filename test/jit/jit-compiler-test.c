@@ -2,7 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <jit-compiler.h>
 
 #include <vm/system.h>

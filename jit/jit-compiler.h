@@ -1,7 +1,7 @@
 #ifndef __JIT_COMPILER_H
 #define __JIT_COMPILER_H
 
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <basic-block.h>
 #include <vm/stack.h>
 

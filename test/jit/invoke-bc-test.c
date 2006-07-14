@@ -4,7 +4,7 @@
 
 #include <basic-block.h>
 #include <bc-test-utils.h>
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <jit-compiler.h>
 #include <jit/statement.h>
 #include <vm/stack.h>

@@ -2,7 +2,7 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <basic-block.h>
 #include <bc-test-utils.h>
 #include <jit/tree-node.h>

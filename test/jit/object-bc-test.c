@@ -3,7 +3,7 @@
  */
 
 #include <bc-test-utils.h>
-#include <compilation-unit.h>
+#include <jit/compilation-unit.h>
 #include <jit/expression.h>
 #include <jvm_types.h>
 #include <libharness.h>
