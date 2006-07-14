@@ -129,7 +129,7 @@ void test_should_select_insn_for_every_statement(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_mov_and_add_insns_for_add_binop(void)
+void test_select_add_local_to_local(void)
 {
 	struct basic_block *bb;
 	struct insn *insn;
@@ -159,7 +159,7 @@ void test_should_select_mov_and_add_insns_for_add_binop(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_nothing_for_void_return_statement(void)
+void test_select_void_return(void)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct statement *stmt;
@@ -172,7 +172,7 @@ void test_should_select_nothing_for_void_return_statement(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_call_insn_for_invoke_without_args(void)
+void test_select_invoke_without_arguments(void)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
@@ -202,7 +202,7 @@ void test_should_select_call_insn_for_invoke_without_args(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
+void test_select_invoke_with_arguments(void)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
@@ -243,7 +243,7 @@ void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_push_insn_for_invoke_return_value(void)
+void test_select_method_return_value_passed_as_argument(void)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
@@ -286,7 +286,7 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_indirect_jmp_for_invokevirtual(void)
+void test_select_invokevirtual_with_arguments(void)
 {
 	unsigned long objectref;
 	unsigned long method_index;
@@ -342,7 +342,7 @@ void test_should_select_indirect_jmp_for_invokevirtual(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
+void test_select_if_statement(void)
 {
 	struct basic_block *bb, *true_bb;
 	struct insn *insn;
@@ -380,7 +380,7 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 	free_basic_block(true_bb);
 }
 
-void test_should_select_mov_insns_for_field_load(void)
+void test_select_load_field(void)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
@@ -406,7 +406,7 @@ void test_should_select_mov_insns_for_field_load(void)
 	free_basic_block(bb);
 }
 
-void test_should_select_mov_insn_for_field_store(void)
+void test_store_value_to_field(void)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
@@ -473,7 +473,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	free_basic_block(bb);
 }
 
-void test_store_field_to_local(void)
+void test_select_store_field_to_local(void)
 {
 	assert_store_field_to_local(-4, 0);
 	assert_store_field_to_local(-8, 1);
