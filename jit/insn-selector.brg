@@ -49,6 +49,7 @@ reg:	EXPR_LOCAL	1
 	
 	expr = to_expr(tree);
 	disp = frame_local_offset(s->b_parent->method, expr);
+
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EBP, disp, REG_EAX));
 }
 
@@ -58,39 +59,47 @@ reg:	OP_ADD(EXPR_LOCAL, reg) 1
 	unsigned long disp;
 
 	expr = to_expr(tree);
-	disp= frame_local_offset(s->b_parent->method, to_expr(expr->binary_left));
+	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_left));
 
 	bb_add_insn(s, membase_reg_insn(OPC_ADD, REG_EBP, disp, REG_EAX));
 }
 
 reg:	EXPR_INVOKE(arg) 1
 {
-	struct expression *expr = to_expr(tree);
-	struct methodblock *method = expr->target_method;
-	void *target = method->trampoline->objcode;
+	struct expression *expr;
+	struct methodblock *method;
+	void *target;
+
+	expr   = to_expr(tree);
+	method = expr->target_method;
+	target = method->trampoline->objcode;
 
 	bb_add_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
 
-	if (method->args_count)
-		bb_add_insn(s, imm_reg_insn(OPC_ADD, method->args_count * sizeof(unsigned long), REG_ESP));
+	if (method->args_count) {
+		unsigned long imm = method->args_count * sizeof(unsigned long);
+		bb_add_insn(s, imm_reg_insn(OPC_ADD, imm, REG_ESP));
+	}
 }
 
 reg:	EXPR_INVOKEVIRTUAL(arg) 1
 {
+	struct expression *expr;
 	unsigned long method_table_offset;
 	unsigned long method_offset;
-	struct expression *expr = to_expr(tree);
+	
+	expr = to_expr(tree);
+	method_table_offset = offsetof(struct classblock, method_table);
+	method_offset = expr->method_index * sizeof(void *);
 
+	/*
+	 *	FIXME: This is horrible due to lack of per-method vtables.
+	 */
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX));
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX));
 	bb_add_insn(s, imm_reg_insn(OPC_ADD, sizeof(struct object), REG_EAX));
-
-	method_table_offset = offsetof(struct classblock, method_table);
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_table_offset, REG_EAX));
-
-	method_offset = expr->method_index * sizeof(void *);
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_offset, REG_EAX));
-
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX));
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct jit_trampoline, objcode), REG_EAX));
 	bb_add_insn(s, reg_insn(OPC_JMP, REG_EAX));
@@ -99,19 +108,20 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
 	struct expression *expr;
-	unsigned long disp;
+	long offset;
 
-	expr = to_expr(tree);
-	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
+	expr   = to_expr(tree);
+	offset = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
 
-	bb_add_insn(s, membase_reg_insn(OPC_CMP, REG_EBP, disp, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(OPC_CMP, REG_EBP, offset, REG_EAX));
 }
 
 reg:	EXPR_FIELD 1
 {
-	unsigned long offset;
-	struct expression *expr = to_expr(tree);
-
+	struct expression *expr;
+	long offset;
+	
+	expr   = to_expr(tree);
 	offset = offsetof(struct fieldblock, static_value);
 
 	bb_add_insn(s, imm_reg_insn(OPC_MOV, (unsigned long) expr->field, REG_EAX));
@@ -124,8 +134,11 @@ arg:	EXPR_NO_ARGS
 
 arg:	EXPR_ARG(EXPR_VALUE)
 {
-	struct expression *expr = to_expr(tree);
-	unsigned long long imm = to_expr(expr->arg_expression)->value;
+	struct expression *expr;
+	unsigned long long imm;
+	
+	expr = to_expr(tree);
+	imm  = to_expr(expr->arg_expression)->value;
 
 	bb_add_insn(s, imm_insn(OPC_PUSH, imm));
 }
@@ -174,13 +187,13 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 {
 	struct statement *stmt;
 	struct expression *local;
-	unsigned long disp;
+	long offset;
 
-	stmt = to_stmt(tree);
-	local = to_expr(stmt->store_dest);
+	stmt   = to_stmt(tree);
+	local  = to_expr(stmt->store_dest);
+	offset = frame_local_offset(s->b_parent->method, local);
 
-	disp = frame_local_offset(s->b_parent->method, local);
-	bb_add_insn(s, reg_membase_insn(OPC_MOV, REG_EAX, REG_ESP, disp));
+	bb_add_insn(s, reg_membase_insn(OPC_MOV, REG_EAX, REG_ESP, offset));
 }
 
 stmt:	STMT_IF(reg)
