@@ -8,12 +8,13 @@
  */
 
 #include <jit/basic-block.h>
+#include <jit/compilation-unit.h>
 #include <jit/instruction.h>
 #include <jit/statement.h>
 #include <stdlib.h>
 #include <string.h>
 
-struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
+struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
 {
 	struct basic_block *bb = malloc(sizeof(*bb));
 	if (bb) {
@@ -21,6 +22,7 @@ struct basic_block *alloc_basic_block(unsigned long start, unsigned long end)
 		INIT_LIST_HEAD(&bb->stmt_list);
 		INIT_LIST_HEAD(&bb->insn_list);
 		INIT_LIST_HEAD(&bb->bb_list_node);
+		bb->b_parent = b_parent;
 		bb->label_stmt = alloc_statement(STMT_LABEL);
 		bb->label_stmt->bb = bb;
 		bb->start = start;
@@ -55,7 +57,7 @@ void free_basic_block(struct basic_block *bb)
 
 /**
  *	bb_split - Split basic block into two.
- * 	@bb: Basic block to split.
+ * 	@orig_bb: Basic block to split.
  * 	@offset: The end offset of the upper basic block and start offset
  *		of the bottom basic block.
  *
@@ -63,17 +65,17 @@ void free_basic_block(struct basic_block *bb)
  * 	newly allocated block. The end offset of the given basic block is
  * 	updated accordingly.
  */
-struct basic_block *bb_split(struct basic_block *bb, unsigned long offset)
+struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 {
-	struct basic_block *new_block;
+	struct basic_block *new_bb;
 
-	if (offset < bb->start || offset >= bb->end)
+	if (offset < orig_bb->start || offset >= orig_bb->end)
 		return NULL;
 
-	new_block = alloc_basic_block(offset, bb->end);
-	if (new_block)
-		bb->end = offset;
-	return new_block;
+	new_bb = alloc_basic_block(orig_bb->b_parent, offset, orig_bb->end);
+	if (new_bb)
+		orig_bb->end = offset;
+	return new_bb;
 }
 
 void bb_insert_stmt(struct basic_block *bb, struct statement *stmt)

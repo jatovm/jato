@@ -68,7 +68,7 @@ int build_cfg(struct compilation_unit *cu)
 	if (!branch_targets)
 		return -ENOMEM;
 
-	entry_bb = alloc_basic_block(0, cu->method->code_size);
+	entry_bb = alloc_basic_block(cu, 0, cu->method->code_size);
 	list_add_tail(&entry_bb->bb_list_node, &cu->bb_list);
 	bb_end_after_branch(cu, entry_bb, branch_targets);
 	bb_start_at_branch_target(cu, branch_targets);

@@ -29,10 +29,10 @@ static void assert_convert_if(enum binary_operator expected_operator,
 		.code_size = ARRAY_SIZE(code),
 	};
 
-	stmt_bb = alloc_basic_block(0, 1);
-	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
-
 	cu = alloc_compilation_unit(&method);
+	stmt_bb = alloc_basic_block(cu, 0, 1);
+	true_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
+
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
@@ -75,10 +75,10 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 		.code_size = ARRAY_SIZE(code),
 	};
 
-	stmt_bb = alloc_basic_block(0, 1);
-	true_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
-
 	cu = alloc_compilation_unit(&method);
+	stmt_bb = alloc_basic_block(cu, 0, 1);
+	true_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
+
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
@@ -127,10 +127,10 @@ void test_convert_goto(void)
 		.code_size = ARRAY_SIZE(code),
 	};
 
-	goto_bb = alloc_basic_block(0, 1);
-	target_bb = alloc_basic_block(TARGET_OFFSET, TARGET_OFFSET + 1);
-
 	cu = alloc_compilation_unit(&method);
+	goto_bb = alloc_basic_block(cu, 0, 1);
+	target_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
+
 	list_add_tail(&goto_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 

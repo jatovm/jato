@@ -94,7 +94,7 @@ void test_should_select_insn_for_every_statement(void)
 	struct insn *insn;
 	struct expression *expr1, *expr2;
 	struct statement *stmt1, *stmt2;
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 
 	expr1 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
 
@@ -128,7 +128,7 @@ void test_should_select_insn_for_every_statement(void)
 
 void test_should_select_mov_and_add_insns_for_add_binop(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
 	struct expression *expr;
 	struct statement *stmt;
@@ -151,7 +151,7 @@ void test_should_select_mov_and_add_insns_for_add_binop(void)
 
 void test_should_select_nothing_for_void_return_statement(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct statement *stmt;
 
 	stmt = alloc_statement(STMT_VOID_RETURN);
@@ -164,7 +164,7 @@ void test_should_select_nothing_for_void_return_statement(void)
 
 void test_should_select_call_insn_for_invoke_without_args(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
 	struct expression *expr, *args_list;
 	struct statement *stmt;
@@ -192,7 +192,7 @@ void test_should_select_call_insn_for_invoke_without_args(void)
 
 void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
 	struct expression *invoke_expression, *args_list_expression;
 	struct statement *stmt;
@@ -231,7 +231,7 @@ void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 
 void test_should_select_push_insn_for_invoke_return_value(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
 	struct expression *no_args, *arg, *invoke, *nested_invoke;
 	struct statement *stmt;
@@ -291,7 +291,7 @@ void test_should_select_indirect_jmp_for_invokevirtual(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &invoke_expr->node;
 
-	bb = alloc_basic_block(0, 1);
+	bb = alloc_basic_block(NULL, 0, 1);
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
@@ -335,8 +335,8 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 	struct expression *expr;
 	struct statement *stmt;
 
-	bb = alloc_basic_block(0, 1);
-	true_bb = alloc_basic_block(1, 2);
+	bb = alloc_basic_block(NULL, 0, 1);
+	true_bb = alloc_basic_block(NULL, 1, 2);
 
 	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_IF);
@@ -362,7 +362,7 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 
 void test_should_select_mov_insns_for_field_load(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
 	struct expression *expr;
 	struct statement *stmt;
@@ -388,7 +388,7 @@ void test_should_select_mov_insns_for_field_load(void)
 
 void test_should_select_mov_insn_for_field_store(void)
 {
-	struct basic_block *bb = alloc_basic_block(0, 1);
+	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
 	struct expression *store_target;
 	struct expression *store_value;
@@ -430,7 +430,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	stmt->store_dest = &store_dest->node;
 	stmt->store_src  = &store_src->node;
 
-	bb = alloc_basic_block(0, 1);
+	bb = alloc_basic_block(NULL, 0, 1);
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);
