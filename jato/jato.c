@@ -26,7 +26,7 @@
 
 #include <vm/backtrace.h>
 #include <vm/vm.h>
-#include <jit-compiler.h>
+#include <jit/jit-compiler.h>
 
 /* Setup default values for command line args */
 

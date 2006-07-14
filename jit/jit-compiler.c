@@ -8,9 +8,9 @@
 #include <vm/alloc.h>
 #include <jit/compilation-unit.h>
 #include <errno.h>
-#include <jit-compiler.h>
+#include <jit/jit-compiler.h>
 #include <jit/statement.h>
-#include <insn-selector.h>
+#include <jit/insn-selector.h>
 #include <x86-objcode.h>
 #include <vm/string.h>
 #include <jit/tree-printer.h>

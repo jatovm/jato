@@ -9,7 +9,7 @@
  */
 
 #include <bytecodes.h>
-#include <jit-compiler.h>
+#include <jit/jit-compiler.h>
 #include <jit/statement.h>
 #include <vm/const-pool.h>
 #include <vm/stack.h>

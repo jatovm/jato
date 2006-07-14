@@ -8,10 +8,10 @@
  */
 
 #include <jit/basic-block.h>
-#include <insn-selector.h>
-#include <jit/instruction.h>
-#include <jit-compiler.h>
 #include <jit/expression.h>
+#include <jit/insn-selector.h>
+#include <jit/instruction.h>
+#include <jit/jit-compiler.h>
 #include <jit/statement.h>
 #include <jit/x86-frame.h>
 

@@ -23,7 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include <jit-compiler.h>
+#include <jit/jit-compiler.h>
 
 #include "jam.h"
 #include "sig.h"

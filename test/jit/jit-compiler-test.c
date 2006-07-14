@@ -3,7 +3,7 @@
  */
 
 #include <jit/compilation-unit.h>
-#include <jit-compiler.h>
+#include <jit/jit-compiler.h>
 
 #include <vm/system.h>
 #include <vm/vm.h>

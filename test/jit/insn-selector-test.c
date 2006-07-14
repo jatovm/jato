@@ -6,9 +6,9 @@
 #include <jit/basic-block.h>
 #include <jit/expression.h>
 #include <jit/instruction.h>
-#include <insn-selector.h>
+#include <jit/insn-selector.h>
 #include <jit/statement.h>
-#include <jit-compiler.h>
+#include <jit/jit-compiler.h>
 
 static void assert_membase_reg_insn(enum insn_opcode insn_op,
 				    enum reg src_base_reg,

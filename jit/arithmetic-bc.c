@@ -11,7 +11,7 @@
 #include <jit/statement.h>
 #include <vm/byteorder.h>
 #include <vm/stack.h>
-#include <jit-compiler.h>
+#include <jit/jit-compiler.h>
 #include <bytecodes.h>
 
 #include <errno.h>
