@@ -7,7 +7,7 @@
  * This file contains BURG specification for IA-32.
  */
 
-#include <basic-block.h>
+#include <jit/basic-block.h>
 #include <insn-selector.h>
 #include <jit/instruction.h>
 #include <jit-compiler.h>
