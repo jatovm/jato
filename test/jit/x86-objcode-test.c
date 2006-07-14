@@ -20,7 +20,7 @@ static void assert_emit_insn(unsigned char *expected,
 	unsigned char actual[expected_size];
 
 	bb = alloc_basic_block(NULL, 0, 1);
-	bb_insert_insn(bb, insn);
+	bb_add_insn(bb, insn);
 
 	init_insn_sequence(&is, actual, expected_size);
 	x86_emit_obj_code(bb, &is);
@@ -155,7 +155,7 @@ static void assert_emit_push_imm32(unsigned long imm)
 	struct insn_sequence is;
 
 	bb = alloc_basic_block(NULL, 0, 1);
-	bb_insert_insn(bb, imm_insn(OPC_PUSH, imm));
+	bb_add_insn(bb, imm_insn(OPC_PUSH, imm));
 	init_insn_sequence(&is, actual, ARRAY_SIZE(actual));
 
 	x86_emit_obj_code(bb, &is);
@@ -196,7 +196,7 @@ static void assert_emit_call(void *call_target,
 	struct insn_sequence is;
 
 	bb = alloc_basic_block(NULL, 0, 1);
-	bb_insert_insn(bb, rel_insn(OPC_CALL, (unsigned long) call_target));
+	bb_add_insn(bb, rel_insn(OPC_CALL, (unsigned long) call_target));
 	
 	init_insn_sequence(&is, code, code_size);
 	x86_emit_obj_code(bb, &is);
@@ -294,7 +294,7 @@ static void assert_emits_branch_target(unsigned char expected_target,
 
 	x86_emit_obj_code(target_bb, &is);
 
-	bb_insert_insn(branch_bb, insn);
+	bb_add_insn(branch_bb, insn);
 	x86_emit_obj_code(branch_bb, &is);
 
 	assert_mem_insn_2(0x74, expected_target, code + insn->offset);
@@ -306,10 +306,10 @@ void test_should_emit_target_for_backward_branches(void)
 {
 	struct basic_block *target_bb = alloc_basic_block(NULL, 0, 1);
 
-	bb_insert_insn(target_bb, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
+	bb_add_insn(target_bb, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
 	assert_emits_branch_target(0xfb, target_bb);
 
-	bb_insert_insn(target_bb, imm_reg_insn(OPC_ADD, 0x02, REG_EBX));
+	bb_add_insn(target_bb, imm_reg_insn(OPC_ADD, 0x02, REG_EBX));
 	assert_emits_branch_target(0xf8, target_bb);
 
 	free_basic_block(target_bb);
@@ -356,10 +356,10 @@ void test_should_backpatch_unresolved_branches_when_emitting_target(void)
 	branch_bb = alloc_basic_block(NULL, 0, 1);
 	target_bb = alloc_basic_block(NULL, 1, 2);
 
-	bb_insert_insn(branch_bb, branch_insn(OPC_JE, target_bb->label_stmt));
+	bb_add_insn(branch_bb, branch_insn(OPC_JE, target_bb->label_stmt));
 	assert_backpatches_branches(0x00, branch_bb, target_bb);
 
-	bb_insert_insn(branch_bb, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
+	bb_add_insn(branch_bb, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
 	assert_backpatches_branches(0x03, branch_bb, target_bb);
 
 	free_basic_block(branch_bb);

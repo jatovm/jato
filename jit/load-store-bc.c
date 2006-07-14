@@ -256,7 +256,7 @@ static int convert_store(struct compilation_unit *cu,
 
 	stmt->store_dest = &dest_expr->node;
 	stmt->store_src = &src_expr->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 	return 0;
       failed:
 	free_statement(stmt);

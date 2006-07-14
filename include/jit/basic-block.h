@@ -25,7 +25,7 @@ static inline struct basic_block *bb_entry(struct list_head *head)
 struct basic_block *alloc_basic_block(struct compilation_unit *, unsigned long, unsigned long);
 void free_basic_block(struct basic_block *);
 struct basic_block *bb_split(struct basic_block *, unsigned long);
-void bb_insert_stmt(struct basic_block *, struct statement *);
-void bb_insert_insn(struct basic_block *, struct insn *);
+void bb_add_stmt(struct basic_block *, struct statement *);
+void bb_add_insn(struct basic_block *, struct insn *);
 
 #endif

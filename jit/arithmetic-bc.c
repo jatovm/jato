@@ -288,7 +288,7 @@ int convert_iinc(struct compilation_unit *cu, struct basic_block *bb,
 	}
 
 	store_stmt->store_src = &binop_expression->node;
-	bb_insert_stmt(bb, store_stmt);
+	bb_add_stmt(bb, store_stmt);
 
 	return 0;
 

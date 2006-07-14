@@ -78,12 +78,12 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 	return new_bb;
 }
 
-void bb_insert_stmt(struct basic_block *bb, struct statement *stmt)
+void bb_add_stmt(struct basic_block *bb, struct statement *stmt)
 {
 	list_add_tail(&stmt->stmt_list_node, &bb->stmt_list);
 }
 
-void bb_insert_insn(struct basic_block *bb, struct insn *insn)
+void bb_add_insn(struct basic_block *bb, struct insn *insn)
 {
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }

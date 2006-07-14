@@ -29,7 +29,7 @@ static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
 	if (!stmt)
 		return -ENOMEM;
 
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 	return 0;
 }
 

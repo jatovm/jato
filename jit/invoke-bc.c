@@ -27,7 +27,7 @@ int convert_non_void_return(struct compilation_unit *cu,
 
 	expr = stack_pop(cu->expr_stack);
 	return_stmt->return_value = &expr->node;
-	bb_insert_stmt(bb, return_stmt);
+	bb_add_stmt(bb, return_stmt);
 	return 0;
 }
 
@@ -40,7 +40,7 @@ int convert_void_return(struct compilation_unit *cu,
 
 	return_stmt->return_value = NULL;
 
-	bb_insert_stmt(bb, return_stmt);
+	bb_add_stmt(bb, return_stmt);
 	return 0;
 }
 
@@ -84,7 +84,7 @@ static int __convert_invoke(struct compilation_unit *cu, struct basic_block *bb,
 			return -ENOMEM;
 
 		expr_stmt->expression = &invoke_expr->node;
-		bb_insert_stmt(bb, expr_stmt);
+		bb_add_stmt(bb, expr_stmt);
 	} else
 		stack_push(cu->expr_stack, invoke_expr);
 

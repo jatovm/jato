@@ -62,7 +62,7 @@ int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 	}
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
-	bb_insert_stmt(bb, store_stmt);
+	bb_add_stmt(bb, store_stmt);
 	
 	return 0;
 }
@@ -110,9 +110,9 @@ int convert_array_load(struct compilation_unit *cu,
 	expr_get(arrayref);
 	nullcheck->expression = &arrayref->node;
 
-	bb_insert_stmt(bb, nullcheck);
-	bb_insert_stmt(bb, arraycheck);
-	bb_insert_stmt(bb, store_stmt);
+	bb_add_stmt(bb, nullcheck);
+	bb_add_stmt(bb, arraycheck);
+	bb_add_stmt(bb, store_stmt);
 
 	return 0;
 
@@ -207,9 +207,9 @@ static int convert_array_store(struct compilation_unit *cu,
 	expr_get(arrayref);
 	nullcheck->expression = &arrayref->node;
 
-	bb_insert_stmt(bb, nullcheck);
-	bb_insert_stmt(bb, arraycheck);
-	bb_insert_stmt(bb, store_stmt);
+	bb_add_stmt(bb, nullcheck);
+	bb_add_stmt(bb, arraycheck);
+	bb_add_stmt(bb, store_stmt);
 
 	return 0;
 

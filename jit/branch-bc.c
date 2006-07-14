@@ -65,7 +65,7 @@ int convert_if(struct compilation_unit *cu,
 		expr_put(zero_value);
 		return -ENOMEM;
 	}
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 	return 0;
 }
 
@@ -120,7 +120,7 @@ static int convert_if_cmp(struct compilation_unit *cu,
 	if (!stmt)
 		return -ENOMEM;
 
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 	return 0;
 }
 
@@ -187,7 +187,7 @@ int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
 		return -ENOMEM;
 
 	goto_stmt->goto_target = &target_bb->label_stmt->node;
-	bb_insert_stmt(bb, goto_stmt);
+	bb_add_stmt(bb, goto_stmt);
 	return 0;
 }
 

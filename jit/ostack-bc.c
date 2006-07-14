@@ -25,7 +25,7 @@ int convert_pop(struct compilation_unit *cu, struct basic_block *bb,
 			return -ENOMEM;
 			
 		expr_stmt->expression = &expr->node;
-		bb_insert_stmt(bb, expr_stmt);
+		bb_add_stmt(bb, expr_stmt);
 	}
 	return 0;
 }

@@ -109,8 +109,8 @@ void test_should_select_insn_for_every_statement(void)
 	stmt2 = alloc_statement(STMT_RETURN);
 	stmt2->return_value = &expr2->node;
 
-	bb_insert_stmt(bb, stmt1);
-	bb_insert_stmt(bb, stmt2);
+	bb_add_stmt(bb, stmt1);
+	bb_add_stmt(bb, stmt2);
 
 	insn_select(bb);
 
@@ -146,7 +146,7 @@ void test_should_select_mov_and_add_insns_for_add_binop(void)
 	expr = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -165,7 +165,7 @@ void test_should_select_nothing_for_void_return_statement(void)
 	struct statement *stmt;
 
 	stmt = alloc_statement(STMT_VOID_RETURN);
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 	insn_select(bb);
 
 	assert_true(list_is_empty(&bb->insn_list));
@@ -190,7 +190,7 @@ void test_should_select_call_insn_for_invoke_without_args(void)
 
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -222,7 +222,7 @@ void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &invoke_expression->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -264,7 +264,7 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &invoke->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -306,7 +306,7 @@ void test_should_select_indirect_jmp_for_invokevirtual(void)
 	stmt->expression = &invoke_expr->node;
 
 	bb = alloc_basic_block(NULL, 0, 1);
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -362,7 +362,7 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 	stmt = alloc_statement(STMT_IF);
 	stmt->expression = &expr->node;
 	stmt->if_true = &true_bb->label_stmt->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -392,7 +392,7 @@ void test_should_select_mov_insns_for_field_load(void)
 	expr = field_expr(J_INT, &field);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -421,7 +421,7 @@ void test_should_select_mov_insn_for_field_store(void)
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_target->node;
 	stmt->store_src  = &store_value->node;
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
@@ -457,7 +457,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	stmt->store_src  = &store_src->node;
 
 	bb = alloc_basic_block(&cu, 0, 1);
-	bb_insert_stmt(bb, stmt);
+	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
 
