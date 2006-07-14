@@ -94,7 +94,15 @@ void test_should_select_insn_for_every_statement(void)
 	struct insn *insn;
 	struct expression *expr1, *expr2;
 	struct statement *stmt1, *stmt2;
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
+	struct basic_block *bb;
+	struct methodblock method = {
+		.args_count = 4,
+	};
+	struct compilation_unit cu = {
+		.method = &method,
+	};
+	
+	bb = alloc_basic_block(&cu, 0, 1);
 
 	expr1 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
 
@@ -128,11 +136,18 @@ void test_should_select_insn_for_every_statement(void)
 
 void test_should_select_mov_and_add_insns_for_add_binop(void)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
+	struct basic_block *bb;
 	struct insn *insn;
 	struct expression *expr;
 	struct statement *stmt;
+	struct methodblock method = {
+		.args_count = 2,
+	};
+	struct compilation_unit cu = {
+		.method = &method,
+	};
 
+	bb = alloc_basic_block(&cu, 0, 1);
 	expr = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
@@ -168,7 +183,9 @@ void test_should_select_call_insn_for_invoke_without_args(void)
 	struct insn *insn;
 	struct expression *expr, *args_list;
 	struct statement *stmt;
-	struct methodblock mb = { .args_count = 0 };
+	struct methodblock mb = {
+		.args_count = 0
+	};
 
 	jit_prepare_for_exec(&mb);
 
@@ -196,7 +213,9 @@ void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 	struct insn *insn;
 	struct expression *invoke_expression, *args_list_expression;
 	struct statement *stmt;
-	struct methodblock mb = { .args_count = 2 };
+	struct methodblock mb = {
+		.args_count = 2
+	};
 
 	jit_prepare_for_exec(&mb);
 
@@ -334,9 +353,15 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 	struct insn *insn;
 	struct expression *expr;
 	struct statement *stmt;
+	struct methodblock method = {
+		.args_count = 2,
+	};
+	struct compilation_unit cu = {
+		.method = &method,
+	};
 
-	bb = alloc_basic_block(NULL, 0, 1);
-	true_bb = alloc_basic_block(NULL, 1, 2);
+	bb = alloc_basic_block(&cu, 0, 1);
+	true_bb = alloc_basic_block(&cu, 1, 2);
 
 	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_IF);
@@ -422,6 +447,12 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
+	struct methodblock method = {
+		.args_count = 0,
+	};
+	struct compilation_unit cu = {
+		.method = &method,
+	};
 
 	store_dest = local_expr(J_INT, local_idx);
 	store_src  = field_expr(J_INT, &field);
@@ -430,7 +461,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	stmt->store_dest = &store_dest->node;
 	stmt->store_src  = &store_src->node;
 
-	bb = alloc_basic_block(NULL, 0, 1);
+	bb = alloc_basic_block(&cu, 0, 1);
 	bb_insert_stmt(bb, stmt);
 
 	insn_select(bb);

@@ -20,7 +20,8 @@ void test_executing_jit_compiled_function(void)
 	sum_fn function;
 	struct methodblock method = {
 		.jit_code = sum_bytecode,
-		.code_size = ARRAY_SIZE(sum_bytecode)
+		.code_size = ARRAY_SIZE(sum_bytecode),
+		.args_count = 2,
 	};
 	
 	cu = alloc_compilation_unit(&method);
@@ -39,7 +40,8 @@ void test_magic_trampoline_compiles_uncompiled(void)
 	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = sum_bytecode,
-		.code_size = ARRAY_SIZE(sum_bytecode)
+		.code_size = ARRAY_SIZE(sum_bytecode),
+		.args_count = 2,
 	};
 	cu = alloc_compilation_unit(&method);
 
@@ -58,7 +60,8 @@ void test_magic_trampoline_compiles_once(void)
 	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = sum_bytecode,
-		.code_size = ARRAY_SIZE(sum_bytecode)
+		.code_size = ARRAY_SIZE(sum_bytecode),
+		.args_count = 2,
 	};
 
 	cu = alloc_compilation_unit(&method);
@@ -77,7 +80,8 @@ void test_jit_method_trampoline_compiles_and_invokes_method(void)
 	sum_fn function;
 	struct methodblock method = {
 		.jit_code = sum_bytecode,
-		.code_size = ARRAY_SIZE(sum_bytecode)
+		.code_size = ARRAY_SIZE(sum_bytecode),
+		.args_count = 2,
 	};
 
 	cu = alloc_compilation_unit(&method);
