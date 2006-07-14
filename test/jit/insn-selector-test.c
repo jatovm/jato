@@ -84,11 +84,6 @@ static void assert_branch_insn(enum insn_opcode expected_opc,
 	assert_ptr_equals(if_true, insn->operand.branch_target);
 }
 
-static struct insn *insn_next(struct insn *insn)
-{
-	return insn_entry(insn->insn_list_node.next);
-}
-
 void test_should_select_insn_for_every_statement(void)
 {
 	struct insn *insn;
@@ -119,16 +114,16 @@ void test_should_select_insn_for_every_statement(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_ADD, REG_EBP, 8, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EBP, 20, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_ADD, REG_EBP, 16, REG_EAX, insn);
 
 	free_basic_block(bb);
@@ -155,10 +150,10 @@ void test_should_select_mov_and_add_insns_for_add_binop(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_ADD, REG_EBP, 8, REG_EAX, insn);
 
 	free_basic_block(bb);
@@ -199,7 +194,7 @@ void test_should_select_call_insn_for_invoke_without_args(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
 
 	free_jit_trampoline(mb.trampoline);
@@ -231,16 +226,16 @@ void test_should_select_insn_push_and_call_insns_for_invoke_with_args_list(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_insn(OPC_PUSH, 0x02, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_insn(OPC_PUSH, 0x01, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(OPC_ADD, 8, REG_ESP, insn);
 
 	free_jit_trampoline(mb.trampoline);
@@ -273,13 +268,13 @@ void test_should_select_push_insn_for_invoke_return_value(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_rel_insn(OPC_CALL, (unsigned long) nested_mb.trampoline->objcode, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(OPC_PUSH, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
 
 	free_jit_trampoline(mb.trampoline);
@@ -315,33 +310,33 @@ void test_should_select_indirect_jmp_for_invokevirtual(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_insn(OPC_PUSH, objectref, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(OPC_ADD, sizeof(struct object), REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX,
 				offsetof(struct classblock, method_table),
 				REG_EAX, insn);
 	
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, method_index * sizeof(void *), REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct jit_trampoline, objcode), REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(OPC_JMP, REG_EAX, insn);
 	
 	free_basic_block(bb);
@@ -371,13 +366,13 @@ void test_should_select_cmp_and_jne_insns_for_if_stmt(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_CMP, REG_EBP, 12, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
 	assert_branch_insn(OPC_JE, to_stmt(stmt->if_true), insn);
 
@@ -401,10 +396,10 @@ void test_should_select_mov_insns_for_field_load(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	expected_disp = offsetof(struct fieldblock, static_value);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, expected_disp, REG_EAX, insn);
 
@@ -430,10 +425,10 @@ void test_should_select_mov_insn_for_field_store(void)
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	expected_disp = offsetof(struct fieldblock, static_value);
 	assert_imm_membase_insn(OPC_MOV, 0xcafebabe, REG_EAX, expected_disp, insn);
 
@@ -466,13 +461,13 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 
 	insn_select(bb);
 
-	insn = insn_entry(bb->insn_list.next);
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct fieldblock, static_value), REG_EAX, insn);
 
-	insn = insn_next(insn);
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_membase_insn(OPC_MOV, REG_EAX, REG_ESP, expected_disp, insn);
 
 	free_basic_block(bb);

@@ -100,12 +100,6 @@ struct insn {
 	unsigned long offset;
 };
 
-
-static inline struct insn *insn_entry(struct list_head *head)
-{
-	return list_entry(head, struct insn, insn_list_node);
-}
-
 struct insn *membase_reg_insn(enum insn_opcode, enum reg, long, enum reg);
 struct insn *reg_membase_insn(enum insn_opcode, enum reg, enum reg, long);
 struct insn *reg_insn(enum insn_opcode, enum reg);

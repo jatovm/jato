@@ -128,4 +128,44 @@ static inline bool list_is_empty(struct list_head *head)
              &pos->member != (head);                                    \
              pos = n, n = list_entry(n->member.next, typeof(*n), member))
 
+/**
+ * list_first_entry - get the struct for the first entry
+ * @head:      the &struct list_head pointer.
+ * @type:      the type of the struct this is embedded in.
+ * @member:    the name of the list_struct within the struct.
+ */
+#define list_first_entry(head, type, member) \
+	list_entry((head)->next, type, member)
+#define list_next_entry list_first_entry
+
+/**
+ * list_last_entry - get the struct for the last entry
+ * @head:      the &struct list_head pointer.
+ * @type:      the type of the struct this is embedded in.
+ * @member:    the name of the list_struct within the struct.
+ */
+#define list_last_entry(head, type, member) \
+	list_entry((head)->prev, type, member)
+#define list_prev_entry list_last_entry
+
+/**
+ * list_first - get first element in a list
+ * @head: the head of your list
+ */
+#define list_next list_first
+static inline struct list_head *list_first(struct list_head *head)
+{
+	return head->next;
+}
+
+/**
+ * list_last - get last element in a list
+ * @head: the head of your list
+ */
+#define list_prev list_last
+static inline struct list_head *list_last(struct list_head *head)
+{
+	return head->prev;
+}
+
 #endif
