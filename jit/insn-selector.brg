@@ -116,6 +116,16 @@ reg:	OP_EQ(reg, EXPR_LOCAL) 1
 	bb_add_insn(s, membase_reg_insn(OPC_CMP, REG_EBP, offset, REG_EAX));
 }
 
+reg:	OP_EQ(reg, EXPR_VALUE) 1
+{
+	struct expression *expr, *rvalue;
+	
+	expr = to_expr(tree);
+	rvalue = to_expr(expr->binary_right);
+
+	bb_add_insn(s, imm_reg_insn(OPC_CMP, rvalue->value, REG_EAX));
+}
+
 reg:	EXPR_FIELD 1
 {
 	struct expression *expr;

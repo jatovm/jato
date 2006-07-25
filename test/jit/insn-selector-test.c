@@ -342,7 +342,19 @@ void test_select_invokevirtual_with_arguments(void)
 	free_basic_block(bb);
 }
 
-void test_select_if_statement(void)
+static struct statement *add_if_stmt(struct expression *expr, struct basic_block *bb, struct basic_block *true_bb)
+{
+	struct statement *stmt;
+
+	stmt = alloc_statement(STMT_IF);
+	stmt->expression = &expr->node;
+	stmt->if_true = &true_bb->label_stmt->node;
+	bb_add_stmt(bb, stmt);
+
+	return stmt;
+}
+
+void test_select_local_eq_local_in_if_statement(void)
 {
 	struct basic_block *bb, *true_bb;
 	struct insn *insn;
@@ -359,10 +371,7 @@ void test_select_if_statement(void)
 	true_bb = alloc_basic_block(&cu, 1, 2);
 
 	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), local_expr(J_INT, 1));
-	stmt = alloc_statement(STMT_IF);
-	stmt->expression = &expr->node;
-	stmt->if_true = &true_bb->label_stmt->node;
-	bb_add_stmt(bb, stmt);
+	stmt = add_if_stmt(expr, bb, true_bb);
 
 	insn_select(bb);
 
@@ -371,6 +380,41 @@ void test_select_if_statement(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_CMP, REG_EBP, 12, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+
+	assert_branch_insn(OPC_JE, to_stmt(stmt->if_true), insn);
+
+	free_basic_block(bb);
+	free_basic_block(true_bb);
+}
+
+void test_select_local_eq_value_in_if_statement(void)
+{
+	struct basic_block *bb, *true_bb;
+	struct insn *insn;
+	struct expression *expr;
+	struct statement *stmt;
+	struct methodblock method = {
+		.args_count = 2,
+	};
+	struct compilation_unit cu = {
+		.method = &method,
+	};
+
+	bb = alloc_basic_block(&cu, 0, 1);
+	true_bb = alloc_basic_block(&cu, 1, 2);
+
+	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), value_expr(J_INT, 0xcafebabe));
+	stmt = add_if_stmt(expr, bb, true_bb);
+
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(OPC_CMP, 0xcafebabe, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
