@@ -53,6 +53,11 @@ static unsigned char encode_reg(enum reg reg)
 	return ret;
 }
 
+static inline int needs_32(long disp)
+{
+	return disp >> 8;
+}
+
 /**
  *	x86_mod_rm:	Encode a ModR/M byte of an IA-32 instruction.
  *	@mod: The mod field of the byte.
@@ -92,6 +97,14 @@ static void x86_emit_imm32(struct insn_sequence *is, int imm)
 	x86_emit(is, imm_buf.b[3]);
 }
 
+static void x86_emit_imm(struct insn_sequence *is, long disp)
+{
+	if (needs_32(disp))
+		x86_emit_imm32(is, disp);
+	else
+		x86_emit(is, disp);
+}
+
 static void x86_emit_membase_reg(struct insn_sequence *is, unsigned char opc,
 				 struct operand *src, struct operand *dest)
 {
@@ -125,10 +138,7 @@ static void x86_emit_membase_reg(struct insn_sequence *is, unsigned char opc,
 	if (needs_sib)
 		x86_emit(is, x86_sib(0x00, 0x04, encode_reg(base_reg)));
 
-	if (needs_32)
-		x86_emit_imm32(is, disp);
-	else
-		x86_emit(is, disp);
+	x86_emit_imm(is, disp);
 }
 
 static void x86_emit_push_reg(struct insn_sequence *is, enum reg reg)
@@ -158,9 +168,9 @@ void x86_emit_mov_imm32_reg(struct insn_sequence *is, unsigned long imm, enum re
 	x86_emit_imm32(is, imm);
 }
 
-static void x86_emit_mov_imm_disp(struct insn_sequence *is,
-				  struct operand *imm_operand,
-				  struct operand *membase_operand)
+static void x86_emit_mov_imm_membase(struct insn_sequence *is,
+				     struct operand *imm_operand,
+				     struct operand *membase_operand)
 {
 	unsigned long mod = 0x00;
 
@@ -175,6 +185,23 @@ static void x86_emit_mov_imm_disp(struct insn_sequence *is,
 		x86_emit(is, membase_operand->disp);
 
 	x86_emit_imm32(is, imm_operand->imm);
+}
+
+static void x86_emit_mov_reg_membase(struct insn_sequence *is,
+				     struct operand *reg_operand,
+				     struct operand *membase_operand)
+{
+	int mod;
+
+	if (needs_32(membase_operand->disp))
+		mod = 0x02;
+	else
+		mod = 0x01;
+
+	x86_emit(is, 0x89);
+	x86_emit(is, x86_mod_rm(mod, encode_reg(reg_operand->reg), encode_reg(membase_operand->base_reg)));
+
+	x86_emit_imm(is, membase_operand->disp);
 }
 
 static void x86_emit_sub_imm_reg(struct insn_sequence *is, unsigned long imm, enum reg reg)
@@ -323,7 +350,10 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		x86_emit_mov_imm32_reg(is, insn->src.imm, insn->dest.reg);
 		break;
 	case INSN_MOV_IMM_MEMBASE:
-		x86_emit_mov_imm_disp(is, &insn->src, &insn->dest); 
+		x86_emit_mov_imm_membase(is, &insn->src, &insn->dest); 
+		break;
+	case INSN_MOV_REG_MEMBASE:
+		x86_emit_mov_reg_membase(is, &insn->src, &insn->dest);
 		break;
 	case INSN_PUSH_IMM:
 		x86_emit_push_imm32(is, insn->operand.imm);
