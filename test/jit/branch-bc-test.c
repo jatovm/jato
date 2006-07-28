@@ -14,16 +14,20 @@
 #include <bc-test-utils.h>
 #include <libharness.h>
 
-#define TARGET_OFFSET 2
+/*
+ * The actual offset is current offset + branch target.
+ */
+#define BRANCH_TARGET 2
+#define TARGET_OFFSET 3
 
 static void assert_convert_if(enum binary_operator expected_operator,
 			      unsigned char opc)
 {
 	struct expression *if_value;
 	struct basic_block *stmt_bb, *true_bb;
-	struct statement *if_stmt;
+	struct statement *nop_stmt, *if_stmt;
 	struct compilation_unit *cu;
-	unsigned char code[] = { opc, 0, TARGET_OFFSET };
+	unsigned char code[] = { OPC_NOP, opc, 0, BRANCH_TARGET };
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
@@ -42,7 +46,10 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(cu->expr_stack));
 
-	if_stmt = stmt_entry(stmt_bb->stmt_list.next);
+	nop_stmt = stmt_entry(stmt_bb->stmt_list.next);
+	assert_int_equals(STMT_NOP, stmt_type(nop_stmt));
+
+	if_stmt = stmt_entry(nop_stmt->stmt_list_node.next);
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb->label_stmt, if_stmt->if_true);
 	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);

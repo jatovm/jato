@@ -11,9 +11,11 @@
 /* public String defaultString(String s) { if (s == null) { s = ""; } return s; } */
 static unsigned char default_string[9] = {
 	/* 0 */ OPC_ALOAD_1,
-	/* 1 */ OPC_IFNONNULL, 0x00, 0x07,
+	/* 1 */ OPC_IFNONNULL, 0x00, 0x06, /* Jumps to 0x07 */
+	
 	/* 4 */ OPC_LDC, 0x02,
 	/* 6 */ OPC_ASTORE_1,
+
 	/* 7 */ OPC_ALOAD_1,
 	/* 8 */ OPC_ARETURN,
 };
@@ -47,9 +49,12 @@ void test_branch_opcode_ends_basic_block(void)
 static unsigned char greater_than_zero[10] = {
 	/* 0 */ OPC_ILOAD_1,
 	/* 1 */ OPC_IFLE, 0x00, 0x08,
+
 	/* 4 */ OPC_ICONST_1,
 	/* 5 */ OPC_GOTO, 0x00, 0x09,
+
 	/* 8 */ OPC_ICONST_0,
+
 	/* 9 */ OPC_IRETURN,
 };
 
