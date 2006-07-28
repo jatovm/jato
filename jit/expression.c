@@ -225,3 +225,19 @@ struct expression *no_args_expr(void)
 {
 	return alloc_expression(EXPR_NO_ARGS, J_VOID);
 }
+
+unsigned long nr_args(struct expression *args_list)
+{
+	struct expression *left, *right;
+
+	if (expr_type(args_list) == EXPR_NO_ARGS)
+		return 0;
+
+	if (expr_type(args_list) == EXPR_ARG)
+		return 1;
+
+	left  = to_expr(args_list->args_left);
+	right = to_expr(args_list->args_right);
+
+	return nr_args(left) + nr_args(right);
+}

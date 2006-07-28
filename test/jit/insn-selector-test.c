@@ -338,6 +338,9 @@ void test_select_invokevirtual_with_arguments(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(OPC_JMP, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(OPC_ADD, 4, REG_ESP, insn);
 	
 	free_basic_block(bb);
 }

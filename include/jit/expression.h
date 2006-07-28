@@ -204,4 +204,6 @@ struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
 
+unsigned long nr_args(struct expression *);
+
 #endif

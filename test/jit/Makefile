@@ -18,7 +18,7 @@ OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)byteco
 TESTS	= arithmetic-bc-test.o basic-block-test.o bc-test-utils.o \
 	  bitmap-test.o branch-bc-test.o cfg-analyzer-test.o \
 	  bytecode-to-ir-test.o bytecodes-test.o compilation-unit-test.o \
-	  insn-selector-test.o invoke-bc-test.o jit-compiler-test.o \
+	  expression-test.o insn-selector-test.o invoke-bc-test.o jit-compiler-test.o \
 	  list-test.o object-bc-test.o resolve-stub.o stack-test.o \
 	  string-test.o tree-printer-test.o x86-frame-test.o x86-objcode-test.o
 

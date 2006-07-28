@@ -32,6 +32,12 @@
 #define MONOBURG_LOG 1
 #define HAVE_ARRAY_ELEM_INIT 1
 
+static void method_args_cleanup(struct basic_block *bb, unsigned long args_count)
+{
+	unsigned long args_size = args_count * sizeof(unsigned long);
+	bb_add_insn(bb, imm_reg_insn(OPC_ADD, args_size, REG_ESP));
+}
+
 %%
 
 %termprefix EXPR_ OP_ STMT_
@@ -76,10 +82,8 @@ reg:	EXPR_INVOKE(arg) 1
 
 	bb_add_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
 
-	if (method->args_count) {
-		unsigned long imm = method->args_count * sizeof(unsigned long);
-		bb_add_insn(s, imm_reg_insn(OPC_ADD, imm, REG_ESP));
-	}
+	if (method->args_count)
+		method_args_cleanup(s, method->args_count);
 }
 
 reg:	EXPR_INVOKEVIRTUAL(arg) 1
@@ -87,6 +91,7 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	struct expression *expr;
 	unsigned long method_table_offset;
 	unsigned long method_offset;
+	unsigned long args_count;
 	
 	expr = to_expr(tree);
 	method_table_offset = offsetof(struct classblock, method_table);
@@ -103,6 +108,10 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX));
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct jit_trampoline, objcode), REG_EAX));
 	bb_add_insn(s, reg_insn(OPC_JMP, REG_EAX));
+
+	args_count = nr_args(to_expr(expr->args_list));
+	if (args_count)
+		method_args_cleanup(s, args_count);
 }
 
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
