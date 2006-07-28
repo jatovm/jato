@@ -48,9 +48,9 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	return NULL;
 }
 
-int convert_if(struct compilation_unit *cu,
-	       struct basic_block *bb, unsigned long offset,
-	       enum binary_operator binop)
+static int convert_if(struct compilation_unit *cu,
+		      struct basic_block *bb, unsigned long offset,
+		      enum binary_operator binop)
 {
 	struct statement *stmt;
 	struct expression *if_value, *zero_value;
