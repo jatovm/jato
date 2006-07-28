@@ -23,8 +23,9 @@
 
 #define OBJCODE_SIZE 256
 
-int show_disasm;
+int show_basic_blocks;
 int show_tree;
+int show_disasm;
 
 static void print_method_info(struct methodblock *method)
 {
@@ -36,6 +37,18 @@ static void print_disasm(struct methodblock *method, void *start, void *end)
 	print_method_info(method);
 	disassemble(start, end);
 	printf("\n");
+}
+
+static void print_basic_blocks(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	int i = 0;
+
+	print_method_info(cu->method);
+
+	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+		printf("BB%i, start: %lu, end: %lu\n", i++, bb->start, bb->end);
+	}
 }
 
 static void print_tree(struct compilation_unit *cu)
@@ -70,6 +83,9 @@ int jit_compile(struct compilation_unit *cu)
 	err = convert_to_ir(cu);
 	if (err)
 		goto out;
+
+	if (show_basic_blocks)
+		print_basic_blocks(cu);
 
 	if (show_tree)
 		print_tree(cu);

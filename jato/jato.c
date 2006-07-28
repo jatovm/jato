@@ -56,6 +56,7 @@ extern void initialisePlatform();
 
 extern int show_disasm;
 extern int show_tree;
+extern int show_basic_blocks;
 
 void initVM() {
     /* Perform platform dependent initialisation */
@@ -288,6 +289,9 @@ int parseCommandLine(int argc, char *argv[]) {
 
         } else if(strcmp(argv[i], "-Xdumptree") == 0) {
           show_tree = 1;
+
+        } else if(strcmp(argv[i], "-Xdumpbb") == 0) {
+          show_basic_blocks = 1;
 
         } else {
             printf("Unrecognised command line option: %s\n", argv[i]);
