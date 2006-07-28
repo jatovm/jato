@@ -273,9 +273,16 @@ void test_emit_add_imm(void)
 	assert_emit_insn_3(0x83, 0xc0, 0x01, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
 }
 
-void test_emit_cmp_disp_reg(void)
+void test_emit_cmp_membase_reg(void)
 {
 	assert_emit_insn_3(0x3b, 0x45, 0x08, membase_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));
+}
+
+void test_emit_cmp_imm_reg(void)
+{
+	assert_emit_insn_3(0x83, 0xf8, 0x04, imm_reg_insn(OPC_CMP, 0x04, REG_EAX));
+	assert_emit_insn_3(0x83, 0xfb, 0x08, imm_reg_insn(OPC_CMP, 0x08, REG_EBX));
+	assert_emit_insn_6(0x81, 0xfb, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(OPC_CMP, 0xdeadbeef, REG_EBX));
 }
 
 void test_should_use_zero_as_target_branch_for_forward_branches(void)

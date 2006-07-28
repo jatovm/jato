@@ -270,6 +270,22 @@ static void x86_emit_add_imm8_reg(struct insn_sequence *is, unsigned char imm8,
 	x86_emit(is, imm8);
 }
 
+void x86_emit_cmp_imm_reg(struct insn_sequence *is,
+			  struct operand *imm_operand,
+			  struct operand *reg_operand)
+{
+	int opc;
+
+	if (needs_32(imm_operand->imm))
+		opc = 0x81;
+	else 
+		opc = 0x83;
+
+	x86_emit(is, opc);
+	x86_emit(is, x86_mod_rm(0x03, 0x07, encode_reg(reg_operand->reg)));
+	x86_emit_imm(is, imm_operand->imm);
+}
+
 void x86_emit_cmp_membase_reg(struct insn_sequence *is, struct operand *src,
 			      struct operand *dest)
 {
@@ -333,6 +349,9 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_CALL_REL:
 		x86_emit_call(is, (void *)insn->operand.rel);
+		break;
+	case INSN_CMP_IMM_REG:
+		x86_emit_cmp_imm_reg(is, &insn->src, &insn->dest);
 		break;
 	case INSN_CMP_MEMBASE_REG:
 		x86_emit_cmp_membase_reg(is, &insn->src, &insn->dest);
