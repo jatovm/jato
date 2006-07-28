@@ -270,7 +270,9 @@ void test_emit_add_disp_reg(void)
 
 void test_emit_add_imm(void)
 {
-	assert_emit_insn_3(0x83, 0xc0, 0x01, imm_reg_insn(OPC_ADD, 0x01, REG_EAX));
+	assert_emit_insn_3(0x83, 0xc0, 0x04, imm_reg_insn(OPC_ADD, 0x04, REG_EAX));
+	assert_emit_insn_3(0x83, 0xc3, 0x08, imm_reg_insn(OPC_ADD, 0x08, REG_EBX));
+	assert_emit_insn_6(0x81, 0xc0, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(OPC_ADD, 0xdeadbeef, REG_EAX));
 }
 
 void test_emit_cmp_membase_reg(void)
