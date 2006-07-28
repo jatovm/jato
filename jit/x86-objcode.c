@@ -390,15 +390,15 @@ static void x86_backpatch_branches(struct insn_sequence *is,
 				   struct list_head *unresolved,
 				   unsigned long target_off)
 {
-	struct insn *insn, *tmp;
+	struct insn *this, *next;
 
-	list_for_each_entry_safe(insn, tmp, unresolved, branch_list_node) {
+	list_for_each_entry_safe(this, next, unresolved, branch_list_node) {
 		unsigned long addr;
 
-		addr = branch_rel_addr(insn->offset, target_off);
-		is->start[insn->offset + 1] = addr;
+		addr = branch_rel_addr(this->offset, target_off);
+		is->start[this->offset + 1] = addr;
 
-		list_del(&insn->branch_list_node);
+		list_del(&this->branch_list_node);
 	}
 }
 
