@@ -203,7 +203,7 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	local  = to_expr(stmt->store_dest);
 	offset = frame_local_offset(s->b_parent->method, local);
 
-	bb_add_insn(s, reg_membase_insn(OPC_MOV, REG_EAX, REG_ESP, offset));
+	bb_add_insn(s, reg_membase_insn(OPC_MOV, REG_EAX, REG_EBP, offset));
 }
 
 stmt:	STMT_IF(reg)

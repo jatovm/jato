@@ -512,7 +512,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct fieldblock, static_value), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_membase_insn(OPC_MOV, REG_EAX, REG_ESP, expected_disp, insn);
+	assert_reg_membase_insn(OPC_MOV, REG_EAX, REG_EBP, expected_disp, insn);
 
 	free_basic_block(bb);
 }
