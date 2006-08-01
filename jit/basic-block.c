@@ -21,7 +21,7 @@ struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigne
 		memset(bb, 0, sizeof(*bb));
 		INIT_LIST_HEAD(&bb->stmt_list);
 		INIT_LIST_HEAD(&bb->insn_list);
-		INIT_LIST_HEAD(&bb->branch_list);
+		INIT_LIST_HEAD(&bb->backpatch_insns);
 		INIT_LIST_HEAD(&bb->bb_list_node);
 		bb->b_parent = b_parent;
 		bb->start = start;

@@ -335,7 +335,7 @@ static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
 
 		addr = branch_rel_addr(insn->offset, target_insn->offset);
 	} else
-		list_add(&insn->branch_list_node, &insn->operand.branch_target->branch_list);
+		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
 
 	x86_emit_je_rel(is, addr);
 }
@@ -398,12 +398,12 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 }
 
 static void x86_backpatch_branches(struct insn_sequence *is,
-				   struct list_head *unresolved,
+				   struct list_head *to_backpatch,
 				   unsigned long target_off)
 {
 	struct insn *this, *next;
 
-	list_for_each_entry_safe(this, next, unresolved, branch_list_node) {
+	list_for_each_entry_safe(this, next, to_backpatch, branch_list_node) {
 		unsigned long addr;
 
 		addr = branch_rel_addr(this->offset, target_off);
@@ -416,10 +416,8 @@ static void x86_backpatch_branches(struct insn_sequence *is,
 void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 {
 	struct insn *insn;
-	struct list_head *unresolved;
 
-	unresolved = &bb->branch_list;
-	x86_backpatch_branches(is, unresolved, is_offset(is));
+	x86_backpatch_branches(is, &bb->backpatch_insns, is_offset(is));
 
 	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
 		x86_emit_insn(is, insn);

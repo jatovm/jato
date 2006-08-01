@@ -13,7 +13,9 @@ struct basic_block {
 	unsigned long end;
 	struct list_head stmt_list;
 	struct list_head insn_list;
-	struct list_head branch_list;		/* List of incoming branches */
+	/* List of forward branch instructions to this basic block that need
+	   back-patching.  */
+	struct list_head backpatch_insns;
 	struct list_head bb_list_node;
 };
 

@@ -342,7 +342,7 @@ void test_should_add_self_to_unresolved_list_for_forward_branches(void)
 
 	assert_emit_insn_2(0x74, 0x00, insn);
 
-	assert_ptr_equals(insn, list_entry(if_true->branch_list.next,
+	assert_ptr_equals(insn, list_entry(if_true->backpatch_insns.next,
 					   struct insn, branch_list_node));
 
 	free_basic_block(if_true);
