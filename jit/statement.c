@@ -18,7 +18,6 @@ struct statement *alloc_statement(enum statement_type type)
 	if (stmt) {
 		memset(stmt, 0, sizeof *stmt);
 		INIT_LIST_HEAD(&stmt->stmt_list_node);
-		INIT_LIST_HEAD(&stmt->branch_list);
 		stmt->node.op = type << STMT_TYPE_SHIFT;
 	}
 
@@ -41,7 +40,6 @@ void free_statement(struct statement *stmt)
 	case STMT_IF:
 		expr_put(to_expr(stmt->if_conditional));
 		break;
-	case STMT_LABEL:
 	case STMT_GOTO:
 		break;
 	case STMT_RETURN:

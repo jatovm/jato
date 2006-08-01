@@ -10,7 +10,6 @@ enum statement_type {
 	STMT_NOP = OP_LAST,
 	STMT_STORE,
 	STMT_IF,
-	STMT_LABEL,
 	STMT_GOTO,
 	STMT_RETURN,
 	STMT_VOID_RETURN,
@@ -32,13 +31,10 @@ struct statement {
 		};
 		struct /* STMT_IF */ {
 			struct tree_node *if_conditional;
-			struct tree_node *if_true;
-		};
-		struct /* STMT_LABEL */ {
-			struct basic_block *bb;
+			struct basic_block *if_true;
 		};
 		struct /* STMT_GOTO */ {
-			struct tree_node *goto_target;
+			struct basic_block *goto_target;
 		};
 		struct /* STMT_RETURN */ {
 			struct tree_node *return_value;
@@ -46,7 +42,6 @@ struct statement {
 		/* STMT_EXPRESSION, STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct tree_node *expression;
 	};
-	struct list_head branch_list; /* FIXME: part of STMT_LABEL */
 	struct list_head stmt_list_node;
 };
 

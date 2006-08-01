@@ -326,7 +326,7 @@ static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
 	struct basic_block *target_bb;
 	unsigned char addr = 0;
 
-	target_bb = insn->operand.branch_target->bb;
+	target_bb = insn->operand.branch_target;
 
 	if (!list_is_empty(&target_bb->insn_list)) {
 		struct insn *target_insn =
@@ -418,7 +418,7 @@ void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 	struct insn *insn;
 	struct list_head *unresolved;
 
-	unresolved = &bb->label_stmt->branch_list;
+	unresolved = &bb->branch_list;
 	x86_backpatch_branches(is, unresolved, is_offset(is));
 
 	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {

@@ -100,7 +100,7 @@ struct insn *rel_insn(enum insn_opcode insn_op, unsigned long rel)
 	return insn;
 }
 
-struct insn *branch_insn(enum insn_opcode insn_op, struct statement *if_true)
+struct insn *branch_insn(enum insn_opcode insn_op, struct basic_block *if_true)
 {
 	struct insn *insn = alloc_insn(DEFINE_INSN_TYPE_1(insn_op, OPERAND_BRANCH));
 	if (insn)

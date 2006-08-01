@@ -11,9 +11,9 @@ struct basic_block {
 	struct compilation_unit *b_parent;
 	unsigned long start;
 	unsigned long end;
-	struct statement *label_stmt;
 	struct list_head stmt_list;
 	struct list_head insn_list;
+	struct list_head branch_list;		/* List of incoming branches */
 	struct list_head bb_list_node;
 };
 

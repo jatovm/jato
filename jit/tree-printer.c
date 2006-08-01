@@ -154,16 +154,11 @@ static int print_if_stmt(int lvl, struct string *str, struct statement *stmt)
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "if_true", "label %p",
+	err = append_simple_attr(lvl + 1, str, "if_true", "bb %p",
 				 stmt->if_true);
 
       out:
 	return err;
-}
-
-static int print_label_stmt(int lvl, struct string *str, struct statement *stmt)
-{
-	return append_formatted(lvl, str, "LABEL: [%p]\n", stmt);
 }
 
 static int print_goto_stmt(int lvl, struct string *str, struct statement *stmt)
@@ -174,7 +169,7 @@ static int print_goto_stmt(int lvl, struct string *str, struct statement *stmt)
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "goto_target", "label %p",
+	err = append_simple_attr(lvl + 1, str, "goto_target", "bb %p",
 			       stmt->goto_target);
 
       out:
@@ -242,7 +237,6 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_NOP] = print_nop_stmt,
 	[STMT_STORE] = print_store_stmt,
 	[STMT_IF] = print_if_stmt,
-	[STMT_LABEL] = print_label_stmt,
 	[STMT_GOTO] = print_goto_stmt,
 	[STMT_RETURN] = print_return_stmt,
 	[STMT_VOID_RETURN] = print_void_return_stmt,

@@ -51,50 +51,35 @@ void test_should_print_if_statement(void)
 {
 	struct string *expected;
 	struct expression *if_conditional;
-	struct statement *if_true, *stmt;
+	struct statement *stmt;
+	struct basic_block *if_true = (void *) 0xdeadbeef;
 
 	if_conditional = local_expr(J_BOOLEAN, 0);
-	if_true = alloc_statement(STMT_LABEL);
 
 	stmt = alloc_statement(STMT_IF);
 	stmt->if_conditional = &if_conditional->node;
-	stmt->if_true = &if_true->node;
+	stmt->if_true = if_true;
 
 	expected = alloc_str();
-	str_append(expected, "IF:\n  if_conditional: [local boolean 0]\n  if_true: [label %p]\n", if_true);
+	str_append(expected, "IF:\n  if_conditional: [local boolean 0]\n  if_true: [bb %p]\n", if_true);
 	assert_print_stmt(expected->value, stmt);
 
-	free_statement(if_true);
-	free_str(expected);
-}
-
-void test_should_print_label_statement(void)
-{
-	struct string *expected;
-	struct statement *stmt;
-
-	stmt = alloc_statement(STMT_LABEL);
-
-	expected = alloc_str();
-	str_append(expected, "LABEL: [%p]\n", stmt);
-	assert_print_stmt(expected->value, stmt);
 	free_str(expected);
 }
 
 void test_should_print_goto_statement(void)
 {
 	struct string *expected;
-	struct statement *goto_target, *stmt;
+	struct statement *stmt;
+	struct basic_block *goto_target = (void *) 0xdeadbeef;
 
-	goto_target = alloc_statement(STMT_LABEL);
 	stmt = alloc_statement(STMT_GOTO);
-	stmt->goto_target = &goto_target->node;
+	stmt->goto_target = goto_target;
 
 	expected = alloc_str();
-	str_append(expected, "GOTO:\n  goto_target: [label %p]\n", goto_target);
+	str_append(expected, "GOTO:\n  goto_target: [bb %p]\n", goto_target);
 	assert_print_stmt(expected->value, stmt);
 
-	free_statement(goto_target);
 	free_str(expected);
 }
 

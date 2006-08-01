@@ -38,7 +38,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	if (!if_stmt)
 		goto failed_put_expr;
 
-	if_stmt->if_true = &true_bb->label_stmt->node;
+	if_stmt->if_true = true_bb;
 	if_stmt->if_conditional = &if_conditional->node;
 
 	return if_stmt;
@@ -186,7 +186,7 @@ int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
 	if (!goto_stmt)
 		return -ENOMEM;
 
-	goto_stmt->goto_target = &target_bb->label_stmt->node;
+	goto_stmt->goto_target = target_bb;
 	bb_add_stmt(bb, goto_stmt);
 	return 0;
 }

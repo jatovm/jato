@@ -219,7 +219,7 @@ stmt:	STMT_IF(reg)
 {
 	struct statement *stmt = to_stmt(tree);
 
-	bb_add_insn(s, branch_insn(OPC_JE, to_stmt(stmt->if_true)));
+	bb_add_insn(s, branch_insn(OPC_JE, stmt->if_true));
 }
 
 %%

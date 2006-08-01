@@ -78,7 +78,7 @@ static void assert_rel_insn(enum insn_opcode expected_opc,
 }
 
 static void assert_branch_insn(enum insn_opcode expected_opc,
-			       struct statement *if_true, struct insn *insn)
+			       struct basic_block *if_true, struct insn *insn)
 {
 	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_BRANCH), insn->type);
 	assert_ptr_equals(if_true, insn->operand.branch_target);
@@ -351,7 +351,7 @@ static struct statement *add_if_stmt(struct expression *expr, struct basic_block
 
 	stmt = alloc_statement(STMT_IF);
 	stmt->expression = &expr->node;
-	stmt->if_true = &true_bb->label_stmt->node;
+	stmt->if_true = true_bb;
 	bb_add_stmt(bb, stmt);
 
 	return stmt;
@@ -386,7 +386,7 @@ void test_select_local_eq_local_in_if_statement(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
-	assert_branch_insn(OPC_JE, to_stmt(stmt->if_true), insn);
+	assert_branch_insn(OPC_JE, stmt->if_true, insn);
 
 	free_basic_block(bb);
 	free_basic_block(true_bb);
@@ -421,7 +421,7 @@ void test_select_local_eq_value_in_if_statement(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
-	assert_branch_insn(OPC_JE, to_stmt(stmt->if_true), insn);
+	assert_branch_insn(OPC_JE, stmt->if_true, insn);
 
 	free_basic_block(bb);
 	free_basic_block(true_bb);

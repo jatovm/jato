@@ -3,7 +3,7 @@
 
 #include <vm/list.h>
 
-struct statement;
+struct basic_block;
 
 enum reg {
 	REG_EAX,
@@ -32,7 +32,7 @@ struct operand {
 		unsigned long rel;
 
 		/* OPERAND_BRANCH */
-		struct statement *branch_target;
+		struct basic_block *branch_target;
 	};
 };
 
@@ -109,7 +109,7 @@ struct insn *imm_reg_insn(enum insn_opcode, unsigned long, enum reg);
 struct insn *imm_membase_insn(enum insn_opcode, unsigned long, enum reg, long);
 struct insn *imm_insn(enum insn_opcode, unsigned long);
 struct insn *rel_insn(enum insn_opcode, unsigned long);
-struct insn *branch_insn(enum insn_opcode, struct statement *);
+struct insn *branch_insn(enum insn_opcode, struct basic_block *);
 
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
