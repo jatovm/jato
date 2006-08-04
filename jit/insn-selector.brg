@@ -46,6 +46,9 @@ static void method_args_cleanup(struct basic_block *bb, unsigned long args_count
 
 reg:	EXPR_VALUE	0
 {
+	struct expression *expr = to_expr(tree);
+
+	bb_add_insn(s, imm_reg_insn(OPC_MOV, expr->value, REG_EAX));
 }
 
 reg:	EXPR_LOCAL	1
@@ -173,10 +176,12 @@ arg:	EXPR_ARGS_LIST(arg, arg)
 
 stmt:	STMT_RETURN(reg)
 {
+	bb_add_insn(s, branch_insn(OPC_JMP, s->b_parent->exit_bb));
 }
 
 stmt:	STMT_VOID_RETURN
 {
+	bb_add_insn(s, branch_insn(OPC_JMP, s->b_parent->exit_bb));
 }
 
 stmt:	STMT_EXPRESSION(reg)

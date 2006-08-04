@@ -10,6 +10,7 @@
 struct compilation_unit {
 	struct methodblock *method;
 	struct list_head bb_list;
+	struct basic_block *exit_bb;
 	struct stack *expr_stack;
 	void *objcode;
 	bool is_compiled;

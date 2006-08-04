@@ -287,13 +287,19 @@ void test_emit_cmp_imm_reg(void)
 	assert_emit_insn_6(0x81, 0xfb, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(OPC_CMP, 0xdeadbeef, REG_EBX));
 }
 
-void test_should_use_zero_as_target_branch_for_forward_branches(void)
+static void assert_forward_branch(unsigned char expected_opc, enum insn_opcode actual_opc)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 
-	assert_emit_insn_2(0x74, 0x00, branch_insn(OPC_JE, bb));
+	assert_emit_insn_2(expected_opc, 0x00, branch_insn(actual_opc, bb));
 
 	free_basic_block(bb);
+}
+
+void test_should_use_zero_as_target_branch_for_forward_branches(void)
+{
+	assert_forward_branch(0x74, OPC_JE);
+	assert_forward_branch(0xeb, OPC_JMP);
 }
 
 static void assert_emits_branch_target(unsigned char expected_target,

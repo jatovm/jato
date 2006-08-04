@@ -309,9 +309,9 @@ static void x86_emit_indirect_jump_reg(struct insn_sequence *is, enum reg reg)
 	x86_emit(is, x86_mod_rm(0x3, 0x04, encode_reg(reg)));
 }
 
-void x86_emit_je_rel(struct insn_sequence *is, unsigned char rel8)
+void x86_emit_branch_rel(struct insn_sequence *is, unsigned char opc, unsigned char rel8)
 {
-	x86_emit(is, 0x74);
+	x86_emit(is, opc);
 	x86_emit(is, rel8);
 }
 
@@ -321,7 +321,7 @@ static unsigned char branch_rel_addr(unsigned long branch_offset,
 	return target_offset - branch_offset - 2;
 }
 
-static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
+static void x86_emit_branch(struct insn_sequence *is, unsigned char opc, struct insn *insn)
 {
 	struct basic_block *target_bb;
 	unsigned char addr = 0;
@@ -337,7 +337,7 @@ static void x86_emit_branch(struct insn_sequence *is, struct insn *insn)
 	} else
 		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
 
-	x86_emit_je_rel(is, addr);
+	x86_emit_branch_rel(is, opc, addr);
 }
 
 static void x86_emit_indirect_jmp(struct insn_sequence *is,
@@ -368,7 +368,10 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		x86_emit_cmp_membase_reg(is, &insn->src, &insn->dest);
 		break;
 	case INSN_JE_BRANCH:
-		x86_emit_branch(is, insn);
+		x86_emit_branch(is, 0x74, insn);
+		break;
+	case INSN_JMP_BRANCH:
+		x86_emit_branch(is, 0xeb, insn);
 		break;
 	case INSN_JMP_REGISTER:
 		x86_emit_indirect_jmp(is, &insn->operand);

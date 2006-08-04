@@ -159,17 +159,57 @@ void test_select_add_local_to_local(void)
 	free_basic_block(bb);
 }
 
-void test_select_void_return(void)
+void test_select_return(void)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
+	struct compilation_unit cu;
+	struct expression *value;
+	struct basic_block *bb;
 	struct statement *stmt;
+	struct insn *insn;
 
-	stmt = alloc_statement(STMT_VOID_RETURN);
+	value = value_expr(J_INT, 0xdeadbeef);
+
+	stmt = alloc_statement(STMT_RETURN);
+	stmt->return_value = &value->node;
+
+	bb = alloc_basic_block(&cu, 0, 1);
 	bb_add_stmt(bb, stmt);
+
+	cu.exit_bb = alloc_basic_block(&cu, 1, 1);
+
 	insn_select(bb);
 
-	assert_true(list_is_empty(&bb->insn_list));
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_branch_insn(OPC_JMP, cu.exit_bb, insn);
+
 	free_basic_block(bb);
+	free_basic_block(cu.exit_bb);
+}
+
+void test_select_void_return(void)
+{
+	struct compilation_unit cu;
+	struct basic_block *bb;
+	struct statement *stmt;
+	struct insn *insn;
+
+	stmt = alloc_statement(STMT_VOID_RETURN);
+
+	bb = alloc_basic_block(&cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	cu.exit_bb = alloc_basic_block(&cu, 1, 1);
+
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_branch_insn(OPC_JMP, cu.exit_bb, insn);
+
+	free_basic_block(bb);
+	free_basic_block(cu.exit_bb);
 }
 
 void test_select_invoke_without_arguments(void)

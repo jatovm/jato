@@ -5,6 +5,7 @@
  * LICENSE for details.
  */
 
+#include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 
 #include <stdlib.h>
@@ -19,6 +20,7 @@ struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 		cu->method = method;
 		cu->expr_stack = alloc_stack();
 		cu->is_compiled = false;
+		cu->exit_bb = alloc_basic_block(cu, 0, 0);
 		pthread_mutex_init(&cu->mutex, NULL);
 	}
 	return cu;
@@ -33,6 +35,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 
 	pthread_mutex_destroy(&cu->mutex);
 	free_stack(cu->expr_stack);
+	free_basic_block(cu->exit_bb);
 	free(cu->objcode);
 	free(cu);
 }
