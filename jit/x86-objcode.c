@@ -341,11 +341,11 @@ static void x86_emit_branch(struct insn_sequence *is, unsigned char opc, struct 
 	x86_emit_branch_rel(is, opc, addr);
 }
 
-static void x86_emit_indirect_jmp(struct insn_sequence *is,
-				  struct operand *operand)
+static void x86_emit_indirect_call(struct insn_sequence *is,
+				   struct operand *operand)
 {
 	x86_emit(is, 0xff);
-	x86_emit(is, x86_mod_rm(3, 4, encode_reg(operand->reg)));
+	x86_emit(is, x86_mod_rm(0x0, 0x2, encode_reg(operand->reg)));
 }
 
 static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
@@ -358,6 +358,9 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_ADD_IMM_REG:
 		x86_emit_add_imm_reg(is, &insn->src, &insn->dest);
+		break;
+	case INSN_CALL_REG:
+		x86_emit_indirect_call(is, &insn->operand);
 		break;
 	case INSN_CALL_REL:
 		x86_emit_call(is, (void *)insn->operand.rel);
@@ -373,9 +376,6 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_JMP_BRANCH:
 		x86_emit_branch(is, 0xeb, insn);
-		break;
-	case INSN_JMP_REGISTER:
-		x86_emit_indirect_jmp(is, &insn->operand);
 		break;
 	case INSN_MOV_MEMBASE_REG:
 		x86_emit_mov_membase_reg(is, &insn->src, &insn->dest);

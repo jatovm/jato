@@ -57,7 +57,7 @@ static void assert_emit_insn_3(unsigned char opcode, unsigned char modrm,
 {
 	unsigned char expected[] = { opcode, modrm, extra };
 
-	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
+assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
 static void assert_emit_insn_4(unsigned char opcode, unsigned char modrm,
@@ -221,9 +221,9 @@ void test_emit_call_forward(void)
 
 void test_emit_indirect_call(void)
 {
-	assert_emit_insn_2(0xff, 0xe0, reg_insn(OPC_JMP, REG_EAX));
-	assert_emit_insn_2(0xff, 0xe3, reg_insn(OPC_JMP, REG_EBX));
-	assert_emit_insn_2(0xff, 0xe1, reg_insn(OPC_JMP, REG_ECX));
+	assert_emit_insn_2(0xff, 0x10, reg_insn(OPC_CALL, REG_EAX));
+	assert_emit_insn_2(0xff, 0x13, reg_insn(OPC_CALL, REG_EBX));
+	assert_emit_insn_2(0xff, 0x11, reg_insn(OPC_CALL, REG_ECX));
 }
 
 void test_emit_mov_imm(void)

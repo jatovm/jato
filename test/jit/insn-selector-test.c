@@ -377,7 +377,7 @@ void test_select_invokevirtual_with_arguments(void)
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct jit_trampoline, objcode), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(OPC_JMP, REG_EAX, insn);
+	assert_reg_insn(OPC_CALL, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(OPC_ADD, 4, REG_ESP, insn);
