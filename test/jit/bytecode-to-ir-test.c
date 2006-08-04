@@ -1025,59 +1025,6 @@ void test_convert_cmp(void)
 
 /* MISSING: lookupswitch */
 
-static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
-{
-	struct expression *return_value;
-	struct compilation_unit *cu;
-	unsigned char code[] = { opc };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-	struct statement *ret_stmt;
-
-	cu = alloc_simple_compilation_unit(&method);
-
-	return_value = temporary_expr(jvm_type, 0);
-	stack_push(cu->expr_stack, return_value);
-
-	convert_to_ir(cu);
-	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_true(stack_is_empty(cu->expr_stack));
-	assert_return_stmt(return_value, ret_stmt);
-
-	free_compilation_unit(cu);
-}
-
-void test_convert_non_void_return(void)
-{
-	assert_convert_return(J_INT, OPC_IRETURN);
-	assert_convert_return(J_LONG, OPC_LRETURN);
-	assert_convert_return(J_FLOAT, OPC_FRETURN);
-	assert_convert_return(J_DOUBLE, OPC_DRETURN);
-	assert_convert_return(J_REFERENCE, OPC_ARETURN);
-}
-
-void test_convert_void_return(void)
-{
-	struct compilation_unit *cu;
-	unsigned char code[] = { OPC_RETURN };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-	struct statement *ret_stmt;
-
-	cu = alloc_simple_compilation_unit(&method);
-
-	convert_to_ir(cu);
-	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_true(stack_is_empty(cu->expr_stack));
-	assert_void_return_stmt(ret_stmt);
-
-	free_compilation_unit(cu);
-}
-
 /* MISSING: getfield */
 
 /* MISSING: putfield */
