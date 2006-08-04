@@ -109,7 +109,6 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_table_offset, REG_EAX));
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_offset, REG_EAX));
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX));
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct jit_trampoline, objcode), REG_EAX));
 	bb_add_insn(s, reg_insn(OPC_CALL, REG_EAX));
 
 	args_count = nr_args(to_expr(expr->args_list));
