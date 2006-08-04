@@ -19,7 +19,7 @@ int convert_pop(struct compilation_unit *cu, struct basic_block *bb,
 {
 	struct expression *expr = stack_pop(cu->expr_stack);
 	
-	if (expr_type(expr) == EXPR_INVOKE) {
+	if (expr_type(expr) == EXPR_INVOKE || expr_type(expr) == EXPR_INVOKEVIRTUAL) {
 		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
 		if (!expr_stmt)
 			return -ENOMEM;

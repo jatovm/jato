@@ -338,29 +338,54 @@ void test_convert_invokestatic_for_void_return_type(void)
 	free_compilation_unit(cu);
 }
 
-void test_convert_invokestatic_when_return_value_is_discarded(void)
+static struct compilation_unit *invoke_discarded_return_value(unsigned char invoke_opc, struct methodblock *mb)
 {
-	struct methodblock mb;
+	struct compilation_unit *cu;
 	unsigned char code[] = {
-		OPC_INVOKESTATIC, 0x00, 0x00,
+		invoke_opc, 0x00, 0x00,
 		OPC_POP
 	};
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
-	struct compilation_unit *cu;
-	struct statement *stmt;
 
-	mb.type = "()I";
-	mb.args_count = 0;
+	mb->type = "()I";
+	mb->args_count = 0;
 
 	cu = alloc_simple_compilation_unit(&method);
-	convert_ir_invoke(cu, &mb, 0);
+	convert_ir_invoke(cu, mb, 0);
+
+	return cu;
+}
+
+void test_convert_invokestatic_when_return_value_is_discarded(void)
+{
+	struct compilation_unit *cu;
+	struct statement *stmt;
+	struct methodblock mb;
+
+	cu = invoke_discarded_return_value(OPC_INVOKESTATIC, &mb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_INT, &mb, stmt->expression);
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	free_compilation_unit(cu);
+}
+
+void test_convert_invokevirtual_when_return_value_is_discarded(void)
+{
+	struct compilation_unit *cu;
+	struct statement *stmt;
+	struct methodblock mb;
+
+	cu = invoke_discarded_return_value(OPC_INVOKEVIRTUAL, &mb);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
+	assert_int_equals(EXPR_INVOKEVIRTUAL, expr_type(to_expr(stmt->expression)));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
