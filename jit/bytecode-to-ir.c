@@ -233,9 +233,7 @@ int convert_to_ir(struct compilation_unit *cu)
 	unsigned long code_size = cu->method->code_size;
 	unsigned char *code = cu->method->jit_code;
 	unsigned long offset = 0;
-	struct basic_block *entry_bb;
-
-	entry_bb = list_entry(cu->bb_list.next, struct basic_block, bb_list_node);
+	struct basic_block *bb;
 
 	while (offset < code_size) {
 		unsigned char opc = code[offset];
@@ -261,8 +259,17 @@ int convert_to_ir(struct compilation_unit *cu)
 			err = -EINVAL;
 			goto out;
 		}
-	
-		err = convert(cu, entry_bb, offset);
+
+		bb = find_bb(cu, offset); 
+		if (!bb) {
+			printf("%s: No basic block found for offset %lu "
+			       "in method '%s'\n", __FUNCTION__, offset,
+			       cu->method->name);
+			err = -EINVAL;
+			goto out;
+		}
+
+		err = convert(cu, bb, offset);
 		if (err)
 			goto out;
 
