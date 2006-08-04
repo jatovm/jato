@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
 #include <x86-objcode.h>
 #include <jit/basic-block.h>
 #include <jit/instruction.h>
@@ -328,7 +329,7 @@ static void x86_emit_branch(struct insn_sequence *is, unsigned char opc, struct 
 
 	target_bb = insn->operand.branch_target;
 
-	if (!list_is_empty(&target_bb->insn_list)) {
+	if (target_bb->is_emitted) {
 		struct insn *target_insn =
 			list_entry(target_bb->insn_list.next, struct insn,
 				   insn_list_node);
@@ -425,6 +426,7 @@ void x86_emit_obj_code(struct basic_block *bb, struct insn_sequence *is)
 	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
 		x86_emit_insn(is, insn);
 	}
+	bb->is_emitted = true;
 }
 
 void x86_emit_trampoline(struct compilation_unit *cu, void *call_target,

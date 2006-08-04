@@ -95,6 +95,42 @@ void test_jit_method_trampoline_compiles_and_invokes_method(void)
 	free_compilation_unit(cu);
 }
 
+typedef int (*is_zero_fn)(int);
+
+static unsigned char is_zero_bytecode[] = {
+	OPC_ILOAD_0,
+	OPC_ICONST_0,
+	OPC_IF_ICMPEQ, 0x00, 0x05,
+
+	OPC_ICONST_0,
+	OPC_IRETURN,
+
+	OPC_ICONST_1,
+	OPC_IRETURN,
+};
+
+void test_magic_trampoline_compiles_all_basic_blocks(void)
+{
+	struct compilation_unit *cu;
+	struct jit_trampoline *t;
+	is_zero_fn function;
+	struct methodblock method = {
+		.jit_code = is_zero_bytecode,
+		.code_size = ARRAY_SIZE(is_zero_bytecode),
+		.args_count = 1,
+	};
+
+	cu = alloc_compilation_unit(&method);
+	t = build_jit_trampoline(cu);
+
+	function = t->objcode;
+	assert_int_equals(0, function(1));
+	assert_int_equals(1, function(0));
+	
+	free_jit_trampoline(t);
+	free_compilation_unit(cu);
+}
+
 static char java_main[] = { OPC_RETURN };
 
 void test_jit_prepare_for_exec_returns_trampoline_objcode(void)

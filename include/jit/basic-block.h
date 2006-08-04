@@ -2,6 +2,7 @@
 #define __JIT_BASIC_BLOCK_H
 
 #include <vm/list.h>
+#include <stdbool.h>
 
 struct compilation_unit;
 struct insn;
@@ -11,6 +12,7 @@ struct basic_block {
 	struct compilation_unit *b_parent;
 	unsigned long start;
 	unsigned long end;
+	bool is_emitted;
 	struct list_head stmt_list;
 	struct list_head insn_list;
 	/* List of forward branch instructions to this basic block that need

@@ -42,12 +42,11 @@ static void print_disasm(struct methodblock *method, void *start, void *end)
 static void print_basic_blocks(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
-	int i = 0;
 
 	print_method_info(cu->method);
 
 	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
-		printf("BB%i, start: %lu, end: %lu\n", i++, bb->start, bb->end);
+		printf("BB %p, start: %lu, end: %lu\n", bb, bb->start, bb->end);
 	}
 }
 
@@ -59,22 +58,24 @@ static void print_tree(struct compilation_unit *cu)
 	
 	print_method_info(cu->method);
 
-	str = alloc_str();
-
 	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
-		list_for_each_entry(stmt, &bb->stmt_list, stmt_list_node)
+		printf("BB %p:\n", bb);
+		list_for_each_entry(stmt, &bb->stmt_list, stmt_list_node) {
+			str = alloc_str();
 			tree_print(&stmt->node, str);
+			printf(str->value);
+			printf("\n");
+			free_str(str);
+		}
 	}
 
-	printf(str->value);
-	printf("\n");
-	free_str(str);
 }
 
 int jit_compile(struct compilation_unit *cu)
 {
-	int err = 0;
 	struct insn_sequence is;
+	struct basic_block *bb;
+	int err = 0;
 
 	err = build_cfg(cu);
 	if (err)
@@ -90,7 +91,9 @@ int jit_compile(struct compilation_unit *cu)
 	if (show_tree)
 		print_tree(cu);
 
-	insn_select(bb_entry(cu->bb_list.next));
+	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+		insn_select(bb);
+	}
 
 	cu->objcode = alloc_exec(OBJCODE_SIZE);
 	if (!cu->objcode) {
@@ -100,7 +103,10 @@ int jit_compile(struct compilation_unit *cu)
 	memset(cu->objcode, 0, OBJCODE_SIZE);
 	init_insn_sequence(&is, cu->objcode, OBJCODE_SIZE);
 	x86_emit_prolog(&is, 0);
-	x86_emit_obj_code(bb_entry(cu->bb_list.next), &is);
+	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+		x86_emit_obj_code(bb, &is);
+	}
+	x86_emit_obj_code(cu->exit_bb, &is);
 	x86_emit_epilog(&is, 0);
 
 	if (show_disasm)

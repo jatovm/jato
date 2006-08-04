@@ -361,6 +361,9 @@ static void assert_backpatches_branches(unsigned char expected_target,
 	char code[16];
 	struct insn_sequence is;
 
+	branch_bb->is_emitted = false;
+	target_bb->is_emitted = false;
+
 	init_insn_sequence(&is, code, 16);
 
 	x86_emit_obj_code(branch_bb, &is);
