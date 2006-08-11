@@ -204,4 +204,6 @@ void test_insn_after_branch_are_added_to_another_bb(void)
 
 	bb = list_next_entry(&bb->bb_list_node, struct basic_block, bb_list_node);
 	assert_false(list_is_empty(&bb->stmt_list));
+
+	free_compilation_unit(cu);
 }
