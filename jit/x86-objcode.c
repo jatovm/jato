@@ -263,6 +263,12 @@ static void x86_emit_add_membase_reg(struct insn_sequence *is,
 	x86_emit_membase_reg(is, 0x03, src, dest);
 }
 
+static void x86_emit_sub_membase_reg(struct insn_sequence *is,
+				     struct operand *src, struct operand *dest)
+{
+	x86_emit_membase_reg(is, 0x2b, src, dest);
+}
+
 static void __x86_emit_add_imm_reg(struct insn_sequence *is, long imm, enum reg reg)
 {
 	int opc;
@@ -394,6 +400,9 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_PUSH_REG:
 		x86_emit_push_reg(is, insn->operand.reg);
+		break;
+	case INSN_SUB_MEMBASE_REG:
+		x86_emit_sub_membase_reg(is, &insn->src, &insn->dest);
 		break;
 	default:
 		assert(!"unknown opcode");

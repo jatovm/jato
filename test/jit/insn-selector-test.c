@@ -129,7 +129,7 @@ void test_should_select_insn_for_every_statement(void)
 	free_basic_block(bb);
 }
 
-void test_select_add_local_to_local(void)
+static void assert_select_local_local_binop(enum binary_operator expr_op, enum insn_opcode insn_op)
 {
 	struct basic_block *bb;
 	struct insn *insn;
@@ -143,7 +143,7 @@ void test_select_add_local_to_local(void)
 	};
 
 	bb = alloc_basic_block(&cu, 0, 1);
-	expr = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
+	expr = binop_expr(J_INT, expr_op, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 	bb_add_stmt(bb, stmt);
@@ -154,9 +154,19 @@ void test_select_add_local_to_local(void)
 	assert_membase_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_ADD, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(insn_op, REG_EBP, 8, REG_EAX, insn);
 
 	free_basic_block(bb);
+}
+
+void test_select_add_local_to_local(void)
+{
+	assert_select_local_local_binop(OP_ADD, OPC_ADD);
+}
+
+void test_select_sub_local_from_local(void)
+{
+	assert_select_local_local_binop(OP_SUB, OPC_SUB);
 }
 
 void test_select_return(void)
