@@ -5,15 +5,16 @@
  * LICENSE for details.
  */
 
-#include <vm/alloc.h>
-#include <jit/compilation-unit.h>
 #include <errno.h>
+#include <jit/compilation-unit.h>
+#include <jit/insn-selector.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
-#include <jit/insn-selector.h>
-#include <x86-objcode.h>
-#include <vm/string.h>
 #include <jit/tree-printer.h>
+#include <vm/alloc.h>
+#include <vm/natives.h>
+#include <vm/string.h>
+#include <x86-objcode.h>
 
 #include "disass.h"
 
@@ -126,14 +127,29 @@ int jit_compile(struct compilation_unit *cu)
 
 void *jit_magic_trampoline(struct compilation_unit *cu)
 {
+	void *ret;
+
 	pthread_mutex_lock(&cu->mutex);
 
-	if (!cu->is_compiled)
+	if (cu->method->access_flags & ACC_NATIVE) {
+		struct methodblock *method = cu->method;
+		const char *method_name, *class_name;
+
+		class_name  = CLASS_CB(method->class)->name;
+		method_name = method->name;
+
+		ret = vm_lookup_native(class_name, method_name);
+	}
+	else if (!cu->is_compiled) {
 		jit_compile(cu);
+		ret = cu->objcode;
+	}
+	else
+		ret = cu->objcode;
 
 	pthread_mutex_unlock(&cu->mutex);
 
-	return cu->objcode;
+	return ret;
 }
 
 #define TRAMP_OBJSIZE 15

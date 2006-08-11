@@ -5,10 +5,13 @@
 #include <jit/compilation-unit.h>
 #include <jit/jit-compiler.h>
 
+#include <vm/natives.h>
 #include <vm/system.h>
 #include <vm/vm.h>
 
 #include <libharness.h>
+
+#include "vm-utils.h"
 
 typedef int (*sum_fn)(int, int);
 
@@ -146,4 +149,74 @@ void test_jit_prepare_for_exec_returns_trampoline_objcode(void)
 
 	free_compilation_unit(mb.compilation_unit);
 	free_jit_trampoline(mb.trampoline);
+}
+
+static int native_sum(int a, int b)
+{
+	return a + b;
+}
+
+static char native_sum_invoker[] = {
+	OPC_ILOAD_0,
+	OPC_ILOAD_1,
+	OPC_INVOKESTATIC, 0x00, 0x00,
+	OPC_IRETURN
+};
+
+void test_jitted_code_invokes_native_method(void)
+{
+	struct constant_pool *constant_pool;
+	struct classblock *classblock;
+	struct object *invoker_class;
+	struct object *native_class;
+	sum_fn function;
+	u4 cp_infos[1];
+	u1 cp_types[1];
+
+	struct methodblock invoker_method = {
+		.jit_code = native_sum_invoker,
+		.code_size = ARRAY_SIZE(native_sum_invoker),
+		.args_count = 2,
+	};
+	struct methodblock native_sum_method = {
+		.args_count = 2,
+		.access_flags = ACC_NATIVE,
+		.type = "(I)II",
+	};
+
+	jit_prepare_for_exec(&invoker_method);
+	jit_prepare_for_exec(&native_sum_method);
+
+	invoker_class = new_class();
+
+	classblock = CLASS_CB(invoker_class);
+	classblock->constant_pool_count = 1;
+
+	cp_infos[0] = (unsigned long) &native_sum_method;
+	cp_types[0] = CONSTANT_Resolved;
+
+	constant_pool = &classblock->constant_pool;
+	constant_pool->info = cp_infos;
+	constant_pool->type = cp_types;
+
+	invoker_method.class = invoker_class;
+
+	native_class = new_class();
+	CLASS_CB(native_class)->name = "Natives";
+	native_sum_method.name = "nativeSum";
+	native_sum_method.class = native_class;
+
+	vm_register_native("Natives", "nativeSum", native_sum);
+
+	function = invoker_method.trampoline->objcode;
+
+	assert_int_equals(1, function(0, 1));
+	assert_int_equals(3, function(1, 2));
+	
+	vm_unregister_natives();
+
+	free_compilation_unit(invoker_method.compilation_unit);
+	free_compilation_unit(native_sum_method.compilation_unit);
+	free(invoker_class);
+	free(native_class);
 }

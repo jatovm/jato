@@ -25,6 +25,7 @@
 #include <signal.h>
 
 #include <vm/backtrace.h>
+#include <vm/natives.h>
 #include <vm/vm.h>
 #include <jit/jit-compiler.h>
 
@@ -318,6 +319,16 @@ void install_sighandlers(void) {
 
 typedef void (*java_main_fn)(void);
 
+static void vm_runtime_exit(int status)
+{
+	exitVM(status);
+}
+
+static void jit_init_natives(void)
+{
+	vm_register_native("java/lang/VMRuntime", "exit", vm_runtime_exit);
+}
+
 int main(int argc, char *argv[]) {
     Class *array_class, *main_class;
     Object *system_loader, *array;
@@ -331,6 +342,7 @@ int main(int argc, char *argv[]) {
     int class_arg = parseCommandLine(argc, argv);
 
     initVM();
+    jit_init_natives();
 
    if((system_loader = getSystemClassLoader()) == NULL) {
         printf("Cannot create system class loader\n");

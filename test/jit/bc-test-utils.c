@@ -13,6 +13,8 @@
 #include <libharness.h>
 #include <stdlib.h>
 
+#include "vm-utils.h"
+
 struct compilation_unit *
 alloc_simple_compilation_unit(struct methodblock *method)
 {
@@ -170,7 +172,7 @@ void convert_ir_const(struct compilation_unit *cu,
 		      ConstantPoolEntry *cp_infos,
 		      size_t nr_cp_infos, u1 *cp_types)
 {
-	struct object *class = malloc(sizeof(struct classblock) + sizeof(struct object));
+	struct object *class = new_class();
 	struct classblock *cb = CLASS_CB(class);
 	struct constant_pool *constant_pool = &cb->constant_pool;
 
