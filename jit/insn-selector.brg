@@ -84,6 +84,11 @@ reg:	OP_SUB(reg, EXPR_LOCAL) 1
 	binop_reg_local(s, tree, OPC_SUB);
 }
 
+reg:	OP_MUL(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(s, tree, OPC_MUL);
+}
+
 reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr;

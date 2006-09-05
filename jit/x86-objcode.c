@@ -269,6 +269,28 @@ static void x86_emit_sub_membase_reg(struct insn_sequence *is,
 	x86_emit_membase_reg(is, 0x2b, src, dest);
 }
 
+static void x86_emit_mul_membase_reg(struct insn_sequence *is,
+				     struct operand *src, struct operand *dest)
+{
+	enum reg reg;
+	long disp;
+	int mod;
+
+	assert(dest->reg == REG_EAX);
+
+	reg  = src->reg;
+	disp = src->disp;
+
+	if (needs_32(disp))
+		mod = 0x02;
+	else
+		mod = 0x01;
+
+	x86_emit(is, 0xf7);
+	x86_emit(is, x86_mod_rm(mod, 0x04, encode_reg(reg)));
+	x86_emit_imm(is, disp);
+}
+
 static void __x86_emit_add_imm_reg(struct insn_sequence *is, long imm, enum reg reg)
 {
 	int opc;
@@ -394,6 +416,9 @@ static void x86_emit_insn(struct insn_sequence *is, struct insn *insn)
 		break;
 	case INSN_MOV_REG_MEMBASE:
 		x86_emit_mov_reg_membase(is, &insn->src, &insn->dest);
+		break;
+	case INSN_MUL_MEMBASE_REG:
+		x86_emit_mul_membase_reg(is, &insn->src, &insn->dest);
 		break;
 	case INSN_PUSH_IMM:
 		x86_emit_push_imm32(is, insn->operand.imm);

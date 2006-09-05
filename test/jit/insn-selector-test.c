@@ -169,6 +169,11 @@ void test_select_sub_local_from_local(void)
 	assert_select_local_local_binop(OP_SUB, OPC_SUB);
 }
 
+void test_select_mul_local_from_local(void)
+{
+	assert_select_local_local_binop(OP_MUL, OPC_MUL);
+}
+
 void test_select_return(void)
 {
 	struct compilation_unit cu;
