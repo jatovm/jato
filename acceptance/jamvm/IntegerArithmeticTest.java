@@ -56,6 +56,12 @@ public class IntegerArithmeticTest {
         assertEquals( 6, mul( 2,  3));
     }
 
+    public static void testIntegerMultiplicationOverflow() {
+        assertEquals(1, mul(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        assertEquals(0, mul(Integer.MIN_VALUE, Integer.MIN_VALUE));
+        assertEquals(Integer.MIN_VALUE, mul(Integer.MIN_VALUE, Integer.MAX_VALUE));
+    }
+
     public static int mul(int multiplicand, int multiplier) {
         return multiplicand * multiplier;
     }
@@ -77,6 +83,7 @@ public class IntegerArithmeticTest {
         testIntegerSubtraction();
         testIntegerSubtractionOverflow();
         testIntegerMultiplication();
+        testIntegerMultiplicationOverflow();
 
         Runtime.getRuntime().halt(retval);
     }
