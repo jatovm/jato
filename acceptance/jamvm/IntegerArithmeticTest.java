@@ -25,8 +25,8 @@ public class IntegerArithmeticTest {
         assertEquals(Integer.MIN_VALUE, add(1, Integer.MAX_VALUE));
     }
 
-    public static int add(int a, int b) {
-        return a + b;
+    public static int add(int augend, int addend) {
+        return augend + addend;
     }
 
     public static void testIntegerSubtraction() {
@@ -42,8 +42,22 @@ public class IntegerArithmeticTest {
         assertEquals(Integer.MAX_VALUE, sub(Integer.MIN_VALUE, 1));
     }
 
-    public static int sub(int a, int b) {
-        return a - b;
+    public static int sub(int minuend, int subtrahend) {
+        return minuend - subtrahend;
+    }
+
+    public static void testIntegerMultiplication() {
+        assertEquals( 1, mul(-1, -1));
+        assertEquals(-1, mul(-1,  1));
+        assertEquals(-1, mul( 1, -1));
+        assertEquals( 1, mul( 1,  1));
+        assertEquals( 0, mul( 0,  1));
+        assertEquals( 0, mul( 1,  0));
+        assertEquals( 6, mul( 2,  3));
+    }
+
+    public static int mul(int multiplicand, int multiplier) {
+        return multiplicand * multiplier;
     }
 
     private static void assertEquals(int expected, int actual) {
@@ -60,8 +74,9 @@ public class IntegerArithmeticTest {
     public static void main(String[] args) {
         testIntegerAddition();
         testIntegerAdditionOverflow();
-	testIntegerSubtraction();
-	testIntegerSubtractionOverflow();
+        testIntegerSubtraction();
+        testIntegerSubtractionOverflow();
+        testIntegerMultiplication();
 
         Runtime.getRuntime().halt(retval);
     }
