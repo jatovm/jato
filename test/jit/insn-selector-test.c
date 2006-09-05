@@ -115,16 +115,16 @@ void test_should_select_insn_for_every_statement(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_ADD, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(OPC_ADD, REG_EBP, 12, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 20, REG_EAX, insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 16, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_ADD, REG_EBP, 16, REG_EAX, insn);
+	assert_membase_reg_insn(OPC_ADD, REG_EBP, 20, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
@@ -151,10 +151,10 @@ static void assert_select_local_local_binop(enum binary_operator expr_op, enum i
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 12, REG_EAX, insn);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(insn_op, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(insn_op, REG_EBP, 12, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
