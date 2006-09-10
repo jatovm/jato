@@ -66,6 +66,21 @@ public class IntegerArithmeticTest {
         return multiplicand * multiplier;
     }
 
+    public static void testIntegerDivision() {
+        assertEquals(-1, div( 1, -1));
+        assertEquals(-1, div(-1,  1));
+        assertEquals( 1, div(-1, -1));
+        assertEquals( 1, div( 1,  1));
+        assertEquals( 0, div( 1,  2));
+        assertEquals( 1, div( 3,  2));
+        assertEquals( 2, div( 2,  1));
+        assertEquals( 3, div( 6,  2));
+    }
+
+    public static int div(int dividend, int divisor) {
+        return dividend / divisor;
+    }
+
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
@@ -84,6 +99,7 @@ public class IntegerArithmeticTest {
         testIntegerSubtractionOverflow();
         testIntegerMultiplication();
         testIntegerMultiplicationOverflow();
+        testIntegerDivision();
 
         Runtime.getRuntime().halt(retval);
     }
