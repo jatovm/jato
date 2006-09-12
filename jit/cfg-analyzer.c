@@ -34,6 +34,7 @@ static void split_after_branches(struct compilation_unit *cu,
 		unsigned long opc_size;
 		
 		opc_size = bytecode_size(code);
+		assert(opc_size != 0);
 
 		if (bytecode_is_branch(*code)) {
 			unsigned long br_target;
@@ -65,6 +66,8 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 
 		opc_size = bytecode_size(code);
 		offset   = code-start;
+
+		assert(opc_size != 0);
 
 		if (test_bit(branch_targets, offset)) {
 			struct basic_block *bb;
