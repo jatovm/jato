@@ -8,7 +8,7 @@ CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Werror -Os -std=gnu99
 INCLUDE = -I. -I../libharness/ -I../../jit/ -I../../src -I../../jit/glib -I../../include
 LIBS = -lbfd -lopcodes
-OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)bytecodes.o $(objdir)arithmetic-bc.o \
+OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o ../../vm/buffer.o $(objdir)bytecodes.o $(objdir)arithmetic-bc.o \
 	$(objdir)cfg-analyzer.o $(objdir)bytecode-to-ir.o $(objdir)compilation-unit.o \
 	$(objdir)jit-compiler.o $(objdir)instruction.o $(objdir)insn-selector.o ../../vm/stack.o $(objdir)statement.o \
 	$(objdir)expression.o $(objdir)x86-objcode.o $(objdir)load-store-bc.o $(objdir)ostack-bc.o \
@@ -17,7 +17,7 @@ OBJS = $(objdir)alloc.o $(objdir)basic-block.o ../../vm/bitmap.o $(objdir)byteco
 	../../vm/natives.o
 
 TESTS	= arithmetic-bc-test.o basic-block-test.o bc-test-utils.o \
-	  bitmap-test.o branch-bc-test.o cfg-analyzer-test.o \
+	  bitmap-test.o branch-bc-test.o buffer-test.o cfg-analyzer-test.o \
 	  bytecode-to-ir-test.o bytecodes-test.o compilation-unit-test.o \
 	  expression-test.o insn-selector-test.o invoke-bc-test.o jit-compiler-test.o \
 	  list-test.o object-bc-test.o resolve-stub.o stack-test.o \
