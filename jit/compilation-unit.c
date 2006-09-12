@@ -37,7 +37,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	pthread_mutex_destroy(&cu->mutex);
 	free_stack(cu->expr_stack);
 	free_basic_block(cu->exit_bb);
-	free_buffer(cu->objcode_buf);
+	free_buffer(cu->objcode);
 	free(cu);
 }
 

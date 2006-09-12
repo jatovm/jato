@@ -101,22 +101,22 @@ int jit_compile(struct compilation_unit *cu)
 		insn_select(bb);
 	}
 
-	cu->objcode_buf = __alloc_buffer(OBJCODE_SIZE, &exec_buf_ops);
-	if (!cu->objcode_buf) {
+	cu->objcode = __alloc_buffer(OBJCODE_SIZE, &exec_buf_ops);
+	if (!cu->objcode) {
 		err = -ENOMEM;
 		goto out;
 	}
-	x86_emit_prolog(cu->objcode_buf, 0);
+	x86_emit_prolog(cu->objcode, 0);
 	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
-		x86_emit_obj_code(bb, cu->objcode_buf);
+		x86_emit_obj_code(bb, cu->objcode);
 	}
-	x86_emit_obj_code(cu->exit_bb, cu->objcode_buf);
-	x86_emit_epilog(cu->objcode_buf, 0);
+	x86_emit_obj_code(cu->exit_bb, cu->objcode);
+	x86_emit_epilog(cu->objcode, 0);
 
 	if (show_disasm)
 		print_disasm(cu->method,
-			     buffer_ptr(cu->objcode_buf),
-			     buffer_current(cu->objcode_buf));
+			     buffer_ptr(cu->objcode),
+			     buffer_current(cu->objcode));
 
 	cu->is_compiled = true;
 
@@ -147,10 +147,10 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	}
 	else if (!cu->is_compiled) {
 		jit_compile(cu);
-		ret = buffer_ptr(cu->objcode_buf);
+		ret = buffer_ptr(cu->objcode);
 	}
 	else
-		ret = buffer_ptr(cu->objcode_buf);
+		ret = buffer_ptr(cu->objcode);
 
 	pthread_mutex_unlock(&cu->mutex);
 

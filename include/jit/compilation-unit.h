@@ -14,7 +14,7 @@ struct compilation_unit {
 	struct list_head bb_list;
 	struct basic_block *exit_bb;
 	struct stack *expr_stack;
-	struct buffer *objcode_buf;
+	struct buffer *objcode;
 	bool is_compiled;
 	pthread_mutex_t mutex;
 };
