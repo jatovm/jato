@@ -1,1 +1,1 @@
-objs	:= backtrace.o bitmap.o buffer.o stack.o string.o
+objs	:= backtrace.o bitmap.o debug-dump.o stack.o string.o
