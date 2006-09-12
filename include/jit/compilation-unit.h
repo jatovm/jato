@@ -7,12 +7,14 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+struct buffer;
+
 struct compilation_unit {
 	struct methodblock *method;
 	struct list_head bb_list;
 	struct basic_block *exit_bb;
 	struct stack *expr_stack;
-	void *objcode;
+	struct buffer *objcode_buf;
 	bool is_compiled;
 	pthread_mutex_t mutex;
 };

@@ -73,6 +73,16 @@ static void print_tree(struct compilation_unit *cu)
 
 }
 
+static void generic_free_buffer(struct buffer *buf)
+{
+	free(buf->buf);
+}
+
+static struct buffer_operations exec_buf_ops = {
+	.expand = expand_exec,
+	.free   = generic_free_buffer,
+};
+
 int jit_compile(struct compilation_unit *cu)
 {
 	struct insn_sequence is;
@@ -97,13 +107,12 @@ int jit_compile(struct compilation_unit *cu)
 		insn_select(bb);
 	}
 
-	cu->objcode = alloc_exec(OBJCODE_SIZE);
-	if (!cu->objcode) {
+	cu->objcode_buf = __alloc_buffer(OBJCODE_SIZE, &exec_buf_ops);
+	if (!cu->objcode_buf) {
 		err = -ENOMEM;
 		goto out;
 	}
-	memset(cu->objcode, 0, OBJCODE_SIZE);
-	init_insn_sequence(&is, cu->objcode, OBJCODE_SIZE);
+	init_insn_sequence(&is, buffer_ptr(cu->objcode_buf), OBJCODE_SIZE);
 	x86_emit_prolog(&is, 0);
 	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
 		x86_emit_obj_code(bb, &is);
@@ -143,10 +152,10 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	}
 	else if (!cu->is_compiled) {
 		jit_compile(cu);
-		ret = cu->objcode;
+		ret = buffer_ptr(cu->objcode_buf);
 	}
 	else
-		ret = cu->objcode;
+		ret = buffer_ptr(cu->objcode_buf);
 
 	pthread_mutex_unlock(&cu->mutex);
 
@@ -154,16 +163,6 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 }
 
 #define TRAMP_OBJSIZE 15
-
-static void generic_free_buffer(struct buffer *buf)
-{
-	free(buf->buf);
-}
-
-static struct buffer_operations exec_buf_ops = {
-	.expand = expand_exec,
-	.free   = generic_free_buffer,
-};
 
 static struct jit_trampoline *alloc_jit_trampoline(void)
 {

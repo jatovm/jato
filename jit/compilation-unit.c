@@ -7,6 +7,7 @@
 
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
+#include <vm/buffer.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +37,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	pthread_mutex_destroy(&cu->mutex);
 	free_stack(cu->expr_stack);
 	free_basic_block(cu->exit_bb);
-	free(cu->objcode);
+	free_buffer(cu->objcode_buf);
 	free(cu);
 }
 
