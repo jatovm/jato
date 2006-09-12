@@ -142,13 +142,12 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 		method_name = method->name;
 
 		ret = vm_lookup_native(class_name, method_name);
-	}
-	else if (!cu->is_compiled) {
-		jit_compile(cu);
+	} else {
+		if (!cu->is_compiled)
+			jit_compile(cu);
+
 		ret = buffer_ptr(cu->objcode);
 	}
-	else
-		ret = buffer_ptr(cu->objcode);
 
 	pthread_mutex_unlock(&cu->mutex);
 
