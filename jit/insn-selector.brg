@@ -97,7 +97,7 @@ reg:	EXPR_INVOKE(arg) 1
 
 	expr   = to_expr(tree);
 	method = expr->target_method;
-	target = method->trampoline->objcode;
+	target = trampoline_ptr(method);
 
 	bb_add_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
 
@@ -125,6 +125,7 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_table_offset, REG_EAX));
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_offset, REG_EAX));
 	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX));
+	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct buffer, buf), REG_EAX));
 	bb_add_insn(s, reg_insn(OPC_CALL, REG_EAX));
 
 	args_count = nr_args(to_expr(expr->args_list));

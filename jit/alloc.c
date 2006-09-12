@@ -11,12 +11,29 @@
 
 #define _XOPEN_SOURCE 600
 
+#include <vm/buffer.h>
 #include <vm/system.h>
 
+#include <errno.h>
 #include <stddef.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+
+static void *__alloc_exec(size_t size)
+{
+	int page_size;
+	void *p;
+
+	page_size = getpagesize();
+
+	if (posix_memalign(&p, page_size, size))
+		return NULL;
+	mprotect(p, size, PROT_READ | PROT_WRITE | PROT_EXEC);
+
+	return p;
+}
 
 /**
  *	alloc_exec - Allocate executable memory.
@@ -31,14 +48,33 @@
 void *alloc_exec(size_t size)
 {
 	int page_size;
+
+	page_size = getpagesize();
+	size = ALIGN(size, page_size);
+
+	return __alloc_exec(size);
+}
+
+int expand_exec(struct buffer *buf, size_t size)
+{
+	int page_size;
 	void *p;
 
 	page_size = getpagesize();
 	size = ALIGN(size, page_size);
 
-	if (posix_memalign(&p, page_size, size))
-		return NULL;
-	mprotect(p, size, PROT_READ | PROT_WRITE | PROT_EXEC);
+	p = __alloc_exec(size);
+	if (!p)
+		return -ENOMEM;
+	memset(p, 0, size);
 
-	return p;
+	if (buf->size)
+		memcpy(p, buf->buf, buf->size);
+
+	buf->ops->free(buf);
+
+	buf->buf  = p;
+	buf->size = size;
+
+	return 0;
 }

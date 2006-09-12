@@ -12,6 +12,7 @@
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
 #include <vm/alloc.h>
+#include <vm/buffer.h>
 #include <vm/natives.h>
 #include <vm/string.h>
 #include <x86-objcode.h>
@@ -154,6 +155,16 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 #define TRAMP_OBJSIZE 15
 
+static void generic_free_buffer(struct buffer *buf)
+{
+	free(buf->buf);
+}
+
+static struct buffer_operations exec_buf_ops = {
+	.expand = expand_exec,
+	.free   = generic_free_buffer,
+};
+
 static struct jit_trampoline *alloc_jit_trampoline(void)
 {
 	struct jit_trampoline *tramp = malloc(sizeof(*tramp));
@@ -162,11 +173,9 @@ static struct jit_trampoline *alloc_jit_trampoline(void)
 
 	memset(tramp, 0, sizeof(*tramp));
 
-	tramp->objcode = alloc_exec(TRAMP_OBJSIZE);
+	tramp->objcode = __alloc_buffer(TRAMP_OBJSIZE, &exec_buf_ops);
 	if (!tramp->objcode)
 		goto failed;
-
-	memset(tramp->objcode, 0, TRAMP_OBJSIZE);
 
 	return tramp;
 
@@ -177,7 +186,7 @@ static struct jit_trampoline *alloc_jit_trampoline(void)
 
 void free_jit_trampoline(struct jit_trampoline *tramp)
 {
-	free(tramp->objcode);
+	free_buffer(tramp->objcode);
 	free(tramp);
 }
 
@@ -185,7 +194,8 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 {
 	struct jit_trampoline *tramp = alloc_jit_trampoline();
 	if (tramp)
-		x86_emit_trampoline(cu, jit_magic_trampoline, tramp->objcode,
+		x86_emit_trampoline(cu, jit_magic_trampoline,
+				    buffer_ptr(tramp->objcode),
 				    TRAMP_OBJSIZE);
 	return tramp;
 }
@@ -195,5 +205,5 @@ void *jit_prepare_for_exec(struct methodblock *mb)
 	mb->compilation_unit = alloc_compilation_unit(mb);
 	mb->trampoline = build_jit_trampoline(mb->compilation_unit);
 
-	return mb->trampoline->objcode;
+	return trampoline_ptr(mb);
 }

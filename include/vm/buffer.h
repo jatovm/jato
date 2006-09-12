@@ -21,4 +21,9 @@ struct buffer *__alloc_buffer(size_t, struct buffer_operations *);
 void free_buffer(struct buffer *);
 int append_buffer(struct buffer *buf, unsigned char);
 
+static inline void *buffer_ptr(struct buffer *buf)
+{
+	return buf->buf;
+}
+
 #endif

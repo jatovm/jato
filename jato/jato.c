@@ -383,7 +383,7 @@ int main(int argc, char *argv[]) {
 
         /* Call the main method */
         if(i == argc) {
-	    java_main_fn java_main = mb->trampoline->objcode;
+	    java_main_fn java_main = trampoline_ptr(mb);
 	    java_main();
             //executeStaticMethod(main_class, mb, array);
 	}

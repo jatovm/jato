@@ -23,7 +23,7 @@ OBJS = jato.o ../src/access.o ../src/alloc.o ../src/cast.o ../src/class.o \
 	../vm/backtrace.o ../jit/ostack-bc.o ../jit/typeconv-bc.o \
 	../jit/object-bc.o ../jit/jvm_types.o ../vm/string.o ../jit/tree-printer.o \
 	../jit/branch-bc.o ../jit/invoke-bc.o ../jit/x86-frame.o ../jit/disass-common.o \
-	../jit/disass.o ../vm/natives.o
+	../jit/disass.o ../vm/natives.o ../vm/buffer.o
 
 # Default to quiet output and add verbose printing only if V=1 is passed
 # as parameter to make.

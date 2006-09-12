@@ -31,7 +31,9 @@ struct buffer *__alloc_buffer(size_t size, struct buffer_operations *ops)
 
 void free_buffer(struct buffer *buf)
 {
-	buf->ops->free(buf);
+	if (buf)
+		buf->ops->free(buf);
+
 	free(buf);
 }
 

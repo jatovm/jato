@@ -250,7 +250,7 @@ void test_select_invoke_without_arguments(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
+	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -288,7 +288,7 @@ void test_select_invoke_with_arguments(void)
 	assert_imm_insn(OPC_PUSH, 0x01, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
+	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(OPC_ADD, 8, REG_ESP, insn);
@@ -324,13 +324,13 @@ void test_select_method_return_value_passed_as_argument(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) nested_mb.trampoline->objcode, insn);
+	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&nested_mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(OPC_PUSH, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) mb.trampoline->objcode, insn);
+	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -387,6 +387,9 @@ void test_select_invokevirtual_with_arguments(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct buffer, buf), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(OPC_CALL, REG_EAX, insn);

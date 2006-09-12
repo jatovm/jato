@@ -79,7 +79,6 @@ void test_magic_trampoline_compiles_once(void)
 void test_jit_method_trampoline_compiles_and_invokes_method(void)
 {
 	struct compilation_unit *cu;
-	struct jit_trampoline *t;
 	sum_fn function;
 	struct methodblock method = {
 		.jit_code = sum_bytecode,
@@ -88,13 +87,13 @@ void test_jit_method_trampoline_compiles_and_invokes_method(void)
 	};
 
 	cu = alloc_compilation_unit(&method);
-	t = build_jit_trampoline(cu);
+	method.trampoline = build_jit_trampoline(cu);
 
-	function = t->objcode;
+	function = trampoline_ptr(&method);
 	assert_int_equals(1, function(0, 1));
 	assert_int_equals(3, function(1, 2));
 	
-	free_jit_trampoline(t);
+	free_jit_trampoline(method.trampoline);
 	free_compilation_unit(cu);
 }
 
@@ -115,7 +114,6 @@ static unsigned char is_zero_bytecode[] = {
 void test_magic_trampoline_compiles_all_basic_blocks(void)
 {
 	struct compilation_unit *cu;
-	struct jit_trampoline *t;
 	is_zero_fn function;
 	struct methodblock method = {
 		.jit_code = is_zero_bytecode,
@@ -124,13 +122,13 @@ void test_magic_trampoline_compiles_all_basic_blocks(void)
 	};
 
 	cu = alloc_compilation_unit(&method);
-	t = build_jit_trampoline(cu);
+	method.trampoline = build_jit_trampoline(cu);
 
-	function = t->objcode;
+	function = trampoline_ptr(&method);
 	assert_int_equals(0, function(1));
 	assert_int_equals(1, function(0));
 	
-	free_jit_trampoline(t);
+	free_jit_trampoline(method.trampoline);
 	free_compilation_unit(cu);
 }
 
@@ -145,7 +143,7 @@ void test_jit_prepare_for_exec_returns_trampoline_objcode(void)
 	void *actual = jit_prepare_for_exec(&mb);
 	assert_not_null(mb.compilation_unit);
 	assert_not_null(mb.trampoline);
-	assert_ptr_equals(mb.trampoline->objcode, actual);
+	assert_ptr_equals(trampoline_ptr(&mb), actual);
 
 	free_compilation_unit(mb.compilation_unit);
 	free_jit_trampoline(mb.trampoline);
@@ -208,7 +206,7 @@ void test_jitted_code_invokes_native_method(void)
 
 	vm_register_native("Natives", "nativeSum", native_sum);
 
-	function = invoker_method.trampoline->objcode;
+	function = trampoline_ptr(&invoker_method);
 
 	assert_int_equals(1, function(0, 1));
 	assert_int_equals(3, function(1, 2));
