@@ -55,13 +55,14 @@ void *alloc_exec(size_t size)
 	return __alloc_exec(size);
 }
 
-int expand_exec(struct buffer *buf, size_t size)
+int expand_buffer_exec(struct buffer *buf)
 {
 	int page_size;
+	size_t size;
 	void *p;
 
 	page_size = getpagesize();
-	size = ALIGN(size, page_size);
+	size = ALIGN(buf->size + 1, page_size);
 
 	p = __alloc_exec(size);
 	if (!p)

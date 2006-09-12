@@ -10,10 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct buffer *__alloc_buffer(size_t size, struct buffer_operations *ops)
+struct buffer *__alloc_buffer(struct buffer_operations *ops)
 {
 	struct buffer *buf;
-	int err;
        
 	buf = malloc(sizeof *buf);
 	if (!buf)
@@ -22,10 +21,6 @@ struct buffer *__alloc_buffer(size_t size, struct buffer_operations *ops)
 	memset(buf, 0, sizeof *buf);
 
 	buf->ops = ops;
-
-	err = ops->expand(buf, size);
-	if (err)
-		return NULL;
 
 	return buf;
 }
@@ -43,7 +38,7 @@ int append_buffer(struct buffer *buf, unsigned char c)
 	if (buf->offset == buf->size) {
 		int err;
 		
-		err = buf->ops->expand(buf, buf->size + 1);
+		err = buf->ops->expand(buf);
 		if (err)
 			return err;
 	}
@@ -51,10 +46,12 @@ int append_buffer(struct buffer *buf, unsigned char c)
 	return 0;
 }
 
-static int generic_buffer_expand(struct buffer *buf, size_t size)
+static int generic_buffer_expand(struct buffer *buf)
 {
+	size_t size;
 	void *p;
 
+	size = buf->size + 1;
 	p = realloc(buf->buf, size);
 	if (!p)
 		return -ENOMEM;
@@ -74,7 +71,7 @@ static struct buffer_operations generic_buffer_ops = {
 	.free   = generic_buffer_free,
 };
 
-struct buffer *alloc_buffer(size_t size)
+struct buffer *alloc_buffer(void)
 {
-	return __alloc_buffer(size, &generic_buffer_ops);
+	return __alloc_buffer(&generic_buffer_ops);
 }

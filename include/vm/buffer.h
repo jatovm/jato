@@ -5,8 +5,14 @@
 
 struct buffer;
 
+/**
+ *	@expand: This method is called when buffer needs to be expanded to
+ *		fit one more element. Returns zero on success; otherwise
+ *		returns a negative number.
+ *	@free: This method is called when the whole buffer is being discarded.
+ */
 struct buffer_operations {
-	int (*expand)(struct buffer *, size_t size);
+	int (*expand)(struct buffer *);
 	void (*free)(struct buffer *);
 };
 
@@ -17,8 +23,8 @@ struct buffer {
 	struct buffer_operations *ops;
 };
 
-struct buffer *__alloc_buffer(size_t, struct buffer_operations *);
-struct buffer *alloc_buffer(size_t);
+struct buffer *__alloc_buffer(struct buffer_operations *);
+struct buffer *alloc_buffer(void);
 void free_buffer(struct buffer *);
 int append_buffer(struct buffer *buf, unsigned char);
 

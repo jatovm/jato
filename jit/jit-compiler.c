@@ -23,8 +23,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define OBJCODE_SIZE 256
-
 int show_basic_blocks;
 int show_tree;
 int show_disasm;
@@ -74,7 +72,7 @@ static void print_tree(struct compilation_unit *cu)
 }
 
 static struct buffer_operations exec_buf_ops = {
-	.expand = expand_exec,
+	.expand = expand_buffer_exec,
 	.free   = generic_buffer_free,
 };
 
@@ -101,7 +99,7 @@ int jit_compile(struct compilation_unit *cu)
 		insn_select(bb);
 	}
 
-	cu->objcode = __alloc_buffer(OBJCODE_SIZE, &exec_buf_ops);
+	cu->objcode = __alloc_buffer(&exec_buf_ops);
 	if (!cu->objcode) {
 		err = -ENOMEM;
 		goto out;
@@ -157,8 +155,6 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	return ret;
 }
 
-#define TRAMP_OBJSIZE 15
-
 static struct jit_trampoline *alloc_jit_trampoline(void)
 {
 	struct jit_trampoline *tramp = malloc(sizeof(*tramp));
@@ -167,7 +163,7 @@ static struct jit_trampoline *alloc_jit_trampoline(void)
 
 	memset(tramp, 0, sizeof(*tramp));
 
-	tramp->objcode = __alloc_buffer(TRAMP_OBJSIZE, &exec_buf_ops);
+	tramp->objcode = __alloc_buffer(&exec_buf_ops);
 	if (!tramp->objcode)
 		goto failed;
 
@@ -189,8 +185,7 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 	struct jit_trampoline *tramp = alloc_jit_trampoline();
 	if (tramp)
 		x86_emit_trampoline(cu, jit_magic_trampoline,
-				    tramp->objcode,
-				    TRAMP_OBJSIZE);
+				    tramp->objcode);
 	return tramp;
 }
 

@@ -462,7 +462,7 @@ void x86_emit_obj_code(struct basic_block *bb, struct buffer *buf)
 }
 
 void x86_emit_trampoline(struct compilation_unit *cu, void *call_target,
-			 struct buffer *buf, unsigned long size)
+			 struct buffer *buf)
 {
 	x86_emit_push_imm32(buf, (unsigned long) cu);
 	x86_emit_call(buf, call_target);
