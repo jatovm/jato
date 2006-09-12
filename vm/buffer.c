@@ -6,6 +6,7 @@
  */
 
 #include <vm/buffer.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -48,4 +49,32 @@ int append_buffer(struct buffer *buf, unsigned char c)
 	}
 	buf->buf[buf->offset++] = c;
 	return 0;
+}
+
+static int generic_buffer_expand(struct buffer *buf, size_t size)
+{
+	void *p;
+
+	p = realloc(buf->buf, size);
+	if (!p)
+		return -ENOMEM;
+
+	buf->buf  = p;
+	buf->size = size;
+	return 0;
+}
+
+void generic_buffer_free(struct buffer *buf)
+{
+	free(buf->buf);
+}
+
+static struct buffer_operations generic_buffer_ops = {
+	.expand = generic_buffer_expand,
+	.free   = generic_buffer_free,
+};
+
+struct buffer *alloc_buffer(size_t size)
+{
+	return __alloc_buffer(size, &generic_buffer_ops);
 }

@@ -73,19 +73,13 @@ static void print_tree(struct compilation_unit *cu)
 
 }
 
-static void generic_free_buffer(struct buffer *buf)
-{
-	free(buf->buf);
-}
-
 static struct buffer_operations exec_buf_ops = {
 	.expand = expand_exec,
-	.free   = generic_free_buffer,
+	.free   = generic_buffer_free,
 };
 
 int jit_compile(struct compilation_unit *cu)
 {
-	struct insn_sequence is;
 	struct basic_block *bb;
 	int err = 0;
 
@@ -112,16 +106,17 @@ int jit_compile(struct compilation_unit *cu)
 		err = -ENOMEM;
 		goto out;
 	}
-	init_insn_sequence(&is, buffer_ptr(cu->objcode_buf), OBJCODE_SIZE);
-	x86_emit_prolog(&is, 0);
+	x86_emit_prolog(cu->objcode_buf, 0);
 	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
-		x86_emit_obj_code(bb, &is);
+		x86_emit_obj_code(bb, cu->objcode_buf);
 	}
-	x86_emit_obj_code(cu->exit_bb, &is);
-	x86_emit_epilog(&is, 0);
+	x86_emit_obj_code(cu->exit_bb, cu->objcode_buf);
+	x86_emit_epilog(cu->objcode_buf, 0);
 
 	if (show_disasm)
-		print_disasm(cu->method, is.start, is.current);
+		print_disasm(cu->method,
+			     buffer_ptr(cu->objcode_buf),
+			     buffer_current(cu->objcode_buf));
 
 	cu->is_compiled = true;
 
@@ -194,7 +189,7 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 	struct jit_trampoline *tramp = alloc_jit_trampoline();
 	if (tramp)
 		x86_emit_trampoline(cu, jit_magic_trampoline,
-				    buffer_ptr(tramp->objcode),
+				    tramp->objcode,
 				    TRAMP_OBJSIZE);
 	return tramp;
 }

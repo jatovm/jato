@@ -6,6 +6,7 @@
 #include <jit/basic-block.h>
 #include <jit/instruction.h>
 #include <jit/statement.h>
+#include <vm/buffer.h>
 #include <vm/list.h>
 #include <vm/system.h>
 
@@ -15,18 +16,18 @@ static void assert_emit_insn(unsigned char *expected,
 			     unsigned long expected_size,
 			     struct insn *insn)
 {
-	struct insn_sequence is;
 	struct basic_block *bb;
-	unsigned char actual[expected_size];
+	struct buffer *buf;
 
 	bb = alloc_basic_block(NULL, 0, 1);
 	bb_add_insn(bb, insn);
 
-	init_insn_sequence(&is, actual, expected_size);
-	x86_emit_obj_code(bb, &is);
-	assert_mem_equals(expected, actual, expected_size);
+	buf = alloc_buffer(expected_size);
+	x86_emit_obj_code(bb, buf);
+	assert_mem_equals(expected, buffer_ptr(buf), expected_size);
 	
 	free_basic_block(bb);
+	free_buffer(buf);
 }
 
 static void assert_emit_insn_1(unsigned char expected_opc, struct insn *insn)
@@ -100,50 +101,49 @@ static void assert_emit_insn_7(unsigned char opcode, unsigned char modrm,
 void test_emit_prolog_no_locals(void)
 {
 	unsigned char expected[] = { 0x55, 0x89, 0xe5 };
-	unsigned char actual[3];
-	struct insn_sequence is;
+	struct buffer *buf;
 
-	init_insn_sequence(&is, actual, 3);
-	x86_emit_prolog(&is, 0);
-	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+	buf = alloc_buffer(ARRAY_SIZE(expected));
+	x86_emit_prolog(buf, 0);
+	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
+	free_buffer(buf);
 }
 
 void test_emit_prolog_has_locals(void)
 {
 	unsigned char expected[] = { 0x55, 0x89, 0xe5, 0x81, 0xec, 0x80, 0x00, 0x00, 0x00 };
-	unsigned char actual[ARRAY_SIZE(expected)];
-	struct insn_sequence is;
+	struct buffer *buf;
 
-	init_insn_sequence(&is, actual, ARRAY_SIZE(expected));
-	x86_emit_prolog(&is, 0x80);
-	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+	buf = alloc_buffer(ARRAY_SIZE(expected));
+	x86_emit_prolog(buf, 0x80);
+	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
+	free_buffer(buf);
 }
 
 void test_emit_epilog_no_locals(void)
 {
 	unsigned char expected[] = { 0x5d, 0xc3 };
-	unsigned char actual[2];
-	struct insn_sequence is;
-	
-	init_insn_sequence(&is, actual, 2);
-	x86_emit_epilog(&is, 0);
-	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+	struct buffer *buf;
+
+	buf = alloc_buffer(ARRAY_SIZE(expected));	
+	x86_emit_epilog(buf, 0);
+	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
+	free_buffer(buf);
 }
 
 void test_emit_epilog_has_locals(void)
 {
 	unsigned char expected[] = { 0xc9, 0xc3 };
-	unsigned char actual[ARRAY_SIZE(expected)];
-	struct insn_sequence is;
-	
-	init_insn_sequence(&is, actual, ARRAY_SIZE(expected));
-	x86_emit_epilog(&is, 0x80);
-	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+	struct buffer *buf;
+
+	buf = alloc_buffer(ARRAY_SIZE(expected));	
+	x86_emit_epilog(buf, 0x80);
+	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
+	free_buffer(buf);
 }
 
 static void assert_emit_push_imm32(unsigned long imm)
 {
-	struct basic_block *bb;
 	unsigned char expected[] = {
 		0x68,
 		(imm & 0x000000ffUL),
@@ -151,17 +151,18 @@ static void assert_emit_push_imm32(unsigned long imm)
 		(imm & 0x00ff0000UL) >> 16,
 		(imm & 0xff000000UL) >> 24,
 	};
-	unsigned char actual[5];
-	struct insn_sequence is;
+	struct basic_block *bb;
+	struct buffer *buf;
 
 	bb = alloc_basic_block(NULL, 0, 1);
 	bb_add_insn(bb, imm_insn(OPC_PUSH, imm));
-	init_insn_sequence(&is, actual, ARRAY_SIZE(actual));
 
-	x86_emit_obj_code(bb, &is);
-	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
+	buf = alloc_buffer(ARRAY_SIZE(expected));
+	x86_emit_obj_code(bb, buf);
+	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 
 	free_basic_block(bb);
+	free_buffer(buf);
 }
 
 void test_emit_push_imm32(void)
@@ -180,43 +181,42 @@ void test_emit_push_reg(void)
 	assert_emit_insn_1(0x54, reg_insn(OPC_PUSH, REG_ESP));
 }
 
-static void assert_emit_call(void *call_target,
-			     void *code,
-			     unsigned long code_size)
+static void assert_emit_call(long target_offset)
 {
+	unsigned char expected[5];
 	struct basic_block *bb;
-	signed long disp = call_target - code - 5;
-	unsigned char expected[] = {
-		0xe8,
-		(disp & 0x000000ffUL),
-		(disp & 0x0000ff00UL) >>  8,
-		(disp & 0x00ff0000UL) >> 16,
-		(disp & 0xff000000UL) >> 24,
-	};
-	struct insn_sequence is;
+	struct buffer *buf;
+	void *call_target;
+	long disp;
+       
+	buf = alloc_buffer(ARRAY_SIZE(expected));
+	call_target = buffer_ptr(buf) + target_offset;
+	disp = call_target - buffer_ptr(buf) - 5;
+
+	expected[0] = 0xe8;
+	expected[1] = (disp & 0x000000ffUL);
+	expected[2] = (disp & 0x0000ff00UL) >>  8;
+	expected[3] = (disp & 0x00ff0000UL) >> 16;
+	expected[4] = (disp & 0xff000000UL) >> 24;
 
 	bb = alloc_basic_block(NULL, 0, 1);
 	bb_add_insn(bb, rel_insn(OPC_CALL, (unsigned long) call_target));
-	
-	init_insn_sequence(&is, code, code_size);
-	x86_emit_obj_code(bb, &is);
-	assert_mem_equals(expected, code, ARRAY_SIZE(expected));
+
+	x86_emit_obj_code(bb, buf);
+	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 
 	free_basic_block(bb);
+	free_buffer(buf);
 }
 
 void test_emit_call_backward(void)
 {
-	unsigned char before_code[3];
-	unsigned char code[5];
-	assert_emit_call(before_code, code, ARRAY_SIZE(code));
+	assert_emit_call(-3);
 }
 
 void test_emit_call_forward(void)
 {
-	unsigned char code[5];
-	unsigned char after_code[3];
-	assert_emit_call(after_code, code, ARRAY_SIZE(code));
+	assert_emit_call(5);
 }
 
 void test_emit_indirect_call(void)
@@ -316,24 +316,23 @@ void test_should_use_zero_as_target_branch_for_forward_branches(void)
 static void assert_emits_branch_target(unsigned char expected_target,
 				       struct basic_block *target_bb)
 {
-	struct insn *insn;
 	struct basic_block *branch_bb;
-	struct insn_sequence is;
-	char code[16];
+	struct buffer *buf;
+	struct insn *insn;
 
 	insn = branch_insn(OPC_JE, target_bb);
 	branch_bb = alloc_basic_block(NULL, 1, 2);
 
-	init_insn_sequence(&is, code, 16);
-
-	x86_emit_obj_code(target_bb, &is);
+	buf = alloc_buffer(16);
+	x86_emit_obj_code(target_bb, buf);
 
 	bb_add_insn(branch_bb, insn);
-	x86_emit_obj_code(branch_bb, &is);
+	x86_emit_obj_code(branch_bb, buf);
 
-	assert_mem_insn_2(0x74, expected_target, code + insn->offset);
+	assert_mem_insn_2(0x74, expected_target, buffer_ptr(buf) + insn->offset);
 
 	free_basic_block(branch_bb);
+	free_buffer(buf);
 }
 
 void test_should_emit_target_for_backward_branches(void)
@@ -369,19 +368,20 @@ static void assert_backpatches_branches(unsigned char expected_target,
 					struct basic_block *branch_bb,
 					struct basic_block *target_bb)
 {
-	char code[16];
-	struct insn_sequence is;
+	struct buffer *buf;
 
 	branch_bb->is_emitted = false;
 	target_bb->is_emitted = false;
 
-	init_insn_sequence(&is, code, 16);
+	buf = alloc_buffer(16);
 
-	x86_emit_obj_code(branch_bb, &is);
-	assert_mem_insn_2(0x74, 0x00, code);
+	x86_emit_obj_code(branch_bb, buf);
+	assert_mem_insn_2(0x74, 0x00, buffer_ptr(buf));
 
-	x86_emit_obj_code(target_bb, &is);
-	assert_mem_insn_2(0x74, expected_target, code);
+	x86_emit_obj_code(target_bb, buf);
+	assert_mem_insn_2(0x74, expected_target, buffer_ptr(buf));
+
+	free_buffer(buf);
 }
 
 void test_should_backpatch_unresolved_branches_when_emitting_target(void)
