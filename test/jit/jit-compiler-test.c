@@ -216,7 +216,9 @@ void test_jitted_code_invokes_native_method(void)
 	vm_unregister_natives();
 
 	free_compilation_unit(invoker_method.compilation_unit);
+	free_jit_trampoline(invoker_method.trampoline);
 	free_compilation_unit(native_sum_method.compilation_unit);
+	free_jit_trampoline(native_sum_method.trampoline);
 	free(invoker_class);
 	free(native_class);
 }
