@@ -286,6 +286,17 @@ void test_emit_mul_membase_reg(void)
 	assert_emit_insn_6(0xf7, 0xa5, 0xef, 0xbe, 0xad, 0xde, membase_reg_insn(OPC_MUL, REG_EBP, 0xdeadbeef, REG_EAX));
 }
 
+void test_emit_cltd(void)
+{
+	assert_emit_insn_1(0x99, insn(OPC_CLTD));
+}
+
+void test_emit_div_membase_reg(void)
+{
+	assert_emit_insn_3(0xf7, 0x7d, 0x0c, membase_reg_insn(OPC_DIV, REG_EBP, 0x0c, REG_EAX));
+	assert_emit_insn_6(0xf7, 0xbd, 0xef, 0xbe, 0xad, 0xde, membase_reg_insn(OPC_DIV, REG_EBP, 0xdeadbeef, REG_EAX));
+}
+
 void test_emit_cmp_membase_reg(void)
 {
 	assert_emit_insn_3(0x3b, 0x45, 0x08, membase_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));

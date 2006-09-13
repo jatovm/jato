@@ -267,8 +267,10 @@ static void x86_emit_sub_membase_reg(struct buffer *buf,
 	x86_emit_membase_reg(buf, 0x2b, src, dest);
 }
 
-static void x86_emit_mul_membase_reg(struct buffer *buf,
-				     struct operand *src, struct operand *dest)
+static void __x86_emit_div_mul_membase_reg(struct buffer *buf,
+					   struct operand *src,
+					   struct operand *dest,
+					   unsigned char opc_ext)
 {
 	enum reg reg;
 	long disp;
@@ -285,8 +287,26 @@ static void x86_emit_mul_membase_reg(struct buffer *buf,
 		mod = 0x01;
 
 	x86_emit(buf, 0xf7);
-	x86_emit(buf, x86_mod_rm(mod, 0x04, encode_reg(reg)));
+	x86_emit(buf, x86_mod_rm(mod, opc_ext, encode_reg(reg)));
 	x86_emit_imm(buf, disp);
+}
+
+static void x86_emit_mul_membase_reg(struct buffer *buf,
+				     struct operand *src,
+				     struct operand *dest)
+{
+	__x86_emit_div_mul_membase_reg(buf, src, dest, 0x04);
+}
+
+static void x86_emit_cltd(struct buffer *buf)
+{
+	x86_emit(buf, 0x99);
+}
+
+static void x86_emit_div_membase_reg(struct buffer *buf, struct operand *src,
+				     struct operand *dest)
+{
+	__x86_emit_div_mul_membase_reg(buf, src, dest, 0x07);
 }
 
 static void __x86_emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
@@ -391,11 +411,17 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 	case INSN_CALL_REL:
 		x86_emit_call(buf, (void *)insn->operand.rel);
 		break;
+	case INSN_CLTD:
+		x86_emit_cltd(buf);
+		break;
 	case INSN_CMP_IMM_REG:
 		x86_emit_cmp_imm_reg(buf, &insn->src, &insn->dest);
 		break;
 	case INSN_CMP_MEMBASE_REG:
 		x86_emit_cmp_membase_reg(buf, &insn->src, &insn->dest);
+		break;
+	case INSN_DIV_MEMBASE_REG:
+		x86_emit_div_membase_reg(buf, &insn->src, &insn->dest);
 		break;
 	case INSN_JE_BRANCH:
 		x86_emit_branch(buf, 0x74, insn);

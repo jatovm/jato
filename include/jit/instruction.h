@@ -39,7 +39,9 @@ struct operand {
 enum insn_opcode {
 	OPC_ADD,
 	OPC_CALL,
+	OPC_CLTD,
 	OPC_CMP,
+	OPC_DIV,
 	OPC_JE,
 	OPC_JMP,
 	OPC_MOV,
@@ -63,6 +65,9 @@ enum operand_type {
 #define SRC_OPERAND_TYPE_SHIFT OPERAND_TYPE_SHIFT
 #define DEST_OPERAND_TYPE_SHIFT 16UL
 
+/*	Instruction that has no operands.  */
+#define DEFINE_INSN_TYPE_0(opc) (opc)
+
 /*	Instruction that operates on one operand.  */
 #define DEFINE_INSN_TYPE_1(opc, operand_type) (((operand_type) << OPERAND_TYPE_SHIFT) | (opc))
 
@@ -79,8 +84,10 @@ enum insn_type {
 	INSN_ADD_MEMBASE_REG	= DEFINE_INSN_TYPE_2(OPC_ADD,  OPERAND_MEMBASE,   OPERAND_REGISTER),
 	INSN_CALL_REG		= DEFINE_INSN_TYPE_1(OPC_CALL, OPERAND_REGISTER),
 	INSN_CALL_REL		= DEFINE_INSN_TYPE_1(OPC_CALL, OPERAND_RELATIVE),
+	INSN_CLTD		= DEFINE_INSN_TYPE_0(OPC_CLTD),
 	INSN_CMP_IMM_REG	= DEFINE_INSN_TYPE_2(OPC_CMP,  OPERAND_IMMEDIATE, OPERAND_REGISTER),
 	INSN_CMP_MEMBASE_REG	= DEFINE_INSN_TYPE_2(OPC_CMP,  OPERAND_MEMBASE,   OPERAND_REGISTER),
+	INSN_DIV_MEMBASE_REG	= DEFINE_INSN_TYPE_2(OPC_DIV,  OPERAND_MEMBASE,   OPERAND_REGISTER),
 	INSN_JE_BRANCH		= DEFINE_INSN_TYPE_1(OPC_JE,   OPERAND_BRANCH),
 	INSN_JMP_BRANCH		= DEFINE_INSN_TYPE_1(OPC_JMP,  OPERAND_BRANCH),
 	INSN_MOV_IMM_MEMBASE	= DEFINE_INSN_TYPE_2(OPC_MOV,  OPERAND_IMMEDIATE, OPERAND_MEMBASE),
@@ -107,6 +114,7 @@ struct insn {
 	unsigned long offset;
 };
 
+struct insn *insn(enum insn_opcode);
 struct insn *membase_reg_insn(enum insn_opcode, enum reg, long, enum reg);
 struct insn *reg_membase_insn(enum insn_opcode, enum reg, enum reg, long);
 struct insn *reg_insn(enum insn_opcode, enum reg);

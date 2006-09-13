@@ -26,6 +26,11 @@ void free_insn(struct insn *insn)
 	free(insn);
 }
 
+struct insn *insn(enum insn_opcode insn_op)
+{
+	return alloc_insn(DEFINE_INSN_TYPE_0(insn_op));
+}
+
 struct insn *membase_reg_insn(enum insn_opcode insn_op, enum reg src_base_reg,
 			      long src_disp, enum reg dest_reg)
 {

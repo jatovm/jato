@@ -10,6 +10,11 @@
 #include <jit/statement.h>
 #include <jit/jit-compiler.h>
 
+static void assert_insn(enum insn_opcode insn_op, struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE_0(insn_op), insn->type);
+}
+
 static void assert_membase_reg_insn(enum insn_opcode insn_op,
 				    enum reg src_base_reg,
 				    long src_displacement,
@@ -129,25 +134,33 @@ void test_should_select_insn_for_every_statement(void)
 	free_basic_block(bb);
 }
 
-static void assert_select_local_local_binop(enum binary_operator expr_op, enum insn_opcode insn_op)
+static struct basic_block *create_binop_bb(enum binary_operator expr_op)
 {
-	struct basic_block *bb;
-	struct insn *insn;
-	struct expression *expr;
-	struct statement *stmt;
 	struct methodblock method = {
 		.args_count = 2,
 	};
 	struct compilation_unit cu = {
 		.method = &method,
 	};
+	struct expression *expr;
+	struct basic_block *bb;
+	struct statement *stmt;
 
-	bb = alloc_basic_block(&cu, 0, 1);
 	expr = binop_expr(J_INT, expr_op, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
-	bb_add_stmt(bb, stmt);
 
+	bb = alloc_basic_block(&cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+	return bb;
+}
+
+static void assert_select_local_local_binop(enum binary_operator expr_op, enum insn_opcode insn_op)
+{
+	struct basic_block *bb;
+	struct insn *insn;
+
+	bb = create_binop_bb(expr_op);
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
@@ -172,6 +185,26 @@ void test_select_sub_local_from_local(void)
 void test_select_mul_local_from_local(void)
 {
 	assert_select_local_local_binop(OP_MUL, OPC_MUL);
+}
+
+void test_select_local_local_div(void)
+{
+	struct basic_block *bb;
+	struct insn *insn;
+
+	bb = create_binop_bb(OP_DIV);
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_insn(OPC_CLTD, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_DIV, REG_EBP, 12, REG_EAX, insn);
+
+	free_basic_block(bb);
 }
 
 void test_select_return(void)
