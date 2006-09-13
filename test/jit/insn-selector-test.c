@@ -283,6 +283,31 @@ void test_select_neg_local(void)
 	assert_select_local_unop(OP_NEG, OPC_NEG);
 }
 
+static void assert_select_local_local_shift(enum binary_operator expr_op, enum insn_opcode insn_op)
+{
+	struct basic_block *bb;
+	struct insn *insn;
+
+	bb = create_binop_bb(expr_op);
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 12, REG_ECX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_reg_insn(insn_op, REG_ECX, REG_EAX, insn);
+
+	free_basic_block(bb);
+}
+
+void test_select_shl_local_to_local(void)
+{
+	assert_select_local_local_shift(OP_SHL, OPC_SHL);
+}
+
 void test_select_return(void)
 {
 	struct compilation_unit cu;

@@ -109,6 +109,19 @@ public class IntegerArithmeticTest {
         return -n;
     }
 
+    public static void testIntegerLeftShift() {
+        assertEquals(1, shl(1, 0));
+        assertEquals(2, shl(1, 1));
+        assertEquals(4, shl(1, 2));
+        assertEquals(Integer.MIN_VALUE, shl(1, 31));
+        assertEquals(1, shl(1, 32));
+        assertEquals(2, shl(1, 33));
+    }
+
+    public static int shl(int value, int distance) {
+        return value << distance;
+    }
+
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
@@ -131,6 +144,7 @@ public class IntegerArithmeticTest {
         testIntegerRemainder();
         testIntegerNegation();
         testIntegerNegationOverflow();
+        testIntegerLeftShift();
 
         Runtime.getRuntime().halt(retval);
     }

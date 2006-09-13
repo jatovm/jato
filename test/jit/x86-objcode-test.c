@@ -58,7 +58,7 @@ static void assert_emit_insn_3(unsigned char opcode, unsigned char modrm,
 {
 	unsigned char expected[] = { opcode, modrm, extra };
 
-assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
+	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
 static void assert_emit_insn_4(unsigned char opcode, unsigned char modrm,
@@ -307,6 +307,12 @@ void test_emit_neg_reg(void)
 {
 	assert_emit_insn_2(0xf7, 0xd8, reg_insn(OPC_NEG, REG_EAX));
 	assert_emit_insn_2(0xf7, 0xdb, reg_insn(OPC_NEG, REG_EBX));
+}
+
+void test_emit_shl_reg_reg(void)
+{
+	assert_emit_insn_2(0xd3, 0xe0, reg_reg_insn(OPC_SHL, REG_ECX, REG_EAX));
+	assert_emit_insn_2(0xd3, 0xe3, reg_reg_insn(OPC_SHL, REG_ECX, REG_EBX));
 }
 
 void test_emit_cmp_membase_reg(void)

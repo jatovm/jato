@@ -119,6 +119,18 @@ reg:	OP_NEG(reg) 1
 	bb_add_insn(s, reg_insn(OPC_NEG, REG_EAX));
 }
 
+reg:	OP_SHL(reg, EXPR_LOCAL) 1
+{
+	struct expression *expr;
+	unsigned long disp;
+
+	expr = to_expr(tree);
+	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
+
+	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EBP, disp, REG_ECX));
+	bb_add_insn(s, reg_reg_insn(OPC_SHL, REG_ECX, REG_EAX));
+}
+
 reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr;
