@@ -441,6 +441,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 	case INSN_MOV_REG_MEMBASE:
 		x86_emit_mov_reg_membase(buf, &insn->src, &insn->dest);
 		break;
+	case INSN_MOV_REG_REG:
+		x86_emit_mov_reg_reg(buf, insn->src.reg, insn->dest.reg);
+		break;
 	case INSN_MUL_MEMBASE_REG:
 		x86_emit_mul_membase_reg(buf, &insn->src, &insn->dest);
 		break;

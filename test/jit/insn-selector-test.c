@@ -46,6 +46,16 @@ static void assert_reg_insn(enum insn_opcode expected_opc,
 	assert_int_equals(expected_reg, insn->operand.reg);
 }
 
+static void assert_reg_reg_insn(enum insn_opcode expected_opc,
+				enum reg expected_src,
+				enum reg expected_dest,
+				struct insn *insn)
+{
+	assert_int_equals(DEFINE_INSN_TYPE_2(expected_opc, OPERAND_REGISTER, OPERAND_REGISTER), insn->type);
+	assert_int_equals(expected_src, insn->src.reg);
+	assert_int_equals(expected_dest, insn->dest.reg);
+}
+
 static void assert_imm_insn(enum insn_opcode expected_opc,
 			    unsigned long expected_imm, struct insn *insn)
 {
@@ -203,6 +213,29 @@ void test_select_local_local_div(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(OPC_DIV, REG_EBP, 12, REG_EAX, insn);
+
+	free_basic_block(bb);
+}
+
+void test_select_local_local_rem(void)
+{
+	struct basic_block *bb;
+	struct insn *insn;
+
+	bb = create_binop_bb(OP_REM);
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_insn(OPC_CLTD, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_DIV, REG_EBP, 12, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_reg_insn(OPC_MOV, REG_EDX, REG_EAX, insn);
 
 	free_basic_block(bb);
 }

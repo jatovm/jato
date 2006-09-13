@@ -263,6 +263,12 @@ void test_emit_mov_reg_membase(void)
 	assert_emit_insn_6(0x89, 0x98, 0xef, 0xbe, 0xad, 0xde, reg_membase_insn(OPC_MOV, REG_EBX, REG_EAX, 0xdeadbeef));
 }
 
+void test_emit_mov_reg_reg(void)
+{
+	assert_emit_insn_2(0x89, 0xd0, reg_reg_insn(OPC_MOV, REG_EDX, REG_EAX));
+	assert_emit_insn_2(0x89, 0xd9, reg_reg_insn(OPC_MOV, REG_EBX, REG_ECX));
+}
+
 void test_emit_add_disp_reg(void)
 {
 	assert_emit_insn_3(0x03, 0x45, 0x04, membase_reg_insn(OPC_ADD, REG_EBP, 0x04, REG_EAX));

@@ -94,6 +94,7 @@ enum insn_type {
 	INSN_MOV_IMM_REG	= DEFINE_INSN_TYPE_2(OPC_MOV,  OPERAND_IMMEDIATE, OPERAND_REGISTER),
 	INSN_MOV_MEMBASE_REG	= DEFINE_INSN_TYPE_2(OPC_MOV,  OPERAND_MEMBASE,   OPERAND_REGISTER),
 	INSN_MOV_REG_MEMBASE    = DEFINE_INSN_TYPE_2(OPC_MOV,  OPERAND_REGISTER,  OPERAND_MEMBASE),
+	INSN_MOV_REG_REG	= DEFINE_INSN_TYPE_2(OPC_MOV,  OPERAND_REGISTER,  OPERAND_REGISTER),
 	INSN_MUL_MEMBASE_REG	= DEFINE_INSN_TYPE_2(OPC_MUL,  OPERAND_MEMBASE,   OPERAND_REGISTER),
 	INSN_PUSH_IMM		= DEFINE_INSN_TYPE_1(OPC_PUSH, OPERAND_IMMEDIATE),
 	INSN_PUSH_REG		= DEFINE_INSN_TYPE_1(OPC_PUSH, OPERAND_REGISTER),
@@ -118,6 +119,7 @@ struct insn *insn(enum insn_opcode);
 struct insn *membase_reg_insn(enum insn_opcode, enum reg, long, enum reg);
 struct insn *reg_membase_insn(enum insn_opcode, enum reg, enum reg, long);
 struct insn *reg_insn(enum insn_opcode, enum reg);
+struct insn *reg_reg_insn(enum insn_opcode, enum reg, enum reg);
 struct insn *imm_reg_insn(enum insn_opcode, unsigned long, enum reg);
 struct insn *imm_membase_insn(enum insn_opcode, unsigned long, enum reg, long);
 struct insn *imm_insn(enum insn_opcode, unsigned long);

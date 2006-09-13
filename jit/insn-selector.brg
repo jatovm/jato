@@ -101,6 +101,19 @@ reg:	OP_DIV(reg, EXPR_LOCAL) 1
 	bb_add_insn(s, membase_reg_insn(OPC_DIV, REG_EBP, disp, REG_EAX));
 }
 
+reg:	OP_REM(reg, EXPR_LOCAL) 1
+{
+	struct expression *expr;
+	unsigned long disp;
+
+	expr = to_expr(tree);
+	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
+
+	bb_add_insn(s, insn(OPC_CLTD));
+	bb_add_insn(s, membase_reg_insn(OPC_DIV, REG_EBP, disp, REG_EAX));
+	bb_add_insn(s, reg_reg_insn(OPC_MOV, REG_EDX, REG_EAX));
+}
+
 reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr;
