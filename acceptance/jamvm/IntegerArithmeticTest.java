@@ -95,6 +95,20 @@ public class IntegerArithmeticTest {
         return dividend % divisor;
     }
 
+    public static void testIntegerNegation() {
+        assertEquals(-1, neg( 1));
+        assertEquals( 0, neg( 0));
+        assertEquals( 1, neg(-1));
+    }
+
+    public static void testIntegerNegationOverflow() {
+        assertEquals(Integer.MIN_VALUE, neg(Integer.MIN_VALUE));
+    }
+
+    public static int neg(int n) {
+        return -n;
+    }
+
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
@@ -115,6 +129,8 @@ public class IntegerArithmeticTest {
         testIntegerMultiplicationOverflow();
         testIntegerDivision();
         testIntegerRemainder();
+        testIntegerNegation();
+        testIntegerNegationOverflow();
 
         Runtime.getRuntime().halt(retval);
     }

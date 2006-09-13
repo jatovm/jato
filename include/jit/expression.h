@@ -52,7 +52,7 @@ enum binary_operator {
 };
 
 enum unary_operator {
-	OP_NEG,
+	OP_NEG	= OP_LAST,
 };
 
 struct expression {
@@ -175,12 +175,12 @@ static inline enum expression_type expr_type(struct expression *expr)
 
 static inline enum binary_operator expr_bin_op(struct expression *expr)
 {
-	return (expr->node.op & BIN_OP_MASK) >> BIN_OP_SHIFT;
+	return (expr->node.op & OP_MASK) >> OP_SHIFT;
 }
 
 static inline enum unary_operator expr_unary_op(struct expression *expr)
 {
-	return (expr->node.op & UNARY_OP_MASK) >> UNARY_OP_SHIFT;
+	return (expr->node.op & OP_MASK) >> OP_SHIFT;
 }
 
 struct expression *alloc_expression(enum expression_type, enum jvm_type);

@@ -298,6 +298,12 @@ static void x86_emit_mul_membase_reg(struct buffer *buf,
 	__x86_emit_div_mul_membase_reg(buf, src, dest, 0x04);
 }
 
+static void x86_emit_neg_reg(struct buffer *buf, struct operand *operand)
+{
+	x86_emit(buf, 0xf7);
+	x86_emit(buf, x86_mod_rm(0x3, 0x3, encode_reg(operand->reg)));
+}
+
 static void x86_emit_cltd(struct buffer *buf)
 {
 	x86_emit(buf, 0x99);
@@ -446,6 +452,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 		break;
 	case INSN_MUL_MEMBASE_REG:
 		x86_emit_mul_membase_reg(buf, &insn->src, &insn->dest);
+		break;
+	case INSN_NEG_REG:
+		x86_emit_neg_reg(buf, &insn->operand);
 		break;
 	case INSN_PUSH_IMM:
 		x86_emit_push_imm32(buf, insn->operand.imm);

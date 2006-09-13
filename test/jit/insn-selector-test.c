@@ -240,6 +240,49 @@ void test_select_local_local_rem(void)
 	free_basic_block(bb);
 }
 
+static struct basic_block *create_unop_bb(enum unary_operator expr_op)
+{
+	struct methodblock method = {
+		.args_count = 1,
+	};
+	struct compilation_unit cu = {
+		.method = &method,
+	};
+	struct expression *expr;
+	struct basic_block *bb;
+	struct statement *stmt;
+
+	expr = unary_op_expr(J_INT, expr_op, local_expr(J_INT, 0));
+	stmt = alloc_statement(STMT_RETURN);
+	stmt->return_value = &expr->node;
+
+	bb = alloc_basic_block(&cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+	return bb;
+}
+
+static void assert_select_local_unop(enum unary_operator expr_op, enum insn_opcode insn_op)
+{
+	struct basic_block *bb;
+	struct insn *insn;
+
+	bb = create_unop_bb(expr_op);
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_insn(insn_op, REG_EAX, insn);
+
+	free_basic_block(bb);
+}
+
+void test_select_neg_local(void)
+{
+	assert_select_local_unop(OP_NEG, OPC_NEG);
+}
+
 void test_select_return(void)
 {
 	struct compilation_unit cu;
