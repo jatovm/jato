@@ -88,6 +88,7 @@ public class IntegerArithmeticTest {
         assertEquals( 1, rem( 3,  2));
         assertEquals( 0, rem( 1,  1));
         assertEquals( 1, rem( 1,  2));
+        assertEquals( 2, rem( 5,  3));
     }
 
     public static int rem(int dividend, int divisor) {
