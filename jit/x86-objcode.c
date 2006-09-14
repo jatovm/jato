@@ -315,13 +315,27 @@ static void x86_emit_div_membase_reg(struct buffer *buf, struct operand *src,
 	__x86_emit_div_mul_membase_reg(buf, src, dest, 0x07);
 }
 
-static void x86_emit_shl_reg_reg(struct buffer *buf, struct operand *src,
-				 struct operand *dest)
+static void __x86_emit_shift_reg_reg(struct buffer *buf,
+				     struct operand *src,
+				     struct operand *dest,
+				     unsigned char opc_ext)
 {
 	assert(src->reg == REG_ECX);
 
 	x86_emit(buf, 0xd3);
-	x86_emit(buf, x86_mod_rm(0x03, 0x04, encode_reg(dest->reg)));
+	x86_emit(buf, x86_mod_rm(0x03, opc_ext, encode_reg(dest->reg)));
+}
+
+static void x86_emit_shl_reg_reg(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
+{
+	__x86_emit_shift_reg_reg(buf, src, dest, 0x04);
+}
+
+static void x86_emit_shr_reg_reg(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
+{
+	__x86_emit_shift_reg_reg(buf, src, dest, 0x05);
 }
 
 static void __x86_emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
@@ -476,6 +490,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 		break;
 	case INSN_SHL_REG_REG:
 		x86_emit_shl_reg_reg(buf, &insn->src, &insn->dest);
+		break;
+	case INSN_SHR_REG_REG:
+		x86_emit_shr_reg_reg(buf, &insn->src, &insn->dest);
 		break;
 	default:
 		assert(!"unknown opcode");

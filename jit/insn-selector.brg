@@ -50,6 +50,19 @@ static void binop_reg_local(struct basic_block *bb, struct tree_node *tree,
 	bb_add_insn(bb, membase_reg_insn(opc, REG_EBP, disp, REG_EAX));
 }
 
+static void shift_reg_local(struct basic_block *bb, struct tree_node *tree,
+			    enum insn_opcode opc)
+{
+	struct expression *expr;
+	unsigned long disp;
+
+	expr = to_expr(tree);
+	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
+
+	bb_add_insn(bb, membase_reg_insn(OPC_MOV, REG_EBP, disp, REG_ECX));
+	bb_add_insn(bb, reg_reg_insn(opc, REG_ECX, REG_EAX));
+}
+
 %%
 
 %termprefix EXPR_ OP_ STMT_
@@ -121,14 +134,12 @@ reg:	OP_NEG(reg) 1
 
 reg:	OP_SHL(reg, EXPR_LOCAL) 1
 {
-	struct expression *expr;
-	unsigned long disp;
+	shift_reg_local(s, tree, OPC_SHL);
+}
 
-	expr = to_expr(tree);
-	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
-
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EBP, disp, REG_ECX));
-	bb_add_insn(s, reg_reg_insn(OPC_SHL, REG_ECX, REG_EAX));
+reg:	OP_SHR(reg, EXPR_LOCAL) 1
+{
+	shift_reg_local(s, tree, OPC_SHR);
 }
 
 reg:	EXPR_INVOKE(arg) 1

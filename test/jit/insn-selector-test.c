@@ -308,6 +308,11 @@ void test_select_shl_local_to_local(void)
 	assert_select_local_local_shift(OP_SHL, OPC_SHL);
 }
 
+void test_select_shr_local_to_local(void)
+{
+	assert_select_local_local_shift(OP_SHR, OPC_SHR);
+}
+
 void test_select_return(void)
 {
 	struct compilation_unit cu;

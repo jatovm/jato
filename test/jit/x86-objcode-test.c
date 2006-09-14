@@ -315,6 +315,12 @@ void test_emit_shl_reg_reg(void)
 	assert_emit_insn_2(0xd3, 0xe3, reg_reg_insn(OPC_SHL, REG_ECX, REG_EBX));
 }
 
+void test_emit_shr_reg_reg(void)
+{
+	assert_emit_insn_2(0xd3, 0xe8, reg_reg_insn(OPC_SHR, REG_ECX, REG_EAX));
+	assert_emit_insn_2(0xd3, 0xeb, reg_reg_insn(OPC_SHR, REG_ECX, REG_EBX));
+}
+
 void test_emit_cmp_membase_reg(void)
 {
 	assert_emit_insn_3(0x3b, 0x45, 0x08, membase_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));

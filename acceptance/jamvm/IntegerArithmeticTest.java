@@ -114,12 +114,32 @@ public class IntegerArithmeticTest {
         assertEquals(2, shl(1, 1));
         assertEquals(4, shl(1, 2));
         assertEquals(Integer.MIN_VALUE, shl(1, 31));
+    }
+
+    public static void testIntegerLeftShiftDistanceIsMasked() {
         assertEquals(1, shl(1, 32));
         assertEquals(2, shl(1, 33));
     }
 
     public static int shl(int value, int distance) {
         return value << distance;
+    }
+
+    public static void testIntegerRightShift() {
+        assertEquals(1, shr(1, 0));
+        assertEquals(0, shr(1, 1));
+        assertEquals(1, shr(2, 1));
+        assertEquals(3, shr(15, 2));
+        assertEquals(0, shr(Integer.MAX_VALUE, 31));
+    }
+
+    public static void testIntegerRightShiftDistanceIsMasked() {
+        assertEquals(1, shr(1, 32));
+        assertEquals(0, shr(1, 33));
+    }
+
+    public static int shr(int value, int distance) {
+        return value >> distance;
     }
 
     private static void assertEquals(int expected, int actual) {
@@ -145,6 +165,9 @@ public class IntegerArithmeticTest {
         testIntegerNegation();
         testIntegerNegationOverflow();
         testIntegerLeftShift();
+        testIntegerLeftShiftDistanceIsMasked();
+        testIntegerRightShift();
+        testIntegerRightShiftDistanceIsMasked();
 
         Runtime.getRuntime().halt(retval);
     }
