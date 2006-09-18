@@ -146,10 +146,10 @@ void test_should_select_insn_for_every_statement(void)
 
 static struct basic_block *create_binop_bb(enum binary_operator expr_op)
 {
-	struct methodblock method = {
+	static struct methodblock method = {
 		.args_count = 2,
 	};
-	struct compilation_unit cu = {
+	static struct compilation_unit cu = {
 		.method = &method,
 	};
 	struct expression *expr;
@@ -242,10 +242,10 @@ void test_select_local_local_rem(void)
 
 static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 {
-	struct methodblock method = {
+	static struct methodblock method = {
 		.args_count = 1,
 	};
-	struct compilation_unit cu = {
+	static struct compilation_unit cu = {
 		.method = &method,
 	};
 	struct expression *expr;
