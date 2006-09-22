@@ -21,7 +21,7 @@ unit tests, follow these instructions:
 
   3. Compile jit-jamvm and run unit tests:
 
-    % cd ../test/jit/
+    % cd ../
     % make
 
 
@@ -46,11 +46,7 @@ Prequisites:
 
 To run the tests, execute the following commands:
 
-  cd lib
-  make
   cd ../monoburg
-  make
-  cd ../jato
   make
   cd ../acceptance
   sh run-acceptance-tests.sh
