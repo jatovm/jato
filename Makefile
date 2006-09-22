@@ -174,11 +174,11 @@ test: insn-selector $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
 	$(call cmd,cc_testrunner)
 	$(call cmd,runtests)
 
-quiet_cmd_jikes_o_c = JIKES $(empty)  $(empty) $@
-      cmd_jikes_o_c = $(JIKES) -cp $(BOOTCLASSPATH) -d acceptance $<
+quiet_cmd_jikes = JIKES $(empty)  $(empty) $@
+      cmd_jikes = $(JIKES) -cp $(BOOTCLASSPATH) -d acceptance $<
 
 %.class: %.java
-	$(call cmd,jikes_o_c)
+	$(call cmd,jikes)
 
 ACCEPTANCE_CLASSES = \
 	acceptance/jamvm/ExitStatusIsOneTest.class \
@@ -190,13 +190,11 @@ vm-classes:
 
 acceptance: vm-classes $(EXECUTABLE) $(ACCEPTANCE_CLASSES)
 
+quiet_cmd_clean = CLEAN
+      cmd_clean = rm -f $(JAMVM_OBJS) $(JATO_OBJS) $(TEST_OBJS) \
+      			jit/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
+			test-suite.c test-suite.o test-runner \
+			$(ACCEPTANCE_CLASSES)
+
 clean:
-	rm -f $(JAMVM_OBJS)
-	rm -f $(JATO_OBJS)
-	rm -f $(TEST_OBJS)
-	rm -f jit/insn-selector.c
-	rm -f $(EXECUTABLE)
-	rm -f $(ARCH_H)
-	rm -f test-suite.c
-	rm -f test-suite.o
-	rm -f test-runner
+	$(call cmd,clean) $(JAMVM_OBJS)
