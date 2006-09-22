@@ -35,8 +35,8 @@ JATO_OBJS =  \
 	jit/arithmetic-bc.o \
 	jit/basic-block.o \
 	jit/branch-bc.o \
-	jit/bytecodes.o \
 	jit/bytecode-to-ir.o \
+	jit/bytecodes.o \
 	jit/cfg-analyzer.o \
 	jit/compilation-unit.o \
 	jit/disass-common.o \
@@ -70,8 +70,8 @@ JAMVM_OBJS = \
 	src/cast.o \
 	src/class.o \
 	src/direct.o \
-	src/dll_ffi.o \
 	src/dll.o \
+	src/dll_ffi.o \
 	src/excep.o \
 	src/execute.o \
 	src/frame.o \
@@ -127,13 +127,27 @@ TEST_OBJS = \
 	test/jit/arithmetic-bc-test.o \
 	test/jit/basic-block-test.o \
 	test/jit/bc-test-utils.o \
-	test/jit/bitmap-test.o \
-	test/jit/branch-bc-test.o test/jit/buffer-test.o test/jit/cfg-analyzer-test.o \
-	test/jit/bytecode-to-ir-test.o test/jit/bytecodes-test.o test/jit/compilation-unit-test.o \
-	test/jit/expression-test.o test/jit/insn-selector-test.o test/jit/invoke-bc-test.o test/jit/jit-compiler-test.o \
-	test/jit/list-test.o test/jit/object-bc-test.o test/jit/resolve-stub.o test/jit/stack-test.o \
-	test/jit/string-test.o test/jit/tree-printer-test.o test/jit/x86-frame-test.o test/jit/x86-objcode-test.o test/jit/natives-test.o \
-	test/libharness/libharness.o
+	test/jit/branch-bc-test.o \
+	test/jit/bytecode-to-ir-test.o \
+	test/jit/bytecodes-test.o \
+	test/jit/cfg-analyzer-test.o \
+	test/jit/compilation-unit-test.o \
+	test/jit/expression-test.o \
+	test/jit/insn-selector-test.o \
+	test/jit/invoke-bc-test.o \
+	test/jit/jit-compiler-test.o \
+	test/jit/object-bc-test.o \
+	test/jit/resolve-stub.o \
+	test/jit/tree-printer-test.o \
+	test/jit/x86-frame-test.o \
+	test/jit/x86-objcode-test.o \
+	test/libharness/libharness.o \
+	test/vm/bitmap-test.o \
+	test/vm/buffer-test.o \
+	test/vm/list-test.o \
+	test/vm/natives-test.o \
+	test/vm/stack-test.o \
+	test/vm/string-test.o \
 
 $(TEST_OBJS):
 
@@ -143,7 +157,7 @@ quiet_cmd_gensuite = GENSUITE $@
 test-suite.c:
 	$(call cmd,gensuite)
 
-quiet_cmd_runtests = RUNTEST_OBJS $(TESTRUNNER)
+quiet_cmd_runtests = RUNTEST $(TESTRUNNER)
       cmd_runtests = ./$(TESTRUNNER)
 
 quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
