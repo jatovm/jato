@@ -7,7 +7,7 @@ function run_java {
   JAVA_CLASS=$1
   EXPECTED=$2
 
-  ../jato/jato \
+  ../jato-exe \
       -Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
       -Xbootclasspath:$BOOTCLASSPATH $JAVA_OPTS -cp . $JAVA_CLASS
 
@@ -20,14 +20,13 @@ function run_java {
 }
 
 make -C ..
-make -C ../jato
 
 # make sure that we have built jamvm classes
 if [ ! -f ../lib/classes.zip ]; then
   make -C ../lib
 fi
 
-GNU_CLASSPATH_ROOT=`grep "with_classpath_install_dir =" ../jato/Makefile  | grep -v "#" |  awk '{ print $3 }'`
+GNU_CLASSPATH_ROOT=`grep "with_classpath_install_dir =" ../Makefile  | grep -v "#" |  awk '{ print $3 }'`
 if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d $GNU_CLASSPATH_ROOT; then
   echo "Error! Cannot find GNU Classpath installed."
   exit
