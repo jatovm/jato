@@ -117,7 +117,7 @@ JNIFrame *ensureJNILrefCapacity(int cap) {
     int size = (Object**)frame - frame->lrefs - frame->mb->args_count;
 
     if(size < cap) {
-        int incr = cap-size;
+        unsigned long incr = cap-size;
         if(incr < sizeof(JNIFrame)/sizeof(Object*))
             incr = sizeof(JNIFrame)/sizeof(Object*);
 

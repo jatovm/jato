@@ -91,8 +91,8 @@ uintptr_t *arraycopy(Class *class, MethodBlock *mb, uintptr_t *ostack) {
     Object *src = (Object *)ostack[0];
     int start1 = ostack[1];
     Object *dest = (Object *)ostack[2];
-    int start2 = ostack[3];
-    int length = ostack[4];
+    unsigned long start2 = ostack[3];
+    unsigned long length = ostack[4];
 
     if((src == NULL) || (dest == NULL))
         signalException("java/lang/NullPointerException", NULL);
@@ -142,7 +142,7 @@ uintptr_t *arraycopy(Class *class, MethodBlock *mb, uintptr_t *ostack) {
             memmove(ddata + start2*size, sdata + start1*size, length*size);
         } else {
             Object **sob, **dob;
-            int i;
+            unsigned long i;
 
             if(!(((scb->name[1] == 'L') || (scb->name[1] == '[')) &&
                           ((dcb->name[1] == 'L') || (dcb->name[1] == '['))))
@@ -601,8 +601,8 @@ uintptr_t *defineClass0(Class *clazz, MethodBlock *mb, uintptr_t *ostack) {
     Object *class_loader = (Object *)ostack[0];
     Object *string = (Object *)ostack[1];
     Object *array = (Object *)ostack[2];
-    int offset = ostack[3];
-    int data_len = ostack[4];
+    unsigned long offset = ostack[3];
+    unsigned long data_len = ostack[4];
     uintptr_t pd = ostack[5];
     Class *class = NULL;
 

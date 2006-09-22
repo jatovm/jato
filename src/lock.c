@@ -37,7 +37,7 @@
 #define TRACE(x)
 #endif
 
-#define UN_USED -1
+#define UN_USED (~0UL)
 
 #define HASHTABSZE 1<<5
 #define HASH(obj) (getObjectHashcode(obj) >> LOG_OBJECT_GRAIN)
