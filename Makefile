@@ -105,7 +105,7 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 %.o: %.c
 	$(call cmd,cc_o_c)
 
-all: $(EXECUTABLE)
+all: $(EXECUTABLE) test
 
 quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
       cmd_ln_arch_h = ln -fsn ../../src/arch/i386.h $@
