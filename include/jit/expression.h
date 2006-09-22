@@ -33,6 +33,7 @@ enum binary_operator {
 
 	OP_SHL,
 	OP_SHR,
+	OP_USHR,
 	OP_AND,
 	OP_OR,
 	OP_XOR,

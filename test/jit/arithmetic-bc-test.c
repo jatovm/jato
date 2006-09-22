@@ -144,6 +144,12 @@ void test_convert_shr(void)
 	assert_convert_binop(J_LONG, OP_SHR, OPC_LSHR);
 }
 
+void test_convert_ushr(void)
+{
+	assert_convert_binop(J_INT, OP_USHR, OPC_IUSHR);
+	assert_convert_binop(J_LONG, OP_USHR, OPC_LUSHR);
+}
+
 void test_convert_and(void)
 {
 	assert_convert_binop(J_INT, OP_AND, OPC_IAND);

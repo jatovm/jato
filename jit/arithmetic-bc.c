@@ -219,6 +219,18 @@ int convert_lshr(struct compilation_unit *cu, struct basic_block *bb,
 	return convert_binop(cu, bb, J_LONG, OP_SHR);
 }
 
+int convert_iushr(struct compilation_unit *cu, struct basic_block *bb,
+		  unsigned long offset)
+{
+	return convert_binop(cu, bb, J_INT, OP_USHR);
+}
+
+int convert_lushr(struct compilation_unit *cu, struct basic_block *bb,
+		  unsigned long offset)
+{
+	return convert_binop(cu, bb, J_LONG, OP_USHR);
+}
+
 int convert_iand(struct compilation_unit *cu, struct basic_block *bb,
 		 unsigned long offset)
 {

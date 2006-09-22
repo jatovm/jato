@@ -146,6 +146,28 @@ public class IntegerArithmeticTest {
         return value >> distance;
     }
 
+    public static void testIntegerUnsignedRightShift() {
+        assertEquals(1, ushr(1, 0));
+        assertEquals(0, ushr(1, 1));
+        assertEquals(1, ushr(2, 1));
+        assertEquals(3, ushr(15, 2));
+        assertEquals(0, ushr(Integer.MAX_VALUE, 31));
+    }
+
+    public static void testIntegerUnsignedRightShiftDistanceIsMasked() {
+        assertEquals(1, ushr(1, 32));
+        assertEquals(0, ushr(1, 33));
+    }
+
+    public static void testIntegerUnsignedRightShiftZeroExtends() {
+        assertEquals(Integer.MAX_VALUE, ushr(-1, 1));
+        assertEquals(Integer.MAX_VALUE / 2 + 1, ushr(Integer.MIN_VALUE, 1));
+    }
+
+    public static int ushr(int value, int distance) {
+        return value >>> distance;
+    }
+
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
@@ -173,6 +195,9 @@ public class IntegerArithmeticTest {
         testIntegerRightShift();
         testIntegerRightShiftDistanceIsMasked();
         testIntegerRightShiftSignExtends();
+        testIntegerUnsignedRightShift();
+        testIntegerUnsignedRightShiftDistanceIsMasked();
+        testIntegerUnsignedRightShiftZeroExtends();
 
         Runtime.getRuntime().halt(retval);
     }

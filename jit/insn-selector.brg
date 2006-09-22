@@ -142,6 +142,11 @@ reg:	OP_SHR(reg, EXPR_LOCAL) 1
 	shift_reg_local(s, tree, OPC_SAR);
 }
 
+reg:	OP_USHR(reg, EXPR_LOCAL) 1
+{
+	shift_reg_local(s, tree, OPC_SHR);
+}
+
 reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr;
