@@ -12,6 +12,10 @@ EXECUTABLE = jato-exe
 prefix = /usr/local
 with_classpath_install_dir = /usr/local/classpath
 
+JIKES=jikes
+GLIBJ=$(with_classpath_install_dir)/share/classpath/glibj.zip
+BOOTCLASSPATH=lib/classes.zip:$(GLIBJ)
+
 # Default to quiet output and add verbose printing only if V=1 is passed
 # as parameter to make.
 ifdef V
@@ -101,7 +105,7 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 %.o: %.c
 	$(call cmd,cc_o_c)
 
-all: gen $(EXECUTABLE)
+all: $(EXECUTABLE)
 
 quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
       cmd_ln_arch_h = ln -fsn ../../src/arch/i386.h $@
@@ -115,7 +119,7 @@ gen:
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
       cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(JAMVM_OBJS) $(JATO_OBJS) -o $(EXECUTABLE)
 
-$(EXECUTABLE): $(ARCH_H) compile
+$(EXECUTABLE): $(ARCH_H) gen compile
 	$(call cmd,cc_exec)
 
 compile: $(JAMVM_OBJS) $(JATO_OBJS)
@@ -166,6 +170,22 @@ quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
 test: gen $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
 	$(call cmd,cc_testrunner)
 	$(call cmd,runtests)
+
+quiet_cmd_jikes_o_c = JIKES $(empty)  $(empty) $@
+      cmd_jikes_o_c = $(JIKES) -cp $(BOOTCLASSPATH) -d acceptance $<
+
+%.class: %.java
+	$(call cmd,jikes_o_c)
+
+ACCEPTANCE_CLASSES = \
+	acceptance/jamvm/ExitStatusIsOneTest.class \
+	acceptance/jamvm/ExitStatusIsZeroTest.class \
+	acceptance/jamvm/IntegerArithmeticTest.class
+
+vm-classes:
+	make -C lib/
+
+acceptance: vm-classes $(EXECUTABLE) $(ACCEPTANCE_CLASSES)
 
 clean:
 	rm -f $(JAMVM_OBJS)

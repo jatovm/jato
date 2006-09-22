@@ -19,13 +19,7 @@ function run_java {
   fi
 }
 
-make -C ..
-
-# make sure that we have built jamvm classes
-if [ ! -f ../lib/classes.zip ]; then
-  make -C ../lib
-fi
-
+make -C.. acceptance
 GNU_CLASSPATH_ROOT=`grep "with_classpath_install_dir =" ../Makefile  | grep -v "#" |  awk '{ print $3 }'`
 if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d $GNU_CLASSPATH_ROOT; then
   echo "Error! Cannot find GNU Classpath installed."
@@ -35,8 +29,6 @@ fi
 GLIBJ=$GNU_CLASSPATH_ROOT/share/classpath/glibj.zip
 
 BOOTCLASSPATH=../lib/classes.zip:$GLIBJ
-
-find jamvm/ -name "*.java" | xargs jikes -cp $BOOTCLASSPATH
 
 run_java jamvm.ExitStatusIsZeroTest 0
 run_java jamvm.ExitStatusIsOneTest 1
