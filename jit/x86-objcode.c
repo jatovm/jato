@@ -441,6 +441,12 @@ static void x86_emit_indirect_call(struct buffer *buf,
 	x86_emit(buf, x86_mod_rm(0x0, 0x2, encode_reg(operand->reg)));
 }
 
+static void x86_emit_xor_membase_reg(struct buffer *buf,
+				     struct operand *src, struct operand *dest)
+{
+	x86_emit_membase_reg(buf, 0x33, src, dest);
+}
+
 static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 {
 	insn->offset = buffer_offset(buf); 
@@ -520,6 +526,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 		break;
 	case INSN_SHR_REG_REG:
 		x86_emit_shr_reg_reg(buf, &insn->src, &insn->dest);
+		break;
+	case INSN_XOR_MEMBASE_REG:
+		x86_emit_xor_membase_reg(buf, &insn->src, &insn->dest);
 		break;
 	default:
 		assert(!"unknown opcode");

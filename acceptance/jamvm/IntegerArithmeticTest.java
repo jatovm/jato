@@ -190,6 +190,17 @@ public class IntegerArithmeticTest {
         return value1 & value2;
     }
 
+    public static void testIntegerBitwiseExclusiveOr() {
+        assertEquals(0, xor(0, 0));
+        assertEquals(1, xor(1, 0));
+        assertEquals(1, xor(0, 1));
+        assertEquals(0, xor(1, 1));
+    }
+
+    public static int xor(int value1, int value2) {
+        return value1 ^ value2;
+    }
+
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
@@ -222,6 +233,7 @@ public class IntegerArithmeticTest {
         testIntegerUnsignedRightShiftZeroExtends();
         testIntegerBitwiseInclusiveOr();
         testIntegerBitwiseAnd();
+        testIntegerBitwiseExclusiveOr();
 
         Runtime.getRuntime().halt(retval);
     }

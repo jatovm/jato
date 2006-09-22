@@ -157,6 +157,11 @@ reg:	OP_AND(reg, EXPR_LOCAL) 1
 	binop_reg_local(s, tree, OPC_AND);
 }
 
+reg:	OP_XOR(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(s, tree, OPC_XOR);
+}
+
 reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr;
