@@ -323,6 +323,11 @@ void test_select_or_local_from_local(void)
 	assert_select_local_local_binop(OP_OR, OPC_OR);
 }
 
+void test_select_and_local_from_local(void)
+{
+	assert_select_local_local_binop(OP_AND, OPC_AND);
+}
+
 void test_select_return(void)
 {
 	struct compilation_unit cu;

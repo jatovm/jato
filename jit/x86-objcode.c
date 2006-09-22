@@ -261,6 +261,12 @@ static void x86_emit_add_membase_reg(struct buffer *buf,
 	x86_emit_membase_reg(buf, 0x03, src, dest);
 }
 
+static void x86_emit_and_membase_reg(struct buffer *buf,
+				     struct operand *src, struct operand *dest)
+{
+	x86_emit_membase_reg(buf, 0x23, src, dest);
+}
+
 static void x86_emit_sub_membase_reg(struct buffer *buf,
 				     struct operand *src, struct operand *dest)
 {
@@ -442,6 +448,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 	switch (insn->type) {
 	case INSN_ADD_MEMBASE_REG:
 		x86_emit_add_membase_reg(buf, &insn->src, &insn->dest);
+		break;
+	case INSN_AND_MEMBASE_REG:
+		x86_emit_and_membase_reg(buf, &insn->src, &insn->dest);
 		break;
 	case INSN_ADD_IMM_REG:
 		x86_emit_add_imm_reg(buf, &insn->src, &insn->dest);

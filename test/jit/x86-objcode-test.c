@@ -333,6 +333,12 @@ void test_emit_or_membase_reg(void)
 	assert_emit_insn_6(0x0b, 0x9d, 0xef, 0xbe, 0xad, 0xde, membase_reg_insn(OPC_OR, REG_EBP, 0xdeadbeef, REG_EBX));
 }
 
+void test_emit_and_membase_reg(void)
+{
+	assert_emit_insn_3(0x23, 0x45, 0x0c, membase_reg_insn(OPC_AND, REG_EBP, 0x0c, REG_EAX));
+	assert_emit_insn_6(0x23, 0x9d, 0xef, 0xbe, 0xad, 0xde, membase_reg_insn(OPC_AND, REG_EBP, 0xdeadbeef, REG_EBX));
+}
+
 void test_emit_cmp_membase_reg(void)
 {
 	assert_emit_insn_3(0x3b, 0x45, 0x08, membase_reg_insn(OPC_CMP, REG_EBP, 0x08, REG_EAX));
