@@ -138,6 +138,10 @@ public class IntegerArithmeticTest {
         assertEquals(0, shr(1, 33));
     }
 
+    public static void testIntegerRightShiftSignExtends() {
+        assertEquals(-1, shr(-2, 1));
+    }
+
     public static int shr(int value, int distance) {
         return value >> distance;
     }
@@ -168,6 +172,7 @@ public class IntegerArithmeticTest {
         testIntegerLeftShiftDistanceIsMasked();
         testIntegerRightShift();
         testIntegerRightShiftDistanceIsMasked();
+        testIntegerRightShiftSignExtends();
 
         Runtime.getRuntime().halt(retval);
     }
