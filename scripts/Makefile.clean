@@ -1,8 +1,0 @@
-src := $(obj)
-
-include $(src)/Makefile
-
-__objs      := $(addprefix $(obj),$(objs))
-
-clean:
-	rm -f $(__objs)

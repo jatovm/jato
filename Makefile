@@ -101,13 +101,7 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 %.o: %.c
 	$(call cmd,cc_o_c)
 
-all: $(EXECUTABLE)
-
-compile: gen
-	$(MAKE) -f scripts/Makefile.compile obj=jit/
-	$(MAKE) -f scripts/Makefile.compile obj=src/
-	$(MAKE) -f scripts/Makefile.compile obj=vm/
-	$(MAKE) -f scripts/Makefile.compile obj=jato/
+all: gen $(EXECUTABLE)
 
 quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
       cmd_ln_arch_h = ln -fsn ../../src/arch/i386.h $@
@@ -123,6 +117,8 @@ quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
 
 $(EXECUTABLE): $(ARCH_H) compile
 	$(call cmd,cc_exec)
+
+compile: $(JAMVM_OBJS) $(JATO_OBJS)
 
 TESTRUNNER=test-runner
 TEST_SUITE=test-suite.c
