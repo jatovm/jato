@@ -318,6 +318,11 @@ void test_select_ushr_local_to_local(void)
 	assert_select_local_local_shift(OP_USHR, OPC_SHR);
 }
 
+void test_select_or_local_from_local(void)
+{
+	assert_select_local_local_binop(OP_OR, OPC_OR);
+}
+
 void test_select_return(void)
 {
 	struct compilation_unit cu;

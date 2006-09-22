@@ -168,6 +168,17 @@ public class IntegerArithmeticTest {
         return value >>> distance;
     }
 
+    public static void testIntegerBitwiseInclusiveOr() {
+        assertEquals(0, or(0, 0));
+        assertEquals(1, or(1, 0));
+        assertEquals(1, or(0, 1));
+        assertEquals(1, or(1, 1));
+    }
+
+    public static int or(int value1, int value2) {
+        return value1 | value2;
+    }
+
     private static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
@@ -198,6 +209,7 @@ public class IntegerArithmeticTest {
         testIntegerUnsignedRightShift();
         testIntegerUnsignedRightShiftDistanceIsMasked();
         testIntegerUnsignedRightShiftZeroExtends();
+        testIntegerBitwiseInclusiveOr();
 
         Runtime.getRuntime().halt(retval);
     }

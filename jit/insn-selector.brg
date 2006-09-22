@@ -147,6 +147,11 @@ reg:	OP_USHR(reg, EXPR_LOCAL) 1
 	shift_reg_local(s, tree, OPC_SHR);
 }
 
+reg:	OP_OR(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(s, tree, OPC_OR);
+}
+
 reg:	EXPR_INVOKE(arg) 1
 {
 	struct expression *expr;

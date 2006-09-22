@@ -344,6 +344,12 @@ static void x86_emit_shr_reg_reg(struct buffer *buf, struct operand *src,
 	__x86_emit_shift_reg_reg(buf, src, dest, 0x05);
 }
 
+static void x86_emit_or_membase_reg(struct buffer *buf,
+				    struct operand *src, struct operand *dest)
+{
+	x86_emit_membase_reg(buf, 0x0b, src, dest);
+}
+
 static void __x86_emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
 {
 	int opc;
@@ -484,6 +490,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 		break;
 	case INSN_NEG_REG:
 		x86_emit_neg_reg(buf, &insn->operand);
+		break;
+	case INSN_OR_MEMBASE_REG:
+		x86_emit_or_membase_reg(buf, &insn->src, &insn->dest);
 		break;
 	case INSN_PUSH_IMM:
 		x86_emit_push_imm32(buf, insn->operand.imm);
