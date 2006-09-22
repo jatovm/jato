@@ -183,6 +183,7 @@ quiet_cmd_jikes = JIKES $(empty)  $(empty) $@
 ACCEPTANCE_CLASSES = \
 	acceptance/jamvm/ExitStatusIsOneTest.class \
 	acceptance/jamvm/ExitStatusIsZeroTest.class \
+	acceptance/jamvm/LoadConstantsTest.class \
 	acceptance/jamvm/IntegerArithmeticTest.class
 
 vm-classes:
