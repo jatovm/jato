@@ -2,7 +2,7 @@ MONOBURG=./monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
-INCLUDE = -I. -I../src -I./glib -I../include -I../jit -I../jit/glib
+INCLUDE =  -Iinclude -Ijit -Isrc -Ijit/glib -Itest/libharness -Itest/jit
 LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
 
 ARCH_H = include/vm/arch.h
@@ -30,8 +30,7 @@ else
   quiet = quiet_
 endif
 
-OBJS =  \
-	jato/jato.o \
+JATO_OBJS =  \
 	jit/alloc.o \
 	jit/arithmetic-bc.o \
 	jit/basic-block.o \
@@ -56,6 +55,16 @@ OBJS =  \
 	jit/typeconv-bc.o \
 	jit/x86-frame.o \
 	jit/x86-objcode.o \
+	vm/backtrace.o \
+	vm/bitmap.o \
+	vm/buffer.o \
+	vm/debug-dump.o \
+	vm/natives.o \
+	vm/stack.o \
+	vm/string.o
+
+JAMVM_OBJS = \
+	jato/jato.o \
 	src/access.o \
 	src/alloc.o \
 	src/cast.o \
@@ -80,18 +89,17 @@ OBJS =  \
 	src/string.o \
 	src/thread.o \
 	src/utf8.o \
-	src/zip.o \
-	vm/backtrace.o \
-	vm/bitmap.o \
-	vm/buffer.o \
-	vm/debug-dump.o \
-	vm/natives.o \
-	vm/stack.o \
-	vm/string.o
+	src/zip.o
 	
 # If quiet is set, only print short version of command
 cmd = @$(if $($(quiet)cmd_$(1)),\
       echo '  $($(quiet)cmd_$(1))' &&) $(cmd_$(1))
+
+quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
+      cmd_cc_o_c = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) -c $< -o $@
+
+%.o: %.c
+	$(call cmd,cc_o_c)
 
 all: $(EXECUTABLE)
 
@@ -110,17 +118,52 @@ $(ARCH_H):
 gen:
 	$(MONOBURG) -p -e jit/insn-selector.brg > jit/insn-selector.c
 
-clean:
-	$(MAKE) -f scripts/Makefile.clean obj=jit/
-	$(MAKE) -f scripts/Makefile.clean obj=src/
-	$(MAKE) -f scripts/Makefile.clean obj=vm/
-	$(MAKE) -f scripts/Makefile.clean obj=jato/
-	rm -f jit/insn-selector.c
-	rm -f $(EXECUTABLE)
-	rm -f $(ARCH_H)
-
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
-      cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(OBJS) -o $(EXECUTABLE)
+      cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(JAMVM_OBJS) $(JATO_OBJS) -o $(EXECUTABLE)
 
 $(EXECUTABLE): $(ARCH_H) compile
 	$(call cmd,cc_exec)
+
+TESTRUNNER=test-runner
+TEST_SUITE=test-suite.c
+
+TEST_OBJS = \
+	test/jit/arithmetic-bc-test.o \
+	test/jit/basic-block-test.o \
+	test/jit/bc-test-utils.o \
+	test/jit/bitmap-test.o \
+	test/jit/branch-bc-test.o test/jit/buffer-test.o test/jit/cfg-analyzer-test.o \
+	test/jit/bytecode-to-ir-test.o test/jit/bytecodes-test.o test/jit/compilation-unit-test.o \
+	test/jit/expression-test.o test/jit/insn-selector-test.o test/jit/invoke-bc-test.o test/jit/jit-compiler-test.o \
+	test/jit/list-test.o test/jit/object-bc-test.o test/jit/resolve-stub.o test/jit/stack-test.o \
+	test/jit/string-test.o test/jit/tree-printer-test.o test/jit/x86-frame-test.o test/jit/x86-objcode-test.o test/jit/natives-test.o \
+	test/libharness/libharness.o
+
+$(TEST_OBJS):
+
+quiet_cmd_gensuite = GENSUITE $@
+      cmd_gensuite = sh test/scripts/make-tests.sh > $@
+
+test-suite.c:
+	$(call cmd,gensuite)
+
+quiet_cmd_runtests = RUNTEST_OBJS $(TESTRUNNER)
+      cmd_runtests = ./$(TESTRUNNER)
+
+quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
+      cmd_cc_testrunner = $(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(LIBS) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) -o $(TESTRUNNER)
+
+test: gen $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
+	$(call cmd,cc_testrunner)
+	$(call cmd,runtests)
+
+clean:
+	rm -f $(JAMVM_OBJS)
+	rm -f $(JATO_OBJS)
+	rm -f $(TEST_OBJS)
+	rm -f jit/insn-selector.c
+	rm -f $(EXECUTABLE)
+	rm -f $(ARCH_H)
+	rm -f test-suite.c
+	rm -f test-suite.o
+	rm -f test-runner
