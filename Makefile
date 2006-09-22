@@ -113,13 +113,16 @@ quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
 $(ARCH_H):
 	$(call cmd,ln_arch_h)
 
-gen:
-	$(MONOBURG) -p -e jit/insn-selector.brg > jit/insn-selector.c
+quiet_cmd_monoburg_exec = MONOBURG jit/insn-selector.c
+      cmd_monoburg_exec = $(MONOBURG) -p -e jit/insn-selector.brg > jit/insn-selector.c
+
+insn-selector:
+	$(call cmd,monoburg_exec)
 
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
       cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(JAMVM_OBJS) $(JATO_OBJS) -o $(EXECUTABLE)
 
-$(EXECUTABLE): $(ARCH_H) gen compile
+$(EXECUTABLE): $(ARCH_H) insn-selector compile
 	$(call cmd,cc_exec)
 
 compile: $(JAMVM_OBJS) $(JATO_OBJS)
@@ -167,7 +170,7 @@ quiet_cmd_runtests = RUNTEST $(TESTRUNNER)
 quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
       cmd_cc_testrunner = $(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(LIBS) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) -o $(TESTRUNNER)
 
-test: gen $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
+test: insn-selector $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
 	$(call cmd,cc_testrunner)
 	$(call cmd,runtests)
 
