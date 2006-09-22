@@ -139,7 +139,7 @@ reg:	OP_SHL(reg, EXPR_LOCAL) 1
 
 reg:	OP_SHR(reg, EXPR_LOCAL) 1
 {
-	shift_reg_local(s, tree, OPC_SHR);
+	shift_reg_local(s, tree, OPC_SAR);
 }
 
 reg:	EXPR_INVOKE(arg) 1

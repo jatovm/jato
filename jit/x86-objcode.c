@@ -332,6 +332,12 @@ static void x86_emit_shl_reg_reg(struct buffer *buf, struct operand *src,
 	__x86_emit_shift_reg_reg(buf, src, dest, 0x04);
 }
 
+static void x86_emit_sar_reg_reg(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
+{
+	__x86_emit_shift_reg_reg(buf, src, dest, 0x07);
+}
+
 static void x86_emit_shr_reg_reg(struct buffer *buf, struct operand *src,
 				 struct operand *dest)
 {
@@ -490,6 +496,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 		break;
 	case INSN_SHL_REG_REG:
 		x86_emit_shl_reg_reg(buf, &insn->src, &insn->dest);
+		break;
+	case INSN_SAR_REG_REG:
+		x86_emit_sar_reg_reg(buf, &insn->src, &insn->dest);
 		break;
 	case INSN_SHR_REG_REG:
 		x86_emit_shr_reg_reg(buf, &insn->src, &insn->dest);

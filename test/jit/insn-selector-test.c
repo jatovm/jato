@@ -310,7 +310,7 @@ void test_select_shl_local_to_local(void)
 
 void test_select_shr_local_to_local(void)
 {
-	assert_select_local_local_shift(OP_SHR, OPC_SHR);
+	assert_select_local_local_shift(OP_SHR, OPC_SAR);
 }
 
 void test_select_return(void)

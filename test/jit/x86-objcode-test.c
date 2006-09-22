@@ -315,6 +315,12 @@ void test_emit_shl_reg_reg(void)
 	assert_emit_insn_2(0xd3, 0xe3, reg_reg_insn(OPC_SHL, REG_ECX, REG_EBX));
 }
 
+void test_emit_sar_reg_reg(void)
+{
+	assert_emit_insn_2(0xd3, 0xf8, reg_reg_insn(OPC_SAR, REG_ECX, REG_EAX));
+	assert_emit_insn_2(0xd3, 0xfb, reg_reg_insn(OPC_SAR, REG_ECX, REG_EBX));
+}
+
 void test_emit_shr_reg_reg(void)
 {
 	assert_emit_insn_2(0xd3, 0xe8, reg_reg_insn(OPC_SHR, REG_ECX, REG_EAX));
