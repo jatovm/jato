@@ -668,7 +668,7 @@ void dumpThreadsLoop(Thread *self) {
 
             printf("\n\"%s\"%s priority: %d tid: %p id: %d state: %d\n",
                   name, daemon ? " (daemon)" : "", priority,
-                  thread->tid, thread->id, thread->state);
+                  (void *)thread->tid, thread->id, thread->state);
             free(name);
 
             while(last->prev != NULL) {
