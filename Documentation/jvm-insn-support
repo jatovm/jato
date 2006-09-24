@@ -262,7 +262,7 @@
 
 (0x83) lxor		Not supported
 
-(0x84) iinc		Not supported
+(0x84) iinc		Supported
 
 (0x85) i2l		Not supported
 
