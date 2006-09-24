@@ -185,7 +185,8 @@ ACCEPTANCE_CLASSES = \
 	acceptance/jamvm/ExitStatusIsOneTest.class \
 	acceptance/jamvm/ExitStatusIsZeroTest.class \
 	acceptance/jamvm/LoadConstantsTest.class \
-	acceptance/jamvm/IntegerArithmeticTest.class
+	acceptance/jamvm/IntegerArithmeticTest.class \
+	acceptance/jamvm/ObjectCreationAndManipulationTest.class
 
 vm-classes:
 	make -C lib/
