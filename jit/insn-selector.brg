@@ -50,6 +50,17 @@ static void binop_reg_local(struct basic_block *bb, struct tree_node *tree,
 	bb_add_insn(bb, membase_reg_insn(opc, REG_EBP, disp, REG_EAX));
 }
 
+static void binop_reg_value(struct basic_block *bb, struct tree_node *tree,
+			    enum insn_opcode opc)
+{
+	struct expression *expr, *right;
+
+	expr  = to_expr(tree);
+	right = to_expr(expr->binary_right);
+
+	bb_add_insn(bb, imm_reg_insn(opc, right->value, REG_EAX));
+}
+
 static void shift_reg_local(struct basic_block *bb, struct tree_node *tree,
 			    enum insn_opcode opc)
 {
@@ -90,6 +101,11 @@ reg:	EXPR_LOCAL	1
 reg:	OP_ADD(reg, EXPR_LOCAL) 1
 {
 	binop_reg_local(s, tree, OPC_ADD);
+}
+
+reg:	OP_ADD(reg, EXPR_VALUE) 1
+{
+	binop_reg_value(s, tree, OPC_ADD);
 }
 
 reg:	OP_SUB(reg, EXPR_LOCAL) 1

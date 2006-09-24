@@ -144,7 +144,7 @@ void test_should_select_insn_for_every_statement(void)
 	free_basic_block(bb);
 }
 
-static struct basic_block *create_binop_bb(enum binary_operator expr_op)
+static struct basic_block *create_local_local_binop_bb(enum binary_operator expr_op)
 {
 	static struct methodblock method = {
 		.args_count = 2,
@@ -170,7 +170,7 @@ static void assert_select_local_local_binop(enum binary_operator expr_op, enum i
 	struct basic_block *bb;
 	struct insn *insn;
 
-	bb = create_binop_bb(expr_op);
+	bb = create_local_local_binop_bb(expr_op);
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
@@ -182,9 +182,48 @@ static void assert_select_local_local_binop(enum binary_operator expr_op, enum i
 	free_basic_block(bb);
 }
 
+static struct basic_block *create_local_value_binop_bb(enum binary_operator expr_op)
+{
+	static struct methodblock method = {
+		.args_count = 2,
+	};
+	static struct compilation_unit cu = {
+		.method = &method,
+	};
+	struct expression *expr;
+	struct basic_block *bb;
+	struct statement *stmt;
+
+	expr = binop_expr(J_INT, expr_op, local_expr(J_INT, 0), value_expr(J_INT, 0xdeadbeef));
+	stmt = alloc_statement(STMT_RETURN);
+	stmt->return_value = &expr->node;
+
+	bb = alloc_basic_block(&cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+	return bb;
+}
+
+static void assert_select_local_value_binop(enum binary_operator expr_op, enum insn_opcode insn_op)
+{
+	struct basic_block *bb;
+	struct insn *insn;
+
+	bb = create_local_value_binop_bb(expr_op);
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(OPC_ADD, 0xdeadbeef, REG_EAX, insn);
+
+	free_basic_block(bb);
+}
+
 void test_select_add_local_to_local(void)
 {
 	assert_select_local_local_binop(OP_ADD, OPC_ADD);
+	assert_select_local_value_binop(OP_ADD, OPC_ADD);
 }
 
 void test_select_sub_local_from_local(void)
@@ -202,7 +241,7 @@ void test_select_local_local_div(void)
 	struct basic_block *bb;
 	struct insn *insn;
 
-	bb = create_binop_bb(OP_DIV);
+	bb = create_local_local_binop_bb(OP_DIV);
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
@@ -222,7 +261,7 @@ void test_select_local_local_rem(void)
 	struct basic_block *bb;
 	struct insn *insn;
 
-	bb = create_binop_bb(OP_REM);
+	bb = create_local_local_binop_bb(OP_REM);
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
@@ -288,7 +327,7 @@ static void assert_select_local_local_shift(enum binary_operator expr_op, enum i
 	struct basic_block *bb;
 	struct insn *insn;
 
-	bb = create_binop_bb(expr_op);
+	bb = create_local_local_binop_bb(expr_op);
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);

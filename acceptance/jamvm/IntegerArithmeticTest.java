@@ -199,6 +199,25 @@ public class IntegerArithmeticTest extends TestCase {
         return value1 ^ value2;
     }
 
+    public static void testIntegerIncrementLocalByConstant() {
+        assertEquals(-1, iincByMinusOne(0));
+        assertEquals( 1, iincByOne(0));
+        assertEquals( 2, iincByOne(1));
+        assertEquals( 4, iincByTwo(2));
+    }
+
+    public static int iincByMinusOne(int value) {
+        return value += -1;
+    }
+
+    public static int iincByOne(int value) {
+        return value++;
+    }
+
+    public static int iincByTwo(int value) {
+        return value += 2;
+    }
+
     public static void main(String[] args) {
         testIntegerAddition();
         testIntegerAdditionOverflow();
@@ -221,6 +240,7 @@ public class IntegerArithmeticTest extends TestCase {
         testIntegerBitwiseInclusiveOr();
         testIntegerBitwiseAnd();
         testIntegerBitwiseExclusiveOr();
+        testIntegerIncrementLocalByConstant();
 
         Runtime.getRuntime().halt(retval);
     }
