@@ -113,16 +113,16 @@ quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
 $(ARCH_H):
 	$(call cmd,ln_arch_h)
 
-quiet_cmd_monoburg_exec = MONOBURG jit/insn-selector.c
-      cmd_monoburg_exec = $(MONOBURG) -p -e jit/insn-selector.brg > jit/insn-selector.c
+quiet_cmd_monoburg_exec = MONOBURG $@
+      cmd_monoburg_exec = $(MONOBURG) -p -e jit/insn-selector.brg > $@
 
-insn-selector:
+jit/insn-selector.c: FORCE
 	$(call cmd,monoburg_exec)
 
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
       cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(JAMVM_OBJS) $(JATO_OBJS) -o $(EXECUTABLE)
 
-$(EXECUTABLE): $(ARCH_H) insn-selector compile
+$(EXECUTABLE): $(ARCH_H) compile
 	$(call cmd,cc_exec)
 
 compile: $(JAMVM_OBJS) $(JATO_OBJS)
@@ -161,7 +161,7 @@ $(TEST_OBJS):
 quiet_cmd_gensuite = GENSUITE $@
       cmd_gensuite = sh test/scripts/make-tests.sh > $@
 
-test-suite.c:
+test-suite.c: FORCE
 	$(call cmd,gensuite)
 
 quiet_cmd_runtests = RUNTEST $(TESTRUNNER)
@@ -170,7 +170,7 @@ quiet_cmd_runtests = RUNTEST $(TESTRUNNER)
 quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
       cmd_cc_testrunner = $(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(LIBS) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) -o $(TESTRUNNER)
 
-test: insn-selector $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
+test: $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
 	$(call cmd,cc_testrunner)
 	$(call cmd,runtests)
 
@@ -197,7 +197,16 @@ quiet_cmd_clean = CLEAN
       cmd_clean = rm -f $(JAMVM_OBJS) $(JATO_OBJS) $(TEST_OBJS) \
       			jit/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
 			test-suite.c test-suite.o test-runner \
-			$(ACCEPTANCE_CLASSES)
+			$(ACCEPTANCE_CLASSES) tags
 
-clean:
-	$(call cmd,clean) $(JAMVM_OBJS)
+clean: FORCE
+	$(call cmd,clean)
+
+quiet_cmd_tags = TAGS
+      cmd_tags = exuberant-ctags -R
+
+tags: FORCE
+	$(call cmd,tags)
+
+PHONY += FORCE
+FORCE:
