@@ -175,12 +175,13 @@ test: insn-selector $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
 	$(call cmd,runtests)
 
 quiet_cmd_jikes = JIKES $(empty)  $(empty) $@
-      cmd_jikes = $(JIKES) -cp $(BOOTCLASSPATH) -d acceptance $<
+      cmd_jikes = $(JIKES) -cp $(BOOTCLASSPATH):acceptance -d acceptance $<
 
 %.class: %.java
 	$(call cmd,jikes)
 
 ACCEPTANCE_CLASSES = \
+	acceptance/jamvm/TestCase.class \
 	acceptance/jamvm/ExitStatusIsOneTest.class \
 	acceptance/jamvm/ExitStatusIsZeroTest.class \
 	acceptance/jamvm/LoadConstantsTest.class \

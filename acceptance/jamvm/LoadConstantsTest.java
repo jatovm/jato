@@ -9,9 +9,7 @@ package jamvm;
 /**
  * @author Pekka Enberg
  */
-public class LoadConstantsTest {
-    private static int retval;
-
+public class LoadConstantsTest extends TestCase {
     public static void testIconst() {
         assertEquals(-1, iconst_m1());
         assertEquals( 0, iconst_0());
@@ -48,17 +46,6 @@ public class LoadConstantsTest {
 
     public static int iconst_5() {
         return 5;
-    }
-
-    private static void assertEquals(int expected, int actual) {
-        if (expected != actual) {
-            fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
-        }
-    }
-
-    private static void fail(/*String msg*/) {
-        //System.out.println(msg);
-        retval = 1;
     }
 
     public static void main(String[] args) {

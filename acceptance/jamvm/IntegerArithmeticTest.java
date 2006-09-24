@@ -9,9 +9,7 @@ package jamvm;
 /**
  * @author Pekka Enberg
  */
-public class IntegerArithmeticTest {
-    private static int retval;
-
+public class IntegerArithmeticTest extends TestCase {
     public static void testIntegerAddition() {
         assertEquals(-1, add(0, -1));
         assertEquals( 0, add(1, -1));
@@ -199,17 +197,6 @@ public class IntegerArithmeticTest {
 
     public static int xor(int value1, int value2) {
         return value1 ^ value2;
-    }
-
-    private static void assertEquals(int expected, int actual) {
-        if (expected != actual) {
-            fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
-        }
-    }
-
-    private static void fail(/*String msg*/) {
-        //System.out.println(msg);
-        retval = 1;
     }
 
     public static void main(String[] args) {
