@@ -268,3 +268,20 @@ int convert_sastore(struct compilation_unit *cu, struct basic_block *bb,
 {
 	return convert_array_store(cu, bb, J_SHORT);
 }
+
+int convert_new(struct compilation_unit *cu, struct basic_block *bb,
+		unsigned long offset)
+{
+	struct expression *expr;
+	unsigned long type_idx;
+
+	type_idx = cp_index(cu->method->jit_code + offset + 1);
+
+	expr = new_expr(type_idx);
+	if (!expr)
+		return -ENOMEM;
+
+	stack_push(cu->expr_stack, expr);
+
+	return 0;
+}

@@ -73,6 +73,9 @@ void free_expression(struct expression *expr)
 	case EXPR_NO_ARGS:
 		/* nothing to do */
 		break;
+	case EXPR_NEW:
+		/* nothing to do */
+		break;
 	case EXPR_LAST:
 		assert(!"EXPR_LAST is not a real type. Don't use it");
 		break;
@@ -224,6 +227,14 @@ struct expression *arg_expr(struct expression *arg_expression)
 struct expression *no_args_expr(void)
 {
 	return alloc_expression(EXPR_NO_ARGS, J_VOID);
+}
+
+struct expression *new_expr(unsigned long type_idx)
+{
+	struct expression *expr = alloc_expression(EXPR_NEW, J_REFERENCE);
+	if (expr)
+		expr->type_idx = type_idx;
+	return expr;
 }
 
 unsigned long nr_args(struct expression *args_list)

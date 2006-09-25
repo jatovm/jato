@@ -5,6 +5,7 @@
 #include <bc-test-utils.h>
 #include <jit/compilation-unit.h>
 #include <jit/expression.h>
+#include <jit/jit-compiler.h>
 #include <jvm_types.h>
 #include <libharness.h>
 #include <vm/stack.h>
@@ -96,4 +97,31 @@ void test_convert_putstatic(void)
 	assert_convert_putstatic(J_REFERENCE, "Ljava/lang/Object;");
 	assert_convert_putstatic(J_SHORT, "S");
 	assert_convert_putstatic(J_BOOLEAN, "Z");
+}
+
+static void assert_convert_new(unsigned long expected_type_idx,
+			       unsigned char idx_1, unsigned char idx_2)
+{
+	unsigned char code[] = { OPC_NEW, 0xca, 0xfe };
+	struct compilation_unit *cu;
+	struct expression *new_expr;
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code)
+	};
+
+	cu = alloc_simple_compilation_unit(&method);
+	convert_to_ir(cu);
+
+	new_expr = stack_pop(cu->expr_stack);
+	assert_int_equals(EXPR_NEW, expr_type(new_expr));
+	assert_int_equals(J_REFERENCE, new_expr->jvm_type);
+	assert_int_equals(0xcafe, new_expr->type_idx);
+
+	free_compilation_unit(cu);
+}
+
+void test_convert_new(void)
+{
+	assert_convert_new(0xcafe, 0xca, 0xfe);
 }

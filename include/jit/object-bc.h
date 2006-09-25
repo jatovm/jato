@@ -18,3 +18,5 @@ DECLARE_CONVERTER(convert_aastore)
 DECLARE_CONVERTER(convert_bastore)
 DECLARE_CONVERTER(convert_castore)
 DECLARE_CONVERTER(convert_sastore)
+
+DECLARE_CONVERTER(convert_new)

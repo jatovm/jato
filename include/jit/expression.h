@@ -21,6 +21,7 @@ enum expression_type {
 	EXPR_ARGS_LIST,
 	EXPR_ARG,
 	EXPR_NO_ARGS,
+	EXPR_NEW,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -161,6 +162,12 @@ struct expression {
 		struct {
 			/* Nothing. */
 		};
+		
+		/*  EXPR_NEW represents creation of a new instance that is
+		    unitialized .  */
+		struct {
+			unsigned long type_idx;
+		};
 	};
 };
 
@@ -204,6 +211,7 @@ struct expression *invokevirtual_expr(enum jvm_type, unsigned long);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
+struct expression *new_expr(unsigned long);
 
 unsigned long nr_args(struct expression *);
 
