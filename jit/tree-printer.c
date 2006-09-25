@@ -519,6 +519,27 @@ static int print_no_args_expr(int lvl, struct string *str,
 	return str_append(str, "[no args]");
 }
 
+static int print_new_expr(int lvl, struct string *str,
+			  struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "NEW:\n");
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "jvm_type",
+				 type_names[expr->jvm_type]);
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "type_idx", "0x%x",
+				 expr->type_idx);
+
+      out:
+	return err;
+}
+
 typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
@@ -537,6 +558,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_ARGS_LIST] = print_args_list_expr,
 	[EXPR_ARG] = print_arg_expr,
 	[EXPR_NO_ARGS] = print_no_args_expr,
+	[EXPR_NEW] = print_new_expr,
 };
 
 static int print_expr(int lvl, struct tree_node *root, struct string *str)

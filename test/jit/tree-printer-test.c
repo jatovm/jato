@@ -459,3 +459,19 @@ void test_should_print_no_args_expression(void)
 {
 	assert_print_expr("[no args]", no_args_expr());
 }
+
+void assert_printed_new_expr(const char *expected, unsigned long type_idx)
+{
+	struct expression *expr;
+
+	expr = new_expr(type_idx);
+	assert_print_expr(expected, expr);
+}
+
+void test_should_print_new_expression(void)
+{
+	assert_printed_new_expr("NEW:\n"
+			     "  jvm_type: [reference]\n"
+			     "  type_idx: [0xcafe]\n",
+			     0xcafe);
+}
