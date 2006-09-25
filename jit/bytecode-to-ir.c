@@ -214,6 +214,7 @@ static convert_fn_t converters[] = {
 	[OPC_GETSTATIC] = convert_getstatic,
 	[OPC_PUTSTATIC] = convert_putstatic,
 	[OPC_INVOKEVIRTUAL] = convert_invokevirtual,
+	[OPC_INVOKESPECIAL] = convert_invokespecial,
 	[OPC_INVOKESTATIC] = convert_invokestatic,
 	[OPC_NEW] = convert_new,
 	[OPC_IFNULL] = convert_ifnull,

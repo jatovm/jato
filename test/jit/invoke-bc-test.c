@@ -129,14 +129,13 @@ static void convert_ir_invoke(struct compilation_unit *cu,
 	convert_ir_const(cu, (void *)cp_infos, method_index+1, cp_types);
 }
 
-/* MISSING: invokespecial */
-
 static struct compilation_unit *
-create_invokevirtual_unit(char *type, unsigned long nr_args,
-			  unsigned long objectref,
-			  unsigned short method_index,
-			  unsigned short method_table_idx,
-			  struct expression **args)
+create_invoke_x_unit(unsigned char invoke_opc,
+		     char *type, unsigned long nr_args,
+		     unsigned long objectref,
+		     unsigned short method_index,
+		     unsigned short method_table_idx,
+		     struct expression **args)
 {
 	struct methodblock target_method = {
 		.type = type,
@@ -144,7 +143,7 @@ create_invokevirtual_unit(char *type, unsigned long nr_args,
 		.method_table_index = method_table_idx,
 	};
 	unsigned char code[] = {
-		OPC_INVOKEVIRTUAL, (method_index >> 8) & 0xff, method_index & 0xff,
+		invoke_opc, (method_index >> 8) & 0xff, method_index & 0xff,
 	};
 	struct methodblock method = {
 		.jit_code = code,
@@ -164,47 +163,47 @@ create_invokevirtual_unit(char *type, unsigned long nr_args,
 	return cu;
 }
 
-void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
+static void assert_invoke_expression_type(enum expression_type expected_type, unsigned char invoke_opc)
 {
+	struct expression *invoke_expr;
 	struct compilation_unit *cu;
 	struct statement *stmt;
-	struct expression *invoke_expr;
 
-	cu = create_invokevirtual_unit("()V", 1, 0, 0, 0, NULL);
+	cu = create_invoke_x_unit(invoke_opc, "()V", 1, 0, 0, 0, NULL);
 
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
 
-	assert_int_equals(EXPR_INVOKEVIRTUAL, expr_type(invoke_expr));
+	assert_int_equals(expected_type, expr_type(invoke_expr));
 
 	free_compilation_unit(cu);
 }
 
-void test_invokevirtual_should_parse_method_index_for_expr(void)
+static void assert_invoke_method_idx(unsigned long expected_idx, unsigned char invoke_opc)
 {
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct expression *invoke_expr;
 
-	cu = create_invokevirtual_unit("()V", 1, 0, 0xcafe, 0xbabe, NULL);
+	cu = create_invoke_x_unit(invoke_opc, "()V", 1, 0, 0xcafe, expected_idx, NULL);
 
 	stmt = first_stmt(cu);
 	assert_not_null(stmt->expression);
 	invoke_expr = to_expr(stmt->expression);
 
-	assert_int_equals(0xbabe, invoke_expr->method_index);
+	assert_int_equals(expected_idx, invoke_expr->method_index);
 
 	free_compilation_unit(cu);
 }
 
-void test_invokevirtual_should_pass_objectref_as_first_argument(void)
+static void assert_invoke_passes_objectref(unsigned char invoke_opc)
 {
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct expression *invoke_expr;
 	struct expression *arg_expr;
 
-	cu = create_invokevirtual_unit("()V", 1, 0xdeadbeef, 0, 0, NULL);
+	cu = create_invoke_x_unit(invoke_opc, "()V", 1, 0xdeadbeef, 0, 0, NULL);
 
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
@@ -215,7 +214,7 @@ void test_invokevirtual_should_pass_objectref_as_first_argument(void)
 	free_compilation_unit(cu);
 }
 
-static void assert_invokevirtual_with_args(unsigned long nr_args)
+static void assert_invoke_args(unsigned char invoke_opc, unsigned long nr_args)
 {
 	struct compilation_unit *cu;
 	struct statement *stmt;
@@ -225,7 +224,7 @@ static void assert_invokevirtual_with_args(unsigned long nr_args)
 	struct expression *second_arg;
 
 	create_args(args, ARRAY_SIZE(args));
-	cu = create_invokevirtual_unit("()V", nr_args+1, 0, 0, 0, args);
+	cu = create_invoke_x_unit(invoke_opc, "()V", nr_args+1, 0, 0, 0, args);
 
 	stmt = first_stmt(cu);
 	invoke_expr = to_expr(stmt->expression);
@@ -237,19 +236,12 @@ static void assert_invokevirtual_with_args(unsigned long nr_args)
 	free_compilation_unit(cu);
 }
 
-void test_invokevirtual_should_parse_passed_arguments(void)
-{
-	assert_invokevirtual_with_args(1);
-	assert_invokevirtual_with_args(2);
-	assert_invokevirtual_with_args(3);
-}
-
-static void assert_invokevirtual_return_type(enum jvm_type expected, char *type)
+static void assert_invoke_return_type(unsigned char invoke_opc, enum jvm_type expected, char *type)
 {
 	struct compilation_unit *cu;
 	struct expression *invoke_expr;
 
-	cu = create_invokevirtual_unit(type, 1, 0, 0, 0, NULL);
+	cu = create_invoke_x_unit(invoke_opc, type, 1, 0, 0, 0, NULL);
 	invoke_expr = stack_pop(cu->expr_stack);
 	assert_int_equals(expected, invoke_expr->jvm_type);
 
@@ -257,11 +249,121 @@ static void assert_invokevirtual_return_type(enum jvm_type expected, char *type)
 	free_compilation_unit(cu);
 }
 
+static struct compilation_unit *invoke_discarded_return_value(unsigned char invoke_opc,
+							      struct methodblock *target_method)
+{
+	struct compilation_unit *cu;
+	unsigned char code[] = {
+		invoke_opc, 0x00, 0x00,
+		OPC_POP
+	};
+	struct methodblock invoker_method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	
+	target_method->type = "()I";
+	target_method->args_count = 0;
+
+	cu = alloc_simple_compilation_unit(&invoker_method);
+	convert_ir_invoke(cu, target_method, 0);
+
+	return cu;
+}
+
+static void assert_invoke_return_value_discarded(enum expression_type expected_type, unsigned char invoke_opc)
+{
+	struct methodblock target_method;
+	struct compilation_unit *cu;
+	struct statement *stmt;
+
+	cu = invoke_discarded_return_value(invoke_opc, &target_method);
+	stmt = first_stmt(cu);
+
+	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
+	assert_int_equals(expected_type, expr_type(to_expr(stmt->expression)));
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	free_compilation_unit(cu);
+}
+
+/*
+ * 	INVOKESPECIAL
+ */
+
+void test_invokespecial_should_be_converted_to_invokespecial_expr(void)
+{
+	assert_invoke_expression_type(EXPR_INVOKESPECIAL, OPC_INVOKESPECIAL);
+}
+
+void test_invokespecial_should_parse_method_index_for_expr(void)
+{
+	assert_invoke_method_idx(0xcafe, OPC_INVOKESPECIAL);
+}
+
+void test_invokespecial_should_pass_objectref_as_first_argument(void)
+{
+	assert_invoke_passes_objectref(OPC_INVOKESPECIAL);
+}
+
+void test_invokespecial_should_parse_passed_arguments(void)
+{
+	assert_invoke_args(OPC_INVOKESPECIAL, 1);
+	assert_invoke_args(OPC_INVOKESPECIAL, 2);
+	assert_invoke_args(OPC_INVOKESPECIAL, 3);
+}
+
+void test_invokespecial_should_parse_return_type(void)
+{
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_BYTE, "()B");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()I");
+}
+
+void test_convert_invokespecial_when_return_value_is_discarded(void)
+{
+	assert_invoke_return_value_discarded(EXPR_INVOKESPECIAL, OPC_INVOKESPECIAL);
+}
+
+/*
+ * 	INVOKEVIRTUAL
+ */
+
+void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
+{
+	assert_invoke_expression_type(EXPR_INVOKEVIRTUAL, OPC_INVOKEVIRTUAL);
+}
+
+void test_invokevirtual_should_parse_method_index_for_expr(void)
+{
+	assert_invoke_method_idx(0xbabe, OPC_INVOKEVIRTUAL);
+}
+
+void test_invokevirtual_should_pass_objectref_as_first_argument(void)
+{
+	assert_invoke_passes_objectref(OPC_INVOKEVIRTUAL);
+}
+
+void test_invokevirtual_should_parse_passed_arguments(void)
+{
+	assert_invoke_args(OPC_INVOKEVIRTUAL, 1);
+	assert_invoke_args(OPC_INVOKEVIRTUAL, 2);
+	assert_invoke_args(OPC_INVOKEVIRTUAL, 3);
+}
+
 void test_invokevirtual_should_parse_return_type(void)
 {
-	assert_invokevirtual_return_type(J_BYTE, "()B");
-	assert_invokevirtual_return_type(J_INT, "()I");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_BYTE, "()B");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()I");
 }
+
+void test_convert_invokevirtual_when_return_value_is_discarded(void)
+{
+	assert_invoke_return_value_discarded(EXPR_INVOKEVIRTUAL, OPC_INVOKEVIRTUAL);
+}
+
+/*
+ * 	INVOKESTATIC
+ */
 
 static void assert_convert_invokestatic(enum jvm_type expected_jvm_type,
 					char *return_type, int nr_args)
@@ -338,27 +440,6 @@ void test_convert_invokestatic_for_void_return_type(void)
 	free_compilation_unit(cu);
 }
 
-static struct compilation_unit *invoke_discarded_return_value(unsigned char invoke_opc, struct methodblock *mb)
-{
-	struct compilation_unit *cu;
-	unsigned char code[] = {
-		invoke_opc, 0x00, 0x00,
-		OPC_POP
-	};
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-
-	mb->type = "()I";
-	mb->args_count = 0;
-
-	cu = alloc_simple_compilation_unit(&method);
-	convert_ir_invoke(cu, mb, 0);
-
-	return cu;
-}
-
 void test_convert_invokestatic_when_return_value_is_discarded(void)
 {
 	struct compilation_unit *cu;
@@ -370,22 +451,6 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_INT, &mb, stmt->expression);
-	assert_true(stack_is_empty(cu->expr_stack));
-
-	free_compilation_unit(cu);
-}
-
-void test_convert_invokevirtual_when_return_value_is_discarded(void)
-{
-	struct compilation_unit *cu;
-	struct statement *stmt;
-	struct methodblock mb;
-
-	cu = invoke_discarded_return_value(OPC_INVOKEVIRTUAL, &mb);
-	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-
-	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_int_equals(EXPR_INVOKEVIRTUAL, expr_type(to_expr(stmt->expression)));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);

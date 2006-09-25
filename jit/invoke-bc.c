@@ -115,7 +115,44 @@ int convert_invokevirtual(struct compilation_unit *cu,
 
 	return_type = method_return_type(target_method);
 	invoke_expr = invokevirtual_expr(return_type, target_method->method_table_index);
-	if(!invoke_expr)
+	if (!invoke_expr)
+		return -ENOMEM;
+
+	args_list = convert_args(cu->expr_stack, target_method->args_count);
+	if (!args_list)
+		goto failed;
+
+	invoke_expr->args_list = &args_list->node;
+
+	err = __convert_invoke(cu, bb, invoke_expr);
+	if (err)
+		goto failed;
+
+	return 0;
+      failed:
+	expr_put(invoke_expr);
+	return err;
+}
+
+int convert_invokespecial(struct compilation_unit *cu,
+			  struct basic_block *bb, unsigned long offset)
+{
+	int err = -ENOMEM;
+	unsigned long method_index;
+	struct methodblock *target_method;
+	enum jvm_type return_type;
+	struct expression *invoke_expr;
+	struct expression *args_list;
+
+	method_index = cp_index(cu->method->jit_code + offset + 1);
+
+	target_method = resolveMethod(cu->method->class, method_index);
+	if (!target_method)
+		return -EINVAL;
+
+	return_type = method_return_type(target_method);
+	invoke_expr = invokespecial_expr(return_type, target_method->method_table_index);
+	if (!invoke_expr)
 		return -ENOMEM;
 
 	args_list = convert_args(cu->expr_stack, target_method->args_count);
