@@ -206,6 +206,7 @@ void test_emit_indirect_call(void)
 
 void test_emit_mov_imm(void)
 {
+	assert_emit_insn_5(0xb8, 0x04, 0x00, 0x00, 0x00, imm_reg_insn(INSN_MOV_IMM_REG, 0x04, REG_EAX));
 	assert_emit_insn_5(0xb8, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EAX));
 	assert_emit_insn_5(0xbb, 0xbe, 0xba, 0xfe, 0xca, imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, REG_EBX));
 	assert_emit_insn_5(0xb9, 0xbe, 0xba, 0xfe, 0xca, imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, REG_ECX));
