@@ -142,33 +142,10 @@ void test_emit_epilog_has_locals(void)
 	free_buffer(buf);
 }
 
-static void assert_emit_push_imm32(unsigned long imm)
+void test_emit_push_imm(void)
 {
-	unsigned char expected[] = {
-		0x68,
-		(imm & 0x000000ffUL),
-		(imm & 0x0000ff00UL) >>  8,
-		(imm & 0x00ff0000UL) >> 16,
-		(imm & 0xff000000UL) >> 24,
-	};
-	struct basic_block *bb;
-	struct buffer *buf;
-
-	bb = alloc_basic_block(NULL, 0, 1);
-	bb_add_insn(bb, imm_insn(INSN_PUSH_IMM, imm));
-
-	buf = alloc_buffer();
-	emit_obj_code(bb, buf);
-	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
-
-	free_basic_block(bb);
-	free_buffer(buf);
-}
-
-void test_emit_push_imm32(void)
-{
-	assert_emit_push_imm32(0x0);
-	assert_emit_push_imm32(0xdeadbeef);
+	assert_emit_insn_2(0x68, 0x04, imm_insn(INSN_PUSH_IMM, 0x04));
+	assert_emit_insn_5(0x68, 0xef, 0xbe, 0xad, 0xde, imm_insn(INSN_PUSH_IMM, 0xdeadbeef));
 }
 
 void test_emit_push_reg(void)
