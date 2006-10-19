@@ -35,11 +35,11 @@
 static void method_args_cleanup(struct basic_block *bb, unsigned long args_count)
 {
 	unsigned long args_size = args_count * sizeof(unsigned long);
-	bb_add_insn(bb, imm_reg_insn(OPC_ADD, args_size, REG_ESP));
+	bb_add_insn(bb, imm_reg_insn(INSN_ADD_IMM_REG, args_size, REG_ESP));
 }
 
 static void binop_reg_local(struct basic_block *bb, struct tree_node *tree,
-			    enum insn_opcode opc)
+			    enum insn_type insn_type)
 {
 	struct expression *expr;
 	unsigned long disp;
@@ -47,22 +47,22 @@ static void binop_reg_local(struct basic_block *bb, struct tree_node *tree,
 	expr = to_expr(tree);
 	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
 
-	bb_add_insn(bb, membase_reg_insn(opc, REG_EBP, disp, REG_EAX));
+	bb_add_insn(bb, membase_reg_insn(insn_type, REG_EBP, disp, REG_EAX));
 }
 
 static void binop_reg_value(struct basic_block *bb, struct tree_node *tree,
-			    enum insn_opcode opc)
+			    enum insn_type insn_type)
 {
 	struct expression *expr, *right;
 
 	expr  = to_expr(tree);
 	right = to_expr(expr->binary_right);
 
-	bb_add_insn(bb, imm_reg_insn(opc, right->value, REG_EAX));
+	bb_add_insn(bb, imm_reg_insn(insn_type, right->value, REG_EAX));
 }
 
 static void shift_reg_local(struct basic_block *bb, struct tree_node *tree,
-			    enum insn_opcode opc)
+			    enum insn_type insn_type)
 {
 	struct expression *expr;
 	unsigned long disp;
@@ -70,8 +70,8 @@ static void shift_reg_local(struct basic_block *bb, struct tree_node *tree,
 	expr = to_expr(tree);
 	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
 
-	bb_add_insn(bb, membase_reg_insn(OPC_MOV, REG_EBP, disp, REG_ECX));
-	bb_add_insn(bb, reg_reg_insn(opc, REG_ECX, REG_EAX));
+	bb_add_insn(bb, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, disp, REG_ECX));
+	bb_add_insn(bb, reg_reg_insn(insn_type, REG_ECX, REG_EAX));
 }
 
 %%
@@ -84,7 +84,7 @@ reg:	EXPR_VALUE	0
 {
 	struct expression *expr = to_expr(tree);
 
-	bb_add_insn(s, imm_reg_insn(OPC_MOV, expr->value, REG_EAX));
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->value, REG_EAX));
 }
 
 reg:	EXPR_LOCAL	1
@@ -95,27 +95,27 @@ reg:	EXPR_LOCAL	1
 	expr = to_expr(tree);
 	disp = frame_local_offset(s->b_parent->method, expr);
 
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EBP, disp, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, disp, REG_EAX));
 }
 
 reg:	OP_ADD(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(s, tree, OPC_ADD);
+	binop_reg_local(s, tree, INSN_ADD_MEMBASE_REG);
 }
 
 reg:	OP_ADD(reg, EXPR_VALUE) 1
 {
-	binop_reg_value(s, tree, OPC_ADD);
+	binop_reg_value(s, tree, INSN_ADD_IMM_REG);
 }
 
 reg:	OP_SUB(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(s, tree, OPC_SUB);
+	binop_reg_local(s, tree, INSN_SUB_MEMBASE_REG);
 }
 
 reg:	OP_MUL(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(s, tree, OPC_MUL);
+	binop_reg_local(s, tree, INSN_MUL_MEMBASE_REG);
 }
 
 reg:	OP_DIV(reg, EXPR_LOCAL) 1
@@ -126,8 +126,8 @@ reg:	OP_DIV(reg, EXPR_LOCAL) 1
 	expr = to_expr(tree);
 	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
 
-	bb_add_insn(s, insn(OPC_CLTD));
-	bb_add_insn(s, membase_reg_insn(OPC_DIV, REG_EBP, disp, REG_EAX));
+	bb_add_insn(s, insn(INSN_CLTD));
+	bb_add_insn(s, membase_reg_insn(INSN_DIV_MEMBASE_REG, REG_EBP, disp, REG_EAX));
 }
 
 reg:	OP_REM(reg, EXPR_LOCAL) 1
@@ -138,44 +138,44 @@ reg:	OP_REM(reg, EXPR_LOCAL) 1
 	expr = to_expr(tree);
 	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
 
-	bb_add_insn(s, insn(OPC_CLTD));
-	bb_add_insn(s, membase_reg_insn(OPC_DIV, REG_EBP, disp, REG_EAX));
-	bb_add_insn(s, reg_reg_insn(OPC_MOV, REG_EDX, REG_EAX));
+	bb_add_insn(s, insn(INSN_CLTD));
+	bb_add_insn(s, membase_reg_insn(INSN_DIV_MEMBASE_REG, REG_EBP, disp, REG_EAX));
+	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, REG_EDX, REG_EAX));
 }
 
 reg:	OP_NEG(reg) 1
 {
-	bb_add_insn(s, reg_insn(OPC_NEG, REG_EAX));
+	bb_add_insn(s, reg_insn(INSN_NEG_REG, REG_EAX));
 }
 
 reg:	OP_SHL(reg, EXPR_LOCAL) 1
 {
-	shift_reg_local(s, tree, OPC_SHL);
+	shift_reg_local(s, tree, INSN_SHL_REG_REG);
 }
 
 reg:	OP_SHR(reg, EXPR_LOCAL) 1
 {
-	shift_reg_local(s, tree, OPC_SAR);
+	shift_reg_local(s, tree, INSN_SAR_REG_REG);
 }
 
 reg:	OP_USHR(reg, EXPR_LOCAL) 1
 {
-	shift_reg_local(s, tree, OPC_SHR);
+	shift_reg_local(s, tree, INSN_SHR_REG_REG);
 }
 
 reg:	OP_OR(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(s, tree, OPC_OR);
+	binop_reg_local(s, tree, INSN_OR_MEMBASE_REG);
 }
 
 reg:	OP_AND(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(s, tree, OPC_AND);
+	binop_reg_local(s, tree, INSN_AND_MEMBASE_REG);
 }
 
 reg:	OP_XOR(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(s, tree, OPC_XOR);
+	binop_reg_local(s, tree, INSN_XOR_MEMBASE_REG);
 }
 
 reg:	EXPR_INVOKE(arg) 1
@@ -188,7 +188,7 @@ reg:	EXPR_INVOKE(arg) 1
 	method = expr->target_method;
 	target = trampoline_ptr(method);
 
-	bb_add_insn(s, rel_insn(OPC_CALL, (unsigned long) target));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) target));
 
 	if (method->args_count)
 		method_args_cleanup(s, method->args_count);
@@ -208,14 +208,14 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	/*
 	 *	FIXME: This is horrible due to lack of per-method vtables.
 	 */
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX));
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX));
-	bb_add_insn(s, imm_reg_insn(OPC_ADD, sizeof(struct object), REG_EAX));
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_table_offset, REG_EAX));
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, method_offset, REG_EAX));
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX));
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct buffer, buf), REG_EAX));
-	bb_add_insn(s, reg_insn(OPC_CALL, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_ESP, 0, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct object, class), REG_EAX));
+	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, method_table_offset, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, method_offset, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct buffer, buf), REG_EAX));
+	bb_add_insn(s, reg_insn(INSN_CALL_REG, REG_EAX));
 
 	args_count = nr_args(to_expr(expr->args_list));
 	if (args_count)
@@ -230,7 +230,7 @@ reg:	OP_EQ(reg, EXPR_LOCAL) 1
 	expr   = to_expr(tree);
 	offset = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
 
-	bb_add_insn(s, membase_reg_insn(OPC_CMP, REG_EBP, offset, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_CMP_MEMBASE_REG, REG_EBP, offset, REG_EAX));
 }
 
 reg:	OP_EQ(reg, EXPR_VALUE) 1
@@ -240,7 +240,7 @@ reg:	OP_EQ(reg, EXPR_VALUE) 1
 	expr = to_expr(tree);
 	rvalue = to_expr(expr->binary_right);
 
-	bb_add_insn(s, imm_reg_insn(OPC_CMP, rvalue->value, REG_EAX));
+	bb_add_insn(s, imm_reg_insn(INSN_CMP_IMM_REG, rvalue->value, REG_EAX));
 }
 
 reg:	EXPR_FIELD 1
@@ -251,8 +251,8 @@ reg:	EXPR_FIELD 1
 	expr   = to_expr(tree);
 	offset = offsetof(struct fieldblock, static_value);
 
-	bb_add_insn(s, imm_reg_insn(OPC_MOV, (unsigned long) expr->field, REG_EAX));
-	bb_add_insn(s, membase_reg_insn(OPC_MOV, REG_EAX, offset, REG_EAX));
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->field, REG_EAX));
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offset, REG_EAX));
 }
 
 arg:	EXPR_NO_ARGS
@@ -267,12 +267,12 @@ arg:	EXPR_ARG(EXPR_VALUE)
 	expr = to_expr(tree);
 	imm  = to_expr(expr->arg_expression)->value;
 
-	bb_add_insn(s, imm_insn(OPC_PUSH, imm));
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, imm));
 }
 
 arg:	EXPR_ARG(reg)
 {
-	bb_add_insn(s, reg_insn(OPC_PUSH, REG_EAX));
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, REG_EAX));
 }
 
 arg:	EXPR_ARGS_LIST(arg, arg)
@@ -281,12 +281,12 @@ arg:	EXPR_ARGS_LIST(arg, arg)
 
 stmt:	STMT_RETURN(reg)
 {
-	bb_add_insn(s, branch_insn(OPC_JMP, s->b_parent->exit_bb));
+	bb_add_insn(s, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
 }
 
 stmt:	STMT_VOID_RETURN
 {
-	bb_add_insn(s, branch_insn(OPC_JMP, s->b_parent->exit_bb));
+	bb_add_insn(s, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
 }
 
 stmt:	STMT_EXPRESSION(reg)
@@ -308,8 +308,8 @@ stmt:	STMT_STORE(EXPR_FIELD, EXPR_VALUE)
 	field_offset = offsetof(struct fieldblock, static_value);
 	field_value  = store_src->value;
 
-	bb_add_insn(s, imm_reg_insn(OPC_MOV, (unsigned long) store_dest->field, REG_EAX));
-	bb_add_insn(s, imm_membase_insn(OPC_MOV, field_value, REG_EAX, field_offset));
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) store_dest->field, REG_EAX));
+	bb_add_insn(s, imm_membase_insn(INSN_MOV_IMM_MEMBASE, field_value, REG_EAX, field_offset));
 }
 
 stmt:	STMT_STORE(EXPR_LOCAL, reg)
@@ -322,14 +322,14 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	local  = to_expr(stmt->store_dest);
 	offset = frame_local_offset(s->b_parent->method, local);
 
-	bb_add_insn(s, reg_membase_insn(OPC_MOV, REG_EAX, REG_EBP, offset));
+	bb_add_insn(s, reg_membase_insn(INSN_MOV_REG_MEMBASE, REG_EAX, REG_EBP, offset));
 }
 
 stmt:	STMT_IF(reg)
 {
 	struct statement *stmt = to_stmt(tree);
 
-	bb_add_insn(s, branch_insn(OPC_JE, stmt->if_true));
+	bb_add_insn(s, branch_insn(INSN_JE_BRANCH, stmt->if_true));
 }
 
 %%

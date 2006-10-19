@@ -10,92 +10,92 @@
 #include <jit/statement.h>
 #include <jit/jit-compiler.h>
 
-static void assert_insn(enum insn_opcode insn_op, struct insn *insn)
+static void assert_insn(enum insn_type insn_type, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_0(insn_op), insn->type);
+	assert_int_equals(insn_type, insn->type);
 }
 
-static void assert_membase_reg_insn(enum insn_opcode insn_op,
+static void assert_membase_reg_insn(enum insn_type insn_type,
 				    enum reg src_base_reg,
 				    long src_displacement,
 				    enum reg dest_reg,
 				    struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_2(insn_op, OPERAND_MEMBASE, OPERAND_REGISTER), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(src_base_reg, insn->src.base_reg);
 	assert_int_equals(src_displacement, insn->src.disp);
 	assert_int_equals(dest_reg, insn->dest.reg);
 }
 
-static void assert_reg_membase_insn(enum insn_opcode insn_op,
+static void assert_reg_membase_insn(enum insn_type insn_type,
 				    enum reg src_reg,
 				    enum reg dest_reg,
 				    long dest_displacement,
 				    struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_2(insn_op, OPERAND_REGISTER, OPERAND_MEMBASE), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(src_reg, insn->src.reg);
 	assert_int_equals(dest_reg, insn->dest.base_reg);
 	assert_int_equals(dest_displacement, insn->dest.disp);
 }
 
-static void assert_reg_insn(enum insn_opcode expected_opc,
+static void assert_reg_insn(enum insn_type insn_type,
 			    enum reg expected_reg, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_REGISTER), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_reg, insn->operand.reg);
 }
 
-static void assert_reg_reg_insn(enum insn_opcode expected_opc,
+static void assert_reg_reg_insn(enum insn_type insn_type,
 				enum reg expected_src,
 				enum reg expected_dest,
 				struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_2(expected_opc, OPERAND_REGISTER, OPERAND_REGISTER), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_src, insn->src.reg);
 	assert_int_equals(expected_dest, insn->dest.reg);
 }
 
-static void assert_imm_insn(enum insn_opcode expected_opc,
+static void assert_imm_insn(enum insn_type insn_type,
 			    unsigned long expected_imm, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_IMMEDIATE), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_imm, insn->operand.imm);
 }
 
-static void assert_imm_reg_insn(enum insn_opcode expected_opc,
+static void assert_imm_reg_insn(enum insn_type insn_type,
 				unsigned long expected_imm,
 				enum reg expected_reg,
 				struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_2(expected_opc, OPERAND_IMMEDIATE, OPERAND_REGISTER), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_imm, insn->src.imm);
 	assert_int_equals(expected_reg, insn->dest.reg);
 }
 
-static void assert_imm_membase_insn(enum insn_opcode expected_opc,
+static void assert_imm_membase_insn(enum insn_type insn_type,
 				    unsigned long expected_imm,
 				    enum reg expected_base_reg,
 				    long expected_disp,
 				    struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_2(expected_opc, OPERAND_IMMEDIATE, OPERAND_MEMBASE), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_imm, insn->src.imm);
 	assert_int_equals(expected_base_reg, insn->dest.base_reg);
 	assert_int_equals(expected_disp, insn->dest.disp);
 }
 
-static void assert_rel_insn(enum insn_opcode expected_opc,
+static void assert_rel_insn(enum insn_type insn_type,
 			    unsigned long expected_imm, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_RELATIVE), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_imm, insn->operand.rel);
 }
 
-static void assert_branch_insn(enum insn_opcode expected_opc,
+static void assert_branch_insn(enum insn_type insn_type,
 			       struct basic_block *if_true, struct insn *insn)
 {
-	assert_int_equals(DEFINE_INSN_TYPE_1(expected_opc, OPERAND_BRANCH), insn->type);
+	assert_int_equals(insn_type, insn->type);
 	assert_ptr_equals(if_true, insn->operand.branch_target);
 }
 
@@ -130,16 +130,16 @@ void test_should_select_insn_for_every_statement(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_ADD, REG_EBP, 12, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_ADD_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 16, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 16, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_ADD, REG_EBP, 20, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_ADD_MEMBASE_REG, REG_EBP, 20, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
@@ -165,7 +165,7 @@ static struct basic_block *create_local_local_binop_bb(enum binary_operator expr
 	return bb;
 }
 
-static void assert_select_local_local_binop(enum binary_operator expr_op, enum insn_opcode insn_op)
+static void assert_select_local_local_binop(enum binary_operator expr_op, enum insn_type insn_type)
 {
 	struct basic_block *bb;
 	struct insn *insn;
@@ -174,10 +174,10 @@ static void assert_select_local_local_binop(enum binary_operator expr_op, enum i
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(insn_op, REG_EBP, 12, REG_EAX, insn);
+	assert_membase_reg_insn(insn_type, REG_EBP, 12, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
@@ -203,7 +203,7 @@ static struct basic_block *create_local_value_binop_bb(enum binary_operator expr
 	return bb;
 }
 
-static void assert_select_local_value_binop(enum binary_operator expr_op, enum insn_opcode insn_op)
+static void assert_select_local_value_binop(enum binary_operator expr_op, enum insn_type insn_type)
 {
 	struct basic_block *bb;
 	struct insn *insn;
@@ -212,28 +212,28 @@ static void assert_select_local_value_binop(enum binary_operator expr_op, enum i
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_ADD, 0xdeadbeef, REG_EAX, insn);
+	assert_imm_reg_insn(insn_type, 0xdeadbeef, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
 
 void test_select_add_local_to_local(void)
 {
-	assert_select_local_local_binop(OP_ADD, OPC_ADD);
-	assert_select_local_value_binop(OP_ADD, OPC_ADD);
+	assert_select_local_local_binop(OP_ADD, INSN_ADD_MEMBASE_REG);
+	assert_select_local_value_binop(OP_ADD, INSN_ADD_IMM_REG);
 }
 
 void test_select_sub_local_from_local(void)
 {
-	assert_select_local_local_binop(OP_SUB, OPC_SUB);
+	assert_select_local_local_binop(OP_SUB, INSN_SUB_MEMBASE_REG);
 }
 
 void test_select_mul_local_from_local(void)
 {
-	assert_select_local_local_binop(OP_MUL, OPC_MUL);
+	assert_select_local_local_binop(OP_MUL, INSN_MUL_MEMBASE_REG);
 }
 
 void test_select_local_local_div(void)
@@ -245,13 +245,13 @@ void test_select_local_local_div(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_insn(OPC_CLTD, insn);
+	assert_insn(INSN_CLTD, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_DIV, REG_EBP, 12, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_DIV_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
@@ -265,16 +265,16 @@ void test_select_local_local_rem(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_insn(OPC_CLTD, insn);
+	assert_insn(INSN_CLTD, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_DIV, REG_EBP, 12, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_DIV_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_reg_insn(OPC_MOV, REG_EDX, REG_EAX, insn);
+	assert_reg_reg_insn(INSN_MOV_REG_REG, REG_EDX, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
@@ -300,7 +300,7 @@ static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 	return bb;
 }
 
-static void assert_select_local_unop(enum unary_operator expr_op, enum insn_opcode insn_op)
+static void assert_select_local_unop(enum unary_operator expr_op, enum insn_type insn_type)
 {
 	struct basic_block *bb;
 	struct insn *insn;
@@ -309,20 +309,20 @@ static void assert_select_local_unop(enum unary_operator expr_op, enum insn_opco
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(insn_op, REG_EAX, insn);
+	assert_reg_insn(insn_type, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
 
 void test_select_neg_local(void)
 {
-	assert_select_local_unop(OP_NEG, OPC_NEG);
+	assert_select_local_unop(OP_NEG, INSN_NEG_REG);
 }
 
-static void assert_select_local_local_shift(enum binary_operator expr_op, enum insn_opcode insn_op)
+static void assert_select_local_local_shift(enum binary_operator expr_op, enum insn_type insn_type)
 {
 	struct basic_block *bb;
 	struct insn *insn;
@@ -331,45 +331,45 @@ static void assert_select_local_local_shift(enum binary_operator expr_op, enum i
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 12, REG_ECX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 12, REG_ECX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_reg_insn(insn_op, REG_ECX, REG_EAX, insn);
+	assert_reg_reg_insn(insn_type, REG_ECX, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
 
 void test_select_shl_local_to_local(void)
 {
-	assert_select_local_local_shift(OP_SHL, OPC_SHL);
+	assert_select_local_local_shift(OP_SHL, INSN_SHL_REG_REG);
 }
 
 void test_select_shr_local_to_local(void)
 {
-	assert_select_local_local_shift(OP_SHR, OPC_SAR);
+	assert_select_local_local_shift(OP_SHR, INSN_SAR_REG_REG);
 }
 
 void test_select_ushr_local_to_local(void)
 {
-	assert_select_local_local_shift(OP_USHR, OPC_SHR);
+	assert_select_local_local_shift(OP_USHR, INSN_SHR_REG_REG);
 }
 
 void test_select_or_local_from_local(void)
 {
-	assert_select_local_local_binop(OP_OR, OPC_OR);
+	assert_select_local_local_binop(OP_OR, INSN_OR_MEMBASE_REG);
 }
 
 void test_select_and_local_from_local(void)
 {
-	assert_select_local_local_binop(OP_AND, OPC_AND);
+	assert_select_local_local_binop(OP_AND, INSN_AND_MEMBASE_REG);
 }
 
 void test_select_xor_local_from_local(void)
 {
-	assert_select_local_local_binop(OP_XOR, OPC_XOR);
+	assert_select_local_local_binop(OP_XOR, INSN_XOR_MEMBASE_REG);
 }
 
 void test_select_return(void)
@@ -393,10 +393,10 @@ void test_select_return(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_MOV, 0xdeadbeef, REG_EAX, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_branch_insn(OPC_JMP, cu.exit_bb, insn);
+	assert_branch_insn(INSN_JMP_BRANCH, cu.exit_bb, insn);
 
 	free_basic_block(bb);
 	free_basic_block(cu.exit_bb);
@@ -419,7 +419,7 @@ void test_select_void_return(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_branch_insn(OPC_JMP, cu.exit_bb, insn);
+	assert_branch_insn(INSN_JMP_BRANCH, cu.exit_bb, insn);
 
 	free_basic_block(bb);
 	free_basic_block(cu.exit_bb);
@@ -448,7 +448,7 @@ void test_select_invoke_without_arguments(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -480,16 +480,16 @@ void test_select_invoke_with_arguments(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_insn(OPC_PUSH, 0x02, insn);
+	assert_imm_insn(INSN_PUSH_IMM, 0x02, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(OPC_PUSH, 0x01, insn);
+	assert_imm_insn(INSN_PUSH_IMM, 0x01, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_ADD, 8, REG_ESP, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -522,13 +522,13 @@ void test_select_method_return_value_passed_as_argument(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&nested_mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&nested_mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(OPC_PUSH, REG_EAX, insn);
+	assert_reg_insn(INSN_PUSH_REG, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(OPC_CALL, (unsigned long) trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -564,36 +564,36 @@ void test_select_invokevirtual_with_arguments(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_insn(OPC_PUSH, objectref, insn);
+	assert_imm_insn(INSN_PUSH_IMM, objectref, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_ESP, 0, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_ESP, 0, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct object, class), REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct object, class), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_ADD, sizeof(struct object), REG_EAX, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EAX,
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX,
 				offsetof(struct classblock, method_table),
 				REG_EAX, insn);
 	
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EAX, method_index * sizeof(void *), REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, method_index * sizeof(void *), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct methodblock, trampoline), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct buffer, buf), REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct buffer, buf), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(OPC_CALL, REG_EAX, insn);
+	assert_reg_insn(INSN_CALL_REG, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_ADD, 4, REG_ESP, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
 	
 	free_basic_block(bb);
 }
@@ -632,14 +632,14 @@ void test_select_local_eq_local_in_if_statement(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_CMP, REG_EBP, 12, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_CMP_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
-	assert_branch_insn(OPC_JE, stmt->if_true, insn);
+	assert_branch_insn(INSN_JE_BRANCH, stmt->if_true, insn);
 
 	free_basic_block(bb);
 	free_basic_block(true_bb);
@@ -667,14 +667,14 @@ void test_select_local_eq_value_in_if_statement(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EBP, 8, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_CMP, 0xcafebabe, REG_EAX, insn);
+	assert_imm_reg_insn(INSN_CMP_IMM_REG, 0xcafebabe, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
-	assert_branch_insn(OPC_JE, stmt->if_true, insn);
+	assert_branch_insn(INSN_JE_BRANCH, stmt->if_true, insn);
 
 	free_basic_block(bb);
 	free_basic_block(true_bb);
@@ -697,11 +697,11 @@ void test_select_load_field(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &field, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	expected_disp = offsetof(struct fieldblock, static_value);
-	assert_membase_reg_insn(OPC_MOV, REG_EAX, expected_disp, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, expected_disp, REG_EAX, insn);
 
 	free_basic_block(bb);
 }
@@ -726,11 +726,11 @@ void test_store_value_to_field(void)
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &field, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	expected_disp = offsetof(struct fieldblock, static_value);
-	assert_imm_membase_insn(OPC_MOV, 0xcafebabe, REG_EAX, expected_disp, insn);
+	assert_imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0xcafebabe, REG_EAX, expected_disp, insn);
 
 	free_basic_block(bb);
 }
@@ -762,13 +762,13 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_reg_insn(OPC_MOV, (unsigned long) &field, REG_EAX, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &field, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(OPC_MOV, REG_EAX, offsetof(struct fieldblock, static_value), REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct fieldblock, static_value), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_membase_insn(OPC_MOV, REG_EAX, REG_EBP, expected_disp, insn);
+	assert_reg_membase_insn(INSN_MOV_REG_MEMBASE, REG_EAX, REG_EBP, expected_disp, insn);
 
 	free_basic_block(bb);
 }
