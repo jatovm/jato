@@ -68,8 +68,8 @@ static inline unsigned char encode_modrm(unsigned char mod,
 	return ((mod & 0x3) << 6) | ((reg_opcode & 0x7) << 3) | (rm & 0x7);
 }
 
-static inline unsigned char sib(unsigned char scale, unsigned char index,
-				unsigned char base)
+static inline unsigned char encode_sib(unsigned char scale,
+				       unsigned char index, unsigned char base)
 {
 	return ((scale & 0x3) << 6) | ((index & 0x7) << 3) | (base & 0x7);
 }
@@ -135,7 +135,7 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 	emit(buf, mod_rm);
 
 	if (needs_sib)
-		emit(buf, sib(0x00, 0x04, encode_reg(base_reg)));
+		emit(buf, encode_sib(0x00, 0x04, encode_reg(base_reg)));
 
 	emit_imm(buf, disp);
 }
