@@ -23,7 +23,7 @@ static void assert_emit_insn(unsigned char *expected,
 	bb_add_insn(bb, insn);
 
 	buf = alloc_buffer();
-	x86_emit_obj_code(bb, buf);
+	emit_obj_code(bb, buf);
 	assert_mem_equals(expected, buffer_ptr(buf), expected_size);
 	
 	free_basic_block(bb);
@@ -104,7 +104,7 @@ void test_emit_prolog_no_locals(void)
 	struct buffer *buf;
 
 	buf = alloc_buffer();
-	x86_emit_prolog(buf, 0);
+	emit_prolog(buf, 0);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 	free_buffer(buf);
 }
@@ -115,7 +115,7 @@ void test_emit_prolog_has_locals(void)
 	struct buffer *buf;
 
 	buf = alloc_buffer();
-	x86_emit_prolog(buf, 0x80);
+	emit_prolog(buf, 0x80);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 	free_buffer(buf);
 }
@@ -126,7 +126,7 @@ void test_emit_epilog_no_locals(void)
 	struct buffer *buf;
 
 	buf = alloc_buffer();
-	x86_emit_epilog(buf, 0);
+	emit_epilog(buf, 0);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 	free_buffer(buf);
 }
@@ -137,7 +137,7 @@ void test_emit_epilog_has_locals(void)
 	struct buffer *buf;
 
 	buf = alloc_buffer();
-	x86_emit_epilog(buf, 0x80);
+	emit_epilog(buf, 0x80);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 	free_buffer(buf);
 }
@@ -158,7 +158,7 @@ static void assert_emit_push_imm32(unsigned long imm)
 	bb_add_insn(bb, imm_insn(INSN_PUSH_IMM, imm));
 
 	buf = alloc_buffer();
-	x86_emit_obj_code(bb, buf);
+	emit_obj_code(bb, buf);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 
 	free_basic_block(bb);
@@ -202,7 +202,7 @@ static void assert_emit_call(long target_offset)
 	bb = alloc_basic_block(NULL, 0, 1);
 	bb_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long) call_target));
 
-	x86_emit_obj_code(bb, buf);
+	emit_obj_code(bb, buf);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 
 	free_basic_block(bb);
@@ -383,10 +383,10 @@ static void assert_emits_branch_target(unsigned char expected_target,
 	branch_bb = alloc_basic_block(NULL, 1, 2);
 
 	buf = alloc_buffer();
-	x86_emit_obj_code(target_bb, buf);
+	emit_obj_code(target_bb, buf);
 
 	bb_add_insn(branch_bb, insn);
-	x86_emit_obj_code(branch_bb, buf);
+	emit_obj_code(branch_bb, buf);
 
 	assert_mem_insn_2(0x74, expected_target, buffer_ptr(buf) + insn->offset);
 
@@ -434,10 +434,10 @@ static void assert_backpatches_branches(unsigned char expected_target,
 
 	buf = alloc_buffer();
 
-	x86_emit_obj_code(branch_bb, buf);
+	emit_obj_code(branch_bb, buf);
 	assert_mem_insn_2(0x74, 0x00, buffer_ptr(buf));
 
-	x86_emit_obj_code(target_bb, buf);
+	emit_obj_code(target_bb, buf);
 	assert_mem_insn_2(0x74, expected_target, buffer_ptr(buf));
 
 	free_buffer(buf);

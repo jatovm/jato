@@ -56,25 +56,25 @@ static inline int needs_32(long disp)
 }
 
 /**
- *	x86_mod_rm:	Encode a ModR/M byte of an IA-32 instruction.
+ *	encode_modrm:	Encode a ModR/M byte of an IA-32 instruction.
  *	@mod: The mod field of the byte.
  *	@reg_opcode: The reg/opcode field of the byte.
  *	@rm: The r/m field of the byte.
  */
-static inline unsigned char x86_mod_rm(unsigned char mod,
-				       unsigned char reg_opcode,
-				       unsigned char rm)
+static inline unsigned char encode_modrm(unsigned char mod,
+					 unsigned char reg_opcode,
+					 unsigned char rm)
 {
 	return ((mod & 0x3) << 6) | ((reg_opcode & 0x7) << 3) | (rm & 0x7);
 }
 
-static inline unsigned char x86_sib(unsigned char scale, unsigned char index,
-				    unsigned char base)
+static inline unsigned char sib(unsigned char scale, unsigned char index,
+				unsigned char base)
 {
 	return ((scale & 0x3) << 6) | ((index & 0x7) << 3) | (base & 0x7);
 }
 
-static inline void x86_emit(struct buffer *buf, unsigned char c)
+static inline void emit(struct buffer *buf, unsigned char c)
 {
 	int err;
 
@@ -82,7 +82,7 @@ static inline void x86_emit(struct buffer *buf, unsigned char c)
 	assert(!err);
 }
 
-static void x86_emit_imm32(struct buffer *buf, int imm)
+static void emit_imm32(struct buffer *buf, int imm)
 {
 	union {
 		int val;
@@ -90,22 +90,22 @@ static void x86_emit_imm32(struct buffer *buf, int imm)
 	} imm_buf;
 
 	imm_buf.val = imm;
-	x86_emit(buf, imm_buf.b[0]);
-	x86_emit(buf, imm_buf.b[1]);
-	x86_emit(buf, imm_buf.b[2]);
-	x86_emit(buf, imm_buf.b[3]);
+	emit(buf, imm_buf.b[0]);
+	emit(buf, imm_buf.b[1]);
+	emit(buf, imm_buf.b[2]);
+	emit(buf, imm_buf.b[3]);
 }
 
-static void x86_emit_imm(struct buffer *buf, long disp)
+static void emit_imm(struct buffer *buf, long disp)
 {
 	if (needs_32(disp))
-		x86_emit_imm32(buf, disp);
+		emit_imm32(buf, disp);
 	else
-		x86_emit(buf, disp);
+		emit(buf, disp);
 }
 
-static void x86_emit_membase_reg(struct buffer *buf, unsigned char opc,
-				 struct operand *src, struct operand *dest)
+static void emit_membase_reg(struct buffer *buf, unsigned char opc,
+			     struct operand *src, struct operand *dest)
 {
 	enum reg base_reg, dest_reg;
 	unsigned long disp;
@@ -119,7 +119,7 @@ static void x86_emit_membase_reg(struct buffer *buf, unsigned char opc,
 	needs_sib = (base_reg == REG_ESP);
 	needs_32 = disp > 0xff;
 
-	x86_emit(buf, opc);
+	emit(buf, opc);
 
 	if (needs_sib)
 		rm = 0x04;
@@ -131,77 +131,77 @@ static void x86_emit_membase_reg(struct buffer *buf, unsigned char opc,
 	else
 		mod = 0x01;
 
-	mod_rm = x86_mod_rm(mod, encode_reg(dest_reg), rm);
-	x86_emit(buf, mod_rm);
+	mod_rm = encode_modrm(mod, encode_reg(dest_reg), rm);
+	emit(buf, mod_rm);
 
 	if (needs_sib)
-		x86_emit(buf, x86_sib(0x00, 0x04, encode_reg(base_reg)));
+		emit(buf, sib(0x00, 0x04, encode_reg(base_reg)));
 
-	x86_emit_imm(buf, disp);
+	emit_imm(buf, disp);
 }
 
-static void __x86_emit_push_reg(struct buffer *buf, enum reg reg)
+static void __emit_push_reg(struct buffer *buf, enum reg reg)
 {
-	x86_emit(buf, 0x50 + encode_reg(reg));
+	emit(buf, 0x50 + encode_reg(reg));
 }
 
-static void x86_emit_push_reg(struct buffer *buf, struct operand *operand)
+static void emit_push_reg(struct buffer *buf, struct operand *operand)
 {
-	__x86_emit_push_reg(buf, operand->reg);
+	__emit_push_reg(buf, operand->reg);
 }
 
-static void __x86_emit_mov_reg_reg(struct buffer *buf, enum reg src_reg,
-				   enum reg dest_reg)
+static void __emit_mov_reg_reg(struct buffer *buf, enum reg src_reg,
+			       enum reg dest_reg)
 {
 	unsigned char mod_rm;
 
-	mod_rm = x86_mod_rm(0x03, encode_reg(src_reg), encode_reg(dest_reg));
-	x86_emit(buf, 0x89);
-	x86_emit(buf, mod_rm);
+	mod_rm = encode_modrm(0x03, encode_reg(src_reg), encode_reg(dest_reg));
+	emit(buf, 0x89);
+	emit(buf, mod_rm);
 }
 
-static void x86_emit_mov_reg_reg(struct buffer *buf, struct operand *src,
-				 struct operand *dest)
+static void emit_mov_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
-	__x86_emit_mov_reg_reg(buf, src->reg, dest->reg);
+	__emit_mov_reg_reg(buf, src->reg, dest->reg);
 }
 
-static void x86_emit_mov_membase_reg(struct buffer *buf,
-				     struct operand *src, struct operand *dest)
+static void emit_mov_membase_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
 {
-	x86_emit_membase_reg(buf, 0x8b, src, dest);
+	emit_membase_reg(buf, 0x8b, src, dest);
 }
 
-static void x86_emit_mov_imm_reg(struct buffer *buf, struct operand *src,
-				 struct operand *dest)
+static void emit_mov_imm_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
-	x86_emit(buf, 0xb8 + encode_reg(dest->reg));
-	x86_emit_imm32(buf, src->imm);
+	emit(buf, 0xb8 + encode_reg(dest->reg));
+	emit_imm32(buf, src->imm);
 }
 
-static void x86_emit_mov_imm_membase(struct buffer *buf,
-				     struct operand *imm_operand,
-				     struct operand *membase_operand)
+static void emit_mov_imm_membase(struct buffer *buf,
+				 struct operand *imm_operand,
+				 struct operand *membase_operand)
 {
 	unsigned long mod = 0x00;
 
-	x86_emit(buf, 0xc7);
+	emit(buf, 0xc7);
 
 	if (membase_operand->disp != 0)
 		mod = 0x01;
 
-	x86_emit(buf,
-		 x86_mod_rm(mod, 0x00, encode_reg(membase_operand->base_reg)));
+	emit(buf,
+	     encode_modrm(mod, 0x00, encode_reg(membase_operand->base_reg)));
 
 	if (membase_operand->disp != 0)
-		x86_emit(buf, membase_operand->disp);
+		emit(buf, membase_operand->disp);
 
-	x86_emit_imm32(buf, imm_operand->imm);
+	emit_imm32(buf, imm_operand->imm);
 }
 
-static void x86_emit_mov_reg_membase(struct buffer *buf,
-				     struct operand *reg_operand,
-				     struct operand *membase_operand)
+static void emit_mov_reg_membase(struct buffer *buf,
+				 struct operand *reg_operand,
+				 struct operand *membase_operand)
 {
 	int mod;
 
@@ -210,99 +210,99 @@ static void x86_emit_mov_reg_membase(struct buffer *buf,
 	else
 		mod = 0x01;
 
-	x86_emit(buf, 0x89);
-	x86_emit(buf,
-		 x86_mod_rm(mod, encode_reg(reg_operand->reg),
-			    encode_reg(membase_operand->base_reg)));
+	emit(buf, 0x89);
+	emit(buf,
+	     encode_modrm(mod, encode_reg(reg_operand->reg),
+			  encode_reg(membase_operand->base_reg)));
 
-	x86_emit_imm(buf, membase_operand->disp);
+	emit_imm(buf, membase_operand->disp);
 }
 
-static void x86_emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
-				 enum reg reg)
+static void emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
+			     enum reg reg)
 {
-	x86_emit(buf, 0x81);
-	x86_emit(buf, x86_mod_rm(0x03, 0x05, encode_reg(reg)));
-	x86_emit_imm32(buf, imm);
+	emit(buf, 0x81);
+	emit(buf, encode_modrm(0x03, 0x05, encode_reg(reg)));
+	emit_imm32(buf, imm);
 }
 
-void x86_emit_prolog(struct buffer *buf, unsigned long nr_locals)
+void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
-	__x86_emit_push_reg(buf, REG_EBP);
-	__x86_emit_mov_reg_reg(buf, REG_ESP, REG_EBP);
+	__emit_push_reg(buf, REG_EBP);
+	__emit_mov_reg_reg(buf, REG_ESP, REG_EBP);
 
 	if (nr_locals)
-		x86_emit_sub_imm_reg(buf, nr_locals, REG_ESP);
+		emit_sub_imm_reg(buf, nr_locals, REG_ESP);
 }
 
-static void x86_emit_pop_reg(struct buffer *buf, enum reg reg)
+static void emit_pop_reg(struct buffer *buf, enum reg reg)
 {
-	x86_emit(buf, 0x58 + encode_reg(reg));
+	emit(buf, 0x58 + encode_reg(reg));
 }
 
-static void __x86_emit_push_imm32(struct buffer *buf, unsigned long imm)
+static void __emit_push_imm32(struct buffer *buf, unsigned long imm)
 {
-	x86_emit(buf, 0x68);
-	x86_emit_imm32(buf, imm);
+	emit(buf, 0x68);
+	emit_imm32(buf, imm);
 }
 
-static void x86_emit_push_imm32(struct buffer *buf, struct operand *operand)
+static void emit_push_imm32(struct buffer *buf, struct operand *operand)
 {
-	__x86_emit_push_imm32(buf, operand->imm);
+	__emit_push_imm32(buf, operand->imm);
 }
 
 #define CALL_INSN_SIZE 5
 
-static void __x86_emit_call(struct buffer *buf, void *call_target)
+static void __emit_call(struct buffer *buf, void *call_target)
 {
 	int disp = call_target - buffer_current(buf) - CALL_INSN_SIZE;
 
-	x86_emit(buf, 0xe8);
-	x86_emit_imm32(buf, disp);
+	emit(buf, 0xe8);
+	emit_imm32(buf, disp);
 }
 
-static void x86_emit_call(struct buffer *buf, struct operand *operand)
+static void emit_call(struct buffer *buf, struct operand *operand)
 {
-	__x86_emit_call(buf, (void *)operand->rel);
+	__emit_call(buf, (void *)operand->rel);
 }
 
-void x86_emit_ret(struct buffer *buf)
+void emit_ret(struct buffer *buf)
 {
-	x86_emit(buf, 0xc3);
+	emit(buf, 0xc3);
 }
 
-void x86_emit_epilog(struct buffer *buf, unsigned long nr_locals)
+void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 {
 	if (nr_locals)
-		x86_emit(buf, 0xc9);
+		emit(buf, 0xc9);
 	else
-		x86_emit_pop_reg(buf, REG_EBP);
+		emit_pop_reg(buf, REG_EBP);
 
-	x86_emit_ret(buf);
+	emit_ret(buf);
 }
 
-static void x86_emit_add_membase_reg(struct buffer *buf,
-				     struct operand *src, struct operand *dest)
+static void emit_add_membase_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
 {
-	x86_emit_membase_reg(buf, 0x03, src, dest);
+	emit_membase_reg(buf, 0x03, src, dest);
 }
 
-static void x86_emit_and_membase_reg(struct buffer *buf,
-				     struct operand *src, struct operand *dest)
+static void emit_and_membase_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
 {
-	x86_emit_membase_reg(buf, 0x23, src, dest);
+	emit_membase_reg(buf, 0x23, src, dest);
 }
 
-static void x86_emit_sub_membase_reg(struct buffer *buf,
-				     struct operand *src, struct operand *dest)
+static void emit_sub_membase_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
 {
-	x86_emit_membase_reg(buf, 0x2b, src, dest);
+	emit_membase_reg(buf, 0x2b, src, dest);
 }
 
-static void __x86_emit_div_mul_membase_reg(struct buffer *buf,
-					   struct operand *src,
-					   struct operand *dest,
-					   unsigned char opc_ext)
+static void __emit_div_mul_membase_reg(struct buffer *buf,
+				       struct operand *src,
+				       struct operand *dest,
+				       unsigned char opc_ext)
 {
 	enum reg reg;
 	long disp;
@@ -318,70 +318,69 @@ static void __x86_emit_div_mul_membase_reg(struct buffer *buf,
 	else
 		mod = 0x01;
 
-	x86_emit(buf, 0xf7);
-	x86_emit(buf, x86_mod_rm(mod, opc_ext, encode_reg(reg)));
-	x86_emit_imm(buf, disp);
+	emit(buf, 0xf7);
+	emit(buf, encode_modrm(mod, opc_ext, encode_reg(reg)));
+	emit_imm(buf, disp);
 }
 
-static void x86_emit_mul_membase_reg(struct buffer *buf,
-				     struct operand *src, struct operand *dest)
+static void emit_mul_membase_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
 {
-	__x86_emit_div_mul_membase_reg(buf, src, dest, 0x04);
+	__emit_div_mul_membase_reg(buf, src, dest, 0x04);
 }
 
-static void x86_emit_neg_reg(struct buffer *buf, struct operand *operand)
+static void emit_neg_reg(struct buffer *buf, struct operand *operand)
 {
-	x86_emit(buf, 0xf7);
-	x86_emit(buf, x86_mod_rm(0x3, 0x3, encode_reg(operand->reg)));
+	emit(buf, 0xf7);
+	emit(buf, encode_modrm(0x3, 0x3, encode_reg(operand->reg)));
 }
 
-static void x86_emit_cltd(struct buffer *buf)
+static void emit_cltd(struct buffer *buf)
 {
-	x86_emit(buf, 0x99);
+	emit(buf, 0x99);
 }
 
-static void x86_emit_div_membase_reg(struct buffer *buf, struct operand *src,
-				     struct operand *dest)
+static void emit_div_membase_reg(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
 {
-	__x86_emit_div_mul_membase_reg(buf, src, dest, 0x07);
+	__emit_div_mul_membase_reg(buf, src, dest, 0x07);
 }
 
-static void __x86_emit_shift_reg_reg(struct buffer *buf,
-				     struct operand *src,
-				     struct operand *dest,
-				     unsigned char opc_ext)
+static void __emit_shift_reg_reg(struct buffer *buf,
+				 struct operand *src,
+				 struct operand *dest, unsigned char opc_ext)
 {
 	assert(src->reg == REG_ECX);
 
-	x86_emit(buf, 0xd3);
-	x86_emit(buf, x86_mod_rm(0x03, opc_ext, encode_reg(dest->reg)));
+	emit(buf, 0xd3);
+	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(dest->reg)));
 }
 
-static void x86_emit_shl_reg_reg(struct buffer *buf, struct operand *src,
-				 struct operand *dest)
+static void emit_shl_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
-	__x86_emit_shift_reg_reg(buf, src, dest, 0x04);
+	__emit_shift_reg_reg(buf, src, dest, 0x04);
 }
 
-static void x86_emit_sar_reg_reg(struct buffer *buf, struct operand *src,
-				 struct operand *dest)
+static void emit_sar_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
-	__x86_emit_shift_reg_reg(buf, src, dest, 0x07);
+	__emit_shift_reg_reg(buf, src, dest, 0x07);
 }
 
-static void x86_emit_shr_reg_reg(struct buffer *buf, struct operand *src,
-				 struct operand *dest)
+static void emit_shr_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
-	__x86_emit_shift_reg_reg(buf, src, dest, 0x05);
+	__emit_shift_reg_reg(buf, src, dest, 0x05);
 }
 
-static void x86_emit_or_membase_reg(struct buffer *buf,
-				    struct operand *src, struct operand *dest)
+static void emit_or_membase_reg(struct buffer *buf,
+				struct operand *src, struct operand *dest)
 {
-	x86_emit_membase_reg(buf, 0x0b, src, dest);
+	emit_membase_reg(buf, 0x0b, src, dest);
 }
 
-static void __x86_emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
+static void __emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
 {
 	int opc;
 
@@ -390,19 +389,19 @@ static void __x86_emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
 	else
 		opc = 0x83;
 
-	x86_emit(buf, opc);
-	x86_emit(buf, x86_mod_rm(0x3, 0x00, encode_reg(reg)));
-	x86_emit_imm(buf, imm);
+	emit(buf, opc);
+	emit(buf, encode_modrm(0x3, 0x00, encode_reg(reg)));
+	emit_imm(buf, imm);
 }
 
-static void x86_emit_add_imm_reg(struct buffer *buf,
-				 struct operand *src, struct operand *dest)
+static void emit_add_imm_reg(struct buffer *buf,
+			     struct operand *src, struct operand *dest)
 {
-	__x86_emit_add_imm_reg(buf, src->imm, dest->reg);
+	__emit_add_imm_reg(buf, src->imm, dest->reg);
 }
 
-void x86_emit_cmp_imm_reg(struct buffer *buf,
-			  struct operand *src, struct operand *dest)
+void emit_cmp_imm_reg(struct buffer *buf,
+		      struct operand *src, struct operand *dest)
 {
 	int opc;
 
@@ -411,28 +410,27 @@ void x86_emit_cmp_imm_reg(struct buffer *buf,
 	else
 		opc = 0x83;
 
-	x86_emit(buf, opc);
-	x86_emit(buf, x86_mod_rm(0x03, 0x07, encode_reg(dest->reg)));
-	x86_emit_imm(buf, src->imm);
+	emit(buf, opc);
+	emit(buf, encode_modrm(0x03, 0x07, encode_reg(dest->reg)));
+	emit_imm(buf, src->imm);
 }
 
-void x86_emit_cmp_membase_reg(struct buffer *buf, struct operand *src,
-			      struct operand *dest)
+void emit_cmp_membase_reg(struct buffer *buf, struct operand *src,
+			  struct operand *dest)
 {
-	x86_emit_membase_reg(buf, 0x3b, src, dest);
+	emit_membase_reg(buf, 0x3b, src, dest);
 }
 
-static void x86_emit_indirect_jump_reg(struct buffer *buf, enum reg reg)
+static void emit_indirect_jump_reg(struct buffer *buf, enum reg reg)
 {
-	x86_emit(buf, 0xff);
-	x86_emit(buf, x86_mod_rm(0x3, 0x04, encode_reg(reg)));
+	emit(buf, 0xff);
+	emit(buf, encode_modrm(0x3, 0x04, encode_reg(reg)));
 }
 
-void x86_emit_branch_rel(struct buffer *buf, unsigned char opc,
-			 unsigned char rel8)
+void emit_branch_rel(struct buffer *buf, unsigned char opc, unsigned char rel8)
 {
-	x86_emit(buf, opc);
-	x86_emit(buf, rel8);
+	emit(buf, opc);
+	emit(buf, rel8);
 }
 
 static unsigned char branch_rel_addr(unsigned long branch_offset,
@@ -441,8 +439,8 @@ static unsigned char branch_rel_addr(unsigned long branch_offset,
 	return target_offset - branch_offset - 2;
 }
 
-static void x86_emit_branch(struct buffer *buf, unsigned char opc,
-			    struct insn *insn)
+static void emit_branch(struct buffer *buf, unsigned char opc,
+			struct insn *insn)
 {
 	struct basic_block *target_bb;
 	unsigned char addr = 0;
@@ -458,19 +456,19 @@ static void x86_emit_branch(struct buffer *buf, unsigned char opc,
 	} else
 		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
 
-	x86_emit_branch_rel(buf, opc, addr);
+	emit_branch_rel(buf, opc, addr);
 }
 
-static void x86_emit_indirect_call(struct buffer *buf, struct operand *operand)
+static void emit_indirect_call(struct buffer *buf, struct operand *operand)
 {
-	x86_emit(buf, 0xff);
-	x86_emit(buf, x86_mod_rm(0x0, 0x2, encode_reg(operand->reg)));
+	emit(buf, 0xff);
+	emit(buf, encode_modrm(0x0, 0x2, encode_reg(operand->reg)));
 }
 
-static void x86_emit_xor_membase_reg(struct buffer *buf,
-				     struct operand *src, struct operand *dest)
+static void emit_xor_membase_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
 {
-	x86_emit_membase_reg(buf, 0x33, src, dest);
+	emit_membase_reg(buf, 0x33, src, dest);
 }
 
 struct emitter {
@@ -482,30 +480,30 @@ struct emitter {
 	[_type] = { .emit_fn = _fn, .nr_operands = _nr }
 
 static struct emitter emitters[] = {
-	DECL_EMITTER(INSN_ADD_IMM_REG, x86_emit_add_imm_reg, 2),
-	DECL_EMITTER(INSN_ADD_MEMBASE_REG, x86_emit_add_membase_reg, 2),
-	DECL_EMITTER(INSN_AND_MEMBASE_REG, x86_emit_and_membase_reg, 2),
-	DECL_EMITTER(INSN_CALL_REG, x86_emit_indirect_call, 1),
-	DECL_EMITTER(INSN_CALL_REL, x86_emit_call, 1),
-	DECL_EMITTER(INSN_CLTD, x86_emit_cltd, 0),
-	DECL_EMITTER(INSN_CMP_IMM_REG, x86_emit_cmp_imm_reg, 2),
-	DECL_EMITTER(INSN_CMP_MEMBASE_REG, x86_emit_cmp_membase_reg, 2),
-	DECL_EMITTER(INSN_DIV_MEMBASE_REG, x86_emit_div_membase_reg, 2),
-	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, x86_emit_mov_imm_membase, 2),
-	DECL_EMITTER(INSN_MOV_IMM_REG, x86_emit_mov_imm_reg, 2),
-	DECL_EMITTER(INSN_MOV_MEMBASE_REG, x86_emit_mov_membase_reg, 2),
-	DECL_EMITTER(INSN_MOV_REG_MEMBASE, x86_emit_mov_reg_membase, 2),
-	DECL_EMITTER(INSN_MOV_REG_REG, x86_emit_mov_reg_reg, 2),
-	DECL_EMITTER(INSN_MUL_MEMBASE_REG, x86_emit_mul_membase_reg, 2),
-	DECL_EMITTER(INSN_NEG_REG, x86_emit_neg_reg, 1),
-	DECL_EMITTER(INSN_OR_MEMBASE_REG, x86_emit_or_membase_reg, 2),
-	DECL_EMITTER(INSN_PUSH_IMM, x86_emit_push_imm32, 1),
-	DECL_EMITTER(INSN_PUSH_REG, x86_emit_push_reg, 1),
-	DECL_EMITTER(INSN_SAR_REG_REG, x86_emit_sar_reg_reg, 2),
-	DECL_EMITTER(INSN_SHL_REG_REG, x86_emit_shl_reg_reg, 2),
-	DECL_EMITTER(INSN_SHR_REG_REG, x86_emit_shr_reg_reg, 2),
-	DECL_EMITTER(INSN_SUB_MEMBASE_REG, x86_emit_sub_membase_reg, 2),
-	DECL_EMITTER(INSN_XOR_MEMBASE_REG, x86_emit_xor_membase_reg, 2),
+	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, 2),
+	DECL_EMITTER(INSN_ADD_MEMBASE_REG, emit_add_membase_reg, 2),
+	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, 2),
+	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, 1),
+	DECL_EMITTER(INSN_CALL_REL, emit_call, 1),
+	DECL_EMITTER(INSN_CLTD, emit_cltd, 0),
+	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, 2),
+	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, 2),
+	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, 2),
+	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, 2),
+	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, 2),
+	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, 2),
+	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, 2),
+	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, 2),
+	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, 2),
+	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, 1),
+	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg, 2),
+	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm32, 1),
+	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, 1),
+	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, 2),
+	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg, 2),
+	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg, 2),
+	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, 2),
+	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, 2),
 };
 
 typedef void (*emit_fn_0) (struct buffer *);
@@ -513,7 +511,7 @@ typedef void (*emit_fn_1) (struct buffer *, struct operand * operand);
 typedef void (*emit_fn_2) (struct buffer *, struct operand * src, struct operand
 			   * dest);
 
-static void x86_emit_insn(struct buffer *buf, struct insn *insn)
+static void emit_insn(struct buffer *buf, struct insn *insn)
 {
 	struct emitter *emitter;
 
@@ -523,11 +521,11 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 	 * Branch emitters are special and need the insn.
 	 */
 	if (insn->type == INSN_JE_BRANCH) {
-		x86_emit_branch(buf, 0x74, insn);
+		emit_branch(buf, 0x74, insn);
 		return;
 	}
 	if (insn->type == INSN_JMP_BRANCH) {
-		x86_emit_branch(buf, 0xeb, insn);
+		emit_branch(buf, 0xeb, insn);
 		return;
 	}
 
@@ -547,9 +545,9 @@ static void x86_emit_insn(struct buffer *buf, struct insn *insn)
 	}
 }
 
-static void x86_backpatch_branches(struct buffer *buf,
-				   struct list_head *to_backpatch,
-				   unsigned long target_off)
+static void backpatch_branches(struct buffer *buf,
+			       struct list_head *to_backpatch,
+			       unsigned long target_off)
 {
 	struct insn *this, *next;
 
@@ -563,23 +561,23 @@ static void x86_backpatch_branches(struct buffer *buf,
 	}
 }
 
-void x86_emit_obj_code(struct basic_block *bb, struct buffer *buf)
+void emit_obj_code(struct basic_block *bb, struct buffer *buf)
 {
 	struct insn *insn;
 
-	x86_backpatch_branches(buf, &bb->backpatch_insns, buffer_offset(buf));
+	backpatch_branches(buf, &bb->backpatch_insns, buffer_offset(buf));
 
 	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
-		x86_emit_insn(buf, insn);
+		emit_insn(buf, insn);
 	}
 	bb->is_emitted = true;
 }
 
-void x86_emit_trampoline(struct compilation_unit *cu, void *call_target,
-			 struct buffer *buf)
+void emit_trampoline(struct compilation_unit *cu, void *call_target,
+		     struct buffer *buf)
 {
-	__x86_emit_push_imm32(buf, (unsigned long)cu);
-	__x86_emit_call(buf, call_target);
-	__x86_emit_add_imm_reg(buf, 0x04, REG_ESP);
-	x86_emit_indirect_jump_reg(buf, REG_EAX);
+	__emit_push_imm32(buf, (unsigned long)cu);
+	__emit_call(buf, call_target);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+	emit_indirect_jump_reg(buf, REG_EAX);
 }
