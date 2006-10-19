@@ -237,15 +237,15 @@ static void emit_pop_reg(struct buffer *buf, enum reg reg)
 	emit(buf, 0x58 + encode_reg(reg));
 }
 
-static void __emit_push_imm32(struct buffer *buf, unsigned long imm)
+static void __emit_push_imm(struct buffer *buf, long imm)
 {
 	emit(buf, 0x68);
-	emit_imm32(buf, imm);
+	emit_imm(buf, imm);
 }
 
-static void emit_push_imm32(struct buffer *buf, struct operand *operand)
+static void emit_push_imm(struct buffer *buf, struct operand *operand)
 {
-	__emit_push_imm32(buf, operand->imm);
+	__emit_push_imm(buf, operand->imm);
 }
 
 #define CALL_INSN_SIZE 5
@@ -494,7 +494,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, 2),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, 1),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg, 2),
-	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm32, 1),
+	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, 1),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, 1),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, 2),
 	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg, 2),
@@ -573,7 +573,7 @@ void emit_obj_code(struct basic_block *bb, struct buffer *buf)
 void emit_trampoline(struct compilation_unit *cu, void *call_target,
 		     struct buffer *buf)
 {
-	__emit_push_imm32(buf, (unsigned long)cu);
+	__emit_push_imm(buf, (unsigned long)cu);
 	__emit_call(buf, call_target);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 	emit_indirect_jump_reg(buf, REG_EAX);

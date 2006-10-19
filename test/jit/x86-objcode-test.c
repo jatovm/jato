@@ -24,6 +24,7 @@ static void assert_emit_insn(unsigned char *expected,
 
 	buf = alloc_buffer();
 	emit_obj_code(bb, buf);
+	assert_int_equals(expected_size, buffer_offset(buf));
 	assert_mem_equals(expected, buffer_ptr(buf), expected_size);
 	
 	free_basic_block(bb);
