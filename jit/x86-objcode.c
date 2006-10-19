@@ -8,14 +8,16 @@
  * instruction sequence.
  */
 
-#include <assert.h>
-#include <errno.h>
-#include <stdio.h>
-#include <x86-objcode.h>
 #include <jit/basic-block.h>
 #include <jit/instruction.h>
 #include <jit/statement.h>
 #include <vm/buffer.h>
+#include <x86-objcode.h>
+
+#include <assert.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 /*
  *	encode_reg:	Encode register to be used in IA-32 instruction.
@@ -50,9 +52,9 @@ static unsigned char encode_reg(enum reg reg)
 	return ret;
 }
 
-static inline int needs_32(long disp)
+static inline bool needs_32(long imm)
 {
-	return disp >> 8;
+	return imm >> 8;
 }
 
 /**
@@ -110,14 +112,13 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 	enum reg base_reg, dest_reg;
 	unsigned long disp;
 	unsigned char mod, rm, mod_rm;
-	int needs_sib, needs_32;
+	int needs_sib;
 
 	base_reg = src->reg;
 	disp = src->disp;
 	dest_reg = dest->reg;
 
 	needs_sib = (base_reg == REG_ESP);
-	needs_32 = disp > 0xff;
 
 	emit(buf, opc);
 
@@ -126,7 +127,7 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 	else
 		rm = encode_reg(base_reg);
 
-	if (needs_32)
+	if (needs_32(disp))
 		mod = 0x02;
 	else
 		mod = 0x01;
@@ -179,43 +180,39 @@ static void emit_mov_imm_reg(struct buffer *buf, struct operand *src,
 	emit_imm32(buf, src->imm);
 }
 
-static void emit_mov_imm_membase(struct buffer *buf,
-				 struct operand *imm_operand,
-				 struct operand *membase_operand)
+static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
 {
 	unsigned long mod = 0x00;
 
 	emit(buf, 0xc7);
 
-	if (membase_operand->disp != 0)
+	if (dest->disp != 0)
 		mod = 0x01;
 
-	emit(buf,
-	     encode_modrm(mod, 0x00, encode_reg(membase_operand->base_reg)));
+	emit(buf, encode_modrm(mod, 0x00, encode_reg(dest->base_reg)));
 
-	if (membase_operand->disp != 0)
-		emit(buf, membase_operand->disp);
+	if (dest->disp != 0)
+		emit(buf, dest->disp);
 
-	emit_imm32(buf, imm_operand->imm);
+	emit_imm32(buf, src->imm);
 }
 
-static void emit_mov_reg_membase(struct buffer *buf,
-				 struct operand *reg_operand,
-				 struct operand *membase_operand)
+static void emit_mov_reg_membase(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
 {
 	int mod;
 
-	if (needs_32(membase_operand->disp))
+	if (needs_32(dest->disp))
 		mod = 0x02;
 	else
 		mod = 0x01;
 
 	emit(buf, 0x89);
-	emit(buf,
-	     encode_modrm(mod, encode_reg(reg_operand->reg),
-			  encode_reg(membase_operand->base_reg)));
+	emit(buf, encode_modrm(mod, encode_reg(src->reg),
+			       encode_reg(dest->base_reg)));
 
-	emit_imm(buf, membase_operand->disp);
+	emit_imm(buf, dest->disp);
 }
 
 static void emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
