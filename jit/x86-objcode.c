@@ -397,8 +397,8 @@ static void emit_add_imm_reg(struct buffer *buf,
 	__emit_add_imm_reg(buf, src->imm, dest->reg);
 }
 
-void emit_cmp_imm_reg(struct buffer *buf,
-		      struct operand *src, struct operand *dest)
+static void emit_cmp_imm_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
 	int opc;
 
@@ -412,8 +412,7 @@ void emit_cmp_imm_reg(struct buffer *buf,
 	emit_imm(buf, src->imm);
 }
 
-void emit_cmp_membase_reg(struct buffer *buf, struct operand *src,
-			  struct operand *dest)
+static void emit_cmp_membase_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x3b, src, dest);
 }
