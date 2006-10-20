@@ -809,4 +809,5 @@ void test_select_new(void)
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
 
 	free(instance_class);
+	free_basic_block(bb);
 }

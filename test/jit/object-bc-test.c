@@ -118,6 +118,7 @@ static void assert_convert_new(unsigned long expected_type_idx,
 	assert_int_equals(J_REFERENCE, new_expr->jvm_type);
 	assert_int_equals(0xcafe, new_expr->type_idx);
 
+	free_expression(new_expr);
 	free_compilation_unit(cu);
 }
 
