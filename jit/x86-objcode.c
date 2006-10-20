@@ -52,9 +52,9 @@ static unsigned char encode_reg(enum reg reg)
 	return ret;
 }
 
-static inline bool needs_32(long imm)
+static inline bool is_imm_8(long imm)
 {
-	return imm >> 8;
+	return (imm >= -128) && (imm <= 127);
 }
 
 /**
@@ -98,12 +98,12 @@ static void emit_imm32(struct buffer *buf, int imm)
 	emit(buf, imm_buf.b[3]);
 }
 
-static void emit_imm(struct buffer *buf, long disp)
+static void emit_imm(struct buffer *buf, long imm)
 {
-	if (needs_32(disp))
-		emit_imm32(buf, disp);
+	if (is_imm_8(imm))
+		emit(buf, imm);
 	else
-		emit(buf, disp);
+		emit_imm32(buf, imm);
 }
 
 static void emit_membase_reg(struct buffer *buf, unsigned char opc,
@@ -127,10 +127,10 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 	else
 		rm = encode_reg(base_reg);
 
-	if (needs_32(disp))
-		mod = 0x02;
-	else
+	if (is_imm_8(disp))
 		mod = 0x01;
+	else
+		mod = 0x02;
 
 	mod_rm = encode_modrm(mod, encode_reg(dest_reg), rm);
 	emit(buf, mod_rm);
@@ -203,10 +203,10 @@ static void emit_mov_reg_membase(struct buffer *buf, struct operand *src,
 {
 	int mod;
 
-	if (needs_32(dest->disp))
-		mod = 0x02;
-	else
+	if (is_imm_8(dest->disp))
 		mod = 0x01;
+	else
+		mod = 0x02;
 
 	emit(buf, 0x89);
 	emit(buf, encode_modrm(mod, encode_reg(src->reg),
@@ -310,10 +310,10 @@ static void __emit_div_mul_membase_reg(struct buffer *buf,
 	reg = src->reg;
 	disp = src->disp;
 
-	if (needs_32(disp))
-		mod = 0x02;
-	else
+	if (is_imm_8(disp))
 		mod = 0x01;
+	else
+		mod = 0x02;
 
 	emit(buf, 0xf7);
 	emit(buf, encode_modrm(mod, opc_ext, encode_reg(reg)));
@@ -381,10 +381,10 @@ static void __emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
 {
 	int opc;
 
-	if (needs_32(imm))
-		opc = 0x81;
-	else
+	if (is_imm_8(imm))
 		opc = 0x83;
+	else
+		opc = 0x81;
 
 	emit(buf, opc);
 	emit(buf, encode_modrm(0x3, 0x00, encode_reg(reg)));
@@ -402,10 +402,10 @@ void emit_cmp_imm_reg(struct buffer *buf,
 {
 	int opc;
 
-	if (needs_32(src->imm))
-		opc = 0x81;
-	else
+	if (is_imm_8(src->imm))
 		opc = 0x83;
+	else
+		opc = 0x81;
 
 	emit(buf, opc);
 	emit(buf, encode_modrm(0x03, 0x07, encode_reg(dest->reg)));
