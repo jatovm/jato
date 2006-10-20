@@ -215,12 +215,25 @@ static void emit_mov_reg_membase(struct buffer *buf, struct operand *src,
 	emit_imm(buf, dest->disp);
 }
 
+static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
+			     long imm, enum reg reg)
+{
+	int opc;
+
+	if (is_imm_8(imm))
+		opc = 0x83;
+	else
+		opc = 0x81;
+
+	emit(buf, opc);
+	emit(buf, encode_modrm(0x3, opc_ext, encode_reg(reg)));
+	emit_imm(buf, imm);
+}
+
 static void emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
 			     enum reg reg)
 {
-	emit(buf, 0x81);
-	emit(buf, encode_modrm(0x03, 0x05, encode_reg(reg)));
-	emit_imm32(buf, imm);
+	emit_alu_imm_reg(buf, 0x05, imm, reg);
 }
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
@@ -379,16 +392,7 @@ static void emit_or_membase_reg(struct buffer *buf,
 
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
 {
-	int opc;
-
-	if (is_imm_8(imm))
-		opc = 0x83;
-	else
-		opc = 0x81;
-
-	emit(buf, opc);
-	emit(buf, encode_modrm(0x3, 0x00, encode_reg(reg)));
-	emit_imm(buf, imm);
+	emit_alu_imm_reg(buf, 0x00, imm, reg);
 }
 
 static void emit_add_imm_reg(struct buffer *buf,
@@ -400,16 +404,7 @@ static void emit_add_imm_reg(struct buffer *buf,
 static void emit_cmp_imm_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
-	int opc;
-
-	if (is_imm_8(src->imm))
-		opc = 0x83;
-	else
-		opc = 0x81;
-
-	emit(buf, opc);
-	emit(buf, encode_modrm(0x03, 0x07, encode_reg(dest->reg)));
-	emit_imm(buf, src->imm);
+	emit_alu_imm_reg(buf, 0x07, src->imm, dest->reg);
 }
 
 static void emit_cmp_membase_reg(struct buffer *buf, struct operand *src, struct operand *dest)
