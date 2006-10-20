@@ -252,7 +252,14 @@ static void emit_pop_reg(struct buffer *buf, enum reg reg)
 
 static void __emit_push_imm(struct buffer *buf, long imm)
 {
-	emit(buf, 0x68);
+	unsigned char opc;
+
+	if (is_imm_8(imm))
+		opc = 0x6a;
+	else
+		opc = 0x68;
+
+	emit(buf, opc);
 	emit_imm(buf, imm);
 }
 

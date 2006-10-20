@@ -145,7 +145,7 @@ void test_emit_epilog_has_locals(void)
 
 void test_emit_push_imm(void)
 {
-	assert_emit_insn_2(0x68, 0x04, imm_insn(INSN_PUSH_IMM, 0x04));
+	assert_emit_insn_2(0x6a, 0x04, imm_insn(INSN_PUSH_IMM, 0x04));
 	assert_emit_insn_5(0x68, 0xef, 0xbe, 0xad, 0xde, imm_insn(INSN_PUSH_IMM, 0xdeadbeef));
 }
 
