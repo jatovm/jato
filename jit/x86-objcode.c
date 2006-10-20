@@ -437,7 +437,7 @@ static unsigned char branch_rel_addr(unsigned long branch_offset,
 	return target_offset - branch_offset - 2;
 }
 
-static void emit_branch(struct buffer *buf, unsigned char opc,
+static void __emit_branch(struct buffer *buf, unsigned char opc,
 			struct insn *insn)
 {
 	struct basic_block *target_bb;
@@ -457,6 +457,16 @@ static void emit_branch(struct buffer *buf, unsigned char opc,
 	emit_branch_rel(buf, opc, addr);
 }
 
+static void emit_je_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x74, insn);
+}
+
+static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0xeb, insn);
+}
+
 static void emit_indirect_call(struct buffer *buf, struct operand *operand)
 {
 	emit(buf, 0xff);
@@ -469,78 +479,107 @@ static void emit_xor_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x33, src, dest);
 }
 
+enum emitter_type {
+	NO_OPERANDS,
+	SINGLE_OPERAND,
+	TWO_OPERANDS,
+	BRANCH,
+};
+
 struct emitter {
 	void *emit_fn;
-	int nr_operands;
+	enum emitter_type type;
 };
 
-#define DECL_EMITTER(_type, _fn, _nr) \
-	[_type] = { .emit_fn = _fn, .nr_operands = _nr }
+#define DECL_EMITTER(_insn_type, _fn, _emitter_type) \
+	[_insn_type] = { .emit_fn = _fn, .type = _emitter_type }
 
 static struct emitter emitters[] = {
-	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, 2),
-	DECL_EMITTER(INSN_ADD_MEMBASE_REG, emit_add_membase_reg, 2),
-	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, 2),
-	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, 1),
-	DECL_EMITTER(INSN_CALL_REL, emit_call, 1),
-	DECL_EMITTER(INSN_CLTD, emit_cltd, 0),
-	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, 2),
-	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, 2),
-	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, 2),
-	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, 2),
-	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, 2),
-	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, 2),
-	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, 2),
-	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, 2),
-	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, 2),
-	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, 1),
-	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg, 2),
-	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, 1),
-	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, 1),
-	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, 2),
-	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg, 2),
-	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg, 2),
-	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, 2),
-	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, 2),
+	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_ADD_MEMBASE_REG, emit_add_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_CLTD, emit_cltd, NO_OPERANDS),
+	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),
+	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),
+	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
 };
 
-typedef void (*emit_fn_0) (struct buffer *);
-typedef void (*emit_fn_1) (struct buffer *, struct operand * operand);
-typedef void (*emit_fn_2) (struct buffer *, struct operand * src, struct operand
-			   * dest);
+typedef void (*emit_no_operands_fn) (struct buffer *);
 
-static void emit_insn(struct buffer *buf, struct insn *insn)
+static void emit_no_operands(struct emitter *emitter, struct buffer *buf)
+{
+	emit_no_operands_fn emit = emitter->emit_fn;
+	emit(buf);
+}
+
+typedef void (*emit_single_operand_fn) (struct buffer *, struct operand * operand);
+
+static void emit_single_operand(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_single_operand_fn emit = emitter->emit_fn;
+	emit(buf, &insn->operand);
+}
+
+typedef void (*emit_two_operands_fn) (struct buffer *, struct operand * src, struct operand * dest);
+
+static void emit_two_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_two_operands_fn emit = emitter->emit_fn;
+	emit(buf, &insn->src, &insn->dest);
+}
+
+typedef void (*emit_branch_fn) (struct buffer *, struct insn *);
+
+static void emit_branch(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_branch_fn emit = emitter->emit_fn;
+	emit(buf, insn);
+}
+
+static void __emit_insn(struct buffer *buf, struct insn *insn)
 {
 	struct emitter *emitter;
 
-	insn->offset = buffer_offset(buf);
-
-	/*
-	 * Branch emitters are special and need the insn.
-	 */
-	if (insn->type == INSN_JE_BRANCH) {
-		emit_branch(buf, 0x74, insn);
-		return;
-	}
-	if (insn->type == INSN_JMP_BRANCH) {
-		emit_branch(buf, 0xeb, insn);
-		return;
-	}
-
 	emitter = &emitters[insn->type];
-	if (emitter->nr_operands == 0) {
-		emit_fn_0 emit;
-		emit = emitter->emit_fn;
-		emit(buf);
-	} else if (emitter->nr_operands == 1) {
-		emit_fn_1 emit;
-		emit = emitter->emit_fn;
-		emit(buf, &insn->operand);
-	} else {
-		emit_fn_2 emit;
-		emit = emitter->emit_fn;
-		emit(buf, &insn->src, &insn->dest);
-	}
+	switch (emitter->type) {
+	case NO_OPERANDS:
+		emit_no_operands(emitter, buf);
+		break;
+	case SINGLE_OPERAND:
+		emit_single_operand(emitter, buf, insn);
+		break;
+	case TWO_OPERANDS:
+		emit_two_operands(emitter, buf, insn);
+		break;
+	case BRANCH:
+		emit_branch(emitter, buf, insn);
+		break;
+	};
+}
+
+static void emit_insn(struct buffer *buf, struct insn *insn)
+{
+	insn->offset = buffer_offset(buf);
+	__emit_insn(buf, insn);
 }
 
 static void backpatch_branches(struct buffer *buf,
