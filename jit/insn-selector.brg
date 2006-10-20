@@ -255,6 +255,17 @@ reg:	EXPR_FIELD 1
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offset, REG_EAX));
 }
 
+reg:	EXPR_NEW
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, expr->type_idx));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) allocObject));
+	method_args_cleanup(s, 1);
+}
+
 arg:	EXPR_NO_ARGS
 {
 }

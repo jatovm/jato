@@ -131,6 +131,7 @@ TESTRUNNER=test-runner
 TEST_SUITE=test-suite.c
 
 TEST_OBJS = \
+	test/jit/alloc-stub.o \
 	test/jit/arithmetic-bc-test.o \
 	test/jit/basic-block-test.o \
 	test/jit/bc-test-utils.o \

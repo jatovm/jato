@@ -10,6 +10,8 @@
 #include <jit/statement.h>
 #include <jit/jit-compiler.h>
 
+#include "vm-utils.h"
+
 static void assert_insn(enum insn_type insn_type, struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
@@ -777,4 +779,34 @@ void test_select_store_field_to_local(void)
 {
 	assert_store_field_to_local(-4, 0);
 	assert_store_field_to_local(-8, 1);
+}
+
+void test_select_new(void)
+{
+	struct object *instance_class;
+	struct expression *expr;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
+
+	instance_class = new_class();
+	expr = new_expr((unsigned long) instance_class);
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &expr->node;
+
+	bb = alloc_basic_block(NULL, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocObject, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
+
+	free(instance_class);
 }
