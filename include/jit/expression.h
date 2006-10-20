@@ -168,7 +168,7 @@ struct expression {
 		/*  EXPR_NEW represents creation of a new instance that is
 		    unitialized .  */
 		struct {
-			unsigned long type_idx;
+			struct object *class;
 		};
 	};
 };
@@ -214,7 +214,7 @@ struct expression *invokespecial_expr(enum jvm_type, unsigned long);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
-struct expression *new_expr(unsigned long);
+struct expression *new_expr(struct object *);
 
 unsigned long nr_args(struct expression *);
 

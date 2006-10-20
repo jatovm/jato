@@ -274,10 +274,14 @@ int convert_new(struct compilation_unit *cu, struct basic_block *bb,
 {
 	struct expression *expr;
 	unsigned long type_idx;
+	struct object *class;
 
 	type_idx = cp_index(cu->method->jit_code + offset + 1);
+	class = resolveClass(cu->method->class, type_idx, FALSE);
+	if (!class)
+		return -EINVAL;
 
-	expr = new_expr(type_idx);
+	expr = new_expr(class);
 	if (!expr)
 		return -ENOMEM;
 

@@ -533,8 +533,7 @@ static int print_new_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "type_idx", "0x%x",
-				 expr->type_idx);
+	err = append_simple_attr(lvl + 1, str, "class", "%p", expr->class);
 
       out:
 	return err;

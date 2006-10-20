@@ -266,7 +266,7 @@ reg:	EXPR_NEW
 
 	expr = to_expr(tree);
 
-	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, expr->type_idx));
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->class));
 	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) allocObject));
 	method_args_cleanup(s, 1);
 }

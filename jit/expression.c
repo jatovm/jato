@@ -238,11 +238,11 @@ struct expression *no_args_expr(void)
 	return alloc_expression(EXPR_NO_ARGS, J_VOID);
 }
 
-struct expression *new_expr(unsigned long type_idx)
+struct expression *new_expr(struct object *class)
 {
 	struct expression *expr = alloc_expression(EXPR_NEW, J_REFERENCE);
 	if (expr)
-		expr->type_idx = type_idx;
+		expr->class = class;
 	return expr;
 }
 

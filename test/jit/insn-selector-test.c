@@ -790,7 +790,7 @@ void test_select_new(void)
 	struct insn *insn;
 
 	instance_class = new_class();
-	expr = new_expr((unsigned long) instance_class);
+	expr = new_expr(instance_class);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
