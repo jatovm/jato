@@ -222,11 +222,6 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 		method_args_cleanup(s, args_count);
 }
 
-reg:	EXPR_INVOKESPECIAL(arg) 1
-{	
-	/* FIXME */
-}
-
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
 	struct expression *expr;
