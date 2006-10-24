@@ -13,6 +13,7 @@
 #include <jit/jit-compiler.h>
 #include <bytecodes.h>
 #include <jit/bytecode-converters.h>
+#include <vm/bytecode.h>
 #include <vm/const-pool.h>
 
 #include <errno.h>
@@ -240,10 +241,11 @@ int convert_to_ir(struct compilation_unit *cu)
 	struct basic_block *bb;
 
 	while (offset < code_size) {
-		unsigned char opc = code[offset];
 		unsigned long opc_size;
 		convert_fn_t convert;
+		unsigned char opc;
 
+		opc = read_u8(code, offset);
 		convert = converters[opc];
 		if (!convert) {
 			printf("%s: Unknown bytecode instruction 0x%x in "

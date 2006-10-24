@@ -9,6 +9,7 @@
  */
 
 #include <jit/statement.h>
+#include <vm/bytecode.h>
 #include <vm/byteorder.h>
 #include <vm/stack.h>
 #include <jit/jit-compiler.h>
@@ -274,18 +275,22 @@ int convert_iinc(struct compilation_unit *cu, struct basic_block *bb,
 	struct expression *local_expression, *binop_expression,
 	    *const_expression;
 	unsigned char *code = cu->method->jit_code;
+	unsigned char index;
+	char const_value;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)
 		goto failed;
 
-	local_expression = local_expr(J_INT, code[offset + 1]);
+	index = read_u8(code, offset + 1);
+	local_expression = local_expr(J_INT, index);
 	if (!local_expression)
 		goto failed;
 
 	store_stmt->store_dest = &local_expression->node;
 
-	const_expression = value_expr(J_INT, code[offset + 2]);
+	const_value = read_s8(code, offset + 2);
+	const_expression = value_expr(J_INT, const_value);
 	if (!const_expression)
 		goto failed;
 
