@@ -7,7 +7,7 @@ LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
 
 ARCH_INCLUDE = include/arch
 ARCH_H = include/vm/arch.h
-EXECUTABLE = jato-exe
+EXECUTABLE = java
 
 # GNU classpath installation path
 prefix = /usr/local
