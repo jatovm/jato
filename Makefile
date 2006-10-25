@@ -2,9 +2,10 @@ MONOBURG=./monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
-INCLUDE =  -Iinclude -Ijit -Isrc -Ijit/glib -Itest/libharness -Itest/jit
+INCLUDE =  -Iinclude -Ijit -Isrc -Ijit/glib -Itest/libharness -Itest/jit -include arch/config.h
 LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
 
+ARCH_INCLUDE = include/arch
 ARCH_H = include/vm/arch.h
 EXECUTABLE = jato-exe
 
@@ -122,7 +123,7 @@ jit/insn-selector.c: FORCE
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
       cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(JAMVM_OBJS) $(JATO_OBJS) -o $(EXECUTABLE)
 
-$(EXECUTABLE): $(ARCH_H) compile
+$(EXECUTABLE): $(ARCH_INCLUDE) $(ARCH_H) compile
 	$(call cmd,cc_exec)
 
 compile: $(JAMVM_OBJS) $(JATO_OBJS)
@@ -159,6 +160,14 @@ TEST_OBJS = \
 
 $(TEST_OBJS):
 
+ARCH := $(shell uname -m | sed  -e s/i.86/i386/)
+
+quiet_cmd_ln_arch = LN $(empty)     $(empty) $@
+      cmd_ln_arch = ln -fsn arch-$(ARCH) $@
+
+$(ARCH_INCLUDE): FORCE
+	$(call cmd,ln_arch)
+
 quiet_cmd_gensuite = GENSUITE $@
       cmd_gensuite = sh test/scripts/make-tests.sh > $@
 
@@ -171,7 +180,7 @@ quiet_cmd_runtests = RUNTEST $(TESTRUNNER)
 quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
       cmd_cc_testrunner = $(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(LIBS) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) -o $(TESTRUNNER)
 
-test: $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
+test: $(ARCH_INCLUDE) $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
 	$(call cmd,cc_testrunner)
 	$(call cmd,runtests)
 
@@ -198,7 +207,7 @@ quiet_cmd_clean = CLEAN
       cmd_clean = rm -f $(JAMVM_OBJS) $(JATO_OBJS) $(TEST_OBJS) \
       			jit/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
 			test-suite.c test-suite.o test-runner \
-			$(ACCEPTANCE_CLASSES) tags
+			$(ACCEPTANCE_CLASSES) tags include/arch
 
 clean: FORCE
 	$(call cmd,clean)

@@ -32,16 +32,24 @@ void print_trace(void)
 	__print_trace(0, NULL);
 }
 
+#ifdef CONFIG_X86_64
+#define IP_REG REG_RIP
+#define IP_REG_NAME "RIP"
+#else
+#define IP_REG REG_EIP
+#define IP_REG_NAME "EIP"
+#endif
+
 void bt_sighandler(int sig, siginfo_t *info, void *secret)
 {
 	void *eip;
 	ucontext_t *uc = secret;
 
-	eip = (void *) uc->uc_mcontext.gregs[REG_EIP];
+	eip = (void *) uc->uc_mcontext.gregs[IP_REG];
 
 	if (sig == SIGSEGV)
-		printf("SIGSEGV at EIP %p while accessing memory address %p.\n",
-		       eip, info->si_addr);
+		printf("SIGSEGV at %s %p while accessing memory address %p.\n",
+		       IP_REG_NAME, eip, info->si_addr);
 	else
 		printf("Got signal %d\n", sig);
 
