@@ -12,7 +12,7 @@
 #include <jit/x86-frame.h>
 #include <vm/vm.h>
 
-#define LOCAL_START (2 * sizeof(unsigned long))
+#define LOCAL_START (2 * sizeof(u4))
 
 long frame_local_offset(struct methodblock *method, struct expression *local)
 {
@@ -22,7 +22,7 @@ long frame_local_offset(struct methodblock *method, struct expression *local)
 	nr_args = method->args_count;
 
 	if (idx < nr_args)
-		return (idx * sizeof(unsigned long)) + LOCAL_START;
+		return (idx * sizeof(u4)) + LOCAL_START;
 
-	return 0 - ((idx - nr_args+1) * sizeof(unsigned long));
+	return 0 - ((idx - nr_args+1) * sizeof(u4));
 }
