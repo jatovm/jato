@@ -9,6 +9,8 @@ ARCH_INCLUDE = include/arch
 ARCH_H = include/vm/arch.h
 EXECUTABLE = java
 
+ARCH := $(shell uname -m | sed  -e s/i.86/i386/)
+
 # GNU classpath installation path
 prefix = /usr/local
 with_classpath_install_dir = /usr/local/classpath
@@ -109,7 +111,7 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 all: $(EXECUTABLE) test
 
 quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
-      cmd_ln_arch_h = ln -fsn ../../src/arch/i386.h $@
+      cmd_ln_arch_h = ln -fsn ../../src/arch/$(ARCH).h $@
 
 $(ARCH_H):
 	$(call cmd,ln_arch_h)
@@ -159,8 +161,6 @@ TEST_OBJS = \
 	test/vm/string-test.o \
 
 $(TEST_OBJS):
-
-ARCH := $(shell uname -m | sed  -e s/i.86/i386/)
 
 quiet_cmd_ln_arch = LN $(empty)     $(empty) $@
       cmd_ln_arch = ln -fsn arch-$(ARCH) $@
