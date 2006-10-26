@@ -59,6 +59,8 @@ extern int show_disasm;
 extern int show_tree;
 extern int show_basic_blocks;
 
+static int interp;
+
 void initVM() {
     /* Perform platform dependent initialisation */
     initialisePlatform();
@@ -294,6 +296,9 @@ int parseCommandLine(int argc, char *argv[]) {
         } else if(strcmp(argv[i], "-Xdumpbb") == 0) {
           show_basic_blocks = 1;
 
+        } else if(strcmp(argv[i], "-interp") == 0) {
+          interp = 1;
+
         } else {
             printf("Unrecognised command line option: %s\n", argv[i]);
             break;
@@ -383,9 +388,12 @@ int main(int argc, char *argv[]) {
 
         /* Call the main method */
         if(i == argc) {
-	    java_main_fn java_main = trampoline_ptr(mb);
-	    java_main();
-            //executeStaticMethod(main_class, mb, array);
+            if (interp)
+                executeStaticMethod(main_class, mb, array);
+	    else {
+	        java_main_fn java_main = trampoline_ptr(mb);
+	        java_main();
+	    }
 	}
     }
 
