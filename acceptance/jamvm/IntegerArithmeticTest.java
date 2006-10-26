@@ -211,7 +211,7 @@ public class IntegerArithmeticTest extends TestCase {
     }
 
     public static int iincByOne(int value) {
-        return value++;
+        return value += 1;
     }
 
     public static int iincByTwo(int value) {
