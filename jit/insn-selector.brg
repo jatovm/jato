@@ -359,10 +359,7 @@ static void emit_code(struct basic_block *bb, MBState *state, int goal)
 	for (i = 0; nts[i]; i++) 
 		emit_code(bb, kids[i], nts[i]);
 
-	if (mono_burg_func[ern])
-		mono_burg_func[ern](state, state->tree, bb);
-	else
-		printf("no code for rule %s\n", mono_burg_rule_string[ern]);
+	mono_burg_emit(ern, state, state->tree, bb);
 }
 
 static void free_state(MBState *state)
