@@ -440,7 +440,7 @@ void test_select_invoke_without_arguments(void)
 	jit_prepare_for_exec(&mb);
 
 	args_list = no_args_expr();
-	expr = invoke_expr(J_INT, &mb);
+	expr = __invoke_expr(J_INT, &mb);
 	expr->args_list = &args_list->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -472,7 +472,7 @@ void test_select_invoke_with_arguments(void)
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr
 						       (J_INT, 0x01)));
-	invoke_expression = invoke_expr(J_INT, &mb);
+	invoke_expression = __invoke_expr(J_INT, &mb);
 	invoke_expression->args_list = &args_list_expression->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -510,11 +510,11 @@ void test_select_method_return_value_passed_as_argument(void)
 	jit_prepare_for_exec(&nested_mb);
 
 	no_args = no_args_expr();
-	nested_invoke = invoke_expr(J_INT, &nested_mb);
+	nested_invoke = __invoke_expr(J_INT, &nested_mb);
 	nested_invoke->args_list = &no_args->node;
 
 	arg = arg_expr(nested_invoke);
-	invoke = invoke_expr(J_INT, &mb);
+	invoke = __invoke_expr(J_INT, &mb);
 	invoke->args_list = &arg->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -554,7 +554,7 @@ void test_select_invokevirtual_with_arguments(void)
 	method_index = 0xcafe;
 
 	args = arg_expr(value_expr(J_REFERENCE, objectref));
-	invoke_expr = invokevirtual_expr(J_VOID, method_index);
+	invoke_expr = __invokevirtual_expr(J_VOID, method_index);
 	invoke_expr->args_list = &args->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);

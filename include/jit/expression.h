@@ -208,9 +208,12 @@ struct expression *binop_expr(enum jvm_type, enum binary_operator, struct expres
 struct expression *unary_op_expr(enum jvm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum jvm_type, struct expression *);
 struct expression *field_expr(enum jvm_type, struct fieldblock *);
-struct expression *invoke_expr(enum jvm_type, struct methodblock *);
-struct expression *invokevirtual_expr(enum jvm_type, unsigned long);
-struct expression *invokespecial_expr(enum jvm_type, unsigned long);
+struct expression *__invoke_expr(enum jvm_type, struct methodblock *);
+struct expression *__invokevirtual_expr(enum jvm_type, unsigned long);
+struct expression *__invokespecial_expr(enum jvm_type, unsigned long);
+struct expression *invoke_expr(struct methodblock *);
+struct expression *invokevirtual_expr(struct methodblock *);
+struct expression *invokespecial_expr(struct methodblock *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);

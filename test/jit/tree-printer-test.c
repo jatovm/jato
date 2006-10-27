@@ -340,7 +340,7 @@ void assert_printed_invoke_expr(const char *expected, enum jvm_type type,
 {
 	struct expression *expr;
 
-	expr = invoke_expr(type, method);
+	expr = __invoke_expr(type, method);
 	expr->args_list = &args_list->node;
 	assert_print_expr(expected, expr);
 }
@@ -367,7 +367,7 @@ void assert_printed_invokespecial_expr(const char *expected,
 {
 	struct expression *expr;
 
-	expr = invokespecial_expr(type, method_index);
+	expr = __invokespecial_expr(type, method_index);
 	expr->args_list = &args_list->node;
 	assert_print_expr(expected, expr);
 }
@@ -393,7 +393,7 @@ void assert_printed_invokevirtual_expr(const char *expected,
 {
 	struct expression *expr;
 
-	expr = invokevirtual_expr(type, method_index);
+	expr = __invokevirtual_expr(type, method_index);
 	expr->args_list = &args_list->node;
 	assert_print_expr(expected, expr);
 }

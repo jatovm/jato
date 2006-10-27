@@ -6,6 +6,7 @@
  */
 
 #include <jit/expression.h>
+#include <vm/vm.h>
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
@@ -188,7 +189,7 @@ struct expression *field_expr(enum jvm_type jvm_type,
 	return expr;
 }
 
-struct expression *invoke_expr(enum jvm_type jvm_type,
+struct expression *__invoke_expr(enum jvm_type jvm_type,
 			     struct methodblock *target_method)
 {
 	struct expression *expr = alloc_expression(EXPR_INVOKE, jvm_type);
@@ -198,7 +199,7 @@ struct expression *invoke_expr(enum jvm_type jvm_type,
 	return expr;
 }
 
-struct expression *invokevirtual_expr(enum jvm_type jvm_type, unsigned long method_index)
+struct expression *__invokevirtual_expr(enum jvm_type jvm_type, unsigned long method_index)
 {
 	struct expression *expr = alloc_expression(EXPR_INVOKEVIRTUAL, jvm_type);
 	if (expr)
@@ -206,12 +207,42 @@ struct expression *invokevirtual_expr(enum jvm_type jvm_type, unsigned long meth
 	return expr;
 }
 
-struct expression *invokespecial_expr(enum jvm_type jvm_type, unsigned long method_index)
+struct expression *__invokespecial_expr(enum jvm_type jvm_type, unsigned long method_index)
 {
 	struct expression *expr = alloc_expression(EXPR_INVOKESPECIAL, jvm_type);
 	if (expr)
 		expr->method_index = method_index;
 	return expr;
+}
+
+static enum jvm_type method_return_type(struct methodblock *method)
+{
+	char *return_type = method->type + (strlen(method->type) - 1);
+	return str_to_type(return_type);
+}
+
+struct expression *invokevirtual_expr(struct methodblock *target)
+{
+	enum jvm_type return_type;
+
+	return_type = method_return_type(target);
+	return __invokevirtual_expr(return_type, target->method_table_index);
+}
+
+struct expression *invokespecial_expr(struct methodblock *target)
+{
+	enum jvm_type return_type;
+
+	return_type = method_return_type(target);
+	return __invokespecial_expr(return_type, target->method_table_index);
+}
+
+struct expression *invoke_expr(struct methodblock *target)
+{
+	enum jvm_type return_type;
+
+	return_type = method_return_type(target);
+	return  __invoke_expr(return_type, target);
 }
 
 struct expression *args_list_expr(struct expression *args_left,

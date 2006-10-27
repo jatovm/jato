@@ -73,7 +73,22 @@ static struct expression *convert_args(struct stack *expr_stack,
 	return args_list;
 }
 
-static int __convert_invoke(struct compilation_unit *cu, struct basic_block *bb,
+static int convert_and_add_args(struct compilation_unit *cu,
+				struct methodblock *invoke_target,
+				struct expression *expr)
+{
+	struct expression *args_list;
+
+	args_list = convert_args(cu->expr_stack, invoke_target->args_count);
+	if (!args_list)
+		return -ENOMEM;
+
+	expr->args_list = &args_list->node;
+
+	return 0;
+}
+
+static int insert_invoke_expr(struct compilation_unit *cu, struct basic_block *bb,
 			    struct expression *invoke_expr)
 {
 	if (invoke_expr->jvm_type == J_VOID) {
@@ -91,119 +106,98 @@ static int __convert_invoke(struct compilation_unit *cu, struct basic_block *bb,
 	return 0;
 }
 
-static enum jvm_type method_return_type(struct methodblock *method)
+static struct methodblock *resolve_invoke_target(struct methodblock *current,
+						 unsigned long offset)
 {
-	char *return_type = method->type + (strlen(method->type) - 1);
-	return str_to_type(return_type);
+	unsigned long idx; 
+
+	idx = read_u16(current->jit_code, offset + 1);
+	return resolveMethod(current->class, idx);
 }
 
 int convert_invokevirtual(struct compilation_unit *cu,
 			  struct basic_block *bb, unsigned long offset)
 {
+	struct methodblock *invoke_target;
+	struct expression *expr;
 	int err = -ENOMEM;
-	unsigned long method_index;
-	struct methodblock *target_method;
-	enum jvm_type return_type;
-	struct expression *invoke_expr;
-	struct expression *args_list;
 
-	method_index = read_u16(cu->method->jit_code, offset + 1);
-
-	target_method = resolveMethod(cu->method->class, method_index);
-	if (!target_method)
+	invoke_target = resolve_invoke_target(cu->method, offset);
+	if (!invoke_target)
 		return -EINVAL;
 
-	return_type = method_return_type(target_method);
-	invoke_expr = invokevirtual_expr(return_type, target_method->method_table_index);
-	if (!invoke_expr)
+	expr = invokevirtual_expr(invoke_target);
+	if (!expr)
 		return -ENOMEM;
 
-	args_list = convert_args(cu->expr_stack, target_method->args_count);
-	if (!args_list)
+	err = convert_and_add_args(cu, invoke_target, expr);
+	if (err)
 		goto failed;
 
-	invoke_expr->args_list = &args_list->node;
-
-	err = __convert_invoke(cu, bb, invoke_expr);
+	err = insert_invoke_expr(cu, bb, expr);
 	if (err)
 		goto failed;
 
 	return 0;
       failed:
-	expr_put(invoke_expr);
+	expr_put(expr);
 	return err;
 }
 
 int convert_invokespecial(struct compilation_unit *cu,
 			  struct basic_block *bb, unsigned long offset)
 {
+	struct methodblock *invoke_target;
+	struct expression *expr;
 	int err = -ENOMEM;
-	unsigned long method_index;
-	struct methodblock *target_method;
-	enum jvm_type return_type;
-	struct expression *invoke_expr;
-	struct expression *args_list;
 
-	method_index = read_u16(cu->method->jit_code, offset + 1);
-
-	target_method = resolveMethod(cu->method->class, method_index);
-	if (!target_method)
+	invoke_target = resolve_invoke_target(cu->method, offset);
+	if (!invoke_target)
 		return -EINVAL;
 
-	return_type = method_return_type(target_method);
-	invoke_expr = invokespecial_expr(return_type, target_method->method_table_index);
-	if (!invoke_expr)
+	expr = invokespecial_expr(invoke_target);
+	if (!expr)
 		return -ENOMEM;
 
-	args_list = convert_args(cu->expr_stack, target_method->args_count);
-	if (!args_list)
+	err = convert_and_add_args(cu, invoke_target, expr);
+	if (err)
 		goto failed;
 
-	invoke_expr->args_list = &args_list->node;
-
-	err = __convert_invoke(cu, bb, invoke_expr);
+	err = insert_invoke_expr(cu, bb, expr);
 	if (err)
 		goto failed;
 
 	return 0;
       failed:
-	expr_put(invoke_expr);
+	expr_put(expr);
 	return err;
 }
 
 int convert_invokestatic(struct compilation_unit *cu,
 			 struct basic_block *bb, unsigned long offset)
 {
+	struct methodblock *invoke_target;
+	struct expression *expr;
 	int err = -ENOMEM;
-	unsigned long method_index;
-	struct methodblock *target_method;
-	enum jvm_type return_type;
-	struct expression *inv_expr;
-	struct expression *args_list;
 
-	method_index = read_u16(cu->method->jit_code, offset + 1);
-
-	target_method = resolveMethod(cu->method->class, method_index);
-	if (!target_method)
+	invoke_target = resolve_invoke_target(cu->method, offset);
+	if (!invoke_target)
 		return -EINVAL;
 
-	return_type = method_return_type(target_method);
-	inv_expr = invoke_expr(return_type, target_method);
-	if (!inv_expr)
+	expr = invoke_expr(invoke_target);
+	if (!expr)
 		return -ENOMEM;
 
-	args_list = convert_args(cu->expr_stack, target_method->args_count);
-	if (!args_list)
+	err = convert_and_add_args(cu, invoke_target, expr);
+	if (err)
 		goto failed;
 
-	inv_expr->args_list = &args_list->node;
-
-	err = __convert_invoke(cu, bb, inv_expr);
+	err = insert_invoke_expr(cu, bb, expr);
 	if (err)
 		goto failed;
 
 	return 0;
       failed:
-	expr_put(inv_expr);
+	expr_put(expr);
 	return err;
 }
