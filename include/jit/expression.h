@@ -17,7 +17,6 @@ enum expression_type {
 	EXPR_CONVERSION,
 	EXPR_FIELD,
 	EXPR_INVOKE,
-	EXPR_INVOKESPECIAL,
 	EXPR_INVOKEVIRTUAL,
 	EXPR_ARGS_LIST,
 	EXPR_ARG,
@@ -210,10 +209,8 @@ struct expression *conversion_expr(enum jvm_type, struct expression *);
 struct expression *field_expr(enum jvm_type, struct fieldblock *);
 struct expression *__invoke_expr(enum jvm_type, struct methodblock *);
 struct expression *__invokevirtual_expr(enum jvm_type, unsigned long);
-struct expression *__invokespecial_expr(enum jvm_type, unsigned long);
 struct expression *invoke_expr(struct methodblock *);
 struct expression *invokevirtual_expr(struct methodblock *);
-struct expression *invokespecial_expr(struct methodblock *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
@@ -226,7 +223,6 @@ static inline int is_invoke_expr(struct expression *expr)
 	enum expression_type type = expr_type(expr);
 
 	return (type == EXPR_INVOKE)
-		|| (type == EXPR_INVOKESPECIAL)
 		|| (type == EXPR_INVOKEVIRTUAL);
 }
 

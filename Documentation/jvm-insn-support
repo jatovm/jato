@@ -364,7 +364,9 @@
 
 (0xb6) invokevirtual	Partially supported
 
-(0xb7) invokespecial	Not supported
+(0xb7) invokespecial	Partially supported
+	- Missing NULL check.
+	- Only support invocation of Object.<init> for now.
 
 (0xb8) invokestatic	Partially supported
 

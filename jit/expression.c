@@ -60,7 +60,6 @@ void free_expression(struct expression *expr)
 		/* nothing to do */
 		break;
 	case EXPR_INVOKE:
-	case EXPR_INVOKESPECIAL:
 	case EXPR_INVOKEVIRTUAL:
 		if (expr->args_list)
 			expr_put(to_expr(expr->args_list));
@@ -207,14 +206,6 @@ struct expression *__invokevirtual_expr(enum jvm_type jvm_type, unsigned long me
 	return expr;
 }
 
-struct expression *__invokespecial_expr(enum jvm_type jvm_type, unsigned long method_index)
-{
-	struct expression *expr = alloc_expression(EXPR_INVOKESPECIAL, jvm_type);
-	if (expr)
-		expr->method_index = method_index;
-	return expr;
-}
-
 static enum jvm_type method_return_type(struct methodblock *method)
 {
 	char *return_type = method->type + (strlen(method->type) - 1);
@@ -227,14 +218,6 @@ struct expression *invokevirtual_expr(struct methodblock *target)
 
 	return_type = method_return_type(target);
 	return __invokevirtual_expr(return_type, target->method_table_index);
-}
-
-struct expression *invokespecial_expr(struct methodblock *target)
-{
-	enum jvm_type return_type;
-
-	return_type = method_return_type(target);
-	return __invokespecial_expr(return_type, target->method_table_index);
 }
 
 struct expression *invoke_expr(struct methodblock *target)

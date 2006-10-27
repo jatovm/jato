@@ -360,32 +360,6 @@ void test_should_print_invoke_expression(void)
 	free_str(expected);
 }
 
-void assert_printed_invokespecial_expr(const char *expected,
-				       enum jvm_type type,
-				       unsigned long method_index,
-				       struct expression *args_list)
-{
-	struct expression *expr;
-
-	expr = __invokespecial_expr(type, method_index);
-	expr->args_list = &args_list->node;
-	assert_print_expr(expected, expr);
-}
-
-void test_should_print_invokespecial_expression(void)
-{
-	struct string *expected;
-
-	expected = alloc_str();
-	str_append(expected, "INVOKESPECIAL:\n"
-			     "  method_index: [%lu]\n"
-			     "  args_list: [no args]\n",
-			     0xdeadbeef);
-
-	assert_printed_invokespecial_expr(expected->value, J_INT, 0xdeadbeef, no_args_expr());
-	free_str(expected);
-}
-
 void assert_printed_invokevirtual_expr(const char *expected,
 				       enum jvm_type type,
 				       unsigned long method_index,

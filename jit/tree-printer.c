@@ -467,12 +467,6 @@ static int __print_invoke_expr(int lvl, struct string *str, struct expression *e
 	return err;
 }
 
-static int print_invokespecial_expr(int lvl, struct string *str,
-				    struct expression *expr)
-{
-	return __print_invoke_expr(lvl, str, expr, "INVOKESPECIAL");
-}
-
 static int print_invokevirtual_expr(int lvl, struct string *str,
 				    struct expression *expr)
 {
@@ -552,7 +546,6 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_CONVERSION] = print_conversion_expr,
 	[EXPR_FIELD] = print_field_expr,
 	[EXPR_INVOKE] = print_invoke_expr,
-	[EXPR_INVOKESPECIAL] = print_invokespecial_expr,
 	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_ARGS_LIST] = print_args_list_expr,
 	[EXPR_ARG] = print_arg_expr,

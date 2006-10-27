@@ -293,12 +293,7 @@ static void assert_invoke_return_value_discarded(enum expression_type expected_t
 
 void test_invokespecial_should_be_converted_to_invokespecial_expr(void)
 {
-	assert_invoke_expression_type(EXPR_INVOKESPECIAL, OPC_INVOKESPECIAL);
-}
-
-void test_invokespecial_should_parse_method_index_for_expr(void)
-{
-	assert_invoke_method_idx(0xcafe, OPC_INVOKESPECIAL);
+	assert_invoke_expression_type(EXPR_INVOKE, OPC_INVOKESPECIAL);
 }
 
 void test_invokespecial_should_pass_objectref_as_first_argument(void)
@@ -321,7 +316,7 @@ void test_invokespecial_should_parse_return_type(void)
 
 void test_convert_invokespecial_when_return_value_is_discarded(void)
 {
-	assert_invoke_return_value_discarded(EXPR_INVOKESPECIAL, OPC_INVOKESPECIAL);
+	assert_invoke_return_value_discarded(EXPR_INVOKE, OPC_INVOKESPECIAL);
 }
 
 /*

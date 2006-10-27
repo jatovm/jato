@@ -155,7 +155,7 @@ int convert_invokespecial(struct compilation_unit *cu,
 	if (!invoke_target)
 		return -EINVAL;
 
-	expr = invokespecial_expr(invoke_target);
+	expr = invoke_expr(invoke_target);
 	if (!expr)
 		return -ENOMEM;
 
