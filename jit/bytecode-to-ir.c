@@ -14,7 +14,6 @@
 #include <bytecodes.h>
 #include <jit/bytecode-converters.h>
 #include <vm/bytecode.h>
-#include <vm/const-pool.h>
 
 #include <errno.h>
 #include <stdlib.h>

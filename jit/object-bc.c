@@ -13,7 +13,7 @@
 #include <jit/jit-compiler.h>
 #include <bytecodes.h>
 #include <errno.h>
-#include <vm/const-pool.h>
+#include <vm/bytecode.h>
 
 int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 		      unsigned long offset)
@@ -22,7 +22,7 @@ int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 	unsigned short index;
 	struct expression *value;
 
-	index = cp_index(cu->method->jit_code + offset + 1);
+	index = read_u16(cu->method->jit_code, offset + 1);
 
 	fb = resolveField(cu->method->class, index);
 	if (!fb)
@@ -44,7 +44,7 @@ int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 	struct statement *store_stmt;
 	struct expression *dest, *src;
 
-	index = cp_index(cu->method->jit_code + offset + 1);
+	index = read_u16(cu->method->jit_code, offset + 1);
 
 	fb = resolveField(cu->method->class, index);
 	if (!fb)
@@ -276,7 +276,7 @@ int convert_new(struct compilation_unit *cu, struct basic_block *bb,
 	unsigned long type_idx;
 	struct object *class;
 
-	type_idx = cp_index(cu->method->jit_code + offset + 1);
+	type_idx = read_u16(cu->method->jit_code, offset + 1);
 	class = resolveClass(cu->method->class, type_idx, FALSE);
 	if (!class)
 		return -EINVAL;

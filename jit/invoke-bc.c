@@ -11,7 +11,7 @@
 #include <bytecodes.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
-#include <vm/const-pool.h>
+#include <vm/bytecode.h>
 #include <vm/stack.h>
 
 #include <string.h>
@@ -107,7 +107,7 @@ int convert_invokevirtual(struct compilation_unit *cu,
 	struct expression *invoke_expr;
 	struct expression *args_list;
 
-	method_index = cp_index(cu->method->jit_code + offset + 1);
+	method_index = read_u16(cu->method->jit_code, offset + 1);
 
 	target_method = resolveMethod(cu->method->class, method_index);
 	if (!target_method)
@@ -144,7 +144,7 @@ int convert_invokespecial(struct compilation_unit *cu,
 	struct expression *invoke_expr;
 	struct expression *args_list;
 
-	method_index = cp_index(cu->method->jit_code + offset + 1);
+	method_index = read_u16(cu->method->jit_code, offset + 1);
 
 	target_method = resolveMethod(cu->method->class, method_index);
 	if (!target_method)
@@ -181,7 +181,7 @@ int convert_invokestatic(struct compilation_unit *cu,
 	struct expression *inv_expr;
 	struct expression *args_list;
 
-	method_index = cp_index(cu->method->jit_code + offset + 1);
+	method_index = read_u16(cu->method->jit_code, offset + 1);
 
 	target_method = resolveMethod(cu->method->class, method_index);
 	if (!target_method)
