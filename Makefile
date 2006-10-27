@@ -149,6 +149,7 @@ TEST_OBJS = \
 	test/jit/jit-compiler-test.o \
 	test/jit/load-store-bc-test.o \
 	test/jit/object-bc-test.o \
+	test/jit/ostack-bc-test.o \
 	test/jit/resolve-stub.o \
 	test/jit/tree-printer-test.o \
 	test/jit/typeconv-bc-test.o \
