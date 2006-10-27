@@ -151,6 +151,7 @@ TEST_OBJS = \
 	test/jit/object-bc-test.o \
 	test/jit/resolve-stub.o \
 	test/jit/tree-printer-test.o \
+	test/jit/typeconv-bc-test.o \
 	test/jit/x86-frame-test.o \
 	test/jit/x86-objcode-test.o \
 	test/libharness/libharness.o \
