@@ -433,43 +433,6 @@ void test_convert_int_narrowing(void)
 	assert_conversion_expr_stack(OPC_I2S, J_INT, J_SHORT);
 }
 
-static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
-			       enum jvm_type type)
-{
-	unsigned char code[] = { opc };
-	struct expression *left, *right, *cmp_expression;
-	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-
-	cu = alloc_simple_compilation_unit(&method);
-
-	left = temporary_expr(type, 1);
-	right = temporary_expr(type, 2);
-
-	stack_push(cu->expr_stack, left);
-	stack_push(cu->expr_stack, right);
-
-	convert_to_ir(cu);
-	cmp_expression = stack_pop(cu->expr_stack);
-	assert_binop_expr(J_INT, op, left, right, &cmp_expression->node);
-	assert_true(stack_is_empty(cu->expr_stack));
-
-	expr_put(cmp_expression);
-	free_compilation_unit(cu);
-}
-
-void test_convert_cmp(void)
-{
-	assert_convert_cmp(OPC_LCMP, OP_CMP, J_LONG);
-	assert_convert_cmp(OPC_FCMPL, OP_CMPL, J_FLOAT);
-	assert_convert_cmp(OPC_FCMPG, OP_CMPG, J_FLOAT);
-	assert_convert_cmp(OPC_DCMPL, OP_CMPL, J_DOUBLE);
-	assert_convert_cmp(OPC_DCMPG, OP_CMPG, J_DOUBLE);
-}
-
 /* MISSING: jsr */
 
 /* MISSING: ret */
