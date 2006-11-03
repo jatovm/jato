@@ -687,13 +687,14 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 static void assert_select_if_statement(enum insn_type expected,
 				       enum binary_operator binop)
 {
-	assert_select_if_statement_local_local(INSN_JE_BRANCH, OP_EQ);
-	assert_select_if_statement_local_value(INSN_JE_BRANCH, OP_EQ);
+	assert_select_if_statement_local_local(expected, binop);
+	assert_select_if_statement_local_value(expected, binop);
 }
 
 void test_select_if_statement(void)
 {
 	assert_select_if_statement(INSN_JE_BRANCH, OP_EQ);
+	assert_select_if_statement(INSN_JNE_BRANCH, OP_NE);
 }
 
 void test_select_load_field(void)

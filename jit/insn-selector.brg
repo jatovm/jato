@@ -74,6 +74,23 @@ static void shift_reg_local(struct basic_block *bb, struct tree_node *tree,
 	bb_add_insn(bb, reg_reg_insn(insn_type, REG_ECX, REG_EAX));
 }
 
+static enum insn_type br_binop_to_insn_type(enum binary_operator binop)
+{
+	enum insn_type ret;
+
+	switch (binop) {
+	case OP_EQ:
+		ret = INSN_JE_BRANCH;
+		break;
+	case OP_NE:
+		ret = INSN_JNE_BRANCH;
+		break;
+	default:
+		assert(!"not a branch operator");
+	};
+	return ret;
+}
+
 %%
 
 %termprefix EXPR_ OP_ STMT_
@@ -224,23 +241,22 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
-	struct expression *expr;
-	long offset;
-
-	expr   = to_expr(tree);
-	offset = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
-
-	bb_add_insn(s, membase_reg_insn(INSN_CMP_MEMBASE_REG, REG_EBP, offset, REG_EAX));
+	binop_reg_local(s, tree, INSN_CMP_MEMBASE_REG);
 }
 
 reg:	OP_EQ(reg, EXPR_VALUE) 1
 {
-	struct expression *expr, *rvalue;
-	
-	expr = to_expr(tree);
-	rvalue = to_expr(expr->binary_right);
+	binop_reg_value(s, tree, INSN_CMP_IMM_REG);
+}
 
-	bb_add_insn(s, imm_reg_insn(INSN_CMP_IMM_REG, rvalue->value, REG_EAX));
+reg:	OP_NE(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_NE(reg, EXPR_VALUE) 1
+{
+	binop_reg_value(s, tree, INSN_CMP_IMM_REG);
 }
 
 reg:	EXPR_FIELD 1
@@ -338,9 +354,15 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 
 stmt:	STMT_IF(reg)
 {
-	struct statement *stmt = to_stmt(tree);
+	struct expression *if_conditional;
+	enum insn_type insn_type;
+	struct statement *stmt;
 
-	bb_add_insn(s, branch_insn(INSN_JE_BRANCH, stmt->if_true));
+	stmt = to_stmt(tree);
+	if_conditional = to_expr(stmt->if_conditional);
+	insn_type = br_binop_to_insn_type(expr_bin_op(if_conditional));
+
+	bb_add_insn(s, branch_insn(insn_type, stmt->if_true));
 }
 
 %%
