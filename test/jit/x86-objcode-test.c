@@ -349,6 +349,7 @@ static void assert_forward_branch(unsigned char expected_opc, enum insn_type ins
 void test_should_use_zero_as_target_branch_for_forward_branches(void)
 {
 	assert_forward_branch(0x74, INSN_JE_BRANCH);
+	assert_forward_branch(0x75, INSN_JNE_BRANCH);
 	assert_forward_branch(0xeb, INSN_JMP_BRANCH);
 }
 

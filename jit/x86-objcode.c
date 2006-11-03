@@ -462,6 +462,11 @@ static void emit_je_branch(struct buffer *buf, struct insn *insn)
 	__emit_branch(buf, 0x74, insn);
 }
 
+static void emit_jne_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x75, insn);
+}
+
 static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
 {
 	__emit_branch(buf, 0xeb, insn);
@@ -505,6 +510,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),
+	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
