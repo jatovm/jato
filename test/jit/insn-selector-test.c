@@ -612,7 +612,8 @@ static struct statement *add_if_stmt(struct expression *expr, struct basic_block
 	return stmt;
 }
 
-void test_select_local_eq_local_in_if_statement(void)
+static void assert_select_if_statement_local_local(enum insn_type expected,
+						   enum binary_operator binop)
 {
 	struct basic_block *bb, *true_bb;
 	struct insn *insn;
@@ -628,7 +629,7 @@ void test_select_local_eq_local_in_if_statement(void)
 	bb = alloc_basic_block(&cu, 0, 1);
 	true_bb = alloc_basic_block(&cu, 1, 2);
 
-	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), local_expr(J_INT, 1));
+	expr = binop_expr(J_INT, binop, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = add_if_stmt(expr, bb, true_bb);
 
 	insn_select(bb);
@@ -641,13 +642,14 @@ void test_select_local_eq_local_in_if_statement(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
-	assert_branch_insn(INSN_JE_BRANCH, stmt->if_true, insn);
+	assert_branch_insn(expected, stmt->if_true, insn);
 
 	free_basic_block(bb);
 	free_basic_block(true_bb);
 }
 
-void test_select_local_eq_value_in_if_statement(void)
+static void assert_select_if_statement_local_value(enum insn_type expected,
+						   enum binary_operator binop)
 {
 	struct basic_block *bb, *true_bb;
 	struct insn *insn;
@@ -663,7 +665,7 @@ void test_select_local_eq_value_in_if_statement(void)
 	bb = alloc_basic_block(&cu, 0, 1);
 	true_bb = alloc_basic_block(&cu, 1, 2);
 
-	expr = binop_expr(J_INT, OP_EQ, local_expr(J_INT, 0), value_expr(J_INT, 0xcafebabe));
+	expr = binop_expr(J_INT, binop, local_expr(J_INT, 0), value_expr(J_INT, 0xcafebabe));
 	stmt = add_if_stmt(expr, bb, true_bb);
 
 	insn_select(bb);
@@ -676,10 +678,22 @@ void test_select_local_eq_value_in_if_statement(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 
-	assert_branch_insn(INSN_JE_BRANCH, stmt->if_true, insn);
+	assert_branch_insn(expected, stmt->if_true, insn);
 
 	free_basic_block(bb);
 	free_basic_block(true_bb);
+}
+
+static void assert_select_if_statement(enum insn_type expected,
+				       enum binary_operator binop)
+{
+	assert_select_if_statement_local_local(INSN_JE_BRANCH, OP_EQ);
+	assert_select_if_statement_local_value(INSN_JE_BRANCH, OP_EQ);
+}
+
+void test_select_if_statement(void)
+{
+	assert_select_if_statement(INSN_JE_BRANCH, OP_EQ);
 }
 
 void test_select_load_field(void)
