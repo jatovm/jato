@@ -12,62 +12,74 @@
 #include <bytecodes.h>
 
 #include <vm/bitmap.h>
+#include <vm/stream.h>
 #include <vm/vm.h>
 
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
-	
+
+static unsigned char *bytecode_next_insn(struct stream *stream)
+{
+	unsigned long opc_size;
+		
+	opc_size = bytecode_size(stream->current);
+	assert(opc_size != 0);
+	return stream->current + opc_size;
+}
+
+static struct stream_operations bytecode_stream_ops = {
+	.new_position = bytecode_next_insn,
+};
+
+static struct basic_block *do_split(struct compilation_unit *cu,
+				    struct basic_block *bb,
+				    struct stream *stream,
+				    unsigned long *branch_targets)
+{
+	unsigned long br_target;
+	unsigned long offset;
+
+	offset    = stream_offset(stream);
+	br_target = bytecode_br_target(stream->current) + offset;
+
+	set_bit(branch_targets, br_target);
+	bb = bb_split(bb, offset + bytecode_size(stream->current));
+	list_add_tail(&bb->bb_list_node, &cu->bb_list);
+
+	return bb;
+}
+
 static void split_after_branches(struct compilation_unit *cu,
 				 struct basic_block *entry_bb,
 				 unsigned long *branch_targets)
 {
-	unsigned char *start, *end, *code;
 	struct basic_block *bb;
+	struct stream stream;
 
-	bb    = entry_bb;
-	start = cu->method->jit_code;
-	end   = start + cu->method->code_size;
-	code  = start;
+	stream_init(&stream, cu->method->jit_code, cu->method->code_size, &bytecode_stream_ops);
 
-	while (code != end) {
-		unsigned long opc_size;
-		
-		opc_size = bytecode_size(code);
-		assert(opc_size != 0);
+	bb = entry_bb;
 
-		if (bytecode_is_branch(*code)) {
-			unsigned long br_target;
-			unsigned long offset;
-			
-			offset    = code-start;
-			br_target = bytecode_br_target(code) + offset;
+	while (stream_has_more(&stream)) {
+		if (bytecode_is_branch(*stream.current))
+			bb = do_split(cu, bb, &stream, branch_targets);
 
-			set_bit(branch_targets, br_target);
-			bb = bb_split(bb, offset + opc_size);
-			list_add_tail(&bb->bb_list_node, &cu->bb_list);
-		}
-		code += opc_size;
+		stream_advance(&stream);
 	}
 }
 
 static void split_at_branch_targets(struct compilation_unit *cu,
 				    unsigned long *branch_targets)
 {
-	unsigned char *start, *end, *code;
+	struct stream stream;
 
-	start = cu->method->jit_code;
-	end   = start + cu->method->code_size;
-	code  = start;
+	stream_init(&stream, cu->method->jit_code, cu->method->code_size, &bytecode_stream_ops);
 
-	while (code != end) {
-		unsigned long opc_size;
+	while (stream_has_more(&stream)) {
 		unsigned long offset;
 
-		opc_size = bytecode_size(code);
-		offset   = code-start;
-
-		assert(opc_size != 0);
+		offset = stream_offset(&stream);
 
 		if (test_bit(branch_targets, offset)) {
 			struct basic_block *bb;
@@ -78,7 +90,7 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 				list_add_tail(&bb->bb_list_node, &cu->bb_list);
 			}
 		}
-		code += opc_size;
+		stream_advance(&stream);
 	}
 }
 
