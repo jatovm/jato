@@ -274,6 +274,7 @@ static unsigned char bytecode_sizes[] = {
 	[OPC_INVOKESPECIAL] = 3,
 	[OPC_INVOKESTATIC] = 3,
 	[OPC_NEW] = 3,
+	[OPC_NEWARRAY] = 2,
 	[OPC_WIDE] = 3,
 	[OPC_IFNULL] = 3,
 	[OPC_IFNONNULL] = 3,
