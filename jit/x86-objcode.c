@@ -84,6 +84,23 @@ static inline void emit(struct buffer *buf, unsigned char c)
 	assert(!err);
 }
 
+static void write_imm32(struct buffer *buf, unsigned long offset, long imm32)
+{
+	unsigned char *buffer;
+	union {
+		int val;
+		unsigned char b[4];
+	} imm_buf;
+
+	buffer = buf->buf;
+	imm_buf.val = imm32;
+
+	buffer[offset] = imm_buf.b[0];
+	buffer[offset + 1] = imm_buf.b[1];
+	buffer[offset + 2] = imm_buf.b[2];
+	buffer[offset + 3] = imm_buf.b[3];
+}
+
 static void emit_imm32(struct buffer *buf, int imm)
 {
 	union {
@@ -425,23 +442,31 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum reg reg)
 	emit(buf, encode_modrm(0x3, 0x04, encode_reg(reg)));
 }
 
-void emit_branch_rel(struct buffer *buf, unsigned char opc, unsigned char rel8)
+void emit_branch_rel(struct buffer *buf, unsigned char prefix,
+		     unsigned char opc, long rel32)
 {
+	emit(buf, prefix);
 	emit(buf, opc);
-	emit(buf, rel8);
+	emit_imm32(buf, rel32);
 }
 
-static unsigned char branch_rel_addr(unsigned long branch_offset,
-				     unsigned long target_offset)
+/*
+ * FIXME: As 32-bit Jcc instructions are escaped, we pad regular JMPs with NOP
+ *        opcode to make all branch instructions the same size.
+ */
+#define BRANCH_INSN_SIZE 6
+#define BRANCH_TARGET_OFFSET 2
+
+static long branch_rel_addr(unsigned long branch_offset, unsigned long target_offset)
 {
-	return target_offset - branch_offset - 2;
+	return target_offset - branch_offset - BRANCH_INSN_SIZE;
 }
 
-static void __emit_branch(struct buffer *buf, unsigned char opc,
-			struct insn *insn)
+static void __emit_branch(struct buffer *buf, unsigned char prefix,
+			  unsigned char opc, struct insn *insn)
 {
 	struct basic_block *target_bb;
-	unsigned char addr = 0;
+	long addr = 0;
 
 	target_bb = insn->operand.branch_target;
 
@@ -454,22 +479,22 @@ static void __emit_branch(struct buffer *buf, unsigned char opc,
 	} else
 		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
 
-	emit_branch_rel(buf, opc, addr);
+	emit_branch_rel(buf, prefix, opc, addr);
 }
 
 static void emit_je_branch(struct buffer *buf, struct insn *insn)
 {
-	__emit_branch(buf, 0x74, insn);
+	__emit_branch(buf, 0x0f, 0x84, insn);
 }
 
 static void emit_jne_branch(struct buffer *buf, struct insn *insn)
 {
-	__emit_branch(buf, 0x75, insn);
+	__emit_branch(buf, 0x0f, 0x85, insn);
 }
 
 static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
 {
-	__emit_branch(buf, 0xeb, insn);
+	__emit_branch(buf, 0x90, 0xe9, insn);
 }
 
 static void emit_indirect_call(struct buffer *buf, struct operand *operand)
@@ -588,18 +613,25 @@ static void emit_insn(struct buffer *buf, struct insn *insn)
 	__emit_insn(buf, insn);
 }
 
+static void backpatch_branch_target(struct buffer *buf,
+				    struct insn *insn,
+				    unsigned long target_offset)
+{
+	long relative_addr;
+
+	relative_addr = branch_rel_addr(insn->offset, target_offset);
+
+	write_imm32(buf, insn->offset + BRANCH_TARGET_OFFSET, relative_addr);
+}
+
 static void backpatch_branches(struct buffer *buf,
 			       struct list_head *to_backpatch,
-			       unsigned long target_off)
+			       unsigned long target_offset)
 {
 	struct insn *this, *next;
 
 	list_for_each_entry_safe(this, next, to_backpatch, branch_list_node) {
-		unsigned long addr;
-
-		addr = branch_rel_addr(this->offset, target_off);
-		buf->buf[this->offset + 1] = addr;
-
+		backpatch_branch_target(buf, this, target_offset);
 		list_del(&this->branch_list_node);
 	}
 }

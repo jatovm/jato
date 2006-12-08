@@ -46,14 +46,6 @@ static void assert_emit_insn_2(unsigned char opcode, unsigned char extra,
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
-static void assert_mem_insn_2(unsigned char expected_opc,
-			      unsigned char expected_extra, const char *actual)
-{
-	unsigned char expected[] = { expected_opc, expected_extra };
-
-	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
-}
-
 static void assert_emit_insn_3(unsigned char opcode, unsigned char modrm,
 			       unsigned char extra, struct insn *insn)
 {
@@ -87,6 +79,19 @@ static void assert_emit_insn_6(unsigned char opcode, unsigned char modrm,
 	unsigned char expected[] = { opcode, modrm, b1, b2, b3, b4 };
 
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
+}
+
+static void assert_mem_insn_6(unsigned char expected_1,
+			      unsigned char expected_2,
+			      unsigned char expected_3,
+			      unsigned char expected_4,
+			      unsigned char expected_5,
+			      unsigned char expected_6,
+			      const char *actual)
+{
+	unsigned char expected[] = { expected_1, expected_2, expected_3, expected_4, expected_5, expected_6 };
+
+	assert_mem_equals(expected, actual, ARRAY_SIZE(expected));
 }
 
 static void assert_emit_insn_7(unsigned char opcode, unsigned char modrm,
@@ -337,17 +342,25 @@ void test_emit_cmp_imm_reg(void)
 	assert_emit_insn_6(0x81, 0xfb, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(INSN_CMP_IMM_REG, 0xdeadbeef, REG_EBX));
 }
 
-static void assert_forward_branch(unsigned char expected_opc, enum insn_type insn_type)
+static void assert_forward_branch(unsigned char expected_prefix,
+				  unsigned char expected_opc,
+				  enum insn_type insn_type)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
+	struct basic_block *bb;
+	
+	bb = alloc_basic_block(NULL, 0, 1);
 
-	assert_emit_insn_2(expected_opc, 0x00, branch_insn(insn_type, bb));
+	assert_emit_insn_6(expected_prefix, expected_opc, 0x00, 0x00, 0x00, 0x00, branch_insn(insn_type, bb));
 
 	free_basic_block(bb);
 }
 
-static void assert_emits_branch_target(unsigned char expected_opc,
-				       unsigned char expected_target,
+static void assert_emits_branch_target(unsigned char expected_prefix,
+				       unsigned char expected_opc,
+				       unsigned char expected_target_1,
+				       unsigned char expected_target_2,
+				       unsigned char expected_target_3,
+				       unsigned char expected_target_4,
 				       struct basic_block *target_bb,
 				       enum insn_type insn_type)
 {
@@ -364,26 +377,35 @@ static void assert_emits_branch_target(unsigned char expected_opc,
 	bb_add_insn(branch_bb, insn);
 	emit_obj_code(branch_bb, buf);
 
-	assert_mem_insn_2(expected_opc, expected_target, buffer_ptr(buf) + insn->offset);
+	assert_mem_insn_6(expected_prefix, expected_opc, expected_target_1, expected_target_2, expected_target_3, expected_target_4, buffer_ptr(buf) + insn->offset);
 
 	free_basic_block(branch_bb);
 	free_buffer(buf);
 }
 
-static void assert_emit_target_for_backward_branches(unsigned char expected_opc, enum insn_type insn_type)
+static void
+assert_emit_target_for_backward_branches(unsigned char expected_prefix,
+					 unsigned char expected_opc,
+					 enum insn_type insn_type)
 {
-	struct basic_block *target_bb = alloc_basic_block(NULL, 0, 1);
+	struct basic_block *target_bb;
+	
+	target_bb = alloc_basic_block(NULL, 0, 1);
 
 	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, REG_EAX));
-	assert_emits_branch_target(expected_opc, 0xfb, target_bb, insn_type);
+	assert_emits_branch_target(expected_prefix, expected_opc, 0xf7, 0xff, 0xff, 0xff, target_bb, insn_type);
 
 	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x02, REG_EBX));
-	assert_emits_branch_target(expected_opc, 0xf8, target_bb, insn_type);
+	assert_emits_branch_target(expected_prefix, expected_opc, 0xf4, 0xff, 0xff, 0xff, target_bb, insn_type);
 
 	free_basic_block(target_bb);
 }
 
-static void assert_adds_self_to_unresolved_list_for_forward_branches(unsigned char expected_opc, enum insn_type insn_type)
+static void
+assert_adds_self_to_unresolved_list_for_forward_branches(
+		unsigned char expected_prefix,
+		unsigned char expected_opc,
+		enum insn_type insn_type)
 {
 	struct basic_block *if_true;
 	struct insn *insn;
@@ -391,7 +413,7 @@ static void assert_adds_self_to_unresolved_list_for_forward_branches(unsigned ch
 	if_true = alloc_basic_block(NULL, 0, 1);
 	insn = branch_insn(insn_type, if_true);
 
-	assert_emit_insn_2(expected_opc, 0x00, insn);
+	assert_emit_insn_6(expected_prefix, expected_opc, 0x00, 0x00, 0x00, 0x00, insn);
 
 	assert_ptr_equals(insn, list_entry(if_true->backpatch_insns.next,
 					   struct insn, branch_list_node));
@@ -399,7 +421,8 @@ static void assert_adds_self_to_unresolved_list_for_forward_branches(unsigned ch
 	free_basic_block(if_true);
 }
 
-static void assert_backpatches_branches(unsigned char expected_opc,
+static void assert_backpatches_branches(unsigned char expected_prefix,
+					unsigned char expected_opc,
 					unsigned char expected_target,
 					struct basic_block *branch_bb,
 					struct basic_block *target_bb)
@@ -412,15 +435,19 @@ static void assert_backpatches_branches(unsigned char expected_opc,
 	buf = alloc_buffer();
 
 	emit_obj_code(branch_bb, buf);
-	assert_mem_insn_2(expected_opc, 0x00, buffer_ptr(buf));
+	assert_mem_insn_6(expected_prefix, expected_opc, 0x00, 0x00, 0x00, 0x00, buffer_ptr(buf));
 
 	emit_obj_code(target_bb, buf);
-	assert_mem_insn_2(expected_opc, expected_target, buffer_ptr(buf));
+	assert_mem_insn_6(expected_prefix, expected_opc, expected_target, 0x00, 0x00, 0x00, buffer_ptr(buf));
 
 	free_buffer(buf);
 }
 
-static void assert_backpatches_unresolved_branches_when_emitting_target(unsigned char expected_opc, enum insn_type insn_type)
+static void
+assert_backpatches_unresolved_branches_when_emitting_target(
+		unsigned char expected_prefix,
+		unsigned char expected_opc,
+		enum insn_type insn_type)
 {
 	struct basic_block *target_bb, *branch_bb;
 
@@ -428,26 +455,28 @@ static void assert_backpatches_unresolved_branches_when_emitting_target(unsigned
 	target_bb = alloc_basic_block(NULL, 1, 2);
 
 	bb_add_insn(branch_bb, branch_insn(insn_type, target_bb));
-	assert_backpatches_branches(expected_opc, 0x00, branch_bb, target_bb);
+	assert_backpatches_branches(expected_prefix, expected_opc, 0x00, branch_bb, target_bb);
 
 	bb_add_insn(branch_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, REG_EAX));
-	assert_backpatches_branches(expected_opc, 0x03, branch_bb, target_bb);
+	assert_backpatches_branches(expected_prefix, expected_opc, 0x03, branch_bb, target_bb);
 
 	free_basic_block(branch_bb);
 	free_basic_block(target_bb);
 }
 
-static void assert_emit_branch(unsigned char expected_opc, enum insn_type insn_type)
+static void assert_emit_branch(unsigned char expected_prefix,
+			       unsigned char expected_opc,
+			       enum insn_type insn_type)
 {
-	assert_forward_branch(expected_opc, insn_type);
-	assert_emit_target_for_backward_branches(expected_opc, insn_type);
-	assert_adds_self_to_unresolved_list_for_forward_branches(expected_opc, insn_type);
-	assert_backpatches_unresolved_branches_when_emitting_target(expected_opc, insn_type);
+	assert_forward_branch(expected_prefix, expected_opc, insn_type);
+	assert_emit_target_for_backward_branches(expected_prefix, expected_opc, insn_type);
+	assert_adds_self_to_unresolved_list_for_forward_branches(expected_prefix, expected_opc, insn_type);
+	assert_backpatches_unresolved_branches_when_emitting_target(expected_prefix, expected_opc, insn_type);
 }
 
 void test_emit_branches(void)
 {
-	assert_emit_branch(0x74, INSN_JE_BRANCH);
-	assert_emit_branch(0x75, INSN_JNE_BRANCH);
-	assert_emit_branch(0xeb, INSN_JMP_BRANCH);
+	assert_emit_branch(0x0f, 0x84, INSN_JE_BRANCH);
+	assert_emit_branch(0x0f, 0x85, INSN_JNE_BRANCH);
+	assert_emit_branch(0x90, 0xe9, INSN_JMP_BRANCH);
 }
