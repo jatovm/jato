@@ -479,7 +479,7 @@ static void __emit_branch(struct buffer *buf, unsigned char prefix,
 
 	if (target_bb->is_emitted) {
 		struct insn *target_insn =
-		    list_entry(target_bb->insn_list.next, struct insn,
+		    list_first_entry(&target_bb->insn_list, struct insn,
 			       insn_list_node);
 
 		addr = branch_rel_addr(insn, target_insn->offset);
