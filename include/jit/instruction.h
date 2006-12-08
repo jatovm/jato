@@ -2,6 +2,7 @@
 #define __JIT_INSTRUCTION_H
 
 #include <vm/list.h>
+#include <stdbool.h>
 
 struct basic_block;
 
@@ -82,6 +83,7 @@ struct insn {
 	struct list_head insn_list_node;
 	struct list_head branch_list_node;
 	unsigned long offset;
+	bool escaped;
 };
 
 struct insn *insn(enum insn_type);

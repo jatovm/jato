@@ -445,21 +445,25 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum reg reg)
 void emit_branch_rel(struct buffer *buf, unsigned char prefix,
 		     unsigned char opc, long rel32)
 {
-	emit(buf, prefix);
+	if (prefix)
+		emit(buf, prefix);
 	emit(buf, opc);
 	emit_imm32(buf, rel32);
 }
 
-/*
- * FIXME: As 32-bit Jcc instructions are escaped, we pad regular JMPs with NOP
- *        opcode to make all branch instructions the same size.
- */
-#define BRANCH_INSN_SIZE 6
-#define BRANCH_TARGET_OFFSET 2
+#define PREFIX_SIZE 1
+#define BRANCH_INSN_SIZE 5
+#define BRANCH_TARGET_OFFSET 1
 
-static long branch_rel_addr(unsigned long branch_offset, unsigned long target_offset)
+static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
 {
-	return target_offset - branch_offset - BRANCH_INSN_SIZE;
+	long ret;
+
+	ret = target_offset - insn->offset - BRANCH_INSN_SIZE;
+	if (insn->escaped)
+		ret -= PREFIX_SIZE;
+
+	return ret;
 }
 
 static void __emit_branch(struct buffer *buf, unsigned char prefix,
@@ -468,6 +472,9 @@ static void __emit_branch(struct buffer *buf, unsigned char prefix,
 	struct basic_block *target_bb;
 	long addr = 0;
 
+	if (prefix)
+		insn->escaped = true;
+
 	target_bb = insn->operand.branch_target;
 
 	if (target_bb->is_emitted) {
@@ -475,7 +482,7 @@ static void __emit_branch(struct buffer *buf, unsigned char prefix,
 		    list_entry(target_bb->insn_list.next, struct insn,
 			       insn_list_node);
 
-		addr = branch_rel_addr(insn->offset, target_insn->offset);
+		addr = branch_rel_addr(insn, target_insn->offset);
 	} else
 		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
 
@@ -494,7 +501,7 @@ static void emit_jne_branch(struct buffer *buf, struct insn *insn)
 
 static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
 {
-	__emit_branch(buf, 0x90, 0xe9, insn);
+	__emit_branch(buf, 0x00, 0xe9, insn);
 }
 
 static void emit_indirect_call(struct buffer *buf, struct operand *operand)
@@ -617,11 +624,16 @@ static void backpatch_branch_target(struct buffer *buf,
 				    struct insn *insn,
 				    unsigned long target_offset)
 {
+	unsigned long backpatch_offset;
 	long relative_addr;
 
-	relative_addr = branch_rel_addr(insn->offset, target_offset);
+	backpatch_offset = insn->offset + BRANCH_TARGET_OFFSET;
+	if (insn->escaped)
+		backpatch_offset += PREFIX_SIZE;
 
-	write_imm32(buf, insn->offset + BRANCH_TARGET_OFFSET, relative_addr);
+	relative_addr = branch_rel_addr(insn, target_offset);
+
+	write_imm32(buf, backpatch_offset, relative_addr);
 }
 
 static void backpatch_branches(struct buffer *buf,
