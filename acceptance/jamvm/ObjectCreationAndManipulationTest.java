@@ -18,19 +18,31 @@ public class ObjectCreationAndManipulationTest extends TestCase {
     }
 
     public static void testClassFieldAccess() {
-        assertEquals(0, StaticFields.field);
-        StaticFields.field = 1;
-        assertEquals(1, StaticFields.field);
+        assertEquals(0, ClassFields.field);
+        ClassFields.field = 1;
+        assertEquals(1, ClassFields.field);
+    }
+
+    public static void testInstanceFieldAccess() {
+        InstanceFields fields = new InstanceFields();
+        assertEquals(0, fields.field);
+        fields.field = 1;
+        assertEquals(1, fields.field);
     }
 
     public static void main(String[] args) {
         testNewObject();
         testClassFieldAccess();
+        testInstanceFieldAccess();
 
         Runtime.getRuntime().halt(retval);
     }
 
-    private static class StaticFields {
+    private static class ClassFields {
         public static int field;
+    };
+
+    private static class InstanceFields {
+        public int field;
     };
 }
