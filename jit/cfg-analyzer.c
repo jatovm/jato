@@ -72,25 +72,19 @@ static void split_after_branches(struct compilation_unit *cu,
 static void split_at_branch_targets(struct compilation_unit *cu,
 				    unsigned long *branch_targets)
 {
-	struct stream stream;
+	unsigned long offset;
 
-	stream_init(&stream, cu->method->jit_code, cu->method->code_size, &bytecode_stream_ops);
+	for (offset = 0; offset < cu->method->code_size; offset++) {
+		struct basic_block *bb;
 
-	while (stream_has_more(&stream)) {
-		unsigned long offset;
-
-		offset = stream_offset(&stream);
-
-		if (test_bit(branch_targets, offset)) {
-			struct basic_block *bb;
+		if (!test_bit(branch_targets, offset))
+			continue;
 			
-			bb = find_bb(cu, offset);
-			if (bb->start != offset) {
-				bb = bb_split(bb, offset);
-				list_add_tail(&bb->bb_list_node, &cu->bb_list);
-			}
+		bb = find_bb(cu, offset);
+		if (bb->start != offset) {
+			bb = bb_split(bb, offset);
+			list_add_tail(&bb->bb_list_node, &cu->bb_list);
 		}
-		stream_advance(&stream);
 	}
 }
 
