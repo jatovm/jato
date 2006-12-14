@@ -11,7 +11,8 @@
 #include <bytecodes.h>
 #include <vm/byteorder.h>
 
-#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 enum bytecode_type {
 	BC_NORMAL = 0x01,
@@ -34,7 +35,10 @@ unsigned long bytecode_size(unsigned char *bc_start)
 	if (*bc_start == OPC_WIDE)
 		size += bytecode_infos[*++bc_start].size;
 
-	assert(size > 0);
+	if (size == 0) {
+		printf("%s: Unknown bytecode opcode: 0x%x\n", __FUNCTION__, *bc_start);
+		abort();
+	}
 	return size;
 }
 
