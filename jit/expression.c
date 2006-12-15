@@ -57,7 +57,7 @@ void free_expression(struct expression *expr)
 		if (expr->from_expression)
 			expr_put(to_expr(expr->from_expression));
 		break;
-	case EXPR_FIELD:
+	case EXPR_CLASS_FIELD:
 		/* nothing to do */
 		break;
 	case EXPR_INVOKE:
@@ -183,7 +183,7 @@ struct expression *conversion_expr(enum vm_type vm_type,
 struct expression *field_expr(enum vm_type vm_type,
 			      struct fieldblock *field)
 {
-	struct expression *expr = alloc_expression(EXPR_FIELD, vm_type);
+	struct expression *expr = alloc_expression(EXPR_CLASS_FIELD, vm_type);
 	if (expr)
 		expr->field = field;
 	return expr;

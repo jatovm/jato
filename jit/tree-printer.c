@@ -81,7 +81,7 @@ static int simple_expr(struct expression *expr)
 	enum expression_type type = expr_type(expr);
 
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
-	    || type == EXPR_TEMPORARY || type == EXPR_FIELD
+	    || type == EXPR_TEMPORARY || type == EXPR_CLASS_FIELD
 	    || type == EXPR_NO_ARGS;
 }
 
@@ -544,7 +544,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_BINOP] = print_binop_expr,
 	[EXPR_UNARY_OP] = print_unary_op_expr,
 	[EXPR_CONVERSION] = print_conversion_expr,
-	[EXPR_FIELD] = print_field_expr,
+	[EXPR_CLASS_FIELD] = print_field_expr,
 	[EXPR_INVOKE] = print_invoke_expr,
 	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_ARGS_LIST] = print_args_list_expr,

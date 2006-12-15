@@ -15,7 +15,7 @@ enum expression_type {
 	EXPR_BINOP,
 	EXPR_UNARY_OP,
 	EXPR_CONVERSION,
-	EXPR_FIELD,
+	EXPR_CLASS_FIELD,
 	EXPR_INVOKE,
 	EXPR_INVOKEVIRTUAL,
 	EXPR_ARGS_LIST,
@@ -113,9 +113,9 @@ struct expression {
 			struct tree_node *from_expression;
 		};
 
-		/*  EXPR_FIELD represents a field access expression (see JLS
-		    15.11.). This expression type can be used as both lvalue
-		    and rvalue.  */
+		/*  EXPR_CLASS_FIELD represents a static field access
+		    expression (see JLS 15.11.). This expression type can be
+		    used as both lvalue and rvalue.  */
 		struct {
 			struct fieldblock *field;
 		};

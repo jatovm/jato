@@ -259,7 +259,7 @@ reg:	OP_NE(reg, EXPR_VALUE) 1
 	binop_reg_value(s, tree, INSN_CMP_IMM_REG);
 }
 
-reg:	EXPR_FIELD 1
+reg:	EXPR_CLASS_FIELD 1
 {
 	struct expression *expr;
 	long offset;
@@ -320,7 +320,7 @@ stmt:	STMT_EXPRESSION(reg)
 {
 }
 
-stmt:	STMT_STORE(EXPR_FIELD, EXPR_VALUE)
+stmt:	STMT_STORE(EXPR_CLASS_FIELD, EXPR_VALUE)
 {
 	struct statement *stmt;
 	struct expression *store_dest;

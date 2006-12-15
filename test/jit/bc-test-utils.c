@@ -118,7 +118,7 @@ void assert_field_expr(enum vm_type expected_type,
 {
 	struct expression *expr = to_expr(node);
 
-	assert_int_equals(EXPR_FIELD, expr_type(expr));
+	assert_int_equals(EXPR_CLASS_FIELD, expr_type(expr));
 	assert_int_equals(expected_type, expr->vm_type);
 	assert_ptr_equals(expected_field, expr->field);
 }
