@@ -207,6 +207,7 @@ struct expression *array_deref_expr(enum vm_type, struct expression *, struct ex
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum vm_type, struct expression *);
+struct expression *__field_expr(enum expression_type, enum vm_type, struct fieldblock *);
 struct expression *class_field_expr(enum vm_type, struct fieldblock *);
 struct expression *instance_field_expr(enum vm_type, struct fieldblock *);
 struct expression *__invoke_expr(enum vm_type, struct methodblock *);

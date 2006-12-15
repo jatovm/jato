@@ -22,12 +22,14 @@ static void convert_ir_const_single(struct compilation_unit *cu, void *value)
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 }
 
-static void assert_convert_getstatic(enum vm_type expected_vm_type,
-				     char *field_type)
+static void __assert_convert_field_get(unsigned char opc,
+				       enum expression_type expected_expr_type,
+				       enum vm_type expected_vm_type,
+				       char *field_type)
 {
 	struct fieldblock fb;
 	struct expression *expr;
-	unsigned char code[] = { OPC_GETSTATIC, 0x00, 0x00 };
+	unsigned char code[] = { opc, 0x00, 0x00 };
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
@@ -40,24 +42,34 @@ static void assert_convert_getstatic(enum vm_type expected_vm_type,
 
 	convert_ir_const_single(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
-	assert_class_field_expr(expected_vm_type, &fb, &expr->node);
+	__assert_field_expr(expected_expr_type, expected_vm_type, &fb, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
+static void assert_convert_field_get(unsigned char opc, enum expression_type expected_expr_type)
+{
+	__assert_convert_field_get(opc, expected_expr_type, J_BYTE, "B");
+	__assert_convert_field_get(opc, expected_expr_type, J_CHAR, "C");
+	__assert_convert_field_get(opc, expected_expr_type, J_DOUBLE, "D");
+	__assert_convert_field_get(opc, expected_expr_type, J_FLOAT, "F");
+	__assert_convert_field_get(opc, expected_expr_type, J_INT, "I");
+	__assert_convert_field_get(opc, expected_expr_type, J_LONG, "J");
+	__assert_convert_field_get(opc, expected_expr_type, J_REFERENCE, "Ljava/lang/Object;");
+	__assert_convert_field_get(opc, expected_expr_type, J_SHORT, "S");
+	__assert_convert_field_get(opc, expected_expr_type, J_BOOLEAN, "Z");
+}
+
 void test_convert_getstatic(void)
 {
-	assert_convert_getstatic(J_BYTE, "B");
-	assert_convert_getstatic(J_CHAR, "C");
-	assert_convert_getstatic(J_DOUBLE, "D");
-	assert_convert_getstatic(J_FLOAT, "F");
-	assert_convert_getstatic(J_INT, "I");
-	assert_convert_getstatic(J_LONG, "J");
-	assert_convert_getstatic(J_REFERENCE, "Ljava/lang/Object;");
-	assert_convert_getstatic(J_SHORT, "S");
-	assert_convert_getstatic(J_BOOLEAN, "Z");
+	assert_convert_field_get(OPC_GETSTATIC, EXPR_CLASS_FIELD);
+}
+
+void test_convert_getfield(void)
+{
+	assert_convert_field_get(OPC_GETFIELD, EXPR_INSTANCE_FIELD);
 }
 
 static void assert_convert_putstatic(enum vm_type expected_vm_type,
@@ -81,7 +93,7 @@ static void assert_convert_putstatic(enum vm_type expected_vm_type,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_class_field_expr(expected_vm_type, &fb, stmt->store_dest);
+	__assert_field_expr(EXPR_CLASS_FIELD, expected_vm_type, &fb, stmt->store_dest);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_true(stack_is_empty(cu->expr_stack));
 

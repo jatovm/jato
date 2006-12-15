@@ -112,13 +112,14 @@ void assert_conv_expr(enum vm_type expected_type,
 	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
 }
 
-void assert_class_field_expr(enum vm_type expected_type,
-		       struct fieldblock *expected_field,
-		       struct tree_node *node)
+void __assert_field_expr(enum expression_type expected_expr_type,
+			 enum vm_type expected_type,
+			 struct fieldblock *expected_field,
+			 struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
-	assert_int_equals(EXPR_CLASS_FIELD, expr_type(expr));
+	assert_int_equals(expected_expr_type, expr_type(expr));
 	assert_int_equals(expected_type, expr->vm_type);
 	assert_ptr_equals(expected_field, expr->field);
 }

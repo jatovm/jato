@@ -181,9 +181,9 @@ struct expression *conversion_expr(enum vm_type vm_type,
 	return expr;
 }
 
-static struct expression *__field_expr(enum expression_type expr_type,
-				       enum vm_type vm_type,
-				       struct fieldblock *field)
+struct expression *__field_expr(enum expression_type expr_type,
+				enum vm_type vm_type,
+				struct fieldblock *field)
 {
 	struct expression *expr = alloc_expression(expr_type, vm_type);
 	if (expr)
