@@ -2,7 +2,7 @@ MONOBURG=./monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
-INCLUDE =  -Iinclude -Ijit -Isrc -Ijit/glib -Itest/libharness -Itest/jit -include arch/config.h
+INCLUDE =  -Iinclude -Ijit -Ijamvm -Ijit/glib -Itest/libharness -Itest/jit -include arch/config.h
 LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
 
 ARCH_INCLUDE = include/arch
@@ -72,31 +72,31 @@ JATO_OBJS =  \
 
 JAMVM_OBJS = \
 	jato/jato.o \
-	src/access.o \
-	src/alloc.o \
-	src/cast.o \
-	src/class.o \
-	src/direct.o \
-	src/dll.o \
-	src/dll_ffi.o \
-	src/excep.o \
-	src/execute.o \
-	src/frame.o \
-	src/hash.o \
-	src/interp.o \
-	src/jni.o \
-	src/lock.o \
-	src/natives.o \
-	src/os/linux/i386/dll_md.o \
-	src/os/linux/i386/init.o \
-	src/os/linux/os.o \
-	src/properties.o \
-	src/reflect.o \
-	src/resolve.o \
-	src/string.o \
-	src/thread.o \
-	src/utf8.o \
-	src/zip.o
+	jamvm/access.o \
+	jamvm/alloc.o \
+	jamvm/cast.o \
+	jamvm/class.o \
+	jamvm/direct.o \
+	jamvm/dll.o \
+	jamvm/dll_ffi.o \
+	jamvm/excep.o \
+	jamvm/execute.o \
+	jamvm/frame.o \
+	jamvm/hash.o \
+	jamvm/interp.o \
+	jamvm/jni.o \
+	jamvm/lock.o \
+	jamvm/natives.o \
+	jamvm/os/linux/i386/dll_md.o \
+	jamvm/os/linux/i386/init.o \
+	jamvm/os/linux/os.o \
+	jamvm/properties.o \
+	jamvm/reflect.o \
+	jamvm/resolve.o \
+	jamvm/string.o \
+	jamvm/thread.o \
+	jamvm/utf8.o \
+	jamvm/zip.o
 	
 # If quiet is set, only print short version of command
 cmd = @$(if $($(quiet)cmd_$(1)),\
@@ -111,7 +111,7 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 all: $(EXECUTABLE) test
 
 quiet_cmd_ln_arch_h = LN $(empty)     $(empty) $@
-      cmd_ln_arch_h = ln -fsn ../../src/arch/$(ARCH).h $@
+      cmd_ln_arch_h = ln -fsn ../../jamvm/arch/$(ARCH).h $@
 
 $(ARCH_H):
 	$(call cmd,ln_arch_h)
