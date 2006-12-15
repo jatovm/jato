@@ -8,12 +8,15 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include <jit/statement.h>
-#include <vm/stack.h>
-#include <jit/jit-compiler.h>
 #include <bytecodes.h>
 #include <errno.h>
+
+#include <jit/jit-compiler.h>
+#include <jit/statement.h>
+
 #include <vm/bytecode.h>
+#include <vm/field.h>
+#include <vm/stack.h>
 
 int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 		      unsigned long offset)
@@ -28,7 +31,7 @@ int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 	if (!fb)
 		return -EINVAL;
 
-	value = field_expr(str_to_type(fb->type), fb);
+	value = field_expr(field_type(fb), fb);
 	if (!value)
 		return -ENOMEM;
 
@@ -51,7 +54,7 @@ int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 		return -EINVAL;
 
 	src = stack_pop(cu->expr_stack);
-	dest = field_expr(str_to_type(fb->type), fb);
+	dest = field_expr(field_type(fb), fb);
 	if (!dest)
 		return -ENOMEM;
 	

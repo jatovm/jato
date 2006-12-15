@@ -7,6 +7,7 @@
 
 #include <jit/expression.h>
 #include <vm/vm.h>
+#include <vm/method.h>
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
@@ -204,12 +205,6 @@ struct expression *__invokevirtual_expr(enum vm_type vm_type, unsigned long meth
 	if (expr)
 		expr->method_index = method_index;
 	return expr;
-}
-
-static enum vm_type method_return_type(struct methodblock *method)
-{
-	char *return_type = method->type + (strlen(method->type) - 1);
-	return str_to_type(return_type);
 }
 
 struct expression *invokevirtual_expr(struct methodblock *target)
