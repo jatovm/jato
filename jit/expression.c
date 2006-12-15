@@ -58,6 +58,7 @@ void free_expression(struct expression *expr)
 			expr_put(to_expr(expr->from_expression));
 		break;
 	case EXPR_CLASS_FIELD:
+	case EXPR_INSTANCE_FIELD:
 		/* nothing to do */
 		break;
 	case EXPR_INVOKE:
@@ -180,13 +181,24 @@ struct expression *conversion_expr(enum vm_type vm_type,
 	return expr;
 }
 
-struct expression *class_field_expr(enum vm_type vm_type,
-			      struct fieldblock *field)
+static struct expression *__field_expr(enum expression_type expr_type,
+				       enum vm_type vm_type,
+				       struct fieldblock *field)
 {
-	struct expression *expr = alloc_expression(EXPR_CLASS_FIELD, vm_type);
+	struct expression *expr = alloc_expression(expr_type, vm_type);
 	if (expr)
 		expr->field = field;
 	return expr;
+}
+
+struct expression *class_field_expr(enum vm_type vm_type, struct fieldblock *field)
+{
+	return __field_expr(EXPR_CLASS_FIELD, vm_type, field);
+}
+
+struct expression *instance_field_expr(enum vm_type vm_type, struct fieldblock *field)
+{
+	return __field_expr(EXPR_INSTANCE_FIELD, vm_type, field);
 }
 
 struct expression *__invoke_expr(enum vm_type vm_type,
