@@ -53,7 +53,6 @@ JATO_OBJS =  \
 	jit/instruction.o \
 	jit/invoke-bc.o \
 	jit/jit-compiler.o \
-	jit/jvm_types.o \
 	jit/load-store-bc.o \
 	jit/object-bc.o \
 	jit/ostack-bc.o \
@@ -68,7 +67,8 @@ JATO_OBJS =  \
 	vm/debug-dump.o \
 	vm/natives.o \
 	vm/stack.o \
-	vm/string.o
+	vm/string.o \
+	vm/types.o
 
 JAMVM_OBJS = \
 	jato/jato.o \
