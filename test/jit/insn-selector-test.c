@@ -706,7 +706,7 @@ void test_select_load_field(void)
 	struct fieldblock field;
 	long expected_disp;
 
-	expr = field_expr(J_INT, &field);
+	expr = class_field_expr(J_INT, &field);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 	bb_add_stmt(bb, stmt);
@@ -733,7 +733,7 @@ void test_store_value_to_field(void)
 	struct fieldblock field;
 	long expected_disp;
 
-	store_target = field_expr(J_INT, &field);
+	store_target = class_field_expr(J_INT, &field);
 	store_value  = value_expr(J_INT, 0xcafebabe);
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_target->node;
@@ -767,7 +767,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	};
 
 	store_dest = local_expr(J_INT, local_idx);
-	store_src  = field_expr(J_INT, &field);
+	store_src  = class_field_expr(J_INT, &field);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_dest->node;

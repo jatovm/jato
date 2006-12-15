@@ -31,7 +31,7 @@ int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 	if (!fb)
 		return -EINVAL;
 
-	value = field_expr(field_type(fb), fb);
+	value = class_field_expr(field_type(fb), fb);
 	if (!value)
 		return -ENOMEM;
 
@@ -54,7 +54,7 @@ int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 		return -EINVAL;
 
 	src = stack_pop(cu->expr_stack);
-	dest = field_expr(field_type(fb), fb);
+	dest = class_field_expr(field_type(fb), fb);
 	if (!dest)
 		return -ENOMEM;
 	

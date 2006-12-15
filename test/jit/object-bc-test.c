@@ -40,7 +40,7 @@ static void assert_convert_getstatic(enum vm_type expected_vm_type,
 
 	convert_ir_const_single(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
-	assert_field_expr(expected_vm_type, &fb, &expr->node);
+	assert_class_field_expr(expected_vm_type, &fb, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -81,7 +81,7 @@ static void assert_convert_putstatic(enum vm_type expected_vm_type,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_field_expr(expected_vm_type, &fb, stmt->store_dest);
+	assert_class_field_expr(expected_vm_type, &fb, stmt->store_dest);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_true(stack_is_empty(cu->expr_stack));
 

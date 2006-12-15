@@ -421,7 +421,7 @@ static int print_conversion_expr(int lvl, struct string *str,
 	return err;
 }
 
-static int print_field_expr(int lvl, struct string *str,
+static int print_class_field_expr(int lvl, struct string *str,
 			    struct expression *expr)
 {
 	return str_append(str, "[field %s %p]", type_names[expr->vm_type],
@@ -544,7 +544,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_BINOP] = print_binop_expr,
 	[EXPR_UNARY_OP] = print_unary_op_expr,
 	[EXPR_CONVERSION] = print_conversion_expr,
-	[EXPR_CLASS_FIELD] = print_field_expr,
+	[EXPR_CLASS_FIELD] = print_class_field_expr,
 	[EXPR_INVOKE] = print_invoke_expr,
 	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_ARGS_LIST] = print_args_list_expr,

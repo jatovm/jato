@@ -313,16 +313,16 @@ void test_should_print_conversion_expression(void)
 				     J_INT, value_expr(J_BOOLEAN, 1));
 }
 
-void assert_printed_field_expr(const char *expected, enum vm_type type,
+void assert_printed_class_field_expr(const char *expected, enum vm_type type,
 			       struct fieldblock *field)
 {
 	struct expression *expr;
 
-	expr = field_expr(type, field);
+	expr = class_field_expr(type, field);
 	assert_print_expr(expected, expr);
 }
 
-void test_should_print_field_expression(void)
+void test_should_print_class_field_expression(void)
 {
 	struct fieldblock fb;
 	struct string *expected;
@@ -330,7 +330,7 @@ void test_should_print_field_expression(void)
 	expected = alloc_str();
 	str_append(expected, "[field int %p]", &fb);
 
-	assert_printed_field_expr(expected->value, J_INT, &fb);
+	assert_printed_class_field_expr(expected->value, J_INT, &fb);
 	free_str(expected);
 }
 

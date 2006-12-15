@@ -112,7 +112,7 @@ void assert_conv_expr(enum vm_type expected_type,
 	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
 }
 
-void assert_field_expr(enum vm_type expected_type,
+void assert_class_field_expr(enum vm_type expected_type,
 		       struct fieldblock *expected_field,
 		       struct tree_node *node)
 {

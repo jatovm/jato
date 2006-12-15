@@ -180,7 +180,7 @@ struct expression *conversion_expr(enum vm_type vm_type,
 	return expr;
 }
 
-struct expression *field_expr(enum vm_type vm_type,
+struct expression *class_field_expr(enum vm_type vm_type,
 			      struct fieldblock *field)
 {
 	struct expression *expr = alloc_expression(EXPR_CLASS_FIELD, vm_type);
