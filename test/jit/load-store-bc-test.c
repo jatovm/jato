@@ -2,12 +2,12 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <vm/system.h>
-#include <vm/vm.h>
 #include <vm/byteorder.h>
+#include <vm/system.h>
+#include <vm/types.h>
+#include <vm/vm.h>
 #include <jit/expression.h>
 #include <jit/jit-compiler.h>
-#include <jvm_types.h>
 #include <libharness.h>
 
 #include "bc-test-utils.h"

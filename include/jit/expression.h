@@ -2,8 +2,8 @@
 #define __EXPRESSION_H
 
 #include <vm/system.h>
+#include <vm/types.h>
 
-#include <jvm_types.h>
 #include <jit/tree-node.h>
 
 enum expression_type {

@@ -6,10 +6,10 @@
 #include <jit/compilation-unit.h>
 #include <jit/expression.h>
 #include <jit/jit-compiler.h>
-#include <jvm_types.h>
 #include <libharness.h>
 #include <vm/stack.h>
 #include <vm/system.h>
+#include <vm/types.h>
 #include <vm/vm.h>
 
 #include "vm-utils.h"

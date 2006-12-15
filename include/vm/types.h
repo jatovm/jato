@@ -1,5 +1,5 @@
-#ifndef __JVM_TYPES_H
-#define __JVM_TYPES_H
+#ifndef __VM_TYPES_H
+#define __VM_TYPES_H
 
 enum jvm_type {
 	J_VOID,

@@ -3,9 +3,9 @@
  */
 
 #include <jit/tree-printer.h>
-#include <jvm_types.h>
 #include <jit/statement.h>
 #include <vm/string.h>
+#include <vm/types.h>
 
 #include <libharness.h>
 #include <stdlib.h>

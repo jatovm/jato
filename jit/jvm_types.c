@@ -1,4 +1,4 @@
-#include <jvm_types.h>
+#include <vm/types.h>
 
 enum jvm_type str_to_type(char *type)
 {
