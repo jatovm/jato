@@ -17,10 +17,10 @@
 
 #include <errno.h>
 
-static int __convert_const(enum jvm_type jvm_type,
+static int __convert_const(enum vm_type vm_type,
 			   unsigned long long value, struct stack *expr_stack)
 {
-	struct expression *expr = value_expr(jvm_type, value);
+	struct expression *expr = value_expr(vm_type, value);
 	if (!expr)
 		return -ENOMEM;
 
@@ -50,10 +50,10 @@ int convert_lconst(struct compilation_unit *cu, struct basic_block *bb,
 			       cu->expr_stack);
 }
 
-static int __convert_fconst(enum jvm_type jvm_type,
+static int __convert_fconst(enum vm_type vm_type,
 			    double value, struct stack *expr_stack)
 {
-	struct expression *expr = fvalue_expr(jvm_type, value);
+	struct expression *expr = fvalue_expr(vm_type, value);
 	if (!expr)
 		return -ENOMEM;
 
@@ -160,7 +160,7 @@ int convert_ldc2_w(struct compilation_unit *cu, struct basic_block *bb,
 
 int convert_load(struct compilation_unit *cu,
 			struct basic_block *bb,
-			unsigned char index, enum jvm_type type)
+			unsigned char index, enum vm_type type)
 {
 	struct expression *expr;
 
@@ -245,7 +245,7 @@ int convert_aload_n(struct compilation_unit *cu, struct basic_block *bb,
 
 static int convert_store(struct compilation_unit *cu,
 			 struct basic_block *bb,
-			 enum jvm_type type, unsigned long index)
+			 enum vm_type type, unsigned long index)
 {
 	struct expression *src_expr, *dest_expr;
 	struct statement *stmt = alloc_statement(STMT_STORE);

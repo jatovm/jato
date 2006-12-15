@@ -19,7 +19,7 @@
 
 static int convert_binop(struct compilation_unit *cu,
 			 struct basic_block *bb,
-			 enum jvm_type jvm_type,
+			 enum vm_type vm_type,
 			 enum binary_operator binary_operator)
 {
 	struct expression *left, *right, *expr;
@@ -27,7 +27,7 @@ static int convert_binop(struct compilation_unit *cu,
 	right = stack_pop(cu->expr_stack);
 	left = stack_pop(cu->expr_stack);
 
-	expr = binop_expr(jvm_type, binary_operator, left, right);
+	expr = binop_expr(vm_type, binary_operator, left, right);
 	if (!expr)
 		return -ENOMEM;
 
@@ -157,14 +157,14 @@ int convert_drem(struct compilation_unit *cu, struct basic_block *bb,
 
 static int convert_unary_op(struct compilation_unit *cu,
 			    struct basic_block *bb,
-			    enum jvm_type jvm_type,
+			    enum vm_type vm_type,
 			    enum unary_operator unary_operator)
 {
 	struct expression *expression, *expr;
 
 	expression = stack_pop(cu->expr_stack);
 
-	expr = unary_op_expr(jvm_type, unary_operator, expression);
+	expr = unary_op_expr(vm_type, unary_operator, expression);
 	if (!expr)
 		return -ENOMEM;
 

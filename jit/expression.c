@@ -12,13 +12,13 @@
 #include <glib.h>
 
 struct expression *alloc_expression(enum expression_type type,
-				    enum jvm_type jvm_type)
+				    enum vm_type vm_type)
 {
 	struct expression *expr = malloc(sizeof *expr);
 	if (expr) {
 		memset(expr, 0, sizeof *expr);
 		expr->node.op = type << EXPR_TYPE_SHIFT;
-		expr->jvm_type = jvm_type;
+		expr->vm_type = vm_type;
 		expr->refcount = 1;
 	}
 	return expr;
@@ -96,48 +96,48 @@ void expr_put(struct expression *expr)
 		free_expression(expr);
 }
 
-struct expression *value_expr(enum jvm_type jvm_type, unsigned long long value)
+struct expression *value_expr(enum vm_type vm_type, unsigned long long value)
 {
-	struct expression *expr = alloc_expression(EXPR_VALUE, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_VALUE, vm_type);
 	if (expr)
 		expr->value = value;
 
 	return expr;
 }
 
-struct expression *fvalue_expr(enum jvm_type jvm_type, double fvalue)
+struct expression *fvalue_expr(enum vm_type vm_type, double fvalue)
 {
-	struct expression *expr = alloc_expression(EXPR_FVALUE, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_FVALUE, vm_type);
 	if (expr)
 		expr->fvalue = fvalue;
 
 	return expr;
 }
 
-struct expression *local_expr(enum jvm_type jvm_type, unsigned long local_index)
+struct expression *local_expr(enum vm_type vm_type, unsigned long local_index)
 {
-	struct expression *expr = alloc_expression(EXPR_LOCAL, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_LOCAL, vm_type);
 	if (expr)
 		expr->local_index = local_index;
 
 	return expr;
 }
 
-struct expression *temporary_expr(enum jvm_type jvm_type,
+struct expression *temporary_expr(enum vm_type vm_type,
 				  unsigned long temporary)
 {
-	struct expression *expr = alloc_expression(EXPR_TEMPORARY, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_TEMPORARY, vm_type);
 	if (expr)
 		expr->temporary = temporary;
 
 	return expr;
 }
 
-struct expression *array_deref_expr(enum jvm_type jvm_type,
+struct expression *array_deref_expr(enum vm_type vm_type,
 				    struct expression *arrayref,
 				    struct expression *array_index)
 {
-	struct expression *expr = alloc_expression(EXPR_ARRAY_DEREF, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_ARRAY_DEREF, vm_type);
 	if (expr) {
 		expr->arrayref = &arrayref->node;
 		expr->array_index = &array_index->node;
@@ -145,11 +145,11 @@ struct expression *array_deref_expr(enum jvm_type jvm_type,
 	return expr;
 }
 
-struct expression *binop_expr(enum jvm_type jvm_type,
+struct expression *binop_expr(enum vm_type vm_type,
 			      enum binary_operator binary_operator,
 			      struct expression *binary_left, struct expression *binary_right)
 {
-	struct expression *expr = alloc_expression(EXPR_BINOP, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_BINOP, vm_type);
 	if (expr) {
 		expr->node.op |= binary_operator << OP_SHIFT;
 		expr->binary_left = &binary_left->node;
@@ -158,11 +158,11 @@ struct expression *binop_expr(enum jvm_type jvm_type,
 	return expr;
 }
 
-struct expression *unary_op_expr(enum jvm_type jvm_type,
+struct expression *unary_op_expr(enum vm_type vm_type,
 				 enum unary_operator unary_operator,
 				 struct expression *unary_expression)
 {
-	struct expression *expr = alloc_expression(EXPR_UNARY_OP, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_UNARY_OP, vm_type);
 	if (expr) {
 		expr->node.op |= unary_operator << OP_SHIFT;
 		expr->unary_expression = &unary_expression->node;
@@ -170,43 +170,43 @@ struct expression *unary_op_expr(enum jvm_type jvm_type,
 	return expr;
 }
 
-struct expression *conversion_expr(enum jvm_type jvm_type,
+struct expression *conversion_expr(enum vm_type vm_type,
 				   struct expression *from_expression)
 {
-	struct expression *expr = alloc_expression(EXPR_CONVERSION, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_CONVERSION, vm_type);
 	if (expr)
 		expr->from_expression = &from_expression->node;
 	return expr;
 }
 
-struct expression *field_expr(enum jvm_type jvm_type,
+struct expression *field_expr(enum vm_type vm_type,
 			      struct fieldblock *field)
 {
-	struct expression *expr = alloc_expression(EXPR_FIELD, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_FIELD, vm_type);
 	if (expr)
 		expr->field = field;
 	return expr;
 }
 
-struct expression *__invoke_expr(enum jvm_type jvm_type,
+struct expression *__invoke_expr(enum vm_type vm_type,
 			     struct methodblock *target_method)
 {
-	struct expression *expr = alloc_expression(EXPR_INVOKE, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_INVOKE, vm_type);
 	if (expr) {
 		expr->target_method = target_method;
 	}
 	return expr;
 }
 
-struct expression *__invokevirtual_expr(enum jvm_type jvm_type, unsigned long method_index)
+struct expression *__invokevirtual_expr(enum vm_type vm_type, unsigned long method_index)
 {
-	struct expression *expr = alloc_expression(EXPR_INVOKEVIRTUAL, jvm_type);
+	struct expression *expr = alloc_expression(EXPR_INVOKEVIRTUAL, vm_type);
 	if (expr)
 		expr->method_index = method_index;
 	return expr;
 }
 
-static enum jvm_type method_return_type(struct methodblock *method)
+static enum vm_type method_return_type(struct methodblock *method)
 {
 	char *return_type = method->type + (strlen(method->type) - 1);
 	return str_to_type(return_type);
@@ -214,7 +214,7 @@ static enum jvm_type method_return_type(struct methodblock *method)
 
 struct expression *invokevirtual_expr(struct methodblock *target)
 {
-	enum jvm_type return_type;
+	enum vm_type return_type;
 
 	return_type = method_return_type(target);
 	return __invokevirtual_expr(return_type, target->method_table_index);
@@ -222,7 +222,7 @@ struct expression *invokevirtual_expr(struct methodblock *target)
 
 struct expression *invoke_expr(struct methodblock *target)
 {
-	enum jvm_type return_type;
+	enum vm_type return_type;
 
 	return_type = method_return_type(target);
 	return  __invoke_expr(return_type, target);

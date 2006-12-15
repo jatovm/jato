@@ -10,8 +10,8 @@
 #include "bc-test-utils.h"
 
 static void assert_conversion_expr_stack(unsigned char opc,
-					 enum jvm_type from_type,
-					 enum jvm_type to_type)
+					 enum vm_type from_type,
+					 enum vm_type to_type)
 {
 	unsigned char code[] = { opc };
 	struct expression *expression, *conversion_expression;

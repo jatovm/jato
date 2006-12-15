@@ -82,7 +82,7 @@ void test_convert_if(void)
 }
 
 static void assert_convert_if_cmp(enum binary_operator expected_operator,
-				  enum jvm_type jvm_type, unsigned char opc)
+				  enum vm_type vm_type, unsigned char opc)
 {
 	struct expression *if_value1, *if_value2;
 	struct basic_block *stmt_bb, *true_bb;
@@ -101,10 +101,10 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
-	if_value1 = temporary_expr(jvm_type, 1);
+	if_value1 = temporary_expr(vm_type, 1);
 	stack_push(cu->expr_stack, if_value1);
 
-	if_value2 = temporary_expr(jvm_type, 2);
+	if_value2 = temporary_expr(vm_type, 2);
 	stack_push(cu->expr_stack, if_value2);
 
 	convert_to_ir(cu);
@@ -113,7 +113,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	if_stmt = stmt_entry(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(true_bb, if_stmt->if_true);
-	assert_binop_expr(jvm_type, expected_operator, if_value1, if_value2,
+	assert_binop_expr(vm_type, expected_operator, if_value1, if_value2,
 			  if_stmt->if_conditional);
 
 	free_compilation_unit(cu);

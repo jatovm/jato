@@ -271,28 +271,28 @@ static const char *type_names[] = {
 static int print_value_expr(int lvl, struct string *str,
 			    struct expression *expr)
 {
-	return str_append(str, "[value %s %llu]", type_names[expr->jvm_type],
+	return str_append(str, "[value %s %llu]", type_names[expr->vm_type],
 			  expr->value);
 }
 
 static int print_fvalue_expr(int lvl, struct string *str,
 			     struct expression *expr)
 {
-	return str_append(str, "[fvalue %s %f]", type_names[expr->jvm_type],
+	return str_append(str, "[fvalue %s %f]", type_names[expr->vm_type],
 			  expr->fvalue);
 }
 
 static int print_local_expr(int lvl, struct string *str,
 			    struct expression *expr)
 {
-	return str_append(str, "[local %s %lu]", type_names[expr->jvm_type],
+	return str_append(str, "[local %s %lu]", type_names[expr->vm_type],
 			  expr->local_index);
 }
 
 static int print_temporary_expr(int lvl, struct string *str,
 				struct expression *expr)
 {
-	return str_append(str, "[temporary %s %lu]", type_names[expr->jvm_type],
+	return str_append(str, "[temporary %s %lu]", type_names[expr->vm_type],
 			  expr->local_index);
 }
 
@@ -305,8 +305,8 @@ static int print_array_deref_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "jvm_type",
-				 type_names[expr->jvm_type]);
+	err = append_simple_attr(lvl + 1, str, "vm_type",
+				 type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
@@ -353,8 +353,8 @@ static int print_binop_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "jvm_type",
-				 type_names[expr->jvm_type]);
+	err = append_simple_attr(lvl + 1, str, "vm_type",
+				 type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
@@ -383,8 +383,8 @@ static int print_unary_op_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "jvm_type",
-				 type_names[expr->jvm_type]);
+	err = append_simple_attr(lvl + 1, str, "vm_type",
+				 type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
@@ -409,8 +409,8 @@ static int print_conversion_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "jvm_type",
-				 type_names[expr->jvm_type]);
+	err = append_simple_attr(lvl + 1, str, "vm_type",
+				 type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
@@ -424,7 +424,7 @@ static int print_conversion_expr(int lvl, struct string *str,
 static int print_field_expr(int lvl, struct string *str,
 			    struct expression *expr)
 {
-	return str_append(str, "[field %s %p]", type_names[expr->jvm_type],
+	return str_append(str, "[field %s %p]", type_names[expr->vm_type],
 			  expr->field);
 }
 
@@ -522,8 +522,8 @@ static int print_new_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "jvm_type",
-				 type_names[expr->jvm_type]);
+	err = append_simple_attr(lvl + 1, str, "vm_type",
+				 type_names[expr->vm_type]);
 	if (err)
 		goto out;
 

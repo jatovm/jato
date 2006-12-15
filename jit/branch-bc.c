@@ -17,7 +17,7 @@
 
 static struct statement *__convert_if(struct compilation_unit *cu,
 				      unsigned long offset,
-				      enum jvm_type jvm_type,
+				      enum vm_type vm_type,
 				      enum binary_operator binop,
 				      struct expression *binary_left,
 				      struct expression *binary_right)
@@ -30,7 +30,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	if_target = bytecode_br_target(cu->method->jit_code + offset);
 	true_bb = find_bb(cu, offset + if_target);
 
-	if_conditional = binop_expr(jvm_type, binop, binary_left, binary_right);
+	if_conditional = binop_expr(vm_type, binop, binary_left, binary_right);
 	if (!if_conditional)
 		goto failed;
 
@@ -108,7 +108,7 @@ int convert_ifle(struct compilation_unit *cu, struct basic_block *bb,
 static int convert_if_cmp(struct compilation_unit *cu,
 			  struct basic_block *bb,
 			  unsigned long offset,
-			  enum jvm_type jvm_type, enum binary_operator binop)
+			  enum vm_type vm_type, enum binary_operator binop)
 {
 	struct statement *stmt;
 	struct expression *if_value1, *if_value2;
@@ -116,7 +116,7 @@ static int convert_if_cmp(struct compilation_unit *cu,
 	if_value2 = stack_pop(cu->expr_stack);
 	if_value1 = stack_pop(cu->expr_stack);
 
-	stmt = __convert_if(cu, offset, jvm_type, binop, if_value1, if_value2);
+	stmt = __convert_if(cu, offset, vm_type, binop, if_value1, if_value2);
 	if (!stmt)
 		return -ENOMEM;
 

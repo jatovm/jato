@@ -13,7 +13,7 @@
 
 #include <bc-test-utils.h>
 
-static void assert_unary_op_expr(enum jvm_type jvm_type,
+static void assert_unary_op_expr(enum vm_type vm_type,
 				 enum unary_operator unary_operator,
 				 struct expression *expression,
 				 struct tree_node *node)
@@ -21,12 +21,12 @@ static void assert_unary_op_expr(enum jvm_type jvm_type,
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_UNARY_OP, expr_type(expr));
-	assert_int_equals(jvm_type, expr->jvm_type);
+	assert_int_equals(vm_type, expr->vm_type);
 	assert_int_equals(unary_operator, expr_unary_op(expr));
 	assert_ptr_equals(expression, to_expr(expr->unary_expression));
 }
 
-static void assert_convert_binop(enum jvm_type jvm_type,
+static void assert_convert_binop(enum vm_type vm_type,
 				 enum binary_operator binary_operator,
 				 unsigned char opc)
 {
@@ -40,8 +40,8 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	left = temporary_expr(jvm_type, 1);
-	right = temporary_expr(jvm_type, 2);
+	left = temporary_expr(vm_type, 1);
+	right = temporary_expr(vm_type, 2);
 
 	stack_push(cu->expr_stack, left);
 	stack_push(cu->expr_stack, right);
@@ -49,7 +49,7 @@ static void assert_convert_binop(enum jvm_type jvm_type,
 	convert_to_ir(cu);
 	expr = stack_pop(cu->expr_stack);
 
-	assert_binop_expr(jvm_type, binary_operator, left, right, &expr->node);
+	assert_binop_expr(vm_type, binary_operator, left, right, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -96,7 +96,7 @@ void test_convert_rem(void)
 	assert_convert_binop(J_DOUBLE, OP_REM, OPC_DREM);
 }
 
-static void assert_convert_unop(enum jvm_type jvm_type,
+static void assert_convert_unop(enum vm_type vm_type,
 				enum unary_operator unary_operator,
 				unsigned char opc)
 {
@@ -110,13 +110,13 @@ static void assert_convert_unop(enum jvm_type jvm_type,
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	expression = temporary_expr(jvm_type, 1);
+	expression = temporary_expr(vm_type, 1);
 	stack_push(cu->expr_stack, expression);
 
 	convert_to_ir(cu);
 	unary_expression = stack_pop(cu->expr_stack);
 
-	assert_unary_op_expr(jvm_type, unary_operator, expression,
+	assert_unary_op_expr(vm_type, unary_operator, expression,
 			     &unary_expression->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -204,7 +204,7 @@ void test_convert_iinc(void)
 }
 
 static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
-			       enum jvm_type type)
+			       enum vm_type type)
 {
 	unsigned char code[] = { opc };
 	struct expression *left, *right, *cmp_expression;

@@ -74,7 +74,7 @@ static unsigned long alloc_temporary(void)
 }
 
 int convert_array_load(struct compilation_unit *cu,
-			      struct basic_block *bb, enum jvm_type type)
+			      struct basic_block *bb, enum vm_type type)
 {
 	struct expression *index, *arrayref;
 	struct expression *src_expr, *dest_expr;
@@ -173,7 +173,7 @@ int convert_saload(struct compilation_unit *cu, struct basic_block *bb,
 }
 
 static int convert_array_store(struct compilation_unit *cu,
-			       struct basic_block *bb, enum jvm_type type)
+			       struct basic_block *bb, enum vm_type type)
 {
 	struct expression *value, *index, *arrayref;
 	struct statement *store_stmt, *arraycheck, *nullcheck;

@@ -32,7 +32,7 @@ static u8 double_to_cpu64(double fvalue)
 	return v.value;
 }
 
-static void __assert_convert_const(enum jvm_type expected_jvm_type,
+static void __assert_convert_const(enum vm_type expected_vm_type,
 				   long long expected_value,
 				   struct methodblock *method)
 {
@@ -43,14 +43,14 @@ static void __assert_convert_const(enum jvm_type expected_jvm_type,
 	convert_to_ir(cu);
 
 	expr = stack_pop(cu->expr_stack);
-	assert_value_expr(expected_jvm_type, expected_value, &expr->node);
+	assert_value_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
-static void assert_convert_const(enum jvm_type expected_jvm_type,
+static void assert_convert_const(enum vm_type expected_vm_type,
 				 long long expected_value, char actual)
 {
 	unsigned char code[] = { actual };
@@ -58,10 +58,10 @@ static void assert_convert_const(enum jvm_type expected_jvm_type,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
-	__assert_convert_const(expected_jvm_type, expected_value, &method);
+	__assert_convert_const(expected_vm_type, expected_value, &method);
 }
 
-static void assert_convert_fconst(enum jvm_type expected_jvm_type,
+static void assert_convert_fconst(enum vm_type expected_vm_type,
 				  double expected_value, char actual)
 {
 	struct expression *expr;
@@ -75,7 +75,7 @@ static void assert_convert_fconst(enum jvm_type expected_jvm_type,
 	cu = alloc_simple_compilation_unit(&method);
 	convert_to_ir(cu);
 	expr = stack_pop(cu->expr_stack);
-	assert_fvalue_expr(expected_jvm_type, expected_value, &expr->node);
+	assert_fvalue_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -156,7 +156,7 @@ void test_convert_sipush(void)
 	assert_convert_sipush(MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
 }
 
-static void assert_convert_ldc(enum jvm_type expected_jvm_type,
+static void assert_convert_ldc(enum vm_type expected_vm_type,
 			       long long expected_value, u1 cp_type)
 {
 	struct expression *expr;
@@ -173,7 +173,7 @@ static void assert_convert_ldc(enum jvm_type expected_jvm_type,
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 	expr = stack_pop(cu->expr_stack);
-	assert_value_expr(expected_jvm_type, expected_value, &expr->node);
+	assert_value_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -218,7 +218,7 @@ void test_convert_ldc(void)
 	assert_convert_ldc(J_REFERENCE, 0xDEADBEEF, CONSTANT_String);
 }
 
-static void assert_convert_ldcw(enum jvm_type expected_jvm_type,
+static void assert_convert_ldcw(enum vm_type expected_vm_type,
 				long long expected_value, u1 cp_type,
 				unsigned char opcode)
 {
@@ -238,14 +238,14 @@ static void assert_convert_ldcw(enum jvm_type expected_jvm_type,
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
 	expr = stack_pop(cu->expr_stack);
-	assert_value_expr(expected_jvm_type, expected_value, &expr->node);
+	assert_value_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
-static void assert_convert_ldcw_f(enum jvm_type expected_jvm_type,
+static void assert_convert_ldcw_f(enum vm_type expected_vm_type,
 				  double expected_value,
 				  u1 cp_type, u8 value, unsigned long opcode)
 {
@@ -265,29 +265,29 @@ static void assert_convert_ldcw_f(enum jvm_type expected_jvm_type,
 
 	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
 	expr = stack_pop(cu->expr_stack);
-	assert_fvalue_expr(expected_jvm_type, expected_value, &expr->node);
+	assert_fvalue_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
-static void assert_ldcw_float_expr_and_stack(enum jvm_type expected_jvm_type,
+static void assert_ldcw_float_expr_and_stack(enum vm_type expected_vm_type,
 					     float expected_value, u1 cp_type,
 					     unsigned long opcode)
 {
 	u4 value = float_to_cpu32(expected_value);
-	assert_convert_ldcw_f(expected_jvm_type,
+	assert_convert_ldcw_f(expected_vm_type,
 			      expected_value, cp_type, value, opcode);
 }
 
-static void assert_ldcw_double_expr_and_stack(enum jvm_type
-					      expected_jvm_type,
+static void assert_ldcw_double_expr_and_stack(enum vm_type
+					      expected_vm_type,
 					      double expected_value,
 					      u1 cp_type, unsigned long opcode)
 {
 	u8 value = double_to_cpu64(expected_value);
-	assert_convert_ldcw_f(expected_jvm_type,
+	assert_convert_ldcw_f(expected_vm_type,
 			      expected_value, cp_type, value, opcode);
 }
 
@@ -326,7 +326,7 @@ void test_convert_ldc2_w(void)
 
 static void __assert_convert_load(unsigned char *code,
 				  unsigned long size,
-				  enum jvm_type expected_jvm_type,
+				  enum vm_type expected_vm_type,
 				  unsigned char expected_index)
 {
 	struct expression *expr;
@@ -341,7 +341,7 @@ static void __assert_convert_load(unsigned char *code,
 	convert_to_ir(cu);
 
 	expr = stack_pop(cu->expr_stack);
-	assert_local_expr(expected_jvm_type, expected_index, &expr->node);
+	assert_local_expr(expected_vm_type, expected_index, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -349,11 +349,11 @@ static void __assert_convert_load(unsigned char *code,
 }
 
 static void assert_convert_load(unsigned char opc,
-				enum jvm_type expected_jvm_type,
+				enum vm_type expected_vm_type,
 				unsigned char expected_index)
 {
 	unsigned char code[] = { opc, expected_index };
-	__assert_convert_load(code, ARRAY_SIZE(code), expected_jvm_type,
+	__assert_convert_load(code, ARRAY_SIZE(code), expected_vm_type,
 			      expected_index);
 }
 
@@ -393,11 +393,11 @@ void test_convert_aload(void)
 }
 
 static void assert_convert_load_n(unsigned char opc,
-				  enum jvm_type expected_jvm_type,
+				  enum vm_type expected_vm_type,
 				  unsigned char expected_index)
 {
 	unsigned char code[] = { opc };
-	__assert_convert_load(code, ARRAY_SIZE(code), expected_jvm_type,
+	__assert_convert_load(code, ARRAY_SIZE(code), expected_vm_type,
 			      expected_index);
 }
 
@@ -442,7 +442,7 @@ void test_convert_aload_n(void)
 }
 
 static void __assert_convert_store(unsigned char *code, unsigned long size,
-				   enum jvm_type expected_jvm_type,
+				   enum vm_type expected_vm_type,
 				   unsigned char expected_index,
 				   unsigned long expected_temporary)
 {
@@ -462,7 +462,7 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 
 	assert_store_stmt(stmt);
 	assert_temporary_expr(expected_temporary, stmt->store_src);
-	assert_local_expr(expected_jvm_type, expected_index, stmt->store_dest);
+	assert_local_expr(expected_vm_type, expected_index, stmt->store_dest);
 
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -470,12 +470,12 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 }
 
 static void assert_convert_store(unsigned char opc,
-				 enum jvm_type expected_jvm_type,
+				 enum vm_type expected_vm_type,
 				 unsigned char expected_index,
 				 unsigned long expected_temporary)
 {
 	unsigned char code[] = { opc, expected_index };
-	__assert_convert_store(code, ARRAY_SIZE(code), expected_jvm_type,
+	__assert_convert_store(code, ARRAY_SIZE(code), expected_vm_type,
 			       expected_index, expected_temporary);
 }
 
@@ -510,12 +510,12 @@ void test_convert_astore(void)
 }
 
 static void assert_convert_store_n(unsigned char opc,
-				 enum jvm_type expected_jvm_type,
+				 enum vm_type expected_vm_type,
 				 unsigned char expected_index,
 				 unsigned long expected_temporary)
 {
 	unsigned char code[] = { opc };
-	__assert_convert_store(code, ARRAY_SIZE(code), expected_jvm_type,
+	__assert_convert_store(code, ARRAY_SIZE(code), expected_vm_type,
 			       expected_index, expected_temporary);
 }
 

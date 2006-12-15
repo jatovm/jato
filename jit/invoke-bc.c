@@ -91,7 +91,7 @@ static int convert_and_add_args(struct compilation_unit *cu,
 static int insert_invoke_expr(struct compilation_unit *cu, struct basic_block *bb,
 			    struct expression *invoke_expr)
 {
-	if (invoke_expr->jvm_type == J_VOID) {
+	if (invoke_expr->vm_type == J_VOID) {
 		struct statement *expr_stmt;
 
 		expr_stmt = alloc_statement(STMT_EXPRESSION);

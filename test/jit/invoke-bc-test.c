@@ -11,7 +11,7 @@
 
 #include <libharness.h>
 
-static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
+static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 {
 	struct expression *return_value;
 	struct compilation_unit *cu;
@@ -24,7 +24,7 @@ static void assert_convert_return(enum jvm_type jvm_type, unsigned char opc)
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	return_value = temporary_expr(jvm_type, 0);
+	return_value = temporary_expr(vm_type, 0);
 	stack_push(cu->expr_stack, return_value);
 
 	convert_to_ir(cu);
@@ -236,14 +236,14 @@ static void assert_invoke_args(unsigned char invoke_opc, unsigned long nr_args)
 	free_compilation_unit(cu);
 }
 
-static void assert_invoke_return_type(unsigned char invoke_opc, enum jvm_type expected, char *type)
+static void assert_invoke_return_type(unsigned char invoke_opc, enum vm_type expected, char *type)
 {
 	struct compilation_unit *cu;
 	struct expression *invoke_expr;
 
 	cu = create_invoke_x_unit(invoke_opc, type, 1, 0, 0, 0, NULL);
 	invoke_expr = stack_pop(cu->expr_stack);
-	assert_int_equals(expected, invoke_expr->jvm_type);
+	assert_int_equals(expected, invoke_expr->vm_type);
 
 	expr_put(invoke_expr);
 	free_compilation_unit(cu);
@@ -287,7 +287,7 @@ static void assert_invoke_return_value_discarded(enum expression_type expected_t
 	free_compilation_unit(cu);
 }
 
-static void assert_converts_to_invoke_expr(enum jvm_type expected_jvm_type, unsigned char opc, char *return_type, int nr_args)
+static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsigned char opc, char *return_type, int nr_args)
 {
 	struct methodblock target_method = {
 		.type = return_type,
@@ -314,7 +314,7 @@ static void assert_converts_to_invoke_expr(enum jvm_type expected_jvm_type, unsi
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));
-	assert_invoke_expr(expected_jvm_type, &target_method, stmt->return_value);
+	assert_invoke_expr(expected_vm_type, &target_method, stmt->return_value);
 
 	actual_args = to_expr(to_expr(stmt->return_value)->args_list);
 	assert_args(args, nr_args, actual_args);

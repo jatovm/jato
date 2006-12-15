@@ -59,7 +59,7 @@ enum unary_operator {
 
 struct expression {
 	unsigned long refcount;
-	enum jvm_type jvm_type;
+	enum vm_type vm_type;
 	union {
 		struct tree_node node;
 
@@ -192,23 +192,23 @@ static inline enum unary_operator expr_unary_op(struct expression *expr)
 	return (expr->node.op & OP_MASK) >> OP_SHIFT;
 }
 
-struct expression *alloc_expression(enum expression_type, enum jvm_type);
+struct expression *alloc_expression(enum expression_type, enum vm_type);
 void free_expression(struct expression *);
 
 void expr_get(struct expression *);
 void expr_put(struct expression *);
 
-struct expression *value_expr(enum jvm_type, unsigned long long);
-struct expression *fvalue_expr(enum jvm_type, double);
-struct expression *local_expr(enum jvm_type, unsigned long);
-struct expression *temporary_expr(enum jvm_type, unsigned long);
-struct expression *array_deref_expr(enum jvm_type, struct expression *, struct expression *);
-struct expression *binop_expr(enum jvm_type, enum binary_operator, struct expression *, struct expression *);
-struct expression *unary_op_expr(enum jvm_type, enum unary_operator, struct expression *);
-struct expression *conversion_expr(enum jvm_type, struct expression *);
-struct expression *field_expr(enum jvm_type, struct fieldblock *);
-struct expression *__invoke_expr(enum jvm_type, struct methodblock *);
-struct expression *__invokevirtual_expr(enum jvm_type, unsigned long);
+struct expression *value_expr(enum vm_type, unsigned long long);
+struct expression *fvalue_expr(enum vm_type, double);
+struct expression *local_expr(enum vm_type, unsigned long);
+struct expression *temporary_expr(enum vm_type, unsigned long);
+struct expression *array_deref_expr(enum vm_type, struct expression *, struct expression *);
+struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
+struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);
+struct expression *conversion_expr(enum vm_type, struct expression *);
+struct expression *field_expr(enum vm_type, struct fieldblock *);
+struct expression *__invoke_expr(enum vm_type, struct methodblock *);
+struct expression *__invokevirtual_expr(enum vm_type, unsigned long);
 struct expression *invoke_expr(struct methodblock *);
 struct expression *invokevirtual_expr(struct methodblock *);
 struct expression *args_list_expr(struct expression *, struct expression *);

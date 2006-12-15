@@ -150,7 +150,7 @@ static void assert_print_expr(const char *expected, struct expression *expr)
 	expr_put(expr);
 }
 
-void assert_printed_value_expr(const char *expected, enum jvm_type type,
+void assert_printed_value_expr(const char *expected, enum vm_type type,
 			       unsigned long long value)
 {
 	struct expression *expr;
@@ -165,7 +165,7 @@ void test_should_print_value_expression(void)
 	assert_printed_value_expr("[value boolean 1]", J_BOOLEAN, 1);
 }
 
-void assert_printed_fvalue_expr(const char *expected, enum jvm_type type,
+void assert_printed_fvalue_expr(const char *expected, enum vm_type type,
 			        double fvalue)
 {
 	struct expression *expr;
@@ -180,7 +180,7 @@ void test_should_print_fvalue_expression(void)
 	assert_printed_fvalue_expr("[fvalue double 1.100000]", J_DOUBLE, 1.1);
 }
 
-void assert_printed_local_expr(const char *expected, enum jvm_type type,
+void assert_printed_local_expr(const char *expected, enum vm_type type,
 			       unsigned long local_index)
 {
 	struct expression *expr;
@@ -195,7 +195,7 @@ void test_should_print_local_expression(void)
 	assert_printed_local_expr("[local boolean 1]", J_BOOLEAN, 1);
 }
 
-void assert_printed_temporary_expr(const char *expected, enum jvm_type type,
+void assert_printed_temporary_expr(const char *expected, enum vm_type type,
 				   unsigned long temporary)
 {
 	struct expression *expr;
@@ -210,7 +210,7 @@ void test_should_print_temporary_expression(void)
 	assert_printed_temporary_expr("[temporary boolean 1]", J_BOOLEAN, 1);
 }
 
-void assert_printed_array_deref_expr(const char *expected, enum jvm_type type,
+void assert_printed_array_deref_expr(const char *expected, enum vm_type type,
 				     unsigned long arrayref, unsigned long array_index)
 {
 	struct expression *expr;
@@ -223,11 +223,11 @@ void assert_printed_array_deref_expr(const char *expected, enum jvm_type type,
 
 void test_should_print_array_deref_expression(void)
 {
-	assert_printed_array_deref_expr("ARRAY_DEREF:\n  jvm_type: [float]\n  arrayref: [value reference 0]\n  array_index: [value int 1]\n", J_FLOAT, 0, 1);
-	assert_printed_array_deref_expr("ARRAY_DEREF:\n  jvm_type: [double]\n  arrayref: [value reference 1]\n  array_index: [value int 2]\n", J_DOUBLE, 1, 2);
+	assert_printed_array_deref_expr("ARRAY_DEREF:\n  vm_type: [float]\n  arrayref: [value reference 0]\n  array_index: [value int 1]\n", J_FLOAT, 0, 1);
+	assert_printed_array_deref_expr("ARRAY_DEREF:\n  vm_type: [double]\n  arrayref: [value reference 1]\n  array_index: [value int 2]\n", J_DOUBLE, 1, 2);
 }
 
-void assert_printed_binop_expr(const char *expected, enum jvm_type type,
+void assert_printed_binop_expr(const char *expected, enum vm_type type,
 			       enum binary_operator op,
 			       struct expression *binary_left,
 			       struct expression *binary_right)
@@ -241,7 +241,7 @@ void assert_printed_binop_expr(const char *expected, enum jvm_type type,
 void test_should_print_binop_expression(void)
 {
 	assert_printed_binop_expr("BINOP:\n"
-				  "  jvm_type: [int]\n"
+				  "  vm_type: [int]\n"
 				  "  binary_operator: [add]\n"
 				  "  binary_left: [value int 0]\n"
 				  "  binary_right: [value int 1]\n",
@@ -249,12 +249,12 @@ void test_should_print_binop_expression(void)
 				  value_expr(J_INT, 0), value_expr(J_INT, 1));
 
 	assert_printed_binop_expr("BINOP:\n"
-				  "  jvm_type: [long]\n"
+				  "  vm_type: [long]\n"
 				  "  binary_operator: [add]\n"
 				  "  binary_left: [value long 1]\n"
 				  "  binary_right:\n"
 				  "    BINOP:\n"
-				  "      jvm_type: [long]\n"
+				  "      vm_type: [long]\n"
 				  "      binary_operator: [sub]\n"
 				  "      binary_left: [value long 2]\n"
 				  "      binary_right: [value long 3]\n",
@@ -266,7 +266,7 @@ void test_should_print_binop_expression(void)
 				  );
 }
 
-void assert_printed_unary_op_expr(const char *expected, enum jvm_type type,
+void assert_printed_unary_op_expr(const char *expected, enum vm_type type,
 				  enum unary_operator op,
 				  struct expression *unary_expr)
 {
@@ -279,19 +279,19 @@ void assert_printed_unary_op_expr(const char *expected, enum jvm_type type,
 void test_should_print_unary_op_expression(void)
 {
 	assert_printed_unary_op_expr("UNARY_OP:\n"
-				     "  jvm_type: [int]\n"
+				     "  vm_type: [int]\n"
 				     "  unary_operator: [neg]\n"
 				     "  unary_expression: [value int 0]\n",
 				     J_INT, OP_NEG, value_expr(J_INT, 0));
 
 	assert_printed_unary_op_expr("UNARY_OP:\n"
-				     "  jvm_type: [boolean]\n"
+				     "  vm_type: [boolean]\n"
 				     "  unary_operator: [neg]\n"
 				     "  unary_expression: [value boolean 1]\n",
 				     J_BOOLEAN, OP_NEG, value_expr(J_BOOLEAN, 1));
 }
 
-void assert_printed_conversion_expr(const char *expected, enum jvm_type type,
+void assert_printed_conversion_expr(const char *expected, enum vm_type type,
 				    struct expression *from_expr)
 {
 	struct expression *expr;
@@ -303,17 +303,17 @@ void assert_printed_conversion_expr(const char *expected, enum jvm_type type,
 void test_should_print_conversion_expression(void)
 {
 	assert_printed_conversion_expr("CONVERSION:\n"
-				     "  jvm_type: [long]\n"
+				     "  vm_type: [long]\n"
 				     "  from_expression: [value int 0]\n",
 				     J_LONG, value_expr(J_INT, 0));
 
 	assert_printed_conversion_expr("CONVERSION:\n"
-				     "  jvm_type: [int]\n"
+				     "  vm_type: [int]\n"
 				     "  from_expression: [value boolean 1]\n",
 				     J_INT, value_expr(J_BOOLEAN, 1));
 }
 
-void assert_printed_field_expr(const char *expected, enum jvm_type type,
+void assert_printed_field_expr(const char *expected, enum vm_type type,
 			       struct fieldblock *field)
 {
 	struct expression *expr;
@@ -334,7 +334,7 @@ void test_should_print_field_expression(void)
 	free_str(expected);
 }
 
-void assert_printed_invoke_expr(const char *expected, enum jvm_type type,
+void assert_printed_invoke_expr(const char *expected, enum vm_type type,
 				struct methodblock *method,
 				struct expression *args_list)
 {
@@ -361,7 +361,7 @@ void test_should_print_invoke_expression(void)
 }
 
 void assert_printed_invokevirtual_expr(const char *expected,
-				       enum jvm_type type,
+				       enum vm_type type,
 				       unsigned long method_index,
 				       struct expression *args_list)
 {
@@ -445,7 +445,7 @@ void assert_printed_new_expr(const char *expected, struct object *class)
 void test_should_print_new_expression(void)
 {
 	assert_printed_new_expr("NEW:\n"
-			     "  jvm_type: [reference]\n"
+			     "  vm_type: [reference]\n"
 			     "  class: [0xcafe]\n",
 			     (void *) 0xcafe);
 }

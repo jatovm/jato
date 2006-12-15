@@ -1,6 +1,6 @@
 #include <vm/types.h>
 
-enum jvm_type str_to_type(char *type)
+enum vm_type str_to_type(char *type)
 {
 	switch (type[0]) {
 	case 'V':

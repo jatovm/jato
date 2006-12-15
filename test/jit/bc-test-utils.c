@@ -27,33 +27,33 @@ alloc_simple_compilation_unit(struct methodblock *method)
 	return cu;
 }
 
-void assert_value_expr(enum jvm_type expected_jvm_type,
+void assert_value_expr(enum vm_type expected_vm_type,
 		       long long expected_value, struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_VALUE, expr_type(expr));
-	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_int_equals(expected_vm_type, expr->vm_type);
 	assert_int_equals(expected_value, expr->value);
 }
 
-void assert_fvalue_expr(enum jvm_type expected_jvm_type,
+void assert_fvalue_expr(enum vm_type expected_vm_type,
 			double expected_value, struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_FVALUE, expr_type(expr));
-	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_int_equals(expected_vm_type, expr->vm_type);
 	assert_float_equals(expected_value, expr->fvalue, 0.01f);
 }
 
-void assert_local_expr(enum jvm_type expected_jvm_type,
+void assert_local_expr(enum vm_type expected_vm_type,
 		       unsigned long expected_index, struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_LOCAL, expr_type(expr));
-	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_int_equals(expected_vm_type, expr->vm_type);
 	assert_int_equals(expected_index, expr->local_index);
 }
 
@@ -65,7 +65,7 @@ void assert_temporary_expr(unsigned long expected, struct tree_node *node)
 	assert_int_equals(expected, expr->temporary);
 }
 
-void assert_array_deref_expr(enum jvm_type expected_jvm_type,
+void assert_array_deref_expr(enum vm_type expected_vm_type,
 			     struct expression *expected_arrayref,
 			     struct expression *expected_index,
 			     struct tree_node *node)
@@ -73,64 +73,64 @@ void assert_array_deref_expr(enum jvm_type expected_jvm_type,
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_ARRAY_DEREF, expr_type(expr));
-	assert_int_equals(expected_jvm_type, expr->jvm_type);
+	assert_int_equals(expected_vm_type, expr->vm_type);
 	assert_ptr_equals(expected_arrayref, to_expr(expr->arrayref));
 	assert_ptr_equals(expected_index, to_expr(expr->array_index));
 }
 
-void __assert_binop_expr(enum jvm_type jvm_type,
+void __assert_binop_expr(enum vm_type vm_type,
 			 enum binary_operator binary_operator,
 			 struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_BINOP, expr_type(expr));
-	assert_int_equals(jvm_type, expr->jvm_type);
+	assert_int_equals(vm_type, expr->vm_type);
 	assert_int_equals(binary_operator, expr_bin_op(expr));
 }
 
-void assert_binop_expr(enum jvm_type jvm_type,
+void assert_binop_expr(enum vm_type vm_type,
 		       enum binary_operator binary_operator,
 		       struct expression *binary_left,
 		       struct expression *binary_right, struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
-	__assert_binop_expr(jvm_type, binary_operator, node);
+	__assert_binop_expr(vm_type, binary_operator, node);
 	assert_ptr_equals(binary_left, to_expr(expr->binary_left));
 	assert_ptr_equals(binary_right, to_expr(expr->binary_right));
 }
 
-void assert_conv_expr(enum jvm_type expected_type,
+void assert_conv_expr(enum vm_type expected_type,
 		      struct expression *expected_expression,
 		      struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_CONVERSION, expr_type(expr));
-	assert_int_equals(expected_type, expr->jvm_type);
+	assert_int_equals(expected_type, expr->vm_type);
 	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
 }
 
-void assert_field_expr(enum jvm_type expected_type,
+void assert_field_expr(enum vm_type expected_type,
 		       struct fieldblock *expected_field,
 		       struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_FIELD, expr_type(expr));
-	assert_int_equals(expected_type, expr->jvm_type);
+	assert_int_equals(expected_type, expr->vm_type);
 	assert_ptr_equals(expected_field, expr->field);
 }
 
-void assert_invoke_expr(enum jvm_type expected_type,
+void assert_invoke_expr(enum vm_type expected_type,
 			struct methodblock *expected_method,
 			struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_INVOKE, expr_type(expr));
-	assert_int_equals(expected_type, expr->jvm_type);
+	assert_int_equals(expected_type, expr->vm_type);
 	assert_ptr_equals(expected_method, expr->target_method);
 }
 
@@ -158,13 +158,13 @@ void assert_null_check_stmt(struct expression *expected,
 	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
 }
 
-void assert_arraycheck_stmt(enum jvm_type expected_jvm_type,
+void assert_arraycheck_stmt(enum vm_type expected_vm_type,
 			    struct expression *expected_arrayref,
 			    struct expression *expected_index,
 			    struct statement *actual)
 {
 	assert_int_equals(STMT_ARRAY_CHECK, stmt_type(actual));
-	assert_array_deref_expr(expected_jvm_type, expected_arrayref,
+	assert_array_deref_expr(expected_vm_type, expected_arrayref,
 				expected_index, actual->expression);
 }
 

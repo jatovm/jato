@@ -22,7 +22,7 @@ static void convert_ir_const_single(struct compilation_unit *cu, void *value)
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 }
 
-static void assert_convert_getstatic(enum jvm_type expected_jvm_type,
+static void assert_convert_getstatic(enum vm_type expected_vm_type,
 				     char *field_type)
 {
 	struct fieldblock fb;
@@ -40,7 +40,7 @@ static void assert_convert_getstatic(enum jvm_type expected_jvm_type,
 
 	convert_ir_const_single(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
-	assert_field_expr(expected_jvm_type, &fb, &expr->node);
+	assert_field_expr(expected_vm_type, &fb, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
@@ -60,7 +60,7 @@ void test_convert_getstatic(void)
 	assert_convert_getstatic(J_BOOLEAN, "Z");
 }
 
-static void assert_convert_putstatic(enum jvm_type expected_jvm_type,
+static void assert_convert_putstatic(enum vm_type expected_vm_type,
 				     char *field_type)
 {
 	struct fieldblock fb;
@@ -74,14 +74,14 @@ static void assert_convert_putstatic(enum jvm_type expected_jvm_type,
 	struct expression *value;
 
 	fb.type = field_type;
-	value = value_expr(expected_jvm_type, 0xdeadbeef);
+	value = value_expr(expected_vm_type, 0xdeadbeef);
 	cu = alloc_simple_compilation_unit(&method);
 	stack_push(cu->expr_stack, value);
 	convert_ir_const_single(cu, &fb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_field_expr(expected_jvm_type, &fb, stmt->store_dest);
+	assert_field_expr(expected_vm_type, &fb, stmt->store_dest);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -101,7 +101,7 @@ void test_convert_putstatic(void)
 	assert_convert_putstatic(J_BOOLEAN, "Z");
 }
 
-static void assert_convert_array_load(enum jvm_type expected_type,
+static void assert_convert_array_load(enum vm_type expected_type,
 				      unsigned char opc,
 				      unsigned long arrayref,
 				      unsigned long index)
@@ -196,7 +196,7 @@ void test_convert_saload(void)
 	assert_convert_array_load(J_SHORT, OPC_SALOAD, 1, 2);
 }
 
-static void assert_convert_array_store(enum jvm_type expected_type,
+static void assert_convert_array_store(enum vm_type expected_type,
 				       unsigned char opc,
 				       unsigned long arrayref,
 				       unsigned long index, unsigned long value)
@@ -306,7 +306,7 @@ static void assert_convert_new(unsigned long expected_type_idx,
 
 	new_expr = stack_pop(cu->expr_stack);
 	assert_int_equals(EXPR_NEW, expr_type(new_expr));
-	assert_int_equals(J_REFERENCE, new_expr->jvm_type);
+	assert_int_equals(J_REFERENCE, new_expr->vm_type);
 	assert_ptr_equals(instance_class, new_expr->class);
 
 	free_expression(new_expr);

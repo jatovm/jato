@@ -1,7 +1,7 @@
 #ifndef __VM_TYPES_H
 #define __VM_TYPES_H
 
-enum jvm_type {
+enum vm_type {
 	J_VOID,
 	J_REFERENCE,
 	J_BYTE,
@@ -15,6 +15,6 @@ enum jvm_type {
 	J_RETURN_ADDRESS,
 };
 
-extern enum jvm_type str_to_type(char *);
+extern enum vm_type str_to_type(char *);
 
 #endif

@@ -15,7 +15,7 @@
 #include <errno.h>
 
 static int convert_conversion(struct compilation_unit *cu,
-			      struct basic_block *bb, enum jvm_type to_type)
+			      struct basic_block *bb, enum vm_type to_type)
 {
 	struct expression *from_expression, *conversion_expression;
 
