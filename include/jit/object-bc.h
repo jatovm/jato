@@ -1,6 +1,7 @@
 DECLARE_CONVERTER(convert_getstatic)
 DECLARE_CONVERTER(convert_putstatic)
 DECLARE_CONVERTER(convert_getfield)
+DECLARE_CONVERTER(convert_putfield)
 
 DECLARE_CONVERTER(convert_iaload)
 DECLARE_CONVERTER(convert_laload)
