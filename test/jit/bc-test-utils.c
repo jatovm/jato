@@ -112,16 +112,34 @@ void assert_conv_expr(enum vm_type expected_type,
 	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
 }
 
-void __assert_field_expr(enum expression_type expected_expr_type,
-			 enum vm_type expected_type,
-			 struct fieldblock *expected_field,
-			 struct tree_node *node)
+static void __assert_field_expr(enum expression_type expected_expr_type,
+				enum vm_type expected_type,
+				struct expression *expr)
+{
+	assert_int_equals(expected_expr_type, expr_type(expr));
+	assert_int_equals(expected_type, expr->vm_type);
+}
+
+void assert_class_field_expr(enum vm_type expected_vm_type,
+			     struct fieldblock *expected_field,
+			     struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
-	assert_int_equals(expected_expr_type, expr_type(expr));
-	assert_int_equals(expected_type, expr->vm_type);
-	assert_ptr_equals(expected_field, expr->field);
+	__assert_field_expr(EXPR_CLASS_FIELD, expected_vm_type, expr);
+	assert_ptr_equals(expected_field, expr->class_field);
+}
+
+void assert_instance_field_expr(enum vm_type expected_vm_type,
+				struct fieldblock *expected_field,
+				struct expression *expected_objectref,
+				struct tree_node *node)
+{
+	struct expression *expr = to_expr(node);
+
+	__assert_field_expr(EXPR_INSTANCE_FIELD, expected_vm_type, expr);
+	assert_ptr_equals(expected_field, expr->instance_field);
+	assert_ptr_equals(expected_objectref, to_expr(expr->objectref_expression));
 }
 
 void assert_invoke_expr(enum vm_type expected_type,

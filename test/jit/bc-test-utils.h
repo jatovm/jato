@@ -25,7 +25,8 @@ void assert_binop_expr(enum vm_type, enum binary_operator,
 		       struct expression *, struct expression *,
 		       struct tree_node *);
 void assert_conv_expr(enum vm_type, struct expression *, struct tree_node *);
-void __assert_field_expr(enum expression_type, enum vm_type, struct fieldblock *, struct tree_node *);
+void assert_class_field_expr(enum vm_type, struct fieldblock *, struct tree_node *);
+void assert_instance_field_expr(enum vm_type, struct fieldblock *, struct expression *, struct tree_node *);
 void assert_invoke_expr(enum vm_type, struct methodblock *,
 			struct tree_node *);
 

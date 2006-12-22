@@ -26,9 +26,8 @@ static struct fieldblock *lookup_field(struct compilation_unit *cu, unsigned lon
 	return resolveField(cu->method->class, index);
 }
 
-static int __convert_field_get(enum expression_type expr_type,
-			       struct compilation_unit *cu,
-			       unsigned long offset)
+int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
+		      unsigned long offset)
 {
 	struct expression *value;
 	struct fieldblock *fb;
@@ -37,7 +36,7 @@ static int __convert_field_get(enum expression_type expr_type,
 	if (!fb)
 		return -EINVAL;
 
-	value = __field_expr(expr_type, field_type(fb), fb);
+	value = class_field_expr(field_type(fb), fb);
 	if (!value)
 		return -ENOMEM;
 
@@ -45,16 +44,8 @@ static int __convert_field_get(enum expression_type expr_type,
 	return 0;
 }
 
-int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
+int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 		      unsigned long offset)
-{
-	return __convert_field_get(EXPR_CLASS_FIELD, cu, offset);
-}
-
-static int __convert_field_put(enum expression_type expr_type,
-			       struct compilation_unit *cu,
-			       struct basic_block *bb,
-			       unsigned long offset)
 {
 	struct fieldblock *fb;
 	struct statement *store_stmt;
@@ -65,7 +56,7 @@ static int __convert_field_put(enum expression_type expr_type,
 		return -EINVAL;
 
 	src = stack_pop(cu->expr_stack);
-	dest = __field_expr(expr_type, field_type(fb), fb);
+	dest = class_field_expr(field_type(fb), fb);
 	if (!dest)
 		return -ENOMEM;
 	
@@ -81,22 +72,55 @@ static int __convert_field_put(enum expression_type expr_type,
 	return 0;
 }
 
-int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
-		      unsigned long offset)
-{
-	return __convert_field_put(EXPR_CLASS_FIELD, cu, bb, offset);
-}
-
 int convert_getfield(struct compilation_unit *cu, struct basic_block *bb,
 		     unsigned long offset)
 {
-	return __convert_field_get(EXPR_INSTANCE_FIELD, cu, offset);
+	struct expression *objectref;
+	struct expression *value;
+	struct fieldblock *fb;
+
+	fb = lookup_field(cu, offset);
+	if (!fb)
+		return -EINVAL;
+
+	objectref = stack_pop(cu->expr_stack);
+
+	value = instance_field_expr(field_type(fb), fb, objectref);
+	if (!value)
+		return -ENOMEM;
+
+	stack_push(cu->expr_stack, value);
+	return 0;
 }
 
 int convert_putfield(struct compilation_unit *cu, struct basic_block *bb,
 		     unsigned long offset)
 {
-	return __convert_field_put(EXPR_INSTANCE_FIELD, cu, bb, offset);
+	struct expression *dest, *src;
+	struct statement *store_stmt;
+	struct expression *objectref;
+	struct fieldblock *fb;
+
+	fb = lookup_field(cu, offset);
+	if (!fb)
+		return -EINVAL;
+
+	src = stack_pop(cu->expr_stack);
+	objectref = stack_pop(cu->expr_stack);
+	dest = instance_field_expr(field_type(fb), fb, objectref);
+	if (!dest)
+		return -ENOMEM;
+	
+	store_stmt = alloc_statement(STMT_STORE);
+	if (!store_stmt) {
+		expr_put(dest);
+		return -ENOMEM;
+	}
+	store_stmt->store_dest = &dest->node;
+	store_stmt->store_src = &src->node;
+	bb_add_stmt(bb, store_stmt);
+	
+	return 0;
 }
 
 static unsigned long alloc_temporary(void)

@@ -44,7 +44,7 @@ void test_should_print_store_statement(void)
 	stmt->store_dest = &dest->node;
 	stmt->store_src = &src->node;
 
-	assert_print_stmt("STORE:\n  store_dest: [local int 0]\n  store_src: [value int 1]\n", stmt);
+	assert_print_stmt("STORE:\n  store_dest: [local int 0]\n  store_src: [value int 0x1]\n", stmt);
 }
 
 void test_should_print_if_statement(void)
@@ -161,8 +161,8 @@ void assert_printed_value_expr(const char *expected, enum vm_type type,
 
 void test_should_print_value_expression(void)
 {
-	assert_printed_value_expr("[value int 0]", J_INT, 0);
-	assert_printed_value_expr("[value boolean 1]", J_BOOLEAN, 1);
+	assert_printed_value_expr("[value int 0x0]", J_INT, 0);
+	assert_printed_value_expr("[value boolean 0x1]", J_BOOLEAN, 1);
 }
 
 void assert_printed_fvalue_expr(const char *expected, enum vm_type type,
@@ -223,8 +223,8 @@ void assert_printed_array_deref_expr(const char *expected, enum vm_type type,
 
 void test_should_print_array_deref_expression(void)
 {
-	assert_printed_array_deref_expr("ARRAY_DEREF:\n  vm_type: [float]\n  arrayref: [value reference 0]\n  array_index: [value int 1]\n", J_FLOAT, 0, 1);
-	assert_printed_array_deref_expr("ARRAY_DEREF:\n  vm_type: [double]\n  arrayref: [value reference 1]\n  array_index: [value int 2]\n", J_DOUBLE, 1, 2);
+	assert_printed_array_deref_expr("ARRAY_DEREF:\n  vm_type: [float]\n  arrayref: [value reference 0x0]\n  array_index: [value int 0x1]\n", J_FLOAT, 0, 1);
+	assert_printed_array_deref_expr("ARRAY_DEREF:\n  vm_type: [double]\n  arrayref: [value reference 0x1]\n  array_index: [value int 0x2]\n", J_DOUBLE, 1, 2);
 }
 
 void assert_printed_binop_expr(const char *expected, enum vm_type type,
@@ -243,21 +243,21 @@ void test_should_print_binop_expression(void)
 	assert_printed_binop_expr("BINOP:\n"
 				  "  vm_type: [int]\n"
 				  "  binary_operator: [add]\n"
-				  "  binary_left: [value int 0]\n"
-				  "  binary_right: [value int 1]\n",
+				  "  binary_left: [value int 0x0]\n"
+				  "  binary_right: [value int 0x1]\n",
 				  J_INT, OP_ADD,
 				  value_expr(J_INT, 0), value_expr(J_INT, 1));
 
 	assert_printed_binop_expr("BINOP:\n"
 				  "  vm_type: [long]\n"
 				  "  binary_operator: [add]\n"
-				  "  binary_left: [value long 1]\n"
+				  "  binary_left: [value long 0x1]\n"
 				  "  binary_right:\n"
 				  "    BINOP:\n"
 				  "      vm_type: [long]\n"
 				  "      binary_operator: [sub]\n"
-				  "      binary_left: [value long 2]\n"
-				  "      binary_right: [value long 3]\n",
+				  "      binary_left: [value long 0x2]\n"
+				  "      binary_right: [value long 0x3]\n",
 				  J_LONG, OP_ADD,
 				  value_expr(J_LONG, 1),
 				  binop_expr(J_LONG, OP_SUB,
@@ -281,13 +281,13 @@ void test_should_print_unary_op_expression(void)
 	assert_printed_unary_op_expr("UNARY_OP:\n"
 				     "  vm_type: [int]\n"
 				     "  unary_operator: [neg]\n"
-				     "  unary_expression: [value int 0]\n",
+				     "  unary_expression: [value int 0x0]\n",
 				     J_INT, OP_NEG, value_expr(J_INT, 0));
 
 	assert_printed_unary_op_expr("UNARY_OP:\n"
 				     "  vm_type: [boolean]\n"
 				     "  unary_operator: [neg]\n"
-				     "  unary_expression: [value boolean 1]\n",
+				     "  unary_expression: [value boolean 0x1]\n",
 				     J_BOOLEAN, OP_NEG, value_expr(J_BOOLEAN, 1));
 }
 
@@ -304,12 +304,12 @@ void test_should_print_conversion_expression(void)
 {
 	assert_printed_conversion_expr("CONVERSION:\n"
 				     "  vm_type: [long]\n"
-				     "  from_expression: [value int 0]\n",
+				     "  from_expression: [value int 0x0]\n",
 				     J_LONG, value_expr(J_INT, 0));
 
 	assert_printed_conversion_expr("CONVERSION:\n"
 				     "  vm_type: [int]\n"
-				     "  from_expression: [value boolean 1]\n",
+				     "  from_expression: [value boolean 0x1]\n",
 				     J_INT, value_expr(J_BOOLEAN, 1));
 }
 
@@ -324,8 +324,8 @@ void assert_printed_class_field_expr(const char *expected, enum vm_type type,
 
 void test_should_print_class_field_expression(void)
 {
-	struct fieldblock fb;
 	struct string *expected;
+	struct fieldblock fb;
 
 	expected = alloc_str();
 	str_append(expected, "[class_field int %p]", &fb);
@@ -335,23 +335,30 @@ void test_should_print_class_field_expression(void)
 }
 
 void assert_printed_instance_field_expr(const char *expected, enum vm_type type,
-					struct fieldblock *field)
+					struct fieldblock *field,
+					struct expression *objectref)
 {
 	struct expression *expr;
 
-	expr = instance_field_expr(type, field);
+	expr = instance_field_expr(type, field, objectref);
 	assert_print_expr(expected, expr);
 }
 
 void test_should_print_instance_field_expression(void)
 {
-	struct fieldblock fb;
+	struct expression *objectref;
 	struct string *expected;
+	struct fieldblock fb;
 
+	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
 	expected = alloc_str();
-	str_append(expected, "[instance_field int %p]", &fb);
+	str_append(expected, "INSTANCE_FIELD:\n"
+			     "  vm_type: [int]\n"
+			     "  instance_field: [%p]\n"
+			     "  objectref_expression: [value reference 0xdeadbeef]\n",
+			     &fb);
 
-	assert_printed_instance_field_expr(expected->value, J_INT, &fb);
+	assert_printed_instance_field_expr(expected->value, J_INT, &fb, objectref);
 	free_str(expected);
 }
 
@@ -422,10 +429,10 @@ void test_should_print_args_list_expression(void)
 	assert_printed_args_list_expr("ARGS_LIST:\n"
 				     "  args_left:\n"
 				     "    ARG:\n"
-				     "      arg_expression: [value int 0]\n"
+				     "      arg_expression: [value int 0x0]\n"
 				     "  args_right:\n"
 				     "    ARG:\n"
-				     "      arg_expression: [value boolean 1]\n",
+				     "      arg_expression: [value boolean 0x1]\n",
 				     value_expr(J_INT, 0),
 				     value_expr(J_BOOLEAN, 1));
 }
@@ -442,11 +449,11 @@ void assert_printed_arg_expr(const char *expected,
 void test_should_print_arg_expression(void)
 {
 	assert_printed_arg_expr("ARG:\n"
-				     "  arg_expression: [value int 0]\n",
+				     "  arg_expression: [value int 0x0]\n",
 				     value_expr(J_INT, 0));
 
 	assert_printed_arg_expr("ARG:\n"
-				     "  arg_expression: [value boolean 1]\n",
+				     "  arg_expression: [value boolean 0x1]\n",
 				     value_expr(J_BOOLEAN, 1));
 }
 

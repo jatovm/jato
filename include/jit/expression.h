@@ -118,7 +118,7 @@ struct expression {
 		    (see JLS 15.11.). This expression type can be used as
 		    either as lvalue or rvalue.  */
 		struct {
-			struct fieldblock *field;
+			struct fieldblock *class_field;
 		};
 
 		/*  EXPR_INSTANCE_FIELD represents instance field access
@@ -126,7 +126,7 @@ struct expression {
 		    used as either as lvalue or rvalue.  */
 		struct {
 			struct tree_node *objectref_expression;
-			struct fieldblock *field;
+			struct fieldblock *instance_field;
 		};
 		
 		/*  EXPR_INVOKE represents a method invocation expression (see
@@ -215,9 +215,8 @@ struct expression *array_deref_expr(enum vm_type, struct expression *, struct ex
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum vm_type, struct expression *);
-struct expression *__field_expr(enum expression_type, enum vm_type, struct fieldblock *);
 struct expression *class_field_expr(enum vm_type, struct fieldblock *);
-struct expression *instance_field_expr(enum vm_type, struct fieldblock *);
+struct expression *instance_field_expr(enum vm_type, struct fieldblock *, struct expression *);
 struct expression *__invoke_expr(enum vm_type, struct methodblock *);
 struct expression *__invokevirtual_expr(enum vm_type, unsigned long);
 struct expression *invoke_expr(struct methodblock *);

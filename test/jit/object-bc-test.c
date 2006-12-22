@@ -39,8 +39,7 @@ static struct type_mapping types[] = {
 	{ "Z", J_BOOLEAN },
 };
 
-static void __assert_convert_field_get(unsigned char opc,
-				       enum expression_type expected_expr_type,
+static void __assert_convert_getstatic(unsigned char opc,
 				       enum vm_type expected_vm_type,
 				       char *field_type)
 {
@@ -59,33 +58,70 @@ static void __assert_convert_field_get(unsigned char opc,
 
 	convert_ir_const_single(cu, &fb);
 	expr = stack_pop(cu->expr_stack);
-	__assert_field_expr(expected_expr_type, expected_vm_type, &fb, &expr->node);
+	assert_class_field_expr(expected_vm_type, &fb, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
 }
 
-static void assert_convert_field_get(unsigned char opc, enum expression_type expected_expr_type)
+static void assert_convert_getstatic(unsigned char opc)
 {
 	unsigned long i;
 
 	for (i = 0; i < ARRAY_SIZE(types); i++)
-		__assert_convert_field_get(opc, expected_expr_type, types[i].vm_type, types[i].type);
+		__assert_convert_getstatic(opc, types[i].vm_type, types[i].type);
 }
 
 void test_convert_getstatic(void)
 {
-	assert_convert_field_get(OPC_GETSTATIC, EXPR_CLASS_FIELD);
+	assert_convert_getstatic(OPC_GETSTATIC);
+}
+
+static void __assert_convert_getfield(unsigned char opc,
+				      enum vm_type expected_vm_type,
+				      char *field_type)
+{
+	struct fieldblock fb;
+	struct expression *expr;
+	struct expression *objectref;
+	unsigned char code[] = { opc, 0x00, 0x00 };
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	struct compilation_unit *cu;
+
+	fb.type = field_type;
+
+	cu = alloc_simple_compilation_unit(&method);
+
+	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
+	stack_push(cu->expr_stack, objectref);
+	convert_ir_const_single(cu, &fb);
+	expr = stack_pop(cu->expr_stack);
+	assert_instance_field_expr(expected_vm_type, &fb, objectref, &expr->node);
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	expr_put(expr);
+	free_compilation_unit(cu);
+}
+
+
+static void assert_convert_getfield(unsigned char opc)
+{
+	unsigned long i;
+
+	for (i = 0; i < ARRAY_SIZE(types); i++)
+		__assert_convert_getfield(opc, types[i].vm_type, types[i].type);
 }
 
 void test_convert_getfield(void)
 {
-	assert_convert_field_get(OPC_GETFIELD, EXPR_INSTANCE_FIELD);
+	assert_convert_getfield(OPC_GETFIELD);
 }
 
-static void __assert_convert_field_put(unsigned char opc,
-				       enum expression_type expected_expr_type,
+static void __assert_convert_putstatic(unsigned char opc,
 				       enum vm_type expected_vm_type,
 				       char *field_type)
 {
@@ -107,29 +143,72 @@ static void __assert_convert_field_put(unsigned char opc,
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	__assert_field_expr(expected_expr_type, expected_vm_type, &fb, stmt->store_dest);
+	assert_class_field_expr(expected_vm_type, &fb, stmt->store_dest);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);
 }
 
-static void assert_convert_field_put(unsigned char opc, enum expression_type expected_expr_type)
+static void assert_convert_putstatic(unsigned char opc)
 {
 	unsigned long i;
 
 	for (i = 0; i < ARRAY_SIZE(types); i++)
-		__assert_convert_field_put(opc, expected_expr_type, types[i].vm_type, types[i].type);
+		__assert_convert_putstatic(opc, types[i].vm_type, types[i].type);
 }
 
 void test_convert_putstatic(void)
 {
-	assert_convert_field_put(OPC_PUTSTATIC, EXPR_CLASS_FIELD);
+	assert_convert_putstatic(OPC_PUTSTATIC);
+}
+
+static void __assert_convert_putfield(unsigned char opc,
+				      enum vm_type expected_vm_type,
+				      char *field_type)
+{
+	struct fieldblock fb;
+	struct statement *stmt;
+	unsigned char code[] = { opc, 0x00, 0x00 };
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	struct compilation_unit *cu;
+	struct expression *objectref;
+	struct expression *value;
+
+	fb.type = field_type;
+	cu = alloc_simple_compilation_unit(&method);
+
+	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
+	stack_push(cu->expr_stack, objectref);
+
+	value = value_expr(expected_vm_type, 0xdeadbeef);
+	stack_push(cu->expr_stack, value);
+
+	convert_ir_const_single(cu, &fb);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_store_stmt(stmt);
+	assert_instance_field_expr(expected_vm_type, &fb, objectref, stmt->store_dest);
+	assert_ptr_equals(value, to_expr(stmt->store_src));
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	free_compilation_unit(cu);
+}
+
+static void assert_convert_putfield(unsigned char opc)
+{
+	unsigned long i;
+
+	for (i = 0; i < ARRAY_SIZE(types); i++)
+		__assert_convert_putfield(opc, types[i].vm_type, types[i].type);
 }
 
 void test_convert_putfield(void)
 {
-	assert_convert_field_put(OPC_PUTFIELD, EXPR_INSTANCE_FIELD);
+	assert_convert_putfield(OPC_PUTFIELD);
 }
 
 static void assert_convert_array_load(enum vm_type expected_type,

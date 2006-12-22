@@ -271,7 +271,7 @@ static const char *type_names[] = {
 static int print_value_expr(int lvl, struct string *str,
 			    struct expression *expr)
 {
-	return str_append(str, "[value %s %llu]", type_names[expr->vm_type],
+	return str_append(str, "[value %s 0x%llx]", type_names[expr->vm_type],
 			  expr->value);
 }
 
@@ -421,19 +421,32 @@ static int print_conversion_expr(int lvl, struct string *str,
 	return err;
 }
 
-static int __print_field_expr(int lvl, const char *name, struct string *str, struct expression *expr)
-{
-	return str_append(str, "[%s %s %p]", name, type_names[expr->vm_type], expr->field);
-}
-
 static int print_class_field_expr(int lvl, struct string *str, struct expression *expr)
 {
-	return __print_field_expr(lvl, "class_field", str, expr);
+	return str_append(str, "[class_field %s %p]", type_names[expr->vm_type], expr->class_field);
 }
 
 static int print_instance_field_expr(int lvl, struct string *str, struct expression *expr)
 {
-	return __print_field_expr(lvl, "instance_field", str, expr);
+	int err;
+
+	err = append_formatted(lvl, str, "INSTANCE_FIELD:\n");
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "instance_field", "%p", expr->instance_field);
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "objectref_expression", expr->objectref_expression);
+
+      out:
+	return err;
+	return str_append(str, "[instance_field %s %p]", type_names[expr->vm_type], expr->instance_field);
 }
 
 static int print_invoke_expr(int lvl, struct string *str,
