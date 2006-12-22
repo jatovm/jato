@@ -114,10 +114,18 @@ struct expression {
 			struct tree_node *from_expression;
 		};
 
-		/*  EXPR_CLASS_FIELD and EXPR_INSTANCE_FIELD represent field
-		    access expressions (see JLS 15.11.). These expression types
-		    can be used as either as lvalue or rvalue.  */
+		/*  EXPR_CLASS_FIELD represents class field access expression
+		    (see JLS 15.11.). This expression type can be used as
+		    either as lvalue or rvalue.  */
 		struct {
+			struct fieldblock *field;
+		};
+
+		/*  EXPR_INSTANCE_FIELD represents instance field access
+		    expression (see JLS 15.11.). This expression type can be
+		    used as either as lvalue or rvalue.  */
+		struct {
+			struct tree_node *objectref_expression;
 			struct fieldblock *field;
 		};
 		
