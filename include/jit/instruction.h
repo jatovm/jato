@@ -15,27 +15,25 @@ enum reg {
 	REG_ESP,
 };
 
-struct operand {
-	union {
-		enum reg reg;
+union operand {
+	enum reg reg;
 
-		struct {
-			enum reg base_reg;
-			long disp;	/* displacement */
-		};
-
-		struct {
-			enum reg base_reg;
-			enum reg index_reg;
-			unsigned char shift;
-		};
-
-		unsigned long imm;
-
-		unsigned long rel;
-
-		struct basic_block *branch_target;
+	struct {
+		enum reg base_reg;
+		long disp;	/* displacement */
 	};
+
+	struct {
+		enum reg base_reg;
+		enum reg index_reg;
+		unsigned char shift;
+	};
+
+	unsigned long imm;
+
+	unsigned long rel;
+
+	struct basic_block *branch_target;
 };
 
 /*
@@ -77,10 +75,10 @@ struct insn {
 	enum insn_type type;
 	union {
 		struct {
-			struct operand src;
-			struct operand dest;
+			union operand src;
+			union operand dest;
 		};
-		struct operand operand;
+		union operand operand;
 	};
 	struct list_head insn_list_node;
 	struct list_head branch_list_node;
