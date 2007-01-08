@@ -17,22 +17,23 @@ enum reg {
 
 struct operand {
 	union {
-		/* OPERAND_REGISTER */
 		enum reg reg;
 
-		/* OPERAND_MEMBASE */
 		struct {
 			enum reg base_reg;
 			long disp;	/* displacement */
 		};
 
-		/* OPERAND_IMMEDIATE */
+		struct {
+			enum reg base_reg;
+			enum reg index_reg;
+			unsigned char shift;
+		};
+
 		unsigned long imm;
 
-		/* OPERAND_RELATIVE */
 		unsigned long rel;
 
-		/* OPERAND_BRANCH */
 		struct basic_block *branch_target;
 	};
 };
@@ -58,6 +59,7 @@ enum insn_type {
 	INSN_MOV_IMM_REG,
 	INSN_MOV_MEMBASE_REG,
 	INSN_MOV_REG_MEMBASE,
+	INSN_MOV_REG_MEMINDEX,
 	INSN_MOV_REG_REG,
 	INSN_MUL_MEMBASE_REG,
 	INSN_NEG_REG,
@@ -89,6 +91,7 @@ struct insn {
 struct insn *insn(enum insn_type);
 struct insn *membase_reg_insn(enum insn_type, enum reg, long, enum reg);
 struct insn *reg_membase_insn(enum insn_type, enum reg, enum reg, long);
+struct insn *reg_memindex_insn(enum insn_type, enum reg, enum reg, enum reg, unsigned char);
 struct insn *reg_insn(enum insn_type, enum reg);
 struct insn *reg_reg_insn(enum insn_type, enum reg, enum reg);
 struct insn *imm_reg_insn(enum insn_type, unsigned long, enum reg);

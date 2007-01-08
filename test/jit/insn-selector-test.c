@@ -41,6 +41,20 @@ static void assert_reg_membase_insn(enum insn_type insn_type,
 	assert_int_equals(dest_displacement, insn->dest.disp);
 }
 
+static void assert_reg_memindex_insn(enum insn_type insn_type,
+				     enum reg src_reg,
+				     enum reg base_reg,
+				     enum reg index_reg,
+				     unsigned char shift,
+				     struct insn *insn)
+{
+	assert_int_equals(insn_type, insn->type);
+	assert_int_equals(src_reg, insn->src.reg);
+	assert_int_equals(base_reg, insn->dest.base_reg);
+	assert_int_equals(index_reg, insn->dest.index_reg);
+	assert_int_equals(shift, insn->dest.shift);
+}
+
 static void assert_reg_insn(enum insn_type insn_type,
 			    enum reg expected_reg, struct insn *insn)
 {
@@ -723,7 +737,7 @@ void test_select_load_field(void)
 	free_basic_block(bb);
 }
 
-void test_store_value_to_field(void)
+void test_store_value_to_class_field(void)
 {
 	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
 	struct insn *insn;
@@ -748,6 +762,55 @@ void test_store_value_to_field(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	expected_disp = offsetof(struct fieldblock, static_value);
 	assert_imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0xcafebabe, REG_EAX, expected_disp, insn);
+
+	free_basic_block(bb);
+}
+
+void test_store_value_to_instance_field(void)
+{
+	struct methodblock method = {
+		.args_count = 0,
+	};
+	struct compilation_unit cu = {
+		.method = &method,
+	};
+	struct expression *store_target;
+	struct expression *store_value;
+	struct expression *objectref;
+	struct fieldblock field;
+	struct basic_block *bb;
+	struct statement *stmt;
+	struct insn *insn;
+
+	field.offset = 8;
+	objectref    = local_expr(J_REFERENCE, 0);
+	store_target = instance_field_expr(J_INT, &field, objectref);
+	store_value  = value_expr(J_INT, 0xcafebabe);
+	stmt = alloc_statement(STMT_STORE);
+	stmt->store_dest = &store_target->node;
+	stmt->store_src  = &store_value->node;
+
+	bb = alloc_basic_block(&cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+	insn_select(bb);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, -4, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_reg_insn(INSN_MOV_REG_REG, REG_EAX, REG_ECX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), REG_ECX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, field.offset, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, REG_EDX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EDX, REG_ECX, REG_EAX, 2, insn);
 
 	free_basic_block(bb);
 }

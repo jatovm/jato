@@ -271,6 +271,17 @@ reg:	EXPR_CLASS_FIELD 1
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offset, REG_EAX));
 }
 
+reg:	EXPR_INSTANCE_FIELD(reg) 1
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, REG_EAX, REG_ECX));
+	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), REG_ECX));
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, REG_EAX));
+}
+
 reg:	EXPR_NEW
 {
 	struct expression *expr;
@@ -337,6 +348,18 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, EXPR_VALUE)
 
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) store_dest->class_field, REG_EAX));
 	bb_add_insn(s, imm_membase_insn(INSN_MOV_IMM_MEMBASE, field_value, REG_EAX, field_offset));
+}
+
+stmt:	STMT_STORE(reg, EXPR_VALUE)
+{
+	struct expression *store_src;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+	store_src = to_expr(stmt->store_src);
+
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, store_src->value, REG_EDX));
+	bb_add_insn(s, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EDX, REG_ECX, REG_EAX, 2));
 }
 
 stmt:	STMT_STORE(EXPR_LOCAL, reg)

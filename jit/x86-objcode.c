@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
 /*
@@ -517,7 +518,7 @@ static void emit_xor_membase_reg(struct buffer *buf,
 }
 
 enum emitter_type {
-	NO_OPERANDS,
+	NO_OPERANDS = 1,
 	SINGLE_OPERAND,
 	TWO_OPERANDS,
 	BRANCH,
@@ -611,6 +612,9 @@ static void __emit_insn(struct buffer *buf, struct insn *insn)
 	case BRANCH:
 		emit_branch(emitter, buf, insn);
 		break;
+	default:
+		printf("Oops. No emitter for 0x%x.\n", insn->type);
+		abort();
 	};
 }
 
