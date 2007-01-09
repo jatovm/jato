@@ -259,6 +259,12 @@ void test_emit_mov_reg_membase(void)
 	assert_emit_insn_6(0x89, 0x98, 0xef, 0xbe, 0xad, 0xde, reg_membase_insn(INSN_MOV_REG_MEMBASE, REG_EBX, REG_EAX, 0xdeadbeef));
 }
 
+void test_emit_mov_reg_memindex(void)
+{
+	assert_emit_insn_3(0x89, 0x14, 0x01, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EDX, REG_ECX, REG_EAX, 0));
+	assert_emit_insn_3(0x89, 0x04, 0x4b, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EAX, REG_EBX, REG_ECX, 1));
+}
+
 void test_emit_mov_reg_reg(void)
 {
 	assert_emit_insn_2(0x89, 0xd0, reg_reg_insn(INSN_MOV_REG_REG, REG_EDX, REG_EAX));

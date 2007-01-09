@@ -233,6 +233,14 @@ static void emit_mov_reg_membase(struct buffer *buf, union operand *src,
 	emit_imm(buf, dest->disp);
 }
 
+static void emit_mov_reg_memindex(struct buffer *buf, union operand *src,
+				  union operand *dest)
+{
+	emit(buf, 0x89);
+	emit(buf, encode_modrm(0x00, encode_reg(src->reg), 0x04));
+	emit(buf, encode_sib(dest->shift, encode_reg(dest->index_reg), encode_reg(dest->base_reg)));
+}
+
 static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
 			     long imm, enum reg reg)
 {
@@ -549,6 +557,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, SINGLE_OPERAND),
