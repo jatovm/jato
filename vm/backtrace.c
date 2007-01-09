@@ -40,6 +40,32 @@ void print_trace(void)
 #define IP_REG_NAME "EIP"
 #endif
 
+static unsigned long get_greg(gregset_t gregs, int reg)
+{
+	return (unsigned long) gregs[reg];
+}
+
+static void show_registers(gregset_t gregs)
+{
+	unsigned long eax, ebx, ecx, edx;
+	unsigned long esi, edi, ebp, esp;
+	
+	eax = get_greg(gregs, REG_EAX);
+	ebx = get_greg(gregs, REG_EBX);
+	ecx = get_greg(gregs, REG_ECX);
+	edx = get_greg(gregs, REG_EDX);
+
+	esi = get_greg(gregs, REG_ESI);
+	edi = get_greg(gregs, REG_EDI);
+	ebp = get_greg(gregs, REG_EBP);
+	esp = get_greg(gregs, REG_ESP);
+
+	printf("eax: %08lx   ebx: %08lx   ecx: %08lx   edx: %08lx\n",
+		eax, ebx, ecx, edx);
+	printf("esi: %08lx   edi: %08lx   ebp: %08lx   esp: %08lx\n",
+		esi, edi, ebp, esp);
+}
+
 void bt_sighandler(int sig, siginfo_t *info, void *secret)
 {
 	void *eip;
@@ -48,11 +74,12 @@ void bt_sighandler(int sig, siginfo_t *info, void *secret)
 	eip = (void *) uc->uc_mcontext.gregs[IP_REG];
 
 	if (sig == SIGSEGV)
-		printf("SIGSEGV at %s %p while accessing memory address %p.\n",
-		       IP_REG_NAME, eip, info->si_addr);
+		printf("SIGSEGV at %s %08lx while accessing memory address %08lx.\n",
+		       IP_REG_NAME, (unsigned long) eip, (unsigned long) info->si_addr);
 	else
 		printf("Got signal %d\n", sig);
 
+	show_registers(uc->uc_mcontext.gregs);
 	__print_trace(1, eip);
 	exit(1);
 }
