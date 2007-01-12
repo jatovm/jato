@@ -56,6 +56,7 @@ enum insn_type {
 	INSN_MOV_IMM_MEMBASE,
 	INSN_MOV_IMM_REG,
 	INSN_MOV_MEMBASE_REG,
+	INSN_MOV_MEMINDEX_REG,
 	INSN_MOV_REG_MEMBASE,
 	INSN_MOV_REG_MEMINDEX,
 	INSN_MOV_REG_REG,
@@ -88,6 +89,7 @@ struct insn {
 
 struct insn *insn(enum insn_type);
 struct insn *membase_reg_insn(enum insn_type, enum reg, long, enum reg);
+struct insn *memindex_reg_insn(enum insn_type, enum reg, enum reg, unsigned char, enum reg);
 struct insn *reg_membase_insn(enum insn_type, enum reg, enum reg, long);
 struct insn *reg_memindex_insn(enum insn_type, enum reg, enum reg, enum reg, unsigned char);
 struct insn *reg_insn(enum insn_type, enum reg);

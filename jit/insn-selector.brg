@@ -271,6 +271,17 @@ reg:	EXPR_CLASS_FIELD 1
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offset, REG_EAX));
 }
 
+reg:	EXPR_INSTANCE_FIELD(reg) 1
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), REG_EAX));
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, REG_EDX));
+	bb_add_insn(s, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, REG_EAX, REG_EDX, 2, REG_EAX));
+}
+
 reg:	EXPR_NEW
 {
 	struct expression *expr;

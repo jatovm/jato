@@ -43,6 +43,20 @@ struct insn *membase_reg_insn(enum insn_type insn_type, enum reg src_base_reg,
 	return insn;
 }
 
+struct insn *memindex_reg_insn(enum insn_type insn_type,
+			       enum reg src_base_reg, enum reg src_index_reg,
+			       unsigned char src_shift, enum reg dest_reg)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		insn->src.base_reg = src_base_reg;
+		insn->src.index_reg = src_index_reg;
+		insn->src.shift = src_shift;
+		insn->dest.reg = dest_reg;
+	}
+	return insn;
+}
+
 struct insn *reg_membase_insn(enum insn_type insn_type, enum reg src_reg,
 			      enum reg dest_base_reg, long dest_disp)
 {
