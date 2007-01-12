@@ -334,6 +334,8 @@ static void jit_init_natives(void)
 	vm_register_native("java/lang/VMRuntime", "exit", vm_runtime_exit);
 }
 
+extern char *exe_name;
+
 int main(int argc, char *argv[]) {
     Class *array_class, *main_class;
     Object *system_loader, *array;
@@ -341,6 +343,8 @@ int main(int argc, char *argv[]) {
     char *cpntr;
     int status;
     int i;
+
+    exe_name = argv[0];
 
     install_sighandlers();
 
