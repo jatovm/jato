@@ -859,13 +859,13 @@ void test_store_value_to_instance_field(void)
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), REG_ECX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, field.offset, REG_EAX, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, field.offset, REG_EDX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, REG_EDX, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EDX, REG_ECX, REG_EAX, 2, insn);
+	assert_reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EAX, REG_ECX, REG_EDX, 2, insn);
 
 	free_basic_block(bb);
 }

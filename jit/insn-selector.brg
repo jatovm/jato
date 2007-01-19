@@ -358,10 +358,10 @@ inst_field: EXPR_INSTANCE_FIELD(reg) 1
 
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, REG_EAX, REG_ECX));
 	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), REG_ECX));
-	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, REG_EAX));
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, REG_EDX));
 }
 
-stmt:	STMT_STORE(inst_field, EXPR_VALUE)
+stmt:	STMT_STORE(inst_field, reg)
 {
 	struct expression *store_src;
 	struct statement *stmt;
@@ -369,8 +369,7 @@ stmt:	STMT_STORE(inst_field, EXPR_VALUE)
 	stmt = to_stmt(tree);
 	store_src = to_expr(stmt->store_src);
 
-	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, store_src->value, REG_EDX));
-	bb_add_insn(s, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EDX, REG_ECX, REG_EAX, 2));
+	bb_add_insn(s, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EAX, REG_ECX, REG_EDX, 2));
 }
 
 stmt:	STMT_STORE(EXPR_LOCAL, reg)
