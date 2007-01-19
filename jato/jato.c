@@ -296,7 +296,7 @@ int parseCommandLine(int argc, char *argv[]) {
         } else if(strcmp(argv[i], "-Xdumpbb") == 0) {
           show_basic_blocks = 1;
 
-        } else if(strcmp(argv[i], "-interp") == 0) {
+        } else if(strcmp(argv[i], "-Xinterp") == 0) {
           interp = 1;
 
         } else {
