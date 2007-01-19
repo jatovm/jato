@@ -25,6 +25,16 @@ unit tests, follow these instructions:
     % make
 
 
+Running Jato
+------------
+
+Options:
+
+  -Xinterp	Interpreter-only execution
+  -Xdumptree	Show expression trees of each compiled method
+  -Xdisasm	Show disassembly of each compiled method
+
+
 Development
 -----------
 
@@ -74,7 +84,7 @@ License
 
 This JIT compiler is
 
-  Copyright (C) 2005-2006  Pekka Enberg
+  Copyright (C) 2005-2007  Pekka Enberg
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License version 2 as
