@@ -276,7 +276,7 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 	__emit_mov_reg_reg(buf, REG_ESP, REG_EBP);
 
 	if (nr_locals)
-		emit_sub_imm_reg(buf, nr_locals, REG_ESP);
+		emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
 }
 
 static void emit_pop_reg(struct buffer *buf, enum reg reg)

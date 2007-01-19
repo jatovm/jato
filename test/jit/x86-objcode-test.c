@@ -133,7 +133,7 @@ void test_emit_prolog_has_locals(void)
 	struct buffer *buf;
 
 	buf = alloc_buffer();
-	emit_prolog(buf, 0x80);
+	emit_prolog(buf, 0x20);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 	free_buffer(buf);
 }
@@ -155,7 +155,7 @@ void test_emit_epilog_has_locals(void)
 	struct buffer *buf;
 
 	buf = alloc_buffer();
-	emit_epilog(buf, 0x80);
+	emit_epilog(buf, 0x20);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 	free_buffer(buf);
 }

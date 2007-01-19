@@ -104,12 +104,12 @@ int jit_compile(struct compilation_unit *cu)
 		err = -ENOMEM;
 		goto out;
 	}
-	emit_prolog(cu->objcode, 0);
+	emit_prolog(cu->objcode, cu->method->max_locals);
 	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
 		emit_obj_code(bb, cu->objcode);
 	}
 	emit_obj_code(cu->exit_bb, cu->objcode);
-	emit_epilog(cu->objcode, 0);
+	emit_epilog(cu->objcode, cu->method->max_locals);
 
 	if (show_disasm)
 		print_disasm(cu->method,
