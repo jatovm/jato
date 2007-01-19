@@ -17,6 +17,11 @@ public class ObjectCreationAndManipulationTest extends TestCase {
 	assertNotNull(obj);
     }
 
+    public static void testObjectInitialization() {
+        InitializingClass obj = new InitializingClass(1);
+        assertEquals(1, obj.value);
+    }
+
     public static void testClassFieldAccess() {
         assertEquals(0, ClassFields.field);
         ClassFields.field = 1;
@@ -32,11 +37,20 @@ public class ObjectCreationAndManipulationTest extends TestCase {
 
     public static void main(String[] args) {
         testNewObject();
+        testObjectInitialization();
         testClassFieldAccess();
         testInstanceFieldAccess();
 
         Runtime.getRuntime().halt(retval);
     }
+
+    private static class InitializingClass {
+        public int value;
+
+        public InitializingClass(int value) {
+            this.value = value;
+	}
+    };
 
     private static class ClassFields {
         public static int field;
