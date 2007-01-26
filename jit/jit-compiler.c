@@ -47,7 +47,7 @@ static void print_basic_blocks(struct compilation_unit *cu)
 
 	print_method_info(cu->method);
 
-	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+	for_each_basic_block(bb, &cu->bb_list) {
 		printf("BB %p, start: %lu, end: %lu\n", bb, bb->start, bb->end);
 	}
 }
@@ -60,7 +60,7 @@ static void print_tree(struct compilation_unit *cu)
 	
 	print_method_info(cu->method);
 
-	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+	for_each_basic_block(bb, &cu->bb_list) {
 		printf("BB %p:\n", bb);
 		list_for_each_entry(stmt, &bb->stmt_list, stmt_list_node) {
 			str = alloc_str();
@@ -97,7 +97,7 @@ int jit_compile(struct compilation_unit *cu)
 	if (show_tree)
 		print_tree(cu);
 
-	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+	for_each_basic_block(bb, &cu->bb_list) {
 		insn_select(bb);
 	}
 
@@ -107,7 +107,7 @@ int jit_compile(struct compilation_unit *cu)
 		goto out;
 	}
 	emit_prolog(cu->objcode, cu->method->max_locals);
-	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+	for_each_basic_block(bb, &cu->bb_list) {
 		emit_obj_code(bb, cu->objcode);
 	}
 	emit_obj_code(cu->exit_bb, cu->objcode);

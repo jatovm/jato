@@ -53,7 +53,7 @@ struct basic_block *find_bb(struct compilation_unit *cu, unsigned long offset)
 {
 	struct basic_block *bb;
 
-	list_for_each_entry(bb, &cu->bb_list, bb_list_node) {
+	for_each_basic_block(bb, &cu->bb_list) {
 		if (offset >= bb->start && offset < bb->end)
 			return bb;
 	}
@@ -65,8 +65,9 @@ unsigned long nr_bblocks(struct compilation_unit *cu)
 	struct basic_block *bb;
 	unsigned long nr = 0;
 
-	list_for_each_entry(bb, &cu->bb_list, bb_list_node)
+	for_each_basic_block(bb, &cu->bb_list) {
 		nr++;
+	}
 
 	return nr;
 }
