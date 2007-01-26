@@ -36,11 +36,6 @@ struct bitset *alloc_bitset(unsigned long nr_bits)
 	return bitset;
 }
 
-static inline unsigned long *addr_of(unsigned long *bitset, unsigned long bit)
-{
-	return bitset + (bit / BITS_PER_LONG);
-}
-
 static inline unsigned long bit_mask(unsigned long bit)
 {
 	return 1UL << (bit & (BITS_PER_LONG-1));
@@ -50,7 +45,7 @@ int test_bit(unsigned long *bitset, unsigned long bit)
 {
 	unsigned long *addr, mask;
 
-	addr = addr_of(bitset, bit);
+	addr = bitset + (bit / BITS_PER_LONG);
 	mask = bit_mask(bit);
 
 	return ((*addr & mask) != 0);
@@ -60,7 +55,7 @@ void set_bit(unsigned long *bitset, unsigned long bit)
 {
 	unsigned long *addr, mask;
 	
-	addr = addr_of(bitset, bit); 
+	addr = bitset + (bit / BITS_PER_LONG);
 	mask = bit_mask(bit);
 
 	*addr |= mask;
