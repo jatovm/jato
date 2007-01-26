@@ -9,5 +9,6 @@ struct bitset {
 struct bitset *alloc_bitset(unsigned long);
 int test_bit(unsigned long *, unsigned long);
 void set_bit(unsigned long *, unsigned long);
+void bitset_union_to(struct bitset *, struct bitset *);
 
 #endif

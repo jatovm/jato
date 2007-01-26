@@ -8,6 +8,7 @@
 #include <vm/bitset.h>
 #include <vm/system.h>
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -63,4 +64,17 @@ void set_bit(unsigned long *bitset, unsigned long bit)
 	mask = bit_mask(bit);
 
 	*addr |= mask;
+}
+
+void bitset_union_to(struct bitset *from, struct bitset *to)
+{
+	unsigned long *src, *dest;
+	unsigned long i, nr_bits;
+
+	dest = to->bits;
+	src = from->bits;
+	nr_bits = max(from->nr_bits, to->nr_bits);
+
+	for (i = 0; i < nr_bits / BITS_PER_LONG; i++)
+		dest[i] |= src[i];
 }
