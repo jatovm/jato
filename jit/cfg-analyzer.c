@@ -10,7 +10,7 @@
 #include <jit/jit-compiler.h>
 #include <bytecodes.h>
 
-#include <vm/bitmap.h>
+#include <vm/bitset.h>
 #include <vm/stream.h>
 #include <vm/vm.h>
 
@@ -34,7 +34,7 @@ static struct stream_operations bytecode_stream_ops = {
 static struct basic_block *do_split(struct compilation_unit *cu,
 				    struct basic_block *bb,
 				    struct stream *stream,
-				    unsigned long *branch_targets)
+				    struct bitset *branch_targets)
 {
 	unsigned long br_target;
 	unsigned long offset;
@@ -42,7 +42,7 @@ static struct basic_block *do_split(struct compilation_unit *cu,
 	offset    = stream_offset(stream);
 	br_target = bytecode_br_target(stream->current) + offset;
 
-	set_bit(branch_targets, br_target);
+	set_bit(branch_targets->bits, br_target);
 	bb = bb_split(bb, offset + bytecode_size(stream->current));
 	list_add_tail(&bb->bb_list_node, &cu->bb_list);
 
@@ -51,7 +51,7 @@ static struct basic_block *do_split(struct compilation_unit *cu,
 
 static void split_after_branches(struct compilation_unit *cu,
 				 struct basic_block *entry_bb,
-				 unsigned long *branch_targets)
+				 struct bitset *branch_targets)
 {
 	struct basic_block *bb;
 	struct stream stream;
@@ -69,14 +69,14 @@ static void split_after_branches(struct compilation_unit *cu,
 }
 
 static void split_at_branch_targets(struct compilation_unit *cu,
-				    unsigned long *branch_targets)
+				    struct bitset *branch_targets)
 {
 	unsigned long offset;
 
 	for (offset = 0; offset < cu->method->code_size; offset++) {
 		struct basic_block *bb;
 
-		if (!test_bit(branch_targets, offset))
+		if (!test_bit(branch_targets->bits, offset))
 			continue;
 			
 		bb = find_bb(cu, offset);
@@ -89,10 +89,10 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 
 int build_cfg(struct compilation_unit *cu)
 {
-	unsigned long *branch_targets;
+	struct bitset *branch_targets;
 	struct basic_block *entry_bb;
 
-	branch_targets = alloc_bitmap(cu->method->code_size);
+	branch_targets = alloc_bitset(cu->method->code_size);
 	if (!branch_targets)
 		return -ENOMEM;
 

@@ -62,7 +62,7 @@ JATO_OBJS =  \
 	jit/x86-frame.o \
 	jit/x86-objcode.o \
 	vm/backtrace.o \
-	vm/bitmap.o \
+	vm/bitset.o \
 	vm/buffer.o \
 	vm/debug-dump.o \
 	vm/natives.o \
@@ -156,7 +156,7 @@ TEST_OBJS = \
 	test/jit/x86-frame-test.o \
 	test/jit/x86-objcode-test.o \
 	test/libharness/libharness.o \
-	test/vm/bitmap-test.o \
+	test/vm/bitset-test.o \
 	test/vm/buffer-test.o \
 	test/vm/list-test.o \
 	test/vm/natives-test.o \
