@@ -1,11 +1,10 @@
 /*
+ * Bytecode control-flow analysis.
+ *
  * Copyright (C) 2006  Pekka Enberg
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
- *
- * The file contains functions for building a control-flow graph of a bytecode
- * stream.
  */
 
 #include <jit/jit-compiler.h>

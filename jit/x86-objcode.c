@@ -1,11 +1,10 @@
 /*
+ * IA-32 code emitter.
+ *
  * Copyright (C) 2006  Pekka Enberg
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
- *
- * The file contains functions for emitting IA-32 object code from IR
- * instruction sequence.
  */
 
 #include <jit/basic-block.h>

@@ -1,11 +1,10 @@
 /*
+ * Converts bytecode to register-based high-level immediate representation.
+ *
  * Copyright (C) 2005-2006  Pekka Enberg
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
- *
- * The file contains functions for converting Java bytecode to immediate
- * representation of the JIT compiler.
  */
 
 #include <jit/statement.h>
@@ -235,11 +234,11 @@ static convert_fn_t converters[] = {
  */
 int convert_to_ir(struct compilation_unit *cu)
 {
-	int err = 0;
 	unsigned long code_size = cu->method->code_size;
 	unsigned char *code = cu->method->jit_code;
 	unsigned long offset = 0;
 	struct basic_block *bb;
+	int err = 0;
 
 	while (offset < code_size) {
 		unsigned long opc_size;

@@ -1,4 +1,6 @@
 /*
+ * Compiles bytecode methods to machine code.
+ *
  * Copyright (C) 2005-2006  Pekka Enberg
  *
  * This file is released under the GPL version 2. Please refer to the file
