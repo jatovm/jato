@@ -103,4 +103,6 @@ struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
+#define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
+
 #endif

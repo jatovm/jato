@@ -62,7 +62,7 @@ static void print_tree(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		printf("BB %p:\n", bb);
-		list_for_each_entry(stmt, &bb->stmt_list, stmt_list_node) {
+		for_each_stmt(stmt, &bb->stmt_list) {
 			str = alloc_str();
 			tree_print(&stmt->node, str);
 			printf(str->value);

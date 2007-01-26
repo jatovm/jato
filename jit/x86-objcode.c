@@ -675,7 +675,7 @@ void emit_obj_code(struct basic_block *bb, struct buffer *buf)
 
 	backpatch_branches(buf, &bb->backpatch_insns, buffer_offset(buf));
 
-	list_for_each_entry(insn, &bb->insn_list, insn_list_node) {
+	for_each_insn(insn, &bb->insn_list) {
 		emit_insn(buf, insn);
 	}
 	bb->is_emitted = true;
