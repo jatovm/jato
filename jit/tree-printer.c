@@ -446,7 +446,6 @@ static int print_instance_field_expr(int lvl, struct string *str, struct express
 
       out:
 	return err;
-	return str_append(str, "[instance_field %s %p]", type_names[expr->vm_type], expr->instance_field);
 }
 
 static int print_invoke_expr(int lvl, struct string *str,
