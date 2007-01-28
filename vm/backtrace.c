@@ -132,6 +132,7 @@ static unsigned long get_greg(gregset_t gregs, int reg)
 	return (unsigned long)gregs[reg];
 }
 
+#ifndef CONFIG_X86_64
 static void show_registers(gregset_t gregs)
 {
 	unsigned long eax, ebx, ecx, edx;
@@ -153,6 +154,11 @@ static void show_registers(gregset_t gregs)
 	printf(" esi: %08lx   edi: %08lx   ebp: %08lx   esp: %08lx\n",
 	       esi, edi, ebp, esp);
 }
+#else
+static void show_registers(gregset_t gregs)
+{
+}
+#endif
 
 void bt_sighandler(int sig, siginfo_t * info, void *secret)
 {
