@@ -19,6 +19,7 @@
  */
 
 /* Must be included first to get configure options */
+#include <arch/config.h>
 #include "jam.h"
 
 #ifdef USE_FFI
