@@ -196,7 +196,7 @@ void test_insn_after_branch_are_added_to_another_bb(void)
 
 	cu = alloc_compilation_unit(&method);
 
-	build_cfg(cu);
+	analyze_control_flow(cu);
 	convert_to_ir(cu);
 
 	bb = list_first_entry(&cu->bb_list, struct basic_block, bb_list_node);

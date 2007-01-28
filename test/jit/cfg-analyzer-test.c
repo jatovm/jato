@@ -31,7 +31,7 @@ void test_branch_opcode_ends_basic_block(void)
 	
 	cu = alloc_compilation_unit(&method);
 
-	build_cfg(cu);
+	analyze_control_flow(cu);
 	assert_int_equals(3, nr_bblocks(cu));
 
 	bb1 = bb_entry(cu->bb_list.next);
@@ -68,7 +68,7 @@ void test_multiple_branches(void)
 
 	cu = alloc_compilation_unit(&method);
 
-	build_cfg(cu);
+	analyze_control_flow(cu);
 	assert_int_equals(4, nr_bblocks(cu));
 
 	free_compilation_unit(cu);

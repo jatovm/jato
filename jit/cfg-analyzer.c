@@ -87,7 +87,7 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 	}
 }
 
-int build_cfg(struct compilation_unit *cu)
+int analyze_control_flow(struct compilation_unit *cu)
 {
 	struct bitset *branch_targets;
 	struct basic_block *entry_bb;

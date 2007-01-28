@@ -14,7 +14,7 @@ struct jit_trampoline {
 	struct buffer *objcode;
 };
 
-int build_cfg(struct compilation_unit *);
+int analyze_control_flow(struct compilation_unit *);
 int convert_to_ir(struct compilation_unit *);
 int jit_compile(struct compilation_unit *);
 void *jit_magic_trampoline(struct compilation_unit *);

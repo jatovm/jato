@@ -25,40 +25,44 @@
 #include <stdio.h>
 #include <string.h>
 
-int show_basic_blocks;
-int show_tree;
-int show_disasm;
+int debug_basic_blocks;
+int debug_tree;
+int debug_disassembly;
 
-static void print_method_info(struct methodblock *method)
+static void show_method_info(struct methodblock *method)
 {
 	printf("Method: %s, Class: %s\n", method->name, CLASS_CB(method->class)->name);
 }
 
-static void print_disasm(struct methodblock *method, void *start, void *end)
+static void show_disassembly(struct compilation_unit *cu)
 {
-	print_method_info(method);
+	struct methodblock *method = cu->method;
+	void *start = buffer_ptr(cu->objcode);
+	void *end = buffer_current(cu->objcode);
+
+	show_method_info(method);
 	disassemble(start, end);
 	printf("\n");
 }
 
-static void print_basic_blocks(struct compilation_unit *cu)
+static void show_basic_blocks(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
 
-	print_method_info(cu->method);
+	show_method_info(cu->method);
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		printf("BB %p, start: %lu, end: %lu\n", bb, bb->start, bb->end);
 	}
 }
 
-static void print_tree(struct compilation_unit *cu)
+static void show_tree(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct string *str;
 	
-	print_method_info(cu->method);
+	show_method_info(cu->method);
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		printf("BB %p:\n", bb);
@@ -78,12 +82,45 @@ static struct buffer_operations exec_buf_ops = {
 	.free   = generic_buffer_free,
 };
 
-int jit_compile(struct compilation_unit *cu)
+static int select_instructions(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
-	int err = 0;
 
-	err = build_cfg(cu);
+	for_each_basic_block(bb, &cu->bb_list)
+		insn_select(bb);
+}
+
+static int emit_machine_code(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+
+	cu->objcode = __alloc_buffer(&exec_buf_ops);
+	if (!cu->objcode)
+		return -ENOMEM;
+
+	emit_prolog(cu->objcode, cu->method->max_locals);
+	for_each_basic_block(bb, &cu->bb_list)
+		emit_obj_code(bb, cu->objcode);
+
+	emit_obj_code(cu->exit_bb, cu->objcode);
+	emit_epilog(cu->objcode, cu->method->max_locals);
+
+	return 0;
+}
+
+static void compile_error(struct compilation_unit *cu, int err)
+{
+	struct classblock *cb = CLASS_CB(cu->method->class);
+
+	printf("%s: Failed to compile method `%s' in class `%s', error: %i\n",
+	       __FUNCTION__, cu->method->name, cb->name, err);
+}
+
+int jit_compile(struct compilation_unit *cu)
+{
+	int err;
+
+	err = analyze_control_flow(cu);
 	if (err)
 		goto out;
 
@@ -91,41 +128,28 @@ int jit_compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
-	if (show_basic_blocks)
-		print_basic_blocks(cu);
+	if (debug_basic_blocks)
+		show_basic_blocks(cu);
 
-	if (show_tree)
-		print_tree(cu);
+	if (debug_tree)
+		show_tree(cu);
 
-	for_each_basic_block(bb, &cu->bb_list) {
-		insn_select(bb);
-	}
-
-	cu->objcode = __alloc_buffer(&exec_buf_ops);
-	if (!cu->objcode) {
-		err = -ENOMEM;
+	err = select_instructions(cu);
+	if (err)
 		goto out;
-	}
-	emit_prolog(cu->objcode, cu->method->max_locals);
-	for_each_basic_block(bb, &cu->bb_list) {
-		emit_obj_code(bb, cu->objcode);
-	}
-	emit_obj_code(cu->exit_bb, cu->objcode);
-	emit_epilog(cu->objcode, cu->method->max_locals);
 
-	if (show_disasm)
-		print_disasm(cu->method,
-			     buffer_ptr(cu->objcode),
-			     buffer_current(cu->objcode));
+	err = emit_machine_code(cu);
+	if (err)
+		goto out;
+
+	if (debug_disassembly)
+		show_disassembly(cu);
 
 	cu->is_compiled = true;
 
   out:
-	if (err) {
-		struct classblock *cb = CLASS_CB(cu->method->class);
-		printf("%s: Failed to compile method `%s' in class `%s', error: %i\n",
-		       __FUNCTION__, cu->method->name, cb->name, err);
-	}
+	if (err)
+		compile_error(cu, err);
 
 	return err;
 }

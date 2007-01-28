@@ -55,9 +55,9 @@ static unsigned long max_heap   = DEFAULT_MAX_HEAP;
 char VM_initing = TRUE;
 extern void initialisePlatform();
 
-extern int show_disasm;
-extern int show_tree;
-extern int show_basic_blocks;
+extern int debug_disassembly;
+extern int debug_tree;
+extern int debug_basic_blocks;
 
 static int interp;
 
@@ -288,13 +288,13 @@ int parseCommandLine(int argc, char *argv[]) {
             compact_specified = do_compact = TRUE;
 
         } else if(strcmp(argv[i], "-Xdisasm") == 0) {
-          show_disasm = 1;
+          debug_disassembly = 1;
 
         } else if(strcmp(argv[i], "-Xdumptree") == 0) {
-          show_tree = 1;
+          debug_tree = 1;
 
         } else if(strcmp(argv[i], "-Xdumpbb") == 0) {
-          show_basic_blocks = 1;
+          debug_basic_blocks = 1;
 
         } else if(strcmp(argv[i], "-Xinterp") == 0) {
           interp = 1;
