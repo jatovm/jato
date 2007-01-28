@@ -121,7 +121,7 @@ static void convert_ir_invoke(struct compilation_unit *cu,
 			      struct methodblock *target_method,
 			      unsigned long method_index)
 {
-	u4 cp_infos[method_index + 1];
+	ConstantPoolEntry cp_infos[method_index + 1];
 	u1 cp_types[method_index + 1];
 
 	cp_infos[method_index] = (unsigned long) target_method;
