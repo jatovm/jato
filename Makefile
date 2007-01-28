@@ -10,6 +10,7 @@ ARCH_H = include/vm/arch.h
 EXECUTABLE = java
 
 ARCH := $(shell uname -m | sed  -e s/i.86/i386/)
+OS := $(shell uname -s | tr "[:upper:]" "[:lower:]")
 
 # GNU classpath installation path
 prefix = /usr/local
@@ -87,9 +88,9 @@ JAMVM_OBJS = \
 	jamvm/jni.o \
 	jamvm/lock.o \
 	jamvm/natives.o \
-	jamvm/os/linux/i386/dll_md.o \
-	jamvm/os/linux/i386/init.o \
-	jamvm/os/linux/os.o \
+	jamvm/os/$(OS)/i386/dll_md.o \
+	jamvm/os/$(OS)/i386/init.o \
+	jamvm/os/$(OS)/os.o \
 	jamvm/properties.o \
 	jamvm/reflect.o \
 	jamvm/resolve.o \
