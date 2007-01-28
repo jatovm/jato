@@ -168,7 +168,7 @@ void test_jitted_code_invokes_native_method(void)
 	struct object *invoker_class;
 	struct object *native_class;
 	sum_fn function;
-	u4 cp_infos[1];
+	ConstantPoolEntry cp_infos[1];
 	u1 cp_types[1];
 
 	struct methodblock invoker_method = {
