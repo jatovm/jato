@@ -1,16 +1,18 @@
+ARCH := $(shell uname -m | sed  -e s/i.86/i386/)
+OS := $(shell uname -s | tr "[:upper:]" "[:lower:]")
+
+include arch/$(ARCH)/Makefile
+
 MONOBURG=./monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
-INCLUDE =  -Iinclude -Ijit -Ijamvm -Ijit/glib -Itest/libharness -Itest/jit -include arch/config.h
-LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
+INCLUDE =  -Iinclude -Ijit -Ijamvm -Ijit/glib -Itest/libharness -Itest/jit -include arch/config.h $(ARCH_INCLUDE)
+LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes $(ARCH_LIBS)
 
-ARCH_INCLUDE = include/arch
+ARCH_INCLUDE_DIR = include/arch
 ARCH_H = include/vm/arch.h
 EXECUTABLE = java
-
-ARCH := $(shell uname -m | sed  -e s/i.86/i386/)
-OS := $(shell uname -s | tr "[:upper:]" "[:lower:]")
 
 # GNU classpath installation path
 prefix = /usr/local
@@ -127,7 +129,7 @@ jit/insn-selector.c: FORCE
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
       cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(JAMVM_OBJS) $(JATO_OBJS) -o $(EXECUTABLE)
 
-$(EXECUTABLE): $(ARCH_INCLUDE) $(ARCH_H) compile
+$(EXECUTABLE): $(ARCH_INCLUDE_DIR) $(ARCH_H) compile
 	$(call cmd,cc_exec)
 
 compile: $(JAMVM_OBJS) $(JATO_OBJS)
@@ -170,7 +172,7 @@ $(TEST_OBJS):
 quiet_cmd_ln_arch = LN $(empty)     $(empty) $@
       cmd_ln_arch = ln -fsn arch-$(ARCH) $@
 
-$(ARCH_INCLUDE): FORCE
+$(ARCH_INCLUDE_DIR): FORCE
 	$(call cmd,ln_arch)
 
 quiet_cmd_gensuite = GENSUITE $@
@@ -185,7 +187,7 @@ quiet_cmd_runtests = RUNTEST $(TESTRUNNER)
 quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
       cmd_cc_testrunner = $(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(LIBS) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) -o $(TESTRUNNER)
 
-test: $(ARCH_INCLUDE) $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
+test: $(ARCH_INCLUDE_DIR) $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
 	$(call cmd,cc_testrunner)
 	$(call cmd,runtests)
 
