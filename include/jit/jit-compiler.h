@@ -14,11 +14,13 @@ struct jit_trampoline {
 	struct buffer *objcode;
 };
 
+int jit_compile(struct compilation_unit *);
 int analyze_control_flow(struct compilation_unit *);
 int convert_to_ir(struct compilation_unit *);
-int jit_compile(struct compilation_unit *);
+int emit_machine_code(struct compilation_unit *);
 void *jit_magic_trampoline(struct compilation_unit *);
 
+struct jit_trampoline *alloc_jit_trampoline(void);
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *);
 void free_jit_trampoline(struct jit_trampoline *);
 

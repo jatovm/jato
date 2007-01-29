@@ -49,6 +49,7 @@ JATO_OBJS =  \
 	jit/compilation-unit.o \
 	jit/disass-common.o \
 	jit/disass.o \
+	jit/emit.o \
 	jit/expression.o \
 	jit/insn-selector.o \
 	jit/instruction.o \

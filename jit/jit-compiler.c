@@ -1,7 +1,7 @@
 /*
  * Compiles bytecode methods to machine code.
  *
- * Copyright (C) 2005-2006  Pekka Enberg
+ * Copyright (C) 2005-2007  Pekka Enberg
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
@@ -13,7 +13,6 @@
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
-#include <vm/alloc.h>
 #include <vm/buffer.h>
 #include <vm/natives.h>
 #include <vm/string.h>
@@ -62,13 +61,7 @@ static void show_tree(struct compilation_unit *cu)
 			free_str(str);
 		}
 	}
-
 }
-
-static struct buffer_operations exec_buf_ops = {
-	.expand = expand_buffer_exec,
-	.free   = generic_buffer_free,
-};
 
 static int select_instructions(struct compilation_unit *cu)
 {
@@ -76,24 +69,6 @@ static int select_instructions(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list)
 		insn_select(bb);
-
-	return 0;
-}
-
-static int emit_machine_code(struct compilation_unit *cu)
-{
-	struct basic_block *bb;
-
-	cu->objcode = __alloc_buffer(&exec_buf_ops);
-	if (!cu->objcode)
-		return -ENOMEM;
-
-	emit_prolog(cu->objcode, cu->method->max_locals);
-	for_each_basic_block(bb, &cu->bb_list)
-		emit_obj_code(bb, cu->objcode);
-
-	emit_obj_code(cu->exit_bb, cu->objcode);
-	emit_epilog(cu->objcode, cu->method->max_locals);
 
 	return 0;
 }
@@ -176,37 +151,14 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	return ret;
 }
 
-static struct jit_trampoline *alloc_jit_trampoline(void)
-{
-	struct jit_trampoline *tramp = malloc(sizeof(*tramp));
-	if (!tramp)
-		return NULL;
-
-	memset(tramp, 0, sizeof(*tramp));
-
-	tramp->objcode = __alloc_buffer(&exec_buf_ops);
-	if (!tramp->objcode)
-		goto failed;
-
-	return tramp;
-
-  failed:
-	free_jit_trampoline(tramp);
-	return NULL;
-}
-
-void free_jit_trampoline(struct jit_trampoline *tramp)
-{
-	free_buffer(tramp->objcode);
-	free(tramp);
-}
-
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 {
-	struct jit_trampoline *tramp = alloc_jit_trampoline();
-	if (tramp)
-		emit_trampoline(cu, jit_magic_trampoline, tramp->objcode);
-	return tramp;
+	struct jit_trampoline *trampoline;
+	
+	trampoline = alloc_jit_trampoline();
+	if (trampoline)
+		emit_trampoline(cu, jit_magic_trampoline, trampoline->objcode);
+	return trampoline;
 }
 
 void *jit_prepare_for_exec(struct methodblock *mb)
