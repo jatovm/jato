@@ -25,7 +25,7 @@
  *
  *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
  */
-static unsigned char encode_reg(enum reg reg)
+static unsigned char encode_reg(enum machine_reg reg)
 {
 	unsigned char ret = 0;
 
@@ -126,7 +126,7 @@ static void emit_imm(struct buffer *buf, long imm)
 static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 			     union operand *src, union operand *dest)
 {
-	enum reg base_reg, dest_reg;
+	enum machine_reg base_reg, dest_reg;
 	unsigned long disp;
 	unsigned char mod, rm, mod_rm;
 	int needs_sib;
@@ -158,7 +158,7 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 	emit_imm(buf, disp);
 }
 
-static void __emit_push_reg(struct buffer *buf, enum reg reg)
+static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0x50 + encode_reg(reg));
 }
@@ -168,8 +168,8 @@ static void emit_push_reg(struct buffer *buf, union operand *operand)
 	__emit_push_reg(buf, operand->reg);
 }
 
-static void __emit_mov_reg_reg(struct buffer *buf, enum reg src_reg,
-			       enum reg dest_reg)
+static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
+			       enum machine_reg dest_reg)
 {
 	unsigned char mod_rm;
 
@@ -249,7 +249,7 @@ static void emit_mov_reg_memindex(struct buffer *buf, union operand *src,
 }
 
 static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
-			     long imm, enum reg reg)
+			     long imm, enum machine_reg reg)
 {
 	int opc;
 
@@ -264,7 +264,7 @@ static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
 }
 
 static void emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
-			     enum reg reg)
+			     enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x05, imm, reg);
 }
@@ -278,7 +278,7 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 		emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
 }
 
-static void emit_pop_reg(struct buffer *buf, enum reg reg)
+static void emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0x58 + encode_reg(reg));
 }
@@ -354,7 +354,7 @@ static void __emit_div_mul_membase_reg(struct buffer *buf,
 				       union operand *dest,
 				       unsigned char opc_ext)
 {
-	enum reg reg;
+	enum machine_reg reg;
 	long disp;
 	int mod;
 
@@ -430,7 +430,7 @@ static void emit_or_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x0b, src, dest);
 }
 
-static void __emit_add_imm_reg(struct buffer *buf, long imm, enum reg reg)
+static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x00, imm, reg);
 }
@@ -452,7 +452,7 @@ static void emit_cmp_membase_reg(struct buffer *buf, union operand *src, union o
 	emit_membase_reg(buf, 0x3b, src, dest);
 }
 
-static void emit_indirect_jump_reg(struct buffer *buf, enum reg reg)
+static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0xff);
 	emit(buf, encode_modrm(0x3, 0x04, encode_reg(reg)));

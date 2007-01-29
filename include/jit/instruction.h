@@ -6,7 +6,7 @@
 
 struct basic_block;
 
-enum reg {
+enum machine_reg {
 	REG_EAX,
 	REG_EBX,
 	REG_ECX,
@@ -16,16 +16,16 @@ enum reg {
 };
 
 union operand {
-	enum reg reg;
+	enum machine_reg reg;
 
 	struct {
-		enum reg base_reg;
+		enum machine_reg base_reg;
 		long disp;	/* displacement */
 	};
 
 	struct {
-		enum reg base_reg;
-		enum reg index_reg;
+		enum machine_reg base_reg;
+		enum machine_reg index_reg;
 		unsigned char shift;
 	};
 
@@ -88,14 +88,14 @@ struct insn {
 };
 
 struct insn *insn(enum insn_type);
-struct insn *membase_reg_insn(enum insn_type, enum reg, long, enum reg);
-struct insn *memindex_reg_insn(enum insn_type, enum reg, enum reg, unsigned char, enum reg);
-struct insn *reg_membase_insn(enum insn_type, enum reg, enum reg, long);
-struct insn *reg_memindex_insn(enum insn_type, enum reg, enum reg, enum reg, unsigned char);
-struct insn *reg_insn(enum insn_type, enum reg);
-struct insn *reg_reg_insn(enum insn_type, enum reg, enum reg);
-struct insn *imm_reg_insn(enum insn_type, unsigned long, enum reg);
-struct insn *imm_membase_insn(enum insn_type, unsigned long, enum reg, long);
+struct insn *membase_reg_insn(enum insn_type, enum machine_reg, long, enum machine_reg);
+struct insn *memindex_reg_insn(enum insn_type, enum machine_reg, enum machine_reg, unsigned char, enum machine_reg);
+struct insn *reg_membase_insn(enum insn_type, enum machine_reg, enum machine_reg, long);
+struct insn *reg_memindex_insn(enum insn_type, enum machine_reg, enum machine_reg, enum machine_reg, unsigned char);
+struct insn *reg_insn(enum insn_type, enum machine_reg);
+struct insn *reg_reg_insn(enum insn_type, enum machine_reg, enum machine_reg);
+struct insn *imm_reg_insn(enum insn_type, unsigned long, enum machine_reg);
+struct insn *imm_membase_insn(enum insn_type, unsigned long, enum machine_reg, long);
 struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);

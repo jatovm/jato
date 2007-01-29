@@ -18,9 +18,9 @@ static void assert_insn(enum insn_type insn_type, struct insn *insn)
 }
 
 static void assert_membase_reg_insn(enum insn_type insn_type,
-				    enum reg src_base_reg,
+				    enum machine_reg src_base_reg,
 				    long src_displacement,
-				    enum reg dest_reg,
+				    enum machine_reg dest_reg,
 				    struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
@@ -30,10 +30,10 @@ static void assert_membase_reg_insn(enum insn_type insn_type,
 }
 
 static void assert_memindex_reg_insn(enum insn_type insn_type,
-				     enum reg src_base_reg,
-				     enum reg src_index_reg,
+				     enum machine_reg src_base_reg,
+				     enum machine_reg src_index_reg,
 				     unsigned char src_shift,
-				     enum reg dest_reg,
+				     enum machine_reg dest_reg,
 				     struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
@@ -44,8 +44,8 @@ static void assert_memindex_reg_insn(enum insn_type insn_type,
 }
 
 static void assert_reg_membase_insn(enum insn_type insn_type,
-				    enum reg src_reg,
-				    enum reg dest_reg,
+				    enum machine_reg src_reg,
+				    enum machine_reg dest_reg,
 				    long dest_displacement,
 				    struct insn *insn)
 {
@@ -56,9 +56,9 @@ static void assert_reg_membase_insn(enum insn_type insn_type,
 }
 
 static void assert_reg_memindex_insn(enum insn_type insn_type,
-				     enum reg src_reg,
-				     enum reg base_reg,
-				     enum reg index_reg,
+				     enum machine_reg src_reg,
+				     enum machine_reg base_reg,
+				     enum machine_reg index_reg,
 				     unsigned char shift,
 				     struct insn *insn)
 {
@@ -70,15 +70,15 @@ static void assert_reg_memindex_insn(enum insn_type insn_type,
 }
 
 static void assert_reg_insn(enum insn_type insn_type,
-			    enum reg expected_reg, struct insn *insn)
+			    enum machine_reg expected_reg, struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_reg, insn->operand.reg);
 }
 
 static void assert_reg_reg_insn(enum insn_type insn_type,
-				enum reg expected_src,
-				enum reg expected_dest,
+				enum machine_reg expected_src,
+				enum machine_reg expected_dest,
 				struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
@@ -95,7 +95,7 @@ static void assert_imm_insn(enum insn_type insn_type,
 
 static void assert_imm_reg_insn(enum insn_type insn_type,
 				unsigned long expected_imm,
-				enum reg expected_reg,
+				enum machine_reg expected_reg,
 				struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
@@ -105,7 +105,7 @@ static void assert_imm_reg_insn(enum insn_type insn_type,
 
 static void assert_imm_membase_insn(enum insn_type insn_type,
 				    unsigned long expected_imm,
-				    enum reg expected_base_reg,
+				    enum machine_reg expected_base_reg,
 				    long expected_disp,
 				    struct insn *insn)
 {
