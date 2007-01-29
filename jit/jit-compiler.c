@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <string.h>
 
-int debug_basic_blocks;
 int debug_tree;
 int debug_disassembly;
 
@@ -45,17 +44,6 @@ static void show_disassembly(struct compilation_unit *cu)
 	printf("\n");
 }
 
-static void show_basic_blocks(struct compilation_unit *cu)
-{
-	struct basic_block *bb;
-
-	show_method_info(cu->method);
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		printf("BB %p, start: %lu, end: %lu\n", bb, bb->start, bb->end);
-	}
-}
-
 static void show_tree(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
@@ -65,7 +53,7 @@ static void show_tree(struct compilation_unit *cu)
 	show_method_info(cu->method);
 
 	for_each_basic_block(bb, &cu->bb_list) {
-		printf("BB %p:\n", bb);
+		printf("BB %p, start: %lu, end: %lu\n", bb, bb->start, bb->end);
 		for_each_stmt(stmt, &bb->stmt_list) {
 			str = alloc_str();
 			tree_print(&stmt->node, str);
@@ -129,9 +117,6 @@ int jit_compile(struct compilation_unit *cu)
 	err = convert_to_ir(cu);
 	if (err)
 		goto out;
-
-	if (debug_basic_blocks)
-		show_basic_blocks(cu);
 
 	if (debug_tree)
 		show_tree(cu);

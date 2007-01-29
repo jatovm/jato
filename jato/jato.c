@@ -57,7 +57,6 @@ extern void initialisePlatform();
 
 extern int debug_disassembly;
 extern int debug_tree;
-extern int debug_basic_blocks;
 
 static int interp;
 
@@ -292,9 +291,6 @@ int parseCommandLine(int argc, char *argv[]) {
 
         } else if(strcmp(argv[i], "-Xdumptree") == 0) {
           debug_tree = 1;
-
-        } else if(strcmp(argv[i], "-Xdumpbb") == 0) {
-          debug_basic_blocks = 1;
 
         } else if(strcmp(argv[i], "-Xinterp") == 0) {
           interp = 1;
