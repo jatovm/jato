@@ -35,9 +35,9 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	emit_prolog(cu->objcode, cu->method->max_locals);
 	for_each_basic_block(bb, &cu->bb_list)
-		emit_obj_code(bb, cu->objcode);
+		emit_body(bb, cu->objcode);
 
-	emit_obj_code(cu->exit_bb, cu->objcode);
+	emit_body(cu->exit_bb, cu->objcode);
 	emit_epilog(cu->objcode, cu->method->max_locals);
 
 	return 0;

@@ -9,7 +9,7 @@ struct compilation_unit;
 
 void emit_prolog(struct buffer *, unsigned long);
 void emit_epilog(struct buffer *, unsigned long);
-void emit_obj_code(struct basic_block *, struct buffer *);
+void emit_body(struct basic_block *, struct buffer *);
 void emit_trampoline(struct compilation_unit *, void *, struct buffer *);
     
 #endif

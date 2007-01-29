@@ -23,7 +23,7 @@ static void assert_emit_insn(unsigned char *expected,
 	bb_add_insn(bb, insn);
 
 	buf = alloc_buffer();
-	emit_obj_code(bb, buf);
+	emit_body(bb, buf);
 	assert_int_equals(expected_size, buffer_offset(buf));
 	assert_mem_equals(expected, buffer_ptr(buf), expected_size);
 	
@@ -197,7 +197,7 @@ static void assert_emit_call(long target_offset)
 	bb = alloc_basic_block(NULL, 0, 1);
 	bb_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long) call_target));
 
-	emit_obj_code(bb, buf);
+	emit_body(bb, buf);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 
 	free_basic_block(bb);
@@ -424,10 +424,10 @@ static void assert_emits_branch_target(unsigned char expected_prefix,
 	branch_bb = alloc_basic_block(NULL, 1, 2);
 
 	buf = alloc_buffer();
-	emit_obj_code(target_bb, buf);
+	emit_body(target_bb, buf);
 
 	bb_add_insn(branch_bb, insn);
-	emit_obj_code(branch_bb, buf);
+	emit_body(branch_bb, buf);
 
 	if (expected_prefix)
 		expected_target_1--;
@@ -489,10 +489,10 @@ static void assert_backpatches_branches(unsigned char expected_prefix,
 
 	buf = alloc_buffer();
 
-	emit_obj_code(branch_bb, buf);
+	emit_body(branch_bb, buf);
 	assert_prefixed_mem_insn_5(expected_prefix, expected_opc, 0x00, 0x00, 0x00, 0x00, buffer_ptr(buf));
 
-	emit_obj_code(target_bb, buf);
+	emit_body(target_bb, buf);
 	assert_prefixed_mem_insn_5(expected_prefix, expected_opc, expected_target, 0x00, 0x00, 0x00, buffer_ptr(buf));
 
 	free_buffer(buf);

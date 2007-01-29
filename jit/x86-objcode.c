@@ -669,7 +669,7 @@ static void backpatch_branches(struct buffer *buf,
 	}
 }
 
-void emit_obj_code(struct basic_block *bb, struct buffer *buf)
+void emit_body(struct basic_block *bb, struct buffer *buf)
 {
 	struct insn *insn;
 
