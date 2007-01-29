@@ -88,6 +88,8 @@ static int select_instructions(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list)
 		insn_select(bb);
+
+	return 0;
 }
 
 static int emit_machine_code(struct compilation_unit *cu)
