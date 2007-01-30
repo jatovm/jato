@@ -1,38 +1,33 @@
-Introduction
+About Jato
 ------------
 
-This is a simple JIT compiler for Java built on top of JamVM.
+Jato is a Just-in-time (JIT) compiler for Java. It is built on top of JamVM.
 
 
-How can I try it out
---------------------
+How can I try it out?
+---------------------
 
-You need git to download jamvm-sources. To compile jit-jamvm and run the
-unit tests, follow these instructions:
+- Download development tree:
 
-  1. Download jit-jamvm sources the first time:
-  
-    % git clone http://www.laughingpanda.org/~penberg/pub/scm/jit-jamvm.git jit-jamvm
+  git clone git://git.kernel.org/pub/scm/java/jato/jato.git
 
-  2. Compile monoburg (you need glib and bison installed on your system)
+- Compile Monoburg:
 
-    % cd jit-jamvm/monoburg/
-    % make
+  cd <JATO_ROOT>/monoburg ; make
 
-  3. Compile jit-jamvm and run unit tests:
+- Compile Jato and run the unit tests:
 
-    % cd ../
-    % make
+  cd <JATO_ROOT> ; make
 
 
 Running Jato
 ------------
 
-Options:
+Command line options:
 
-  -Xinterp	Interpreter-only execution
-  -Xdumptree	Show expression trees of each compiled method
-  -Xdisasm	Show disassembly of each compiled method
+  -Xinterp	Interpreter-only execution. Useful for debugging.
+  -Xdumptree	Show expression trees of each compiled method.
+  -Xdisasm	Show disassembly of each compiled method.
 
 
 Development
@@ -42,8 +37,8 @@ If you use git for development, please remember to add your committer name
 and email to .git/config file.  The format is as follows:
 
   [user]
-    name = Pekka Enberg
-    email = penberg@cs.helsinki.fi
+    name = Jane Doe
+    email = jane@foo.bar
 
 
 How to run the acceptance test?
@@ -51,7 +46,8 @@ How to run the acceptance test?
 
 Prequisites:
 
-  - Jikes Compiler
+  - Jikes Compiler (other Java compilers suffice too, but you need to hack the
+    scripts)
   - GNU classpath (installed in /usr/local/classpath/)
 
 To run the tests, execute the following commands:
@@ -79,10 +75,8 @@ Finally, to launch a Java application with Jato under gdb:
   gdb --args <JATO_ROOT>/jato/jato <class>
 
 
-License
--------
-
-This JIT compiler is
+Copyright and License
+---------------------
 
   Copyright (C) 2005-2007  Pekka Enberg
 
@@ -103,5 +97,7 @@ This JIT compiler is
 Acknowledgements
 ----------------
 
-My work on this JIT compiler has been partially sponsored by
-Reaktor Innovations Oy. Thank you!
+  - Reaktor Innovations Oy for sponsoring my work on this.
+  - kernel.org for providing public space for my development tree.
+
+Thank you!
