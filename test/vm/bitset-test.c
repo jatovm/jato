@@ -57,4 +57,5 @@ void test_bitset_union(void)
 		assert_int_equals(1, test_bit(bitset->bits, i));
 
 	free(bitset);
+	free(all_set);
 }
