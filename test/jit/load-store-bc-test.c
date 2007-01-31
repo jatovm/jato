@@ -9,28 +9,9 @@
 #include <jit/expression.h>
 #include <jit/jit-compiler.h>
 #include <libharness.h>
+#include <string.h>
 
 #include "bc-test-utils.h"
-
-static u4 float_to_cpu32(float fvalue)
-{
-	union {
-		float fvalue;
-		u4 value;
-	} v;
-	v.fvalue = fvalue;
-	return v.value;
-}
-
-static u8 double_to_cpu64(double fvalue)
-{
-	union {
-		double fvalue;
-		u8 value;
-	} v;
-	v.fvalue = fvalue;
-	return v.value;
-}
 
 static void __assert_convert_const(enum vm_type expected_vm_type,
 				   long long expected_value,
@@ -156,22 +137,44 @@ void test_convert_sipush(void)
 	assert_convert_sipush(MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
 }
 
+static void const_set_s4(ConstantPoolEntry *cp_infos, unsigned long idx, s4 value)
+{
+	cp_infos[idx] = value;
+}
+
+static void const_set_s8(ConstantPoolEntry *cp_infos, unsigned long idx, s8 value)
+{
+	*(long long *)&(cp_infos[idx]) = value;
+}
+
+static void const_set_float(ConstantPoolEntry *cp_infos, unsigned long idx, float value)
+{
+	*(float *)&(cp_infos[idx]) = value;
+}
+
+static void const_set_double(ConstantPoolEntry *cp_infos, unsigned long idx, double value)
+{
+	*(double *)&(cp_infos[idx]) = value;
+}
+
 static void assert_convert_ldc(enum vm_type expected_vm_type,
 			       long long expected_value, u1 cp_type)
 {
 	struct expression *expr;
-	u8 cp_infos[] = { expected_value };
-	u1 cp_types[] = { cp_type };
-	unsigned char code[] = { OPC_LDC, 0x00, 0x00 };
+	ConstantPoolEntry cp_infos[512];
+	u1 cp_types[512];
+	unsigned char code[] = { OPC_LDC, 0xff };
 	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
+	const_set_s4(cp_infos, 0xff, expected_value);
+	cp_types[0xff] = cp_type;
 	cu = alloc_simple_compilation_unit(&method);
 
-	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+	convert_ir_const(cu, cp_infos, 512, cp_types);
 	expr = stack_pop(cu->expr_stack);
 	assert_value_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
@@ -183,18 +186,20 @@ static void assert_convert_ldc(enum vm_type expected_vm_type,
 static void assert_convert_ldc_f(float expected_value)
 {
 	struct expression *expr;
-	u8 cp_infos[] = { float_to_cpu32(expected_value) };
-	u1 cp_types[] = { CONSTANT_Float };
-	unsigned char code[] = { OPC_LDC, 0x00, 0x00 };
+	ConstantPoolEntry cp_infos[512];
+	u1 cp_types[512];
+	unsigned char code[] = { OPC_LDC, 0xff };
 	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 
+	const_set_float(cp_infos, 0xff, expected_value);
+	cp_types[0xff] = CONSTANT_Float;
 	cu = alloc_simple_compilation_unit(&method);
 
-	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
+	convert_ir_const(cu, cp_infos, 512, cp_types);
 	expr = stack_pop(cu->expr_stack);
 	assert_fvalue_expr(J_FLOAT, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
@@ -212,10 +217,10 @@ void test_convert_ldc(void)
 	assert_convert_ldc(J_INT, 1, CONSTANT_Integer);
 	assert_convert_ldc(J_INT, INT_MIN, CONSTANT_Integer);
 	assert_convert_ldc(J_INT, INT_MAX, CONSTANT_Integer);
+	assert_convert_ldc(J_REFERENCE, 0xcafe, CONSTANT_String);
 	assert_convert_ldc_f(0.01f);
 	assert_convert_ldc_f(1.0f);
 	assert_convert_ldc_f(-1.0f);
-	assert_convert_ldc(J_REFERENCE, 0xDEADBEEF, CONSTANT_String);
 }
 
 static void assert_convert_ldcw(enum vm_type expected_vm_type,
@@ -223,10 +228,8 @@ static void assert_convert_ldcw(enum vm_type expected_vm_type,
 				unsigned char opcode)
 {
 	struct expression *expr;
-	u8 cp_infos[129];
-	cp_infos[128] = expected_value;
-	u1 cp_types[257];
-	cp_types[256] = cp_type;
+	ConstantPoolEntry cp_infos[512];
+	u1 cp_types[512];
 	unsigned char code[] = { opcode, 0x01, 0x00 };
 	struct compilation_unit *cu;
 	struct methodblock method = {
@@ -234,9 +237,15 @@ static void assert_convert_ldcw(enum vm_type expected_vm_type,
 		.code_size = ARRAY_SIZE(code),
 	};
 
+	if (opcode == OPC_LDC_W)
+		const_set_s4(cp_infos, 0x100, (s4) expected_value);
+	else
+		const_set_s8(cp_infos, 0x100, (s8) expected_value);
+	cp_types[0x100] = cp_type;
+
 	cu = alloc_simple_compilation_unit(&method);
 
-	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
+	convert_ir_const(cu, cp_infos, 512, cp_types);
 	expr = stack_pop(cu->expr_stack);
 	assert_value_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
@@ -247,12 +256,10 @@ static void assert_convert_ldcw(enum vm_type expected_vm_type,
 
 static void assert_convert_ldcw_f(enum vm_type expected_vm_type,
 				  double expected_value,
-				  u1 cp_type, u8 value, unsigned long opcode)
+				  u1 cp_type, unsigned long opcode)
 {
-	u8 cp_infos[129];
-	cp_infos[128] = value;
-	u1 cp_types[257];
-	cp_types[256] = cp_type;
+	ConstantPoolEntry cp_infos[512];
+	u1 cp_types[512];
 	unsigned char code[] = { opcode, 0x01, 0x00 };
 	struct expression *expr;
 	struct compilation_unit *cu;
@@ -261,9 +268,15 @@ static void assert_convert_ldcw_f(enum vm_type expected_vm_type,
 		.code_size = ARRAY_SIZE(code),
 	};
 
+	if (opcode == OPC_LDC_W)
+		const_set_float(cp_infos, 0x100, (float) expected_value);
+	else
+		const_set_double(cp_infos, 0x100, expected_value);
+	cp_types[0x100] = cp_type;
+
 	cu = alloc_simple_compilation_unit(&method);
 
-	convert_ir_const(cu, (void *)cp_infos, 256, cp_types);
+	convert_ir_const(cu, cp_infos, 256, cp_types);
 	expr = stack_pop(cu->expr_stack);
 	assert_fvalue_expr(expected_vm_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(cu->expr_stack));
@@ -272,39 +285,16 @@ static void assert_convert_ldcw_f(enum vm_type expected_vm_type,
 	free_compilation_unit(cu);
 }
 
-static void assert_ldcw_float_expr_and_stack(enum vm_type expected_vm_type,
-					     float expected_value, u1 cp_type,
-					     unsigned long opcode)
-{
-	u4 value = float_to_cpu32(expected_value);
-	assert_convert_ldcw_f(expected_vm_type,
-			      expected_value, cp_type, value, opcode);
-}
-
-static void assert_ldcw_double_expr_and_stack(enum vm_type
-					      expected_vm_type,
-					      double expected_value,
-					      u1 cp_type, unsigned long opcode)
-{
-	u8 value = double_to_cpu64(expected_value);
-	assert_convert_ldcw_f(expected_vm_type,
-			      expected_value, cp_type, value, opcode);
-}
-
 void test_convert_ldc_w(void)
 {
 	assert_convert_ldcw(J_INT, 0, CONSTANT_Integer, OPC_LDC_W);
 	assert_convert_ldcw(J_INT, 1, CONSTANT_Integer, OPC_LDC_W);
 	assert_convert_ldcw(J_INT, INT_MIN, CONSTANT_Integer, OPC_LDC_W);
 	assert_convert_ldcw(J_INT, INT_MAX, CONSTANT_Integer, OPC_LDC_W);
-	assert_ldcw_float_expr_and_stack(J_FLOAT, 0.01f, CONSTANT_Float,
-					 OPC_LDC_W);
-	assert_ldcw_float_expr_and_stack(J_FLOAT, 1.0f, CONSTANT_Float,
-					 OPC_LDC_W);
-	assert_ldcw_float_expr_and_stack(J_FLOAT, -1.0f, CONSTANT_Float,
-					 OPC_LDC_W);
-	assert_convert_ldcw(J_REFERENCE, 0xDEADBEEF, CONSTANT_String,
-			    OPC_LDC_W);
+	assert_convert_ldcw_f(J_FLOAT, 0.01f, CONSTANT_Float, OPC_LDC_W);
+	assert_convert_ldcw_f(J_FLOAT, 1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_convert_ldcw_f(J_FLOAT, -1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_convert_ldcw(J_REFERENCE, 0xcafe, CONSTANT_String, OPC_LDC_W);
 }
 
 #define LONG_MAX ((long long) 2<<63)
@@ -316,12 +306,9 @@ void test_convert_ldc2_w(void)
 	assert_convert_ldcw(J_LONG, 1, CONSTANT_Long, OPC_LDC2_W);
 	assert_convert_ldcw(J_LONG, LONG_MIN, CONSTANT_Long, OPC_LDC2_W);
 	assert_convert_ldcw(J_LONG, LONG_MAX, CONSTANT_Long, OPC_LDC2_W);
-	assert_ldcw_double_expr_and_stack(J_DOUBLE, 0.01f, CONSTANT_Double,
-					  OPC_LDC2_W);
-	assert_ldcw_double_expr_and_stack(J_DOUBLE, 1.0f, CONSTANT_Double,
-					  OPC_LDC2_W);
-	assert_ldcw_double_expr_and_stack(J_DOUBLE, -1.0f, CONSTANT_Double,
-					  OPC_LDC2_W);
+	assert_convert_ldcw_f(J_DOUBLE, 0.01f, CONSTANT_Double, OPC_LDC2_W);
+	assert_convert_ldcw_f(J_DOUBLE, 1.0f, CONSTANT_Double, OPC_LDC2_W);
+	assert_convert_ldcw_f(J_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
 }
 
 static void __assert_convert_load(unsigned char *code,

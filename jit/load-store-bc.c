@@ -110,7 +110,7 @@ static int __convert_ldc(struct constant_pool *cp,
 		expr = fvalue_expr(J_FLOAT, CP_FLOAT(cp, cp_idx));
 		break;
 	case CONSTANT_String:
-		expr = value_expr(J_REFERENCE, CP_LONG(cp, cp_idx));
+		expr = value_expr(J_REFERENCE, CP_STRING(cp, cp_idx));
 		break;
 	case CONSTANT_Long:
 		expr = value_expr(J_LONG, CP_LONG(cp, cp_idx));
