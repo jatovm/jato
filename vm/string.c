@@ -63,12 +63,15 @@ static unsigned long str_remaining(struct string *str)
 static int str_vprintf(struct string *str, unsigned long offset,
 		       const char *fmt, va_list args)
 {
-	int nr, err = 0;
 	unsigned long size;
+	va_list tmp_args;
+	int nr, err = 0;
 
   retry:
 	size = str_remaining(str);
-	nr = vsnprintf(str->value + offset, size, fmt, args);
+	va_copy(tmp_args, args);
+	nr = vsnprintf(str->value + offset, size, fmt, tmp_args);
+	va_end(tmp_args);
 
 	if ((unsigned long)nr >= size) {
 		int err;
