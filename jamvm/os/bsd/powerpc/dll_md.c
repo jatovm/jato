@@ -68,8 +68,8 @@ int nativeExtraArg(MethodBlock *mb) {
         }
 
 #ifdef DEBUG_DLL
-    printf("<NativeExtraArg: %s.%s%s --> int args: %d fp args: %d stack: %d>\n",
-            CLASS_CB(mb->class)->name, mb->name, mb->type, iargs, fargs, margs);
+    jam_printf("<NativeExtraArg: %s.%s%s --> int args: %d fp args: %d stack: %d>\n",
+               CLASS_CB(mb->class)->name, mb->name, mb->type, iargs, fargs, margs);
 #endif
 
     return margs;

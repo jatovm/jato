@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -18,20 +18,26 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <fpu_control.h>
+#include "jam.h"
 
-/* Change floating point precision to double (64-bit) from
- * the extended (80-bit) Linux default. */
+static int (*vfprintf_hook)(FILE *stream, const char *fmt, va_list ap);
+static void (*exit_hook)(int status);
 
-void setDoublePrecision() {
-    fpu_control_t cw;
+void jam_fprintf(FILE *stream, const char *fmt, ...) {
+    va_list ap;
 
-    _FPU_GETCW(cw);
-    cw &= ~_FPU_EXTENDED;
-    cw |= _FPU_DOUBLE;
-    _FPU_SETCW(cw);
+    va_start(ap, fmt);
+    (*vfprintf_hook)(stream, fmt, ap);
+
+    va_end(ap);
 }
 
-void initialisePlatform() {
-    setDoublePrecision();
+void jamvm_exit(int status) {
+    (*exit_hook)(status);
 }
+
+void initialiseHooks(InitArgs *args) {
+    vfprintf_hook = args->vfprintf;
+    exit_hook = args->exit;
+}
+

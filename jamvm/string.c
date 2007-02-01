@@ -168,7 +168,7 @@ void initialiseString() {
 
         /* findField doesn't throw an exception... */
         if((count == NULL) || (value == NULL) || (offset == NULL)) {
-            fprintf(stderr, "Error initialising VM (initialiseString)\n");
+            jam_fprintf(stderr, "Error initialising VM (initialiseString)\n");
             exitVM(1);
         }
 

@@ -23,19 +23,23 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <sys/sysinfo.h>
-
-#ifdef __linux__
-#include <sys/sysinfo.h>
-#endif
+#include <pthread.h>
 
 #include "../../jam.h"
 
+void *nativeStackBase() {
+    pthread_attr_t attr;
+    void *addr;
+    int size;
+
+    pthread_getattr_np(pthread_self(), &attr);
+    pthread_attr_getstack(&attr, &addr, &size);
+
+    return addr+size;
+}
+
 int nativeAvailableProcessors() {
-#ifdef __linux__
     return get_nprocs();
-#else
-    return 1;
-#endif
 }
 
 char *nativeLibPath() {
@@ -44,6 +48,10 @@ char *nativeLibPath() {
 
 void *nativeLibOpen(char *path) {
     return dlopen(path, RTLD_LAZY);
+}
+
+void nativeLibClose(void *handle) {
+    dlclose(handle);
 }
 
 void *nativeLibSym(void *handle, char *symbol) {

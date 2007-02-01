@@ -33,6 +33,8 @@ typedef struct hash_table {
 } HashTable;
 
 extern void resizeHash(HashTable *table, int new_size);
+extern void lockHashTable0(HashTable *table, Thread *self);
+extern void unlockHashTable0(HashTable *table, Thread *self);
 
 #define initHashTable(table, initial_size, create_lock)                            \
 {                                                                                  \
@@ -45,18 +47,10 @@ extern void resizeHash(HashTable *table, int new_size);
 }
 
 #define lockHashTable(table)                                                       \
-{                                                                                  \
-    Thread *self = threadSelf();                                                   \
-    disableSuspend(self);                                                          \
-    lockVMLock(table.lock, self);                                                  \
-}
+    lockHashTable0(&table, threadSelf());
 
 #define unlockHashTable(table)                                                     \
-{                                                                                  \
-    Thread *self = threadSelf();                                                   \
-    unlockVMLock(table.lock, self);                                                \
-    enableSuspend(self);                                                           \
-}
+    unlockHashTable0(&table, threadSelf());
 
 #define findHashEntry(table, ptr, ptr2, add_if_absent, scavenge, locked)           \
 {                                                                                  \
@@ -66,12 +60,7 @@ extern void resizeHash(HashTable *table, int new_size);
     Thread *self;                                                                  \
     if(locked) {                                                                   \
         self = threadSelf();                                                       \
-        if(!tryLockVMLock(table.lock, self)) {                                     \
-            disableSuspend(self);                                                  \
-            lockVMLock(table.lock, self);                                          \
-            enableSuspend(self);                                                   \
-        }                                                                          \
-        fastDisableSuspend(self);                                                  \
+        lockHashTable0(&table, self);                                              \
     }                                                                              \
                                                                                    \
     i = hash & (table.hash_size - 1);                                              \
@@ -114,10 +103,37 @@ extern void resizeHash(HashTable *table, int new_size);
             }                                                                      \
         }                                                                          \
                                                                                    \
+    if(locked)                                                                     \
+        unlockHashTable0(&table, self);                                            \
+}
+
+#define deleteHashEntry(table, ptr, locked)                                        \
+{                                                                                  \
+    int hash = HASH(ptr);                                                          \
+    void *ptr2;                                                                    \
+    int i;                                                                         \
+                                                                                   \
+    Thread *self;                                                                  \
     if(locked) {                                                                   \
-        fastEnableSuspend(self);                                                   \
-        unlockVMLock(table.lock, self);                                            \
+        self = threadSelf();                                                       \
+        lockHashTable0(&table, self);                                              \
     }                                                                              \
+                                                                                   \
+    i = hash & (table.hash_size - 1);                                              \
+                                                                                   \
+    for(;;) {                                                                      \
+        ptr2 = table.hash_table[i].data;                                           \
+        if((ptr2 == NULL) || (COMPARE(ptr, ptr2, hash, table.hash_table[i].hash))) \
+            break;                                                                 \
+                                                                                   \
+        i = (i+1) & (table.hash_size - 1);                                         \
+    }                                                                              \
+                                                                                   \
+    if(ptr2)                                                                       \
+        table.hash_table[i].data = DELETED;                                        \
+                                                                                   \
+    if(locked)                                                                     \
+        unlockHashTable0(&table, self);                                            \
 }
 
 #define hashIterate(table)                                                         \

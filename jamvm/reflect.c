@@ -392,7 +392,7 @@ MethodBlock *getEnclosingMethod(Class *class) {
         ClassBlock *cb = CLASS_CB(class);
 
         if(cb->enclosing_method) {
-            ConstantPool *cp = &(CLASS_CB(class)->constant_pool);
+            ConstantPool *cp = &cb->constant_pool;
             char *methodname = CP_UTF8(cp, CP_NAME_TYPE_NAME(cp, cb->enclosing_method));
             char *methodtype = CP_UTF8(cp, CP_NAME_TYPE_TYPE(cp, cb->enclosing_method));
             MethodBlock *mb = findMethod(enclosing_class, methodname, methodtype);
@@ -573,9 +573,12 @@ Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_typ
 
     Object *excep;
 
-    if(check_access && !checkMethodAccess(mb, getCallerCallerClass())) {
-        signalException("java/lang/IllegalAccessException", "method is not accessible");
-        return NULL;
+    if(check_access) {
+        Class *caller = getCallerCallerClass();
+        if(!checkClassAccess(mb->class, caller) || !checkMethodAccess(mb, caller)) {
+            signalException("java/lang/IllegalAccessException", "method is not accessible");
+            return NULL;
+        }
     }
 
     if(args_len != types_len) {

@@ -18,7 +18,6 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -35,28 +34,28 @@
 /* Trace GC heap mark/sweep phases - useful for debugging heap
  * corruption */
 #ifdef TRACEGC
-#define TRACE_GC(fmt, ...) printf(fmt, ## __VA_ARGS__)
+#define TRACE_GC(fmt, ...) jam_printf(fmt, ## __VA_ARGS__)
 #else
 #define TRACE_GC(fmt, ...)
 #endif
 
 /* Trace GC Compaction phase */
 #ifdef TRACECOMPACT
-#define TRACE_COMPACT(fmt, ...) printf(fmt, ## __VA_ARGS__)
+#define TRACE_COMPACT(fmt, ...) jam_printf(fmt, ## __VA_ARGS__)
 #else
 #define TRACE_COMPACT(fmt, ...)
 #endif
 
 /* Trace class, object and array allocation */
 #ifdef TRACEALLOC
-#define TRACE_ALLOC(fmt, ...) printf(fmt, ## __VA_ARGS__)
+#define TRACE_ALLOC(fmt, ...) jam_printf(fmt, ## __VA_ARGS__)
 #else
 #define TRACE_ALLOC(fmt, ...)
 #endif
 
 /* Trace object finalization */
 #ifdef TRACEFNLZ
-#define TRACE_FNLZ(fmt, ...) printf(fmt, ## __VA_ARGS__)
+#define TRACE_FNLZ(fmt, ...) jam_printf(fmt, ## __VA_ARGS__)
 #else
 #define TRACE_FNLZ(fmt, ...)
 #endif
@@ -236,15 +235,15 @@ void clearMarkBits() {
     memset(markBits, 0, markBitSize*sizeof(*markBits));
 }
 
-void initialiseAlloc(unsigned long min, unsigned long max, int verbose) {
+void initialiseAlloc(InitArgs *args) {
 
 #ifdef USE_MALLOC
     /* Don't use mmap - malloc max heap size */
-    char *mem = (char*)malloc(max);
+    char *mem = (char*)malloc(args->max_heap);
     min = max;
     if(mem == NULL) {
 #else
-    char *mem = (char*)mmap(0, max, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
+    char *mem = (char*)mmap(0, args->max_heap, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
     if(mem == MAP_FAILED) {
 #endif
         perror("Aborting the VM -- couldn't allocate the heap");
@@ -255,9 +254,9 @@ void initialiseAlloc(unsigned long min, unsigned long max, int verbose) {
     heapbase = (char*)(((uintptr_t)mem+HEADER_SIZE+OBJECT_GRAIN-1)&~(OBJECT_GRAIN-1))-HEADER_SIZE;
 
     /* Ensure size of heap is multiple of OBJECT_GRAIN */
-    heaplimit = heapbase+((min-(heapbase-mem))&~(OBJECT_GRAIN-1));
+    heaplimit = heapbase+((args->min_heap-(heapbase-mem))&~(OBJECT_GRAIN-1));
 
-    heapmax = heapbase+((max-(heapbase-mem))&~(OBJECT_GRAIN-1));
+    heapmax = heapbase+((args->max_heap-(heapbase-mem))&~(OBJECT_GRAIN-1));
 
     freelist = (Chunk*)heapbase;
     freelist->header = heapfree = heaplimit-heapbase;
@@ -271,7 +270,7 @@ void initialiseAlloc(unsigned long min, unsigned long max, int verbose) {
     initVMWaitLock(run_finaliser_lock);
     initVMWaitLock(reference_lock);
 
-    verbosegc = verbose;
+    verbosegc = args->verbosegc;
 }
 
 /* ------------------------- MARK PHASE ------------------------- */
@@ -320,13 +319,13 @@ void scanThread(Thread *thread) {
 
     TRACE_GC("Scanning stacks for thread 0x%x id %d\n", thread, thread->id);
 
+    /* Mark the java.lang.Thread object */
     markConservativeRoot(ee->thread);
 
-    /* If there's a pending exception raised
-       on this thread mark it */
-    if(ee->exception)
-        markConservativeRoot(ee->exception);
+    /* Mark any pending exception raised on this thread */
+    markConservativeRoot(ee->exception);
 
+    /* Scan the thread's C stack and mark all references */
     slot = (uintptr_t*)getStackTop(thread);
     end = (uintptr_t*)getStackBase(thread);
 
@@ -337,6 +336,7 @@ void scanThread(Thread *thread) {
             markConservativeRoot(ob);
         }
 
+    /* Scan the thread's Java stack and mark all references */
     slot = frame->ostack + frame->mb->max_stack;
 
     while(frame->prev != NULL) {
@@ -371,6 +371,7 @@ void markClassData(Class *class, int mark, int mark_soft_refs) {
 
     TRACE_GC("Marking class %s\n", cb->name);
 
+    /* Recursively mark the class's classloader */
     if(cb->class_loader != NULL && mark > IS_MARKED(cb->class_loader))
         markChildren(cb->class_loader, mark, mark_soft_refs);
 
@@ -542,7 +543,7 @@ static void doMark(Thread *self, int mark_soft_refs) {
         uintptr_t size = HDR_SIZE(hdr);
 
 #ifdef DEBUG
-        printf("Block @%p size %d alloced %d\n", ptr, size, HDR_ALLOCED(hdr));
+        jam_printf("Block @%p size %d alloced %d\n", ptr, size, HDR_ALLOCED(hdr));
 #endif
 
         if(HDR_ALLOCED(hdr)) {
@@ -656,14 +657,21 @@ void handleUnmarkedSpecial(Object *ob) {
         if(verbosegc) {
             ClassBlock *cb = CLASS_CB(ob);
             if(!IS_CLASS_DUP(cb))
-                printf("<GC: Unloading class %s>\n", cb->name);
+                jam_printf("<GC: Unloading class %s>\n", cb->name);
         }
-        freeClassData((Class*)ob);
+        freeClassData(ob);
     } else
         if(IS_CLASS_LOADER(CLASS_CB(ob->class))) {
-            TRACE_GC("FREE: Freeing class loader object\n");
+            TRACE_GC("FREE: Freeing class loader object %p\n", ob);
+            unloadClassLoaderDlls(ob);
             freeClassLoaderData(ob);
-        }
+        } else
+            if(IS_VMTHREAD(CLASS_CB(ob->class))) {
+                /* Free the native thread structure (see comment
+                   in detachThread (thread.c) */
+                TRACE_GC("FREE: Freeing native thread for VMThread object %p\n", ob);
+                free(threadSelf0(ob));
+            }
 }
 
 static uintptr_t doSweep(Thread *self) {
@@ -805,19 +813,19 @@ out_last_marked:
 {
     Chunk *c;
     for(c = freelist; c != NULL; c = c->next)
-        printf("Chunk @%p size: %d\n", c, c->header);
+        jam_printf("Chunk @%p size: %d\n", c, c->header);
 }
 #endif
  
     if(verbosegc) {
         long long size = heaplimit-heapbase;
         long long pcnt_used = ((long long)heapfree)*100/size;
-        printf("<GC: Allocated objects: %lld>\n", (long long)marked);
-        printf("<GC: Freed %lld object(s) using %lld bytes",
+        jam_printf("<GC: Allocated objects: %lld>\n", (long long)marked);
+        jam_printf("<GC: Freed %lld object(s) using %lld bytes",
 			(long long)unmarked, (long long)freed);
         if(cleared)
-            printf(", cleared %lld reference(s)", (long long)cleared);
-        printf(">\n<GC: Largest block is %lld total free is %lld out of %lld (%lld%%)>\n",
+            jam_printf(", cleared %lld reference(s)", (long long)cleared);
+        jam_printf(">\n<GC: Largest block is %lld total free is %lld out of %lld (%lld%%)>\n",
                          (long long)largest, (long long)heapfree, size, pcnt_used);
     }
 
@@ -1178,6 +1186,8 @@ uintptr_t doCompact() {
                     new_addr = ptr;
 
 marked_phase1:
+                marked++;
+
                 /* Thread references within the object */
                 if(threadChildren(ob, (Object*)(new_addr+HEADER_SIZE)))
                     cleared++;
@@ -1186,9 +1196,17 @@ marked_phase1:
                     new_addr += OBJECT_GRAIN;
 
                 new_addr += size;
+                goto next;
             }
+
+            if(HDR_SPECIAL_OBJ(hdr) && ob->class != NULL)
+                handleUnmarkedSpecial(ob);
+
+            freed += size;
+            unmarked++;
         }
 
+next:
         /* Skip to next block */
         ptr += size;
     }
@@ -1230,8 +1248,6 @@ marked_phase1:
                 }
 
 marked_phase2:
-                marked++;
-
                 /* Move the object to the new address */
                 if(new_addr != ptr) {
                     TRACE_COMPACT("Moving object from %p to %p.\n", ob, new_addr+HEADER_SIZE);
@@ -1243,17 +1259,9 @@ marked_phase2:
                 }
 
                 new_addr += size;
-                goto next;
             }
-
-            if(HDR_SPECIAL_OBJ(hdr) && ob->class != NULL)
-                handleUnmarkedSpecial(ob);
-
-            freed += size;
-            unmarked++;
         }
 
-next:
         /* Skip to next block */
         ptr += size;
     }
@@ -1275,12 +1283,12 @@ next:
     if(verbosegc) {
         long long size = heaplimit-heapbase;
         long long pcnt_used = ((long long)heapfree)*100/size;
-        printf("<GC: Allocated objects: %lld>\n", (long long)marked);
-        printf("<GC: Freed %lld object(s) using %lld bytes",
+        jam_printf("<GC: Allocated objects: %lld>\n", (long long)marked);
+        jam_printf("<GC: Freed %lld object(s) using %lld bytes",
 			(long long)unmarked, (long long)freed);
         if(cleared)
-            printf(", cleared %lld reference(s)", (long long)cleared);
-        printf(">\n<GC: Moved %lld objects, largest block is %lld total free is %lld out of %lld (%lld%%)>\n",
+            jam_printf(", cleared %lld reference(s)", (long long)cleared);
+        jam_printf(">\n<GC: Moved %lld objects, largest block is %lld total free is %lld out of %lld (%lld%%)>\n",
                          (long long)moved, (long long)largest, (long long)heapfree, size, pcnt_used);
     }
 
@@ -1295,7 +1303,7 @@ void expandHeap(int min) {
     uintptr_t delta;
 
     if(verbosegc)
-        printf("<GC: Expanding heap - minimum needed is %d>\n", min);
+        jam_printf("<GC: Expanding heap - minimum needed is %d>\n", min);
 
     delta = (heaplimit-heapbase)/2;
     delta = delta < min ? min : delta;
@@ -1308,7 +1316,7 @@ void expandHeap(int min) {
     delta = (delta&~(OBJECT_GRAIN-1));
 
     if(verbosegc)
-        printf("<GC: Expanding heap by %lld bytes>\n", (long long)delta);
+        jam_printf("<GC: Expanding heap by %lld bytes>\n", (long long)delta);
 
     /* The freelist is in address order - find the last
        free chunk and add the new area to the end.  */
@@ -1387,7 +1395,7 @@ unsigned long gc0(int mark_soft_refs, int compact) {
         largest = compact ? doCompact() : doSweep(self);
         scan_time = endTime(&start)/1000000.0;
 
-        printf("<GC: Mark took %f seconds, %s took %f seconds>\n",
+        jam_printf("<GC: Mark took %f seconds, %s took %f seconds>\n",
                                   mark_time, compact ? "compact" : "scan", scan_time);
     } else {
         doMark(self, mark_soft_refs);
@@ -1502,7 +1510,7 @@ void asyncGCThreadLoop(Thread *self) {
                                                                                 \
         if(verbosegc) {                                                         \
             int diff = list##_end - list##_start;                               \
-            printf(verbose_message, diff > 0 ? diff : diff + list##_size);      \
+            jam_printf(verbose_message, diff > 0 ? diff : diff + list##_size);  \
         }                                                                       \
                                                                                 \
         do {                                                                    \
@@ -1555,7 +1563,7 @@ void referenceHandlerThreadLoop(Thread *self) {
                         "<GC: enqueuing %d references>\n", self, &self);
 }
 
-void initialiseGC(int noasyncgc, int comp_override, int comp_value) {
+void initialiseGC(InitArgs *args) {
     /* Pre-allocate an OutOfMemoryError exception object - we throw it
      * when we're really low on heap space, and can create FA... */
 
@@ -1578,13 +1586,13 @@ void initialiseGC(int noasyncgc, int comp_override, int comp_value) {
     createVMThread("Reference Handler", referenceHandlerThreadLoop);
 
     /* Create and start VM thread for asynchronous GC */
-    if(!noasyncgc)
+    if(!args->noasyncgc)
         createVMThread("Async GC", asyncGCThreadLoop);
 
     /* GC will use mark-sweep or mark-compact as appropriate, but this
        can be changed via the command line */
-    compact_override = comp_override;
-    compact_value = comp_value;
+    compact_override = args->compact_specified;
+    compact_value = args->do_compact;
 }
 
 /* ------------------------- ALLOCATION ROUTINES  ------------------------- */
@@ -1654,7 +1662,7 @@ void *gcMalloc(int len) {
         }
 
         if(verbosegc)
-            printf("<GC: Alloc attempt for %d bytes failed.>\n", n);
+            jam_printf("<GC: Alloc attempt for %d bytes failed.>\n", n);
 
         switch(state) {
 
@@ -1680,7 +1688,7 @@ void *gcMalloc(int len) {
                 disableSuspend(self);
 
                 if(verbosegc)
-                    printf("<GC: Waiting for finalizers to be ran.>\n");
+                    jam_printf("<GC: Waiting for finalizers to be ran.>\n");
 
                 runFinalizers0(self, 200);
                 lockVMLock(heap_lock, self);
@@ -1708,7 +1716,7 @@ void *gcMalloc(int len) {
                 }
 
                 if(verbosegc)
-                    printf("<GC: Stack at maximum already.  Clearing Soft References>\n");
+                    jam_printf("<GC: Stack at maximum already.  Clearing Soft References>\n");
 
                 /* Can't expand the heap any more.  Try GC again but this time
                    clearing all soft references.  Note we succeed if we can satisfy
@@ -1721,7 +1729,7 @@ void *gcMalloc(int len) {
                 }
 
                 if(verbosegc)
-                    printf("<GC: completely out of heap space - throwing OutOfMemoryError>\n");
+                    jam_printf("<GC: completely out of heap space - throwing OutOfMemoryError>\n");
 
                 state = throw_oom;
                 unlockVMLock(heap_lock, self);
@@ -1737,7 +1745,7 @@ void *gcMalloc(int len) {
                  */
 
                 if(verbosegc)
-                    printf("<GC: completely out of heap space - throwing prepared OutOfMemoryError>\n");
+                    jam_printf("<GC: completely out of heap space - throwing prepared OutOfMemoryError>\n");
 
                 state = gc;
                 unlockVMLock(heap_lock, self);
@@ -1749,7 +1757,7 @@ void *gcMalloc(int len) {
 
 got_it:
 #ifdef TRACEALLOC
-    printf("<ALLOC: took %d tries to find block.>\n", tries);
+    jam_printf("<ALLOC: took %d tries to find block.>\n", tries);
 #endif
 
     heapfree -= n;
@@ -1918,7 +1926,7 @@ Object *allocTypeArray(int type, int size) {
             break;
 
         default:
-            printf("Invalid array type %d - aborting VM...\n", type);
+            jam_printf("Invalid array type %d - aborting VM...\n", type);
             exit(0);
     }
 
@@ -2062,8 +2070,8 @@ unsigned long maxHeapMem() {
 void *sysMalloc(int n) {
     void *mem = malloc(n);
 
-    if(mem == NULL) {
-        fprintf(stderr, "Malloc failed - aborting VM...\n");
+    if(mem == NULL && n > 0) {
+        jam_fprintf(stderr, "Malloc failed - aborting VM...\n");
         exitVM(1);
     }
 
@@ -2074,7 +2082,7 @@ void *sysRealloc(void *ptr, int n) {
     void *mem = realloc(ptr, n);
 
     if(mem == NULL) {
-        fprintf(stderr, "Realloc failed - aborting VM...\n");
+        jam_fprintf(stderr, "Realloc failed - aborting VM...\n");
         exitVM(1);
     }
 

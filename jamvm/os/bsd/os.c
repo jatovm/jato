@@ -24,8 +24,38 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <pthread.h>
+
+#ifndef __NetBSD__
+#include <pthread_np.h>
+#endif
+
+#ifdef __OpenBSD__
+#include <sys/signal.h>
+#endif
 
 #include "../../jam.h"
+
+#ifdef __OpenBSD__
+void *nativeStackBase() {
+    stack_t sinfo;
+
+    pthread_stackseg_np(pthread_self(), &sinfo);
+    return sinfo.ss_sp;
+}
+#else
+void *nativeStackBase() {
+    pthread_attr_t attr;
+    void *addr;
+    int size;
+
+    pthread_attr_init(&attr);
+    pthread_attr_get_np(pthread_self(), &attr);
+    pthread_attr_getstack(&attr, &addr, &size);
+
+    return addr+size;
+}
+#endif
 
 int nativeAvailableProcessors() {
     int processors, mib[2];
@@ -46,6 +76,10 @@ char *nativeLibPath() {
 
 void *nativeLibOpen(char *path) {
     return dlopen(path, RTLD_LAZY);
+}
+
+void nativeLibClose(void *handle) {
+    dlclose(handle);
 }
 
 void *nativeLibSym(void *handle, char *symbol) {

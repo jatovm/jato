@@ -40,8 +40,23 @@
 #include <locale.h>
 #endif
 
-extern Property *commandline_props;
-extern int commandline_props_count;
+static Property *commandline_props;
+static int commandline_props_count;
+
+void initialiseProperties(InitArgs *args) {
+    commandline_props = args->commandline_props;
+    commandline_props_count = args->props_count;
+}
+
+char *getCommandLineProperty(char *key) {
+    int i;
+
+    for(i = 0; i < commandline_props_count; i++)
+        if(strcmp(commandline_props[i].key, key) == 0)
+            return commandline_props[i].value;
+
+    return NULL;
+}
 
 void setProperty(Object *properties, char *key, char *value) {
     Object *k = Cstr2String(key);
@@ -61,6 +76,7 @@ void addCommandLineProperties(Object *properties) {
             free(commandline_props[i].key);
         }
 
+        commandline_props_count = 0;
         free(commandline_props);
     }
 }
@@ -155,6 +171,7 @@ void addDefaultProperties(Object *properties) {
     setProperty(properties, "java.vm.specification.name", "Java Virtual Machine Specification");
     setProperty(properties, "java.class.version", "48.0");
     setProperty(properties, "java.class.path", getClassPath());
+    setProperty(properties, "sun.boot.class.path", getBootClassPath());
     setProperty(properties, "java.boot.class.path", getBootClassPath());
     setProperty(properties, "gnu.classpath.boot.library.path", getBootDllPath());
     setProperty(properties, "java.library.path", getDllPath());

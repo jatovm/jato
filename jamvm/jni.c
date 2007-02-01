@@ -137,7 +137,7 @@ Object *addJNILref(Object *ref) {
 
     if(frame->next_ref == (Object**)frame)
         if((frame = expandJNILrefs(ee, frame, LIST_INCR)) == NULL) {
-            fprintf(stderr, "JNI - FatalError: cannot expand local references.\n");
+            jam_fprintf(stderr, "JNI - FatalError: cannot expand local references.\n");
             exitVM(1);
         }
 
@@ -410,7 +410,13 @@ jclass Jam_DefineClass(JNIEnv *env, const char *name, jobject loader, const jbyt
 }
 
 jclass Jam_FindClass(JNIEnv *env, const char *name) {
-    Object *loader = CLASS_CB(getExecEnv()->last_frame->mb->class)->class_loader;
+    /* We use the class loader associated with the calling native method.
+       However, if this has been called from an attached thread there may
+       be no native Java frame.  In this case use the system class loader */
+    Frame *last = getExecEnv()->last_frame;
+    Object *loader = last->prev ? CLASS_CB(last->mb->class)->class_loader
+                                : getSystemClassLoader();
+
     return (jclass) findClassFromClassLoader((char*) name, loader);
 }
 
@@ -425,7 +431,7 @@ jboolean Jam_IsAssignableFrom(JNIEnv *env, jclass clazz1, jclass clazz2) {
 
 jint Jam_Throw(JNIEnv *env, jthrowable obj) {
     Object *ob = (Object*)obj;
-    setStackTrace(ob);
+    setStackTrace();
     setException(ob);
     return JNI_TRUE;
 }
@@ -448,7 +454,7 @@ void Jam_ExceptionClear(JNIEnv *env) {
 }
 
 void Jam_FatalError(JNIEnv *env, const char *message) {
-    fprintf(stderr, "JNI - FatalError: %s\n", message);
+    jam_fprintf(stderr, "JNI - FatalError: %s\n", message);
     exitVM(1);
 }
 
@@ -531,11 +537,15 @@ jsize Jam_GetStringLength(JNIEnv *env, jstring string) {
 const jchar *Jam_GetStringChars(JNIEnv *env, jstring string, jboolean *isCopy) {
     if(isCopy != NULL)
         *isCopy = JNI_FALSE;
+
+    /* Pin the reference */
     addJNIGref(getStringCharsArray((Object*)string));
+
     return (const jchar *)getStringChars((Object*)string);
 }
 
 void Jam_ReleaseStringChars(JNIEnv *env, jstring string, const jchar *chars) {
+    /* Unpin the reference */
     delJNIGref(getStringCharsArray((Object*)string));
 }
 
@@ -544,12 +554,17 @@ jstring Jam_NewStringUTF(JNIEnv *env, const char *bytes) {
 }
 
 jsize Jam_GetStringUTFLength(JNIEnv *env, jstring string) {
+    if(string == NULL)
+        return 0;
     return getStringUtf8Len((Object*)string);
 }
 
 const char *Jam_GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy) {
     if(isCopy != NULL)
         *isCopy = JNI_TRUE;
+
+    if(string == NULL)
+        return NULL;
     return (const char*)String2Utf8((Object*)string);
 }
 
@@ -1235,31 +1250,55 @@ struct _JNINativeInterface Jam_JNINativeInterface = {
 };
 
 jint Jam_DestroyJavaVM(JavaVM *vm) {
-    fprintf(stderr, "JNI - FatalError: DestroyJavaVM unimplemented.\n");
-    exitVM(1);
-    return 0;
+    mainThreadWaitToExitVM();
+    exitVM(0);
+
+    return JNI_OK;
+}
+
+static void *env = &Jam_JNINativeInterface;
+
+static jint attachCurrentThread(void **penv, void *args, int is_daemon) {
+    if(threadSelf() == NULL) {
+        char *name = NULL;
+        Object *group = NULL;
+
+        if(args != NULL) {
+            JavaVMAttachArgs *attach_args = (JavaVMAttachArgs*)args;
+            if((attach_args->version != JNI_VERSION_1_4) && (attach_args->version != JNI_VERSION_1_2))
+                return JNI_EVERSION;
+
+            name = attach_args->name;
+            group = attach_args->group;
+        }
+
+        if(attachJNIThread(name, is_daemon, group) == NULL)
+            return JNI_ERR;
+
+        initJNILrefs();
+    }
+
+    *penv = &env;
+    return JNI_OK;
 }
 
 jint Jam_AttachCurrentThread(JavaVM *vm, void **penv, void *args) {
-    fprintf(stderr, "JNI - FatalError: AttachCurrentThread unimplemented.\n");
-    exitVM(1);
-    return 0;
+    return attachCurrentThread(penv, args, FALSE);
 }
 
 jint Jam_AttachCurrentThreadAsDaemon(JavaVM *vm, void **penv, void *args) {
-    fprintf(stderr, "JNI - FatalError: AttachCurrentThreadAsDaemon unimplemented.\n");
-    exitVM(1);
-    return 0;
+    return attachCurrentThread(penv, args, TRUE);
 }
 
 jint Jam_DetachCurrentThread(JavaVM *vm) {
-    fprintf(stderr, "JNI - FatalError: DetachCurrentThread unimplemented.\n");
-    exitVM(1);
-    return 0;
-}
+    Thread *thread = threadSelf();
 
-struct _JNINativeInterface Jam_JNINativeInterface;
-static void *env = &Jam_JNINativeInterface;
+    if(thread == NULL)
+        return JNI_EDETACHED;
+
+    detachJNIThread(thread);
+    return JNI_OK;
+}
 
 jint Jam_GetEnv(JavaVM *vm, void **penv, jint version) {
     if((version != JNI_VERSION_1_4) && (version != JNI_VERSION_1_2)
@@ -1287,6 +1326,140 @@ struct _JNIInvokeInterface Jam_JNIInvokeInterface = {
     Jam_GetEnv,
     Jam_AttachCurrentThreadAsDaemon,
 };
+
+jint JNI_GetDefaultJavaVMInitArgs(void *args) {
+    JavaVMInitArgs *vm_args = (JavaVMInitArgs*) args;
+
+    if((vm_args->version != JNI_VERSION_1_4) && (vm_args->version != JNI_VERSION_1_2))
+        return JNI_EVERSION;
+
+    return JNI_OK;
+}
+
+jint parseInitOptions(JavaVMInitArgs *vm_args, InitArgs *args) {
+    Property props[vm_args->nOptions];
+    int props_count = 0;
+    int i;
+
+    for(i = 0; i < vm_args->nOptions; i++) {
+        char *string = vm_args->options[i].optionString;
+
+        if(strcmp(string, "vfprintf") == 0)
+            args->vfprintf = vm_args->options[i].extraInfo;
+
+        else if(strcmp(string, "exit") == 0)
+            args->exit = vm_args->options[i].extraInfo;
+
+        else if(strcmp(string, "abort") == 0)
+            args->abort = vm_args->options[i].extraInfo;
+
+        else if(strncmp(string, "-verbose:", 9) == 0) {
+            char *type = &string[8];
+
+            do {
+                type++;
+
+                if(strncmp(type, "class", 5) == 0) {
+                    args->verboseclass = TRUE;
+                    type += 5;
+                 }
+                else if(strncmp(type, "gc", 2) == 0) {
+                    args->verbosegc = TRUE;
+                    type += 2;
+                }
+                else if(strncmp(type, "jni", 3) == 0) {
+                    args->verbosedll = TRUE;
+                    type += 3;
+                }
+            } while(*type == ',');
+
+        } else if(strcmp(string, "-Xnoasyncgc") == 0)
+            args->noasyncgc = TRUE;
+
+        else if(strncmp(string, "-Xms", 4) == 0) {
+            args->min_heap = parseMemValue(string + 4);
+            if(args->min_heap < MIN_HEAP)
+                goto error;
+
+        } else if(strncmp(string, "-Xmx", 4) == 0) {
+            args->max_heap = parseMemValue(string + 4);
+            if(args->max_heap < MIN_HEAP)
+                goto error;
+
+        } else if(strncmp(string, "-Xss", 4) == 0) {
+            args->java_stack = parseMemValue(string + 4);
+            if(args->java_stack < MIN_STACK)
+                goto error;
+
+        } else if(strncmp(string, "-D", 2) == 0) {
+            char *pntr, *key = strcpy(sysMalloc(strlen(string+2) + 1), string+2);
+            for(pntr = key; *pntr && (*pntr != '='); pntr++);
+            if(pntr == key)
+                goto error;
+
+            *pntr++ = '\0';
+            props[props_count].key = key;
+            props[props_count++].value = pntr;
+
+        } else if(strncmp(string, "-Xbootclasspath:", 16) == 0) {
+
+            args->bootpathopt = '\0';
+            args->bootpath = string + 16;
+
+        } else if(strncmp(string, "-Xbootclasspath/a:", 18) == 0 ||
+                  strncmp(string, "-Xbootclasspath/p:", 18) == 0 ||
+                  strncmp(string, "-Xbootclasspath/c:", 18) == 0 ||
+                  strncmp(string, "-Xbootclasspath/v:", 18) == 0) {
+
+            args->bootpathopt = string[16];
+            args->bootpath = string + 18;
+
+        } else if(strcmp(string, "-Xnocompact") == 0) {
+            args->compact_specified = TRUE;
+            args->do_compact = FALSE;
+
+        } else if(strcmp(string, "-Xcompactalways") == 0) {
+            args->compact_specified = args->do_compact = TRUE;
+
+        } else if(!vm_args->ignoreUnrecognized)
+            goto error;
+    }
+
+    if(args->min_heap > args->max_heap)
+        goto error;
+
+    if((args->props_count = props_count)) {
+        args->commandline_props = (Property*)sysMalloc(props_count * sizeof(Property));
+        memcpy(args->commandline_props, &props[0], props_count * sizeof(Property));
+    }
+
+    return JNI_OK;
+
+error:
+    return JNI_ERR;
+}
+
+jint JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args) {
+    JavaVMInitArgs *vm_args = (JavaVMInitArgs*) args;
+    InitArgs init_args;
+
+    if((vm_args->version != JNI_VERSION_1_4) && (vm_args->version != JNI_VERSION_1_2))
+        return JNI_EVERSION;
+
+    setDefaultInitArgs(&init_args);
+
+    if(parseInitOptions(vm_args, &init_args) == JNI_ERR)
+        return JNI_ERR;
+
+    init_args.main_stack_base = nativeStackBase();
+    initVM(&init_args);
+    initJNILrefs();
+
+    *penv = &env;
+    *pvm = &invokeIntf;
+
+    return JNI_OK;
+}
 
 jint JNI_GetCreatedJavaVMs(JavaVM **buff, jsize buff_len, jsize *num) {
     if(buff_len > 0) {

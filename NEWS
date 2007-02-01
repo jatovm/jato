@@ -1,3 +1,182 @@
+JamVM 1.4.4 released on 2nd November 2006
+=========================================
+
+A summary of changes since 1.4.3:
+
+- Full JNI Invocation API implemented, enabling JamVM to be linked into
+  another program.
+
+    - JNI_CreateJavaVM, DestroyJavaVM, AttachCurrentThread,
+    - AttachCurrentThreadAsDaemon, DetachCurrentThread
+    - JNI_GetDefaultJavaVMInitArgs
+
+- JamVM is now also built as a shared library (lib/libjvm.so).
+    - The executable (bin/jamvm) is statically linked with this library
+      instead of being a wrapper.  This is because the shared library
+      runs slower than static linking on some architectures.  As JamVM
+      is small this is not a problem.
+
+- Improved class-loader and shared library support
+
+    - When a class-loader (and all its classes) is unloaded all shared
+      libraries loaded by the class-loader are unloaded and JNI_OnUnload
+      called (if defined)
+
+    - A shared library can no longer be opened by two class-loaders
+      at once
+
+    - A class can only resolve native methods defined in shared libraries
+      opened by its defining class-loader
+
+- Major re-working of thread/locking code to support additional Java 1.5
+  functionality
+
+    - Thread.getState() implemented
+        - correct thread states and their transistions (e.g. BLOCKING,
+          WAITING, TIMED_WAITING, etc.)
+
+    - native support for the ThreadMXBean thread system management API
+        - thread creation statistics (count of live, started and
+          peak threads)
+
+        - Information about a thread (ThreadInfo)
+            - execution information (thread state, stack backtrace to
+              a particular depth, object upon which the thread is blocked
+              or waiting to be notified)
+
+            - synchronization statistics (counts of the times the thread
+              has been blocked or waited for notification)
+
+    - Thread.interrupt() re-implemented fixing several bugs
+        - if a thread was waiting on a monitor, previous implementation
+          required the monitor lock to be obtained.  If a 3rd thread
+          was holding this, the  interrupt could not occur to avoid
+          deadlock.  New thread-code does not require lock to be obtained.
+
+        - in rare circumstances another thread waiting on the monitor
+          could be notified (when there was pending notifications,
+          and then an interrupt, and subsequent threads waiting on the
+          monitor).
+
+        - a thread waiting on a thin-lock (waiting for inflation)
+          could erroneously report an InterruptedException
+
+- GC bug fix for class-unloading when only using the compactor
+  (-Xcompactalways).  The compactor in some circumstances could move
+  objects ontop of the object holding the native class-loader VM data
+  before it was freed leading to a SEGV.
+
+- Bug fix for abstract methods which fell through previous
+  AbstractMethodError checks (using a stub method) 
+    - AbstractMethodError now also gives the method name
+
+- Bug fix to not allow abstract classes to be instantiated
+
+- Bug fix for NULL in identityHashCode (a regression in JamVM 1.4.3)
+
+- Bug fix for NULL in JNI method GetStringUTFLength|Chars
+
+- Bug fix for $ in native method names
+
+- FirstNonNullClassLoader implemented
+
+- Access-checking bug fix.  In reflection method/field access, also
+  check class access in addition to method/field.
+
+- Ensure created threads have a native stack size of at least 2MB.  This
+  fixes SEGVs due to stack overflow seen on OpenBSD/Darwin
+  (default 512KB).
+
+- Property sun.boot.class.path is now also defined in addition to
+  java.boot.classpath.  Certain applications look for the Sun property
+  (e.g. Dacapo bloat benchmark).
+
+- Extra bootclasspath command line options
+    - bootclasspath/v overrides the default VM classes path
+    - bootclasspath/c overrides the default GNU Classpath classes path
+
+- java.endorsed.dirs support added
+    - directories are scanned and any jar/zip files are added to the
+      boot classpath.
+
+- Improved thread dump (produced via ctrl-\).  Now shows thread state.
+
+- JamVM by default now installs in its own directory (/usr/local/jamvm)
+
+
+JamVM 1.4.3 released on 21st May 2006
+=====================================
+
+A summary of changes since 1.4.2:
+
+- Heap compaction implemented.  Previously on some programs the object
+  allocation pattern could lead to a highly fragmented heap (lots of
+  small holes).  This caused early heap expansion, and in some cases
+  an OutOfMemory exception (a result of repeated heap expansion until
+  heap fully expanded).
+
+  JamVM now includes a mark/compact collector in addition to the
+  mark/sweep GC.  This is normally ran after forced finalisation, and
+  before heap expansion.  It removes fragmentation by sliding the objects
+  to the bottom of the heap, closing the holes.
+
+  Two new command line options can be used to control compaction :
+
+    -Xnocompact : don't do compaction and just use the mark/sweep
+                  collector.  This is equivalent to JamVM 1.4.2 behaviour.
+
+    -Xcompactalways : do compaction on every garbage-collection.   In
+                      some cases this may lead to less collections, but
+                      the compactor is slower than the sweeper.
+
+- The interned String table is now garbage-collected (JamVM uses its
+  own interned String hashtable).
+
+- Additional Java 1.5 support
+    - New methods within VMClass implemented
+        - isMemberClass, isLocalClass, isAnonymousClass,
+          getEnclosingClass, getEnclosingMethod,
+          getEnclosingConstructor, getClassSignature.
+
+    - Generic signature support in reflection classes (Constructor, Method
+      Field).
+        - getTypeParameters, getSignature, getGenericExceptionTypes,
+          getGenericParameterTypes, toGenericString, getGenericType,
+          getGenericReturnType
+
+    - Uncaught exceptions will now use the thread's uncaughtExceptionHandler
+      (if available).
+
+- Fix for Non-ASCII characters in class name parameter
+    - affected methods Class.ForName, ClassLoader.defineClass
+
+- Use getcwd() instead of PWD enviroment variable for user.dir
+  property.  This fixes problems seen on some applications.
+
+- Fix in VMClass.defineClass on 64-bit machines (protection domain
+  parameter assumed to be 4 bytes).
+
+- Minor interpreter optimisation in direct-mode with handler
+  prefetch (reload of handler address in aload_0/getfield pair).
+
+- Command line options -version and -showversion now prints a "Java
+  compatible" version number.  This is to work with shell scripts which
+  parse the output to get the Java version.
+
+- Set the java.home property to the JAVA_HOME environment variable if set.
+
+- Ported to Mac OS X on Intel.
+
+- Runtime.availableProcessors implemented (Linux, Mac OS X and BSD
+  systems).
+
+- Updated to be compatible with Classpath 0.91.
+    - Merged in changes to GNU Classpath's VM reference classes and
+      JamVM's classes.
+
+- Various compiler warnings.
+
+
 JamVM 1.4.2 released on 22nd January 2006
 =========================================
 

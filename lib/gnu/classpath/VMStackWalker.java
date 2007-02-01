@@ -95,5 +95,10 @@ public final class VMStackWalker
    * version of this method.
    */
   public static native ClassLoader getCallingClassLoader();
-}
 
+  /**
+   * Walk up the stack and return the first non-null class loader.
+   * If there aren't any non-null class loaders on the stack, return null.
+   */
+  public static native ClassLoader firstNonNullClassLoader();
+}

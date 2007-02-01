@@ -23,8 +23,6 @@
 #include "jam.h"
 #include "lock.h"
 
-extern char VM_initing;
-
 static Class *ste_class, *ste_array_class, *throw_class, *vmthrow_class;
 static MethodBlock *vmthrow_init_mb;
 static int backtrace_offset;
@@ -43,7 +41,7 @@ void initialiseException() {
                              "(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V");
 
         if((bcktrce == NULL) || (vmthrow_init_mb == NULL)) {
-            fprintf(stderr, "Error initialising VM (initialiseException)\n");
+            jam_fprintf(stderr, "Error initialising VM (initialiseException)\n");
             exitVM(1);
         }
         CLASS_CB(vmthrow_class)->flags |= VMTHROWABLE;
@@ -63,12 +61,12 @@ Object *exceptionOccured() {
 }
 
 void signalChainedException(char *excep_name, char *message, Object *cause) {
-    if(VM_initing) {
-        fprintf(stderr, "Exception occurred while VM initialising.\n");
+    if(VMInitialising()) {
+        jam_fprintf(stderr, "Exception occurred while VM initialising.\n");
         if(message)
-            fprintf(stderr, "%s: %s\n", excep_name, message);
+            jam_fprintf(stderr, "%s: %s\n", excep_name, message);
         else
-            fprintf(stderr, "%s\n", excep_name);
+            jam_fprintf(stderr, "%s\n", excep_name);
         exitVM(1);
     } else {
         Class *exception = findSystemClass(excep_name);
@@ -121,9 +119,9 @@ void printException() {
          * OutOfMemory, but then been unable to print any part of it!  In
          * this case the VM just seems to stop... */
         if(ee->exception) {
-            fprintf(stderr, "Exception occured while printing exception (%s)...\n",
+            jam_fprintf(stderr, "Exception occured while printing exception (%s)...\n",
                             CLASS_CB(ee->exception->class)->name);
-            fprintf(stderr, "Original exception was %s\n", CLASS_CB(exception->class)->name);
+            jam_fprintf(stderr, "Original exception was %s\n", CLASS_CB(exception->class)->name);
         }
     }
 }
@@ -188,14 +186,20 @@ int mapPC2LineNo(MethodBlock *mb, CodePntr pc_pntr) {
     return -1;
 }
 
-Object *setStackTrace() {
-    Frame *bottom, *last = getExecEnv()->last_frame;
+Object *setStackTrace0(ExecEnv *ee, int max_depth) {
+    Frame *bottom, *last = ee->last_frame;
     Object *array, *vmthrwble;
     uintptr_t *data;
     int depth = 0;
 
     if(!inited)
         initialiseException();
+
+    if(last->prev == NULL) {
+        if((array = allocTypeArray(sizeof(uintptr_t) == 4 ? T_INT : T_LONG, 0)) == NULL)
+            return NULL;
+        goto out2;
+    }
 
     for(; last->mb != NULL && isInstanceOf(vmthrow_class, last->mb->class);
           last = last->prev);
@@ -205,9 +209,12 @@ Object *setStackTrace() {
 
     bottom = last;
     do {
-        for(; last->mb != NULL; last = last->prev, depth++);
+        for(; last->mb != NULL; last = last->prev, depth++)
+            if(depth == max_depth)
+                goto out;
     } while((last = last->prev)->prev != NULL);
     
+out:
     if((array = allocTypeArray(sizeof(uintptr_t) == 4 ? T_INT : T_LONG, depth*2)) == NULL)
         return NULL;
 
@@ -215,11 +222,15 @@ Object *setStackTrace() {
     depth = 0;
     do {
         for(; bottom->mb != NULL; bottom = bottom->prev) {
+            if(depth == max_depth)
+                goto out2;
+
             data[depth++] = (uintptr_t)bottom->mb;
             data[depth++] = (uintptr_t)bottom->last_pc;
         }
     } while((bottom = bottom->prev)->prev != NULL);
 
+out2:
     if((vmthrwble = allocObject(vmthrow_class)))
         INST_DATA(vmthrwble)[backtrace_offset] = (uintptr_t)array;
 

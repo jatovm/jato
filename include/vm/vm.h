@@ -23,6 +23,8 @@
 
 #include <stdarg.h>
 #include <inttypes.h>
+#include <limits.h>
+#include <stdio.h>
 
 /* Architecture dependent definitions */
 #include <vm/arch.h>
@@ -264,6 +266,7 @@
 #define OPC_INSTANCEOF_QUICK            239
 #define OPC_MULTIANEWARRAY_QUICK        243
 #define OPC_INVOKEINTERFACE_QUICK       244
+#define OPC_ABSTRACT_METHOD_ERROR       245
 
 #define CONSTANT_Utf8                   1
 #define CONSTANT_Integer                3
@@ -331,6 +334,7 @@
 #define CLASS_CLASH           128
 #define VMTHROWABLE           256 
 #define ANONYMOUS             512
+#define VMTHREAD             1024
 
 typedef unsigned char           u1;
 typedef unsigned short          u2;
@@ -540,6 +544,37 @@ typedef struct prop {
     char *value;
 } Property;
 
+typedef struct InitArgs {
+    int noasyncgc;
+    int verbosegc;
+    int verbosedll;
+    int verboseclass;
+
+    int compact_specified; /* Whether compaction has been given on the
+                              command line, and the value if it has */
+    int do_compact;
+
+    char *classpath;
+    char *bootpath;
+    char bootpathopt;
+
+    int java_stack;
+    unsigned long min_heap;
+    unsigned long max_heap;
+
+    Property *commandline_props;
+    int props_count;
+
+    void *main_stack_base;
+
+    /* JNI invocation API hooks */
+    
+    int (*vfprintf)(FILE *stream, const char *fmt, va_list ap);
+    void (*exit)(int status);
+    void (*abort)(void);
+
+} InitArgs;
+
 #define CLASS_CB(classRef)              ((ClassBlock*)(classRef+1))
 #define INST_DATA(objectRef)            ((uintptr_t*)(objectRef+1))
 
@@ -564,8 +599,9 @@ typedef struct prop {
 #define IS_CLASS_DUP(cb)		(cb->flags & CLASS_CLASH)
 #define IS_CLASS_CLASS(cb)		(cb->flags & CLASS_CLASS)
 #define IS_VMTHROWABLE(cb)		(cb->flags & VMTHROWABLE)
+#define IS_VMTHREAD(cb)			(cb->flags & VMTHREAD)
 #define IS_ANONYMOUS(cb)		(cb->flags & ANONYMOUS)
-#define IS_SPECIAL(cb)			(cb->flags & (REFERENCE | CLASS_LOADER))
+#define IS_SPECIAL(cb)			(cb->flags & (REFERENCE | CLASS_LOADER | VMTHREAD))
 
 #define IS_MEMBER(cb)			cb->declaring_class
 #define IS_LOCAL(cb)			(cb->enclosing_method && !IS_ANONYMOUS(cb))
@@ -623,8 +659,8 @@ typedef struct prop {
 
 /* Alloc */
 
-extern void initialiseAlloc(unsigned long min, unsigned long max, int verbose);
-extern void initialiseGC(int noasyncgc, int compact_override, int compact_value);
+extern void initialiseAlloc(InitArgs *args);
+extern void initialiseGC(InitArgs *args);
 extern Class *allocClass();
 extern Object *allocObject(Class *class);
 extern Object *allocTypeArray(int type, int size);
@@ -693,8 +729,7 @@ extern void markBootClasses();
 extern void markLoaderClasses(Object *loader, int mark, int mark_soft_refs);
 extern void threadBootClasses();
 extern void threadLoaderClasses(Object *class_loader);
-
-extern void initialiseClass(char *classpath, char *bootpath, char bootpathopt, int verbose);
+extern void initialiseClass(InitArgs *args);
 
 /* resolve */
 
@@ -736,7 +771,7 @@ extern void setException(Object *excep);
 extern void clearException();
 extern void printException();
 extern CodePntr findCatchBlock(Class *exception);
-extern Object *setStackTrace();
+extern Object *setStackTrace0(ExecEnv *ee, int max_depth);
 extern Object *convertStackTrace(Object *vmthrwble);
 extern int mapPC2LineNo(MethodBlock *mb, CodePntr pc_pntr);
 extern void markVMThrowable(Object *vmthrwble, int mark, int mark_soft_refs);
@@ -747,6 +782,9 @@ extern void initialiseException();
 
 #define signalException(excep_name, excep_mess) \
     signalChainedException(excep_name, excep_mess, NULL)
+
+#define setStackTrace() \
+    setStackTrace0(getExecEnv(), INT_MAX)
 
 /* interp */
 
@@ -786,26 +824,27 @@ extern void initialiseUtf8();
 /* Dll */
 
 extern void *resolveNativeMethod(MethodBlock *mb);
-extern int resolveDll(char *name);
+extern int resolveDll(char *name, Object *loader);
 extern char *getDllPath();
 extern char *getBootDllPath();
 extern char *getDllName(char *name);
-extern void initialiseDll(int verbose);
-
+extern void initialiseDll(InitArgs *args);
 extern uintptr_t *resolveNativeWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack);
+extern void unloadClassLoaderDlls(Object *loader);
 
 /* Dll OS */
 
 extern char *nativeLibPath();
 extern void *nativeLibOpen(char *path);
+extern void nativeLibClose(void *handle);
 extern char *nativeLibMapName(char *name);
 extern void *nativeLibSym(void *handle, char *symbol);
-
+extern void *nativeStackBase();
 extern int nativeAvailableProcessors();
 
 /* Threading */
 
-extern void initialiseMainThread(int java_stack);
+extern void initialiseMainThread(InitArgs *args);
 extern ExecEnv *getExecEnv();
 
 extern void createJavaThread(Object *jThread, long long stack_size);
@@ -854,8 +893,10 @@ extern void markJNIGlobalRefs();
 
 /* properties */
 
+extern void initialiseProperties(InitArgs *args);
 extern void addCommandLineProperties(Object *properties);
 extern void addDefaultProperties(Object *properties);
+extern char *getCommandLineProperty(char *key);
 
 /* access */
 
@@ -871,5 +912,20 @@ extern Class *getCallerCallerClass();
 /* native */
 
 extern void initialiseNatives();
+
+/* init */
+
+extern void setDefaultInitArgs(InitArgs *args);
+extern unsigned long parseMemValue(char *str);
+extern void initVM(InitArgs *args);
+extern int VMInitialising();
+
+/* hooks */
+
+extern void initialiseHooks(InitArgs *args);
+extern void jam_fprintf(FILE *stream, const char *fmt, ...);
+extern void jamvm_exit(int status);
+
+#define jam_printf(fmt, ...) jam_fprintf(stdout, fmt, ## __VA_ARGS__)
 
 #endif /* __VM_H */

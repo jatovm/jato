@@ -1,4 +1,4 @@
-JamVM 1.4.2 Installation
+JamVM 1.4.4 Installation
 ========================
 
 This section describes how to configure, build and install JamVM on
@@ -12,22 +12,19 @@ Getting the Files
 You must already have the compressed tar file containing the source
 code for JamVM (you're reading this!).  For JamVM to run, it must also
 have a class library containing the system classes and the associated
-native methods (e.g. java.lang.Object).  JamVM 1.4.2 has been written to
+native methods (e.g. java.lang.Object).  JamVM 1.4.4 has been written to
 use GNU Classpath.  It is compatible with the latest snapshot version
-0.20.  It should also be compatible with the CVS version, and later
-snapshots, as long as the VM interface has remained the same.  As this
-changed between 0.17 and 0.18 JamVM will not work with versions earlier
-than 0.18. (Note, the VM interface of the generics branch of Classpath
-changed in 0.20, so JamVM 1.4.2 will only work with the latest version
-of the generics branch).
+0.92.  It should also be compatible with the CVS version, and the
+upcoming snapshot (Classpath 0.93).  It should also be compatible with
+later snapshots, as long as the VM interface has remained the same.
 
 Classpath can be obtained from the following URL:
 
-ftp://ftp.gnu.org/gnu/classpath/classpath-0.20.tar.gz
+ftp://ftp.gnu.org/gnu/classpath/classpath-0.92.tar.gz
 
 The class library consists of the Java classes and the shared libraries
 containing the native methods.  To build the Java classes you must have
-either GCJ 3.1+ or the Jikes 1.15b+ compiler (I use Jikes 1.21).  If you
+either GCJ 3.1+ or the Jikes 1.15b+ compiler (I use Jikes 1.22).  If you
 don't have Jikes, it can be downloaded from:
 
 http://oss.software.ibm.com/developerworks/opensource/jikes
@@ -104,10 +101,11 @@ see the INSTALL file inside the GNU Classpath directory.
 
 ./configure --with-jikes --enable-jni
  
-Note, this builds the AWT "peer" classes.  If configure fails, refer
-to the Classpath INSTALL file to make sure you have what's needed.
-Alternatively, adding `--disable-gtk-peer' will turn off their compilation,
-but you'll be unable to use or test any GUI applications.
+Note, this builds the AWT "peer" classes, the gconf peer classes and
+gcjwebplugin.  If configure fails, refer to the Classpath INSTALL file
+to make sure you have what's needed.  Alternatively, adding
+`--disable-gtk-peer --disable-gconf-peer --disable-plugin' will turn off
+their compilation, but you'll be unable to use or test any GUI applications.
 
 2) Build GNU Classpath by typing :-
 

@@ -144,8 +144,9 @@ uintptr_t *executeJava() {
         I(227,level), I(228,level), L(229,level), I(230,level), L(231,level), \
         L(232,level), L(233,level), &&unused, L(235,level), &&unused,         \
         &&unused, L(238,level), L(239,level), &&unused, &&unused, &&unused,   \
-        L(243,level), L(244,level), &&unused, &&unused, &&unused, &&unused,   \
-        &&unused, &&unused, &&unused, &&unused, &&unused, &&unused, &&unused}
+        L(243,level), L(244,level), L(245, level), &&unused, &&unused,        \
+        &&unused, &&unused, &&unused, &&unused, &&unused, &&unused, &&unused, \
+        &&unused}
 
     DEF_HANDLER_TABLE(0);
 
@@ -173,7 +174,7 @@ uintptr_t *executeJava() {
 
 unused:
 #ifndef DIRECT
-    printf("Unrecognised opcode %d in: %s.%s\n", *pc, CLASS_CB(mb->class)->name, mb->name);
+    jam_printf("Unrecognised opcode %d in: %s.%s\n", *pc, CLASS_CB(mb->class)->name, mb->name);
     exitVM(1);
 #else
 rewrite_lock:
@@ -1632,13 +1633,22 @@ rewrite_lock:
         int idx = pc->operand.uui.u1;
         int opcode = pc->operand.uui.u2;
         int cache = pc->operand.uui.i;
+        Class *class;
 
         frame->last_pc = pc;
-        resolveClass(mb->class, idx, opcode == OPC_NEW);
+        class = resolveClass(mb->class, idx, opcode == OPC_NEW);
 
         if(exceptionOccured0(ee))
             goto throwException;
         
+        if(opcode == OPC_NEW) {
+            ClassBlock *cb = CLASS_CB(class);
+            if(cb->access_flags & ACC_ABSTRACT) {
+                signalException("java/lang/InstantiationError", cb->name);
+                goto throwException;
+            }
+        }
+
         OPCODE_REWRITE((opcode + OPC_NEW_QUICK-OPC_NEW), cache, pc->operand);
         REDISPATCH
     }
@@ -1914,14 +1924,26 @@ rewrite_lock:
             OPC_CHECKCAST,
             OPC_INSTANCEOF,
             OPC_MULTIANEWARRAY)
+    {
+        Class *class;
+
         frame->last_pc = pc;
-        resolveClass(mb->class, DOUBLE_INDEX(pc), *pc == OPC_NEW);
+        class = resolveClass(mb->class, DOUBLE_INDEX(pc), *pc == OPC_NEW);
 
         if(exceptionOccured0(ee))
             goto throwException;
         
+        if(pc[0] == OPC_NEW) {
+            ClassBlock *cb = CLASS_CB(class);
+            if(cb->access_flags & ACC_ABSTRACT) {
+                signalException("java/lang/InstantiationError", cb->name);
+                goto throwException;
+            }
+        }
+
         OPCODE_REWRITE((pc[0] + OPC_NEW_QUICK-OPC_NEW));
         DISPATCH(0, 0);
+    }
 
     DEF_OPC_210(OPC_WIDE)
     {
@@ -2071,6 +2093,7 @@ rewrite_lock:
                   (new_mb->class != cb->imethod_table[cache].interface)) {
             for(cache = 0; (cache < cb->imethod_table_size) &&
                            (new_mb->class != cb->imethod_table[cache].interface); cache++);
+
             if(cache == cb->imethod_table_size)
                 THROW_EXCEPTION("java/lang/IncompatibleClassChangeError",
                                  "unimplemented interface");
@@ -2080,10 +2103,6 @@ rewrite_lock:
 
         mtbl_idx = cb->imethod_table[cache].offsets[new_mb->method_table_index];
         new_mb = cb->method_table[mtbl_idx];
-
-        if(new_mb->access_flags & ACC_ABSTRACT)
-            THROW_EXCEPTION("java/lang/AbstractMethodError",
-                            "unimplemented interface method");
 
         goto invokeMethod;
     }
@@ -2178,6 +2197,19 @@ rewrite_lock:
         PUSH_0((uintptr_t)obj, 4);
     }
 
+    /* Special bytecode which forms the body of an abstract method.
+       If it is invoked it'll throw an abstract method exception. */
+
+    DEF_OPC_210(OPC_ABSTRACT_METHOD_ERROR)
+        /* As the method has been invoked, a frame will exist for
+           the abstract method itself.  Pop this to get the correct
+           exception stack trace. */
+        ee->last_frame = frame->prev;
+
+        /* Throw the exception */
+        signalException("java/lang/AbstractMethodError", mb->name);
+        goto throwException;
+
     DEF_OPC_210(OPC_INVOKEVIRTUAL_QUICK)
         arg1 = ostack - INV_QUICK_ARGS(pc);
         NULL_POINTER_CHECK(*arg1);
@@ -2201,7 +2233,7 @@ invokeMethod:
             /* Overflow when we're already throwing stack overflow.
                Stack extension should be enough to throw exception,
                so something's seriously gone wrong - abort the VM! */
-            printf("Fatal stack overflow!  Aborting VM.\n");
+            jam_printf("Fatal stack overflow!  Aborting VM.\n");
             exitVM(1);
         }
         ee->stack_end += STACK_RED_ZONE_SIZE;

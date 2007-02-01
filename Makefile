@@ -87,6 +87,8 @@ JAMVM_OBJS = \
 	jamvm/execute.o \
 	jamvm/frame.o \
 	jamvm/hash.o \
+	jamvm/hooks.o \
+	jamvm/init.o \
 	jamvm/interp.o \
 	jamvm/jni.o \
 	jamvm/lock.o \

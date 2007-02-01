@@ -23,6 +23,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <jit/jit-compiler.h>
 
 #include "jam.h"
@@ -81,6 +83,10 @@ static HashTable loaded_classes;
  * access protected by loaded_classes hash table lock */
 #define MAX_PRIM_CLASSES 9
 static Class *prim_classes[MAX_PRIM_CLASSES];
+
+/* Bytecode for stub abstract method.  If it is invoked
+   we'll get an abstract method error. */
+static char abstract_method[] = {OPC_ABSTRACT_METHOD_ERROR};
 
 /* Macros for reading data values from class files - values
    are in big endian format, and non-aligned.  See arch.h
@@ -583,7 +589,7 @@ createArrayClass(char *classname, Object *class_loader) {
 
     if((found = addClassToHash(class, classblock->class_loader)) == class) {
         if(verbose)
-            printf("[Created array class %s]\n", classname);
+            jam_printf("[Created array class %s]\n", classname);
         return class;
     }
 
@@ -613,7 +619,7 @@ createPrimClass(char *classname, int index) {
     unlockHashTable(loaded_classes);
 
     if(verbose)
-        printf("[Created primitive class %s]\n", classname);
+        jam_printf("[Created primitive class %s]\n", classname);
 
     return prim_classes[index];
 }
@@ -676,7 +682,7 @@ void linkClass(Class *class) {
        goto unlock;
 
    if(verbose)
-       printf("[Linking class %s]\n", cb->name);
+       jam_printf("[Linking class %s]\n", cb->name);
 
    if(super) {
       ClassBlock *super_cb = CLASS_CB(super);
@@ -744,6 +750,12 @@ void linkClass(Class *class) {
 
        mb->class = class;
 
+       /* Set abstract method to stub */
+       if(mb->access_flags & ACC_ABSTRACT) {
+           mb->code_size = sizeof(abstract_method);
+           mb->code = abstract_method;
+       }
+
        if(mb->access_flags & ACC_NATIVE) {
 
            /* set up native invoker to wrapper to resolve function 
@@ -758,6 +770,7 @@ void linkClass(Class *class) {
            mb->max_locals = mb->args_count;
            mb->max_stack = 0;
        }
+
 #ifdef DIRECT
        else  {
            /* Set the bottom bit of the pointer to indicate the
@@ -966,7 +979,7 @@ void linkClass(Class *class) {
        MethodBlock *enqueue_mb = findMethod(class, "enqueue", "()Z");
 
        if(ref_fb == NULL || queue_fb == NULL || enqueue_mb == NULL) {
-           fprintf(stderr, "Expected fields/methods missing in java.lang.ref.Reference\n");
+           jam_fprintf(stderr, "Expected fields/methods missing in java.lang.ref.Reference\n");
            exitVM(1);
        }
 
@@ -999,7 +1012,7 @@ void linkClass(Class *class) {
        FieldBlock *ldr_fb = findField(class, "vmdata", "Ljava/lang/Object;");
 
        if(ldr_fb == NULL) {
-           fprintf(stderr, "Expected vmdata field missing in java.lang.ClassLoader\n");
+           jam_fprintf(stderr, "Expected vmdata field missing in java.lang.ClassLoader\n");
            exitVM(1);
        }
 
@@ -1178,7 +1191,7 @@ Class *loadSystemClass(char *classname) {
     free(data);
 
     if(verbose && class)
-        printf("[Loaded %s from %s]\n", classname, bootclasspath[i-1].path);
+        jam_printf("[Loaded %s from %s]\n", classname, bootclasspath[i-1].path);
 
     return class;
 }
@@ -1326,7 +1339,7 @@ Class *findNonArrayClassFromClassLoader(char *classname, Object *loader) {
         addInitiatingLoaderToClass(loader, class);
 
         if(verbose && (CLASS_CB(class)->class_loader == loader))
-            printf("[Loaded %s]\n", classname);
+            jam_printf("[Loaded %s]\n", classname);
     }
     return class;
 }
@@ -1429,11 +1442,17 @@ void freeClassData(Class *class) {
     for(i = 0; i < cb->methods_count; i++) {
         MethodBlock *mb = &cb->methods[i];
 
-        free((void*)((uintptr_t)mb->code & ~1));
+#ifdef DIRECT
+        if(!(mb->access_flags & ACC_ABSTRACT) || !((uintptr_t)mb->code & 0x3))
+#else
+        if(!(mb->access_flags & ACC_ABSTRACT))
+#endif
+            free((void*)((uintptr_t)mb->code & ~3));
+
         free(mb->exception_table);
         free(mb->line_no_table);
         free(mb->throw_table);
-    }
+    } 
 
     free(cb->methods);
     free(cb->inner_classes);
@@ -1524,26 +1543,109 @@ char *getClassPath() {
     return classpath;
 }
 
-char *setBootClassPath(char *cmdlne_bcp, char bootpathopt) {
+int filter(struct dirent *entry) {
+    int len = strlen(entry->d_name);
+    char *ext = &entry->d_name[len-4];
+
+    return len >= 4 && (strcasecmp(ext, ".zip") == 0 ||
+                        strcasecmp(ext, ".jar") == 0);
+}
+
+void scanDirForJars(char *dir) {
+    int bootpathlen = strlen(bootpath) + 1;
+    int dirlen = strlen(dir);
+    struct dirent **namelist;
+    int n;
+
+    n = scandir(dir, &namelist, &filter, &alphasort);
+
+    if(n >= 0) {
+        while(--n >= 0) {
+            char *buff;
+            bootpathlen += strlen(namelist[n]->d_name) + dirlen + 2;
+            buff = malloc(bootpathlen);
+
+            strcat(strcat(strcat(strcat(strcpy(buff, dir), "/"), namelist[n]->d_name), ":"), bootpath);
+
+            free(bootpath);
+            bootpath = buff;
+            free(namelist[n]);
+        }
+        free(namelist);
+    }
+}
+
+void scanDirsForJars(char *directories) {
+    int dirslen = strlen(directories);
+    char *pntr, *end, *dirs = sysMalloc(dirslen + 1);
+    strcpy(dirs, directories);
+
+    for(end = pntr = &dirs[dirslen]; pntr != dirs; pntr--) {
+        if(*pntr == ':') {
+            char *start = pntr + 1;
+            if(start != end)
+                scanDirForJars(start);
+
+            *(end = pntr) = '\0';
+        }
+    }
+
+    if(end != dirs)
+        scanDirForJars(dirs);
+
+    free(dirs);
+}
+
 #ifdef USE_ZIP
-    char *dflt_bcp = INSTALL_DIR"/share/jamvm/classes.zip:"CLASSPATH_INSTALL_DIR"/share/classpath/glibj.zip";
+#define JAMVM_CLASSES INSTALL_DIR"/share/jamvm/classes.zip"
+#define CLASSPATH_CLASSES CLASSPATH_INSTALL_DIR"/share/classpath/glibj.zip"
 #else
-    char *dflt_bcp = INSTALL_DIR"/share/jamvm/classes:"CLASSPATH_INSTALL_DIR"/share/classpath";
+#define JAMVM_CLASSES INSTALL_DIR"/share/jamvm/classes"
+#define CLASSPATH_CLASSES CLASSPATH_INSTALL_DIR"/share/classpath"
 #endif
 
-    if(cmdlne_bcp) {
-        if(bootpathopt) {
-            bootpath = sysMalloc(strlen(dflt_bcp) + strlen(cmdlne_bcp) + 2);
-            if(bootpathopt == 'a')
-                strcat(strcat(strcpy(bootpath, dflt_bcp), ":"), cmdlne_bcp);
-            else
-                strcat(strcat(strcpy(bootpath, cmdlne_bcp), ":"), dflt_bcp);
-        } else
-            bootpath = cmdlne_bcp;
-    } else {
+#define DFLT_BCP JAMVM_CLASSES":"CLASSPATH_CLASSES
+
+char *setBootClassPath(char *cmdlne_bcp, char bootpathopt) {
+    char *endorsed_dirs;
+
+    if(cmdlne_bcp)
+        switch(bootpathopt) {
+            case 'a':
+            case 'p':
+                bootpath = sysMalloc(strlen(DFLT_BCP) + strlen(cmdlne_bcp) + 2);
+                if(bootpathopt == 'a')
+                    strcat(strcat(strcpy(bootpath, DFLT_BCP), ":"), cmdlne_bcp);
+                else
+                    strcat(strcat(strcpy(bootpath, cmdlne_bcp), ":"), DFLT_BCP);
+                break;
+
+            case 'c':
+                bootpath = sysMalloc(strlen(JAMVM_CLASSES) + strlen(cmdlne_bcp) + 2);
+                strcat(strcat(strcpy(bootpath, JAMVM_CLASSES), ":"), cmdlne_bcp);
+                break;
+
+            case 'v':
+                bootpath = sysMalloc(strlen(CLASSPATH_CLASSES) + strlen(cmdlne_bcp) + 2);
+                strcat(strcat(strcpy(bootpath, cmdlne_bcp), ":"), CLASSPATH_CLASSES);
+                break;
+
+            default:
+                bootpath = sysMalloc(strlen(cmdlne_bcp) + 1);
+                strcpy(bootpath, cmdlne_bcp);
+        }           
+    else {
         char *env = getenv("BOOTCLASSPATH");
-        bootpath = env ? env : dflt_bcp;
+        char *path = env ? env : DFLT_BCP;
+        bootpath = sysMalloc(strlen(path) + 1);
+        strcpy(bootpath, path);
     }
+
+    endorsed_dirs = getCommandLineProperty("java.endorsed.dirs");
+    if(endorsed_dirs == NULL)
+        endorsed_dirs = INSTALL_DIR"/share/jamvm/endorsed";
+
+    scanDirsForJars(endorsed_dirs);
 
     return bootpath;
 }
@@ -1583,20 +1685,21 @@ Object *bootClassPathResource(char *filename, int index) {
     return NULL;
 }
 
-void initialiseClass(char *classpath, char *bootpath, char bootpathopt, int verboseclass) {
-    char *bcp = setBootClassPath(bootpath, bootpathopt);
+void initialiseClass(InitArgs *args) {
+    char *bcp = setBootClassPath(args->bootpath, args->bootpathopt);
 
     if(!(bcp && parseBootClassPath(bcp))) {
-        fprintf(stderr, "bootclasspath is empty!\n");
+        jam_fprintf(stderr, "bootclasspath is empty!\n");
         exitVM(1);
     }
 
-    verbose = verboseclass;
-    setClassPath(classpath);
+    verbose = args->verboseclass;
+    setClassPath(args->classpath);
 
     /* Init hash table, and create lock */
     initHashTable(loaded_classes, INITSZE, TRUE);
 
+    /* Register the address of where the java.lang.Class ref _will_ be */
     registerStaticClassRef(&java_lang_Class);
 }
 

@@ -35,7 +35,7 @@ int nativeExtraArg(MethodBlock *mb) {
                  ((mb->access_flags & ACC_STATIC) ? 1 : 0) + 7 + 6) * -sizeof(uintptr_t);
 
 #ifdef DEBUG_DLL
-    printf("<nativExtraArg %s%s : %d>\n", mb->name, mb->type, params);
+    jam_printf("<nativExtraArg %s%s : %d>\n", mb->name, mb->type, params);
 #endif
 
     return params;

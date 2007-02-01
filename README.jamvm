@@ -1,9 +1,9 @@
-JamVM 1.4.2
+JamVM 1.4.4
 ===========
 
-Welcome to the nineteenth release of JamVM!
+Welcome to the twenty-first release of JamVM!
 
-JamVM is a new Java Virtual Machine which conforms to the JVM
+JamVM is a Java Virtual Machine which conforms to the JVM
 specification version 2 (blue book).  In comparison to most other
 VM's (free and commercial) it is extremely small, with a stripped
 executable on PowerPC of only ~150K, and Intel 110K.  However, unlike
@@ -52,6 +52,11 @@ Mac OS X/Darwin
            the flag -arch ppc64.  If no option is given a 32-bit
            executable is built by default.
 
+- i386:
+           JamVM has been built and tested on the MacBook Pro
+           (Intel Core Duo).
+
+
 BSD Variants
 ------------
 
@@ -66,14 +71,15 @@ Class Libraries
 JamVM is designed to use the GNU classpath Java class library (see
 http://www.gnu.org/software/classpath).  A number of classes are
 reference classes which must be modified for a particular VM.  These are
-provided and built along with JamVM (see INSTALL).  JamVM 1.4.2 works with
-Classpath version 0.20 (the latest development snapshot).  It should
-also work with the latest version direct from CVS (but check the
-Classpath mailing lists for possible patches).  Later snapshots of Classpath
-may also work, if no modifications have been made to the VM interface.
+provided and built along with JamVM (see INSTALL).  JamVM 1.4.4 works with
+Classpath version 0.92 (the latest development snapshot).  It should
+also work with the latest version direct from CVS and the upcoming
+Classpath 0.93 (but check the Classpath mailing lists for possible patches).
+Later snapshots of Classpath may also work, if no modifications have been
+made to the VM interface.
 
-Note, JamVM 1.4.1 will not work with versions of Classpath earlier than
-0.18, nor will it work with the class library from Sun or IBM's Virtual
+Note, JamVM 1.4.4 will not work with versions of Classpath earlier than
+0.92, nor will it work with the class library from Sun or IBM's Virtual
 Machines.
 
 Building and Installing
@@ -155,7 +161,8 @@ particular order, is given below.
 - Full GC support for Soft, Weak and Phantom References.  References
   are enqueued using a seperate thread (the reference handler)
 
-- Full GC support for class-unloading
+- Full GC support for class and class-loader unloading (including
+  associated shared libraries)
 
 - Garbage collector can run synchronously or asynchronously within its
   own thread
@@ -175,5 +182,5 @@ particular order, is given below.
 
 That's it!
 
-Robert Lougher <rob@lougher.demon.co.uk>
-22nd January 2006.
+Robert Lougher <rob@lougher.org.uk>
+21st May 2006.

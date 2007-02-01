@@ -30,9 +30,9 @@
 #include "interp.h"
 
 #ifdef TRACEDIRECT
-#define TRACE(x) printf x
+#define TRACE(fmt, ...) jam_printf(fmt, ## __VA_ARGS__)
 #else
-#define TRACE(x)
+#define TRACE(fmt, ...)
 #endif
 
 #define REWRITE_OPERAND(index) \
@@ -101,7 +101,7 @@ retry:
 
     unlockVMWaitLock(prepare_lock, self);
 
-    TRACE(("Preparing %s.%s%s\n", CLASS_CB(mb->class)->name, mb->name, mb->type));
+    TRACE("Preparing %s.%s%s\n", CLASS_CB(mb->class)->name, mb->name, mb->type);
 
     /* Method is unprepared, so bottom bit of pntr will be set */
     code--;
@@ -138,7 +138,7 @@ retry:
                this generally only happens in the x ? y : z code sequence. */
 
             if((cache_depth[pc] != DEPTH_UNKNOWN) && (cache_depth[pc] != cache)) {
-                TRACE(("CONFLICT @ addr: %d depth1 %d depth2 %d\n", pc, cache_depth[pc], cache));
+                TRACE("CONFLICT @ addr: %d depth1 %d depth2 %d\n", pc, cache_depth[pc], cache);
 
                 if(pass == 1)
                     new_code[ins_count].handler = (void**)handlers[cache][OPC_NOP];
@@ -155,10 +155,10 @@ retry:
                between bytecode and instruction numbering */
             if(pass == 0) {
 #ifdef USE_CACHE
-                TRACE(("%d : pc %d opcode %d cache %d\n", ins_count, pc, opcode, cache));
+                TRACE("%d : pc %d opcode %d cache %d\n", ins_count, pc, opcode, cache);
                 cache_depth[pc] = cache;
 #else
-                TRACE(("%d : pc %d opcode %d\n", ins_count, pc, opcode));
+                TRACE("%d : pc %d opcode %d\n", ins_count, pc, opcode);
 #endif
                 map[pc] = ins_count;
             }
@@ -175,8 +175,8 @@ retry:
 
             switch(opcode) {
                 default:
-                    printf("Unrecognised bytecode %d found while preparing %s.%s%s\n",
-                            opcode, CLASS_CB(mb->class)->name, mb->name, mb->type);
+                    jam_printf("Unrecognised bytecode %d found while preparing %s.%s%s\n",
+                               opcode, CLASS_CB(mb->class)->name, mb->name, mb->type);
                     exitVM(1);
 
                 case OPC_ALOAD_0:
@@ -308,7 +308,7 @@ retry:
                 case OPC_F2D: case OPC_D2F: case OPC_FREM:
                 case OPC_DREM: case OPC_LNEG: case OPC_FNEG:
                 case OPC_DNEG: case OPC_MONITORENTER:
-                case OPC_MONITOREXIT:
+                case OPC_MONITOREXIT: case OPC_ABSTRACT_METHOD_ERROR:
 #ifdef USE_CACHE
                     cache = 0;
                     pc += 1;
@@ -391,7 +391,7 @@ retry:
 #ifdef USE_CACHE
                     /* Conflict can only occur on first pass, and dest must be backwards */
                     if(cache_depth[dest] > 0) {
-                        TRACE(("CONFLICT in IF target addr: %d\n", dest));
+                        TRACE("CONFLICT in IF target addr: %d\n", dest);
 
                         /* Reset depthes calculated from the (backwards) destination and
                            here.  By setting depth at dest to zero (see below) and starting
@@ -409,7 +409,7 @@ retry:
                     }
 #endif
                     if(pass == 1) {
-                        TRACE(("IF old dest %d new dest %d\n", dest, map[dest]));
+                        TRACE("IF old dest %d new dest %d\n", dest, map[dest]);
                         operand.pntr = &new_code[map[dest]];
                     }
 #ifdef USE_CACHE
@@ -443,7 +443,7 @@ retry:
 #ifdef USE_CACHE
                     /* Conflict can only occur on first pass, and dest must be backwards */
                     if(cache_depth[dest] > 0) {
-                        TRACE(("CONFLICT in GOTO target addr: %d\n", dest));
+                        TRACE("CONFLICT in GOTO target addr: %d\n", dest);
 
                         /* Reset depthes calculated from the (backwards) destination and
                            here.  By setting depth at dest to zero (see below) and starting
@@ -462,7 +462,7 @@ retry:
 #endif
                     /* GOTO re-caches, so the cache depth at destination is zero */
                     if(pass == 1) {
-                        TRACE(("GOTO old dest %d new dest %d\n", dest, map[dest]));
+                        TRACE("GOTO old dest %d new dest %d\n", dest, map[dest]);
                         operand.pntr = &new_code[map[dest]];
                     }
 #ifdef USE_CACHE
@@ -614,7 +614,7 @@ retry:
 #ifdef USE_CACHE
                     /* Conflict can only occur on first pass, and dest must be backwards */
                     if(cache_depth[dest] > 0) {
-                        TRACE(("CONFLICT in JSR target addr: %d\n", dest));
+                        TRACE("CONFLICT in JSR target addr: %d\n", dest);
 
                         /* Reset depthes calculated from the (backwards) destination and
                            here.  By setting depth at dest to zero (see below) and starting
@@ -633,7 +633,7 @@ retry:
                     }
 #endif
                     if(pass == 1) {
-                        TRACE(("JSR old dest %d new dest %d\n", dest, map[dest]));
+                        TRACE("JSR old dest %d new dest %d\n", dest, map[dest]);
                         operand.pntr = &new_code[map[dest]];
                     }
 #ifdef USE_CACHE
@@ -765,6 +765,7 @@ retry:
     enableSuspend(self);
 
     /* We don't need the old bytecode stream anymore */
-    free(code);
+    if(!mb->access_flags & ACC_ABSTRACT)
+        free(code);
 }
 #endif

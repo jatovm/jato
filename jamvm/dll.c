@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "jam.h"
 
@@ -47,9 +48,9 @@ void *lookupLoadedDlls(MethodBlock *mb);
 
 /* Trace library loading and method lookup */
 #ifdef TRACEDLL
-#define TRACE(x) printf x
+#define TRACE(fmt, ...) jam_printf(fmt, ## __VA_ARGS__)
 #else
-#define TRACE(x)
+#define TRACE(fmt, ...)
 #endif
 
 char *mangleString(char *utf8) {
@@ -64,20 +65,17 @@ char *mangleString(char *utf8) {
 
     for(i = 0; i < len; i++) {
         unsigned short c = unicode[i];
-        if(c > 127)
-            mangledLen += 6;
-        else
-            switch(c) {
-                case '_':
-                case ';':
-                case '[':
-                    mangledLen += 2;
-                    break;
+        switch(c) {
+            case '_':
+            case ';':
+            case '[':
+                mangledLen += 2;
+                break;
 
-                default:
-                    mangledLen++;
-                    break;
-            }
+           default:
+                mangledLen += isalnum(c) ? 1 : 6;
+                break;
+        }
     }
 
     mangled = mngldPtr = (char*) sysMalloc(mangledLen + 1);
@@ -86,31 +84,31 @@ char *mangleString(char *utf8) {
 
     for(i = 0; i < len; i++) {
         unsigned short c = unicode[i];
-        if(c > 127)
-            mngldPtr += sprintf(mngldPtr, "_0%04x", c);
-        else
-            switch(c) {
-                case '_':
-                    *mngldPtr++ = '_';
-                    *mngldPtr++ = '1';
-                    break;
-                case ';':
-                    *mngldPtr++ = '_';
-                    *mngldPtr++ = '2';
-                    break;
-                case '[':
-                    *mngldPtr++ = '_';
-                    *mngldPtr++ = '3';
-                    break;
+        switch(c) {
+            case '_':
+                *mngldPtr++ = '_';
+                *mngldPtr++ = '1';
+                break;
+            case ';':
+                *mngldPtr++ = '_';
+                *mngldPtr++ = '2';
+                break;
+            case '[':
+                *mngldPtr++ = '_';
+                *mngldPtr++ = '3';
+                break;
 
-                case '/':
-                    *mngldPtr++ = '_';
-                    break;
+            case '/':
+                *mngldPtr++ = '_';
+                break;
 
-                default:
+            default:
+                if(isalnum(c))
                     *mngldPtr++ = c;
-                    break;
-            }
+                else
+                    mngldPtr += sprintf(mngldPtr, "_0%04x", c);
+                break;
+        }
     }
 
     *mngldPtr = '\0';
@@ -154,7 +152,7 @@ void *lookupInternal(MethodBlock *mb) {
     ClassBlock *cb = CLASS_CB(mb->class);
     int i;
 
-    TRACE(("<DLL: Looking up %s internally>\n", mb->name));
+    TRACE("<DLL: Looking up %s internally>\n", mb->name);
 
     /* First try to locate the class */
     for(i = 0; native_methods[i].classname &&
@@ -169,7 +167,7 @@ void *lookupInternal(MethodBlock *mb) {
 
         if(methods[i].methodname) {
             if(verbose)
-                printf("internal");
+                jam_printf("internal");
 
             /* Found it -- set the invoker to the native method */
             return mb->native_invoker = (void*)methods[i].method;
@@ -184,7 +182,7 @@ void *resolveNativeMethod(MethodBlock *mb) {
 
     if(verbose) {
         char *classname = slash2dots(CLASS_CB(mb->class)->name);
-        printf("[Dynamic-linking native method %s.%s ... ", classname, mb->name);
+        jam_printf("[Dynamic-linking native method %s.%s ... ", classname, mb->name);
         free(classname);
     }
 
@@ -197,7 +195,7 @@ void *resolveNativeMethod(MethodBlock *mb) {
 #endif
 
     if(verbose)
-        printf("]\n");
+        jam_printf("]\n");
 
     return func;
 }
@@ -212,18 +210,19 @@ uintptr_t *resolveNativeWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack
     return (*(uintptr_t *(*)(Class*, MethodBlock*, uintptr_t*))func)(class, mb, ostack);
 }
 
-void initialiseDll(int verbosedll) {
+void initialiseDll(InitArgs *args) {
 #ifndef NO_JNI
     /* Init hash table, and create lock */
     initHashTable(hash_table, HASHTABSZE, TRUE);
 #endif
-    verbose = verbosedll;
+    verbose = args->verbosedll;
 }
 
 #ifndef NO_JNI
 typedef struct {
     char *name;
     void *handle;
+    Object *loader;
 } DllEntry;
 
 int dllNameHash(char *name) {
@@ -235,10 +234,10 @@ int dllNameHash(char *name) {
     return hash;
 }
 
-int resolveDll(char *name) {
+int resolveDll(char *name, Object *loader) {
     DllEntry *dll;
 
-    TRACE(("<DLL: Attempting to resolve library %s>\n", name));
+    TRACE("<DLL: Attempting to resolve library %s>\n", name);
 
 #define HASH(ptr) dllNameHash(ptr)
 #define COMPARE(ptr1, ptr2, hash1, hash2) \
@@ -255,22 +254,23 @@ int resolveDll(char *name) {
         void *onload, *handle = nativeLibOpen(name);
 
         if(handle == NULL)
-            return 0;
+            return FALSE;
 
-        TRACE(("<DLL: Successfully opened library %s>\n", name));
+        TRACE("<DLL: Successfully opened library %s>\n", name);
 
         if((onload = nativeLibSym(handle, "JNI_OnLoad")) != NULL) {
             int ver = (*(jint (*)(JavaVM*, void*))onload)(&invokeIntf, NULL);
 
             if(ver != JNI_VERSION_1_2 && ver != JNI_VERSION_1_4) {
-                TRACE(("<DLL: JNI_OnLoad returned unsupported version %d.\n>", ver));
-                return 0;
+                TRACE("<DLL: JNI_OnLoad returned unsupported version %d.\n>", ver);
+                return FALSE;
             }
         }
 
         dll = (DllEntry*)sysMalloc(sizeof(DllEntry));
         dll->name = strcpy((char*)sysMalloc(strlen(name)+1), name);
         dll->handle = handle;
+        dll->loader = loader;
 
 #undef HASH
 #undef COMPARE
@@ -280,9 +280,11 @@ int resolveDll(char *name) {
 
         /* Add if absent, no scavenge, locked */
         findHashEntry(hash_table, dll, dll2, TRUE, FALSE, TRUE);
-    }
+    } else
+        if(dll->loader != loader)
+            return FALSE;
 
-    return 1;
+    return TRUE;
 }
 
 char *getDllPath() {
@@ -298,23 +300,73 @@ char *getDllName(char *name) {
    return nativeLibMapName(name);
 }
 
-void *lookupLoadedDlls0(char *name) {
-    TRACE(("<DLL: Looking up %s in loaded DLL's>\n", name));
+void *lookupLoadedDlls0(char *name, Object *loader) {
+    TRACE("<DLL: Looking up %s loader %x in loaded DLL's>\n", name, loader);
 
 #define ITERATE(ptr)                                          \
 {                                                             \
-    void *sym = nativeLibSym(((DllEntry*)ptr)->handle, name); \
-    if(sym) return sym;                                       \
+    DllEntry *dll = (DllEntry*)ptr;                           \
+    if(dll->loader == loader) {                               \
+        void *sym = nativeLibSym(dll->handle, name);          \
+        if(sym != NULL)                                       \
+            return sym;                                       \
+    }                                                         \
 }
 
     hashIterate(hash_table);
     return NULL;
 }
 
+void unloadDll(DllEntry *dll) {
+    void *on_unload;
+
+    TRACE("<DLL: Unloading DLL %s\n" dll->name);
+
+    if((on_unload = nativeLibSym(dll->handle, "JNI_OnUnload")) != NULL)
+        (*(void (*)(JavaVM*, void*))on_unload)(&invokeIntf, NULL);
+
+    nativeLibClose(dll->handle);
+    free(dll);
+}
+
+void unloadClassLoaderDlls(Object *loader) {
+    int unloaded = 0;
+
+    TRACE("<DLL: Unloading DLLs for loader %x\n" loader);
+
+#undef ITERATE
+#define ITERATE(ptr)                                          \
+{                                                             \
+    DllEntry *dll = (DllEntry*)*ptr;                          \
+    if(dll->loader == loader) {                               \
+        unloadDll(dll);                                       \
+        *ptr = NULL;                                          \
+        unloaded++;                                           \
+    }                                                         \
+}
+
+    hashIterateP(hash_table);
+
+    if(unloaded) {
+        int size;
+
+        /* Update count to remaining number of DLLs */
+        hash_table.hash_count -= unloaded;
+
+        /* Calculate nearest multiple of 2 larger than count */
+        for(size = 1; size < hash_table.hash_count; size <<= 1);
+
+        /* Ensure new table is less than 2/3 full */
+        size = hash_table.hash_count*3 > size*2 ? size<< 1 : size;
+
+        resizeHash(&hash_table, size);
+    }
+}
+
 static void *env = &Jam_JNINativeInterface;
 
 uintptr_t *callJNIWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack) {
-    TRACE(("<DLL: Calling JNI method %s.%s%s>\n", CLASS_CB(class)->name, mb->name, mb->type));
+    TRACE("<DLL: Calling JNI method %s.%s%s>\n", CLASS_CB(class)->name, mb->name, mb->type);
 
     if(!initJNILrefs())
         return NULL;
@@ -324,17 +376,18 @@ uintptr_t *callJNIWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack) {
 }
 
 void *lookupLoadedDlls(MethodBlock *mb) {
+    Object *loader = (CLASS_CB(mb->class))->class_loader;
     char *mangled = mangleClassAndMethodName(mb);
     void *func;
 
-    func = lookupLoadedDlls0(mangled);
+    func = lookupLoadedDlls0(mangled, loader);
 
     if(func == NULL) {
         char *mangledSig = mangleSignature(mb);
         char *fullyMangled = (char*)sysMalloc(strlen(mangled)+strlen(mangledSig)+3);
 
         sprintf(fullyMangled, "%s__%s", mangled, mangledSig);
-        func = lookupLoadedDlls0(fullyMangled);
+        func = lookupLoadedDlls0(fullyMangled, loader);
 
         free(fullyMangled);
         free(mangledSig);
@@ -344,7 +397,7 @@ void *lookupLoadedDlls(MethodBlock *mb) {
 
     if(func) {
         if(verbose)
-            printf("JNI");
+            jam_printf("JNI");
 
         mb->code = (unsigned char *) func;
         mb->native_extra_arg = nativeExtraArg(mb);
@@ -354,3 +407,4 @@ void *lookupLoadedDlls(MethodBlock *mb) {
     return NULL;
 }
 #endif
+

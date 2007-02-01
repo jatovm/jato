@@ -159,6 +159,7 @@ retry:
                 goto retry;
 
             methodname = CP_UTF8(cp, CP_NAME_TYPE_NAME(cp, name_type_idx));
+
             methodtype = CP_UTF8(cp, CP_NAME_TYPE_TYPE(cp, name_type_idx));
             resolved_class = resolveClass(class, cl_idx, FALSE);
             resolved_cb = CLASS_CB(resolved_class);
@@ -379,7 +380,7 @@ MethodBlock *lookupVirtualMethod(Object *ob, MethodBlock *mb) {
     mb = cb->method_table[mtbl_idx];
 
     if(mb->access_flags & ACC_ABSTRACT) {
-        signalException("java/lang/AbstractMethodError", NULL);
+        signalException("java/lang/AbstractMethodError", mb->name);
         return NULL;
     }
 

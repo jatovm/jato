@@ -23,6 +23,20 @@
 #include "jam.h"
 #include "hash.h"
 
+void lockHashTable0(HashTable *table, Thread *self) {
+    if(!tryLockVMLock(table->lock, self)) {
+        disableSuspend(self);
+        lockVMLock(table->lock, self);
+        enableSuspend(self);
+    }
+    fastDisableSuspend(self);
+}
+
+void unlockHashTable0(HashTable *table, Thread *self) {
+    fastEnableSuspend(self);
+    unlockVMLock(table->lock, self);
+}
+
 void resizeHash(HashTable *table, int new_size) {
     HashEntry *new_table = (HashEntry*)sysMalloc(sizeof(HashEntry)*new_size);
     int i;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -18,20 +18,11 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <fpu_control.h>
+#include "arch/parisc.h"
 
-/* Change floating point precision to double (64-bit) from
- * the extended (80-bit) Linux default. */
-
-void setDoublePrecision() {
-    fpu_control_t cw;
-
-    _FPU_GETCW(cw);
-    cw &= ~_FPU_EXTENDED;
-    cw |= _FPU_DOUBLE;
-    _FPU_SETCW(cw);
-}
+CasLock cas_lock;
 
 void initialisePlatform() {
-    setDoublePrecision();
+    /* Initialise lock for compare_and_swap implementation */
+    cas_lock.lock = 1;
 }

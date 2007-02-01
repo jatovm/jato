@@ -25,59 +25,6 @@
 
 #include "jam.h"
 
-/* Setup default values for command line args */
-
-static int noasyncgc = FALSE;
-static int verbosegc = FALSE;
-static int verbosedll = FALSE;
-static int verboseclass = FALSE;
-
-/* Whether compaction has been given on the command line,
-   and the value if it has */
-static int compact_specified = FALSE;
-static int do_compact;
-
-static char *classpath = NULL;
-static char *bootpath = NULL;
-static char bootpathopt;
-
-Property *commandline_props;
-int commandline_props_count = 0;
-
-static int java_stack = DEFAULT_STACK;
-static unsigned long min_heap   = DEFAULT_MIN_HEAP;
-static unsigned long max_heap   = DEFAULT_MAX_HEAP;
-
-char VM_initing = TRUE;
-extern void initialisePlatform();
-
-void initVM() {
-    /* Perform platform dependent initialisation */
-    initialisePlatform();
-
-    /* Initialise the VM modules -- ordering is important! */
-    initialiseAlloc(min_heap, max_heap, verbosegc);
-    initialiseClass(classpath, bootpath, bootpathopt, verboseclass);
-    initialiseDll(verbosedll);
-    initialiseUtf8();
-    initialiseMonitor();
-    initialiseInterpreter();
-    initialiseMainThread(java_stack);
-    initialiseException();
-    initialiseString();
-    initialiseGC(noasyncgc, compact_specified, do_compact);
-    initialiseJNI();
-    initialiseNatives();
-
-    /* No need to check for exception - if one occurs, signalException aborts VM */
-    findSystemClass("java/lang/NoClassDefFoundError");
-    findSystemClass("java/lang/ClassFormatError");
-    findSystemClass("java/lang/NoSuchFieldError");
-    findSystemClass("java/lang/NoSuchMethodError");
-
-    VM_initing = FALSE;
-}
-    
 #ifdef USE_ZIP
 #define BCP_MESSAGE "<jar/zip files and directories separated by :>"
 #else
@@ -91,6 +38,10 @@ void showNonStandardOptions() {
     printf("\t\t   locations are appended to the bootstrap class path\n");
     printf("  -Xbootclasspath/p:%s\n", BCP_MESSAGE);
     printf("\t\t   locations are prepended to the bootstrap class path\n");
+    printf("  -Xbootclasspath/c:%s\n", BCP_MESSAGE);
+    printf("\t\t   locations where to find Classpath's classes\n");
+    printf("  -Xbootclasspath/v:%s\n", BCP_MESSAGE);
+    printf("\t\t   locations where to find JamVM's classes\n");
     printf("  -Xnoasyncgc\t   turn off asynchronous garbage collection\n");
     printf("  -Xcompactalways  always compact the heap when garbage-collecting\n");
     printf("  -Xnocompact\t   turn off heap-compaction\n");
@@ -133,51 +84,28 @@ void showVersionAndCopyright() {
     printf("GNU General Public License for more details.\n");
 }
 
-unsigned long parseMemValue(char *str) {
-    char *end;
-    unsigned long n = strtol(str, &end, 0);
-
-    switch(end[0]) {
-        case '\0':
-            break;
-
-        case 'M':
-        case 'm':
-            n *= MB;
-            break;
-
-        case 'K':
-        case 'k':
-            n *= KB;
-            break;
-
-        default:
-             n = 0;
-    } 
-
-    return n;
-}
-
-int parseCommandLine(int argc, char *argv[]) {
+int parseCommandLine(int argc, char *argv[], InitArgs *args) {
     int is_jar = FALSE;
     int status = 1;
     int i;
 
     Property props[argc-1];
+    int props_count = 0;
 
     for(i = 1; i < argc; i++) {
         if(*argv[i] != '-') {
-            if(min_heap > max_heap) {
+            if(args->min_heap > args->max_heap) {
                 printf("Minimum heap size greater than max!\n");
                 goto exit;
             }
-            if(commandline_props_count) {
-                commandline_props = (Property*)sysMalloc(commandline_props_count * sizeof(Property));
-                memcpy(commandline_props, &props[0], commandline_props_count * sizeof(Property));
+
+            if((args->props_count = props_count)) {
+                args->commandline_props = (Property*)sysMalloc(props_count * sizeof(Property));
+                memcpy(args->commandline_props, &props[0], props_count * sizeof(Property));
             }
 
             if(is_jar) {
-                classpath = argv[i];
+                args->classpath = argv[i];
                 argv[i] = "jamvm/java/lang/JarLauncher";
             }
 
@@ -205,34 +133,34 @@ int parseCommandLine(int argc, char *argv[]) {
             char *type = &argv[i][8];
 
             if(*type == '\0' || strcmp(type, ":class") == 0)
-                verboseclass = TRUE;
+                args->verboseclass = TRUE;
 
             else if(strcmp(type, ":gc") == 0 || strcmp(type, "gc") == 0)
-                verbosegc = TRUE;
+                args->verbosegc = TRUE;
 
             else if(strcmp(type, ":jni") == 0)
-                verbosedll = TRUE;
+                args->verbosedll = TRUE;
 
         } else if(strcmp(argv[i], "-Xnoasyncgc") == 0)
-            noasyncgc = TRUE;
+            args->noasyncgc = TRUE;
 
         else if(strncmp(argv[i], "-ms", 3) == 0 || strncmp(argv[i], "-Xms", 4) == 0) {
-            min_heap = parseMemValue(argv[i] + (argv[i][1] == 'm' ? 3 : 4));
-            if(min_heap < MIN_HEAP) {
+            args->min_heap = parseMemValue(argv[i] + (argv[i][1] == 'm' ? 3 : 4));
+            if(args->min_heap < MIN_HEAP) {
                 printf("Invalid minimum heap size: %s (min %dK)\n", argv[i], MIN_HEAP/KB);
                 goto exit;
             }
 
         } else if(strncmp(argv[i], "-mx", 3) == 0 || strncmp(argv[i], "-Xmx", 4) == 0) {
-            max_heap = parseMemValue(argv[i] + (argv[i][1] == 'm' ? 3 : 4));
-            if(max_heap < MIN_HEAP) {
+            args->max_heap = parseMemValue(argv[i] + (argv[i][1] == 'm' ? 3 : 4));
+            if(args->max_heap < MIN_HEAP) {
                 printf("Invalid maximum heap size: %s (min is %dK)\n", argv[i], MIN_HEAP/KB);
                 goto exit;
             }
 
         } else if(strncmp(argv[i], "-ss", 3) == 0 || strncmp(argv[i], "-Xss", 4) == 0) {
-            java_stack = parseMemValue(argv[i] + (argv[i][1] == 's' ? 3 : 4));
-            if(java_stack < MIN_STACK) {
+            args->java_stack = parseMemValue(argv[i] + (argv[i][1] == 's' ? 3 : 4));
+            if(args->java_stack < MIN_STACK) {
                 printf("Invalid Java stack size: %s (min is %dK)\n", argv[i], MIN_STACK/KB);
                 goto exit;
             }
@@ -245,8 +173,8 @@ int parseCommandLine(int argc, char *argv[]) {
                 goto exit;
             }
             *pntr++ = '\0';
-            props[commandline_props_count].key = key;
-            props[commandline_props_count++].value = pntr;
+            props[props_count].key = key;
+            props[props_count++].value = pntr;
 
         } else if(strcmp(argv[i], "-classpath") == 0 || strcmp(argv[i], "-cp") == 0) {
 
@@ -254,28 +182,30 @@ int parseCommandLine(int argc, char *argv[]) {
                 printf("%s : missing path list\n", argv[i]);
                 goto exit;
             }
-            classpath = argv[++i];
+            args->classpath = argv[++i];
 
         } else if(strncmp(argv[i], "-Xbootclasspath:", 16) == 0) {
 
-            bootpathopt = '\0';
-            bootpath = argv[i] + 16;
+            args->bootpathopt = '\0';
+            args->bootpath = argv[i] + 16;
 
         } else if(strncmp(argv[i], "-Xbootclasspath/a:", 18) == 0 ||
-                  strncmp(argv[i], "-Xbootclasspath/p:", 18) == 0) {
+                  strncmp(argv[i], "-Xbootclasspath/p:", 18) == 0 ||
+                  strncmp(argv[i], "-Xbootclasspath/c:", 18) == 0 ||
+                  strncmp(argv[i], "-Xbootclasspath/v:", 18) == 0) {
 
-            bootpathopt = argv[i][16];
-            bootpath = argv[i] + 18;
+            args->bootpathopt = argv[i][16];
+            args->bootpath = argv[i] + 18;
 
         } else if(strcmp(argv[i], "-jar") == 0) {
             is_jar = TRUE;
 
         } else if(strcmp(argv[i], "-Xnocompact") == 0) {
-            compact_specified = TRUE;
-            do_compact = FALSE;
+            args->compact_specified = TRUE;
+            args->do_compact = FALSE;
 
         } else if(strcmp(argv[i], "-Xcompactalways") == 0) {
-            compact_specified = do_compact = TRUE;
+            args->compact_specified = args->do_compact = TRUE;
 
         } else {
             printf("Unrecognised command line option: %s\n", argv[i]);
@@ -293,13 +223,16 @@ int main(int argc, char *argv[]) {
     Class *array_class, *main_class;
     Object *system_loader, *array;
     MethodBlock *mb;
+    InitArgs args;
     char *cpntr;
     int status;
     int i;
 
-    int class_arg = parseCommandLine(argc, argv);
+    setDefaultInitArgs(&args);
+    int class_arg = parseCommandLine(argc, argv, &args);
 
-    initVM();
+    args.main_stack_base = &array_class;
+    initVM(&args);
 
    if((system_loader = getSystemClassLoader()) == NULL) {
         printf("Cannot create system class loader\n");

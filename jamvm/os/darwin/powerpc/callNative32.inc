@@ -60,9 +60,6 @@ _callJNIMethod:
         stw r19,-24(r11)
         stw r20,-28(r11)
 
-        ; Set lr to function ptr, for calling later        
-        mtlr r8
-
         ; setup signature and stack pntrs
         mr r14,r5
         addi r15,r7,-4
@@ -78,12 +75,16 @@ _callJNIMethod:
         lwzu r4,4(r15)
 
 static:
-        lis r17,ha16(other0)
-        la r17,lo16(other0)(r17)
-        lis r18,ha16(float0)
-        la r18,lo16(float0)(r18)
-        lis r19,ha16(long0)
-        la r19,lo16(long0)(r19)
+        bl get_pc
+
+get_pc:
+        mflr r20
+        la r17,lo16(other0-get_pc)(r20)
+        la r18,lo16(float0-get_pc)(r20)
+        la r19,lo16(long0-get_pc)(r20)
+
+        ; Set lr to function ptr, for calling later        
+        mtlr r8
 
         ; Setup pointer to parameter area for args which
         ; do not fit into registers

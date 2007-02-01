@@ -21,6 +21,11 @@
 #include <stddef.h>
 #include "jam.h"
 
+/* The function getCallerFrame() is used in the code that does
+   security related stack-walking.  It guards against invocation
+   via reflection.  These frames must be skipped, else it will
+   appear that the caller was loaded by the boot loader. */
+
 Frame *getCallerFrame(Frame *last) {
 
 loop:
