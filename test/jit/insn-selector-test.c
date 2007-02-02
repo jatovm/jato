@@ -138,11 +138,10 @@ void test_should_select_insn_for_every_statement(void)
 	struct methodblock method = {
 		.args_count = 4,
 	};
-	struct compilation_unit cu = {
-		.method = &method,
-	};
-	
-	bb = alloc_basic_block(&cu, 0, 1);
+	struct compilation_unit *cu;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
 
 	expr1 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
 
@@ -171,7 +170,7 @@ void test_should_select_insn_for_every_statement(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_ADD_MEMBASE_REG, REG_EBP, 20, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(cu);
 }
 
 static struct basic_block *create_local_local_binop_bb(enum binary_operator expr_op)
@@ -179,9 +178,7 @@ static struct basic_block *create_local_local_binop_bb(enum binary_operator expr
 	static struct methodblock method = {
 		.args_count = 2,
 	};
-	static struct compilation_unit cu = {
-		.method = &method,
-	};
+	struct compilation_unit *cu;
 	struct expression *expr;
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -190,7 +187,8 @@ static struct basic_block *create_local_local_binop_bb(enum binary_operator expr
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
 }
@@ -209,7 +207,7 @@ static void assert_select_local_local_binop(enum binary_operator expr_op, enum i
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(insn_type, REG_EBP, 12, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(bb->b_parent);
 }
 
 static struct basic_block *create_local_value_binop_bb(enum binary_operator expr_op)
@@ -217,9 +215,7 @@ static struct basic_block *create_local_value_binop_bb(enum binary_operator expr
 	static struct methodblock method = {
 		.args_count = 2,
 	};
-	static struct compilation_unit cu = {
-		.method = &method,
-	};
+	struct compilation_unit *cu;
 	struct expression *expr;
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -228,7 +224,8 @@ static struct basic_block *create_local_value_binop_bb(enum binary_operator expr
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
 }
@@ -247,7 +244,7 @@ static void assert_select_local_value_binop(enum binary_operator expr_op, enum i
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(insn_type, 0xdeadbeef, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(bb->b_parent);
 }
 
 void test_select_add_local_to_local(void)
@@ -283,7 +280,7 @@ void test_select_local_local_div(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_DIV_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(bb->b_parent);
 }
 
 void test_select_local_local_rem(void)
@@ -306,7 +303,7 @@ void test_select_local_local_rem(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_reg_insn(INSN_MOV_REG_REG, REG_EDX, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(bb->b_parent);
 }
 
 static struct basic_block *create_unop_bb(enum unary_operator expr_op)
@@ -314,9 +311,7 @@ static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 	static struct methodblock method = {
 		.args_count = 1,
 	};
-	static struct compilation_unit cu = {
-		.method = &method,
-	};
+	struct compilation_unit *cu;
 	struct expression *expr;
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -325,7 +320,8 @@ static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
 }
@@ -344,7 +340,7 @@ static void assert_select_local_unop(enum unary_operator expr_op, enum insn_type
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(insn_type, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(bb->b_parent);
 }
 
 void test_select_neg_local(void)
@@ -369,7 +365,7 @@ static void assert_select_local_local_shift(enum binary_operator expr_op, enum i
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_reg_insn(insn_type, REG_ECX, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(bb->b_parent);
 }
 
 void test_select_shl_local_to_local(void)
@@ -404,7 +400,7 @@ void test_select_xor_local_from_local(void)
 
 void test_select_return(void)
 {
-	struct compilation_unit cu;
+	struct compilation_unit *cu;
 	struct expression *value;
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -415,10 +411,9 @@ void test_select_return(void)
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &value->node;
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
-
-	cu.exit_bb = alloc_basic_block(&cu, 1, 1);
 
 	insn_select(bb);
 
@@ -426,46 +421,45 @@ void test_select_return(void)
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_branch_insn(INSN_JMP_BRANCH, cu.exit_bb, insn);
+	assert_branch_insn(INSN_JMP_BRANCH, cu->exit_bb, insn);
 
-	free_basic_block(bb);
-	free_basic_block(cu.exit_bb);
+	free_compilation_unit(cu);
 }
 
 void test_select_void_return(void)
 {
-	struct compilation_unit cu;
+	struct compilation_unit *cu;
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
 
 	stmt = alloc_statement(STMT_VOID_RETURN);
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
-
-	cu.exit_bb = alloc_basic_block(&cu, 1, 1);
 
 	insn_select(bb);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_branch_insn(INSN_JMP_BRANCH, cu.exit_bb, insn);
+	assert_branch_insn(INSN_JMP_BRANCH, cu->exit_bb, insn);
 
-	free_basic_block(bb);
-	free_basic_block(cu.exit_bb);
+	free_compilation_unit(cu);
 }
 
 void test_select_invoke_without_arguments(void)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
-	struct insn *insn;
 	struct expression *expr, *args_list;
+	struct basic_block *bb;
 	struct statement *stmt;
+	struct insn *insn;
 	struct methodblock mb = {
 		.args_count = 0
 	};
 
 	jit_prepare_for_exec(&mb);
+
+	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
 	args_list = no_args_expr();
 	expr = __invoke_expr(J_INT, &mb);
@@ -482,20 +476,20 @@ void test_select_invoke_without_arguments(void)
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
-	free_basic_block(bb);
 }
 
 void test_select_invoke_with_arguments(void)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
-	struct insn *insn;
 	struct expression *invoke_expression, *args_list_expression;
 	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
 	struct methodblock mb = {
 		.args_count = 2
 	};
 
 	jit_prepare_for_exec(&mb);
+	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr
@@ -523,18 +517,24 @@ void test_select_invoke_with_arguments(void)
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
-	free_basic_block(bb);
 }
 
 void test_select_method_return_value_passed_as_argument(void)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
-	struct insn *insn;
 	struct expression *no_args, *arg, *invoke, *nested_invoke;
+	struct basic_block *bb;
 	struct statement *stmt;
-	struct methodblock mb = { .args_count = 1 }, nested_mb = { .args_count = 0 };
+	struct insn *insn;
+	struct methodblock mb = {
+		.args_count = 1
+	};
+	struct methodblock nested_mb = {
+		.args_count = 0
+	};
 
 	jit_prepare_for_exec(&mb);
+	bb = get_basic_block(mb.compilation_unit, 0, 1);
+
 	jit_prepare_for_exec(&nested_mb);
 
 	no_args = no_args_expr();
@@ -565,15 +565,14 @@ void test_select_method_return_value_passed_as_argument(void)
 
 	free_jit_trampoline(nested_mb.trampoline);
 	free_compilation_unit(nested_mb.compilation_unit);
-
-	free_basic_block(bb);
 }
 
 void test_select_invokevirtual_with_arguments(void)
 {
-	unsigned long objectref;
-	unsigned long method_index;
 	struct expression *invoke_expr, *args;
+	struct compilation_unit *cu;
+	unsigned long method_index;
+	unsigned long objectref;
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
@@ -588,7 +587,8 @@ void test_select_invokevirtual_with_arguments(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &invoke_expr->node;
 
-	bb = alloc_basic_block(NULL, 0, 1);
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
@@ -624,8 +624,8 @@ void test_select_invokevirtual_with_arguments(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
-	
-	free_basic_block(bb);
+
+	free_compilation_unit(cu);
 }
 
 static struct statement *add_if_stmt(struct expression *expr, struct basic_block *bb, struct basic_block *true_bb)
@@ -644,18 +644,17 @@ static void assert_select_if_statement_local_local(enum insn_type expected,
 						   enum binary_operator binop)
 {
 	struct basic_block *bb, *true_bb;
-	struct insn *insn;
+	struct compilation_unit *cu;
 	struct expression *expr;
 	struct statement *stmt;
+	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 2,
 	};
-	struct compilation_unit cu = {
-		.method = &method,
-	};
 
-	bb = alloc_basic_block(&cu, 0, 1);
-	true_bb = alloc_basic_block(&cu, 1, 2);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	true_bb = get_basic_block(cu, 1, 2);
 
 	expr = binop_expr(J_INT, binop, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = add_if_stmt(expr, bb, true_bb);
@@ -669,29 +668,26 @@ static void assert_select_if_statement_local_local(enum insn_type expected,
 	assert_membase_reg_insn(INSN_CMP_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-
 	assert_branch_insn(expected, stmt->if_true, insn);
 
-	free_basic_block(bb);
-	free_basic_block(true_bb);
+	free_compilation_unit(cu);
 }
 
 static void assert_select_if_statement_local_value(enum insn_type expected,
 						   enum binary_operator binop)
 {
 	struct basic_block *bb, *true_bb;
-	struct insn *insn;
+	struct compilation_unit *cu;
 	struct expression *expr;
 	struct statement *stmt;
+	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 2,
 	};
-	struct compilation_unit cu = {
-		.method = &method,
-	};
 
-	bb = alloc_basic_block(&cu, 0, 1);
-	true_bb = alloc_basic_block(&cu, 1, 2);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	true_bb = get_basic_block(cu, 1, 2);
 
 	expr = binop_expr(J_INT, binop, local_expr(J_INT, 0), value_expr(J_INT, 0xcafebabe));
 	stmt = add_if_stmt(expr, bb, true_bb);
@@ -705,11 +701,9 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 	assert_imm_reg_insn(INSN_CMP_IMM_REG, 0xcafebabe, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-
 	assert_branch_insn(expected, stmt->if_true, insn);
 
-	free_basic_block(bb);
-	free_basic_block(true_bb);
+	free_compilation_unit(cu);
 }
 
 static void assert_select_if_statement(enum insn_type expected,
@@ -727,12 +721,16 @@ void test_select_if_statement(void)
 
 void test_select_load_class_field(void)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
-	struct insn *insn;
-	struct expression *expr;
-	struct statement *stmt;
+	struct compilation_unit *cu;
 	struct fieldblock field;
+	struct expression *expr;
+	struct basic_block *bb;
+	struct statement *stmt;
+	struct insn *insn;
 	long expected_disp;
+
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 1);
 
 	expr = class_field_expr(J_INT, &field);
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -748,7 +746,7 @@ void test_select_load_class_field(void)
 	expected_disp = offsetof(struct fieldblock, static_value);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, expected_disp, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(cu);
 }
 
 void test_select_load_instance_field(void)
@@ -756,9 +754,7 @@ void test_select_load_instance_field(void)
 	struct methodblock method = {
 		.args_count = 0,
 	};
-	struct compilation_unit cu = {
-		.method = &method,
-	};
+	struct compilation_unit *cu;
 	struct expression *objectref;
 	struct fieldblock field;
 	struct expression *expr;
@@ -773,7 +769,8 @@ void test_select_load_instance_field(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	insn_select(bb);
 
@@ -789,19 +786,22 @@ void test_select_load_instance_field(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_memindex_reg_insn(INSN_MOV_MEMINDEX_REG, REG_EAX, REG_EDX, 2, REG_EAX, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(cu);
 }
 
 void test_store_value_to_class_field(void)
 {
-	struct basic_block *bb = alloc_basic_block(NULL, 0, 1);
-	struct insn *insn;
 	struct expression *store_target;
 	struct expression *store_value;
-	struct statement *stmt;
+	struct compilation_unit *cu;
 	struct fieldblock field;
+	struct basic_block *bb;
+	struct statement *stmt;
 	long expected_disp;
+	struct insn *insn;
 
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 1);
 	store_target = class_field_expr(J_INT, &field);
 	store_value  = value_expr(J_INT, 0xcafebabe);
 	stmt = alloc_statement(STMT_STORE);
@@ -818,7 +818,7 @@ void test_store_value_to_class_field(void)
 	expected_disp = offsetof(struct fieldblock, static_value);
 	assert_imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0xcafebabe, REG_EAX, expected_disp, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(cu);
 }
 
 void test_store_value_to_instance_field(void)
@@ -826,12 +826,10 @@ void test_store_value_to_instance_field(void)
 	struct methodblock method = {
 		.args_count = 0,
 	};
-	struct compilation_unit cu = {
-		.method = &method,
-	};
 	struct expression *store_target;
 	struct expression *store_value;
 	struct expression *objectref;
+	struct compilation_unit *cu;
 	struct fieldblock field;
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -845,7 +843,8 @@ void test_store_value_to_instance_field(void)
 	stmt->store_dest = &store_target->node;
 	stmt->store_src  = &store_value->node;
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	insn_select(bb);
 
@@ -867,21 +866,19 @@ void test_store_value_to_instance_field(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EAX, REG_ECX, REG_EDX, 2, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(cu);
 }
 
 static void assert_store_field_to_local(long expected_disp, unsigned long local_idx)
 {
-	struct fieldblock field;
 	struct expression *store_dest, *store_src;
+	struct compilation_unit *cu;
+	struct fieldblock field;
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 0,
-	};
-	struct compilation_unit cu = {
-		.method = &method,
 	};
 
 	store_dest = local_expr(J_INT, local_idx);
@@ -891,7 +888,8 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	stmt->store_dest = &store_dest->node;
 	stmt->store_src  = &store_src->node;
 
-	bb = alloc_basic_block(&cu, 0, 1);
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
@@ -905,7 +903,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_membase_insn(INSN_MOV_REG_MEMBASE, REG_EAX, REG_EBP, expected_disp, insn);
 
-	free_basic_block(bb);
+	free_compilation_unit(cu);
 }
 
 void test_select_store_field_to_local(void)
@@ -917,6 +915,7 @@ void test_select_store_field_to_local(void)
 void test_select_new(void)
 {
 	struct object *instance_class;
+	struct compilation_unit *cu;
 	struct expression *expr;
 	struct statement *stmt;
 	struct basic_block *bb;
@@ -927,7 +926,8 @@ void test_select_new(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	bb = alloc_basic_block(NULL, 0, 1);
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
 	insn_select(bb);
@@ -942,5 +942,5 @@ void test_select_new(void)
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
 
 	free(instance_class);
-	free_basic_block(bb);
+	free_compilation_unit(cu);
 }
