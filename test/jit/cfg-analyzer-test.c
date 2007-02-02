@@ -38,9 +38,9 @@ void test_branch_opcode_ends_basic_block(void)
 	bb2 = bb_entry(bb1->bb_list_node.next);
 	bb3 = bb_entry(bb2->bb_list_node.next);
 
-	assert_basic_block(0, 4, bb1);
-	assert_basic_block(4, 7, bb2);
-	assert_basic_block(7, 9, bb3);
+	assert_basic_block(cu, 0, 4, bb1);
+	assert_basic_block(cu, 4, 7, bb2);
+	assert_basic_block(cu, 7, 9, bb3);
 
 	free_compilation_unit(cu);
 }
