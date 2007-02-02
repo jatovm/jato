@@ -22,8 +22,8 @@ alloc_simple_compilation_unit(struct methodblock *method)
 	struct basic_block *bb;
 
 	cu = alloc_compilation_unit(method);
-	bb = alloc_basic_block(NULL, 0, method->code_size);
-	list_add_tail(&bb->bb_list_node, &cu->bb_list);
+	bb = get_basic_block(cu, 0, method->code_size);
+
 	return cu;
 }
 

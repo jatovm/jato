@@ -44,7 +44,6 @@ static struct basic_block *do_split(struct compilation_unit *cu,
 
 	set_bit(branch_targets->bits, br_target);
 	bb = bb_split(bb, offset + bytecode_size(stream->current));
-	list_add_tail(&bb->bb_list_node, &cu->bb_list);
 
 	return bb;
 }
@@ -82,7 +81,6 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 		bb = find_bb(cu, offset);
 		if (bb->start != offset) {
 			bb = bb_split(bb, offset);
-			list_add_tail(&bb->bb_list_node, &cu->bb_list);
 		}
 	}
 }
@@ -96,8 +94,7 @@ int analyze_control_flow(struct compilation_unit *cu)
 	if (!branch_targets)
 		return -ENOMEM;
 
-	entry_bb = alloc_basic_block(cu, 0, cu->method->code_size);
-	list_add_tail(&entry_bb->bb_list_node, &cu->bb_list);
+	entry_bb = get_basic_block(cu, 0, cu->method->code_size);
 
 	split_after_branches(cu, entry_bb, branch_targets);
 	split_at_branch_targets(cu, branch_targets);

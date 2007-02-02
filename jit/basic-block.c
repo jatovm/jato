@@ -30,6 +30,16 @@ struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigne
 	return bb;
 }
 
+struct basic_block *get_basic_block(struct compilation_unit *cu, unsigned long start, unsigned long end)
+{
+	struct basic_block *bb;
+
+	bb = alloc_basic_block(cu, start, end);
+	if (bb)
+		list_add_tail(&bb->bb_list_node, &cu->bb_list);
+	return bb;
+}
+
 static void free_stmt_list(struct list_head *head)
 {
 	struct statement *stmt, *tmp;
@@ -70,7 +80,7 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 	if (offset < orig_bb->start || offset >= orig_bb->end)
 		return NULL;
 
-	new_bb = alloc_basic_block(orig_bb->b_parent, offset, orig_bb->end);
+	new_bb = get_basic_block(orig_bb->b_parent, offset, orig_bb->end);
 	if (new_bb)
 		orig_bb->end = offset;
 	return new_bb;

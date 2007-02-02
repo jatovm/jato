@@ -13,36 +13,30 @@
 
 void test_split_with_out_of_range_offset(void)
 {
-	struct basic_block *block = alloc_basic_block(NULL, 1, 2);
-	assert_ptr_equals(NULL, bb_split(block, 0));
-	assert_ptr_equals(NULL, bb_split(block, 2));
-	free_basic_block(block);
+	struct compilation_unit *cu;
+	struct basic_block *bb;
+
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 1, 2);
+
+	assert_ptr_equals(NULL, bb_split(bb, 0));
+	assert_ptr_equals(NULL, bb_split(bb, 2));
+
+	free_compilation_unit(cu);
 }
 
 void test_split_basic_block(void)
 {
-	struct basic_block *block, *split;
-	
-	block = alloc_basic_block(NULL, 0, 3);
-	split = bb_split(block, 2);
+	struct basic_block *bb, *new_bb;
+	struct compilation_unit *cu;
 
-	assert_basic_block(0, 2, block);
-	assert_basic_block(2, 3, split);
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 3);
 
-	free_basic_block(block);
-	free_basic_block(split);
-}
+	new_bb = bb_split(bb, 2);
 
-void test_should_have_same_compilation_unit_as_original_after_split(void)
-{
-	struct compilation_unit cu;
-	struct basic_block *orig_bb, *split_bb;
-	
-	orig_bb = alloc_basic_block(&cu, 0, 3);
-	split_bb = bb_split(orig_bb, 2);
+	assert_basic_block(cu, 0, 2, bb);
+	assert_basic_block(cu, 2, 3, new_bb);
 
-	assert_ptr_equals(orig_bb->b_parent, split_bb->b_parent);
-
-	free_basic_block(orig_bb);
-	free_basic_block(split_bb);
+	free_compilation_unit(cu);
 }
