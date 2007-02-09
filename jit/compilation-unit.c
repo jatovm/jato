@@ -9,6 +9,7 @@
 #include <jit/compilation-unit.h>
 #include <vm/buffer.h>
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,6 +28,16 @@ struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 	return cu;
 }
 
+static void free_var_infos(struct var_info *var_infos)
+{
+	struct var_info *this, *next;
+
+	for (this = var_infos; this != NULL; this = next) {
+		next = this->next;
+		free(this);
+	}
+}
+
 void free_compilation_unit(struct compilation_unit *cu)
 {
 	struct basic_block *bb, *tmp_bb;
@@ -38,7 +49,33 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_stack(cu->expr_stack);
 	free_basic_block(cu->exit_bb);
 	free_buffer(cu->objcode);
+	free_var_infos(cu->var_infos);
 	free(cu);
+}
+
+struct var_info *get_var(struct compilation_unit *cu)
+{
+	struct var_info *ret;
+
+	ret = malloc(sizeof *ret);
+	if (!ret)
+		goto out;
+
+	ret->next = cu->var_infos;
+	cu->var_infos = ret;
+  out:
+	return ret;
+}
+
+struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
+{
+	struct var_info *ret;
+
+	ret = get_var(cu);
+	if (ret)
+		ret->reg = reg;
+
+	return ret;
 }
 
 /**
