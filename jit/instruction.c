@@ -31,8 +31,8 @@ struct insn *insn(enum insn_type insn_type)
 	return alloc_insn(insn_type);
 }
 
-struct insn *membase_reg_insn(enum insn_type insn_type, enum machine_reg src_base_reg,
-			      long src_disp, enum machine_reg dest_reg)
+struct insn *membase_reg_insn(enum insn_type insn_type, struct var_info *src_base_reg,
+			      long src_disp, struct var_info *dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
@@ -44,8 +44,8 @@ struct insn *membase_reg_insn(enum insn_type insn_type, enum machine_reg src_bas
 }
 
 struct insn *memindex_reg_insn(enum insn_type insn_type,
-			       enum machine_reg src_base_reg, enum machine_reg src_index_reg,
-			       unsigned char src_shift, enum machine_reg dest_reg)
+			       struct var_info *src_base_reg, struct var_info *src_index_reg,
+			       unsigned char src_shift, struct var_info *dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
@@ -57,8 +57,8 @@ struct insn *memindex_reg_insn(enum insn_type insn_type,
 	return insn;
 }
 
-struct insn *reg_membase_insn(enum insn_type insn_type, enum machine_reg src_reg,
-			      enum machine_reg dest_base_reg, long dest_disp)
+struct insn *reg_membase_insn(enum insn_type insn_type, struct var_info *src_reg,
+			      struct var_info *dest_base_reg, long dest_disp)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
@@ -69,8 +69,8 @@ struct insn *reg_membase_insn(enum insn_type insn_type, enum machine_reg src_reg
 	return insn;
 }
 
-struct insn *reg_memindex_insn(enum insn_type insn_type, enum machine_reg src_reg,
-			       enum machine_reg dest_base_reg, enum machine_reg dest_index_reg,
+struct insn *reg_memindex_insn(enum insn_type insn_type, struct var_info *src_reg,
+			       struct var_info *dest_base_reg, struct var_info *dest_index_reg,
 			       unsigned char dest_shift)
 {
 	struct insn *insn = alloc_insn(insn_type);
@@ -84,18 +84,18 @@ struct insn *reg_memindex_insn(enum insn_type insn_type, enum machine_reg src_re
 }
 
 struct insn *imm_reg_insn(enum insn_type insn_type, unsigned long imm,
-			  enum machine_reg reg)
+			  struct var_info *result)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
 		insn->src.imm = imm;
-		insn->dest.reg = reg;
+		insn->dest.reg = result;
 	}
 	return insn;
 }
 
 struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
-			   enum machine_reg base_reg, long disp)
+			      struct var_info *base_reg, long disp)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
@@ -106,7 +106,7 @@ struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 	return insn;
 }
 
-struct insn *reg_insn(enum insn_type insn_type, enum machine_reg reg)
+struct insn *reg_insn(enum insn_type insn_type, struct var_info *reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn)
@@ -115,7 +115,7 @@ struct insn *reg_insn(enum insn_type insn_type, enum machine_reg reg)
 	return insn;
 }
 
-struct insn *reg_reg_insn(enum insn_type insn_type, enum machine_reg src, enum machine_reg dest)
+struct insn *reg_reg_insn(enum insn_type insn_type, struct var_info *src, struct var_info *dest)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {

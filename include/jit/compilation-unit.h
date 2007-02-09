@@ -11,11 +11,6 @@
 
 struct buffer;
 
-struct var_info {
-	enum machine_reg reg;
-	struct var_info *next;
-};
-
 struct compilation_unit {
 	struct methodblock *method;
 	struct list_head bb_list;

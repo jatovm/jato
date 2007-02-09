@@ -15,17 +15,23 @@ enum machine_reg {
 	REG_ESP,
 };
 
-union operand {
+struct var_info {
 	enum machine_reg reg;
 
+	struct var_info *next;
+};
+
+union operand {
+	struct var_info *reg;
+
 	struct {
-		enum machine_reg base_reg;
+		struct var_info *base_reg;
 		long disp;	/* displacement */
 	};
 
 	struct {
-		enum machine_reg base_reg;
-		enum machine_reg index_reg;
+		struct var_info *base_reg;
+		struct var_info *index_reg;
 		unsigned char shift;
 	};
 
@@ -88,14 +94,14 @@ struct insn {
 };
 
 struct insn *insn(enum insn_type);
-struct insn *membase_reg_insn(enum insn_type, enum machine_reg, long, enum machine_reg);
-struct insn *memindex_reg_insn(enum insn_type, enum machine_reg, enum machine_reg, unsigned char, enum machine_reg);
-struct insn *reg_membase_insn(enum insn_type, enum machine_reg, enum machine_reg, long);
-struct insn *reg_memindex_insn(enum insn_type, enum machine_reg, enum machine_reg, enum machine_reg, unsigned char);
-struct insn *reg_insn(enum insn_type, enum machine_reg);
-struct insn *reg_reg_insn(enum insn_type, enum machine_reg, enum machine_reg);
-struct insn *imm_reg_insn(enum insn_type, unsigned long, enum machine_reg);
-struct insn *imm_membase_insn(enum insn_type, unsigned long, enum machine_reg, long);
+struct insn *membase_reg_insn(enum insn_type, struct var_info *, long, struct var_info *);
+struct insn *memindex_reg_insn(enum insn_type, struct var_info *, struct var_info *, unsigned char, struct var_info *);
+struct insn *reg_membase_insn(enum insn_type, struct var_info *, struct var_info *, long);
+struct insn *reg_memindex_insn(enum insn_type, struct var_info *, struct var_info *, struct var_info *, unsigned char);
+struct insn *reg_insn(enum insn_type, struct var_info *);
+struct insn *reg_reg_insn(enum insn_type, struct var_info *, struct var_info *);
+struct insn *imm_reg_insn(enum insn_type, unsigned long, struct var_info *);
+struct insn *imm_membase_insn(enum insn_type, unsigned long, struct var_info *, long);
 struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
