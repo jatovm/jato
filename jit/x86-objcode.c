@@ -385,8 +385,11 @@ static void emit_neg_reg(struct buffer *buf, union operand *operand)
 	emit(buf, encode_modrm(0x3, 0x3, encode_reg(operand->reg->reg)));
 }
 
-static void emit_cltd(struct buffer *buf)
+static void emit_cltd_reg_reg(struct buffer *buf, union operand *src, union operand *dest)
 {
+	assert(src->reg->reg == REG_EAX);
+	assert(dest->reg->reg == REG_EDX);
+
 	emit(buf, 0x99);
 }
 
@@ -553,7 +556,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),
-	DECL_EMITTER(INSN_CLTD, emit_cltd, NO_OPERANDS),
+	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),

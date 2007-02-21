@@ -8,17 +8,18 @@
 #include <jit/compilation-unit.h>
 
 enum {
-	DEF_DST = 1,
-	DEF_NONE = 2,
-	USE_DST = 4,
-	USE_IDX_DST = 8,	/* destination operand is memindex */
-	USE_IDX_SRC = 16,	/* source operand is memindex */
-	USE_NONE = 32,
-	USE_SRC = 64,
+	DEF_DST		= 1,
+	DEF_SRC		= 2,
+	DEF_NONE	= 4,
+	USE_DST		= 8,
+	USE_IDX_DST	= 16,	/* destination operand is memindex */
+	USE_IDX_SRC	= 32,	/* source operand is memindex */
+	USE_NONE	= 64,
+	USE_SRC		= 128,
 };
 
 struct insn_info {
-	unsigned long flags;
+	unsigned char flags;
 };
 
 #define DECLARE_INFO(_type, _flags) [_type] = { .flags = _flags }
@@ -29,7 +30,7 @@ static struct insn_info insn_infos[] = {
 	DECLARE_INFO(INSN_AND_MEMBASE_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_CALL_REG, USE_SRC | DEF_NONE),
 	DECLARE_INFO(INSN_CALL_REL, USE_NONE | DEF_NONE),
-	DECLARE_INFO(INSN_CLTD, 0),
+	DECLARE_INFO(INSN_CLTD_REG_REG, USE_SRC | DEF_SRC | DEF_DST),
 	DECLARE_INFO(INSN_CMP_IMM_REG, USE_DST),
 	DECLARE_INFO(INSN_CMP_MEMBASE_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_DIV_MEMBASE_REG, USE_SRC | DEF_DST),
@@ -71,6 +72,9 @@ unsigned long insn_def_mask(struct insn *insn)
 	unsigned long ret = 0;
 
 	info = get_info(insn);
+
+	if (info->flags & DEF_SRC)
+		ret |= var_mask(insn->src.reg);
 
 	if (info->flags & DEF_DST)
 		ret |= var_mask(insn->dest.reg);

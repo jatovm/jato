@@ -64,6 +64,14 @@ static void assert_uses_r0_defines_r1(struct insn *insn)
 	free_insn(insn);
 }
 
+static void assert_uses_r0_defines_r0_and_r1(struct insn *insn)
+{
+	assert_int_equals(0x01, insn_use_mask(insn));
+	assert_int_equals(0x01 | 0x02, insn_def_mask(insn));
+
+	free_insn(insn);
+}
+
 static void assert_uses_r0_and_r1_defines_r2(struct insn *insn)
 {
 	assert_int_equals(0x01 | 0x02, insn_use_mask(insn));
@@ -115,7 +123,7 @@ void test_call_reg_uses_operand(void)
 
 void test_cltd_defines_edx_and_eax_and_uses_eax(void)
 {
-	// FIXME: INSN_CLTD
+	assert_uses_r0_defines_r0_and_r1(reg_reg_insn(INSN_CLTD_REG_REG, &r0, &r1));
 }
 
 void test_neg_reg_uses_and_defines_operand(void)

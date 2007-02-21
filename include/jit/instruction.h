@@ -52,7 +52,7 @@ enum insn_type {
 	INSN_AND_MEMBASE_REG,
 	INSN_CALL_REG,
 	INSN_CALL_REL,	
-	INSN_CLTD,	/* CDQ in Intel manuals*/
+	INSN_CLTD_REG_REG,	/* CDQ in Intel manuals*/
 	INSN_CMP_IMM_REG,
 	INSN_CMP_MEMBASE_REG,
 	INSN_DIV_MEMBASE_REG,

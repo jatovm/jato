@@ -311,7 +311,7 @@ void test_emit_mul_membase_reg(void)
 
 void test_emit_cltd(void)
 {
-	assert_emit_insn_1(0x99, insn(INSN_CLTD));
+	assert_emit_insn_1(0x99, reg_reg_insn(INSN_CLTD_REG_REG, &VAR_EAX, &VAR_EDX));
 }
 
 void test_emit_div_membase_reg(void)
