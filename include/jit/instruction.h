@@ -16,8 +16,8 @@ enum machine_reg {
 };
 
 struct var_info {
+	unsigned long vreg;
 	enum machine_reg reg;
-
 	struct var_info *next;
 };
 
@@ -108,6 +108,9 @@ struct insn *branch_insn(enum insn_type, struct basic_block *);
 
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
+
+unsigned long insn_def_mask(struct insn *);
+unsigned long insn_use_mask(struct insn *);
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 

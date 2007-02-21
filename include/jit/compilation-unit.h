@@ -17,6 +17,7 @@ struct compilation_unit {
 	struct basic_block *exit_bb;
 	struct stack *expr_stack;
 	struct var_info *var_infos;
+	unsigned long nr_vregs;
 	struct buffer *objcode;
 	bool is_compiled;
 	pthread_mutex_t mutex;

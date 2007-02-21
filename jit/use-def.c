@@ -1,0 +1,101 @@
+/*
+ * Copyright (C) 2007  Pekka Enberg
+ *
+ * This file is released under the GPL version 2. Please refer to the file
+ * LICENSE for details.
+ */
+
+#include <jit/compilation-unit.h>
+
+enum {
+	DEF_DST = 1,
+	DEF_NONE = 2,
+	USE_DST = 4,
+	USE_IDX_DST = 8,	/* destination operand is memindex */
+	USE_IDX_SRC = 16,	/* source operand is memindex */
+	USE_NONE = 32,
+	USE_SRC = 64,
+};
+
+struct insn_info {
+	unsigned long flags;
+};
+
+#define DECLARE_INFO(_type, _flags) [_type] = { .flags = _flags }
+
+static struct insn_info insn_infos[] = {
+	DECLARE_INFO(INSN_ADD_IMM_REG, DEF_DST),
+	DECLARE_INFO(INSN_ADD_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_AND_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_CALL_REG, USE_SRC | DEF_NONE),
+	DECLARE_INFO(INSN_CALL_REL, USE_NONE | DEF_NONE),
+	DECLARE_INFO(INSN_CLTD, 0),
+	DECLARE_INFO(INSN_CMP_IMM_REG, USE_DST),
+	DECLARE_INFO(INSN_CMP_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_DIV_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_JE_BRANCH, USE_NONE | DEF_NONE),
+	DECLARE_INFO(INSN_JNE_BRANCH, USE_NONE | DEF_NONE),
+	DECLARE_INFO(INSN_JMP_BRANCH, USE_NONE | DEF_NONE),
+	DECLARE_INFO(INSN_MOV_IMM_MEMBASE, USE_DST),
+	DECLARE_INFO(INSN_MOV_IMM_REG, DEF_DST),
+	DECLARE_INFO(INSN_MOV_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_MOV_MEMINDEX_REG, USE_SRC | USE_IDX_SRC | DEF_DST),
+	DECLARE_INFO(INSN_MOV_REG_MEMBASE, USE_SRC | USE_DST | DEF_NONE),
+	DECLARE_INFO(INSN_MOV_REG_MEMINDEX, USE_SRC | USE_DST | USE_IDX_DST | DEF_NONE),
+	DECLARE_INFO(INSN_MOV_REG_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_MUL_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_NEG_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_OR_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_PUSH_IMM, USE_NONE | DEF_NONE),
+	DECLARE_INFO(INSN_PUSH_REG, USE_SRC | DEF_NONE),
+	DECLARE_INFO(INSN_SAR_REG_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_SHL_REG_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_SHR_REG_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_SUB_MEMBASE_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_XOR_MEMBASE_REG, USE_SRC | DEF_DST),
+};
+
+static inline struct insn_info *get_info(struct insn *insn)
+{
+	return insn_infos + insn->type;
+}
+
+static inline unsigned long var_mask(struct var_info *info)
+{
+	return 1 << info->vreg;
+}
+
+unsigned long insn_def_mask(struct insn *insn)
+{
+	struct insn_info *info;
+	unsigned long ret = 0;
+
+	info = get_info(insn);
+
+	if (info->flags & DEF_DST)
+		ret |= var_mask(insn->dest.reg);
+
+	return ret;
+}
+
+unsigned long insn_use_mask(struct insn *insn)
+{
+	struct insn_info *info;
+	unsigned long ret = 0;
+
+	info = get_info(insn);
+
+	if (info->flags & USE_SRC)
+		ret |= var_mask(insn->src.reg);
+
+	if (info->flags & USE_DST)
+		ret |= var_mask(insn->dest.reg);
+
+	if (info->flags & USE_IDX_SRC)
+		ret |= var_mask(insn->src.index_reg);
+
+	if (info->flags & USE_IDX_DST)
+		ret |= var_mask(insn->dest.index_reg);
+
+	return ret;
+}

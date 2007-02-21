@@ -109,8 +109,10 @@ struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 struct insn *reg_insn(enum insn_type insn_type, struct var_info *reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
-	if (insn)
-		insn->operand.reg = reg;
+	if (insn) {
+		insn->src.reg = reg;
+		insn->dest.reg = reg;
+	}
 
 	return insn;
 }

@@ -63,6 +63,7 @@ JATO_OBJS =  \
 	jit/statement.o \
 	jit/tree-printer.o \
 	jit/typeconv-bc.o \
+	jit/use-def.o \
 	jit/x86-frame.o \
 	jit/x86-objcode.o \
 	vm/backtrace.o \
@@ -159,6 +160,7 @@ TEST_OBJS = \
 	test/jit/resolve-stub.o \
 	test/jit/tree-printer-test.o \
 	test/jit/typeconv-bc-test.o \
+	test/jit/use-def-test.o \
 	test/jit/x86-frame-test.o \
 	test/jit/x86-objcode-test.o \
 	test/libharness/libharness.o \
