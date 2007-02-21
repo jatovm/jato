@@ -1,5 +1,5 @@
 srcdir=.
-GLIBJ_ZIP = /usr/local/classpath/share/classpath/glibj.zip
+GLIBJ_ZIP = /usr/share/classpath/glibj.zip
 JAVAC=jikes
 
 JAVA_FILES = $(srcdir)/jamvm/java/lang/JarLauncher.java \

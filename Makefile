@@ -16,7 +16,7 @@ EXECUTABLE = java
 
 # GNU classpath installation path
 prefix = /usr/local
-with_classpath_install_dir = /usr/local/classpath
+with_classpath_install_dir = /usr/
 
 JIKES=jikes
 GLIBJ=$(with_classpath_install_dir)/share/classpath/glibj.zip
