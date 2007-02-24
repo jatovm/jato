@@ -12,11 +12,6 @@
 
 #include "vm-utils.h"
 
-static void assert_insn(enum insn_type insn_type, struct insn *insn)
-{
-	assert_int_equals(insn_type, insn->type);
-}
-
 static void assert_membase_reg_insn(enum insn_type insn_type,
 				    enum machine_reg src_base_reg,
 				    long src_displacement,
