@@ -14,7 +14,7 @@
 #include <libharness.h>
 #include <stdlib.h>
 
-#define VREG_OFFSET 0
+#define VREG_OFFSET (sizeof(unsigned long) - 1)
 
 static struct var_info r0 = { .vreg = VREG_OFFSET + 0 };
 static struct var_info r1 = { .vreg = VREG_OFFSET + 1 };
@@ -36,7 +36,7 @@ static void assert_use_mask(int r0_set, int r1_set, int r2_set, struct insn *ins
 
 static void assert_def_mask(int r0_set, int r1_set, int r2_set, struct insn *insn)
 {
-	struct bitset *def = alloc_bitset(3);
+	struct bitset *def = alloc_bitset(NR_VREGS);
 
 	insn_def_mask(insn, def);
 	assert_int_equals(r0_set, test_bit(def->bits, r0.vreg));
