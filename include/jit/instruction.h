@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 struct basic_block;
+struct bitset;
 
 enum machine_reg {
 	REG_EAX,
@@ -109,8 +110,8 @@ struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
-unsigned long insn_def_mask(struct insn *);
-unsigned long insn_use_mask(struct insn *);
+void insn_def_mask(struct insn *, struct bitset *);
+void insn_use_mask(struct insn *, struct bitset *);
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 

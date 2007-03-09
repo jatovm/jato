@@ -6,6 +6,7 @@
  */
 
 #include <jit/compilation-unit.h>
+#include <vm/bitset.h>
 
 enum {
 	DEF_DST		= 1,
@@ -61,45 +62,39 @@ static inline struct insn_info *get_info(struct insn *insn)
 	return insn_infos + insn->type;
 }
 
-static inline unsigned long var_mask(struct var_info *info)
+static inline void set_var_bit(struct bitset *set, struct var_info *info)
 {
-	return 1 << info->vreg;
+	set_bit(set->bits, info->vreg);
 }
 
-unsigned long insn_def_mask(struct insn *insn)
+void insn_def_mask(struct insn *insn, struct bitset *set)
 {
 	struct insn_info *info;
-	unsigned long ret = 0;
 
 	info = get_info(insn);
 
 	if (info->flags & DEF_SRC)
-		ret |= var_mask(insn->src.reg);
+		set_var_bit(set, insn->src.reg);
 
 	if (info->flags & DEF_DST)
-		ret |= var_mask(insn->dest.reg);
-
-	return ret;
+		set_var_bit(set, insn->dest.reg);
 }
 
-unsigned long insn_use_mask(struct insn *insn)
+void insn_use_mask(struct insn *insn, struct bitset *set)
 {
 	struct insn_info *info;
-	unsigned long ret = 0;
 
 	info = get_info(insn);
 
 	if (info->flags & USE_SRC)
-		ret |= var_mask(insn->src.reg);
+		set_var_bit(set, insn->src.reg);
 
 	if (info->flags & USE_DST)
-		ret |= var_mask(insn->dest.reg);
+		set_var_bit(set, insn->dest.reg);
 
 	if (info->flags & USE_IDX_SRC)
-		ret |= var_mask(insn->src.index_reg);
+		set_var_bit(set, insn->src.index_reg);
 
 	if (info->flags & USE_IDX_DST)
-		ret |= var_mask(insn->dest.index_reg);
-
-	return ret;
+		set_var_bit(set, insn->dest.index_reg);
 }

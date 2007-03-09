@@ -8,82 +8,112 @@
 #include <jit/compilation-unit.h>
 #include <jit/instruction.h>
 #include <jit/jit-compiler.h>
+#include <vm/bitset.h>
 
-#include <libharness.h>
 #include <bc-test-utils.h>
+#include <libharness.h>
+#include <stdlib.h>
 
-static struct var_info r0 = { .vreg = 0 };
-static struct var_info r1 = { .vreg = 1 };
-static struct var_info r2 = { .vreg = 2 };
+#define VREG_OFFSET 0
+
+static struct var_info r0 = { .vreg = VREG_OFFSET + 0 };
+static struct var_info r1 = { .vreg = VREG_OFFSET + 1 };
+static struct var_info r2 = { .vreg = VREG_OFFSET + 2 };
+
+#define NR_VREGS VREG_OFFSET + 3
+
+static void assert_use_mask(int r0_set, int r1_set, int r2_set, struct insn *insn)
+{
+	struct bitset *use = alloc_bitset(NR_VREGS);
+
+	insn_use_mask(insn, use);
+	assert_int_equals(r0_set, test_bit(use->bits, r0.vreg));
+	assert_int_equals(r1_set, test_bit(use->bits, r1.vreg));
+	assert_int_equals(r2_set, test_bit(use->bits, r2.vreg));
+
+	free(use);
+}
+
+static void assert_def_mask(int r0_set, int r1_set, int r2_set, struct insn *insn)
+{
+	struct bitset *def = alloc_bitset(3);
+
+	insn_def_mask(insn, def);
+	assert_int_equals(r0_set, test_bit(def->bits, r0.vreg));
+	assert_int_equals(r1_set, test_bit(def->bits, r1.vreg));
+	assert_int_equals(r2_set, test_bit(def->bits, r2.vreg));
+
+	free(def);
+}
 
 static void assert_does_not_define_or_use_anything(struct insn *insn)
 {
-	assert_int_equals(0x00, insn_use_mask(insn));
-	assert_int_equals(0x00, insn_def_mask(insn));
+	assert_use_mask(0, 0, 0, insn);
+	assert_def_mask(0, 0, 0, insn);
 
 	free_insn(insn);
 }
 
 static void assert_uses_r0(struct insn *insn)
 {
-	assert_int_equals(0x01, insn_use_mask(insn));
-	assert_int_equals(0x00, insn_def_mask(insn));
+	assert_use_mask(1, 0, 0, insn);
+	assert_def_mask(0, 0, 0, insn);
 
 	free_insn(insn);
 }
 
 static void assert_uses_r0_defines_r0(struct insn *insn)
 {
-	assert_int_equals(0x01, insn_use_mask(insn));
-	assert_int_equals(0x01, insn_def_mask(insn));
+	assert_use_mask(1, 0, 0, insn);
+	assert_def_mask(1, 0, 0, insn);
 
 	free_insn(insn);
 }
 
 static void assert_uses_r0_and_r1(struct insn *insn)
 {
-	assert_int_equals(0x01 | 0x02, insn_use_mask(insn));
-	assert_int_equals(0x00, insn_def_mask(insn));
+	assert_use_mask(1, 1, 0, insn);
+	assert_def_mask(0, 0, 0, insn);
 
 	free_insn(insn);
 }
 
 static void assert_uses_r0_r1_and_r2(struct insn *insn)
 {
-	assert_int_equals(0x01 | 0x02 | 0x04, insn_use_mask(insn));
-	assert_int_equals(0x00, insn_def_mask(insn));
+	assert_use_mask(1, 1, 1, insn);
+	assert_def_mask(0, 0, 0, insn);
 
 	free_insn(insn);
 }
 
 static void assert_uses_r0_defines_r1(struct insn *insn)
 {
-	assert_int_equals(0x01, insn_use_mask(insn));
-	assert_int_equals(0x02, insn_def_mask(insn));
+	assert_use_mask(1, 0, 0, insn);
+	assert_def_mask(0, 1, 0, insn);
 
 	free_insn(insn);
 }
 
 static void assert_uses_r0_defines_r0_and_r1(struct insn *insn)
 {
-	assert_int_equals(0x01, insn_use_mask(insn));
-	assert_int_equals(0x01 | 0x02, insn_def_mask(insn));
+	assert_use_mask(1, 0, 0, insn);
+	assert_def_mask(1, 1, 0, insn);
 
 	free_insn(insn);
 }
 
 static void assert_uses_r0_and_r1_defines_r2(struct insn *insn)
 {
-	assert_int_equals(0x01 | 0x02, insn_use_mask(insn));
-	assert_int_equals(0x04, insn_def_mask(insn));
+	assert_use_mask(1, 1, 0, insn);
+	assert_def_mask(0, 0, 1, insn);
 
 	free_insn(insn);
 }
 
 static void assert_defines_r0(struct insn *insn)
 {
-	assert_int_equals(0x00, insn_use_mask(insn));
-	assert_int_equals(0x01, insn_def_mask(insn));
+	assert_use_mask(0, 0, 0, insn);
+	assert_def_mask(1, 0, 0, insn);
 
 	free_insn(insn);
 }
