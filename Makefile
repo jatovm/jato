@@ -46,7 +46,6 @@ JATO_OBJS =  \
 	jit/basic-block.o \
 	jit/branch-bc.o \
 	jit/bytecode-to-ir.o \
-	jit/bytecodes.o \
 	jit/cfg-analyzer.o \
 	jit/compilation-unit.o \
 	jit/disass-common.o \
@@ -69,6 +68,7 @@ JATO_OBJS =  \
 	vm/backtrace.o \
 	vm/bitset.o \
 	vm/buffer.o \
+	vm/bytecodes.o \
 	vm/debug-dump.o \
 	vm/natives.o \
 	vm/stack.o \
@@ -147,7 +147,6 @@ TEST_OBJS = \
 	test/jit/bc-test-utils.o \
 	test/jit/branch-bc-test.o \
 	test/jit/bytecode-to-ir-test.o \
-	test/jit/bytecodes-test.o \
 	test/jit/cfg-analyzer-test.o \
 	test/jit/compilation-unit-test.o \
 	test/jit/expression-test.o \
@@ -166,6 +165,7 @@ TEST_OBJS = \
 	test/libharness/libharness.o \
 	test/vm/bitset-test.o \
 	test/vm/buffer-test.o \
+	test/vm/bytecodes-test.o \
 	test/vm/list-test.o \
 	test/vm/natives-test.o \
 	test/vm/stack-test.o \

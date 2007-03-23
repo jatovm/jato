@@ -2,12 +2,12 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
+#include <vm/bytecodes.h>
 #include <vm/byteorder.h>
 #include <vm/system.h>
 #include <vm/vm.h>
 
 #include <libharness.h>
-#include <bytecodes.h>
 
 static void assert_bytecode_size(unsigned long expected_len, unsigned char opc)
 {

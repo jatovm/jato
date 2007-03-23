@@ -8,9 +8,9 @@
  */
 
 #include <jit/jit-compiler.h>
-#include <bytecodes.h>
 
 #include <vm/bitset.h>
+#include <vm/bytecodes.h>
 #include <vm/stream.h>
 #include <vm/vm.h>
 

@@ -8,7 +8,7 @@
  */
 
 #include <vm/vm.h>
-#include <bytecodes.h>
+#include <vm/bytecodes.h>
 #include <vm/byteorder.h>
 
 #include <stdio.h>

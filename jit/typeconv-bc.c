@@ -8,10 +8,12 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include <jit/statement.h>
-#include <vm/stack.h>
 #include <jit/jit-compiler.h>
-#include <bytecodes.h>
+#include <jit/statement.h>
+
+#include <vm/bytecodes.h>
+#include <vm/stack.h>
+
 #include <errno.h>
 
 static int convert_conversion(struct compilation_unit *cu,

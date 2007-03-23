@@ -7,12 +7,13 @@
  * LICENSE for details.
  */
 
-#include <jit/statement.h>
-#include <vm/stack.h>
-#include <jit/jit-compiler.h>
-#include <bytecodes.h>
 #include <jit/bytecode-converters.h>
+#include <jit/jit-compiler.h>
+#include <jit/statement.h>
+
 #include <vm/bytecode.h>
+#include <vm/bytecodes.h>
+#include <vm/stack.h>
 
 #include <errno.h>
 #include <stdlib.h>

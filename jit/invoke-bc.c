@@ -8,10 +8,11 @@
  * and return instructions to immediate representation of the JIT compiler.
  */
 
-#include <bytecodes.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
+
 #include <vm/bytecode.h>
+#include <vm/bytecodes.h>
 #include <vm/stack.h>
 
 #include <string.h>

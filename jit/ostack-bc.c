@@ -8,10 +8,12 @@
  * management instructions to immediate representation of the JIT compiler.
  */
 
-#include <jit/statement.h>
-#include <vm/stack.h>
 #include <jit/jit-compiler.h>
-#include <bytecodes.h>
+#include <jit/statement.h>
+
+#include <vm/bytecodes.h>
+#include <vm/stack.h>
+
 #include <errno.h>
 
 int convert_pop(struct compilation_unit *cu, struct basic_block *bb,

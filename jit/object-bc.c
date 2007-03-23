@@ -8,15 +8,15 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include <bytecodes.h>
-#include <errno.h>
-
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 
 #include <vm/bytecode.h>
+#include <vm/bytecodes.h>
 #include <vm/field.h>
 #include <vm/stack.h>
+
+#include <errno.h>
 
 static struct fieldblock *lookup_field(struct compilation_unit *cu, unsigned long offset)
 {
