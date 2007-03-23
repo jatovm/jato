@@ -28,7 +28,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	struct statement *if_stmt;
 	unsigned long if_target;
 
-	if_target = bytecode_br_target(cu->method->jit_code + offset);
+	if_target = bc_target_off(cu->method->jit_code + offset);
 	true_bb = find_bb(cu, offset + if_target);
 
 	if_conditional = binop_expr(vm_type, binop, binary_left, binary_right);
@@ -180,7 +180,7 @@ int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
 	struct statement *goto_stmt;
 	unsigned long goto_target;
 
-	goto_target = bytecode_br_target(cu->method->jit_code + offset);
+	goto_target = bc_target_off(cu->method->jit_code + offset);
 	target_bb = find_bb(cu, goto_target + offset);
 
 	goto_stmt = alloc_statement(STMT_GOTO);

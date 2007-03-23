@@ -38,7 +38,7 @@ static unsigned char *bytecode_next_insn(struct stream *stream)
 {
 	unsigned long opc_size;
 		
-	opc_size = bytecode_size(stream->current);
+	opc_size = bc_insn_size(stream->current);
 	assert(opc_size != 0);
 	return stream->current + opc_size;
 }
@@ -57,14 +57,14 @@ static struct basic_block *do_split(struct compilation_unit *cu,
 	struct basic_block *new_bb;
 
 	current_offset = stream_offset(stream);
-	br_target_off = bytecode_br_target(stream->current) + current_offset;
+	br_target_off = bc_target_off(stream->current) + current_offset;
 
 	set_bit(branch_targets->bits, br_target_off);
 	bb->br_target_off = br_target_off;
 	bb->has_branch = true;
-	new_bb = bb_split(bb, current_offset + bytecode_size(stream->current));
+	new_bb = bb_split(bb, current_offset + bc_insn_size(stream->current));
 
-	if (can_fall_through(*stream->current))
+	if (!bc_is_goto(*stream->current))
 		bb->successors[0] = new_bb;
 
 	return new_bb;
@@ -82,7 +82,7 @@ static void split_after_branches(struct compilation_unit *cu,
 	bb = entry_bb;
 
 	while (stream_has_more(&stream)) {
-		if (bytecode_is_branch(*stream.current))
+		if (bc_is_branch(*stream.current))
 			bb = do_split(cu, bb, &stream, branch_targets);
 
 		stream_advance(&stream);

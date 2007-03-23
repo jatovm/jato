@@ -256,7 +256,7 @@ int convert_to_ir(struct compilation_unit *cu)
 			goto out;
 		}
 
-		opc_size = bytecode_size(code + offset);
+		opc_size = bc_insn_size(code + offset);
 		if (opc_size > code_size-offset) {
 			printf("%s: Premature end of bytecode stream in "
 			       "method '%s' (code_size: %lu, offset: %lu, "

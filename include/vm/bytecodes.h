@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 
-unsigned long bytecode_size(unsigned char *);
-bool bytecode_is_branch(unsigned char);
-bool can_fall_through(unsigned char);
-unsigned long bytecode_br_target(unsigned char *);
+unsigned long bc_insn_size(unsigned char *);
+bool bc_is_branch(unsigned char);
+bool bc_is_goto(unsigned char);
+unsigned long bc_target_off(unsigned char *);
 
 #endif

@@ -27,7 +27,7 @@ struct bytecode_info {
 
 static struct bytecode_info bytecode_infos[];
 
-unsigned long bytecode_size(unsigned char *bc_start)
+unsigned long bc_insn_size(unsigned char *bc_start)
 {
 	unsigned long size;
 
@@ -42,40 +42,40 @@ unsigned long bytecode_size(unsigned char *bc_start)
 	return size;
 }
 
-bool bytecode_is_branch(unsigned char opc)
+bool bc_is_branch(unsigned char opc)
 {
 	return bytecode_infos[opc].type & BC_BRANCH;
 }
 
-bool can_fall_through(unsigned char opc)
+bool bc_is_goto(unsigned char opc)
 {
-	return opc != OPC_GOTO;
+	return opc == OPC_GOTO;
 }
 
-static unsigned long bytecode_br_target16(unsigned char *code)
+static unsigned long bc_target_off16(unsigned char *code)
 {
 	u2 target = *(u2 *) code;
 	return be16_to_cpu(target);
 }
 
-static unsigned long bytecode_br_target32(unsigned char *code)
+static unsigned long bc_target_off32(unsigned char *code)
 {
 	u4 target = *(u4 *) code;
 	return be32_to_cpu(target);
 }
 
 /**
- *	bytecode_br_target - Return branch opcode target offset.
+ *	bc_target_off - Return branch opcode target offset.
  *	@code: start of branch bytecode.
  */
-unsigned long bytecode_br_target(unsigned char *code)
+unsigned long bc_target_off(unsigned char *code)
 {
 	unsigned char opc = *code;
 
 	if (bytecode_infos[opc].type & BC_WIDE)
-		return bytecode_br_target32(code + 1);
+		return bc_target_off32(code + 1);
 
-	return bytecode_br_target16(code + 1);
+	return bc_target_off16(code + 1);
 }
 
 #define DECLARE_BC(__opc, __size, __type) [__opc] = { .size = __size, .type = __type }
