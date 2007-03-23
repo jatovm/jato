@@ -59,3 +59,23 @@ void test_bitset_union(void)
 	free(bitset);
 	free(all_set);
 }
+
+void test_bitset_copy_to(void)
+{
+	struct bitset *src, *target;
+	int i;
+
+	src = alloc_bitset(BITSET_SIZE);
+	target = alloc_bitset(BITSET_SIZE);
+
+	for (i = 0; i < BITSET_SIZE; i += 2)
+		set_bit(src->bits, i);
+
+	bitset_copy_to(src, target);
+
+	for (i = 0; i < BITSET_SIZE; i++)
+		assert_int_equals(test_bit(src->bits, i), test_bit(target->bits, i));
+
+	free(src);
+	free(target);
+}

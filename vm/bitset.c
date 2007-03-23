@@ -73,3 +73,16 @@ void bitset_union_to(struct bitset *from, struct bitset *to)
 	for (i = 0; i < nr_bits / BITS_PER_LONG; i++)
 		dest[i] |= src[i];
 }
+
+void bitset_copy_to(struct bitset *from, struct bitset *to)
+{
+	unsigned long *src, *dest;
+	unsigned long i, nr_bits;
+
+	dest = to->bits;
+	src = from->bits;
+	nr_bits = max(from->nr_bits, to->nr_bits);
+
+	for (i = 0; i < nr_bits / BITS_PER_LONG; i++)
+		dest[i] = src[i];
+}
