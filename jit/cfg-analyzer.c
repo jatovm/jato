@@ -18,6 +18,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+static void update_branch_successors(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		struct basic_block *target_bb;
+
+		if (!bb->has_branch)
+			continue;
+
+		target_bb = find_bb(cu, bb->br_target_off);
+		assert(target_bb != NULL);
+		bb->successors[1] = target_bb;
+	}
+}
+
 static unsigned char *bytecode_next_insn(struct stream *stream)
 {
 	unsigned long opc_size;
@@ -36,16 +52,22 @@ static struct basic_block *do_split(struct compilation_unit *cu,
 				    struct stream *stream,
 				    struct bitset *branch_targets)
 {
-	unsigned long br_target;
-	unsigned long offset;
+	unsigned long current_offset;
+	unsigned long br_target_off;
+	struct basic_block *new_bb;
 
-	offset    = stream_offset(stream);
-	br_target = bytecode_br_target(stream->current) + offset;
+	current_offset = stream_offset(stream);
+	br_target_off = bytecode_br_target(stream->current) + current_offset;
 
-	set_bit(branch_targets->bits, br_target);
-	bb = bb_split(bb, offset + bytecode_size(stream->current));
+	set_bit(branch_targets->bits, br_target_off);
+	bb->br_target_off = br_target_off;
+	bb->has_branch = true;
+	new_bb = bb_split(bb, current_offset + bytecode_size(stream->current));
 
-	return bb;
+	if (can_fall_through(*stream->current))
+		bb->successors[0] = new_bb;
+
+	return new_bb;
 }
 
 static void split_after_branches(struct compilation_unit *cu,
@@ -80,7 +102,11 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 			
 		bb = find_bb(cu, offset);
 		if (bb->start != offset) {
-			bb = bb_split(bb, offset);
+			struct basic_block *new_bb;
+
+			new_bb = bb_split(bb, offset);
+			bb->successors[0] = new_bb;
+			bb = new_bb;
 		}
 	}
 }
@@ -98,6 +124,7 @@ int analyze_control_flow(struct compilation_unit *cu)
 
 	split_after_branches(cu, entry_bb, branch_targets);
 	split_at_branch_targets(cu, branch_targets);
+	update_branch_successors(cu);
 
 	free(branch_targets);
 

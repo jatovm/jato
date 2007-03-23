@@ -47,6 +47,11 @@ bool bytecode_is_branch(unsigned char opc)
 	return bytecode_infos[opc].type & BC_BRANCH;
 }
 
+bool can_fall_through(unsigned char opc)
+{
+	return opc != OPC_GOTO;
+}
+
 static unsigned long bytecode_br_target16(unsigned char *code)
 {
 	u2 target = *(u2 *) code;

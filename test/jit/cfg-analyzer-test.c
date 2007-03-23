@@ -32,6 +32,7 @@ void test_branch_opcode_ends_basic_block(void)
 	cu = alloc_compilation_unit(&method);
 
 	analyze_control_flow(cu);
+
 	assert_int_equals(3, nr_bblocks(cu));
 
 	bb1 = bb_entry(cu->bb_list.next);
@@ -42,16 +43,20 @@ void test_branch_opcode_ends_basic_block(void)
 	assert_basic_block(cu, 4, 7, bb2);
 	assert_basic_block(cu, 7, 9, bb3);
 
+	assert_basic_block_successors(bb2, bb3, bb1);
+	assert_basic_block_successors(bb3, NULL, bb2);
+	assert_basic_block_successors(NULL, NULL, bb3);
+
 	free_compilation_unit(cu);
 }
 
 /* public boolean greaterThanZero(int i) { return i > 0; } */ 
 static unsigned char greater_than_zero[10] = {
 	/* 0 */ OPC_ILOAD_1,
-	/* 1 */ OPC_IFLE, 0x00, 0x08,
+	/* 1 */ OPC_IFLE, 0x00, 0x07,
 
 	/* 4 */ OPC_ICONST_1,
-	/* 5 */ OPC_GOTO, 0x00, 0x09,
+	/* 5 */ OPC_GOTO, 0x00, 0x04,
 
 	/* 8 */ OPC_ICONST_0,
 
@@ -60,7 +65,9 @@ static unsigned char greater_than_zero[10] = {
 
 void test_multiple_branches(void)
 {
+	struct basic_block *bb1, *bb2, *bb3, *bb4;
 	struct compilation_unit *cu;
+
 	struct methodblock method = {
 		.jit_code = greater_than_zero,
 		.code_size = ARRAY_SIZE(greater_than_zero) 
@@ -70,6 +77,16 @@ void test_multiple_branches(void)
 
 	analyze_control_flow(cu);
 	assert_int_equals(4, nr_bblocks(cu));
+
+	bb1 = bb_entry(cu->bb_list.next);
+	bb2 = bb_entry(bb1->bb_list_node.next);
+	bb3 = bb_entry(bb2->bb_list_node.next);
+	bb4 = bb_entry(bb3->bb_list_node.next);
+
+	assert_basic_block_successors( bb2,  bb3, bb1);
+	assert_basic_block_successors(NULL,  bb4, bb2);
+	assert_basic_block_successors( bb4, NULL, bb3);
+	assert_basic_block_successors(NULL, NULL, bb4);
 
 	free_compilation_unit(cu);
 }

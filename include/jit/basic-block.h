@@ -19,6 +19,9 @@ struct basic_block {
 	   back-patching.  */
 	struct list_head backpatch_insns;
 	struct list_head bb_list_node;
+	bool has_branch;
+	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
+	struct basic_block *successors[2];
 };
 
 static inline struct basic_block *bb_entry(struct list_head *head)

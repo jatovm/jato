@@ -12,4 +12,12 @@ static void inline assert_basic_block(struct compilation_unit *parent,
 	assert_int_equals(end, bb->end);
 }
 
+static void inline assert_basic_block_successors(struct basic_block *succ0,
+						 struct basic_block *succ1,
+						 struct basic_block *bb)
+{
+	assert_ptr_equals(succ0, bb->successors[0]);
+	assert_ptr_equals(succ1, bb->successors[1]);
+}
+
 #endif
