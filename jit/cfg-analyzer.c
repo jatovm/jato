@@ -30,7 +30,7 @@ static void update_branch_successors(struct compilation_unit *cu)
 
 		target_bb = find_bb(cu, bb->br_target_off);
 		assert(target_bb != NULL);
-		bb->successors[1] = target_bb;
+		bb_add_successor(bb, target_bb);
 	}
 }
 
@@ -50,7 +50,7 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 			struct basic_block *new_bb;
 
 			new_bb = bb_split(bb, offset);
-			bb->successors[0] = new_bb;
+			bb_add_successor(bb, new_bb);
 			bb = new_bb;
 		}
 	}
@@ -81,7 +81,7 @@ static void split_after_branches(struct stream *stream,
 
 		new_bb = bb_split(bb, next_insn_off);
 		if (!bc_is_goto(*code))
-			bb->successors[0] = new_bb;
+			bb_add_successor(bb, new_bb);
 
 		bb->br_target_off = br_target_off;
 		bb->has_branch = true;

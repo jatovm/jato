@@ -95,3 +95,11 @@ void bb_add_insn(struct basic_block *bb, struct insn *insn)
 {
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }
+
+void bb_add_successor(struct basic_block *bb, struct basic_block *successor)
+{
+	assert(bb->nr_successors < MAX_BB_SUCCESSORS);
+
+	bb->successors[bb->nr_successors] = successor;
+	bb->nr_successors++;
+}

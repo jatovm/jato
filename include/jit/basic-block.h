@@ -8,6 +8,8 @@ struct compilation_unit;
 struct insn;
 struct statement;
 
+#define MAX_BB_SUCCESSORS 2
+
 struct basic_block {
 	struct compilation_unit *b_parent;
 	unsigned long start;
@@ -21,7 +23,8 @@ struct basic_block {
 	struct list_head bb_list_node;
 	bool has_branch;
 	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
-	struct basic_block *successors[2];
+	unsigned long nr_successors;
+	struct basic_block *successors[MAX_BB_SUCCESSORS];
 };
 
 static inline struct basic_block *bb_entry(struct list_head *head)
@@ -35,6 +38,7 @@ void free_basic_block(struct basic_block *);
 struct basic_block *bb_split(struct basic_block *, unsigned long);
 void bb_add_stmt(struct basic_block *, struct statement *);
 void bb_add_insn(struct basic_block *, struct insn *);
+void bb_add_successor(struct basic_block *, struct basic_block *);
 
 #define for_each_basic_block(bb, bb_list) list_for_each_entry(bb, bb_list, bb_list_node)
 

@@ -83,9 +83,9 @@ void test_multiple_branches(void)
 	bb3 = bb_entry(bb2->bb_list_node.next);
 	bb4 = bb_entry(bb3->bb_list_node.next);
 
-	assert_basic_block_successors( bb2,  bb3, bb1);
-	assert_basic_block_successors(NULL,  bb4, bb2);
-	assert_basic_block_successors( bb4, NULL, bb3);
+	assert_basic_block_successors(bb2, bb3, bb1);
+	assert_basic_block_successors(bb4, NULL, bb2);
+	assert_basic_block_successors(bb4, NULL, bb3);
 	assert_basic_block_successors(NULL, NULL, bb4);
 
 	free_compilation_unit(cu);
