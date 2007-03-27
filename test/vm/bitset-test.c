@@ -79,3 +79,29 @@ void test_bitset_copy_to(void)
 	free(src);
 	free(target);
 }
+
+void test_bitset_sub(void)
+{
+	struct bitset *half_set, *bitset;
+	int i;
+
+	half_set = alloc_bitset(BITSET_SIZE);
+	bitset = alloc_bitset(BITSET_SIZE);
+
+	for (i = 0; i < BITSET_SIZE/2; i++)
+		set_bit(half_set->bits, i);
+
+	for (i = 0; i < BITSET_SIZE; i++)
+		set_bit(bitset->bits, i);
+
+	bitset_sub(half_set, bitset);
+
+	for (i = 0; i < BITSET_SIZE/2; i++)
+		assert_int_equals(0, test_bit(bitset->bits, i));
+
+	for (i = BITSET_SIZE/2; i < BITSET_SIZE; i++)
+		assert_int_equals(1, test_bit(bitset->bits, i));
+
+	free(bitset);
+	free(half_set);
+}
