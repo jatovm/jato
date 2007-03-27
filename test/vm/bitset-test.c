@@ -105,3 +105,28 @@ void test_bitset_sub(void)
 	free(bitset);
 	free(half_set);
 }
+
+void test_bitset_equal(void)
+{
+	struct bitset *half_set, *ones, *zeros;
+	int i;
+
+	half_set = alloc_bitset(BITSET_SIZE);
+	ones = alloc_bitset(BITSET_SIZE);
+	zeros = alloc_bitset(BITSET_SIZE);
+
+	for (i = 0; i < BITSET_SIZE/2; i++)
+		set_bit(half_set->bits, i);
+
+	for (i = 0; i < BITSET_SIZE; i++)
+		set_bit(ones->bits, i);
+
+	assert_int_equals(0, bitset_equal(half_set, ones));
+	assert_int_equals(1, bitset_equal(half_set, half_set));
+	assert_int_equals(1, bitset_equal(ones, ones));
+	assert_int_equals(1, bitset_equal(zeros, zeros));
+
+	free(zeros);
+	free(ones);
+	free(half_set);
+}
