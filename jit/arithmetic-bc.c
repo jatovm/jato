@@ -242,14 +242,14 @@ int convert_iinc(struct parse_context *ctx)
 	if (!store_stmt)
 		goto failed;
 
-	index = read_u8(ctx->code, ctx->offset + 1);
+	index = read_u8(ctx->insn_start + 1);
 	local_expression = local_expr(J_INT, index);
 	if (!local_expression)
 		goto failed;
 
 	store_stmt->store_dest = &local_expression->node;
 
-	const_value = read_s8(ctx->code, ctx->offset + 2);
+	const_value = read_s8(ctx->insn_start + 2);
 	const_expression = value_expr(J_INT, const_value);
 	if (!const_expression)
 		goto failed;

@@ -23,7 +23,7 @@ static struct fieldblock *lookup_field(struct parse_context *ctx)
 {
 	unsigned short index;
 
-	index = read_u16(ctx->code, ctx->offset + 1);
+	index = read_u16(ctx->insn_start + 1);
 	return resolveField(ctx->cu->method->class, index);
 }
 
@@ -310,7 +310,7 @@ int convert_new(struct parse_context *ctx)
 	unsigned long type_idx;
 	struct object *class;
 
-	type_idx = read_u16(ctx->code, ctx->offset + 1);
+	type_idx = read_u16(ctx->insn_start + 1);
 	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
 	if (!class)
 		return -EINVAL;

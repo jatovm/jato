@@ -3,24 +3,24 @@
 
 #include <vm/byteorder.h>
 
-static inline char read_s8(unsigned char *code, unsigned long offset)
+static inline char read_s8(unsigned char *p)
 {
-	return (char) code[offset];
+	return (char) *p;
 }
 
-static inline unsigned char read_u8(unsigned char *code, unsigned long offset)
+static inline unsigned char read_u8(unsigned char *p)
 {
-	return code[offset];
+	return *p;
 }
 
-static inline short read_s16(unsigned char *code, unsigned long offset)
+static inline short read_s16(unsigned char *p)
 {
-	return (short)be16_to_cpu(*(u2 *)(code + offset));
+	return (short)be16_to_cpu(*(u2 *) p);
 }
 
-static inline unsigned short read_u16(unsigned char *code, unsigned long offset)
+static inline unsigned short read_u16(unsigned char *p)
 {
-	return be16_to_cpu(*(u2 *)(code + offset));
+	return be16_to_cpu(*(u2 *) p);
 }
 
 #endif

@@ -227,7 +227,8 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 	convert_fn_t convert;
 	int err = 0;
 
-	ctx->opc = read_u8(ctx->code, ctx->offset);
+	ctx->insn_start = ctx->code + ctx->offset;
+	ctx->opc = read_u8(ctx->insn_start);
 	convert = converters[ctx->opc];
 	if (!convert) {
 		printf("%s: Unknown bytecode instruction 0x%x in "

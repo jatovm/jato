@@ -106,13 +106,12 @@ static int insert_invoke_expr(struct parse_context *ctx,
 	return 0;
 }
 
-static struct methodblock *resolve_invoke_target(struct methodblock *current,
-						 unsigned long offset)
+static struct methodblock *resolve_invoke_target(struct parse_context *ctx)
 {
 	unsigned long idx; 
 
-	idx = read_u16(current->jit_code, offset + 1);
-	return resolveMethod(current->class, idx);
+	idx = read_u16(ctx->insn_start + 1);
+	return resolveMethod(ctx->cu->method->class, idx);
 }
 
 int convert_invokevirtual(struct parse_context *ctx)
@@ -121,7 +120,7 @@ int convert_invokevirtual(struct parse_context *ctx)
 	struct expression *expr;
 	int err = -ENOMEM;
 
-	invoke_target = resolve_invoke_target(ctx->cu->method, ctx->offset);
+	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
 		return -EINVAL;
 
@@ -149,7 +148,7 @@ int convert_invokespecial(struct parse_context *ctx)
 	struct expression *expr;
 	int err = -ENOMEM;
 
-	invoke_target = resolve_invoke_target(ctx->cu->method, ctx->offset);
+	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
 		return -EINVAL;
 
@@ -177,7 +176,7 @@ int convert_invokestatic(struct parse_context *ctx)
 	struct expression *expr;
 	int err = -ENOMEM;
 
-	invoke_target = resolve_invoke_target(ctx->cu->method, ctx->offset);
+	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
 		return -EINVAL;
 

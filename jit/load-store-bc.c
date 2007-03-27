@@ -69,7 +69,7 @@ int convert_bipush(struct parse_context *ctx)
 {
 	unsigned long long value;
 
-	value = read_s8(ctx->code, ctx->offset + 1);
+	value = read_s8(ctx->insn_start + 1);
 	return __convert_const(ctx, value, J_INT);
 }
 
@@ -77,7 +77,7 @@ int convert_sipush(struct parse_context *ctx)
 {
 	unsigned long long value;
 
-	value = read_s16(ctx->code, ctx->offset + 1);
+	value = read_s16(ctx->insn_start + 1);
 	return __convert_const(ctx, value, J_INT);
 }
 
@@ -122,7 +122,7 @@ int convert_ldc(struct parse_context *ctx)
 {
 	unsigned long idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return __convert_ldc(ctx, idx);
 }
 
@@ -130,7 +130,7 @@ int convert_ldc_w(struct parse_context *ctx)
 {
 	unsigned long idx;
 
-	idx = read_u16(ctx->code, ctx->offset + 1);
+	idx = read_u16(ctx->insn_start + 1);
 	return __convert_ldc(ctx, idx);
 }
 
@@ -138,7 +138,7 @@ int convert_ldc2_w(struct parse_context *ctx)
 {
 	unsigned long idx;
 
-	idx = read_u16(ctx->code, ctx->offset + 1);
+	idx = read_u16(ctx->insn_start + 1);
 	return __convert_ldc(ctx, idx);
 }
 
@@ -158,7 +158,7 @@ int convert_iload(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_load(ctx, idx, J_INT);
 }
 
@@ -166,7 +166,7 @@ int convert_lload(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_load(ctx, idx, J_LONG);
 }
 
@@ -174,7 +174,7 @@ int convert_fload(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_load(ctx, idx, J_FLOAT);
 }
 
@@ -182,7 +182,7 @@ int convert_dload(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_load(ctx, idx, J_DOUBLE);
 }
 
@@ -190,7 +190,7 @@ int convert_aload(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_load(ctx, idx, J_REFERENCE);
 }
 
@@ -242,7 +242,7 @@ int convert_istore(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_store(ctx, idx, J_INT);
 }
 
@@ -250,7 +250,7 @@ int convert_lstore(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_store(ctx, idx, J_LONG);
 }
 
@@ -258,7 +258,7 @@ int convert_fstore(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_store(ctx, idx, J_FLOAT);
 }
 
@@ -266,7 +266,7 @@ int convert_dstore(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_store(ctx, idx, J_DOUBLE);
 }
 
@@ -274,7 +274,7 @@ int convert_astore(struct parse_context *ctx)
 {
 	unsigned char idx;
 
-	idx = read_u8(ctx->code, ctx->offset + 1);
+	idx = read_u8(ctx->insn_start + 1);
 	return convert_store(ctx, idx, J_REFERENCE);
 }
 
