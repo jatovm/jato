@@ -19,81 +19,76 @@
 
 #include <errno.h>
 
-static int __convert_const(enum vm_type vm_type, unsigned long long value,
-			   struct stack *expr_stack)
+static int __convert_const(struct parse_context *ctx,
+			   unsigned long long value, enum vm_type vm_type)
 {
 	struct expression *expr = value_expr(vm_type, value);
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(expr_stack, expr);
+	stack_push(ctx->cu->expr_stack, expr);
 	return 0;
 }
 
 int convert_aconst_null(struct parse_context *ctx)
 {
-	return __convert_const(J_REFERENCE, 0, ctx->cu->expr_stack);
+	return __convert_const(ctx, 0, J_REFERENCE);
 }
 
 int convert_iconst(struct parse_context *ctx)
 {
-	return __convert_const(J_INT, read_u8(ctx->code, ctx->offset) - OPC_ICONST_0,
-			       ctx->cu->expr_stack);
+	return __convert_const(ctx, ctx->opc - OPC_ICONST_0, J_INT);
 }
 
 int convert_lconst(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return __convert_const(J_LONG, read_u8(code, ctx->offset) - OPC_LCONST_0,
-			       ctx->cu->expr_stack);
+	return __convert_const(ctx, ctx->opc - OPC_LCONST_0, J_LONG);
 }
 
-static int __convert_fconst(enum vm_type vm_type,
-			    double value, struct stack *expr_stack)
+static int __convert_fconst(struct parse_context *ctx, double value, enum vm_type vm_type)
 {
 	struct expression *expr = fvalue_expr(vm_type, value);
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(expr_stack, expr);
+	stack_push(ctx->cu->expr_stack, expr);
 	return 0;
 }
 
 int convert_fconst(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return __convert_fconst(J_FLOAT,
-				read_u8(code, ctx->offset) - OPC_FCONST_0,
-				ctx->cu->expr_stack);
+	return __convert_fconst(ctx, ctx->opc - OPC_FCONST_0, J_FLOAT);
 }
 
 int convert_dconst(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return __convert_fconst(J_DOUBLE,
-				read_u8(code, ctx->offset) - OPC_DCONST_0,
-				ctx->cu->expr_stack);
+	return __convert_fconst(ctx, ctx->opc - OPC_DCONST_0, J_DOUBLE);
 }
 
 int convert_bipush(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return __convert_const(J_INT, read_s8(code, ctx->offset + 1),
-			       ctx->cu->expr_stack);
+	unsigned long long value;
+
+	value = read_s8(ctx->code, ctx->offset + 1);
+	return __convert_const(ctx, value, J_INT);
 }
 
 int convert_sipush(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return __convert_const(J_INT,
-			       read_s16(code, ctx->offset + 1),
-			       ctx->cu->expr_stack);
+	unsigned long long value;
+
+	value = read_s16(ctx->code, ctx->offset + 1);
+	return __convert_const(ctx, value, J_INT);
 }
 
-static int __convert_ldc(struct constant_pool *cp,
-			 unsigned long cp_idx, struct stack *expr_stack)
+static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 {
+	struct constant_pool *cp;
 	struct expression *expr;
+	struct classblock *cb;
+
+	cb = CLASS_CB(ctx->cu->method->class);
+	cp = &cb->constant_pool;
 
 	u1 type = CP_TYPE(cp, cp_idx);
 	switch (type) {
@@ -119,38 +114,35 @@ static int __convert_ldc(struct constant_pool *cp,
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(expr_stack, expr);
+	stack_push(ctx->cu->expr_stack, expr);
 	return 0;
 }
 
 int convert_ldc(struct parse_context *ctx)
 {
-	struct classblock *cb = CLASS_CB(ctx->cu->method->class);
-	unsigned char *code = ctx->code;
-	return __convert_ldc(&cb->constant_pool,
-			     read_u8(code, ctx->offset + 1), ctx->cu->expr_stack);
+	unsigned long idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return __convert_ldc(ctx, idx);
 }
 
 int convert_ldc_w(struct parse_context *ctx)
 {
-	struct classblock *cb = CLASS_CB(ctx->cu->method->class);
-	unsigned char *code = ctx->code;
-	return __convert_ldc(&cb->constant_pool,
-			     read_u16(code, ctx->offset + 1),
-			     ctx->cu->expr_stack);
+	unsigned long idx;
+
+	idx = read_u16(ctx->code, ctx->offset + 1);
+	return __convert_ldc(ctx, idx);
 }
 
 int convert_ldc2_w(struct parse_context *ctx)
 {
-	struct classblock *cb = CLASS_CB(ctx->cu->method->class);
-	unsigned char *code = ctx->code;
-	return __convert_ldc(&cb->constant_pool,
-			     read_u16(code, ctx->offset + 1),
-			     ctx->cu->expr_stack);
+	unsigned long idx;
+
+	idx = read_u16(ctx->code, ctx->offset + 1);
+	return __convert_ldc(ctx, idx);
 }
 
-static int convert_load(struct parse_context *ctx, unsigned char index,
-			enum vm_type type)
+static int convert_load(struct parse_context *ctx, unsigned char index, enum vm_type type)
 {
 	struct expression *expr;
 
@@ -164,66 +156,70 @@ static int convert_load(struct parse_context *ctx, unsigned char index,
 
 int convert_iload(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset + 1), J_INT);
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_load(ctx, idx, J_INT);
 }
 
 int convert_lload(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset + 1), J_LONG);
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_load(ctx, idx, J_LONG);
 }
 
 int convert_fload(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset + 1), J_FLOAT);
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_load(ctx, idx, J_FLOAT);
 }
 
 int convert_dload(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset + 1), J_DOUBLE);
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_load(ctx, idx, J_DOUBLE);
 }
 
 int convert_aload(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset + 1), J_REFERENCE);
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_load(ctx, idx, J_REFERENCE);
 }
 
 int convert_iload_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset) - OPC_ILOAD_0, J_INT);
+	return convert_load(ctx, ctx->opc - OPC_ILOAD_0, J_INT);
 }
 
 int convert_lload_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset) - OPC_LLOAD_0, J_LONG);
+	return convert_load(ctx, ctx->opc - OPC_LLOAD_0, J_LONG);
 }
 
 int convert_fload_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset) - OPC_FLOAD_0, J_FLOAT);
+	return convert_load(ctx, ctx->opc - OPC_FLOAD_0, J_FLOAT);
 }
 
 int convert_dload_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset) - OPC_DLOAD_0, J_DOUBLE);
+	return convert_load(ctx, ctx->opc - OPC_DLOAD_0, J_DOUBLE);
 }
 
 int convert_aload_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_load(ctx, read_u8(code, ctx->offset) - OPC_ALOAD_0,
-			    J_REFERENCE);
+	return convert_load(ctx, ctx->opc - OPC_ALOAD_0, J_REFERENCE);
 }
 
-static int convert_store(struct parse_context *ctx, enum vm_type type, unsigned long index)
+static int convert_store(struct parse_context *ctx, unsigned long index, enum vm_type type)
 {
 	struct expression *src_expr, *dest_expr;
 	struct statement *stmt = alloc_statement(STMT_STORE);
@@ -244,61 +240,65 @@ static int convert_store(struct parse_context *ctx, enum vm_type type, unsigned 
 
 int convert_istore(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_INT, read_u8(code, ctx->offset + 1));
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_store(ctx, idx, J_INT);
 }
 
 int convert_lstore(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_LONG, read_u8(code, ctx->offset + 1));
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_store(ctx, idx, J_LONG);
 }
 
 int convert_fstore(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_FLOAT, read_u8(code, ctx->offset + 1));
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_store(ctx, idx, J_FLOAT);
 }
 
 int convert_dstore(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_DOUBLE, read_u8(code, ctx->offset + 1));
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_store(ctx, idx, J_DOUBLE);
 }
 
 int convert_astore(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_REFERENCE, read_u8(code, ctx->offset + 1));
+	unsigned char idx;
+
+	idx = read_u8(ctx->code, ctx->offset + 1);
+	return convert_store(ctx, idx, J_REFERENCE);
 }
 
 int convert_istore_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_INT, read_u8(code, ctx->offset) - OPC_ISTORE_0);
+	return convert_store(ctx, ctx->opc - OPC_ISTORE_0, J_INT);
 }
 
 int convert_lstore_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_LONG, read_u8(code, ctx->offset) - OPC_LSTORE_0);
+	return convert_store(ctx, ctx->opc - OPC_LSTORE_0, J_LONG);
 }
 
 int convert_fstore_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_FLOAT, read_u8(code, ctx->offset) - OPC_FSTORE_0);
+	return convert_store(ctx, ctx->opc - OPC_FSTORE_0, J_FLOAT);
 }
 
 int convert_dstore_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_DOUBLE, read_u8(code, ctx->offset) - OPC_DSTORE_0);
+	return convert_store(ctx, ctx->opc - OPC_DSTORE_0, J_DOUBLE);
 }
 
 int convert_astore_n(struct parse_context *ctx)
 {
-	unsigned char *code = ctx->code;
-	return convert_store(ctx, J_REFERENCE,
-			     read_u8(code, ctx->offset) - OPC_ASTORE_0);
+	return convert_store(ctx, ctx->opc - OPC_ASTORE_0, J_REFERENCE);
 }

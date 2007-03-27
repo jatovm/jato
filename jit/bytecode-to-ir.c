@@ -225,15 +225,14 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 {
 	unsigned long opc_size;
 	convert_fn_t convert;
-	unsigned char opc;
 	int err = 0;
 
-	opc = read_u8(ctx->code, ctx->offset);
-	convert = converters[opc];
+	ctx->opc = read_u8(ctx->code, ctx->offset);
+	convert = converters[ctx->opc];
 	if (!convert) {
 		printf("%s: Unknown bytecode instruction 0x%x in "
 		       "method '%s' at offset %lu.\n",
-		       __FUNCTION__, opc, ctx->cu->method->name, ctx->offset);
+		       __FUNCTION__, ctx->opc, ctx->cu->method->name, ctx->offset);
 		err = -EINVAL;
 		goto out;
 	}
@@ -244,7 +243,7 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 		       "method '%s' (code_size: %lu, offset: %lu, "
 		       "opc_size: %lu, opc: 0x%x)\n.",
 		       __FUNCTION__, ctx->cu->method->name, ctx->code_size,
-		       ctx->offset, opc_size, opc);
+		       ctx->offset, opc_size, ctx->opc);
 		err = -EINVAL;
 		goto out;
 	}

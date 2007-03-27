@@ -21,6 +21,7 @@ struct parse_context {
 	unsigned char *code;
 	unsigned long offset;
 	unsigned long code_size;
+	unsigned char opc;
 };
 
 int jit_compile(struct compilation_unit *);
