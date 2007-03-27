@@ -221,7 +221,7 @@ int parseCommandLine(int argc, char *argv[], InitArgs *args) {
         } else if(strcmp(argv[i], "-Xdumptree") == 0) {
             debug_tree = 1;
 
-        } else if(strcmp(argv[i], "-Xinterp") == 0) {
+        } else if(strcmp(argv[i], "-Xint") == 0) {
             run_with_interpreter = 1;
 
         } else {
