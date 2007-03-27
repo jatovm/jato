@@ -8,6 +8,7 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
+#include <jit/bytecode-converters.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 
@@ -16,8 +17,7 @@
 
 #include <errno.h>
 
-static struct statement *__convert_if(struct compilation_unit *cu,
-				      unsigned long offset,
+static struct statement *__convert_if(struct parse_context *ctx,
 				      enum vm_type vm_type,
 				      enum binary_operator binop,
 				      struct expression *binary_left,
@@ -28,8 +28,8 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	struct statement *if_stmt;
 	unsigned long if_target;
 
-	if_target = bc_target_off(cu->method->jit_code + offset);
-	true_bb = find_bb(cu, offset + if_target);
+	if_target = bc_target_off(ctx->code + ctx->offset);
+	true_bb = find_bb(ctx->cu, ctx->offset + if_target);
 
 	if_conditional = binop_expr(vm_type, binop, binary_left, binary_right);
 	if (!if_conditional)
@@ -49,9 +49,7 @@ static struct statement *__convert_if(struct compilation_unit *cu,
 	return NULL;
 }
 
-static int convert_if(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset,
-		      enum binary_operator binop)
+static int convert_if(struct parse_context *ctx, enum binary_operator binop)
 {
 	struct statement *stmt;
 	struct expression *if_value, *zero_value;
@@ -60,146 +58,126 @@ static int convert_if(struct compilation_unit *cu,
 	if (!zero_value)
 		return -ENOMEM;
 
-	if_value = stack_pop(cu->expr_stack);
-	stmt = __convert_if(cu, offset, J_INT, binop, if_value, zero_value);
+	if_value = stack_pop(ctx->cu->expr_stack);
+	stmt = __convert_if(ctx, J_INT, binop, if_value, zero_value);
 	if (!stmt) {
 		expr_put(zero_value);
 		return -ENOMEM;
 	}
-	bb_add_stmt(bb, stmt);
+	bb_add_stmt(ctx->bb, stmt);
 	return 0;
 }
 
-int convert_ifeq(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_ifeq(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_EQ);
+	return convert_if(ctx, OP_EQ);
 }
 
-int convert_ifne(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_ifne(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_NE);
+	return convert_if(ctx, OP_NE);
 }
 
-int convert_iflt(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_iflt(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_LT);
+	return convert_if(ctx, OP_LT);
 }
 
-int convert_ifge(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_ifge(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_GE);
+	return convert_if(ctx, OP_GE);
 }
 
-int convert_ifgt(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_ifgt(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_GT);
+	return convert_if(ctx, OP_GT);
 }
 
-int convert_ifle(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_ifle(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_LE);
+	return convert_if(ctx, OP_LE);
 }
 
-static int convert_if_cmp(struct compilation_unit *cu,
-			  struct basic_block *bb,
-			  unsigned long offset,
-			  enum vm_type vm_type, enum binary_operator binop)
+static int convert_if_cmp(struct parse_context *ctx, enum vm_type vm_type, enum binary_operator binop)
 {
 	struct statement *stmt;
 	struct expression *if_value1, *if_value2;
 
-	if_value2 = stack_pop(cu->expr_stack);
-	if_value1 = stack_pop(cu->expr_stack);
+	if_value2 = stack_pop(ctx->cu->expr_stack);
+	if_value1 = stack_pop(ctx->cu->expr_stack);
 
-	stmt = __convert_if(cu, offset, vm_type, binop, if_value1, if_value2);
+	stmt = __convert_if(ctx, vm_type, binop, if_value1, if_value2);
 	if (!stmt)
 		return -ENOMEM;
 
-	bb_add_stmt(bb, stmt);
+	bb_add_stmt(ctx->bb, stmt);
 	return 0;
 }
 
-int convert_if_icmpeq(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_icmpeq(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_INT, OP_EQ);
+	return convert_if_cmp(ctx, J_INT, OP_EQ);
 }
 
-int convert_if_icmpne(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_icmpne(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_INT, OP_NE);
+	return convert_if_cmp(ctx, J_INT, OP_NE);
 }
 
-int convert_if_icmplt(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_icmplt(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_INT, OP_LT);
+	return convert_if_cmp(ctx, J_INT, OP_LT);
 }
 
-int convert_if_icmpge(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_icmpge(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_INT, OP_GE);
+	return convert_if_cmp(ctx, J_INT, OP_GE);
 }
 
-int convert_if_icmpgt(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_icmpgt(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_INT, OP_GT);
+	return convert_if_cmp(ctx, J_INT, OP_GT);
 }
 
-int convert_if_icmple(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_icmple(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_INT, OP_LE);
+	return convert_if_cmp(ctx, J_INT, OP_LE);
 }
 
-int convert_if_acmpeq(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_acmpeq(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_REFERENCE, OP_EQ);
+	return convert_if_cmp(ctx, J_REFERENCE, OP_EQ);
 }
 
-int convert_if_acmpne(struct compilation_unit *cu,
-		      struct basic_block *bb, unsigned long offset)
+int convert_if_acmpne(struct parse_context *ctx)
 {
-	return convert_if_cmp(cu, bb, offset, J_REFERENCE, OP_NE);
+	return convert_if_cmp(ctx, J_REFERENCE, OP_NE);
 }
 
-int convert_goto(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_goto(struct parse_context *ctx)
 {
 	struct basic_block *target_bb;
 	struct statement *goto_stmt;
 	unsigned long goto_target;
 
-	goto_target = bc_target_off(cu->method->jit_code + offset);
-	target_bb = find_bb(cu, goto_target + offset);
+	goto_target = bc_target_off(ctx->code + ctx->offset);
+	target_bb = find_bb(ctx->cu, goto_target + ctx->offset);
 
 	goto_stmt = alloc_statement(STMT_GOTO);
 	if (!goto_stmt)
 		return -ENOMEM;
 
 	goto_stmt->goto_target = target_bb;
-	bb_add_stmt(bb, goto_stmt);
+	bb_add_stmt(ctx->bb, goto_stmt);
 	return 0;
 }
 
-int convert_ifnull(struct compilation_unit *cu, struct basic_block *bb,
-		   unsigned long offset)
+int convert_ifnull(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_EQ);
+	return convert_if(ctx, OP_EQ);
 }
 
-int convert_ifnonnull(struct compilation_unit *cu, struct basic_block *bb,
-		   unsigned long offset)
+int convert_ifnonnull(struct parse_context *ctx)
 {
-	return convert_if(cu, bb, offset, OP_NE);
+	return convert_if(ctx, OP_NE);
 }

@@ -8,6 +8,7 @@
  * and return instructions to immediate representation of the JIT compiler.
  */
 
+#include <jit/bytecode-converters.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 
@@ -18,22 +19,20 @@
 #include <string.h>
 #include <errno.h>
 
-int convert_non_void_return(struct compilation_unit *cu,
-			    struct basic_block *bb, unsigned long offset)
+int convert_non_void_return(struct parse_context *ctx)
 {
 	struct expression *expr;
 	struct statement *return_stmt = alloc_statement(STMT_RETURN);
 	if (!return_stmt)
 		return -ENOMEM;
 
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(ctx->cu->expr_stack);
 	return_stmt->return_value = &expr->node;
-	bb_add_stmt(bb, return_stmt);
+	bb_add_stmt(ctx->bb, return_stmt);
 	return 0;
 }
 
-int convert_void_return(struct compilation_unit *cu,
-			struct basic_block *bb, unsigned long offset)
+int convert_void_return(struct parse_context *ctx)
 {
 	struct statement *return_stmt = alloc_statement(STMT_VOID_RETURN);
 	if (!return_stmt)
@@ -41,7 +40,7 @@ int convert_void_return(struct compilation_unit *cu,
 
 	return_stmt->return_value = NULL;
 
-	bb_add_stmt(bb, return_stmt);
+	bb_add_stmt(ctx->bb, return_stmt);
 	return 0;
 }
 
@@ -74,13 +73,13 @@ static struct expression *convert_args(struct stack *expr_stack,
 	return args_list;
 }
 
-static int convert_and_add_args(struct compilation_unit *cu,
+static int convert_and_add_args(struct parse_context *ctx,
 				struct methodblock *invoke_target,
 				struct expression *expr)
 {
 	struct expression *args_list;
 
-	args_list = convert_args(cu->expr_stack, invoke_target->args_count);
+	args_list = convert_args(ctx->cu->expr_stack, invoke_target->args_count);
 	if (!args_list)
 		return -ENOMEM;
 
@@ -89,8 +88,8 @@ static int convert_and_add_args(struct compilation_unit *cu,
 	return 0;
 }
 
-static int insert_invoke_expr(struct compilation_unit *cu, struct basic_block *bb,
-			    struct expression *invoke_expr)
+static int insert_invoke_expr(struct parse_context *ctx,
+			      struct expression *invoke_expr)
 {
 	if (invoke_expr->vm_type == J_VOID) {
 		struct statement *expr_stmt;
@@ -100,9 +99,9 @@ static int insert_invoke_expr(struct compilation_unit *cu, struct basic_block *b
 			return -ENOMEM;
 
 		expr_stmt->expression = &invoke_expr->node;
-		bb_add_stmt(bb, expr_stmt);
+		bb_add_stmt(ctx->bb, expr_stmt);
 	} else
-		stack_push(cu->expr_stack, invoke_expr);
+		stack_push(ctx->cu->expr_stack, invoke_expr);
 
 	return 0;
 }
@@ -116,14 +115,13 @@ static struct methodblock *resolve_invoke_target(struct methodblock *current,
 	return resolveMethod(current->class, idx);
 }
 
-int convert_invokevirtual(struct compilation_unit *cu,
-			  struct basic_block *bb, unsigned long offset)
+int convert_invokevirtual(struct parse_context *ctx)
 {
 	struct methodblock *invoke_target;
 	struct expression *expr;
 	int err = -ENOMEM;
 
-	invoke_target = resolve_invoke_target(cu->method, offset);
+	invoke_target = resolve_invoke_target(ctx->cu->method, ctx->offset);
 	if (!invoke_target)
 		return -EINVAL;
 
@@ -131,40 +129,11 @@ int convert_invokevirtual(struct compilation_unit *cu,
 	if (!expr)
 		return -ENOMEM;
 
-	err = convert_and_add_args(cu, invoke_target, expr);
+	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
 		goto failed;
 
-	err = insert_invoke_expr(cu, bb, expr);
-	if (err)
-		goto failed;
-
-	return 0;
-      failed:
-	expr_put(expr);
-	return err;
-}
-
-int convert_invokespecial(struct compilation_unit *cu,
-			  struct basic_block *bb, unsigned long offset)
-{
-	struct methodblock *invoke_target;
-	struct expression *expr;
-	int err = -ENOMEM;
-
-	invoke_target = resolve_invoke_target(cu->method, offset);
-	if (!invoke_target)
-		return -EINVAL;
-
-	expr = invoke_expr(invoke_target);
-	if (!expr)
-		return -ENOMEM;
-
-	err = convert_and_add_args(cu, invoke_target, expr);
-	if (err)
-		goto failed;
-
-	err = insert_invoke_expr(cu, bb, expr);
+	err = insert_invoke_expr(ctx, expr);
 	if (err)
 		goto failed;
 
@@ -174,14 +143,13 @@ int convert_invokespecial(struct compilation_unit *cu,
 	return err;
 }
 
-int convert_invokestatic(struct compilation_unit *cu,
-			 struct basic_block *bb, unsigned long offset)
+int convert_invokespecial(struct parse_context *ctx)
 {
 	struct methodblock *invoke_target;
 	struct expression *expr;
 	int err = -ENOMEM;
 
-	invoke_target = resolve_invoke_target(cu->method, offset);
+	invoke_target = resolve_invoke_target(ctx->cu->method, ctx->offset);
 	if (!invoke_target)
 		return -EINVAL;
 
@@ -189,11 +157,39 @@ int convert_invokestatic(struct compilation_unit *cu,
 	if (!expr)
 		return -ENOMEM;
 
-	err = convert_and_add_args(cu, invoke_target, expr);
+	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
 		goto failed;
 
-	err = insert_invoke_expr(cu, bb, expr);
+	err = insert_invoke_expr(ctx, expr);
+	if (err)
+		goto failed;
+
+	return 0;
+      failed:
+	expr_put(expr);
+	return err;
+}
+
+int convert_invokestatic(struct parse_context *ctx)
+{
+	struct methodblock *invoke_target;
+	struct expression *expr;
+	int err = -ENOMEM;
+
+	invoke_target = resolve_invoke_target(ctx->cu->method, ctx->offset);
+	if (!invoke_target)
+		return -EINVAL;
+
+	expr = invoke_expr(invoke_target);
+	if (!expr)
+		return -ENOMEM;
+
+	err = convert_and_add_args(ctx, invoke_target, expr);
+	if (err)
+		goto failed;
+
+	err = insert_invoke_expr(ctx, expr);
 	if (err)
 		goto failed;
 

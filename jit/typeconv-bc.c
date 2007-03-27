@@ -8,6 +8,7 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
+#include <jit/bytecode-converters.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 
@@ -16,107 +17,91 @@
 
 #include <errno.h>
 
-static int convert_conversion(struct compilation_unit *cu,
-			      struct basic_block *bb, enum vm_type to_type)
+static int convert_conversion(struct parse_context *ctx, enum vm_type to_type)
 {
 	struct expression *from_expression, *conversion_expression;
 
-	from_expression = stack_pop(cu->expr_stack);
+	from_expression = stack_pop(ctx->cu->expr_stack);
 
 	conversion_expression = conversion_expr(to_type, from_expression);
 	if (!conversion_expression)
 		return -ENOMEM;
 
-	stack_push(cu->expr_stack, conversion_expression);
+	stack_push(ctx->cu->expr_stack, conversion_expression);
 	return 0;
 }
 
-int convert_i2l(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_i2l(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_LONG);
+	return convert_conversion(ctx, J_LONG);
 }
 
-int convert_i2f(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_i2f(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_FLOAT);
+	return convert_conversion(ctx, J_FLOAT);
 }
 
-int convert_i2d(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_i2d(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_DOUBLE);
+	return convert_conversion(ctx, J_DOUBLE);
 }
 
-int convert_l2i(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_l2i(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_INT);
+	return convert_conversion(ctx, J_INT);
 }
 
-int convert_l2f(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_l2f(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_FLOAT);
+	return convert_conversion(ctx, J_FLOAT);
 }
 
-int convert_l2d(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_l2d(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_DOUBLE);
+	return convert_conversion(ctx, J_DOUBLE);
 }
 
-int convert_f2i(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_f2i(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_INT);
+	return convert_conversion(ctx, J_INT);
 }
 
-int convert_f2l(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_f2l(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_LONG);
+	return convert_conversion(ctx, J_LONG);
 }
 
-int convert_f2d(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_f2d(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_DOUBLE);
+	return convert_conversion(ctx, J_DOUBLE);
 }
 
-int convert_d2i(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_d2i(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_INT);
+	return convert_conversion(ctx, J_INT);
 }
 
-int convert_d2l(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_d2l(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_LONG);
+	return convert_conversion(ctx, J_LONG);
 }
 
-int convert_d2f(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_d2f(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_FLOAT);
+	return convert_conversion(ctx, J_FLOAT);
 }
 
-int convert_i2b(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_i2b(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_BYTE);
+	return convert_conversion(ctx, J_BYTE);
 }
 
-int convert_i2c(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_i2c(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_CHAR);
+	return convert_conversion(ctx, J_CHAR);
 }
 
-int convert_i2s(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_i2s(struct parse_context *ctx)
 {
-	return convert_conversion(cu, bb, J_SHORT);
+	return convert_conversion(ctx, J_SHORT);
 }

@@ -20,8 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
-		       unsigned long offset)
+static int convert_nop(struct parse_context *ctx)
 {
 	struct statement *stmt;
 
@@ -29,12 +28,11 @@ static int convert_nop(struct compilation_unit *cu, struct basic_block *bb,
 	if (!stmt)
 		return -ENOMEM;
 
-	bb_add_stmt(bb, stmt);
+	bb_add_stmt(ctx->bb, stmt);
 	return 0;
 }
 
-typedef int (*convert_fn_t) (struct compilation_unit *, struct basic_block *,
-			     unsigned long);
+typedef int (*convert_fn_t) (struct parse_context *);
 
 static convert_fn_t converters[] = {
 	[OPC_NOP] = convert_nop,
@@ -223,6 +221,53 @@ static convert_fn_t converters[] = {
 	[OPC_IFNONNULL] = convert_ifnonnull,
 };
 
+static int parse_bytecode_insn(struct parse_context *ctx)
+{
+	unsigned long opc_size;
+	convert_fn_t convert;
+	unsigned char opc;
+	int err = 0;
+
+	opc = read_u8(ctx->code, ctx->offset);
+	convert = converters[opc];
+	if (!convert) {
+		printf("%s: Unknown bytecode instruction 0x%x in "
+		       "method '%s' at offset %lu.\n",
+		       __FUNCTION__, opc, ctx->cu->method->name, ctx->offset);
+		err = -EINVAL;
+		goto out;
+	}
+
+	opc_size = bc_insn_size(ctx->code + ctx->offset);
+	if (opc_size > ctx->code_size-ctx->offset) {
+		printf("%s: Premature end of bytecode stream in "
+		       "method '%s' (code_size: %lu, offset: %lu, "
+		       "opc_size: %lu, opc: 0x%x)\n.",
+		       __FUNCTION__, ctx->cu->method->name, ctx->code_size,
+		       ctx->offset, opc_size, opc);
+		err = -EINVAL;
+		goto out;
+	}
+
+	ctx->bb = find_bb(ctx->cu, ctx->offset);
+	if (!ctx->bb) {
+		printf("%s: No basic block found for offset %lu "
+		       "in method '%s'\n", __FUNCTION__, ctx->offset,
+		       ctx->cu->method->name);
+		err = -EINVAL;
+		goto out;
+	}
+
+	err = convert(ctx);
+	if (err)
+		goto out;
+
+	ctx->offset += opc_size;
+
+  out:
+	return err;
+}
+
 /**
  *	convert_to_ir - Convert bytecode to intermediate representation.
  *	@compilation_unit: compilation unit to convert.
@@ -235,53 +280,17 @@ static convert_fn_t converters[] = {
  */
 int convert_to_ir(struct compilation_unit *cu)
 {
-	unsigned long code_size = cu->method->code_size;
-	unsigned char *code = cu->method->jit_code;
-	unsigned long offset = 0;
-	struct basic_block *bb;
+	struct parse_context ctx = {
+		.code_size = cu->method->code_size,
+		.code = cu->method->jit_code,
+		.cu = cu,
+	};
 	int err = 0;
 
-	while (offset < code_size) {
-		unsigned long opc_size;
-		convert_fn_t convert;
-		unsigned char opc;
-
-		opc = read_u8(code, offset);
-		convert = converters[opc];
-		if (!convert) {
-			printf("%s: Unknown bytecode instruction 0x%x in "
-			       "method '%s' at offset %lu.\n",
-			       __FUNCTION__, opc, cu->method->name, offset);
-			err = -EINVAL;
-			goto out;
-		}
-
-		opc_size = bc_insn_size(code + offset);
-		if (opc_size > code_size-offset) {
-			printf("%s: Premature end of bytecode stream in "
-			       "method '%s' (code_size: %lu, offset: %lu, "
-			       "opc_size: %lu, opc: 0x%x)\n.",
-			       __FUNCTION__, cu->method->name, code_size,
-			       offset, opc_size, opc);
-			err = -EINVAL;
-			goto out;
-		}
-
-		bb = find_bb(cu, offset); 
-		if (!bb) {
-			printf("%s: No basic block found for offset %lu "
-			       "in method '%s'\n", __FUNCTION__, offset,
-			       cu->method->name);
-			err = -EINVAL;
-			goto out;
-		}
-
-		err = convert(cu, bb, offset);
+	while (ctx.offset < ctx.code_size) {
+		err = parse_bytecode_insn(&ctx);
 		if (err)
-			goto out;
-
-		offset += opc_size;
+			break;
 	}
-  out:
 	return err;
 }

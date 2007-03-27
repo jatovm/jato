@@ -8,6 +8,7 @@
  * management instructions to immediate representation of the JIT compiler.
  */
 
+#include <jit/bytecode-converters.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 
@@ -16,10 +17,9 @@
 
 #include <errno.h>
 
-int convert_pop(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_pop(struct parse_context *ctx)
 {
-	struct expression *expr = stack_pop(cu->expr_stack);
+	struct expression *expr = stack_pop(ctx->cu->expr_stack);
 	
 	if (is_invoke_expr(expr)) {
 		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
@@ -27,65 +27,61 @@ int convert_pop(struct compilation_unit *cu, struct basic_block *bb,
 			return -ENOMEM;
 			
 		expr_stmt->expression = &expr->node;
-		bb_add_stmt(bb, expr_stmt);
+		bb_add_stmt(ctx->bb, expr_stmt);
 	}
 	return 0;
 }
 
-int convert_dup(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_dup(struct parse_context *ctx)
 {
 	void *v;
 
-	v = stack_pop(cu->expr_stack);
-	stack_push(cu->expr_stack, v);
-	stack_push(cu->expr_stack, v);
+	v = stack_pop(ctx->cu->expr_stack);
+	stack_push(ctx->cu->expr_stack, v);
+	stack_push(ctx->cu->expr_stack, v);
 
 	return 0;
 }
 
-int convert_dup_x1(struct compilation_unit *cu, struct basic_block *bb,
-		   unsigned long offset)
+int convert_dup_x1(struct parse_context *ctx)
 {
 	void *v1, *v2;
 
-	v1 = stack_pop(cu->expr_stack);
-	v2 = stack_pop(cu->expr_stack);
+	v1 = stack_pop(ctx->cu->expr_stack);
+	v2 = stack_pop(ctx->cu->expr_stack);
 
-	stack_push(cu->expr_stack, v1);
-	stack_push(cu->expr_stack, v2);
-	stack_push(cu->expr_stack, v1);
+	stack_push(ctx->cu->expr_stack, v1);
+	stack_push(ctx->cu->expr_stack, v2);
+	stack_push(ctx->cu->expr_stack, v1);
 
 	return 0;
 }
 
-int convert_dup_x2(struct compilation_unit *cu, struct basic_block *bb,
-		   unsigned long offset)
+int convert_dup_x2(struct parse_context *ctx)
 {
 	void *v1, *v2, *v3;
 
-	v1 = stack_pop(cu->expr_stack);
-	v2 = stack_pop(cu->expr_stack);
-	v3 = stack_pop(cu->expr_stack);
+	v1 = stack_pop(ctx->cu->expr_stack);
+	v2 = stack_pop(ctx->cu->expr_stack);
+	v3 = stack_pop(ctx->cu->expr_stack);
 
-	stack_push(cu->expr_stack, v1);
-	stack_push(cu->expr_stack, v3);
-	stack_push(cu->expr_stack, v2);
-	stack_push(cu->expr_stack, v1);
+	stack_push(ctx->cu->expr_stack, v1);
+	stack_push(ctx->cu->expr_stack, v3);
+	stack_push(ctx->cu->expr_stack, v2);
+	stack_push(ctx->cu->expr_stack, v1);
 
 	return 0;
 }
 
-int convert_swap(struct compilation_unit *cu, struct basic_block *bb,
-		 unsigned long offset)
+int convert_swap(struct parse_context *ctx)
 {
 	void *v1, *v2;
 
-	v1 = stack_pop(cu->expr_stack);
-	v2 = stack_pop(cu->expr_stack);
+	v1 = stack_pop(ctx->cu->expr_stack);
+	v2 = stack_pop(ctx->cu->expr_stack);
 
-	stack_push(cu->expr_stack, v1);
-	stack_push(cu->expr_stack, v2);
+	stack_push(ctx->cu->expr_stack, v1);
+	stack_push(ctx->cu->expr_stack, v2);
 
 	return 0;
 }

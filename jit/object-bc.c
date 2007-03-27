@@ -8,6 +8,7 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
+#include <jit/bytecode-converters.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 
@@ -18,21 +19,20 @@
 
 #include <errno.h>
 
-static struct fieldblock *lookup_field(struct compilation_unit *cu, unsigned long offset)
+static struct fieldblock *lookup_field(struct parse_context *ctx)
 {
 	unsigned short index;
 
-	index = read_u16(cu->method->jit_code, offset + 1);
-	return resolveField(cu->method->class, index);
+	index = read_u16(ctx->code, ctx->offset + 1);
+	return resolveField(ctx->cu->method->class, index);
 }
 
-int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
-		      unsigned long offset)
+int convert_getstatic(struct parse_context *ctx)
 {
 	struct expression *value;
 	struct fieldblock *fb;
 
-	fb = lookup_field(cu, offset);
+	fb = lookup_field(ctx);
 	if (!fb)
 		return -EINVAL;
 
@@ -40,22 +40,21 @@ int convert_getstatic(struct compilation_unit *cu, struct basic_block *bb,
 	if (!value)
 		return -ENOMEM;
 
-	stack_push(cu->expr_stack, value);
+	stack_push(ctx->cu->expr_stack, value);
 	return 0;
 }
 
-int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
-		      unsigned long offset)
+int convert_putstatic(struct parse_context *ctx)
 {
 	struct fieldblock *fb;
 	struct statement *store_stmt;
 	struct expression *dest, *src;
 
-	fb = lookup_field(cu, offset);
+	fb = lookup_field(ctx);
 	if (!fb)
 		return -EINVAL;
 
-	src = stack_pop(cu->expr_stack);
+	src = stack_pop(ctx->cu->expr_stack);
 	dest = class_field_expr(field_type(fb), fb);
 	if (!dest)
 		return -ENOMEM;
@@ -67,46 +66,44 @@ int convert_putstatic(struct compilation_unit *cu, struct basic_block *bb,
 	}
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
-	bb_add_stmt(bb, store_stmt);
+	bb_add_stmt(ctx->bb, store_stmt);
 	
 	return 0;
 }
 
-int convert_getfield(struct compilation_unit *cu, struct basic_block *bb,
-		     unsigned long offset)
+int convert_getfield(struct parse_context *ctx)
 {
 	struct expression *objectref;
 	struct expression *value;
 	struct fieldblock *fb;
 
-	fb = lookup_field(cu, offset);
+	fb = lookup_field(ctx);
 	if (!fb)
 		return -EINVAL;
 
-	objectref = stack_pop(cu->expr_stack);
+	objectref = stack_pop(ctx->cu->expr_stack);
 
 	value = instance_field_expr(field_type(fb), fb, objectref);
 	if (!value)
 		return -ENOMEM;
 
-	stack_push(cu->expr_stack, value);
+	stack_push(ctx->cu->expr_stack, value);
 	return 0;
 }
 
-int convert_putfield(struct compilation_unit *cu, struct basic_block *bb,
-		     unsigned long offset)
+int convert_putfield(struct parse_context *ctx)
 {
 	struct expression *dest, *src;
 	struct statement *store_stmt;
 	struct expression *objectref;
 	struct fieldblock *fb;
 
-	fb = lookup_field(cu, offset);
+	fb = lookup_field(ctx);
 	if (!fb)
 		return -EINVAL;
 
-	src = stack_pop(cu->expr_stack);
-	objectref = stack_pop(cu->expr_stack);
+	src = stack_pop(ctx->cu->expr_stack);
+	objectref = stack_pop(ctx->cu->expr_stack);
 	dest = instance_field_expr(field_type(fb), fb, objectref);
 	if (!dest)
 		return -ENOMEM;
@@ -118,7 +115,7 @@ int convert_putfield(struct compilation_unit *cu, struct basic_block *bb,
 	}
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
-	bb_add_stmt(bb, store_stmt);
+	bb_add_stmt(ctx->bb, store_stmt);
 	
 	return 0;
 }
@@ -129,15 +126,14 @@ static unsigned long alloc_temporary(void)
 	return ++temporary;
 }
 
-int convert_array_load(struct compilation_unit *cu,
-			      struct basic_block *bb, enum vm_type type)
+int convert_array_load(struct parse_context *ctx, enum vm_type type)
 {
 	struct expression *index, *arrayref;
 	struct expression *src_expr, *dest_expr;
 	struct statement *store_stmt, *arraycheck, *nullcheck;
 
-	index = stack_pop(cu->expr_stack);
-	arrayref = stack_pop(cu->expr_stack);
+	index = stack_pop(ctx->cu->expr_stack);
+	arrayref = stack_pop(ctx->cu->expr_stack);
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)
@@ -150,7 +146,7 @@ int convert_array_load(struct compilation_unit *cu,
 	store_stmt->store_dest = &dest_expr->node;
 
 	expr_get(dest_expr);
-	stack_push(cu->expr_stack, dest_expr);
+	stack_push(ctx->cu->expr_stack, dest_expr);
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
@@ -166,9 +162,9 @@ int convert_array_load(struct compilation_unit *cu,
 	expr_get(arrayref);
 	nullcheck->expression = &arrayref->node;
 
-	bb_add_stmt(bb, nullcheck);
-	bb_add_stmt(bb, arraycheck);
-	bb_add_stmt(bb, store_stmt);
+	bb_add_stmt(ctx->bb, nullcheck);
+	bb_add_stmt(ctx->bb, arraycheck);
+	bb_add_stmt(ctx->bb, store_stmt);
 
 	return 0;
 
@@ -180,64 +176,55 @@ int convert_array_load(struct compilation_unit *cu,
 	return -ENOMEM;
 }
 
-int convert_iaload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_iaload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_INT);
+	return convert_array_load(ctx, J_INT);
 }
 
-int convert_laload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_laload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_LONG);
+	return convert_array_load(ctx, J_LONG);
 }
 
-int convert_faload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_faload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_FLOAT);
+	return convert_array_load(ctx, J_FLOAT);
 }
 
-int convert_daload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_daload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_DOUBLE);
+	return convert_array_load(ctx, J_DOUBLE);
 }
 
-int convert_aaload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_aaload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_REFERENCE);
+	return convert_array_load(ctx, J_REFERENCE);
 }
 
-int convert_baload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_baload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_INT);
+	return convert_array_load(ctx, J_INT);
 }
 
-int convert_caload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_caload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_CHAR);
+	return convert_array_load(ctx, J_CHAR);
 }
 
-int convert_saload(struct compilation_unit *cu, struct basic_block *bb,
-			  unsigned long offset)
+int convert_saload(struct parse_context *ctx)
 {
-	return convert_array_load(cu, bb, J_SHORT);
+	return convert_array_load(ctx, J_SHORT);
 }
 
-static int convert_array_store(struct compilation_unit *cu,
-			       struct basic_block *bb, enum vm_type type)
+static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 {
 	struct expression *value, *index, *arrayref;
 	struct statement *store_stmt, *arraycheck, *nullcheck;
 	struct expression *src_expr, *dest_expr;
 
-	value = stack_pop(cu->expr_stack);
-	index = stack_pop(cu->expr_stack);
-	arrayref = stack_pop(cu->expr_stack);
+	value = stack_pop(ctx->cu->expr_stack);
+	index = stack_pop(ctx->cu->expr_stack);
+	arrayref = stack_pop(ctx->cu->expr_stack);
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)
@@ -263,9 +250,9 @@ static int convert_array_store(struct compilation_unit *cu,
 	expr_get(arrayref);
 	nullcheck->expression = &arrayref->node;
 
-	bb_add_stmt(bb, nullcheck);
-	bb_add_stmt(bb, arraycheck);
-	bb_add_stmt(bb, store_stmt);
+	bb_add_stmt(ctx->bb, nullcheck);
+	bb_add_stmt(ctx->bb, arraycheck);
+	bb_add_stmt(ctx->bb, store_stmt);
 
 	return 0;
 
@@ -277,63 +264,54 @@ static int convert_array_store(struct compilation_unit *cu,
 	return -ENOMEM;
 }
 
-int convert_iastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_iastore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_INT);
+	return convert_array_store(ctx, J_INT);
 }
 
-int convert_lastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_lastore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_LONG);
+	return convert_array_store(ctx, J_LONG);
 }
 
-int convert_fastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_fastore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_FLOAT);
+	return convert_array_store(ctx, J_FLOAT);
 }
 
-int convert_dastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_dastore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_DOUBLE);
+	return convert_array_store(ctx, J_DOUBLE);
 }
 
-int convert_aastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_aastore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_REFERENCE);
+	return convert_array_store(ctx, J_REFERENCE);
 }
 
-int convert_bastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_bastore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_INT);
+	return convert_array_store(ctx, J_INT);
 }
 
-int convert_castore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_castore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_CHAR);
+	return convert_array_store(ctx, J_CHAR);
 }
 
-int convert_sastore(struct compilation_unit *cu, struct basic_block *bb,
-			   unsigned long offset)
+int convert_sastore(struct parse_context *ctx)
 {
-	return convert_array_store(cu, bb, J_SHORT);
+	return convert_array_store(ctx, J_SHORT);
 }
 
-int convert_new(struct compilation_unit *cu, struct basic_block *bb,
-		unsigned long offset)
+int convert_new(struct parse_context *ctx)
 {
 	struct expression *expr;
 	unsigned long type_idx;
 	struct object *class;
 
-	type_idx = read_u16(cu->method->jit_code, offset + 1);
-	class = resolveClass(cu->method->class, type_idx, FALSE);
+	type_idx = read_u16(ctx->code, ctx->offset + 1);
+	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
 	if (!class)
 		return -EINVAL;
 
@@ -341,7 +319,7 @@ int convert_new(struct compilation_unit *cu, struct basic_block *bb,
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(cu->expr_stack, expr);
+	stack_push(ctx->cu->expr_stack, expr);
 
 	return 0;
 }
