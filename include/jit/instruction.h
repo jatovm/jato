@@ -110,8 +110,8 @@ struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
-void insn_def_mask(struct insn *, struct bitset *);
-void insn_use_mask(struct insn *, struct bitset *);
+bool insn_defs(struct insn *, unsigned long);
+bool insn_uses(struct insn *, unsigned long);
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 
