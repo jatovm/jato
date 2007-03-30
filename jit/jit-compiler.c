@@ -63,16 +63,6 @@ static void show_tree(struct compilation_unit *cu)
 	}
 }
 
-static int select_instructions(struct compilation_unit *cu)
-{
-	struct basic_block *bb;
-
-	for_each_basic_block(bb, &cu->bb_list)
-		insn_select(bb);
-
-	return 0;
-}
-
 static void compile_error(struct compilation_unit *cu, int err)
 {
 	struct classblock *cb = CLASS_CB(cu->method->class);

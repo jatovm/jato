@@ -3,6 +3,7 @@
 
 struct basic_block;
 
+int select_instructions(struct compilation_unit *cu);
 void insn_select(struct basic_block *);
 
 #endif
