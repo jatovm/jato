@@ -6,7 +6,6 @@
 #include <jit/basic-block.h>
 #include <jit/expression.h>
 #include <jit/instruction.h>
-#include <jit/insn-selector.h>
 #include <jit/statement.h>
 #include <jit/jit-compiler.h>
 
@@ -151,7 +150,7 @@ void test_should_select_insn_for_every_statement(void)
 	bb_add_stmt(bb, stmt1);
 	bb_add_stmt(bb, stmt2);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -194,7 +193,7 @@ static void assert_select_local_local_binop(enum binary_operator expr_op, enum i
 	struct insn *insn;
 
 	bb = create_local_local_binop_bb(expr_op);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -231,7 +230,7 @@ static void assert_select_local_value_binop(enum binary_operator expr_op, enum i
 	struct insn *insn;
 
 	bb = create_local_value_binop_bb(expr_op);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -264,7 +263,7 @@ void test_select_local_local_div(void)
 	struct insn *insn;
 
 	bb = create_local_local_binop_bb(OP_DIV);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -284,7 +283,7 @@ void test_select_local_local_rem(void)
 	struct insn *insn;
 
 	bb = create_local_local_binop_bb(OP_REM);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -327,7 +326,7 @@ static void assert_select_local_unop(enum unary_operator expr_op, enum insn_type
 	struct insn *insn;
 
 	bb = create_unop_bb(expr_op);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -349,7 +348,7 @@ static void assert_select_local_local_shift(enum binary_operator expr_op, enum i
 	struct insn *insn;
 
 	bb = create_local_local_binop_bb(expr_op);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -410,7 +409,7 @@ void test_select_return(void)
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EAX, insn);
@@ -434,7 +433,7 @@ void test_select_void_return(void)
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_branch_insn(INSN_JMP_BRANCH, cu->exit_bb, insn);
@@ -464,7 +463,7 @@ void test_select_invoke_without_arguments(void)
 	stmt->expression = &expr->node;
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&mb), insn);
@@ -496,7 +495,7 @@ void test_select_invoke_with_arguments(void)
 	stmt->expression = &invoke_expression->node;
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_insn(INSN_PUSH_IMM, 0x02, insn);
@@ -544,7 +543,7 @@ void test_select_method_return_value_passed_as_argument(void)
 	stmt->expression = &invoke->node;
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&nested_mb), insn);
@@ -586,7 +585,7 @@ void test_select_invokevirtual_with_arguments(void)
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_insn(INSN_PUSH_IMM, objectref, insn);
@@ -654,7 +653,7 @@ static void assert_select_if_statement_local_local(enum insn_type expected,
 	expr = binop_expr(J_INT, binop, local_expr(J_INT, 0), local_expr(J_INT, 1));
 	stmt = add_if_stmt(expr, bb, true_bb);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -687,7 +686,7 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 	expr = binop_expr(J_INT, binop, local_expr(J_INT, 0), value_expr(J_INT, 0xcafebabe));
 	stmt = add_if_stmt(expr, bb, true_bb);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, 8, REG_EAX, insn);
@@ -732,7 +731,7 @@ void test_select_load_class_field(void)
 	stmt->expression = &expr->node;
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &field, REG_EAX, insn);
@@ -767,7 +766,7 @@ void test_select_load_instance_field(void)
 	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, -4, REG_EAX, insn);
@@ -804,7 +803,7 @@ void test_store_value_to_class_field(void)
 	stmt->store_src  = &store_value->node;
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &field, REG_EAX, insn);
@@ -841,7 +840,7 @@ void test_store_value_to_instance_field(void)
 	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EBP, -4, REG_EAX, insn);
@@ -887,7 +886,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &field, REG_EAX, insn);
@@ -925,7 +924,7 @@ void test_select_new(void)
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
-	insn_select(bb);
+	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);

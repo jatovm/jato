@@ -10,7 +10,6 @@
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/expression.h>
-#include <jit/insn-selector.h>
 #include <jit/instruction.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
@@ -542,7 +541,7 @@ static void free_state(MBState *state)
 	g_free(state);
 }
 
-void insn_select(struct basic_block *bb)
+static void insn_select(struct basic_block *bb)
 {
 	struct statement *stmt;
 	MBState *state;

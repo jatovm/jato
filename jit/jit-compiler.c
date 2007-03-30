@@ -9,7 +9,6 @@
 
 #include <errno.h>
 #include <jit/compilation-unit.h>
-#include <jit/insn-selector.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
