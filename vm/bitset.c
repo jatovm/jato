@@ -115,3 +115,11 @@ bool bitset_equal(struct bitset *from, struct bitset *to)
 	}
 	return true;
 }
+
+void bitset_clear(struct bitset *bitset)
+{
+	unsigned long i;
+
+	for (i = 0; i < bitset->nr_bits / BITS_PER_LONG; i++)
+		bitset->bits[i] = 0;
+}

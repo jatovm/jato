@@ -130,3 +130,21 @@ void test_bitset_equal(void)
 	free(ones);
 	free(half_set);
 }
+
+void test_biset_clear(void)
+{
+	struct bitset *bitset;
+	int i;
+
+	bitset = alloc_bitset(BITSET_SIZE);
+
+	for (i = 0; i < BITSET_SIZE; i++)
+		set_bit(bitset->bits, i);
+
+	bitset_clear(bitset);
+
+	for (i = 0; i < BITSET_SIZE; i++)
+		assert_int_equals(0, test_bit(bitset->bits, i));
+
+	free(bitset);
+}

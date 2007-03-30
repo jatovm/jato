@@ -14,6 +14,7 @@ void set_bit(unsigned long *, unsigned long);
 void bitset_union_to(struct bitset *, struct bitset *);
 void bitset_sub(struct bitset *, struct bitset *);
 void bitset_copy_to(struct bitset *, struct bitset *);
-bool bitset_equal(struct bitset*, struct bitset *);
+bool bitset_equal(struct bitset *, struct bitset *);
+void bitset_clear(struct bitset *);
 
 #endif
