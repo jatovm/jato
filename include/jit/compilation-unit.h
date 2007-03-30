@@ -21,6 +21,12 @@ struct compilation_unit {
 	struct buffer *objcode;
 	bool is_compiled;
 	pthread_mutex_t mutex;
+
+	/* The frame pointer for this method.  */
+	struct var_info *frame_ptr;
+
+	/* The stack pointer for this method.  */
+	struct var_info *stack_ptr;
 };
 
 struct compilation_unit *alloc_compilation_unit(struct methodblock *);

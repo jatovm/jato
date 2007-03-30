@@ -16,6 +16,7 @@
 #include <jit/x86-frame.h>
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,7 @@ static void method_args_cleanup(struct basic_block *bb, unsigned long args_count
 	struct var_info *stack_ptr;
 	unsigned long args_size;
 
-	stack_ptr = get_fixed_var(bb->b_parent, REG_ESP);
+	stack_ptr = bb->b_parent->stack_ptr;
 	args_size = args_count * sizeof(u4);
 
 	bb_add_insn(bb, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
@@ -98,7 +99,7 @@ reg:	EXPR_LOCAL	1
 	result = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = result;
 
-	frame_ptr = get_fixed_var(s->b_parent, REG_EBP);
+	frame_ptr = s->b_parent->frame_ptr;
 
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, frame_ptr, disp, result));
 }
@@ -136,7 +137,7 @@ reg:	OP_DIV(reg, EXPR_LOCAL) 1
 	result = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = result;
 
-	frame_ptr = get_fixed_var(s->b_parent, REG_EBP);
+	frame_ptr = s->b_parent->frame_ptr;
 
 	bb_add_insn(s, reg_reg_insn(INSN_CLTD_REG_REG, result, edx));
 	bb_add_insn(s, membase_reg_insn(INSN_DIV_MEMBASE_REG, frame_ptr, disp, result));
@@ -155,7 +156,7 @@ reg:	OP_REM(reg, EXPR_LOCAL) 1
 	result = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = result;
 
-	frame_ptr = get_fixed_var(s->b_parent, REG_EBP);
+	frame_ptr = s->b_parent->frame_ptr;
 	remainder = get_fixed_var(s->b_parent, REG_EDX);
 
 	bb_add_insn(s, reg_reg_insn(INSN_CLTD_REG_REG, result, edx));
@@ -440,7 +441,7 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	src = state->right->reg1;
 	offset = frame_local_offset(s->b_parent->method, local);
 
-	frame_ptr = get_fixed_var(s->b_parent, REG_EBP);
+	frame_ptr = s->b_parent->frame_ptr;
 
 	bb_add_insn(s, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, frame_ptr, offset));
 }
@@ -558,9 +559,23 @@ static void insn_select(struct basic_block *bb)
 int select_instructions(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
+	int err = 0;
+
+	cu->frame_ptr = get_fixed_var(cu, REG_EBP);
+	if (!cu->frame_ptr) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	cu->stack_ptr = get_fixed_var(cu, REG_ESP);
+	if (!cu->stack_ptr) {
+		err = -ENOMEM;
+		goto out;
+	}
 
 	for_each_basic_block(bb, &cu->bb_list)
 		insn_select(bb);
 
-	return 0;
+  out:
+	return err;
 }
