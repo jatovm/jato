@@ -5,7 +5,8 @@
  * LICENSE for details.
  */
 
-#include <jit/instruction.h>
+#include <arch/instruction.h>
+
 #include <stdlib.h>
 #include <string.h>
 

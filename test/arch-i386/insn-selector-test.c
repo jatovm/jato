@@ -5,9 +5,10 @@
 #include <libharness.h>
 #include <jit/basic-block.h>
 #include <jit/expression.h>
-#include <jit/instruction.h>
 #include <jit/statement.h>
 #include <jit/jit-compiler.h>
+
+#include <arch/instruction.h>
 
 #include "vm-utils.h"
 

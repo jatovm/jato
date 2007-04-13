@@ -10,10 +10,11 @@
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/expression.h>
-#include <jit/instruction.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 #include <jit/x86-frame.h>
+
+#include <arch/instruction.h>
 
 #include <assert.h>
 #include <errno.h>

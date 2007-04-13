@@ -2,10 +2,12 @@
 #define __JIT_COMPILATION_UNIT_H
 
 #include <jit/basic-block.h>
-#include <jit/instruction.h>
 
 #include <vm/list.h>
 #include <vm/stack.h>
+
+#include <arch/instruction.h>
+
 #include <stdbool.h>
 #include <pthread.h>
 

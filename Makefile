@@ -41,6 +41,11 @@ else
 endif
 
 JATO_OBJS =  \
+	arch/$(ARCH)/emit-code.o \
+	arch/$(ARCH)/instruction.o \
+	arch/$(ARCH)/insn-selector.o \
+	arch/$(ARCH)/stack-frame.o \
+	arch/$(ARCH)/use-def.o \
 	jit/alloc.o \
 	jit/arithmetic-bc.o \
 	jit/basic-block.o \
@@ -52,8 +57,6 @@ JATO_OBJS =  \
 	jit/disass.o \
 	jit/emit.o \
 	jit/expression.o \
-	jit/insn-selector.o \
-	jit/instruction.o \
 	jit/invoke-bc.o \
 	jit/jit-compiler.o \
 	jit/load-store-bc.o \
@@ -63,9 +66,6 @@ JATO_OBJS =  \
 	jit/trace-jit.o \
 	jit/tree-printer.o \
 	jit/typeconv-bc.o \
-	jit/use-def.o \
-	jit/x86-frame.o \
-	jit/x86-objcode.o \
 	vm/backtrace.o \
 	vm/bitset.o \
 	vm/buffer.o \
@@ -125,9 +125,9 @@ $(ARCH_H):
 	$(call cmd,ln_arch_h)
 
 quiet_cmd_monoburg_exec = MONOBURG $@
-      cmd_monoburg_exec = $(MONOBURG) -p -e jit/insn-selector.brg > $@
+      cmd_monoburg_exec = $(MONOBURG) -p -e arch/$(ARCH)/insn-selector.brg > $@
 
-jit/insn-selector.c: FORCE
+arch/$(ARCH)/insn-selector.c: FORCE
 	$(call cmd,monoburg_exec)
 
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
@@ -142,6 +142,10 @@ TESTRUNNER=test-runner
 TEST_SUITE=test-suite.c
 
 TEST_OBJS = \
+	test/arch-$(ARCH)/emit-code-test.o \
+	test/arch-$(ARCH)/insn-selector-test.o \
+	test/arch-$(ARCH)/stack-frame-test.o \
+	test/arch-$(ARCH)/use-def-test.o \
 	test/jit/alloc-stub.o \
 	test/jit/arithmetic-bc-test.o \
 	test/jit/basic-block-test.o \
@@ -151,7 +155,6 @@ TEST_OBJS = \
 	test/jit/cfg-analyzer-test.o \
 	test/jit/compilation-unit-test.o \
 	test/jit/expression-test.o \
-	test/jit/insn-selector-test.o \
 	test/jit/invoke-bc-test.o \
 	test/jit/jit-compiler-test.o \
 	test/jit/load-store-bc-test.o \
@@ -160,9 +163,6 @@ TEST_OBJS = \
 	test/jit/resolve-stub.o \
 	test/jit/tree-printer-test.o \
 	test/jit/typeconv-bc-test.o \
-	test/jit/use-def-test.o \
-	test/jit/x86-frame-test.o \
-	test/jit/x86-objcode-test.o \
 	test/libharness/libharness.o \
 	test/vm/bitset-test.o \
 	test/vm/buffer-test.o \
@@ -217,7 +217,7 @@ acceptance: vm-classes $(EXECUTABLE) $(ACCEPTANCE_CLASSES)
 
 quiet_cmd_clean = CLEAN
       cmd_clean = rm -f $(JAMVM_OBJS) $(JATO_OBJS) $(TEST_OBJS) \
-      			jit/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
+      			arch/$(ARCH)/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
 			test-suite.c test-suite.o test-runner \
 			$(ACCEPTANCE_CLASSES) tags include/arch
 

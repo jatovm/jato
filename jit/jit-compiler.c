@@ -7,16 +7,18 @@
  * LICENSE for details.
  */
 
-#include <errno.h>
 #include <jit/compilation-unit.h>
 #include <jit/jit-compiler.h>
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
+
 #include <vm/buffer.h>
 #include <vm/natives.h>
 #include <vm/string.h>
-#include <x86-objcode.h>
 
+#include <arch/emit-code.h>
+
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

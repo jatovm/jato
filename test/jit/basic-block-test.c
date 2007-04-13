@@ -5,8 +5,9 @@
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <basic-block-assert.h>
-#include <jit/instruction.h>
 #include <jit/statement.h>
+
+#include <arch/instruction.h>
 
 #include <libharness.h>
 #include <stddef.h>

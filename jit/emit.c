@@ -14,7 +14,8 @@
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/jit-compiler.h>
-#include <x86-objcode.h>
+
+#include <arch/emit-code.h>
 
 #include <errno.h>
 #include <stdlib.h>

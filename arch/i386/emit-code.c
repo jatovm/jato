@@ -8,10 +8,12 @@
  */
 
 #include <jit/basic-block.h>
-#include <jit/instruction.h>
 #include <jit/statement.h>
+
 #include <vm/buffer.h>
-#include <x86-objcode.h>
+
+#include <arch/emit-code.h>
+#include <arch/instruction.h>
 
 #include <assert.h>
 #include <errno.h>

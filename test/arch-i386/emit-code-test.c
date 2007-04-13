@@ -2,13 +2,15 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <x86-objcode.h>
 #include <jit/basic-block.h>
-#include <jit/instruction.h>
 #include <jit/statement.h>
+
 #include <vm/buffer.h>
 #include <vm/list.h>
 #include <vm/system.h>
+
+#include <arch/emit-code.h>
+#include <arch/instruction.h>
 
 #include <libharness.h>
 

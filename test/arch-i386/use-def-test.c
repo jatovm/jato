@@ -6,8 +6,9 @@
  */
 
 #include <jit/compilation-unit.h>
-#include <jit/instruction.h>
 #include <jit/jit-compiler.h>
+
+#include <arch/instruction.h>
 
 #include <bc-test-utils.h>
 #include <libharness.h>
