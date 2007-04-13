@@ -22,6 +22,11 @@ struct var_info {
 	struct var_info *next;
 };
 
+static inline bool is_vreg(struct var_info *var, unsigned long vreg)
+{
+	return var->vreg == vreg;
+}
+
 union operand {
 	struct var_info *reg;
 
