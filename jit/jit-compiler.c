@@ -17,50 +17,9 @@
 #include <vm/string.h>
 #include <x86-objcode.h>
 
-#include "disass.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-int debug_tree;
-int debug_disassembly;
-
-static void show_method_info(struct methodblock *method)
-{
-	printf("Method: %s, Class: %s\n", method->name, CLASS_CB(method->class)->name);
-}
-
-static void show_disassembly(struct compilation_unit *cu)
-{
-	struct methodblock *method = cu->method;
-	void *start = buffer_ptr(cu->objcode);
-	void *end = buffer_current(cu->objcode);
-
-	show_method_info(method);
-	disassemble(start, end);
-	printf("\n");
-}
-
-static void show_tree(struct compilation_unit *cu)
-{
-	struct basic_block *bb;
-	struct statement *stmt;
-	struct string *str;
-	
-	show_method_info(cu->method);
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		printf("BB %p, start: %lu, end: %lu\n", bb, bb->start, bb->end);
-		for_each_stmt(stmt, &bb->stmt_list) {
-			str = alloc_str();
-			tree_print(&stmt->node, str);
-			printf(str->value);
-			printf("\n");
-			free_str(str);
-		}
-	}
-}
 
 static void compile_error(struct compilation_unit *cu, int err)
 {
@@ -74,16 +33,22 @@ int jit_compile(struct compilation_unit *cu)
 {
 	int err;
 
+	if (opt_trace_method)
+		trace_method(cu);
+
 	err = analyze_control_flow(cu);
 	if (err)
 		goto out;
+
+	if (opt_trace_cfg)
+		trace_cfg(cu);
 
 	err = convert_to_ir(cu);
 	if (err)
 		goto out;
 
-	if (debug_tree)
-		show_tree(cu);
+	if (opt_trace_tree_ir)
+		trace_tree_ir(cu);
 
 	err = select_instructions(cu);
 	if (err)
@@ -93,8 +58,8 @@ int jit_compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
-	if (debug_disassembly)
-		show_disassembly(cu);
+	if (opt_trace_machine_code)
+		trace_machine_code(cu);
 
 	cu->is_compiled = true;
 

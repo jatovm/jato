@@ -43,4 +43,14 @@ static inline void *trampoline_ptr(struct methodblock *method)
 	return buffer_ptr(method->trampoline->objcode);
 }
 
+extern bool opt_trace_method;
+extern bool opt_trace_cfg;
+extern bool opt_trace_tree_ir;
+extern bool opt_trace_machine_code;
+
+void trace_method(struct compilation_unit *);
+void trace_cfg(struct compilation_unit *);
+void trace_tree_ir(struct compilation_unit *);
+void trace_machine_code(struct compilation_unit *);
+
 #endif

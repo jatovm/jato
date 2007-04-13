@@ -75,7 +75,7 @@ unsigned char *disassinstr(unsigned char *code)
 		disass_initialized = 1;
 	}
 
-	printf("0x%08lx:   ", (unsigned long) code);
+	printf("  0x%08lx:   ", (unsigned long) code);
 
 	disass_len = 0;
 

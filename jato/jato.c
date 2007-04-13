@@ -35,8 +35,6 @@
 #define BCP_MESSAGE "<directories separated by :>"
 #endif
 
-extern int debug_disassembly;
-extern int debug_tree;
 static int run_with_interpreter;
 
 void showNonStandardOptions() {
@@ -215,11 +213,15 @@ int parseCommandLine(int argc, char *argv[], InitArgs *args) {
         } else if(strcmp(argv[i], "-Xcompactalways") == 0) {
             args->compact_specified = args->do_compact = TRUE;
 
-        } else if(strcmp(argv[i], "-Xdisasm") == 0) {
-            debug_disassembly = 1;
+        } else if(strcmp(argv[i], "-Xtrace:jit") == 0) {
+            opt_trace_method = true;
+            opt_trace_cfg = true;
+            opt_trace_tree_ir = true;
+            opt_trace_machine_code = true;
 
-        } else if(strcmp(argv[i], "-Xdumptree") == 0) {
-            debug_tree = 1;
+        } else if(strcmp(argv[i], "-Xtrace:asm") == 0) {
+            opt_trace_method = true;
+            opt_trace_machine_code = true;
 
         } else if(strcmp(argv[i], "-Xint") == 0) {
             run_with_interpreter = 1;

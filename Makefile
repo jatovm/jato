@@ -60,6 +60,7 @@ JATO_OBJS =  \
 	jit/object-bc.o \
 	jit/ostack-bc.o \
 	jit/statement.o \
+	jit/trace-jit.o \
 	jit/tree-printer.o \
 	jit/typeconv-bc.o \
 	jit/use-def.o \

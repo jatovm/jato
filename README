@@ -26,8 +26,8 @@ Running Jato
 Command line options:
 
   -Xint		Operate in interpreter-only mode.  Useful for debugging.
-  -Xdumptree	Show expression trees of each compiled method.
-  -Xdisasm	Show disassembly of each compiled method.
+  -Xtrace:jit	Trace all compilation phases for each method.
+  -Xtrace:asm	Trace the emitted machine code for each method.
 
 
 Development

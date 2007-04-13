@@ -62,8 +62,6 @@ unsigned long disass_len;
 
 void disassemble(void *start, void *end)
 {
-	printf("  --- disassembler listing ---\n");
-
 	for (; start < end; )
 		start = disassinstr(start);
 }
