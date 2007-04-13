@@ -197,29 +197,29 @@ test: $(ARCH_INCLUDE_DIR) $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-su
 	$(call cmd,runtests)
 
 quiet_cmd_jikes = JIKES $(empty)  $(empty) $@
-      cmd_jikes = $(JIKES) -cp $(BOOTCLASSPATH):acceptance -d acceptance $<
+      cmd_jikes = $(JIKES) -cp $(BOOTCLASSPATH):test/regression -d test/regression $<
 
 %.class: %.java
 	$(call cmd,jikes)
 
-ACCEPTANCE_CLASSES = \
-	acceptance/jamvm/TestCase.class \
-	acceptance/jamvm/ExitStatusIsOneTest.class \
-	acceptance/jamvm/ExitStatusIsZeroTest.class \
-	acceptance/jamvm/LoadConstantsTest.class \
-	acceptance/jamvm/IntegerArithmeticTest.class \
-	acceptance/jamvm/ObjectCreationAndManipulationTest.class
+REGRESSION_TEST_SUITE_CLASSES = \
+	test/regression/jamvm/TestCase.class \
+	test/regression/jamvm/ExitStatusIsOneTest.class \
+	test/regression/jamvm/ExitStatusIsZeroTest.class \
+	test/regression/jamvm/LoadConstantsTest.class \
+	test/regression/jamvm/IntegerArithmeticTest.class \
+	test/regression/jamvm/ObjectCreationAndManipulationTest.class
 
 vm-classes:
 	make -C lib/
 
-acceptance: vm-classes $(EXECUTABLE) $(ACCEPTANCE_CLASSES)
+compile-regression-suite: vm-classes $(EXECUTABLE) $(REGRESSION_TEST_SUITE_CLASSES)
 
 quiet_cmd_clean = CLEAN
       cmd_clean = rm -f $(JAMVM_OBJS) $(JATO_OBJS) $(TEST_OBJS) \
       			arch/$(ARCH)/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
 			test-suite.c test-suite.o test-runner \
-			$(ACCEPTANCE_CLASSES) tags include/arch
+			$(REGRESSION_TEST_SUITE_CLASSES) tags include/arch
 
 clean: FORCE
 	$(call cmd,clean)

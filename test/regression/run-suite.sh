@@ -7,7 +7,7 @@ function run_java {
   JAVA_CLASS=$1
   EXPECTED=$2
 
-  ../java \
+  ../../java \
       -Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
       -Xbootclasspath:$BOOTCLASSPATH $JAVA_OPTS -cp . $JAVA_CLASS
 
@@ -19,8 +19,8 @@ function run_java {
   fi
 }
 
-make -C.. acceptance
-GNU_CLASSPATH_ROOT=`grep "with_classpath_install_dir =" ../Makefile  | grep -v "#" |  awk '{ print $3 }'`
+make -C../../ compile-regression-suite
+GNU_CLASSPATH_ROOT=`grep "with_classpath_install_dir =" ../../Makefile  | grep -v "#" |  awk '{ print $3 }'`
 if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d $GNU_CLASSPATH_ROOT; then
   echo "Error! Cannot find GNU Classpath installed."
   exit
@@ -28,7 +28,7 @@ fi
 
 GLIBJ=$GNU_CLASSPATH_ROOT/share/classpath/glibj.zip
 
-BOOTCLASSPATH=../lib/classes.zip:$GLIBJ
+BOOTCLASSPATH=../../lib/classes.zip:$GLIBJ
 
 run_java jamvm.ExitStatusIsZeroTest 0
 run_java jamvm.ExitStatusIsOneTest 1

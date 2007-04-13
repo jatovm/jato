@@ -41,8 +41,8 @@ and email to .git/config file.  The format is as follows:
     email = jane@foo.bar
 
 
-How to run the acceptance test?
--------------------------------
+How to run the regression test suite?
+-------------------------------------
 
 Prequisites:
 
@@ -54,8 +54,8 @@ To run the tests, execute the following commands:
 
   cd ../monoburg
   make
-  cd ../acceptance
-  sh run-acceptance-tests.sh
+  cd ../test/regression
+  ./run-suite.sh
 
 
 How to launch Java applications with Jato under GDB?
