@@ -3,8 +3,8 @@
  */
 
 #include <jit/expression.h>
-#include <jit/x86-frame.h>
 #include <vm/vm.h>
+#include <arch/stack-frame.h>
 
 #include <libharness.h>
 
