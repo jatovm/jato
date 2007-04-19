@@ -40,12 +40,14 @@ else
   quiet = quiet_
 endif
 
-JATO_OBJS =  \
+ARCH_OBJS = \
 	arch/$(ARCH)/emit-code.o \
 	arch/$(ARCH)/instruction.o \
 	arch/$(ARCH)/insn-selector.o \
 	arch/$(ARCH)/stack-frame.o \
-	arch/$(ARCH)/use-def.o \
+	arch/$(ARCH)/use-def.o
+
+JIT_OBJS = \
 	jit/alloc.o \
 	jit/arithmetic-bc.o \
 	jit/basic-block.o \
@@ -66,6 +68,8 @@ JATO_OBJS =  \
 	jit/trace-jit.o \
 	jit/tree-printer.o \
 	jit/typeconv-bc.o \
+
+VM_OBJS = \
 	vm/backtrace.o \
 	vm/bitset.o \
 	vm/buffer.o \
@@ -105,6 +109,10 @@ JAMVM_OBJS = \
 	jamvm/thread.o \
 	jamvm/utf8.o \
 	jamvm/zip.o
+
+JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS)
+
+OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 	
 # If quiet is set, only print short version of command
 cmd = @$(if $($(quiet)cmd_$(1)),\
@@ -131,21 +139,29 @@ arch/$(ARCH)/insn-selector.c: FORCE
 	$(call cmd,monoburg_exec)
 
 quiet_cmd_cc_exec = LD $(empty)     $(empty) $(EXECUTABLE)
-      cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(JAMVM_OBJS) $(JATO_OBJS) -o $(EXECUTABLE)
+      cmd_cc_exec = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) $(LIBS) $(OBJS) -o $(EXECUTABLE)
 
 $(EXECUTABLE): $(ARCH_INCLUDE_DIR) $(ARCH_H) compile
 	$(call cmd,cc_exec)
 
-compile: $(JAMVM_OBJS) $(JATO_OBJS)
+compile: $(OBJS)
 
-TESTRUNNER=test-runner
-TEST_SUITE=test-suite.c
+LIBHARNESS_OBJS = \
+	test/libharness/libharness.o
 
-TEST_OBJS = \
+ARCH_TESTRUNNER=arch-test-runner
+ARCH_TEST_SUITE=arch-test-suite.c
+
+ARCH_TEST_OBJS= \
 	test/arch-$(ARCH)/emit-code-test.o \
 	test/arch-$(ARCH)/insn-selector-test.o \
 	test/arch-$(ARCH)/stack-frame-test.o \
 	test/arch-$(ARCH)/use-def-test.o \
+
+JIT_TESTRUNNER=jit-test-runner
+JIT_TEST_SUITE=jit-test-suite.c
+
+JIT_TEST_OBJS = \
 	test/jit/alloc-stub.o \
 	test/jit/arithmetic-bc-test.o \
 	test/jit/basic-block-test.o \
@@ -163,7 +179,11 @@ TEST_OBJS = \
 	test/jit/resolve-stub.o \
 	test/jit/tree-printer-test.o \
 	test/jit/typeconv-bc-test.o \
-	test/libharness/libharness.o \
+
+VM_TESTRUNNER=vm-test-runner
+VM_TEST_SUITE=vm-test-suite.c
+
+VM_TEST_OBJS = \
 	test/vm/bitset-test.o \
 	test/vm/buffer-test.o \
 	test/vm/bytecodes-test.o \
@@ -172,29 +192,55 @@ TEST_OBJS = \
 	test/vm/stack-test.o \
 	test/vm/string-test.o \
 
-$(TEST_OBJS):
-
 quiet_cmd_ln_arch = LN $(empty)     $(empty) $@
       cmd_ln_arch = ln -fsn arch-$(ARCH) $@
 
 $(ARCH_INCLUDE_DIR): FORCE
 	$(call cmd,ln_arch)
 
-quiet_cmd_gensuite = GENSUITE $@
-      cmd_gensuite = sh test/scripts/make-tests.sh > $@
+quiet_cmd_arch_gensuite = GENSUITE $@
+      cmd_arch_gensuite = sh test/scripts/make-tests.sh test/arch-$(ARCH)/*.c > $@
 
-test-suite.c: FORCE
-	$(call cmd,gensuite)
+$(ARCH_TEST_SUITE): FORCE
+	$(call cmd,arch_gensuite)
 
-quiet_cmd_runtests = RUNTEST $(TESTRUNNER)
-      cmd_runtests = ./$(TESTRUNNER)
+quiet_cmd_jit_gensuite = GENSUITE $@
+      cmd_jit_gensuite = sh test/scripts/make-tests.sh test/jit/*.c > $@
 
-quiet_cmd_cc_testrunner = MAKE $(empty)   $(empty) $(TESTRUNNER)
-      cmd_cc_testrunner = $(CC) $(CCFLAGS) $(INCLUDE) $(TEST_SUITE) $(LIBS) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) -o $(TESTRUNNER)
+$(JIT_TEST_SUITE): FORCE
+	$(call cmd,jit_gensuite)
 
-test: $(ARCH_INCLUDE_DIR) $(ARCH_H) $(JATO_OBJS) $(TEST_OBJS) $(HARNESS) test-suite.c
-	$(call cmd,cc_testrunner)
-	$(call cmd,runtests)
+quiet_cmd_vm_gensuite = GENSUITE $@
+      cmd_vm_gensuite = sh test/scripts/make-tests.sh test/vm/*.c > $@
+
+$(VM_TEST_SUITE): FORCE
+	$(call cmd,vm_gensuite)
+
+quiet_cmd_arch_run_tests = RUNTEST $(empty) $(ARCH_TESTRUNNER)
+      cmd_arch_run_tests = ./$(ARCH_TESTRUNNER)
+
+quiet_cmd_jit_run_tests = RUNTEST $(empty) $(JIT_TESTRUNNER)
+      cmd_jit_run_tests = ./$(JIT_TESTRUNNER)
+
+quiet_cmd_vm_run_tests = RUNTEST $(empty) $(VM_TESTRUNNER)
+      cmd_vm_run_tests = ./$(VM_TESTRUNNER)
+
+quiet_cmd_cc_arch_test_runner = MAKE $(empty)   $(empty) $(ARCH_TESTRUNNER)
+      cmd_cc_arch_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(ARCH_TEST_SUITE) $(LIBS) $(JATO_OBJS) $(ARCH_TEST_OBJS) $(JIT_TEST_OBJS) $(LIBHARNESS_OBJS) -o $(ARCH_TESTRUNNER)
+
+quiet_cmd_cc_jit_test_runner = MAKE $(empty)   $(empty) $(JIT_TESTRUNNER)
+      cmd_cc_jit_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(JIT_TEST_SUITE) $(LIBS) $(JATO_OBJS) $(JIT_TEST_OBJS) $(LIBHARNESS_OBJS) -o $(JIT_TESTRUNNER)
+
+quiet_cmd_cc_vm_test_runner = MAKE $(empty)   $(empty) $(VM_TESTRUNNER)
+      cmd_cc_vm_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(VM_TEST_SUITE) $(LIBS) $(VM_OBJS) $(VM_TEST_OBJS) $(LIBHARNESS_OBJS) -o $(VM_TESTRUNNER)
+
+test: $(ARCH_INCLUDE_DIR) $(ARCH_H) $(JATO_OBJS) $(LIBHARNESS_OBJS) $(ARCH_TEST_OBJS) $(JIT_TEST_OBJS) $(VM_TEST_OBJS) $(ARCH_TEST_SUITE) $(JIT_TEST_SUITE) $(VM_TEST_SUITE)
+	$(call cmd,cc_vm_test_runner)
+	$(call cmd,cc_jit_test_runner)
+	$(call cmd,cc_arch_test_runner)
+	$(call cmd,vm_run_tests)
+	$(call cmd,jit_run_tests)
+	$(call cmd,arch_run_tests)
 
 quiet_cmd_jikes = JIKES $(empty)  $(empty) $@
       cmd_jikes = $(JIKES) -cp $(BOOTCLASSPATH):test/regression -d test/regression $<
@@ -216,10 +262,13 @@ vm-classes:
 compile-regression-suite: vm-classes $(EXECUTABLE) $(REGRESSION_TEST_SUITE_CLASSES)
 
 quiet_cmd_clean = CLEAN
-      cmd_clean = rm -f $(JAMVM_OBJS) $(JATO_OBJS) $(TEST_OBJS) \
-      			arch/$(ARCH)/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
-			test-suite.c test-suite.o test-runner \
-			$(REGRESSION_TEST_SUITE_CLASSES) tags include/arch
+      cmd_clean = rm -f $(OBJS) $(LIBHARNESS_OBJS) $(ARCH_TEST_OBJS) \
+			$(JIT_TEST_OBJS) $(VM_TEST_OBJS) \
+			arch/$(ARCH)/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
+			$(ARCH_TEST_SUITE) $(JIT_TEST_SUITE) $(VM_TEST_SUITE) \
+			test-suite.o $(ARCH_TESTRUNNER) $(JIT_TESTRUNNER) \
+			$(VM_TESTRUNNER) $(REGRESSION_TEST_SUITE_CLASSES) \
+			tags include/arch
 
 clean: FORCE
 	$(call cmd,clean)
