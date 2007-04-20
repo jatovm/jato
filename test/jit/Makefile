@@ -1,0 +1,82 @@
+CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+INCLUDE=-I../include/ -I. -I../libharness -I../../include -I../../jit/glib
+LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
+
+include ../../scripts/Makefile.include
+
+quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
+      cmd_cc_o_c = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `basename $@`
+
+%.o: %.c
+	$(call cmd,cc_o_c)
+
+RUNNER=jit-test-runner
+SUITE=jit-test-suite.c
+
+OBJS = \
+	../../vm/backtrace.o \
+	../../vm/bitset.o \
+	../../vm/buffer.o \
+	../../vm/bytecodes.o \
+	../../vm/stack.o \
+	../../vm/string.o \
+	../../vm/types.o \
+	../../jit/arithmetic-bc.o \
+	../../jit/basic-block.o \
+	../../jit/branch-bc.o \
+	../../jit/bytecode-to-ir.o \
+	../../jit/cfg-analyzer.o \
+	../../jit/compilation-unit.o \
+	../../jit/expression.o \
+	../../jit/invoke-bc.o \
+	../../jit/load-store-bc.o \
+	../../jit/object-bc.o \
+	../../jit/ostack-bc.o \
+	../../jit/statement.o \
+	../../jit/typeconv-bc.o \
+	../../jit/tree-printer.o \
+	../libharness/libharness.o \
+	../jamvm/alloc-stub.o \
+	../jamvm/resolve-stub.o \
+        arithmetic-bc-test.o \
+        basic-block-test.o \
+        bc-test-utils.o \
+        branch-bc-test.o \
+        bytecode-to-ir-test.o \
+        cfg-analyzer-test.o \
+        compilation-unit-test.o \
+        expression-test.o \
+        invoke-bc-test.o \
+        load-store-bc-test.o \
+        object-bc-test.o \
+        ostack-bc-test.o \
+        tree-printer-test.o \
+        typeconv-bc-test.o \
+
+quiet_cmd_run_tests = RUNTEST $(empty) $(RUNNER)
+      cmd_run_tests = ./$(RUNNER)
+
+quiet_cmd_cc_test_runner = MAKE $(empty)   $(empty) $(RUNNER)
+      cmd_cc_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(LIBS) *.o $(SUITE) -o $(RUNNER)
+
+test: $(SUITE) $(OBJS)
+	$(call cmd,cc_test_runner)
+	$(call cmd,run_tests)
+
+$(OBJS): FORCE
+
+quiet_cmd_gen_suite = SUITE $(empty)  $(empty) $@
+      cmd_gen_suite = sh ../scripts/make-tests.sh *.c > $@
+
+$(SUITE): FORCE
+	$(call cmd,gen_suite)
+
+quiet_cmd_clean = CLEAN
+      cmd_clean = rm -f *.o $(RUNNER) $(SUITE)
+
+clean: FORCE
+	$(call cmd,clean)
+
+PHONY += FORCE
+FORCE:
+# DO NOT DELETE

@@ -452,7 +452,8 @@ void test_select_invoke_without_arguments(void)
 		.args_count = 0
 	};
 
-	jit_prepare_for_exec(&mb);
+	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.trampoline = alloc_jit_trampoline();
 
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
@@ -483,7 +484,8 @@ void test_select_invoke_with_arguments(void)
 		.args_count = 2
 	};
 
-	jit_prepare_for_exec(&mb);
+	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.trampoline = alloc_jit_trampoline();
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
@@ -527,10 +529,12 @@ void test_select_method_return_value_passed_as_argument(void)
 		.args_count = 0
 	};
 
-	jit_prepare_for_exec(&mb);
+	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.trampoline = alloc_jit_trampoline();
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
-	jit_prepare_for_exec(&nested_mb);
+	nested_mb.compilation_unit = alloc_compilation_unit(&nested_mb);
+	nested_mb.trampoline = alloc_jit_trampoline();
 
 	no_args = no_args_expr();
 	nested_invoke = __invoke_expr(J_INT, &nested_mb);

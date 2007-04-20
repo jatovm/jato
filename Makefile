@@ -149,49 +149,6 @@ compile: $(OBJS)
 LIBHARNESS_OBJS = \
 	test/libharness/libharness.o
 
-ARCH_TESTRUNNER=arch-test-runner
-ARCH_TEST_SUITE=arch-test-suite.c
-
-ARCH_TEST_OBJS= \
-	test/arch-$(ARCH)/emit-code-test.o \
-	test/arch-$(ARCH)/insn-selector-test.o \
-	test/arch-$(ARCH)/stack-frame-test.o \
-	test/arch-$(ARCH)/use-def-test.o \
-
-JIT_TESTRUNNER=jit-test-runner
-JIT_TEST_SUITE=jit-test-suite.c
-
-JIT_TEST_OBJS = \
-	test/jit/alloc-stub.o \
-	test/jit/arithmetic-bc-test.o \
-	test/jit/basic-block-test.o \
-	test/jit/bc-test-utils.o \
-	test/jit/branch-bc-test.o \
-	test/jit/bytecode-to-ir-test.o \
-	test/jit/cfg-analyzer-test.o \
-	test/jit/compilation-unit-test.o \
-	test/jit/expression-test.o \
-	test/jit/invoke-bc-test.o \
-	test/jit/jit-compiler-test.o \
-	test/jit/load-store-bc-test.o \
-	test/jit/object-bc-test.o \
-	test/jit/ostack-bc-test.o \
-	test/jit/resolve-stub.o \
-	test/jit/tree-printer-test.o \
-	test/jit/typeconv-bc-test.o \
-
-VM_TESTRUNNER=vm-test-runner
-VM_TEST_SUITE=vm-test-suite.c
-
-VM_TEST_OBJS = \
-	test/vm/bitset-test.o \
-	test/vm/buffer-test.o \
-	test/vm/bytecodes-test.o \
-	test/vm/list-test.o \
-	test/vm/natives-test.o \
-	test/vm/stack-test.o \
-	test/vm/string-test.o \
-
 quiet_cmd_ln_arch = LN $(empty)     $(empty) $@
       cmd_ln_arch = ln -fsn arch-$(ARCH) $@
 
@@ -201,46 +158,10 @@ $(ARCH_INCLUDE_DIR): FORCE
 quiet_cmd_arch_gensuite = GENSUITE $@
       cmd_arch_gensuite = sh test/scripts/make-tests.sh test/arch-$(ARCH)/*.c > $@
 
-$(ARCH_TEST_SUITE): FORCE
-	$(call cmd,arch_gensuite)
-
-quiet_cmd_jit_gensuite = GENSUITE $@
-      cmd_jit_gensuite = sh test/scripts/make-tests.sh test/jit/*.c > $@
-
-$(JIT_TEST_SUITE): FORCE
-	$(call cmd,jit_gensuite)
-
-quiet_cmd_vm_gensuite = GENSUITE $@
-      cmd_vm_gensuite = sh test/scripts/make-tests.sh test/vm/*.c > $@
-
-$(VM_TEST_SUITE): FORCE
-	$(call cmd,vm_gensuite)
-
-quiet_cmd_arch_run_tests = RUNTEST $(empty) $(ARCH_TESTRUNNER)
-      cmd_arch_run_tests = ./$(ARCH_TESTRUNNER)
-
-quiet_cmd_jit_run_tests = RUNTEST $(empty) $(JIT_TESTRUNNER)
-      cmd_jit_run_tests = ./$(JIT_TESTRUNNER)
-
-quiet_cmd_vm_run_tests = RUNTEST $(empty) $(VM_TESTRUNNER)
-      cmd_vm_run_tests = ./$(VM_TESTRUNNER)
-
-quiet_cmd_cc_arch_test_runner = MAKE $(empty)   $(empty) $(ARCH_TESTRUNNER)
-      cmd_cc_arch_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(ARCH_TEST_SUITE) $(LIBS) $(JATO_OBJS) $(ARCH_TEST_OBJS) $(JIT_TEST_OBJS) $(LIBHARNESS_OBJS) -o $(ARCH_TESTRUNNER)
-
-quiet_cmd_cc_jit_test_runner = MAKE $(empty)   $(empty) $(JIT_TESTRUNNER)
-      cmd_cc_jit_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(JIT_TEST_SUITE) $(LIBS) $(JATO_OBJS) $(JIT_TEST_OBJS) $(LIBHARNESS_OBJS) -o $(JIT_TESTRUNNER)
-
-quiet_cmd_cc_vm_test_runner = MAKE $(empty)   $(empty) $(VM_TESTRUNNER)
-      cmd_cc_vm_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(VM_TEST_SUITE) $(LIBS) $(VM_OBJS) $(VM_TEST_OBJS) $(LIBHARNESS_OBJS) -o $(VM_TESTRUNNER)
-
-test: $(ARCH_INCLUDE_DIR) $(ARCH_H) $(JATO_OBJS) $(LIBHARNESS_OBJS) $(ARCH_TEST_OBJS) $(JIT_TEST_OBJS) $(VM_TEST_OBJS) $(ARCH_TEST_SUITE) $(JIT_TEST_SUITE) $(VM_TEST_SUITE)
-	$(call cmd,cc_vm_test_runner)
-	$(call cmd,cc_jit_test_runner)
-	$(call cmd,cc_arch_test_runner)
-	$(call cmd,vm_run_tests)
-	$(call cmd,jit_run_tests)
-	$(call cmd,arch_run_tests)
+test: $(ARCH_INCLUDE_DIR) $(ARCH_H) FORCE
+	make -C test/vm/ test
+	make -C test/jit/ test
+	make -C test/arch-i386/ test
 
 quiet_cmd_jikes = JIKES $(empty)  $(empty) $@
       cmd_jikes = $(JIKES) -cp $(BOOTCLASSPATH):test/regression -d test/regression $<
@@ -263,15 +184,17 @@ compile-regression-suite: vm-classes $(EXECUTABLE) $(REGRESSION_TEST_SUITE_CLASS
 
 quiet_cmd_clean = CLEAN
       cmd_clean = rm -f $(OBJS) $(LIBHARNESS_OBJS) $(ARCH_TEST_OBJS) \
-			$(JIT_TEST_OBJS) $(VM_TEST_OBJS) \
 			arch/$(ARCH)/insn-selector.c $(EXECUTABLE) $(ARCH_H) \
-			$(ARCH_TEST_SUITE) $(JIT_TEST_SUITE) $(VM_TEST_SUITE) \
-			test-suite.o $(ARCH_TESTRUNNER) $(JIT_TESTRUNNER) \
-			$(VM_TESTRUNNER) $(REGRESSION_TEST_SUITE_CLASSES) \
+			$(ARCH_TEST_SUITE) \
+			test-suite.o $(ARCH_TESTRUNNER) \
+			$(REGRESSION_TEST_SUITE_CLASSES) \
 			tags include/arch
 
 clean: FORCE
 	$(call cmd,clean)
+	make -C test/vm/ clean
+	make -C test/jit/ clean
+	make -C test/arch-i386/ clean
 
 quiet_cmd_tags = TAGS
       cmd_tags = exuberant-ctags -R
