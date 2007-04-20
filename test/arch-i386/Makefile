@@ -15,19 +15,19 @@ SUITE=i386-test-suite.c
 
 OBJS = \
 	../libharness/libharness.o \
-        ../jamvm/alloc-stub.o \
-        ../../vm/backtrace.o \
-        ../../vm/buffer.o \
-        ../../vm/stack.o \
-        ../../vm/string.o \
-        ../../vm/types.o \
-        ../../jit/alloc.o \
-        ../../jit/basic-block.o \
-        ../../jit/compilation-unit.o \
-        ../../jit/emit.o \
-        ../../jit/expression.o \
-        ../../jit/statement.o \
-        ../../jit/tree-printer.o \
+	../jamvm/alloc-stub.o \
+	../../vm/backtrace.o \
+	../../vm/buffer.o \
+	../../vm/stack.o \
+	../../vm/string.o \
+	../../vm/types.o \
+	../../jit/alloc.o \
+	../../jit/basic-block.o \
+	../../jit/compilation-unit.o \
+	../../jit/emit.o \
+	../../jit/expression.o \
+	../../jit/statement.o \
+	../../jit/tree-printer.o \
 	../../arch/i386/emit-code.o \
 	../../arch/i386/instruction.o \
 	../../arch/i386/insn-selector.o \

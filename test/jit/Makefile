@@ -38,20 +38,20 @@ OBJS = \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
-        arithmetic-bc-test.o \
-        basic-block-test.o \
-        bc-test-utils.o \
-        branch-bc-test.o \
-        bytecode-to-ir-test.o \
-        cfg-analyzer-test.o \
-        compilation-unit-test.o \
-        expression-test.o \
-        invoke-bc-test.o \
-        load-store-bc-test.o \
-        object-bc-test.o \
-        ostack-bc-test.o \
-        tree-printer-test.o \
-        typeconv-bc-test.o \
+	arithmetic-bc-test.o \
+	basic-block-test.o \
+	bc-test-utils.o \
+	branch-bc-test.o \
+	bytecode-to-ir-test.o \
+	cfg-analyzer-test.o \
+	compilation-unit-test.o \
+	expression-test.o \
+	invoke-bc-test.o \
+	load-store-bc-test.o \
+	object-bc-test.o \
+	ostack-bc-test.o \
+	tree-printer-test.o \
+	typeconv-bc-test.o \
 
 quiet_cmd_run_tests = RUNTEST $(empty) $(RUNNER)
       cmd_run_tests = ./$(RUNNER)
