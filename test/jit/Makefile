@@ -29,6 +29,7 @@ OBJS = \
 	../../jit/compilation-unit.o \
 	../../jit/expression.o \
 	../../jit/invoke-bc.o \
+	../../jit/liveness.o \
 	../../jit/load-store-bc.o \
 	../../jit/object-bc.o \
 	../../jit/ostack-bc.o \
@@ -38,6 +39,8 @@ OBJS = \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
+	../arch-mmix/instruction.o \
+	../arch-mmix/use-def.o \
 	arithmetic-bc-test.o \
 	basic-block-test.o \
 	bc-test-utils.o \
@@ -47,6 +50,7 @@ OBJS = \
 	compilation-unit-test.o \
 	expression-test.o \
 	invoke-bc-test.o \
+	liveness-test.o \
 	load-store-bc-test.o \
 	object-bc-test.o \
 	ostack-bc-test.o \

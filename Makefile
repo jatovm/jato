@@ -61,6 +61,7 @@ JIT_OBJS = \
 	jit/expression.o \
 	jit/invoke-bc.o \
 	jit/jit-compiler.o \
+	jit/liveness.o \
 	jit/load-store-bc.o \
 	jit/object-bc.o \
 	jit/ostack-bc.o \

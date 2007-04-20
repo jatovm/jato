@@ -62,6 +62,10 @@ void free_basic_block(struct basic_block *bb)
 {
 	free_stmt_list(&bb->stmt_list);
 	free_insn_list(&bb->insn_list);
+	free(bb->use_set);
+	free(bb->def_set);
+	free(bb->live_in_set);
+	free(bb->live_out_set);
 	free(bb);
 }
 

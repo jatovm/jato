@@ -16,9 +16,14 @@ enum machine_reg {
 	REG_ESP,
 };
 
+struct live_range {
+	unsigned long start, end;
+};
+
 struct var_info {
 	unsigned long vreg;
 	enum machine_reg reg;
+	struct live_range range;
 	struct var_info *next;
 };
 

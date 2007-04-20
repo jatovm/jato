@@ -28,6 +28,7 @@ struct parse_context {
 int jit_compile(struct compilation_unit *);
 int analyze_control_flow(struct compilation_unit *);
 int convert_to_ir(struct compilation_unit *);
+int analyze_liveness(struct compilation_unit *);
 int select_instructions(struct compilation_unit *cu);
 int emit_machine_code(struct compilation_unit *);
 void *jit_magic_trampoline(struct compilation_unit *);

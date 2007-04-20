@@ -25,6 +25,25 @@ struct basic_block {
 	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
 	unsigned long nr_successors;
 	struct basic_block *successors[MAX_BB_SUCCESSORS];
+
+	/*
+	 * These are computed by liveness analysis.
+	 */
+	struct {
+		unsigned long start_insn, end_insn;
+
+		/* Set of variables defined by this basic block.  */
+		struct bitset *def_set;
+
+		/* Set of variables used by this basic block.  */
+		struct bitset *use_set;
+
+		/* Set of variables that are live when entering this basic block.  */
+		struct bitset *live_in_set;
+
+		/* Set of variables that are live when exiting this basic block.  */
+		struct bitset *live_out_set;
+	};
 };
 
 static inline struct basic_block *bb_entry(struct list_head *head)
@@ -41,5 +60,6 @@ void bb_add_insn(struct basic_block *, struct insn *);
 void bb_add_successor(struct basic_block *, struct basic_block *);
 
 #define for_each_basic_block(bb, bb_list) list_for_each_entry(bb, bb_list, bb_list_node)
+#define for_each_basic_block_reverse(bb, bb_list) list_for_each_entry_reverse(bb, bb_list, bb_list_node)
 
 #endif

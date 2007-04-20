@@ -61,6 +61,8 @@ struct var_info *get_var(struct compilation_unit *cu)
 	if (!ret)
 		goto out;
 
+	ret->range.start = ~0UL;
+	ret->range.end = 0UL;
 	ret->vreg = cu->nr_vregs++;
 	ret->next = cu->var_infos;
 	cu->var_infos = ret;

@@ -56,6 +56,10 @@ int jit_compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	err = analyze_liveness(cu);
+	if (err)
+		goto out;
+
 	err = emit_machine_code(cu);
 	if (err)
 		goto out;
