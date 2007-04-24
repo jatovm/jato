@@ -78,8 +78,9 @@ Finally, to launch a Java application with Jato under gdb:
 How do I launch a simple application?
 -------------------------------------
 
-Run a simple Java application, you can download Christian Schneider's Java
-tetris <http://www.liquidreality.de/main/projects/tetris> and launch it with
+To run a simple Java application, you can download Christian
+Schneider's Java tetris
+<http://www.liquidreality.de/main/projects/tetris> and launch it with
 the following command (remembed to download jdom jar also):
 
   ./java -Xtrace:jit -Xms32M -Xnocompact -Xnoasyncgc \
@@ -88,8 +89,9 @@ the following command (remembed to download jdom jar also):
          -classpath <TETRIS_HOME>/tetris_source.jar:<TETRIS_HOME>/jdom.jar \
          tetris/TetrisFrame
 
-Note: Jato interacts badly with JamVM GC which is why you should make the
-initial heap size big enough for GC not to trigger during execution.
+Note: Jato interacts badly with JamVM GC which is why you should make
+the initial heap size big enough for GC not to trigger during
+execution.
 
 To launch the application under gdb, use the following command:
 
