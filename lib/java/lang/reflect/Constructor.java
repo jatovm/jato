@@ -45,6 +45,7 @@ package java.lang.reflect;
 import gnu.java.lang.ClassHelper;
 import gnu.java.lang.reflect.MethodSignatureParser;
 import java.util.Arrays;
+import java.lang.annotation.Annotation;
 
 /**
  * The Constructor class represents a constructor of a class. It also allows
@@ -122,13 +123,6 @@ public final class Constructor
   {
     return getDeclaringClass().getName();
   }
-
-  /**
-   * Return the raw modifiers for this constructor.  In particular
-   * this will include the synthetic and varargs bits.
-   * @return the constructor's modifiers
-   */
-  private native int getConstructorModifiers(Class declaringClass, int slot);
 
   /**
    * Gets the modifiers this constructor uses.  Use the <code>Modifier</code>
@@ -334,12 +328,6 @@ public final class Constructor
     return constructNative(args, declaringClass, parameterTypes, slot, flag);
   }
 
-  private native Object constructNative(Object[] args, Class declaringClass,
-					Class[] parameterTypes, int slot,
-					boolean noAccessCheck)
-    throws InstantiationException, IllegalAccessException,
-           InvocationTargetException;
-
   /**
    * Returns an array of <code>TypeVariable</code> objects that represents
    * the type variables declared by this constructor, in declaration order.
@@ -361,12 +349,6 @@ public final class Constructor
     MethodSignatureParser p = new MethodSignatureParser(this, sig);
     return p.getTypeParameters();
   }
-
-  /**
-   * Return the String in the Signature attribute for this constructor. If there
-   * is no Signature attribute, return null.
-   */
-  private native String getSignature(Class declaringClass, int slot);
 
   /**
    * Returns an array of <code>Type</code> objects that represents
@@ -409,5 +391,49 @@ public final class Constructor
     MethodSignatureParser p = new MethodSignatureParser(this, sig);
     return p.getGenericParameterTypes();
   }
-}
 
+  public Annotation getAnnotation(Class annoClass)
+  {
+    Annotation[] annos = getDeclaredAnnotations();
+    for (int i = 0; i < annos.length; i++)
+      if (annos[i].annotationType() == annoClass)
+	return annos[i];
+    return null;
+  }
+
+  public Annotation[] getDeclaredAnnotations()
+  {
+    return getDeclaredAnnotationsNative(declaringClass, slot);
+  }
+
+  public Annotation[][] getParameterAnnotations()
+  {
+    return getParameterAnnotationsNative(declaringClass, slot);
+  }
+
+  /*
+   * NATIVE HELPERS
+   */
+
+  /**
+   * Return the String in the Signature attribute for this constructor. If there
+   * is no Signature attribute, return null.
+   */
+  private native String getSignature(Class declaringClass, int slot);
+
+  /**
+   * Return the raw modifiers for this constructor.  In particular
+   * this will include the synthetic and varargs bits.
+   * @return the constructor's modifiers
+   */
+  private native int getConstructorModifiers(Class declaringClass, int slot);
+
+  private native Object constructNative(Object[] args, Class declaringClass,
+					Class[] parameterTypes, int slot,
+					boolean noAccessCheck)
+    throws InstantiationException, IllegalAccessException,
+           InvocationTargetException;
+
+  private native Annotation[] getDeclaredAnnotationsNative(Class declaringClass, int slot);
+  private native Annotation[][] getParameterAnnotationsNative(Class declaringClass, int slot);
+}

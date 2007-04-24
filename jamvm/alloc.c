@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -163,6 +164,7 @@ static int reference_size      = 0;
 /* Internal locks protecting the GC lists and heap */
 static VMLock heap_lock;
 static VMLock has_fnlzr_lock;
+static VMLock registered_refs_lock;
 static VMWaitLock run_finaliser_lock;
 static VMWaitLock reference_lock;
 
@@ -267,6 +269,7 @@ void initialiseAlloc(InitArgs *args) {
 
     initVMLock(heap_lock);
     initVMLock(has_fnlzr_lock);
+    initVMLock(registered_refs_lock);
     initVMWaitLock(run_finaliser_lock);
     initVMWaitLock(reference_lock);
 
@@ -898,6 +901,18 @@ void addConservativeRoots2Hash() {
     }
 }
 
+void registerStaticObjectRefLocked(Object **ref) {
+    Thread *self = threadSelf();
+
+    disableSuspend(self);
+    lockVMLock(registered_refs_lock, self);
+
+    registerStaticObjectRef(ref);
+
+    unlockVMLock(registered_refs_lock, self);
+    enableSuspend(self);
+}
+
 void registerStaticObjectRef(Object **ref) {
     if((registered_refs_count % LIST_INCREMENT) == 0) {
         int new_size = registered_refs_count + LIST_INCREMENT;
@@ -1152,6 +1167,7 @@ uintptr_t doCompact() {
     threadBootClasses();
     threadMonitorCache();
     threadInternedStrings();
+    threadLiveClassLoaderDlls();
 
     TRACE_COMPACT("COMPACT PHASE ONE\n");
 
@@ -1318,16 +1334,19 @@ void expandHeap(int min) {
     if(verbosegc)
         jam_printf("<GC: Expanding heap by %lld bytes>\n", (long long)delta);
 
-    /* The freelist is in address order - find the last
-       free chunk and add the new area to the end.  */
-
-    for(chunk = freelist; chunk->next != NULL; chunk = chunk->next);
-
     new = (Chunk*)heaplimit;
     new->header = delta;
     new->next = NULL;
 
-    chunk->next = new;
+    if(freelist != NULL) {
+    /* The freelist is in address order - find the last
+       free chunk and add the new area to the end.  */
+
+    for(chunk = freelist; chunk->next != NULL; chunk = chunk->next);
+        chunk->next = new;
+    } else
+        freelist = new;
+
     heaplimit += delta;
     heapfree += delta;
 
@@ -1835,8 +1854,8 @@ Object *allocArray(Class *class, int size, int el_size) {
     ob = (Object *)gcMalloc(size * el_size + sizeof(u4) + sizeof(Object));
 
     if(ob != NULL) {
-        *(u4*)INST_DATA(ob) = size;
         ob->class = class;
+        ARRAY_LEN(ob) = size;
         TRACE_ALLOC("<ALLOC: allocated %s array object @%p>\n", CLASS_CB(class)->name, ob);
     }
 
@@ -1856,7 +1875,7 @@ Object *allocTypeArray(int type, int size) {
         case T_BOOLEAN:
             if(bool_array_class == NULL) {
                 bool_array_class = findArrayClass("[Z");
-                registerStaticClassRef(&bool_array_class);
+                registerStaticClassRefLocked(&bool_array_class);
             }
             class = bool_array_class;
             el_size = 1;
@@ -1865,7 +1884,7 @@ Object *allocTypeArray(int type, int size) {
         case T_BYTE:
             if(byte_array_class == NULL) {
                 byte_array_class = findArrayClass("[B");
-                registerStaticClassRef(&byte_array_class);
+                registerStaticClassRefLocked(&byte_array_class);
             }
             class = byte_array_class;
             el_size = 1;
@@ -1874,7 +1893,7 @@ Object *allocTypeArray(int type, int size) {
         case T_CHAR:
             if(char_array_class == NULL) {
                 char_array_class = findArrayClass("[C");
-                registerStaticClassRef(&char_array_class);
+                registerStaticClassRefLocked(&char_array_class);
             }
             class = char_array_class;
             el_size = 2;
@@ -1883,7 +1902,7 @@ Object *allocTypeArray(int type, int size) {
         case T_SHORT:
             if(short_array_class == NULL) {
                 short_array_class = findArrayClass("[S");
-                registerStaticClassRef(&short_array_class);
+                registerStaticClassRefLocked(&short_array_class);
             }
             class = short_array_class;
             el_size = 2;
@@ -1892,7 +1911,7 @@ Object *allocTypeArray(int type, int size) {
         case T_INT:
             if(int_array_class == NULL) {
                 int_array_class = findArrayClass("[I");
-                registerStaticClassRef(&int_array_class);
+                registerStaticClassRefLocked(&int_array_class);
             }
             class = int_array_class;
             el_size = 4;
@@ -1901,7 +1920,7 @@ Object *allocTypeArray(int type, int size) {
         case T_FLOAT:
             if(float_array_class == NULL) {
                 float_array_class = findArrayClass("[F");
-                registerStaticClassRef(&float_array_class);
+                registerStaticClassRefLocked(&float_array_class);
             }
             class = float_array_class;
             el_size = 4;
@@ -1910,7 +1929,7 @@ Object *allocTypeArray(int type, int size) {
         case T_DOUBLE:
             if(double_array_class == NULL) {
                 double_array_class = findArrayClass("[D");
-                registerStaticClassRef(&double_array_class);
+                registerStaticClassRefLocked(&double_array_class);
             }
             class = double_array_class;
             el_size = 8;
@@ -1919,7 +1938,7 @@ Object *allocTypeArray(int type, int size) {
         case T_LONG:
             if(long_array_class == NULL) {
                 long_array_class = findArrayClass("[J");
-                registerStaticClassRef(&long_array_class);
+                registerStaticClassRefLocked(&long_array_class);
             }
             class = long_array_class;
             el_size = 8;

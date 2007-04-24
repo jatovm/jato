@@ -1,5 +1,6 @@
 ;
-; Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+; Copyright (C) 2003, 2004, 2005, 2006, 2007
+; Robert Lougher <rob@lougher.org.uk>.
 ;
 ; This file is part of JamVM.
 ;

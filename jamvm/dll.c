@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -327,6 +328,18 @@ void unloadDll(DllEntry *dll) {
 
     nativeLibClose(dll->handle);
     free(dll);
+}
+
+#undef ITERATE
+#define ITERATE(ptr)                                          \
+{                                                             \
+    DllEntry *dll = (DllEntry*)ptr;                           \
+    if(isMarked(dll->loader))                                 \
+        threadReference(&dll->loader);                        \
+}
+
+void threadLiveClassLoaderDlls() {
+    hashIterate(hash_table);
 }
 
 void unloadClassLoaderDlls(Object *loader) {

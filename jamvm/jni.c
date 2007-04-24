@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -66,9 +67,6 @@ void initialiseJNI() {
     rawdata_class = findSystemClass0(sizeof(uintptr_t) == 4 ? "gnu/classpath/Pointer32"
                                                             : "gnu/classpath/Pointer64");
 
-    registerStaticClassRef(&buffImpl_class);
-    registerStaticClassRef(&rawdata_class);
-
     buffImpl_init_mb = findMethod(buffImpl_class, "<init>",
                       "(Ljava/lang/Object;Lgnu/classpath/Pointer;III)V");
 
@@ -80,6 +78,9 @@ void initialiseJNI() {
              rawdata_fb == NULL || buffAddr_fb == NULL) {
         return;
     }
+
+    registerStaticClassRef(&buffImpl_class);
+    registerStaticClassRef(&rawdata_class);
 
     buffCap_offset = buffCap_fb->offset;
     buffAddr_offset = buffAddr_fb->offset;
@@ -117,7 +118,7 @@ JNIFrame *ensureJNILrefCapacity(int cap) {
     int size = (Object**)frame - frame->lrefs - frame->mb->args_count;
 
     if(size < cap) {
-        unsigned long incr = cap-size;
+        int incr = cap-size;
         if(incr < sizeof(JNIFrame)/sizeof(Object*))
             incr = sizeof(JNIFrame)/sizeof(Object*);
 

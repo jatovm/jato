@@ -20,5 +20,4 @@
  */
 
 void initialisePlatform() {
-    /* Nothing to do for ARM */
 }

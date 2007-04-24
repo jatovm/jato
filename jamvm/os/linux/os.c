@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -28,6 +29,9 @@
 #include "../../jam.h"
 
 void *nativeStackBase() {
+#ifdef __UCLIBC__
+    return NULL;
+#else
     pthread_attr_t attr;
     void *addr;
     int size;
@@ -36,10 +40,15 @@ void *nativeStackBase() {
     pthread_attr_getstack(&attr, &addr, &size);
 
     return addr+size;
+#endif
 }
 
 int nativeAvailableProcessors() {
+#ifdef __UCLIBC__
+    return 1;
+#else
     return get_nprocs();
+#endif
 }
 
 char *nativeLibPath() {

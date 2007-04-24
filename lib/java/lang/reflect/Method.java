@@ -44,6 +44,7 @@ package java.lang.reflect;
 
 import gnu.java.lang.ClassHelper;
 import gnu.java.lang.reflect.MethodSignatureParser;
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
 /**
@@ -121,12 +122,6 @@ public final class Method
   {
     return name;
   }
-
-  /**
-   * Return the raw modifiers for this method.
-   * @return the method's modifiers
-   */
-  private native int getMethodModifiers(Class declaringClass, int slot);
 
   /**
    * Gets the modifiers this method uses.  Use the <code>Modifier</code>
@@ -372,15 +367,6 @@ public final class Method
     return invokeNative(o, args, declaringClass, parameterTypes, returnType, slot, flag);
   }
 
-  /*
-   * NATIVE HELPERS
-   */
-
-  private native Object invokeNative(Object o, Object[] args, Class declaringClass,
-                                     Class[] parameterTypes, Class returnType,
-                                     int slot, boolean noAccessCheck)
-    throws IllegalAccessException, InvocationTargetException;
-
   /**
    * Returns an array of <code>TypeVariable</code> objects that represents
    * the type variables declared by this constructor, in declaration order.
@@ -402,12 +388,6 @@ public final class Method
     MethodSignatureParser p = new MethodSignatureParser(this, sig);
     return p.getTypeParameters();
   }
-
-  /**
-   * Return the String in the Signature attribute for this method. If there
-   * is no Signature attribute, return null.
-   */
-  private native String getSignature(Class declaringClass, int slot);
 
   /**
    * Returns an array of <code>Type</code> objects that represents
@@ -468,5 +448,65 @@ public final class Method
     MethodSignatureParser p = new MethodSignatureParser(this, sig);
     return p.getGenericReturnType();
   }
+
+  public Annotation getAnnotation(Class annoClass)
+  {
+    Annotation[] annos = getDeclaredAnnotations();
+    for (int i = 0; i < annos.length; i++)
+      if (annos[i].annotationType() == annoClass)
+	return annos[i];
+    return null;
+  }
+
+  public Annotation[] getDeclaredAnnotations()
+  {
+    return getDeclaredAnnotationsNative(declaringClass, slot);
+  }
+
+  public Annotation[][] getParameterAnnotations()
+  {
+    return getParameterAnnotationsNative(declaringClass, slot);
+  }
+
+  /**
+   * If this method is an annotation method, returns the default
+   * value for the method.  If there is no default value, or if the
+   * method is not a member of an annotation type, returns null.
+   * Primitive types are wrapped.
+   *
+   * @throws TypeNotPresentException if the method returns a Class,
+   * and the class cannot be found
+   *
+   * @since 1.5
+   */
+  public Object getDefaultValue()
+  {
+    return getDefaultValueNative(declaringClass, slot);
+  }
+
+  /*
+   * NATIVE HELPERS
+   */
+
+  /**
+   * Return the raw modifiers for this method.
+   * @return the method's modifiers
+   */
+  private native int getMethodModifiers(Class declaringClass, int slot);
+
+  /**
+   * Return the String in the Signature attribute for this method. If there
+   * is no Signature attribute, return null.
+   */
+  private native String getSignature(Class declaringClass, int slot);
+
+  private native Object invokeNative(Object o, Object[] args, Class declaringClass,
+                                     Class[] parameterTypes, Class returnType,
+                                     int slot, boolean noAccessCheck)
+    throws IllegalAccessException, InvocationTargetException;
+
+  private native Object getDefaultValueNative(Class declaringClass, int slot);
+  private native Annotation[] getDeclaredAnnotationsNative(Class declaringClass, int slot);
+  private native Annotation[][] getParameterAnnotationsNative(Class declaringClass, int slot);
 }
 

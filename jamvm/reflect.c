@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -24,6 +25,7 @@
 #include "jam.h"
 #include "frame.h"
 #include "lock.h"
+#include "class.h"
 
 static char inited = FALSE;
 
@@ -49,14 +51,6 @@ static int initReflection() {
           !method_reflect_class || !field_array_class || !field_reflect_class)
         return FALSE;
 
-    registerStaticClassRef(&class_array_class);
-    registerStaticClassRef(&cons_array_class);
-    registerStaticClassRef(&method_array_class);
-    registerStaticClassRef(&field_array_class);
-    registerStaticClassRef(&cons_reflect_class);
-    registerStaticClassRef(&method_reflect_class);
-    registerStaticClassRef(&field_reflect_class);
-
     cons_init_mb = findMethod(cons_reflect_class, "<init>",
                "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;I)V");
 
@@ -75,8 +69,11 @@ static int initReflection() {
 
     if(!cons_init_mb || ! method_init_mb || !field_init_mb ||
            !cons_slot_fb || !mthd_slot_fb || !fld_slot_fb ||
-           !cons_class_fb || !mthd_class_fb || !fld_class_fb)
+           !cons_class_fb || !mthd_class_fb || !fld_class_fb) {
+        /* Find Field/Method doesn't throw an exception... */
+        signalException("java/lang/InternalError", "Expected field/method doesn't exist");
         return FALSE;
+    }
 
     cons_slot_offset = cons_slot_fb->offset; 
     method_slot_offset = mthd_slot_fb->offset; 
@@ -84,6 +81,14 @@ static int initReflection() {
     cons_class_offset = cons_class_fb->offset; 
     method_class_offset = mthd_class_fb->offset; 
     field_class_offset = fld_class_fb->offset; 
+
+    registerStaticClassRefLocked(&class_array_class);
+    registerStaticClassRefLocked(&cons_array_class);
+    registerStaticClassRefLocked(&method_array_class);
+    registerStaticClassRefLocked(&field_array_class);
+    registerStaticClassRefLocked(&cons_reflect_class);
+    registerStaticClassRefLocked(&method_reflect_class);
+    registerStaticClassRefLocked(&field_reflect_class);
 
     return inited = TRUE;
 }
@@ -427,13 +432,310 @@ Object *getEnclosingConstructorObject(Class *class) {
     return NULL;
 }
 
+static char anno_inited = FALSE;
+
+static Class *enum_class, *map_class, *anno_inv_class, *obj_array_class;
+static Class *anno_array_class, *dbl_anno_array_class;
+static MethodBlock *map_init_mb, *map_put_mb, *anno_create_mb, *enum_valueof_mb;
+
+static int initAnnotation() {
+    enum_class = findSystemClass("java/lang/Enum");
+    map_class = findSystemClass("java/util/HashMap");
+    anno_inv_class = findSystemClass("sun/reflect/annotation/AnnotationInvocationHandler");
+
+    obj_array_class = findArrayClass("[Ljava/lang/Object;");
+    anno_array_class = findArrayClass("[Ljava/lang/annotation/Annotation;");
+    dbl_anno_array_class = findArrayClass("[[Ljava/lang/annotation/Annotation;");
+
+    if(!enum_class || !map_class || !anno_inv_class || !obj_array_class
+                   || !anno_array_class || !dbl_anno_array_class)
+        return FALSE;
+
+    map_init_mb = findMethod(map_class, "<init>", "()V");
+    map_put_mb = findMethod(map_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+    anno_create_mb = findMethod(anno_inv_class, "create",
+                                "(Ljava/lang/Class;Ljava/util/Map;)Ljava/lang/annotation/Annotation;");
+
+    enum_valueof_mb = findMethod(enum_class, "valueOf",
+                          "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;");
+
+    if(!map_init_mb || !map_put_mb || !anno_create_mb || !enum_valueof_mb) {
+        /* FindMethod doesn't throw an exception... */
+        signalException("java/lang/InternalError", "Expected field/method doesn't exist");
+        return FALSE;
+    }
+
+    registerStaticClassRefLocked(&enum_class);
+    registerStaticClassRefLocked(&map_class);
+    registerStaticClassRefLocked(&anno_inv_class);
+    registerStaticClassRefLocked(&obj_array_class);
+    registerStaticClassRefLocked(&anno_array_class);
+    registerStaticClassRefLocked(&dbl_anno_array_class);
+
+    return anno_inited = TRUE;
+}
+
+Class *findClassFromSignature(char *type_name, Class *class) {
+    Class *type_class;
+    char *name, *pntr;
+
+    name = pntr = sysMalloc(strlen(type_name));
+    strcpy(name, type_name);
+
+    type_class = convertSigElement2Class(&pntr, class);
+    free(name);
+
+    return type_class;
+}
+
+/* Forward declarations */
+Object *createWrapperObject(int prim_type_no, uintptr_t *pntr);
+Object *parseAnnotation(Class *class, u1 **data_ptr, int *data_len);
+
+Object *parseElementValue(Class *class, u1 **data_ptr, int *data_len) {
+    ClassBlock *cb = CLASS_CB(class);
+    ConstantPool *cp = &cb->constant_pool;
+    char tag;
+
+    READ_U1(tag, *data_ptr, *data_len);
+
+    switch(tag) {
+        default: {
+            int cp_tag = CONSTANT_Integer;
+            int const_val_idx;
+            int prim_type_no;
+
+            switch(tag) {
+                case 'Z':
+                    prim_type_no = 1;
+                    break;
+                case 'B':
+                    prim_type_no = 2;
+                    break;
+                case 'C':
+                    prim_type_no = 3;
+                    break;
+                case 'S':
+                    prim_type_no = 4;
+                    break;
+                case 'I':
+                    prim_type_no = 5;
+                    break;
+                case 'F':
+                    cp_tag = CONSTANT_Float;
+                    prim_type_no = 6;
+                    break;
+                case 'J':
+                    cp_tag = CONSTANT_Long;
+                    prim_type_no = 7;
+                    break;
+                case 'D':
+                    cp_tag = CONSTANT_Double;
+                    prim_type_no = 8;
+                    break;
+            }
+            READ_TYPE_INDEX(const_val_idx, cp, cp_tag, *data_ptr, *data_len);
+            return createWrapperObject(prim_type_no, &CP_INFO(cp, const_val_idx));
+        }
+
+        case 's': {
+            int const_str_idx;
+            READ_TYPE_INDEX(const_str_idx, cp, CONSTANT_Utf8, *data_ptr, *data_len);
+            return createString(CP_UTF8(cp, const_str_idx));
+        }
+
+        case 'e': {
+            int type_name_idx, const_name_idx;
+            Object *const_name, *enum_obj;
+            Class *type_class;
+
+            READ_TYPE_INDEX(type_name_idx, cp, CONSTANT_Utf8, *data_ptr, *data_len);
+            READ_TYPE_INDEX(const_name_idx, cp, CONSTANT_Utf8, *data_ptr, *data_len);
+            type_class = findClassFromSignature(CP_UTF8(cp, type_name_idx), class);
+            const_name = createString(CP_UTF8(cp, const_name_idx));
+
+            if(type_class == NULL || const_name == NULL)
+                return NULL;
+
+            enum_obj = *(Object**)executeStaticMethod(enum_class, enum_valueof_mb, type_class, const_name);
+            if(exceptionOccured())
+                return NULL;
+
+            return enum_obj;
+        }
+
+        case 'c': {
+            int class_info_idx;
+            READ_TYPE_INDEX(class_info_idx, cp, CONSTANT_Utf8, *data_ptr, *data_len);
+            return findClassFromSignature(CP_UTF8(cp, class_info_idx), class);
+        }
+
+        case '@':
+            return parseAnnotation(class, data_ptr, data_len);
+
+        case '[': {
+            Object *array;
+            Object **array_data;
+            int i, num_values;
+
+            READ_U2(num_values, *data_ptr, *data_len);
+            if((array = allocArray(obj_array_class, num_values, sizeof(Object*))) == NULL)
+                return NULL;
+
+            array_data = ARRAY_DATA(array);
+            for(i = 0; i < num_values; i++)
+                if((array_data[i] = parseElementValue(class, data_ptr, data_len)) == NULL)
+                    return NULL;
+
+            return array;
+        }
+    }
+}
+
+Object *parseAnnotation(Class *class, u1 **data_ptr, int *data_len) {
+    ClassBlock *cb = CLASS_CB(class);
+    ConstantPool *cp = &cb->constant_pool;
+    Object *map, *anno;
+    int no_value_pairs;
+    Class *type_class;
+    int type_idx;
+    int i;
+
+    if((map = allocObject(map_class)) == NULL)
+        return NULL;
+
+    executeMethod(map, map_init_mb);
+    if(exceptionOccured())
+        return NULL;
+
+    READ_TYPE_INDEX(type_idx, cp, CONSTANT_Utf8, *data_ptr, *data_len);
+    if((type_class = findClassFromSignature(CP_UTF8(cp, type_idx), class)) == NULL)
+        return NULL;
+
+    READ_U2(no_value_pairs, *data_ptr, *data_len);
+
+    for(i = 0; i < no_value_pairs; i++) {
+        Object *element_name, *element_value;
+        int element_name_idx;
+
+        READ_TYPE_INDEX(element_name_idx, cp, CONSTANT_Utf8, *data_ptr, *data_len);
+
+        element_name = createString(CP_UTF8(cp, element_name_idx));
+        element_value = parseElementValue(class, data_ptr, data_len);
+        if(element_name == NULL || element_value == NULL)
+            return NULL;
+
+        executeMethod(map, map_put_mb, element_name, element_value);
+        if(exceptionOccured())
+            return NULL;
+    }
+
+    anno = *(Object**)executeStaticMethod(anno_inv_class, anno_create_mb, type_class, map);
+    if(exceptionOccured())
+        return NULL;
+
+    return anno;
+}
+
+Object *parseAnnotations(Class *class, AnnotationData *annotations) {
+    if(!anno_inited && !initAnnotation())
+        return NULL;
+
+    if(annotations == NULL)
+        return allocArray(anno_array_class, 0, sizeof(Object*));
+    else {
+        u1 *data_ptr = annotations->data;
+        int data_len = annotations->len;
+        Object **array_data;
+        Object *array;
+        int no_annos;
+        int i;
+
+        READ_U2(no_annos, data_ptr, data_len);
+        if((array = allocArray(anno_array_class, no_annos, sizeof(Object*))) == NULL)
+            return NULL;
+
+        array_data = ARRAY_DATA(array);
+        for(i = 0; i < no_annos; i++)
+            if((array_data[i] = parseAnnotation(class, &data_ptr, &data_len)) == NULL)
+                return NULL;
+
+        return array;
+    }
+}
+
+Object *getClassAnnotations(Class *class) {
+    return parseAnnotations(class, CLASS_CB(class)->annotations);
+}
+
+Object *getFieldAnnotations(FieldBlock *fb) {
+    return parseAnnotations(fb->class, fb->annotations);
+}
+
+Object *getMethodAnnotations(MethodBlock *mb) {
+    return parseAnnotations(mb->class, mb->annotations == NULL ? NULL : mb->annotations->annotations);
+}
+
+Object *getMethodParameterAnnotations(MethodBlock *mb) {
+    if(!anno_inited && !initAnnotation())
+        return NULL;
+
+    if(mb->annotations == NULL || mb->annotations->parameters == NULL)
+        return allocArray(dbl_anno_array_class, 0, sizeof(Object*));
+    else {
+        u1 *data_ptr = mb->annotations->parameters->data;
+        int data_len = mb->annotations->parameters->len;
+        Object **outer_array_data;
+        Object *outer_array;
+        int no_params, i;
+
+        READ_U1(no_params, data_ptr, data_len);
+        if((outer_array = allocArray(dbl_anno_array_class, no_params, sizeof(Object*))) == NULL)
+            return NULL;
+
+        outer_array_data = ARRAY_DATA(outer_array);
+        for(i = 0; i < no_params; i++) {
+            Object **inner_array_data;
+            Object *inner_array;
+            int no_annos, j;
+
+            READ_U2(no_annos, data_ptr, data_len);
+            if((inner_array = allocArray(anno_array_class, no_annos, sizeof(Object*))) == NULL)
+                return NULL;
+
+            inner_array_data = ARRAY_DATA(inner_array);
+            for(j = 0; j < no_annos; j++)
+                if((inner_array_data[j] = parseAnnotation(mb->class, &data_ptr, &data_len)) == NULL)
+                    return NULL;
+
+            outer_array_data[i] = inner_array;
+        }
+        return outer_array;
+    }
+}
+
+Object *getMethodDefaultValue(MethodBlock *mb) {
+    if(!anno_inited && !initAnnotation())
+        return NULL;
+
+    if(mb->annotations == NULL || mb->annotations->dft_val == NULL)
+        return NULL;
+    else {
+        u1 *data = mb->annotations->dft_val->data;
+        int len = mb->annotations->dft_val->len;
+
+        return parseElementValue(mb->class, &data, &len);
+    }
+}
+
 int getWrapperPrimTypeIndex(Object *arg) {
     ClassBlock *cb;
 
     if(arg == NULL) return 0;
 
     cb = CLASS_CB(arg->class);
-    if(strncmp(cb->name, "java/lang/" , 10) != 0)
+    if(strncmp(cb->name, "java/lang/", 10) != 0)
         return 0;
     if(strcmp(&cb->name[10], "Boolean") == 0)
         return 1;
@@ -454,31 +756,31 @@ int getWrapperPrimTypeIndex(Object *arg) {
     return 0;
 }
 
-Object *createWrapperObject(Class *type, uintptr_t *pntr) {
+Object *createWrapperObject(int prim_type_no, uintptr_t *pntr) {
     static char *wrapper_suffix[] = {"Boolean", "Byte", "Character", "Short",
                                     "Integer", "Float", "Long", "Double"};
     char wrapper_name[20] = "java/lang/";
+    Object *wrapper = NULL;
+
+    if(prim_type_no > 0 /* void */) {
+        Class *wrapper_type;
+
+        strncpy(&wrapper_name[10], wrapper_suffix[prim_type_no - 1], 10);
+        if((wrapper_type = findSystemClass(wrapper_name)) &&
+                 (wrapper = allocObject(wrapper_type))) {
+            INST_DATA(wrapper)[0] = pntr[0];
+            if(prim_type_no > 6)      /* i.e. long or double */
+                INST_DATA(wrapper)[1] = pntr[1];
+        }
+    }
+    return wrapper;
+}
+
+Object *getReflectReturnObject(Class *type, uintptr_t *pntr) {
     ClassBlock *type_cb = CLASS_CB(type);
 
-    if(IS_PRIMITIVE(type_cb)) {
-        int idx = type_cb->state - CLASS_PRIM - 1;
-        if(idx == -1) /* void */
-            return NULL;
-        else {
-            Class *wrapper_type;
-            Object *wrapper = NULL;
-       
-            strncpy(&wrapper_name[10], wrapper_suffix[idx], 10);
-            if((wrapper_type = findSystemClass(wrapper_name)) &&
-                     (wrapper = allocObject(wrapper_type))) {
-                INST_DATA(wrapper)[0] = pntr[0];
-                if(idx > 5)      /* i.e. long or double */
-                    INST_DATA(wrapper)[1] = pntr[1];
-            }
-            return wrapper;
-        }
-    } else
-        return (Object*)*pntr;
+    return IS_PRIMITIVE(type_cb) ? createWrapperObject(type_cb->state - CLASS_PRIM, pntr)
+                                 : (Object*)*pntr;
 }
 
 uintptr_t *widenPrimitiveValue(int src_idx, int dest_idx, uintptr_t *src, uintptr_t *dest) {
@@ -573,12 +875,9 @@ Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_typ
 
     Object *excep;
 
-    if(check_access) {
-        Class *caller = getCallerCallerClass();
-        if(!checkClassAccess(mb->class, caller) || !checkMethodAccess(mb, caller)) {
-            signalException("java/lang/IllegalAccessException", "method is not accessible");
-            return NULL;
-        }
+    if(check_access && !checkMethodAccess(mb, getCallerCallerClass())) {
+        signalException("java/lang/IllegalAccessException", "method is not accessible");
+        return NULL;
     }
 
     if(args_len != types_len) {

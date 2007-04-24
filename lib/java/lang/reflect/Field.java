@@ -45,6 +45,7 @@ package java.lang.reflect;
 
 import gnu.java.lang.ClassHelper;
 import gnu.java.lang.reflect.FieldSignatureParser;
+import java.lang.annotation.Annotation;
 
 /**
  * The Field class represents a member variable of a class. It also allows
@@ -116,12 +117,6 @@ extends AccessibleObject implements Member
   {
     return name;
   }
-
-  /**
-   * Return the raw modifiers for this field.
-   * @return the field's modifiers
-   */
-  public native int getFieldModifiers(Class declaringClass, int slot);
 
   /**
    * Gets the modifiers this field uses.  Use the <code>Modifier</code>
@@ -271,8 +266,6 @@ extends AccessibleObject implements Member
     return getField(o, declaringClass, type, slot, flag);
   }
 
-  private native Object getField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck)
-      throws IllegalAccessException;
   /**
    * Get the value of this boolean Field. If the field is static,
    * <code>o</code> will be ignored.
@@ -497,8 +490,6 @@ extends AccessibleObject implements Member
     setField(o, declaringClass, type, slot, flag, value);
   }
 
-  private native void setField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, Object value)
-      throws IllegalAccessException;
   /**
    * Set this boolean Field. If the field is static, <code>o</code> will be
    * ignored.
@@ -686,12 +677,36 @@ extends AccessibleObject implements Member
     return p.getFieldType();
   }
 
+  public Annotation getAnnotation(Class annoClass)
+  {
+    Annotation[] annos = getDeclaredAnnotations();
+    for (int i = 0; i < annos.length; i++)
+      if (annos[i].annotationType() == annoClass)
+	return annos[i];
+    return null;
+  }
+
+  public Annotation[] getDeclaredAnnotations()
+  {
+    return getDeclaredAnnotationsNative(declaringClass, slot);
+  }
+
+  /**
+   * Return the raw modifiers for this field.
+   * @return the field's modifiers
+   */
+  public native int getFieldModifiers(Class declaringClass, int slot);
+
   /**
    * Return the String in the Signature attribute for this field. If there
    * is no Signature attribute, return null.
    */
   private native String getSignature(Class declaringClass, int slot);
 
+  private native Annotation[] getDeclaredAnnotationsNative(Class declaringClass, int slot);
+
+  private native void setField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, Object value)
+      throws IllegalAccessException;
   private native double getDField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
   private native int getIField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
   private native long getJField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
@@ -701,6 +716,8 @@ extends AccessibleObject implements Member
   private native short getSField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
   private native byte getBField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no);
 
+  private native Object getField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck)
+      throws IllegalAccessException;
   private native void setDField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, double v);
   private native void setIField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, int i);
   private native void setJField(Object o, Class declaringClass, Class type, int slot, boolean noAccessCheck, int type_no, long j);

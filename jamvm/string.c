@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -225,7 +226,7 @@ char *StringRegion2Utf8(Object *string, int start, int len, char *utf8) {
 char *String2Utf8(Object *string) {
     int len = getStringLen(string);
     unsigned short *unicode = getStringChars(string);
-    char *utf8 = (char*)sysMalloc(utf8CharLen(unicode, len));
+    char *utf8 = (char*)sysMalloc(utf8CharLen(unicode, len) + 1);
 
     return unicode2Utf8(unicode, len, utf8);
 }

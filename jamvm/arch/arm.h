@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -50,48 +51,48 @@
 /* Needed for i386 -- empty here */
 #define FPU_HACK
 
-#define COMPARE_AND_SWAP(addr, old_val, new_val) \
-({                                               \
-    int result, read_val;                        \
-    __asm__ __volatile__ ("                      \
-                mvn %1, #1;                      \
-        1:      swp %1, %1, [%2];                \
-                cmn %1, #2;                      \
-                beq 1b;                          \
-                cmp %3, %1;                      \
-                strne %1, [%2];                  \
-                movne %0, #0;                    \
-                streq %4, [%2];                  \
-                moveq %0, #1;"                   \
-    : "=&r" (result), "=&r" (read_val)           \
-    : "r" (addr), "r" (old_val), "r" (new_val)   \
-    : "cc", "memory");                           \
-    result;                                      \
+#define LOCKWORD_COMPARE_AND_SWAP(addr, old_val, new_val) \
+({                                                        \
+    int result, read_val;                                 \
+    __asm__ __volatile__ ("                               \
+                mvn %1, #1;                               \
+        1:      swp %1, %1, [%2];                         \
+                cmn %1, #2;                               \
+                beq 1b;                                   \
+                cmp %3, %1;                               \
+                strne %1, [%2];                           \
+                movne %0, #0;                             \
+                streq %4, [%2];                           \
+                moveq %0, #1;"                            \
+    : "=&r" (result), "=&r" (read_val)                    \
+    : "r" (addr), "r" (old_val), "r" (new_val)            \
+    : "cc", "memory");                                    \
+    result;                                               \
 })
 
-#define ATOMIC_READ(addr)                        \
-({                                               \
-    int read_val;                                \
-    __asm__ __volatile__ ("                      \
-        1:      ldr %0, [%1];                    \
-                cmn %0, #2;                      \
-                beq 1b;"                         \
-    : "=&r" (read_val) : "r" (addr) : "cc");     \
-    read_val;                                    \
+#define LOCKWORD_READ(addr)                               \
+({                                                        \
+    int read_val;                                         \
+    __asm__ __volatile__ ("                               \
+        1:      ldr %0, [%1];                             \
+                cmn %0, #2;                               \
+                beq 1b;"                                  \
+    : "=&r" (read_val) : "r" (addr) : "cc");              \
+    read_val;                                             \
 })
 
-#define ATOMIC_WRITE(addr, new_val)              \
-do {                                             \
-    int read_val;                                \
-    __asm__ __volatile__ ("                      \
-                mvn %0, #1;                      \
-        1:      swp %0, %0, [%1];                \
-                cmn %0, #2;                      \
-                beq 1b;                          \
-                str %2, [%1];"                   \
-    : "=&r" (read_val)                           \
-    : "r" (addr), "r" (new_val)                  \
-    : "cc", "memory");                           \
+#define LOCKWORD_WRITE(addr, new_val)                     \
+do {                                                      \
+    int read_val;                                         \
+    __asm__ __volatile__ ("                               \
+                mvn %0, #1;                               \
+        1:      swp %0, %0, [%1];                         \
+                cmn %0, #2;                               \
+                beq 1b;                                   \
+                str %2, [%1];"                            \
+    : "=&r" (read_val)                                    \
+    : "r" (addr), "r" (new_val)                           \
+    : "cc", "memory");                                    \
 } while(0)
 
 #define MBARRIER() __asm__ __volatile__ ("" ::: "memory")

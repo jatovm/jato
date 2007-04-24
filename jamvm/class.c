@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -25,7 +26,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include <jit/jit-compiler.h>
 
 #include "jam.h"
 #include "sig.h"
@@ -34,6 +34,9 @@
 #include "hash.h"
 #include "zip.h"
 #include "interp.h"
+#include "class.h"
+
+#include <jit/jit-compiler.h>
 
 #define PREPARE(ptr) ptr
 #define SCAVENGE(ptr) FALSE
@@ -87,20 +90,6 @@ static Class *prim_classes[MAX_PRIM_CLASSES];
 /* Bytecode for stub abstract method.  If it is invoked
    we'll get an abstract method error. */
 static char abstract_method[] = {OPC_ABSTRACT_METHOD_ERROR};
-
-/* Macros for reading data values from class files - values
-   are in big endian format, and non-aligned.  See arch.h
-   for READ_DBL - this is platform dependent */
-
-#define READ_U1(v,p,l)  v = *p++
-#define READ_U2(v,p,l)  v = (p[0]<<8)|p[1]; p+=2
-#define READ_U4(v,p,l)  v = (p[0]<<24)|(p[1]<<16)|(p[2]<<8)|p[3]; p+=4
-#define READ_U8(v,p,l)  v = ((u8)p[0]<<56)|((u8)p[1]<<48)|((u8)p[2]<<40) \
-                            |((u8)p[3]<<32)|((u8)p[4]<<24)|((u8)p[5]<<16) \
-                            |((u8)p[6]<<8)|(u8)p[7]; p+=8
-                            
-#define READ_INDEX(v,p,l)               READ_U2(v,p,l)
-#define READ_TYPE_INDEX(v,cp,t,p,l)     READ_U2(v,p,l)
 
 static Class *addClassToHash(Class *class, Object *class_loader) {
     HashTable *table;
@@ -312,6 +301,7 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
         READ_TYPE_INDEX(type_idx, constant_pool, CONSTANT_Utf8, ptr, len);
         classblock->fields[i].name = CP_UTF8(constant_pool, name_idx);
         classblock->fields[i].type = CP_UTF8(constant_pool, type_idx);
+        classblock->fields[i].annotations = NULL;
         classblock->fields[i].signature = NULL;
         classblock->fields[i].constant = 0;
 
@@ -333,7 +323,14 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
                     READ_TYPE_INDEX(signature_idx, constant_pool, CONSTANT_Utf8, ptr, len);
                     classblock->fields[i].signature = CP_UTF8(constant_pool, signature_idx);
                 } else
-                    ptr += attr_length;
+                    if(strcmp(attr_name, "RuntimeVisibleAnnotations") == 0) {
+                        classblock->fields[i].annotations = sysMalloc(sizeof(AnnotationData));
+                        classblock->fields[i].annotations->len = attr_length;
+                        classblock->fields[i].annotations->data = sysMalloc(attr_length);
+                        memcpy(classblock->fields[i].annotations->data, ptr, attr_length);
+                        ptr += attr_length;
+                    } else
+                        ptr += attr_length;
         }
     }
 
@@ -346,7 +343,10 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
 
     for(i = 0; i < classblock->methods_count; i++) {
         MethodBlock *method = &classblock->methods[i];
+        MethodAnnotationData annos;
         u2 name_idx, type_idx;
+
+        memset(&annos, 0, sizeof(MethodAnnotationData));
 
         READ_U2(method->access_flags, ptr, len);
         READ_TYPE_INDEX(name_idx, constant_pool, CONSTANT_Utf8, ptr, len);
@@ -374,8 +374,7 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
                 READ_U2(method->max_locals, ptr, len);
 
                 READ_U4(code_length, ptr, len);
-
-                method->code = sysMalloc(code_length);
+                method->code = (char *)sysMalloc(code_length);
                 memcpy(method->code, ptr, code_length);
 
                 method->jit_code = sysMalloc(code_length);
@@ -436,9 +435,35 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
                         READ_TYPE_INDEX(signature_idx, constant_pool, CONSTANT_Utf8, ptr, len);
                         method->signature = CP_UTF8(constant_pool, signature_idx);
                     } else
-                        ptr += attr_length;
+                        if(strcmp(attr_name, "RuntimeVisibleAnnotations") == 0) {
+                            annos.annotations = sysMalloc(sizeof(AnnotationData));
+                            annos.annotations->len = attr_length;
+                            annos.annotations->data = sysMalloc(attr_length);
+                            memcpy(annos.annotations->data, ptr, attr_length);
+                            ptr += attr_length;
+                        } else
+                            if(strcmp(attr_name, "RuntimeVisibleParameterAnnotations") == 0) {
+                                annos.parameters = sysMalloc(sizeof(AnnotationData));
+                                annos.parameters->len = attr_length;
+                                annos.parameters->data = sysMalloc(attr_length);
+                                memcpy(annos.parameters->data, ptr, attr_length);
+                                ptr += attr_length;
+                            } else
+                                if(strcmp(attr_name, "AnnotationDefault") == 0) {
+                                    annos.dft_val = sysMalloc(sizeof(AnnotationData));
+                                    annos.dft_val->len = attr_length;
+                                    annos.dft_val->data = sysMalloc(attr_length);
+                                    memcpy(annos.dft_val->data, ptr, attr_length);
+                                    ptr += attr_length;
+                                } else
+                                    ptr += attr_length;
         }
-	jit_prepare_for_exec(method);
+        if(annos.annotations != NULL || annos.parameters != NULL
+                                     || annos.dft_val != NULL) {
+            method->annotations = sysMalloc(sizeof(MethodAnnotationData));
+            memcpy(method->annotations, &annos, sizeof(MethodAnnotationData));
+        }
+        jit_prepare_for_exec(method);
     }
 
     READ_U2(attr_count, ptr, len);
@@ -505,7 +530,14 @@ Class *defineClass(char *classname, char *data, int offset, int len, Object *cla
                         if(strcmp(attr_name, "Synthetic") == 0)
                             classblock->access_flags |= ACC_SYNTHETIC;
                         else
-                            ptr += attr_length;
+                            if(strcmp(attr_name, "RuntimeVisibleAnnotations") == 0) {
+                                classblock->annotations = sysMalloc(sizeof(AnnotationData));
+                                classblock->annotations->len = attr_length;
+                                classblock->annotations->data = sysMalloc(attr_length);
+                                memcpy(classblock->annotations->data, ptr, attr_length);
+                                ptr += attr_length;
+                            } else
+                                ptr += attr_length;
     }
 
     classblock->super = super_idx ? resolveClass(class, super_idx, FALSE) : NULL;
@@ -1437,6 +1469,16 @@ void freeClassData(Class *class) {
     free((void*)cb->constant_pool.type);
     free(cb->constant_pool.info);
     free(cb->interfaces);
+
+    for(i = 0; i < cb->fields_count; i++) {
+        FieldBlock *fb = &cb->fields[i];
+
+        if(fb->annotations != NULL) {
+            free(fb->annotations->data);
+            free(fb->annotations);
+        }
+    }
+
     free(cb->fields);
 
     for(i = 0; i < cb->methods_count; i++) {
@@ -1452,10 +1494,31 @@ void freeClassData(Class *class) {
         free(mb->exception_table);
         free(mb->line_no_table);
         free(mb->throw_table);
+
+        if(mb->annotations != NULL) {
+            if(mb->annotations->annotations != NULL) {
+                free(mb->annotations->annotations->data);
+                free(mb->annotations->annotations);
+            }
+            if(mb->annotations->parameters != NULL) {
+                free(mb->annotations->parameters->data);
+                free(mb->annotations->parameters);
+            }
+            if(mb->annotations->dft_val != NULL) {
+                free(mb->annotations->dft_val->data);
+                free(mb->annotations->dft_val);
+            }
+            free(mb->annotations);
+        }
     } 
 
     free(cb->methods);
     free(cb->inner_classes);
+
+    if(cb->annotations != NULL) {
+        free(cb->annotations->data);
+        free(cb->annotations);
+    }
 
    if(cb->state >= CLASS_LINKED) {
         ClassBlock *super_cb = CLASS_CB(cb->super);

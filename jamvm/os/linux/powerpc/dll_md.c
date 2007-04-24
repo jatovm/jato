@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -68,8 +69,8 @@ int nativeExtraArg(MethodBlock *mb) {
         }
 
 #ifdef DEBUG_DLL
-    printf("<NativeExtraArg: %s.%s%s --> int args: %d fp args: %d stack: %d>\n",
-            CLASS_CB(mb->class)->name, mb->name, mb->type, iargs, fargs, margs);
+    jam_printf("<NativeExtraArg: %s.%s%s --> int args: %d fp args: %d stack: %d>\n",
+               CLASS_CB(mb->class)->name, mb->name, mb->type, iargs, fargs, margs);
 #endif
 
     return margs;

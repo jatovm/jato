@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -425,6 +426,17 @@ typedef Instruction *CodePntr;
 typedef unsigned char *CodePntr;
 #endif
 
+typedef struct annotation_data {
+   u1 *data;
+   int len;
+} AnnotationData;
+
+typedef struct method_annotation_data {
+    AnnotationData *annotations;
+    AnnotationData *parameters;
+    AnnotationData *dft_val;
+} MethodAnnotationData;
+
 struct compilation_unit;
 struct jit_trampoline;
 
@@ -444,11 +456,12 @@ typedef struct methodblock {
    void *native_invoker;
    void *code;
    void *jit_code;
-   unsigned int code_size;
+   int code_size;
    u2 *throw_table;
    ExceptionTableEntry *exception_table;
    LineNoTableEntry *line_no_table;
    int method_table_index;
+   MethodAnnotationData *annotations;
    struct compilation_unit *compilation_unit;
    struct jit_trampoline *trampoline;
 } MethodBlock;
@@ -462,6 +475,7 @@ typedef struct fieldblock {
    u2 constant;
    uintptr_t static_value;
    u4 offset;
+   AnnotationData *annotations;
 } FieldBlock;
 
 typedef struct itable_entry {
@@ -511,6 +525,7 @@ typedef struct classblock {
    RefsOffsetsEntry *refs_offsets_table;
    u2 enclosing_class;
    u2 enclosing_method;
+   AnnotationData *annotations;
 } ClassBlock;
 
 typedef struct frame {
@@ -683,9 +698,13 @@ extern void *sysMalloc(int n);
 extern void *sysRealloc(void *ptr, int n);
 
 extern void registerStaticObjectRef(Object **ob);
+extern void registerStaticObjectRefLocked(Object **ob);
 
 #define registerStaticClassRef(ref) \
     registerStaticObjectRef(ref);
+
+#define registerStaticClassRefLocked(ref) \
+    registerStaticObjectRefLocked(ref);
 
 /* GC support */
 extern void threadReference(Object **ref);
@@ -831,6 +850,7 @@ extern char *getDllName(char *name);
 extern void initialiseDll(InitArgs *args);
 extern uintptr_t *resolveNativeWrapper(Class *class, MethodBlock *mb, uintptr_t *ostack);
 extern void unloadClassLoaderDlls(Object *loader);
+extern void threadLiveClassLoaderDlls();
 
 /* Dll OS */
 
@@ -868,8 +888,13 @@ extern Class *getDeclaringClass(Class *class);
 extern Class *getEnclosingClass(Class *class);
 extern Object *getEnclosingMethodObject(Class *class);
 extern Object *getEnclosingConstructorObject(Class *class);
+extern Object *getClassAnnotations(Class *class);
+extern Object *getFieldAnnotations(FieldBlock *fb);
+extern Object *getMethodAnnotations(MethodBlock *mb);
+extern Object *getMethodParameterAnnotations(MethodBlock *mb);
+extern Object *getMethodDefaultValue(MethodBlock *mb);
 
-extern Object *createWrapperObject(Class *type, uintptr_t *pntr);
+extern Object *getReflectReturnObject(Class *type, uintptr_t *pntr);
 extern uintptr_t *widenPrimitiveValue(int src_idx, int dest_idx, uintptr_t *src, uintptr_t *dest);
 extern uintptr_t *unwrapAndWidenObject(Class *type, Object *arg, uintptr_t *pntr);
 extern Object *invoke(Object *ob, MethodBlock *mb, Object *arg_array, Object *param_types,

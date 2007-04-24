@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -122,7 +123,7 @@ void initialiseUtf8() {
 /* Functions used by JNI */
 
 int utf8CharLen(unsigned short *unicode, int len) {
-    int count = 1;
+    int count = 0;
 
     for(; len > 0; len--) {
         unsigned short c = *unicode++;

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -576,7 +577,7 @@ void createJavaThread(Object *jThread, long long stack_size) {
     if(pthread_create(&thread->tid, &attributes, threadStart, thread)) {
         INST_DATA(jThread)[vmthread_offset] = 0;
         free(ee);
-        free(thread);
+//        free(thread);
         signalException("java/lang/OutOfMemoryError", "can't create thread");
         return;
     }
@@ -1005,9 +1006,9 @@ void initialiseMainThread(InitArgs *args) {
     pthread_attr_init(&attributes);
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
 
-    /* Ensure the thread stacks are at least 2 megabytes in size */
+    /* Ensure the thread stacks are at least 1 megabyte in size */
     pthread_attr_getstacksize(&attributes, &size);
-    if(size < 2*MB)
+    if(size < 1*MB)
         pthread_attr_setstacksize(&attributes, 2*MB);
 
     monitorInit(&sleep_mon);

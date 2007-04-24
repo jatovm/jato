@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -626,28 +627,6 @@ rewrite_lock:
     DEF_OPC(op1, 0)                   \
     DEF_OPC(op2, 0)
 
-#define DEF_OPC_210_5(op1, op2, op3, op4, op5) \
-    DEF_OPC(op1, 2)                            \
-    DEF_OPC(op2, 2)                            \
-    DEF_OPC(op3, 2)                            \
-    DEF_OPC(op4, 2)                            \
-    DEF_OPC(op5, 2)                            \
-        *ostack++ = cache.i.v1;                \
-        cache.i.v1 = cache.i.v2;               \
-                                               \
-    DEF_OPC(op1, 1)                            \
-    DEF_OPC(op2, 1)                            \
-    DEF_OPC(op3, 1)                            \
-    DEF_OPC(op4, 1)                            \
-    DEF_OPC(op5, 1)                            \
-        *ostack++ = cache.i.v1;                \
-                                               \
-    DEF_OPC(op1, 0)                            \
-    DEF_OPC(op2, 0)                            \
-    DEF_OPC(op3, 0)                            \
-    DEF_OPC(op4, 0)                            \
-    DEF_OPC(op5, 0)
-
 #else /* USE_CACHE */
 
 #define DEF_OPC_012(opcode)           \
@@ -668,13 +647,6 @@ rewrite_lock:
 #define DEF_OPC_210_2(op1, op2)       \
     DEF_OPC(op1, 0)                   \
     DEF_OPC(op2, 0)
-
-#define DEF_OPC_210_5(op1, op2, op3, op4, op5) \
-    DEF_OPC(op1, 0)                            \
-    DEF_OPC(op2, 0)                            \
-    DEF_OPC(op3, 0)                            \
-    DEF_OPC(op4, 0)                            \
-    DEF_OPC(op5, 0)
 
 #endif /* USE_CACHE */
 
@@ -1643,7 +1615,7 @@ rewrite_lock:
         
         if(opcode == OPC_NEW) {
             ClassBlock *cb = CLASS_CB(class);
-            if(cb->access_flags & ACC_ABSTRACT) {
+            if(cb->access_flags & (ACC_INTERFACE | ACC_ABSTRACT)) {
                 signalException("java/lang/InstantiationError", cb->name);
                 goto throwException;
             }
@@ -1918,30 +1890,40 @@ rewrite_lock:
 
         DISPATCH(0, 0);
 
-    DEF_OPC_210_5(
-            OPC_NEW,
-            OPC_ANEWARRAY,
-            OPC_CHECKCAST,
-            OPC_INSTANCEOF,
-            OPC_MULTIANEWARRAY)
+#define REWRITE_RESOLVE_CLASS(opcode)                                     \
+    DEF_OPC_210(opcode)                                                   \
+        frame->last_pc = pc;                                              \
+        resolveClass(mb->class, DOUBLE_INDEX(pc), FALSE);                 \
+                                                                          \
+        if(exceptionOccured0(ee))                                         \
+            goto throwException;                                          \
+                                                                          \
+        OPCODE_REWRITE((opcode + OPC_ANEWARRAY_QUICK-OPC_ANEWARRAY));     \
+        DISPATCH(0, 0);                                                   \
+
+   REWRITE_RESOLVE_CLASS(OPC_ANEWARRAY)
+   REWRITE_RESOLVE_CLASS(OPC_CHECKCAST)
+   REWRITE_RESOLVE_CLASS(OPC_INSTANCEOF)
+   REWRITE_RESOLVE_CLASS(OPC_MULTIANEWARRAY)
+
+    DEF_OPC_210(OPC_NEW)
     {
         Class *class;
+        ClassBlock *cb;
 
         frame->last_pc = pc;
-        class = resolveClass(mb->class, DOUBLE_INDEX(pc), *pc == OPC_NEW);
+        class = resolveClass(mb->class, DOUBLE_INDEX(pc), TRUE);
 
         if(exceptionOccured0(ee))
             goto throwException;
         
-        if(pc[0] == OPC_NEW) {
-            ClassBlock *cb = CLASS_CB(class);
-            if(cb->access_flags & ACC_ABSTRACT) {
-                signalException("java/lang/InstantiationError", cb->name);
-                goto throwException;
-            }
+        cb = CLASS_CB(class);
+        if(cb->access_flags & (ACC_INTERFACE | ACC_ABSTRACT)) {
+            signalException("java/lang/InstantiationError", cb->name);
+            goto throwException;
         }
 
-        OPCODE_REWRITE((pc[0] + OPC_NEW_QUICK-OPC_NEW));
+        OPCODE_REWRITE(OPC_NEW_QUICK);
         DISPATCH(0, 0);
     }
 

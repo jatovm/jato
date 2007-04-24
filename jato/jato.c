@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Robert Lougher <rob@lougher.org.uk>.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
+ * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
  *
@@ -66,6 +67,7 @@ void showUsage(char *name) {
     printf("  -help\t\t   print out this message\n");
     printf("  -version\t   print out version number and copyright information\n");
     printf("  -showversion     show version number and copyright and continue\n");
+    printf("  -fullversion     show jpackage-compatible version number and exit\n");
     printf("  -cp -classpath   <jar/zip files and directories separated by :>\n");
     printf("\t\t   locations where to find application classes\n");
     printf("  -verbose[:class|gc|jni]\n");
@@ -79,7 +81,7 @@ void showUsage(char *name) {
 void showVersionAndCopyright() {
     printf("java version \"%s\"\n", JAVA_COMPAT_VERSION);
     printf("JamVM version %s\n", VERSION);
-    printf("Copyright (C) 2003-2006 Robert Lougher <rob@lougher.org.uk>\n\n");
+    printf("Copyright (C) 2003-2007 Robert Lougher <rob@lougher.org.uk>\n\n");
     printf("This program is free software; you can redistribute it and/or\n");
     printf("modify it under the terms of the GNU General Public License\n");
     printf("as published by the Free Software Foundation; either version 2,\n");
@@ -88,6 +90,10 @@ void showVersionAndCopyright() {
     printf("but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
     printf("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
     printf("GNU General Public License for more details.\n");
+}
+
+void showFullVersion() {
+    printf("java full version \"jamvm-%s\"\n", JAVA_COMPAT_VERSION);
 }
 
 int parseCommandLine(int argc, char *argv[], InitArgs *args) {
@@ -134,6 +140,11 @@ int parseCommandLine(int argc, char *argv[], InitArgs *args) {
 
         } else if(strcmp(argv[i], "-showversion") == 0) {
             showVersionAndCopyright();
+
+        } else if(strcmp(argv[i], "-fullversion") == 0) {
+            showFullVersion();
+            status = 0;
+            goto exit;
 
         } else if(strncmp(argv[i], "-verbose", 8) == 0) {
             char *type = &argv[i][8];

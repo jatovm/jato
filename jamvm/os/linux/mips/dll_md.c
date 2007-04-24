@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2006, 2007
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007
  * Robert Lougher <rob@lougher.org.uk>.
  *
  * This file is part of JamVM.
@@ -19,6 +19,30 @@
  * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-void initialisePlatform() {
-    /* Nothing to do for ARM */
+#include "../../../jam.h"
+
+#ifndef USE_FFI
+int nativeExtraArg(MethodBlock *mb) {
+    char *sig = mb->type;
+    int args = 8;
+
+    while(*++sig != ')')
+        switch(*sig) {
+            case 'J':
+            case 'D':
+                args = (args + 15) & ~7;
+                break;
+
+            default:
+                args += 4;
+
+                if(*sig == '[')
+                    while(*++sig == '[');
+                if(*sig == 'L')
+                    while(*++sig != ';');
+                break;
+        }
+
+    return (args + 7) & ~7;
 }
+#endif
