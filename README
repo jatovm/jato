@@ -75,6 +75,27 @@ Finally, to launch a Java application with Jato under gdb:
   gdb --args <JATO_ROOT>/jato/jato <class>
 
 
+How do I launch a simple application?
+-------------------------------------
+
+Run a simple Java application, you can download Christian Schneider's Java
+tetris <http://www.liquidreality.de/main/projects/tetris> and launch it with
+the following command (remembed to download jdom jar also):
+
+  ./java -Xtrace:jit -Xms32M -Xnocompact -Xnoasyncgc \
+         -Dgnu.classpath.boot.library.path=/usr/lib/classpath:lib/ \
+         -Xbootclasspath:lib/classes.zip:/usr/share/classpath/glibj.zip \
+         -classpath <TETRIS_HOME>/tetris_source.jar:<TETRIS_HOME>/jdom.jar \
+         tetris/TetrisFrame
+
+Note: Jato interacts badly with JamVM GC which is why you should make the
+initial heap size big enough for GC not to trigger during execution.
+
+To launch the application under gdb, use the following command:
+
+  gdb --args ./java [...]
+
+
 Copyright and License
 ---------------------
 
