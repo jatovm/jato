@@ -77,7 +77,7 @@ static int analyze_live_sets(struct compilation_unit *cu)
 			bitset_sub(this->def_set, this->live_in_set);
 			bitset_union_to(this->use_set, this->live_in_set);
 
-			bitset_clear(this->live_out_set);
+			bitset_clear_all(this->live_out_set);
 			for (i = 0; i < this->nr_successors; i++) {
 				succ = this->successors[i];
 				bitset_union_to(succ->live_in_set, this->live_out_set);
