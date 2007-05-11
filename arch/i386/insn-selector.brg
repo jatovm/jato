@@ -305,7 +305,7 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 
 	expr = to_expr(tree);
 
-	base = get_fixed_var(s->b_parent, REG_EAX);
+	base = state->left->reg1;
 	index = get_fixed_var(s->b_parent, REG_EDX);
 	result = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = result;
