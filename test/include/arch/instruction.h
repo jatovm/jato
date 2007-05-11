@@ -9,10 +9,13 @@
  * This is MMIX.
  */
 
+#define NR_REGISTERS 3	/* available for register allocation */
+
 enum machine_reg {
 	R0,
 	R1,
 	R2,
+	REG_UNASSIGNED = ~0UL,
 };
 
 struct live_range {
@@ -24,6 +27,10 @@ struct var_info {
 	enum machine_reg reg;
         struct live_range range;
 	struct var_info *next;
+
+	/* Used by register allocator.  */
+	struct list_head interval;
+	struct list_head active;
 };
 
 static inline bool is_vreg(struct var_info *var, unsigned long vreg)

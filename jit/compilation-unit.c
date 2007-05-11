@@ -65,6 +65,9 @@ struct var_info *get_var(struct compilation_unit *cu)
 	ret->range.end = 0UL;
 	ret->vreg = cu->nr_vregs++;
 	ret->next = cu->var_infos;
+	ret->reg = REG_UNASSIGNED;
+	INIT_LIST_HEAD(&ret->interval);
+	INIT_LIST_HEAD(&ret->active);
 	cu->var_infos = ret;
   out:
 	return ret;

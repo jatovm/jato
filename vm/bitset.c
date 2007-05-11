@@ -61,6 +61,16 @@ void set_bit(unsigned long *bitset, unsigned long bit)
 	*addr |= mask;
 }
 
+void clear_bit(unsigned long *bitset, unsigned long bit)
+{
+	unsigned long *addr, mask;
+
+	addr = bitset + (bit / BITS_PER_LONG);
+	mask = bit_mask(bit);
+
+	*addr &= ~mask;
+}
+
 void bitset_union_to(struct bitset *from, struct bitset *to)
 {
 	unsigned long *src, *dest;
@@ -124,4 +134,23 @@ void bitset_clear_all(struct bitset *bitset)
 void bitset_set_all(struct bitset *bitset)
 {
 	memset(bitset->bits, 0xff, bitset->nr_bits / BITS_PER_LONG);
+}
+
+/**
+ *	bitset_ffs - find first set bit
+ *	@bitset:	the bitset to search
+ *
+ *	This function returns the index of the first set bit. If no bits
+ *	are set, returns a negative integer.
+ */
+int bitset_ffs(struct bitset *bitset)
+{
+	unsigned long i;
+
+	for (i = 0; i < bitset->nr_bits; i++) {
+		if (test_bit(bitset->bits, i))
+			return i;
+	}
+
+	return -1;
 }

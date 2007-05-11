@@ -7,6 +7,8 @@
 struct basic_block;
 struct bitset;
 
+#define NR_REGISTERS 4	/* available for register allocator */
+
 enum machine_reg {
 	REG_EAX,
 	REG_EBX,
@@ -14,6 +16,7 @@ enum machine_reg {
 	REG_EDX,
 	REG_EBP,
 	REG_ESP,
+	REG_UNASSIGNED = ~0UL,
 };
 
 struct live_range {
@@ -25,6 +28,10 @@ struct var_info {
 	enum machine_reg reg;
 	struct live_range range;
 	struct var_info *next;
+
+	/* Used by register allocator.  */
+	struct list_head interval;
+	struct list_head active;
 };
 
 static inline bool is_vreg(struct var_info *var, unsigned long vreg)

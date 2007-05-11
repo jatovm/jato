@@ -60,6 +60,10 @@ int jit_compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	err = allocate_registers(cu);
+	if (err)
+		goto out;
+
 	err = emit_machine_code(cu);
 	if (err)
 		goto out;

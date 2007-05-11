@@ -29,6 +29,7 @@ OBJS = \
 	../../jit/compilation-unit.o \
 	../../jit/expression.o \
 	../../jit/invoke-bc.o \
+	../../jit/linear-scan.o \
 	../../jit/liveness.o \
 	../../jit/load-store-bc.o \
 	../../jit/object-bc.o \
@@ -50,6 +51,7 @@ OBJS = \
 	compilation-unit-test.o \
 	expression-test.o \
 	invoke-bc-test.o \
+	linear-scan-test.o \
 	liveness-test.o \
 	load-store-bc-test.o \
 	object-bc-test.o \

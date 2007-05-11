@@ -50,6 +50,9 @@ static unsigned char encode_reg(enum machine_reg reg)
 	case REG_EBP:
 		ret = 0x05;
 		break;
+	case REG_UNASSIGNED:
+		assert(!"unassigned register in code emission");
+		break;
 	}
 	return ret;
 }
