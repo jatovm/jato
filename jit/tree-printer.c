@@ -81,7 +81,7 @@ static int simple_expr(struct expression *expr)
 	enum expression_type type = expr_type(expr);
 
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
-	    || type == EXPR_TEMPORARY || type == EXPR_CLASS_FIELD
+	    || type == EXPR_TEMPORARY || type == EXPR_VAR || type == EXPR_CLASS_FIELD
 	    || type == EXPR_NO_ARGS;
 }
 
