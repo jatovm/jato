@@ -296,6 +296,11 @@ static int print_temporary_expr(int lvl, struct string *str,
 			  expr->local_index);
 }
 
+static int print_var_expr(int lvl, struct string *str, struct expression *expr)
+{
+	return str_append(str, "[var %s %lu]", type_names[expr->vm_type], expr->var->vreg);
+}
+
 static int print_array_deref_expr(int lvl, struct string *str,
 				  struct expression *expr)
 {
@@ -560,6 +565,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_FVALUE] = print_fvalue_expr,
 	[EXPR_LOCAL] = print_local_expr,
 	[EXPR_TEMPORARY] = print_temporary_expr,
+	[EXPR_VAR] = print_var_expr,
 	[EXPR_ARRAY_DEREF] = print_array_deref_expr,
 	[EXPR_BINOP] = print_binop_expr,
 	[EXPR_UNARY_OP] = print_unary_op_expr,
