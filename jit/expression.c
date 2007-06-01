@@ -98,6 +98,8 @@ void expr_get(struct expression *expr)
 
 void expr_put(struct expression *expr)
 {
+	assert(expr->refcount > 0);
+
 	expr->refcount--;
 	if (expr->refcount == 0)
 		free_expression(expr);

@@ -5,6 +5,7 @@
 #include <vm/vm.h>
 #include <jit/expression.h>
 #include <jit/jit-compiler.h>
+#include <stdlib.h>
 #include <libharness.h>
 
 #include "bc-test-utils.h"
@@ -35,100 +36,159 @@ void test_convert_pop(void)
 	assert_pop_stack(OPC_POP2);
 }
 
-static void assert_dup_stack(unsigned char opc, void *expected)
+static struct methodblock *alloc_simple_method(unsigned char opc)
 {
-	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
+	struct methodblock *ret;
+	unsigned char *code;
 
-	cu = alloc_simple_compilation_unit(&method);
+	code = malloc(1);
+	code[0] = opc;
 
-	stack_push(cu->expr_stack, expected);
+	ret = malloc(sizeof *ret);
+	ret->jit_code = code;
+	ret->code_size = 1;
+
+	cu = alloc_simple_compilation_unit(ret);
+	ret->compilation_unit = cu;
+
+	return ret;
+}
+
+static void free_simple_method(struct methodblock *method)
+{
+	free(method->jit_code);
+	free_compilation_unit(method->compilation_unit);
+	free(method);
+}
+
+static void assert_dup_stack(unsigned char opc, struct expression *value)
+{
+	struct compilation_unit *cu;
+	struct methodblock *method;
+	struct statement *stmt;
+
+	method = alloc_simple_method(opc);
+	cu = method->compilation_unit;
+
+	stack_push(cu->expr_stack, value);
 
 	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected);
+        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_store_stmt(stmt);
+	assert_ptr_equals(value, to_expr(stmt->store_src));
+	assert_var_expr(J_REFERENCE, 0, stmt->store_dest);
+
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
+
 	assert_true(stack_is_empty(cu->expr_stack));
 
-	free_compilation_unit(cu);
+	free_simple_method(method);
 }
 
 void test_convert_dup(void)
 {
-	assert_dup_stack(OPC_DUP, (void *)1);
-	assert_dup_stack(OPC_DUP, (void *)2);
-	assert_dup_stack(OPC_DUP2, (void *)1);
-	assert_dup_stack(OPC_DUP2, (void *)2);
+	struct expression *value = value_expr(J_REFERENCE, 0xdeadbeef);
+
+	expr_get(value);
+
+	assert_dup_stack(OPC_DUP, value);
+	assert_dup_stack(OPC_DUP2, value);
 }
 
-static void assert_dup_x1_stack(unsigned char opc,
-				void *expected1, void *expected2)
+static void assert_dup_x1_stack(unsigned char opc, struct expression *value1,
+				struct expression *value2)
 {
-	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
+	struct methodblock *method;
+	struct statement *stmt;
 
-	cu = alloc_simple_compilation_unit(&method);
+	method = alloc_simple_method(opc);
+	cu = method->compilation_unit;
 
-	stack_push(cu->expr_stack, expected2);
-	stack_push(cu->expr_stack, expected1);
+	stack_push(cu->expr_stack, value2);
+	stack_push(cu->expr_stack, value1);
 
 	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected2);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
+        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_store_stmt(stmt);
+	assert_ptr_equals(value1, to_expr(stmt->store_src));
+	assert_var_expr(J_REFERENCE, 0, stmt->store_dest);
+
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
+	assert_ptr_equals(value2, stack_pop(cu->expr_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
+
 	assert_true(stack_is_empty(cu->expr_stack));
 
-	free_compilation_unit(cu);
+	free_simple_method(method);
 }
 
 void test_convert_dup_x1(void)
 {
-	assert_dup_x1_stack(OPC_DUP_X1, (void *)1, (void *)2);
-	assert_dup_x1_stack(OPC_DUP_X1, (void *)2, (void *)3);
-	assert_dup_x1_stack(OPC_DUP2_X1, (void *)1, (void *)2);
-	assert_dup_x1_stack(OPC_DUP2_X1, (void *)2, (void *)3);
+	struct expression *value1, *value2;
+
+	value1 = value_expr(J_REFERENCE, 0xdeadbeef);
+	value2 = value_expr(J_REFERENCE, 0xcafebabe);
+
+	expr_get(value1);
+
+	assert_dup_x1_stack(OPC_DUP_X1, value1, value2);
+	assert_dup_x1_stack(OPC_DUP2_X1, value1, value2);
+
+	expr_put(value2);
 }
 
-static void assert_dup_x2_stack(unsigned char opc,
-				void *expected1, void *expected2,
-				void *expected3)
+static void assert_dup_x2_stack(unsigned char opc, struct expression *value1,
+				struct expression *value2,
+				struct expression *value3)
 {
-	unsigned char code[] = { opc };
 	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
+	struct methodblock *method;
+	struct statement *stmt;
 
-	cu = alloc_simple_compilation_unit(&method);
+	method = alloc_simple_method(opc);
+	cu = method->compilation_unit;
 
-	stack_push(cu->expr_stack, expected3);
-	stack_push(cu->expr_stack, expected2);
-	stack_push(cu->expr_stack, expected1);
+	stack_push(cu->expr_stack, value3);
+	stack_push(cu->expr_stack, value2);
+	stack_push(cu->expr_stack, value1);
 
 	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected2);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected3);
-	assert_ptr_equals(stack_pop(cu->expr_stack), expected1);
+        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_store_stmt(stmt);
+	assert_ptr_equals(value1, to_expr(stmt->store_src));
+	assert_var_expr(J_REFERENCE, 0, stmt->store_dest);
+
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
+	assert_ptr_equals(value2, stack_pop(cu->expr_stack));
+	assert_ptr_equals(value3, stack_pop(cu->expr_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
+
 	assert_true(stack_is_empty(cu->expr_stack));
 
-	free_compilation_unit(cu);
+	free_simple_method(method);
 }
 
 void test_convert_dup_x2(void)
 {
-	assert_dup_x2_stack(OPC_DUP_X2, (void *)1, (void *)2, (void *)3);
-	assert_dup_x2_stack(OPC_DUP_X2, (void *)2, (void *)3, (void *)4);
-	assert_dup_x2_stack(OPC_DUP2_X2, (void *)1, (void *)2, (void *)3);
-	assert_dup_x2_stack(OPC_DUP2_X2, (void *)2, (void *)3, (void *)4);
+	struct expression *value1, *value2, *value3;
+
+	value1 = value_expr(J_REFERENCE, 0xdeadbeef);
+	value2 = value_expr(J_REFERENCE, 0xcafebabe);
+	value3 = value_expr(J_REFERENCE, 0xb4df00d);
+
+	expr_get(value1);
+
+	assert_dup_x2_stack(OPC_DUP_X2, value1, value2, value3);
+	assert_dup_x2_stack(OPC_DUP2_X2, value1, value2, value3);
+
+	expr_put(value2);
+	expr_put(value3);
 }
 
 static void assert_swap_stack(unsigned char opc,
