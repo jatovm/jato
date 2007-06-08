@@ -447,6 +447,18 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	bb_add_insn(s, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, frame_ptr, offset));
 }
 
+stmt:  STMT_STORE(EXPR_VAR, reg)
+{
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+	dest = to_expr(stmt->store_dest)->var;
+	src = state->right->reg1;
+
+	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+}
+
 stmt:	STMT_IF(reg)
 {
 	struct expression *if_conditional;

@@ -81,6 +81,16 @@ static void assert_reg_reg_insn(enum insn_type insn_type,
 	assert_int_equals(expected_dest, insn->dest.reg->reg);
 }
 
+static void assert_reg_var_insn(enum insn_type insn_type,
+				enum machine_reg expected_src,
+				struct var_info *expected_dest,
+				struct insn *insn)
+{
+	assert_int_equals(insn_type, insn->type);
+	assert_int_equals(expected_src, insn->src.reg->reg);
+	assert_ptr_equals(expected_dest, insn->dest.reg);
+}
+
 static void assert_imm_insn(enum insn_type insn_type,
 			    unsigned long expected_imm, struct insn *insn)
 {
@@ -909,6 +919,40 @@ void test_select_store_field_to_local(void)
 {
 	assert_store_field_to_local(-4, 0);
 	assert_store_field_to_local(-8, 1);
+}
+
+void test_select_store_value_to_var(void)
+{
+	struct expression *store_dest, *store_src;
+	struct compilation_unit *cu;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct var_info var;
+	struct insn *insn;
+	struct methodblock method = {
+		.args_count = 0,
+	};
+
+	store_dest = var_expr(J_REFERENCE, &var);
+	store_src  = value_expr(J_REFERENCE, 0xdeadbeef);
+
+	stmt = alloc_statement(STMT_STORE);
+	stmt->store_dest = &store_dest->node;
+	stmt->store_src  = &store_src->node;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_var_insn(INSN_MOV_REG_REG, REG_EAX, &var, insn);
+
+	free_compilation_unit(cu);
 }
 
 void test_select_new(void)
