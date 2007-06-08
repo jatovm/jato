@@ -178,7 +178,9 @@ void test_should_select_insn_for_every_statement(void)
 	free_compilation_unit(cu);
 }
 
-static struct basic_block *create_local_local_binop_bb(enum binary_operator expr_op)
+static struct basic_block *alloc_simple_binop_bb(enum binary_operator expr_op,
+						 struct expression *left,
+						 struct expression *right)
 {
 	static struct methodblock method = {
 		.args_count = 2,
@@ -188,7 +190,7 @@ static struct basic_block *create_local_local_binop_bb(enum binary_operator expr
 	struct basic_block *bb;
 	struct statement *stmt;
 
-	expr = binop_expr(J_INT, expr_op, local_expr(J_INT, 0), local_expr(J_INT, 1));
+	expr = binop_expr(J_INT, expr_op, left, right);
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
@@ -196,6 +198,11 @@ static struct basic_block *create_local_local_binop_bb(enum binary_operator expr
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
+}
+
+static struct basic_block *create_local_local_binop_bb(enum binary_operator expr_op)
+{
+	return alloc_simple_binop_bb(expr_op, local_expr(J_INT, 0), local_expr(J_INT, 1));
 }
 
 static void assert_select_local_local_binop(enum binary_operator expr_op, enum insn_type insn_type)
@@ -217,22 +224,7 @@ static void assert_select_local_local_binop(enum binary_operator expr_op, enum i
 
 static struct basic_block *create_local_value_binop_bb(enum binary_operator expr_op)
 {
-	static struct methodblock method = {
-		.args_count = 2,
-	};
-	struct compilation_unit *cu;
-	struct expression *expr;
-	struct basic_block *bb;
-	struct statement *stmt;
-
-	expr = binop_expr(J_INT, expr_op, local_expr(J_INT, 0), value_expr(J_INT, 0xdeadbeef));
-	stmt = alloc_statement(STMT_RETURN);
-	stmt->return_value = &expr->node;
-
-	cu = alloc_compilation_unit(&method);
-	bb = get_basic_block(cu, 0, 1);
-	bb_add_stmt(bb, stmt);
-	return bb;
+	return alloc_simple_binop_bb(expr_op, local_expr(J_INT, 0), value_expr(J_INT, 0xdeadbeef));
 }
 
 static void assert_select_local_value_binop(enum binary_operator expr_op, enum insn_type insn_type)
