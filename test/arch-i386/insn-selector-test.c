@@ -38,6 +38,18 @@ static void assert_memindex_reg_insn(enum insn_type insn_type,
 	assert_int_equals(dest_reg, insn->dest.reg->reg);
 }
 
+static void assert_var_membase_insn(enum insn_type insn_type,
+				    struct var_info *src_var,
+				    enum machine_reg dest_reg,
+				    long dest_displacement,
+				    struct insn *insn)
+{
+	assert_int_equals(insn_type, insn->type);
+	assert_ptr_equals(src_var, insn->src.reg);
+	assert_int_equals(dest_reg, insn->dest.base_reg->reg);
+	assert_int_equals(dest_displacement, insn->dest.disp);
+}
+
 static void assert_reg_membase_insn(enum insn_type insn_type,
 				    enum machine_reg src_reg,
 				    enum machine_reg dest_reg,
@@ -943,6 +955,37 @@ void test_select_store_value_to_var(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_var_insn(INSN_MOV_REG_REG, REG_EAX, &var, insn);
+
+	free_compilation_unit(cu);
+}
+
+void test_select_store_var_to_local(void)
+{
+	struct expression *store_dest, *store_src;
+	struct compilation_unit *cu;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct var_info var;
+	struct insn *insn;
+	struct methodblock method = {
+		.args_count = 0,
+	};
+
+	store_dest = local_expr(J_INT, 0);
+	store_src  = var_expr(J_INT, &var);
+
+	stmt = alloc_statement(STMT_STORE);
+	stmt->store_dest = &store_dest->node;
+	stmt->store_src  = &store_src->node;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_var_membase_insn(INSN_MOV_REG_MEMBASE, &var, REG_EBP, -4, insn);
 
 	free_compilation_unit(cu);
 }

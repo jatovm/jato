@@ -105,6 +105,15 @@ reg:	EXPR_LOCAL	1
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, frame_ptr, disp, result));
 }
 
+reg:   EXPR_VAR
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = expr->var;
+}
+
 reg:	OP_ADD(reg, EXPR_LOCAL) 1
 {
 	binop_reg_local(state, s, tree, INSN_ADD_MEMBASE_REG);
