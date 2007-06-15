@@ -429,3 +429,30 @@ void test_convert_new(void)
 {
 	assert_convert_new(0xcafe, 0xca, 0xfe);
 }
+
+void test_convert_newarray(void)
+{
+	unsigned char code[] = { OPC_NEWARRAY, T_INT };
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	struct expression *size, *arrayref;
+	struct compilation_unit *cu;
+
+	cu = alloc_simple_compilation_unit(&method);
+
+	size = value_expr(J_INT, 0xff);
+	stack_push(cu->expr_stack, size);
+
+	convert_to_ir(cu);
+
+	arrayref = stack_pop(cu->expr_stack);
+	assert_int_equals(EXPR_NEWARRAY, expr_type(arrayref));
+	assert_int_equals(J_REFERENCE, arrayref->vm_type);
+	assert_ptr_equals(size, to_expr(arrayref->array_size));
+	assert_int_equals(T_INT, arrayref->array_type);
+
+	expr_put(arrayref);
+	free_compilation_unit(cu);
+}

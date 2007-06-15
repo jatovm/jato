@@ -323,3 +323,20 @@ int convert_new(struct parse_context *ctx)
 
 	return 0;
 }
+
+int convert_newarray(struct parse_context *ctx)
+{
+	struct expression *size, *arrayref;
+	unsigned long type;
+
+	size = stack_pop(ctx->cu->expr_stack);
+	type = read_u8(ctx->insn_start + 1);
+
+	arrayref = newarray_expr(type, size);
+	if (!arrayref)
+		return -ENOMEM;
+
+	stack_push(ctx->cu->expr_stack, arrayref);
+
+	return 0;
+}

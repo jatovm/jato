@@ -504,3 +504,12 @@ void test_should_print_new_expression(void)
 			     "  class: [0xcafe]\n",
 			     (void *) 0xcafe);
 }
+
+void test_print_newarray_expression(void)
+{
+	assert_print_expr("NEWARRAY:\n"
+			  "  vm_type: [reference]\n"
+			  "  array_size: [value int 0xff]\n"
+			  "  array_type: [10]\n",
+			  newarray_expr(T_INT, value_expr(J_INT, 0xff)));
+}

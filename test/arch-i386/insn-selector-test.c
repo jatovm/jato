@@ -1030,3 +1030,40 @@ void test_select_new(void)
 	free(instance_class);
 	free_compilation_unit(cu);
 }
+
+void test_select_newarray(void)
+{
+	struct compilation_unit *cu;
+	struct expression *size, *expr;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
+
+	size = value_expr(J_INT, 0xff);
+	expr = newarray_expr(T_INT, size);
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &expr->node;
+
+	cu = alloc_compilation_unit(NULL);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xff, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_insn(INSN_PUSH_REG, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_insn(INSN_PUSH_IMM, T_INT, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocTypeArray, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
+
+	free_compilation_unit(cu);
+}

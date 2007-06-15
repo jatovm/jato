@@ -84,6 +84,9 @@ void free_expression(struct expression *expr)
 	case EXPR_NEW:
 		/* nothing to do */
 		break;
+	case EXPR_NEWARRAY:
+		expr_put(to_expr(expr->array_size));
+		break;
 	case EXPR_LAST:
 		assert(!"EXPR_LAST is not a real type. Don't use it");
 		break;
@@ -272,6 +275,18 @@ struct expression *new_expr(struct object *class)
 	struct expression *expr = alloc_expression(EXPR_NEW, J_REFERENCE);
 	if (expr)
 		expr->class = class;
+	return expr;
+}
+
+struct expression *newarray_expr(unsigned long type, struct expression *size)
+{
+	struct expression *expr = alloc_expression(EXPR_NEWARRAY, J_REFERENCE);
+
+	if (expr) {
+		expr->array_type = type;
+		expr->array_size = &size->node;
+	}
+
 	return expr;
 }
 

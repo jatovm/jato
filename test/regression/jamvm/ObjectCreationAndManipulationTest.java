@@ -35,11 +35,19 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         assertEquals(1, fields.field);
     }
 
+    public static void testNewArray() {
+        int[] array = null;
+        assertNull(array);
+        array = new int[5];
+        assertNotNull(array);
+    }
+
     public static void main(String[] args) {
         testNewObject();
         testObjectInitialization();
         testClassFieldAccess();
         testInstanceFieldAccess();
+        testNewArray();
 
         Runtime.getRuntime().halt(retval);
     }
