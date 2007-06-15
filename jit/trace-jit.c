@@ -29,7 +29,7 @@ void trace_method(struct compilation_unit *cu)
 {
 	struct methodblock *method = cu->method;
 
-	printf("\nTRACE: %s.%s()\n\n", CLASS_CB(method->class)->name, method->name);
+	printf("\nTRACE: %s.%s%s\n\n", CLASS_CB(method->class)->name, method->name, method->type);
 }
 
 void trace_cfg(struct compilation_unit *cu)
