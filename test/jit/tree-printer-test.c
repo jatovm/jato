@@ -10,6 +10,8 @@
 #include <libharness.h>
 #include <stdlib.h>
 
+#include "vm-utils.h"
+
 static void assert_tree_print(const char *expected, struct tree_node *root)
 {
 	struct string *str = alloc_str();
@@ -382,20 +384,26 @@ void assert_printed_invoke_expr(const char *expected,
 }
 
 void test_should_print_invoke_expression(void)
-{
+{	
+	struct object *class = new_class();
 	struct methodblock method = {
-		.type = "(I)I",
+		.class = class,
+		.name = "getId",
+		.type = "()I",
 	};
 	struct string *expected;
 
+	CLASS_CB(class)->name = "Foo";
+
 	expected = alloc_str();
 	str_append(expected, "INVOKE:\n"
-			     "  target_method: [%p]\n"
+			     "  target_method: [%p 'Foo.getId()I']\n"
 			     "  args_list: [no args]\n",
 			     &method);
 
 	assert_printed_invoke_expr(expected->value, &method, no_args_expr());
 	free_str(expected);
+	free(class);
 }
 
 void assert_printed_invokevirtual_expr(const char *expected,
@@ -411,20 +419,26 @@ void assert_printed_invokevirtual_expr(const char *expected,
 
 void test_should_print_invokevirtual_expression(void)
 {
-	struct string *expected;
+	struct object *class = new_class();
 	struct methodblock method = {
+		.class = class,
 		.method_table_index = 0xdeadbeef,
-		.type = "(I)I",
+		.name = "bar",
+		.type = "(I)V",
 	};
+	struct string *expected;
+
+	CLASS_CB(class)->name = "Foo";
 
 	expected = alloc_str();
 	str_append(expected, "INVOKEVIRTUAL:\n"
-			     "  method_index: [%lu]\n"
+			     "  target_method: [%p 'Foo.bar(I)V' (%lu)]\n"
 			     "  args_list: [no args]\n",
-			     0xdeadbeef);
+			     &method, 0xdeadbeef);
 
 	assert_printed_invokevirtual_expr(expected->value, &method, no_args_expr());
 	free_str(expected);
+	free(class);
 }
 
 void assert_printed_args_list_expr(const char *expected,

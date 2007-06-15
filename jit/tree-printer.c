@@ -456,14 +456,17 @@ static int print_instance_field_expr(int lvl, struct string *str, struct express
 static int print_invoke_expr(int lvl, struct string *str,
 			     struct expression *expr)
 {
+	struct methodblock *method;
 	int err;
 
 	err = append_formatted(lvl, str, "INVOKE:\n");
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "target_method", "%p",
-				 expr->target_method);
+	method = expr->target_method;
+
+	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s'",
+				 method, CLASS_CB(method->class)->name, method->name, method->type);
 	if (err)
 		goto out;
 
@@ -475,13 +478,18 @@ static int print_invoke_expr(int lvl, struct string *str,
 
 static int __print_invoke_expr(int lvl, struct string *str, struct expression *expr, const char *name)
 {
+	struct methodblock *method;
 	int err;
 
 	err = append_formatted(lvl, str, "%s:\n", name);
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "method_index", "%lu",
+	method = expr->target_method;
+
+	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s' (%lu)",
+				 method, CLASS_CB(method->class)->name,
+				 method->name, method->type,
 				 expr_method_index(expr));
 	if (err)
 		goto out;
