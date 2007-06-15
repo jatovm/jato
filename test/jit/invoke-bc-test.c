@@ -191,7 +191,7 @@ static void assert_invoke_method_idx(unsigned long expected_idx, unsigned char i
 	assert_not_null(stmt->expression);
 	invoke_expr = to_expr(stmt->expression);
 
-	assert_int_equals(expected_idx, invoke_expr->method_index);
+	assert_int_equals(expected_idx, expr_method_index(invoke_expr));
 
 	free_compilation_unit(cu);
 }

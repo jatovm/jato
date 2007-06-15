@@ -3,7 +3,10 @@
 
 #include <vm/system.h>
 #include <vm/types.h>
+#include <vm/vm.h>
+
 #include <jit/tree-node.h>
+
 #include <arch/instruction.h>
 
 enum expression_type {
@@ -138,24 +141,20 @@ struct expression {
 		/*  EXPR_INVOKE represents a method invocation expression (see
 		    JLS 15.12.) for which the target method can be determined
 		    statically.  This expression type can contain side-effects
-		    and can be used as an rvalue only.  See also the
-		    EXPR_INVOKEVIRTUAL expression type.  */
-		struct {
-			struct tree_node *args_list;
-			struct methodblock *target_method;
-		};
+		    and can be used as an rvalue only.
 
-		/*  EXPR_INVOKESPECIAL and EXPR_INVOKEVIRTUAL represent a
+		    EXPR_INVOKESPECIAL and EXPR_INVOKEVIRTUAL represent a
 		    method invocation (see JLS 15.12.) for which the target
 		    method has to be determined from instance class vtable at
 		    the call site.
+
 		    The first argument in the argument list is always the
 		    object reference for the invocation.  This expression type
 		    can contain side-effects and can be used as an rvalue
-		    only.  See also the EXPR_INVOKE expression type.  */
+		    only.  */
 		struct {
 			struct tree_node *args_list;
-			unsigned long method_index;
+			struct methodblock *target_method;
 		};
 
 		/*  EXPR_ARGS_LIST represents list of arguments passed to
@@ -224,8 +223,6 @@ struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expre
 struct expression *conversion_expr(enum vm_type, struct expression *);
 struct expression *class_field_expr(enum vm_type, struct fieldblock *);
 struct expression *instance_field_expr(enum vm_type, struct fieldblock *, struct expression *);
-struct expression *__invoke_expr(enum vm_type, struct methodblock *);
-struct expression *__invokevirtual_expr(enum vm_type, unsigned long);
 struct expression *invoke_expr(struct methodblock *);
 struct expression *invokevirtual_expr(struct methodblock *);
 struct expression *args_list_expr(struct expression *, struct expression *);
@@ -241,6 +238,11 @@ static inline int is_invoke_expr(struct expression *expr)
 
 	return (type == EXPR_INVOKE)
 		|| (type == EXPR_INVOKEVIRTUAL);
+}
+
+static inline unsigned long expr_method_index(struct expression *expr)
+{
+	return expr->target_method->method_table_index;
 }
 
 #endif

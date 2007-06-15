@@ -482,7 +482,7 @@ static int __print_invoke_expr(int lvl, struct string *str, struct expression *e
 		goto out;
 
 	err = append_simple_attr(lvl + 1, str, "method_index", "%lu",
-				 expr->method_index);
+				 expr_method_index(expr));
 	if (err)
 		goto out;
 

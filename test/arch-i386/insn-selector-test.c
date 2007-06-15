@@ -463,7 +463,8 @@ void test_select_invoke_without_arguments(void)
 	struct statement *stmt;
 	struct insn *insn;
 	struct methodblock mb = {
-		.args_count = 0
+		.args_count = 0,
+		.type = "()I",
 	};
 
 	mb.compilation_unit = alloc_compilation_unit(&mb);
@@ -472,7 +473,7 @@ void test_select_invoke_without_arguments(void)
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
 	args_list = no_args_expr();
-	expr = __invoke_expr(J_INT, &mb);
+	expr = invoke_expr(&mb);
 	expr->args_list = &args_list->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -495,7 +496,8 @@ void test_select_invoke_with_arguments(void)
 	struct basic_block *bb;
 	struct insn *insn;
 	struct methodblock mb = {
-		.args_count = 2
+		.args_count = 2,
+		.type = "(II)I",
 	};
 
 	mb.compilation_unit = alloc_compilation_unit(&mb);
@@ -505,7 +507,7 @@ void test_select_invoke_with_arguments(void)
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr
 						       (J_INT, 0x01)));
-	invoke_expression = __invoke_expr(J_INT, &mb);
+	invoke_expression = invoke_expr(&mb);
 	invoke_expression->args_list = &args_list_expression->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -537,10 +539,12 @@ void test_select_method_return_value_passed_as_argument(void)
 	struct statement *stmt;
 	struct insn *insn;
 	struct methodblock mb = {
-		.args_count = 1
+		.args_count = 1,
+		.type = "(I)I",
 	};
 	struct methodblock nested_mb = {
-		.args_count = 0
+		.args_count = 0,
+		.type = "()I",
 	};
 
 	mb.compilation_unit = alloc_compilation_unit(&mb);
@@ -551,11 +555,11 @@ void test_select_method_return_value_passed_as_argument(void)
 	nested_mb.trampoline = alloc_jit_trampoline();
 
 	no_args = no_args_expr();
-	nested_invoke = __invoke_expr(J_INT, &nested_mb);
+	nested_invoke = invoke_expr(&nested_mb);
 	nested_invoke->args_list = &no_args->node;
 
 	arg = arg_expr(nested_invoke);
-	invoke = __invoke_expr(J_INT, &mb);
+	invoke = invoke_expr(&mb);
 	invoke->args_list = &arg->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -582,6 +586,7 @@ void test_select_method_return_value_passed_as_argument(void)
 
 void test_select_invokevirtual_with_arguments(void)
 {
+	struct methodblock method;
 	struct expression *invoke_expr, *args;
 	struct compilation_unit *cu;
 	unsigned long method_index;
@@ -593,8 +598,11 @@ void test_select_invokevirtual_with_arguments(void)
 	objectref = 0xdeadbeef;
 	method_index = 0xcafe;
 
+	method.method_table_index = method_index;
+	method.type = "()V";
+
 	args = arg_expr(value_expr(J_REFERENCE, objectref));
-	invoke_expr = __invokevirtual_expr(J_VOID, method_index);
+	invoke_expr = invokevirtual_expr(&method);
 	invoke_expr->args_list = &args->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);

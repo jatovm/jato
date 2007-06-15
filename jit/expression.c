@@ -217,21 +217,13 @@ struct expression *instance_field_expr(enum vm_type vm_type,
 	return expr;
 }
 
-struct expression *__invoke_expr(enum vm_type vm_type,
-			     struct methodblock *target_method)
+struct expression *__invoke_expr(enum expression_type expr_type, enum vm_type vm_type, struct methodblock *target_method)
 {
-	struct expression *expr = alloc_expression(EXPR_INVOKE, vm_type);
-	if (expr) {
-		expr->target_method = target_method;
-	}
-	return expr;
-}
+	struct expression *expr = alloc_expression(expr_type, vm_type);
 
-struct expression *__invokevirtual_expr(enum vm_type vm_type, unsigned long method_index)
-{
-	struct expression *expr = alloc_expression(EXPR_INVOKEVIRTUAL, vm_type);
 	if (expr)
-		expr->method_index = method_index;
+		expr->target_method = target_method;
+
 	return expr;
 }
 
@@ -240,7 +232,7 @@ struct expression *invokevirtual_expr(struct methodblock *target)
 	enum vm_type return_type;
 
 	return_type = method_return_type(target);
-	return __invokevirtual_expr(return_type, target->method_table_index);
+	return __invoke_expr(EXPR_INVOKEVIRTUAL, return_type, target);
 }
 
 struct expression *invoke_expr(struct methodblock *target)
@@ -248,7 +240,7 @@ struct expression *invoke_expr(struct methodblock *target)
 	enum vm_type return_type;
 
 	return_type = method_return_type(target);
-	return  __invoke_expr(return_type, target);
+	return  __invoke_expr(EXPR_INVOKE, return_type, target);
 }
 
 struct expression *args_list_expr(struct expression *args_left,

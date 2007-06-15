@@ -370,40 +370,41 @@ void test_should_print_instance_field_expression(void)
 	free_str(expected);
 }
 
-void assert_printed_invoke_expr(const char *expected, enum vm_type type,
+void assert_printed_invoke_expr(const char *expected,
 				struct methodblock *method,
 				struct expression *args_list)
 {
 	struct expression *expr;
 
-	expr = __invoke_expr(type, method);
+	expr = invoke_expr(method);
 	expr->args_list = &args_list->node;
 	assert_print_expr(expected, expr);
 }
 
 void test_should_print_invoke_expression(void)
 {
-	struct methodblock mb;
+	struct methodblock method = {
+		.type = "(I)I",
+	};
 	struct string *expected;
 
 	expected = alloc_str();
 	str_append(expected, "INVOKE:\n"
 			     "  target_method: [%p]\n"
 			     "  args_list: [no args]\n",
-			     &mb);
+			     &method);
 
-	assert_printed_invoke_expr(expected->value, J_INT, &mb, no_args_expr());
+	assert_printed_invoke_expr(expected->value, &method, no_args_expr());
 	free_str(expected);
 }
 
 void assert_printed_invokevirtual_expr(const char *expected,
-				       enum vm_type type,
-				       unsigned long method_index,
+				       struct methodblock *target,
 				       struct expression *args_list)
 {
 	struct expression *expr;
 
-	expr = __invokevirtual_expr(type, method_index);
+	expr = invokevirtual_expr(target);
 	expr->args_list = &args_list->node;
 	assert_print_expr(expected, expr);
 }
@@ -411,6 +412,10 @@ void assert_printed_invokevirtual_expr(const char *expected,
 void test_should_print_invokevirtual_expression(void)
 {
 	struct string *expected;
+	struct methodblock method = {
+		.method_table_index = 0xdeadbeef,
+		.type = "(I)I",
+	};
 
 	expected = alloc_str();
 	str_append(expected, "INVOKEVIRTUAL:\n"
@@ -418,7 +423,7 @@ void test_should_print_invokevirtual_expression(void)
 			     "  args_list: [no args]\n",
 			     0xdeadbeef);
 
-	assert_printed_invokevirtual_expr(expected->value, J_INT, 0xdeadbeef, no_args_expr());
+	assert_printed_invokevirtual_expr(expected->value, &method, no_args_expr());
 	free_str(expected);
 }
 
