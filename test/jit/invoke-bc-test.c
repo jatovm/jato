@@ -179,23 +179,6 @@ static void assert_invoke_expression_type(enum expression_type expected_type, un
 	free_compilation_unit(cu);
 }
 
-static void assert_invoke_method_idx(unsigned long expected_idx, unsigned char invoke_opc)
-{
-	struct compilation_unit *cu;
-	struct statement *stmt;
-	struct expression *invoke_expr;
-
-	cu = create_invoke_x_unit(invoke_opc, "()V", 1, 0, 0xcafe, expected_idx, NULL);
-
-	stmt = first_stmt(cu);
-	assert_not_null(stmt->expression);
-	invoke_expr = to_expr(stmt->expression);
-
-	assert_int_equals(expected_idx, expr_method_index(invoke_expr));
-
-	free_compilation_unit(cu);
-}
-
 static void assert_invoke_passes_objectref(unsigned char invoke_opc)
 {
 	struct compilation_unit *cu;
@@ -368,11 +351,6 @@ void test_convert_invokespecial_when_return_value_is_discarded(void)
 void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
 {
 	assert_invoke_expression_type(EXPR_INVOKEVIRTUAL, OPC_INVOKEVIRTUAL);
-}
-
-void test_invokevirtual_should_parse_method_index_for_expr(void)
-{
-	assert_invoke_method_idx(0xbabe, OPC_INVOKEVIRTUAL);
 }
 
 void test_invokevirtual_should_pass_objectref_as_first_argument(void)
