@@ -23,6 +23,11 @@ struct live_range {
 	unsigned long start, end;
 };
 
+static inline bool in_range(struct live_range *range, unsigned long offset)
+{
+	return (range->start <= offset) && (range->end >= offset);
+}
+
 struct var_info {
 	unsigned long vreg;
 	enum machine_reg reg;
@@ -129,6 +134,27 @@ void free_insn(struct insn *);
 
 bool insn_defs(struct insn *, unsigned long);
 bool insn_uses(struct insn *, unsigned long);
+
+static inline const char *reg_name(enum machine_reg reg)
+{
+	switch (reg) {
+	case REG_EAX:
+		return "EAX";
+	case REG_EBX:
+		return "EBX";
+	case REG_ECX:
+		return "ECX";
+	case REG_EDX:
+		return "EDX";
+	case REG_EBP:
+		return "EBP";
+	case REG_ESP:
+		return "ESP";
+	case REG_UNASSIGNED:
+		return "<unassigned>";
+	};
+	assert(!"not reached");
+}
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 

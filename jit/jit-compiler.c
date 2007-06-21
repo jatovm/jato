@@ -60,9 +60,15 @@ int jit_compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	if (opt_trace_liveness)
+		trace_liveness(cu);
+
 	err = allocate_registers(cu);
 	if (err)
 		goto out;
+
+	if (opt_trace_regalloc)
+		trace_regalloc(cu);
 
 	err = emit_machine_code(cu);
 	if (err)
