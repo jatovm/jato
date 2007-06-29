@@ -35,6 +35,7 @@ run_java jamvm.ExitStatusIsOneTest 1
 run_java jamvm.LoadConstantsTest 0
 run_java jamvm.IntegerArithmeticTest 0
 run_java jamvm.ObjectCreationAndManipulationTest 0
+run_java jamvm.MethodInvocationAndReturnTest 0
 
 find jamvm/ -name "*.class" | xargs rm -f
 

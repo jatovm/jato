@@ -177,7 +177,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	test/regression/jamvm/ExitStatusIsZeroTest.class \
 	test/regression/jamvm/LoadConstantsTest.class \
 	test/regression/jamvm/IntegerArithmeticTest.class \
-	test/regression/jamvm/ObjectCreationAndManipulationTest.class
+	test/regression/jamvm/ObjectCreationAndManipulationTest.class \
+	test/regression/jamvm/MethodInvocationAndReturnTest.class
 
 vm-classes:
 	make -C lib/

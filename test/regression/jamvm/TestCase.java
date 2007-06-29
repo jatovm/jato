@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006  Pekka Enberg
+ * Copyright (C) 2006-2007  Pekka Enberg
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
@@ -13,6 +13,12 @@ public class TestCase {
     protected static int retval;
 
     protected static void assertEquals(int expected, int actual) {
+        if (expected != actual) {
+            fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
+        }
+    }
+
+    protected static void assertEquals(Object expected, Object actual) {
         if (expected != actual) {
             fail(/*"Expected '" + expected + "', but was '" + actual + "'."*/);
         }
