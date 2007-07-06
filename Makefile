@@ -80,7 +80,8 @@ VM_OBJS = \
 	vm/natives.o \
 	vm/stack.o \
 	vm/string.o \
-	vm/types.o
+	vm/types.o \
+	vm/zalloc.o
 
 JAMVM_OBJS = \
 	jato/jato.o \

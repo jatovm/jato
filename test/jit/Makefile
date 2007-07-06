@@ -21,6 +21,7 @@ OBJS = \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/types.o \
+	../../vm/zalloc.o \
 	../../jit/arithmetic-bc.o \
 	../../jit/basic-block.o \
 	../../jit/branch-bc.o \

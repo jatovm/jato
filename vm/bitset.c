@@ -7,12 +7,14 @@
 
 #include <vm/bitset.h>
 #include <vm/system.h>
+#include <vm/stdlib.h>
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define BITS_PER_BYTE 8
+#define BYTES_PER_LONG sizeof(unsigned long)
 
 /**
  *	bitset_alloc - Allocate a new bit set
@@ -26,12 +28,11 @@ struct bitset *alloc_bitset(unsigned long nr_bits)
 	struct bitset *bitset;
 	unsigned long size;
 
-	nr_bits = ALIGN(nr_bits, BITS_PER_LONG);
-	size = sizeof(struct bitset) + (nr_bits / BITS_PER_BYTE);
-	bitset = malloc(size);
+	size = ALIGN(nr_bits, BITS_PER_LONG) / BITS_PER_BYTE;
+	bitset = zalloc(sizeof(struct bitset) + size);
 	if (bitset) {
-		memset(bitset, 0, size);
 		bitset->nr_bits = nr_bits;
+		bitset->size = size;
 	}
 	return bitset;
 }
@@ -74,52 +75,52 @@ void clear_bit(unsigned long *bitset, unsigned long bit)
 void bitset_union_to(struct bitset *from, struct bitset *to)
 {
 	unsigned long *src, *dest;
-	unsigned long i, nr_bits;
+	unsigned long i, size;
 
 	dest = to->bits;
 	src = from->bits;
-	nr_bits = max(from->nr_bits, to->nr_bits);
+	size = max(from->size, to->size);
 
-	for (i = 0; i < nr_bits / BITS_PER_LONG; i++)
+	for (i = 0; i < size / BYTES_PER_LONG; i++)
 		dest[i] |= src[i];
 }
 
 void bitset_copy_to(struct bitset *from, struct bitset *to)
 {
 	unsigned long *src, *dest;
-	unsigned long i, nr_bits;
+	unsigned long i, size;
 
 	dest = to->bits;
 	src = from->bits;
-	nr_bits = max(from->nr_bits, to->nr_bits);
+	size = max(from->size, to->size);
 
-	for (i = 0; i < nr_bits / BITS_PER_LONG; i++)
+	for (i = 0; i < size / BYTES_PER_LONG; i++)
 		dest[i] = src[i];
 }
 
 void bitset_sub(struct bitset *from, struct bitset *to)
 {
 	unsigned long *src, *dest;
-	unsigned long i, nr_bits;
+	unsigned long i, size;
 
 	dest = to->bits;
 	src = from->bits;
-	nr_bits = max(from->nr_bits, to->nr_bits);
+	size = max(from->size, to->size);
 
-	for (i = 0; i < nr_bits / BITS_PER_LONG; i++)
+	for (i = 0; i < size / BYTES_PER_LONG; i++)
 		dest[i] &= ~src[i];
 }
 
 bool bitset_equal(struct bitset *from, struct bitset *to)
 {
 	unsigned long *src, *dest;
-	unsigned long i, nr_bits;
+	unsigned long i, size;
 
 	dest = to->bits;
 	src = from->bits;
-	nr_bits = max(from->nr_bits, to->nr_bits);
+	size = max(from->size, to->size);
 
-	for (i = 0; i < nr_bits / BITS_PER_LONG; i++) {
+	for (i = 0; i < size / BYTES_PER_LONG; i++) {
 		if (dest[i] != src[i])
 			return false;
 	}
@@ -128,12 +129,12 @@ bool bitset_equal(struct bitset *from, struct bitset *to)
 
 void bitset_clear_all(struct bitset *bitset)
 {
-	memset(bitset->bits, 0, bitset->nr_bits / BITS_PER_LONG);
+	memset(bitset->bits, 0, bitset->size);
 }
 
 void bitset_set_all(struct bitset *bitset)
 {
-	memset(bitset->bits, 0xff, bitset->nr_bits / BITS_PER_LONG);
+	memset(bitset->bits, 0xff, bitset->size);
 }
 
 /**

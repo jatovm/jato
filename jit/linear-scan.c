@@ -52,8 +52,10 @@ static int try_to_alloc_reg(struct bitset *registers)
 	int ret;
 
 	ret = bitset_ffs(registers);
+	assert(ret < NR_REGISTERS);
 	if (ret >= 0)
 		clear_bit(registers->bits, ret);
+
 	return ret;
 }
 

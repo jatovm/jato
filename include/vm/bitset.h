@@ -5,6 +5,7 @@
 
 struct bitset {
 	unsigned long nr_bits;
+	unsigned long size;
 	unsigned long bits[];
 };
 

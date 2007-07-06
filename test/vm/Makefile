@@ -23,6 +23,7 @@ OBJS = \
 	../../vm/natives.o \
 	../../vm/stack.o \
 	../../vm/string.o \
+	../../vm/zalloc.o \
 	bitset-test.o \
 	buffer-test.o \
 	bytecodes-test.o \
