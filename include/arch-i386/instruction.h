@@ -2,6 +2,7 @@
 #define __JIT_INSTRUCTION_H
 
 #include <vm/list.h>
+#include <assert.h>
 #include <stdbool.h>
 
 struct basic_block;
