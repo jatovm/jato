@@ -5,6 +5,7 @@
  * LICENSE for details.
  */
 
+#include <arch/instruction.h>
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <vm/buffer.h>
@@ -53,6 +54,15 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free(cu);
 }
 
+static void init_interval(struct live_interval *interval)
+{
+	interval->reg = REG_UNASSIGNED;
+	interval->range.start = ~0UL;
+	interval->range.end = 0UL;
+	INIT_LIST_HEAD(&interval->interval);
+	INIT_LIST_HEAD(&interval->active);
+}
+
 struct var_info *get_var(struct compilation_unit *cu)
 {
 	struct var_info *ret;
@@ -61,13 +71,12 @@ struct var_info *get_var(struct compilation_unit *cu)
 	if (!ret)
 		goto out;
 
-	ret->range.start = ~0UL;
-	ret->range.end = 0UL;
 	ret->vreg = cu->nr_vregs++;
 	ret->next = cu->var_infos;
 	ret->reg = REG_UNASSIGNED;
-	INIT_LIST_HEAD(&ret->interval);
-	INIT_LIST_HEAD(&ret->active);
+
+	init_interval(&ret->interval);
+
 	cu->var_infos = ret;
   out:
 	return ret;

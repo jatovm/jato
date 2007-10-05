@@ -10,8 +10,8 @@
 
 static void assert_live_range(struct var_info *var, unsigned long expected_start, unsigned long expected_end)
 {
-	assert_int_equals(expected_start, var->range.start);
-	assert_int_equals(expected_end, var->range.end);
+	assert_int_equals(expected_start, var->interval.range.start);
+	assert_int_equals(expected_end, var->interval.range.end);
 }
 
 static void assert_uses(struct basic_block *bb, struct var_info *var)

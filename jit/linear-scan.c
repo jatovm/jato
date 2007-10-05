@@ -27,24 +27,24 @@
 /* The active list contains live intervals that overlap the current
    point and have been placed in registers. The list is kept sorted by
    increasing end point.  */
-static void insert_to_active(struct var_info *var, struct list_head *active)
+static void insert_to_active(struct live_interval *interval, struct list_head *active)
 {
-	struct var_info *this;
+	struct live_interval *this;
 
 	/*
 	 * If we find an existing interval, that ends _after_ the
 	 * new interval, add ours before that.
 	 */
 	list_for_each_entry(this, active, active) {
-		if (var->range.end < this->range.end) {
-			list_add_tail(&var->active, &this->active);
+		if (interval->range.end < this->range.end) {
+			list_add_tail(&interval->active, &this->active);
 			return;
 		}
 	}
 	/*
 	 * Otherwise the new interval goes to the end of the list.
 	 */
-	list_add_tail(&var->active, active);
+	list_add_tail(&interval->active, active);
 }
 
 static int try_to_alloc_reg(struct bitset *registers)
@@ -59,11 +59,11 @@ static int try_to_alloc_reg(struct bitset *registers)
 	return ret;
 }
 
-static void expire_old_intervals(struct var_info *current,
+static void expire_old_intervals(struct live_interval *current,
 				 struct list_head *active,
 				 struct bitset *registers)
 {
-	struct var_info *this, *prev;
+	struct live_interval *this, *prev;
 
 	list_for_each_entry_safe(this, prev, active, active) {
 		if (this->range.end > current->range.start)
@@ -83,33 +83,34 @@ static void expire_old_intervals(struct var_info *current,
 
 /* The interval list contains all intervals sorted by increasing start
    point.  */
-static void insert_to_intervals(struct var_info *var,
+static void insert_to_intervals(struct live_interval *interval,
 				struct list_head *intervals)
 {
-	struct var_info *this;
+	struct live_interval *this;
 
 	/*
 	 * If we find an existing interval, that starts _after_ the
 	 * new interval, add ours before that.
 	 */
 	list_for_each_entry(this, intervals, interval) {
-		if (var->range.start < this->range.start) {
-			list_add_tail(&var->interval, &this->interval);
+		if (interval->range.start < this->range.start) {
+			list_add_tail(&interval->interval, &this->interval);
 			return;
 		}
 	}
 	/*
 	 * Otherwise the new interval goes to the end of the list.
 	 */
-	list_add_tail(&var->interval, intervals);
+	list_add_tail(&interval->interval, intervals);
 }
 
 int allocate_registers(struct compilation_unit *cu)
 {
 	struct list_head intervals = LIST_HEAD_INIT(intervals);
 	struct list_head active = LIST_HEAD_INIT(active);
+	struct live_interval *this;
 	struct bitset *registers;
-	struct var_info *this;
+	struct var_info *var;
 
 	registers = alloc_bitset(NR_REGISTERS);
 	if (!registers)
@@ -121,19 +122,26 @@ int allocate_registers(struct compilation_unit *cu)
 	bitset_set_all(registers);
 
 	/*
+ 	 * Setup fixed registers to intervals.
+ 	 */ 
+	for_each_variable(var, cu->var_infos) {
+		var->interval.reg = var->reg;
+	}
+
+	/*
 	 * Sort intervals in the order of increasing start point. We
 	 * add intervals with register constraints first, so that that
 	 * we when a fixed and non-fixed intervals overlap, we always
 	 * process the fixed interval first.
 	 */
-	for_each_variable(this, cu->var_infos) {
-		if (this->reg != REG_UNASSIGNED)
-			insert_to_intervals(this, &intervals);
+	for_each_variable(var, cu->var_infos) {
+		if (var->interval.reg != REG_UNASSIGNED)
+			insert_to_intervals(&var->interval, &intervals);
 	}
 
-	for_each_variable(this, cu->var_infos) {
-		if (this->reg == REG_UNASSIGNED)
-			insert_to_intervals(this, &intervals);
+	for_each_variable(var, cu->var_infos) {
+		if (var->interval.reg == REG_UNASSIGNED)
+			insert_to_intervals(&var->interval, &intervals);
 	}
 
 	list_for_each_entry(this, &intervals, interval) {
@@ -158,6 +166,13 @@ int allocate_registers(struct compilation_unit *cu)
 		insert_to_active(this, &active);
 	}
 	free(registers);
+
+	/*
+	 * Assign allocated registers to temporaries.
+	 */ 
+	for_each_variable(var, cu->var_infos) {
+		var->reg = var->interval.reg;
+	}
 
 	return 0;
 }

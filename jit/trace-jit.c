@@ -91,7 +91,7 @@ void trace_liveness(struct compilation_unit *cu)
 		offset = 0;
 		for_each_basic_block(bb, &cu->bb_list) {
 			for_each_insn(insn, &bb->insn_list) {
-				if (in_range(&var->range, offset++))
+				if (in_range(&var->interval.range, offset++))
 					printf("***");
 				else
 					printf("   ");

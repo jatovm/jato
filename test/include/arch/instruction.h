@@ -22,15 +22,18 @@ struct live_range {
 	unsigned long start, end;
 };
 
+struct live_interval {
+	struct live_range	range;
+	enum machine_reg	reg;
+	struct list_head	interval;
+	struct list_head	active;
+};
+
 struct var_info {
 	unsigned long vreg;
 	enum machine_reg reg;
-        struct live_range range;
 	struct var_info *next;
-
-	/* Used by register allocator.  */
-	struct list_head interval;
-	struct list_head active;
+	struct live_interval interval;
 };
 
 static inline bool is_vreg(struct var_info *var, unsigned long vreg)
