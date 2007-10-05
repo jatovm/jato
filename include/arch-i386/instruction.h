@@ -2,40 +2,14 @@
 #define __JIT_INSTRUCTION_H
 
 #include <arch/registers.h>
+#include <jit/vars.h>
 #include <vm/list.h>
+
 #include <assert.h>
 #include <stdbool.h>
 
 struct basic_block;
 struct bitset;
-
-struct live_range {
-	unsigned long start, end;
-};
-
-static inline bool in_range(struct live_range *range, unsigned long offset)
-{
-	return (range->start <= offset) && (range->end >= offset);
-}
-
-struct live_interval {
-	struct live_range	range;
-	enum machine_reg	reg;
-	struct list_head	interval;
-	struct list_head	active;
-};
-
-struct var_info {
-	unsigned long vreg;
-	enum machine_reg reg;
-	struct var_info *next;
-	struct live_interval interval;
-};
-
-static inline bool is_vreg(struct var_info *var, unsigned long vreg)
-{
-	return var->vreg == vreg;
-}
 
 union operand {
 	struct var_info *reg;

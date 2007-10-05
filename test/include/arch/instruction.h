@@ -3,35 +3,13 @@
 
 #include <arch/registers.h>
 #include <jit/basic-block.h>
+#include <jit/vars.h>
 
 #include <stdbool.h>
 
 /*
  * This is MMIX.
  */
-
-struct live_range {
-	unsigned long start, end;
-};
-
-struct live_interval {
-	struct live_range	range;
-	enum machine_reg	reg;
-	struct list_head	interval;
-	struct list_head	active;
-};
-
-struct var_info {
-	unsigned long vreg;
-	enum machine_reg reg;
-	struct var_info *next;
-	struct live_interval interval;
-};
-
-static inline bool is_vreg(struct var_info *var, unsigned long vreg)
-{
-	return var->vreg == vreg;
-}
 
 enum insn_type {
 	INSN_ADD,
