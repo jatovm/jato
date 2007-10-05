@@ -1,6 +1,7 @@
 #ifndef __ARCH_INSTRUCTION_H
 #define __ARCH_INSTRUCTION_H
 
+#include <arch/registers.h>
 #include <jit/basic-block.h>
 
 #include <stdbool.h>
@@ -8,15 +9,6 @@
 /*
  * This is MMIX.
  */
-
-#define NR_REGISTERS 3	/* available for register allocation */
-
-enum machine_reg {
-	R0,
-	R1,
-	R2,
-	REG_UNASSIGNED = ~0UL,
-};
 
 struct live_range {
 	unsigned long start, end;

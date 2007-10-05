@@ -1,24 +1,13 @@
 #ifndef __JIT_INSTRUCTION_H
 #define __JIT_INSTRUCTION_H
 
+#include <arch/registers.h>
 #include <vm/list.h>
 #include <assert.h>
 #include <stdbool.h>
 
 struct basic_block;
 struct bitset;
-
-#define NR_REGISTERS 4	/* available for register allocator */
-
-enum machine_reg {
-	REG_EAX,
-	REG_EBX,
-	REG_ECX,
-	REG_EDX,
-	REG_EBP,
-	REG_ESP,
-	REG_UNASSIGNED = ~0UL,
-};
 
 struct live_range {
 	unsigned long start, end;
