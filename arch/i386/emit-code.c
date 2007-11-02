@@ -22,12 +22,12 @@
 #include <stdbool.h>
 
 /*
- *	encode_reg:	Encode register to be used in IA-32 instruction.
+ *	__encode_reg:	Encode register to be used in IA-32 instruction.
  *	@reg: Register to encode.
  *
  *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
  */
-static unsigned char encode_reg(enum machine_reg reg)
+static unsigned char __encode_reg(enum machine_reg reg)
 {
 	unsigned char ret = 0;
 
@@ -55,6 +55,11 @@ static unsigned char encode_reg(enum machine_reg reg)
 		break;
 	}
 	return ret;
+}
+
+static unsigned char encode_reg(struct register_info *reg)
+{
+	return __encode_reg(register_get(reg));
 }
 
 static inline bool is_imm_8(long imm)
@@ -136,9 +141,9 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 	unsigned char mod, rm, mod_rm;
 	int needs_sib;
 
-	base_reg = src->base_reg->reg;
+	base_reg = register_get(&src->base_reg);
 	disp = src->disp;
-	dest_reg = dest->reg->reg;
+	dest_reg = register_get(&dest->reg);
 
 	needs_sib = (base_reg == REG_ESP);
 
@@ -147,30 +152,30 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 	if (needs_sib)
 		rm = 0x04;
 	else
-		rm = encode_reg(base_reg);
+		rm = __encode_reg(base_reg);
 
 	if (is_imm_8(disp))
 		mod = 0x01;
 	else
 		mod = 0x02;
 
-	mod_rm = encode_modrm(mod, encode_reg(dest_reg), rm);
+	mod_rm = encode_modrm(mod, __encode_reg(dest_reg), rm);
 	emit(buf, mod_rm);
 
 	if (needs_sib)
-		emit(buf, encode_sib(0x00, 0x04, encode_reg(base_reg)));
+		emit(buf, encode_sib(0x00, 0x04, __encode_reg(base_reg)));
 
 	emit_imm(buf, disp);
 }
 
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 {
-	emit(buf, 0x50 + encode_reg(reg));
+	emit(buf, 0x50 + __encode_reg(reg));
 }
 
 static void emit_push_reg(struct buffer *buf, union operand *operand)
 {
-	__emit_push_reg(buf, operand->reg->reg);
+	__emit_push_reg(buf, register_get(&operand->reg));
 }
 
 static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
@@ -178,7 +183,7 @@ static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
 {
 	unsigned char mod_rm;
 
-	mod_rm = encode_modrm(0x03, encode_reg(src_reg), encode_reg(dest_reg));
+	mod_rm = encode_modrm(0x03, __encode_reg(src_reg), __encode_reg(dest_reg));
 	emit(buf, 0x89);
 	emit(buf, mod_rm);
 }
@@ -186,7 +191,7 @@ static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
 static void emit_mov_reg_reg(struct buffer *buf, union operand *src,
 			     union operand *dest)
 {
-	__emit_mov_reg_reg(buf, src->reg->reg, dest->reg->reg);
+	__emit_mov_reg_reg(buf, register_get(&src->reg), register_get(&dest->reg));
 }
 
 static void emit_mov_membase_reg(struct buffer *buf,
@@ -199,14 +204,14 @@ static void emit_mov_memindex_reg(struct buffer *buf,
 				  union operand *src, union operand *dest)
 {
 	emit(buf, 0x8b);
-	emit(buf, encode_modrm(0x00, encode_reg(dest->reg->reg), 0x04));
-	emit(buf, encode_sib(src->shift, encode_reg(src->index_reg->reg), encode_reg(src->base_reg->reg)));
+	emit(buf, encode_modrm(0x00, encode_reg(&dest->reg), 0x04));
+	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
 }
 
 static void emit_mov_imm_reg(struct buffer *buf, union operand *src,
 			     union operand *dest)
 {
-	emit(buf, 0xb8 + encode_reg(dest->reg->reg));
+	emit(buf, 0xb8 + encode_reg(&dest->reg));
 	emit_imm32(buf, src->imm);
 }
 
@@ -220,7 +225,7 @@ static void emit_mov_imm_membase(struct buffer *buf, union operand *src,
 	if (dest->disp != 0)
 		mod = 0x01;
 
-	emit(buf, encode_modrm(mod, 0x00, encode_reg(dest->base_reg->reg)));
+	emit(buf, encode_modrm(mod, 0x00, encode_reg(&dest->base_reg)));
 
 	if (dest->disp != 0)
 		emit(buf, dest->disp);
@@ -239,8 +244,8 @@ static void emit_mov_reg_membase(struct buffer *buf, union operand *src,
 		mod = 0x02;
 
 	emit(buf, 0x89);
-	emit(buf, encode_modrm(mod, encode_reg(src->reg->reg),
-			       encode_reg(dest->base_reg->reg)));
+	emit(buf, encode_modrm(mod, encode_reg(&src->reg),
+			       encode_reg(&dest->base_reg)));
 
 	emit_imm(buf, dest->disp);
 }
@@ -249,8 +254,8 @@ static void emit_mov_reg_memindex(struct buffer *buf, union operand *src,
 				  union operand *dest)
 {
 	emit(buf, 0x89);
-	emit(buf, encode_modrm(0x00, encode_reg(src->reg->reg), 0x04));
-	emit(buf, encode_sib(dest->shift, encode_reg(dest->index_reg->reg), encode_reg(dest->base_reg->reg)));
+	emit(buf, encode_modrm(0x00, encode_reg(&src->reg), 0x04));
+	emit(buf, encode_sib(dest->shift, encode_reg(&dest->index_reg), encode_reg(&dest->base_reg)));
 }
 
 static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
@@ -264,7 +269,7 @@ static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
 		opc = 0x81;
 
 	emit(buf, opc);
-	emit(buf, encode_modrm(0x3, opc_ext, encode_reg(reg)));
+	emit(buf, encode_modrm(0x3, opc_ext, __encode_reg(reg)));
 	emit_imm(buf, imm);
 }
 
@@ -285,7 +290,7 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 
 static void emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 {
-	emit(buf, 0x58 + encode_reg(reg));
+	emit(buf, 0x58 + __encode_reg(reg));
 }
 
 static void __emit_push_imm(struct buffer *buf, long imm)
@@ -359,13 +364,11 @@ static void __emit_div_mul_membase_reg(struct buffer *buf,
 				       union operand *dest,
 				       unsigned char opc_ext)
 {
-	enum machine_reg reg;
 	long disp;
 	int mod;
 
-	assert(dest->reg->reg == REG_EAX);
+	assert(register_get(&dest->reg) == REG_EAX);
 
-	reg = src->base_reg->reg;
 	disp = src->disp;
 
 	if (is_imm_8(disp))
@@ -374,7 +377,7 @@ static void __emit_div_mul_membase_reg(struct buffer *buf,
 		mod = 0x02;
 
 	emit(buf, 0xf7);
-	emit(buf, encode_modrm(mod, opc_ext, encode_reg(reg)));
+	emit(buf, encode_modrm(mod, opc_ext, encode_reg(&src->base_reg)));
 	emit_imm(buf, disp);
 }
 
@@ -387,13 +390,13 @@ static void emit_mul_membase_reg(struct buffer *buf,
 static void emit_neg_reg(struct buffer *buf, union operand *operand)
 {
 	emit(buf, 0xf7);
-	emit(buf, encode_modrm(0x3, 0x3, encode_reg(operand->reg->reg)));
+	emit(buf, encode_modrm(0x3, 0x3, encode_reg(&operand->reg)));
 }
 
 static void emit_cltd_reg_reg(struct buffer *buf, union operand *src, union operand *dest)
 {
-	assert(src->reg->reg == REG_EAX);
-	assert(dest->reg->reg == REG_EDX);
+	assert(register_get(&src->reg) == REG_EAX);
+	assert(register_get(&dest->reg) == REG_EDX);
 
 	emit(buf, 0x99);
 }
@@ -408,10 +411,10 @@ static void __emit_shift_reg_reg(struct buffer *buf,
 				 union operand *src,
 				 union operand *dest, unsigned char opc_ext)
 {
-	assert(src->reg->reg == REG_ECX);
+	assert(register_get(&src->reg) == REG_ECX);
 
 	emit(buf, 0xd3);
-	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(dest->reg->reg)));
+	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(&dest->reg)));
 }
 
 static void emit_shl_reg_reg(struct buffer *buf, union operand *src,
@@ -446,13 +449,13 @@ static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg re
 static void emit_add_imm_reg(struct buffer *buf,
 			     union operand *src, union operand *dest)
 {
-	__emit_add_imm_reg(buf, src->imm, dest->reg->reg);
+	__emit_add_imm_reg(buf, src->imm, register_get(&dest->reg));
 }
 
 static void emit_cmp_imm_reg(struct buffer *buf, union operand *src,
 			     union operand *dest)
 {
-	emit_alu_imm_reg(buf, 0x07, src->imm, dest->reg->reg);
+	emit_alu_imm_reg(buf, 0x07, src->imm, register_get(&dest->reg));
 }
 
 static void emit_cmp_membase_reg(struct buffer *buf, union operand *src, union operand *dest)
@@ -463,7 +466,7 @@ static void emit_cmp_membase_reg(struct buffer *buf, union operand *src, union o
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0xff);
-	emit(buf, encode_modrm(0x3, 0x04, encode_reg(reg)));
+	emit(buf, encode_modrm(0x3, 0x04, __encode_reg(reg)));
 }
 
 void emit_branch_rel(struct buffer *buf, unsigned char prefix,
@@ -531,7 +534,7 @@ static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
 static void emit_indirect_call(struct buffer *buf, union operand *operand)
 {
 	emit(buf, 0xff);
-	emit(buf, encode_modrm(0x0, 0x2, encode_reg(operand->reg->reg)));
+	emit(buf, encode_modrm(0x0, 0x2, encode_reg(&operand->reg)));
 }
 
 static void emit_xor_membase_reg(struct buffer *buf,

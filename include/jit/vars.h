@@ -27,9 +27,18 @@ struct var_info {
 	struct live_interval interval;
 };
 
-static inline bool is_vreg(struct var_info *var, unsigned long vreg)
+struct register_info {
+	struct var_info		*var_info;
+};
+
+static inline enum machine_reg register_get(struct register_info *reg)
 {
-	return var->vreg == vreg;
+	return reg->var_info->reg;
+}
+
+static inline bool is_vreg(struct register_info *reg, unsigned long vreg)
+{
+	return reg->var_info->vreg == vreg;
 }
 
 #endif /* __JIT_VARS_H */

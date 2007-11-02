@@ -38,7 +38,7 @@ bool insn_defs(struct insn *insn, unsigned long vreg)
 	info = get_info(insn);
 
 	if (info->flags & DEF_X) {
-		if (is_vreg(insn->x.reg, vreg))
+		if (is_vreg(&insn->x.reg, vreg))
 			return true;
 	}
 	return false;
@@ -51,11 +51,11 @@ bool insn_uses(struct insn *insn, unsigned long vreg)
 	info = get_info(insn);
 
 	if (info->flags & USE_Y) {
-		if (is_vreg(insn->y.reg, vreg))
+		if (is_vreg(&insn->y.reg, vreg))
 			return true;
 	}
 	if (info->flags & USE_Z) {
-		if (is_vreg(insn->z.reg, vreg))
+		if (is_vreg(&insn->z.reg, vreg))
 			return true;
 	}
 	return false;

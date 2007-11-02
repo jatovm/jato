@@ -18,9 +18,9 @@ enum insn_type {
 };
 
 union operand {
-	struct var_info *reg;
-	unsigned long imm;
-	struct basic_block *branch_target;
+	struct register_info	reg;
+	unsigned long		imm;
+	struct basic_block	*branch_target;
 };
 
 struct insn {

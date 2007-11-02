@@ -68,12 +68,12 @@ bool insn_defs(struct insn *insn, unsigned long vreg)
 	info = get_info(insn);
 
 	if (info->flags & DEF_SRC) {
-		if (is_vreg(insn->src.reg, vreg))
+		if (is_vreg(&insn->src.reg, vreg))
 			return true;
 	}
 
 	if (info->flags & DEF_DST) {
-		if (is_vreg(insn->dest.reg, vreg))
+		if (is_vreg(&insn->dest.reg, vreg))
 			return true;
 	}
 
@@ -87,22 +87,22 @@ bool insn_uses(struct insn *insn, unsigned long vreg)
 	info = get_info(insn);
 
 	if (info->flags & USE_SRC) {
-		if (is_vreg(insn->src.reg, vreg))
+		if (is_vreg(&insn->src.reg, vreg))
 			return true;
 	}
 
 	if (info->flags & USE_DST) {
-		if (is_vreg(insn->dest.reg, vreg))
+		if (is_vreg(&insn->dest.reg, vreg))
 			return true;
 	}
 
 	if (info->flags & USE_IDX_SRC) {
-		if (is_vreg(insn->src.index_reg, vreg))
+		if (is_vreg(&insn->src.index_reg, vreg))
 			return true;
 	}
 
 	if (info->flags & USE_IDX_DST) {
-		if (is_vreg(insn->dest.index_reg, vreg))
+		if (is_vreg(&insn->dest.index_reg, vreg))
 			return true;
 	}
 

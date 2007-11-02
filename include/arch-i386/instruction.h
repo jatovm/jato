@@ -12,16 +12,16 @@ struct basic_block;
 struct bitset;
 
 union operand {
-	struct var_info *reg;
+	struct register_info reg;
 
 	struct {
-		struct var_info *base_reg;
+		struct register_info base_reg;
 		long disp;	/* displacement */
 	};
 
 	struct {
-		struct var_info *base_reg;
-		struct var_info *index_reg;
+		struct register_info base_reg;
+		struct register_info index_reg;
 		unsigned char shift;
 	};
 
