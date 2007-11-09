@@ -7,7 +7,7 @@ MONOBURG=./monoburg/monoburg
 CC = gcc
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
-INCLUDE =  -Iinclude -Ijit -Ijamvm -Ijit/glib -Itest/libharness -Itest/jit -include arch/config.h $(ARCH_INCLUDE)
+INCLUDE =  -Iinclude -Ijit -Ijamvm -Ijit/glib -include arch/config.h $(ARCH_INCLUDE)
 LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes $(ARCH_LIBS)
 
 ARCH_INCLUDE_DIR = include/arch
