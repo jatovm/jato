@@ -12,15 +12,16 @@
 #include <arch/emit-code.h>
 #include <arch/instruction.h>
 
+#include <test/vars.h>
 #include <libharness.h>
 
-static struct var_info VAR_EAX = { .reg = REG_EAX };
-static struct var_info VAR_EBX = { .reg = REG_EBX };
-static struct var_info VAR_ECX = { .reg = REG_ECX };
-static struct var_info VAR_EDX = { .reg = REG_EDX };
+static DECLARE_REG(VAR_EAX, REG_EAX);
+static DECLARE_REG(VAR_EBX, REG_EBX);
+static DECLARE_REG(VAR_ECX, REG_ECX);
+static DECLARE_REG(VAR_EDX, REG_EDX);
 
-static struct var_info VAR_EBP = { .reg = REG_EBP };
-static struct var_info VAR_ESP = { .reg = REG_ESP };
+static DECLARE_REG(VAR_EBP, REG_EBP);
+static DECLARE_REG(VAR_ESP, REG_ESP);
 
 static void assert_emit_insn(unsigned char *expected,
 			     unsigned long expected_size,

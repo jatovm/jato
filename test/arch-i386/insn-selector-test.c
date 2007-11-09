@@ -10,6 +10,8 @@
 
 #include <arch/instruction.h>
 
+#include <test/vars.h>
+
 #include "vm-utils.h"
 
 static void assert_membase_reg_insn(enum insn_type insn_type,
@@ -939,7 +941,7 @@ void test_select_store_value_to_var(void)
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct basic_block *bb;
-	struct var_info var;
+	DECLARE_VREG(var, 0);
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 0,
@@ -973,7 +975,7 @@ void test_select_store_var_to_local(void)
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct basic_block *bb;
-	struct var_info var;
+	DECLARE_VREG(var, 0);
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 0,

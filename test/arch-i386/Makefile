@@ -1,5 +1,5 @@
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
-INCLUDE=-I. -I../libharness -I../jit -I../../include -I../../jit/glib
+INCLUDE=-I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib
 LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
 
 include ../../scripts/Makefile.include

@@ -54,8 +54,9 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free(cu);
 }
 
-static void init_interval(struct live_interval *interval)
+static void init_interval(struct live_interval *interval, struct var_info *var)
 {
+	interval->var_info = var;
 	interval->reg = REG_UNASSIGNED;
 	interval->range.start = ~0UL;
 	interval->range.end = 0UL;
@@ -75,7 +76,7 @@ struct var_info *get_var(struct compilation_unit *cu)
 	ret->next = cu->var_infos;
 	ret->reg = REG_UNASSIGNED;
 
-	init_interval(&ret->interval);
+	init_interval(&ret->interval, ret);
 
 	cu->var_infos = ret;
   out:

@@ -7,18 +7,20 @@
 
 #include <jit/compilation-unit.h>
 #include <jit/jit-compiler.h>
+#include <jit/vars.h>
 
 #include <arch/instruction.h>
 
+#include <test/vars.h>
 #include <bc-test-utils.h>
 #include <libharness.h>
 #include <stdlib.h>
 
 #define VREG_OFFSET (sizeof(unsigned long) - 1)
 
-static struct var_info r0 = { .vreg = VREG_OFFSET + 0 };
-static struct var_info r1 = { .vreg = VREG_OFFSET + 1 };
-static struct var_info r2 = { .vreg = VREG_OFFSET + 2 };
+static DECLARE_VREG(r0, VREG_OFFSET + 0);
+static DECLARE_VREG(r1, VREG_OFFSET + 1);
+static DECLARE_VREG(r2, VREG_OFFSET + 2);
 
 #define NR_VREGS VREG_OFFSET + 3
 

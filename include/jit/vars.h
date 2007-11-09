@@ -13,7 +13,10 @@ static inline bool in_range(struct live_range *range, unsigned long offset)
 	return (range->start <= offset) && (range->end >= offset);
 }
 
+struct var_info;
+
 struct live_interval {
+	struct var_info		*var_info;
 	struct live_range	range;
 	enum machine_reg	reg;
 	struct list_head	interval;
@@ -28,27 +31,27 @@ struct var_info {
 };
 
 struct register_info {
-	struct var_info		*var_info;
+	struct live_interval	*interval;
 };
 
 static inline void var_associate_reg(struct register_info *reg, struct var_info *var)
 {
-	reg->var_info = var;
+	reg->interval = &var->interval;
 }
 
 static inline enum machine_reg register_get(struct register_info *reg)
 {
-	return reg->var_info->reg;
+	return reg->interval->var_info->reg;
 }
 
 static inline struct var_info *register_get_var(struct register_info *reg)
 {
-	return reg->var_info;
+	return reg->interval->var_info;
 }
 
 static inline bool is_vreg(struct register_info *reg, unsigned long vreg)
 {
-	return reg->var_info->vreg == vreg;
+	return reg->interval->var_info->vreg == vreg;
 }
 
 #endif /* __JIT_VARS_H */
