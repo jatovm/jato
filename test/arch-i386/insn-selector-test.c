@@ -11,8 +11,7 @@
 #include <arch/instruction.h>
 
 #include <test/vars.h>
-
-#include "vm-utils.h"
+#include <test/vm.h>
 
 static void assert_membase_reg_insn(enum insn_type insn_type,
 				    enum machine_reg src_base_reg,

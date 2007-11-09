@@ -13,7 +13,7 @@
 #include <libharness.h>
 #include <stdlib.h>
 
-#include "vm-utils.h"
+#include <test/vm.h>
 
 struct compilation_unit *
 alloc_simple_compilation_unit(struct methodblock *method)

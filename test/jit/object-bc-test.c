@@ -12,7 +12,7 @@
 #include <vm/types.h>
 #include <vm/vm.h>
 
-#include "vm-utils.h"
+#include <test/vm.h>
 
 static void convert_ir_const_single(struct compilation_unit *cu, void *value)
 {

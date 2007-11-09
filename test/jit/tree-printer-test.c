@@ -10,7 +10,7 @@
 #include <libharness.h>
 #include <stdlib.h>
 
-#include "vm-utils.h"
+#include <test/vm.h>
 
 static void assert_tree_print(const char *expected, struct tree_node *root)
 {
