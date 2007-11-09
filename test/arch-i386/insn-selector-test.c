@@ -45,7 +45,7 @@ static void assert_var_membase_insn(enum insn_type insn_type,
 				    struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_ptr_equals(src_var, insn->src.reg.var_info);
+	assert_ptr_equals(src_var, register_get_var(&insn->src.reg));
 	assert_int_equals(dest_reg, register_get(&insn->dest.base_reg));
 	assert_int_equals(dest_displacement, insn->dest.disp);
 }
@@ -100,7 +100,7 @@ static void assert_reg_var_insn(enum insn_type insn_type,
 {
 	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_src, register_get(&insn->src.reg));
-	assert_ptr_equals(expected_dest, insn->dest.reg.var_info);
+	assert_ptr_equals(expected_dest, register_get_var(&insn->dest.reg));
 }
 
 static void assert_imm_insn(enum insn_type insn_type,

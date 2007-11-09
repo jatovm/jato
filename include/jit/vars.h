@@ -31,9 +31,19 @@ struct register_info {
 	struct var_info		*var_info;
 };
 
+static inline void var_associate_reg(struct register_info *reg, struct var_info *var)
+{
+	reg->var_info = var;
+}
+
 static inline enum machine_reg register_get(struct register_info *reg)
 {
 	return reg->var_info->reg;
+}
+
+static inline struct var_info *register_get_var(struct register_info *reg)
+{
+	return reg->var_info;
 }
 
 static inline bool is_vreg(struct register_info *reg, unsigned long vreg)
