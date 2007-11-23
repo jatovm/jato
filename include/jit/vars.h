@@ -24,10 +24,9 @@ struct live_interval {
 };
 
 struct var_info {
-	unsigned long vreg;
-	enum machine_reg reg;
-	struct var_info *next;
-	struct live_interval interval;
+	unsigned long		vreg;
+	struct var_info		*next;
+	struct live_interval	interval;
 };
 
 struct register_info {
@@ -41,7 +40,7 @@ static inline void var_associate_reg(struct register_info *reg, struct var_info 
 
 static inline enum machine_reg register_get(struct register_info *reg)
 {
-	return reg->interval->var_info->reg;
+	return reg->interval->reg;
 }
 
 static inline struct var_info *register_get_var(struct register_info *reg)

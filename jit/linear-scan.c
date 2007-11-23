@@ -122,13 +122,6 @@ int allocate_registers(struct compilation_unit *cu)
 	bitset_set_all(registers);
 
 	/*
- 	 * Setup fixed registers to intervals.
- 	 */ 
-	for_each_variable(var, cu->var_infos) {
-		var->interval.reg = var->reg;
-	}
-
-	/*
 	 * Sort intervals in the order of increasing start point. We
 	 * add intervals with register constraints first, so that that
 	 * we when a fixed and non-fixed intervals overlap, we always
@@ -166,13 +159,6 @@ int allocate_registers(struct compilation_unit *cu)
 		insert_to_active(this, &active);
 	}
 	free(registers);
-
-	/*
-	 * Assign allocated registers to temporaries.
-	 */ 
-	for_each_variable(var, cu->var_infos) {
-		var->reg = var->interval.reg;
-	}
 
 	return 0;
 }

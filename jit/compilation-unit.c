@@ -74,7 +74,6 @@ struct var_info *get_var(struct compilation_unit *cu)
 
 	ret->vreg = cu->nr_vregs++;
 	ret->next = cu->var_infos;
-	ret->reg = REG_UNASSIGNED;
 
 	init_interval(&ret->interval, ret);
 
@@ -89,7 +88,7 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 
 	ret = get_var(cu);
 	if (ret)
-		ret->reg = reg;
+		ret->interval.reg = reg;
 
 	return ret;
 }
