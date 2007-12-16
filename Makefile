@@ -185,7 +185,7 @@ clean:
 	$(Q) - rm -f $(LIBHARNESS_OBJS)
 	$(Q) - rm -f $(ARCH_TEST_OBJS)
 	$(Q) - rm -f arch/$(ARCH)/insn-selector.c
-	$(Q) - rm -f $(EXECUTABLE)
+	$(Q) - rm -f $(PROGRAM)
 	$(Q) - rm -f $(ARCH_H)
 	$(Q) - rm -f $(ARCH_TEST_SUITE)
 	$(Q) - rm -f test-suite.o
