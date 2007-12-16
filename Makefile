@@ -159,23 +159,25 @@ test: $(ARCH_INCLUDE_DIR) $(ARCH_H)
 
 %.class: %.java
 	$(E) "  JIKES   " $@
-	$(Q) $(JIKES) -cp $(BOOTCLASSPATH):test/regression -d test/regression $<
+	$(Q) $(JIKES) -cp $(BOOTCLASSPATH):regression -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
-	test/regression/jamvm/TestCase.class \
-	test/regression/jamvm/ExitStatusIsOneTest.class \
-	test/regression/jamvm/ExitStatusIsZeroTest.class \
-	test/regression/jamvm/LoadConstantsTest.class \
-	test/regression/jamvm/IntegerArithmeticTest.class \
-	test/regression/jamvm/ObjectCreationAndManipulationTest.class \
-	test/regression/jamvm/MethodInvocationAndReturnTest.class
+	regression/jamvm/TestCase.class \
+	regression/jamvm/ExitStatusIsOneTest.class \
+	regression/jamvm/ExitStatusIsZeroTest.class \
+	regression/jamvm/LoadConstantsTest.class \
+	regression/jamvm/IntegerArithmeticTest.class \
+	regression/jamvm/ObjectCreationAndManipulationTest.class \
+	regression/jamvm/MethodInvocationAndReturnTest.class
 
 vm-classes:
 	make -C lib/
 .PHONY: vm-classes
 
-compile-regression-suite: vm-classes $(EXECUTABLE) $(REGRESSION_TEST_SUITE_CLASSES)
-.PHONY: compile-regression-suite
+regression: vm-classes $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
+	$(E) "  REGRESSION"
+	$(Q) cd regression && /bin/bash run-suite.sh
+.PHONY: regression
 
 clean:
 	$(E) "  CLEAN"
