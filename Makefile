@@ -176,7 +176,7 @@ vm-classes:
 
 regression: vm-classes $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
 	$(E) "  REGRESSION"
-	$(Q) cd regression && /bin/bash run-suite.sh
+	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
 
 clean:

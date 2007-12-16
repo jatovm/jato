@@ -50,12 +50,17 @@ Prequisites:
     scripts)
   - GNU classpath (installed in /usr/local/classpath/)
 
-To run the tests, execute the following commands:
+To run the test suite, execute the following commands:
 
-  cd ../monoburg
+  cd monoburg
   make
-  cd ../test/regression
-  ./run-suite.sh
+  cd ..
+  make regression
+
+If you want to run the same suite with the Jam VM interpreter, just add -Xint
+to JAVA_OPTS as follows:
+
+  make JAVA_OPTS=-Xint regression
 
 
 How to launch Java applications with Jato under GDB?
