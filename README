@@ -1,103 +1,95 @@
-About Jato
-------------
+What is it?
 
-Jato is a Just-in-time (JIT) compiler for Java. It is built on top of JamVM.
+  Jato is a Just-in-time (JIT) compiler for Java. It is built on top of JamVM.
 
 
 How can I try it out?
----------------------
 
-- Download development tree:
+  - Download development tree:
 
-  git clone git://git.kernel.org/pub/scm/java/jato/jato.git
+    $ git clone git://git.kernel.org/pub/scm/java/jato/jato.git
 
-- Compile Jato and run the unit tests:
+  - Compile Jato and run the unit tests:
 
-  cd <JATO_ROOT> ; make
+    $ cd <JATO_ROOT> ; make
 
 
 Running Jato
-------------
 
-Command line options:
+  Command line options:
 
-  -Xint		Operate in interpreter-only mode.  Useful for debugging.
-  -Xtrace:jit	Trace all compilation phases for each method.
-  -Xtrace:asm	Trace the emitted machine code for each method.
+    -Xint		Operate in interpreter-only mode.  Useful for
+			debugging.
+    -Xtrace:jit		Trace all compilation phases for each method.
+    -Xtrace:asm		Trace the emitted machine code for each method.
 
 
 Development
------------
 
-If you use git for development, please remember to add your committer name
-and email to .git/config file.  The format is as follows:
+  If you use git for development, please remember to add your committer name
+  and email to .git/config file.  The format is as follows:
 
-  [user]
-    name = Jane Doe
-    email = jane@foo.bar
+    [user]
+      name = Pekka Enberg
+      email = penberg@cs.helsinki.fi
 
 
 How to run the regression test suite?
--------------------------------------
 
-Prequisites:
+  Prequisites:
 
-  - Jikes Compiler (other Java compilers suffice too, but you need to hack the
-    scripts)
-  - GNU classpath (installed in /usr/local/classpath/)
+    - Jikes Compiler (other Java compilers suffice too, but you need to hack
+      the scripts)
+    - GNU classpath (installed in /usr/local/classpath/)
 
-To run the test suite, execute the following commands:
+  To run the test suite, execute the following commands:
 
-  make regression
+    $ make regression
 
-If you want to run the same suite with the Jam VM interpreter, just add -Xint
-to JAVA_OPTS as follows:
+  If you want to run the same suite with the Jam VM interpreter, just add -Xint
+  to JAVA_OPTS as follows:
 
-  make JAVA_OPTS=-Xint regression
+    $ make JAVA_OPTS=-Xint regression
 
 
 How to launch Java applications with Jato under GDB?
-----------------------------------------------------
 
-NTPL threads cause problems while running Jato under gdb. You should
-set the following environment variable before starting the debugger:
+  NTPL threads cause problems while running Jato under gdb. You should
+  set the following environment variable before starting the debugger:
 
-  export LD_ASSUME_KERNEL=2.4.1
+    $ export LD_ASSUME_KERNEL=2.4.1
 
-To set up boot classpath for Jato, set the following environment variable:
+  To set up boot classpath for Jato, set the following environment variable:
 
-  export BOOTCLASSPATH=<JATO_ROOT>/lib/classes.zip:/usr/local/classpath/share/classpath/glibj.zip
+    $ export BOOTCLASSPATH=<JATO_ROOT>/lib/classes.zip:/usr/local/classpath/share/classpath/glibj.zip
 
-Finally, to launch a Java application with Jato under gdb:
+  Finally, to launch a Java application with Jato under gdb:
 
-  gdb --args <JATO_ROOT>/jato/jato <class>
+    $ gdb --args <JATO_ROOT>/jato/jato <class>
 
 
 How do I launch a simple application?
--------------------------------------
 
-To run a simple Java application, you can download Christian
-Schneider's Java tetris
-<http://www.liquidreality.de/main/projects/tetris> and launch it with
-the following command (remembed to download jdom jar also):
+  To run a simple Java application, you can download Christian Schneider's Java
+  tetris <http://www.liquidreality.de/main/projects/tetris> and launch it with
+  the following command (remembed to download jdom jar also):
 
-  ./java -Xtrace:jit -Xms32M -Xnocompact -Xnoasyncgc \
-         -Dgnu.classpath.boot.library.path=/usr/lib/classpath:lib/ \
-         -Xbootclasspath:lib/classes.zip:/usr/share/classpath/glibj.zip \
-         -classpath <TETRIS_HOME>/tetris_source.jar:<TETRIS_HOME>/jdom.jar \
-         tetris/TetrisFrame
+    $ ./java -Xtrace:jit -Xms32M -Xnocompact -Xnoasyncgc \
+             -Dgnu.classpath.boot.library.path=/usr/lib/classpath:lib/ \
+             -Xbootclasspath:lib/classes.zip:/usr/share/classpath/glibj.zip \
+             -classpath <TETRIS_HOME>/tetris_source.jar:<TETRIS_HOME>/jdom.jar \
+             tetris/TetrisFrame
 
-Note: Jato interacts badly with JamVM GC which is why you should make
-the initial heap size big enough for GC not to trigger during
-execution.
+  Note: Jato interacts badly with JamVM GC which is why you should make
+  the initial heap size big enough for GC not to trigger during
+  execution.
 
-To launch the application under gdb, use the following command:
+  To launch the application under gdb, use the following command:
 
-  gdb --args ./java [...]
+    $ gdb --args ./java [...]
 
 
 Copyright and License
----------------------
 
   Copyright (C) 2005-2007  Pekka Enberg
 
@@ -116,9 +108,12 @@ Copyright and License
 
 
 Acknowledgements
-----------------
 
-  - Reaktor Innovations Oy for sponsoring my work on this.
-  - kernel.org for providing public space for my development tree.
+  I would like to thank the following people/organizations for supporting the
+  development of Jato:
 
-Thank you!
+    Reaktor Innovations Oy for sponsoring the initial development of Jato.
+
+    The folks at kernel.org for providing public space for my development tree.
+
+  Thank you!
