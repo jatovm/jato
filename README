@@ -11,10 +11,6 @@ How can I try it out?
 
   git clone git://git.kernel.org/pub/scm/java/jato/jato.git
 
-- Compile Monoburg:
-
-  cd <JATO_ROOT>/monoburg ; make
-
 - Compile Jato and run the unit tests:
 
   cd <JATO_ROOT> ; make
@@ -52,9 +48,6 @@ Prequisites:
 
 To run the test suite, execute the following commands:
 
-  cd monoburg
-  make
-  cd ..
   make regression
 
 If you want to run the same suite with the Jam VM interpreter, just add -Xint

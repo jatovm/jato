@@ -125,9 +125,13 @@ else
 endif
 export E Q
 
-all: $(PROGRAM) test
+all: monoburg $(PROGRAM) test
 .PHONY: all
 .DEFAULT: all
+
+monoburg:
+	$(Q) make -C monoburg/
+.PHONY: monoburg
 
 %.o: %.c
 	$(E) "  CC      " $@
@@ -174,7 +178,7 @@ vm-classes:
 	make -C lib/
 .PHONY: vm-classes
 
-regression: vm-classes $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
+regression: monoburg vm-classes $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
 	$(E) "  REGRESSION"
 	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
@@ -193,6 +197,7 @@ clean:
 	$(Q) - rm -f $(REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
+	$(Q) - make -C monoburg/ clean
 	$(Q) - make -C test/vm/ clean
 	$(Q) - make -C test/jit/ clean
 	$(Q) - make -C test/arch-i386/ clean
