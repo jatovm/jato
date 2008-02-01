@@ -29,6 +29,7 @@ OBJS = \
 	../../jit/cfg-analyzer.o \
 	../../jit/compilation-unit.o \
 	../../jit/expression.o \
+	../../jit/interval.o \
 	../../jit/invoke-bc.o \
 	../../jit/linear-scan.o \
 	../../jit/liveness.o \

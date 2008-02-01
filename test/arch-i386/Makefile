@@ -27,6 +27,7 @@ OBJS = \
 	../../jit/compilation-unit.o \
 	../../jit/emit.o \
 	../../jit/expression.o \
+	../../jit/interval.o \
 	../../jit/statement.o \
 	../../jit/tree-printer.o \
 	../../arch/i386/emit-code.o \

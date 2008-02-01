@@ -33,6 +33,7 @@ JIT_OBJS = \
 	jit/disass.o		\
 	jit/emit.o		\
 	jit/expression.o	\
+	jit/interval.o		\
 	jit/invoke-bc.o		\
 	jit/linear-scan.o	\
 	jit/liveness.o		\

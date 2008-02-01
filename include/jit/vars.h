@@ -62,4 +62,6 @@ static inline bool is_vreg(struct register_info *reg, unsigned long vreg)
 	return reg->interval->var_info->vreg == vreg;
 }
 
+void init_interval(struct live_interval *, struct var_info *);
+
 #endif /* __JIT_VARS_H */
