@@ -52,6 +52,7 @@ OBJS = \
 	cfg-analyzer-test.o \
 	compilation-unit-test.o \
 	expression-test.o \
+	interval-test.o \
 	invoke-bc-test.o \
 	linear-scan-test.o \
 	liveness-test.o \

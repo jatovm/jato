@@ -23,8 +23,16 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <arch/registers.h>
+#include <arch/instruction.h>
 #include <jit/vars.h>
+#include <stdlib.h>
+
+static void __init_interval(struct live_interval *interval)
+{
+	INIT_LIST_HEAD(&interval->interval);
+	INIT_LIST_HEAD(&interval->active);
+	INIT_LIST_HEAD(&interval->registers);
+}
 
 void init_interval(struct live_interval *interval, struct var_info *var)
 {
@@ -32,6 +40,32 @@ void init_interval(struct live_interval *interval, struct var_info *var)
 	interval->reg = REG_UNASSIGNED;
 	interval->range.start = ~0UL;
 	interval->range.end = 0UL;
-	INIT_LIST_HEAD(&interval->interval);
-	INIT_LIST_HEAD(&interval->active);
+	__init_interval(interval);
+}
+
+struct live_interval *split_interval_at(struct live_interval *interval,
+					unsigned long pos)
+{
+	struct live_interval *new;
+
+	new = malloc(sizeof *new);
+	if (new) {
+		struct register_info *this, *next;
+
+		__init_interval(new);
+		new->var_info = interval->var_info;
+		new->reg = interval->reg;
+		new->range.start = pos;
+		new->range.end = interval->range.end;
+		interval->range.end = pos;
+
+		list_for_each_entry_safe(this, next, &interval->registers, reg_list) {
+			if (this->insn->lir_pos < pos)
+				continue;
+
+			list_move(&this->reg_list, &new->registers);
+			this->interval = new;
+		}
+	}
+	return new;
 }
