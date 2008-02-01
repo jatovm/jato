@@ -3,7 +3,7 @@
  */
 
 #include <jit/statement.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <vm/list.h>
 #include <vm/stack.h>
 #include <vm/system.h>

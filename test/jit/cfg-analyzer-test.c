@@ -4,7 +4,7 @@
 
 #include <vm/system.h>
 #include <vm/vm.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <libharness.h>
 #include <basic-block-assert.h>
 

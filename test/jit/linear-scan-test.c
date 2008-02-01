@@ -2,7 +2,7 @@
  * Copyright © 2007  Pekka Enberg
  */
 
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <libharness.h>
 
 void test_allocates_different_registers_for_overlapping_intervals(void)

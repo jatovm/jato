@@ -13,7 +13,7 @@
 
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 
 #include <arch/emit-code.h>
 

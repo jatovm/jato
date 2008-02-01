@@ -8,7 +8,7 @@
 #include <jit/tree-node.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <vm/types.h>
 #include <libharness.h>
 #include <stdlib.h>

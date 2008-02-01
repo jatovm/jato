@@ -6,7 +6,7 @@
  */
 
 #include <jit/compilation-unit.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <jit/vars.h>
 
 #include <arch/instruction.h>

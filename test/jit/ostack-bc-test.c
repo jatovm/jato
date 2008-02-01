@@ -4,7 +4,7 @@
 
 #include <vm/vm.h>
 #include <jit/expression.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <stdlib.h>
 #include <libharness.h>
 

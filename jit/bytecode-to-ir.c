@@ -8,7 +8,7 @@
  */
 
 #include <jit/bytecode-converters.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <jit/statement.h>
 
 #include <vm/bytecode.h>

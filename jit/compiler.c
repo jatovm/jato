@@ -8,7 +8,7 @@
  */
 
 #include <jit/compilation-unit.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
 
@@ -31,7 +31,7 @@ static void compile_error(struct compilation_unit *cu, int err)
 	       __FUNCTION__, cu->method->name, cb->name, err);
 }
 
-int jit_compile(struct compilation_unit *cu)
+static int compile(struct compilation_unit *cu)
 {
 	int err;
 
@@ -100,7 +100,7 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 static void *jit_java_trampoline(struct compilation_unit *cu)
 {
 	if (!cu->is_compiled)
-		jit_compile(cu);
+		compile(cu);
 
 	return buffer_ptr(cu->objcode);
 }

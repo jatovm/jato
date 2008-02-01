@@ -3,7 +3,7 @@
  */
 
 #include <jit/compilation-unit.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <vm/bitset.h>
 #include <arch/instruction.h>
 #include <libharness.h>

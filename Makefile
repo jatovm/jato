@@ -28,12 +28,12 @@ JIT_OBJS = \
 	jit/bytecode-to-ir.o	\
 	jit/cfg-analyzer.o	\
 	jit/compilation-unit.o	\
+	jit/compiler.o		\
 	jit/disass-common.o	\
 	jit/disass.o		\
 	jit/emit.o		\
 	jit/expression.o	\
 	jit/invoke-bc.o		\
-	jit/jit-compiler.o	\
 	jit/linear-scan.o	\
 	jit/liveness.o		\
 	jit/load-store-bc.o	\

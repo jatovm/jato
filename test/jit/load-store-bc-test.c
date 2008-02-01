@@ -7,7 +7,7 @@
 #include <vm/types.h>
 #include <vm/vm.h>
 #include <jit/expression.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 #include <libharness.h>
 #include <string.h>
 

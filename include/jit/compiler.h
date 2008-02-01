@@ -25,7 +25,6 @@ struct parse_context {
 	unsigned char opc;
 };
 
-int jit_compile(struct compilation_unit *);
 int analyze_control_flow(struct compilation_unit *);
 int convert_to_ir(struct compilation_unit *);
 int analyze_liveness(struct compilation_unit *);

@@ -36,7 +36,7 @@
 #include "interp.h"
 #include "class.h"
 
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 
 #define PREPARE(ptr) ptr
 #define SCAVENGE(ptr) FALSE

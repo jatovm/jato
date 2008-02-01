@@ -7,7 +7,7 @@
  * LICENSE for details.
  */
 
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 
 #include <vm/bitset.h>
 #include <vm/bytecodes.h>

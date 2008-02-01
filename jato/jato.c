@@ -28,7 +28,7 @@
 #include <vm/backtrace.h>
 #include <vm/natives.h>
 #include <vm/vm.h>
-#include <jit/jit-compiler.h>
+#include <jit/compiler.h>
 
 #ifdef USE_ZIP
 #define BCP_MESSAGE "<jar/zip files and directories separated by :>"
