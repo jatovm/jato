@@ -41,6 +41,7 @@ void test_variable_range_limited_to_basic_block(void)
 	bb_add_insn(bb, imm_insn(INSN_SETL, 0x02, r2));
 	bb_add_insn(bb, arithmetic_insn(INSN_ADD, r1, r2, r2));
 
+	compute_insn_positions(cu);
 	analyze_liveness(cu);
 
 	assert_defines(bb, r1);
@@ -72,6 +73,7 @@ void test_variable_range_spans_two_basic_blocks(void)
 	bb_add_insn(bb1, imm_insn(INSN_SETL, 0x01, r1));
 	bb_add_insn(bb1, branch_insn(INSN_JMP, bb2));
 
+	compute_insn_positions(cu);
 	analyze_liveness(cu);
 
 	assert_defines(bb1, r1);

@@ -81,6 +81,8 @@ struct insn {
 	struct list_head branch_list_node;
 	/* Offset in machine code.  */
 	unsigned long mach_offset;
+	/* Position of this instruction in LIR.  */
+	unsigned long lir_pos;
 	bool escaped;
 };
 

@@ -32,6 +32,8 @@ struct insn {
                 union operand operand;
         };
         struct list_head insn_list_node;
+	/* Position of this instruction in LIR.  */
+	unsigned long		lir_pos;
 };
 
 struct insn *arithmetic_insn(enum insn_type, struct var_info *, struct var_info *, struct var_info *);

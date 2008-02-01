@@ -37,6 +37,7 @@ struct var_info *get_var(struct compilation_unit *);
 struct var_info *get_fixed_var(struct compilation_unit *, enum machine_reg);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 unsigned long nr_bblocks(struct compilation_unit *);
+void compute_insn_positions(struct compilation_unit *);
 
 #define for_each_variable(var, var_list) for (var = var_list; var != NULL; var = var->next)
 

@@ -56,6 +56,8 @@ static int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	compute_insn_positions(cu);
+
 	err = analyze_liveness(cu);
 	if (err)
 		goto out;

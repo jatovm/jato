@@ -123,3 +123,18 @@ unsigned long nr_bblocks(struct compilation_unit *cu)
 
 	return nr;
 }
+
+void compute_insn_positions(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	unsigned long pos = 0;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		struct insn *insn;
+
+		for_each_insn(insn, &bb->insn_list) {
+			insn->lir_pos = pos++;
+		}
+	}
+}
+

@@ -12,13 +12,13 @@
 #include <errno.h>
 #include <stdlib.h>
 
-static void __update_live_range(struct live_range *range, unsigned long insn_idx)
+static void __update_live_range(struct live_range *range, unsigned long pos)
 {
-	if (range->start > insn_idx)
-		range->start = insn_idx;
+	if (range->start > pos)
+		range->start = pos;
 
-	if (range->end < insn_idx)
-		range->end = insn_idx;
+	if (range->end < pos)
+		range->end = pos;
 }
 
 static void update_live_ranges(struct compilation_unit *cu)
@@ -98,8 +98,7 @@ static int analyze_live_sets(struct compilation_unit *cu)
 	return err;
 }
 
-static void __analyze_use_def(struct basic_block *bb, struct insn *insn,
-			      unsigned long insn_idx)
+static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 {
 	struct var_info *var;
 
@@ -120,22 +119,21 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn,
 
 static void analyze_use_def(struct compilation_unit *cu)
 {
-	unsigned long insn_idx = 0;
 	struct basic_block *bb;
-	struct insn *insn;
 
 	for_each_basic_block(bb, &cu->bb_list) {
+		struct insn *insn;
+
 		for_each_insn(insn, &bb->insn_list) {
 			struct var_info *var;
 
-			__analyze_use_def(bb, insn, insn_idx);
+			__analyze_use_def(bb, insn);
 
 			for_each_variable(var, bb->b_parent->var_infos) {
 				if (test_bit(bb->def_set->bits, var->vreg) ||
 				    test_bit(bb->use_set->bits, var->vreg))
-					__update_live_range(&var->interval.range, insn_idx);
+					__update_live_range(&var->interval.range, insn->lir_pos);
 			}
-			insn_idx++;
 		}
 	}
 }
