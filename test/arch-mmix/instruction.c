@@ -32,7 +32,7 @@ struct insn *imm_insn(enum insn_type insn_type, unsigned long imm, struct var_in
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->x.reg, result);
+		assoc_var_to_operand(result, insn, x.reg);
 		insn->y.imm = imm;
 		/* part of the immediate is stored in z but it's unused here */
 	}
@@ -43,9 +43,9 @@ struct insn *arithmetic_insn(enum insn_type insn_type, struct var_info *z, struc
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->x.reg, x);
-		var_associate_reg(&insn->y.reg, y);
-		var_associate_reg(&insn->z.reg, z);
+		assoc_var_to_operand(x, insn, x.reg);
+		assoc_var_to_operand(y, insn, y.reg);
+		assoc_var_to_operand(z, insn, z.reg);
 	}
 	return insn;
 }

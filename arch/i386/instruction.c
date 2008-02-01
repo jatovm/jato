@@ -37,9 +37,9 @@ struct insn *membase_reg_insn(enum insn_type insn_type, struct var_info *src_bas
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->src.base_reg, src_base_reg);
+		assoc_var_to_operand(src_base_reg, insn, src.base_reg);
 		insn->src.disp = src_disp;
-		var_associate_reg(&insn->dest.reg, dest_reg);
+		assoc_var_to_operand(dest_reg, insn, dest.reg);
 	}
 	return insn;
 }
@@ -50,10 +50,10 @@ struct insn *memindex_reg_insn(enum insn_type insn_type,
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->src.base_reg, src_base_reg);
-		var_associate_reg(&insn->src.index_reg, src_index_reg);
+		assoc_var_to_operand(src_base_reg, insn, src.base_reg);
+		assoc_var_to_operand(src_index_reg, insn, src.index_reg);
 		insn->src.shift = src_shift;
-		var_associate_reg(&insn->dest.reg, dest_reg);
+		assoc_var_to_operand(dest_reg, insn, dest.reg);
 	}
 	return insn;
 }
@@ -63,8 +63,8 @@ struct insn *reg_membase_insn(enum insn_type insn_type, struct var_info *src_reg
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->src.reg, src_reg);
-		var_associate_reg(&insn->dest.base_reg, dest_base_reg);
+		assoc_var_to_operand(src_reg, insn, src.reg);
+		assoc_var_to_operand(dest_base_reg, insn, dest.base_reg);
 		insn->dest.disp = dest_disp;
 	}
 	return insn;
@@ -76,9 +76,9 @@ struct insn *reg_memindex_insn(enum insn_type insn_type, struct var_info *src_re
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->src.reg, src_reg);
-		var_associate_reg(&insn->dest.base_reg, dest_base_reg);
-		var_associate_reg(&insn->dest.index_reg, dest_index_reg);
+		assoc_var_to_operand(src_reg, insn, src.reg);
+		assoc_var_to_operand(dest_base_reg, insn, dest.base_reg);
+		assoc_var_to_operand(dest_index_reg, insn, dest.index_reg);
 		insn->dest.shift = dest_shift;
 	}
 	return insn;
@@ -90,7 +90,7 @@ struct insn *imm_reg_insn(enum insn_type insn_type, unsigned long imm,
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
 		insn->src.imm = imm;
-		var_associate_reg(&insn->dest.reg, result);
+		assoc_var_to_operand(result, insn, dest.reg);
 	}
 	return insn;
 }
@@ -101,7 +101,7 @@ struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
 		insn->src.imm = imm;
-		var_associate_reg(&insn->dest.base_reg, base_reg);
+		assoc_var_to_operand(base_reg, insn, dest.base_reg);
 		insn->dest.disp = disp;
 	}
 	return insn;
@@ -111,8 +111,8 @@ struct insn *reg_insn(enum insn_type insn_type, struct var_info *reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->src.reg, reg);
-		var_associate_reg(&insn->dest.reg, reg);
+		assoc_var_to_operand(reg, insn, src.reg);
+		assoc_var_to_operand(reg, insn, dest.reg);
 	}
 
 	return insn;
@@ -122,8 +122,8 @@ struct insn *reg_reg_insn(enum insn_type insn_type, struct var_info *src, struct
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		var_associate_reg(&insn->src.reg, src);
-		var_associate_reg(&insn->dest.reg, dest);
+		assoc_var_to_operand(src, insn, src.reg);
+		assoc_var_to_operand(dest, insn, dest.reg);
 	}
 	return insn;
 }

@@ -29,9 +29,18 @@ struct var_info {
 	struct live_interval	interval;
 };
 
+struct insn;
+
 struct register_info {
+	struct insn		*insn;
 	struct live_interval	*interval;
 };
+
+#define assoc_var_to_operand(var, insn, operand)	\
+do {							\
+	insn->operand.insn = insn;			\
+	insn->operand.interval = &var->interval;	\
+} while (0);
 
 static inline void var_associate_reg(struct register_info *reg, struct var_info *var)
 {
