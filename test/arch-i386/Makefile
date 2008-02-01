@@ -1,6 +1,7 @@
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 INCLUDE=-I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib
 LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
+MONOBURG = ../../monoburg/monoburg
 
 include ../../scripts/Makefile.include
 
@@ -47,6 +48,10 @@ quiet_cmd_cc_test_runner = MAKE $(empty)   $(empty) $(RUNNER)
 test: $(SUITE) $(OBJS)
 	$(call cmd,cc_test_runner)
 	$(call cmd,run_tests)
+
+../../arch/i386/insn-selector.c: FORCE
+	$(E) "  MONOBURG" $@
+	$(Q) $(MONOBURG) -p -e ../../arch/i386/insn-selector.brg > $@
 
 $(OBJS): FORCE
 

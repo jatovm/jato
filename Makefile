@@ -155,7 +155,7 @@ $(ARCH_INCLUDE_DIR): FORCE
 	$(E) "  LN      " $@
 	$(Q) ln -fsn arch-$(ARCH) $@
 
-test: $(ARCH_INCLUDE_DIR) $(ARCH_H)
+test: $(ARCH_INCLUDE_DIR) $(ARCH_H) monoburg
 	make -C test/vm/ test
 	make -C test/jit/ test
 	make -C test/arch-i386/ test
