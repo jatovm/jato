@@ -443,7 +443,9 @@ static void assert_emits_branch_target(unsigned char expected_prefix,
 	if (expected_prefix)
 		expected_target_1--;
 
-	assert_prefixed_mem_insn_5(expected_prefix, expected_opc, expected_target_1, expected_target_2, expected_target_3, expected_target_4, buffer_ptr(buf) + insn->offset);
+	assert_prefixed_mem_insn_5(expected_prefix, expected_opc,
+		expected_target_1, expected_target_2, expected_target_3,
+		expected_target_4, buffer_ptr(buf) + insn->mach_offset);
 
 	free_basic_block(branch_bb);
 	free_buffer(buf);

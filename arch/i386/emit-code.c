@@ -486,7 +486,7 @@ static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
 {
 	long ret;
 
-	ret = target_offset - insn->offset - BRANCH_INSN_SIZE;
+	ret = target_offset - insn->mach_offset - BRANCH_INSN_SIZE;
 	if (insn->escaped)
 		ret -= PREFIX_SIZE;
 
@@ -509,7 +509,7 @@ static void __emit_branch(struct buffer *buf, unsigned char prefix,
 		    list_first_entry(&target_bb->insn_list, struct insn,
 			       insn_list_node);
 
-		addr = branch_rel_addr(insn, target_insn->offset);
+		addr = branch_rel_addr(insn, target_insn->mach_offset);
 	} else
 		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
 
@@ -648,7 +648,7 @@ static void __emit_insn(struct buffer *buf, struct insn *insn)
 
 static void emit_insn(struct buffer *buf, struct insn *insn)
 {
-	insn->offset = buffer_offset(buf);
+	insn->mach_offset = buffer_offset(buf);
 	__emit_insn(buf, insn);
 }
 
@@ -659,7 +659,7 @@ static void backpatch_branch_target(struct buffer *buf,
 	unsigned long backpatch_offset;
 	long relative_addr;
 
-	backpatch_offset = insn->offset + BRANCH_TARGET_OFFSET;
+	backpatch_offset = insn->mach_offset + BRANCH_TARGET_OFFSET;
 	if (insn->escaped)
 		backpatch_offset += PREFIX_SIZE;
 

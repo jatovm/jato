@@ -79,7 +79,8 @@ struct insn {
 	};
 	struct list_head insn_list_node;
 	struct list_head branch_list_node;
-	unsigned long offset;
+	/* Offset in machine code.  */
+	unsigned long mach_offset;
 	bool escaped;
 };
 
