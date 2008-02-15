@@ -16,12 +16,23 @@ static inline bool in_range(struct live_range *range, unsigned long offset)
 struct var_info;
 
 struct live_interval {
-	struct var_info		*var_info;
-	struct live_range	range;
-	enum machine_reg	reg;
-	struct list_head	registers;
-	struct list_head	interval;
-	struct list_head	active;
+	/* Parent variable of this interval.  */
+	struct var_info *var_info;
+
+	/* Live range of this interval.  */
+	struct live_range range;
+
+	/* Machine register of this interval.  */
+	enum machine_reg reg;
+
+	/* List of use positions of this interval.  */
+	struct list_head registers;
+
+	/* Member of list of intervals during linear scan.  */
+	struct list_head interval;
+
+	/* Member of list of active intervals during linear scan.  */
+	struct list_head active;
 };
 
 struct var_info {
