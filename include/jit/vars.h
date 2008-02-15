@@ -27,7 +27,7 @@ struct live_interval {
 struct var_info {
 	unsigned long		vreg;
 	struct var_info		*next;
-	struct live_interval	interval;
+	struct live_interval	*interval;
 };
 
 struct insn;
@@ -43,9 +43,9 @@ static inline void __assoc_var_to_operand(struct var_info *var,
 					  struct register_info *reg_info)
 {
 	reg_info->insn = insn;
-	reg_info->interval = &var->interval;
+	reg_info->interval = var->interval;
 	INIT_LIST_HEAD(&reg_info->reg_list);
-	list_add(&reg_info->reg_list, &var->interval.registers);
+	list_add(&reg_info->reg_list, &var->interval->registers);
 }
 
 #define assoc_var_to_operand(_var, _insn, _operand) \
@@ -53,7 +53,7 @@ static inline void __assoc_var_to_operand(struct var_info *var,
 	
 static inline void var_associate_reg(struct register_info *reg, struct var_info *var)
 {
-	reg->interval = &var->interval;
+	reg->interval = var->interval;
 }
 
 static inline enum machine_reg register_get(struct register_info *reg)
@@ -71,7 +71,7 @@ static inline bool is_vreg(struct register_info *reg, unsigned long vreg)
 	return reg->interval->var_info->vreg == vreg;
 }
 
-void init_interval(struct live_interval *, struct var_info *);
+struct live_interval *alloc_interval(struct var_info *);
 struct live_interval *split_interval_at(struct live_interval *, unsigned long pos);
 
 #endif /* __JIT_VARS_H */

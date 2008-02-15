@@ -29,13 +29,19 @@ struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 	return cu;
 }
 
+static void free_var_info(struct var_info *var)
+{
+	free(var->interval);
+	free(var);
+}
+
 static void free_var_infos(struct var_info *var_infos)
 {
 	struct var_info *this, *next;
 
 	for (this = var_infos; this != NULL; this = next) {
 		next = this->next;
-		free(this);
+		free_var_info(this);
 	}
 }
 
@@ -64,8 +70,7 @@ struct var_info *get_var(struct compilation_unit *cu)
 
 	ret->vreg = cu->nr_vregs++;
 	ret->next = cu->var_infos;
-
-	init_interval(&ret->interval, ret);
+	ret->interval = alloc_interval(ret);
 
 	cu->var_infos = ret;
   out:
@@ -78,7 +83,7 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 
 	ret = get_var(cu);
 	if (ret)
-		ret->interval.reg = reg;
+		ret->interval->reg = reg;
 
 	return ret;
 }

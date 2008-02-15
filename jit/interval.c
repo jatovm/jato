@@ -27,20 +27,19 @@
 #include <jit/vars.h>
 #include <stdlib.h>
 
-static void __init_interval(struct live_interval *interval)
+struct live_interval *alloc_interval(struct var_info *var)
 {
-	INIT_LIST_HEAD(&interval->interval);
-	INIT_LIST_HEAD(&interval->active);
-	INIT_LIST_HEAD(&interval->registers);
-}
-
-void init_interval(struct live_interval *interval, struct var_info *var)
-{
-	interval->var_info = var;
-	interval->reg = REG_UNASSIGNED;
-	interval->range.start = ~0UL;
-	interval->range.end = 0UL;
-	__init_interval(interval);
+	struct live_interval *interval = malloc(sizeof *interval);
+	if (interval) {
+		interval->var_info = var;
+		interval->reg = REG_UNASSIGNED;
+		interval->range.start = ~0UL;
+		interval->range.end = 0UL;
+		INIT_LIST_HEAD(&interval->interval);
+		INIT_LIST_HEAD(&interval->active);
+		INIT_LIST_HEAD(&interval->registers);
+	}
+	return interval;
 }
 
 struct live_interval *split_interval_at(struct live_interval *interval,
@@ -48,12 +47,10 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 {
 	struct live_interval *new;
 
-	new = malloc(sizeof *new);
+	new = alloc_interval(interval->var_info);
 	if (new) {
 		struct register_info *this, *next;
 
-		__init_interval(new);
-		new->var_info = interval->var_info;
 		new->reg = interval->reg;
 		new->range.start = pos;
 		new->range.end = interval->range.end;

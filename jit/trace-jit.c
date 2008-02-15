@@ -91,7 +91,7 @@ void trace_liveness(struct compilation_unit *cu)
 		offset = 0;
 		for_each_basic_block(bb, &cu->bb_list) {
 			for_each_insn(insn, &bb->insn_list) {
-				if (in_range(&var->interval.range, offset++))
+				if (in_range(&var->interval->range, offset++))
 					printf("***");
 				else
 					printf("   ");
@@ -109,7 +109,7 @@ void trace_regalloc(struct compilation_unit *cu)
 	printf("Register Allocation:\n\n");
 
 	for_each_variable(var, cu->var_infos) {
-		printf("  %2lu: %s\n", var->vreg, reg_name(var->interval.reg));
+		printf("  %2lu: %s\n", var->vreg, reg_name(var->interval->reg));
 	}
 	printf("\n");
 }

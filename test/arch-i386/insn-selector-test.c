@@ -934,19 +934,20 @@ void test_select_store_field_to_local(void)
 	assert_store_field_to_local(-8, 1);
 }
 
+DECLARE_STATIC_VREG(dest_var, 0);
+
 void test_select_store_value_to_var(void)
 {
 	struct expression *store_dest, *store_src;
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct basic_block *bb;
-	DECLARE_VREG(var, 0);
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 0,
 	};
 
-	store_dest = var_expr(J_REFERENCE, &var);
+	store_dest = var_expr(J_REFERENCE, &dest_var);
 	store_src  = value_expr(J_REFERENCE, 0xdeadbeef);
 
 	stmt = alloc_statement(STMT_STORE);
@@ -963,10 +964,12 @@ void test_select_store_value_to_var(void)
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_var_insn(INSN_MOV_REG_REG, REG_EAX, &var, insn);
+	assert_reg_var_insn(INSN_MOV_REG_REG, REG_EAX, &dest_var, insn);
 
 	free_compilation_unit(cu);
 }
+
+DECLARE_STATIC_VREG(src_var, 0);
 
 void test_select_store_var_to_local(void)
 {
@@ -974,14 +977,13 @@ void test_select_store_var_to_local(void)
 	struct compilation_unit *cu;
 	struct statement *stmt;
 	struct basic_block *bb;
-	DECLARE_VREG(var, 0);
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 0,
 	};
 
 	store_dest = local_expr(J_INT, 0);
-	store_src  = var_expr(J_INT, &var);
+	store_src  = var_expr(J_INT, &src_var);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_dest->node;
@@ -994,7 +996,7 @@ void test_select_store_var_to_local(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_var_membase_insn(INSN_MOV_REG_MEMBASE, &var, REG_EBP, -4, insn);
+	assert_var_membase_insn(INSN_MOV_REG_MEMBASE, &src_var, REG_EBP, -4, insn);
 
 	free_compilation_unit(cu);
 }

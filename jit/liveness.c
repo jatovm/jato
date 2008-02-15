@@ -30,10 +30,10 @@ static void update_live_ranges(struct compilation_unit *cu)
 
 		for_each_variable(var, cu->var_infos) {
 			if (test_bit(this->live_in_set->bits, var->vreg))
-				__update_live_range(&var->interval.range, this->start_insn);
+				__update_live_range(&var->interval->range, this->start_insn);
 
 			if (test_bit(this->live_out_set->bits, var->vreg))
-				__update_live_range(&var->interval.range, this->end_insn);
+				__update_live_range(&var->interval->range, this->end_insn);
 		}
 	}
 }
@@ -132,7 +132,7 @@ static void analyze_use_def(struct compilation_unit *cu)
 			for_each_variable(var, bb->b_parent->var_infos) {
 				if (test_bit(bb->def_set->bits, var->vreg) ||
 				    test_bit(bb->use_set->bits, var->vreg))
-					__update_live_range(&var->interval.range, insn->lir_pos);
+					__update_live_range(&var->interval->range, insn->lir_pos);
 			}
 		}
 	}

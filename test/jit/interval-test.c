@@ -13,23 +13,23 @@ void test_split_interval_at(void)
 	struct var_info var;
 	int i;
 
-	init_interval(&var.interval, &var);
+	var.interval = alloc_interval(&var);
 
 	for (i = 0; i < ARRAY_SIZE(insns); i++) {
 		insns[i].lir_pos = i;
 		assoc_var_to_operand(&var, &insns[i], x.reg);
 	}
-	var.interval.range.start = 0;
-	var.interval.range.end = 2;
+	var.interval->range.start = 0;
+	var.interval->range.end = 2;
 
-	assert_ptr_equals(&var.interval, insns[0].x.reg.interval);
-	assert_ptr_equals(&var.interval, insns[1].x.reg.interval);
+	assert_ptr_equals(var.interval, insns[0].x.reg.interval);
+	assert_ptr_equals(var.interval, insns[1].x.reg.interval);
 
-	new_interval = split_interval_at(&var.interval, 1);
+	new_interval = split_interval_at(var.interval, 1);
 
-	assert_ptr_equals(&var.interval, insns[0].x.reg.interval);
-	assert_int_equals(0, var.interval.range.start);
-	assert_int_equals(1, var.interval.range.end);
+	assert_ptr_equals(var.interval, insns[0].x.reg.interval);
+	assert_int_equals(0, var.interval->range.start);
+	assert_int_equals(1, var.interval->range.end);
 
 	assert_ptr_equals(new_interval, insns[1].x.reg.interval);
 	assert_int_equals(1, new_interval->range.start);

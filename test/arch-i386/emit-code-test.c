@@ -2,6 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
+#include <jit/compilation-unit.h>
 #include <jit/basic-block.h>
 #include <jit/statement.h>
 
@@ -15,13 +16,13 @@
 #include <test/vars.h>
 #include <libharness.h>
 
-static DECLARE_REG(VAR_EAX, REG_EAX);
-static DECLARE_REG(VAR_EBX, REG_EBX);
-static DECLARE_REG(VAR_ECX, REG_ECX);
-static DECLARE_REG(VAR_EDX, REG_EDX);
+DECLARE_STATIC_REG(VAR_EAX, REG_EAX);
+DECLARE_STATIC_REG(VAR_EBX, REG_EBX);
+DECLARE_STATIC_REG(VAR_ECX, REG_ECX);
+DECLARE_STATIC_REG(VAR_EDX, REG_EDX);
 
-static DECLARE_REG(VAR_EBP, REG_EBP);
-static DECLARE_REG(VAR_ESP, REG_ESP);
+DECLARE_STATIC_REG(VAR_EBP, REG_EBP);
+DECLARE_STATIC_REG(VAR_ESP, REG_ESP);
 
 static void assert_emit_insn(unsigned char *expected,
 			     unsigned long expected_size,
@@ -457,16 +458,22 @@ assert_emit_target_for_backward_branches(unsigned char expected_prefix,
 					 enum insn_type insn_type)
 {
 	struct basic_block *target_bb;
+	struct compilation_unit *cu;
+	struct var_info *eax, *ebx;
+
+	cu = alloc_compilation_unit(NULL);
+	eax = get_fixed_var(cu, REG_EAX);
+	ebx = get_fixed_var(cu, REG_EBX);
 	
 	target_bb = alloc_basic_block(NULL, 0, 1);
 
-	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, &VAR_EAX));
+	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, eax));
 	assert_emits_branch_target(expected_prefix, expected_opc, 0xf8, 0xff, 0xff, 0xff, target_bb, insn_type);
 
-	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x02, &VAR_EBX));
+	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x02, ebx));
 	assert_emits_branch_target(expected_prefix, expected_opc, 0xf5, 0xff, 0xff, 0xff, target_bb, insn_type);
 
-	free_basic_block(target_bb);
+	free_compilation_unit(cu);
 }
 
 static void
@@ -518,18 +525,22 @@ assert_backpatches_unresolved_branches_when_emitting_target(
 		enum insn_type insn_type)
 {
 	struct basic_block *target_bb, *branch_bb;
+	struct compilation_unit *cu;
+	struct var_info *eax;
 
-	branch_bb = alloc_basic_block(NULL, 0, 1);
-	target_bb = alloc_basic_block(NULL, 1, 2);
+	cu = alloc_compilation_unit(NULL);
+	eax = get_fixed_var(cu, REG_EAX);
+
+	branch_bb = alloc_basic_block(cu, 0, 1);
+	target_bb = alloc_basic_block(cu, 1, 2);
 
 	bb_add_insn(branch_bb, branch_insn(insn_type, target_bb));
 	assert_backpatches_branches(expected_prefix, expected_opc, 0x00, branch_bb, target_bb);
 
-	bb_add_insn(branch_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, &VAR_EAX));
+	bb_add_insn(branch_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, eax));
 	assert_backpatches_branches(expected_prefix, expected_opc, 0x03, branch_bb, target_bb);
 
-	free_basic_block(branch_bb);
-	free_basic_block(target_bb);
+	free_compilation_unit(cu);
 }
 
 static void assert_emit_branch(unsigned char expected_prefix,

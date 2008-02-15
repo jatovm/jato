@@ -128,13 +128,13 @@ int allocate_registers(struct compilation_unit *cu)
 	 * process the fixed interval first.
 	 */
 	for_each_variable(var, cu->var_infos) {
-		if (var->interval.reg != REG_UNASSIGNED)
-			insert_to_intervals(&var->interval, &intervals);
+		if (var->interval->reg != REG_UNASSIGNED)
+			insert_to_intervals(var->interval, &intervals);
 	}
 
 	for_each_variable(var, cu->var_infos) {
-		if (var->interval.reg == REG_UNASSIGNED)
-			insert_to_intervals(&var->interval, &intervals);
+		if (var->interval->reg == REG_UNASSIGNED)
+			insert_to_intervals(var->interval, &intervals);
 	}
 
 	list_for_each_entry(this, &intervals, interval) {
