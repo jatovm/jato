@@ -515,7 +515,7 @@ static void binop_reg_local(struct _MBState *state, struct basic_block *bb,
 	expr = to_expr(tree);
 	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
 
-	frame_ptr = get_fixed_var(bb->b_parent, REG_EBP);
+	frame_ptr = bb->b_parent->frame_ptr;
 
 	bb_add_insn(bb, membase_reg_insn(insn_type, frame_ptr, disp, result));
 }
@@ -548,7 +548,7 @@ static void shift_reg_local(struct _MBState *state, struct basic_block *bb,
 	expr = to_expr(tree);
 	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
 
-	frame_ptr = get_fixed_var(bb->b_parent, REG_EBP);
+	frame_ptr = bb->b_parent->frame_ptr;
 	shift_count = get_fixed_var(bb->b_parent, REG_ECX);
 
 	bb_add_insn(bb, membase_reg_insn(INSN_MOV_MEMBASE_REG, frame_ptr, disp, shift_count));
