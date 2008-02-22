@@ -22,12 +22,14 @@ OBJS = \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/types.o \
+	../../vm/zalloc.o \
 	../../jit/alloc.o \
 	../../jit/basic-block.o \
 	../../jit/compilation-unit.o \
 	../../jit/emit.o \
 	../../jit/expression.o \
 	../../jit/interval.o \
+	../../jit/stack-slot.o \
 	../../jit/statement.o \
 	../../jit/tree-printer.o \
 	../../arch/i386/emit-code.o \

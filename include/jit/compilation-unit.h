@@ -6,6 +6,7 @@
 #include <vm/list.h>
 #include <vm/stack.h>
 
+#include <arch/stack-frame.h>
 #include <arch/instruction.h>
 
 #include <stdbool.h>
@@ -29,9 +30,14 @@ struct compilation_unit {
 
 	/* The stack pointer for this method.  */
 	struct var_info *stack_ptr;
+
+	/* The stack frame contains information of stack slots for stack-based
+	   arguments, local variables, and spill/reload storage.  */
+	struct stack_frame *stack_frame;
 };
 
 struct compilation_unit *alloc_compilation_unit(struct methodblock *);
+int init_stack_slots(struct compilation_unit *cu);
 void free_compilation_unit(struct compilation_unit *);
 struct var_info *get_var(struct compilation_unit *);
 struct var_info *get_fixed_var(struct compilation_unit *, enum machine_reg);

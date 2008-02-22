@@ -40,6 +40,7 @@ JIT_OBJS = \
 	jit/load-store-bc.o	\
 	jit/object-bc.o		\
 	jit/ostack-bc.o		\
+	jit/stack-slot.o	\
 	jit/statement.o		\
 	jit/trace-jit.o		\
 	jit/tree-printer.o	\

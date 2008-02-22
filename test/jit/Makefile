@@ -36,6 +36,7 @@ OBJS = \
 	../../jit/load-store-bc.o \
 	../../jit/object-bc.o \
 	../../jit/ostack-bc.o \
+	../../jit/stack-slot.o \
 	../../jit/statement.o \
 	../../jit/typeconv-bc.o \
 	../../jit/tree-printer.o \
@@ -59,6 +60,7 @@ OBJS = \
 	load-store-bc-test.o \
 	object-bc-test.o \
 	ostack-bc-test.o \
+	stack-slot-test.o \
 	tree-printer-test.o \
 	typeconv-bc-test.o \
 

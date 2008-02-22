@@ -48,6 +48,8 @@ static struct methodblock *alloc_simple_method(unsigned char opc)
 	ret = malloc(sizeof *ret);
 	ret->jit_code = code;
 	ret->code_size = 1;
+	ret->args_count = 0;
+	ret->max_locals = 0;
 
 	cu = alloc_simple_compilation_unit(ret);
 	ret->compilation_unit = cu;

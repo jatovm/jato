@@ -7,11 +7,13 @@
 #include <jit/expression.h>
 #include <jit/statement.h>
 #include <jit/compiler.h>
-
+#include <vm/vm.h>
 #include <arch/instruction.h>
 
 #include <test/vars.h>
 #include <test/vm.h>
+
+static struct methodblock method = { };
 
 static void assert_membase_reg_insn(enum insn_type insn_type,
 				    enum machine_reg src_base_reg,
@@ -421,7 +423,7 @@ void test_select_return(void)
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &value->node;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -445,7 +447,7 @@ void test_select_void_return(void)
 
 	stmt = alloc_statement(STMT_VOID_RETURN);
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -609,7 +611,7 @@ void test_select_invokevirtual_with_arguments(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &invoke_expr->node;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -751,7 +753,7 @@ void test_select_load_class_field(void)
 	struct insn *insn;
 	long expected_disp;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 
 	expr = class_field_expr(J_INT, &field);
@@ -822,7 +824,7 @@ void test_store_value_to_class_field(void)
 	long expected_disp;
 	struct insn *insn;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	store_target = class_field_expr(J_INT, &field);
 	store_value  = value_expr(J_INT, 0xcafebabe);
@@ -1015,7 +1017,7 @@ void test_select_new(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1047,7 +1049,7 @@ void test_select_newarray(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 

@@ -4,13 +4,16 @@
 
 #include <jit/compiler.h>
 #include <libharness.h>
+#include <vm/vm.h>
+
+struct methodblock method;
 
 void test_allocates_different_registers_for_overlapping_intervals(void)
 {
 	struct compilation_unit *cu;
 	struct var_info *v1, *v2;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 
 	v1 = get_var(cu);
 	v1->interval->range.start = 0;
@@ -33,7 +36,7 @@ void test_reuses_registers_for_non_overlapping_intervals(void)
 	struct compilation_unit *cu;
 	struct var_info *v1, *v2;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 
 	v1 = get_var(cu);
 	v1->interval->range.start = 0;
@@ -56,7 +59,7 @@ void test_honors_fixed_interval_register_constraint_for_overlapping_intervals(vo
 	struct compilation_unit *cu;
 	struct var_info *v1, *v2;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 
 	v1 = get_fixed_var(cu, R0);
 	v1->interval->range.start = 0;

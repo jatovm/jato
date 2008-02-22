@@ -28,18 +28,21 @@ static struct buffer_operations exec_buf_ops = {
 
 int emit_machine_code(struct compilation_unit *cu)
 {
+	unsigned long frame_size;
 	struct basic_block *bb;
 
 	cu->objcode = __alloc_buffer(&exec_buf_ops);
 	if (!cu->objcode)
 		return -ENOMEM;
 
-	emit_prolog(cu->objcode, cu->method->max_locals);
+	frame_size = frame_locals_size(cu->stack_frame);
+
+	emit_prolog(cu->objcode, frame_size);
 	for_each_basic_block(bb, &cu->bb_list)
 		emit_body(bb, cu->objcode);
 
 	emit_body(cu->exit_bb, cu->objcode);
-	emit_epilog(cu->objcode, cu->method->max_locals);
+	emit_epilog(cu->objcode, frame_size);
 
 	return 0;
 }

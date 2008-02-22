@@ -6,18 +6,21 @@
 #include <jit/compilation-unit.h>
 #include <basic-block-assert.h>
 #include <jit/statement.h>
+#include <vm/vm.h>
 
 #include <arch/instruction.h>
 
 #include <libharness.h>
 #include <stddef.h>
 
+static struct methodblock method = { };
+
 void test_split_with_out_of_range_offset(void)
 {
 	struct compilation_unit *cu;
 	struct basic_block *bb;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 1, 2);
 
 	assert_ptr_equals(NULL, bb_split(bb, 0));
@@ -31,7 +34,7 @@ void test_split_basic_block(void)
 	struct basic_block *bb, *new_bb;
 	struct compilation_unit *cu;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 3);
 
 	new_bb = bb_split(bb, 2);

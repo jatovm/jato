@@ -9,12 +9,15 @@
 #include <vm/buffer.h>
 #include <vm/list.h>
 #include <vm/system.h>
+#include <vm/vm.h>
 
 #include <arch/emit-code.h>
 #include <arch/instruction.h>
 
 #include <test/vars.h>
 #include <libharness.h>
+
+static struct methodblock method;
 
 DECLARE_STATIC_REG(VAR_EAX, REG_EAX);
 DECLARE_STATIC_REG(VAR_EBX, REG_EBX);
@@ -461,7 +464,7 @@ assert_emit_target_for_backward_branches(unsigned char expected_prefix,
 	struct compilation_unit *cu;
 	struct var_info *eax, *ebx;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	eax = get_fixed_var(cu, REG_EAX);
 	ebx = get_fixed_var(cu, REG_EBX);
 	
@@ -528,7 +531,7 @@ assert_backpatches_unresolved_branches_when_emitting_target(
 	struct compilation_unit *cu;
 	struct var_info *eax;
 
-	cu = alloc_compilation_unit(NULL);
+	cu = alloc_compilation_unit(&method);
 	eax = get_fixed_var(cu, REG_EAX);
 
 	branch_bb = alloc_basic_block(cu, 0, 1);

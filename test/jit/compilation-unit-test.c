@@ -6,7 +6,7 @@
 #include <jit/compilation-unit.h>
 #include <vm/vm.h>
 
-static struct methodblock method;
+static struct methodblock method = { };
 
 void test_find_basic_block(void)
 {
