@@ -17,7 +17,7 @@ echo '
 #include <stdlib.h>
 '
 
-cat $FILES | grep '^void test_' | 
+cat $FILES | grep '^void test_' | grep -v "__ignore" | 
     sed -e 's/(.*$//' \
         -e 's/$/(void);/' \
         -e 's/^/extern /'

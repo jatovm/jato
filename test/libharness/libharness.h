@@ -39,4 +39,6 @@ void __assert_ptr_equals(const char *, int, void *, void *);
 void __assert_mem_equals(const char *, int, const void *, const void *, unsigned long);
 void __assert_str_equals(const char *, int, const char *, const char *);
 
+#define __ignore
+
 #endif
