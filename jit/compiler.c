@@ -133,10 +133,16 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 	return trampoline;
 }
 
-void *jit_prepare_method(struct methodblock *mb)
+int jit_prepare_method(struct methodblock *mb)
 {
 	mb->compilation_unit = alloc_compilation_unit(mb);
-	mb->trampoline = build_jit_trampoline(mb->compilation_unit);
+	if (!mb->compilation_unit)
+		return -ENOMEM;
 
-	return trampoline_ptr(mb);
+	mb->trampoline = build_jit_trampoline(mb->compilation_unit);
+	if (!mb->trampoline) {
+		free_compilation_unit(mb->compilation_unit);
+		return -ENOMEM;
+	}
+	return 0;
 }

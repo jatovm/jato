@@ -37,7 +37,7 @@ struct jit_trampoline *alloc_jit_trampoline(void);
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *);
 void free_jit_trampoline(struct jit_trampoline *);
 
-void *jit_prepare_method(struct methodblock *);
+int jit_prepare_method(struct methodblock *);
 
 static inline void *trampoline_ptr(struct methodblock *method)
 {
