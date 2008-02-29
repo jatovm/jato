@@ -32,6 +32,18 @@ struct insn *insn(enum insn_type insn_type)
 	return alloc_insn(insn_type);
 }
 
+struct insn *local_reg_insn(enum insn_type insn_type,
+			    struct stack_slot *src_slot,
+			    struct var_info *dest_reg)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		insn->src.slot = src_slot;
+		assoc_var_to_operand(dest_reg, insn, dest.reg);
+	}
+	return insn;
+}
+
 struct insn *membase_reg_insn(enum insn_type insn_type, struct var_info *src_base_reg,
 			      long src_disp, struct var_info *dest_reg)
 {

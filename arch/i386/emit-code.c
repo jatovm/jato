@@ -133,17 +133,14 @@ static void emit_imm(struct buffer *buf, long imm)
 		emit_imm32(buf, imm);
 }
 
-static void emit_membase_reg(struct buffer *buf, unsigned char opc,
-			     union operand *src, union operand *dest)
+static void 
+__emit_membase_reg(struct buffer *buf, unsigned char opc,
+		   enum machine_reg base_reg, unsigned long disp,
+		   enum machine_reg dest_reg)
 {
-	enum machine_reg base_reg, dest_reg;
-	unsigned long disp;
 	unsigned char mod, rm, mod_rm;
 	int needs_sib;
 
-	base_reg = register_get(&src->base_reg);
-	disp = src->disp;
-	dest_reg = register_get(&dest->reg);
 
 	needs_sib = (base_reg == REG_ESP);
 
@@ -166,6 +163,20 @@ static void emit_membase_reg(struct buffer *buf, unsigned char opc,
 		emit(buf, encode_sib(0x00, 0x04, __encode_reg(base_reg)));
 
 	emit_imm(buf, disp);
+}
+
+static void 
+emit_membase_reg(struct buffer *buf, unsigned char opc, union operand *src,
+		 union operand *dest)
+{
+	enum machine_reg base_reg, dest_reg;
+	unsigned long disp;
+
+	base_reg = register_get(&src->base_reg);
+	disp = src->disp;
+	dest_reg = register_get(&dest->reg);
+
+	__emit_membase_reg(buf, opc, base_reg, disp, dest_reg);
 }
 
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
@@ -192,6 +203,18 @@ static void emit_mov_reg_reg(struct buffer *buf, union operand *src,
 			     union operand *dest)
 {
 	__emit_mov_reg_reg(buf, register_get(&src->reg), register_get(&dest->reg));
+}
+
+static void
+emit_mov_local_reg(struct buffer *buf, union operand *src, union operand *dest)
+{
+	enum machine_reg dest_reg;
+	unsigned long disp;
+
+	dest_reg = register_get(&dest->reg);
+	disp = slot_offset(src->slot);
+
+	__emit_membase_reg(buf, 0x8b, REG_EBP, disp, dest_reg);
 }
 
 static void emit_mov_membase_reg(struct buffer *buf,
@@ -573,6 +596,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_LOCAL_REG, emit_mov_local_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),

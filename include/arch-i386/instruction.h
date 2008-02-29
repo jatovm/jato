@@ -2,6 +2,7 @@
 #define __JIT_INSTRUCTION_H
 
 #include <arch/registers.h>
+#include <arch/stack-frame.h>
 #include <jit/vars.h>
 #include <vm/list.h>
 
@@ -18,6 +19,8 @@ union operand {
 		struct register_info base_reg;
 		long disp;	/* displacement */
 	};
+
+	struct stack_slot *slot; /* EBP + displacement */
 
 	struct {
 		struct register_info base_reg;
@@ -51,6 +54,7 @@ enum insn_type {
 	INSN_JMP_BRANCH,
 	INSN_MOV_IMM_MEMBASE,
 	INSN_MOV_IMM_REG,
+	INSN_MOV_LOCAL_REG,
 	INSN_MOV_MEMBASE_REG,
 	INSN_MOV_MEMINDEX_REG,
 	INSN_MOV_REG_MEMBASE,
@@ -87,6 +91,7 @@ struct insn {
 };
 
 struct insn *insn(enum insn_type);
+struct insn *local_reg_insn(enum insn_type, struct stack_slot *, struct var_info *);
 struct insn *membase_reg_insn(enum insn_type, struct var_info *, long, struct var_info *);
 struct insn *memindex_reg_insn(enum insn_type, struct var_info *, struct var_info *, unsigned char, struct var_info *);
 struct insn *reg_membase_insn(enum insn_type, struct var_info *, struct var_info *, long);

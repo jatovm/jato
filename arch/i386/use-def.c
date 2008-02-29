@@ -16,10 +16,11 @@ enum {
 	USE_IDX_SRC	= 32,	/* source operand is memindex */
 	USE_NONE	= 64,
 	USE_SRC		= 128,
+	USE_FP		= 256,	/* frame pointer */
 };
 
 struct insn_info {
-	unsigned char flags;
+	unsigned long flags;
 };
 
 #define DECLARE_INFO(_type, _flags) [_type] = { .flags = _flags }
@@ -39,6 +40,7 @@ static struct insn_info insn_infos[] = {
 	DECLARE_INFO(INSN_JMP_BRANCH, USE_NONE | DEF_NONE),
 	DECLARE_INFO(INSN_MOV_IMM_MEMBASE, USE_DST),
 	DECLARE_INFO(INSN_MOV_IMM_REG, DEF_DST),
+	DECLARE_INFO(INSN_MOV_LOCAL_REG, USE_FP | DEF_DST),
 	DECLARE_INFO(INSN_MOV_MEMBASE_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_MOV_MEMINDEX_REG, USE_SRC | USE_IDX_SRC | DEF_DST),
 	DECLARE_INFO(INSN_MOV_REG_MEMBASE, USE_SRC | USE_DST | DEF_NONE),

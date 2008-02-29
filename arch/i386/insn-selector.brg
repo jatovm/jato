@@ -90,19 +90,18 @@ reg:	EXPR_VALUE	0
 
 reg:	EXPR_LOCAL	1
 {
-	struct var_info *result, *frame_ptr;
+	struct compilation_unit *cu = s->b_parent;
 	struct expression *expr;
-	unsigned long disp;
+	struct stack_slot *slot;
+	struct var_info *result;
 	
 	expr = to_expr(tree);
-	disp = frame_local_offset(s->b_parent->method, expr);
+	slot = get_local_slot(cu->stack_frame, expr->local_index);
 
 	result = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = result;
 
-	frame_ptr = s->b_parent->frame_ptr;
-
-	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, frame_ptr, disp, result));
+	bb_add_insn(s, local_reg_insn(INSN_MOV_LOCAL_REG, slot, result));
 }
 
 reg:   EXPR_VAR
