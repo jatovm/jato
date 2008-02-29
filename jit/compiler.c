@@ -10,13 +10,6 @@
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
-#include <jit/tree-printer.h>
-
-#include <vm/buffer.h>
-#include <vm/natives.h>
-#include <vm/string.h>
-
-#include <arch/emit-code.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -31,7 +24,7 @@ static void compile_error(struct compilation_unit *cu, int err)
 	       __FUNCTION__, cu->method->name, cb->name, err);
 }
 
-static int compile(struct compilation_unit *cu)
+int compile(struct compilation_unit *cu)
 {
 	int err;
 
@@ -86,51 +79,6 @@ static int compile(struct compilation_unit *cu)
 		compile_error(cu, err);
 
 	return err;
-}
-
-static void *jit_native_trampoline(struct compilation_unit *cu)
-{
-	struct methodblock *method = cu->method;
-	const char *method_name, *class_name;
-
-	class_name  = CLASS_CB(method->class)->name;
-	method_name = method->name;
-
-	return vm_lookup_native(class_name, method_name);
-}
-
-static void *jit_java_trampoline(struct compilation_unit *cu)
-{
-	if (!cu->is_compiled)
-		compile(cu);
-
-	return buffer_ptr(cu->objcode);
-}
-
-void *jit_magic_trampoline(struct compilation_unit *cu)
-{
-	void *ret;
-
-	pthread_mutex_lock(&cu->mutex);
-
-	if (cu->method->access_flags & ACC_NATIVE)
-		ret = jit_native_trampoline(cu);
-	else
-		ret = jit_java_trampoline(cu);
-
-	pthread_mutex_unlock(&cu->mutex);
-
-	return ret;
-}
-
-struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
-{
-	struct jit_trampoline *trampoline;
-	
-	trampoline = alloc_jit_trampoline();
-	if (trampoline)
-		emit_trampoline(cu, jit_magic_trampoline, trampoline->objcode);
-	return trampoline;
 }
 
 int jit_prepare_method(struct methodblock *mb)

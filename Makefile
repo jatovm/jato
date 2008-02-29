@@ -43,6 +43,7 @@ JIT_OBJS = \
 	jit/stack-slot.o	\
 	jit/statement.o		\
 	jit/trace-jit.o		\
+	jit/trampoline.o	\
 	jit/tree-printer.o	\
 	jit/typeconv-bc.o
 
