@@ -809,7 +809,7 @@ void linkClass(Class *class) {
            mb->code = ((char*)mb->code) + 1;
        }
 #endif
-       jit_prepare_for_exec(mb);
+       jit_prepare_method(mb);
 
        /* Static, private or init methods aren't dynamically invoked, so
          don't stick them in the table to save space */
