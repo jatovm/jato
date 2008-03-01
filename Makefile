@@ -86,7 +86,6 @@ JAMVM_OBJS = \
 	jamvm/jni.o		\
 	jamvm/lock.o		\
 	jamvm/natives.o		\
-	jamvm/os/$(OS)/os.o	\
 	jamvm/properties.o	\
 	jamvm/reflect.o		\
 	jamvm/resolve.o		\
