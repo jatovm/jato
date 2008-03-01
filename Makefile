@@ -5,7 +5,8 @@ with_classpath_install_dir = /usr/
 GLIBJ		= $(with_classpath_install_dir)/share/classpath/glibj.zip
 BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
 
-ARCH		:= $(shell uname -m | sed  -e s/i.86/i386/)
+JAMVM_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/)
+ARCH		:= $(shell uname -m | sed -e s/i.86/x86/)
 OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
 
 # Make the build silent by default
@@ -73,8 +74,8 @@ JAMVM_OBJS = \
 	jamvm/jni.o		\
 	jamvm/lock.o		\
 	jamvm/natives.o		\
-	jamvm/os/$(OS)/i386/dll_md.o \
-	jamvm/os/$(OS)/i386/init.o \
+	jamvm/os/$(OS)/$(JAMVM_ARCH)/dll_md.o \
+	jamvm/os/$(OS)/$(JAMVM_ARCH)/init.o \
 	jamvm/os/$(OS)/os.o	\
 	jamvm/properties.o	\
 	jamvm/reflect.o		\
@@ -112,7 +113,7 @@ CFLAGS		+= $(DEFINES)
 LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes $(ARCH_LIBS)
 
 ARCH_INCLUDE_DIR = include/arch
-ARCH_H = include/vm/arch.h
+JAMVM_ARCH_H = include/vm/arch.h
 
 ifeq ($(strip $(V)),)
 	E = @echo
@@ -135,15 +136,15 @@ monoburg:
 	$(E) "  CC      " $@
 	$(Q) $(CC) -c $(CFLAGS) $< -o $@
 
-$(ARCH_H):
+$(JAMVM_ARCH_H):
 	$(E) "  LN      " $@
-	$(Q) ln -fsn ../../jamvm/arch/$(ARCH).h $@
+	$(Q) ln -fsn ../../jamvm/arch/$(JAMVM_ARCH).h $@
 
 arch/$(ARCH)/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e arch/$(ARCH)/insn-selector.brg > $@
 
-$(PROGRAM): $(ARCH_INCLUDE_DIR) $(ARCH_H) compile
+$(PROGRAM): $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(CFLAGS) $(LIBS) $(OBJS) -o $(PROGRAM)
 
@@ -153,10 +154,10 @@ $(ARCH_INCLUDE_DIR): FORCE
 	$(E) "  LN      " $@
 	$(Q) ln -fsn arch-$(ARCH) $@
 
-test: $(ARCH_INCLUDE_DIR) $(ARCH_H) monoburg
+test: $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) monoburg
 	make -C test/vm/ test
 	make -C test/jit/ test
-	make -C test/arch-i386/ test
+	make -C test/arch-$(ARCH)/ test
 .PHONY: test
 
 %.class: %.java
@@ -188,7 +189,7 @@ clean:
 	$(Q) - rm -f $(ARCH_TEST_OBJS)
 	$(Q) - rm -f arch/$(ARCH)/insn-selector.c
 	$(Q) - rm -f $(PROGRAM)
-	$(Q) - rm -f $(ARCH_H)
+	$(Q) - rm -f $(JAMVM_ARCH_H)
 	$(Q) - rm -f $(ARCH_TEST_SUITE)
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
@@ -198,7 +199,7 @@ clean:
 	$(Q) - make -C monoburg/ clean
 	$(Q) - make -C test/vm/ clean
 	$(Q) - make -C test/jit/ clean
-	$(Q) - make -C test/arch-i386/ clean
+	$(Q) - make -C test/arch-$(ARCH)/ clean
 .PHONY: clean
 
 PHONY += FORCE

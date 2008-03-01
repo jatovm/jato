@@ -11,8 +11,8 @@ quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
 %.o: %.c
 	$(call cmd,cc_o_c)
 
-RUNNER=i386-test-runner
-SUITE=i386-test-suite.c
+RUNNER=x86-test-runner
+SUITE=x86-test-suite.c
 
 OBJS = \
 	../libharness/libharness.o \
@@ -32,11 +32,11 @@ OBJS = \
 	../../jit/stack-slot.o \
 	../../jit/statement.o \
 	../../jit/tree-printer.o \
-	../../arch/i386/emit-code.o \
-	../../arch/i386/instruction.o \
-	../../arch/i386/insn-selector.o \
-	../../arch/i386/stack-frame.o \
-	../../arch/i386/use-def.o \
+	../../arch/x86/emit-code.o \
+	../../arch/x86/instruction.o \
+	../../arch/x86/insn-selector.o \
+	../../arch/x86/stack-frame.o \
+	../../arch/x86/use-def.o \
 	emit-code-test.o \
 	insn-selector-test.o \
 	stack-frame-test.o \
@@ -52,9 +52,9 @@ test: $(SUITE) $(OBJS)
 	$(call cmd,cc_test_runner)
 	$(call cmd,run_tests)
 
-../../arch/i386/insn-selector.c: FORCE
+../../arch/x86/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
-	$(Q) $(MONOBURG) -p -e ../../arch/i386/insn-selector.brg > $@
+	$(Q) $(MONOBURG) -p -e ../../arch/x86/insn-selector.brg > $@
 
 $(OBJS): FORCE
 
