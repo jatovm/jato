@@ -59,7 +59,7 @@ static unsigned char __encode_reg(enum machine_reg reg)
 
 static unsigned char encode_reg(struct register_info *reg)
 {
-	return __encode_reg(register_get(reg));
+	return __encode_reg(mach_reg(reg));
 }
 
 static inline bool is_imm_8(long imm)
@@ -172,9 +172,9 @@ emit_membase_reg(struct buffer *buf, unsigned char opc, union operand *src,
 	enum machine_reg base_reg, dest_reg;
 	unsigned long disp;
 
-	base_reg = register_get(&src->base_reg);
+	base_reg = mach_reg(&src->base_reg);
 	disp = src->disp;
-	dest_reg = register_get(&dest->reg);
+	dest_reg = mach_reg(&dest->reg);
 
 	__emit_membase_reg(buf, opc, base_reg, disp, dest_reg);
 }
@@ -186,7 +186,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 
 static void emit_push_reg(struct buffer *buf, union operand *operand)
 {
-	__emit_push_reg(buf, register_get(&operand->reg));
+	__emit_push_reg(buf, mach_reg(&operand->reg));
 }
 
 static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
@@ -202,7 +202,7 @@ static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
 static void emit_mov_reg_reg(struct buffer *buf, union operand *src,
 			     union operand *dest)
 {
-	__emit_mov_reg_reg(buf, register_get(&src->reg), register_get(&dest->reg));
+	__emit_mov_reg_reg(buf, mach_reg(&src->reg), mach_reg(&dest->reg));
 }
 
 static void
@@ -211,7 +211,7 @@ emit_mov_local_reg(struct buffer *buf, union operand *src, union operand *dest)
 	enum machine_reg dest_reg;
 	unsigned long disp;
 
-	dest_reg = register_get(&dest->reg);
+	dest_reg = mach_reg(&dest->reg);
 	disp = slot_offset(src->slot);
 
 	__emit_membase_reg(buf, 0x8b, REG_EBP, disp, dest_reg);
@@ -390,7 +390,7 @@ static void __emit_div_mul_membase_reg(struct buffer *buf,
 	long disp;
 	int mod;
 
-	assert(register_get(&dest->reg) == REG_EAX);
+	assert(mach_reg(&dest->reg) == REG_EAX);
 
 	disp = src->disp;
 
@@ -418,8 +418,8 @@ static void emit_neg_reg(struct buffer *buf, union operand *operand)
 
 static void emit_cltd_reg_reg(struct buffer *buf, union operand *src, union operand *dest)
 {
-	assert(register_get(&src->reg) == REG_EAX);
-	assert(register_get(&dest->reg) == REG_EDX);
+	assert(mach_reg(&src->reg) == REG_EAX);
+	assert(mach_reg(&dest->reg) == REG_EDX);
 
 	emit(buf, 0x99);
 }
@@ -434,7 +434,7 @@ static void __emit_shift_reg_reg(struct buffer *buf,
 				 union operand *src,
 				 union operand *dest, unsigned char opc_ext)
 {
-	assert(register_get(&src->reg) == REG_ECX);
+	assert(mach_reg(&src->reg) == REG_ECX);
 
 	emit(buf, 0xd3);
 	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(&dest->reg)));
@@ -472,13 +472,13 @@ static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg re
 static void emit_add_imm_reg(struct buffer *buf,
 			     union operand *src, union operand *dest)
 {
-	__emit_add_imm_reg(buf, src->imm, register_get(&dest->reg));
+	__emit_add_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_cmp_imm_reg(struct buffer *buf, union operand *src,
 			     union operand *dest)
 {
-	emit_alu_imm_reg(buf, 0x07, src->imm, register_get(&dest->reg));
+	emit_alu_imm_reg(buf, 0x07, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_cmp_membase_reg(struct buffer *buf, union operand *src, union operand *dest)

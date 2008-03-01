@@ -67,12 +67,12 @@ static inline void var_associate_reg(struct register_info *reg, struct var_info 
 	reg->interval = var->interval;
 }
 
-static inline enum machine_reg register_get(struct register_info *reg)
+static inline enum machine_reg mach_reg(struct register_info *reg)
 {
 	return reg->interval->reg;
 }
 
-static inline struct var_info *register_get_var(struct register_info *reg)
+static inline struct var_info *mach_reg_var(struct register_info *reg)
 {
 	return reg->interval->var_info;
 }

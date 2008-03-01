@@ -20,7 +20,7 @@ assert_local_reg_insn(enum insn_type insn_type, unsigned long slot_index, enum m
 {
 	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(slot_index, insn->src.slot->index);
-	assert_int_equals(dest_reg, register_get(&insn->dest.reg));
+	assert_int_equals(dest_reg, mach_reg(&insn->dest.reg));
 }
 
 static void assert_membase_reg_insn(enum insn_type insn_type,
@@ -30,9 +30,9 @@ static void assert_membase_reg_insn(enum insn_type insn_type,
 				    struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(src_base_reg, register_get(&insn->src.base_reg));
+	assert_int_equals(src_base_reg, mach_reg(&insn->src.base_reg));
 	assert_int_equals(src_displacement, insn->src.disp);
-	assert_int_equals(dest_reg, register_get(&insn->dest.reg));
+	assert_int_equals(dest_reg, mach_reg(&insn->dest.reg));
 }
 
 static void assert_memindex_reg_insn(enum insn_type insn_type,
@@ -43,10 +43,10 @@ static void assert_memindex_reg_insn(enum insn_type insn_type,
 				     struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(src_base_reg, register_get(&insn->src.base_reg));
-	assert_int_equals(src_index_reg, register_get(&insn->src.index_reg));
+	assert_int_equals(src_base_reg, mach_reg(&insn->src.base_reg));
+	assert_int_equals(src_index_reg, mach_reg(&insn->src.index_reg));
 	assert_int_equals(src_shift, insn->src.shift);
-	assert_int_equals(dest_reg, register_get(&insn->dest.reg));
+	assert_int_equals(dest_reg, mach_reg(&insn->dest.reg));
 }
 
 static void assert_var_membase_insn(enum insn_type insn_type,
@@ -56,8 +56,8 @@ static void assert_var_membase_insn(enum insn_type insn_type,
 				    struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_ptr_equals(src_var, register_get_var(&insn->src.reg));
-	assert_int_equals(dest_reg, register_get(&insn->dest.base_reg));
+	assert_ptr_equals(src_var, mach_reg_var(&insn->src.reg));
+	assert_int_equals(dest_reg, mach_reg(&insn->dest.base_reg));
 	assert_int_equals(dest_displacement, insn->dest.disp);
 }
 
@@ -68,8 +68,8 @@ static void assert_reg_membase_insn(enum insn_type insn_type,
 				    struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(src_reg, register_get(&insn->src.reg));
-	assert_int_equals(dest_reg, register_get(&insn->dest.base_reg));
+	assert_int_equals(src_reg, mach_reg(&insn->src.reg));
+	assert_int_equals(dest_reg, mach_reg(&insn->dest.base_reg));
 	assert_int_equals(dest_displacement, insn->dest.disp);
 }
 
@@ -81,9 +81,9 @@ static void assert_reg_memindex_insn(enum insn_type insn_type,
 				     struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(src_reg, register_get(&insn->src.reg));
-	assert_int_equals(base_reg, register_get(&insn->dest.base_reg));
-	assert_int_equals(index_reg, register_get(&insn->dest.index_reg));
+	assert_int_equals(src_reg, mach_reg(&insn->src.reg));
+	assert_int_equals(base_reg, mach_reg(&insn->dest.base_reg));
+	assert_int_equals(index_reg, mach_reg(&insn->dest.index_reg));
 	assert_int_equals(shift, insn->dest.shift);
 }
 
@@ -91,7 +91,7 @@ static void assert_reg_insn(enum insn_type insn_type,
 			    enum machine_reg expected_reg, struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(expected_reg, register_get(&insn->operand.reg));
+	assert_int_equals(expected_reg, mach_reg(&insn->operand.reg));
 }
 
 static void assert_reg_reg_insn(enum insn_type insn_type,
@@ -100,8 +100,8 @@ static void assert_reg_reg_insn(enum insn_type insn_type,
 				struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(expected_src, register_get(&insn->src.reg));
-	assert_int_equals(expected_dest, register_get(&insn->dest.reg));
+	assert_int_equals(expected_src, mach_reg(&insn->src.reg));
+	assert_int_equals(expected_dest, mach_reg(&insn->dest.reg));
 }
 
 static void assert_reg_var_insn(enum insn_type insn_type,
@@ -110,8 +110,8 @@ static void assert_reg_var_insn(enum insn_type insn_type,
 				struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(expected_src, register_get(&insn->src.reg));
-	assert_ptr_equals(expected_dest, register_get_var(&insn->dest.reg));
+	assert_int_equals(expected_src, mach_reg(&insn->src.reg));
+	assert_ptr_equals(expected_dest, mach_reg_var(&insn->dest.reg));
 }
 
 static void assert_imm_insn(enum insn_type insn_type,
@@ -128,7 +128,7 @@ static void assert_imm_reg_insn(enum insn_type insn_type,
 {
 	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_imm, insn->src.imm);
-	assert_int_equals(expected_reg, register_get(&insn->dest.reg));
+	assert_int_equals(expected_reg, mach_reg(&insn->dest.reg));
 }
 
 static void assert_imm_membase_insn(enum insn_type insn_type,
@@ -139,7 +139,7 @@ static void assert_imm_membase_insn(enum insn_type insn_type,
 {
 	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(expected_imm, insn->src.imm);
-	assert_int_equals(expected_base_reg, register_get(&insn->dest.base_reg));
+	assert_int_equals(expected_base_reg, mach_reg(&insn->dest.base_reg));
 	assert_int_equals(expected_disp, insn->dest.disp);
 }
 
