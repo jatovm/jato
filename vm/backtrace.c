@@ -157,6 +157,42 @@ static void show_registers(gregset_t gregs)
 #else
 static void show_registers(gregset_t gregs)
 {
+	unsigned long rsp;
+	unsigned long rax, rbx, rcx;
+	unsigned long rdx, rsi, rdi;
+	unsigned long rbp, r8,  r9;
+	unsigned long r10, r11, r12;
+	unsigned long r13, r14, r15;
+
+	rsp = get_greg(gregs, REG_RSP);
+
+	rax = get_greg(gregs, REG_RAX);
+	rbx = get_greg(gregs, REG_RBX);
+	rcx = get_greg(gregs, REG_RCX);
+
+	rdx = get_greg(gregs, REG_RDX);
+	rsi = get_greg(gregs, REG_RSI);
+	rdi = get_greg(gregs, REG_RDI);
+
+	rbp = get_greg(gregs, REG_RBP);
+	r8  = get_greg(gregs, REG_R8);
+	r9  = get_greg(gregs, REG_R9);
+
+	r10 = get_greg(gregs, REG_R10);
+	r11 = get_greg(gregs, REG_R11);
+	r12 = get_greg(gregs, REG_R12);
+
+	r13 = get_greg(gregs, REG_R13);
+	r14 = get_greg(gregs, REG_R14);
+	r15 = get_greg(gregs, REG_R15);
+
+	printf("Registers:\n");
+	printf(" rsp: %016lx\n", rsp);
+	printf(" rax: %016lx   ebx: %016lx   ecx: %016lx\n", rax, rbx, rcx);
+	printf(" rdx: %016lx   rsi: %016lx   rdi: %016lx\n", rdx, rsi, rdi);
+	printf(" rbp: %016lx   r8:  %016lx   r9:  %016lx\n", rbp, r8,  r9);
+	printf(" r10: %016lx   r11: %016lx   r12: %016lx\n", r10, r11, r12);
+	printf(" r13: %016lx   r14: %016lx   r15: %016lx\n", r13, r14, r15);
 }
 #endif
 
