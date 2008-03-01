@@ -6,15 +6,20 @@ GLIBJ		= $(with_classpath_install_dir)/share/classpath/glibj.zip
 BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
 
 JAMVM_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/)
-ARCH		:= $(shell uname -m | sed -e s/i.86/x86/)
+ARCH		:= $(shell uname -m | sed -e s/i.86/i386/)
 OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
+
+ifeq ($(ARCH),i386)
+ARCH		= x86
+ARCH_POSTFIX	= _32
+endif
 
 # Make the build silent by default
 V =
 
 PROGRAM		= java
 
-include arch/$(ARCH)/Makefile
+include arch/$(ARCH)/Makefile$(ARCH_POSTFIX)
 
 JIT_OBJS = \
 	jit/alloc.o		\
