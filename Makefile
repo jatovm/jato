@@ -14,6 +14,13 @@ ARCH		= x86
 ARCH_POSTFIX	= _32
 endif
 
+ifeq ($(ARCH),x86_64)
+ARCH		= x86
+ARCH_POSTFIX	= _64
+endif
+
+ARCH_CONFIG=include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
+
 # Make the build silent by default
 V =
 
@@ -79,6 +86,7 @@ JAMVM_OBJS = \
 	jamvm/jni.o		\
 	jamvm/lock.o		\
 	jamvm/natives.o		\
+	jamvm/os/$(OS)/os.o	\
 	jamvm/properties.o	\
 	jamvm/reflect.o		\
 	jamvm/resolve.o		\
@@ -106,7 +114,7 @@ CFLAGS		+= $(WARNINGS)
 OPTIMIZATIONS	+= -Os
 CFLAGS		+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Ijit -Ijamvm -Ijit/glib -include arch/config.h $(ARCH_INCLUDE)
+INCLUDES	= -Iinclude -Ijit -Ijamvm -Ijit/glib -include $(ARCH_CONFIG) $(ARCH_INCLUDES)
 CFLAGS		+= $(INCLUDES)
 
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
