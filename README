@@ -9,6 +9,12 @@ How can I try it out?
 
     $ git clone git://git.kernel.org/pub/scm/java/jato/jato.git
 
+  - Make sure you have necessary dependencies installed to compile the program.
+
+    For Ubuntu:
+
+    $ sudo apt-get install jikes classpath libffi-dev binutils-dev
+
   - Compile Jato and run the unit tests:
 
     $ cd <JATO_ROOT> ; make
