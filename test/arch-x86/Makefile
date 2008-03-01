@@ -1,6 +1,6 @@
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 INCLUDE=-I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib
-LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes
+LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty
 MONOBURG = ../../monoburg/monoburg
 
 include ../../scripts/Makefile.include
@@ -46,7 +46,7 @@ quiet_cmd_run_tests = RUNTEST $(empty) $(RUNNER)
       cmd_run_tests = ./$(RUNNER)
 
 quiet_cmd_cc_test_runner = MAKE $(empty)   $(empty) $(RUNNER)
-      cmd_cc_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) $(LIBS) *.o $(SUITE) -o $(RUNNER)
+      cmd_cc_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) *.o $(SUITE) -o $(RUNNER) $(LIBS)
 
 test: $(SUITE) $(OBJS)
 	$(call cmd,cc_test_runner)

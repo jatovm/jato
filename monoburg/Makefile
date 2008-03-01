@@ -41,7 +41,7 @@ $(OBJS):
 
 $(PROGRAM): $(OBJS)
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
+	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $@ $(LIBS)
 
 %.o: %.c
 	$(E) "  CC      " $@

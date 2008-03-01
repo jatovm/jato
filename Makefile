@@ -119,7 +119,7 @@ CFLAGS		+= $(INCLUDES)
 DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
 CFLAGS		+= $(DEFINES)
 
-LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes $(ARCH_LIBS)
+LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
 
 ARCH_INCLUDE_DIR = include/arch
 JAMVM_ARCH_H = include/vm/arch.h
@@ -155,7 +155,7 @@ arch/$(ARCH)/insn-selector.c: FORCE
 
 $(PROGRAM): $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(CFLAGS) $(LIBS) $(OBJS) -o $(PROGRAM)
+	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS)
 
 compile: $(OBJS)
 
