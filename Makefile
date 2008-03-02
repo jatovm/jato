@@ -183,7 +183,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jamvm/MethodInvocationAndReturnTest.class
 
 vm-classes:
-	make -C lib/
+	make -C lib/ JAVAC=$(JAVAC)
 .PHONY: vm-classes
 
 regression: monoburg vm-classes $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
@@ -210,6 +210,7 @@ clean:
 	$(Q) - make -C test/vm/ clean
 	$(Q) - make -C test/jit/ clean
 	$(Q) - make -C test/arch-$(ARCH)/ clean
+	$(Q) - make -C lib clean
 .PHONY: clean
 
 PHONY += FORCE

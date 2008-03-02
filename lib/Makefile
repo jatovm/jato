@@ -1,20 +1,18 @@
-srcdir=.
-GLIBJ_ZIP = /usr/share/classpath/glibj.zip
-JAVAC=ecj
+GLIBJ_ZIP	:= /usr/share/classpath/glibj.zip
+JAVAC		:= ecj
 
-JAVA_FILES = $(srcdir)/jamvm/java/lang/JarLauncher.java \
-             $(srcdir)/java/lang/VMRuntime.java \
-             $(srcdir)/java/lang/VMClassLoader.java \
-             $(srcdir)/java/lang/VMString.java \
-             $(srcdir)/java/lang/VMThread.java \
-             $(srcdir)/java/lang/VMThrowable.java \
-             $(srcdir)/java/lang/reflect/Constructor.java \
-             $(srcdir)/java/lang/reflect/Field.java \
-             $(srcdir)/java/lang/reflect/Method.java \
-             $(srcdir)/java/security/VMAccessController.java \
-             $(srcdir)/gnu/classpath/VMSystemProperties.java \
-             $(srcdir)/gnu/classpath/VMStackWalker.java
-
+JAVA_FILES = jamvm/java/lang/JarLauncher.java \
+             java/lang/VMRuntime.java \
+             java/lang/VMClassLoader.java \
+             java/lang/VMString.java \
+             java/lang/VMThread.java \
+             java/lang/VMThrowable.java \
+             java/lang/reflect/Constructor.java \
+             java/lang/reflect/Field.java \
+             java/lang/reflect/Method.java \
+             java/security/VMAccessController.java \
+             gnu/classpath/VMSystemProperties.java \
+             gnu/classpath/VMStackWalker.java
 
 inst_classes.zip: classes.zip
 	ln -fs $< $@
