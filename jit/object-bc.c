@@ -340,3 +340,9 @@ int convert_newarray(struct parse_context *ctx)
 
 	return 0;
 }
+
+int convert_checkcast(struct parse_context *ctx)
+{
+	/* TODO */
+	return 0;
+}

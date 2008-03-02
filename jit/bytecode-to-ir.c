@@ -218,6 +218,7 @@ static convert_fn_t converters[] = {
 	[OPC_INVOKESTATIC] = convert_invokestatic,
 	[OPC_NEW] = convert_new,
 	[OPC_NEWARRAY] = convert_newarray,
+	[OPC_CHECKCAST] = convert_checkcast,
 	[OPC_IFNULL] = convert_ifnull,
 	[OPC_IFNONNULL] = convert_ifnonnull,
 };
