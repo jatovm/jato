@@ -1,6 +1,6 @@
 srcdir=.
 GLIBJ_ZIP = /usr/share/classpath/glibj.zip
-JAVAC=jikes
+JAVAC=ecj
 
 JAVA_FILES = $(srcdir)/jamvm/java/lang/JarLauncher.java \
              $(srcdir)/java/lang/VMRuntime.java \

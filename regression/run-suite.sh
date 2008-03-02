@@ -36,8 +36,6 @@ run_java jamvm.IntegerArithmeticTest 0
 run_java jamvm.ObjectCreationAndManipulationTest 0
 run_java jamvm.MethodInvocationAndReturnTest 0
 
-find jamvm/ -name "*.class" | xargs rm -f
-
 if [ "$HAS_FAILURES" == "0" ]; then
   echo "Tests OK."
 else

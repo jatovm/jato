@@ -13,7 +13,7 @@ How can I try it out?
 
     For Ubuntu:
 
-    $ sudo apt-get install jikes classpath libffi-dev binutils-dev
+    $ sudo apt-get install ecj classpath libffi-dev binutils-dev
 
   - Compile Jato and run the unit tests:
 
@@ -44,8 +44,7 @@ How to run the regression test suite?
 
   Prequisites:
 
-    - Jikes Compiler (other Java compilers suffice too, but you need to hack
-      the scripts)
+    - Eclipse Compiler for Java (ECJ)
     - GNU classpath (installed in /usr/local/classpath/)
 
   To run the test suite, execute the following commands:

@@ -103,7 +103,7 @@ OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
 CC		= gcc
 MONOBURG	= ./monoburg/monoburg
-JIKES		= jikes
+JAVAC		= ecj
 
 CFLAGS		+= -g -Wall -rdynamic -std=gnu99
 
@@ -170,8 +170,8 @@ test: $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) monoburg
 .PHONY: test
 
 %.class: %.java
-	$(E) "  JIKES   " $@
-	$(Q) $(JIKES) -cp $(BOOTCLASSPATH):regression -d regression $<
+	$(E) "  JAVAC   " $@
+	$(Q) $(JAVAC) -cp $(BOOTCLASSPATH):regression -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jamvm/TestCase.class \
