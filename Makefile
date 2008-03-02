@@ -203,6 +203,7 @@ clean:
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
 	$(Q) - rm -f $(REGRESSION_TEST_SUITE_CLASSES)
+	$(Q) - find regression/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
 	$(Q) - make -C monoburg/ clean
