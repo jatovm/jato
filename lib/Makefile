@@ -18,7 +18,7 @@ inst_classes.zip: classes.zip
 	ln -fs $< $@
 
 classes.zip: $(JAVA_FILES)
-	-mkdir classes
+	mkdir -p classes
 	$(JAVAC) -bootclasspath ${GLIBJ_ZIP} -d classes $(JAVA_FILES)
 	cd classes && zip -r ../classes.zip .
 	rm -rf classes
