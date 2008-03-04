@@ -20,6 +20,7 @@
  */
 
 #include <jit/compiler.h>
+#include <jit/vars.h>
 #include <vm/bitset.h>
 #include <errno.h>
 #include <stdlib.h>

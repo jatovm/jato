@@ -10,6 +10,7 @@
 #include <jit/compilation-unit.h>
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
+#include <jit/vars.h>
 
 #include <vm/buffer.h>
 #include <vm/string.h>

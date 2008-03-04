@@ -7,6 +7,7 @@
  */
 
 #include <jit/compilation-unit.h>
+#include <jit/vars.h>
 #include <vm/bitset.h>
 
 #include <errno.h>

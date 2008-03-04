@@ -5,7 +5,7 @@ with_classpath_install_dir = /usr/
 GLIBJ		= $(with_classpath_install_dir)/share/classpath/glibj.zip
 BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
 
-JAMVM_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/)
+JAMVM_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/ppc/powerpc/)
 ARCH		:= $(shell uname -m | sed -e s/i.86/i386/)
 OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
 
@@ -17,6 +17,11 @@ endif
 ifeq ($(ARCH),x86_64)
 ARCH		= x86
 ARCH_POSTFIX	= _64
+endif
+
+ifeq ($(ARCH),ppc)
+ARCH		= ppc
+ARCH_POSTFIX	= _32
 endif
 
 ARCH_CONFIG=include/arch-$(ARCH)/config$(ARCH_POSTFIX).h

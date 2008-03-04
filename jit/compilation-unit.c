@@ -27,6 +27,7 @@
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/stack-slot.h>
+#include <jit/vars.h>
 #include <vm/buffer.h>
 #include <vm/vm.h>
 

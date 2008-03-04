@@ -132,6 +132,7 @@ static unsigned long get_greg(gregset_t gregs, int reg)
 	return (unsigned long)gregs[reg];
 }
 
+#ifndef CONFIG_PPC_32
 #ifndef CONFIG_X86_64
 static void show_registers(gregset_t gregs)
 {
@@ -195,7 +196,9 @@ static void show_registers(gregset_t gregs)
 	printf(" r13: %016lx   r14: %016lx   r15: %016lx\n", r13, r14, r15);
 }
 #endif
+#endif
 
+#ifndef CONFIG_PPC_32
 void bt_sighandler(int sig, siginfo_t * info, void *secret)
 {
 	void *eip;
@@ -215,3 +218,8 @@ void bt_sighandler(int sig, siginfo_t * info, void *secret)
 	__show_stack_trace(1, eip);
 	exit(1);
 }
+#else
+void bt_sighandler(int sig, siginfo_t *info, void *secret)
+{
+}
+#endif

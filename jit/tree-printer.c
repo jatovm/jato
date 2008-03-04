@@ -8,9 +8,11 @@
  * tree in human-readable form.
  */
 
+#include <jit/expression.h>
 #include <jit/tree-printer.h>
 #include <jit/statement.h>
 #include <jit/tree-node.h>
+#include <jit/vars.h>
 #include <vm/string.h>
 
 #include <stdio.h>
