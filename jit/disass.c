@@ -58,6 +58,12 @@ char *regs[] = {
 
 *******************************************************************************/
 
+#ifdef CONFIG_PPC_32
+unsigned char *disassinstr(unsigned char *code)
+{
+	return NULL;
+}
+#else
 unsigned char *disassinstr(unsigned char *code)
 {
 	unsigned long seqlen;
@@ -93,3 +99,4 @@ unsigned char *disassinstr(unsigned char *code)
 
 	return code;
 }
+#endif

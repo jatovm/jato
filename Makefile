@@ -106,9 +106,10 @@ JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS)
 
 OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
-CC		= gcc
-MONOBURG	= ./monoburg/monoburg
-JAVAC		= ecj
+AS		:= as
+CC		:= gcc
+MONOBURG	:= ./monoburg/monoburg
+JAVAC		:= ecj
 
 CFLAGS		+= -g -Wall -rdynamic -std=gnu99
 
@@ -149,6 +150,10 @@ monoburg:
 %.o: %.c
 	$(E) "  CC      " $@
 	$(Q) $(CC) -c $(CFLAGS) $< -o $@
+
+%.o: %.S
+	$(E) "  AS      " $@
+	$(Q) $(AS) $(AFLAGS) $< -o $@
 
 $(JAMVM_ARCH_H):
 	$(E) "  LN      " $@

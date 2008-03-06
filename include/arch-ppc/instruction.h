@@ -22,4 +22,9 @@ static inline bool insn_uses(struct insn *insn, unsigned long vreg)
 	return false;
 }
 
+static inline const char *reg_name(enum machine_reg reg)
+{
+	return "<unknown>";
+}
+
 #endif /* __PPC_INSTRUCTION_H */
