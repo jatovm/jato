@@ -110,6 +110,13 @@ static void assert_defines_r0(struct insn *insn)
 	free_insn(insn);
 }
 
+void test_memlocal_reg_defines_target(void)
+{
+	struct stack_slot slot;
+
+	assert_defines_r0(memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, &slot, &r0));
+}
+
 void test_membase_reg_uses_source_defines_target(void)
 {
 	assert_uses_r0_defines_r1(membase_reg_insn(INSN_ADD_MEMBASE_REG, &r0, 0, &r1));
