@@ -475,7 +475,7 @@ assert_emit_target_for_backward_branches(unsigned char expected_prefix,
 	eax = get_fixed_var(cu, REG_EAX);
 	ebx = get_fixed_var(cu, REG_EBX);
 	
-	target_bb = alloc_basic_block(NULL, 0, 1);
+	target_bb = get_basic_block(cu, 0, 1);
 
 	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, eax));
 	assert_emits_branch_target(expected_prefix, expected_opc, 0xf8, 0xff, 0xff, 0xff, target_bb, insn_type);
@@ -541,8 +541,8 @@ assert_backpatches_unresolved_branches_when_emitting_target(
 	cu = alloc_compilation_unit(&method);
 	eax = get_fixed_var(cu, REG_EAX);
 
-	branch_bb = alloc_basic_block(cu, 0, 1);
-	target_bb = alloc_basic_block(cu, 1, 2);
+	branch_bb = get_basic_block(cu, 0, 1);
+	target_bb = get_basic_block(cu, 1, 2);
 
 	bb_add_insn(branch_bb, branch_insn(insn_type, target_bb));
 	assert_backpatches_branches(expected_prefix, expected_opc, 0x00, branch_bb, target_bb);
