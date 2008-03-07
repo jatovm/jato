@@ -40,7 +40,7 @@ echo \
     print_test_suite_results();
 }
 
-extern const char *exe_name;
+char *exe_name;
 
 int main(int argc, char *argv[])
 {

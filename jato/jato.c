@@ -38,6 +38,8 @@
 
 static int run_with_interpreter;
 
+char *exe_name;
+
 void showNonStandardOptions() {
     printf("  -Xbootclasspath:%s\n", BCP_MESSAGE);
     printf("\t\t   locations where to find the system classes\n");
@@ -273,8 +275,6 @@ static void jit_init_natives(void)
 {
 	vm_register_native("java/lang/VMRuntime", "exit", vm_runtime_exit);
 }
-
-extern char *exe_name;
 
 int main(int argc, char *argv[]) {
     Class *array_class, *main_class;

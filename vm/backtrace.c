@@ -16,7 +16,7 @@
 #define __USE_GNU
 #include <ucontext.h>
 
-char *exe_name;
+extern char *exe_name;
 
 #ifndef CONFIG_PPC_32
 
