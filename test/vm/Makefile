@@ -15,7 +15,7 @@ SUITE=vm-test-suite.c
 
 OBJS = \
 	../libharness/libharness.o \
-	../../vm/backtrace.o \
+	../../arch/$(ARCH)/backtrace.o \
 	../../vm/bitset.o \
 	../../vm/buffer.o \
 	../../vm/bytecodes.o \

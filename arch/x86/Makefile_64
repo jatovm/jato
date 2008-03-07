@@ -2,6 +2,7 @@ ARCH_INCLUDES	= -I/usr/include/libffi
 ARCH_LIBS	= -L/usr/lib64/libffi -lffi
 
 ARCH_OBJS = \
+	arch/x86/backtrace.o		\
 	arch/x86/emit-code.o		\
 	arch/x86/insn-selector.o	\
 	arch/x86/instruction.o		\

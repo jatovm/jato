@@ -61,7 +61,6 @@ JIT_OBJS = \
 	jit/typeconv-bc.o
 
 VM_OBJS = \
-	vm/backtrace.o		\
 	vm/bitset.o		\
 	vm/buffer.o		\
 	vm/bytecodes.o		\
@@ -174,8 +173,8 @@ $(ARCH_INCLUDE_DIR): FORCE
 	$(Q) ln -fsn arch-$(ARCH) $@
 
 test: $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) monoburg
-	make -C test/vm/ test
-	make -C test/jit/ test
+	make -C test/vm/ ARCH=$(ARCH) test
+	make -C test/jit/ ARCH=$(ARCH) test
 	make -C test/arch-$(ARCH)/ test
 .PHONY: test
 

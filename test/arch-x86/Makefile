@@ -17,7 +17,7 @@ SUITE=x86-test-suite.c
 OBJS = \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
-	../../vm/backtrace.o \
+	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
 	../../vm/stack.o \
 	../../vm/string.o \

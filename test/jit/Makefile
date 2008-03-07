@@ -14,7 +14,7 @@ RUNNER=jit-test-runner
 SUITE=jit-test-suite.c
 
 OBJS = \
-	../../vm/backtrace.o \
+	../../arch/$(ARCH)/backtrace.o \
 	../../vm/bitset.o \
 	../../vm/buffer.o \
 	../../vm/bytecodes.o \
