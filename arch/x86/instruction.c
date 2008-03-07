@@ -32,7 +32,7 @@ struct insn *insn(enum insn_type insn_type)
 	return alloc_insn(insn_type);
 }
 
-struct insn *local_reg_insn(enum insn_type insn_type,
+struct insn *memlocal_reg_insn(enum insn_type insn_type,
 			    struct stack_slot *src_slot,
 			    struct var_info *dest_reg)
 {

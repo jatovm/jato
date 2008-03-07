@@ -206,7 +206,7 @@ static void emit_mov_reg_reg(struct buffer *buf, union operand *src,
 }
 
 static void
-emit_mov_local_reg(struct buffer *buf, union operand *src, union operand *dest)
+emit_mov_memlocal_reg(struct buffer *buf, union operand *src, union operand *dest)
 {
 	enum machine_reg dest_reg;
 	unsigned long disp;
@@ -596,7 +596,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
-	DECL_EMITTER(INSN_MOV_LOCAL_REG, emit_mov_local_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),

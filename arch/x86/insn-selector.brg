@@ -101,7 +101,7 @@ reg:	EXPR_LOCAL	1
 	result = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = result;
 
-	bb_add_insn(s, local_reg_insn(INSN_MOV_LOCAL_REG, slot, result));
+	bb_add_insn(s, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
 }
 
 reg:   EXPR_VAR
