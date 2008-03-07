@@ -272,12 +272,19 @@ void test_emit_mov_memindex_reg(void)
 	assert_emit_insn_3(0x8b, 0x14, 0x4b, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, &VAR_EBX, &VAR_ECX, 1, &VAR_EDX));
 }
 
-void test_emit_mov_reg_membase(void)
+void test_emit_mov_reg_memlocal(void)
 {
-	assert_emit_insn_3(0x89, 0x43, 0x04, reg_membase_insn(INSN_MOV_REG_MEMBASE, &VAR_EAX, &VAR_EBX, 0x04));
-	assert_emit_insn_3(0x89, 0x41, 0x04, reg_membase_insn(INSN_MOV_REG_MEMBASE, &VAR_EAX, &VAR_ECX, 0x04));
-	assert_emit_insn_3(0x89, 0x41, 0x08, reg_membase_insn(INSN_MOV_REG_MEMBASE, &VAR_EAX, &VAR_ECX, 0x08));
-	assert_emit_insn_6(0x89, 0x98, 0xef, 0xbe, 0xad, 0xde, reg_membase_insn(INSN_MOV_REG_MEMBASE, &VAR_EBX, &VAR_EAX, 0xdeadbeef));
+	struct stack_slot *slot, *wide_slot;
+	struct stack_frame *frame;
+
+	frame = alloc_stack_frame(32, 32);
+	slot = get_local_slot(frame, 0);
+	wide_slot = get_local_slot(frame, 31);
+
+	assert_emit_insn_3(0x89, 0x45, 0x08, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EAX, slot));
+	assert_emit_insn_6(0x89, 0x9d, 0x84, 0x00, 0x00, 0x00, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EBX, wide_slot));
+
+	free_stack_frame(frame);
 }
 
 void test_emit_mov_reg_memindex(void)

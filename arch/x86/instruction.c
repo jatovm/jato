@@ -70,14 +70,14 @@ struct insn *memindex_reg_insn(enum insn_type insn_type,
 	return insn;
 }
 
-struct insn *reg_membase_insn(enum insn_type insn_type, struct var_info *src_reg,
-			      struct var_info *dest_base_reg, long dest_disp)
+struct insn *
+reg_memlocal_insn(enum insn_type insn_type, struct var_info *src_reg,
+		  struct stack_slot *dest_slot)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
 		assoc_var_to_operand(src_reg, insn, src.reg);
-		assoc_var_to_operand(dest_base_reg, insn, dest.base_reg);
-		insn->dest.disp = dest_disp;
+		insn->dest.slot = dest_slot;
 	}
 	return insn;
 }

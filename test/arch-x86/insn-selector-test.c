@@ -16,10 +16,11 @@
 static struct methodblock method = { };
 
 static void
-assert_memlocal_reg_insn(enum insn_type insn_type, unsigned long slot_index, enum machine_reg dest_reg, struct insn *insn)
+assert_memlocal_reg_insn(enum insn_type insn_type, unsigned long src_slot_idx,
+			 enum machine_reg dest_reg, struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(slot_index, insn->src.slot->index);
+	assert_int_equals(src_slot_idx, insn->src.slot->index);
 	assert_int_equals(dest_reg, mach_reg(&insn->dest.reg));
 }
 
@@ -49,28 +50,22 @@ static void assert_memindex_reg_insn(enum insn_type insn_type,
 	assert_int_equals(dest_reg, mach_reg(&insn->dest.reg));
 }
 
-static void assert_var_membase_insn(enum insn_type insn_type,
-				    struct var_info *src_var,
-				    enum machine_reg dest_reg,
-				    long dest_displacement,
-				    struct insn *insn)
+static void
+assert_var_memlocal_insn(enum insn_type insn_type, struct var_info *src_var,
+			 unsigned long dest_slot_idx, struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
 	assert_ptr_equals(src_var, mach_reg_var(&insn->src.reg));
-	assert_int_equals(dest_reg, mach_reg(&insn->dest.base_reg));
-	assert_int_equals(dest_displacement, insn->dest.disp);
+	assert_int_equals(dest_slot_idx, insn->dest.slot->index);
 }
 
-static void assert_reg_membase_insn(enum insn_type insn_type,
-				    enum machine_reg src_reg,
-				    enum machine_reg dest_reg,
-				    long dest_displacement,
-				    struct insn *insn)
+static void
+assert_reg_memlocal_insn(enum insn_type insn_type, enum machine_reg src_reg,
+			 unsigned long dest_slot_idx, struct insn *insn)
 {
 	assert_int_equals(insn_type, insn->type);
 	assert_int_equals(src_reg, mach_reg(&insn->src.reg));
-	assert_int_equals(dest_reg, mach_reg(&insn->dest.base_reg));
-	assert_int_equals(dest_displacement, insn->dest.disp);
+	assert_int_equals(dest_slot_idx, insn->dest.slot->index);
 }
 
 static void assert_reg_memindex_insn(enum insn_type insn_type,
@@ -165,6 +160,7 @@ void test_should_select_insn_for_every_statement(void)
 	struct basic_block *bb;
 	struct methodblock method = {
 		.args_count = 4,
+		.max_locals = 4,
 	};
 	struct compilation_unit *cu;
 
@@ -193,7 +189,7 @@ void test_should_select_insn_for_every_statement(void)
 	assert_membase_reg_insn(INSN_ADD_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, 4, REG_EAX, insn);
+	assert_memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, 2, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_ADD_MEMBASE_REG, REG_EBP, 20, REG_EAX, insn);
@@ -207,6 +203,7 @@ static struct basic_block *alloc_simple_binop_bb(enum binary_operator expr_op,
 {
 	static struct methodblock method = {
 		.args_count = 2,
+		.max_locals = 2,
 	};
 	struct compilation_unit *cu;
 	struct expression *expr;
@@ -330,6 +327,7 @@ static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 {
 	static struct methodblock method = {
 		.args_count = 1,
+		.max_locals = 1,
 	};
 	struct compilation_unit *cu;
 	struct expression *expr;
@@ -597,7 +595,9 @@ void test_select_method_return_value_passed_as_argument(void)
 
 void test_select_invokevirtual_with_arguments(void)
 {
-	struct methodblock method;
+	struct methodblock method = {
+		.max_locals = 1,
+	};
 	struct expression *invoke_expr, *args;
 	struct compilation_unit *cu;
 	unsigned long method_index;
@@ -682,6 +682,7 @@ static void assert_select_if_statement_local_local(enum insn_type expected,
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 2,
+		.max_locals = 2,
 	};
 
 	cu = alloc_compilation_unit(&method);
@@ -715,6 +716,7 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 2,
+		.max_locals = 2,
 	};
 
 	cu = alloc_compilation_unit(&method);
@@ -785,6 +787,7 @@ void test_select_load_instance_field(void)
 {
 	struct methodblock method = {
 		.args_count = 0,
+		.max_locals = 1,
 	};
 	struct compilation_unit *cu;
 	struct expression *objectref;
@@ -857,6 +860,7 @@ void test_store_value_to_instance_field(void)
 {
 	struct methodblock method = {
 		.args_count = 0,
+		.max_locals = 1,
 	};
 	struct expression *store_target;
 	struct expression *store_value;
@@ -901,7 +905,7 @@ void test_store_value_to_instance_field(void)
 	free_compilation_unit(cu);
 }
 
-static void assert_store_field_to_local(long expected_disp, unsigned long local_idx)
+static void assert_store_field_to_local(unsigned long local_idx)
 {
 	struct expression *store_dest, *store_src;
 	struct compilation_unit *cu;
@@ -911,6 +915,7 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 0,
+		.max_locals = local_idx+1,
 	};
 
 	store_dest = local_expr(J_INT, local_idx);
@@ -933,15 +938,15 @@ static void assert_store_field_to_local(long expected_disp, unsigned long local_
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, offsetof(struct fieldblock, static_value), REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_membase_insn(INSN_MOV_REG_MEMBASE, REG_EAX, REG_EBP, expected_disp, insn);
+	assert_reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, REG_EAX, local_idx, insn);
 
 	free_compilation_unit(cu);
 }
 
 void test_select_store_field_to_local(void)
 {
-	assert_store_field_to_local(-4, 0);
-	assert_store_field_to_local(-8, 1);
+	assert_store_field_to_local(0);
+	assert_store_field_to_local(1);
 }
 
 DECLARE_STATIC_VREG(dest_var, 0);
@@ -990,6 +995,7 @@ void test_select_store_var_to_local(void)
 	struct insn *insn;
 	struct methodblock method = {
 		.args_count = 0,
+		.max_locals = 1,
 	};
 
 	store_dest = local_expr(J_INT, 0);
@@ -1006,7 +1012,7 @@ void test_select_store_var_to_local(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_var_membase_insn(INSN_MOV_REG_MEMBASE, &src_var, REG_EBP, -4, insn);
+	assert_var_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &src_var, 0, insn);
 
 	free_compilation_unit(cu);
 }

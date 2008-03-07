@@ -62,14 +62,6 @@ static void assert_uses_r0_defines_r0(struct insn *insn)
 	free_insn(insn);
 }
 
-static void assert_uses_r0_and_r1(struct insn *insn)
-{
-	assert_use_mask(1, 1, 0, insn);
-	assert_def_mask(0, 0, 0, insn);
-
-	free_insn(insn);
-}
-
 static void assert_uses_r0_r1_and_r2(struct insn *insn)
 {
 	assert_use_mask(1, 1, 1, insn);
@@ -137,7 +129,9 @@ void test_memindex_reg_uses_source_defines_target(void)
 
 void test_reg_membase_uses_source_and_target(void)
 {
-	assert_uses_r0_and_r1(reg_membase_insn(INSN_MOV_REG_MEMBASE, &r0, &r1, 0));
+	struct stack_slot slot;
+
+	assert_uses_r0(reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &r0, &slot));
 }
 
 void test_reg_memindex_uses_source_and_target(void)

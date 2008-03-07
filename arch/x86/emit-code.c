@@ -256,21 +256,24 @@ static void emit_mov_imm_membase(struct buffer *buf, union operand *src,
 	emit_imm32(buf, src->imm);
 }
 
-static void emit_mov_reg_membase(struct buffer *buf, union operand *src,
-				 union operand *dest)
+static void emit_mov_reg_memlocal(struct buffer *buf, union operand *src,
+				  union operand *dest)
 {
+	unsigned long disp;
 	int mod;
 
-	if (is_imm_8(dest->disp))
+	disp = slot_offset(dest->slot);
+
+	if (is_imm_8(disp))
 		mod = 0x01;
 	else
 		mod = 0x02;
 
 	emit(buf, 0x89);
 	emit(buf, encode_modrm(mod, encode_reg(&src->reg),
-			       encode_reg(&dest->base_reg)));
+			       __encode_reg(REG_EBP)));
 
-	emit_imm(buf, dest->disp);
+	emit_imm(buf, disp);
 }
 
 static void emit_mov_reg_memindex(struct buffer *buf, union operand *src,
@@ -599,8 +602,8 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
-	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, SINGLE_OPERAND),
