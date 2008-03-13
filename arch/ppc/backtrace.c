@@ -29,3 +29,6 @@ void bt_sighandler(int sig, siginfo_t *info, void *secret)
 {
 }
 
+void print_trace(void)
+{
+}
