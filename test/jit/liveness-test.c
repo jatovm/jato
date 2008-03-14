@@ -11,10 +11,10 @@
 
 struct methodblock method;
 
-static void assert_live_range(struct var_info *var, unsigned long expected_start, unsigned long expected_end)
+static void assert_live_range(struct live_interval *interval, unsigned long expected_start, unsigned long expected_end)
 {
-	assert_int_equals(expected_start, var->interval->range.start);
-	assert_int_equals(expected_end, var->interval->range.end);
+	assert_int_equals(expected_start, interval->range.start);
+	assert_int_equals(expected_end, interval->range.end);
 }
 
 static void assert_uses(struct basic_block *bb, struct var_info *var)
@@ -50,8 +50,8 @@ void test_variable_range_limited_to_basic_block(void)
 	assert_defines(bb, r1);
 	assert_defines(bb, r2);
 
-	assert_live_range(r1, 0, 2);
-	assert_live_range(r2, 1, 2);
+	assert_live_range(r1->interval, 0, 2);
+	assert_live_range(r2->interval, 1, 2);
 
 	free_compilation_unit(cu);
 }
@@ -83,8 +83,8 @@ void test_variable_range_spans_two_basic_blocks(void)
 	assert_defines(bb2, r2);
 	assert_uses(bb2, r1);
 
-	assert_live_range(r1, 0, 3);
-	assert_live_range(r2, 2, 3);
+	assert_live_range(r1->interval, 0, 3);
+	assert_live_range(r2->interval, 2, 3);
 
 	free_compilation_unit(cu);
 }
