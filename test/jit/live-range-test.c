@@ -23,53 +23,13 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <arch/instruction.h>
+
 #include <jit/vars.h>
-#include <vm/stdlib.h>
-#include <stdlib.h>
+#include <libharness.h>
 
-struct live_interval *alloc_interval(struct var_info *var)
+void test_range_length(void)
 {
-	struct live_interval *interval = zalloc(sizeof *interval);
-	if (interval) {
-		interval->var_info = var;
-		interval->reg = REG_UNASSIGNED;
-		interval->range.start = ~0UL;
-		interval->range.end = 0UL;
-		INIT_LIST_HEAD(&interval->interval);
-		INIT_LIST_HEAD(&interval->active);
-		INIT_LIST_HEAD(&interval->registers);
-	}
-	return interval;
-}
+	struct live_range range = { .start = 0, .end = 2 };
 
-void free_interval(struct live_interval *interval)
-{
-	free(interval->insn_array);
-	free(interval);
-}
-
-struct live_interval *split_interval_at(struct live_interval *interval,
-					unsigned long pos)
-{
-	struct live_interval *new;
-
-	new = alloc_interval(interval->var_info);
-	if (new) {
-		struct register_info *this, *next;
-
-		new->reg = interval->reg;
-		new->range.start = pos;
-		new->range.end = interval->range.end;
-		interval->range.end = pos;
-
-		list_for_each_entry_safe(this, next, &interval->registers, reg_list) {
-			if (this->insn->lir_pos < pos)
-				continue;
-
-			list_move(&this->reg_list, &new->registers);
-			this->interval = new;
-		}
-	}
-	return new;
+	assert_int_equals(3, range_len(&range));
 }

@@ -62,7 +62,7 @@ out_of_memory:
 
 static void free_var_info(struct var_info *var)
 {
-	free(var->interval);
+	free_interval(var->interval);
 	free(var);
 }
 

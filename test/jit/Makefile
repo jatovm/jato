@@ -57,6 +57,7 @@ OBJS = \
 	invoke-bc-test.o \
 	linear-scan-test.o \
 	liveness-test.o \
+	live-range-test.o \
 	load-store-bc-test.o \
 	object-bc-test.o \
 	ostack-bc-test.o \

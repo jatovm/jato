@@ -2,6 +2,7 @@
 #define __JIT_VARS_H
 
 #include <vm/list.h>
+#include <arch/registers.h>
 #include <stdbool.h>
 
 struct live_range {
@@ -13,7 +14,13 @@ static inline bool in_range(struct live_range *range, unsigned long offset)
 	return (range->start <= offset) && (range->end >= offset);
 }
 
+static inline unsigned long range_len(struct live_range *range)
+{
+	return range->end - range->start + 1;
+}
+
 struct var_info;
+struct insn;
 
 struct live_interval {
 	/* Parent variable of this interval.  */
@@ -33,6 +40,9 @@ struct live_interval {
 
 	/* Member of list of active intervals during linear scan.  */
 	struct list_head active;
+
+	/* Array of instructions within this interval.  */
+	struct insn **insn_array;
 };
 
 struct var_info {
@@ -83,6 +93,7 @@ static inline bool is_vreg(struct register_info *reg, unsigned long vreg)
 }
 
 struct live_interval *alloc_interval(struct var_info *);
+void free_interval(struct live_interval *);
 struct live_interval *split_interval_at(struct live_interval *, unsigned long pos);
 
 #endif /* __JIT_VARS_H */
