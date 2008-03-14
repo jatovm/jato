@@ -35,5 +35,5 @@ void test_split_interval_at(void)
 	assert_int_equals(1, new_interval->range.start);
 	assert_int_equals(2, new_interval->range.end);
 
-	free(new_interval);
+	free_interval(new_interval);
 }
