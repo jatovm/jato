@@ -138,7 +138,7 @@ else
 endif
 export E Q
 
-all: monoburg $(PROGRAM) test
+all: monoburg $(PROGRAM) test lib
 .PHONY: all
 .DEFAULT: all
 
@@ -191,11 +191,11 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jamvm/ObjectCreationAndManipulationTest.class \
 	regression/jamvm/MethodInvocationAndReturnTest.class
 
-vm-classes:
+lib:
 	make -C lib/ JAVAC=$(JAVAC)
-.PHONY: vm-classes
+.PHONY: lib
 
-regression: monoburg vm-classes $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
+regression: monoburg lib $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
 	$(E) "  REGRESSION"
 	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
