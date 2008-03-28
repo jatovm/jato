@@ -26,7 +26,9 @@
 #include <arch/instruction.h>
 #include <jit/vars.h>
 #include <vm/stdlib.h>
+#include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 struct live_interval *alloc_interval(struct var_info *var)
 {
@@ -49,27 +51,50 @@ void free_interval(struct live_interval *interval)
 	free(interval);
 }
 
+static int split_insn_array(struct live_interval *src, struct live_interval *dst)
+{
+	unsigned long src_len, dst_len, size;
+
+	src_len = range_len(&src->range);
+	dst_len = range_len(&dst->range);
+
+	size = dst_len * sizeof(struct insn *);
+	dst->insn_array = zalloc(size);
+	if (!dst->insn_array)
+		return -ENOMEM;
+
+	memcpy(dst->insn_array, src->insn_array + src_len, size);
+
+	return 0;
+}
+
 struct live_interval *split_interval_at(struct live_interval *interval,
 					unsigned long pos)
 {
+	struct register_info *this, *next;
 	struct live_interval *new;
+	int err;
 
 	new = alloc_interval(interval->var_info);
-	if (new) {
-		struct register_info *this, *next;
+	if (!new)
+		return NULL;
 
-		new->reg = interval->reg;
-		new->range.start = pos;
-		new->range.end = interval->range.end;
-		interval->range.end = pos;
+	new->reg = interval->reg;
+	new->range.start = pos;
+	new->range.end = interval->range.end;
+	interval->range.end = pos;
 
-		list_for_each_entry_safe(this, next, &interval->registers, reg_list) {
-			if (this->insn->lir_pos < pos)
-				continue;
+	list_for_each_entry_safe(this, next, &interval->registers, reg_list) {
+		if (this->insn->lir_pos < pos)
+			continue;
 
-			list_move(&this->reg_list, &new->registers);
-			this->interval = new;
-		}
+		list_move(&this->reg_list, &new->registers);
+		this->interval = new;
+	}
+	err = split_insn_array(interval, new);
+	if (err) {
+		free_interval(new);
+		return NULL;
 	}
 	return new;
 }
