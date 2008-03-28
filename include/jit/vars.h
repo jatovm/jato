@@ -6,17 +6,17 @@
 #include <stdbool.h>
 
 struct live_range {
-	unsigned long start, end;
+	unsigned long start, end;	/* end is exclusive */
 };
 
 static inline bool in_range(struct live_range *range, unsigned long offset)
 {
-	return (range->start <= offset) && (range->end >= offset);
+	return (offset >= range->start) && (offset < range->end);
 }
 
 static inline unsigned long range_len(struct live_range *range)
 {
-	return range->end - range->start + 1;
+	return range->end - range->start;
 }
 
 struct var_info;

@@ -57,8 +57,8 @@ static void __update_live_range(struct live_range *range, unsigned long pos)
 	if (range->start > pos)
 		range->start = pos;
 
-	if (range->end < pos)
-		range->end = pos;
+	if (range->end < (pos + 1))
+		range->end = pos + 1;
 }
 
 static void update_live_ranges(struct compilation_unit *cu)

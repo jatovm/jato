@@ -27,9 +27,26 @@
 #include <jit/vars.h>
 #include <libharness.h>
 
-void test_range_length(void)
+void test_empty_range_does_not_contain_anything(void)
+{
+	struct live_range range = { .start = 0, .end = 0 };
+
+	assert_false(in_range(&range, 0));
+	assert_false(in_range(&range, 1));
+}
+
+void test_range_length_treats_end_as_exclusive(void)
 {
 	struct live_range range = { .start = 0, .end = 2 };
 
-	assert_int_equals(3, range_len(&range));
+	assert_int_equals(2, range_len(&range));
+}
+
+void test_in_range_treats_end_as_exclusive(void)
+{
+	struct live_range range = { .start = 0, .end = 2 };
+
+	assert_true(in_range(&range, 0));
+	assert_true(in_range(&range, 1));
+	assert_false(in_range(&range, 2));
 }
