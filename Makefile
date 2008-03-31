@@ -1,8 +1,7 @@
-# GNU classpath installation path
-prefix = /usr/local
-with_classpath_install_dir = /usr/
+JAMVM_INSTALL_DIR	:= /usr/local
+CLASSPATH_INSTALL_DIR	:= /usr/
 
-GLIBJ		= $(with_classpath_install_dir)/share/classpath/glibj.zip
+GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
 
 JAMVM_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/ppc/powerpc/)
@@ -121,7 +120,7 @@ CFLAGS		+= $(OPTIMIZATIONS)
 INCLUDES	= -Iinclude -Ijit -Ijamvm -Ijit/glib -include $(ARCH_CONFIG) $(ARCH_INCLUDES)
 CFLAGS		+= $(INCLUDES)
 
-DEFINES = -DINSTALL_DIR=\"$(prefix)\" -DCLASSPATH_INSTALL_DIR=\"$(with_classpath_install_dir)\"
+DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"
 CFLAGS		+= $(DEFINES)
 
 LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
