@@ -10,7 +10,7 @@
 
 static const char *install_dirs[NR_DIRS] = {
 	"/usr",
-	"/usr/local",
+	"/usr/local/classpath",
 };
 
 static bool is_file(const char *path)
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 		strcpy(lib, install_dirs[i]);
 		strcat(lib, "/lib/classpath");
 
-		if (is_file(glibj) || is_dir(lib)) {
+		if (is_file(glibj) && is_dir(lib)) {
 			printf("%s\n", install_dirs[i]);
 			break;
 		}
