@@ -1,5 +1,7 @@
+CLASSPATH_CONFIG = tools/classpath-config
+
 JAMVM_INSTALL_DIR	:= /usr/local
-CLASSPATH_INSTALL_DIR	:= /usr/
+CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
@@ -137,9 +139,13 @@ else
 endif
 export E Q
 
-all: monoburg $(PROGRAM) test lib
+all: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) test lib
 .PHONY: all
 .DEFAULT: all
+
+$(CLASSPATH_CONFIG):
+	$(E) "  LD      " $@
+	$(Q) $(CC) -Wall $(CLASSPATH_CONFIG).c -o $(CLASSPATH_CONFIG)
 
 monoburg:
 	$(Q) make -C monoburg/
@@ -201,6 +207,7 @@ regression: monoburg lib $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
 
 clean:
 	$(E) "  CLEAN"
+	$(Q) - rm -f $(CLASSPATH_CONFIG)
 	$(Q) - rm -f $(OBJS)
 	$(Q) - rm -f $(LIBHARNESS_OBJS)
 	$(Q) - rm -f $(ARCH_TEST_OBJS)

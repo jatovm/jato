@@ -19,7 +19,7 @@ function run_java {
   fi
 }
 
-GNU_CLASSPATH_ROOT=`grep "CLASSPATH_INSTALL_DIR.*:=" ../Makefile  | grep -v "#" |  awk '{ print $3 }'`
+GNU_CLASSPATH_ROOT=`../tools/classpath-config`
 if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d $GNU_CLASSPATH_ROOT; then
   echo "Error! Cannot find GNU Classpath installed."
   exit
