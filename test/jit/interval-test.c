@@ -39,5 +39,6 @@ void test_split_interval_at(void)
 	assert_int_equals(2, new_interval->range.end);
 	assert_ptr_equals(&insns[1], new_interval->insn_array[0]);
 
+	free_interval(var.interval);
 	free_interval(new_interval);
 }
