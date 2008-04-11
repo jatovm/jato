@@ -12,27 +12,42 @@
 struct basic_block;
 struct bitset;
 
-union operand {
-	struct register_info reg;
+enum operand_type {
+	OPERAND_NONE,
+	OPERAND_BRANCH,
+	OPERAND_IMM,
+	OPERAND_MEMBASE,
+	OPERAND_MEMINDEX,
+	OPERAND_MEMLOCAL,
+	OPERAND_REG,
+	OPERAND_REL,
+	LAST_OPERAND
+};
 
-	struct {
-		struct register_info base_reg;
-		long disp;	/* displacement */
+struct operand {
+	enum operand_type type;
+	union {
+		struct register_info reg;
+
+		struct {
+			struct register_info base_reg;
+			long disp;	/* displacement */
+		};
+
+		struct stack_slot *slot; /* EBP + displacement */
+
+		struct {
+			struct register_info base_reg;
+			struct register_info index_reg;
+			unsigned char shift;
+		};
+
+		unsigned long imm;
+
+		unsigned long rel;
+
+		struct basic_block *branch_target;
 	};
-
-	struct stack_slot *slot; /* EBP + displacement */
-
-	struct {
-		struct register_info base_reg;
-		struct register_info index_reg;
-		unsigned char shift;
-	};
-
-	unsigned long imm;
-
-	unsigned long rel;
-
-	struct basic_block *branch_target;
 };
 
 /*
@@ -75,11 +90,12 @@ enum insn_type {
 struct insn {
 	enum insn_type type;
 	union {
+		struct operand operands[2];
 		struct {
-			union operand src;
-			union operand dest;
+			struct operand src;
+			struct operand dest;
 		};
-		union operand operand;
+		struct operand operand;
 	};
 	struct list_head insn_list_node;
 	struct list_head branch_list_node;

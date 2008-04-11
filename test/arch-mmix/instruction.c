@@ -28,13 +28,45 @@ void free_insn(struct insn *insn)
 	free(insn);
 }
 
+static void init_none_operand(struct insn *insn, unsigned long idx)
+{
+	struct operand *operand = &insn->operands[idx];
+
+	operand->type = OPERAND_NONE;
+}
+
+static void init_branch_operand(struct insn *insn, unsigned long idx, struct basic_block *if_true)
+{
+	struct operand *operand = &insn->operands[idx];
+
+	operand->type = OPERAND_BRANCH;
+	operand->branch_target = if_true;
+}
+
+static void init_imm_operand(struct insn *insn, unsigned long idx, unsigned long imm)
+{
+	struct operand *operand = &insn->operands[idx];
+
+	operand->type = OPERAND_IMM;
+	operand->imm = imm;
+}
+
+static void init_reg_operand(struct insn *insn, unsigned long idx, struct var_info *reg)
+{
+	struct operand *operand = &insn->operands[idx];
+
+	operand->type = OPERAND_REG;
+	__assoc_var_to_operand(reg, insn, &operand->reg);
+}
+
 struct insn *imm_insn(enum insn_type insn_type, unsigned long imm, struct var_info *result)
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		assoc_var_to_operand(result, insn, x.reg);
-		insn->y.imm = imm;
+		init_reg_operand(insn, 0, result);
+		init_imm_operand(insn, 1, imm);
 		/* part of the immediate is stored in z but it's unused here */
+		init_none_operand(insn, 2);
 	}
 	return insn;
 }
@@ -43,9 +75,9 @@ struct insn *arithmetic_insn(enum insn_type insn_type, struct var_info *z, struc
 {
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
-		assoc_var_to_operand(x, insn, x.reg);
-		assoc_var_to_operand(y, insn, y.reg);
-		assoc_var_to_operand(z, insn, z.reg);
+		init_reg_operand(insn, 0, x);
+		init_reg_operand(insn, 1, y);
+		init_reg_operand(insn, 2, z);
 	}
 	return insn;
 }
@@ -53,8 +85,10 @@ struct insn *arithmetic_insn(enum insn_type insn_type, struct var_info *z, struc
 struct insn *branch_insn(enum insn_type insn_type, struct basic_block *if_true)
 {
 	struct insn *insn = alloc_insn(insn_type);
-	if (insn)
-		insn->operand.branch_target = if_true;
-
+	if (insn) {
+		init_branch_operand(insn, 0, if_true);
+		init_none_operand(insn, 1);
+		init_none_operand(insn, 2);
+	}
 	return insn;
 }

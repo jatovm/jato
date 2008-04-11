@@ -166,8 +166,8 @@ __emit_membase_reg(struct buffer *buf, unsigned char opc,
 }
 
 static void 
-emit_membase_reg(struct buffer *buf, unsigned char opc, union operand *src,
-		 union operand *dest)
+emit_membase_reg(struct buffer *buf, unsigned char opc, struct operand *src,
+		 struct operand *dest)
 {
 	enum machine_reg base_reg, dest_reg;
 	unsigned long disp;
@@ -184,7 +184,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 	emit(buf, 0x50 + __encode_reg(reg));
 }
 
-static void emit_push_reg(struct buffer *buf, union operand *operand)
+static void emit_push_reg(struct buffer *buf, struct operand *operand)
 {
 	__emit_push_reg(buf, mach_reg(&operand->reg));
 }
@@ -199,14 +199,14 @@ static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
 	emit(buf, mod_rm);
 }
 
-static void emit_mov_reg_reg(struct buffer *buf, union operand *src,
-			     union operand *dest)
+static void emit_mov_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
 	__emit_mov_reg_reg(buf, mach_reg(&src->reg), mach_reg(&dest->reg));
 }
 
 static void
-emit_mov_memlocal_reg(struct buffer *buf, union operand *src, union operand *dest)
+emit_mov_memlocal_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
 	enum machine_reg dest_reg;
 	unsigned long disp;
@@ -218,28 +218,28 @@ emit_mov_memlocal_reg(struct buffer *buf, union operand *src, union operand *des
 }
 
 static void emit_mov_membase_reg(struct buffer *buf,
-				 union operand *src, union operand *dest)
+				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x8b, src, dest);
 }
 
 static void emit_mov_memindex_reg(struct buffer *buf,
-				  union operand *src, union operand *dest)
+				  struct operand *src, struct operand *dest)
 {
 	emit(buf, 0x8b);
 	emit(buf, encode_modrm(0x00, encode_reg(&dest->reg), 0x04));
 	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
 }
 
-static void emit_mov_imm_reg(struct buffer *buf, union operand *src,
-			     union operand *dest)
+static void emit_mov_imm_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
 	emit(buf, 0xb8 + encode_reg(&dest->reg));
 	emit_imm32(buf, src->imm);
 }
 
-static void emit_mov_imm_membase(struct buffer *buf, union operand *src,
-				 union operand *dest)
+static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
 {
 	unsigned long mod = 0x00;
 
@@ -256,8 +256,8 @@ static void emit_mov_imm_membase(struct buffer *buf, union operand *src,
 	emit_imm32(buf, src->imm);
 }
 
-static void emit_mov_reg_memlocal(struct buffer *buf, union operand *src,
-				  union operand *dest)
+static void emit_mov_reg_memlocal(struct buffer *buf, struct operand *src,
+				  struct operand *dest)
 {
 	unsigned long disp;
 	int mod;
@@ -276,8 +276,8 @@ static void emit_mov_reg_memlocal(struct buffer *buf, union operand *src,
 	emit_imm(buf, disp);
 }
 
-static void emit_mov_reg_memindex(struct buffer *buf, union operand *src,
-				  union operand *dest)
+static void emit_mov_reg_memindex(struct buffer *buf, struct operand *src,
+				  struct operand *dest)
 {
 	emit(buf, 0x89);
 	emit(buf, encode_modrm(0x00, encode_reg(&src->reg), 0x04));
@@ -332,7 +332,7 @@ static void __emit_push_imm(struct buffer *buf, long imm)
 	emit_imm(buf, imm);
 }
 
-static void emit_push_imm(struct buffer *buf, union operand *operand)
+static void emit_push_imm(struct buffer *buf, struct operand *operand)
 {
 	__emit_push_imm(buf, operand->imm);
 }
@@ -347,7 +347,7 @@ static void __emit_call(struct buffer *buf, void *call_target)
 	emit_imm32(buf, disp);
 }
 
-static void emit_call(struct buffer *buf, union operand *operand)
+static void emit_call(struct buffer *buf, struct operand *operand)
 {
 	__emit_call(buf, (void *)operand->rel);
 }
@@ -368,26 +368,26 @@ void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 }
 
 static void emit_add_membase_reg(struct buffer *buf,
-				 union operand *src, union operand *dest)
+				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x03, src, dest);
 }
 
 static void emit_and_membase_reg(struct buffer *buf,
-				 union operand *src, union operand *dest)
+				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x23, src, dest);
 }
 
 static void emit_sub_membase_reg(struct buffer *buf,
-				 union operand *src, union operand *dest)
+				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x2b, src, dest);
 }
 
 static void __emit_div_mul_membase_reg(struct buffer *buf,
-				       union operand *src,
-				       union operand *dest,
+				       struct operand *src,
+				       struct operand *dest,
 				       unsigned char opc_ext)
 {
 	long disp;
@@ -408,18 +408,18 @@ static void __emit_div_mul_membase_reg(struct buffer *buf,
 }
 
 static void emit_mul_membase_reg(struct buffer *buf,
-				 union operand *src, union operand *dest)
+				 struct operand *src, struct operand *dest)
 {
 	__emit_div_mul_membase_reg(buf, src, dest, 0x04);
 }
 
-static void emit_neg_reg(struct buffer *buf, union operand *operand)
+static void emit_neg_reg(struct buffer *buf, struct operand *operand)
 {
 	emit(buf, 0xf7);
 	emit(buf, encode_modrm(0x3, 0x3, encode_reg(&operand->reg)));
 }
 
-static void emit_cltd_reg_reg(struct buffer *buf, union operand *src, union operand *dest)
+static void emit_cltd_reg_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
 	assert(mach_reg(&src->reg) == REG_EAX);
 	assert(mach_reg(&dest->reg) == REG_EDX);
@@ -427,15 +427,15 @@ static void emit_cltd_reg_reg(struct buffer *buf, union operand *src, union oper
 	emit(buf, 0x99);
 }
 
-static void emit_div_membase_reg(struct buffer *buf, union operand *src,
-				 union operand *dest)
+static void emit_div_membase_reg(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
 {
 	__emit_div_mul_membase_reg(buf, src, dest, 0x07);
 }
 
 static void __emit_shift_reg_reg(struct buffer *buf,
-				 union operand *src,
-				 union operand *dest, unsigned char opc_ext)
+				 struct operand *src,
+				 struct operand *dest, unsigned char opc_ext)
 {
 	assert(mach_reg(&src->reg) == REG_ECX);
 
@@ -443,26 +443,26 @@ static void __emit_shift_reg_reg(struct buffer *buf,
 	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(&dest->reg)));
 }
 
-static void emit_shl_reg_reg(struct buffer *buf, union operand *src,
-			     union operand *dest)
+static void emit_shl_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
 	__emit_shift_reg_reg(buf, src, dest, 0x04);
 }
 
-static void emit_sar_reg_reg(struct buffer *buf, union operand *src,
-			     union operand *dest)
+static void emit_sar_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
 	__emit_shift_reg_reg(buf, src, dest, 0x07);
 }
 
-static void emit_shr_reg_reg(struct buffer *buf, union operand *src,
-			     union operand *dest)
+static void emit_shr_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
 	__emit_shift_reg_reg(buf, src, dest, 0x05);
 }
 
 static void emit_or_membase_reg(struct buffer *buf,
-				union operand *src, union operand *dest)
+				struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x0b, src, dest);
 }
@@ -473,18 +473,18 @@ static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg re
 }
 
 static void emit_add_imm_reg(struct buffer *buf,
-			     union operand *src, union operand *dest)
+			     struct operand *src, struct operand *dest)
 {
 	__emit_add_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
-static void emit_cmp_imm_reg(struct buffer *buf, union operand *src,
-			     union operand *dest)
+static void emit_cmp_imm_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
 {
 	emit_alu_imm_reg(buf, 0x07, src->imm, mach_reg(&dest->reg));
 }
 
-static void emit_cmp_membase_reg(struct buffer *buf, union operand *src, union operand *dest)
+static void emit_cmp_membase_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x3b, src, dest);
 }
@@ -557,14 +557,14 @@ static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
 	__emit_branch(buf, 0x00, 0xe9, insn);
 }
 
-static void emit_indirect_call(struct buffer *buf, union operand *operand)
+static void emit_indirect_call(struct buffer *buf, struct operand *operand)
 {
 	emit(buf, 0xff);
 	emit(buf, encode_modrm(0x0, 0x2, encode_reg(&operand->reg)));
 }
 
 static void emit_xor_membase_reg(struct buffer *buf,
-				 union operand *src, union operand *dest)
+				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x33, src, dest);
 }
@@ -625,7 +625,7 @@ static void emit_no_operands(struct emitter *emitter, struct buffer *buf)
 	emit(buf);
 }
 
-typedef void (*emit_single_operand_fn) (struct buffer *, union operand * operand);
+typedef void (*emit_single_operand_fn) (struct buffer *, struct operand * operand);
 
 static void emit_single_operand(struct emitter *emitter, struct buffer *buf, struct insn *insn)
 {
@@ -633,7 +633,7 @@ static void emit_single_operand(struct emitter *emitter, struct buffer *buf, str
 	emit(buf, &insn->operand);
 }
 
-typedef void (*emit_two_operands_fn) (struct buffer *, union operand * src, union operand * dest);
+typedef void (*emit_two_operands_fn) (struct buffer *, struct operand * src, struct operand * dest);
 
 static void emit_two_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
 {

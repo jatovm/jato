@@ -11,25 +11,36 @@
  * This is MMIX.
  */
 
+enum operand_type {
+	OPERAND_NONE,
+	OPERAND_BRANCH,
+	OPERAND_IMM,
+	OPERAND_REG,
+};
+
+struct operand {
+	enum operand_type	type;
+	union {
+		struct register_info	reg;
+		unsigned long		imm;
+		struct basic_block	*branch_target;
+	};
+};
+
 enum insn_type {
 	INSN_ADD,
 	INSN_JMP,
 	INSN_SETL,
 };
 
-union operand {
-	struct register_info	reg;
-	unsigned long		imm;
-	struct basic_block	*branch_target;
-};
-
 struct insn {
 	enum insn_type type;
         union {
+		struct operand operands[3];
                 struct {
-                        union operand x, y, z;
+                        struct operand x, y, z;
                 };
-                union operand operand;
+                struct operand operand;
         };
         struct list_head insn_list_node;
 	/* Position of this instruction in LIR.  */
