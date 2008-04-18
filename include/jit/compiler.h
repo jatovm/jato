@@ -31,6 +31,7 @@ int convert_to_ir(struct compilation_unit *);
 int analyze_liveness(struct compilation_unit *);
 int select_instructions(struct compilation_unit *cu);
 int allocate_registers(struct compilation_unit *cu);
+int insert_spill_reload_insns(struct compilation_unit *cu);
 int emit_machine_code(struct compilation_unit *);
 void *jit_magic_trampoline(struct compilation_unit *);
 

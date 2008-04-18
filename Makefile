@@ -56,6 +56,7 @@ JIT_OBJS = \
 	jit/ostack-bc.o		\
 	jit/stack-slot.o	\
 	jit/statement.o		\
+	jit/spill-reload.o	\
 	jit/trace-jit.o		\
 	jit/trampoline.o	\
 	jit/tree-printer.o	\

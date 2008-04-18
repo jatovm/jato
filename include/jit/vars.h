@@ -43,6 +43,16 @@ struct live_interval {
 
 	/* Array of instructions within this interval.  */
 	struct insn **insn_array;
+
+	/* Do we need to spill the register of this interval?  */
+	bool need_spill;
+
+	/* Do we need to reload the register of this interval?  */
+	bool need_reload;
+
+	/* The slot this interval is spilled to. Only set if ->need_spill is
+	   true.  */
+	struct stack_slot *spill_slot;
 };
 
 struct var_info {

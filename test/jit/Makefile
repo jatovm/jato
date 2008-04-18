@@ -38,6 +38,7 @@ OBJS = \
 	../../jit/ostack-bc.o \
 	../../jit/stack-slot.o \
 	../../jit/statement.o \
+	../../jit/spill-reload.o \
 	../../jit/typeconv-bc.o \
 	../../jit/tree-printer.o \
 	../libharness/libharness.o \
@@ -62,6 +63,7 @@ OBJS = \
 	object-bc-test.o \
 	ostack-bc-test.o \
 	stack-slot-test.o \
+	spill-reload-test.o \
 	tree-printer-test.o \
 	typeconv-bc-test.o \
 

@@ -65,6 +65,10 @@ int compile(struct compilation_unit *cu)
 	if (opt_trace_regalloc)
 		trace_regalloc(cu);
 
+	err = insert_spill_reload_insns(cu);
+	if (err)
+		goto out;
+
 	err = emit_machine_code(cu);
 	if (err)
 		goto out;

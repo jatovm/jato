@@ -120,6 +120,23 @@ struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
 
+/*
+ * These functions are used by generic code to insert spill/reload
+ * instructions.
+ */
+
+static inline struct insn *
+spill_insn(struct var_info *var, struct stack_slot *slot)
+{
+	return reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, var, slot);
+}
+
+static inline struct insn *
+reload_insn(struct stack_slot *slot, struct var_info *var)
+{
+	return memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, var);
+}
+
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 

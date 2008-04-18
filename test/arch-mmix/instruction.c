@@ -51,6 +51,14 @@ static void init_imm_operand(struct insn *insn, unsigned long idx, unsigned long
 	operand->imm = imm;
 }
 
+static void init_local_operand(struct insn *insn, unsigned long idx, struct stack_slot *slot)
+{
+	struct operand *operand = &insn->operands[idx];
+
+	operand->type = OPERAND_LOCAL;
+	operand->slot = slot;
+}
+
 static void init_reg_operand(struct insn *insn, unsigned long idx, struct var_info *reg)
 {
 	struct operand *operand = &insn->operands[idx];
@@ -88,6 +96,28 @@ struct insn *branch_insn(enum insn_type insn_type, struct basic_block *if_true)
 	if (insn) {
 		init_branch_operand(insn, 0, if_true);
 		init_none_operand(insn, 1);
+		init_none_operand(insn, 2);
+	}
+	return insn;
+}
+
+struct insn *st_insn(enum insn_type insn_type, struct var_info *var, struct stack_slot *slot)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_reg_operand(insn, 0, var);
+		init_local_operand(insn, 1, slot);
+		init_none_operand(insn, 2);
+	}
+	return insn;
+}
+
+struct insn *ld_insn(enum insn_type insn_type, struct stack_slot *slot, struct var_info *var)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_reg_operand(insn, 0, var);
+		init_local_operand(insn, 1, slot);
 		init_none_operand(insn, 2);
 	}
 	return insn;
