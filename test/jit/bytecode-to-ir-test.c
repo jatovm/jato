@@ -49,8 +49,6 @@ void test_convert_nop(void)
 
 /* MISSING: newarray */
 
-/* MISSING: anewarray */
-
 /* MISSING: arraylength */
 
 /* MISSING: athrow */

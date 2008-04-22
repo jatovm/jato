@@ -590,6 +590,28 @@ static int print_newarray_expr(int lvl, struct string *str, struct expression *e
 	return err;
 }
 
+static int print_anewarray_expr(int lvl, struct string *str, struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "ANEWARRAY:\n");
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "anewarray_size", expr->anewarray_size);
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "anewarray_ref_type", "%p", expr->anewarray_ref_type);
+
+      out:
+	return err;
+}
+
 typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
@@ -611,6 +633,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_NO_ARGS] = print_no_args_expr,
 	[EXPR_NEW] = print_new_expr,
 	[EXPR_NEWARRAY] = print_newarray_expr,
+	[EXPR_ANEWARRAY] = print_anewarray_expr,
 };
 
 static int print_expr(int lvl, struct tree_node *root, struct string *str)

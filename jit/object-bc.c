@@ -341,6 +341,29 @@ int convert_newarray(struct parse_context *ctx)
 	return 0;
 }
 
+int convert_anewarray(struct parse_context *ctx)
+{
+	struct expression *size,*arrayref;
+	unsigned long type_idx;
+	struct object *class;
+
+	size = stack_pop(ctx->cu->expr_stack);
+	type_idx = read_u16(ctx->insn_start + 1);
+
+	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+
+	if (!class)
+		return -EINVAL;
+
+	arrayref = anewarray_expr(class,size);
+	if (!arrayref)
+		return -ENOMEM;
+
+	stack_push(ctx->cu->expr_stack,arrayref);
+
+	return 0;
+}
+
 int convert_checkcast(struct parse_context *ctx)
 {
 	/* TODO */

@@ -28,6 +28,7 @@ enum expression_type {
 	EXPR_NO_ARGS,
 	EXPR_NEW,
 	EXPR_NEWARRAY,
+	EXPR_ANEWARRAY,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -190,6 +191,13 @@ struct expression {
 			struct tree_node *array_size;
 			unsigned long array_type;	/* T_INT, T_LONG, etc. */
 		};
+
+		/*  EXPR_ANEWARRAY represents creation of a new array of given
+		   reference.  */
+		struct {
+		        struct tree_node *anewarray_size;
+			struct object *anewarray_ref_type;
+		};
 	};
 };
 
@@ -237,6 +245,7 @@ struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
 struct expression *new_expr(struct object *);
 struct expression *newarray_expr(unsigned long, struct expression *);
+struct expression *anewarray_expr(struct object *, struct expression *);
 
 unsigned long nr_args(struct expression *);
 

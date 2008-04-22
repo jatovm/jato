@@ -221,6 +221,7 @@ static convert_fn_t converters[] = {
 	[OPC_CHECKCAST] = convert_checkcast,
 	[OPC_IFNULL] = convert_ifnull,
 	[OPC_IFNONNULL] = convert_ifnonnull,
+	[OPC_ANEWARRAY] = convert_anewarray,
 };
 
 static int parse_bytecode_insn(struct parse_context *ctx)

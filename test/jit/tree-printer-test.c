@@ -513,3 +513,12 @@ void test_print_newarray_expression(void)
 			  "  array_type: [10]\n",
 			  newarray_expr(T_INT, value_expr(J_INT, 0xff)));
 }
+
+void test_print_anewarray_expression(void)
+{
+	assert_print_expr("ANEWARRAY:\n"
+			  "  vm_type: [reference]\n"
+			  "  anewarray_size: [value int 0xff]\n"
+			  "  anewarray_ref_type: [0x55]\n",
+			  anewarray_expr((void *) 0x55, value_expr(J_INT, 0xff)));
+}

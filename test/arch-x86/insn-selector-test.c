@@ -1086,3 +1086,46 @@ void test_select_newarray(void)
 
 	free_compilation_unit(cu);
 }
+
+void test_select_anewarray(void)
+{
+	struct object *instance_class;
+	struct compilation_unit *cu;
+	struct expression *expr,*size;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
+
+	instance_class = new_class();
+	size = value_expr(J_INT,0xFF);
+
+	expr = anewarray_expr(instance_class,size);
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &expr->node;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xff, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_insn(INSN_PUSH_IMM, sizeof(instance_class), insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_insn(INSN_PUSH_REG, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_insn(INSN_PUSH_IMM,(unsigned long) instance_class, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocArray, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 12, REG_ESP, insn);
+
+	free_compilation_unit(cu);
+}

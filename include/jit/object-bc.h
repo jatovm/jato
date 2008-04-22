@@ -23,4 +23,5 @@ DECLARE_CONVERTER(convert_sastore)
 
 DECLARE_CONVERTER(convert_new)
 DECLARE_CONVERTER(convert_newarray)
+DECLARE_CONVERTER(convert_anewarray)
 DECLARE_CONVERTER(convert_checkcast)

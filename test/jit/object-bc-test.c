@@ -430,6 +430,46 @@ void test_convert_new(void)
 	assert_convert_new(0xcafe, 0xca, 0xfe);
 }
 
+void assert_convert_anewarray(unsigned long expected_type_idx,
+			unsigned char idx_1,unsigned char idx_2)
+{
+
+	struct object *instance_class = new_class();
+	unsigned char code[] = { OPC_ANEWARRAY, idx_1, idx_2 };
+	struct compilation_unit *cu;
+	struct expression *size,*arrayref;
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+
+	cu = alloc_simple_compilation_unit(&method);
+	size = value_expr(J_INT, 0xff);
+	stack_push(cu->expr_stack, size);
+
+	convert_ir_const_single(cu, instance_class);
+
+	arrayref = stack_pop(cu->expr_stack);
+
+	instance_class = resolveClass(cu->method->class, expected_type_idx,FALSE);
+
+	assert_int_equals(EXPR_ANEWARRAY, expr_type(arrayref));
+	assert_int_equals(J_REFERENCE, arrayref->vm_type);
+	assert_ptr_equals(size, to_expr(arrayref->anewarray_size));
+	assert_ptr_equals(instance_class, arrayref->anewarray_ref_type);
+
+	expr_put(arrayref);
+	free_compilation_unit(cu);
+}
+
+void test_convert_anewarray(void)
+{
+	unsigned char type_idx_1,type_idx_2;
+	type_idx_1 = 0;
+	type_idx_2 = 0x55;
+	assert_convert_anewarray((type_idx_1<<8) | type_idx_2, type_idx_1, type_idx_2);
+}
+
 void test_convert_newarray(void)
 {
 	unsigned char code[] = { OPC_NEWARRAY, T_INT };
