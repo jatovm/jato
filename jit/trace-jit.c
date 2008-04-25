@@ -87,18 +87,20 @@ void trace_liveness(struct compilation_unit *cu)
 	printf("\n");
 
 	for_each_variable(var, cu->var_infos) {
+		struct live_range *range = &var->interval->range;
+
 		printf("  %2lu: ", var->vreg);
 
 		offset = 0;
 		for_each_basic_block(bb, &cu->bb_list) {
 			for_each_insn(insn, &bb->insn_list) {
-				if (in_range(&var->interval->range, offset++))
+				if (in_range(range, offset++))
 					printf("***");
 				else
 					printf("   ");
 			}
 		}
-		printf("\n");
+		printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
 	}
 	printf("\n");
 }
