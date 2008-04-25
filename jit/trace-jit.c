@@ -100,7 +100,10 @@ void trace_liveness(struct compilation_unit *cu)
 					printf("   ");
 			}
 		}
-		printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
+		if (!range_is_empty(range))
+			printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
+		else
+			printf(" (empty)\n");
 	}
 	printf("\n");
 }

@@ -19,6 +19,11 @@ static inline unsigned long range_len(struct live_range *range)
 	return range->end - range->start;
 }
 
+static inline bool range_is_empty(struct live_range *range)
+{
+	return range->start == ~0UL && range->end == 0;
+}
+
 struct var_info;
 struct insn;
 

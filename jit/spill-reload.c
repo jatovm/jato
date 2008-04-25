@@ -92,6 +92,9 @@ int insert_spill_reload_insns(struct compilation_unit *cu)
 	for_each_variable(var, cu->var_infos) {
 		struct live_interval *interval = var->interval;
 
+		if (range_is_empty(&interval->range))
+			continue;
+
 		if (interval->need_reload) {
 			err = insert_reload_insn(interval, cu->stack_frame);
 			if (err)
