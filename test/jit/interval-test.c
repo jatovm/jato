@@ -18,7 +18,7 @@ void test_split_interval_at(void)
 
 	for (i = 0; i < ARRAY_SIZE(insns); i++) {
 		insns[i].lir_pos = i;
-		assoc_var_to_operand(&var, &insns[i], x.reg);
+		__assoc_var_to_operand(&var, &insns[i], &insns[i].x.reg);
 		var.interval->insn_array[i] = &insns[i];
 	}
 	var.interval->range.start = 0;

@@ -84,14 +84,6 @@ static inline void __assoc_var_to_operand(struct var_info *var,
 	list_add(&reg_info->reg_list, &var->interval->registers);
 }
 
-#define assoc_var_to_operand(_var, _insn, _operand) \
-		__assoc_var_to_operand(_var, _insn, &((_insn)->_operand));
-	
-static inline void var_associate_reg(struct register_info *reg, struct var_info *var)
-{
-	reg->interval = var->interval;
-}
-
 static inline enum machine_reg mach_reg(struct register_info *reg)
 {
 	return reg->interval->reg;
