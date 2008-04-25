@@ -47,6 +47,9 @@ struct live_interval *alloc_interval(struct var_info *var)
 
 void free_interval(struct live_interval *interval)
 {
+	if (interval->next_child)
+		free_interval(interval->next_child);
+
 	free(interval->insn_array);
 	free(interval);
 }
@@ -96,5 +99,8 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 		free_interval(new);
 		return NULL;
 	}
+	new->next_child = interval->next_child;
+	interval->next_child = new;
+
 	return new;
 }
