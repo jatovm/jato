@@ -17,9 +17,12 @@ void test_split_interval_at(void)
 	var.interval->insn_array = calloc(ARRAY_SIZE(insns), sizeof(struct insn *));
 
 	for (i = 0; i < ARRAY_SIZE(insns); i++) {
-		insns[i].lir_pos = i;
-		__assoc_var_to_operand(&var, &insns[i], &insns[i].x.reg);
-		var.interval->insn_array[i] = &insns[i];
+		struct insn *insn = &insns[i];
+
+		insn->lir_pos = i;
+		register_set_insn(&insn->x.reg, insn);
+		insert_register_to_interval(var.interval, &insn->x.reg);
+		var.interval->insn_array[i] = insn;
 	}
 	var.interval->range.start = 0;
 	var.interval->range.end = ARRAY_SIZE(insns);

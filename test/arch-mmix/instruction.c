@@ -64,7 +64,7 @@ static void init_reg_operand(struct insn *insn, unsigned long idx, struct var_in
 	struct operand *operand = &insn->operands[idx];
 
 	operand->type = OPERAND_REG;
-	__assoc_var_to_operand(reg, insn, &operand->reg);
+	init_register(&operand->reg, insn, reg->interval);
 }
 
 struct insn *imm_insn(enum insn_type insn_type, unsigned long imm, struct var_info *result)

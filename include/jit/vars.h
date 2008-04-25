@@ -37,7 +37,7 @@ struct live_interval {
 	/* Machine register of this interval.  */
 	enum machine_reg reg;
 
-	/* List of use positions of this interval.  */
+	/* List of register use positions in this interval.  */
 	struct list_head registers;
 
 	/* Member of list of intervals during linear scan.  */
@@ -68,20 +68,43 @@ struct var_info {
 
 struct insn;
 
+/**
+ * struct register_info - register use position
+ *
+ * Each instruction can operate on multiple registers. That is, every
+ * instruction can have zero or more operands and each operand can use zero or
+ * more registers depending on the addressing mode.
+ *
+ * This struct is used by code emission to look up the actual assigned machine
+ * register of an operand register or base register and an optional index
+ * register. We keep struct register_infos in a list in an interval so that we
+ * know which operands moved to another interval when an interval is split.
+ */
 struct register_info {
 	struct insn		*insn;
 	struct live_interval	*interval;
 	struct list_head	reg_list;
 };
 
-static inline void __assoc_var_to_operand(struct var_info *var,
-					  struct insn *insn,
-					  struct register_info *reg_info)
+static inline void register_set_insn(struct register_info *reg, struct insn *insn)
 {
-	reg_info->insn = insn;
-	reg_info->interval = var->interval;
-	INIT_LIST_HEAD(&reg_info->reg_list);
-	list_add(&reg_info->reg_list, &var->interval->registers);
+	reg->insn = insn;
+}
+
+static inline void insert_register_to_interval(struct live_interval *interval,
+					       struct register_info *reg)
+{
+	INIT_LIST_HEAD(&reg->reg_list);
+	list_add(&reg->reg_list, &interval->registers);
+
+	reg->interval = interval;
+}
+
+static inline void init_register(struct register_info *reg, struct insn *insn,
+				 struct live_interval *interval)
+{
+	register_set_insn(reg, insn);
+	insert_register_to_interval(interval, reg);
 }
 
 static inline enum machine_reg mach_reg(struct register_info *reg)

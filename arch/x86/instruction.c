@@ -69,7 +69,7 @@ void free_insn(struct insn *insn)
 
 	free(insn);
 }
-	
+
 static void init_none_operand(struct insn *insn, unsigned long idx)
 {
 	struct operand *operand = &insn->operands[idx];
@@ -98,30 +98,35 @@ static void init_imm_operand(struct insn *insn, unsigned long idx,
 static void init_membase_operand(struct insn *insn, unsigned long idx,
 				 struct var_info *base_reg, unsigned long disp)
 {
-	struct operand *operand = &insn->operands[idx];
+	struct operand *operand;
 
+	operand = &insn->operands[idx];
 	operand->type = OPERAND_MEMBASE;
-	__assoc_var_to_operand(base_reg, insn, &operand->base_reg);
 	operand->disp = disp;
+
+	init_register(&operand->base_reg, insn, base_reg->interval);
 }
 
 static void init_memindex_operand(struct insn *insn, unsigned long idx,
 				  struct var_info *base_reg,
 				  struct var_info *index_reg, unsigned long shift)
 {
-	struct operand *operand = &insn->operands[idx];
+	struct operand *operand;
 
+	operand = &insn->operands[idx];
 	operand->type = OPERAND_MEMINDEX;
-	__assoc_var_to_operand(base_reg, insn, &operand->base_reg);
-	__assoc_var_to_operand(index_reg, insn, &operand->index_reg);
 	operand->shift = shift;
+
+	init_register(&operand->base_reg, insn, base_reg->interval);
+	init_register(&operand->index_reg, insn, index_reg->interval);
 }
 
 static void init_memlocal_operand(struct insn *insn, unsigned long idx,
 				  struct stack_slot *slot)
 {
-	struct operand *operand = &insn->operands[idx];
+	struct operand *operand;
 
+	operand = &insn->operands[idx];
 	operand->type = OPERAND_MEMLOCAL;
 	operand->slot = slot;
 }
@@ -129,10 +134,12 @@ static void init_memlocal_operand(struct insn *insn, unsigned long idx,
 static void init_reg_operand(struct insn *insn, unsigned long idx,
 			     struct var_info *reg)
 {
-	struct operand *operand = &insn->operands[idx];
+	struct operand *operand;
 
+	operand = &insn->operands[idx];
 	operand->type = OPERAND_REG;
-	__assoc_var_to_operand(reg, insn, &operand->reg);
+
+	init_register(&operand->reg, insn, reg->interval);
 }
 
 static void init_rel_operand(struct insn *insn, unsigned long idx,
