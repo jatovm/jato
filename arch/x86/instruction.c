@@ -56,10 +56,10 @@ static bool operand_uses_index_reg(struct operand *operand)
 static void release_operand(struct operand *operand)
 {
 	if (operand_uses_reg(operand))
-		list_del(&operand->reg.reg_list);
+		list_del(&operand->reg.use_pos_list);
 
 	if (operand_uses_index_reg(operand))
-		list_del(&operand->index_reg.reg_list);
+		list_del(&operand->index_reg.use_pos_list);
 }
 
 void free_insn(struct insn *insn)

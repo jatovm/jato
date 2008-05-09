@@ -1,9 +1,9 @@
 #ifndef __JIT_INSTRUCTION_H
 #define __JIT_INSTRUCTION_H
 
+#include <jit/use-position.h>
 #include <arch/registers.h>
 #include <arch/stack-frame.h>
-#include <jit/vars.h>
 #include <vm/list.h>
 
 #include <assert.h>
@@ -27,18 +27,18 @@ enum operand_type {
 struct operand {
 	enum operand_type type;
 	union {
-		struct register_info reg;
+		struct use_position reg;
 
 		struct {
-			struct register_info base_reg;
+			struct use_position base_reg;
 			long disp;	/* displacement */
 		};
 
 		struct stack_slot *slot; /* EBP + displacement */
 
 		struct {
-			struct register_info base_reg;
-			struct register_info index_reg;
+			struct use_position base_reg;
+			struct use_position index_reg;
 			unsigned char shift;
 		};
 
@@ -105,6 +105,11 @@ struct insn {
 	unsigned long lir_pos;
 	bool escaped;
 };
+
+static inline unsigned long lir_position(struct use_position *reg)
+{
+	return reg->insn->lir_pos;
+}
 
 struct insn *insn(enum insn_type);
 struct insn *memlocal_reg_insn(enum insn_type, struct stack_slot *, struct var_info *);

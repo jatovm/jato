@@ -3,6 +3,7 @@
 
 #include <arch/registers.h>
 #include <jit/basic-block.h>
+#include <jit/use-position.h>
 #include <jit/vars.h>
 
 #include <stdbool.h>
@@ -26,7 +27,7 @@ enum operand_type {
 struct operand {
 	enum operand_type	type;
 	union {
-		struct register_info	reg;
+		struct use_position	reg;
 		unsigned long		imm;
 		struct stack_slot	*slot; /* frame pointer + displacement */
 		struct basic_block	*branch_target;
@@ -54,6 +55,11 @@ struct insn {
 	/* Position of this instruction in LIR.  */
 	unsigned long		lir_pos;
 };
+
+static inline unsigned long lir_position(struct use_position *reg)
+{
+	return reg->insn->lir_pos;
+}
 
 struct insn *arithmetic_insn(enum insn_type, struct var_info *, struct var_info *, struct var_info *);
 struct insn *imm_insn(enum insn_type, unsigned long, struct var_info *);

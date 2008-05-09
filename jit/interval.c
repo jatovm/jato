@@ -40,7 +40,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 		interval->range.end = 0UL;
 		INIT_LIST_HEAD(&interval->interval);
 		INIT_LIST_HEAD(&interval->active);
-		INIT_LIST_HEAD(&interval->registers);
+		INIT_LIST_HEAD(&interval->use_positions);
 	}
 	return interval;
 }
@@ -74,7 +74,7 @@ static int split_insn_array(struct live_interval *src, struct live_interval *dst
 struct live_interval *split_interval_at(struct live_interval *interval,
 					unsigned long pos)
 {
-	struct register_info *this, *next;
+	struct use_position *this, *next;
 	struct live_interval *new;
 	int err;
 
@@ -87,11 +87,11 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 	new->range.end = interval->range.end;
 	interval->range.end = pos;
 
-	list_for_each_entry_safe(this, next, &interval->registers, reg_list) {
-		if (this->insn->lir_pos < pos)
+	list_for_each_entry_safe(this, next, &interval->use_positions, use_pos_list) {
+		if (lir_position(this) < pos)
 			continue;
 
-		list_move(&this->reg_list, &new->registers);
+		list_move(&this->use_pos_list, &new->use_positions);
 		this->interval = new;
 	}
 	err = split_insn_array(interval, new);

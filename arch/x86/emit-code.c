@@ -57,7 +57,7 @@ static unsigned char __encode_reg(enum machine_reg reg)
 	return ret;
 }
 
-static unsigned char encode_reg(struct register_info *reg)
+static unsigned char encode_reg(struct use_position *reg)
 {
 	return __encode_reg(mach_reg(reg));
 }
