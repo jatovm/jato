@@ -21,10 +21,10 @@
 #define BRANCH_INSN_SIZE 3
 
 /* Where we are branching at.  */
-#define BRANCH_OFFSET 1
+#define BRANCH_OFFSET 0
 
 /* Target offset stored in the branch instruction  */
-#define BRANCH_TARGET 5
+#define BRANCH_TARGET 4
 
 /* The absolute offset we are branching to  */
 #define TARGET_OFFSET BRANCH_OFFSET + BRANCH_TARGET
@@ -33,10 +33,10 @@ static void assert_convert_if(enum binary_operator expected_operator,
 			      unsigned char opc)
 {
 	struct basic_block *branch_bb, *bb, *target_bb;
-	struct statement *nop_stmt, *if_stmt;
+	struct statement *if_stmt;
 	struct expression *if_value;
 	struct compilation_unit *cu;
-	unsigned char code[] = { OPC_NOP, opc, 0, BRANCH_TARGET, OPC_NOP, OPC_NOP };
+	unsigned char code[] = { opc, 0, BRANCH_TARGET, OPC_NOP, OPC_NOP };
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
@@ -58,10 +58,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	convert_to_ir(cu);
 	assert_true(stack_is_empty(cu->expr_stack));
 
-	nop_stmt = stmt_entry(branch_bb->stmt_list.next);
-	assert_int_equals(STMT_NOP, stmt_type(nop_stmt));
-
-	if_stmt = stmt_entry(nop_stmt->stmt_list_node.next);
+	if_stmt = stmt_entry(branch_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
 	assert_ptr_equals(target_bb, if_stmt->if_true);
 	__assert_binop_expr(J_INT, expected_operator, if_stmt->if_conditional);
