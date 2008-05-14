@@ -28,12 +28,6 @@ static void assert_print_stmt(const char *expected, struct statement *stmt)
 	free_statement(stmt);
 }
 
-void test_should_print_nop_statement(void)
-{
-	struct statement *stmt = alloc_statement(STMT_NOP);
-	assert_print_stmt("NOP\n", stmt);
-}
-
 void test_should_print_store_statement(void)
 {
 	struct expression *dest, *src;

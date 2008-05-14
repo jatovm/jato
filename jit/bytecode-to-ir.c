@@ -22,13 +22,7 @@
 
 static int convert_nop(struct parse_context *ctx)
 {
-	struct statement *stmt;
-
-	stmt = alloc_statement(STMT_NOP);
-	if (!stmt)
-		return -ENOMEM;
-
-	bb_add_stmt(ctx->bb, stmt);
+	/* Do nothing. */
 	return 0;
 }
 

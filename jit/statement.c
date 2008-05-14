@@ -30,9 +30,6 @@ void free_statement(struct statement *stmt)
 		return;
 
 	switch (stmt_type(stmt)) {
-	case STMT_NOP:
-		/* nothing to do */
-		break;
 	case STMT_STORE:
 		expr_put(to_expr(stmt->store_dest));
 		expr_put(to_expr(stmt->store_src));

@@ -56,12 +56,12 @@ enum binary_operator {
 	OP_GE,
 	OP_GT,
 	OP_LE,
-
-	OP_LAST,	/* Not a real operator. Keep this last. */
+	BINOP_LAST,	/* Not a real operator. Keep this last. */
 };
 
 enum unary_operator {
-	OP_NEG	= OP_LAST,
+	OP_NEG	= BINOP_LAST,
+	OP_LAST,	/* Not a real operator. Keep this last. */
 };
 
 struct expression {

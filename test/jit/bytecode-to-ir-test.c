@@ -26,8 +26,6 @@ void test_convert_nop(void)
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_to_ir(cu);
-	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_int_equals(STMT_NOP, stmt_type(stmt));
 	assert_true(stack_is_empty(cu->expr_stack));
 
 	free_compilation_unit(cu);

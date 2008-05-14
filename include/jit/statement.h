@@ -7,8 +7,7 @@
 #include <vm/vm.h>
 
 enum statement_type {
-	STMT_NOP = OP_LAST,
-	STMT_STORE,
+	STMT_STORE = OP_LAST,
 	STMT_IF,
 	STMT_GOTO,
 	STMT_RETURN,
@@ -23,7 +22,7 @@ struct statement {
 	union {
 		struct tree_node node;
 
-		/* STMT_NOP and STMT_VOID_RETURN have no fields.  */
+		/* STMT_VOID_RETURN has no members in this struct.  */
 		
 		struct /* STMT_STORE */ {
 			struct tree_node *store_dest;

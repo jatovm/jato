@@ -120,11 +120,6 @@ static int append_tree_attr(int lvl, struct string *str, const char *attr_name,
 	return err;
 }
 
-static int print_nop_stmt(int lvl, struct string *str, struct statement *stmt)
-{
-	return append_formatted(lvl, str, "NOP\n");
-}
-
 static int print_store_stmt(int lvl, struct string *str, struct statement *stmt)
 {
 	int err;
@@ -236,7 +231,6 @@ static int print_array_check_stmt(int lvl, struct string *str,
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
-	[STMT_NOP] = print_nop_stmt,
 	[STMT_STORE] = print_store_stmt,
 	[STMT_IF] = print_if_stmt,
 	[STMT_GOTO] = print_goto_stmt,
