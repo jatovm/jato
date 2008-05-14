@@ -10,6 +10,14 @@ package jamvm;
  * @author Pekka Enberg
  */
 public class LoadConstantsTest extends TestCase {
+    public static void testAconstNull() {
+        assertNull(aconst_null());
+    }
+
+    public static Object aconst_null() {
+        return null;
+    }
+
     public static void testIconst() {
         assertEquals(-1, iconst_m1());
         assertEquals( 0, iconst_0());
@@ -49,6 +57,7 @@ public class LoadConstantsTest extends TestCase {
     }
 
     public static void main(String[] args) {
+        testAconstNull();
         testIconst();
 
         Runtime.getRuntime().halt(retval);
