@@ -21,7 +21,6 @@ void test_convert_nop(void)
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
-	struct statement *stmt;
 
 	cu = alloc_simple_compilation_unit(&method);
 
