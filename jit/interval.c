@@ -38,8 +38,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 		interval->reg = REG_UNASSIGNED;
 		interval->range.start = ~0UL;
 		interval->range.end = 0UL;
-		INIT_LIST_HEAD(&interval->interval);
-		INIT_LIST_HEAD(&interval->active);
+		INIT_LIST_HEAD(&interval->interval_node);
 		INIT_LIST_HEAD(&interval->use_positions);
 	}
 	return interval;

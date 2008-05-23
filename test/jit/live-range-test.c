@@ -50,3 +50,21 @@ void test_in_range_treats_end_as_exclusive(void)
 	assert_true(in_range(&range, 1));
 	assert_false(in_range(&range, 2));
 }
+
+void test_ranges_that_intersect(void)
+{
+	struct live_range range1 = { .start = 0, .end = 2 };
+	struct live_range range2 = { .start = 1, .end = 3 };
+
+	assert_true(ranges_intersect(&range1, &range2));
+	assert_true(ranges_intersect(&range2, &range1));
+}
+
+void test_ranges_that_do_not_intersect(void)
+{
+	struct live_range range1 = { .start = 0, .end = 2 };
+	struct live_range range2 = { .start = 2, .end = 4 };
+
+	assert_false(ranges_intersect(&range1, &range2));
+	assert_false(ranges_intersect(&range2, &range1));
+}

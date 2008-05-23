@@ -14,6 +14,11 @@ static inline bool in_range(struct live_range *range, unsigned long offset)
 	return (offset >= range->start) && (offset < range->end);
 }
 
+static inline bool ranges_intersect(struct live_range *range1, struct live_range *range2)
+{
+	return range2->start < range1->end && range1->start < range2->end;
+}
+
 static inline unsigned long range_len(struct live_range *range)
 {
 	return range->end - range->start;
@@ -42,11 +47,9 @@ struct live_interval {
 	/* List of register use positions in this interval.  */
 	struct list_head use_positions;
 
-	/* Member of list of intervals during linear scan.  */
-	struct list_head interval;
-
-	/* Member of list of active intervals during linear scan.  */
-	struct list_head active;
+	/* Member of list of unhandled, active, or inactive intervals during
+	   linear scan.  */
+	struct list_head interval_node;
 
 	/* Array of instructions within this interval.  */
 	struct insn **insn_array;
