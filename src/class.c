@@ -35,7 +35,7 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 		goto out;
 
 	uint16_t constant_pool_i;
-	for (uint16_t i = 0; i < c->constant_pool_count; ++i) {
+	for (uint16_t i = 1; i < c->constant_pool_count; ++i) {
 		if (cafebabe_constant_pool_init(&c->constant_pool[i], s)) {
 			constant_pool_i = i;
 			goto out_constant_pool_init;
@@ -132,7 +132,7 @@ out_fields_init:
 out_interfaces_alloc:
 	free(c->interfaces);
 out_constant_pool_init:
-	for (uint16_t i = 0; i < constant_pool_i; ++i)
+	for (uint16_t i = 1; i < constant_pool_i; ++i)
 		cafebabe_constant_pool_deinit(&c->constant_pool[i]);
 	free(c->constant_pool);
 out:
@@ -142,7 +142,7 @@ out:
 void
 cafebabe_class_deinit(struct cafebabe_class *c)
 {
-	for (uint16_t i = 0; i < c->constant_pool_count; ++i)
+	for (uint16_t i = 1; i < c->constant_pool_count; ++i)
 		cafebabe_constant_pool_deinit(&c->constant_pool[i]);
 	free(c->constant_pool);
 
