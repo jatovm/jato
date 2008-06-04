@@ -1,6 +1,8 @@
 #include "cafebabe/error.h"
 
 static const char *messages[] = {
+	[CAFEBABE_ERROR_EXPECTED_EOF]
+		= "Expected end-of-file",
 	[CAFEBABE_ERROR_UNEXPECTED_EOF]
 		= "Unexpected end-of-file",
 	[CAFEBABE_ERROR_BAD_MAGIC_NUMBER]

@@ -113,6 +113,11 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	}
 	attributes_i = c->attributes_count;
 
+	if (!cafebabe_stream_eof(s)) {
+		s->cafebabe_errno = CAFEBABE_ERROR_EXPECTED_EOF;
+		goto out_attributes_init;
+	}
+
 	/* Success */
 	return 0;
 

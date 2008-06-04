@@ -27,6 +27,7 @@ int cafebabe_stream_open(struct cafebabe_stream *s, const char *filename);
 void cafebabe_stream_close(struct cafebabe_stream *s);
 
 const char *cafebabe_stream_error(struct cafebabe_stream *s);
+int cafebabe_stream_eof(struct cafebabe_stream *s);
 
 int cafebabe_stream_read_uint8(struct cafebabe_stream *s, uint8_t *r);
 int cafebabe_stream_read_uint16(struct cafebabe_stream *s, uint16_t *r);

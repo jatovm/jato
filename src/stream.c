@@ -100,6 +100,12 @@ cafebabe_stream_error(struct cafebabe_stream *s)
 }
 
 int
+cafebabe_stream_eof(struct cafebabe_stream *s)
+{
+	return s->virtual_i == s->virtual_n;
+}
+
+int
 cafebabe_stream_read_uint8(struct cafebabe_stream *s, uint8_t *r)
 {
 	uint8_t *v = s->virtual;
