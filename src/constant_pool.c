@@ -32,6 +32,12 @@ out:
 	return 1;
 }
 
+static void
+cafebabe_constant_info_utf8_deinit(struct cafebabe_constant_info_utf8 *utf8)
+{
+	free(utf8->bytes);
+}
+
 static int
 cafebabe_constant_info_class_init(struct cafebabe_constant_info_class *c,
 	struct cafebabe_stream *s)
@@ -40,6 +46,11 @@ cafebabe_constant_info_class_init(struct cafebabe_constant_info_class *c,
 		return 1;
 
 	return 0;
+}
+
+static void
+cafebabe_constant_info_class_deinit(struct cafebabe_constant_info_class *c)
+{
 }
 
 static int
@@ -56,6 +67,12 @@ cafebabe_constant_info_field_ref_init(
 	return 0;
 }
 
+static void
+cafebabe_constant_info_field_ref_deinit(
+	struct cafebabe_constant_info_field_ref *r)
+{
+}
+
 static int
 cafebabe_constant_info_method_ref_init(
 	struct cafebabe_constant_info_method_ref *mr,
@@ -70,6 +87,12 @@ cafebabe_constant_info_method_ref_init(
 	return 0;
 }
 
+static void
+cafebabe_constant_info_method_ref_deinit(struct
+	cafebabe_constant_info_method_ref *r)
+{
+}
+
 static int
 cafebabe_constant_info_name_and_type_init(
 	struct cafebabe_constant_info_name_and_type *nat,
@@ -82,6 +105,12 @@ cafebabe_constant_info_name_and_type_init(
 		return 1;
 
 	return 0;
+}
+
+static void
+cafebabe_constant_info_name_and_type_deinit(
+	struct cafebabe_constant_info_name_and_type *nat)
+{
 }
 
 int
@@ -196,4 +225,39 @@ out:
 void
 cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp)
 {
+	switch (cp->tag) {
+	case CAFEBABE_CONSTANT_TAG_UTF8:
+		cafebabe_constant_info_utf8_deinit(cp->info.utf8);
+		free(cp->info.utf8);
+		break;
+	case CAFEBABE_CONSTANT_TAG_INTEGER:
+		break;
+	case CAFEBABE_CONSTANT_TAG_FLOAT:
+		break;
+	case CAFEBABE_CONSTANT_TAG_LONG:
+		break;
+	case CAFEBABE_CONSTANT_TAG_DOUBLE:
+		break;
+	case CAFEBABE_CONSTANT_TAG_CLASS:
+		cafebabe_constant_info_class_deinit(cp->info.class);
+		free(cp->info.class);
+		break;
+	case CAFEBABE_CONSTANT_TAG_STRING:
+		break;
+	case CAFEBABE_CONSTANT_TAG_FIELD_REF:
+		cafebabe_constant_info_field_ref_deinit(cp->info.field_ref);
+		free(cp->info.field_ref);
+		break;
+	case CAFEBABE_CONSTANT_TAG_METHOD_REF:
+		cafebabe_constant_info_method_ref_deinit(cp->info.method_ref);
+		free(cp->info.method_ref);
+		break;
+	case CAFEBABE_CONSTANT_TAG_INTERFACE_METHOD_REF:
+		break;
+	case CAFEBABE_CONSTANT_TAG_NAME_AND_TYPE:
+		cafebabe_constant_info_name_and_type_deinit(
+			cp->info.name_and_type);
+		free(cp->info.name_and_type);
+		break;
+	}
 }

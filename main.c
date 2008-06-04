@@ -19,7 +19,7 @@ main(int argc, char *argv[])
 	if (cafebabe_stream_open(&stream, filename)) {
 		fprintf(stderr, "error: %s: %s\n", filename,
 			cafebabe_stream_error(&stream));
-		exit(EXIT_FAILURE);
+		goto out;
 	}
 
 	struct cafebabe_class class;
@@ -27,11 +27,16 @@ main(int argc, char *argv[])
 		fprintf(stderr, "error: %s:%d/%d: %s\n", filename,
 			stream.virtual_i, stream.virtual_n,
 			cafebabe_stream_error(&stream));
-		exit(EXIT_FAILURE);
+		goto out_stream;
 	}
 
 	cafebabe_class_deinit(&class);
 	cafebabe_stream_close(&stream);
 
 	return EXIT_SUCCESS;
+
+out_stream:
+	cafebabe_stream_close(&stream);
+out:
+	return EXIT_FAILURE;
 }
