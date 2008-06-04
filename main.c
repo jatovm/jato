@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "cafebabe/access.h"
 #include "cafebabe/class.h"
 #include "cafebabe/constant_pool.h"
 #include "cafebabe/error.h"
@@ -111,6 +112,20 @@ main(int argc, char *argv[])
 	}
 
 	printf("super_class: %.*s\n",
+		super_class_name->length, super_class_name->bytes);
+
+	/* Try to output the class declaration */
+	printf("declaration: ");
+	if (class.access_flags & CAFEBABE_ACCESS_PUBLIC)
+		printf("public ");
+	if (class.access_flags & CAFEBABE_ACCESS_FINAL)
+		printf("final ");
+	if (class.access_flags & CAFEBABE_ACCESS_ABSTRACT)
+		printf("abstract ");
+	printf("%s ", class.access_flags & CAFEBABE_ACCESS_INTERFACE
+		? "interface" : "class");
+	printf("%.*s ", this_class_name->length, this_class_name->bytes);
+	printf("extends %.*s\n",
 		super_class_name->length, super_class_name->bytes);
 
 	cafebabe_class_deinit(&class);
