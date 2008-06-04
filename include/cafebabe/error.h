@@ -10,6 +10,7 @@ enum cafebabe_errno {
 	/* Cafebabe-generated errors */
 	CAFEBABE_ERROR_UNEXPECTED_EOF,
 	CAFEBABE_ERROR_BAD_MAGIC_NUMBER,
+	CAFEBABE_ERROR_BAD_CONSTANT_TAG,
 };
 
 const char *cafebabe_strerror(enum cafebabe_errno e);

@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "cafebabe/error.h"
+
 struct cafebabe_stream {
 	char *filename;
 	int fd;

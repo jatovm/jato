@@ -5,6 +5,8 @@ static const char *messages[] = {
 		= "Unexpected end-of-file",
 	[CAFEBABE_ERROR_BAD_MAGIC_NUMBER]
 		= "Bad magic number",
+	[CAFEBABE_ERROR_BAD_CONSTANT_TAG]
+		= "Bad constant tag",
 };
 
 const char *
