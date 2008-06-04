@@ -39,6 +39,66 @@ cafebabe_constant_info_utf8_deinit(struct cafebabe_constant_info_utf8 *utf8)
 }
 
 static int
+cafebabe_constant_info_integer_init(struct cafebabe_constant_info_integer *i,
+	struct cafebabe_stream *s)
+{
+	return cafebabe_stream_read_uint32(s, &i->bytes);
+}
+
+static void
+cafebabe_constant_info_integer_deinit(struct cafebabe_constant_info_integer *i)
+{
+}
+
+static int
+cafebabe_constant_info_float_init(struct cafebabe_constant_info_float *f,
+	struct cafebabe_stream *s)
+{
+	return cafebabe_stream_read_uint32(s, &f->bytes);
+}
+
+static void
+cafebabe_constant_info_float_deinit(struct cafebabe_constant_info_float *f)
+{
+}
+
+static int
+cafebabe_constant_info_long_init(struct cafebabe_constant_info_long *l,
+	struct cafebabe_stream *s)
+{
+	if (cafebabe_stream_read_uint32(s, &l->high_bytes))
+		return 1;
+
+	if (cafebabe_stream_read_uint32(s, &l->low_bytes))
+		return 1;
+
+	return 0;
+}
+
+static void
+cafebabe_constant_info_long_deinit(struct cafebabe_constant_info_long *l)
+{
+}
+
+static int
+cafebabe_constant_info_double_init(struct cafebabe_constant_info_double *d,
+	struct cafebabe_stream *s)
+{
+	if (cafebabe_stream_read_uint32(s, &d->high_bytes))
+		return 1;
+
+	if (cafebabe_stream_read_uint32(s, &d->low_bytes))
+		return 1;
+
+	return 0;
+}
+
+static void
+cafebabe_constant_info_double_deinit(struct cafebabe_constant_info_double *d)
+{
+}
+
+static int
 cafebabe_constant_info_class_init(struct cafebabe_constant_info_class *c,
 	struct cafebabe_stream *s)
 {
@@ -50,6 +110,18 @@ cafebabe_constant_info_class_init(struct cafebabe_constant_info_class *c,
 
 static void
 cafebabe_constant_info_class_deinit(struct cafebabe_constant_info_class *c)
+{
+}
+
+static int
+cafebabe_constant_info_string_init(struct cafebabe_constant_info_string *str,
+	struct cafebabe_stream *s)
+{
+	return cafebabe_stream_read_uint16(s, &str->string_index);
+}
+
+static void
+cafebabe_constant_info_string_deinit(struct cafebabe_constant_info_string *str)
 {
 }
 
@@ -90,6 +162,26 @@ cafebabe_constant_info_method_ref_init(
 static void
 cafebabe_constant_info_method_ref_deinit(struct
 	cafebabe_constant_info_method_ref *r)
+{
+}
+
+static int
+cafebabe_constant_info_interface_method_ref_init(
+	struct cafebabe_constant_info_interface_method_ref *r,
+	struct cafebabe_stream *s)
+{
+	if (cafebabe_stream_read_uint16(s, &r->class_index))
+		return 1;
+
+	if (cafebabe_stream_read_uint16(s, &r->name_and_type_index))
+		return 1;
+
+	return 0;
+}
+
+static void
+cafebabe_constant_info_interface_method_ref_deinit(
+	struct cafebabe_constant_info_interface_method_ref *r)
 {
 }
 
@@ -138,12 +230,60 @@ cafebabe_constant_pool_init(struct cafebabe_constant_pool *cp,
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTEGER:
+		cp->info.integer_ = malloc(sizeof(*cp->info.integer_));
+		if (!cp->info.integer_) {
+			s->syscall_errno = errno;
+			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+			goto out;
+		}
+
+		if (cafebabe_constant_info_integer_init(cp->info.integer_, s)) {
+			free(cp->info.integer_);
+			goto out;
+		}
+
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
+		cp->info.float_ = malloc(sizeof(*cp->info.float_));
+		if (!cp->info.float_) {
+			s->syscall_errno = errno;
+			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+			goto out;
+		}
+
+		if (cafebabe_constant_info_float_init(cp->info.float_, s)) {
+			free(cp->info.float_);
+			goto out;
+		}
+
 		break;
 	case CAFEBABE_CONSTANT_TAG_LONG:
+		cp->info.long_ = malloc(sizeof(*cp->info.long_));
+		if (!cp->info.long_) {
+			s->syscall_errno = errno;
+			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+			goto out;
+		}
+
+		if (cafebabe_constant_info_long_init(cp->info.long_, s)) {
+			free(cp->info.long_);
+			goto out;
+		}
+
 		break;
 	case CAFEBABE_CONSTANT_TAG_DOUBLE:
+		cp->info.double_ = malloc(sizeof(*cp->info.double_));
+		if (!cp->info.double_) {
+			s->syscall_errno = errno;
+			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+			goto out;
+		}
+
+		if (cafebabe_constant_info_double_init(cp->info.double_, s)) {
+			free(cp->info.double_);
+			goto out;
+		}
+
 		break;
 	case CAFEBABE_CONSTANT_TAG_CLASS:
 		cp->info.class = malloc(sizeof(*cp->info.class));
@@ -160,6 +300,18 @@ cafebabe_constant_pool_init(struct cafebabe_constant_pool *cp,
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING:
+		cp->info.string = malloc(sizeof(*cp->info.string));
+		if (!cp->info.string) {
+			s->syscall_errno = errno;
+			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+			goto out;
+		}
+
+		if (cafebabe_constant_info_string_init(cp->info.string, s)) {
+			free(cp->info.string);
+			goto out;
+		}
+
 		break;
 	case CAFEBABE_CONSTANT_TAG_FIELD_REF:
 		cp->info.field_ref = malloc(sizeof(*cp->info.field_ref));
@@ -193,6 +345,21 @@ cafebabe_constant_pool_init(struct cafebabe_constant_pool *cp,
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTERFACE_METHOD_REF:
+		cp->info.interface_method_ref =
+			malloc(sizeof(*cp->info.interface_method_ref));
+		if (!cp->info.interface_method_ref) {
+			s->syscall_errno = errno;
+			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+			goto out;
+		}
+
+		if (cafebabe_constant_info_interface_method_ref_init(
+			cp->info.interface_method_ref, s))
+		{
+			free(cp->info.interface_method_ref);
+			goto out;
+		}
+
 		break;
 	case CAFEBABE_CONSTANT_TAG_NAME_AND_TYPE:
 		cp->info.name_and_type = malloc(
@@ -231,18 +398,28 @@ cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp)
 		free(cp->info.utf8);
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTEGER:
+		cafebabe_constant_info_integer_deinit(cp->info.integer_);
+		free(cp->info.integer_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
+		cafebabe_constant_info_float_deinit(cp->info.float_);
+		free(cp->info.float_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_LONG:
+		cafebabe_constant_info_long_deinit(cp->info.long_);
+		free(cp->info.long_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_DOUBLE:
+		cafebabe_constant_info_double_deinit(cp->info.double_);
+		free(cp->info.double_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_CLASS:
 		cafebabe_constant_info_class_deinit(cp->info.class);
 		free(cp->info.class);
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING:
+		cafebabe_constant_info_string_deinit(cp->info.string);
+		free(cp->info.string);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FIELD_REF:
 		cafebabe_constant_info_field_ref_deinit(cp->info.field_ref);
@@ -253,6 +430,9 @@ cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp)
 		free(cp->info.method_ref);
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTERFACE_METHOD_REF:
+		cafebabe_constant_info_interface_method_ref_deinit(
+			cp->info.interface_method_ref);
+		free(cp->info.interface_method_ref);
 		break;
 	case CAFEBABE_CONSTANT_TAG_NAME_AND_TYPE:
 		cafebabe_constant_info_name_and_type_deinit(

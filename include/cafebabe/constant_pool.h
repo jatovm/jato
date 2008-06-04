@@ -27,15 +27,21 @@ struct cafebabe_constant_info_utf8 {
 };
 
 struct cafebabe_constant_info_integer {
+	uint32_t bytes;
 };
 
 struct cafebabe_constant_info_float {
+	uint32_t bytes;
 };
 
 struct cafebabe_constant_info_long {
+	uint32_t high_bytes;
+	uint32_t low_bytes;
 };
 
 struct cafebabe_constant_info_double {
+	uint32_t high_bytes;
+	uint32_t low_bytes;
 };
 
 struct cafebabe_constant_info_class {
@@ -43,6 +49,7 @@ struct cafebabe_constant_info_class {
 };
 
 struct cafebabe_constant_info_string {
+	uint16_t string_index;
 };
 
 struct cafebabe_constant_info_field_ref {
@@ -56,6 +63,8 @@ struct cafebabe_constant_info_method_ref {
 };
 
 struct cafebabe_constant_info_interface_method_ref {
+	uint16_t class_index;
+	uint16_t name_and_type_index;
 };
 
 struct cafebabe_constant_info_name_and_type {
@@ -67,7 +76,7 @@ struct cafebabe_constant_pool {
 	enum cafebabe_constant_tag tag;
 	union {
 		struct cafebabe_constant_info_utf8 *utf8;
-		struct cafebabe_constant_info_integer *integer;
+		struct cafebabe_constant_info_integer *integer_;
 		struct cafebabe_constant_info_float *float_;
 		struct cafebabe_constant_info_long *long_;
 		struct cafebabe_constant_info_double *double_;
