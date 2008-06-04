@@ -21,9 +21,12 @@
 #include <stdlib.h>
 
 #include "cafebabe/access.h"
+#include "cafebabe/attribute_info.h"
 #include "cafebabe/class.h"
 #include "cafebabe/constant_pool.h"
 #include "cafebabe/error.h"
+#include "cafebabe/field_info.h"
+#include "cafebabe/method_info.h"
 #include "cafebabe/stream.h"
 
 int
@@ -111,6 +114,36 @@ main(int argc, char *argv[])
 	printf("%.*s ", this_class_name->length, this_class_name->bytes);
 	printf("extends %.*s\n",
 		super_class_name->length, super_class_name->bytes);
+
+	for(uint16_t i = 0; i < class.fields_count; ++i) {
+		struct cafebabe_constant_info_utf8 *field_name;
+		if (cafebabe_class_constant_get_utf8(&class,
+			class.fields[i].name_index, &field_name))
+		{
+			fprintf(stderr,
+				"error: %s: invalid field name index\n",
+				filename);
+			goto out_stream;
+		}
+
+		printf("field: %.*s\n",
+			field_name->length, field_name->bytes);
+	}
+
+	for(uint16_t i = 0; i < class.methods_count; ++i) {
+		struct cafebabe_constant_info_utf8 *method_name;
+		if (cafebabe_class_constant_get_utf8(&class,
+			class.methods[i].name_index, &method_name))
+		{
+			fprintf(stderr,
+				"error: %s: invalid method name index\n",
+				filename);
+			goto out_stream;
+		}
+
+		printf("method: %.*s\n",
+			method_name->length, method_name->bytes);
+	}
 
 	cafebabe_class_deinit(&class);
 	cafebabe_stream_close(&stream);
