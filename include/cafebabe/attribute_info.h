@@ -8,18 +8,13 @@
 struct cafebabe_stream;
 
 struct cafebabe_attribute_info {
+	uint16_t attribute_name_index;
+	uint32_t attribute_length;
+	uint8_t *info;
 };
 
-static inline int
-cafebabe_attribute_info_init(struct cafebabe_attribute_info *ai,
-	struct cafebabe_stream *s)
-{
-	return 0;
-}
-
-static inline void
-cafebabe_attribute_info_deinit(struct cafebabe_attribute_info *ai)
-{
-}
+int cafebabe_attribute_info_init(struct cafebabe_attribute_info *a,
+	struct cafebabe_stream *s);
+void cafebabe_attribute_info_deinit(struct cafebabe_attribute_info *a);
 
 #endif
