@@ -184,3 +184,42 @@ cafebabe_class_deinit(struct cafebabe_class *c)
 		cafebabe_attribute_info_deinit(&c->attributes[i]);
 	free(c->attributes);
 }
+
+int
+cafebabe_class_constant_index_invalid(struct cafebabe_class *c, uint16_t i)
+{
+	if (i < 1 || i >= c->constant_pool_count)
+		return 1;
+
+	return 0;
+}
+
+int
+cafebabe_class_constant_get_utf8(struct cafebabe_class *c, uint16_t i,
+	struct cafebabe_constant_info_utf8 **r)
+{
+	if (cafebabe_class_constant_index_invalid(c, i))
+		return 1;
+
+	struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	if (pool->tag != CAFEBABE_CONSTANT_TAG_UTF8)
+		return 1;
+
+	*r = pool->info.utf8;
+	return 0;
+}
+
+int
+cafebabe_class_constant_get_class(struct cafebabe_class *c, uint16_t i,
+	struct cafebabe_constant_info_class **r)
+{
+	if (cafebabe_class_constant_index_invalid(c, i))
+		return 1;
+
+	struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	if (pool->tag != CAFEBABE_CONSTANT_TAG_CLASS)
+		return 1;
+
+	*r = pool->info.class;
+	return 0;
+}
