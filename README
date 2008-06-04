@@ -1,0 +1,7 @@
+cafebabe - the class loader library in C
+Copyright (C) 2008  Vegard Nossum <vegardno@ifi.uio.no>
+
+We don't have so much functionality yet, but expect more to come.
+
+For information about the class file format itself, see:
+http://java.sun.com/docs/books/jvms/second_edition/html/ClassFile.doc.html
