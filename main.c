@@ -24,7 +24,8 @@ main(int argc, char *argv[])
 
 	struct cafebabe_class class;
 	if (cafebabe_class_init(&class, &stream)) {
-		fprintf(stderr, "error: %s: %s\n", filename,
+		fprintf(stderr, "error: %s:%d/%d: %s\n", filename,
+			stream.virtual_i, stream.virtual_n,
 			cafebabe_stream_error(&stream));
 		exit(EXIT_FAILURE);
 	}
