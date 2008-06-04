@@ -111,7 +111,7 @@ cafebabe_stream_read_uint8(struct cafebabe_stream *s, uint8_t *r)
 	uint8_t *v = s->virtual;
 	unsigned int i = s->virtual_i;
 
-	if (i + 1 >= s->virtual_n) {
+	if (i >= s->virtual_n) {
 		s->cafebabe_errno = CAFEBABE_ERROR_UNEXPECTED_EOF;
 		return 1;
 	}
@@ -127,7 +127,7 @@ cafebabe_stream_read_uint16(struct cafebabe_stream *s, uint16_t *r)
 	uint8_t *v = s->virtual;
 	unsigned int i = s->virtual_i;
 
-	if (i + 2 >= s->virtual_n) {
+	if (i + 1 >= s->virtual_n) {
 		s->cafebabe_errno = CAFEBABE_ERROR_UNEXPECTED_EOF;
 		return 1;
 	}
@@ -143,7 +143,7 @@ cafebabe_stream_read_uint32(struct cafebabe_stream *s, uint32_t *r)
 	uint8_t *v = s->virtual;
 	unsigned int i = s->virtual_i;
 
-	if (i + 4 >= s->virtual_n) {
+	if (i + 3 >= s->virtual_n) {
 		s->cafebabe_errno = CAFEBABE_ERROR_UNEXPECTED_EOF;
 		return 1;
 	}
