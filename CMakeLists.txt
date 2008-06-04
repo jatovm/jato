@@ -14,5 +14,9 @@ add_library (cafebabe
 	src/stream.c
 )
 
+add_executable (dump main.c)
+
+target_link_libraries (dump cafebabe)
+
 install (TARGETS cafebabe DESTINATION "${LIB_INSTALL_DIR}")
 install (DIRECTORY include DESTINATION "${INCLUDE_INSTALL_DIR}")
