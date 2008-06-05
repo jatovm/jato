@@ -67,4 +67,11 @@ int cafebabe_class_constant_get_utf8(struct cafebabe_class *c, uint16_t i,
 int cafebabe_class_constant_get_class(struct cafebabe_class *c, uint16_t i,
 	struct cafebabe_constant_info_class **r);
 
+int cafebabe_class_get_field(struct cafebabe_class *c,
+	const char *name, const char *descriptor,
+	struct cafebabe_field_info **r);
+int cafebabe_class_get_method(struct cafebabe_class *c,
+	const char *name, const char *descriptor,
+	struct cafebabe_method_info **r);
+
 #endif

@@ -145,6 +145,13 @@ main(int argc, char *argv[])
 			method_name->length, method_name->bytes);
 	}
 
+	struct cafebabe_method_info *main_method;
+	if (!cafebabe_class_get_method(&class,
+		"main", "([Ljava/lang/String;)V", &main_method))
+	{
+		printf("class has main method\n");
+	}
+
 	cafebabe_class_deinit(&class);
 	cafebabe_stream_close(&stream);
 

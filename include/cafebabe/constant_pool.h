@@ -117,4 +117,7 @@ int cafebabe_constant_pool_init(struct cafebabe_constant_pool *cp,
 	struct cafebabe_stream *s);
 void cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp);
 
+int cafebabe_constant_info_utf8_compare(
+	const struct cafebabe_constant_info_utf8 *s1, const char *s2);
+
 #endif

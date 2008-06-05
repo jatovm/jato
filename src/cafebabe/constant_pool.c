@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cafebabe/constant_pool.h"
 #include "cafebabe/stream.h"
@@ -346,4 +347,11 @@ cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp)
 			&cp->name_and_type);
 		break;
 	}
+}
+
+int
+cafebabe_constant_info_utf8_compare(
+	const struct cafebabe_constant_info_utf8 *s1, const char *s2)
+{
+	return strncmp((const char *) s1->bytes, s2, s1->length);
 }

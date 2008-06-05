@@ -223,3 +223,77 @@ cafebabe_class_constant_get_class(struct cafebabe_class *c, uint16_t i,
 	*r = &pool->class;
 	return 0;
 }
+
+int
+cafebabe_class_get_field(struct cafebabe_class *c,
+	const char *name, const char *descriptor,
+	struct cafebabe_field_info **r)
+{
+	for (uint16_t i = 0; i < c->fields_count; ++i) {
+		struct cafebabe_constant_info_utf8 *field_name;
+		if (cafebabe_class_constant_get_utf8(c,
+			c->fields[i].name_index, &field_name))
+		{
+			return 1;
+		}
+
+		if (cafebabe_constant_info_utf8_compare(field_name, name))
+			continue;
+
+		struct cafebabe_constant_info_utf8 *field_descriptor;
+		if (cafebabe_class_constant_get_utf8(c,
+			c->fields[i].descriptor_index, &field_descriptor))
+		{
+			return 1;
+		}
+
+		if (cafebabe_constant_info_utf8_compare(
+			field_descriptor, descriptor))
+		{
+			continue;
+		}
+
+		*r = &c->fields[i];
+		return 0;
+	}
+
+	/* Not found */
+	return 1;
+}
+
+int
+cafebabe_class_get_method(struct cafebabe_class *c,
+	const char *name, const char *descriptor,
+	struct cafebabe_method_info **r)
+{
+	for (uint16_t i = 0; i < c->methods_count; ++i) {
+		struct cafebabe_constant_info_utf8 *method_name;
+		if (cafebabe_class_constant_get_utf8(c,
+			c->methods[i].name_index, &method_name))
+		{
+			return 1;
+		}
+
+		if (cafebabe_constant_info_utf8_compare(method_name, name))
+			continue;
+
+		struct cafebabe_constant_info_utf8 *method_descriptor;
+		if (cafebabe_class_constant_get_utf8(c,
+			c->methods[i].descriptor_index, &method_descriptor))
+		{
+			return 1;
+		}
+
+		if (cafebabe_constant_info_utf8_compare(
+			method_descriptor, descriptor))
+		{
+			continue;
+		}
+
+		*r = &c->methods[i];
+		return 0;
+	}
+
+	/* Not found */
+	return 1;
+}
