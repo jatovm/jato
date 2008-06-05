@@ -37,7 +37,7 @@ cafebabe_attribute_info_init(struct cafebabe_attribute_info *a,
 	if (!a->info)
 		goto out;
 
-	for (uint8_t i = 0; i < a->attribute_length; ++i) {
+	for (uint16_t i = 0; i < a->attribute_length; ++i) {
 		if (cafebabe_stream_read_uint8(s, &a->info[i]))
 			goto out_info;
 	}
