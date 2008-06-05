@@ -94,18 +94,18 @@ struct cafebabe_constant_info_name_and_type {
 struct cafebabe_constant_pool {
 	enum cafebabe_constant_tag tag;
 	union {
-		struct cafebabe_constant_info_utf8 *utf8;
-		struct cafebabe_constant_info_integer *integer_;
-		struct cafebabe_constant_info_float *float_;
-		struct cafebabe_constant_info_long *long_;
-		struct cafebabe_constant_info_double *double_;
-		struct cafebabe_constant_info_class *class;
-		struct cafebabe_constant_info_string *string;
-		struct cafebabe_constant_info_field_ref *field_ref;
-		struct cafebabe_constant_info_method_ref *method_ref;
-		struct cafebabe_constant_info_interface_method_ref *interface_method_ref;
-		struct cafebabe_constant_info_name_and_type *name_and_type;
-	} info;
+		struct cafebabe_constant_info_utf8 utf8;
+		struct cafebabe_constant_info_integer integer_;
+		struct cafebabe_constant_info_float float_;
+		struct cafebabe_constant_info_long long_;
+		struct cafebabe_constant_info_double double_;
+		struct cafebabe_constant_info_class class;
+		struct cafebabe_constant_info_string string;
+		struct cafebabe_constant_info_field_ref field_ref;
+		struct cafebabe_constant_info_method_ref method_ref;
+		struct cafebabe_constant_info_interface_method_ref interface_method_ref;
+		struct cafebabe_constant_info_name_and_type name_and_type;
+	};
 };
 
 int cafebabe_constant_pool_init(struct cafebabe_constant_pool *cp,

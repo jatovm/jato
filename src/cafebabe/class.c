@@ -205,7 +205,7 @@ cafebabe_class_constant_get_utf8(struct cafebabe_class *c, uint16_t i,
 	if (pool->tag != CAFEBABE_CONSTANT_TAG_UTF8)
 		return 1;
 
-	*r = pool->info.utf8;
+	*r = &pool->utf8;
 	return 0;
 }
 
@@ -220,6 +220,6 @@ cafebabe_class_constant_get_class(struct cafebabe_class *c, uint16_t i,
 	if (pool->tag != CAFEBABE_CONSTANT_TAG_CLASS)
 		return 1;
 
-	*r = pool->info.class;
+	*r = &pool->class;
 	return 0;
 }

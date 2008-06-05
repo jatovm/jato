@@ -235,164 +235,62 @@ cafebabe_constant_pool_init(struct cafebabe_constant_pool *cp,
 
 	switch (cp->tag) {
 	case CAFEBABE_CONSTANT_TAG_UTF8:
-		cp->info.utf8 = malloc(sizeof(*cp->info.utf8));
-		if (!cp->info.utf8) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_utf8_init(&cp->utf8, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_utf8_init(cp->info.utf8, s)) {
-			free(cp->info.utf8);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTEGER:
-		cp->info.integer_ = malloc(sizeof(*cp->info.integer_));
-		if (!cp->info.integer_) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_integer_init(&cp->integer_, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_integer_init(cp->info.integer_, s)) {
-			free(cp->info.integer_);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
-		cp->info.float_ = malloc(sizeof(*cp->info.float_));
-		if (!cp->info.float_) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_float_init(&cp->float_, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_float_init(cp->info.float_, s)) {
-			free(cp->info.float_);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_LONG:
-		cp->info.long_ = malloc(sizeof(*cp->info.long_));
-		if (!cp->info.long_) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_long_init(&cp->long_, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_long_init(cp->info.long_, s)) {
-			free(cp->info.long_);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_DOUBLE:
-		cp->info.double_ = malloc(sizeof(*cp->info.double_));
-		if (!cp->info.double_) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_double_init(&cp->double_, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_double_init(cp->info.double_, s)) {
-			free(cp->info.double_);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_CLASS:
-		cp->info.class = malloc(sizeof(*cp->info.class));
-		if (!cp->info.class) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_class_init(&cp->class, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_class_init(cp->info.class, s)) {
-			free(cp->info.class);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING:
-		cp->info.string = malloc(sizeof(*cp->info.string));
-		if (!cp->info.string) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_string_init(&cp->string, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_string_init(cp->info.string, s)) {
-			free(cp->info.string);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_FIELD_REF:
-		cp->info.field_ref = malloc(sizeof(*cp->info.field_ref));
-		if (!cp->info.field_ref) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
-		}
-
-		if (cafebabe_constant_info_field_ref_init(
-			cp->info.field_ref, s))
-		{
-			free(cp->info.field_ref);
+		if (cafebabe_constant_info_field_ref_init(&cp->field_ref, s))
 			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_METHOD_REF:
-		cp->info.method_ref = malloc(sizeof(*cp->info.method_ref));
-		if (!cp->info.method_ref) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+		if (cafebabe_constant_info_method_ref_init(&cp->method_ref, s))
 			goto out;
-		}
-
-		if (cafebabe_constant_info_method_ref_init(
-			cp->info.method_ref, s))
-		{
-			free(cp->info.method_ref);
-			goto out;
-		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTERFACE_METHOD_REF:
-		cp->info.interface_method_ref =
-			malloc(sizeof(*cp->info.interface_method_ref));
-		if (!cp->info.interface_method_ref) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
-			goto out;
-		}
-
 		if (cafebabe_constant_info_interface_method_ref_init(
-			cp->info.interface_method_ref, s))
+			&cp->interface_method_ref, s))
 		{
-			free(cp->info.interface_method_ref);
 			goto out;
 		}
 
 		break;
 	case CAFEBABE_CONSTANT_TAG_NAME_AND_TYPE:
-		cp->info.name_and_type = malloc(
-			sizeof(*cp->info.name_and_type));
-		if (!cp->info.name_and_type) {
-			s->syscall_errno = errno;
-			s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
-			goto out;
-		}
-
 		if (cafebabe_constant_info_name_and_type_init(
-			cp->info.name_and_type, s))
+			&cp->name_and_type, s))
 		{
-			free(cp->info.name_and_type);
 			goto out;
 		}
 
@@ -413,50 +311,39 @@ cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp)
 {
 	switch (cp->tag) {
 	case CAFEBABE_CONSTANT_TAG_UTF8:
-		cafebabe_constant_info_utf8_deinit(cp->info.utf8);
-		free(cp->info.utf8);
+		cafebabe_constant_info_utf8_deinit(&cp->utf8);
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTEGER:
-		cafebabe_constant_info_integer_deinit(cp->info.integer_);
-		free(cp->info.integer_);
+		cafebabe_constant_info_integer_deinit(&cp->integer_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
-		cafebabe_constant_info_float_deinit(cp->info.float_);
-		free(cp->info.float_);
+		cafebabe_constant_info_float_deinit(&cp->float_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_LONG:
-		cafebabe_constant_info_long_deinit(cp->info.long_);
-		free(cp->info.long_);
+		cafebabe_constant_info_long_deinit(&cp->long_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_DOUBLE:
-		cafebabe_constant_info_double_deinit(cp->info.double_);
-		free(cp->info.double_);
+		cafebabe_constant_info_double_deinit(&cp->double_);
 		break;
 	case CAFEBABE_CONSTANT_TAG_CLASS:
-		cafebabe_constant_info_class_deinit(cp->info.class);
-		free(cp->info.class);
+		cafebabe_constant_info_class_deinit(&cp->class);
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING:
-		cafebabe_constant_info_string_deinit(cp->info.string);
-		free(cp->info.string);
+		cafebabe_constant_info_string_deinit(&cp->string);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FIELD_REF:
-		cafebabe_constant_info_field_ref_deinit(cp->info.field_ref);
-		free(cp->info.field_ref);
+		cafebabe_constant_info_field_ref_deinit(&cp->field_ref);
 		break;
 	case CAFEBABE_CONSTANT_TAG_METHOD_REF:
-		cafebabe_constant_info_method_ref_deinit(cp->info.method_ref);
-		free(cp->info.method_ref);
+		cafebabe_constant_info_method_ref_deinit(&cp->method_ref);
 		break;
 	case CAFEBABE_CONSTANT_TAG_INTERFACE_METHOD_REF:
 		cafebabe_constant_info_interface_method_ref_deinit(
-			cp->info.interface_method_ref);
-		free(cp->info.interface_method_ref);
+			&cp->interface_method_ref);
 		break;
 	case CAFEBABE_CONSTANT_TAG_NAME_AND_TYPE:
 		cafebabe_constant_info_name_and_type_deinit(
-			cp->info.name_and_type);
-		free(cp->info.name_and_type);
+			&cp->name_and_type);
 		break;
 	}
 }
