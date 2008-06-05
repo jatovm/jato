@@ -73,6 +73,7 @@ main(int argc, char *argv[])
 
 	cafebabe_class_deinit(&class);
 	cafebabe_stream_close(&stream);
+	free(filename);
 
 	return EXIT_SUCCESS;
 
