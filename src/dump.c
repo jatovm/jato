@@ -64,7 +64,7 @@ main(int argc, char *argv[])
 	{
 		fprintf(stderr, "error: %s: invalid this_class index\n",
 			filename);
-		goto out_stream;
+		goto out_class;
 	}
 
 	struct cafebabe_constant_info_utf8 *this_class_name;
@@ -73,7 +73,7 @@ main(int argc, char *argv[])
 	{
 		fprintf(stderr, "error: %s: invalid this_class name index\n",
 			filename);
-		goto out_stream;
+		goto out_class;
 	}
 
 	printf("this_class: %.*s\n",
@@ -86,7 +86,7 @@ main(int argc, char *argv[])
 	{
 		fprintf(stderr, "error: %s: invalid super_class index\n",
 			filename);
-		goto out_stream;
+		goto out_class;
 	}
 
 	struct cafebabe_constant_info_utf8 *super_class_name;
@@ -95,7 +95,7 @@ main(int argc, char *argv[])
 	{
 		fprintf(stderr, "error: %s: invalid super_class name index\n",
 			filename);
-		goto out_stream;
+		goto out_class;
 	}
 
 	printf("super_class: %.*s\n",
@@ -123,7 +123,7 @@ main(int argc, char *argv[])
 			fprintf(stderr,
 				"error: %s: invalid field name index\n",
 				filename);
-			goto out_stream;
+			goto out_class;
 		}
 
 		printf("field: %.*s\n",
@@ -138,18 +138,11 @@ main(int argc, char *argv[])
 			fprintf(stderr,
 				"error: %s: invalid method name index\n",
 				filename);
-			goto out_stream;
+			goto out_class;
 		}
 
 		printf("method: %.*s\n",
 			method_name->length, method_name->bytes);
-	}
-
-	struct cafebabe_method_info *main_method;
-	if (!cafebabe_class_get_method(&class,
-		"main", "([Ljava/lang/String;)V", &main_method))
-	{
-		printf("class has main method\n");
 	}
 
 	cafebabe_class_deinit(&class);
@@ -157,6 +150,8 @@ main(int argc, char *argv[])
 
 	return EXIT_SUCCESS;
 
+out_class:
+	cafebabe_class_deinit(&class);
 out_stream:
 	cafebabe_stream_close(&stream);
 out:
