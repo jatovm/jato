@@ -58,7 +58,7 @@ main(int argc, char *argv[])
 	printf("version: %d.%d\n", class.major_version, class.minor_version);
 
 	/* Look up class name */
-	struct cafebabe_constant_info_class *this_class;
+	const struct cafebabe_constant_info_class *this_class;
 	if (cafebabe_class_constant_get_class(&class, class.this_class,
 		&this_class))
 	{
@@ -67,7 +67,7 @@ main(int argc, char *argv[])
 		goto out_class;
 	}
 
-	struct cafebabe_constant_info_utf8 *this_class_name;
+	const struct cafebabe_constant_info_utf8 *this_class_name;
 	if (cafebabe_class_constant_get_utf8(&class, this_class->name_index,
 		&this_class_name))
 	{
@@ -80,7 +80,7 @@ main(int argc, char *argv[])
 		this_class_name->length, this_class_name->bytes);
 
 	/* Look up superclass name */
-	struct cafebabe_constant_info_class *super_class;
+	const struct cafebabe_constant_info_class *super_class;
 	if (cafebabe_class_constant_get_class(&class, class.super_class,
 		&super_class))
 	{
@@ -89,7 +89,7 @@ main(int argc, char *argv[])
 		goto out_class;
 	}
 
-	struct cafebabe_constant_info_utf8 *super_class_name;
+	const struct cafebabe_constant_info_utf8 *super_class_name;
 	if (cafebabe_class_constant_get_utf8(&class, super_class->name_index,
 		&super_class_name))
 	{
@@ -116,7 +116,7 @@ main(int argc, char *argv[])
 		super_class_name->length, super_class_name->bytes);
 
 	for(uint16_t i = 0; i < class.fields_count; ++i) {
-		struct cafebabe_constant_info_utf8 *field_name;
+		const struct cafebabe_constant_info_utf8 *field_name;
 		if (cafebabe_class_constant_get_utf8(&class,
 			class.fields[i].name_index, &field_name))
 		{
@@ -131,7 +131,7 @@ main(int argc, char *argv[])
 	}
 
 	for(uint16_t i = 0; i < class.methods_count; ++i) {
-		struct cafebabe_constant_info_utf8 *method_name;
+		const struct cafebabe_constant_info_utf8 *method_name;
 		if (cafebabe_class_constant_get_utf8(&class,
 			class.methods[i].name_index, &method_name))
 		{

@@ -197,12 +197,12 @@ cafebabe_class_constant_index_invalid(const struct cafebabe_class *c,
 
 int
 cafebabe_class_constant_get_utf8(const struct cafebabe_class *c, uint16_t i,
-	struct cafebabe_constant_info_utf8 **r)
+	const struct cafebabe_constant_info_utf8 **r)
 {
 	if (cafebabe_class_constant_index_invalid(c, i))
 		return 1;
 
-	struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	const struct cafebabe_constant_pool *pool = &c->constant_pool[i];
 	if (pool->tag != CAFEBABE_CONSTANT_TAG_UTF8)
 		return 1;
 
@@ -212,12 +212,12 @@ cafebabe_class_constant_get_utf8(const struct cafebabe_class *c, uint16_t i,
 
 int
 cafebabe_class_constant_get_class(const struct cafebabe_class *c, uint16_t i,
-	struct cafebabe_constant_info_class **r)
+	const struct cafebabe_constant_info_class **r)
 {
 	if (cafebabe_class_constant_index_invalid(c, i))
 		return 1;
 
-	struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	const struct cafebabe_constant_pool *pool = &c->constant_pool[i];
 	if (pool->tag != CAFEBABE_CONSTANT_TAG_CLASS)
 		return 1;
 
@@ -228,10 +228,10 @@ cafebabe_class_constant_get_class(const struct cafebabe_class *c, uint16_t i,
 int
 cafebabe_class_get_field(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	struct cafebabe_field_info **r)
+	const struct cafebabe_field_info **r)
 {
 	for (uint16_t i = 0; i < c->fields_count; ++i) {
-		struct cafebabe_constant_info_utf8 *field_name;
+		const struct cafebabe_constant_info_utf8 *field_name;
 		if (cafebabe_class_constant_get_utf8(c,
 			c->fields[i].name_index, &field_name))
 		{
@@ -241,7 +241,7 @@ cafebabe_class_get_field(const struct cafebabe_class *c,
 		if (cafebabe_constant_info_utf8_compare(field_name, name))
 			continue;
 
-		struct cafebabe_constant_info_utf8 *field_descriptor;
+		const struct cafebabe_constant_info_utf8 *field_descriptor;
 		if (cafebabe_class_constant_get_utf8(c,
 			c->fields[i].descriptor_index, &field_descriptor))
 		{
@@ -265,10 +265,10 @@ cafebabe_class_get_field(const struct cafebabe_class *c,
 int
 cafebabe_class_get_method(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	struct cafebabe_method_info **r)
+	const struct cafebabe_method_info **r)
 {
 	for (uint16_t i = 0; i < c->methods_count; ++i) {
-		struct cafebabe_constant_info_utf8 *method_name;
+		const struct cafebabe_constant_info_utf8 *method_name;
 		if (cafebabe_class_constant_get_utf8(c,
 			c->methods[i].name_index, &method_name))
 		{
@@ -278,7 +278,7 @@ cafebabe_class_get_method(const struct cafebabe_class *c,
 		if (cafebabe_constant_info_utf8_compare(method_name, name))
 			continue;
 
-		struct cafebabe_constant_info_utf8 *method_descriptor;
+		const struct cafebabe_constant_info_utf8 *method_descriptor;
 		if (cafebabe_class_constant_get_utf8(c,
 			c->methods[i].descriptor_index, &method_descriptor))
 		{

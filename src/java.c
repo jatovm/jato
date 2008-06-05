@@ -63,7 +63,7 @@ main(int argc, char *argv[])
 		goto out_stream;
 	}
 
-	struct cafebabe_method_info *main_method;
+	const struct cafebabe_method_info *main_method;
 	if (cafebabe_class_get_method(&class,
 		"main", "([Ljava/lang/String;)V", &main_method))
 	{

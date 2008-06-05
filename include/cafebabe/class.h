@@ -63,15 +63,15 @@ void cafebabe_class_deinit(struct cafebabe_class *c);
 int cafebabe_class_constant_index_invalid(const struct cafebabe_class *c,
 	uint16_t i);
 int cafebabe_class_constant_get_utf8(const struct cafebabe_class *c,
-	uint16_t i, struct cafebabe_constant_info_utf8 **r);
+	uint16_t i, const struct cafebabe_constant_info_utf8 **r);
 int cafebabe_class_constant_get_class(const struct cafebabe_class *c,
-	uint16_t i, struct cafebabe_constant_info_class **r);
+	uint16_t i, const struct cafebabe_constant_info_class **r);
 
 int cafebabe_class_get_field(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	struct cafebabe_field_info **r);
+	const struct cafebabe_field_info **r);
 int cafebabe_class_get_method(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	struct cafebabe_method_info **r);
+	const struct cafebabe_method_info **r);
 
 #endif
