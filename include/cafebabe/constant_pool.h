@@ -91,6 +91,11 @@ struct cafebabe_constant_info_name_and_type {
 	uint16_t descriptor_index;
 };
 
+/**
+ * An entry in the constant pool table.
+ *
+ * See also section 4.4 of The Java Virtual Machine Specification.
+ */
 struct cafebabe_constant_pool {
 	enum cafebabe_constant_tag tag;
 	union {

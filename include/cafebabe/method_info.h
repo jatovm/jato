@@ -27,6 +27,11 @@
 struct cafebabe_attribute_info;
 struct cafebabe_stream;
 
+/**
+ * A java class method.
+ *
+ * See also section 4.6 of The Java Virtual Machine Specification.
+ */
 struct cafebabe_method_info {
 	uint16_t access_flags;
 	uint16_t name_index;

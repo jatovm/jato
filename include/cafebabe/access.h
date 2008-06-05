@@ -22,6 +22,12 @@
 #ifndef CAFEBABE__ACCESS_H
 #define CAFEBABE__ACCESS_H
 
+/**
+ * Access flags.
+ *
+ * See also tables 4.1, 4.4, 4.5, and 4.7 of The Java Virtual Machine
+ * Specification.
+ */
 enum cafebabe_access_flags {
 	CAFEBABE_ACCESS_PUBLIC		= 0x0001,
 	CAFEBABE_ACCESS_PRIVATE		= 0x0002,

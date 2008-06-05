@@ -26,6 +26,11 @@
 
 struct cafebabe_stream;
 
+/**
+ * An attribute.
+ *
+ * See also section 4.7 of The Java Virtual Machine Specification.
+ */
 struct cafebabe_attribute_info {
 	uint16_t attribute_name_index;
 	uint32_t attribute_length;

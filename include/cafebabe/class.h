@@ -32,6 +32,11 @@ struct cafebabe_field_info;
 struct cafebabe_method_info;
 struct cafebabe_stream;
 
+/**
+ * A java class file.
+ *
+ * See also section 4.1 of The Java Virtual Machine Specification.
+ */
 struct cafebabe_class {
 	uint32_t magic;
 	uint16_t minor_version;
