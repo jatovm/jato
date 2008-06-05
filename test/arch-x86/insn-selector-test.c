@@ -1127,5 +1127,6 @@ void test_select_anewarray(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 12, REG_ESP, insn);
 
+	free(instance_class);
 	free_compilation_unit(cu);
 }
