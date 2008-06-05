@@ -15,8 +15,10 @@ add_library (cafebabe SHARED
 )
 
 add_executable (dump src/dump.c)
-
 target_link_libraries (dump cafebabe)
+
+add_executable (java src/java.c)
+target_link_libraries (java cafebabe)
 
 set (LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib
 	CACHE PATH "Installation prefix for user executables" FORCE)
