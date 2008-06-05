@@ -59,6 +59,17 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 			constant_pool_i = i;
 			goto out_constant_pool_init;
 		}
+
+		/* 8-byte constants take up two entries in the constant_pool
+		 * table. See also section 4.4.5 of the JVM Specification. */
+		switch (c->constant_pool[i].tag) {
+		case CAFEBABE_CONSTANT_TAG_LONG:
+		case CAFEBABE_CONSTANT_TAG_DOUBLE:
+			++i;
+			break;
+		default:
+			break;
+		}
 	}
 	constant_pool_i = c->constant_pool_count;
 
