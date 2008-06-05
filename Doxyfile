@@ -451,7 +451,7 @@ SHOW_DIRECTORIES       = YES
 # provided by doxygen. Whatever the program writes to standard output 
 # is used as the file version. See the manual for examples.
 
-FILE_VERSION_FILTER    = git-log --pretty=format:%H -n 1
+FILE_VERSION_FILTER    = "git-log --pretty=format:%H -n 1"
 
 #---------------------------------------------------------------------------
 # configuration options related to warning and progress messages
