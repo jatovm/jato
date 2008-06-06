@@ -485,3 +485,31 @@ void test_convert_newarray(void)
 	expr_put(arrayref);
 	free_compilation_unit(cu);
 }
+
+void test_convert_arraylength(void)
+{
+	unsigned char code[] = { OPC_ARRAYLENGTH };
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	struct expression *arrayref, *arraylen_exp;
+	struct compilation_unit *cu;
+	struct object *class = new_class();
+
+	cu = alloc_simple_compilation_unit(&method);
+
+	arrayref = value_expr(J_REFERENCE, class);
+	stack_push(cu->expr_stack, arrayref);
+
+	convert_to_ir(cu);
+
+	arraylen_exp = stack_pop(cu->expr_stack);
+	assert_int_equals(EXPR_ARRAYLENGTH, expr_type(arraylen_exp));
+	assert_int_equals(J_REFERENCE, arraylen_exp->vm_type);
+	assert_ptr_equals(arrayref, to_expr(arraylen_exp->arraylength_ref));
+
+	expr_put(arraylen_exp);
+	free_compilation_unit(cu);
+	free(class);
+}

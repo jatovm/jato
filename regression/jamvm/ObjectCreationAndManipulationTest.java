@@ -49,6 +49,11 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         assertNotNull(array);
     }
 
+    public static void testArrayLength() {
+        Object[] array = new Object[255];
+        assertEquals(255, array.length);
+    }
+
     public static void main(String[] args) {
         testNewObject();
         testObjectInitialization();
@@ -56,6 +61,7 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testInstanceFieldAccess();
         testNewArray();
         testANewArray();
+        testArrayLength();
 
         Runtime.getRuntime().halt(retval);
     }

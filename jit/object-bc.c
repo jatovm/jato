@@ -364,6 +364,21 @@ int convert_anewarray(struct parse_context *ctx)
 	return 0;
 }
 
+int convert_arraylength(struct parse_context *ctx)
+{
+	struct expression *arrayref, *arraylength_exp;
+
+	arrayref = stack_pop(ctx->cu->expr_stack);
+
+	arraylength_exp = arraylength_expr(arrayref);
+	if (!arraylength_exp)
+		return -ENOMEM;
+
+	stack_push(ctx->cu->expr_stack, arraylength_exp);
+
+	return 0;
+}
+
 int convert_checkcast(struct parse_context *ctx)
 {
 	/* TODO */

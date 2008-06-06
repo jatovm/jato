@@ -377,6 +377,18 @@ reg:    EXPR_ANEWARRAY(reg)
         method_args_cleanup(s, 3);
 }
 
+reg:    EXPR_ARRAYLENGTH(reg)
+{
+	struct var_info *arrayref, *arraylength;
+
+	arrayref = state->left->reg1;
+
+	arraylength = get_fixed_var(s->b_parent, REG_EAX);
+	state->reg1 = arraylength;
+
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref, sizeof(struct object), arraylength));
+}
+
 arg:	EXPR_NO_ARGS
 {
 }

@@ -516,3 +516,11 @@ void test_print_anewarray_expression(void)
 			  "  anewarray_ref_type: [0x55]\n",
 			  anewarray_expr((void *) 0x55, value_expr(J_INT, 0xff)));
 }
+
+void test_print_arraylength_expression(void)
+{
+	assert_print_expr("ARRAYLENGTH:\n"
+			  "  vm_type: [reference]\n"
+			  "  arraylength_ref: [value reference 0xcafe]\n",
+			  arraylength_expr(value_expr(J_REFERENCE, 0xcafe)));
+}

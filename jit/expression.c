@@ -90,6 +90,9 @@ void free_expression(struct expression *expr)
 	case EXPR_ANEWARRAY:
 		expr_put(to_expr(expr->anewarray_size));
 		break;
+	case EXPR_ARRAYLENGTH:
+		expr_put(to_expr(expr->arraylength_ref));
+		break;
 	case EXPR_LAST:
 		assert(!"EXPR_LAST is not a real type. Don't use it");
 		break;
@@ -301,6 +304,15 @@ struct expression *anewarray_expr(struct object *class, struct expression *size)
 		expr->anewarray_ref_type = class;
 		expr->anewarray_size = &size->node;
 	}
+	return expr;
+}
+
+struct expression *arraylength_expr(struct expression *arrayref)
+{
+	struct expression *expr = alloc_expression(EXPR_ARRAYLENGTH, J_REFERENCE);
+
+	if (expr)
+		expr->arraylength_ref = &arrayref->node;
 	return expr;
 }
 

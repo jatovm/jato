@@ -1130,3 +1130,35 @@ void test_select_anewarray(void)
 	free(instance_class);
 	free_compilation_unit(cu);
 }
+
+void test_select_arraylength(void)
+{
+	struct object *instance_class;
+	struct compilation_unit *cu;
+	struct expression *expr, *arraylength_exp;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
+
+	instance_class = new_class();
+	expr = value_expr(J_REFERENCE, instance_class);
+
+	arraylength_exp = arraylength_expr(expr);
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &arraylength_exp->node;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, instance_class, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, sizeof(struct object), REG_EAX, insn);
+
+	free(instance_class);
+	free_compilation_unit(cu);
+}
