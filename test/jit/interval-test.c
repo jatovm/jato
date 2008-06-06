@@ -11,7 +11,7 @@ void test_split_interval_at(void)
 	struct live_interval *new_interval;
 	struct insn insns[2];
 	struct var_info var;
-	int i;
+	unsigned int i;
 
 	var.interval = alloc_interval(&var);
 	var.interval->insn_array = calloc(ARRAY_SIZE(insns), sizeof(struct insn *));
