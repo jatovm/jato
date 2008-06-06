@@ -1141,7 +1141,7 @@ void test_select_arraylength(void)
 	struct insn *insn;
 
 	instance_class = new_class();
-	expr = value_expr(J_REFERENCE, instance_class);
+	expr = value_expr(J_REFERENCE, (unsigned long) instance_class);
 
 	arraylength_exp = arraylength_expr(expr);
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -1154,7 +1154,7 @@ void test_select_arraylength(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, instance_class, REG_EAX, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) instance_class, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, REG_EAX, sizeof(struct object), REG_EAX, insn);

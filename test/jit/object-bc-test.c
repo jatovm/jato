@@ -499,7 +499,7 @@ void test_convert_arraylength(void)
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	arrayref = value_expr(J_REFERENCE, class);
+	arrayref = value_expr(J_REFERENCE, (unsigned long) class);
 	stack_push(cu->expr_stack, arrayref);
 
 	convert_to_ir(cu);
