@@ -55,6 +55,8 @@ struct operand {
  * 	operand types.
  */
 enum insn_type {
+	INSN_ADC_IMM_REG,
+	INSN_ADC_MEMBASE_REG,
 	INSN_ADD_IMM_REG,
 	INSN_ADD_MEMBASE_REG,
 	INSN_AND_MEMBASE_REG,

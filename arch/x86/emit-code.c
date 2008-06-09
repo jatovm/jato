@@ -367,6 +367,12 @@ void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 	emit_ret(buf);
 }
 
+static void emit_adc_membase_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
+{
+	emit_membase_reg(buf, 0x13, src, dest);
+}
+
 static void emit_add_membase_reg(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
@@ -478,6 +484,17 @@ static void emit_add_imm_reg(struct buffer *buf,
 	__emit_add_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void __emit_adc_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0x02, imm, reg);
+}
+
+static void emit_adc_imm_reg(struct buffer *buf,
+			     struct operand *src, struct operand *dest)
+{
+	__emit_adc_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
 static void emit_cmp_imm_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
@@ -585,6 +602,8 @@ struct emitter {
 	[_insn_type] = { .emit_fn = _fn, .type = _emitter_type }
 
 static struct emitter emitters[] = {
+	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_ADC_MEMBASE_REG, emit_adc_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, emit_add_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, TWO_OPERANDS),
