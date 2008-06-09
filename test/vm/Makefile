@@ -24,6 +24,7 @@ OBJS = \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/zalloc.o \
+	../../vm/types.o \
 	bitset-test.o \
 	buffer-test.o \
 	bytecodes-test.o \
@@ -31,6 +32,7 @@ OBJS = \
 	natives-test.o \
 	stack-test.o \
 	string-test.o \
+	types-test.o
 
 quiet_cmd_run_tests = RUNTEST $(empty) $(RUNNER)
       cmd_run_tests = ./$(RUNNER)
