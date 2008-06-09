@@ -16,5 +16,5 @@ enum vm_type {
 };
 
 extern enum vm_type str_to_type(char *);
-
+extern enum vm_type get_method_return_type(char *);
 #endif

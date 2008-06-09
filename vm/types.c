@@ -28,3 +28,9 @@ enum vm_type str_to_type(char *type)
 	};
 	return J_REFERENCE;	/* L<classname>; or [ */
 }
+
+enum vm_type get_method_return_type(char *type)
+{
+	while (*type != ')') type++;
+	return str_to_type(type);
+}
