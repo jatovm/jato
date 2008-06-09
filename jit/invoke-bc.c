@@ -44,6 +44,17 @@ int convert_void_return(struct parse_context *ctx)
 	return 0;
 }
 
+static unsigned int method_real_argument_count(struct methodblock *invoke_target)
+{
+	unsigned int c = invoke_target->args_count;
+	char * a = invoke_target->type;
+	while (*(a++) != ')') {
+		if (*a == 'J' || *a == 'D')
+			c--;
+	}
+	return c;
+}
+
 static struct expression *insert_arg(struct expression *root,
 				     struct expression *expr)
 {
@@ -79,7 +90,7 @@ static int convert_and_add_args(struct parse_context *ctx,
 {
 	struct expression *args_list;
 
-	args_list = convert_args(ctx->cu->expr_stack, invoke_target->args_count);
+	args_list = convert_args(ctx->cu->expr_stack, method_real_argument_count(invoke_target));
 	if (!args_list)
 		return -ENOMEM;
 
