@@ -90,6 +90,10 @@ void free_expression(struct expression *expr)
 	case EXPR_ANEWARRAY:
 		expr_put(to_expr(expr->anewarray_size));
 		break;
+	case EXPR_MULTIANEWARRAY:
+		if (expr->multianewarray_dimensions)
+			expr_put(to_expr(expr->multianewarray_dimensions));
+		break;
 	case EXPR_ARRAYLENGTH:
 		expr_put(to_expr(expr->arraylength_ref));
 		break;
@@ -304,6 +308,15 @@ struct expression *anewarray_expr(struct object *class, struct expression *size)
 		expr->anewarray_ref_type = class;
 		expr->anewarray_size = &size->node;
 	}
+	return expr;
+}
+
+struct expression *multianewarray_expr(struct object *class)
+{
+	struct expression *expr = alloc_expression(EXPR_MULTIANEWARRAY, J_REFERENCE);
+
+	if (expr)
+		expr->multianewarray_ref_type = class;
 	return expr;
 }
 

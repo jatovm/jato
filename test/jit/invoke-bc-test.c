@@ -8,6 +8,7 @@
 #include <jit/compiler.h>
 #include <jit/statement.h>
 #include <vm/stack.h>
+#include <args-test-utils.h>
 
 #include <libharness.h>
 
@@ -62,59 +63,6 @@ void test_convert_void_return(void)
 	assert_void_return_stmt(ret_stmt);
 
 	free_compilation_unit(cu);
-}
-
-static void create_args(struct expression **args, int nr_args)
-{
-	int i;
-
-	for (i = 0; i < nr_args; i++) {
-		args[i] = value_expr(J_INT, i);
-	}
-}
-
-static void push_args(struct compilation_unit *cu,
-		      struct expression **args, int nr_args)
-{
-	int i;
-
-	for (i = 0; i < nr_args; i++) {
-		stack_push(cu->expr_stack, args[i]);
-	}
-}
-
-static void assert_args(struct expression **expected_args,
-			int nr_args,
-			struct expression *args_list)
-{
-	int i;
-	struct expression *tree = args_list;
-	struct expression *actual_args[nr_args];
-
-	if (nr_args == 0) {
-		assert_int_equals(EXPR_NO_ARGS, expr_type(args_list));
-		return;
-	}
-
-	i = 0;
-	while (i < nr_args) {
-		if (expr_type(tree) == EXPR_ARGS_LIST) {
-			struct expression *expr = to_expr(tree->node.kids[1]);
-			actual_args[i++] = to_expr(expr->arg_expression);
-			tree = to_expr(tree->node.kids[0]);
-		} else if (expr_type(tree) == EXPR_ARG) {
-			actual_args[i++] = to_expr(tree->arg_expression);
-			break;
-		} else {
-			assert_true(false);
-			break;
-		}
-	}
-
-	assert_int_equals(i, nr_args);
-	
-	for (i = 0; i < nr_args; i++)
-		assert_ptr_equals(expected_args[i], actual_args[i]);
 }
 
 static void convert_ir_invoke(struct compilation_unit *cu,

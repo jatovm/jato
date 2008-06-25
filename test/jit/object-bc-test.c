@@ -3,6 +3,7 @@
  */
 
 #include <bc-test-utils.h>
+#include <args-test-utils.h>
 #include <jit/compilation-unit.h>
 #include <jit/expression.h>
 #include <jit/compiler.h>
@@ -484,6 +485,43 @@ void test_convert_newarray(void)
 
 	expr_put(arrayref);
 	free_compilation_unit(cu);
+}
+
+void test_convert_multianewarray(void)
+{
+	struct object *instance_class = new_class();
+	unsigned char dimension = 0x02;
+	unsigned char code[] = { OPC_MULTIANEWARRAY, 0x00, 0x00, dimension };
+	struct compilation_unit *cu;
+	struct expression *arrayref;
+	struct expression *args_count[dimension];
+	struct expression *actual_args;
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+
+	cu = alloc_simple_compilation_unit(&method);
+
+	create_args(args_count, dimension);
+	push_args(cu, args_count, dimension);
+
+	convert_ir_const_single(cu, instance_class);
+
+	arrayref = stack_pop(cu->expr_stack);
+
+	assert_int_equals(EXPR_MULTIANEWARRAY, expr_type(arrayref));
+	assert_int_equals(J_REFERENCE, arrayref->vm_type);
+	assert_ptr_equals(instance_class, arrayref->multianewarray_ref_type);
+
+	actual_args = to_expr(arrayref->multianewarray_dimensions);
+	assert_args(args_count, dimension, actual_args);
+
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	expr_put(arrayref);
+	free_compilation_unit(cu);
+	free(instance_class);
 }
 
 void test_convert_arraylength(void)

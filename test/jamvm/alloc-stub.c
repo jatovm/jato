@@ -16,3 +16,8 @@ struct object *allocTypeArray(int type, int size)
 {
 	return NULL;
 }
+
+struct object *allocMultiArray(struct object *class, int dim, intptr_t *count)
+{
+	return NULL;
+}

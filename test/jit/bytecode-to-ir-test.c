@@ -58,8 +58,6 @@ void test_convert_nop(void)
 
 /* MISSING: wide */
 
-/* MISSING: multianewarray */
-
 /* MISSING: ifnull */
 
 /* MISSING: ifnonnull */

@@ -357,6 +357,30 @@ reg:	EXPR_NEWARRAY(reg)
 	method_args_cleanup(s, 2);
 }
 
+reg:	EXPR_MULTIANEWARRAY(arg)
+{
+	struct var_info *var;
+	struct var_info *stack_ptr;
+	unsigned int dimension;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	var = get_fixed_var(s->b_parent, REG_EAX);
+	state->reg1 = var;
+
+	stack_ptr = get_fixed_var(s->b_parent, REG_ESP);
+
+	dimension = nr_args(to_expr(expr->multianewarray_dimensions));
+
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, stack_ptr));
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, dimension));
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->multianewarray_ref_type));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) allocMultiArray));
+
+	method_args_cleanup(s, dimension + 3);
+}
+
 reg:    EXPR_ANEWARRAY(reg)
 {
         struct var_info *var, *size;

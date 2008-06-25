@@ -517,6 +517,29 @@ void test_print_anewarray_expression(void)
 			  anewarray_expr((void *) 0x55, value_expr(J_INT, 0xff)));
 }
 
+void test_print_multianewarray_expression(void)
+{
+	struct expression *expr, *args_list;
+	args_list = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
+				   arg_expr(value_expr(J_INT, 0xff)));
+
+	expr = multianewarray_expr((void *) 0xff);
+	expr->multianewarray_dimensions = &args_list->node;
+
+	assert_print_expr("MULTIANEWARRAY:\n"
+			  "  vm_type: [reference]\n"
+			  "  multianewarray_ref_type: [0xff]\n"
+			  "  dimension list:\n"
+			  "    ARGS_LIST:\n"
+			  "      args_left:\n"
+			  "        ARG:\n"
+			  "          arg_expression: [value int 0x2]\n"
+			  "      args_right:\n"
+			  "        ARG:\n"
+			  "          arg_expression: [value int 0xff]\n",
+			  expr);
+}
+
 void test_print_arraylength_expression(void)
 {
 	assert_print_expr("ARRAYLENGTH:\n"

@@ -29,6 +29,7 @@ enum expression_type {
 	EXPR_NEW,
 	EXPR_NEWARRAY,
 	EXPR_ANEWARRAY,
+	EXPR_MULTIANEWARRAY,
 	EXPR_ARRAYLENGTH,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
@@ -200,6 +201,13 @@ struct expression {
 			struct object *anewarray_ref_type;
 		};
 
+		/*  EXPR_MULTIANEWARRAY represents creation of a new multidimensional
+		    array of given reference.  */
+		struct {
+			struct tree_node *multianewarray_dimensions;
+			struct object *multianewarray_ref_type;
+		};
+
 		/*  EXPR_ARRAYLENGTH represents length of an array.  */
 		struct {
 			struct tree_node *arraylength_ref;
@@ -252,6 +260,7 @@ struct expression *no_args_expr(void);
 struct expression *new_expr(struct object *);
 struct expression *newarray_expr(unsigned long, struct expression *);
 struct expression *anewarray_expr(struct object *, struct expression *);
+struct expression *multianewarray_expr(struct object *);
 struct expression *arraylength_expr(struct expression *);
 
 unsigned long nr_args(struct expression *);

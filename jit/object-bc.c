@@ -11,6 +11,7 @@
 #include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
+#include <jit/args.h>
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
@@ -360,6 +361,35 @@ int convert_anewarray(struct parse_context *ctx)
 		return -ENOMEM;
 
 	stack_push(ctx->cu->expr_stack,arrayref);
+
+	return 0;
+}
+
+int convert_multianewarray(struct parse_context *ctx)
+{
+	struct expression *arrayref;
+	struct expression *args_list;
+	unsigned long type_idx;
+	unsigned char dimension;
+	struct object *class;
+
+	type_idx = read_u16(ctx->insn_start + 1);
+	dimension = read_u8(ctx->insn_start + 3);
+	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+
+	if (!class)
+		return -ENOMEM;
+
+	arrayref = multianewarray_expr(class);
+	if (!arrayref)
+		return -ENOMEM;
+
+	args_list = convert_args(ctx->cu->expr_stack, dimension);
+	arrayref->multianewarray_dimensions = &args_list->node;
+	if (!arrayref->multianewarray_dimensions)
+		return -ENOMEM;
+
+	stack_push(ctx->cu->expr_stack, arrayref);
 
 	return 0;
 }

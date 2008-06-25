@@ -41,6 +41,7 @@ OBJS = \
 	../../jit/spill-reload.o \
 	../../jit/typeconv-bc.o \
 	../../jit/tree-printer.o \
+	../../jit/args.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
@@ -55,6 +56,7 @@ OBJS = \
 	compilation-unit-test.o \
 	expression-test.o \
 	interval-test.o \
+	args-test-utils.o \
 	invoke-bc-test.o \
 	linear-scan-test.o \
 	liveness-test.o \

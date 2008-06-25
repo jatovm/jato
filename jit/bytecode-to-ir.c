@@ -216,6 +216,7 @@ static convert_fn_t converters[] = {
 	[OPC_IFNULL] = convert_ifnull,
 	[OPC_IFNONNULL] = convert_ifnonnull,
 	[OPC_ANEWARRAY] = convert_anewarray,
+	[OPC_MULTIANEWARRAY] = convert_multianewarray,
 	[OPC_ARRAYLENGTH] = convert_arraylength,
 };
 
