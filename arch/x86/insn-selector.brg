@@ -85,7 +85,13 @@ reg:	EXPR_VALUE	0
 	result = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = result;
 
-	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->value, result));
+	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->value & ~0UL, result));
+
+	if (expr->vm_type == J_LONG) {
+		result = get_fixed_var(s->b_parent, REG_EDX);
+		state->reg2 = result;
+		bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->value >> 32, state->reg2));
+	}
 }
 
 reg:	EXPR_LOCAL	1
@@ -94,7 +100,7 @@ reg:	EXPR_LOCAL	1
 	struct expression *expr;
 	struct stack_slot *slot;
 	struct var_info *result;
-	
+
 	expr = to_expr(tree);
 	slot = get_local_slot(cu->stack_frame, expr->local_index);
 
@@ -102,6 +108,15 @@ reg:	EXPR_LOCAL	1
 	state->reg1 = result;
 
 	bb_add_insn(s, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
+
+	if (expr->vm_type == J_LONG) {
+		slot = get_local_slot(cu->stack_frame, expr->local_index + 1);
+
+		result = get_fixed_var(s->b_parent, REG_EDX);
+		state->reg2 = result;
+
+		bb_add_insn(s, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
+	}
 }
 
 reg:   EXPR_VAR
@@ -226,6 +241,11 @@ reg:	EXPR_INVOKE(arg) 1
 
 	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
+
+	if (get_method_return_type(method->type) == J_LONG) {
+		var = get_fixed_var(s->b_parent, REG_EDX);
+		state->reg2 = var;
+	}
 
 	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) target));
 
@@ -419,21 +439,34 @@ arg:	EXPR_NO_ARGS
 
 arg:	EXPR_ARG(EXPR_VALUE)
 {
-	struct expression *expr;
+	struct expression *expr, *arg_expr;
 	unsigned long long imm;
 	
 	expr = to_expr(tree);
-	imm  = to_expr(expr->arg_expression)->value;
+	arg_expr = to_expr(expr->arg_expression);
+	imm  = arg_expr->value;
 
-	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, imm));
+	if (arg_expr->vm_type == J_LONG) {
+		bb_add_insn(s, imm_insn(INSN_PUSH_IMM, imm >> 32));
+	}
+
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
 }
 
 arg:	EXPR_ARG(reg)
 {
 	struct var_info *src;
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	if (arg_expr->vm_type == J_LONG) {
+		src = state->left->reg2;
+		bb_add_insn(s, reg_insn(INSN_PUSH_REG, src));
+	}
 
 	src = state->left->reg1;
-
 	bb_add_insn(s, reg_insn(INSN_PUSH_REG, src));
 }
 
@@ -528,6 +561,14 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	slot = get_local_slot(cu->stack_frame, local->local_index);
 
 	bb_add_insn(s, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+
+	if (local->vm_type == J_LONG) {
+		src = state->right->reg2;
+
+		slot = get_local_slot(cu->stack_frame, local->local_index+1);
+
+		bb_add_insn(s, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+	}
 }
 
 stmt:  STMT_STORE(EXPR_VAR, reg)
