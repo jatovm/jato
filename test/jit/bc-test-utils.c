@@ -65,16 +65,6 @@ void assert_temporary_expr(unsigned long expected, struct tree_node *node)
 	assert_int_equals(expected, expr->temporary);
 }
 
-void assert_var_expr(enum vm_type expected_vm_type,
-		     unsigned long expected_vreg, struct tree_node *node)
-{
-	struct expression *expr = to_expr(node);
-
-	assert_int_equals(EXPR_VAR, expr_type(expr));
-	assert_int_equals(expected_vm_type, expr->vm_type);
-	assert_int_equals(expected_vreg, expr->var->vreg);
-}
-
 void assert_array_deref_expr(enum vm_type expected_vm_type,
 			     struct expression *expected_arrayref,
 			     struct expression *expected_index,

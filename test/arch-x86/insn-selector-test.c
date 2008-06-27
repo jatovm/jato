@@ -949,8 +949,6 @@ void test_select_store_field_to_local(void)
 	assert_store_field_to_local(1);
 }
 
-DECLARE_STATIC_VREG(dest_var, 0);
-
 void test_select_store_value_to_var(void)
 {
 	struct expression *store_dest, *store_src;
@@ -962,7 +960,7 @@ void test_select_store_value_to_var(void)
 		.args_count = 0,
 	};
 
-	store_dest = var_expr(J_REFERENCE, &dest_var);
+	store_dest = temporary_expr(J_REFERENCE, 0);
 	store_src  = value_expr(J_REFERENCE, 0xdeadbeef);
 
 	stmt = alloc_statement(STMT_STORE);
@@ -979,12 +977,10 @@ void test_select_store_value_to_var(void)
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_var_insn(INSN_MOV_REG_REG, REG_EAX, &dest_var, insn);
+	assert_reg_var_insn(INSN_MOV_REG_REG, REG_EAX, mach_reg_var(&insn->dest.reg) , insn);
 
 	free_compilation_unit(cu);
 }
-
-DECLARE_STATIC_VREG(src_var, 0);
 
 void test_select_store_var_to_local(void)
 {
@@ -999,7 +995,7 @@ void test_select_store_var_to_local(void)
 	};
 
 	store_dest = local_expr(J_INT, 0);
-	store_src  = var_expr(J_INT, &src_var);
+	store_src  = temporary_expr(J_INT, 0);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_dest->node;
@@ -1012,7 +1008,7 @@ void test_select_store_var_to_local(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_var_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &src_var, 0, insn);
+	assert_var_memlocal_insn(INSN_MOV_REG_MEMLOCAL, mach_reg_var(&insn->src.reg), 0, insn);
 
 	free_compilation_unit(cu);
 }

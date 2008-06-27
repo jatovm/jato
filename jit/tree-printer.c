@@ -83,7 +83,7 @@ static int simple_expr(struct expression *expr)
 	enum expression_type type = expr_type(expr);
 
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
-	    || type == EXPR_TEMPORARY || type == EXPR_VAR || type == EXPR_CLASS_FIELD
+	    || type == EXPR_TEMPORARY || type == EXPR_CLASS_FIELD
 	    || type == EXPR_NO_ARGS;
 }
 
@@ -290,11 +290,6 @@ static int print_temporary_expr(int lvl, struct string *str,
 {
 	return str_append(str, "[temporary %s %lu]", type_names[expr->vm_type],
 			  expr->local_index);
-}
-
-static int print_var_expr(int lvl, struct string *str, struct expression *expr)
-{
-	return str_append(str, "[var %s %lu]", type_names[expr->vm_type], expr->var->vreg);
 }
 
 static int print_array_deref_expr(int lvl, struct string *str,
@@ -653,7 +648,6 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_FVALUE] = print_fvalue_expr,
 	[EXPR_LOCAL] = print_local_expr,
 	[EXPR_TEMPORARY] = print_temporary_expr,
-	[EXPR_VAR] = print_var_expr,
 	[EXPR_ARRAY_DEREF] = print_array_deref_expr,
 	[EXPR_BINOP] = print_binop_expr,
 	[EXPR_UNARY_OP] = print_unary_op_expr,

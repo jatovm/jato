@@ -37,9 +37,6 @@ void free_expression(struct expression *expr)
 	case EXPR_TEMPORARY:
 		/* nothing to do */
 		break;
-	case EXPR_VAR:
-		/* nothing to do */
-		break;
 	case EXPR_ARRAY_DEREF:
 		if (expr->arrayref)
 			expr_put(to_expr(expr->arrayref));
@@ -151,15 +148,6 @@ struct expression *temporary_expr(enum vm_type vm_type,
 	struct expression *expr = alloc_expression(EXPR_TEMPORARY, vm_type);
 	if (expr)
 		expr->temporary = temporary;
-
-	return expr;
-}
-
-struct expression *var_expr(enum vm_type vm_type, struct var_info *var)
-{
-	struct expression *expr = alloc_expression(EXPR_VAR, vm_type);
-	if (expr)
-		expr->var = var;
 
 	return expr;
 }

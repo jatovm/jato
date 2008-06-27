@@ -80,7 +80,7 @@ static void assert_dup_stack(unsigned char opc, struct expression *value)
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
-	assert_var_expr(J_REFERENCE, 0, stmt->store_dest);
+	assert_temporary_expr(0, stmt->store_dest);
 
 	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
 	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
@@ -118,7 +118,7 @@ static void assert_dup_x1_stack(unsigned char opc, struct expression *value1,
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
-	assert_var_expr(J_REFERENCE, 0, stmt->store_dest);
+	assert_temporary_expr(0, stmt->store_dest);
 
 	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
 	assert_ptr_equals(value2, stack_pop(cu->expr_stack));
@@ -164,7 +164,7 @@ static void assert_dup_x2_stack(unsigned char opc, struct expression *value1,
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
-	assert_var_expr(J_REFERENCE, 0, stmt->store_dest);
+	assert_temporary_expr(0, stmt->store_dest);
 
 	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->expr_stack));
 	assert_ptr_equals(value2, stack_pop(cu->expr_stack));

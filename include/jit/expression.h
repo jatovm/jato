@@ -13,8 +13,7 @@ enum expression_type {
 	EXPR_VALUE,
 	EXPR_FVALUE,
 	EXPR_LOCAL,
-	EXPR_TEMPORARY,		/* Deprecated. Use EXPR_VAR instead. */
-	EXPR_VAR,
+	EXPR_TEMPORARY,
 	EXPR_ARRAY_DEREF,
 	EXPR_BINOP,
 	EXPR_UNARY_OP,
@@ -89,13 +88,8 @@ struct expression {
 
 		/*  EXPR_TEMPORARY represents a compiler-generated temporary
 		    expression. This expression type can be used as both
-		    lvalue and rvalue.  DEPRECATED: Use EXPR_VAR instead. */
+		    lvalue and rvalue. */
 		unsigned long temporary;
-
-		/*  EXPR_VAR represents a compiler-generated temporary
-		    expression. This expression type can be used as both
-		    lvalue and rvalue.  */
-		struct var_info *var;
 
 		/*  EXPR_ARRAY_DEREF represents an array access expression
 		    (see JLS 15.13.). This expression type can be used as
@@ -245,7 +239,6 @@ struct expression *value_expr(enum vm_type, unsigned long long);
 struct expression *fvalue_expr(enum vm_type, double);
 struct expression *local_expr(enum vm_type, unsigned long);
 struct expression *temporary_expr(enum vm_type, unsigned long);
-struct expression *var_expr(enum vm_type, struct var_info *);
 struct expression *array_deref_expr(enum vm_type, struct expression *, struct expression *);
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);

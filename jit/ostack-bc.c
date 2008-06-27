@@ -36,10 +36,8 @@ static struct expression *dup_expr(struct parse_context *ctx, struct expression 
 {
 	struct expression *dest;
 	struct statement *stmt;
-	struct var_info *var;
 
-	var = get_var(ctx->cu);
-	dest = var_expr(J_REFERENCE, var);
+	dest = temporary_expr(expr->vm_type, 0);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &dest->node;

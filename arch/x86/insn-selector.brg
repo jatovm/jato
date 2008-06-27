@@ -119,13 +119,17 @@ reg:	EXPR_LOCAL	1
 	}
 }
 
-reg:   EXPR_VAR
+reg:   EXPR_TEMPORARY
 {
+	struct compilation_unit *cu = s->b_parent;
 	struct expression *expr;
-
 	expr = to_expr(tree);
 
-	state->reg1 = expr->var;
+	state->reg1 = get_fixed_var(cu, REG_EBX);
+
+	if (expr->vm_type == J_LONG) {
+		state->reg2 = get_fixed_var(cu, REG_ECX);
+	}
 }
 
 reg:	OP_ADD(reg, EXPR_LOCAL) 1
@@ -571,16 +575,24 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	}
 }
 
-stmt:  STMT_STORE(EXPR_VAR, reg)
+stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
 {
+	struct expression * expr;
 	struct var_info *src, *dest;
 	struct statement *stmt;
 
+	expr = to_expr(tree);
 	stmt = to_stmt(tree);
-	dest = to_expr(stmt->store_dest)->var;
+	dest = get_fixed_var(s->b_parent, REG_EBX);
 	src = state->right->reg1;
 
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+
+	if (expr->vm_type == J_LONG) {
+		dest = get_fixed_var(s->b_parent, REG_ECX);
+		src = state->right->reg2;
+		bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+	}
 }
 
 stmt:	STMT_IF(reg)

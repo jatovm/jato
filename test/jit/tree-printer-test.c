@@ -206,14 +206,6 @@ void test_should_print_temporary_expression(void)
 	assert_printed_temporary_expr("[temporary boolean 1]", J_BOOLEAN, 1);
 }
 
-void test_print_expr_var(void)
-{
-	struct var_info var = {
-		.vreg = 1,
-	};
-	assert_print_expr("[var int 1]", var_expr(J_INT, &var));
-}
-
 void assert_printed_array_deref_expr(const char *expected, enum vm_type type,
 				     unsigned long arrayref, unsigned long array_index)
 {
