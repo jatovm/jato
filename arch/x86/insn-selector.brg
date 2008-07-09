@@ -48,8 +48,8 @@ static void method_args_cleanup(struct basic_block *bb, unsigned long args_count
 
 struct _MBState;
 
-static void binop_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
-static void binop_reg_value(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
+static void binop_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type, struct var_info *);
+static void binop_reg_value(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type, struct var_info *);
 static void shift_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
 
 static enum insn_type br_binop_to_insn_type(enum binary_operator binop)
@@ -134,22 +134,22 @@ reg:   EXPR_TEMPORARY
 
 reg:	OP_ADD(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_ADD_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_ADD_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_ADD(reg, EXPR_VALUE) 1
 {
-	binop_reg_value(state, s, tree, INSN_ADD_IMM_REG);
+	binop_reg_value(state, s, tree, INSN_ADD_IMM_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_SUB(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_SUB_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_SUB_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_MUL(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_MUL_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_MUL_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_DIV(reg, EXPR_LOCAL) 1
@@ -219,17 +219,17 @@ reg:	OP_USHR(reg, EXPR_LOCAL) 1
 
 reg:	OP_OR(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_OR_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_OR_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_AND(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_AND_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_AND_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_XOR(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_XOR_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_XOR_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	EXPR_INVOKE(arg) 1
@@ -296,22 +296,22 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_EQ(reg, EXPR_VALUE) 1
 {
-	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
+	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_NE(reg, EXPR_LOCAL) 1
 {
-	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG);
+	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	OP_NE(reg, EXPR_VALUE) 1
 {
-	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
+	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG, get_fixed_var(s->b_parent, REG_EAX));
 }
 
 reg:	EXPR_CLASS_FIELD 1
@@ -611,13 +611,12 @@ stmt:	STMT_IF(reg)
 %%
 
 static void binop_reg_local(struct _MBState *state, struct basic_block *bb,
-			    struct tree_node *tree, enum insn_type insn_type)
+			    struct tree_node *tree, enum insn_type insn_type, struct var_info * result)
 {
-	struct var_info *result, *frame_ptr;
+	struct var_info *frame_ptr;
 	struct expression *expr;
 	unsigned long disp;
 
-	result = get_fixed_var(bb->b_parent, REG_EAX);
 	state->reg1 = result;
 
 	expr = to_expr(tree);
@@ -629,12 +628,10 @@ static void binop_reg_local(struct _MBState *state, struct basic_block *bb,
 }
 
 static void binop_reg_value(struct _MBState *state, struct basic_block *bb,
-			    struct tree_node *tree, enum insn_type insn_type)
+			    struct tree_node *tree, enum insn_type insn_type, struct var_info * result)
 {
 	struct expression *expr, *right;
-	struct var_info *result;
 
-	result = get_fixed_var(bb->b_parent, REG_EAX);
 	state->reg1 = result;
 
 	expr  = to_expr(tree);
