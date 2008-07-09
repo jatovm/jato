@@ -473,6 +473,22 @@ static void emit_or_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x0b, src, dest);
 }
 
+static void __emit_or_reg_reg(struct buffer * buf, enum machine_reg src_reg,
+			      enum machine_reg dest_reg)
+{
+	unsigned char mod_rm;
+
+	mod_rm = encode_modrm(0x03, __encode_reg(src_reg), __encode_reg(dest_reg));
+	emit(buf, 0x0b);
+	emit(buf, mod_rm);
+}
+
+static void emit_or_reg_reg(struct buffer *buf, struct operand * src,
+			    struct operand *dest)
+{
+	__emit_or_reg_reg(buf, mach_reg(&src->reg), mach_reg(&dest->reg));
+}
+
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x00, imm, reg);
@@ -586,6 +602,17 @@ static void emit_xor_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x33, src, dest);
 }
 
+static void __emit_xor_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0x06, imm, reg);
+}
+
+static void emit_xor_imm_reg(struct buffer *buf, struct operand * src,
+			     struct operand *dest)
+{
+	__emit_xor_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
 enum emitter_type {
 	NO_OPERANDS = 1,
 	SINGLE_OPERAND,
@@ -627,6 +654,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, TWO_OPERANDS),
@@ -634,6 +662,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 };
 
 typedef void (*emit_no_operands_fn) (struct buffer *);
