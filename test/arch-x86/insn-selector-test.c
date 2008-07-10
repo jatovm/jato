@@ -837,8 +837,8 @@ void test_store_value_to_class_field(void)
 
 	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
-	store_target = class_field_expr(J_INT, &field);
-	store_value  = value_expr(J_INT, 0xcafebabe);
+	store_target = class_field_expr(J_LONG, &field);
+	store_value  = value_expr(J_LONG, 0xdeadbeefcafebabe);
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_target->node;
 	stmt->store_src  = &store_value->node;
@@ -852,6 +852,12 @@ void test_store_value_to_class_field(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	expected_disp = offsetof(struct fieldblock, static_value);
 	assert_imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0xcafebabe, REG_EAX, expected_disp, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0xdeadbeef, REG_EAX, expected_disp, insn);
 
 	free_compilation_unit(cu);
 }
@@ -873,8 +879,8 @@ void test_store_value_to_instance_field(void)
 
 	field.offset = 8;
 	objectref    = local_expr(J_REFERENCE, 0);
-	store_target = instance_field_expr(J_INT, &field, objectref);
-	store_value  = value_expr(J_INT, 0xcafebabe);
+	store_target = instance_field_expr(J_LONG, &field, objectref);
+	store_value  = value_expr(J_LONG, 0xdeadbeefcafebabe);
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_target->node;
 	stmt->store_src  = &store_value->node;
@@ -900,7 +906,16 @@ void test_store_value_to_instance_field(void)
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, REG_EDX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EAX, REG_ECX, REG_EDX, 2, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 1, REG_EDX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_memindex_insn(INSN_MOV_REG_MEMINDEX, REG_EDX, REG_ECX, REG_EDX, 2, insn);
 
 	free_compilation_unit(cu);
 }
