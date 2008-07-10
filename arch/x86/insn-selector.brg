@@ -294,6 +294,16 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 		method_args_cleanup(s, args_count);
 }
 
+reg:	OP_CMP(reg, EXPR_LOCAL) 1
+{
+	assert(!"not implemented");
+}
+
+reg:	OP_CMP(reg, EXPR_VALUE) 1
+{
+	assert(!"not implemented");
+}
+
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
 	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG, get_fixed_var(s->b_parent, REG_EAX));
