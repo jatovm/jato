@@ -379,7 +379,7 @@ reg:	EXPR_NEWARRAY(reg)
 
 	expr = to_expr(tree);
 
-	var = get_var(s->b_parent);
+	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
 
 	size = state->left->reg1;
