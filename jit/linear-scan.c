@@ -76,8 +76,13 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		free_until_pos[i] = LONG_MAX;
 
 	list_for_each_entry(it, active, interval_node) {
-		assert(it->reg < NR_REGISTERS);
-		free_until_pos[it->reg] = 0;
+		/*
+		 * If it->reg is greater than or equal to NR_REGISTERS, it's
+		 * not a general purpose register and thus not available for
+		 * allocation so it's safe to just ignore it.
+		 */
+		if (it->reg < NR_REGISTERS)
+			free_until_pos[it->reg] = 0;
 	}
 
 	list_for_each_entry(it, inactive, interval_node) {
