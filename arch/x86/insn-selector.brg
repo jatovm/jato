@@ -154,41 +154,18 @@ reg:	OP_MUL(reg, EXPR_LOCAL) 1
 
 reg:	OP_DIV(reg, EXPR_LOCAL) 1
 {
-	struct var_info *edx, *result, *frame_ptr;
-	struct expression *expr;
-	unsigned long disp;
-
-	expr = to_expr(tree);
-	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
-
-	edx = get_fixed_var(s->b_parent, REG_EDX);
-	result = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = result;
-
-	frame_ptr = s->b_parent->frame_ptr;
-
-	bb_add_insn(s, reg_reg_insn(INSN_CLTD_REG_REG, result, edx));
-	bb_add_insn(s, membase_reg_insn(INSN_DIV_MEMBASE_REG, frame_ptr, disp, result));
+	div_reg_local(state, s, tree);
 }
 
 reg:	OP_REM(reg, EXPR_LOCAL) 1
 {
-	struct var_info *edx, *result, *frame_ptr, *remainder;
-	struct expression *expr;
-	unsigned long disp;
-
-	expr = to_expr(tree);
-	disp = frame_local_offset(s->b_parent->method, to_expr(expr->binary_right));
-
-	edx = get_fixed_var(s->b_parent, REG_EDX);
+	struct var_info *result, *remainder;
+	
+	div_reg_local(state, s, tree);
+	
 	result = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = result;
-
-	frame_ptr = s->b_parent->frame_ptr;
 	remainder = get_fixed_var(s->b_parent, REG_EDX);
 
-	bb_add_insn(s, reg_reg_insn(INSN_CLTD_REG_REG, result, edx));
-	bb_add_insn(s, membase_reg_insn(INSN_DIV_MEMBASE_REG, frame_ptr, disp, result));
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, remainder, result));
 }
 
@@ -679,6 +656,28 @@ static void shift_reg_local(struct _MBState *state, struct basic_block *bb,
 
 	bb_add_insn(bb, membase_reg_insn(INSN_MOV_MEMBASE_REG, frame_ptr, disp, shift_count));
 	bb_add_insn(bb, reg_reg_insn(insn_type, shift_count, result));
+}
+
+static void div_reg_local(struct _MBState *state, struct basic_block *bb,
+			  struct tree_node *tree)
+{
+	struct var_info *edx, *result, *frame_ptr;
+	struct expression *expr;
+	unsigned long disp;
+
+	expr = to_expr(tree);
+	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
+
+	edx = get_fixed_var(bb->b_parent, REG_EDX);
+	result = get_fixed_var(bb->b_parent, REG_EAX);
+	state->reg1 = result;
+
+	frame_ptr = bb->b_parent->frame_ptr;
+
+	bb_add_insn(bb, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, result));
+	bb_add_insn(bb, reg_reg_insn(INSN_CLTD_REG_REG, result, edx));
+	bb_add_insn(bb, membase_reg_insn(INSN_DIV_MEMBASE_REG, frame_ptr, disp, result));
+
 }
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)
