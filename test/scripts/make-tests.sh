@@ -29,7 +29,7 @@ static void run_tests(void)
 {
 
 '
-cat $FILES | grep '^void test_' | 
+cat $FILES | grep '^void test_' | grep -v "__ignore" |
     sed -e 's/^void //' \
         -e 's/(.*$//' \
         -e 's/^/    /' \
