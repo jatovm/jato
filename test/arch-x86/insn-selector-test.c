@@ -197,6 +197,9 @@ void test_should_select_insn_for_every_statement(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_membase_reg_insn(INSN_ADD_MEMBASE_REG, REG_EBP, 20, dreg, insn);
 
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg, REG_EAX, insn);
+
 	free_compilation_unit(cu);
 }
 
@@ -445,9 +448,9 @@ void test_select_return(void)
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
-	enum machine_reg dreg;
+	enum machine_reg dreg, dreg2;
 
-	value = value_expr(J_INT, 0xdeadbeef);
+	value = value_expr(J_LONG, 0xcafecacadeadbeef);
 
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &value->node;
@@ -461,6 +464,16 @@ void test_select_return(void)
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	dreg2 = mach_reg(&insn->dest.reg);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xcafecaca, dreg2, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg2, REG_EDX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_branch_insn(INSN_JMP_BRANCH, cu->exit_bb, insn);
