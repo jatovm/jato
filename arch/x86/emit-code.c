@@ -44,6 +44,12 @@ static unsigned char __encode_reg(enum machine_reg reg)
 	case REG_EDX:
 		ret = 0x02;
 		break;
+	case REG_ESI:
+		ret = 0x06;
+		break;
+	case REG_EDI:
+		ret = 0x07;
+		break;
 	case REG_ESP:
 		ret = 0x04;
 		break;
