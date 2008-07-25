@@ -17,12 +17,14 @@ SUITE=x86-test-suite.c
 OBJS = \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
+	../jamvm/cast-stub.o \
 	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/types.o \
 	../../vm/zalloc.o \
+	../../vm/class.o \
 	../../jit/alloc.o \
 	../../jit/basic-block.o \
 	../../jit/compilation-unit.o \

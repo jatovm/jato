@@ -62,6 +62,13 @@ public class ObjectCreationAndManipulationTest extends TestCase {
        assertEquals(5, array.length);
     }
 
+    public static void testIsInstanceOf() {
+        ClassFields obj = new ClassFields();
+        assertTrue(obj instanceof ClassFields);
+        assertTrue(obj instanceof Object);
+        assertFalse(null instanceof Object);
+    }
+
     public static void main(String[] args) {
         testNewObject();
         testObjectInitialization();
@@ -71,6 +78,7 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testANewArray();
         testArrayLength();
         testMultiANewArray();
+        testIsInstanceOf();
 
         Runtime.getRuntime().halt(retval);
     }

@@ -94,6 +94,9 @@ void free_expression(struct expression *expr)
 	case EXPR_ARRAYLENGTH:
 		expr_put(to_expr(expr->arraylength_ref));
 		break;
+	case EXPR_INSTANCEOF:
+		expr_put(to_expr(expr->instanceof_ref));
+		break;
 	case EXPR_LAST:
 		assert(!"EXPR_LAST is not a real type. Don't use it");
 		break;
@@ -314,6 +317,17 @@ struct expression *arraylength_expr(struct expression *arrayref)
 
 	if (expr)
 		expr->arraylength_ref = &arrayref->node;
+	return expr;
+}
+
+struct expression *instanceof_expr(struct expression *objectref, struct object *class)
+{
+	struct expression *expr = alloc_expression(EXPR_INSTANCEOF, J_REFERENCE);
+
+	if (expr) {
+		expr->instanceof_class = class;
+		expr->instanceof_ref = &objectref->node;
+	}
 	return expr;
 }
 

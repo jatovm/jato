@@ -42,6 +42,18 @@ public class TestCase {
         }
     }
 
+    protected static void assertTrue(boolean actual) {
+        if (actual == false) {
+            fail(/*"Expected true, but was false."*/);
+        }
+    }
+
+    protected static void assertFalse(boolean actual) {
+        if (actual == true) {
+            fail(/*"Expected false, but was true."*/);
+        }
+    }
+
     protected static void fail(/*String msg*/) {
 //        System.out.println(msg);
         retval = 1;

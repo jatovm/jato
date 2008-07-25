@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <vm/class.h>
+
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct tree_node
@@ -422,6 +424,25 @@ reg:    EXPR_ARRAYLENGTH(reg)
 	state->reg1 = arraylength;
 
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref, sizeof(struct object), arraylength));
+}
+
+reg:	EXPR_INSTANCEOF(reg)
+{
+	struct var_info *ref, *instanceof_result;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	ref = state->left->reg1;
+
+	instanceof_result = get_fixed_var(s->b_parent, REG_EAX);
+	state->reg1 = instanceof_result;
+
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->instanceof_class));
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, ref));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) is_object_instance_of));
+
+	method_args_cleanup(s, 2);
 }
 
 arg:	EXPR_NO_ARGS

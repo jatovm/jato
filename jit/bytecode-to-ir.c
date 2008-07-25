@@ -218,6 +218,7 @@ static convert_fn_t converters[] = {
 	[OPC_ANEWARRAY] = convert_anewarray,
 	[OPC_MULTIANEWARRAY] = convert_multianewarray,
 	[OPC_ARRAYLENGTH] = convert_arraylength,
+	[OPC_INSTANCEOF] = convert_instanceof,
 };
 
 static int parse_bytecode_insn(struct parse_context *ctx)

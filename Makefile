@@ -72,7 +72,8 @@ VM_OBJS = \
 	vm/stack.o		\
 	vm/string.o		\
 	vm/types.o		\
-	vm/zalloc.o
+	vm/zalloc.o		\
+	vm/class.o
 
 JAMVM_OBJS = \
 	jato/jato.o		\

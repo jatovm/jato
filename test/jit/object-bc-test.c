@@ -551,3 +551,32 @@ void test_convert_arraylength(void)
 	free_compilation_unit(cu);
 	free(class);
 }
+
+void test_convert_instanceof(void)
+{
+	struct object *instance_class = new_class();
+	unsigned char code[] = { OPC_INSTANCEOF, 0x00, 0x00 };
+	struct compilation_unit *cu;
+	struct expression *ref, *expr;
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+
+	cu = alloc_simple_compilation_unit(&method);
+	ref = value_expr(J_REFERENCE, (unsigned long) instance_class);
+	stack_push(cu->expr_stack, ref);
+
+	convert_ir_const_single(cu, instance_class);
+
+	expr = stack_pop(cu->expr_stack);
+
+	assert_int_equals(EXPR_INSTANCEOF, expr_type(expr));
+	assert_int_equals(J_REFERENCE, expr->vm_type);
+	assert_ptr_equals(ref, to_expr(expr->instanceof_ref));
+	assert_ptr_equals(instance_class, expr->instanceof_class);
+
+	expr_put(expr);
+	free_compilation_unit(cu);
+	free(instance_class);
+}

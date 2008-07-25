@@ -539,3 +539,12 @@ void test_print_arraylength_expression(void)
 			  "  arraylength_ref: [value reference 0xcafe]\n",
 			  arraylength_expr(value_expr(J_REFERENCE, 0xcafe)));
 }
+
+void test_print_instanceof_expression(void)
+{
+	assert_print_expr("INSTANCEOF:\n"
+			  "  vm_type: [reference]\n"
+			  "  instanceof_class: [0x55]\n"
+			  "  instanceof_ref: [value reference 0x55]\n",
+			  instanceof_expr(value_expr(J_REFERENCE, 0x55), (void *)0x55));
+}

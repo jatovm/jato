@@ -30,6 +30,7 @@ enum expression_type {
 	EXPR_ANEWARRAY,
 	EXPR_MULTIANEWARRAY,
 	EXPR_ARRAYLENGTH,
+	EXPR_INSTANCEOF,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -206,6 +207,12 @@ struct expression {
 		struct {
 			struct tree_node *arraylength_ref;
 		};
+
+		/*  EXPR_INSTANCEOF is used to determine if object is of given type.  */
+		struct {
+			struct tree_node *instanceof_ref;
+			struct object *instanceof_class;
+		};
 	};
 };
 
@@ -255,6 +262,7 @@ struct expression *newarray_expr(unsigned long, struct expression *);
 struct expression *anewarray_expr(struct object *, struct expression *);
 struct expression *multianewarray_expr(struct object *);
 struct expression *arraylength_expr(struct expression *);
+struct expression *instanceof_expr(struct expression *, struct object *);
 
 unsigned long nr_args(struct expression *);
 

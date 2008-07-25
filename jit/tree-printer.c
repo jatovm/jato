@@ -641,6 +641,28 @@ static int print_arraylength_expr(int lvl, struct string *str, struct expression
 	return err;
 }
 
+static int print_instanceof_expr(int lvl, struct string *str, struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "INSTANCEOF:\n");
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "instanceof_class", "%p", expr->instanceof_class);
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "instanceof_ref", expr->instanceof_ref);
+
+      out:
+	return err;
+}
+
 typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
@@ -664,6 +686,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_ANEWARRAY] = print_anewarray_expr,
 	[EXPR_MULTIANEWARRAY] = print_multianewarray_expr,
 	[EXPR_ARRAYLENGTH] = print_arraylength_expr,
+	[EXPR_INSTANCEOF] = print_instanceof_expr,
 };
 
 static int print_expr(int lvl, struct tree_node *root, struct string *str)

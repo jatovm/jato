@@ -26,4 +26,6 @@ DECLARE_CONVERTER(convert_newarray)
 DECLARE_CONVERTER(convert_anewarray)
 DECLARE_CONVERTER(convert_multianewarray)
 DECLARE_CONVERTER(convert_arraylength)
+
+DECLARE_CONVERTER(convert_instanceof)
 DECLARE_CONVERTER(convert_checkcast)

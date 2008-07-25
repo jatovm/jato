@@ -8,6 +8,7 @@
 #include <jit/statement.h>
 #include <jit/compiler.h>
 #include <vm/vm.h>
+#include <vm/class.h>
 #include <arch/instruction.h>
 
 #include <test/vars.h>
@@ -1295,6 +1296,49 @@ void test_select_arraylength(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, sizeof(struct object), dreg2, insn);
+
+	free(instance_class);
+	free_compilation_unit(cu);
+}
+
+void test_select_instanceof(void)
+{
+	struct object *instance_class;
+	struct compilation_unit *cu;
+	struct expression *expr, *ref;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct insn *insn;
+	enum machine_reg dreg;
+
+	instance_class = new_class();
+	ref = value_expr(J_REFERENCE, (unsigned long) instance_class);
+
+	expr = instanceof_expr(ref, instance_class);
+	stmt = alloc_statement(STMT_EXPRESSION);
+	stmt->expression = &expr->node;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	dreg = mach_reg(&insn->dest.reg);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) instance_class, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) is_object_instance_of, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
 
 	free(instance_class);
 	free_compilation_unit(cu);
