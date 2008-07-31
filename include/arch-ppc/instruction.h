@@ -12,12 +12,12 @@ struct insn {
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 
-static inline bool insn_defs(struct insn *insn, unsigned long vreg)
+static inline bool insn_defs(struct insn *insn, struct var_info *var)
 {
 	return false;
 }
 
-static inline bool insn_uses(struct insn *insn, unsigned long vreg)
+static inline bool insn_uses(struct insn *insn, struct var_info *var)
 {
 	return false;
 }

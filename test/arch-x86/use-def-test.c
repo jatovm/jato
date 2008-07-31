@@ -26,16 +26,16 @@ DECLARE_STATIC_VREG(r2, VREG_OFFSET + 2);
 
 static void assert_use_mask(int r0_set, int r1_set, int r2_set, struct insn *insn)
 {
-	assert_int_equals(r0_set, insn_uses(insn, r0.vreg));
-	assert_int_equals(r1_set, insn_uses(insn, r1.vreg));
-	assert_int_equals(r2_set, insn_uses(insn, r2.vreg));
+	assert_int_equals(r0_set, insn_uses(insn, &r0));
+	assert_int_equals(r1_set, insn_uses(insn, &r1));
+	assert_int_equals(r2_set, insn_uses(insn, &r2));
 }
 
 static void assert_def_mask(int r0_set, int r1_set, int r2_set, struct insn *insn)
 {
-	assert_int_equals(r0_set, insn_defs(insn, r0.vreg));
-	assert_int_equals(r1_set, insn_defs(insn, r1.vreg));
-	assert_int_equals(r2_set, insn_defs(insn, r2.vreg));
+	assert_int_equals(r0_set, insn_defs(insn, &r0));
+	assert_int_equals(r1_set, insn_defs(insn, &r1));
+	assert_int_equals(r2_set, insn_defs(insn, &r2));
 }
 
 static void assert_does_not_define_or_use_anything(struct insn *insn)

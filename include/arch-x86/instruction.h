@@ -149,8 +149,8 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
-bool insn_defs(struct insn *, unsigned long);
-bool insn_uses(struct insn *, unsigned long);
+bool insn_defs(struct insn *, struct var_info *);
+bool insn_uses(struct insn *, struct var_info *);
 
 static inline const char *reg_name(enum machine_reg reg)
 {

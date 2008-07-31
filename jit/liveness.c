@@ -143,10 +143,10 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 	struct var_info *var;
 
 	for_each_variable(var, bb->b_parent->var_infos) {
-		if (insn_defs(insn, var->vreg))
+		if (insn_defs(insn, var))
 			set_bit(bb->def_set->bits, var->vreg);
 
-		if (insn_uses(insn, var->vreg))
+		if (insn_uses(insn, var))
 			set_bit(bb->use_set->bits, var->vreg);
 	}
 

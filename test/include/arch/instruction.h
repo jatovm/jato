@@ -87,8 +87,8 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
-bool insn_defs(struct insn *, unsigned long);
-bool insn_uses(struct insn *, unsigned long);
+bool insn_defs(struct insn *, struct var_info *);
+bool insn_uses(struct insn *, struct var_info *);
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 

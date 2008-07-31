@@ -31,11 +31,13 @@ static inline struct insn_info *get_info(struct insn *insn)
 	return insn_infos + insn->type;
 }
 
-bool insn_defs(struct insn *insn, unsigned long vreg)
+bool insn_defs(struct insn *insn, struct var_info *var)
 {
 	struct insn_info *info;
+	unsigned long vreg;
 
 	info = get_info(insn);
+	vreg = var->vreg;
 
 	if (info->flags & DEF_X) {
 		if (is_vreg(&insn->x.reg, vreg))
@@ -44,11 +46,13 @@ bool insn_defs(struct insn *insn, unsigned long vreg)
 	return false;
 }
 
-bool insn_uses(struct insn *insn, unsigned long vreg)
+bool insn_uses(struct insn *insn, struct var_info *var)
 {
 	struct insn_info *info;
+	unsigned long vreg;
 
 	info = get_info(insn);
+	vreg = var->vreg;
 
 	if (info->flags & USE_Y) {
 		if (is_vreg(&insn->y.reg, vreg))
