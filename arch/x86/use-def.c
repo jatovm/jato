@@ -11,12 +11,13 @@ enum {
 	DEF_DST		= 1,
 	DEF_SRC		= 2,
 	DEF_NONE	= 4,
-	USE_DST		= 8,
-	USE_IDX_DST	= 16,	/* destination operand is memindex */
-	USE_IDX_SRC	= 32,	/* source operand is memindex */
-	USE_NONE	= 64,
-	USE_SRC		= 128,
-	USE_FP		= 256,	/* frame pointer */
+	DEF_CALLER_SAVED_REGS = 8,
+	USE_DST		= 16,
+	USE_IDX_DST	= 32,	/* destination operand is memindex */
+	USE_IDX_SRC	= 64,	/* source operand is memindex */
+	USE_NONE	= 128,
+	USE_SRC		= 256,
+	USE_FP		= 512,	/* frame pointer */
 };
 
 struct insn_info {
@@ -72,6 +73,17 @@ bool insn_defs(struct insn *insn, struct var_info *var)
 
 	info = get_info(insn);
 	vreg = var->vreg;
+
+	if (info->flags & DEF_CALLER_SAVED_REGS) {
+		if (var->interval->reg == REG_EAX)
+			return true;
+
+		if (var->interval->reg == REG_ECX)
+			return true;
+
+		if (var->interval->reg == REG_EDX)
+			return true;
+	}
 
 	if (info->flags & DEF_SRC) {
 		if (is_vreg(&insn->src.reg, vreg))
