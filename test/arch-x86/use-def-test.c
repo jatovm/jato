@@ -24,6 +24,10 @@ DECLARE_STATIC_VREG(r2, VREG_OFFSET + 2);
 
 #define NR_VREGS VREG_OFFSET + 3
 
+DECLARE_STATIC_REG(eax, REG_EAX);
+DECLARE_STATIC_REG(ecx, REG_ECX);
+DECLARE_STATIC_REG(edx, REG_EDX);
+
 static void assert_use_mask(int r0_set, int r1_set, int r2_set, struct insn *insn)
 {
 	assert_int_equals(r0_set, insn_uses(insn, &r0));
@@ -36,6 +40,13 @@ static void assert_def_mask(int r0_set, int r1_set, int r2_set, struct insn *ins
 	assert_int_equals(r0_set, insn_defs(insn, &r0));
 	assert_int_equals(r1_set, insn_defs(insn, &r1));
 	assert_int_equals(r2_set, insn_defs(insn, &r2));
+}
+
+static void assert_def_fixed_mask(int a_set, int c_set, int d_set, struct insn *insn)
+{
+	assert_int_equals(a_set, insn_defs(insn, &eax));
+	assert_int_equals(c_set, insn_defs(insn, &ecx));
+	assert_int_equals(d_set, insn_defs(insn, &edx));
 }
 
 static void assert_does_not_define_or_use_anything(struct insn *insn)
@@ -102,6 +113,13 @@ static void assert_defines_r0(struct insn *insn)
 	free_insn(insn);
 }
 
+static void assert_defines_caller_saved(struct insn *insn)
+{
+	assert_def_fixed_mask(1, 1, 1, insn);
+
+	free_insn(insn);
+}
+
 void test_memlocal_reg_defines_target(void)
 {
 	struct stack_slot slot;
@@ -144,6 +162,12 @@ void test_call_reg_uses_operand(void)
 	assert_uses_r0(reg_insn(INSN_CALL_REG, &r0));
 }
 
+void test_call_defines_caller_saved(void)
+{
+	assert_defines_caller_saved(reg_insn(INSN_CALL_REG, &r0));
+	assert_defines_caller_saved(rel_insn(INSN_CALL_REL, 0x12345678));
+}
+
 void test_cltd_defines_edx_and_eax_and_uses_eax(void)
 {
 	assert_uses_r0_defines_r0_and_r1(reg_reg_insn(INSN_CLTD_REG_REG, &r0, &r1));
@@ -182,11 +206,6 @@ void test_imm_membase_uses_target(void)
 void test_imm_does_not_define_or_use_anything(void)
 {
 	assert_does_not_define_or_use_anything(imm_insn(INSN_PUSH_IMM, 0xdeadbeef));
-}
-
-void test_rel_does_not_define_or_use_anything(void)
-{
-	assert_does_not_define_or_use_anything(rel_insn(INSN_CALL_REL, 0xcafebabe));
 }
 
 void test_branch_does_not_define_or_use_anything(void)
