@@ -778,6 +778,13 @@ int select_instructions(struct compilation_unit *cu)
 		goto out;
 	}
 
+	/*
+	 * Let the liveness analysis pass know about caller saved registers.
+	 */
+	get_fixed_var(cu, REG_EAX);
+	get_fixed_var(cu, REG_ECX);
+	get_fixed_var(cu, REG_EDX);
+
 	for_each_basic_block(bb, &cu->bb_list)
 		insn_select(bb);
 
