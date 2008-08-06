@@ -151,13 +151,13 @@ int allocate_registers(struct compilation_unit *cu)
 	bitset_set_all(registers);
 
 	/*
-	 * Fixed intervals need to be inserted before non-fixed intervals to
-	 * make sure the former always block a fixed register from being
-	 * allocated.
+	 * Fixed intervals are placed on the inactive list initially so that
+	 * the allocator can avoid conflicts when allocating a register for a
+	 * non-fixed interval.
 	 */
 	for_each_variable(var, cu->var_infos) {
 		if (var->interval->reg != REG_UNASSIGNED)
-			insert_to_list(var->interval, &unhandled);
+			insert_to_list(var->interval, &inactive);
 	}
 
 	for_each_variable(var, cu->var_infos) {
