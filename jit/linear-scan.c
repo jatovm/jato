@@ -63,6 +63,20 @@ static enum machine_reg pick_register(unsigned long *free_until_pos)
 	return ret;
 }
 
+static void set_free_pos(unsigned long *free_until_pos, enum machine_reg reg,
+			 unsigned long pos)
+{
+	/*
+	 * If the position for one register is set multiple times the minimum
+	 * of all positions is used. This can happen when many inactive
+	 * intervals have the same register assigned.
+	 */
+	if (free_until_pos[reg] < pos)
+		return;
+
+	free_until_pos[reg] = pos;
+}
+
 static void try_to_allocate_free_reg(struct live_interval *current,
 				     struct list_head *active,
 				     struct list_head *inactive)
@@ -82,12 +96,15 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		 * allocation so it's safe to just ignore it.
 		 */
 		if (it->reg < NR_REGISTERS)
-			free_until_pos[it->reg] = 0;
+			set_free_pos(free_until_pos, it->reg, 0);
 	}
 
 	list_for_each_entry(it, inactive, interval_node) {
 		if (ranges_intersect(&it->range, &current->range)) {
-			free_until_pos[it->reg] = range_intersection_start(&it->range, &current->range);
+			unsigned long pos;
+
+			pos = range_intersection_start(&it->range, &current->range);
+			set_free_pos(free_until_pos, it->reg, pos);
 		}
 	}
 
