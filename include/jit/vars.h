@@ -4,6 +4,7 @@
 #include <vm/list.h>
 #include <arch/registers.h>
 #include <stdbool.h>
+#include <assert.h>
 
 struct live_range {
 	unsigned long start, end;	/* end is exclusive */
@@ -17,6 +18,17 @@ static inline bool in_range(struct live_range *range, unsigned long offset)
 static inline bool ranges_intersect(struct live_range *range1, struct live_range *range2)
 {
 	return range2->start < range1->end && range1->start < range2->end;
+}
+
+static inline unsigned long
+range_intersection_start(struct live_range *range1, struct live_range *range2)
+{
+	assert(ranges_intersect(range1, range2));
+
+	if (range1->start > range2->start)
+		return range1->start;
+
+	return range2->start;
 }
 
 static inline unsigned long range_len(struct live_range *range)

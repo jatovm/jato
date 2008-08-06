@@ -87,7 +87,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 
 	list_for_each_entry(it, inactive, interval_node) {
 		if (ranges_intersect(&it->range, &current->range)) {
-			assert("!oops: intersects with current");
+			free_until_pos[it->reg] = range_intersection_start(&it->range, &current->range);
 		}
 	}
 
