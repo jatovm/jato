@@ -287,9 +287,26 @@ void test_select_sub_local_from_local(void)
 	assert_select_local_local_binop(OP_SUB, INSN_SUB_MEMBASE_REG);
 }
 
-void test_select_mul_local_from_local(void)
+void test_select_local_local_mul(void)
 {
-	assert_select_local_local_binop(OP_MUL, INSN_MUL_MEMBASE_REG);
+	struct basic_block *bb;
+	struct insn *insn;
+	enum machine_reg dreg;
+
+	bb = create_local_local_binop_bb(OP_MUL);
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	dreg = mach_reg(&insn->dest.reg);
+	assert_memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, 0, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg, REG_EAX, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_membase_reg_insn(INSN_MUL_MEMBASE_REG, REG_EBP, 12, REG_EAX, insn);
+
+	free_compilation_unit(bb->b_parent);
 }
 
 void test_select_local_local_div(void)
