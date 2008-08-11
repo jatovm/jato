@@ -77,11 +77,12 @@ void free_basic_block(struct basic_block *bb)
  *
  * 	Splits the basic block into two parts and returns a pointer to the
  * 	newly allocated block. The end offset of the given basic block is
- * 	updated accordingly.
+ * 	updated accordingly. Successors of the both block is also updated.
  */
 struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 {
 	struct basic_block *new_bb;
+	unsigned int i;
 
 	if (offset < orig_bb->start || offset >= orig_bb->end)
 		return NULL;
@@ -89,6 +90,23 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 	new_bb = get_basic_block(orig_bb->b_parent, offset, orig_bb->end);
 	if (new_bb)
 		orig_bb->end = offset;
+
+	if (orig_bb->has_branch) {
+		for (i = 0; i < orig_bb->nr_successors; i++) {
+			new_bb->successors[i] = orig_bb->successors[i];
+			orig_bb->successors[i] = NULL;
+		}
+
+		new_bb->nr_successors = orig_bb->nr_successors;
+		orig_bb->nr_successors = 0;
+
+		orig_bb->has_branch = false;
+		new_bb->has_branch = true;
+
+		new_bb->br_target_off = orig_bb->br_target_off;
+		orig_bb->br_target_off = 0;
+	}
+
 	return new_bb;
 }
 
