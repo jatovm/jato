@@ -14,16 +14,15 @@ public class ControlTransferTest extends TestCase {
         int i = 0;
 
         outer: {
-                inner: {
-                        if (i == 0)
-                                break inner;
-                        fail(/*Should not reach here.*/);
-                }
+            inner: {
                 if (i == 0)
-                        break outer;
+                    break inner;
                 fail(/*Should not reach here.*/);
+            }
+            if (i == 0)
+                break outer;
+            fail(/*Should not reach here.*/);
         }
-
     }
 
     public static void main(String [] args) {
