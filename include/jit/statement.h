@@ -16,6 +16,8 @@ enum statement_type {
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 	STMT_ATHROW,
+	STMT_MONITOR_ENTER,
+	STMT_MONITOR_EXIT,
 	STMT_LAST,	/* Not a real type. Keep this last.  */
 };
 

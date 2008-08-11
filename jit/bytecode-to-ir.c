@@ -220,6 +220,8 @@ static convert_fn_t converters[] = {
 	[OPC_ARRAYLENGTH] = convert_arraylength,
 	[OPC_INSTANCEOF] = convert_instanceof,
 	[OPC_ATHROW] = convert_athrow,
+	[OPC_MONITORENTER] = convert_monitor_enter,
+	[OPC_MONITOREXIT] = convert_monitor_exit,
 };
 
 static int parse_bytecode_insn(struct parse_context *ctx)

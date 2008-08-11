@@ -29,3 +29,5 @@ DECLARE_CONVERTER(convert_arraylength)
 
 DECLARE_CONVERTER(convert_instanceof)
 DECLARE_CONVERTER(convert_checkcast)
+DECLARE_CONVERTER(convert_monitor_enter)
+DECLARE_CONVERTER(convert_monitor_exit)

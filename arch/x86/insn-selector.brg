@@ -24,6 +24,8 @@
 
 #include <vm/class.h>
 
+#include <../jamvm/lock.h>
+
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct tree_node
@@ -662,6 +664,28 @@ stmt:	STMT_GOTO
 	stmt = to_stmt(tree);
 
 	bb_add_insn(s, branch_insn(INSN_JMP_BRANCH, stmt->goto_target));
+}
+
+stmt:	STMT_MONITOR_ENTER(reg)
+{
+	struct var_info *ref;
+	ref = state->left->reg1;
+
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, ref));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) objectLock));
+
+	method_args_cleanup(s, 1);
+}
+
+stmt:	STMT_MONITOR_EXIT(reg)
+{
+	struct var_info *ref;
+	ref = state->left->reg1;
+
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, ref));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) objectUnlock));
+
+	method_args_cleanup(s, 1);
 }
 
 %%

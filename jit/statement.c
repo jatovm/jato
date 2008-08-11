@@ -49,6 +49,8 @@ void free_statement(struct statement *stmt)
 	case STMT_EXPRESSION:
 	case STMT_NULL_CHECK:
 	case STMT_ARRAY_CHECK:
+	case STMT_MONITOR_ENTER:
+	case STMT_MONITOR_EXIT:
 		if (stmt->expression)
 			expr_put(to_expr(stmt->expression));
 		break;

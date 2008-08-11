@@ -187,6 +187,20 @@ void assert_arraycheck_stmt(enum vm_type expected_vm_type,
 				expected_index, actual->expression);
 }
 
+void assert_monitor_enter_stmt(struct expression *expected,
+			       struct statement *actual)
+{
+	assert_int_equals(STMT_MONITOR_ENTER, stmt_type(actual));
+	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
+}
+
+void assert_monitor_exit_stmt(struct expression *expected,
+			      struct statement *actual)
+{
+	assert_int_equals(STMT_MONITOR_EXIT, stmt_type(actual));
+	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
+}
+
 void convert_ir_const(struct compilation_unit *cu,
 		      ConstantPoolEntry *cp_infos,
 		      size_t nr_cp_infos, u1 *cp_types)

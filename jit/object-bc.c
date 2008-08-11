@@ -436,3 +436,39 @@ int convert_checkcast(struct parse_context *ctx)
 	/* TODO */
 	return 0;
 }
+
+int convert_monitor_enter(struct parse_context *ctx)
+{
+	struct expression *exp;
+	struct statement *stmt;
+
+	exp = stack_pop(ctx->cu->expr_stack);
+
+	stmt = alloc_statement(STMT_MONITOR_ENTER);
+	if (!stmt)
+		return -ENOMEM;
+
+	expr_get(exp);
+	stmt->expression = &exp->node;
+	bb_add_stmt(ctx->bb, stmt);
+
+	return 0;
+}
+
+int convert_monitor_exit(struct parse_context *ctx)
+{
+	struct expression *exp;
+	struct statement *stmt;
+
+	exp = stack_pop(ctx->cu->expr_stack);
+
+	stmt = alloc_statement(STMT_MONITOR_EXIT);
+	if (!stmt)
+		return -ENOMEM;
+
+	expr_get(exp);
+	stmt->expression = &exp->node;
+	bb_add_stmt(ctx->bb, stmt);
+
+	return 0;
+}

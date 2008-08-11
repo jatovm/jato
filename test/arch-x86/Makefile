@@ -18,6 +18,7 @@ OBJS = \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/cast-stub.o \
+	../jamvm/lock.o \
 	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
 	../../vm/stack.o \

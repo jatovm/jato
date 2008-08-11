@@ -580,3 +580,57 @@ void test_convert_instanceof(void)
 	free_compilation_unit(cu);
 	free(instance_class);
 }
+
+void test_covert_monitor_enter(void)
+{
+	unsigned char code[] = { OPC_MONITORENTER };
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	struct expression *ref;
+	struct statement *stmt;
+	struct compilation_unit *cu;
+	struct object *class = new_class();
+
+	cu = alloc_simple_compilation_unit(&method);
+
+	ref = value_expr(J_REFERENCE, (unsigned long) class);
+	stack_push(cu->expr_stack, ref);
+
+	convert_to_ir(cu);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_monitor_enter_stmt(ref, stmt);
+
+	expr_put(ref);
+	free_compilation_unit(cu);
+	free(class);
+}
+
+void test_convert_monitor_exit(void)
+{
+	unsigned char code[] = { OPC_MONITOREXIT };
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+	struct expression *ref;
+	struct statement *stmt;
+	struct compilation_unit *cu;
+	struct object *class = new_class();
+
+	cu = alloc_simple_compilation_unit(&method);
+
+	ref = value_expr(J_REFERENCE, (unsigned long) class);
+	stack_push(cu->expr_stack, ref);
+
+	convert_to_ir(cu);
+	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+
+	assert_monitor_exit_stmt(ref, stmt);
+
+	expr_put(ref);
+	free_compilation_unit(cu);
+	free(class);
+}
