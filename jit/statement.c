@@ -43,6 +43,7 @@ void free_statement(struct statement *stmt)
 		if (stmt->return_value)
 			expr_put(to_expr(stmt->return_value));
 		break;
+	case STMT_ATHROW:
 	case STMT_VOID_RETURN:
 		break;
 	case STMT_EXPRESSION:

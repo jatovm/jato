@@ -53,6 +53,7 @@ JIT_OBJS = \
 	jit/linear-scan.o	\
 	jit/liveness.o		\
 	jit/load-store-bc.o	\
+	jit/exception-bc.o	\
 	jit/object-bc.o		\
 	jit/ostack-bc.o		\
 	jit/stack-slot.o	\

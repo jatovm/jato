@@ -15,6 +15,7 @@ enum statement_type {
 	STMT_EXPRESSION,
 	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
+	STMT_ATHROW,
 	STMT_LAST,	/* Not a real type. Keep this last.  */
 };
 
@@ -22,7 +23,7 @@ struct statement {
 	union {
 		struct tree_node node;
 
-		/* STMT_VOID_RETURN has no members in this struct.  */
+		/* STMT_VOID_RETURN and STMT_ATHROW has no members in this struct.  */
 		
 		struct /* STMT_STORE */ {
 			struct tree_node *store_dest;

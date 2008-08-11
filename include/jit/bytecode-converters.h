@@ -13,5 +13,6 @@ struct parse_context;
 #include <jit/ostack-bc.h>
 #include <jit/branch-bc.h>
 #include <jit/invoke-bc.h>
+#include <jit/exception-bc.h>
 
 #endif

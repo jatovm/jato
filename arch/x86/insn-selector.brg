@@ -637,6 +637,11 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
 	}
 }
 
+stmt:	STMT_ATHROW(reg)
+{
+	/*TODO*/
+}
+
 stmt:	STMT_IF(reg)
 {
 	struct expression *if_conditional;
