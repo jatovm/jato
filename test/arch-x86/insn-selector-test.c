@@ -1360,3 +1360,26 @@ void test_select_instanceof(void)
 	free(instance_class);
 	free_compilation_unit(cu);
 }
+
+void test_select_goto_stmt(void)
+{
+	struct compilation_unit *cu;
+	struct basic_block *bb, *goto_target;
+	struct statement *stmt;
+	struct insn *insn;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	goto_target = get_basic_block(cu, 1, 2);
+
+	stmt = alloc_statement(STMT_GOTO);
+	stmt->goto_target = goto_target;
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	assert_branch_insn(INSN_JMP_BRANCH, goto_target, insn);
+
+	free_compilation_unit(cu);
+}

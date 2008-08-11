@@ -650,6 +650,15 @@ stmt:	STMT_IF(reg)
 	bb_add_insn(s, branch_insn(insn_type, stmt->if_true));
 }
 
+stmt:	STMT_GOTO
+{
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	bb_add_insn(s, branch_insn(INSN_JMP_BRANCH, stmt->goto_target));
+}
+
 %%
 
 static void binop_reg_local(struct _MBState *state, struct basic_block *bb,
