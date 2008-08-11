@@ -581,7 +581,7 @@ void test_convert_instanceof(void)
 	free(instance_class);
 }
 
-void test_covert_monitor_enter(void)
+void test_convert_monitor_enter(void)
 {
 	unsigned char code[] = { OPC_MONITORENTER };
 	struct methodblock method = {
