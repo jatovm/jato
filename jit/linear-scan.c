@@ -174,12 +174,12 @@ int allocate_registers(struct compilation_unit *cu)
 	 * non-fixed interval.
 	 */
 	for_each_variable(var, cu->var_infos) {
-		if (var->interval->reg != REG_UNASSIGNED)
+		if (var->interval->fixed_reg)
 			insert_to_list(var->interval, &inactive);
 	}
 
 	for_each_variable(var, cu->var_infos) {
-		if (var->interval->reg == REG_UNASSIGNED)
+		if (!var->interval->fixed_reg)
 			insert_to_list(var->interval, &unhandled);
 	}
 
@@ -217,7 +217,7 @@ int allocate_registers(struct compilation_unit *cu)
 		/*
 		 * Don't allocate registers for fixed intervals.
 		 */
-		if (current->reg == REG_UNASSIGNED) {
+		if (!current->fixed_reg) {
 			try_to_allocate_free_reg(current, &active, &inactive, &unhandled);
 
 			if (current->reg == REG_UNASSIGNED)

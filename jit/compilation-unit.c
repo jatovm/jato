@@ -114,8 +114,10 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 	struct var_info *ret;
 
 	ret = get_var(cu);
-	if (ret)
+	if (ret) {
 		ret->interval->reg = reg;
+		ret->interval->fixed_reg = true;
+	}
 
 	return ret;
 }

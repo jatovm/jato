@@ -36,6 +36,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 	if (interval) {
 		interval->var_info = var;
 		interval->reg = REG_UNASSIGNED;
+		interval->fixed_reg = false;
 		interval->range.start = ~0UL;
 		interval->range.end = 0UL;
 		INIT_LIST_HEAD(&interval->interval_node);

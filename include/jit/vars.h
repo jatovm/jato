@@ -75,6 +75,9 @@ struct live_interval {
 	/* The slot this interval is spilled to. Only set if ->need_spill is
 	   true.  */
 	struct stack_slot *spill_slot;
+
+	/* Is this interval fixed? */
+	bool fixed_reg;
 };
 
 struct var_info {
