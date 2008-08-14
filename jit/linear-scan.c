@@ -77,9 +77,33 @@ static void set_free_pos(unsigned long *free_until_pos, enum machine_reg reg,
 	free_until_pos[reg] = pos;
 }
 
+/* Inserts to a list of intervals sorted by increasing start position.  */
+static void
+insert_to_list(struct live_interval *interval, struct list_head *interval_list)
+{
+	struct live_interval *this;
+
+	/*
+	 * If we find an existing interval, that starts _after_ the
+	 * new interval, add ours before that.
+	 */
+	list_for_each_entry(this, interval_list, interval_node) {
+		if (interval->range.start < this->range.start) {
+			list_add_tail(&interval->interval_node, &this->interval_node);
+			return;
+		}
+	}
+
+	/*
+	 * Otherwise the new interval goes to the end of the list.
+	 */
+	list_add_tail(&interval->interval_node, interval_list);
+}
+
 static void try_to_allocate_free_reg(struct live_interval *current,
 				     struct list_head *active,
-				     struct list_head *inactive)
+				     struct list_head *inactive,
+				     struct list_head *unhandled)
 {
 	unsigned long free_until_pos[NR_REGISTERS];
 	struct live_interval *it;
@@ -127,29 +151,6 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		 */
 		assert(!"need to split");
 	}
-}
-
-/* Inserts to a list of intervals sorted by increasing start position.  */
-static void
-insert_to_list(struct live_interval *interval, struct list_head *interval_list)
-{
-	struct live_interval *this;
-
-	/*
-	 * If we find an existing interval, that starts _after_ the
-	 * new interval, add ours before that.
-	 */
-	list_for_each_entry(this, interval_list, interval_node) {
-		if (interval->range.start < this->range.start) {
-			list_add_tail(&interval->interval_node, &this->interval_node);
-			return;
-		}
-	}
-
-	/*
-	 * Otherwise the new interval goes to the end of the list.
-	 */
-	list_add_tail(&interval->interval_node, interval_list);
 }
 
 int allocate_registers(struct compilation_unit *cu)
@@ -217,7 +218,7 @@ int allocate_registers(struct compilation_unit *cu)
 		 * Don't allocate registers for fixed intervals.
 		 */
 		if (current->reg == REG_UNASSIGNED) {
-			try_to_allocate_free_reg(current, &active, &inactive);
+			try_to_allocate_free_reg(current, &active, &inactive, &unhandled);
 
 			if (current->reg == REG_UNASSIGNED)
 				allocate_blocked_reg();
