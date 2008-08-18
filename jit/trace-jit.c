@@ -31,8 +31,18 @@ bool opt_trace_machine_code;
 void trace_method(struct compilation_unit *cu)
 {
 	struct methodblock *method = cu->method;
+	unsigned char *p;
+	int i;
 
-	printf("\nTRACE: %s.%s%s\n\n", CLASS_CB(method->class)->name, method->name, method->type);
+	printf("\nTRACE: %s.%s%s\n", CLASS_CB(method->class)->name, method->name, method->type);
+
+	printf("Length: %d\n", method->code_size);
+	printf("Code: ");
+	p = method->jit_code;
+	for (i = 0; i < method->code_size; i++) {
+		printf("%02x ", p[i]);
+	}
+	printf("\n\n");
 }
 
 void trace_cfg(struct compilation_unit *cu)
