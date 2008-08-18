@@ -318,12 +318,14 @@ static void assert_convert_array_store(enum vm_type expected_type,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
+	struct var_info *temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
-	expr = temporary_expr(expected_type);
+	temporary = get_var(cu);
+	expr = temporary_expr(expected_type, temporary);
 
 	stack_push(cu->expr_stack, arrayref_expr);
 	stack_push(cu->expr_stack, index_expr);

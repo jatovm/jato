@@ -126,6 +126,7 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	struct expression *index, *arrayref;
 	struct expression *src_expr, *dest_expr;
 	struct statement *store_stmt, *arraycheck, *nullcheck;
+	struct var_info *temporary;
 
 	index = stack_pop(ctx->cu->expr_stack);
 	arrayref = stack_pop(ctx->cu->expr_stack);
@@ -135,7 +136,9 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 		goto failed;
 
 	src_expr = array_deref_expr(type, arrayref, index);
-	dest_expr = temporary_expr(type);
+
+	temporary = get_var(ctx->cu);
+	dest_expr = temporary_expr(type, temporary);
 	
 	store_stmt->store_src = &src_expr->node;
 	store_stmt->store_dest = &dest_expr->node;

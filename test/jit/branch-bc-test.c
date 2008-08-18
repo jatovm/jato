@@ -41,6 +41,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
+	struct var_info *temporary;
 
 	cu = alloc_compilation_unit(&method);
 
@@ -52,7 +53,8 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	list_add_tail(&bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 
-	if_value = temporary_expr(J_INT);
+	temporary = get_var(cu);
+	if_value = temporary_expr(J_INT, temporary);
 	stack_push(cu->expr_stack, if_value);
 
 	convert_to_ir(cu);
@@ -90,6 +92,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
+	struct var_info *temporary;
 
 	cu = alloc_compilation_unit(&method);
 	stmt_bb = alloc_basic_block(cu, 0, 1);
@@ -98,10 +101,12 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
-	if_value1 = temporary_expr(vm_type);
+	temporary = get_var(cu);
+	if_value1 = temporary_expr(vm_type, temporary);
 	stack_push(cu->expr_stack, if_value1);
 
-	if_value2 = temporary_expr(vm_type);
+	temporary = get_var(cu);
+	if_value2 = temporary_expr(vm_type, temporary);
 	stack_push(cu->expr_stack, if_value2);
 
 	convert_to_ir(cu);

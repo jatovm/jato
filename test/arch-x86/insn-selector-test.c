@@ -1059,15 +1059,18 @@ void test_select_store_value_to_var(void)
 		.args_count = 0,
 	};
 	enum machine_reg dreg;
+	struct var_info *temporary;
 
-	store_dest = temporary_expr(J_REFERENCE);
+	cu = alloc_compilation_unit(&method);
+
+	temporary = get_var(cu);
+	store_dest = temporary_expr(J_REFERENCE, temporary);
 	store_src  = value_expr(J_REFERENCE, 0xdeadbeef);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_dest->node;
 	stmt->store_src  = &store_src->node;
 
-	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1094,15 +1097,18 @@ void test_select_store_var_to_local(void)
 		.args_count = 0,
 		.max_locals = 1,
 	};
+	struct var_info *temporary;
+
+	cu = alloc_compilation_unit(&method);
 
 	store_dest = local_expr(J_INT, 0);
-	store_src  = temporary_expr(J_INT);
+	temporary = get_var(cu);
+	store_src  = temporary_expr(J_INT, temporary);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_dest->node;
 	stmt->store_src  = &store_src->node;
 
-	cu = alloc_compilation_unit(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 

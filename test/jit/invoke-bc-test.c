@@ -22,10 +22,12 @@ static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct statement *ret_stmt;
+	struct var_info *temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	return_value = temporary_expr(vm_type);
+	temporary = get_var(cu);
+	return_value = temporary_expr(vm_type, temporary);
 	stack_push(cu->expr_stack, return_value);
 
 	convert_to_ir(cu);

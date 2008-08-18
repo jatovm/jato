@@ -245,7 +245,7 @@ void expr_put(struct expression *);
 struct expression *value_expr(enum vm_type, unsigned long long);
 struct expression *fvalue_expr(enum vm_type, double);
 struct expression *local_expr(enum vm_type, unsigned long);
-struct expression *temporary_expr(enum vm_type);
+struct expression *temporary_expr(enum vm_type, struct var_info *);
 struct expression *array_deref_expr(enum vm_type, struct expression *, struct expression *);
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);

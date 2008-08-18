@@ -37,11 +37,15 @@ static void assert_convert_binop(enum vm_type vm_type,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code)
 	};
+	struct var_info *temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	left = temporary_expr(vm_type);
-	right = temporary_expr(vm_type);
+	temporary = get_var(cu);
+	left = temporary_expr(vm_type, temporary);
+
+	temporary = get_var(cu);
+	right = temporary_expr(vm_type, temporary);
 
 	stack_push(cu->expr_stack, left);
 	stack_push(cu->expr_stack, right);
@@ -107,10 +111,12 @@ static void assert_convert_unop(enum vm_type vm_type,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code)
 	};
+	struct var_info *temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	expression = temporary_expr(vm_type);
+	temporary = get_var(cu);
+	expression = temporary_expr(vm_type, temporary);
 	stack_push(cu->expr_stack, expression);
 
 	convert_to_ir(cu);
@@ -213,11 +219,15 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
+	struct var_info *temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	left = temporary_expr(type);
-	right = temporary_expr(type);
+	temporary = get_var(cu);
+	left = temporary_expr(type, temporary);
+
+	temporary = get_var(cu);
+	right = temporary_expr(type, temporary);
 
 	stack_push(cu->expr_stack, left);
 	stack_push(cu->expr_stack, right);

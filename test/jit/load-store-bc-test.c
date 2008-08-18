@@ -438,10 +438,12 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 		.jit_code = code,
 		.code_size = size,
 	};
+	struct var_info *temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	stack_push(cu->expr_stack, temporary_expr(J_INT));
+	temporary = get_var(cu);
+	stack_push(cu->expr_stack, temporary_expr(J_INT, temporary));
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);

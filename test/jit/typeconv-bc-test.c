@@ -20,10 +20,12 @@ static void assert_conversion_expr_stack(unsigned char opc,
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
+	struct var_info *temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	expression = temporary_expr(from_type);
+	temporary = get_var(cu);
+	expression = temporary_expr(from_type, temporary);
 	stack_push(cu->expr_stack, expression);
 
 	convert_to_ir(cu);
