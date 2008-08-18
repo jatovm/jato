@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <libharness.h>
 
-static void assert_local_offset(long expected, struct expression *local, unsigned long nr_args)
+static void assert_local_offset(unsigned long expected, struct expression *local, unsigned long nr_args)
 {
 	struct methodblock method = {
 		.args_count = nr_args

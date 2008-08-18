@@ -36,7 +36,8 @@ static unsigned long index_to_offset(unsigned long index)
 	return index * sizeof(unsigned int);
 }
 
-long frame_local_offset(struct methodblock *method, struct expression *local)
+unsigned long frame_local_offset(struct methodblock *method,
+				 struct expression *local)
 {
 	unsigned long idx, nr_args;
 
@@ -46,7 +47,7 @@ long frame_local_offset(struct methodblock *method, struct expression *local)
 	if (idx < nr_args)
 		return ARGS_START_OFFSET + index_to_offset(idx);
 
-	return 0 - index_to_offset(idx - nr_args + 1);
+	return 0UL - index_to_offset(idx - nr_args + 1);
 }
 
 unsigned long slot_offset(struct stack_slot *slot)

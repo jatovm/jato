@@ -6,8 +6,7 @@
 struct methodblock;
 struct expression;
 
-long frame_local_offset(struct methodblock *, struct expression *);
-
+unsigned long frame_local_offset(struct methodblock *, struct expression *);
 unsigned long slot_offset(struct stack_slot *slot);
 unsigned long frame_locals_size(struct stack_frame *frame);
 
