@@ -89,5 +89,6 @@ struct var_info {
 struct live_interval *alloc_interval(struct var_info *);
 void free_interval(struct live_interval *);
 struct live_interval *split_interval_at(struct live_interval *, unsigned long pos);
+unsigned long next_use_pos(struct live_interval *, unsigned long);
 
 #endif /* __JIT_VARS_H */

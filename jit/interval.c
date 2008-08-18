@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 
 struct live_interval *alloc_interval(struct var_info *var)
 {
@@ -103,4 +104,20 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 	interval->next_child = new;
 
 	return new;
+}
+
+unsigned long next_use_pos(struct live_interval *it, unsigned long pos)
+{
+	struct use_position *this;
+	unsigned long min = LONG_MAX;
+
+	list_for_each_entry(this, &it->use_positions, use_pos_list) {
+		if (lir_position(this) < pos)
+			continue;
+
+		if (lir_position(this) < min)
+			min = lir_position(this);
+	}
+
+	return min;
 }

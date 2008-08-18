@@ -1,6 +1,7 @@
 /*
  * Linear scan register allocation
  * Copyright © 2007-2008  Pekka Enberg
+ * Copyright © 2008	  Arthur Huillet
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -41,9 +42,45 @@
 #include <limits.h>
 #include <stdlib.h>
 
-static void allocate_blocked_reg(void)
+static void set_free_pos(unsigned long *free_until_pos, enum machine_reg reg,
+			 unsigned long pos)
 {
-	assert(!"oops: blocked register");
+	/*
+	 * If reg is greater than or equal to NR_REGISTERS, it's
+	 * not a general purpose register and thus not available for
+	 * allocation so it's safe to just ignore it.
+	 */
+	if (reg >= NR_REGISTERS)
+		return;
+
+	/*
+	 * If the position for one register is set multiple times the minimum
+	 * of all positions is used. This can happen when many inactive
+	 * intervals have the same register assigned.
+	 */
+	if (free_until_pos[reg] < pos)
+		return;
+
+	free_until_pos[reg] = pos;
+}
+
+static void set_use_pos(unsigned long *use_pos, enum machine_reg reg,
+			unsigned long pos)
+{
+	/*
+	 * This function does the same as set_free_pos so we call this directly
+	 */
+	set_free_pos(use_pos, reg, pos);
+}
+
+static void set_block_pos(unsigned long *block_pos, unsigned long *use_pos,
+			  enum machine_reg reg, unsigned long pos)
+{
+	/*
+	 * This function does the same as set_free_pos so we call this directly
+	 */
+	set_free_pos(block_pos, reg, pos);
+	set_free_pos(use_pos, reg, pos);
 }
 
 /* Find the register that is used the latest.  */
@@ -61,20 +98,6 @@ static enum machine_reg pick_register(unsigned long *free_until_pos)
 		}
 	}
 	return ret;
-}
-
-static void set_free_pos(unsigned long *free_until_pos, enum machine_reg reg,
-			 unsigned long pos)
-{
-	/*
-	 * If the position for one register is set multiple times the minimum
-	 * of all positions is used. This can happen when many inactive
-	 * intervals have the same register assigned.
-	 */
-	if (free_until_pos[reg] < pos)
-		return;
-
-	free_until_pos[reg] = pos;
 }
 
 /* Inserts to a list of intervals sorted by increasing start position.  */
@@ -100,13 +123,143 @@ insert_to_list(struct live_interval *interval, struct list_head *interval_list)
 	list_add_tail(&interval->interval_node, interval_list);
 }
 
+static void __spill_interval_intersecting(struct live_interval *current,
+					  enum machine_reg reg,
+					  struct live_interval *it,
+					  struct list_head *unhandled)
+{
+	struct live_interval *new;
+	unsigned long next_pos;
+
+	if (it->reg != reg)
+		return;
+
+	if (!ranges_intersect(&it->range, &current->range))
+		return;
+
+	new = split_interval_at(it, current->range.start);
+	it->need_spill = true;
+
+	next_pos = next_use_pos(new, new->range.start);
+
+	if (next_pos == LONG_MAX)
+		return;
+
+	new = split_interval_at(new, next_pos);
+	new->need_reload = true;
+
+	insert_to_list(new, unhandled);
+}
+
+static void spill_all_intervals_intersecting(struct live_interval *current,
+					     enum machine_reg reg,
+					     struct list_head *active,
+					     struct list_head *inactive,
+					     struct list_head *unhandled)
+{
+	struct live_interval *it;
+
+	list_for_each_entry(it, active, interval_node) {
+		__spill_interval_intersecting(current, reg, it, unhandled);
+	}
+
+	list_for_each_entry(it, inactive, interval_node) {
+		__spill_interval_intersecting(current, reg, it, unhandled);
+	}
+
+}
+
+static void allocate_blocked_reg(struct live_interval *current,
+				 struct list_head *active,
+				 struct list_head *inactive,
+				 struct list_head *unhandled)
+{
+	unsigned long use_pos[NR_REGISTERS], block_pos[NR_REGISTERS];
+	struct live_interval *it, *new;
+	int i;
+	enum machine_reg reg;
+
+	for (i = 0; i < NR_REGISTERS; i++) {
+		use_pos[i] = LONG_MAX;
+		block_pos[i] = LONG_MAX;
+	}
+
+	list_for_each_entry(it, active, interval_node) {
+		unsigned long pos;
+
+		if (it->fixed_reg)
+			continue;
+
+		pos = next_use_pos(it, current->range.start);
+		set_use_pos(use_pos, it->reg, pos);
+	}
+
+	list_for_each_entry(it, inactive, interval_node) {
+		unsigned long pos;
+
+		if (it->fixed_reg)
+			continue;
+
+		if (ranges_intersect(&it->range, &current->range)) {
+			pos = next_use_pos(it, current->range.start);
+			set_use_pos(use_pos, it->reg, pos);
+		}
+	}
+
+	list_for_each_entry(it, active, interval_node) {
+		if (!it->fixed_reg)
+			continue;
+
+		set_block_pos(block_pos, use_pos, it->reg, 0);
+	}
+
+	list_for_each_entry(it, inactive, interval_node) {
+		if (!it->fixed_reg)
+			continue;
+
+		if (ranges_intersect(&it->range, &current->range)) {
+			unsigned long pos;
+
+			pos = range_intersection_start(&it->range, &current->range);
+			set_block_pos(block_pos, use_pos, it->reg, pos);
+		}
+	}
+
+	reg = pick_register(use_pos);
+	if (use_pos[reg] < next_use_pos(it, 0)) {
+		unsigned long pos;
+
+		/*
+		 * All active and inactive intervals are used before current,
+		 * so it is best to spill current itself
+		 */
+		pos = next_use_pos(it, current->range.start);
+		new = split_interval_at(current, pos);
+		new->need_reload = 1;
+		insert_to_list(new, unhandled);
+		current->need_spill = 1;
+	} else if (block_pos[reg] > current->range.end) {
+		/* Spilling made a register free for the whole current */
+		current->reg = reg;
+		spill_all_intervals_intersecting(current, reg, active,
+						 inactive, unhandled);
+	} else {
+		new = split_interval_at(current, block_pos[reg]);
+		insert_to_list(new, unhandled);
+
+		current->reg = reg;
+		spill_all_intervals_intersecting(current, reg, active,
+						 inactive, unhandled);
+	}
+}
+
 static void try_to_allocate_free_reg(struct live_interval *current,
 				     struct list_head *active,
 				     struct list_head *inactive,
 				     struct list_head *unhandled)
 {
 	unsigned long free_until_pos[NR_REGISTERS];
-	struct live_interval *it;
+	struct live_interval *it, *new;
 	enum machine_reg reg;
 	int i;
 
@@ -114,13 +267,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		free_until_pos[i] = LONG_MAX;
 
 	list_for_each_entry(it, active, interval_node) {
-		/*
-		 * If it->reg is greater than or equal to NR_REGISTERS, it's
-		 * not a general purpose register and thus not available for
-		 * allocation so it's safe to just ignore it.
-		 */
-		if (it->reg < NR_REGISTERS)
-			set_free_pos(free_until_pos, it->reg, 0);
+		set_free_pos(free_until_pos, it->reg, 0);
 	}
 
 	list_for_each_entry(it, inactive, interval_node) {
@@ -149,7 +296,11 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		/*
 		 * Register available for the first part of the interval.
 		 */
-		assert(!"need to split");
+		new = split_interval_at(current, free_until_pos[reg]);
+		new->need_reload = 1;
+		insert_to_list(new, unhandled);
+		current->reg = reg;
+		current->need_spill = 1;
 	}
 }
 
@@ -221,7 +372,7 @@ int allocate_registers(struct compilation_unit *cu)
 			try_to_allocate_free_reg(current, &active, &inactive, &unhandled);
 
 			if (current->reg == REG_UNASSIGNED)
-				allocate_blocked_reg();
+				allocate_blocked_reg(current, &active, &inactive, &unhandled);
 		}
 		if (current->reg != REG_UNASSIGNED)
 			list_add(&current->interval_node, &active);
