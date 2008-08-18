@@ -13,7 +13,7 @@
 #include <arch/stack-frame.h>
 #include <stdlib.h>
 
-#define LOCAL_START (5 * sizeof(u4))
+#define ARGS_START_OFFSET (sizeof(unsigned long) * 5)
 
 long frame_local_offset(struct methodblock *method, struct expression *local)
 {
@@ -23,7 +23,7 @@ long frame_local_offset(struct methodblock *method, struct expression *local)
 	nr_args = method->args_count;
 
 	if (idx < nr_args)
-		return (idx * sizeof(u4)) + LOCAL_START;
+		return (idx * sizeof(u4)) + ARGS_START_OFFSET;
 
 	return 0 - ((idx - nr_args+1) * sizeof(u4));
 }
@@ -32,8 +32,6 @@ static unsigned long index_to_offset(unsigned long index)
 {
 	return index * sizeof(unsigned int);
 }
-
-#define ARGS_START_OFFSET (sizeof(unsigned long) * 5)
 
 unsigned long slot_offset(struct stack_slot *slot)
 {
