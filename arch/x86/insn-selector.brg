@@ -86,13 +86,13 @@ reg:	EXPR_VALUE	0
 
 	expr = to_expr(tree);
 
-	result = get_fixed_var(s->b_parent, REG_EAX);
+	result = get_var(s->b_parent);
 	state->reg1 = result;
 
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->value & ~0UL, result));
 
 	if (expr->vm_type == J_LONG) {
-		result = get_fixed_var(s->b_parent, REG_EDX);
+		result = get_var(s->b_parent);
 		state->reg2 = result;
 		bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->value >> 32, state->reg2));
 	}
@@ -108,7 +108,7 @@ reg:	EXPR_LOCAL	1
 	expr = to_expr(tree);
 	slot = get_local_slot(cu->stack_frame, expr->local_index);
 
-	result = get_fixed_var(s->b_parent, REG_EAX);
+	result = get_var(s->b_parent);
 	state->reg1 = result;
 
 	bb_add_insn(s, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
@@ -116,7 +116,7 @@ reg:	EXPR_LOCAL	1
 	if (expr->vm_type == J_LONG) {
 		slot = get_local_slot(cu->stack_frame, expr->local_index + 1);
 
-		result = get_fixed_var(s->b_parent, REG_EDX);
+		result = get_var(s->b_parent);
 		state->reg2 = result;
 
 		bb_add_insn(s, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
@@ -125,14 +125,15 @@ reg:	EXPR_LOCAL	1
 
 reg:   EXPR_TEMPORARY
 {
-	struct compilation_unit *cu = s->b_parent;
 	struct expression *expr;
+
 	expr = to_expr(tree);
 
-	state->reg1 = get_fixed_var(cu, REG_EBX);
+	state->reg1 = expr->temporary;
 
 	if (expr->vm_type == J_LONG) {
-		state->reg2 = get_fixed_var(cu, REG_ECX);
+		/* No 64bit temporary support yet */
+		assert(!"64bit TEMPORARY");
 	}
 }
 
@@ -260,7 +261,7 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	return_value = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = return_value;
 
-	call_target = get_fixed_var(s->b_parent, REG_EAX);
+	call_target = get_var(s->b_parent);
 	stack_ptr = get_fixed_var(s->b_parent, REG_ESP);
 
 	/*
@@ -319,7 +320,7 @@ reg:	EXPR_CLASS_FIELD 1
 	expr   = to_expr(tree);
 	offset = offsetof(struct fieldblock, static_value);
 
-	result = get_fixed_var(s->b_parent, REG_EAX);
+	result = get_var(s->b_parent);
 	state->reg1 = result;
 
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->class_field, result));
@@ -334,8 +335,8 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	expr = to_expr(tree);
 
 	base = state->left->reg1;
-	index = get_fixed_var(s->b_parent, REG_EDX);
-	result = get_fixed_var(s->b_parent, REG_EAX);
+	index = get_var(s->b_parent);
+	result = get_var(s->b_parent);
 	state->reg1 = result;
 
 	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), base));
@@ -541,7 +542,7 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, EXPR_VALUE)
 	field_offset = offsetof(struct fieldblock, static_value);
 	field_value  = store_src->value;
 
-	offset = get_fixed_var(s->b_parent, REG_EAX);
+	offset = get_var(s->b_parent);
 
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) store_dest->class_field, offset));
 	bb_add_insn(s, imm_membase_insn(INSN_MOV_IMM_MEMBASE, field_value & ~0UL, offset, field_offset));
@@ -561,10 +562,10 @@ inst_field: EXPR_INSTANCE_FIELD(reg) 1
 
 	src = state->left->reg1;
 
-	base = get_fixed_var(s->b_parent, REG_ECX);
+	base = get_var(s->b_parent);
 	state->reg1 = base;
 
-	index = get_fixed_var(s->b_parent, REG_EDX);
+	index = get_var(s->b_parent);
 	state->reg2 = index;
 
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, base));
@@ -621,21 +622,22 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 
 stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
 {
-	struct expression * expr;
+	struct expression *expr, *temp;
 	struct var_info *src, *dest;
 	struct statement *stmt;
 
 	expr = to_expr(tree);
 	stmt = to_stmt(tree);
-	dest = get_fixed_var(s->b_parent, REG_EBX);
-	src = state->right->reg1;
 
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->temporary;
+	src = state->right->reg1;
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
 
 	if (expr->vm_type == J_LONG) {
-		dest = get_fixed_var(s->b_parent, REG_ECX);
-		src = state->right->reg2;
-		bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+		/* No 64bit temporary support yet. */
+		assert(!"64bit TEMPORARY");
 	}
 }
 
