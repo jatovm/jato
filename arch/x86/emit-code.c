@@ -313,6 +313,11 @@ static void emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
+	/* Unconditionally push callee-saved registers */
+	__emit_push_reg(buf, REG_EDI);
+	__emit_push_reg(buf, REG_ESI);
+	__emit_push_reg(buf, REG_EBX);
+
 	__emit_push_reg(buf, REG_EBP);
 	__emit_mov_reg_reg(buf, REG_ESP, REG_EBP);
 
@@ -369,6 +374,11 @@ void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 		emit(buf, 0xc9);
 	else
 		emit_pop_reg(buf, REG_EBP);
+
+	/* Restore callee saved registers */
+	emit_pop_reg(buf, REG_EBX);
+	emit_pop_reg(buf, REG_ESI);
+	emit_pop_reg(buf, REG_EDI);
 
 	emit_ret(buf);
 }

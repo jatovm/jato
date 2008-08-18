@@ -19,13 +19,13 @@ static void assert_local_offset(long expected, struct expression *local, unsigne
 
 void test_should_map_local_index_to_frame_offset(void)
 {
-	assert_local_offset(8, local_expr(J_INT, 0), 2);
-	assert_local_offset(12, local_expr(J_INT, 1), 2);
+	assert_local_offset(20, local_expr(J_INT, 0), 2);
+	assert_local_offset(24, local_expr(J_INT, 1), 2);
 }
 
 void test_should_map_local_variables_after_last_arg_at_negative_offsets(void)
 {
-	assert_local_offset(8, local_expr(J_INT, 0), 1);
+	assert_local_offset(20, local_expr(J_INT, 0), 1);
 	assert_local_offset(-4, local_expr(J_INT, 1), 1);
 	assert_local_offset(-8, local_expr(J_INT, 2), 1);
 }
@@ -43,8 +43,8 @@ void test_arguments_are_at_successive_positive_offsets(void)
 	param1 = get_local_slot(frame, 0);
 	param2 = get_local_slot(frame, 1);
 
-	assert_int_equals(0x08, slot_offset(param1));
-	assert_int_equals(0x0c, slot_offset(param2));
+	assert_int_equals(0x14, slot_offset(param1));
+	assert_int_equals(0x18, slot_offset(param2));
 
 	free_stack_frame(frame);
 }
@@ -59,8 +59,8 @@ void test_locals_are_at_successive_negative_offsets(void)
 	local1 = get_local_slot(frame, 2);
 	local2 = get_local_slot(frame, 3);
 
-	assert_int_equals(0UL - 0x04, slot_offset(local1));
-	assert_int_equals(0UL - 0x08, slot_offset(local2));
+	assert_int_equals(0UL - 0x4, slot_offset(local1));
+	assert_int_equals(0UL - 0x8, slot_offset(local2));
 	assert_int_equals(8, frame_locals_size(frame));
 
 	free_stack_frame(frame);
@@ -76,7 +76,7 @@ void test_spill_storage_is_at_successive_negative_offsets_after_locals(void)
 	spill1 = get_spill_slot_64(frame);
 	spill2 = get_spill_slot_32(frame);
 
-	assert_int_equals(0UL - 0x0c, slot_offset(spill1));
+	assert_int_equals(0UL - 0xc, slot_offset(spill1));
 	assert_int_equals(0UL - 0x14, slot_offset(spill2));
 	assert_int_equals(20, frame_locals_size(frame));
 

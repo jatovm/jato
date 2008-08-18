@@ -133,7 +133,7 @@ static void assert_emit_insn_7(unsigned char opcode, unsigned char modrm,
 
 void test_emit_prolog_no_locals(void)
 {
-	unsigned char expected[] = { 0x55, 0x89, 0xe5 };
+	unsigned char expected[] = { 0x57, 0x56, 0x53, 0x55, 0x89, 0xe5};
 	struct buffer *buf;
 
 	buf = alloc_buffer();
@@ -144,7 +144,7 @@ void test_emit_prolog_no_locals(void)
 
 void test_emit_prolog_has_locals(void)
 {
-	unsigned char expected[] = { 0x55, 0x89, 0xe5, 0x81, 0xec, 0x80, 0x00, 0x00, 0x00 };
+	unsigned char expected[] = { 0x57, 0x56, 0x53, 0x55, 0x89, 0xe5, 0x81, 0xec, 0x80, 0x00, 0x00, 0x00 };
 	struct buffer *buf;
 
 	buf = alloc_buffer();
@@ -155,7 +155,7 @@ void test_emit_prolog_has_locals(void)
 
 void test_emit_epilog_no_locals(void)
 {
-	unsigned char expected[] = { 0x5d, 0xc3 };
+	unsigned char expected[] = { 0x5d, 0x5b, 0x5e, 0x5f, 0xc3 };
 	struct buffer *buf;
 
 	buf = alloc_buffer();
@@ -166,7 +166,7 @@ void test_emit_epilog_no_locals(void)
 
 void test_emit_epilog_has_locals(void)
 {
-	unsigned char expected[] = { 0xc9, 0xc3 };
+	unsigned char expected[] = { 0xc9, 0x5b, 0x5e, 0x5f, 0xc3 };
 	struct buffer *buf;
 
 	buf = alloc_buffer();
@@ -281,8 +281,8 @@ void test_emit_mov_reg_memlocal(void)
 	slot = get_local_slot(frame, 0);
 	wide_slot = get_local_slot(frame, 31);
 
-	assert_emit_insn_3(0x89, 0x45, 0x08, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EAX, slot));
-	assert_emit_insn_6(0x89, 0x9d, 0x84, 0x00, 0x00, 0x00, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EBX, wide_slot));
+	assert_emit_insn_3(0x89, 0x45, 0x14, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EAX, slot));
+	assert_emit_insn_6(0x89, 0x9d, 0x90, 0x00, 0x00, 0x00, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EBX, wide_slot));
 
 	free_stack_frame(frame);
 }
