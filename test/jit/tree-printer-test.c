@@ -201,8 +201,8 @@ void assert_printed_temporary_expr(const char *expected, enum vm_type type, stru
 
 void test_should_print_temporary_expression(void)
 {
-	assert_printed_temporary_expr("[temporary int]", J_INT, (struct var_info *)0x12345678);
-	assert_printed_temporary_expr("[temporary boolean]", J_BOOLEAN, (struct var_info *)0x87654321);
+	assert_printed_temporary_expr("[temporary int 0x12345678]", J_INT, (struct var_info *)0x12345678);
+	assert_printed_temporary_expr("[temporary boolean 0x87654321]", J_BOOLEAN, (struct var_info *)0x87654321);
 }
 
 void assert_printed_array_deref_expr(const char *expected, enum vm_type type,
