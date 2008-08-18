@@ -121,12 +121,6 @@ int convert_putfield(struct parse_context *ctx)
 	return 0;
 }
 
-static unsigned long alloc_temporary(void)
-{
-	static unsigned long temporary;
-	return ++temporary;
-}
-
 int convert_array_load(struct parse_context *ctx, enum vm_type type)
 {
 	struct expression *index, *arrayref;
@@ -141,7 +135,7 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 		goto failed;
 
 	src_expr = array_deref_expr(type, arrayref, index);
-	dest_expr = temporary_expr(type, alloc_temporary());
+	dest_expr = temporary_expr(type);
 	
 	store_stmt->store_src = &src_expr->node;
 	store_stmt->store_dest = &dest_expr->node;

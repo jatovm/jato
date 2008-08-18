@@ -23,7 +23,7 @@ static void assert_conversion_expr_stack(unsigned char opc,
 
 	cu = alloc_simple_compilation_unit(&method);
 
-	expression = temporary_expr(from_type, 1);
+	expression = temporary_expr(from_type);
 	stack_push(cu->expr_stack, expression);
 
 	convert_to_ir(cu);

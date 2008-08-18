@@ -225,7 +225,6 @@ static void assert_convert_array_load(enum vm_type expected_type,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct compilation_unit *cu;
-	unsigned long expected_temporary;
 
 	cu = alloc_simple_compilation_unit(&method);
 
@@ -251,8 +250,7 @@ static void assert_convert_array_load(enum vm_type expected_type,
 
 	temporary_expr = stack_pop(cu->expr_stack);
 
-	expected_temporary = to_expr(store_stmt->store_dest)->temporary;
-	assert_temporary_expr(expected_temporary, &temporary_expr->node);
+	assert_temporary_expr(&temporary_expr->node);
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -310,7 +308,7 @@ void test_convert_saload(void)
 static void assert_convert_array_store(enum vm_type expected_type,
 				       unsigned char opc,
 				       unsigned long arrayref,
-				       unsigned long index, unsigned long value)
+				       unsigned long index)
 {
 	unsigned char code[] = { opc };
 	struct expression *arrayref_expr, *index_expr, *expr;
@@ -325,7 +323,7 @@ static void assert_convert_array_store(enum vm_type expected_type,
 
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
-	expr = temporary_expr(expected_type, value);
+	expr = temporary_expr(expected_type);
 
 	stack_push(cu->expr_stack, arrayref_expr);
 	stack_push(cu->expr_stack, index_expr);
@@ -345,7 +343,7 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	assert_store_stmt(store_stmt);
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
 				store_stmt->store_dest);
-	assert_temporary_expr(value, store_stmt->store_src);
+	assert_temporary_expr(store_stmt->store_src);
 
 	assert_true(stack_is_empty(cu->expr_stack));
 
@@ -354,50 +352,50 @@ static void assert_convert_array_store(enum vm_type expected_type,
 
 void test_convert_iastore(void)
 {
-	assert_convert_array_store(J_INT, OPC_IASTORE, 0, 1, 2);
-	assert_convert_array_store(J_INT, OPC_IASTORE, 2, 3, 4);
+	assert_convert_array_store(J_INT, OPC_IASTORE, 0, 1);
+	assert_convert_array_store(J_INT, OPC_IASTORE, 2, 3);
 }
 
 void test_convert_lastore(void)
 {
-	assert_convert_array_store(J_LONG, OPC_LASTORE, 0, 1, 2);
-	assert_convert_array_store(J_LONG, OPC_LASTORE, 2, 3, 4);
+	assert_convert_array_store(J_LONG, OPC_LASTORE, 0, 1);
+	assert_convert_array_store(J_LONG, OPC_LASTORE, 2, 3);
 }
 
 void test_convert_fastore(void)
 {
-	assert_convert_array_store(J_FLOAT, OPC_FASTORE, 0, 1, 2);
-	assert_convert_array_store(J_FLOAT, OPC_FASTORE, 2, 3, 4);
+	assert_convert_array_store(J_FLOAT, OPC_FASTORE, 0, 1);
+	assert_convert_array_store(J_FLOAT, OPC_FASTORE, 2, 3);
 }
 
 void test_convert_dastore(void)
 {
-	assert_convert_array_store(J_DOUBLE, OPC_DASTORE, 0, 1, 2);
-	assert_convert_array_store(J_DOUBLE, OPC_DASTORE, 2, 3, 4);
+	assert_convert_array_store(J_DOUBLE, OPC_DASTORE, 0, 1);
+	assert_convert_array_store(J_DOUBLE, OPC_DASTORE, 2, 3);
 }
 
 void test_convert_aastore(void)
 {
-	assert_convert_array_store(J_REFERENCE, OPC_AASTORE, 0, 1, 2);
-	assert_convert_array_store(J_REFERENCE, OPC_AASTORE, 2, 3, 4);
+	assert_convert_array_store(J_REFERENCE, OPC_AASTORE, 0, 1);
+	assert_convert_array_store(J_REFERENCE, OPC_AASTORE, 2, 3);
 }
 
 void test_convert_bastore(void)
 {
-	assert_convert_array_store(J_INT, OPC_BASTORE, 0, 1, 2);
-	assert_convert_array_store(J_INT, OPC_BASTORE, 2, 3, 4);
+	assert_convert_array_store(J_INT, OPC_BASTORE, 0, 1);
+	assert_convert_array_store(J_INT, OPC_BASTORE, 2, 3);
 }
 
 void test_convert_castore(void)
 {
-	assert_convert_array_store(J_CHAR, OPC_CASTORE, 0, 1, 2);
-	assert_convert_array_store(J_CHAR, OPC_CASTORE, 2, 3, 4);
+	assert_convert_array_store(J_CHAR, OPC_CASTORE, 0, 1);
+	assert_convert_array_store(J_CHAR, OPC_CASTORE, 2, 3);
 }
 
 void test_convert_sastore(void)
 {
-	assert_convert_array_store(J_SHORT, OPC_SASTORE, 0, 1, 2);
-	assert_convert_array_store(J_SHORT, OPC_SASTORE, 2, 3, 4);
+	assert_convert_array_store(J_SHORT, OPC_SASTORE, 0, 1);
+	assert_convert_array_store(J_SHORT, OPC_SASTORE, 2, 3);
 }
 
 static void assert_convert_new(unsigned long expected_type_idx,

@@ -90,7 +90,7 @@ struct expression {
 		/*  EXPR_TEMPORARY represents a compiler-generated temporary
 		    expression. This expression type can be used as both
 		    lvalue and rvalue. */
-		unsigned long temporary;
+		struct var_info *temporary;
 
 		/*  EXPR_ARRAY_DEREF represents an array access expression
 		    (see JLS 15.13.). This expression type can be used as
@@ -245,7 +245,7 @@ void expr_put(struct expression *);
 struct expression *value_expr(enum vm_type, unsigned long long);
 struct expression *fvalue_expr(enum vm_type, double);
 struct expression *local_expr(enum vm_type, unsigned long);
-struct expression *temporary_expr(enum vm_type, unsigned long);
+struct expression *temporary_expr(enum vm_type);
 struct expression *array_deref_expr(enum vm_type, struct expression *, struct expression *);
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);

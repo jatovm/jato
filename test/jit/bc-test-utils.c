@@ -57,12 +57,11 @@ void assert_local_expr(enum vm_type expected_vm_type,
 	assert_int_equals(expected_index, expr->local_index);
 }
 
-void assert_temporary_expr(unsigned long expected, struct tree_node *node)
+void assert_temporary_expr(struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
 	assert_int_equals(EXPR_TEMPORARY, expr_type(expr));
-	assert_int_equals(expected, expr->temporary);
 }
 
 void assert_array_deref_expr(enum vm_type expected_vm_type,

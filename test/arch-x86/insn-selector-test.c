@@ -1060,7 +1060,7 @@ void test_select_store_value_to_var(void)
 	};
 	enum machine_reg dreg;
 
-	store_dest = temporary_expr(J_REFERENCE, 0);
+	store_dest = temporary_expr(J_REFERENCE);
 	store_src  = value_expr(J_REFERENCE, 0xdeadbeef);
 
 	stmt = alloc_statement(STMT_STORE);
@@ -1096,7 +1096,7 @@ void test_select_store_var_to_local(void)
 	};
 
 	store_dest = local_expr(J_INT, 0);
-	store_src  = temporary_expr(J_INT, 0);
+	store_src  = temporary_expr(J_INT);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_dest->node;

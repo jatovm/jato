@@ -288,8 +288,7 @@ static int print_local_expr(int lvl, struct string *str,
 static int print_temporary_expr(int lvl, struct string *str,
 				struct expression *expr)
 {
-	return str_append(str, "[temporary %s %lu]", type_names[expr->vm_type],
-			  expr->local_index);
+	return str_append(str, "[temporary %s]", type_names[expr->vm_type]);
 }
 
 static int print_array_deref_expr(int lvl, struct string *str,

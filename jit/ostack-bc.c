@@ -37,7 +37,7 @@ static struct expression *dup_expr(struct parse_context *ctx, struct expression 
 	struct expression *dest;
 	struct statement *stmt;
 
-	dest = temporary_expr(expr->vm_type, 0);
+	dest = temporary_expr(expr->vm_type);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &dest->node;
