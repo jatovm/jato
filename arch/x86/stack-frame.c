@@ -31,9 +31,18 @@
 
 #define ARGS_START_OFFSET (sizeof(unsigned long) * 5)
 
-static unsigned long index_to_offset(unsigned long index)
+static unsigned long __index_to_offset(unsigned long index)
 {
 	return index * sizeof(unsigned int);
+}
+
+static unsigned long
+index_to_offset(unsigned long idx, unsigned long nr_args)
+{
+	if (idx < nr_args)
+		return ARGS_START_OFFSET + __index_to_offset(idx);
+
+	return 0UL - __index_to_offset(idx - nr_args + 1);
 }
 
 unsigned long frame_local_offset(struct methodblock *method,
@@ -44,23 +53,18 @@ unsigned long frame_local_offset(struct methodblock *method,
 	idx = local->local_index;
 	nr_args = method->args_count;
 
-	if (idx < nr_args)
-		return ARGS_START_OFFSET + index_to_offset(idx);
-
-	return 0UL - index_to_offset(idx - nr_args + 1);
+	return index_to_offset(idx, nr_args);
 }
 
 unsigned long slot_offset(struct stack_slot *slot)
 {
 	struct stack_frame *frame = slot->parent;
-	if (slot->index < frame->nr_args)
-		return ARGS_START_OFFSET + index_to_offset(slot->index);
 
-	return 0UL - index_to_offset(slot->index - frame->nr_args + 1);
+	return index_to_offset(slot->index, frame->nr_args);
 }
 
 unsigned long frame_locals_size(struct stack_frame *frame)
 {
 	unsigned long nr_locals = frame->nr_local_slots - frame->nr_args;
-	return index_to_offset(nr_locals + frame->nr_spill_slots);
+	return __index_to_offset(nr_locals + frame->nr_spill_slots);
 }
