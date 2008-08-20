@@ -6,7 +6,6 @@
 #include <arch/stack-frame.h>
 #include <vm/list.h>
 
-#include <assert.h>
 #include <stdbool.h>
 
 struct basic_block;
@@ -151,31 +150,6 @@ void free_insn(struct insn *);
 
 bool insn_defs(struct insn *, struct var_info *);
 bool insn_uses(struct insn *, struct var_info *);
-
-static inline const char *reg_name(enum machine_reg reg)
-{
-	switch (reg) {
-	case REG_EAX:
-		return "EAX";
-	case REG_EBX:
-		return "EBX";
-	case REG_ECX:
-		return "ECX";
-	case REG_EDX:
-		return "EDX";
-	case REG_ESI:
-		return "ESI";
-	case REG_EDI:
-		return "EDI";
-	case REG_EBP:
-		return "EBP";
-	case REG_ESP:
-		return "ESP";
-	case REG_UNASSIGNED:
-		return "<unassigned>";
-	};
-	assert(!"not reached");
-}
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 
