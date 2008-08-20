@@ -23,4 +23,6 @@ enum machine_reg {
 	REG_UNASSIGNED = ~0UL,
 };
 
+const char *reg_name(enum machine_reg reg);
+
 #endif /* __X86_REGISTERS_64_H */
