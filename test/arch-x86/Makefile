@@ -1,5 +1,19 @@
+ARCH		:= $(shell uname -m | sed -e s/i.86/i386/)
+OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
+
+ifeq ($(ARCH),i386)
+ARCH		= x86
+ARCH_POSTFIX	= _32
+endif
+
+ifeq ($(ARCH),x86_64)
+ARCH		= x86
+ARCH_POSTFIX	= _64
+endif
+
+ARCH_CONFIG=../../include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
 CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
-INCLUDE=-I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib
+INCLUDE=-I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
 LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty
 MONOBURG = ../../monoburg/monoburg
 

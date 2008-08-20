@@ -1,1 +1,1 @@
-#define CONFIG_X86 1
+#define CONFIG_X86_32 1
