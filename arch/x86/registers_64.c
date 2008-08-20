@@ -41,8 +41,8 @@ static const char *register_names[] = {
 	[REG_R13] = "R13",
 	[REG_R14] = "R14",
 	[REG_R15] = "R15",
-	[REG_ESP] = "RSP",
-	[REG_EBP] = "RBP",
+	[REG_RSP] = "RSP",
+	[REG_RBP] = "RBP",
 };
 
 const char *reg_name(enum machine_reg reg)

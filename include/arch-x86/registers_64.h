@@ -18,8 +18,8 @@ enum machine_reg {
 	REG_R13,
 	REG_R14,
 	REG_R15, /* last register available for allocation */
-	REG_ESP, /* R4 */
-	REG_EBP, /* R5 */
+	REG_RSP, /* R4 */
+	REG_RBP, /* R5 */
 	REG_UNASSIGNED = ~0UL,
 };
 
