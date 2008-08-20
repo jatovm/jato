@@ -407,7 +407,7 @@ void test_should_print_invokevirtual_expression(void)
 	struct object *class = new_class();
 	struct methodblock method = {
 		.class = class,
-		.method_table_index = 0xdeadbeef,
+		.method_table_index = 0xff,
 		.name = "bar",
 		.type = "(I)V",
 	};
@@ -419,7 +419,7 @@ void test_should_print_invokevirtual_expression(void)
 	str_append(expected, "INVOKEVIRTUAL:\n"
 			     "  target_method: [%p 'Foo.bar(I)V' (%lu)]\n"
 			     "  args_list: [no args]\n",
-			     &method, 0xdeadbeef);
+			     &method, 0xff);
 
 	assert_printed_invokevirtual_expr(expected->value, &method, no_args_expr());
 	free_str(expected);
