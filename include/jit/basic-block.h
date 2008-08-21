@@ -26,6 +26,9 @@ struct basic_block {
 	unsigned long nr_successors;
 	struct basic_block *successors[MAX_BB_SUCCESSORS];
 
+	/* Is this basic block an exception handler? */
+	bool is_eh;
+
 	/*
 	 * These are computed by liveness analysis.
 	 */

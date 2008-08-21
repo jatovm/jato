@@ -18,6 +18,31 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+static bool is_exception_handler(struct basic_block *bb)
+{
+	struct methodblock *method = bb->b_parent->method;
+	int i;
+
+	for (i = 0; i < method->exception_table_size; i++) {
+		struct exception_table_entry *eh = &method->exception_table[i];
+
+		if (eh->handler_pc == bb->start)
+			return true;
+	}
+
+	return false;
+}
+
+static void detect_exception_handlers(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		if (is_exception_handler(bb))
+			bb->is_eh = true;
+	}
+}
+
 static void update_branch_successors(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
@@ -127,6 +152,7 @@ int analyze_control_flow(struct compilation_unit *cu)
 	split_after_branches(&stream, entry_bb, branch_targets);
 	split_at_branch_targets(cu, branch_targets);
 	update_branch_successors(cu);
+	detect_exception_handlers(cu);
 
 	free(branch_targets);
 

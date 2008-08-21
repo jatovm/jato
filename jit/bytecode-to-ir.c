@@ -238,7 +238,7 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 		       "method '%s' at offset %lu.\n",
 		       __FUNCTION__, ctx->opc, ctx->cu->method->name, ctx->offset);
 		err = -EINVAL;
-		goto out;
+		goto error;
 	}
 
 	opc_size = bc_insn_size(ctx->code + ctx->offset);
@@ -249,7 +249,7 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 		       __FUNCTION__, ctx->cu->method->name, ctx->code_size,
 		       ctx->offset, opc_size, ctx->opc);
 		err = -EINVAL;
-		goto out;
+		goto error;
 	}
 
 	ctx->bb = find_bb(ctx->cu, ctx->offset);
@@ -258,16 +258,23 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 		       "in method '%s'\n", __FUNCTION__, ctx->offset,
 		       ctx->cu->method->name);
 		err = -EINVAL;
-		goto out;
+		goto error;
 	}
+
+	/*
+	 * Don't compile exception handlers because we don't support exception
+	 * handling yet.
+	 */
+	if (ctx->bb->is_eh)
+		goto skip;
 
 	err = convert(ctx);
 	if (err)
-		goto out;
+		goto error;
 
+skip:
 	ctx->offset += opc_size;
-
-  out:
+error:
 	return err;
 }
 

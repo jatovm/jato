@@ -53,7 +53,10 @@ void trace_cfg(struct compilation_unit *cu)
 	printf("  #:\t\tRange\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
-		printf("  %p\t%lu..%lu\n", bb, bb->start, bb->end);
+		printf("  %p\t%lu..%lu", bb, bb->start, bb->end);
+		if (bb->is_eh)
+			printf(" (eh)\n");
+		printf("\n");
 	}
 
 	printf("\n");
