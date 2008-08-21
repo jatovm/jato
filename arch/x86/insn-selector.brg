@@ -646,6 +646,18 @@ stmt:	STMT_ATHROW(reg)
 	/*TODO*/
 }
 
+stmt:	STMT_NULL_CHECK(reg)
+{
+	struct var_info *ref;
+
+	ref = state->left->reg1;
+
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, ref));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) check_null));
+
+	method_args_cleanup(s, 1);
+}
+
 stmt:	STMT_IF(reg)
 {
 	struct expression *if_conditional;

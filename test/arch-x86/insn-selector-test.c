@@ -1389,3 +1389,38 @@ void test_select_goto_stmt(void)
 
 	free_compilation_unit(cu);
 }
+
+void test_select_null_check_stmt(void)
+{
+	struct compilation_unit *cu;
+	struct basic_block *bb;
+	struct statement *stmt;
+	struct expression *expr;
+	struct insn *insn;
+	enum machine_reg dreg1;
+
+	expr = value_expr(J_REFERENCE, 0xcafebabe);
+	stmt = alloc_statement(STMT_NULL_CHECK);
+	stmt->expression = &expr->node;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	dreg1 = mach_reg(&insn->dest.reg);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, dreg1, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_insn(INSN_PUSH_REG, dreg1, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_null, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
+
+	free_compilation_unit(cu);
+}

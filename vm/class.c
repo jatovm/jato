@@ -25,6 +25,7 @@
  */
 
 #include <vm/vm.h>
+#include <stdlib.h>
 
 unsigned long is_object_instance_of(struct object *obj, struct object *type)
 {
@@ -32,4 +33,10 @@ unsigned long is_object_instance_of(struct object *obj, struct object *type)
 		return 0;
 
 	return isInstanceOf(type, obj->class);
+}
+
+void check_null(struct object *obj)
+{
+	if (!obj)
+		abort();
 }
