@@ -658,6 +658,40 @@ stmt:	STMT_NULL_CHECK(reg)
 	method_args_cleanup(s, 1);
 }
 
+array_check:	EXPR_ARRAY_DEREF(reg, reg) 2
+{
+	struct var_info *base, *index, *state_base, *state_index;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state_base = state->left->reg1;
+	state_index = state->right->reg1;
+
+	base = get_var(s->b_parent);
+	state->reg1 = base;
+
+	index = get_var(s->b_parent);
+	state->reg2 = index;
+
+	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
+	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, state_index, index));
+}
+
+stmt:	STMT_ARRAY_CHECK(array_check)
+{
+	struct var_info *ref, *index;
+
+	ref = state->left->reg1;
+	index = state->left->reg2;
+
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, index));
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, ref));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) check_array));
+
+	method_args_cleanup(s, 2);
+}
+
 stmt:	STMT_IF(reg)
 {
 	struct expression *if_conditional;

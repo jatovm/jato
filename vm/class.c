@@ -40,3 +40,14 @@ void check_null(struct object *obj)
 	if (!obj)
 		abort();
 }
+
+void check_array(struct object *obj, unsigned int index)
+{
+	struct classblock *cb = CLASS_CB(obj->class);
+
+	if (!IS_ARRAY(cb))
+		abort();
+
+	if (index >= ARRAY_LEN(obj))
+		abort();
+}
