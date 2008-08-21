@@ -69,6 +69,12 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         assertFalse(null instanceof Object);
     }
 
+    public static void testIntArrayLoadAndStore() {
+        int[] array = new int[5];
+        array[1] = 1;
+        assertEquals(1, array[1]);
+    }
+
     public static void main(String[] args) {
         testNewObject();
         testObjectInitialization();
@@ -79,6 +85,7 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testArrayLength();
         testMultiANewArray();
         testIsInstanceOf();
+        testIntArrayLoadAndStore();
 
         Runtime.getRuntime().halt(retval);
     }
