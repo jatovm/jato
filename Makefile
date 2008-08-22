@@ -70,6 +70,7 @@ VM_OBJS = \
 	vm/bytecodes.o		\
 	vm/debug-dump.o		\
 	vm/natives.o		\
+	vm/resolve.o		\
 	vm/stack.o		\
 	vm/string.o		\
 	vm/types.o		\

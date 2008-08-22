@@ -10,6 +10,7 @@
 #include <jit/compiler.h>
 #include <libharness.h>
 #include <string.h>
+#include <test/vm.h>
 
 #include "bc-test-utils.h"
 
@@ -203,9 +204,35 @@ void test_convert_ldc(void)
 	assert_convert_ldc(J_INT, J_INT_MAX, CONSTANT_Integer);
 }
 
+static void assert_convert_ldc_string(enum vm_type expected_vm_type,
+				      long long expected_value)
+{
+	struct expression *expr;
+	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	u1 cp_types[NR_CP_ENTRIES];
+	unsigned char code[] = { OPC_LDC, 0xff };
+	struct compilation_unit *cu;
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+
+	const_set_s4(cp_infos, 0xff, 0x00);
+	cp_types[0xff] = CONSTANT_String;
+	cu = alloc_simple_compilation_unit(&method);
+
+	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
+	expr = stack_pop(cu->expr_stack);
+	assert_value_expr(expected_vm_type, expected_value, &expr->node);
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	expr_put(expr);
+	free_compilation_unit(cu);
+}
+
 void test_convert_ldc_string(void)
 {
-	assert_convert_ldc(J_REFERENCE, 0xcafe, CONSTANT_String);
+	assert_convert_ldc_string(J_REFERENCE, RESOLVED_STRING_CONSTANT);
 }
 
 static void assert_convert_ldc_float(float expected_value)
@@ -271,6 +298,32 @@ static void assert_convert_ldc_w(enum vm_type expected_vm_type,
 	free_compilation_unit(cu);
 }
 
+static void assert_convert_ldc_w_string(enum vm_type expected_vm_type, long long expected_value)
+{
+	struct expression *expr;
+	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	u1 cp_types[NR_CP_ENTRIES];
+	unsigned char code[] = { OPC_LDC_W, 0x01, 0x00 };
+	struct compilation_unit *cu;
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+
+	const_set_s4(cp_infos, 0x100, 0x00);
+	cp_types[0x100] = CONSTANT_String;
+
+	cu = alloc_simple_compilation_unit(&method);
+
+	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
+	expr = stack_pop(cu->expr_stack);
+	assert_value_expr(expected_vm_type, expected_value, &expr->node);
+	assert_true(stack_is_empty(cu->expr_stack));
+
+	expr_put(expr);
+	free_compilation_unit(cu);
+}
+
 void test_convert_ldc_w_int(void)
 {
 	assert_convert_ldc_w(J_INT, 0, CONSTANT_Integer, OPC_LDC_W);
@@ -289,7 +342,7 @@ void test_convert_ldc2_w_long(void)
 
 void test_convert_ldc_w_string(void)
 {
-	assert_convert_ldc_w(J_REFERENCE, 0xcafe, CONSTANT_String, OPC_LDC_W);
+	assert_convert_ldc_w_string(J_REFERENCE, RESOLVED_STRING_CONSTANT);
 }
 
 static void assert_convert_ldc_w_float(enum vm_type expected_vm_type,

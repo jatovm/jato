@@ -15,6 +15,7 @@
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
 #include <vm/byteorder.h>
+#include <vm/resolve.h>
 #include <vm/stack.h>
 
 #include <errno.h>
@@ -98,9 +99,12 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	case CONSTANT_Float:
 		expr = fvalue_expr(J_FLOAT, CP_FLOAT(cp, cp_idx));
 		break;
-	case CONSTANT_String:
-		expr = value_expr(J_REFERENCE, CP_STRING(cp, cp_idx));
+	case CONSTANT_String: {
+		struct object *string = resolve_string(cp, CP_STRING(cp, cp_idx));
+
+		expr = value_expr(J_REFERENCE, (unsigned long) string);
 		break;
+	}
 	case CONSTANT_Long:
 		expr = value_expr(J_LONG, CP_LONG(cp, cp_idx));
 		break;

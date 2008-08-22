@@ -28,3 +28,8 @@ struct object *findArrayClassFromClassLoader(char *name, struct object *classloa
 {
 	return new_class();
 }
+
+struct object *resolve_string(struct constant_pool *cp, unsigned long cp_idx)
+{
+	return (void *) RESOLVED_STRING_CONSTANT;
+}

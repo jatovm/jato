@@ -9,4 +9,6 @@ static inline struct object *new_class(void)
 	return malloc(sizeof(struct classblock) + sizeof(struct object));
 }
 
+#define RESOLVED_STRING_CONSTANT 0x2bad1deaUL
+
 #endif

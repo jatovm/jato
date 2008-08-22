@@ -56,9 +56,14 @@ public class LoadConstantsTest extends TestCase {
         return 5;
     }
 
+    public static void testLdcStringConstant() {
+        assertEquals(4, "HELO".length());
+    } 
+
     public static void main(String[] args) {
         testAconstNull();
         testIconst();
+        testLdcStringConstant();
 
         Runtime.getRuntime().halt(retval);
     }
