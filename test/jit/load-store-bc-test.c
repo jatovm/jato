@@ -137,6 +137,16 @@ void test_convert_sipush(void)
 	assert_convert_sipush(MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
 }
 
+/*
+ * Limits
+ */
+
+#define J_INT_MAX 2147483647
+#define J_INT_MIN (-J_INT_MAX - 1)
+
+#define J_LONG_MAX ((long long) 2<<63)
+#define J_LONG_MIN (-J_LONG_MAX - 1)
+
 static void const_set_s4(ConstantPoolEntry *cp_infos, unsigned long idx, s4 value)
 {
 	cp_infos[idx] = value;
@@ -183,7 +193,20 @@ static void assert_convert_ldc(enum vm_type expected_vm_type,
 	free_compilation_unit(cu);
 }
 
-static void assert_convert_ldc_f(float expected_value)
+void test_convert_ldc(void)
+{
+	assert_convert_ldc(J_INT, 0, CONSTANT_Integer);
+	assert_convert_ldc(J_INT, 1, CONSTANT_Integer);
+	assert_convert_ldc(J_INT, J_INT_MIN, CONSTANT_Integer);
+	assert_convert_ldc(J_INT, J_INT_MAX, CONSTANT_Integer);
+}
+
+void test_convert_ldc_string(void)
+{
+	assert_convert_ldc(J_REFERENCE, 0xcafe, CONSTANT_String);
+}
+
+static void assert_convert_ldc_float(float expected_value)
 {
 	struct expression *expr;
 	ConstantPoolEntry cp_infos[512];
@@ -208,22 +231,14 @@ static void assert_convert_ldc_f(float expected_value)
 	free_compilation_unit(cu);
 }
 
-#define J_INT_MAX 2147483647
-#define J_INT_MIN (-J_INT_MAX - 1)
-
-void test_convert_ldc(void)
+void test_convert_ldc_float(void)
 {
-	assert_convert_ldc(J_INT, 0, CONSTANT_Integer);
-	assert_convert_ldc(J_INT, 1, CONSTANT_Integer);
-	assert_convert_ldc(J_INT, J_INT_MIN, CONSTANT_Integer);
-	assert_convert_ldc(J_INT, J_INT_MAX, CONSTANT_Integer);
-	assert_convert_ldc(J_REFERENCE, 0xcafe, CONSTANT_String);
-	assert_convert_ldc_f(0.01f);
-	assert_convert_ldc_f(1.0f);
-	assert_convert_ldc_f(-1.0f);
+	assert_convert_ldc_float(0.01f);
+	assert_convert_ldc_float( 1.0f);
+	assert_convert_ldc_float(-1.0f);
 }
 
-static void assert_convert_ldcw(enum vm_type expected_vm_type,
+static void assert_convert_ldc_w(enum vm_type expected_vm_type,
 				long long expected_value, u1 cp_type,
 				unsigned char opcode)
 {
@@ -254,7 +269,28 @@ static void assert_convert_ldcw(enum vm_type expected_vm_type,
 	free_compilation_unit(cu);
 }
 
-static void assert_convert_ldcw_f(enum vm_type expected_vm_type,
+void test_convert_ldc_w_int(void)
+{
+	assert_convert_ldc_w(J_INT, 0, CONSTANT_Integer, OPC_LDC_W);
+	assert_convert_ldc_w(J_INT, 1, CONSTANT_Integer, OPC_LDC_W);
+	assert_convert_ldc_w(J_INT, J_INT_MIN, CONSTANT_Integer, OPC_LDC_W);
+	assert_convert_ldc_w(J_INT, J_INT_MAX, CONSTANT_Integer, OPC_LDC_W);
+}
+
+void test_convert_ldc2_w_long(void)
+{
+	assert_convert_ldc_w(J_LONG, 0, CONSTANT_Long, OPC_LDC2_W);
+	assert_convert_ldc_w(J_LONG, 1, CONSTANT_Long, OPC_LDC2_W);
+	assert_convert_ldc_w(J_LONG, J_LONG_MIN, CONSTANT_Long, OPC_LDC2_W);
+	assert_convert_ldc_w(J_LONG, J_LONG_MAX, CONSTANT_Long, OPC_LDC2_W);
+}
+
+void test_convert_ldc_w_string(void)
+{
+	assert_convert_ldc_w(J_REFERENCE, 0xcafe, CONSTANT_String, OPC_LDC_W);
+}
+
+static void assert_convert_ldc_w_float(enum vm_type expected_vm_type,
 				  double expected_value,
 				  u1 cp_type, unsigned long opcode)
 {
@@ -285,30 +321,18 @@ static void assert_convert_ldcw_f(enum vm_type expected_vm_type,
 	free_compilation_unit(cu);
 }
 
-void test_convert_ldc_w(void)
+void test_convert_ldc_w_float(void)
 {
-	assert_convert_ldcw(J_INT, 0, CONSTANT_Integer, OPC_LDC_W);
-	assert_convert_ldcw(J_INT, 1, CONSTANT_Integer, OPC_LDC_W);
-	assert_convert_ldcw(J_INT, J_INT_MIN, CONSTANT_Integer, OPC_LDC_W);
-	assert_convert_ldcw(J_INT, J_INT_MAX, CONSTANT_Integer, OPC_LDC_W);
-	assert_convert_ldcw_f(J_FLOAT, 0.01f, CONSTANT_Float, OPC_LDC_W);
-	assert_convert_ldcw_f(J_FLOAT, 1.0f, CONSTANT_Float, OPC_LDC_W);
-	assert_convert_ldcw_f(J_FLOAT, -1.0f, CONSTANT_Float, OPC_LDC_W);
-	assert_convert_ldcw(J_REFERENCE, 0xcafe, CONSTANT_String, OPC_LDC_W);
+	assert_convert_ldc_w_float(J_FLOAT, 0.01f, CONSTANT_Float, OPC_LDC_W);
+	assert_convert_ldc_w_float(J_FLOAT,  1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_convert_ldc_w_float(J_FLOAT, -1.0f, CONSTANT_Float, OPC_LDC_W);
 }
 
-#define J_LONG_MAX ((long long) 2<<63)
-#define J_LONG_MIN (-J_LONG_MAX - 1)
-
-void test_convert_ldc2_w(void)
+void test_convert_ldc2_w_double(void)
 {
-	assert_convert_ldcw(J_LONG, 0, CONSTANT_Long, OPC_LDC2_W);
-	assert_convert_ldcw(J_LONG, 1, CONSTANT_Long, OPC_LDC2_W);
-	assert_convert_ldcw(J_LONG, J_LONG_MIN, CONSTANT_Long, OPC_LDC2_W);
-	assert_convert_ldcw(J_LONG, J_LONG_MAX, CONSTANT_Long, OPC_LDC2_W);
-	assert_convert_ldcw_f(J_DOUBLE, 0.01f, CONSTANT_Double, OPC_LDC2_W);
-	assert_convert_ldcw_f(J_DOUBLE, 1.0f, CONSTANT_Double, OPC_LDC2_W);
-	assert_convert_ldcw_f(J_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
+	assert_convert_ldc_w_float(J_DOUBLE, 0.01f, CONSTANT_Double, OPC_LDC2_W);
+	assert_convert_ldc_w_float(J_DOUBLE,  1.0f, CONSTANT_Double, OPC_LDC2_W);
+	assert_convert_ldc_w_float(J_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
 }
 
 static void __assert_convert_load(unsigned char *code,
