@@ -142,6 +142,9 @@ void test_convert_dup(void)
 	assert_dup_stack(OPC_DUP, value);
 	assert_dup2_stack(OPC_DUP2, value, value2);
 	assert_dup2_stack(OPC_DUP2, value3, NULL);
+
+	expr_put(value2);
+	expr_put(value3);
 }
 
 static void assert_dup_x1_stack(unsigned char opc, struct expression *value1,
@@ -330,6 +333,8 @@ void test_convert_dup_x2(void)
 	assert_dup_x2_stack(OPC_DUP_X2, value1, value2, value3);
 	assert_dup2_x2_stack(OPC_DUP2_X2, value1, value2, value3, value4);
 
+	expr_put(value3);
+	expr_put(value4);
 }
 
 static void assert_swap_stack(unsigned char opc,
