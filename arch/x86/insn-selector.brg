@@ -622,11 +622,10 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 
 stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
 {
-	struct expression *expr, *temp;
+	struct expression *temp;
 	struct var_info *src, *dest;
 	struct statement *stmt;
 
-	expr = to_expr(tree);
 	stmt = to_stmt(tree);
 
 	temp = to_expr(stmt->store_dest);
@@ -635,7 +634,7 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
 	src = state->right->reg1;
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
 
-	if (expr->vm_type == J_LONG) {
+	if (temp->vm_type == J_LONG) {
 		/* No 64bit temporary support yet. */
 		assert(!"64bit TEMPORARY");
 	}
