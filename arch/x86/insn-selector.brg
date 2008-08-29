@@ -39,6 +39,29 @@
 #define MONOBURG_LOG 1
 #define HAVE_ARRAY_ELEM_INIT 1
 
+static unsigned char type_to_scale(enum vm_type vm_type)
+{
+	unsigned char scale;
+
+	switch (vm_type) {
+	case J_BYTE:
+	case J_CHAR:
+		scale = 0;
+		break;
+	case J_SHORT:
+		scale = 1;
+		break;
+	case J_INT:
+	case J_REFERENCE:
+		scale = 2;
+		break;
+	default:
+		assert(!"Not supported yet");
+	}
+
+	return scale;
+}
+
 static void method_args_cleanup(struct basic_block *bb, unsigned long args_count)
 {
 	struct var_info *stack_ptr;
@@ -671,8 +694,7 @@ stmt:	STMT_STORE(array_deref, reg)
 	stmt = to_stmt(tree);
 	dest_expr = to_expr(stmt->store_dest);
 
-	assert(dest_expr->vm_type == J_INT);
-	scale = 2;
+	scale = type_to_scale(dest_expr->vm_type);
 
 	base = state->left->reg1;
 	index = state->left->reg2;
@@ -691,8 +713,7 @@ stmt:	STMT_STORE(reg, array_deref)
 	stmt = to_stmt(tree);
 	src_expr = to_expr(stmt->store_src);
 
-	assert(src_expr->vm_type == J_INT);
-	scale = 2;
+	scale = type_to_scale(src_expr->vm_type);
 
 	base = state->right->reg1;
 	index = state->right->reg2;

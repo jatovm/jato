@@ -69,10 +69,40 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         assertFalse(null instanceof Object);
     }
 
+    public static void testByteArrayLoadAndStore() {
+        byte[] array = new byte[5];
+        array[1] = 1;
+        assertEquals(array[1], 1);
+    }
+
+    public static void testCharArrayLoadAndStore() {
+        char[] array = new char[5];
+        array[1] = 65535;
+        assertEquals(array[1], 65535);
+    }
+
+    public static void testShortArrayLoadAndStore() {
+        short[] array = new short[5];
+        array[3] = 1;
+        assertEquals(array[3], 1);
+    }
+
     public static void testIntArrayLoadAndStore() {
         int[] array = new int[5];
         array[1] = 1;
         assertEquals(1, array[1]);
+    }
+
+    public static void testObjectArrayLoadAndStore() {
+        InitializingClass[] array = new InitializingClass[5];
+        InitializingClass obj = new InitializingClass(1);
+        array[2] = obj;
+        assertEquals(array[2], obj);
+    }
+
+    public static void testMultiDimensionalArrayLoadAndStore() {
+        int[][] array = new int[5][5];
+        array[0][0] = 0;
     }
 
     public static void main(String[] args) {
@@ -86,6 +116,11 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testMultiANewArray();
         testIsInstanceOf();
         testIntArrayLoadAndStore();
+        testCharArrayLoadAndStore();
+        testByteArrayLoadAndStore();
+        testShortArrayLoadAndStore();
+        testObjectArrayLoadAndStore();
+        testMultiDimensionalArrayLoadAndStore();
 
         Runtime.getRuntime().halt(retval);
     }
