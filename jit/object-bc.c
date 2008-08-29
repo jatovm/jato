@@ -18,7 +18,40 @@
 #include <vm/field.h>
 #include <vm/stack.h>
 
+#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
+
+static const char *class_name_to_array_name(const char *class_name)
+{
+	const char *array_name = malloc(strlen(class_name) + 4);
+
+	if (class_name[0] == '[') {
+		strcpy(array_name, "[");
+		strcat(array_name, class_name);
+	} else {
+		strcpy(array_name, "[L");
+		strcat(array_name, class_name);
+		strcat(array_name, ";");
+	}
+
+	return array_name;
+}
+
+static struct object *class_to_array_class(struct object *class)
+{
+	const char *class_name, *array_class_name;
+	struct object *array_class;
+
+	class_name = CLASS_CB(class)->name;
+	array_class_name = class_name_to_array_name(class_name);
+
+	array_class = findArrayClassFromClass(array_class_name, class);
+
+	free(array_class_name);
+
+	return array_class;
+}
 
 static struct fieldblock *lookup_field(struct parse_context *ctx)
 {
@@ -343,17 +376,20 @@ int convert_anewarray(struct parse_context *ctx)
 {
 	struct expression *size,*arrayref;
 	unsigned long type_idx;
-	struct object *class;
+	struct object *class, *arrayclass;
 
 	size = stack_pop(ctx->cu->expr_stack);
 	type_idx = read_u16(ctx->insn_start + 1);
 
 	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
-
 	if (!class)
 		return -EINVAL;
 
-	arrayref = anewarray_expr(class,size);
+	arrayclass = class_to_array_class(class);
+	if (!arrayclass)
+		return -EINVAL;
+
+	arrayref = anewarray_expr(arrayclass,size);
 	if (!arrayref)
 		return -ENOMEM;
 

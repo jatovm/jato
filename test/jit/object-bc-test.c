@@ -15,6 +15,8 @@
 
 #include <test/vm.h>
 
+#include <string.h>
+
 static void convert_ir_const_single(struct compilation_unit *cu, void *value)
 {
 	u8 cp_infos[] = { (unsigned long) value };
@@ -436,6 +438,7 @@ void test_convert_anewarray(void)
 	struct object *instance_class = new_class();
 	unsigned char code[] = { OPC_ANEWARRAY, 0x00, 0x00 };
 	struct compilation_unit *cu;
+	char array_name[] = "java/lang/Object";
 	struct expression *size,*arrayref;
 	struct methodblock method = {
 		.jit_code = code,
@@ -446,6 +449,8 @@ void test_convert_anewarray(void)
 	size = value_expr(J_INT, 0xff);
 	stack_push(cu->expr_stack, size);
 
+	CLASS_CB(instance_class)->name = array_name;
+
 	convert_ir_const_single(cu, instance_class);
 
 	arrayref = stack_pop(cu->expr_stack);
@@ -453,7 +458,12 @@ void test_convert_anewarray(void)
 	assert_int_equals(EXPR_ANEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
 	assert_ptr_equals(size, to_expr(arrayref->anewarray_size));
-	assert_ptr_equals(instance_class, arrayref->anewarray_ref_type);
+
+        /*
+	 * Free the struct object returned from findArrayClassFromClassLoader()
+	 * stub.
+         */
+	free(arrayref->anewarray_ref_type);
 
 	expr_put(arrayref);
 	free_compilation_unit(cu);
