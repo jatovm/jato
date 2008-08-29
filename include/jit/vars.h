@@ -76,6 +76,9 @@ struct live_interval {
 	   true.  */
 	struct stack_slot *spill_slot;
 
+	/* The live interval where spill happened.  */
+	struct live_interval *spill_parent;
+
 	/* Is this interval fixed? */
 	bool fixed_reg;
 };

@@ -75,7 +75,7 @@ static int insert_reload_insn(struct live_interval *interval, struct stack_frame
 	struct insn *first = first_insn(interval);
 	struct insn *reload;
 
-	reload = reload_insn(interval->spill_slot, interval->var_info);
+	reload = reload_insn(interval->spill_parent->spill_slot, interval->var_info);
 	if (!reload)
 		return -ENOMEM;
 
@@ -84,25 +84,38 @@ static int insert_reload_insn(struct live_interval *interval, struct stack_frame
 	return 0;
 }
 
+static int __insert_spill_reload_insn(struct live_interval *interval, struct stack_frame *frame)
+{
+	int err = 0;
+
+	if (range_is_empty(&interval->range))
+		goto out;
+
+	if (interval->need_reload) {
+		err = insert_reload_insn(interval, frame);
+		if (err)
+			goto out;
+	}
+
+	if (interval->need_spill) {
+		err = insert_spill_insn(interval, frame);
+		if (err)
+			goto out;
+	}
+out:
+	return err;
+}
+
 int insert_spill_reload_insns(struct compilation_unit *cu)
 {
 	struct var_info *var;
 	int err = 0;
 
 	for_each_variable(var, cu->var_infos) {
-		struct live_interval *interval = var->interval;
+		struct live_interval *interval;
 
-		if (range_is_empty(&interval->range))
-			continue;
-
-		if (interval->need_reload) {
-			err = insert_reload_insn(interval, cu->stack_frame);
-			if (err)
-				break;
-		}
-
-		if (interval->need_spill) {
-			err = insert_spill_insn(interval, cu->stack_frame);
+		for (interval = var->interval; interval != NULL; interval = interval->next_child) {
+			err = __insert_spill_reload_insn(interval, cu->stack_frame);
 			if (err)
 				break;
 		}

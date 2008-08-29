@@ -112,7 +112,7 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
         bb_add_insn(bb, insn_array[1]);
 
 	r2->interval->need_reload = true;
-	r2->interval->spill_slot = get_spill_slot_32(cu->stack_frame);
+	r2->interval->spill_parent = r1->interval;
 
 	compute_insn_positions(cu);
 	analyze_liveness(cu);
@@ -128,7 +128,7 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
 	 * A reload instruction is inserted before the interval end.
 	 */ 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_ld_insn(INSN_LD_LOCAL, r2, r2->interval->spill_slot, insn);
+	assert_ld_insn(INSN_LD_LOCAL, r2, r1->interval->spill_slot, insn);
 
 	/*
 	 * Last instruction stays the same. 

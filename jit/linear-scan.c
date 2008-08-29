@@ -147,6 +147,7 @@ static void __spill_interval_intersecting(struct live_interval *current,
 
 	new = split_interval_at(new, next_pos);
 	new->need_reload = true;
+	new->spill_parent = it;
 
 	insert_to_list(new, unhandled);
 }
