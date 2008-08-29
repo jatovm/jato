@@ -22,9 +22,9 @@
 #include <string.h>
 #include <errno.h>
 
-static const char *class_name_to_array_name(const char *class_name)
+static char *class_name_to_array_name(const char *class_name)
 {
-	const char *array_name = malloc(strlen(class_name) + 4);
+	char *array_name = malloc(strlen(class_name) + 4);
 
 	if (class_name[0] == '[') {
 		strcpy(array_name, "[");
@@ -40,8 +40,9 @@ static const char *class_name_to_array_name(const char *class_name)
 
 static struct object *class_to_array_class(struct object *class)
 {
-	const char *class_name, *array_class_name;
 	struct object *array_class;
+	const char *class_name;
+	char *array_class_name;
 
 	class_name = CLASS_CB(class)->name;
 	array_class_name = class_name_to_array_name(class_name);
