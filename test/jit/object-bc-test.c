@@ -291,8 +291,8 @@ void test_convert_aaload(void)
 
 void test_convert_baload(void)
 {
-	assert_convert_array_load(J_INT, OPC_BALOAD, 0, 1);
-	assert_convert_array_load(J_INT, OPC_BALOAD, 1, 2);
+	assert_convert_array_load(J_BYTE, OPC_BALOAD, 0, 1);
+	assert_convert_array_load(J_BYTE, OPC_BALOAD, 1, 2);
 }
 
 void test_convert_caload(void)
@@ -386,8 +386,8 @@ void test_convert_aastore(void)
 
 void test_convert_bastore(void)
 {
-	assert_convert_array_store(J_INT, OPC_BASTORE, 0, 1);
-	assert_convert_array_store(J_INT, OPC_BASTORE, 2, 3);
+	assert_convert_array_store(J_BYTE, OPC_BASTORE, 0, 1);
+	assert_convert_array_store(J_BYTE, OPC_BASTORE, 2, 3);
 }
 
 void test_convert_castore(void)

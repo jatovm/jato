@@ -234,7 +234,7 @@ int convert_aaload(struct parse_context *ctx)
 
 int convert_baload(struct parse_context *ctx)
 {
-	return convert_array_load(ctx, J_INT);
+	return convert_array_load(ctx, J_BYTE);
 }
 
 int convert_caload(struct parse_context *ctx)
@@ -322,7 +322,7 @@ int convert_aastore(struct parse_context *ctx)
 
 int convert_bastore(struct parse_context *ctx)
 {
-	return convert_array_store(ctx, J_INT);
+	return convert_array_store(ctx, J_BYTE);
 }
 
 int convert_castore(struct parse_context *ctx)
