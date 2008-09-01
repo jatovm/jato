@@ -25,6 +25,64 @@ public class ControlTransferTest extends TestCase {
         }
     }
 
+    public static boolean ifeq(int x) {
+        return x == 0;
+    }
+
+    public static void testIfEq() {
+        assertFalse(ifeq(1));
+        assertTrue(ifeq(0));
+    }
+
+    public static boolean ifne(int x) {
+        return x != 0;
+    }
+
+    public static void testIfNe() {
+        assertTrue(ifne(1));
+        assertFalse(ifne(0));
+    }
+
+    public static boolean iflt(int x) {
+        return x < 0;
+    }
+
+    public static void testIfLt() {
+        assertTrue(iflt(-1));
+        assertFalse(iflt(0));
+        assertFalse(iflt(1));
+    }
+
+    public static boolean ifle(int x) {
+        return x <= 0;
+    }
+
+    public static void testIfLe() {
+        assertTrue(ifle(-1));
+        assertTrue(ifle(0));
+        assertFalse(ifle(1));
+    }
+
+    public static boolean ifgt(int x) {
+        return x > 0;
+    }
+
+    public static void testIfGt() {
+        assertFalse(ifgt(-1));
+        assertFalse(ifgt(0));
+        assertTrue(ifgt(1));
+    }
+
+    public static boolean ifge(int x) {
+        return x >= 0;
+    }
+
+    public static void testIfGe() {
+        assertFalse(ifge(-1));
+        assertTrue(ifge(0));
+        assertTrue(ifge(1));
+    }
+
     public static boolean if_icmpeq(int x, int y) {
         return x == y;
     }
@@ -84,6 +142,12 @@ public class ControlTransferTest extends TestCase {
     }
 
     public static void main(String [] args) {
+        testIfEq();
+        testIfNe();
+        testIfLt();
+        testIfLe();
+        testIfGt();
+        testIfGe();
         testIfIcmpEq();
         testIfIcmpNe();
         testIfIcmpLt();
