@@ -151,6 +151,18 @@ __emit_reg_reg(struct buffer *buf, unsigned char opc,
 	emit(buf, mod_rm);
 }
 
+static void
+emit_reg_reg(struct buffer *buf, unsigned char opc,	
+	     struct operand *src, struct operand *dst)
+{
+	enum machine_reg src_reg, dst_reg;
+
+	src_reg = mach_reg(&src->reg);
+	dst_reg = mach_reg(&dst->reg);
+
+	__emit_reg_reg(buf, opc, src_reg, dst_reg);
+}
+
 static void 
 __emit_membase_reg(struct buffer *buf, unsigned char opc,
 		   enum machine_reg base_reg, unsigned long disp,
@@ -497,16 +509,10 @@ static void emit_or_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x0b, src, dest);
 }
 
-static void __emit_or_reg_reg(struct buffer * buf, enum machine_reg src_reg,
-			      enum machine_reg dest_reg)
-{
-	__emit_reg_reg(buf, 0x0b, src_reg, dest_reg);
-}
-
-static void emit_or_reg_reg(struct buffer *buf, struct operand * src,
+static void emit_or_reg_reg(struct buffer *buf, struct operand *src,
 			    struct operand *dest)
 {
-	__emit_or_reg_reg(buf, mach_reg(&src->reg), mach_reg(&dest->reg));
+	emit_reg_reg(buf, 0x0b, src, dest);
 }
 
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
