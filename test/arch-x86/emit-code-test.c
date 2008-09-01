@@ -407,6 +407,13 @@ void test_emit_cmp_membase_reg(void)
 	assert_emit_insn_3(0x3b, 0x45, 0x08, membase_reg_insn(INSN_CMP_MEMBASE_REG, &VAR_EBP, 0x08, &VAR_EAX));
 }
 
+void test_emit_cmp_reg_reg(void)
+{
+	assert_emit_insn_2(0x39, 0xc3, reg_reg_insn(INSN_CMP_REG_REG, &VAR_EAX, &VAR_EBX));
+	assert_emit_insn_2(0x39, 0xd8, reg_reg_insn(INSN_CMP_REG_REG, &VAR_EBX, &VAR_EAX));
+	assert_emit_insn_2(0x39, 0xca, reg_reg_insn(INSN_CMP_REG_REG, &VAR_ECX, &VAR_EDX));
+}
+
 void test_emit_cmp_imm_reg(void)
 {
 	assert_emit_insn_3(0x83, 0xf8, 0x04, imm_reg_insn(INSN_CMP_IMM_REG, 0x04, &VAR_EAX));

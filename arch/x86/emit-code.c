@@ -548,6 +548,11 @@ static void emit_cmp_membase_reg(struct buffer *buf, struct operand *src, struct
 	emit_membase_reg(buf, 0x3b, src, dest);
 }
 
+static void emit_cmp_reg_reg(struct buffer *buf, struct operand *src, struct operand *dest)
+{
+	emit_reg_reg(buf, 0x39, src, dest);
+}
+
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0xff);
@@ -665,6 +670,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),
 	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),
