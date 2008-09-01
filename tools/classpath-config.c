@@ -6,9 +6,7 @@
 #include <unistd.h>
 #include <limits.h>
 
-#define NR_DIRS 2
-
-static const char *install_dirs[NR_DIRS] = {
+static const char *install_dirs[] = {
 	"/usr",
 	"/usr/local/classpath",
 };
@@ -41,7 +39,7 @@ int main(int argc, char *argv[])
 {
 	int i;
 
-	for (i = 0; i < NR_DIRS; i++) {
+	for (i = 0; i < sizeof(install_dirs) / sizeof(*install_dirs); i++) {
 		char glibj[PATH_MAX];
 		char lib[PATH_MAX];
 
