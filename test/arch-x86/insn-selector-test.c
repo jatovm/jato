@@ -806,16 +806,58 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 	free_compilation_unit(cu);
 }
 
+static void assert_select_if_statement_reg_reg(enum insn_type expected,
+					       enum binary_operator binop)
+{
+	struct basic_block *bb, *true_bb;
+	struct compilation_unit *cu;
+	enum machine_reg dreg, sreg;
+	struct var_info *src, *dst;
+	struct expression *expr;
+	struct statement *stmt;
+	struct insn *insn;
+	struct methodblock method = {
+		.args_count = 2,
+		.max_locals = 2,
+	};
+
+	cu = alloc_compilation_unit(&method);
+	src = get_var(cu);
+	dst = get_var(cu);
+	bb = get_basic_block(cu, 0, 1);
+	true_bb = get_basic_block(cu, 1, 2);
+
+	expr = binop_expr(J_INT, binop, temporary_expr(J_INT, src), temporary_expr(J_INT, dst));
+	stmt = add_if_stmt(expr, bb, true_bb);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	sreg = mach_reg(&insn->src.reg);
+	dreg = mach_reg(&insn->dest.reg);
+	assert_reg_reg_insn(INSN_CMP_REG_REG, sreg, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_branch_insn(expected, stmt->if_true, insn);
+
+	free_compilation_unit(cu);
+}
+
 static void assert_select_if_statement(enum insn_type expected,
 				       enum binary_operator binop)
 {
 	assert_select_if_statement_local_local(expected, binop);
 	assert_select_if_statement_local_value(expected, binop);
+	assert_select_if_statement_reg_reg(expected, binop);
 }
 
 void test_select_if_statement(void)
 {
 	assert_select_if_statement(INSN_JE_BRANCH, OP_EQ);
+	assert_select_if_statement(INSN_JGE_BRANCH, OP_GE);
+	assert_select_if_statement(INSN_JG_BRANCH, OP_GT);
+	assert_select_if_statement(INSN_JLE_BRANCH, OP_LE);
+	assert_select_if_statement(INSN_JL_BRANCH, OP_LT);
 	assert_select_if_statement(INSN_JNE_BRANCH, OP_NE);
 }
 

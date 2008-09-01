@@ -213,6 +213,10 @@ void test_branch_does_not_define_or_use_anything(void)
 	struct basic_block bb;
 
 	assert_does_not_define_or_use_anything(branch_insn(INSN_JE_BRANCH, &bb));
-	assert_does_not_define_or_use_anything(branch_insn(INSN_JNE_BRANCH, &bb));
+	assert_does_not_define_or_use_anything(branch_insn(INSN_JGE_BRANCH, &bb));
+	assert_does_not_define_or_use_anything(branch_insn(INSN_JG_BRANCH, &bb));
+	assert_does_not_define_or_use_anything(branch_insn(INSN_JLE_BRANCH, &bb));
+	assert_does_not_define_or_use_anything(branch_insn(INSN_JL_BRANCH, &bb));
 	assert_does_not_define_or_use_anything(branch_insn(INSN_JMP_BRANCH, &bb));
+	assert_does_not_define_or_use_anything(branch_insn(INSN_JNE_BRANCH, &bb));
 }

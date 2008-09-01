@@ -91,6 +91,18 @@ static enum insn_type br_binop_to_insn_type(enum binary_operator binop)
 	case OP_NE:
 		ret = INSN_JNE_BRANCH;
 		break;
+	case OP_LT:
+		ret = INSN_JL_BRANCH;
+		break;
+	case OP_GE:
+		ret = INSN_JGE_BRANCH;
+		break;
+	case OP_GT:
+		ret = INSN_JG_BRANCH;
+		break;
+	case OP_LE:
+		ret = INSN_JLE_BRANCH;
+		break;
 	default:
 		assert(!"not a branch operator");
 	};
@@ -325,6 +337,11 @@ reg:	OP_EQ(reg, EXPR_VALUE) 1
 	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
 }
 
+reg:	OP_EQ(reg, reg) 1
+{
+	binop_reg_reg(state, s, tree, INSN_CMP_REG_REG);
+}
+
 reg:	OP_NE(reg, EXPR_LOCAL) 1
 {
 	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG);
@@ -333,6 +350,71 @@ reg:	OP_NE(reg, EXPR_LOCAL) 1
 reg:	OP_NE(reg, EXPR_VALUE) 1
 {
 	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_NE(reg, reg) 1
+{
+	binop_reg_reg(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_LT(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_LT(reg, EXPR_VALUE) 1
+{
+	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_LT(reg, reg) 1
+{
+	binop_reg_reg(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_GT(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_GT(reg, EXPR_VALUE) 1
+{
+	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_GT(reg, reg) 1
+{
+	binop_reg_reg(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_GE(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_GE(reg, EXPR_VALUE) 1
+{
+	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_GE(reg, reg) 1
+{
+	binop_reg_reg(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_LE(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_LE(reg, EXPR_VALUE) 1
+{
+	binop_reg_value(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_LE(reg, reg) 2
+{
+	binop_reg_reg(state, s, tree, INSN_CMP_REG_REG);
 }
 
 reg:	EXPR_CLASS_FIELD 1
@@ -859,6 +941,17 @@ static void binop_reg_value(struct _MBState *state, struct basic_block *bb,
 	right = to_expr(expr->binary_right);
 
 	bb_add_insn(bb, imm_reg_insn(insn_type, right->value, result));
+}
+
+static void binop_reg_reg(struct _MBState *state, struct basic_block *bb,
+			  struct tree_node *tree, enum insn_type insn_type)
+{
+	struct var_info *src, *dst;
+
+	src = state->right->reg1;
+	dst = state->left->reg1;
+
+	bb_add_insn(bb, reg_reg_insn(insn_type, src, dst));
 }
 
 static void shift_reg_local(struct _MBState *state, struct basic_block *bb,

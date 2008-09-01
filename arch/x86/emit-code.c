@@ -616,6 +616,26 @@ static void emit_jne_branch(struct buffer *buf, struct insn *insn)
 	__emit_branch(buf, 0x0f, 0x85, insn);
 }
 
+static void emit_jge_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8d, insn);
+}
+
+static void emit_jg_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8f, insn);
+}
+
+static void emit_jle_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8e, insn);
+}
+
+static void emit_jl_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8c, insn);
+}
+
 static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
 {
 	__emit_branch(buf, 0x00, 0xe9, insn);
@@ -673,8 +693,12 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),
-	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),
+	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch, BRANCH),
+	DECL_EMITTER(INSN_JG_BRANCH, emit_jg_branch, BRANCH),
+	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch, BRANCH),
+	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch, BRANCH),
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),
+	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
