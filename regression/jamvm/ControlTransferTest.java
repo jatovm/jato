@@ -141,6 +141,30 @@ public class ControlTransferTest extends TestCase {
         assertTrue(if_icmpge(1, 0));
     }
 
+    public static boolean if_acmpeq(Object x, Object y) {
+        return x == y;
+    }
+
+    public static void testIfAcmpEq() {
+        Object x = new Object();
+        Object y = new Object();
+        Object z = x;
+        assertTrue(if_acmpeq(x, z));
+        assertFalse(if_acmpeq(x, y));
+    }
+
+    public static boolean if_acmpne(Object x, Object y) {
+        return x != y;
+    }
+
+    public static void testIfAcmpNe() {
+        Object x = new Object();
+        Object y = new Object();
+        Object z = x;
+        assertFalse(if_acmpne(x, z));
+        assertTrue(if_acmpne(x, y));
+    }
+
     public static void main(String [] args) {
         testIfEq();
         testIfNe();
@@ -154,6 +178,8 @@ public class ControlTransferTest extends TestCase {
         testIfIcmpGt();
         testIfIcmpLe();
         testIfIcmpGe();
+        testIfAcmpEq();
+        testIfAcmpNe();
         testGoTo();
 
         Runtime.getRuntime().halt(retval);
