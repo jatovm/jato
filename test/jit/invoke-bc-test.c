@@ -27,7 +27,7 @@ static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 	cu = alloc_simple_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	return_value = temporary_expr(vm_type, temporary);
+	return_value = temporary_expr(vm_type, NULL, temporary);
 	stack_push(cu->expr_stack, return_value);
 
 	convert_to_ir(cu);

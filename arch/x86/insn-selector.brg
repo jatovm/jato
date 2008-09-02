@@ -165,11 +165,10 @@ reg:   EXPR_TEMPORARY
 
 	expr = to_expr(tree);
 
-	state->reg1 = expr->temporary;
+	state->reg1 = expr->tmp_low;
 
 	if (expr->vm_type == J_LONG) {
-		/* No 64bit temporary support yet */
-		assert(!"64bit TEMPORARY");
+		state->reg2 = expr->tmp_high;
 	}
 }
 
@@ -736,13 +735,14 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
 
 	temp = to_expr(stmt->store_dest);
 
-	dest = temp->temporary;
+	dest = temp->tmp_low;
 	src = state->right->reg1;
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
 
 	if (temp->vm_type == J_LONG) {
-		/* No 64bit temporary support yet. */
-		assert(!"64bit TEMPORARY");
+		dest = temp->tmp_high;
+		src = state->right->reg2;
+		bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
 	}
 }
 

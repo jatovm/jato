@@ -827,7 +827,8 @@ static void assert_select_if_statement_reg_reg(enum insn_type expected,
 	bb = get_basic_block(cu, 0, 1);
 	true_bb = get_basic_block(cu, 1, 2);
 
-	expr = binop_expr(J_INT, binop, temporary_expr(J_INT, src), temporary_expr(J_INT, dst));
+	expr = binop_expr(J_INT, binop, temporary_expr(J_INT, NULL, src),
+			  temporary_expr(J_INT, NULL, dst));
 	stmt = add_if_stmt(expr, bb, true_bb);
 
 	select_instructions(bb->b_parent);
@@ -1106,7 +1107,7 @@ void test_select_store_value_to_var(void)
 	cu = alloc_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	store_dest = temporary_expr(J_REFERENCE, temporary);
+	store_dest = temporary_expr(J_REFERENCE, NULL, temporary);
 	store_src  = value_expr(J_REFERENCE, 0xdeadbeef);
 
 	stmt = alloc_statement(STMT_STORE);
@@ -1145,7 +1146,7 @@ void test_select_store_var_to_local(void)
 
 	store_dest = local_expr(J_INT, 0);
 	temporary = get_var(cu);
-	store_src  = temporary_expr(J_INT, temporary);
+	store_src  = temporary_expr(J_INT, NULL, temporary);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &store_dest->node;

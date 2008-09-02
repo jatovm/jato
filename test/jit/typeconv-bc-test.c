@@ -25,7 +25,7 @@ static void assert_conversion_expr_stack(unsigned char opc,
 	cu = alloc_simple_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	expression = temporary_expr(from_type, temporary);
+	expression = temporary_expr(from_type, NULL, temporary);
 	stack_push(cu->expr_stack, expression);
 
 	convert_to_ir(cu);

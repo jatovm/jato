@@ -327,7 +327,7 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
 	temporary = get_var(cu);
-	expr = temporary_expr(expected_type, temporary);
+	expr = temporary_expr(expected_type, NULL, temporary);
 
 	stack_push(cu->expr_stack, arrayref_expr);
 	stack_push(cu->expr_stack, index_expr);

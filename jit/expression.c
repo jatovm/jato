@@ -145,11 +145,13 @@ struct expression *local_expr(enum vm_type vm_type, unsigned long local_index)
 	return expr;
 }
 
-struct expression *temporary_expr(enum vm_type vm_type, struct var_info *temporary)
+struct expression *temporary_expr(enum vm_type vm_type, struct var_info *tmp_high, struct var_info *tmp_low)
 {
 	struct expression *expr = alloc_expression(EXPR_TEMPORARY, vm_type);
-	if (expr)
-		expr->temporary = temporary;
+	if (expr) {
+		expr->tmp_high = tmp_high;
+		expr->tmp_low = tmp_low;
+	}
 
 	return expr;
 }

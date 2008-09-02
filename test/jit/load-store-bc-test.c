@@ -522,7 +522,7 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	cu = alloc_simple_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	stack_push(cu->expr_stack, temporary_expr(J_INT, temporary));
+	stack_push(cu->expr_stack, temporary_expr(J_INT, NULL, temporary));
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);

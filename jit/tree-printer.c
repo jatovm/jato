@@ -288,8 +288,8 @@ static int print_local_expr(int lvl, struct string *str,
 static int print_temporary_expr(int lvl, struct string *str,
 				struct expression *expr)
 {
-	return str_append(str, "[temporary %s 0x%lx]", type_names[expr->vm_type],
-			  expr->temporary);
+	return str_append(str, "[temporary %s 0x%lx (high), 0x%lx (low)]", type_names[expr->vm_type],
+			  expr->tmp_high, expr->tmp_low);
 }
 
 static int print_array_deref_expr(int lvl, struct string *str,

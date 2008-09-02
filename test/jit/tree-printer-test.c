@@ -191,18 +191,18 @@ void test_should_print_local_expression(void)
 	assert_printed_local_expr("[local boolean 1]", J_BOOLEAN, 1);
 }
 
-void assert_printed_temporary_expr(const char *expected, enum vm_type type, struct var_info *var)
+void assert_printed_temporary_expr(const char *expected, enum vm_type type, struct var_info *var, struct var_info *var2)
 {
 	struct expression *expr;
 
-	expr = temporary_expr(type, var);
+	expr = temporary_expr(type, var, var2);
 	assert_print_expr(expected, expr);
 }
 
 void test_should_print_temporary_expression(void)
 {
-	assert_printed_temporary_expr("[temporary int 0x12345678]", J_INT, (struct var_info *)0x12345678);
-	assert_printed_temporary_expr("[temporary boolean 0x87654321]", J_BOOLEAN, (struct var_info *)0x87654321);
+	assert_printed_temporary_expr("[temporary int 0x0 (high), 0x12345678 (low)]", J_INT, NULL, (struct var_info *)0x12345678);
+	assert_printed_temporary_expr("[temporary boolean 0x85215975 (high), 0x87654321 (low)]", J_BOOLEAN, (struct var_info *)0x85215975, (struct var_info *)0x87654321);
 }
 
 void assert_printed_array_deref_expr(const char *expected, enum vm_type type,

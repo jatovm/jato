@@ -42,10 +42,10 @@ static void assert_convert_binop(enum vm_type vm_type,
 	cu = alloc_simple_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	left = temporary_expr(vm_type, temporary);
+	left = temporary_expr(vm_type, NULL, temporary);
 
 	temporary = get_var(cu);
-	right = temporary_expr(vm_type, temporary);
+	right = temporary_expr(vm_type, NULL, temporary);
 
 	stack_push(cu->expr_stack, left);
 	stack_push(cu->expr_stack, right);
@@ -116,7 +116,7 @@ static void assert_convert_unop(enum vm_type vm_type,
 	cu = alloc_simple_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	expression = temporary_expr(vm_type, temporary);
+	expression = temporary_expr(vm_type, NULL, temporary);
 	stack_push(cu->expr_stack, expression);
 
 	convert_to_ir(cu);
@@ -224,10 +224,10 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 	cu = alloc_simple_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	left = temporary_expr(type, temporary);
+	left = temporary_expr(type, NULL, temporary);
 
 	temporary = get_var(cu);
-	right = temporary_expr(type, temporary);
+	right = temporary_expr(type, NULL, temporary);
 
 	stack_push(cu->expr_stack, left);
 	stack_push(cu->expr_stack, right);
