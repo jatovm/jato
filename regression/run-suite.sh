@@ -7,7 +7,7 @@ function run_java {
   JAVA_CLASS=$1
   EXPECTED=$2
 
-  ../java \
+  ../bin/java \
       -Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
       -Xbootclasspath:$BOOTCLASSPATH $JAVA_OPTS -cp . $JAVA_CLASS
 

@@ -30,7 +30,8 @@ ARCH_CONFIG=include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
 # Make the build silent by default
 V =
 
-PROGRAM		= java
+BIN_DIR		:= bin
+PROGRAM		:= $(BIN_DIR)/java
 
 include arch/$(ARCH)/Makefile$(ARCH_POSTFIX)
 
@@ -172,7 +173,7 @@ arch/$(ARCH)/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e arch/$(ARCH)/insn-selector.brg > $@
 
-$(PROGRAM): $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) compile
+$(PROGRAM): $(ARCH_INCLUDE_DIR) $(BIN_DIR) $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS)
 
@@ -181,6 +182,10 @@ compile: $(OBJS)
 $(ARCH_INCLUDE_DIR): FORCE
 	$(E) "  LN      " $@
 	$(Q) ln -fsn arch-$(ARCH) $@
+
+$(BIN_DIR): FORCE
+	$(E) "  MKDIR   " $@
+	$(Q) mkdir -p $@
 
 test: $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) monoburg
 	make -C test/vm/ ARCH=$(ARCH) test
@@ -214,6 +219,7 @@ regression: monoburg $(CLASSPATH_CONFIG) lib $(PROGRAM) $(REGRESSION_TEST_SUITE_
 
 clean:
 	$(E) "  CLEAN"
+	$(Q) - rm -f $(BIN_DIR)
 	$(Q) - rm -f $(CLASSPATH_CONFIG)
 	$(Q) - rm -f $(OBJS)
 	$(Q) - rm -f $(LIBHARNESS_OBJS)
