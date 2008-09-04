@@ -281,17 +281,41 @@ reg:	OP_USHR(reg, EXPR_LOCAL) 1
 
 reg:	OP_OR(reg, EXPR_LOCAL) 1
 {
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
 	binop_reg_local_low(state, s, tree, INSN_OR_MEMBASE_REG);
+
+	if (expr->vm_type == J_LONG) {
+		binop_reg_local_high(state, s, tree, INSN_OR_MEMBASE_REG);
+	}
 }
 
 reg:	OP_AND(reg, EXPR_LOCAL) 1
 {
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
 	binop_reg_local_low(state, s, tree, INSN_AND_MEMBASE_REG);
+
+	if (expr->vm_type == J_LONG) {
+		binop_reg_local_high(state, s, tree, INSN_AND_MEMBASE_REG);
+	}
 }
 
 reg:	OP_XOR(reg, EXPR_LOCAL) 1
 {
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
 	binop_reg_local_low(state, s, tree, INSN_XOR_MEMBASE_REG);
+
+	if (expr->vm_type == J_LONG) {
+		binop_reg_local_high(state, s, tree, INSN_XOR_MEMBASE_REG);
+	}
 }
 
 reg:	EXPR_INVOKE(arg) 1

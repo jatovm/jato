@@ -237,11 +237,11 @@ public class LongArithmeticTest extends TestCase {
         testLongRightShiftSignExtends();
         testLongUnsignedRightShift();
         testLongUnsignedRightShiftDistanceIsMasked();
-        testLongUnsignedRightShiftZeroExtends();
+        testLongUnsignedRightShiftZeroExtends();*/
         testLongBitwiseInclusiveOr();
         testLongBitwiseAnd();
         testLongBitwiseExclusiveOr();
-        testLongIncrementLocalByConstant();*/
+        //testLongIncrementLocalByConstant();
 
         Runtime.getRuntime().halt(retval);
     }
