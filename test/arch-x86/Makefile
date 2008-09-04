@@ -44,6 +44,7 @@ OBJS = \
 	../../jit/basic-block.o \
 	../../jit/compilation-unit.o \
 	../../jit/emit.o \
+	../../jit/emulate.o \
 	../../jit/expression.o \
 	../../jit/interval.o \
 	../../jit/stack-slot.o \

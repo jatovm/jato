@@ -165,7 +165,26 @@ public class ControlTransferTest extends TestCase {
         assertTrue(if_acmpne(x, y));
     }
 
+    public static boolean if_lcmpeq(long x, long y) {
+        return x == y;	/* lcmp + ifne */
+    }
+
+    public static void testIfLcmpEq() {
+        assertFalse(if_lcmpeq(0, 1));
+        assertTrue(if_lcmpeq(0, 0));
+    }
+
+    public static boolean if_lcmpgt(long x, long y) {
+	return x > y;	/* lcmp + ifle */
+    }
+
+    public static void testIfLcmpGt() {
+        assertTrue(if_lcmpgt(1, 0));
+        assertFalse(if_lcmpgt(1, 1));
+    }
+
     public static void main(String [] args) {
+        testGoTo();
         testIfEq();
         testIfNe();
         testIfLt();
@@ -180,7 +199,8 @@ public class ControlTransferTest extends TestCase {
         testIfIcmpGe();
         testIfAcmpEq();
         testIfAcmpNe();
-        testGoTo();
+        testIfLcmpEq();
+        testIfLcmpGt();
 
         Runtime.getRuntime().halt(retval);
     }

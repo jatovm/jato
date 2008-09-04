@@ -47,6 +47,7 @@ JIT_OBJS = \
 	jit/disass-common.o	\
 	jit/disass.o		\
 	jit/emit.o		\
+	jit/emulate.o		\
 	jit/expression.o	\
 	jit/args.o		\
 	jit/interval.o		\
