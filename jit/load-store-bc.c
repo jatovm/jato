@@ -19,6 +19,7 @@
 #include <vm/stack.h>
 
 #include <errno.h>
+#include <stdint.h>
 
 static int __convert_const(struct parse_context *ctx,
 			   unsigned long long value, enum vm_type vm_type)
@@ -91,7 +92,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	cb = CLASS_CB(ctx->cu->method->class);
 	cp = &cb->constant_pool;
 
-	u1 type = CP_TYPE(cp, cp_idx);
+	uint8_t type = CP_TYPE(cp, cp_idx);
 	switch (type) {
 	case CONSTANT_Integer:
 		expr = value_expr(J_INT, CP_INTEGER(cp, cp_idx));
