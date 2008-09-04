@@ -203,7 +203,15 @@ reg:	OP_ADD(reg, EXPR_VALUE) 1
 
 reg:	OP_SUB(reg, EXPR_LOCAL) 1
 {
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
 	binop_reg_local_low(state, s, tree, INSN_SUB_MEMBASE_REG);
+
+	if (expr->vm_type == J_LONG) {
+		binop_reg_local_high(state, s, tree, INSN_SBB_MEMBASE_REG);
+	}
 }
 
 reg:	OP_MUL(reg, EXPR_LOCAL) 1

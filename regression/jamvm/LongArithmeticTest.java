@@ -15,7 +15,7 @@ public class LongArithmeticTest extends TestCase {
         assertEquals( 0, add(1, -1));
         assertEquals( 0, add(0, 0));
         assertEquals( 1, add(0, 1));
-        assertEquals( 3, add(1, 2));
+        assertEquals( 0x200000001L, add(0x100000000L, 0x100000001L));
     }
 
     public static void testLongAdditionOverflow() {
@@ -32,7 +32,7 @@ public class LongArithmeticTest extends TestCase {
         assertEquals( 0, sub(-1, -1));
         assertEquals( 0, sub( 0,  0));
         assertEquals(-1, sub( 0,  1));
-        assertEquals(-2, sub( 1,  3));
+        assertEquals( 0x200000000L, sub( 0x200000001L, 1L));
     }
 
     public static void testLongSubtractionOverflow() {
@@ -220,10 +220,10 @@ public class LongArithmeticTest extends TestCase {
 
     public static void main(String[] args) {
         testLongAddition();
-    /*    testLongAdditionOverflow();
+        testLongAdditionOverflow();
         testLongSubtraction();
         testLongSubtractionOverflow();
-        testLongMultiplication();
+        /*testLongMultiplication();
         testLongMultiplicationOverflow();
         testLongDivision();
         testLongRemainder();

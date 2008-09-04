@@ -330,6 +330,11 @@ void test_emit_sub_membase_reg(void)
 	assert_emit_insn_3(0x2b, 0x45, 0x04, membase_reg_insn(INSN_SUB_MEMBASE_REG, &VAR_EBP, 0x04, &VAR_EAX));
 }
 
+void test_emit_sbb_membase_reg(void)
+{
+	assert_emit_insn_3(0x1b, 0x45, 0x04, membase_reg_insn(INSN_SBB_MEMBASE_REG, &VAR_EBP, 0x04, &VAR_EAX));
+}
+
 void test_emit_mul_membase_reg(void)
 {
 	assert_emit_insn_3(0xf7, 0x65, 0x0c, membase_reg_insn(INSN_MUL_MEMBASE_REG, &VAR_EBP, 0x0c, &VAR_EAX));
