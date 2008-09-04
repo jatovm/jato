@@ -19,7 +19,7 @@
 
 static void convert_ir_const_single(struct compilation_unit *cu, void *value)
 {
-	u8 cp_infos[] = { (unsigned long) value };
+	uint64_t cp_infos[] = { (unsigned long) value };
 	u1 cp_types[] = { CONSTANT_Resolved };
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);

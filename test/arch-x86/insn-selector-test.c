@@ -1212,7 +1212,7 @@ void test_iastore_select(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg1, dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(u4), dreg3, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg4 = mach_reg(&insn->dest.reg);
@@ -1262,7 +1262,7 @@ void test_iaload_select(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg2, dreg4, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(u4), dreg4, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), dreg4, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg5 = mach_reg(&insn->dest.reg);

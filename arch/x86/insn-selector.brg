@@ -69,7 +69,7 @@ static void method_args_cleanup(struct basic_block *bb, unsigned long args_count
 	unsigned long args_size;
 
 	stack_ptr = bb->b_parent->stack_ptr;
-	args_size = args_count * sizeof(u4);
+	args_size = args_count * sizeof(uint32_t);
 
 	bb_add_insn(bb, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
 }
@@ -865,7 +865,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 	state->reg2 = index;
 
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
-	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(u4), base));
+	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), base));
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, state_index, index));
 }
 

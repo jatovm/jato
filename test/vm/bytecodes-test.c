@@ -74,7 +74,7 @@ void test_is_branch_opcode(void)
 	assert_true(bc_is_branch(OPC_JSR_W));
 }
 
-static void assert_branch_target(u2 expected, unsigned char opc)
+static void assert_branch_target(uint16_t expected, unsigned char opc)
 {
 	unsigned char code[] = { opc, (expected & 0xFF00) >> 8, (expected & 0x00FF) };
 	assert_int_equals(expected, bc_target_off(code));
@@ -87,7 +87,7 @@ void test_branch_target(void)
 	assert_branch_target(0x1000, OPC_IFNE);
 }
 
-static void assert_wide_branch_target(u4 expected, unsigned char opc)
+static void assert_wide_branch_target(uint32_t expected, unsigned char opc)
 {
 	unsigned char code[] = {
 		opc,

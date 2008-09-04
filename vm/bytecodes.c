@@ -11,6 +11,7 @@
 #include <vm/bytecodes.h>
 #include <vm/byteorder.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -54,13 +55,13 @@ bool bc_is_goto(unsigned char opc)
 
 static unsigned long bc_target_off16(unsigned char *code)
 {
-	u2 target = *(u2 *) code;
+	uint16_t target = *(uint16_t *) code;
 	return be16_to_cpu(target);
 }
 
 static unsigned long bc_target_off32(unsigned char *code)
 {
-	u4 target = *(u4 *) code;
+	uint32_t target = *(uint32_t *) code;
 	return be32_to_cpu(target);
 }
 

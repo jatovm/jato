@@ -2,6 +2,7 @@
 #define __BYTECODE_H
 
 #include <vm/byteorder.h>
+#include <stdint.h>
 
 static inline char read_s8(unsigned char *p)
 {
@@ -15,12 +16,12 @@ static inline unsigned char read_u8(unsigned char *p)
 
 static inline short read_s16(unsigned char *p)
 {
-	return (short)be16_to_cpu(*(u2 *) p);
+	return (short)be16_to_cpu(*(uint16_t *) p);
 }
 
 static inline unsigned short read_u16(unsigned char *p)
 {
-	return be16_to_cpu(*(u2 *) p);
+	return be16_to_cpu(*(uint16_t *) p);
 }
 
 #endif
