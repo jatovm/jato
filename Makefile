@@ -204,6 +204,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jamvm/ExitStatusIsZeroTest.class \
 	regression/jamvm/LoadConstantsTest.class \
 	regression/jamvm/IntegerArithmeticTest.class \
+	regression/jamvm/LongArithmeticTest.class \
 	regression/jamvm/ObjectCreationAndManipulationTest.class \
 	regression/jamvm/ControlTransferTest.class \
 	regression/jamvm/SynchronizationTest.class \
