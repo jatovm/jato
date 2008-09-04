@@ -201,21 +201,21 @@ public class LongArithmeticTest extends TestCase {
     }
 
     public static void testLongIncrementLocalByConstant() {
-        assertEquals(-1, iincByMinusOne(0));
-        assertEquals( 1, iincByOne(0));
-        assertEquals( 2, iincByOne(1));
-        assertEquals( 4, iincByTwo(2));
+        assertEquals(-1, lincByMinusOne(0));
+        assertEquals( 1, lincByOne(0));
+        assertEquals( 2, lincByOne(1));
+        assertEquals( 4, lincByTwo(2));
     }
 
-    public static long iincByMinusOne(long value) {
+    public static long lincByMinusOne(long value) {
         return value += -1;
     }
 
-    public static long iincByOne(long value) {
+    public static long lincByOne(long value) {
         return value += 1;
     }
 
-    public static long iincByTwo(long value) {
+    public static long lincByTwo(long value) {
         return value += 2;
     }
 
@@ -241,7 +241,7 @@ public class LongArithmeticTest extends TestCase {
         testLongBitwiseInclusiveOr();
         testLongBitwiseAnd();
         testLongBitwiseExclusiveOr();
-        //testLongIncrementLocalByConstant();
+        testLongIncrementLocalByConstant();
 
         Runtime.getRuntime().halt(retval);
     }
