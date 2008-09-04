@@ -97,6 +97,7 @@ public class LongArithmeticTest extends TestCase {
         assertEquals(-1, neg( 1));
         assertEquals( 0, neg( 0));
         assertEquals( 1, neg(-1));
+        assertEquals(0x200000001L, neg(-0x200000001L));
     }
 
     public static void testLongNegationOverflow() {
@@ -226,10 +227,10 @@ public class LongArithmeticTest extends TestCase {
         /*testLongMultiplication();
         testLongMultiplicationOverflow();
         testLongDivision();
-        testLongRemainder();
+        testLongRemainder();*/
         testLongNegation();
         testLongNegationOverflow();
-        testLongLeftShift();
+        /*testLongLeftShift();
         testLongLeftShiftDistanceIsMasked();
         testLongRightShift();
         testLongRightShiftDistanceIsMasked();

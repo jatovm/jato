@@ -245,12 +245,23 @@ reg:	OP_REM(reg, EXPR_LOCAL) 1
 
 reg:	OP_NEG(reg) 1
 {
+	struct expression *expr;
 	struct var_info *result;
+
+	expr = to_expr(tree);
 
 	result = state->left->reg1;
 	state->reg1 = result;
 
 	bb_add_insn(s, reg_insn(INSN_NEG_REG, result));
+
+	if (expr->vm_type == J_LONG) {
+		result = state->left->reg2;
+		state->reg2 = result;
+
+		bb_add_insn(s, imm_reg_insn(INSN_ADC_IMM_REG, 0, result));
+		bb_add_insn(s, reg_insn(INSN_NEG_REG, result));
+	}
 }
 
 reg:	OP_SHL(reg, EXPR_LOCAL) 1
