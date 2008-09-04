@@ -36,10 +36,15 @@ static struct expression *dup_expr(struct parse_context *ctx, struct expression 
 {
 	struct expression *dest;
 	struct statement *stmt;
-	struct var_info *temporary;
+	struct var_info *tmp_low, *tmp_high = NULL;
 
-	temporary = get_var(ctx->cu);
-	dest = temporary_expr(expr->vm_type, NULL, temporary);
+	tmp_low = get_var(ctx->cu);
+
+	if (expr->vm_type == J_LONG) {
+		tmp_high = get_var(ctx->cu);
+	}
+
+	dest = temporary_expr(expr->vm_type, tmp_high, tmp_low);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &dest->node;
