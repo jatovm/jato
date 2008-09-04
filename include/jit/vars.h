@@ -83,6 +83,13 @@ struct live_interval {
 	bool fixed_reg;
 };
 
+static inline void
+mark_need_reload(struct live_interval *it, struct live_interval *parent)
+{
+	it->need_reload = true;
+	it->spill_parent = parent;
+}
+
 struct var_info {
 	unsigned long		vreg;
 	struct var_info		*next;
