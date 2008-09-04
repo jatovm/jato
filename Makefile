@@ -219,7 +219,7 @@ regression: monoburg $(CLASSPATH_CONFIG) lib $(PROGRAM) $(REGRESSION_TEST_SUITE_
 
 clean:
 	$(E) "  CLEAN"
-	$(Q) - rm -f $(BIN_DIR)
+	$(Q) - rm -rf $(BIN_DIR)
 	$(Q) - rm -f $(CLASSPATH_CONFIG)
 	$(Q) - rm -f $(OBJS)
 	$(Q) - rm -f $(LIBHARNESS_OBJS)
