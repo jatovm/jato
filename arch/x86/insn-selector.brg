@@ -660,6 +660,22 @@ reg:	EXPR_INSTANCEOF(reg)
 	method_args_cleanup(s, 2);
 }
 
+reg:	EXPR_CONVERSION(reg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	if (src->vm_type == J_INT && expr->vm_type == J_LONG) {
+		assert(!"i2l not implemented");
+	} else if (src->vm_type == J_LONG && expr->vm_type == J_INT) {
+		state->reg1 = state->left->reg1;
+	} else {
+		assert(!"conversion not implemented");
+	}
+}
+
 arg:	EXPR_NO_ARGS
 {
 }
