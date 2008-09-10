@@ -21,8 +21,20 @@ public class ConversionTest extends TestCase {
         assertEquals(10, l2i(c));
     }
 
+    public static long i2l(int value) {
+        return (long) value;
+    }
+
+    public static void testIntegerToLongConversion() {
+        int b = 10;
+        int c = -1;
+        assertEquals(10L, i2l(b));
+        assertEquals(-1L, i2l(c));
+    }
+
     public static void main(String[] args) {
         testLongToIntegerConversion();
+        testIntegerToLongConversion();
 
         Runtime.getRuntime().halt(retval);
     }
