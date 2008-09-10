@@ -497,6 +497,14 @@ static void emit_shl_reg_reg(struct buffer *buf, struct operand *src,
 	__emit_shift_reg_reg(buf, src, dest, 0x04);
 }
 
+static void emit_sar_imm_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	emit(buf, 0xc1);
+	emit(buf, encode_modrm(0x03, 0x07, encode_reg(&dest->reg)));
+	emit(buf, src->imm);
+}
+
 static void emit_sar_reg_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
@@ -719,6 +727,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, emit_sbb_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg, TWO_OPERANDS),

@@ -364,6 +364,12 @@ void test_emit_shl_reg_reg(void)
 	assert_emit_insn_2(0xd3, 0xe3, reg_reg_insn(INSN_SHL_REG_REG, &VAR_ECX, &VAR_EBX));
 }
 
+void test_emit_sar_imm_reg(void)
+{
+	assert_emit_insn_3(0xc1, 0xf8, 0x04, imm_reg_insn(INSN_SAR_IMM_REG, 0x04, &VAR_EAX));
+	assert_emit_insn_3(0xc1, 0xfb, 0x05, imm_reg_insn(INSN_SAR_IMM_REG, 0x05, &VAR_EBX));
+}
+
 void test_emit_sar_reg_reg(void)
 {
 	assert_emit_insn_2(0xd3, 0xf8, reg_reg_insn(INSN_SAR_REG_REG, &VAR_ECX, &VAR_EAX));
