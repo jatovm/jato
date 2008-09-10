@@ -35,6 +35,13 @@ void test_empty_range_does_not_contain_anything(void)
 	assert_false(in_range(&range, 1));
 }
 
+void test_empy_range_is_empty(void)
+{
+	struct live_range range = { .start = 0, .end = 0 };
+
+	assert_true(range_is_empty(&range));
+}
+
 void test_range_length_treats_end_as_exclusive(void)
 {
 	struct live_range range = { .start = 0, .end = 2 };
