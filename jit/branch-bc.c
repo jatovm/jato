@@ -26,7 +26,7 @@ static struct statement *__convert_if(struct parse_context *ctx,
 	struct basic_block *true_bb;
 	struct expression *if_conditional;
 	struct statement *if_stmt;
-	unsigned long if_target;
+	long if_target;
 
 	if_target = bc_target_off(ctx->code + ctx->offset);
 	true_bb = find_bb(ctx->cu, ctx->offset + if_target);
@@ -158,7 +158,7 @@ int convert_goto(struct parse_context *ctx)
 {
 	struct basic_block *target_bb;
 	struct statement *goto_stmt;
-	unsigned long goto_target;
+	long goto_target;
 
 	goto_target = bc_target_off(ctx->code + ctx->offset);
 	target_bb = find_bb(ctx->cu, goto_target + ctx->offset);

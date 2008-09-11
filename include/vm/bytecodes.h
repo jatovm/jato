@@ -6,6 +6,6 @@
 unsigned long bc_insn_size(unsigned char *);
 bool bc_is_branch(unsigned char);
 bool bc_is_goto(unsigned char);
-unsigned long bc_target_off(unsigned char *);
+long bc_target_off(unsigned char *);
 
 #endif

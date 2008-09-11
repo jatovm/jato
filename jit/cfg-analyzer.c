@@ -91,7 +91,7 @@ static void split_after_branches(struct stream *stream,
 
 	for (; stream_has_more(stream); stream_advance(stream)) {
 		unsigned long offset, next_insn_off;
-		unsigned long br_target_off;
+		long br_target_off;
 		struct basic_block *new_bb;
 		unsigned char *code;
 

@@ -53,15 +53,15 @@ bool bc_is_goto(unsigned char opc)
 	return opc == OPC_GOTO;
 }
 
-static unsigned long bc_target_off16(unsigned char *code)
+static long bc_target_off16(unsigned char *code)
 {
-	uint16_t target = *(uint16_t *) code;
+	int16_t target = *(int16_t *) code;
 	return be16_to_cpu(target);
 }
 
-static unsigned long bc_target_off32(unsigned char *code)
+static long bc_target_off32(unsigned char *code)
 {
-	uint32_t target = *(uint32_t *) code;
+	int32_t target = *(int32_t *) code;
 	return be32_to_cpu(target);
 }
 
@@ -69,7 +69,7 @@ static unsigned long bc_target_off32(unsigned char *code)
  *	bc_target_off - Return branch opcode target offset.
  *	@code: start of branch bytecode.
  */
-unsigned long bc_target_off(unsigned char *code)
+long bc_target_off(unsigned char *code)
 {
 	unsigned char opc = *code;
 
