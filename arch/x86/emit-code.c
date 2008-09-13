@@ -403,10 +403,22 @@ void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 	emit_ret(buf);
 }
 
+static void emit_adc_reg_reg(struct buffer *buf,
+                             struct operand *src, struct operand *dest)
+{
+	emit_reg_reg(buf, 0x13, src, dest);
+}
+
 static void emit_adc_membase_reg(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x13, src, dest);
+}
+
+static void emit_add_reg_reg(struct buffer *buf,
+			     struct operand *src, struct operand *dest)
+{
+	emit_reg_reg(buf, 0x03, src, dest);
 }
 
 static void emit_add_membase_reg(struct buffer *buf,
@@ -695,9 +707,11 @@ struct emitter {
 
 static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_ADC_REG_REG, emit_adc_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, emit_adc_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, emit_add_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),
