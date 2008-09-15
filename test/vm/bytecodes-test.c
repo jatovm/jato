@@ -87,7 +87,7 @@ void test_branch_target(void)
 	assert_branch_target(0x1000, OPC_IFNE);
 }
 
-static void assert_wide_branch_target(uint32_t expected, unsigned char opc)
+static void assert_wide_branch_target(long expected, unsigned char opc)
 {
 	unsigned char code[] = {
 		opc,
