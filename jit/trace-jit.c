@@ -132,10 +132,16 @@ void trace_regalloc(struct compilation_unit *cu)
 	printf("Register Allocation:\n\n");
 
 	for_each_variable(var, cu->var_infos) {
-		printf("  %2lu: %s", var->vreg, reg_name(var->interval->reg));
-		if (var->interval->fixed_reg)
-			printf(" (fixed)");
-		printf("\n");
+		struct live_interval *interval;
+
+		for (interval = var->interval; interval != NULL; interval = interval->next_child) {
+			printf("  %2lu:", var->vreg);
+			printf("\t%s", reg_name(var->interval->reg));
+			printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
+			printf("\t%s", interval->need_spill ? "spill\t" : "no spill");
+			printf("\t%s", interval->need_reload ? "reload\t" : "no reload");
+			printf("\n");
+		}
 	}
 	printf("\n");
 }
