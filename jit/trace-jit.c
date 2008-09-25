@@ -71,6 +71,7 @@ void trace_tree_ir(struct compilation_unit *cu)
 	printf("High-Level Intermediate Representation:\n\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
+		printf("[bb %p]:\n\n", bb);
 		for_each_stmt(stmt, &bb->stmt_list) {
 			str = alloc_str();
 			tree_print(&stmt->node, str);
