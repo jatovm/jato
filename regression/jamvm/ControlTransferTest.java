@@ -10,7 +10,7 @@ package jamvm;
  * @author Saeed Siam
  */
 public class ControlTransferTest extends TestCase {
-    public static void testGoTo() {
+    public static void testLabeledBreak() {
         int i = 0;
 
         outer: {
@@ -23,6 +23,16 @@ public class ControlTransferTest extends TestCase {
                 break outer;
             fail(/*Should not reach here.*/);
         }
+    }
+
+    public static void testForLoop() {
+        int i;
+
+        for (i = 0; i < 10; i++)
+            ;
+
+        // TODO: Uncomment the following line to make the test fail.
+        // assertEquals(i, 10);
     }
 
     public static boolean ifeq(int x) {
@@ -184,7 +194,8 @@ public class ControlTransferTest extends TestCase {
     }
 
     public static void main(String [] args) {
-        testGoTo();
+        testLabeledBreak();
+        testForLoop();
         testIfEq();
         testIfNe();
         testIfLt();

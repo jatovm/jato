@@ -8,8 +8,8 @@
  */
 
 #include <vm/vm.h>
+#include <vm/bytecode.h>
 #include <vm/bytecodes.h>
-#include <vm/byteorder.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -53,18 +53,6 @@ bool bc_is_goto(unsigned char opc)
 	return opc == OPC_GOTO;
 }
 
-static long bc_target_off16(unsigned char *code)
-{
-	int16_t target = *(int16_t *) code;
-	return be16_to_cpu(target);
-}
-
-static long bc_target_off32(unsigned char *code)
-{
-	int32_t target = *(int32_t *) code;
-	return be32_to_cpu(target);
-}
-
 /**
  *	bc_target_off - Return branch opcode target offset.
  *	@code: start of branch bytecode.
@@ -74,9 +62,9 @@ long bc_target_off(unsigned char *code)
 	unsigned char opc = *code;
 
 	if (bytecode_infos[opc].type & BC_WIDE)
-		return bc_target_off32(code + 1);
+		return read_s32(code + 1);
 
-	return bc_target_off16(code + 1);
+	return read_s16(code + 1);
 }
 
 #define DECLARE_BC(__opc, __size, __type) [__opc] = { .size = __size, .type = __type }
