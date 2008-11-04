@@ -140,6 +140,32 @@ void test_should_print_arraycheck_statement(void)
 	assert_print_stmt("ARRAY_CHECK:\n  expression: [local int 0]\n", stmt);
 }
 
+void test_should_print_monitorenter_statement(void)
+{
+	struct expression *expr;
+	struct statement *stmt;
+
+	expr = local_expr(J_INT, 0);
+
+	stmt = alloc_statement(STMT_MONITOR_ENTER);
+	stmt->expression = &expr->node;
+
+	assert_print_stmt("MONITOR_ENTER:\n  expression: [local int 0]\n", stmt);
+}
+
+void test_should_print_monitorexit_statement(void)
+{
+	struct expression *expr;
+	struct statement *stmt;
+
+	expr = local_expr(J_INT, 0);
+
+	stmt = alloc_statement(STMT_MONITOR_EXIT);
+	stmt->expression = &expr->node;
+
+	assert_print_stmt("MONITOR_EXIT:\n  expression: [local int 0]\n", stmt);
+}
+
 static void assert_print_expr(const char *expected, struct expression *expr)
 {
 	assert_tree_print(expected, &expr->node);

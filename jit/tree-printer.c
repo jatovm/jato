@@ -228,6 +228,18 @@ static int print_array_check_stmt(int lvl, struct string *str,
 	return print_expr_stmt(lvl, str, "ARRAY_CHECK", stmt);
 }
 
+static int print_monitor_enter_stmt(int lvl, struct string *str,
+				    struct statement *stmt)
+{
+	return print_expr_stmt(lvl, str, "MONITOR_ENTER", stmt);
+}
+
+static int print_monitor_exit_stmt(int lvl, struct string *str,
+				    struct statement *stmt)
+{
+	return print_expr_stmt(lvl, str, "MONITOR_EXIT", stmt);
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -239,6 +251,8 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_EXPRESSION] = print_expression_stmt,
 	[STMT_NULL_CHECK] = print_null_check_stmt,
 	[STMT_ARRAY_CHECK] = print_array_check_stmt,
+	[STMT_MONITOR_ENTER] = print_monitor_enter_stmt,
+	[STMT_MONITOR_EXIT] = print_monitor_exit_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)
