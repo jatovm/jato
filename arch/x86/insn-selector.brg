@@ -372,7 +372,6 @@ reg:	EXPR_INVOKE(arg) 1
 
 reg:	EXPR_INVOKEVIRTUAL(arg) 1
 {
-	unsigned long method_table_offset;
 	struct var_info *return_value;
 	struct var_info *call_target;
 	unsigned long method_offset;
@@ -381,7 +380,6 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	struct expression *expr;
 
 	expr = to_expr(tree);
-	method_table_offset = offsetof(struct classblock, method_table);
 	method_offset = expr_method_index(expr) * sizeof(void *);
 
 	return_value = get_fixed_var(s->b_parent, REG_EAX);
@@ -390,16 +388,19 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	call_target = get_var(s->b_parent);
 	stack_ptr = get_fixed_var(s->b_parent, REG_ESP);
 
-	/*
-	 *	FIXME: This is horrible due to lack of per-method vtables.
-	 */
+	/* object reference */
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, stack_ptr, 0, call_target));
+
+	/* object class */
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct object, class), call_target));
-	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), call_target));
-	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, method_table_offset, call_target));
-	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, method_offset, call_target));
-	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct methodblock, trampoline), call_target));
-	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct buffer, buf), call_target));
+
+	/* vtable */
+	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, sizeof(struct object), call_target));
+
+	/* native ptr */
+	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
+
+	/* invoke method */
 	bb_add_insn(s, reg_insn(INSN_CALL_REG, call_target));
 
 	args_count = nr_args(to_expr(expr->args_list));

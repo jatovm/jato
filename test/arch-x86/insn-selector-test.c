@@ -693,28 +693,14 @@ void test_select_invokevirtual_with_arguments(void)
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct object, class), dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), dreg2, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg2,
-				offsetof(struct classblock, method_table),
-				dreg, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg2, sizeof(struct object), dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, method_index * sizeof(void *), dreg2, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, method_index * sizeof(void *), dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	dreg = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg2, offsetof(struct methodblock, trampoline), dreg, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct buffer, buf), dreg2, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(INSN_CALL_REG, dreg2, insn);
+	assert_reg_insn(INSN_CALL_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);

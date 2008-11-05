@@ -23,11 +23,6 @@ public class MethodInvocationAndReturnTest extends TestCase {
         assertEquals(target, target.self);
     }
 
-    public static void main(String[] args) {
-        testReturnFromInvokeVirtualReinstatesTheFrameOfTheInvoker();
-        Runtime.getRuntime().halt(retval);
-    }
-
     public static class Dispatcher {
         public Object self;
 
@@ -49,5 +44,33 @@ public class MethodInvocationAndReturnTest extends TestCase {
 
         public void invoke() {
         }
+    }
+
+    public static void testInvokeVirtualInvokesSuperClassMethodIfMethodIsNotOverridden() {
+        SuperClass c = new NonOverridingSubClass();
+        assertEquals(0, c.value());
+    }
+
+    public static void testInvokeVirtualInvokesSubClassMethodIfMethodIsOverridden() {
+        SuperClass c = new OverridingSubClass();
+        assertEquals(1, c.value());
+    }
+
+    public static class NonOverridingSubClass extends SuperClass {
+    }
+
+    public static class OverridingSubClass extends SuperClass {
+        public int value() { return 1; }
+    }
+
+    public static class SuperClass {
+        public int value() { return 0; }
+    }
+
+    public static void main(String[] args) {
+        testReturnFromInvokeVirtualReinstatesTheFrameOfTheInvoker();
+        testInvokeVirtualInvokesSuperClassMethodIfMethodIsNotOverridden();
+
+        Runtime.getRuntime().halt(retval);
     }
 }

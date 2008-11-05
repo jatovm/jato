@@ -33,6 +33,8 @@
 /* Configure options */
 #include <vm/config.h>
 
+#include <jit/vtable.h>
+
 #ifndef TRUE
 #define         TRUE    1
 #define         FALSE   0
@@ -491,6 +493,7 @@ typedef struct refs_offsets_entry {
 #define CLASS_PAD_SIZE 4
 
 typedef struct classblock {
+   struct vtable vtable;
    uintptr_t pad[CLASS_PAD_SIZE];
    char *name;
    char *signature;

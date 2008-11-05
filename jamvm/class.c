@@ -980,6 +980,14 @@ void linkClass(Class *class) {
    cb->method_table = method_table;
    cb->method_table_size = method_table_size;
 
+   if (!(cb->access_flags & ACC_INTERFACE)) {
+       vtable_init(&cb->vtable, method_table_size);
+       for (i = 0; i < method_table_size; i++) {
+           mb = method_table[i];
+           vtable_setup_method(&cb->vtable, mb->method_table_index, trampoline_ptr(mb));
+       }
+   }
+
    /* Handle finalizer */
 
    /* If this is Object find the finalize method.  All subclasses will
@@ -1514,6 +1522,8 @@ void freeClassData(Class *class) {
 
     free(cb->methods);
     free(cb->inner_classes);
+
+    vtable_release(&cb->vtable);
 
     if(cb->annotations != NULL) {
         free(cb->annotations->data);

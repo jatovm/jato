@@ -64,7 +64,8 @@ JIT_OBJS = \
 	jit/trace-jit.o		\
 	jit/trampoline.o	\
 	jit/tree-printer.o	\
-	jit/typeconv-bc.o
+	jit/typeconv-bc.o	\
+	jit/vtable.o
 
 VM_OBJS = \
 	vm/bitset.o		\
