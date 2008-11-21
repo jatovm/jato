@@ -18,17 +18,26 @@
 
 struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
 {
-	struct basic_block *bb = malloc(sizeof(*bb));
-	if (bb) {
-		memset(bb, 0, sizeof(*bb));
-		INIT_LIST_HEAD(&bb->stmt_list);
-		INIT_LIST_HEAD(&bb->insn_list);
-		INIT_LIST_HEAD(&bb->backpatch_insns);
-		INIT_LIST_HEAD(&bb->bb_list_node);
-		bb->b_parent = b_parent;
-		bb->start = start;
-		bb->end = end;
+	struct basic_block *bb;
+
+	bb = malloc(sizeof(*bb));
+	if (!bb)
+		return NULL;
+	memset(bb, 0, sizeof(*bb));
+
+	bb->mimic_stack = alloc_stack();
+	if (!bb->mimic_stack) {
+		free(bb);
+		return NULL;
 	}
+	INIT_LIST_HEAD(&bb->stmt_list);
+	INIT_LIST_HEAD(&bb->insn_list);
+	INIT_LIST_HEAD(&bb->backpatch_insns);
+	INIT_LIST_HEAD(&bb->bb_list_node);
+	bb->b_parent = b_parent;
+	bb->start = start;
+	bb->end = end;
+
 	return bb;
 }
 
@@ -60,6 +69,7 @@ static void free_insn_list(struct list_head *head)
 
 void free_basic_block(struct basic_block *bb)
 {
+	free_stack(bb->mimic_stack);
 	free_stmt_list(&bb->stmt_list);
 	free_insn_list(&bb->insn_list);
 	free(bb->use_set);

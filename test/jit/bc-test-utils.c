@@ -19,12 +19,47 @@ struct compilation_unit *
 alloc_simple_compilation_unit(struct methodblock *method)
 {
 	struct compilation_unit *cu;
-	struct basic_block *bb;
 
 	cu = alloc_compilation_unit(method);
-	bb = get_basic_block(cu, 0, method->code_size);
+	get_basic_block(cu, 0, method->code_size);
 
 	return cu;
+}
+
+struct basic_block *__alloc_simple_bb(struct methodblock *method)
+{
+	struct compilation_unit *cu;
+
+	cu = alloc_compilation_unit(method);
+
+	return get_basic_block(cu, 0, method->code_size);
+}
+
+struct basic_block *
+alloc_simple_bb(unsigned char *code, unsigned long code_size)
+{
+	struct methodblock *method;
+
+	method = malloc(sizeof *method);
+	method->jit_code = code;
+	method->code_size = code_size;
+	method->args_count = 0;
+	method->max_locals = 0;
+
+	return __alloc_simple_bb(method);
+}
+
+void __free_simple_bb(struct basic_block *bb)
+{
+	free_compilation_unit(bb->b_parent);
+}
+
+void free_simple_bb(struct basic_block *bb)
+{
+	struct compilation_unit *cu = bb->b_parent;
+
+	free(cu->method);
+	__free_simple_bb(bb);
 }
 
 void assert_value_expr(enum vm_type expected_vm_type,

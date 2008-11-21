@@ -24,12 +24,6 @@ struct compilation_unit {
 	bool is_compiled;
 	pthread_mutex_t mutex;
 
-	/* The mimic stack is used to simulate JVM operand stack at
-	   compile-time.  See Section 2.2 ("Lazy code selection") of the paper
-	   "Fast, Effective Code Generation in a Just-In-Time Java Compiler" by
-	   Adl-Tabatabai et al (1998) for more in-depth explanation.  */
-	struct stack *mimic_stack;
-
 	/* The frame pointer for this method.  */
 	struct var_info *frame_ptr;
 

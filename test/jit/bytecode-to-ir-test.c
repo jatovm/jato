@@ -20,14 +20,12 @@ void test_convert_nop(void)
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
-	struct compilation_unit *cu;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
-
-	convert_to_ir(cu);
-	assert_true(stack_is_empty(cu->mimic_stack));
-
-	free_compilation_unit(cu);
+	bb = __alloc_simple_bb(&method);
+	convert_to_ir(bb->b_parent);
+	assert_true(stack_is_empty(bb->mimic_stack));
+	__free_simple_bb(bb);
 }
 
 /* MISSING: jsr */
@@ -68,18 +66,18 @@ void test_convert_nop(void)
 
 void test_converts_complete_basic_block(void)
 {
-	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_ILOAD_0, OPC_ILOAD_1, OPC_IADD, OPC_IRETURN };
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
- 
-	cu = alloc_simple_compilation_unit(&method);
-	convert_to_ir(cu);
+	struct basic_block *bb;
 
-	assert_false(list_is_empty(&bb_entry(cu->bb_list.next)->stmt_list));
-	assert_true(stack_is_empty(cu->mimic_stack));
-	
-	free_compilation_unit(cu);
+	bb = __alloc_simple_bb(&method); 
+	convert_to_ir(bb->b_parent);
+
+	assert_false(list_is_empty(&bb->stmt_list));
+	assert_true(stack_is_empty(bb->mimic_stack));
+
+	__free_simple_bb(bb);	
 }

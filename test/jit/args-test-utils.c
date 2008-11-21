@@ -39,13 +39,12 @@ void create_args(struct expression **args, int nr_args)
         }
 }
 
-void push_args(struct compilation_unit *cu,
-                      struct expression **args, int nr_args)
+void push_args(struct basic_block *bb, struct expression **args, int nr_args)
 {
         int i;
 
         for (i = 0; i < nr_args; i++) {
-                stack_push(cu->mimic_stack, args[i]);
+                stack_push(bb->mimic_stack, args[i]);
         }
 }
 

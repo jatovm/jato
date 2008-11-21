@@ -14,27 +14,27 @@ static void assert_conversion_mimic_stack(unsigned char opc,
 					 enum vm_type to_type)
 {
 	unsigned char code[] = { opc };
-	struct expression *expression, *conversion_expression;
-	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
+	struct expression *conversion_expression;
+	struct expression *expression;
 	struct var_info *temporary;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
-
-	temporary = get_var(cu);
+	bb = __alloc_simple_bb(&method);
+	temporary = get_var(bb->b_parent);
 	expression = temporary_expr(from_type, NULL, temporary);
-	stack_push(cu->mimic_stack, expression);
+	stack_push(bb->mimic_stack, expression);
+	convert_to_ir(bb->b_parent);
 
-	convert_to_ir(cu);
-	conversion_expression = stack_pop(cu->mimic_stack);
+	conversion_expression = stack_pop(bb->mimic_stack);
 	assert_conv_expr(to_type, expression, &conversion_expression->node);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(conversion_expression);
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 void test_convert_int_widening(void)

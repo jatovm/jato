@@ -58,7 +58,7 @@ static int convert_if(struct parse_context *ctx, enum binary_operator binop)
 	if (!zero_value)
 		return -ENOMEM;
 
-	if_value = stack_pop(ctx->cu->mimic_stack);
+	if_value = stack_pop(ctx->bb->mimic_stack);
 	stmt = __convert_if(ctx, J_INT, binop, if_value, zero_value);
 	if (!stmt) {
 		expr_put(zero_value);
@@ -103,8 +103,8 @@ static int convert_if_cmp(struct parse_context *ctx, enum vm_type vm_type, enum 
 	struct statement *stmt;
 	struct expression *if_value1, *if_value2;
 
-	if_value2 = stack_pop(ctx->cu->mimic_stack);
-	if_value1 = stack_pop(ctx->cu->mimic_stack);
+	if_value2 = stack_pop(ctx->bb->mimic_stack);
+	if_value1 = stack_pop(ctx->bb->mimic_stack);
 
 	stmt = __convert_if(ctx, vm_type, binop, if_value1, if_value2);
 	if (!stmt)

@@ -42,7 +42,6 @@ struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 		memset(cu, 0, sizeof *cu);
 		INIT_LIST_HEAD(&cu->bb_list);
 		cu->method = method;
-		cu->mimic_stack = alloc_stack();
 		cu->is_compiled = false;
 		cu->exit_bb = alloc_basic_block(cu, 0, 0);
 		if (!cu->exit_bb)
@@ -84,7 +83,6 @@ void free_compilation_unit(struct compilation_unit *cu)
 		free_basic_block(bb);
 
 	pthread_mutex_destroy(&cu->mutex);
-	free_stack(cu->mimic_stack);
 	free_basic_block(cu->exit_bb);
 	free_buffer(cu->objcode);
 	free_var_infos(cu->var_infos);

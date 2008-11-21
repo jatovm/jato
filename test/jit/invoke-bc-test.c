@@ -15,7 +15,6 @@
 static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 {
 	struct expression *return_value;
-	struct compilation_unit *cu;
 	unsigned char code[] = { opc };
 	struct methodblock method = {
 		.jit_code = code,
@@ -23,19 +22,19 @@ static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 	};
 	struct statement *ret_stmt;
 	struct var_info *temporary;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
-
-	temporary = get_var(cu);
+	bb = __alloc_simple_bb(&method);
+	temporary = get_var(bb->b_parent);
 	return_value = temporary_expr(vm_type, NULL, temporary);
-	stack_push(cu->mimic_stack, return_value);
+	stack_push(bb->mimic_stack, return_value);
+	convert_to_ir(bb->b_parent);
 
-	convert_to_ir(cu);
-	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	ret_stmt = stmt_entry(bb->stmt_list.next);
+	assert_true(stack_is_empty(bb->mimic_stack));
 	assert_return_stmt(return_value, ret_stmt);
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 void test_convert_non_void_return(void)
@@ -49,22 +48,22 @@ void test_convert_non_void_return(void)
 
 void test_convert_void_return(void)
 {
-	struct compilation_unit *cu;
 	unsigned char code[] = { OPC_RETURN };
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct statement *ret_stmt;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
+	bb = __alloc_simple_bb(&method);
+	convert_to_ir(bb->b_parent);
 
-	convert_to_ir(cu);
-	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	ret_stmt = stmt_entry(bb->stmt_list.next);
+	assert_true(stack_is_empty(bb->mimic_stack));
 	assert_void_return_stmt(ret_stmt);
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 static void convert_ir_invoke(struct compilation_unit *cu,
@@ -79,13 +78,13 @@ static void convert_ir_invoke(struct compilation_unit *cu,
 	convert_ir_const(cu, (void *)cp_infos, method_index+1, cp_types);
 }
 
-static struct compilation_unit *
-create_invoke_x_unit(unsigned char invoke_opc,
-		     char *type, unsigned long nr_args,
-		     unsigned long objectref,
-		     unsigned short method_index,
-		     unsigned short method_table_idx,
-		     struct expression **args)
+static struct basic_block *
+build_invoke_bb(unsigned char invoke_opc,
+		char *type, unsigned long nr_args,
+		unsigned long objectref,
+		unsigned short method_index,
+		unsigned short method_table_idx,
+		struct expression **args)
 {
 	struct methodblock target_method = {
 		.type = type,
@@ -100,92 +99,91 @@ create_invoke_x_unit(unsigned char invoke_opc,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct expression *objectref_expr;
-	struct compilation_unit *cu;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
+	bb = __alloc_simple_bb(&method);
 
 	objectref_expr = value_expr(J_REFERENCE, objectref);
-	stack_push(cu->mimic_stack, objectref_expr);
+	stack_push(bb->mimic_stack, objectref_expr);
 	if (args)
-		push_args(cu, args, nr_args-1);
+		push_args(bb, args, nr_args-1);
 
-	convert_ir_invoke(cu, &target_method, method_index);
-	return cu;
+	convert_ir_invoke(bb->b_parent, &target_method, method_index);
+
+	return bb;
 }
 
 static void assert_invoke_expression_type(enum expression_type expected_type, unsigned char invoke_opc)
 {
 	struct expression *invoke_expr;
-	struct compilation_unit *cu;
+	struct basic_block *bb;
 	struct statement *stmt;
 
-	cu = create_invoke_x_unit(invoke_opc, "()V", 1, 0, 0, 0, NULL);
-
-	stmt = first_stmt(cu);
+	bb = build_invoke_bb(invoke_opc, "()V", 1, 0, 0, 0, NULL);
+	stmt = first_stmt(bb->b_parent);
 	invoke_expr = to_expr(stmt->expression);
 
 	assert_int_equals(expected_type, expr_type(invoke_expr));
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 static void assert_invoke_passes_objectref(unsigned char invoke_opc)
 {
-	struct compilation_unit *cu;
-	struct statement *stmt;
 	struct expression *invoke_expr;
 	struct expression *arg_expr;
+	struct basic_block *bb;
+	struct statement *stmt;
 
-	cu = create_invoke_x_unit(invoke_opc, "()V", 1, 0xdeadbeef, 0, 0, NULL);
+	bb = build_invoke_bb(invoke_opc, "()V", 1, 0xdeadbeef, 0, 0, NULL);
 
-	stmt = first_stmt(cu);
+	stmt = first_stmt(bb->b_parent);
 	invoke_expr = to_expr(stmt->expression);
 	arg_expr = to_expr(invoke_expr->args_list);
 
 	assert_value_expr(J_REFERENCE, 0xdeadbeef, arg_expr->arg_expression);
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 static void assert_invoke_args(unsigned char invoke_opc, unsigned long nr_args)
 {
-	struct compilation_unit *cu;
-	struct statement *stmt;
-	struct expression *invoke_expr;
-	struct expression *args[nr_args];
 	struct expression *args_list_expr;
+	struct expression *args[nr_args];
+	struct expression *invoke_expr;
 	struct expression *second_arg;
+	struct basic_block *bb;
+	struct statement *stmt;
 
 	create_args(args, ARRAY_SIZE(args));
-	cu = create_invoke_x_unit(invoke_opc, "()V", nr_args+1, 0, 0, 0, args);
+	bb = build_invoke_bb(invoke_opc, "()V", nr_args+1, 0, 0, 0, args);
 
-	stmt = first_stmt(cu);
+	stmt = first_stmt(bb->b_parent);
 	invoke_expr = to_expr(stmt->expression);
 	args_list_expr = to_expr(invoke_expr->args_list);
 	second_arg = to_expr(args_list_expr->args_left);
 
 	assert_args(args, ARRAY_SIZE(args), second_arg);
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 static void assert_invoke_return_type(unsigned char invoke_opc, enum vm_type expected, char *type)
 {
-	struct compilation_unit *cu;
 	struct expression *invoke_expr;
+	struct basic_block *bb;
 
-	cu = create_invoke_x_unit(invoke_opc, type, 1, 0, 0, 0, NULL);
-	invoke_expr = stack_pop(cu->mimic_stack);
+	bb = build_invoke_bb(invoke_opc, type, 1, 0, 0, 0, NULL);
+	invoke_expr = stack_pop(bb->mimic_stack);
 	assert_int_equals(expected, invoke_expr->vm_type);
 
 	expr_put(invoke_expr);
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
-static struct compilation_unit *invoke_discarded_return_value(unsigned char invoke_opc,
-							      struct methodblock *target_method)
+static struct basic_block *
+invoke_discarded_return_value(unsigned char invoke_opc, struct methodblock *target_method)
 {
-	struct compilation_unit *cu;
 	unsigned char code[] = {
 		invoke_opc, 0x00, 0x00,
 		OPC_POP
@@ -194,30 +192,31 @@ static struct compilation_unit *invoke_discarded_return_value(unsigned char invo
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
+	struct basic_block *bb;
 	
 	target_method->type = "()I";
 	target_method->args_count = 0;
 
-	cu = alloc_simple_compilation_unit(&invoker_method);
-	convert_ir_invoke(cu, target_method, 0);
+	bb = __alloc_simple_bb(&invoker_method);
+	convert_ir_invoke(bb->b_parent, target_method, 0);
 
-	return cu;
+	return bb;
 }
 
 static void assert_invoke_return_value_discarded(enum expression_type expected_type, unsigned char invoke_opc)
 {
 	struct methodblock target_method;
-	struct compilation_unit *cu;
+	struct basic_block *bb;
 	struct statement *stmt;
 
-	cu = invoke_discarded_return_value(invoke_opc, &target_method);
-	stmt = first_stmt(cu);
+	bb = invoke_discarded_return_value(invoke_opc, &target_method);
+	stmt = first_stmt(bb->b_parent);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_int_equals(expected_type, expr_type(to_expr(stmt->expression)));
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsigned char opc, char *return_type, int nr_args)
@@ -234,17 +233,17 @@ static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsign
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
-	struct compilation_unit *cu;
-	struct statement *stmt;
 	struct expression *args[nr_args];
 	struct expression *actual_args;
+	struct basic_block *bb;
+	struct statement *stmt;
 
-	cu = alloc_simple_compilation_unit(&method);
+	bb = __alloc_simple_bb(&method);
 
 	create_args(args, nr_args);
-	push_args(cu, args, nr_args);
-	convert_ir_invoke(cu, &target_method, 0);
-	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+	push_args(bb, args, nr_args);
+	convert_ir_invoke(bb->b_parent, &target_method, 0);
+	stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));
 	assert_invoke_expr(expected_vm_type, &target_method, stmt->return_value);
@@ -252,9 +251,9 @@ static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsign
 	actual_args = to_expr(to_expr(stmt->return_value)->args_list);
 	assert_args(args, nr_args, actual_args);
 
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 /*
@@ -350,37 +349,37 @@ void test_convert_invokestatic_for_void_return_type(void)
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
-	struct compilation_unit *cu;
+	struct basic_block *bb;
 	struct statement *stmt;
 
 	mb.type = "()V";
 	mb.args_count = 0;
 
-	cu = alloc_simple_compilation_unit(&method);
-	convert_ir_invoke(cu, &mb, 0);
-	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+	bb = __alloc_simple_bb(&method);
+	convert_ir_invoke(bb->b_parent, &mb, 0);
+	stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_VOID, &mb, stmt->expression);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 void test_convert_invokestatic_when_return_value_is_discarded(void)
 {
-	struct compilation_unit *cu;
+	struct basic_block *bb;
 	struct statement *stmt;
 	struct methodblock mb;
 
-	cu = invoke_discarded_return_value(OPC_INVOKESTATIC, &mb);
-	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+	bb = invoke_discarded_return_value(OPC_INVOKESTATIC, &mb);
+	stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_INT, &mb, stmt->expression);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_compilation_unit(cu);
+	free_compilation_unit(bb->b_parent);
 }
 
 /* MISSING: invokeinterface */

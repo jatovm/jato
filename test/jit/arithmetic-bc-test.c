@@ -32,32 +32,32 @@ static void assert_convert_binop(enum vm_type vm_type,
 {
 	unsigned char code[] = { opc };
 	struct expression *left, *right, *expr;
-	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code)
 	};
 	struct var_info *temporary;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
+	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(cu);
+	temporary = get_var(bb->b_parent);
 	left = temporary_expr(vm_type, NULL, temporary);
 
-	temporary = get_var(cu);
+	temporary = get_var(bb->b_parent);
 	right = temporary_expr(vm_type, NULL, temporary);
 
-	stack_push(cu->mimic_stack, left);
-	stack_push(cu->mimic_stack, right);
+	stack_push(bb->mimic_stack, left);
+	stack_push(bb->mimic_stack, right);
 
-	convert_to_ir(cu);
-	expr = stack_pop(cu->mimic_stack);
+	convert_to_ir(bb->b_parent);
+	expr = stack_pop(bb->mimic_stack);
 
 	assert_binop_expr(vm_type, binary_operator, left, right, &expr->node);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 void test_convert_add(void)
@@ -106,28 +106,28 @@ static void assert_convert_unop(enum vm_type vm_type,
 {
 	unsigned char code[] = { opc };
 	struct expression *expression, *unary_expression;
-	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code)
 	};
 	struct var_info *temporary;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
+	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(cu);
+	temporary = get_var(bb->b_parent);
 	expression = temporary_expr(vm_type, NULL, temporary);
-	stack_push(cu->mimic_stack, expression);
+	stack_push(bb->mimic_stack, expression);
 
-	convert_to_ir(cu);
-	unary_expression = stack_pop(cu->mimic_stack);
+	convert_to_ir(bb->b_parent);
+	unary_expression = stack_pop(bb->mimic_stack);
 
 	assert_unary_op_expr(vm_type, unary_operator, expression,
 			     &unary_expression->node);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(unary_expression);
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 void test_convert_neg(void)
@@ -214,31 +214,31 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 {
 	unsigned char code[] = { opc };
 	struct expression *left, *right, *cmp_expression;
-	struct compilation_unit *cu;
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
 	};
 	struct var_info *temporary;
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
+	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(cu);
+	temporary = get_var(bb->b_parent);
 	left = temporary_expr(type, NULL, temporary);
 
-	temporary = get_var(cu);
+	temporary = get_var(bb->b_parent);
 	right = temporary_expr(type, NULL, temporary);
 
-	stack_push(cu->mimic_stack, left);
-	stack_push(cu->mimic_stack, right);
+	stack_push(bb->mimic_stack, left);
+	stack_push(bb->mimic_stack, right);
 
-	convert_to_ir(cu);
-	cmp_expression = stack_pop(cu->mimic_stack);
+	convert_to_ir(bb->b_parent);
+	cmp_expression = stack_pop(bb->mimic_stack);
 	assert_binop_expr(J_INT, op, left, right, &cmp_expression->node);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(cmp_expression);
-	free_compilation_unit(cu);
+	__free_simple_bb(bb);
 }
 
 void test_convert_cmp(void)

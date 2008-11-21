@@ -5,6 +5,7 @@
 #include <vm/list.h>
 
 struct compilation_unit;
+struct basic_block;
 struct methodblock;
 
 static inline struct statement *stmt_entry(struct list_head *head)
@@ -13,6 +14,11 @@ static inline struct statement *stmt_entry(struct list_head *head)
 }
 
 struct compilation_unit *alloc_simple_compilation_unit(struct methodblock *);
+struct basic_block *__alloc_simple_bb(struct methodblock *);
+struct basic_block *alloc_simple_bb(unsigned char *, unsigned long);
+void __free_simple_bb(struct basic_block *);
+void free_simple_bb(struct basic_block *);
+
 void assert_value_expr(enum vm_type, long long, struct tree_node *);
 void assert_fvalue_expr(enum vm_type, double, struct tree_node *);
 void assert_local_expr(enum vm_type, unsigned long, struct tree_node *);

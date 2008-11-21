@@ -26,6 +26,12 @@ struct basic_block {
 	unsigned long nr_successors;
 	struct basic_block *successors[MAX_BB_SUCCESSORS];
 
+	/* The mimic stack is used to simulate JVM operand stack at
+	   compile-time.  See Section 2.2 ("Lazy code selection") of the paper
+	   "Fast, Effective Code Generation in a Just-In-Time Java Compiler" by
+	   Adl-Tabatabai et al (1998) for more in-depth explanation.  */
+	struct stack *mimic_stack;
+
 	/* Is this basic block an exception handler? */
 	bool is_eh;
 

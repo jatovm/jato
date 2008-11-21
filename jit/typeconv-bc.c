@@ -21,13 +21,13 @@ static int convert_conversion(struct parse_context *ctx, enum vm_type to_type)
 {
 	struct expression *from_expression, *conversion_expression;
 
-	from_expression = stack_pop(ctx->cu->mimic_stack);
+	from_expression = stack_pop(ctx->bb->mimic_stack);
 
 	conversion_expression = conversion_expr(to_type, from_expression);
 	if (!conversion_expression)
 		return -ENOMEM;
 
-	stack_push(ctx->cu->mimic_stack, conversion_expression);
+	stack_push(ctx->bb->mimic_stack, conversion_expression);
 	return 0;
 }
 

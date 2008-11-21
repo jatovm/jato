@@ -12,22 +12,17 @@
 
 static void assert_pop_stack(unsigned char opc)
 {
-	unsigned char code[] = { opc };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-	struct compilation_unit *cu;
 	struct expression *expr;
+	struct basic_block *bb;
 
 	expr = value_expr(J_INT, 1);
-	cu = alloc_simple_compilation_unit(&method);
-	stack_push(cu->mimic_stack, expr);
-	convert_to_ir(cu);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	bb = alloc_simple_bb(&opc, 1);
+	stack_push(bb->mimic_stack, expr);
+	convert_to_ir(bb->b_parent);
+	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	free_compilation_unit(cu);
+	free_simple_bb(bb);
 }
 
 void test_convert_pop(void)
@@ -36,80 +31,47 @@ void test_convert_pop(void)
 	assert_pop_stack(OPC_POP2);
 }
 
-static struct methodblock *alloc_simple_method(unsigned char opc)
-{
-	struct compilation_unit *cu;
-	struct methodblock *ret;
-	unsigned char *code;
-
-	code = malloc(1);
-	code[0] = opc;
-
-	ret = malloc(sizeof *ret);
-	ret->jit_code = code;
-	ret->code_size = 1;
-	ret->args_count = 0;
-	ret->max_locals = 0;
-
-	cu = alloc_simple_compilation_unit(ret);
-	ret->compilation_unit = cu;
-
-	return ret;
-}
-
-static void free_simple_method(struct methodblock *method)
-{
-	free(method->jit_code);
-	free_compilation_unit(method->compilation_unit);
-	free(method);
-}
-
 static void assert_dup_stack(unsigned char opc, struct expression *value)
 {
-	struct compilation_unit *cu;
-	struct methodblock *method;
+	struct basic_block *bb;
 	struct statement *stmt;
 
-	method = alloc_simple_method(opc);
-	cu = method->compilation_unit;
+	bb = alloc_simple_bb(&opc, 1);
+	stack_push(bb->mimic_stack, value);
 
-	stack_push(cu->mimic_stack, value);
-
-	convert_to_ir(cu);
-        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+	convert_to_ir(bb->b_parent);
+        stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
 
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_simple_method(method);
+	free_simple_bb(bb);
 }
 
 static void assert_dup2_stack(unsigned char opc, struct expression *value, struct expression *value2)
 {
-	struct compilation_unit *cu;
-	struct methodblock *method;
 	struct statement *stmt, *stmt2;
+	struct basic_block *bb;
 
 	if (value->vm_type == J_LONG || value->vm_type == J_DOUBLE) {
 		assert_dup_stack(opc, value);
 		return;
 	}
 
-	method = alloc_simple_method(opc);
-	cu = method->compilation_unit;
+	bb = alloc_simple_bb(&opc, 1);
 
-	stack_push(cu->mimic_stack, value2);
-	stack_push(cu->mimic_stack, value);
+	stack_push(bb->mimic_stack, value2);
+	stack_push(bb->mimic_stack, value);
 
-	convert_to_ir(cu);
-	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	stmt2 = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next->next);
+	convert_to_ir(bb->b_parent);
+	stmt = stmt_entry(bb->stmt_list.next);
+	stmt2 = stmt_entry(bb->stmt_list.next->next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
@@ -119,14 +81,14 @@ static void assert_dup2_stack(unsigned char opc, struct expression *value, struc
 	assert_ptr_equals(value2, to_expr(stmt2->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(cu->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(bb->mimic_stack));
 
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_simple_method(method);
+	free_simple_bb(bb);
 }
 
 void test_convert_dup(void)
@@ -150,54 +112,50 @@ void test_convert_dup(void)
 static void assert_dup_x1_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2)
 {
-	struct compilation_unit *cu;
-	struct methodblock *method;
+	struct basic_block *bb;
 	struct statement *stmt;
 
-	method = alloc_simple_method(opc);
-	cu = method->compilation_unit;
+	bb = alloc_simple_bb(&opc, 1);
 
-	stack_push(cu->mimic_stack, value2);
-	stack_push(cu->mimic_stack, value1);
+	stack_push(bb->mimic_stack, value2);
+	stack_push(bb->mimic_stack, value1);
 
-	convert_to_ir(cu);
-        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+	convert_to_ir(bb->b_parent);
+        stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(value2, stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(value2, stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
 
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_simple_method(method);
+	free_simple_bb(bb);
 }
 
 static void assert_dup2_x1_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2, struct expression *value3)
 {
-	struct compilation_unit *cu;
-	struct methodblock *method;
 	struct statement *stmt, *stmt2;
+	struct basic_block *bb;
 
 	if (value1->vm_type == J_LONG || value2->vm_type == J_DOUBLE) {
 		assert_dup_x1_stack(opc, value1, value2);
 		return;
 	}
 
-	method = alloc_simple_method(opc);
-	cu = method->compilation_unit;
+	bb = alloc_simple_bb(&opc, 1);
 
-	stack_push(cu->mimic_stack, value3);
-	stack_push(cu->mimic_stack, value2);
-	stack_push(cu->mimic_stack, value1);
+	stack_push(bb->mimic_stack, value3);
+	stack_push(bb->mimic_stack, value2);
+	stack_push(bb->mimic_stack, value1);
 
-	convert_to_ir(cu);
-        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	stmt2 = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next->next);
+	convert_to_ir(bb->b_parent);
+        stmt = stmt_entry(bb->stmt_list.next);
+	stmt2 = stmt_entry(bb->stmt_list.next->next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
@@ -207,15 +165,15 @@ static void assert_dup2_x1_stack(unsigned char opc, struct expression *value1,
 	assert_ptr_equals(value2, to_expr(stmt2->store_src));
 	assert_temporary_expr(stmt2->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(value3, stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(cu->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(value3, stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(bb->mimic_stack));
 
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_simple_method(method);
+	free_simple_bb(bb);
 }
 
 void test_convert_dup_x1(void)
@@ -236,41 +194,38 @@ void test_convert_dup_x1(void)
 static void assert_dup_x2_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2, struct expression *value3)
 {
-	struct compilation_unit *cu;
-	struct methodblock *method;
+	struct basic_block *bb;
 	struct statement *stmt;
 
-	method = alloc_simple_method(opc);
-	cu = method->compilation_unit;
+	bb = alloc_simple_bb(&opc, 1);
 
-	stack_push(cu->mimic_stack, value3);
-	stack_push(cu->mimic_stack, value2);
-	stack_push(cu->mimic_stack, value1);
+	stack_push(bb->mimic_stack, value3);
+	stack_push(bb->mimic_stack, value2);
+	stack_push(bb->mimic_stack, value1);
 
-	convert_to_ir(cu);
-        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
+	convert_to_ir(bb->b_parent);
+        stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(value2, stack_pop(cu->mimic_stack));
-	assert_ptr_equals(value3, stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(value2, stack_pop(bb->mimic_stack));
+	assert_ptr_equals(value3, stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
 
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_simple_method(method);
+	free_simple_bb(bb);
 }
 
 static void assert_dup2_x2_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2, struct expression *value3,
 				struct expression *value4)
 {
-	struct compilation_unit *cu;
-	struct methodblock *method;
 	struct statement *stmt, *stmt2;
+	struct basic_block *bb;
 
 	if (value1->vm_type == J_LONG || value1->vm_type == J_DOUBLE) {
 		if (value2->vm_type == J_LONG || value2->vm_type == J_DOUBLE) {
@@ -287,17 +242,16 @@ static void assert_dup2_x2_stack(unsigned char opc, struct expression *value1,
 		}
 	}
 
-	method = alloc_simple_method(opc);
-	cu = method->compilation_unit;
+	bb = alloc_simple_bb(&opc, 1);
 
-	stack_push(cu->mimic_stack, value4);
-	stack_push(cu->mimic_stack, value3);
-	stack_push(cu->mimic_stack, value2);
-	stack_push(cu->mimic_stack, value1);
+	stack_push(bb->mimic_stack, value4);
+	stack_push(bb->mimic_stack, value3);
+	stack_push(bb->mimic_stack, value2);
+	stack_push(bb->mimic_stack, value1);
 
-	convert_to_ir(cu);
-        stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	stmt2 = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next->next);
+	convert_to_ir(bb->b_parent);
+        stmt = stmt_entry(bb->stmt_list.next);
+	stmt2 = stmt_entry(bb->stmt_list.next->next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
@@ -307,16 +261,16 @@ static void assert_dup2_x2_stack(unsigned char opc, struct expression *value1,
 	assert_ptr_equals(value2, to_expr(stmt2->store_src));
 	assert_temporary_expr(stmt2->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(value3, stack_pop(cu->mimic_stack));
-	assert_ptr_equals(value4, stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(cu->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(cu->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(value3, stack_pop(bb->mimic_stack));
+	assert_ptr_equals(value4, stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt->store_dest), stack_pop(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt2->store_dest), stack_pop(bb->mimic_stack));
 
-	assert_true(stack_is_empty(cu->mimic_stack));
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_simple_method(method);
+	free_simple_bb(bb);
 }
 
 void test_convert_dup_x2(void)
@@ -337,27 +291,22 @@ void test_convert_dup_x2(void)
 	expr_put(value4);
 }
 
-static void assert_swap_stack(unsigned char opc,
-			      void *expected1, void *expected2)
+static void
+assert_swap_stack(unsigned char opc, void *expected1, void *expected2)
 {
-	unsigned char code[] = { opc };
-	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
+	struct basic_block *bb;
 
-	cu = alloc_simple_compilation_unit(&method);
+	bb = alloc_simple_bb(&opc, 1);
 
-	stack_push(cu->mimic_stack, expected1);
-	stack_push(cu->mimic_stack, expected2);
+	stack_push(bb->mimic_stack, expected1);
+	stack_push(bb->mimic_stack, expected2);
 
-	convert_to_ir(cu);
-	assert_ptr_equals(stack_pop(cu->mimic_stack), expected1);
-	assert_ptr_equals(stack_pop(cu->mimic_stack), expected2);
-	assert_true(stack_is_empty(cu->mimic_stack));
+	convert_to_ir(bb->b_parent);
+	assert_ptr_equals(stack_pop(bb->mimic_stack), expected1);
+	assert_ptr_equals(stack_pop(bb->mimic_stack), expected2);
+	assert_true(stack_is_empty(bb->mimic_stack));
 
-	free_compilation_unit(cu);
+	free_simple_bb(bb);
 }
 
 void test_convert_swap(void)
