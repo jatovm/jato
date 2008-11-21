@@ -19,7 +19,7 @@
 
 int convert_pop(struct parse_context *ctx)
 {
-	struct expression *expr = stack_pop(ctx->cu->expr_stack);
+	struct expression *expr = stack_pop(ctx->cu->mimic_stack);
 	
 	if (is_invoke_expr(expr)) {
 		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
@@ -60,8 +60,8 @@ static int __convert_dup(struct parse_context *ctx, struct expression *value)
 
 	dup = dup_expr(ctx, value);
 
-	stack_push(ctx->cu->expr_stack, dup);
-	stack_push(ctx->cu->expr_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup);
 	return 0;
 }
 
@@ -69,7 +69,7 @@ int convert_dup(struct parse_context *ctx)
 {
 	struct expression *value;
 
-	value = stack_pop(ctx->cu->expr_stack);
+	value = stack_pop(ctx->cu->mimic_stack);
 
 	return __convert_dup(ctx, value);
 }
@@ -80,9 +80,9 @@ static int __convert_dup_x1(struct parse_context *ctx, struct expression *value1
 
 	dup = dup_expr(ctx, value1);
 
-	stack_push(ctx->cu->expr_stack, dup);
-	stack_push(ctx->cu->expr_stack, value2);
-	stack_push(ctx->cu->expr_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup);
+	stack_push(ctx->cu->mimic_stack, value2);
+	stack_push(ctx->cu->mimic_stack, dup);
 	return 0;
 }
 
@@ -90,8 +90,8 @@ int convert_dup_x1(struct parse_context *ctx)
 {
 	struct expression *value1, *value2;
 
-	value1 = stack_pop(ctx->cu->expr_stack);
-	value2 = stack_pop(ctx->cu->expr_stack);
+	value1 = stack_pop(ctx->cu->mimic_stack);
+	value2 = stack_pop(ctx->cu->mimic_stack);
 
 	return __convert_dup_x1(ctx, value1, value2);
 }
@@ -102,10 +102,10 @@ static int __convert_dup_x2(struct parse_context *ctx, struct expression *value1
 
 	dup = dup_expr(ctx, value1);
 
-	stack_push(ctx->cu->expr_stack, dup);
-	stack_push(ctx->cu->expr_stack, value3);
-	stack_push(ctx->cu->expr_stack, value2);
-	stack_push(ctx->cu->expr_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup);
+	stack_push(ctx->cu->mimic_stack, value3);
+	stack_push(ctx->cu->mimic_stack, value2);
+	stack_push(ctx->cu->mimic_stack, dup);
 
 	return 0;
 }
@@ -114,9 +114,9 @@ int convert_dup_x2(struct parse_context *ctx)
 {
 	struct expression *value1, *value2, *value3;
 
-	value1 = stack_pop(ctx->cu->expr_stack);
-	value2 = stack_pop(ctx->cu->expr_stack);
-	value3 = stack_pop(ctx->cu->expr_stack);
+	value1 = stack_pop(ctx->cu->mimic_stack);
+	value2 = stack_pop(ctx->cu->mimic_stack);
+	value3 = stack_pop(ctx->cu->mimic_stack);
 
 	return __convert_dup_x2(ctx, value1, value2, value3);
 }
@@ -127,10 +127,10 @@ static int __convert_dup2(struct parse_context *ctx, struct expression *value1, 
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	stack_push(ctx->cu->expr_stack, dup2);
-	stack_push(ctx->cu->expr_stack, dup);
-	stack_push(ctx->cu->expr_stack, dup2);
-	stack_push(ctx->cu->expr_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup2);
+	stack_push(ctx->cu->mimic_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup2);
+	stack_push(ctx->cu->mimic_stack, dup);
 
 	return 0;
 }
@@ -140,12 +140,12 @@ int convert_dup2(struct parse_context *ctx)
 	struct expression *value, *value2;
 	/* Dup2 duplicates *one* 64bit operand or *two* 32 bit operands.
 	 * This second case is to be handled here. */
-	value = stack_pop(ctx->cu->expr_stack);
+	value = stack_pop(ctx->cu->mimic_stack);
 
 	if (value->vm_type == J_LONG || value->vm_type == J_DOUBLE) {
 		return __convert_dup(ctx, value);
 	} else {
-		value2 = stack_pop(ctx->cu->expr_stack);
+		value2 = stack_pop(ctx->cu->mimic_stack);
 		return __convert_dup2(ctx, value, value2);
 	}
 }
@@ -157,11 +157,11 @@ static int __convert_dup2_x1(struct parse_context * ctx, struct expression * val
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	stack_push(ctx->cu->expr_stack, dup2);
-	stack_push(ctx->cu->expr_stack, dup);
-	stack_push(ctx->cu->expr_stack, value3);
-	stack_push(ctx->cu->expr_stack, dup2);
-	stack_push(ctx->cu->expr_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup2);
+	stack_push(ctx->cu->mimic_stack, dup);
+	stack_push(ctx->cu->mimic_stack, value3);
+	stack_push(ctx->cu->mimic_stack, dup2);
+	stack_push(ctx->cu->mimic_stack, dup);
 
 	return 0;
 }
@@ -171,13 +171,13 @@ int convert_dup2_x1(struct parse_context *ctx)
 	struct expression *value1, *value2, *value3;
 	/* Dup2 duplicates *one* 64bit operand or *two* 32 bit operands.
 	 * This second case is to be handled here. */
-	value1 = stack_pop(ctx->cu->expr_stack);
-	value2 = stack_pop(ctx->cu->expr_stack);
+	value1 = stack_pop(ctx->cu->mimic_stack);
+	value2 = stack_pop(ctx->cu->mimic_stack);
 
 	if (value1->vm_type == J_LONG || value1->vm_type == J_DOUBLE) {
 		return __convert_dup_x1(ctx, value1, value2);
 	} else {
-		value3 = stack_pop(ctx->cu->expr_stack);
+		value3 = stack_pop(ctx->cu->mimic_stack);
 		return __convert_dup2_x1(ctx, value1, value2, value3);
 	}
 }
@@ -188,12 +188,12 @@ static int __convert_dup2_x2(struct parse_context *ctx, struct expression *value
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	stack_push(ctx->cu->expr_stack, dup2);
-	stack_push(ctx->cu->expr_stack, dup);
-	stack_push(ctx->cu->expr_stack, value4);
-	stack_push(ctx->cu->expr_stack, value3);
-	stack_push(ctx->cu->expr_stack, dup2);
-	stack_push(ctx->cu->expr_stack, dup);
+	stack_push(ctx->cu->mimic_stack, dup2);
+	stack_push(ctx->cu->mimic_stack, dup);
+	stack_push(ctx->cu->mimic_stack, value4);
+	stack_push(ctx->cu->mimic_stack, value3);
+	stack_push(ctx->cu->mimic_stack, dup2);
+	stack_push(ctx->cu->mimic_stack, dup);
 
 	return 0;
 }
@@ -204,8 +204,8 @@ int convert_dup2_x2(struct parse_context *ctx)
 
 	/* Refer to the JVM spec at http://java.sun.com/docs/books/jvms/second_edition/html/Instructions2.doc3.html#dup2_x2
 	 */
-	value1 = stack_pop(ctx->cu->expr_stack);
-	value2 = stack_pop(ctx->cu->expr_stack);
+	value1 = stack_pop(ctx->cu->mimic_stack);
+	value2 = stack_pop(ctx->cu->mimic_stack);
 
 	if (value1->vm_type == J_LONG || value1->vm_type == J_DOUBLE) {
 		if (value2->vm_type == J_LONG || value2->vm_type == J_DOUBLE) {
@@ -213,18 +213,18 @@ int convert_dup2_x2(struct parse_context *ctx)
 			return __convert_dup_x1(ctx, value1, value2);
 		} else {
 			/* Call dup_x2 - form 2*/
-			value3 = stack_pop(ctx->cu->expr_stack);
+			value3 = stack_pop(ctx->cu->mimic_stack);
 			return __convert_dup_x2(ctx, value1, value2, value3);
 		}
 	} else {
-		value3 = stack_pop(ctx->cu->expr_stack);
+		value3 = stack_pop(ctx->cu->mimic_stack);
 
 		if (value3->vm_type == J_LONG || value3->vm_type == J_DOUBLE) {
 			/* Call dup2_x1 - form 3*/
 			return __convert_dup2_x1(ctx, value1, value2, value3);
 		} else {
 			/* the annoying case - form 1 */
-			value4 = stack_pop(ctx->cu->expr_stack);
+			value4 = stack_pop(ctx->cu->mimic_stack);
 			return __convert_dup2_x2(ctx, value1, value2, value3, value4);
 		}
 	}
@@ -235,11 +235,11 @@ int convert_swap(struct parse_context *ctx)
 {
 	void *v1, *v2;
 
-	v1 = stack_pop(ctx->cu->expr_stack);
-	v2 = stack_pop(ctx->cu->expr_stack);
+	v1 = stack_pop(ctx->cu->mimic_stack);
+	v2 = stack_pop(ctx->cu->mimic_stack);
 
-	stack_push(ctx->cu->expr_stack, v1);
-	stack_push(ctx->cu->expr_stack, v2);
+	stack_push(ctx->cu->mimic_stack, v1);
+	stack_push(ctx->cu->mimic_stack, v2);
 
 	return 0;
 }

@@ -28,11 +28,11 @@ static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 
 	temporary = get_var(cu);
 	return_value = temporary_expr(vm_type, NULL, temporary);
-	stack_push(cu->expr_stack, return_value);
+	stack_push(cu->mimic_stack, return_value);
 
 	convert_to_ir(cu);
 	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 	assert_return_stmt(return_value, ret_stmt);
 
 	free_compilation_unit(cu);
@@ -61,7 +61,7 @@ void test_convert_void_return(void)
 
 	convert_to_ir(cu);
 	ret_stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 	assert_void_return_stmt(ret_stmt);
 
 	free_compilation_unit(cu);
@@ -105,7 +105,7 @@ create_invoke_x_unit(unsigned char invoke_opc,
 	cu = alloc_simple_compilation_unit(&method);
 
 	objectref_expr = value_expr(J_REFERENCE, objectref);
-	stack_push(cu->expr_stack, objectref_expr);
+	stack_push(cu->mimic_stack, objectref_expr);
 	if (args)
 		push_args(cu, args, nr_args-1);
 
@@ -175,7 +175,7 @@ static void assert_invoke_return_type(unsigned char invoke_opc, enum vm_type exp
 	struct expression *invoke_expr;
 
 	cu = create_invoke_x_unit(invoke_opc, type, 1, 0, 0, 0, NULL);
-	invoke_expr = stack_pop(cu->expr_stack);
+	invoke_expr = stack_pop(cu->mimic_stack);
 	assert_int_equals(expected, invoke_expr->vm_type);
 
 	expr_put(invoke_expr);
@@ -215,7 +215,7 @@ static void assert_invoke_return_value_discarded(enum expression_type expected_t
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_int_equals(expected_type, expr_type(to_expr(stmt->expression)));
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -252,7 +252,7 @@ static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsign
 	actual_args = to_expr(to_expr(stmt->return_value)->args_list);
 	assert_args(args, nr_args, actual_args);
 
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -362,7 +362,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_VOID, &mb, stmt->expression);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -378,7 +378,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 
 	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
 	assert_invoke_expr(J_INT, &mb, stmt->expression);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }

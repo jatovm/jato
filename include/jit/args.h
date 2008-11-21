@@ -5,7 +5,7 @@
 
 #include <vm/stack.h>
 
-struct expression *insert_arg(struct expression *root,struct expression *expr);
-struct expression *convert_args(struct stack *expr_stack,unsigned long nr_args);
+struct expression *insert_arg(struct expression *root, struct expression *expr);
+struct expression *convert_args(struct stack *mimic_stack, unsigned long nr_args);
 
 #endif

@@ -55,10 +55,10 @@ static void assert_convert_if(enum binary_operator expected_operator,
 
 	temporary = get_var(cu);
 	if_value = temporary_expr(J_INT, NULL, temporary);
-	stack_push(cu->expr_stack, if_value);
+	stack_push(cu->mimic_stack, if_value);
 
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	if_stmt = stmt_entry(branch_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
@@ -103,14 +103,14 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 
 	temporary = get_var(cu);
 	if_value1 = temporary_expr(vm_type, NULL, temporary);
-	stack_push(cu->expr_stack, if_value1);
+	stack_push(cu->mimic_stack, if_value1);
 
 	temporary = get_var(cu);
 	if_value2 = temporary_expr(vm_type, NULL, temporary);
-	stack_push(cu->expr_stack, if_value2);
+	stack_push(cu->mimic_stack, if_value2);
 
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	if_stmt = stmt_entry(stmt_bb->stmt_list.next);
 	assert_int_equals(STMT_IF, stmt_type(if_stmt));
@@ -156,7 +156,7 @@ void test_convert_goto(void)
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	goto_stmt = stmt_entry(goto_bb->stmt_list.next);
 	assert_int_equals(STMT_GOTO, stmt_type(goto_stmt));

@@ -28,8 +28,8 @@
 
 #include <vm/stack.h>
 
-struct expression *insert_arg(struct expression *root,
-				     struct expression *expr)
+struct expression *
+insert_arg(struct expression *root, struct expression *expr)
 {
 	if (!root)
 		return arg_expr(expr);
@@ -37,8 +37,8 @@ struct expression *insert_arg(struct expression *root,
 	return args_list_expr(root, arg_expr(expr));
 }
 
-struct expression *convert_args(struct stack *expr_stack,
-				unsigned long nr_args)
+struct expression *
+convert_args(struct stack *mimic_stack, unsigned long nr_args)
 {
 	struct expression *args_list = NULL;
 	unsigned long i;
@@ -49,7 +49,7 @@ struct expression *convert_args(struct stack *expr_stack,
 	}
 
 	for (i = 0; i < nr_args; i++) {
-		struct expression *expr = stack_pop(expr_stack);
+		struct expression *expr = stack_pop(mimic_stack);
 		args_list = insert_arg(args_list, expr);
 	}
 

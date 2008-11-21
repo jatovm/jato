@@ -25,7 +25,7 @@ void test_convert_nop(void)
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_to_ir(cu);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -79,7 +79,7 @@ void test_converts_complete_basic_block(void)
 	convert_to_ir(cu);
 
 	assert_false(list_is_empty(&bb_entry(cu->bb_list.next)->stmt_list));
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 	
 	free_compilation_unit(cu);
 }

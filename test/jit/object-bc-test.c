@@ -60,9 +60,9 @@ static void __assert_convert_getstatic(unsigned char opc,
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const_single(cu, &fb);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_class_field_expr(expected_vm_type, &fb, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -100,11 +100,11 @@ static void __assert_convert_getfield(unsigned char opc,
 	cu = alloc_simple_compilation_unit(&method);
 
 	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
-	stack_push(cu->expr_stack, objectref);
+	stack_push(cu->mimic_stack, objectref);
 	convert_ir_const_single(cu, &fb);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_instance_field_expr(expected_vm_type, &fb, objectref, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -141,14 +141,14 @@ static void __assert_convert_putstatic(unsigned char opc,
 	fb.type = field_type;
 	value = value_expr(expected_vm_type, 0xdeadbeef);
 	cu = alloc_simple_compilation_unit(&method);
-	stack_push(cu->expr_stack, value);
+	stack_push(cu->mimic_stack, value);
 	convert_ir_const_single(cu, &fb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
 
 	assert_store_stmt(stmt);
 	assert_class_field_expr(expected_vm_type, &fb, stmt->store_dest);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -185,10 +185,10 @@ static void __assert_convert_putfield(unsigned char opc,
 	cu = alloc_simple_compilation_unit(&method);
 
 	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
-	stack_push(cu->expr_stack, objectref);
+	stack_push(cu->mimic_stack, objectref);
 
 	value = value_expr(expected_vm_type, 0xdeadbeef);
-	stack_push(cu->expr_stack, value);
+	stack_push(cu->mimic_stack, value);
 
 	convert_ir_const_single(cu, &fb);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -196,7 +196,7 @@ static void __assert_convert_putfield(unsigned char opc,
 	assert_store_stmt(stmt);
 	assert_instance_field_expr(expected_vm_type, &fb, objectref, stmt->store_dest);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -233,8 +233,8 @@ static void assert_convert_array_load(enum vm_type expected_type,
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
 
-	stack_push(cu->expr_stack, arrayref_expr);
-	stack_push(cu->expr_stack, index_expr);
+	stack_push(cu->mimic_stack, arrayref_expr);
+	stack_push(cu->mimic_stack, index_expr);
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -250,11 +250,11 @@ static void assert_convert_array_load(enum vm_type expected_type,
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
 				store_stmt->store_src);
 
-	temporary_expr = stack_pop(cu->expr_stack);
+	temporary_expr = stack_pop(cu->mimic_stack);
 
 	assert_temporary_expr(&temporary_expr->node);
 	expr_put(temporary_expr);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -329,9 +329,9 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	temporary = get_var(cu);
 	expr = temporary_expr(expected_type, NULL, temporary);
 
-	stack_push(cu->expr_stack, arrayref_expr);
-	stack_push(cu->expr_stack, index_expr);
-	stack_push(cu->expr_stack, expr);
+	stack_push(cu->mimic_stack, arrayref_expr);
+	stack_push(cu->mimic_stack, index_expr);
+	stack_push(cu->mimic_stack, expr);
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -349,7 +349,7 @@ static void assert_convert_array_store(enum vm_type expected_type,
 				store_stmt->store_dest);
 	assert_temporary_expr(store_stmt->store_src);
 
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }
@@ -417,7 +417,7 @@ static void assert_convert_new(unsigned long expected_type_idx,
 	cu = alloc_simple_compilation_unit(&method);
 	convert_ir_const_single(cu, instance_class);
 
-	new_expr = stack_pop(cu->expr_stack);
+	new_expr = stack_pop(cu->mimic_stack);
 	assert_int_equals(EXPR_NEW, expr_type(new_expr));
 	assert_int_equals(J_REFERENCE, new_expr->vm_type);
 	assert_ptr_equals(instance_class, new_expr->class);
@@ -447,13 +447,13 @@ void test_convert_anewarray(void)
 
 	cu = alloc_simple_compilation_unit(&method);
 	size = value_expr(J_INT, 0xff);
-	stack_push(cu->expr_stack, size);
+	stack_push(cu->mimic_stack, size);
 
 	CLASS_CB(instance_class)->name = array_name;
 
 	convert_ir_const_single(cu, instance_class);
 
-	arrayref = stack_pop(cu->expr_stack);
+	arrayref = stack_pop(cu->mimic_stack);
 
 	assert_int_equals(EXPR_ANEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
@@ -483,11 +483,11 @@ void test_convert_newarray(void)
 	cu = alloc_simple_compilation_unit(&method);
 
 	size = value_expr(J_INT, 0xff);
-	stack_push(cu->expr_stack, size);
+	stack_push(cu->mimic_stack, size);
 
 	convert_to_ir(cu);
 
-	arrayref = stack_pop(cu->expr_stack);
+	arrayref = stack_pop(cu->mimic_stack);
 	assert_int_equals(EXPR_NEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
 	assert_ptr_equals(size, to_expr(arrayref->array_size));
@@ -518,7 +518,7 @@ void test_convert_multianewarray(void)
 
 	convert_ir_const_single(cu, instance_class);
 
-	arrayref = stack_pop(cu->expr_stack);
+	arrayref = stack_pop(cu->mimic_stack);
 
 	assert_int_equals(EXPR_MULTIANEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
@@ -527,7 +527,7 @@ void test_convert_multianewarray(void)
 	actual_args = to_expr(arrayref->multianewarray_dimensions);
 	assert_args(args_count, dimension, actual_args);
 
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(arrayref);
 	free_compilation_unit(cu);
@@ -548,11 +548,11 @@ void test_convert_arraylength(void)
 	cu = alloc_simple_compilation_unit(&method);
 
 	arrayref = value_expr(J_REFERENCE, (unsigned long) class);
-	stack_push(cu->expr_stack, arrayref);
+	stack_push(cu->mimic_stack, arrayref);
 
 	convert_to_ir(cu);
 
-	arraylen_exp = stack_pop(cu->expr_stack);
+	arraylen_exp = stack_pop(cu->mimic_stack);
 	assert_int_equals(EXPR_ARRAYLENGTH, expr_type(arraylen_exp));
 	assert_int_equals(J_REFERENCE, arraylen_exp->vm_type);
 	assert_ptr_equals(arrayref, to_expr(arraylen_exp->arraylength_ref));
@@ -575,11 +575,11 @@ void test_convert_instanceof(void)
 
 	cu = alloc_simple_compilation_unit(&method);
 	ref = value_expr(J_REFERENCE, (unsigned long) instance_class);
-	stack_push(cu->expr_stack, ref);
+	stack_push(cu->mimic_stack, ref);
 
 	convert_ir_const_single(cu, instance_class);
 
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 
 	assert_int_equals(EXPR_INSTANCEOF, expr_type(expr));
 	assert_int_equals(J_REFERENCE, expr->vm_type);
@@ -606,7 +606,7 @@ void test_convert_monitor_enter(void)
 	cu = alloc_simple_compilation_unit(&method);
 
 	ref = value_expr(J_REFERENCE, (unsigned long) class);
-	stack_push(cu->expr_stack, ref);
+	stack_push(cu->mimic_stack, ref);
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -633,7 +633,7 @@ void test_convert_monitor_exit(void)
 	cu = alloc_simple_compilation_unit(&method);
 
 	ref = value_expr(J_REFERENCE, (unsigned long) class);
-	stack_push(cu->expr_stack, ref);
+	stack_push(cu->mimic_stack, ref);
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);

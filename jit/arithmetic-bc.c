@@ -24,14 +24,14 @@ static int convert_binop(struct parse_context *ctx, enum vm_type vm_type,
 {
 	struct expression *left, *right, *expr;
 
-	right = stack_pop(ctx->cu->expr_stack);
-	left = stack_pop(ctx->cu->expr_stack);
+	right = stack_pop(ctx->cu->mimic_stack);
+	left = stack_pop(ctx->cu->mimic_stack);
 
 	expr = binop_expr(vm_type, binary_operator, left, right);
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->cu->expr_stack, expr);
+	stack_push(ctx->cu->mimic_stack, expr);
 	return 0;
 }
 
@@ -140,13 +140,13 @@ static int convert_unary_op(struct parse_context *ctx, enum vm_type vm_type,
 {
 	struct expression *expression, *expr;
 
-	expression = stack_pop(ctx->cu->expr_stack);
+	expression = stack_pop(ctx->cu->mimic_stack);
 
 	expr = unary_op_expr(vm_type, unary_operator, expression);
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->cu->expr_stack, expr);
+	stack_push(ctx->cu->mimic_stack, expr);
 	return 0;
 }
 

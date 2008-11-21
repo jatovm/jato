@@ -45,7 +45,7 @@ void push_args(struct compilation_unit *cu,
         int i;
 
         for (i = 0; i < nr_args; i++) {
-                stack_push(cu->expr_stack, args[i]);
+                stack_push(cu->mimic_stack, args[i]);
         }
 }
 

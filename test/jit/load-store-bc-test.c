@@ -24,9 +24,9 @@ static void __assert_convert_const(enum vm_type expected_vm_type,
 	cu = alloc_simple_compilation_unit(method);
 	convert_to_ir(cu);
 
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_value_expr(expected_vm_type, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -56,9 +56,9 @@ static void assert_convert_fconst(enum vm_type expected_vm_type,
 
 	cu = alloc_simple_compilation_unit(&method);
 	convert_to_ir(cu);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_fvalue_expr(expected_vm_type, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -188,9 +188,9 @@ static void assert_convert_ldc(enum vm_type expected_vm_type,
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_value_expr(expected_vm_type, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -222,9 +222,9 @@ static void assert_convert_ldc_string(enum vm_type expected_vm_type,
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_value_expr(expected_vm_type, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -252,9 +252,9 @@ static void assert_convert_ldc_float(float expected_value)
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_fvalue_expr(J_FLOAT, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -290,9 +290,9 @@ static void assert_convert_ldc_w(enum vm_type expected_vm_type,
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_value_expr(expected_vm_type, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -316,9 +316,9 @@ static void assert_convert_ldc_w_string(enum vm_type expected_vm_type, long long
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_value_expr(expected_vm_type, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -368,9 +368,9 @@ static void assert_convert_ldc_w_float(enum vm_type expected_vm_type,
 	cu = alloc_simple_compilation_unit(&method);
 
 	convert_ir_const(cu, cp_infos, NR_CP_ENTRIES, cp_types);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_fvalue_expr(expected_vm_type, expected_value, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -406,9 +406,9 @@ static void __assert_convert_load(unsigned char *code,
 
 	convert_to_ir(cu);
 
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 	assert_local_expr(expected_vm_type, expected_index, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -522,7 +522,7 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	cu = alloc_simple_compilation_unit(&method);
 
 	temporary = get_var(cu);
-	stack_push(cu->expr_stack, temporary_expr(J_INT, NULL, temporary));
+	stack_push(cu->mimic_stack, temporary_expr(J_INT, NULL, temporary));
 
 	convert_to_ir(cu);
 	stmt = stmt_entry(bb_entry(cu->bb_list.next)->stmt_list.next);
@@ -531,7 +531,7 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 	assert_temporary_expr(stmt->store_src);
 	assert_local_expr(expected_vm_type, expected_index, stmt->store_dest);
 
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	free_compilation_unit(cu);
 }

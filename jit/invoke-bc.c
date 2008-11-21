@@ -26,7 +26,7 @@ int convert_non_void_return(struct parse_context *ctx)
 	if (!return_stmt)
 		return -ENOMEM;
 
-	expr = stack_pop(ctx->cu->expr_stack);
+	expr = stack_pop(ctx->cu->mimic_stack);
 	return_stmt->return_value = &expr->node;
 	bb_add_stmt(ctx->bb, return_stmt);
 	return 0;
@@ -64,7 +64,7 @@ static struct expression *insert_arg(struct expression *root,
 	return args_list_expr(root, arg_expr(expr));
 }
 
-static struct expression *convert_args(struct stack *expr_stack,
+static struct expression *convert_args(struct stack *mimic_stack,
 				       unsigned long nr_args)
 {
 	struct expression *args_list = NULL;
@@ -76,7 +76,7 @@ static struct expression *convert_args(struct stack *expr_stack,
 	}
 
 	for (i = 0; i < nr_args; i++) {
-		struct expression *expr = stack_pop(expr_stack);
+		struct expression *expr = stack_pop(mimic_stack);
 		args_list = insert_arg(args_list, expr);
 	}
 
@@ -90,7 +90,7 @@ static int convert_and_add_args(struct parse_context *ctx,
 {
 	struct expression *args_list;
 
-	args_list = convert_args(ctx->cu->expr_stack, method_real_argument_count(invoke_target));
+	args_list = convert_args(ctx->cu->mimic_stack, method_real_argument_count(invoke_target));
 	if (!args_list)
 		return -ENOMEM;
 
@@ -112,7 +112,7 @@ static int insert_invoke_expr(struct parse_context *ctx,
 		expr_stmt->expression = &invoke_expr->node;
 		bb_add_stmt(ctx->bb, expr_stmt);
 	} else
-		stack_push(ctx->cu->expr_stack, invoke_expr);
+		stack_push(ctx->cu->mimic_stack, invoke_expr);
 
 	return 0;
 }

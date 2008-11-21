@@ -47,14 +47,14 @@ static void assert_convert_binop(enum vm_type vm_type,
 	temporary = get_var(cu);
 	right = temporary_expr(vm_type, NULL, temporary);
 
-	stack_push(cu->expr_stack, left);
-	stack_push(cu->expr_stack, right);
+	stack_push(cu->mimic_stack, left);
+	stack_push(cu->mimic_stack, right);
 
 	convert_to_ir(cu);
-	expr = stack_pop(cu->expr_stack);
+	expr = stack_pop(cu->mimic_stack);
 
 	assert_binop_expr(vm_type, binary_operator, left, right, &expr->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(expr);
 	free_compilation_unit(cu);
@@ -117,14 +117,14 @@ static void assert_convert_unop(enum vm_type vm_type,
 
 	temporary = get_var(cu);
 	expression = temporary_expr(vm_type, NULL, temporary);
-	stack_push(cu->expr_stack, expression);
+	stack_push(cu->mimic_stack, expression);
 
 	convert_to_ir(cu);
-	unary_expression = stack_pop(cu->expr_stack);
+	unary_expression = stack_pop(cu->mimic_stack);
 
 	assert_unary_op_expr(vm_type, unary_operator, expression,
 			     &unary_expression->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(unary_expression);
 	free_compilation_unit(cu);
@@ -229,13 +229,13 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 	temporary = get_var(cu);
 	right = temporary_expr(type, NULL, temporary);
 
-	stack_push(cu->expr_stack, left);
-	stack_push(cu->expr_stack, right);
+	stack_push(cu->mimic_stack, left);
+	stack_push(cu->mimic_stack, right);
 
 	convert_to_ir(cu);
-	cmp_expression = stack_pop(cu->expr_stack);
+	cmp_expression = stack_pop(cu->mimic_stack);
 	assert_binop_expr(J_INT, op, left, right, &cmp_expression->node);
-	assert_true(stack_is_empty(cu->expr_stack));
+	assert_true(stack_is_empty(cu->mimic_stack));
 
 	expr_put(cmp_expression);
 	free_compilation_unit(cu);
