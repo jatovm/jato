@@ -6,6 +6,7 @@
 #include <vm/system.h>
 #include <vm/types.h>
 #include <vm/vm.h>
+#include <vm/limits.h>
 #include <jit/expression.h>
 #include <jit/compiler.h>
 #include <libharness.h>
@@ -14,55 +15,65 @@
 
 #include "bc-test-utils.h"
 
-static void __assert_convert_const(enum vm_type expected_vm_type,
+static void __assert_convert_const(enum vm_type expected_type,
 				   long long expected_value,
-				   struct methodblock *method)
+				   unsigned char *code,
+				   unsigned long code_size)
 {
 	struct expression *expr;
 	struct basic_block *bb;
 
-	bb = __alloc_simple_bb(method);
+	bb = alloc_simple_bb(code, code_size);
 	convert_to_ir(bb->b_parent);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_value_expr(expected_vm_type, expected_value, &expr->node);
+	assert_value_expr(expected_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
-static void assert_convert_const(enum vm_type expected_vm_type,
-				 long long expected_value, char actual)
+static void assert_convert_const(enum vm_type expected_type,
+				 long long expected_value,
+				 unsigned char opc)
 {
-	unsigned char code[] = { actual };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-	__assert_convert_const(expected_vm_type, expected_value, &method);
+	__assert_convert_const(expected_type, expected_value, &opc, 1);
 }
 
-static void assert_convert_fconst(enum vm_type expected_vm_type,
-				  double expected_value, char actual)
+static void assert_convert_bipush(long long expected_value,
+				  unsigned char byte, char opc)
 {
-	unsigned char code[] = { actual };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
+	unsigned char code[] = { opc, byte };
+
+	__assert_convert_const(J_INT, expected_value, code, ARRAY_SIZE(code));
+}
+
+static void assert_convert_sipush(long long expected_value,
+				  unsigned char high_byte,
+				  unsigned char low_byte,
+				  unsigned char opc)
+{
+	unsigned char code[] = { opc, high_byte, low_byte };
+
+	__assert_convert_const(J_INT, expected_value, code, ARRAY_SIZE(code));
+}
+
+static void assert_convert_fconst(enum vm_type expected_type,
+				  double expected_value, unsigned char opc)
+{
 	struct expression *expr;
 	struct basic_block *bb;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(&opc, 1);
 	convert_to_ir(bb->b_parent);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_fvalue_expr(expected_vm_type, expected_value, &expr->node);
+	assert_fvalue_expr(expected_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 void test_convert_aconst_null(void)
@@ -100,54 +111,21 @@ void test_convert_dconst(void)
 	assert_convert_fconst(J_DOUBLE, 1, OPC_DCONST_1);
 }
 
-static void assert_convert_bipush(char expected_value, char actual)
-{
-	unsigned char code[] = { actual, expected_value };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-	__assert_convert_const(J_INT, expected_value, &method);
-}
-
 void test_convert_bipush(void)
 {
-	assert_convert_bipush(0x00, OPC_BIPUSH);
-	assert_convert_bipush(0x01, OPC_BIPUSH);
-	assert_convert_bipush(0xFF, OPC_BIPUSH);
+	assert_convert_bipush(0, 0x00, OPC_BIPUSH);
+	assert_convert_bipush(1, 0x01, OPC_BIPUSH);
+	assert_convert_bipush(J_BYTE_MIN, 0x80, OPC_BIPUSH);
+	assert_convert_bipush(J_BYTE_MAX, 0x7F, OPC_BIPUSH);
 }
-
-static void assert_convert_sipush(long long expected_value,
-				  char first, char second, char actual)
-{
-	unsigned char code[] = { actual, first, second };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
-	__assert_convert_const(J_INT, expected_value, &method);
-}
-
-#define MIN_SHORT (-32768)
-#define MAX_SHORT 32767
 
 void test_convert_sipush(void)
 {
 	assert_convert_sipush(0, 0x00, 0x00, OPC_SIPUSH);
 	assert_convert_sipush(1, 0x00, 0x01, OPC_SIPUSH);
-	assert_convert_sipush(MIN_SHORT, 0x80, 0x00, OPC_SIPUSH);
-	assert_convert_sipush(MAX_SHORT, 0x7F, 0xFF, OPC_SIPUSH);
+	assert_convert_sipush(J_SHORT_MIN, 0x80, 0x00, OPC_SIPUSH);
+	assert_convert_sipush(J_SHORT_MAX, 0x7F, 0xFF, OPC_SIPUSH);
 }
-
-/*
- * Limits
- */
-
-#define J_INT_MAX 2147483647
-#define J_INT_MIN (-J_INT_MAX - 1)
-
-#define J_LONG_MAX ((long long) 2<<63)
-#define J_LONG_MIN (-J_LONG_MAX - 1)
 
 static void const_set_s4(ConstantPoolEntry *cp_infos, unsigned long idx, s4 value)
 {
@@ -171,31 +149,27 @@ static void const_set_double(ConstantPoolEntry *cp_infos, unsigned long idx, dou
 
 #define NR_CP_ENTRIES 512
 
-static void assert_convert_ldc(enum vm_type expected_vm_type,
+static void assert_convert_ldc(enum vm_type expected_type,
 			       long long expected_value, u1 cp_type)
 {
 	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
 	u1 cp_types[NR_CP_ENTRIES];
 	unsigned char code[] = { OPC_LDC, 0xff };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
 	struct expression *expr;
 	struct basic_block *bb;
 
 	const_set_s4(cp_infos, 0xff, expected_value);
 	cp_types[0xff] = cp_type;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_value_expr(expected_vm_type, expected_value, &expr->node);
+	assert_value_expr(expected_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 void test_convert_ldc(void)
@@ -206,31 +180,27 @@ void test_convert_ldc(void)
 	assert_convert_ldc(J_INT, J_INT_MAX, CONSTANT_Integer);
 }
 
-static void assert_convert_ldc_string(enum vm_type expected_vm_type,
+static void assert_convert_ldc_string(enum vm_type expected_type,
 				      long long expected_value)
 {
+	unsigned char code[] = { OPC_LDC, 0xff };
 	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
 	u1 cp_types[NR_CP_ENTRIES];
-	unsigned char code[] = { OPC_LDC, 0xff };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
 	struct expression *expr;
 	struct basic_block *bb;
 
 	const_set_s4(cp_infos, 0xff, 0x00);
 	cp_types[0xff] = CONSTANT_String;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_value_expr(expected_vm_type, expected_value, &expr->node);
+	assert_value_expr(expected_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 void test_convert_ldc_string(void)
@@ -240,20 +210,16 @@ void test_convert_ldc_string(void)
 
 static void assert_convert_ldc_float(float expected_value)
 {
-	struct expression *expr;
+	unsigned char code[] = { OPC_LDC, 0xff };
 	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
 	u1 cp_types[NR_CP_ENTRIES];
-	unsigned char code[] = { OPC_LDC, 0xff };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
+	struct expression *expr;
 	struct basic_block *bb;
 
 	const_set_float(cp_infos, 0xff, expected_value);
 	cp_types[0xff] = CONSTANT_Float;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
 
 	expr = stack_pop(bb->mimic_stack);
@@ -261,7 +227,7 @@ static void assert_convert_ldc_float(float expected_value)
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 void test_convert_ldc_float(void)
@@ -271,19 +237,15 @@ void test_convert_ldc_float(void)
 	assert_convert_ldc_float(-1.0f);
 }
 
-static void assert_convert_ldc_w(enum vm_type expected_vm_type,
+static void assert_convert_ldc_w(enum vm_type expected_type,
 				long long expected_value, u1 cp_type,
 				unsigned char opcode)
 {
-	struct expression *expr;
+	unsigned char code[] = { opcode, 0x01, 0x00 };
 	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
 	u1 cp_types[NR_CP_ENTRIES];
-	unsigned char code[] = { opcode, 0x01, 0x00 };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
 	struct basic_block *bb;
+	struct expression *expr;
 
 	if (opcode == OPC_LDC_W)
 		const_set_s4(cp_infos, 0x100, (s4) expected_value);
@@ -291,41 +253,37 @@ static void assert_convert_ldc_w(enum vm_type expected_vm_type,
 		const_set_s8(cp_infos, 0x100, (s8) expected_value);
 	cp_types[0x100] = cp_type;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_value_expr(expected_vm_type, expected_value, &expr->node);
+	assert_value_expr(expected_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
-static void assert_convert_ldc_w_string(enum vm_type expected_vm_type, long long expected_value)
+static void assert_convert_ldc_w_string(enum vm_type expected_type, long long expected_value)
 {
-	struct expression *expr;
+	unsigned char code[] = { OPC_LDC_W, 0x01, 0x00 };
 	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
 	u1 cp_types[NR_CP_ENTRIES];
-	unsigned char code[] = { OPC_LDC_W, 0x01, 0x00 };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
 	struct basic_block *bb;
+	struct expression *expr;
 
 	const_set_s4(cp_infos, 0x100, 0x00);
 	cp_types[0x100] = CONSTANT_String;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_value_expr(expected_vm_type, expected_value, &expr->node);
+	assert_value_expr(expected_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 void test_convert_ldc_w_int(void)
@@ -349,18 +307,14 @@ void test_convert_ldc_w_string(void)
 	assert_convert_ldc_w_string(J_REFERENCE, RESOLVED_STRING_CONSTANT);
 }
 
-static void assert_convert_ldc_w_float(enum vm_type expected_vm_type,
+static void assert_convert_ldc_w_float(enum vm_type expected_type,
 				  double expected_value,
 				  u1 cp_type, unsigned long opcode)
 {
+	unsigned char code[] = { opcode, 0x01, 0x00 };
 	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
 	u1 cp_types[NR_CP_ENTRIES];
-	unsigned char code[] = { opcode, 0x01, 0x00 };
 	struct expression *expr;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
-	};
 	struct basic_block *bb;
 
 	if (opcode == OPC_LDC_W)
@@ -369,15 +323,15 @@ static void assert_convert_ldc_w_float(enum vm_type expected_vm_type,
 		const_set_double(cp_infos, 0x100, expected_value);
 	cp_types[0x100] = cp_type;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_fvalue_expr(expected_vm_type, expected_value, &expr->node);
+	assert_fvalue_expr(expected_type, expected_value, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 void test_convert_ldc_w_float(void)
@@ -395,36 +349,39 @@ void test_convert_ldc2_w_double(void)
 }
 
 static void __assert_convert_load(unsigned char *code,
-				  unsigned long size,
-				  enum vm_type expected_vm_type,
+				  unsigned long code_size,
+				  enum vm_type expected_type,
 				  unsigned char expected_index)
 {
 	struct expression *expr;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = size,
-	};
 	struct basic_block *bb;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, code_size);
 
 	convert_to_ir(bb->b_parent);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_local_expr(expected_vm_type, expected_index, &expr->node);
+	assert_local_expr(expected_type, expected_index, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 static void assert_convert_load(unsigned char opc,
-				enum vm_type expected_vm_type,
+				enum vm_type expected_type,
 				unsigned char expected_index)
 {
 	unsigned char code[] = { opc, expected_index };
-	__assert_convert_load(code, ARRAY_SIZE(code), expected_vm_type,
-			      expected_index);
+
+	__assert_convert_load(code, ARRAY_SIZE(code), expected_type, expected_index);
+}
+
+static void assert_convert_load_n(unsigned char opc,
+				  enum vm_type expected_type,
+				  unsigned char expected_index)
+{
+	__assert_convert_load(&opc, 1, expected_type, expected_index);
 }
 
 void test_convert_iload(void)
@@ -460,15 +417,6 @@ void test_convert_aload(void)
 	assert_convert_load(OPC_ALOAD, J_REFERENCE, 0x00);
 	assert_convert_load(OPC_ALOAD, J_REFERENCE, 0x01);
 	assert_convert_load(OPC_ALOAD, J_REFERENCE, 0xFF);
-}
-
-static void assert_convert_load_n(unsigned char opc,
-				  enum vm_type expected_vm_type,
-				  unsigned char expected_index)
-{
-	unsigned char code[] = { opc };
-	__assert_convert_load(code, ARRAY_SIZE(code), expected_vm_type,
-			      expected_index);
 }
 
 void test_convert_iload_n(void)
@@ -511,19 +459,16 @@ void test_convert_aload_n(void)
 	assert_convert_load_n(OPC_ALOAD_3, J_REFERENCE, 0x03);
 }
 
-static void __assert_convert_store(unsigned char *code, unsigned long size,
-				   enum vm_type expected_vm_type,
+static void __assert_convert_store(unsigned char *code,
+				   unsigned long code_size,
+				   enum vm_type expected_type,
 				   unsigned char expected_index)
 {
 	struct statement *stmt;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = size,
-	};
 	struct var_info *temporary;
 	struct basic_block *bb;
 
-	bb = __alloc_simple_bb(&method);
+	bb = alloc_simple_bb(code, code_size);
 
 	temporary = get_var(bb->b_parent);
 	stack_push(bb->mimic_stack, temporary_expr(J_INT, NULL, temporary));
@@ -533,20 +478,28 @@ static void __assert_convert_store(unsigned char *code, unsigned long size,
 
 	assert_store_stmt(stmt);
 	assert_temporary_expr(stmt->store_src);
-	assert_local_expr(expected_vm_type, expected_index, stmt->store_dest);
+	assert_local_expr(expected_type, expected_index, stmt->store_dest);
 
 	assert_true(stack_is_empty(bb->mimic_stack));
 
-	__free_simple_bb(bb);
+	free_simple_bb(bb);
 }
 
 static void assert_convert_store(unsigned char opc,
-				 enum vm_type expected_vm_type,
+				 enum vm_type expected_type,
 				 unsigned char expected_index)
 {
 	unsigned char code[] = { opc, expected_index };
-	__assert_convert_store(code, ARRAY_SIZE(code), expected_vm_type,
+
+	__assert_convert_store(code, ARRAY_SIZE(code), expected_type,
 			       expected_index);
+}
+
+static void assert_convert_store_n(unsigned char opc,
+				 enum vm_type expected_type,
+				 unsigned char expected_index)
+{
+	__assert_convert_store(&opc, 1, expected_type, expected_index);
 }
 
 void test_convert_istore(void)
@@ -577,15 +530,6 @@ void test_convert_astore(void)
 {
 	assert_convert_store(OPC_ASTORE, J_REFERENCE, 0x00);
 	assert_convert_store(OPC_ASTORE, J_REFERENCE, 0x01);
-}
-
-static void assert_convert_store_n(unsigned char opc,
-				 enum vm_type expected_vm_type,
-				 unsigned char expected_index)
-{
-	unsigned char code[] = { opc };
-	__assert_convert_store(code, ARRAY_SIZE(code), expected_vm_type,
-			       expected_index);
 }
 
 void test_convert_istore_n(void)
