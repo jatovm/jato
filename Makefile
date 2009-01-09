@@ -70,6 +70,7 @@ JIT_OBJS = \
 VM_OBJS = \
 	vm/bitset.o		\
 	vm/buffer.o		\
+	vm/bytecode.o		\
 	vm/bytecodes.o		\
 	vm/debug-dump.o		\
 	vm/natives.o		\

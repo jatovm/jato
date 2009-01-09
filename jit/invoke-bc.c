@@ -121,7 +121,8 @@ static struct methodblock *resolve_invoke_target(struct parse_context *ctx)
 {
 	unsigned long idx; 
 
-	idx = read_u16(ctx->insn_start + 1);
+	idx = bytecode_read_u16(ctx->buffer);
+
 	return resolveMethod(ctx->cu->method->class, idx);
 }
 

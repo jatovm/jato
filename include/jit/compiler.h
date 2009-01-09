@@ -18,7 +18,7 @@ struct parse_context {
 	struct compilation_unit *cu;
 	struct basic_block *bb;
 
-	unsigned char *insn_start;
+	struct bytecode_buffer *buffer;
 	unsigned char *code;
 	unsigned long offset;
 	unsigned long code_size;

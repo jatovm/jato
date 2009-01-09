@@ -58,7 +58,8 @@ static struct fieldblock *lookup_field(struct parse_context *ctx)
 {
 	unsigned short index;
 
-	index = read_u16(ctx->insn_start + 1);
+	index = bytecode_read_u16(ctx->buffer);
+
 	return resolveField(ctx->cu->method->class, index);
 }
 
@@ -342,7 +343,7 @@ int convert_new(struct parse_context *ctx)
 	unsigned long type_idx;
 	struct object *class;
 
-	type_idx = read_u16(ctx->insn_start + 1);
+	type_idx = bytecode_read_u16(ctx->buffer);
 	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
 	if (!class)
 		return -EINVAL;
@@ -362,7 +363,7 @@ int convert_newarray(struct parse_context *ctx)
 	unsigned long type;
 
 	size = stack_pop(ctx->bb->mimic_stack);
-	type = read_u8(ctx->insn_start + 1);
+	type = bytecode_read_u8(ctx->buffer);
 
 	arrayref = newarray_expr(type, size);
 	if (!arrayref)
@@ -380,7 +381,7 @@ int convert_anewarray(struct parse_context *ctx)
 	struct object *class, *arrayclass;
 
 	size = stack_pop(ctx->bb->mimic_stack);
-	type_idx = read_u16(ctx->insn_start + 1);
+	type_idx = bytecode_read_u16(ctx->buffer);
 
 	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
 	if (!class)
@@ -407,8 +408,8 @@ int convert_multianewarray(struct parse_context *ctx)
 	unsigned char dimension;
 	struct object *class;
 
-	type_idx = read_u16(ctx->insn_start + 1);
-	dimension = read_u8(ctx->insn_start + 3);
+	type_idx = bytecode_read_u16(ctx->buffer);
+	dimension = bytecode_read_u8(ctx->buffer);
 	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
 
 	if (!class)
@@ -451,7 +452,7 @@ int convert_instanceof(struct parse_context *ctx)
 
 	objectref = stack_pop(ctx->bb->mimic_stack);
 
-	type_idx = read_u16(ctx->insn_start + 1);
+	type_idx = bytecode_read_u16(ctx->buffer);
 	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
 	if (!class)
 		return -EINVAL;

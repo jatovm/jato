@@ -230,8 +230,9 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 	convert_fn_t convert;
 	int err = 0;
 
-	ctx->insn_start = ctx->code + ctx->offset;
-	ctx->opc = read_u8(ctx->insn_start);
+	ctx->buffer->buffer = ctx->code;
+	ctx->buffer->pos = ctx->offset;
+	ctx->opc = bytecode_read_u8(ctx->buffer);
 	convert = converters[ctx->opc];
 	if (!convert) {
 		printf("%s: Unknown bytecode instruction 0x%x in "
@@ -290,7 +291,9 @@ error:
  */
 int convert_to_ir(struct compilation_unit *cu)
 {
+	struct bytecode_buffer buffer = { };
 	struct parse_context ctx = {
+		.buffer = &buffer,
 		.code_size = cu->method->code_size,
 		.code = cu->method->jit_code,
 		.cu = cu,

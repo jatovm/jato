@@ -17,6 +17,7 @@ OBJS = \
 	../../arch/$(ARCH)/backtrace.o \
 	../../vm/bitset.o \
 	../../vm/buffer.o \
+	../../vm/bytecode.o \
 	../../vm/bytecodes.o \
 	../../vm/stack.o \
 	../../vm/string.o \
