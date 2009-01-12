@@ -48,6 +48,11 @@ bool bc_is_branch(unsigned char opc)
 	return bytecode_infos[opc].type & BC_BRANCH;
 }
 
+bool bc_is_wide(unsigned char opc)
+{
+	return bytecode_infos[opc].type & BC_WIDE;
+}
+
 bool bc_is_goto(unsigned char opc)
 {
 	return opc == OPC_GOTO;
@@ -61,7 +66,7 @@ long bc_target_off(unsigned char *code)
 {
 	unsigned char opc = *code;
 
-	if (bytecode_infos[opc].type & BC_WIDE)
+	if (bc_is_wide(opc))
 		return read_s32(code + 1);
 
 	return read_s16(code + 1);

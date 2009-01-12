@@ -13,6 +13,7 @@
 #include <jit/statement.h>
 
 #include <vm/bytecodes.h>
+#include <vm/bytecode.h>
 #include <vm/stack.h>
 
 #include <errno.h>
@@ -26,9 +27,10 @@ static struct statement *__convert_if(struct parse_context *ctx,
 	struct basic_block *true_bb;
 	struct expression *if_conditional;
 	struct statement *if_stmt;
-	long if_target;
+	int32_t if_target;
 
-	if_target = bc_target_off(ctx->code + ctx->offset);
+	if_target = bytecode_read_branch_target(ctx->opc, ctx->buffer);
+
 	true_bb = find_bb(ctx->cu, ctx->offset + if_target);
 
 	if_conditional = binop_expr(vm_type, binop, binary_left, binary_right);
@@ -158,9 +160,10 @@ int convert_goto(struct parse_context *ctx)
 {
 	struct basic_block *target_bb;
 	struct statement *goto_stmt;
-	long goto_target;
+	int32_t goto_target;
 
-	goto_target = bc_target_off(ctx->code + ctx->offset);
+	goto_target = bytecode_read_branch_target(ctx->opc, ctx->buffer);
+
 	target_bb = find_bb(ctx->cu, goto_target + ctx->offset);
 
 	goto_stmt = alloc_statement(STMT_GOTO);

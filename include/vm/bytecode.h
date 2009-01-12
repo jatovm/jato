@@ -15,6 +15,7 @@ int16_t bytecode_read_s16(struct bytecode_buffer *buffer);
 uint16_t bytecode_read_u16(struct bytecode_buffer *buffer);
 int32_t bytecode_read_s32(struct bytecode_buffer *buffer);
 uint32_t bytecode_read_u32(struct bytecode_buffer *buffer);
+int32_t bytecode_read_branch_target(unsigned char opc, struct bytecode_buffer *buffer);
 
 static inline uint8_t read_u8(unsigned char *p)
 {

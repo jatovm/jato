@@ -24,6 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 #include <vm/bytecode.h>
+#include <vm/bytecodes.h>
 
 int8_t bytecode_read_s8(struct bytecode_buffer *buffer)
 {
@@ -65,4 +66,13 @@ uint32_t bytecode_read_u32(struct bytecode_buffer *buffer)
 	result |= (uint32_t) bytecode_read_u8(buffer);
 
 	return result;
+}
+
+int32_t bytecode_read_branch_target(unsigned char opc,
+				    struct bytecode_buffer *buffer)
+{
+	if (bc_is_wide(opc))
+		return bytecode_read_s32(buffer);
+
+	return bytecode_read_s16(buffer);
 }
