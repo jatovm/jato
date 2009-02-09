@@ -84,16 +84,9 @@ bool insn_defs(struct insn *insn, struct var_info *var)
 	info = get_info(insn);
 	vreg = var->vreg;
 
-	if (info->flags & DEF_CALLER_SAVED_REGS) {
-		if (var->interval->reg == REG_EAX)
+	if (info->flags & DEF_CALLER_SAVED_REGS)
+		if (is_caller_saved_reg(var->interval->reg))
 			return true;
-
-		if (var->interval->reg == REG_ECX)
-			return true;
-
-		if (var->interval->reg == REG_EDX)
-			return true;
-	}
 
 	if (info->flags & DEF_SRC) {
 		if (is_vreg(&insn->src.reg, vreg))
