@@ -15,6 +15,20 @@ How can I try it out?
 
     $ sudo apt-get install ecj classpath libffi-dev binutils-dev
 
+    For Fedora:
+
+    $ su
+    $ yum install eclipse-ecj ; exit
+
+    and
+
+    $ wget ftp://ftp.gnu.org/gnu/classpath/classpath-0.97.2.tar.gz
+    $ tar xzvf classpath-0.97.2.tar.gz
+    $ cd classpath-0.97.2
+    $ ./configure ; make
+    $ su
+    $ make install ; exit
+
   - Compile Jato and run the unit tests:
 
     $ cd <JATO_ROOT> ; make
