@@ -19,7 +19,7 @@ include/vm/arch.h
 #
 # Generated source files
 #
-arch/x86/insn-selector.c
+arch/x86/insn-selector_*.c
 monoburg/parser.c
 
 #

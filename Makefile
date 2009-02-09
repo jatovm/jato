@@ -163,9 +163,9 @@ $(JAMVM_ARCH_H):
 	$(E) "  LN      " $@
 	$(Q) ln -fsn ../../jamvm/arch/$(JAMVM_ARCH).h $@
 
-arch/$(ARCH)/insn-selector.c: FORCE
+arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: FORCE
 	$(E) "  MONOBURG" $@
-	$(Q) $(MONOBURG) -p -e arch/$(ARCH)/insn-selector.brg > $@
+	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
 $(PROGRAM): lib monoburg $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
