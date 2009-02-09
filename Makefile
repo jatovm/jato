@@ -167,7 +167,7 @@ arch/$(ARCH)/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e arch/$(ARCH)/insn-selector.brg > $@
 
-$(PROGRAM): monoburg $(CLASSPATH_CONFIG) $(ARCH_INCLUDE_DIR) $(BIN_DIR) $(JAMVM_ARCH_H) compile lib
+$(PROGRAM): lib monoburg $(ARCH_INCLUDE_DIR) $(BIN_DIR) $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS)
 
@@ -204,7 +204,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jamvm/MethodInvocationAndReturnTest.class \
 	regression/jamvm/ConversionTest.class
 
-lib:
+lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 

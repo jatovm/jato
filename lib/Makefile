@@ -13,10 +13,16 @@ VM_CLASSES = \
 	gnu/classpath/VMStackWalker.java
 
 classes.zip: $(VM_CLASSES)
-	mkdir -p classes
-	$(JAVAC) -bootclasspath $(GLIBJ) -d classes $(VM_CLASSES)
-	cd classes && zip -r ../classes.zip .
-	rm -rf classes
+	$(E) "  MKDIR   "
+	$(Q) mkdir -p classes
+	$(E) "  JAVAC   "
+	$(Q) $(JAVAC) -nowarn -bootclasspath $(GLIBJ) -d classes $(VM_CLASSES)
+	$(E) "  ZIP     " $@
+	$(Q) cd classes && zip -r -q ../classes.zip .
 
 clean:
-	rm -f classes.zip
+	$(E) "  CLEAN   "
+	$(Q) rm -f classes.zip
+	$(Q) rm -rf classes
+
+include ../scripts/build/common.mk
