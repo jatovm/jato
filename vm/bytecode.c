@@ -76,3 +76,40 @@ int32_t bytecode_read_branch_target(unsigned char opc,
 
 	return bytecode_read_s16(buffer);
 }
+
+uint8_t read_u8(unsigned char *p)
+{
+	return *p;
+}
+
+int16_t read_s16(unsigned char *p)
+{
+	return (int16_t) read_u16(p);
+}
+
+int32_t read_s32(unsigned char *p)
+{
+	return (int32_t) read_u32(p);
+}
+
+uint16_t read_u16(unsigned char *p)
+{
+	uint16_t result;
+
+	result  = (uint16_t) read_u8(p + 0) << 8;
+	result |= (uint16_t) read_u8(p + 1);
+
+	return result;
+}
+
+uint32_t read_u32(unsigned char *p)
+{
+	uint32_t result;
+
+	result  = (uint32_t) read_u8(p + 0) << 24;
+	result |= (uint32_t) read_u8(p + 1) << 16;
+	result |= (uint32_t) read_u8(p + 2) << 8;
+	result |= (uint32_t) read_u8(p + 3);
+
+	return result;
+}

@@ -3,7 +3,6 @@
  */
 
 #include <vm/bytecodes.h>
-#include <vm/byteorder.h>
 #include <vm/system.h>
 #include <vm/vm.h>
 

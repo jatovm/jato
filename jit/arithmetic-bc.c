@@ -14,7 +14,6 @@
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
-#include <vm/byteorder.h>
 #include <vm/stack.h>
 
 #include <errno.h>

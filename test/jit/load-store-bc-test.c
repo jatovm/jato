@@ -2,7 +2,6 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <vm/byteorder.h>
 #include <vm/system.h>
 #include <vm/types.h>
 #include <vm/vm.h>
