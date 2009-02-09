@@ -139,7 +139,7 @@ LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
 ARCH_INCLUDE_DIR = include/arch
 JAMVM_ARCH_H = include/vm/arch.h
 
-all: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) test lib
+all: $(PROGRAM) test
 .PHONY: all
 .DEFAULT: all
 
@@ -167,7 +167,7 @@ arch/$(ARCH)/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e arch/$(ARCH)/insn-selector.brg > $@
 
-$(PROGRAM): $(ARCH_INCLUDE_DIR) $(BIN_DIR) $(JAMVM_ARCH_H) compile
+$(PROGRAM): monoburg $(CLASSPATH_CONFIG) $(ARCH_INCLUDE_DIR) $(BIN_DIR) $(JAMVM_ARCH_H) compile lib
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS)
 
