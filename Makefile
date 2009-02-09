@@ -139,15 +139,6 @@ LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
 ARCH_INCLUDE_DIR = include/arch
 JAMVM_ARCH_H = include/vm/arch.h
 
-ifeq ($(strip $(V)),)
-	E = @echo
-	Q = @
-else
-	E = @\#
-	Q =
-endif
-export E Q
-
 all: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) test lib
 .PHONY: all
 .DEFAULT: all
@@ -248,3 +239,5 @@ clean:
 
 PHONY += FORCE
 FORCE:
+
+include scripts/common.mk
