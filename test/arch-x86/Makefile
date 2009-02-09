@@ -11,19 +11,10 @@ ARCH		= x86
 ARCH_POSTFIX	= _64
 endif
 
-ARCH_CONFIG=../../include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
-CCFLAGS = -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
-INCLUDE=-I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
-LIBS = -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty
-MONOBURG = ../../monoburg/monoburg
-
-include ../../scripts/Makefile.include
-
-quiet_cmd_cc_o_c = CC $(empty)     $(empty) $@
-      cmd_cc_o_c = $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `basename $@`
-
-%.o: %.c
-	$(call cmd,cc_o_c)
+ARCH_CONFIG	:= ../../include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
+CCFLAGS		:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+INCLUDE		:= -I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
+MONOBURG	:= ../../monoburg/monoburg
 
 RUNNER=x86-test-runner
 SUITE=x86-test-suite.c
@@ -58,36 +49,10 @@ OBJS = \
 	emit-code-test.o \
 	insn-selector-test.o \
 	stack-frame-test.o \
-	use-def-test.o \
-
-quiet_cmd_run_tests = RUNTEST $(empty) $(RUNNER)
-      cmd_run_tests = ./$(RUNNER)
-
-quiet_cmd_cc_test_runner = MAKE $(empty)   $(empty) $(RUNNER)
-      cmd_cc_test_runner = $(CC) $(CCFLAGS) $(INCLUDE) *.o $(SUITE) -o $(RUNNER) $(LIBS)
-
-test: $(SUITE) $(OBJS)
-	$(call cmd,cc_test_runner)
-	$(call cmd,run_tests)
+	use-def-test.o
 
 ../../arch/x86/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e ../../arch/x86/insn-selector.brg > $@
 
-$(OBJS): FORCE
-
-quiet_cmd_gen_suite = SUITE $(empty)  $(empty) $@
-      cmd_gen_suite = sh ../scripts/make-tests.sh *.c > $@
-
-$(SUITE): FORCE
-	$(call cmd,gen_suite)
-
-quiet_cmd_clean = CLEAN
-      cmd_clean = rm -f *.o $(RUNNER) $(SUITE)
-
-clean: FORCE
-	$(call cmd,clean)
-
-PHONY += FORCE
-FORCE:
-# DO NOT DELETE
+include ../scripts/test.mk
