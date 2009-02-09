@@ -12,7 +12,7 @@ ARCH_POSTFIX	= _64
 endif
 
 ARCH_CONFIG	:= ../../include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
-CCFLAGS		:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+CFLAGS		:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 INCLUDE		:= -I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
 MONOBURG	:= ../../monoburg/monoburg
 

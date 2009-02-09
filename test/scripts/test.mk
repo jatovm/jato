@@ -1,14 +1,14 @@
-CCFLAGS	?= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+CFLAGS	?= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 INCLUDE	?= -I../include/ -I. -I../libharness -I../../include -I../../jit/glib
 LIBS	?= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty
 
 %.o: %.c
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(CCFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `basename $@`
+	$(Q) $(CC) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `basename $@`
 
 test: $(SUITE) $(OBJS)
 	$(E) "  LD      " $@
-	$(Q) $(CC) $(CCFLAGS) $(INCLUDE) *.o $(SUITE) -o $(RUNNER) $(LIBS)
+	$(Q) $(CC) $(CFLAGS) $(INCLUDE) *.o $(SUITE) -o $(RUNNER) $(LIBS)
 	$(E) "  RUN     " $@
 	$(Q) ./$(RUNNER)
 
