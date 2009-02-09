@@ -6,7 +6,9 @@ LIBS	?= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `basename $@`
 
-test: $(SUITE) $(OBJS)
+test: $(RUNNER)
+
+$(RUNNER): $(SUITE) $(OBJS)
 	$(E) "  LD      " $@
 	$(Q) $(CC) $(CFLAGS) $(INCLUDE) *.o $(SUITE) -o $(RUNNER) $(LIBS)
 	$(E) "  RUN     " $@
