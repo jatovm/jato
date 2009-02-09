@@ -4,6 +4,7 @@
 .*
 *.o
 *.class
+*.d
 
 #
 # Generated symbolic links

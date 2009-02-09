@@ -153,6 +153,7 @@ monoburg:
 %.o: %.c
 	$(E) "  CC      " $@
 	$(Q) $(CC) -c $(CFLAGS) $< -o $@
+	$(Q) $(CC) -MM $(CFLAGS) -MT $@ $*.c -o $*.d
 
 %.o: %.S
 	$(E) "  AS      " $@
@@ -213,6 +214,7 @@ clean:
 	$(Q) - rm -f $(PROGRAM)
 	$(Q) - rm -f $(CLASSPATH_CONFIG)
 	$(Q) - rm -f $(OBJS)
+	$(Q) - rm -f $(OBJS:.o=.d)
 	$(Q) - rm -f $(LIBHARNESS_OBJS)
 	$(Q) - rm -f $(ARCH_TEST_OBJS)
 	$(Q) - rm -f arch/$(ARCH)/insn-selector.c
@@ -236,3 +238,5 @@ PHONY += FORCE
 FORCE:
 
 include scripts/build/common.mk
+
+-include $(OBJS:.o=.d)
