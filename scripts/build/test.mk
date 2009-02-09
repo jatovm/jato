@@ -16,7 +16,7 @@ $(OBJS): FORCE
 
 $(SUITE): FORCE
 	$(E) "  SUITE   " $@
-	$(Q) sh ../scripts/make-tests.sh *.c > $@
+	$(Q) sh ../../scripts/build/make-tests.sh *.c > $@
 
 clean: FORCE
 	$(E) "  CLEAN"

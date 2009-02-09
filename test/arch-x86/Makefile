@@ -55,4 +55,4 @@ OBJS = \
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e ../../arch/x86/insn-selector.brg > $@
 
-include ../scripts/test.mk
+include ../../scripts/build/test.mk

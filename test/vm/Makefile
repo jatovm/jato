@@ -22,4 +22,4 @@ OBJS = \
 	string-test.o \
 	types-test.o
 
-include ../scripts/test.mk
+include ../../scripts/build/test.mk

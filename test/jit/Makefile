@@ -59,4 +59,4 @@ OBJS = \
 	tree-printer-test.o \
 	typeconv-bc-test.o
 
-include ../scripts/test.mk
+include ../../scripts/build/test.mk

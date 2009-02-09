@@ -240,4 +240,4 @@ clean:
 PHONY += FORCE
 FORCE:
 
-include scripts/common.mk
+include scripts/build/common.mk
