@@ -103,7 +103,7 @@ static void show_function(void *addr)
 	symbol_offset = (unsigned long)addr - symbol_start;
 
 	printf(" [<%08lx>] %s+%llx (%s:%i)\n", (unsigned long) addr, function_name,
-	       symbol_offset, filename, line);
+	       (long long) symbol_offset, filename, line);
 
   out:
 	free(symbols);
