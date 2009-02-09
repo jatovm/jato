@@ -37,4 +37,21 @@ static inline const char *reg_name(enum machine_reg reg)
 	return "<unknown>";
 }
 
+/*
+ * These functions are used by generic code to insert spill/reload
+ * instructions.
+ */
+
+static inline struct insn *
+spill_insn(struct var_info *var, struct stack_slot *slot)
+{
+	return NULL;
+}
+
+static inline struct insn *
+reload_insn(struct stack_slot *slot, struct var_info *var)
+{
+	return NULL;
+}
+
 #endif /* __PPC_INSTRUCTION_H */
