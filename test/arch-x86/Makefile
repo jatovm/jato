@@ -41,7 +41,7 @@ OBJS = \
 	../../jit/stack-slot.o \
 	../../jit/statement.o \
 	../../jit/tree-printer.o \
-	../../arch/x86/emit-code.o \
+	../../arch/x86/emit-code$(ARCH_POSTFIX).o \
 	../../arch/x86/instruction.o \
 	../../arch/x86/insn-selector.o \
 	../../arch/x86/stack-frame.o \
