@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 
-#define NR_REGISTERS 14	/* available for register allocator */
-
 enum machine_reg {
 	REG_RAX, /* R0 */
 	REG_RCX, /* R1 */
@@ -19,8 +17,12 @@ enum machine_reg {
 	REG_R12,
 	REG_R13,
 	REG_R14,
-	REG_R15, /* last register available for allocation */
-	REG_RSP, /* R4 */
+	REG_R15,
+
+	/* The above registers are available for register allocator.  */
+	NR_REGISTERS,
+
+	REG_RSP = NR_REGISTERS, /* R4 */
 	REG_RBP, /* R5 */
 	REG_UNASSIGNED = ~0UL,
 };
