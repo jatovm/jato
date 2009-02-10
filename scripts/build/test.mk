@@ -1,5 +1,7 @@
+ARCH_CONFIG=../../arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
+
 CFLAGS	?= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
-INCLUDE	?= -I../include/ -I. -I../libharness -I../../include -I../../jit/glib
+INCLUDE	?= -I../include/ -I. -I../libharness -I../../include -I../../jit/glib -include $(ARCH_CONFIG)
 LIBS	?= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty
 
 %.o: %.c

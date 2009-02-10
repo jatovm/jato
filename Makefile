@@ -173,9 +173,9 @@ $(PROGRAM): lib monoburg $(JAMVM_ARCH_H) compile
 compile: $(OBJS)
 
 test: $(JAMVM_ARCH_H) monoburg
-	make -C test/vm/ ARCH=$(ARCH) test
-	make -C test/jit/ ARCH=$(ARCH) test
-	make -C test/arch-$(ARCH)/ test
+	make -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) test
+	make -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) test
+	make -C test/arch-$(ARCH)/ ARCH_POSTFIX=$(ARCH_POSTFIX) test
 .PHONY: test
 
 %.class: %.java
