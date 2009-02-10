@@ -23,24 +23,12 @@
  *
  * Please refer to the file LICENSE for details.
  */
+#include <signal.h>
 
-#include <arch/registers.h>
-
-static const char *register_names[] = {
-	[REG_EAX] = "EAX",
-	[REG_ECX] = "ECX",
-	[REG_EDX] = "EDX",
-	[REG_EBX] = "EBX",
-	[REG_ESI] = "ESI",
-	[REG_EDI] = "EDI",
-	[REG_EBP] = "EBP",
-	[REG_ESP] = "ESP",
-};
-
-const char *reg_name(enum machine_reg reg)
+void bt_sighandler(int sig, siginfo_t *info, void *secret)
 {
-	if (reg == REG_UNASSIGNED)
-		return "<unassigned>";
+}
 
-	return register_names[reg];
+void print_trace(void)
+{
 }

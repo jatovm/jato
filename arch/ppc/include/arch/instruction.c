@@ -24,23 +24,10 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/registers.h>
+#include <arch/instruction.h>
+#include <stdlib.h>
 
-static const char *register_names[] = {
-	[REG_EAX] = "EAX",
-	[REG_ECX] = "ECX",
-	[REG_EDX] = "EDX",
-	[REG_EBX] = "EBX",
-	[REG_ESI] = "ESI",
-	[REG_EDI] = "EDI",
-	[REG_EBP] = "EBP",
-	[REG_ESP] = "ESP",
-};
-
-const char *reg_name(enum machine_reg reg)
+void free_insn(struct insn *insn)
 {
-	if (reg == REG_UNASSIGNED)
-		return "<unassigned>";
-
-	return register_names[reg];
+	free(insn);
 }

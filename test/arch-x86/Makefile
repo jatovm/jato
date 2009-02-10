@@ -11,9 +11,9 @@ ARCH		= x86
 ARCH_POSTFIX	= _64
 endif
 
-ARCH_CONFIG	:= ../../include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
+ARCH_CONFIG	:= ../../arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 CFLAGS		:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
-INCLUDE		:= -I. -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
+INCLUDE		:= -I. -I../../arch/$(ARCH)/include -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
 MONOBURG	:= ../../monoburg/monoburg
 
 RUNNER=x86-test-runner

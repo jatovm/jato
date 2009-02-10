@@ -25,7 +25,7 @@ ARCH		= ppc
 ARCH_POSTFIX	= _32
 endif
 
-ARCH_CONFIG=include/arch-$(ARCH)/config$(ARCH_POSTFIX).h
+ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 
 # Make the build silent by default
 V =
@@ -127,7 +127,7 @@ CFLAGS		+= $(WARNINGS)
 OPTIMIZATIONS	+= -Os
 CFLAGS		+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Ijit -Ijamvm -Ijit/glib -include $(ARCH_CONFIG) $(ARCH_INCLUDES)
+INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijamvm -Ijit/glib -include $(ARCH_CONFIG)
 CFLAGS		+= $(INCLUDES)
 
 DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"
@@ -135,7 +135,6 @@ CFLAGS		+= $(DEFINES)
 
 LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
 
-ARCH_INCLUDE_DIR = include/arch
 JAMVM_ARCH_H = include/vm/arch.h
 
 all: $(PROGRAM) test
@@ -167,17 +166,13 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
-$(PROGRAM): lib monoburg $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) compile
+$(PROGRAM): lib monoburg $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS)
 
 compile: $(OBJS)
 
-$(ARCH_INCLUDE_DIR): FORCE
-	$(E) "  LN      " $@
-	$(Q) ln -fsn arch-$(ARCH) $@
-
-test: $(ARCH_INCLUDE_DIR) $(JAMVM_ARCH_H) monoburg
+test: $(JAMVM_ARCH_H) monoburg
 	make -C test/vm/ ARCH=$(ARCH) test
 	make -C test/jit/ ARCH=$(ARCH) test
 	make -C test/arch-$(ARCH)/ test

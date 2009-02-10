@@ -1,0 +1,4 @@
+#ifndef MMIX_STACK_FRAME_H
+#define MMIX_STACK_FRAME_H
+
+#endif /* MMIX_STACK_FRAME_H */
