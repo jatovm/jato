@@ -28,17 +28,23 @@
 #include <vm/buffer.h>
 #include <vm/natives.h>
 #include <vm/vm.h>
+#include <vm/die.h>
 #include <arch/emit-code.h>
 
 static void *jit_native_trampoline(struct compilation_unit *cu)
 {
 	struct methodblock *method = cu->method;
 	const char *method_name, *class_name;
+	void *ret;
 
 	class_name  = CLASS_CB(method->class)->name;
 	method_name = method->name;
 
-	return vm_lookup_native(class_name, method_name);
+	ret = vm_lookup_native(class_name, method_name);
+	if (!ret)
+		die("no native function found for %s.%s", class_name, method_name);
+
+	return ret;
 }
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
