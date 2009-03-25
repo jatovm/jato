@@ -271,9 +271,15 @@ static void vm_runtime_exit(int status)
 	exitVM(status);
 }
 
+static void vm_fill_in_stack_trace(struct object *object)
+{
+	/* TODO */
+}
+
 static void jit_init_natives(void)
 {
 	vm_register_native("java/lang/VMRuntime", "exit", vm_runtime_exit);
+	vm_register_native("java/lang/VMThrowable", "fillInStackTrace", vm_fill_in_stack_trace);
 }
 
 int main(int argc, char *argv[]) {
