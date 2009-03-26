@@ -271,9 +271,14 @@ static void vm_runtime_exit(int status)
 	exitVM(status);
 }
 
-static void vm_fill_in_stack_trace(struct object *object)
+/*
+ * This stub is needed by java.lang.VMThrowable constructor to work. It should
+ * return java.lang.VMState instance, or null in which case no stack trace will
+ * be printed by printStackTrace() method.
+ */
+static struct object *vm_fill_in_stack_trace(struct object *object)
 {
-	/* TODO */
+	return NULL;
 }
 
 static void jit_init_natives(void)
