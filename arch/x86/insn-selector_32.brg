@@ -279,6 +279,27 @@ reg:	OP_REM(reg, EXPR_LOCAL) 1
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, remainder, result));
 }
 
+reg:	OP_REM_64(reg, reg) 1
+{
+	struct var_info *eax, *edx;
+
+	eax = get_fixed_var(s->b_parent, REG_EAX);
+	edx = get_fixed_var(s->b_parent, REG_EDX);
+	state->reg1 = get_var(s->b_parent);
+	state->reg2 = get_var(s->b_parent);
+
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, state->right->reg2));
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, state->right->reg1));
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, state->left->reg2));
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, state->left->reg1));
+
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) emulate_lrem));
+	method_args_cleanup(s, 4); 
+
+	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
+}
+
 reg:	OP_NEG(reg) 1
 {
 	struct expression *expr;

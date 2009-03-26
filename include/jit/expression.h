@@ -41,6 +41,7 @@ enum binary_operator {
 	OP_DIV,
 	OP_DIV_64,
 	OP_REM,
+	OP_REM_64,
 
 	OP_SHL,
 	OP_SHR,

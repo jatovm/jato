@@ -230,7 +230,7 @@ public class LongArithmeticTest extends TestCase {
         /*testLongMultiplication();
         testLongMultiplicationOverflow();*/
         testLongDivision();
-        /*testLongRemainder();*/
+        testLongRemainder();
         testLongNegation();
         testLongNegationOverflow();
         /*testLongLeftShift();

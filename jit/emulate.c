@@ -39,6 +39,10 @@ int emulate_lcmp(long long value1, long long value2)
 
 long long emulate_ldiv(long long value1, long long value2)
 {
-	long long out = value1 / value2;
-	return out;
+	return value1 / value2;
+}
+
+long long emulate_lrem(long long value1, long long value2)
+{
+	return value1 % value2;
 }
