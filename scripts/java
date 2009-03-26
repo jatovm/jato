@@ -1,12 +1,21 @@
 #!/bin/sh
 
-GNU_CLASSPATH_ROOT=`./tools/classpath-config`
-if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d $GNU_CLASSPATH_ROOT; then
-  echo "Error! Cannot find GNU Classpath installed."
+GNU_CLASSPATH_ROOT=$(./tools/classpath-config)
+
+GLIBJ=$GNU_CLASSPATH_ROOT/share/classpath/glibj.zip
+if (test ! -e $GLIBJ)
+then
+  echo "Error! Cannot find GNU Classpath glibj.zip installed."
   exit
 fi
 
-GLIBJ=$GNU_CLASSPATH_ROOT/share/classpath/glibj.zip
+LIBRARY_PATH=$GNU_CLASSPATH_ROOT/lib/classpath
+if (test ! -d $LIBRARY_PATH)
+then
+  echo "Error! GNU Classpath directory $LIBRARY_PATH does not exist."
+  exit
+fi
+
 BOOTCLASSPATH=lib/classes.zip:$GLIBJ
 
-./jato -Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath -Xbootclasspath:$BOOTCLASSPATH $*
+./jato -Dgnu.classpath.boot.library.path=$LIBRARY_PATH -Xbootclasspath:$BOOTCLASSPATH $*
