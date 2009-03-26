@@ -87,7 +87,7 @@ void test_convert_mul(void)
 void test_convert_div(void)
 {
 	assert_convert_binop(J_INT, OP_DIV, OPC_IDIV);
-	assert_convert_binop(J_LONG, OP_DIV, OPC_LDIV);
+	assert_convert_binop(J_LONG, OP_DIV_64, OPC_LDIV);
 	assert_convert_binop(J_FLOAT, OP_DIV, OPC_FDIV);
 	assert_convert_binop(J_DOUBLE, OP_DIV, OPC_DDIV);
 }

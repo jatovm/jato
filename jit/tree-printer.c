@@ -335,6 +335,7 @@ static const char *op_names[] = {
 	[OP_SUB] = "sub",
 	[OP_MUL] = "mul",
 	[OP_DIV] = "div",
+	[OP_DIV_64] = "div64",
 	[OP_REM] = "rem",
 	[OP_SHL] = "shl",
 	[OP_SHR] = "shr",

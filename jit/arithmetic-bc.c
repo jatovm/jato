@@ -101,7 +101,7 @@ int convert_idiv(struct parse_context *ctx)
 
 int convert_ldiv(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_LONG, OP_DIV);
+	return convert_binop(ctx, J_LONG, OP_DIV_64);
 }
 
 int convert_fdiv(struct parse_context *ctx)

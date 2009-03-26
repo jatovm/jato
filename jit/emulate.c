@@ -36,3 +36,9 @@ int emulate_lcmp(long long value1, long long value2)
 		return 1;
 	return 0;
 }
+
+long long emulate_ldiv(long long value1, long long value2)
+{
+	long long out = value1 / value2;
+	return out;
+}

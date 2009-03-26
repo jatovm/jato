@@ -73,6 +73,9 @@ public class LongArithmeticTest extends TestCase {
         assertEquals( 1, div( 3,  2));
         assertEquals( 2, div( 2,  1));
         assertEquals( 3, div( 6,  2));
+        assertEquals( 1, div( 0x123456789L, 0x123456789L));
+        assertEquals(-0x100000000L, div( 0x200000000L,-2L));
+        assertEquals( 0x100000000L, div( 0x200000000L, 2L));
     }
 
     public static long div(long dividend, long divisor) {
@@ -225,9 +228,9 @@ public class LongArithmeticTest extends TestCase {
         testLongSubtraction();
         testLongSubtractionOverflow();
         /*testLongMultiplication();
-        testLongMultiplicationOverflow();
+        testLongMultiplicationOverflow();*/
         testLongDivision();
-        testLongRemainder();*/
+        /*testLongRemainder();*/
         testLongNegation();
         testLongNegationOverflow();
         /*testLongLeftShift();
