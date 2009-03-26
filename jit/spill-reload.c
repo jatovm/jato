@@ -25,6 +25,7 @@
  */
 
 #include <jit/compilation-unit.h>
+#include <jit/stack-slot.h>
 #include <errno.h>
 
 static struct insn *last_insn(struct live_interval *interval)
