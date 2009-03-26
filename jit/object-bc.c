@@ -468,7 +468,29 @@ int convert_instanceof(struct parse_context *ctx)
 
 int convert_checkcast(struct parse_context *ctx)
 {
-	/* TODO */
+	struct expression *object_ref;
+	struct object *class;
+	struct statement *checkcast_stmt;
+	unsigned long type_idx;
+
+	object_ref = stack_pop(ctx->bb->mimic_stack);
+
+	type_idx = bytecode_read_u16(ctx->buffer);
+	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	if (!class)
+		return -ENOMEM;
+
+	checkcast_stmt = alloc_statement(STMT_CHECKCAST);
+	if (!checkcast_stmt)
+		return -ENOMEM;
+
+	checkcast_stmt->checkcast_class = class;
+	checkcast_stmt->checkcast_ref = &object_ref->node;
+
+	expr_get(object_ref);
+	bb_add_stmt(ctx->bb, checkcast_stmt);
+	stack_push(ctx->bb->mimic_stack, object_ref);
+
 	return 0;
 }
 

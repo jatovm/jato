@@ -644,3 +644,30 @@ void test_convert_monitor_exit(void)
 	__free_simple_bb(bb);
 	free(class);
 }
+
+void test_convert_checkcast(void)
+{
+	unsigned char code[] = {OPC_CHECKCAST, 0x00, 0x00};
+	struct methodblock method = {
+		.jit_code = code,
+		.code_size = ARRAY_SIZE(code),
+	};
+
+	struct expression *ref;
+	struct statement *stmt;
+	struct basic_block *bb;
+	struct object *class = new_class();
+
+	bb = __alloc_simple_bb(&method);
+
+	ref = value_expr(J_REFERENCE, (unsigned long)class);
+	stack_push(bb->mimic_stack, ref);
+
+	convert_ir_const_single(bb->b_parent, class);
+	stmt = stmt_entry(bb->stmt_list.next);
+	assert_checkcast_stmt(ref, stmt);
+
+	expr_put(ref);
+	__free_simple_bb(bb);
+	free(class);
+}

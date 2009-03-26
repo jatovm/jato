@@ -54,6 +54,10 @@ void free_statement(struct statement *stmt)
 		if (stmt->expression)
 			expr_put(to_expr(stmt->expression));
 		break;
+	case STMT_CHECKCAST:
+		if (stmt->checkcast_ref)
+			expr_put(to_expr(stmt->checkcast_ref));
+		break;
 	case STMT_LAST:
 		assert(!"STMT_LAST is not a real type. Don't use it!");
 		break;

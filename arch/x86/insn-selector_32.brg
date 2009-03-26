@@ -1047,6 +1047,22 @@ stmt:	STMT_MONITOR_EXIT(reg)
 	method_args_cleanup(s, 1);
 }
 
+stmt:	STMT_CHECKCAST(reg)
+{
+	struct statement *stmt;
+	struct var_info *ref;
+
+	ref = state->left->reg1;
+
+	stmt = to_stmt(tree);
+
+	bb_add_insn(s, imm_insn(INSN_PUSH_IMM, (unsigned long) stmt->checkcast_class));
+	bb_add_insn(s, reg_insn(INSN_PUSH_REG, ref));
+	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long)check_cast));
+
+	method_args_cleanup(s, 2);
+}
+
 %%
 
 static void __binop_reg_local(struct _MBState *state, struct basic_block *bb,

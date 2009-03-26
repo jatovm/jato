@@ -1619,3 +1619,46 @@ void test_select_array_check_stmt(void)
 
 	free_compilation_unit(cu);
 }
+
+void test_select_checkcast_stmt(void)
+{
+	struct compilation_unit *cu;
+	struct basic_block *bb;
+	struct statement *stmt;
+	struct expression *expr;
+	struct insn *insn;
+	struct object *class;
+	enum machine_reg dreg;
+
+	class = new_class();
+	expr = value_expr(J_REFERENCE, (unsigned long)class);
+
+	stmt = alloc_statement(STMT_CHECKCAST);
+	stmt->checkcast_class = class;
+	stmt->checkcast_ref = &expr->node;
+
+	cu = alloc_compilation_unit(&method);
+	bb = get_basic_block(cu, 0, 1);
+	bb_add_stmt(bb, stmt);
+
+	select_instructions(bb->b_parent);
+
+	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
+	dreg = mach_reg(&insn->dest.reg);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) class, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) class, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_cast, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
+
+	free(class);
+	free_compilation_unit(cu);
+}

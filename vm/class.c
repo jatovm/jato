@@ -51,3 +51,12 @@ void check_array(struct object *obj, unsigned int index)
 	if (index >= ARRAY_LEN(obj))
 		abort();
 }
+
+void check_cast(struct object *obj, struct object *type)
+{
+	if (!obj)
+		return;
+
+	if (!isInstanceOf(type, obj->class))
+		abort();
+}

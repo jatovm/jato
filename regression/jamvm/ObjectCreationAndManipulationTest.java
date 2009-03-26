@@ -105,6 +105,25 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         array[0][0] = 0;
     }
 
+    public static void testCheckCast() {
+        Object object = new InstanceFields();
+
+        InstanceFields instanceFields = (InstanceFields) null;
+        assertNull(instanceFields);
+
+        instanceFields = (InstanceFields) object;
+        assertNotNull(instanceFields);
+
+        //Following test will fail.
+
+        /*
+         ClassFields classField = new ClassFields();
+         object = classField;
+         instanceFields = (InstanceFields) object;
+        */
+
+    }
+
     public static void main(String[] args) {
         testNewObject();
         testObjectInitialization();
@@ -121,6 +140,7 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testShortArrayLoadAndStore();
         testObjectArrayLoadAndStore();
         testMultiDimensionalArrayLoadAndStore();
+        testCheckCast();
 
         Runtime.getRuntime().halt(retval);
     }

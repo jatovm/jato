@@ -240,6 +240,25 @@ static int print_monitor_exit_stmt(int lvl, struct string *str,
 	return print_expr_stmt(lvl, str, "MONITOR_EXIT", stmt);
 }
 
+static int print_checkcast_stmt(int lvl, struct string *str,
+				struct statement *stmt)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "CHECKCAST:\n");
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "checkcast_type", "%p", stmt->checkcast_class);
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "checkcast_ref", stmt->checkcast_ref);
+
+      out:
+	return err;
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -253,6 +272,7 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_ARRAY_CHECK] = print_array_check_stmt,
 	[STMT_MONITOR_ENTER] = print_monitor_enter_stmt,
 	[STMT_MONITOR_EXIT] = print_monitor_exit_stmt,
+	[STMT_CHECKCAST] = print_checkcast_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)

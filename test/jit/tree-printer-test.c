@@ -166,6 +166,22 @@ void test_should_print_monitorexit_statement(void)
 	assert_print_stmt("MONITOR_EXIT:\n  expression: [local int 0]\n", stmt);
 }
 
+void test_should_print_checkcast_statement(void)
+{
+	struct expression *expr;
+	struct statement *stmt;
+
+	expr = local_expr(J_INT, 0);
+
+	stmt = alloc_statement(STMT_CHECKCAST);
+	stmt->checkcast_ref = &expr->node;
+	stmt->checkcast_class = (void *)0xcafebabe;
+
+	assert_print_stmt("CHECKCAST:\n"
+			  "  checkcast_type: [0xcafebabe]\n"
+			  "  checkcast_ref: [local int 0]\n", stmt);
+}
+
 static void assert_print_expr(const char *expected, struct expression *expr)
 {
 	assert_tree_print(expected, &expr->node);

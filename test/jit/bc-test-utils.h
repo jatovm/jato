@@ -44,6 +44,7 @@ void assert_arraycheck_stmt(enum vm_type, struct expression *,
 			    struct expression *, struct statement *);
 void assert_monitor_enter_stmt(struct expression *, struct statement *);
 void assert_monitor_exit_stmt(struct expression *, struct statement *);
+void assert_checkcast_stmt(struct expression *, struct statement *);
 
 void convert_ir_const(struct compilation_unit *, ConstantPoolEntry *, size_t, u1 *);
 
