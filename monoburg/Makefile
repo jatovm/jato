@@ -19,10 +19,11 @@ CFLAGS		+= $(OPTIMIZATIONS)
 DEFINES		= -DYYENABLE_NLS=0 -DYYLTYPE_IS_TRIVIAL=0
 CFLAGS		+= $(DEFINES)
 
-INCLUDES	= -I. -I.. -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
+INCLUDES	= -I. -I..
 CFLAGS		+= $(INCLUDES)
 
-LIBS		= -lglib-2.0
+CFLAGS		+= $(shell pkg-config --cflags glib-2.0)
+LIBS		+= $(shell pkg-config --libs glib-2.0)
 
 ifeq ($(strip $(V)),)
 	E = @echo
