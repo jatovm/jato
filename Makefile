@@ -11,17 +11,17 @@ ARCH		:= $(shell uname -m | sed -e s/i.86/i386/)
 OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
 
 ifeq ($(ARCH),i386)
-ARCH		= x86
+override ARCH	= x86
 ARCH_POSTFIX	= _32
 endif
 
 ifeq ($(ARCH),x86_64)
-ARCH		= x86
+override ARCH	= x86
 ARCH_POSTFIX	= _64
 endif
 
 ifeq ($(ARCH),ppc)
-ARCH		= ppc
+override ARCH	= ppc
 ARCH_POSTFIX	= _32
 endif
 
