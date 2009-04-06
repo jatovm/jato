@@ -197,6 +197,18 @@ struct insn *memindex_reg_insn(enum insn_type insn_type,
 }
 
 struct insn *
+reg_membase_insn(enum insn_type insn_type, struct var_info *src_reg,
+		 struct var_info *dest_base_reg, long dest_disp)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_reg_operand(insn, 0, src_reg);
+		init_membase_operand(insn, 1, dest_base_reg, dest_disp);
+	}
+	return insn;
+}
+
+struct insn *
 reg_memlocal_insn(enum insn_type insn_type, struct var_info *src_reg,
 		  struct stack_slot *dest_slot)
 {

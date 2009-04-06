@@ -776,30 +776,31 @@ stmt:	STMT_EXPRESSION(reg)
 {
 }
 
-stmt:	STMT_STORE(EXPR_CLASS_FIELD, EXPR_VALUE)
+stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 {
 	struct expression *store_dest;
 	struct expression *store_src;
 	unsigned long field_offset;
-	unsigned long long field_value;
 	struct var_info *offset;
 	struct statement *stmt;
+	struct var_info *src;
 
 	stmt = to_stmt(tree);
 	store_dest = to_expr(stmt->store_dest);
 	store_src  = to_expr(stmt->store_src);
 
 	field_offset = offsetof(struct fieldblock, static_value);
-	field_value  = store_src->value;
+	src = state->right->reg1;
 
 	offset = get_var(s->b_parent);
 
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) store_dest->class_field, offset));
-	bb_add_insn(s, imm_membase_insn(INSN_MOV_IMM_MEMBASE, field_value & ~0UL, offset, field_offset));
+	bb_add_insn(s, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, offset, field_offset));
 
 	if (store_src->vm_type == J_LONG) {
+		src = state->right->reg2;
 		bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, 4, offset));
-		bb_add_insn(s, imm_membase_insn(INSN_MOV_IMM_MEMBASE, field_value >> 32, offset, field_offset));
+		bb_add_insn(s, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, offset, field_offset));
 	}
 }
 

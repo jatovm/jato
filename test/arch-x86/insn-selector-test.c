@@ -127,18 +127,6 @@ static void assert_imm_reg_insn(enum insn_type insn_type,
 	assert_int_equals(expected_reg, mach_reg(&insn->dest.reg));
 }
 
-static void assert_imm_membase_insn(enum insn_type insn_type,
-				    unsigned long expected_imm,
-				    enum machine_reg expected_base_reg,
-				    long expected_disp,
-				    struct insn *insn)
-{
-	assert_int_equals(insn_type, insn->type);
-	assert_int_equals(expected_imm, insn->src.imm);
-	assert_int_equals(expected_base_reg, mach_reg(&insn->dest.base_reg));
-	assert_int_equals(expected_disp, insn->dest.disp);
-}
-
 static void assert_rel_insn(enum insn_type insn_type,
 			    unsigned long expected_imm, struct insn *insn)
 {
@@ -922,46 +910,6 @@ void test_select_load_instance_field(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg3 = mach_reg(&insn->dest.reg);
 	assert_memindex_reg_insn(INSN_MOV_MEMINDEX_REG, dreg, dreg2, 2, dreg3, insn);
-
-	free_compilation_unit(cu);
-}
-
-void test_store_value_to_class_field(void)
-{
-	struct expression *store_target;
-	struct expression *store_value;
-	struct compilation_unit *cu;
-	struct fieldblock field;
-	struct basic_block *bb;
-	struct statement *stmt;
-	long expected_disp;
-	struct insn *insn;
-	enum machine_reg dreg;
-
-	cu = alloc_compilation_unit(&method);
-	bb = get_basic_block(cu, 0, 1);
-	store_target = class_field_expr(J_LONG, &field);
-	store_value  = value_expr(J_LONG, 0xdeadbeefcafebabe);
-	stmt = alloc_statement(STMT_STORE);
-	stmt->store_dest = &store_target->node;
-	stmt->store_src  = &store_value->node;
-	bb_add_stmt(bb, stmt);
-
-	select_instructions(bb->b_parent);
-
-	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	dreg = mach_reg(&insn->dest.reg);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &field, dreg, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	expected_disp = offsetof(struct fieldblock, static_value);
-	assert_imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0xcafebabe, dreg, expected_disp, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, dreg, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0xdeadbeef, dreg, expected_disp, insn);
 
 	free_compilation_unit(cu);
 }

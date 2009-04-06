@@ -23,8 +23,9 @@ public class ObjectCreationAndManipulationTest extends TestCase {
     }
 
     public static void testClassFieldAccess() {
+        int i = 1;
         assertEquals(0, ClassFields.field);
-        ClassFields.field = 1;
+        ClassFields.field = i;
         assertEquals(1, ClassFields.field);
     }
 
