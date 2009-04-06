@@ -194,7 +194,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jamvm/ControlTransferTest.class \
 	regression/jamvm/SynchronizationTest.class \
 	regression/jamvm/MethodInvocationAndReturnTest.class \
-	regression/jamvm/ConversionTest.class
+	regression/jamvm/ConversionTest.class \
+	regression/jvm/putstatic.class
 
 lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)

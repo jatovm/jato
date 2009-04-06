@@ -22,13 +22,6 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         assertEquals(1, obj.value);
     }
 
-    public static void testClassFieldAccess() {
-        int i = 1;
-        assertEquals(0, ClassFields.field);
-        ClassFields.field = i;
-        assertEquals(1, ClassFields.field);
-    }
-
     public static void testInstanceFieldAccess() {
         InstanceFields fields = new InstanceFields();
         assertEquals(0, fields.field);
@@ -128,7 +121,6 @@ public class ObjectCreationAndManipulationTest extends TestCase {
     public static void main(String[] args) {
         testNewObject();
         testObjectInitialization();
-        testClassFieldAccess();
         testInstanceFieldAccess();
         testNewArray();
         testANewArray();
