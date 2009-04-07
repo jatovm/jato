@@ -27,7 +27,7 @@ package jvm;
 
 import jamvm.TestCase;
 
-public class putstatic extends TestCase {
+public class PutstaticTest extends TestCase {
   static class I {
     static int x, y;
     int z;
