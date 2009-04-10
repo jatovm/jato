@@ -46,10 +46,13 @@ OBJS = \
 	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \
 	../../arch/x86/stack-frame.o \
 	../../arch/x86/use-def.o \
-	emit-code-test.o \
-	insn-selector-test.o \
-	stack-frame-test.o \
-	use-def-test.o
+	$(TESTS)
+
+TESTS = \
+	emit-code-test$(ARCH_POSTFIX).o \
+	insn-selector-test$(ARCH_POSTFIX).o \
+	stack-frame-test$(ARCH_POSTFIX).o \
+	use-def-test$(ARCH_POSTFIX).o
 
 ../../arch/x86/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
