@@ -27,6 +27,7 @@ bool opt_trace_tree_ir;
 bool opt_trace_liveness;
 bool opt_trace_regalloc;
 bool opt_trace_machine_code;
+bool opt_trace_magic_trampoline;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -158,4 +159,14 @@ void trace_machine_code(struct compilation_unit *cu)
 
 	disassemble(start, end);
 	printf("\n");
+}
+
+void trace_magic_trampoline(struct compilation_unit *cu)
+{
+	printf("jit_magic_trampoline: ret0=%p, ret1=%p: %s.%s #%d\n",
+	       __builtin_return_address(1),
+	       __builtin_return_address(2),
+	       CLASS_CB(cu->method->class)->name,
+	       cu->method->name,
+	       cu->method->method_table_index);
 }

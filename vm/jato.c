@@ -233,6 +233,10 @@ int parseCommandLine(int argc, char *argv[], InitArgs *args) {
             opt_trace_liveness = true;
             opt_trace_regalloc = true;
             opt_trace_machine_code = true;
+            opt_trace_magic_trampoline = true;
+
+        } else if (strcmp(argv[i], "-Xtrace:trampoline") == 0) {
+            opt_trace_magic_trampoline = true;
 
         } else if(strcmp(argv[i], "-Xtrace:asm") == 0) {
             opt_trace_method = true;
@@ -348,7 +352,7 @@ int main(int argc, char *argv[]) {
             if (run_with_interpreter)
                 executeStaticMethod(main_class, mb, array);
 	    else {
-	        java_main_fn java_main = trampoline_ptr(mb);
+	        java_main_fn java_main = method_trampoline_ptr(mb);
 	        java_main();
 	    }
 	}

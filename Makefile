@@ -64,7 +64,8 @@ JIT_OBJS = \
 	jit/trampoline.o	\
 	jit/tree-printer.o	\
 	jit/typeconv-bc.o	\
-	jit/vtable.o
+	jit/vtable.o		\
+	jit/fixup-site.o
 
 VM_OBJS = \
 	vm/bitset.o		\
@@ -195,7 +196,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jamvm/SynchronizationTest.class \
 	regression/jamvm/MethodInvocationAndReturnTest.class \
 	regression/jamvm/ConversionTest.class \
-	regression/jvm/PutstaticTest.class
+	regression/jvm/PutstaticTest.class \
+	regression/jvm/TrampolineBackpatchingTest.class \
 
 lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)

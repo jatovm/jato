@@ -361,10 +361,21 @@ reg:	EXPR_INVOKE(arg) 1
 	struct expression *expr;
 	struct var_info *var;
 	void *target;
+	struct insn *call_insn;
+	bool is_compiled;
 
 	expr   = to_expr(tree);
 	method = expr->target_method;
-	target = trampoline_ptr(method);
+
+	pthread_mutex_lock(&method->compilation_unit->mutex);
+	is_compiled = method->compilation_unit->is_compiled;
+
+	if (is_compiled)
+		target = method_native_ptr(method);
+	else
+		target = method_trampoline_ptr(method);
+
+	pthread_mutex_unlock(&method->compilation_unit->mutex);
 
 	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
@@ -374,7 +385,18 @@ reg:	EXPR_INVOKE(arg) 1
 		state->reg2 = var;
 	}
 
-	bb_add_insn(s, rel_insn(INSN_CALL_REL, (unsigned long) target));
+	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
+	bb_add_insn(s, call_insn);
+
+	if (!is_compiled) {
+		struct fixup_site *fixup;
+
+		fixup = alloc_fixup_site();
+		fixup->cu = s->b_parent;
+		fixup->relcall_insn = call_insn;
+
+		trampoline_add_fixup_site(method->trampoline, fixup);
+	}
 
 	if (method->args_count)
 		method_args_cleanup(s, method->args_count);

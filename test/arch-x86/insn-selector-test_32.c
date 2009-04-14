@@ -535,7 +535,7 @@ void test_select_invoke_without_arguments(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -575,7 +575,7 @@ void test_select_invoke_with_arguments(void)
 	assert_imm_insn(INSN_PUSH_IMM, 0x01, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
@@ -621,13 +621,13 @@ void test_select_method_return_value_passed_as_argument(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&nested_mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&nested_mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(INSN_PUSH_REG, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);

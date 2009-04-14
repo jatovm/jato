@@ -6,12 +6,25 @@
 #include <vm/buffer.h>
 #include <vm/stack.h>
 #include <vm/vm.h>
+#include <pthread.h>
 
 struct buffer;
 struct compilation_unit;
 
+struct fixup_site {
+	/* Compilation unit to which relcall_insn belongs */
+	struct compilation_unit *cu;
+	/* We need this, because we don't have native pointer at
+	   instruction selection */
+	struct insn *relcall_insn;
+	struct list_head fixup_list_node;
+};
+
 struct jit_trampoline {
 	struct buffer *objcode;
+	struct list_head fixup_site_list;
+	/* This mutex is protecting operations on fixup_site_list */
+	pthread_mutex_t mutex;
 };
 
 struct parse_context {
@@ -41,7 +54,17 @@ void free_jit_trampoline(struct jit_trampoline *);
 
 int jit_prepare_method(struct methodblock *);
 
-static inline void *trampoline_ptr(struct methodblock *method)
+struct fixup_site *alloc_fixup_site(void);
+void free_fixup_site(struct fixup_site *);
+void trampoline_add_fixup_site(struct jit_trampoline *, struct fixup_site *);
+unsigned char *fixup_site_addr(struct fixup_site *);
+
+static inline void *method_native_ptr(struct methodblock *method)
+{
+	return buffer_ptr(method->compilation_unit->objcode);
+}
+
+static inline void *method_trampoline_ptr(struct methodblock *method)
 {
 	return buffer_ptr(method->trampoline->objcode);
 }
@@ -52,6 +75,7 @@ extern bool opt_trace_tree_ir;
 extern bool opt_trace_liveness;
 extern bool opt_trace_regalloc;
 extern bool opt_trace_machine_code;
+extern bool opt_trace_magic_trampoline;
 
 void trace_method(struct compilation_unit *);
 void trace_cfg(struct compilation_unit *);

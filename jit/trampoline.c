@@ -61,6 +61,9 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 	pthread_mutex_lock(&cu->mutex);
 
+	if (opt_trace_magic_trampoline)
+		trace_magic_trampoline(cu);
+
 	if (cu->method->access_flags & ACC_NATIVE)
 		ret = jit_native_trampoline(cu);
 	else
@@ -77,6 +80,6 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 	
 	trampoline = alloc_jit_trampoline();
 	if (trampoline)
-		emit_trampoline(cu, jit_magic_trampoline, trampoline->objcode);
+		emit_trampoline(cu, jit_magic_trampoline, trampoline);
 	return trampoline;
 }

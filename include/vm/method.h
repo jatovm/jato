@@ -12,4 +12,9 @@ static inline enum vm_type method_return_type(struct methodblock *method)
 	return str_to_type(return_type);
 }
 
+static inline bool method_is_constructor(struct methodblock *method)
+{
+	return strcmp(method->name,"<init>") == 0;
+}
+
 #endif

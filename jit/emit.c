@@ -61,6 +61,9 @@ struct jit_trampoline *alloc_jit_trampoline(void)
 	if (!trampoline->objcode)
 		goto failed;
 
+	INIT_LIST_HEAD(&trampoline->fixup_site_list);
+	pthread_mutex_init(&trampoline->mutex, NULL);
+
 	return trampoline;
 
   failed:

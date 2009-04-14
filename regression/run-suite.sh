@@ -61,6 +61,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jamvm.MethodInvocationAndReturnTest 0
     run_java jamvm.ControlTransferTest 0
     run_java jvm.PutstaticTest 0
+    run_java jvm.TrampolineBackpatchingTest 0
 else 
     for i in $CLASS_LIST; do
 	run_java $i 0

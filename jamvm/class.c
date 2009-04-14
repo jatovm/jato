@@ -984,7 +984,7 @@ void linkClass(Class *class) {
        vtable_init(&cb->vtable, method_table_size);
        for (i = 0; i < method_table_size; i++) {
            mb = method_table[i];
-           vtable_setup_method(&cb->vtable, mb->method_table_index, trampoline_ptr(mb));
+           vtable_setup_method(&cb->vtable, mb->method_table_index, method_trampoline_ptr(mb));
        }
    }
 
