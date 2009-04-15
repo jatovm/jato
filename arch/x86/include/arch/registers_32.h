@@ -22,9 +22,4 @@ enum machine_reg {
 
 const char *reg_name(enum machine_reg reg);
 
-static inline bool is_caller_saved_reg(enum machine_reg reg)
-{
-	return reg == REG_EAX || reg == REG_ECX || reg == REG_EDX;
-}
-
 #endif /* __X86_REGISTERS_32_H */

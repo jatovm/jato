@@ -221,3 +221,8 @@ void test_branch_does_not_define_or_use_anything(void)
 	assert_does_not_define_or_use_anything(branch_insn(INSN_JMP_BRANCH, &bb));
 	assert_does_not_define_or_use_anything(branch_insn(INSN_JNE_BRANCH, &bb));
 }
+
+void test_mul_defines_eax_edx(void)
+{
+	assert_def_fixed_mask(1, 0, 1, reg_reg_insn(INSN_MUL_REG_EAX, &r2, &r2));
+}

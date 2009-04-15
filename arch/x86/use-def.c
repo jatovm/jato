@@ -11,13 +11,15 @@ enum {
 	DEF_DST		= 1,
 	DEF_SRC		= 2,
 	DEF_NONE	= 4,
-	DEF_CALLER_SAVED_REGS = 8,
-	USE_DST		= 16,
-	USE_IDX_DST	= 32,	/* destination operand is memindex */
-	USE_IDX_SRC	= 64,	/* source operand is memindex */
-	USE_NONE	= 128,
-	USE_SRC		= 256,
-	USE_FP		= 512,	/* frame pointer */
+	DEF_EAX		= 8,
+	DEF_ECX		= 16,
+	DEF_EDX		= 32,
+	USE_DST		= 64,
+	USE_IDX_DST	= 128,	/* destination operand is memindex */
+	USE_IDX_SRC	= 256,	/* source operand is memindex */
+	USE_NONE	= 512,
+	USE_SRC		= 1024,
+	USE_FP		= 2048,	/* frame pointer */
 };
 
 struct insn_info {
@@ -34,8 +36,8 @@ static struct insn_info insn_infos[] = {
 	DECLARE_INFO(INSN_ADD_MEMBASE_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_ADD_REG_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_AND_MEMBASE_REG, USE_SRC | DEF_DST),
-	DECLARE_INFO(INSN_CALL_REG, USE_SRC | DEF_CALLER_SAVED_REGS),
-	DECLARE_INFO(INSN_CALL_REL, USE_NONE | DEF_CALLER_SAVED_REGS),
+	DECLARE_INFO(INSN_CALL_REG, USE_SRC | DEF_EAX | DEF_ECX | DEF_EDX),
+	DECLARE_INFO(INSN_CALL_REL, USE_NONE | DEF_EAX | DEF_ECX | DEF_EDX),
 	DECLARE_INFO(INSN_CLTD_REG_REG, USE_SRC | DEF_SRC | DEF_DST),
 	DECLARE_INFO(INSN_CMP_IMM_REG, USE_DST),
 	DECLARE_INFO(INSN_CMP_MEMBASE_REG, USE_SRC | DEF_DST),
@@ -55,9 +57,9 @@ static struct insn_info insn_infos[] = {
 	DECLARE_INFO(INSN_MOV_REG_MEMINDEX, USE_SRC | USE_DST | USE_IDX_DST | DEF_NONE),
 	DECLARE_INFO(INSN_MOV_REG_MEMLOCAL, USE_SRC),
 	DECLARE_INFO(INSN_MOV_REG_REG, USE_SRC | DEF_DST),
-	DECLARE_INFO(INSN_MUL_MEMBASE_EAX, USE_SRC | DEF_DST),
-	DECLARE_INFO(INSN_MUL_REG_EAX, USE_SRC | DEF_DST),
-	DECLARE_INFO(INSN_MUL_REG_REG, USE_SRC | DEF_DST), //FIXME: defines EDX as well.
+	DECLARE_INFO(INSN_MUL_MEMBASE_EAX, USE_SRC | DEF_DST | DEF_EDX | DEF_EAX),
+	DECLARE_INFO(INSN_MUL_REG_EAX, USE_SRC | DEF_DST | DEF_EDX | DEF_EAX),
+	DECLARE_INFO(INSN_MUL_REG_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_NEG_REG, USE_SRC | DEF_SRC),
 	DECLARE_INFO(INSN_OR_MEMBASE_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_OR_REG_REG, USE_SRC | DEF_DST),
@@ -82,13 +84,10 @@ bool insn_defs(struct insn *insn, struct var_info *var)
 {
 	struct insn_info *info;
 	unsigned long vreg;
+	unsigned int i;
 
 	info = get_info(insn);
 	vreg = var->vreg;
-
-	if (info->flags & DEF_CALLER_SAVED_REGS)
-		if (is_caller_saved_reg(var->interval->reg))
-			return true;
 
 	if (info->flags & DEF_SRC) {
 		if (is_vreg(&insn->src.reg, vreg))
@@ -97,6 +96,21 @@ bool insn_defs(struct insn *insn, struct var_info *var)
 
 	if (info->flags & DEF_DST) {
 		if (is_vreg(&insn->dest.reg, vreg))
+			return true;
+	}
+
+	struct {
+		enum machine_reg reg;
+		int enumval;
+	} checkregs[] = {
+			{ REG_EAX, DEF_EAX },
+			{ REG_ECX, DEF_ECX },
+			{ REG_EDX, DEF_EDX },
+	};
+
+	for (i = 0; i < sizeof(checkregs)/sizeof(checkregs[0]); i++) {
+		if (info->flags & checkregs[i].enumval &&
+				var->interval->reg == checkregs[i].reg)
 			return true;
 	}
 
