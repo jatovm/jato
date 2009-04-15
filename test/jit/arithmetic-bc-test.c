@@ -79,7 +79,7 @@ void test_convert_sub(void)
 void test_convert_mul(void)
 {
 	assert_convert_binop(J_INT, OP_MUL, OPC_IMUL);
-	assert_convert_binop(J_LONG, OP_MUL, OPC_LMUL);
+	assert_convert_binop(J_LONG, OP_MUL_64, OPC_LMUL);
 	assert_convert_binop(J_FLOAT, OP_MUL, OPC_FMUL);
 	assert_convert_binop(J_DOUBLE, OP_MUL, OPC_DMUL);
 }

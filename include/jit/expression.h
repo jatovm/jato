@@ -38,6 +38,7 @@ enum binary_operator {
 	OP_ADD = EXPR_LAST,
 	OP_SUB,
 	OP_MUL,
+	OP_MUL_64,
 	OP_DIV,
 	OP_DIV_64,
 	OP_REM,

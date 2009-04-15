@@ -81,7 +81,7 @@ int convert_imul(struct parse_context *ctx)
 
 int convert_lmul(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_LONG, OP_MUL);
+	return convert_binop(ctx, J_LONG, OP_MUL_64);
 }
 
 int convert_fmul(struct parse_context *ctx)
