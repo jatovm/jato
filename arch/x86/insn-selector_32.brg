@@ -357,25 +357,27 @@ reg:	OP_XOR(reg, EXPR_LOCAL) 1
 
 reg:	EXPR_INVOKE(arg) 1
 {
+	struct compilation_unit *cu;
 	struct methodblock *method;
 	struct expression *expr;
-	struct var_info *var;
-	void *target;
 	struct insn *call_insn;
+	struct var_info *var;
 	bool is_compiled;
+	void *target;
 
-	expr   = to_expr(tree);
-	method = expr->target_method;
+	expr	= to_expr(tree);
+	method	= expr->target_method;
+	cu	= method->compilation_unit;
 
-	pthread_mutex_lock(&method->compilation_unit->mutex);
-	is_compiled = method->compilation_unit->is_compiled;
+	pthread_mutex_lock(&cu->mutex);
+	is_compiled = cu->is_compiled;
 
 	if (is_compiled)
 		target = method_native_ptr(method);
 	else
 		target = method_trampoline_ptr(method);
 
-	pthread_mutex_unlock(&method->compilation_unit->mutex);
+	pthread_mutex_unlock(&cu->mutex);
 
 	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
