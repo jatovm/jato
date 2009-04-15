@@ -229,8 +229,8 @@ public class LongArithmeticTest extends TestCase {
         testLongAdditionOverflow();
         testLongSubtraction();
         testLongSubtractionOverflow();
-        /*testLongMultiplication();
-        testLongMultiplicationOverflow();*/
+        testLongMultiplication();
+        testLongMultiplicationOverflow();
         testLongDivision();
         testLongRemainder();
         testLongNegation();

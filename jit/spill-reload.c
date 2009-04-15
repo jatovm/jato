@@ -40,17 +40,24 @@ static struct insn *last_insn(struct live_interval *interval)
 	return ret;
 }
 
-static int insert_spill_insn(struct live_interval *interval, struct stack_frame *frame)
+static int insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
 	struct insn *last = last_insn(interval);
 	struct stack_slot *slot;
+	struct var_info *reg;
 	struct insn *spill;
 
-	slot = get_spill_slot_32(frame);
+	/*
+	 * We've already done register allocation, so use fixed registers for
+	 * spilling and reloading.
+	 */
+	reg = get_fixed_var(cu, interval->reg);
+
+	slot = get_spill_slot_32(cu->stack_frame);
 	if (!slot)
 		return -ENOMEM;
 
-	spill = spill_insn(interval->var_info, slot);
+	spill = spill_insn(reg, slot);
 	if (!spill)
 		return -ENOMEM;
 
@@ -71,12 +78,14 @@ static struct insn *first_insn(struct live_interval *interval)
 	return ret;
 }
 
-static int insert_reload_insn(struct live_interval *interval, struct stack_frame *frame)
+static int insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
 	struct insn *first = first_insn(interval);
 	struct insn *reload;
+	struct var_info *reg;
 
-	reload = reload_insn(interval->spill_parent->spill_slot, interval->var_info);
+	reg = get_fixed_var(cu, interval->reg);
+	reload = reload_insn(interval->spill_parent->spill_slot, reg);
 	if (!reload)
 		return -ENOMEM;
 
@@ -85,7 +94,7 @@ static int insert_reload_insn(struct live_interval *interval, struct stack_frame
 	return 0;
 }
 
-static int __insert_spill_reload_insn(struct live_interval *interval, struct stack_frame *frame)
+static int __insert_spill_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
 	int err = 0;
 
@@ -93,13 +102,13 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct sta
 		goto out;
 
 	if (interval->need_reload) {
-		err = insert_reload_insn(interval, frame);
+		err = insert_reload_insn(interval, cu);
 		if (err)
 			goto out;
 	}
 
 	if (interval->need_spill) {
-		err = insert_spill_insn(interval, frame);
+		err = insert_spill_insn(interval, cu);
 		if (err)
 			goto out;
 	}
@@ -116,7 +125,7 @@ int insert_spill_reload_insns(struct compilation_unit *cu)
 		struct live_interval *interval;
 
 		for (interval = var->interval; interval != NULL; interval = interval->next_child) {
-			err = __insert_spill_reload_insn(interval, cu->stack_frame);
+			err = __insert_spill_reload_insn(interval, cu);
 			if (err)
 				break;
 		}

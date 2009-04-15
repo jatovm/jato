@@ -31,17 +31,17 @@
 
 struct methodblock method;
 
-static void assert_st_insn(enum insn_type type, struct stack_slot *slot, struct var_info *var, struct insn *insn)
+static void assert_st_insn(enum insn_type type, struct stack_slot *slot, enum machine_reg reg, struct insn *insn)
 {
 	assert_int_equals(type, insn->type);
-	assert_ptr_equals(var, mach_reg_var(&insn->x.reg));
+	assert_int_equals(reg, mach_reg(&insn->x.reg));
 	assert_ptr_equals(slot, insn->y.slot); 
 }
 
-static void assert_ld_insn(enum insn_type type, struct var_info *var, struct stack_slot *slot, struct insn *insn)
+static void assert_ld_insn(enum insn_type type, enum machine_reg reg, struct stack_slot *slot, struct insn *insn)
 {
 	assert_int_equals(type, insn->type);
-	assert_ptr_equals(var, mach_reg_var(&insn->x.reg));
+	assert_int_equals(reg, mach_reg(&insn->x.reg));
 	assert_ptr_equals(slot, insn->y.slot); 
 }
 
@@ -87,7 +87,7 @@ void test_spill_insn_is_inserted_at_the_end_of_the_interval_if_necessary(void)
 	 * A spill instruction is inserted after the interval end.
 	 */ 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_st_insn(INSN_ST_LOCAL, r1->interval->spill_slot, r1, insn);
+	assert_st_insn(INSN_ST_LOCAL, r1->interval->spill_slot, r1->interval->reg, insn);
 
 	free_compilation_unit(cu);
 }
@@ -128,7 +128,7 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
 	 * A reload instruction is inserted before the interval end.
 	 */ 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_ld_insn(INSN_LD_LOCAL, r2, r1->interval->spill_slot, insn);
+	assert_ld_insn(INSN_LD_LOCAL, r2->interval->reg, r1->interval->spill_slot, insn);
 
 	/*
 	 * Last instruction stays the same. 
