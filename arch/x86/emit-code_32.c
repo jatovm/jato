@@ -147,11 +147,11 @@ static void emit_imm(struct buffer *buf, long imm)
 
 static void
 __emit_reg_reg(struct buffer *buf, unsigned char opc,
-	       enum machine_reg src_reg, enum machine_reg dst_reg)
+	       enum machine_reg direct_reg, enum machine_reg rm_reg)
 {
 	unsigned char mod_rm;
 
-	mod_rm = encode_modrm(0x03, __encode_reg(src_reg), __encode_reg(dst_reg));
+	mod_rm = encode_modrm(0x03, __encode_reg(direct_reg), __encode_reg(rm_reg));
 
 	emit(buf, opc);
 	emit(buf, mod_rm);
@@ -159,14 +159,14 @@ __emit_reg_reg(struct buffer *buf, unsigned char opc,
 
 static void
 emit_reg_reg(struct buffer *buf, unsigned char opc,	
-	     struct operand *src, struct operand *dst)
+	     struct operand *direct, struct operand *rm)
 {
-	enum machine_reg src_reg, dst_reg;
+	enum machine_reg direct_reg, rm_reg;
 
-	src_reg = mach_reg(&src->reg);
-	dst_reg = mach_reg(&dst->reg);
+	direct_reg = mach_reg(&direct->reg);
+	rm_reg = mach_reg(&rm->reg);
 
-	__emit_reg_reg(buf, opc, src_reg, dst_reg);
+	__emit_reg_reg(buf, opc, direct_reg, rm_reg);
 }
 
 static void 
@@ -439,7 +439,7 @@ void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 static void emit_adc_reg_reg(struct buffer *buf,
                              struct operand *src, struct operand *dest)
 {
-	emit_reg_reg(buf, 0x13, src, dest);
+	emit_reg_reg(buf, 0x13, dest, src);
 }
 
 static void emit_adc_membase_reg(struct buffer *buf,
@@ -451,7 +451,7 @@ static void emit_adc_membase_reg(struct buffer *buf,
 static void emit_add_reg_reg(struct buffer *buf,
 			     struct operand *src, struct operand *dest)
 {
-	emit_reg_reg(buf, 0x03, src, dest);
+	emit_reg_reg(buf, 0x03, dest, src);
 }
 
 static void emit_add_membase_reg(struct buffer *buf,
@@ -571,7 +571,7 @@ static void emit_or_membase_reg(struct buffer *buf,
 static void emit_or_reg_reg(struct buffer *buf, struct operand *src,
 			    struct operand *dest)
 {
-	emit_reg_reg(buf, 0x0b, src, dest);
+	emit_reg_reg(buf, 0x0b, dest, src);
 }
 
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)

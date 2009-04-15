@@ -314,7 +314,7 @@ void test_emit_adc_imm(void)
 
 void test_emit_adc_reg_reg(void)
 {
-	assert_emit_insn_2(0x13, 0xd8, reg_reg_insn(INSN_ADC_REG_REG, &VAR_EBX, &VAR_EAX));
+	assert_emit_insn_2(0x13, 0xc3, reg_reg_insn(INSN_ADC_REG_REG, &VAR_EBX, &VAR_EAX));
 }
 
 void test_emit_add_disp_reg(void)
@@ -332,7 +332,7 @@ void test_emit_add_imm(void)
 
 void test_emit_add_reg_reg(void)
 {
-	assert_emit_insn_2(0x03, 0xd8, reg_reg_insn(INSN_ADD_REG_REG, &VAR_EBX, &VAR_EAX));
+	assert_emit_insn_2(0x03, 0xc3, reg_reg_insn(INSN_ADD_REG_REG, &VAR_EBX, &VAR_EAX));
 }
 
 void test_emit_sub_membase_reg(void)
@@ -400,8 +400,8 @@ void test_emit_or_membase_reg(void)
 
 void test_emit_or_reg_reg(void)
 {
-	assert_emit_insn_2(0x0b, 0xc8, reg_reg_insn(INSN_OR_REG_REG, &VAR_ECX, &VAR_EAX));
-	assert_emit_insn_2(0x0b, 0xcb, reg_reg_insn(INSN_OR_REG_REG, &VAR_ECX, &VAR_EBX));
+	assert_emit_insn_2(0x0b, 0xc1, reg_reg_insn(INSN_OR_REG_REG, &VAR_ECX, &VAR_EAX));
+	assert_emit_insn_2(0x0b, 0xd9, reg_reg_insn(INSN_OR_REG_REG, &VAR_ECX, &VAR_EBX));
 }
 
 void test_emit_and_membase_reg(void)
