@@ -52,6 +52,8 @@ public class LongArithmeticTest extends TestCase {
         assertEquals( 0, mul( 0,  1));
         assertEquals( 0, mul( 1,  0));
         assertEquals( 6, mul( 2,  3));
+        assertEquals(-0x200000000L, mul( 0x100000000L, -2L));
+        assertEquals(-0x400000000L, mul(-0x200000000L,  2L));
     }
 
     public static void testLongMultiplicationOverflow() {
@@ -227,8 +229,8 @@ public class LongArithmeticTest extends TestCase {
         testLongAdditionOverflow();
         testLongSubtraction();
         testLongSubtractionOverflow();
-        /*testLongMultiplication();
-        testLongMultiplicationOverflow();*/
+        testLongMultiplication();
+        testLongMultiplicationOverflow();
         testLongDivision();
         testLongRemainder();
         testLongNegation();
