@@ -292,7 +292,7 @@ void test_select_local_local_mul(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg, REG_EAX, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_membase_reg_insn(INSN_MUL_MEMBASE_REG, REG_EBP, 24, REG_EAX, insn);
+	assert_membase_reg_insn(INSN_MUL_MEMBASE_EAX, REG_EBP, 24, REG_EAX, insn);
 
 	free_compilation_unit(bb->b_parent);
 }

@@ -238,7 +238,7 @@ reg:	OP_MUL(reg, EXPR_LOCAL) 1
 	state->reg1 = eax;
 
 	bb_add_insn(s, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
-	__binop_reg_local(state, s, tree, INSN_MUL_MEMBASE_REG, eax, 0);
+	__binop_reg_local(state, s, tree, INSN_MUL_MEMBASE_EAX, eax, 0);
 }
 
 reg:	OP_DIV(reg, EXPR_LOCAL) 1

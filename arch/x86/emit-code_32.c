@@ -478,7 +478,7 @@ static void emit_sub_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x2b, src, dest);
 }
 
-static void __emit_div_mul_membase_reg(struct buffer *buf,
+static void __emit_div_mul_membase_eax(struct buffer *buf,
 				       struct operand *src,
 				       struct operand *dest,
 				       unsigned char opc_ext)
@@ -500,10 +500,34 @@ static void __emit_div_mul_membase_reg(struct buffer *buf,
 	emit_imm(buf, disp);
 }
 
-static void emit_mul_membase_reg(struct buffer *buf,
+static void __emit_div_mul_reg_eax(struct buffer *buf,
+				       struct operand *src,
+				       struct operand *dest,
+				       unsigned char opc_ext)
+{
+	assert(mach_reg(&dest->reg) == REG_EAX);
+
+	emit(buf, 0xf7);
+	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(&src->base_reg)));
+}
+
+static void emit_mul_membase_eax(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
-	__emit_div_mul_membase_reg(buf, src, dest, 0x04);
+	__emit_div_mul_membase_eax(buf, src, dest, 0x04);
+}
+
+static void emit_mul_reg_eax(struct buffer *buf, 
+			     struct operand *src, struct operand *dest)
+{
+    	__emit_div_mul_reg_eax(buf, src, dest, 0x04);
+}
+
+static void emit_mul_reg_reg(struct buffer *buf,
+			     struct operand *src, struct operand *dest)
+{
+    	emit(buf, 0x0f);
+	__emit_reg_reg(buf, 0xaf, mach_reg(&dest->reg), mach_reg(&src->reg));
 }
 
 static void emit_neg_reg(struct buffer *buf, struct operand *operand)
@@ -523,7 +547,7 @@ static void emit_cltd_reg_reg(struct buffer *buf, struct operand *src, struct op
 static void emit_div_membase_reg(struct buffer *buf, struct operand *src,
 				 struct operand *dest)
 {
-	__emit_div_mul_membase_reg(buf, src, dest, 0x07);
+	__emit_div_mul_membase_eax(buf, src, dest, 0x07);
 }
 
 static void __emit_shift_reg_reg(struct buffer *buf,
@@ -769,7 +793,9 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
-	DECL_EMITTER(INSN_MUL_MEMBASE_REG, emit_mul_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MUL_MEMBASE_EAX, emit_mul_membase_eax, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),

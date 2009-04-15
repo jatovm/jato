@@ -347,8 +347,8 @@ void test_emit_sbb_membase_reg(void)
 
 void test_emit_mul_membase_reg(void)
 {
-	assert_emit_insn_3(0xf7, 0x65, 0x0c, membase_reg_insn(INSN_MUL_MEMBASE_REG, &VAR_EBP, 0x0c, &VAR_EAX));
-	assert_emit_insn_6(0xf7, 0xa5, 0xef, 0xbe, 0xad, 0xde, membase_reg_insn(INSN_MUL_MEMBASE_REG, &VAR_EBP, 0xdeadbeef, &VAR_EAX));
+	assert_emit_insn_3(0xf7, 0x65, 0x0c, membase_reg_insn(INSN_MUL_MEMBASE_EAX, &VAR_EBP, 0x0c, &VAR_EAX));
+	assert_emit_insn_6(0xf7, 0xa5, 0xef, 0xbe, 0xad, 0xde, membase_reg_insn(INSN_MUL_MEMBASE_EAX, &VAR_EBP, 0xdeadbeef, &VAR_EAX));
 }
 
 void test_emit_cltd(void)
