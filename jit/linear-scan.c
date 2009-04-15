@@ -309,7 +309,7 @@ int allocate_registers(struct compilation_unit *cu)
 	struct list_head unhandled = LIST_HEAD_INIT(unhandled);
 	struct list_head inactive = LIST_HEAD_INIT(inactive);
 	struct list_head active = LIST_HEAD_INIT(active);
-	struct live_interval *tmp, *current;
+	struct live_interval *current;
 	struct bitset *registers;
 	struct var_info *var;
 
@@ -334,10 +334,11 @@ int allocate_registers(struct compilation_unit *cu)
 			insert_to_list(var->interval, &unhandled);
 	}
 
-	list_for_each_entry_safe(current, tmp, &unhandled, interval_node) {
+	while (!list_is_empty(&unhandled)) {
 		struct live_interval *it, *prev;
 		unsigned long position;
 
+		current = list_first_entry(&unhandled, struct live_interval, interval_node);
 		list_del(&current->interval_node);
 		position = current->range.start;
 
