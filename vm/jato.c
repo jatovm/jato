@@ -230,6 +230,7 @@ int parseCommandLine(int argc, char *argv[], InitArgs *args) {
             opt_trace_method = true;
             opt_trace_cfg = true;
             opt_trace_tree_ir = true;
+            opt_trace_lir = true;
             opt_trace_liveness = true;
             opt_trace_regalloc = true;
             opt_trace_machine_code = true;

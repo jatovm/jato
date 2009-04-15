@@ -51,6 +51,9 @@ int compile(struct compilation_unit *cu)
 
 	compute_insn_positions(cu);
 
+	if (opt_trace_lir)
+		trace_lir(cu);
+
 	err = analyze_liveness(cu);
 	if (err)
 		goto out;

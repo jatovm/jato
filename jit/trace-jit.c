@@ -16,6 +16,8 @@
 #include <vm/string.h>
 #include <vm/vm.h>
 
+#include <arch/lir-printer.h>
+
 #include "disass.h"
 
 #include <stdbool.h>
@@ -24,6 +26,7 @@
 bool opt_trace_method;
 bool opt_trace_cfg;
 bool opt_trace_tree_ir;
+bool opt_trace_lir;
 bool opt_trace_liveness;
 bool opt_trace_regalloc;
 bool opt_trace_machine_code;
@@ -81,6 +84,27 @@ void trace_tree_ir(struct compilation_unit *cu)
 		}
 		printf("\n");
 	}
+}
+
+void trace_lir(struct compilation_unit *cu)
+{
+	unsigned long offset = 0;
+	struct basic_block *bb;
+	struct string *str;
+	struct insn *insn;
+
+	printf("LIR:\n\n");
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		for_each_insn(insn, &bb->insn_list) {
+			str = alloc_str();
+			lir_print(insn, str);
+			printf("%-2lu \t%s\n", offset++, str->value);
+			free_str(str);
+		}
+	}
+
+	printf("\n");
 }
 
 void trace_liveness(struct compilation_unit *cu)
