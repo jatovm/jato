@@ -77,6 +77,7 @@ extern bool opt_trace_regalloc;
 extern bool opt_trace_machine_code;
 extern bool opt_trace_magic_trampoline;
 
+void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);
 void trace_cfg(struct compilation_unit *);
 void trace_tree_ir(struct compilation_unit *);
