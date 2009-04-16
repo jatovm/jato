@@ -80,6 +80,18 @@ static inline struct insn_info *get_info(struct insn *insn)
 	return insn_infos + insn->type;
 }
 
+struct mach_reg_def {
+	enum machine_reg reg;
+	int def;
+};
+
+static struct mach_reg_def checkregs[] = {
+	{ REG_EAX, DEF_EAX },
+	{ REG_ECX, DEF_ECX },
+	{ REG_EDX, DEF_EDX },
+};
+
+
 bool insn_defs(struct insn *insn, struct var_info *var)
 {
 	struct insn_info *info;
@@ -99,17 +111,8 @@ bool insn_defs(struct insn *insn, struct var_info *var)
 			return true;
 	}
 
-	struct {
-		enum machine_reg reg;
-		int enumval;
-	} checkregs[] = {
-			{ REG_EAX, DEF_EAX },
-			{ REG_ECX, DEF_ECX },
-			{ REG_EDX, DEF_EDX },
-	};
-
-	for (i = 0; i < sizeof(checkregs)/sizeof(checkregs[0]); i++) {
-		if (info->flags & checkregs[i].enumval &&
+	for (i = 0; i < ARRAY_SIZE(checkregs); i++) {
+		if (info->flags & checkregs[i].def &&
 				var->interval->reg == checkregs[i].reg)
 			return true;
 	}
