@@ -176,7 +176,7 @@ int convert_ishl(struct parse_context *ctx)
 
 int convert_lshl(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_LONG, OP_SHL);
+	return convert_binop(ctx, J_LONG, OP_SHL_64);
 }
 
 int convert_ishr(struct parse_context *ctx)
@@ -186,7 +186,7 @@ int convert_ishr(struct parse_context *ctx)
 
 int convert_lshr(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_LONG, OP_SHR);
+	return convert_binop(ctx, J_LONG, OP_SHR_64);
 }
 
 int convert_iushr(struct parse_context *ctx)
@@ -196,7 +196,7 @@ int convert_iushr(struct parse_context *ctx)
 
 int convert_lushr(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_LONG, OP_USHR);
+	return convert_binop(ctx, J_LONG, OP_USHR_64);
 }
 
 int convert_iand(struct parse_context *ctx)

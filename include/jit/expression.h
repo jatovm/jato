@@ -45,8 +45,11 @@ enum binary_operator {
 	OP_REM_64,
 
 	OP_SHL,
+	OP_SHL_64,
 	OP_SHR,
+	OP_SHR_64,
 	OP_USHR,
+	OP_USHR_64,
 	OP_AND,
 	OP_OR,
 	OP_XOR,

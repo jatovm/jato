@@ -141,19 +141,19 @@ void test_convert_neg(void)
 void test_convert_shl(void)
 {
 	assert_convert_binop(J_INT, OP_SHL, OPC_ISHL);
-	assert_convert_binop(J_LONG, OP_SHL, OPC_LSHL);
+	assert_convert_binop(J_LONG, OP_SHL_64, OPC_LSHL);
 }
 
 void test_convert_shr(void)
 {
 	assert_convert_binop(J_INT, OP_SHR, OPC_ISHR);
-	assert_convert_binop(J_LONG, OP_SHR, OPC_LSHR);
+	assert_convert_binop(J_LONG, OP_SHR_64, OPC_LSHR);
 }
 
 void test_convert_ushr(void)
 {
 	assert_convert_binop(J_INT, OP_USHR, OPC_IUSHR);
-	assert_convert_binop(J_LONG, OP_USHR, OPC_LUSHR);
+	assert_convert_binop(J_LONG, OP_USHR_64, OPC_LUSHR);
 }
 
 void test_convert_and(void)

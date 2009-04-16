@@ -329,14 +329,29 @@ reg:	OP_SHL(reg, EXPR_LOCAL) 1
 	shift_reg_local(state, s, tree, INSN_SHL_REG_REG);
 }
 
+reg:	OP_SHL_64(reg, reg) 1
+{
+	assert(!"SHL_64 todo");
+}
+
 reg:	OP_SHR(reg, EXPR_LOCAL) 1
 {
 	shift_reg_local(state, s, tree, INSN_SAR_REG_REG);
 }
 
+reg:	OP_SHR_64(reg, reg) 1
+{
+	assert(!"SHR_64 todo");
+}
+
 reg:	OP_USHR(reg, EXPR_LOCAL) 1
 {
 	shift_reg_local(state, s, tree, INSN_SHR_REG_REG);
+}
+
+reg:	OP_USHR_64(reg, reg) 1
+{
+	assert(!"USHR_64 todo");
 }
 
 reg:	OP_OR(reg, EXPR_LOCAL) 1
