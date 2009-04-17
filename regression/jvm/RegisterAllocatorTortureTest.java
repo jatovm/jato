@@ -25,8 +25,6 @@
  */
 package jvm;
 
-import jamvm.TestCase;
-
 public class RegisterAllocatorTortureTest extends TestCase {
   public static int one() {
     return 1;

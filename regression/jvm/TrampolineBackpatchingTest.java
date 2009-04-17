@@ -6,8 +6,6 @@
  */
 package jvm;
 
-import jamvm.TestCase;
-
 /**
  * @author Tomasz Grabiec
  */

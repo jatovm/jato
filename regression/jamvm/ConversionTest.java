@@ -6,6 +6,8 @@
  */
 package jamvm;
 
+import jvm.TestCase;
+
 /**
  * @author Arthur Huillet
  */
