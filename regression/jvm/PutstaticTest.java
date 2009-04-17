@@ -25,75 +25,78 @@
  */
 package jvm;
 
+/**
+ * @author Pekka Enberg
+ */
 public class PutstaticTest extends TestCase {
-  static class I {
-    static int x, y;
-    int z;
-  };
+    static class I {
+        static int x, y;
+        int z;
+    };
 
-  public static void testPutStaticConstInt() {
-     I.x = 1;
-     assertEquals(1, I.x);
-  }
+    public static void testPutStaticConstInt() {
+        I.x = 1;
+        assertEquals(1, I.x);
+    }
 
-  public static void testPutStaticClassFieldInt() {
-     I.x = 1;
-     I.y = I.x;
-     assertEquals(I.x, I.y);
-  }
+    public static void testPutStaticClassFieldInt() {
+        I.x = 1;
+        I.y = I.x;
+        assertEquals(I.x, I.y);
+    }
 
-  public static void testPutStaticInstanceFieldInt() {
-     I i = new I();
-     i.z = 1;
-     I.x = i.z;
-     assertEquals(i.z, I.y);
-  }
+    public static void testPutStaticInstanceFieldInt() {
+        I i = new I();
+        i.z = 1;
+        I.x = i.z;
+        assertEquals(i.z, I.y);
+    }
 
-  public static void testPutStaticLocalInt() {
-     int i = 1;
-     I.x = i;
-     assertEquals(i, I.x); 
-  }
+    public static void testPutStaticLocalInt() {
+        int i = 1;
+        I.x = i;
+        assertEquals(i, I.x);
+    }
 
-  static class J {
-    static long x, y;
-    long z;
-  };
+    static class J {
+        static long x, y;
+        long z;
+    };
 
-  public static void testPutStaticConstLong() {
-     J.x = 1;
-     assertEquals(1, J.x);
-  }
+    public static void testPutStaticConstLong() {
+        J.x = 1;
+        assertEquals(1, J.x);
+    }
 
-  public static void testPutStaticClassFieldLong() {
-     J.x = 1;
-     J.y = J.x;
-     assertEquals(J.x, J.y);
-  }
+    public static void testPutStaticClassFieldLong() {
+        J.x = 1;
+        J.y = J.x;
+        assertEquals(J.x, J.y);
+    }
 
-  public static void testPutStaticInstanceFieldLong() {
-     J j = new J();
-     j.z = 1;
-     J.x = j.z;
-     assertEquals(j.z, J.y);
-  }
+    public static void testPutStaticInstanceFieldLong() {
+        J j = new J();
+        j.z = 1;
+        J.x = j.z;
+        assertEquals(j.z, J.y);
+    }
 
-  public static void testPutStaticLocalLong() {
-     long j = 1;
-     J.x = j;
-     assertEquals(j, J.x); 
-  }
+    public static void testPutStaticLocalLong() {
+        long j = 1;
+        J.x = j;
+        assertEquals(j, J.x);
+    }
 
-  public static void main(String[] args) {
-    testPutStaticConstInt();
-    testPutStaticClassFieldInt();
-    testPutStaticInstanceFieldInt();
-    testPutStaticLocalInt();
-//  testPutStaticConstLong();
-//  testPutStaticClassFieldLong();
-//  testPutStaticInstanceFieldLong();
-//  testPutStaticLocalLong();
+    public static void main(String[] args) {
+        testPutStaticConstInt();
+        testPutStaticClassFieldInt();
+        testPutStaticInstanceFieldInt();
+        testPutStaticLocalInt();
+        // testPutStaticConstLong();
+        // testPutStaticClassFieldLong();
+        // testPutStaticInstanceFieldLong();
+        // testPutStaticLocalLong();
 
-    Runtime.getRuntime().halt(retval);
-  }
+        Runtime.getRuntime().halt(retval);
+    }
 }
