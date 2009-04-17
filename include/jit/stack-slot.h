@@ -6,13 +6,14 @@ struct stack_frame;
 struct stack_slot {
 	struct stack_frame *parent;
 
+	/* Linked list of stack slots.  */
+	struct stack_slot *next;
+
 	/* In the class file, a 32-bit local variable occupies one index and a
 	   64-bit variable occupies two which gives us a natural mapping for
 	   stack slots.  */
 	unsigned long index;
 };
-
-#define MAX_SPILL_SLOT 32
 
 struct stack_frame {
 	/* Number of arguments in this stack frame.  */
@@ -32,7 +33,7 @@ struct stack_frame {
 	unsigned long nr_spill_slots;
 
 	/* Table of stack slots for spill/reload storage.  */
-	struct stack_slot spill_slots[MAX_SPILL_SLOT];
+	struct stack_slot *spill_slots;
 };
 
 struct stack_frame *alloc_stack_frame(unsigned long nr_args, unsigned long nr_local_slots);

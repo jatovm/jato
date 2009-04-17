@@ -56,6 +56,15 @@ struct stack_frame *alloc_stack_frame(unsigned long nr_args,
 
 void free_stack_frame(struct stack_frame *frame)
 {
+	struct stack_slot *s = frame->spill_slots;
+
+	while (s != NULL) {
+		struct stack_slot *p = s;
+
+		s = s->next;
+		free(p);
+	}
+
 	free(frame->local_slots);
 	free(frame);
 }
@@ -70,10 +79,17 @@ __get_spill_slot(struct stack_frame *frame, unsigned long size)
 {
 	struct stack_slot *slot;
 
-	slot = &frame->spill_slots[frame->nr_spill_slots];
+	slot = zalloc(sizeof *slot);
+	if (!slot)
+		return NULL;
+
 	slot->index = frame->nr_local_slots + frame->nr_spill_slots;
 	slot->parent = frame;
 	frame->nr_spill_slots += size;
+
+	slot->next = frame->spill_slots;
+	frame->spill_slots = slot;
+
 	return slot;
 }
 
