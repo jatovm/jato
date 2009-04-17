@@ -616,6 +616,10 @@ reg:	EXPR_CLASS_FIELD 1
 
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->class_field, result));
 	bb_add_insn(s, membase_reg_insn(INSN_MOV_MEMBASE_REG, result, offset, result));
+
+	if (expr->vm_type == J_LONG) {
+		assert(!"not supported");
+	}
 }
 
 reg:	EXPR_INSTANCE_FIELD(reg) 1
@@ -633,6 +637,10 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), base));
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
 	bb_add_insn(s, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 2, result));
+
+	if (expr->vm_type == J_LONG) {
+		assert(!"not supported");
+	}
 }
 
 reg:	EXPR_NEW
