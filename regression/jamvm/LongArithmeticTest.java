@@ -237,14 +237,15 @@ public class LongArithmeticTest extends TestCase {
         testLongRemainder();
         testLongNegation();
         testLongNegationOverflow();
-        /*testLongLeftShift();
-        testLongLeftShiftDistanceIsMasked();
-        testLongRightShift();
-        testLongRightShiftDistanceIsMasked();
-        testLongRightShiftSignExtends();
-        testLongUnsignedRightShift();
-        testLongUnsignedRightShiftDistanceIsMasked();
-        testLongUnsignedRightShiftZeroExtends();*/
+        // FIXME:
+        // testLongLeftShift();
+        // testLongLeftShiftDistanceIsMasked();
+        // testLongRightShift();
+        // testLongRightShiftDistanceIsMasked();
+        // testLongRightShiftSignExtends();
+        // testLongUnsignedRightShift();
+        // testLongUnsignedRightShiftDistanceIsMasked();
+        // testLongUnsignedRightShiftZeroExtends();
         testLongBitwiseInclusiveOr();
         testLongBitwiseAnd();
         testLongBitwiseExclusiveOr();

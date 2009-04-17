@@ -71,6 +71,7 @@ public class TestCase {
     }
 
     protected static void fail(/* String msg */) {
+        // FIXME:
         // System.out.println(msg);
         retval = 1;
     }

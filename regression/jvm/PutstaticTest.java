@@ -92,6 +92,7 @@ public class PutstaticTest extends TestCase {
         testPutStaticClassFieldInt();
         testPutStaticInstanceFieldInt();
         testPutStaticLocalInt();
+        // FIXME:
         // testPutStaticConstLong();
         // testPutStaticClassFieldLong();
         // testPutStaticInstanceFieldLong();

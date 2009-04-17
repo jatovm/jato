@@ -33,7 +33,7 @@ public class ControlTransferTest extends TestCase {
         for (i = 0; i < 10; i++)
             ;
 
-        // TODO: Uncomment the following line to make the test fail.
+        // FIXME:
         // assertEquals(i, 10);
     }
 
