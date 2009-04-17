@@ -61,6 +61,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jamvm.MethodInvocationAndReturnTest 0
     run_java jamvm.ControlTransferTest 0
     run_java jvm.PutstaticTest 0
+    run_java jvm.PutfieldTest 0
     run_java jvm.TrampolineBackpatchingTest 0
     run_java jvm.RegisterAllocatorTortureTest 0
 else 
