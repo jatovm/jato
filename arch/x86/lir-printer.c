@@ -95,6 +95,13 @@ static int print_membase_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->dest);
 }
 
+static int print_reg_membase(struct string *str, struct insn *insn)
+{
+	print_reg(str, &insn->src);
+	str_append(str, ", ");
+	return print_membase(str, &insn->dest);
+}
+
 static int print_memlocal_reg(struct string *str, struct insn *insn)
 {
 	print_memlocal(str, &insn->src);
@@ -293,7 +300,7 @@ static int print_mov_memindex_reg(struct string *str, struct insn *insn)
 static int print_mov_reg_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
-	return print_membase_reg(str, insn);
+	return print_reg_membase(str, insn);
 }
 
 static int print_mov_reg_memindex(struct string *str, struct insn *insn)
