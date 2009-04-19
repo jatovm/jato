@@ -96,8 +96,8 @@ public class PutfieldTest extends TestCase {
     public static void main(String[] args) {
         testPutFieldConstInt();
         // FIXME:
-        //testPutFieldInstanceFieldInt();
-        testPutFieldClassFieldInt();
+        // testPutFieldInstanceFieldInt();
+        // testPutFieldClassFieldInt();
         testPutFieldLocalInt();
         // FIXME:
         // testPutFieldConstLong();

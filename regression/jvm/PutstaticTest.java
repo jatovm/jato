@@ -69,7 +69,7 @@ public class PutstaticTest extends TestCase {
     }
 
     public static void testPutStaticClassFieldLong() {
-        J.x = 1;
+        J.x = 4294967300L;
         J.y = J.x;
         assertEquals(J.x, J.y);
     }
@@ -92,9 +92,9 @@ public class PutstaticTest extends TestCase {
         testPutStaticClassFieldInt();
         testPutStaticInstanceFieldInt();
         testPutStaticLocalInt();
+        testPutStaticClassFieldLong();
         // FIXME:
         // testPutStaticConstLong();
-        // testPutStaticClassFieldLong();
         // testPutStaticInstanceFieldLong();
         // testPutStaticLocalLong();
 
