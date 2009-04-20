@@ -1,5 +1,5 @@
-ARCH		:= $(shell uname -m | sed -e s/i.86/i386/)
-OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
+ARCH		?= $(shell uname -m | sed -e s/i.86/i386/)
+OS		?= $(shell uname -s | tr "[:upper:]" "[:lower:]")
 
 ifeq ($(ARCH),i386)
 ARCH		= x86
@@ -12,7 +12,7 @@ ARCH_POSTFIX	= _64
 endif
 
 ARCH_CONFIG	:= ../../arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
-CFLAGS		:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+DEFAULT_CFLAGS	:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
 INCLUDE		:= -I. -I../../arch/$(ARCH)/include -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
 MONOBURG	:= ../../monoburg/monoburg
 

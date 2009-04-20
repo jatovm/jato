@@ -8,22 +8,22 @@ OBJS = \
 
 CC = gcc
 
-CFLAGS		+= -Wall -g -rdynamic -Werror -std=gnu99
+DEFAULT_CFLAGS	+= -Wall -g -rdynamic -Werror -std=gnu99
 
 WARNINGS	= -Wundef
-CFLAGS		+= $(WARNINGS)
+DEFAULT_CFLAGS	+= $(WARNINGS)
 
 OPTIMIZATIONS	= -Os
-CFLAGS		+= $(OPTIMIZATIONS)
+DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
 DEFINES		= -DYYENABLE_NLS=0 -DYYLTYPE_IS_TRIVIAL=0
-CFLAGS		+= $(DEFINES)
+DEFAULT_CFLAGS	+= $(DEFINES)
 
 INCLUDES	= -I. -I..
-CFLAGS		+= $(INCLUDES)
+DEFAULT_CFLAGS	+= $(INCLUDES)
 
-CFLAGS		+= $(shell pkg-config --cflags glib-2.0)
-LIBS		+= $(shell pkg-config --libs glib-2.0)
+DEFAULT_CFLAGS	+= $(shell pkg-config --cflags glib-2.0)
+DEFAULT_LIBS	+= $(shell pkg-config --libs glib-2.0)
 
 ifeq ($(strip $(V)),)
 	E = @echo
@@ -42,11 +42,11 @@ $(OBJS):
 
 $(PROGRAM): $(OBJS)
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $@ $(LIBS)
+	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $@ $(LIBS) $(DEFAULT_LIBS)
 
 %.o: %.c
 	$(E) "  CC      " $@
-	$(Q) $(CC) -c $(CFLAGS) $< -o $@
+	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
 parser.c: monoburg.y
 	$(E) "  BISON   " $@

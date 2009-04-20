@@ -6,13 +6,24 @@ CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
 
-JAMVM_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/ppc/powerpc/)
-ARCH		:= $(shell uname -m | sed -e s/i.86/i386/)
+BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/)
+ARCH		:= $(BUILD_ARCH)
+JAMVM_ARCH	:= $(shell echo "$(ARCH)" | sed -e s/ppc/powerpc/)
 OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
+
+ifneq ($(ARCH),$(BUILD_ARCH))
+TEST		=
+else
+TEST		= test
+endif
 
 ifeq ($(ARCH),i386)
 override ARCH	= x86
 ARCH_POSTFIX	= _32
+ifeq ($(BUILD_ARCH),x86_64)
+ARCH_CFLAGS	+= -m32
+TEST		= test
+endif
 endif
 
 ifeq ($(ARCH),x86_64)
@@ -24,6 +35,8 @@ ifeq ($(ARCH),ppc)
 override ARCH	= ppc
 ARCH_POSTFIX	= _32
 endif
+
+export ARCH_CFLAGS
 
 ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 
@@ -121,25 +134,25 @@ CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
 
-CFLAGS		+= -g -Wall -rdynamic -std=gnu99
+DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99
 
 WARNINGS	= -Wsign-compare -Wundef
-CFLAGS		+= $(WARNINGS)
+DEFAULT_CFLAGS	+= $(WARNINGS)
 
 OPTIMIZATIONS	+= -Os
-CFLAGS		+= $(OPTIMIZATIONS)
+DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijamvm -Ijit/glib -include $(ARCH_CONFIG)
-CFLAGS		+= $(INCLUDES)
+DEFAULT_CFLAGS	+= $(INCLUDES)
 
 DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"
-CFLAGS		+= $(DEFINES)
+DEFAULT_CFLAGS	+= $(DEFINES)
 
-LIBS		= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
+DEFAULT_LIBS	= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
 
 JAMVM_ARCH_H = include/vm/arch.h
 
-all: $(PROGRAM) test
+all: $(PROGRAM) $(TEST)
 .PHONY: all
 .DEFAULT: all
 
@@ -153,8 +166,8 @@ monoburg:
 
 %.o: %.c
 	$(E) "  CC      " $@
-	$(Q) $(CC) -c $(CFLAGS) $< -o $@
-	$(Q) $(CC) -MM $(CFLAGS) -MT $@ $*.c -o $*.d
+	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
+	$(Q) $(CC) -MM $(DEFAULT_CFLAGS) $(CFLAGS) -MT $@ $*.c -o $*.d
 
 %.o: %.S
 	$(E) "  AS      " $@
@@ -170,14 +183,14 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: FORCE
 
 $(PROGRAM): lib monoburg $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS)
+	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
 compile: $(OBJS)
 
 test: $(JAMVM_ARCH_H) monoburg
-	make -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) test
-	make -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) test
-	make -C test/arch-$(ARCH)/ ARCH_POSTFIX=$(ARCH_POSTFIX) test
+	make -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	make -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	make -C test/arch-$(ARCH)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: test
 
 %.class: %.java
