@@ -20,7 +20,7 @@ function run_java {
 }
 
 GNU_CLASSPATH_ROOT=`../tools/classpath-config`
-if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d $GNU_CLASSPATH_ROOT; then
+if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d "$GNU_CLASSPATH_ROOT"; then
   echo "Error! Cannot find GNU Classpath installed."
   exit
 fi
