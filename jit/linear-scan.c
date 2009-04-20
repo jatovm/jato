@@ -226,14 +226,14 @@ static void allocate_blocked_reg(struct live_interval *current,
 	}
 
 	reg = pick_register(use_pos);
-	if (use_pos[reg] < next_use_pos(it, 0)) {
+	if (use_pos[reg] < next_use_pos(current, 0)) {
 		unsigned long pos;
 
 		/*
 		 * All active and inactive intervals are used before current,
 		 * so it is best to spill current itself
 		 */
-		pos = next_use_pos(it, current->range.start);
+		pos = next_use_pos(current, current->range.start);
 		new = split_interval_at(current, pos);
 		mark_need_reload(new, current);
 		insert_to_list(new, unhandled);
