@@ -161,7 +161,7 @@ void trace_regalloc(struct compilation_unit *cu)
 		struct live_interval *interval;
 
 		for (interval = var->interval; interval != NULL; interval = interval->next_child) {
-			printf("  %2lu (pos: %2ld-%2lu):", var->vreg, (signed)interval->range.start, interval->range.end);
+			printf("  %2lu (pos: %2ld-%2lu):", var->vreg, (signed long)interval->range.start, interval->range.end);
 			printf("\t%s", reg_name(interval->reg));
 			printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
 			printf("\t%s", interval->need_spill ? "spill\t" : "no spill");
