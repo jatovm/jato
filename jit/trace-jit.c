@@ -107,11 +107,47 @@ void trace_lir(struct compilation_unit *cu)
 	printf("\n");
 }
 
+static void
+print_var_liveness(struct compilation_unit *cu, struct var_info *var)
+{
+	struct live_range *range = &var->interval->range;
+	struct basic_block *bb;
+	unsigned long offset;
+	struct insn *insn;
+
+	printf("  %2lu: ", var->vreg);
+
+	offset = 0;
+	for_each_basic_block(bb, &cu->bb_list) {
+		for_each_insn(insn, &bb->insn_list) {
+			if (in_range(range, offset)) {
+				if (next_use_pos(var->interval, offset) == offset) {
+					/* In use */
+					printf("UUU");
+				} else {
+					if (var->interval->reg == REG_UNASSIGNED)
+						printf("***");
+					else
+						printf("---");
+				}
+			}
+			else
+				printf("   ");
+
+			offset++;
+		}
+	}
+	if (!range_is_empty(range))
+		printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
+	else
+		printf(" (empty)\n");
+}
+
 void trace_liveness(struct compilation_unit *cu)
 {
-	unsigned long offset;
 	struct basic_block *bb;
 	struct var_info *var;
+	unsigned long offset;
 	struct insn *insn;
 
 	printf("Liveness:\n\n");
@@ -125,36 +161,9 @@ void trace_liveness(struct compilation_unit *cu)
 	}
 	printf("\n");
 
-	for_each_variable(var, cu->var_infos) {
-		struct live_range *range = &var->interval->range;
+	for_each_variable(var, cu->var_infos)
+		print_var_liveness(cu, var);
 
-		printf("  %2lu: ", var->vreg);
-
-		offset = 0;
-		for_each_basic_block(bb, &cu->bb_list) {
-			for_each_insn(insn, &bb->insn_list) {
-				if (in_range(range, offset)) {
-					if (next_use_pos(var->interval, offset) == offset) {
-						/* In use */
-						printf("UUU");
-					} else {
-						if (var->interval->reg == REG_UNASSIGNED)
-							printf("***");
-						else
-							printf("---");
-					}
-				}
-				else
-					printf("   ");
-
-				offset++;
-			}
-		}
-		if (!range_is_empty(range))
-			printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
-		else
-			printf(" (empty)\n");
-	}
 	printf("\n");
 }
 
