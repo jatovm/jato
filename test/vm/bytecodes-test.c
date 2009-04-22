@@ -86,14 +86,14 @@ void test_branch_target(void)
 	assert_branch_target(0x1000, OPC_IFNE);
 }
 
-static void assert_wide_branch_target(long expected, unsigned char opc)
+static void assert_wide_branch_target(int32_t expected, unsigned char opc)
 {
 	unsigned char code[] = {
 		opc,
-		(expected & 0xFF000000UL) >> 24,
-		(expected & 0x00FF0000UL) >> 16,
-		(expected & 0x0000FF00UL) >> 8,
-		 expected & 0x000000FFUL
+		((uint32_t)expected & 0xFF000000UL) >> 24,
+		((uint32_t)expected & 0x00FF0000UL) >> 16,
+		((uint32_t)expected & 0x0000FF00UL) >> 8,
+		 (uint32_t)expected & 0x000000FFUL
 	};
 	assert_int_equals(expected, bc_target_off(code));
 }
