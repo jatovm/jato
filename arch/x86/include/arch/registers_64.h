@@ -24,6 +24,17 @@ enum machine_reg {
 
 	REG_RSP = NR_REGISTERS, /* R4 */
 	REG_RBP, /* R5 */
+
+	/* Either-R**-or-E** variants (for word-size independent code). */
+	REG_XAX = REG_RAX,
+	REG_XCX,
+	REG_XDX,
+	REG_XBX,
+	REG_XSI,
+	REG_XDI,
+	REG_XSP = REG_RSP,
+	REG_XBP,
+
 	REG_UNASSIGNED = ~0UL,
 };
 
