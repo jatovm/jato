@@ -93,7 +93,8 @@ VM_OBJS = \
 	vm/string.o		\
 	vm/types.o		\
 	vm/zalloc.o		\
-	vm/class.o
+	vm/class.o		\
+	vm/list.o
 
 JAMVM_OBJS = \
 	vm/jato.o		\

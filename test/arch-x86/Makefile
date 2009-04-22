@@ -26,6 +26,7 @@ OBJS = \
 	../jamvm/lock.o \
 	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
+	../../vm/list.o \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/types.o \

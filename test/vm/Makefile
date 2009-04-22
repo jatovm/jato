@@ -14,6 +14,7 @@ OBJS = \
 	../../vm/string.o \
 	../../vm/zalloc.o \
 	../../vm/types.o \
+	../../vm/list.o \
 	bitset-test.o \
 	buffer-test.o \
 	bytecodes-test.o \

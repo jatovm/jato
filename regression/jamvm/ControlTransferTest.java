@@ -33,8 +33,7 @@ public class ControlTransferTest extends TestCase {
         for (i = 0; i < 10; i++)
             ;
 
-        // FIXME:
-        // assertEquals(i, 10);
+        assertEquals(i, 10);
     }
 
     public static boolean ifeq(int x) {

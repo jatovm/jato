@@ -190,4 +190,22 @@ static inline struct list_head *list_last(struct list_head *head)
 	return head->prev;
 }
 
+/**
+ * list_for_each - iterate over list nodes
+ * @node - the iterator of type struct list_head *
+ * @head - the head of your list
+ */
+#define list_for_each(node, head) \
+	for (node = head->next; node != head; node = node->next)
+
+typedef int (*list_cmp_fn)(const struct list_head **, const struct list_head **);
+
+/**
+ * list_sort - sort the list using given comparator
+ * @head: is a head of the list to be sorted
+ * @comaprator: function comparing two entries, should return value lesser
+ *              than 0 when the first argument is lesser than the second one.
+ */
+int list_sort(struct list_head *head, list_cmp_fn comparator);
+
 #endif

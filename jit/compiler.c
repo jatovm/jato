@@ -35,12 +35,16 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
-	if (opt_trace_cfg)
-		trace_cfg(cu);
-
 	err = convert_to_ir(cu);
 	if (err)
 		goto out;
+
+	err = sort_basic_blocks(cu);
+	if (err)
+		goto out;
+
+	if (opt_trace_cfg)
+		trace_cfg(cu);
 
 	if (opt_trace_tree_ir)
 		trace_tree_ir(cu);

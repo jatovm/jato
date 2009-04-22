@@ -7,6 +7,7 @@ OBJS = \
 	../../vm/buffer.o \
 	../../vm/bytecode.o \
 	../../vm/bytecodes.o \
+	../../vm/list.o \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/types.o \
