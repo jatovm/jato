@@ -133,14 +133,21 @@ void trace_liveness(struct compilation_unit *cu)
 		offset = 0;
 		for_each_basic_block(bb, &cu->bb_list) {
 			for_each_insn(insn, &bb->insn_list) {
-				if (in_range(range, offset++)) {
-					if (var->interval->reg == REG_UNASSIGNED)
-						printf("***");
-					else
-						printf("---");
+				if (in_range(range, offset)) {
+					if (next_use_pos(var->interval, offset) == offset) {
+						/* In use */
+						printf("UUU");
+					} else {
+						if (var->interval->reg == REG_UNASSIGNED)
+							printf("***");
+						else
+							printf("---");
+					}
 				}
 				else
 					printf("   ");
+
+				offset++;
 			}
 		}
 		if (!range_is_empty(range))
