@@ -58,7 +58,7 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
 }
 
 void emit_trampoline(struct compilation_unit *cu, void *call_target,
-		     struct buffer *buf)
+		     struct jit_trampoline *trampoline)
 {
 	abort();
 }
