@@ -29,13 +29,13 @@ enum machine_reg {
 
 	/* Aliases that aid the reuse of code from x86-32. */
 	REG_EAX = REG_RAX,
-	REG_ECX,
-	REG_EDX,
-	REG_EBX,
-	REG_ESI,
-	RED_EDI,
+	REG_ECX = REG_RCX,
+	REG_EDX = REG_RDX,
+	REG_EBX = REG_RBX,
+	REG_ESI = REG_RSI,
+	RED_EDI = REG_RDI,
 	REG_ESP = REG_RSP,
-	REG_EBP,
+	REG_EBP = REG_RBP,
 };
 
 const char *reg_name(enum machine_reg reg);
