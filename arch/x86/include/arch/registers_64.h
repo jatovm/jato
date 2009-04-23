@@ -25,17 +25,17 @@ enum machine_reg {
 	REG_RSP = NR_REGISTERS, /* R4 */
 	REG_RBP, /* R5 */
 
-	/* Either-R**-or-E** variants (for word-size independent code). */
-	REG_XAX = REG_RAX,
-	REG_XCX,
-	REG_XDX,
-	REG_XBX,
-	REG_XSI,
-	REG_XDI,
-	REG_XSP = REG_RSP,
-	REG_XBP,
-
 	REG_UNASSIGNED = ~0UL,
+
+	/* Aliases that aid the reuse of code from x86-32. */
+	REG_EAX = REG_RAX,
+	REG_ECX,
+	REG_EDX,
+	REG_EBX,
+	REG_ESI,
+	RED_EDI,
+	REG_ESP = REG_RSP,
+	REG_EBP,
 };
 
 const char *reg_name(enum machine_reg reg);
