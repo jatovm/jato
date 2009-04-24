@@ -83,7 +83,7 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 	if (!new)
 		return NULL;
 
-	new->reg = interval->reg;
+	new->reg = REG_UNASSIGNED;
 	new->range.start = pos;
 	new->range.end = interval->range.end;
 	interval->range.end = pos;
