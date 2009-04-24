@@ -49,7 +49,7 @@ public class PutstaticTest extends TestCase {
         I i = new I();
         i.z = 1;
         I.x = i.z;
-        assertEquals(i.z, I.y);
+        assertEquals(i.z, I.x);
     }
 
     public static void testPutStaticLocalInt() {
@@ -78,7 +78,7 @@ public class PutstaticTest extends TestCase {
         J j = new J();
         j.z = 1;
         J.x = j.z;
-        assertEquals(j.z, J.y);
+        assertEquals(j.z, J.x);
     }
 
     public static void testPutStaticLocalLong() {
