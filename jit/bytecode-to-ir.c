@@ -262,18 +262,13 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 		goto error;
 	}
 
-	/*
-	 * Don't compile exception handlers because we don't support exception
-	 * handling yet.
-	 */
-	if (ctx->bb->is_eh)
-		goto skip;
+	if (ctx->bb->is_eh && ctx->offset == ctx->bb->start)
+		stack_push(ctx->bb->mimic_stack, exception_ref_expr());
 
 	err = convert(ctx);
 	if (err)
 		goto error;
 
-skip:
 	ctx->offset += opc_size;
 error:
 	return err;

@@ -97,6 +97,9 @@ void free_expression(struct expression *expr)
 	case EXPR_INSTANCEOF:
 		expr_put(to_expr(expr->instanceof_ref));
 		break;
+	case EXPR_EXCEPTION_REF:
+		/* nothing to do */
+		break;
 	case EXPR_LAST:
 		assert(!"EXPR_LAST is not a real type. Don't use it");
 		break;
@@ -346,4 +349,9 @@ unsigned long nr_args(struct expression *args_list)
 	right = to_expr(args_list->args_right);
 
 	return nr_args(left) + nr_args(right);
+}
+
+struct expression *exception_ref_expr(void)
+{
+	return alloc_expression(EXPR_EXCEPTION_REF, J_REFERENCE);
 }

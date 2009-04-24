@@ -84,7 +84,7 @@ static int simple_expr(struct expression *expr)
 
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
 	    || type == EXPR_TEMPORARY || type == EXPR_CLASS_FIELD
-	    || type == EXPR_NO_ARGS;
+	    || type == EXPR_NO_ARGS || type == EXPR_EXCEPTION_REF;
 }
 
 static int __tree_print(int, struct tree_node *, struct string *);
@@ -700,6 +700,11 @@ static int print_instanceof_expr(int lvl, struct string *str, struct expression 
 	return err;
 }
 
+static int print_exception_ref_expr(int lvl, struct string *str, struct expression *expr)
+{
+	return str_append(str, "[exception object reference]\n");
+}
+
 typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
@@ -724,6 +729,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_MULTIANEWARRAY] = print_multianewarray_expr,
 	[EXPR_ARRAYLENGTH] = print_arraylength_expr,
 	[EXPR_INSTANCEOF] = print_instanceof_expr,
+	[EXPR_EXCEPTION_REF] = print_exception_ref_expr
 };
 
 static int print_expr(int lvl, struct tree_node *root, struct string *str)

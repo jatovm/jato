@@ -31,6 +31,7 @@ enum expression_type {
 	EXPR_MULTIANEWARRAY,
 	EXPR_ARRAYLENGTH,
 	EXPR_INSTANCEOF,
+	EXPR_EXCEPTION_REF,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -272,6 +273,7 @@ struct expression *anewarray_expr(struct object *, struct expression *);
 struct expression *multianewarray_expr(struct object *);
 struct expression *arraylength_expr(struct expression *);
 struct expression *instanceof_expr(struct expression *, struct object *);
+struct expression *exception_ref_expr(void);
 
 unsigned long nr_args(struct expression *);
 

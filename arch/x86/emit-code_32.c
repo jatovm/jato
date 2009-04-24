@@ -378,9 +378,9 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 		emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
 }
 
-static void emit_pop_reg(struct buffer *buf, enum machine_reg reg)
+static void emit_pop_reg(struct buffer *buf, struct operand *operand)
 {
-	emit(buf, 0x58 + __encode_reg(reg));
+	__emit_pop_reg(buf, mach_reg(&operand->reg));
 }
 
 static void __emit_push_imm(struct buffer *buf, long imm)
@@ -426,12 +426,12 @@ void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 	if (nr_locals)
 		emit(buf, 0xc9);
 	else
-		emit_pop_reg(buf, REG_EBP);
+		__emit_pop_reg(buf, REG_EBP);
 
 	/* Restore callee saved registers */
-	emit_pop_reg(buf, REG_EBX);
-	emit_pop_reg(buf, REG_ESI);
-	emit_pop_reg(buf, REG_EDI);
+	__emit_pop_reg(buf, REG_EBX);
+	__emit_pop_reg(buf, REG_ESI);
+	__emit_pop_reg(buf, REG_EDI);
 
 	emit_ret(buf);
 }
@@ -801,6 +801,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_POP_REG, emit_pop_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, emit_sbb_membase_reg, TWO_OPERANDS),

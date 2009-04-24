@@ -369,6 +369,12 @@ static int print_push_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->operand);
 }
 
+static int print_pop_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg(str, &insn->operand);
+}
+
 static int print_sar_imm_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -458,6 +464,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_OR_REG_REG] = print_or_reg_reg,
 	[INSN_PUSH_IMM] = print_push_imm,
 	[INSN_PUSH_REG] = print_push_reg,
+	[INSN_POP_REG] = print_pop_reg,
 	[INSN_SAR_IMM_REG] = print_sar_imm_reg,
 	[INSN_SAR_REG_REG] = print_sar_reg_reg,
 	[INSN_SBB_MEMBASE_REG] = print_sbb_membase_reg,

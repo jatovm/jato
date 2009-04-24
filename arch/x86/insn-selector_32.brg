@@ -818,6 +818,16 @@ arg:	EXPR_ARGS_LIST(arg, arg)
 {
 }
 
+reg:	EXPR_EXCEPTION_REF
+{
+	struct var_info *result;
+
+	result = get_var(s->b_parent);
+	state->reg1 = result;
+
+	bb_add_insn(s, reg_insn(INSN_POP_REG, result));
+}
+
 stmt:	STMT_RETURN(reg)
 {
 	struct expression *expr;
