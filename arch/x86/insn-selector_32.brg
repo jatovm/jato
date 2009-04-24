@@ -626,22 +626,24 @@ reg:	EXPR_CLASS_FIELD 1
 
 reg:	EXPR_INSTANCE_FIELD(reg) 1
 {
-	struct var_info *base, *index, *result;
+	struct var_info *base, *index;
 	struct expression *expr;
 
 	expr = to_expr(tree);
 
 	base = state->left->reg1;
 	index = get_var(s->b_parent);
-	result = get_var(s->b_parent);
-	state->reg1 = result;
+	state->reg1 = get_var(s->b_parent);
 
 	bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), base));
 	bb_add_insn(s, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
-	bb_add_insn(s, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 2, result));
+	bb_add_insn(s, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 2, state->reg1));
 
 	if (expr->vm_type == J_LONG) {
-		assert(!"not supported");
+		state->reg2 = get_var(s->b_parent);
+
+		bb_add_insn(s, imm_reg_insn(INSN_ADD_IMM_REG, 1, index));
+		bb_add_insn(s, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 2, state->reg2));
 	}
 }
 
