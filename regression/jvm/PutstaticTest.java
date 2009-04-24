@@ -64,8 +64,8 @@ public class PutstaticTest extends TestCase {
     };
 
     public static void testPutStaticConstLong() {
-        J.x = 1;
-        assertEquals(1, J.x);
+        J.x = 4294967300L;
+        assertEquals(4294967300L, J.x);
     }
 
     public static void testPutStaticClassFieldLong() {
@@ -76,13 +76,13 @@ public class PutstaticTest extends TestCase {
 
     public static void testPutStaticInstanceFieldLong() {
         J j = new J();
-        j.z = 1;
+        j.z = 4294967300L;
         J.x = j.z;
         assertEquals(j.z, J.x);
     }
 
     public static void testPutStaticLocalLong() {
-        long j = 1;
+        long j = 4294967300L;
         J.x = j;
         assertEquals(j, J.x);
     }
