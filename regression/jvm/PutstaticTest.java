@@ -94,8 +94,7 @@ public class PutstaticTest extends TestCase {
         testPutStaticLocalInt();
         testPutStaticClassFieldLong();
         testPutStaticConstLong();
-        // FIXME:
-        // testPutStaticInstanceFieldLong();
+        testPutStaticInstanceFieldLong();
         testPutStaticLocalLong();
 
         Runtime.getRuntime().halt(retval);
