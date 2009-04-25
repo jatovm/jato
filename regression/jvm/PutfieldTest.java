@@ -62,48 +62,46 @@ public class PutfieldTest extends TestCase {
     }
 
     static class J {
-        int x, y;
-        static int z;
+        long x, y;
+        static long z;
     };
 
     public static void testPutFieldConstLong() {
         J j = new J();
-        j.x = 1;
-        assertEquals(1, j.x);
+        j.x = 4294967300L;
+        assertEquals(4294967300L, j.x);
     }
 
     public static void testPutFieldInstanceFieldLong() {
         J j = new J();
-        j.x = 1;
+        j.x = 4294967300L;
         j.y = j.x;
         assertEquals(j.x, j.y);
     }
 
     public static void testPutFieldClassFieldLong() {
         J j = new J();
-        J.z = 1;
+        J.z = 4294967300L;
         j.x = J.z;
         assertEquals(J.z, j.x);
     }
 
     public static void testPutFieldLocalLong() {
         J j = new J();
-        int l = 1;
+        long l = 4294967300L;
         j.x = l;
         assertEquals(l, j.x);
     }
 
     public static void main(String[] args) {
         testPutFieldConstInt();
-        // FIXME:
-        // testPutFieldInstanceFieldInt();
-        // testPutFieldClassFieldInt();
+        testPutFieldInstanceFieldInt();
+        testPutFieldClassFieldInt();
         testPutFieldLocalInt();
-        // FIXME:
-        // testPutFieldConstLong();
-        // testPutFieldInstanceFieldLong();
-        // testPutFieldClassFieldLong();
-        // testPutFieldLocalLong();
+        testPutFieldConstLong();
+        testPutFieldInstanceFieldLong();
+        testPutFieldClassFieldLong();
+        testPutFieldLocalLong();
 
         Runtime.getRuntime().halt(retval);
     }
