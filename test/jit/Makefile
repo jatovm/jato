@@ -33,6 +33,7 @@ OBJS = \
 	../../jit/typeconv-bc.o \
 	../../jit/tree-printer.o \
 	../../jit/args.o \
+	../../jit/exception.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \

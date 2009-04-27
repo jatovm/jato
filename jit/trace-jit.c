@@ -54,12 +54,24 @@ void trace_cfg(struct compilation_unit *cu)
 	struct basic_block *bb;
 
 	printf("Control Flow Graph:\n\n");
-	printf("  #:\t\tRange\n");
+	printf("  #:\t\tRange\t\tSuccessors\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
-		printf("  %p\t%lu..%lu", bb, bb->start, bb->end);
+		unsigned long i;
+
+		printf("  %p\t%lu..%lu\t", bb, bb->start, bb->end);
 		if (bb->is_eh)
-			printf(" (eh)\n");
+			printf(" (eh)");
+
+		for (i = 0; i < bb->nr_successors; i++) {
+			if (i == 0)
+				printf("\t");
+			else
+				printf(", ");
+
+			printf("%p", bb->successors[i]);
+		}
+
 		printf("\n");
 	}
 

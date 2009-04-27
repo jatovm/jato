@@ -13,6 +13,7 @@
 #include <vm/bytecodes.h>
 #include <vm/stream.h>
 #include <vm/vm.h>
+#include <jit/exception.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -20,17 +21,7 @@
 
 static bool is_exception_handler(struct basic_block *bb)
 {
-	struct methodblock *method = bb->b_parent->method;
-	int i;
-
-	for (i = 0; i < method->exception_table_size; i++) {
-		struct exception_table_entry *eh = &method->exception_table[i];
-
-		if (eh->handler_pc == bb->start)
-			return true;
-	}
-
-	return false;
+	return exception_find_entry(bb->b_parent->method, bb->start) != NULL;
 }
 
 static void detect_exception_handlers(struct compilation_unit *cu)
@@ -81,6 +72,11 @@ static void split_at_branch_targets(struct compilation_unit *cu,
 	}
 }
 
+static inline bool bc_ends_basic_block(unsigned char code)
+{
+	return bc_is_branch(code) || bc_is_athrow(code) || bc_is_return(code);
+}
+
 static void split_after_branches(struct stream *stream,
 				 struct basic_block *entry_bb,
 				 struct bitset *branch_targets)
@@ -97,24 +93,83 @@ static void split_after_branches(struct stream *stream,
 
 		code = stream->current;
 
-		if (!bc_is_branch(*code))
+		if (!bc_ends_basic_block(*code))
 			continue;
 
 		offset = stream_offset(stream);
-		br_target_off = bc_target_off(code) + offset;
 		next_insn_off = offset + bc_insn_size(code);
 
 		new_bb = bb_split(bb, next_insn_off);
-		if (!bc_is_goto(*code))
+		if (bc_is_branch(*code) && !bc_is_goto(*code))
 			bb_add_successor(bb, new_bb);
 
-		bb->br_target_off = br_target_off;
-		bb->has_branch = true;
+		if (bc_is_branch(*code)) {
+			br_target_off = bc_target_off(code) + offset;
 
-		set_bit(branch_targets->bits, br_target_off);
+			bb->br_target_off = br_target_off;
+			bb->has_branch = true;
+
+			set_bit(branch_targets->bits, br_target_off);
+		}
 
 		bb = new_bb;
 	}
+}
+
+static void update_athrow_successors(struct stream *stream,
+				     struct compilation_unit *cu)
+{
+	struct methodblock *method;
+
+	method = cu->method;
+
+	for (; stream_has_more(stream); stream_advance(stream)) {
+		struct basic_block *bb;
+		unsigned long offset;
+		int i;
+
+		offset = stream_offset(stream);
+
+		if (!bc_is_athrow(*stream->current))
+			continue;
+
+		bb = find_bb(cu, offset);
+
+		for (i = 0; i < method->exception_table_size; i++) {
+			struct exception_table_entry *eh;
+
+			eh = &method->exception_table[i];
+
+			if (exception_covers(eh, offset)) {
+				struct basic_block *eh_bb;
+
+				eh_bb = find_bb(cu, eh->handler_pc);
+				assert(eh_bb != NULL);
+
+				bb_add_successor(bb, eh_bb);
+			}
+		}
+	}
+}
+
+static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
+{
+	struct methodblock *method = cu->method;
+	int i;
+
+	for (i = 0; i < method->exception_table_size; i++) {
+		struct exception_table_entry *eh;
+		struct basic_block *bb;
+
+		eh = &method->exception_table[i];
+		bb = find_bb(cu, eh->handler_pc);
+
+		if (bb == 0 || bb->start != eh->handler_pc)
+			return false;
+
+	}
+
+	return true;
 }
 
 static unsigned char *bytecode_next_insn(struct stream *stream)
@@ -154,7 +209,18 @@ int analyze_control_flow(struct compilation_unit *cu)
 	update_branch_successors(cu);
 	detect_exception_handlers(cu);
 
+	bytecode_stream_init(&stream, cu->method);
+	update_athrow_successors(&stream, cu);
+
 	free(branch_targets);
+
+	/*
+	 * This checks whether every exception handler has its own
+	 * basic block which starts at handler_pc. There always should
+	 * be a branch, athrow or return before each exception handler
+	 * which will guarantee a basic block starts at exception handler.
+	 */
+	assert(all_exception_handlers_have_bb(cu));
 
 	return 0;
 }

@@ -78,7 +78,8 @@ JIT_OBJS = \
 	jit/tree-printer.o	\
 	jit/typeconv-bc.o	\
 	jit/vtable.o		\
-	jit/fixup-site.o
+	jit/fixup-site.o	\
+	jit/exception.o
 
 VM_OBJS = \
 	vm/bitset.o		\

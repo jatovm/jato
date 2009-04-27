@@ -11,21 +11,25 @@ package jvm;
  */
 public class ExceptionsTest extends TestCase {
     public static void testCatchCompilation() {
-        int i;
+        assertEquals(2, onlyTryBlockExecuted());
+    }
 
-        i = 0;
+    public static int onlyTryBlockExecuted() {
+        int i = 0;
+
         try {
             i = 2;
         } catch (Exception e) {
-            i = 1;
+            i--;
+            return i;
+        } catch (Throwable e) {
+            i++;
         }
 
-        assertEquals(i, 2);
+        return i;
     }
 
     public static void main(String args[]) {
-        testCatchCompilation();
-
         Runtime.getRuntime().halt(retval);
     }
 };

@@ -10,6 +10,7 @@
 #include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
+#include <jit/expression.h>
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>

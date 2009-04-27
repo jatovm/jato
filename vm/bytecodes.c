@@ -19,6 +19,7 @@ enum bytecode_type {
 	BC_NORMAL = 0x01,
 	BC_BRANCH = 0x02,
 	BC_WIDE   = 0x04,
+	BC_RETURN = 0x08,
 };
 
 struct bytecode_info {
@@ -56,6 +57,16 @@ bool bc_is_wide(unsigned char opc)
 bool bc_is_goto(unsigned char opc)
 {
 	return opc == OPC_GOTO;
+}
+
+bool bc_is_athrow(unsigned char opc)
+{
+	return opc == OPC_ATHROW;
+}
+
+bool bc_is_return(unsigned char opc)
+{
+	return bytecode_infos[opc].type & BC_RETURN;
 }
 
 /**
@@ -249,12 +260,12 @@ static struct bytecode_info bytecode_infos[] = {
 	/* OPC_TABLESWITCH and OPC_LOOKUPSWITCH are variable-length.  */
 	DECLARE_BC(OPC_TABLESWITCH, 0, BC_BRANCH),
 	DECLARE_BC(OPC_LOOKUPSWITCH, 0, BC_BRANCH),
-	DECLARE_BC(OPC_IRETURN, 1, BC_NORMAL),
-	DECLARE_BC(OPC_LRETURN, 1, BC_NORMAL),
-	DECLARE_BC(OPC_FRETURN, 1, BC_NORMAL),
-	DECLARE_BC(OPC_DRETURN, 1, BC_NORMAL),
-	DECLARE_BC(OPC_ARETURN, 1, BC_NORMAL),
-	DECLARE_BC(OPC_RETURN, 1, BC_NORMAL),
+	DECLARE_BC(OPC_IRETURN, 1, BC_RETURN),
+	DECLARE_BC(OPC_LRETURN, 1, BC_RETURN),
+	DECLARE_BC(OPC_FRETURN, 1, BC_RETURN),
+	DECLARE_BC(OPC_DRETURN, 1, BC_RETURN),
+	DECLARE_BC(OPC_ARETURN, 1, BC_RETURN),
+	DECLARE_BC(OPC_RETURN, 1, BC_RETURN),
 	DECLARE_BC(OPC_GETSTATIC, 3, BC_NORMAL),
 	DECLARE_BC(OPC_PUTSTATIC, 3, BC_NORMAL),
 	DECLARE_BC(OPC_GETFIELD, 3, BC_NORMAL),
