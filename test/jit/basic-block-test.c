@@ -56,19 +56,15 @@ void test_split_basic_block_with_branch(void)
 	target_bb = bb_split(bb, 3);
 
 	bb->has_branch = true;
-	bb->nr_successors = 1;
-	bb->successors[0] = target_bb;
+	bb_add_successor(bb, target_bb);
 
 	new_bb = bb_split(bb, 2);
 
 	assert_true(new_bb->has_branch);
 	assert_false(bb->has_branch);
 
-	assert_int_equals(bb->nr_successors, 0);
-	assert_int_equals(new_bb->nr_successors, 1);
-
-	assert_basic_block_successors(NULL, NULL, bb);
-	assert_basic_block_successors(target_bb, NULL, new_bb);
+	assert_basic_block_successors((struct basic_block*[]){         }, 0, bb);
+	assert_basic_block_successors((struct basic_block*[]){target_bb}, 1, new_bb);
 
 	free_compilation_unit(cu);
 }

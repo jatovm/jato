@@ -43,9 +43,9 @@ void test_branch_opcode_ends_basic_block(void)
 	assert_basic_block(cu, 4, 7, bb2);
 	assert_basic_block(cu, 7, 9, bb3);
 
-	assert_basic_block_successors(bb2, bb3, bb1);
-	assert_basic_block_successors(bb3, NULL, bb2);
-	assert_basic_block_successors(NULL, NULL, bb3);
+	assert_basic_block_successors((struct basic_block*[]){bb2, bb3}, 2, bb1);
+	assert_basic_block_successors((struct basic_block*[]){bb3     }, 1, bb2);
+	assert_basic_block_successors((struct basic_block*[]){        }, 0, bb3);
 
 	free_compilation_unit(cu);
 }
@@ -83,10 +83,10 @@ void test_multiple_branches(void)
 	bb3 = bb_entry(bb2->bb_list_node.next);
 	bb4 = bb_entry(bb3->bb_list_node.next);
 
-	assert_basic_block_successors(bb2, bb3, bb1);
-	assert_basic_block_successors(bb4, NULL, bb2);
-	assert_basic_block_successors(bb4, NULL, bb3);
-	assert_basic_block_successors(NULL, NULL, bb4);
+	assert_basic_block_successors((struct basic_block*[]){bb2, bb3}, 2, bb1);
+	assert_basic_block_successors((struct basic_block*[]){bb4     }, 1, bb2);
+	assert_basic_block_successors((struct basic_block*[]){bb4     }, 1, bb3);
+	assert_basic_block_successors((struct basic_block*[]){        }, 0, bb4);
 
 	free_compilation_unit(cu);
 }
@@ -152,11 +152,11 @@ void test_multiple_branch_with_target_instruction_splitting(void)
 	assert_basic_block(cu, 12, 14, bb3);
 	assert_basic_block(cu, 14, 15, bb5);
 
-	assert_basic_block_successors(bb2, bb4, bb1);
-	assert_basic_block_successors(bb4, NULL, bb2);
-	assert_basic_block_successors(bb3, bb5, bb4);
-	assert_basic_block_successors(bb5, NULL, bb3);
-	assert_basic_block_successors(NULL, NULL, bb5);
+	assert_basic_block_successors((struct basic_block*[]){bb2, bb4}, 2, bb1);
+	assert_basic_block_successors((struct basic_block*[]){bb4     }, 1, bb2);
+	assert_basic_block_successors((struct basic_block*[]){bb3, bb5}, 2, bb4);
+	assert_basic_block_successors((struct basic_block*[]){bb5     }, 1, bb3);
+	assert_basic_block_successors((struct basic_block*[]){        }, 0, bb5);
 
 	free_compilation_unit(cu);
 }

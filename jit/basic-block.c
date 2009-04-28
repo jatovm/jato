@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
 {
@@ -92,24 +93,23 @@ void free_basic_block(struct basic_block *bb)
 struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 {
 	struct basic_block *new_bb;
-	unsigned int i;
 
 	if (offset < orig_bb->start || offset >= orig_bb->end)
 		return NULL;
 
 	new_bb = get_basic_block(orig_bb->b_parent, offset, orig_bb->end);
-	if (new_bb)
-		orig_bb->end = offset;
+	if (new_bb == NULL)
+		return NULL;
+
+	orig_bb->end = offset;
+
+	new_bb->successors = orig_bb->successors;
+	orig_bb->successors = NULL;
+
+	new_bb->nr_successors = orig_bb->nr_successors;
+	orig_bb->nr_successors = 0;
 
 	if (orig_bb->has_branch) {
-		for (i = 0; i < orig_bb->nr_successors; i++) {
-			new_bb->successors[i] = orig_bb->successors[i];
-			orig_bb->successors[i] = NULL;
-		}
-
-		new_bb->nr_successors = orig_bb->nr_successors;
-		orig_bb->nr_successors = 0;
-
 		orig_bb->has_branch = false;
 		new_bb->has_branch = true;
 
@@ -130,10 +130,21 @@ void bb_add_insn(struct basic_block *bb, struct insn *insn)
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }
 
-void bb_add_successor(struct basic_block *bb, struct basic_block *successor)
+int bb_add_successor(struct basic_block *bb, struct basic_block *successor)
 {
-	assert(bb->nr_successors < MAX_BB_SUCCESSORS);
+	int new_size;
+	struct basic_block **new_successors;
+
+	new_size = sizeof(struct basic_block *) * (bb->nr_successors + 1);
+
+	new_successors = realloc(bb->successors, new_size);
+	if (new_successors == NULL)
+		return -ENOMEM;
+
+	bb->successors = new_successors;
 
 	bb->successors[bb->nr_successors] = successor;
 	bb->nr_successors++;
+
+	return 0;
 }

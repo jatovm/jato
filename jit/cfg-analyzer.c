@@ -34,9 +34,10 @@ static void detect_exception_handlers(struct compilation_unit *cu)
 	}
 }
 
-static void update_branch_successors(struct compilation_unit *cu)
+static int update_branch_successors(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
+	int err = 0;
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		struct basic_block *target_bb;
@@ -46,30 +47,42 @@ static void update_branch_successors(struct compilation_unit *cu)
 
 		target_bb = find_bb(cu, bb->br_target_off);
 		assert(target_bb != NULL);
-		bb_add_successor(bb, target_bb);
+
+		err = bb_add_successor(bb, target_bb);
+		if (err)
+			break;
 	}
+
+	return err;
 }
 
-static void split_at_branch_targets(struct compilation_unit *cu,
+static int split_at_branch_targets(struct compilation_unit *cu,
 				    struct bitset *branch_targets)
 {
 	unsigned long offset;
+	int err = 0;
 
 	for (offset = 0; offset < cu->method->code_size; offset++) {
 		struct basic_block *bb;
 
 		if (!test_bit(branch_targets->bits, offset))
 			continue;
-			
+
 		bb = find_bb(cu, offset);
 		if (bb->start != offset) {
 			struct basic_block *new_bb;
 
 			new_bb = bb_split(bb, offset);
-			bb_add_successor(bb, new_bb);
+
+			err = bb_add_successor(bb, new_bb);
+			if (err)
+				break;
+
 			bb = new_bb;
 		}
 	}
+
+	return err;
 }
 
 static inline bool bc_ends_basic_block(unsigned char code)
@@ -77,11 +90,12 @@ static inline bool bc_ends_basic_block(unsigned char code)
 	return bc_is_branch(code) || bc_is_athrow(code) || bc_is_return(code);
 }
 
-static void split_after_branches(struct stream *stream,
+static int split_after_branches(struct stream *stream,
 				 struct basic_block *entry_bb,
 				 struct bitset *branch_targets)
 {
 	struct basic_block *bb;
+	int err = 0;
 
 	bb = entry_bb;
 
@@ -100,8 +114,11 @@ static void split_after_branches(struct stream *stream,
 		next_insn_off = offset + bc_insn_size(code);
 
 		new_bb = bb_split(bb, next_insn_off);
-		if (bc_is_branch(*code) && !bc_is_goto(*code))
-			bb_add_successor(bb, new_bb);
+		if (bc_is_branch(*code) && !bc_is_goto(*code)) {
+			err = bb_add_successor(bb, new_bb);
+			if (err)
+				break;
+		}
 
 		if (bc_is_branch(*code)) {
 			br_target_off = bc_target_off(code) + offset;
@@ -114,12 +131,15 @@ static void split_after_branches(struct stream *stream,
 
 		bb = new_bb;
 	}
+
+	return err;
 }
 
-static void update_athrow_successors(struct stream *stream,
+static int update_athrow_successors(struct stream *stream,
 				     struct compilation_unit *cu)
 {
 	struct methodblock *method;
+	int err = 0;
 
 	method = cu->method;
 
@@ -146,10 +166,15 @@ static void update_athrow_successors(struct stream *stream,
 				eh_bb = find_bb(cu, eh->handler_pc);
 				assert(eh_bb != NULL);
 
-				bb_add_successor(bb, eh_bb);
+				err = bb_add_successor(bb, eh_bb);
+				if (err)
+					goto out;
 			}
 		}
 	}
+
+ out:
+	return err;
 }
 
 static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
@@ -175,7 +200,7 @@ static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
 static unsigned char *bytecode_next_insn(struct stream *stream)
 {
 	unsigned long opc_size;
-		
+
 	opc_size = bc_insn_size(stream->current);
 	assert(opc_size != 0);
 	return stream->current + opc_size;
@@ -196,6 +221,7 @@ int analyze_control_flow(struct compilation_unit *cu)
 	struct bitset *branch_targets;
 	struct basic_block *entry_bb;
 	struct stream stream;
+	int err = 0;
 
 	branch_targets = alloc_bitset(cu->method->code_size);
 	if (!branch_targets)
@@ -204,15 +230,25 @@ int analyze_control_flow(struct compilation_unit *cu)
 	bytecode_stream_init(&stream, cu->method);
 
 	entry_bb = get_basic_block(cu, 0, cu->method->code_size);
-	split_after_branches(&stream, entry_bb, branch_targets);
-	split_at_branch_targets(cu, branch_targets);
-	update_branch_successors(cu);
+
+	err = split_after_branches(&stream, entry_bb, branch_targets);
+	if (err)
+		goto out;
+
+	err = split_at_branch_targets(cu, branch_targets);
+	if (err)
+		goto out;
+
+	err = update_branch_successors(cu);
+	if (err)
+		goto out;
+
 	detect_exception_handlers(cu);
 
 	bytecode_stream_init(&stream, cu->method);
-	update_athrow_successors(&stream, cu);
-
-	free(branch_targets);
+	err = update_athrow_successors(&stream, cu);
+	if (err)
+		goto out;
 
 	/*
 	 * This checks whether every exception handler has its own
@@ -222,5 +258,8 @@ int analyze_control_flow(struct compilation_unit *cu)
 	 */
 	assert(all_exception_handlers_have_bb(cu));
 
-	return 0;
+ out:
+	free(branch_targets);
+
+	return err;
 }
