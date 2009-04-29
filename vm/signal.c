@@ -29,7 +29,7 @@
 
 static void signal_handler(int sig, siginfo_t *si, void *unused)
 {
-	bt_sighandler(sig, si, unused);
+	print_backtrace_and_die(sig, si, unused);
 }
 
 void setup_signal_handlers(void)

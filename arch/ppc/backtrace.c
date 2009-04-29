@@ -25,7 +25,7 @@
  */
 #include <signal.h>
 
-void bt_sighandler(int sig, siginfo_t *info, void *secret)
+void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 {
 }
 

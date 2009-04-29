@@ -117,16 +117,15 @@ static void show_function(void *addr)
 	goto out;
 }
 
-/* Must be inline so this does not change the backtrace for
-   bt_sighandler. */
-static inline void __show_stack_trace(unsigned long start, void *caller)
+/* Must be inline so this does not change the backtrace. */
+static inline void __show_stack_trace(unsigned long start, unsigned long caller)
 {
 	void *array[10];
 	size_t size;
 	size_t i;
 
 	size = backtrace(array, 10);
-	array[1] = caller;
+	array[1] = (void *) caller;
 
 	printf("Native stack trace:\n");
 	for (i = start; i < size; i++)
@@ -135,7 +134,7 @@ static inline void __show_stack_trace(unsigned long start, void *caller)
 
 void print_trace(void)
 {
-	__show_stack_trace(0, NULL);
+	__show_stack_trace(0, 0);
 }
 
 static unsigned long get_greg(gregset_t gregs, int reg)
@@ -216,21 +215,23 @@ static void show_registers(gregset_t gregs)
 }
 #endif
 
-void bt_sighandler(int sig, siginfo_t * info, void *secret)
+void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 {
-	void *eip;
 	ucontext_t *uc = secret;
+	unsigned long eip, addr;
 
-	eip = (void *)uc->uc_mcontext.gregs[IP_REG];
+	eip	= uc->uc_mcontext.gregs[IP_REG];
+	addr	= (unsigned long) info->si_addr;
 
-	if (sig == SIGSEGV)
-		printf
-		    ("SIGSEGV at %s %08lx while accessing memory address %08lx.\n",
-		     IP_REG_NAME, (unsigned long)eip,
-		     (unsigned long)info->si_addr);
-	else
-		printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, (unsigned long)eip);
-
+	switch (sig) {
+	case SIGSEGV:
+		printf("SIGSEGV at %s %08lx while accessing memory address %08lx.\n",
+			IP_REG_NAME, eip, addr);
+		break;
+	default:
+		printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, eip);
+		break;
+	};
 	show_registers(uc->uc_mcontext.gregs);
 	__show_stack_trace(1, eip);
 	exit(1);
