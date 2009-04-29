@@ -25,8 +25,8 @@
 #include <stdarg.h>
 #include <signal.h>
 
-#include <vm/backtrace.h>
 #include <vm/natives.h>
+#include <vm/signal.h>
 #include <vm/vm.h>
 #include <jit/compiler.h>
 
@@ -258,17 +258,6 @@ exit:
     exit(status);
 }
 
-void install_sighandlers(void) {
-    struct sigaction sa;
- 
-    sa.sa_handler = (void *)bt_sighandler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART | SA_SIGINFO;
-       
-    sigaction(SIGSEGV, &sa, NULL);
-    sigaction(SIGUSR1, &sa, NULL);
-}
-
 typedef void (*java_main_fn)(void);
 
 static void vm_runtime_exit(int status)
@@ -302,7 +291,8 @@ int main(int argc, char *argv[]) {
     int i;
 
     exe_name = argv[0];
-    install_sighandlers();
+
+    setup_signal_handlers();
 
     setDefaultInitArgs(&args);
     int class_arg = parseCommandLine(argc, argv, &args);

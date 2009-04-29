@@ -90,6 +90,7 @@ VM_OBJS = \
 	vm/die.o		\
 	vm/natives.o		\
 	vm/resolve.o		\
+	vm/signal.o		\
 	vm/stack.o		\
 	vm/string.o		\
 	vm/types.o		\
