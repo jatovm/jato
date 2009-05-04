@@ -225,6 +225,16 @@ static convert_fn_t converters[] = {
 	[OPC_MONITOREXIT] = convert_monitor_exit,
 };
 
+void convert_expression(struct parse_context *ctx, struct expression *expr)
+{
+	stack_push(ctx->bb->mimic_stack, expr);
+}
+
+void convert_statement(struct parse_context *ctx, struct statement *stmt)
+{
+	bb_add_stmt(ctx->bb, stmt);
+}
+
 static int parse_bytecode_insn(struct parse_context *ctx)
 {
 	unsigned long opc_size;

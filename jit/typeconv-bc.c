@@ -27,7 +27,7 @@ static int convert_conversion(struct parse_context *ctx, enum vm_type to_type)
 	if (!conversion_expression)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, conversion_expression);
+	convert_expression(ctx, conversion_expression);
 	return 0;
 }
 

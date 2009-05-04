@@ -76,7 +76,7 @@ int convert_getstatic(struct parse_context *ctx)
 	if (!value)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, value);
+	convert_expression(ctx, value);
 	return 0;
 }
 
@@ -102,7 +102,7 @@ int convert_putstatic(struct parse_context *ctx)
 	}
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
-	bb_add_stmt(ctx->bb, store_stmt);
+	convert_statement(ctx, store_stmt);
 	
 	return 0;
 }
@@ -123,7 +123,7 @@ int convert_getfield(struct parse_context *ctx)
 	if (!value)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, value);
+	convert_expression(ctx, value);
 	return 0;
 }
 
@@ -151,7 +151,7 @@ int convert_putfield(struct parse_context *ctx)
 	}
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
-	bb_add_stmt(ctx->bb, store_stmt);
+	convert_statement(ctx, store_stmt);
 	
 	return 0;
 }
@@ -179,7 +179,7 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	store_stmt->store_dest = &dest_expr->node;
 
 	expr_get(dest_expr);
-	stack_push(ctx->bb->mimic_stack, dest_expr);
+	convert_expression(ctx, dest_expr);
 
 	arraycheck = alloc_statement(STMT_ARRAY_CHECK);
 	if (!arraycheck)
@@ -195,9 +195,9 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	expr_get(arrayref);
 	nullcheck->expression = &arrayref->node;
 
-	bb_add_stmt(ctx->bb, nullcheck);
-	bb_add_stmt(ctx->bb, arraycheck);
-	bb_add_stmt(ctx->bb, store_stmt);
+	convert_statement(ctx, nullcheck);
+	convert_statement(ctx, arraycheck);
+	convert_statement(ctx, store_stmt);
 
 	return 0;
 
@@ -283,9 +283,9 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 	expr_get(arrayref);
 	nullcheck->expression = &arrayref->node;
 
-	bb_add_stmt(ctx->bb, nullcheck);
-	bb_add_stmt(ctx->bb, arraycheck);
-	bb_add_stmt(ctx->bb, store_stmt);
+	convert_statement(ctx, nullcheck);
+	convert_statement(ctx, arraycheck);
+	convert_statement(ctx, store_stmt);
 
 	return 0;
 
@@ -352,7 +352,7 @@ int convert_new(struct parse_context *ctx)
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 
 	return 0;
 }
@@ -369,7 +369,7 @@ int convert_newarray(struct parse_context *ctx)
 	if (!arrayref)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, arrayref);
+	convert_expression(ctx, arrayref);
 
 	return 0;
 }
@@ -395,7 +395,7 @@ int convert_anewarray(struct parse_context *ctx)
 	if (!arrayref)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, arrayref);
+	convert_expression(ctx, arrayref);
 
 	return 0;
 }
@@ -424,7 +424,7 @@ int convert_multianewarray(struct parse_context *ctx)
 	if (!arrayref->multianewarray_dimensions)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, arrayref);
+	convert_expression(ctx, arrayref);
 
 	return 0;
 }
@@ -439,7 +439,7 @@ int convert_arraylength(struct parse_context *ctx)
 	if (!arraylength_exp)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, arraylength_exp);
+	convert_expression(ctx, arraylength_exp);
 
 	return 0;
 }
@@ -461,7 +461,7 @@ int convert_instanceof(struct parse_context *ctx)
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 
 	return 0;
 }
@@ -488,8 +488,8 @@ int convert_checkcast(struct parse_context *ctx)
 	checkcast_stmt->checkcast_ref = &object_ref->node;
 
 	expr_get(object_ref);
-	bb_add_stmt(ctx->bb, checkcast_stmt);
-	stack_push(ctx->bb->mimic_stack, object_ref);
+	convert_statement(ctx, checkcast_stmt);
+	convert_expression(ctx, object_ref);
 
 	return 0;
 }
@@ -507,7 +507,7 @@ int convert_monitor_enter(struct parse_context *ctx)
 
 	expr_get(exp);
 	stmt->expression = &exp->node;
-	bb_add_stmt(ctx->bb, stmt);
+	convert_statement(ctx, stmt);
 
 	return 0;
 }
@@ -525,7 +525,7 @@ int convert_monitor_exit(struct parse_context *ctx)
 
 	expr_get(exp);
 	stmt->expression = &exp->node;
-	bb_add_stmt(ctx->bb, stmt);
+	convert_statement(ctx, stmt);
 
 	return 0;
 }

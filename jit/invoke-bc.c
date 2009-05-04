@@ -28,7 +28,7 @@ int convert_non_void_return(struct parse_context *ctx)
 
 	expr = stack_pop(ctx->bb->mimic_stack);
 	return_stmt->return_value = &expr->node;
-	bb_add_stmt(ctx->bb, return_stmt);
+	convert_statement(ctx, return_stmt);
 	return 0;
 }
 
@@ -40,7 +40,7 @@ int convert_void_return(struct parse_context *ctx)
 
 	return_stmt->return_value = NULL;
 
-	bb_add_stmt(ctx->bb, return_stmt);
+	convert_statement(ctx, return_stmt);
 	return 0;
 }
 
@@ -110,9 +110,9 @@ static int insert_invoke_expr(struct parse_context *ctx,
 			return -ENOMEM;
 
 		expr_stmt->expression = &invoke_expr->node;
-		bb_add_stmt(ctx->bb, expr_stmt);
+		convert_statement(ctx, expr_stmt);
 	} else
-		stack_push(ctx->bb->mimic_stack, invoke_expr);
+		convert_expression(ctx, invoke_expr);
 
 	return 0;
 }

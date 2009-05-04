@@ -27,7 +27,7 @@ static int __convert_const(struct parse_context *ctx,
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 	return 0;
 }
 
@@ -52,7 +52,7 @@ static int __convert_fconst(struct parse_context *ctx, double value, enum vm_typ
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 	return 0;
 }
 
@@ -119,7 +119,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 	return 0;
 }
 
@@ -158,7 +158,7 @@ static int convert_load(struct parse_context *ctx, unsigned char index, enum vm_
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 	return 0;
 }
 
@@ -244,7 +244,7 @@ static int convert_store(struct parse_context *ctx, unsigned long index, enum vm
 
 	stmt->store_dest = &dest_expr->node;
 	stmt->store_src = &src_expr->node;
-	bb_add_stmt(ctx->bb, stmt);
+	convert_statement(ctx, stmt);
 	return 0;
       failed:
 	free_statement(stmt);

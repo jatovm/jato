@@ -66,7 +66,7 @@ static int convert_if(struct parse_context *ctx, enum binary_operator binop)
 		expr_put(zero_value);
 		return -ENOMEM;
 	}
-	bb_add_stmt(ctx->bb, stmt);
+	convert_statement(ctx, stmt);
 	return 0;
 }
 
@@ -112,7 +112,7 @@ static int convert_if_cmp(struct parse_context *ctx, enum vm_type vm_type, enum 
 	if (!stmt)
 		return -ENOMEM;
 
-	bb_add_stmt(ctx->bb, stmt);
+	convert_statement(ctx, stmt);
 	return 0;
 }
 
@@ -171,7 +171,7 @@ int convert_goto(struct parse_context *ctx)
 		return -ENOMEM;
 
 	goto_stmt->goto_target = target_bb;
-	bb_add_stmt(ctx->bb, goto_stmt);
+	convert_statement(ctx, goto_stmt);
 	return 0;
 }
 

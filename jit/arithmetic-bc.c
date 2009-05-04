@@ -30,7 +30,7 @@ static int convert_binop(struct parse_context *ctx, enum vm_type vm_type,
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 	return 0;
 }
 
@@ -145,7 +145,7 @@ static int convert_unary_op(struct parse_context *ctx, enum vm_type vm_type,
 	if (!expr)
 		return -ENOMEM;
 
-	stack_push(ctx->bb->mimic_stack, expr);
+	convert_expression(ctx, expr);
 	return 0;
 }
 
@@ -264,7 +264,7 @@ int convert_iinc(struct parse_context *ctx)
 	}
 
 	store_stmt->store_src = &binop_expression->node;
-	bb_add_stmt(ctx->bb, store_stmt);
+	convert_statement(ctx, store_stmt);
 
 	return 0;
 

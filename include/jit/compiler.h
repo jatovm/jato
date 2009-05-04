@@ -8,8 +8,10 @@
 #include <vm/vm.h>
 #include <pthread.h>
 
-struct buffer;
 struct compilation_unit;
+struct expression;
+struct statement;
+struct buffer;
 
 struct fixup_site {
 	/* Compilation unit to which relcall_insn belongs */
@@ -37,6 +39,9 @@ struct parse_context {
 	unsigned long code_size;
 	unsigned char opc;
 };
+
+void convert_expression(struct parse_context *ctx, struct expression *expr);
+void convert_statement(struct parse_context *ctx, struct statement *stmt);
 
 int compile(struct compilation_unit *);
 int analyze_control_flow(struct compilation_unit *);
