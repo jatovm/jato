@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <jit/bc-offset-mapping.h>
+
 #include <arch/instruction.h>
 
 #include <stdlib.h>
@@ -37,6 +39,7 @@ struct insn *alloc_insn(enum insn_type type)
 		INIT_LIST_HEAD(&insn->insn_list_node);
 		INIT_LIST_HEAD(&insn->branch_list_node);
 		insn->type = type;
+		insn->bytecode_offset = BC_OFFSET_UNKNOWN;
 	}
 	return insn;
 }

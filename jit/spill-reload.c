@@ -63,6 +63,8 @@ static int insert_spill_insn(struct live_interval *interval, struct compilation_
 
 	interval->spill_slot = slot;
 
+	spill->bytecode_offset = last->bytecode_offset;
+
 	list_add(&spill->insn_list_node, &last->insn_list_node);
 
 	return 0;
@@ -88,6 +90,8 @@ static int insert_reload_insn(struct live_interval *interval, struct compilation
 	reload = reload_insn(interval->spill_parent->spill_slot, reg);
 	if (!reload)
 		return -ENOMEM;
+
+	reload->bytecode_offset = first->bytecode_offset;
 
 	list_add_tail(&reload->insn_list_node, &first->insn_list_node);
 

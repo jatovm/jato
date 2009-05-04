@@ -76,6 +76,8 @@ enum unary_operator {
 struct expression {
 	unsigned long refcount;
 	enum vm_type vm_type;
+	unsigned long bytecode_offset;
+
 	union {
 		struct tree_node node;
 

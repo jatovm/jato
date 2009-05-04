@@ -11,6 +11,8 @@
 #include <jit/compiler.h>
 #include <jit/statement.h>
 #include <jit/expression.h>
+#include <jit/bc-offset-mapping.h>
+#include <jit/tree-node.h>
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
@@ -227,11 +229,38 @@ static convert_fn_t converters[] = {
 
 void convert_expression(struct parse_context *ctx, struct expression *expr)
 {
+	expr->bytecode_offset = ctx->offset;
 	stack_push(ctx->bb->mimic_stack, expr);
 }
 
 void convert_statement(struct parse_context *ctx, struct statement *stmt)
 {
+	unsigned long bc_offset = ctx->offset;
+
+	/*
+	 * Some expressions do not go through convert_expression()
+	 * so we need to set their bytecode_offset here if it is not set.
+	 */
+	switch (stmt_type(stmt)) {
+	case STMT_STORE:
+		tree_patch_bc_offset(stmt->store_dest, bc_offset);
+		tree_patch_bc_offset(stmt->store_src, bc_offset);
+		break;
+	case STMT_IF:
+		tree_patch_bc_offset(stmt->if_conditional, bc_offset);
+		break;
+	case STMT_RETURN:
+		tree_patch_bc_offset(stmt->return_value, bc_offset);
+		break;
+	case STMT_EXPRESSION:
+	case STMT_NULL_CHECK:
+	case STMT_ARRAY_CHECK:
+		tree_patch_bc_offset(stmt->expression, bc_offset);
+		break;
+	default: ;
+	}
+
+	stmt->bytecode_offset = bc_offset;
 	bb_add_stmt(ctx->bb, stmt);
 }
 

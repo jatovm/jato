@@ -54,6 +54,9 @@ struct insn {
         struct list_head insn_list_node;
 	/* Position of this instruction in LIR.  */
 	unsigned long		lir_pos;
+	/* Offset in machine code.  */
+	unsigned long mach_offset;
+	unsigned long bytecode_offset;
 };
 
 static inline unsigned long lir_position(struct use_position *reg)

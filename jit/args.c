@@ -31,10 +31,15 @@
 struct expression *
 insert_arg(struct expression *root, struct expression *expr)
 {
-	if (!root)
-		return arg_expr(expr);
+	struct expression *_expr;
 
-	return args_list_expr(root, arg_expr(expr));
+	_expr = arg_expr(expr);
+	_expr->bytecode_offset = expr->bytecode_offset;
+
+	if (!root)
+		return _expr;
+
+	return args_list_expr(root, _expr);
 }
 
 struct expression *

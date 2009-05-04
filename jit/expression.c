@@ -6,6 +6,7 @@
  */
 
 #include <jit/expression.h>
+#include <jit/bc-offset-mapping.h>
 #include <vm/vm.h>
 #include <vm/method.h>
 #include <stdlib.h>
@@ -21,6 +22,7 @@ struct expression *alloc_expression(enum expression_type type,
 		expr->node.op = type << EXPR_TYPE_SHIFT;
 		expr->vm_type = vm_type;
 		expr->refcount = 1;
+		expr->bytecode_offset = BC_OFFSET_UNKNOWN;
 	}
 	return expr;
 }

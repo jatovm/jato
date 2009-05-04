@@ -58,10 +58,15 @@ static unsigned int method_real_argument_count(struct methodblock *invoke_target
 static struct expression *insert_arg(struct expression *root,
 				     struct expression *expr)
 {
-	if (!root)
-		return arg_expr(expr);
+	struct expression *_expr;
 
-	return args_list_expr(root, arg_expr(expr));
+	_expr = arg_expr(expr);
+	_expr->bytecode_offset = expr->bytecode_offset;
+
+	if (!root)
+		return _expr;
+
+	return args_list_expr(root, _expr);
 }
 
 static struct expression *convert_args(struct stack *mimic_stack,
@@ -119,7 +124,7 @@ static int insert_invoke_expr(struct parse_context *ctx,
 
 static struct methodblock *resolve_invoke_target(struct parse_context *ctx)
 {
-	unsigned long idx; 
+	unsigned long idx;
 
 	idx = bytecode_read_u16(ctx->buffer);
 

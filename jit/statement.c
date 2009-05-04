@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
+#include <jit/bc-offset-mapping.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,6 +20,7 @@ struct statement *alloc_statement(enum statement_type type)
 		memset(stmt, 0, sizeof *stmt);
 		INIT_LIST_HEAD(&stmt->stmt_list_node);
 		stmt->node.op = type << STMT_TYPE_SHIFT;
+		stmt->bytecode_offset = BC_OFFSET_UNKNOWN;
 	}
 
 	return stmt;

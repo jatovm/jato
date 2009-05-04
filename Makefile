@@ -79,7 +79,8 @@ JIT_OBJS = \
 	jit/typeconv-bc.o	\
 	jit/vtable.o		\
 	jit/fixup-site.o	\
-	jit/exception.o
+	jit/exception.o 	\
+	jit/bc-offset-mapping.o
 
 VM_OBJS = \
 	vm/bitset.o		\

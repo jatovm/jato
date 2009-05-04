@@ -50,6 +50,7 @@ struct statement {
 		struct tree_node *expression;
 	};
 	struct list_head stmt_list_node;
+	unsigned long bytecode_offset;
 };
 
 static inline struct statement *to_stmt(struct tree_node *node)

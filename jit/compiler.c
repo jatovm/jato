@@ -10,6 +10,7 @@
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
+#include <jit/bc-offset-mapping.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -75,6 +76,8 @@ int compile(struct compilation_unit *cu)
 	err = insert_spill_reload_insns(cu);
 	if (err)
 		goto out;
+
+	assert(all_insn_have_bytecode_offset(cu));
 
 	err = emit_machine_code(cu);
 	if (err)

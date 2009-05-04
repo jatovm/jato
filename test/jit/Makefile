@@ -34,6 +34,7 @@ OBJS = \
 	../../jit/tree-printer.o \
 	../../jit/args.o \
 	../../jit/exception.o \
+	../../jit/bc-offset-mapping.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
