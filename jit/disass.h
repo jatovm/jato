@@ -34,6 +34,7 @@
 #ifndef _DISASS_H
 #define _DISASS_H
 
+#include <jit/compilation-unit.h>
 #include <dis-asm.h>
 #include <stdbool.h>
 
@@ -59,7 +60,7 @@ extern unsigned long disass_len;
 
 /* function prototypes *******************************************************/
 
-void disassemble(void *start, void *end);
+void disassemble(struct compilation_unit *cu, void *start, void *end);
 
 void disass_printf(PTR p, const char *fmt, ...);
 
@@ -67,6 +68,6 @@ int disass_buffer_read_memory(bfd_vma memaddr, bfd_byte *myaddr, unsigned int le
 
 /* machine dependent functions */
 
-unsigned char *disassinstr(unsigned char *code);
+unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code);
 
 #endif /* _DISASS_H */

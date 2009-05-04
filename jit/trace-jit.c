@@ -11,6 +11,7 @@
 #include <jit/statement.h>
 #include <jit/tree-printer.h>
 #include <jit/vars.h>
+#include <jit/bc-offset-mapping.h>
 
 #include <vm/buffer.h>
 #include <vm/string.h>
@@ -31,6 +32,7 @@ bool opt_trace_liveness;
 bool opt_trace_regalloc;
 bool opt_trace_machine_code;
 bool opt_trace_magic_trampoline;
+bool opt_trace_bytecode_offset;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -111,6 +113,19 @@ void trace_lir(struct compilation_unit *cu)
 		for_each_insn(insn, &bb->insn_list) {
 			str = alloc_str();
 			lir_print(insn, str);
+
+			if (opt_trace_bytecode_offset) {
+				unsigned long bc_offset = insn->bytecode_offset;
+				struct string *bc_str;
+
+				bc_str = alloc_str();
+
+				print_bytecode_offset(bc_offset, bc_str);
+
+				printf("[ %5s ] ", bc_str->value);
+				free_str(bc_str);
+			}
+
 			printf("%-2lu \t%s\n", offset++, str->value);
 			free_str(str);
 		}
@@ -209,7 +224,7 @@ void trace_machine_code(struct compilation_unit *cu)
 	start  = buffer_ptr(cu->objcode);
 	end = buffer_current(cu->objcode);
 
-	disassemble(start, end);
+	disassemble(cu, start, end);
 	printf("\n");
 }
 

@@ -60,10 +60,10 @@ unsigned long disass_len;
 
 *******************************************************************************/
 
-void disassemble(void *start, void *end)
+void disassemble(struct compilation_unit *cu, void *start, void *end)
 {
 	for (; start < end; )
-		start = disassinstr(start);
+		start = disassinstr(cu, start);
 }
 
 

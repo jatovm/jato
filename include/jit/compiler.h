@@ -82,6 +82,7 @@ extern bool opt_trace_liveness;
 extern bool opt_trace_regalloc;
 extern bool opt_trace_machine_code;
 extern bool opt_trace_magic_trampoline;
+extern bool opt_trace_bytecode_offset;
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);

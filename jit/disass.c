@@ -33,6 +33,10 @@
 
 #include "disass.h"
 
+#include <jit/compiler.h>
+#include <jit/bc-offset-mapping.h>
+#include <vm/string.h>
+
 #include <assert.h>
 #include <dis-asm.h>
 #include <stdarg.h>
@@ -64,7 +68,7 @@ unsigned char *disassinstr(unsigned char *code)
 	return NULL;
 }
 #else
-unsigned char *disassinstr(unsigned char *code)
+unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 {
 	unsigned long seqlen;
 	unsigned long i;
@@ -79,6 +83,16 @@ unsigned char *disassinstr(unsigned char *code)
 		info.read_memory_func = &disass_buffer_read_memory;
 
 		disass_initialized = 1;
+	}
+
+	if (opt_trace_bytecode_offset) {
+		struct string *str = alloc_str();
+		unsigned long bc_offset;
+
+		bc_offset = native_ptr_to_bytecode_offset(cu, code);
+		print_bytecode_offset(bc_offset, str);
+		printf("[ %5s ]", str->value);
+		free_str(str);
 	}
 
 	printf("  0x%08lx:   ", (unsigned long) code);

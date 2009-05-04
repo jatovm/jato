@@ -235,9 +235,13 @@ int parseCommandLine(int argc, char *argv[], InitArgs *args) {
             opt_trace_regalloc = true;
             opt_trace_machine_code = true;
             opt_trace_magic_trampoline = true;
+            opt_trace_bytecode_offset = true;
 
         } else if (strcmp(argv[i], "-Xtrace:trampoline") == 0) {
             opt_trace_magic_trampoline = true;
+
+        } else if (strcmp(argv[i], "-Xtrace:bytecode-offset") == 0) {
+            opt_trace_bytecode_offset = true;
 
         } else if(strcmp(argv[i], "-Xtrace:asm") == 0) {
             opt_trace_method = true;
