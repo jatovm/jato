@@ -86,7 +86,7 @@ void trace_tree_ir(struct compilation_unit *cu)
 	struct statement *stmt;
 	struct string *str;
 
-	printf("High-Level Intermediate Representation:\n\n");
+	printf("High-Level Intermediate Representation (HIR):\n\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		printf("[bb %p]:\n\n", bb);
@@ -107,7 +107,11 @@ void trace_lir(struct compilation_unit *cu)
 	struct string *str;
 	struct insn *insn;
 
-	printf("LIR:\n\n");
+	printf("Low-Level Intermediate Representation (LIR):\n\n");
+
+	printf("Bytecode   LIR\n");
+	printf("offset     offset    Instruction          Operands\n");
+	printf("---------  -------   -----------          --------\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		for_each_insn(insn, &bb->insn_list) {
@@ -122,11 +126,11 @@ void trace_lir(struct compilation_unit *cu)
 
 				print_bytecode_offset(bc_offset, bc_str);
 
-				printf("[ %5s ] ", bc_str->value);
+				printf("[ %5s ]  ", bc_str->value);
 				free_str(bc_str);
 			}
 
-			printf("%-2lu \t%s\n", offset++, str->value);
+			printf(" %5lu:   %s\n", offset++, str->value);
 			free_str(str);
 		}
 	}
@@ -178,6 +182,8 @@ void trace_liveness(struct compilation_unit *cu)
 	struct insn *insn;
 
 	printf("Liveness:\n\n");
+
+	printf("Legend: (U) In use, (*) Unassigned, (-) Assigned\n\n");
 
 	printf("      ");
 	offset = 0;
