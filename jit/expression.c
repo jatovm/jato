@@ -107,11 +107,13 @@ void free_expression(struct expression *expr)
 	free(expr);
 }
 
-void expr_get(struct expression *expr)
+struct expression *expr_get(struct expression *expr)
 {
 	assert(expr->refcount > 0);
 
 	expr->refcount++;
+
+	return expr;
 }
 
 void expr_put(struct expression *expr)

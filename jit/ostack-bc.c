@@ -23,12 +23,15 @@ int convert_pop(struct parse_context *ctx)
 	
 	if (is_invoke_expr(expr)) {
 		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
+
 		if (!expr_stmt)
 			return -ENOMEM;
 			
 		expr_stmt->expression = &expr->node;
 		convert_statement(ctx, expr_stmt);
-	}
+	} else
+		expr_put(expr);
+
 	return 0;
 }
 
@@ -60,8 +63,9 @@ static int __convert_dup(struct parse_context *ctx, struct expression *value)
 
 	dup = dup_expr(ctx, value);
 
-	convert_expression(ctx, dup);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, expr_get(dup));
+
 	return 0;
 }
 
@@ -80,9 +84,10 @@ static int __convert_dup_x1(struct parse_context *ctx, struct expression *value1
 
 	dup = dup_expr(ctx, value1);
 
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup));
 	convert_expression(ctx, value2);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup));
+
 	return 0;
 }
 
@@ -102,10 +107,10 @@ static int __convert_dup_x2(struct parse_context *ctx, struct expression *value1
 
 	dup = dup_expr(ctx, value1);
 
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup));
 	convert_expression(ctx, value3);
 	convert_expression(ctx, value2);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup));
 
 	return 0;
 }
@@ -124,13 +129,14 @@ int convert_dup_x2(struct parse_context *ctx)
 static int __convert_dup2(struct parse_context *ctx, struct expression *value1, struct expression *value2)
 {
 	struct expression *dup, *dup2;
+
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	convert_expression(ctx, dup2);
-	convert_expression(ctx, dup);
-	convert_expression(ctx, dup2);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup2));
+	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, expr_get(dup2));
+	convert_expression(ctx, expr_get(dup));
 
 	return 0;
 }
@@ -138,6 +144,7 @@ static int __convert_dup2(struct parse_context *ctx, struct expression *value1, 
 int convert_dup2(struct parse_context *ctx)
 {
 	struct expression *value, *value2;
+
 	/* Dup2 duplicates *one* 64bit operand or *two* 32 bit operands.
 	 * This second case is to be handled here. */
 	value = stack_pop(ctx->bb->mimic_stack);
@@ -157,11 +164,11 @@ static int __convert_dup2_x1(struct parse_context * ctx, struct expression * val
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	convert_expression(ctx, dup2);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup2));
+	convert_expression(ctx, expr_get(dup));
 	convert_expression(ctx, value3);
-	convert_expression(ctx, dup2);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup2));
+	convert_expression(ctx, expr_get(dup));
 
 	return 0;
 }
@@ -169,6 +176,7 @@ static int __convert_dup2_x1(struct parse_context * ctx, struct expression * val
 int convert_dup2_x1(struct parse_context *ctx)
 {
 	struct expression *value1, *value2, *value3;
+
 	/* Dup2 duplicates *one* 64bit operand or *two* 32 bit operands.
 	 * This second case is to be handled here. */
 	value1 = stack_pop(ctx->bb->mimic_stack);
@@ -185,15 +193,16 @@ int convert_dup2_x1(struct parse_context *ctx)
 static int __convert_dup2_x2(struct parse_context *ctx, struct expression *value1, struct expression *value2, struct expression *value3, struct expression *value4)
 {
 	struct expression *dup, *dup2;
+
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	convert_expression(ctx, dup2);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup2));
+	convert_expression(ctx, expr_get(dup));
 	convert_expression(ctx, value4);
 	convert_expression(ctx, value3);
-	convert_expression(ctx, dup2);
-	convert_expression(ctx, dup);
+	convert_expression(ctx, expr_get(dup2));
+	convert_expression(ctx, expr_get(dup));
 
 	return 0;
 }

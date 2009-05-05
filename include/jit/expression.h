@@ -249,7 +249,7 @@ static inline enum unary_operator expr_unary_op(struct expression *expr)
 struct expression *alloc_expression(enum expression_type, enum vm_type);
 void free_expression(struct expression *);
 
-void expr_get(struct expression *);
+struct expression *expr_get(struct expression *);
 void expr_put(struct expression *);
 
 struct expression *value_expr(enum vm_type, unsigned long long);
