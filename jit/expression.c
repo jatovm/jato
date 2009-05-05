@@ -109,6 +109,8 @@ void free_expression(struct expression *expr)
 
 void expr_get(struct expression *expr)
 {
+	assert(expr->refcount > 0);
+
 	expr->refcount++;
 }
 
