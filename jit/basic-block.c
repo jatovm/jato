@@ -73,6 +73,7 @@ void free_basic_block(struct basic_block *bb)
 	free_stack(bb->mimic_stack);
 	free_stmt_list(&bb->stmt_list);
 	free_insn_list(&bb->insn_list);
+	free(bb->successors);
 	free(bb->use_set);
 	free(bb->def_set);
 	free(bb->live_in_set);
