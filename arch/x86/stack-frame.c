@@ -42,10 +42,10 @@
  *     :     ...      :
  *     |    Arg 1     | <-- Start offset of arguments
  *     |   Old EIP    |
- *     |   Old EBP    |
  *     |     EDI      |
  *     |     ESI      |
- *     |     EBX      | <-- New EBP
+ *     |     EBX      |
+ *     |   Old EBP    | <-- New EBP
  *     |   Local 1    |
  *     :     ...      :
  *     |   Local m    :
