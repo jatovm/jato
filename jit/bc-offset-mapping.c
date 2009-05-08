@@ -80,7 +80,8 @@ unsigned long native_ptr_to_bytecode_offset(struct compilation_unit *cu,
 				return insn->bytecode_offset;
 
 			if (insn->mach_offset > offset) {
-				if (prev_insn->mach_offset <= offset)
+				if (prev_insn &&
+				    prev_insn->mach_offset <= offset)
 					return prev_insn->bytecode_offset;
 				break;
 			}
