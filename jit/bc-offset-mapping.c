@@ -63,14 +63,29 @@ void tree_patch_bc_offset(struct tree_node *node, unsigned long bc_offset)
 unsigned long native_ptr_to_bytecode_offset(struct compilation_unit *cu,
 					    unsigned char *native_ptr)
 {
-	unsigned char *method_ptr = buffer_ptr(cu->objcode);
+	unsigned long method_addr = (unsigned long)buffer_ptr(cu->objcode);
+	unsigned long offset;
 	struct basic_block *bb;
 	struct insn *insn;
+	struct insn *prev_insn = NULL;
+
+	if ((unsigned long)native_ptr < method_addr)
+		return BC_OFFSET_UNKNOWN;
+
+	offset = (unsigned long)native_ptr - method_addr;
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		for_each_insn(insn, &bb->insn_list) {
-			if (method_ptr + insn->mach_offset == native_ptr)
+			if (insn->mach_offset == offset)
 				return insn->bytecode_offset;
+
+			if (insn->mach_offset > offset) {
+				if (prev_insn->mach_offset <= offset)
+					return prev_insn->bytecode_offset;
+				break;
+			}
+
+			prev_insn = insn;
 		}
 	}
 
