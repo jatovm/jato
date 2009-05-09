@@ -1168,11 +1168,16 @@ static void __binop_reg_local(struct _MBState *state, struct basic_block *bb,
 {
 	struct var_info *frame_ptr;
 	struct expression *expr;
-	unsigned long disp;
+	long disp;
 
 	expr = to_expr(tree);
 	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
-	disp += disp_offset;
+	if (disp < 0)
+		/* local stack slot, decreasing offset values */
+		disp -= disp_offset;
+	else
+		/* method argument slot, increasing offset values */
+		disp += disp_offset;
 
 	frame_ptr = bb->b_parent->frame_ptr;
 
