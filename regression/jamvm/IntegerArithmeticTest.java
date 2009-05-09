@@ -220,6 +220,14 @@ public class IntegerArithmeticTest extends TestCase {
         return value += 2;
     }
 
+    public static void testIntegerSubtractionImmRegAndRegReg() {
+        int x = 0x1a;
+        int y = 0x0d;
+        int result = (0x1f - x) - (0x11 - y);
+
+        assertEquals(1, result);
+    }
+
     public static void main(String[] args) {
         testIntegerAddition();
         testIntegerAdditionOverflow();
@@ -243,6 +251,7 @@ public class IntegerArithmeticTest extends TestCase {
         testIntegerBitwiseAnd();
         testIntegerBitwiseExclusiveOr();
         testIntegerIncrementLocalByConstant();
+        testIntegerSubtractionImmRegAndRegReg();
 
         Runtime.getRuntime().halt(retval);
     }

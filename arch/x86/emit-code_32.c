@@ -358,10 +358,40 @@ static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
 	emit_imm(buf, imm);
 }
 
-static void emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
-			     enum machine_reg reg)
+static void __emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
+			       enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x05, imm, reg);
+}
+
+static void emit_sub_imm_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	__emit_sub_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
+static void emit_sub_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	emit_reg_reg(buf, 0x29, src, dest);
+}
+
+static void __emit_sbb_imm_reg(struct buffer *buf, unsigned long imm,
+			       enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0x03, imm, reg);
+}
+
+static void emit_sbb_imm_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	__emit_sbb_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
+static void emit_sbb_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	emit_reg_reg(buf, 0x1B, src, dest);
 }
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
@@ -375,7 +405,7 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 	__emit_mov_reg_reg(buf, REG_ESP, REG_EBP);
 
 	if (nr_locals)
-		emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
+		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
 }
 
 static void emit_pop_reg(struct buffer *buf, struct operand *operand)
@@ -804,10 +834,14 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SBB_IMM_REG, emit_sbb_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, emit_sbb_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SBB_REG_REG, emit_sbb_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 };

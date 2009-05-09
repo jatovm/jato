@@ -234,6 +234,34 @@ reg:	OP_SUB(reg, EXPR_LOCAL) 1
 	}
 }
 
+reg:	OP_SUB(reg, EXPR_VALUE) 1
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	binop_reg_value_low(state, s, tree, INSN_SUB_IMM_REG);
+
+	if (expr->vm_type == J_LONG) {
+		binop_reg_value_high(state, s, tree, INSN_SBB_IMM_REG);
+	}
+}
+
+reg:	OP_SUB(reg, reg) 1
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = state->left->reg1;
+	binop_reg_reg_low(state, s, tree, INSN_SUB_REG_REG);
+
+	if (expr->vm_type == J_LONG) {
+		state->reg2 = state->left->reg2;
+		binop_reg_reg_high(state, s, tree, INSN_SBB_REG_REG);
+	}
+}
+
 reg:	OP_MUL(reg, EXPR_LOCAL) 1
 {
 	struct var_info *eax;

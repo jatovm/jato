@@ -234,6 +234,14 @@ public class LongArithmeticTest extends TestCase {
         assertEquals(0x57, result);
     }
 
+    public static void testLongSubtractionImmRegAndRegReg() {
+        long x = 0x1a;
+        long y = 0x0d;
+        long result = (0x1f - x) - (0x11 - y);
+
+        assertEquals(1, result);
+    }
+
     public static void main(String[] args) {
         testLongAddition();
         testLongAdditionOverflow();
@@ -259,6 +267,7 @@ public class LongArithmeticTest extends TestCase {
         testLongBitwiseExclusiveOr();
         testLongIncrementLocalByConstant();
         testLongAdditionLocalSlot();
+        testLongSubtractionImmRegAndRegReg();
 
         Runtime.getRuntime().halt(retval);
     }
