@@ -387,10 +387,22 @@ static int print_sar_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_sbb_imm_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_imm_reg(str, insn);
+}
+
 static int print_sbb_membase_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_membase_reg(str, insn);
+}
+
+static int print_sbb_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
 }
 
 static int print_shl_reg_reg(struct string *str, struct insn *insn)
@@ -405,11 +417,24 @@ static int print_shr_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_sub_imm_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_imm_reg(str, insn);
+}
+
 static int print_sub_membase_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_membase_reg(str, insn);
 }
+
+static int print_sub_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 
 static int print_xor_membase_reg(struct string *str, struct insn *insn)
 {
@@ -467,10 +492,14 @@ static print_insn_fn insn_printers[] = {
 	[INSN_POP_REG] = print_pop_reg,
 	[INSN_SAR_IMM_REG] = print_sar_imm_reg,
 	[INSN_SAR_REG_REG] = print_sar_reg_reg,
+	[INSN_SBB_IMM_REG] = print_sbb_imm_reg,
 	[INSN_SBB_MEMBASE_REG] = print_sbb_membase_reg,
+	[INSN_SBB_REG_REG] = print_sbb_reg_reg,
 	[INSN_SHL_REG_REG] = print_shl_reg_reg,
 	[INSN_SHR_REG_REG] = print_shr_reg_reg,
+	[INSN_SUB_IMM_REG] = print_sub_imm_reg,
 	[INSN_SUB_MEMBASE_REG] = print_sub_membase_reg,
+	[INSN_SUB_REG_REG] = print_sub_reg_reg,
 	[INSN_XOR_MEMBASE_REG] = print_xor_membase_reg,
 	[INSN_XOR_IMM_REG] = print_xor_imm_reg,
 };
