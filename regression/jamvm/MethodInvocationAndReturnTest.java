@@ -69,9 +69,21 @@ public class MethodInvocationAndReturnTest extends TestCase {
         public int value() { return 0; }
     }
 
+    public static void testRecursiveInvocation() {
+        assertEquals(3, recursive(2));
+    }
+
+    public static int recursive(int n) {
+        if (n == 0)
+            return n;
+
+        return n + recursive(n - 1);
+    }
+
     public static void main(String[] args) {
         testReturnFromInvokeVirtualReinstatesTheFrameOfTheInvoker();
         testInvokeVirtualInvokesSuperClassMethodIfMethodIsNotOverridden();
+        testRecursiveInvocation();
 
         Runtime.getRuntime().halt(retval);
     }

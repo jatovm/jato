@@ -440,15 +440,25 @@ reg:	EXPR_INVOKE(arg) 1
 	method	= expr->target_method;
 	cu	= method->compilation_unit;
 
-	pthread_mutex_lock(&cu->mutex);
-	is_compiled = cu->is_compiled;
-
-	if (is_compiled)
-		target = method_native_ptr(method);
-	else
+	if (cu == s->b_parent) {
+		/*
+		 * This is a recursive method invocation. Threfore, we are
+		 * already holding cu->mutex here because we entered
+		 * instruction selection through jit_magic_trampoline().
+		 */
+		is_compiled = false;
 		target = method_trampoline_ptr(method);
+	} else {
+		pthread_mutex_lock(&cu->mutex);
+		is_compiled = cu->is_compiled;
 
-	pthread_mutex_unlock(&cu->mutex);
+		if (is_compiled)
+			target = method_native_ptr(method);
+		else
+			target = method_trampoline_ptr(method);
+
+		pthread_mutex_unlock(&cu->mutex);
+	}
 
 	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
