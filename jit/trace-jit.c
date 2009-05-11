@@ -183,7 +183,7 @@ void trace_liveness(struct compilation_unit *cu)
 
 	printf("Liveness:\n\n");
 
-	printf("Legend: (U) In use, (*) Unassigned, (-) Assigned\n\n");
+	printf("Legend: (U) In use, (-) Fixed register, (*) Non-fixed register\n\n");
 
 	printf("      ");
 	offset = 0;
