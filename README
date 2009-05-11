@@ -56,7 +56,7 @@ Development
 
 How to run the regression test suite?
 
-  Prequisites:
+  Installation prerequisites:
 
     - Eclipse Compiler for Java (ECJ)
     - GNU classpath (installed in /usr/local/classpath/)
