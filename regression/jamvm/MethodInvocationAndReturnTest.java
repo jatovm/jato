@@ -80,10 +80,33 @@ public class MethodInvocationAndReturnTest extends TestCase {
         return n + recursive(n - 1);
     }
 
+    public static void testInvokestaticLongReturnValue() {
+        assertEquals(Long.MIN_VALUE, f(Long.MIN_VALUE));
+        assertEquals(Long.MAX_VALUE, f(Long.MAX_VALUE));
+    }
+
+    public static long f(long x) {
+        return x;
+    }
+
+    public static void testInvokevirtualLongReturnValue() {
+        F f = new F();
+        assertEquals(Long.MIN_VALUE, f.f(Long.MIN_VALUE));
+        assertEquals(Long.MAX_VALUE, f.f(Long.MAX_VALUE));
+    }
+
+    public static class F {
+        public long f(long x) {
+            return x;
+        }
+    }
+
     public static void main(String[] args) {
         testReturnFromInvokeVirtualReinstatesTheFrameOfTheInvoker();
         testInvokeVirtualInvokesSuperClassMethodIfMethodIsNotOverridden();
         testRecursiveInvocation();
+        testInvokestaticLongReturnValue();
+        testInvokevirtualLongReturnValue();
 
         Runtime.getRuntime().halt(retval);
     }
