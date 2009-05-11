@@ -49,9 +49,9 @@ public class IntegerArithmeticTest extends TestCase {
     }
 
     public static void testIntegerAdditionLocalSlot() {
-        long x = 0x1a;
-        long y = 0x0d;
-        long result = (0x1f + x) + (0x11 + y);
+        int x = 0x1a;
+        int y = 0x0d;
+        int result = (0x1f + x) + (0x11 + y);
 
         assertEquals(0x57, result);
     }
@@ -74,9 +74,9 @@ public class IntegerArithmeticTest extends TestCase {
     }
 
     public static void testIntegerSubtractionImmediateLocal() {
-        long x = 0x1a;
-        long y = 0x0d;
-        long result = (0x1f - x) - (0x11 - y);
+        int x = 0x1a;
+        int y = 0x0d;
+        int result = (0x1f - x) - (0x11 - y);
 
         assertEquals(1, result);
     }
