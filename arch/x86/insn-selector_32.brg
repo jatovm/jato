@@ -428,11 +428,11 @@ reg:	OP_XOR(reg, EXPR_LOCAL) 1
 
 reg:	EXPR_INVOKE(arg) 1
 {
+	struct var_info *eax, *edx = NULL;
 	struct compilation_unit *cu;
 	struct methodblock *method;
 	struct expression *expr;
 	struct insn *call_insn;
-	struct var_info *var;
 	bool is_compiled;
 	void *target;
 
@@ -460,12 +460,12 @@ reg:	EXPR_INVOKE(arg) 1
 		pthread_mutex_unlock(&cu->mutex);
 	}
 
-	var = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = var;
+	eax = get_fixed_var(s->b_parent, REG_EAX);
+	state->reg1 = get_var(s->b_parent);
 
 	if (get_method_return_type(method->type) == J_LONG) {
-		var = get_fixed_var(s->b_parent, REG_EDX);
-		state->reg2 = var;
+		edx = get_fixed_var(s->b_parent, REG_EDX);
+		state->reg2 = get_var(s->b_parent);
 	}
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
@@ -483,22 +483,36 @@ reg:	EXPR_INVOKE(arg) 1
 
 	if (method->args_count)
 		method_args_cleanup(s, tree, method->args_count);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+	if (edx != NULL)
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 }
 
 reg:	EXPR_INVOKEVIRTUAL(arg) 1
 {
-	struct var_info *return_value;
+	struct var_info *eax, *edx = NULL;
 	struct var_info *call_target;
+	struct compilation_unit *cu;
 	unsigned long method_offset;
+	struct methodblock *method;
 	struct var_info *stack_ptr;
 	unsigned long args_count;
 	struct expression *expr;
 
-	expr = to_expr(tree);
+	expr	= to_expr(tree);
+	method	= expr->target_method;
+	cu	= method->compilation_unit;
+
 	method_offset = expr_method_index(expr) * sizeof(void *);
 
-	return_value = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = return_value;
+	eax = get_fixed_var(s->b_parent, REG_EAX);
+	state->reg1 = get_var(s->b_parent);
+
+	if (get_method_return_type(method->type) == J_LONG) {
+		edx = get_fixed_var(s->b_parent, REG_EDX);
+		state->reg2 = get_var(s->b_parent);
+	}
 
 	call_target = get_var(s->b_parent);
 	stack_ptr = get_fixed_var(s->b_parent, REG_ESP);
@@ -521,6 +535,10 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	args_count = nr_args(to_expr(expr->args_list));
 	if (args_count)
 		method_args_cleanup(s, tree, args_count);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+	if (edx != NULL)
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 }
 
 reg:	OP_CMP(reg, reg) 1

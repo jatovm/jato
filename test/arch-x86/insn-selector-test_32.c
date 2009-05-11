@@ -587,6 +587,7 @@ void test_select_invoke_with_arguments(void)
 void test_select_method_return_value_passed_as_argument(void)
 {
 	struct expression *no_args, *arg, *invoke, *nested_invoke;
+	enum machine_reg dreg, sreg;
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
@@ -624,7 +625,12 @@ void test_select_method_return_value_passed_as_argument(void)
 	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&nested_mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(INSN_PUSH_REG, REG_EAX, insn);
+	sreg = mach_reg(&insn->src.reg);
+	dreg = mach_reg(&insn->dest.reg);
+	assert_reg_reg_insn(INSN_MOV_REG_REG, sreg, dreg, insn);
+
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
