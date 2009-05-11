@@ -18,4 +18,4 @@ fi
 
 BOOTCLASSPATH=lib/classes.zip:$GLIBJ
 
-./jato -Dgnu.classpath.boot.library.path=$LIBRARY_PATH -Xbootclasspath:$BOOTCLASSPATH $*
+./jato -Xms32M -Xnocompact -Xnoasyncgc -Dgnu.classpath.boot.library.path=$LIBRARY_PATH -Xbootclasspath:$BOOTCLASSPATH $*
