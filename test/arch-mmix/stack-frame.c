@@ -24,15 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/exception.h>
-#include <arch/exception.h>
 #include <arch/stack-frame.h>
 
-unsigned char *throw_exception(struct compilation_unit *cu,
-			       struct object *exception)
+bool is_jit_method(unsigned long eip)
 {
-	unsigned char *native_ptr = __builtin_return_address(0) - 1;
-	struct jit_stack_frame *frame = __builtin_frame_address(1);
-
-	return throw_exception_from(cu, frame, native_ptr, exception);
+	return false;
 }

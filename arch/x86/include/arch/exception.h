@@ -3,7 +3,11 @@
 
 #include <vm/vm.h>
 
+struct compilation_unit;
+
 /* This should be called only by JIT compiled native code */
-unsigned char *throw_exception(struct object *exception);
+unsigned char *throw_exception(struct compilation_unit *cu,
+			       struct object *exception);
+extern void unwind();
 
 #endif

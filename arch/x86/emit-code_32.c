@@ -11,6 +11,8 @@
 #include <jit/statement.h>
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
+#include <jit/exception.h>
+#include <jit/stack-slot.h>
 
 #include <vm/list.h>
 #include <vm/buffer.h>
@@ -19,6 +21,7 @@
 #include <arch/emit-code.h>
 #include <arch/instruction.h>
 #include <arch/memory.h>
+#include <arch/exception.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -26,6 +29,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#define PREFIX_SIZE 1
+#define BRANCH_INSN_SIZE 5
+#define BRANCH_TARGET_OFFSET 1
+
+#define CALL_INSN_SIZE 5
 
 /*
  *	__encode_reg:	Encode register to be used in IA-32 instruction.
@@ -431,8 +440,6 @@ static void emit_push_imm(struct buffer *buf, struct operand *operand)
 	__emit_push_imm(buf, operand->imm);
 }
 
-#define CALL_INSN_SIZE 5
-
 static void __emit_call(struct buffer *buf, void *call_target)
 {
 	int disp = call_target - buffer_current(buf) - CALL_INSN_SIZE;
@@ -451,7 +458,11 @@ void emit_ret(struct buffer *buf)
 	emit(buf, 0xc3);
 }
 
-void emit_epilog(struct buffer *buf, unsigned long nr_locals)
+/*
+ * Emitted code must not write to ECX register because it may hold
+ * exception object reference when in unwind block
+ */
+static void __emit_epilog(struct buffer *buf, unsigned long nr_locals)
 {
 	if (nr_locals)
 		emit(buf, 0xc9);
@@ -462,8 +473,28 @@ void emit_epilog(struct buffer *buf, unsigned long nr_locals)
 	__emit_pop_reg(buf, REG_EBX);
 	__emit_pop_reg(buf, REG_ESI);
 	__emit_pop_reg(buf, REG_EDI);
+}
 
+void emit_epilog(struct buffer *buf, unsigned long nr_locals)
+{
+	__emit_epilog(buf, nr_locals);
 	emit_ret(buf);
+}
+
+static void __emit_jmp(struct buffer *buf, unsigned long addr)
+{
+	unsigned long current = (unsigned long)buffer_current(buf);
+	emit(buf, 0xE9);
+	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
+}
+
+void emit_unwind(struct buffer *buf, unsigned long nr_locals)
+{
+	/* save exception object in ECX */
+	__emit_pop_reg(buf, REG_ECX);
+
+	__emit_epilog(buf, nr_locals);
+	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
 static void emit_adc_reg_reg(struct buffer *buf,
@@ -680,10 +711,6 @@ void emit_branch_rel(struct buffer *buf, unsigned char prefix,
 	emit(buf, opc);
 	emit_imm32(buf, rel32);
 }
-
-#define PREFIX_SIZE 1
-#define BRANCH_INSN_SIZE 5
-#define BRANCH_TARGET_OFFSET 1
 
 static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
 {

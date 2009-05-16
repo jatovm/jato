@@ -18,6 +18,7 @@ struct compilation_unit {
 	struct methodblock *method;
 	struct list_head bb_list;
 	struct basic_block *exit_bb;
+	struct basic_block *unwind_bb;
 	struct var_info *var_infos;
 	unsigned long nr_vregs;
 	struct buffer *objcode;
@@ -44,6 +45,7 @@ struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 unsigned long nr_bblocks(struct compilation_unit *);
 void compute_insn_positions(struct compilation_unit *);
 int sort_basic_blocks(struct compilation_unit *);
+unsigned char *cu_exit_bb_native_ptr(struct compilation_unit *);
 
 #define for_each_variable(var, var_list) for (var = var_list; var != NULL; var = var->next)
 

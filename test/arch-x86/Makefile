@@ -24,8 +24,11 @@ OBJS = \
 	../jamvm/alloc-stub.o \
 	../jamvm/cast-stub.o \
 	../jamvm/lock.o \
+	../jamvm/thread-stub.o \
+	../jamvm/resolve-stub.o \
 	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
+	../../vm/die.o \
 	../../vm/list.o \
 	../../vm/stack.o \
 	../../vm/string.o \
@@ -44,12 +47,15 @@ OBJS = \
 	../../jit/tree-printer.o \
 	../../jit/fixup-site.o \
 	../../jit/bc-offset-mapping.o \
+	../../jit/exception.o \
+	../../jit/cu-mapping.o \
 	../../arch/x86/emit-code$(ARCH_POSTFIX).o \
 	../../arch/x86/instruction.o \
 	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \
 	../../arch/x86/stack-frame.o \
 	../../arch/x86/use-def.o \
 	../../arch/x86/exception$(ARCH_POSTFIX).o \
+	../../arch/x86/unwind$(ARCH_POSTFIX).o \
 	$(TESTS)
 
 TESTS = \

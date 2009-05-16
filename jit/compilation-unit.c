@@ -46,6 +46,11 @@ struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 		cu->exit_bb = alloc_basic_block(cu, 0, 0);
 		if (!cu->exit_bb)
 			goto out_of_memory;
+
+		cu->unwind_bb = alloc_basic_block(cu, 0, 0);
+		if (!cu->unwind_bb)
+			goto out_of_memory;
+
 		pthread_mutex_init(&cu->mutex, NULL);
 		cu->stack_frame = alloc_stack_frame(method->args_count,
 						    method->max_locals);
@@ -84,6 +89,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 
 	pthread_mutex_destroy(&cu->mutex);
 	free_basic_block(cu->exit_bb);
+	free_basic_block(cu->unwind_bb);
 	free_buffer(cu->objcode);
 	free_var_infos(cu->var_infos);
 	free_stack_frame(cu->stack_frame);
@@ -178,4 +184,9 @@ static int bb_list_compare(const struct list_head **e1, const struct list_head *
 int sort_basic_blocks(struct compilation_unit *cu)
 {
 	return list_sort(&cu->bb_list, bb_list_compare);
+}
+
+unsigned char *cu_exit_bb_native_ptr(struct compilation_unit *cu)
+{
+	return bb_native_ptr(cu->exit_bb);
 }

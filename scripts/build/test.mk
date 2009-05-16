@@ -14,6 +14,10 @@ endif
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `basename $@`
 
+%.o: %.S
+	$(E) "  AS      " $@
+	$(Q) $(AS) $(AFLAGS) $< -o `basename $@`
+
 test: $(RUNNER)
 
 $(RUNNER): $(SUITE) $(OBJS)

@@ -40,8 +40,11 @@ OBJS = \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
+	../jamvm/thread-stub.o \
+	../jamvm/cast-stub.o \
 	../arch-mmix/instruction.o \
 	../arch-mmix/use-def.o \
+	../arch-mmix/stack-frame.o \
 	arithmetic-bc-test.o \
 	basic-block-test.o \
 	bc-test-utils.o \

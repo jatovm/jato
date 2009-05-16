@@ -44,6 +44,9 @@ int emit_machine_code(struct compilation_unit *cu)
 	emit_body(cu->exit_bb, cu->objcode);
 	emit_epilog(cu->objcode, frame_size);
 
+	emit_body(cu->unwind_bb, cu->objcode);
+	emit_unwind(cu->objcode, frame_size);
+
 	return 0;
 }
 
