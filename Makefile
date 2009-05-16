@@ -83,6 +83,7 @@ JIT_OBJS = \
 	jit/bc-offset-mapping.o
 
 VM_OBJS = \
+	vm/jato.o		\
 	vm/bitset.o		\
 	vm/buffer.o		\
 	vm/bytecode.o		\
