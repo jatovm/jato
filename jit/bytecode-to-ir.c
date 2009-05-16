@@ -257,6 +257,9 @@ void convert_statement(struct parse_context *ctx, struct statement *stmt)
 	case STMT_ARRAY_CHECK:
 		tree_patch_bc_offset(stmt->expression, bc_offset);
 		break;
+	case STMT_ATHROW:
+		tree_patch_bc_offset(stmt->exception_ref, bc_offset);
+		break;
 	default: ;
 	}
 

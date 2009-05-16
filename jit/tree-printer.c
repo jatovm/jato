@@ -259,6 +259,21 @@ static int print_checkcast_stmt(int lvl, struct string *str,
 	return err;
 }
 
+static int print_athrow_stmt(int lvl, struct string *str,
+			     struct statement *stmt)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "ATHROW:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "expression", stmt->expression);
+
+      out:
+	return err;
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -273,6 +288,7 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_MONITOR_ENTER] = print_monitor_enter_stmt,
 	[STMT_MONITOR_EXIT] = print_monitor_exit_stmt,
 	[STMT_CHECKCAST] = print_checkcast_stmt,
+	[STMT_ATHROW] = print_athrow_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)

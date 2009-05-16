@@ -26,8 +26,8 @@ struct statement {
 	union {
 		struct tree_node node;
 
-		/* STMT_VOID_RETURN and STMT_ATHROW has no members in this struct.  */
-		
+		/* STMT_VOID_RETURN has no members in this struct.  */
+
 		struct /* STMT_STORE */ {
 			struct tree_node *store_dest;
 			struct tree_node *store_src;
@@ -45,6 +45,9 @@ struct statement {
 		struct /* STMT_CHECKCAST */ {
 			struct tree_node *checkcast_ref;
 			struct object *checkcast_class;
+		};
+		struct /* STMT_ATHROW */ {
+			struct tree_node *exception_ref;
 		};
 		/* STMT_EXPRESSION, STMT_NULL_CHECK, STMT_ARRAY_CHECK */
 		struct tree_node *expression;

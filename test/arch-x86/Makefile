@@ -49,6 +49,7 @@ OBJS = \
 	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \
 	../../arch/x86/stack-frame.o \
 	../../arch/x86/use-def.o \
+	../../arch/x86/exception$(ARCH_POSTFIX).o \
 	$(TESTS)
 
 TESTS = \
