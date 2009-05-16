@@ -1,0 +1,31 @@
+Hi!
+
+This is my GSoC project for 2009, called "Replacing Jam VM". My changes will
+live in this repository until they (eventually, hopefully) are merged in the
+jato main repository.
+
+Project description abstract: "Jato currently depends heavily on the Jam VM
+source code for class-file loading by including parts of the Jam VM source
+code in Jato. That was initially just a way to speed up Jato development;
+now it seems prudent to replace Jam VM with something else, before the
+dependencies are made too strong, which will only make it harder to replace
+in the future."
+
+Current plan (expect heavy changes to this as progress is made):
+
+ - Remove Jam VM .c files from the build
+   (this will tell us what the boundaries between jato and jamvm are)
+
+ - Add temporary dummy functions to vm/
+   (this should allow jato to build again, but not run)
+
+ - Add the cafebabe files
+
+ - Write the glue code between cafebabe and jato
+
+ - Jato should now work using cafebabe instead of jamvm
+
+ - Remove jamvm/ completely
+
+
+Vegard Nossum
