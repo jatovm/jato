@@ -99,32 +99,7 @@ VM_OBJS = \
 	vm/class.o		\
 	vm/list.o
 
-JAMVM_OBJS = \
-	vm/jato.o		\
-	jamvm/access.o		\
-	jamvm/alloc.o		\
-	jamvm/cast.o		\
-	jamvm/class.o		\
-	jamvm/direct.o		\
-	jamvm/dll.o		\
-	jamvm/dll_ffi.o		\
-	jamvm/excep.o		\
-	jamvm/execute.o		\
-	jamvm/frame.o		\
-	jamvm/hash.o		\
-	jamvm/hooks.o		\
-	jamvm/init.o		\
-	jamvm/interp.o		\
-	jamvm/jni.o		\
-	jamvm/lock.o		\
-	jamvm/natives.o		\
-	jamvm/properties.o	\
-	jamvm/reflect.o		\
-	jamvm/resolve.o		\
-	jamvm/string.o		\
-	jamvm/thread.o		\
-	jamvm/utf8.o		\
-	jamvm/zip.o
+JAMVM_OBJS =
 
 LIBHARNESS_OBJS = \
 	test/libharness/libharness.o
