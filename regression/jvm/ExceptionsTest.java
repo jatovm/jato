@@ -25,6 +25,23 @@
  */
 package jvm;
 
+class MyException extends Exception {
+    static final long serialVersionUID = 0;
+
+    public MyException(String msg) {
+        super(msg);
+    }
+};
+
+class MyException2 extends MyException {
+    static final long serialVersionUID = 0;
+
+    public MyException2(String msg) {
+        super(msg);
+    }
+};
+
+
 /**
  * @author Tomasz Grabiec
  */
@@ -39,16 +56,70 @@ public class ExceptionsTest extends TestCase {
         try {
             i = 2;
         } catch (Exception e) {
-            i--;
-            return i;
+            i = 3;
         } catch (Throwable e) {
-            i++;
+            i = 4;
         }
 
         return i;
     }
 
+    public static void testThrowAndCatchInTheSameMethod() {
+        Exception e = new Exception("the horror!");
+        boolean catched = false;
+
+        try {
+            throw e;
+        } catch (Exception _e) {
+            assertEquals(e, _e);
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void methodThrowingException(int counter) throws Exception {
+        if (counter == 0)
+            throw new Exception("boom");
+        else
+            methodThrowingException(counter - 1);
+    }
+
+    public static void testUnwinding() {
+        boolean catched = false;
+
+        try {
+            methodThrowingException(10);
+        } catch (Exception e) {
+            assertEquals(e.getMessage(), "boom");
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testMultipleCatchBlocks() {
+        int section = 0;
+
+        try {
+            throw new MyException("boom");
+        } catch (MyException2 e) {
+            section = 1;
+        } catch (MyException e) {
+            section = 2;
+        } catch (Exception e) {
+            section = 3;
+        }
+
+        assertEquals(section, 2);
+    }
+
     public static void main(String args[]) {
+        testCatchCompilation();
+        testThrowAndCatchInTheSameMethod();
+        testUnwinding();
+        testMultipleCatchBlocks();
+
         Runtime.getRuntime().halt(retval);
     }
 };
