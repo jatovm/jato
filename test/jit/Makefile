@@ -7,6 +7,7 @@ OBJS = \
 	../../vm/buffer.o \
 	../../vm/bytecode.o \
 	../../vm/bytecodes.o \
+	../../vm/die.o \
 	../../vm/list.o \
 	../../vm/stack.o \
 	../../vm/string.o \
@@ -35,6 +36,7 @@ OBJS = \
 	../../jit/args.o \
 	../../jit/exception.o \
 	../../jit/bc-offset-mapping.o \
+	../../jit/cu-mapping.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \

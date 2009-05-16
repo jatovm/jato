@@ -29,6 +29,7 @@
 #include <vm/signal.h>
 #include <vm/vm.h>
 #include <jit/compiler.h>
+#include <jit/cu-mapping.h>
 
 #ifdef USE_ZIP
 #define BCP_MESSAGE "<jar/zip files and directories separated by :>"
@@ -297,6 +298,7 @@ int main(int argc, char *argv[]) {
     exe_name = argv[0];
 
     setup_signal_handlers();
+    init_cu_mapping();
 
     setDefaultInitArgs(&args);
     int class_arg = parseCommandLine(argc, argv, &args);

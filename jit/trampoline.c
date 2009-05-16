@@ -25,6 +25,7 @@
  */
 
 #include <jit/compiler.h>
+#include <jit/cu-mapping.h>
 #include <vm/buffer.h>
 #include <vm/natives.h>
 #include <vm/vm.h>
@@ -51,6 +52,8 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 {
 	if (!cu->is_compiled)
 		compile(cu);
+
+	add_cu_mapping(cu);
 
 	return buffer_ptr(cu->objcode);
 }
