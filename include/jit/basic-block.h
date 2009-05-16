@@ -23,6 +23,7 @@ struct basic_block {
 	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
 	unsigned long nr_successors;
 	struct basic_block **successors;
+	unsigned long mach_offset;
 
 	/* The mimic stack is used to simulate JVM operand stack at
 	   compile-time.  See Section 2.2 ("Lazy code selection") of the paper
@@ -65,6 +66,7 @@ struct basic_block *bb_split(struct basic_block *, unsigned long);
 void bb_add_stmt(struct basic_block *, struct statement *);
 void bb_add_insn(struct basic_block *, struct insn *);
 int bb_add_successor(struct basic_block *, struct basic_block *);
+unsigned char *bb_native_ptr(struct basic_block *bb);
 
 #define for_each_basic_block(bb, bb_list) list_for_each_entry(bb, bb_list, bb_list_node)
 #define for_each_basic_block_reverse(bb, bb_list) list_for_each_entry_reverse(bb, bb_list, bb_list_node)

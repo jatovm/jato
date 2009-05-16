@@ -941,7 +941,8 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
 {
 	struct insn *insn;
 
-	backpatch_branches(buf, &bb->backpatch_insns, buffer_offset(buf));
+	bb->mach_offset = buffer_offset(buf);
+	backpatch_branches(buf, &bb->backpatch_insns, bb->mach_offset);
 
 	for_each_insn(insn, &bb->insn_list) {
 		emit_insn(buf, insn);
