@@ -88,16 +88,17 @@ VM_OBJS = \
 	vm/buffer.o		\
 	vm/bytecode.o		\
 	vm/bytecodes.o		\
+	vm/class.o		\
 	vm/debug-dump.o		\
 	vm/die.o		\
 	vm/natives.o		\
+	vm/object.o		\
 	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack.o		\
 	vm/string.o		\
 	vm/types.o		\
 	vm/zalloc.o		\
-	vm/class.o		\
 	vm/list.o
 
 JAMVM_OBJS =

@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <vm/class.h>
+#include <vm/object.h>
 
 #include <../jamvm/lock.h>
 
@@ -718,8 +719,10 @@ reg:	EXPR_NEW
 	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
 
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->class));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocObject));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+		(unsigned long) expr->class));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc));
 	method_args_cleanup(s, tree, 1);
 }
 
@@ -737,7 +740,8 @@ reg:	EXPR_NEWARRAY(reg)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, expr->array_type));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocTypeArray));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc_native_array));
 
 	method_args_cleanup(s, tree, 2);
 }
@@ -760,8 +764,10 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, stack_ptr));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimension));
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->multianewarray_ref_type));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocMultiArray));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+		(unsigned long) expr->multianewarray_ref_type));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc_multi_array));
 
 	method_args_cleanup(s, tree, dimension + 3);
 }
@@ -778,12 +784,13 @@ reg:    EXPR_ANEWARRAY(reg)
 
         size = state->left->reg1;
 
-        select_insn(s, tree, imm_insn(INSN_PUSH_IMM, sizeof(struct object *)));
         select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
-        select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->anewarray_ref_type));
-        select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocArray));
+        select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+		(unsigned long) expr->anewarray_ref_type));
+        select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc_array));
 
-        method_args_cleanup(s, tree, 3);
+        method_args_cleanup(s, tree, 2);
 }
 
 reg:    EXPR_ARRAYLENGTH(reg)
@@ -1177,7 +1184,8 @@ stmt:	STMT_MONITOR_ENTER(reg)
 	ref = state->left->reg1;
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) objectLock));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_lock));
 
 	method_args_cleanup(s, tree, 1);
 }
@@ -1188,7 +1196,8 @@ stmt:	STMT_MONITOR_EXIT(reg)
 	ref = state->left->reg1;
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) objectUnlock));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_unlock));
 
 	method_args_cleanup(s, tree, 1);
 }
