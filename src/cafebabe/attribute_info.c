@@ -33,7 +33,7 @@ cafebabe_attribute_info_init(struct cafebabe_attribute_info *a,
 	if (cafebabe_stream_read_uint32(s, &a->attribute_length))
 		goto out;
 
-	a->info = malloc(a->attribute_length);
+	a->info = cafebabe_stream_malloc(s, a->attribute_length);
 	if (!a->info)
 		goto out;
 

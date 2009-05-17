@@ -32,12 +32,9 @@ cafebabe_constant_info_utf8_init(struct cafebabe_constant_info_utf8 *utf8,
 	if (cafebabe_stream_read_uint16(s, &utf8->length))
 		goto out;
 
-	utf8->bytes = malloc(utf8->length);
-	if (!utf8->bytes) {
-		s->syscall_errno = errno;
-		s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+	utf8->bytes = cafebabe_stream_malloc(s, utf8->length);
+	if (!utf8->bytes)
 		goto out;
-	}
 
 	for (uint16_t i = 0; i < utf8->length; ++i) {
 		if (cafebabe_stream_read_uint8(s, &utf8->bytes[i]))

@@ -48,8 +48,8 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	if (cafebabe_stream_read_uint16(s, &c->constant_pool_count))
 		goto out;
 
-	c->constant_pool = malloc(sizeof(*c->constant_pool)
-		* c->constant_pool_count);
+	c->constant_pool = cafebabe_stream_malloc(s,
+		sizeof(*c->constant_pool) * c->constant_pool_count);
 	if (!c->constant_pool)
 		goto out;
 
@@ -85,8 +85,8 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	if (cafebabe_stream_read_uint16(s, &c->interfaces_count))
 		goto out_constant_pool_init;
 
-	c->interfaces = malloc(sizeof(*c->interfaces)
-		* c->interfaces_count);
+	c->interfaces = cafebabe_stream_malloc(s,
+		sizeof(*c->interfaces) * c->interfaces_count);
 	if (!c->interfaces)
 		goto out_constant_pool_init;
 
@@ -98,7 +98,8 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	if (cafebabe_stream_read_uint16(s, &c->fields_count))
 		goto out_interfaces_alloc;
 
-	c->fields = malloc(sizeof(*c->fields) * c->fields_count);
+	c->fields = cafebabe_stream_malloc(s,
+		sizeof(*c->fields) * c->fields_count);
 	if (!c->fields)
 		goto out_interfaces_alloc;
 
@@ -114,7 +115,8 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	if (cafebabe_stream_read_uint16(s, &c->methods_count))
 		goto out_fields_init;
 
-	c->methods = malloc(sizeof(*c->methods) * c->methods_count);
+	c->methods = cafebabe_stream_malloc(s,
+		sizeof(*c->methods) * c->methods_count);
 	if (!c->methods)
 		goto out_fields_init;
 
@@ -130,7 +132,8 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	if (cafebabe_stream_read_uint16(s, &c->attributes_count))
 		goto out_methods_init;
 
-	c->attributes = malloc(sizeof(*c->attributes) * c->attributes_count);
+	c->attributes = cafebabe_stream_malloc(s,
+		sizeof(*c->attributes) * c->attributes_count);
 	if (!c->attributes)
 		goto out_methods_init;
 

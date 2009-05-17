@@ -40,7 +40,8 @@ cafebabe_field_info_init(struct cafebabe_field_info *f,
 	if (cafebabe_stream_read_uint16(s, &f->attributes_count))
 		goto out;
 
-	f->attributes = malloc(sizeof(*f->attributes) * f->attributes_count);
+	f->attributes = cafebabe_stream_malloc(s,
+		sizeof(*f->attributes) * f->attributes_count);
 	if (!f->attributes)
 		goto out;
 
