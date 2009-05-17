@@ -1,0 +1,3 @@
+[submodule "cafebabe"]
+	path = cafebabe
+	url = git://github.com/vegard/cafebabe.git
