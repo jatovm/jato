@@ -62,8 +62,10 @@ static struct object *vm_fill_in_stack_trace(struct object *object)
 
 static void jit_init_natives(void)
 {
-	vm_register_native("java/lang/VMRuntime", "exit", vm_runtime_exit);
-	vm_register_native("java/lang/VMThrowable", "fillInStackTrace", vm_fill_in_stack_trace);
+	vm_register_native("java/lang/VMRuntime", "exit",
+		vm_runtime_exit);
+	vm_register_native("java/lang/VMThrowable", "fillInStackTrace",
+		vm_fill_in_stack_trace);
 }
 
 int
@@ -89,7 +91,8 @@ main(int argc, char *argv[])
 	if (cafebabe_stream_open(&stream, filename)) {
 		fprintf(stderr, "error: %s: %s\n", filename,
 			cafebabe_stream_error(&stream));
-		goto out_filename;
+		free(filename);
+		goto out;
 	}
 
 	struct cafebabe_class class;
@@ -97,8 +100,13 @@ main(int argc, char *argv[])
 		fprintf(stderr, "error: %s:%d/%d: %s\n", filename,
 			stream.virtual_i, stream.virtual_n,
 			cafebabe_stream_error(&stream));
-		goto out_stream;
+		cafebabe_stream_close(&stream);
+		free(filename);
+		goto out;
 	}
+
+	cafebabe_stream_close(&stream);
+	free(filename);
 
 	const struct cafebabe_method_info *main_method;
 	if (cafebabe_class_get_method(&class,
@@ -108,18 +116,19 @@ main(int argc, char *argv[])
 		goto out_class;
 	}
 
-	cafebabe_class_deinit(&class);
-	cafebabe_stream_close(&stream);
-	free(filename);
+	NOT_IMPLEMENTED;
+#if 0
+	jit_prepare_method(main_method);
+	java_main_fn main_method_trampoline;
+	main_method_trampoline = method_trampoline_ptr(main_method);
+	main_method_trampoline();
+#endif
 
+	cafebabe_class_deinit(&class);
 	return EXIT_SUCCESS;
 
 out_class:
 	cafebabe_class_deinit(&class);
-out_stream:
-	cafebabe_stream_close(&stream);
-out_filename:
-	free(filename);
 out:
 	return EXIT_FAILURE;
 }
