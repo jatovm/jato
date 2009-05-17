@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
 #include "cafebabe/class.h"
 #include "cafebabe/constant_pool.h"
@@ -129,22 +130,22 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	}
 	methods_i = c->methods_count;
 
-	if (cafebabe_stream_read_uint16(s, &c->attributes_count))
+	if (cafebabe_stream_read_uint16(s, &c->attributes.count))
 		goto out_methods_init;
 
-	c->attributes = cafebabe_stream_malloc(s,
-		sizeof(*c->attributes) * c->attributes_count);
-	if (!c->attributes)
+	c->attributes.array = cafebabe_stream_malloc(s,
+		sizeof(*c->attributes.array) * c->attributes.count);
+	if (!c->attributes.array)
 		goto out_methods_init;
 
 	uint16_t attributes_i;
-	for (uint16_t i = 0; i < c->attributes_count; ++i) {
-		if (cafebabe_attribute_info_init(&c->attributes[i], s)) {
+	for (uint16_t i = 0; i < c->attributes.count; ++i) {
+		if (cafebabe_attribute_info_init(&c->attributes.array[i], s)) {
 			attributes_i = i;
 			goto out_attributes_init;
 		}
 	}
-	attributes_i = c->attributes_count;
+	attributes_i = c->attributes.count;
 
 	if (!cafebabe_stream_eof(s)) {
 		s->cafebabe_errno = CAFEBABE_ERROR_EXPECTED_EOF;
@@ -157,8 +158,8 @@ cafebabe_class_init(struct cafebabe_class *c, struct cafebabe_stream *s)
 	/* Error handling (partial deinitialization) */
 out_attributes_init:
 	for (uint16_t i = 0; i < attributes_i; ++i)
-		cafebabe_attribute_info_deinit(&c->attributes[i]);
-	free(c->attributes);
+		cafebabe_attribute_info_deinit(&c->attributes.array[i]);
+	free(c->attributes.array);
 out_methods_init:
 	for (uint16_t i = 0; i < methods_i; ++i)
 		cafebabe_method_info_deinit(&c->methods[i]);
@@ -194,9 +195,9 @@ cafebabe_class_deinit(struct cafebabe_class *c)
 		cafebabe_method_info_deinit(&c->methods[i]);
 	free(c->methods);
 
-	for (uint16_t i = 0; i < c->attributes_count; ++i)
-		cafebabe_attribute_info_deinit(&c->attributes[i]);
-	free(c->attributes);
+	for (uint16_t i = 0; i < c->attributes.count; ++i)
+		cafebabe_attribute_info_deinit(&c->attributes.array[i]);
+	free(c->attributes.array);
 }
 
 int

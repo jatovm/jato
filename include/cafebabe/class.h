@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "cafebabe/attribute_array.h"
+
 struct cafebabe_attribute_info;
 struct cafebabe_constant_info_utf8;
 struct cafebabe_constant_info_class;
@@ -52,8 +54,11 @@ struct cafebabe_class {
 	struct cafebabe_field_info *fields;
 	uint16_t methods_count;
 	struct cafebabe_method_info *methods;
+#if 0
 	uint16_t attributes_count;
 	struct cafebabe_attribute_info *attributes;
+#endif
+	struct cafebabe_attribute_array attributes;
 };
 
 int cafebabe_class_init(struct cafebabe_class *c,

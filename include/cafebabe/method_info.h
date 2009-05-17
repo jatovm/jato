@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "cafebabe/attribute_array.h"
+
 struct cafebabe_attribute_info;
 struct cafebabe_stream;
 
@@ -36,8 +38,7 @@ struct cafebabe_method_info {
 	uint16_t access_flags;
 	uint16_t name_index;
 	uint16_t descriptor_index;
-	uint16_t attributes_count;
-	struct cafebabe_attribute_info *attributes;
+	struct cafebabe_attribute_array attributes;
 };
 
 int cafebabe_method_info_init(struct cafebabe_method_info *m,

@@ -19,30 +19,20 @@
 
 #pragma once
 
-#ifndef CAFEBABE__FIELD_INFO_H
-#define CAFEBABE__FIELD_INFO_H
+#ifndef CAFEBABE__ATTRIBUTE_ARRAY_H
+#define CAFEBABE__ATTRIBUTE_ARRAY_H
 
 #include <stdint.h>
 
-#include "cafebabe/attribute_array.h"
-
 struct cafebabe_attribute_info;
-struct cafebabe_stream;
+struct cafebabe_class;
 
-/**
- * A java class field.
- *
- * See also section 4.5 of The Java Virtual Machine Specification.
- */
-struct cafebabe_field_info {
-	uint16_t access_flags;
-	uint16_t name_index;
-	uint16_t descriptor_index;
-	struct cafebabe_attribute_array attributes;
+struct cafebabe_attribute_array {
+	uint16_t count;
+	struct cafebabe_attribute_info *array;
 };
 
-int cafebabe_field_info_init(struct cafebabe_field_info *fi,
-	struct cafebabe_stream *s);
-void cafebabe_field_info_deinit(struct cafebabe_field_info *fi);
+int cafebabe_attribute_array_get(const struct cafebabe_attribute_array *array,
+	const char *name, const struct cafebabe_class *c, unsigned int *r);
 
 #endif

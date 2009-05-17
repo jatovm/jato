@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
 #include "cafebabe/method_info.h"
 #include "cafebabe/stream.h"
@@ -37,29 +38,29 @@ cafebabe_method_info_init(struct cafebabe_method_info *m,
 	if (cafebabe_stream_read_uint16(s, &m->descriptor_index))
 		goto out;
 
-	if (cafebabe_stream_read_uint16(s, &m->attributes_count))
+	if (cafebabe_stream_read_uint16(s, &m->attributes.count))
 		goto out;
 
-	m->attributes = cafebabe_stream_malloc(s,
-		sizeof(*m->attributes) * m->attributes_count);
-	if (!m->attributes)
+	m->attributes.array = cafebabe_stream_malloc(s,
+		sizeof(*m->attributes.array) * m->attributes.count);
+	if (!m->attributes.array)
 		goto out;
 
 	uint16_t attributes_i;
-	for (uint16_t i = 0; i < m->attributes_count; ++i) {
-		if (cafebabe_attribute_info_init(&m->attributes[i], s)) {
+	for (uint16_t i = 0; i < m->attributes.count; ++i) {
+		if (cafebabe_attribute_info_init(&m->attributes.array[i], s)) {
 			attributes_i = i;
 			goto out_attributes_init;
 		}
 	}
-	attributes_i = m->attributes_count;
+	attributes_i = m->attributes.count;
 
 	return 0;
 
 out_attributes_init:
 	for (uint16_t i = 0; i < attributes_i; ++i)
-		cafebabe_attribute_info_deinit(&m->attributes[i]);
-	free(m->attributes);
+		cafebabe_attribute_info_deinit(&m->attributes.array[i]);
+	free(m->attributes.array);
 out:
 	return 1;
 }
@@ -67,7 +68,7 @@ out:
 void
 cafebabe_method_info_deinit(struct cafebabe_method_info *m)
 {
-	for (uint16_t i = 0; i < m->attributes_count; ++i)
-		cafebabe_attribute_info_deinit(&m->attributes[i]);
-	free(m->attributes);
+	for (uint16_t i = 0; i < m->attributes.count; ++i)
+		cafebabe_attribute_info_deinit(&m->attributes.array[i]);
+	free(m->attributes.array);
 }

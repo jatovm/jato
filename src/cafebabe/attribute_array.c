@@ -17,32 +17,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#pragma once
-
-#ifndef CAFEBABE__FIELD_INFO_H
-#define CAFEBABE__FIELD_INFO_H
-
-#include <stdint.h>
-
 #include "cafebabe/attribute_array.h"
+#include "cafebabe/attribute_info.h"
 
-struct cafebabe_attribute_info;
-struct cafebabe_stream;
+int cafebabe_attribute_array_get(const struct cafebabe_attribute_array *array,
+	const char *name, const struct cafebabe_class *c, unsigned int *r)
+{
+	for (uint16_t i = 0; i < array->attributes_count; ++i) {
+		const struct cafebabe_constant_info_utf8 *attribute_name;
+		if (cafebabe_class_constant_get_utf8(c,
+			array->attributes[i].attribute_name_index,
+			&attribute_name))
+		{
+			return 1;
+		}
 
-/**
- * A java class field.
- *
- * See also section 4.5 of The Java Virtual Machine Specification.
- */
-struct cafebabe_field_info {
-	uint16_t access_flags;
-	uint16_t name_index;
-	uint16_t descriptor_index;
-	struct cafebabe_attribute_array attributes;
-};
+		if (cafebabe_constant_info_utf8_compare(attribute_name, name))
+			continue;
 
-int cafebabe_field_info_init(struct cafebabe_field_info *fi,
-	struct cafebabe_stream *s);
-void cafebabe_field_info_deinit(struct cafebabe_field_info *fi);
+		*r = i;
+		return 0;
+	}
 
-#endif
+	/* Not found */
+	return 0;
+}
