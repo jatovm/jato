@@ -33,13 +33,50 @@
 #include "cafebabe/method_info.h"
 #include "cafebabe/stream.h"
 
+#include "jit/compiler.h"
+
+#include "vm/natives.h"
+#include "vm/signal.h"
+#include "vm/vm.h"
+
+char *exe_name;
+
+static void vm_runtime_exit(int status)
+{
+	NOT_IMPLEMENTED;
+
+	exit(status);
+}
+
+/*
+ * This stub is needed by java.lang.VMThrowable constructor to work. It should
+ * return java.lang.VMState instance, or null in which case no stack trace will
+ * be printed by printStackTrace() method.
+ */
+static struct object *vm_fill_in_stack_trace(struct object *object)
+{
+	NOT_IMPLEMENTED;
+
+	return NULL;
+}
+
+static void jit_init_natives(void)
+{
+	vm_register_native("java/lang/VMRuntime", "exit", vm_runtime_exit);
+	vm_register_native("java/lang/VMThrowable", "fillInStackTrace", vm_fill_in_stack_trace);
+}
+
 int
 main(int argc, char *argv[])
 {
+	exe_name = argv[0];
+
 	if (argc != 2) {
 		fprintf(stderr, "usage: %s CLASS\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	jit_init_natives();
 
 	const char *classname = argv[1];
 	char *filename;
