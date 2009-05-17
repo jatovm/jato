@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 2.6)
+
 project (cafebabe)
 
 set (CMAKE_C_FLAGS "-Wall -std=gnu99")
