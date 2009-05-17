@@ -83,7 +83,7 @@ JIT_OBJS = \
 	jit/bc-offset-mapping.o
 
 VM_OBJS = \
-	vm/jato.o		\
+	vm/jato-cafebabe.o	\
 	vm/bitset.o		\
 	vm/buffer.o		\
 	vm/bytecode.o		\
@@ -102,10 +102,21 @@ VM_OBJS = \
 
 JAMVM_OBJS =
 
+CAFEBABE_OBJS := \
+	attribute_info.o	\
+	class.o			\
+	constant_pool.o		\
+	error.o			\
+	field_info.o		\
+	method_info.o		\
+	stream.o
+
+CAFEBABE_OBJS := $(addprefix cafebabe/src/cafebabe/,$(CAFEBABE_OBJS))
+
 LIBHARNESS_OBJS = \
 	test/libharness/libharness.o
 
-JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS)
+JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(CAFEBABE_OBJS)
 
 OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
@@ -122,7 +133,7 @@ DEFAULT_CFLAGS	+= $(WARNINGS)
 OPTIMIZATIONS	+= -Os
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijamvm -Ijit/glib -include $(ARCH_CONFIG)
+INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijamvm -Ijit/glib -Icafebabe/include -include $(ARCH_CONFIG)
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
 DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"
