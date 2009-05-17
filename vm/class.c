@@ -32,7 +32,9 @@ unsigned long is_object_instance_of(struct object *obj, struct object *type)
 	if (!obj)
 		return 0;
 
-	return isInstanceOf(type, obj->class);
+	NOT_IMPLEMENTED;
+	//return isInstanceOf(type, obj->class);
+	return 0;
 }
 
 void check_null(struct object *obj)
@@ -57,6 +59,7 @@ void check_cast(struct object *obj, struct object *type)
 	if (!obj)
 		return;
 
-	if (!isInstanceOf(type, obj->class))
-		abort();
+	NOT_IMPLEMENTED;
+	//if (!isInstanceOf(type, obj->class))
+	//	abort();
 }
