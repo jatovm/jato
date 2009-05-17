@@ -128,6 +128,9 @@ JAVAC		:= ecj
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99
 
+# XXX: Temporary hack -Vegard
+DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning %s not implemented\n", __FILE__, __LINE__, __func__)'
+
 WARNINGS	= -Wsign-compare -Wundef
 DEFAULT_CFLAGS	+= $(WARNINGS)
 

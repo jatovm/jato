@@ -2,10 +2,6 @@
 
 #include "vm/object.h"
 
-#define NOT_IMPLEMENTED \
-	fprintf(stderr, "%s:%d: warning: %s not implemented\n",	\
-		__FILE__, __LINE__, __func__)
-
 struct vm_object *vm_object_alloc(struct vm_class *class)
 {
 	NOT_IMPLEMENTED;
