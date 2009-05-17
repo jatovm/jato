@@ -60,7 +60,9 @@ static struct fieldblock *lookup_field(struct parse_context *ctx)
 
 	index = bytecode_read_u16(ctx->buffer);
 
-	return resolveField(ctx->cu->method->class, index);
+	NOT_IMPLEMENTED;
+	//return resolveField(ctx->cu->method->class, index);
+	return NULL;
 }
 
 int convert_getstatic(struct parse_context *ctx)
@@ -343,8 +345,11 @@ int convert_new(struct parse_context *ctx)
 	unsigned long type_idx;
 	struct object *class;
 
+	NOT_IMPLEMENTED;
+
 	type_idx = bytecode_read_u16(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = NULL;
 	if (!class)
 		return -EINVAL;
 
@@ -380,10 +385,13 @@ int convert_anewarray(struct parse_context *ctx)
 	unsigned long type_idx;
 	struct object *class, *arrayclass;
 
+	NOT_IMPLEMENTED;
+
 	size = stack_pop(ctx->bb->mimic_stack);
 	type_idx = bytecode_read_u16(ctx->buffer);
 
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = NULL;
 	if (!class)
 		return -EINVAL;
 
@@ -408,10 +416,12 @@ int convert_multianewarray(struct parse_context *ctx)
 	unsigned char dimension;
 	struct object *class;
 
+	NOT_IMPLEMENTED;
+
 	type_idx = bytecode_read_u16(ctx->buffer);
 	dimension = bytecode_read_u8(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
-
+	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = NULL;
 	if (!class)
 		return -ENOMEM;
 
@@ -450,10 +460,13 @@ int convert_instanceof(struct parse_context *ctx)
 	struct object *class;
 	unsigned long type_idx;
 
+	NOT_IMPLEMENTED;
+
 	objectref = stack_pop(ctx->bb->mimic_stack);
 
 	type_idx = bytecode_read_u16(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = NULL;
 	if (!class)
 		return -EINVAL;
 
@@ -473,10 +486,13 @@ int convert_checkcast(struct parse_context *ctx)
 	struct statement *checkcast_stmt;
 	unsigned long type_idx;
 
+	NOT_IMPLEMENTED;
+
 	object_ref = stack_pop(ctx->bb->mimic_stack);
 
 	type_idx = bytecode_read_u16(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = NULL;
 	if (!class)
 		return -ENOMEM;
 

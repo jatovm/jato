@@ -128,7 +128,10 @@ static struct methodblock *resolve_invoke_target(struct parse_context *ctx)
 
 	idx = bytecode_read_u16(ctx->buffer);
 
-	return resolveMethod(ctx->cu->method->class, idx);
+	//return resolveMethod(ctx->cu->method->class, idx);
+
+	NOT_IMPLEMENTED;
+	return NULL;
 }
 
 int convert_invokevirtual(struct parse_context *ctx)
