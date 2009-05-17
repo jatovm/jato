@@ -171,3 +171,15 @@ cafebabe_stream_read_uint32(struct cafebabe_stream *s, uint32_t *r)
 	s->virtual_i += 4;
 	return 0;
 }
+
+void *
+cafebabe_stream_malloc(struct cafebabe_stream *s, size_t size)
+{
+	void *ptr = malloc(size);
+	if (!ptr) {
+		s->syscall_errno = ENOMEM;
+		s->cafebabe_errno = CAFEBABE_ERROR_ERRNO;
+	}
+
+	return ptr;
+}
