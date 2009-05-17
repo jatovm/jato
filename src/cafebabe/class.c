@@ -242,7 +242,7 @@ cafebabe_class_constant_get_class(const struct cafebabe_class *c, uint16_t i,
 int
 cafebabe_class_get_field(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	const struct cafebabe_field_info **r)
+	unsigned int *r)
 {
 	for (uint16_t i = 0; i < c->fields_count; ++i) {
 		const struct cafebabe_constant_info_utf8 *field_name;
@@ -268,7 +268,7 @@ cafebabe_class_get_field(const struct cafebabe_class *c,
 			continue;
 		}
 
-		*r = &c->fields[i];
+		*r = i;
 		return 0;
 	}
 
@@ -279,7 +279,7 @@ cafebabe_class_get_field(const struct cafebabe_class *c,
 int
 cafebabe_class_get_method(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	const struct cafebabe_method_info **r)
+	unsigned int *r)
 {
 	for (uint16_t i = 0; i < c->methods_count; ++i) {
 		const struct cafebabe_constant_info_utf8 *method_name;
@@ -305,7 +305,7 @@ cafebabe_class_get_method(const struct cafebabe_class *c,
 			continue;
 		}
 
-		*r = &c->methods[i];
+		*r = i;
 		return 0;
 	}
 

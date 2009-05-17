@@ -69,9 +69,9 @@ int cafebabe_class_constant_get_class(const struct cafebabe_class *c,
 
 int cafebabe_class_get_field(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	const struct cafebabe_field_info **r);
+	unsigned int *r);
 int cafebabe_class_get_method(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
-	const struct cafebabe_method_info **r);
+	unsigned int *r);
 
 #endif
