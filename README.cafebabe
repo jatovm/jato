@@ -11,7 +11,7 @@ now it seems prudent to replace Jam VM with something else, before the
 dependencies are made too strong, which will only make it harder to replace
 in the future."
 
-Current plan (expect heavy changes to this as progress is made):
+Done, more or less:
 
  - Remove Jam VM .c files from the build
    (this will tell us what the boundaries between jato and jamvm are)
@@ -21,7 +21,20 @@ Current plan (expect heavy changes to this as progress is made):
 
  - Add the cafebabe files
 
- - Write the glue code between cafebabe and jato
+Current plan (expect heavy changes to this as progress is made):
+
+ - Write the glue code between cafebabe and jato:
+
+	This would be vm_class/vm_method/etc., i.e. jato-specific structures
+	with pointers to cafebabe structures, but also direct pointers (instead
+	of e.g. indices). We should e.g. load max_stack/max_locals from the
+	Code attribute of a method and put it directly into struct vm_method.
+
+ - Write a wrapper around object allocation that simply calls malloc()
+
+	Garbage collection can be implemented later.
+
+ - Use pthread for object locking
 
  - Jato should now work using cafebabe instead of jamvm
 
