@@ -186,6 +186,11 @@ cafebabe_stream_read_uint32(struct cafebabe_stream *s, uint32_t *r)
 	return 0;
 }
 
+uint8_t *cafebabe_stream_pointer(struct cafebabe_stream *s)
+{
+	return s->virtual + s->virtual_i;
+}
+
 int
 cafebabe_stream_skip(struct cafebabe_stream *s, unsigned int n)
 {
