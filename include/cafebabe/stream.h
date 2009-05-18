@@ -45,6 +45,10 @@ struct cafebabe_stream {
 int cafebabe_stream_open(struct cafebabe_stream *s, const char *filename);
 void cafebabe_stream_close(struct cafebabe_stream *s);
 
+void cafebabe_stream_open_buffer(struct cafebabe_stream *s,
+	uint8_t *buf, unsigned int size);
+void cafebabe_stream_close_buffer(struct cafebabe_stream *s);
+
 const char *cafebabe_stream_error(struct cafebabe_stream *s);
 int cafebabe_stream_eof(struct cafebabe_stream *s);
 

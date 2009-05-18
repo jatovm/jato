@@ -109,6 +109,20 @@ cafebabe_stream_close(struct cafebabe_stream *s)
 	free(s->filename);
 }
 
+void
+cafebabe_stream_open_buffer(struct cafebabe_stream *s,
+	uint8_t *buf, unsigned int size)
+{
+	s->virtual = buf;
+	s->virtual_i = 0;
+	s->virtual_n = size;
+}
+
+void
+cafebabe_stream_close_buffer(struct cafebabe_stream *s)
+{
+}
+
 const char *
 cafebabe_stream_error(struct cafebabe_stream *s)
 {
