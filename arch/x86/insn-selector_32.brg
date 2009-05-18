@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <vm/class.h>
+#include <vm/method.h>
 #include <vm/object.h>
 
 #include <../jamvm/lock.h>
@@ -431,7 +432,7 @@ reg:	EXPR_INVOKE(arg) 1
 {
 	struct var_info *eax, *edx = NULL;
 	struct compilation_unit *cu;
-	struct methodblock *method;
+	struct vm_method *method;
 	struct expression *expr;
 	struct insn *call_insn;
 	bool is_compiled;
@@ -448,15 +449,15 @@ reg:	EXPR_INVOKE(arg) 1
 		 * instruction selection through jit_magic_trampoline().
 		 */
 		is_compiled = false;
-		target = method_trampoline_ptr(method);
+		target = vm_method_trampoline_ptr(method);
 	} else {
 		pthread_mutex_lock(&cu->mutex);
 		is_compiled = cu->is_compiled;
 
 		if (is_compiled)
-			target = method_native_ptr(method);
+			target = vm_method_native_ptr(method);
 		else
-			target = method_trampoline_ptr(method);
+			target = vm_method_trampoline_ptr(method);
 
 		pthread_mutex_unlock(&cu->mutex);
 	}
@@ -496,7 +497,7 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	struct var_info *call_target;
 	struct compilation_unit *cu;
 	unsigned long method_offset;
-	struct methodblock *method;
+	struct vm_method *method;
 	struct var_info *stack_ptr;
 	unsigned long args_count;
 	struct expression *expr;

@@ -7,12 +7,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-static inline enum vm_type method_return_type(struct methodblock *method)
-{
-	char *return_type = method->type + (strlen(method->type) - 1);
-	return str_to_type(return_type);
-}
-
 #include <cafebabe/code_attribute.h>
 #include <cafebabe/class.h>
 #include <cafebabe/method_info.h>
@@ -26,9 +20,12 @@ struct vm_class;
 
 struct vm_method {
 	struct vm_class *class;
+	unsigned int method_index;
 	const struct cafebabe_method_info *method;
 
 	char *name;
+	char *type;
+	unsigned int args_count;
 
 	struct cafebabe_code_attribute code_attribute;
 
@@ -56,7 +53,18 @@ static inline bool vm_method_is_constructor(struct vm_method *vmm)
 	return strcmp(vmm->name, "<init>") == 0;
 }
 
+static inline enum vm_type method_return_type(struct vm_method *method)
+{
+	char *return_type = method->type + (strlen(method->type) - 1);
+	return str_to_type(return_type);
+}
+
 int vm_method_prepare_jit(struct vm_method *vmm);
+
+static inline void *vm_method_native_ptr(struct vm_method *vmm)
+{
+	return buffer_ptr(vmm->compilation_unit->objcode);
+}
 
 static inline void *vm_method_trampoline_ptr(struct vm_method *vmm)
 {

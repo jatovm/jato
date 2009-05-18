@@ -117,6 +117,8 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	default:
 		return -EINVAL;
 	}
+#else
+	expr = NULL;
 #endif
 
 	if (!expr)

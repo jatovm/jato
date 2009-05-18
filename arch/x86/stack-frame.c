@@ -25,6 +25,7 @@
  */
 
 #include <jit/expression.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 #include <arch/stack-frame.h>
 #include <stdlib.h>
@@ -67,7 +68,7 @@ index_to_offset(unsigned long idx, unsigned long nr_args)
 	return 0UL - __index_to_offset(idx - nr_args + 1);
 }
 
-unsigned long frame_local_offset(struct methodblock *method,
+unsigned long frame_local_offset(struct vm_method *method,
 				 struct expression *local)
 {
 	unsigned long idx, nr_args;

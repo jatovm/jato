@@ -122,7 +122,6 @@ main(int argc, char *argv[])
 	}
 
 	struct vm_method *main_method = &vmc.methods[main_method_index];
-	vm_method_prepare_jit(main_method);
 
 	if (!vm_method_is_static(main_method)) {
 		fprintf(stderr, "errror: %s: main method not static\n",

@@ -1,6 +1,7 @@
 #ifndef __EXPRESSION_H
 #define __EXPRESSION_H
 
+#include <vm/method.h>
 #include <vm/system.h>
 #include <vm/types.h>
 #include <vm/vm.h>
@@ -165,7 +166,7 @@ struct expression {
 		    only.  */
 		struct {
 			struct tree_node *args_list;
-			struct methodblock *target_method;
+			struct vm_method *target_method;
 		};
 
 		/*  EXPR_ARGS_LIST represents list of arguments passed to
@@ -264,8 +265,8 @@ struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expre
 struct expression *conversion_expr(enum vm_type, struct expression *);
 struct expression *class_field_expr(enum vm_type, struct fieldblock *);
 struct expression *instance_field_expr(enum vm_type, struct fieldblock *, struct expression *);
-struct expression *invoke_expr(struct methodblock *);
-struct expression *invokevirtual_expr(struct methodblock *);
+struct expression *invoke_expr(struct vm_method *);
+struct expression *invokevirtual_expr(struct vm_method *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
@@ -289,7 +290,7 @@ static inline int is_invoke_expr(struct expression *expr)
 
 static inline unsigned long expr_method_index(struct expression *expr)
 {
-	return expr->target_method->method_table_index;
+	return expr->target_method->method_index;
 }
 
 #endif

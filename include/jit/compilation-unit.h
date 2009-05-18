@@ -36,7 +36,6 @@ struct compilation_unit {
 	struct stack_frame *stack_frame;
 };
 
-struct compilation_unit *alloc_compilation_unit(struct methodblock *);
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);
 int init_stack_slots(struct compilation_unit *cu);
 void free_compilation_unit(struct compilation_unit *);

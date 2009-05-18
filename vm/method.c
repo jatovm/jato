@@ -21,6 +21,7 @@ int vm_method_init(struct vm_method *vmm,
 		= &class->methods[method_index];
 
 	vmm->class = vmc;
+	vmm->method_index = method_index;
 	vmm->method = method;
 
 	const struct cafebabe_constant_info_utf8 *name;
@@ -36,6 +37,17 @@ int vm_method_init(struct vm_method *vmm,
 		NOT_IMPLEMENTED;
 		return -1;
 	}
+
+	const struct cafebabe_constant_info_utf8 *type;
+	if (cafebabe_class_constant_get_utf8(class, method->descriptor_index,
+		&type))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	vmm->type = strndup((char *) type->bytes, type->length);
+	vmm->args_count = count_arguments(vmm->type);
 
 	unsigned int code_index = 0;
 	if (cafebabe_attribute_array_get(&method->attributes,

@@ -97,17 +97,3 @@ int compile(struct compilation_unit *cu)
 
 	return err;
 }
-
-int jit_prepare_method(struct methodblock *mb)
-{
-	mb->compilation_unit = alloc_compilation_unit(mb);
-	if (!mb->compilation_unit)
-		return -ENOMEM;
-
-	mb->trampoline = build_jit_trampoline(mb->compilation_unit);
-	if (!mb->trampoline) {
-		free_compilation_unit(mb->compilation_unit);
-		return -ENOMEM;
-	}
-	return 0;
-}

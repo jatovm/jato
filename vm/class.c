@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
+#define _GNU_SOURCE
+
 #include <vm/vm.h>
 #include <stdlib.h>
 
@@ -64,8 +66,12 @@ void check_cast(struct object *obj, struct object *type)
 	//	abort();
 }
 
+#include <string.h>
+
 #include <cafebabe/class.h>
+#include <cafebabe/constant_pool.h>
 #include <cafebabe/method_info.h>
+
 #include <vm/class.h>
 #include <vm/method.h>
 
@@ -79,8 +85,67 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		return -1;
 	}
 
-	for (uint16_t i = 0; i < class->methods_count; ++i)
+	for (uint16_t i = 0; i < class->methods_count; ++i) {
 		vm_method_init(&vmc->methods[i], vmc, i);
+		vm_method_prepare_jit(&vmc->methods[i]);
+	}
 
 	return 0;
+}
+
+struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
+{
+	const struct cafebabe_constant_info_method_ref *method;
+	if (cafebabe_class_constant_get_method_ref(vmc->class, i, &method))
+		return NULL;
+
+	const struct cafebabe_constant_info_class *class;
+	if (cafebabe_class_constant_get_class(vmc->class,
+		method->class_index, &class))
+	{
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_utf8 *class_name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		class->name_index, &class_name))
+	{
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_name_and_type *name_and_type;
+	if (cafebabe_class_constant_get_name_and_type(vmc->class,
+		method->name_and_type_index, &name_and_type))
+	{
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->name_index, &name))
+	{
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_utf8 *type;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->descriptor_index, &type))
+	{
+		return NULL;
+	}
+
+	char *name_str = strndup((char *) name->bytes, name->length);
+	char *type_str = strndup((char *) type->bytes, type->length);
+
+	unsigned int index = 0;
+	int r = cafebabe_class_get_method(vmc->class,
+		name_str, type_str, &index);
+
+	free(name_str);
+	free(type_str);
+
+	if (!r)
+		return &vmc->methods[index];
+
+	return NULL;
 }
