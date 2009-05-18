@@ -7,8 +7,10 @@ set (CMAKE_C_FLAGS "-Wall -std=gnu99")
 include_directories ($(CAFEBABE_SOURCE_DIR)/include)
 
 add_library (cafebabe SHARED
+	src/cafebabe/attribute_array.c
 	src/cafebabe/attribute_info.c
 	src/cafebabe/class.c
+	src/cafebabe/code_attribute.c
 	src/cafebabe/constant_pool.c
 	src/cafebabe/error.c
 	src/cafebabe/field_info.c
