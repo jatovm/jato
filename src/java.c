@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 	struct cafebabe_method_info *main_method
 		= &class.methods[main_method_index];
 
-	unsigned int main_code_index;
+	unsigned int main_code_index = 0;
 	if (cafebabe_attribute_array_get(&main_method->attributes,
 		"Code", &class, &main_code_index))
 	{
