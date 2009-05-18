@@ -16,12 +16,7 @@ struct buffer;
 struct vm_method;
 
 struct compilation_unit {
-	/* Jam VM */
-	struct methodblock *method;
-
-	/* Cafebabe */
-	struct vm_method *vm_method;
-
+	struct vm_method *method;
 	struct list_head bb_list;
 	struct basic_block *exit_bb;
 	struct var_info *var_infos;

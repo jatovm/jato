@@ -89,6 +89,8 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	struct expression *expr;
 	struct classblock *cb;
 
+	NOT_IMPLEMENTED;
+#if 0
 	cb = CLASS_CB(ctx->cu->method->class);
 	cp = &cb->constant_pool;
 
@@ -115,6 +117,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	default:
 		return -EINVAL;
 	}
+#endif
 
 	if (!expr)
 		return -ENOMEM;

@@ -7,6 +7,8 @@
  * LICENSE for details.
  */
 
+#include <cafebabe/method_info.h>
+
 #include <jit/basic-block.h>
 #include <jit/statement.h>
 #include <jit/compilation-unit.h>
@@ -993,7 +995,8 @@ static void fixup_invokevirtual(struct compilation_unit *cu,
 {
 	struct classblock *cb = CLASS_CB(objref->class);
 
-	cb->vtable.native_ptr[cu->method->method_table_index] = target;
+	NOT_IMPLEMENTED;
+	//cb->vtable.native_ptr[cu->method->method_table_index] = target;
 }
 
 void emit_trampoline(struct compilation_unit *cu,
@@ -1012,8 +1015,9 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	__emit_push_reg(buf, REG_EAX);
 
-	if ((cu->method->access_flags & ACC_STATIC) ||
-	     method_is_constructor(cu->method)) {
+	if (vm_method_is_static(cu->method)
+		|| vm_method_is_constructor(cu->method))
+	{
 		__emit_push_imm(buf, (unsigned long)trampoline);
 		__emit_call(buf, fixup_invoke);
 		__emit_add_imm_reg(buf, 0x4, REG_ESP);

@@ -26,6 +26,7 @@
 
 #include <jit/compiler.h>
 #include <vm/buffer.h>
+#include <vm/method.h>
 #include <vm/natives.h>
 #include <vm/vm.h>
 #include <vm/die.h>
@@ -33,10 +34,14 @@
 
 static void *jit_native_trampoline(struct compilation_unit *cu)
 {
-	struct methodblock *method = cu->method;
+	struct vm_method *method = cu->method;
 	const char *method_name, *class_name;
 	void *ret;
 
+	NOT_IMPLEMENTED;
+	return NULL;
+
+#if 0
 	class_name  = CLASS_CB(method->class)->name;
 	method_name = method->name;
 
@@ -45,6 +50,7 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 		die("no native function found for %s.%s", class_name, method_name);
 
 	return ret;
+#endif
 }
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
@@ -64,7 +70,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
-	if (cu->method->access_flags & ACC_NATIVE)
+	if (vm_method_is_native(cu->method))
 		ret = jit_native_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);

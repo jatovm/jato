@@ -11,8 +11,10 @@
 
 #include <vm/bitset.h>
 #include <vm/bytecodes.h>
+#include <vm/method.h>
 #include <vm/stream.h>
 #include <vm/vm.h>
+
 #include <jit/exception.h>
 
 #include <errno.h>
@@ -62,7 +64,9 @@ static int split_at_branch_targets(struct compilation_unit *cu,
 	unsigned long offset;
 	int err = 0;
 
-	for (offset = 0; offset < cu->method->code_size; offset++) {
+	for (offset = 0; offset < cu->method->code_attribute.code_length;
+		offset++)
+	{
 		struct basic_block *bb;
 
 		if (!test_bit(branch_targets->bits, offset))
@@ -138,7 +142,7 @@ static int split_after_branches(struct stream *stream,
 static int update_athrow_successors(struct stream *stream,
 				     struct compilation_unit *cu)
 {
-	struct methodblock *method;
+	struct vm_method *method;
 	int err = 0;
 
 	method = cu->method;
@@ -155,10 +159,12 @@ static int update_athrow_successors(struct stream *stream,
 
 		bb = find_bb(cu, offset);
 
-		for (i = 0; i < method->exception_table_size; i++) {
-			struct exception_table_entry *eh;
+		for (i = 0; i < method->code_attribute.exception_table_length;
+			i++)
+		{
+			struct cafebabe_code_attribute_exception *eh;
 
-			eh = &method->exception_table[i];
+			eh = &method->code_attribute.exception_table[i];
 
 			if (exception_covers(eh, offset)) {
 				struct basic_block *eh_bb;
@@ -179,14 +185,14 @@ static int update_athrow_successors(struct stream *stream,
 
 static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
 {
-	struct methodblock *method = cu->method;
+	struct vm_method *method = cu->method;
 	int i;
 
-	for (i = 0; i < method->exception_table_size; i++) {
-		struct exception_table_entry *eh;
+	for (i = 0; i < method->code_attribute.exception_table_length; i++) {
+		struct cafebabe_code_attribute_exception *eh;
 		struct basic_block *bb;
 
-		eh = &method->exception_table[i];
+		eh = &method->code_attribute.exception_table[i];
 		bb = find_bb(cu, eh->handler_pc);
 
 		if (bb == 0 || bb->start != eh->handler_pc)
@@ -210,9 +216,11 @@ static struct stream_operations bytecode_stream_ops = {
 	.new_position = bytecode_next_insn,
 };
 
-static void bytecode_stream_init(struct stream *stream, struct methodblock *method)
+static void bytecode_stream_init(struct stream *stream, struct vm_method *method)
 {
-	stream_init(stream, method->jit_code, method->code_size,
+	stream_init(stream,
+		    method->code_attribute.code,
+		    method->code_attribute.code_length,
 		    &bytecode_stream_ops);
 }
 
@@ -223,13 +231,14 @@ int analyze_control_flow(struct compilation_unit *cu)
 	struct stream stream;
 	int err = 0;
 
-	branch_targets = alloc_bitset(cu->method->code_size);
+	branch_targets = alloc_bitset(cu->method->code_attribute.code_length);
 	if (!branch_targets)
 		return -ENOMEM;
 
 	bytecode_stream_init(&stream, cu->method);
 
-	entry_bb = get_basic_block(cu, 0, cu->method->code_size);
+	entry_bb = get_basic_block(cu, 0,
+		cu->method->code_attribute.code_length);
 
 	err = split_after_branches(&stream, entry_bb, branch_targets);
 	if (err)

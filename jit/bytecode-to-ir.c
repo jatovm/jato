@@ -16,6 +16,7 @@
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
+#include <vm/method.h>
 #include <vm/stack.h>
 
 #include <errno.h>
@@ -329,8 +330,8 @@ int convert_to_ir(struct compilation_unit *cu)
 	struct bytecode_buffer buffer = { };
 	struct parse_context ctx = {
 		.buffer = &buffer,
-		.code_size = cu->method->code_size,
-		.code = cu->method->jit_code,
+		.code_size = cu->method->code_attribute.code_length,
+		.code = cu->method->code_attribute.code,
 		.cu = cu,
 	};
 	int err = 0;

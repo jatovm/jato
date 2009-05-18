@@ -24,16 +24,19 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <cafebabe/code_attribute.h>
+
 #include <jit/exception.h>
 #include <jit/compilation-unit.h>
 
-struct exception_table_entry *exception_find_entry(struct methodblock *method,
-						   unsigned long target)
+struct cafebabe_code_attribute_exception *
+exception_find_entry(struct vm_method *method, unsigned long target)
 {
 	int i;
 
-	for (i = 0; i < method->exception_table_size; i++) {
-		struct exception_table_entry *eh = &method->exception_table[i];
+	for (i = 0; i < method->code_attribute.exception_table_length; i++) {
+		struct cafebabe_code_attribute_exception *eh
+			= &method->code_attribute.exception_table[i];
 
 		if (eh->handler_pc == target)
 			return eh;

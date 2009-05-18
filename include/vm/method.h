@@ -13,35 +13,54 @@ static inline enum vm_type method_return_type(struct methodblock *method)
 	return str_to_type(return_type);
 }
 
-static inline bool method_is_constructor(struct methodblock *method)
-{
-	return strcmp(method->name,"<init>") == 0;
-}
-
 #include <cafebabe/code_attribute.h>
+#include <cafebabe/class.h>
+#include <cafebabe/method_info.h>
+
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
+
 #include <vm/buffer.h>
 
 struct vm_class;
 
 struct vm_method {
-	const struct cafebabe_method *method;
+	struct vm_class *class;
+	const struct cafebabe_method_info *method;
+
+	char *name;
 
 	struct cafebabe_code_attribute code_attribute;
 
 	struct compilation_unit *compilation_unit;
 	struct jit_trampoline *trampoline;
+
+	void *jit_code;
 };
 
 int vm_method_init(struct vm_method *vmm,
 	struct vm_class *vmc, unsigned int method_index);
 
+static inline bool vm_method_is_static(struct vm_method *vmm)
+{
+	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_STATIC;
+}
+
+static inline bool vm_method_is_native(struct vm_method *vmm)
+{
+	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_NATIVE;
+}
+
+static inline bool vm_method_is_constructor(struct vm_method *vmm)
+{
+	return strcmp(vmm->name, "<init>") == 0;
+}
+
 int vm_method_prepare_jit(struct vm_method *vmm);
 
-static inline void *vm_method_trampoline_ptr(struct vm_method *method)
+static inline void *vm_method_trampoline_ptr(struct vm_method *vmm)
 {
-	return buffer_ptr(method->trampoline->objcode);
+	return buffer_ptr(vmm->trampoline->objcode);
 }
 
 #endif

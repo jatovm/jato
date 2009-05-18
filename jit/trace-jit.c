@@ -14,6 +14,7 @@
 #include <jit/bc-offset-mapping.h>
 
 #include <vm/buffer.h>
+#include <vm/method.h>
 #include <vm/string.h>
 #include <vm/vm.h>
 
@@ -36,16 +37,19 @@ bool opt_trace_bytecode_offset;
 
 void trace_method(struct compilation_unit *cu)
 {
-	struct methodblock *method = cu->method;
+	struct vm_method *method = cu->method;
 	unsigned char *p;
-	int i;
+	unsigned int i;
 
+	NOT_IMPLEMENTED;
+#if 0
 	printf("\nTRACE: %s.%s%s\n", CLASS_CB(method->class)->name, method->name, method->type);
+#endif
 
-	printf("Length: %d\n", method->code_size);
+	printf("Length: %d\n", method->code_attribute.code_length);
 	printf("Code: ");
-	p = method->jit_code;
-	for (i = 0; i < method->code_size; i++) {
+	p = method->code_attribute.code;
+	for (i = 0; i < method->code_attribute.code_length; i++) {
 		printf("%02x ", p[i]);
 	}
 	printf("\n\n");
@@ -236,10 +240,13 @@ void trace_machine_code(struct compilation_unit *cu)
 
 void trace_magic_trampoline(struct compilation_unit *cu)
 {
+	NOT_IMPLEMENTED;
+#if 0
 	printf("jit_magic_trampoline: ret0=%p, ret1=%p: %s.%s #%d\n",
 	       __builtin_return_address(1),
 	       __builtin_return_address(2),
 	       CLASS_CB(cu->method->class)->name,
 	       cu->method->name,
 	       cu->method->method_table_index);
+#endif
 }

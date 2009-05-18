@@ -1,9 +1,15 @@
+#define _GNU_SOURCE
+
+#include <string.h>
+
 #include <cafebabe/attribute_array.h>
 #include <cafebabe/attribute_info.h>
 #include <cafebabe/class.h>
 #include <cafebabe/code_attribute.h>
+#include <cafebabe/constant_pool.h>
 #include <cafebabe/method_info.h>
 #include <cafebabe/stream.h>
+
 #include <vm/class.h>
 #include <vm/method.h>
 
@@ -13,6 +19,23 @@ int vm_method_init(struct vm_method *vmm,
 	const struct cafebabe_class *class = vmc->class;
 	const struct cafebabe_method_info *method
 		= &class->methods[method_index];
+
+	vmm->class = vmc;
+	vmm->method = method;
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(class, method->name_index,
+		&name))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	vmm->name = strndup((char *) name->bytes, name->length);
+	if (!vmm->name) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
 
 	unsigned int code_index = 0;
 	if (cafebabe_attribute_array_get(&method->attributes,
