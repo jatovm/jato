@@ -63,3 +63,24 @@ void check_cast(struct object *obj, struct object *type)
 	//if (!isInstanceOf(type, obj->class))
 	//	abort();
 }
+
+#include <cafebabe/class.h>
+#include <cafebabe/method_info.h>
+#include <vm/class.h>
+#include <vm/method.h>
+
+int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
+{
+	vmc->class = class;
+
+	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
+	if (!vmc->methods) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	for (uint16_t i = 0; i < class->methods_count; ++i)
+		vm_method_init(&vmc->methods[i], vmc, i);
+
+	return 0;
+}

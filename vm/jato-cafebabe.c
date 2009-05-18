@@ -35,6 +35,8 @@
 
 #include "jit/compiler.h"
 
+#include "vm/class.h"
+#include "vm/method.h"
 #include "vm/natives.h"
 #include "vm/signal.h"
 #include "vm/vm.h"
@@ -108,6 +110,9 @@ main(int argc, char *argv[])
 	cafebabe_stream_close(&stream);
 	free(filename);
 
+	struct vm_class vmc;
+	vm_class_init(&vmc, &class);
+
 	unsigned int main_method_index;
 	if (cafebabe_class_get_method(&class,
 		"main", "([Ljava/lang/String;)V", &main_method_index))
@@ -116,7 +121,6 @@ main(int argc, char *argv[])
 		goto out_class;
 	}
 
-	NOT_IMPLEMENTED;
 #if 0
 	jit_prepare_method(main_method);
 	java_main_fn main_method_trampoline;

@@ -91,6 +91,7 @@ VM_OBJS = \
 	vm/class.o		\
 	vm/debug-dump.o		\
 	vm/die.o		\
+	vm/method.o		\
 	vm/natives.o		\
 	vm/object.o		\
 	vm/resolve.o		\
@@ -104,8 +105,10 @@ VM_OBJS = \
 JAMVM_OBJS =
 
 CAFEBABE_OBJS := \
+	attribute_array.o	\
 	attribute_info.o	\
 	class.o			\
+	code_attribute.o	\
 	constant_pool.o		\
 	error.o			\
 	field_info.o		\
