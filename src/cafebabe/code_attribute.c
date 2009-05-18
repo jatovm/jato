@@ -83,6 +83,12 @@ cafebabe_code_attribute_init(struct cafebabe_code_attribute *a,
 	}
 	attributes_i = a->attributes.count;
 
+	if (!cafebabe_stream_eof(s)) {
+		s->cafebabe_errno = CAFEBABE_ERROR_EXPECTED_EOF;
+		goto out_attributes_init;
+	}
+
+	/* Success */
 	return 0;
 
 out_attributes_init:
@@ -93,4 +99,14 @@ out_exception_table:
 	free(a->exception_table);
 out:
 	return 1;
+}
+
+void
+cafebabe_code_attribute_deinit(struct cafebabe_code_attribute *a)
+{
+	free(a->exception_table);
+
+	for (uint16_t i = 0; i < a->attributes.count; ++i)
+		cafebabe_attribute_info_deinit(&a->attributes.array[i]);
+	free(a->attributes.array);
 }
