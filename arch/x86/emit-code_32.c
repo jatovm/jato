@@ -417,6 +417,13 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
 }
 
+static void emit_pop_memlocal(struct buffer *buf, struct operand *operand)
+{
+	unsigned long disp = slot_offset(operand->slot);
+
+	__emit_membase_reg(buf, 0x8f, REG_EBP, disp, 0);
+}
+
 static void emit_pop_reg(struct buffer *buf, struct operand *operand)
 {
 	__emit_pop_reg(buf, mach_reg(&operand->reg));
@@ -858,6 +865,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_RET, emit_ret, NO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg, TWO_OPERANDS),

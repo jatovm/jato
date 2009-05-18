@@ -307,3 +307,12 @@ struct insn *branch_insn(enum insn_type insn_type, struct basic_block *if_true)
 	}
 	return insn;
 }
+
+struct insn *memlocal_insn(enum insn_type insn_type, struct stack_slot *slot)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn)
+		init_memlocal_operand(insn, 0, slot);
+
+	return insn;
+}
