@@ -113,6 +113,8 @@ main(int argc, char *argv[])
 	printf("\tmax_locals = %d\n", main_code_attribute.max_locals);
 	printf("\tcode_length = %d\n", main_code_attribute.code_length);
 
+	cafebabe_code_attribute_deinit(&main_code_attribute);
+
 	cafebabe_class_deinit(&class);
 	cafebabe_stream_close(&stream);
 	free(filename);
