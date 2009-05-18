@@ -21,14 +21,21 @@ Done, more or less:
 
  - Add the cafebabe files
 
-Current plan (expect heavy changes to this as progress is made):
-
  - Write the glue code between cafebabe and jato:
 
 	This would be vm_class/vm_method/etc., i.e. jato-specific structures
 	with pointers to cafebabe structures, but also direct pointers (instead
 	of e.g. indices). We should e.g. load max_stack/max_locals from the
 	Code attribute of a method and put it directly into struct vm_method.
+
+Current plan (expect heavy changes to this as progress is made):
+
+ - Write a "class loader":
+
+	Given a class name, search the classpath and load the class (using
+	cafebabe).
+
+	Cache classes, so that we don't load the same class twice.
 
  - Write a wrapper around object allocation that simply calls malloc()
 
