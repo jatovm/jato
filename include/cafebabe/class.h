@@ -54,10 +54,6 @@ struct cafebabe_class {
 	struct cafebabe_field_info *fields;
 	uint16_t methods_count;
 	struct cafebabe_method_info *methods;
-#if 0
-	uint16_t attributes_count;
-	struct cafebabe_attribute_info *attributes;
-#endif
 	struct cafebabe_attribute_array attributes;
 };
 
