@@ -49,6 +49,13 @@ int vm_method_init(struct vm_method *vmm,
 	vmm->type = strndup((char *) type->bytes, type->length);
 	vmm->args_count = count_arguments(vmm->type);
 
+	/*
+	 * Note: We can return here because the rest of the function deals
+	 * with loading the Code attribute (which native methods don't have).
+	 */
+	if (vm_method_is_native(vmm) || vm_method_is_abstract(vmm))
+		return 0;
+
 	unsigned int code_index = 0;
 	if (cafebabe_attribute_array_get(&method->attributes,
 		"Code", class, &code_index))

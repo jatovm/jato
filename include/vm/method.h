@@ -48,6 +48,11 @@ static inline bool vm_method_is_native(struct vm_method *vmm)
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_NATIVE;
 }
 
+static inline bool vm_method_is_abstract(struct vm_method *vmm)
+{
+	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_ABSTRACT;
+}
+
 static inline bool vm_method_is_constructor(struct vm_method *vmm)
 {
 	return strcmp(vmm->name, "<init>") == 0;

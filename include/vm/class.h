@@ -13,6 +13,8 @@ void check_cast(struct object *obj, struct object *type);
 struct vm_class {
 	const struct cafebabe_class *class;
 
+	char *name;
+
 	struct vm_method *methods;
 };
 

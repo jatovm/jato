@@ -79,6 +79,24 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 {
 	vmc->class = class;
 
+	const struct cafebabe_constant_info_class *constant_class;
+	if (cafebabe_class_constant_get_class(class,
+		class->this_class, &constant_class))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(class,
+		constant_class->name_index, &name))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	vmc->name = strndup((char *) name->bytes, name->length);
+
 	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
 	if (!vmc->methods) {
 		NOT_IMPLEMENTED;
