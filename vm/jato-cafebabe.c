@@ -121,14 +121,18 @@ main(int argc, char *argv[])
 		goto out_class;
 	}
 
-	vm_method_prepare_jit(&vmc.methods[main_method_index]);
+	struct vm_method *main_method = &vmc.methods[main_method_index];
+	vm_method_prepare_jit(main_method);
 
-#if 0
-	jit_prepare_method(main_method);
-	java_main_fn main_method_trampoline;
-	main_method_trampoline = method_trampoline_ptr(main_method);
+	if (!vm_method_is_static(main_method)) {
+		fprintf(stderr, "errror: %s: main method not static\n",
+			classname);
+		goto out_class;
+	}
+
+	void (*main_method_trampoline)(void)
+		= vm_method_trampoline_ptr(main_method);
 	main_method_trampoline();
-#endif
 
 	cafebabe_class_deinit(&class);
 	return EXIT_SUCCESS;

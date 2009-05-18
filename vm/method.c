@@ -81,13 +81,11 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 		return -1;
 	}
 
-#if 0
 	vmm->trampoline = build_jit_trampoline(vmm->compilation_unit);
 	if (!vmm->trampoline) {
 		NOT_IMPLEMENTED;
 		return -1;
 	}
-#endif
 
 	return 0;
 }
