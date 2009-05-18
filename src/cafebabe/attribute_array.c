@@ -19,14 +19,16 @@
 
 #include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
+#include "cafebabe/class.h"
+#include "cafebabe/constant_pool.h"
 
 int cafebabe_attribute_array_get(const struct cafebabe_attribute_array *array,
 	const char *name, const struct cafebabe_class *c, unsigned int *r)
 {
-	for (uint16_t i = 0; i < array->attributes_count; ++i) {
+	for (uint16_t i = 0; i < array->count; ++i) {
 		const struct cafebabe_constant_info_utf8 *attribute_name;
 		if (cafebabe_class_constant_get_utf8(c,
-			array->attributes[i].attribute_name_index,
+			array->array[i].attribute_name_index,
 			&attribute_name))
 		{
 			return 1;
@@ -40,5 +42,5 @@ int cafebabe_attribute_array_get(const struct cafebabe_attribute_array *array,
 	}
 
 	/* Not found */
-	return 0;
+	return 1;
 }
