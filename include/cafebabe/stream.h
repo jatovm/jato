@@ -56,6 +56,8 @@ int cafebabe_stream_read_uint8(struct cafebabe_stream *s, uint8_t *r);
 int cafebabe_stream_read_uint16(struct cafebabe_stream *s, uint16_t *r);
 int cafebabe_stream_read_uint32(struct cafebabe_stream *s, uint32_t *r);
 
+int cafebabe_stream_skip(struct cafebabe_stream *s, unsigned int n);
+
 void *cafebabe_stream_malloc(struct cafebabe_stream *s, size_t size);
 
 #endif

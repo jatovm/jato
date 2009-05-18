@@ -186,6 +186,20 @@ cafebabe_stream_read_uint32(struct cafebabe_stream *s, uint32_t *r)
 	return 0;
 }
 
+int
+cafebabe_stream_skip(struct cafebabe_stream *s, unsigned int n)
+{
+	unsigned int i = s->virtual_i;
+
+	if (i + n >= s->virtual_n) {
+		s->cafebabe_errno = CAFEBABE_ERROR_UNEXPECTED_EOF;
+		return 1;
+	}
+
+	s->virtual_i += n;
+	return 0;
+}
+
 void *
 cafebabe_stream_malloc(struct cafebabe_stream *s, size_t size)
 {
