@@ -11,6 +11,7 @@
 #include <jit/compiler.h>
 #include <jit/statement.h>
 #include <jit/bc-offset-mapping.h>
+#include <jit/exception.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -49,6 +50,10 @@ int compile(struct compilation_unit *cu)
 
 	if (opt_trace_tree_ir)
 		trace_tree_ir(cu);
+
+	err = insert_exception_spill_insns(cu);
+	if (err)
+		goto out;
 
 	err = select_instructions(cu);
 	if (err)

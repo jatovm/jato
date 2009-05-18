@@ -20,5 +20,6 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    struct jit_stack_frame *frame,
 				    unsigned char *native_ptr,
 				    struct object *exception);
+int insert_exception_spill_insns(struct compilation_unit *cu);
 
 #endif

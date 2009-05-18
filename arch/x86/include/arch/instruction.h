@@ -167,6 +167,12 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 	return memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, var);
 }
 
+static inline struct insn *
+exception_spill_insn(struct stack_slot *slot)
+{
+	return memlocal_insn(INSN_POP_MEMLOCAL, slot);
+}
+
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 

@@ -27,9 +27,12 @@
 #include <jit/exception.h>
 #include <jit/compilation-unit.h>
 #include <jit/bc-offset-mapping.h>
+#include <jit/basic-block.h>
 #include <vm/buffer.h>
 #include <arch/exception.h>
 #include <arch/stack-frame.h>
+#include <arch/instruction.h>
+#include <errno.h>
 
 struct exception_table_entry *exception_find_entry(struct methodblock *method,
 						   unsigned long target)
@@ -138,4 +141,23 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 	}
 
 	return bb_native_ptr(cu->unwind_bb);
+}
+
+int insert_exception_spill_insns(struct compilation_unit *cu)
+{
+	struct insn *insn;
+	struct basic_block *bb;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		if (bb->is_eh) {
+			insn = exception_spill_insn(cu->exception_spill_slot);
+			if (insn == NULL)
+				return -ENOMEM;
+
+			insn->bytecode_offset = bb->start;
+			bb_add_insn(bb, insn);
+		}
+	}
+
+	return 0;
 }

@@ -884,11 +884,12 @@ arg:	EXPR_ARGS_LIST(arg, arg)
 reg:	EXPR_EXCEPTION_REF
 {
 	struct var_info *result;
+	struct stack_slot *slot = s->b_parent->exception_spill_slot;
 
 	result = get_var(s->b_parent);
 	state->reg1 = result;
 
-	select_insn(s, tree, reg_insn(INSN_POP_REG, result));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
 }
 
 stmt:	STMT_RETURN(reg)

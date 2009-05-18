@@ -34,6 +34,9 @@ struct compilation_unit {
 	/* The stack frame contains information of stack slots for stack-based
 	   arguments, local variables, and spill/reload storage.  */
 	struct stack_frame *stack_frame;
+
+	/* It's needed to spill exception object reference at eh entry */
+	struct stack_slot *exception_spill_slot;
 };
 
 struct compilation_unit *alloc_compilation_unit(struct methodblock *);

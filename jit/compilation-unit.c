@@ -56,6 +56,10 @@ struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 						    method->max_locals);
 		if (!cu->stack_frame)
 			goto out_of_memory;
+
+		cu->exception_spill_slot = get_spill_slot_32(cu->stack_frame);
+		if (!cu->exception_spill_slot)
+			goto out_of_memory;
 	}
 	return cu;
 
