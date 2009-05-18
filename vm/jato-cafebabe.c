@@ -121,6 +121,8 @@ main(int argc, char *argv[])
 		goto out_class;
 	}
 
+	vm_method_prepare_jit(&vmc.methods[main_method_index]);
+
 #if 0
 	jit_prepare_method(main_method);
 	java_main_fn main_method_trampoline;

@@ -29,6 +29,7 @@
 #include <jit/stack-slot.h>
 #include <jit/vars.h>
 #include <vm/buffer.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 
 #include <errno.h>
@@ -52,6 +53,36 @@ struct compilation_unit *alloc_compilation_unit(struct methodblock *method)
 		if (!cu->stack_frame)
 			goto out_of_memory;
 	}
+	return cu;
+
+out_of_memory:
+	free_compilation_unit(cu);
+	return NULL;
+}
+
+struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
+{
+	struct compilation_unit *cu = malloc(sizeof *cu);
+	if (cu) {
+		memset(cu, 0, sizeof *cu);
+
+		INIT_LIST_HEAD(&cu->bb_list);
+		cu->vm_method = method;
+		cu->is_compiled = false;
+
+		cu->exit_bb = alloc_basic_block(cu, 0, 0);
+		if (!cu->exit_bb)
+			goto out_of_memory;
+
+		pthread_mutex_init(&cu->mutex, NULL);
+
+		cu->stack_frame = alloc_stack_frame(
+			method->code_attribute.max_stack,
+			method->code_attribute.max_locals);
+		if (!cu->stack_frame)
+			goto out_of_memory;
+	}
+
 	return cu;
 
 out_of_memory:
