@@ -25,8 +25,10 @@
 #include <string.h>
 
 #include "cafebabe/access.h"
+#include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
 #include "cafebabe/class.h"
+#include "cafebabe/code_attribute.h"
 #include "cafebabe/constant_pool.h"
 #include "cafebabe/error.h"
 #include "cafebabe/field_info.h"
@@ -70,6 +72,46 @@ main(int argc, char *argv[])
 		fprintf(stderr, "error: %s: no main method\n", classname);
 		goto out_class;
 	}
+
+	struct cafebabe_method_info *main_method
+		= &class.methods[main_method_index];
+
+	unsigned int main_code_index;
+	if (cafebabe_attribute_array_get(&main_method->attributes,
+		"Code", &class, &main_code_index))
+	{
+		fprintf(stderr, "error: %s: no 'Class' attribute for main "
+			"method\n", classname);
+		goto out_class;
+	}
+
+	struct cafebabe_attribute_info *main_code_attribute_info
+		= &main_method->attributes.array[main_code_index];
+
+	struct cafebabe_stream main_code_attribute_stream;
+	cafebabe_stream_open_buffer(&main_code_attribute_stream,
+		main_code_attribute_info->info,
+		main_code_attribute_info->attribute_length);
+
+	struct cafebabe_code_attribute main_code_attribute;
+	if (cafebabe_code_attribute_init(&main_code_attribute,
+		&main_code_attribute_stream))
+	{
+		fprintf(stderr, "error: %s:%s:%d/%d: %s\n",
+			filename,
+			"main",
+			main_code_attribute_stream.virtual_i,
+			main_code_attribute_stream.virtual_n,
+			cafebabe_stream_error(&main_code_attribute_stream));
+		exit(1);
+	}
+
+	cafebabe_stream_close_buffer(&main_code_attribute_stream);
+
+	printf("main:\n");
+	printf("\tmax_stack = %d\n", main_code_attribute.max_stack);
+	printf("\tmax_locals = %d\n", main_code_attribute.max_locals);
+	printf("\tcode_length = %d\n", main_code_attribute.code_length);
 
 	cafebabe_class_deinit(&class);
 	cafebabe_stream_close(&stream);
