@@ -346,10 +346,7 @@ int convert_new(struct parse_context *ctx)
 	unsigned long type_idx;
 	struct vm_object *class;
 
-	NOT_IMPLEMENTED;
-
 	type_idx = bytecode_read_u16(ctx->buffer);
-	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
 		return -EINVAL;
