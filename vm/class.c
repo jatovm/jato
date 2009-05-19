@@ -122,9 +122,6 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		char *super_name_str = strndup((char *) super_name->bytes,
 			super_name->length);
 
-		printf("name = '%s', super name = '%s'\n",
-			vmc->name, super_name_str);
-
 		vmc->super = classloader_load(super_name_str);
 		if (!vmc->super) {
 			NOT_IMPLEMENTED;
