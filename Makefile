@@ -92,6 +92,7 @@ VM_OBJS = \
 	vm/classloader.o	\
 	vm/debug-dump.o		\
 	vm/die.o		\
+	vm/field.o		\
 	vm/method.o		\
 	vm/natives.o		\
 	vm/object.o		\

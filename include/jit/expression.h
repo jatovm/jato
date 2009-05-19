@@ -1,6 +1,7 @@
 #ifndef __EXPRESSION_H
 #define __EXPRESSION_H
 
+#include <vm/field.h>
 #include <vm/method.h>
 #include <vm/system.h>
 #include <vm/types.h>
@@ -139,7 +140,7 @@ struct expression {
 		    (see JLS 15.11.). This expression type can be used as
 		    either as lvalue or rvalue.  */
 		struct {
-			struct fieldblock *class_field;
+			struct vm_field *class_field;
 		};
 
 		/*  EXPR_INSTANCE_FIELD represents instance field access
@@ -147,7 +148,7 @@ struct expression {
 		    used as either as lvalue or rvalue.  */
 		struct {
 			struct tree_node *objectref_expression;
-			struct fieldblock *instance_field;
+			struct vm_field *instance_field;
 		};
 		
 		/*  EXPR_INVOKE represents a method invocation expression (see
@@ -263,8 +264,8 @@ struct expression *array_deref_expr(enum vm_type, struct expression *, struct ex
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum vm_type, struct expression *);
-struct expression *class_field_expr(enum vm_type, struct fieldblock *);
-struct expression *instance_field_expr(enum vm_type, struct fieldblock *, struct expression *);
+struct expression *class_field_expr(enum vm_type, struct vm_field *);
+struct expression *instance_field_expr(enum vm_type, struct vm_field *, struct expression *);
 struct expression *invoke_expr(struct vm_method *);
 struct expression *invokevirtual_expr(struct vm_method *);
 struct expression *args_list_expr(struct expression *, struct expression *);

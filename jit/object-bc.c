@@ -57,27 +57,25 @@ static struct vm_object *class_to_array_class(struct vm_object *class)
 	return array_class;
 }
 
-static struct fieldblock *lookup_field(struct parse_context *ctx)
+static struct vm_field *lookup_field(struct parse_context *ctx)
 {
 	unsigned short index;
 
 	index = bytecode_read_u16(ctx->buffer);
 
-	NOT_IMPLEMENTED;
-	//return resolveField(ctx->cu->method->class, index);
-	return NULL;
+	return vm_class_resolve_field(ctx->cu->method->class, index);
 }
 
 int convert_getstatic(struct parse_context *ctx)
 {
 	struct expression *value;
-	struct fieldblock *fb;
+	struct vm_field *fb;
 
 	fb = lookup_field(ctx);
 	if (!fb)
 		return -EINVAL;
 
-	value = class_field_expr(field_type(fb), fb);
+	value = class_field_expr(vm_field_type(fb), fb);
 	if (!value)
 		return -ENOMEM;
 
@@ -87,7 +85,7 @@ int convert_getstatic(struct parse_context *ctx)
 
 int convert_putstatic(struct parse_context *ctx)
 {
-	struct fieldblock *fb;
+	struct vm_field *fb;
 	struct statement *store_stmt;
 	struct expression *dest, *src;
 
@@ -96,7 +94,7 @@ int convert_putstatic(struct parse_context *ctx)
 		return -EINVAL;
 
 	src = stack_pop(ctx->bb->mimic_stack);
-	dest = class_field_expr(field_type(fb), fb);
+	dest = class_field_expr(vm_field_type(fb), fb);
 	if (!dest)
 		return -ENOMEM;
 	
@@ -116,7 +114,7 @@ int convert_getfield(struct parse_context *ctx)
 {
 	struct expression *objectref;
 	struct expression *value;
-	struct fieldblock *fb;
+	struct vm_field *fb;
 
 	fb = lookup_field(ctx);
 	if (!fb)
@@ -124,7 +122,7 @@ int convert_getfield(struct parse_context *ctx)
 
 	objectref = stack_pop(ctx->bb->mimic_stack);
 
-	value = instance_field_expr(field_type(fb), fb, objectref);
+	value = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!value)
 		return -ENOMEM;
 
@@ -137,7 +135,7 @@ int convert_putfield(struct parse_context *ctx)
 	struct expression *dest, *src;
 	struct statement *store_stmt;
 	struct expression *objectref;
-	struct fieldblock *fb;
+	struct vm_field *fb;
 
 	fb = lookup_field(ctx);
 	if (!fb)
@@ -145,7 +143,7 @@ int convert_putfield(struct parse_context *ctx)
 
 	src = stack_pop(ctx->bb->mimic_stack);
 	objectref = stack_pop(ctx->bb->mimic_stack);
-	dest = instance_field_expr(field_type(fb), fb, objectref);
+	dest = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!dest)
 		return -ENOMEM;
 	

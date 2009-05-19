@@ -214,7 +214,7 @@ struct expression *conversion_expr(enum vm_type vm_type,
 	return expr;
 }
 
-struct expression *class_field_expr(enum vm_type vm_type, struct fieldblock *class_field)
+struct expression *class_field_expr(enum vm_type vm_type, struct vm_field *class_field)
 {
 	struct expression *expr = alloc_expression(EXPR_CLASS_FIELD, vm_type);
 	if (expr)
@@ -223,7 +223,7 @@ struct expression *class_field_expr(enum vm_type vm_type, struct fieldblock *cla
 }
 
 struct expression *instance_field_expr(enum vm_type vm_type,
-				       struct fieldblock *instance_field,
+				       struct vm_field *instance_field,
 				       struct expression *objectref_expression)
 {
 	struct expression *expr = alloc_expression(EXPR_INSTANCE_FIELD, vm_type);

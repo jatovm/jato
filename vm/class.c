@@ -72,10 +72,12 @@ void check_cast(struct object *obj, struct object *type)
 
 #include <cafebabe/class.h>
 #include <cafebabe/constant_pool.h>
+#include <cafebabe/field_info.h>
 #include <cafebabe/method_info.h>
 
 #include <vm/class.h>
 #include <vm/classloader.h>
+#include <vm/field.h>
 #include <vm/method.h>
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
@@ -100,6 +102,19 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	vmc->name = strndup((char *) name->bytes, name->length);
 
+	vmc->fields = malloc(sizeof(*vmc->fields) * class->fields_count);
+	if (!vmc->fields) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	for (uint16_t i = 0; i < class->fields_count; ++i) {
+		if (vm_field_init(&vmc->fields[i], vmc, i)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+	}
+
 	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
 	if (!vmc->methods) {
 		NOT_IMPLEMENTED;
@@ -107,8 +122,15 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	for (uint16_t i = 0; i < class->methods_count; ++i) {
-		vm_method_init(&vmc->methods[i], vmc, i);
-		vm_method_prepare_jit(&vmc->methods[i]);
+		if (vm_method_init(&vmc->methods[i], vmc, i)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		if (vm_method_prepare_jit(&vmc->methods[i])) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
 	}
 
 	return 0;
@@ -148,6 +170,71 @@ struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i)
 	return class;
 }
 
+struct vm_field *vm_class_resolve_field(struct vm_class *vmc, uint16_t i)
+{
+	const struct cafebabe_constant_info_field_ref *field;
+	if (cafebabe_class_constant_get_field_ref(vmc->class, i, &field)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	struct vm_class *class = vm_class_resolve_class(vmc,
+		field->class_index);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_name_and_type *name_and_type;
+	if (cafebabe_class_constant_get_name_and_type(vmc->class,
+		field->name_and_type_index, &name_and_type))
+	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->name_index, &name))
+	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_utf8 *type;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->descriptor_index, &type))
+	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	char *name_str = strndup((char *) name->bytes, name->length);
+	if (!name_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	char *type_str = strndup((char *) type->bytes, type->length);
+	if (!type_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	unsigned int index = 0;
+	int r = cafebabe_class_get_field(class->class,
+		name_str, type_str, &index);
+
+	free(name_str);
+	free(type_str);
+
+	if (!r)
+		return &class->fields[index];
+
+	NOT_IMPLEMENTED;
+	return NULL;
+}
+
 struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 {
 	const struct cafebabe_constant_info_method_ref *method;
@@ -156,30 +243,8 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 		return NULL;
 	}
 
-	const struct cafebabe_constant_info_class *constant_class;
-	if (cafebabe_class_constant_get_class(vmc->class,
-		method->class_index, &constant_class))
-	{
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	const struct cafebabe_constant_info_utf8 *class_name;
-	if (cafebabe_class_constant_get_utf8(vmc->class,
-		constant_class->name_index, &class_name))
-	{
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	char *class_name_str = strndup((char *) class_name->bytes,
-		class_name->length);
-	if (!class_name_str) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	struct vm_class *class = classloader_load(class_name_str);
+	struct vm_class *class = vm_class_resolve_class(vmc,
+		method->class_index);
 	if (!class) {
 		NOT_IMPLEMENTED;
 		return NULL;

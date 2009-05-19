@@ -25,7 +25,7 @@ static void compile_error(struct compilation_unit *cu, int err)
 	struct vm_method *method = cu->method;
 	struct vm_class *class = method->class;
 
-	printf("%s: Failed to compile method `%s' in class `%s', error: %i\n",
+	die("%s: Failed to compile method `%s' in class `%s', error: %i\n",
 	       __FUNCTION__, method->name, class->name, err);
 }
 
