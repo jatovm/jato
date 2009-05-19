@@ -35,6 +35,7 @@ OBJS = \
 	../../vm/types.o \
 	../../vm/zalloc.o \
 	../../vm/class.o \
+	../../vm/radix-tree.o \
 	../../jit/alloc.o \
 	../../jit/basic-block.o \
 	../../jit/compilation-unit.o \

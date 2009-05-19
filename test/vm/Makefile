@@ -15,6 +15,7 @@ OBJS = \
 	../../vm/zalloc.o \
 	../../vm/types.o \
 	../../vm/list.o \
+	../../vm/radix-tree.o \
 	bitset-test.o \
 	buffer-test.o \
 	bytecodes-test.o \
@@ -22,6 +23,7 @@ OBJS = \
 	natives-test.o \
 	stack-test.o \
 	string-test.o \
-	types-test.o
+	types-test.o \
+	radix-tree-test.o
 
 include ../../scripts/build/test.mk

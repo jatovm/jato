@@ -98,7 +98,8 @@ VM_OBJS = \
 	vm/types.o		\
 	vm/zalloc.o		\
 	vm/class.o		\
-	vm/list.o
+	vm/list.o 		\
+	vm/radix-tree.o
 
 JAMVM_OBJS = \
 	vm/jato.o		\

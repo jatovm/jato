@@ -53,7 +53,8 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 	if (!cu->is_compiled)
 		compile(cu);
 
-	add_cu_mapping(cu);
+	if (add_cu_mapping(cu) != 0)
+		die("out of memory");
 
 	return buffer_ptr(cu->objcode);
 }

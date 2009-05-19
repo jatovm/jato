@@ -1,0 +1,327 @@
+/*
+ * Copyright (c) 2009 Tomasz Grabiec
+ *
+ * This file is released under the GPL version 2 with the following
+ * clarification and special exception:
+ *
+ *     Linking this library statically or dynamically with other modules is
+ *     making a combined work based on this library. Thus, the terms and
+ *     conditions of the GNU General Public License cover the whole
+ *     combination.
+ *
+ *     As a special exception, the copyright holders of this library give you
+ *     permission to link this library with independent modules to produce an
+ *     executable, regardless of the license terms of these independent
+ *     modules, and to copy and distribute the resulting executable under terms
+ *     of your choice, provided that you also meet, for each linked independent
+ *     module, the terms and conditions of the license of that module. An
+ *     independent module is a module which is not derived from or based on
+ *     this library. If you modify this library, you may extend this exception
+ *     to your version of the library, but you are not obligated to do so. If
+ *     you do not wish to do so, delete this exception statement from your
+ *     version.
+ *
+ * Please refer to the file LICENSE for details.
+ */
+
+#include <vm/radix-tree.h>
+#include <vm/stdlib.h>
+#include <assert.h>
+#include <malloc.h>
+#include <errno.h>
+#include <stdbool.h>
+
+/*
+ * Below is a schematic ilustration how values are mapped to keys in
+ * radix tree. In this example it is assumed that key is 22 bits long
+ * and bits_per_level is equal to 6.
+ *
+ *
+ *  key -->   0000 0000 00xx xxxx xxxx xxxx xxxx xxxx
+ *                      |     ||     | |     ||     |
+ *                      \-----/\-----/ \-----/\-----/
+ *                       |       |         |    |
+ *                      /       /          |    |
+ *                     /       /           |     \
+ *                    /       /            |      \
+ *                   /        |            |       \
+ *                  /         |            |        \
+ *                 |          |            |         \
+ *       +----+-+-+-+-+..+-+  |            |          \
+ * root: |NULL| | | | |  | |  |            |           \
+ *       +----+-+-+-+-+..+-+  |            |            |
+ *       level 0   |          |            |            |
+ *                 |  +----+-+-+-+-+..+-+  |            |
+ *                  > |    | | | | |  | |  |            |
+ *                    +----+-+-+-+-+..+-+  |            |
+ *                    level 1 |            |            |
+ *                            |    +----+-+-+-+-+..+-+  |
+ *                             ->  |    | | | | |  | |  |
+ *                                 +----+-+-+-+-+..+-+  |
+ *                                 level 2 |            |
+ *                                         |    +----+-+-+-+-+..+-+
+ *                                          ->  |    | | | | |  | |
+ *                                              +----+-+-+-+-+..+-+
+ *                                              level 3 |
+ *                                                      |
+ *                                                      v
+ *                                                    value
+ *
+ */
+
+struct radix_tree {
+	int level_count;
+	int bits_per_level;
+
+	struct radix_tree_node *root;
+};
+
+struct radix_tree_node {
+	struct radix_tree_node *parent;
+	int count; /* number of nonempty slots */
+	void *slots[0];
+};
+
+static unsigned long level_mask(struct radix_tree *tree)
+{
+	return (1ul << tree->bits_per_level) - 1;
+}
+
+static int slot_count(struct radix_tree *tree)
+{
+	return 1 << tree->bits_per_level;
+}
+
+static int level_count(struct radix_tree *tree)
+{
+	return tree->level_count;
+}
+
+static struct radix_tree_node *
+alloc_radix_tree_node(struct radix_tree *tree, struct radix_tree_node *parent)
+{
+	struct radix_tree_node *node;
+	int slots_size = sizeof(struct radix_tree_node*) * slot_count(tree);
+
+	node = zalloc(sizeof(struct radix_tree_node) + slots_size);
+	if (!node)
+		return NULL;
+
+	node->parent = parent;
+
+	return node;
+}
+
+struct radix_tree *alloc_radix_tree(unsigned int bits_per_level,
+				    unsigned int key_bits)
+{
+	struct radix_tree *tree;
+
+	assert(bits_per_level < key_bits);
+	assert(key_bits <= sizeof(unsigned long) * 8);
+
+	tree = malloc(sizeof(struct radix_tree));
+	if (!tree)
+		return NULL;
+
+	tree->bits_per_level = bits_per_level;
+
+	tree->level_count = (key_bits + bits_per_level - 1)
+		/ bits_per_level;
+
+	tree->root = alloc_radix_tree_node(tree, NULL);
+	if (!tree->root) {
+		free(tree);
+		return NULL;
+	}
+
+	return tree;
+}
+
+static void free_radix_tree_node(struct radix_tree *tree,
+				 struct radix_tree_node *node, int level)
+{
+	int i;
+
+	if (level < level_count(tree) - 1)
+		for (i = 0; i < slot_count(tree); i++)
+			if (node->slots[i] != NULL)
+				free_radix_tree_node(tree, node->slots[i],
+						     level + 1);
+
+	free(node);
+}
+
+void free_radix_tree(struct radix_tree *tree)
+{
+	free_radix_tree_node(tree, tree->root, 0);
+	free(tree);
+}
+
+static void *tree_last(struct radix_tree *tree, struct radix_tree_node *node,
+		       int level)
+{
+	int i;
+
+	while (level < level_count(tree)) {
+
+		for (i = slot_count(tree) - 1; i >= 0; i--)
+			if (node->slots[i] != NULL) {
+				node = node->slots[i];
+				level++;
+				break;
+			}
+
+		if (i < 0)
+			return NULL;
+	}
+
+	return node;
+}
+
+static unsigned long get_index(struct radix_tree *tree, unsigned long key,
+			       int level)
+{
+	int shift = ((level_count(tree) - level - 1) * tree->bits_per_level);
+
+	return (key >> shift) & level_mask(tree);
+}
+
+static void *
+tree_previous(struct radix_tree *tree, struct radix_tree_node *node,
+	      unsigned long key, int level)
+{
+	int index;
+
+	/* We don't have to search this level if there are no
+	   other slots */
+	while (node != NULL && node->count == 1) {
+		node = node->parent;
+		level--;
+	}
+
+	if (node == NULL)
+		return NULL;
+
+	for (index = get_index(tree, key, level) - 1; index >= 0; index--)
+		if (node->slots[index] != NULL)
+			return tree_last(tree, node->slots[index], level + 1);
+
+	return tree_previous(tree, node->parent, key, level - 1);
+}
+
+/**
+ * tree_put - put key->value mapping into the tree. Returns 0 upon success.
+ *
+ * @tree: a radix tree to put into.
+ * @key: the search key
+ * @value: the value to associate key with
+ */
+int tree_put(struct radix_tree *tree, unsigned long key, void *value)
+{
+	struct radix_tree_node *node = tree->root;
+	int i;
+
+	assert(value != NULL);
+
+	for (i = 0; i < level_count(tree) - 1; i++) {
+		int index = get_index(tree, key, i);
+
+		if (node->slots[index] == NULL) {
+			node->slots[index] = alloc_radix_tree_node(tree, node);
+			if (node->slots[index] == NULL)
+				return -ENOMEM;
+
+			node->count++;
+		}
+
+		node = node->slots[index];
+	}
+
+	node->count++;
+	node->slots[get_index(tree, key, i)] = value;
+
+	return 0;
+}
+
+static void free_slot(struct radix_tree *tree, struct radix_tree_node *node,
+		      int key, int level)
+{
+	node->slots[get_index(tree, key, level)] = NULL;
+	node->count--;
+
+	if (node->count == 0 && node->parent != NULL) {
+		free_slot(tree, node->parent, key, level - 1);
+		free(node);
+	}
+}
+
+/**
+ * tree_remove - remove mapping from tree.
+ * @tree: a radix tree to remove from.
+ * @key: a key to remove.
+ */
+void tree_remove(struct radix_tree *tree, unsigned long key)
+{
+	int i;
+	struct radix_tree_node *node = tree->root;
+
+	for (i = 0; i < level_count(tree) - 1; i++) {
+		int index = get_index(tree, key, i);
+
+		if (node->slots[index] == NULL)
+			return; /* no mapping exists */
+
+		node = node->slots[index];
+	}
+
+	free_slot(tree, node, key, i);
+}
+
+static void *__tree_lookup(struct radix_tree *tree, unsigned long key,
+			   bool try_preceeding)
+{
+	int i;
+	struct radix_tree_node *node = tree->root;
+
+	for (i = 0; i < level_count(tree); i++) {
+		int index = get_index(tree, key, i);
+
+		if (node->slots[index] == NULL) {
+			if (try_preceeding)
+				return tree_previous(tree, node, key, i);
+			else
+				return NULL;
+		}
+
+		node = node->slots[index];
+	}
+
+	return node;
+}
+
+
+/**
+ * tree_lookup - get the value associated with @key. Returns NULL when no
+ *               mapping exists.
+ *
+ * @tree: a radix tree to lookup in.
+ * @key: a key which value should be abtained.
+ */
+void *tree_lookup(struct radix_tree *tree, unsigned long key)
+{
+	return  __tree_lookup(tree, key, false);
+}
+
+/**
+ * tree_lookup_preceeding - get the value associated with @key or
+ *                          the value associated with the preceeding key.
+ *                          Returns NULL when no preceeding key exists.
+ *
+ * @tree: a radix tree to lookup in.
+ * @key: a key which value should be returned.
+ */
+void *tree_lookup_preceeding(struct radix_tree *tree, unsigned long key)
+{
+	return  __tree_lookup(tree, key, true);
+}

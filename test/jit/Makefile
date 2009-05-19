@@ -13,6 +13,8 @@ OBJS = \
 	../../vm/string.o \
 	../../vm/types.o \
 	../../vm/zalloc.o \
+	../../vm/radix-tree.o \
+	../../jit/alloc.o \
 	../../jit/arithmetic-bc.o \
 	../../jit/basic-block.o \
 	../../jit/branch-bc.o \
