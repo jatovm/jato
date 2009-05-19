@@ -28,14 +28,16 @@ Done, more or less:
 	of e.g. indices). We should e.g. load max_stack/max_locals from the
 	Code attribute of a method and put it directly into struct vm_method.
 
-Current plan (expect heavy changes to this as progress is made):
-
  - Write a "class loader":
 
 	Given a class name, search the classpath and load the class (using
 	cafebabe).
 
 	Cache classes, so that we don't load the same class twice.
+
+Current plan (expect heavy changes to this as progress is made):
+
+ - Write a zip-/jar-file reader
 
  - Write a wrapper around object allocation that simply calls malloc()
 
