@@ -4,8 +4,16 @@
 
 struct vm_object *vm_object_alloc(struct vm_class *class)
 {
+	struct vm_object *res;
+
 	NOT_IMPLEMENTED;
-	return NULL;
+
+	res = malloc(sizeof(*res) + /* XXX: Payload: */ 256);
+	if (res) {
+		res->class = class;
+	}
+
+	return res;
 }
 
 struct vm_object *vm_object_alloc_native_array(int type, int count)
