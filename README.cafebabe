@@ -37,8 +37,6 @@ Done, more or less:
 
 Current plan (expect heavy changes to this as progress is made):
 
- - Write a zip-/jar-file reader
-
  - Write a wrapper around object allocation that simply calls malloc()
 
 	Garbage collection can be implemented later.
@@ -48,6 +46,15 @@ Current plan (expect heavy changes to this as progress is made):
  - Jato should now work using cafebabe instead of jamvm
 
  - Remove jamvm/ completely
+
+ - Write a zip-/jar-file reader
+
+ - Go through the JVM specification with a magnifying glass
+
+	And make sure we have all the right checks to make sure that we throw
+	the right exceptions at the right times, basically just all these
+	sanity checks that need to be put everywhere. We don't want people to
+	be able to hack into jato either!
 
 
 Vegard Nossum
