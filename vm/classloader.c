@@ -10,7 +10,7 @@
 #include <vm/classloader.h>
 
 struct classloader_class {
-	const char *class_name;
+	char *class_name;
 	struct vm_class *class;
 };
 
@@ -55,7 +55,7 @@ struct vm_class *load_class_from_file(const char *filename)
 	struct cafebabe_class *class;
 	struct vm_class *result = NULL;
 
-	printf("classloader: trying to load file '%s'...\n", filename);
+	fprintf(stderr, "classloader: trying to load file '%s'...\n", filename);
 
 	if (cafebabe_stream_open(&stream, filename)) {
 		NOT_IMPLEMENTED;
@@ -68,14 +68,18 @@ struct vm_class *load_class_from_file(const char *filename)
 		goto out_stream;
 	}
 
+	cafebabe_stream_close(&stream);
+
 	result = malloc(sizeof *result);
 	if (result)
 		vm_class_init(result, class);
 
+	return result;
+
 out_stream:
 	cafebabe_stream_close(&stream);
 out:
-	return result;
+	return NULL;
 }
 
 struct vm_class *load_class(const char *class_name)
@@ -84,7 +88,7 @@ struct vm_class *load_class(const char *class_name)
 	char *filename;
 	const char *classpath;
 
-	printf("classloader: trying to load class '%s'...\n", class_name);
+	fprintf(stderr, "classloader: trying to load class '%s'...\n", class_name);
 
 	filename = class_name_to_file_name(class_name);
 	if (!filename) {
@@ -171,7 +175,7 @@ struct vm_class *classloader_load(const char *class_name)
 	}
 
 	class = &classes[nr_classes++];
-	class->class_name = class_name;
+	class->class_name = strdup(class_name);
 	class->class = vmc;
 
 	return vmc;
