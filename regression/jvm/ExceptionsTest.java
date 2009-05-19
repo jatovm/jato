@@ -114,11 +114,46 @@ public class ExceptionsTest extends TestCase {
         assertEquals(section, 2);
     }
 
+    public static RuntimeException a;
+    public static RuntimeException b;
+
+    public static void throwA() {
+        a = new RuntimeException();
+        throw a;
+    }
+
+    public static void throwB() {
+        b = new RuntimeException();
+        throw b;
+    }
+
+    public static void testNestedTryCatch() {
+        try {
+            throwA();
+        } catch (Exception _a) {
+            try {
+                throwB();
+            } catch (Exception _b) {
+                assertEquals(b, _b);
+            }
+
+            assertEquals(a, _a);
+        }
+    }
+
+    public static void testEmptyCatchBlock() {
+        try {
+            throw new Exception();
+        } catch (Exception e) {}
+    }
+
     public static void main(String args[]) {
         testCatchCompilation();
         testThrowAndCatchInTheSameMethod();
         testUnwinding();
         testMultipleCatchBlocks();
+        testNestedTryCatch();
+        testEmptyCatchBlock();
 
         Runtime.getRuntime().halt(retval);
     }
