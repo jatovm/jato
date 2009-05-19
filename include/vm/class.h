@@ -20,6 +20,7 @@ struct vm_class {
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
 
+struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);
 struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i);
 
 #endif /* __CLASS_H */

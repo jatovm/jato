@@ -114,6 +114,40 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 	return 0;
 }
 
+struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i)
+{
+	const struct cafebabe_constant_info_class *constant_class;
+	if (cafebabe_class_constant_get_class(vmc->class,
+		i, &constant_class))
+	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_utf8 *class_name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		constant_class->name_index, &class_name))
+	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	char *class_name_str = strndup((char *) class_name->bytes,
+		class_name->length);
+	if (!class_name_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	struct vm_class *class = classloader_load(class_name_str);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	return class;
+}
+
 struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 {
 	const struct cafebabe_constant_info_method_ref *method;
