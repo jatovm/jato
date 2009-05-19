@@ -12,6 +12,9 @@
 #include <jit/statement.h>
 #include <jit/bc-offset-mapping.h>
 
+#include <vm/class.h>
+#include <vm/method.h>
+
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,13 +22,11 @@
 
 static void compile_error(struct compilation_unit *cu, int err)
 {
-	NOT_IMPLEMENTED;
-#if 0
-	struct classblock *cb = CLASS_CB(cu->method->class);
+	struct vm_method *method = cu->method;
+	struct vm_class *class = method->class;
 
 	printf("%s: Failed to compile method `%s' in class `%s', error: %i\n",
-	       __FUNCTION__, cu->method->name, cb->name, err);
-#endif
+	       __FUNCTION__, method->name, class->name, err);
 }
 
 int compile(struct compilation_unit *cu)

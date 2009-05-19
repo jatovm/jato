@@ -13,6 +13,9 @@
 #include <jit/statement.h>
 #include <jit/tree-node.h>
 #include <jit/vars.h>
+
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/string.h>
 
 #include <stdio.h>
@@ -484,7 +487,7 @@ static int print_instance_field_expr(int lvl, struct string *str, struct express
 static int print_invoke_expr(int lvl, struct string *str,
 			     struct expression *expr)
 {
-	struct methodblock *method;
+	struct vm_method *method;
 	int err;
 
 	err = append_formatted(lvl, str, "INVOKE:\n");
@@ -494,7 +497,7 @@ static int print_invoke_expr(int lvl, struct string *str,
 	method = expr->target_method;
 
 	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s'",
-				 method, CLASS_CB(method->class)->name, method->name, method->type);
+				 method, method->class->name, method->name, method->type);
 	if (err)
 		goto out;
 
@@ -506,7 +509,7 @@ static int print_invoke_expr(int lvl, struct string *str,
 
 static int __print_invoke_expr(int lvl, struct string *str, struct expression *expr, const char *name)
 {
-	struct methodblock *method;
+	struct vm_method *method;
 	int err;
 
 	err = append_formatted(lvl, str, "%s:\n", name);
@@ -516,7 +519,7 @@ static int __print_invoke_expr(int lvl, struct string *str, struct expression *e
 	method = expr->target_method;
 
 	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s' (%lu)",
-				 method, CLASS_CB(method->class)->name,
+				 method, method->class->name,
 				 method->name, method->type,
 				 expr_method_index(expr));
 	if (err)
