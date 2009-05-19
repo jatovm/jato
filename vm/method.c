@@ -52,7 +52,14 @@ int vm_method_init(struct vm_method *vmm,
 		return -1;
 	}
 
+	/*
+	 * XXX: Jam VM legacy? It seems that JamVM counts the number of
+	 * _32-bit_ arguments. This probably needs some fixing. What do we do
+	 * on x86_64?
+	 */
 	vmm->args_count = count_arguments(vmm->type);
+	if (!vm_method_is_static(vmm))
+		++vmm->args_count;
 
 	/*
 	 * Note: We can return here because the rest of the function deals

@@ -39,23 +39,28 @@ enum vm_type get_method_return_type(char *type)
 
 #include <stdio.h>
 
-static unsigned int count_skip_arguments(const char **type);
+static int count_skip_arguments(const char **type);
 
 static int skip_type(const char **type)
 {
 	const char *ptr = *type;
+	int ret = 1;
 
 	switch (*ptr) {
-	/* BaseType */
+		/* BaseType */
 	case 'B':
 	case 'C':
-	case 'D':
 	case 'F':
 	case 'I':
-	case 'J':
 	case 'S':
 	case 'Z':
 		++ptr;
+		break;
+
+	case 'D':
+	case 'J':
+		++ptr;
+		ret = 2;
 		break;
 
 		/* ObjectType */
@@ -85,25 +90,28 @@ static int skip_type(const char **type)
 	}
 
 	*type = ptr;
-	return 0;
+	return ret;
 }
 
-static unsigned int count_skip_arguments(const char **type)
+static int count_skip_arguments(const char **type)
 {
 	unsigned int args = 0;
 	const char *ptr = *type;
 
 	while (1) {
+		int ret;
+
 		if (!*ptr)
 			break;
 
 		if (*ptr == ')')
 			break;
 
-		if (skip_type(&ptr))
+		ret = skip_type(&ptr);
+		if (ret < 0)
 			return -1;
 
-		++args;
+		args += ret;
 	}
 
 	*type = ptr;
