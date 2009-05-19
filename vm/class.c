@@ -73,6 +73,7 @@ void check_cast(struct object *obj, struct object *type)
 #include <cafebabe/method_info.h>
 
 #include <vm/class.h>
+#include <vm/classloader.h>
 #include <vm/method.h>
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
@@ -114,20 +115,33 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 {
 	const struct cafebabe_constant_info_method_ref *method;
-	if (cafebabe_class_constant_get_method_ref(vmc->class, i, &method))
+	if (cafebabe_class_constant_get_method_ref(vmc->class, i, &method)) {
+		NOT_IMPLEMENTED;
 		return NULL;
+	}
 
-	const struct cafebabe_constant_info_class *class;
+	const struct cafebabe_constant_info_class *constant_class;
 	if (cafebabe_class_constant_get_class(vmc->class,
-		method->class_index, &class))
+		method->class_index, &constant_class))
 	{
+		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
 	const struct cafebabe_constant_info_utf8 *class_name;
 	if (cafebabe_class_constant_get_utf8(vmc->class,
-		class->name_index, &class_name))
+		constant_class->name_index, &class_name))
 	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	char *class_name_str = strndup((char *) class_name->bytes,
+		class_name->length);
+
+	struct vm_class *class = classloader_load(class_name_str);
+	if (!class) {
+		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
@@ -135,6 +149,7 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 	if (cafebabe_class_constant_get_name_and_type(vmc->class,
 		method->name_and_type_index, &name_and_type))
 	{
+		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
@@ -142,6 +157,7 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 	if (cafebabe_class_constant_get_utf8(vmc->class,
 		name_and_type->name_index, &name))
 	{
+		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
@@ -149,14 +165,20 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 	if (cafebabe_class_constant_get_utf8(vmc->class,
 		name_and_type->descriptor_index, &type))
 	{
+		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
 	char *name_str = strndup((char *) name->bytes, name->length);
 	char *type_str = strndup((char *) type->bytes, type->length);
 
+#if 0
+	printf("class = '%s'\n", class_name_str);
+	printf("name/type = '%s'/'%s'\n", name_str, type_str);
+#endif
+
 	unsigned int index = 0;
-	int r = cafebabe_class_get_method(vmc->class,
+	int r = cafebabe_class_get_method(class->class,
 		name_str, type_str, &index);
 
 	free(name_str);
@@ -165,5 +187,6 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 	if (!r)
 		return &vmc->methods[index];
 
+	NOT_IMPLEMENTED;
 	return NULL;
 }
