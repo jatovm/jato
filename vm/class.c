@@ -138,6 +138,10 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 
 	char *class_name_str = strndup((char *) class_name->bytes,
 		class_name->length);
+	if (!class_name_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	struct vm_class *class = classloader_load(class_name_str);
 	if (!class) {
@@ -170,12 +174,16 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 	}
 
 	char *name_str = strndup((char *) name->bytes, name->length);
-	char *type_str = strndup((char *) type->bytes, type->length);
+	if (!name_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
-#if 0
-	printf("class = '%s'\n", class_name_str);
-	printf("name/type = '%s'/'%s'\n", name_str, type_str);
-#endif
+	char *type_str = strndup((char *) type->bytes, type->length);
+	if (!type_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	unsigned int index = 0;
 	int r = cafebabe_class_get_method(class->class,
@@ -185,7 +193,7 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 	free(type_str);
 
 	if (!r)
-		return &vmc->methods[index];
+		return &class->methods[index];
 
 	NOT_IMPLEMENTED;
 	return NULL;
