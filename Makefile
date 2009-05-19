@@ -89,6 +89,7 @@ VM_OBJS = \
 	vm/bytecode.o		\
 	vm/bytecodes.o		\
 	vm/class.o		\
+	vm/classloader.o	\
 	vm/debug-dump.o		\
 	vm/die.o		\
 	vm/method.o		\

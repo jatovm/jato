@@ -36,6 +36,7 @@
 #include "jit/compiler.h"
 
 #include "vm/class.h"
+#include "vm/classloader.h"
 #include "vm/method.h"
 #include "vm/natives.h"
 #include "vm/signal.h"
@@ -70,6 +71,11 @@ static void jit_init_natives(void)
 		vm_fill_in_stack_trace);
 }
 
+static void native_Test_printf(int x)
+{
+	printf("%d\n", x);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -81,63 +87,37 @@ main(int argc, char *argv[])
 	}
 
 	jit_init_natives();
+	vm_register_native("Test", "printf", &native_Test_printf);
 
 	const char *classname = argv[1];
-	char *filename;
-	if (asprintf(&filename, "%s.class", classname) == -1) {
-		fprintf(stderr, "error: %s\n", strerror(errno));
+	struct vm_class *vmc = classloader_load(classname);
+	if (!vmc) {
+		fprintf(stderr, "error: %s: could not load\n", classname);
 		goto out;
 	}
-
-	struct cafebabe_stream stream;
-	if (cafebabe_stream_open(&stream, filename)) {
-		fprintf(stderr, "error: %s: %s\n", filename,
-			cafebabe_stream_error(&stream));
-		free(filename);
-		goto out;
-	}
-
-	struct cafebabe_class class;
-	if (cafebabe_class_init(&class, &stream)) {
-		fprintf(stderr, "error: %s:%d/%d: %s\n", filename,
-			stream.virtual_i, stream.virtual_n,
-			cafebabe_stream_error(&stream));
-		cafebabe_stream_close(&stream);
-		free(filename);
-		goto out;
-	}
-
-	cafebabe_stream_close(&stream);
-	free(filename);
-
-	struct vm_class vmc;
-	vm_class_init(&vmc, &class);
 
 	unsigned int main_method_index;
-	if (cafebabe_class_get_method(&class,
+	if (cafebabe_class_get_method(vmc->class,
 		"main", "([Ljava/lang/String;)V", &main_method_index))
 	{
 		fprintf(stderr, "error: %s: no main method\n", classname);
-		goto out_class;
+		goto out;
 	}
 
-	struct vm_method *main_method = &vmc.methods[main_method_index];
+	struct vm_method *main_method = &vmc->methods[main_method_index];
 
 	if (!vm_method_is_static(main_method)) {
 		fprintf(stderr, "errror: %s: main method not static\n",
 			classname);
-		goto out_class;
+		goto out;
 	}
 
 	void (*main_method_trampoline)(void)
 		= vm_method_trampoline_ptr(main_method);
 	main_method_trampoline();
 
-	cafebabe_class_deinit(&class);
 	return EXIT_SUCCESS;
 
-out_class:
-	cafebabe_class_deinit(&class);
 out:
 	return EXIT_FAILURE;
 }
