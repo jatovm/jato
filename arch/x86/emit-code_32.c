@@ -178,14 +178,13 @@ emit_reg_reg(struct buffer *buf, unsigned char opc,
 	__emit_reg_reg(buf, opc, direct_reg, rm_reg);
 }
 
-static void 
-__emit_membase_reg(struct buffer *buf, unsigned char opc,
-		   enum machine_reg base_reg, unsigned long disp,
-		   enum machine_reg dest_reg)
+static void
+__emit_membase(struct buffer *buf, unsigned char opc,
+	       enum machine_reg base_reg, unsigned long disp,
+	       unsigned char reg_opcode)
 {
 	unsigned char mod, rm, mod_rm;
 	int needs_sib;
-
 
 	needs_sib = (base_reg == REG_ESP);
 
@@ -201,13 +200,21 @@ __emit_membase_reg(struct buffer *buf, unsigned char opc,
 	else
 		mod = 0x02;
 
-	mod_rm = encode_modrm(mod, __encode_reg(dest_reg), rm);
+	mod_rm = encode_modrm(mod, reg_opcode, rm);
 	emit(buf, mod_rm);
 
 	if (needs_sib)
 		emit(buf, encode_sib(0x00, 0x04, __encode_reg(base_reg)));
 
 	emit_imm(buf, disp);
+}
+
+static void
+__emit_membase_reg(struct buffer *buf, unsigned char opc,
+		   enum machine_reg base_reg, unsigned long disp,
+		   enum machine_reg dest_reg)
+{
+	__emit_membase(buf, opc, base_reg, disp, __encode_reg(dest_reg));
 }
 
 static void 
@@ -232,7 +239,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg,
 				unsigned long disp)
 {
-	__emit_membase_reg(buf, 0xff, src_reg, disp, REG_ESI);
+	__emit_membase(buf, 0xff, src_reg, disp, 6);
 }
 
 static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
@@ -421,7 +428,7 @@ static void emit_pop_memlocal(struct buffer *buf, struct operand *operand)
 {
 	unsigned long disp = slot_offset(operand->slot);
 
-	__emit_membase_reg(buf, 0x8f, REG_EBP, disp, 0);
+	__emit_membase(buf, 0x8f, REG_EBP, disp, 0);
 }
 
 static void emit_pop_reg(struct buffer *buf, struct operand *operand)
