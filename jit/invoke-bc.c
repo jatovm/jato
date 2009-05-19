@@ -130,7 +130,7 @@ static struct vm_method *resolve_invoke_target(struct parse_context *ctx)
 
 	idx = bytecode_read_u16(ctx->buffer);
 
-	return vm_class_resolve_method(ctx->cu->method->class, idx);
+	return vm_class_resolve_method_recursive(ctx->cu->method->class, idx);
 }
 
 int convert_invokevirtual(struct parse_context *ctx)

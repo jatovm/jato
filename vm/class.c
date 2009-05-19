@@ -102,6 +102,45 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	vmc->name = strndup((char *) name->bytes, name->length);
 
+	if (class->super_class) {
+		const struct cafebabe_constant_info_class *constant_super;
+		if (cafebabe_class_constant_get_class(class,
+			class->super_class, &constant_super))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		const struct cafebabe_constant_info_utf8 *super_name;
+		if (cafebabe_class_constant_get_utf8(class,
+			constant_super->name_index, &super_name))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		char *super_name_str = strndup((char *) super_name->bytes,
+			super_name->length);
+
+		printf("name = '%s', super name = '%s'\n",
+			vmc->name, super_name_str);
+
+		vmc->super = classloader_load(super_name_str);
+		if (!vmc->super) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		free(super_name_str);
+	} else {
+		if (!strcmp(vmc->name, "java.lang.Object")) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		vmc->super = NULL;
+	}
+
 	vmc->fields = malloc(sizeof(*vmc->fields) * class->fields_count);
 	if (!vmc->fields) {
 		NOT_IMPLEMENTED;
@@ -170,19 +209,20 @@ struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i)
 	return class;
 }
 
-struct vm_field *vm_class_resolve_field(struct vm_class *vmc, uint16_t i)
+int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type)
 {
 	const struct cafebabe_constant_info_field_ref *field;
 	if (cafebabe_class_constant_get_field_ref(vmc->class, i, &field)) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	struct vm_class *class = vm_class_resolve_class(vmc,
 		field->class_index);
 	if (!class) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	const struct cafebabe_constant_info_name_and_type *name_and_type;
@@ -190,7 +230,7 @@ struct vm_field *vm_class_resolve_field(struct vm_class *vmc, uint16_t i)
 		field->name_and_type_index, &name_and_type))
 	{
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	const struct cafebabe_constant_info_utf8 *name;
@@ -198,7 +238,7 @@ struct vm_field *vm_class_resolve_field(struct vm_class *vmc, uint16_t i)
 		name_and_type->name_index, &name))
 	{
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	const struct cafebabe_constant_info_utf8 *type;
@@ -206,48 +246,78 @@ struct vm_field *vm_class_resolve_field(struct vm_class *vmc, uint16_t i)
 		name_and_type->descriptor_index, &type))
 	{
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	char *name_str = strndup((char *) name->bytes, name->length);
 	if (!name_str) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	char *type_str = strndup((char *) type->bytes, type->length);
 	if (!type_str) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
-	unsigned int index = 0;
-	int r = cafebabe_class_get_field(class->class,
-		name_str, type_str, &index);
+	*r_vmc = class;
+	*r_name = name_str;
+	*r_type = type_str;
+	return 0;
+}
 
-	free(name_str);
-	free(type_str);
+struct vm_field *vm_class_get_field_recursive(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	do {
+		unsigned int index = 0;
+		if (!cafebabe_class_get_field(vmc->class,
+			name, type, &index))
+		{
+			return &vmc->fields[index];
+		}
 
-	if (!r)
-		return &class->fields[index];
+		vmc = vmc->super;
+	} while(vmc);
 
-	NOT_IMPLEMENTED;
 	return NULL;
 }
 
-struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
+struct vm_field *
+vm_class_resolve_field_recursive(struct vm_class *vmc, uint16_t i)
+{
+	struct vm_class *class;
+	char *name;
+	char *type;
+	struct vm_field *result;
+
+	if (vm_class_resolve_field(vmc, i, &class, &name, &type)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	result = vm_class_get_field_recursive(class, name, type);
+
+	free(name);
+	free(type);
+	return result;
+}
+
+int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type)
 {
 	const struct cafebabe_constant_info_method_ref *method;
 	if (cafebabe_class_constant_get_method_ref(vmc->class, i, &method)) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	struct vm_class *class = vm_class_resolve_class(vmc,
 		method->class_index);
 	if (!class) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	const struct cafebabe_constant_info_name_and_type *name_and_type;
@@ -255,7 +325,7 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 		method->name_and_type_index, &name_and_type))
 	{
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	const struct cafebabe_constant_info_utf8 *name;
@@ -263,7 +333,7 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 		name_and_type->name_index, &name))
 	{
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	const struct cafebabe_constant_info_utf8 *type;
@@ -271,31 +341,60 @@ struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i)
 		name_and_type->descriptor_index, &type))
 	{
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	char *name_str = strndup((char *) name->bytes, name->length);
 	if (!name_str) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		return -1;
 	}
 
 	char *type_str = strndup((char *) type->bytes, type->length);
 	if (!type_str) {
 		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	*r_vmc = class;
+	*r_name = name_str;
+	*r_type = type_str;
+	return 0;
+}
+
+struct vm_method *vm_class_get_method_recursive(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	do {
+		unsigned int index = 0;
+		if (!cafebabe_class_get_method(vmc->class,
+			name, type, &index))
+		{
+			return &vmc->methods[index];
+		}
+
+		vmc = vmc->super;
+	} while(vmc);
+
+	return NULL;
+}
+
+struct vm_method *
+vm_class_resolve_method_recursive(struct vm_class *vmc, uint16_t i)
+{
+	struct vm_class *class;
+	char *name;
+	char *type;
+	struct vm_method *result;
+
+	if (vm_class_resolve_method(vmc, i, &class, &name, &type)) {
+		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
-	unsigned int index = 0;
-	int r = cafebabe_class_get_method(class->class,
-		name_str, type_str, &index);
+	result = vm_class_get_method_recursive(class, name, type);
 
-	free(name_str);
-	free(type_str);
-
-	if (!r)
-		return &class->methods[index];
-
-	NOT_IMPLEMENTED;
-	return NULL;
+	free(name);
+	free(type);
+	return result;
 }

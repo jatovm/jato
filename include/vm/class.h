@@ -16,6 +16,7 @@ struct vm_class {
 
 	char *name;
 
+	struct vm_class *super;
 	struct vm_field *fields;
 	struct vm_method *methods;
 };
@@ -23,7 +24,15 @@ struct vm_class {
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
 
 struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);
-struct vm_field *vm_class_resolve_field(struct vm_class *vmc, uint16_t i);
-struct vm_method *vm_class_resolve_method(struct vm_class *vmc, uint16_t i);
+
+int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type);
+struct vm_field *vm_class_resolve_field_recursive(struct vm_class *vmc,
+	uint16_t i);
+
+int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type);
+struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
+	uint16_t i);
 
 #endif /* __CLASS_H */

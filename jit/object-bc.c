@@ -63,7 +63,7 @@ static struct vm_field *lookup_field(struct parse_context *ctx)
 
 	index = bytecode_read_u16(ctx->buffer);
 
-	return vm_class_resolve_field(ctx->cu->method->class, index);
+	return vm_class_resolve_field_recursive(ctx->cu->method->class, index);
 }
 
 int convert_getstatic(struct parse_context *ctx)
