@@ -193,7 +193,7 @@ struct expression {
 		/*  EXPR_NEW represents creation of a new instance that is
 		    unitialized .  */
 		struct {
-			struct object *class;
+			struct vm_object *class;
 		};
 
 		/*  EXPR_NEWARRAY represents creation of a new array.  */
@@ -206,14 +206,14 @@ struct expression {
 		   reference.  */
 		struct {
 		        struct tree_node *anewarray_size;
-			struct object *anewarray_ref_type;
+			struct vm_object *anewarray_ref_type;
 		};
 
 		/*  EXPR_MULTIANEWARRAY represents creation of a new multidimensional
 		    array of given reference.  */
 		struct {
 			struct tree_node *multianewarray_dimensions;
-			struct object *multianewarray_ref_type;
+			struct vm_object *multianewarray_ref_type;
 		};
 
 		/*  EXPR_ARRAYLENGTH represents length of an array.  */
@@ -224,7 +224,7 @@ struct expression {
 		/*  EXPR_INSTANCEOF is used to determine if object is of given type.  */
 		struct {
 			struct tree_node *instanceof_ref;
-			struct object *instanceof_class;
+			struct vm_object *instanceof_class;
 		};
 	};
 };
@@ -270,12 +270,12 @@ struct expression *invokevirtual_expr(struct vm_method *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
-struct expression *new_expr(struct object *);
+struct expression *new_expr(struct vm_object *);
 struct expression *newarray_expr(unsigned long, struct expression *);
-struct expression *anewarray_expr(struct object *, struct expression *);
-struct expression *multianewarray_expr(struct object *);
+struct expression *anewarray_expr(struct vm_object *, struct expression *);
+struct expression *multianewarray_expr(struct vm_object *);
 struct expression *arraylength_expr(struct expression *);
-struct expression *instanceof_expr(struct expression *, struct object *);
+struct expression *instanceof_expr(struct expression *, struct vm_object *);
 struct expression *exception_ref_expr(void);
 
 unsigned long nr_args(struct expression *);

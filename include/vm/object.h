@@ -5,6 +5,7 @@
 #include "vm/vm.h"
 
 struct vm_object {
+	struct vm_class *class;
 };
 
 struct vm_object *vm_object_alloc(struct vm_class *class);

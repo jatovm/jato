@@ -523,10 +523,10 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, stack_ptr, 0, call_target));
 
 	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct object, class), call_target));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
 
 	/* vtable */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, sizeof(struct object), call_target));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, sizeof(struct vm_object), call_target));
 
 	/* native ptr */
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
@@ -698,7 +698,7 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	index = get_var(s->b_parent);
 	state->reg1 = get_var(s->b_parent);
 
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
 	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 2, state->reg1));
 
@@ -803,7 +803,7 @@ reg:    EXPR_ARRAYLENGTH(reg)
 	arraylength = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = arraylength;
 
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref, sizeof(struct object), arraylength));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref, sizeof(struct vm_object), arraylength));
 }
 
 reg:	EXPR_INSTANCEOF(reg)
@@ -973,7 +973,7 @@ inst_field: EXPR_INSTANCE_FIELD(reg) 1
 	state->reg2 = index;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, base));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
 }
 
@@ -1062,7 +1062,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 	state->reg2 = index;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object) + sizeof(uint32_t), base));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_index, index));
 }
 

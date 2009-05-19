@@ -47,6 +47,8 @@ void check_null(struct object *obj)
 
 void check_array(struct object *obj, unsigned int index)
 {
+	NOT_IMPLEMENTED;
+
 	struct classblock *cb = CLASS_CB(obj->class);
 
 	if (!IS_ARRAY(cb))

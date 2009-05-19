@@ -16,6 +16,7 @@
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
 #include <vm/field.h>
+#include <vm/object.h>
 #include <vm/stack.h>
 
 #include <stdlib.h>
@@ -38,11 +39,13 @@ static char *class_name_to_array_name(const char *class_name)
 	return array_name;
 }
 
-static struct object *class_to_array_class(struct object *class)
+static struct vm_object *class_to_array_class(struct vm_object *class)
 {
-	struct object *array_class;
+	struct vm_object *array_class;
 	const char *class_name;
 	char *array_class_name;
+
+	NOT_IMPLEMENTED;
 
 	class_name = CLASS_CB(class)->name;
 	array_class_name = class_name_to_array_name(class_name);
@@ -343,7 +346,7 @@ int convert_new(struct parse_context *ctx)
 {
 	struct expression *expr;
 	unsigned long type_idx;
-	struct object *class;
+	struct vm_object *class;
 
 	NOT_IMPLEMENTED;
 
@@ -383,7 +386,7 @@ int convert_anewarray(struct parse_context *ctx)
 {
 	struct expression *size,*arrayref;
 	unsigned long type_idx;
-	struct object *class, *arrayclass;
+	struct vm_object *class, *arrayclass;
 
 	NOT_IMPLEMENTED;
 
@@ -414,7 +417,7 @@ int convert_multianewarray(struct parse_context *ctx)
 	struct expression *args_list;
 	unsigned long type_idx;
 	unsigned char dimension;
-	struct object *class;
+	struct vm_object *class;
 
 	NOT_IMPLEMENTED;
 
@@ -457,7 +460,7 @@ int convert_arraylength(struct parse_context *ctx)
 int convert_instanceof(struct parse_context *ctx)
 {
 	struct expression *objectref, *expr;
-	struct object *class;
+	struct vm_object *class;
 	unsigned long type_idx;
 
 	NOT_IMPLEMENTED;
@@ -482,7 +485,7 @@ int convert_instanceof(struct parse_context *ctx)
 int convert_checkcast(struct parse_context *ctx)
 {
 	struct expression *object_ref;
-	struct object *class;
+	struct vm_object *class;
 	struct statement *checkcast_stmt;
 	unsigned long type_idx;
 

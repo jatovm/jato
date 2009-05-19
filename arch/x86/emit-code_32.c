@@ -17,6 +17,7 @@
 #include <vm/list.h>
 #include <vm/buffer.h>
 #include <vm/method.h>
+#include <vm/object.h>
 
 #include <arch/emit-code.h>
 #include <arch/instruction.h>
@@ -990,10 +991,10 @@ static void fixup_invoke(struct jit_trampoline *t, unsigned long target)
  * directly to compiled code instead of trampoline code.
  */
 static void fixup_invokevirtual(struct compilation_unit *cu,
-				struct object *objref,
+				struct vm_object *objref,
 				void *target)
 {
-	struct classblock *cb = CLASS_CB(objref->class);
+	struct vm_class *vmc = objref->class;
 
 	NOT_IMPLEMENTED;
 	//cb->vtable.native_ptr[cu->method->method_table_index] = target;
