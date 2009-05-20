@@ -25,84 +25,57 @@
  */
 package jvm;
 
-class MyException extends Exception {
-    static final long serialVersionUID = 0;
-
-    public MyException(String msg) {
-        super(msg);
-    }
-};
-
-class MyException2 extends MyException {
-    static final long serialVersionUID = 0;
-
-    public MyException2(String msg) {
-        super(msg);
-    }
-};
-
-
 /**
  * @author Tomasz Grabiec
  */
 public class ExceptionsTest extends TestCase {
-    public static void testCatchCompilation() {
-        assertEquals(2, onlyTryBlockExecuted());
-    }
-
-    public static int onlyTryBlockExecuted() {
-        int i = 0;
-
-        try {
-            i = 2;
-        } catch (Exception e) {
-            i = 3;
-        } catch (Throwable e) {
-            i = 4;
-        }
-
-        return i;
+    public static void testTryBlockDoesNotThrowAnything() {
+	boolean caught;
+	try {
+            caught = false;
+	} catch (Exception e) {
+            caught = true;
+	}
+        assertFalse(caught);
     }
 
     public static void testThrowAndCatchInTheSameMethod() {
-        Exception e = new Exception("the horror!");
-        boolean catched = false;
-
+        Exception exception = null;
+        boolean caught;
         try {
-            throw e;
-        } catch (Exception _e) {
-            assertEquals(e, _e);
-            catched = true;
+            caught = false;
+            throw exception = new Exception();
+        } catch (Exception e) {
+            assertEquals(exception, e);
+            caught = true;
         }
-
-        assertTrue(catched);
-    }
-
-    public static void methodThrowingException(int counter) throws Exception {
-        if (counter == 0)
-            throw new Exception("boom");
-        else
-            methodThrowingException(counter - 1);
+        assertTrue(caught);
     }
 
     public static void testUnwinding() {
-        boolean catched = false;
-
+        String s = "unwind";
+        boolean caught = false;
         try {
-            methodThrowingException(10);
+            recurseTimesThenThrow(10, s);
         } catch (Exception e) {
-            assertEquals(e.getMessage(), "boom");
-            catched = true;
+            assertEquals(e.getMessage(), s);
+            caught = true;
         }
+        assertTrue(caught);
+    }
 
-        assertTrue(catched);
+    public static void recurseTimesThenThrow(int counter, String s) {
+        if (counter == 0)
+            throw new RuntimeException(s);
+
+        recurseTimesThenThrow(counter - 1, s);
     }
 
     public static void testMultipleCatchBlocks() {
         int section = 0;
 
         try {
-            throw new MyException("boom");
+            throw new MyException();
         } catch (MyException2 e) {
             section = 1;
         } catch (MyException e) {
@@ -114,29 +87,30 @@ public class ExceptionsTest extends TestCase {
         assertEquals(section, 2);
     }
 
-    public static RuntimeException a;
-    public static RuntimeException b;
+    private static class MyException extends Exception {
+        static final long serialVersionUID = 0;
+    };
 
-    public static void throwA() {
-        a = new RuntimeException();
-        throw a;
-    }
+    private static class MyException2 extends MyException {
+        static final long serialVersionUID = 0;
+    };
 
-    public static void throwB() {
-        b = new RuntimeException();
-        throw b;
+    public static void throwException(Exception e) throws Exception {
+        throw e;
     }
 
     public static void testNestedTryCatch() {
+        Exception a = new RuntimeException();
+        Exception b = new RuntimeException();
+
         try {
-            throwA();
+            throwException(a);
         } catch (Exception _a) {
             try {
-                throwB();
+                throwException(b);
             } catch (Exception _b) {
                 assertEquals(b, _b);
             }
-
             assertEquals(a, _a);
         }
     }
@@ -148,7 +122,7 @@ public class ExceptionsTest extends TestCase {
     }
 
     public static void main(String args[]) {
-        testCatchCompilation();
+        testTryBlockDoesNotThrowAnything();
         testThrowAndCatchInTheSameMethod();
         testUnwinding();
         testMultipleCatchBlocks();
