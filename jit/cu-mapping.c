@@ -32,6 +32,8 @@
 #include <vm/buffer.h>
 #include <vm/die.h>
 
+#include <pthread.h>
+
 /*
  * A radix tree is used to associate native method addresses with
  * compilation unit. Only method entry address is stored in the tree
@@ -39,6 +41,7 @@
  * is fast.
  */
 struct radix_tree *cu_map;
+pthread_mutex_t cu_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define BITS_PER_LEVEL 6
 
@@ -64,12 +67,20 @@ static unsigned long cu_key(struct compilation_unit *cu)
 
 int add_cu_mapping(struct compilation_unit *cu)
 {
-	return radix_tree_insert(cu_map, cu_key(cu), cu);
+	int result;
+
+	pthread_mutex_lock(&cu_map_mutex);
+	result = radix_tree_insert(cu_map, cu_key(cu), cu);
+	pthread_mutex_unlock(&cu_map_mutex);
+
+	return result;
 }
 
 void remove_cu_mapping(struct compilation_unit *cu)
 {
+	pthread_mutex_lock(&cu_map_mutex);
 	radix_tree_remove(cu_map, cu_key(cu));
+	pthread_mutex_unlock(&cu_map_mutex);
 }
 
 struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
@@ -77,7 +88,10 @@ struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
 	struct compilation_unit *cu;
 	unsigned long method_addr;
 
+	pthread_mutex_lock(&cu_map_mutex);
 	cu = radix_tree_lookup_prev(cu_map, addr_key(addr));
+	pthread_mutex_unlock(&cu_map_mutex);
+
 	if (cu == NULL)
 		return NULL;
 
