@@ -64,12 +64,12 @@ static unsigned long cu_key(struct compilation_unit *cu)
 
 int add_cu_mapping(struct compilation_unit *cu)
 {
-	return tree_put(cu_map, cu_key(cu), cu);
+	return radix_tree_insert(cu_map, cu_key(cu), cu);
 }
 
 void remove_cu_mapping(struct compilation_unit *cu)
 {
-	tree_remove(cu_map, cu_key(cu));
+	radix_tree_remove(cu_map, cu_key(cu));
 }
 
 struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
@@ -77,7 +77,7 @@ struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
 	struct compilation_unit *cu;
 	unsigned long method_addr;
 
-	cu = tree_lookup_preceeding(cu_map, addr_key(addr));
+	cu = radix_tree_lookup_prev(cu_map, addr_key(addr));
 	if (cu == NULL)
 		return NULL;
 

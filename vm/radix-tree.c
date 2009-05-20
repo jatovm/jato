@@ -144,36 +144,39 @@ static void free_radix_tree_node(struct radix_tree *tree,
 	int i;
 
 	if (level < level_count(tree) - 1)
-		for (i = 0; i < slot_count(tree); i++)
-			if (node->slots[i] != NULL)
-				free_radix_tree_node(tree, node->slots[i],
-						     level + 1);
+		for (i = 0; i < slot_count(tree); i++) {
+			if (node->slots[i] == NULL)
+				continue;
+
+			free_radix_tree_node(tree, node->slots[i], level + 1);
+		}
 
 	free(node);
 }
 
 void free_radix_tree(struct radix_tree *tree)
 {
-	free_radix_tree_node(tree, tree->root, 0);
-	free(tree);
+	if (tree) {
+		free_radix_tree_node(tree, tree->root, 0);
+		free(tree);
+	}
 }
 
-static void *tree_last(struct radix_tree *tree, struct radix_tree_node *node,
-		       int level)
+static void *radix_tree_last(struct radix_tree *tree,
+			     struct radix_tree_node *node, int level)
 {
 	int i;
 
 	while (level < level_count(tree)) {
-
 		for (i = slot_count(tree) - 1; i >= 0; i--)
-			if (node->slots[i] != NULL) {
-				node = node->slots[i];
-				level++;
+			if (node->slots[i] != NULL)
 				break;
-			}
 
 		if (i < 0)
 			return NULL;
+
+		node = node->slots[i];
+		level++;
 	}
 
 	return node;
@@ -188,8 +191,8 @@ static unsigned long get_index(struct radix_tree *tree, unsigned long key,
 }
 
 static void *
-tree_previous(struct radix_tree *tree, struct radix_tree_node *node,
-	      unsigned long key, int level)
+radix_tree_previous(struct radix_tree *tree, struct radix_tree_node *node,
+		    unsigned long key, int level)
 {
 	int index;
 
@@ -205,19 +208,21 @@ tree_previous(struct radix_tree *tree, struct radix_tree_node *node,
 
 	for (index = get_index(tree, key, level) - 1; index >= 0; index--)
 		if (node->slots[index] != NULL)
-			return tree_last(tree, node->slots[index], level + 1);
+			return radix_tree_last(tree, node->slots[index],
+					       level + 1);
 
-	return tree_previous(tree, node->parent, key, level - 1);
+	return radix_tree_previous(tree, node->parent, key, level - 1);
 }
 
 /**
- * tree_put - put key->value mapping into the tree. Returns 0 upon success.
+ * radix_tree_insert - Insert key->value mapping into the tree.
+ *                     Returns 0 on success.
  *
  * @tree: a radix tree to put into.
  * @key: the search key
  * @value: the value to associate key with
  */
-int tree_put(struct radix_tree *tree, unsigned long key, void *value)
+int radix_tree_insert(struct radix_tree *tree, unsigned long key, void *value)
 {
 	struct radix_tree_node *node = tree->root;
 	int i;
@@ -257,11 +262,11 @@ static void free_slot(struct radix_tree *tree, struct radix_tree_node *node,
 }
 
 /**
- * tree_remove - remove mapping from tree.
+ * radix_tree_remove - remove mapping from tree.
  * @tree: a radix tree to remove from.
  * @key: a key to remove.
  */
-void tree_remove(struct radix_tree *tree, unsigned long key)
+void radix_tree_remove(struct radix_tree *tree, unsigned long key)
 {
 	int i;
 	struct radix_tree_node *node = tree->root;
@@ -278,8 +283,8 @@ void tree_remove(struct radix_tree *tree, unsigned long key)
 	free_slot(tree, node, key, i);
 }
 
-static void *__tree_lookup(struct radix_tree *tree, unsigned long key,
-			   bool try_preceeding)
+static void *__radix_tree_lookup(struct radix_tree *tree, unsigned long key,
+				 bool try_previous)
 {
 	int i;
 	struct radix_tree_node *node = tree->root;
@@ -288,8 +293,8 @@ static void *__tree_lookup(struct radix_tree *tree, unsigned long key,
 		int index = get_index(tree, key, i);
 
 		if (node->slots[index] == NULL) {
-			if (try_preceeding)
-				return tree_previous(tree, node, key, i);
+			if (try_previous)
+				return radix_tree_previous(tree, node, key, i);
 			else
 				return NULL;
 		}
@@ -302,26 +307,26 @@ static void *__tree_lookup(struct radix_tree *tree, unsigned long key,
 
 
 /**
- * tree_lookup - get the value associated with @key. Returns NULL when no
+ * radix_tree_lookup - get the value associated with @key. Returns NULL when no
  *               mapping exists.
  *
  * @tree: a radix tree to lookup in.
  * @key: a key which value should be abtained.
  */
-void *tree_lookup(struct radix_tree *tree, unsigned long key)
+void *radix_tree_lookup(struct radix_tree *tree, unsigned long key)
 {
-	return  __tree_lookup(tree, key, false);
+	return  __radix_tree_lookup(tree, key, false);
 }
 
 /**
- * tree_lookup_preceeding - get the value associated with @key or
+ * radix_tree_lookup_prev - get the value associated with @key or
  *                          the value associated with the preceeding key.
  *                          Returns NULL when no preceeding key exists.
  *
  * @tree: a radix tree to lookup in.
  * @key: a key which value should be returned.
  */
-void *tree_lookup_preceeding(struct radix_tree *tree, unsigned long key)
+void *radix_tree_lookup_prev(struct radix_tree *tree, unsigned long key)
 {
-	return  __tree_lookup(tree, key, true);
+	return  __radix_tree_lookup(tree, key, true);
 }
