@@ -1,3 +1,6 @@
+#define _GNU_SOURCE
+#include <string.h>
+
 #include <cafebabe/class.h>
 #include <cafebabe/constant_pool.h>
 #include <cafebabe/field_info.h>
@@ -5,6 +8,7 @@
 #include <vm/class.h>
 #include <vm/field.h>
 #include <vm/method.h>
+#include <vm/stdlib.h>
 
 int vm_field_init(struct vm_field *vmf,
 	struct vm_class *vmc, unsigned int field_index)
@@ -47,6 +51,8 @@ int vm_field_init(struct vm_field *vmf,
 
 	NOT_IMPLEMENTED;
 	vmf->offset = 0;
+	vmf->static_value = zalloc(sizeof(unsigned long long));
+	/* XXX: Use ConstantValue attribute */
 
 	return 0;
 }
