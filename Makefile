@@ -190,7 +190,7 @@ se-mnemonics.html:
 include/vm/opcodes.h: fe-mnemonics.html se-mnemonics.html scripts/gen-opcodes.pl
 	(html2text fe-mnemonics.html; html2text se-mnemonics.html) | perl scripts/gen-opcodes.pl > $@
 
-$(PROGRAM): lib monoburg $(JAMVM_ARCH_H) compile
+$(PROGRAM): include/vm/opcodes.h lib monoburg $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
