@@ -29,6 +29,14 @@
 struct cafebabe_attribute_info;
 struct cafebabe_stream;
 
+#define CAFEBABE_FIELD_ACC_PUBLIC		0x0001
+#define CAFEBABE_FIELD_ACC_PRIVATE		0x0002
+#define CAFEBABE_FIELD_ACC_PROTECTED		0x0004
+#define CAFEBABE_FIELD_ACC_STATIC		0x0008
+#define CAFEBABE_FIELD_ACC_FINAL		0x0010
+#define CAFEBABE_FIELD_ACC_VOLATILE		0x0040
+#define CAFEBABE_FIELD_ACC_TRANSIENT		0x0080
+
 /**
  * A java class field.
  *
