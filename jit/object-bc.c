@@ -484,13 +484,10 @@ int convert_checkcast(struct parse_context *ctx)
 	struct statement *checkcast_stmt;
 	unsigned long type_idx;
 
-	NOT_IMPLEMENTED;
-
 	object_ref = stack_pop(ctx->bb->mimic_stack);
 
 	type_idx = bytecode_read_u16(ctx->buffer);
-	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
-	class = NULL;
+	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
 		return -ENOMEM;
 
