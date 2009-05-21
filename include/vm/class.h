@@ -11,6 +11,8 @@ void check_cast(struct object *obj, struct object *type);
 #include <vm/field.h>
 #include <vm/method.h>
 
+#include <jit/vtable.h>
+
 struct vm_class {
 	const struct cafebabe_class *class;
 
@@ -19,6 +21,8 @@ struct vm_class {
 	struct vm_class *super;
 	struct vm_field *fields;
 	struct vm_method *methods;
+
+	struct vtable vtable;
 };
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);

@@ -169,6 +169,14 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		}
 	}
 
+	NOT_IMPLEMENTED;
+	vtable_init(&vmc->vtable, 256);
+	for (int i = 0; i < 256; ++i)
+		vmc->vtable.native_ptr[i] = (void **) 0x1337;
+
+	return 0;
+}
+
 int vm_class_run_clinit(struct vm_class *vmc)
 {
 	/* XXX: Make sure there's at most one of these. */
