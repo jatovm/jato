@@ -169,6 +169,20 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		}
 	}
 
+int vm_class_run_clinit(struct vm_class *vmc)
+{
+	/* XXX: Make sure there's at most one of these. */
+	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
+		if (strcmp(vmc->methods[i].name, "<clinit>"))
+			continue;
+
+		void (*clinit_trampoline)(void)
+			= vm_method_trampoline_ptr(&vmc->methods[i]);
+
+		fprintf(stderr, "clinit_trampoline() for '%s'!\n", vmc->name);
+		clinit_trampoline();
+	}
+
 	return 0;
 }
 

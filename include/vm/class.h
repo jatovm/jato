@@ -22,6 +22,7 @@ struct vm_class {
 };
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
+int vm_class_run_clinit(struct vm_class *vmc);
 
 struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);
 

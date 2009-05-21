@@ -178,5 +178,9 @@ struct vm_class *classloader_load(const char *class_name)
 	class->class_name = strdup(class_name);
 	class->class = vmc;
 
+	if (vm_class_run_clinit(vmc)) {
+		NOT_IMPLEMENTED;
+	}
+
 	return vmc;
 }
