@@ -44,11 +44,17 @@
 
 char *exe_name;
 
-static void vm_runtime_exit(int status)
+static void native_vmruntime_exit(int status)
 {
 	NOT_IMPLEMENTED;
 
 	exit(status);
+}
+
+static void native_vmsystem_arraycopy(struct object *src, int src_start,
+	struct object *dest, int dest_start, int len)
+{
+	NOT_IMPLEMENTED;
 }
 
 /*
@@ -56,7 +62,8 @@ static void vm_runtime_exit(int status)
  * return java.lang.VMState instance, or null in which case no stack trace will
  * be printed by printStackTrace() method.
  */
-static struct object *vm_fill_in_stack_trace(struct object *object)
+static struct object *
+native_vmthrowable_fill_in_stack_trace(struct object *object)
 {
 	NOT_IMPLEMENTED;
 
@@ -66,9 +73,11 @@ static struct object *vm_fill_in_stack_trace(struct object *object)
 static void jit_init_natives(void)
 {
 	vm_register_native("java/lang/VMRuntime", "exit",
-		vm_runtime_exit);
+		&native_vmruntime_exit);
+	vm_register_native("java/lang/VMSystem", "arraycopy",
+		&native_vmsystem_arraycopy);
 	vm_register_native("java/lang/VMThrowable", "fillInStackTrace",
-		vm_fill_in_stack_trace);
+		&native_vmthrowable_fill_in_stack_trace);
 }
 
 static void native_Test_printf(int x)
