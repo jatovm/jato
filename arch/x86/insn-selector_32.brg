@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <vm/class.h>
+#include <vm/field.h>
 #include <vm/method.h>
 #include <vm/object.h>
 
@@ -526,7 +527,7 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
 
 	/* vtable */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, sizeof(struct vm_object), call_target));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
 
 	/* native ptr */
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
@@ -672,7 +673,7 @@ reg:	EXPR_CLASS_FIELD 1
 	long offset;
 
 	expr   = to_expr(tree);
-	offset = offsetof(struct fieldblock, static_value);
+	offset = offsetof(struct vm_field, static_value);
 
 	state->reg1 = get_var(s->b_parent);
 	field = get_var(s->b_parent);
@@ -942,7 +943,7 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 	store_dest = to_expr(stmt->store_dest);
 	store_src  = to_expr(stmt->store_src);
 
-	field_offset = offsetof(struct fieldblock, static_value);
+	field_offset = offsetof(struct vm_field, static_value);
 	src = state->right->reg1;
 
 	offset = get_var(s->b_parent);
