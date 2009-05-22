@@ -28,6 +28,8 @@ package jvm;
 public class TestCase {
     protected static int retval;
 
+    protected static native void exit(int status);
+
     protected static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail(/* "Expected '" + expected + "', but was '" + actual + "'." */);

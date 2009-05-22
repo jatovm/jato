@@ -97,6 +97,6 @@ public class PutstaticTest extends TestCase {
         testPutStaticInstanceFieldLong();
         testPutStaticLocalLong();
 
-        Runtime.getRuntime().halt(retval);
+        exit(retval);
     }
 }

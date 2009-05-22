@@ -74,6 +74,8 @@ static void jit_init_natives(void)
 {
 	vm_register_native("java/lang/VMRuntime", "exit",
 		&native_vmruntime_exit);
+	vm_register_native("jvm/TestCase", "exit",
+		&native_vmruntime_exit);
 	vm_register_native("java/lang/VMSystem", "arraycopy",
 		&native_vmsystem_arraycopy);
 	vm_register_native("java/lang/VMThrowable", "fillInStackTrace",
