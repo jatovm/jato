@@ -25,8 +25,7 @@ struct vm_field {
 
 	unsigned int offset;
 
-	/* This is a pointer to... something */
-	unsigned int *static_value;
+	unsigned long long static_value;
 };
 
 int vm_field_init(struct vm_field *vmf,

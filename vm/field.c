@@ -51,8 +51,8 @@ int vm_field_init(struct vm_field *vmf,
 
 	NOT_IMPLEMENTED;
 	vmf->offset = 0;
-	vmf->static_value = zalloc(sizeof(unsigned long long));
 	/* XXX: Use ConstantValue attribute */
+	vmf->static_value = 0;
 
 	return 0;
 }
