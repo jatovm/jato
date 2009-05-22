@@ -1,8 +1,8 @@
 #ifndef __VM_OBJECT_H
 #define __VM_OBJECT_H
 
-#include "vm/class.h"
-#include "vm/vm.h"
+#include <vm/class.h>
+#include <vm/vm.h>
 
 struct vm_object {
 	struct vm_class *class;
