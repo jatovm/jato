@@ -37,6 +37,12 @@ struct cafebabe_field_info;
 struct cafebabe_method_info;
 struct cafebabe_stream;
 
+#define CAFEBABE_CLASS_ACC_PUBLIC	0x0001
+#define CAFEBABE_CLASS_ACC_FINAL	0x0010
+#define CAFEBABE_CLASS_ACC_SUPER	0x0020
+#define CAFEBABE_CLASS_ACC_INTERFACE	0x0200
+#define CAFEBABE_CLASS_ACC_ABSTRACT	0x0400
+
 /**
  * A java class file.
  *
