@@ -80,8 +80,7 @@ static int skip_type(const char **type)
 		/* ArrayType */
 	case '[':
 		++ptr;
-		if (skip_type(&ptr))
-			return -1;
+		ret = skip_type(&ptr);
 		break;
 
 	default:
@@ -118,7 +117,7 @@ static int count_skip_arguments(const char **type)
 	return args;
 }
 
-unsigned int count_arguments(const char *type)
+int count_arguments(const char *type)
 {
 	unsigned int args = 0;
 
