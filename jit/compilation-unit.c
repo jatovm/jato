@@ -53,7 +53,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		pthread_mutex_init(&cu->mutex, NULL);
 
 		cu->stack_frame = alloc_stack_frame(
-			method->code_attribute.max_stack,
+			method->args_count,
 			method->code_attribute.max_locals);
 		if (!cu->stack_frame)
 			goto out_of_memory;
