@@ -25,10 +25,10 @@
  */
 package jvm;
 
-public class TestCase {
-    protected static int retval;
+import jato.internal.VM;
 
-    protected static native void exit(int status);
+public class TestCase {
+    private static int status;
 
     protected static void assertEquals(int expected, int actual) {
         if (expected != actual) {
@@ -75,6 +75,10 @@ public class TestCase {
     protected static void fail(/* String msg */) {
         // FIXME:
         // System.out.println(msg);
-        retval = 1;
+        status = 1;
+    }
+
+    protected static void exit() {
+        VM.exit(status);
     }
 }

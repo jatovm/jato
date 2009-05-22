@@ -47,6 +47,6 @@ public class FibonacciTest extends TestCase {
     public static void main(String[] args) {
         testFibonacci();
 
-        exit(retval);
+        exit();
     }
 }

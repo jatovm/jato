@@ -67,6 +67,6 @@ public class LoadConstantsTest extends TestCase {
         testIconst();
         testLdcStringConstant();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }

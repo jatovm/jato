@@ -282,6 +282,7 @@ static struct object *vm_fill_in_stack_trace(struct object *object)
 static void jit_init_natives(void)
 {
 	vm_register_native("java/lang/VMRuntime", "exit", vm_runtime_exit);
+	vm_register_native("jato/internal/VM", "exit", vm_runtime_exit);
 	vm_register_native("java/lang/VMThrowable", "fillInStackTrace", vm_fill_in_stack_trace);
 }
 

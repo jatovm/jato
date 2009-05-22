@@ -281,6 +281,6 @@ public class IntegerArithmeticTest extends TestCase {
         testIntegerBitwiseExclusiveOr();
         testIntegerIncrementLocalByConstant();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }

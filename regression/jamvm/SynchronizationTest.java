@@ -22,6 +22,6 @@ public class SynchronizationTest extends TestCase {
     public static void main(String[] args) {
         testMonitorEnterAndExit();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }

@@ -49,6 +49,6 @@ public class ExceptionsTest extends TestCase {
     }
 
     public static void main(String args[]) {
-        exit(retval);
+        exit();
     }
 };

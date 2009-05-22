@@ -288,6 +288,6 @@ public class LongArithmeticTest extends TestCase {
         testLongBitwiseExclusiveOr();
         testLongIncrementLocalByConstant();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }

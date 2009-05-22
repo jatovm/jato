@@ -72,9 +72,9 @@ native_vmthrowable_fill_in_stack_trace(struct object *object)
 
 static void jit_init_natives(void)
 {
-	vm_register_native("java/lang/VMRuntime", "exit",
+	vm_register_native("jato/internal/VM", "exit",
 		&native_vmruntime_exit);
-	vm_register_native("jvm/TestCase", "exit",
+	vm_register_native("java/lang/VMRuntime", "exit",
 		&native_vmruntime_exit);
 	vm_register_native("java/lang/VMSystem", "arraycopy",
 		&native_vmsystem_arraycopy);

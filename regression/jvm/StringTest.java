@@ -11,6 +11,6 @@ public class StringTest extends TestCase {
 		String t = "ヒラガナ";
 		assertEquals(t.length(), 4);
 
-		exit(retval);
+		exit();
 	}
 }
