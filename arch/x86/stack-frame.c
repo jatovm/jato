@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <assert.h>
+
 #include <jit/expression.h>
 #include <vm/method.h>
 #include <vm/vm.h>
@@ -88,6 +90,10 @@ unsigned long slot_offset(struct stack_slot *slot)
 
 unsigned long frame_locals_size(struct stack_frame *frame)
 {
-	unsigned long nr_locals = frame->nr_local_slots - frame->nr_args;
+	unsigned long nr_locals;
+
+	assert(frame->nr_local_slots >= frame->nr_args);
+
+	nr_locals = frame->nr_local_slots - frame->nr_args;
 	return __index_to_offset(nr_locals + frame->nr_spill_slots);
 }
