@@ -129,6 +129,6 @@ public class ExceptionsTest extends TestCase {
         testNestedTryCatch();
         testEmptyCatchBlock();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 };

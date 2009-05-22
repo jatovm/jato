@@ -42,6 +42,6 @@ public class RegisterAllocatorTortureTest extends TestCase {
   public static void main(String[] args) {
     testIntegerBigExpression();
 
-    Runtime.getRuntime().halt(retval);
+    exit();
   }
 }

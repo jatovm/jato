@@ -204,6 +204,7 @@ test: $(JAMVM_ARCH_H) monoburg
 	$(Q) $(JAVAC) -cp $(BOOTCLASSPATH):regression -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
+	regression/jato/internal/VM.class \
 	regression/jvm/TestCase.class \
 	regression/jamvm/ExitStatusIsOneTest.class \
 	regression/jamvm/ExitStatusIsZeroTest.class \

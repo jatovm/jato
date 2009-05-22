@@ -137,7 +137,7 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testMultiDimensionalArrayLoadAndStore();
         testCheckCast();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 
     private static class InitializingClass {

@@ -74,6 +74,6 @@ public class TrampolineBackpatchingTest extends TestCase {
         x = t.testArg(x);
         assertEquals(x, 3);
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }

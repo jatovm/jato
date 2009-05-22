@@ -38,6 +38,6 @@ public class ConversionTest extends TestCase {
         testLongToIntegerConversion();
         testIntegerToLongConversion();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }

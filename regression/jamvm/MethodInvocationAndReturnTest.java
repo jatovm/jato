@@ -108,6 +108,6 @@ public class MethodInvocationAndReturnTest extends TestCase {
         testInvokestaticLongReturnValue();
         testInvokevirtualLongReturnValue();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }

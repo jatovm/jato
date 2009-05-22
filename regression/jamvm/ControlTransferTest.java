@@ -214,6 +214,6 @@ public class ControlTransferTest extends TestCase {
         testIfLcmpEq();
         testIfLcmpGt();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }
