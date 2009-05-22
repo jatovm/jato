@@ -58,6 +58,11 @@ int vm_method_init(struct vm_method *vmm,
 	 * on x86_64?
 	 */
 	vmm->args_count = count_arguments(vmm->type);
+	if (vmm->args_count < 0) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
 	if (!vm_method_is_static(vmm))
 		++vmm->args_count;
 

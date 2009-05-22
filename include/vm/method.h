@@ -25,7 +25,7 @@ struct vm_method {
 
 	char *name;
 	char *type;
-	unsigned int args_count;
+	int args_count;
 
 	struct cafebabe_code_attribute code_attribute;
 
