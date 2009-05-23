@@ -350,5 +350,13 @@ int
 cafebabe_constant_info_utf8_compare(
 	const struct cafebabe_constant_info_utf8 *s1, const char *s2)
 {
+	unsigned int s2_length = strlen(s2);
+
+	if (s1->length != s2_length) {
+		if (s1->length < s2_length)
+			return -1;
+		return 1;
+	}
+
 	return strncmp((const char *) s1->bytes, s2, s1->length);
 }
