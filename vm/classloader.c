@@ -55,8 +55,6 @@ struct vm_class *load_class_from_file(const char *filename)
 	struct cafebabe_class *class;
 	struct vm_class *result = NULL;
 
-	fprintf(stderr, "classloader: trying to load file '%s'...\n", filename);
-
 	if (cafebabe_stream_open(&stream, filename)) {
 		NOT_IMPLEMENTED;
 		goto out;
@@ -87,8 +85,6 @@ struct vm_class *load_class(const char *class_name)
 	struct vm_class *result;
 	char *filename;
 	const char *classpath;
-
-	fprintf(stderr, "classloader: trying to load class '%s'...\n", class_name);
 
 	filename = class_name_to_file_name(class_name);
 	if (!filename) {
