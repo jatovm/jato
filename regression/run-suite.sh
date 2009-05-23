@@ -50,16 +50,6 @@ while [ "$#" -ge 1 ]; do
 done
 
 if [ -z "$CLASS_LIST" ]; then
-    run_java jamvm.ExitStatusIsZeroTest 0
-    run_java jamvm.ExitStatusIsOneTest 1
-    run_java jamvm.LoadConstantsTest 0
-    run_java jamvm.IntegerArithmeticTest 0
-    run_java jamvm.LongArithmeticTest 0
-    run_java jamvm.ConversionTest 0
-    run_java jamvm.ObjectCreationAndManipulationTest 0
-    run_java jamvm.SynchronizationTest 0
-    run_java jamvm.MethodInvocationAndReturnTest 0
-    run_java jamvm.ControlTransferTest 0
     run_java jvm.PutstaticTest 0
     run_java jvm.PutfieldTest 0
     run_java jvm.TrampolineBackpatchingTest 0
