@@ -22,10 +22,17 @@ struct vm_class {
 	struct vm_field *fields;
 	struct vm_method *methods;
 
+	unsigned int vtable_size;
 	struct vtable vtable;
 };
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
+
+static inline bool vm_class_is_interface(struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
+}
+
 int vm_class_run_clinit(struct vm_class *vmc);
 
 struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);

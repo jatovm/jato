@@ -1,6 +1,7 @@
 #ifndef __EXPRESSION_H
 #define __EXPRESSION_H
 
+#include <vm/class.h>
 #include <vm/field.h>
 #include <vm/method.h>
 #include <vm/system.h>
@@ -291,7 +292,15 @@ static inline int is_invoke_expr(struct expression *expr)
 
 static inline unsigned long expr_method_index(struct expression *expr)
 {
-	return expr->target_method->method_index;
+	struct vm_method *method = expr->target_method;
+	unsigned int base;
+
+	if (method->class->super)
+		base = method->class->super->vtable_size;
+	else
+		base = 0;
+
+	return  base + method->method_index;
 }
 
 #endif

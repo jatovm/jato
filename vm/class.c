@@ -80,6 +80,37 @@ void check_cast(struct object *obj, struct object *type)
 #include <vm/field.h>
 #include <vm/method.h>
 
+#include <jit/vtable.h>
+
+static void
+setup_vtable(struct vm_class *vmc)
+{
+	unsigned int super_vtable_size;
+	struct vtable *super_vtable;
+
+	if (vmc->super) {
+		super_vtable_size = vmc->super->vtable_size;
+		super_vtable = &vmc->super->vtable;
+	} else {
+		super_vtable_size = 0;
+	}
+
+	vmc->vtable_size = super_vtable_size + vmc->class->methods_count;
+
+	vtable_init(&vmc->vtable, vmc->vtable_size);
+
+	/* Superclass methods */
+	for (uint16_t i = 0; i < super_vtable_size; ++i)
+		vtable_setup_method(&vmc->vtable, i,
+			super_vtable->native_ptr[i]);
+
+	/* Our methods */
+	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
+		vtable_setup_method(&vmc->vtable, super_vtable_size + i,
+				vm_method_trampoline_ptr(&vmc->methods[i]));
+	}
+}
+
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 {
 	vmc->class = class;
@@ -169,10 +200,8 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		}
 	}
 
-	NOT_IMPLEMENTED;
-	vtable_init(&vmc->vtable, 256);
-	for (int i = 0; i < 256; ++i)
-		vmc->vtable.native_ptr[i] = (void **) 0x1337;
+	if (!vm_class_is_interface(vmc))
+		setup_vtable(vmc);
 
 	return 0;
 }

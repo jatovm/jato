@@ -996,8 +996,7 @@ static void fixup_invokevirtual(struct compilation_unit *cu,
 {
 	struct vm_class *vmc = objref->class;
 
-	NOT_IMPLEMENTED;
-	//cb->vtable.native_ptr[cu->method->method_table_index] = target;
+	vmc->vtable.native_ptr[cu->method->method_index] = target;
 }
 
 void emit_trampoline(struct compilation_unit *cu,
