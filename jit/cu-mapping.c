@@ -41,7 +41,7 @@
  * is fast.
  */
 struct radix_tree *cu_map;
-pthread_mutex_t cu_map_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_rwlock_t cu_map_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
 #define BITS_PER_LEVEL 6
 
@@ -69,18 +69,18 @@ int add_cu_mapping(struct compilation_unit *cu)
 {
 	int result;
 
-	pthread_mutex_lock(&cu_map_mutex);
+	pthread_rwlock_wrlock(&cu_map_rwlock);
 	result = radix_tree_insert(cu_map, cu_key(cu), cu);
-	pthread_mutex_unlock(&cu_map_mutex);
+	pthread_rwlock_unlock(&cu_map_rwlock);
 
 	return result;
 }
 
 void remove_cu_mapping(struct compilation_unit *cu)
 {
-	pthread_mutex_lock(&cu_map_mutex);
+	pthread_rwlock_wrlock(&cu_map_rwlock);
 	radix_tree_remove(cu_map, cu_key(cu));
-	pthread_mutex_unlock(&cu_map_mutex);
+	pthread_rwlock_unlock(&cu_map_rwlock);
 }
 
 struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
@@ -88,9 +88,9 @@ struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
 	struct compilation_unit *cu;
 	unsigned long method_addr;
 
-	pthread_mutex_lock(&cu_map_mutex);
+	pthread_rwlock_rdlock(&cu_map_rwlock);
 	cu = radix_tree_lookup_prev(cu_map, addr_key(addr));
-	pthread_mutex_unlock(&cu_map_mutex);
+	pthread_rwlock_unlock(&cu_map_rwlock);
 
 	if (cu == NULL)
 		return NULL;
