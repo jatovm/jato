@@ -69,8 +69,12 @@ struct vm_class *load_class_from_file(const char *filename)
 	cafebabe_stream_close(&stream);
 
 	result = malloc(sizeof *result);
-	if (result)
-		vm_class_init(result, class);
+	if (result) {
+		if (vm_class_init(result, class)) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+	}
 
 	return result;
 
