@@ -25,6 +25,7 @@
  */
 
 #include <jit/compiler.h>
+#include <arch/instruction.h>
 #include <memory.h>
 #include <malloc.h>
 

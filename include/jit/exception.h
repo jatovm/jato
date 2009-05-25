@@ -1,10 +1,10 @@
 #ifndef _JIT_EXCEPTION_H
 #define _JIT_EXCEPTION_H
 
-#include <jit/compilation-unit.h>
 #include <vm/vm.h>
 #include <arch/stack-frame.h>
 
+struct compilation_unit;
 struct jit_stack_frame;
 
 struct exception_table_entry *exception_find_entry(struct methodblock *,

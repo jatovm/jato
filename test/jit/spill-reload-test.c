@@ -26,6 +26,7 @@
 
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
+#include <arch/instruction.h>
 #include <vm/vm.h>
 #include <libharness.h>
 

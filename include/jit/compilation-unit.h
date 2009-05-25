@@ -7,12 +7,13 @@
 #include <vm/stack.h>
 
 #include <arch/stack-frame.h>
-#include <arch/instruction.h>
 
 #include <stdbool.h>
 #include <pthread.h>
 
 struct buffer;
+struct insn;
+enum machine_reg;
 
 struct compilation_unit {
 	struct methodblock *method;

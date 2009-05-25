@@ -4,6 +4,7 @@
 
 #include <libharness.h>
 #include <jit/compilation-unit.h>
+#include <arch/instruction.h>
 #include <vm/vm.h>
 
 static struct methodblock method = { };

@@ -6,6 +6,7 @@
  */
 
 #include <jit/compilation-unit.h>
+#include <arch/instruction.h>
 
 enum {
 	NO_USE_DEF	= 0,
