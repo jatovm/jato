@@ -32,7 +32,6 @@
 #include <string.h>
 
 /* get REG_EIP from ucontext.h */
-#define __USE_GNU
 #include <ucontext.h>
 
 extern char *exe_name;

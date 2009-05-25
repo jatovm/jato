@@ -140,7 +140,7 @@ CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
 
-DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99
+DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99 -D_GNU_SOURCE
 
 WARNINGS	= -Wsign-compare -Wundef
 DEFAULT_CFLAGS	+= $(WARNINGS)
