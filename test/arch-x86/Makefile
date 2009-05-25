@@ -26,6 +26,7 @@ OBJS = \
 	../jamvm/lock.o \
 	../jamvm/thread-stub.o \
 	../jamvm/resolve-stub.o \
+	../jamvm/class-stub.o \
 	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
 	../../vm/die.o \
@@ -34,7 +35,6 @@ OBJS = \
 	../../vm/string.o \
 	../../vm/types.o \
 	../../vm/zalloc.o \
-	../../vm/class.o \
 	../../vm/radix-tree.o \
 	../../jit/alloc.o \
 	../../jit/basic-block.o \

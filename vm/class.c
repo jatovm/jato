@@ -27,6 +27,24 @@
 #include <vm/vm.h>
 #include <stdlib.h>
 
+struct object *create_object(char *class_name)
+{
+	Class *e_class;
+	struct object *obj;
+	MethodBlock *init;
+
+	e_class = findSystemClass(class_name);
+	obj = allocObject(e_class);
+	if (!obj)
+		return NULL;
+
+	init = lookupMethod(e_class, "<init>", "()V");
+	if (init)
+		executeMethod(obj, init);
+
+	return obj;
+}
+
 unsigned long is_object_instance_of(struct object *obj, struct object *type)
 {
 	if (!obj)
