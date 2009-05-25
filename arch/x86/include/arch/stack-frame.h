@@ -2,6 +2,7 @@
 #define __X86_FRAME_H
 
 #include <jit/stack-slot.h>
+#include <stdbool.h>
 
 struct methodblock;
 struct expression;
