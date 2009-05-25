@@ -11,6 +11,7 @@ add_library (cafebabe SHARED
 	src/cafebabe/attribute_info.c
 	src/cafebabe/class.c
 	src/cafebabe/code_attribute.c
+	src/cafebabe/constant_value_attribute.c
 	src/cafebabe/constant_pool.c
 	src/cafebabe/error.c
 	src/cafebabe/field_info.c
