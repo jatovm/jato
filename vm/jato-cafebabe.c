@@ -92,6 +92,12 @@ main(int argc, char *argv[])
 {
 	exe_name = argv[0];
 
+#ifndef NDEBUG
+	/* Make stdout/stderr unbuffered; it really helps debugging! */
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+#endif
+
 	if (argc != 2) {
 		fprintf(stderr, "usage: %s CLASS\n", argv[0]);
 		exit(EXIT_FAILURE);
