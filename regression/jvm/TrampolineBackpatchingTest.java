@@ -44,7 +44,7 @@ public class TrampolineBackpatchingTest extends TestCase {
         /* Instantiating RuntimeException calls virtual method
            Throwable.fillInStackTrace.  This tests proper functioning
            of vtable back-patching */
-        new RuntimeException("foo");
+        new RuntimeException((String) null);
     }
 
     public int testArg(int a) {
