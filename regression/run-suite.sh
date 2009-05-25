@@ -7,7 +7,7 @@ function run_java {
   JAVA_CLASS=$1
   EXPECTED=$2
 
-  $GDB ../jato $JAVA_CLASS
+  CLASSPATH="$CLASSPATH:$PWD/..:$PWD" $GDB ../jato $JAVA_CLASS
 
   ACTUAL=$?
 
