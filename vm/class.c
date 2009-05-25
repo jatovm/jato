@@ -175,12 +175,34 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		return -1;
 	}
 
+	unsigned int offset;
+
+	if (vmc->super)
+		offset = vmc->super->object_size;
+	else
+		offset = 0;
+
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
-		if (vm_field_init(&vmc->fields[i], vmc, i)) {
+		struct vm_field *vmf = &vmc->fields[i];
+
+		if (vm_field_init(vmf, vmc, i)) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}
+
+		if (vm_field_is_static(vmf)) {
+			if (vm_field_init_static(vmf)) {
+				NOT_IMPLEMENTED;
+				return -1;
+			}
+		} else {
+			vm_field_init_nonstatic(vmf, offset);
+			/* XXX: Do field reordering and use the right sizes */
+			offset += 8;
+		}
 	}
+
+	vmc->object_size = offset;
 
 	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
 	if (!vmc->methods) {

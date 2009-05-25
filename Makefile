@@ -107,14 +107,15 @@ VM_OBJS = \
 JAMVM_OBJS =
 
 CAFEBABE_OBJS := \
-	attribute_array.o	\
-	attribute_info.o	\
-	class.o			\
-	code_attribute.o	\
-	constant_pool.o		\
-	error.o			\
-	field_info.o		\
-	method_info.o		\
+	attribute_array.o		\
+	attribute_info.o		\
+	class.o				\
+	code_attribute.o		\
+	constant_value_attribute.o	\
+	constant_pool.o			\
+	error.o				\
+	field_info.o			\
+	method_info.o			\
 	stream.o
 
 CAFEBABE_OBJS := $(addprefix cafebabe/src/cafebabe/,$(CAFEBABE_OBJS))

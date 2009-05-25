@@ -1,14 +1,13 @@
 #include <stdlib.h>
 
-#include "vm/object.h"
+#include <vm/object.h>
+#include <vm/stdlib.h>
 
 struct vm_object *vm_object_alloc(struct vm_class *class)
 {
 	struct vm_object *res;
 
-	NOT_IMPLEMENTED;
-
-	res = malloc(sizeof(*res) + /* XXX: Payload: */ 256);
+	res = zalloc(sizeof(*res) + class->object_size);
 	if (res) {
 		res->class = class;
 	}
@@ -18,8 +17,15 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 
 struct vm_object *vm_object_alloc_native_array(int type, int count)
 {
-	NOT_IMPLEMENTED;
-	return NULL;
+	struct vm_object *res;
+
+	/* XXX: Use the right size... */
+	res = zalloc(sizeof(*res) + 8 * count);
+	if (res) {
+		res->array_length = count;
+	}
+
+	return res;
 }
 
 struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,

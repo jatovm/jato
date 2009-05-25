@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include <cafebabe/constant_pool.h>
+#include <cafebabe/constant_value_attribute.h>
 #include <cafebabe/field_info.h>
 
 #include <vm/vm.h>
@@ -24,12 +26,13 @@ struct vm_field {
 	char *type;
 
 	unsigned int offset;
-
 	unsigned long long static_value;
 };
 
 int vm_field_init(struct vm_field *vmf,
 	struct vm_class *vmc, unsigned int field_index);
+void vm_field_init_nonstatic(struct vm_field *vmf, unsigned int offset);
+int vm_field_init_static(struct vm_field *vmf);
 
 static inline bool vm_field_is_static(struct vm_field *vmm)
 {

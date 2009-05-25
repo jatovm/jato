@@ -22,6 +22,8 @@ struct vm_class {
 	struct vm_field *fields;
 	struct vm_method *methods;
 
+	unsigned int object_size;
+
 	unsigned int vtable_size;
 	struct vtable vtable;
 };
