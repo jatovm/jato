@@ -818,6 +818,12 @@ static void emit_xor_imm_reg(struct buffer *buf, struct operand * src,
 	__emit_xor_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void emit_test_membase_reg(struct buffer *buf, struct operand *src,
+				  struct operand *dest)
+{
+	emit_membase_reg(buf, 0x85, src, dest);
+}
+
 enum emitter_type {
 	NO_OPERANDS = 1,
 	SINGLE_OPERAND,
@@ -885,6 +891,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 };

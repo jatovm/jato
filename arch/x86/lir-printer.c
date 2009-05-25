@@ -446,6 +446,11 @@ static int print_sub_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_test_membase_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase_reg(str, insn);
+}
 
 static int print_xor_membase_reg(struct string *str, struct insn *insn)
 {
@@ -513,6 +518,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_SUB_IMM_REG] = print_sub_imm_reg,
 	[INSN_SUB_MEMBASE_REG] = print_sub_membase_reg,
 	[INSN_SUB_REG_REG] = print_sub_reg_reg,
+	[INSN_TEST_MEMBASE_REG] = print_test_membase_reg,
 	[INSN_XOR_MEMBASE_REG] = print_xor_membase_reg,
 	[INSN_XOR_IMM_REG] = print_xor_imm_reg,
 };
