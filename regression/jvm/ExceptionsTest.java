@@ -121,6 +121,19 @@ public class ExceptionsTest extends TestCase {
         } catch (Exception e) {}
     }
 
+    public static void testInvokevirtualOnNullReference() {
+        boolean catched = false;
+
+        try {
+            Object o = null;
+            o.getClass();
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
     public static void main(String args[]) {
         testTryBlockDoesNotThrowAnything();
         testThrowAndCatchInTheSameMethod();
@@ -128,6 +141,7 @@ public class ExceptionsTest extends TestCase {
         testMultipleCatchBlocks();
         testNestedTryCatch();
         testEmptyCatchBlock();
+        testInvokevirtualOnNullReference();
 
         exit();
     }
