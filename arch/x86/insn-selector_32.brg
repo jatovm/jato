@@ -1121,10 +1121,7 @@ stmt:	STMT_NULL_CHECK(reg)
 
 	ref = state->left->reg1;
 
-	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) check_null));
-
-	method_args_cleanup(s, tree, 1);
+	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, ref, 0, ref));
 }
 
 array_check:	EXPR_ARRAY_DEREF(reg, reg) 2

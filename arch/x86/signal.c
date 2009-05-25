@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2009 Pekka Enberg
- * 
+ * Copyright (C) 2009 Tomasz Grabiec
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -25,52 +25,23 @@
  */
 
 #include <arch/signal.h>
-#include <arch/exception.h>
-#include <vm/backtrace.h>
-#include <vm/class.h>
-#include <stddef.h>
-#include <unistd.h>
-#include <ucontext.h>
+#include <arch/stack-frame.h>
+#include <jit/cu-mapping.h>
 
-static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
+bool signal_from_jit_method(void *ctx)
 {
-	/* Assume that zero-page access is caused by dereferencing a
-	   null pointer */
-	if (signal_from_jit_method(ctx) &&
-	    ((unsigned long)si->si_addr < (unsigned long)getpagesize())) {
-		struct object *exception;
+	ucontext_t *uc;
+	unsigned long ip;
 
-		/* TODO: exception's stack trace should be filled using ctx */
-		exception = create_object("java/lang/NullPointerException");
-		if (exception == NULL) {
-			/* TODO: throw OutOfMemoryError */
-			fprintf(stderr, "%s: Out of memory\n", __FUNCTION__);
-			goto exit;
-		}
+	uc = ctx;
+	ip = uc->uc_mcontext.gregs[REG_IP];
 
-		throw_exception_from_signal(ctx, exception);
-		return;
-	}
+	if (!is_jit_method(ip))
+		return false;
 
- exit:
-	print_backtrace_and_die(sig, si, ctx);
-}
+	/* We must be extra caucious here because IP might be iinvalid*/
+	if (get_cu_from_native_addr(ip) == NULL)
+		return false;
 
-static void signal_handler(int sig, siginfo_t *si, void *ctx)
-{
-	print_backtrace_and_die(sig, si, ctx);
-}
-
-void setup_signal_handlers(void)
-{
-	struct sigaction sa;
-
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags	= SA_RESTART | SA_SIGINFO;
-
-	sa.sa_sigaction	= sigsegv_handler;
-	sigaction(SIGSEGV, &sa, NULL);
-
-	sa.sa_sigaction	= signal_handler;
-	sigaction(SIGUSR1, &sa, NULL);
+	return true;
 }

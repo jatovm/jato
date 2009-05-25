@@ -25,8 +25,13 @@
  */
 
 #include <jit/exception.h>
+#include <jit/cu-mapping.h>
+#include <jit/basic-block.h>
+#include <jit/compilation-unit.h>
 #include <arch/exception.h>
 #include <arch/stack-frame.h>
+#include <arch/memory.h>
+#include <arch/signal.h>
 
 unsigned char *throw_exception(struct compilation_unit *cu,
 			       struct object *exception)
@@ -35,4 +40,35 @@ unsigned char *throw_exception(struct compilation_unit *cu,
 	struct jit_stack_frame *frame = __builtin_frame_address(1);
 
 	return throw_exception_from(cu, frame, native_ptr, exception);
+}
+
+void throw_exception_from_signal(void *ctx, struct object *exception)
+{
+	ucontext_t *uc;
+	struct jit_stack_frame *frame;
+	struct compilation_unit *cu;
+	unsigned long source_addr;
+	void *eh;
+
+	uc = ctx;
+
+	source_addr = uc->uc_mcontext.gregs[REG_IP];
+	cu = get_cu_from_native_addr(source_addr);
+	frame = (struct jit_stack_frame*)uc->uc_mcontext.gregs[REG_BP];
+
+	eh = throw_exception_from(cu, frame, (unsigned char*)source_addr,
+				  exception);
+
+	if (eh == NULL) {
+		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)bb_native_ptr(cu->exit_bb);
+	} else {
+		unsigned long *stack;
+
+		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)eh;
+
+		/* push exception object reference on stack */
+		uc->uc_mcontext.gregs[REG_SP] -= sizeof(exception);
+		stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
+		*stack = (unsigned long)exception;
+	}
 }

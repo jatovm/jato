@@ -9,6 +9,7 @@ ARCH_OBJS = \
 	arch/x86/use-def.o		\
 	arch/x86/exception_32.o		\
 	arch/x86/unwind_32.o		\
+	arch/x86/signal.o		\
 	jamvm/os/$(OS)/i386/dll_md.o	\
 	jamvm/os/$(OS)/i386/init.o	\
 	jamvm/os/$(OS)/os.o

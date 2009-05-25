@@ -1509,13 +1509,7 @@ void test_select_null_check_stmt(void)
 	assert_imm_reg_insn(INSN_MOV_IMM_REG, 0xcafebabe, dreg1, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(INSN_PUSH_REG, dreg1, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_null, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
+	assert_membase_reg_insn(INSN_TEST_MEMBASE_REG, dreg1, 0, dreg1, insn);
 
 	free_compilation_unit(cu);
 }
