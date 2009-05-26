@@ -25,11 +25,13 @@
  */
 package jvm;
 
+import jato.internal.VM;
+
 /**
  * @author Pekka Enberg
  */
 public class ExitStatusIsZeroTest {
     public static void main(String[] args) {
-        Runtime.getRuntime().halt(0);
+        VM.exit(0);
     }
 }

@@ -25,11 +25,13 @@
  */
 package jvm;
 
+import jato.internal.VM;
+
 /**
  * @author Pekka Enberg
  */
 public class ExitStatusIsOneTest {
     public static void main(String[] args) {
-        Runtime.getRuntime().halt(1);
+        VM.exit(1);
     }
 }
