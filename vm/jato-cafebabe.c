@@ -39,6 +39,7 @@
 #include "vm/classloader.h"
 #include "vm/method.h"
 #include "vm/natives.h"
+#include "vm/object.h"
 #include "vm/signal.h"
 #include "vm/vm.h"
 
@@ -46,9 +47,49 @@ char *exe_name;
 
 static void native_vmruntime_exit(int status)
 {
-	NOT_IMPLEMENTED;
-
+	/* XXX: exit gracefully */
 	exit(status);
+}
+
+static void native_vmruntime_println(struct vm_object *message)
+{
+	struct vm_field *offset_field
+		= vm_class_get_field(message->class, "offset", "I");
+	if (!offset_field) {
+		NOT_IMPLEMENTED;
+		return;
+	}
+
+	struct vm_field *count_field
+		= vm_class_get_field(message->class, "count", "I");
+	if (!count_field) {
+		NOT_IMPLEMENTED;
+		return;
+	}
+
+	struct vm_field *value_field
+		= vm_class_get_field(message->class, "value", "[C");
+	if (!value_field) {
+		NOT_IMPLEMENTED;
+		return;
+	}
+
+	int32_t offset = *(int32_t *) &message->fields[offset_field->offset];
+	int32_t count = *(int32_t *) &message->fields[count_field->offset];
+	struct vm_object *array_object
+		= *(struct vm_object **) &message->fields[value_field->offset];
+	int16_t *array = (int16_t *) array_object->fields;
+
+	for (uint32_t i = 0; i < count; ++i) {
+		int16_t ch = array[offset + i];
+
+		if (ch < 128 && isprint(ch))
+			printf("%c", ch);
+		else
+			printf("<%d>", ch);
+	}
+
+	printf("\n");
 }
 
 static void native_vmsystem_arraycopy(struct object *src, int src_start,
@@ -63,7 +104,7 @@ static void native_vmsystem_arraycopy(struct object *src, int src_start,
  * be printed by printStackTrace() method.
  */
 static struct object *
-native_vmthrowable_fill_in_stack_trace(struct object *object)
+native_vmthrowable_fill_in_stack_trace(struct object *message)
 {
 	NOT_IMPLEMENTED;
 
@@ -74,6 +115,8 @@ static void jit_init_natives(void)
 {
 	vm_register_native("jato/internal/VM", "exit",
 		&native_vmruntime_exit);
+	vm_register_native("jato/internal/VM", "println",
+		&native_vmruntime_println);
 	vm_register_native("java/lang/VMRuntime", "exit",
 		&native_vmruntime_exit);
 	vm_register_native("java/lang/VMSystem", "arraycopy",
