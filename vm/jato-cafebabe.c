@@ -113,24 +113,21 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	unsigned int main_method_index;
-	if (cafebabe_class_get_method(vmc->class,
-		"main", "([Ljava/lang/String;)V", &main_method_index))
-	{
+	struct vm_method *vmm = vm_class_get_method_recursive(vmc,
+		"main", "([Ljava/lang/String;)V");
+	if (!vmm) {
 		fprintf(stderr, "error: %s: no main method\n", classname);
 		goto out;
 	}
 
-	struct vm_method *main_method = &vmc->methods[main_method_index];
-
-	if (!vm_method_is_static(main_method)) {
+	if (!vm_method_is_static(vmm)) {
 		fprintf(stderr, "errror: %s: main method not static\n",
 			classname);
 		goto out;
 	}
 
 	void (*main_method_trampoline)(void)
-		= vm_method_trampoline_ptr(main_method);
+		= vm_method_trampoline_ptr(vmm);
 	main_method_trampoline();
 
 	return EXIT_SUCCESS;
