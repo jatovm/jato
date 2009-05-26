@@ -107,7 +107,7 @@ main(int argc, char *argv[])
 	vm_register_native("Test", "printf", &native_Test_printf);
 
 	const char *classname = argv[1];
-	struct vm_class *vmc = classloader_load(classname);
+	struct vm_class *vmc = classloader_load_and_init(classname);
 	if (!vmc) {
 		fprintf(stderr, "error: %s: could not load\n", classname);
 		goto out;

@@ -10,7 +10,6 @@
 #include <vm/classloader.h>
 
 struct classloader_class {
-	char *class_name;
 	struct vm_class *class;
 };
 
@@ -25,7 +24,7 @@ static struct classloader_class *lookup_class(const char *class_name)
 	for (i = 0; i < nr_classes; ++i) {
 		struct classloader_class *class = &classes[i];
 
-		if (!strcmp(class->class_name, class_name))
+		if (!strcmp(class->class->name, class_name))
 			return class;
 	}
 
@@ -56,6 +55,7 @@ struct vm_class *load_class_from_file(const char *filename)
 	struct vm_class *result = NULL;
 
 	if (cafebabe_stream_open(&stream, filename)) {
+		printf("couldn't open file '%s'\n", filename);
 		NOT_IMPLEMENTED;
 		goto out;
 	}
@@ -175,11 +175,23 @@ struct vm_class *classloader_load(const char *class_name)
 	}
 
 	class = &classes[nr_classes++];
-	class->class_name = strdup(class_name);
 	class->class = vmc;
 
-	if (vm_class_run_clinit(vmc)) {
-		NOT_IMPLEMENTED;
+	return vmc;
+}
+
+struct vm_class *classloader_load_and_init(const char *class_name)
+{
+	struct vm_class *vmc;
+
+	vmc = classloader_load(class_name);
+	if (vmc) {
+		if (vmc->state != VM_CLASS_INITIALIZED) {
+			if (vm_class_run_clinit(vmc)) {
+				NOT_IMPLEMENTED;
+				return NULL;
+			}
+		}
 	}
 
 	return vmc;
