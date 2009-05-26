@@ -24,20 +24,24 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/exception.h>
-#include <jit/cu-mapping.h>
-#include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
-#include <arch/exception.h>
+#include <jit/basic-block.h>
+#include <jit/cu-mapping.h>
+#include <jit/exception.h>
+
 #include <arch/stack-frame.h>
+#include <arch/exception.h>
 #include <arch/memory.h>
 #include <arch/signal.h>
 
-unsigned char *throw_exception(struct compilation_unit *cu,
-			       struct object *exception)
+unsigned char *
+throw_exception(struct compilation_unit *cu, struct object *exception)
 {
-	unsigned char *native_ptr = __builtin_return_address(0) - 1;
-	struct jit_stack_frame *frame = __builtin_frame_address(1);
+	unsigned char *native_ptr;
+	struct jit_stack_frame *frame;
+
+	native_ptr = __builtin_return_address(0) - 1;
+	frame      = __builtin_frame_address(1);
 
 	return throw_exception_from(cu, frame, native_ptr, exception);
 }
