@@ -101,6 +101,7 @@ VM_OBJS = \
 	vm/stack.o		\
 	vm/string.o		\
 	vm/types.o		\
+	vm/utf8.o		\
 	vm/zalloc.o		\
 	vm/list.o
 
