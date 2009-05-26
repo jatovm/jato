@@ -8,6 +8,8 @@ struct vm_object {
 	struct vm_class *class;
 
 	unsigned int array_length;
+
+	uint8_t fields[];
 };
 
 struct vm_object *vm_object_alloc(struct vm_class *class);
