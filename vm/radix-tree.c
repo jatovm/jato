@@ -26,10 +26,11 @@
 
 #include <vm/radix-tree.h>
 #include <vm/stdlib.h>
+
+#include <stdbool.h>
 #include <assert.h>
 #include <malloc.h>
 #include <errno.h>
-#include <stdbool.h>
 
 /*
  * Below is a schematic ilustration how values are mapped to keys in
@@ -69,22 +70,9 @@
  *
  */
 
-struct radix_tree {
-	int level_count;
-	int bits_per_level;
-
-	struct radix_tree_node *root;
-};
-
-struct radix_tree_node {
-	struct radix_tree_node *parent;
-	int count; /* number of nonempty slots */
-	void *slots[0];
-};
-
 static unsigned long level_mask(struct radix_tree *tree)
 {
-	return (1ul << tree->bits_per_level) - 1;
+	return (1UL << tree->bits_per_level) - 1;
 }
 
 static int slot_count(struct radix_tree *tree)
@@ -101,9 +89,11 @@ static struct radix_tree_node *
 alloc_radix_tree_node(struct radix_tree *tree, struct radix_tree_node *parent)
 {
 	struct radix_tree_node *node;
-	int slots_size = sizeof(struct radix_tree_node*) * slot_count(tree);
+	size_t size;
 
-	node = zalloc(sizeof(struct radix_tree_node) + slots_size);
+	size = sizeof(struct radix_tree_node *) * slot_count(tree);
+
+	node = zalloc(sizeof(struct radix_tree_node) + size);
 	if (!node)
 		return NULL;
 
@@ -112,22 +102,21 @@ alloc_radix_tree_node(struct radix_tree *tree, struct radix_tree_node *parent)
 	return node;
 }
 
-struct radix_tree *alloc_radix_tree(unsigned int bits_per_level,
-				    unsigned int key_bits)
+struct radix_tree *
+alloc_radix_tree(unsigned int bits_per_level, unsigned int key_bits)
 {
 	struct radix_tree *tree;
 
 	assert(bits_per_level < key_bits);
 	assert(key_bits <= sizeof(unsigned long) * 8);
 
-	tree = malloc(sizeof(struct radix_tree));
+	tree = malloc(sizeof(*tree));
 	if (!tree)
 		return NULL;
 
 	tree->bits_per_level = bits_per_level;
 
-	tree->level_count = (key_bits + bits_per_level - 1)
-		/ bits_per_level;
+	tree->level_count = (key_bits + bits_per_level - 1) / bits_per_level;
 
 	tree->root = alloc_radix_tree_node(tree, NULL);
 	if (!tree->root) {
@@ -138,36 +127,39 @@ struct radix_tree *alloc_radix_tree(unsigned int bits_per_level,
 	return tree;
 }
 
-static void free_radix_tree_node(struct radix_tree *tree,
-				 struct radix_tree_node *node, int level)
+static void
+free_radix_tree_node(struct radix_tree *tree, struct radix_tree_node *node,
+		     int level)
 {
-	int i;
+	if (level < level_count(tree) - 1) {
+		int i;
 
-	if (level < level_count(tree) - 1)
 		for (i = 0; i < slot_count(tree); i++) {
 			if (node->slots[i] == NULL)
 				continue;
 
 			free_radix_tree_node(tree, node->slots[i], level + 1);
 		}
-
+	}
 	free(node);
 }
 
 void free_radix_tree(struct radix_tree *tree)
 {
-	if (tree) {
-		free_radix_tree_node(tree, tree->root, 0);
-		free(tree);
-	}
+	if (!tree)
+		return;
+
+	free_radix_tree_node(tree, tree->root, 0);
+	free(tree);
 }
 
-static void *radix_tree_last(struct radix_tree *tree,
-			     struct radix_tree_node *node, int level)
+static void *
+radix_tree_last(struct radix_tree *tree, struct radix_tree_node *node,
+		int level)
 {
-	int i;
-
 	while (level < level_count(tree)) {
+		int i;
+
 		for (i = slot_count(tree) - 1; i >= 0; i--)
 			if (node->slots[i] != NULL)
 				break;
@@ -249,8 +241,9 @@ int radix_tree_insert(struct radix_tree *tree, unsigned long key, void *value)
 	return 0;
 }
 
-static void free_slot(struct radix_tree *tree, struct radix_tree_node *node,
-		      int key, int level)
+static void
+free_slot(struct radix_tree *tree, struct radix_tree_node *node, int key,
+	  int level)
 {
 	node->slots[get_index(tree, key, level)] = NULL;
 	node->count--;
@@ -268,8 +261,8 @@ static void free_slot(struct radix_tree *tree, struct radix_tree_node *node,
  */
 void radix_tree_remove(struct radix_tree *tree, unsigned long key)
 {
-	int i;
 	struct radix_tree_node *node = tree->root;
+	int i;
 
 	for (i = 0; i < level_count(tree) - 1; i++) {
 		int index = get_index(tree, key, i);
@@ -286,8 +279,8 @@ void radix_tree_remove(struct radix_tree *tree, unsigned long key)
 static void *__radix_tree_lookup(struct radix_tree *tree, unsigned long key,
 				 bool try_previous)
 {
-	int i;
 	struct radix_tree_node *node = tree->root;
+	int i;
 
 	for (i = 0; i < level_count(tree); i++) {
 		int index = get_index(tree, key, i);
@@ -315,7 +308,7 @@ static void *__radix_tree_lookup(struct radix_tree *tree, unsigned long key,
  */
 void *radix_tree_lookup(struct radix_tree *tree, unsigned long key)
 {
-	return  __radix_tree_lookup(tree, key, false);
+	return __radix_tree_lookup(tree, key, false);
 }
 
 /**
@@ -328,5 +321,5 @@ void *radix_tree_lookup(struct radix_tree *tree, unsigned long key)
  */
 void *radix_tree_lookup_prev(struct radix_tree *tree, unsigned long key)
 {
-	return  __radix_tree_lookup(tree, key, true);
+	return __radix_tree_lookup(tree, key, true);
 }
