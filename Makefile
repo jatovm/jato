@@ -221,7 +221,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/TrampolineBackpatchingTest.class \
 	regression/jvm/RegisterAllocatorTortureTest.class \
 	regression/jvm/ExceptionsTest.class \
-	regression/jvm/FibonacciTest.class
+	regression/jvm/FibonacciTest.class \
+	regression/jvm/ObjectStackTest.class
 
 lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)

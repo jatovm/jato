@@ -19,9 +19,11 @@ struct compilation_unit *
 alloc_simple_compilation_unit(struct methodblock *method)
 {
 	struct compilation_unit *cu;
+	struct basic_block *bb;
 
 	cu = alloc_compilation_unit(method);
-	get_basic_block(cu, 0, method->code_size);
+	bb = get_basic_block(cu, 0, method->code_size);
+	cu->entry_bb = bb;
 
 	return cu;
 }
@@ -29,10 +31,13 @@ alloc_simple_compilation_unit(struct methodblock *method)
 struct basic_block *__alloc_simple_bb(struct methodblock *method)
 {
 	struct compilation_unit *cu;
+	struct basic_block *bb;
 
 	cu = alloc_compilation_unit(method);
+	bb = get_basic_block(cu, 0, method->code_size);
+	cu->entry_bb = bb;
 
-	return get_basic_block(cu, 0, method->code_size);
+	return bb;
 }
 
 struct basic_block *

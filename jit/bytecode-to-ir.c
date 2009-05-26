@@ -233,10 +233,9 @@ void convert_expression(struct parse_context *ctx, struct expression *expr)
 	stack_push(ctx->bb->mimic_stack, expr);
 }
 
-void convert_statement(struct parse_context *ctx, struct statement *stmt)
+static void
+do_convert_statement(struct basic_block *bb, struct statement *stmt, unsigned short bc_offset)
 {
-	unsigned long bc_offset = ctx->offset;
-
 	/*
 	 * Some expressions do not go through convert_expression()
 	 * so we need to set their bytecode_offset here if it is not set.
@@ -264,56 +263,182 @@ void convert_statement(struct parse_context *ctx, struct statement *stmt)
 	}
 
 	stmt->bytecode_offset = bc_offset;
-	bb_add_stmt(ctx->bb, stmt);
+	bb_add_stmt(bb, stmt);
 }
 
-static int parse_bytecode_insn(struct parse_context *ctx)
+void convert_statement(struct parse_context *ctx, struct statement *stmt)
 {
-	unsigned long opc_size;
-	convert_fn_t convert;
+	do_convert_statement(ctx->bb, stmt, ctx->offset);
+}
+
+static int spill_expression(struct basic_block *bb,
+			    struct stack *reload_stack,
+			    struct expression *expr)
+{
+	struct compilation_unit *cu = bb->b_parent;
+	struct var_info *tmp_low, *tmp_high;
+	struct statement *store, *branch;
+	struct expression *tmp;
+
+	tmp_low = get_var(cu);
+	if (expr->vm_type == J_LONG)
+		tmp_high = get_var(cu);
+	else
+		tmp_high = NULL;
+
+	tmp = temporary_expr(expr->vm_type, tmp_high, tmp_low);
+	if (!tmp)
+		return -ENOMEM;
+
+	store = alloc_statement(STMT_STORE);
+	if (!store)
+		return -ENOMEM;
+
+	store->store_dest = &tmp->node;
+	store->store_src = &expr->node;
+
+	if (bb->has_branch)
+		branch = bb_remove_last_stmt(bb);
+	else
+		branch = NULL;
+
+	/*
+	 * Insert spill store to the current basic block.
+	 */
+	do_convert_statement(bb, store, bb->end);
+
+	if (branch)
+		bb_add_stmt(bb, branch);
+
+	/*
+	 * And add a reload expression that is put on the mimic stack of
+	 * successor basic blocks.
+	 */
+	stack_push(reload_stack, tmp);
+
+	return 0;
+}
+
+static struct stack *spill_mimic_stack(struct basic_block *bb)
+{
+	struct stack *reload_stack;
+
+	reload_stack = alloc_stack();
+	if (!reload_stack)
+		return NULL;
+
+	/*
+	 * The reload stack contains elements in reverse order of the mimic
+	 * stack.
+	 */
+	while (!stack_is_empty(bb->mimic_stack)) {
+		struct expression *expr;
+		int err;
+
+		expr = stack_pop(bb->mimic_stack);
+
+		err = spill_expression(bb, reload_stack, expr);
+		if (err)
+			goto error_oom;
+	}
+	return reload_stack;
+error_oom:
+	free_stack(reload_stack);
+	return NULL;
+}
+
+static int do_convert_bb_to_ir(struct basic_block *bb)
+{
+	struct compilation_unit *cu = bb->b_parent;
+	struct bytecode_buffer buffer = { };
+	struct parse_context ctx = {
+		.buffer = &buffer,
+		.cu = cu,
+		.bb = bb,
+		.code = cu->method->jit_code,
+	};
 	int err = 0;
 
-	ctx->buffer->buffer = ctx->code;
-	ctx->buffer->pos = ctx->offset;
-	ctx->opc = bytecode_read_u8(ctx->buffer);
-	convert = converters[ctx->opc];
-	if (!convert) {
-		printf("%s: Unknown bytecode instruction 0x%x in "
-		       "method '%s' at offset %lu.\n",
-		       __FUNCTION__, ctx->opc, ctx->cu->method->name, ctx->offset);
-		err = -EINVAL;
-		goto error;
+	buffer.buffer = cu->method->jit_code;
+	buffer.pos = bb->start;
+
+	if (bb->is_eh)
+		stack_push(bb->mimic_stack, exception_ref_expr());
+
+	while (buffer.pos < bb->end) {
+		convert_fn_t convert;
+
+		ctx.offset = ctx.buffer->pos;	/* this is fragile */
+		ctx.opc = bytecode_read_u8(ctx.buffer);
+
+		convert = converters[ctx.opc];
+		if (!convert) {
+			err = -EINVAL;
+			break;
+		}
+
+		err = convert(&ctx);
+		if (err)
+			break;
 	}
+	return err;
+}
 
-	opc_size = bc_insn_size(ctx->code + ctx->offset);
-	if (opc_size > ctx->code_size-ctx->offset) {
-		printf("%s: Premature end of bytecode stream in "
-		       "method '%s' (code_size: %lu, offset: %lu, "
-		       "opc_size: %lu, opc: 0x%x)\n.",
-		       __FUNCTION__, ctx->cu->method->name, ctx->code_size,
-		       ctx->offset, opc_size, ctx->opc);
-		err = -EINVAL;
-		goto error;
-	}
+static int convert_bb_to_ir(struct basic_block *bb)
+{
+	struct stack *reload_stack;
+	unsigned int i;
+	int err;
 
-	ctx->bb = find_bb(ctx->cu, ctx->offset);
-	if (!ctx->bb) {
-		printf("%s: No basic block found for offset %lu "
-		       "in method '%s'\n", __FUNCTION__, ctx->offset,
-		       ctx->cu->method->name);
-		err = -EINVAL;
-		goto error;
-	}
+	if (bb->is_converted)
+		return 0;
 
-	if (ctx->bb->is_eh && ctx->offset == ctx->bb->start)
-		stack_push(ctx->bb->mimic_stack, exception_ref_expr());
-
-	err = convert(ctx);
+	err = do_convert_bb_to_ir(bb);
 	if (err)
-		goto error;
+		return err;
 
-	ctx->offset += opc_size;
-error:
+	bb->is_converted = true;
+
+	/*
+	 * If there are no successors, avoid spilling mimic stack contents.
+	 */
+	if (bb->nr_successors == 0)
+		goto out;
+
+	/*
+	 * The operand stack can be non-empty at the entry or exit of a basic
+	 * block because of, for example, ternary operator. To guarantee that
+	 * the mimic stack operands are the same at the merge points of all
+	 * paths, we spill any remaining values at the end of a basic block in
+	 * memory locations and initialize the mimic stack of any successor
+	 * basic blocks to load those values from memory.
+	 */
+	reload_stack = spill_mimic_stack(bb);
+	if (!reload_stack)
+		return -ENOMEM;
+
+	while (!stack_is_empty(reload_stack)) {
+		struct expression *expr = stack_pop(reload_stack);
+
+		for (i = 0; i < bb->nr_successors; i++) {
+			struct basic_block *s = bb->successors[i];
+
+			expr_get(expr);
+
+			stack_push(s->mimic_stack, expr);
+		}
+		expr_put(expr);
+	}
+	free_stack(reload_stack);
+
+	for (i = 0; i < bb->nr_successors; i++) {
+		struct basic_block *s = bb->successors[i];
+
+		err = convert_bb_to_ir(s);
+		if (err)
+			break;
+	}
+out:
 	return err;
 }
 
@@ -329,17 +454,20 @@ error:
  */
 int convert_to_ir(struct compilation_unit *cu)
 {
-	struct bytecode_buffer buffer = { };
-	struct parse_context ctx = {
-		.buffer = &buffer,
-		.code_size = cu->method->code_size,
-		.code = cu->method->jit_code,
-		.cu = cu,
-	};
-	int err = 0;
+	struct basic_block *bb;
+	int err;
 
-	while (ctx.offset < ctx.code_size) {
-		err = parse_bytecode_insn(&ctx);
+	err = convert_bb_to_ir(cu->entry_bb);
+	if (err)
+		return err;
+
+	/*
+	 * A compilation unit can have exception handler basic blocks that are
+	 * not reachable from the entry basic block. Therefore, make sure we've
+	 * really converted all basic blocks.
+	 */
+	for_each_basic_block(bb, &cu->bb_list) {
+		err = convert_bb_to_ir(bb);
 		if (err)
 			break;
 	}

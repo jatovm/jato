@@ -18,6 +18,7 @@ enum machine_reg;
 struct compilation_unit {
 	struct methodblock *method;
 	struct list_head bb_list;
+	struct basic_block *entry_bb;
 	struct basic_block *exit_bb;
 	struct basic_block *unwind_bb;
 	struct var_info *var_infos;
