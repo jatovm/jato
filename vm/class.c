@@ -24,23 +24,40 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <jit/compiler.h>
+#include <vm/die.h>
 #include <vm/vm.h>
 #include <stdlib.h>
 
-struct object *create_object(char *class_name)
+typedef void (*exception_init_fn)(struct object *, struct object *);
+
+struct object *new_exception(char *class_name, char *message)
 {
-	Class *e_class;
+	struct object *message_str;
+	struct methodblock *mb;
 	struct object *obj;
-	MethodBlock *init;
+	Class *e_class;
 
 	e_class = findSystemClass(class_name);
+	if (!e_class)
+		return NULL;
+
 	obj = allocObject(e_class);
 	if (!obj)
 		return NULL;
 
-	init = lookupMethod(e_class, "<init>", "()V");
-	if (init)
-		executeMethod(obj, init);
+	if (message == NULL)
+		message_str = NULL;
+	else
+		message_str = Cstr2String(message);
+
+	mb = lookupMethod(e_class, "<init>", "(Ljava/lang/String;)V");
+	if (!mb)
+		die("%s: constructor not found for class %s\n",
+		    __FUNCTION__, class_name);
+
+	exception_init_fn init = (exception_init_fn)method_trampoline_ptr(mb);
+	init(obj, message_str);
 
 	return obj;
 }

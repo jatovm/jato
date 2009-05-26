@@ -41,7 +41,7 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		struct object *exception;
 
 		/* TODO: exception's stack trace should be filled using ctx */
-		exception = create_object("java/lang/NullPointerException");
+		exception = new_exception("java/lang/NullPointerException", NULL);
 		if (exception == NULL) {
 			/* TODO: throw OutOfMemoryError */
 			fprintf(stderr, "%s: Out of memory\n", __FUNCTION__);

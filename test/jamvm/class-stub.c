@@ -1,7 +1,7 @@
 #include <vm/vm.h>
 #include <stdlib.h>
 
-struct object *create_object(char *class_name)
+struct object *new_exception(char *class_name, char *message)
 {
 	return NULL;
 }
