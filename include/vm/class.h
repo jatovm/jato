@@ -13,8 +13,16 @@ void check_cast(struct object *obj, struct object *type);
 
 #include <jit/vtable.h>
 
+enum vm_class_state {
+	VM_CLASS_LOADED,
+	VM_CLASS_LINKED,
+	VM_CLASS_INITIALIZED,
+};
+
 struct vm_class {
 	const struct cafebabe_class *class;
+
+	enum vm_class_state state;
 
 	char *name;
 

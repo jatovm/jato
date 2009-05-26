@@ -153,6 +153,7 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		char *super_name_str = strndup((char *) super_name->bytes,
 			super_name->length);
 
+		/* XXX: Circularity check */
 		vmc->super = classloader_load(super_name_str);
 		if (!vmc->super) {
 			NOT_IMPLEMENTED;
@@ -225,11 +226,14 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 	if (!vm_class_is_interface(vmc))
 		setup_vtable(vmc);
 
+	vmc->state = VM_CLASS_LINKED;
 	return 0;
 }
 
 int vm_class_run_clinit(struct vm_class *vmc)
 {
+	assert(vmc->state == VM_CLASS_LINKED);
+
 	/* XXX: Make sure there's at most one of these. */
 	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
 		if (strcmp(vmc->methods[i].name, "<clinit>"))
@@ -238,10 +242,10 @@ int vm_class_run_clinit(struct vm_class *vmc)
 		void (*clinit_trampoline)(void)
 			= vm_method_trampoline_ptr(&vmc->methods[i]);
 
-		fprintf(stderr, "clinit_trampoline() for '%s'!\n", vmc->name);
 		clinit_trampoline();
 	}
 
+	vmc->state = VM_CLASS_INITIALIZED;
 	return 0;
 }
 
