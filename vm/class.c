@@ -337,16 +337,23 @@ int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
 	return 0;
 }
 
+struct vm_field *vm_class_get_field(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	unsigned int index = 0;
+	if (!cafebabe_class_get_field(vmc->class, name, type, &index))
+		return &vmc->fields[index];
+
+	return NULL;
+}
+
 struct vm_field *vm_class_get_field_recursive(struct vm_class *vmc,
 	const char *name, const char *type)
 {
 	do {
-		unsigned int index = 0;
-		if (!cafebabe_class_get_field(vmc->class,
-			name, type, &index))
-		{
-			return &vmc->fields[index];
-		}
+		struct vm_field *vmf = vm_class_get_field(vmc, name, type);
+		if (vmf)
+			return vmf;
 
 		vmc = vmc->super;
 	} while(vmc);
@@ -432,16 +439,23 @@ int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
 	return 0;
 }
 
+struct vm_method *vm_class_get_method(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	unsigned int index = 0;
+	if (!cafebabe_class_get_method(vmc->class, name, type, &index))
+		return &vmc->methods[index];
+
+	return NULL;
+}
+
 struct vm_method *vm_class_get_method_recursive(struct vm_class *vmc,
 	const char *name, const char *type)
 {
 	do {
-		unsigned int index = 0;
-		if (!cafebabe_class_get_method(vmc->class,
-			name, type, &index))
-		{
-			return &vmc->methods[index];
-		}
+		struct vm_method *vmf = vm_class_get_method(vmc, name, type);
+		if (vmf)
+			return vmf;
 
 		vmc = vmc->super;
 	} while(vmc);
