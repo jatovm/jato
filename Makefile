@@ -222,6 +222,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ArrayTest.java \
 	regression/jvm/PutstaticTest.class \
 	regression/jvm/PutfieldTest.class \
+	regression/jvm/StringTest.class \
 	regression/jvm/TrampolineBackpatchingTest.class \
 	regression/jvm/RegisterAllocatorTortureTest.class \
 	regression/jvm/ExceptionsTest.class \
