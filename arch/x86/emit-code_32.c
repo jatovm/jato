@@ -472,16 +472,23 @@ static void emit_ret(struct buffer *buf)
 	emit(buf, 0xc3);
 }
 
+static void emit_leave(struct buffer *buf)
+{
+	emit(buf, 0xc9);
+}
+
 /*
  * Emitted code must not write to ECX register because it may hold
  * exception object reference when in unwind block
  */
-static void __emit_epilog(struct buffer *buf, unsigned long nr_locals)
+static void __emit_epilog(struct buffer *buf)
 {
-	if (nr_locals)
-		emit(buf, 0xc9);
-	else
-		__emit_pop_reg(buf, REG_EBP);
+	/*
+	 * Always emit 'leave' even if method has no local variables
+	 * because exception object reference might have been pushed
+	 * on stack.
+	 */
+	emit_leave(buf);
 
 	/* Restore callee saved registers */
 	__emit_pop_reg(buf, REG_EBX);
@@ -489,9 +496,9 @@ static void __emit_epilog(struct buffer *buf, unsigned long nr_locals)
 	__emit_pop_reg(buf, REG_EDI);
 }
 
-void emit_epilog(struct buffer *buf, unsigned long nr_locals)
+void emit_epilog(struct buffer *buf)
 {
-	__emit_epilog(buf, nr_locals);
+	__emit_epilog(buf);
 	emit_ret(buf);
 }
 
@@ -502,12 +509,12 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
 }
 
-void emit_unwind(struct buffer *buf, unsigned long nr_locals)
+void emit_unwind(struct buffer *buf)
 {
 	/* save exception object in ECX */
 	__emit_pop_reg(buf, REG_ECX);
 
-	__emit_epilog(buf, nr_locals);
+	__emit_epilog(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
