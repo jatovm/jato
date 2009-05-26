@@ -134,10 +134,10 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 
 	if (!is_jit_method(frame->return_address)) {
 		/* No handler found within jitted method call
-		   chain. Signal exception and return to previous
-		   (non-jitted) method. */
+		   chain. Set exception in execution environment and
+		   return to previous (not jit) method. */
 		getExecEnv()->exception = exception;
-		return NULL;
+		return bb_native_ptr(cu->exit_bb);
 	}
 
 	return bb_native_ptr(cu->unwind_bb);

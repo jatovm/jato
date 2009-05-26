@@ -55,18 +55,7 @@ unwind:
 	pushl	%ebp	# frame
 	pushl	%eax	# cu
 	call	throw_exception_from
-	popl	%ecx	# cu -> ECX
-	addl	$12, %esp
+	addl	$16, %esp
 
-	test	%eax, %eax
-	jnz	finish
-
-	/* Jump to exit block. Do not push exception object */
-	add	$4, %esp
-	pushl	%ecx
-	call	cu_exit_bb_native_ptr
-	addl	$4, %esp
-
-finish:
 	pushl %eax
 	ret

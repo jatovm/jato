@@ -189,8 +189,3 @@ int sort_basic_blocks(struct compilation_unit *cu)
 {
 	return list_sort(&cu->bb_list, bb_list_compare);
 }
-
-unsigned char *cu_exit_bb_native_ptr(struct compilation_unit *cu)
-{
-	return bb_native_ptr(cu->exit_bb);
-}

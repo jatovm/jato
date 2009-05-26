@@ -44,10 +44,11 @@ unsigned char *throw_exception(struct compilation_unit *cu,
 
 void throw_exception_from_signal(void *ctx, struct object *exception)
 {
-	ucontext_t *uc;
 	struct jit_stack_frame *frame;
 	struct compilation_unit *cu;
 	unsigned long source_addr;
+	unsigned long *stack;
+	ucontext_t *uc;
 	void *eh;
 
 	uc = ctx;
@@ -59,16 +60,10 @@ void throw_exception_from_signal(void *ctx, struct object *exception)
 	eh = throw_exception_from(cu, frame, (unsigned char*)source_addr,
 				  exception);
 
-	if (eh == NULL) {
-		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)bb_native_ptr(cu->exit_bb);
-	} else {
-		unsigned long *stack;
+	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)eh;
 
-		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)eh;
-
-		/* push exception object reference on stack */
-		uc->uc_mcontext.gregs[REG_SP] -= sizeof(exception);
-		stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
-		*stack = (unsigned long)exception;
-	}
+	/* push exception object reference on stack */
+	uc->uc_mcontext.gregs[REG_SP] -= sizeof(exception);
+	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
+	*stack = (unsigned long)exception;
 }
