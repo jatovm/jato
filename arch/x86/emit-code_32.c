@@ -467,7 +467,7 @@ static void emit_call(struct buffer *buf, struct operand *operand)
 	__emit_call(buf, (void *)operand->rel);
 }
 
-void emit_ret(struct buffer *buf)
+static void emit_ret(struct buffer *buf)
 {
 	emit(buf, 0xc3);
 }
