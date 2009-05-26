@@ -25,7 +25,8 @@ monoburg/parser.c
 #
 # Generated binaries
 #
-bin/java
+jato
+tools/classpath-config
 lib/classes.zip
 lib/inst_classes.zip
 monoburg/monoburg
