@@ -206,16 +206,16 @@ test: $(JAMVM_ARCH_H) monoburg
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
 	regression/jvm/TestCase.class \
-	regression/jamvm/ExitStatusIsOneTest.class \
-	regression/jamvm/ExitStatusIsZeroTest.class \
-	regression/jamvm/LoadConstantsTest.class \
-	regression/jamvm/IntegerArithmeticTest.class \
-	regression/jamvm/LongArithmeticTest.class \
-	regression/jamvm/ObjectCreationAndManipulationTest.class \
-	regression/jamvm/ControlTransferTest.class \
-	regression/jamvm/SynchronizationTest.class \
-	regression/jamvm/MethodInvocationAndReturnTest.class \
-	regression/jamvm/ConversionTest.class \
+	regression/jvm/ExitStatusIsOneTest.class \
+	regression/jvm/ExitStatusIsZeroTest.class \
+	regression/jvm/LoadConstantsTest.class \
+	regression/jvm/IntegerArithmeticTest.class \
+	regression/jvm/LongArithmeticTest.class \
+	regression/jvm/ObjectCreationAndManipulationTest.class \
+	regression/jvm/ControlTransferTest.class \
+	regression/jvm/SynchronizationTest.class \
+	regression/jvm/MethodInvocationAndReturnTest.class \
+	regression/jvm/ConversionTest.class \
 	regression/jvm/PutstaticTest.class \
 	regression/jvm/PutfieldTest.class \
 	regression/jvm/TrampolineBackpatchingTest.class \
