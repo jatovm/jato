@@ -744,6 +744,35 @@ reg:	EXPR_NEWARRAY(reg)
 	method_args_cleanup(s, tree, 2);
 }
 
+reg:	EXPR_NULL_CHECK(reg)
+{
+	struct var_info *ref;
+
+	ref = state->left->reg1;
+	state->reg1 = ref;
+
+	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, ref, 0, ref));
+}
+
+reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
+{
+	struct var_info *reg;
+	struct stack_slot *slot;
+	struct expression *expr;
+	struct expression *local;
+
+	reg = get_var(s->b_parent);
+	state->reg1 = reg;
+
+	expr = to_expr(tree);
+	local = to_expr(expr->null_check_ref);
+
+	slot = get_local_slot(s->b_parent->stack_frame, local->local_index);
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, reg));
+	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
+}
+
 reg:	EXPR_MULTIANEWARRAY(arg)
 {
 	struct var_info *var;
@@ -1113,15 +1142,6 @@ stmt:	STMT_ATHROW(reg)
 	/* Jump where throw_exception() told us to jump */
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, reg_eax));
 	select_insn(s, tree, insn(INSN_RET));
-}
-
-stmt:	STMT_NULL_CHECK(reg)
-{
-	struct var_info *ref;
-
-	ref = state->left->reg1;
-
-	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, ref, 0, ref));
 }
 
 array_check:	EXPR_ARRAY_DEREF(reg, reg) 2

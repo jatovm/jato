@@ -158,9 +158,9 @@ int convert_putfield(struct parse_context *ctx)
 
 int convert_array_load(struct parse_context *ctx, enum vm_type type)
 {
-	struct expression *index, *arrayref;
+	struct expression *index, *arrayref, *arrayref_nullcheck;
 	struct expression *src_expr, *dest_expr;
-	struct statement *store_stmt, *arraycheck, *nullcheck;
+	struct statement *store_stmt, *arraycheck;
 	struct var_info *temporary;
 
 	index = stack_pop(ctx->bb->mimic_stack);
@@ -170,7 +170,11 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	if (!store_stmt)
 		goto failed;
 
-	src_expr = array_deref_expr(type, arrayref, index);
+	arrayref_nullcheck = null_check_expr(arrayref);
+	if (!arrayref_nullcheck)
+		goto failed_arrayref_nullcheck;
+
+	src_expr = array_deref_expr(type, arrayref_nullcheck, index);
 
 	temporary = get_var(ctx->cu);
 	dest_expr = temporary_expr(type, NULL, temporary);
@@ -188,22 +192,13 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	expr_get(src_expr);
 	arraycheck->expression = &src_expr->node;
 
-	nullcheck = alloc_statement(STMT_NULL_CHECK);
-	if (!nullcheck)
-		goto failed_nullcheck;
-
-	expr_get(arrayref);
-	nullcheck->expression = &arrayref->node;
-
-	convert_statement(ctx, nullcheck);
 	convert_statement(ctx, arraycheck);
 	convert_statement(ctx, store_stmt);
 
 	return 0;
 
-      failed_nullcheck:
-	free_statement(arraycheck);
       failed_arraycheck:
+      failed_arrayref_nullcheck:
 	free_statement(store_stmt);
       failed:
 	return -ENOMEM;
@@ -251,8 +246,8 @@ int convert_saload(struct parse_context *ctx)
 
 static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 {
-	struct expression *value, *index, *arrayref;
-	struct statement *store_stmt, *arraycheck, *nullcheck;
+	struct expression *value, *index, *arrayref, *arrayref_nullcheck;
+	struct statement *store_stmt, *arraycheck;
 	struct expression *src_expr, *dest_expr;
 
 	value = stack_pop(ctx->bb->mimic_stack);
@@ -263,7 +258,11 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 	if (!store_stmt)
 		goto failed;
 
-	dest_expr = array_deref_expr(type, arrayref, index);
+	arrayref_nullcheck = null_check_expr(arrayref);
+	if (!arrayref_nullcheck)
+		goto failed_arrayref_nullcheck;
+
+	dest_expr = array_deref_expr(type, arrayref_nullcheck, index);
 	src_expr = value;
 
 	store_stmt->store_dest = &dest_expr->node;
@@ -276,22 +275,13 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 	expr_get(dest_expr);
 	arraycheck->expression = &dest_expr->node;
 
-	nullcheck = alloc_statement(STMT_NULL_CHECK);
-	if (!nullcheck)
-		goto failed_nullcheck;
-
-	expr_get(arrayref);
-	nullcheck->expression = &arrayref->node;
-
-	convert_statement(ctx, nullcheck);
 	convert_statement(ctx, arraycheck);
 	convert_statement(ctx, store_stmt);
 
 	return 0;
 
-      failed_nullcheck:
-	free_statement(arraycheck);
       failed_arraycheck:
+      failed_arrayref_nullcheck:
 	free_statement(store_stmt);
       failed:
 	return -ENOMEM;

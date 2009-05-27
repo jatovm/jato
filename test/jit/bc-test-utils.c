@@ -99,6 +99,13 @@ void assert_temporary_expr(struct tree_node *node)
 	assert_int_equals(EXPR_TEMPORARY, expr_type(expr));
 }
 
+void assert_null_check_expr(struct expression *expected,
+			    struct expression *actual)
+{
+	assert_int_equals(EXPR_NULL_CHECK, expr_type(actual));
+	assert_ptr_equals(expected, to_expr(actual->null_check_ref));
+}
+
 void assert_array_deref_expr(enum vm_type expected_vm_type,
 			     struct expression *expected_arrayref,
 			     struct expression *expected_index,
@@ -108,7 +115,7 @@ void assert_array_deref_expr(enum vm_type expected_vm_type,
 
 	assert_int_equals(EXPR_ARRAY_DEREF, expr_type(expr));
 	assert_int_equals(expected_vm_type, expr->vm_type);
-	assert_ptr_equals(expected_arrayref, to_expr(expr->arrayref));
+	assert_null_check_expr(expected_arrayref, to_expr(expr->arrayref));
 	assert_ptr_equals(expected_index, to_expr(expr->array_index));
 }
 
@@ -202,13 +209,6 @@ void assert_void_return_stmt(struct statement *stmt)
 {
 	assert_int_equals(STMT_VOID_RETURN, stmt_type(stmt));
 	assert_ptr_equals(NULL, stmt->return_value);
-}
-
-void assert_null_check_stmt(struct expression *expected,
-			    struct statement *actual)
-{
-	assert_int_equals(STMT_NULL_CHECK, stmt_type(actual));
-	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
 }
 
 void assert_arraycheck_stmt(enum vm_type expected_vm_type,

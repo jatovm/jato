@@ -102,6 +102,9 @@ void free_expression(struct expression *expr)
 	case EXPR_EXCEPTION_REF:
 		/* nothing to do */
 		break;
+	case EXPR_NULL_CHECK:
+		expr_put(to_expr(expr->null_check_ref));
+		break;
 	case EXPR_LAST:
 		assert(!"EXPR_LAST is not a real type. Don't use it");
 		break;
@@ -360,4 +363,20 @@ unsigned long nr_args(struct expression *args_list)
 struct expression *exception_ref_expr(void)
 {
 	return alloc_expression(EXPR_EXCEPTION_REF, J_REFERENCE);
+}
+
+struct expression *null_check_expr(struct expression *ref)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_NULL_CHECK, J_REFERENCE);
+	if (!expr)
+		return NULL;
+
+	assert(ref->vm_type == J_REFERENCE);
+
+	expr->bytecode_offset = ref->bytecode_offset;
+	expr->null_check_ref = &ref->node;
+
+	return expr;
 }

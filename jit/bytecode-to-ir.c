@@ -253,7 +253,6 @@ void convert_statement(struct parse_context *ctx, struct statement *stmt)
 		tree_patch_bc_offset(stmt->return_value, bc_offset);
 		break;
 	case STMT_EXPRESSION:
-	case STMT_NULL_CHECK:
 	case STMT_ARRAY_CHECK:
 		tree_patch_bc_offset(stmt->expression, bc_offset);
 		break;

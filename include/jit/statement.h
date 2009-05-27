@@ -13,7 +13,6 @@ enum statement_type {
 	STMT_RETURN,
 	STMT_VOID_RETURN,
 	STMT_EXPRESSION,
-	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 	STMT_ATHROW,
 	STMT_MONITOR_ENTER,
@@ -49,7 +48,7 @@ struct statement {
 		struct /* STMT_ATHROW */ {
 			struct tree_node *exception_ref;
 		};
-		/* STMT_EXPRESSION, STMT_NULL_CHECK, STMT_ARRAY_CHECK */
+		/* STMT_EXPRESSION, STMT_ARRAY_CHECK */
 		struct tree_node *expression;
 	};
 	struct list_head stmt_list_node;
