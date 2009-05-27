@@ -38,6 +38,7 @@ int convert_athrow(struct parse_context *ctx)
 {
 	struct stack *mimic_stack = ctx->bb->mimic_stack;
 	struct expression *exception_ref;
+	struct expression *nullcheck;
 	struct statement *stmt;
 
 	stmt = alloc_statement(STMT_ATHROW);
@@ -45,7 +46,12 @@ int convert_athrow(struct parse_context *ctx)
 		return -ENOMEM;
 
 	exception_ref = stack_pop(mimic_stack);
-	stmt->exception_ref = &exception_ref->node;
+
+	nullcheck = null_check_expr(exception_ref);
+	if (!nullcheck)
+		return -ENOMEM;
+
+	stmt->exception_ref = &nullcheck->node;
 
 	/*
 	 * According to the JVM specification athrow operation is
