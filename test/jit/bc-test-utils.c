@@ -236,14 +236,16 @@ void assert_monitor_enter_stmt(struct expression *expected,
 			       struct statement *actual)
 {
 	assert_int_equals(STMT_MONITOR_ENTER, stmt_type(actual));
-	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
+	assert_nullcheck_value_expr(J_REFERENCE, expected->value,
+				    actual->expression);
 }
 
 void assert_monitor_exit_stmt(struct expression *expected,
 			      struct statement *actual)
 {
 	assert_int_equals(STMT_MONITOR_EXIT, stmt_type(actual));
-	assert_value_expr(J_REFERENCE, expected->value, actual->expression);
+	assert_nullcheck_value_expr(J_REFERENCE, expected->value,
+				    actual->expression);
 }
 
 void assert_checkcast_stmt(struct expression *expected,
