@@ -72,6 +72,17 @@ void assert_value_expr(enum vm_type expected_vm_type,
 	assert_int_equals(expected_value, expr->value);
 }
 
+void assert_nullcheck_value_expr(enum vm_type expected_vm_type,
+				 long long expected_value,
+				 struct tree_node *node)
+{
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(EXPR_NULL_CHECK, expr_type(expr));
+	assert_value_expr(expected_vm_type, expected_value,
+			  expr->null_check_ref);
+}
+
 void assert_fvalue_expr(enum vm_type expected_vm_type,
 			double expected_value, struct tree_node *node)
 {

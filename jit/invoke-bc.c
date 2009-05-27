@@ -98,6 +98,20 @@ static struct methodblock *resolve_invoke_target(struct parse_context *ctx)
 	return resolveMethod(ctx->cu->method->class, idx);
 }
 
+/* Replaces first argument with null check expression on that argument */
+static void null_check_first_arg(struct expression *arg)
+{
+	struct expression *expr;
+
+	if (expr_type(arg) == EXPR_ARG) {
+		expr = null_check_expr(to_expr(arg->arg_expression));
+		arg->arg_expression = &expr->node;
+	}
+
+	if (expr_type(arg) == EXPR_ARGS_LIST)
+		null_check_first_arg(to_expr(arg->args_right));
+}
+
 int convert_invokevirtual(struct parse_context *ctx)
 {
 	struct methodblock *invoke_target;
@@ -143,6 +157,8 @@ int convert_invokespecial(struct parse_context *ctx)
 	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
 		goto failed;
+
+	null_check_first_arg(to_expr(expr->args_list));
 
 	err = insert_invoke_expr(ctx, expr);
 	if (err)
