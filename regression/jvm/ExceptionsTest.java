@@ -29,13 +29,26 @@ package jvm;
  * @author Tomasz Grabiec
  */
 public class ExceptionsTest extends TestCase {
+    public static int static_field;
+    public int field;
+
+    private void privateMethod() {
+    }
+
+    public void publicMethod() {
+    }
+
+    public static void takeInt(int val) {
+    }
+
     public static void testTryBlockDoesNotThrowAnything() {
-	boolean caught;
-	try {
+        boolean caught;
+        try {
             caught = false;
-	} catch (Exception e) {
+        } catch (Exception e) {
             caught = true;
-	}
+        }
+
         assertFalse(caught);
     }
 
@@ -121,12 +134,119 @@ public class ExceptionsTest extends TestCase {
         } catch (Exception e) {}
     }
 
-    public static void testInvokevirtualOnNullReference() {
+    public static void testInvokespecial() {
         boolean catched = false;
+        ExceptionsTest test = null;
 
         try {
-            Object o = null;
-            o.getClass();
+            test.privateMethod();
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testInvokevirtual() {
+        boolean catched = false;
+        ExceptionsTest test = null;
+
+        try {
+            test.publicMethod();
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testArrayLoad() {
+        boolean catched = false;
+        Object[] array = null;
+
+        try {
+            array[0].getClass();
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testArrayStore() {
+        boolean catched = false;
+        Object[] array = null;
+
+        try {
+            array[0] = null;
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testArraylength() {
+        boolean catched = false;
+        Object[] array = null;
+
+        try {
+            takeInt(array.length);
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testAthrow() {
+        boolean catched = false;
+        Exception exception = null;
+
+        try {
+            throw exception;
+        } catch (NullPointerException e) {
+            catched = true;
+        } catch (Exception e) {
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testGetfield() {
+        boolean catched = false;
+        ExceptionsTest test = null;
+
+        try {
+            takeInt(test.field);
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testPutfield() {
+        boolean catched = false;
+        ExceptionsTest test = null;
+
+        try {
+            test.field = 1;
+        } catch (NullPointerException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testMonitorenter() {
+        boolean catched = false;
+        Object mon = null;
+
+        try {
+            synchronized(mon) {
+                takeInt(1);
+            }
         } catch (NullPointerException e) {
             catched = true;
         }
@@ -141,7 +261,18 @@ public class ExceptionsTest extends TestCase {
         testMultipleCatchBlocks();
         testNestedTryCatch();
         testEmptyCatchBlock();
-        testInvokevirtualOnNullReference();
+
+        /* Test run-time exceptions */
+        testInvokespecial();
+        testInvokevirtual();
+        testArrayLoad();
+        testArrayStore();
+        testArraylength();
+        testAthrow();
+        testGetfield();
+        testPutfield();
+        testMonitorenter();
+        /* no test for Monitorexit */
 
         exit();
     }
