@@ -4,7 +4,6 @@ JAMVM_INSTALL_DIR	:= /usr/local
 CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
-BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
 
 BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/)
 ARCH		:= $(BUILD_ARCH)
@@ -192,7 +191,14 @@ se-mnemonics.html:
 include/vm/opcodes.h: fe-mnemonics.html se-mnemonics.html scripts/gen-opcodes.pl
 	(html2text fe-mnemonics.html; html2text se-mnemonics.html) | perl scripts/gen-opcodes.pl > $@
 
-$(PROGRAM): include/vm/opcodes.h lib monoburg $(JAMVM_ARCH_H) compile
+# We need to extract GNU classpath because we don't support searching JAR or
+# ZIP files for classes yet.
+classpath: $(CLASSPATH_CONFIG)
+	rm -rf $@
+	mkdir $@
+	unzip -qq -d $@ $(GLIBJ)
+
+$(PROGRAM): include/vm/opcodes.h lib monoburg $(JAMVM_ARCH_H) compile classpath
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
@@ -206,7 +212,7 @@ test: $(JAMVM_ARCH_H) monoburg
 
 %.class: %.java
 	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) -cp $(BOOTCLASSPATH):regression -d regression $<
+	$(Q) $(JAVAC) -cp classpath:regression -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
