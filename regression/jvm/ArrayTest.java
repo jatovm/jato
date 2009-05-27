@@ -37,6 +37,6 @@ public class ArrayTest extends TestCase {
 		testStaticArrayLength();
 		testArrayLength();
 
-		exit(retval);
+		exit();
 	}
 }
