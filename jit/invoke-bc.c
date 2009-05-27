@@ -11,6 +11,7 @@
 #include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
+#include <jit/args.h>
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
@@ -53,40 +54,6 @@ static unsigned int method_real_argument_count(struct methodblock *invoke_target
 			c--;
 	}
 	return c;
-}
-
-static struct expression *insert_arg(struct expression *root,
-				     struct expression *expr)
-{
-	struct expression *_expr;
-
-	_expr = arg_expr(expr);
-	_expr->bytecode_offset = expr->bytecode_offset;
-
-	if (!root)
-		return _expr;
-
-	return args_list_expr(root, _expr);
-}
-
-static struct expression *convert_args(struct stack *mimic_stack,
-				       unsigned long nr_args)
-{
-	struct expression *args_list = NULL;
-	unsigned long i;
-
-	if (nr_args == 0) {
-		args_list = no_args_expr();
-		goto out;
-	}
-
-	for (i = 0; i < nr_args; i++) {
-		struct expression *expr = stack_pop(mimic_stack);
-		args_list = insert_arg(args_list, expr);
-	}
-
-  out:
-	return args_list;
 }
 
 static int convert_and_add_args(struct parse_context *ctx,
