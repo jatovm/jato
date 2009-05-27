@@ -57,22 +57,10 @@ struct jit_trampoline *alloc_jit_trampoline(void);
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *);
 void free_jit_trampoline(struct jit_trampoline *);
 
-int jit_prepare_method(struct methodblock *);
-
 struct fixup_site *alloc_fixup_site(void);
 void free_fixup_site(struct fixup_site *);
 void trampoline_add_fixup_site(struct jit_trampoline *, struct fixup_site *);
 unsigned char *fixup_site_addr(struct fixup_site *);
-
-static inline void *method_native_ptr(struct methodblock *method)
-{
-	return buffer_ptr(method->compilation_unit->objcode);
-}
-
-static inline void *method_trampoline_ptr(struct methodblock *method)
-{
-	return buffer_ptr(method->trampoline->objcode);
-}
 
 extern bool opt_trace_method;
 extern bool opt_trace_cfg;
