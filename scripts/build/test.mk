@@ -12,7 +12,7 @@ endif
 
 %.o: %.c
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `basename $@`
+	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `echo $@ | sed "s\/\-\g" | sed "s\[.][.]\p\g"`
 
 test: $(RUNNER)
 
