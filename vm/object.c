@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include <vm/object.h>
@@ -103,4 +104,28 @@ vm_object_alloc_string(const uint8_t bytes[], unsigned int length)
 	*(void **) &string->fields[value->offset] = array;
 
 	return string;
+}
+
+bool vm_object_is_instance_of(struct vm_object *obj, struct vm_object *class)
+{
+	if (!obj)
+		return false;
+
+	NOT_IMPLEMENTED;
+	return false;
+}
+
+void vm_object_check_null(struct vm_object *obj)
+{
+	NOT_IMPLEMENTED;
+}
+
+void vm_object_check_array(struct vm_object *obj, unsigned int index)
+{
+	NOT_IMPLEMENTED;
+}
+
+void vm_object_check_cast(struct vm_object *obj, struct vm_object *class)
+{
+	NOT_IMPLEMENTED;
 }

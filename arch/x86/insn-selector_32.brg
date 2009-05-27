@@ -29,8 +29,6 @@
 #include <vm/method.h>
 #include <vm/object.h>
 
-#include <../jamvm/lock.h>
-
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct tree_node
@@ -822,7 +820,7 @@ reg:	EXPR_INSTANCEOF(reg)
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->instanceof_class));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) is_object_instance_of));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
 
 	method_args_cleanup(s, tree, 2);
 }
@@ -1120,7 +1118,7 @@ stmt:	STMT_NULL_CHECK(reg)
 	ref = state->left->reg1;
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) check_null));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_null));
 
 	method_args_cleanup(s, tree, 1);
 }
@@ -1154,7 +1152,7 @@ stmt:	STMT_ARRAY_CHECK(array_check)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, index));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) check_array));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array));
 
 	method_args_cleanup(s, tree, 2);
 }
@@ -1216,7 +1214,7 @@ stmt:	STMT_CHECKCAST(reg)
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) stmt->checkcast_class));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)check_cast));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_cast));
 
 	method_args_cleanup(s, tree, 2);
 }

@@ -26,48 +26,7 @@
 
 #define _GNU_SOURCE
 
-#include <vm/vm.h>
 #include <stdlib.h>
-
-unsigned long is_object_instance_of(struct object *obj, struct object *type)
-{
-	if (!obj)
-		return 0;
-
-	NOT_IMPLEMENTED;
-	//return isInstanceOf(type, obj->class);
-	return 0;
-}
-
-void check_null(struct object *obj)
-{
-	if (!obj)
-		abort();
-}
-
-void check_array(struct object *obj, unsigned int index)
-{
-	NOT_IMPLEMENTED;
-
-	struct classblock *cb = CLASS_CB(obj->class);
-
-	if (!IS_ARRAY(cb))
-		abort();
-
-	if (index >= ARRAY_LEN(obj))
-		abort();
-}
-
-void check_cast(struct object *obj, struct object *type)
-{
-	if (!obj)
-		return;
-
-	NOT_IMPLEMENTED;
-	//if (!isInstanceOf(type, obj->class))
-	//	abort();
-}
-
 #include <string.h>
 
 #include <cafebabe/class.h>
@@ -79,6 +38,7 @@ void check_cast(struct object *obj, struct object *type)
 #include <vm/classloader.h>
 #include <vm/field.h>
 #include <vm/method.h>
+#include <vm/vm.h>
 
 #include <jit/vtable.h>
 
