@@ -46,13 +46,16 @@ static struct vm_object *class_to_array_class(struct vm_object *class)
 	char *array_class_name;
 
 	NOT_IMPLEMENTED;
+	array_class = NULL;
 
+#if 0
 	class_name = CLASS_CB(class)->name;
 	array_class_name = class_name_to_array_name(class_name);
 
 	array_class = findArrayClassFromClass(array_class_name, class);
 
 	free(array_class_name);
+#endif
 
 	return array_class;
 }
