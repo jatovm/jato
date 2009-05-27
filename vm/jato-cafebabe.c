@@ -19,6 +19,7 @@
 
 #define _GNU_SOURCE
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,7 +81,7 @@ static void native_vmruntime_println(struct vm_object *message)
 		= *(struct vm_object **) &message->fields[value_field->offset];
 	int16_t *array = (int16_t *) array_object->fields;
 
-	for (uint32_t i = 0; i < count; ++i) {
+	for (int32_t i = 0; i < count; ++i) {
 		int16_t ch = array[offset + i];
 
 		if (ch < 128 && isprint(ch))
@@ -92,8 +93,8 @@ static void native_vmruntime_println(struct vm_object *message)
 	printf("\n");
 }
 
-static void native_vmsystem_arraycopy(struct object *src, int src_start,
-	struct object *dest, int dest_start, int len)
+static void native_vmsystem_arraycopy(struct vm_object *src, int src_start,
+	struct vm_object *dest, int dest_start, int len)
 {
 	NOT_IMPLEMENTED;
 }
@@ -103,8 +104,8 @@ static void native_vmsystem_arraycopy(struct object *src, int src_start,
  * return java.lang.VMState instance, or null in which case no stack trace will
  * be printed by printStackTrace() method.
  */
-static struct object *
-native_vmthrowable_fill_in_stack_trace(struct object *message)
+static struct vm_object *
+native_vmthrowable_fill_in_stack_trace(struct vm_object *message)
 {
 	NOT_IMPLEMENTED;
 
