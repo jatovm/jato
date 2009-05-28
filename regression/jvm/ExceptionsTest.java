@@ -138,112 +138,112 @@ public class ExceptionsTest extends TestCase {
     }
 
     public static void testInvokespecial() {
-        boolean catched = false;
+        boolean caught = false;
         ExceptionsTest test = null;
 
         try {
             test.privateMethod();
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testInvokevirtual() {
-        boolean catched = false;
+        boolean caught = false;
         ExceptionsTest test = null;
 
         try {
             test.publicMethod();
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testArrayLoad() {
-        boolean catched = false;
+        boolean caught = false;
         Object[] array = null;
 
         try {
             array[0].getClass();
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testArrayStore() {
-        boolean catched = false;
+        boolean caught = false;
         Object[] array = null;
 
         try {
             array[0] = null;
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testArraylength() {
-        boolean catched = false;
+        boolean caught = false;
         Object[] array = null;
 
         try {
             takeInt(array.length);
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testAthrow() {
-        boolean catched = false;
+        boolean caught = false;
         Exception exception = null;
 
         try {
             throw exception;
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         } catch (Exception e) {
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testGetfield() {
-        boolean catched = false;
+        boolean caught = false;
         ExceptionsTest test = null;
 
         try {
             takeInt(test.field);
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testPutfield() {
-        boolean catched = false;
+        boolean caught = false;
         ExceptionsTest test = null;
 
         try {
             test.field = 1;
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testMonitorenter() {
-        boolean catched = false;
+        boolean caught = false;
         Object mon = null;
 
         try {
@@ -251,62 +251,62 @@ public class ExceptionsTest extends TestCase {
                 takeInt(1);
             }
         } catch (NullPointerException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testIdiv() {
-        boolean catched = false;
+        boolean caught = false;
         int denominator = 0;
 
         try {
             takeInt(1 / denominator);
         } catch (ArithmeticException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testIrem() {
-        boolean catched = false;
+        boolean caught = false;
         int denominator = 0;
 
         try {
             takeInt(1 % denominator);
         } catch (ArithmeticException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testLdiv() {
-        boolean catched = false;
+        boolean caught = false;
         long denominator = 0;
 
         try {
             takeLong(1L / denominator);
         } catch (ArithmeticException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void testLrem() {
-        boolean catched = false;
+        boolean caught = false;
         long denominator = 0;
 
         try {
             takeLong(1L % denominator);
         } catch (ArithmeticException e) {
-            catched = true;
+            caught = true;
         }
 
-        assertTrue(catched);
+        assertTrue(caught);
     }
 
     public static void main(String args[]) {
