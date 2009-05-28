@@ -49,6 +49,7 @@ void tree_patch_bc_offset(struct tree_node *node, unsigned long bc_offset)
 		stmt->bytecode_offset = bc_offset;
 	} else {
 		struct expression *expr = to_expr(node);
+		int i;
 
 		if (expr->bytecode_offset != BC_OFFSET_UNKNOWN)
 			return;
@@ -57,77 +58,8 @@ void tree_patch_bc_offset(struct tree_node *node, unsigned long bc_offset)
 
 		/* We should propagate bytecode offset to expressions
 		   contained by this one. */
-		switch (expr_type(expr)) {
-		case EXPR_VALUE:
-		case EXPR_FVALUE:
-		case EXPR_LOCAL:
-		case EXPR_TEMPORARY:
-			/* nothing to do */
-			break;
-		case EXPR_ARRAY_DEREF:
-			tree_patch_bc_offset(expr->arrayref, bc_offset);
-			tree_patch_bc_offset(expr->array_index, bc_offset);
-			break;
-		case EXPR_BINOP:
-			tree_patch_bc_offset(expr->binary_left, bc_offset);
-			tree_patch_bc_offset(expr->binary_right, bc_offset);
-			break;
-		case EXPR_UNARY_OP:
-			tree_patch_bc_offset(expr->unary_expression, bc_offset);
-			break;
-		case EXPR_CONVERSION:
-			tree_patch_bc_offset(expr->from_expression, bc_offset);
-			break;
-		case EXPR_CLASS_FIELD:
-			/* nothing to do */
-			break;
-		case EXPR_INSTANCE_FIELD:
-			tree_patch_bc_offset(expr->objectref_expression,
-					     bc_offset);
-			break;
-		case EXPR_INVOKE:
-		case EXPR_INVOKEVIRTUAL:
-			tree_patch_bc_offset(expr->args_list, bc_offset);
-			break;
-		case EXPR_ARGS_LIST:
-			tree_patch_bc_offset(expr->args_left, bc_offset);
-			tree_patch_bc_offset(expr->args_right, bc_offset);
-			break;
-		case EXPR_ARG:
-			tree_patch_bc_offset(expr->arg_expression, bc_offset);
-			break;
-		case EXPR_NO_ARGS:
-			/* nothing to do */
-			break;
-		case EXPR_NEW:
-			/* nothing to do */
-			break;
-		case EXPR_NEWARRAY:
-			tree_patch_bc_offset(expr->array_size, bc_offset);
-			break;
-		case EXPR_ANEWARRAY:
-			tree_patch_bc_offset(expr->anewarray_size, bc_offset);
-			break;
-		case EXPR_MULTIANEWARRAY:
-			tree_patch_bc_offset(expr->multianewarray_dimensions,
-					     bc_offset);
-			break;
-		case EXPR_ARRAYLENGTH:
-			tree_patch_bc_offset(expr->arraylength_ref, bc_offset);
-			break;
-		case EXPR_INSTANCEOF:
-			tree_patch_bc_offset(expr->instanceof_ref, bc_offset);
-			break;
-		case EXPR_EXCEPTION_REF:
-			/* nothing to do */
-			break;
-		case EXPR_NULL_CHECK:
-			tree_patch_bc_offset(expr->null_check_ref, bc_offset);
-			break;
-		case EXPR_LAST:
-			/* nothing to do */
-			break;
-		}
+		for (i = 0; i < expr_nr_kids(expr); i++)
+			tree_patch_bc_offset(expr->node.kids[i], bc_offset);
 	}
 }
 

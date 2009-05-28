@@ -284,6 +284,7 @@ struct expression *exception_ref_expr(void);
 struct expression *null_check_expr(struct expression *);
 
 unsigned long nr_args(struct expression *);
+int expr_nr_kids(struct expression *);
 
 static inline int is_invoke_expr(struct expression *expr)
 {
