@@ -317,7 +317,6 @@ public class ExceptionsTest extends TestCase {
         testNestedTryCatch();
         testEmptyCatchBlock();
 
-        /* Test run-time exceptions */
         testInvokespecial();
         testInvokevirtual();
         testArrayLoad();
@@ -327,11 +326,11 @@ public class ExceptionsTest extends TestCase {
         testGetfield();
         testPutfield();
         testMonitorenter();
-        /* no test for Monitorexit */
+	/* TODO: testMonitorexit() */
         testIdiv();
         testIrem();
-        /* testLdiv(); */
-        /* testLrem(); */
+        /* TODO: testLdiv(); */
+        /* TODO: testLrem(); */
 
         exit();
     }
