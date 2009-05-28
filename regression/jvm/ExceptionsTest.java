@@ -41,6 +41,9 @@ public class ExceptionsTest extends TestCase {
     public static void takeInt(int val) {
     }
 
+    public static void takeLong(long val) {
+    }
+
     public static void testTryBlockDoesNotThrowAnything() {
         boolean caught;
         try {
@@ -254,6 +257,58 @@ public class ExceptionsTest extends TestCase {
         assertTrue(catched);
     }
 
+    public static void testIdiv() {
+        boolean catched = false;
+        int denominator = 0;
+
+        try {
+            takeInt(1 / denominator);
+        } catch (ArithmeticException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testIrem() {
+        boolean catched = false;
+        int denominator = 0;
+
+        try {
+            takeInt(1 % denominator);
+        } catch (ArithmeticException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testLdiv() {
+        boolean catched = false;
+        long denominator = 0;
+
+        try {
+            takeLong(1L / denominator);
+        } catch (ArithmeticException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
+    public static void testLrem() {
+        boolean catched = false;
+        long denominator = 0;
+
+        try {
+            takeLong(1L % denominator);
+        } catch (ArithmeticException e) {
+            catched = true;
+        }
+
+        assertTrue(catched);
+    }
+
     public static void main(String args[]) {
         testTryBlockDoesNotThrowAnything();
         testThrowAndCatchInTheSameMethod();
@@ -273,6 +328,10 @@ public class ExceptionsTest extends TestCase {
         testPutfield();
         testMonitorenter();
         /* no test for Monitorexit */
+        testIdiv();
+        testIrem();
+        /* testLdiv(); */
+        /* testLrem(); */
 
         exit();
     }

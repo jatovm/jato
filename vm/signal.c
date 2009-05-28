@@ -32,6 +32,28 @@
 #include <unistd.h>
 #include <ucontext.h>
 
+static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
+{
+	if (signal_from_jit_method(ctx) && si->si_code == FPE_INTDIV) {
+		struct object *exception;
+
+		/* TODO: exception's stack trace should be filled using ctx */
+		exception = new_exception(
+			"java/lang/ArithmeticException", "division by zero");
+		if (exception == NULL) {
+			/* TODO: throw OutOfMemoryError */
+			fprintf(stderr, "%s: Out of memory\n", __FUNCTION__);
+			goto exit;
+		}
+
+		throw_exception_from_signal(ctx, exception);
+		return;
+	}
+
+ exit:
+	print_backtrace_and_die(sig, si, ctx);
+}
+
 static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 {
 	/* Assume that zero-page access is caused by dereferencing a
@@ -70,6 +92,9 @@ void setup_signal_handlers(void)
 
 	sa.sa_sigaction	= sigsegv_handler;
 	sigaction(SIGSEGV, &sa, NULL);
+
+	sa.sa_sigaction	= sigfpe_handler;
+	sigaction(SIGFPE, &sa, NULL);
 
 	sa.sa_sigaction	= signal_handler;
 	sigaction(SIGUSR1, &sa, NULL);
