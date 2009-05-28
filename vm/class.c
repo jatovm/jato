@@ -55,7 +55,7 @@ struct object *new_exception(char *class_name, char *message)
 	mb = lookupMethod(e_class, "<init>", "(Ljava/lang/String;)V");
 	if (!mb)
 		die("%s: constructor not found for class %s\n",
-		    __FUNCTION__, class_name);
+		    __func__, class_name);
 
 	init = method_trampoline_ptr(mb);
 	init(obj, message_str);

@@ -38,7 +38,7 @@ unsigned long bc_insn_size(unsigned char *bc_start)
 		size += bytecode_infos[*++bc_start].size;
 
 	if (size == 0) {
-		printf("%s: Unknown bytecode opcode: 0x%x\n", __FUNCTION__, *bc_start);
+		printf("%s: Unknown bytecode opcode: 0x%x\n", __func__, *bc_start);
 		abort();
 	}
 	return size;

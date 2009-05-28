@@ -42,7 +42,7 @@ static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 			"java/lang/ArithmeticException", "division by zero");
 		if (exception == NULL) {
 			/* TODO: throw OutOfMemoryError */
-			fprintf(stderr, "%s: Out of memory\n", __FUNCTION__);
+			fprintf(stderr, "%s: Out of memory\n", __func__);
 			goto exit;
 		}
 
@@ -66,7 +66,7 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		exception = new_exception("java/lang/NullPointerException", NULL);
 		if (exception == NULL) {
 			/* TODO: throw OutOfMemoryError */
-			fprintf(stderr, "%s: Out of memory\n", __FUNCTION__);
+			fprintf(stderr, "%s: Out of memory\n", __func__);
 			goto exit;
 		}
 

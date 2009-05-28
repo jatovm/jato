@@ -279,7 +279,7 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 	if (!convert) {
 		printf("%s: Unknown bytecode instruction 0x%x in "
 		       "method '%s' at offset %lu.\n",
-		       __FUNCTION__, ctx->opc, ctx->cu->method->name, ctx->offset);
+		       __func__, ctx->opc, ctx->cu->method->name, ctx->offset);
 		err = -EINVAL;
 		goto error;
 	}
@@ -289,7 +289,7 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 		printf("%s: Premature end of bytecode stream in "
 		       "method '%s' (code_size: %lu, offset: %lu, "
 		       "opc_size: %lu, opc: 0x%x)\n.",
-		       __FUNCTION__, ctx->cu->method->name, ctx->code_size,
+		       __func__, ctx->cu->method->name, ctx->code_size,
 		       ctx->offset, opc_size, ctx->opc);
 		err = -EINVAL;
 		goto error;
@@ -298,7 +298,7 @@ static int parse_bytecode_insn(struct parse_context *ctx)
 	ctx->bb = find_bb(ctx->cu, ctx->offset);
 	if (!ctx->bb) {
 		printf("%s: No basic block found for offset %lu "
-		       "in method '%s'\n", __FUNCTION__, ctx->offset,
+		       "in method '%s'\n", __func__, ctx->offset,
 		       ctx->cu->method->name);
 		err = -EINVAL;
 		goto error;

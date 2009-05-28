@@ -23,7 +23,7 @@ static void compile_error(struct compilation_unit *cu, int err)
 	struct classblock *cb = CLASS_CB(cu->method->class);
 
 	printf("%s: Failed to compile method `%s' in class `%s', error: %i\n",
-	       __FUNCTION__, cu->method->name, cb->name, err);
+	       __func__, cu->method->name, cb->name, err);
 }
 
 int compile(struct compilation_unit *cu)
