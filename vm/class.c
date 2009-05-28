@@ -34,6 +34,7 @@ typedef void (*exception_init_fn)(struct object *, struct object *);
 struct object *new_exception(char *class_name, char *message)
 {
 	struct object *message_str;
+	exception_init_fn init;
 	struct methodblock *mb;
 	struct object *obj;
 	Class *e_class;
@@ -56,7 +57,7 @@ struct object *new_exception(char *class_name, char *message)
 		die("%s: constructor not found for class %s\n",
 		    __FUNCTION__, class_name);
 
-	exception_init_fn init = (exception_init_fn)method_trampoline_ptr(mb);
+	init = method_trampoline_ptr(mb);
 	init(obj, message_str);
 
 	return obj;
