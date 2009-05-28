@@ -22,6 +22,7 @@
 #include <arch/instruction.h>
 #include <arch/memory.h>
 #include <arch/exception.h>
+#include <arch/stack-frame.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -29,6 +30,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include <../jamvm/lock.h>
 
 #define PREFIX_SIZE 1
 #define BRANCH_INSN_SIZE 5
@@ -829,6 +832,42 @@ static void emit_test_membase_reg(struct buffer *buf, struct operand *src,
 				  struct operand *dest)
 {
 	emit_membase_reg(buf, 0x85, src, dest);
+}
+
+void emit_lock(struct buffer *buf, struct object *obj)
+{
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, objectLock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+}
+
+void emit_unlock(struct buffer *buf, struct object *obj)
+{
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, objectUnlock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+}
+
+void emit_lock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_call(buf, objectLock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+}
+
+void emit_unlock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_call(buf, objectUnlock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 }
 
 enum emitter_type {

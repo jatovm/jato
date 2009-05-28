@@ -9,6 +9,7 @@
 
 #include <vm/alloc.h>
 #include <vm/buffer.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 
 #include <jit/basic-block.h>
@@ -20,6 +21,22 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+static void emit_monitor_enter(struct compilation_unit *cu)
+{
+	if (method_is_static(cu->method))
+		emit_lock(cu->objcode, cu->method->class);
+	else
+		emit_lock_this(cu->objcode);
+}
+
+static void emit_monitor_exit(struct compilation_unit *cu)
+{
+	if (method_is_static(cu->method))
+		emit_unlock(cu->objcode, cu->method->class);
+	else
+		emit_unlock_this(cu->objcode);
+}
 
 static struct buffer_operations exec_buf_ops = {
 	.expand = expand_buffer_exec,
@@ -38,13 +55,20 @@ int emit_machine_code(struct compilation_unit *cu)
 	frame_size = frame_locals_size(cu->stack_frame);
 
 	emit_prolog(cu->objcode, frame_size);
+	if (method_is_synchronized(cu->method))
+		emit_monitor_enter(cu);
+
 	for_each_basic_block(bb, &cu->bb_list)
 		emit_body(bb, cu->objcode);
 
 	emit_body(cu->exit_bb, cu->objcode);
+	if (method_is_synchronized(cu->method))
+		emit_monitor_exit(cu);
 	emit_epilog(cu->objcode);
 
 	emit_body(cu->unwind_bb, cu->objcode);
+	if (method_is_synchronized(cu->method))
+		emit_monitor_exit(cu);
 	emit_unwind(cu->objcode);
 
 	return 0;
