@@ -1,15 +1,10 @@
 #
 # Normal rules
 #
-.*
-*.o
 *.class
 *.d
-
-#
-# Generated symbolic links
-#
-include/arch
+*.o
+.*
 
 #
 # Generated include files
@@ -21,15 +16,21 @@ include/vm/arch.h
 #
 arch/x86/insn-selector_*.c
 monoburg/parser.c
+test/arch-x86/x86-test-suite.c
+test/jit/jit-test-suite.c
+test/vm/vm-test-suite.c
 
 #
 # Generated binaries
 #
 jato
-tools/classpath-config
 lib/classes.zip
 lib/inst_classes.zip
 monoburg/monoburg
+test/arch-x86/x86-test-runner
+test/jit/jit-test-runner
+test/vm/vm-test-runner
+tools/classpath-config
 
 #
 # Quilt generated directories
