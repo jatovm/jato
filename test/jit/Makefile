@@ -38,6 +38,7 @@ OBJS = \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
+	../vm/class-stub.o \
 	../arch-mmix/instruction.o \
 	../arch-mmix/use-def.o \
 	arithmetic-bc-test.o \
