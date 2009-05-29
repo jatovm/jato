@@ -843,9 +843,17 @@ void emit_lock(struct buffer *buf, struct object *obj)
 
 void emit_unlock(struct buffer *buf, struct object *obj)
 {
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_EDX);
+
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, objectUnlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+
+	__emit_pop_reg(buf, REG_EDX);
+	__emit_pop_reg(buf, REG_EAX);
 }
 
 void emit_lock_this(struct buffer *buf)
@@ -865,9 +873,16 @@ void emit_unlock_this(struct buffer *buf)
 
 	this_arg_offset = offsetof(struct jit_stack_frame, args);
 
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_EDX);
+
 	__emit_push_membase(buf, REG_EBP, this_arg_offset);
 	__emit_call(buf, objectUnlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_pop_reg(buf, REG_EDX);
+	__emit_pop_reg(buf, REG_EAX);
 }
 
 enum emitter_type {
