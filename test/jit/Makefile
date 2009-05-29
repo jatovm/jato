@@ -3,6 +3,14 @@ SUITE=jit-test-suite.c
 
 OBJS = \
 	../../arch/$(ARCH)/backtrace.o \
+	../../cafebabe/src/cafebabe/attribute_array.o \
+	../../cafebabe/src/cafebabe/attribute_info.o \
+	../../cafebabe/src/cafebabe/class.o \
+	../../cafebabe/src/cafebabe/constant_pool.o \
+	../../cafebabe/src/cafebabe/error.o \
+	../../cafebabe/src/cafebabe/field_info.o \
+	../../cafebabe/src/cafebabe/method_info.o \
+	../../cafebabe/src/cafebabe/stream.o \
 	../../vm/bitset.o \
 	../../vm/buffer.o \
 	../../vm/bytecode.o \
