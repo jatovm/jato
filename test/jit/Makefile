@@ -39,6 +39,7 @@ OBJS = \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
 	../vm/class-stub.o \
+	../vm/object-stub.o \
 	../arch-mmix/instruction.o \
 	../arch-mmix/use-def.o \
 	arithmetic-bc-test.o \
