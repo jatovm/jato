@@ -43,7 +43,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	};
 	struct var_info *temporary;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	branch_bb = alloc_basic_block(cu, 0, BRANCH_OFFSET + BRANCH_INSN_SIZE);
 	bb        = alloc_basic_block(cu, BRANCH_OFFSET + BRANCH_INSN_SIZE, TARGET_OFFSET);
@@ -94,7 +94,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	};
 	struct var_info *temporary;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	stmt_bb = alloc_basic_block(cu, 0, 1);
 	true_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
 
@@ -148,7 +148,7 @@ void test_convert_goto(void)
 		.code_size = ARRAY_SIZE(code),
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	goto_bb = alloc_basic_block(cu, 0, 1);
 	target_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
 
@@ -196,7 +196,7 @@ void test_insn_after_branch_are_added_to_another_bb(void)
 		.code_size = ARRAY_SIZE(is_zero_bytecode),
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
 	convert_to_ir(cu);

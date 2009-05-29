@@ -154,7 +154,7 @@ void test_should_select_insn_for_every_statement(void)
 	struct compilation_unit *cu;
 	enum machine_reg dreg;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 
 	expr1 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
@@ -209,7 +209,7 @@ static struct basic_block *alloc_simple_binop_bb(enum binary_operator expr_op,
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
@@ -365,7 +365,7 @@ static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
@@ -461,7 +461,7 @@ void test_select_return(void)
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &value->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -496,7 +496,7 @@ void test_select_void_return(void)
 
 	stmt = alloc_statement(STMT_VOID_RETURN);
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -519,7 +519,7 @@ void test_select_invoke_without_arguments(void)
 		.type = "()I",
 	};
 
-	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.compilation_unit = compilation_unit_alloc(&mb);
 	mb.trampoline = alloc_jit_trampoline();
 
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
@@ -552,7 +552,7 @@ void test_select_invoke_with_arguments(void)
 		.type = "(II)I",
 	};
 
-	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.compilation_unit = compilation_unit_alloc(&mb);
 	mb.trampoline = alloc_jit_trampoline();
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
@@ -600,11 +600,11 @@ void test_select_method_return_value_passed_as_argument(void)
 		.type = "()I",
 	};
 
-	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.compilation_unit = compilation_unit_alloc(&mb);
 	mb.trampoline = alloc_jit_trampoline();
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
-	nested_mb.compilation_unit = alloc_compilation_unit(&nested_mb);
+	nested_mb.compilation_unit = compilation_unit_alloc(&nested_mb);
 	nested_mb.trampoline = alloc_jit_trampoline();
 
 	no_args = no_args_expr();
@@ -669,7 +669,7 @@ void test_select_invokevirtual_with_arguments(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &invoke_expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -728,7 +728,7 @@ static void assert_select_if_statement_local_local(enum insn_type expected,
 	};
 	enum machine_reg dreg;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	true_bb = get_basic_block(cu, 1, 2);
 
@@ -764,7 +764,7 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 	};
 	enum machine_reg dreg;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	true_bb = get_basic_block(cu, 1, 2);
 
@@ -801,7 +801,7 @@ static void assert_select_if_statement_reg_reg(enum insn_type expected,
 		.max_locals = 2,
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	src = get_var(cu);
 	dst = get_var(cu);
 	bb = get_basic_block(cu, 0, 1);
@@ -853,7 +853,7 @@ void test_select_load_class_field(void)
 	long expected_disp;
 	enum machine_reg dreg, dreg2;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 
 	expr = class_field_expr(J_INT, &field);
@@ -897,7 +897,7 @@ void test_select_load_instance_field(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	select_instructions(bb->b_parent);
@@ -944,7 +944,7 @@ void test_store_value_to_instance_field(void)
 	stmt->store_dest = &store_target->node;
 	stmt->store_src  = &store_value->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	select_instructions(bb->b_parent);
@@ -1005,7 +1005,7 @@ static void assert_store_field_to_local(unsigned long local_idx)
 	stmt->store_dest = &store_dest->node;
 	stmt->store_src  = &store_src->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1044,7 +1044,7 @@ void test_select_store_value_to_var(void)
 	enum machine_reg dreg;
 	struct var_info *temporary;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	temporary = get_var(cu);
 	store_dest = temporary_expr(J_REFERENCE, NULL, temporary);
@@ -1082,7 +1082,7 @@ void test_select_store_var_to_local(void)
 	};
 	struct var_info *temporary;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	store_dest = local_expr(J_INT, 0);
 	temporary = get_var(cu);
@@ -1110,7 +1110,7 @@ static struct basic_block *alloc_array_access_bb(struct expression *store_src,
 	struct statement *stmt;
 	struct basic_block *bb;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_src = &store_src->node;
@@ -1229,7 +1229,7 @@ void test_select_new(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1262,7 +1262,7 @@ void test_select_newarray(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1304,7 +1304,7 @@ void test_select_anewarray(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1353,7 +1353,7 @@ void test_select_multianewarray(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1401,7 +1401,7 @@ void test_select_arraylength(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &arraylength_exp->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1436,7 +1436,7 @@ void test_select_instanceof(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1469,7 +1469,7 @@ void test_select_goto_stmt(void)
 	struct statement *stmt;
 	struct insn *insn;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	goto_target = get_basic_block(cu, 1, 2);
 
@@ -1498,7 +1498,7 @@ void test_select_null_check_stmt(void)
 	stmt = alloc_statement(STMT_NULL_CHECK);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1537,7 +1537,7 @@ void test_select_array_check_stmt(void)
 	stmt = alloc_statement(STMT_ARRAY_CHECK);
 	stmt->expression = &array->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1591,7 +1591,7 @@ void test_select_checkcast_stmt(void)
 	stmt->checkcast_class = class;
 	stmt->checkcast_ref = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 

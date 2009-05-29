@@ -29,7 +29,7 @@ void test_branch_opcode_ends_basic_block(void)
 		.code_size = ARRAY_SIZE(default_string)
 	};
 	
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
 
@@ -73,7 +73,7 @@ void test_multiple_branches(void)
 		.code_size = ARRAY_SIZE(greater_than_zero) 
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
 	assert_int_equals(4, nr_bblocks(cu));
@@ -134,7 +134,7 @@ void test_multiple_branch_with_target_instruction_splitting(void)
 		.code_size = ARRAY_SIZE(set_value)
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
 

@@ -36,7 +36,7 @@ void test_variable_range_limited_to_basic_block(void)
 	struct basic_block *bb;
 	struct insn *insn[3];
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	r1 = get_var(cu);
 	r2 = get_var(cu);
 
@@ -77,7 +77,7 @@ void test_variable_range_spans_two_basic_blocks(void)
 	struct var_info *r1, *r2;
 	struct insn *insn[4];
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	r1 = get_var(cu);
 	r2 = get_var(cu);
 
