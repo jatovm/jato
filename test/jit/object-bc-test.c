@@ -49,9 +49,9 @@ static void __assert_convert_getstatic(unsigned char opc,
 	struct fieldblock fb;
 	struct expression *expr;
 	unsigned char code[] = { opc, 0x00, 0x00 };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 
@@ -89,9 +89,9 @@ static void __assert_convert_getfield(unsigned char opc,
 	struct expression *expr;
 	struct expression *objectref;
 	unsigned char code[] = { opc, 0x00, 0x00 };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 
@@ -131,9 +131,9 @@ static void __assert_convert_putstatic(unsigned char opc,
 	struct fieldblock fb;
 	struct statement *stmt;
 	unsigned char code[] = { opc, 0x00, 0x00 };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 	struct expression *value;
@@ -173,9 +173,9 @@ static void __assert_convert_putfield(unsigned char opc,
 	struct fieldblock fb;
 	struct statement *stmt;
 	unsigned char code[] = { opc, 0x00, 0x00 };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 	struct expression *objectref;
@@ -222,9 +222,9 @@ static void assert_convert_array_load(enum vm_type expected_type,
 	unsigned char code[] = { opc };
 	struct expression *arrayref_expr, *index_expr, *temporary_expr;
 	struct statement *stmt;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 
@@ -316,9 +316,9 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	struct expression *arrayref_expr, *index_expr, *expr;
 	struct statement *stmt;
 	struct basic_block *bb;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct var_info *temporary;
 
@@ -409,9 +409,9 @@ static void assert_convert_new(unsigned long expected_type_idx,
 	unsigned char code[] = { OPC_NEW, 0x0, 0x0 };
 	struct basic_block *bb;
 	struct expression *new_expr;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 
 	bb = __alloc_simple_bb(&method);
@@ -440,9 +440,9 @@ void test_convert_anewarray(void)
 	struct basic_block *bb;
 	char array_name[] = "java/lang/Object";
 	struct expression *size,*arrayref;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 
 	bb = __alloc_simple_bb(&method);
@@ -473,9 +473,9 @@ void test_convert_anewarray(void)
 void test_convert_newarray(void)
 {
 	unsigned char code[] = { OPC_NEWARRAY, T_INT };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *size, *arrayref;
 	struct basic_block *bb;
@@ -506,9 +506,9 @@ void test_convert_multianewarray(void)
 	struct expression *args_count[dimension];
 	struct expression *actual_args;
 	struct basic_block *bb;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 
 	bb = __alloc_simple_bb(&method);
@@ -537,9 +537,9 @@ void test_convert_multianewarray(void)
 void test_convert_arraylength(void)
 {
 	unsigned char code[] = { OPC_ARRAYLENGTH };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *arrayref, *arraylen_exp;
 	struct basic_block *bb;
@@ -568,9 +568,9 @@ void test_convert_instanceof(void)
 	unsigned char code[] = { OPC_INSTANCEOF, 0x00, 0x00 };
 	struct basic_block *bb;
 	struct expression *ref, *expr;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 
 	bb = __alloc_simple_bb(&method);
@@ -594,9 +594,9 @@ void test_convert_instanceof(void)
 void test_convert_monitor_enter(void)
 {
 	unsigned char code[] = { OPC_MONITORENTER };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *ref;
 	struct statement *stmt;
@@ -621,9 +621,9 @@ void test_convert_monitor_enter(void)
 void test_convert_monitor_exit(void)
 {
 	unsigned char code[] = { OPC_MONITOREXIT };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *ref;
 	struct statement *stmt;
@@ -648,9 +648,9 @@ void test_convert_monitor_exit(void)
 void test_convert_checkcast(void)
 {
 	unsigned char code[] = {OPC_CHECKCAST, 0x00, 0x00};
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 
 	struct expression *ref;

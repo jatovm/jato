@@ -5,11 +5,13 @@
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
 #include <vm/bitset.h>
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 #include <arch/instruction.h>
 #include <libharness.h>
 
-struct methodblock method;
+struct vm_method method;
 
 static void assert_live_range(struct live_interval *interval, unsigned long expected_start, unsigned long expected_end)
 {

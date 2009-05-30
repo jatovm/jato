@@ -16,35 +16,35 @@
 #include <test/vm.h>
 
 struct compilation_unit *
-alloc_simple_compilation_unit(struct methodblock *method)
+alloc_simple_compilation_unit(struct vm_method *method)
 {
 	struct compilation_unit *cu;
 
 	cu = compilation_unit_alloc(method);
-	get_basic_block(cu, 0, method->code_size);
+	get_basic_block(cu, 0, method->code_attribute.code_length);
 
 	return cu;
 }
 
-struct basic_block *__alloc_simple_bb(struct methodblock *method)
+struct basic_block *__alloc_simple_bb(struct vm_method *method)
 {
 	struct compilation_unit *cu;
 
 	cu = compilation_unit_alloc(method);
 
-	return get_basic_block(cu, 0, method->code_size);
+	return get_basic_block(cu, 0, method->code_attribute.code_length);
 }
 
 struct basic_block *
 alloc_simple_bb(unsigned char *code, unsigned long code_size)
 {
-	struct methodblock *method;
+	struct vm_method *method;
 
 	method = malloc(sizeof *method);
-	method->jit_code = code;
-	method->code_size = code_size;
+	method->code_attribute.code = code;
+	method->code_attribute.code_length = code_size;
 	method->args_count = 0;
-	method->max_locals = 0;
+	method->code_attribute.max_locals = 0;
 
 	return __alloc_simple_bb(method);
 }
@@ -177,7 +177,7 @@ void assert_instance_field_expr(enum vm_type expected_vm_type,
 }
 
 void assert_invoke_expr(enum vm_type expected_type,
-			struct methodblock *expected_method,
+			struct vm_method *expected_method,
 			struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);

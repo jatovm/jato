@@ -400,7 +400,7 @@ void test_should_print_instance_field_expression(void)
 }
 
 void assert_printed_invoke_expr(const char *expected,
-				struct methodblock *method,
+				struct vm_method *method,
 				struct expression *args_list)
 {
 	struct expression *expr;
@@ -413,7 +413,7 @@ void assert_printed_invoke_expr(const char *expected,
 void test_should_print_invoke_expression(void)
 {	
 	struct object *class = new_class();
-	struct methodblock method = {
+	struct vm_method method = {
 		.class = class,
 		.name = "getId",
 		.type = "()I",
@@ -434,7 +434,7 @@ void test_should_print_invoke_expression(void)
 }
 
 void assert_printed_invokevirtual_expr(const char *expected,
-				       struct methodblock *target,
+				       struct vm_method *target,
 				       struct expression *args_list)
 {
 	struct expression *expr;
@@ -447,9 +447,9 @@ void assert_printed_invokevirtual_expr(const char *expected,
 void test_should_print_invokevirtual_expression(void)
 {
 	struct object *class = new_class();
-	struct methodblock method = {
+	struct vm_method method = {
 		.class = class,
-		.method_table_index = 0xff,
+		.method_index = 0xff,
 		.name = "bar",
 		.type = "(I)V",
 	};

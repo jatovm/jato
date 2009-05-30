@@ -6,15 +6,15 @@
 
 struct compilation_unit;
 struct basic_block;
-struct methodblock;
+struct vm_method;
 
 static inline struct statement *stmt_entry(struct list_head *head)
 {
 	return list_entry(head, struct statement, stmt_list_node);
 }
 
-struct compilation_unit *alloc_simple_compilation_unit(struct methodblock *);
-struct basic_block *__alloc_simple_bb(struct methodblock *);
+struct compilation_unit *alloc_simple_compilation_unit(struct vm_method *);
+struct basic_block *__alloc_simple_bb(struct vm_method *);
 struct basic_block *alloc_simple_bb(unsigned char *, unsigned long);
 void __free_simple_bb(struct basic_block *);
 void free_simple_bb(struct basic_block *);
@@ -33,7 +33,7 @@ void assert_binop_expr(enum vm_type, enum binary_operator,
 void assert_conv_expr(enum vm_type, struct expression *, struct tree_node *);
 void assert_class_field_expr(enum vm_type, struct fieldblock *, struct tree_node *);
 void assert_instance_field_expr(enum vm_type, struct fieldblock *, struct expression *, struct tree_node *);
-void assert_invoke_expr(enum vm_type, struct methodblock *,
+void assert_invoke_expr(enum vm_type, struct vm_method *,
 			struct tree_node *);
 
 void assert_store_stmt(struct statement *);

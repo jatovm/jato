@@ -26,10 +26,12 @@
 
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 #include <libharness.h>
 
-struct methodblock method;
+struct vm_method method;
 
 static void assert_st_insn(enum insn_type type, struct stack_slot *slot, enum machine_reg reg, struct insn *insn)
 {

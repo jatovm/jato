@@ -13,7 +13,7 @@
 #include <libharness.h>
 #include <stddef.h>
 
-static struct methodblock method = { };
+static struct vm_method method = { };
 
 void test_split_with_out_of_range_offset(void)
 {

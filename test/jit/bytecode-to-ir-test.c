@@ -16,9 +16,9 @@
 void test_convert_nop(void)
 {
 	unsigned char code[] = { OPC_NOP };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 
@@ -67,9 +67,9 @@ void test_convert_nop(void)
 void test_converts_complete_basic_block(void)
 {
 	unsigned char code[] = { OPC_ILOAD_0, OPC_ILOAD_1, OPC_IADD, OPC_IRETURN };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 

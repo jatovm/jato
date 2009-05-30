@@ -4,9 +4,11 @@
 
 #include <jit/compiler.h>
 #include <libharness.h>
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 
-struct methodblock method;
+struct vm_method method;
 
 void test_allocates_different_registers_for_overlapping_intervals(void)
 {
