@@ -70,12 +70,15 @@ static void convert_ir_invoke(struct compilation_unit *cu,
 			      struct vm_method *target_method,
 			      unsigned long method_index)
 {
-	ConstantPoolEntry cp_infos[method_index + 1];
-	u1 cp_types[method_index + 1];
+	assert(method_index == 0);
 
-	cp_infos[method_index] = (unsigned long) target_method;
-	cp_types[method_index] = CONSTANT_Resolved;
-	convert_ir_const(cu, (void *)cp_infos, method_index+1, cp_types);
+	struct vm_class vmc = {
+		.methods = target_method,
+	};
+
+	cu->method->class = &vmc;
+
+	convert_to_ir(cu);
 }
 
 static struct basic_block *
