@@ -351,7 +351,7 @@ void test_should_print_conversion_expression(void)
 }
 
 void assert_printed_class_field_expr(const char *expected, enum vm_type type,
-				     struct fieldblock *field)
+				     struct vm_field *field)
 {
 	struct expression *expr;
 
@@ -362,7 +362,7 @@ void assert_printed_class_field_expr(const char *expected, enum vm_type type,
 void test_should_print_class_field_expression(void)
 {
 	struct string *expected;
-	struct fieldblock fb;
+	struct vm_field fb;
 
 	expected = alloc_str();
 	str_append(expected, "[class_field int %p]", &fb);
@@ -372,7 +372,7 @@ void test_should_print_class_field_expression(void)
 }
 
 void assert_printed_instance_field_expr(const char *expected, enum vm_type type,
-					struct fieldblock *field,
+					struct vm_field *field,
 					struct expression *objectref)
 {
 	struct expression *expr;
@@ -385,7 +385,7 @@ void test_should_print_instance_field_expression(void)
 {
 	struct expression *objectref;
 	struct string *expected;
-	struct fieldblock fb;
+	struct vm_field fb;
 
 	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
 	expected = alloc_str();

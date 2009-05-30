@@ -46,7 +46,7 @@ static void __assert_convert_getstatic(unsigned char opc,
 				       enum vm_type expected_vm_type,
 				       char *field_type)
 {
-	struct fieldblock fb;
+	struct vm_field fb;
 	struct expression *expr;
 	unsigned char code[] = { opc, 0x00, 0x00 };
 	struct vm_method method = {
@@ -85,7 +85,7 @@ static void __assert_convert_getfield(unsigned char opc,
 				      enum vm_type expected_vm_type,
 				      char *field_type)
 {
-	struct fieldblock fb;
+	struct vm_field fb;
 	struct expression *expr;
 	struct expression *objectref;
 	unsigned char code[] = { opc, 0x00, 0x00 };
@@ -128,7 +128,7 @@ static void __assert_convert_putstatic(unsigned char opc,
 				       enum vm_type expected_vm_type,
 				       char *field_type)
 {
-	struct fieldblock fb;
+	struct vm_field fb;
 	struct statement *stmt;
 	unsigned char code[] = { opc, 0x00, 0x00 };
 	struct vm_method method = {
@@ -170,7 +170,7 @@ static void __assert_convert_putfield(unsigned char opc,
 				      enum vm_type expected_vm_type,
 				      char *field_type)
 {
-	struct fieldblock fb;
+	struct vm_field fb;
 	struct statement *stmt;
 	unsigned char code[] = { opc, 0x00, 0x00 };
 	struct vm_method method = {

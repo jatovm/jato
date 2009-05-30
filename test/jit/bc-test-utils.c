@@ -155,7 +155,7 @@ static void __assert_field_expr(enum expression_type expected_expr_type,
 }
 
 void assert_class_field_expr(enum vm_type expected_vm_type,
-			     struct fieldblock *expected_field,
+			     struct vm_field *expected_field,
 			     struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
@@ -165,7 +165,7 @@ void assert_class_field_expr(enum vm_type expected_vm_type,
 }
 
 void assert_instance_field_expr(enum vm_type expected_vm_type,
-				struct fieldblock *expected_field,
+				struct vm_field *expected_field,
 				struct expression *expected_objectref,
 				struct tree_node *node)
 {
