@@ -28,4 +28,9 @@ static inline bool method_is_static(struct methodblock *method)
 	return method->access_flags & ACC_STATIC;
 }
 
+static inline bool method_is_virtual(struct methodblock *method)
+{
+	return !method_is_static(method) && !method_is_constructor(method);
+}
+
 #endif

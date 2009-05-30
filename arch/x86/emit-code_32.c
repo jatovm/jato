@@ -1072,7 +1072,7 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
  * this, we could suspend all threads before patching, and force them
  * to execute flush_icache() on resume.
  */
-static void fixup_invoke(struct jit_trampoline *t, unsigned long target)
+static void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 {
 	struct fixup_site *this, *next;
 
@@ -1098,9 +1098,8 @@ static void fixup_invoke(struct jit_trampoline *t, unsigned long target)
  * This function replaces pointers in vtable so that they point
  * directly to compiled code instead of trampoline code.
  */
-static void fixup_invokevirtual(struct compilation_unit *cu,
-				struct object *objref,
-				void *target)
+static void
+fixup_vtable(struct compilation_unit *cu, struct object *objref, void *target)
 {
 	struct classblock *cb = CLASS_CB(objref->class);
 
@@ -1123,15 +1122,23 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	__emit_push_reg(buf, REG_EAX);
 
-	if ((cu->method->access_flags & ACC_STATIC) ||
-	     method_is_constructor(cu->method)) {
-		__emit_push_imm(buf, (unsigned long)trampoline);
-		__emit_call(buf, fixup_invoke);
-		__emit_add_imm_reg(buf, 0x4, REG_ESP);
-	} else {
+	/*
+	 * A method can be invoked by invokevirtual and invokespecial. For
+	 * example, a public method p() in class A is normally invoked with
+	 * invokevirtual but if a class B that extends A calls calls that
+	 * method by "super.p()" we use invokespecial instead.
+	 *
+	 * Therefore, do fixup for direct call sites unconditionally and fixup
+	 * vtables if method can be invoked via invokevirtual.
+	 */
+	__emit_push_imm(buf, (unsigned long)trampoline);
+	__emit_call(buf, fixup_direct_calls);
+	__emit_add_imm_reg(buf, 0x4, REG_ESP);
+
+	if (method_is_virtual(cu->method)) {
 		__emit_push_membase(buf, REG_EBP, 0x08);
 		__emit_push_imm(buf, (unsigned long)cu);
-		__emit_call(buf, fixup_invokevirtual);
+		__emit_call(buf, fixup_vtable);
 		__emit_add_imm_reg(buf, 0x08, REG_ESP);
 	}
 
