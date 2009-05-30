@@ -2,6 +2,8 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
+#include <cafebabe/constant_pool.h>
+
 #include <jit/compilation-unit.h>
 #include <jit/basic-block.h>
 #include <bc-test-utils.h>
@@ -244,7 +246,7 @@ void assert_checkcast_stmt(struct expression *expected,
 
 void convert_ir_const(struct compilation_unit *cu,
 		      ConstantPoolEntry *cp_infos,
-		      size_t nr_cp_infos, u1 *cp_types)
+		      size_t nr_cp_infos, uint8_t *cp_types)
 {
 	struct object *class = new_class();
 	struct classblock *cb = CLASS_CB(class);
