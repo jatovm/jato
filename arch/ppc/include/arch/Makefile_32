@@ -1,8 +1,0 @@
-ARCH_OBJS = \
-	arch/ppc/backtrace.o \
-	arch/ppc/insn-selector_32.o \
-	arch/ppc/instruction.o \
-	jamvm/os/linux/os.o \
-	jamvm/os/linux/powerpc/callNative.o \
-	jamvm/os/linux/powerpc/init.o \
-	jamvm/os/linux/powerpc/dll_md.o
