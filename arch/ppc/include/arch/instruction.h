@@ -56,4 +56,10 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 	return NULL;
 }
 
+static inline struct insn *
+exception_spill_insn(struct stack_slot *slot)
+{
+	return NULL;
+}
+
 #endif /* __PPC_INSTRUCTION_H */
