@@ -13,12 +13,12 @@
 #include <jit/compiler.h>
 #include <jit/exception.h>
 #include <jit/stack-slot.h>
+#include <jit/emit-code.h>
 
 #include <vm/list.h>
 #include <vm/buffer.h>
 #include <vm/method.h>
 
-#include <arch/emit-code.h>
 #include <arch/instruction.h>
 #include <arch/memory.h>
 #include <arch/exception.h>

@@ -25,9 +25,10 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/basic-block.h>
-#include <jit/statement.h>
 #include <jit/compilation-unit.h>
+#include <jit/basic-block.h>
+#include <jit/emit-code.h>
+#include <jit/statement.h>
 #include <jit/compiler.h>
 
 #include <vm/list.h>
@@ -35,7 +36,6 @@
 #include <vm/method.h>
 #include <vm/string.h>
 
-#include <arch/emit-code.h>
 #include <arch/instruction.h>
 #include <arch/memory.h>
 

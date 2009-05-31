@@ -5,13 +5,13 @@
 #include <jit/compilation-unit.h>
 #include <jit/basic-block.h>
 #include <jit/statement.h>
+#include <jit/emit-code.h>
 
 #include <vm/buffer.h>
 #include <vm/list.h>
 #include <vm/system.h>
 #include <vm/vm.h>
 
-#include <arch/emit-code.h>
 #include <arch/instruction.h>
 
 #include <test/vars.h>

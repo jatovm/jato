@@ -24,13 +24,14 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compiler.h>
 #include <jit/cu-mapping.h>
-#include <vm/buffer.h>
+#include <jit/emit-code.h>
+#include <jit/compiler.h>
+
 #include <vm/natives.h>
-#include <vm/vm.h>
+#include <vm/buffer.h>
 #include <vm/die.h>
-#include <arch/emit-code.h>
+#include <vm/vm.h>
 
 static void *jit_native_trampoline(struct compilation_unit *cu)
 {

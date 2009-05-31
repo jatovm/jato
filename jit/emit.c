@@ -12,11 +12,10 @@
 #include <vm/method.h>
 #include <vm/vm.h>
 
-#include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
+#include <jit/basic-block.h>
+#include <jit/emit-code.h>
 #include <jit/compiler.h>
-
-#include <arch/emit-code.h>
 
 #include <errno.h>
 #include <stdlib.h>
