@@ -7,14 +7,17 @@
 #include <jit/expression.h>
 #include <jit/statement.h>
 #include <jit/compiler.h>
-#include <vm/vm.h>
 #include <vm/class.h>
+#include <vm/field.h>
+#include <vm/method.h>
+#include <vm/object.h>
+#include <vm/vm.h>
 #include <arch/instruction.h>
 
 #include <test/vars.h>
 #include <test/vm.h>
 
-static struct methodblock method = { };
+static struct vm_method method = { };
 
 static void
 assert_memlocal_reg_insn(enum insn_type insn_type, unsigned long src_slot_idx,
@@ -147,9 +150,9 @@ void test_should_select_insn_for_every_statement(void)
 	struct expression *expr1, *expr2;
 	struct statement *stmt1, *stmt2;
 	struct basic_block *bb;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 4,
-		.max_locals = 4,
+		.code_attribute.max_locals = 4,
 	};
 	struct compilation_unit *cu;
 	enum machine_reg dreg;
@@ -196,9 +199,9 @@ static struct basic_block *alloc_simple_binop_bb(enum binary_operator expr_op,
 						 struct expression *left,
 						 struct expression *right)
 {
-	static struct methodblock method = {
+	static struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 	struct compilation_unit *cu;
 	struct expression *expr;
@@ -352,9 +355,9 @@ void test_select_local_local_rem(void)
 
 static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 {
-	static struct methodblock method = {
+	static struct vm_method method = {
 		.args_count = 1,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct compilation_unit *cu;
 	struct expression *expr;
@@ -514,7 +517,7 @@ void test_select_invoke_without_arguments(void)
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock mb = {
+	struct vm_method mb = {
 		.args_count = 0,
 		.type = "()I",
 	};
@@ -535,7 +538,7 @@ void test_select_invoke_without_arguments(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -547,7 +550,7 @@ void test_select_invoke_with_arguments(void)
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock mb = {
+	struct vm_method mb = {
 		.args_count = 2,
 		.type = "(II)I",
 	};
@@ -575,7 +578,7 @@ void test_select_invoke_with_arguments(void)
 	assert_imm_insn(INSN_PUSH_IMM, 0x01, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
@@ -591,11 +594,11 @@ void test_select_method_return_value_passed_as_argument(void)
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock mb = {
+	struct vm_method mb = {
 		.args_count = 1,
 		.type = "(I)I",
 	};
-	struct methodblock nested_mb = {
+	struct vm_method nested_mb = {
 		.args_count = 0,
 		.type = "()I",
 	};
@@ -622,7 +625,7 @@ void test_select_method_return_value_passed_as_argument(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&nested_mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&nested_mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	sreg = mach_reg(&insn->src.reg);
@@ -633,7 +636,7 @@ void test_select_method_return_value_passed_as_argument(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -644,8 +647,8 @@ void test_select_method_return_value_passed_as_argument(void)
 
 void test_select_invokevirtual_with_arguments(void)
 {
-	struct methodblock method = {
-		.max_locals = 1,
+	struct vm_method method = {
+		.code_attribute.max_locals = 1,
 	};
 	struct expression *invoke_expr, *args;
 	struct compilation_unit *cu;
@@ -659,7 +662,7 @@ void test_select_invokevirtual_with_arguments(void)
 	objectref = 0xdeadbeef;
 	method_index = 0xcafe;
 
-	method.method_table_index = method_index;
+	method.method_index = method_index;
 	method.type = "()V";
 
 	args = arg_expr(value_expr(J_REFERENCE, objectref));
@@ -722,9 +725,9 @@ static void assert_select_if_statement_local_local(enum insn_type expected,
 	struct expression *expr;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 	enum machine_reg dreg;
 
@@ -758,9 +761,9 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 	struct expression *expr;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 	enum machine_reg dreg;
 
@@ -796,9 +799,9 @@ static void assert_select_if_statement_reg_reg(enum insn_type expected,
 	struct expression *expr;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 
 	cu = compilation_unit_alloc(&method);
@@ -845,7 +848,7 @@ void test_select_if_statement(void)
 void test_select_load_class_field(void)
 {
 	struct compilation_unit *cu;
-	struct fieldblock field;
+	struct vm_field field;
 	struct expression *expr;
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -869,7 +872,7 @@ void test_select_load_class_field(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	expected_disp = offsetof(struct fieldblock, static_value);
+	expected_disp = offsetof(struct vm_field, static_value);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, expected_disp, dreg2, insn);
 
 	free_compilation_unit(cu);
@@ -877,13 +880,13 @@ void test_select_load_class_field(void)
 
 void test_select_load_instance_field(void)
 {
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct compilation_unit *cu;
 	struct expression *objectref;
-	struct fieldblock field;
+	struct vm_field field;
 	struct expression *expr;
 	struct statement *stmt;
 	struct basic_block *bb;
@@ -922,15 +925,15 @@ void test_select_load_instance_field(void)
 
 void test_store_value_to_instance_field(void)
 {
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct expression *store_target;
 	struct expression *store_value;
 	struct expression *objectref;
 	struct compilation_unit *cu;
-	struct fieldblock field;
+	struct vm_field field;
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
@@ -988,13 +991,13 @@ static void assert_store_field_to_local(unsigned long local_idx)
 {
 	struct expression *store_dest, *store_src;
 	struct compilation_unit *cu;
-	struct fieldblock field;
+	struct vm_field field;
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = local_idx+1,
+		.code_attribute.max_locals = local_idx+1,
 	};
 	enum machine_reg dreg, dreg2;
 
@@ -1017,7 +1020,7 @@ static void assert_store_field_to_local(unsigned long local_idx)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct fieldblock, static_value), dreg2, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct vm_field, static_value), dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, dreg2, local_idx, insn);
@@ -1038,7 +1041,7 @@ void test_select_store_value_to_var(void)
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
 	};
 	enum machine_reg dreg;
@@ -1076,9 +1079,9 @@ void test_select_store_var_to_local(void)
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct var_info *temporary;
 
@@ -1453,7 +1456,7 @@ void test_select_instanceof(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) is_object_instance_of, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
@@ -1512,7 +1515,7 @@ void test_select_null_check_stmt(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg1, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_null, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_null, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
@@ -1566,7 +1569,7 @@ void test_select_array_check_stmt(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_array, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
@@ -1608,7 +1611,7 @@ void test_select_checkcast_stmt(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_cast, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_cast, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);

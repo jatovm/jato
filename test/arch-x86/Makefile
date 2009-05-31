@@ -21,17 +21,33 @@ SUITE=x86-test-suite.c
 
 OBJS = \
 	../libharness/libharness.o \
+	../../cafebabe/src/cafebabe/attribute_array.o \
+	../../cafebabe/src/cafebabe/attribute_info.o \
+	../../cafebabe/src/cafebabe/class.o \
+	../../cafebabe/src/cafebabe/code_attribute.o \
+	../../cafebabe/src/cafebabe/constant_pool.o \
+	../../cafebabe/src/cafebabe/constant_value_attribute.o \
+	../../cafebabe/src/cafebabe/error.o \
+	../../cafebabe/src/cafebabe/field_info.o \
+	../../cafebabe/src/cafebabe/method_info.o \
+	../../cafebabe/src/cafebabe/stream.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/cast-stub.o \
 	../jamvm/lock.o \
+	../jit/trampoline-stub.o \
 	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
+	../../vm/class.o \
+	../../vm/classloader.o \
+	../../vm/field.o \
 	../../vm/list.o \
+	../../vm/method.o \
+	../../vm/object.o \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/types.o \
+	../../vm/utf8.o \
 	../../vm/zalloc.o \
-	../../vm/class.o \
 	../../jit/alloc.o \
 	../../jit/basic-block.o \
 	../../jit/compilation-unit.o \
@@ -44,6 +60,7 @@ OBJS = \
 	../../jit/tree-printer.o \
 	../../jit/fixup-site.o \
 	../../jit/bc-offset-mapping.o \
+	../../jit/vtable.o \
 	../../arch/x86/emit-code$(ARCH_POSTFIX).o \
 	../../arch/x86/instruction.o \
 	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \

@@ -17,7 +17,7 @@
 #include <test/vars.h>
 #include <libharness.h>
 
-static struct methodblock method;
+static struct vm_method method;
 
 DECLARE_STATIC_REG(VAR_EAX, REG_EAX);
 DECLARE_STATIC_REG(VAR_EBX, REG_EBX);
