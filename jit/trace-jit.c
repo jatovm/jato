@@ -11,14 +11,13 @@
 #include <jit/tree-printer.h>
 #include <jit/basic-block.h>
 #include <jit/disassemble.h>
+#include <jit/lir-printer.h>
 #include <jit/statement.h>
 #include <jit/vars.h>
 
 #include <vm/buffer.h>
 #include <vm/string.h>
 #include <vm/vm.h>
-
-#include <arch/lir-printer.h>
 
 #include <stdbool.h>
 #include <stdio.h>
