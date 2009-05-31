@@ -8,7 +8,16 @@
 
 struct var_info;
 
+/*
+ *	Instruction type identifies the opcode, number of operands, and
+ * 	operand types.
+ */
+enum insn_type {
+	INSN_BLR,
+};
+
 struct insn {
+	enum insn_type		type;
 	struct list_head	insn_list_node;
 	unsigned long		lir_pos;
 	unsigned long		bytecode_offset;
