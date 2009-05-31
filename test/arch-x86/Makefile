@@ -13,7 +13,7 @@ endif
 
 ARCH_CONFIG	:= ../../arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 DEFAULT_CFLAGS	:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
-INCLUDE		:= -I. -I../../arch/$(ARCH)/include -I../libharness -I../jit -I../../include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
+INCLUDE		:= -I. -I../../arch/$(ARCH)/include -I../libharness -I../jit -I../../include -I../../cafebabe/include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
 MONOBURG	:= ../../monoburg/monoburg
 
 RUNNER=x86-test-runner
