@@ -57,7 +57,6 @@ JIT_OBJS = \
 	jit/compilation-unit.o	\
 	jit/compiler.o		\
 	jit/disass-common.o	\
-	jit/disass.o		\
 	jit/emit.o		\
 	jit/emulate.o		\
 	jit/expression.o	\
