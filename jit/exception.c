@@ -24,10 +24,12 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/exception.h>
 #include <jit/compilation-unit.h>
 #include <jit/bc-offset-mapping.h>
 #include <jit/basic-block.h>
+#include <jit/exception.h>
+#include <jit/compiler.h>
+
 #include <vm/buffer.h>
 #include <arch/stack-frame.h>
 #include <arch/instruction.h>

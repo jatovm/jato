@@ -80,7 +80,8 @@ JIT_OBJS = \
 	jit/fixup-site.o	\
 	jit/exception.o 	\
 	jit/bc-offset-mapping.o \
-	jit/cu-mapping.o
+	jit/cu-mapping.o	\
+	jit/method.o
 
 VM_OBJS = \
 	vm/bitset.o		\

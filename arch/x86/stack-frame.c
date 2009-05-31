@@ -92,23 +92,6 @@ unsigned long frame_locals_size(struct stack_frame *frame)
 	return __index_to_offset(nr_locals + frame->nr_spill_slots);
 }
 
-/* Points to the first address past text segment */
-extern char etext;
-
-/*
- * Checks whether address belongs to jitted or JATO method.
- * This is used in deciding when to stop the unwind process upon
- * exception throwing.
- *
- * It utilises the fact, that jitted code is allocated on heap. So by
- * comparing return address with text segment end we can tell whether
- * the caller is on heap or in text.
- */
-bool is_jit_method(unsigned long eip)
-{
-	return eip >= (unsigned long)&etext;
-}
-
 /*
  * Returns total offset to subtract from ESP to reserve space for locals.
  */

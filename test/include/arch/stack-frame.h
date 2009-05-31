@@ -7,6 +7,4 @@ struct jit_stack_frame {
 	unsigned long return_address;
 };
 
-bool is_jit_method(unsigned long eip);
-
 #endif /* MMIX_STACK_FRAME_H */

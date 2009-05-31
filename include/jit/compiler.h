@@ -6,7 +6,9 @@
 #include <vm/buffer.h>
 #include <vm/stack.h>
 #include <vm/vm.h>
+
 #include <pthread.h>
+#include <stdbool.h>
 
 struct compilation_unit;
 struct expression;
@@ -73,6 +75,8 @@ static inline void *method_trampoline_ptr(struct methodblock *method)
 {
 	return buffer_ptr(method->trampoline->objcode);
 }
+
+bool is_jit_method(unsigned long eip);
 
 extern bool opt_trace_method;
 extern bool opt_trace_cfg;

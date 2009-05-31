@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Tomasz Grabiec
+ * Copyright (c) 2009 Tomasz Grabiec
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -24,26 +24,23 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/cu-mapping.h>
 #include <jit/compiler.h>
 
-#include <arch/stack-frame.h>
-#include <arch/signal.h>
+#include <stdbool.h>
 
-bool signal_from_jit_method(void *ctx)
+/* Points to the first address past text segment */
+extern char etext;
+
+/*
+ * Checks whether address belongs to jitted or JATO method.
+ * This is used in deciding when to stop the unwind process upon
+ * exception throwing.
+ *
+ * It utilises the fact, that jitted code is allocated on heap. So by
+ * comparing return address with text segment end we can tell whether
+ * the caller is on heap or in text.
+ */
+bool is_jit_method(unsigned long eip)
 {
-	ucontext_t *uc;
-	unsigned long ip;
-
-	uc = ctx;
-	ip = uc->uc_mcontext.gregs[REG_IP];
-
-	if (!is_jit_method(ip))
-		return false;
-
-	/* We must be extra caucious here because IP might be iinvalid*/
-	if (get_cu_from_native_addr(ip) == NULL)
-		return false;
-
-	return true;
+	return eip >= (unsigned long)&etext;
 }
