@@ -1,8 +1,8 @@
-#ifndef _JIT_EXCEPTION_H
-#define _JIT_EXCEPTION_H
+#ifndef JATO_JIT_EXCEPTION_H
+#define JATO_JIT_EXCEPTION_H
 
+#include <stdbool.h>
 #include <vm/vm.h>
-#include <arch/stack-frame.h>
 
 struct compilation_unit;
 struct jit_stack_frame;
@@ -22,4 +22,4 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    struct object *exception);
 int insert_exception_spill_insns(struct compilation_unit *cu);
 
-#endif
+#endif /* JATO_JIT_EXCEPTION_H */
