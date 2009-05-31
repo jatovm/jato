@@ -1,8 +1,10 @@
 ARCH_OBJS = \
 	arch/ppc/backtrace.o \
 	arch/ppc/emit-code.o \
+	arch/ppc/exception.o \
 	arch/ppc/insn-selector_32.o \
 	arch/ppc/instruction.o \
+	arch/ppc/signal.o \
 	jamvm/os/linux/os.o \
 	jamvm/os/linux/powerpc/callNative.o \
 	jamvm/os/linux/powerpc/init.o \
