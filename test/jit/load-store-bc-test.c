@@ -175,10 +175,14 @@ static void assert_convert_ldc(enum vm_type expected_type,
 
 void test_convert_ldc(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc(J_INT, 0, CONSTANT_Integer);
 	assert_convert_ldc(J_INT, 1, CONSTANT_Integer);
 	assert_convert_ldc(J_INT, J_INT_MIN, CONSTANT_Integer);
 	assert_convert_ldc(J_INT, J_INT_MAX, CONSTANT_Integer);
+#endif
 }
 
 static void assert_convert_ldc_string(enum vm_type expected_type,
@@ -206,7 +210,11 @@ static void assert_convert_ldc_string(enum vm_type expected_type,
 
 void test_convert_ldc_string(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc_string(J_REFERENCE, RESOLVED_STRING_CONSTANT);
+#endif
 }
 
 static void assert_convert_ldc_float(float expected_value)
@@ -233,9 +241,13 @@ static void assert_convert_ldc_float(float expected_value)
 
 void test_convert_ldc_float(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc_float(0.01f);
 	assert_convert_ldc_float( 1.0f);
 	assert_convert_ldc_float(-1.0f);
+#endif
 }
 
 static void assert_convert_ldc_w(enum vm_type expected_type,
@@ -289,23 +301,35 @@ static void assert_convert_ldc_w_string(enum vm_type expected_type, long long ex
 
 void test_convert_ldc_w_int(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc_w(J_INT, 0, CONSTANT_Integer, OPC_LDC_W);
 	assert_convert_ldc_w(J_INT, 1, CONSTANT_Integer, OPC_LDC_W);
 	assert_convert_ldc_w(J_INT, J_INT_MIN, CONSTANT_Integer, OPC_LDC_W);
 	assert_convert_ldc_w(J_INT, J_INT_MAX, CONSTANT_Integer, OPC_LDC_W);
+#endif
 }
 
 void test_convert_ldc2_w_long(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc_w(J_LONG, 0, CONSTANT_Long, OPC_LDC2_W);
 	assert_convert_ldc_w(J_LONG, 1, CONSTANT_Long, OPC_LDC2_W);
 	assert_convert_ldc_w(J_LONG, J_LONG_MIN, CONSTANT_Long, OPC_LDC2_W);
 	assert_convert_ldc_w(J_LONG, J_LONG_MAX, CONSTANT_Long, OPC_LDC2_W);
+#endif
 }
 
 void test_convert_ldc_w_string(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc_w_string(J_REFERENCE, RESOLVED_STRING_CONSTANT);
+#endif
 }
 
 static void assert_convert_ldc_w_float(enum vm_type expected_type,
@@ -337,16 +361,24 @@ static void assert_convert_ldc_w_float(enum vm_type expected_type,
 
 void test_convert_ldc_w_float(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc_w_float(J_FLOAT, 0.01f, CONSTANT_Float, OPC_LDC_W);
 	assert_convert_ldc_w_float(J_FLOAT,  1.0f, CONSTANT_Float, OPC_LDC_W);
 	assert_convert_ldc_w_float(J_FLOAT, -1.0f, CONSTANT_Float, OPC_LDC_W);
+#endif
 }
 
 void test_convert_ldc2_w_double(void)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	assert_convert_ldc_w_float(J_DOUBLE, 0.01f, CONSTANT_Double, OPC_LDC2_W);
 	assert_convert_ldc_w_float(J_DOUBLE,  1.0f, CONSTANT_Double, OPC_LDC2_W);
 	assert_convert_ldc_w_float(J_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
+#endif
 }
 
 static void __assert_convert_load(unsigned char *code,
