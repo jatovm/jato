@@ -647,7 +647,11 @@ void test_select_method_return_value_passed_as_argument(void)
 
 void test_select_invokevirtual_with_arguments(void)
 {
+	struct vm_class class = {
+		.super = NULL,
+	};
 	struct vm_method method = {
+		.class = &class,
 		.code_attribute.max_locals = 1,
 	};
 	struct expression *invoke_expr, *args;
@@ -687,11 +691,11 @@ void test_select_invokevirtual_with_arguments(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct object, class), dreg2, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct vm_object, class), dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg2, sizeof(struct object), dreg, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg2, sizeof(struct vm_object), dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, method_index * sizeof(void *), dreg, insn);
@@ -910,7 +914,7 @@ void test_select_load_instance_field(void)
 	assert_memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, 0, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), dreg, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
@@ -961,7 +965,7 @@ void test_store_value_to_instance_field(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg, dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), dreg2, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg3 = mach_reg(&insn->dest.reg);
@@ -1155,7 +1159,7 @@ void test_iastore_select(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg1, dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), dreg3, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object) + sizeof(uint32_t), dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg4 = mach_reg(&insn->dest.reg);
@@ -1205,7 +1209,7 @@ void test_iaload_select(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg2, dreg4, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), dreg4, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object) + sizeof(uint32_t), dreg4, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg5 = mach_reg(&insn->dest.reg);
@@ -1220,15 +1224,14 @@ void test_iaload_select(void)
 
 void test_select_new(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr;
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
 
-	instance_class = new_class();
-	expr = new_expr(instance_class);
+	expr = new_expr(&instance_class);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
@@ -1239,15 +1242,14 @@ void test_select_new(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &instance_class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocObject, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
@@ -1292,7 +1294,7 @@ void test_select_newarray(void)
 
 void test_select_anewarray(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr,*size;
 	struct statement *stmt;
@@ -1300,10 +1302,9 @@ void test_select_anewarray(void)
 	struct insn *insn;
 	enum machine_reg dreg;
 
-	instance_class = new_class();
 	size = value_expr(J_INT,0xFF);
 
-	expr = anewarray_expr(instance_class,size);
+	expr = anewarray_expr(&instance_class, size);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
@@ -1324,7 +1325,7 @@ void test_select_anewarray(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM,(unsigned long) instance_class, insn);
+	assert_imm_insn(INSN_PUSH_IMM,(unsigned long) &instance_class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocArray, insn);
@@ -1332,25 +1333,22 @@ void test_select_anewarray(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 12, REG_ESP, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
 void test_select_multianewarray(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr, *args_list_expression;
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
 
-	instance_class = new_class();
-
 	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
 					      arg_expr(value_expr(J_INT, 0xff)));
 
-	expr = multianewarray_expr(instance_class);
+	expr = multianewarray_expr(&instance_class);
 	expr->multianewarray_dimensions = &args_list_expression->node;
 
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -1375,21 +1373,20 @@ void test_select_multianewarray(void)
 	assert_imm_insn(INSN_PUSH_IMM, 0x02, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &instance_class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocMultiArray, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_multi_array, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 20, REG_ESP, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
 void test_select_arraylength(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr, *arraylength_exp;
 	struct statement *stmt;
@@ -1397,8 +1394,8 @@ void test_select_arraylength(void)
 	struct insn *insn;
 	enum machine_reg dreg, dreg2;
 
-	instance_class = new_class();
-	expr = value_expr(J_REFERENCE, (unsigned long) instance_class);
+	NOT_IMPLEMENTED;
+	expr = value_expr(J_REFERENCE, (unsigned long) &instance_class);
 
 	arraylength_exp = arraylength_expr(expr);
 	stmt = alloc_statement(STMT_EXPRESSION);
@@ -1412,19 +1409,18 @@ void test_select_arraylength(void)
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) instance_class, dreg, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &instance_class, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, sizeof(struct object), dreg2, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, sizeof(struct vm_object), dreg2, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
 void test_select_instanceof(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr, *ref;
 	struct statement *stmt;
@@ -1432,10 +1428,9 @@ void test_select_instanceof(void)
 	struct insn *insn;
 	enum machine_reg dreg;
 
-	instance_class = new_class();
-	ref = value_expr(J_REFERENCE, (unsigned long) instance_class);
+	ref = value_expr(J_REFERENCE, (unsigned long) &instance_class);
 
-	expr = instanceof_expr(ref, instance_class);
+	expr = instanceof_expr(ref, &instance_class);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
@@ -1447,10 +1442,10 @@ void test_select_instanceof(void)
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) instance_class, dreg, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &instance_class, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &instance_class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
@@ -1461,7 +1456,6 @@ void test_select_instanceof(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
@@ -1579,19 +1573,18 @@ void test_select_array_check_stmt(void)
 
 void test_select_checkcast_stmt(void)
 {
+	struct vm_class class;
 	struct compilation_unit *cu;
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct expression *expr;
 	struct insn *insn;
-	struct object *class;
 	enum machine_reg dreg;
 
-	class = new_class();
-	expr = value_expr(J_REFERENCE, (unsigned long)class);
+	expr = value_expr(J_REFERENCE, (unsigned long) &class);
 
 	stmt = alloc_statement(STMT_CHECKCAST);
-	stmt->checkcast_class = class;
+	stmt->checkcast_class = &class;
 	stmt->checkcast_ref = &expr->node;
 
 	cu = compilation_unit_alloc(&method);
@@ -1602,10 +1595,10 @@ void test_select_checkcast_stmt(void)
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) class, dreg, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &class, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) class, insn);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
@@ -1616,6 +1609,5 @@ void test_select_checkcast_stmt(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
 
-	free(class);
 	free_compilation_unit(cu);
 }
