@@ -412,15 +412,15 @@ void assert_printed_invoke_expr(const char *expected,
 
 void test_should_print_invoke_expression(void)
 {	
-	struct object *class = new_class();
+	struct vm_class class = {
+		.name = "Foo",
+	};
 	struct vm_method method = {
-		.class = class,
+		.class = &class,
 		.name = "getId",
 		.type = "()I",
 	};
 	struct string *expected;
-
-	CLASS_CB(class)->name = "Foo";
 
 	expected = alloc_str();
 	str_append(expected, "INVOKE:\n"
@@ -430,7 +430,6 @@ void test_should_print_invoke_expression(void)
 
 	assert_printed_invoke_expr(expected->value, &method, no_args_expr());
 	free_str(expected);
-	free(class);
 }
 
 void assert_printed_invokevirtual_expr(const char *expected,
@@ -446,16 +445,16 @@ void assert_printed_invokevirtual_expr(const char *expected,
 
 void test_should_print_invokevirtual_expression(void)
 {
-	struct object *class = new_class();
+	struct vm_class class = {
+		.name = "Foo",
+	};
 	struct vm_method method = {
-		.class = class,
+		.class = &class,
 		.method_index = 0xff,
 		.name = "bar",
 		.type = "(I)V",
 	};
 	struct string *expected;
-
-	CLASS_CB(class)->name = "Foo";
 
 	expected = alloc_str();
 	str_append(expected, "INVOKEVIRTUAL:\n"
@@ -465,7 +464,6 @@ void test_should_print_invokevirtual_expression(void)
 
 	assert_printed_invokevirtual_expr(expected->value, &method, no_args_expr());
 	free_str(expected);
-	free(class);
 }
 
 void assert_printed_args_list_expr(const char *expected,
@@ -516,7 +514,7 @@ void test_should_print_no_args_expression(void)
 	assert_print_expr("[no args]", no_args_expr());
 }
 
-void assert_printed_new_expr(const char *expected, struct object *class)
+void assert_printed_new_expr(const char *expected, struct vm_class *class)
 {
 	struct expression *expr;
 
