@@ -22,4 +22,10 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    struct object *exception);
 int insert_exception_spill_insns(struct compilation_unit *cu);
 
+/* This should be called only by JIT compiled native code */
+unsigned char *throw_exception(struct compilation_unit *cu,
+			       struct object *exception);
+void throw_exception_from_signal(void *ctx, struct object *exception);
+void unwind(void);
+
 #endif /* JATO_JIT_EXCEPTION_H */

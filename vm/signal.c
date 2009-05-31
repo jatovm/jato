@@ -24,13 +24,16 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/signal.h>
-#include <arch/exception.h>
+#include <jit/exception.h>
+
 #include <vm/backtrace.h>
 #include <vm/class.h>
+
+#include <arch/signal.h>
+
+#include <ucontext.h>
 #include <stddef.h>
 #include <unistd.h>
-#include <ucontext.h>
 
 static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 {

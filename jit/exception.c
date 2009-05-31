@@ -29,7 +29,6 @@
 #include <jit/bc-offset-mapping.h>
 #include <jit/basic-block.h>
 #include <vm/buffer.h>
-#include <arch/exception.h>
 #include <arch/stack-frame.h>
 #include <arch/instruction.h>
 #include <errno.h>

@@ -21,7 +21,6 @@
 
 #include <arch/instruction.h>
 #include <arch/memory.h>
-#include <arch/exception.h>
 #include <arch/stack-frame.h>
 
 #include <assert.h>
