@@ -5,6 +5,7 @@ struct compilation_unit;
 struct jit_trampoline;
 struct basic_block;
 struct buffer;
+struct object;
 
 void emit_prolog(struct buffer *, unsigned long);
 void emit_epilog(struct buffer *);
