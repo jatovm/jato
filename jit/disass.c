@@ -31,10 +31,9 @@
 
 */
 
-#include "disass.h"
-
-#include <jit/compiler.h>
 #include <jit/bc-offset-mapping.h>
+#include <jit/disassemble.h>
+#include <jit/compiler.h>
 #include <vm/string.h>
 
 #include <assert.h>

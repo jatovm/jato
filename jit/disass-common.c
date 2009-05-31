@@ -30,7 +30,7 @@
 
 */
 
-#include "disass.h"
+#include <jit/disassemble.h>
 
 #include <dis-asm.h>
 #include <stdarg.h>
