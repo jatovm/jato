@@ -9,9 +9,10 @@
 struct var_info;
 
 struct insn {
-	unsigned long lir_pos;
-	struct list_head insn_list_node;
-	unsigned long bytecode_offset;
+	struct list_head	insn_list_node;
+	unsigned long		lir_pos;
+	unsigned long		bytecode_offset;
+	unsigned long		mach_offset;
 };
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
