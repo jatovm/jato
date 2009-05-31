@@ -195,7 +195,7 @@ struct expression {
 		/*  EXPR_NEW represents creation of a new instance that is
 		    unitialized .  */
 		struct {
-			struct vm_object *class;
+			struct vm_class *class;
 		};
 
 		/*  EXPR_NEWARRAY represents creation of a new array.  */
@@ -272,7 +272,7 @@ struct expression *invokevirtual_expr(struct vm_method *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
-struct expression *new_expr(struct vm_object *);
+struct expression *new_expr(struct vm_class *);
 struct expression *newarray_expr(unsigned long, struct expression *);
 struct expression *anewarray_expr(struct vm_object *, struct expression *);
 struct expression *multianewarray_expr(struct vm_object *);

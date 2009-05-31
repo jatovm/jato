@@ -347,7 +347,7 @@ int convert_new(struct parse_context *ctx)
 {
 	struct expression *expr;
 	unsigned long type_idx;
-	struct vm_object *class;
+	struct vm_class *class;
 
 	type_idx = bytecode_read_u16(ctx->buffer);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
@@ -483,7 +483,7 @@ int convert_instanceof(struct parse_context *ctx)
 int convert_checkcast(struct parse_context *ctx)
 {
 	struct expression *object_ref;
-	struct vm_object *class;
+	struct vm_class *class;
 	struct statement *checkcast_stmt;
 	unsigned long type_idx;
 

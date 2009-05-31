@@ -284,7 +284,7 @@ struct expression *no_args_expr(void)
 	return alloc_expression(EXPR_NO_ARGS, J_VOID);
 }
 
-struct expression *new_expr(struct vm_object *class)
+struct expression *new_expr(struct vm_class *class)
 {
 	struct expression *expr = alloc_expression(EXPR_NEW, J_REFERENCE);
 	if (expr)
