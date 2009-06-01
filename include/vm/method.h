@@ -35,8 +35,10 @@ static inline bool method_is_private(struct methodblock *method)
 
 static inline bool method_is_virtual(struct methodblock *method)
 {
-	return !method_is_static(method) && !method_is_constructor(method) &&
-		!method_is_private(method);
+	if (method_is_constructor(method))
+		return false;
+
+	return (method->access_flags & (ACC_STATIC | ACC_PRIVATE)) == 0;
 }
 
 #endif
