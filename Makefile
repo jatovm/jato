@@ -182,16 +182,7 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
-fe-mnemonics.html:
-	wget -O fe-mnemonics.html http://java.sun.com/docs/books/jvms/first_edition/html/Mnemonics.doc.html
-
-se-mnemonics.html:
-	wget -O se-mnemonics.html http://java.sun.com/docs/books/jvms/second_edition/html/Mnemonics.doc.html
-
-include/vm/opcodes.h: fe-mnemonics.html se-mnemonics.html scripts/gen-opcodes.pl
-	(html2text fe-mnemonics.html; html2text se-mnemonics.html) | perl scripts/gen-opcodes.pl > $@
-
-$(PROGRAM): include/vm/opcodes.h lib monoburg $(JAMVM_ARCH_H) compile
+$(PROGRAM): lib monoburg $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 

@@ -1,5 +1,22 @@
 #! /usr/bin/perl
 
+# Copyright (C) 2009  Vegard Nossum
+#
+# This file is released under the GPL version 2. Please refer to the file
+# LICENSE for details.
+#
+
+# Usage: 
+#
+# First get the relevant pages from the manuals:
+#
+# wget -O fe-mnemonics.html http://java.sun.com/docs/books/jvms/first_edition/html/Mnemonics.doc.html
+# wget -O se-mnemonics.html http://java.sun.com/docs/books/jvms/second_edition/html/Mnemonics.doc.html
+#
+# Run html2text on these and pipe it to this script:
+# (html2text fe-mnemonics.html; html2text se-mnemonics.html) | perl scripts/gen-opcodes.pl > opcodes.h
+#
+
 use strict;
 use warnings;
 
