@@ -126,11 +126,6 @@ static void jit_init_natives(void)
 		&native_vmthrowable_fill_in_stack_trace);
 }
 
-static void native_Test_printf(int x)
-{
-	printf("%d\n", x);
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -148,7 +143,6 @@ main(int argc, char *argv[])
 	}
 
 	jit_init_natives();
-	vm_register_native("Test", "printf", &native_Test_printf);
 
 	const char *classname = argv[1];
 	struct vm_class *vmc = classloader_load_and_init(classname);
