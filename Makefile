@@ -143,13 +143,13 @@ DEFAULT_CFLAGS	+= $(WARNINGS)
 OPTIMIZATIONS	+= -Os
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijamvm -Ijit/glib -Icafebabe/include -include $(ARCH_CONFIG)
+INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -Icafebabe/include -include $(ARCH_CONFIG)
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
 DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"
 DEFAULT_CFLAGS	+= $(DEFINES)
 
-DEFAULT_LIBS	= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
+DEFAULT_LIBS	= -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty $(ARCH_LIBS)
 
 JAMVM_ARCH_H = include/vm/arch.h
 
@@ -191,14 +191,7 @@ se-mnemonics.html:
 include/vm/opcodes.h: fe-mnemonics.html se-mnemonics.html scripts/gen-opcodes.pl
 	(html2text fe-mnemonics.html; html2text se-mnemonics.html) | perl scripts/gen-opcodes.pl > $@
 
-# We need to extract GNU classpath because we don't support searching JAR or
-# ZIP files for classes yet.
-classpath: $(CLASSPATH_CONFIG)
-	rm -rf $@
-	mkdir $@
-	unzip -qq -d $@ $(GLIBJ)
-
-$(PROGRAM): include/vm/opcodes.h lib monoburg $(JAMVM_ARCH_H) compile classpath
+$(PROGRAM): include/vm/opcodes.h lib monoburg $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
@@ -212,7 +205,7 @@ test: $(JAMVM_ARCH_H) monoburg
 
 %.class: %.java
 	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) -cp classpath:regression -d regression $<
+	$(Q) $(JAVAC) -cp $(GLIBJ):regression -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \

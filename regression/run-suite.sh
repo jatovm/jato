@@ -7,7 +7,10 @@ function run_java {
   JAVA_CLASS=$1
   EXPECTED=$2
 
-  CLASSPATH="$CLASSPATH:$PWD/../classpath:$PWD" $GDB ../jato $JAVA_CLASS
+  CLASSPATH_INSTALL_DIR=`../tools/classpath-config`
+  GLIBJ="$CLASSPATH_INSTALL_DIR/share/classpath/glibj.zip"
+
+  CLASSPATH="$CLASSPATH:$GLIBJ:$PWD" $GDB ../jato $JAVA_CLASS
 
   ACTUAL=$?
 

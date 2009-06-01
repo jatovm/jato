@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <zip.h>
+
 #include <cafebabe/class.h>
 #include <cafebabe/stream.h>
 
@@ -84,6 +86,120 @@ out:
 	return NULL;
 }
 
+struct vm_class *load_class_from_zip(const char *zipfile, const char *file)
+{
+	int zip_error;
+	struct zip *zip;
+	int zip_file_index;
+	struct zip_stat zip_stat;
+	struct zip_file *zip_file;
+	uint8_t *zip_file_buf;
+
+	struct cafebabe_stream stream;
+	struct cafebabe_class *class;
+	struct vm_class *result = NULL;
+
+	zip = zip_open(zipfile, 0, &zip_error);
+	if (!zip) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	zip_file_index = zip_name_locate(zip, file, 0);
+	if (zip_file_index == -1) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	zip_file_buf = malloc(zip_stat.size);
+	if (!zip_file_buf) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	zip_file = zip_fopen_index(zip, zip_file_index, 0);
+	if (!zip_file) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	/* Read the zipped class file */
+	for (int offset = 0; offset != zip_stat.size;) {
+		int ret;
+
+		ret = zip_fread(zip_file,
+			zip_file_buf + offset, zip_stat.size - offset);
+		if (ret == -1) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		offset += ret;
+	}
+
+	/* If this returns error, what can we do? We've got all the data we
+	 * wanted, so there should be no point in returning the error. */
+	zip_fclose(zip_file);
+	zip_close(zip);
+
+	cafebabe_stream_open_buffer(&stream, zip_file_buf, zip_stat.size);
+
+	class = malloc(sizeof *class);
+	if (cafebabe_class_init(class, &stream)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	cafebabe_stream_close_buffer(&stream);
+
+	result = malloc(sizeof *result);
+	if (result) {
+		if (vm_class_init(result, class)) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+	}
+
+	return result;
+}
+
+struct vm_class *load_class_from_path_file(const char *path, const char *file)
+{
+	struct stat st;
+
+	if (stat(path, &st) == -1) {
+		/* Doesn't exist or not accessible */
+		return NULL;
+	}
+
+	if (S_ISDIR(st.st_mode)) {
+		/* Directory */
+		struct vm_class *vmc;
+		char *full_filename;
+
+		if (asprintf(&full_filename, "%s/%s", path, file) == -1) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		vmc = load_class_from_file(full_filename);
+		free(full_filename);
+		return vmc;
+	}
+
+	if (S_ISREG(st.st_mode)) {
+		/* Regular file; could be .zip or .jar */
+		return load_class_from_zip(path, file);
+	}
+
+	return NULL;
+}
+
 struct vm_class *load_class(const char *class_name)
 {
 	struct vm_class *result;
@@ -112,7 +228,7 @@ struct vm_class *load_class(const char *class_name)
 	size_t i = 0;
 	while (classpath[i]) {
 		size_t n;
-		char *full_filename;
+		char *classpath_element;
 
 		n = strspn(classpath + i, ":");
 		i += n;
@@ -121,9 +237,8 @@ struct vm_class *load_class(const char *class_name)
 		if (n == 0)
 			continue;
 
-		if (asprintf(&full_filename, "%.*s/%s",
-			n, classpath + i, filename) == -1)
-		{
+		classpath_element = strndup(classpath + i, n);
+		if (!classpath_element) {
 			NOT_IMPLEMENTED;
 			result = NULL;
 			goto out_filename;
@@ -131,8 +246,8 @@ struct vm_class *load_class(const char *class_name)
 
 		i += n;
 
-		result = load_class_from_file(full_filename);
-		free(full_filename);
+		result = load_class_from_path_file(classpath_element, filename);
+		free(classpath_element);
 
 		if (result)
 			break;
