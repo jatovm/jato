@@ -1125,7 +1125,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	/*
 	 * A method can be invoked by invokevirtual and invokespecial. For
 	 * example, a public method p() in class A is normally invoked with
-	 * invokevirtual but if a class B that extends A calls calls that
+	 * invokevirtual but if a class B that extends A calls that
 	 * method by "super.p()" we use invokespecial instead.
 	 *
 	 * Therefore, do fixup for direct call sites unconditionally and fixup
