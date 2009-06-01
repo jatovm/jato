@@ -78,6 +78,8 @@ static inline void *method_trampoline_ptr(struct methodblock *method)
 
 bool is_jit_method(unsigned long eip);
 
+void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target);
+
 extern bool opt_trace_method;
 extern bool opt_trace_cfg;
 extern bool opt_trace_tree_ir;

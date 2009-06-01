@@ -62,6 +62,7 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 
 void *jit_magic_trampoline(struct compilation_unit *cu)
 {
+	struct methodblock *method = cu->method;
 	void *ret;
 
 	pthread_mutex_lock(&cu->mutex);
@@ -73,6 +74,17 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 		ret = jit_native_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);
+
+	/*
+	 * A method can be invoked by invokevirtual and invokespecial. For
+	 * example, a public method p() in class A is normally invoked with
+	 * invokevirtual but if a class B that extends A calls that
+	 * method by "super.p()" we use invokespecial instead.
+	 *
+	 * Therefore, do fixup for direct call sites unconditionally and fixup
+	 * vtables if method can be invoked via invokevirtual.
+	 */
+	fixup_direct_calls(method->trampoline, (unsigned long) ret);
 
 	pthread_mutex_unlock(&cu->mutex);
 
