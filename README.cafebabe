@@ -39,6 +39,11 @@ Done, more or less:
 
  - Static and non-static fields
 
+ - Write a zip-/jar-file reader
+
+	Used libzip; can find class files in zips and jars given in the
+	environment variable CLASSPATH.
+
 Current plan (expect heavy changes to this as progress is made):
 
  - Load constant values from the constant pool
@@ -55,7 +60,7 @@ Current plan (expect heavy changes to this as progress is made):
 
  - Remove jamvm/ completely
 
- - Write a zip-/jar-file reader
+ - Fix remaining, unfixed tests
 
  - Go through the JVM specification with a magnifying glass
 
