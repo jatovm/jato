@@ -1119,6 +1119,7 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	__emit_push_imm(buf, (unsigned long)cu);
 	__emit_call(buf, call_target);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
 	__emit_push_reg(buf, REG_EAX);
 
@@ -1144,7 +1145,6 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	__emit_pop_reg(buf, REG_EAX);
 
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 	__emit_pop_reg(buf, REG_EBP);
 	emit_indirect_jump_reg(buf, REG_EAX);
 }
