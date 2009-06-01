@@ -56,11 +56,8 @@ struct vm_class *load_class_from_file(const char *filename)
 	struct cafebabe_class *class;
 	struct vm_class *result = NULL;
 
-	if (cafebabe_stream_open(&stream, filename)) {
-		printf("couldn't open file '%s'\n", filename);
-		NOT_IMPLEMENTED;
+	if (cafebabe_stream_open(&stream, filename))
 		goto out;
-	}
 
 	class = malloc(sizeof *class);
 	if (cafebabe_class_init(class, &stream)) {
