@@ -181,6 +181,19 @@ emit_reg_reg(struct buffer *buf, unsigned char opc,
 }
 
 static void
+__emit_memdisp_reg(struct buffer *buf, unsigned char opc, unsigned long disp,
+		   unsigned char reg_opcode)
+{
+	unsigned char mod_rm;
+
+	mod_rm = encode_modrm(0, __encode_reg(reg_opcode), 5);
+
+	emit(buf, opc);
+	emit(buf, mod_rm);
+	emit_imm32(buf, disp);
+}
+
+static void
 __emit_membase(struct buffer *buf, unsigned char opc,
 	       enum machine_reg base_reg, unsigned long disp,
 	       unsigned char reg_opcode)
@@ -282,6 +295,14 @@ static void emit_mov_membase_reg(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x8b, src, dest);
+}
+
+static void emit_mov_thread_local_memdisp_reg(struct buffer *buf,
+					      struct operand *src,
+					      struct operand *dest)
+{
+	emit(buf, 0x65); /* GS segment override prefix */
+	__emit_memdisp_reg(buf, 0x8b, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_mov_memindex_reg(struct buffer *buf,
@@ -925,6 +946,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
