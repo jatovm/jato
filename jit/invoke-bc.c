@@ -8,7 +8,6 @@
  * and return instructions to immediate representation of the JIT compiler.
  */
 
-#include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
 #include <jit/args.h>

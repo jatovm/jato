@@ -3,7 +3,6 @@
  */
 
 #include <jit/compiler.h>
-#include <jit/bytecode-converters.h>
 #include <jit/statement.h>
 #include <vm/list.h>
 #include <vm/stack.h>

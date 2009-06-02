@@ -1,1 +1,0 @@
-DECLARE_CONVERTER(convert_athrow)

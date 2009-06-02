@@ -5,7 +5,6 @@
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
-#include <jit/bytecode-converters.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
 #include <vm/list.h>

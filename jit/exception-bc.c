@@ -25,7 +25,6 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
 #include <jit/expression.h>
