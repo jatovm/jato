@@ -587,7 +587,7 @@ void test_convert_instanceof(void)
 	free(instance_class);
 }
 
-void test_convert_monitor_enter(void)
+void test_convert_monitorenter(void)
 {
 	unsigned char code[] = { OPC_MONITORENTER };
 	struct methodblock method = {
@@ -607,14 +607,14 @@ void test_convert_monitor_enter(void)
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	assert_monitor_enter_stmt(ref, stmt);
+	assert_monitorenter_stmt(ref, stmt);
 
 	expr_put(ref);
 	__free_simple_bb(bb);
 	free(class);
 }
 
-void test_convert_monitor_exit(void)
+void test_convert_monitorexit(void)
 {
 	unsigned char code[] = { OPC_MONITOREXIT };
 	struct methodblock method = {
@@ -634,7 +634,7 @@ void test_convert_monitor_exit(void)
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	assert_monitor_exit_stmt(ref, stmt);
+	assert_monitorexit_stmt(ref, stmt);
 
 	expr_put(ref);
 	__free_simple_bb(bb);

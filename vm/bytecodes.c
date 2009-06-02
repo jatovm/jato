@@ -27,7 +27,7 @@ struct bytecode_info {
 	enum bytecode_type type;
 };
 
-#define BYTECODE(__opc, __size, __type) \
+#define BYTECODE(__opc, __name, __size, __type) \
 	[__opc] = { .size = __size, .type = __type },
 
 static struct bytecode_info bytecode_infos[] = {

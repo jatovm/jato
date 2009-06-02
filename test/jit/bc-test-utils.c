@@ -237,7 +237,7 @@ void assert_arraycheck_stmt(enum vm_type expected_vm_type,
 				expected_index, actual->expression);
 }
 
-void assert_monitor_enter_stmt(struct expression *expected,
+void assert_monitorenter_stmt(struct expression *expected,
 			       struct statement *actual)
 {
 	assert_int_equals(STMT_MONITOR_ENTER, stmt_type(actual));
@@ -245,7 +245,7 @@ void assert_monitor_enter_stmt(struct expression *expected,
 				    actual->expression);
 }
 
-void assert_monitor_exit_stmt(struct expression *expected,
+void assert_monitorexit_stmt(struct expression *expected,
 			      struct statement *actual)
 {
 	assert_int_equals(STMT_MONITOR_EXIT, stmt_type(actual));

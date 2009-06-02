@@ -483,7 +483,7 @@ int convert_checkcast(struct parse_context *ctx)
 	return 0;
 }
 
-int convert_monitor_enter(struct parse_context *ctx)
+int convert_monitorenter(struct parse_context *ctx)
 {
 	struct expression *nullcheck;
 	struct expression *exp;
@@ -506,7 +506,7 @@ int convert_monitor_enter(struct parse_context *ctx)
 	return 0;
 }
 
-int convert_monitor_exit(struct parse_context *ctx)
+int convert_monitorexit(struct parse_context *ctx)
 {
 	struct expression *nullcheck;
 	struct expression *exp;

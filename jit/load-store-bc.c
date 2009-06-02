@@ -35,12 +35,12 @@ int convert_aconst_null(struct parse_context *ctx)
 	return __convert_const(ctx, 0, J_REFERENCE);
 }
 
-int convert_iconst(struct parse_context *ctx)
+int convert_iconst_n(struct parse_context *ctx)
 {
 	return __convert_const(ctx, ctx->opc - OPC_ICONST_0, J_INT);
 }
 
-int convert_lconst(struct parse_context *ctx)
+int convert_lconst_n(struct parse_context *ctx)
 {
 	return __convert_const(ctx, ctx->opc - OPC_LCONST_0, J_LONG);
 }
@@ -55,12 +55,12 @@ static int __convert_fconst(struct parse_context *ctx, double value, enum vm_typ
 	return 0;
 }
 
-int convert_fconst(struct parse_context *ctx)
+int convert_fconst_n(struct parse_context *ctx)
 {
 	return __convert_fconst(ctx, ctx->opc - OPC_FCONST_0, J_FLOAT);
 }
 
-int convert_dconst(struct parse_context *ctx)
+int convert_dconst_n(struct parse_context *ctx)
 {
 	return __convert_fconst(ctx, ctx->opc - OPC_DCONST_0, J_DOUBLE);
 }
