@@ -30,10 +30,58 @@
 #include <jit/exception.h>
 #include <jit/compiler.h>
 
+#include <vm/guard-page.h>
 #include <vm/buffer.h>
+#include <vm/die.h>
+
 #include <arch/stack-frame.h>
 #include <arch/instruction.h>
 #include <errno.h>
+
+__thread void *exception_guard = NULL;
+void *exceptions_guard_page;
+
+void init_exceptions(void)
+{
+	exceptions_guard_page = alloc_guard_page();
+	if (!exceptions_guard_page)
+		die("%s: failed to allocate exceptions guard page.", __func__);
+
+	/* TODO: Should be called from thread initialization code. */
+	thread_init_exceptions();
+}
+
+/**
+ * thread_init_exceptions - initializes per-thread structures.
+ */
+void thread_init_exceptions(void)
+{
+	exception_guard = &exception_guard; /* assign a safe pointer */
+}
+
+/**
+ * signal_exception - used for signaling that exception has occurred in
+ *         jato functions.  Exception will be thrown as soon as
+ *         controll is returned back to JIT method code.
+ *
+ * @exception: exception object to be thrown.
+ */
+void signal_exception(struct object *exception)
+{
+	getExecEnv()->exception = exception;
+	exception_guard = exceptions_guard_page;
+}
+
+struct object *exception_occurred(void)
+{
+	return getExecEnv()->exception;
+}
+
+void clear_exception(void)
+{
+	exception_guard = &exception_guard;
+	getExecEnv()->exception = NULL;
+}
 
 struct exception_table_entry *exception_find_entry(struct methodblock *method,
 						   unsigned long target)
@@ -116,14 +164,16 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    unsigned char *native_ptr,
 				    struct object *exception)
 {
-	unsigned char *eh_ptr = NULL;
+	struct object *ee_exception;
 	unsigned long bc_offset;
+	unsigned char *eh_ptr;
 
-	if (getExecEnv()->exception != NULL) {
-		/* Looks like we've caught some asynchronous exception,
-		   which must have precedence. */
-		exception = getExecEnv()->exception;
-		getExecEnv()->exception = NULL;
+	eh_ptr = NULL;
+
+	ee_exception = exception_occurred();
+	if (ee_exception) {
+		exception = ee_exception;
+		clear_exception();
 	}
 
 	bc_offset = native_ptr_to_bytecode_offset(cu, native_ptr);
@@ -134,10 +184,11 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 	}
 
 	if (!is_jit_method(frame->return_address)) {
-		/* No handler found within jitted method call
-		   chain. Set exception in execution environment and
-		   return to previous (not jit) method. */
-		getExecEnv()->exception = exception;
+		/*
+		 * No handler found within jitted method call chain.
+		 * Signal exception and return to previous (not jit) method.
+		 */
+		signal_exception(exception);
 		return bb_native_ptr(cu->exit_bb);
 	}
 

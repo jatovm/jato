@@ -28,8 +28,10 @@
 #include <vm/natives.h>
 #include <vm/signal.h>
 #include <vm/vm.h>
-#include <jit/compiler.h>
+
 #include <jit/cu-mapping.h>
+#include <jit/exception.h>
+#include <jit/compiler.h>
 
 #ifdef USE_ZIP
 #define BCP_MESSAGE "<jar/zip files and directories separated by :>"
@@ -300,6 +302,7 @@ int main(int argc, char *argv[]) {
 
     setup_signal_handlers();
     init_cu_mapping();
+    init_exceptions();
 
     setDefaultInitArgs(&args);
     int class_arg = parseCommandLine(argc, argv, &args);

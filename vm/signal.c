@@ -59,10 +59,12 @@ static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 
 static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 {
+	if (!signal_from_jit_method(ctx))
+		goto exit;
+
 	/* Assume that zero-page access is caused by dereferencing a
 	   null pointer */
-	if (signal_from_jit_method(ctx) &&
-	    ((unsigned long)si->si_addr < (unsigned long)getpagesize())) {
+	if ((unsigned long)si->si_addr < (unsigned long)getpagesize()) {
 		struct object *exception;
 
 		/* TODO: exception's stack trace should be filled using ctx */
@@ -70,6 +72,21 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		if (exception == NULL) {
 			/* TODO: throw OutOfMemoryError */
 			fprintf(stderr, "%s: Out of memory\n", __func__);
+			goto exit;
+		}
+
+		throw_exception_from_signal(ctx, exception);
+		return;
+	}
+
+	/* Check if exception was triggered by exception guard */
+	if (si->si_addr == exceptions_guard_page) {
+		struct object *exception;
+
+		exception = exception_occurred();
+		if (exception == NULL) {
+			fprintf(stderr, "%s: spurious exception-test failure\n",
+				__func__);
 			goto exit;
 		}
 
