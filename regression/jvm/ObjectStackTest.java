@@ -56,6 +56,6 @@ public class ObjectStackTest extends TestCase {
     public static void main(String[] args) {
         testObjectStackWhenBranching();
 
-        Runtime.getRuntime().halt(retval);
+        exit();
     }
 }
