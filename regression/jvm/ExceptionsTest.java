@@ -329,8 +329,8 @@ public class ExceptionsTest extends TestCase {
 	/* TODO: testMonitorexit() */
         testIdiv();
         testIrem();
-        /* TODO: testLdiv(); */
-        /* TODO: testLrem(); */
+        testLdiv();
+        testLrem();
 
         exit();
     }
