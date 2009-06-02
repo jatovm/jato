@@ -370,6 +370,11 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 		ctx.offset = ctx.buffer->pos;	/* this is fragile */
 		ctx.opc = bytecode_read_u8(ctx.buffer);
 
+		if (ctx.opc >= ARRAY_SIZE(converters)) {
+			err = -EINVAL;
+			break;
+		}
+
 		convert = converters[ctx.opc];
 		if (!convert) {
 			err = -EINVAL;
