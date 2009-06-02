@@ -100,7 +100,8 @@ VM_OBJS = \
 	vm/zalloc.o		\
 	vm/class.o		\
 	vm/list.o 		\
-	vm/radix-tree.o
+	vm/radix-tree.o		\
+	vm/guard-page.o
 
 JAMVM_OBJS = \
 	vm/jato.o		\

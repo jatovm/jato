@@ -92,3 +92,16 @@ int expand_buffer_exec(struct buffer *buf)
 
 	return 0;
 }
+
+void *alloc_page(void)
+{
+	int page_size;
+	void *p;
+
+	page_size = getpagesize();
+
+	if (posix_memalign(&p, page_size, page_size))
+		return NULL;
+
+	return p;
+}
