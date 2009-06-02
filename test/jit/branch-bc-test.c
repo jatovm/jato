@@ -142,7 +142,7 @@ void test_convert_goto(void)
 	struct basic_block *goto_bb, *target_bb;
 	struct statement *goto_stmt;
 	struct compilation_unit *cu;
-	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
+	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET, OPC_NOP, OPC_NOP };
 	struct methodblock method = {
 		.jit_code = code,
 		.code_size = ARRAY_SIZE(code),
