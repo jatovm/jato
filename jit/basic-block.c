@@ -17,6 +17,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <vm/buffer.h>
+
 struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
 {
 	struct basic_block *bb;
@@ -148,4 +150,9 @@ int bb_add_successor(struct basic_block *bb, struct basic_block *successor)
 	bb->nr_successors++;
 
 	return 0;
+}
+
+unsigned char *bb_native_ptr(struct basic_block *bb)
+{
+	return buffer_ptr(bb->b_parent->objcode) + bb->mach_offset;
 }

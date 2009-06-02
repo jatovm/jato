@@ -131,7 +131,8 @@ static void assert_invoke_expression_type(enum expression_type expected_type, un
 	__free_simple_bb(bb);
 }
 
-static void assert_invoke_passes_objectref(unsigned char invoke_opc)
+static void assert_invoke_passes_objectref(unsigned char invoke_opc,
+					   bool nullcheck)
 {
 	struct expression *invoke_expr;
 	struct expression *arg_expr;
@@ -144,8 +145,12 @@ static void assert_invoke_passes_objectref(unsigned char invoke_opc)
 	invoke_expr = to_expr(stmt->expression);
 	arg_expr = to_expr(invoke_expr->args_list);
 
-	assert_value_expr(J_REFERENCE, 0xdeadbeef, arg_expr->arg_expression);
-
+	if (nullcheck)
+		assert_nullcheck_value_expr(J_REFERENCE, 0xdeadbeef,
+					    arg_expr->arg_expression);
+	else
+		assert_value_expr(J_REFERENCE, 0xdeadbeef,
+				  arg_expr->arg_expression);
 	__free_simple_bb(bb);
 }
 
@@ -270,7 +275,7 @@ void test_invokespecial_should_be_converted_to_invokespecial_expr(void)
 
 void test_invokespecial_should_pass_objectref_as_first_argument(void)
 {
-	assert_invoke_passes_objectref(OPC_INVOKESPECIAL);
+	assert_invoke_passes_objectref(OPC_INVOKESPECIAL, true);
 }
 
 void test_invokespecial_converts_to_invoke_expr(void)
@@ -307,7 +312,7 @@ void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
 
 void test_invokevirtual_should_pass_objectref_as_first_argument(void)
 {
-	assert_invoke_passes_objectref(OPC_INVOKEVIRTUAL);
+	assert_invoke_passes_objectref(OPC_INVOKEVIRTUAL, false);
 }
 
 void test_invokevirtual_should_parse_passed_arguments(void)

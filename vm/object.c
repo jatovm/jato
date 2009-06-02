@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include <vm/die.h>
 #include <vm/object.h>
 #include <vm/stdlib.h>
 
@@ -104,6 +105,42 @@ vm_object_alloc_string(const uint8_t bytes[], unsigned int length)
 	*(void **) &string->fields[value->offset] = array;
 
 	return string;
+}
+
+typedef void (*exception_init_fn)(struct vm_object *, struct vm_object *);
+
+struct vm_object *new_exception(char *class_name, char *message)
+{
+	struct vm_object *message_str;
+	exception_init_fn init;
+	struct vm_method *mb;
+	struct vm_object *obj;
+	struct vm_class *e_class;
+
+	/* XXX: load_and_init? We'd better preload exception classes. */
+	e_class = classloader_load(class_name);
+	if (!e_class)
+		return NULL;
+
+	obj = vm_object_alloc(e_class);
+	if (!obj)
+		return NULL;
+
+	if (message == NULL)
+		message_str = NULL;
+	else
+		message_str = vm_object_alloc_string(message, strlen(message));
+
+	mb = vm_class_get_method(e_class,
+		"<init>", "(Ljava/lang/String;)V");
+	if (!mb)
+		die("%s: constructor not found for class %s\n",
+		    __func__, class_name);
+
+	init = vm_method_trampoline_ptr(mb);
+	init(obj, message_str);
+
+	return obj;
 }
 
 bool vm_object_is_instance_of(struct vm_object *obj, struct vm_object *class)

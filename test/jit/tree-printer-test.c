@@ -114,19 +114,6 @@ void test_should_print_expression_statement(void)
 	assert_print_stmt("EXPRESSION:\n  expression: [local int 0]\n", stmt);
 }
 
-void test_should_print_nullcheck_statement(void)
-{
-	struct expression *expression;
-	struct statement *stmt;
-
-	expression = local_expr(J_INT, 0);
-
-	stmt = alloc_statement(STMT_NULL_CHECK);
-	stmt->expression = &expression->node;
-
-	assert_print_stmt("NULL_CHECK:\n  expression: [local int 0]\n", stmt);
-}
-
 void test_should_print_arraycheck_statement(void)
 {
 	struct expression *expression;
@@ -586,4 +573,16 @@ void test_print_instanceof_expression(void)
 			  "  instanceof_class: [0x55]\n"
 			  "  instanceof_ref: [value reference 0x55]\n",
 			  instanceof_expr(value_expr(J_REFERENCE, 0x55), (void *)0x55));
+}
+
+void test_should_print_nullcheck_expression(void)
+{
+	struct expression *expression;
+	struct expression *expr;
+
+	expression = local_expr(J_REFERENCE, 0);
+
+	expr = null_check_expr(expression);
+
+	assert_print_expr("NULL_CHECK:\n  ref: [local reference 0]\n", expr);
 }

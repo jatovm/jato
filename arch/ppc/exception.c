@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008  Pekka Enberg
- * 
+ * Copyright (c) 2009 Pekka Enberg
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -24,10 +24,15 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/instruction.h>
-#include <stdlib.h>
+#include <jit/compilation-unit.h>
+#include <vm/vm.h>
 
-void free_insn(struct insn *insn)
+unsigned char *
+throw_exception(struct compilation_unit *cu, struct object *exception)
 {
-	free(insn);
+	return NULL;
+}
+
+void throw_exception_from_signal(void *ctx, struct object *exception)
+{
 }

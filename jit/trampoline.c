@@ -24,15 +24,17 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <jit/cu-mapping.h>
+#include <jit/emit-code.h>
 #include <jit/compiler.h>
 
 #include <vm/buffer.h>
 #include <vm/class.h>
 #include <vm/method.h>
 #include <vm/natives.h>
-#include <vm/vm.h>
+#include <vm/buffer.h>
 #include <vm/die.h>
-#include <arch/emit-code.h>
+#include <vm/vm.h>
 
 static void *jit_native_trampoline(struct compilation_unit *cu)
 {
@@ -57,11 +59,15 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 	if (!cu->is_compiled)
 		compile(cu);
 
+	if (add_cu_mapping(cu) != 0)
+		die("out of memory");
+
 	return buffer_ptr(cu->objcode);
 }
 
 void *jit_magic_trampoline(struct compilation_unit *cu)
 {
+	struct vm_method *method = cu->method;
 	void *ret;
 
 	pthread_mutex_lock(&cu->mutex);
@@ -73,6 +79,17 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 		ret = jit_native_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);
+
+	/*
+	 * A method can be invoked by invokevirtual and invokespecial. For
+	 * example, a public method p() in class A is normally invoked with
+	 * invokevirtual but if a class B that extends A calls that
+	 * method by "super.p()" we use invokespecial instead.
+	 *
+	 * Therefore, do fixup for direct call sites unconditionally and fixup
+	 * vtables if method can be invoked via invokevirtual.
+	 */
+	fixup_direct_calls(method->trampoline, (unsigned long) ret);
 
 	pthread_mutex_unlock(&cu->mutex);
 

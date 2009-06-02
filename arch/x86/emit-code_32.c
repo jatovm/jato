@@ -13,15 +13,18 @@
 #include <jit/statement.h>
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
+#include <jit/exception.h>
+#include <jit/stack-slot.h>
+#include <jit/emit-code.h>
 
 #include <vm/list.h>
 #include <vm/buffer.h>
 #include <vm/method.h>
 #include <vm/object.h>
 
-#include <arch/emit-code.h>
 #include <arch/instruction.h>
 #include <arch/memory.h>
+#include <arch/stack-frame.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -29,6 +32,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include <../jamvm/lock.h>
+
+#define PREFIX_SIZE 1
+#define BRANCH_INSN_SIZE 5
+#define BRANCH_TARGET_OFFSET 1
+
+#define CALL_INSN_SIZE 5
 
 /*
  *	__encode_reg:	Encode register to be used in IA-32 instruction.
@@ -172,14 +183,13 @@ emit_reg_reg(struct buffer *buf, unsigned char opc,
 	__emit_reg_reg(buf, opc, direct_reg, rm_reg);
 }
 
-static void 
-__emit_membase_reg(struct buffer *buf, unsigned char opc,
-		   enum machine_reg base_reg, unsigned long disp,
-		   enum machine_reg dest_reg)
+static void
+__emit_membase(struct buffer *buf, unsigned char opc,
+	       enum machine_reg base_reg, unsigned long disp,
+	       unsigned char reg_opcode)
 {
 	unsigned char mod, rm, mod_rm;
 	int needs_sib;
-
 
 	needs_sib = (base_reg == REG_ESP);
 
@@ -195,13 +205,21 @@ __emit_membase_reg(struct buffer *buf, unsigned char opc,
 	else
 		mod = 0x02;
 
-	mod_rm = encode_modrm(mod, __encode_reg(dest_reg), rm);
+	mod_rm = encode_modrm(mod, reg_opcode, rm);
 	emit(buf, mod_rm);
 
 	if (needs_sib)
 		emit(buf, encode_sib(0x00, 0x04, __encode_reg(base_reg)));
 
 	emit_imm(buf, disp);
+}
+
+static void
+__emit_membase_reg(struct buffer *buf, unsigned char opc,
+		   enum machine_reg base_reg, unsigned long disp,
+		   enum machine_reg dest_reg)
+{
+	__emit_membase(buf, opc, base_reg, disp, __encode_reg(dest_reg));
 }
 
 static void 
@@ -226,7 +244,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg,
 				unsigned long disp)
 {
-	__emit_membase_reg(buf, 0xff, src_reg, disp, REG_ESI);
+	__emit_membase(buf, 0xff, src_reg, disp, 6);
 }
 
 static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
@@ -411,6 +429,13 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
 }
 
+static void emit_pop_memlocal(struct buffer *buf, struct operand *operand)
+{
+	unsigned long disp = slot_offset(operand->slot);
+
+	__emit_membase(buf, 0x8f, REG_EBP, disp, 0);
+}
+
 static void emit_pop_reg(struct buffer *buf, struct operand *operand)
 {
 	__emit_pop_reg(buf, mach_reg(&operand->reg));
@@ -434,8 +459,6 @@ static void emit_push_imm(struct buffer *buf, struct operand *operand)
 	__emit_push_imm(buf, operand->imm);
 }
 
-#define CALL_INSN_SIZE 5
-
 static void __emit_call(struct buffer *buf, void *call_target)
 {
 	int disp = call_target - buffer_current(buf) - CALL_INSN_SIZE;
@@ -449,24 +472,55 @@ static void emit_call(struct buffer *buf, struct operand *operand)
 	__emit_call(buf, (void *)operand->rel);
 }
 
-void emit_ret(struct buffer *buf)
+static void emit_ret(struct buffer *buf)
 {
 	emit(buf, 0xc3);
 }
 
-void emit_epilog(struct buffer *buf, unsigned long nr_locals)
+static void emit_leave(struct buffer *buf)
 {
-	if (nr_locals)
-		emit(buf, 0xc9);
-	else
-		__emit_pop_reg(buf, REG_EBP);
+	emit(buf, 0xc9);
+}
+
+/*
+ * Emitted code must not write to ECX register because it may hold
+ * exception object reference when in unwind block
+ */
+static void __emit_epilog(struct buffer *buf)
+{
+	/*
+	 * Always emit 'leave' even if method has no local variables
+	 * because exception object reference might have been pushed
+	 * on stack.
+	 */
+	emit_leave(buf);
 
 	/* Restore callee saved registers */
 	__emit_pop_reg(buf, REG_EBX);
 	__emit_pop_reg(buf, REG_ESI);
 	__emit_pop_reg(buf, REG_EDI);
+}
 
+void emit_epilog(struct buffer *buf)
+{
+	__emit_epilog(buf);
 	emit_ret(buf);
+}
+
+static void __emit_jmp(struct buffer *buf, unsigned long addr)
+{
+	unsigned long current = (unsigned long)buffer_current(buf);
+	emit(buf, 0xE9);
+	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
+}
+
+void emit_unwind(struct buffer *buf)
+{
+	/* save exception object in ECX */
+	__emit_pop_reg(buf, REG_ECX);
+
+	__emit_epilog(buf);
+	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
 static void emit_adc_reg_reg(struct buffer *buf,
@@ -684,10 +738,6 @@ void emit_branch_rel(struct buffer *buf, unsigned char prefix,
 	emit_imm32(buf, rel32);
 }
 
-#define PREFIX_SIZE 1
-#define BRANCH_INSN_SIZE 5
-#define BRANCH_TARGET_OFFSET 1
-
 static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
 {
 	long ret;
@@ -780,6 +830,63 @@ static void emit_xor_imm_reg(struct buffer *buf, struct operand * src,
 	__emit_xor_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void emit_test_membase_reg(struct buffer *buf, struct operand *src,
+				  struct operand *dest)
+{
+	emit_membase_reg(buf, 0x85, src, dest);
+}
+
+void emit_lock(struct buffer *buf, struct vm_object *obj)
+{
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, vm_object_lock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+}
+
+void emit_unlock(struct buffer *buf, struct vm_object *obj)
+{
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_EDX);
+
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, vm_object_unlock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+
+	__emit_pop_reg(buf, REG_EDX);
+	__emit_pop_reg(buf, REG_EAX);
+}
+
+void emit_lock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_call(buf, vm_object_lock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+}
+
+void emit_unlock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_EDX);
+
+	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_call(buf, vm_object_unlock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_pop_reg(buf, REG_EDX);
+	__emit_pop_reg(buf, REG_EAX);
+}
+
 enum emitter_type {
 	NO_OPERANDS = 1,
 	SINGLE_OPERAND,
@@ -834,7 +941,9 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_RET, emit_ret, NO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SBB_IMM_REG, emit_sbb_imm_reg, TWO_OPERANDS),
@@ -845,6 +954,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 };
@@ -943,7 +1053,8 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
 {
 	struct insn *insn;
 
-	backpatch_branches(buf, &bb->backpatch_insns, buffer_offset(buf));
+	bb->mach_offset = buffer_offset(buf);
+	backpatch_branches(buf, &bb->backpatch_insns, bb->mach_offset);
 
 	for_each_insn(insn, &bb->insn_list) {
 		emit_insn(buf, insn);
@@ -964,7 +1075,7 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
  * this, we could suspend all threads before patching, and force them
  * to execute flush_icache() on resume.
  */
-static void fixup_invoke(struct jit_trampoline *t, unsigned long target)
+void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 {
 	struct fixup_site *this, *next;
 
@@ -990,9 +1101,8 @@ static void fixup_invoke(struct jit_trampoline *t, unsigned long target)
  * This function replaces pointers in vtable so that they point
  * directly to compiled code instead of trampoline code.
  */
-static void fixup_invokevirtual(struct compilation_unit *cu,
-				struct vm_object *objref,
-				void *target)
+static void fixup_vtable(struct compilation_unit *cu,
+	struct vm_object *objref, void *target)
 {
 	struct vm_class *vmc = objref->class;
 
@@ -1012,25 +1122,19 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	__emit_push_imm(buf, (unsigned long)cu);
 	__emit_call(buf, call_target);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
 	__emit_push_reg(buf, REG_EAX);
 
-	if (vm_method_is_static(cu->method)
-		|| vm_method_is_constructor(cu->method))
-	{
-		__emit_push_imm(buf, (unsigned long)trampoline);
-		__emit_call(buf, fixup_invoke);
-		__emit_add_imm_reg(buf, 0x4, REG_ESP);
-	} else {
+	if (method_is_virtual(cu->method)) {
 		__emit_push_membase(buf, REG_EBP, 0x08);
 		__emit_push_imm(buf, (unsigned long)cu);
-		__emit_call(buf, fixup_invokevirtual);
+		__emit_call(buf, fixup_vtable);
 		__emit_add_imm_reg(buf, 0x08, REG_ESP);
 	}
 
 	__emit_pop_reg(buf, REG_EAX);
 
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 	__emit_pop_reg(buf, REG_EBP);
 	emit_indirect_jump_reg(buf, REG_EAX);
 }

@@ -24,9 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/emit-code.h>
 #include <arch/instruction.h>
 #include <jit/basic-block.h>
+#include <jit/emit-code.h>
 #include <vm/buffer.h>
 
 #include <stdlib.h>

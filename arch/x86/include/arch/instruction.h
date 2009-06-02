@@ -92,7 +92,9 @@ enum insn_type {
 	INSN_OR_REG_REG,
 	INSN_PUSH_IMM,
 	INSN_PUSH_REG,
+	INSN_POP_MEMLOCAL,
 	INSN_POP_REG,
+	INSN_RET,
 	INSN_SAR_IMM_REG,
 	INSN_SAR_REG_REG,
 	INSN_SBB_IMM_REG,
@@ -103,6 +105,7 @@ enum insn_type {
 	INSN_SUB_IMM_REG,
 	INSN_SUB_MEMBASE_REG,
 	INSN_SUB_REG_REG,
+	INSN_TEST_MEMBASE_REG,
 	INSN_XOR_MEMBASE_REG,
 	INSN_XOR_IMM_REG,
 };
@@ -146,6 +149,7 @@ struct insn *imm_membase_insn(enum insn_type, unsigned long, struct var_info *, 
 struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
+struct insn *memlocal_insn(enum insn_type, struct stack_slot *);
 
 /*
  * These functions are used by generic code to insert spill/reload
@@ -162,6 +166,12 @@ static inline struct insn *
 reload_insn(struct stack_slot *slot, struct var_info *var)
 {
 	return memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, var);
+}
+
+static inline struct insn *
+exception_spill_insn(struct stack_slot *slot)
+{
+	return memlocal_insn(INSN_POP_MEMLOCAL, slot);
 }
 
 struct insn *alloc_insn(enum insn_type);

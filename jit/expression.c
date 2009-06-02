@@ -16,6 +16,41 @@
 #include <string.h>
 #include <glib.h>
 
+/* How many child expressions are used by each type of expression. */
+int expr_nr_kids(struct expression *expr)
+{
+	switch (expr_type(expr)) {
+	case EXPR_ARRAY_DEREF:
+	case EXPR_BINOP:
+	case EXPR_ARGS_LIST:
+		return 2;
+	case EXPR_UNARY_OP:
+	case EXPR_CONVERSION:
+	case EXPR_INSTANCE_FIELD:
+	case EXPR_INVOKE:
+	case EXPR_INVOKEVIRTUAL:
+	case EXPR_ARG:
+	case EXPR_NEWARRAY:
+	case EXPR_ANEWARRAY:
+	case EXPR_MULTIANEWARRAY:
+	case EXPR_ARRAYLENGTH:
+	case EXPR_INSTANCEOF:
+	case EXPR_NULL_CHECK:
+		return 1;
+	case EXPR_VALUE:
+	case EXPR_FVALUE:
+	case EXPR_LOCAL:
+	case EXPR_TEMPORARY:
+	case EXPR_CLASS_FIELD:
+	case EXPR_NO_ARGS:
+	case EXPR_NEW:
+	case EXPR_EXCEPTION_REF:
+		return 0;
+	default:
+		assert(!"Invalid expression type");
+	}
+}
+
 struct expression *alloc_expression(enum expression_type type,
 				    enum vm_type vm_type)
 {
@@ -32,83 +67,15 @@ struct expression *alloc_expression(enum expression_type type,
 
 void free_expression(struct expression *expr)
 {
+	int i;
+
 	if (!expr)
 		return;
 
-	switch (expr_type(expr)) {
-	case EXPR_VALUE:
-	case EXPR_FVALUE:
-	case EXPR_LOCAL:
-	case EXPR_TEMPORARY:
-		/* nothing to do */
-		break;
-	case EXPR_ARRAY_DEREF:
-		if (expr->arrayref)
-			expr_put(to_expr(expr->arrayref));
-		if (expr->array_index)
-			expr_put(to_expr(expr->array_index));
-		break;
-	case EXPR_BINOP:
-		if (expr->binary_left)
-			expr_put(to_expr(expr->binary_left));
-		if (expr->binary_right)
-			expr_put(to_expr(expr->binary_right));
-		break;
-	case EXPR_UNARY_OP:
-		if (expr->unary_expression)
-			expr_put(to_expr(expr->unary_expression));
-		break;
-	case EXPR_CONVERSION:
-		if (expr->from_expression)
-			expr_put(to_expr(expr->from_expression));
-		break;
-	case EXPR_CLASS_FIELD:
-		/* nothing to do */
-		break;
-	case EXPR_INSTANCE_FIELD:
-		expr_put(to_expr(expr->objectref_expression));
-		break;
-	case EXPR_INVOKE:
-	case EXPR_INVOKEVIRTUAL:
-		if (expr->args_list)
-			expr_put(to_expr(expr->args_list));
-		break;
-	case EXPR_ARGS_LIST:
-		expr_put(to_expr(expr->args_left));
-		expr_put(to_expr(expr->args_right));
-		break;
-	case EXPR_ARG:
-		expr_put(to_expr(expr->arg_expression));
-		break;
-	case EXPR_NO_ARGS:
-		/* nothing to do */
-		break;
-	case EXPR_NEW:
-		/* nothing to do */
-		break;
-	case EXPR_NEWARRAY:
-		expr_put(to_expr(expr->array_size));
-		break;
-	case EXPR_ANEWARRAY:
-		expr_put(to_expr(expr->anewarray_size));
-		break;
-	case EXPR_MULTIANEWARRAY:
-		if (expr->multianewarray_dimensions)
-			expr_put(to_expr(expr->multianewarray_dimensions));
-		break;
-	case EXPR_ARRAYLENGTH:
-		expr_put(to_expr(expr->arraylength_ref));
-		break;
-	case EXPR_INSTANCEOF:
-		expr_put(to_expr(expr->instanceof_ref));
-		break;
-	case EXPR_EXCEPTION_REF:
-		/* nothing to do */
-		break;
-	case EXPR_LAST:
-		assert(!"EXPR_LAST is not a real type. Don't use it");
-		break;
-	};
+	for (i = 0; i < expr_nr_kids(expr); i++)
+		if (expr->node.kids[i])
+			expr_put(to_expr(expr->node.kids[i]));
+
 	free(expr);
 }
 
@@ -363,4 +330,20 @@ unsigned long nr_args(struct expression *args_list)
 struct expression *exception_ref_expr(void)
 {
 	return alloc_expression(EXPR_EXCEPTION_REF, J_REFERENCE);
+}
+
+struct expression *null_check_expr(struct expression *ref)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_NULL_CHECK, J_REFERENCE);
+	if (!expr)
+		return NULL;
+
+	assert(ref->vm_type == J_REFERENCE);
+
+	expr->bytecode_offset = ref->bytecode_offset;
+	expr->null_check_ref = &ref->node;
+
+	return expr;
 }

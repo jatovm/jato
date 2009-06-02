@@ -29,50 +29,62 @@ package jvm;
  * @author Tomasz Grabiec
  */
 public class TrampolineBackpatchingTest extends TestCase {
-
-    public static int test(int x) {
+    public static int staticMethod(int x) {
         return x+x;
     }
 
-    public static int testBackpatchingOnTheFly(int x) {
-        /* No trampoline call should be generated for this,
-           because method test() is already compiled */
-        return test(x);
+    private class A {
+        public int virtualMethod(int x) {
+            return x+x;
+        }
+
+        private int privateMethod(int x) {
+            return x+x;
+        }
+
+        public int invokePrivate(int x) {
+            return privateMethod(x);
+        }
     }
 
-    static void testVTableBackpatching() {
-        /* Instantiating RuntimeException calls virtual method
-           Throwable.fillInStackTrace.  This tests proper functioning
-           of vtable back-patching */
-        new RuntimeException((String) null);
+    private class B extends A {
+        public int invokeSuper(int x) {
+            return super.virtualMethod(x);
+        }
+
+        public int invokeVirtual(int x) {
+            return virtualMethod(x);
+        }
     }
 
-    public int testArg(int a) {
-        return a+1;
+    public static void testInvokestatic() {
+        assertEquals(staticMethod(4), 8);
+    }
+
+    public  void testInvokevirtual() {
+        assertEquals(new A().virtualMethod(4), 8);
+        assertEquals(new B().invokeVirtual(4), 8);
+    }
+
+    public  void testInvokespecial() {
+        assertEquals(new A().invokePrivate(4), 8);
+        assertEquals(new B().invokeSuper(4), 8);
     }
 
     public static void main(String [] args) {
-        int x;
         TrampolineBackpatchingTest t = new TrampolineBackpatchingTest();
 
-        /* Test backpatching of multiple call sites
-           at once */
-        x = 1;
-        x = test(x);
-        x = test(x);
-        x = test(x);
-        assertEquals(x, 8);
+        testInvokestatic();
+        t.testInvokevirtual();
+        t.testInvokespecial();
 
-        x = testBackpatchingOnTheFly(8);
-        assertEquals(x, 16);
-
-        testVTableBackpatching();
-
-        /* Another invokevirtual backpatching test */
-        x = 1;
-        x = t.testArg(x);
-        x = t.testArg(x);
-        assertEquals(x, 3);
+        /*
+         * Run tests again to check if all call sites have
+         * been properly fixed.
+         */
+        testInvokestatic();
+        t.testInvokevirtual();
+        t.testInvokespecial();
 
         exit();
     }

@@ -23,9 +23,7 @@
  *
  * Please refer to the file LICENSE for details.
  */
-package jamvm;
-
-import jvm.TestCase;
+package jvm;
 
 /**
  * @author Pekka Enberg

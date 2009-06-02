@@ -219,12 +219,6 @@ static int print_expression_stmt(int lvl, struct string *str,
 	return print_expr_stmt(lvl, str, "EXPRESSION", stmt);
 }
 
-static int print_null_check_stmt(int lvl, struct string *str,
-				 struct statement *stmt)
-{
-	return print_expr_stmt(lvl, str, "NULL_CHECK", stmt);
-}
-
 static int print_array_check_stmt(int lvl, struct string *str,
 				  struct statement *stmt)
 {
@@ -262,6 +256,21 @@ static int print_checkcast_stmt(int lvl, struct string *str,
 	return err;
 }
 
+static int print_athrow_stmt(int lvl, struct string *str,
+			     struct statement *stmt)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "ATHROW:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "expression", stmt->expression);
+
+      out:
+	return err;
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -271,11 +280,11 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_RETURN] = print_return_stmt,
 	[STMT_VOID_RETURN] = print_void_return_stmt,
 	[STMT_EXPRESSION] = print_expression_stmt,
-	[STMT_NULL_CHECK] = print_null_check_stmt,
 	[STMT_ARRAY_CHECK] = print_array_check_stmt,
 	[STMT_MONITOR_ENTER] = print_monitor_enter_stmt,
 	[STMT_MONITOR_EXIT] = print_monitor_exit_stmt,
 	[STMT_CHECKCAST] = print_checkcast_stmt,
+	[STMT_ATHROW] = print_athrow_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)
@@ -708,6 +717,21 @@ static int print_exception_ref_expr(int lvl, struct string *str, struct expressi
 	return str_append(str, "[exception object reference]\n");
 }
 
+static int print_null_check_expr(int lvl, struct string *str,
+				 struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "NULL_CHECK:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "ref", expr->null_check_ref);
+
+ out:
+	return err;
+}
+
 typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
@@ -732,7 +756,8 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_MULTIANEWARRAY] = print_multianewarray_expr,
 	[EXPR_ARRAYLENGTH] = print_arraylength_expr,
 	[EXPR_INSTANCEOF] = print_instanceof_expr,
-	[EXPR_EXCEPTION_REF] = print_exception_ref_expr
+	[EXPR_EXCEPTION_REF] = print_exception_ref_expr,
+	[EXPR_NULL_CHECK] = print_null_check_expr
 };
 
 static int print_expr(int lvl, struct tree_node *root, struct string *str)

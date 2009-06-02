@@ -87,6 +87,12 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 	return ld_insn(INSN_LD_LOCAL, slot, var);
 }
 
+static inline struct insn *
+exception_spill_insn(struct stack_slot *slot)
+{
+	return NULL;
+}
+
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 

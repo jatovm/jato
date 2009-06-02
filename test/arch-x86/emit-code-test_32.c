@@ -5,13 +5,13 @@
 #include <jit/compilation-unit.h>
 #include <jit/basic-block.h>
 #include <jit/statement.h>
+#include <jit/emit-code.h>
 
 #include <vm/buffer.h>
 #include <vm/list.h>
 #include <vm/system.h>
 #include <vm/vm.h>
 
-#include <arch/emit-code.h>
 #include <arch/instruction.h>
 
 #include <test/vars.h>
@@ -153,24 +153,13 @@ void test_emit_prolog_has_locals(void)
 	free_buffer(buf);
 }
 
-void test_emit_epilog_no_locals(void)
-{
-	unsigned char expected[] = { 0x5d, 0x5b, 0x5e, 0x5f, 0xc3 };
-	struct buffer *buf;
-
-	buf = alloc_buffer();
-	emit_epilog(buf, 0);
-	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
-	free_buffer(buf);
-}
-
-void test_emit_epilog_has_locals(void)
+void test_emit_epilog(void)
 {
 	unsigned char expected[] = { 0xc9, 0x5b, 0x5e, 0x5f, 0xc3 };
 	struct buffer *buf;
 
 	buf = alloc_buffer();
-	emit_epilog(buf, 0x20);
+	emit_epilog(buf);
 	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
 	free_buffer(buf);
 }

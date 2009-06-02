@@ -8,9 +8,20 @@
 
 struct var_info;
 
+/*
+ *	Instruction type identifies the opcode, number of operands, and
+ * 	operand types.
+ */
+enum insn_type {
+	INSN_BLR,
+};
+
 struct insn {
-	unsigned long lir_pos;
-        struct list_head insn_list_node;
+	enum insn_type		type;
+	struct list_head	insn_list_node;
+	unsigned long		lir_pos;
+	unsigned long		bytecode_offset;
+	unsigned long		mach_offset;
 };
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
@@ -50,6 +61,12 @@ spill_insn(struct var_info *var, struct stack_slot *slot)
 
 static inline struct insn *
 reload_insn(struct stack_slot *slot, struct var_info *var)
+{
+	return NULL;
+}
+
+static inline struct insn *
+exception_spill_insn(struct stack_slot *slot)
 {
 	return NULL;
 }

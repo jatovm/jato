@@ -20,6 +20,7 @@ void __free_simple_bb(struct basic_block *);
 void free_simple_bb(struct basic_block *);
 
 void assert_value_expr(enum vm_type, long long, struct tree_node *);
+void assert_nullcheck_value_expr(enum vm_type, long long, struct tree_node *);
 void assert_fvalue_expr(enum vm_type, double, struct tree_node *);
 void assert_local_expr(enum vm_type, unsigned long, struct tree_node *);
 void assert_temporary_expr(struct tree_node *);

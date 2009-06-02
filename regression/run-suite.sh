@@ -53,6 +53,16 @@ done
 if [ -z "$CLASS_LIST" ]; then
     run_java jvm.ArrayTest 0
     run_java jvm.ObjectArrayTest 0
+    run_java jvm.ExitStatusIsZeroTest 0
+    run_java jvm.ExitStatusIsOneTest 1
+    run_java jvm.LoadConstantsTest 0
+    run_java jvm.IntegerArithmeticTest 0
+    run_java jvm.LongArithmeticTest 0
+    run_java jvm.ConversionTest 0
+    run_java jvm.ObjectCreationAndManipulationTest 0
+    run_java jvm.SynchronizationTest 0
+    run_java jvm.MethodInvocationAndReturnTest 0
+    run_java jvm.ControlTransferTest 0
     run_java jvm.PutstaticTest 0
     run_java jvm.PutfieldTest 0
     run_java jvm.TrampolineBackpatchingTest 0

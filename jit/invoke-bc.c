@@ -11,6 +11,7 @@
 #include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
+#include <jit/args.h>
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
@@ -57,40 +58,6 @@ static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 	return c;
 }
 
-static struct expression *insert_arg(struct expression *root,
-				     struct expression *expr)
-{
-	struct expression *_expr;
-
-	_expr = arg_expr(expr);
-	_expr->bytecode_offset = expr->bytecode_offset;
-
-	if (!root)
-		return _expr;
-
-	return args_list_expr(root, _expr);
-}
-
-static struct expression *convert_args(struct stack *mimic_stack,
-				       unsigned long nr_args)
-{
-	struct expression *args_list = NULL;
-	unsigned long i;
-
-	if (nr_args == 0) {
-		args_list = no_args_expr();
-		goto out;
-	}
-
-	for (i = 0; i < nr_args; i++) {
-		struct expression *expr = stack_pop(mimic_stack);
-		args_list = insert_arg(args_list, expr);
-	}
-
-  out:
-	return args_list;
-}
-
 static int convert_and_add_args(struct parse_context *ctx,
 				struct vm_method *invoke_target,
 				struct expression *expr)
@@ -131,6 +98,20 @@ static struct vm_method *resolve_invoke_target(struct parse_context *ctx)
 	idx = bytecode_read_u16(ctx->buffer);
 
 	return vm_class_resolve_method_recursive(ctx->cu->method->class, idx);
+}
+
+/* Replaces first argument with null check expression on that argument */
+static void null_check_first_arg(struct expression *arg)
+{
+	struct expression *expr;
+
+	if (expr_type(arg) == EXPR_ARG) {
+		expr = null_check_expr(to_expr(arg->arg_expression));
+		arg->arg_expression = &expr->node;
+	}
+
+	if (expr_type(arg) == EXPR_ARGS_LIST)
+		null_check_first_arg(to_expr(arg->args_right));
 }
 
 int convert_invokevirtual(struct parse_context *ctx)
@@ -178,6 +159,8 @@ int convert_invokespecial(struct parse_context *ctx)
 	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
 		goto failed;
+
+	null_check_first_arg(to_expr(expr->args_list));
 
 	err = insert_invoke_expr(ctx, expr);
 	if (err)

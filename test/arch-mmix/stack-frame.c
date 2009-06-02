@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008  Pekka Enberg
- * 
+ * Copyright (c) 2009 Tomasz Grabiec
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -23,12 +23,10 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <signal.h>
 
-void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
-{
-}
+#include <arch/stack-frame.h>
 
-void print_trace(void)
+bool is_jit_method(unsigned long eip)
 {
+	return false;
 }

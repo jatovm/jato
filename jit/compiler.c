@@ -11,6 +11,7 @@
 #include <jit/compiler.h>
 #include <jit/statement.h>
 #include <jit/bc-offset-mapping.h>
+#include <jit/exception.h>
 
 #include <vm/class.h>
 #include <vm/method.h>
@@ -26,7 +27,7 @@ static void compile_error(struct compilation_unit *cu, int err)
 	struct vm_class *class = method->class;
 
 	die("%s: Failed to compile method `%s' in class `%s', error: %i\n",
-	       __FUNCTION__, method->name, class->name, err);
+	       __func__, method->name, class->name, err);
 }
 
 int compile(struct compilation_unit *cu)
@@ -53,6 +54,10 @@ int compile(struct compilation_unit *cu)
 
 	if (opt_trace_tree_ir)
 		trace_tree_ir(cu);
+
+	err = insert_exception_spill_insns(cu);
+	if (err)
+		goto out;
 
 	err = select_instructions(cu);
 	if (err)

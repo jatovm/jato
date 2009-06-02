@@ -25,9 +25,10 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/basic-block.h>
-#include <jit/statement.h>
 #include <jit/compilation-unit.h>
+#include <jit/basic-block.h>
+#include <jit/emit-code.h>
+#include <jit/statement.h>
 #include <jit/compiler.h>
 
 #include <vm/list.h>
@@ -35,7 +36,6 @@
 #include <vm/method.h>
 #include <vm/string.h>
 
-#include <arch/emit-code.h>
 #include <arch/instruction.h>
 #include <arch/memory.h>
 
@@ -369,10 +369,21 @@ static int print_push_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->operand);
 }
 
+static int print_pop_memlocal(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memlocal(str, &insn->operand);
+}
+
 static int print_pop_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg(str, &insn->operand);
+}
+
+static int print_ret(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
 }
 
 static int print_sar_imm_reg(struct string *str, struct insn *insn)
@@ -435,6 +446,11 @@ static int print_sub_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_test_membase_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase_reg(str, insn);
+}
 
 static int print_xor_membase_reg(struct string *str, struct insn *insn)
 {
@@ -489,7 +505,9 @@ static print_insn_fn insn_printers[] = {
 	[INSN_OR_REG_REG] = print_or_reg_reg,
 	[INSN_PUSH_IMM] = print_push_imm,
 	[INSN_PUSH_REG] = print_push_reg,
+	[INSN_POP_MEMLOCAL] = print_pop_memlocal,
 	[INSN_POP_REG] = print_pop_reg,
+	[INSN_RET] = print_ret,
 	[INSN_SAR_IMM_REG] = print_sar_imm_reg,
 	[INSN_SAR_REG_REG] = print_sar_reg_reg,
 	[INSN_SBB_IMM_REG] = print_sbb_imm_reg,
@@ -500,6 +518,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_SUB_IMM_REG] = print_sub_imm_reg,
 	[INSN_SUB_MEMBASE_REG] = print_sub_membase_reg,
 	[INSN_SUB_REG_REG] = print_sub_reg_reg,
+	[INSN_TEST_MEMBASE_REG] = print_test_membase_reg,
 	[INSN_XOR_MEMBASE_REG] = print_xor_membase_reg,
 	[INSN_XOR_IMM_REG] = print_xor_imm_reg,
 };

@@ -6,7 +6,9 @@
 #include <vm/buffer.h>
 #include <vm/stack.h>
 #include <vm/vm.h>
+
 #include <pthread.h>
+#include <stdbool.h>
 
 struct compilation_unit;
 struct expression;
@@ -61,6 +63,10 @@ struct fixup_site *alloc_fixup_site(void);
 void free_fixup_site(struct fixup_site *);
 void trampoline_add_fixup_site(struct jit_trampoline *, struct fixup_site *);
 unsigned char *fixup_site_addr(struct fixup_site *);
+
+bool is_jit_method(unsigned long eip);
+
+void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target);
 
 extern bool opt_trace_method;
 extern bool opt_trace_cfg;

@@ -26,6 +26,7 @@
 
 #include <assert.h>
 
+#include <jit/compilation-unit.h>
 #include <jit/expression.h>
 #include <vm/method.h>
 #include <vm/vm.h>
@@ -96,4 +97,13 @@ unsigned long frame_locals_size(struct stack_frame *frame)
 
 	nr_locals = frame->nr_local_slots - frame->nr_args;
 	return __index_to_offset(nr_locals + frame->nr_spill_slots);
+}
+
+/*
+ * Returns total offset to subtract from ESP to reserve space for locals.
+ */
+unsigned long cu_frame_locals_offset(struct compilation_unit *cu)
+{
+	unsigned long frame_size = frame_locals_size(cu->stack_frame);
+	return frame_size * sizeof(unsigned long);
 }

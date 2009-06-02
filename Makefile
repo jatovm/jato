@@ -56,7 +56,6 @@ JIT_OBJS = \
 	jit/compilation-unit.o	\
 	jit/compiler.o		\
 	jit/disass-common.o	\
-	jit/disass.o		\
 	jit/emit.o		\
 	jit/emulate.o		\
 	jit/expression.o	\
@@ -79,7 +78,9 @@ JIT_OBJS = \
 	jit/vtable.o		\
 	jit/fixup-site.o	\
 	jit/exception.o 	\
-	jit/bc-offset-mapping.o
+	jit/bc-offset-mapping.o \
+	jit/cu-mapping.o	\
+	jit/method.o
 
 VM_OBJS = \
 	vm/jato-cafebabe.o	\
@@ -92,9 +93,11 @@ VM_OBJS = \
 	vm/debug-dump.o		\
 	vm/die.o		\
 	vm/field.o		\
+	vm/list.o		\
 	vm/method.o		\
 	vm/natives.o		\
 	vm/object.o		\
+	vm/radix-tree.o		\
 	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack.o		\
@@ -102,7 +105,6 @@ VM_OBJS = \
 	vm/types.o		\
 	vm/utf8.o		\
 	vm/zalloc.o		\
-	vm/list.o
 
 JAMVM_OBJS =
 
@@ -132,7 +134,7 @@ CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
 
-DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99
+DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99 -D_GNU_SOURCE
 
 # XXX: Temporary hack -Vegard
 DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
@@ -201,18 +203,18 @@ test: $(JAMVM_ARCH_H) monoburg
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
 	regression/jvm/TestCase.class \
-	regression/jamvm/ExitStatusIsOneTest.class \
-	regression/jamvm/ExitStatusIsZeroTest.class \
-	regression/jamvm/LoadConstantsTest.class \
-	regression/jamvm/IntegerArithmeticTest.class \
-	regression/jamvm/LongArithmeticTest.class \
-	regression/jamvm/ObjectCreationAndManipulationTest.class \
-	regression/jamvm/ControlTransferTest.class \
-	regression/jamvm/SynchronizationTest.class \
-	regression/jamvm/MethodInvocationAndReturnTest.class \
-	regression/jamvm/ConversionTest.class \
 	regression/jvm/ArrayTest.class \
 	regression/jvm/ObjectArrayTest.class \
+	regression/jvm/ExitStatusIsOneTest.class \
+	regression/jvm/ExitStatusIsZeroTest.class \
+	regression/jvm/LoadConstantsTest.class \
+	regression/jvm/IntegerArithmeticTest.class \
+	regression/jvm/LongArithmeticTest.class \
+	regression/jvm/ObjectCreationAndManipulationTest.class \
+	regression/jvm/ControlTransferTest.class \
+	regression/jvm/SynchronizationTest.class \
+	regression/jvm/MethodInvocationAndReturnTest.class \
+	regression/jvm/ConversionTest.class \
 	regression/jvm/PutstaticTest.class \
 	regression/jvm/PutfieldTest.class \
 	regression/jvm/StringTest.class \

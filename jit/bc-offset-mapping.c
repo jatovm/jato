@@ -43,13 +43,23 @@ void tree_patch_bc_offset(struct tree_node *node, unsigned long bc_offset)
 	if (node_is_stmt(node)) {
 		struct statement *stmt = to_stmt(node);
 
-		if (stmt->bytecode_offset == BC_OFFSET_UNKNOWN)
-			stmt->bytecode_offset = bc_offset;
+		if (stmt->bytecode_offset != BC_OFFSET_UNKNOWN)
+			return;
+
+		stmt->bytecode_offset = bc_offset;
 	} else {
 		struct expression *expr = to_expr(node);
+		int i;
 
-		if (expr->bytecode_offset == BC_OFFSET_UNKNOWN)
-			expr->bytecode_offset = bc_offset;
+		if (expr->bytecode_offset != BC_OFFSET_UNKNOWN)
+			return;
+
+		expr->bytecode_offset = bc_offset;
+
+		/* We should propagate bytecode offset to expressions
+		   contained by this one. */
+		for (i = 0; i < expr_nr_kids(expr); i++)
+			tree_patch_bc_offset(expr->node.kids[i], bc_offset);
 	}
 }
 

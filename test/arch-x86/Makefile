@@ -12,7 +12,7 @@ ARCH_POSTFIX	= _64
 endif
 
 ARCH_CONFIG	:= ../../arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
-DEFAULT_CFLAGS	:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99
+DEFAULT_CFLAGS	:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99 -D_GNU_SOURCE
 INCLUDE		:= -I. -I../../arch/$(ARCH)/include -I../libharness -I../jit -I../../include -I../../cafebabe/include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
 MONOBURG	:= ../../monoburg/monoburg
 
@@ -40,6 +40,7 @@ OBJS = \
 	../../vm/class.o \
 	../../vm/classloader.o \
 	../../vm/field.o \
+	../../vm/die.o \
 	../../vm/list.o \
 	../../vm/method.o \
 	../../vm/object.o \
@@ -48,6 +49,7 @@ OBJS = \
 	../../vm/types.o \
 	../../vm/utf8.o \
 	../../vm/zalloc.o \
+	../../vm/radix-tree.o \
 	../../jit/alloc.o \
 	../../jit/basic-block.o \
 	../../jit/compilation-unit.o \
@@ -61,11 +63,16 @@ OBJS = \
 	../../jit/fixup-site.o \
 	../../jit/bc-offset-mapping.o \
 	../../jit/vtable.o \
+	../../jit/exception.o \
+	../../jit/cu-mapping.o \
+	../../jit/method.o \
 	../../arch/x86/emit-code$(ARCH_POSTFIX).o \
 	../../arch/x86/instruction.o \
 	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \
 	../../arch/x86/stack-frame.o \
 	../../arch/x86/use-def.o \
+	../../arch/x86/exception.o \
+	../../arch/x86/unwind$(ARCH_POSTFIX).o \
 	$(TESTS)
 
 TESTS = \

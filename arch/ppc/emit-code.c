@@ -24,58 +24,57 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/basic-block.h>
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <jit/emulate.h>
-#include <jit/expression.h>
-#include <jit/statement.h>
-
 #include <arch/instruction.h>
-#include <arch/stack-frame.h>
+#include <jit/basic-block.h>
+#include <jit/emit-code.h>
+#include <vm/buffer.h>
 
-#include <assert.h>
-#include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include <vm/class.h>
+#define 	NOT_IMPLEMENTED abort();
 
-#include <../jamvm/lock.h>
-
-#define MBCGEN_TYPE struct basic_block
-#define MBCOST_DATA struct basic_block
-#define MBTREE_TYPE struct tree_node
-#define MBTREE_OP(t) tree_op(t)
-#define MBTREE_LEFT(t) tree->kids[0]
-#define MBTREE_RIGHT(t) tree->kids[1]
-#define MBREG_TYPE struct var_info *
-
-#define MBMAX_OPCODES STMT_LAST
-
-#define MONOBURG_LOG 1
-#define HAVE_ARRAY_ELEM_INIT 1
-
-%%
-
-%termprefix EXPR_ OP_ STMT_
-
-%start stmt
-
-reg:	EXPR_VALUE	0
+void emit_prolog(struct buffer *buffer, unsigned long nr_locals)
 {
-	abort();
+		NOT_IMPLEMENTED
 }
 
-stmt:	STMT_RETURN(reg)
+void emit_epilog(struct buffer *buffer)
 {
-	abort();
+	NOT_IMPLEMENTED
 }
 
-%%
-
-int select_instructions(struct compilation_unit *cu)
+void emit_body(struct basic_block *bb, struct buffer *buffer)
 {
-	abort();
+	NOT_IMPLEMENTED
+}
+
+void emit_trampoline(struct compilation_unit *cu, void *call_target,
+		     struct jit_trampoline *trampoline)
+{
+	NOT_IMPLEMENTED
+}
+
+void emit_unwind(struct buffer *buffer)
+{
+	NOT_IMPLEMENTED
+}
+
+void emit_lock(struct buffer *buffer, struct object *object)
+{
+	NOT_IMPLEMENTED
+}
+
+void emit_lock_this(struct buffer *buffer)
+{
+	NOT_IMPLEMENTED
+}
+
+void emit_unlock(struct buffer *buffer, struct object *object)
+{
+	NOT_IMPLEMENTED
+}
+
+void emit_unlock_this(struct buffer *buffer)
+{
+	NOT_IMPLEMENTED
 }

@@ -33,7 +33,7 @@ enum machine_reg {
 	REG_EDX = REG_RDX,
 	REG_EBX = REG_RBX,
 	REG_ESI = REG_RSI,
-	RED_EDI = REG_RDI,
+	REG_EDI = REG_RDI,
 	REG_ESP = REG_RSP,
 	REG_EBP = REG_RBP,
 };

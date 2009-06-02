@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include <string.h>
 
 #include <cafebabe/attribute_array.h>

@@ -21,6 +21,8 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count);
 struct vm_object *
 vm_object_alloc_string(const uint8_t bytes[], unsigned int length);
 
+struct vm_object *new_exception(char *class_name, char *message);
+
 bool vm_object_is_instance_of(struct vm_object *obj, struct vm_object *class);
 void vm_object_check_null(struct vm_object *obj);
 void vm_object_check_array(struct vm_object *obj, unsigned int index);

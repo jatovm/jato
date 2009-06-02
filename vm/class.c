@@ -24,8 +24,6 @@
  * Please refer to the file LICENSE for details.
  */
 
-#define _GNU_SOURCE
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -36,10 +34,12 @@
 
 #include <vm/class.h>
 #include <vm/classloader.h>
+#include <vm/die.h>
 #include <vm/field.h>
 #include <vm/method.h>
 #include <vm/vm.h>
 
+#include <jit/compiler.h>
 #include <jit/vtable.h>
 
 static void

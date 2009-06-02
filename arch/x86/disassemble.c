@@ -31,10 +31,9 @@
 
 */
 
-#include "disass.h"
-
-#include <jit/compiler.h>
 #include <jit/bc-offset-mapping.h>
+#include <jit/disassemble.h>
+#include <jit/compiler.h>
 #include <vm/string.h>
 
 #include <assert.h>
@@ -62,12 +61,6 @@ char *regs[] = {
 
 *******************************************************************************/
 
-#ifdef CONFIG_PPC_32
-unsigned char *disassinstr(unsigned char *code)
-{
-	return NULL;
-}
-#else
 unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 {
 	unsigned long seqlen;
@@ -113,4 +106,3 @@ unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 
 	return code;
 }
-#endif

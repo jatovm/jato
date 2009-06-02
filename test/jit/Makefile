@@ -15,11 +15,14 @@ OBJS = \
 	../../vm/buffer.o \
 	../../vm/bytecode.o \
 	../../vm/bytecodes.o \
+	../../vm/die.o \
 	../../vm/list.o \
 	../../vm/stack.o \
 	../../vm/string.o \
 	../../vm/types.o \
 	../../vm/zalloc.o \
+	../../vm/radix-tree.o \
+	../../jit/alloc.o \
 	../../jit/arithmetic-bc.o \
 	../../jit/basic-block.o \
 	../../jit/branch-bc.o \
@@ -43,13 +46,17 @@ OBJS = \
 	../../jit/args.o \
 	../../jit/exception.o \
 	../../jit/bc-offset-mapping.o \
+	../../jit/cu-mapping.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \
+	../jamvm/thread-stub.o \
+	../jamvm/cast-stub.o \
 	../vm/class-stub.o \
 	../vm/object-stub.o \
 	../arch-mmix/instruction.o \
 	../arch-mmix/use-def.o \
+	../arch-mmix/stack-frame.o \
 	arithmetic-bc-test.o \
 	basic-block-test.o \
 	bc-test-utils.o \

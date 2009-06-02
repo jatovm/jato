@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2008 Saeed Siam
+ * Copyright (c) 2009 Tomasz Grabiec
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -27,13 +28,45 @@
 #include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
+#include <jit/expression.h>
 
-#include <vm/bytecodes.h>
 #include <vm/stack.h>
 
 #include <errno.h>
 
 int convert_athrow(struct parse_context *ctx)
 {
+	struct stack *mimic_stack = ctx->bb->mimic_stack;
+	struct expression *exception_ref;
+	struct expression *nullcheck;
+	struct statement *stmt;
+
+	stmt = alloc_statement(STMT_ATHROW);
+	if (!stmt)
+		return -ENOMEM;
+
+	exception_ref = stack_pop(mimic_stack);
+
+	nullcheck = null_check_expr(exception_ref);
+	if (!nullcheck)
+		return -ENOMEM;
+
+	stmt->exception_ref = &nullcheck->node;
+
+	/*
+	 * According to the JVM specification athrow operation is
+	 * supposed to discard the java stack and push exception
+	 * reference on it. We don't do the latter because exception
+	 * reference is not transferred to exception handlers in
+	 * BC2IR layer.
+	 */
+	while (!stack_is_empty(mimic_stack)) {
+		struct expression *expr = stack_pop(mimic_stack);
+
+		expr_put(expr);
+	}
+
+	convert_statement(ctx, stmt);
+
 	return 0;
 }

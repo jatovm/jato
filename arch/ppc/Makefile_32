@@ -1,4 +1,9 @@
 ARCH_OBJS = \
 	arch/ppc/backtrace.o \
+	arch/ppc/disassemble.o \
+	arch/ppc/emit-code.o \
+	arch/ppc/exception.o \
 	arch/ppc/insn-selector_32.o \
-	arch/ppc/instruction.o
+	arch/ppc/instruction.o \
+	arch/ppc/lir-printer.o \
+	arch/ppc/signal.o \

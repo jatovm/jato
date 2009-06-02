@@ -7,18 +7,20 @@
 #include <vm/stack.h>
 
 #include <arch/stack-frame.h>
-#include <arch/instruction.h>
 
 #include <stdbool.h>
 #include <pthread.h>
 
 struct buffer;
 struct vm_method;
+struct insn;
+enum machine_reg;
 
 struct compilation_unit {
 	struct vm_method *method;
 	struct list_head bb_list;
 	struct basic_block *exit_bb;
+	struct basic_block *unwind_bb;
 	struct var_info *var_infos;
 	unsigned long nr_vregs;
 	struct buffer *objcode;
@@ -34,6 +36,9 @@ struct compilation_unit {
 	/* The stack frame contains information of stack slots for stack-based
 	   arguments, local variables, and spill/reload storage.  */
 	struct stack_frame *stack_frame;
+
+	/* It's needed to spill exception object reference at eh entry */
+	struct stack_slot *exception_spill_slot;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

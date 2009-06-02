@@ -24,12 +24,66 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <vm/backtrace.h>
-#include <stddef.h>
+#include <jit/exception.h>
 
-static void signal_handler(int sig, siginfo_t *si, void *unused)
+#include <vm/backtrace.h>
+#include <vm/class.h>
+
+#include <arch/signal.h>
+
+#include <ucontext.h>
+#include <stddef.h>
+#include <unistd.h>
+
+static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 {
-	print_backtrace_and_die(sig, si, unused);
+	if (signal_from_jit_method(ctx) && si->si_code == FPE_INTDIV) {
+		struct vm_object *exception;
+
+		/* TODO: exception's stack trace should be filled using ctx */
+		exception = new_exception(
+			"java/lang/ArithmeticException", "division by zero");
+		if (exception == NULL) {
+			/* TODO: throw OutOfMemoryError */
+			fprintf(stderr, "%s: Out of memory\n", __func__);
+			goto exit;
+		}
+
+		throw_exception_from_signal(ctx, exception);
+		return;
+	}
+
+ exit:
+	print_backtrace_and_die(sig, si, ctx);
+}
+
+static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
+{
+	/* Assume that zero-page access is caused by dereferencing a
+	   null pointer */
+	if (signal_from_jit_method(ctx) &&
+	    ((unsigned long)si->si_addr < (unsigned long)getpagesize())) {
+		struct vm_object *exception;
+
+		/* TODO: exception's stack trace should be filled using ctx */
+		exception = new_exception("java/lang/NullPointerException", NULL);
+		if (exception == NULL) {
+			/* TODO: throw OutOfMemoryError */
+			fprintf(stderr, "%s: Out of memory\n", __func__);
+			goto exit;
+		}
+
+		throw_exception_from_signal(ctx, exception);
+		return;
+	}
+
+ exit:
+	print_backtrace_and_die(sig, si, ctx);
+}
+
+static void signal_handler(int sig, siginfo_t *si, void *ctx)
+{
+	print_backtrace_and_die(sig, si, ctx);
 }
 
 void setup_signal_handlers(void)
@@ -38,8 +92,13 @@ void setup_signal_handlers(void)
 
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags	= SA_RESTART | SA_SIGINFO;
-	sa.sa_sigaction	= signal_handler;
-   
+
+	sa.sa_sigaction	= sigsegv_handler;
 	sigaction(SIGSEGV, &sa, NULL);
+
+	sa.sa_sigaction	= sigfpe_handler;
+	sigaction(SIGFPE, &sa, NULL);
+
+	sa.sa_sigaction	= signal_handler;
 	sigaction(SIGUSR1, &sa, NULL);
 }

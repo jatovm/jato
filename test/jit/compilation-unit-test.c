@@ -3,6 +3,7 @@
  */
 
 #include <libharness.h>
+#include <arch/instruction.h>
 #include <jit/compilation-unit.h>
 #include <vm/method.h>
 #include <vm/vm.h>

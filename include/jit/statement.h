@@ -13,7 +13,6 @@ enum statement_type {
 	STMT_RETURN,
 	STMT_VOID_RETURN,
 	STMT_EXPRESSION,
-	STMT_NULL_CHECK,
 	STMT_ARRAY_CHECK,
 	STMT_ATHROW,
 	STMT_MONITOR_ENTER,
@@ -26,8 +25,8 @@ struct statement {
 	union {
 		struct tree_node node;
 
-		/* STMT_VOID_RETURN and STMT_ATHROW has no members in this struct.  */
-		
+		/* STMT_VOID_RETURN has no members in this struct.  */
+
 		struct /* STMT_STORE */ {
 			struct tree_node *store_dest;
 			struct tree_node *store_src;
@@ -46,7 +45,10 @@ struct statement {
 			struct tree_node *checkcast_ref;
 			struct vm_class *checkcast_class;
 		};
-		/* STMT_EXPRESSION, STMT_NULL_CHECK, STMT_ARRAY_CHECK */
+		struct /* STMT_ATHROW */ {
+			struct tree_node *exception_ref;
+		};
+		/* STMT_EXPRESSION, STMT_ARRAY_CHECK */
 		struct tree_node *expression;
 	};
 	struct list_head stmt_list_node;

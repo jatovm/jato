@@ -35,6 +35,7 @@ enum expression_type {
 	EXPR_ARRAYLENGTH,
 	EXPR_INSTANCEOF,
 	EXPR_EXCEPTION_REF,
+	EXPR_NULL_CHECK,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -228,6 +229,10 @@ struct expression {
 			struct tree_node *instanceof_ref;
 			struct vm_object *instanceof_class;
 		};
+
+		/* EXPR_NULL_CHECK is used to assure that NullPointerException
+		   will be thrown if reference is null. */
+		struct tree_node *null_check_ref;
 	};
 };
 
@@ -279,8 +284,10 @@ struct expression *multianewarray_expr(struct vm_object *);
 struct expression *arraylength_expr(struct expression *);
 struct expression *instanceof_expr(struct expression *, struct vm_object *);
 struct expression *exception_ref_expr(void);
+struct expression *null_check_expr(struct expression *);
 
 unsigned long nr_args(struct expression *);
+int expr_nr_kids(struct expression *);
 
 static inline int is_invoke_expr(struct expression *expr)
 {

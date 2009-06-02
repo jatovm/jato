@@ -17,8 +17,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#define _GNU_SOURCE
-
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -35,6 +33,7 @@
 #include "cafebabe/stream.h"
 
 #include "jit/compiler.h"
+#include "jit/cu-mapping.h"
 
 #include "vm/class.h"
 #include "vm/classloader.h"
@@ -142,6 +141,7 @@ main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	init_cu_mapping();
 	jit_init_natives();
 
 	const char *classname = argv[1];

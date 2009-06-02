@@ -247,11 +247,9 @@ static void assert_convert_array_load(enum vm_type expected_type,
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = stmt_entry(nullcheck->stmt_list_node.next);
+	struct statement *arraycheck = stmt;
 	struct statement *store_stmt = stmt_entry(arraycheck->stmt_list_node.next);
 
-	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr, arraycheck);
 
 	assert_store_stmt(store_stmt);
@@ -344,11 +342,9 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	struct statement *nullcheck = stmt;
-	struct statement *arraycheck = stmt_entry(nullcheck->stmt_list_node.next);
+	struct statement *arraycheck = stmt;
 	struct statement *store_stmt = stmt_entry(arraycheck->stmt_list_node.next);
 
-	assert_null_check_stmt(arrayref_expr, nullcheck);
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr,
 			       arraycheck);
 

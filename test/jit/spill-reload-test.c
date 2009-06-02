@@ -24,6 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <arch/instruction.h>
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
 #include <vm/class.h>
