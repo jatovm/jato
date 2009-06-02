@@ -16,10 +16,11 @@
 #include <stdlib.h>
 
 enum bytecode_type {
-	BYTECODE_NORMAL = 0x01,
-	BYTECODE_BRANCH = 0x02,
-	BYTECODE_WIDE   = 0x04,
-	BYTECODE_RETURN = 0x08,
+	BYTECODE_NORMAL		= 0x01,
+	BYTECODE_BRANCH		= 0x02,
+	BYTECODE_WIDE		= 0x04,
+	BYTECODE_RETURN		= 0x08,
+	BYTECODE_VARIABLE_LEN	= 0x10,
 };
 
 struct bytecode_info {
