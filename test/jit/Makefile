@@ -39,6 +39,7 @@ OBJS = \
 	../../jit/exception.o \
 	../../jit/bc-offset-mapping.o \
 	../../jit/cu-mapping.o \
+	../../jit/nop-bc.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \

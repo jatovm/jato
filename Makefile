@@ -81,7 +81,8 @@ JIT_OBJS = \
 	jit/exception.o 	\
 	jit/bc-offset-mapping.o \
 	jit/cu-mapping.o	\
-	jit/method.o
+	jit/method.o		\
+	jit/nop-bc.o
 
 VM_OBJS = \
 	vm/bitset.o		\

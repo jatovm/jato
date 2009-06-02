@@ -40,13 +40,9 @@
 #include <errno.h>
 #include <stdio.h>
 
-#define DECLARE_CONVERTER(name) int name(struct parse_context *)
+typedef int (*convert_fn_t) (struct parse_context *);
 
-static int convert_nop(struct parse_context *ctx)
-{
-	/* Do nothing. */
-	return 0;
-}
+#define DECLARE_CONVERTER(name) int name(struct parse_context *)
 
 DECLARE_CONVERTER(convert_aaload);
 DECLARE_CONVERTER(convert_aastore);
@@ -221,6 +217,7 @@ DECLARE_CONVERTER(convert_monitor_enter);
 DECLARE_CONVERTER(convert_monitor_exit);
 DECLARE_CONVERTER(convert_multianewarray);
 DECLARE_CONVERTER(convert_new);
+DECLARE_CONVERTER(convert_nop);
 DECLARE_CONVERTER(convert_newarray);
 DECLARE_CONVERTER(convert_non_void_return);
 DECLARE_CONVERTER(convert_pop);
@@ -236,8 +233,6 @@ DECLARE_CONVERTER(convert_xcmpg);
 DECLARE_CONVERTER(convert_xcmpg);
 DECLARE_CONVERTER(convert_xcmpl);
 DECLARE_CONVERTER(convert_xcmpl);
-
-typedef int (*convert_fn_t) (struct parse_context *);
 
 static convert_fn_t converters[] = {
 	[OPC_AALOAD] 		= convert_aaload,
