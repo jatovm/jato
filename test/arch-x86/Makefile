@@ -59,6 +59,7 @@ OBJS = \
 	../../arch/x86/use-def.o \
 	../../arch/x86/exception.o \
 	../../arch/x86/unwind$(ARCH_POSTFIX).o \
+	../../arch/x86/thread.o \
 	$(TESTS)
 
 TESTS = \

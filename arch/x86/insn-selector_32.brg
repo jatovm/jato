@@ -18,6 +18,7 @@
 
 #include <arch/instruction.h>
 #include <arch/stack-frame.h>
+#include <arch/thread.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -44,6 +45,8 @@
 
 static void select_insn(struct basic_block *bb, struct tree_node *tree,
 			struct insn *instruction);
+static void select_exception_test(struct basic_block *bb,
+				  struct tree_node *tree);
 
 static unsigned char type_to_scale(enum vm_type vm_type)
 {
@@ -570,6 +573,7 @@ reg:	OP_CMP(reg, EXPR_VALUE) 1
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_lcmp));
 	method_args_cleanup(s, tree, 4);
+	select_exception_test(s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 }
@@ -722,6 +726,7 @@ reg:	EXPR_NEW
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->class));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocObject));
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
 }
 
 reg:	EXPR_NEWARRAY(reg)
@@ -741,6 +746,7 @@ reg:	EXPR_NEWARRAY(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocTypeArray));
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 reg:	EXPR_NULL_CHECK(reg)
@@ -794,6 +800,7 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocMultiArray));
 
 	method_args_cleanup(s, tree, dimension + 3);
+	select_exception_test(s, tree);
 }
 
 reg:    EXPR_ANEWARRAY(reg)
@@ -814,6 +821,7 @@ reg:    EXPR_ANEWARRAY(reg)
         select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocArray));
 
         method_args_cleanup(s, tree, 3);
+	select_exception_test(s, tree);
 }
 
 reg:    EXPR_ARRAYLENGTH(reg)
@@ -845,6 +853,7 @@ reg:	EXPR_INSTANCEOF(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) is_object_instance_of));
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 reg:	EXPR_CONVERSION(reg)
@@ -1175,6 +1184,7 @@ stmt:	STMT_ARRAY_CHECK(array_check)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) check_array));
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_IF(reg)
@@ -1208,6 +1218,7 @@ stmt:	STMT_MONITOR_ENTER(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) objectLock));
 
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_MONITOR_EXIT(reg)
@@ -1219,6 +1230,7 @@ stmt:	STMT_MONITOR_EXIT(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) objectUnlock));
 
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_CHECKCAST(reg)
@@ -1235,6 +1247,7 @@ stmt:	STMT_CHECKCAST(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)check_cast));
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 %%
@@ -1244,6 +1257,28 @@ static void select_insn(struct basic_block *bb, struct tree_node *tree,
 {
 	instruction->bytecode_offset = tree_bytecode_offset(tree);
 	bb_add_insn(bb, instruction);
+}
+
+/*
+ * Selects code checking whether exception occured. When this is the case
+ * exception will be thrown.
+ *
+ * NOTICE: exception test should be always selected _after_
+ * method args cleanup or stack overflow may occure if exceptions
+ * are thrown locally in a loop.
+ */
+static void select_exception_test(struct basic_block *bb,
+				  struct tree_node *tree)
+{
+	unsigned long exception_guard_offset;
+	struct var_info *reg;
+
+	reg = get_var(bb->b_parent);
+
+	exception_guard_offset = get_thread_local_offset(&exception_guard);
+
+	select_insn(bb, tree, imm_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, exception_guard_offset, reg));
+	select_insn(bb, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
 }
 
 static void __binop_reg_local(struct _MBState *state, struct basic_block *bb,
@@ -1394,6 +1429,7 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) func));
 	method_args_cleanup(s, tree, 4);
+	select_exception_test(s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx)
