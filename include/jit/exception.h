@@ -39,6 +39,7 @@ unsigned char *throw_exception(struct compilation_unit *cu,
 void throw_exception_from_signal(void *ctx, struct object *exception);
 void unwind(void);
 void signal_exception(struct object *obj);
+void signal_new_exception(char *class_name, char *msg);
 void clear_exception(void);
 struct object *exception_occurred(void);
 void init_exceptions(void);

@@ -46,6 +46,7 @@ OBJS = \
 	../jamvm/resolve-stub.o \
 	../jamvm/thread-stub.o \
 	../jamvm/cast-stub.o \
+	../jamvm/class-stub.o \
 	../arch-mmix/instruction.o \
 	../arch-mmix/use-def.o \
 	../arch-mmix/stack-frame.o \

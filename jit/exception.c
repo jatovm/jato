@@ -32,6 +32,7 @@
 
 #include <vm/guard-page.h>
 #include <vm/buffer.h>
+#include <vm/class.h>
 #include <vm/die.h>
 
 #include <arch/stack-frame.h>
@@ -70,6 +71,14 @@ void signal_exception(struct object *exception)
 {
 	getExecEnv()->exception = exception;
 	exception_guard = exceptions_guard_page;
+}
+
+void signal_new_exception(char *class_name, char *msg)
+{
+	struct object *e;
+
+	e = new_exception(class_name, msg);
+	signal_exception(e);
 }
 
 struct object *exception_occurred(void)
