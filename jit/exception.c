@@ -61,15 +61,23 @@ void thread_init_exceptions(void)
 }
 
 /**
- * signal_exception - used for signaling that exception has occurred in
- *         jato functions.  Exception will be thrown as soon as
- *         controll is returned back to JIT method code.
+ * signal_exception - used for signaling that exception has occurred
+ *         in jato functions. Exception will be thrown as soon as
+ *         controll is returned back to JIT method code. If another
+ *         exception is already signalled no action is done.
  *
  * @exception: exception object to be thrown.
  */
 void signal_exception(struct object *exception)
 {
+	if (getExecEnv()->exception)
+		return;
+
+	if (exception == NULL)
+		die("%s: exception is NULL.", __func__);
+
 	getExecEnv()->exception = exception;
+
 	exception_guard = exceptions_guard_page;
 }
 
