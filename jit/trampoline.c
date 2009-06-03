@@ -51,8 +51,10 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
 {
-	if (!cu->is_compiled)
-		compile(cu);
+	if (cu->is_compiled)
+		return buffer_ptr(cu->objcode);
+
+	compile(cu);
 
 	if (add_cu_mapping(cu) != 0)
 		die("out of memory");
