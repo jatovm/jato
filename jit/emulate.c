@@ -42,10 +42,12 @@ int emulate_lcmp(long long value1, long long value2)
 long long emulate_ldiv(long long value1, long long value2)
 {
 	if (value2 == 0) {
-		struct object *exception = new_exception(
-		    "java/lang/ArithmeticException", "division by zero");
+		struct object *e;
 
-		signal_exception(exception);
+		e = new_exception("java/lang/ArithmeticException", "division by zero");
+
+		signal_exception(e);
+
 		return 0;
 	}
 
@@ -55,10 +57,12 @@ long long emulate_ldiv(long long value1, long long value2)
 long long emulate_lrem(long long value1, long long value2)
 {
 	if (value2 == 0) {
-		struct object *exception = new_exception(
-		    "java/lang/ArithmeticException", "division by zero");
+		struct object *e;
 
-		signal_exception(exception);
+		e = new_exception("java/lang/ArithmeticException", "division by zero");
+
+		signal_exception(e);
+
 		return 0;
 	}
 
