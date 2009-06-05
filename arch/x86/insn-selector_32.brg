@@ -1429,7 +1429,6 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) func));
 	method_args_cleanup(s, tree, 4);
-	select_exception_test(s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx)
