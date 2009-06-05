@@ -24,10 +24,13 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <jit/exception.h>
 #include <jit/compiler.h>
+#include <vm/string.h>
 #include <vm/die.h>
 #include <vm/vm.h>
 #include <stdlib.h>
+#include <errno.h>
 
 typedef void (*exception_init_fn)(struct object *, struct object *);
 
@@ -84,9 +87,45 @@ void check_array(struct object *obj, unsigned int index)
 
 void check_cast(struct object *obj, struct object *type)
 {
-	if (!obj)
+	struct string *str;
+	int err;
+
+	if (!obj || isInstanceOf(type, obj->class))
 		return;
 
-	if (!isInstanceOf(type, obj->class))
-		abort();
+	if (exception_occurred())
+		goto throw;
+
+	str = alloc_str();
+	if (str == NULL) {
+		err = -ENOMEM;
+		goto error;
+	}
+
+	err = str_append(str, slash2dots(CLASS_CB(obj->class)->name));
+	if (err)
+		goto error;
+
+	err = str_append(str, " cannot be cast to ");
+	if (err)
+		goto error;
+
+	err = str_append(str, slash2dots(CLASS_CB(type)->name));
+	if (err)
+		goto error;
+
+	signal_new_exception("java/lang/ClassCastException", str->value);
+	free_str(str);
+ throw:
+	throw_from_native(2 * sizeof(struct object *));
+	return;
+
+ error:
+	if (str)
+		free_str(str);
+
+	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
+		die("%s: out of memory", __func__);
+
+	die("%s: error %d", __func__, err);
 }

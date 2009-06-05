@@ -1247,7 +1247,6 @@ stmt:	STMT_CHECKCAST(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)check_cast));
 
 	method_args_cleanup(s, tree, 2);
-	select_exception_test(s, tree);
 }
 
 %%

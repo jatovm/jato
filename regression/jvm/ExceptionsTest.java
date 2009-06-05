@@ -44,6 +44,9 @@ public class ExceptionsTest extends TestCase {
     public static void takeLong(long val) {
     }
 
+    public static void takeObject(Object obj) {
+    }
+
     public static void testTryBlockDoesNotThrowAnything() {
         boolean caught;
         try {
@@ -309,6 +312,32 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
+    public static void testCheckcast() {
+        boolean caught = false;
+        Object o = null;
+        String s = null;
+
+        try {
+            s = (String)o;
+        } catch (ClassCastException e) {
+            caught = true;
+        }
+
+        assertFalse(caught);
+
+        o = new Object();
+
+        try {
+            s = (String)o;
+        } catch (ClassCastException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(s);
+    }
+
     public static void main(String args[]) {
         testTryBlockDoesNotThrowAnything();
         testThrowAndCatchInTheSameMethod();
@@ -326,11 +355,12 @@ public class ExceptionsTest extends TestCase {
         testGetfield();
         testPutfield();
         testMonitorenter();
-	/* TODO: testMonitorexit() */
+        /* TODO: testMonitorexit() */
         testIdiv();
         testIrem();
         testLdiv();
         testLrem();
+        testCheckcast();
 
         exit();
     }
