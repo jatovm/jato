@@ -88,6 +88,13 @@ static int print_imm_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->dest);
 }
 
+static int print_imm_membase(struct string *str, struct insn *insn)
+{
+	print_imm(str, &insn->src);
+	str_append(str, ", ");
+	return print_membase(str, &insn->dest);
+}
+
 static int print_membase_reg(struct string *str, struct insn *insn)
 {
 	print_membase(str, &insn->src);
@@ -278,7 +285,7 @@ static int print_jne_branch(struct string *str, struct insn *insn)
 static int print_mov_imm_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
-	return print_membase_reg(str, insn);
+	return print_imm_membase(str, insn);
 }
 
 static int print_mov_imm_reg(struct string *str, struct insn *insn)
