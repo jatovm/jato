@@ -1,7 +1,11 @@
 #ifndef JATO_JIT_EXCEPTION_H
 #define JATO_JIT_EXCEPTION_H
 
+#include <arch/stack-frame.h>
+#include <jit/cu-mapping.h>
+#include <jit/compiler.h>
 #include <stdbool.h>
+#include <vm/die.h>
 #include <vm/vm.h>
 
 struct compilation_unit;
@@ -54,5 +58,37 @@ static inline struct object *exception_occurred(void)
 {
 	return exception_holder;
 }
+
+/**
+ * Use this macro to throw signalled exception from jato functions
+ * that are directly called from JIT code. It replaces the function's
+ * return address so that it points to propper exception handler and
+ * removes call arguments from stack. The calling function can
+ * continue to execute safely as long as it's not trying to access
+ * call arguments.
+ *
+ * @args_size: the size of arguments pushed before call expressed in
+ *             byte units.
+ */
+#define throw_from_native(args_size)					\
+({									\
+	struct jit_stack_frame *frame;					\
+	struct compilation_unit *cu;					\
+	unsigned char *native_ptr;					\
+	void *eh;							\
+									\
+	native_ptr = __builtin_return_address(0) - 1;			\
+	if (!is_jit_method((unsigned long)native_ptr))			\
+		die("%s: must not be called from not-JIT code",		\
+		    __func__);						\
+									\
+	frame = __builtin_frame_address(1);				\
+									\
+	cu = get_cu_from_native_addr((unsigned long)native_ptr);	\
+	eh = throw_exception_from(cu, frame, native_ptr);		\
+									\
+	__override_return_address(eh);					\
+	__cleanup_args(args_size);					\
+})
 
 #endif /* JATO_JIT_EXCEPTION_H */
