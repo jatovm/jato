@@ -181,16 +181,23 @@ emit_reg_reg(struct buffer *buf, unsigned char opc,
 }
 
 static void
-__emit_memdisp_reg(struct buffer *buf, unsigned char opc, unsigned long disp,
-		   unsigned char reg_opcode)
+__emit_memdisp(struct buffer *buf, unsigned char opc, unsigned long disp,
+	       unsigned char reg_opcode)
 {
 	unsigned char mod_rm;
 
-	mod_rm = encode_modrm(0, __encode_reg(reg_opcode), 5);
+	mod_rm = encode_modrm(0, reg_opcode, 5);
 
 	emit(buf, opc);
 	emit(buf, mod_rm);
 	emit_imm32(buf, disp);
+}
+
+static void
+__emit_memdisp_reg(struct buffer *buf, unsigned char opc, unsigned long disp,
+		   enum machine_reg reg)
+{
+	__emit_memdisp(buf, opc, disp, __encode_reg(reg));
 }
 
 static void
