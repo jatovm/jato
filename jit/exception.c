@@ -39,7 +39,9 @@
 #include <arch/instruction.h>
 #include <errno.h>
 
+__thread struct object *exception_holder = NULL;
 __thread void *exception_guard = NULL;
+
 void *exceptions_guard_page;
 
 void init_exceptions(void)
@@ -62,23 +64,21 @@ void thread_init_exceptions(void)
 
 /**
  * signal_exception - used for signaling that exception has occurred
- *         in jato functions. Exception will be thrown as soon as
- *         controll is returned back to JIT method code. If another
- *         exception is already signalled no action is done.
+ *         in jato functions. Exception will be thrown when controll
+ *         is returned to JIT code.
  *
  * @exception: exception object to be thrown.
  */
 void signal_exception(struct object *exception)
 {
-	if (getExecEnv()->exception)
+	if (exception_holder)
 		return;
 
 	if (exception == NULL)
 		die("%s: exception is NULL.", __func__);
 
-	getExecEnv()->exception = exception;
-
-	exception_guard = exceptions_guard_page;
+	exception_guard  = exceptions_guard_page;
+	exception_holder = exception;
 }
 
 void signal_new_exception(char *class_name, char *msg)
@@ -89,15 +89,10 @@ void signal_new_exception(char *class_name, char *msg)
 	signal_exception(e);
 }
 
-struct object *exception_occurred(void)
-{
-	return getExecEnv()->exception;
-}
-
 void clear_exception(void)
 {
-	exception_guard = &exception_guard;
-	getExecEnv()->exception = NULL;
+	exception_guard  = &exception_guard;
+	exception_holder = NULL;
 }
 
 struct exception_table_entry *exception_find_entry(struct methodblock *method,
@@ -172,61 +167,42 @@ static unsigned char *find_handler(struct compilation_unit *cu,
  *                           unwind can't be done because the method's caller
  *                           is not a jitted method).
  *
+ * @cu: compilation unit
  * @frame: frame pointer of method throwing exception
  * @native_ptr: pointer to instruction that caused exception
- * @exception: exception object to throw.
  */
 unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    struct jit_stack_frame *frame,
-				    unsigned char *native_ptr,
-				    struct object *exception)
+				    unsigned char *native_ptr)
 {
-	struct object *ee_exception;
+	struct object *exception;
 	unsigned long bc_offset;
 	unsigned char *eh_ptr;
 
 	eh_ptr = NULL;
 
-	ee_exception = exception_occurred();
-	if (ee_exception) {
-		exception = ee_exception;
-		clear_exception();
-	}
+	exception = exception_occurred();
+	assert(exception != NULL);
+
+	clear_exception();
 
 	bc_offset = native_ptr_to_bytecode_offset(cu, native_ptr);
 	if (bc_offset != BC_OFFSET_UNKNOWN) {
 		eh_ptr = find_handler(cu, exception->class, bc_offset);
-		if (eh_ptr != NULL)
+		if (eh_ptr != NULL) {
+			signal_exception(exception);
 			return eh_ptr;
-	}
-
-	if (!is_jit_method(frame->return_address)) {
-		/*
-		 * No handler found within jitted method call chain.
-		 * Signal exception and return to previous (not jit) method.
-		 */
-		signal_exception(exception);
-		return bb_native_ptr(cu->exit_bb);
-	}
-
-	return bb_native_ptr(cu->unwind_bb);
-}
-
-int insert_exception_spill_insns(struct compilation_unit *cu)
-{
-	struct insn *insn;
-	struct basic_block *bb;
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		if (bb->is_eh) {
-			insn = exception_spill_insn(cu->exception_spill_slot);
-			if (insn == NULL)
-				return -ENOMEM;
-
-			insn->bytecode_offset = bb->start;
-			bb_add_insn(bb, insn);
 		}
 	}
 
-	return 0;
+	signal_exception(exception);
+
+	if (!is_jit_method(frame->return_address))
+		/*
+		 * No handler found within jitted method call chain.
+		 * Return to previous (not jit) method.
+		 */
+		return bb_native_ptr(cu->exit_bb);
+
+	return bb_native_ptr(cu->unwind_bb);
 }

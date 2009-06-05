@@ -51,10 +51,6 @@ int compile(struct compilation_unit *cu)
 	if (opt_trace_tree_ir)
 		trace_tree_ir(cu);
 
-	err = insert_exception_spill_insns(cu);
-	if (err)
-		goto out;
-
 	err = select_instructions(cu);
 	if (err)
 		goto out;

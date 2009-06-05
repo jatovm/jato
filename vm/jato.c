@@ -361,8 +361,10 @@ int main(int argc, char *argv[]) {
 
     /* ExceptionOccured returns the exception or NULL, which is OK
        for normal conditionals, but not here... */
-    if((status = exceptionOccured() ? 1 : 0))
-        printException();
+    if((status = exception_occurred() ? 1 : 0)) {
+        getExecEnv()->exception = exception_occurred();
+	printException();
+    }
 
     /* Wait for all but daemon threads to die */
     mainThreadWaitToExitVM();

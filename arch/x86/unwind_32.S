@@ -14,48 +14,28 @@ unwind:
 	/*
 	 * Lookup pointer to compilation unit.
 	 */
-	push	%ecx
 	push	%edx
 	call	get_cu_from_native_addr
+	movl 	%eax, %ecx
 	pop	%edx
-	pop	%ecx
 
 	/*
 	 * Restore stack pointer. We need to restore space for locals too.
 	 */
-	push	%ecx
 	push	%edx
-
-	push	%eax
+	push	%ecx
 	call	cu_frame_locals_offset
-	addl	$4, %esp
-
-	pop	%edx
 	pop	%ecx
+	pop	%edx
 
 	movl	%ebp, %esp
 	subl	%eax, %esp
 
-	/*
-	 * Lookup pointer to compilation unit.
-	 */
-	push	%ecx
-	push	%edx
-	call	get_cu_from_native_addr
-	pop	%edx
-	pop	%ecx
-
-	/*
-	 * Push exception object reference to handler
-	 */
-	pushl	%ecx
-
-	pushl	%ecx	# exception
 	pushl	%edx	# native ptr
 	pushl	%ebp	# frame
-	pushl	%eax	# cu
+	pushl	%ecx	# cu
 	call	throw_exception_from
-	addl	$16, %esp
+	addl	$12, %esp
 
 	pushl %eax
 	ret

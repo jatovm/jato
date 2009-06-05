@@ -1145,7 +1145,7 @@ stmt:	STMT_ATHROW(reg)
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)s->b_parent));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)throw_exception));
-	method_args_cleanup(s, tree, 1);
+	method_args_cleanup(s, tree, 2);
 
 	/* Jump where throw_exception() told us to jump */
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, reg_eax));
@@ -1464,12 +1464,37 @@ static void free_state(MBState *state)
 	g_free(state);
 }
 
+static void eh_add_insn(struct basic_block *bb, struct insn *insn)
+{
+	insn->bytecode_offset = bb->start;
+	bb_add_insn(bb, insn);
+}
+
+static void select_eh_prologue(struct basic_block *bb)
+{
+	struct var_info *reg_eax;
+
+	reg_eax = get_fixed_var(bb->b_parent, REG_EAX);
+
+	/* Save exception from exception_holder to exception stack slot */
+	eh_add_insn(bb, imm_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
+		get_thread_local_offset(&exception_holder), reg_eax));
+	eh_add_insn(bb,	reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, reg_eax,
+		bb->b_parent->exception_spill_slot));
+
+	/* Clear exception */
+	eh_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long)clear_exception));
+}
+
 static void insn_select(struct basic_block *bb)
 {
 	struct statement *stmt;
 	MBState *state;
 
 	mono_burg_init();
+
+	if (bb->is_eh)
+		select_eh_prologue(bb);
 
 	for_each_stmt(stmt, &bb->stmt_list) {
 		state = mono_burg_label(&stmt->node, bb);

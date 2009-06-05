@@ -507,17 +507,8 @@ static void emit_leave(struct buffer *buf)
 	emit(buf, 0xc9);
 }
 
-/*
- * Emitted code must not write to ECX register because it may hold
- * exception object reference when in unwind block
- */
 static void __emit_epilog(struct buffer *buf)
 {
-	/*
-	 * Always emit 'leave' even if method has no local variables
-	 * because exception object reference might have been pushed
-	 * on stack.
-	 */
 	emit_leave(buf);
 
 	/* Restore callee saved registers */
@@ -541,9 +532,6 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 
 void emit_unwind(struct buffer *buf)
 {
-	/* save exception object in ECX */
-	__emit_pop_reg(buf, REG_ECX);
-
 	__emit_epilog(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
 }
