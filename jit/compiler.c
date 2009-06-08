@@ -12,6 +12,7 @@
 #include <jit/statement.h>
 #include <jit/bc-offset-mapping.h>
 #include <jit/exception.h>
+#include <jit/perf-map.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -26,8 +27,11 @@ static void compile_error(struct compilation_unit *cu, int err)
 	       __func__, cu->method->name, cb->name, err);
 }
 
+#define SYMBOL_LEN 128
+
 int compile(struct compilation_unit *cu)
 {
+	char symbol[SYMBOL_LEN];
 	int err;
 
 	if (opt_trace_method)
@@ -89,6 +93,7 @@ int compile(struct compilation_unit *cu)
 
 	cu->is_compiled = true;
 
+	perf_map_append(cu_symbol(cu, symbol, SYMBOL_LEN), (unsigned long) cu_native_ptr(cu), cu_native_size(cu));
   out:
 	if (err)
 		compile_error(cu, err);

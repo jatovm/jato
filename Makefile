@@ -82,7 +82,8 @@ JIT_OBJS = \
 	jit/bc-offset-mapping.o \
 	jit/cu-mapping.o	\
 	jit/method.o		\
-	jit/nop-bc.o
+	jit/nop-bc.o		\
+	jit/perf-map.o
 
 VM_OBJS = \
 	vm/bitset.o		\

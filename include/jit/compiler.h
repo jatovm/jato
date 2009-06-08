@@ -66,6 +66,23 @@ void free_fixup_site(struct fixup_site *);
 void trampoline_add_fixup_site(struct jit_trampoline *, struct fixup_site *);
 unsigned char *fixup_site_addr(struct fixup_site *);
 
+const char *method_symbol(struct methodblock *method, char *symbol, size_t len);
+
+static inline const char *cu_symbol(struct compilation_unit *cu, char *symbol, size_t len)
+{
+	return method_symbol(cu->method, symbol, len);
+}
+
+static inline void *cu_native_ptr(struct compilation_unit *cu)
+{
+	return buffer_ptr(cu->objcode);
+}
+
+static inline unsigned long cu_native_size(struct compilation_unit *cu)
+{
+	return buffer_offset(cu->objcode);
+}
+
 static inline void *method_native_ptr(struct methodblock *method)
 {
 	return buffer_ptr(method->compilation_unit->objcode);

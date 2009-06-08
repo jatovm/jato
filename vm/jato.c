@@ -32,6 +32,7 @@
 #include <jit/cu-mapping.h>
 #include <jit/exception.h>
 #include <jit/compiler.h>
+#include <jit/perf-map.h>
 
 #ifdef USE_ZIP
 #define BCP_MESSAGE "<jar/zip files and directories separated by :>"
@@ -299,6 +300,8 @@ int main(int argc, char *argv[]) {
     int i;
 
     exe_name = argv[0];
+
+    perf_map_open();
 
     setup_signal_handlers();
     init_cu_mapping();

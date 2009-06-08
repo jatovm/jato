@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2009 Tomasz Grabiec
- *
+ * Copyright (c) 2009  Pekka Enberg
+ * 
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -24,30 +24,33 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compiler.h>
+#include <jit/perf-map.h>
+#include <vm/die.h>
 
-#include <stdbool.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdio.h>
 
-/* Points to the first address past text segment */
-extern char etext;
+static pthread_mutex_t perf_mutex = PTHREAD_MUTEX_INITIALIZER; 
+static FILE *perf_file;
 
-/*
- * Checks whether address belongs to jitted or JATO method.
- * This is used in deciding when to stop the unwind process upon
- * exception throwing.
- *
- * It utilises the fact, that jitted code is allocated on heap. So by
- * comparing return address with text segment end we can tell whether
- * the caller is on heap or in text.
- */
-bool is_jit_method(unsigned long eip)
+void perf_map_open(void)
 {
-	return eip >= (unsigned long)&etext;
+	char filename[32];
+	pid_t pid;
+
+	pid = getpid();
+	sprintf(filename, "perf-%d.map", pid);
+
+	perf_file = fopen(filename, "w");
+	if (!perf_file)
+		die("fopen");
 }
 
-const char *method_symbol(struct methodblock *method, char *symbol, size_t size)
+void perf_map_append(const char *symbol, unsigned long addr, unsigned long size)
 {
-	snprintf(symbol, size, "%s.%s%s", CLASS_CB(method->class)->name, method->name, method->type);
-
-	return symbol;
+	pthread_mutex_lock(&perf_mutex);
+	fprintf(perf_file, "%lx %lx %s\n", addr, size, symbol);
+	pthread_mutex_unlock(&perf_mutex);
 }
