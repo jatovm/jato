@@ -41,7 +41,7 @@ void perf_map_open(void)
 	pid_t pid;
 
 	pid = getpid();
-	sprintf(filename, "perf-%d.map", pid);
+	sprintf(filename, "/tmp/perf-%d.map", pid);
 
 	perf_file = fopen(filename, "w");
 	if (!perf_file)
