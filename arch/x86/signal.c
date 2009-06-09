@@ -41,9 +41,13 @@ bool signal_from_jit_method(void *ctx)
 	if (!is_jit_method(ip))
 		return false;
 
-	/* We must be extra caucious here because IP might be iinvalid*/
-	if (get_cu_from_native_addr(ip) == NULL)
-		return false;
-
 	return true;
+}
+
+struct compilation_unit *get_signal_source_cu(void *ctx)
+{
+	ucontext_t *uc;
+
+	uc = ctx;
+	return get_cu_from_native_addr(uc->uc_mcontext.gregs[REG_IP]);
 }

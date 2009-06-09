@@ -28,6 +28,7 @@
 #include <jit/basic-block.h>
 #include <jit/cu-mapping.h>
 #include <jit/exception.h>
+#include <jit/compiler.h>
 
 #include <arch/stack-frame.h>
 #include <arch/memory.h>
@@ -66,4 +67,31 @@ void throw_exception_from_signal(void *ctx, struct object *exception)
 	eh = throw_exception_from(cu, frame, (unsigned char*)source_addr);
 
 	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)eh;
+}
+
+void throw_exception_from_trampoline(void *ctx, struct object *exception)
+{
+	unsigned long return_address;
+	unsigned long *stack;
+	ucontext_t *uc;
+
+	uc = ctx;
+
+	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
+	return_address = stack[1];
+
+	if (!is_jit_method(return_address)) {
+		/* Signal exception and return to caller. */
+		signal_exception(exception);
+		uc->uc_mcontext.gregs[REG_IP] = return_address;
+	} else {
+		/* Unwind to previous jit method. */
+		uc->uc_mcontext.gregs[REG_CX] = (unsigned long)exception;
+		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)unwind;
+	}
+
+	/* pop EBP from stack */
+	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
+	uc->uc_mcontext.gregs[REG_BP] = *stack;
+	uc->uc_mcontext.gregs[REG_SP] += sizeof(unsigned long);
 }

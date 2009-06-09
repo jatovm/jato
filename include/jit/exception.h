@@ -20,7 +20,12 @@ struct jit_stack_frame;
  */
 extern __thread void *exception_guard;
 
+/* Same as exception_guard but destined to be used in trampolines
+   to distinguish between them and the general case. */
+extern __thread void *trampoline_exception_guard;
+
 extern void *exceptions_guard_page;
+extern void *trampoline_exceptions_guard_page;
 
 /*
  * Holds a reference to exception that has been signalled.  This
@@ -47,6 +52,7 @@ int insert_exception_spill_insns(struct compilation_unit *cu);
 unsigned char *throw_exception(struct compilation_unit *cu,
 			       struct object *exception);
 void throw_exception_from_signal(void *ctx, struct object *exception);
+void throw_exception_from_trampoline(void *ctx, struct object *exception);
 void unwind(void);
 void signal_exception(struct object *obj);
 void signal_new_exception(char *class_name, char *msg);

@@ -41,13 +41,17 @@
 
 __thread struct object *exception_holder = NULL;
 __thread void *exception_guard = NULL;
+__thread void *trampoline_exception_guard = NULL;
 
 void *exceptions_guard_page;
+void *trampoline_exceptions_guard_page;
 
 void init_exceptions(void)
 {
 	exceptions_guard_page = alloc_guard_page();
-	if (!exceptions_guard_page)
+	trampoline_exceptions_guard_page = alloc_guard_page();
+
+	if (!exceptions_guard_page || !trampoline_exceptions_guard_page)
 		die("%s: failed to allocate exceptions guard page.", __func__);
 
 	/* TODO: Should be called from thread initialization code. */
@@ -59,7 +63,9 @@ void init_exceptions(void)
  */
 void thread_init_exceptions(void)
 {
-	exception_guard = &exception_guard; /* assign a safe pointer */
+	/* Assign safe pointers. */
+	exception_guard = &exception_guard;
+	trampoline_exception_guard = &trampoline_exception_guard;
 }
 
 /**
@@ -77,6 +83,7 @@ void signal_exception(struct object *exception)
 	if (exception == NULL)
 		die("%s: exception is NULL.", __func__);
 
+	trampoline_exception_guard = trampoline_exceptions_guard_page;
 	exception_guard  = exceptions_guard_page;
 	exception_holder = exception;
 }
@@ -91,6 +98,7 @@ void signal_new_exception(char *class_name, char *msg)
 
 void clear_exception(void)
 {
+	trampoline_exception_guard = &trampoline_exception_guard;
 	exception_guard  = &exception_guard;
 	exception_holder = NULL;
 }

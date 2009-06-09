@@ -67,6 +67,11 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	if ((unsigned long)si->si_addr < (unsigned long)getpagesize()) {
 		struct object *exception;
 
+		/* We must be extra caucious here because IP might be
+		   invalid */
+		if (get_signal_source_cu(ctx) == NULL)
+			goto exit;
+
 		/* TODO: exception's stack trace should be filled using ctx */
 		exception = new_exception("java/lang/NullPointerException", NULL);
 		if (exception == NULL) {
@@ -80,7 +85,8 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	}
 
 	/* Check if exception was triggered by exception guard */
-	if (si->si_addr == exceptions_guard_page) {
+	if (si->si_addr == exceptions_guard_page ||
+	    si->si_addr == trampoline_exceptions_guard_page) {
 		struct object *exception;
 
 		exception = exception_occurred();
@@ -90,7 +96,11 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 			goto exit;
 		}
 
-		throw_exception_from_signal(ctx, exception);
+		if (si->si_addr == trampoline_exceptions_guard_page)
+			throw_exception_from_trampoline(ctx, exception);
+		else
+			throw_exception_from_signal(ctx, exception);
+
 		return;
 	}
 

@@ -22,6 +22,7 @@
 #include <arch/instruction.h>
 #include <arch/memory.h>
 #include <arch/stack-frame.h>
+#include <arch/thread.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -843,6 +844,12 @@ static void emit_xor_imm_reg(struct buffer *buf, struct operand * src,
 	__emit_xor_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void __emit_test_membase_reg(struct buffer *buf, enum machine_reg src,
+				    unsigned long disp, enum machine_reg dest)
+{
+	__emit_membase_reg(buf, 0x85, src, disp, dest);
+}
+
 static void emit_test_membase_reg(struct buffer *buf, struct operand *src,
 				  struct operand *dest)
 {
@@ -1137,6 +1144,20 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_push_imm(buf, (unsigned long)cu);
 	__emit_call(buf, call_target);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	/*
+	 * Test for exeption occurance.
+	 * We do this by polling a dedicated thread-specific pointer,
+	 * which triggers SIGSEGV when exception is set.
+	 *
+	 * mov gs:(0xXXX), %ecx
+	 * test (%ecx), %ecx
+	 */
+	emit(buf, 0x65);
+	__emit_memdisp_reg(buf, 0x8b,
+			   get_thread_local_offset(&trampoline_exception_guard),
+			   REG_ECX);
+	__emit_test_membase_reg(buf, REG_ECX, 0, REG_ECX);
 
 	__emit_push_reg(buf, REG_EAX);
 
