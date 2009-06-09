@@ -80,15 +80,14 @@ void throw_exception_from_trampoline(void *ctx, struct object *exception)
 	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
 	return_address = stack[1];
 
-	if (!is_jit_method(return_address)) {
-		/* Signal exception and return to caller. */
-		signal_exception(exception);
+	signal_exception(exception);
+
+	if (!is_jit_method(return_address))
+		/* Return to caller. */
 		uc->uc_mcontext.gregs[REG_IP] = return_address;
-	} else {
+	else
 		/* Unwind to previous jit method. */
-		uc->uc_mcontext.gregs[REG_CX] = (unsigned long)exception;
 		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)unwind;
-	}
 
 	/* pop EBP from stack */
 	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
