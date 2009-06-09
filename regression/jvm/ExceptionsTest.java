@@ -388,6 +388,61 @@ public class ExceptionsTest extends TestCase {
         takeObject(s);
     }
 
+    public static void testAnewarray() {
+        boolean caught = false;
+        Object array[] = null;
+
+        try {
+            array = new Object[-1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(array);
+    }
+
+    public static void testNewarray() {
+        boolean caught = false;
+        int array[] = null;
+
+        try {
+            array = new int[-1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(array);
+    }
+
+    public static void testMultianewarray() {
+        boolean caught = false;
+        Object array[][] = null;
+
+        try {
+            array = new Object[1][-1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        caught = false;
+        try {
+            array = new Object[-1][1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(array);
+    }
+
+
     public static void main(String args[]) {
         testTryBlockDoesNotThrowAnything();
         testThrowAndCatchInTheSameMethod();
@@ -411,6 +466,9 @@ public class ExceptionsTest extends TestCase {
         testLdiv();
         testLrem();
         testCheckcast();
+        testAnewarray();
+        testNewarray();
+        testMultianewarray();
 
         exit();
     }
