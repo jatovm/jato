@@ -197,3 +197,34 @@ void check_cast(struct object *obj, struct object *type)
 
 	die("%s: error %d", __func__, err);
 }
+
+void array_size_check(int size)
+{
+	if (size < 0) {
+		signal_new_exception(
+			"java/lang/NegativeArraySizeException", NULL);
+		throw_from_native(sizeof(int));
+	}
+}
+
+void multiarray_size_check(int n, ...)
+{
+	va_list ap;
+	int i;
+
+	va_start(ap, n);
+
+	for (i = 0; i < n; i++) {
+		if (va_arg(ap, int) >= 0)
+			continue;
+
+		signal_new_exception("java/lang/NegativeArraySizeException",
+				     NULL);
+		va_end(ap);
+		throw_from_native(sizeof(int) * (n + 1));
+		return;
+	}
+
+	va_end(ap);
+	return;
+}

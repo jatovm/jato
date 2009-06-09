@@ -42,3 +42,12 @@ void array_store_check(struct object *arrayref, struct object *obj)
 void array_store_check_vmtype(struct object *arrayref, enum vm_type vm_type)
 {
 }
+
+void array_size_check(int size)
+{
+}
+
+void multiarray_size_check(int n, ...)
+{
+}
+

@@ -455,7 +455,7 @@ void test_convert_anewarray(void)
 
 	assert_int_equals(EXPR_ANEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
-	assert_ptr_equals(size, to_expr(arrayref->anewarray_size));
+	assert_array_size_check_expr(size, to_expr(arrayref->anewarray_size));
 
         /*
 	 * Free the struct object returned from findArrayClassFromClassLoader()
@@ -488,7 +488,7 @@ void test_convert_newarray(void)
 	arrayref = stack_pop(bb->mimic_stack);
 	assert_int_equals(EXPR_NEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
-	assert_ptr_equals(size, to_expr(arrayref->array_size));
+	assert_array_size_check_expr(size, to_expr(arrayref->array_size));
 	assert_int_equals(T_INT, arrayref->array_type);
 
 	expr_put(arrayref);
@@ -502,7 +502,6 @@ void test_convert_multianewarray(void)
 	unsigned char code[] = { OPC_MULTIANEWARRAY, 0x00, 0x00, dimension };
 	struct expression *arrayref;
 	struct expression *args_count[dimension];
-	struct expression *actual_args;
 	struct basic_block *bb;
 	struct methodblock method = {
 		.jit_code = code,
@@ -522,8 +521,8 @@ void test_convert_multianewarray(void)
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
 	assert_ptr_equals(instance_class, arrayref->multianewarray_ref_type);
 
-	actual_args = to_expr(arrayref->multianewarray_dimensions);
-	assert_args(args_count, dimension, actual_args);
+	assert_multiarray_size_check_expr(args_count, dimension,
+		to_expr(arrayref->multianewarray_dimensions));
 
 	assert_true(stack_is_empty(bb->mimic_stack));
 

@@ -5,6 +5,7 @@
 #include <jit/compilation-unit.h>
 #include <jit/basic-block.h>
 #include <bc-test-utils.h>
+#include <args-test-utils.h>
 #include <jit/tree-node.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
@@ -208,6 +209,21 @@ void assert_invoke_expr(enum vm_type expected_type,
 	assert_int_equals(EXPR_INVOKE, expr_type(expr));
 	assert_int_equals(expected_type, expr->vm_type);
 	assert_ptr_equals(expected_method, expr->target_method);
+}
+
+void assert_array_size_check_expr(struct expression *expected,
+				  struct expression *actual)
+{
+	assert_int_equals(EXPR_ARRAY_SIZE_CHECK, expr_type(actual));
+	assert_ptr_equals(&expected->node, actual->size_expr);
+}
+
+void assert_multiarray_size_check_expr(struct expression **expected_args,
+				       int nr_args,
+				       struct expression *actual)
+{
+	assert_int_equals(EXPR_MULTIARRAY_SIZE_CHECK, expr_type(actual));
+	assert_args(expected_args, nr_args, to_expr(actual->size_expr));
 }
 
 void assert_store_stmt(struct statement *stmt)

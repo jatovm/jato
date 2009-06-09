@@ -749,6 +749,37 @@ static int print_null_check_expr(int lvl, struct string *str,
 	return err;
 }
 
+static int print_array_size_check_expr(int lvl, struct string *str,
+				       struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "ARRAY_SIZE_CHECK:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "size", expr->size_expr);
+
+ out:
+	return err;
+}
+
+static int print_multiarray_size_check_expr(int lvl, struct string *str,
+					    struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "MULTIARRAY_SIZE_CHECK:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "dimension list",
+			       expr->size_expr);
+
+ out:
+	return err;
+}
+
 typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
@@ -774,7 +805,10 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_ARRAYLENGTH] = print_arraylength_expr,
 	[EXPR_INSTANCEOF] = print_instanceof_expr,
 	[EXPR_EXCEPTION_REF] = print_exception_ref_expr,
-	[EXPR_NULL_CHECK] = print_null_check_expr
+	[EXPR_NULL_CHECK] = print_null_check_expr,
+	[EXPR_ARRAY_SIZE_CHECK] = print_array_size_check_expr,
+	[EXPR_MULTIARRAY_SIZE_CHECK] = print_multiarray_size_check_expr
+
 };
 
 static int print_expr(int lvl, struct tree_node *root, struct string *str)

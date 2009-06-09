@@ -36,7 +36,8 @@ void assert_class_field_expr(enum vm_type, struct fieldblock *, struct tree_node
 void assert_instance_field_expr(enum vm_type, struct fieldblock *, struct expression *, struct tree_node *);
 void assert_invoke_expr(enum vm_type, struct methodblock *,
 			struct tree_node *);
-
+void assert_array_size_check_expr(struct expression *, struct expression *);
+void assert_multiarray_size_check_expr(struct expression **, int, struct expression *);
 void assert_store_stmt(struct statement *);
 void assert_array_store_check_stmt(struct statement *, struct expression *, struct tree_node *);
 void assert_return_stmt(struct expression *, struct statement *);

@@ -33,6 +33,8 @@ enum expression_type {
 	EXPR_INSTANCEOF,
 	EXPR_EXCEPTION_REF,
 	EXPR_NULL_CHECK,
+	EXPR_ARRAY_SIZE_CHECK,
+	EXPR_MULTIARRAY_SIZE_CHECK,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -230,6 +232,9 @@ struct expression {
 		/* EXPR_NULL_CHECK is used to assure that NullPointerException
 		   will be thrown if reference is null. */
 		struct tree_node *null_check_ref;
+
+		/* EXPR_ARRAY_SIZE_CHECK and EXPR_MULTIARRAY_SIZE_CHECK */
+		struct tree_node *size_expr;
 	};
 };
 
@@ -282,6 +287,8 @@ struct expression *arraylength_expr(struct expression *);
 struct expression *instanceof_expr(struct expression *, struct object *);
 struct expression *exception_ref_expr(void);
 struct expression *null_check_expr(struct expression *);
+struct expression *array_size_check_expr(struct expression *);
+struct expression *multiarray_size_check_expr(struct expression *);
 
 unsigned long nr_args(struct expression *);
 int expr_nr_kids(struct expression *);

@@ -729,6 +729,18 @@ reg:	EXPR_NEW
 	select_exception_test(s, tree);
 }
 
+reg:	EXPR_ARRAY_SIZE_CHECK(reg)
+{
+	struct var_info *size;
+
+	size = state->left->reg1;
+	state->reg1 = size;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
+	method_args_cleanup(s, tree, 1);
+}
+
 reg:	EXPR_NEWARRAY(reg)
 {
 	struct var_info *var, *size;
@@ -778,12 +790,27 @@ reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
 	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
 }
 
+arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
+{
+	struct expression *expr;
+	int dimensions;
+
+	expr = to_expr(tree);
+	dimensions = nr_args(to_expr(expr->size_expr));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimensions));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) multiarray_size_check));
+	method_args_cleanup(s, tree, 1);
+}
+
 reg:	EXPR_MULTIANEWARRAY(arg)
 {
 	struct var_info *var;
 	struct var_info *stack_ptr;
 	unsigned int dimension;
 	struct expression *expr;
+	struct expression *size_check;
 
 	expr = to_expr(tree);
 
@@ -792,7 +819,8 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 
 	stack_ptr = get_fixed_var(s->b_parent, REG_ESP);
 
-	dimension = nr_args(to_expr(expr->multianewarray_dimensions));
+	size_check = to_expr(expr->multianewarray_dimensions);
+	dimension = nr_args(to_expr(size_check->size_expr));
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, stack_ptr));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimension));

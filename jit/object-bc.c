@@ -363,12 +363,17 @@ int convert_new(struct parse_context *ctx)
 int convert_newarray(struct parse_context *ctx)
 {
 	struct expression *size, *arrayref;
+	struct expression *size_check;
 	unsigned long type;
 
 	size = stack_pop(ctx->bb->mimic_stack);
 	type = bytecode_read_u8(ctx->buffer);
 
-	arrayref = newarray_expr(type, size);
+	size_check = array_size_check_expr(size);
+	if (!size_check)
+		return -ENOMEM;
+
+	arrayref = newarray_expr(type, size_check);
 	if (!arrayref)
 		return -ENOMEM;
 
@@ -379,6 +384,7 @@ int convert_newarray(struct parse_context *ctx)
 
 int convert_anewarray(struct parse_context *ctx)
 {
+	struct expression *size_check;
 	struct expression *size,*arrayref;
 	unsigned long type_idx;
 	struct object *class, *arrayclass;
@@ -394,7 +400,11 @@ int convert_anewarray(struct parse_context *ctx)
 	if (!arrayclass)
 		return -EINVAL;
 
-	arrayref = anewarray_expr(arrayclass,size);
+	size_check = array_size_check_expr(size);
+	if (!size_check)
+		return -ENOMEM;
+
+	arrayref = anewarray_expr(arrayclass, size_check);
 	if (!arrayref)
 		return -ENOMEM;
 
@@ -405,6 +415,7 @@ int convert_anewarray(struct parse_context *ctx)
 
 int convert_multianewarray(struct parse_context *ctx)
 {
+	struct expression *size_check;
 	struct expression *arrayref;
 	struct expression *args_list;
 	unsigned long type_idx;
@@ -423,9 +434,12 @@ int convert_multianewarray(struct parse_context *ctx)
 		return -ENOMEM;
 
 	args_list = convert_args(ctx->bb->mimic_stack, dimension);
-	arrayref->multianewarray_dimensions = &args_list->node;
-	if (!arrayref->multianewarray_dimensions)
+
+	size_check = multiarray_size_check_expr(args_list);
+	if (!size_check)
 		return -ENOMEM;
+
+	arrayref->multianewarray_dimensions = &size_check->node;
 
 	convert_expression(ctx, arrayref);
 
