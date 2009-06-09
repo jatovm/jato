@@ -76,7 +76,7 @@ unsigned long cu_frame_locals_offset(struct compilation_unit *cu);
 	     "addl %%ebx, %%ebp \n"					\
 	     :								\
 	     : "b" (args_size), "n"(2*sizeof(unsigned long))		\
-	     : "%eax", "%edi", "%esi", "%ecx"				\
+	     : "%eax", "%edi", "%esi", "%ecx", "cc", "memory"		\
 									); \
 	})
 #else
