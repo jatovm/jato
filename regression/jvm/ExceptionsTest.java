@@ -166,12 +166,12 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
-    public static void testArrayLoad() {
+    public static void testArrayLoadThrowsNullPointerException() {
         boolean caught = false;
         Object[] array = null;
 
         try {
-            array[0].getClass();
+            takeObject(array[0]);
         } catch (NullPointerException e) {
             caught = true;
         }
@@ -179,7 +179,25 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
-    public static void testArrayStore() {
+    public static void testArrayLoadThrowsArrayIndexOutOfBoundsException() {
+        boolean caught = false;
+        Object[] array = new String[3];
+
+        try {
+            takeObject(array[3]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
+
+    public static void testArrayLoad() {
+        testArrayLoadThrowsNullPointerException();
+        testArrayLoadThrowsArrayIndexOutOfBoundsException();
+    }
+
+    public static void testArrayStoreThrowsNullPointerException() {
         boolean caught = false;
         Object[] array = null;
 
@@ -190,6 +208,24 @@ public class ExceptionsTest extends TestCase {
         }
 
         assertTrue(caught);
+    }
+
+    public static void testArrayStoreThrowsArrayIndexOutOfBoundsException() {
+        boolean caught = false;
+        Object[] array = new String[3];
+
+        try {
+            array[3] = "test";
+        } catch (ArrayIndexOutOfBoundsException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
+
+    public static void testArrayStore() {
+        testArrayStoreThrowsNullPointerException();
+        testArrayStoreThrowsArrayIndexOutOfBoundsException();
     }
 
     public static void testArraylength() {
