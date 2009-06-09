@@ -76,13 +76,29 @@ unsigned long is_object_instance_of(struct object *obj, struct object *type)
 
 void check_array(struct object *obj, unsigned int index)
 {
-	struct classblock *cb = CLASS_CB(obj->class);
+	unsigned int array_len;
+	struct classblock *cb;
+	char index_str[32];
 
-	if (!IS_ARRAY(cb))
-		abort();
+	cb = CLASS_CB(obj->class);
 
-	if (index >= ARRAY_LEN(obj))
-		abort();
+	if (!IS_ARRAY(cb)) {
+		signal_new_exception("java/lang/RuntimeException",
+				     "object is not an array");
+		goto throw;
+	}
+
+	array_len = ARRAY_LEN(obj);
+
+	if (index < array_len)
+		return;
+
+	sprintf(index_str, "%d > %d", index, array_len - 1);
+	signal_new_exception("java/lang/ArrayIndexOutOfBoundsException",
+			     index_str);
+
+ throw:
+	throw_from_native(sizeof(struct object *) + sizeof(unsigned int));
 }
 
 void check_cast(struct object *obj, struct object *type)
