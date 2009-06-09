@@ -27,6 +27,7 @@
 #include <jit/exception.h>
 #include <jit/compiler.h>
 #include <vm/string.h>
+#include <vm/class.h>
 #include <vm/die.h>
 #include <vm/vm.h>
 #include <stdlib.h>
@@ -99,6 +100,57 @@ void check_array(struct object *obj, unsigned int index)
 
  throw:
 	throw_from_native(sizeof(struct object *) + sizeof(unsigned int));
+}
+
+void array_store_check(struct object *arrayref, struct object *obj)
+{
+	struct classblock *cb;
+	struct string *str;
+	int err;
+
+	cb = CLASS_CB(arrayref->class);
+
+	if (!IS_ARRAY(cb)) {
+		signal_new_exception("java/lang/RuntimeException",
+				     "object is not an array");
+		goto throw;
+	}
+
+	if (obj == NULL || isInstanceOf(cb->element_class, obj->class))
+		return;
+
+	str = alloc_str();
+	if (str == NULL) {
+		err = -ENOMEM;
+		goto error;
+	}
+
+	err = str_append(str, slash2dots(CLASS_CB(obj->class)->name));
+	if (err)
+		goto error;
+
+	signal_new_exception("java/lang/ArrayStoreException", str->value);
+	free_str(str);
+
+ throw:
+	throw_from_native(2 * sizeof(struct object *));
+	return;
+
+ error:
+	if (str)
+		free_str(str);
+
+	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
+		die("%s: out of memory", __func__);
+
+	die("%s: error %d", __func__, err);
+}
+
+void array_store_check_vmtype(struct object *arrayref, enum vm_type vm_type)
+{
+	/* TODO: Implement assignment compatibility checking described
+	   in chapter "2.6.7 Assignment Conversion" of The Java VM
+	   Specification - Second Edition. */
 }
 
 void check_cast(struct object *obj, struct object *type)

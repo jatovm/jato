@@ -1,3 +1,4 @@
+#include <vm/types.h>
 #include <vm/vm.h>
 #include <stdlib.h>
 
@@ -32,4 +33,12 @@ void check_cast(struct object *obj, struct object *type)
 
 	if (!isInstanceOf(type, obj->class))
 		abort();
+}
+
+void array_store_check(struct object *arrayref, struct object *obj)
+{
+}
+
+void array_store_check_vmtype(struct object *arrayref, enum vm_type vm_type)
+{
 }

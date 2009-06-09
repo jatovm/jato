@@ -335,11 +335,13 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	stmt = stmt_entry(bb->stmt_list.next);
 
 	struct statement *arraycheck = stmt;
-	struct statement *store_stmt = stmt_entry(arraycheck->stmt_list_node.next);
+	struct statement *storecheck_stmt = stmt_entry(arraycheck->stmt_list_node.next);
+	struct statement *store_stmt = stmt_entry(storecheck_stmt->stmt_list_node.next);
 
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr,
 			       arraycheck);
-
+	assert_array_store_check_stmt(storecheck_stmt, arrayref_expr,
+				      store_stmt->store_src);
 	assert_store_stmt(store_stmt);
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
 				store_stmt->store_dest);

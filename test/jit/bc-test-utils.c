@@ -215,6 +215,15 @@ void assert_store_stmt(struct statement *stmt)
 	assert_int_equals(STMT_STORE, stmt_type(stmt));
 }
 
+void assert_array_store_check_stmt(struct statement *stmt,
+				   struct expression *arrayref,
+				   struct tree_node *store_src)
+{
+	assert_int_equals(STMT_ARRAY_STORE_CHECK, stmt_type(stmt));
+	assert_null_check_expr(arrayref, to_expr(stmt->store_check_array));
+	assert_ptr_equals(store_src, stmt->store_check_src);
+}
+
 void assert_return_stmt(struct expression *return_value, struct statement *stmt)
 {
 	assert_int_equals(STMT_RETURN, stmt_type(stmt));

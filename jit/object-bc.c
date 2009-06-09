@@ -247,6 +247,7 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 {
 	struct expression *value, *index, *arrayref, *arrayref_nullcheck;
 	struct statement *store_stmt, *arraycheck;
+	struct statement *array_store_check_stmt;
 	struct expression *src_expr, *dest_expr;
 
 	value = stack_pop(ctx->bb->mimic_stack);
@@ -274,11 +275,24 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 	expr_get(dest_expr);
 	arraycheck->expression = &dest_expr->node;
 
+	array_store_check_stmt = alloc_statement(STMT_ARRAY_STORE_CHECK);
+	if (!array_store_check_stmt)
+		goto failed_array_store_check_stmt;
+
+	expr_get(src_expr);
+	array_store_check_stmt->store_check_src = &src_expr->node;
+	expr_get(arrayref_nullcheck);
+	array_store_check_stmt->store_check_array = &arrayref_nullcheck->node;
+
+
 	convert_statement(ctx, arraycheck);
+	convert_statement(ctx, array_store_check_stmt);
 	convert_statement(ctx, store_stmt);
 
 	return 0;
 
+      failed_array_store_check_stmt:
+	free_statement(arraycheck);
       failed_arraycheck:
       failed_arrayref_nullcheck:
 	free_statement(store_stmt);

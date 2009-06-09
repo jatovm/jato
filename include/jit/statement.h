@@ -18,6 +18,7 @@ enum statement_type {
 	STMT_MONITOR_ENTER,
 	STMT_MONITOR_EXIT,
 	STMT_CHECKCAST,
+	STMT_ARRAY_STORE_CHECK,
 	STMT_LAST,	/* Not a real type. Keep this last.  */
 };
 
@@ -47,6 +48,10 @@ struct statement {
 		};
 		struct /* STMT_ATHROW */ {
 			struct tree_node *exception_ref;
+		};
+		struct /* STMT_ARRAY_STORE_CHECK */ {
+			struct tree_node *store_check_src;
+			struct tree_node *store_check_array;
 		};
 		/* STMT_EXPRESSION, STMT_ARRAY_CHECK */
 		struct tree_node *expression;

@@ -38,6 +38,7 @@ void assert_invoke_expr(enum vm_type, struct methodblock *,
 			struct tree_node *);
 
 void assert_store_stmt(struct statement *);
+void assert_array_store_check_stmt(struct statement *, struct expression *, struct tree_node *);
 void assert_return_stmt(struct expression *, struct statement *);
 void assert_void_return_stmt(struct statement *);
 void assert_null_check_stmt(struct expression *, struct statement *);

@@ -268,6 +268,25 @@ static int print_athrow_stmt(int lvl, struct string *str,
 	return err;
 }
 
+static int print_array_store_check_stmt(int lvl, struct string *str,
+					struct statement *stmt)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "ARRAY_STORE_CHECK:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "src", stmt->store_check_src);
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "array", stmt->store_check_array);
+
+      out:
+	return err;
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -282,6 +301,7 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_MONITOR_EXIT] = print_monitorexit_stmt,
 	[STMT_CHECKCAST] = print_checkcast_stmt,
 	[STMT_ATHROW] = print_athrow_stmt,
+	[STMT_ARRAY_STORE_CHECK] = print_array_store_check_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)

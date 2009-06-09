@@ -33,6 +33,7 @@ void free_statement(struct statement *stmt)
 
 	switch (stmt_type(stmt)) {
 	case STMT_STORE:
+	case STMT_ARRAY_STORE_CHECK:
 		expr_put(to_expr(stmt->store_dest));
 		expr_put(to_expr(stmt->store_src));
 		break;
