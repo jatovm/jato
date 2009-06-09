@@ -84,7 +84,7 @@ static convert_fn_t converters[] = {
 
 void convert_expression(struct parse_context *ctx, struct expression *expr)
 {
-	expr->bytecode_offset = ctx->offset;
+	tree_patch_bc_offset(&expr->node, ctx->offset);
 	stack_push(ctx->bb->mimic_stack, expr);
 }
 
