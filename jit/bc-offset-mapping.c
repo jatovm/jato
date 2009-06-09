@@ -33,34 +33,22 @@
 #include <vm/buffer.h>
 
 /**
- * tree_patch_bc_offset - sets bytecode_offset field of a tree node container
+ * tree_patch_bc_offset - sets bytecode_offset field of a tree node
  *                        unless it is already set.
  * @node: a tree node
  * @offset: bytecode offset to set.
  */
 void tree_patch_bc_offset(struct tree_node *node, unsigned long bc_offset)
 {
-	if (node_is_stmt(node)) {
-		struct statement *stmt = to_stmt(node);
+	int i;
 
-		if (stmt->bytecode_offset != BC_OFFSET_UNKNOWN)
-			return;
+	if (node->bytecode_offset != BC_OFFSET_UNKNOWN)
+		return;
 
-		stmt->bytecode_offset = bc_offset;
-	} else {
-		struct expression *expr = to_expr(node);
-		int i;
+	node->bytecode_offset = bc_offset;
 
-		if (expr->bytecode_offset != BC_OFFSET_UNKNOWN)
-			return;
-
-		expr->bytecode_offset = bc_offset;
-
-		/* We should propagate bytecode offset to expressions
-		   contained by this one. */
-		for (i = 0; i < expr_nr_kids(expr); i++)
-			tree_patch_bc_offset(expr->node.kids[i], bc_offset);
-	}
+	for (i = 0; i < node_nr_kids(node); i++)
+		tree_patch_bc_offset(node->kids[i], bc_offset);
 }
 
 /**
@@ -112,14 +100,6 @@ void print_bytecode_offset(unsigned long bytecode_offset, struct string *str)
 		sprintf(buf, "%ld", bytecode_offset);
 		str_append(str, buf);
 	}
-}
-
-unsigned long tree_bytecode_offset(struct tree_node *node)
-{
-	if (node_is_stmt(node))
-		return to_stmt(node)->bytecode_offset;
-
-	return to_expr(node)->bytecode_offset;
 }
 
 bool all_insn_have_bytecode_offset(struct compilation_unit *cu)

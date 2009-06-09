@@ -83,6 +83,7 @@ JIT_OBJS = \
 	jit/cu-mapping.o	\
 	jit/method.o		\
 	jit/nop-bc.o		\
+	jit/tree-node.o		\
 	jit/perf-map.o
 
 VM_OBJS = \

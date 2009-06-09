@@ -72,6 +72,7 @@ static inline enum statement_type stmt_type(struct statement *stmt)
 
 struct statement *alloc_statement(enum statement_type);
 void free_statement(struct statement *);
+int stmt_nr_kids(struct statement *);
 
 #define for_each_stmt(stmt, stmt_list) list_for_each_entry(stmt, stmt_list, stmt_list_node)
 	

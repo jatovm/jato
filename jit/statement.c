@@ -13,6 +13,30 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* How many child expression nodes are used by each type of statement. */
+int stmt_nr_kids(struct statement *stmt)
+{
+	switch (stmt_type(stmt)) {
+	case STMT_STORE:
+	case STMT_ARRAY_STORE_CHECK:
+		return 2;
+	case STMT_IF:
+	case STMT_RETURN:
+	case STMT_EXPRESSION:
+	case STMT_ARRAY_CHECK:
+	case STMT_ATHROW:
+	case STMT_MONITOR_ENTER:
+	case STMT_MONITOR_EXIT:
+	case STMT_CHECKCAST:
+		return 1;
+	case STMT_GOTO:
+	case STMT_VOID_RETURN:
+		return 0;
+	default:
+		assert(!"Invalid statement type");
+	}
+}
+
 struct statement *alloc_statement(enum statement_type type)
 {
 	struct statement *stmt = malloc(sizeof *stmt);
@@ -20,7 +44,7 @@ struct statement *alloc_statement(enum statement_type type)
 		memset(stmt, 0, sizeof *stmt);
 		INIT_LIST_HEAD(&stmt->stmt_list_node);
 		stmt->node.op = type << STMT_TYPE_SHIFT;
-		stmt->bytecode_offset = BC_OFFSET_UNKNOWN;
+		stmt->node.bytecode_offset = BC_OFFSET_UNKNOWN;
 	}
 
 	return stmt;
@@ -28,41 +52,14 @@ struct statement *alloc_statement(enum statement_type type)
 
 void free_statement(struct statement *stmt)
 {
+	int i;
+
 	if (!stmt)
 		return;
 
-	switch (stmt_type(stmt)) {
-	case STMT_STORE:
-	case STMT_ARRAY_STORE_CHECK:
-		expr_put(to_expr(stmt->store_dest));
-		expr_put(to_expr(stmt->store_src));
-		break;
-	case STMT_IF:
-		expr_put(to_expr(stmt->if_conditional));
-		break;
-	case STMT_GOTO:
-		break;
-	case STMT_RETURN:
-		if (stmt->return_value)
-			expr_put(to_expr(stmt->return_value));
-		break;
-	case STMT_ATHROW:
-	case STMT_VOID_RETURN:
-		break;
-	case STMT_EXPRESSION:
-	case STMT_ARRAY_CHECK:
-	case STMT_MONITOR_ENTER:
-	case STMT_MONITOR_EXIT:
-		if (stmt->expression)
-			expr_put(to_expr(stmt->expression));
-		break;
-	case STMT_CHECKCAST:
-		if (stmt->checkcast_ref)
-			expr_put(to_expr(stmt->checkcast_ref));
-		break;
-	case STMT_LAST:
-		assert(!"STMT_LAST is not a real type. Don't use it!");
-		break;
-	};
+	for (i = 0; i < stmt_nr_kids(stmt); i++)
+		if (stmt->node.kids[i])
+			expr_put(to_expr(stmt->node.kids[i]));
+
 	free(stmt);
 }

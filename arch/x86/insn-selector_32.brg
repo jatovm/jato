@@ -1273,7 +1273,7 @@ stmt:	STMT_CHECKCAST(reg)
 static void select_insn(struct basic_block *bb, struct tree_node *tree,
 			struct insn *instruction)
 {
-	instruction->bytecode_offset = tree_bytecode_offset(tree);
+	instruction->bytecode_offset = tree->bytecode_offset;
 	bb_add_insn(bb, instruction);
 }
 

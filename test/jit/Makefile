@@ -41,6 +41,7 @@ OBJS = \
 	../../jit/bc-offset-mapping.o \
 	../../jit/cu-mapping.o \
 	../../jit/nop-bc.o \
+	../../jit/tree-node.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \

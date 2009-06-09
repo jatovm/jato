@@ -10,10 +10,11 @@
 #define OP_SHIFT	8UL
 #define STMT_TYPE_MASK	0xFF000000UL
 #define STMT_TYPE_SHIFT	24UL
-		
+
 struct tree_node {
 	struct tree_node *kids[2];
 	unsigned long op;
+	unsigned long bytecode_offset;
 };
 
 static inline int node_is_stmt(struct tree_node *node)
@@ -35,5 +36,7 @@ static inline int tree_op(struct tree_node *node)
 
 	return (node->op & EXPR_TYPE_MASK) >> EXPR_TYPE_SHIFT;
 }
+
+int node_nr_kids(struct tree_node *node);
 
 #endif

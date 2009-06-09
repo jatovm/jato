@@ -57,7 +57,7 @@ struct expression *alloc_expression(enum expression_type type,
 		expr->node.op = type << EXPR_TYPE_SHIFT;
 		expr->vm_type = vm_type;
 		expr->refcount = 1;
-		expr->bytecode_offset = BC_OFFSET_UNKNOWN;
+		expr->node.bytecode_offset = BC_OFFSET_UNKNOWN;
 	}
 	return expr;
 }

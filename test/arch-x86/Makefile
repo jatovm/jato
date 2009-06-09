@@ -52,6 +52,7 @@ OBJS = \
 	../../jit/exception.o \
 	../../jit/cu-mapping.o \
 	../../jit/method.o \
+	../../jit/tree-node.o \
 	../../arch/x86/emit-code$(ARCH_POSTFIX).o \
 	../../arch/x86/instruction.o \
 	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \

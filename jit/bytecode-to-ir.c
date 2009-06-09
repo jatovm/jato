@@ -89,34 +89,9 @@ void convert_expression(struct parse_context *ctx, struct expression *expr)
 }
 
 static void
-do_convert_statement(struct basic_block *bb, struct statement *stmt, unsigned short bc_offset)
+do_convert_statement(struct basic_block *bb, struct statement *stmt, unsigned long bc_offset)
 {
-	/*
-	 * Some expressions do not go through convert_expression()
-	 * so we need to set their bytecode_offset here if it is not set.
-	 */
-	switch (stmt_type(stmt)) {
-	case STMT_STORE:
-		tree_patch_bc_offset(stmt->store_dest, bc_offset);
-		tree_patch_bc_offset(stmt->store_src, bc_offset);
-		break;
-	case STMT_IF:
-		tree_patch_bc_offset(stmt->if_conditional, bc_offset);
-		break;
-	case STMT_RETURN:
-		tree_patch_bc_offset(stmt->return_value, bc_offset);
-		break;
-	case STMT_EXPRESSION:
-	case STMT_ARRAY_CHECK:
-		tree_patch_bc_offset(stmt->expression, bc_offset);
-		break;
-	case STMT_ATHROW:
-		tree_patch_bc_offset(stmt->exception_ref, bc_offset);
-		break;
-	default: ;
-	}
-
-	stmt->bytecode_offset = bc_offset;
+	tree_patch_bc_offset(&stmt->node, bc_offset);
 	bb_add_stmt(bb, stmt);
 }
 
