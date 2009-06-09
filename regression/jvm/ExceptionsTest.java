@@ -223,9 +223,23 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
+    public static void testArrayStoreThrowsArrayStoreException() {
+        boolean caught = false;
+        Object[] array = new String[3];
+
+        try {
+            array[2] = new Integer(0);
+        } catch (ArrayStoreException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
+
     public static void testArrayStore() {
         testArrayStoreThrowsNullPointerException();
         testArrayStoreThrowsArrayIndexOutOfBoundsException();
+        testArrayStoreThrowsArrayStoreException();
     }
 
     public static void testArraylength() {
