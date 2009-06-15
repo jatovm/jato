@@ -856,11 +856,27 @@ static void emit_test_membase_reg(struct buffer *buf, struct operand *src,
 	emit_membase_reg(buf, 0x85, src, dest);
 }
 
+/* Emits exception test using given register. */
+static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
+{
+	/* mov gs:(0xXXX), %reg */
+	emit(buf, 0x65);
+	__emit_memdisp_reg(buf, 0x8b,
+		get_thread_local_offset(&exception_guard), reg);
+
+	/* test (%reg), %reg */
+	__emit_test_membase_reg(buf, reg, 0, reg);
+}
+
 void emit_lock(struct buffer *buf, struct object *obj)
 {
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, objectLock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_push_reg(buf, REG_EAX);
+	emit_exception_test(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_EAX);
 }
 
 void emit_unlock(struct buffer *buf, struct object *obj)
@@ -873,6 +889,7 @@ void emit_unlock(struct buffer *buf, struct object *obj)
 	__emit_call(buf, objectUnlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
+	emit_exception_test(buf, REG_EAX);
 
 	__emit_pop_reg(buf, REG_EDX);
 	__emit_pop_reg(buf, REG_EAX);
@@ -887,6 +904,10 @@ void emit_lock_this(struct buffer *buf)
 	__emit_push_membase(buf, REG_EBP, this_arg_offset);
 	__emit_call(buf, objectLock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_push_reg(buf, REG_EAX);
+	emit_exception_test(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_EAX);
 }
 
 void emit_unlock_this(struct buffer *buf)
@@ -902,6 +923,8 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_push_membase(buf, REG_EBP, this_arg_offset);
 	__emit_call(buf, objectUnlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	emit_exception_test(buf, REG_EAX);
 
 	__emit_pop_reg(buf, REG_EDX);
 	__emit_pop_reg(buf, REG_EAX);
