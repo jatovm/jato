@@ -39,6 +39,15 @@ struct compilation_unit {
 
 	/* It's needed to spill exception object reference at eh entry */
 	struct stack_slot *exception_spill_slot;
+
+	/*
+	 * Pointers inside exit block and unwind block after monitor
+	 * unlocking code. The code is only present if method is
+	 * synchronized. These pointers are used to skip unlocking
+	 * when exception is thrown from that unlocking code.
+	 */
+	unsigned char *exit_past_unlock_ptr;
+	unsigned char *unwind_past_unlock_ptr;
 };
 
 struct compilation_unit *alloc_compilation_unit(struct methodblock *);

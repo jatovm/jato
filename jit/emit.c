@@ -63,11 +63,13 @@ int emit_machine_code(struct compilation_unit *cu)
 	emit_body(cu->exit_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))
 		emit_monitorexit(cu);
+	cu->exit_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_epilog(cu->objcode);
 
 	emit_body(cu->unwind_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))
 		emit_monitorexit(cu);
+	cu->unwind_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_unwind(cu->objcode);
 
 	return 0;

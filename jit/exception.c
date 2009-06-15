@@ -165,6 +165,20 @@ static unsigned char *find_handler(struct compilation_unit *cu,
 	return NULL;
 }
 
+static bool
+is_inside_exit_unlock(struct compilation_unit *cu, unsigned char *ptr)
+{
+	return ptr >= bb_native_ptr(cu->exit_bb) &&
+		ptr < cu->exit_past_unlock_ptr;
+}
+
+static bool
+is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
+{
+	return ptr >= bb_native_ptr(cu->unwind_bb) &&
+		ptr < cu->unwind_past_unlock_ptr;
+}
+
 /**
  * throw_exception_from - returns native pointer inside jitted method
  *                        that sould be executed to handle exception.
@@ -205,12 +219,19 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 
 	signal_exception(exception);
 
-	if (!is_jit_method(frame->return_address))
+	if (!is_jit_method(frame->return_address)) {
 		/*
 		 * No handler found within jitted method call chain.
 		 * Return to previous (not jit) method.
 		 */
+		if (is_inside_exit_unlock(cu, native_ptr))
+			return cu->exit_past_unlock_ptr;
+
 		return bb_native_ptr(cu->exit_bb);
+	}
+
+	if (is_inside_unwind_unlock(cu, native_ptr))
+		return cu->unwind_past_unlock_ptr;
 
 	return bb_native_ptr(cu->unwind_bb);
 }
