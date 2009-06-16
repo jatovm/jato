@@ -33,6 +33,7 @@ extern void emit_lock(struct buffer *, struct object *);
 extern void emit_lock_this(struct buffer *);
 extern void emit_unlock(struct buffer *, struct object *);
 extern void emit_unlock_this(struct buffer *);
+extern void emit_body(struct basic_block *bb, struct buffer *buf);
 extern void backpatch_branch_target(struct buffer *, struct insn *, unsigned long);
 
 #endif /* JATO_EMIT_CODE_H */
