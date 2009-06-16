@@ -6,6 +6,7 @@ struct jit_trampoline;
 struct basic_block;
 struct buffer;
 struct object;
+struct insn;
 
 enum emitter_type {
 	NO_OPERANDS = 1,
