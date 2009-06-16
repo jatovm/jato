@@ -1135,25 +1135,426 @@ void emit_trampoline(struct compilation_unit *cu,
  * x86-64 code emitters *
  ************************/
 
+#define	REX		40
+#define REX_W		(REX | 8)	/* 64-bit operands */
+#define REX_R		(REX | 4)	/* ModRM reg extension */
+#define REX_X		(REX | 2)	/* SIB index extension */
+#define REX_B		(REX | 1)	/* ModRM r/m extension */
+
+/*
+ *	__encode_reg:	Encode register to be used in x86-64 instruction.
+ *	@reg: Register to encode.
+ *
+ *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
+ */
+static unsigned char __encode_reg(enum machine_reg reg)
+{
+	unsigned char ret = 0;
+
+	switch (reg) {
+	case REG_RAX:
+		ret = 0x00;
+		break;
+	case REG_RBX:
+		ret = 0x03;
+		break;
+	case REG_RCX:
+		ret = 0x01;
+		break;
+	case REG_RDX:
+		ret = 0x02;
+		break;
+	case REG_RSI:
+		ret = 0x06;
+		break;
+	case REG_RDI:
+		ret = 0x07;
+		break;
+	case REG_RSP:
+		ret = 0x04;
+		break;
+	case REG_RBP:
+		ret = 0x05;
+		break;
+	case REG_R8:
+		ret = 0x08;
+		break;
+	case REG_R9:
+		ret = 0x09;
+		break;
+	case REG_R10:
+		ret = 0x0A;
+		break;
+	case REG_R11:
+		ret = 0x0B;
+		break;
+	case REG_R12:
+		ret = 0x0C;
+		break;
+	case REG_R13:
+		ret = 0x0D;
+		break;
+	case REG_R14:
+		ret = 0x0E;
+		break;
+	case REG_R15:
+		ret = 0x0F;
+		break;
+	case REG_UNASSIGNED:
+		assert(!"unassigned register in code emission");
+		break;
+	}
+	return ret;
+}
+
+static inline unsigned char reg_low(unsigned char reg)
+{
+	return (reg & 0x7);
+}
+
+static inline unsigned char reg_high(unsigned char reg)
+{
+	return (reg & 0x8);
+}
+
+static void __emit_reg(struct buffer *buf,
+		       int rex_w,
+		       unsigned char opc,
+		       enum machine_reg reg)
+{
+	unsigned char __reg = __encode_reg(reg);
+	unsigned char rex_pfx = 0;
+
+	if (rex_w)
+		rex_pfx |= REX_W;
+	if (reg_high(__reg))
+		rex_pfx |= REX_B;
+
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+	emit(buf, opc + reg_low(__reg));
+}
+
+static void __emit64_push_reg(struct buffer *buf, enum machine_reg reg)
+{
+	__emit_reg(buf, 0, 0x50, reg);
+}
+
+static void emit64_push_reg(struct buffer *buf, struct operand *operand)
+{
+	__emit64_push_reg(buf, mach_reg(&operand->reg));
+}
+
+static void __emit64_pop_reg(struct buffer *buf, enum machine_reg reg)
+{
+	__emit_reg(buf, 0, 0x58, reg);
+}
+
+static void emit64_pop_reg(struct buffer *buf, struct operand *operand)
+{
+	__emit64_pop_reg(buf, mach_reg(&operand->reg));
+}
+
+static void __emit_reg_reg(struct buffer *buf,
+			   int rex_w,
+			   unsigned char opc,
+			   enum machine_reg direct_reg,
+			   enum machine_reg rm_reg)
+{
+	unsigned char rex_pfx = 0, mod_rm;
+	unsigned char direct, rm;
+
+	direct = __encode_reg(direct_reg);
+	rm = __encode_reg(rm_reg);
+
+	if (rex_w)
+		rex_pfx |= REX_W;
+	if (reg_high(direct))
+		rex_pfx |= REX_R;
+	if (reg_high(rm))
+		rex_pfx |= REX_B;
+
+	mod_rm = encode_modrm(0x03, direct, rm);
+
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+	emit(buf, opc);
+	emit(buf, mod_rm);
+}
+
+static void emit_reg_reg(struct buffer *buf,
+			 int rex_w,
+			 unsigned char opc,
+			 struct operand *direct,
+			 struct operand *rm)
+{
+	enum machine_reg direct_reg, rm_reg;
+
+	direct_reg = mach_reg(&direct->reg);
+	rm_reg = mach_reg(&rm->reg);
+
+	__emit_reg_reg(buf, rex_w, opc, direct_reg, rm_reg);
+}
+
+static void __emit64_mov_reg_reg(struct buffer *buf,
+				 enum machine_reg src,
+				 enum machine_reg dst)
+{
+	__emit_reg_reg(buf, 1, 0x89, src, dst);
+}
+
+static void emit64_mov_reg_reg(struct buffer *buf,
+			       struct operand *src,
+			       struct operand *dest)
+{
+	__emit64_mov_reg_reg(buf, mach_reg(&src->reg), mach_reg(&dest->reg));
+}
+
+static void __emit32_mov_reg_reg(struct buffer *buf,
+				 enum machine_reg src,
+				 enum machine_reg dst)
+{
+	__emit_reg_reg(buf, 0, 0x89, src, dst);
+}
+
+static void emit32_mov_reg_reg(struct buffer *buf,
+			       struct operand *src,
+			       struct operand *dest)
+{
+	__emit32_mov_reg_reg(buf, mach_reg(&src->reg), mach_reg(&dest->reg));
+}
+
+static void emit_alu_imm_reg(struct buffer *buf,
+			     int rex_w,
+			     unsigned char opc_ext,
+			     long imm,
+			     enum machine_reg reg)
+{
+	unsigned char rex_pfx = 0, opc, __reg;
+
+	__reg = __encode_reg(reg);
+
+	if (rex_w)
+		rex_pfx |= REX_W;
+	if (reg_high(__reg))
+		rex_pfx |= REX_B;
+
+	if (is_imm_8(imm))
+		opc = 0x83;
+	else
+		opc = 0x81;
+
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+	emit(buf, opc);
+	emit(buf, encode_modrm(0x3, opc_ext, __reg));
+	emit_imm(buf, imm);
+}
+
+static void __emit64_sub_imm_reg(struct buffer *buf,
+				 unsigned long imm,
+				 enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 1, 0x05, imm, reg);
+}
+
+static void emit64_sub_imm_reg(struct buffer *buf,
+			       struct operand *src,
+			       struct operand *dest)
+{
+	__emit64_sub_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
+static void __emit32_sub_imm_reg(struct buffer *buf,
+				 unsigned long imm,
+				 enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0, 0x05, imm, reg);
+}
+
+static void emit32_sub_imm_reg(struct buffer *buf,
+			       struct operand *src,
+			       struct operand *dest)
+{
+	__emit32_sub_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
+static void __emit64_add_imm_reg(struct buffer *buf,
+				 long imm,
+				 enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 1, 0x00, imm, reg);
+}
+
+static void emit64_add_imm_reg(struct buffer *buf,
+			       struct operand *src,
+			       struct operand *dest)
+{
+	__emit64_add_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
+static void __emit32_add_imm_reg(struct buffer *buf,
+				 long imm,
+				 enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0, 0x00, imm, reg);
+}
+
+static void emit32_add_imm_reg(struct buffer *buf,
+			       struct operand *src,
+			       struct operand *dest)
+{
+	__emit64_add_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
+static void emit_imm64(struct buffer *buf, int imm)
+{
+	union {
+		int val;
+		unsigned char b[8];
+	} imm_buf;
+
+	imm_buf.val = imm;
+	emit(buf, imm_buf.b[0]);
+	emit(buf, imm_buf.b[1]);
+	emit(buf, imm_buf.b[2]);
+	emit(buf, imm_buf.b[3]);
+	emit(buf, imm_buf.b[4]);
+	emit(buf, imm_buf.b[5]);
+	emit(buf, imm_buf.b[6]);
+	emit(buf, imm_buf.b[7]);
+}
+
+static void emit64_imm(struct buffer *buf, long imm)
+{
+	if (is_imm_8(imm))
+		emit(buf, imm);
+	else
+		emit_imm64(buf, imm);
+}
+
+static void __emit64_push_imm(struct buffer *buf, long imm)
+{
+	unsigned char opc;
+
+	if (is_imm_8(imm))
+		opc = 0x6a;
+	else
+		opc = 0x68;
+
+	emit(buf, opc);
+	emit64_imm(buf, imm);
+}
+
+static void emit64_push_imm(struct buffer *buf, struct operand *operand)
+{
+	__emit64_push_imm(buf, operand->imm);
+}
+
+static void __emit_membase(struct buffer *buf,
+			   int rex_w,
+			   unsigned char opc,
+			   enum machine_reg base_reg,
+			   unsigned long disp,
+			   unsigned char reg_opcode)
+{
+	unsigned char rex_pfx = 0, mod, rm, mod_rm;
+	unsigned char __base_reg = __encode_reg(base_reg);
+	int needs_sib;
+
+	needs_sib = (base_reg == REG_ESP);
+
+	emit(buf, opc);
+
+	if (needs_sib)
+		rm = 0x04;
+	else
+		rm = __base_reg;
+
+	if (is_imm_8(disp))
+		mod = 0x01;
+	else
+		mod = 0x02;
+
+	if (rex_w)
+		rex_pfx |= REX_W;
+	if (reg_high(reg_opcode))
+		rex_pfx |= REX_R;
+	if (reg_high(__base_reg))
+		rex_pfx |= REX_B;
+
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+
+	mod_rm = encode_modrm(mod, reg_opcode, rm);
+	emit(buf, mod_rm);
+
+	if (needs_sib)
+		emit(buf, encode_sib(0x00, 0x04, __base_reg));
+
+	emit_imm(buf, disp);
+}
+
+static void __emit64_push_membase(struct buffer *buf,
+				  enum machine_reg src_reg,
+				  unsigned long disp)
+{
+	__emit_membase(buf, 0, 0xff, src_reg, disp, 6);
+}
+
+static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
+{
+	/* FIXME: implement this! */
+}
+
+struct emitter emitters[] = {
+	GENERIC_X86_EMITTERS,
+
+	DECL_EMITTER(INSN64_ADD_IMM_REG, emit64_add_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN64_MOV_REG_REG, emit64_mov_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN64_PUSH_IMM, emit64_push_imm, SINGLE_OPERAND),
+	DECL_EMITTER(INSN64_PUSH_REG, emit64_push_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN64_POP_REG, emit64_pop_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN64_SUB_IMM_REG, emit64_sub_imm_reg, TWO_OPERANDS),
+
+	DECL_EMITTER(INSN32_ADD_IMM_REG, emit32_add_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN32_MOV_REG_REG, emit32_mov_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN32_SUB_IMM_REG, emit32_sub_imm_reg, TWO_OPERANDS),
+};
+
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
-	abort();
+	__emit_push_reg(buf, REG_RBX);
+	__emit_push_reg(buf, REG_R12);
+	__emit_push_reg(buf, REG_R13);
+	__emit_push_reg(buf, REG_R14);
+	__emit_push_reg(buf, REG_R15);
+
+	/*
+	 * The ABI requires us to clear DF, but we
+	 * don't need to. Though keep this in mind:
+	 * emit(buf, 0xFC);
+	 */
+
+	__emit_push_reg(buf, REG_RBP);
+	__emit64_mov_reg_reg(buf, REG_RSP, REG_RBP);
+
+	if (nr_locals)
+		__emit64_sub_imm_reg(buf,
+				     nr_locals * sizeof(unsigned long),
+				     REG_RSP);
 }
 
-void emit_ret(struct buffer *buf)
+void emit_epilog(struct buffer *buf)
 {
-	abort();
-}
+	emit_leave(buf);
 
-void emit_epilog(struct buffer *buf, unsigned long nr_locals)
-{
-	abort();
-}
-
-void emit_branch_rel(struct buffer *buf, unsigned char prefix,
-		     unsigned char opc, long rel32)
-{
-	abort();
+	/* Restore callee saved registers */
+	__emit_pop_reg(buf, REG_R15);
+	__emit_pop_reg(buf, REG_R14);
+	__emit_pop_reg(buf, REG_R13);
+	__emit_pop_reg(buf, REG_R12);
+	__emit_pop_reg(buf, REG_RBX);
 }
 
 void emit_trampoline(struct compilation_unit *cu, void *call_target,
