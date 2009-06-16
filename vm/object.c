@@ -1,9 +1,13 @@
+#include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+#include <jit/exception.h>
 
 #include <vm/die.h>
 #include <vm/object.h>
 #include <vm/stdlib.h>
+#include <vm/string.h>
 
 struct vm_object *vm_object_alloc(struct vm_class *class)
 {
@@ -143,7 +147,7 @@ struct vm_object *new_exception(char *class_name, char *message)
 	return obj;
 }
 
-bool vm_object_is_instance_of(struct vm_object *obj, struct vm_object *class)
+bool vm_object_is_instance_of(struct vm_object *obj, struct vm_class *class)
 {
 	if (!obj)
 		return false;
@@ -159,10 +163,157 @@ void vm_object_check_null(struct vm_object *obj)
 
 void vm_object_check_array(struct vm_object *obj, unsigned int index)
 {
-	NOT_IMPLEMENTED;
+	unsigned int array_len;
+	struct classblock *cb;
+	char index_str[32];
+
+	cb = CLASS_CB(obj->class);
+
+	if (!IS_ARRAY(cb)) {
+		signal_new_exception("java/lang/RuntimeException",
+				     "object is not an array");
+		goto throw;
+	}
+
+	array_len = ARRAY_LEN(obj);
+
+	if (index < array_len)
+		return;
+
+	sprintf(index_str, "%d > %d", index, array_len - 1);
+	signal_new_exception("java/lang/ArrayIndexOutOfBoundsException",
+			     index_str);
+
+ throw:
+	throw_from_native(sizeof(struct vm_object *) + sizeof(unsigned int));
 }
 
-void vm_object_check_cast(struct vm_object *obj, struct vm_object *class)
+void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 {
+	struct vm_class *cb;
+	struct string *str;
+	int err;
+
+	cb = arrayref->class;
+
+	if (!IS_ARRAY(cb)) {
+		signal_new_exception("java/lang/RuntimeException",
+				     "object is not an array");
+		goto throw;
+	}
+
 	NOT_IMPLEMENTED;
+#if 0
+	if (obj == NULL || isInstanceOf(cb->element_class, obj->class))
+		return;
+#endif
+
+	str = alloc_str();
+	if (str == NULL) {
+		err = -ENOMEM;
+		goto error;
+	}
+
+	err = str_append(str, slash2dots(obj->class->name));
+	if (err)
+		goto error;
+
+	signal_new_exception("java/lang/ArrayStoreException", str->value);
+	free_str(str);
+
+ throw:
+	throw_from_native(2 * sizeof(struct vm_object *));
+	return;
+
+ error:
+	if (str)
+		free_str(str);
+
+	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
+		die("%s: out of memory", __func__);
+
+	die("%s: error %d", __func__, err);
+}
+
+void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type)
+{
+	/* TODO: Implement assignment compatibility checking described
+	   in chapter "2.6.7 Assignment Conversion" of The Java VM
+	   Specification - Second Edition. */
+}
+
+void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
+{
+	struct string *str;
+	int err;
+
+	if (!obj || vm_object_is_instance_of(obj, class))
+		return;
+
+	if (exception_occurred())
+		goto throw;
+
+	str = alloc_str();
+	if (str == NULL) {
+		err = -ENOMEM;
+		goto error;
+	}
+
+	err = str_append(str, slash2dots(obj->class->name));
+	if (err)
+		goto error;
+
+	err = str_append(str, " cannot be cast to ");
+	if (err)
+		goto error;
+
+	err = str_append(str, slash2dots(class->name));
+	if (err)
+		goto error;
+
+	signal_new_exception("java/lang/ClassCastException", str->value);
+	free_str(str);
+ throw:
+	throw_from_native(2 * sizeof(struct vm_object *));
+	return;
+
+ error:
+	if (str)
+		free_str(str);
+
+	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
+		die("%s: out of memory", __func__);
+
+	die("%s: error %d", __func__, err);
+}
+
+void array_size_check(int size)
+{
+	if (size < 0) {
+		signal_new_exception(
+			"java/lang/NegativeArraySizeException", NULL);
+		throw_from_native(sizeof(int));
+	}
+}
+
+void multiarray_size_check(int n, ...)
+{
+	va_list ap;
+	int i;
+
+	va_start(ap, n);
+
+	for (i = 0; i < n; i++) {
+		if (va_arg(ap, int) >= 0)
+			continue;
+
+		signal_new_exception("java/lang/NegativeArraySizeException",
+				     NULL);
+		va_end(ap);
+		throw_from_native(sizeof(int) * (n + 1));
+		return;
+	}
+
+	va_end(ap);
+	return;
 }

@@ -79,6 +79,7 @@ enum insn_type {
 	INSN_MOV_IMM_REG,
 	INSN_MOV_MEMLOCAL_REG,
 	INSN_MOV_MEMBASE_REG,
+	INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
 	INSN_MOV_MEMINDEX_REG,
 	INSN_MOV_REG_MEMBASE,
 	INSN_MOV_REG_MEMINDEX,
@@ -166,12 +167,6 @@ static inline struct insn *
 reload_insn(struct stack_slot *slot, struct var_info *var)
 {
 	return memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, var);
-}
-
-static inline struct insn *
-exception_spill_insn(struct stack_slot *slot)
-{
-	return memlocal_insn(INSN_POP_MEMLOCAL, slot);
 }
 
 struct insn *alloc_insn(enum insn_type);

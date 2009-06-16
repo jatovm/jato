@@ -227,7 +227,6 @@ static void bytecode_stream_init(struct stream *stream, struct vm_method *method
 int analyze_control_flow(struct compilation_unit *cu)
 {
 	struct bitset *branch_targets;
-	struct basic_block *entry_bb;
 	struct stream stream;
 	int err = 0;
 
@@ -237,10 +236,9 @@ int analyze_control_flow(struct compilation_unit *cu)
 
 	bytecode_stream_init(&stream, cu->method);
 
-	entry_bb = get_basic_block(cu, 0,
-		cu->method->code_attribute.code_length);
+	cu->entry_bb = get_basic_block(cu, 0, cu->method->code_attribute.code_length);
 
-	err = split_after_branches(&stream, entry_bb, branch_targets);
+	err = split_after_branches(&stream, cu->entry_bb, branch_targets);
 	if (err)
 		goto out;
 

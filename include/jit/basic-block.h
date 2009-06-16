@@ -12,6 +12,7 @@ struct basic_block {
 	struct compilation_unit *b_parent;
 	unsigned long start;
 	unsigned long end;
+	bool is_converted;
 	bool is_emitted;
 	struct list_head stmt_list;
 	struct list_head insn_list;
@@ -66,6 +67,7 @@ struct basic_block *bb_split(struct basic_block *, unsigned long);
 void bb_add_stmt(struct basic_block *, struct statement *);
 void bb_add_insn(struct basic_block *, struct insn *);
 int bb_add_successor(struct basic_block *, struct basic_block *);
+struct statement *bb_remove_last_stmt(struct basic_block *bb);
 unsigned char *bb_native_ptr(struct basic_block *bb);
 
 #define for_each_basic_block(bb, bb_list) list_for_each_entry(bb, bb_list, bb_list_node)

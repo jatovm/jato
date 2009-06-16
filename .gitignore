@@ -33,6 +33,11 @@ test/vm/vm-test-runner
 tools/classpath-config
 
 #
+# ctags generated files
+#
+tags
+
+#
 # Quilt generated directories
 #
 patches

@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2008 Saeed Siam
  * Copyright (c) 2009 Tomasz Grabiec
  *
  * This file is released under the GPL version 2 with the following
@@ -25,47 +24,32 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <jit/expression.h>
+#include <vm/guard-page.h>
+#include <vm/alloc.h>
+#include <vm/die.h>
 
-#include <vm/stack.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
-#include <errno.h>
-
-int convert_athrow(struct parse_context *ctx)
+void *alloc_guard_page(void)
 {
-	struct stack *mimic_stack = ctx->bb->mimic_stack;
-	struct expression *exception_ref;
-	struct expression *nullcheck;
-	struct statement *stmt;
+	void *p = alloc_page();
 
-	stmt = alloc_statement(STMT_ATHROW);
-	if (!stmt)
-		return -ENOMEM;
+	if (p == NULL)
+		return NULL;
 
-	exception_ref = stack_pop(mimic_stack);
+	if (hide_guard_page(p))
+		return NULL;
 
-	nullcheck = null_check_expr(exception_ref);
-	if (!nullcheck)
-		return -ENOMEM;
+	return p;
+}
 
-	stmt->exception_ref = &nullcheck->node;
+int hide_guard_page(void *page_ptr)
+{
+	return mprotect(page_ptr, getpagesize(), PROT_NONE);
+}
 
-	/*
-	 * According to the JVM specification athrow operation is
-	 * supposed to discard the java stack and push exception
-	 * reference on it. We don't do the latter because exception
-	 * reference is not transferred to exception handlers in
-	 * BC2IR layer.
-	 */
-	while (!stack_is_empty(mimic_stack)) {
-		struct expression *expr = stack_pop(mimic_stack);
-
-		expr_put(expr);
-	}
-
-	convert_statement(ctx, stmt);
-
-	return 0;
+int unhide_guard_page(void *page_ptr)
+{
+	return mprotect(page_ptr, getpagesize(), PROT_READ|PROT_WRITE);
 }

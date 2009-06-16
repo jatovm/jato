@@ -37,8 +37,10 @@
 #include <vm/die.h>
 #include <vm/field.h>
 #include <vm/method.h>
+#include <vm/string.h>
 #include <vm/vm.h>
 
+#include <jit/exception.h>
 #include <jit/compiler.h>
 #include <jit/vtable.h>
 

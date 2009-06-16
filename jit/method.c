@@ -26,6 +26,9 @@
 
 #include <jit/compiler.h>
 
+#include <vm/class.h>
+#include <vm/method.h>
+
 #include <stdbool.h>
 
 /* Points to the first address past text segment */
@@ -43,4 +46,11 @@ extern char etext;
 bool is_jit_method(unsigned long eip)
 {
 	return eip >= (unsigned long)&etext;
+}
+
+const char *method_symbol(struct vm_method *method, char *symbol, size_t size)
+{
+	snprintf(symbol, size, "%s.%s%s", method->class->name, method->name, method->type);
+
+	return symbol;
 }

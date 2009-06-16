@@ -35,6 +35,8 @@
 
 #include <vm/buffer.h>
 #include <vm/class.h>
+#include <vm/die.h>
+#include <vm/guard-page.h>
 #include <vm/method.h>
 #include <vm/object.h>
 #include <vm/thread.h>
@@ -42,6 +44,70 @@
 #include <arch/stack-frame.h>
 #include <arch/instruction.h>
 #include <errno.h>
+
+__thread struct vm_object *exception_holder = NULL;
+__thread void *exception_guard = NULL;
+__thread void *trampoline_exception_guard = NULL;
+
+void *exceptions_guard_page;
+void *trampoline_exceptions_guard_page;
+
+void init_exceptions(void)
+{
+	exceptions_guard_page = alloc_guard_page();
+	trampoline_exceptions_guard_page = alloc_guard_page();
+
+	if (!exceptions_guard_page || !trampoline_exceptions_guard_page)
+		die("%s: failed to allocate exceptions guard page.", __func__);
+
+	/* TODO: Should be called from thread initialization code. */
+	thread_init_exceptions();
+}
+
+/**
+ * thread_init_exceptions - initializes per-thread structures.
+ */
+void thread_init_exceptions(void)
+{
+	/* Assign safe pointers. */
+	exception_guard = &exception_guard;
+	trampoline_exception_guard = &trampoline_exception_guard;
+}
+
+/**
+ * signal_exception - used for signaling that exception has occurred
+ *         in jato functions. Exception will be thrown when controll
+ *         is returned to JIT code.
+ *
+ * @exception: exception object to be thrown.
+ */
+void signal_exception(struct vm_object *exception)
+{
+	if (exception_holder)
+		return;
+
+	if (exception == NULL)
+		die("%s: exception is NULL.", __func__);
+
+	trampoline_exception_guard = trampoline_exceptions_guard_page;
+	exception_guard  = exceptions_guard_page;
+	exception_holder = exception;
+}
+
+void signal_new_exception(char *class_name, char *msg)
+{
+	struct vm_object *e;
+
+	e = new_exception(class_name, msg);
+	signal_exception(e);
+}
+
+void clear_exception(void)
+{
+	trampoline_exception_guard = &trampoline_exception_guard;
+	exception_guard  = &exception_guard;
+	exception_holder = NULL;
+}
 
 struct cafebabe_code_attribute_exception *
 exception_find_entry(struct vm_method *method, unsigned long target)
@@ -108,6 +174,20 @@ static unsigned char *find_handler(struct compilation_unit *cu,
 	return NULL;
 }
 
+static bool
+is_inside_exit_unlock(struct compilation_unit *cu, unsigned char *ptr)
+{
+	return ptr >= bb_native_ptr(cu->exit_bb) &&
+		ptr < cu->exit_past_unlock_ptr;
+}
+
+static bool
+is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
+{
+	return ptr >= bb_native_ptr(cu->unwind_bb) &&
+		ptr < cu->unwind_past_unlock_ptr;
+}
+
 /**
  * throw_exception_from - returns native pointer inside jitted method
  *                        that sould be executed to handle exception.
@@ -118,59 +198,49 @@ static unsigned char *find_handler(struct compilation_unit *cu,
  *                           unwind can't be done because the method's caller
  *                           is not a jitted method).
  *
+ * @cu: compilation unit
  * @frame: frame pointer of method throwing exception
  * @native_ptr: pointer to instruction that caused exception
- * @exception: exception object to throw.
  */
 unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    struct jit_stack_frame *frame,
-				    unsigned char *native_ptr,
-				    struct vm_object *exception)
+				    unsigned char *native_ptr)
 {
-	struct vm_thread *thread = vm_current_thread();
-	unsigned char *eh_ptr = NULL;
+	struct vm_object *exception;
 	unsigned long bc_offset;
+	unsigned char *eh_ptr;
 
-	if (thread->exception != NULL) {
-		/* Looks like we've caught some asynchronous exception,
-		   which must have precedence. */
-		exception = thread->exception;
-		thread->exception = NULL;
-	}
+	eh_ptr = NULL;
+
+	exception = exception_occurred();
+	assert(exception != NULL);
+
+	clear_exception();
 
 	bc_offset = native_ptr_to_bytecode_offset(cu, native_ptr);
 	if (bc_offset != BC_OFFSET_UNKNOWN) {
 		eh_ptr = find_handler(cu, exception->class, bc_offset);
-		if (eh_ptr != NULL)
+		if (eh_ptr != NULL) {
+			signal_exception(exception);
 			return eh_ptr;
-	}
-
-	if (!is_jit_method(frame->return_address)) {
-		/* No handler found within jitted method call
-		   chain. Set exception in execution environment and
-		   return to previous (not jit) method. */
-		thread->exception = exception;
-		return bb_native_ptr(cu->exit_bb);
-	}
-
-	return bb_native_ptr(cu->unwind_bb);
-}
-
-int insert_exception_spill_insns(struct compilation_unit *cu)
-{
-	struct insn *insn;
-	struct basic_block *bb;
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		if (bb->is_eh) {
-			insn = exception_spill_insn(cu->exception_spill_slot);
-			if (insn == NULL)
-				return -ENOMEM;
-
-			insn->bytecode_offset = bb->start;
-			bb_add_insn(bb, insn);
 		}
 	}
 
-	return 0;
+	signal_exception(exception);
+
+	if (!is_jit_method(frame->return_address)) {
+		/*
+		 * No handler found within jitted method call chain.
+		 * Return to previous (not jit) method.
+		 */
+		if (is_inside_exit_unlock(cu, native_ptr))
+			return cu->exit_past_unlock_ptr;
+
+		return bb_native_ptr(cu->exit_bb);
+	}
+
+	if (is_inside_unwind_unlock(cu, native_ptr))
+		return cu->unwind_past_unlock_ptr;
+
+	return bb_native_ptr(cu->unwind_bb);
 }

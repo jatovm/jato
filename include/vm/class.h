@@ -3,6 +3,7 @@
 
 #include <vm/field.h>
 #include <vm/method.h>
+#include <vm/types.h>
 #include <vm/vm.h>
 
 #include <jit/vtable.h>
@@ -60,5 +61,7 @@ int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type);
 struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
 	uint16_t i);
+
+struct vm_object *new_exception(char *class_name, char *message);
 
 #endif /* __CLASS_H */

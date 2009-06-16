@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void emit_monitor_enter(struct compilation_unit *cu)
+static void emit_monitorenter(struct compilation_unit *cu)
 {
 	if (vm_method_is_static(cu->method))
 		emit_lock(cu->objcode, cu->method->class);
@@ -29,7 +29,7 @@ static void emit_monitor_enter(struct compilation_unit *cu)
 		emit_lock_this(cu->objcode);
 }
 
-static void emit_monitor_exit(struct compilation_unit *cu)
+static void emit_monitorexit(struct compilation_unit *cu)
 {
 	if (vm_method_is_static(cu->method))
 		emit_unlock(cu->objcode, cu->method->class);
@@ -55,19 +55,21 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	emit_prolog(cu->objcode, frame_size);
 	if (method_is_synchronized(cu->method))
-		emit_monitor_enter(cu);
+		emit_monitorenter(cu);
 
 	for_each_basic_block(bb, &cu->bb_list)
 		emit_body(bb, cu->objcode);
 
 	emit_body(cu->exit_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))
-		emit_monitor_exit(cu);
+		emit_monitorexit(cu);
+	cu->exit_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_epilog(cu->objcode);
 
 	emit_body(cu->unwind_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))
-		emit_monitor_exit(cu);
+		emit_monitorexit(cu);
+	cu->unwind_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_unwind(cu->objcode);
 
 	return 0;

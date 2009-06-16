@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <jit/exception.h>
 #include "jam.h"
 #include "lock.h"
 
@@ -88,6 +89,7 @@ void signalChainedException(char *excep_name, char *message, Object *cause) {
                 }
 
                 getExecEnv()->exception = exp;
+		signal_exception(exp);
             }
         }
     }
@@ -95,6 +97,7 @@ void signalChainedException(char *excep_name, char *message, Object *cause) {
 
 void setException(Object *exp) {
     getExecEnv()->exception = exp;
+    signal_exception(exp);
 }
 
 void clearException() {
@@ -105,6 +108,7 @@ void clearException() {
         ee->stack_end -= STACK_RED_ZONE_SIZE;
     }
     ee->exception = NULL;
+    clear_exception();
 }
 
 void printException() {

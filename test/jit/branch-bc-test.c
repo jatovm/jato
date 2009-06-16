@@ -5,7 +5,6 @@
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
-#include <jit/bytecode-converters.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
 #include <vm/list.h>
@@ -46,8 +45,14 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	cu = compilation_unit_alloc(&method);
 
 	branch_bb = alloc_basic_block(cu, 0, BRANCH_OFFSET + BRANCH_INSN_SIZE);
-	bb        = alloc_basic_block(cu, BRANCH_OFFSET + BRANCH_INSN_SIZE, TARGET_OFFSET);
+
+	bb = alloc_basic_block(cu, BRANCH_OFFSET + BRANCH_INSN_SIZE, TARGET_OFFSET);
+	bb_add_successor(branch_bb, bb);
+
 	target_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
+	bb_add_successor(bb, target_bb);
+
+	cu->entry_bb = branch_bb;
 
 	list_add_tail(&branch_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&bb->bb_list_node, &cu->bb_list);
@@ -87,7 +92,7 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	struct basic_block *stmt_bb, *true_bb;
 	struct statement *if_stmt;
 	struct compilation_unit *cu;
-	unsigned char code[] = { opc, 0, TARGET_OFFSET };
+	unsigned char code[] = { opc, 0, TARGET_OFFSET, OPC_NOP, OPC_NOP };
 	struct vm_method method = {
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
@@ -97,6 +102,8 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	cu = compilation_unit_alloc(&method);
 	stmt_bb = alloc_basic_block(cu, 0, 1);
 	true_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
+	bb_add_successor(stmt_bb, true_bb);
+	cu->entry_bb = stmt_bb;
 
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
@@ -142,7 +149,7 @@ void test_convert_goto(void)
 	struct basic_block *goto_bb, *target_bb;
 	struct statement *goto_stmt;
 	struct compilation_unit *cu;
-	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET };
+	unsigned char code[] = { OPC_GOTO, 0, TARGET_OFFSET, OPC_NOP, OPC_NOP };
 	struct vm_method method = {
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
@@ -150,7 +157,11 @@ void test_convert_goto(void)
 
 	cu = compilation_unit_alloc(&method);
 	goto_bb = alloc_basic_block(cu, 0, 1);
+
 	target_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
+	bb_add_successor(goto_bb, target_bb);
+
+	cu->entry_bb = goto_bb;
 
 	list_add_tail(&goto_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);

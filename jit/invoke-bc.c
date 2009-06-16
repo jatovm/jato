@@ -8,7 +8,6 @@
  * and return instructions to immediate representation of the JIT compiler.
  */
 
-#include <jit/bytecode-converters.h>
 #include <jit/compiler.h>
 #include <jit/statement.h>
 #include <jit/args.h>
@@ -22,7 +21,7 @@
 #include <string.h>
 #include <errno.h>
 
-int convert_non_void_return(struct parse_context *ctx)
+int convert_xreturn(struct parse_context *ctx)
 {
 	struct expression *expr;
 	struct statement *return_stmt = alloc_statement(STMT_RETURN);
@@ -35,7 +34,7 @@ int convert_non_void_return(struct parse_context *ctx)
 	return 0;
 }
 
-int convert_void_return(struct parse_context *ctx)
+int convert_return(struct parse_context *ctx)
 {
 	struct statement *return_stmt = alloc_statement(STMT_VOID_RETURN);
 	if (!return_stmt)

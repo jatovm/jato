@@ -12,6 +12,7 @@
 #include <jit/statement.h>
 #include <jit/bc-offset-mapping.h>
 #include <jit/exception.h>
+#include <jit/perf-map.h>
 
 #include <vm/class.h>
 #include <vm/method.h>
@@ -28,10 +29,22 @@ static void compile_error(struct compilation_unit *cu, int err)
 
 	die("%s: Failed to compile method `%s' in class `%s', error: %i\n",
 	       __func__, method->name, class->name, err);
+
+	if (!exception_occurred()) {
+		if (err == -ENOMEM)
+			/* TODO: throw OutOfMemoryError */
+			die("%s: out of memory", __func__);
+
+		signal_new_exception("java/lang/VirtualMachineError",
+				     "method compilation failed");
+	}
 }
+
+#define SYMBOL_LEN 128
 
 int compile(struct compilation_unit *cu)
 {
+	char symbol[SYMBOL_LEN];
 	int err;
 
 	if (opt_trace_method)
@@ -54,10 +67,6 @@ int compile(struct compilation_unit *cu)
 
 	if (opt_trace_tree_ir)
 		trace_tree_ir(cu);
-
-	err = insert_exception_spill_insns(cu);
-	if (err)
-		goto out;
 
 	err = select_instructions(cu);
 	if (err)
@@ -97,6 +106,7 @@ int compile(struct compilation_unit *cu)
 
 	cu->is_compiled = true;
 
+	perf_map_append(cu_symbol(cu, symbol, SYMBOL_LEN), (unsigned long) cu_native_ptr(cu), cu_native_size(cu));
   out:
 	if (err)
 		compile_error(cu, err);

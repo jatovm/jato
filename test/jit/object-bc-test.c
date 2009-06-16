@@ -343,11 +343,13 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	stmt = stmt_entry(bb->stmt_list.next);
 
 	struct statement *arraycheck = stmt;
-	struct statement *store_stmt = stmt_entry(arraycheck->stmt_list_node.next);
+	struct statement *storecheck_stmt = stmt_entry(arraycheck->stmt_list_node.next);
+	struct statement *store_stmt = stmt_entry(storecheck_stmt->stmt_list_node.next);
 
 	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr,
 			       arraycheck);
-
+	assert_array_store_check_stmt(storecheck_stmt, arrayref_expr,
+				      store_stmt->store_src);
 	assert_store_stmt(store_stmt);
 	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
 				store_stmt->store_dest);
@@ -466,7 +468,7 @@ void test_convert_anewarray(void)
 
 	assert_int_equals(EXPR_ANEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
-	assert_ptr_equals(size, to_expr(arrayref->anewarray_size));
+	assert_array_size_check_expr(size, to_expr(arrayref->anewarray_size));
 
         /*
 	 * Free the struct object returned from findArrayClassFromClassLoader()
@@ -500,7 +502,7 @@ void test_convert_newarray(void)
 	arrayref = stack_pop(bb->mimic_stack);
 	assert_int_equals(EXPR_NEWARRAY, expr_type(arrayref));
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
-	assert_ptr_equals(size, to_expr(arrayref->array_size));
+	assert_array_size_check_expr(size, to_expr(arrayref->array_size));
 	assert_int_equals(T_INT, arrayref->array_type);
 
 	expr_put(arrayref);
@@ -517,7 +519,6 @@ void test_convert_multianewarray(void)
 	unsigned char code[] = { OPC_MULTIANEWARRAY, 0x00, 0x00, dimension };
 	struct expression *arrayref;
 	struct expression *args_count[dimension];
-	struct expression *actual_args;
 	struct basic_block *bb;
 	struct vm_method method = {
 		.code_attribute.code = code,
@@ -537,8 +538,8 @@ void test_convert_multianewarray(void)
 	assert_int_equals(J_REFERENCE, arrayref->vm_type);
 	assert_ptr_equals(instance_class, arrayref->multianewarray_ref_type);
 
-	actual_args = to_expr(arrayref->multianewarray_dimensions);
-	assert_args(args_count, dimension, actual_args);
+	assert_multiarray_size_check_expr(args_count, dimension,
+		to_expr(arrayref->multianewarray_dimensions));
 
 	assert_true(stack_is_empty(bb->mimic_stack));
 
@@ -609,7 +610,7 @@ void test_convert_instanceof(void)
 #endif
 }
 
-void test_convert_monitor_enter(void)
+void test_convert_monitorenter(void)
 {
 	unsigned char code[] = { OPC_MONITORENTER };
 	struct vm_method method = {
@@ -629,14 +630,14 @@ void test_convert_monitor_enter(void)
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	assert_monitor_enter_stmt(ref, stmt);
+	assert_monitorenter_stmt(ref, stmt);
 
 	expr_put(ref);
 	__free_simple_bb(bb);
 	free(class);
 }
 
-void test_convert_monitor_exit(void)
+void test_convert_monitorexit(void)
 {
 	unsigned char code[] = { OPC_MONITOREXIT };
 	struct vm_method method = {
@@ -656,7 +657,7 @@ void test_convert_monitor_exit(void)
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	assert_monitor_exit_stmt(ref, stmt);
+	assert_monitorexit_stmt(ref, stmt);
 
 	expr_put(ref);
 	__free_simple_bb(bb);

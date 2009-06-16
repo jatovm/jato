@@ -23,12 +23,17 @@ vm_object_alloc_string(const uint8_t bytes[], unsigned int length);
 
 struct vm_object *new_exception(char *class_name, char *message);
 
-bool vm_object_is_instance_of(struct vm_object *obj, struct vm_object *class);
+bool vm_object_is_instance_of(struct vm_object *obj, struct vm_class *class);
 void vm_object_check_null(struct vm_object *obj);
 void vm_object_check_array(struct vm_object *obj, unsigned int index);
-void vm_object_check_cast(struct vm_object *obj, struct vm_object *class);
+void vm_object_check_cast(struct vm_object *obj, struct vm_class *class);
 
 void vm_object_lock(struct vm_object *obj);
 void vm_object_unlock(struct vm_object *obj);
+
+void array_store_check(struct vm_object *arrayref, struct vm_object *obj);
+void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type);
+void array_size_check(int size);
+void multiarray_size_check(int n, ...);
 
 #endif

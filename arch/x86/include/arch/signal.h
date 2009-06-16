@@ -17,6 +17,9 @@
  #error Unsupported architecture
 #endif
 
+struct compilation_unit;
+
 bool signal_from_jit_method(void *ctx);
+struct compilation_unit *get_signal_source_cu(void *ctx);
 
 #endif

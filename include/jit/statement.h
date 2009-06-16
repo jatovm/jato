@@ -18,6 +18,7 @@ enum statement_type {
 	STMT_MONITOR_ENTER,
 	STMT_MONITOR_EXIT,
 	STMT_CHECKCAST,
+	STMT_ARRAY_STORE_CHECK,
 	STMT_LAST,	/* Not a real type. Keep this last.  */
 };
 
@@ -48,6 +49,10 @@ struct statement {
 		struct /* STMT_ATHROW */ {
 			struct tree_node *exception_ref;
 		};
+		struct /* STMT_ARRAY_STORE_CHECK */ {
+			struct tree_node *store_check_src;
+			struct tree_node *store_check_array;
+		};
 		/* STMT_EXPRESSION, STMT_ARRAY_CHECK */
 		struct tree_node *expression;
 	};
@@ -67,6 +72,7 @@ static inline enum statement_type stmt_type(struct statement *stmt)
 
 struct statement *alloc_statement(enum statement_type);
 void free_statement(struct statement *);
+int stmt_nr_kids(struct statement *);
 
 #define for_each_stmt(stmt, stmt_list) list_for_each_entry(stmt, stmt_list, stmt_list_node)
 	

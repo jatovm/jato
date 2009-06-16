@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2008 Saeed Siam
- * Copyright (c) 2009 Tomasz Grabiec
- *
+ * Copyright (c) 2009  Pekka Enberg
+ * 
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -25,47 +24,33 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <jit/expression.h>
+#include <jit/perf-map.h>
+#include <vm/die.h>
 
-#include <vm/stack.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdio.h>
 
-#include <errno.h>
+static pthread_mutex_t perf_mutex = PTHREAD_MUTEX_INITIALIZER; 
+static FILE *perf_file;
 
-int convert_athrow(struct parse_context *ctx)
+void perf_map_open(void)
 {
-	struct stack *mimic_stack = ctx->bb->mimic_stack;
-	struct expression *exception_ref;
-	struct expression *nullcheck;
-	struct statement *stmt;
+	char filename[32];
+	pid_t pid;
 
-	stmt = alloc_statement(STMT_ATHROW);
-	if (!stmt)
-		return -ENOMEM;
+	pid = getpid();
+	sprintf(filename, "/tmp/perf-%d.map", pid);
 
-	exception_ref = stack_pop(mimic_stack);
+	perf_file = fopen(filename, "w");
+	if (!perf_file)
+		die("fopen");
+}
 
-	nullcheck = null_check_expr(exception_ref);
-	if (!nullcheck)
-		return -ENOMEM;
-
-	stmt->exception_ref = &nullcheck->node;
-
-	/*
-	 * According to the JVM specification athrow operation is
-	 * supposed to discard the java stack and push exception
-	 * reference on it. We don't do the latter because exception
-	 * reference is not transferred to exception handlers in
-	 * BC2IR layer.
-	 */
-	while (!stack_is_empty(mimic_stack)) {
-		struct expression *expr = stack_pop(mimic_stack);
-
-		expr_put(expr);
-	}
-
-	convert_statement(ctx, stmt);
-
-	return 0;
+void perf_map_append(const char *symbol, unsigned long addr, unsigned long size)
+{
+	pthread_mutex_lock(&perf_mutex);
+	fprintf(perf_file, "%lx %lx %s\n", addr, size, symbol);
+	pthread_mutex_unlock(&perf_mutex);
 }

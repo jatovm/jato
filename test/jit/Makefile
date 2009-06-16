@@ -22,6 +22,7 @@ OBJS = \
 	../../vm/types.o \
 	../../vm/zalloc.o \
 	../../vm/radix-tree.o \
+	../../vm/guard-page.o \
 	../../jit/alloc.o \
 	../../jit/arithmetic-bc.o \
 	../../jit/basic-block.o \
@@ -47,6 +48,8 @@ OBJS = \
 	../../jit/exception.o \
 	../../jit/bc-offset-mapping.o \
 	../../jit/cu-mapping.o \
+	../../jit/nop-bc.o \
+	../../jit/tree-node.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \

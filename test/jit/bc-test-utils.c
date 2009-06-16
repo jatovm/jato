@@ -7,6 +7,7 @@
 #include <jit/compilation-unit.h>
 #include <jit/basic-block.h>
 #include <bc-test-utils.h>
+#include <args-test-utils.h>
 #include <jit/tree-node.h>
 #include <jit/expression.h>
 #include <jit/statement.h>
@@ -21,9 +22,11 @@ struct compilation_unit *
 alloc_simple_compilation_unit(struct vm_method *method)
 {
 	struct compilation_unit *cu;
+	struct basic_block *bb;
 
 	cu = compilation_unit_alloc(method);
-	get_basic_block(cu, 0, method->code_attribute.code_length);
+	bb = get_basic_block(cu, 0, method->code_attribute.code_length);
+	cu->entry_bb = bb;
 
 	return cu;
 }
@@ -31,10 +34,13 @@ alloc_simple_compilation_unit(struct vm_method *method)
 struct basic_block *__alloc_simple_bb(struct vm_method *method)
 {
 	struct compilation_unit *cu;
+	struct basic_block *bb;
 
 	cu = compilation_unit_alloc(method);
+	bb = get_basic_block(cu, 0, method->code_attribute.code_length);
+	cu->entry_bb = bb;
 
-	return get_basic_block(cu, 0, method->code_attribute.code_length);
+	return bb;
 }
 
 struct basic_block *
@@ -207,9 +213,33 @@ void assert_invoke_expr(enum vm_type expected_type,
 	assert_ptr_equals(expected_method, expr->target_method);
 }
 
+void assert_array_size_check_expr(struct expression *expected,
+				  struct expression *actual)
+{
+	assert_int_equals(EXPR_ARRAY_SIZE_CHECK, expr_type(actual));
+	assert_ptr_equals(&expected->node, actual->size_expr);
+}
+
+void assert_multiarray_size_check_expr(struct expression **expected_args,
+				       int nr_args,
+				       struct expression *actual)
+{
+	assert_int_equals(EXPR_MULTIARRAY_SIZE_CHECK, expr_type(actual));
+	assert_args(expected_args, nr_args, to_expr(actual->size_expr));
+}
+
 void assert_store_stmt(struct statement *stmt)
 {
 	assert_int_equals(STMT_STORE, stmt_type(stmt));
+}
+
+void assert_array_store_check_stmt(struct statement *stmt,
+				   struct expression *arrayref,
+				   struct tree_node *store_src)
+{
+	assert_int_equals(STMT_ARRAY_STORE_CHECK, stmt_type(stmt));
+	assert_null_check_expr(arrayref, to_expr(stmt->store_check_array));
+	assert_ptr_equals(store_src, stmt->store_check_src);
 }
 
 void assert_return_stmt(struct expression *return_value, struct statement *stmt)
@@ -234,7 +264,7 @@ void assert_arraycheck_stmt(enum vm_type expected_vm_type,
 				expected_index, actual->expression);
 }
 
-void assert_monitor_enter_stmt(struct expression *expected,
+void assert_monitorenter_stmt(struct expression *expected,
 			       struct statement *actual)
 {
 	assert_int_equals(STMT_MONITOR_ENTER, stmt_type(actual));
@@ -242,7 +272,7 @@ void assert_monitor_enter_stmt(struct expression *expected,
 				    actual->expression);
 }
 
-void assert_monitor_exit_stmt(struct expression *expected,
+void assert_monitorexit_stmt(struct expression *expected,
 			      struct statement *actual)
 {
 	assert_int_equals(STMT_MONITOR_EXIT, stmt_type(actual));

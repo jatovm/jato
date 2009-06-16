@@ -59,11 +59,18 @@ static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 
 static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 {
+	if (!signal_from_jit_method(ctx))
+		goto exit;
+
 	/* Assume that zero-page access is caused by dereferencing a
 	   null pointer */
-	if (signal_from_jit_method(ctx) &&
-	    ((unsigned long)si->si_addr < (unsigned long)getpagesize())) {
+	if ((unsigned long)si->si_addr < (unsigned long)getpagesize()) {
 		struct vm_object *exception;
+
+		/* We must be extra caucious here because IP might be
+		   invalid */
+		if (get_signal_source_cu(ctx) == NULL)
+			goto exit;
 
 		/* TODO: exception's stack trace should be filled using ctx */
 		exception = new_exception("java/lang/NullPointerException", NULL);
@@ -74,6 +81,26 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		}
 
 		throw_exception_from_signal(ctx, exception);
+		return;
+	}
+
+	/* Check if exception was triggered by exception guard */
+	if (si->si_addr == exceptions_guard_page ||
+	    si->si_addr == trampoline_exceptions_guard_page) {
+		struct object *exception;
+
+		exception = exception_occurred();
+		if (exception == NULL) {
+			fprintf(stderr, "%s: spurious exception-test failure\n",
+				__func__);
+			goto exit;
+		}
+
+		if (si->si_addr == trampoline_exceptions_guard_page)
+			throw_exception_from_trampoline(ctx, exception);
+		else
+			throw_exception_from_signal(ctx, exception);
+
 		return;
 	}
 

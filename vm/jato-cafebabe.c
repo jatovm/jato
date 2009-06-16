@@ -141,7 +141,12 @@ main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	perf_map_open();
+
+	setup_signal_handlers();
 	init_cu_mapping();
+	init_exceptions();
+
 	jit_init_natives();
 
 	const char *classname = argv[1];

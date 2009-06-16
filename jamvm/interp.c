@@ -2292,6 +2292,7 @@ throwException:
     {
         Object *excep = ee->exception;
         ee->exception = NULL;
+	clear_exception();
 
         pc = findCatchBlock(excep->class);
 

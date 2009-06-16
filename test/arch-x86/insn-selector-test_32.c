@@ -1336,54 +1336,6 @@ void test_select_anewarray(void)
 	free_compilation_unit(cu);
 }
 
-void test_select_multianewarray(void)
-{
-	struct vm_class instance_class;
-	struct compilation_unit *cu;
-	struct expression *expr, *args_list_expression;
-	struct statement *stmt;
-	struct basic_block *bb;
-	struct insn *insn;
-
-	args_list_expression = args_list_expr(arg_expr(value_expr(J_INT, 0x02)),
-					      arg_expr(value_expr(J_INT, 0xff)));
-
-	expr = multianewarray_expr(&instance_class);
-	expr->multianewarray_dimensions = &args_list_expression->node;
-
-	stmt = alloc_statement(STMT_EXPRESSION);
-	stmt->expression = &expr->node;
-
-	cu = compilation_unit_alloc(&method);
-	bb = get_basic_block(cu, 0, 1);
-	bb_add_stmt(bb, stmt);
-
-	select_instructions(bb->b_parent);
-
-	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, 0x02, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, 0xff, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_reg_insn(INSN_PUSH_REG, REG_ESP, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, 0x02, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &instance_class, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_multi_array, insn);
-
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, 20, REG_ESP, insn);
-
-	free_compilation_unit(cu);
-}
-
 void test_select_arraylength(void)
 {
 	struct vm_class instance_class;

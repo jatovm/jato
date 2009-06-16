@@ -28,8 +28,11 @@
 #include <vm/natives.h>
 #include <vm/signal.h>
 #include <vm/vm.h>
-#include <jit/compiler.h>
+
 #include <jit/cu-mapping.h>
+#include <jit/exception.h>
+#include <jit/compiler.h>
+#include <jit/perf-map.h>
 
 #ifdef USE_ZIP
 #define BCP_MESSAGE "<jar/zip files and directories separated by :>"
@@ -298,8 +301,11 @@ int main(int argc, char *argv[]) {
 
     exe_name = argv[0];
 
+    perf_map_open();
+
     setup_signal_handlers();
     init_cu_mapping();
+    init_exceptions();
 
     setDefaultInitArgs(&args);
     int class_arg = parseCommandLine(argc, argv, &args);
@@ -358,8 +364,10 @@ int main(int argc, char *argv[]) {
 
     /* ExceptionOccured returns the exception or NULL, which is OK
        for normal conditionals, but not here... */
-    if((status = exceptionOccured() ? 1 : 0))
-        printException();
+    if((status = exception_occurred() ? 1 : 0)) {
+        getExecEnv()->exception = exception_occurred();
+	printException();
+    }
 
     /* Wait for all but daemon threads to die */
     mainThreadWaitToExitVM();

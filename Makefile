@@ -80,7 +80,10 @@ JIT_OBJS = \
 	jit/exception.o 	\
 	jit/bc-offset-mapping.o \
 	jit/cu-mapping.o	\
-	jit/method.o
+	jit/method.o		\
+	jit/nop-bc.o		\
+	jit/tree-node.o		\
+	jit/perf-map.o
 
 VM_OBJS = \
 	vm/jato-cafebabe.o	\
@@ -93,6 +96,7 @@ VM_OBJS = \
 	vm/debug-dump.o		\
 	vm/die.o		\
 	vm/field.o		\
+	vm/guard-page.o		\
 	vm/list.o		\
 	vm/method.o		\
 	vm/natives.o		\
@@ -104,7 +108,7 @@ VM_OBJS = \
 	vm/string.o		\
 	vm/types.o		\
 	vm/utf8.o		\
-	vm/zalloc.o		\
+	vm/zalloc.o
 
 JAMVM_OBJS =
 
@@ -221,7 +225,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/TrampolineBackpatchingTest.class \
 	regression/jvm/RegisterAllocatorTortureTest.class \
 	regression/jvm/ExceptionsTest.class \
-	regression/jvm/FibonacciTest.class
+	regression/jvm/FibonacciTest.class \
+	regression/jvm/ObjectStackTest.class
 
 lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)

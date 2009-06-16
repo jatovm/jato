@@ -128,6 +128,15 @@ void bb_add_stmt(struct basic_block *bb, struct statement *stmt)
 	list_add_tail(&stmt->stmt_list_node, &bb->stmt_list);
 }
 
+struct statement *bb_remove_last_stmt(struct basic_block *bb)
+{
+	struct list_head *last = list_last(&bb->stmt_list);
+
+	list_del(last);
+
+	return list_entry(last, struct statement, stmt_list_node);
+}
+
 void bb_add_insn(struct basic_block *bb, struct insn *insn)
 {
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);

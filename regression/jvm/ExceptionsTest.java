@@ -44,6 +44,9 @@ public class ExceptionsTest extends TestCase {
     public static void takeLong(long val) {
     }
 
+    public static void takeObject(Object obj) {
+    }
+
     public static void testTryBlockDoesNotThrowAnything() {
         boolean caught;
         try {
@@ -163,12 +166,12 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
-    public static void testArrayLoad() {
+    public static void testArrayLoadThrowsNullPointerException() {
         boolean caught = false;
         Object[] array = null;
 
         try {
-            array[0].getClass();
+            takeObject(array[0]);
         } catch (NullPointerException e) {
             caught = true;
         }
@@ -176,7 +179,25 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
-    public static void testArrayStore() {
+    public static void testArrayLoadThrowsArrayIndexOutOfBoundsException() {
+        boolean caught = false;
+        Object[] array = new String[3];
+
+        try {
+            takeObject(array[3]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
+
+    public static void testArrayLoad() {
+        testArrayLoadThrowsNullPointerException();
+        testArrayLoadThrowsArrayIndexOutOfBoundsException();
+    }
+
+    public static void testArrayStoreThrowsNullPointerException() {
         boolean caught = false;
         Object[] array = null;
 
@@ -187,6 +208,38 @@ public class ExceptionsTest extends TestCase {
         }
 
         assertTrue(caught);
+    }
+
+    public static void testArrayStoreThrowsArrayIndexOutOfBoundsException() {
+        boolean caught = false;
+        Object[] array = new String[3];
+
+        try {
+            array[3] = "test";
+        } catch (ArrayIndexOutOfBoundsException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
+
+    public static void testArrayStoreThrowsArrayStoreException() {
+        boolean caught = false;
+        Object[] array = new String[3];
+
+        try {
+            array[2] = new Integer(0);
+        } catch (ArrayStoreException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
+
+    public static void testArrayStore() {
+        testArrayStoreThrowsNullPointerException();
+        testArrayStoreThrowsArrayIndexOutOfBoundsException();
+        testArrayStoreThrowsArrayStoreException();
     }
 
     public static void testArraylength() {
@@ -309,6 +362,87 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
+    public static void testCheckcast() {
+        boolean caught = false;
+        Object o = null;
+        String s = null;
+
+        try {
+            s = (String)o;
+        } catch (ClassCastException e) {
+            caught = true;
+        }
+
+        assertFalse(caught);
+
+        o = new Object();
+
+        try {
+            s = (String)o;
+        } catch (ClassCastException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(s);
+    }
+
+    public static void testAnewarray() {
+        boolean caught = false;
+        Object array[] = null;
+
+        try {
+            array = new Object[-1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(array);
+    }
+
+    public static void testNewarray() {
+        boolean caught = false;
+        int array[] = null;
+
+        try {
+            array = new int[-1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(array);
+    }
+
+    public static void testMultianewarray() {
+        boolean caught = false;
+        Object array[][] = null;
+
+        try {
+            array = new Object[1][-1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        caught = false;
+        try {
+            array = new Object[-1][1];
+        } catch (NegativeArraySizeException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        takeObject(array);
+    }
+
+
     public static void main(String args[]) {
         testTryBlockDoesNotThrowAnything();
         testThrowAndCatchInTheSameMethod();
@@ -326,11 +460,15 @@ public class ExceptionsTest extends TestCase {
         testGetfield();
         testPutfield();
         testMonitorenter();
-	/* TODO: testMonitorexit() */
+        /* TODO: testMonitorexit() */
         testIdiv();
         testIrem();
-        /* TODO: testLdiv(); */
-        /* TODO: testLrem(); */
+        testLdiv();
+        testLrem();
+        testCheckcast();
+        testAnewarray();
+        testNewarray();
+        testMultianewarray();
 
         exit();
     }

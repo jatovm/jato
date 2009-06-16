@@ -81,3 +81,14 @@ struct vm_object *utf8_to_char_array(const uint8_t *bytes, unsigned int n)
 	return array;
 }
 
+char *slash2dots(char *utf8)
+{
+	char *result = strdup(utf8);
+
+	for (unsigned int i = 0, n = strlen(utf8); i < n; ++i) {
+		if (result[i] == '.')
+			result[i] = '/';
+	}
+
+	return result;
+}

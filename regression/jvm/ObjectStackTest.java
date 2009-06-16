@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2008 Saeed Siam
- * Copyright (c) 2009 Tomasz Grabiec
- *
+ * Copyright (C) 2009 Pekka Enberg
+ * 
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -24,48 +23,39 @@
  *
  * Please refer to the file LICENSE for details.
  */
+package jvm;
 
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <jit/expression.h>
+/**
+ * @author Pekka Enberg
+ */
+public class ObjectStackTest extends TestCase {
+    /*
+     * The following method evaluates whether n > 1 is true ("0x01") or false
+     * ("0x00") and passes the result to the assertTrue() method. The generated
+     * bytecode will have two mutually exclusive basic blocks to handle the
+     * evaluation. We're testing here that the object stack state is properly
+     * preserved during JIT compilation.
+     */
+    public static void assertIsGreaterThanOne(int n) {
+        assertTrue(n > 1);
+    }
 
-#include <vm/stack.h>
+    /*
+     * The inverse case of the above.
+     */
+    public static void assertIsNotGreaterThanOne(int n) {
+        assertFalse(n > 1);
+    }
 
-#include <errno.h>
+    public static void testObjectStackWhenBranching() {
+        assertIsGreaterThanOne(2);
+        // TODO
+        // assertIsNotGreaterThanOne(1);
+    }
 
-int convert_athrow(struct parse_context *ctx)
-{
-	struct stack *mimic_stack = ctx->bb->mimic_stack;
-	struct expression *exception_ref;
-	struct expression *nullcheck;
-	struct statement *stmt;
+    public static void main(String[] args) {
+        testObjectStackWhenBranching();
 
-	stmt = alloc_statement(STMT_ATHROW);
-	if (!stmt)
-		return -ENOMEM;
-
-	exception_ref = stack_pop(mimic_stack);
-
-	nullcheck = null_check_expr(exception_ref);
-	if (!nullcheck)
-		return -ENOMEM;
-
-	stmt->exception_ref = &nullcheck->node;
-
-	/*
-	 * According to the JVM specification athrow operation is
-	 * supposed to discard the java stack and push exception
-	 * reference on it. We don't do the latter because exception
-	 * reference is not transferred to exception handlers in
-	 * BC2IR layer.
-	 */
-	while (!stack_is_empty(mimic_stack)) {
-		struct expression *expr = stack_pop(mimic_stack);
-
-		expr_put(expr);
-	}
-
-	convert_statement(ctx, stmt);
-
-	return 0;
+        exit();
+    }
 }

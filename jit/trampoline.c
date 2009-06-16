@@ -26,6 +26,7 @@
 
 #include <jit/cu-mapping.h>
 #include <jit/emit-code.h>
+#include <jit/exception.h>
 #include <jit/compiler.h>
 
 #include <vm/buffer.h>
@@ -56,11 +57,18 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
 {
-	if (!cu->is_compiled)
-		compile(cu);
+	if (cu->is_compiled)
+		return buffer_ptr(cu->objcode);
+
+	if (compile(cu)) {
+		assert(exception_occurred() != NULL);
+
+		return NULL;
+	}
 
 	if (add_cu_mapping(cu) != 0)
-		die("out of memory");
+		/* TODO: throw OutOfMemoryError */
+		die("%s: out of memory", __func__);
 
 	return buffer_ptr(cu->objcode);
 }
@@ -89,7 +97,8 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	 * Therefore, do fixup for direct call sites unconditionally and fixup
 	 * vtables if method can be invoked via invokevirtual.
 	 */
-	fixup_direct_calls(method->trampoline, (unsigned long) ret);
+	if (cu->is_compiled)
+		fixup_direct_calls(method->trampoline, (unsigned long) ret);
 
 	pthread_mutex_unlock(&cu->mutex);
 

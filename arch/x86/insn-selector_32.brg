@@ -18,6 +18,7 @@
 
 #include <arch/instruction.h>
 #include <arch/stack-frame.h>
+#include <arch/thread.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -45,6 +46,8 @@
 
 static void select_insn(struct basic_block *bb, struct tree_node *tree,
 			struct insn *instruction);
+static void select_exception_test(struct basic_block *bb,
+				  struct tree_node *tree);
 
 static unsigned char type_to_scale(enum vm_type vm_type)
 {
@@ -571,6 +574,7 @@ reg:	OP_CMP(reg, EXPR_VALUE) 1
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_lcmp));
 	method_args_cleanup(s, tree, 4);
+	select_exception_test(s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 }
@@ -725,6 +729,19 @@ reg:	EXPR_NEW
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc));
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
+}
+
+reg:	EXPR_ARRAY_SIZE_CHECK(reg)
+{
+	struct var_info *size;
+
+	size = state->left->reg1;
+	state->reg1 = size;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
+	method_args_cleanup(s, tree, 1);
 }
 
 reg:	EXPR_NEWARRAY(reg)
@@ -745,6 +762,7 @@ reg:	EXPR_NEWARRAY(reg)
 		(unsigned long) vm_object_alloc_native_array));
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 reg:	EXPR_NULL_CHECK(reg)
@@ -776,12 +794,27 @@ reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
 	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
 }
 
+arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
+{
+	struct expression *expr;
+	int dimensions;
+
+	expr = to_expr(tree);
+	dimensions = nr_args(to_expr(expr->size_expr));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimensions));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) multiarray_size_check));
+	method_args_cleanup(s, tree, 1);
+}
+
 reg:	EXPR_MULTIANEWARRAY(arg)
 {
 	struct var_info *var;
 	struct var_info *stack_ptr;
 	unsigned int dimension;
 	struct expression *expr;
+	struct expression *size_check;
 
 	expr = to_expr(tree);
 
@@ -790,7 +823,8 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 
 	stack_ptr = get_fixed_var(s->b_parent, REG_ESP);
 
-	dimension = nr_args(to_expr(expr->multianewarray_dimensions));
+	size_check = to_expr(expr->multianewarray_dimensions);
+	dimension = nr_args(to_expr(size_check->size_expr));
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, stack_ptr));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimension));
@@ -800,6 +834,7 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 		(unsigned long) vm_object_alloc_multi_array));
 
 	method_args_cleanup(s, tree, dimension + 3);
+	select_exception_test(s, tree);
 }
 
 reg:    EXPR_ANEWARRAY(reg)
@@ -820,7 +855,8 @@ reg:    EXPR_ANEWARRAY(reg)
         select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc_array));
 
-        method_args_cleanup(s, tree, 2);
+        method_args_cleanup(s, tree, 3);
+	select_exception_test(s, tree);
 }
 
 reg:    EXPR_ARRAYLENGTH(reg)
@@ -853,6 +889,7 @@ reg:	EXPR_INSTANCEOF(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 reg:	EXPR_CONVERSION(reg)
@@ -1137,6 +1174,27 @@ stmt:	STMT_STORE(reg, array_deref)
 	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
 }
 
+stmt:	STMT_ARRAY_STORE_CHECK(reg, reg) 1
+{
+	struct expression *src_expr;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_check_src);
+
+	if (src_expr->vm_type == J_REFERENCE) {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check));
+	} else {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, src_expr->vm_type));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check_vmtype));
+	}
+
+	method_args_cleanup(s, tree, 2);
+}
+
 stmt:	STMT_ATHROW(reg)
 {
 	struct var_info *reg_eax = get_fixed_var(s->b_parent, REG_EAX);
@@ -1144,7 +1202,7 @@ stmt:	STMT_ATHROW(reg)
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)s->b_parent));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)throw_exception));
-	method_args_cleanup(s, tree, 1);
+	method_args_cleanup(s, tree, 2);
 
 	/* Jump where throw_exception() told us to jump */
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, reg_eax));
@@ -1181,7 +1239,6 @@ stmt:	STMT_ARRAY_CHECK(array_check)
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, index));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array));
-
 	method_args_cleanup(s, tree, 2);
 }
 
@@ -1217,6 +1274,7 @@ stmt:	STMT_MONITOR_ENTER(reg)
 		(unsigned long) vm_object_lock));
 
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_MONITOR_EXIT(reg)
@@ -1229,6 +1287,7 @@ stmt:	STMT_MONITOR_EXIT(reg)
 		(unsigned long) vm_object_unlock));
 
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_CHECKCAST(reg)
@@ -1252,8 +1311,30 @@ stmt:	STMT_CHECKCAST(reg)
 static void select_insn(struct basic_block *bb, struct tree_node *tree,
 			struct insn *instruction)
 {
-	instruction->bytecode_offset = tree_bytecode_offset(tree);
+	instruction->bytecode_offset = tree->bytecode_offset;
 	bb_add_insn(bb, instruction);
+}
+
+/*
+ * Selects code checking whether exception occured. When this is the case
+ * exception will be thrown.
+ *
+ * NOTICE: exception test should be always selected _after_
+ * method args cleanup or stack overflow may occure if exceptions
+ * are thrown locally in a loop.
+ */
+static void select_exception_test(struct basic_block *bb,
+				  struct tree_node *tree)
+{
+	unsigned long exception_guard_offset;
+	struct var_info *reg;
+
+	reg = get_var(bb->b_parent);
+
+	exception_guard_offset = get_thread_local_offset(&exception_guard);
+
+	select_insn(bb, tree, imm_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, exception_guard_offset, reg));
+	select_insn(bb, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
 }
 
 static void __binop_reg_local(struct _MBState *state, struct basic_block *bb,
@@ -1438,12 +1519,37 @@ static void free_state(MBState *state)
 	g_free(state);
 }
 
+static void eh_add_insn(struct basic_block *bb, struct insn *insn)
+{
+	insn->bytecode_offset = bb->start;
+	bb_add_insn(bb, insn);
+}
+
+static void select_eh_prologue(struct basic_block *bb)
+{
+	struct var_info *reg_eax;
+
+	reg_eax = get_fixed_var(bb->b_parent, REG_EAX);
+
+	/* Save exception from exception_holder to exception stack slot */
+	eh_add_insn(bb, imm_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
+		get_thread_local_offset(&exception_holder), reg_eax));
+	eh_add_insn(bb,	reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, reg_eax,
+		bb->b_parent->exception_spill_slot));
+
+	/* Clear exception */
+	eh_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long)clear_exception));
+}
+
 static void insn_select(struct basic_block *bb)
 {
 	struct statement *stmt;
 	MBState *state;
 
 	mono_burg_init();
+
+	if (bb->is_eh)
+		select_eh_prologue(bb);
 
 	for_each_stmt(stmt, &bb->stmt_list) {
 		state = mono_burg_label(&stmt->node, bb);

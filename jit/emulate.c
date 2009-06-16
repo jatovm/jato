@@ -24,7 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <jit/exception.h>
 #include <jit/emulate.h>
+#include <vm/class.h>
 
 int emulate_lcmp(long long value1, long long value2)
 {
@@ -39,10 +41,24 @@ int emulate_lcmp(long long value1, long long value2)
 
 long long emulate_ldiv(long long value1, long long value2)
 {
+	if (value2 == 0) {
+		signal_new_exception(
+			"java/lang/ArithmeticException", "division by zero");
+		throw_from_native(2 * sizeof(long long));
+		return 0;
+	}
+
 	return value1 / value2;
 }
 
 long long emulate_lrem(long long value1, long long value2)
 {
+	if (value2 == 0) {
+		signal_new_exception(
+			"java/lang/ArithmeticException", "division by zero");
+		throw_from_native(2 * sizeof(long long));
+		return 0;
+	}
+
 	return value1 % value2;
 }

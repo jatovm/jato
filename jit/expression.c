@@ -36,6 +36,8 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_ARRAYLENGTH:
 	case EXPR_INSTANCEOF:
 	case EXPR_NULL_CHECK:
+	case EXPR_ARRAY_SIZE_CHECK:
+	case EXPR_MULTIARRAY_SIZE_CHECK:
 		return 1;
 	case EXPR_VALUE:
 	case EXPR_FVALUE:
@@ -60,7 +62,7 @@ struct expression *alloc_expression(enum expression_type type,
 		expr->node.op = type << EXPR_TYPE_SHIFT;
 		expr->vm_type = vm_type;
 		expr->refcount = 1;
-		expr->bytecode_offset = BC_OFFSET_UNKNOWN;
+		expr->node.bytecode_offset = BC_OFFSET_UNKNOWN;
 	}
 	return expr;
 }
@@ -344,6 +346,32 @@ struct expression *null_check_expr(struct expression *ref)
 
 	expr->bytecode_offset = ref->bytecode_offset;
 	expr->null_check_ref = &ref->node;
+
+	return expr;
+}
+
+struct expression *array_size_check_expr(struct expression *size)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_ARRAY_SIZE_CHECK, J_INT);
+	if (!expr)
+		return NULL;
+
+	expr->size_expr = &size->node;
+
+	return expr;
+}
+
+struct expression *multiarray_size_check_expr(struct expression *dimensions)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_MULTIARRAY_SIZE_CHECK, J_VOID);
+	if (!expr)
+		return NULL;
+
+	expr->size_expr = &dimensions->node;
 
 	return expr;
 }

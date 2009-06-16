@@ -50,6 +50,7 @@ OBJS = \
 	../../vm/utf8.o \
 	../../vm/zalloc.o \
 	../../vm/radix-tree.o \
+	../../vm/guard-page.o \
 	../../jit/alloc.o \
 	../../jit/basic-block.o \
 	../../jit/compilation-unit.o \
@@ -66,6 +67,7 @@ OBJS = \
 	../../jit/exception.o \
 	../../jit/cu-mapping.o \
 	../../jit/method.o \
+	../../jit/tree-node.o \
 	../../arch/x86/emit-code$(ARCH_POSTFIX).o \
 	../../arch/x86/instruction.o \
 	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \
@@ -73,6 +75,7 @@ OBJS = \
 	../../arch/x86/use-def.o \
 	../../arch/x86/exception.o \
 	../../arch/x86/unwind$(ARCH_POSTFIX).o \
+	../../arch/x86/thread.o \
 	$(TESTS)
 
 TESTS = \

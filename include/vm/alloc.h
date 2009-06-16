@@ -5,6 +5,7 @@
 
 struct buffer;
 
+void *alloc_page(void);
 int get_buffer_align_bits(void);
 void *alloc_exec(size_t);
 int expand_buffer_exec(struct buffer *);

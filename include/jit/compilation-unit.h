@@ -19,6 +19,7 @@ enum machine_reg;
 struct compilation_unit {
 	struct vm_method *method;
 	struct list_head bb_list;
+	struct basic_block *entry_bb;
 	struct basic_block *exit_bb;
 	struct basic_block *unwind_bb;
 	struct var_info *var_infos;
@@ -39,6 +40,15 @@ struct compilation_unit {
 
 	/* It's needed to spill exception object reference at eh entry */
 	struct stack_slot *exception_spill_slot;
+
+	/*
+	 * Pointers inside exit block and unwind block after monitor
+	 * unlocking code. The code is only present if method is
+	 * synchronized. These pointers are used to skip unlocking
+	 * when exception is thrown from that unlocking code.
+	 */
+	unsigned char *exit_past_unlock_ptr;
+	unsigned char *unwind_past_unlock_ptr;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

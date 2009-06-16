@@ -25,6 +25,7 @@
 #include <arch/instruction.h>
 #include <arch/memory.h>
 #include <arch/stack-frame.h>
+#include <arch/thread.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -184,6 +185,26 @@ emit_reg_reg(struct buffer *buf, unsigned char opc,
 }
 
 static void
+__emit_memdisp(struct buffer *buf, unsigned char opc, unsigned long disp,
+	       unsigned char reg_opcode)
+{
+	unsigned char mod_rm;
+
+	mod_rm = encode_modrm(0, reg_opcode, 5);
+
+	emit(buf, opc);
+	emit(buf, mod_rm);
+	emit_imm32(buf, disp);
+}
+
+static void
+__emit_memdisp_reg(struct buffer *buf, unsigned char opc, unsigned long disp,
+		   enum machine_reg reg)
+{
+	__emit_memdisp(buf, opc, disp, __encode_reg(reg));
+}
+
+static void
 __emit_membase(struct buffer *buf, unsigned char opc,
 	       enum machine_reg base_reg, unsigned long disp,
 	       unsigned char reg_opcode)
@@ -285,6 +306,14 @@ static void emit_mov_membase_reg(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
 	emit_membase_reg(buf, 0x8b, src, dest);
+}
+
+static void emit_mov_thread_local_memdisp_reg(struct buffer *buf,
+					      struct operand *src,
+					      struct operand *dest)
+{
+	emit(buf, 0x65); /* GS segment override prefix */
+	__emit_memdisp_reg(buf, 0x8b, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_mov_memindex_reg(struct buffer *buf,
@@ -482,17 +511,8 @@ static void emit_leave(struct buffer *buf)
 	emit(buf, 0xc9);
 }
 
-/*
- * Emitted code must not write to ECX register because it may hold
- * exception object reference when in unwind block
- */
 static void __emit_epilog(struct buffer *buf)
 {
-	/*
-	 * Always emit 'leave' even if method has no local variables
-	 * because exception object reference might have been pushed
-	 * on stack.
-	 */
 	emit_leave(buf);
 
 	/* Restore callee saved registers */
@@ -516,9 +536,6 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 
 void emit_unwind(struct buffer *buf)
 {
-	/* save exception object in ECX */
-	__emit_pop_reg(buf, REG_ECX);
-
 	__emit_epilog(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
 }
@@ -830,10 +847,28 @@ static void emit_xor_imm_reg(struct buffer *buf, struct operand * src,
 	__emit_xor_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void __emit_test_membase_reg(struct buffer *buf, enum machine_reg src,
+				    unsigned long disp, enum machine_reg dest)
+{
+	__emit_membase_reg(buf, 0x85, src, disp, dest);
+}
+
 static void emit_test_membase_reg(struct buffer *buf, struct operand *src,
 				  struct operand *dest)
 {
 	emit_membase_reg(buf, 0x85, src, dest);
+}
+
+/* Emits exception test using given register. */
+static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
+{
+	/* mov gs:(0xXXX), %reg */
+	emit(buf, 0x65);
+	__emit_memdisp_reg(buf, 0x8b,
+		get_thread_local_offset(&exception_guard), reg);
+
+	/* test (%reg), %reg */
+	__emit_test_membase_reg(buf, reg, 0, reg);
 }
 
 void emit_lock(struct buffer *buf, struct vm_object *obj)
@@ -841,6 +876,10 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, vm_object_lock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_push_reg(buf, REG_EAX);
+	emit_exception_test(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_EAX);
 }
 
 void emit_unlock(struct buffer *buf, struct vm_object *obj)
@@ -853,6 +892,7 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 	__emit_call(buf, vm_object_unlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
+	emit_exception_test(buf, REG_EAX);
 
 	__emit_pop_reg(buf, REG_EDX);
 	__emit_pop_reg(buf, REG_EAX);
@@ -867,6 +907,10 @@ void emit_lock_this(struct buffer *buf)
 	__emit_push_membase(buf, REG_EBP, this_arg_offset);
 	__emit_call(buf, vm_object_lock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_push_reg(buf, REG_EAX);
+	emit_exception_test(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_EAX);
 }
 
 void emit_unlock_this(struct buffer *buf)
@@ -882,6 +926,8 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_push_membase(buf, REG_EBP, this_arg_offset);
 	__emit_call(buf, vm_object_unlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	emit_exception_test(buf, REG_EAX);
 
 	__emit_pop_reg(buf, REG_EDX);
 	__emit_pop_reg(buf, REG_EAX);
@@ -928,6 +974,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
@@ -1123,6 +1170,20 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_push_imm(buf, (unsigned long)cu);
 	__emit_call(buf, call_target);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	/*
+	 * Test for exeption occurance.
+	 * We do this by polling a dedicated thread-specific pointer,
+	 * which triggers SIGSEGV when exception is set.
+	 *
+	 * mov gs:(0xXXX), %ecx
+	 * test (%ecx), %ecx
+	 */
+	emit(buf, 0x65);
+	__emit_memdisp_reg(buf, 0x8b,
+			   get_thread_local_offset(&trampoline_exception_guard),
+			   REG_ECX);
+	__emit_test_membase_reg(buf, REG_ECX, 0, REG_ECX);
 
 	__emit_push_reg(buf, REG_EAX);
 
