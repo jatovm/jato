@@ -52,11 +52,6 @@ void emit_branch_rel(struct buffer *buf, unsigned char prefix,
 	abort();
 }
 
-void emit_body(struct basic_block *bb, struct buffer *buf)
-{
-	abort();
-}
-
 void emit_trampoline(struct compilation_unit *cu, void *call_target,
 		     struct jit_trampoline *trampoline)
 {

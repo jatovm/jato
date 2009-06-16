@@ -930,22 +930,7 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, REG_EAX);
 }
 
-enum emitter_type {
-	NO_OPERANDS = 1,
-	SINGLE_OPERAND,
-	TWO_OPERANDS,
-	BRANCH,
-};
-
-struct emitter {
-	void *emit_fn;
-	enum emitter_type type;
-};
-
-#define DECL_EMITTER(_insn_type, _fn, _emitter_type) \
-	[_insn_type] = { .emit_fn = _fn, .type = _emitter_type }
-
-static struct emitter emitters[] = {
+struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADC_REG_REG, emit_adc_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, emit_adc_membase_reg, TWO_OPERANDS),
@@ -1003,71 +988,9 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 };
 
-typedef void (*emit_no_operands_fn) (struct buffer *);
-
-static void emit_no_operands(struct emitter *emitter, struct buffer *buf)
-{
-	emit_no_operands_fn emit = emitter->emit_fn;
-	emit(buf);
-}
-
-typedef void (*emit_single_operand_fn) (struct buffer *, struct operand * operand);
-
-static void emit_single_operand(struct emitter *emitter, struct buffer *buf, struct insn *insn)
-{
-	emit_single_operand_fn emit = emitter->emit_fn;
-	emit(buf, &insn->operand);
-}
-
-typedef void (*emit_two_operands_fn) (struct buffer *, struct operand * src, struct operand * dest);
-
-static void emit_two_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
-{
-	emit_two_operands_fn emit = emitter->emit_fn;
-	emit(buf, &insn->src, &insn->dest);
-}
-
-typedef void (*emit_branch_fn) (struct buffer *, struct insn *);
-
-static void emit_branch(struct emitter *emitter, struct buffer *buf, struct insn *insn)
-{
-	emit_branch_fn emit = emitter->emit_fn;
-	emit(buf, insn);
-}
-
-static void __emit_insn(struct buffer *buf, struct insn *insn)
-{
-	struct emitter *emitter;
-
-	emitter = &emitters[insn->type];
-	switch (emitter->type) {
-	case NO_OPERANDS:
-		emit_no_operands(emitter, buf);
-		break;
-	case SINGLE_OPERAND:
-		emit_single_operand(emitter, buf, insn);
-		break;
-	case TWO_OPERANDS:
-		emit_two_operands(emitter, buf, insn);
-		break;
-	case BRANCH:
-		emit_branch(emitter, buf, insn);
-		break;
-	default:
-		printf("Oops. No emitter for 0x%x.\n", insn->type);
-		abort();
-	};
-}
-
-static void emit_insn(struct buffer *buf, struct insn *insn)
-{
-	insn->mach_offset = buffer_offset(buf);
-	__emit_insn(buf, insn);
-}
-
-static void backpatch_branch_target(struct buffer *buf,
-				    struct insn *insn,
-				    unsigned long target_offset)
+void backpatch_branch_target(struct buffer *buf,
+			     struct insn *insn,
+			     unsigned long target_offset)
 {
 	unsigned long backpatch_offset;
 	long relative_addr;
@@ -1079,31 +1002,6 @@ static void backpatch_branch_target(struct buffer *buf,
 	relative_addr = branch_rel_addr(insn, target_offset);
 
 	write_imm32(buf, backpatch_offset, relative_addr);
-}
-
-static void backpatch_branches(struct buffer *buf,
-			       struct list_head *to_backpatch,
-			       unsigned long target_offset)
-{
-	struct insn *this, *next;
-
-	list_for_each_entry_safe(this, next, to_backpatch, branch_list_node) {
-		backpatch_branch_target(buf, this, target_offset);
-		list_del(&this->branch_list_node);
-	}
-}
-
-void emit_body(struct basic_block *bb, struct buffer *buf)
-{
-	struct insn *insn;
-
-	bb->mach_offset = buffer_offset(buf);
-	backpatch_branches(buf, &bb->backpatch_insns, bb->mach_offset);
-
-	for_each_insn(insn, &bb->insn_list) {
-		emit_insn(buf, insn);
-	}
-	bb->is_emitted = true;
 }
 
 /*
