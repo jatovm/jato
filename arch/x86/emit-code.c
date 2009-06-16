@@ -1,5 +1,5 @@
 /*
- * IA-32 code emitter.
+ * x86-32/x86-64 code emitter.
  *
  * Copyright (C) 2006  Pekka Enberg
  *
@@ -32,6 +32,16 @@
 #include <string.h>
 
 #include <../jamvm/lock.h>
+
+/************************
+ * Common code emitters *
+ ************************/
+
+#ifdef CONFIG_X86_32
+
+/************************
+ * x86-32 code emitters *
+ ************************/
 
 #define PREFIX_SIZE 1
 #define BRANCH_INSN_SIZE 5
@@ -1094,3 +1104,39 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_pop_reg(buf, REG_EBP);
 	emit_indirect_jump_reg(buf, REG_EAX);
 }
+
+#else /* CONFIG_X86_32 */
+
+/************************
+ * x86-64 code emitters *
+ ************************/
+
+void emit_prolog(struct buffer *buf, unsigned long nr_locals)
+{
+	abort();
+}
+
+void emit_ret(struct buffer *buf)
+{
+	abort();
+}
+
+void emit_epilog(struct buffer *buf, unsigned long nr_locals)
+{
+	abort();
+}
+
+void emit_branch_rel(struct buffer *buf, unsigned char prefix,
+		     unsigned char opc, long rel32)
+{
+	abort();
+}
+
+void emit_trampoline(struct compilation_unit *cu, void *call_target,
+		     struct jit_trampoline *trampoline)
+{
+	abort();
+}
+
+#endif /* CONFIG_X86_32 */
+
