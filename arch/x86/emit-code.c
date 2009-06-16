@@ -33,14 +33,29 @@
 
 #include <../jamvm/lock.h>
 
+/* Aliases and prototypes to make common emitters work as expected. */
+#ifdef CONFIG_X86_64
+# define __emit_add_imm_reg	__emit64_add_imm_reg
+# define __emit_pop_reg		__emit64_pop_reg
+# define __emit_push_imm	__emit64_push_imm
+# define __emit_push_membase	__emit64_push_membase
+# define __emit_push_reg	__emit64_push_reg
+#endif
+
+static unsigned char __encode_reg(enum machine_reg reg);
+static void __emit_add_imm_reg(struct buffer *buf,
+			       long imm,
+			       enum machine_reg reg);
+static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg);
+static void __emit_push_imm(struct buffer *buf, long imm);
+static void __emit_push_membase(struct buffer *buf,
+				enum machine_reg src_reg,
+				unsigned long disp);
+static void __emit_push_reg(struct buffer *buf, enum machine_reg reg);
+static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
+
 /************************
  * Common code emitters *
- ************************/
-
-#ifdef CONFIG_X86_32
-
-/************************
- * x86-32 code emitters *
  ************************/
 
 #define PREFIX_SIZE 1
@@ -49,47 +64,16 @@
 
 #define CALL_INSN_SIZE 5
 
-/*
- *	__encode_reg:	Encode register to be used in IA-32 instruction.
- *	@reg: Register to encode.
- *
- *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
- */
-static unsigned char __encode_reg(enum machine_reg reg)
-{
-	unsigned char ret = 0;
-
-	switch (reg) {
-	case REG_EAX:
-		ret = 0x00;
-		break;
-	case REG_EBX:
-		ret = 0x03;
-		break;
-	case REG_ECX:
-		ret = 0x01;
-		break;
-	case REG_EDX:
-		ret = 0x02;
-		break;
-	case REG_ESI:
-		ret = 0x06;
-		break;
-	case REG_EDI:
-		ret = 0x07;
-		break;
-	case REG_ESP:
-		ret = 0x04;
-		break;
-	case REG_EBP:
-		ret = 0x05;
-		break;
-	case REG_UNASSIGNED:
-		assert(!"unassigned register in code emission");
-		break;
-	}
-	return ret;
-}
+#define GENERIC_X86_EMITTERS \
+	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),		\
+	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JG_BRANCH, emit_jg_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),		\
+	DECL_EMITTER(INSN_RET, emit_ret, NO_OPERANDS)
 
 static unsigned char encode_reg(struct use_position *reg)
 {
@@ -165,6 +149,233 @@ static void emit_imm(struct buffer *buf, long imm)
 		emit(buf, imm);
 	else
 		emit_imm32(buf, imm);
+}
+
+static void __emit_call(struct buffer *buf, void *call_target)
+{
+	int disp = call_target - buffer_current(buf) - CALL_INSN_SIZE;
+
+	emit(buf, 0xe8);
+	emit_imm32(buf, disp);
+}
+
+static void emit_call(struct buffer *buf, struct operand *operand)
+{
+	__emit_call(buf, (void *)operand->rel);
+}
+
+static void emit_ret(struct buffer *buf)
+{
+	emit(buf, 0xc3);
+}
+
+static void emit_leave(struct buffer *buf)
+{
+	emit(buf, 0xc9);
+}
+
+void emit_branch_rel(struct buffer *buf, unsigned char prefix,
+		     unsigned char opc, long rel32)
+{
+	if (prefix)
+		emit(buf, prefix);
+	emit(buf, opc);
+	emit_imm32(buf, rel32);
+}
+
+static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
+{
+	long ret;
+
+	ret = target_offset - insn->mach_offset - BRANCH_INSN_SIZE;
+	if (insn->escaped)
+		ret -= PREFIX_SIZE;
+
+	return ret;
+}
+
+static void __emit_branch(struct buffer *buf, unsigned char prefix,
+			  unsigned char opc, struct insn *insn)
+{
+	struct basic_block *target_bb;
+	long addr = 0;
+
+	if (prefix)
+		insn->escaped = true;
+
+	target_bb = insn->operand.branch_target;
+
+	if (target_bb->is_emitted) {
+		struct insn *target_insn =
+		    list_first_entry(&target_bb->insn_list, struct insn,
+			       insn_list_node);
+
+		addr = branch_rel_addr(insn, target_insn->mach_offset);
+	} else
+		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
+
+	emit_branch_rel(buf, prefix, opc, addr);
+}
+
+static void emit_je_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x84, insn);
+}
+
+static void emit_jne_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x85, insn);
+}
+
+static void emit_jge_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8d, insn);
+}
+
+static void emit_jg_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8f, insn);
+}
+
+static void emit_jle_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8e, insn);
+}
+
+static void emit_jl_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x0f, 0x8c, insn);
+}
+
+static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
+{
+	__emit_branch(buf, 0x00, 0xe9, insn);
+}
+
+void emit_lock(struct buffer *buf, struct object *obj)
+{
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, objectLock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_push_reg(buf, REG_EAX);
+	emit_exception_test(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_EAX);
+}
+
+void emit_unlock(struct buffer *buf, struct object *obj)
+{
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_EDX);
+
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, objectUnlock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	emit_exception_test(buf, REG_EAX);
+
+	__emit_pop_reg(buf, REG_EDX);
+	__emit_pop_reg(buf, REG_EAX);
+}
+
+void emit_lock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_call(buf, objectLock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	__emit_push_reg(buf, REG_EAX);
+	emit_exception_test(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_EAX);
+}
+
+void emit_unlock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_EDX);
+
+	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_call(buf, objectUnlock);
+	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+
+	emit_exception_test(buf, REG_EAX);
+
+	__emit_pop_reg(buf, REG_EDX);
+	__emit_pop_reg(buf, REG_EAX);
+}
+
+void backpatch_branch_target(struct buffer *buf,
+			     struct insn *insn,
+			     unsigned long target_offset)
+{
+	unsigned long backpatch_offset;
+	long relative_addr;
+
+	backpatch_offset = insn->mach_offset + BRANCH_TARGET_OFFSET;
+	if (insn->escaped)
+		backpatch_offset += PREFIX_SIZE;
+
+	relative_addr = branch_rel_addr(insn, target_offset);
+
+	write_imm32(buf, backpatch_offset, relative_addr);
+}
+
+#ifdef CONFIG_X86_32
+
+/************************
+ * x86-32 code emitters *
+ ************************/
+
+/*
+ *	__encode_reg:	Encode register to be used in IA-32 instruction.
+ *	@reg: Register to encode.
+ *
+ *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
+ */
+static unsigned char __encode_reg(enum machine_reg reg)
+{
+	unsigned char ret = 0;
+
+	switch (reg) {
+	case REG_EAX:
+		ret = 0x00;
+		break;
+	case REG_EBX:
+		ret = 0x03;
+		break;
+	case REG_ECX:
+		ret = 0x01;
+		break;
+	case REG_EDX:
+		ret = 0x02;
+		break;
+	case REG_ESI:
+		ret = 0x06;
+		break;
+	case REG_EDI:
+		ret = 0x07;
+		break;
+	case REG_ESP:
+		ret = 0x04;
+		break;
+	case REG_EBP:
+		ret = 0x05;
+		break;
+	case REG_UNASSIGNED:
+		assert(!"unassigned register in code emission");
+		break;
+	}
+	return ret;
 }
 
 static void
@@ -495,29 +706,6 @@ static void emit_push_imm(struct buffer *buf, struct operand *operand)
 	__emit_push_imm(buf, operand->imm);
 }
 
-static void __emit_call(struct buffer *buf, void *call_target)
-{
-	int disp = call_target - buffer_current(buf) - CALL_INSN_SIZE;
-
-	emit(buf, 0xe8);
-	emit_imm32(buf, disp);
-}
-
-static void emit_call(struct buffer *buf, struct operand *operand)
-{
-	__emit_call(buf, (void *)operand->rel);
-}
-
-static void emit_ret(struct buffer *buf)
-{
-	emit(buf, 0xc3);
-}
-
-static void emit_leave(struct buffer *buf)
-{
-	emit(buf, 0xc9);
-}
-
 static void __emit_epilog(struct buffer *buf)
 {
 	emit_leave(buf);
@@ -753,84 +941,6 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 	emit(buf, encode_modrm(0x3, 0x04, __encode_reg(reg)));
 }
 
-void emit_branch_rel(struct buffer *buf, unsigned char prefix,
-		     unsigned char opc, long rel32)
-{
-	if (prefix)
-		emit(buf, prefix);
-	emit(buf, opc);
-	emit_imm32(buf, rel32);
-}
-
-static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
-{
-	long ret;
-
-	ret = target_offset - insn->mach_offset - BRANCH_INSN_SIZE;
-	if (insn->escaped)
-		ret -= PREFIX_SIZE;
-
-	return ret;
-}
-
-static void __emit_branch(struct buffer *buf, unsigned char prefix,
-			  unsigned char opc, struct insn *insn)
-{
-	struct basic_block *target_bb;
-	long addr = 0;
-
-	if (prefix)
-		insn->escaped = true;
-
-	target_bb = insn->operand.branch_target;
-
-	if (target_bb->is_emitted) {
-		struct insn *target_insn =
-		    list_first_entry(&target_bb->insn_list, struct insn,
-			       insn_list_node);
-
-		addr = branch_rel_addr(insn, target_insn->mach_offset);
-	} else
-		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
-
-	emit_branch_rel(buf, prefix, opc, addr);
-}
-
-static void emit_je_branch(struct buffer *buf, struct insn *insn)
-{
-	__emit_branch(buf, 0x0f, 0x84, insn);
-}
-
-static void emit_jne_branch(struct buffer *buf, struct insn *insn)
-{
-	__emit_branch(buf, 0x0f, 0x85, insn);
-}
-
-static void emit_jge_branch(struct buffer *buf, struct insn *insn)
-{
-	__emit_branch(buf, 0x0f, 0x8d, insn);
-}
-
-static void emit_jg_branch(struct buffer *buf, struct insn *insn)
-{
-	__emit_branch(buf, 0x0f, 0x8f, insn);
-}
-
-static void emit_jle_branch(struct buffer *buf, struct insn *insn)
-{
-	__emit_branch(buf, 0x0f, 0x8e, insn);
-}
-
-static void emit_jl_branch(struct buffer *buf, struct insn *insn)
-{
-	__emit_branch(buf, 0x0f, 0x8c, insn);
-}
-
-static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
-{
-	__emit_branch(buf, 0x00, 0xe9, insn);
-}
-
 static void emit_indirect_call(struct buffer *buf, struct operand *operand)
 {
 	emit(buf, 0xff);
@@ -878,69 +988,8 @@ static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
 	__emit_test_membase_reg(buf, reg, 0, reg);
 }
 
-void emit_lock(struct buffer *buf, struct object *obj)
-{
-	__emit_push_imm(buf, (unsigned long)obj);
-	__emit_call(buf, objectLock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
-
-	__emit_push_reg(buf, REG_EAX);
-	emit_exception_test(buf, REG_EAX);
-	__emit_pop_reg(buf, REG_EAX);
-}
-
-void emit_unlock(struct buffer *buf, struct object *obj)
-{
-	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, REG_EAX);
-	__emit_push_reg(buf, REG_EDX);
-
-	__emit_push_imm(buf, (unsigned long)obj);
-	__emit_call(buf, objectUnlock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
-
-	emit_exception_test(buf, REG_EAX);
-
-	__emit_pop_reg(buf, REG_EDX);
-	__emit_pop_reg(buf, REG_EAX);
-}
-
-void emit_lock_this(struct buffer *buf)
-{
-	unsigned long this_arg_offset;
-
-	this_arg_offset = offsetof(struct jit_stack_frame, args);
-
-	__emit_push_membase(buf, REG_EBP, this_arg_offset);
-	__emit_call(buf, objectLock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
-
-	__emit_push_reg(buf, REG_EAX);
-	emit_exception_test(buf, REG_EAX);
-	__emit_pop_reg(buf, REG_EAX);
-}
-
-void emit_unlock_this(struct buffer *buf)
-{
-	unsigned long this_arg_offset;
-
-	this_arg_offset = offsetof(struct jit_stack_frame, args);
-
-	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, REG_EAX);
-	__emit_push_reg(buf, REG_EDX);
-
-	__emit_push_membase(buf, REG_EBP, this_arg_offset);
-	__emit_call(buf, objectUnlock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
-
-	emit_exception_test(buf, REG_EAX);
-
-	__emit_pop_reg(buf, REG_EDX);
-	__emit_pop_reg(buf, REG_EAX);
-}
-
 struct emitter emitters[] = {
+	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADC_REG_REG, emit_adc_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, emit_adc_membase_reg, TWO_OPERANDS),
@@ -949,19 +998,11 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, SINGLE_OPERAND),
-	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
-	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),
-	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch, BRANCH),
-	DECL_EMITTER(INSN_JG_BRANCH, emit_jg_branch, BRANCH),
-	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch, BRANCH),
-	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch, BRANCH),
-	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),
-	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
@@ -982,7 +1023,6 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg, SINGLE_OPERAND),
-	DECL_EMITTER(INSN_RET, emit_ret, NO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SBB_IMM_REG, emit_sbb_imm_reg, TWO_OPERANDS),
@@ -997,22 +1037,6 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 };
-
-void backpatch_branch_target(struct buffer *buf,
-			     struct insn *insn,
-			     unsigned long target_offset)
-{
-	unsigned long backpatch_offset;
-	long relative_addr;
-
-	backpatch_offset = insn->mach_offset + BRANCH_TARGET_OFFSET;
-	if (insn->escaped)
-		backpatch_offset += PREFIX_SIZE;
-
-	relative_addr = branch_rel_addr(insn, target_offset);
-
-	write_imm32(buf, backpatch_offset, relative_addr);
-}
 
 /*
  * This fixes relative calls generated by EXPR_INVOKE.
