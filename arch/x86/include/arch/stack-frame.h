@@ -80,7 +80,34 @@ unsigned long cu_frame_locals_offset(struct compilation_unit *cu);
 									); \
 	})
 #else
- #error NOT IMPLEMENTED
+#define __cleanup_args(args_size)		\
+	({								\
+	__asm__ volatile (						\
+	     "movq %%rbp, %%rsi \n"					\
+	     "addq %1, %%rsi \n"					\
+	     "decq %%rsi \n"						\
+									\
+	     "movq %%rsi, %%rdi \n"					\
+	     "addq %%rbx, %%rdi \n"					\
+									\
+	     "movq %%rbp, %%rcx \n"					\
+	     "subq %%rsp, %%rcx \n"					\
+	     "addq %1, %%rcx \n"					\
+									\
+	     "1: movb (%%rsi), %%al \n"					\
+	     "movb %%al, (%%rdi) \n"					\
+	     "decq %%rsi \n"						\
+	     "decq %%rdi \n"						\
+	     "decq %%rcx \n"						\
+	     "jnz 1b \n"						\
+									\
+	     "addq %%rbx, %%rsp \n"					\
+	     "addq %%rbx, %%rbp \n"					\
+	     :								\
+	     : "b" (args_size), "n"(2*sizeof(unsigned long))		\
+	     : "%rax", "%rdi", "%rsi", "%rcx", "cc", "memory"		\
+									); \
+	})
 #endif
 
 #endif
