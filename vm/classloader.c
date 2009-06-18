@@ -195,11 +195,124 @@ struct vm_class *load_class_from_path_file(const char *path, const char *file)
 	return NULL;
 }
 
+struct vm_class *load_primitive_array_class(const char *class_name,
+	unsigned int dimensions, char type)
+{
+	struct vm_class *array_class;
+
+	array_class = malloc(sizeof *array_class);
+	if (!array_class) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	array_class->class = NULL;
+	array_class->state = VM_CLASS_LOADED;
+	array_class->name = strdup(class_name);
+	/* XXX: Preload java.lang.Object */
+	array_class->super = classloader_load("java/lang/Object");
+	array_class->fields = NULL;
+	array_class->methods = NULL;
+	array_class->object_size = 0;
+	array_class->vtable_size = 0;
+
+	return array_class;
+}
+
+struct vm_class *load_class_array_class(const char *array_class_name,
+	unsigned int dimensions, const char *class_name)
+{
+	struct vm_class *array_class;
+
+	array_class = malloc(sizeof *array_class);
+	if (!array_class) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	array_class->class = NULL;
+	array_class->state = VM_CLASS_LOADED;
+	array_class->name = strdup(array_class_name);
+	/* XXX: Preload java.lang.Object */
+	array_class->super = classloader_load("java/lang/Object");
+	array_class->fields = NULL;
+	array_class->methods = NULL;
+	array_class->object_size = 0;
+	array_class->vtable_size = 0;
+
+	return array_class;
+}
+
+struct vm_class *load_array_class(const char *class_name)
+{
+	const char *ptr;
+	unsigned int dimensions;
+
+	ptr = class_name;
+	for (dimensions = 0; *ptr == '['; ++ptr)
+		++dimensions;
+
+	assert(dimensions >= 1);
+
+	if (*ptr == 'L') {
+		const char *end;
+		unsigned int n;
+		char *copy;
+		struct vm_class *ret;
+
+		++ptr;
+		end = strchr(ptr, ';');
+		if (!end) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		n = strlen(ptr);
+
+		/*
+		 * There must be exactly one semicolon, and it must be at the
+		 * end of the string.
+		 */
+		if (end + 1 != ptr + n) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		copy = strndup(ptr, n - 1);
+		ret = load_class_array_class(class_name, dimensions, copy);
+		free(copy);
+		return ret;
+	}
+
+	switch (*ptr) {
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'F':
+	case 'I':
+	case 'J':
+	case 'S':
+	case 'Z':
+		if (strlen(ptr) != 1) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		return load_primitive_array_class(class_name, dimensions, *ptr);
+	}
+
+	NOT_IMPLEMENTED;
+	return NULL;
+}
+
 struct vm_class *load_class(const char *class_name)
 {
 	struct vm_class *result;
 	char *filename;
 	const char *classpath;
+
+	if (class_name[0] == '[')
+		return load_array_class(class_name);
 
 	filename = class_name_to_file_name(class_name);
 	if (!filename) {
