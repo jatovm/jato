@@ -34,6 +34,8 @@
 
 #include "jit/compiler.h"
 #include "jit/cu-mapping.h"
+#include "jit/exception.h"
+#include "jit/perf-map.h"
 
 #include "vm/class.h"
 #include "vm/classloader.h"
