@@ -14,6 +14,7 @@
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
+#include <vm/classloader.h>
 #include <vm/field.h>
 #include <vm/object.h>
 #include <vm/stack.h>
@@ -38,23 +39,17 @@ static char *class_name_to_array_name(const char *class_name)
 	return array_name;
 }
 
-static struct vm_object *class_to_array_class(struct vm_object *class)
+static struct vm_class *class_to_array_class(struct vm_class *class)
 {
-	struct vm_object *array_class;
-	const char *class_name;
+	struct vm_class *array_class;
 	char *array_class_name;
 
-	NOT_IMPLEMENTED;
-	array_class = NULL;
-
-#if 0
-	class_name = CLASS_CB(class)->name;
-	array_class_name = class_name_to_array_name(class_name);
-
-	array_class = findArrayClassFromClass(array_class_name, class);
-
+	/* XXX: This is not entirely right. We need to make sure that we're
+	 * using the same class loader as the original class. We don't support
+	 * multiple (different) class loaders yet. */
+	array_class_name = class_name_to_array_name(class->name);
+	array_class = classloader_load(array_class_name);
 	free(array_class_name);
-#endif
 
 	return array_class;
 }
@@ -393,7 +388,7 @@ int convert_anewarray(struct parse_context *ctx)
 	struct expression *size_check;
 	struct expression *size,*arrayref;
 	unsigned long type_idx;
-	struct vm_object *class, *arrayclass;
+	struct vm_class *class, *array_class;
 
 	size = stack_pop(ctx->bb->mimic_stack);
 	type_idx = bytecode_read_u16(ctx->buffer);
@@ -402,15 +397,15 @@ int convert_anewarray(struct parse_context *ctx)
 	if (!class)
 		return -EINVAL;
 
-	arrayclass = class_to_array_class(class);
-	if (!arrayclass)
+	array_class = class_to_array_class(class);
+	if (!array_class)
 		return -EINVAL;
 
 	size_check = array_size_check_expr(size);
 	if (!size_check)
 		return -ENOMEM;
 
-	arrayref = anewarray_expr(arrayclass, size_check);
+	arrayref = anewarray_expr(array_class, size_check);
 	if (!arrayref)
 		return -ENOMEM;
 
