@@ -18,6 +18,9 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 		res->class = class;
 	}
 
+	if (pthread_mutex_init(&res->mutex, NULL))
+		NOT_IMPLEMENTED;
+
 	return res;
 }
 
@@ -30,6 +33,9 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 	if (res) {
 		res->array_length = count;
 	}
+
+	if (pthread_mutex_init(&res->mutex, NULL))
+		NOT_IMPLEMENTED;
 
 	return res;
 }
@@ -49,12 +55,14 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 
 void vm_object_lock(struct vm_object *obj)
 {
-	NOT_IMPLEMENTED;
+	if (pthread_mutex_lock(&obj->mutex))
+		NOT_IMPLEMENTED;
 }
 
 void vm_object_unlock(struct vm_object *obj)
 {
-	NOT_IMPLEMENTED;
+	if (pthread_mutex_unlock(&obj->mutex))
+		NOT_IMPLEMENTED;
 }
 
 #include <vm/classloader.h>

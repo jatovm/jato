@@ -1,14 +1,19 @@
 #ifndef __VM_OBJECT_H
 #define __VM_OBJECT_H
 
+#include <pthread.h>
+
 #include <vm/class.h>
 #include <vm/vm.h>
 
 struct vm_object {
+	/* For arrays, this points to the array type, e.g. for int arrays,
+	 * this points to the (artificial) class named "[I". */
 	struct vm_class *class;
 
-	unsigned int array_length;
+	pthread_mutex_t mutex;
 
+	unsigned int array_length;
 	uint8_t fields[];
 };
 
