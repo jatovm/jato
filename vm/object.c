@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -41,16 +42,58 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 }
 
 struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
-	int nr_dimensions, int **counts)
+	int nr_dimensions, int *counts)
 {
-	NOT_IMPLEMENTED;
+	assert(nr_dimensions > 0);
+
+	struct vm_object *res;
+
+	res = zalloc(sizeof(*res) + sizeof(struct vm_object *) * counts[0]);
+	if (!res) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	if (pthread_mutex_init(&res->mutex, NULL))
+		NOT_IMPLEMENTED;
+
+	res->array_length = counts[0];
+
+	struct vm_object **elems = (struct vm_object **) (res + 1);
+
+	if (nr_dimensions == 1) {
+		for (int i = 0; i < counts[0]; ++i)
+			elems[i] = NULL;
+	} else {
+		for (int i = 0; i < counts[0]; ++i) {
+			elems[i] = vm_object_alloc_multi_array(class,
+				nr_dimensions - 1, counts + 1);
+		}
+	}
+
 	return NULL;
 }
 
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 {
-	NOT_IMPLEMENTED;
-	return NULL;
+	struct vm_object *res;
+
+	res = zalloc(sizeof(*res) + sizeof(struct vm_object *) * count);
+	if (!res) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	if (pthread_mutex_init(&res->mutex, NULL))
+		NOT_IMPLEMENTED;
+
+	res->array_length = count;
+
+	struct vm_object **elems = (struct vm_object **) (res + 1);
+	for (int i = 0; i < count; ++i)
+		elems[i] = NULL;
+
+	return res;
 }
 
 void vm_object_lock(struct vm_object *obj)
