@@ -127,6 +127,18 @@ static void jit_init_natives(void)
 		&native_vmthrowable_fill_in_stack_trace);
 }
 
+struct vm_class *vm_java_lang_Object;
+struct vm_class *vm_java_lang_Class;
+
+static void preload_vm_classes(void)
+{
+	vm_java_lang_Object = classloader_load("java/lang/Object");
+	vm_java_lang_Class = classloader_load("java/lang/Class");
+
+	vm_class_init_object(vm_java_lang_Object);
+	vm_class_init_object(vm_java_lang_Class);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -150,6 +162,8 @@ main(int argc, char *argv[])
 	init_exceptions();
 
 	jit_init_natives();
+
+	preload_vm_classes();
 
 	const char *classname = argv[1];
 	struct vm_class *vmc = classloader_load_and_init(classname);

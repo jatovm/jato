@@ -408,12 +408,18 @@ struct vm_class *classloader_load_and_init(const char *class_name)
 	struct vm_class *vmc;
 
 	vmc = classloader_load(class_name);
-	if (vmc) {
-		if (vmc->state != VM_CLASS_INITIALIZED) {
-			if (vm_class_run_clinit(vmc)) {
-				NOT_IMPLEMENTED;
-				return NULL;
-			}
+	if (!vmc)
+		return NULL;
+
+	if (vmc->state != VM_CLASS_INITIALIZED) {
+		if (vm_class_init_object(vmc)) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		if (vm_class_run_clinit(vmc)) {
+			NOT_IMPLEMENTED;
+			return NULL;
 		}
 	}
 

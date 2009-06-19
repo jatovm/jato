@@ -37,6 +37,7 @@
 #include <vm/die.h>
 #include <vm/field.h>
 #include <vm/method.h>
+#include <vm/object.h>
 #include <vm/string.h>
 #include <vm/vm.h>
 
@@ -72,6 +73,8 @@ setup_vtable(struct vm_class *vmc)
 				vm_method_trampoline_ptr(&vmc->methods[i]));
 	}
 }
+
+extern struct vm_class *vm_java_lang_Class;
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 {
@@ -189,6 +192,21 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
 		setup_vtable(vmc);
 
 	vmc->state = VM_CLASS_LINKED;
+	return 0;
+}
+
+/*
+ * This function sets the .object member of struct vm_class to point to
+ * the object (of type java.lang.Class) for this class.
+ */
+int vm_class_init_object(struct vm_class *vmc)
+{
+	vmc->object = vm_object_alloc(vm_java_lang_Class);
+	if (!vmc->object) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
 	return 0;
 }
 

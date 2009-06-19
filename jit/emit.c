@@ -9,7 +9,9 @@
 
 #include <vm/alloc.h>
 #include <vm/buffer.h>
+#include <vm/class.h>
 #include <vm/method.h>
+#include <vm/object.h>
 #include <vm/vm.h>
 
 #include <jit/compilation-unit.h>
@@ -24,7 +26,7 @@
 static void emit_monitorenter(struct compilation_unit *cu)
 {
 	if (vm_method_is_static(cu->method))
-		emit_lock(cu->objcode, cu->method->class);
+		emit_lock(cu->objcode, cu->method->class->object);
 	else
 		emit_lock_this(cu->objcode);
 }
@@ -32,7 +34,7 @@ static void emit_monitorenter(struct compilation_unit *cu)
 static void emit_monitorexit(struct compilation_unit *cu)
 {
 	if (vm_method_is_static(cu->method))
-		emit_unlock(cu->objcode, cu->method->class);
+		emit_unlock(cu->objcode, cu->method->class->object);
 	else
 		emit_unlock_this(cu->objcode);
 }

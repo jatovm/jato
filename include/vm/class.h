@@ -8,6 +8,8 @@
 
 #include <jit/vtable.h>
 
+struct vm_object;
+
 enum vm_class_state {
 	VM_CLASS_LOADED,
 	VM_CLASS_LINKED,
@@ -29,6 +31,9 @@ struct vm_class {
 
 	unsigned int vtable_size;
 	struct vtable vtable;
+
+	/* The java.lang.Class object representing this class */
+	struct vm_object *object;
 };
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
@@ -38,6 +43,7 @@ static inline bool vm_class_is_interface(struct vm_class *vmc)
 	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
 }
 
+int vm_class_init_object(struct vm_class *vmc);
 int vm_class_run_clinit(struct vm_class *vmc);
 
 struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);
