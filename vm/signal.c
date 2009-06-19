@@ -28,6 +28,7 @@
 
 #include <vm/backtrace.h>
 #include <vm/class.h>
+#include <vm/object.h>
 
 #include <arch/signal.h>
 

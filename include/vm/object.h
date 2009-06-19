@@ -1,10 +1,14 @@
 #ifndef __VM_OBJECT_H
 #define __VM_OBJECT_H
 
+#include <stdbool.h>
+
 #include <pthread.h>
 
-#include <vm/class.h>
 #include <vm/vm.h>
+
+struct vm_class;
+enum vm_type;
 
 struct vm_object {
 	/* For arrays, this points to the array type, e.g. for int arrays,

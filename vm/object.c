@@ -5,6 +5,7 @@
 
 #include <jit/exception.h>
 
+#include <vm/class.h>
 #include <vm/die.h>
 #include <vm/object.h>
 #include <vm/stdlib.h>

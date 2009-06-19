@@ -1,6 +1,8 @@
 #include <stdint.h>
+#include <string.h>
 
 #include <vm/object.h>
+#include <vm/types.h>
 
 int utf8_char_count(const uint8_t *bytes, unsigned int n, unsigned int *res)
 {
