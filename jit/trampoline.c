@@ -62,7 +62,7 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 		return NULL;
 	}
 
-	if (add_cu_mapping(cu) != 0)
+	if (add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu) != 0)
 		/* TODO: throw OutOfMemoryError */
 		die("%s: out of memory", __func__);
 

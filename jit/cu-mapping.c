@@ -48,56 +48,37 @@ pthread_rwlock_t cu_map_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 void init_cu_mapping(void)
 {
 	int key_bits = sizeof(unsigned long) * 8;
-	int viable_key_bits = key_bits - get_buffer_align_bits();
 
-	cu_map = alloc_radix_tree(BITS_PER_LEVEL, viable_key_bits);
+	cu_map = alloc_radix_tree(BITS_PER_LEVEL, key_bits);
 	if (!cu_map)
 		die("out of memory");
 }
 
-static unsigned long addr_key(unsigned long addr)
-{
-	return addr >> get_buffer_align_bits();
-}
-
-static unsigned long cu_key(struct compilation_unit *cu)
-{
-	return addr_key((unsigned long)buffer_ptr(cu->objcode));
-}
-
-int add_cu_mapping(struct compilation_unit *cu)
+int add_cu_mapping(unsigned long addr, struct compilation_unit *cu)
 {
 	int result;
 
 	pthread_rwlock_wrlock(&cu_map_rwlock);
-	result = radix_tree_insert(cu_map, cu_key(cu), cu);
+	result = radix_tree_insert(cu_map, addr, cu);
 	pthread_rwlock_unlock(&cu_map_rwlock);
 
 	return result;
 }
 
-void remove_cu_mapping(struct compilation_unit *cu)
+void remove_cu_mapping(unsigned long addr)
 {
 	pthread_rwlock_wrlock(&cu_map_rwlock);
-	radix_tree_remove(cu_map, cu_key(cu));
+	radix_tree_remove(cu_map, addr);
 	pthread_rwlock_unlock(&cu_map_rwlock);
 }
 
 struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
 {
 	struct compilation_unit *cu;
-	unsigned long method_addr;
 
 	pthread_rwlock_rdlock(&cu_map_rwlock);
-	cu = radix_tree_lookup_prev(cu_map, addr_key(addr));
+	cu = radix_tree_lookup_prev(cu_map, addr);
 	pthread_rwlock_unlock(&cu_map_rwlock);
-
-	if (cu == NULL)
-		return NULL;
-
-	method_addr = (unsigned long)buffer_ptr(cu->objcode);
-	if (method_addr + buffer_offset(cu->objcode) <= addr)
-		return NULL;
 
 	return cu;
 }

@@ -21,19 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int get_buffer_align_bits(void)
-{
-	int page_size = getpagesize();
-	int bits = 0;
-
-	while (page_size) {
-		bits++;
-		page_size >>= 1;
-	}
-
-	return bits;
-}
-
 static void *__alloc_exec(size_t size)
 {
 	int page_size;
