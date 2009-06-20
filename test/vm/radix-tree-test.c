@@ -53,3 +53,17 @@ void test_tree_remove()
 
 	free_radix_tree(tree);
 }
+
+void test_tree_lookup_previous_in_the_same_node(void)
+{
+	struct radix_tree *tree;
+	void *result;
+
+	tree = alloc_radix_tree(8, 16);
+
+	radix_tree_insert(tree, 1, (void*)0xcafebabe);
+	result = radix_tree_lookup_prev(tree, 100);
+	assert_ptr_equals((void*)0xcafebabe, result);
+
+	free_radix_tree(tree);
+}
