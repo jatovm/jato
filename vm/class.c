@@ -466,3 +466,13 @@ vm_class_resolve_method_recursive(struct vm_class *vmc, uint16_t i)
 	free(type);
 	return result;
 }
+
+bool vm_class_is_assignable_from(struct vm_class *vmc, struct vm_class *from)
+{
+	NOT_IMPLEMENTED;
+
+	if (vmc == from)
+		return true;
+
+	return false;
+}

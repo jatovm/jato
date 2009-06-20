@@ -204,8 +204,7 @@ bool vm_object_is_instance_of(struct vm_object *obj, struct vm_class *class)
 	if (!obj)
 		return false;
 
-	NOT_IMPLEMENTED;
-	return false;
+	return vm_class_is_assignable_from(class, obj->class);;
 }
 
 void vm_object_check_null(struct vm_object *obj)
