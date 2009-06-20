@@ -34,23 +34,15 @@ extern void *trampoline_exceptions_guard_page;
  */
 extern __thread struct object *exception_holder;
 
-struct exception_table_entry *exception_find_entry(struct methodblock *,
-						   unsigned long);
-
-static inline bool exception_covers(struct exception_table_entry *eh,
-				    unsigned long offset)
-{
-	return eh->start_pc <= offset && offset < eh->end_pc;
-}
+struct exception_table_entry *lookup_eh_entry(struct methodblock *method,
+					      unsigned long target);
 
 unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    struct jit_stack_frame *frame,
 				    unsigned char *native_ptr);
-int insert_exception_spill_insns(struct compilation_unit *cu);
 
-/* This should be called only by JIT compiled native code */
-unsigned char *throw_exception(struct compilation_unit *cu,
-			       struct object *exception);
+int insert_exception_spill_insns(struct compilation_unit *cu);
+unsigned char *throw_exception(struct compilation_unit *, struct object *);
 void throw_exception_from_signal(void *ctx, struct object *exception);
 void throw_exception_from_trampoline(void *ctx, struct object *exception);
 void unwind(void);
@@ -59,6 +51,12 @@ void signal_new_exception(char *class_name, char *msg);
 void clear_exception(void);
 void init_exceptions(void);
 void thread_init_exceptions(void);
+
+static inline bool
+exception_covers(struct exception_table_entry *eh, unsigned long offset)
+{
+	return eh->start_pc <= offset && offset < eh->end_pc;
+}
 
 static inline struct object *exception_occurred(void)
 {

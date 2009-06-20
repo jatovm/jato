@@ -21,17 +21,15 @@
 
 static bool is_exception_handler(struct basic_block *bb)
 {
-	return exception_find_entry(bb->b_parent->method, bb->start) != NULL;
+	return lookup_eh_entry(bb->b_parent->method, bb->start) != NULL;
 }
 
 static void detect_exception_handlers(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
 
-	for_each_basic_block(bb, &cu->bb_list) {
-		if (is_exception_handler(bb))
-			bb->is_eh = true;
-	}
+	for_each_basic_block(bb, &cu->bb_list)
+		bb->is_eh = is_exception_handler(bb);
 }
 
 static int update_branch_successors(struct compilation_unit *cu)

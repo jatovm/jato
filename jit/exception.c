@@ -103,14 +103,15 @@ void clear_exception(void)
 	exception_holder = NULL;
 }
 
-struct exception_table_entry *exception_find_entry(struct methodblock *method,
-						   unsigned long target)
+struct exception_table_entry *
+lookup_eh_entry(struct methodblock *method, unsigned long target)
 {
 	int i;
 
 	for (i = 0; i < method->exception_table_size; i++) {
-		struct exception_table_entry *eh = &method->exception_table[i];
+		struct exception_table_entry *eh;
 
+		eh = &method->exception_table[i];
 		if (eh->handler_pc == target)
 			return eh;
 	}
@@ -118,11 +119,12 @@ struct exception_table_entry *exception_find_entry(struct methodblock *method,
 	return NULL;
 }
 
-static unsigned char *eh_native_ptr(struct compilation_unit *cu,
-				    struct exception_table_entry *eh)
+static unsigned char *
+eh_native_ptr(struct compilation_unit *cu, struct exception_table_entry *eh)
 {
-	struct basic_block *bb = find_bb(cu, eh->handler_pc);
+	struct basic_block *bb;
 
+	bb = find_bb(cu, eh->handler_pc);
 	assert(bb != NULL);
 
 	return bb_native_ptr(bb);
@@ -132,31 +134,33 @@ static unsigned char *eh_native_ptr(struct compilation_unit *cu,
  * find_handler - return native pointer to exception handler for given
  *                @exception_class and @bc_offset of source.
  */
-static unsigned char *find_handler(struct compilation_unit *cu,
-				   Class *exception_class,
-				   unsigned long bc_offset)
+static unsigned char *
+find_handler(struct compilation_unit *cu, struct object *exception_class,
+	     unsigned long bc_offset)
 {
 	struct exception_table_entry *eh;
-	struct methodblock *method = cu->method;
-	int size = method->exception_table_size;
+	struct methodblock *mb;
+	int size;
 	int i;
 
+	mb = cu->method;
+	size = mb->exception_table_size;
+
 	for (i = 0; i < size; i++) {
-		eh = &method->exception_table[i];
+		struct object *catch_class;
 
-		if (exception_covers(eh, bc_offset)) {
-			Class *catch_class;
+		eh = &mb->exception_table[i];
 
-			if (eh->catch_type == 0)
-				break; /* It's a finally block */
+		if (!exception_covers(eh, bc_offset))
+			continue;
 
-			catch_class = resolveClass(method->class,
-						   eh->catch_type,
-						   false);
+		if (eh->catch_type == 0)
+			break; /* This matches to everything. */
 
-			if (isInstanceOf(catch_class, exception_class))
-				break;
-		}
+		catch_class = resolveClass(mb->class, eh->catch_type, false);
+
+		if (isInstanceOf(catch_class, exception_class))
+			break;
 	}
 
 	if (i < size)
@@ -193,9 +197,9 @@ is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
  * @frame: frame pointer of method throwing exception
  * @native_ptr: pointer to instruction that caused exception
  */
-unsigned char *throw_exception_from(struct compilation_unit *cu,
-				    struct jit_stack_frame *frame,
-				    unsigned char *native_ptr)
+unsigned char *
+throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
+		     unsigned char *native_ptr)
 {
 	struct object *exception;
 	unsigned long bc_offset;
