@@ -48,6 +48,8 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 	if (!ret)
 		die("no native function found for %s.%s", class_name, method_name);
 
+	add_cu_mapping((unsigned long)ret, cu);
+
 	return ret;
 }
 
