@@ -849,6 +849,12 @@ static void emit_div_membase_reg(struct buffer *buf, struct operand *src,
 	__emit_div_mul_membase_eax(buf, src, dest, 0x07);
 }
 
+static void emit_div_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	__emit_div_mul_reg_eax(buf, src, dest, 0x07);
+}
+
 static void __emit_shift_reg_reg(struct buffer *buf,
 				 struct operand *src,
 				 struct operand *dest, unsigned char opc_ext)
@@ -1003,6 +1009,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
@@ -1564,4 +1571,3 @@ void emit_trampoline(struct compilation_unit *cu, void *call_target,
 }
 
 #endif /* CONFIG_X86_32 */
-
