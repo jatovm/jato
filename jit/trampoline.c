@@ -30,6 +30,7 @@
 #include <jit/compiler.h>
 
 #include <vm/natives.h>
+#include <vm/method.h>
 #include <vm/buffer.h>
 #include <vm/die.h>
 #include <vm/vm.h>
@@ -78,7 +79,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
-	if (cu->method->access_flags & ACC_NATIVE)
+	if (method_is_native(cu->method))
 		ret = jit_native_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);

@@ -41,4 +41,9 @@ static inline bool method_is_virtual(struct methodblock *method)
 	return (method->access_flags & (ACC_STATIC | ACC_PRIVATE)) == 0;
 }
 
+static inline bool method_is_native(struct methodblock *method)
+{
+	return method->access_flags & ACC_NATIVE;
+}
+
 #endif
