@@ -188,22 +188,28 @@ radix_tree_previous(struct radix_tree *tree, struct radix_tree_node *node,
 {
 	int index;
 
-	/* We don't have to search this level if there are no
-	   other slots */
-	while (node != NULL && node->count == 1) {
-		node = node->parent;
-		level--;
-	}
+	while (node) {
+		index = get_index(tree, key, level) - 1;
+		for (; index >= 0; index--) {
+			if (node->slots[index] == NULL)
+				continue;
 
-	if (node == NULL)
-		return NULL;
-
-	for (index = get_index(tree, key, level) - 1; index >= 0; index--)
-		if (node->slots[index] != NULL)
 			return radix_tree_last(tree, node->slots[index],
 					       level + 1);
+		}
 
-	return radix_tree_previous(tree, node->parent, key, level - 1);
+		/*
+		 * Go back one level until we find level with more
+		 * than one slot filed in. We don't have to search
+		 * level if there are no other slots.
+		 */
+		do {
+			node = node->parent;
+			level--;
+		} while (node != NULL && node->count == 1);
+	}
+
+	return NULL;
 }
 
 /**
