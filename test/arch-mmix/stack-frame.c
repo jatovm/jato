@@ -25,8 +25,3 @@
  */
 
 #include <arch/stack-frame.h>
-
-bool is_jit_method(unsigned long eip)
-{
-	return false;
-}

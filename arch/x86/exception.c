@@ -82,7 +82,7 @@ void throw_exception_from_trampoline(void *ctx, struct object *exception)
 
 	signal_exception(exception);
 
-	if (!is_jit_method(return_address))
+	if (is_native(return_address))
 		/* Return to caller. */
 		uc->uc_mcontext.gregs[REG_IP] = return_address;
 	else

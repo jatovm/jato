@@ -38,7 +38,7 @@ bool signal_from_jit_method(void *ctx)
 	uc = ctx;
 	ip = uc->uc_mcontext.gregs[REG_IP];
 
-	if (!is_jit_method(ip))
+	if (is_native(ip))
 		return false;
 
 	return true;

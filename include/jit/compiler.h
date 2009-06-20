@@ -93,7 +93,7 @@ static inline void *method_trampoline_ptr(struct methodblock *method)
 	return buffer_ptr(method->trampoline->objcode);
 }
 
-bool is_jit_method(unsigned long eip);
+bool is_native(unsigned long eip);
 
 void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target);
 

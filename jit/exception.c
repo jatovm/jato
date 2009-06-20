@@ -223,7 +223,7 @@ throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
 
 	signal_exception(exception);
 
-	if (!is_jit_method(frame->return_address)) {
+	if (is_native(frame->return_address)) {
 		/*
 		 * No handler found within jitted method call chain.
 		 * Return to previous (not jit) method.

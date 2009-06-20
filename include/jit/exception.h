@@ -82,7 +82,7 @@ static inline struct object *exception_occurred(void)
 	void *eh;							\
 									\
 	native_ptr = __builtin_return_address(0) - 1;			\
-	if (!is_jit_method((unsigned long)native_ptr))			\
+	if (is_native((unsigned long)native_ptr))			\
 		die("%s: must not be called from not-JIT code",		\
 		    __func__);						\
 									\
