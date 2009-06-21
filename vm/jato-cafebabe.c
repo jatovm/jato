@@ -139,6 +139,12 @@ static void preload_vm_classes(void)
 	vm_class_init_object(vm_java_lang_Class);
 }
 
+static void usage(FILE *f, int retval)
+{
+	fprintf(f, "usage: %s [options] class\n", exe_name);
+	exit(retval);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -150,10 +156,51 @@ main(int argc, char *argv[])
 	setvbuf(stderr, NULL, _IONBF, 0);
 #endif
 
-	if (argc != 2) {
-		fprintf(stderr, "usage: %s CLASS\n", argv[0]);
-		exit(EXIT_FAILURE);
+	/* We need to support at least this:
+	 *  -classpath/-cp
+	 *  -Xtrace:jit
+	 *  -Xtrace:trampoline
+	 *  -Xtrace:bytecode-offset
+	 *  -Xtrace:asm
+	 */
+
+	for (int i = 1; i < argc; ++i) {
+		if (!strcmp(argv[i], "-classpath") || !strcmp(argv[i], "-cp")) {
+		} else if (!strcmp(argv[i], "-Xtrace:asm")) {
+			opt_trace_method = true;
+			opt_trace_machine_code = true;
+		} else if (!strcmp(argv[i], "-Xtrace:bytecode-offset")) {
+			opt_trace_bytecode_offset = true;
+		} else if (!strcmp(argv[i], "-Xtrace:jit")) {
+			opt_trace_method = true;
+			opt_trace_cfg = true;
+			opt_trace_tree_ir = true;
+			opt_trace_lir = true;
+			opt_trace_liveness = true;
+			opt_trace_regalloc = true;
+			opt_trace_machine_code = true;
+			opt_trace_magic_trampoline = true;
+			opt_trace_bytecode_offset = true;
+		} else if (!strcmp(argv[i], "-Xtrace:trampoline")) {
+			opt_trace_magic_trampoline = true;
+		}
 	}
+
+	int optind = 1;
+
+	/* Skip to next non-flag argument */
+	while (optind < argc && argv[optind][0] == '-')
+		++optind;
+	if (optind == argc)
+		usage(stderr, EXIT_FAILURE);
+
+	const char *classname = argv[optind++];
+
+	/* There must be no other non-flag arguments */
+	while (optind < argc && argv[optind][0] == '-')
+		++optind;
+	if (optind != argc)
+		usage(stderr, EXIT_FAILURE);
 
 	perf_map_open();
 
@@ -165,7 +212,6 @@ main(int argc, char *argv[])
 
 	preload_vm_classes();
 
-	const char *classname = argv[1];
 	struct vm_class *vmc = classloader_load_and_init(classname);
 	if (!vmc) {
 		fprintf(stderr, "error: %s: could not load\n", classname);
