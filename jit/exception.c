@@ -160,11 +160,9 @@ static unsigned char *find_handler(struct compilation_unit *cu,
 			catch_class = vm_class_resolve_class(method->class,
 				eh->catch_type);
 
-			NOT_IMPLEMENTED;
-#if 0
-			if (isInstanceOf(catch_class, exception_class))
+			if (vm_class_is_assignable_from(exception_class,
+				catch_class))
 				break;
-#endif
 		}
 	}
 
