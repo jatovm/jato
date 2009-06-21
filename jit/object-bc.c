@@ -421,7 +421,7 @@ int convert_multianewarray(struct parse_context *ctx)
 	struct expression *args_list;
 	unsigned long type_idx;
 	unsigned char dimension;
-	struct vm_object *class;
+	struct vm_class *class;
 
 	type_idx = bytecode_read_u16(ctx->buffer);
 	dimension = bytecode_read_u8(ctx->buffer);

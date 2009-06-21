@@ -211,14 +211,14 @@ struct expression {
 		   reference.  */
 		struct {
 		        struct tree_node *anewarray_size;
-			struct vm_object *anewarray_ref_type;
+			struct vm_class *anewarray_ref_type;
 		};
 
 		/*  EXPR_MULTIANEWARRAY represents creation of a new multidimensional
 		    array of given reference.  */
 		struct {
 			struct tree_node *multianewarray_dimensions;
-			struct vm_object *multianewarray_ref_type;
+			struct vm_class *multianewarray_ref_type;
 		};
 
 		/*  EXPR_ARRAYLENGTH represents length of an array.  */
@@ -284,8 +284,8 @@ struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
 struct expression *new_expr(struct vm_class *);
 struct expression *newarray_expr(unsigned long, struct expression *);
-struct expression *anewarray_expr(struct vm_object *, struct expression *);
-struct expression *multianewarray_expr(struct vm_object *);
+struct expression *anewarray_expr(struct vm_class *, struct expression *);
+struct expression *multianewarray_expr(struct vm_class *);
 struct expression *arraylength_expr(struct expression *);
 struct expression *instanceof_expr(struct expression *, struct vm_object *);
 struct expression *exception_ref_expr(void);

@@ -273,7 +273,7 @@ struct expression *newarray_expr(unsigned long type, struct expression *size)
 	return expr;
 }
 
-struct expression *anewarray_expr(struct vm_object *class, struct expression *size)
+struct expression *anewarray_expr(struct vm_class *class, struct expression *size)
 {
 	struct expression *expr = alloc_expression(EXPR_ANEWARRAY, J_REFERENCE);
 
@@ -284,7 +284,7 @@ struct expression *anewarray_expr(struct vm_object *class, struct expression *si
 	return expr;
 }
 
-struct expression *multianewarray_expr(struct vm_object *class)
+struct expression *multianewarray_expr(struct vm_class *class)
 {
 	struct expression *expr = alloc_expression(EXPR_MULTIANEWARRAY, J_REFERENCE);
 
