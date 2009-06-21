@@ -38,13 +38,18 @@ struct vm_class {
 
 int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
 
+int vm_class_init_object(struct vm_class *vmc);
+int vm_class_run_clinit(struct vm_class *vmc);
+
 static inline bool vm_class_is_interface(struct vm_class *vmc)
 {
 	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
 }
 
-int vm_class_init_object(struct vm_class *vmc);
-int vm_class_run_clinit(struct vm_class *vmc);
+static inline bool vm_class_is_array_class(struct vm_class *vmc)
+{
+	return vmc->name && vmc->name[0] == '[';
+}
 
 struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);
 
