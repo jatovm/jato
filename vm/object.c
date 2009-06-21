@@ -215,18 +215,18 @@ void vm_object_check_null(struct vm_object *obj)
 void vm_object_check_array(struct vm_object *obj, unsigned int index)
 {
 	unsigned int array_len;
-	struct classblock *cb;
+	struct vm_class *cb;
 	char index_str[32];
 
-	cb = CLASS_CB(obj->class);
+	cb = obj->class;
 
-	if (!IS_ARRAY(cb)) {
+	if (!vm_class_is_array_class(cb)) {
 		signal_new_exception("java/lang/RuntimeException",
 				     "object is not an array");
 		goto throw;
 	}
 
-	array_len = ARRAY_LEN(obj);
+	array_len = obj->array_length;
 
 	if (index < array_len)
 		return;
