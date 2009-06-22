@@ -8,7 +8,7 @@ OBJS = \
 
 CC = gcc
 
-DEFAULT_CFLAGS	+= -Wall -g -rdynamic -Werror -std=gnu99
+DEFAULT_CFLAGS	+= -Wall -g -rdynamic -std=gnu99
 
 WARNINGS	= -Wundef
 DEFAULT_CFLAGS	+= $(WARNINGS)
