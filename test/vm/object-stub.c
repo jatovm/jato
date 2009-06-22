@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <vm/class.h>
 #include <vm/object.h>
 
 struct vm_object *

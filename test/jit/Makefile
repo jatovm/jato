@@ -56,6 +56,7 @@ OBJS = \
 	../jamvm/thread-stub.o \
 	../jamvm/cast-stub.o \
 	../vm/class-stub.o \
+	../vm/classloader-stub.o \
 	../vm/object-stub.o \
 	../arch-mmix/instruction.o \
 	../arch-mmix/use-def.o \
