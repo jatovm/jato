@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,6 +11,34 @@
 #include <vm/class.h>
 #include <vm/classloader.h>
 #include <vm/java_lang.h>
+
+struct classpath {
+	struct list_head node;
+
+	/* This can contain several paths separated by colons */
+	const char *paths;
+};
+
+/* These are the directories we search for classes */
+struct list_head classpaths = LIST_HEAD_INIT(classpaths);
+
+int classloader_add_to_classpath(const char *classpath)
+{
+	assert(classpath);
+
+	struct classpath *cp = malloc(sizeof *cp);
+	if (!cp)
+		return -ENOMEM;
+
+	cp->paths = strdup(classpath);
+	if (!cp->paths) {
+		NOT_IMPLEMENTED;
+		return -ENOMEM;
+	}
+
+	list_add(&cp->node, &classpaths);
+	return 0;
+}
 
 struct classloader_class {
 	struct vm_class *class;
@@ -196,6 +226,41 @@ struct vm_class *load_class_from_path_file(const char *path, const char *file)
 	return NULL;
 }
 
+struct vm_class *load_class_from_classpath_file(const char *classpath,
+	const char *file)
+{
+	struct vm_class *result = NULL;
+	size_t i = 0;
+
+	while (classpath[i]) {
+		size_t n;
+		char *classpath_element;
+
+		n = strspn(classpath + i, ":");
+		i += n;
+
+		n = strcspn(classpath + i, ":");
+		if (n == 0)
+			continue;
+
+		classpath_element = strndup(classpath + i, n);
+		if (!classpath_element) {
+			NOT_IMPLEMENTED;
+			break;
+		}
+
+		i += n;
+
+		result = load_class_from_path_file(classpath_element, file);
+		free(classpath_element);
+
+		if (result)
+			break;
+	}
+
+	return result;
+}
+
 struct vm_class *load_primitive_array_class(const char *class_name,
 	unsigned int dimensions, char type)
 {
@@ -308,7 +373,6 @@ struct vm_class *load_class(const char *class_name)
 {
 	struct vm_class *result;
 	char *filename;
-	const char *classpath;
 
 	if (class_name[0] == '[')
 		return load_array_class(class_name);
@@ -320,45 +384,12 @@ struct vm_class *load_class(const char *class_name)
 	}
 
 	result = load_class_from_file(filename);
-	if (result) {
-		/* XXX: Free filename */
+	if (result)
 		goto out_filename;
-	}
 
-	classpath = getenv("CLASSPATH");
-	if (!classpath) {
-		NOT_IMPLEMENTED;
-		result = NULL;
-		goto out_filename;
-	}
-
-	size_t i = 0;
-	while (classpath[i]) {
-		size_t n;
-		char *classpath_element;
-
-		n = strspn(classpath + i, ":");
-		i += n;
-
-		n = strcspn(classpath + i, ":");
-		if (n == 0)
-			continue;
-
-		classpath_element = strndup(classpath + i, n);
-		if (!classpath_element) {
-			NOT_IMPLEMENTED;
-			result = NULL;
-			goto out_filename;
-		}
-
-		i += n;
-
-		result = load_class_from_path_file(classpath_element, filename);
-		free(classpath_element);
-
-		if (result)
-			break;
-	}
+	struct classpath *cp;
+	list_for_each_entry(cp, &classpaths, node)
+		result = load_class_from_classpath_file(cp->paths, filename);
 
 out_filename:
 	free(filename);

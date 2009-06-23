@@ -208,8 +208,21 @@ main(int argc, char *argv[])
 	 *  -Xtrace:asm
 	 */
 
+	const char *classname = NULL;
+
 	for (int i = 1; i < argc; ++i) {
-		if (!strcmp(argv[i], "-classpath") || !strcmp(argv[i], "-cp")) {
+		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help")) {
+			usage(stdout, EXIT_SUCCESS);
+		} else if (!strcmp(argv[i], "-classpath")
+			|| !strcmp(argv[i], "-cp"))
+		{
+			if (++i >= argc) {
+				NOT_IMPLEMENTED;
+				break;
+			}
+
+			if (classloader_add_to_classpath(argv[i]))
+				NOT_IMPLEMENTED;
 		} else if (!strcmp(argv[i], "-Xtrace:asm")) {
 			opt_trace_method = true;
 			opt_trace_machine_code = true;
@@ -227,23 +240,18 @@ main(int argc, char *argv[])
 			opt_trace_bytecode_offset = true;
 		} else if (!strcmp(argv[i], "-Xtrace:trampoline")) {
 			opt_trace_magic_trampoline = true;
+		} else {
+			if (argv[i][0] == '-')
+				usage(stderr, EXIT_FAILURE);
+
+			if (classname)
+				usage(stderr, EXIT_FAILURE);
+
+			classname = argv[i];
 		}
 	}
 
-	int optind = 1;
-
-	/* Skip to next non-flag argument */
-	while (optind < argc && argv[optind][0] == '-')
-		++optind;
-	if (optind == argc)
-		usage(stderr, EXIT_FAILURE);
-
-	const char *classname = argv[optind++];
-
-	/* There must be no other non-flag arguments */
-	while (optind < argc && argv[optind][0] == '-')
-		++optind;
-	if (optind != argc)
+	if (!classname)
 		usage(stderr, EXIT_FAILURE);
 
 	perf_map_open();
@@ -253,6 +261,11 @@ main(int argc, char *argv[])
 	init_exceptions();
 
 	jit_init_natives();
+
+	/* Search $CLASSPATH last. */
+	char *classpath = getenv("CLASSPATH");
+	if (classpath)
+		classloader_add_to_classpath(classpath);
 
 	if (preload_vm_classes()) {
 		NOT_IMPLEMENTED;
