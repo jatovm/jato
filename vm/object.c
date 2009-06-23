@@ -6,11 +6,13 @@
 #include <jit/exception.h>
 
 #include <vm/class.h>
+#include <vm/classloader.h>
 #include <vm/die.h>
-#include "vm/java_lang.h"
+#include <vm/java_lang.h>
 #include <vm/object.h>
 #include <vm/stdlib.h>
 #include <vm/string.h>
+#include <vm/utf8.h>
 
 struct vm_object *vm_object_alloc(struct vm_class *class)
 {
@@ -109,9 +111,6 @@ void vm_object_unlock(struct vm_object *obj)
 	if (pthread_mutex_unlock(&obj->mutex))
 		NOT_IMPLEMENTED;
 }
-
-#include <vm/classloader.h>
-#include <vm/utf8.h>
 
 struct vm_object *
 vm_object_alloc_string(const uint8_t bytes[], unsigned int length)
