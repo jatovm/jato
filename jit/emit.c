@@ -19,6 +19,8 @@
 #include <jit/emit-code.h>
 #include <jit/compiler.h>
 
+#include <arch/instruction.h>
+
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +45,93 @@ static struct buffer_operations exec_buf_ops = {
 	.expand = expand_buffer_exec,
 	.free   = generic_buffer_free,
 };
+
+typedef void (*emit_no_operands_fn) (struct buffer *);
+
+static void emit_no_operands(struct emitter *emitter, struct buffer *buf)
+{
+	emit_no_operands_fn emit = emitter->emit_fn;
+	emit(buf);
+}
+
+typedef void (*emit_single_operand_fn) (struct buffer *, struct operand * operand);
+
+static void emit_single_operand(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_single_operand_fn emit = emitter->emit_fn;
+	emit(buf, &insn->operand);
+}
+
+typedef void (*emit_two_operands_fn) (struct buffer *, struct operand * src, struct operand * dest);
+
+static void emit_two_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_two_operands_fn emit = emitter->emit_fn;
+	emit(buf, &insn->src, &insn->dest);
+}
+
+typedef void (*emit_branch_fn) (struct buffer *, struct insn *);
+
+static void emit_branch(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_branch_fn emit = emitter->emit_fn;
+	emit(buf, insn);
+}
+
+static void __emit_insn(struct buffer *buf, struct insn *insn)
+{
+	struct emitter *emitter;
+
+	emitter = &emitters[insn->type];
+	switch (emitter->type) {
+	case NO_OPERANDS:
+		emit_no_operands(emitter, buf);
+		break;
+	case SINGLE_OPERAND:
+		emit_single_operand(emitter, buf, insn);
+		break;
+	case TWO_OPERANDS:
+		emit_two_operands(emitter, buf, insn);
+		break;
+	case BRANCH:
+		emit_branch(emitter, buf, insn);
+		break;
+	default:
+		printf("Oops. No emitter for 0x%x.\n", insn->type);
+		abort();
+	};
+}
+
+static void emit_insn(struct buffer *buf, struct insn *insn)
+{
+	insn->mach_offset = buffer_offset(buf);
+	__emit_insn(buf, insn);
+}
+
+static void backpatch_branches(struct buffer *buf,
+			       struct list_head *to_backpatch,
+			       unsigned long target_offset)
+{
+	struct insn *this, *next;
+
+	list_for_each_entry_safe(this, next, to_backpatch, branch_list_node) {
+		backpatch_branch_target(buf, this, target_offset);
+		list_del(&this->branch_list_node);
+	}
+}
+
+void emit_body(struct basic_block *bb, struct buffer *buf)
+{
+	struct insn *insn;
+
+	bb->mach_offset = buffer_offset(buf);
+	backpatch_branches(buf, &bb->backpatch_insns, bb->mach_offset);
+
+	for_each_insn(insn, &bb->insn_list) {
+		emit_insn(buf, insn);
+	}
+	bb->is_emitted = true;
+}
 
 int emit_machine_code(struct compilation_unit *cu)
 {

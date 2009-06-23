@@ -81,7 +81,7 @@ static inline unsigned long cu_native_size(struct compilation_unit *cu)
 	return buffer_offset(cu->objcode);
 }
 
-bool is_jit_method(unsigned long eip);
+bool is_native(unsigned long eip);
 
 void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target);
 

@@ -43,11 +43,6 @@ void emit_epilog(struct buffer *buffer)
 	NOT_IMPLEMENTED
 }
 
-void emit_body(struct basic_block *bb, struct buffer *buffer)
-{
-	NOT_IMPLEMENTED
-}
-
 void emit_trampoline(struct compilation_unit *cu, void *call_target,
 		     struct jit_trampoline *trampoline)
 {

@@ -110,7 +110,7 @@ void clear_exception(void)
 }
 
 struct cafebabe_code_attribute_exception *
-exception_find_entry(struct vm_method *method, unsigned long target)
+lookup_eh_entry(struct vm_method *method, unsigned long target)
 {
 	int i;
 
@@ -128,8 +128,9 @@ exception_find_entry(struct vm_method *method, unsigned long target)
 static unsigned char *eh_native_ptr(struct compilation_unit *cu,
 	struct cafebabe_code_attribute_exception *eh)
 {
-	struct basic_block *bb = find_bb(cu, eh->handler_pc);
+	struct basic_block *bb;
 
+	bb = find_bb(cu, eh->handler_pc);
 	assert(bb != NULL);
 
 	return bb_native_ptr(bb);
@@ -140,30 +141,32 @@ static unsigned char *eh_native_ptr(struct compilation_unit *cu,
  *                @exception_class and @bc_offset of source.
  */
 static unsigned char *find_handler(struct compilation_unit *cu,
-				   struct vm_class *exception_class,
-				   unsigned long bc_offset)
+	struct vm_class *exception_class, unsigned long bc_offset)
 {
 	struct cafebabe_code_attribute_exception *eh;
-	struct vm_method *method = cu->method;
-	int size = method->code_attribute.exception_table_length;
+	struct vm_method *method;
+	int size;
 	int i;
 
+	method = cu->method;
+	size = method->code_attribute.exception_table_length;
+
 	for (i = 0; i < size; i++) {
+		struct vm_class *catch_class;
+
 		eh = &method->code_attribute.exception_table[i];
+		if (!exception_covers(eh, bc_offset))
+			continue;
 
-		if (exception_covers(eh, bc_offset)) {
-			struct vm_class *catch_class;
+		/* This matches to everything. */
+		if (eh->catch_type == 0)
+			break;
 
-			if (eh->catch_type == 0)
-				break; /* It's a finally block */
+		catch_class = vm_class_resolve_class(method->class,
+			eh->catch_type);
 
-			catch_class = vm_class_resolve_class(method->class,
-				eh->catch_type);
-
-			if (vm_class_is_assignable_from(exception_class,
-				catch_class))
-				break;
-		}
+		if (vm_class_is_assignable_from(exception_class, catch_class))
+			break;
 	}
 
 	if (i < size)
@@ -200,9 +203,9 @@ is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
  * @frame: frame pointer of method throwing exception
  * @native_ptr: pointer to instruction that caused exception
  */
-unsigned char *throw_exception_from(struct compilation_unit *cu,
-				    struct jit_stack_frame *frame,
-				    unsigned char *native_ptr)
+unsigned char *
+throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
+		     unsigned char *native_ptr)
 {
 	struct vm_object *exception;
 	unsigned long bc_offset;
@@ -226,7 +229,7 @@ unsigned char *throw_exception_from(struct compilation_unit *cu,
 
 	signal_exception(exception);
 
-	if (!is_jit_method(frame->return_address)) {
+	if (is_native(frame->return_address)) {
 		/*
 		 * No handler found within jitted method call chain.
 		 * Return to previous (not jit) method.

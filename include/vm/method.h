@@ -95,4 +95,9 @@ static inline void *vm_method_trampoline_ptr(struct vm_method *vmm)
 	return buffer_ptr(vmm->trampoline->objcode);
 }
 
+static inline bool method_is_native(struct methodblock *method)
+{
+	return method->access_flags & ACC_NATIVE;
+}
+
 #endif

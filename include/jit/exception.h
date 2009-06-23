@@ -42,21 +42,13 @@ extern void *trampoline_exceptions_guard_page;
 extern __thread struct vm_object *exception_holder;
 
 struct cafebabe_code_attribute_exception *
-exception_find_entry(struct vm_method *, unsigned long);
-
-static inline bool
-exception_covers(struct cafebabe_code_attribute_exception *eh,
-	unsigned long offset)
-{
-	return eh->start_pc <= offset && offset < eh->end_pc;
-}
+lookup_eh_entry(struct vm_method *method, unsigned long target);
 
 unsigned char *throw_exception_from(struct compilation_unit *cu,
 				    struct jit_stack_frame *frame,
 				    unsigned char *native_ptr);
-int insert_exception_spill_insns(struct compilation_unit *cu);
 
-/* This should be called only by JIT compiled native code */
+int insert_exception_spill_insns(struct compilation_unit *cu);
 unsigned char *throw_exception(struct compilation_unit *cu,
 			       struct vm_object *exception);
 void throw_exception_from_signal(void *ctx, struct vm_object *exception);
@@ -67,6 +59,12 @@ void signal_new_exception(char *class_name, char *msg);
 void clear_exception(void);
 void init_exceptions(void);
 void thread_init_exceptions(void);
+
+static inline bool
+exception_covers(struct cafebabe_code_attribute_exception *eh, unsigned long offset)
+{
+	return eh->start_pc <= offset && offset < eh->end_pc;
+}
 
 static inline struct vm_object *exception_occurred(void)
 {
@@ -92,7 +90,7 @@ static inline struct vm_object *exception_occurred(void)
 	void *eh;							\
 									\
 	native_ptr = __builtin_return_address(0) - 1;			\
-	if (!is_jit_method((unsigned long)native_ptr))			\
+	if (is_native((unsigned long)native_ptr))			\
 		die("%s: must not be called from not-JIT code",		\
 		    __func__);						\
 									\

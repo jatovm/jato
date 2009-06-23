@@ -1,6 +1,7 @@
 #ifndef __X86_REGISTERS_64_H
 #define __X86_REGISTERS_64_H
 
+#include <limits.h>
 #include <stdbool.h>
 
 enum machine_reg {
@@ -25,7 +26,7 @@ enum machine_reg {
 	REG_RSP = NR_REGISTERS, /* R4 */
 	REG_RBP, /* R5 */
 
-	REG_UNASSIGNED = ~0UL,
+	REG_UNASSIGNED = INT_MAX,
 
 	/* Aliases that aid the reuse of code from x86-32. */
 	REG_EAX = REG_RAX,

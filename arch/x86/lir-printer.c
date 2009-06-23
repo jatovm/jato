@@ -240,6 +240,12 @@ static int print_div_membase_reg(struct string *str, struct insn *insn)
 	return print_membase_reg(str, insn);
 }
 
+static int print_div_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 static int print_je_branch(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -502,6 +508,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_CMP_MEMBASE_REG] = print_cmp_membase_reg,
 	[INSN_CMP_REG_REG] = print_cmp_reg_reg,
 	[INSN_DIV_MEMBASE_REG] = print_div_membase_reg,
+	[INSN_DIV_REG_REG] = print_div_reg_reg,
 	[INSN_JE_BRANCH] = print_je_branch,
 	[INSN_JGE_BRANCH] = print_jge_branch,
 	[INSN_JG_BRANCH] = print_jg_branch,

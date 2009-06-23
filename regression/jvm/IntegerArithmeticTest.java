@@ -110,6 +110,16 @@ public class IntegerArithmeticTest extends TestCase {
         assertEquals( 3, div( 6,  2));
     }
 
+    public static void testIntegerDivisionRegReg() {
+        int x = 3;
+
+        try {
+            x = 1 / 0;
+        } catch (ArithmeticException e) {}
+
+        assertEquals(3, x);
+    }
+
     public static int div(int dividend, int divisor) {
         return dividend / divisor;
     }
@@ -263,6 +273,7 @@ public class IntegerArithmeticTest extends TestCase {
         testIntegerMultiplication();
         testIntegerMultiplicationOverflow();
         testIntegerDivision();
+        testIntegerDivisionRegReg();
         testIntegerRemainder();
         testIntegerNegation();
         testIntegerNegationOverflow();

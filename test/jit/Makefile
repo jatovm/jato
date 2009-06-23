@@ -50,6 +50,7 @@ OBJS = \
 	../../jit/cu-mapping.o \
 	../../jit/nop-bc.o \
 	../../jit/tree-node.o \
+	../../jit/method.o \
 	../libharness/libharness.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/resolve-stub.o \

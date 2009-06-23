@@ -24,28 +24,34 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <arch/stack-frame.h>
 #include <jit/compiler.h>
+#include <vm/natives.h>
 
 #include <vm/class.h>
 #include <vm/method.h>
 
 #include <stdbool.h>
+#include <unistd.h>
 
-/* Points to the first address past text segment */
-extern char etext;
+/* This is located on the first address past the end of the
+   uninitialized data segment */
+extern char end;
 
 /*
- * Checks whether address belongs to jitted or JATO method.
- * This is used in deciding when to stop the unwind process upon
- * exception throwing.
- *
- * It utilises the fact, that jitted code is allocated on heap. So by
- * comparing return address with text segment end we can tell whether
- * the caller is on heap or in text.
+ * Checks whether address is located above data segments and below heap end.
  */
-bool is_jit_method(unsigned long eip)
+static bool address_on_heap(unsigned long addr)
 {
-	return eip >= (unsigned long)&etext;
+	return addr >= (unsigned long)&end && addr < (unsigned long)sbrk(0);
+}
+
+/*
+ * Checks whether given address belongs to a native function.
+ */
+bool is_native(unsigned long eip)
+{
+	return !address_on_heap(eip);
 }
 
 const char *method_symbol(struct vm_method *method, char *symbol, size_t size)

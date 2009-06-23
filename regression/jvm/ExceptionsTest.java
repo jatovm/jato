@@ -442,6 +442,19 @@ public class ExceptionsTest extends TestCase {
         takeObject(array);
     }
 
+    public static native void nativeMethod();
+
+    public static void testUnsatisfiedLinkError() {
+        boolean caught = false;
+
+        try {
+            nativeMethod();
+        } catch (UnsatisfiedLinkError e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
 
     public static void main(String args[]) {
         testTryBlockDoesNotThrowAnything();
@@ -469,6 +482,7 @@ public class ExceptionsTest extends TestCase {
         testAnewarray();
         testNewarray();
         testMultianewarray();
+        testUnsatisfiedLinkError();
 
         exit();
     }

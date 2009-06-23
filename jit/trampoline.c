@@ -33,26 +33,44 @@
 #include <vm/class.h>
 #include <vm/method.h>
 #include <vm/natives.h>
+#include <vm/string.h>
+#include <vm/method.h>
 #include <vm/buffer.h>
 #include <vm/die.h>
 #include <vm/vm.h>
 
 static void *jit_native_trampoline(struct compilation_unit *cu)
 {
-	struct vm_method *method = cu->method;
 	const char *method_name, *class_name;
+	struct vm_method *method;
+	struct string *msg;
 	void *ret;
 
+	method = cu->method;
 	class_name  = method->class->name;
 	method_name = method->name;
 
 	ret = vm_lookup_native(class_name, method_name);
-	if (!ret) {
-		die("no native function found for %s.%s",
-			class_name, method_name);
+	if (ret) {
+		add_cu_mapping((unsigned long)ret, cu);
+		return ret;
 	}
 
-	return ret;
+	msg = alloc_str();
+	if (!msg)
+		/* TODO: signal OutOfMemoryError */
+		die("%s: out of memory\n", __func__);
+
+	str_printf(msg, "%s.%s%s", CLASS_CB(method->class)->name, method->name,
+		   method->type);
+
+	if (strcmp(class_name, "VMThrowable") == 0)
+		die("no native function found for %s", msg->value);
+
+	signal_new_exception("java/lang/UnsatisfiedLinkError", msg->value);
+	free_str(msg);
+
+	return NULL;
 }
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
@@ -66,7 +84,7 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 		return NULL;
 	}
 
-	if (add_cu_mapping(cu) != 0)
+	if (add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu) != 0)
 		/* TODO: throw OutOfMemoryError */
 		die("%s: out of memory", __func__);
 
