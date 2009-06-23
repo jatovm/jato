@@ -39,6 +39,7 @@
 
 #include "vm/class.h"
 #include "vm/classloader.h"
+#include "vm/java_lang.h"
 #include "vm/method.h"
 #include "vm/natives.h"
 #include "vm/object.h"
@@ -128,14 +129,14 @@ static void jit_init_natives(void)
 		&native_vmthrowable_fill_in_stack_trace);
 }
 
-struct vm_class *vm_java_lang_Object;
-struct vm_class *vm_java_lang_Class;
-struct vm_class *vm_java_lang_String;
-
 struct preload_entry {
 	const char *name;
 	struct vm_class **class;
 };
+
+struct vm_class *vm_java_lang_Object;
+struct vm_class *vm_java_lang_Class;
+struct vm_class *vm_java_lang_String;
 
 static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Object",	&vm_java_lang_Object },
