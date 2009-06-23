@@ -102,7 +102,6 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 
 	switch (cp->tag) {
 	case CAFEBABE_CONSTANT_TAG_INTEGER:
-		NOT_IMPLEMENTED;
 		expr = value_expr(J_INT, cp->integer_.bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
@@ -129,7 +128,6 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 		break;
 	}
 	case CAFEBABE_CONSTANT_TAG_LONG:
-		//NOT_IMPLEMENTED;
 		expr = value_expr(J_LONG,
 			((uint64_t) cp->long_.high_bytes << 32)
 			+ (uint64_t) cp->long_.low_bytes);
