@@ -54,17 +54,17 @@ Done, more or less:
 	Used libzip; can find class files in zips and jars given in the
 	environment variable CLASSPATH.
 
-Current plan (expect heavy changes to this as progress is made):
-
- - Load constant values from the constant pool
-
- - Improve the main program a bit, e.g. command-line handling
-
  - Write a wrapper around object allocation that simply calls malloc()
 
 	Garbage collection can be implemented later.
 
  - Use pthread for object locking
+
+Current plan (expect heavy changes to this as progress is made):
+
+ - Load constant values from the constant pool
+
+ - Improve the main program a bit, e.g. command-line handling
 
  - Jato should now work using cafebabe instead of jamvm
 
