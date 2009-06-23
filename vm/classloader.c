@@ -8,6 +8,7 @@
 
 #include <vm/class.h>
 #include <vm/classloader.h>
+#include <vm/java_lang.h>
 
 struct classloader_class {
 	struct vm_class *class;
@@ -209,8 +210,7 @@ struct vm_class *load_primitive_array_class(const char *class_name,
 	array_class->class = NULL;
 	array_class->state = VM_CLASS_LOADED;
 	array_class->name = strdup(class_name);
-	/* XXX: Preload java.lang.Object */
-	array_class->super = classloader_load("java/lang/Object");
+	array_class->super = vm_java_lang_Object;
 	array_class->fields = NULL;
 	array_class->methods = NULL;
 	array_class->object_size = 0;
@@ -233,8 +233,7 @@ struct vm_class *load_class_array_class(const char *array_class_name,
 	array_class->class = NULL;
 	array_class->state = VM_CLASS_LOADED;
 	array_class->name = strdup(array_class_name);
-	/* XXX: Preload java.lang.Object */
-	array_class->super = classloader_load("java/lang/Object");
+	array_class->super = vm_java_lang_Object;
 	array_class->fields = NULL;
 	array_class->methods = NULL;
 	array_class->object_size = 0;
