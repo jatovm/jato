@@ -57,31 +57,13 @@ static void native_vmruntime_exit(int status)
 
 static void native_vmruntime_println(struct vm_object *message)
 {
-	struct vm_field *offset_field
-		= vm_class_get_field(message->class, "offset", "I");
-	if (!offset_field) {
-		NOT_IMPLEMENTED;
-		return;
-	}
+	int32_t offset = *(int32_t *)
+		&message->fields[vm_java_lang_String_offset->offset];
+	int32_t count = *(int32_t *)
+		&message->fields[vm_java_lang_String_count->offset];
+	struct vm_object *array_object = *(struct vm_object **)
+		&message->fields[vm_java_lang_String_value->offset];
 
-	struct vm_field *count_field
-		= vm_class_get_field(message->class, "count", "I");
-	if (!count_field) {
-		NOT_IMPLEMENTED;
-		return;
-	}
-
-	struct vm_field *value_field
-		= vm_class_get_field(message->class, "value", "[C");
-	if (!value_field) {
-		NOT_IMPLEMENTED;
-		return;
-	}
-
-	int32_t offset = *(int32_t *) &message->fields[offset_field->offset];
-	int32_t count = *(int32_t *) &message->fields[count_field->offset];
-	struct vm_object *array_object
-		= *(struct vm_object **) &message->fields[value_field->offset];
 	int16_t *array = (int16_t *) array_object->fields;
 
 	for (int32_t i = 0; i < count; ++i) {
