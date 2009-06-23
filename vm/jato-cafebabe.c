@@ -129,14 +129,46 @@ static void jit_init_natives(void)
 
 struct vm_class *vm_java_lang_Object;
 struct vm_class *vm_java_lang_Class;
+struct vm_class *vm_java_lang_String;
 
-static void preload_vm_classes(void)
+struct preload_entry {
+	const char *name;
+	struct vm_class **class;
+};
+
+static const struct preload_entry preload_entries[] = {
+	{ "java/lang/Object",	&vm_java_lang_Object },
+	{ "java/lang/Class",	&vm_java_lang_Class },
+	{ "java/lang/String",	&vm_java_lang_String },
+};
+
+static int preload_vm_classes(void)
 {
-	vm_java_lang_Object = classloader_load("java/lang/Object");
-	vm_java_lang_Class = classloader_load("java/lang/Class");
+	static const unsigned int nr_preload_entries
+		= sizeof(preload_entries) / sizeof(*preload_entries);
 
-	vm_class_init_object(vm_java_lang_Object);
-	vm_class_init_object(vm_java_lang_Class);
+	for (unsigned int i = 0; i < nr_preload_entries; ++i) {
+		const struct preload_entry *pe = &preload_entries[i];
+
+		struct vm_class *class = classloader_load(pe->name);
+		if (!class) {
+			NOT_IMPLEMENTED;
+			return 1;
+		}
+
+		*pe->class = class;
+	}
+
+	for (unsigned int i = 0; i < nr_preload_entries; ++i) {
+		const struct preload_entry *pe = &preload_entries[i];
+
+		if (vm_class_init_object(*pe->class)) {
+			NOT_IMPLEMENTED;
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 static void usage(FILE *f, int retval)
@@ -210,7 +242,10 @@ main(int argc, char *argv[])
 
 	jit_init_natives();
 
-	preload_vm_classes();
+	if (preload_vm_classes()) {
+		NOT_IMPLEMENTED;
+		exit(EXIT_FAILURE);
+	}
 
 	struct vm_class *vmc = classloader_load_and_init(classname);
 	if (!vmc) {
