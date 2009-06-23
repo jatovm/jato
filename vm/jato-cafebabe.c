@@ -43,6 +43,7 @@
 #include "vm/natives.h"
 #include "vm/object.h"
 #include "vm/signal.h"
+#include "vm/system.h"
 #include "vm/vm.h"
 
 char *exe_name;
@@ -142,12 +143,26 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/String",	&vm_java_lang_String },
 };
 
+struct field_preload_entry {
+	struct vm_class **class;
+	const char *name;
+	const char *type;
+	struct vm_field **field;
+};
+
+struct vm_field *vm_java_lang_String_offset;
+struct vm_field *vm_java_lang_String_count;
+struct vm_field *vm_java_lang_String_value;
+
+static const struct field_preload_entry field_preload_entries[] = {
+	{ &vm_java_lang_String, "offset", "I",	&vm_java_lang_String_offset },
+	{ &vm_java_lang_String, "count", "I",	&vm_java_lang_String_count },
+	{ &vm_java_lang_String, "value", "[C",	&vm_java_lang_String_value },
+};
+
 static int preload_vm_classes(void)
 {
-	static const unsigned int nr_preload_entries
-		= sizeof(preload_entries) / sizeof(*preload_entries);
-
-	for (unsigned int i = 0; i < nr_preload_entries; ++i) {
+	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
 		const struct preload_entry *pe = &preload_entries[i];
 
 		struct vm_class *class = classloader_load(pe->name);
@@ -159,13 +174,27 @@ static int preload_vm_classes(void)
 		*pe->class = class;
 	}
 
-	for (unsigned int i = 0; i < nr_preload_entries; ++i) {
+	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
 		const struct preload_entry *pe = &preload_entries[i];
 
 		if (vm_class_init_object(*pe->class)) {
 			NOT_IMPLEMENTED;
 			return 1;
 		}
+	}
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(field_preload_entries); ++i) {
+		const struct field_preload_entry *pe
+			= &field_preload_entries[i];
+
+		struct vm_field *field = vm_class_get_field(*pe->class,
+			pe->name, pe->type);
+		if (!field) {
+			NOT_IMPLEMENTED;
+			return 1;
+		}
+
+		*pe->field = field;
 	}
 
 	return 0;
