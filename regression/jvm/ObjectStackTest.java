@@ -49,8 +49,7 @@ public class ObjectStackTest extends TestCase {
 
     public static void testObjectStackWhenBranching() {
         assertIsGreaterThanOne(2);
-        // TODO
-        // assertIsNotGreaterThanOne(1);
+        assertIsNotGreaterThanOne(1);
     }
 
     public static void main(String[] args) {
