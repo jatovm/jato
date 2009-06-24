@@ -104,7 +104,8 @@ VM_OBJS = \
 	vm/class.o		\
 	vm/list.o 		\
 	vm/radix-tree.o		\
-	vm/guard-page.o
+	vm/guard-page.o		\
+	vm/stack-trace.o
 
 JAMVM_OBJS = \
 	vm/jato.o		\

@@ -8,6 +8,12 @@
 #include <stdlib.h>
 #include <libharness.h>
 
+/* Stub required by called_from_jit_trampoline() in arch/x86/stack-frame.c */
+void *jit_magic_trampoline(struct compilation_unit *cu)
+{
+	return NULL;
+}
+
 static void assert_local_offset(unsigned long expected, struct expression *local, unsigned long nr_args)
 {
 	struct methodblock method = {

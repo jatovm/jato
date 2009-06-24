@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <signal.h>
 
+#include <vm/stack-trace.h>
 #include <vm/natives.h>
 #include <vm/signal.h>
 #include <vm/vm.h>
@@ -357,6 +358,9 @@ int main(int argc, char *argv[]) {
                 executeStaticMethod(main_class, mb, array);
 	    else {
 	        java_main_fn java_main = method_trampoline_ptr(mb);
+
+		bottom_stack_frame = __builtin_frame_address(0);
+
 	        java_main();
 	    }
 	}

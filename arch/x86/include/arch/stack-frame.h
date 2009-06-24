@@ -8,13 +8,19 @@ struct methodblock;
 struct expression;
 struct compilation_unit;
 
+struct native_stack_frame {
+	void *prev; /* previous stack frame link */
+	unsigned long return_address;
+	unsigned long args[0];
+} __attribute__((packed));
+
 struct jit_stack_frame {
-       struct jit_stack_frame *prev;
-       unsigned long old_ebx;
-       unsigned long old_esi;
-       unsigned long old_edi;
-       unsigned long return_address;
-       unsigned long args[0];
+	void *prev; /* previous stack frame link */
+	unsigned long old_ebx;
+	unsigned long old_esi;
+	unsigned long old_edi;
+	unsigned long return_address;
+	unsigned long args[0];
 } __attribute__((packed));
 
 unsigned long frame_local_offset(struct methodblock *, struct expression *);
