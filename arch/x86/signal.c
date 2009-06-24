@@ -32,18 +32,13 @@
 
 #include <vm/signal.h>
 
-bool signal_from_jit_method(void *ctx)
+bool signal_from_native(void *ctx)
 {
 	ucontext_t *uc;
-	unsigned long ip;
 
 	uc = ctx;
-	ip = uc->uc_mcontext.gregs[REG_IP];
 
-	if (is_native(ip))
-		return false;
-
-	return true;
+	return is_native(uc->uc_mcontext.gregs[REG_IP]);
 }
 
 struct compilation_unit *get_signal_source_cu(void *ctx)
