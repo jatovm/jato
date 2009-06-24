@@ -143,7 +143,7 @@ static int spill_expression(struct basic_block *bb,
 	 * And add a reload expression that is put on the mimic stack of
 	 * successor basic blocks.
 	 */
-	stack_push(reload_stack, tmp);
+	stack_push(reload_stack, expr_get(tmp));
 
 	return 0;
 }
