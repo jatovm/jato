@@ -52,7 +52,7 @@ unsigned long cu_frame_locals_offset(struct compilation_unit *cu);
  */
 #ifdef CONFIG_X86_32
 #define __cleanup_args(args_size)		\
-	({								\
+	if (args_size) {						\
 	__asm__ volatile (						\
 	     "movl %%ebp, %%esi \n"					\
 	     "addl %1, %%esi \n"					\
@@ -78,10 +78,10 @@ unsigned long cu_frame_locals_offset(struct compilation_unit *cu);
 	     : "b" (args_size), "n"(2*sizeof(unsigned long))		\
 	     : "%eax", "%edi", "%esi", "%ecx", "cc", "memory"		\
 									); \
-	})
+	}
 #else
 #define __cleanup_args(args_size)		\
-	({								\
+	if (args_size) {						\
 	__asm__ volatile (						\
 	     "movq %%rbp, %%rsi \n"					\
 	     "addq %1, %%rsi \n"					\
@@ -107,7 +107,7 @@ unsigned long cu_frame_locals_offset(struct compilation_unit *cu);
 	     : "b" (args_size), "n"(2*sizeof(unsigned long))		\
 	     : "%rax", "%rdi", "%rsi", "%rcx", "cc", "memory"		\
 									); \
-	})
+	}
 #endif
 
 #endif
