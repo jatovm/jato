@@ -268,7 +268,7 @@ exit:
 
 typedef void (*java_main_fn)(void);
 
-static void vm_runtime_exit(int status)
+static void __vm_native vm_runtime_exit(int status)
 {
 	exitVM(status);
 }
@@ -278,7 +278,7 @@ static void vm_runtime_exit(int status)
  * return java.lang.VMState instance, or null in which case no stack trace will
  * be printed by printStackTrace() method.
  */
-static struct object *vm_fill_in_stack_trace(struct object *object)
+static struct object * __vm_native vm_fill_in_stack_trace(struct object *object)
 {
 	return NULL;
 }

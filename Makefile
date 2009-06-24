@@ -39,6 +39,7 @@ endif
 export ARCH_CFLAGS
 
 ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
+LINKER_SCRIPT=arch/$(ARCH)/jato$(ARCH_POSTFIX).ld
 
 # Make the build silent by default
 V =
@@ -193,7 +194,7 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: FORCE
 
 $(PROGRAM): lib monoburg $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+	$(Q) $(CC) -T $(LINKER_SCRIPT) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
 compile: $(OBJS)
 
