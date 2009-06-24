@@ -24,6 +24,8 @@ struct basic_block {
 	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
 	unsigned long nr_successors;
 	struct basic_block **successors;
+	unsigned long nr_predecessors;
+	struct basic_block **predecessors;
 	unsigned long mach_offset;
 
 	/* The mimic stack is used to simulate JVM operand stack at

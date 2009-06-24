@@ -76,6 +76,7 @@ void free_basic_block(struct basic_block *bb)
 	free_stmt_list(&bb->stmt_list);
 	free_insn_list(&bb->insn_list);
 	free(bb->successors);
+	free(bb->predecessors);
 	free(bb->use_set);
 	free(bb->def_set);
 	free(bb->live_in_set);
@@ -112,6 +113,9 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 	new_bb->nr_successors = orig_bb->nr_successors;
 	orig_bb->nr_successors = 0;
 
+	new_bb->predecessors = NULL;
+	new_bb->nr_predecessors = 0;
+
 	if (orig_bb->has_branch) {
 		orig_bb->has_branch = false;
 		new_bb->has_branch = true;
@@ -142,23 +146,33 @@ void bb_add_insn(struct basic_block *bb, struct insn *insn)
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }
 
-int bb_add_successor(struct basic_block *bb, struct basic_block *successor)
+int __bb_add_neighbor(struct basic_block *new, struct basic_block ***array, unsigned long *nb)
 {
-	int new_size;
-	struct basic_block **new_successors;
+	unsigned long new_size;
+	struct basic_block **new_neighbors;
 
-	new_size = sizeof(struct basic_block *) * (bb->nr_successors + 1);
+	new_size = sizeof(struct basic_block *) * (*nb + 1);
 
-	new_successors = realloc(bb->successors, new_size);
-	if (new_successors == NULL)
+	new_neighbors = realloc(*array, new_size);
+	if (new_neighbors == NULL)
 		return -ENOMEM;
 
-	bb->successors = new_successors;
+	*array = new_neighbors;
 
-	bb->successors[bb->nr_successors] = successor;
-	bb->nr_successors++;
+	(*array)[*nb] = new;
+	(*nb)++;
 
 	return 0;
+}
+
+int bb_add_successor(struct basic_block *bb, struct basic_block *successor)
+{
+	return __bb_add_neighbor(successor, &bb->successors, &bb->nr_successors);
+}
+
+int bb_add_predecessor(struct basic_block *bb, struct basic_block *predecessor)
+{
+	return __bb_add_neighbor(predecessor, &bb->predecessors, &bb->nr_predecessors);
 }
 
 unsigned char *bb_native_ptr(struct basic_block *bb)
