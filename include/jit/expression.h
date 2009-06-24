@@ -35,6 +35,7 @@ enum expression_type {
 	EXPR_NULL_CHECK,
 	EXPR_ARRAY_SIZE_CHECK,
 	EXPR_MULTIARRAY_SIZE_CHECK,
+	EXPR_MIMIC_STACK_SLOT,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -235,6 +236,13 @@ struct expression {
 
 		/* EXPR_ARRAY_SIZE_CHECK and EXPR_MULTIARRAY_SIZE_CHECK */
 		struct tree_node *size_expr;
+
+		/* EXPR_MIMIC_STACK_SLOT */
+		struct {
+			char entry;
+			int slot_ndx;
+		};
+
 	};
 };
 
@@ -246,6 +254,13 @@ static inline struct expression *to_expr(struct tree_node *node)
 static inline enum expression_type expr_type(struct expression *expr)
 {
 	return (expr->node.op & EXPR_TYPE_MASK) >> EXPR_TYPE_SHIFT;
+}
+
+static inline void expr_set_type(struct expression *expr, int type)
+{
+	unsigned long op = expr->node.op & ~EXPR_TYPE_MASK;
+	type <<= EXPR_TYPE_SHIFT;
+	expr->node.op = op | type;
 }
 
 static inline enum binary_operator expr_bin_op(struct expression *expr)
@@ -268,6 +283,7 @@ struct expression *value_expr(enum vm_type, unsigned long long);
 struct expression *fvalue_expr(enum vm_type, double);
 struct expression *local_expr(enum vm_type, unsigned long);
 struct expression *temporary_expr(enum vm_type, struct var_info *, struct var_info *);
+struct expression *mimic_stack_expr(enum vm_type, int, int);
 struct expression *array_deref_expr(enum vm_type, struct expression *, struct expression *);
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);
