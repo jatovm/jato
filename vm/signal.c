@@ -27,6 +27,7 @@
 #include <jit/exception.h>
 
 #include <vm/backtrace.h>
+#include <vm/signal.h>
 #include <vm/class.h>
 
 #include <arch/signal.h>
@@ -35,25 +36,28 @@
 #include <stddef.h>
 #include <unistd.h>
 
+static void throw_arithmetic_exception(void)
+{
+	signal_new_exception("java/lang/ArithmeticException",
+			     "division by zero");
+	throw_from_native(0);
+}
+
+static void throw_null_pointer_exception(void)
+{
+	signal_new_exception("java/lang/NullPointerException", NULL);
+	throw_from_native(0);
+}
+
 static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 {
 	if (signal_from_jit_method(ctx) && si->si_code == FPE_INTDIV) {
-		struct object *exception;
+		if (install_signal_bh(ctx, throw_arithmetic_exception) == 0)
+			return;
 
-		/* TODO: exception's stack trace should be filled using ctx */
-		exception = new_exception(
-			"java/lang/ArithmeticException", "division by zero");
-		if (exception == NULL) {
-			/* TODO: throw OutOfMemoryError */
-			fprintf(stderr, "%s: Out of memory\n", __func__);
-			goto exit;
-		}
-
-		throw_exception_from_signal(ctx, exception);
-		return;
+		fprintf(stderr, "%s: install_signal_bh() failed.\n", __func__);
 	}
 
- exit:
 	print_backtrace_and_die(sig, si, ctx);
 }
 
@@ -65,23 +69,16 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	/* Assume that zero-page access is caused by dereferencing a
 	   null pointer */
 	if ((unsigned long)si->si_addr < (unsigned long)getpagesize()) {
-		struct object *exception;
-
 		/* We must be extra caucious here because IP might be
 		   invalid */
 		if (get_signal_source_cu(ctx) == NULL)
 			goto exit;
 
-		/* TODO: exception's stack trace should be filled using ctx */
-		exception = new_exception("java/lang/NullPointerException", NULL);
-		if (exception == NULL) {
-			/* TODO: throw OutOfMemoryError */
-			fprintf(stderr, "%s: Out of memory\n", __func__);
-			goto exit;
-		}
+		if (install_signal_bh(ctx, throw_null_pointer_exception) == 0)
+			return;
 
-		throw_exception_from_signal(ctx, exception);
-		return;
+		fprintf(stderr, "%s: install_signal_bh() failed.\n", __func__);
+		goto exit;
 	}
 
 	/* Check if exception was triggered by exception guard */
