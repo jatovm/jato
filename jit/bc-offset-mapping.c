@@ -116,3 +116,17 @@ bool all_insn_have_bytecode_offset(struct compilation_unit *cu)
 
 	return true;
 }
+
+int bytecode_offset_to_line_no(struct methodblock *mb, unsigned long bc_offset)
+{
+	int i;
+
+	if(mb->line_no_table_size == 0 || bc_offset == BC_OFFSET_UNKNOWN)
+		return -1;
+
+	i = mb->line_no_table_size - 1;
+	while (i && bc_offset < mb->line_no_table[i].start_pc)
+		i--;
+
+	return mb->line_no_table[i].line_no;
+}

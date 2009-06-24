@@ -25,11 +25,65 @@
  */
 #include <vm/stack-trace.h>
 #include <vm/natives.h>
+#include <vm/method.h>
 
+#include <jit/bc-offset-mapping.h>
 #include <jit/cu-mapping.h>
+#include <jit/exception.h>
 #include <jit/compiler.h>
 
+#include <malloc.h>
+
 __thread struct native_stack_frame *bottom_stack_frame;
+
+static struct object *vmthrowable_class;
+static struct object *throwable_class;
+static struct object *ste_class;
+static struct object *ste_array_class;
+static int backtrace_offset;
+static int vmstate_offset;
+
+typedef void (*ste_init_fn)(struct object *, struct object *, int,
+			    struct object *, struct object *, int);
+
+static ste_init_fn ste_init;
+
+void init_stack_trace_printing(void)
+{
+	struct fieldblock *backtrace_fld;
+	struct fieldblock *vmstate_fld;
+	struct methodblock *ste_init_mb;
+
+	vmthrowable_class = findSystemClass("java/lang/VMThrowable");
+	throwable_class = findSystemClass("java/lang/Throwable");
+	ste_class = findSystemClass("java/lang/StackTraceElement");
+	ste_array_class = findArrayClass("[Ljava/lang/StackTraceElement;");
+
+	if (exception_occurred())
+		goto error;
+
+	ste_init_mb = findMethod(ste_class, "<init>",
+		"(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V");
+	if (ste_init_mb == NULL)
+		goto error;
+
+	ste_init = method_trampoline_ptr(ste_init_mb);
+
+	backtrace_fld = findField(vmthrowable_class, "backtrace",
+		"Ljava/lang/Object;");
+	vmstate_fld = findField(throwable_class, "vmState",
+		"Ljava/lang/VMThrowable;");
+
+	if (!backtrace_fld || !vmstate_fld)
+		goto error;
+
+	backtrace_offset = backtrace_fld->offset;
+	vmstate_offset = vmstate_fld->offset;
+	return;
+
+ error:
+	die("%s: initialization failed.", __func__);
+}
 
 /**
  * get_caller_stack_trace_elem - makes @elem to point to the stack
@@ -157,4 +211,188 @@ int get_stack_trace_depth(struct stack_trace_elem *elem)
 		depth++;
 
 	return depth;
+}
+
+/**
+ * get_stack_trace - creates instance of VMThrowable with
+ *                   backtrace filled in.
+ *
+ * @st_elem: top most stack trace element.
+ */
+struct object *get_stack_trace(struct stack_trace_elem *st_elem)
+{
+	struct compilation_unit *cu;
+	struct object *vmstate;
+	struct object *array;
+	unsigned long *data;
+	int array_type;
+	int depth;
+	int i;
+
+	depth = get_stack_trace_depth(st_elem);
+	if (depth == 0)
+		return NULL;
+
+	vmstate = allocObject(vmthrowable_class);
+	if (!vmstate)
+		return NULL;
+
+	array_type = sizeof(unsigned long) == 4 ? T_INT : T_LONG;
+	array = allocTypeArray(array_type, depth * 2);
+	if (!array)
+		return NULL;
+
+	data = ARRAY_DATA(array);
+
+	i = 0;
+	do {
+		unsigned long bc_offset;
+
+		cu = get_cu_from_native_addr(st_elem->addr);
+		if (!cu) {
+			fprintf(stderr,
+				"%s: no compilation unit mapping for %p\n",
+				__func__, (void*)st_elem->addr);
+			return NULL;
+		}
+
+		if (method_is_native(cu->method))
+			bc_offset = BC_OFFSET_UNKNOWN;
+		else
+			bc_offset = native_ptr_to_bytecode_offset(cu,
+				(unsigned char*)st_elem->addr);
+
+		data[i++] = (unsigned long)cu->method;
+
+		/* We must add cu->method->code to be compatible with JamVM. */
+		data[i++] = bc_offset + (unsigned long)cu->method->code;
+	} while (get_prev_stack_trace_elem(st_elem) == 0);
+
+	INST_DATA(vmstate)[backtrace_offset] = (uintptr_t)array;
+
+	return vmstate;
+}
+
+/**
+ * new_stack_trace_element - creates new instance of
+ *     java.lang.StackTraceElement for given method and bytecode
+ *     offset.
+ */
+struct object *
+new_stack_trace_element(struct methodblock *mb, unsigned long bc_offset)
+{
+	struct object *method_name;
+	struct object *class_name;
+	struct object *file_name;
+	struct classblock *cb;
+	struct object *ste;
+	char *class_dot_name;
+	bool is_native;
+	int line_no;
+
+	cb = CLASS_CB(mb->class);
+
+	line_no = bytecode_offset_to_line_no(mb, bc_offset);
+	is_native = method_is_native(mb);
+
+	if (!is_native && cb->source_file_name)
+		file_name = createString(cb->source_file_name);
+	else
+		file_name = NULL;
+
+	class_dot_name = slash2dots(cb->name);
+	class_name = createString(class_dot_name);
+	method_name = createString(mb->name);
+	free(class_dot_name);
+
+	ste = allocObject(ste_class);
+	if(!ste)
+		return NULL;
+
+	ste_init(ste, file_name, line_no, class_name, method_name, is_native);
+
+	return ste;
+}
+
+/**
+ * convert_stack_trace - returns java.lang.StackTraceElement[] array
+ *     filled in using stack trace stored in given VMThrowable
+ *     instance.
+ *
+ * @vmthrowable: instance of VMThrowable to get stack trace from.
+ */
+struct object *convert_stack_trace(struct object *vmthrowable)
+{
+	unsigned long *stack_trace;
+	struct object *ste_array;
+	struct object *array;
+	struct object **dest;
+	int depth;
+	int i;
+
+	array = (struct object *)INST_DATA(vmthrowable)[backtrace_offset];
+	if (!array)
+		return NULL;
+
+	stack_trace = ARRAY_DATA(array);
+	depth = ARRAY_LEN(array);
+
+	ste_array = allocArray(ste_array_class, depth / 2,
+			       sizeof(struct object*));
+	if (!ste_array)
+		return NULL;
+
+	dest = ARRAY_DATA(ste_array);
+
+	for(i = 0; i < depth; dest++) {
+		struct methodblock *mb;
+		unsigned long bc_offset;
+		struct object *ste;
+
+		mb = (struct methodblock*)stack_trace[i++];
+		bc_offset = stack_trace[i++] - (unsigned long)mb->code;
+
+		ste = new_stack_trace_element(mb, bc_offset);
+		if(ste == NULL || exception_occurred())
+			return NULL;
+
+		*dest = ste;
+	}
+
+	return ste_array;
+}
+
+struct object * __vm_native
+vm_throwable_fill_in_stack_trace(struct object *throwable)
+{
+	struct stack_trace_elem st_elem;
+
+	if (init_stack_trace_elem(&st_elem))
+		return NULL;
+
+	if (skip_frames_from_class(&st_elem, vmthrowable_class))
+		return NULL;
+
+	if (skip_frames_from_class(&st_elem, throwable_class))
+		return NULL;
+
+	return get_stack_trace(&st_elem);
+}
+
+struct object * __vm_native
+vm_throwable_get_stack_trace(struct object *this, struct object *throwable)
+{
+	struct object *result;
+
+	result = convert_stack_trace(this);
+
+	if (exception_occurred())
+		throw_from_native(sizeof(struct object *) * 2);
+
+	return result;
+}
+
+void set_throwable_vmstate(struct object *throwable, struct object *vmstate)
+{
+	INST_DATA(throwable)[vmstate_offset] = (uintptr_t)vmstate;
 }
