@@ -13,7 +13,7 @@ How can I try it out?
 
     For Ubuntu:
 
-    $ sudo apt-get install ecj classpath libffi-dev binutils-dev
+    $ sudo apt-get install ecj classpath libffi-dev binutils-dev libzip-dev
 
     For Fedora:
 
