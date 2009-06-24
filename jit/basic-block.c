@@ -167,6 +167,7 @@ int __bb_add_neighbor(struct basic_block *new, struct basic_block ***array, unsi
 
 int bb_add_successor(struct basic_block *bb, struct basic_block *successor)
 {
+	__bb_add_neighbor(bb, &successor->predecessors, &successor->nr_predecessors);
 	return __bb_add_neighbor(successor, &bb->successors, &bb->nr_successors);
 }
 
