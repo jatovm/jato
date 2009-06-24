@@ -432,6 +432,21 @@ reg:	OP_AND(reg, EXPR_LOCAL) 1
 	}
 }
 
+reg:	OP_AND(reg, reg) 1
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = state->left->reg1;
+	binop_reg_reg_low(state, s, tree, INSN_AND_REG_REG);
+
+	if (expr->vm_type == J_LONG) {
+		state->reg2 = state->left->reg2;
+		binop_reg_reg_high(state, s, tree, INSN_AND_REG_REG);
+	}
+}
+
 reg:	OP_XOR(reg, EXPR_LOCAL) 1
 {
 	struct expression *expr;

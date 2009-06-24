@@ -196,6 +196,12 @@ static int print_and_membase_reg(struct string *str, struct insn *insn)
 	return print_membase_reg(str, insn);
 }
 
+static int print_and_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 static int print_call_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -501,6 +507,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_ADD_MEMBASE_REG] = print_add_membase_reg,
 	[INSN_ADD_REG_REG] = print_add_reg_reg,
 	[INSN_AND_MEMBASE_REG] = print_and_membase_reg,
+	[INSN_AND_REG_REG] = print_and_reg_reg,
 	[INSN_CALL_REG] = print_call_reg,
 	[INSN_CALL_REL] = print_call_rel,
 	[INSN_CLTD_REG_REG] = print_cltd_reg_reg,	/* CDQ in Intel manuals*/
