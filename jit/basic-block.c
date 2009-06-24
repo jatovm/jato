@@ -77,6 +77,7 @@ void free_basic_block(struct basic_block *bb)
 	free_insn_list(&bb->insn_list);
 	free(bb->successors);
 	free(bb->predecessors);
+	free(bb->mimic_stack_expr);
 	free(bb->use_set);
 	free(bb->def_set);
 	free(bb->live_in_set);
@@ -146,20 +147,20 @@ void bb_add_insn(struct basic_block *bb, struct insn *insn)
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }
 
-int __bb_add_neighbor(struct basic_block *new, struct basic_block ***array, unsigned long *nb)
+int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
 {
 	unsigned long new_size;
-	struct basic_block **new_neighbors;
+	void *new_array;
 
-	new_size = sizeof(struct basic_block *) * (*nb + 1);
+	new_size = sizeof(void *) * (*nb + 1);
 
-	new_neighbors = realloc(*array, new_size);
-	if (new_neighbors == NULL)
+	new_array = realloc(*array, new_size);
+	if (new_array == NULL)
 		return -ENOMEM;
 
-	*array = new_neighbors;
+	*array = new_array;
 
-	(*array)[*nb] = new;
+	((void **)(*array))[*nb] = new;
 	(*nb)++;
 
 	return 0;
@@ -167,13 +168,18 @@ int __bb_add_neighbor(struct basic_block *new, struct basic_block ***array, unsi
 
 int bb_add_successor(struct basic_block *bb, struct basic_block *successor)
 {
-	__bb_add_neighbor(bb, &successor->predecessors, &successor->nr_predecessors);
-	return __bb_add_neighbor(successor, &bb->successors, &bb->nr_successors);
+	__bb_add_neighbor(bb, (void **)&successor->predecessors, &successor->nr_predecessors);
+	return __bb_add_neighbor(successor, (void **)&bb->successors, &bb->nr_successors);
 }
 
 int bb_add_predecessor(struct basic_block *bb, struct basic_block *predecessor)
 {
-	return __bb_add_neighbor(predecessor, &bb->predecessors, &bb->nr_predecessors);
+	return __bb_add_neighbor(predecessor, (void **)&bb->predecessors, &bb->nr_predecessors);
+}
+
+int bb_add_mimic_stack_expr(struct basic_block *bb, struct expression *expr)
+{
+	return __bb_add_neighbor(expr, (void **)&bb->mimic_stack_expr, &bb->nr_mimic_stack_expr);
 }
 
 unsigned char *bb_native_ptr(struct basic_block *bb)
