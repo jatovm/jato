@@ -35,10 +35,11 @@ OBJS = \
 	../jamvm/cast-stub.o \
 	../jamvm/lock.o \
 	../jit/trampoline-stub.o \
+	../vm/java_lang-stub.o \
+	../vm/classloader-stub.o \
 	../../arch/x86/backtrace.o \
 	../../vm/buffer.o \
 	../../vm/class.o \
-	../../vm/classloader.o \
 	../../vm/field.o \
 	../../vm/die.o \
 	../../vm/list.o \
@@ -80,7 +81,6 @@ OBJS = \
 
 TESTS = \
 	emit-code-test$(ARCH_POSTFIX).o \
-	insn-selector-test$(ARCH_POSTFIX).o \
 	stack-frame-test$(ARCH_POSTFIX).o \
 	use-def-test$(ARCH_POSTFIX).o
 
