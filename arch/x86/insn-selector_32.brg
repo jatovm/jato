@@ -930,7 +930,12 @@ reg:	EXPR_CONVERSION(reg)
 		select_insn(s, tree, imm_reg_insn(INSN_SAR_IMM_REG, 0x1f, state->reg2));
 	} else if (src->vm_type == J_LONG && expr->vm_type == J_INT) {
 		state->reg1 = state->left->reg1;
+	} else if (src->vm_type == J_INT && expr->vm_type == J_BYTE) {
+		state->reg1 = get_var(s->b_parent);
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSX_REG_REG, state->left->reg1, state->reg1));
 	} else {
+		printf("%d to %d\n", src->vm_type, expr->vm_type);
 		assert(!"conversion not implemented");
 	}
 }

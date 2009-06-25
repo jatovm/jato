@@ -51,9 +51,24 @@ public class ConversionTest extends TestCase {
         assertEquals(-1L, i2l(c));
     }
 
+    public static byte i2b(int value) {
+        return (byte) value;
+    }
+
+	public static void testIntegerToByteConversion() {
+        int b = 10;
+		int c = -1;
+        int a = b + 0x10000;
+
+        assertEquals(10, i2b(a));
+		assertEquals(10, i2b(b));
+        assertEquals(-1, i2b(c));
+    }
+
     public static void main(String[] args) {
         testLongToIntegerConversion();
         testIntegerToLongConversion();
+        testIntegerToByteConversion();
 
         exit();
     }
