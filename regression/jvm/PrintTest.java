@@ -31,9 +31,9 @@ package jvm;
 public class PrintTest extends TestCase {
     public static void main(String[] args) {
 
-		System.out.write(4);
-//		System.out.flush();
-//		System.out.println("hehehe\n");
+/*      FIXME
+        System.out.write(4);
+*/
         exit();
     }
 }

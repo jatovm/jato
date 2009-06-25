@@ -302,14 +302,22 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	status = EXIT_SUCCESS;
-
 	bottom_stack_frame = __builtin_frame_address(0);
 
 	void (*main_method_trampoline)(void)
 		= vm_method_trampoline_ptr(vmm);
 	main_method_trampoline();
 
+	if (exception_occurred()) {
+		struct vm_object *exception;
+
+		exception = exception_occurred();
+		clear_exception();
+
+		vm_print_exception(exception);
+		goto out;
+	}
+	status = EXIT_SUCCESS;
 out:
 	return status;
 }

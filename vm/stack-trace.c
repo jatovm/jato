@@ -407,3 +407,9 @@ void set_throwable_vmstate(struct vm_object *throwable, struct vm_object *vmstat
 {
 	INST_DATA(throwable)[vmstate_offset] = (uintptr_t)vmstate;
 }
+
+void vm_print_exception(struct vm_object *exception)
+{
+	printf("%s: %s\n", __func__, exception->class->name);
+	NOT_IMPLEMENTED;
+}
