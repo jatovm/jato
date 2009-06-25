@@ -186,7 +186,7 @@ $(JAMVM_ARCH_H):
 	$(E) "  LN      " $@
 	$(Q) ln -fsn ../../jamvm/arch/$(JAMVM_ARCH).h $@
 
-arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: FORCE
+arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
