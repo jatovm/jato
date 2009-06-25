@@ -388,8 +388,11 @@ struct vm_class *load_class(const char *class_name)
 		goto out_filename;
 
 	struct classpath *cp;
-	list_for_each_entry(cp, &classpaths, node)
+	list_for_each_entry(cp, &classpaths, node) {
 		result = load_class_from_classpath_file(cp->paths, filename);
+		if (result)
+			break;
+	}
 
 out_filename:
 	free(filename);
