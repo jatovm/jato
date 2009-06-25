@@ -3,18 +3,19 @@
  */
 
 #include <libharness.h>
-#include <jit/compilation-unit.h>
 #include <arch/instruction.h>
+#include <jit/compilation-unit.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 
-static struct methodblock method = { };
+static struct vm_method method = { };
 
 void test_find_basic_block(void)
 {
 	struct basic_block *b1;
 	struct basic_block *b2;
 	struct basic_block *b3;
-	struct compilation_unit *cu = alloc_compilation_unit(&method);
+	struct compilation_unit *cu = compilation_unit_alloc(&method);
 
 	b1 = alloc_basic_block(cu, 0, 3);
 	b2 = alloc_basic_block(cu, 3, 5);
@@ -33,7 +34,7 @@ void test_find_basic_block(void)
 
 void test_no_basic_block_when_offset_out_of_range(void)
 {
-	struct compilation_unit *cu = alloc_compilation_unit(&method);
+	struct compilation_unit *cu = compilation_unit_alloc(&method);
 	struct basic_block *block = alloc_basic_block(cu, 1, 2);
 
 	list_add_tail(&block->bb_list_node, &cu->bb_list);
@@ -45,7 +46,7 @@ void test_no_basic_block_when_offset_out_of_range(void)
 
 void test_instruction_positions_are_computed_in_basic_block_order(void)
 {
-	struct compilation_unit *cu = alloc_compilation_unit(&method);
+	struct compilation_unit *cu = compilation_unit_alloc(&method);
 	struct basic_block *b1, *b2;
 	struct insn *insns[4];
 	unsigned long i;

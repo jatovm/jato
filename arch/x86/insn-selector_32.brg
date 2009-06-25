@@ -27,8 +27,9 @@
 #include <string.h>
 
 #include <vm/class.h>
-
-#include <../jamvm/lock.h>
+#include <vm/field.h>
+#include <vm/method.h>
+#include <vm/object.h>
 
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
@@ -471,7 +472,7 @@ reg:	EXPR_INVOKE(arg) 1
 {
 	struct var_info *eax, *edx = NULL;
 	struct compilation_unit *cu;
-	struct methodblock *method;
+	struct vm_method *method;
 	struct expression *expr;
 	struct insn *call_insn;
 	bool is_compiled;
@@ -488,15 +489,15 @@ reg:	EXPR_INVOKE(arg) 1
 		 * instruction selection through jit_magic_trampoline().
 		 */
 		is_compiled = false;
-		target = method_trampoline_ptr(method);
+		target = vm_method_trampoline_ptr(method);
 	} else {
 		pthread_mutex_lock(&cu->mutex);
 		is_compiled = cu->is_compiled;
 
 		if (is_compiled)
-			target = method_native_ptr(method);
+			target = vm_method_native_ptr(method);
 		else
-			target = method_trampoline_ptr(method);
+			target = vm_method_trampoline_ptr(method);
 
 		pthread_mutex_unlock(&cu->mutex);
 	}
@@ -536,7 +537,7 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	struct var_info *call_target;
 	struct compilation_unit *cu;
 	unsigned long method_offset;
-	struct methodblock *method;
+	struct vm_method *method;
 	struct var_info *stack_ptr;
 	unsigned long args_count;
 	struct expression *expr;
@@ -562,10 +563,10 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, stack_ptr, 0, call_target));
 
 	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct object, class), call_target));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
 
 	/* vtable */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, sizeof(struct object), call_target));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
 
 	/* native ptr */
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
@@ -712,7 +713,7 @@ reg:	EXPR_CLASS_FIELD 1
 	long offset;
 
 	expr   = to_expr(tree);
-	offset = offsetof(struct fieldblock, static_value);
+	offset = offsetof(struct vm_field, static_value);
 
 	state->reg1 = get_var(s->b_parent);
 	field = get_var(s->b_parent);
@@ -738,15 +739,15 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	index = get_var(s->b_parent);
 	state->reg1 = get_var(s->b_parent);
 
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
-	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 2, state->reg1));
+	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 0, state->reg1));
 
 	if (expr->vm_type == J_LONG) {
 		state->reg2 = get_var(s->b_parent);
 
-		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 1, index));
-		select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 2, state->reg2));
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, index));
+		select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 0, state->reg2));
 	}
 }
 
@@ -760,8 +761,10 @@ reg:	EXPR_NEW
 	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
 
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->class));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocObject));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+		(unsigned long) expr->class));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc));
 	method_args_cleanup(s, tree, 1);
 	select_exception_test(s, tree);
 }
@@ -792,7 +795,8 @@ reg:	EXPR_NEWARRAY(reg)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, expr->array_type));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocTypeArray));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc_native_array));
 
 	method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
@@ -861,8 +865,10 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, stack_ptr));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimension));
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->multianewarray_ref_type));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocMultiArray));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+		(unsigned long) expr->multianewarray_ref_type));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc_multi_array));
 
 	method_args_cleanup(s, tree, dimension + 3);
 	select_exception_test(s, tree);
@@ -880,10 +886,11 @@ reg:    EXPR_ANEWARRAY(reg)
 
         size = state->left->reg1;
 
-        select_insn(s, tree, imm_insn(INSN_PUSH_IMM, sizeof(struct object *)));
         select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
-        select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->anewarray_ref_type));
-        select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) allocArray));
+        select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+		(unsigned long) expr->anewarray_ref_type));
+        select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc_array));
 
         method_args_cleanup(s, tree, 3);
 	select_exception_test(s, tree);
@@ -898,7 +905,8 @@ reg:    EXPR_ARRAYLENGTH(reg)
 	arraylength = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = arraylength;
 
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref, sizeof(struct object), arraylength));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref,
+		offsetof(struct vm_object, array_length), arraylength));
 }
 
 reg:	EXPR_INSTANCEOF(reg)
@@ -915,7 +923,7 @@ reg:	EXPR_INSTANCEOF(reg)
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->instanceof_class));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) is_object_instance_of));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
 
 	method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
@@ -1044,7 +1052,7 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 	store_dest = to_expr(stmt->store_dest);
 	store_src  = to_expr(stmt->store_src);
 
-	field_offset = offsetof(struct fieldblock, static_value);
+	field_offset = offsetof(struct vm_field, static_value);
 	src = state->right->reg1;
 
 	offset = get_var(s->b_parent);
@@ -1075,7 +1083,7 @@ inst_field: EXPR_INSTANCE_FIELD(reg) 1
 	state->reg2 = index;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, base));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
 }
 
@@ -1092,12 +1100,12 @@ stmt:	STMT_STORE(inst_field, reg)
 	base = state->left->reg1;
 	index = state->left->reg2;
 
-	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, 2));
+	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, 0));
 
 	if (store_src->vm_type == J_LONG) {
 		src = state->right->reg2;
-		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 1, index));
-		select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, 2));
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, index));
+		select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, 0));
 	}
 }
 
@@ -1164,7 +1172,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 	state->reg2 = index;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object) + sizeof(uint32_t), base));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_index, index));
 }
 
@@ -1272,7 +1280,7 @@ stmt:	STMT_ARRAY_CHECK(array_check)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, index));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) check_array));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array));
 	method_args_cleanup(s, tree, 2);
 }
 
@@ -1304,7 +1312,8 @@ stmt:	STMT_MONITOR_ENTER(reg)
 	ref = state->left->reg1;
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) objectLock));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_lock));
 
 	method_args_cleanup(s, tree, 1);
 	select_exception_test(s, tree);
@@ -1316,7 +1325,8 @@ stmt:	STMT_MONITOR_EXIT(reg)
 	ref = state->left->reg1;
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) objectUnlock));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_unlock));
 
 	method_args_cleanup(s, tree, 1);
 	select_exception_test(s, tree);
@@ -1333,7 +1343,7 @@ stmt:	STMT_CHECKCAST(reg)
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) stmt->checkcast_class));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)check_cast));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_cast));
 
 	method_args_cleanup(s, tree, 2);
 }

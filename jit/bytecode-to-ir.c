@@ -31,10 +31,11 @@
 #include <jit/tree-node.h>
 #include <jit/compiler.h>
 
-#include <vm/bytecodes.h>
 #include <vm/bytecode.h>
-#include <vm/stack.h>
+#include <vm/bytecodes.h>
 #include <vm/die.h>
+#include <vm/method.h>
+#include <vm/stack.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -183,11 +184,11 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 		.buffer = &buffer,
 		.cu = cu,
 		.bb = bb,
-		.code = cu->method->jit_code,
+		.code = cu->method->code_attribute.code,
 	};
 	int err = 0;
 
-	buffer.buffer = cu->method->jit_code;
+	buffer.buffer = cu->method->code_attribute.code;
 	buffer.pos = bb->start;
 
 	if (bb->is_eh)

@@ -1,6 +1,9 @@
 #ifndef __EXPRESSION_H
 #define __EXPRESSION_H
 
+#include <vm/class.h>
+#include <vm/field.h>
+#include <vm/method.h>
 #include <vm/system.h>
 #include <vm/types.h>
 #include <vm/vm.h>
@@ -142,7 +145,7 @@ struct expression {
 		    (see JLS 15.11.). This expression type can be used as
 		    either as lvalue or rvalue.  */
 		struct {
-			struct fieldblock *class_field;
+			struct vm_field *class_field;
 		};
 
 		/*  EXPR_INSTANCE_FIELD represents instance field access
@@ -150,7 +153,7 @@ struct expression {
 		    used as either as lvalue or rvalue.  */
 		struct {
 			struct tree_node *objectref_expression;
-			struct fieldblock *instance_field;
+			struct vm_field *instance_field;
 		};
 		
 		/*  EXPR_INVOKE represents a method invocation expression (see
@@ -169,7 +172,7 @@ struct expression {
 		    only.  */
 		struct {
 			struct tree_node *args_list;
-			struct methodblock *target_method;
+			struct vm_method *target_method;
 		};
 
 		/*  EXPR_ARGS_LIST represents list of arguments passed to
@@ -196,7 +199,7 @@ struct expression {
 		/*  EXPR_NEW represents creation of a new instance that is
 		    unitialized .  */
 		struct {
-			struct object *class;
+			struct vm_class *class;
 		};
 
 		/*  EXPR_NEWARRAY represents creation of a new array.  */
@@ -209,14 +212,14 @@ struct expression {
 		   reference.  */
 		struct {
 		        struct tree_node *anewarray_size;
-			struct object *anewarray_ref_type;
+			struct vm_class *anewarray_ref_type;
 		};
 
 		/*  EXPR_MULTIANEWARRAY represents creation of a new multidimensional
 		    array of given reference.  */
 		struct {
 			struct tree_node *multianewarray_dimensions;
-			struct object *multianewarray_ref_type;
+			struct vm_class *multianewarray_ref_type;
 		};
 
 		/*  EXPR_ARRAYLENGTH represents length of an array.  */
@@ -227,7 +230,7 @@ struct expression {
 		/*  EXPR_INSTANCEOF is used to determine if object is of given type.  */
 		struct {
 			struct tree_node *instanceof_ref;
-			struct object *instanceof_class;
+			struct vm_object *instanceof_class;
 		};
 
 		/* EXPR_NULL_CHECK is used to assure that NullPointerException
@@ -288,19 +291,19 @@ struct expression *array_deref_expr(enum vm_type, struct expression *, struct ex
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum vm_type, struct expression *);
-struct expression *class_field_expr(enum vm_type, struct fieldblock *);
-struct expression *instance_field_expr(enum vm_type, struct fieldblock *, struct expression *);
-struct expression *invoke_expr(struct methodblock *);
-struct expression *invokevirtual_expr(struct methodblock *);
+struct expression *class_field_expr(enum vm_type, struct vm_field *);
+struct expression *instance_field_expr(enum vm_type, struct vm_field *, struct expression *);
+struct expression *invoke_expr(struct vm_method *);
+struct expression *invokevirtual_expr(struct vm_method *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *no_args_expr(void);
-struct expression *new_expr(struct object *);
+struct expression *new_expr(struct vm_class *);
 struct expression *newarray_expr(unsigned long, struct expression *);
-struct expression *anewarray_expr(struct object *, struct expression *);
-struct expression *multianewarray_expr(struct object *);
+struct expression *anewarray_expr(struct vm_class *, struct expression *);
+struct expression *multianewarray_expr(struct vm_class *);
 struct expression *arraylength_expr(struct expression *);
-struct expression *instanceof_expr(struct expression *, struct object *);
+struct expression *instanceof_expr(struct expression *, struct vm_object *);
 struct expression *exception_ref_expr(void);
 struct expression *null_check_expr(struct expression *);
 struct expression *array_size_check_expr(struct expression *);
@@ -319,7 +322,15 @@ static inline int is_invoke_expr(struct expression *expr)
 
 static inline unsigned long expr_method_index(struct expression *expr)
 {
-	return expr->target_method->method_table_index;
+	struct vm_method *method = expr->target_method;
+	unsigned int base;
+
+	if (method->class->super)
+		base = method->class->super->vtable_size;
+	else
+		base = 0;
+
+	return  base + method->method_index;
 }
 
 #endif

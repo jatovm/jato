@@ -23,9 +23,14 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <vm/stack-trace.h>
-#include <vm/natives.h>
+
+#include <vm/class.h>
+#include <vm/classloader.h>
+#include <vm/object.h>
 #include <vm/method.h>
+#include <vm/natives.h>
+#include <vm/object.h>
+#include <vm/stack-trace.h>
 
 #include <jit/bc-offset-mapping.h>
 #include <jit/cu-mapping.h>
@@ -36,43 +41,47 @@
 
 __thread struct native_stack_frame *bottom_stack_frame;
 
-static struct object *vmthrowable_class;
-static struct object *throwable_class;
-static struct object *ste_class;
-static struct object *ste_array_class;
+static struct vm_class *vmthrowable_class;
+static struct vm_class *throwable_class;
+static struct vm_class *ste_class;
+static struct vm_class *ste_array_class;
 static int backtrace_offset;
 static int vmstate_offset;
 
-typedef void (*ste_init_fn)(struct object *, struct object *, int,
-			    struct object *, struct object *, int);
+typedef void (*ste_init_fn)(struct vm_object *, struct vm_object *, int,
+			    struct vm_object *, struct vm_object *, int);
 
 static ste_init_fn ste_init;
 
 void init_stack_trace_printing(void)
 {
-	struct fieldblock *backtrace_fld;
-	struct fieldblock *vmstate_fld;
-	struct methodblock *ste_init_mb;
+	struct vm_field *backtrace_fld;
+	struct vm_field *vmstate_fld;
+	struct vm_method *ste_init_mb;
 
-	vmthrowable_class = findSystemClass("java/lang/VMThrowable");
-	throwable_class = findSystemClass("java/lang/Throwable");
-	ste_class = findSystemClass("java/lang/StackTraceElement");
-	ste_array_class = findArrayClass("[Ljava/lang/StackTraceElement;");
+	NOT_IMPLEMENTED;
+	return;
+
+	/* XXX: Preload these. */
+	vmthrowable_class = classloader_load("java/lang/VMThrowable");
+	throwable_class = classloader_load("java/lang/Throwable");
+	ste_class = classloader_load("java/lang/StackTraceElement");
+	ste_array_class = classloader_load("[Ljava/lang/StackTraceElement;");
 
 	if (exception_occurred())
 		goto error;
 
-	ste_init_mb = findMethod(ste_class, "<init>",
+	ste_init_mb = vm_class_get_method_recursive(ste_class, "<init>",
 		"(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V");
 	if (ste_init_mb == NULL)
 		goto error;
 
-	ste_init = method_trampoline_ptr(ste_init_mb);
+	ste_init = vm_method_trampoline_ptr(ste_init_mb);
 
-	backtrace_fld = findField(vmthrowable_class, "backtrace",
-		"Ljava/lang/Object;");
-	vmstate_fld = findField(throwable_class, "vmState",
-		"Ljava/lang/VMThrowable;");
+	backtrace_fld = vm_class_get_field_recursive(vmthrowable_class,
+		"backtrace", "Ljava/lang/Object;");
+	vmstate_fld = vm_class_get_field_recursive(throwable_class,
+		"vmState", "Ljava/lang/VMThrowable;");
 
 	if (!backtrace_fld || !vmstate_fld)
 		goto error;
@@ -174,7 +183,7 @@ int init_stack_trace_elem(struct stack_trace_elem *elem)
  *
  * Returns 0 on success and -1 when bottom of stack trace reached.
  */
-int skip_frames_from_class(struct stack_trace_elem *elem, struct object *class)
+int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class)
 {
 	struct compilation_unit *cu;
 
@@ -187,7 +196,7 @@ int skip_frames_from_class(struct stack_trace_elem *elem, struct object *class)
 			return -1;
 		}
 
-		if (!isInstanceOf(class, cu->method->class))
+		if (!vm_class_is_assignable_from(class, cu->method->class))
 			return 0;
 
 	} while (get_prev_stack_trace_elem(elem) == 0);
@@ -219,11 +228,11 @@ int get_stack_trace_depth(struct stack_trace_elem *elem)
  *
  * @st_elem: top most stack trace element.
  */
-struct object *get_stack_trace(struct stack_trace_elem *st_elem)
+struct vm_object *get_stack_trace(struct stack_trace_elem *st_elem)
 {
 	struct compilation_unit *cu;
-	struct object *vmstate;
-	struct object *array;
+	struct vm_object *vmstate;
+	struct vm_object *array;
 	unsigned long *data;
 	int array_type;
 	int depth;
@@ -233,12 +242,12 @@ struct object *get_stack_trace(struct stack_trace_elem *st_elem)
 	if (depth == 0)
 		return NULL;
 
-	vmstate = allocObject(vmthrowable_class);
+	vmstate = vm_object_alloc(vmthrowable_class);
 	if (!vmstate)
 		return NULL;
 
 	array_type = sizeof(unsigned long) == 4 ? T_INT : T_LONG;
-	array = allocTypeArray(array_type, depth * 2);
+	array = vm_object_alloc_native_array(array_type, depth * 2);
 	if (!array)
 		return NULL;
 
@@ -256,7 +265,7 @@ struct object *get_stack_trace(struct stack_trace_elem *st_elem)
 			return NULL;
 		}
 
-		if (method_is_native(cu->method))
+		if (vm_method_is_native(cu->method))
 			bc_offset = BC_OFFSET_UNKNOWN;
 		else
 			bc_offset = native_ptr_to_bytecode_offset(cu,
@@ -265,7 +274,7 @@ struct object *get_stack_trace(struct stack_trace_elem *st_elem)
 		data[i++] = (unsigned long)cu->method;
 
 		/* We must add cu->method->code to be compatible with JamVM. */
-		data[i++] = bc_offset + (unsigned long)cu->method->code;
+		data[i++] = bc_offset + (unsigned long)cu->method->jit_code;
 	} while (get_prev_stack_trace_elem(st_elem) == 0);
 
 	INST_DATA(vmstate)[backtrace_offset] = (uintptr_t)array;
@@ -278,34 +287,37 @@ struct object *get_stack_trace(struct stack_trace_elem *st_elem)
  *     java.lang.StackTraceElement for given method and bytecode
  *     offset.
  */
-struct object *
-new_stack_trace_element(struct methodblock *mb, unsigned long bc_offset)
+struct vm_object *
+new_stack_trace_element(struct vm_method *mb, unsigned long bc_offset)
 {
-	struct object *method_name;
-	struct object *class_name;
-	struct object *file_name;
-	struct classblock *cb;
-	struct object *ste;
+	struct vm_object *method_name;
+	struct vm_object *class_name;
+	struct vm_object *file_name;
+	struct vm_class *cb;
+	struct vm_object *ste;
 	char *class_dot_name;
 	bool is_native;
 	int line_no;
 
-	cb = CLASS_CB(mb->class);
+	cb = mb->class;
 
 	line_no = bytecode_offset_to_line_no(mb, bc_offset);
-	is_native = method_is_native(mb);
+	is_native = vm_method_is_native(mb);
 
+	NOT_IMPLEMENTED;
+#if 0
 	if (!is_native && cb->source_file_name)
 		file_name = createString(cb->source_file_name);
 	else
+#endif
 		file_name = NULL;
 
 	class_dot_name = slash2dots(cb->name);
-	class_name = createString(class_dot_name);
-	method_name = createString(mb->name);
+	class_name = vm_object_alloc_string(class_dot_name, strlen(class_dot_name));
+	method_name = vm_object_alloc_string(mb->name, strlen(mb->name));
 	free(class_dot_name);
 
-	ste = allocObject(ste_class);
+	ste = vm_object_alloc(ste_class);
 	if(!ste)
 		return NULL;
 
@@ -321,36 +333,35 @@ new_stack_trace_element(struct methodblock *mb, unsigned long bc_offset)
  *
  * @vmthrowable: instance of VMThrowable to get stack trace from.
  */
-struct object *convert_stack_trace(struct object *vmthrowable)
+struct vm_object *convert_stack_trace(struct vm_object *vmthrowable)
 {
 	unsigned long *stack_trace;
-	struct object *ste_array;
-	struct object *array;
-	struct object **dest;
+	struct vm_object *ste_array;
+	struct vm_object *array;
+	struct vm_object **dest;
 	int depth;
 	int i;
 
-	array = (struct object *)INST_DATA(vmthrowable)[backtrace_offset];
+	array = (struct vm_object *)INST_DATA(vmthrowable)[backtrace_offset];
 	if (!array)
 		return NULL;
 
 	stack_trace = ARRAY_DATA(array);
 	depth = ARRAY_LEN(array);
 
-	ste_array = allocArray(ste_array_class, depth / 2,
-			       sizeof(struct object*));
+	ste_array = vm_object_alloc_array(ste_array_class, depth / 2);
 	if (!ste_array)
 		return NULL;
 
 	dest = ARRAY_DATA(ste_array);
 
 	for(i = 0; i < depth; dest++) {
-		struct methodblock *mb;
+		struct vm_method *mb;
 		unsigned long bc_offset;
-		struct object *ste;
+		struct vm_object *ste;
 
-		mb = (struct methodblock*)stack_trace[i++];
-		bc_offset = stack_trace[i++] - (unsigned long)mb->code;
+		mb = (struct vm_method *)stack_trace[i++];
+		bc_offset = stack_trace[i++] - (unsigned long)mb->jit_code;
 
 		ste = new_stack_trace_element(mb, bc_offset);
 		if(ste == NULL || exception_occurred())
@@ -362,8 +373,8 @@ struct object *convert_stack_trace(struct object *vmthrowable)
 	return ste_array;
 }
 
-struct object * __vm_native
-vm_throwable_fill_in_stack_trace(struct object *throwable)
+struct vm_object * __vm_native
+vm_throwable_fill_in_stack_trace(struct vm_object *throwable)
 {
 	struct stack_trace_elem st_elem;
 
@@ -379,20 +390,20 @@ vm_throwable_fill_in_stack_trace(struct object *throwable)
 	return get_stack_trace(&st_elem);
 }
 
-struct object * __vm_native
-vm_throwable_get_stack_trace(struct object *this, struct object *throwable)
+struct vm_object * __vm_native
+vm_throwable_get_stack_trace(struct vm_object *this, struct vm_object *throwable)
 {
-	struct object *result;
+	struct vm_object *result;
 
 	result = convert_stack_trace(this);
 
 	if (exception_occurred())
-		throw_from_native(sizeof(struct object *) * 2);
+		throw_from_native(sizeof(struct vm_object *) * 2);
 
 	return result;
 }
 
-void set_throwable_vmstate(struct object *throwable, struct object *vmstate)
+void set_throwable_vmstate(struct vm_object *throwable, struct vm_object *vmstate)
 {
 	INST_DATA(throwable)[vmstate_offset] = (uintptr_t)vmstate;
 }

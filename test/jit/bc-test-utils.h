@@ -6,15 +6,15 @@
 
 struct compilation_unit;
 struct basic_block;
-struct methodblock;
+struct vm_method;
 
 static inline struct statement *stmt_entry(struct list_head *head)
 {
 	return list_entry(head, struct statement, stmt_list_node);
 }
 
-struct compilation_unit *alloc_simple_compilation_unit(struct methodblock *);
-struct basic_block *__alloc_simple_bb(struct methodblock *);
+struct compilation_unit *alloc_simple_compilation_unit(struct vm_method *);
+struct basic_block *__alloc_simple_bb(struct vm_method *);
 struct basic_block *alloc_simple_bb(unsigned char *, unsigned long);
 void __free_simple_bb(struct basic_block *);
 void free_simple_bb(struct basic_block *);
@@ -32,9 +32,9 @@ void assert_binop_expr(enum vm_type, enum binary_operator,
 		       struct expression *, struct expression *,
 		       struct tree_node *);
 void assert_conv_expr(enum vm_type, struct expression *, struct tree_node *);
-void assert_class_field_expr(enum vm_type, struct fieldblock *, struct tree_node *);
-void assert_instance_field_expr(enum vm_type, struct fieldblock *, struct expression *, struct tree_node *);
-void assert_invoke_expr(enum vm_type, struct methodblock *,
+void assert_class_field_expr(enum vm_type, struct vm_field *, struct tree_node *);
+void assert_instance_field_expr(enum vm_type, struct vm_field *, struct expression *, struct tree_node *);
+void assert_invoke_expr(enum vm_type, struct vm_method *,
 			struct tree_node *);
 void assert_array_size_check_expr(struct expression *, struct expression *);
 void assert_multiarray_size_check_expr(struct expression **, int, struct expression *);
@@ -49,7 +49,7 @@ void assert_monitorenter_stmt(struct expression *, struct statement *);
 void assert_monitorexit_stmt(struct expression *, struct statement *);
 void assert_checkcast_stmt(struct expression *, struct statement *);
 
-void convert_ir_const(struct compilation_unit *, ConstantPoolEntry *, size_t, u1 *);
+void convert_ir_const(struct compilation_unit *, ConstantPoolEntry *, size_t, uint8_t *);
 
 struct statement *first_stmt(struct compilation_unit *cu);
 

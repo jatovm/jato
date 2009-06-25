@@ -5,8 +5,8 @@ struct compilation_unit;
 struct jit_trampoline;
 struct basic_block;
 struct buffer;
-struct object;
 struct insn;
+struct vm_object;
 
 enum emitter_type {
 	NO_OPERANDS = 1,
@@ -29,11 +29,10 @@ extern void emit_prolog(struct buffer *, unsigned long);
 extern void emit_epilog(struct buffer *);
 extern void emit_trampoline(struct compilation_unit *, void *, struct jit_trampoline *);
 extern void emit_unwind(struct buffer *);
-extern void emit_lock(struct buffer *, struct object *);
+extern void emit_lock(struct buffer *, struct vm_object *);
 extern void emit_lock_this(struct buffer *);
-extern void emit_unlock(struct buffer *, struct object *);
+extern void emit_unlock(struct buffer *, struct vm_object *);
 extern void emit_unlock_this(struct buffer *);
-extern void emit_body(struct basic_block *bb, struct buffer *buf);
-extern void backpatch_branch_target(struct buffer *, struct insn *, unsigned long);
+extern void emit_body(struct basic_block *, struct buffer *);
 
 #endif /* JATO_EMIT_CODE_H */

@@ -14,6 +14,8 @@
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/stack.h>
 
 #include <string.h>
@@ -44,7 +46,7 @@ int convert_return(struct parse_context *ctx)
 	return 0;
 }
 
-static unsigned int method_real_argument_count(struct methodblock *invoke_target)
+static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 {
 	unsigned int c = invoke_target->args_count;
 	char * a = invoke_target->type;
@@ -56,7 +58,7 @@ static unsigned int method_real_argument_count(struct methodblock *invoke_target
 }
 
 static int convert_and_add_args(struct parse_context *ctx,
-				struct methodblock *invoke_target,
+				struct vm_method *invoke_target,
 				struct expression *expr)
 {
 	struct expression *args_list;
@@ -88,13 +90,13 @@ static int insert_invoke_expr(struct parse_context *ctx,
 	return 0;
 }
 
-static struct methodblock *resolve_invoke_target(struct parse_context *ctx)
+static struct vm_method *resolve_invoke_target(struct parse_context *ctx)
 {
 	unsigned long idx;
 
 	idx = bytecode_read_u16(ctx->buffer);
 
-	return resolveMethod(ctx->cu->method->class, idx);
+	return vm_class_resolve_method_recursive(ctx->cu->method->class, idx);
 }
 
 /* Replaces first argument with null check expression on that argument */
@@ -113,7 +115,7 @@ static void null_check_first_arg(struct expression *arg)
 
 int convert_invokevirtual(struct parse_context *ctx)
 {
-	struct methodblock *invoke_target;
+	struct vm_method *invoke_target;
 	struct expression *expr;
 	int err = -ENOMEM;
 
@@ -141,7 +143,7 @@ int convert_invokevirtual(struct parse_context *ctx)
 
 int convert_invokespecial(struct parse_context *ctx)
 {
-	struct methodblock *invoke_target;
+	struct vm_method *invoke_target;
 	struct expression *expr;
 	int err = -ENOMEM;
 
@@ -171,7 +173,7 @@ int convert_invokespecial(struct parse_context *ctx)
 
 int convert_invokestatic(struct parse_context *ctx)
 {
-	struct methodblock *invoke_target;
+	struct vm_method *invoke_target;
 	struct expression *expr;
 	int err = -ENOMEM;
 

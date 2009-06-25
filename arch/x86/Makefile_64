@@ -11,6 +11,4 @@ ARCH_OBJS = \
 	arch/x86/registers_64.o		\
 	arch/x86/signal.o		\
 	arch/x86/stack-frame.o		\
-	arch/x86/use-def.o		\
-	jamvm/os/$(OS)/os.o		\
-	jamvm/os/$(OS)/x86_64/init.o
+	arch/x86/use-def.o

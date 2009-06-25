@@ -7,7 +7,3 @@ ARCH_OBJS = \
 	arch/ppc/instruction.o \
 	arch/ppc/lir-printer.o \
 	arch/ppc/signal.o \
-	jamvm/os/linux/os.o \
-	jamvm/os/linux/powerpc/callNative.o \
-	jamvm/os/linux/powerpc/init.o \
-	jamvm/os/linux/powerpc/dll_md.o

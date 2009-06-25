@@ -7,14 +7,17 @@
 #include <jit/expression.h>
 #include <jit/statement.h>
 #include <jit/compiler.h>
-#include <vm/vm.h>
 #include <vm/class.h>
+#include <vm/field.h>
+#include <vm/method.h>
+#include <vm/object.h>
+#include <vm/vm.h>
 #include <arch/instruction.h>
 
 #include <test/vars.h>
 #include <test/vm.h>
 
-static struct methodblock method = { };
+static struct vm_method method = { };
 
 static void
 assert_memlocal_reg_insn(enum insn_type insn_type, unsigned long src_slot_idx,
@@ -147,14 +150,14 @@ void test_should_select_insn_for_every_statement(void)
 	struct expression *expr1, *expr2;
 	struct statement *stmt1, *stmt2;
 	struct basic_block *bb;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 4,
-		.max_locals = 4,
+		.code_attribute.max_locals = 4,
 	};
 	struct compilation_unit *cu;
 	enum machine_reg dreg;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 
 	expr1 = binop_expr(J_INT, OP_ADD, local_expr(J_INT, 0), local_expr(J_INT, 1));
@@ -196,9 +199,9 @@ static struct basic_block *alloc_simple_binop_bb(enum binary_operator expr_op,
 						 struct expression *left,
 						 struct expression *right)
 {
-	static struct methodblock method = {
+	static struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 	struct compilation_unit *cu;
 	struct expression *expr;
@@ -209,7 +212,7 @@ static struct basic_block *alloc_simple_binop_bb(enum binary_operator expr_op,
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
@@ -352,9 +355,9 @@ void test_select_local_local_rem(void)
 
 static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 {
-	static struct methodblock method = {
+	static struct vm_method method = {
 		.args_count = 1,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct compilation_unit *cu;
 	struct expression *expr;
@@ -365,7 +368,7 @@ static struct basic_block *create_unop_bb(enum unary_operator expr_op)
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	return bb;
@@ -461,7 +464,7 @@ void test_select_return(void)
 	stmt = alloc_statement(STMT_RETURN);
 	stmt->return_value = &value->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -496,7 +499,7 @@ void test_select_void_return(void)
 
 	stmt = alloc_statement(STMT_VOID_RETURN);
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -514,12 +517,12 @@ void test_select_invoke_without_arguments(void)
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock mb = {
+	struct vm_method mb = {
 		.args_count = 0,
 		.type = "()I",
 	};
 
-	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.compilation_unit = compilation_unit_alloc(&mb);
 	mb.trampoline = alloc_jit_trampoline();
 
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
@@ -535,7 +538,7 @@ void test_select_invoke_without_arguments(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -547,12 +550,12 @@ void test_select_invoke_with_arguments(void)
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock mb = {
+	struct vm_method mb = {
 		.args_count = 2,
 		.type = "(II)I",
 	};
 
-	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.compilation_unit = compilation_unit_alloc(&mb);
 	mb.trampoline = alloc_jit_trampoline();
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
@@ -575,7 +578,7 @@ void test_select_invoke_with_arguments(void)
 	assert_imm_insn(INSN_PUSH_IMM, 0x01, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
@@ -591,20 +594,20 @@ void test_select_method_return_value_passed_as_argument(void)
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock mb = {
+	struct vm_method mb = {
 		.args_count = 1,
 		.type = "(I)I",
 	};
-	struct methodblock nested_mb = {
+	struct vm_method nested_mb = {
 		.args_count = 0,
 		.type = "()I",
 	};
 
-	mb.compilation_unit = alloc_compilation_unit(&mb);
+	mb.compilation_unit = compilation_unit_alloc(&mb);
 	mb.trampoline = alloc_jit_trampoline();
 	bb = get_basic_block(mb.compilation_unit, 0, 1);
 
-	nested_mb.compilation_unit = alloc_compilation_unit(&nested_mb);
+	nested_mb.compilation_unit = compilation_unit_alloc(&nested_mb);
 	nested_mb.trampoline = alloc_jit_trampoline();
 
 	no_args = no_args_expr();
@@ -622,7 +625,7 @@ void test_select_method_return_value_passed_as_argument(void)
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&nested_mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&nested_mb), insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	sreg = mach_reg(&insn->src.reg);
@@ -633,7 +636,7 @@ void test_select_method_return_value_passed_as_argument(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) method_trampoline_ptr(&mb), insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_method_trampoline_ptr(&mb), insn);
 
 	free_jit_trampoline(mb.trampoline);
 	free_compilation_unit(mb.compilation_unit);
@@ -644,8 +647,12 @@ void test_select_method_return_value_passed_as_argument(void)
 
 void test_select_invokevirtual_with_arguments(void)
 {
-	struct methodblock method = {
-		.max_locals = 1,
+	struct vm_class class = {
+		.super = NULL,
+	};
+	struct vm_method method = {
+		.class = &class,
+		.code_attribute.max_locals = 1,
 	};
 	struct expression *invoke_expr, *args;
 	struct compilation_unit *cu;
@@ -659,7 +666,7 @@ void test_select_invokevirtual_with_arguments(void)
 	objectref = 0xdeadbeef;
 	method_index = 0xcafe;
 
-	method.method_table_index = method_index;
+	method.method_index = method_index;
 	method.type = "()V";
 
 	args = arg_expr(value_expr(J_REFERENCE, objectref));
@@ -669,7 +676,7 @@ void test_select_invokevirtual_with_arguments(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &invoke_expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -684,11 +691,11 @@ void test_select_invokevirtual_with_arguments(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct object, class), dreg2, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct vm_object, class), dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg2, sizeof(struct object), dreg, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg2, sizeof(struct vm_object), dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, method_index * sizeof(void *), dreg, insn);
@@ -722,13 +729,13 @@ static void assert_select_if_statement_local_local(enum insn_type expected,
 	struct expression *expr;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 	enum machine_reg dreg;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	true_bb = get_basic_block(cu, 1, 2);
 
@@ -758,13 +765,13 @@ static void assert_select_if_statement_local_value(enum insn_type expected,
 	struct expression *expr;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 	enum machine_reg dreg;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	true_bb = get_basic_block(cu, 1, 2);
 
@@ -796,12 +803,12 @@ static void assert_select_if_statement_reg_reg(enum insn_type expected,
 	struct expression *expr;
 	struct statement *stmt;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 2,
-		.max_locals = 2,
+		.code_attribute.max_locals = 2,
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	src = get_var(cu);
 	dst = get_var(cu);
 	bb = get_basic_block(cu, 0, 1);
@@ -845,7 +852,7 @@ void test_select_if_statement(void)
 void test_select_load_class_field(void)
 {
 	struct compilation_unit *cu;
-	struct fieldblock field;
+	struct vm_field field;
 	struct expression *expr;
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -853,7 +860,7 @@ void test_select_load_class_field(void)
 	long expected_disp;
 	enum machine_reg dreg, dreg2;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 
 	expr = class_field_expr(J_INT, &field);
@@ -869,7 +876,7 @@ void test_select_load_class_field(void)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	expected_disp = offsetof(struct fieldblock, static_value);
+	expected_disp = offsetof(struct vm_field, static_value);
 	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, expected_disp, dreg2, insn);
 
 	free_compilation_unit(cu);
@@ -877,13 +884,13 @@ void test_select_load_class_field(void)
 
 void test_select_load_instance_field(void)
 {
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct compilation_unit *cu;
 	struct expression *objectref;
-	struct fieldblock field;
+	struct vm_field field;
 	struct expression *expr;
 	struct statement *stmt;
 	struct basic_block *bb;
@@ -897,7 +904,7 @@ void test_select_load_instance_field(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	select_instructions(bb->b_parent);
@@ -907,7 +914,7 @@ void test_select_load_instance_field(void)
 	assert_memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, 0, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), dreg, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
@@ -922,15 +929,15 @@ void test_select_load_instance_field(void)
 
 void test_store_value_to_instance_field(void)
 {
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct expression *store_target;
 	struct expression *store_value;
 	struct expression *objectref;
 	struct compilation_unit *cu;
-	struct fieldblock field;
+	struct vm_field field;
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct insn *insn;
@@ -944,7 +951,7 @@ void test_store_value_to_instance_field(void)
 	stmt->store_dest = &store_target->node;
 	stmt->store_src  = &store_value->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 	select_instructions(bb->b_parent);
@@ -958,7 +965,7 @@ void test_store_value_to_instance_field(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg, dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object), dreg2, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg3 = mach_reg(&insn->dest.reg);
@@ -988,13 +995,13 @@ static void assert_store_field_to_local(unsigned long local_idx)
 {
 	struct expression *store_dest, *store_src;
 	struct compilation_unit *cu;
-	struct fieldblock field;
+	struct vm_field field;
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = local_idx+1,
+		.code_attribute.max_locals = local_idx+1,
 	};
 	enum machine_reg dreg, dreg2;
 
@@ -1005,7 +1012,7 @@ static void assert_store_field_to_local(unsigned long local_idx)
 	stmt->store_dest = &store_dest->node;
 	stmt->store_src  = &store_src->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1017,7 +1024,7 @@ static void assert_store_field_to_local(unsigned long local_idx)
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct fieldblock, static_value), dreg2, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, offsetof(struct vm_field, static_value), dreg2, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, dreg2, local_idx, insn);
@@ -1038,13 +1045,13 @@ void test_select_store_value_to_var(void)
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
 	};
 	enum machine_reg dreg;
 	struct var_info *temporary;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	temporary = get_var(cu);
 	store_dest = temporary_expr(J_REFERENCE, NULL, temporary);
@@ -1076,13 +1083,13 @@ void test_select_store_var_to_local(void)
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = 0,
-		.max_locals = 1,
+		.code_attribute.max_locals = 1,
 	};
 	struct var_info *temporary;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	store_dest = local_expr(J_INT, 0);
 	temporary = get_var(cu);
@@ -1110,7 +1117,7 @@ static struct basic_block *alloc_array_access_bb(struct expression *store_src,
 	struct statement *stmt;
 	struct basic_block *bb;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_src = &store_src->node;
@@ -1152,7 +1159,7 @@ void test_iastore_select(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg1, dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), dreg3, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object) + sizeof(uint32_t), dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg4 = mach_reg(&insn->dest.reg);
@@ -1202,7 +1209,7 @@ void test_iaload_select(void)
 	assert_reg_reg_insn(INSN_MOV_REG_REG, dreg2, dreg4, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct object) + sizeof(uint32_t), dreg4, insn);
+	assert_imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object) + sizeof(uint32_t), dreg4, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg5 = mach_reg(&insn->dest.reg);
@@ -1217,34 +1224,32 @@ void test_iaload_select(void)
 
 void test_select_new(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr;
 	struct statement *stmt;
 	struct basic_block *bb;
 	struct insn *insn;
 
-	instance_class = new_class();
-	expr = new_expr(instance_class);
+	expr = new_expr(&instance_class);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
 	select_instructions(bb->b_parent);
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &instance_class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocObject, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 4, REG_ESP, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
@@ -1262,7 +1267,7 @@ void test_select_newarray(void)
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1289,7 +1294,7 @@ void test_select_newarray(void)
 
 void test_select_anewarray(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr,*size;
 	struct statement *stmt;
@@ -1297,14 +1302,13 @@ void test_select_anewarray(void)
 	struct insn *insn;
 	enum machine_reg dreg;
 
-	instance_class = new_class();
 	size = value_expr(J_INT,0xFF);
 
-	expr = anewarray_expr(instance_class,size);
+	expr = anewarray_expr(&instance_class, size);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1321,7 +1325,7 @@ void test_select_anewarray(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM,(unsigned long) instance_class, insn);
+	assert_imm_insn(INSN_PUSH_IMM,(unsigned long) &instance_class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_rel_insn(INSN_CALL_REL, (unsigned long) allocArray, insn);
@@ -1329,13 +1333,12 @@ void test_select_anewarray(void)
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 12, REG_ESP, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
 void test_select_arraylength(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr, *arraylength_exp;
 	struct statement *stmt;
@@ -1343,14 +1346,14 @@ void test_select_arraylength(void)
 	struct insn *insn;
 	enum machine_reg dreg, dreg2;
 
-	instance_class = new_class();
-	expr = value_expr(J_REFERENCE, (unsigned long) instance_class);
+	NOT_IMPLEMENTED;
+	expr = value_expr(J_REFERENCE, (unsigned long) &instance_class);
 
 	arraylength_exp = arraylength_expr(expr);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &arraylength_exp->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1358,19 +1361,18 @@ void test_select_arraylength(void)
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) instance_class, dreg, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &instance_class, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	dreg2 = mach_reg(&insn->dest.reg);
-	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, sizeof(struct object), dreg2, insn);
+	assert_membase_reg_insn(INSN_MOV_MEMBASE_REG, dreg, sizeof(struct vm_object), dreg2, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
 void test_select_instanceof(void)
 {
-	struct object *instance_class;
+	struct vm_class instance_class;
 	struct compilation_unit *cu;
 	struct expression *expr, *ref;
 	struct statement *stmt;
@@ -1378,14 +1380,13 @@ void test_select_instanceof(void)
 	struct insn *insn;
 	enum machine_reg dreg;
 
-	instance_class = new_class();
-	ref = value_expr(J_REFERENCE, (unsigned long) instance_class);
+	ref = value_expr(J_REFERENCE, (unsigned long) &instance_class);
 
-	expr = instanceof_expr(ref, instance_class);
+	expr = instanceof_expr(ref, &instance_class);
 	stmt = alloc_statement(STMT_EXPRESSION);
 	stmt->expression = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1393,21 +1394,20 @@ void test_select_instanceof(void)
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) instance_class, dreg, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &instance_class, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) instance_class, insn);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &instance_class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) is_object_instance_of, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
 
-	free(instance_class);
 	free_compilation_unit(cu);
 }
 
@@ -1418,7 +1418,7 @@ void test_select_goto_stmt(void)
 	struct statement *stmt;
 	struct insn *insn;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	goto_target = get_basic_block(cu, 1, 2);
 
@@ -1451,7 +1451,7 @@ void test_select_array_check_stmt(void)
 	stmt = alloc_statement(STMT_ARRAY_CHECK);
 	stmt->expression = &array->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1480,7 +1480,7 @@ void test_select_array_check_stmt(void)
 	assert_reg_insn(INSN_PUSH_REG, dreg3, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_array, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
@@ -1490,22 +1490,21 @@ void test_select_array_check_stmt(void)
 
 void test_select_checkcast_stmt(void)
 {
+	struct vm_class class;
 	struct compilation_unit *cu;
 	struct basic_block *bb;
 	struct statement *stmt;
 	struct expression *expr;
 	struct insn *insn;
-	struct object *class;
 	enum machine_reg dreg;
 
-	class = new_class();
-	expr = value_expr(J_REFERENCE, (unsigned long)class);
+	expr = value_expr(J_REFERENCE, (unsigned long) &class);
 
 	stmt = alloc_statement(STMT_CHECKCAST);
-	stmt->checkcast_class = class;
+	stmt->checkcast_class = &class;
 	stmt->checkcast_ref = &expr->node;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 1);
 	bb_add_stmt(bb, stmt);
 
@@ -1513,20 +1512,19 @@ void test_select_checkcast_stmt(void)
 
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	dreg = mach_reg(&insn->dest.reg);
-	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) class, dreg, insn);
+	assert_imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &class, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) class, insn);
+	assert_imm_insn(INSN_PUSH_IMM, (unsigned long) &class, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_reg_insn(INSN_PUSH_REG, dreg, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_rel_insn(INSN_CALL_REL, (unsigned long) check_cast, insn);
+	assert_rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_cast, insn);
 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_imm_reg_insn(INSN_ADD_IMM_REG, 8, REG_ESP, insn);
 
-	free(class);
 	free_compilation_unit(cu);
 }

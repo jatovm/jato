@@ -59,14 +59,12 @@ struct jit_trampoline *alloc_jit_trampoline(void);
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *);
 void free_jit_trampoline(struct jit_trampoline *);
 
-int jit_prepare_method(struct methodblock *);
-
 struct fixup_site *alloc_fixup_site(void);
 void free_fixup_site(struct fixup_site *);
 void trampoline_add_fixup_site(struct jit_trampoline *, struct fixup_site *);
 unsigned char *fixup_site_addr(struct fixup_site *);
 
-const char *method_symbol(struct methodblock *method, char *symbol, size_t len);
+const char *method_symbol(struct vm_method *method, char *symbol, size_t len);
 
 static inline const char *cu_symbol(struct compilation_unit *cu, char *symbol, size_t len)
 {
@@ -81,16 +79,6 @@ static inline void *cu_native_ptr(struct compilation_unit *cu)
 static inline unsigned long cu_native_size(struct compilation_unit *cu)
 {
 	return buffer_offset(cu->objcode);
-}
-
-static inline void *method_native_ptr(struct methodblock *method)
-{
-	return buffer_ptr(method->compilation_unit->objcode);
-}
-
-static inline void *method_trampoline_ptr(struct methodblock *method)
-{
-	return buffer_ptr(method->trampoline->objcode);
 }
 
 bool is_native(unsigned long eip);

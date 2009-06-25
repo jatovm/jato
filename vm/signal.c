@@ -29,6 +29,7 @@
 #include <vm/backtrace.h>
 #include <vm/signal.h>
 #include <vm/class.h>
+#include <vm/object.h>
 
 #include <arch/signal.h>
 
@@ -88,7 +89,7 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	/* Check if exception was triggered by exception guard */
 	if (si->si_addr == exceptions_guard_page ||
 	    si->si_addr == trampoline_exceptions_guard_page) {
-		struct object *exception;
+		struct vm_object *exception;
 
 		exception = exception_occurred();
 		if (exception == NULL) {

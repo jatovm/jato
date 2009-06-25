@@ -24,12 +24,17 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/expression.h>
+#include <assert.h>
+#include <stdlib.h>
+
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
+#include <jit/expression.h>
+
+#include <vm/method.h>
 #include <vm/vm.h>
+
 #include <arch/stack-frame.h>
-#include <stdlib.h>
 
 /*
  * The three callee-saved registers are unconditionally stored on the stack
@@ -69,7 +74,7 @@ index_to_offset(unsigned long idx, unsigned long nr_args)
 	return 0UL - __index_to_offset(idx - nr_args + 1);
 }
 
-unsigned long frame_local_offset(struct methodblock *method,
+unsigned long frame_local_offset(struct vm_method *method,
 				 struct expression *local)
 {
 	unsigned long idx, nr_args;
@@ -89,7 +94,11 @@ unsigned long slot_offset(struct stack_slot *slot)
 
 unsigned long frame_locals_size(struct stack_frame *frame)
 {
-	unsigned long nr_locals = frame->nr_local_slots - frame->nr_args;
+	unsigned long nr_locals;
+
+	assert(frame->nr_local_slots >= frame->nr_args);
+
+	nr_locals = frame->nr_local_slots - frame->nr_args;
 	return __index_to_offset(nr_locals + frame->nr_spill_slots);
 }
 

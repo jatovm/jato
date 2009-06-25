@@ -14,9 +14,9 @@ static void assert_conversion_mimic_stack(unsigned char opc,
 					 enum vm_type to_type)
 {
 	unsigned char code[] = { opc };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *conversion_expression;
 	struct expression *expression;

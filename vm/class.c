@@ -24,207 +24,458 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <stdlib.h>
+#include <string.h>
+
+#include <cafebabe/class.h>
+#include <cafebabe/constant_pool.h>
+#include <cafebabe/field_info.h>
+#include <cafebabe/method_info.h>
+
+#include <vm/class.h>
+#include <vm/classloader.h>
+#include <vm/die.h>
+#include <vm/field.h>
+#include <vm/method.h>
+#include <vm/object.h>
+#include <vm/string.h>
+#include <vm/vm.h>
+
 #include <jit/exception.h>
 #include <jit/compiler.h>
-#include <vm/string.h>
-#include <vm/class.h>
-#include <vm/die.h>
-#include <vm/vm.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <jit/vtable.h>
 
-typedef void (*exception_init_fn)(struct object *, struct object *);
-
-struct object *new_exception(char *class_name, char *message)
+static void
+setup_vtable(struct vm_class *vmc)
 {
-	struct object *message_str;
-	exception_init_fn init;
-	struct methodblock *mb;
-	struct object *obj;
-	Class *e_class;
+	unsigned int super_vtable_size;
+	struct vtable *super_vtable;
 
-	e_class = findSystemClass(class_name);
-	if (!e_class)
-		return NULL;
+	if (vmc->super) {
+		super_vtable_size = vmc->super->vtable_size;
+		super_vtable = &vmc->super->vtable;
+	} else {
+		super_vtable_size = 0;
+	}
 
-	obj = allocObject(e_class);
-	if (!obj)
-		return NULL;
+	vmc->vtable_size = super_vtable_size + vmc->class->methods_count;
 
-	if (message == NULL)
-		message_str = NULL;
+	vtable_init(&vmc->vtable, vmc->vtable_size);
+
+	/* Superclass methods */
+	for (uint16_t i = 0; i < super_vtable_size; ++i)
+		vtable_setup_method(&vmc->vtable, i,
+			super_vtable->native_ptr[i]);
+
+	/* Our methods */
+	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
+		vtable_setup_method(&vmc->vtable, super_vtable_size + i,
+				vm_method_trampoline_ptr(&vmc->methods[i]));
+	}
+}
+
+extern struct vm_class *vm_java_lang_Class;
+
+int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
+{
+	vmc->class = class;
+
+	const struct cafebabe_constant_info_class *constant_class;
+	if (cafebabe_class_constant_get_class(class,
+		class->this_class, &constant_class))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(class,
+		constant_class->name_index, &name))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	vmc->name = strndup((char *) name->bytes, name->length);
+
+	if (class->super_class) {
+		const struct cafebabe_constant_info_class *constant_super;
+		if (cafebabe_class_constant_get_class(class,
+			class->super_class, &constant_super))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		const struct cafebabe_constant_info_utf8 *super_name;
+		if (cafebabe_class_constant_get_utf8(class,
+			constant_super->name_index, &super_name))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		char *super_name_str = strndup((char *) super_name->bytes,
+			super_name->length);
+
+		/* XXX: Circularity check */
+		vmc->super = classloader_load(super_name_str);
+		if (!vmc->super) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		free(super_name_str);
+	} else {
+		if (!strcmp(vmc->name, "java.lang.Object")) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		vmc->super = NULL;
+	}
+
+	vmc->fields = malloc(sizeof(*vmc->fields) * class->fields_count);
+	if (!vmc->fields) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	unsigned int offset;
+
+	if (vmc->super)
+		offset = vmc->super->object_size;
 	else
-		message_str = Cstr2String(message);
+		offset = 0;
 
-	mb = lookupMethod(e_class, "<init>", "(Ljava/lang/String;)V");
-	if (!mb)
-		die("%s: constructor not found for class %s\n",
-		    __func__, class_name);
+	for (uint16_t i = 0; i < class->fields_count; ++i) {
+		struct vm_field *vmf = &vmc->fields[i];
 
-	init = method_trampoline_ptr(mb);
-	init(obj, message_str);
+		if (vm_field_init(vmf, vmc, i)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
 
-	return obj;
-}
-
-unsigned long is_object_instance_of(struct object *obj, struct object *type)
-{
-	if (!obj)
-		return 0;
-
-	return isInstanceOf(type, obj->class);
-}
-
-void check_array(struct object *obj, unsigned int index)
-{
-	unsigned int array_len;
-	struct classblock *cb;
-	char index_str[32];
-
-	cb = CLASS_CB(obj->class);
-
-	if (!IS_ARRAY(cb)) {
-		signal_new_exception("java/lang/RuntimeException",
-				     "object is not an array");
-		goto throw;
+		if (vm_field_is_static(vmf)) {
+			if (vm_field_init_static(vmf)) {
+				NOT_IMPLEMENTED;
+				return -1;
+			}
+		} else {
+			vm_field_init_nonstatic(vmf, offset);
+			/* XXX: Do field reordering and use the right sizes */
+			offset += 8;
+		}
 	}
 
-	array_len = ARRAY_LEN(obj);
+	vmc->object_size = offset;
 
-	if (index < array_len)
-		return;
-
-	sprintf(index_str, "%d > %d", index, array_len - 1);
-	signal_new_exception("java/lang/ArrayIndexOutOfBoundsException",
-			     index_str);
-
- throw:
-	throw_from_native(sizeof(struct object *) + sizeof(unsigned int));
-}
-
-void array_store_check(struct object *arrayref, struct object *obj)
-{
-	struct classblock *cb;
-	struct string *str;
-	int err;
-
-	cb = CLASS_CB(arrayref->class);
-
-	if (!IS_ARRAY(cb)) {
-		signal_new_exception("java/lang/RuntimeException",
-				     "object is not an array");
-		goto throw;
+	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
+	if (!vmc->methods) {
+		NOT_IMPLEMENTED;
+		return -1;
 	}
 
-	if (obj == NULL || isInstanceOf(cb->element_class, obj->class))
-		return;
+	for (uint16_t i = 0; i < class->methods_count; ++i) {
+		if (vm_method_init(&vmc->methods[i], vmc, i)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
 
-	str = alloc_str();
-	if (str == NULL) {
-		err = -ENOMEM;
-		goto error;
+		if (vm_method_prepare_jit(&vmc->methods[i])) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
 	}
 
-	err = str_append(str, slash2dots(CLASS_CB(obj->class)->name));
-	if (err)
-		goto error;
+	if (!vm_class_is_interface(vmc))
+		setup_vtable(vmc);
 
-	signal_new_exception("java/lang/ArrayStoreException", str->value);
-	free_str(str);
-
- throw:
-	throw_from_native(2 * sizeof(struct object *));
-	return;
-
- error:
-	if (str)
-		free_str(str);
-
-	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
-		die("%s: out of memory", __func__);
-
-	die("%s: error %d", __func__, err);
+	vmc->state = VM_CLASS_LINKED;
+	return 0;
 }
 
-void array_store_check_vmtype(struct object *arrayref, enum vm_type vm_type)
+/*
+ * This function sets the .object member of struct vm_class to point to
+ * the object (of type java.lang.Class) for this class.
+ */
+int vm_class_init_object(struct vm_class *vmc)
 {
-	/* TODO: Implement assignment compatibility checking described
-	   in chapter "2.6.7 Assignment Conversion" of The Java VM
-	   Specification - Second Edition. */
-}
-
-void check_cast(struct object *obj, struct object *type)
-{
-	struct string *str;
-	int err;
-
-	if (!obj || isInstanceOf(type, obj->class))
-		return;
-
-	if (exception_occurred())
-		goto throw;
-
-	str = alloc_str();
-	if (str == NULL) {
-		err = -ENOMEM;
-		goto error;
+	vmc->object = vm_object_alloc(vm_java_lang_Class);
+	if (!vmc->object) {
+		NOT_IMPLEMENTED;
+		return -1;
 	}
 
-	err = str_append(str, slash2dots(CLASS_CB(obj->class)->name));
-	if (err)
-		goto error;
-
-	err = str_append(str, " cannot be cast to ");
-	if (err)
-		goto error;
-
-	err = str_append(str, slash2dots(CLASS_CB(type)->name));
-	if (err)
-		goto error;
-
-	signal_new_exception("java/lang/ClassCastException", str->value);
-	free_str(str);
- throw:
-	throw_from_native(2 * sizeof(struct object *));
-	return;
-
- error:
-	if (str)
-		free_str(str);
-
-	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
-		die("%s: out of memory", __func__);
-
-	die("%s: error %d", __func__, err);
+	return 0;
 }
 
-void array_size_check(int size)
+int vm_class_run_clinit(struct vm_class *vmc)
 {
-	if (size < 0) {
-		signal_new_exception(
-			"java/lang/NegativeArraySizeException", NULL);
-		throw_from_native(sizeof(int));
-	}
-}
+	assert(vmc->state == VM_CLASS_LINKED);
 
-void multiarray_size_check(int n, ...)
-{
-	va_list ap;
-	int i;
-
-	va_start(ap, n);
-
-	for (i = 0; i < n; i++) {
-		if (va_arg(ap, int) >= 0)
+	/* XXX: Make sure there's at most one of these. */
+	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
+		if (strcmp(vmc->methods[i].name, "<clinit>"))
 			continue;
 
-		signal_new_exception("java/lang/NegativeArraySizeException",
-				     NULL);
-		va_end(ap);
-		throw_from_native(sizeof(int) * (n + 1));
-		return;
+		void (*clinit_trampoline)(void)
+			= vm_method_trampoline_ptr(&vmc->methods[i]);
+
+		clinit_trampoline();
 	}
 
-	va_end(ap);
-	return;
+	vmc->state = VM_CLASS_INITIALIZED;
+	return 0;
+}
+
+struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i)
+{
+	const struct cafebabe_constant_info_class *constant_class;
+	if (cafebabe_class_constant_get_class(vmc->class,
+		i, &constant_class))
+	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	const struct cafebabe_constant_info_utf8 *class_name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		constant_class->name_index, &class_name))
+	{
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	char *class_name_str = strndup((char *) class_name->bytes,
+		class_name->length);
+	if (!class_name_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	struct vm_class *class = classloader_load(class_name_str);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	return class;
+}
+
+int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type)
+{
+	const struct cafebabe_constant_info_field_ref *field;
+	if (cafebabe_class_constant_get_field_ref(vmc->class, i, &field)) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	struct vm_class *class = vm_class_resolve_class(vmc,
+		field->class_index);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_name_and_type *name_and_type;
+	if (cafebabe_class_constant_get_name_and_type(vmc->class,
+		field->name_and_type_index, &name_and_type))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->name_index, &name))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *type;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->descriptor_index, &type))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	char *name_str = strndup((char *) name->bytes, name->length);
+	if (!name_str) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	char *type_str = strndup((char *) type->bytes, type->length);
+	if (!type_str) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	*r_vmc = class;
+	*r_name = name_str;
+	*r_type = type_str;
+	return 0;
+}
+
+struct vm_field *vm_class_get_field(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	unsigned int index = 0;
+	if (!cafebabe_class_get_field(vmc->class, name, type, &index))
+		return &vmc->fields[index];
+
+	return NULL;
+}
+
+struct vm_field *vm_class_get_field_recursive(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	do {
+		struct vm_field *vmf = vm_class_get_field(vmc, name, type);
+		if (vmf)
+			return vmf;
+
+		vmc = vmc->super;
+	} while(vmc);
+
+	return NULL;
+}
+
+struct vm_field *
+vm_class_resolve_field_recursive(struct vm_class *vmc, uint16_t i)
+{
+	struct vm_class *class;
+	char *name;
+	char *type;
+	struct vm_field *result;
+
+	if (vm_class_resolve_field(vmc, i, &class, &name, &type)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	result = vm_class_get_field_recursive(class, name, type);
+
+	free(name);
+	free(type);
+	return result;
+}
+
+int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type)
+{
+	const struct cafebabe_constant_info_method_ref *method;
+	if (cafebabe_class_constant_get_method_ref(vmc->class, i, &method)) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	struct vm_class *class = vm_class_resolve_class(vmc,
+		method->class_index);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_name_and_type *name_and_type;
+	if (cafebabe_class_constant_get_name_and_type(vmc->class,
+		method->name_and_type_index, &name_and_type))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->name_index, &name))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *type;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->descriptor_index, &type))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	char *name_str = strndup((char *) name->bytes, name->length);
+	if (!name_str) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	char *type_str = strndup((char *) type->bytes, type->length);
+	if (!type_str) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	*r_vmc = class;
+	*r_name = name_str;
+	*r_type = type_str;
+	return 0;
+}
+
+struct vm_method *vm_class_get_method(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	unsigned int index = 0;
+	if (!cafebabe_class_get_method(vmc->class, name, type, &index))
+		return &vmc->methods[index];
+
+	return NULL;
+}
+
+struct vm_method *vm_class_get_method_recursive(struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	do {
+		struct vm_method *vmf = vm_class_get_method(vmc, name, type);
+		if (vmf)
+			return vmf;
+
+		vmc = vmc->super;
+	} while(vmc);
+
+	return NULL;
+}
+
+struct vm_method *
+vm_class_resolve_method_recursive(struct vm_class *vmc, uint16_t i)
+{
+	struct vm_class *class;
+	char *name;
+	char *type;
+	struct vm_method *result;
+
+	if (vm_class_resolve_method(vmc, i, &class, &name, &type)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	result = vm_class_get_method_recursive(class, name, type);
+
+	free(name);
+	free(type);
+	return result;
+}
+
+/* Reference: http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
+bool vm_class_is_assignable_from(struct vm_class *vmc, struct vm_class *from)
+{
+	if (vmc == from)
+		return true;
+
+	if (from->super && vm_class_is_assignable_from(vmc, from->super))
+		return true;
+
+	NOT_IMPLEMENTED;
+	return false;
 }

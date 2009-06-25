@@ -28,6 +28,9 @@
 #include <jit/compiler.h>
 #include <vm/natives.h>
 
+#include <vm/class.h>
+#include <vm/method.h>
+
 #include <stdbool.h>
 #include <unistd.h>
 
@@ -51,9 +54,9 @@ bool is_native(unsigned long eip)
 	return !address_on_heap(eip);
 }
 
-const char *method_symbol(struct methodblock *method, char *symbol, size_t size)
+const char *method_symbol(struct vm_method *method, char *symbol, size_t size)
 {
-	snprintf(symbol, size, "%s.%s%s", CLASS_CB(method->class)->name, method->name, method->type);
+	snprintf(symbol, size, "%s.%s%s", method->class->name, method->name, method->type);
 
 	return symbol;
 }

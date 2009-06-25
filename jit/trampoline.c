@@ -29,6 +29,9 @@
 #include <jit/exception.h>
 #include <jit/compiler.h>
 
+#include <vm/buffer.h>
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/natives.h>
 #include <vm/string.h>
 #include <vm/method.h>
@@ -39,12 +42,12 @@
 static void *jit_native_trampoline(struct compilation_unit *cu)
 {
 	const char *method_name, *class_name;
-	struct methodblock *method;
+	struct vm_method *method;
 	struct string *msg;
 	void *ret;
 
 	method = cu->method;
-	class_name  = CLASS_CB(method->class)->name;
+	class_name  = method->class->name;
 	method_name = method->name;
 
 	ret = vm_lookup_native(class_name, method_name);
@@ -90,7 +93,7 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 
 void *jit_magic_trampoline(struct compilation_unit *cu)
 {
-	struct methodblock *method = cu->method;
+	struct vm_method *method = cu->method;
 	void *ret;
 
 	pthread_mutex_lock(&cu->mutex);
@@ -98,7 +101,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
-	if (method_is_native(cu->method))
+	if (vm_method_is_native(cu->method))
 		ret = jit_native_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);

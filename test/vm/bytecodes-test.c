@@ -2,6 +2,8 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
+#include <stdint.h>
+
 #include <vm/bytecodes.h>
 #include <vm/system.h>
 #include <vm/vm.h>

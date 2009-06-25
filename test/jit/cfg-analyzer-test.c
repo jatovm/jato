@@ -2,6 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
+#include <vm/method.h>
 #include <vm/system.h>
 #include <vm/vm.h>
 #include <jit/compiler.h>
@@ -24,12 +25,12 @@ void test_branch_opcode_ends_basic_block(void)
 {
 	struct basic_block *bb1, *bb2, *bb3;
 	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = default_string,
-		.code_size = ARRAY_SIZE(default_string)
+	struct vm_method method = {
+		.code_attribute.code = default_string,
+		.code_attribute.code_length = ARRAY_SIZE(default_string)
 	};
 	
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
 
@@ -68,12 +69,12 @@ void test_multiple_branches(void)
 	struct basic_block *bb1, *bb2, *bb3, *bb4;
 	struct compilation_unit *cu;
 
-	struct methodblock method = {
-		.jit_code = greater_than_zero,
-		.code_size = ARRAY_SIZE(greater_than_zero) 
+	struct vm_method method = {
+		.code_attribute.code = greater_than_zero,
+		.code_attribute.code_length = ARRAY_SIZE(greater_than_zero) 
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
 	assert_int_equals(4, nr_bblocks(cu));
@@ -129,12 +130,12 @@ void test_multiple_branch_with_target_instruction_splitting(void)
 {
 	struct basic_block *bb1, *bb2, *bb3, *bb4, *bb5;
 	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = set_value,
-		.code_size = ARRAY_SIZE(set_value)
+	struct vm_method method = {
+		.code_attribute.code = set_value,
+		.code_attribute.code_length = ARRAY_SIZE(set_value)
 	};
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
 

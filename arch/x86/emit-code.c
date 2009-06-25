@@ -7,6 +7,8 @@
  * LICENSE for details.
  */
 
+#include <cafebabe/method_info.h>
+
 #include <jit/basic-block.h>
 #include <jit/statement.h>
 #include <jit/compilation-unit.h>
@@ -18,6 +20,7 @@
 #include <vm/list.h>
 #include <vm/buffer.h>
 #include <vm/method.h>
+#include <vm/object.h>
 
 #include <arch/instruction.h>
 #include <arch/memory.h>
@@ -252,10 +255,10 @@ static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
 	__emit_branch(buf, 0x00, 0xe9, insn);
 }
 
-void emit_lock(struct buffer *buf, struct object *obj)
+void emit_lock(struct buffer *buf, struct vm_object *obj)
 {
 	__emit_push_imm(buf, (unsigned long)obj);
-	__emit_call(buf, objectLock);
+	__emit_call(buf, vm_object_lock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
 	__emit_push_reg(buf, REG_EAX);
@@ -263,14 +266,14 @@ void emit_lock(struct buffer *buf, struct object *obj)
 	__emit_pop_reg(buf, REG_EAX);
 }
 
-void emit_unlock(struct buffer *buf, struct object *obj)
+void emit_unlock(struct buffer *buf, struct vm_object *obj)
 {
 	/* Save caller-saved registers which contain method's return value */
 	__emit_push_reg(buf, REG_EAX);
 	__emit_push_reg(buf, REG_EDX);
 
 	__emit_push_imm(buf, (unsigned long)obj);
-	__emit_call(buf, objectUnlock);
+	__emit_call(buf, vm_object_unlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
 	emit_exception_test(buf, REG_EAX);
@@ -286,7 +289,7 @@ void emit_lock_this(struct buffer *buf)
 	this_arg_offset = offsetof(struct jit_stack_frame, args);
 
 	__emit_push_membase(buf, REG_EBP, this_arg_offset);
-	__emit_call(buf, objectLock);
+	__emit_call(buf, vm_object_lock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
 	__emit_push_reg(buf, REG_EAX);
@@ -305,7 +308,7 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_push_reg(buf, REG_EDX);
 
 	__emit_push_membase(buf, REG_EBP, this_arg_offset);
-	__emit_call(buf, objectUnlock);
+	__emit_call(buf, vm_object_unlock);
 	__emit_add_imm_reg(buf, 0x04, REG_ESP);
 
 	emit_exception_test(buf, REG_EAX);
@@ -1099,12 +1102,12 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
  * This function replaces pointers in vtable so that they point
  * directly to compiled code instead of trampoline code.
  */
-static void
-fixup_vtable(struct compilation_unit *cu, struct object *objref, void *target)
+static void fixup_vtable(struct compilation_unit *cu,
+	struct vm_object *objref, void *target)
 {
-	struct classblock *cb = CLASS_CB(objref->class);
+	struct vm_class *vmc = objref->class;
 
-	cb->vtable.native_ptr[cu->method->method_table_index] = target;
+	vmc->vtable.native_ptr[cu->method->method_index] = target;
 }
 
 void emit_trampoline(struct compilation_unit *cu,

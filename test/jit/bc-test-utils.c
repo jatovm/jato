@@ -2,6 +2,8 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
+#include <cafebabe/constant_pool.h>
+
 #include <jit/compilation-unit.h>
 #include <jit/basic-block.h>
 #include <bc-test-utils.h>
@@ -17,25 +19,25 @@
 #include <test/vm.h>
 
 struct compilation_unit *
-alloc_simple_compilation_unit(struct methodblock *method)
+alloc_simple_compilation_unit(struct vm_method *method)
 {
 	struct compilation_unit *cu;
 	struct basic_block *bb;
 
-	cu = alloc_compilation_unit(method);
-	bb = get_basic_block(cu, 0, method->code_size);
+	cu = compilation_unit_alloc(method);
+	bb = get_basic_block(cu, 0, method->code_attribute.code_length);
 	cu->entry_bb = bb;
 
 	return cu;
 }
 
-struct basic_block *__alloc_simple_bb(struct methodblock *method)
+struct basic_block *__alloc_simple_bb(struct vm_method *method)
 {
 	struct compilation_unit *cu;
 	struct basic_block *bb;
 
-	cu = alloc_compilation_unit(method);
-	bb = get_basic_block(cu, 0, method->code_size);
+	cu = compilation_unit_alloc(method);
+	bb = get_basic_block(cu, 0, method->code_attribute.code_length);
 	cu->entry_bb = bb;
 
 	return bb;
@@ -44,13 +46,13 @@ struct basic_block *__alloc_simple_bb(struct methodblock *method)
 struct basic_block *
 alloc_simple_bb(unsigned char *code, unsigned long code_size)
 {
-	struct methodblock *method;
+	struct vm_method *method;
 
 	method = malloc(sizeof *method);
-	method->jit_code = code;
-	method->code_size = code_size;
+	method->code_attribute.code = code;
+	method->code_attribute.code_length = code_size;
 	method->args_count = 0;
-	method->max_locals = 0;
+	method->code_attribute.max_locals = 0;
 
 	return __alloc_simple_bb(method);
 }
@@ -179,7 +181,7 @@ static void __assert_field_expr(enum expression_type expected_expr_type,
 }
 
 void assert_class_field_expr(enum vm_type expected_vm_type,
-			     struct fieldblock *expected_field,
+			     struct vm_field *expected_field,
 			     struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
@@ -189,7 +191,7 @@ void assert_class_field_expr(enum vm_type expected_vm_type,
 }
 
 void assert_instance_field_expr(enum vm_type expected_vm_type,
-				struct fieldblock *expected_field,
+				struct vm_field *expected_field,
 				struct expression *expected_objectref,
 				struct tree_node *node)
 {
@@ -201,7 +203,7 @@ void assert_instance_field_expr(enum vm_type expected_vm_type,
 }
 
 void assert_invoke_expr(enum vm_type expected_type,
-			struct methodblock *expected_method,
+			struct vm_method *expected_method,
 			struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
@@ -287,7 +289,7 @@ void assert_checkcast_stmt(struct expression *expected,
 
 void convert_ir_const(struct compilation_unit *cu,
 		      ConstantPoolEntry *cp_infos,
-		      size_t nr_cp_infos, u1 *cp_types)
+		      size_t nr_cp_infos, uint8_t *cp_types)
 {
 	struct object *class = new_class();
 	struct classblock *cb = CLASS_CB(class);

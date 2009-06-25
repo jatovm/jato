@@ -24,13 +24,15 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <arch/instruction.h>
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
-#include <arch/instruction.h>
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 #include <libharness.h>
 
-struct methodblock method;
+struct vm_method method;
 
 static void assert_st_insn(enum insn_type type, struct stack_slot *slot, enum machine_reg reg, struct insn *insn)
 {
@@ -55,7 +57,7 @@ void test_spill_insn_is_inserted_at_the_end_of_the_interval_if_necessary(void)
         struct basic_block *bb;
 	struct insn *insn;
 
-        cu = alloc_compilation_unit(&method);
+        cu = compilation_unit_alloc(&method);
         r1 = get_var(cu);
         r2 = get_var(cu);
 
@@ -101,7 +103,7 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
         struct basic_block *bb;
 	struct insn *insn;
 
-        cu = alloc_compilation_unit(&method);
+        cu = compilation_unit_alloc(&method);
         r1 = get_var(cu);
         r2 = get_var(cu);
 
@@ -146,7 +148,7 @@ void test_empty_interval_is_never_spilled(void)
 	struct basic_block *bb;
 	struct var_info *r1;
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 2);
 
 	r1 = get_var(cu);

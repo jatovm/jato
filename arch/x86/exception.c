@@ -30,12 +30,14 @@
 #include <jit/exception.h>
 #include <jit/compiler.h>
 
+#include <vm/object.h>
+
 #include <arch/stack-frame.h>
 #include <arch/memory.h>
 #include <arch/signal.h>
 
 unsigned char *
-throw_exception(struct compilation_unit *cu, struct object *exception)
+throw_exception(struct compilation_unit *cu, struct vm_object *exception)
 {
 	unsigned char *native_ptr;
 	struct jit_stack_frame *frame;
@@ -48,7 +50,7 @@ throw_exception(struct compilation_unit *cu, struct object *exception)
 	return throw_exception_from(cu, frame, native_ptr);
 }
 
-void throw_exception_from_signal(void *ctx, struct object *exception)
+void throw_exception_from_signal(void *ctx, struct vm_object *exception)
 {
 	struct jit_stack_frame *frame;
 	struct compilation_unit *cu;
@@ -69,7 +71,7 @@ void throw_exception_from_signal(void *ctx, struct object *exception)
 	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)eh;
 }
 
-void throw_exception_from_trampoline(void *ctx, struct object *exception)
+void throw_exception_from_trampoline(void *ctx, struct vm_object *exception)
 {
 	unsigned long return_address;
 	unsigned long *stack;

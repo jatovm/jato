@@ -5,11 +5,13 @@
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
 #include <vm/bitset.h>
+#include <vm/class.h>
+#include <vm/method.h>
 #include <vm/vm.h>
 #include <arch/instruction.h>
 #include <libharness.h>
 
-struct methodblock method;
+struct vm_method method;
 
 static void assert_live_range(struct live_interval *interval, unsigned long expected_start, unsigned long expected_end)
 {
@@ -36,7 +38,7 @@ void test_variable_range_limited_to_basic_block(void)
 	struct basic_block *bb;
 	struct insn *insn[3];
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	r1 = get_var(cu);
 	r2 = get_var(cu);
 
@@ -77,7 +79,7 @@ void test_variable_range_spans_two_basic_blocks(void)
 	struct var_info *r1, *r2;
 	struct insn *insn[4];
 
-	cu = alloc_compilation_unit(&method);
+	cu = compilation_unit_alloc(&method);
 	r1 = get_var(cu);
 	r2 = get_var(cu);
 

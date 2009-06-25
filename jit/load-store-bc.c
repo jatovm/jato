@@ -8,11 +8,16 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
+#include <cafebabe/constant_pool.h>
+
 #include <jit/compiler.h>
 #include <jit/statement.h>
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
+#include <vm/class.h>
+#include <vm/classloader.h>
+#include <vm/object.h>
 #include <vm/resolve.h>
 #include <vm/stack.h>
 
@@ -84,32 +89,54 @@ int convert_sipush(struct parse_context *ctx)
 
 static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 {
-	struct constant_pool *cp;
-	struct expression *expr;
-	struct classblock *cb;
+	struct vm_class *vmc;
+	struct cafebabe_constant_pool *cp;
+	struct expression *expr = NULL;
 
-	cb = CLASS_CB(ctx->cu->method->class);
-	cp = &cb->constant_pool;
+	vmc = ctx->cu->method->class;
 
-	uint8_t type = CP_TYPE(cp, cp_idx);
-	switch (type) {
-	case CONSTANT_Integer:
-		expr = value_expr(J_INT, CP_INTEGER(cp, cp_idx));
+	if (cafebabe_class_constant_index_invalid(vmc->class, cp_idx))
+		return -EINVAL;
+
+	cp = &vmc->class->constant_pool[cp_idx];
+
+	switch (cp->tag) {
+	case CAFEBABE_CONSTANT_TAG_INTEGER:
+		expr = value_expr(J_INT, cp->integer_.bytes);
 		break;
-	case CONSTANT_Float:
-		expr = fvalue_expr(J_FLOAT, CP_FLOAT(cp, cp_idx));
+	case CAFEBABE_CONSTANT_TAG_FLOAT:
+		NOT_IMPLEMENTED;
+		expr = fvalue_expr(J_FLOAT, cp->float_.bytes);
 		break;
-	case CONSTANT_String: {
-		struct object *string = resolve_string(cp, CP_STRING(cp, cp_idx));
+	case CAFEBABE_CONSTANT_TAG_STRING: {
+		const struct cafebabe_constant_info_utf8 *utf8;
+		if (cafebabe_class_constant_get_utf8(vmc->class,
+			cp->string.string_index, &utf8))
+		{
+			NOT_IMPLEMENTED;
+			break;
+		}
+
+		struct vm_object *string
+			= vm_object_alloc_string(utf8->bytes, utf8->length);
+		if (!string) {
+			NOT_IMPLEMENTED;
+			break;
+		}
 
 		expr = value_expr(J_REFERENCE, (unsigned long) string);
 		break;
 	}
-	case CONSTANT_Long:
-		expr = value_expr(J_LONG, CP_LONG(cp, cp_idx));
+	case CAFEBABE_CONSTANT_TAG_LONG:
+		expr = value_expr(J_LONG,
+			((uint64_t) cp->long_.high_bytes << 32)
+			+ (uint64_t) cp->long_.low_bytes);
 		break;
-	case CONSTANT_Double:
-		expr = fvalue_expr(J_DOUBLE, CP_DOUBLE(cp, cp_idx));
+	case CAFEBABE_CONSTANT_TAG_DOUBLE:
+		NOT_IMPLEMENTED;
+		expr = fvalue_expr(J_DOUBLE,
+			((uint64_t) cp->double_.high_bytes << 32)
+			+ (uint64_t) cp->double_.low_bytes);
 		break;
 	default:
 		return -EINVAL;

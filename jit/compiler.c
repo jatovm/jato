@@ -14,6 +14,9 @@
 #include <jit/exception.h>
 #include <jit/perf-map.h>
 
+#include <vm/class.h>
+#include <vm/method.h>
+
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,10 +24,11 @@
 
 static void compile_error(struct compilation_unit *cu, int err)
 {
-	struct classblock *cb = CLASS_CB(cu->method->class);
+	struct vm_method *method = cu->method;
+	struct vm_class *class = method->class;
 
-	printf("%s: Failed to compile method `%s' in class `%s', error: %i\n",
-	       __func__, cu->method->name, cb->name, err);
+	die("%s: Failed to compile method `%s' in class `%s', error: %i\n",
+	       __func__, method->name, class->name, err);
 
 	if (!exception_occurred()) {
 		if (err == -ENOMEM)
@@ -108,18 +112,4 @@ int compile(struct compilation_unit *cu)
 		compile_error(cu, err);
 
 	return err;
-}
-
-int jit_prepare_method(struct methodblock *mb)
-{
-	mb->compilation_unit = alloc_compilation_unit(mb);
-	if (!mb->compilation_unit)
-		return -ENOMEM;
-
-	mb->trampoline = build_jit_trampoline(mb->compilation_unit);
-	if (!mb->trampoline) {
-		free_compilation_unit(mb->compilation_unit);
-		return -ENOMEM;
-	}
-	return 0;
 }

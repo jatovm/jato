@@ -16,7 +16,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 static void assert_local_offset(unsigned long expected, struct expression *local, unsigned long nr_args)
 {
-	struct methodblock method = {
+	struct vm_method method = {
 		.args_count = nr_args
 	};
 	assert_int_equals(expected, frame_local_offset(&method, local));

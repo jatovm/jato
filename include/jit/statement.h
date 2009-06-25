@@ -44,7 +44,7 @@ struct statement {
 		};
 		struct /* STMT_CHECKCAST */ {
 			struct tree_node *checkcast_ref;
-			struct object *checkcast_class;
+			struct vm_class *checkcast_class;
 		};
 		struct /* STMT_ATHROW */ {
 			struct tree_node *exception_ref;

@@ -7,9 +7,10 @@ function run_java {
   JAVA_CLASS=$1
   EXPECTED=$2
 
-  $GDB ../jato \
-      -Dgnu.classpath.boot.library.path=$GNU_CLASSPATH_ROOT/lib/classpath \
-      -Xbootclasspath:$BOOTCLASSPATH $JAVA_OPTS -cp . $JAVA_CLASS
+  CLASSPATH_INSTALL_DIR=`../tools/classpath-config`
+  GLIBJ="$CLASSPATH_INSTALL_DIR/share/classpath/glibj.zip"
+
+  $GDB ../jato -cp $PWD:$GLIBJ $JAVA_CLASS
 
   ACTUAL=$?
 
@@ -50,6 +51,8 @@ while [ "$#" -ge 1 ]; do
 done
 
 if [ -z "$CLASS_LIST" ]; then
+    run_java jvm.ArrayTest 0
+    run_java jvm.ObjectArrayTest 0
     run_java jvm.ExitStatusIsZeroTest 0
     run_java jvm.ExitStatusIsOneTest 1
     run_java jvm.LoadConstantsTest 0
@@ -67,6 +70,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.ObjectStackTest 0
     run_java jvm.ExceptionsTest 0
     run_java jvm.FibonacciTest 0
+    run_java jvm.StringTest 0
     run_java jvm.PrintTest 0
 else 
     for i in $CLASS_LIST; do

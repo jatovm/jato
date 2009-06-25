@@ -32,9 +32,9 @@ static void assert_convert_binop(enum vm_type vm_type,
 {
 	unsigned char code[] = { opc };
 	struct expression *left, *right, *expr;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code)
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code)
 	};
 	struct var_info *temporary;
 	struct basic_block *bb;
@@ -106,9 +106,9 @@ static void assert_convert_unop(enum vm_type vm_type,
 {
 	unsigned char code[] = { opc };
 	struct expression *expression, *unary_expression;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code)
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code)
 	};
 	struct var_info *temporary;
 	struct basic_block *bb;
@@ -181,9 +181,9 @@ static void assert_iinc_stmt(unsigned char expected_index,
 	struct statement *store_stmt;
 	struct tree_node *local_expression, *const_expression;
 	struct compilation_unit *cu;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code)
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code)
 	};
 
 	cu = alloc_simple_compilation_unit(&method);
@@ -214,9 +214,9 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 {
 	unsigned char code[] = { opc };
 	struct expression *left, *right, *cmp_expression;
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct var_info *temporary;
 	struct basic_block *bb;

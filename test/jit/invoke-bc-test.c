@@ -16,9 +16,9 @@ static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 {
 	struct expression *return_value;
 	unsigned char code[] = { opc };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct statement *ret_stmt;
 	struct var_info *temporary;
@@ -49,9 +49,9 @@ void test_convert_non_void_return(void)
 void test_convert_void_return(void)
 {
 	unsigned char code[] = { OPC_RETURN };
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct statement *ret_stmt;
 	struct basic_block *bb;
@@ -67,15 +67,18 @@ void test_convert_void_return(void)
 }
 
 static void convert_ir_invoke(struct compilation_unit *cu,
-			      struct methodblock *target_method,
+			      struct vm_method *target_method,
 			      unsigned long method_index)
 {
-	ConstantPoolEntry cp_infos[method_index + 1];
-	u1 cp_types[method_index + 1];
+	assert(method_index == 0);
 
-	cp_infos[method_index] = (unsigned long) target_method;
-	cp_types[method_index] = CONSTANT_Resolved;
-	convert_ir_const(cu, (void *)cp_infos, method_index+1, cp_types);
+	struct vm_class vmc = {
+		.methods = target_method,
+	};
+
+	cu->method->class = &vmc;
+
+	convert_to_ir(cu);
 }
 
 static struct basic_block *
@@ -86,17 +89,17 @@ build_invoke_bb(unsigned char invoke_opc,
 		unsigned short method_table_idx,
 		struct expression **args)
 {
-	struct methodblock target_method = {
+	struct vm_method target_method = {
 		.type = type,
 		.args_count = nr_args,
-		.method_table_index = method_table_idx,
+		.method_index = method_table_idx,
 	};
 	unsigned char code[] = {
 		invoke_opc, (method_index >> 8) & 0xff, method_index & 0xff,
 	};
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *objectref_expr;
 	struct basic_block *bb;
@@ -187,15 +190,15 @@ static void assert_invoke_return_type(unsigned char invoke_opc, enum vm_type exp
 }
 
 static struct basic_block *
-invoke_discarded_return_value(unsigned char invoke_opc, struct methodblock *target_method)
+invoke_discarded_return_value(unsigned char invoke_opc, struct vm_method *target_method)
 {
 	unsigned char code[] = {
 		invoke_opc, 0x00, 0x00,
 		OPC_POP
 	};
-	struct methodblock invoker_method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method invoker_method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 	
@@ -210,7 +213,7 @@ invoke_discarded_return_value(unsigned char invoke_opc, struct methodblock *targ
 
 static void assert_invoke_return_value_discarded(enum expression_type expected_type, unsigned char invoke_opc)
 {
-	struct methodblock target_method;
+	struct vm_method target_method;
 	struct basic_block *bb;
 	struct statement *stmt;
 
@@ -226,7 +229,7 @@ static void assert_invoke_return_value_discarded(enum expression_type expected_t
 
 static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsigned char opc, char *return_type, int nr_args)
 {
-	struct methodblock target_method = {
+	struct vm_method target_method = {
 		.type = return_type,
 		.args_count = nr_args,
 	};
@@ -234,9 +237,9 @@ static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsign
 		opc, 0x00, 0x00,
 		OPC_IRETURN
 	};
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *args[nr_args];
 	struct expression *actual_args;
@@ -346,13 +349,13 @@ void test_convert_invokestatic(void)
 
 void test_convert_invokestatic_for_void_return_type(void)
 {
-	struct methodblock mb;
+	struct vm_method mb;
 	unsigned char code[] = {
 		OPC_INVOKESTATIC, 0x00, 0x00,
 	};
-	struct methodblock method = {
-		.jit_code = code,
-		.code_size = ARRAY_SIZE(code),
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct basic_block *bb;
 	struct statement *stmt;
@@ -375,7 +378,7 @@ void test_convert_invokestatic_when_return_value_is_discarded(void)
 {
 	struct basic_block *bb;
 	struct statement *stmt;
-	struct methodblock mb;
+	struct vm_method mb;
 
 	bb = invoke_discarded_return_value(OPC_INVOKESTATIC, &mb);
 	stmt = stmt_entry(bb->stmt_list.next);

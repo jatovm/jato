@@ -1,16 +1,80 @@
 #ifndef __CLASS_H
 #define __CLASS_H
 
+#include <vm/field.h>
+#include <vm/method.h>
 #include <vm/types.h>
 #include <vm/vm.h>
 
-struct object *new_exception(char *class_name, char *message);
-unsigned long is_object_instance_of(struct object *obj, struct object *type);
-void check_array(struct object *obj, unsigned int index);
-void check_cast(struct object *obj, struct object *type);
-void array_store_check(struct object *arrayref, struct object *obj);
-void array_store_check_vmtype(struct object *arrayref, enum vm_type vm_type);
-void array_size_check(int size);
-void multiarray_size_check(int n, ...);
+#include <jit/vtable.h>
+
+struct vm_object;
+
+enum vm_class_state {
+	VM_CLASS_LOADED,
+	VM_CLASS_LINKED,
+	VM_CLASS_INITIALIZED,
+};
+
+struct vm_class {
+	const struct cafebabe_class *class;
+
+	enum vm_class_state state;
+
+	char *name;
+
+	struct vm_class *super;
+	struct vm_field *fields;
+	struct vm_method *methods;
+
+	unsigned int object_size;
+
+	unsigned int vtable_size;
+	struct vtable vtable;
+
+	/* The java.lang.Class object representing this class */
+	struct vm_object *object;
+};
+
+int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
+
+int vm_class_init_object(struct vm_class *vmc);
+int vm_class_run_clinit(struct vm_class *vmc);
+
+static inline bool vm_class_is_interface(struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
+}
+
+static inline bool vm_class_is_array_class(struct vm_class *vmc)
+{
+	return vmc->name && vmc->name[0] == '[';
+}
+
+struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);
+
+struct vm_field *vm_class_get_field(struct vm_class *vmc,
+	const char *name, const char *type);
+struct vm_field *vm_class_get_field_recursive(struct vm_class *vmc,
+	const char *name, const char *type);
+
+int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type);
+struct vm_field *vm_class_resolve_field_recursive(struct vm_class *vmc,
+	uint16_t i);
+
+struct vm_method *vm_class_get_method(struct vm_class *vmc,
+	const char *name, const char *type);
+struct vm_method *vm_class_get_method_recursive(struct vm_class *vmc,
+	const char *name, const char *type);
+
+int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type);
+struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
+	uint16_t i);
+
+struct vm_object *new_exception(char *class_name, char *message);
+
+bool vm_class_is_assignable_from(struct vm_class *vmc, struct vm_class *from);
 
 #endif /* __CLASS_H */

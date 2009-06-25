@@ -14,7 +14,9 @@
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
+#include <vm/classloader.h>
 #include <vm/field.h>
+#include <vm/object.h>
 #include <vm/stack.h>
 
 #include <stdlib.h>
@@ -37,41 +39,40 @@ static char *class_name_to_array_name(const char *class_name)
 	return array_name;
 }
 
-static struct object *class_to_array_class(struct object *class)
+static struct vm_class *class_to_array_class(struct vm_class *class)
 {
-	struct object *array_class;
-	const char *class_name;
+	struct vm_class *array_class;
 	char *array_class_name;
 
-	class_name = CLASS_CB(class)->name;
-	array_class_name = class_name_to_array_name(class_name);
-
-	array_class = findArrayClassFromClass(array_class_name, class);
-
+	/* XXX: This is not entirely right. We need to make sure that we're
+	 * using the same class loader as the original class. We don't support
+	 * multiple (different) class loaders yet. */
+	array_class_name = class_name_to_array_name(class->name);
+	array_class = classloader_load(array_class_name);
 	free(array_class_name);
 
 	return array_class;
 }
 
-static struct fieldblock *lookup_field(struct parse_context *ctx)
+static struct vm_field *lookup_field(struct parse_context *ctx)
 {
 	unsigned short index;
 
 	index = bytecode_read_u16(ctx->buffer);
 
-	return resolveField(ctx->cu->method->class, index);
+	return vm_class_resolve_field_recursive(ctx->cu->method->class, index);
 }
 
 int convert_getstatic(struct parse_context *ctx)
 {
 	struct expression *value;
-	struct fieldblock *fb;
+	struct vm_field *fb;
 
 	fb = lookup_field(ctx);
 	if (!fb)
 		return -EINVAL;
 
-	value = class_field_expr(field_type(fb), fb);
+	value = class_field_expr(vm_field_type(fb), fb);
 	if (!value)
 		return -ENOMEM;
 
@@ -81,7 +82,7 @@ int convert_getstatic(struct parse_context *ctx)
 
 int convert_putstatic(struct parse_context *ctx)
 {
-	struct fieldblock *fb;
+	struct vm_field *fb;
 	struct statement *store_stmt;
 	struct expression *dest, *src;
 
@@ -90,7 +91,7 @@ int convert_putstatic(struct parse_context *ctx)
 		return -EINVAL;
 
 	src = stack_pop(ctx->bb->mimic_stack);
-	dest = class_field_expr(field_type(fb), fb);
+	dest = class_field_expr(vm_field_type(fb), fb);
 	if (!dest)
 		return -ENOMEM;
 	
@@ -110,7 +111,7 @@ int convert_getfield(struct parse_context *ctx)
 {
 	struct expression *objectref;
 	struct expression *value;
-	struct fieldblock *fb;
+	struct vm_field *fb;
 
 	fb = lookup_field(ctx);
 	if (!fb)
@@ -118,7 +119,7 @@ int convert_getfield(struct parse_context *ctx)
 
 	objectref = stack_pop(ctx->bb->mimic_stack);
 
-	value = instance_field_expr(field_type(fb), fb, objectref);
+	value = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!value)
 		return -ENOMEM;
 
@@ -131,7 +132,7 @@ int convert_putfield(struct parse_context *ctx)
 	struct expression *dest, *src;
 	struct statement *store_stmt;
 	struct expression *objectref;
-	struct fieldblock *fb;
+	struct vm_field *fb;
 
 	fb = lookup_field(ctx);
 	if (!fb)
@@ -139,7 +140,7 @@ int convert_putfield(struct parse_context *ctx)
 
 	src = stack_pop(ctx->bb->mimic_stack);
 	objectref = stack_pop(ctx->bb->mimic_stack);
-	dest = instance_field_expr(field_type(fb), fb, objectref);
+	dest = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!dest)
 		return -ENOMEM;
 	
@@ -344,10 +345,10 @@ int convert_new(struct parse_context *ctx)
 {
 	struct expression *expr;
 	unsigned long type_idx;
-	struct object *class;
+	struct vm_class *class;
 
 	type_idx = bytecode_read_u16(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
 		return -EINVAL;
 
@@ -387,24 +388,24 @@ int convert_anewarray(struct parse_context *ctx)
 	struct expression *size_check;
 	struct expression *size,*arrayref;
 	unsigned long type_idx;
-	struct object *class, *arrayclass;
+	struct vm_class *class, *array_class;
 
 	size = stack_pop(ctx->bb->mimic_stack);
 	type_idx = bytecode_read_u16(ctx->buffer);
 
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
 		return -EINVAL;
 
-	arrayclass = class_to_array_class(class);
-	if (!arrayclass)
+	array_class = class_to_array_class(class);
+	if (!array_class)
 		return -EINVAL;
 
 	size_check = array_size_check_expr(size);
 	if (!size_check)
 		return -ENOMEM;
 
-	arrayref = anewarray_expr(arrayclass, size_check);
+	arrayref = anewarray_expr(array_class, size_check);
 	if (!arrayref)
 		return -ENOMEM;
 
@@ -420,12 +421,11 @@ int convert_multianewarray(struct parse_context *ctx)
 	struct expression *args_list;
 	unsigned long type_idx;
 	unsigned char dimension;
-	struct object *class;
+	struct vm_class *class;
 
 	type_idx = bytecode_read_u16(ctx->buffer);
 	dimension = bytecode_read_u8(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
-
+	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
 		return -ENOMEM;
 
@@ -464,13 +464,16 @@ int convert_arraylength(struct parse_context *ctx)
 int convert_instanceof(struct parse_context *ctx)
 {
 	struct expression *objectref, *expr;
-	struct object *class;
+	struct vm_object *class;
 	unsigned long type_idx;
+
+	NOT_IMPLEMENTED;
 
 	objectref = stack_pop(ctx->bb->mimic_stack);
 
 	type_idx = bytecode_read_u16(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	//class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = NULL;
 	if (!class)
 		return -EINVAL;
 
@@ -486,14 +489,14 @@ int convert_instanceof(struct parse_context *ctx)
 int convert_checkcast(struct parse_context *ctx)
 {
 	struct expression *object_ref;
-	struct object *class;
+	struct vm_class *class;
 	struct statement *checkcast_stmt;
 	unsigned long type_idx;
 
 	object_ref = stack_pop(ctx->bb->mimic_stack);
 
 	type_idx = bytecode_read_u16(ctx->buffer);
-	class = resolveClass(ctx->cu->method->class, type_idx, FALSE);
+	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
 		return -ENOMEM;
 

@@ -35,15 +35,15 @@ struct stack_trace_elem {
 void init_stack_trace_printing(void);
 int init_stack_trace_elem(struct stack_trace_elem *elem);
 int get_prev_stack_trace_elem(struct stack_trace_elem *elem);
-int skip_frames_from_class(struct stack_trace_elem *elem, struct object *class);
+int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class);
 int get_stack_trace_depth(struct stack_trace_elem *elem);
-struct object *get_stack_trace(struct stack_trace_elem *);
-struct object *get_stack_trace_from_ctx(void *ctx);
-struct object *convert_stack_trace(struct object *vmthrowable);
-struct object *new_stack_trace_element(struct methodblock *, unsigned long);
-struct object * __vm_native vm_throwable_fill_in_stack_trace(struct object *);
-struct object * __vm_native vm_throwable_get_stack_trace(struct object *, struct object *);
-void set_throwable_vmstate(struct object *throwable, struct object *vmstate);
+struct vm_object *get_stack_trace(struct stack_trace_elem *);
+struct vm_object *get_stack_trace_from_ctx(void *ctx);
+struct vm_object *convert_stack_trace(struct vm_object *vmthrowable);
+struct vm_object *new_stack_trace_element(struct vm_method *, unsigned long);
+struct vm_object * __vm_native vm_throwable_fill_in_stack_trace(struct vm_object *);
+struct vm_object * __vm_native vm_throwable_get_stack_trace(struct vm_object *, struct vm_object *);
+void set_throwable_vmstate(struct vm_object *throwable, struct vm_object *vmstate);
 
 bool called_from_jit_trampoline(struct native_stack_frame *frame);
 

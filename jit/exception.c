@@ -24,22 +24,28 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <cafebabe/code_attribute.h>
+
+#include <jit/exception.h>
 #include <jit/compilation-unit.h>
 #include <jit/bc-offset-mapping.h>
 #include <jit/basic-block.h>
 #include <jit/exception.h>
 #include <jit/compiler.h>
 
-#include <vm/guard-page.h>
 #include <vm/buffer.h>
 #include <vm/class.h>
 #include <vm/die.h>
+#include <vm/guard-page.h>
+#include <vm/method.h>
+#include <vm/object.h>
+#include <vm/thread.h>
 
 #include <arch/stack-frame.h>
 #include <arch/instruction.h>
 #include <errno.h>
 
-__thread struct object *exception_holder = NULL;
+__thread struct vm_object *exception_holder = NULL;
 __thread void *exception_guard = NULL;
 __thread void *trampoline_exception_guard = NULL;
 
@@ -75,7 +81,7 @@ void thread_init_exceptions(void)
  *
  * @exception: exception object to be thrown.
  */
-void signal_exception(struct object *exception)
+void signal_exception(struct vm_object *exception)
 {
 	if (exception_holder)
 		return;
@@ -90,7 +96,7 @@ void signal_exception(struct object *exception)
 
 void signal_new_exception(char *class_name, char *msg)
 {
-	struct object *e;
+	struct vm_object *e;
 
 	e = new_exception(class_name, msg);
 	signal_exception(e);
@@ -103,15 +109,15 @@ void clear_exception(void)
 	exception_holder = NULL;
 }
 
-struct exception_table_entry *
-lookup_eh_entry(struct methodblock *method, unsigned long target)
+struct cafebabe_code_attribute_exception *
+lookup_eh_entry(struct vm_method *method, unsigned long target)
 {
 	int i;
 
-	for (i = 0; i < method->exception_table_size; i++) {
-		struct exception_table_entry *eh;
+	for (i = 0; i < method->code_attribute.exception_table_length; i++) {
+		struct cafebabe_code_attribute_exception *eh
+			= &method->code_attribute.exception_table[i];
 
-		eh = &method->exception_table[i];
 		if (eh->handler_pc == target)
 			return eh;
 	}
@@ -119,8 +125,8 @@ lookup_eh_entry(struct methodblock *method, unsigned long target)
 	return NULL;
 }
 
-static unsigned char *
-eh_native_ptr(struct compilation_unit *cu, struct exception_table_entry *eh)
+static unsigned char *eh_native_ptr(struct compilation_unit *cu,
+	struct cafebabe_code_attribute_exception *eh)
 {
 	struct basic_block *bb;
 
@@ -134,32 +140,32 @@ eh_native_ptr(struct compilation_unit *cu, struct exception_table_entry *eh)
  * find_handler - return native pointer to exception handler for given
  *                @exception_class and @bc_offset of source.
  */
-static unsigned char *
-find_handler(struct compilation_unit *cu, struct object *exception_class,
-	     unsigned long bc_offset)
+static unsigned char *find_handler(struct compilation_unit *cu,
+	struct vm_class *exception_class, unsigned long bc_offset)
 {
-	struct exception_table_entry *eh;
-	struct methodblock *mb;
+	struct cafebabe_code_attribute_exception *eh;
+	struct vm_method *method;
 	int size;
 	int i;
 
-	mb = cu->method;
-	size = mb->exception_table_size;
+	method = cu->method;
+	size = method->code_attribute.exception_table_length;
 
 	for (i = 0; i < size; i++) {
-		struct object *catch_class;
+		struct vm_class *catch_class;
 
-		eh = &mb->exception_table[i];
-
+		eh = &method->code_attribute.exception_table[i];
 		if (!exception_covers(eh, bc_offset))
 			continue;
 
+		/* This matches to everything. */
 		if (eh->catch_type == 0)
-			break; /* This matches to everything. */
+			break;
 
-		catch_class = resolveClass(mb->class, eh->catch_type, false);
+		catch_class = vm_class_resolve_class(method->class,
+			eh->catch_type);
 
-		if (isInstanceOf(catch_class, exception_class))
+		if (vm_class_is_assignable_from(exception_class, catch_class))
 			break;
 	}
 
@@ -201,7 +207,7 @@ unsigned char *
 throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
 		     unsigned char *native_ptr)
 {
-	struct object *exception;
+	struct vm_object *exception;
 	unsigned long bc_offset;
 	unsigned char *eh_ptr;
 

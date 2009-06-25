@@ -4,7 +4,6 @@ JAMVM_INSTALL_DIR	:= /usr/local
 CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
-BOOTCLASSPATH	= lib/classes.zip:$(GLIBJ)
 
 BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/)
 ARCH		:= $(BUILD_ARCH)
@@ -92,52 +91,47 @@ VM_OBJS = \
 	vm/buffer.o		\
 	vm/bytecode.o		\
 	vm/bytecodes.o		\
+	vm/class.o		\
+	vm/classloader.o	\
 	vm/debug-dump.o		\
 	vm/die.o		\
+	vm/field.o		\
+	vm/guard-page.o		\
+	vm/jato.o		\
+	vm/list.o		\
+	vm/method.o		\
 	vm/natives.o		\
+	vm/object.o		\
+	vm/radix-tree.o		\
 	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack.o		\
+	vm/stack-trace.o	\
 	vm/string.o		\
 	vm/types.o		\
-	vm/zalloc.o		\
-	vm/class.o		\
-	vm/list.o 		\
-	vm/radix-tree.o		\
-	vm/guard-page.o		\
-	vm/stack-trace.o
+	vm/utf8.o		\
+	vm/zalloc.o
 
-JAMVM_OBJS = \
-	vm/jato.o		\
-	jamvm/access.o		\
-	jamvm/alloc.o		\
-	jamvm/cast.o		\
-	jamvm/class.o		\
-	jamvm/direct.o		\
-	jamvm/dll.o		\
-	jamvm/dll_ffi.o		\
-	jamvm/excep.o		\
-	jamvm/execute.o		\
-	jamvm/frame.o		\
-	jamvm/hash.o		\
-	jamvm/hooks.o		\
-	jamvm/init.o		\
-	jamvm/interp.o		\
-	jamvm/jni.o		\
-	jamvm/lock.o		\
-	jamvm/natives.o		\
-	jamvm/properties.o	\
-	jamvm/reflect.o		\
-	jamvm/resolve.o		\
-	jamvm/string.o		\
-	jamvm/thread.o		\
-	jamvm/utf8.o		\
-	jamvm/zip.o
+JAMVM_OBJS =
+
+CAFEBABE_OBJS := \
+	attribute_array.o		\
+	attribute_info.o		\
+	class.o				\
+	code_attribute.o		\
+	constant_value_attribute.o	\
+	constant_pool.o			\
+	error.o				\
+	field_info.o			\
+	method_info.o			\
+	stream.o
+
+CAFEBABE_OBJS := $(addprefix cafebabe/src/cafebabe/,$(CAFEBABE_OBJS))
 
 LIBHARNESS_OBJS = \
 	test/libharness/libharness.o
 
-JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS)
+JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(CAFEBABE_OBJS)
 
 OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
@@ -148,19 +142,22 @@ JAVAC		:= ecj
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99 -D_GNU_SOURCE
 
+# XXX: Temporary hack -Vegard
+DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
+
 WARNINGS	= -Wsign-compare -Wundef
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
 OPTIMIZATIONS	+= -Os
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijamvm -Ijit/glib -include $(ARCH_CONFIG)
+INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -Icafebabe/include -include $(ARCH_CONFIG)
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
 DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"
 DEFAULT_CFLAGS	+= $(DEFINES)
 
-DEFAULT_LIBS	= -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty $(ARCH_LIBS)
+DEFAULT_LIBS	= -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty $(ARCH_LIBS)
 
 JAMVM_ARCH_H = include/vm/arch.h
 
@@ -207,11 +204,13 @@ test: $(JAMVM_ARCH_H) monoburg
 
 %.class: %.java
 	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) -cp $(BOOTCLASSPATH):regression -d regression $<
+	$(Q) $(JAVAC) -cp $(GLIBJ):regression -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
 	regression/jvm/TestCase.class \
+	regression/jvm/ArrayTest.class \
+	regression/jvm/ObjectArrayTest.class \
 	regression/jvm/ExitStatusIsOneTest.class \
 	regression/jvm/ExitStatusIsZeroTest.class \
 	regression/jvm/LoadConstantsTest.class \
@@ -224,6 +223,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ConversionTest.class \
 	regression/jvm/PutstaticTest.class \
 	regression/jvm/PutfieldTest.class \
+	regression/jvm/StringTest.class \
 	regression/jvm/TrampolineBackpatchingTest.class \
 	regression/jvm/RegisterAllocatorTortureTest.class \
 	regression/jvm/ExceptionsTest.class \
