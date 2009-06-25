@@ -86,7 +86,6 @@ JIT_OBJS = \
 	jit/perf-map.o
 
 VM_OBJS = \
-	vm/jato-cafebabe.o	\
 	vm/bitset.o		\
 	vm/buffer.o		\
 	vm/bytecode.o		\
@@ -97,6 +96,7 @@ VM_OBJS = \
 	vm/die.o		\
 	vm/field.o		\
 	vm/guard-page.o		\
+	vm/jato.o		\
 	vm/list.o		\
 	vm/method.o		\
 	vm/natives.o		\
