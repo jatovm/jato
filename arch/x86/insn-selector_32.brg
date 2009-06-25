@@ -278,6 +278,13 @@ reg:	OP_MUL(reg, EXPR_LOCAL) 1
 	__binop_reg_local(state, s, tree, INSN_MUL_MEMBASE_EAX, eax, 0);
 }
 
+reg:	OP_MUL(reg, reg) 1
+{
+	state->reg1 = get_var(s->b_parent);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->reg1));
+}
+
 reg: 	OP_MUL_64(reg, reg) 1
 {
 	struct var_info *eax, *edx, *tmp1;
