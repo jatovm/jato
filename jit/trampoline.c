@@ -61,7 +61,7 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 		/* TODO: signal OutOfMemoryError */
 		die("%s: out of memory\n", __func__);
 
-	str_printf(msg, "%s.%s%s", CLASS_CB(method->class)->name, method->name,
+	str_printf(msg, "%s.%s%s", method->class->name, method->name,
 		   method->type);
 
 	if (strcmp(class_name, "VMThrowable") == 0)
