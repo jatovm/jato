@@ -47,6 +47,7 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_NO_ARGS:
 	case EXPR_NEW:
 	case EXPR_EXCEPTION_REF:
+	case EXPR_MIMIC_STACK_SLOT:
 		return 0;
 	default:
 		assert(!"Invalid expression type");
@@ -132,6 +133,17 @@ struct expression *temporary_expr(enum vm_type vm_type, struct var_info *tmp_hig
 	if (expr) {
 		expr->tmp_high = tmp_high;
 		expr->tmp_low = tmp_low;
+	}
+
+	return expr;
+}
+
+struct expression *mimic_stack_expr(enum vm_type vm_type, int entry, int slot_ndx)
+{
+	struct expression *expr = alloc_expression(EXPR_MIMIC_STACK_SLOT, vm_type);
+	if (expr) {
+		expr->entry = entry;
+		expr->slot_ndx = slot_ndx;
 	}
 
 	return expr;

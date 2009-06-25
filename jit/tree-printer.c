@@ -87,7 +87,7 @@ static int simple_expr(struct expression *expr)
 
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
 	    || type == EXPR_TEMPORARY || type == EXPR_CLASS_FIELD
-	    || type == EXPR_NO_ARGS || type == EXPR_EXCEPTION_REF;
+	    || type == EXPR_NO_ARGS || type == EXPR_EXCEPTION_REF || type == EXPR_MIMIC_STACK_SLOT;
 }
 
 static int __tree_print(int, struct tree_node *, struct string *);
@@ -356,6 +356,12 @@ static int print_temporary_expr(int lvl, struct string *str,
 {
 	return str_append(str, "[temporary %s 0x%lx (high), 0x%lx (low)]", type_names[expr->vm_type],
 			  expr->tmp_high, expr->tmp_low);
+}
+
+static int print_mimic_stack_slot_expr(int lvl, struct string *str,
+					    struct expression *expr)
+{
+	return str_append(str, "[mimic stack slot %d at %s]", expr->slot_ndx, expr->entry ? "entry" : "exit");
 }
 
 static int print_array_deref_expr(int lvl, struct string *str,
@@ -810,7 +816,8 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_EXCEPTION_REF] = print_exception_ref_expr,
 	[EXPR_NULL_CHECK] = print_null_check_expr,
 	[EXPR_ARRAY_SIZE_CHECK] = print_array_size_check_expr,
-	[EXPR_MULTIARRAY_SIZE_CHECK] = print_multiarray_size_check_expr
+	[EXPR_MULTIARRAY_SIZE_CHECK] = print_multiarray_size_check_expr,
+	[EXPR_MIMIC_STACK_SLOT] = print_mimic_stack_slot_expr,
 
 };
 

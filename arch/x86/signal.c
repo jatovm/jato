@@ -30,18 +30,15 @@
 #include <arch/stack-frame.h>
 #include <arch/signal.h>
 
-bool signal_from_jit_method(void *ctx)
+#include <vm/signal.h>
+
+bool signal_from_native(void *ctx)
 {
 	ucontext_t *uc;
-	unsigned long ip;
 
 	uc = ctx;
-	ip = uc->uc_mcontext.gregs[REG_IP];
 
-	if (is_native(ip))
-		return false;
-
-	return true;
+	return is_native(uc->uc_mcontext.gregs[REG_IP]);
 }
 
 struct compilation_unit *get_signal_source_cu(void *ctx)
@@ -50,4 +47,30 @@ struct compilation_unit *get_signal_source_cu(void *ctx)
 
 	uc = ctx;
 	return get_cu_from_native_addr(uc->uc_mcontext.gregs[REG_IP]);
+}
+
+/**
+ * install_signal_bh - installs signal's bottom half function by
+ *     modifying user context so that control will be returned to @bh
+ *     when signal handler returns. When @bh function returns, the
+ *     control should be returned to the source of the signal.
+ *
+ * @ctx: pointer to struct ucontext_t
+ * @bh: bottom half function to install
+ */
+int install_signal_bh(void *ctx, signal_bh_fn bh)
+{
+	unsigned long *stack;
+	ucontext_t *uc;
+
+	uc = ctx;
+
+	/* push return address on stack */
+	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP] - 1;
+	*stack = uc->uc_mcontext.gregs[REG_IP];
+	uc->uc_mcontext.gregs[REG_SP] -= sizeof(unsigned long);
+
+	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)bh;
+
+	return 0;
 }

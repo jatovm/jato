@@ -25,13 +25,16 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <jit/compilation-unit.h>
+#include <jit/compiler.h>
 #include <jit/expression.h>
+
 #include <vm/method.h>
 #include <vm/vm.h>
+
 #include <arch/stack-frame.h>
-#include <stdlib.h>
 
 /*
  * The three callee-saved registers are unconditionally stored on the stack
@@ -106,4 +109,20 @@ unsigned long cu_frame_locals_offset(struct compilation_unit *cu)
 {
 	unsigned long frame_size = frame_locals_size(cu->stack_frame);
 	return frame_size * sizeof(unsigned long);
+}
+
+/*
+ * Checks whether given native function was called from jit trampoline
+ * code. It checks whether return address points after a relative call
+ * to jit_magic_trampoline, which is typical for trampolines.
+ */
+bool called_from_jit_trampoline(struct native_stack_frame *frame)
+{
+	void **call_rel_target_p;
+	void *call_target;
+
+	call_rel_target_p = (void **)(frame->return_address - sizeof(void*));
+	call_target = *call_rel_target_p + frame->return_address;
+
+	return call_target == &jit_magic_trampoline;
 }

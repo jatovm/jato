@@ -19,6 +19,8 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,18 +46,19 @@
 #include "vm/natives.h"
 #include "vm/object.h"
 #include "vm/signal.h"
+#include "vm/stack-trace.h"
 #include "vm/system.h"
 #include "vm/vm.h"
 
 char *exe_name;
 
-static void native_vmruntime_exit(int status)
+static void __vm_native native_vmruntime_exit(int status)
 {
 	/* XXX: exit gracefully */
 	exit(status);
 }
 
-static void native_vmruntime_println(struct vm_object *message)
+static void __vm_native native_vmruntime_println(struct vm_object *message)
 {
 	int32_t offset = *(int32_t *)
 		&message->fields[vm_java_lang_String_offset->offset];
@@ -78,7 +81,7 @@ static void native_vmruntime_println(struct vm_object *message)
 	printf("\n");
 }
 
-static void native_vmsystem_arraycopy(struct vm_object *src, int src_start,
+static void __vm_native native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	struct vm_object *dest, int dest_start, int len)
 {
 	NOT_IMPLEMENTED;
@@ -89,7 +92,7 @@ static void native_vmsystem_arraycopy(struct vm_object *src, int src_start,
  * return java.lang.VMState instance, or null in which case no stack trace will
  * be printed by printStackTrace() method.
  */
-static struct vm_object *
+static struct vm_object * __vm_native
 native_vmthrowable_fill_in_stack_trace(struct vm_object *message)
 {
 	NOT_IMPLEMENTED;
@@ -272,6 +275,8 @@ main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	init_stack_trace_printing();
+
 	struct vm_class *vmc = classloader_load_and_init(classname);
 	if (!vmc) {
 		fprintf(stderr, "error: %s: could not load\n", classname);
@@ -290,6 +295,8 @@ main(int argc, char *argv[])
 			classname);
 		goto out;
 	}
+
+	bottom_stack_frame = __builtin_frame_address(0);
 
 	void (*main_method_trampoline)(void)
 		= vm_method_trampoline_ptr(vmm);

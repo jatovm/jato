@@ -38,6 +38,7 @@ endif
 export ARCH_CFLAGS
 
 ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
+LINKER_SCRIPT=arch/$(ARCH)/jato$(ARCH_POSTFIX).ld
 
 # Make the build silent by default
 V =
@@ -105,6 +106,7 @@ VM_OBJS = \
 	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack.o		\
+	vm/stack-trace.o	\
 	vm/string.o		\
 	vm/types.o		\
 	vm/utf8.o		\
@@ -190,7 +192,7 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: FORCE
 
 $(PROGRAM): lib monoburg $(JAMVM_ARCH_H) compile
 	$(E) "  CC      " $@
-	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+	$(Q) $(CC) -T $(LINKER_SCRIPT) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
 compile: $(OBJS)
 
@@ -226,7 +228,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/RegisterAllocatorTortureTest.class \
 	regression/jvm/ExceptionsTest.class \
 	regression/jvm/FibonacciTest.class \
-	regression/jvm/ObjectStackTest.class
+	regression/jvm/ObjectStackTest.class \
+	regression/jvm/PrintTest.class
 
 lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)

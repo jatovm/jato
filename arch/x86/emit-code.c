@@ -511,6 +511,13 @@ static void emit_mov_reg_reg(struct buffer *buf, struct operand *src,
 	__emit_mov_reg_reg(buf, mach_reg(&src->reg), mach_reg(&dest->reg));
 }
 
+static void emit_movsx_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	emit(buf, 0x0f);
+	__emit_reg_reg(buf, 0xbe, mach_reg(&dest->reg), mach_reg(&src->reg));
+}
+
 static void
 emit_mov_memlocal_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
@@ -762,6 +769,12 @@ static void emit_add_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x03, src, dest);
 }
 
+static void emit_and_reg_reg(struct buffer *buf,
+			     struct operand *src, struct operand *dest)
+{
+	emit_reg_reg(buf, 0x23, dest, src);
+}
+
 static void emit_and_membase_reg(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
@@ -1006,6 +1019,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, emit_add_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_AND_REG_REG, emit_and_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, TWO_OPERANDS),
@@ -1023,6 +1037,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOVSX_REG_REG, emit_movsx_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_MEMBASE_EAX, emit_mul_membase_eax, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg, TWO_OPERANDS),

@@ -196,6 +196,12 @@ static int print_and_membase_reg(struct string *str, struct insn *insn)
 	return print_membase_reg(str, insn);
 }
 
+static int print_and_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 static int print_call_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -346,6 +352,13 @@ static int print_mov_reg_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
+}
+
+static int print_movsx_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	print_reg_reg(str, insn);
+	return str_append(str, "(8bit->32bit)");
 }
 
 static int print_mul_membase_eax(struct string *str, struct insn *insn)
@@ -501,6 +514,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_ADD_MEMBASE_REG] = print_add_membase_reg,
 	[INSN_ADD_REG_REG] = print_add_reg_reg,
 	[INSN_AND_MEMBASE_REG] = print_and_membase_reg,
+	[INSN_AND_REG_REG] = print_and_reg_reg,
 	[INSN_CALL_REG] = print_call_reg,
 	[INSN_CALL_REL] = print_call_rel,
 	[INSN_CLTD_REG_REG] = print_cltd_reg_reg,	/* CDQ in Intel manuals*/
@@ -526,6 +540,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_REG_MEMINDEX] = print_mov_reg_memindex,
 	[INSN_MOV_REG_MEMLOCAL] = print_mov_reg_memlocal,
 	[INSN_MOV_REG_REG] = print_mov_reg_reg,
+	[INSN_MOVSX_REG_REG] = print_movsx_reg_reg,
 	[INSN_MUL_MEMBASE_EAX] = print_mul_membase_eax,
 	[INSN_MUL_REG_EAX] = print_mul_reg_eax,
 	[INSN_MUL_REG_REG] = print_mul_reg_reg,

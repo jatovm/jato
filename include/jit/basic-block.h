@@ -24,6 +24,10 @@ struct basic_block {
 	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
 	unsigned long nr_successors;
 	struct basic_block **successors;
+	unsigned long nr_predecessors;
+	struct basic_block **predecessors;
+	unsigned long nr_mimic_stack_expr;
+	struct expression **mimic_stack_expr;
 	unsigned long mach_offset;
 
 	/* The mimic stack is used to simulate JVM operand stack at
@@ -67,6 +71,7 @@ struct basic_block *bb_split(struct basic_block *, unsigned long);
 void bb_add_stmt(struct basic_block *, struct statement *);
 void bb_add_insn(struct basic_block *, struct insn *);
 int bb_add_successor(struct basic_block *, struct basic_block *);
+int bb_add_mimic_stack_expr(struct basic_block *, struct expression *);
 struct statement *bb_remove_last_stmt(struct basic_block *bb);
 unsigned char *bb_native_ptr(struct basic_block *bb);
 

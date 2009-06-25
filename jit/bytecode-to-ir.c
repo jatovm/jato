@@ -103,28 +103,24 @@ void convert_statement(struct parse_context *ctx, struct statement *stmt)
 
 static int spill_expression(struct basic_block *bb,
 			    struct stack *reload_stack,
-			    struct expression *expr)
+			    struct expression *expr, int slot_ndx)
 {
-	struct compilation_unit *cu = bb->b_parent;
-	struct var_info *tmp_low, *tmp_high;
 	struct statement *store, *branch;
-	struct expression *tmp;
+	struct expression *exit_tmp, *entry_tmp;
 
-	tmp_low = get_var(cu);
-	if (expr->vm_type == J_LONG)
-		tmp_high = get_var(cu);
-	else
-		tmp_high = NULL;
+	exit_tmp = mimic_stack_expr(expr->vm_type, 0, slot_ndx);
+	entry_tmp = mimic_stack_expr(expr->vm_type, 1, slot_ndx);
 
-	tmp = temporary_expr(expr->vm_type, tmp_high, tmp_low);
-	if (!tmp)
+	if (!exit_tmp || !entry_tmp)
 		return -ENOMEM;
+
+	bb_add_mimic_stack_expr(bb, exit_tmp);
 
 	store = alloc_statement(STMT_STORE);
 	if (!store)
 		return -ENOMEM;
 
-	store->store_dest = &tmp->node;
+	store->store_dest = &exit_tmp->node;
 	store->store_src = &expr->node;
 
 	if (bb->has_branch)
@@ -144,7 +140,7 @@ static int spill_expression(struct basic_block *bb,
 	 * And add a reload expression that is put on the mimic stack of
 	 * successor basic blocks.
 	 */
-	stack_push(reload_stack, tmp);
+	stack_push(reload_stack, expr_get(entry_tmp));
 
 	return 0;
 }
@@ -152,6 +148,7 @@ static int spill_expression(struct basic_block *bb,
 static struct stack *spill_mimic_stack(struct basic_block *bb)
 {
 	struct stack *reload_stack;
+	int slot_ndx = 0;
 
 	reload_stack = alloc_stack();
 	if (!reload_stack)
@@ -167,9 +164,11 @@ static struct stack *spill_mimic_stack(struct basic_block *bb)
 
 		expr = stack_pop(bb->mimic_stack);
 
-		err = spill_expression(bb, reload_stack, expr);
+		err = spill_expression(bb, reload_stack, expr, slot_ndx);
 		if (err)
 			goto error_oom;
+
+		slot_ndx++;
 	}
 	return reload_stack;
 error_oom:
@@ -260,6 +259,8 @@ static int convert_bb_to_ir(struct basic_block *bb)
 
 			expr_get(expr);
 
+			bb_add_mimic_stack_expr(s, expr);
+
 			stack_push(s->mimic_stack, expr);
 		}
 		expr_put(expr);
@@ -275,6 +276,123 @@ static int convert_bb_to_ir(struct basic_block *bb)
 	}
 out:
 	return err;
+}
+
+static void
+assign_temporary(struct basic_block *bb, int entry, int slot_ndx,
+		 struct var_info *tmp_high, struct var_info *tmp_low)
+{
+	struct expression *expr;
+	unsigned int i;
+
+	for (i = 0; i < bb->nr_mimic_stack_expr; i++) {
+		expr = bb->mimic_stack_expr[i];
+
+		if (expr_type(expr) != EXPR_MIMIC_STACK_SLOT)
+			continue;
+
+		if (expr->entry != entry ||
+				expr->slot_ndx != slot_ndx)
+			continue;
+
+		expr_set_type(expr, EXPR_TEMPORARY);
+		expr->tmp_high = tmp_high;
+		expr->tmp_low = tmp_low;
+	}
+}
+
+static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
+{
+	struct var_info *tmp_high, *tmp_low;
+	struct basic_block **neighbors;
+	struct expression *expr;
+	int nr_neighbors;
+	unsigned int i;
+	int slot_ndx;
+
+	if (entry) {
+		neighbors    = bb->predecessors;
+		nr_neighbors = bb->nr_predecessors;
+	} else {
+		neighbors    = bb->successors;
+		nr_neighbors = bb->nr_successors;
+	}
+
+	for (i = 0; i < bb->nr_mimic_stack_expr; i++) {
+		int j;
+
+		expr = bb->mimic_stack_expr[i];
+
+		/* Skip expressions that already been transformed */
+		if (expr_type(expr) != EXPR_MIMIC_STACK_SLOT)
+			continue;
+
+		/* Skip slots related to the exit when treating entrance
+		 * and vice versa */
+		if (expr->entry != entry)
+			continue;
+
+		tmp_low = get_var(bb->b_parent);
+		if (expr->vm_type == J_LONG)
+			tmp_high = get_var(bb->b_parent);
+		else
+			tmp_high = NULL;
+
+		/* Save the slot number */
+		slot_ndx = expr->slot_ndx;
+
+		/* Assign this temporary to same mimic stack expressions in this block */
+		assign_temporary(bb, entry, expr->slot_ndx, tmp_high, tmp_low);
+
+		for (j = 0; j < nr_neighbors; j++)
+			assign_temporary(neighbors[j], !entry, slot_ndx, tmp_high, tmp_low);
+	}
+}
+
+static bool
+need_to_resolve(int nr_neighbors, struct basic_block **neighbors, int entry)
+{
+	/* No successors? We have nothing to do */
+	if (!nr_neighbors)
+		return false;
+
+	/* Are we a slave? */
+	if (nr_neighbors == 1) {
+		struct basic_block *n = neighbors[0];
+		int nr_connect;
+
+		if (entry)
+			nr_connect = n->nr_successors;
+		else
+			nr_connect = n->nr_predecessors;
+
+		if (nr_connect == 1) {
+			/* Slave-slave relationship, we can pick a temporary */
+			return true;
+		} else {
+			/* Slave-master, do nothing */
+			return false;
+		}
+	} else {
+		/* A master always picks his temporaries */
+		return true;
+	}
+}
+
+/**
+ * resolve_mimic_stack_slots - Transform the mimic stack slots expressions
+ * of the basic bloc into temporary expressions, based on
+ * master/slave properties depending on the number of successors and predecessors.
+ */
+static int resolve_mimic_stack_slots(struct basic_block *bb)
+{
+	if (need_to_resolve(bb->nr_successors, bb->successors, 0))
+		pick_and_propagate_temporaries(bb, false);
+
+	if (need_to_resolve(bb->nr_predecessors, bb->predecessors, 1))
+		pick_and_propagate_temporaries(bb, true);
+
+	return 0;
 }
 
 /**
@@ -306,5 +424,16 @@ int convert_to_ir(struct compilation_unit *cu)
 		if (err)
 			break;
 	}
+
+	/*
+	 * Connect mimic stacks between basic blocks by changing
+	 * each EXPR_MIMIC_STACK_SLOT into an EXPR_TEMPORARY
+	 */
+	for_each_basic_block(bb, &cu->bb_list) {
+		err = resolve_mimic_stack_slots(bb);
+		if (err)
+			break;
+	}
+
 	return err;
 }
