@@ -67,6 +67,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.ObjectStackTest 0
     run_java jvm.ExceptionsTest 0
     run_java jvm.FibonacciTest 0
+    run_java jvm.PrintTest 0
 else 
     for i in $CLASS_LIST; do
 	run_java $i 0
