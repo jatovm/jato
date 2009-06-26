@@ -273,7 +273,7 @@ struct vm_class *load_primitive_array_class(const char *class_name,
 	}
 
 	array_class->class = NULL;
-	array_class->state = VM_CLASS_LOADED;
+	array_class->state = VM_CLASS_LINKED;
 	array_class->name = strdup(class_name);
 	array_class->super = vm_java_lang_Object;
 	array_class->fields = NULL;
@@ -296,7 +296,7 @@ struct vm_class *load_class_array_class(const char *array_class_name,
 	}
 
 	array_class->class = NULL;
-	array_class->state = VM_CLASS_LOADED;
+	array_class->state = VM_CLASS_LINKED;
 	array_class->name = strdup(array_class_name);
 	array_class->super = vm_java_lang_Object;
 	array_class->fields = NULL;
