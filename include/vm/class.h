@@ -73,8 +73,6 @@ int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
 struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
 	uint16_t i);
 
-struct vm_object *new_exception(char *class_name, char *message);
-
 bool vm_class_is_assignable_from(struct vm_class *vmc, struct vm_class *from);
 
 #endif /* __CLASS_H */
