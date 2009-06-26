@@ -176,7 +176,7 @@ vm_object_alloc_string(const uint8_t bytes[], unsigned int length)
 
 typedef void (*exception_init_fn)(struct vm_object *, struct vm_object *);
 
-struct vm_object *new_exception(char *class_name, char *message)
+struct vm_object *new_exception(char *class_name, const char *message)
 {
 	struct vm_object *message_str;
 	exception_init_fn init;
