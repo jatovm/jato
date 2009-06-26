@@ -346,6 +346,21 @@ reg:	OP_REM(reg, EXPR_LOCAL) 1
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, remainder, result));
 }
 
+reg:	OP_REM(reg, reg) 1
+{
+	struct var_info *eax;
+	struct var_info *result;
+
+	eax = get_fixed_var(s->b_parent, REG_EAX);
+	result = get_fixed_var(s->b_parent, REG_EDX);
+
+	state->reg1 = result;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, result));
+	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
+}
+
 reg:	OP_REM_64(reg, reg) 1
 {
 	emulate_op_64(state, s, tree, emulate_lrem, J_LONG);
