@@ -50,6 +50,9 @@ void perf_map_open(void)
 
 void perf_map_append(const char *symbol, unsigned long addr, unsigned long size)
 {
+	if (perf_file == NULL)
+		return;
+
 	pthread_mutex_lock(&perf_mutex);
 	fprintf(perf_file, "%lx %lx %s\n", addr, size, symbol);
 	pthread_mutex_unlock(&perf_mutex);

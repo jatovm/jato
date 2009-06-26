@@ -50,6 +50,7 @@
 #include "vm/system.h"
 #include "vm/vm.h"
 
+static bool perf_enabled;
 char *exe_name;
 
 static void __vm_native native_vmruntime_exit(int status)
@@ -245,6 +246,8 @@ main(int argc, char *argv[])
 			opt_trace_bytecode_offset = true;
 		} else if (!strcmp(argv[i], "-Xtrace:trampoline")) {
 			opt_trace_magic_trampoline = true;
+		} else if (!strcmp(argv[i], "-Xperf")) {
+			perf_enabled = true;
 		} else {
 			if (argv[i][0] == '-')
 				usage(stderr, EXIT_FAILURE);
@@ -259,7 +262,8 @@ main(int argc, char *argv[])
 	if (!classname)
 		usage(stderr, EXIT_FAILURE);
 
-	perf_map_open();
+	if (perf_enabled)
+		perf_map_open();
 
 	setup_signal_handlers();
 	init_cu_mapping();
