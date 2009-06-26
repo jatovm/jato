@@ -134,6 +134,8 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	for (int i = 0; i < count; ++i)
 		elems[i] = NULL;
 
+	res->class = class;
+
 	return res;
 }
 
