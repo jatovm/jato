@@ -35,9 +35,46 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 
 	/* XXX: Use the right size... */
 	res = zalloc(sizeof(*res) + 8 * count);
-	if (res) {
-		res->array_length = count;
+	if (!res) {
+		NOT_IMPLEMENTED;
+		return NULL;
 	}
+
+	switch (type) {
+	case T_BOOLEAN:
+		res->class = classloader_load("[Z");
+		break;
+	case T_CHAR:
+		res->class = classloader_load("[C");
+		break;
+	case T_FLOAT:
+		res->class = classloader_load("[F");
+		break;
+	case T_DOUBLE:
+		res->class = classloader_load("[D");
+		break;
+	case T_BYTE:
+		res->class = classloader_load("[B");
+		break;
+	case T_SHORT:
+		res->class = classloader_load("[S");
+		break;
+	case T_INT:
+		res->class = classloader_load("[I");
+		break;
+	case T_LONG:
+		res->class = classloader_load("[J");
+		break;
+	default:
+		NOT_IMPLEMENTED;
+	}
+
+	if (!res->class) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	res->array_length = count;
 
 	if (pthread_mutex_init(&res->mutex, NULL))
 		NOT_IMPLEMENTED;
