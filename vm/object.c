@@ -112,6 +112,8 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 		}
 	}
 
+	res->class = class;
+
 	return res;
 }
 
