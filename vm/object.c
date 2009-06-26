@@ -213,6 +213,9 @@ void vm_object_check_array(struct vm_object *obj, unsigned int index)
 
 void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 {
+	NOT_IMPLEMENTED;
+
+#if 0
 	struct vm_class *cb;
 	struct string *str;
 	int err;
@@ -225,11 +228,8 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 		goto throw;
 	}
 
-	NOT_IMPLEMENTED;
-#if 0
 	if (obj == NULL || isInstanceOf(cb->element_class, obj->class))
 		return;
-#endif
 
 	str = alloc_str();
 	if (str == NULL) {
@@ -256,6 +256,7 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 		die("%s: out of memory", __func__);
 
 	die("%s: error %d", __func__, err);
+#endif
 }
 
 void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type)
