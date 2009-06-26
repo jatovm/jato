@@ -139,6 +139,7 @@ AS		:= as
 CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
+JAVAC_OPTS	:= -encoding utf-8
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99 -D_GNU_SOURCE
 
@@ -204,7 +205,7 @@ test: $(JAMVM_ARCH_H) monoburg
 
 %.class: %.java
 	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) -cp $(GLIBJ):regression -d regression $<
+	$(Q) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):regression -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
