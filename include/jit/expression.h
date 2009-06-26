@@ -230,7 +230,7 @@ struct expression {
 		/*  EXPR_INSTANCEOF is used to determine if object is of given type.  */
 		struct {
 			struct tree_node *instanceof_ref;
-			struct vm_object *instanceof_class;
+			struct vm_class *instanceof_class;
 		};
 
 		/* EXPR_NULL_CHECK is used to assure that NullPointerException
@@ -303,7 +303,7 @@ struct expression *newarray_expr(unsigned long, struct expression *);
 struct expression *anewarray_expr(struct vm_class *, struct expression *);
 struct expression *multianewarray_expr(struct vm_class *);
 struct expression *arraylength_expr(struct expression *);
-struct expression *instanceof_expr(struct expression *, struct vm_object *);
+struct expression *instanceof_expr(struct expression *, struct vm_class *);
 struct expression *exception_ref_expr(void);
 struct expression *null_check_expr(struct expression *);
 struct expression *array_size_check_expr(struct expression *);

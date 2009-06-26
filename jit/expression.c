@@ -314,7 +314,7 @@ struct expression *arraylength_expr(struct expression *arrayref)
 	return expr;
 }
 
-struct expression *instanceof_expr(struct expression *objectref, struct vm_object *class)
+struct expression *instanceof_expr(struct expression *objectref, struct vm_class *class)
 {
 	struct expression *expr = alloc_expression(EXPR_INSTANCEOF, J_REFERENCE);
 
