@@ -146,14 +146,12 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testArrayLength();
         testMultiANewArray();
         testIsInstanceOf();
-/*	FIXME:
         testIntArrayLoadAndStore();
         testCharArrayLoadAndStore();
         testByteArrayLoadAndStore();
         testShortArrayLoadAndStore();
         testObjectArrayLoadAndStore();
         testMultiDimensionalArrayLoadAndStore();
-*/
         testCheckCast();
 
         exit();

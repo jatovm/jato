@@ -192,7 +192,7 @@ void vm_object_check_array(struct vm_object *obj, unsigned int index)
 
 	cb = obj->class;
 
-	if (!vm_class_is_array_class(cb)) {
+	if (cb && !vm_class_is_array_class(cb)) {
 		signal_new_exception("java/lang/RuntimeException",
 				     "object is not an array");
 		goto throw;
@@ -219,7 +219,7 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 
 	cb = arrayref->class;
 
-	if (!IS_ARRAY(cb)) {
+	if (cb && !IS_ARRAY(cb)) {
 		signal_new_exception("java/lang/RuntimeException",
 				     "object is not an array");
 		goto throw;
