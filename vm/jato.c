@@ -195,6 +195,8 @@ static void usage(FILE *f, int retval)
 int
 main(int argc, char *argv[])
 {
+	int status = EXIT_FAILURE;
+
 	exe_name = argv[0];
 
 #ifndef NDEBUG
@@ -296,14 +298,14 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
+	status = EXIT_SUCCESS;
+
 	bottom_stack_frame = __builtin_frame_address(0);
 
 	void (*main_method_trampoline)(void)
 		= vm_method_trampoline_ptr(vmm);
 	main_method_trampoline();
 
-	return EXIT_SUCCESS;
-
 out:
-	return EXIT_FAILURE;
+	return status;
 }
