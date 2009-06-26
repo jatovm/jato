@@ -205,7 +205,7 @@ test: $(JAMVM_ARCH_H) monoburg
 
 %.class: %.java
 	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):regression -d regression $<
+	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $<
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
