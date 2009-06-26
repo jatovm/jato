@@ -12,6 +12,28 @@
 #include <vm/classloader.h>
 #include <vm/java_lang.h>
 
+bool opt_trace_classloader;
+static int trace_classloader_level = 0;
+
+static inline void trace_push(const char *class_name)
+{
+	assert(trace_classloader_level >= 0);
+
+	if (opt_trace_classloader) {
+		fprintf(stderr, "classloader: %*s%s\n",
+			trace_classloader_level, "", class_name);
+	}
+
+	++trace_classloader_level;
+}
+
+static inline void trace_pop()
+{
+	assert(trace_classloader_level >= 1);
+
+	--trace_classloader_level;
+}
+
 struct classpath {
 	struct list_head node;
 
@@ -407,14 +429,19 @@ struct vm_class *classloader_load(const char *class_name)
 	struct classloader_class *new_array;
 	unsigned long new_max_classes;
 
+	trace_push(class_name);
+
 	class = lookup_class(class_name);
-	if (class)
-		return class->class;
+	if (class) {
+		vmc = class->class;
+		goto out;
+	}
 
 	vmc = load_class(class_name);
 	if (!vmc) {
 		NOT_IMPLEMENTED;
-		return NULL;
+		vmc = NULL;
+		goto out;
 	}
 
 	if (nr_classes == max_classes) {	
@@ -423,7 +450,8 @@ struct vm_class *classloader_load(const char *class_name)
 			new_max_classes * sizeof(struct classloader_class));
 		if (!new_array) {
 			NOT_IMPLEMENTED;
-			return NULL;
+			vmc = NULL;
+			goto out;
 		}
 
 		max_classes = new_max_classes;
@@ -433,6 +461,8 @@ struct vm_class *classloader_load(const char *class_name)
 	class = &classes[nr_classes++];
 	class->class = vmc;
 
+out:
+	trace_pop();
 	return vmc;
 }
 

@@ -234,6 +234,8 @@ main(int argc, char *argv[])
 			opt_trace_machine_code = true;
 		} else if (!strcmp(argv[i], "-Xtrace:bytecode-offset")) {
 			opt_trace_bytecode_offset = true;
+		} else if (!strcmp(argv[i], "-Xtrace:classloader")) {
+			opt_trace_classloader = true;
 		} else if (!strcmp(argv[i], "-Xtrace:jit")) {
 			opt_trace_method = true;
 			opt_trace_cfg = true;
