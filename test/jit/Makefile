@@ -11,57 +11,58 @@ OBJS = \
 	../../cafebabe/src/cafebabe/field_info.o \
 	../../cafebabe/src/cafebabe/method_info.o \
 	../../cafebabe/src/cafebabe/stream.o \
-	../../vm/bitset.o \
-	../../vm/buffer.o \
-	../../vm/bytecode.o \
-	../../vm/bytecodes.o \
-	../../vm/die.o \
-	../../vm/list.o \
-	../../vm/stack.o \
-	../../vm/string.o \
-	../../vm/types.o \
-	../../vm/zalloc.o \
-	../../vm/radix-tree.o \
-	../../vm/guard-page.o \
 	../../jit/alloc.o \
+	../../jit/args.o \
 	../../jit/arithmetic-bc.o \
 	../../jit/basic-block.o \
+	../../jit/bc-offset-mapping.o \
 	../../jit/branch-bc.o \
 	../../jit/bytecode-to-ir.o \
 	../../jit/cfg-analyzer.o \
 	../../jit/compilation-unit.o \
+	../../jit/cu-mapping.o \
+	../../jit/exception-bc.o \
+	../../jit/exception.o \
 	../../jit/expression.o \
 	../../jit/interval.o \
 	../../jit/invoke-bc.o \
 	../../jit/linear-scan.o \
 	../../jit/liveness.o \
 	../../jit/load-store-bc.o \
-	../../jit/exception-bc.o \
+	../../jit/method.o \
+	../../jit/nop-bc.o \
 	../../jit/object-bc.o \
 	../../jit/ostack-bc.o \
+	../../jit/spill-reload.o \
 	../../jit/stack-slot.o \
 	../../jit/statement.o \
-	../../jit/spill-reload.o \
-	../../jit/typeconv-bc.o \
-	../../jit/tree-printer.o \
-	../../jit/args.o \
-	../../jit/exception.o \
-	../../jit/bc-offset-mapping.o \
-	../../jit/cu-mapping.o \
-	../../jit/nop-bc.o \
 	../../jit/tree-node.o \
-	../../jit/method.o \
-	../libharness/libharness.o \
+	../../jit/tree-printer.o \
+	../../jit/typeconv-bc.o \
+	../../lib/bitset.o \
+	../../lib/buffer.o \
+	../../lib/list.o \
+	../../lib/radix-tree.o \
+	../../lib/string.o \
+	../../vm/bytecode.o \
+	../../vm/bytecodes.o \
+	../../vm/die.o \
+	../../vm/guard-page.o \
+	../../vm/stack.o \
+	../../vm/types.o \
+	../../vm/zalloc.o \
+	../arch-mmix/instruction.o \
+	../arch-mmix/stack-frame.o \
+	../arch-mmix/use-def.o \
 	../jamvm/alloc-stub.o \
+	../jamvm/cast-stub.o \
 	../jamvm/resolve-stub.o \
 	../jamvm/thread-stub.o \
-	../jamvm/cast-stub.o \
+	../libharness/libharness.o \
 	../vm/class-stub.o \
 	../vm/classloader-stub.o \
 	../vm/object-stub.o \
-	../arch-mmix/instruction.o \
-	../arch-mmix/use-def.o \
-	../arch-mmix/stack-frame.o \
+	args-test-utils.o \
 	arithmetic-bc-test.o \
 	basic-block-test.o \
 	bc-test-utils.o \
@@ -71,16 +72,15 @@ OBJS = \
 	compilation-unit-test.o \
 	expression-test.o \
 	interval-test.o \
-	args-test-utils.o \
 	invoke-bc-test.o \
 	linear-scan-test.o \
-	liveness-test.o \
 	live-range-test.o \
+	liveness-test.o \
 	load-store-bc-test.o \
 	object-bc-test.o \
 	ostack-bc-test.o \
-	stack-slot-test.o \
 	spill-reload-test.o \
+	stack-slot-test.o \
 	tree-printer-test.o \
 	typeconv-bc-test.o
 

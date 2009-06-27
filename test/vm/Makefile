@@ -1,29 +1,29 @@
 RUNNER=vm-test-runner
 SUITE=vm-test-suite.c
 
-OBJS = \
-	../libharness/libharness.o \
-	../../arch/$(ARCH)/backtrace.o \
-	../../vm/bitset.o \
-	../../vm/buffer.o \
-	../../vm/bytecode.o \
-	../../vm/bytecodes.o \
-	../../vm/list.o \
-	../../vm/natives.o \
-	../../vm/stack.o \
-	../../vm/string.o \
-	../../vm/zalloc.o \
-	../../vm/types.o \
-	../../vm/list.o \
-	../../vm/radix-tree.o \
-	bitset-test.o \
-	buffer-test.o \
-	bytecodes-test.o \
-	list-test.o \
-	natives-test.o \
-	stack-test.o \
-	string-test.o \
-	types-test.o \
-	radix-tree-test.o
+OBJS =					\
+	../../arch/$(ARCH)/backtrace.o	\
+	../../lib/bitset.o		\
+	../../lib/buffer.o		\
+	../../lib/list.o		\
+	../../lib/list.o		\
+	../../lib/radix-tree.o		\
+	../../lib/string.o		\
+	../../vm/bytecode.o		\
+	../../vm/bytecodes.o		\
+	../../vm/natives.o		\
+	../../vm/stack.o		\
+	../../vm/types.o		\
+	../../vm/zalloc.o		\
+	../libharness/libharness.o	\
+	bitset-test.o			\
+	buffer-test.o			\
+	bytecodes-test.o		\
+	list-test.o			\
+	natives-test.o			\
+	radix-tree-test.o		\
+	stack-test.o			\
+	string-test.o			\
+	types-test.o
 
 include ../../scripts/build/test.mk

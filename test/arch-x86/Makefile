@@ -20,7 +20,15 @@ RUNNER=x86-test-runner
 SUITE=x86-test-suite.c
 
 OBJS = \
-	../libharness/libharness.o \
+	../../arch/x86/backtrace.o \
+	../../arch/x86/emit-code.o \
+	../../arch/x86/exception.o \
+	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \
+	../../arch/x86/instruction.o \
+	../../arch/x86/stack-frame.o \
+	../../arch/x86/thread.o \
+	../../arch/x86/unwind$(ARCH_POSTFIX).o \
+	../../arch/x86/use-def.o \
 	../../cafebabe/src/cafebabe/attribute_array.o \
 	../../cafebabe/src/cafebabe/attribute_info.o \
 	../../cafebabe/src/cafebabe/class.o \
@@ -31,52 +39,44 @@ OBJS = \
 	../../cafebabe/src/cafebabe/field_info.o \
 	../../cafebabe/src/cafebabe/method_info.o \
 	../../cafebabe/src/cafebabe/stream.o \
+	../../jit/alloc.o \
+	../../jit/basic-block.o \
+	../../jit/bc-offset-mapping.o \
+	../../jit/compilation-unit.o \
+	../../jit/cu-mapping.o \
+	../../jit/emit.o \
+	../../jit/emulate.o \
+	../../jit/exception.o \
+	../../jit/expression.o \
+	../../jit/fixup-site.o \
+	../../jit/interval.o \
+	../../jit/method.o \
+	../../jit/stack-slot.o \
+	../../jit/statement.o \
+	../../jit/tree-node.o \
+	../../jit/tree-printer.o \
+	../../jit/vtable.o \
+	../../lib/buffer.o \
+	../../lib/list.o \
+	../../lib/radix-tree.o \
+	../../lib/string.o \
+	../../vm/class.o \
+	../../vm/die.o \
+	../../vm/field.o \
+	../../vm/guard-page.o \
+	../../vm/method.o \
+	../../vm/object.o \
+	../../vm/stack.o \
+	../../vm/types.o \
+	../../vm/utf8.o \
+	../../vm/zalloc.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/cast-stub.o \
 	../jamvm/lock.o \
 	../jit/trampoline-stub.o \
-	../vm/java_lang-stub.o \
+	../libharness/libharness.o \
 	../vm/classloader-stub.o \
-	../../arch/x86/backtrace.o \
-	../../vm/buffer.o \
-	../../vm/class.o \
-	../../vm/field.o \
-	../../vm/die.o \
-	../../vm/list.o \
-	../../vm/method.o \
-	../../vm/object.o \
-	../../vm/stack.o \
-	../../vm/string.o \
-	../../vm/types.o \
-	../../vm/utf8.o \
-	../../vm/zalloc.o \
-	../../vm/radix-tree.o \
-	../../vm/guard-page.o \
-	../../jit/alloc.o \
-	../../jit/basic-block.o \
-	../../jit/compilation-unit.o \
-	../../jit/emit.o \
-	../../jit/emulate.o \
-	../../jit/expression.o \
-	../../jit/interval.o \
-	../../jit/stack-slot.o \
-	../../jit/statement.o \
-	../../jit/tree-printer.o \
-	../../jit/fixup-site.o \
-	../../jit/bc-offset-mapping.o \
-	../../jit/vtable.o \
-	../../jit/exception.o \
-	../../jit/cu-mapping.o \
-	../../jit/method.o \
-	../../jit/tree-node.o \
-	../../arch/x86/emit-code.o \
-	../../arch/x86/instruction.o \
-	../../arch/x86/insn-selector$(ARCH_POSTFIX).o \
-	../../arch/x86/stack-frame.o \
-	../../arch/x86/use-def.o \
-	../../arch/x86/exception.o \
-	../../arch/x86/unwind$(ARCH_POSTFIX).o \
-	../../arch/x86/thread.o \
+	../vm/java_lang-stub.o \
 	$(TESTS)
 
 TESTS = \

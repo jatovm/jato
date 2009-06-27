@@ -87,8 +87,6 @@ JIT_OBJS = \
 	jit/perf-map.o
 
 VM_OBJS = \
-	vm/bitset.o		\
-	vm/buffer.o		\
 	vm/bytecode.o		\
 	vm/bytecodes.o		\
 	vm/class.o		\
@@ -98,19 +96,23 @@ VM_OBJS = \
 	vm/field.o		\
 	vm/guard-page.o		\
 	vm/jato.o		\
-	vm/list.o		\
 	vm/method.o		\
 	vm/natives.o		\
 	vm/object.o		\
-	vm/radix-tree.o		\
 	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack.o		\
 	vm/stack-trace.o	\
-	vm/string.o		\
 	vm/types.o		\
 	vm/utf8.o		\
 	vm/zalloc.o
+
+LIB_OBJS = \
+	lib/bitset.o		\
+	lib/buffer.o		\
+	lib/list.o		\
+	lib/radix-tree.o	\
+	lib/string.o
 
 JAMVM_OBJS =
 
@@ -131,7 +133,7 @@ CAFEBABE_OBJS := $(addprefix cafebabe/src/cafebabe/,$(CAFEBABE_OBJS))
 LIBHARNESS_OBJS = \
 	test/libharness/libharness.o
 
-JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(CAFEBABE_OBJS)
+JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(LIB_OBJS) $(CAFEBABE_OBJS)
 
 OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
