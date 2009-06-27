@@ -30,6 +30,10 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include <arch/text.h>
+#include <jit/text.h>
+
+#include <vm/system.h>
 #include <vm/alloc.h>
 #include <vm/die.h>
 
@@ -70,7 +74,7 @@ void *jit_text_ptr(void)
 
 void jit_text_reserve(size_t size)
 {
-	jit_text_offset += size;
+	jit_text_offset += ALIGN(size, TEXT_ALIGNMENT);
 }
 
 void *alloc_page(void)
