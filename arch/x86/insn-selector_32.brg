@@ -986,7 +986,7 @@ reg:    EXPR_ARRAYLENGTH(reg)
 
 	arrayref = state->left->reg1;
 
-	arraylength = get_fixed_var(s->b_parent, REG_EAX);
+	arraylength = get_var(s->b_parent);
 	state->reg1 = arraylength;
 
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref,
