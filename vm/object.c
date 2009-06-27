@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include <jit/exception.h>
 
@@ -381,4 +382,47 @@ void multiarray_size_check(int n, ...)
 
 	va_end(ap);
 	return;
+}
+
+char *vm_string_to_cstr(struct vm_object *string_obj)
+{
+	struct vm_object *array_object;
+	struct string *str;
+	int16_t *array;
+	int32_t offset;
+	int32_t count;
+	char *result;
+
+	offset = *(int32_t *)
+		&string_obj->fields[vm_java_lang_String_offset->offset];
+	count = *(int32_t *)
+		&string_obj->fields[vm_java_lang_String_count->offset];
+	array_object = *(struct vm_object **)
+		&string_obj->fields[vm_java_lang_String_value->offset];
+	array = (int16_t *) array_object->fields;
+
+	str = alloc_str();
+	if (!str)
+		return NULL;
+
+	result = NULL;
+
+	for (int32_t i = 0; i < count; ++i) {
+		int16_t ch = array[offset + i];
+		int err;
+
+		if (ch < 128 && isprint(ch))
+			err = str_append(str, "%c", ch);
+		else
+			err = str_append(str, "<%d>", ch);
+
+		if (err)
+			goto exit;
+	}
+
+	result = strdup(str->value);
+
+ exit:
+	free_str(str);
+	return result;
 }

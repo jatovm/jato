@@ -44,5 +44,6 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj);
 void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type);
 void array_size_check(int size);
 void multiarray_size_check(int n, ...);
+char *vm_string_to_cstr(struct vm_object *string);
 
 #endif
