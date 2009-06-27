@@ -1,10 +1,11 @@
 #ifndef __VM_OBJECT_H
 #define __VM_OBJECT_H
 
-#include <stdbool.h>
-
 #include <pthread.h>
+#include <stdbool.h>
+#include <stdint.h>
 
+#include <vm/field.h>
 #include <vm/vm.h>
 
 struct vm_class;
@@ -45,5 +46,29 @@ void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type);
 void array_size_check(int size);
 void multiarray_size_check(int n, ...);
 char *vm_string_to_cstr(struct vm_object *string);
+
+static inline void
+field_set_int32(struct vm_object *obj, struct vm_field *field, int32_t value)
+{
+	*(int32_t *) &obj->fields[field->offset] = value;
+}
+
+static inline int32_t
+field_get_int32(struct vm_object *obj, struct vm_field *field)
+{
+	return *(int32_t *) &obj->fields[field->offset];
+}
+
+static inline void
+field_set_object(struct vm_object *obj, struct vm_field *field, struct vm_object *value)
+{
+	*(void **) &obj->fields[field->offset] = value;
+}
+
+static inline struct vm_object *
+field_get_object(struct vm_object *obj, struct vm_field *field)
+{
+	return *(struct vm_object **) &obj->fields[field->offset];
+}
 
 #endif
