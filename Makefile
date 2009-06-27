@@ -213,6 +213,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
 	regression/jvm/TestCase.class \
 	regression/jvm/ArrayTest.class \
+	regression/jvm/BranchTest.class \
 	regression/jvm/ObjectArrayTest.class \
 	regression/jvm/ExitStatusIsOneTest.class \
 	regression/jvm/ExitStatusIsZeroTest.class \
