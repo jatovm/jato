@@ -94,7 +94,7 @@ void signal_exception(struct vm_object *exception)
 	exception_holder = exception;
 }
 
-void signal_new_exception(char *class_name, const char *msg)
+void signal_new_exception(const char *class_name, const char *msg)
 {
 	struct vm_object *e;
 

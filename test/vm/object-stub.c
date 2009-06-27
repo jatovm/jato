@@ -11,7 +11,7 @@ vm_object_alloc_string(const uint8_t bytes[], unsigned int length)
 	return NULL;
 }
 
-struct vm_object *new_exception(char *class_name, const char *message)
+struct vm_object *new_exception(const char *class_name, const char *message)
 {
 	return NULL;
 }
