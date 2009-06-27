@@ -669,7 +669,7 @@ static void emit_sbb_imm_reg(struct buffer *buf, struct operand *src,
 static void emit_sbb_reg_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
-	emit_reg_reg(buf, 0x1B, src, dest);
+	emit_reg_reg(buf, 0x19, src, dest);
 }
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
