@@ -27,9 +27,6 @@
 #include <limits.h>
 #include <stdio.h>
 
-/* Architecture dependent definitions */
-#include <vm/arch.h>
-
 /* Configure options */
 #include <vm/config.h>
 

@@ -34,8 +34,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <../jamvm/lock.h>
-
 /* Aliases and prototypes to make common emitters work as expected. */
 #ifdef CONFIG_X86_64
 # define __emit_add_imm_reg	__emit64_add_imm_reg
