@@ -12,6 +12,8 @@
 
 #include <arch/instruction.h>
 
+struct parse_context;
+
 enum expression_type {
 	EXPR_VALUE,
 	EXPR_FVALUE,
@@ -308,6 +310,7 @@ struct expression *exception_ref_expr(void);
 struct expression *null_check_expr(struct expression *);
 struct expression *array_size_check_expr(struct expression *);
 struct expression *multiarray_size_check_expr(struct expression *);
+struct expression *copy_expr_value(struct parse_context *, struct expression *);
 
 unsigned long nr_args(struct expression *);
 int expr_nr_kids(struct expression *);
