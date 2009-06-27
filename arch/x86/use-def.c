@@ -85,6 +85,7 @@ static struct insn_info insn_infos[] = {
 	DECLARE_INFO(INSN_TEST_MEMBASE_REG, USE_SRC | USE_DST | DEF_NONE),
 	DECLARE_INFO(INSN_XOR_MEMBASE_REG, USE_SRC | DEF_DST),
 	DECLARE_INFO(INSN_XOR_IMM_REG, USE_SRC | DEF_DST),
+	DECLARE_INFO(INSN_XOR_REG_REG, USE_SRC | DEF_DST),
 };
 
 static inline struct insn_info *get_info(struct insn *insn)
