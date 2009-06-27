@@ -90,8 +90,11 @@ How to launch Java applications with Jato under GDB?
 How do I launch a simple application?
 
   To run a simple Java application, you can download Christian Schneider's Java
-  tetris <http://www.liquidreality.de/main/projects/tetris> and launch it with
-  the following command:
+  tetris at:
+
+    http://www.liquidreality.de/display/liquid/Java+Tris
+
+  and launch it with the following command:
 
     $ ./scripts/java -Xtrace:jit -jar tetris.jar
 

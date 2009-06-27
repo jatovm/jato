@@ -16,6 +16,4 @@ then
   exit
 fi
 
-BOOTCLASSPATH=lib/classes.zip:$GLIBJ
-
-./jato -Xms32M -Xnocompact -Xnoasyncgc -Dgnu.classpath.boot.library.path=$LIBRARY_PATH -Xbootclasspath:$BOOTCLASSPATH $*
+./jato -cp $PWD:$GLIBJ $*
