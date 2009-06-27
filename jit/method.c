@@ -25,12 +25,13 @@
  */
 
 #include <arch/stack-frame.h>
-#include <jit/compiler.h>
-#include <vm/natives.h>
 
-#include <vm/class.h>
+#include <vm/natives.h>
 #include <vm/method.h>
-#include <vm/alloc.h>
+#include <vm/class.h>
+
+#include <jit/compiler.h>
+#include <jit/text.h>
 
 #include <stdbool.h>
 #include <unistd.h>

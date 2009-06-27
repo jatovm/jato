@@ -38,6 +38,7 @@
 #include "jit/cu-mapping.h"
 #include "jit/exception.h"
 #include "jit/perf-map.h"
+#include "jit/text.h"
 
 #include "vm/class.h"
 #include "vm/classloader.h"
@@ -48,7 +49,6 @@
 #include "vm/signal.h"
 #include "vm/stack-trace.h"
 #include "vm/system.h"
-#include "vm/alloc.h"
 #include "vm/vm.h"
 
 static bool perf_enabled;

@@ -48,43 +48,43 @@ PROGRAM		:= jato
 include arch/$(ARCH)/Makefile$(ARCH_POSTFIX)
 
 JIT_OBJS = \
-	jit/alloc.o		\
+	jit/args.o		\
 	jit/arithmetic-bc.o	\
 	jit/basic-block.o	\
+	jit/bc-offset-mapping.o \
 	jit/branch-bc.o		\
 	jit/bytecode-to-ir.o	\
 	jit/cfg-analyzer.o	\
 	jit/compilation-unit.o	\
 	jit/compiler.o		\
+	jit/cu-mapping.o	\
 	jit/disass-common.o	\
 	jit/emit.o		\
 	jit/emulate.o		\
+	jit/exception-bc.o	\
+	jit/exception.o 	\
 	jit/expression.o	\
-	jit/args.o		\
+	jit/fixup-site.o	\
 	jit/interval.o		\
 	jit/invoke-bc.o		\
 	jit/linear-scan.o	\
 	jit/liveness.o		\
 	jit/load-store-bc.o	\
-	jit/exception-bc.o	\
+	jit/method.o		\
+	jit/nop-bc.o		\
 	jit/object-bc.o		\
 	jit/ostack-bc.o		\
+	jit/perf-map.o		\
+	jit/spill-reload.o	\
 	jit/stack-slot.o	\
 	jit/statement.o		\
-	jit/spill-reload.o	\
+	jit/text.o		\
 	jit/trace-jit.o		\
 	jit/trampoline.o	\
+	jit/tree-node.o		\
 	jit/tree-printer.o	\
 	jit/typeconv-bc.o	\
 	jit/vtable.o		\
-	jit/fixup-site.o	\
-	jit/exception.o 	\
-	jit/bc-offset-mapping.o \
-	jit/cu-mapping.o	\
-	jit/method.o		\
-	jit/nop-bc.o		\
-	jit/tree-node.o		\
-	jit/perf-map.o
 
 VM_OBJS = \
 	vm/bytecode.o		\

@@ -16,12 +16,12 @@
 #include <jit/exception.h>
 #include <jit/stack-slot.h>
 #include <jit/emit-code.h>
+#include <jit/text.h>
 
 #include <vm/list.h>
 #include <vm/buffer.h>
 #include <vm/method.h>
 #include <vm/object.h>
-#include <vm/alloc.h>
 
 #include <arch/instruction.h>
 #include <arch/memory.h>

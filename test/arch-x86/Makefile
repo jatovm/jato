@@ -39,7 +39,6 @@ OBJS = \
 	../../cafebabe/src/cafebabe/field_info.o \
 	../../cafebabe/src/cafebabe/method_info.o \
 	../../cafebabe/src/cafebabe/stream.o \
-	../../jit/alloc.o \
 	../../jit/basic-block.o \
 	../../jit/bc-offset-mapping.o \
 	../../jit/compilation-unit.o \
@@ -53,6 +52,7 @@ OBJS = \
 	../../jit/method.o \
 	../../jit/stack-slot.o \
 	../../jit/statement.o \
+	../../jit/text.o \
 	../../jit/tree-node.o \
 	../../jit/tree-printer.o \
 	../../jit/vtable.o \

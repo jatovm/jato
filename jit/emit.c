@@ -7,7 +7,6 @@
  * LICENSE for details.
  */
 
-#include <vm/alloc.h>
 #include <vm/buffer.h>
 #include <vm/class.h>
 #include <vm/method.h>
@@ -18,6 +17,7 @@
 #include <jit/basic-block.h>
 #include <jit/emit-code.h>
 #include <jit/compiler.h>
+#include <jit/text.h>
 
 #include <arch/instruction.h>
 

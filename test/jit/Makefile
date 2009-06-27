@@ -11,7 +11,6 @@ OBJS = \
 	../../cafebabe/src/cafebabe/field_info.o \
 	../../cafebabe/src/cafebabe/method_info.o \
 	../../cafebabe/src/cafebabe/stream.o \
-	../../jit/alloc.o \
 	../../jit/args.o \
 	../../jit/arithmetic-bc.o \
 	../../jit/basic-block.o \
@@ -36,6 +35,7 @@ OBJS = \
 	../../jit/spill-reload.o \
 	../../jit/stack-slot.o \
 	../../jit/statement.o \
+	../../jit/text.o \
 	../../jit/tree-node.o \
 	../../jit/tree-printer.o \
 	../../jit/typeconv-bc.o \
