@@ -463,20 +463,21 @@ public class ExceptionsTest extends TestCase {
         testUnwinding();
         testMultipleCatchBlocks();
         testNestedTryCatch();
+*/
         testEmptyCatchBlock();
 
         testInvokespecial();
         testInvokevirtual();
         testArrayLoad();
+/*      FIXME
         testArrayStore();
+*/
         testArraylength();
         testAthrow();
         testGetfield();
         testPutfield();
         testMonitorenter();
-*/
         /* TODO: testMonitorexit() */
-/*      FIXME
         testIdiv();
         testIrem();
         testLdiv();
@@ -486,7 +487,6 @@ public class ExceptionsTest extends TestCase {
         testNewarray();
         testMultianewarray();
         testUnsatisfiedLinkError();
-*/
 
         exit();
     }
