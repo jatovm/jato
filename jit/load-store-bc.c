@@ -12,6 +12,7 @@
 
 #include <jit/compiler.h>
 #include <jit/statement.h>
+#include <jit/expression.h>
 
 #include <vm/bytecode.h>
 #include <vm/bytecodes.h>
@@ -178,13 +179,20 @@ int convert_ldc2_w(struct parse_context *ctx)
 
 static int convert_load(struct parse_context *ctx, unsigned char index, enum vm_type type)
 {
+	struct expression *tmp_expr;
 	struct expression *expr;
 
 	expr = local_expr(type, index);
 	if (!expr)
 		return -ENOMEM;
 
-	convert_expression(ctx, expr);
+	tmp_expr = copy_expr_value(ctx, expr);
+	if (!tmp_expr) {
+		expr_put(expr);
+		return -ENOMEM;
+	}
+
+	convert_expression(ctx, tmp_expr);
 	return 0;
 }
 
