@@ -27,7 +27,7 @@ struct buffer *__alloc_buffer(struct buffer_operations *ops)
 
 void free_buffer(struct buffer *buf)
 {
-	if (buf)
+	if (buf && buf->ops->free)
 		buf->ops->free(buf);
 
 	free(buf);
@@ -36,9 +36,10 @@ void free_buffer(struct buffer *buf)
 int append_buffer(struct buffer *buf, unsigned char c)
 {
 	if (buf->offset == buf->size) {
-		int err;
-		
-		err = buf->ops->expand(buf);
+		int err = 0;
+
+		if (buf->ops->expand)
+			err = buf->ops->expand(buf);
 		if (err)
 			return err;
 	}

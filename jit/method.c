@@ -30,6 +30,7 @@
 
 #include <vm/class.h>
 #include <vm/method.h>
+#include <vm/alloc.h>
 
 #include <stdbool.h>
 #include <unistd.h>
@@ -39,19 +40,11 @@
 extern char end;
 
 /*
- * Checks whether address is located above data segments and below heap end.
- */
-static bool address_on_heap(unsigned long addr)
-{
-	return addr >= (unsigned long)&end && addr < (unsigned long)sbrk(0);
-}
-
-/*
  * Checks whether given address belongs to a native function.
  */
 bool is_native(unsigned long eip)
 {
-	return !address_on_heap(eip);
+	return !is_jit_text((void *)eip);
 }
 
 const char *method_symbol(struct vm_method *method, char *symbol, size_t size)

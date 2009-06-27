@@ -21,6 +21,7 @@
 #include <vm/buffer.h>
 #include <vm/method.h>
 #include <vm/object.h>
+#include <vm/alloc.h>
 
 #include <arch/instruction.h>
 #include <arch/memory.h>
@@ -1121,6 +1122,10 @@ void emit_trampoline(struct compilation_unit *cu,
 {
 	struct buffer *buf = trampoline->objcode;
 
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+
 	/* This is for __builtin_return_address() to work and to access
 	   call arguments in correct manner. */
 	__emit_push_reg(buf, REG_EBP);
@@ -1157,6 +1162,9 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	__emit_pop_reg(buf, REG_EBP);
 	emit_indirect_jump_reg(buf, REG_EAX);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
 }
 
 #else /* CONFIG_X86_32 */

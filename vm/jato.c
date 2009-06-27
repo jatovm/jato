@@ -48,6 +48,7 @@
 #include "vm/signal.h"
 #include "vm/stack-trace.h"
 #include "vm/system.h"
+#include "vm/alloc.h"
 #include "vm/vm.h"
 
 static bool perf_enabled;
@@ -278,6 +279,8 @@ main(int argc, char *argv[])
 
 	if (!classname)
 		usage(stderr, EXIT_FAILURE);
+
+	jit_text_init();
 
 	if (perf_enabled)
 		perf_map_open();

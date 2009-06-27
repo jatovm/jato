@@ -41,11 +41,6 @@ static void emit_monitorexit(struct compilation_unit *cu)
 		emit_unlock_this(cu->objcode);
 }
 
-static struct buffer_operations exec_buf_ops = {
-	.expand = expand_buffer_exec,
-	.free   = generic_buffer_free,
-};
-
 typedef void (*emit_no_operands_fn) (struct buffer *);
 
 static void emit_no_operands(struct emitter *emitter, struct buffer *buf)
@@ -133,14 +128,26 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
 	bb->is_emitted = true;
 }
 
+static struct buffer_operations exec_buf_ops = {
+	.expand = NULL,
+	.free   = NULL,
+};
+
 int emit_machine_code(struct compilation_unit *cu)
 {
 	unsigned long frame_size;
 	struct basic_block *bb;
+	struct buffer *buf;
+	int err = 0;
 
-	cu->objcode = __alloc_buffer(&exec_buf_ops);
-	if (!cu->objcode)
+	buf = __alloc_buffer(&exec_buf_ops);
+	if (!buf)
 		return -ENOMEM;
+
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+	cu->objcode = buf;
 
 	frame_size = frame_locals_size(cu->stack_frame);
 
@@ -163,7 +170,10 @@ int emit_machine_code(struct compilation_unit *cu)
 	cu->unwind_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_unwind(cu->objcode);
 
-	return 0;
+	jit_text_reserve(buffer_offset(cu->objcode));
+	jit_text_unlock();
+
+	return err;
 }
 
 struct jit_trampoline *alloc_jit_trampoline(void)
