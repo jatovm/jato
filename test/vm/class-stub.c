@@ -4,20 +4,20 @@
 #include <vm/field.h>
 #include <vm/method.h>
 
-struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i)
+struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 {
 	NOT_IMPLEMENTED;
 	return NULL;
 }
 
-struct vm_field *vm_class_resolve_field_recursive(struct vm_class *vmc,
+struct vm_field *vm_class_resolve_field_recursive(const struct vm_class *vmc,
 	uint16_t i)
 {
 	NOT_IMPLEMENTED;
 	return NULL;
 }
 
-struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
+struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
 	uint16_t i)
 {
 	/* NOTE: For the tests, instead of going through the constant pool,

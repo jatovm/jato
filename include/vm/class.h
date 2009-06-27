@@ -51,26 +51,26 @@ static inline bool vm_class_is_array_class(const struct vm_class *vmc)
 	return vmc->name && vmc->name[0] == '[';
 }
 
-struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i);
+struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i);
 
-struct vm_field *vm_class_get_field(struct vm_class *vmc,
+struct vm_field *vm_class_get_field(const struct vm_class *vmc,
 	const char *name, const char *type);
-struct vm_field *vm_class_get_field_recursive(struct vm_class *vmc,
+struct vm_field *vm_class_get_field_recursive(const struct vm_class *vmc,
 	const char *name, const char *type);
 
-int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
+int vm_class_resolve_field(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type);
-struct vm_field *vm_class_resolve_field_recursive(struct vm_class *vmc,
+struct vm_field *vm_class_resolve_field_recursive(const struct vm_class *vmc,
 	uint16_t i);
 
-struct vm_method *vm_class_get_method(struct vm_class *vmc,
+struct vm_method *vm_class_get_method(const struct vm_class *vmc,
 	const char *name, const char *type);
-struct vm_method *vm_class_get_method_recursive(struct vm_class *vmc,
+struct vm_method *vm_class_get_method_recursive(const struct vm_class *vmc,
 	const char *name, const char *type);
 
-int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
+int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type);
-struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
+struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
 	uint16_t i);
 
 bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from);

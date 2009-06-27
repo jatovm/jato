@@ -229,7 +229,7 @@ int vm_class_run_clinit(struct vm_class *vmc)
 	return 0;
 }
 
-struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i)
+struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 {
 	const struct cafebabe_constant_info_class *constant_class;
 	if (cafebabe_class_constant_get_class(vmc->class,
@@ -263,7 +263,7 @@ struct vm_class *vm_class_resolve_class(struct vm_class *vmc, uint16_t i)
 	return class;
 }
 
-int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
+int vm_class_resolve_field(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type)
 {
 	const struct cafebabe_constant_info_field_ref *field;
@@ -321,7 +321,7 @@ int vm_class_resolve_field(struct vm_class *vmc, uint16_t i,
 	return 0;
 }
 
-struct vm_field *vm_class_get_field(struct vm_class *vmc,
+struct vm_field *vm_class_get_field(const struct vm_class *vmc,
 	const char *name, const char *type)
 {
 	unsigned int index = 0;
@@ -331,7 +331,7 @@ struct vm_field *vm_class_get_field(struct vm_class *vmc,
 	return NULL;
 }
 
-struct vm_field *vm_class_get_field_recursive(struct vm_class *vmc,
+struct vm_field *vm_class_get_field_recursive(const struct vm_class *vmc,
 	const char *name, const char *type)
 {
 	do {
@@ -346,7 +346,7 @@ struct vm_field *vm_class_get_field_recursive(struct vm_class *vmc,
 }
 
 struct vm_field *
-vm_class_resolve_field_recursive(struct vm_class *vmc, uint16_t i)
+vm_class_resolve_field_recursive(const struct vm_class *vmc, uint16_t i)
 {
 	struct vm_class *class;
 	char *name;
@@ -365,7 +365,7 @@ vm_class_resolve_field_recursive(struct vm_class *vmc, uint16_t i)
 	return result;
 }
 
-int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
+int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type)
 {
 	const struct cafebabe_constant_info_method_ref *method;
@@ -423,7 +423,7 @@ int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
 	return 0;
 }
 
-struct vm_method *vm_class_get_method(struct vm_class *vmc,
+struct vm_method *vm_class_get_method(const struct vm_class *vmc,
 	const char *name, const char *type)
 {
 	unsigned int index = 0;
@@ -433,7 +433,7 @@ struct vm_method *vm_class_get_method(struct vm_class *vmc,
 	return NULL;
 }
 
-struct vm_method *vm_class_get_method_recursive(struct vm_class *vmc,
+struct vm_method *vm_class_get_method_recursive(const struct vm_class *vmc,
 	const char *name, const char *type)
 {
 	do {
@@ -448,7 +448,7 @@ struct vm_method *vm_class_get_method_recursive(struct vm_class *vmc,
 }
 
 struct vm_method *
-vm_class_resolve_method_recursive(struct vm_class *vmc, uint16_t i)
+vm_class_resolve_method_recursive(const struct vm_class *vmc, uint16_t i)
 {
 	struct vm_class *class;
 	char *name;
