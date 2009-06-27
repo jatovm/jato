@@ -162,8 +162,6 @@ DEFAULT_CFLAGS	+= $(DEFINES)
 
 DEFAULT_LIBS	= -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty $(ARCH_LIBS)
 
-JAMVM_ARCH_H = include/vm/arch.h
-
 all: $(PROGRAM) $(TEST)
 .PHONY: all
 .DEFAULT: all
@@ -185,21 +183,17 @@ monoburg:
 	$(E) "  AS      " $@
 	$(Q) $(AS) $(AFLAGS) $< -o $@
 
-$(JAMVM_ARCH_H):
-	$(E) "  LN      " $@
-	$(Q) ln -fsn ../../jamvm/arch/$(JAMVM_ARCH).h $@
-
 arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
-$(PROGRAM): monoburg $(JAMVM_ARCH_H) compile
+$(PROGRAM): monoburg compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) -T $(LINKER_SCRIPT) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
 compile: $(OBJS)
 
-test: $(JAMVM_ARCH_H) monoburg
+test: monoburg
 	make -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	make -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	make -C test/arch-$(ARCH)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
@@ -259,7 +253,6 @@ clean:
 	$(Q) - rm -f $(ARCH_TEST_OBJS)
 	$(Q) - rm -f arch/$(ARCH)/insn-selector.c
 	$(Q) - rm -f $(PROGRAM)
-	$(Q) - rm -f $(JAMVM_ARCH_H)
 	$(Q) - rm -f $(ARCH_TEST_SUITE)
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
