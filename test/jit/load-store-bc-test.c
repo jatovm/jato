@@ -387,6 +387,7 @@ static void __assert_convert_load(unsigned char *code,
 				  unsigned char expected_index)
 {
 	struct expression *expr;
+	struct statement *stmt;
 	struct basic_block *bb;
 
 	bb = alloc_simple_bb(code, code_size);
@@ -394,7 +395,14 @@ static void __assert_convert_load(unsigned char *code,
 	convert_to_ir(bb->b_parent);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_local_expr(expected_type, expected_index, &expr->node);
+	assert_temporary_expr(&expr->node);
+
+	stmt = stmt_entry(bb->stmt_list.next);
+
+	assert_store_stmt(stmt);
+	assert_local_expr(expected_type, expected_index, stmt->store_src);
+	assert_ptr_equals(&expr->node, stmt->store_dest);
+
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
