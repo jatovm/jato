@@ -1,3 +1,9 @@
-N: Pekka Enberg <penberg@cs.helsinki.fi>
-D: JIT for i386
+  (N) - Name, (E) - Email, (D) - Description, (L) - Location
+
+-------
+
+N: Pekka Enberg
+E: penberg@cs.helsinki.fi
+W: http://www.laughingpanda.org/
+D: Author and maintainer, initial work on i386 JIT
 L: Finland
