@@ -92,6 +92,12 @@ static void __vm_native native_vmsystem_arraycopy(struct vm_object *src, int src
 	NOT_IMPLEMENTED;
 }
 
+static int32_t __vm_native native_vmsystem_identityhashcode(struct vm_object *obj)
+{
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 /*
  * This stub is needed by java.lang.VMThrowable constructor to work. It should
  * return java.lang.VMState instance, or null in which case no stack trace will
@@ -114,10 +120,13 @@ static void jit_init_natives(void)
 		&native_vmruntime_exit);
 	vm_register_native("jato/internal/VM", "println",
 		&native_vmruntime_println);
+
 	vm_register_native("java/lang/VMRuntime", "exit",
 		&native_vmruntime_exit);
 	vm_register_native("java/lang/VMSystem", "arraycopy",
 		&native_vmsystem_arraycopy);
+	vm_register_native("java/lang/VMSystem", "identityHashCode",
+		&native_vmsystem_identityhashcode);
 	vm_register_native("java/lang/VMThrowable", "fillInStackTrace",
 		&native_vmthrowable_fill_in_stack_trace);
 }
