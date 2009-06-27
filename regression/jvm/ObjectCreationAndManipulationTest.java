@@ -118,6 +118,11 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         array[0][0] = 0;
     }
 
+    public static Object getClassFieldsAndIncrementField() {
+        ClassFields.field++;
+        return new ClassFields();
+    }
+
     public static void testCheckCast() {
         Object object = new InstanceFields();
 
@@ -126,6 +131,14 @@ public class ObjectCreationAndManipulationTest extends TestCase {
 
         instanceFields = (InstanceFields) object;
         assertNotNull(instanceFields);
+
+	/* Test for expression double evaluation bug */
+        ClassFields.field = 0;
+
+        ClassFields classFields =
+            (ClassFields)getClassFieldsAndIncrementField();
+        assertEquals(1, ClassFields.field);
+        assertNotNull(classFields);
 
         //Following test will fail.
 
