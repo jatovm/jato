@@ -6,7 +6,6 @@
 struct buffer;
 
 void *alloc_page(void);
-void *alloc_exec(size_t);
 int expand_buffer_exec(struct buffer *);
 
 #endif

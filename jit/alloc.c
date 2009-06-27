@@ -35,26 +35,6 @@ static void *__alloc_exec(size_t size)
 	return p;
 }
 
-/**
- *	alloc_exec - Allocate executable memory.
- *	@size: size of the allocated memory block.
- *
- *	This function allocates @size amount of memory and ensures the region
- *	is executable. The allocated memory is released with free(3).
- *
- * 	Returns a pointer to executable memory region with at least @size
- * 	bytes. If allocation fails, returns NULL.
- */
-void *alloc_exec(size_t size)
-{
-	int page_size;
-
-	page_size = getpagesize();
-	size = ALIGN(size, page_size);
-
-	return __alloc_exec(size);
-}
-
 int expand_buffer_exec(struct buffer *buf)
 {
 	int page_size;
