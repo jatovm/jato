@@ -96,10 +96,10 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	struct vm_method *method = cu->method;
 	void *ret;
 
-	pthread_mutex_lock(&cu->mutex);
-
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
+
+	pthread_mutex_lock(&cu->mutex);
 
 	if (vm_method_is_native(cu->method))
 		ret = jit_native_trampoline(cu);
