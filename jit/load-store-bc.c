@@ -346,3 +346,32 @@ int convert_astore_n(struct parse_context *ctx)
 {
 	return convert_store(ctx, ctx->opc - OPC_ASTORE_0, J_REFERENCE);
 }
+
+struct expression *
+copy_expr_value(struct parse_context *ctx, struct expression *expr)
+
+{      struct var_info *tmp_high;
+       struct var_info *tmp_low;
+       struct expression *dest;
+       struct statement *stmt;
+
+       tmp_low = get_var(ctx->cu);
+
+       if (expr->vm_type == J_LONG)
+               tmp_high = get_var(ctx->cu);
+       else
+               tmp_high = NULL;
+
+       dest = temporary_expr(expr->vm_type, tmp_high, tmp_low);
+
+       stmt = alloc_statement(STMT_STORE);
+       if (!stmt)
+               return NULL;
+
+       expr_get(dest);
+       stmt->store_dest = &dest->node;
+       stmt->store_src  = &expr->node;
+       convert_statement(ctx, stmt);
+
+       return dest;
+}
