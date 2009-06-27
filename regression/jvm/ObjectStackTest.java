@@ -52,8 +52,15 @@ public class ObjectStackTest extends TestCase {
         assertIsNotGreaterThanOne(1);
     }
 
+    public static void testLoadAndIncrementLocal() {
+        int x = 0;
+
+        assertEquals(0, x++);
+    }
+
     public static void main(String[] args) {
         testObjectStackWhenBranching();
+        testLoadAndIncrementLocal();
 
         exit();
     }
