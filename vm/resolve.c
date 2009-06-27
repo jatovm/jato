@@ -29,10 +29,10 @@
 
 struct object *resolve_string(struct constant_pool *cp, unsigned long cp_idx)
 {
-	struct object *string;
-
 	NOT_IMPLEMENTED;
 #if 0
+	struct object *string;
+
 	string = createString(CP_UTF8(cp, cp_idx));
 	return findInternedString(string);
 #endif
