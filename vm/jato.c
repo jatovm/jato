@@ -53,6 +53,10 @@
 static bool perf_enabled;
 char *exe_name;
 
+static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
+{
+}
+
 static void __vm_native native_vmruntime_exit(int status)
 {
 	/* XXX: exit gracefully */
@@ -103,6 +107,9 @@ native_vmthrowable_fill_in_stack_trace(struct vm_object *message)
 
 static void jit_init_natives(void)
 {
+	vm_register_native("gnu/classpath/VMSystemProperties", "preInit",
+		&native_vmsystemproperties_preinit);
+
 	vm_register_native("jato/internal/VM", "exit",
 		&native_vmruntime_exit);
 	vm_register_native("jato/internal/VM", "println",

@@ -232,11 +232,14 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ObjectStackTest.class \
 	regression/jvm/PrintTest.class
 
+RUNTIME_CLASSES = \
+	runtime/classpath/gnu/classpath/VMSystemProperties.class
+
 lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
+regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES) $(RUNTIME_CLASSES)
 	$(E) "  REGRESSION"
 	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
@@ -256,6 +259,7 @@ clean:
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
 	$(Q) - rm -f $(REGRESSION_TEST_SUITE_CLASSES)
+	$(Q) - rm -f $(RUNTIME_CLASSES)
 	$(Q) - find regression/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
