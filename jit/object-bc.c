@@ -485,12 +485,12 @@ int convert_instanceof(struct parse_context *ctx)
 
 int convert_checkcast(struct parse_context *ctx)
 {
-	struct expression *object_ref;
+	struct expression *object_ref_tmp;
 	struct vm_class *class;
 	struct statement *checkcast_stmt;
 	unsigned long type_idx;
 
-	object_ref = stack_pop(ctx->bb->mimic_stack);
+	object_ref_tmp = copy_expr_value(ctx, stack_pop(ctx->bb->mimic_stack));
 
 	type_idx = bytecode_read_u16(ctx->buffer);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
@@ -502,11 +502,10 @@ int convert_checkcast(struct parse_context *ctx)
 		return -ENOMEM;
 
 	checkcast_stmt->checkcast_class = class;
-	checkcast_stmt->checkcast_ref = &object_ref->node;
+	checkcast_stmt->checkcast_ref = &object_ref_tmp->node;
 
-	expr_get(object_ref);
 	convert_statement(ctx, checkcast_stmt);
-	convert_expression(ctx, object_ref);
+	convert_expression(ctx, expr_get(object_ref_tmp));
 
 	return 0;
 }
