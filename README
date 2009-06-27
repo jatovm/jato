@@ -1,7 +1,7 @@
 What is it?
 
-  Jato is a Just-in-time (JIT) compiler for Java. It is built on top of JamVM.
-
+  Jato is a Java virtual machine implementation with a Just-in-time (JIT)
+  compiler. It can currently run some simple Java programs on Linux/i386.
 
 How can I try it out?
 
@@ -38,20 +38,27 @@ Running Jato
 
   Command line options:
 
-    -Xint		Operate in interpreter-only mode.  Useful for
-			debugging.
-    -Xtrace:jit		Trace all compilation phases for each method.
-    -Xtrace:asm		Trace the emitted machine code for each method.
+    -Xtrace:jit
+      Trace all compilation phases for each method.
+
+    -Xtrace:asm
+      Trace the emitted machine code for each method.
+
+    -Xtrace:classloader
+      Trace class loading and initialization.
+
+    -Xtrace:trampoline
+      Trace executed trampolines.
 
 
 Development
 
   If you use git for development, please remember to add your committer name
-  and email to .git/config file.  The format is as follows:
+  and email to .git/config file.  You can do that by running the following
+  commands:
 
-    [user]
-      name = Pekka Enberg
-      email = penberg@cs.helsinki.fi
+    git config user.name "Pekka Enberg"
+    git config user.email penberg@cs.helsinki.fi
 
 
 How to run the regression test suite?
@@ -59,32 +66,11 @@ How to run the regression test suite?
   Installation prerequisites:
 
     - Eclipse Compiler for Java (ECJ)
-    - GNU classpath (installed in /usr/local/classpath/)
+    - GNU classpath installed in '/usr/local/classpath/'
 
   To run the test suite, execute the following commands:
 
     $ make regression
-
-  If you want to run the same suite with the Jam VM interpreter, just add -Xint
-  to JAVA_OPTS as follows:
-
-    $ make JAVA_OPTS=-Xint regression
-
-
-How to launch Java applications with Jato under GDB?
-
-  NTPL threads cause problems while running Jato under gdb. You should
-  set the following environment variable before starting the debugger:
-
-    $ export LD_ASSUME_KERNEL=2.4.1
-
-  To set up boot classpath for Jato, set the following environment variable:
-
-    $ export BOOTCLASSPATH=<JATO_ROOT>/lib/classes.zip:/usr/local/classpath/share/classpath/glibj.zip
-
-  Finally, to launch a Java application with Jato under gdb:
-
-    $ gdb --args <JATO_ROOT>/jato/jato <class>
 
 
 How do I launch a simple application?
@@ -128,11 +114,6 @@ Copyright and License
     you modify this library, you may extend this exception to your version of
     the library, but you are not obligated to do so. If you do not wish to do
     so, delete this exception statement from your version.
-
-  Note: the special exception clause does not cover source code of Jam VM which
-  is distributed under the GPL version 2 or later without any modifications.
-  This means that if you use Jato with Jam VM, the exception clause does not
-  apply to the combination. 
 
 Acknowledgements
 
