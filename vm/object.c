@@ -383,7 +383,7 @@ void multiarray_size_check(int n, ...)
 	return;
 }
 
-char *vm_string_to_cstr(struct vm_object *string_obj)
+char *vm_string_to_cstr(const struct vm_object *string_obj)
 {
 	struct vm_object *array_object;
 	struct string *str;

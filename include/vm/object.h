@@ -45,28 +45,28 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj);
 void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type);
 void array_size_check(int size);
 void multiarray_size_check(int n, ...);
-char *vm_string_to_cstr(struct vm_object *string);
+char *vm_string_to_cstr(const struct vm_object *string);
 
 static inline void
-field_set_int32(struct vm_object *obj, struct vm_field *field, int32_t value)
+field_set_int32(struct vm_object *obj, const struct vm_field *field, int32_t value)
 {
 	*(int32_t *) &obj->fields[field->offset] = value;
 }
 
 static inline int32_t
-field_get_int32(struct vm_object *obj, struct vm_field *field)
+field_get_int32(const struct vm_object *obj, const struct vm_field *field)
 {
 	return *(int32_t *) &obj->fields[field->offset];
 }
 
 static inline void
-field_set_object(struct vm_object *obj, struct vm_field *field, struct vm_object *value)
+field_set_object(struct vm_object *obj, const struct vm_field *field, struct vm_object *value)
 {
 	*(void **) &obj->fields[field->offset] = value;
 }
 
 static inline struct vm_object *
-field_get_object(struct vm_object *obj, struct vm_field *field)
+field_get_object(const struct vm_object *obj, const struct vm_field *field)
 {
 	return *(struct vm_object **) &obj->fields[field->offset];
 }
