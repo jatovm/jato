@@ -76,25 +76,7 @@ static void __vm_native native_vmruntime_exit(int status)
 
 static void __vm_native native_vmruntime_println(struct vm_object *message)
 {
-	int32_t offset = *(int32_t *)
-		&message->fields[vm_java_lang_String_offset->offset];
-	int32_t count = *(int32_t *)
-		&message->fields[vm_java_lang_String_count->offset];
-	struct vm_object *array_object = *(struct vm_object **)
-		&message->fields[vm_java_lang_String_value->offset];
-
-	int16_t *array = (int16_t *) array_object->fields;
-
-	for (int32_t i = 0; i < count; ++i) {
-		int16_t ch = array[offset + i];
-
-		if (ch < 128 && isprint(ch))
-			printf("%c", ch);
-		else
-			printf("<%d>", ch);
-	}
-
-	printf("\n");
+	printf("%s\n", vm_string_to_cstr(message));
 }
 
 static void __vm_native native_vmsystem_arraycopy(struct vm_object *src, int src_start,
