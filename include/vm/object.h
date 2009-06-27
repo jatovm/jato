@@ -33,7 +33,7 @@ vm_object_alloc_string(const uint8_t bytes[], unsigned int length);
 
 struct vm_object *new_exception(const char *class_name, const char *message);
 
-bool vm_object_is_instance_of(struct vm_object *obj, struct vm_class *class);
+bool vm_object_is_instance_of(const struct vm_object *obj, const struct vm_class *class);
 void vm_object_check_null(struct vm_object *obj);
 void vm_object_check_array(struct vm_object *obj, unsigned int index);
 void vm_object_check_cast(struct vm_object *obj, struct vm_class *class);
