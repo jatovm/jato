@@ -187,7 +187,7 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
-$(PROGRAM): monoburg compile
+$(PROGRAM): monoburg $(CLASSPATH_CONFIG) compile
 	$(E) "  CC      " $@
 	$(Q) $(CC) -T $(LINKER_SCRIPT) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
