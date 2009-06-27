@@ -233,6 +233,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/PrintTest.class
 
 RUNTIME_CLASSES = \
+	runtime/classpath/gnu/classpath/VMStackWalker.class \
 	runtime/classpath/gnu/classpath/VMSystemProperties.class \
 	runtime/classpath/java/lang/VMSystem.class
 

@@ -53,6 +53,17 @@
 static bool perf_enabled;
 char *exe_name;
 
+static struct vm_object *__vm_native native_vmstackwalker_getclasscontext(void)
+{
+	struct vm_object *res;
+
+	NOT_IMPLEMENTED;
+
+	res = vm_object_alloc_array(vm_java_lang_Class, 1);
+
+	return res;
+}
+
 static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 {
 }
@@ -113,6 +124,8 @@ native_vmthrowable_fill_in_stack_trace(struct vm_object *message)
 
 static void jit_init_natives(void)
 {
+	vm_register_native("gnu/classpath/VMStackWalker", "getClassContext",
+		&native_vmstackwalker_getclasscontext);
 	vm_register_native("gnu/classpath/VMSystemProperties", "preInit",
 		&native_vmsystemproperties_preinit);
 
