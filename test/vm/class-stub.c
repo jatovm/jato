@@ -26,7 +26,8 @@ struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
 	return &vmc->methods[i];
 }
 
-bool vm_class_is_assignable_from(struct vm_class *vmc, struct vm_class *from)
+bool vm_class_is_assignable_from(const struct vm_class *vmc,
+	const struct vm_class *from)
 {
 	return false;
 }

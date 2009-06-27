@@ -41,12 +41,12 @@ int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
 int vm_class_init_object(struct vm_class *vmc);
 int vm_class_run_clinit(struct vm_class *vmc);
 
-static inline bool vm_class_is_interface(struct vm_class *vmc)
+static inline bool vm_class_is_interface(const struct vm_class *vmc)
 {
 	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
 }
 
-static inline bool vm_class_is_array_class(struct vm_class *vmc)
+static inline bool vm_class_is_array_class(const struct vm_class *vmc)
 {
 	return vmc->name && vmc->name[0] == '[';
 }
@@ -73,6 +73,6 @@ int vm_class_resolve_method(struct vm_class *vmc, uint16_t i,
 struct vm_method *vm_class_resolve_method_recursive(struct vm_class *vmc,
 	uint16_t i);
 
-bool vm_class_is_assignable_from(struct vm_class *vmc, struct vm_class *from);
+bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from);
 
 #endif /* __CLASS_H */

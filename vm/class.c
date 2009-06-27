@@ -468,7 +468,7 @@ vm_class_resolve_method_recursive(struct vm_class *vmc, uint16_t i)
 }
 
 /* Reference: http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
-bool vm_class_is_assignable_from(struct vm_class *vmc, struct vm_class *from)
+bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from)
 {
 	if (vmc == from)
 		return true;
