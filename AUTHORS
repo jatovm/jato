@@ -7,3 +7,9 @@ E: penberg@cs.helsinki.fi
 W: http://www.cs.helsinki.fi/u/penberg/
 D: Author and maintainer, initial work on i386 JIT
 L: Finland
+
+N: Vegard Nossum
+E: vegard.nossum@gmail.com
+W: http://folk.uio.no/vegardno/
+D: Class loading (GSoC 2009), VM core
+L: Oslo, Norway
