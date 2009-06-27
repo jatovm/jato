@@ -31,6 +31,7 @@
 #include <vm/natives.h>
 #include <vm/object.h>
 #include <vm/stack-trace.h>
+#include <vm/java_lang.h>
 
 #include <jit/bc-offset-mapping.h>
 #include <jit/cu-mapping.h>
@@ -410,6 +411,16 @@ void set_throwable_vmstate(struct vm_object *throwable, struct vm_object *vmstat
 
 void vm_print_exception(struct vm_object *exception)
 {
-	printf("%s: %s\n", __func__, exception->class->name);
+	struct vm_object *message_obj;
+
+	fprintf(stderr, "%s", exception->class->name);
+
+	message_obj = field_get_object(exception,
+				       vm_java_lang_Throwable_detailMessage);
+	if (message_obj)
+		fprintf(stderr, ": %s", vm_string_to_cstr(message_obj));
+
+	fprintf(stderr, "\n   <<No stack trace available>>\n");
+
 	NOT_IMPLEMENTED;
 }

@@ -134,11 +134,13 @@ struct preload_entry {
 struct vm_class *vm_java_lang_Object;
 struct vm_class *vm_java_lang_Class;
 struct vm_class *vm_java_lang_String;
+struct vm_class *vm_java_lang_Throwable;
 
 static const struct preload_entry preload_entries[] = {
-	{ "java/lang/Object",	&vm_java_lang_Object },
-	{ "java/lang/Class",	&vm_java_lang_Class },
-	{ "java/lang/String",	&vm_java_lang_String },
+	{ "java/lang/Object",		&vm_java_lang_Object },
+	{ "java/lang/Class",		&vm_java_lang_Class },
+	{ "java/lang/String",		&vm_java_lang_String },
+	{ "java/lang/Throwable",	&vm_java_lang_Throwable },
 };
 
 struct field_preload_entry {
@@ -151,11 +153,13 @@ struct field_preload_entry {
 struct vm_field *vm_java_lang_String_offset;
 struct vm_field *vm_java_lang_String_count;
 struct vm_field *vm_java_lang_String_value;
+struct vm_field *vm_java_lang_Throwable_detailMessage;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_String, "offset", "I",	&vm_java_lang_String_offset },
 	{ &vm_java_lang_String, "count", "I",	&vm_java_lang_String_count },
 	{ &vm_java_lang_String, "value", "[C",	&vm_java_lang_String_value },
+	{ &vm_java_lang_Throwable, "detailMessage", "Ljava/lang/String;", &vm_java_lang_Throwable_detailMessage },
 };
 
 static int preload_vm_classes(void)
