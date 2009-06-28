@@ -314,6 +314,7 @@ struct expression *dup_expr(struct parse_context *, struct expression *);
 
 unsigned long nr_args(struct expression *);
 int expr_nr_kids(struct expression *);
+int expr_is_pure(struct expression *);
 
 static inline int is_invoke_expr(struct expression *expr)
 {

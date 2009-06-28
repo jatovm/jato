@@ -55,6 +55,69 @@ int expr_nr_kids(struct expression *expr)
 	}
 }
 
+/**
+ * Returns true if given expression does not have any potential side
+ * effects and hence one instance of this expression can be safely
+ * connected to many nodes in the tree.
+ */
+int expr_is_pure(struct expression *expr)
+{
+	int i;
+
+	switch (expr_type(expr)) {
+		/*
+		 * These expressions may or may not have side effects
+		 * depending on their actual children expressions. In
+		 * general these expressions should not be connected
+		 * to more than one node.
+		 */
+	case EXPR_BINOP:
+	case EXPR_ARGS_LIST:
+	case EXPR_UNARY_OP:
+	case EXPR_CONVERSION:
+	case EXPR_ARG:
+	case EXPR_ARRAYLENGTH:
+	case EXPR_INSTANCEOF:
+	case EXPR_ARRAY_SIZE_CHECK:
+	case EXPR_MULTIARRAY_SIZE_CHECK:
+	case EXPR_NULL_CHECK:
+
+		/* These expression types should be always assumed to
+		   have side-effects. */
+	case EXPR_INVOKE:
+	case EXPR_INVOKEVIRTUAL:
+	case EXPR_NEWARRAY:
+	case EXPR_ANEWARRAY:
+	case EXPR_MULTIANEWARRAY:
+	case EXPR_NEW:
+		return false;
+
+		/* These expression types do not have any side-effects */
+	case EXPR_VALUE:
+	case EXPR_FVALUE:
+	case EXPR_LOCAL:
+	case EXPR_TEMPORARY:
+	case EXPR_CLASS_FIELD:
+	case EXPR_NO_ARGS:
+	case EXPR_EXCEPTION_REF:
+	case EXPR_INSTANCE_FIELD:
+	case EXPR_MIMIC_STACK_SLOT:
+		return true;
+
+		/* EXPR_ARRAY_DEREF can have side effects in general
+		   but it can not be copied so it's considered pure
+		   when all it's children are pure. */
+	case EXPR_ARRAY_DEREF:
+		for (i = 0; i < expr_nr_kids(expr); i++)
+			if (!expr_is_pure(to_expr(expr->node.kids[i])))
+				return false;
+		return true;
+
+	default:
+		assert(!"Invalid expression type");
+	}
+}
+
 struct expression *alloc_expression(enum expression_type type,
 				    enum vm_type vm_type)
 {
