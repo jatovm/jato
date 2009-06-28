@@ -27,17 +27,8 @@ static void compile_error(struct compilation_unit *cu, int err)
 	struct vm_method *method = cu->method;
 	struct vm_class *class = method->class;
 
-	die("%s: Failed to compile method `%s' in class `%s', error: %i\n",
-	       __func__, method->name, class->name, err);
-
-	if (!exception_occurred()) {
-		if (err == -ENOMEM)
-			/* TODO: throw OutOfMemoryError */
-			die("%s: out of memory", __func__);
-
-		signal_new_exception("java/lang/VirtualMachineError",
-				     "method compilation failed");
-	}
+	error("Failed to compile method `%s' in class `%s', error: %i",
+		method->name, class->name, err);
 }
 
 #define SYMBOL_LEN 128
