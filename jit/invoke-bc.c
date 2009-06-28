@@ -17,6 +17,7 @@
 #include <vm/class.h>
 #include <vm/method.h>
 #include <vm/stack.h>
+#include <vm/die.h>
 
 #include <string.h>
 #include <errno.h>
@@ -121,7 +122,7 @@ int convert_invokevirtual(struct parse_context *ctx)
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
-		return -EINVAL;
+		return warn("unable to resolve invocation target"), -EINVAL;
 
 	expr = invokevirtual_expr(invoke_target);
 	if (!expr)
@@ -149,7 +150,7 @@ int convert_invokespecial(struct parse_context *ctx)
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
-		return -EINVAL;
+		return warn("unable to resolve invocation target"), -EINVAL;
 
 	expr = invoke_expr(invoke_target);
 	if (!expr)
@@ -179,7 +180,7 @@ int convert_invokestatic(struct parse_context *ctx)
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
-		return -EINVAL;
+		return warn("unable to resolve invocation target"), -EINVAL;
 
 	expr = invoke_expr(invoke_target);
 	if (!expr)

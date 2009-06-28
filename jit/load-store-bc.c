@@ -21,6 +21,7 @@
 #include <vm/object.h>
 #include <vm/resolve.h>
 #include <vm/stack.h>
+#include <vm/die.h>
 
 #include <errno.h>
 #include <stdint.h>
@@ -97,7 +98,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	vmc = ctx->cu->method->class;
 
 	if (cafebabe_class_constant_index_invalid(vmc->class, cp_idx))
-		return -EINVAL;
+		return warn("invalid constant index: %ld", cp_idx), -EINVAL;
 
 	cp = &vmc->class->constant_pool[cp_idx];
 
@@ -140,7 +141,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 			+ (uint64_t) cp->double_.low_bytes);
 		break;
 	default:
-		return -EINVAL;
+		return warn("unknown tag: %d", cp->tag), -EINVAL;
 	}
 
 	if (!expr)

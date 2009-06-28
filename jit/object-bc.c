@@ -18,6 +18,7 @@
 #include <vm/field.h>
 #include <vm/object.h>
 #include <vm/stack.h>
+#include <vm/die.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -70,7 +71,7 @@ int convert_getstatic(struct parse_context *ctx)
 
 	fb = lookup_field(ctx);
 	if (!fb)
-		return -EINVAL;
+		return warn("field lookup failed"), -EINVAL;
 
 	value = class_field_expr(vm_field_type(fb), fb);
 	if (!value)
@@ -88,7 +89,7 @@ int convert_putstatic(struct parse_context *ctx)
 
 	fb = lookup_field(ctx);
 	if (!fb)
-		return -EINVAL;
+		return warn("field lookup failed"), -EINVAL;
 
 	src = stack_pop(ctx->bb->mimic_stack);
 	dest = class_field_expr(vm_field_type(fb), fb);
@@ -115,7 +116,7 @@ int convert_getfield(struct parse_context *ctx)
 
 	fb = lookup_field(ctx);
 	if (!fb)
-		return -EINVAL;
+		return warn("field lookup failed"), -EINVAL;
 
 	objectref = stack_pop(ctx->bb->mimic_stack);
 
@@ -136,7 +137,7 @@ int convert_putfield(struct parse_context *ctx)
 
 	fb = lookup_field(ctx);
 	if (!fb)
-		return -EINVAL;
+		return warn("field lookup failed"), -EINVAL;
 
 	src = stack_pop(ctx->bb->mimic_stack);
 	objectref = stack_pop(ctx->bb->mimic_stack);
@@ -350,7 +351,7 @@ int convert_new(struct parse_context *ctx)
 	type_idx = bytecode_read_u16(ctx->buffer);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
-		return -EINVAL;
+		return warn("unable to resolve class"), -EINVAL;
 
 	expr = new_expr(class);
 	if (!expr)
@@ -395,11 +396,11 @@ int convert_anewarray(struct parse_context *ctx)
 
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
-		return -EINVAL;
+		return warn("unable to resolve class"), -EINVAL;
 
 	array_class = class_to_array_class(class);
 	if (!array_class)
-		return -EINVAL;
+		return warn("conversion failed"), -EINVAL;
 
 	size_check = array_size_check_expr(size);
 	if (!size_check)
@@ -472,7 +473,7 @@ int convert_instanceof(struct parse_context *ctx)
 	type_idx = bytecode_read_u16(ctx->buffer);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
-		return -EINVAL;
+		return warn("unable to resolve class"), -EINVAL;
 
 	expr = instanceof_expr(objectref, class);
 	if (!expr)

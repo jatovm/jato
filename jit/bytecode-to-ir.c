@@ -48,9 +48,7 @@
 
 static int convert_not_implemented(struct parse_context *ctx)
 {
-	die("bytecode %d is not supported", ctx->opc);
-
-	return -EINVAL;
+	return warn("bytecode %d is not supported", ctx->opc), -EINVAL;
 }
 
 #define convert_jsr		convert_not_implemented
@@ -201,12 +199,14 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 		ctx.opc = bytecode_read_u8(ctx.buffer);
 
 		if (ctx.opc >= ARRAY_SIZE(converters)) {
+			warn("%d out of bounds", ctx.opc);
 			err = -EINVAL;
 			break;
 		}
 
 		convert = converters[ctx.opc];
 		if (!convert) {
+			warn("no converter for %d found", ctx.opc);
 			err = -EINVAL;
 			break;
 		}
