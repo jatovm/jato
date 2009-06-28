@@ -77,7 +77,12 @@ static void __vm_native native_vmruntime_exit(int status)
 
 static void __vm_native native_vmruntime_println(struct vm_object *message)
 {
-	printf("%s\n", vm_string_to_cstr(message));
+	char *cstr = vm_string_to_cstr(message);
+
+	if (cstr)
+		printf("%s\n", cstr);
+
+	free(cstr);
 }
 
 static void __vm_native native_vmsystem_arraycopy(struct vm_object *src, int src_start,
