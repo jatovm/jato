@@ -147,8 +147,6 @@ void free_expression(struct expression *expr)
 	free(expr);
 }
 
-extern void print_trace(void);
-
 struct expression *expr_get(struct expression *expr)
 {
 	assert(expr->refcount > 0);
