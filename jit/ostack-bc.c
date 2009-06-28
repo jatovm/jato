@@ -19,13 +19,13 @@
 int convert_pop(struct parse_context *ctx)
 {
 	struct expression *expr = stack_pop(ctx->bb->mimic_stack);
-	
+
 	if (is_invoke_expr(expr)) {
 		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
 
 		if (!expr_stmt)
 			return -ENOMEM;
-			
+
 		expr_stmt->expression = &expr->node;
 		convert_statement(ctx, expr_stmt);
 	} else
@@ -48,6 +48,7 @@ static struct expression *dup_expr(struct parse_context *ctx, struct expression 
 
 	dest = temporary_expr(expr->vm_type, tmp_high, tmp_low);
 
+	expr_get(dest);
 	stmt = alloc_statement(STMT_STORE);
 	stmt->store_dest = &dest->node;
 	stmt->store_src  = &expr->node;
@@ -62,8 +63,8 @@ static int __convert_dup(struct parse_context *ctx, struct expression *value)
 
 	dup = dup_expr(ctx, value);
 
-	convert_expression(ctx, expr_get(dup));
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup);
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup)));
 
 	return 0;
 }
@@ -83,9 +84,9 @@ static int __convert_dup_x1(struct parse_context *ctx, struct expression *value1
 
 	dup = dup_expr(ctx, value1);
 
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup);
 	convert_expression(ctx, value2);
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup)));
 
 	return 0;
 }
@@ -106,10 +107,10 @@ static int __convert_dup_x2(struct parse_context *ctx, struct expression *value1
 
 	dup = dup_expr(ctx, value1);
 
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup);
 	convert_expression(ctx, value3);
 	convert_expression(ctx, value2);
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup)));
 
 	return 0;
 }
@@ -132,10 +133,10 @@ static int __convert_dup2(struct parse_context *ctx, struct expression *value1, 
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	convert_expression(ctx, expr_get(dup2));
-	convert_expression(ctx, expr_get(dup));
-	convert_expression(ctx, expr_get(dup2));
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup2);
+	convert_expression(ctx, dup);
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup2)));
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup)));
 
 	return 0;
 }
@@ -163,11 +164,11 @@ static int __convert_dup2_x1(struct parse_context * ctx, struct expression * val
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	convert_expression(ctx, expr_get(dup2));
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup2);
+	convert_expression(ctx, dup);
 	convert_expression(ctx, value3);
-	convert_expression(ctx, expr_get(dup2));
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup2)));
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup)));
 
 	return 0;
 }
@@ -196,12 +197,12 @@ static int __convert_dup2_x2(struct parse_context *ctx, struct expression *value
 	dup = dup_expr(ctx, value1);
 	dup2 = dup_expr(ctx, value2);
 
-	convert_expression(ctx, expr_get(dup2));
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup2);
+	convert_expression(ctx, dup);
 	convert_expression(ctx, value4);
 	convert_expression(ctx, value3);
-	convert_expression(ctx, expr_get(dup2));
-	convert_expression(ctx, expr_get(dup));
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup2)));
+	convert_expression(ctx, dup_expr(ctx, expr_get(dup)));
 
 	return 0;
 }

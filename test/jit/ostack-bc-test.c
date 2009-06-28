@@ -48,18 +48,24 @@ static void assert_dup_stack(unsigned char opc, struct expression *value)
 {
 	struct basic_block *bb;
 	struct statement *stmt;
+	struct statement *stmt2;
 
 	bb = alloc_simple_bb(&opc, 1);
 	stack_push(bb->mimic_stack, expr_get(value));
 
 	convert_to_ir(bb->b_parent);
         stmt = stmt_entry(bb->stmt_list.next);
+        stmt2 = stmt_entry(bb->stmt_list.next->next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_store_stmt(stmt2);
+	assert_ptr_equals(stmt->store_dest, stmt2->store_src);
+	assert_temporary_expr(stmt2->store_dest);
+
+	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
 
 	assert_true(stack_is_empty(bb->mimic_stack));
@@ -69,7 +75,7 @@ static void assert_dup_stack(unsigned char opc, struct expression *value)
 
 static void assert_dup2_stack(unsigned char opc, struct expression *value, struct expression *value2)
 {
-	struct statement *stmt, *stmt2;
+	struct statement *stmt, *stmt2, *stmt3, *stmt4;
 	struct basic_block *bb;
 
 	if (value->vm_type == J_LONG || value->vm_type == J_DOUBLE) {
@@ -84,7 +90,9 @@ static void assert_dup2_stack(unsigned char opc, struct expression *value, struc
 
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
-	stmt2 = stmt_entry(bb->stmt_list.next->next);
+	stmt2 = stmt_entry(stmt->stmt_list_node.next);
+	stmt3 = stmt_entry(stmt2->stmt_list_node.next);
+	stmt4 = stmt_entry(stmt3->stmt_list_node.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value, to_expr(stmt->store_src));
@@ -94,8 +102,16 @@ static void assert_dup2_stack(unsigned char opc, struct expression *value, struc
 	assert_ptr_equals(value2, to_expr(stmt2->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_store_stmt(stmt3);
+	assert_ptr_equals(stmt2->store_dest, stmt3->store_src);
+	assert_temporary_expr(stmt3->store_dest);
+
+	assert_store_stmt(stmt4);
+	assert_ptr_equals(stmt->store_dest, stmt4->store_src);
+	assert_temporary_expr(stmt4->store_dest);
+
+	assert_ptr_equals(to_expr(stmt4->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt3->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
 
@@ -125,7 +141,7 @@ static void assert_dup_x1_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2)
 {
 	struct basic_block *bb;
-	struct statement *stmt;
+	struct statement *stmt, *stmt2;
 
 	bb = alloc_simple_bb(&opc, 1);
 
@@ -134,12 +150,17 @@ static void assert_dup_x1_stack(unsigned char opc, struct expression *value1,
 
 	convert_to_ir(bb->b_parent);
         stmt = stmt_entry(bb->stmt_list.next);
+	stmt2 = stmt_entry(stmt->stmt_list_node.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_store_stmt(stmt2);
+	assert_ptr_equals(stmt->store_dest, stmt2->store_src);
+	assert_temporary_expr(stmt2->store_dest);
+
+	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(value2, pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
 
@@ -151,7 +172,7 @@ static void assert_dup_x1_stack(unsigned char opc, struct expression *value1,
 static void assert_dup2_x1_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2, struct expression *value3)
 {
-	struct statement *stmt, *stmt2;
+	struct statement *stmt, *stmt2, *stmt3, *stmt4;
 	struct basic_block *bb;
 
 	if (value1->vm_type == J_LONG || value2->vm_type == J_DOUBLE) {
@@ -167,7 +188,9 @@ static void assert_dup2_x1_stack(unsigned char opc, struct expression *value1,
 
 	convert_to_ir(bb->b_parent);
         stmt = stmt_entry(bb->stmt_list.next);
-	stmt2 = stmt_entry(bb->stmt_list.next->next);
+	stmt2 = stmt_entry(stmt->stmt_list_node.next);
+	stmt3 = stmt_entry(stmt2->stmt_list_node.next);
+	stmt4 = stmt_entry(stmt3->stmt_list_node.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
@@ -177,8 +200,16 @@ static void assert_dup2_x1_stack(unsigned char opc, struct expression *value1,
 	assert_ptr_equals(value2, to_expr(stmt2->store_src));
 	assert_temporary_expr(stmt2->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_store_stmt(stmt3);
+	assert_ptr_equals(stmt2->store_dest, stmt3->store_src);
+	assert_temporary_expr(stmt3->store_dest);
+
+	assert_store_stmt(stmt4);
+	assert_ptr_equals(stmt->store_dest, stmt4->store_src);
+	assert_temporary_expr(stmt4->store_dest);
+
+	assert_ptr_equals(to_expr(stmt4->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt3->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(value3, pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
@@ -209,7 +240,7 @@ static void assert_dup_x2_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2, struct expression *value3)
 {
 	struct basic_block *bb;
-	struct statement *stmt;
+	struct statement *stmt, *stmt2;
 
 	bb = alloc_simple_bb(&opc, 1);
 
@@ -219,12 +250,17 @@ static void assert_dup_x2_stack(unsigned char opc, struct expression *value1,
 
 	convert_to_ir(bb->b_parent);
         stmt = stmt_entry(bb->stmt_list.next);
+	stmt2 = stmt_entry(stmt->stmt_list_node.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
 	assert_temporary_expr(stmt->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_store_stmt(stmt2);
+	assert_ptr_equals(stmt->store_dest, stmt2->store_src);
+	assert_temporary_expr(stmt2->store_dest);
+
+	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(value2, pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(value3, pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
@@ -238,7 +274,7 @@ static void assert_dup2_x2_stack(unsigned char opc, struct expression *value1,
 				struct expression *value2, struct expression *value3,
 				struct expression *value4)
 {
-	struct statement *stmt, *stmt2;
+	struct statement *stmt, *stmt2, *stmt3, *stmt4;
 	struct basic_block *bb;
 
 	if (value1->vm_type == J_LONG || value1->vm_type == J_DOUBLE) {
@@ -265,7 +301,9 @@ static void assert_dup2_x2_stack(unsigned char opc, struct expression *value1,
 
 	convert_to_ir(bb->b_parent);
         stmt = stmt_entry(bb->stmt_list.next);
-	stmt2 = stmt_entry(bb->stmt_list.next->next);
+	stmt2 = stmt_entry(stmt->stmt_list_node.next);
+	stmt3 = stmt_entry(stmt2->stmt_list_node.next);
+	stmt4 = stmt_entry(stmt3->stmt_list_node.next);
 
 	assert_store_stmt(stmt);
 	assert_ptr_equals(value1, to_expr(stmt->store_src));
@@ -275,8 +313,16 @@ static void assert_dup2_x2_stack(unsigned char opc, struct expression *value1,
 	assert_ptr_equals(value2, to_expr(stmt2->store_src));
 	assert_temporary_expr(stmt2->store_dest);
 
-	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
-	assert_ptr_equals(to_expr(stmt2->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_store_stmt(stmt3);
+	assert_ptr_equals(stmt2->store_dest, stmt3->store_src);
+	assert_temporary_expr(stmt3->store_dest);
+
+	assert_store_stmt(stmt4);
+	assert_ptr_equals(stmt->store_dest, stmt4->store_src);
+	assert_temporary_expr(stmt4->store_dest);
+
+	assert_ptr_equals(to_expr(stmt4->store_dest), pop_and_put_expr(bb->mimic_stack));
+	assert_ptr_equals(to_expr(stmt3->store_dest), pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(value3, pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(value4, pop_and_put_expr(bb->mimic_stack));
 	assert_ptr_equals(to_expr(stmt->store_dest), pop_and_put_expr(bb->mimic_stack));
