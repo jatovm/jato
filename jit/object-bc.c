@@ -191,7 +191,7 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 
 	temporary = get_var(ctx->cu);
 	dest_expr = temporary_expr(type, NULL, temporary);
-	
+
 	store_stmt->store_src = &src_expr->node;
 	store_stmt->store_dest = &dest_expr->node;
 
@@ -503,7 +503,7 @@ int convert_checkcast(struct parse_context *ctx)
 	struct statement *checkcast_stmt;
 	unsigned long type_idx;
 
-	object_ref_tmp = copy_expr_value(ctx, stack_pop(ctx->bb->mimic_stack));
+	object_ref_tmp = dup_expr(ctx, stack_pop(ctx->bb->mimic_stack));
 
 	type_idx = bytecode_read_u16(ctx->buffer);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);

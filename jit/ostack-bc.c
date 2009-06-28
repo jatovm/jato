@@ -34,7 +34,8 @@ int convert_pop(struct parse_context *ctx)
 	return 0;
 }
 
-static struct expression *dup_expr(struct parse_context *ctx, struct expression *expr)
+struct expression *
+dup_expr(struct parse_context *ctx, struct expression *expr)
 {
 	struct expression *dest;
 	struct statement *stmt;
