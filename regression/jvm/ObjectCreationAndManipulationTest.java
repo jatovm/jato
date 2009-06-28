@@ -150,6 +150,34 @@ public class ObjectCreationAndManipulationTest extends TestCase {
 
     }
 
+    private static int sideEffectCounter;
+
+    private static int sideEffect() {
+        sideEffectCounter++;
+        return 0;
+    }
+
+    private static void testArrayLoadSideEffectBug() {
+        int array[] = {0, 0};
+        int x;
+
+        sideEffectCounter = 0;
+        x = array[sideEffect()];
+
+        assertEquals(0, x);
+        assertEquals(1, sideEffectCounter);
+    }
+
+    private static void testArrayStoreSideEffectBug() {
+        int array[] = {0, 0};
+        int x = 1;
+
+        sideEffectCounter = 0;
+        array[sideEffect()] = x;
+
+        assertEquals(1, sideEffectCounter);
+    }
+
     public static void main(String[] args) {
         testNewObject();
         testObjectInitialization();
@@ -166,6 +194,8 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testObjectArrayLoadAndStore();
         testMultiDimensionalArrayLoadAndStore();
         testCheckCast();
+        testArrayLoadSideEffectBug();
+        testArrayStoreSideEffectBug();
 
         exit();
     }
@@ -175,7 +205,7 @@ public class ObjectCreationAndManipulationTest extends TestCase {
 
         public InitializingClass(int value) {
             this.value = value;
-	}
+        }
     };
 
     private static class ClassFields {
