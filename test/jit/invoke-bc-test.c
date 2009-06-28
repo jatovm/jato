@@ -72,10 +72,15 @@ static void convert_ir_invoke(struct compilation_unit *cu,
 {
 	assert(method_index == 0);
 
+	struct vm_class target_vmc = {
+		.state = VM_CLASS_INITIALIZED,
+	};
+
 	struct vm_class vmc = {
 		.methods = target_method,
 	};
 
+	target_method->class = &target_vmc;
 	cu->method->class = &vmc;
 
 	convert_to_ir(cu);
