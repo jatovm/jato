@@ -137,6 +137,11 @@ JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(LIB_OBJS) $(CAFEBABE_OBJS)
 
 OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
+RUNTIME_CLASSES = \
+	runtime/classpath/gnu/classpath/VMStackWalker.class \
+	runtime/classpath/gnu/classpath/VMSystemProperties.class \
+	runtime/classpath/java/lang/VMSystem.class
+
 AS		:= as
 CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
@@ -187,7 +192,7 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
-$(PROGRAM): monoburg $(CLASSPATH_CONFIG) compile
+$(PROGRAM): monoburg $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
 	$(E) "  CC      " $@
 	$(Q) $(CC) -T $(LINKER_SCRIPT) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
@@ -229,11 +234,6 @@ $(REGRESSION_TEST_SUITE_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
 	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $<
 
-RUNTIME_CLASSES = \
-	runtime/classpath/gnu/classpath/VMStackWalker.class \
-	runtime/classpath/gnu/classpath/VMSystemProperties.class \
-	runtime/classpath/java/lang/VMSystem.class
-
 $(RUNTIME_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
 	$(Q) $(JAVAC) -cp $(GLIBJ) $(JAVAC_OPTS) -d runtime/classpath $<
@@ -242,7 +242,7 @@ lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES) $(RUNTIME_CLASSES)
+regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
 	$(E) "  REGRESSION"
 	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
