@@ -37,9 +37,15 @@ struct vm_class {
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
+int vm_class_init(struct vm_class *vmc);
 
-int vm_class_init_object(struct vm_class *vmc);
-int vm_class_run_clinit(struct vm_class *vmc);
+static inline int vm_class_ensure_init(struct vm_class *vmc)
+{
+	if (vmc->state == VM_CLASS_INITIALIZED)
+		return 0;
+
+	return vm_class_init(vmc);
+}
 
 static inline bool vm_class_is_interface(const struct vm_class *vmc)
 {

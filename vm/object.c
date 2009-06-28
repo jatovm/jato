@@ -19,10 +19,18 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 {
 	struct vm_object *res;
 
-	res = zalloc(sizeof(*res) + class->object_size);
-	if (res) {
-		res->class = class;
+	if (vm_class_ensure_init(class)) {
+		NOT_IMPLEMENTED;
+		return NULL;
 	}
+
+	res = zalloc(sizeof(*res) + class->object_size);
+	if (!res) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	res->class = class;
 
 	if (pthread_mutex_init(&res->mutex, NULL))
 		NOT_IMPLEMENTED;
@@ -75,6 +83,11 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 		return NULL;
 	}
 
+	if (vm_class_ensure_init(res->class)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
 	res->array_length = count;
 
 	if (pthread_mutex_init(&res->mutex, NULL))
@@ -87,6 +100,11 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	int nr_dimensions, int *counts)
 {
 	assert(nr_dimensions > 0);
+
+	if (vm_class_ensure_init(class)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	struct vm_object *res;
 
@@ -121,6 +139,11 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 {
 	struct vm_object *res;
+
+	if (vm_class_ensure_init(class)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	res = zalloc(sizeof(*res) + sizeof(struct vm_object *) * count);
 	if (!res) {
@@ -186,7 +209,6 @@ struct vm_object *new_exception(const char *class_name, const char *message)
 	struct vm_object *obj;
 	struct vm_class *e_class;
 
-	/* XXX: load_and_init? We'd better preload exception classes. */
 	e_class = classloader_load(class_name);
 	if (!e_class)
 		return NULL;

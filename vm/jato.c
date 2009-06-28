@@ -182,15 +182,6 @@ static int preload_vm_classes(void)
 		*pe->class = class;
 	}
 
-	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
-		const struct preload_entry *pe = &preload_entries[i];
-
-		if (vm_class_init_object(*pe->class)) {
-			NOT_IMPLEMENTED;
-			return 1;
-		}
-	}
-
 	for (unsigned int i = 0; i < ARRAY_SIZE(field_preload_entries); ++i) {
 		const struct field_preload_entry *pe
 			= &field_preload_entries[i];
@@ -203,6 +194,15 @@ static int preload_vm_classes(void)
 		}
 
 		*pe->field = field;
+	}
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
+		const struct preload_entry *pe = &preload_entries[i];
+
+		if (vm_class_ensure_init(*pe->class)) {
+			NOT_IMPLEMENTED;
+			return 1;
+		}
 	}
 
 	return 0;
@@ -308,7 +308,7 @@ main(int argc, char *argv[])
 
 	init_stack_trace_printing();
 
-	struct vm_class *vmc = classloader_load_and_init(classname);
+	struct vm_class *vmc = classloader_load(classname);
 	if (!vmc) {
 		fprintf(stderr, "error: %s: could not load\n", classname);
 		goto out;
@@ -322,7 +322,7 @@ main(int argc, char *argv[])
 	}
 
 	if (!vm_method_is_static(vmm)) {
-		fprintf(stderr, "errror: %s: main method not static\n",
+		fprintf(stderr, "error: %s: main method not static\n",
 			classname);
 		goto out;
 	}

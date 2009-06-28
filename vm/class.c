@@ -195,37 +195,46 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	return 0;
 }
 
-/*
- * This function sets the .object member of struct vm_class to point to
- * the object (of type java.lang.Class) for this class.
- */
-int vm_class_init_object(struct vm_class *vmc)
+int vm_class_init(struct vm_class *vmc)
 {
+	assert(vmc->state == VM_CLASS_LINKED);
+
+	/* XXX: Not entirely true, but we need it to break the recursion. */
+	vmc->state = VM_CLASS_INITIALIZED;
+
+	/* JVM spec, 2nd. ed., 2.17.1: "But before Terminator can be
+	 * initialized, its direct superclass must be initialized, as well
+	 * as the direct superclass of its direct superclass, and so on,
+	 * recursively." */
+	if (vmc->super) {
+		int ret = vm_class_ensure_init(vmc->super);
+		if (ret)
+			return ret;
+	}
+
+	/*
+	 * Set the .object member of struct vm_class to point to
+	 * the object (of type java.lang.Class) for this class.
+	 */
 	vmc->object = vm_object_alloc(vm_java_lang_Class);
 	if (!vmc->object) {
 		NOT_IMPLEMENTED;
 		return -1;
 	}
 
-	return 0;
-}
+	if (vmc->class) {
+		/* XXX: Make sure there's at most one of these. */
+		for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
+			if (strcmp(vmc->methods[i].name, "<clinit>"))
+				continue;
 
-int vm_class_run_clinit(struct vm_class *vmc)
-{
-	assert(vmc->state == VM_CLASS_LINKED);
+			void (*clinit_trampoline)(void)
+				= vm_method_trampoline_ptr(&vmc->methods[i]);
 
-	/* XXX: Make sure there's at most one of these. */
-	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
-		if (strcmp(vmc->methods[i].name, "<clinit>"))
-			continue;
-
-		void (*clinit_trampoline)(void)
-			= vm_method_trampoline_ptr(&vmc->methods[i]);
-
-		clinit_trampoline();
+			clinit_trampoline();
+		}
 	}
 
-	vmc->state = VM_CLASS_INITIALIZED;
 	return 0;
 }
 
