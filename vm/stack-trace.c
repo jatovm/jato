@@ -417,8 +417,15 @@ void vm_print_exception(struct vm_object *exception)
 
 	message_obj = field_get_object(exception,
 				       vm_java_lang_Throwable_detailMessage);
-	if (message_obj)
-		fprintf(stderr, ": %s", vm_string_to_cstr(message_obj));
+	if (message_obj) {
+		char *msg_str;
+
+		msg_str = vm_string_to_cstr(message_obj);
+
+		fprintf(stderr, ": %s", msg_str);
+
+		free(msg_str);
+	}
 
 	fprintf(stderr, "\n   <<No stack trace available>>\n");
 
