@@ -182,6 +182,11 @@ int convert_invokestatic(struct parse_context *ctx)
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
+	/* JVM Spec. 2nd. ed., §5.5 */
+	err = vm_class_ensure_init(invoke_target->class);
+	if (err)
+		return err;
+
 	expr = invoke_expr(invoke_target);
 	if (!expr)
 		return -ENOMEM;

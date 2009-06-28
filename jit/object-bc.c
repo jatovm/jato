@@ -68,10 +68,16 @@ int convert_getstatic(struct parse_context *ctx)
 {
 	struct expression *value;
 	struct vm_field *fb;
+	int err;
 
 	fb = lookup_field(ctx);
 	if (!fb)
 		return warn("field lookup failed"), -EINVAL;
+
+	/* JVM Spec. 2nd. ed., §5.5 */
+	err = vm_class_ensure_init(fb->class);
+	if (err)
+		return err;
 
 	value = class_field_expr(vm_field_type(fb), fb);
 	if (!value)
@@ -86,10 +92,16 @@ int convert_putstatic(struct parse_context *ctx)
 	struct vm_field *fb;
 	struct statement *store_stmt;
 	struct expression *dest, *src;
+	int err;
 
 	fb = lookup_field(ctx);
 	if (!fb)
 		return warn("field lookup failed"), -EINVAL;
+
+	/* JVM Spec. 2nd. ed., §5.5 */
+	err = vm_class_ensure_init(fb->class);
+	if (err)
+		return err;
 
 	src = stack_pop(ctx->bb->mimic_stack);
 	dest = class_field_expr(vm_field_type(fb), fb);
