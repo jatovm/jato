@@ -10,7 +10,7 @@ function run_java {
   CLASSPATH_INSTALL_DIR=`../tools/classpath-config`
   GLIBJ="$CLASSPATH_INSTALL_DIR/share/classpath/glibj.zip"
 
-  $GDB ../jato $JAVA_OPTS -cp $PWD:$GLIBJ $JAVA_CLASS
+  $GDB ../jato $JAVA_OPTS -cp $PWD:../runtime/classpath:$GLIBJ $JAVA_CLASS
 
   ACTUAL=$?
 

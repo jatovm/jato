@@ -199,10 +199,6 @@ test: monoburg
 	make -C test/arch-$(ARCH)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: test
 
-%.class: %.java
-	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $<
-
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
 	regression/jvm/TestCase.class \
@@ -229,10 +225,18 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ObjectStackTest.class \
 	regression/jvm/PrintTest.class
 
+$(REGRESSION_TEST_SUITE_CLASSES): %.class: %.java
+	$(E) "  JAVAC   " $@
+	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $<
+
 RUNTIME_CLASSES = \
 	runtime/classpath/gnu/classpath/VMStackWalker.class \
 	runtime/classpath/gnu/classpath/VMSystemProperties.class \
 	runtime/classpath/java/lang/VMSystem.class
+
+$(RUNTIME_CLASSES): %.class: %.java
+	$(E) "  JAVAC   " $@
+	$(Q) $(JAVAC) -cp $(GLIBJ) $(JAVAC_OPTS) -d runtime/classpath $<
 
 lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
