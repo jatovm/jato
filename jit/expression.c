@@ -72,7 +72,6 @@ int expr_is_pure(struct expression *expr)
 		 * general these expressions should not be connected
 		 * to more than one node.
 		 */
-	case EXPR_BINOP:
 	case EXPR_ARGS_LIST:
 	case EXPR_UNARY_OP:
 	case EXPR_CONVERSION:
@@ -91,6 +90,7 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_ANEWARRAY:
 	case EXPR_MULTIANEWARRAY:
 	case EXPR_NEW:
+	case EXPR_BINOP:
 		return false;
 
 		/* These expression types do not have any side-effects */
