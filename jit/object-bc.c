@@ -80,6 +80,7 @@ static struct vm_field *lookup_field(struct parse_context *ctx)
 
 int convert_getstatic(struct parse_context *ctx)
 {
+	struct expression *value_dup;
 	struct expression *value;
 	struct vm_field *fb;
 	int err;
@@ -97,7 +98,11 @@ int convert_getstatic(struct parse_context *ctx)
 	if (!value)
 		return -ENOMEM;
 
-	convert_expression(ctx, value);
+	value_dup = dup_expr(ctx, value);
+	if (!value_dup)
+		return -ENOMEM;
+
+	convert_expression(ctx, value_dup);
 	return 0;
 }
 
@@ -121,7 +126,7 @@ int convert_putstatic(struct parse_context *ctx)
 	dest = class_field_expr(vm_field_type(fb), fb);
 	if (!dest)
 		return -ENOMEM;
-	
+
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt) {
 		expr_put(dest);
@@ -130,13 +135,14 @@ int convert_putstatic(struct parse_context *ctx)
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
 	convert_statement(ctx, store_stmt);
-	
+
 	return 0;
 }
 
 int convert_getfield(struct parse_context *ctx)
 {
 	struct expression *objectref;
+	struct expression *value_dup;
 	struct expression *value;
 	struct vm_field *fb;
 
@@ -150,7 +156,11 @@ int convert_getfield(struct parse_context *ctx)
 	if (!value)
 		return -ENOMEM;
 
-	convert_expression(ctx, value);
+	value_dup = dup_expr(ctx, value);
+	if (!value_dup)
+		return -ENOMEM;
+
+	convert_expression(ctx, value_dup);
 	return 0;
 }
 
@@ -170,7 +180,7 @@ int convert_putfield(struct parse_context *ctx)
 	dest = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!dest)
 		return -ENOMEM;
-	
+
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt) {
 		expr_put(dest);
@@ -179,7 +189,7 @@ int convert_putfield(struct parse_context *ctx)
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
 	convert_statement(ctx, store_stmt);
-	
+
 	return 0;
 }
 
