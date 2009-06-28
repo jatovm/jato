@@ -58,9 +58,28 @@ public class ObjectStackTest extends TestCase {
         assertEquals(0, x++);
     }
 
+
+    public static int classField;
+
+    public static void testLoadAndIncrementClassField() {
+        classField = 0;
+        assertEquals(0, classField++);
+    }
+
+    public int instanceField;
+
+    public static void testLoadAndIncrementInstanceField() {
+        ObjectStackTest test = new ObjectStackTest();
+
+        test.instanceField = 0;
+        assertEquals(0, test.instanceField++);
+    }
+
     public static void main(String[] args) {
         testObjectStackWhenBranching();
         testLoadAndIncrementLocal();
+        testLoadAndIncrementClassField();
+        testLoadAndIncrementInstanceField();
 
         exit();
     }
