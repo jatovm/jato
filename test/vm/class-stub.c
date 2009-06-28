@@ -4,6 +4,12 @@
 #include <vm/field.h>
 #include <vm/method.h>
 
+int vm_class_init(struct vm_class *vmc)
+{
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 {
 	NOT_IMPLEMENTED;
