@@ -139,8 +139,7 @@ OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
 RUNTIME_CLASSES = \
 	runtime/classpath/gnu/classpath/VMStackWalker.class \
-	runtime/classpath/gnu/classpath/VMSystemProperties.class \
-	runtime/classpath/java/lang/VMSystem.class
+	runtime/classpath/gnu/classpath/VMSystemProperties.class
 
 AS		:= as
 CC		:= gcc
