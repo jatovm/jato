@@ -120,7 +120,7 @@ struct vm_class *load_class_from_file(const char *filename)
 
 	result = malloc(sizeof *result);
 	if (result) {
-		if (vm_class_init(result, class)) {
+		if (vm_class_link(result, class)) {
 			NOT_IMPLEMENTED;
 			return NULL;
 		}
@@ -207,7 +207,7 @@ struct vm_class *load_class_from_zip(const char *zipfile, const char *file)
 
 	result = malloc(sizeof *result);
 	if (result) {
-		if (vm_class_init(result, class)) {
+		if (vm_class_link(result, class)) {
 			NOT_IMPLEMENTED;
 			return NULL;
 		}

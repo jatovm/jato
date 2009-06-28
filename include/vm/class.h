@@ -36,7 +36,7 @@ struct vm_class {
 	struct vm_object *object;
 };
 
-int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class);
+int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
 
 int vm_class_init_object(struct vm_class *vmc);
 int vm_class_run_clinit(struct vm_class *vmc);

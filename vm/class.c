@@ -76,7 +76,7 @@ setup_vtable(struct vm_class *vmc)
 
 extern struct vm_class *vm_java_lang_Class;
 
-int vm_class_init(struct vm_class *vmc, const struct cafebabe_class *class)
+int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
 	vmc->class = class;
 
