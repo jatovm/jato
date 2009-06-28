@@ -24,6 +24,20 @@
 #include <string.h>
 #include <errno.h>
 
+/**
+ * Returns a pure expression for given expression. If @expr is not
+ * pure we need to save it's value to a temporary and return the
+ * temporary.
+ */
+static struct expression *
+get_pure_expr(struct parse_context *ctx, struct expression *expr)
+{
+	if (expr_is_pure(expr))
+		return expr;
+
+	return dup_expr(ctx, expr);
+}
+
 static char *class_name_to_array_name(const char *class_name)
 {
 	char *array_name = malloc(strlen(class_name) + 4);
@@ -171,23 +185,31 @@ int convert_putfield(struct parse_context *ctx)
 
 int convert_array_load(struct parse_context *ctx, enum vm_type type)
 {
-	struct expression *index, *arrayref, *arrayref_nullcheck;
+	struct expression *index, *arrayref;
 	struct expression *src_expr, *dest_expr;
 	struct statement *store_stmt, *arraycheck;
 	struct var_info *temporary;
+	struct expression *arrayref_pure;
+	struct expression *index_pure;
 
 	index = stack_pop(ctx->bb->mimic_stack);
-	arrayref = stack_pop(ctx->bb->mimic_stack);
+	arrayref = null_check_expr(stack_pop(ctx->bb->mimic_stack));
+	if (!arrayref)
+		goto failed;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)
 		goto failed;
 
-	arrayref_nullcheck = null_check_expr(arrayref);
-	if (!arrayref_nullcheck)
-		goto failed_arrayref_nullcheck;
-
-	src_expr = array_deref_expr(type, arrayref_nullcheck, index);
+	/*
+	 * We have to assure that arrayref and index expressions
+	 * passed to array_deref_expr() do not have side effects
+	 * because src_expr is connected to both STMT_STORE and
+	 * STMT_ARRAY_CHECK.
+	 */
+	arrayref_pure = get_pure_expr(ctx, arrayref);
+	index_pure = get_pure_expr(ctx, index);
+	src_expr = array_deref_expr(type, arrayref_pure, index_pure);
 
 	temporary = get_var(ctx->cu);
 	dest_expr = temporary_expr(type, NULL, temporary);
@@ -211,7 +233,6 @@ int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	return 0;
 
       failed_arraycheck:
-      failed_arrayref_nullcheck:
 	free_statement(store_stmt);
       failed:
 	return -ENOMEM;
@@ -259,25 +280,30 @@ int convert_saload(struct parse_context *ctx)
 
 static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 {
-	struct expression *value, *index, *arrayref, *arrayref_nullcheck;
+	struct expression *value, *index, *arrayref;
 	struct statement *store_stmt, *arraycheck;
 	struct statement *array_store_check_stmt;
 	struct expression *src_expr, *dest_expr;
+	struct expression *arrayref_pure;
+	struct expression *index_pure;
 
 	value = stack_pop(ctx->bb->mimic_stack);
 	index = stack_pop(ctx->bb->mimic_stack);
-	arrayref = stack_pop(ctx->bb->mimic_stack);
+
+	arrayref = null_check_expr(stack_pop(ctx->bb->mimic_stack));
+	if (!arrayref)
+		goto failed;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)
 		goto failed;
 
-	arrayref_nullcheck = null_check_expr(arrayref);
-	if (!arrayref_nullcheck)
-		goto failed_arrayref_nullcheck;
 
-	dest_expr = array_deref_expr(type, arrayref_nullcheck, index);
-	src_expr = value;
+	arrayref_pure = get_pure_expr(ctx, arrayref);
+	index_pure = get_pure_expr(ctx, index);
+	dest_expr = array_deref_expr(type, arrayref_pure, index_pure);
+
+	src_expr = dup_expr(ctx, value);
 
 	store_stmt->store_dest = &dest_expr->node;
 	store_stmt->store_src = &src_expr->node;
@@ -295,9 +321,8 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 
 	expr_get(src_expr);
 	array_store_check_stmt->store_check_src = &src_expr->node;
-	expr_get(arrayref_nullcheck);
-	array_store_check_stmt->store_check_array = &arrayref_nullcheck->node;
-
+	expr_get(arrayref_pure);
+	array_store_check_stmt->store_check_array = &arrayref_pure->node;
 
 	convert_statement(ctx, arraycheck);
 	convert_statement(ctx, array_store_check_stmt);
@@ -308,7 +333,6 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
       failed_array_store_check_stmt:
 	free_statement(arraycheck);
       failed_arraycheck:
-      failed_arrayref_nullcheck:
 	free_statement(store_stmt);
       failed:
 	return -ENOMEM;

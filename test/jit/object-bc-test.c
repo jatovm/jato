@@ -247,13 +247,24 @@ static void assert_convert_array_load(enum vm_type expected_type,
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	struct statement *arraycheck = stmt;
-	struct statement *store_stmt = stmt_entry(arraycheck->stmt_list_node.next);
+	struct statement *arrayref_pure_stmt = stmt;
+	struct statement *arraycheck_stmt = stmt_entry(arrayref_pure_stmt->stmt_list_node.next);
+	struct statement *store_stmt = stmt_entry(arraycheck_stmt->stmt_list_node.next);
 
-	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr, arraycheck);
+	assert_store_stmt(arrayref_pure_stmt);
+	assert_nullcheck_value_expr(J_REFERENCE, arrayref,
+				    arrayref_pure_stmt->store_src);
+	assert_temporary_expr(arrayref_pure_stmt->store_dest);
+
+	assert_arraycheck_stmt(expected_type,
+			       to_expr(arrayref_pure_stmt->store_dest),
+			       index_expr,
+			       arraycheck_stmt);
 
 	assert_store_stmt(store_stmt);
-	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
+	assert_array_deref_expr(expected_type,
+				to_expr(arrayref_pure_stmt->store_dest),
+				index_expr,
 				store_stmt->store_src);
 
 	temporary_expr = stack_pop(bb->mimic_stack);
@@ -342,16 +353,33 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	struct statement *arraycheck = stmt;
-	struct statement *storecheck_stmt = stmt_entry(arraycheck->stmt_list_node.next);
+	struct statement *arrayref_pure_stmt = stmt;
+	struct statement *value_dup_stmt = stmt_entry(arrayref_pure_stmt->stmt_list_node.next);
+	struct statement *arraycheck_stmt = stmt_entry(value_dup_stmt->stmt_list_node.next);
+	struct statement *storecheck_stmt = stmt_entry(arraycheck_stmt->stmt_list_node.next);
 	struct statement *store_stmt = stmt_entry(storecheck_stmt->stmt_list_node.next);
 
-	assert_arraycheck_stmt(expected_type, arrayref_expr, index_expr,
-			       arraycheck);
-	assert_array_store_check_stmt(storecheck_stmt, arrayref_expr,
+	assert_store_stmt(arrayref_pure_stmt);
+	assert_nullcheck_value_expr(J_REFERENCE, arrayref,
+				    arrayref_pure_stmt->store_src);
+	assert_temporary_expr(arrayref_pure_stmt->store_dest);
+
+	assert_store_stmt(value_dup_stmt);
+	assert_ptr_equals(&expr->node, value_dup_stmt->store_src);
+	assert_temporary_expr(value_dup_stmt->store_dest);
+
+	assert_arraycheck_stmt(expected_type,
+			       to_expr(arrayref_pure_stmt->store_dest),
+			       index_expr,
+			       arraycheck_stmt);
+
+	assert_array_store_check_stmt(storecheck_stmt,
+				      to_expr(arrayref_pure_stmt->store_dest),
 				      store_stmt->store_src);
 	assert_store_stmt(store_stmt);
-	assert_array_deref_expr(expected_type, arrayref_expr, index_expr,
+	assert_array_deref_expr(expected_type,
+				to_expr(arrayref_pure_stmt->store_dest),
+				index_expr,
 				store_stmt->store_dest);
 	assert_temporary_expr(store_stmt->store_src);
 

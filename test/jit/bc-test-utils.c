@@ -134,7 +134,7 @@ void assert_array_deref_expr(enum vm_type expected_vm_type,
 
 	assert_int_equals(EXPR_ARRAY_DEREF, expr_type(expr));
 	assert_int_equals(expected_vm_type, expr->vm_type);
-	assert_null_check_expr(expected_arrayref, to_expr(expr->arrayref));
+	assert_ptr_equals(expected_arrayref, to_expr(expr->arrayref));
 	assert_ptr_equals(expected_index, to_expr(expr->array_index));
 }
 
@@ -238,7 +238,7 @@ void assert_array_store_check_stmt(struct statement *stmt,
 				   struct tree_node *store_src)
 {
 	assert_int_equals(STMT_ARRAY_STORE_CHECK, stmt_type(stmt));
-	assert_null_check_expr(arrayref, to_expr(stmt->store_check_array));
+	assert_ptr_equals(arrayref, to_expr(stmt->store_check_array));
 	assert_ptr_equals(store_src, stmt->store_check_src);
 }
 
