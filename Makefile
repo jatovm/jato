@@ -138,7 +138,6 @@ JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(LIB_OBJS) $(CAFEBABE_OBJS)
 OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
 RUNTIME_CLASSES = \
-	runtime/classpath/gnu/classpath/VMStackWalker.class \
 	runtime/classpath/gnu/classpath/VMSystemProperties.class
 
 AS		:= as
