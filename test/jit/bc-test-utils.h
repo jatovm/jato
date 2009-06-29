@@ -49,7 +49,7 @@ void assert_monitorenter_stmt(struct expression *, struct statement *);
 void assert_monitorexit_stmt(struct expression *, struct statement *);
 void assert_checkcast_stmt(struct expression *, struct statement *);
 
-void convert_ir_const(struct compilation_unit *, ConstantPoolEntry *, size_t, uint8_t *);
+void convert_ir_const(struct compilation_unit *, uint32_t *, size_t, uint8_t *);
 
 struct statement *first_stmt(struct compilation_unit *cu);
 

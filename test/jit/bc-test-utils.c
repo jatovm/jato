@@ -289,7 +289,7 @@ void assert_checkcast_stmt(struct expression *expected,
 }
 
 void convert_ir_const(struct compilation_unit *cu,
-		      ConstantPoolEntry *cp_infos,
+		      uint32_t *cp_infos,
 		      size_t nr_cp_infos, uint8_t *cp_types)
 {
 	struct vm_class *class = new_class();

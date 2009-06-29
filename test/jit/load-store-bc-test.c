@@ -128,22 +128,22 @@ void test_convert_sipush(void)
 	assert_convert_sipush(J_SHORT_MAX, 0x7F, 0xFF, OPC_SIPUSH);
 }
 
-static void const_set_int32_t(ConstantPoolEntry *cp_infos, unsigned long idx, int32_t value)
+static void const_set_int32_t(uint32_t *cp_infos, unsigned long idx, int32_t value)
 {
 	cp_infos[idx] = value;
 }
 
-static void const_set_int64_t(ConstantPoolEntry *cp_infos, unsigned long idx, int64_t value)
+static void const_set_int64_t(uint32_t *cp_infos, unsigned long idx, int64_t value)
 {
 	*(long long *)&(cp_infos[idx]) = value;
 }
 
-static void const_set_float(ConstantPoolEntry *cp_infos, unsigned long idx, float value)
+static void const_set_float(uint32_t *cp_infos, unsigned long idx, float value)
 {
 	*(float *)&(cp_infos[idx]) = value;
 }
 
-static void const_set_double(ConstantPoolEntry *cp_infos, unsigned long idx, double value)
+static void const_set_double(uint32_t *cp_infos, unsigned long idx, double value)
 {
 	*(double *)&(cp_infos[idx]) = value;
 }
@@ -153,7 +153,7 @@ static void const_set_double(ConstantPoolEntry *cp_infos, unsigned long idx, dou
 static void assert_convert_ldc(enum vm_type expected_type,
 			       long long expected_value, uint8_t cp_type)
 {
-	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	uint32_t cp_infos[NR_CP_ENTRIES];
 	uint8_t cp_types[NR_CP_ENTRIES];
 	unsigned char code[] = { OPC_LDC, 0xff };
 	struct expression *expr;
@@ -189,7 +189,7 @@ static void assert_convert_ldc_string(enum vm_type expected_type,
 				      long long expected_value)
 {
 	unsigned char code[] = { OPC_LDC, 0xff };
-	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	uint32_t cp_infos[NR_CP_ENTRIES];
 	uint8_t cp_types[NR_CP_ENTRIES];
 	struct expression *expr;
 	struct basic_block *bb;
@@ -220,7 +220,7 @@ void test_convert_ldc_string(void)
 static void assert_convert_ldc_float(float expected_value)
 {
 	unsigned char code[] = { OPC_LDC, 0xff };
-	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	uint32_t cp_infos[NR_CP_ENTRIES];
 	uint8_t cp_types[NR_CP_ENTRIES];
 	struct expression *expr;
 	struct basic_block *bb;
@@ -255,7 +255,7 @@ static void assert_convert_ldc_w(enum vm_type expected_type,
 				unsigned char opcode)
 {
 	unsigned char code[] = { opcode, 0x01, 0x00 };
-	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	uint32_t cp_infos[NR_CP_ENTRIES];
 	uint8_t cp_types[NR_CP_ENTRIES];
 	struct basic_block *bb;
 	struct expression *expr;
@@ -280,7 +280,7 @@ static void assert_convert_ldc_w(enum vm_type expected_type,
 static void assert_convert_ldc_w_string(enum vm_type expected_type, long long expected_value)
 {
 	unsigned char code[] = { OPC_LDC_W, 0x01, 0x00 };
-	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	uint32_t cp_infos[NR_CP_ENTRIES];
 	uint8_t cp_types[NR_CP_ENTRIES];
 	struct basic_block *bb;
 	struct expression *expr;
@@ -337,7 +337,7 @@ static void assert_convert_ldc_w_float(enum vm_type expected_type,
 				  uint8_t cp_type, unsigned long opcode)
 {
 	unsigned char code[] = { opcode, 0x01, 0x00 };
-	ConstantPoolEntry cp_infos[NR_CP_ENTRIES];
+	uint32_t cp_infos[NR_CP_ENTRIES];
 	uint8_t cp_types[NR_CP_ENTRIES];
 	struct expression *expr;
 	struct basic_block *bb;

@@ -24,6 +24,4 @@ extern char *slash2dots(char *utf8);
 #define CLASS_ARRAY             6
 #define IS_ARRAY(cb)                    (cb->state == CLASS_ARRAY)
 
-typedef uintptr_t ConstantPoolEntry;
-
 #endif /* JATO_VM_H */
