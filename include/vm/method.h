@@ -21,6 +21,7 @@ struct vm_class;
 struct vm_method {
 	struct vm_class *class;
 	unsigned int method_index;
+	unsigned int virtual_index;
 	const struct cafebabe_method_info *method;
 
 	char *name;
