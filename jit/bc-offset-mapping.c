@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <stdio.h>
+
 #include <jit/bc-offset-mapping.h>
 #include <jit/statement.h>
 #include <jit/expression.h>

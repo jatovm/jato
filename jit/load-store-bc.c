@@ -23,8 +23,9 @@
 #include <vm/stack.h>
 #include <vm/die.h>
 
-#include <errno.h>
 #include <stdint.h>
+#include <errno.h>
+#include <stdio.h>
 
 static int __convert_const(struct parse_context *ctx,
 			   unsigned long long value, enum vm_type vm_type)

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 
 #include <cafebabe/attribute_array.h>
 #include <cafebabe/attribute_info.h>

@@ -17,10 +17,10 @@
 
 #include <string.h>
 
-static void convert_ir_const_single(struct compilation_unit *cu, void *value)
+static void convert_ir_const_single(struct compilation_unit *cu, void *value, uint8_t type)
 {
 	uint64_t cp_infos[] = { (unsigned long) value };
-	uint8_t cp_types[] = { CONSTANT_Resolved };
+	uint8_t cp_types[] = { type };
 
 	convert_ir_const(cu, (void *)cp_infos, 8, cp_types);
 }
@@ -59,7 +59,7 @@ static void __assert_convert_getstatic(unsigned char opc,
 
 	bb = __alloc_simple_bb(&method);
 
-	convert_ir_const_single(bb->b_parent, &fb);
+	convert_ir_const_single(bb->b_parent, &fb, CAFEBABE_CONSTANT_TAG_FIELD_REF);
 	expr = stack_pop(bb->mimic_stack);
 	assert_class_field_expr(expected_vm_type, &fb, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
@@ -103,7 +103,7 @@ static void __assert_convert_getfield(unsigned char opc,
 
 	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
 	stack_push(bb->mimic_stack, objectref);
-	convert_ir_const_single(bb->b_parent, &fb);
+	convert_ir_const_single(bb->b_parent, &fb, CAFEBABE_CONSTANT_TAG_FIELD_REF);
 	expr = stack_pop(bb->mimic_stack);
 	assert_instance_field_expr(expected_vm_type, &fb, objectref, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
@@ -146,7 +146,7 @@ static void __assert_convert_putstatic(unsigned char opc,
 	value = value_expr(expected_vm_type, 0xdeadbeef);
 	bb = __alloc_simple_bb(&method);
 	stack_push(bb->mimic_stack, value);
-	convert_ir_const_single(bb->b_parent, &fb);
+	convert_ir_const_single(bb->b_parent, &fb, CAFEBABE_CONSTANT_TAG_FIELD_REF);
 	stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_store_stmt(stmt);
@@ -196,7 +196,7 @@ static void __assert_convert_putfield(unsigned char opc,
 	value = value_expr(expected_vm_type, 0xdeadbeef);
 	stack_push(bb->mimic_stack, value);
 
-	convert_ir_const_single(bb->b_parent, &fb);
+	convert_ir_const_single(bb->b_parent, &fb, CAFEBABE_CONSTANT_TAG_FIELD_REF);
 	stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_store_stmt(stmt);
@@ -449,7 +449,7 @@ static void assert_convert_new(unsigned long expected_type_idx,
 	};
 
 	bb = __alloc_simple_bb(&method);
-	convert_ir_const_single(bb->b_parent, instance_class);
+	convert_ir_const_single(bb->b_parent, instance_class, CAFEBABE_CONSTANT_TAG_CLASS);
 
 	new_expr = stack_pop(bb->mimic_stack);
 	assert_int_equals(EXPR_NEW, expr_type(new_expr));
@@ -490,7 +490,7 @@ void test_convert_anewarray(void)
 
 	CLASS_CB(instance_class)->name = array_name;
 
-	convert_ir_const_single(bb->b_parent, instance_class);
+	convert_ir_const_single(bb->b_parent, instance_class, CAFEBABE_CONSTANT_TAG_CLASS);
 
 	arrayref = stack_pop(bb->mimic_stack);
 
@@ -558,7 +558,7 @@ void test_convert_multianewarray(void)
 	create_args(args_count, dimension);
 	push_args(bb, args_count, dimension);
 
-	convert_ir_const_single(bb->b_parent, instance_class);
+	convert_ir_const_single(bb->b_parent, instance_class, CAFEBABE_CONSTANT_TAG_CLASS);
 
 	arrayref = stack_pop(bb->mimic_stack);
 
@@ -623,7 +623,7 @@ void test_convert_instanceof(void)
 	ref = value_expr(J_REFERENCE, (unsigned long) instance_class);
 	stack_push(bb->mimic_stack, ref);
 
-	convert_ir_const_single(bb->b_parent, instance_class);
+	convert_ir_const_single(bb->b_parent, instance_class, CAFEBABE_CONSTANT_TAG_CLASS);
 
 	expr = stack_pop(bb->mimic_stack);
 
@@ -713,7 +713,7 @@ void test_convert_checkcast(void)
 	ref = value_expr(J_REFERENCE, (unsigned long)class);
 	stack_push(bb->mimic_stack, ref);
 
-	convert_ir_const_single(bb->b_parent, class);
+	convert_ir_const_single(bb->b_parent, class, CAFEBABE_CONSTANT_TAG_CLASS);
 	stmt = stmt_entry(bb->stmt_list.next);
 	assert_checkcast_stmt(ref, stmt);
 

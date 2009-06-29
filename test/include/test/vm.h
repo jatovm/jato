@@ -4,9 +4,9 @@
 #include <vm/vm.h>
 #include <stdlib.h>
 
-static inline struct object *new_class(void)
+static inline struct vm_class *new_class(void)
 {
-	return malloc(sizeof(struct classblock) + sizeof(struct object));
+	return malloc(sizeof(struct vm_class));
 }
 
 #define RESOLVED_STRING_CONSTANT 0x2bad1deaUL

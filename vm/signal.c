@@ -36,6 +36,7 @@
 #include <ucontext.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <stdio.h>
 
 static void throw_arithmetic_exception(void)
 {

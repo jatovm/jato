@@ -195,7 +195,7 @@ static void assert_convert_ldc_string(enum vm_type expected_type,
 	struct basic_block *bb;
 
 	const_set_int32_t(cp_infos, 0xff, 0x00);
-	cp_types[0xff] = CONSTANT_String;
+	cp_types[0xff] = CAFEBABE_CONSTANT_TAG_STRING;
 
 	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
@@ -226,7 +226,7 @@ static void assert_convert_ldc_float(float expected_value)
 	struct basic_block *bb;
 
 	const_set_float(cp_infos, 0xff, expected_value);
-	cp_types[0xff] = CONSTANT_Float;
+	cp_types[0xff] = CAFEBABE_CONSTANT_TAG_FLOAT;
 
 	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
@@ -286,7 +286,7 @@ static void assert_convert_ldc_w_string(enum vm_type expected_type, long long ex
 	struct expression *expr;
 
 	const_set_int32_t(cp_infos, 0x100, 0x00);
-	cp_types[0x100] = CONSTANT_String;
+	cp_types[0x100] = CAFEBABE_CONSTANT_TAG_STRING;
 
 	bb = alloc_simple_bb(code, ARRAY_SIZE(code));
 	convert_ir_const(bb->b_parent, cp_infos, NR_CP_ENTRIES, cp_types);
@@ -364,9 +364,9 @@ void test_convert_ldc_w_float(void)
 	NOT_IMPLEMENTED;
 
 #if 0
-	assert_convert_ldc_w_float(J_FLOAT, 0.01f, CONSTANT_Float, OPC_LDC_W);
-	assert_convert_ldc_w_float(J_FLOAT,  1.0f, CONSTANT_Float, OPC_LDC_W);
-	assert_convert_ldc_w_float(J_FLOAT, -1.0f, CONSTANT_Float, OPC_LDC_W);
+	assert_convert_ldc_w_float(J_FLOAT, 0.01f, CAFEBABE_CONSTANT_TAG_FLOAT, OPC_LDC_W);
+	assert_convert_ldc_w_float(J_FLOAT,  1.0f, CAFEBABE_CONSTANT_TAG_FLOAT, OPC_LDC_W);
+	assert_convert_ldc_w_float(J_FLOAT, -1.0f, CAFEBABE_CONSTANT_TAG_FLOAT, OPC_LDC_W);
 #endif
 }
 
@@ -375,9 +375,9 @@ void test_convert_ldc2_w_double(void)
 	NOT_IMPLEMENTED;
 
 #if 0
-	assert_convert_ldc_w_float(J_DOUBLE, 0.01f, CONSTANT_Double, OPC_LDC2_W);
-	assert_convert_ldc_w_float(J_DOUBLE,  1.0f, CONSTANT_Double, OPC_LDC2_W);
-	assert_convert_ldc_w_float(J_DOUBLE, -1.0f, CONSTANT_Double, OPC_LDC2_W);
+	assert_convert_ldc_w_float(J_DOUBLE, 0.01f, CAFEBABE_CONSTANT_TAG_DOUBLE, OPC_LDC2_W);
+	assert_convert_ldc_w_float(J_DOUBLE,  1.0f, CAFEBABE_CONSTANT_TAG_DOUBLE, OPC_LDC2_W);
+	assert_convert_ldc_w_float(J_DOUBLE, -1.0f, CAFEBABE_CONSTANT_TAG_DOUBLE, OPC_LDC2_W);
 #endif
 }
 

@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include <vm/class.h>
 #include <vm/field.h>

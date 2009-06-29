@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <vm/object.h>
 #include <vm/types.h>

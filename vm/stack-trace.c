@@ -32,6 +32,7 @@
 #include <vm/object.h>
 #include <vm/stack-trace.h>
 #include <vm/java_lang.h>
+#include <vm/system.h>
 
 #include <jit/bc-offset-mapping.h>
 #include <jit/cu-mapping.h>
@@ -39,6 +40,7 @@
 #include <jit/compiler.h>
 
 #include <malloc.h>
+#include <stdio.h>
 
 __thread struct native_stack_frame *bottom_stack_frame;
 

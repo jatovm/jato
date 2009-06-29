@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 
 #include <cafebabe/class.h>
 #include <cafebabe/constant_pool.h>

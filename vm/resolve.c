@@ -27,6 +27,9 @@
 #include <vm/resolve.h>
 #include <vm/vm.h>
 
+#include <stddef.h>
+#include <stdio.h>
+
 struct object *resolve_string(struct constant_pool *cp, unsigned long cp_idx)
 {
 	NOT_IMPLEMENTED;

@@ -39,6 +39,8 @@
 #include <vm/die.h>
 #include <vm/vm.h>
 
+#include <stdio.h>
+
 static void *jit_native_trampoline(struct compilation_unit *cu)
 {
 	const char *method_name, *class_name;

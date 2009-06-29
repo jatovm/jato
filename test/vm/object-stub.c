@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <vm/class.h>
 #include <vm/object.h>

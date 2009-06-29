@@ -21,9 +21,10 @@
 
 #include <arch/instruction.h>
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <stdio.h>
 
 static void emit_monitorenter(struct compilation_unit *cu)
 {

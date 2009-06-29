@@ -35,6 +35,7 @@
 
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdio.h>
 
 /* This is located on the first address past the end of the
    uninitialized data segment */

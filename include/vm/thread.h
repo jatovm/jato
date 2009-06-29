@@ -1,6 +1,8 @@
 #ifndef __VM_THREAD_H
 #define __VM_THREAD_H
 
+#include <stdio.h> /* for NOT_IMPLEMENTED */
+
 struct vm_object;
 
 struct vm_thread {
