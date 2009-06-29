@@ -38,17 +38,40 @@
 #include <unistd.h>
 #include <stdio.h>
 
-static void throw_arithmetic_exception(void)
+static unsigned long
+throw_from_signal_bh(unsigned long jit_addr)
+{
+	struct jit_stack_frame *frame;
+	struct compilation_unit *cu;
+
+	/*
+	 * The frame chain looks like this here:
+	 *
+	 * 0  <throw_from_signal_bh>
+	 * 1  <signal_bottom_half_handler>
+	 * 2  <signal_bh_trampoline>
+	 * 3  <jit_method>
+	 *    ...
+	 */
+	frame = __builtin_frame_address(3);
+
+	cu = get_cu_from_native_addr(jit_addr);
+
+	return (unsigned long)throw_exception_from(cu, frame,
+		(unsigned char *)jit_addr);
+}
+
+static unsigned long throw_arithmetic_exception(unsigned long src_addr)
 {
 	signal_new_exception("java/lang/ArithmeticException",
 			     "division by zero");
-	throw_from_native(0);
+	return throw_from_signal_bh(src_addr);
 }
 
-static void throw_null_pointer_exception(void)
+static unsigned long throw_null_pointer_exception(unsigned long src_addr)
 {
 	signal_new_exception("java/lang/NullPointerException", NULL);
-	throw_from_native(0);
+	return throw_from_signal_bh(src_addr);
 }
 
 static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)

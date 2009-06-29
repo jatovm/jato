@@ -32,6 +32,8 @@
 
 #include <vm/signal.h>
 
+extern void signal_bh_trampoline(void *bh);
+
 bool signal_from_native(void *ctx)
 {
 	ucontext_t *uc;
@@ -65,12 +67,19 @@ int install_signal_bh(void *ctx, signal_bh_fn bh)
 
 	uc = ctx;
 
-	/* push return address on stack */
-	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP] - 1;
-	*stack = uc->uc_mcontext.gregs[REG_IP];
-	uc->uc_mcontext.gregs[REG_SP] -= sizeof(unsigned long);
+	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
 
-	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)bh;
+	/* push return address on stack */
+	stack--;
+	*stack = uc->uc_mcontext.gregs[REG_IP];
+
+	/* push bottom-half handler address on stack */
+	stack--;
+	*stack = bh;
+
+	uc->uc_mcontext.gregs[REG_SP] -= 2 * sizeof(unsigned long);
+
+	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)signal_bh_trampoline;
 
 	return 0;
 }
