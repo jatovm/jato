@@ -6,6 +6,7 @@
 
 extern char *slash2dots(char *utf8);
 
+/* The following are atype values of the newarray bytecode:*/
 #define T_BOOLEAN               4
 #define T_CHAR                  5
 #define T_FLOAT                 6
