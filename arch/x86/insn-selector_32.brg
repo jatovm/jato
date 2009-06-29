@@ -84,6 +84,20 @@ static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
 	select_insn(bb, tree, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
 }
 
+/*
+ * Returns the right-most expression in argument list. It's the first
+ * argument passed to method.
+ */
+static struct expression *get_first_arg(struct tree_node *args)
+{
+	while (expr_type(to_expr(args)) == EXPR_ARGS_LIST)
+	      args = to_expr(args)->args_right;
+
+	assert(expr_type(to_expr(args)) == EXPR_ARG);
+
+	return to_expr(to_expr(args)->arg_expression);
+}
+
 struct _MBState;
 
 static void __binop_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type, struct var_info *, long);
@@ -612,11 +626,11 @@ reg:	EXPR_INVOKE(arg) 1
 reg:	EXPR_INVOKEVIRTUAL(arg) 1
 {
 	struct var_info *eax, *edx = NULL;
+	struct expression *objectref_expr;
 	struct var_info *call_target;
 	struct compilation_unit *cu;
 	unsigned long method_offset;
 	struct vm_method *method;
-	struct var_info *stack_ptr;
 	unsigned long args_count;
 	struct expression *expr;
 
@@ -634,11 +648,15 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 		state->reg2 = get_var(s->b_parent);
 	}
 
-	call_target = get_var(s->b_parent);
-	stack_ptr = get_fixed_var(s->b_parent, REG_ESP);
-
 	/* object reference */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, stack_ptr, 0, call_target));
+	objectref_expr = get_first_arg(expr->args_list);
+
+	if (expr_type(objectref_expr) == EXPR_VALUE) {
+		call_target = get_var(s->b_parent);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
+	} else {
+		call_target = state->left->reg1;
+	}
 
 	/* object class */
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
@@ -1047,6 +1065,7 @@ reg:	EXPR_CONVERSION(reg)
 
 arg:	EXPR_NO_ARGS
 {
+	state->reg1 = NULL;
 }
 
 arg:	EXPR_ARG(EXPR_VALUE)
@@ -1080,10 +1099,13 @@ arg:	EXPR_ARG(reg)
 
 	src = state->left->reg1;
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+
+	state->reg1 = src;
 }
 
 arg:	EXPR_ARGS_LIST(arg, arg)
 {
+	state->reg1 = state->right->reg1;
 }
 
 reg:	EXPR_EXCEPTION_REF
