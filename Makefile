@@ -227,7 +227,13 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ExceptionsTest.class \
 	regression/jvm/FibonacciTest.class \
 	regression/jvm/ObjectStackTest.class \
-	regression/jvm/PrintTest.class
+	regression/jvm/PrintTest.class \
+	regression/jvm/ArrayExceptionsTest.class \
+	regression/jvm/IntegerArithmeticExceptionsTest.class \
+	regression/jvm/LongArithmeticExceptionsTest.class \
+	regression/jvm/MethodInvocationExceptionsTest.class \
+	regression/jvm/ObjectCreationAndManipulationExceptionsTest.class \
+	regression/jvm/SynchronizationExceptionsTest.class
 
 $(REGRESSION_TEST_SUITE_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
