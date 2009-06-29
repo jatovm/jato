@@ -102,6 +102,14 @@ static int print_membase_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->dest);
 }
 
+static int print_memdisp_reg(struct string *str, struct insn *insn)
+{
+	str_append(str, "(");
+	print_imm(str, &insn->src);
+	str_append(str, "), ");
+	return print_reg(str, &insn->dest);
+}
+
 static int print_tlmemdisp_reg(struct string *str, struct insn *insn)
 {
 	str_append(str, "gs:(");
@@ -304,6 +312,12 @@ static int print_mov_imm_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_imm_reg(str, insn);
+}
+
+static int print_mov_memdisp_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memdisp_reg(str, insn);
 }
 
 static int print_mov_memlocal_reg(struct string *str, struct insn *insn)
@@ -540,6 +554,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_IMM_REG] = print_mov_imm_reg,
 	[INSN_MOV_MEMLOCAL_REG] = print_mov_memlocal_reg,
 	[INSN_MOV_MEMBASE_REG] = print_mov_membase_reg,
+	[INSN_MOV_MEMDISP_REG] = print_mov_memdisp_reg,
 	[INSN_MOV_THREAD_LOCAL_MEMDISP_REG] = print_mov_tlmemdisp_reg,
 	[INSN_MOV_MEMINDEX_REG] = print_mov_memindex_reg,
 	[INSN_MOV_REG_MEMBASE] = print_mov_reg_membase,
