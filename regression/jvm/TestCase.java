@@ -81,4 +81,8 @@ public class TestCase {
     protected static void exit() {
         VM.exit(status);
     }
+
+    public static void takeInt(int val) {}
+    public static void takeLong(long val) {}
+    public static void takeObject(Object obj) {}
 }

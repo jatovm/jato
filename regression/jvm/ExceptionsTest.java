@@ -38,15 +38,6 @@ public class ExceptionsTest extends TestCase {
     public void publicMethod() {
     }
 
-    public static void takeInt(int val) {
-    }
-
-    public static void takeLong(long val) {
-    }
-
-    public static void takeObject(Object obj) {
-    }
-
     public static void testTryBlockDoesNotThrowAnything() {
         boolean caught;
         try {
