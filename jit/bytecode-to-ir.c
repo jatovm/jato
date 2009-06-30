@@ -301,14 +301,12 @@ assign_temporary(struct basic_block *bb, int entry, int slot_ndx,
 	}
 }
 
-static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
+static void propagate_temporary(struct basic_block *bb, bool entry, int slot_ndx,
+		struct var_info *tmp_high, struct var_info *tmp_low, struct basic_block *from)
 {
-	struct var_info *tmp_high, *tmp_low;
 	struct basic_block **neighbors;
-	struct expression *expr;
 	int nr_neighbors;
-	unsigned int i;
-	int slot_ndx;
+	int j;
 
 	if (entry) {
 		neighbors    = bb->predecessors;
@@ -318,9 +316,24 @@ static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
 		nr_neighbors = bb->nr_successors;
 	}
 
-	for (i = 0; i < bb->nr_mimic_stack_expr; i++) {
-		int j;
+	assign_temporary(bb, entry, slot_ndx, tmp_high, tmp_low);
 
+	for (j = 0; j < nr_neighbors; j++) {
+		if (neighbors[j] == from)
+			continue;
+
+		propagate_temporary(neighbors[j], !entry, slot_ndx, tmp_high, tmp_low, bb);
+	}
+}
+
+static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
+{
+	struct var_info *tmp_high, *tmp_low;
+	struct expression *expr;
+	unsigned int i;
+	int slot_ndx;
+
+	for (i = 0; i < bb->nr_mimic_stack_expr; i++) {
 		expr = bb->mimic_stack_expr[i];
 
 		/* Skip expressions that already been transformed */
@@ -341,11 +354,8 @@ static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
 		/* Save the slot number */
 		slot_ndx = expr->slot_ndx;
 
-		/* Assign this temporary to same mimic stack expressions in this block */
-		assign_temporary(bb, entry, expr->slot_ndx, tmp_high, tmp_low);
-
-		for (j = 0; j < nr_neighbors; j++)
-			assign_temporary(neighbors[j], !entry, slot_ndx, tmp_high, tmp_low);
+		/* Assign this temporary to same mimic stack expressions in this block and its neighbors */
+		propagate_temporary(bb, entry, expr->slot_ndx, tmp_high, tmp_low, bb);
 	}
 }
 
