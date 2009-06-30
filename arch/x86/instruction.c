@@ -246,6 +246,28 @@ struct insn *imm_reg_insn(enum insn_type insn_type, unsigned long imm,
 	return insn;
 }
 
+struct insn *memdisp_reg_insn(enum insn_type insn_type, unsigned long imm,
+			      struct var_info *dest_reg)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_imm_operand(insn, 0, imm);
+		init_reg_operand(insn, 1, dest_reg);
+	}
+	return insn;
+}
+
+struct insn *reg_memdisp_insn(enum insn_type insn_type,
+			      struct var_info *src_reg, unsigned long imm)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_reg_operand(insn, 0, src_reg);
+		init_imm_operand(insn, 1, imm);
+	}
+	return insn;
+}
+
 struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 			      struct var_info *base_reg, long disp)
 {

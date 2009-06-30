@@ -82,6 +82,7 @@ enum insn_type {
 	INSN_MOV_MEMLOCAL_REG,
 	INSN_MOV_MEMBASE_REG,
 	INSN_MOV_MEMDISP_REG,
+	INSN_MOV_REG_MEMDISP,
 	INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
 	INSN_MOV_MEMINDEX_REG,
 	INSN_MOV_REG_MEMBASE,
@@ -178,6 +179,8 @@ struct insn *reg_memlocal_insn(enum insn_type, struct var_info *, struct stack_s
 struct insn *reg_insn(enum insn_type, struct var_info *);
 struct insn *reg_reg_insn(enum insn_type, struct var_info *, struct var_info *);
 struct insn *imm_reg_insn(enum insn_type, unsigned long, struct var_info *);
+struct insn *memdisp_reg_insn(enum insn_type, unsigned long, struct var_info *);
+struct insn *reg_memdisp_insn(enum insn_type, struct var_info *, unsigned long);
 struct insn *imm_membase_insn(enum insn_type, unsigned long, struct var_info *, long);
 struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
