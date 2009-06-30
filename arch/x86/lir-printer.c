@@ -53,7 +53,13 @@ static inline int print_imm(struct string *str, struct operand *op)
 
 static inline int print_reg(struct string *str, struct operand *op)
 {
-	return str_append(str, "r%lu", op->reg.interval->var_info->vreg);
+	struct live_interval *interval = op->reg.interval;
+
+	if (interval->fixed_reg)
+		return str_append(str, "r%lu=%s", interval->var_info->vreg,
+				  reg_name(interval->reg));
+	else
+		return str_append(str, "r%lu", interval->var_info->vreg);
 }
 
 static inline int print_membase(struct string *str, struct operand *op)
