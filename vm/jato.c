@@ -196,15 +196,6 @@ static int preload_vm_classes(void)
 		*pe->field = field;
 	}
 
-	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
-		const struct preload_entry *pe = &preload_entries[i];
-
-		if (vm_class_ensure_init(*pe->class)) {
-			NOT_IMPLEMENTED;
-			return 1;
-		}
-	}
-
 	return 0;
 }
 
