@@ -1,3 +1,5 @@
+#include <arch/asm.h>
+
 .global signal_bh_trampoline
 .text
 
@@ -6,37 +8,49 @@
  *                        signal bottom half hanlder.
  */
 signal_bh_trampoline:
-	push %ebp
-	mov %esp, %ebp
+	push %xbp
+	mov %xsp, %xbp
 
 	/* save caller saved registers */
-	pushl %eax
-	pushl %ecx
-	pushl %edx
+	push %xax
+	push %xcx
+	push %xdx
+#ifdef CONFIG_X86_64
+	pushq %r8
+	pushq %r9
+	pushq %r10
+	pushq %r11
+#endif
 
 	/* push signal bottom half handler's argument - address of
 	   faulting instruction. */
-	pushl 8(%ebp)
+	push (2 * PTR_SIZE)(%xbp)
 
 	/* call the signal bottom half handler */
-	pushl $.bh_return
-	pushl 4(%ebp)
+	push $.bh_return
+	push PTR_SIZE(%xbp)
 	ret
 
 .bh_return:
 	/* cleanup call arguments */
-	addl $4,%esp
+	add $PTR_SIZE, %xsp
 
 	/* overwrite return address */
-	movl %eax, 8(%ebp)
+	mov %xax, (2 * PTR_SIZE)(%xbp)
 
 	/* restore caller saved registers */
-	popl %edx
-	popl %ecx
-	popl %eax
+#ifdef CONFIG_X86_64
+	popq %r11
+	popq %r10
+	popq %r9
+	popq %r8
+#endif
+	pop %xdx
+	pop %xcx
+	pop %xax
 
-	popl %ebp
+	pop %xbp
 
 	/* Skip bottom half hanlder address pushed by signal_install_bh() */
-	addl $4,%esp
+	add $PTR_SIZE, %xsp
 	ret
