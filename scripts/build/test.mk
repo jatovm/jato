@@ -21,11 +21,13 @@ endif
 	$(E) "  AS      " $@
 	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `echo $@ | sed "s\/\-\g" | sed "s\[.][.]\p\g"`
 
-test: $(RUNNER)
+test: run
 
 $(RUNNER): $(SUITE) $(OBJS)
 	$(E) "  LD      " $@
 	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) *.o $(SUITE) -o $(RUNNER) $(LIBS) $(DEFAULT_LIBS)
+
+run: $(RUNNER)
 	$(E) "  RUN     " $@
 	$(Q) ./$(RUNNER)
 
