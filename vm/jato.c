@@ -93,8 +93,7 @@ static void __vm_native native_vmsystem_arraycopy(struct vm_object *src, int src
 
 static int32_t __vm_native native_vmsystem_identityhashcode(struct vm_object *obj)
 {
-	NOT_IMPLEMENTED;
-	return 0;
+	return (int32_t) obj;
 }
 
 /*
