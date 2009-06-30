@@ -144,8 +144,17 @@ static enum insn_type br_binop_to_insn_type(enum binary_operator binop)
 
 reg:	EXPR_FVALUE	0
 {
-	NOT_IMPLEMENTED;
-	state->reg1 = get_var(s->b_parent);
+	struct expression *expr;
+	struct var_info *result, *gpr;
+
+	expr = to_expr(tree);
+
+	gpr = get_var(s->b_parent);
+	result = get_fpu_var(s->b_parent);
+	state->reg1 = result;
+
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, float_to_uint32(expr->fvalue), gpr));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_GPR_TO_XMM, gpr, result));
 }
 
 reg:	EXPR_VALUE	0
