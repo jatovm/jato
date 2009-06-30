@@ -216,6 +216,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ExitStatusIsZeroTest.class \
 	regression/jvm/LoadConstantsTest.class \
 	regression/jvm/IntegerArithmeticTest.class \
+	regression/jvm/FloatArithmeticTest.class \
 	regression/jvm/LongArithmeticTest.class \
 	regression/jvm/ObjectCreationAndManipulationTest.class \
 	regression/jvm/ControlTransferTest.class \

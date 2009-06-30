@@ -42,6 +42,11 @@ public class TestCase {
         }
     }
 
+    public static void assertEquals(float expected, float actual) {
+        if (expected != actual) {
+            fail(/* "Expected '" + expected + "', but was '" + actual + "'." */);
+        }
+    }
     protected static void assertEquals(Object expected, Object actual) {
         if (expected != actual) {
             fail(/* "Expected '" + expected + "', but was '" + actual + "'." */);
