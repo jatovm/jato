@@ -116,6 +116,17 @@ native_vmobject_getclass(struct vm_object *object)
 	return object->class->object;
 }
 
+static struct vm_object * __vm_native
+native_vmclass_getname(struct vm_object *object)
+{
+	struct vm_class *class;
+
+	class = object->java_lang_Class_class;
+	assert(class != NULL);
+
+	return vm_object_alloc_string(class->name, strlen(class->name));
+}
+
 static void jit_init_natives(void)
 {
 	vm_register_native("gnu/classpath/VMStackWalker", "getClassContext",
@@ -127,6 +138,8 @@ static void jit_init_natives(void)
 		&native_vmruntime_exit);
 	vm_register_native("jato/internal/VM", "println",
 		&native_vmruntime_println);
+	vm_register_native("java/lang/VMClass", "getName",
+		&native_vmclass_getname);
 	vm_register_native("java/lang/VMObject", "getClass",
 		&native_vmobject_getclass);
 	vm_register_native("java/lang/VMRuntime", "exit",
