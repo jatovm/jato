@@ -19,7 +19,7 @@ endif
 
 %.o: %.S
 	$(E) "  AS      " $@
-	$(Q) $(AS) $(AFLAGS) $< -o `echo $@ | sed "s\/\-\g" | sed "s\[.][.]\p\g"`
+	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `echo $@ | sed "s\/\-\g" | sed "s\[.][.]\p\g"`
 
 test: $(RUNNER)
 

@@ -141,7 +141,6 @@ OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 RUNTIME_CLASSES = \
 	runtime/classpath/gnu/classpath/VMSystemProperties.class
 
-AS		:= as
 CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
@@ -185,7 +184,7 @@ monoburg:
 
 %.o: %.S
 	$(E) "  AS      " $@
-	$(Q) $(AS) $(AFLAGS) $< -o $@
+	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
 arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
