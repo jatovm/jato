@@ -146,7 +146,7 @@ int convert_invokespecial(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
 	struct expression *expr;
-	int err = -ENOMEM;
+	int err;
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
@@ -176,16 +176,11 @@ int convert_invokestatic(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
 	struct expression *expr;
-	int err = -ENOMEM;
+	int err;
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
-
-	/* JVM Spec. 2nd. ed., §5.5 */
-	err = vm_class_ensure_init(invoke_target->class);
-	if (err)
-		return err;
 
 	expr = invoke_expr(invoke_target);
 	if (!expr)

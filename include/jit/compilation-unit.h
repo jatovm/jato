@@ -5,6 +5,7 @@
 
 #include <vm/list.h>
 #include <vm/stack.h>
+#include <vm/static.h>
 
 #include <arch/stack-frame.h>
 
@@ -49,6 +50,8 @@ struct compilation_unit {
 	 */
 	unsigned char *exit_past_unlock_ptr;
 	unsigned char *unwind_past_unlock_ptr;
+
+	struct list_head static_fixup_site_list;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

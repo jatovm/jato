@@ -3,6 +3,7 @@
 
 #include <vm/field.h>
 #include <vm/method.h>
+#include <vm/static.h>
 #include <vm/types.h>
 #include <vm/vm.h>
 
@@ -13,6 +14,7 @@ struct vm_object;
 enum vm_class_state {
 	VM_CLASS_LOADED,
 	VM_CLASS_LINKED,
+	VM_CLASS_INITIALIZING,
 	VM_CLASS_INITIALIZED,
 };
 
@@ -28,12 +30,19 @@ struct vm_class {
 	struct vm_method *methods;
 
 	unsigned int object_size;
+	unsigned int static_size;
 
 	unsigned int vtable_size;
 	struct vtable vtable;
 
 	/* The java.lang.Class object representing this class */
 	struct vm_object *object;
+
+	/* This is an array of all the values of the static members of this
+	 * class. */
+	uint8_t *static_values;
+
+	struct list_head static_fixup_site_list;
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);

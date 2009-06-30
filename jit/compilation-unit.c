@@ -65,6 +65,8 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		cu->exception_spill_slot = get_spill_slot_32(cu->stack_frame);
 		if (!cu->exception_spill_slot)
 			goto out_of_memory;
+
+		INIT_LIST_HEAD(&cu->static_fixup_site_list);
 	}
 
 	return cu;

@@ -48,6 +48,7 @@
 #include "vm/object.h"
 #include "vm/signal.h"
 #include "vm/stack-trace.h"
+#include "vm/static.h"
 #include "vm/system.h"
 #include "vm/vm.h"
 
@@ -294,6 +295,8 @@ main(int argc, char *argv[])
 	init_exceptions();
 
 	jit_init_natives();
+
+	static_fixup_init();
 
 	/* Search $CLASSPATH last. */
 	char *classpath = getenv("CLASSPATH");

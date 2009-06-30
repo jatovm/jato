@@ -67,6 +67,7 @@ OBJS = \
 	../../vm/method.o \
 	../../vm/object.o \
 	../../vm/stack.o \
+	../../vm/static.o \
 	../../vm/types.o \
 	../../vm/utf8.o \
 	../../vm/zalloc.o \

@@ -103,6 +103,7 @@ VM_OBJS = \
 	vm/signal.o		\
 	vm/stack.o		\
 	vm/stack-trace.o	\
+	vm/static.o		\
 	vm/types.o		\
 	vm/utf8.o		\
 	vm/zalloc.o

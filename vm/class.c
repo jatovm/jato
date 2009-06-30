@@ -24,6 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -182,11 +183,18 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	unsigned int offset;
+	unsigned int static_offset;
 
-	if (vmc->super)
+	if (vmc->super) {
 		offset = vmc->super->object_size;
-	else
+		static_offset = vmc->super->static_size;
+	} else {
 		offset = 0;
+		static_offset = 0;
+	}
+
+	/* XXX: only static fields, right size, etc. */
+	vmc->static_values = malloc(class->fields_count * 8);
 
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
@@ -197,10 +205,13 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		}
 
 		if (vm_field_is_static(vmf)) {
-			if (vm_field_init_static(vmf)) {
+			if (vm_field_init_static(vmf, static_offset)) {
 				NOT_IMPLEMENTED;
 				return -1;
 			}
+
+			/* XXX: Same as below */
+			static_offset += 8;
 		} else {
 			vm_field_init_nonstatic(vmf, offset);
 			/* XXX: Do field reordering and use the right sizes */
@@ -209,6 +220,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	vmc->object_size = offset;
+	vmc->static_size = static_offset;
 
 	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
 	if (!vmc->methods) {
@@ -230,6 +242,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	if (!vm_class_is_interface(vmc))
 		setup_vtable(vmc);
+
+	INIT_LIST_HEAD(&vmc->static_fixup_site_list);
 
 	vmc->state = VM_CLASS_LINKED;
 	return 0;

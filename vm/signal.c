@@ -130,6 +130,12 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		return;
 	}
 
+	/* Static field access */
+	if (si->si_addr == static_guard_page) {
+		install_signal_bh(ctx, &static_field_signal_bh);
+		return;
+	}
+
  exit:
 	print_backtrace_and_die(sig, si, ctx);
 }
