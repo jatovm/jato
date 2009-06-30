@@ -16,6 +16,10 @@ struct vm_object {
 	 * this points to the (artificial) class named "[I". */
 	struct vm_class *class;
 
+	/* For instances of java.lang.Class this points to the class
+	   represented by this java.lang.Class instance. */
+	struct vm_class *java_lang_Class_class;
+
 	pthread_mutex_t mutex;
 
 	unsigned int array_length;

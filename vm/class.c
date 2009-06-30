@@ -276,6 +276,8 @@ int vm_class_init(struct vm_class *vmc)
 		return -1;
 	}
 
+	vmc->object->java_lang_Class_class = vmc;
+
 	if (vmc->class) {
 		/* XXX: Make sure there's at most one of these. */
 		for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
