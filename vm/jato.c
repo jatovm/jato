@@ -110,6 +110,12 @@ native_vmthrowable_fill_in_stack_trace(struct vm_object *message)
 	return NULL;
 }
 
+static struct vm_object * __vm_native
+native_vmobject_getclass(struct vm_object *object)
+{
+	return object->class->object;
+}
+
 static void jit_init_natives(void)
 {
 	vm_register_native("gnu/classpath/VMStackWalker", "getClassContext",
@@ -121,7 +127,8 @@ static void jit_init_natives(void)
 		&native_vmruntime_exit);
 	vm_register_native("jato/internal/VM", "println",
 		&native_vmruntime_println);
-
+	vm_register_native("java/lang/VMObject", "getClass",
+		&native_vmobject_getclass);
 	vm_register_native("java/lang/VMRuntime", "exit",
 		&native_vmruntime_exit);
 	vm_register_native("java/lang/VMSystem", "arraycopy",
