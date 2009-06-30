@@ -15,17 +15,15 @@ public class GetstaticPatchingTest extends TestCase {
     }
 
     public static void main(String[] args) {
-        int i;
-
         assertFalse(clinit_run);
         /* Should trap, therefore clinit_run becomes true */
-        i = X.x;
+        assertEquals(1, X.x);
         assertTrue(clinit_run);
 
         clinit_run = false;
         /* Should not trap, therefore clinit_run remains false */
-        i = X.x;
-        i = X.y;
+        assertEquals(1, X.x);
+        assertEquals(2, X.y);
         assertFalse(clinit_run);
 
         exit();

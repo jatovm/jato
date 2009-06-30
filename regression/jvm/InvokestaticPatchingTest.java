@@ -13,12 +13,11 @@ public class InvokestaticPatchingTest extends TestCase {
     }
 
     public static void main(String[] args) {
-        int i = 0;
-
         /* Should not trap, therefore clinit_run remains false */
         assertFalse(clinit_run);
         X x = null;
         assertFalse(clinit_run);
+        assertNull(x);
 
         /* Should trap, therefore clinit_run becomes true */
         X.f();

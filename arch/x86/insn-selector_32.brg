@@ -1175,8 +1175,6 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 {
 	struct expression *store_dest;
 	struct expression *store_src;
-	unsigned long field_offset;
-	struct var_info *offset;
 	struct statement *stmt;
 	struct var_info *src;
 	struct insn *mov_insn;
