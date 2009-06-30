@@ -1,6 +1,7 @@
 #ifndef __JIT_SYSTEM_H
 #define __JIT_SYSTEM_H
 
+#include <stdint.h>
 #include <stddef.h>
 
 #define BITS_PER_LONG (sizeof(unsigned long) * 8)
@@ -31,5 +32,15 @@
 	typeof(y) _y = (y);     \
 	(void) (&_x == &_y);    \
 	_x > _y ? _x : _y; })
+
+static inline float uint32_to_float(uint32_t value)
+{
+	union {
+		uint32_t	val;
+		float		fv;
+	} a;
+	a.val = value;
+	return a.fv;
+}
 
 #endif

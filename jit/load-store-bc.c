@@ -108,8 +108,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 		expr = value_expr(J_INT, cp->integer_.bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
-		NOT_IMPLEMENTED;
-		expr = fvalue_expr(J_FLOAT, cp->float_.bytes);
+		expr = fvalue_expr(J_FLOAT, uint32_to_float(cp->float_.bytes));
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING: {
 		const struct cafebabe_constant_info_utf8 *utf8;
