@@ -101,11 +101,6 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
-	if (vm_class_ensure_init(method->class)) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
 	pthread_mutex_lock(&cu->mutex);
 
 	if (vm_method_is_native(cu->method))

@@ -314,6 +314,11 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
+	if (vm_class_ensure_init(vmc)) {
+		fprintf(stderr, "error: %s: couldn't initialize\n", classname);
+		goto out;
+	}
+
 	struct vm_method *vmm = vm_class_get_method_recursive(vmc,
 		"main", "([Ljava/lang/String;)V");
 	if (!vmm) {
