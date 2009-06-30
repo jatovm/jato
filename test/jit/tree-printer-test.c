@@ -437,7 +437,7 @@ void test_should_print_invokevirtual_expression(void)
 	};
 	struct vm_method method = {
 		.class = &class,
-		.method_index = 0xff,
+		.virtual_index = 0xff,
 		.name = "bar",
 		.type = "(I)V",
 	};
