@@ -246,7 +246,7 @@ static int print_checkcast_stmt(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "checkcast_type", "%p", stmt->checkcast_class);
+	err = append_simple_attr(lvl + 1, str, "checkcast_type", "%p '%s'", stmt->checkcast_class, stmt->checkcast_class->name);
 	if (err)
 		goto out;
 
@@ -498,7 +498,7 @@ static int print_conversion_expr(int lvl, struct string *str,
 
 static int print_class_field_expr(int lvl, struct string *str, struct expression *expr)
 {
-	return str_append(str, "[class_field %s %p]", type_names[expr->vm_type], expr->class_field);
+	return str_append(str, "[class_field %s %p '%s.%s']", type_names[expr->vm_type], expr->class_field, expr->class_field->class->name, expr->class_field->name);
 }
 
 static int print_instance_field_expr(int lvl, struct string *str, struct expression *expr)
@@ -513,7 +513,7 @@ static int print_instance_field_expr(int lvl, struct string *str, struct express
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "instance_field", "%p", expr->instance_field);
+	err = append_simple_attr(lvl + 1, str, "instance_field", "%p '%s.%s'", expr->instance_field, expr->instance_field->class->name, expr->instance_field->name);
 	if (err)
 		goto out;
 
@@ -630,7 +630,7 @@ static int print_new_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "class", "%p", expr->class);
+	err = append_simple_attr(lvl + 1, str, "class", "%p '%s'", expr->class, expr->class->name);
 
       out:
 	return err;
@@ -674,7 +674,7 @@ static int print_anewarray_expr(int lvl, struct string *str, struct expression *
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "anewarray_ref_type", "%p", expr->anewarray_ref_type);
+	err = append_simple_attr(lvl + 1, str, "anewarray_ref_type", "%p '%s'", expr->anewarray_ref_type, expr->anewarray_ref_type->name);
 
       out:
 	return err;
@@ -692,7 +692,7 @@ static int print_multianewarray_expr(int lvl, struct string *str, struct express
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "multianewarray_ref_type", "%p", expr->multianewarray_ref_type);
+	err = append_simple_attr(lvl + 1, str, "multianewarray_ref_type", "%p '%s'", expr->multianewarray_ref_type, expr->multianewarray_ref_type->name);
 	if (err)
 		goto out;
 
@@ -732,7 +732,7 @@ static int print_instanceof_expr(int lvl, struct string *str, struct expression 
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "instanceof_class", "%p", expr->instanceof_class);
+	err = append_simple_attr(lvl + 1, str, "instanceof_class", "%p '%s'", expr->instanceof_class, expr->instanceof_class->name);
 	if (err)
 		goto out;
 
