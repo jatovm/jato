@@ -42,8 +42,6 @@
 
 #include <vm/class.h>
 
-#include <../jamvm/lock.h>
-
 #define MBCGEN_TYPE struct basic_block
 #define MBCOST_DATA struct basic_block
 #define MBTREE_TYPE struct tree_node
