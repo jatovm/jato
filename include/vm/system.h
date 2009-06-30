@@ -43,4 +43,14 @@ static inline float uint32_to_float(uint32_t value)
 	return a.fv;
 }
 
+static inline int float_to_uint32(float value)
+{
+	union {
+		uint32_t	iv;
+		float		val;
+	} a;
+	a.val = value;
+	return a.iv;
+}
+
 #endif

@@ -64,7 +64,7 @@ void test_convert_add(void)
 {
 	assert_convert_binop(J_INT, OP_ADD, OPC_IADD);
 	assert_convert_binop(J_LONG, OP_ADD, OPC_LADD);
-	assert_convert_binop(J_FLOAT, OP_ADD, OPC_FADD);
+	assert_convert_binop(J_FLOAT, OP_FADD, OPC_FADD);
 	assert_convert_binop(J_DOUBLE, OP_ADD, OPC_DADD);
 }
 
@@ -72,7 +72,7 @@ void test_convert_sub(void)
 {
 	assert_convert_binop(J_INT, OP_SUB, OPC_ISUB);
 	assert_convert_binop(J_LONG, OP_SUB, OPC_LSUB);
-	assert_convert_binop(J_FLOAT, OP_SUB, OPC_FSUB);
+	assert_convert_binop(J_FLOAT, OP_FSUB, OPC_FSUB);
 	assert_convert_binop(J_DOUBLE, OP_SUB, OPC_DSUB);
 }
 
@@ -80,7 +80,7 @@ void test_convert_mul(void)
 {
 	assert_convert_binop(J_INT, OP_MUL, OPC_IMUL);
 	assert_convert_binop(J_LONG, OP_MUL_64, OPC_LMUL);
-	assert_convert_binop(J_FLOAT, OP_MUL, OPC_FMUL);
+	assert_convert_binop(J_FLOAT, OP_FMUL, OPC_FMUL);
 	assert_convert_binop(J_DOUBLE, OP_MUL, OPC_DMUL);
 }
 
@@ -88,7 +88,7 @@ void test_convert_div(void)
 {
 	assert_convert_binop(J_INT, OP_DIV, OPC_IDIV);
 	assert_convert_binop(J_LONG, OP_DIV_64, OPC_LDIV);
-	assert_convert_binop(J_FLOAT, OP_DIV, OPC_FDIV);
+	assert_convert_binop(J_FLOAT, OP_FDIV, OPC_FDIV);
 	assert_convert_binop(J_DOUBLE, OP_DIV, OPC_DDIV);
 }
 

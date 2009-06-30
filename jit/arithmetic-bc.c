@@ -45,7 +45,7 @@ int convert_ladd(struct parse_context *ctx)
 
 int convert_fadd(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_FLOAT, OP_ADD);
+	return convert_binop(ctx, J_FLOAT, OP_FADD);
 }
 
 int convert_dadd(struct parse_context *ctx)
@@ -65,7 +65,7 @@ int convert_lsub(struct parse_context *ctx)
 
 int convert_fsub(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_FLOAT, OP_SUB);
+	return convert_binop(ctx, J_FLOAT, OP_FSUB);
 }
 
 int convert_dsub(struct parse_context *ctx)
@@ -85,7 +85,7 @@ int convert_lmul(struct parse_context *ctx)
 
 int convert_fmul(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_FLOAT, OP_MUL);
+	return convert_binop(ctx, J_FLOAT, OP_FMUL);
 }
 
 int convert_dmul(struct parse_context *ctx)
@@ -105,7 +105,7 @@ int convert_ldiv(struct parse_context *ctx)
 
 int convert_fdiv(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_FLOAT, OP_DIV);
+	return convert_binop(ctx, J_FLOAT, OP_FDIV);
 }
 
 int convert_ddiv(struct parse_context *ctx)
