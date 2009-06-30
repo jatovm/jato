@@ -55,6 +55,7 @@ static void __emit_push_membase(struct buffer *buf,
 				unsigned long disp);
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg);
 static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
+static void emit_restore_regs(struct buffer *buf);
 
 /************************
  * Common code emitters *
@@ -330,6 +331,13 @@ void backpatch_branch_target(struct buffer *buf,
 	relative_addr = branch_rel_addr(insn, target_offset);
 
 	write_imm32(buf, backpatch_offset, relative_addr);
+}
+
+void emit_epilog(struct buffer *buf)
+{
+	emit_leave(buf);
+	emit_restore_regs(buf);
+	emit_ret(buf);
 }
 
 #ifdef CONFIG_X86_32
@@ -736,20 +744,11 @@ static void emit_push_imm(struct buffer *buf, struct operand *operand)
 	__emit_push_imm(buf, operand->imm);
 }
 
-static void __emit_epilog(struct buffer *buf)
+static void emit_restore_regs(struct buffer *buf)
 {
-	emit_leave(buf);
-
-	/* Restore callee saved registers */
 	__emit_pop_reg(buf, REG_EBX);
 	__emit_pop_reg(buf, REG_ESI);
 	__emit_pop_reg(buf, REG_EDI);
-}
-
-void emit_epilog(struct buffer *buf)
-{
-	__emit_epilog(buf);
-	emit_ret(buf);
 }
 
 static void __emit_jmp(struct buffer *buf, unsigned long addr)
@@ -1649,11 +1648,8 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 				     REG_RSP);
 }
 
-void emit_epilog(struct buffer *buf)
+static void emit_restore_regs(struct buffer *buf)
 {
-	emit_leave(buf);
-
-	/* Restore callee saved registers */
 	__emit_pop_reg(buf, REG_R15);
 	__emit_pop_reg(buf, REG_R14);
 	__emit_pop_reg(buf, REG_R13);
