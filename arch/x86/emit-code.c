@@ -340,6 +340,20 @@ void emit_epilog(struct buffer *buf)
 	emit_ret(buf);
 }
 
+static void __emit_jmp(struct buffer *buf, unsigned long addr)
+{
+	unsigned long current = (unsigned long)buffer_current(buf);
+	emit(buf, 0xE9);
+	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
+}
+
+void emit_unwind(struct buffer *buf)
+{
+	emit_leave(buf);
+	emit_restore_regs(buf);
+	__emit_jmp(buf, (unsigned long)&unwind);
+}
+
 #ifdef CONFIG_X86_32
 
 /************************
@@ -749,19 +763,6 @@ static void emit_restore_regs(struct buffer *buf)
 	__emit_pop_reg(buf, REG_EBX);
 	__emit_pop_reg(buf, REG_ESI);
 	__emit_pop_reg(buf, REG_EDI);
-}
-
-static void __emit_jmp(struct buffer *buf, unsigned long addr)
-{
-	unsigned long current = (unsigned long)buffer_current(buf);
-	emit(buf, 0xE9);
-	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
-}
-
-void emit_unwind(struct buffer *buf)
-{
-	__emit_epilog(buf);
-	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
 static void emit_adc_reg_reg(struct buffer *buf,
