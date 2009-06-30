@@ -52,6 +52,7 @@ OBJS = \
 	../../vm/types.o \
 	../../vm/zalloc.o \
 	../arch-mmix/instruction.o \
+	../arch-mmix/register.o \
 	../arch-mmix/stack-frame.o \
 	../arch-mmix/use-def.o \
 	../jamvm/alloc-stub.o \

@@ -419,27 +419,35 @@ static unsigned char __encode_reg(enum machine_reg reg)
 
 	switch (reg) {
 	case REG_EAX:
+	case REG_XMM0:
 		ret = 0x00;
 		break;
 	case REG_EBX:
+	case REG_XMM3:
 		ret = 0x03;
 		break;
 	case REG_ECX:
+	case REG_XMM1:
 		ret = 0x01;
 		break;
 	case REG_EDX:
+	case REG_XMM2:
 		ret = 0x02;
 		break;
 	case REG_ESI:
+	case REG_XMM6:
 		ret = 0x06;
 		break;
 	case REG_EDI:
+	case REG_XMM7:
 		ret = 0x07;
 		break;
 	case REG_ESP:
+	case REG_XMM4:
 		ret = 0x04;
 		break;
 	case REG_EBP:
+	case REG_XMM5:
 		ret = 0x05;
 		break;
 	case REG_UNASSIGNED:

@@ -25,6 +25,25 @@
  */
 
 #include <arch/registers.h>
+#include <jit/vars.h>
+
+static enum machine_reg_type register_types[] = {
+	[REG_EAX] = REG_TYPE_GPR,
+	[REG_EBX] = REG_TYPE_GPR,
+	[REG_ECX] = REG_TYPE_GPR,
+	[REG_EDX] = REG_TYPE_GPR,
+	[REG_EDI] = REG_TYPE_GPR,
+	[REG_ESI] = REG_TYPE_GPR,
+
+	[REG_XMM0] = REG_TYPE_FPU,
+	[REG_XMM1] = REG_TYPE_FPU,
+	[REG_XMM2] = REG_TYPE_FPU,
+	[REG_XMM3] = REG_TYPE_FPU,
+	[REG_XMM4] = REG_TYPE_FPU,
+	[REG_XMM5] = REG_TYPE_FPU,
+	[REG_XMM6] = REG_TYPE_FPU,
+	[REG_XMM7] = REG_TYPE_FPU,
+};
 
 static const char *register_names[] = {
 	[REG_EAX] = "EAX",
@@ -35,6 +54,14 @@ static const char *register_names[] = {
 	[REG_EDI] = "EDI",
 	[REG_EBP] = "EBP",
 	[REG_ESP] = "ESP",
+	[REG_XMM0] = "XMM0",
+	[REG_XMM1] = "XMM1",
+	[REG_XMM2] = "XMM2",
+	[REG_XMM3] = "XMM3",
+	[REG_XMM4] = "XMM4",
+	[REG_XMM5] = "XMM5",
+	[REG_XMM6] = "XMM6",
+	[REG_XMM7] = "XMM7",
 };
 
 const char *reg_name(enum machine_reg reg)
@@ -43,4 +70,9 @@ const char *reg_name(enum machine_reg reg)
 		return "<unassigned>";
 
 	return register_names[reg];
+}
+
+enum machine_reg_type reg_type(enum machine_reg reg)
+{
+	return register_types[reg];
 }

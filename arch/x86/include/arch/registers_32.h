@@ -13,6 +13,15 @@ enum machine_reg {
 	REG_ESI,
 	REG_EDI,
 
+	REG_XMM0,
+	REG_XMM1,
+	REG_XMM2,
+	REG_XMM3,
+	REG_XMM4,
+	REG_XMM5,
+	REG_XMM6,
+	REG_XMM7,
+
 	/* The above registers are available for register allocator.  */
 	NR_REGISTERS,
 
@@ -33,5 +42,6 @@ enum machine_reg {
 };
 
 const char *reg_name(enum machine_reg reg);
+enum machine_reg_type reg_type(enum machine_reg reg);
 
 #endif /* __X86_REGISTERS_32_H */

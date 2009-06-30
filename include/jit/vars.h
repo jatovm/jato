@@ -93,10 +93,16 @@ mark_need_reload(struct live_interval *it, struct live_interval *parent)
 	it->spill_parent = parent;
 }
 
+enum machine_reg_type {
+	REG_TYPE_GPR,
+	REG_TYPE_FPU,
+};
+
 struct var_info {
 	unsigned long		vreg;
 	struct var_info		*next;
 	struct live_interval	*interval;
+	enum machine_reg_type type;
 };
 
 struct live_interval *alloc_interval(struct var_info *);

@@ -120,8 +120,19 @@ struct var_info *get_var(struct compilation_unit *cu)
 	ret->next = cu->var_infos;
 	ret->interval = alloc_interval(ret);
 
+	ret->type = REG_TYPE_GPR;
+
 	cu->var_infos = ret;
   out:
+	return ret;
+}
+
+struct var_info *get_fpu_var(struct compilation_unit *cu)
+{
+	struct var_info *ret = get_var(cu);
+
+	ret->type = REG_TYPE_FPU;
+
 	return ret;
 }
 
