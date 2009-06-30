@@ -51,9 +51,16 @@ static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 {
 	unsigned int c = invoke_target->args_count;
 	char * a = invoke_target->type;
+
+	/* FIXME: Make more robust, verify correctness. */
 	while (*(a++) != ')') {
 		if (*a == 'J' || *a == 'D')
 			c--;
+		if (*a == 'L') {
+			++a;
+			while (*(a++) != ';')
+				;
+		}
 	}
 	return c;
 }
