@@ -68,7 +68,7 @@ int vm_field_init_static(struct vm_field *vmf, unsigned int offset)
 		= &class->fields[vmf->field_index];
 
 	/* XXX: Actually _use_ the ConstantValue attribute */
-	vmf->class->static_values[offset] = 0;
+	*(unsigned long *) &vmf->class->static_values[offset] = 0;
 
 	unsigned int constant_value_index = 0;
 	if (cafebabe_attribute_array_get(&field->attributes,
