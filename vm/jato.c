@@ -113,6 +113,11 @@ native_vmthrowable_fill_in_stack_trace(struct vm_object *message)
 static struct vm_object * __vm_native
 native_vmobject_getclass(struct vm_object *object)
 {
+	if (!object || !object->class) {
+		signal_new_exception("java.lang.NullPointerException", NULL);
+		throw_from_native(sizeof object);
+	}
+
 	return object->class->object;
 }
 
