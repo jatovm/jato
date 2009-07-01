@@ -52,7 +52,7 @@ struct vm_object *utf8_to_char_array(const uint8_t *bytes, unsigned int n)
 		return NULL;
 
 	struct vm_object *array
-		= vm_object_alloc_native_array(J_CHAR, utf16_count);
+		= vm_object_alloc_native_array(T_CHAR, utf16_count);
 	if (!array) {
 		NOT_IMPLEMENTED;
 		return array;

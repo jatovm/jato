@@ -219,7 +219,7 @@ vm_object_alloc_string_from_c(const char *bytes)
 
 	unsigned int n = strlen(bytes);
 	struct vm_object *array
-		= vm_object_alloc_native_array(J_CHAR, n);
+		= vm_object_alloc_native_array(T_CHAR, n);
 	if (!array) {
 		NOT_IMPLEMENTED;
 		return NULL;
