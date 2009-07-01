@@ -18,7 +18,7 @@ struct vm_object {
 
 	pthread_mutex_t mutex;
 
-	unsigned int array_length;
+	int array_length;
 	uint8_t fields[];
 };
 
