@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 #include <arch/instruction.h>
+#include <arch/registers.h>
+
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/stack-slot.h>
@@ -144,6 +146,7 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 	if (ret) {
 		ret->interval->reg = reg;
 		ret->interval->fixed_reg = true;
+		ret->type = reg_type(reg);
 	}
 
 	return ret;

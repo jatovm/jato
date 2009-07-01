@@ -12,4 +12,6 @@ enum machine_reg {
 	REG_UNASSIGNED = ~0UL,
 };
 
+enum machine_reg_type reg_type(enum machine_reg reg);
+
 #endif /* __JIT_REGISTERS_H */
