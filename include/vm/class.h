@@ -115,6 +115,5 @@ bool vm_class_is_primitive_type_name(const char *class_name);
 char *vm_class_get_array_element_class_name(const char *class_name);
 struct vm_class *vm_class_get_array_element_class(const struct vm_class *array_class);
 enum vm_type vm_class_get_storage_vmtype(const struct vm_class *class);
-bool vm_class_is_equal_to(const struct vm_class *class, const struct vm_class *class2);
 
 #endif /* __CLASS_H */
