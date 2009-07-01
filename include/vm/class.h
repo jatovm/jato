@@ -52,7 +52,7 @@ struct vm_class {
 	struct list_head static_fixup_site_list;
 
 	union {
-		/* For primitve type classes this holds a vm type
+		/* For primitve type classes this holds a vm_type
 		   represented by this class. */
 		enum vm_type primitive_vm_type;
 
