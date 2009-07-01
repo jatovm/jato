@@ -293,16 +293,13 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 		return NULL;
 	}
 
-	class->class = NULL;
-	class->state = VM_CLASS_LINKED;
-	class->name = strdup(class_name);
-	class->super = vm_java_lang_Object;
-	class->fields = NULL;
-	class->methods = NULL;
-	class->object_size = 0;
-	class->vtable_size = 0;
 	class->primitive_vm_type = str_to_type(class_name);
 	class->kind = VM_CLASS_KIND_PRIMITIVE;
+
+	if (vm_class_link_bogus_class(class, class_name)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	return class;
 }
@@ -327,15 +324,12 @@ struct vm_class *load_array_class(const char *class_name)
 		return NULL;
 	}
 
-	array_class->class = NULL;
-	array_class->state = VM_CLASS_LINKED;
-	array_class->name = strdup(class_name);
-	array_class->super = vm_java_lang_Object;
-	array_class->fields = NULL;
-	array_class->methods = NULL;
-	array_class->object_size = 0;
-	array_class->vtable_size = 0;
 	array_class->kind = VM_CLASS_KIND_ARRAY;
+
+	if (vm_class_link_bogus_class(array_class, class_name)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	if (str_to_type(class_name + 1) != J_REFERENCE) {
 		array_class->array_element_class =
