@@ -51,25 +51,19 @@ static void select_exception_test(struct basic_block *bb,
 
 static unsigned char type_to_scale(enum vm_type vm_type)
 {
-	unsigned char scale;
-
-	switch (vm_type) {
-	case J_BYTE:
-	case J_CHAR:
-		scale = 0;
-		break;
-	case J_SHORT:
-		scale = 1;
-		break;
-	case J_INT:
-	case J_REFERENCE:
-		scale = 2;
-		break;
+	/* Currently we can store not less than machine word at once */
+	switch (get_vmtype_size(vm_type)) {
+	case 1:
+	     return 0;
+	case 2:
+	     return 1;
+	case 4:
+	     return 2;
+	case 8:
+	     return 3;
 	default:
-		assert(!"Not supported yet");
+		error("Invalid type size");
 	}
-
-	return scale;
 }
 
 static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
