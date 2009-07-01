@@ -194,7 +194,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	/* XXX: only static fields, right size, etc. */
-	vmc->static_values = malloc(class->fields_count * 8);
+	vmc->static_values = malloc(static_offset + class->fields_count * 8);
 
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
