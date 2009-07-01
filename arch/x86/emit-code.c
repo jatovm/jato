@@ -405,7 +405,7 @@ static void fixup_vtable(struct compilation_unit *cu,
 {
 	struct vm_class *vmc = objref->class;
 
-	vmc->vtable.native_ptr[cu->method->method_index] = target;
+	vmc->vtable.native_ptr[cu->method->virtual_index] = target;
 }
 
 #ifdef CONFIG_X86_32
