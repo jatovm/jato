@@ -1315,23 +1315,20 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
 
 array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 {
-	struct var_info *base, *index, *state_base, *state_index;
+	struct var_info *base, *state_base;
 	struct expression *expr;
 
 	expr = to_expr(tree);
 
 	state_base = state->left->reg1;
-	state_index = state->right->reg1;
 
 	base = get_var(s->b_parent);
 	state->reg1 = base;
 
-	index = get_var(s->b_parent);
-	state->reg2 = index;
+	state->reg2 = state->right->reg1;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_index, index));
 }
 
 stmt:	STMT_STORE(array_deref, reg)
