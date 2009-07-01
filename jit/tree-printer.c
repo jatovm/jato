@@ -45,7 +45,7 @@ static int append_formatted(int lvl, struct string *str, const char *fmt, ...)
 
 	err = str_vappend(str, fmt, args);
 
-      out:
+out:
 	va_end(args);
 	return err;
 }
@@ -76,7 +76,7 @@ static int append_simple_attr(int lvl, struct string *str,
 		goto out;
 
 	err = str_append(str, "]\n");
-      out:
+out:
 	va_end(args);
 	return err;
 }
@@ -87,7 +87,8 @@ static int simple_expr(struct expression *expr)
 
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
 	    || type == EXPR_TEMPORARY || type == EXPR_CLASS_FIELD
-	    || type == EXPR_NO_ARGS || type == EXPR_EXCEPTION_REF || type == EXPR_MIMIC_STACK_SLOT;
+	    || type == EXPR_NO_ARGS || type == EXPR_EXCEPTION_REF
+	    || type == EXPR_MIMIC_STACK_SLOT;
 }
 
 static int __tree_print(int, struct tree_node *, struct string *);
@@ -119,7 +120,7 @@ static int append_tree_attr(int lvl, struct string *str, const char *attr_name,
 	if (!multiline)
 		err = str_append(str, "\n");
 
-      out:
+out:
 	return err;
 }
 
@@ -137,7 +138,7 @@ static int print_store_stmt(int lvl, struct string *str, struct statement *stmt)
 
 	err = append_tree_attr(lvl + 1, str, "store_src", stmt->store_src);
 
-      out:
+out:
 	return err;
 }
 
@@ -157,7 +158,7 @@ static int print_if_stmt(int lvl, struct string *str, struct statement *stmt)
 	err = append_simple_attr(lvl + 1, str, "if_true", "bb %p",
 				 stmt->if_true);
 
-      out:
+out:
 	return err;
 }
 
@@ -170,9 +171,9 @@ static int print_goto_stmt(int lvl, struct string *str, struct statement *stmt)
 		goto out;
 
 	err = append_simple_attr(lvl + 1, str, "goto_target", "bb %p",
-			       stmt->goto_target);
+				 stmt->goto_target);
 
-      out:
+out:
 	return err;
 }
 
@@ -188,7 +189,7 @@ static int print_return_stmt(int lvl, struct string *str,
 	err = append_tree_attr(lvl + 1, str, "return_value",
 			       stmt->return_value);
 
-      out:
+out:
 	return err;
 }
 
@@ -209,7 +210,7 @@ static int print_expr_stmt(int lvl, struct string *str, const char *type_name,
 
 	err = append_tree_attr(lvl + 1, str, "expression", stmt->expression);
 
-      out:
+out:
 	return err;
 }
 
@@ -226,13 +227,13 @@ static int print_array_check_stmt(int lvl, struct string *str,
 }
 
 static int print_monitorenter_stmt(int lvl, struct string *str,
-				    struct statement *stmt)
+				   struct statement *stmt)
 {
 	return print_expr_stmt(lvl, str, "MONITOR_ENTER", stmt);
 }
 
 static int print_monitorexit_stmt(int lvl, struct string *str,
-				    struct statement *stmt)
+				  struct statement *stmt)
 {
 	return print_expr_stmt(lvl, str, "MONITOR_EXIT", stmt);
 }
@@ -246,13 +247,18 @@ static int print_checkcast_stmt(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "checkcast_type", "%p '%s'", stmt->checkcast_class, stmt->checkcast_class->name);
+	err =
+	    append_simple_attr(lvl + 1, str, "checkcast_type", "%p '%s'",
+			       stmt->checkcast_class,
+			       stmt->checkcast_class->name);
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl + 1, str, "checkcast_ref", stmt->checkcast_ref);
+	err =
+	    append_tree_attr(lvl + 1, str, "checkcast_ref",
+			     stmt->checkcast_ref);
 
-      out:
+out:
 	return err;
 }
 
@@ -267,7 +273,7 @@ static int print_athrow_stmt(int lvl, struct string *str,
 
 	err = append_tree_attr(lvl + 1, str, "expression", stmt->expression);
 
-      out:
+out:
 	return err;
 }
 
@@ -286,7 +292,7 @@ static int print_array_store_check_stmt(int lvl, struct string *str,
 
 	err = append_tree_attr(lvl + 1, str, "array", stmt->store_check_array);
 
-      out:
+out:
 	return err;
 }
 
@@ -354,14 +360,16 @@ static int print_local_expr(int lvl, struct string *str,
 static int print_temporary_expr(int lvl, struct string *str,
 				struct expression *expr)
 {
-	return str_append(str, "[temporary %s 0x%lx (high), 0x%lx (low)]", type_names[expr->vm_type],
-			  expr->tmp_high, expr->tmp_low);
+	return str_append(str, "[temporary %s 0x%lx (high), 0x%lx (low)]",
+			  type_names[expr->vm_type], expr->tmp_high,
+			  expr->tmp_low);
 }
 
 static int print_mimic_stack_slot_expr(int lvl, struct string *str,
-					    struct expression *expr)
+				       struct expression *expr)
 {
-	return str_append(str, "[mimic stack slot %d at %s]", expr->slot_ndx, expr->entry ? "entry" : "exit");
+	return str_append(str, "[mimic stack slot %d at %s]", expr->slot_ndx,
+			  expr->entry ? "entry" : "exit");
 }
 
 static int print_array_deref_expr(int lvl, struct string *str,
@@ -384,7 +392,7 @@ static int print_array_deref_expr(int lvl, struct string *str,
 
 	err = append_tree_attr(lvl + 1, str, "array_index", expr->array_index);
 
-      out:
+out:
 	return err;
 }
 
@@ -442,9 +450,10 @@ static int print_binop_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl + 1, str, "binary_right", expr->binary_right);
+	err =
+	    append_tree_attr(lvl + 1, str, "binary_right", expr->binary_right);
 
-      out:
+out:
 	return err;
 }
 
@@ -471,7 +480,7 @@ static int print_unary_op_expr(int lvl, struct string *str,
 	err = append_tree_attr(lvl + 1, str, "unary_expression",
 			       expr->unary_expression);
 
-      out:
+out:
 	return err;
 }
 
@@ -492,16 +501,21 @@ static int print_conversion_expr(int lvl, struct string *str,
 	err = append_tree_attr(lvl + 1, str, "from_expression",
 			       expr->unary_expression);
 
-      out:
+out:
 	return err;
 }
 
-static int print_class_field_expr(int lvl, struct string *str, struct expression *expr)
+static int print_class_field_expr(int lvl, struct string *str,
+				  struct expression *expr)
 {
-	return str_append(str, "[class_field %s %p '%s.%s']", type_names[expr->vm_type], expr->class_field, expr->class_field->class->name, expr->class_field->name);
+	return str_append(str, "[class_field %s %p '%s.%s']",
+			  type_names[expr->vm_type], expr->class_field,
+			  expr->class_field->class->name,
+			  expr->class_field->name);
 }
 
-static int print_instance_field_expr(int lvl, struct string *str, struct expression *expr)
+static int print_instance_field_expr(int lvl, struct string *str,
+				     struct expression *expr)
 {
 	int err;
 
@@ -509,17 +523,25 @@ static int print_instance_field_expr(int lvl, struct string *str, struct express
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	err =
+	    append_simple_attr(lvl + 1, str, "vm_type",
+			       type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "instance_field", "%p '%s.%s'", expr->instance_field, expr->instance_field->class->name, expr->instance_field->name);
+	err =
+	    append_simple_attr(lvl + 1, str, "instance_field", "%p '%s.%s'",
+			       expr->instance_field,
+			       expr->instance_field->class->name,
+			       expr->instance_field->name);
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl + 1, str, "objectref_expression", expr->objectref_expression);
+	err =
+	    append_tree_attr(lvl + 1, str, "objectref_expression",
+			     expr->objectref_expression);
 
-      out:
+out:
 	return err;
 }
 
@@ -536,17 +558,19 @@ static int print_invoke_expr(int lvl, struct string *str,
 	method = expr->target_method;
 
 	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s'",
-				 method, method->class->name, method->name, method->type);
+				 method, method->class->name, method->name,
+				 method->type);
 	if (err)
 		goto out;
 
 	err = append_tree_attr(lvl + 1, str, "args_list", expr->args_list);
 
-      out:
+out:
 	return err;
 }
 
-static int __print_invoke_expr(int lvl, struct string *str, struct expression *expr, const char *name)
+static int __print_invoke_expr(int lvl, struct string *str,
+			       struct expression *expr, const char *name)
 {
 	struct vm_method *method;
 	int err;
@@ -557,16 +581,17 @@ static int __print_invoke_expr(int lvl, struct string *str, struct expression *e
 
 	method = expr->target_method;
 
-	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s' (%lu)",
-				 method, method->class->name,
-				 method->name, method->type,
-				 expr_method_index(expr));
+	err =
+	    append_simple_attr(lvl + 1, str, "target_method",
+			       "%p '%s.%s%s' (%lu)", method,
+			       method->class->name, method->name, method->type,
+			       expr_method_index(expr));
 	if (err)
 		goto out;
 
 	err = append_tree_attr(lvl + 1, str, "args_list", expr->args_list);
 
-      out:
+out:
 	return err;
 }
 
@@ -591,7 +616,7 @@ static int print_args_list_expr(int lvl, struct string *str,
 
 	err = append_tree_attr(lvl + 1, str, "args_right", expr->args_right);
 
-      out:
+out:
 	return err;
 }
 
@@ -606,7 +631,7 @@ static int print_arg_expr(int lvl, struct string *str, struct expression *expr)
 	err = append_tree_attr(lvl + 1, str, "arg_expression",
 			       expr->arg_expression);
 
-      out:
+out:
 	return err;
 }
 
@@ -616,8 +641,7 @@ static int print_no_args_expr(int lvl, struct string *str,
 	return str_append(str, "[no args]");
 }
 
-static int print_new_expr(int lvl, struct string *str,
-			  struct expression *expr)
+static int print_new_expr(int lvl, struct string *str, struct expression *expr)
 {
 	int err;
 
@@ -630,13 +654,16 @@ static int print_new_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "class", "%p '%s'", expr->class, expr->class->name);
+	err =
+	    append_simple_attr(lvl + 1, str, "class", "%p '%s'", expr->class,
+			       expr->class->name);
 
-      out:
+out:
 	return err;
 }
 
-static int print_newarray_expr(int lvl, struct string *str, struct expression *expr)
+static int print_newarray_expr(int lvl, struct string *str,
+			       struct expression *expr)
 {
 	int err;
 
@@ -644,7 +671,9 @@ static int print_newarray_expr(int lvl, struct string *str, struct expression *e
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	err =
+	    append_simple_attr(lvl + 1, str, "vm_type",
+			       type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
@@ -652,13 +681,16 @@ static int print_newarray_expr(int lvl, struct string *str, struct expression *e
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "array_type", "%lu", expr->array_type);
+	err =
+	    append_simple_attr(lvl + 1, str, "array_type", "%lu",
+			       expr->array_type);
 
-      out:
+out:
 	return err;
 }
 
-static int print_anewarray_expr(int lvl, struct string *str, struct expression *expr)
+static int print_anewarray_expr(int lvl, struct string *str,
+				struct expression *expr)
 {
 	int err;
 
@@ -666,21 +698,29 @@ static int print_anewarray_expr(int lvl, struct string *str, struct expression *
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	err =
+	    append_simple_attr(lvl + 1, str, "vm_type",
+			       type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl + 1, str, "anewarray_size", expr->anewarray_size);
+	err =
+	    append_tree_attr(lvl + 1, str, "anewarray_size",
+			     expr->anewarray_size);
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "anewarray_ref_type", "%p '%s'", expr->anewarray_ref_type, expr->anewarray_ref_type->name);
+	err =
+	    append_simple_attr(lvl + 1, str, "anewarray_ref_type", "%p '%s'",
+			       expr->anewarray_ref_type,
+			       expr->anewarray_ref_type->name);
 
-      out:
+out:
 	return err;
 }
 
-static int print_multianewarray_expr(int lvl, struct string *str, struct expression *expr)
+static int print_multianewarray_expr(int lvl, struct string *str,
+				     struct expression *expr)
 {
 	int err;
 
@@ -688,21 +728,29 @@ static int print_multianewarray_expr(int lvl, struct string *str, struct express
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	err =
+	    append_simple_attr(lvl + 1, str, "vm_type",
+			       type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "multianewarray_ref_type", "%p '%s'", expr->multianewarray_ref_type, expr->multianewarray_ref_type->name);
+	err =
+	    append_simple_attr(lvl + 1, str, "multianewarray_ref_type",
+			       "%p '%s'", expr->multianewarray_ref_type,
+			       expr->multianewarray_ref_type->name);
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl + 1, str, "dimension list", expr->multianewarray_dimensions);
+	err =
+	    append_tree_attr(lvl + 1, str, "dimension list",
+			     expr->multianewarray_dimensions);
 
-      out:
+out:
 	return err;
 }
 
-static int print_arraylength_expr(int lvl, struct string *str, struct expression *expr)
+static int print_arraylength_expr(int lvl, struct string *str,
+				  struct expression *expr)
 {
 	int err;
 
@@ -710,17 +758,22 @@ static int print_arraylength_expr(int lvl, struct string *str, struct expression
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl+1, str, "vm_type", type_names[expr->vm_type]);
+	err =
+	    append_simple_attr(lvl + 1, str, "vm_type",
+			       type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl+1, str, "arraylength_ref", expr->arraylength_ref);
+	err =
+	    append_tree_attr(lvl + 1, str, "arraylength_ref",
+			     expr->arraylength_ref);
 
-      out:
+out:
 	return err;
 }
 
-static int print_instanceof_expr(int lvl, struct string *str, struct expression *expr)
+static int print_instanceof_expr(int lvl, struct string *str,
+				 struct expression *expr)
 {
 	int err;
 
@@ -728,21 +781,29 @@ static int print_instanceof_expr(int lvl, struct string *str, struct expression 
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "vm_type", type_names[expr->vm_type]);
+	err =
+	    append_simple_attr(lvl + 1, str, "vm_type",
+			       type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
-	err = append_simple_attr(lvl + 1, str, "instanceof_class", "%p '%s'", expr->instanceof_class, expr->instanceof_class->name);
+	err =
+	    append_simple_attr(lvl + 1, str, "instanceof_class", "%p '%s'",
+			       expr->instanceof_class,
+			       expr->instanceof_class->name);
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl + 1, str, "instanceof_ref", expr->instanceof_ref);
+	err =
+	    append_tree_attr(lvl + 1, str, "instanceof_ref",
+			     expr->instanceof_ref);
 
-      out:
+out:
 	return err;
 }
 
-static int print_exception_ref_expr(int lvl, struct string *str, struct expression *expr)
+static int print_exception_ref_expr(int lvl, struct string *str,
+				    struct expression *expr)
 {
 	return str_append(str, "[exception object reference]\n");
 }
@@ -758,7 +819,7 @@ static int print_null_check_expr(int lvl, struct string *str,
 
 	err = append_tree_attr(lvl + 1, str, "ref", expr->null_check_ref);
 
- out:
+out:
 	return err;
 }
 
@@ -773,7 +834,7 @@ static int print_array_size_check_expr(int lvl, struct string *str,
 
 	err = append_tree_attr(lvl + 1, str, "size", expr->size_expr);
 
- out:
+out:
 	return err;
 }
 
@@ -786,10 +847,9 @@ static int print_multiarray_size_check_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
-	err = append_tree_attr(lvl + 1, str, "dimension list",
-			       expr->size_expr);
+	err = append_tree_attr(lvl + 1, str, "dimension list", expr->size_expr);
 
- out:
+out:
 	return err;
 }
 
