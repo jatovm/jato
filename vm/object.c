@@ -130,8 +130,12 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 		for (int i = 0; i < counts[0]; ++i)
 			elems[i] = NULL;
 	} else {
+		struct vm_class *elem_class;
+
+		elem_class = vm_class_get_array_element_class(class);
+
 		for (int i = 0; i < counts[0]; ++i) {
-			elems[i] = vm_object_alloc_multi_array(class,
+			elems[i] = vm_object_alloc_multi_array(elem_class,
 				nr_dimensions - 1, counts + 1);
 		}
 	}
