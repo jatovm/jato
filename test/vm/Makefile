@@ -11,6 +11,7 @@ OBJS =					\
 	../../lib/string.o		\
 	../../vm/bytecode.o		\
 	../../vm/bytecodes.o		\
+	../../vm/die.o			\
 	../../vm/natives.o		\
 	../../vm/stack.o		\
 	../../vm/types.o		\

@@ -535,10 +535,37 @@ vm_class_resolve_method_recursive(const struct vm_class *vmc, uint16_t i)
 	return result;
 }
 
+bool vm_class_is_equal_to(const struct vm_class *class,
+			  const struct vm_class *class2)
+{
+	enum vm_type type1;
+	enum vm_type type2;
+
+	if (class->kind != class2->kind)
+		return false;
+
+	if (class == class2)
+		return true;
+
+	switch (class->kind) {
+	case VM_CLASS_KIND_REGULAR:
+		return false;
+	case VM_CLASS_KIND_PRIMITIVE:
+		type1 = vm_class_get_storage_vmtype(class);
+		type2 = vm_class_get_storage_vmtype(class2);
+
+		return type1 == type2;
+	case VM_CLASS_KIND_ARRAY:
+		return strcmp(class->name, class2->name);
+	default:
+		error("Unknown class kind");
+	}
+}
+
 /* Reference: http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
 bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from)
 {
-	if (vmc == from)
+	if (vm_class_is_equal_to(vmc, from))
 		return true;
 
 	if (from->super && vm_class_is_assignable_from(vmc, from->super))
