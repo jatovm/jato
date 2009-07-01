@@ -72,4 +72,16 @@ field_get_object(const struct vm_object *obj, const struct vm_field *field)
 	return *(struct vm_object **) &obj->fields[field->offset];
 }
 
+static inline void
+array_set_field_char(struct vm_object *obj, int index, uint16_t value)
+{
+	*(uint16_t *) &obj->fields[index * get_vmtype_size(J_CHAR)] = value;
+}
+
+static inline uint16_t
+array_get_field_char(struct vm_object *obj, int index)
+{
+	return *(uint16_t *) &obj->fields[index * get_vmtype_size(J_CHAR)];
+}
+
 #endif

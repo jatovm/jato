@@ -58,17 +58,16 @@ struct vm_object *utf8_to_char_array(const uint8_t *bytes, unsigned int n)
 		return array;
 	}
 
-	uint16_t *utf16_chars = (uint16_t *) &array->fields;
 	for (unsigned int i = 0, j = 0; i < n; ++i) {
 		if (!(bytes[i] & 0x80)) {
-			utf16_chars[j++] = bytes[i];
+			array_set_field_char(array, j++, bytes[i]);
 			continue;
 		}
 
 		if ((bytes[i] & 0xe0) == 0xc0) {
 			uint16_t ch = (uint16_t) (bytes[i++] & 0x1f) << 6;
 			ch += bytes[i++] & 0x3f;
-			utf16_chars[j++] = ch;
+			array_set_field_char(array, j++, ch);
 			continue;
 		}
 
@@ -76,7 +75,7 @@ struct vm_object *utf8_to_char_array(const uint8_t *bytes, unsigned int n)
 			uint16_t ch = (uint16_t) (bytes[i++] & 0xf) << 12;
 			ch += (uint16_t) (bytes[i++] & 0x3f) << 6;
 			ch += bytes[i++] & 0x3f;
-			utf16_chars[j++] = ch;
+			array_set_field_char(array, j++, ch);
 			continue;
 		}
 	}

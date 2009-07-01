@@ -228,9 +228,8 @@ vm_object_alloc_string_from_c(const char *bytes)
 	/* XXX: Need to handle code points >= 0x80 */
 	NOT_IMPLEMENTED;
 
-	uint16_t *utf16_chars = (uint16_t *) &array->fields;
 	for (unsigned int i = 0; i < n; ++i) {
-		utf16_chars[i] = bytes[i];
+		array_set_field_char(array, i, bytes[i]);
 	}
 
 	field_set_int32(string, vm_java_lang_String_offset, 0);
@@ -451,7 +450,6 @@ char *vm_string_to_cstr(const struct vm_object *string_obj)
 {
 	struct vm_object *array_object;
 	struct string *str;
-	int16_t *array;
 	int32_t offset;
 	int32_t count;
 	char *result;
@@ -459,7 +457,6 @@ char *vm_string_to_cstr(const struct vm_object *string_obj)
 	offset = field_get_int32(string_obj, vm_java_lang_String_offset);
 	count = field_get_int32(string_obj, vm_java_lang_String_count);
 	array_object = field_get_object(string_obj, vm_java_lang_String_value);
-	array = (int16_t *) array_object->fields;
 
 	str = alloc_str();
 	if (!str)
@@ -468,8 +465,10 @@ char *vm_string_to_cstr(const struct vm_object *string_obj)
 	result = NULL;
 
 	for (int32_t i = 0; i < count; ++i) {
-		int16_t ch = array[offset + i];
+		int16_t ch;
 		int err;
+
+		ch = array_get_field_char(array_object, offset + i);
 
 		if (ch < 128 && isprint(ch))
 			err = str_append(str, "%c", ch);
