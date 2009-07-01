@@ -81,6 +81,7 @@ enum insn_type {
 	INSN_MOV_IMM_MEMBASE,
 	INSN_MOV_IMM_REG,
 	INSN_MOV_MEMLOCAL_REG,
+	INSN_MOV_MEMLOCAL_FREG,
 	INSN_MOV_MEMBASE_REG,
 	INSN_MOV_MEMDISP_REG,
 	INSN_MOV_REG_MEMDISP,
@@ -89,6 +90,7 @@ enum insn_type {
 	INSN_MOV_REG_MEMBASE,
 	INSN_MOV_REG_MEMINDEX,
 	INSN_MOV_REG_MEMLOCAL,
+	INSN_MOV_FREG_MEMLOCAL,
 	INSN_MOV_REG_REG,
 	INSN_MOVSX_REG_REG,
 	INSN_MUL_MEMBASE_EAX,
@@ -196,13 +198,23 @@ struct insn *memlocal_insn(enum insn_type, struct stack_slot *);
 static inline struct insn *
 spill_insn(struct var_info *var, struct stack_slot *slot)
 {
-	return reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, var, slot);
+	if (var->type == REG_TYPE_GPR)
+		return reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, var, slot);
+	else if (var->type == REG_TYPE_FPU)
+		return reg_memlocal_insn(INSN_MOV_FREG_MEMLOCAL, var, slot);
+	else
+		return NULL;
 }
 
 static inline struct insn *
 reload_insn(struct stack_slot *slot, struct var_info *var)
 {
-	return memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, var);
+	if (var->type == REG_TYPE_GPR)
+		return memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, var);
+	else if (var->type == REG_TYPE_FPU)
+		return memlocal_reg_insn(INSN_MOV_MEMLOCAL_FREG, slot, var);
+	else
+		return NULL;
 }
 
 struct insn *alloc_insn(enum insn_type);
