@@ -8,6 +8,11 @@ W: http://www.cs.helsinki.fi/u/penberg/
 D: Author and maintainer, initial work on i386 JIT
 L: Finland
 
+N: Tomasz Grabiec
+E: tgrabiec@gmail.com
+D: Exception handling mechanisms (GSoC 2009)
+L: Cracow, Poland
+
 N: Vegard Nossum
 E: vegard.nossum@gmail.com
 W: http://folk.uio.no/vegardno/
