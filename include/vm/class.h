@@ -25,10 +25,11 @@ enum vm_class_kind {
 };
 
 struct vm_class {
+	enum vm_class_kind kind;
+
 	const struct cafebabe_class *class;
 
 	enum vm_class_state state;
-	enum vm_class_kind kind;
 
 	char *name;
 
