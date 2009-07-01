@@ -573,20 +573,9 @@ char *vm_class_get_array_element_class_name(const char *class_name)
 	if (class_name[0] != '[')
 		return NULL;
 
-	if (class_name[1] == 'L') {
-		char *result;
-		int len;
-
+	if (class_name[1] == 'L')
 		/* Skip '[L' prefix and ';' suffix */
-		len = strlen(class_name);
-		assert(class_name[len - 1] == ';');
-
-		result = malloc(len - 2);
-		memcpy(result, class_name + 2, len - 3);
-		result[len - 3] = 0;
-
-		return result;
-	}
+		return strndup(class_name + 2, strlen(class_name) - 3);
 
 	return strdup(class_name + 1);
 }
