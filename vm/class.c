@@ -263,6 +263,7 @@ int vm_class_link_bogus_class(struct vm_class *vmc, const char *class_name)
 	vmc->fields = NULL;
 	vmc->methods = NULL;
 	vmc->object_size = 0;
+	vmc->static_size = 0;
 
 	vmc->vtable_size = vm_java_lang_Object->vtable_size;
 	vmc->vtable.native_ptr = vm_java_lang_Object->vtable.native_ptr;
