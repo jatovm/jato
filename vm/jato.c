@@ -237,6 +237,8 @@ struct vm_class *vm_java_lang_Object;
 struct vm_class *vm_java_lang_Class;
 struct vm_class *vm_java_lang_String;
 struct vm_class *vm_java_lang_Throwable;
+struct vm_class *vm_java_util_Properties;
+
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -251,6 +253,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Class",		&vm_java_lang_Class },
 	{ "java/lang/String",		&vm_java_lang_String },
 	{ "java/lang/Throwable",	&vm_java_lang_Throwable },
+	{ "java/util/Properties",	&vm_java_util_Properties },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -283,6 +286,24 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_String, "count", "I",	&vm_java_lang_String_count },
 	{ &vm_java_lang_String, "value", "[C",	&vm_java_lang_String_value },
 	{ &vm_java_lang_Throwable, "detailMessage", "Ljava/lang/String;", &vm_java_lang_Throwable_detailMessage },
+};
+
+struct method_preload_entry {
+	struct vm_class **class;
+	const char *name;
+	const char *type;
+	struct vm_method **method;
+};
+
+struct vm_method *vm_java_util_Properties_setProperty;
+
+static const struct method_preload_entry method_preload_entries[] = {
+	{
+		&vm_java_util_Properties,
+		"setProperty",
+		"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;",
+		&vm_java_util_Properties_setProperty,
+	},
 };
 
 static int preload_vm_classes(void)
@@ -328,6 +349,19 @@ static int preload_vm_classes(void)
 		*pe->field = field;
 	}
 
+	for (unsigned int i = 0; i < ARRAY_SIZE(method_preload_entries); ++i) {
+		const struct method_preload_entry *me
+			= &method_preload_entries[i];
+
+		struct vm_method *method = vm_class_get_method(*me->class,
+			me->name, me->type);
+		if (!method) {
+			NOT_IMPLEMENTED;
+			return 1;
+		}
+
+		*me->method = method;
+	}
 
 	return 0;
 }
