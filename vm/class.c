@@ -583,3 +583,11 @@ vm_class_get_array_element_class(const struct vm_class *array_class)
 
 	return result;
 }
+
+enum vm_type vm_class_get_storage_vmtype(const struct vm_class *class)
+{
+	if (class->kind != VM_CLASS_KIND_PRIMITIVE)
+		return J_REFERENCE;
+
+	return class->primitive_vm_type;
+}
