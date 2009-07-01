@@ -91,7 +91,7 @@ public class ArrayExceptionsTest extends TestCase {
         Object[] array = new String[3];
 
         try {
-            array[2] = new Integer(0);
+            array[2] = new ArrayExceptionsTest();
         } catch (ArrayStoreException e) {
             caught = true;
         }
@@ -174,7 +174,7 @@ public class ArrayExceptionsTest extends TestCase {
 
     public static void main(String args[]) {
         testArrayLoad();
-        /* FIXME: testArrayStore(); */
+        testArrayStore();
         testArraylengthThrowsNullPointerException();
         testAnewarrayThrowsNegativeArraySizeException();
         testNewarrayThrowsNegativeArraySizeException();
