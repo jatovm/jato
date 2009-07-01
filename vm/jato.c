@@ -121,7 +121,8 @@ native_vmclass_getname(struct vm_object *object)
 {
 	struct vm_class *class;
 
-	class = object->java_lang_Class_class;
+	class = (struct vm_class*)field_get_object(object,
+						   vm_java_lang_Class_vmdata);
 	assert(class != NULL);
 
 	return vm_object_alloc_string_from_c(class->name);
@@ -176,12 +177,14 @@ struct field_preload_entry {
 	struct vm_field **field;
 };
 
+struct vm_field *vm_java_lang_Class_vmdata;
 struct vm_field *vm_java_lang_String_offset;
 struct vm_field *vm_java_lang_String_count;
 struct vm_field *vm_java_lang_String_value;
 struct vm_field *vm_java_lang_Throwable_detailMessage;
 
 static const struct field_preload_entry field_preload_entries[] = {
+	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
 	{ &vm_java_lang_String, "offset", "I",	&vm_java_lang_String_offset },
 	{ &vm_java_lang_String, "count", "I",	&vm_java_lang_String_count },
 	{ &vm_java_lang_String, "value", "[C",	&vm_java_lang_String_value },

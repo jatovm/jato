@@ -38,6 +38,7 @@
 #include <vm/classloader.h>
 #include <vm/die.h>
 #include <vm/field.h>
+#include <vm/java_lang.h>
 #include <vm/method.h>
 #include <vm/object.h>
 #include <vm/string.h>
@@ -276,7 +277,8 @@ int vm_class_init(struct vm_class *vmc)
 		return -1;
 	}
 
-	vmc->object->java_lang_Class_class = vmc;
+	field_set_object(vmc->object, vm_java_lang_Class_vmdata,
+		(struct vm_object *)vmc);
 
 	if (vmc->class) {
 		/* XXX: Make sure there's at most one of these. */
