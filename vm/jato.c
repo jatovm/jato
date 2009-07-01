@@ -86,10 +86,64 @@ static void __vm_native native_vmruntime_println(struct vm_object *message)
 	free(cstr);
 }
 
-static void __vm_native native_vmsystem_arraycopy(struct vm_object *src, int src_start,
-	struct vm_object *dest, int dest_start, int len)
+static void __vm_native
+native_vmsystem_arraycopy(struct vm_object *src, int src_start,
+			  struct vm_object *dest, int dest_start, int len)
 {
-	NOT_IMPLEMENTED;
+	const struct vm_class *src_elem_class;
+	const struct vm_class *dest_elem_class;
+	enum vm_type elem_type;
+	int elem_size;
+	char *tmp;
+	int size;
+
+	if (!src || !dest || !src->class || !dest->class) {
+		signal_new_exception("java.lang.NullPointerException", NULL);
+		goto throw;
+	}
+
+	if (!vm_class_is_array_class(src->class) ||
+	    !vm_class_is_array_class(dest->class)) {
+		signal_new_exception("java.lang.ArrayStoreException", NULL);
+		goto throw;
+	}
+
+	src_elem_class = vm_class_get_array_element_class(src->class);
+	dest_elem_class = vm_class_get_array_element_class(dest->class);
+	if (!src_elem_class || !dest_elem_class) {
+		signal_new_exception("java.lang.NullPointerException", NULL);
+		goto throw;
+	}
+
+	elem_type = vm_class_get_storage_vmtype(src_elem_class);
+	if (elem_type != vm_class_get_storage_vmtype(dest_elem_class)) {
+		NOT_IMPLEMENTED;
+		return;
+	}
+
+	if (len < 0 ||
+	    src_start < 0 || src_start + len > src->array_length ||
+	    dest_start < 0 || dest_start + len > dest->array_length) {
+		signal_new_exception("java.lang.ArrayIndexOutOfBoundsException",
+				     NULL);
+		goto throw;
+	}
+
+	elem_size = get_vmtype_size(elem_type);
+	size = len * elem_size;
+	tmp = malloc(size);
+	if (!tmp) {
+		NOT_IMPLEMENTED;
+		return;
+	}
+
+	memcpy(tmp, src->fields + src_start * elem_size, size);
+	memcpy(dest->fields + dest_start * elem_size, tmp, size);
+	free(tmp);
+
+	return;
+ throw:
+	throw_from_native(sizeof(int) * 3 + sizeof(struct vm_object*) * 2);
 }
 
 static int32_t __vm_native native_vmsystem_identityhashcode(struct vm_object *obj)
