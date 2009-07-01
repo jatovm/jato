@@ -199,6 +199,17 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Throwable",	&vm_java_lang_Throwable },
 };
 
+static const struct preload_entry primitive_preload_entries[] = {
+	{"Z", &vm_boolean_class},
+	{"C", &vm_char_class},
+	{"F", &vm_float_class},
+	{"D", &vm_double_class},
+	{"B", &vm_byte_class},
+	{"S", &vm_short_class},
+	{"I", &vm_int_class},
+	{"J", &vm_long_class},
+};
+
 struct field_preload_entry {
 	struct vm_class **class;
 	const char *name;
@@ -222,10 +233,25 @@ static const struct field_preload_entry field_preload_entries[] = {
 
 static int preload_vm_classes(void)
 {
+	unsigned int array_size;
+
 	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
 		const struct preload_entry *pe = &preload_entries[i];
 
 		struct vm_class *class = classloader_load(pe->name);
+		if (!class) {
+			NOT_IMPLEMENTED;
+			return 1;
+		}
+
+		*pe->class = class;
+	}
+
+	array_size = ARRAY_SIZE(primitive_preload_entries);
+	for (unsigned int i = 0; i < array_size; ++i) {
+		const struct preload_entry *pe = &primitive_preload_entries[i];
+
+		struct vm_class *class = classloader_load_primitive(pe->name);
 		if (!class) {
 			NOT_IMPLEMENTED;
 			return 1;
@@ -248,14 +274,6 @@ static int preload_vm_classes(void)
 		*pe->field = field;
 	}
 
-	vm_boolean_class = classloader_load_primitive("Z");
-	vm_char_class = classloader_load_primitive("C");
-	vm_float_class = classloader_load_primitive("F");
-	vm_double_class = classloader_load_primitive("D");
-	vm_byte_class = classloader_load_primitive("B");
-	vm_short_class = classloader_load_primitive("S");
-	vm_int_class = classloader_load_primitive("I");
-	vm_long_class = classloader_load_primitive("J");
 
 	return 0;
 }
