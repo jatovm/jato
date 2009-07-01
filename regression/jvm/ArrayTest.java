@@ -102,6 +102,18 @@ public class ArrayTest extends TestCase {
 		assertEquals(a, array[1]);
 	}
 
+	public static void testArrayClass() {
+		int big_arr[][][]  = new int[2][2][2];
+
+		assertClassName("[[[I", big_arr);
+		assertClassName("[[I", big_arr[0]);
+		assertClassName("[I", big_arr[0][0]);
+
+		int arr2[] = new int[10];
+
+		assertTrue(arr2.getClass().equals(big_arr[0][0].getClass()));
+	}
+
 	public static void main(String args[]) {
 		testEmptyStaticArrayLength();
 		testEmptyArrayLength();
@@ -116,6 +128,8 @@ public class ArrayTest extends TestCase {
 		testShortElementLoadStore();
 		/* FIXME: testLongElementLoadStore(); */
 		testReferenceElementLoadStore();
+
+		testArrayClass();
 
 		exit();
 	}

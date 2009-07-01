@@ -77,6 +77,10 @@ public class TestCase {
         }
     }
 
+    protected static void assertClassName(String className, Object o) {
+        assertTrue(o.getClass().getName().equals(className));
+    }
+
     protected static void fail(/* String msg */) {
         // FIXME:
         // System.out.println(msg);
