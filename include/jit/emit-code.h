@@ -26,6 +26,7 @@ extern struct emitter emitters[];
 	[_insn_type] = { .emit_fn = _fn, .type = _emitter_type }
 
 extern void emit_prolog(struct buffer *, unsigned long);
+extern void emit_trace_invoke(struct buffer *, struct compilation_unit *);
 extern void emit_epilog(struct buffer *);
 extern void emit_trampoline(struct compilation_unit *, void *, struct jit_trampoline *);
 extern void emit_unwind(struct buffer *);

@@ -94,6 +94,7 @@ extern bool opt_trace_regalloc;
 extern bool opt_trace_machine_code;
 extern bool opt_trace_magic_trampoline;
 extern bool opt_trace_bytecode_offset;
+extern bool opt_trace_invoke;
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);
@@ -103,5 +104,6 @@ void trace_lir(struct compilation_unit *);
 void trace_liveness(struct compilation_unit *);
 void trace_regalloc(struct compilation_unit *);
 void trace_machine_code(struct compilation_unit *);
+void trace_invoke(struct compilation_unit *);
 
 #endif

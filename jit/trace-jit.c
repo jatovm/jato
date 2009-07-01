@@ -33,6 +33,7 @@ bool opt_trace_regalloc;
 bool opt_trace_machine_code;
 bool opt_trace_magic_trampoline;
 bool opt_trace_bytecode_offset;
+bool opt_trace_invoke;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -258,4 +259,12 @@ void trace_magic_trampoline(struct compilation_unit *cu)
 	       cu->method->class->name,
 	       cu->method->name,
 	       cu->method->method_index);
+}
+
+void trace_invoke(struct compilation_unit *cu)
+{
+	struct vm_method *vmm = cu->method;
+	struct vm_class *vmc = vmm->class;
+
+	printf("trace invoke: %s.%s%s\n", vmc->name, vmm->name, vmm->type);
 }

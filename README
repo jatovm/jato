@@ -38,6 +38,9 @@ Running Jato
 
   Command line options:
 
+    -Xtrace:invoke
+      Trace method invocations.
+
     -Xtrace:jit
       Trace all compilation phases for each method.
 

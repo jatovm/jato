@@ -156,6 +156,9 @@ int emit_machine_code(struct compilation_unit *cu)
 	if (method_is_synchronized(cu->method))
 		emit_monitorenter(cu);
 
+	if (opt_trace_invoke)
+		emit_trace_invoke(cu->objcode, cu);
+
 	for_each_basic_block(bb, &cu->bb_list)
 		emit_body(bb, cu->objcode);
 
