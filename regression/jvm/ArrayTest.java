@@ -30,12 +30,92 @@ public class ArrayTest extends TestCase {
 		assertEquals(x.b2.length, 1);
 	}
 
+	private static void testIntegerElementLoadStore() {
+		int array[] = new int[2];
+
+		array[1] = 2;
+		array[0] = 1;
+
+		assertEquals(1, array[0]);
+		assertEquals(2, array[1]);
+	}
+
+	private static void testByteElementLoadStore() {
+		byte array[] = new byte[2];
+
+		array[1] = 2;
+		array[0] = 1;
+
+		assertEquals(1, array[0]);
+		assertEquals(2, array[1]);
+	}
+
+	private static void testCharElementLoadStore() {
+		char array[] = new char[2];
+
+		array[1] = 'a';
+		array[0] = 'b';
+
+		assertEquals('b', array[0]);
+		assertEquals('a', array[1]);
+	}
+
+	private static void testBooleanElementLoadStore() {
+		boolean array[] = new boolean[2];
+
+		array[1] = true;
+		array[0] = false;
+
+		assertFalse(array[0]);
+		assertTrue(array[1]);
+	}
+
+	private static void testShortElementLoadStore() {
+		short array[] = new short[2];
+
+		array[1] = 2;
+		array[0] = 1;
+
+		assertEquals(1, array[0]);
+		assertEquals(2, array[1]);
+	}
+
+	public static void testLongElementLoadStore() {
+		long array[] = new long[2];
+
+		array[1] = 2L;
+		array[0] = 1L;
+
+		assertEquals(1L, array[0]);
+		assertEquals(2L, array[1]);
+	}
+
+	private static void testReferenceElementLoadStore() {
+		Object array[] = new Object[2];
+		Object a = "a";
+		Object b = "b";
+
+		array[1] = a;
+		array[0] = b;
+
+		assertEquals(b, array[0]);
+		assertEquals(a, array[1]);
+	}
+
 	public static void main(String args[]) {
 		testEmptyStaticArrayLength();
 		testEmptyArrayLength();
 
 		testStaticArrayLength();
 		testArrayLength();
+
+		testIntegerElementLoadStore();
+		testBooleanElementLoadStore();
+		testCharElementLoadStore();
+		testByteElementLoadStore();
+		testShortElementLoadStore();
+		/* FIXME: testLongElementLoadStore(); */
+		testReferenceElementLoadStore();
 
 		exit();
 	}
