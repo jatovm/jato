@@ -331,6 +331,7 @@ struct vm_class *load_primitive_array_class(const char *class_name,
 	array_class->object_size = 0;
 	array_class->vtable_size = 0;
 	array_class->primitive_vm_type = class_name_to_vm_type(class_name);
+	array_class->kind = VM_CLASS_KIND_ARRAY;
 
 	return array_class;
 }
@@ -354,6 +355,7 @@ struct vm_class *load_class_array_class(const char *array_class_name,
 	array_class->methods = NULL;
 	array_class->object_size = 0;
 	array_class->vtable_size = 0;
+	array_class->kind = VM_CLASS_KIND_ARRAY;
 
 	return array_class;
 }
@@ -376,6 +378,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	class->methods = NULL;
 	class->object_size = 0;
 	class->vtable_size = 0;
+	class->kind = VM_CLASS_KIND_PRIMITIVE;
 
 	return class;
 }

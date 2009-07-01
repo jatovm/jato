@@ -18,10 +18,17 @@ enum vm_class_state {
 	VM_CLASS_INITIALIZED,
 };
 
+enum vm_class_kind {
+	VM_CLASS_KIND_PRIMITIVE,
+	VM_CLASS_KIND_ARRAY,
+	VM_CLASS_KIND_REGULAR
+};
+
 struct vm_class {
 	const struct cafebabe_class *class;
 
 	enum vm_class_state state;
+	enum vm_class_kind kind;
 
 	char *name;
 
@@ -67,7 +74,12 @@ static inline bool vm_class_is_interface(const struct vm_class *vmc)
 
 static inline bool vm_class_is_array_class(const struct vm_class *vmc)
 {
-	return vmc->name && vmc->name[0] == '[';
+	return vmc->kind == VM_CLASS_KIND_ARRAY;
+}
+
+static inline bool vm_class_is_primitive_class(const struct vm_class *vmc)
+{
+	return vmc->kind == VM_CLASS_KIND_PRIMITIVE;
 }
 
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i);

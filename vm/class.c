@@ -121,6 +121,7 @@ extern struct vm_class *vm_java_lang_Class;
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
 	vmc->class = class;
+	vmc->kind = VM_CLASS_KIND_REGULAR;
 
 	const struct cafebabe_constant_info_class *constant_class;
 	if (cafebabe_class_constant_get_class(class,
