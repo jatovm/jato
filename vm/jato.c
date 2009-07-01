@@ -128,6 +128,20 @@ native_vmclass_getname(struct vm_object *object)
 	return vm_object_alloc_string_from_c(class->name);
 }
 
+static struct vm_object * __vm_native
+native_vmclassloader_getprimitiveclass(int type)
+{
+	static char primitive_class_name[] = { "X" };
+	struct vm_class *class;
+
+	primitive_class_name[0] = (char)type;
+
+	class = classloader_load(primitive_class_name);
+	vm_class_ensure_init(class);
+
+	return class->object;
+}
+
 static void jit_init_natives(void)
 {
 	vm_register_native("gnu/classpath/VMStackWalker", "getClassContext",
@@ -141,6 +155,8 @@ static void jit_init_natives(void)
 		&native_vmruntime_println);
 	vm_register_native("java/lang/VMClass", "getName",
 		&native_vmclass_getname);
+	vm_register_native("java/lang/VMClassLoader", "getPrimitiveClass",
+		&native_vmclassloader_getprimitiveclass);
 	vm_register_native("java/lang/VMObject", "getClass",
 		&native_vmobject_getclass);
 	vm_register_native("java/lang/VMRuntime", "exit",
