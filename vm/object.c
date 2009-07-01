@@ -317,22 +317,24 @@ void vm_object_check_array(struct vm_object *obj, unsigned int index)
 
 void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 {
-	NOT_IMPLEMENTED;
-
-#if 0
-	struct vm_class *cb;
+	struct vm_class *class;
+	struct vm_class *element_class;
 	struct string *str;
 	int err;
 
-	cb = arrayref->class;
+	if (obj == NULL)
+		return;
 
-	if (!IS_ARRAY(cb)) {
+	class = arrayref->class;
+
+	if (!vm_class_is_array_class(class)) {
 		signal_new_exception("java/lang/RuntimeException",
 				     "object is not an array");
 		goto throw;
 	}
 
-	if (obj == NULL || isInstanceOf(cb->element_class, obj->class))
+	element_class = vm_class_get_array_element_class(class);
+	if (vm_class_is_assignable_from(element_class, obj->class))
 		return;
 
 	str = alloc_str();
@@ -360,7 +362,6 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 		die("%s: out of memory", __func__);
 
 	die("%s: error %d", __func__, err);
-#endif
 }
 
 void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type)
