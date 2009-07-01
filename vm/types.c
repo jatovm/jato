@@ -1,4 +1,6 @@
 #include <vm/types.h>
+#include <vm/die.h>
+#include <vm/vm.h>
 
 /* See Table 4.2 in Section 4.3.2 ("Field Descriptors") of the JVM
    specification.  */
@@ -131,4 +133,41 @@ int count_arguments(const char *type)
 		return -1;
 
 	return args;
+}
+
+static enum vm_type bytecode_type_to_vmtype_map[] = {
+	[T_BOOLEAN] = J_BOOLEAN,
+	[T_CHAR] = J_CHAR,
+	[T_FLOAT] = J_FLOAT,
+	[T_DOUBLE] = J_DOUBLE,
+	[T_BYTE] = J_BYTE,
+	[T_SHORT] = J_SHORT,
+	[T_INT] = J_INT,
+	[T_LONG] = J_LONG,
+};
+
+enum vm_type bytecode_type_to_vmtype(int type)
+{
+	return bytecode_type_to_vmtype_map[type];
+}
+
+int get_vmtype_size(enum vm_type type)
+{
+	/* Currently we can load/store only multiples of machine word
+	   at once. */
+	switch (type) {
+	case J_BOOLEAN:
+	case J_BYTE:
+	case J_CHAR:
+	case J_SHORT:
+	case J_FLOAT:
+	case J_INT:
+	case J_REFERENCE:
+		return sizeof(unsigned long);
+	case J_DOUBLE:
+	case J_LONG:
+		return 8;
+	default:
+		error("type has no size");
+	}
 }
