@@ -477,7 +477,7 @@ void test_should_print_invokevirtual_expression(void)
 		&vmm, no_args_expr());
 }
 
-void assert_printed_args_list_expr(const char *expected,
+void assert_printed_args_list_expr(struct string *expected,
 				   struct expression *args_left,
 				   struct expression *args_right)
 {
