@@ -283,6 +283,34 @@ struct vm_class *load_class_from_classpath_file(const char *classpath,
 	return result;
 }
 
+static enum vm_type class_name_to_vm_type(const char *class_name)
+{
+	if (class_name[0] == 0 || class_name[1] != 0)
+		return J_VOID;
+
+	switch (class_name[0]) {
+	case 'Z':
+		return J_BOOLEAN;
+	case 'C':
+		return J_CHAR;
+	case 'F':
+		return J_FLOAT;
+	case 'D':
+		return J_DOUBLE;
+	case 'B':
+		return J_BYTE;
+	case 'S':
+		return J_SHORT;
+	case 'I':
+		return J_INT;
+	case 'J':
+		return J_LONG;
+	}
+
+	return J_VOID;
+}
+
+
 struct vm_class *load_primitive_array_class(const char *class_name,
 	unsigned int dimensions, char type)
 {
@@ -302,6 +330,7 @@ struct vm_class *load_primitive_array_class(const char *class_name,
 	array_class->methods = NULL;
 	array_class->object_size = 0;
 	array_class->vtable_size = 0;
+	array_class->primitive_vm_type = class_name_to_vm_type(class_name);
 
 	return array_class;
 }
@@ -327,6 +356,28 @@ struct vm_class *load_class_array_class(const char *array_class_name,
 	array_class->vtable_size = 0;
 
 	return array_class;
+}
+
+struct vm_class *classloader_load_primitive(const char *class_name)
+{
+	struct vm_class *class;
+
+	class = malloc(sizeof *class);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	class->class = NULL;
+	class->state = VM_CLASS_LINKED;
+	class->name = strdup(class_name);
+	class->super = vm_java_lang_Object;
+	class->fields = NULL;
+	class->methods = NULL;
+	class->object_size = 0;
+	class->vtable_size = 0;
+
+	return class;
 }
 
 struct vm_class *load_array_class(const char *class_name)
@@ -370,15 +421,7 @@ struct vm_class *load_array_class(const char *class_name)
 		return ret;
 	}
 
-	switch (*ptr) {
-	case 'B':
-	case 'C':
-	case 'D':
-	case 'F':
-	case 'I':
-	case 'J':
-	case 'S':
-	case 'Z':
+	if (class_name_to_vm_type(ptr)) {
 		if (strlen(ptr) != 1) {
 			NOT_IMPLEMENTED;
 			return NULL;
@@ -444,7 +487,7 @@ struct vm_class *classloader_load(const char *class_name)
 		goto out;
 	}
 
-	if (nr_classes == max_classes) {	
+	if (nr_classes == max_classes) {
 		new_max_classes = 1 + max_classes * 2;
 		new_array = realloc(classes,
 			new_max_classes * sizeof(struct classloader_class));

@@ -162,6 +162,14 @@ struct vm_class *vm_java_lang_Object;
 struct vm_class *vm_java_lang_Class;
 struct vm_class *vm_java_lang_String;
 struct vm_class *vm_java_lang_Throwable;
+struct vm_class *vm_boolean_class;
+struct vm_class *vm_char_class;
+struct vm_class *vm_float_class;
+struct vm_class *vm_double_class;
+struct vm_class *vm_byte_class;
+struct vm_class *vm_short_class;
+struct vm_class *vm_int_class;
+struct vm_class *vm_long_class;
 
 static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Object",		&vm_java_lang_Object },
@@ -218,6 +226,15 @@ static int preload_vm_classes(void)
 
 		*pe->field = field;
 	}
+
+	vm_boolean_class = classloader_load_primitive("Z");
+	vm_char_class = classloader_load_primitive("C");
+	vm_float_class = classloader_load_primitive("F");
+	vm_double_class = classloader_load_primitive("D");
+	vm_byte_class = classloader_load_primitive("B");
+	vm_short_class = classloader_load_primitive("S");
+	vm_int_class = classloader_load_primitive("I");
+	vm_long_class = classloader_load_primitive("J");
 
 	return 0;
 }
