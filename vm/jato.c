@@ -124,7 +124,7 @@ native_vmclass_getname(struct vm_object *object)
 	class = object->java_lang_Class_class;
 	assert(class != NULL);
 
-	return vm_object_alloc_string(class->name, strlen(class->name));
+	return vm_object_alloc_string_from_c(class->name);
 }
 
 static void jit_init_natives(void)

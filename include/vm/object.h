@@ -33,7 +33,8 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count);
 
 struct vm_object *
-vm_object_alloc_string(const uint8_t bytes[], unsigned int length);
+vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length);
+struct vm_object *vm_object_alloc_string_from_c(const char *bytes);
 
 struct vm_object *new_exception(const char *class_name, const char *message);
 

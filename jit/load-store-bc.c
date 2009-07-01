@@ -120,7 +120,8 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 		}
 
 		struct vm_object *string
-			= vm_object_alloc_string(utf8->bytes, utf8->length);
+			= vm_object_alloc_string_from_utf8(utf8->bytes,
+				utf8->length);
 		if (!string) {
 			NOT_IMPLEMENTED;
 			break;

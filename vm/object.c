@@ -179,7 +179,7 @@ void vm_object_unlock(struct vm_object *obj)
 }
 
 struct vm_object *
-vm_object_alloc_string(const uint8_t bytes[], unsigned int length)
+vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length)
 {
 	struct vm_object *array = utf8_to_char_array(bytes, length);
 	if (!array) {
@@ -191,6 +191,38 @@ vm_object_alloc_string(const uint8_t bytes[], unsigned int length)
 	if (!string) {
 		NOT_IMPLEMENTED;
 		return NULL;
+	}
+
+	field_set_int32(string, vm_java_lang_String_offset, 0);
+	field_set_int32(string, vm_java_lang_String_count, array->array_length);
+	field_set_object(string, vm_java_lang_String_value, array);
+
+	return string;
+}
+
+struct vm_object *
+vm_object_alloc_string_from_c(const char *bytes)
+{
+	struct vm_object *string = vm_object_alloc(vm_java_lang_String);
+	if (!string) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	unsigned int n = strlen(bytes);
+	struct vm_object *array
+		= vm_object_alloc_native_array(J_CHAR, n);
+	if (!array) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	/* XXX: Need to handle code points >= 0x80 */
+	NOT_IMPLEMENTED;
+
+	uint16_t *utf16_chars = (uint16_t *) &array->fields;
+	for (unsigned int i = 0; i < n; ++i) {
+		utf16_chars[i] = bytes[i];
 	}
 
 	field_set_int32(string, vm_java_lang_String_offset, 0);
@@ -221,7 +253,7 @@ struct vm_object *new_exception(const char *class_name, const char *message)
 	if (message == NULL)
 		message_str = NULL;
 	else
-		message_str = vm_object_alloc_string(message, strlen(message));
+		message_str = vm_object_alloc_string_from_c(message);
 
 	mb = vm_class_get_method(e_class,
 		"<init>", "(Ljava/lang/String;)V");

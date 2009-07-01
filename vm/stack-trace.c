@@ -316,8 +316,8 @@ new_stack_trace_element(struct vm_method *mb, unsigned long bc_offset)
 		file_name = NULL;
 
 	class_dot_name = slash2dots(cb->name);
-	class_name = vm_object_alloc_string(class_dot_name, strlen(class_dot_name));
-	method_name = vm_object_alloc_string(mb->name, strlen(mb->name));
+	class_name = vm_object_alloc_string_from_c(class_dot_name);
+	method_name = vm_object_alloc_string_from_c(mb->name);
 	free(class_dot_name);
 
 	ste = vm_object_alloc(ste_class);
