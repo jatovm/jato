@@ -14,6 +14,7 @@
 #include <vm/object.h>
 #include <vm/stdlib.h>
 #include <vm/string.h>
+#include <vm/types.h>
 #include <vm/utf8.h>
 
 struct vm_object *vm_object_alloc(struct vm_class *class)
@@ -42,9 +43,12 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 struct vm_object *vm_object_alloc_native_array(int type, int count)
 {
 	struct vm_object *res;
+	int vm_type;
 
-	/* XXX: Use the right size... */
-	res = zalloc(sizeof(*res) + 8 * count);
+	vm_type = bytecode_type_to_vmtype(type);
+	assert(vm_type != 0);
+
+	res = zalloc(sizeof(*res) + get_vmtype_size(vm_type) * count);
 	if (!res) {
 		NOT_IMPLEMENTED;
 		return NULL;
