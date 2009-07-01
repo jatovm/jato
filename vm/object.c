@@ -46,7 +46,7 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 	int vm_type;
 
 	vm_type = bytecode_type_to_vmtype(type);
-	assert(vm_type != 0);
+	assert(vm_type != J_VOID);
 
 	res = zalloc(sizeof(*res) + get_vmtype_size(vm_type) * count);
 	if (!res) {
