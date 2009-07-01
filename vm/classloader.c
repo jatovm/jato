@@ -283,9 +283,19 @@ struct vm_class *load_class_from_classpath_file(const char *classpath,
 	return result;
 }
 
+static struct vm_class *primitive_class_cache[VM_TYPE_MAX];
+
 struct vm_class *classloader_load_primitive(const char *class_name)
 {
 	struct vm_class *class;
+	int cache_index;
+
+	cache_index = str_to_type(class_name);
+
+	assert(cache_index != J_VOID && cache_index != J_REFERENCE);
+
+	if (primitive_class_cache[cache_index])
+		return primitive_class_cache[cache_index];
 
 	class = malloc(sizeof *class);
 	if (!class) {
@@ -300,6 +310,8 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 		NOT_IMPLEMENTED;
 		return NULL;
 	}
+
+	primitive_class_cache[cache_index] = class;
 
 	return class;
 }

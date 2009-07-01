@@ -13,6 +13,7 @@ enum vm_type {
 	J_DOUBLE,
 	J_BOOLEAN,
 	J_RETURN_ADDRESS,
+	VM_TYPE_MAX,
 };
 
 extern enum vm_type str_to_type(const char *);
