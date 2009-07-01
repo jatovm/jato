@@ -283,33 +283,6 @@ struct vm_class *load_class_from_classpath_file(const char *classpath,
 	return result;
 }
 
-static enum vm_type class_name_to_vm_type(const char *class_name)
-{
-	if (class_name[0] == 0 || class_name[1] != 0)
-		return J_VOID;
-
-	switch (class_name[0]) {
-	case 'Z':
-		return J_BOOLEAN;
-	case 'C':
-		return J_CHAR;
-	case 'F':
-		return J_FLOAT;
-	case 'D':
-		return J_DOUBLE;
-	case 'B':
-		return J_BYTE;
-	case 'S':
-		return J_SHORT;
-	case 'I':
-		return J_INT;
-	case 'J':
-		return J_LONG;
-	}
-
-	return J_VOID;
-}
-
 struct vm_class *classloader_load_primitive(const char *class_name)
 {
 	struct vm_class *class;
@@ -328,7 +301,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	class->methods = NULL;
 	class->object_size = 0;
 	class->vtable_size = 0;
-	class->primitive_vm_type = class_name_to_vm_type(class_name);
+	class->primitive_vm_type = str_to_type(class_name);
 	class->kind = VM_CLASS_KIND_PRIMITIVE;
 
 	return class;
@@ -364,7 +337,7 @@ struct vm_class *load_array_class(const char *class_name)
 	array_class->vtable_size = 0;
 	array_class->kind = VM_CLASS_KIND_ARRAY;
 
-	if (class_name_to_vm_type(class_name + 1) != J_VOID) {
+	if (str_to_type(class_name + 1) != J_REFERENCE) {
 		array_class->array_element_class =
 			classloader_load_primitive(elem_class_name);
 	} else {

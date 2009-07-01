@@ -4,7 +4,7 @@
 
 /* See Table 4.2 in Section 4.3.2 ("Field Descriptors") of the JVM
    specification.  */
-enum vm_type str_to_type(char *type)
+enum vm_type str_to_type(const char *type)
 {
 	switch (type[0]) {
 	case 'V':

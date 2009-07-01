@@ -15,7 +15,7 @@ enum vm_type {
 	J_RETURN_ADDRESS,
 };
 
-extern enum vm_type str_to_type(char *);
+extern enum vm_type str_to_type(const char *);
 extern enum vm_type get_method_return_type(char *);
 
 int count_arguments(const char *);
