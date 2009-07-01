@@ -881,6 +881,14 @@ static void emit_add_reg_reg(struct buffer *buf,
 	emit_reg_reg(buf, 0x03, dest, src);
 }
 
+static void emit_fadd_reg_reg(struct buffer *buf,
+			     struct operand *src, struct operand *dest)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x58, dest, src);
+}
+
 static void emit_add_membase_reg(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
@@ -1142,6 +1150,14 @@ static void emit_mov_gpr_to_xmm(struct buffer *buf, struct operand *src,
 	emit_reg_reg(buf, 0x2a, dest, src);
 }
 
+static void emit_mov_xmm_to_gpr(struct buffer *buf, struct operand *src,
+				struct operand *dest)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x2d, dest, src);
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg, TWO_OPERANDS),
@@ -1159,7 +1175,9 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FADD_REG_REG, emit_fadd_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_GPR_TO_XMM, emit_mov_gpr_to_xmm, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_XMM_TO_GPR, emit_mov_xmm_to_gpr, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
