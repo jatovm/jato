@@ -310,56 +310,6 @@ static enum vm_type class_name_to_vm_type(const char *class_name)
 	return J_VOID;
 }
 
-
-struct vm_class *load_primitive_array_class(const char *class_name,
-	unsigned int dimensions, char type)
-{
-	struct vm_class *array_class;
-
-	array_class = malloc(sizeof *array_class);
-	if (!array_class) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	array_class->class = NULL;
-	array_class->state = VM_CLASS_LINKED;
-	array_class->name = strdup(class_name);
-	array_class->super = vm_java_lang_Object;
-	array_class->fields = NULL;
-	array_class->methods = NULL;
-	array_class->object_size = 0;
-	array_class->vtable_size = 0;
-	array_class->primitive_vm_type = class_name_to_vm_type(class_name);
-	array_class->kind = VM_CLASS_KIND_ARRAY;
-
-	return array_class;
-}
-
-struct vm_class *load_class_array_class(const char *array_class_name,
-	unsigned int dimensions, const char *class_name)
-{
-	struct vm_class *array_class;
-
-	array_class = malloc(sizeof *array_class);
-	if (!array_class) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	array_class->class = NULL;
-	array_class->state = VM_CLASS_LINKED;
-	array_class->name = strdup(array_class_name);
-	array_class->super = vm_java_lang_Object;
-	array_class->fields = NULL;
-	array_class->methods = NULL;
-	array_class->object_size = 0;
-	array_class->vtable_size = 0;
-	array_class->kind = VM_CLASS_KIND_ARRAY;
-
-	return array_class;
-}
-
 struct vm_class *classloader_load_primitive(const char *class_name)
 {
 	struct vm_class *class;
@@ -378,6 +328,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	class->methods = NULL;
 	class->object_size = 0;
 	class->vtable_size = 0;
+	class->primitive_vm_type = class_name_to_vm_type(class_name);
 	class->kind = VM_CLASS_KIND_PRIMITIVE;
 
 	return class;
@@ -385,56 +336,45 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 
 struct vm_class *load_array_class(const char *class_name)
 {
-	const char *ptr;
-	unsigned int dimensions;
+	struct vm_class *array_class;
+	char *elem_class_name;
 
-	ptr = class_name;
-	for (dimensions = 0; *ptr == '['; ++ptr)
-		++dimensions;
+	assert(class_name[0] == '[');
 
-	assert(dimensions >= 1);
-
-	if (*ptr == 'L') {
-		const char *end;
-		unsigned int n;
-		char *copy;
-		struct vm_class *ret;
-
-		++ptr;
-		end = strchr(ptr, ';');
-		if (!end) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
-
-		n = strlen(ptr);
-
-		/*
-		 * There must be exactly one semicolon, and it must be at the
-		 * end of the string.
-		 */
-		if (end + 1 != ptr + n) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
-
-		copy = strndup(ptr, n - 1);
-		ret = load_class_array_class(class_name, dimensions, copy);
-		free(copy);
-		return ret;
+	array_class = malloc(sizeof *array_class);
+	if (!array_class) {
+		NOT_IMPLEMENTED;
+		return NULL;
 	}
 
-	if (class_name_to_vm_type(ptr)) {
-		if (strlen(ptr) != 1) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
-
-		return load_primitive_array_class(class_name, dimensions, *ptr);
+	elem_class_name =
+		vm_class_get_array_element_class_name(class_name);
+	if (!elem_class_name) {
+		NOT_IMPLEMENTED;
+		return NULL;
 	}
 
-	NOT_IMPLEMENTED;
-	return NULL;
+	array_class->class = NULL;
+	array_class->state = VM_CLASS_LINKED;
+	array_class->name = strdup(class_name);
+	array_class->super = vm_java_lang_Object;
+	array_class->fields = NULL;
+	array_class->methods = NULL;
+	array_class->object_size = 0;
+	array_class->vtable_size = 0;
+	array_class->kind = VM_CLASS_KIND_ARRAY;
+
+	if (class_name_to_vm_type(class_name + 1) != J_VOID) {
+		array_class->array_element_class =
+			classloader_load_primitive(elem_class_name);
+	} else {
+		array_class->array_element_class =
+			classloader_load(elem_class_name);
+	}
+
+	free(elem_class_name);
+
+	return array_class;
 }
 
 struct vm_class *load_class(const char *class_name)

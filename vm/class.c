@@ -547,3 +547,39 @@ bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_cla
 	NOT_IMPLEMENTED;
 	return false;
 }
+
+char *vm_class_get_array_element_class_name(const char *class_name)
+{
+	if (class_name[0] != '[')
+		return NULL;
+
+	if (class_name[1] == 'L') {
+		char *result;
+		int len;
+
+		/* Skip '[L' prefix and ';' suffix */
+		len = strlen(class_name);
+		assert(class_name[len - 1] == ';');
+
+		result = malloc(len - 2);
+		memcpy(result, class_name + 2, len - 3);
+		result[len - 3] = 0;
+
+		return result;
+	}
+
+	return strdup(class_name + 1);
+}
+
+struct vm_class *
+vm_class_get_array_element_class(const struct vm_class *array_class)
+{
+	struct vm_class *result;
+
+	result = array_class->array_element_class;
+	assert(result);
+
+	vm_class_ensure_init(result);
+
+	return result;
+}

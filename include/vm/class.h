@@ -51,9 +51,14 @@ struct vm_class {
 
 	struct list_head static_fixup_site_list;
 
-	/* For primitve type classes this holds a vm type
-	   represented by this class. */
-	enum vm_type primitive_vm_type;
+	union {
+		/* For primitve type classes this holds a vm type
+		   represented by this class. */
+		enum vm_type primitive_vm_type;
+
+		/* For array classes this points to array element's class */
+		struct vm_class *array_element_class;
+	};
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
@@ -106,5 +111,7 @@ struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
 
 bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from);
 bool vm_class_is_primitive_type_name(const char *class_name);
+char *vm_class_get_array_element_class_name(const char *class_name);
+struct vm_class *vm_class_get_array_element_class(const struct vm_class *array_class);
 
 #endif /* __CLASS_H */
