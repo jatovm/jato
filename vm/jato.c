@@ -200,7 +200,7 @@ native_vmclass_getname(struct vm_object *object)
 static struct vm_object * __vm_native
 native_vmclassloader_getprimitiveclass(int type)
 {
-	static char primitive_class_name[] = { "X" };
+	char primitive_class_name[] = { "X" };
 	struct vm_class *class;
 
 	primitive_class_name[0] = (char)type;
