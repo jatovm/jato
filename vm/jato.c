@@ -227,7 +227,7 @@ static struct vm_native natives[] = {
 
 static void jit_init_natives(void)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(natives); i++)
 		vm_register_native(&natives[i]);

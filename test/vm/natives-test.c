@@ -26,7 +26,7 @@ struct vm_native natives[] = {
 
 static void test_setup(void)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(natives); i++)
 		vm_register_native(&natives[i]);
