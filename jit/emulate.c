@@ -24,6 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <math.h>
 #include <jit/exception.h>
 #include <jit/emulate.h>
 #include <vm/class.h>
@@ -37,6 +38,35 @@ int emulate_lcmp(long long value1, long long value2)
 	if (tmp > 0)
 		return 1;
 	return 0;
+}
+
+static int __emulate_fcmpx(float value1, float value2)
+{
+	float tmp;
+	tmp	= value1 - value2;
+
+	if (tmp < 0)
+		return -1;
+	else if (tmp > 0)
+		return 1;
+
+	return 0;
+}
+
+int emulate_fcmpl(float value1, float value2)
+{
+	if (isnan(value1) || isnan(value2))
+		return -1;
+
+	return __emulate_fcmpx(value1, value2);
+}
+
+int emulate_fcmpg(float value1, float value2)
+{
+	if (isnan(value1) || isnan(value2))
+		return 1;
+
+	return __emulate_fcmpx(value1, value2);
 }
 
 long long emulate_ldiv(long long value1, long long value2)
