@@ -4,6 +4,7 @@
 
 #include <libharness.h>
 #include <vm/natives.h>
+#include <vm/system.h>
 
 static void vm_class_is_instance(void)
 {
@@ -17,11 +18,18 @@ static void vm_object_get_class(void)
 {
 }
 
+struct vm_native natives[] = {
+	DEFINE_NATIVE("java/lang/VMClass", "isInstance", vm_class_is_instance),
+	DEFINE_NATIVE("java/lang/VMClass", "isAssignableFrom", vm_class_is_assignable_from),
+	DEFINE_NATIVE("java/lang/VMObject", "getClass", vm_object_get_class),
+};
+
 static void test_setup(void)
 {
-	vm_register_native("java/lang/VMClass", "isInstance", vm_class_is_instance);
-	vm_register_native("java/lang/VMClass", "isAssignableFrom", vm_class_is_assignable_from);
-	vm_register_native("java/lang/VMObject", "getClass", vm_object_get_class);
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(natives); i++)
+		vm_register_native(&natives[i]);
 }
 
 static void test_teardown(void)

@@ -102,21 +102,21 @@ static int insert_native(struct vm_class *class, const char *method_name, void *
 	return 0;
 }
 
-int vm_register_native(const char *class_name, const char *method_name, void *ptr)
+int vm_register_native(struct vm_native *native)
 {
 	struct vm_class *class;
 	int err = 0;
 
-	class = lookup_class(class_name);
+	class = lookup_class(native->class_name);
 	if (!class)
-		class = new_class(class_name);
+		class = new_class(native->class_name);
 
 	if (!class) {
 		err = -ENOMEM;
 		goto out;
 	}
 
-	err = insert_native(class, method_name, ptr);
+	err = insert_native(class, native->method_name, native->ptr);
   out:
 	return err;
 }

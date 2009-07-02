@@ -211,31 +211,26 @@ native_vmclassloader_getprimitiveclass(int type)
 	return class->object;
 }
 
+static struct vm_native natives[] = {
+	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
+	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
+	DEFINE_NATIVE("jato/internal/VM", "exit", &native_vmruntime_exit),
+	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
+	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
+	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
+	DEFINE_NATIVE("java/lang/VMObject", "getClass", &native_vmobject_getclass),
+	DEFINE_NATIVE("java/lang/VMRuntime", "exit", &native_vmruntime_exit),
+	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", &native_vmsystem_arraycopy),
+	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
+	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
+};
+
 static void jit_init_natives(void)
 {
-	vm_register_native("gnu/classpath/VMStackWalker", "getClassContext",
-		&native_vmstackwalker_getclasscontext);
-	vm_register_native("gnu/classpath/VMSystemProperties", "preInit",
-		&native_vmsystemproperties_preinit);
+	int i;
 
-	vm_register_native("jato/internal/VM", "exit",
-		&native_vmruntime_exit);
-	vm_register_native("jato/internal/VM", "println",
-		&native_vmruntime_println);
-	vm_register_native("java/lang/VMClass", "getName",
-		&native_vmclass_getname);
-	vm_register_native("java/lang/VMClassLoader", "getPrimitiveClass",
-		&native_vmclassloader_getprimitiveclass);
-	vm_register_native("java/lang/VMObject", "getClass",
-		&native_vmobject_getclass);
-	vm_register_native("java/lang/VMRuntime", "exit",
-		&native_vmruntime_exit);
-	vm_register_native("java/lang/VMSystem", "arraycopy",
-		&native_vmsystem_arraycopy);
-	vm_register_native("java/lang/VMSystem", "identityHashCode",
-		&native_vmsystem_identityhashcode);
-	vm_register_native("java/lang/VMThrowable", "fillInStackTrace",
-		&native_vmthrowable_fill_in_stack_trace);
+	for (i = 0; i < ARRAY_SIZE(natives); i++)
+		vm_register_native(&natives[i]);
 }
 
 struct preload_entry {
