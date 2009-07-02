@@ -104,8 +104,6 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	const struct vm_class *dest_elem_class;
 	enum vm_type elem_type;
 	int elem_size;
-	char *tmp;
-	int size;
 
 	if (!src || !dest || !src->class || !dest->class) {
 		signal_new_exception("java.lang.NullPointerException", NULL);
@@ -140,16 +138,9 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	}
 
 	elem_size = get_vmtype_size(elem_type);
-	size = len * elem_size;
-	tmp = malloc(size);
-	if (!tmp) {
-		NOT_IMPLEMENTED;
-		return;
-	}
-
-	memcpy(tmp, src->fields + src_start * elem_size, size);
-	memcpy(dest->fields + dest_start * elem_size, tmp, size);
-	free(tmp);
+	memmove(dest->fields + dest_start * elem_size,
+		src->fields + src_start * elem_size,
+		len * elem_size);
 
 	return;
  throw:
