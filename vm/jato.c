@@ -206,8 +206,10 @@ native_vmclassloader_getprimitiveclass(int type)
 	primitive_class_name[0] = (char)type;
 
 	class = classloader_load_primitive(primitive_class_name);
-	vm_class_ensure_init(class);
+	if (!class)
+		return NULL;
 
+	vm_class_ensure_init(class);
 	return class->object;
 }
 
