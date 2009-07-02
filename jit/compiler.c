@@ -33,9 +33,21 @@ static void compile_error(struct compilation_unit *cu, int err)
 
 #define SYMBOL_LEN 128
 
+static void perf_append_cu(struct compilation_unit *cu)
+{
+	unsigned long addr, size;
+	char symbol[SYMBOL_LEN];
+
+	cu_symbol(cu, symbol, SYMBOL_LEN);
+
+	addr = (unsigned long) cu_native_ptr(cu);
+	size = cu_native_size(cu);
+
+	perf_map_append(symbol, addr, size);
+}
+
 int compile(struct compilation_unit *cu)
 {
-	char symbol[SYMBOL_LEN];
 	int err;
 
 	if (opt_trace_method)
@@ -97,7 +109,7 @@ int compile(struct compilation_unit *cu)
 
 	cu->is_compiled = true;
 
-	perf_map_append(cu_symbol(cu, symbol, SYMBOL_LEN), (unsigned long) cu_native_ptr(cu), cu_native_size(cu));
+	perf_append_cu(cu);
   out:
 	if (err)
 		compile_error(cu, err);
