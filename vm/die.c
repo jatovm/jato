@@ -30,7 +30,7 @@ void do_error(const char *format, ...)
 	abort();
 }
 
-void die(const char *format, ...)
+void do_die(const char *format, ...)
 {
 	va_list ap;
 

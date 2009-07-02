@@ -61,7 +61,7 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 	msg = alloc_str();
 	if (!msg)
 		/* TODO: signal OutOfMemoryError */
-		die("%s: out of memory\n", __func__);
+		die("out of memory");
 
 	str_printf(msg, "%s.%s%s", method->class->name, method->name,
 		   method->type);
@@ -88,7 +88,7 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 
 	if (add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu) != 0)
 		/* TODO: throw OutOfMemoryError */
-		die("%s: out of memory", __func__);
+		die("out of memory");
 
 	return buffer_ptr(cu->objcode);
 }

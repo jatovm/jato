@@ -265,8 +265,7 @@ struct vm_object *new_exception(const char *class_name, const char *message)
 	mb = vm_class_get_method(e_class,
 		"<init>", "(Ljava/lang/String;)V");
 	if (!mb)
-		die("%s: constructor not found for class %s\n",
-		    __func__, class_name);
+		die("constructor not found for class %s\n", class_name);
 
 	init = vm_method_trampoline_ptr(mb);
 	init(obj, message_str);
@@ -359,9 +358,9 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 		free_str(str);
 
 	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
-		die("%s: out of memory", __func__);
+		die("out of memory");
 
-	die("%s: error %d", __func__, err);
+	die("error %d", err);
 }
 
 void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type)
@@ -411,9 +410,9 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 		free_str(str);
 
 	if (err == -ENOMEM) /* TODO: throw OutOfMemoryError */
-		die("%s: out of memory", __func__);
+		die("out of memory");
 
-	die("%s: error %d", __func__, err);
+	die("error %d", err);
 }
 
 void array_size_check(int size)

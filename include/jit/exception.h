@@ -91,8 +91,7 @@ static inline struct vm_object *exception_occurred(void)
 									\
 	native_ptr = __builtin_return_address(0) - 1;			\
 	if (is_native((unsigned long)native_ptr))			\
-		die("%s: must not be called from not-JIT code",		\
-		    __func__);						\
+		die("must not be called from not-JIT code");		\
 									\
 	frame = __builtin_frame_address(1);				\
 									\

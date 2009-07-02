@@ -1224,7 +1224,7 @@ void fixup_static(struct vm_class *vmc)
 	struct static_fixup_site *this, *next;
 
 	if (vm_class_ensure_init(vmc))
-		die("class wouldn't initialize.. oops\n");
+		die("class wouldn't initialize.. oops");
 
 	list_for_each_entry_safe(this, next,
 		&vmc->static_fixup_site_list, vmc_node)

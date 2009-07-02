@@ -94,7 +94,7 @@ void init_stack_trace_printing(void)
 	return;
 
  error:
-	die("%s: initialization failed.", __func__);
+	die("initialization failed");
 }
 
 /**

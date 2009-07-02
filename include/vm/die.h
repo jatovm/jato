@@ -8,7 +8,9 @@ void do_warn(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
 void do_error(const char *format, ...) __attribute__ ((noreturn))
     __attribute__ ((format (printf, 1, 2)));
 
-void die(const char *format, ...) __attribute__ ((noreturn))
+#define die(format, args...) do_die("%s: " format, __func__, ## args)
+
+void do_die(const char *format, ...) __attribute__ ((noreturn))
     __attribute__ ((format (printf, 1, 2)));
 
 #endif /* JATO_VM_DIE_H */

@@ -58,7 +58,7 @@ void init_exceptions(void)
 	trampoline_exceptions_guard_page = alloc_guard_page();
 
 	if (!exceptions_guard_page || !trampoline_exceptions_guard_page)
-		die("%s: failed to allocate exceptions guard page.", __func__);
+		die("failed to allocate exceptions guard page");
 
 	/* TODO: Should be called from thread initialization code. */
 	thread_init_exceptions();
@@ -87,7 +87,7 @@ void signal_exception(struct vm_object *exception)
 		return;
 
 	if (exception == NULL)
-		die("%s: exception is NULL.", __func__);
+		die("exception is NULL");
 
 	trampoline_exception_guard = trampoline_exceptions_guard_page;
 	exception_guard  = exceptions_guard_page;
