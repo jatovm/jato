@@ -12,6 +12,7 @@
 #include <jit/basic-block.h>
 #include <jit/disassemble.h>
 #include <jit/lir-printer.h>
+#include <jit/exception.h>
 #include <jit/cu-mapping.h>
 #include <jit/statement.h>
 #include <jit/vars.h>
@@ -40,6 +41,7 @@ bool opt_trace_magic_trampoline;
 bool opt_trace_bytecode_offset;
 bool opt_trace_invoke;
 bool opt_trace_invoke_dtls;
+bool opt_trace_exceptions;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -383,4 +385,51 @@ void trace_invoke(struct compilation_unit *cu)
 		trace_return_address(frame);
 		trace_invoke_args(vmm, frame);
 	}
+}
+
+void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
+		     unsigned char *native_ptr)
+{
+	struct vm_object *exception;
+	struct vm_method *vmm;
+	struct vm_class *vmc;
+
+
+	vmm = cu->method;
+	vmc = vmm->class;
+
+	exception = exception_occurred();
+	assert(exception);
+
+	printf("trace exception: exception object %p (%s) thrown\n",
+	       exception, exception->class->name);
+
+	printf("\tfrom\t: %p (%s.%s%s)\n", native_ptr, vmc->name, vmm->name,
+	       vmm->type);
+}
+
+void trace_exception_handler(unsigned char *ptr)
+{
+	printf("\taction\t: jump to handler at %p\n", ptr);
+}
+
+void trace_exception_unwind(struct jit_stack_frame *frame)
+{
+	struct compilation_unit *cu;
+	struct vm_method *vmm;
+	struct vm_class *vmc;
+
+	cu = jit_lookup_cu(frame->return_address);
+
+	vmm = cu->method;
+	vmc = vmm->class;
+
+	printf("\taction\t: unwind to %p (%s.%s%s)\n",
+	       (void*)frame->return_address, vmc->name, vmm->name, vmm->type);
+}
+
+void trace_exception_unwind_to_native(struct jit_stack_frame *frame)
+{
+	printf("\taction\t: unwind to native caller at %p\n",
+	       (void*)frame->return_address);
 }

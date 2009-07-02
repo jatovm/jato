@@ -216,6 +216,9 @@ throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	exception = exception_occurred();
 	assert(exception != NULL);
 
+	if (opt_trace_exceptions)
+		trace_exception(cu, frame, native_ptr);
+
 	clear_exception();
 
 	bc_offset = native_ptr_to_bytecode_offset(cu, native_ptr);
@@ -223,6 +226,10 @@ throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
 		eh_ptr = find_handler(cu, exception->class, bc_offset);
 		if (eh_ptr != NULL) {
 			signal_exception(exception);
+
+			if (opt_trace_exceptions)
+				trace_exception_handler(eh_ptr);
+
 			return eh_ptr;
 		}
 	}
@@ -234,11 +241,17 @@ throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
 		 * No handler found within jitted method call chain.
 		 * Return to previous (not jit) method.
 		 */
+		if (opt_trace_exceptions)
+			trace_exception_unwind_to_native(frame);
+
 		if (is_inside_exit_unlock(cu, native_ptr))
 			return cu->exit_past_unlock_ptr;
 
 		return bb_native_ptr(cu->exit_bb);
 	}
+
+	if (opt_trace_exceptions)
+		trace_exception_unwind(frame);
 
 	if (is_inside_unwind_unlock(cu, native_ptr))
 		return cu->unwind_past_unlock_ptr;

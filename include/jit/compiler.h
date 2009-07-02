@@ -97,6 +97,7 @@ extern bool opt_trace_magic_trampoline;
 extern bool opt_trace_bytecode_offset;
 extern bool opt_trace_invoke;
 extern bool opt_trace_invoke_dtls;
+extern bool opt_trace_exceptions;
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);
@@ -107,5 +108,9 @@ void trace_liveness(struct compilation_unit *);
 void trace_regalloc(struct compilation_unit *);
 void trace_machine_code(struct compilation_unit *);
 void trace_invoke(struct compilation_unit *);
+void trace_exception(struct compilation_unit *, struct jit_stack_frame *, unsigned char *);
+void trace_exception_handler(unsigned char *);
+void trace_exception_unwind(struct jit_stack_frame *);
+void trace_exception_unwind_to_native(struct jit_stack_frame *);
 
 #endif
