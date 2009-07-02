@@ -52,6 +52,8 @@ struct vm_class {
 
 	struct list_head static_fixup_site_list;
 
+	const char *source_file_name;
+
 	union {
 		/* For primitve type classes this holds a vm_type
 		   represented by this class. */
