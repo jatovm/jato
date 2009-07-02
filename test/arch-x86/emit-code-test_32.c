@@ -250,7 +250,7 @@ void test_emit_mov_disp_reg(void)
 	assert_emit_insn_3(0x8b, 0x5D, 0x08, membase_reg_insn(INSN_MOV_MEMBASE_REG, &VAR_EBP, 0x08, &VAR_EBX));
 	assert_emit_insn_3(0x8b, 0x4D, 0x08, membase_reg_insn(INSN_MOV_MEMBASE_REG, &VAR_EBP, 0x08, &VAR_ECX));
 	assert_emit_insn_3(0x8b, 0x55, 0x08, membase_reg_insn(INSN_MOV_MEMBASE_REG, &VAR_EBP, 0x08, &VAR_EDX));
-	assert_emit_insn_4(0x8b, 0x44, 0x24, 0x00, membase_reg_insn(INSN_MOV_MEMBASE_REG, &VAR_ESP, 0, &VAR_EAX));
+	assert_emit_insn_3(0x8b, 0x04, 0x24, membase_reg_insn(INSN_MOV_MEMBASE_REG, &VAR_ESP, 0, &VAR_EAX));
 
 	assert_emit_insn_6(0x8b, 0x80, 0x50, 0x02, 0x00, 0x00, membase_reg_insn(INSN_MOV_MEMBASE_REG, &VAR_EAX, 0x250, &VAR_EAX));
 }

@@ -218,6 +218,24 @@ static int print_fadd_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_fsub_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
+static int print_fmul_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
+static int print_fdiv_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 static int print_and_membase_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -280,13 +298,25 @@ static int print_div_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
-static int print_mov_gpr_to_xmm(struct string *str, struct insn *insn)
+static int print_mov_membase_xmm(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase_reg(str, insn);
+}
+
+static int print_mov_xmm_membase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_membase(str, insn);
+}
+
+static int print_conv_fpu_to_gpr(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
 }
 
-static int print_mov_xmm_to_gpr(struct string *str, struct insn *insn)
+static int print_conv_gpr_to_fpu(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
@@ -594,8 +624,13 @@ static print_insn_fn insn_printers[] = {
 	[INSN_DIV_MEMBASE_REG] = print_div_membase_reg,
 	[INSN_DIV_REG_REG] = print_div_reg_reg,
 	[INSN_FADD_REG_REG] = print_fadd_reg_reg,
-	[INSN_MOV_GPR_TO_XMM] = print_mov_gpr_to_xmm,
-	[INSN_MOV_XMM_TO_GPR] = print_mov_xmm_to_gpr,
+	[INSN_FSUB_REG_REG] = print_fsub_reg_reg,
+	[INSN_FMUL_REG_REG] = print_fmul_reg_reg,
+	[INSN_FDIV_REG_REG] = print_fdiv_reg_reg,
+	[INSN_MOV_MEMBASE_XMM] = print_mov_membase_xmm,
+	[INSN_MOV_XMM_MEMBASE] = print_mov_xmm_membase,
+	[INSN_CONV_FPU_TO_GPR] = print_conv_fpu_to_gpr,
+	[INSN_CONV_GPR_TO_FPU] = print_conv_gpr_to_fpu,
 	[INSN_JE_BRANCH] = print_je_branch,
 	[INSN_JGE_BRANCH] = print_jge_branch,
 	[INSN_JG_BRANCH] = print_jg_branch,
