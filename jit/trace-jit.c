@@ -12,8 +12,12 @@
 #include <jit/basic-block.h>
 #include <jit/disassemble.h>
 #include <jit/lir-printer.h>
+#include <jit/cu-mapping.h>
 #include <jit/statement.h>
 #include <jit/vars.h>
+#include <jit/args.h>
+#include <vm/java_lang.h>
+#include <vm/object.h>
 
 #include <vm/buffer.h>
 #include <vm/class.h>
@@ -21,7 +25,8 @@
 #include <vm/string.h>
 #include <vm/vm.h>
 
-#include <stdbool.h>
+#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 bool opt_trace_method;
@@ -34,6 +39,7 @@ bool opt_trace_machine_code;
 bool opt_trace_magic_trampoline;
 bool opt_trace_bytecode_offset;
 bool opt_trace_invoke;
+bool opt_trace_invoke_dtls;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -261,10 +267,120 @@ void trace_magic_trampoline(struct compilation_unit *cu)
 	       cu->method->method_index);
 }
 
+static void print_arg(enum vm_type arg_type, const unsigned long *args,
+		      int *arg_index)
+{
+	if (arg_type == J_LONG || arg_type == J_DOUBLE) {
+		unsigned long long value;
+
+		value = *(unsigned long long*)(args + *arg_index);
+		(*arg_index) += 2;
+
+		printf("0x%llx", value);
+		return;
+	}
+
+	printf("0x%lx ", args[*arg_index]);
+
+	if (arg_type == J_REFERENCE) {
+		struct vm_object *obj;
+
+		obj = (struct vm_object *)args[*arg_index];
+
+		if (!obj) {
+			printf("null");
+			goto out;
+		}
+
+		if (!is_on_heap((unsigned long)obj)) {
+			printf("*** pointer not on heap ***");
+			goto out;
+		}
+
+		if (obj->class == vm_java_lang_String) {
+			char *str;
+
+			str = vm_string_to_cstr(obj);
+			printf("= \"%s\"", str);
+			free(str);
+		}
+
+		printf(" (%s)", obj->class->name);
+	}
+
+ out:
+	(*arg_index)++;
+	printf("\n");
+}
+
+static void trace_invoke_args(struct vm_method *vmm,
+			      struct jit_stack_frame *frame)
+{
+	enum vm_type arg_type;
+	const char *type_str;
+	int arg_index;
+
+	arg_index = 0;
+
+	if (!vm_method_is_static(vmm)) {
+		printf("\tthis\t: ");
+		print_arg(J_REFERENCE, frame->args, &arg_index);
+	}
+
+	type_str = vmm->type;
+
+	if (!strncmp(type_str, "()", 2)) {
+		printf("\targs\t: none\n");
+		return;
+	}
+
+	printf("\targs\t:\n");
+
+	while ((type_str = parse_method_args(type_str, &arg_type))) {
+		printf("\t   %-12s: ", get_vm_type_name(arg_type));
+		print_arg(arg_type, frame->args, &arg_index);
+	}
+}
+
+static void trace_return_address(struct jit_stack_frame *frame)
+{
+	printf("\tret\t: %p", (void*)frame->return_address);
+
+	if (is_native(frame->return_address)) {
+		printf(" (native)\n");
+	} else {
+		struct compilation_unit *cu;
+		struct vm_method *vmm;
+		struct vm_class *vmc;
+
+		cu = get_cu_from_native_addr(frame->return_address);
+		if (!cu) {
+			printf(" (no compilation unit mapping)\n");
+			return;
+		}
+
+		vmm = cu->method;;
+		vmc = vmm->class;
+
+		printf(" (%s.%s%s)\n", vmc->name, vmm->name, vmm->type );
+	}
+}
+
+
 void trace_invoke(struct compilation_unit *cu)
 {
 	struct vm_method *vmm = cu->method;
 	struct vm_class *vmc = vmm->class;
 
 	printf("trace invoke: %s.%s%s\n", vmc->name, vmm->name, vmm->type);
+
+	if (opt_trace_invoke_dtls) {
+		struct jit_stack_frame *frame;
+
+		frame =  __builtin_frame_address(1);
+
+		printf("\tentry\t: %p\n", buffer_ptr(cu->objcode));
+		trace_return_address(frame);
+		trace_invoke_args(vmm, frame);
+	}
 }

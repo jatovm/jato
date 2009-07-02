@@ -415,6 +415,9 @@ main(int argc, char *argv[])
 			opt_trace_classloader = true;
 		} else if (!strcmp(argv[i], "-Xtrace:invoke")) {
 			opt_trace_invoke = true;
+		} else if (!strcmp(argv[i], "-Xtrace:invoke-dtls")) {
+			opt_trace_invoke = true;
+			opt_trace_invoke_dtls = true;
 		} else if (!strcmp(argv[i], "-Xtrace:jit")) {
 			opt_trace_method = true;
 			opt_trace_cfg = true;

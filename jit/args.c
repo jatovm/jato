@@ -61,3 +61,35 @@ convert_args(struct stack *mimic_stack, unsigned long nr_args)
   out:
 	return args_list;
 }
+
+const char *parse_method_args(const char *type_str, enum vm_type *vmtype)
+{
+	char type_name[] = { "X" };
+
+	if (*type_str == '(')
+		type_str++;
+
+	if (*type_str == ')')
+		return NULL;
+
+	if (*type_str == '[') {
+		*vmtype = J_REFERENCE;
+		type_str++;
+
+		if (*type_str != 'L') {
+			return type_str + 1;
+		}
+	}
+
+	if (*type_str == 'L') {
+		++type_str;
+		while (*(type_str++) != ';')
+			;
+		*vmtype = J_REFERENCE;
+	} else {
+		type_name[0] = *(type_str++);
+		*vmtype = str_to_type(type_name);
+	}
+
+	return type_str;
+}

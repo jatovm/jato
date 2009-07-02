@@ -82,6 +82,7 @@ static inline unsigned long cu_native_size(struct compilation_unit *cu)
 }
 
 bool is_native(unsigned long eip);
+bool is_on_heap(unsigned long addr);
 
 void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target);
 
@@ -95,6 +96,7 @@ extern bool opt_trace_machine_code;
 extern bool opt_trace_magic_trampoline;
 extern bool opt_trace_bytecode_offset;
 extern bool opt_trace_invoke;
+extern bool opt_trace_invoke_dtls;
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);

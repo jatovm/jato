@@ -49,6 +49,14 @@ bool is_native(unsigned long eip)
 	return !is_jit_text((void *)eip);
 }
 
+/*
+ * Checks whether given address is on heap
+ */
+bool is_on_heap(unsigned long addr)
+{
+	return addr >= (unsigned long)&end && addr < (unsigned long)sbrk(0);
+}
+
 const char *method_symbol(struct vm_method *method, char *symbol, size_t size)
 {
 	snprintf(symbol, size, "%s.%s%s", method->class->name, method->name, method->type);

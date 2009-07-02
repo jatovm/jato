@@ -1,3 +1,4 @@
+#include <vm/system.h>
 #include <vm/types.h>
 #include <vm/die.h>
 #include <vm/vm.h>
@@ -170,4 +171,25 @@ int get_vmtype_size(enum vm_type type)
 	default:
 		error("type has no size");
 	}
+}
+
+static const char *vm_type_names[] = {
+	[J_VOID] = "J_VOID",
+	[J_REFERENCE] = "J_REFERENCE",
+	[J_BYTE] = "J_BYTE",
+	[J_SHORT] = "J_SHORT",
+	[J_INT] = "J_INT",
+	[J_LONG] = "J_LONG",
+	[J_CHAR] = "J_CHAR",
+	[J_FLOAT] = "J_FLOAT",
+	[J_DOUBLE] = "J_DOUBLE",
+	[J_BOOLEAN] = "J_BOOLEAN",
+	[J_RETURN_ADDRESS] = "J_RETURN_ADDRESS"
+};
+
+const char *get_vm_type_name(enum vm_type type) {
+	if (type < 0 || type >= ARRAY_SIZE(vm_type_names))
+		return NULL;
+
+	return vm_type_names[type];
 }
