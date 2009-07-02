@@ -69,13 +69,13 @@ int install_signal_bh(void *ctx, signal_bh_fn bh)
 
 	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
 
+	/* push bottom-half handler address on stack */
+	stack--;
+	*stack = (unsigned long)bh;
+
 	/* push return address on stack */
 	stack--;
 	*stack = uc->uc_mcontext.gregs[REG_IP];
-
-	/* push bottom-half handler address on stack */
-	stack--;
-	*stack = (unsigned long) bh;
 
 	uc->uc_mcontext.gregs[REG_SP] -= 2 * sizeof(unsigned long);
 

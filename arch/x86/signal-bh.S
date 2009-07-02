@@ -24,11 +24,11 @@ signal_bh_trampoline:
 
 	/* push signal bottom half handler's argument - address of
 	   faulting instruction. */
-	push (2 * PTR_SIZE)(%xbp)
+	push (PTR_SIZE)(%xbp)
 
 	/* call the signal bottom half handler */
 	push $.bh_return
-	push PTR_SIZE(%xbp)
+	push (2 * PTR_SIZE)(%xbp)
 	ret
 
 .bh_return:
@@ -51,6 +51,10 @@ signal_bh_trampoline:
 
 	pop %xbp
 
-	/* Skip bottom half hanlder address pushed by signal_install_bh() */
+	/*
+	 * Cleanup bottom half handler address pushed by signal_install_bh().
+	 * We do this by popping the return address from stack into
+	 * the call argument.
+	 */
 	add $PTR_SIZE, %xsp
 	ret
