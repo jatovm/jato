@@ -2,6 +2,7 @@
 #define __CLASS_H
 
 #include <vm/field.h>
+#include <vm/itable.h>
 #include <vm/method.h>
 #include <vm/static.h>
 #include <vm/types.h>
@@ -62,6 +63,8 @@ struct vm_class {
 		/* For array classes this points to array element's class */
 		struct vm_class *array_element_class;
 	};
+
+	void *itable[VM_ITABLE_SIZE];
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);

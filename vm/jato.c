@@ -42,6 +42,7 @@
 
 #include "vm/class.h"
 #include "vm/classloader.h"
+#include "vm/itable.h"
 #include "vm/java_lang.h"
 #include "vm/method.h"
 #include "vm/natives.h"
@@ -420,6 +421,8 @@ main(int argc, char *argv[])
 		} else if (!strcmp(argv[i], "-Xtrace:invoke-verbose")) {
 			opt_trace_invoke = true;
 			opt_trace_invoke_verbose = true;
+		} else if (!strcmp(argv[i], "-Xtrace:itable")) {
+			opt_trace_itable = true;
 		} else if (!strcmp(argv[i], "-Xtrace:jit")) {
 			opt_trace_method = true;
 			opt_trace_cfg = true;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2008 Saeed Siam
+ * Copyright (c) 2009 Vegard Nossum
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -38,6 +39,7 @@
 #include <vm/classloader.h>
 #include <vm/die.h>
 #include <vm/field.h>
+#include <vm/itable.h>
 #include <vm/java_lang.h>
 #include <vm/method.h>
 #include <vm/object.h>
@@ -119,8 +121,6 @@ setup_vtable(struct vm_class *vmc)
 		++vtable_size;
 	}
 }
-
-extern struct vm_class *vm_java_lang_Class;
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
@@ -255,8 +255,10 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		}
 	}
 
-	if (!vm_class_is_interface(vmc))
+	if (!vm_class_is_interface(vmc)) {
 		setup_vtable(vmc);
+		vm_itable_setup(vmc);
+	}
 
 	INIT_LIST_HEAD(&vmc->static_fixup_site_list);
 

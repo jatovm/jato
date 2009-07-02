@@ -65,6 +65,7 @@ OBJS = \
 	../../vm/die.o \
 	../../vm/field.o \
 	../../vm/guard-page.o \
+	../../vm/itable.o \
 	../../vm/method.o \
 	../../vm/object.o \
 	../../vm/stack.o \
