@@ -948,24 +948,21 @@ reg:	EXPR_CLASS_FIELD 1
 
 reg:	EXPR_INSTANCE_FIELD(reg) 1
 {
-	struct var_info *base, *index;
+	struct var_info *base;
 	struct expression *expr;
+	unsigned long offset;
 
 	expr = to_expr(tree);
 
 	base = state->left->reg1;
-	index = get_var(s->b_parent);
 	state->reg1 = get_var(s->b_parent);
 
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
-	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 0, state->reg1));
+	offset = sizeof(struct vm_object) + expr->instance_field->offset;
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
 
 	if (expr->vm_type == J_LONG) {
 		state->reg2 = get_var(s->b_parent);
-
-		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, index));
-		select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, 0, state->reg2));
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset + 4, state->reg2));
 	}
 }
 
@@ -1314,43 +1311,33 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 
 inst_field: EXPR_INSTANCE_FIELD(reg) 1
 {
-	struct var_info *src, *base, *index;
 	struct expression *expr;
 
 	expr = to_expr(tree);
 
-	src = state->left->reg1;
-
-	base = get_var(s->b_parent);
-	state->reg1 = base;
-
-	index = get_var(s->b_parent);
-	state->reg2 = index;
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, base));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->instance_field->offset, index));
+	state->reg1 = state->left->reg1;
+	state->reg2 = (void*)(sizeof(struct vm_object) + expr->instance_field->offset);
 }
 
 stmt:	STMT_STORE(inst_field, reg)
 {
-	struct var_info *src, *base, *index;
+	struct var_info *src, *base;
 	struct expression *store_src;
 	struct statement *stmt;
+	unsigned long offset;
 
 	stmt = to_stmt(tree);
 	store_src = to_expr(stmt->store_src);
 	src = state->right->reg1;
 
 	base = state->left->reg1;
-	index = state->left->reg2;
+	offset = (unsigned long)state->left->reg2;
 
-	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, 0));
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset));
 
 	if (store_src->vm_type == J_LONG) {
 		src = state->right->reg2;
-		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, index));
-		select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset + 4));
 	}
 }
 
