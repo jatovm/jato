@@ -72,7 +72,7 @@ void remove_cu_mapping(unsigned long addr)
 	pthread_rwlock_unlock(&cu_map_rwlock);
 }
 
-struct compilation_unit *get_cu_from_native_addr(unsigned long addr)
+struct compilation_unit *jit_lookup_cu(unsigned long addr)
 {
 	struct compilation_unit *cu;
 

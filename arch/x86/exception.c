@@ -63,7 +63,7 @@ void throw_exception_from_signal(void *ctx, struct vm_object *exception)
 	uc = ctx;
 
 	source_addr = uc->uc_mcontext.gregs[REG_IP];
-	cu = get_cu_from_native_addr(source_addr);
+	cu = jit_lookup_cu(source_addr);
 	frame = (struct jit_stack_frame*)uc->uc_mcontext.gregs[REG_BP];
 
 	eh = throw_exception_from(cu, frame, (unsigned char*)source_addr);

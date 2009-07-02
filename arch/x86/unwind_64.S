@@ -15,7 +15,7 @@ unwind:
 	 * Lookup pointer to compilation unit.
 	 */
 	push	%rdx
-	call	get_cu_from_native_addr
+	call	jit_lookup_cu
 	movq 	%rax, %rcx
 	pop	%rdx
 

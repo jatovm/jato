@@ -191,7 +191,7 @@ int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class
 	struct compilation_unit *cu;
 
 	do {
-		cu = get_cu_from_native_addr(elem->addr);
+		cu = jit_lookup_cu(elem->addr);
 		if (cu == NULL) {
 			fprintf(stderr,
 				"%s: no compilation unit mapping for %p\n",
@@ -260,7 +260,7 @@ struct vm_object *get_stack_trace(struct stack_trace_elem *st_elem)
 	do {
 		unsigned long bc_offset;
 
-		cu = get_cu_from_native_addr(st_elem->addr);
+		cu = jit_lookup_cu(st_elem->addr);
 		if (!cu) {
 			fprintf(stderr,
 				"%s: no compilation unit mapping for %p\n",

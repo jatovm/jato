@@ -48,7 +48,7 @@ struct compilation_unit *get_signal_source_cu(void *ctx)
 	ucontext_t *uc;
 
 	uc = ctx;
-	return get_cu_from_native_addr(uc->uc_mcontext.gregs[REG_IP]);
+	return jit_lookup_cu(uc->uc_mcontext.gregs[REG_IP]);
 }
 
 /**

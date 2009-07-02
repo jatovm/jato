@@ -55,7 +55,7 @@ throw_from_signal_bh(unsigned long jit_addr)
 	 */
 	frame = __builtin_frame_address(3);
 
-	cu = get_cu_from_native_addr(jit_addr);
+	cu = jit_lookup_cu(jit_addr);
 
 	return (unsigned long)throw_exception_from(cu, frame,
 		(unsigned char *)jit_addr);

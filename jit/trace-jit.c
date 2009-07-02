@@ -353,7 +353,7 @@ static void trace_return_address(struct jit_stack_frame *frame)
 		struct vm_method *vmm;
 		struct vm_class *vmc;
 
-		cu = get_cu_from_native_addr(frame->return_address);
+		cu = jit_lookup_cu(frame->return_address);
 		if (!cu) {
 			printf(" (no compilation unit mapping)\n");
 			return;

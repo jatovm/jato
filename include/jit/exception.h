@@ -95,7 +95,7 @@ static inline struct vm_object *exception_occurred(void)
 									\
 	frame = __builtin_frame_address(1);				\
 									\
-	cu = get_cu_from_native_addr((unsigned long)native_ptr);	\
+	cu = jit_lookup_cu((unsigned long)native_ptr);	\
 	eh = throw_exception_from(cu, frame, native_ptr);		\
 									\
 	__override_return_address(eh);					\

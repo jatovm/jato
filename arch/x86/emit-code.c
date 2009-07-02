@@ -1281,7 +1281,7 @@ void fixup_static_at(unsigned long addr)
 	struct compilation_unit *cu;
 	struct static_fixup_site *this;
 
-	cu = get_cu_from_native_addr(addr);
+	cu = jit_lookup_cu(addr);
 	assert(cu);
 
 	list_for_each_entry(this, &cu->static_fixup_site_list, cu_node)
