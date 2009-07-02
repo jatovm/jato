@@ -134,8 +134,8 @@ void test_convert_neg(void)
 {
 	assert_convert_unop(J_INT, OP_NEG, OPC_INEG);
 	assert_convert_unop(J_LONG, OP_NEG, OPC_LNEG);
-	assert_convert_unop(J_FLOAT, OP_NEG, OPC_FNEG);
-	assert_convert_unop(J_DOUBLE, OP_NEG, OPC_DNEG);
+	assert_convert_unop(J_FLOAT, OP_FNEG, OPC_FNEG);
+	assert_convert_unop(J_DOUBLE, OP_FNEG, OPC_DNEG);
 }
 
 void test_convert_shl(void)

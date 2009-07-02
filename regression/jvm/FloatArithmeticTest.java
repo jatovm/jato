@@ -62,11 +62,11 @@ public class FloatArithmeticTest extends TestCase {
     }
 
     public static void testFloatSubtractionImmediateLocal() {
-        float x = 11.000000f;
-        float y = 9.999999f;
-        float result = (1.0f - x) - (0.0f - y);
+        float x = 4.5f;
+        float y = 3.5f;
+        float result = (1.5f - x) - (0.0f - y);
 
-        assertEquals(-0.000001f, result);
+        assertEquals(0.5f, result);
     }
 
     public static void testFloatMultiplication() {
@@ -103,7 +103,7 @@ public class FloatArithmeticTest extends TestCase {
 
     public static void testFloatNegation() {
         assertEquals(-1.5f, neg( 1.5f));
-        assertEquals( 0.0f, neg( 0.0f));
+        assertEquals( -0.0f, neg( 0.0f));
         assertEquals( 1.3f, neg(-1.3f));
     }
 
@@ -112,7 +112,7 @@ public class FloatArithmeticTest extends TestCase {
     }
 
     public static void main(String[] args) {
-/*
+
 		testFloatAddition();
         testFloatAdditionLocalSlot();
         testFloatSubtraction();
@@ -120,7 +120,7 @@ public class FloatArithmeticTest extends TestCase {
         testFloatMultiplication();
         testFloatDivision();
         testFloatNegation();
-*/
+
         exit();
     }
 }

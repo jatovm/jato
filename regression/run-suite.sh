@@ -63,6 +63,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.LoadConstantsTest 0
     run_java jvm.IntegerArithmeticTest 0
     run_java jvm.LongArithmeticTest 0
+    run_java jvm.FloatArithmeticTest 0
     run_java jvm.ConversionTest 0
     run_java jvm.ObjectCreationAndManipulationTest 0
     run_java jvm.SynchronizationTest 0

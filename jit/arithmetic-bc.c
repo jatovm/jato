@@ -160,12 +160,12 @@ int convert_lneg(struct parse_context *ctx)
 
 int convert_fneg(struct parse_context *ctx)
 {
-	return convert_unary_op(ctx, J_FLOAT, OP_NEG);
+	return convert_unary_op(ctx, J_FLOAT, OP_FNEG);
 }
 
 int convert_dneg(struct parse_context *ctx)
 {
-	return convert_unary_op(ctx, J_DOUBLE, OP_NEG);
+	return convert_unary_op(ctx, J_DOUBLE, OP_FNEG);
 }
 
 int convert_ishl(struct parse_context *ctx)

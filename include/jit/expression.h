@@ -85,6 +85,7 @@ enum binary_operator {
 
 enum unary_operator {
 	OP_NEG	= BINOP_LAST,
+	OP_FNEG,
 	OP_LAST,	/* Not a real operator. Keep this last. */
 };
 
