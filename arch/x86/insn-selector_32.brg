@@ -669,33 +669,10 @@ reg:	EXPR_INVOKE(arg) 1
 	struct compilation_unit *cu;
 	struct vm_method *method;
 	struct expression *expr;
-	struct insn *call_insn;
-	bool is_compiled;
-	void *target;
 
 	expr	= to_expr(tree);
 	method	= expr->target_method;
 	cu	= method->compilation_unit;
-
-	if (cu == s->b_parent) {
-		/*
-		 * This is a recursive method invocation. Threfore, we are
-		 * already holding cu->mutex here because we entered
-		 * instruction selection through jit_magic_trampoline().
-		 */
-		is_compiled = false;
-		target = vm_method_trampoline_ptr(method);
-	} else {
-		pthread_mutex_lock(&cu->mutex);
-		is_compiled = cu->is_compiled;
-
-		if (is_compiled)
-			target = vm_method_native_ptr(method);
-		else
-			target = vm_method_trampoline_ptr(method);
-
-		pthread_mutex_unlock(&cu->mutex);
-	}
 
 	eax = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = get_var(s->b_parent);
@@ -705,21 +682,7 @@ reg:	EXPR_INVOKE(arg) 1
 		state->reg2 = get_var(s->b_parent);
 	}
 
-	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
-	select_insn(s, tree, call_insn);
-
-	if (!is_compiled) {
-		struct fixup_site *fixup;
-
-		fixup = alloc_fixup_site();
-		fixup->cu = s->b_parent;
-		fixup->relcall_insn = call_insn;
-
-		trampoline_add_fixup_site(method->trampoline, fixup);
-	}
-
-	if (method->args_count)
-		method_args_cleanup(s, tree, method->args_count);
+	invoke(s, tree, cu, method);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx != NULL)
@@ -731,52 +694,15 @@ freg:	EXPR_FINVOKE(arg) 1
 	struct compilation_unit *cu;
 	struct vm_method *method;
 	struct expression *expr;
-	struct insn *call_insn;
-	bool is_compiled;
-	void *target;
 	struct var_info *esp;
 
 	expr	= to_expr(tree);
 	method	= expr->target_method;
 	cu	= method->compilation_unit;
 
-	if (cu == s->b_parent) {
-		/*
-		 * This is a recursive method invocation. Threfore, we are
-		 * already holding cu->mutex here because we entered
-		 * instruction selection through jit_magic_trampoline().
-		 */
-		is_compiled = false;
-		target = vm_method_trampoline_ptr(method);
-	} else {
-		pthread_mutex_lock(&cu->mutex);
-		is_compiled = cu->is_compiled;
-
-		if (is_compiled)
-			target = vm_method_native_ptr(method);
-		else
-			target = vm_method_trampoline_ptr(method);
-
-		pthread_mutex_unlock(&cu->mutex);
-	}
-
 	state->reg1 = get_fpu_var(s->b_parent);
 
-	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
-	select_insn(s, tree, call_insn);
-
-	if (!is_compiled) {
-		struct fixup_site *fixup;
-
-		fixup = alloc_fixup_site();
-		fixup->cu = s->b_parent;
-		fixup->relcall_insn = call_insn;
-
-		trampoline_add_fixup_site(method->trampoline, fixup);
-	}
-
-	if (method->args_count)
-		method_args_cleanup(s, tree, method->args_count);
+	invoke(s, tree, cu, method);
 
 	esp = get_fixed_var(s->b_parent, REG_ESP);
 	select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, -4));
@@ -1868,6 +1794,51 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	if (edx)
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 }
+
+static void invoke(struct basic_block *s, struct tree_node *tree, struct compilation_unit *cu, struct vm_method *method)
+{
+	bool is_compiled;
+	struct insn *call_insn;
+	void *target;
+
+	if (cu == s->b_parent) {
+		/*
+		 * This is a recursive method invocation. Threfore, we are
+		 * already holding cu->mutex here because we entered
+		 * instruction selection through jit_magic_trampoline().
+		 */
+		is_compiled = false;
+		target = vm_method_trampoline_ptr(method);
+	} else {
+		pthread_mutex_lock(&cu->mutex);
+		is_compiled = cu->is_compiled;
+
+		if (is_compiled)
+			target = vm_method_native_ptr(method);
+		else
+			target = vm_method_trampoline_ptr(method);
+
+		pthread_mutex_unlock(&cu->mutex);
+	}
+
+
+	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
+	select_insn(s, tree, call_insn);
+
+	if (!is_compiled) {
+		struct fixup_site *fixup;
+
+		fixup = alloc_fixup_site();
+		fixup->cu = s->b_parent;
+		fixup->relcall_insn = call_insn;
+
+		trampoline_add_fixup_site(method->trampoline, fixup);
+	}
+
+	if (method->args_count)
+		method_args_cleanup(s, tree, method->args_count);
+}
+
 
 static void invokevirtual(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
 {
