@@ -111,16 +111,33 @@ public class FloatArithmeticTest extends TestCase {
         return -n;
     }
 
-    public static void main(String[] args) {
+    public static float i2f(int val) {
+        return (float) val;
+    }
 
-		testFloatAddition();
+    public static int f2i(float val) {
+        return (int) val;
+    }
+
+    public static void testFloatIntConversion() {
+        assertEquals(2, f2i(2.5f));
+        assertEquals(-1000, f2i(-1000.0101f));
+        assertEquals(2.0f, i2f(2));
+        assertEquals(-3000f, i2f(-3000));
+    }
+
+    public static void main(String[] args) {
+        testFloatAddition();
         testFloatAdditionLocalSlot();
         testFloatSubtraction();
         testFloatSubtractionImmediateLocal();
         testFloatMultiplication();
         testFloatDivision();
+// FIXME
+//      testFloatRemainder();
         testFloatNegation();
-
+// FIXME
+//      testFloatIntConversion();
         exit();
     }
 }
