@@ -786,19 +786,11 @@ freg:	EXPR_FINVOKE(arg) 1
 reg:	EXPR_INVOKEVIRTUAL(arg) 1
 {
 	struct var_info *eax, *edx = NULL;
-	struct expression *objectref_expr;
-	struct var_info *call_target;
-	struct compilation_unit *cu;
-	unsigned long method_offset;
 	struct vm_method *method;
-	unsigned long args_count;
 	struct expression *expr;
 
 	expr	= to_expr(tree);
 	method	= expr->target_method;
-	cu	= method->compilation_unit;
-
-	method_offset = expr_method_index(expr) * sizeof(void *);
 
 	eax = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = get_var(s->b_parent);
@@ -808,31 +800,7 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 		state->reg2 = get_var(s->b_parent);
 	}
 
-	/* object reference */
-	objectref_expr = get_first_arg(expr->args_list);
-
-	if (expr_type(objectref_expr) == EXPR_VALUE) {
-		call_target = get_var(s->b_parent);
-		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
-	} else {
-		call_target = state->left->reg1;
-	}
-
-	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
-
-	/* vtable */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
-
-	/* native ptr */
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
-
-	/* invoke method */
-	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
-
-	args_count = nr_args(to_expr(expr->args_list));
-	if (args_count)
-		method_args_cleanup(s, tree, args_count);
+	invokevirtual(state, s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx != NULL)
@@ -842,47 +810,13 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 freg:	EXPR_FINVOKEVIRTUAL(arg) 1
 {
 	struct var_info *esp;
-	struct expression *objectref_expr;
-	struct var_info *call_target;
-	struct compilation_unit *cu;
-	unsigned long method_offset;
-	struct vm_method *method;
-	unsigned long args_count;
 	struct expression *expr;
 
 	expr	= to_expr(tree);
-	method	= expr->target_method;
-	cu	= method->compilation_unit;
-
-	method_offset = expr_method_index(expr) * sizeof(void *);
 
 	state->reg1 = get_fpu_var(s->b_parent);
 
-	/* object reference */
-	objectref_expr = get_first_arg(expr->args_list);
-
-	if (expr_type(objectref_expr) == EXPR_VALUE) {
-		call_target = get_var(s->b_parent);
-		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
-	} else {
-		call_target = state->left->reg1;
-	}
-
-	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
-
-	/* vtable */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
-
-	/* native ptr */
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
-
-	/* invoke method */
-	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
-
-	args_count = nr_args(to_expr(expr->args_list));
-	if (args_count)
-		method_args_cleanup(s, tree, args_count);
+	invokevirtual(state, s, tree);
 
 	esp = get_fixed_var(s->b_parent, REG_ESP);
 	select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, -4));
@@ -1933,6 +1867,44 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx)
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
+}
+
+static void invokevirtual(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
+{
+	struct expression *expr;
+	struct expression *objectref_expr;
+	struct var_info *call_target;
+	unsigned long method_offset;
+	unsigned long args_count;
+
+	expr	= to_expr(tree);
+	method_offset = expr_method_index(expr) * sizeof(void *);
+
+	/* object reference */
+	objectref_expr = get_first_arg(expr->args_list);
+
+	if (expr_type(objectref_expr) == EXPR_VALUE) {
+		call_target = get_var(s->b_parent);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
+	} else {
+		call_target = state->left->reg1;
+	}
+
+	/* object class */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
+
+	/* vtable */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
+
+	/* native ptr */
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
+
+	/* invoke method */
+	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
+
+	args_count = nr_args(to_expr(expr->args_list));
+	if (args_count)
+		method_args_cleanup(s, tree, args_count);
 }
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)
