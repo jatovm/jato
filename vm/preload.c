@@ -127,6 +127,7 @@ struct method_preload_entry {
 };
 
 struct vm_method *vm_java_util_Properties_setProperty;
+struct vm_method *vm_java_lang_Throwable_initCause;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -135,6 +136,13 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;",
 		&vm_java_util_Properties_setProperty,
 	},
+	{
+		&vm_java_lang_Throwable,
+		"initCause",
+		"(Ljava/lang/Throwable;)Ljava/lang/Throwable;",
+		&vm_java_lang_Throwable_initCause,
+	},
+
 };
 
 int preload_vm_classes(void)

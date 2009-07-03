@@ -28,8 +28,8 @@ int add_getstatic_fixup_site(struct insn *insn,
 int add_putstatic_fixup_site(struct insn *insn,
 	struct vm_field *vmf, struct compilation_unit *cu);
 
-void fixup_static(struct vm_class *vmc);
-void fixup_static_at(unsigned long addr);
+int fixup_static(struct vm_class *vmc);
+int fixup_static_at(unsigned long addr);
 
 extern unsigned long static_field_signal_bh(unsigned long ret);
 

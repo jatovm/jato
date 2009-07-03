@@ -80,6 +80,7 @@ OBJS = \
 	../libharness/libharness.o \
 	../vm/classloader-stub.o \
 	../vm/preload-stub.o \
+	../vm/signal-stub.o \
 	$(TESTS)
 
 TESTS = \

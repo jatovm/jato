@@ -37,6 +37,7 @@ extern struct vm_field *vm_java_lang_Throwable_detailMessage;
 extern struct vm_field *vm_java_lang_VMThrowable_vmdata;
 
 extern struct vm_method *vm_java_util_Properties_setProperty;
+extern struct vm_method *vm_java_lang_Throwable_initCause;
 
 int preload_vm_classes(void);
 

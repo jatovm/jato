@@ -10,5 +10,6 @@ typedef unsigned long (*signal_bh_fn)(unsigned long);
 
 void setup_signal_handlers(void);
 int install_signal_bh(void *ctx, signal_bh_fn bh);
+unsigned long throw_from_signal_bh(unsigned long jit_addr);
 
 #endif /* VM_SIGNAL_H */

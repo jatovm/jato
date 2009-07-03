@@ -21,10 +21,8 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 {
 	struct vm_object *res;
 
-	if (vm_class_ensure_init(class)) {
-		NOT_IMPLEMENTED;
+	if (vm_class_ensure_init(class))
 		return NULL;
-	}
 
 	res = zalloc(sizeof(*res) + class->object_size);
 	if (!res) {
@@ -88,10 +86,8 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 		return NULL;
 	}
 
-	if (vm_class_ensure_init(res->class)) {
-		NOT_IMPLEMENTED;
+	if (vm_class_ensure_init(res->class))
 		return NULL;
-	}
 
 	res->array_length = count;
 
@@ -106,10 +102,8 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 {
 	assert(nr_dimensions > 0);
 
-	if (vm_class_ensure_init(class)) {
-		NOT_IMPLEMENTED;
+	if (vm_class_ensure_init(class))
 		return NULL;
-	}
 
 	struct vm_object *res;
 
@@ -149,10 +143,8 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 {
 	struct vm_object *res;
 
-	if (vm_class_ensure_init(class)) {
-		NOT_IMPLEMENTED;
+	if (vm_class_ensure_init(class))
 		return NULL;
-	}
 
 	res = zalloc(sizeof(*res) + sizeof(struct vm_object *) * count);
 	if (!res) {

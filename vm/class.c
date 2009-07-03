@@ -286,6 +286,14 @@ int vm_class_link_bogus_class(struct vm_class *vmc, const char *class_name)
 
 int vm_class_init(struct vm_class *vmc)
 {
+	struct vm_object *exception;
+
+	if (vmc->state == VM_CLASS_ERRONEOUS) {
+		signal_new_exception(vm_java_lang_NoClassDefFoundError,
+				     vmc->name);
+		goto error;
+	}
+
 	assert(vmc->state == VM_CLASS_LINKED);
 
 	/* XXX: Not entirely true, but we need it to break the recursion. */
@@ -298,7 +306,7 @@ int vm_class_init(struct vm_class *vmc)
 	if (vmc->super) {
 		int ret = vm_class_ensure_init(vmc->super);
 		if (ret)
-			return ret;
+			goto error;
 	}
 
 	/*
@@ -324,10 +332,27 @@ int vm_class_init(struct vm_class *vmc)
 				= vm_method_trampoline_ptr(&vmc->methods[i]);
 
 			clinit_trampoline();
+			if (exception_occurred())
+				goto error;
 		}
 	}
 
 	return 0;
+
+ error:
+	exception = exception_occurred();
+
+	if (!vm_object_is_instance_of(exception, vm_java_lang_Error)) {
+		clear_exception();
+		signal_new_exception_with_cause(
+			vm_java_lang_ExceptionInInitializerError,
+			exception,
+			NULL);
+	}
+
+	vmc->state = VM_CLASS_ERRONEOUS;
+
+	return -1;
 }
 
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)

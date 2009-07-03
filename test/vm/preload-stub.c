@@ -21,3 +21,5 @@ struct vm_class *vm_java_lang_RuntimeException;
 struct vm_class *vm_java_lang_ExceptionInInitializerError;
 struct vm_class *vm_java_lang_NegativeArraySizeException;
 struct vm_class *vm_java_lang_ClassCastException;
+
+struct vm_method *vm_java_lang_Throwable_initCause;

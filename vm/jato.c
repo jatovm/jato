@@ -192,6 +192,9 @@ native_vmclassloader_getprimitiveclass(int type)
 		return NULL;
 
 	vm_class_ensure_init(class);
+	if (exception_occurred())
+		throw_from_native(sizeof(int));
+
 	return class->object;
 }
 

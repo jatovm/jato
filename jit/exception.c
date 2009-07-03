@@ -39,6 +39,7 @@
 #include <vm/guard-page.h>
 #include <vm/method.h>
 #include <vm/object.h>
+#include <vm/preload.h>
 #include <vm/thread.h>
 
 #include <arch/stack-frame.h>
@@ -99,6 +100,26 @@ void signal_new_exception(struct vm_class *vmc, const char *msg)
 	struct vm_object *e;
 
 	e = new_exception(vmc, msg);
+	signal_exception(e);
+}
+
+typedef struct vm_object * (*vm_throwable_init_cause_fn)(struct vm_object *,
+							 struct vm_object *);
+
+void signal_new_exception_with_cause(struct vm_class *vmc,
+				     struct vm_object *cause,
+				     const char *msg)
+{
+	struct vm_object *e;
+	vm_throwable_init_cause_fn init_cause;
+
+	init_cause = vm_method_trampoline_ptr(vm_java_lang_Throwable_initCause);
+
+	e = new_exception(vmc, msg);
+	if (!e || exception_occurred())
+		return;
+
+	init_cause(e, cause);
 	signal_exception(e);
 }
 

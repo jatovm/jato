@@ -57,7 +57,9 @@ int add_putstatic_fixup_site(struct insn *insn,
 
 unsigned long static_field_signal_bh(unsigned long ret)
 {
-	fixup_static_at(ret);
+	if (fixup_static_at(ret))
+		return throw_from_signal_bh(ret);
+
 	return ret;
 }
 

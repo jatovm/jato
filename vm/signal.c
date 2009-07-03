@@ -39,8 +39,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-static unsigned long
-throw_from_signal_bh(unsigned long jit_addr)
+unsigned long throw_from_signal_bh(unsigned long jit_addr)
 {
 	struct jit_stack_frame *frame;
 	struct compilation_unit *cu;
