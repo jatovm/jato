@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -445,6 +446,26 @@ reg:	OP_REM(reg, reg) 1
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
 	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, result));
 	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
+}
+
+freg:	OP_FREM(freg, freg) 1
+{
+	struct var_info *esp, *eax;
+
+	state->reg1 = get_fpu_var(s->b_parent);
+
+	esp = get_fixed_var(s->b_parent, REG_ESP);
+	eax = get_fixed_var(s->b_parent, REG_EAX);
+
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->left->reg1, esp, -8));
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->right->reg1, esp, -4));
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)fmodf));
+	method_args_cleanup(s, tree, 2);
+
+	select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, -4));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_XMM, esp, -4, state->reg1));
 }
 
 reg:	OP_REM_64(reg, reg) 1

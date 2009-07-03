@@ -97,6 +97,12 @@ public class FloatArithmeticTest extends TestCase {
         return dividend / divisor;
     }
 
+    public static void testFloatRemainder() {
+        assertEquals(2.0f, rem(6.0f, 4.0f));
+        assertEquals(10000.5f, rem(10000.5f, 10001.5f));
+        assertEquals(1.0f, rem(10002.5f, 10001.5f));
+    }
+
     public static float rem(float dividend, float divisor) {
         return dividend % divisor;
     }
@@ -133,8 +139,7 @@ public class FloatArithmeticTest extends TestCase {
         testFloatSubtractionImmediateLocal();
         testFloatMultiplication();
         testFloatDivision();
-// FIXME
-//      testFloatRemainder();
+        testFloatRemainder();
         testFloatNegation();
         testFloatIntConversion();
         exit();
