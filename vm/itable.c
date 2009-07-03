@@ -69,7 +69,7 @@ static uint32_t itable_hash_combine(uint32_t a, uint32_t b)
 		^ ((b >> 24) ^ (b >> 16) ^ (b >> 8) ^ b);
 }
 
-static unsigned int itable_hash(struct vm_method *vmm)
+unsigned int itable_hash(struct vm_method *vmm)
 {
 #if 0
 	/* Very simple hash based on the middle bits of the method pointer.

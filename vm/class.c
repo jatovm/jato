@@ -244,10 +244,14 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	for (uint16_t i = 0; i < class->methods_count; ++i) {
+		struct vm_method *vmm = &vmc->methods[i];
+
 		if (vm_method_init(&vmc->methods[i], vmc, i)) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}
+
+		vmm->itable_index = itable_hash(vmm);
 
 		if (vm_method_prepare_jit(&vmc->methods[i])) {
 			NOT_IMPLEMENTED;

@@ -11,7 +11,9 @@ extern bool opt_trace_itable;
 #define VM_ITABLE_SIZE 64
 
 struct vm_class;
+struct vm_method;
 
 int vm_itable_setup(struct vm_class *vmc);
+unsigned int itable_hash(struct vm_method *vmm);
 
 #endif
