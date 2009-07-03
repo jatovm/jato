@@ -1159,7 +1159,7 @@ static void emit_conv_gpr_to_fpu(struct buffer *buf, struct operand *src,
 {
 	emit(buf, 0xf3);
 	emit(buf, 0x0f);
-	emit_reg_reg(buf, 0x2a, src, dest);
+	emit_reg_reg(buf, 0x2a, dest, src);
 }
 
 static void emit_conv_fpu_to_gpr(struct buffer *buf, struct operand *src,
@@ -1167,7 +1167,7 @@ static void emit_conv_fpu_to_gpr(struct buffer *buf, struct operand *src,
 {
 	emit(buf, 0xf3);
 	emit(buf, 0x0f);
-	emit_reg_reg(buf, 0x2d, src, dest);
+	emit_reg_reg(buf, 0x2d, dest, src);
 }
 
 static void emit_mov_membase_xmm(struct buffer *buf, struct operand *src,
