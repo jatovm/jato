@@ -33,6 +33,8 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_INSTANCE_FIELD:
 	case EXPR_INVOKE:
 	case EXPR_INVOKEVIRTUAL:
+	case EXPR_FINVOKE:
+	case EXPR_FINVOKEVIRTUAL:
 	case EXPR_ARG:
 	case EXPR_NEWARRAY:
 	case EXPR_ANEWARRAY:
@@ -90,6 +92,8 @@ int expr_is_pure(struct expression *expr)
 		   have side-effects. */
 	case EXPR_INVOKE:
 	case EXPR_INVOKEVIRTUAL:
+	case EXPR_FINVOKE:
+	case EXPR_FINVOKEVIRTUAL:
 	case EXPR_NEWARRAY:
 	case EXPR_ANEWARRAY:
 	case EXPR_MULTIANEWARRAY:
@@ -323,12 +327,28 @@ struct expression *invokevirtual_expr(struct vm_method *target)
 	return __invoke_expr(EXPR_INVOKEVIRTUAL, return_type, target);
 }
 
+struct expression *finvokevirtual_expr(struct vm_method *target)
+{
+	enum vm_type return_type;
+
+	return_type = method_return_type(target);
+	return __invoke_expr(EXPR_FINVOKEVIRTUAL, return_type, target);
+}
+
 struct expression *invoke_expr(struct vm_method *target)
 {
 	enum vm_type return_type;
 
 	return_type = method_return_type(target);
 	return  __invoke_expr(EXPR_INVOKE, return_type, target);
+}
+
+struct expression *finvoke_expr(struct vm_method *target)
+{
+	enum vm_type return_type;
+
+	return_type = method_return_type(target);
+	return  __invoke_expr(EXPR_FINVOKE, return_type, target);
 }
 
 struct expression *args_list_expr(struct expression *args_left,

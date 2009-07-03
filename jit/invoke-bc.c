@@ -131,7 +131,11 @@ int convert_invokevirtual(struct parse_context *ctx)
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
-	expr = invokevirtual_expr(invoke_target);
+	if (method_return_type(invoke_target) == J_FLOAT)
+		expr = finvokevirtual_expr(invoke_target);
+	else
+		expr = invokevirtual_expr(invoke_target);
+
 	if (!expr)
 		return -ENOMEM;
 
@@ -159,7 +163,11 @@ int convert_invokespecial(struct parse_context *ctx)
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
-	expr = invoke_expr(invoke_target);
+	if (method_return_type(invoke_target) == J_FLOAT)
+		expr = finvoke_expr(invoke_target);
+	else
+		expr = invoke_expr(invoke_target);
+
 	if (!expr)
 		return -ENOMEM;
 
@@ -189,7 +197,11 @@ int convert_invokestatic(struct parse_context *ctx)
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
-	expr = invoke_expr(invoke_target);
+	if (method_return_type(invoke_target) == J_FLOAT)
+		expr = finvoke_expr(invoke_target);
+	else
+		expr = invoke_expr(invoke_target);
+
 	if (!expr)
 		return -ENOMEM;
 

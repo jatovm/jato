@@ -338,3 +338,13 @@ struct insn *memlocal_insn(enum insn_type insn_type, struct stack_slot *slot)
 
 	return insn;
 }
+
+struct insn *membase_insn(enum insn_type insn_type, struct var_info *src_base_reg,
+			      long src_disp)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_membase_operand(insn, 0, src_base_reg, src_disp);
+	}
+	return insn;
+}

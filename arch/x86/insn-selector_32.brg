@@ -705,6 +705,63 @@ reg:	EXPR_INVOKE(arg) 1
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 }
 
+freg:	EXPR_FINVOKE(arg) 1
+{
+	struct compilation_unit *cu;
+	struct vm_method *method;
+	struct expression *expr;
+	struct insn *call_insn;
+	bool is_compiled;
+	void *target;
+	struct var_info *esp;
+
+	expr	= to_expr(tree);
+	method	= expr->target_method;
+	cu	= method->compilation_unit;
+
+	if (cu == s->b_parent) {
+		/*
+		 * This is a recursive method invocation. Threfore, we are
+		 * already holding cu->mutex here because we entered
+		 * instruction selection through jit_magic_trampoline().
+		 */
+		is_compiled = false;
+		target = vm_method_trampoline_ptr(method);
+	} else {
+		pthread_mutex_lock(&cu->mutex);
+		is_compiled = cu->is_compiled;
+
+		if (is_compiled)
+			target = vm_method_native_ptr(method);
+		else
+			target = vm_method_trampoline_ptr(method);
+
+		pthread_mutex_unlock(&cu->mutex);
+	}
+
+	state->reg1 = get_fpu_var(s->b_parent);
+
+	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
+	select_insn(s, tree, call_insn);
+
+	if (!is_compiled) {
+		struct fixup_site *fixup;
+
+		fixup = alloc_fixup_site();
+		fixup->cu = s->b_parent;
+		fixup->relcall_insn = call_insn;
+
+		trampoline_add_fixup_site(method->trampoline, fixup);
+	}
+
+	if (method->args_count)
+		method_args_cleanup(s, tree, method->args_count);
+
+	esp = get_fixed_var(s->b_parent, REG_ESP);
+	select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, -4));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_XMM, esp, -4, state->reg1));
+}
+
 reg:	EXPR_INVOKEVIRTUAL(arg) 1
 {
 	struct var_info *eax, *edx = NULL;
@@ -759,6 +816,56 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx != NULL)
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
+}
+
+freg:	EXPR_FINVOKEVIRTUAL(arg) 1
+{
+	struct var_info *esp;
+	struct expression *objectref_expr;
+	struct var_info *call_target;
+	struct compilation_unit *cu;
+	unsigned long method_offset;
+	struct vm_method *method;
+	unsigned long args_count;
+	struct expression *expr;
+
+	expr	= to_expr(tree);
+	method	= expr->target_method;
+	cu	= method->compilation_unit;
+
+	method_offset = expr_method_index(expr) * sizeof(void *);
+
+	state->reg1 = get_fpu_var(s->b_parent);
+
+	/* object reference */
+	objectref_expr = get_first_arg(expr->args_list);
+
+	if (expr_type(objectref_expr) == EXPR_VALUE) {
+		call_target = get_var(s->b_parent);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
+	} else {
+		call_target = state->left->reg1;
+	}
+
+	/* object class */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
+
+	/* vtable */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
+
+	/* native ptr */
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
+
+	/* invoke method */
+	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
+
+	args_count = nr_args(to_expr(expr->args_list));
+	if (args_count)
+		method_args_cleanup(s, tree, args_count);
+
+	esp = get_fixed_var(s->b_parent, REG_ESP);
+	select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, -4));
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_XMM, esp, -4, state->reg1));
 }
 
 reg:	OP_CMPL(freg, freg) 1
@@ -1260,7 +1367,7 @@ reg:	EXPR_EXCEPTION_REF
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
 }
 
-stmt:	STMT_RETURN(reg)
+stmt:	STMT_RETURN(reg) 1
 {
 	struct expression *expr;
 	struct var_info *src, *eax, *edx;
@@ -1279,6 +1386,23 @@ stmt:	STMT_RETURN(reg)
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, edx));
 	}
+
+	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
+}
+
+stmt:	STMT_RETURN(freg) 1
+{
+	struct expression *expr;
+	struct var_info *src, *esp;
+
+	expr = to_expr(tree);
+	expr = to_expr(expr->unary_expression);
+
+	src = state->left->reg1;
+	esp = get_fixed_var(s->b_parent, REG_ESP);
+
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, src, esp, -4));
+	select_insn(s, tree, membase_insn(INSN_FLD_MEMBASE, esp, -4));
 
 	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
 }

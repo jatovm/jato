@@ -74,6 +74,8 @@ enum insn_type {
 	INSN_FMUL_REG_REG,
 	INSN_FDIV_REG_REG,
 	INSN_FSUB_REG_REG,
+	INSN_FLD_MEMBASE,
+	INSN_FSTP_MEMBASE,
 	INSN_CONV_FPU_TO_GPR,
 	INSN_CONV_GPR_TO_FPU,
 	INSN_JE_BRANCH,
@@ -197,6 +199,7 @@ struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *memlocal_insn(enum insn_type, struct stack_slot *);
+struct insn *membase_insn(enum insn_type, struct var_info *, long);
 
 /*
  * These functions are used by generic code to insert spill/reload

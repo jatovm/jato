@@ -236,6 +236,18 @@ static int print_fdiv_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_fld_membase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase(str, &insn->operand);
+}
+
+static int print_fstp_membase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase(str, &insn->operand);
+}
+
 static int print_and_membase_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -633,6 +645,8 @@ static print_insn_fn insn_printers[] = {
 	[INSN_FSUB_REG_REG] = print_fsub_reg_reg,
 	[INSN_FMUL_REG_REG] = print_fmul_reg_reg,
 	[INSN_FDIV_REG_REG] = print_fdiv_reg_reg,
+	[INSN_FLD_MEMBASE] = print_fld_membase,
+	[INSN_FSTP_MEMBASE] = print_fstp_membase,
 	[INSN_MOV_MEMBASE_XMM] = print_mov_membase_xmm,
 	[INSN_MOV_XMM_MEMBASE] = print_mov_xmm_membase,
 	[INSN_CONV_FPU_TO_GPR] = print_conv_fpu_to_gpr,
