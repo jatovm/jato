@@ -19,7 +19,7 @@ vm_object_alloc_string_from_c(const char *bytes)
 	return NULL;
 }
 
-struct vm_object *new_exception(const char *class_name, const char *message)
+struct vm_object *new_exception(struct vm_class *class, const char *message)
 {
 	return NULL;
 }

@@ -74,7 +74,7 @@ long long emulate_ldiv(long long value1, long long value2)
 {
 	if (value2 == 0) {
 		signal_new_exception(
-			"java/lang/ArithmeticException", "division by zero");
+			vm_java_lang_ArithmeticException, "division by zero");
 		throw_from_native(2 * sizeof(long long));
 		return 0;
 	}
@@ -86,7 +86,7 @@ long long emulate_lrem(long long value1, long long value2)
 {
 	if (value2 == 0) {
 		signal_new_exception(
-			"java/lang/ArithmeticException", "division by zero");
+			vm_java_lang_ArithmeticException, "division by zero");
 		throw_from_native(2 * sizeof(long long));
 		return 0;
 	}

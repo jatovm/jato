@@ -43,7 +43,17 @@ struct vm_class *vm_java_util_Properties;
 struct vm_class *vm_java_lang_VMThrowable;
 struct vm_class *vm_java_lang_StackTraceElement;
 struct vm_class *vm_array_of_java_lang_StackTraceElement;
-struct vm_class *vm_java_lang_RE;
+struct vm_class *vm_java_lang_Error;
+struct vm_class *vm_java_lang_ArithmeticException;
+struct vm_class *vm_java_lang_NullPointerException;
+struct vm_class *vm_java_lang_NegativeArraySizeException;
+struct vm_class *vm_java_lang_ClassCastException;
+struct vm_class *vm_java_lang_NoClassDefFoundError;
+struct vm_class *vm_java_lang_UnsatisfiedLinkError;
+struct vm_class *vm_java_lang_ArrayIndexOutOfBoundsException;
+struct vm_class *vm_java_lang_ArrayStoreException;
+struct vm_class *vm_java_lang_RuntimeException;
+struct vm_class *vm_java_lang_ExceptionInInitializerError;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -62,6 +72,17 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/StackTraceElement", &vm_java_lang_StackTraceElement },
 	{ "[Ljava/lang/StackTraceElement;", &vm_array_of_java_lang_StackTraceElement },
 	{ "java/lang/VMThrowable",	&vm_java_lang_VMThrowable },
+	{ "java/lang/ArithmeticException", &vm_java_lang_ArithmeticException },
+	{ "java/lang/ArrayIndexOutOfBoundsException", &vm_java_lang_ArrayIndexOutOfBoundsException },
+	{ "java/lang/ArrayStoreException", &vm_java_lang_ArrayStoreException },
+	{ "java/lang/ClassCastException", &vm_java_lang_ClassCastException },
+	{ "java/lang/Error",		&vm_java_lang_Error },
+	{ "java/lang/ExceptionInInitializerError", &vm_java_lang_ExceptionInInitializerError },
+	{ "java/lang/NegativeArraySizeException", &vm_java_lang_NegativeArraySizeException },
+	{ "java/lang/NoClassDefFoundError", &vm_java_lang_NoClassDefFoundError },
+	{ "java/lang/NullPointerException", &vm_java_lang_NullPointerException },
+	{ "java/lang/RuntimeException",	&vm_java_lang_RuntimeException },
+	{ "java/lang/UnsatisfiedLinkError", &vm_java_lang_UnsatisfiedLinkError },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {

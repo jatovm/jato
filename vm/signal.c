@@ -26,6 +26,7 @@
 
 #include <jit/exception.h>
 
+#include <vm/preload.h>
 #include <vm/backtrace.h>
 #include <vm/signal.h>
 #include <vm/class.h>
@@ -63,14 +64,14 @@ throw_from_signal_bh(unsigned long jit_addr)
 
 static unsigned long throw_arithmetic_exception(unsigned long src_addr)
 {
-	signal_new_exception("java/lang/ArithmeticException",
+	signal_new_exception(vm_java_lang_ArithmeticException,
 			     "division by zero");
 	return throw_from_signal_bh(src_addr);
 }
 
 static unsigned long throw_null_pointer_exception(unsigned long src_addr)
 {
-	signal_new_exception("java/lang/NullPointerException", NULL);
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);
 	return throw_from_signal_bh(src_addr);
 }
 

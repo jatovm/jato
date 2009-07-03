@@ -70,7 +70,7 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 	if (strcmp(class_name, "VMThrowable") == 0)
 		die("no native function found for %s", msg->value);
 
-	signal_new_exception("java/lang/UnsatisfiedLinkError", msg->value);
+	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, msg->value);
 	free_str(msg);
 
 	return NULL;

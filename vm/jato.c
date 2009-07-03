@@ -110,20 +110,20 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	int elem_size;
 
 	if (!src || !dest || !src->class || !dest->class) {
-		signal_new_exception("java.lang.NullPointerException", NULL);
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		goto throw;
 	}
 
 	if (!vm_class_is_array_class(src->class) ||
 	    !vm_class_is_array_class(dest->class)) {
-		signal_new_exception("java.lang.ArrayStoreException", NULL);
+		signal_new_exception(vm_java_lang_ArrayStoreException, NULL);
 		goto throw;
 	}
 
 	src_elem_class = vm_class_get_array_element_class(src->class);
 	dest_elem_class = vm_class_get_array_element_class(dest->class);
 	if (!src_elem_class || !dest_elem_class) {
-		signal_new_exception("java.lang.NullPointerException", NULL);
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		goto throw;
 	}
 
@@ -136,8 +136,8 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	if (len < 0 ||
 	    src_start < 0 || src_start + len > src->array_length ||
 	    dest_start < 0 || dest_start + len > dest->array_length) {
-		signal_new_exception("java.lang.ArrayIndexOutOfBoundsException",
-				     NULL);
+		signal_new_exception(
+			vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
 		goto throw;
 	}
 
@@ -160,7 +160,7 @@ static struct vm_object * __vm_native
 native_vmobject_getclass(struct vm_object *object)
 {
 	if (!object || !object->class) {
-		signal_new_exception("java.lang.NullPointerException", NULL);
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		throw_from_native(sizeof object);
 	}
 

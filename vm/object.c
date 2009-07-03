@@ -241,19 +241,14 @@ vm_object_alloc_string_from_c(const char *bytes)
 
 typedef void (*exception_init_fn)(struct vm_object *, struct vm_object *);
 
-struct vm_object *new_exception(const char *class_name, const char *message)
+struct vm_object *new_exception(struct vm_class *vmc, const char *message)
 {
 	struct vm_object *message_str;
 	exception_init_fn init;
 	struct vm_method *mb;
 	struct vm_object *obj;
-	struct vm_class *e_class;
 
-	e_class = classloader_load(class_name);
-	if (!e_class)
-		return NULL;
-
-	obj = vm_object_alloc(e_class);
+	obj = vm_object_alloc(vmc);
 	if (!obj)
 		return NULL;
 
@@ -262,10 +257,10 @@ struct vm_object *new_exception(const char *class_name, const char *message)
 	else
 		message_str = vm_object_alloc_string_from_c(message);
 
-	mb = vm_class_get_method(e_class,
+	mb = vm_class_get_method(vmc,
 		"<init>", "(Ljava/lang/String;)V");
 	if (!mb)
-		die("constructor not found for class %s\n", class_name);
+		error("constructor not found");
 
 	init = vm_method_trampoline_ptr(mb);
 	init(obj, message_str);
@@ -296,7 +291,7 @@ void vm_object_check_array(struct vm_object *obj, unsigned int index)
 	cb = obj->class;
 
 	if (!vm_class_is_array_class(cb)) {
-		signal_new_exception("java/lang/RuntimeException",
+		signal_new_exception(vm_java_lang_RuntimeException,
 				     "object is not an array");
 		goto throw;
 	}
@@ -307,7 +302,7 @@ void vm_object_check_array(struct vm_object *obj, unsigned int index)
 		return;
 
 	sprintf(index_str, "%d > %d", index, array_len - 1);
-	signal_new_exception("java/lang/ArrayIndexOutOfBoundsException",
+	signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException,
 			     index_str);
 
  throw:
@@ -327,7 +322,7 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 	class = arrayref->class;
 
 	if (!vm_class_is_array_class(class)) {
-		signal_new_exception("java/lang/RuntimeException",
+		signal_new_exception(vm_java_lang_RuntimeException,
 				     "object is not an array");
 		goto throw;
 	}
@@ -346,7 +341,7 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 	if (err)
 		goto error;
 
-	signal_new_exception("java/lang/ArrayStoreException", str->value);
+	signal_new_exception(vm_java_lang_ArrayStoreException, str->value);
 	free_str(str);
 
  throw:
@@ -399,7 +394,7 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 	if (err)
 		goto error;
 
-	signal_new_exception("java/lang/ClassCastException", str->value);
+	signal_new_exception(vm_java_lang_ClassCastException, str->value);
 	free_str(str);
  throw:
 	throw_from_native(2 * sizeof(struct vm_object *));
@@ -419,7 +414,7 @@ void array_size_check(int size)
 {
 	if (size < 0) {
 		signal_new_exception(
-			"java/lang/NegativeArraySizeException", NULL);
+			vm_java_lang_NegativeArraySizeException, NULL);
 		throw_from_native(sizeof(int));
 	}
 }
@@ -435,7 +430,7 @@ void multiarray_size_check(int n, ...)
 		if (va_arg(ap, int) >= 0)
 			continue;
 
-		signal_new_exception("java/lang/NegativeArraySizeException",
+		signal_new_exception(vm_java_lang_NegativeArraySizeException,
 				     NULL);
 		va_end(ap);
 		throw_from_native(sizeof(int) * (n + 1));
