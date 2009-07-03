@@ -156,19 +156,6 @@ static int32_t __vm_native native_vmsystem_identityhashcode(struct vm_object *ob
 	return (int32_t) obj;
 }
 
-/*
- * This stub is needed by java.lang.VMThrowable constructor to work. It should
- * return java.lang.VMState instance, or null in which case no stack trace will
- * be printed by printStackTrace() method.
- */
-static struct vm_object * __vm_native
-native_vmthrowable_fill_in_stack_trace(struct vm_object *message)
-{
-	NOT_IMPLEMENTED;
-
-	return NULL;
-}
-
 static struct vm_object * __vm_native
 native_vmobject_getclass(struct vm_object *object)
 {
@@ -220,6 +207,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", &native_vmsystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
+	DEFINE_NATIVE("java/lang/VMThrowable", "getStackTrace", &native_vmthrowable_get_stack_trace),
 };
 
 static void jit_init_natives(void)
@@ -240,7 +228,9 @@ struct vm_class *vm_java_lang_Class;
 struct vm_class *vm_java_lang_String;
 struct vm_class *vm_java_lang_Throwable;
 struct vm_class *vm_java_util_Properties;
-
+struct vm_class *vm_java_lang_VMThrowable;
+struct vm_class *vm_java_lang_StackTraceElement;
+struct vm_class *vm_array_of_java_lang_StackTraceElement;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -256,6 +246,10 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/String",		&vm_java_lang_String },
 	{ "java/lang/Throwable",	&vm_java_lang_Throwable },
 	{ "java/util/Properties",	&vm_java_util_Properties },
+	{ "java/lang/RuntimeException",	&vm_java_lang_RE },
+	{ "java/lang/VMThrowable",	&vm_java_lang_VMThrowable },
+	{ "java/lang/StackTraceElement", &vm_java_lang_StackTraceElement },
+	{ "[Ljava/lang/StackTraceElement;", &vm_array_of_java_lang_StackTraceElement },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -281,6 +275,7 @@ struct vm_field *vm_java_lang_String_offset;
 struct vm_field *vm_java_lang_String_count;
 struct vm_field *vm_java_lang_String_value;
 struct vm_field *vm_java_lang_Throwable_detailMessage;
+struct vm_field *vm_java_lang_VMThrowable_vmdata;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
@@ -288,6 +283,7 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_String, "count", "I",	&vm_java_lang_String_count },
 	{ &vm_java_lang_String, "value", "[C",	&vm_java_lang_String_value },
 	{ &vm_java_lang_Throwable, "detailMessage", "Ljava/lang/String;", &vm_java_lang_Throwable_detailMessage },
+	{ &vm_java_lang_VMThrowable, "vmdata", "Ljava/lang/Object;", &vm_java_lang_VMThrowable_vmdata },
 };
 
 struct method_preload_entry {

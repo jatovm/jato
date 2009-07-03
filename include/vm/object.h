@@ -84,4 +84,16 @@ array_get_field_char(struct vm_object *obj, int index)
 	return *(uint16_t *) &obj->fields[index * get_vmtype_size(J_CHAR)];
 }
 
+static inline void
+array_set_field_ptr(struct vm_object *obj, int index, void *value)
+{
+	*(void **) &obj->fields[index * get_vmtype_size(J_REFERENCE)] = value;
+}
+
+static inline void *
+array_get_field_ptr(struct vm_object *obj, int index)
+{
+	return *(void **) &obj->fields[index * get_vmtype_size(J_REFERENCE)];
+}
+
 #endif

@@ -41,9 +41,8 @@ struct vm_object *get_stack_trace(struct stack_trace_elem *);
 struct vm_object *get_stack_trace_from_ctx(void *ctx);
 struct vm_object *convert_stack_trace(struct vm_object *vmthrowable);
 struct vm_object *new_stack_trace_element(struct vm_method *, unsigned long);
-struct vm_object * __vm_native vm_throwable_fill_in_stack_trace(struct vm_object *);
-struct vm_object * __vm_native vm_throwable_get_stack_trace(struct vm_object *, struct vm_object *);
-void set_throwable_vmstate(struct vm_object *throwable, struct vm_object *vmstate);
+struct vm_object * __vm_native native_vmthrowable_fill_in_stack_trace(struct vm_object *);
+struct vm_object * __vm_native native_vmthrowable_get_stack_trace(struct vm_object *, struct vm_object *);
 
 bool called_from_jit_trampoline(struct native_stack_frame *frame);
 void vm_print_exception(struct vm_object *exception);
