@@ -125,7 +125,7 @@ int convert_lrem(struct parse_context *ctx)
 
 int convert_frem(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_FLOAT, OP_REM);
+	return convert_binop(ctx, J_FLOAT, OP_FREM);
 }
 
 int convert_drem(struct parse_context *ctx)

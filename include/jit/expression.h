@@ -79,6 +79,7 @@ enum binary_operator {
 	OP_FSUB,
 	OP_FMUL,
 	OP_FDIV,
+	OP_FREM,
 
 	BINOP_LAST,	/* Not a real operator. Keep this last. */
 };

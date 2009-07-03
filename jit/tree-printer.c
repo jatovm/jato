@@ -410,6 +410,7 @@ static const char *op_names[] = {
 	[OP_FMUL] = "fmul",
 	[OP_FNEG] = "fneg",
 	[OP_FDIV] = "fdiv",
+	[OP_FREM] = "frem",
 	[OP_SHL] = "shl",
 	[OP_SHL_64] = "shl64",
 	[OP_SHR] = "shr",

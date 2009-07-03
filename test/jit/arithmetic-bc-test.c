@@ -96,7 +96,7 @@ void test_convert_rem(void)
 {
 	assert_convert_binop(J_INT, OP_REM, OPC_IREM);
 	assert_convert_binop(J_LONG, OP_REM_64, OPC_LREM);
-	assert_convert_binop(J_FLOAT, OP_REM, OPC_FREM);
+	assert_convert_binop(J_FLOAT, OP_FREM, OPC_FREM);
 	assert_convert_binop(J_DOUBLE, OP_REM, OPC_DREM);
 }
 
