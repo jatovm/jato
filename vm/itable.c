@@ -138,12 +138,24 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 	return 0;
 }
 
+static void itable_resolver_stub(void)
+{
+	NOT_IMPLEMENTED;
+	abort();
+}
+
+static void itable_resolver_stub_error(void)
+{
+	printf("itable resolver stub error!\n");
+	abort();
+}
+
 static void *itable_create_conflict_resolver(struct list_head *methods)
 {
 	/* No methods at this index -- return something that will choke the
 	 * caller. */
 	if (list_is_empty(methods))
-		return NULL;
+		return &itable_resolver_stub_error;
 
 	/* If it's not empty, and the first element is the same as the last,
 	 * there can only be one element in the list. If so, we can put the
@@ -155,8 +167,7 @@ static void *itable_create_conflict_resolver(struct list_head *methods)
 		return vm_method_trampoline_ptr(entry->method);
 	}
 
-	/* XXX: Actually create the resolver stub */
-	return NULL;
+	return &itable_resolver_stub;
 }
 
 static void trace_itable(struct vm_class *vmc, struct list_head *itable)
