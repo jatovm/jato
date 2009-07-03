@@ -32,6 +32,7 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_CONVERSION_FROM_FLOAT:
 	case EXPR_INSTANCE_FIELD:
 	case EXPR_INVOKE:
+	case EXPR_INVOKEINTERFACE:
 	case EXPR_INVOKEVIRTUAL:
 	case EXPR_FINVOKE:
 	case EXPR_FINVOKEVIRTUAL:
@@ -317,6 +318,14 @@ struct expression *__invoke_expr(enum expression_type expr_type, enum vm_type vm
 		expr->target_method = target_method;
 
 	return expr;
+}
+
+struct expression *invokeinterface_expr(struct vm_method *target)
+{
+	enum vm_type return_type;
+
+	return_type = method_return_type(target);
+	return __invoke_expr(EXPR_INVOKEINTERFACE, return_type, target);
 }
 
 struct expression *invokevirtual_expr(struct vm_method *target)
