@@ -10,6 +10,7 @@
 #include "bc-test-utils.h"
 
 static void assert_conversion_mimic_stack(unsigned char opc,
+					 enum expression_type expr_type,
 					 enum vm_type from_type,
 					 enum vm_type to_type)
 {
@@ -30,7 +31,7 @@ static void assert_conversion_mimic_stack(unsigned char opc,
 	convert_to_ir(bb->b_parent);
 
 	conversion_expression = stack_pop(bb->mimic_stack);
-	assert_conv_expr(to_type, expression, &conversion_expression->node);
+	assert_conv_expr(to_type, expr_type, expression, &conversion_expression->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(conversion_expression);
@@ -39,35 +40,35 @@ static void assert_conversion_mimic_stack(unsigned char opc,
 
 void test_convert_int_widening(void)
 {
-	assert_conversion_mimic_stack(OPC_I2L, J_INT, J_LONG);
-	assert_conversion_mimic_stack(OPC_I2F, J_INT, J_FLOAT);
-	assert_conversion_mimic_stack(OPC_I2D, J_INT, J_DOUBLE);
+	assert_conversion_mimic_stack(OPC_I2L, EXPR_CONVERSION, J_INT, J_LONG);
+	assert_conversion_mimic_stack(OPC_I2F, EXPR_CONVERSION_TO_FLOAT, J_INT, J_FLOAT);
+	assert_conversion_mimic_stack(OPC_I2D, EXPR_CONVERSION, J_INT, J_DOUBLE);
 }
 
 void test_convert_long_conversion(void)
 {
-	assert_conversion_mimic_stack(OPC_L2I, J_LONG, J_INT);
-	assert_conversion_mimic_stack(OPC_L2F, J_LONG, J_FLOAT);
-	assert_conversion_mimic_stack(OPC_L2D, J_LONG, J_DOUBLE);
+	assert_conversion_mimic_stack(OPC_L2I, EXPR_CONVERSION, J_LONG, J_INT);
+	assert_conversion_mimic_stack(OPC_L2F, EXPR_CONVERSION_TO_FLOAT, J_LONG, J_FLOAT);
+	assert_conversion_mimic_stack(OPC_L2D, EXPR_CONVERSION, J_LONG, J_DOUBLE);
 }
 
 void test_convert_float_conversion(void)
 {
-	assert_conversion_mimic_stack(OPC_F2I, J_FLOAT, J_INT);
-	assert_conversion_mimic_stack(OPC_F2L, J_FLOAT, J_LONG);
-	assert_conversion_mimic_stack(OPC_F2D, J_FLOAT, J_DOUBLE);
+	assert_conversion_mimic_stack(OPC_F2I, EXPR_CONVERSION_FROM_FLOAT, J_FLOAT, J_INT);
+	assert_conversion_mimic_stack(OPC_F2L, EXPR_CONVERSION_FROM_FLOAT, J_FLOAT, J_LONG);
+	assert_conversion_mimic_stack(OPC_F2D, EXPR_CONVERSION_FROM_FLOAT, J_FLOAT, J_DOUBLE);
 }
 
 void test_convert_double_conversion(void)
 {
-	assert_conversion_mimic_stack(OPC_D2I, J_DOUBLE, J_INT);
-	assert_conversion_mimic_stack(OPC_D2L, J_DOUBLE, J_LONG);
-	assert_conversion_mimic_stack(OPC_D2F, J_DOUBLE, J_FLOAT);
+	assert_conversion_mimic_stack(OPC_D2I, EXPR_CONVERSION, J_DOUBLE, J_INT);
+	assert_conversion_mimic_stack(OPC_D2L, EXPR_CONVERSION, J_DOUBLE, J_LONG);
+	assert_conversion_mimic_stack(OPC_D2F, EXPR_CONVERSION_TO_FLOAT, J_DOUBLE, J_FLOAT);
 }
 
 void test_convert_int_narrowing(void)
 {
-	assert_conversion_mimic_stack(OPC_I2B, J_INT, J_BYTE);
-	assert_conversion_mimic_stack(OPC_I2C, J_INT, J_CHAR);
-	assert_conversion_mimic_stack(OPC_I2S, J_INT, J_SHORT);
+	assert_conversion_mimic_stack(OPC_I2B, EXPR_CONVERSION, J_INT, J_BYTE);
+	assert_conversion_mimic_stack(OPC_I2C, EXPR_CONVERSION, J_INT, J_CHAR);
+	assert_conversion_mimic_stack(OPC_I2S, EXPR_CONVERSION, J_INT, J_SHORT);
 }

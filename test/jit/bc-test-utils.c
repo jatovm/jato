@@ -163,12 +163,13 @@ void assert_binop_expr(enum vm_type vm_type,
 }
 
 void assert_conv_expr(enum vm_type expected_type,
+		      enum expression_type expected_expr_type,
 		      struct expression *expected_expression,
 		      struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
-	assert_int_equals(EXPR_CONVERSION, expr_type(expr));
+	assert_int_equals(expected_expr_type, expr_type(expr));
 	assert_int_equals(expected_type, expr->vm_type);
 	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
 }
