@@ -38,7 +38,7 @@
 #include <vm/classloader.h>
 #include <vm/die.h>
 #include <vm/field.h>
-#include <vm/java_lang.h>
+#include <vm/preload.h>
 #include <vm/method.h>
 #include <vm/object.h>
 #include <vm/string.h>

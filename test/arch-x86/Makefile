@@ -79,7 +79,7 @@ OBJS = \
 	../jit/trace-stub.o \
 	../libharness/libharness.o \
 	../vm/classloader-stub.o \
-	../vm/java_lang-stub.o \
+	../vm/preload-stub.o \
 	$(TESTS)
 
 TESTS = \

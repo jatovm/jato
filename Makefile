@@ -106,7 +106,8 @@ VM_OBJS = \
 	vm/static.o		\
 	vm/types.o		\
 	vm/utf8.o		\
-	vm/zalloc.o
+	vm/zalloc.o		\
+	vm/preload.o
 
 LIB_OBJS = \
 	lib/bitset.o		\

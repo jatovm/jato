@@ -31,7 +31,7 @@
 #include <vm/natives.h>
 #include <vm/object.h>
 #include <vm/stack-trace.h>
-#include <vm/java_lang.h>
+#include <vm/preload.h>
 #include <vm/system.h>
 
 #include <jit/bc-offset-mapping.h>

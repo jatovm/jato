@@ -10,7 +10,7 @@
 #include <vm/class.h>
 #include <vm/classloader.h>
 #include <vm/die.h>
-#include <vm/java_lang.h>
+#include <vm/preload.h>
 #include <vm/object.h>
 #include <vm/stdlib.h>
 #include <vm/string.h>

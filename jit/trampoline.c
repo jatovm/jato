@@ -29,6 +29,7 @@
 #include <jit/exception.h>
 #include <jit/compiler.h>
 
+#include <vm/preload.h>
 #include <vm/buffer.h>
 #include <vm/class.h>
 #include <vm/method.h>

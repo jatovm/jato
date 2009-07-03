@@ -10,7 +10,7 @@
 
 #include <vm/class.h>
 #include <vm/classloader.h>
-#include <vm/java_lang.h>
+#include <vm/preload.h>
 
 bool opt_trace_classloader;
 static int trace_classloader_level = 0;

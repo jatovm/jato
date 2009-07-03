@@ -17,7 +17,7 @@
 #include <jit/statement.h>
 #include <jit/vars.h>
 #include <jit/args.h>
-#include <vm/java_lang.h>
+#include <vm/preload.h>
 #include <vm/object.h>
 
 #include <vm/buffer.h>
