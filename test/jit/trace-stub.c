@@ -1,5 +1,7 @@
 #include <stdbool.h>
 
+#include "arch/stack-frame.h"
+
 struct compilation_unit;
 
 bool opt_trace_invoke = false;

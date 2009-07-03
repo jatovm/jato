@@ -26,6 +26,8 @@
 #include <vm/string.h>
 #include <vm/vm.h>
 
+#include <arch/stack-frame.h>
+
 #include <malloc.h>
 #include <stdlib.h>
 #include <stdio.h>
