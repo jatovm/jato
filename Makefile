@@ -271,6 +271,7 @@ clean:
 	$(Q) - rm -f $(REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) - rm -f $(RUNTIME_CLASSES)
 	$(Q) - find regression/ -name "*.class" | xargs rm -f
+	$(Q) - find runtime/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
 	$(Q) - make -C monoburg/ clean
