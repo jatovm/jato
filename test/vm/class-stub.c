@@ -33,6 +33,13 @@ struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
 	return &vmc->methods[i];
 }
 
+struct vm_method *vm_class_resolve_interface_method_recursive(
+	const struct vm_class *vmc, uint16_t i)
+{
+	/* See vm_class_resolve_method_recursive() */
+	return &vmc->methods[i];
+}
+
 bool vm_class_is_assignable_from(const struct vm_class *vmc,
 	const struct vm_class *from)
 {

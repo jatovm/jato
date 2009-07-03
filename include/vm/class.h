@@ -116,6 +116,11 @@ int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
 struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
 	uint16_t i);
 
+int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type);
+struct vm_method *vm_class_resolve_interface_method_recursive(
+	const struct vm_class *vmc, uint16_t i);
+
 bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from);
 bool vm_class_is_primitive_type_name(const char *class_name);
 char *vm_class_get_array_element_class_name(const char *class_name);

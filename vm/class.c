@@ -550,6 +550,66 @@ struct vm_method *vm_class_get_method_recursive(const struct vm_class *vmc,
 	return NULL;
 }
 
+int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type)
+{
+	const struct cafebabe_constant_info_interface_method_ref *method;
+	if (cafebabe_class_constant_get_interface_method_ref(vmc->class, i,
+		&method))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	struct vm_class *class = vm_class_resolve_class(vmc,
+		method->class_index);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_name_and_type *name_and_type;
+	if (cafebabe_class_constant_get_name_and_type(vmc->class,
+		method->name_and_type_index, &name_and_type))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *name;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->name_index, &name))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	const struct cafebabe_constant_info_utf8 *type;
+	if (cafebabe_class_constant_get_utf8(vmc->class,
+		name_and_type->descriptor_index, &type))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	char *name_str = strndup((char *) name->bytes, name->length);
+	if (!name_str) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	char *type_str = strndup((char *) type->bytes, type->length);
+	if (!type_str) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	*r_vmc = class;
+	*r_name = name_str;
+	*r_type = type_str;
+	return 0;
+}
+
 struct vm_method *
 vm_class_resolve_method_recursive(const struct vm_class *vmc, uint16_t i)
 {
@@ -559,6 +619,27 @@ vm_class_resolve_method_recursive(const struct vm_class *vmc, uint16_t i)
 	struct vm_method *result;
 
 	if (vm_class_resolve_method(vmc, i, &class, &name, &type)) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	result = vm_class_get_method_recursive(class, name, type);
+
+	free(name);
+	free(type);
+	return result;
+}
+
+struct vm_method *
+vm_class_resolve_interface_method_recursive(const struct vm_class *vmc,
+	uint16_t i)
+{
+	struct vm_class *class;
+	char *name;
+	char *type;
+	struct vm_method *result;
+
+	if (vm_class_resolve_interface_method(vmc, i, &class, &name, &type)) {
 		NOT_IMPLEMENTED;
 		return NULL;
 	}
