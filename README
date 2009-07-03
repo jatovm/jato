@@ -41,6 +41,9 @@ Running Jato
     -Xtrace:invoke
       Trace method invocations.
 
+    -Xtrace:invoke-verbose
+      Trace method invocations (verbose mode).
+
     -Xtrace:jit
       Trace all compilation phases for each method.
 

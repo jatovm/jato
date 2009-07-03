@@ -96,7 +96,7 @@ extern bool opt_trace_machine_code;
 extern bool opt_trace_magic_trampoline;
 extern bool opt_trace_bytecode_offset;
 extern bool opt_trace_invoke;
-extern bool opt_trace_invoke_dtls;
+extern bool opt_trace_invoke_verbose;
 extern bool opt_trace_exceptions;
 
 void trace_magic_trampoline(struct compilation_unit *);

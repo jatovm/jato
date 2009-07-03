@@ -40,7 +40,7 @@ bool opt_trace_machine_code;
 bool opt_trace_magic_trampoline;
 bool opt_trace_bytecode_offset;
 bool opt_trace_invoke;
-bool opt_trace_invoke_dtls;
+bool opt_trace_invoke_verbose;
 bool opt_trace_exceptions;
 
 void trace_method(struct compilation_unit *cu)
@@ -376,7 +376,7 @@ void trace_invoke(struct compilation_unit *cu)
 
 	printf("trace invoke: %s.%s%s\n", vmc->name, vmm->name, vmm->type);
 
-	if (opt_trace_invoke_dtls) {
+	if (opt_trace_invoke_verbose) {
 		struct jit_stack_frame *frame;
 
 		frame =  __builtin_frame_address(1);

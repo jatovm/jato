@@ -417,9 +417,9 @@ main(int argc, char *argv[])
 			opt_trace_invoke = true;
 		} else if (!strcmp(argv[i], "-Xtrace:exceptions")) {
 			opt_trace_exceptions = true;
-		} else if (!strcmp(argv[i], "-Xtrace:invoke-dtls")) {
+		} else if (!strcmp(argv[i], "-Xtrace:invoke-verbose")) {
 			opt_trace_invoke = true;
-			opt_trace_invoke_dtls = true;
+			opt_trace_invoke_verbose = true;
 		} else if (!strcmp(argv[i], "-Xtrace:jit")) {
 			opt_trace_method = true;
 			opt_trace_cfg = true;
