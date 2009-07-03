@@ -288,10 +288,10 @@ void test_emit_mov_reg_reg(void)
 	assert_emit_insn_2(0x89, 0xd9, reg_reg_insn(INSN_MOV_REG_REG, &VAR_EBX, &VAR_ECX));
 }
 
-void test_emit_movsx_reg_reg(void)
+void test_emit_movsx_8_reg_reg(void)
 {
-	assert_emit_insn_3(0x0f, 0xbe, 0xc2, reg_reg_insn(INSN_MOVSX_REG_REG, &VAR_EDX, &VAR_EAX));
-	assert_emit_insn_3(0x0f, 0xbe, 0xcb, reg_reg_insn(INSN_MOVSX_REG_REG, &VAR_EBX, &VAR_ECX));
+	assert_emit_insn_3(0x0f, 0xbe, 0xc2, reg_reg_insn(INSN_MOVSX_8_REG_REG, &VAR_EDX, &VAR_EAX));
+	assert_emit_insn_3(0x0f, 0xbe, 0xcb, reg_reg_insn(INSN_MOVSX_8_REG_REG, &VAR_EBX, &VAR_ECX));
 }
 void test_emit_adc_disp_reg(void)
 {
