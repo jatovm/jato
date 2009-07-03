@@ -271,6 +271,21 @@ cafebabe_class_constant_get_method_ref(const struct cafebabe_class *c,
 }
 
 int
+cafebabe_class_constant_get_interface_method_ref(const struct cafebabe_class *c,
+	uint16_t i, const struct cafebabe_constant_info_interface_method_ref **r)
+{
+	if (cafebabe_class_constant_index_invalid(c, i))
+		return 1;
+
+	const struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	if (pool->tag != CAFEBABE_CONSTANT_TAG_INTERFACE_METHOD_REF)
+		return 1;
+
+	*r = &pool->interface_method_ref;
+	return 0;
+}
+
+int
 cafebabe_class_constant_get_name_and_type(const struct cafebabe_class *c,
 	uint16_t i, const struct cafebabe_constant_info_name_and_type **r)
 {
