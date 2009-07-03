@@ -136,8 +136,7 @@ public class FloatArithmeticTest extends TestCase {
 // FIXME
 //      testFloatRemainder();
         testFloatNegation();
-// FIXME
-//      testFloatIntConversion();
+        testFloatIntConversion();
         exit();
     }
 }

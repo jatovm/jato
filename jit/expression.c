@@ -28,6 +28,8 @@ int expr_nr_kids(struct expression *expr)
 		return 2;
 	case EXPR_UNARY_OP:
 	case EXPR_CONVERSION:
+	case EXPR_CONVERSION_TO_FLOAT:
+	case EXPR_CONVERSION_FROM_FLOAT:
 	case EXPR_INSTANCE_FIELD:
 	case EXPR_INVOKE:
 	case EXPR_INVOKEVIRTUAL:
@@ -75,6 +77,8 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_ARGS_LIST:
 	case EXPR_UNARY_OP:
 	case EXPR_CONVERSION:
+	case EXPR_CONVERSION_TO_FLOAT:
+	case EXPR_CONVERSION_FROM_FLOAT:
 	case EXPR_ARG:
 	case EXPR_ARRAYLENGTH:
 	case EXPR_INSTANCEOF:
@@ -258,6 +262,24 @@ struct expression *conversion_expr(enum vm_type vm_type,
 				   struct expression *from_expression)
 {
 	struct expression *expr = alloc_expression(EXPR_CONVERSION, vm_type);
+	if (expr)
+		expr->from_expression = &from_expression->node;
+	return expr;
+}
+
+struct expression *conversion_to_float_expr(enum vm_type vm_type,
+				   struct expression *from_expression)
+{
+	struct expression *expr = alloc_expression(EXPR_CONVERSION_TO_FLOAT, vm_type);
+	if (expr)
+		expr->from_expression = &from_expression->node;
+	return expr;
+}
+
+struct expression *conversion_from_float_expr(enum vm_type vm_type,
+				   struct expression *from_expression)
+{
+	struct expression *expr = alloc_expression(EXPR_CONVERSION_FROM_FLOAT, vm_type);
 	if (expr)
 		expr->from_expression = &from_expression->node;
 	return expr;
