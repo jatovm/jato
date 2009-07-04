@@ -72,6 +72,7 @@ OBJS = \
 	../../vm/types.o \
 	../../vm/utf8.o \
 	../../vm/zalloc.o \
+	../../vm/fault-inject.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/cast-stub.o \
 	../jamvm/lock.o \

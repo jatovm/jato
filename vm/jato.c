@@ -42,6 +42,7 @@
 
 #include "vm/class.h"
 #include "vm/classloader.h"
+#include "vm/fault-inject.h"
 #include "vm/preload.h"
 #include "vm/method.h"
 #include "vm/natives.h"
@@ -211,6 +212,8 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
 	DEFINE_NATIVE("java/lang/VMThrowable", "getStackTrace", &native_vmthrowable_get_stack_trace),
+	DEFINE_NATIVE("jato/internal/VM", "enableFault", &native_vm_enable_fault),
+	DEFINE_NATIVE("jato/internal/VM", "disableFault", &native_vm_disable_fault),
 };
 
 static void jit_init_natives(void)

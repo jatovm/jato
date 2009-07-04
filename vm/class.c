@@ -37,6 +37,7 @@
 #include <vm/class.h>
 #include <vm/classloader.h>
 #include <vm/die.h>
+#include <vm/fault-inject.h>
 #include <vm/field.h>
 #include <vm/preload.h>
 #include <vm/method.h>
@@ -284,6 +285,19 @@ int vm_class_link_bogus_class(struct vm_class *vmc, const char *class_name)
 	return 0;
 }
 
+static bool vm_class_check_class_init_fault(struct vm_class *vmc,
+					    struct vm_object *arg)
+{
+	char * str;
+	bool fault;
+
+	str = vm_string_to_cstr(arg);
+	fault = (strcmp(str, vmc->name) == 0);
+	free(str);
+
+	return fault;
+}
+
 int vm_class_init(struct vm_class *vmc)
 {
 	struct vm_object *exception;
@@ -298,6 +312,18 @@ int vm_class_init(struct vm_class *vmc)
 
 	/* XXX: Not entirely true, but we need it to break the recursion. */
 	vmc->state = VM_CLASS_INITIALIZED;
+
+	/* Fault injection, for testing purposes */
+	if (vm_fault_enabled(VM_FAULT_CLASS_INIT)) {
+		struct vm_object *arg;
+
+		arg = vm_fault_arg(VM_FAULT_CLASS_INIT);
+		if (vm_class_check_class_init_fault(vmc, arg)) {
+			signal_new_exception(vm_java_lang_RuntimeException,
+					     NULL);
+			goto error;
+		}
+	}
 
 	/* JVM spec, 2nd. ed., 2.17.1: "But before Terminator can be
 	 * initialized, its direct superclass must be initialized, as well
