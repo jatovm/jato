@@ -183,6 +183,44 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		vmc->super = NULL;
 	}
 
+	vmc->interfaces
+		= malloc(sizeof(*vmc->interfaces) * class->interfaces_count);
+	if (!vmc->interfaces) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	for (unsigned int i = 0; i < class->interfaces_count; ++i) {
+		uint16_t idx = class->interfaces[i];
+
+		const struct cafebabe_constant_info_class *interface;
+		if (cafebabe_class_constant_get_class(class, idx, &interface)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		const struct cafebabe_constant_info_utf8 *name;
+		if (cafebabe_class_constant_get_utf8(class,
+			interface->name_index, &name))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		char *c_name = strndup((char *) name->bytes, name->length);
+		if (!c_name) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		struct vm_class *vmi = classloader_load(c_name);
+		free(c_name);
+		if (!vmi)
+			return -1;
+
+		vmc->interfaces[i] = vmi;
+	}
+
 	vmc->fields = malloc(sizeof(*vmc->fields) * class->fields_count);
 	if (!vmc->fields) {
 		NOT_IMPLEMENTED;

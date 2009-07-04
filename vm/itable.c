@@ -98,29 +98,8 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 		}
 	}
 
-	/* XXX: Move this to class linking? */
 	for (unsigned int i = 0; i < class->interfaces_count; ++i) {
-		uint16_t idx = class->interfaces[i];
-
-		const struct cafebabe_constant_info_class *interface;
-		if (cafebabe_class_constant_get_class(class, idx, &interface))
-			return -1;
-
-		const struct cafebabe_constant_info_utf8 *name;
-		if (cafebabe_class_constant_get_utf8(class,
-			interface->name_index, &name))
-			return -1;
-
-		char *c_name = strndup((char *) name->bytes, name->length);
-		if (!c_name)
-			return -1;
-
-		struct vm_class *vmi = classloader_load(c_name);
-		free(c_name);
-		if (!vmi)
-			return -1;
-
-		int ret = itable_add_entries(vmi, itable);
+		int ret = itable_add_entries(vmc->interfaces[i], itable);
 		if (ret)
 			return ret;
 	}

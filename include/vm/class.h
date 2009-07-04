@@ -36,6 +36,7 @@ struct vm_class {
 	char *name;
 
 	struct vm_class *super;
+	struct vm_class **interfaces;
 	struct vm_field *fields;
 	struct vm_method *methods;
 
