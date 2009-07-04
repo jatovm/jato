@@ -84,6 +84,14 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 	key = vm_object_alloc_string_from_c("java.io.tmpdir");
 	value = vm_object_alloc_string_from_c("/tmp");
 	trampoline(p, key, value);
+
+	key = vm_object_alloc_string_from_c("file.separator");
+	value = vm_object_alloc_string_from_c("/");
+	trampoline(p, key, value);
+
+	key = vm_object_alloc_string_from_c("path.separator");
+	value = vm_object_alloc_string_from_c("/");
+	trampoline(p, key, value);
 }
 
 static void __vm_native native_vmruntime_exit(int status)
