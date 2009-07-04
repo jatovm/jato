@@ -211,6 +211,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/GetstaticPatchingTest.class \
 	regression/jvm/PutstaticPatchingTest.class \
 	regression/jvm/InvokestaticPatchingTest.class \
+	regression/jvm/InvokeinterfaceTest.class \
 	regression/jvm/ObjectArrayTest.class \
 	regression/jvm/ExitStatusIsOneTest.class \
 	regression/jvm/ExitStatusIsZeroTest.class \
