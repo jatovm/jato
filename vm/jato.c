@@ -70,8 +70,17 @@ static struct vm_object *__vm_native native_vmstackwalker_getclasscontext(void)
 
 static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 {
-	struct vm_object *key = vm_object_alloc_string_from_c("java.vm.name");
-	struct vm_object *value = vm_object_alloc_string_from_c("jato");
+	struct system_properties_entry {
+		const char *key;
+		const char *value;
+	};
+
+	static const struct system_properties_entry system_properties[] = {
+		{ "java.vm.name", "jato"},
+		{ "java.io.tmpdir", "/tmp"},
+		{ "file.separator", "/" },
+		{ "path.separator", "/" },
+	};
 
 	struct vm_object *(*trampoline)(struct vm_object *,
 		struct vm_object *, struct vm_object *);
@@ -79,19 +88,16 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 	trampoline
 		= vm_method_trampoline_ptr(vm_java_util_Properties_setProperty);
 
-	trampoline(p, key, value);
+	for (unsigned int i = 0; i < ARRAY_SIZE(system_properties); ++i) {
+		const struct system_properties_entry *e = &system_properties[i];
+		struct vm_object *key, *value;
 
-	key = vm_object_alloc_string_from_c("java.io.tmpdir");
-	value = vm_object_alloc_string_from_c("/tmp");
-	trampoline(p, key, value);
+		key = vm_object_alloc_string_from_c(e->key);
+		value = vm_object_alloc_string_from_c(e->value);
 
-	key = vm_object_alloc_string_from_c("file.separator");
-	value = vm_object_alloc_string_from_c("/");
-	trampoline(p, key, value);
-
-	key = vm_object_alloc_string_from_c("path.separator");
-	value = vm_object_alloc_string_from_c("/");
-	trampoline(p, key, value);
+		/* XXX: Check exceptions? */
+		trampoline(p, key, value);
+	}
 }
 
 static void __vm_native native_vmruntime_exit(int status)
