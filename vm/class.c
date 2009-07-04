@@ -753,7 +753,11 @@ bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_cla
 	if (from->super && vm_class_is_assignable_from(vmc, from->super))
 		return true;
 
-	NOT_IMPLEMENTED;
+	for (unsigned int i = 0; i < from->class->interfaces_count; ++i) {
+		if (vm_class_is_assignable_from(vmc, from->interfaces[i]))
+			return true;
+	}
+
 	return false;
 }
 
