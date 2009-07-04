@@ -1494,9 +1494,9 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 {
 	struct expression *exprdest, *exprsrc;
-	struct var_info *src, *dest;
-	struct statement *stmt;
 	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *dest;
 
 	stmt = to_stmt(tree);
 
