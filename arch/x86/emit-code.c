@@ -1127,6 +1127,12 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 	emit(buf, encode_modrm(0x3, 0x04, __encode_reg(reg)));
 }
 
+static void emit_really_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
+{
+	emit(buf, 0xff);
+	emit(buf, encode_modrm(0x0, 0x04, __encode_reg(reg)));
+}
+
 static void emit_indirect_call(struct buffer *buf, struct operand *operand)
 {
 	emit(buf, 0xff);
