@@ -148,7 +148,7 @@ MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
 JAVAC_OPTS	:= -encoding utf-8
 
-DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -rdynamic -std=gnu99 -D_GNU_SOURCE
+DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -Wall -Werror -rdynamic -std=gnu99 -D_GNU_SOURCE
 
 # XXX: Temporary hack -Vegard
 DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
