@@ -1277,7 +1277,7 @@ arg:	EXPR_NO_ARGS
 	state->reg1 = NULL;
 }
 
-arg:	EXPR_ARG(EXPR_VALUE)
+arg:	EXPR_ARG(EXPR_VALUE) 1
 {
 	struct expression *expr, *arg_expr;
 	unsigned long long imm;
@@ -1289,6 +1289,18 @@ arg:	EXPR_ARG(EXPR_VALUE)
 	if (arg_expr->vm_type == J_LONG) {
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm >> 32));
 	}
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
+}
+
+arg:	EXPR_ARG(EXPR_FVALUE) 1
+{
+	struct expression *expr, *arg_expr;
+	unsigned long long imm;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+	imm  = float_to_uint32(arg_expr->fvalue);
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
 }
