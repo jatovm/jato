@@ -174,6 +174,13 @@ static int32_t __vm_native native_vmsystem_identityhashcode(struct vm_object *ob
 }
 
 static struct vm_object * __vm_native
+native_vmobject_clone(struct vm_object *object)
+{
+	NOT_IMPLEMENTED;
+	return vm_object_alloc(object->class);
+}
+
+static struct vm_object * __vm_native
 native_vmobject_getclass(struct vm_object *object)
 {
 	if (!object || !object->class) {
@@ -222,6 +229,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
+	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
 	DEFINE_NATIVE("java/lang/VMObject", "getClass", &native_vmobject_getclass),
 	DEFINE_NATIVE("java/lang/VMRuntime", "exit", &native_vmruntime_exit),
 	DEFINE_NATIVE("java/lang/VMRuntime", "mapLibraryName", &native_vmruntime_maplibraryname),
