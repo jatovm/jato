@@ -84,6 +84,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.MethodInvocationExceptionsTest 0
     run_java jvm.ObjectCreationAndManipulationExceptionsTest 0
     run_java jvm.SynchronizationExceptionsTest 0
+    run_java jvm.ClassExceptionsTest 0
 else 
     for i in $CLASS_LIST; do
 	run_java $i 0

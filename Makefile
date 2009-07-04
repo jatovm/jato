@@ -238,7 +238,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/LongArithmeticExceptionsTest.class \
 	regression/jvm/MethodInvocationExceptionsTest.class \
 	regression/jvm/ObjectCreationAndManipulationExceptionsTest.class \
-	regression/jvm/SynchronizationExceptionsTest.class
+	regression/jvm/SynchronizationExceptionsTest.class \
+	regression/jvm/ClassExceptionsTest.class
 
 $(REGRESSION_TEST_SUITE_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
