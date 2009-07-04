@@ -70,12 +70,12 @@ static void emit_restore_regs(struct buffer *buf);
 #define GENERIC_X86_EMITTERS \
 	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),		\
 	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JG_BRANCH, emit_jg_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),		\
-	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),		\
 	DECL_EMITTER(INSN_RET, emit_ret, NO_OPERANDS)
 
 static unsigned char encode_reg(struct use_position *reg)
