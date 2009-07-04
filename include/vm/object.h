@@ -22,6 +22,8 @@ struct vm_object {
 	uint8_t fields[];
 };
 
+int init_vm_objects(void);
+
 struct vm_object *vm_object_alloc(struct vm_class *class);
 struct vm_object *vm_object_alloc_native_array(int type, int count);
 struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,

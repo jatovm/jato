@@ -17,6 +17,24 @@
 #include <vm/types.h>
 #include <vm/utf8.h>
 
+static pthread_mutexattr_t obj_mutexattr;
+
+int init_vm_objects(void)
+{
+	int err;
+
+	err = pthread_mutexattr_init(&obj_mutexattr);
+	if (err)
+		return -err;
+
+	err = pthread_mutexattr_settype(&obj_mutexattr,
+		PTHREAD_MUTEX_RECURSIVE);
+	if (err)
+		return -err;
+
+	return 0;
+}
+
 struct vm_object *vm_object_alloc(struct vm_class *class)
 {
 	struct vm_object *res;
@@ -32,7 +50,7 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 
 	res->class = class;
 
-	if (pthread_mutex_init(&res->mutex, NULL))
+	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
 		NOT_IMPLEMENTED;
 
 	return res;
@@ -91,7 +109,7 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 
 	res->array_length = count;
 
-	if (pthread_mutex_init(&res->mutex, NULL))
+	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
 		NOT_IMPLEMENTED;
 
 	return res;
@@ -113,7 +131,7 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 		return NULL;
 	}
 
-	if (pthread_mutex_init(&res->mutex, NULL))
+	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
 		NOT_IMPLEMENTED;
 
 	res->array_length = counts[0];
@@ -152,7 +170,7 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 		return NULL;
 	}
 
-	if (pthread_mutex_init(&res->mutex, NULL))
+	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
 		NOT_IMPLEMENTED;
 
 	res->array_length = count;

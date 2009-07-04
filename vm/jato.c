@@ -335,6 +335,8 @@ main(int argc, char *argv[])
 	if (!classname)
 		usage(stderr, EXIT_FAILURE);
 
+	init_vm_objects();
+
 	jit_text_init();
 
 	if (perf_enabled)
