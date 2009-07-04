@@ -1390,15 +1390,18 @@ void emit_trampoline(struct compilation_unit *cu,
 static void emit_itable_bsearch(struct buffer *buf,
 	struct itable_entry **table, unsigned int a, unsigned int b)
 {
+	uint8_t *jb_addr = NULL;
+	uint8_t *ja_addr = NULL;
+	unsigned int m;
+
 	/* Find middle (safe from overflows) */
-	unsigned int m = a + (b - a) / 2;
+	m = a + (b - a) / 2;
 
 	/* No point in emitting the "cmp" if we're not going to test
 	 * anything */
 	if (b - a >= 1)
 		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, REG_EAX);
 
-	uint8_t *jb_addr;
 	if (m - a > 0) {
 		/* open-coded "jb" */
 		emit(buf, 0x0f);
@@ -1409,7 +1412,6 @@ static void emit_itable_bsearch(struct buffer *buf,
 		emit_imm32(buf, 0);
 	}
 
-	uint8_t *ja_addr;
 	if (b - m > 0) {
 		/* open-coded "ja" */
 		emit(buf, 0x0f);
@@ -1424,7 +1426,7 @@ static void emit_itable_bsearch(struct buffer *buf,
 	emit_really_indirect_jump_reg(buf, REG_ECX);
 
 	/* This emits the code for checking the interval [a, m> */
-	if (m - a > 0) {
+	if (jb_addr) {
 		long cur = (long) (buffer_current(buf) - (void *) jb_addr) - 4;
 		jb_addr[3] = cur >> 24;
 		jb_addr[2] = cur >> 16;
@@ -1435,7 +1437,7 @@ static void emit_itable_bsearch(struct buffer *buf,
 	}
 
 	/* This emits the code for checking the interval <m, b] */
-	if (b - m > 0) {
+	if (ja_addr) {
 		long cur = (long) (buffer_current(buf) - (void *) ja_addr) - 4;
 		ja_addr[3] = cur >> 24;
 		ja_addr[2] = cur >> 16;
