@@ -224,7 +224,23 @@ reg:	EXPR_LOCAL	1
 	}
 }
 
-reg:   EXPR_TEMPORARY
+freg:	EXPR_LOCAL 0
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *expr;
+	struct stack_slot *slot;
+	struct var_info *result;
+
+	expr = to_expr(tree);
+	slot = get_local_slot(cu->stack_frame, expr->local_index);
+
+	result = get_fpu_var(s->b_parent);
+	state->reg1 = result;
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_FREG, slot, result));
+}
+
+reg:   EXPR_TEMPORARY 0
 {
 	struct expression *expr;
 
@@ -1403,7 +1419,31 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	}
 }
 
-stmt:  STMT_STORE(EXPR_TEMPORARY, reg)
+stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
+{
+	struct expression *exprdest, *exprsrc;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+	struct stack_slot *slot;
+
+	stmt = to_stmt(tree);
+
+	exprsrc = to_expr(stmt->store_src);
+	exprdest = to_expr(stmt->store_dest);
+
+	slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index);
+
+	dest = exprdest->tmp_low;
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, dest));
+	if (exprsrc->vm_type == J_LONG) {
+		slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index + 1);
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, exprdest->tmp_high));
+	}
+
+}
+
+stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
 {
 	struct expression *temp;
 	struct var_info *src, *dest;
