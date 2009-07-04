@@ -417,7 +417,7 @@ int vm_class_init(struct vm_class *vmc)
 		signal_new_exception_with_cause(
 			vm_java_lang_ExceptionInInitializerError,
 			exception,
-			NULL);
+			vmc->name);
 	}
 
 	vmc->state = VM_CLASS_ERRONEOUS;
