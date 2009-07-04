@@ -673,11 +673,16 @@ static void emit_mov_memindex_reg(struct buffer *buf,
 	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
 }
 
+static void __emit_mov_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+{
+	emit(buf, 0xb8 + __encode_reg(reg));
+	emit_imm32(buf, imm);
+}
+
 static void emit_mov_imm_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
-	emit(buf, 0xb8 + encode_reg(&dest->reg));
-	emit_imm32(buf, src->imm);
+	__emit_mov_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
