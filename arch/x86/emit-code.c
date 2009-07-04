@@ -1100,10 +1100,15 @@ static void emit_adc_imm_reg(struct buffer *buf,
 	__emit_adc_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void __emit_cmp_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0x07, imm, reg);
+}
+
 static void emit_cmp_imm_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
-	emit_alu_imm_reg(buf, 0x07, src->imm, mach_reg(&dest->reg));
+	__emit_cmp_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_cmp_membase_reg(struct buffer *buf, struct operand *src, struct operand *dest)
