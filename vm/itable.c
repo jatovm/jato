@@ -36,12 +36,6 @@
 
 bool opt_trace_itable;
 
-struct itable_entry {
-	struct vm_method *method;
-
-	struct list_head node;
-};
-
 static uint32_t itable_hash_string(const char *str)
 {
 	/* Stolen shamelessly from
@@ -99,7 +93,7 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 			if (!entry)
 				return -1;
 
-			entry->method = vmm;
+			entry->i_method = vmm;
 			list_add(&entry->node, &itable[bucket]);
 		}
 	}
@@ -138,19 +132,26 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 	return 0;
 }
 
-static void itable_resolver_stub(void)
-{
-	NOT_IMPLEMENTED;
-	abort();
-}
-
 static void itable_resolver_stub_error(void)
 {
 	printf("itable resolver stub error!\n");
 	abort();
 }
 
-static void *itable_create_conflict_resolver(struct list_head *methods)
+static int itable_entry_compare(const void *a, const void *b)
+{
+	const struct itable_entry *ae = a;
+	const struct itable_entry *be = b;
+
+	if (ae->i_method < be->i_method)
+		return -1;
+	if (ae->i_method > be->i_method)
+		return 1;
+	return 0;
+}
+
+static void *itable_create_conflict_resolver(struct vm_class *vmc,
+	struct list_head *methods)
 {
 	/* No methods at this index -- return something that will choke the
 	 * caller. */
@@ -164,10 +165,32 @@ static void *itable_create_conflict_resolver(struct list_head *methods)
 		struct itable_entry *entry = list_first_entry(methods,
 			struct itable_entry, node);
 
-		return vm_method_trampoline_ptr(entry->method);
+		return vm_method_trampoline_ptr(entry->c_method);
 	}
 
-	return &itable_resolver_stub;
+	unsigned int nr_entries = 0;
+	struct itable_entry *entry;
+	list_for_each_entry(entry, methods, node)
+		++nr_entries;
+
+	struct itable_entry **sorted_table
+		= malloc(nr_entries * sizeof(*sorted_table));
+	if (!sorted_table) {
+		NOT_IMPLEMENTED;
+		return &itable_resolver_stub_error;
+	}
+
+	unsigned int i = 0;
+	list_for_each_entry(entry, methods, node)
+		sorted_table[i++] = entry;
+
+	qsort(sorted_table, nr_entries, sizeof(*sorted_table),
+		&itable_entry_compare);
+
+	void *ret = emit_itable_resolver_stub(vmc, sorted_table, nr_entries);
+	free(sorted_table);
+
+	return ret;
 }
 
 static void trace_itable(struct vm_class *vmc, struct list_head *itable)
@@ -182,9 +205,10 @@ static void trace_itable(struct vm_class *vmc, struct list_head *itable)
 
 		struct itable_entry *entry;
 		list_for_each_entry(entry, &itable[i], node) {
+			struct vm_method *vmm = entry->i_method;
+
 			printf("%s.%s%s%s",
-				entry->method->class->name,
-				entry->method->name, entry->method->type,
+				vmm->class->name, vmm->name, vmm->type,
 				&entry->node == list_last(&itable[i])
 					? "" : ", ");
 		}
@@ -207,11 +231,33 @@ int vm_itable_setup(struct vm_class *vmc)
 
 	itable_add_entries(vmc, itable);
 
-	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i)
-		vmc->itable[i] = itable_create_conflict_resolver(&itable[i]);
-
 	if (opt_trace_itable)
 		trace_itable(vmc, itable);
+
+	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
+		struct itable_entry *entry;
+
+		list_for_each_entry(entry, &itable[i], node) {
+			/* Specification */
+			struct vm_method *i_vmm = entry->i_method;
+
+			/* Implementation */
+			struct vm_method *c_vmm
+				= vm_class_get_method_recursive(vmc,
+					i_vmm->name, i_vmm->type);
+			if (!c_vmm) {
+				NOT_IMPLEMENTED;
+				continue;
+			}
+
+			entry->c_method = c_vmm;
+		}
+	}
+
+	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
+		vmc->itable[i]
+			= itable_create_conflict_resolver(vmc, &itable[i]);
+	}
 
 	/* Free the temporary itable */
 	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {

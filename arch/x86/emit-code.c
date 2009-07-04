@@ -1375,6 +1375,99 @@ void emit_trampoline(struct compilation_unit *cu,
 	jit_text_unlock();
 }
 
+/* Note: a < b, always */
+static void emit_itable_bsearch(struct buffer *buf,
+	struct itable_entry **table, unsigned int a, unsigned int b)
+{
+	/* Find middle (safe from overflows) */
+	unsigned int m = a + (b - a) / 2;
+
+	/* No point in emitting the "cmp" if we're not going to test
+	 * anything */
+	if (b - a >= 1)
+		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, REG_EAX);
+
+	uint8_t *jb_addr;
+	if (m - a > 0) {
+		/* open-coded "jb" */
+		emit(buf, 0x0f);
+		emit(buf, 0x82);
+
+		/* placeholder address */
+		jb_addr = buffer_current(buf);
+		emit_imm32(buf, 0);
+	}
+
+	uint8_t *ja_addr;
+	if (b - m > 0) {
+		/* open-coded "ja" */
+		emit(buf, 0x0f);
+		emit(buf, 0x87);
+
+		/* placeholder address */
+		ja_addr = buffer_current(buf);
+		emit_imm32(buf, 0);
+	}
+
+	__emit_add_imm_reg(buf, 4 * table[m]->c_method->virtual_index, REG_ECX);
+	emit_really_indirect_jump_reg(buf, REG_ECX);
+
+	/* This emits the code for checking the interval [a, m> */
+	if (m - a > 0) {
+		long cur = (long) (buffer_current(buf) - (void *) jb_addr) - 4;
+		jb_addr[3] = cur >> 24;
+		jb_addr[2] = cur >> 16;
+		jb_addr[1] = cur >> 8;
+		jb_addr[0] = cur;
+
+		emit_itable_bsearch(buf, table, a, m - 1);
+	}
+
+	/* This emits the code for checking the interval <m, b] */
+	if (b - m > 0) {
+		long cur = (long) (buffer_current(buf) - (void *) ja_addr) - 4;
+		ja_addr[3] = cur >> 24;
+		ja_addr[2] = cur >> 16;
+		ja_addr[1] = cur >> 8;
+		ja_addr[0] = cur;
+
+		emit_itable_bsearch(buf, table, m + 1, b);
+	}
+}
+
+/* Note: table is always sorted on entry->method address */
+/* Note: nr_entries is always >= 2 */
+void *emit_itable_resolver_stub(struct vm_class *vmc,
+	struct itable_entry **table, unsigned int nr_entries)
+{
+	static struct buffer_operations exec_buf_ops = {
+		.expand = NULL,
+		.free   = NULL,
+	};
+
+	struct buffer *buf = __alloc_buffer(&exec_buf_ops);
+
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+
+	/* Note: When the stub is called, %eax contains the signature hash that
+	 * we look up in the stub. 0(%esp) contains the object reference. %ecx
+	 * and %edx are available here because they are already saved by the
+	 * caller (guaranteed by ABI). */
+
+	/* Load the start of the vtable into %ecx. Later we just add the
+	 * right offset to %ecx and jump to *(%ecx). */
+	__emit_mov_imm_reg(buf, (long) vmc->vtable.native_ptr, REG_ECX);
+
+	emit_itable_bsearch(buf, table, 0, nr_entries - 1);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
+
+	return buffer_ptr(buf);
+}
+
 #else /* CONFIG_X86_32 */
 
 /************************
