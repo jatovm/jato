@@ -95,6 +95,7 @@ VM_OBJS = \
 	vm/die.o		\
 	vm/field.o		\
 	vm/guard-page.o		\
+	vm/itable.o		\
 	vm/jato.o		\
 	vm/method.o		\
 	vm/natives.o		\
@@ -212,6 +213,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/GetstaticPatchingTest.class \
 	regression/jvm/PutstaticPatchingTest.class \
 	regression/jvm/InvokestaticPatchingTest.class \
+	regression/jvm/InvokeinterfaceTest.class \
 	regression/jvm/ObjectArrayTest.class \
 	regression/jvm/ExitStatusIsOneTest.class \
 	regression/jvm/ExitStatusIsZeroTest.class \

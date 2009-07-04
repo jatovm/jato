@@ -70,12 +70,12 @@ static void emit_restore_regs(struct buffer *buf);
 #define GENERIC_X86_EMITTERS \
 	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),		\
 	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),		\
+	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JG_BRANCH, emit_jg_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),		\
-	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch, BRANCH),		\
 	DECL_EMITTER(INSN_RET, emit_ret, NO_OPERANDS)
 
 static unsigned char encode_reg(struct use_position *reg)
@@ -680,11 +680,16 @@ static void emit_mov_memindex_reg(struct buffer *buf,
 	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
 }
 
+static void __emit_mov_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+{
+	emit(buf, 0xb8 + __encode_reg(reg));
+	emit_imm32(buf, imm);
+}
+
 static void emit_mov_imm_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
-	emit(buf, 0xb8 + encode_reg(&dest->reg));
-	emit_imm32(buf, src->imm);
+	__emit_mov_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
@@ -1102,10 +1107,15 @@ static void emit_adc_imm_reg(struct buffer *buf,
 	__emit_adc_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void __emit_cmp_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0x07, imm, reg);
+}
+
 static void emit_cmp_imm_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
-	emit_alu_imm_reg(buf, 0x07, src->imm, mach_reg(&dest->reg));
+	__emit_cmp_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
 static void emit_cmp_membase_reg(struct buffer *buf, struct operand *src, struct operand *dest)
@@ -1122,6 +1132,12 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0xff);
 	emit(buf, encode_modrm(0x3, 0x04, __encode_reg(reg)));
+}
+
+static void emit_really_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
+{
+	emit(buf, 0xff);
+	emit(buf, encode_modrm(0x0, 0x04, __encode_reg(reg)));
 }
 
 static void emit_indirect_call(struct buffer *buf, struct operand *operand)
@@ -1368,6 +1384,99 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
+}
+
+/* Note: a < b, always */
+static void emit_itable_bsearch(struct buffer *buf,
+	struct itable_entry **table, unsigned int a, unsigned int b)
+{
+	/* Find middle (safe from overflows) */
+	unsigned int m = a + (b - a) / 2;
+
+	/* No point in emitting the "cmp" if we're not going to test
+	 * anything */
+	if (b - a >= 1)
+		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, REG_EAX);
+
+	uint8_t *jb_addr;
+	if (m - a > 0) {
+		/* open-coded "jb" */
+		emit(buf, 0x0f);
+		emit(buf, 0x82);
+
+		/* placeholder address */
+		jb_addr = buffer_current(buf);
+		emit_imm32(buf, 0);
+	}
+
+	uint8_t *ja_addr;
+	if (b - m > 0) {
+		/* open-coded "ja" */
+		emit(buf, 0x0f);
+		emit(buf, 0x87);
+
+		/* placeholder address */
+		ja_addr = buffer_current(buf);
+		emit_imm32(buf, 0);
+	}
+
+	__emit_add_imm_reg(buf, 4 * table[m]->c_method->virtual_index, REG_ECX);
+	emit_really_indirect_jump_reg(buf, REG_ECX);
+
+	/* This emits the code for checking the interval [a, m> */
+	if (m - a > 0) {
+		long cur = (long) (buffer_current(buf) - (void *) jb_addr) - 4;
+		jb_addr[3] = cur >> 24;
+		jb_addr[2] = cur >> 16;
+		jb_addr[1] = cur >> 8;
+		jb_addr[0] = cur;
+
+		emit_itable_bsearch(buf, table, a, m - 1);
+	}
+
+	/* This emits the code for checking the interval <m, b] */
+	if (b - m > 0) {
+		long cur = (long) (buffer_current(buf) - (void *) ja_addr) - 4;
+		ja_addr[3] = cur >> 24;
+		ja_addr[2] = cur >> 16;
+		ja_addr[1] = cur >> 8;
+		ja_addr[0] = cur;
+
+		emit_itable_bsearch(buf, table, m + 1, b);
+	}
+}
+
+/* Note: table is always sorted on entry->method address */
+/* Note: nr_entries is always >= 2 */
+void *emit_itable_resolver_stub(struct vm_class *vmc,
+	struct itable_entry **table, unsigned int nr_entries)
+{
+	static struct buffer_operations exec_buf_ops = {
+		.expand = NULL,
+		.free   = NULL,
+	};
+
+	struct buffer *buf = __alloc_buffer(&exec_buf_ops);
+
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+
+	/* Note: When the stub is called, %eax contains the signature hash that
+	 * we look up in the stub. 0(%esp) contains the object reference. %ecx
+	 * and %edx are available here because they are already saved by the
+	 * caller (guaranteed by ABI). */
+
+	/* Load the start of the vtable into %ecx. Later we just add the
+	 * right offset to %ecx and jump to *(%ecx). */
+	__emit_mov_imm_reg(buf, (long) vmc->vtable.native_ptr, REG_ECX);
+
+	emit_itable_bsearch(buf, table, 0, nr_entries - 1);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
+
+	return buffer_ptr(buf);
 }
 
 #else /* CONFIG_X86_32 */

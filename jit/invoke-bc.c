@@ -107,6 +107,15 @@ static struct vm_method *resolve_invoke_target(struct parse_context *ctx)
 	return vm_class_resolve_method_recursive(ctx->cu->method->class, idx);
 }
 
+static struct vm_method *resolve_invokeinterface_target(struct parse_context *ctx)
+{
+	unsigned long idx;
+
+	idx = bytecode_read_u16(ctx->buffer);
+
+	return vm_class_resolve_interface_method_recursive(ctx->cu->method->class, idx);
+}
+
 /* Replaces first argument with null check expression on that argument */
 static void null_check_first_arg(struct expression *arg)
 {
@@ -119,6 +128,47 @@ static void null_check_first_arg(struct expression *arg)
 
 	if (expr_type(arg) == EXPR_ARGS_LIST)
 		null_check_first_arg(to_expr(arg->args_right));
+}
+
+int convert_invokeinterface(struct parse_context *ctx)
+{
+	struct vm_method *invoke_target;
+	struct expression *expr;
+	int count;
+	int zero;
+	int err;
+
+	invoke_target = resolve_invokeinterface_target(ctx);
+	if (!invoke_target)
+		return warn("unable to resolve invocation target"), -EINVAL;
+
+	expr = invokeinterface_expr(invoke_target);
+	if (!expr)
+		return -ENOMEM;
+
+	count = bytecode_read_u8(ctx->buffer);
+	if (count == 0)
+		return warn("invokeinterface count must not be zero"), -EINVAL;
+
+	zero = bytecode_read_u8(ctx->buffer);
+	if (zero != 0) {
+		return warn("invokeinterface fourth operand byte not zero"),
+			-EINVAL;
+	}
+
+	err = convert_and_add_args(ctx, invoke_target, expr);
+	if (err)
+		goto failed;
+
+	err = insert_invoke_expr(ctx, expr);
+	if (err)
+		goto failed;
+
+	return 0;
+
+failed:
+	expr_put(expr);
+	return err;
 }
 
 int convert_invokevirtual(struct parse_context *ctx)

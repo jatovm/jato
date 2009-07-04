@@ -39,6 +39,7 @@ struct cafebabe_constant_info_utf8;
 struct cafebabe_constant_info_class;
 struct cafebabe_constant_info_field_ref;
 struct cafebabe_constant_info_method_ref;
+struct cafebabe_constant_info_interface_method_ref;
 struct cafebabe_constant_info_name_and_type;
 struct cafebabe_constant_pool;
 struct cafebabe_field_info;
@@ -88,6 +89,9 @@ int cafebabe_class_constant_get_field_ref(const struct cafebabe_class *c,
 	uint16_t i, const struct cafebabe_constant_info_field_ref **r);
 int cafebabe_class_constant_get_method_ref(const struct cafebabe_class *c,
 	uint16_t i, const struct cafebabe_constant_info_method_ref **r);
+int cafebabe_class_constant_get_interface_method_ref(
+	const struct cafebabe_class *c, uint16_t i,
+	const struct cafebabe_constant_info_interface_method_ref **r);
 int cafebabe_class_constant_get_name_and_type(const struct cafebabe_class *c,
 	uint16_t i, const struct cafebabe_constant_info_name_and_type **r);
 

@@ -29,6 +29,7 @@ enum expression_type {
 	EXPR_INSTANCE_FIELD,
 	EXPR_INVOKE,
 	EXPR_FINVOKE,
+	EXPR_INVOKEINTERFACE,
 	EXPR_INVOKEVIRTUAL,
 	EXPR_FINVOKEVIRTUAL,
 	EXPR_ARGS_LIST,
@@ -310,6 +311,7 @@ struct expression *conversion_to_float_expr(enum vm_type, struct expression *);
 struct expression *class_field_expr(enum vm_type, struct vm_field *);
 struct expression *instance_field_expr(enum vm_type, struct vm_field *, struct expression *);
 struct expression *invoke_expr(struct vm_method *);
+struct expression *invokeinterface_expr(struct vm_method *);
 struct expression *invokevirtual_expr(struct vm_method *);
 struct expression *finvoke_expr(struct vm_method *);
 struct expression *finvokevirtual_expr(struct vm_method *);
@@ -337,6 +339,7 @@ static inline int is_invoke_expr(struct expression *expr)
 	enum expression_type type = expr_type(expr);
 
 	return (type == EXPR_INVOKE)
+		|| (type == EXPR_INVOKEINTERFACE)
 		|| (type == EXPR_INVOKEVIRTUAL)
 		|| (type == EXPR_FINVOKE)
 		|| (type == EXPR_FINVOKEVIRTUAL);

@@ -601,6 +601,12 @@ out:
 	return err;
 }
 
+static int print_invokeinterface_expr(int lvl, struct string *str,
+				    struct expression *expr)
+{
+	return __print_invoke_expr(lvl, str, expr, "INVOKEINTERFACE");
+}
+
 static int print_invokevirtual_expr(int lvl, struct string *str,
 				    struct expression *expr)
 {
@@ -875,6 +881,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_CLASS_FIELD] = print_class_field_expr,
 	[EXPR_INSTANCE_FIELD] = print_instance_field_expr,
 	[EXPR_INVOKE] = print_invoke_expr,
+	[EXPR_INVOKEINTERFACE] = print_invokeinterface_expr,
 	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_FINVOKE] = print_invoke_expr,
 	[EXPR_FINVOKEVIRTUAL] = print_invokevirtual_expr,

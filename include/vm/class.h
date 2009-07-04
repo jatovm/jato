@@ -2,6 +2,7 @@
 #define __CLASS_H
 
 #include <vm/field.h>
+#include <vm/itable.h>
 #include <vm/method.h>
 #include <vm/static.h>
 #include <vm/types.h>
@@ -63,6 +64,8 @@ struct vm_class {
 		/* For array classes this points to array element's class */
 		struct vm_class *array_element_class;
 	};
+
+	void *itable[VM_ITABLE_SIZE];
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
@@ -113,6 +116,11 @@ int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type);
 struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
 	uint16_t i);
+
+int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type);
+struct vm_method *vm_class_resolve_interface_method_recursive(
+	const struct vm_class *vmc, uint16_t i);
 
 bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from);
 bool vm_class_is_primitive_type_name(const char *class_name);
