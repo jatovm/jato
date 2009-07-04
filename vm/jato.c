@@ -100,6 +100,13 @@ static void __vm_native native_vmruntime_exit(int status)
 	exit(status);
 }
 
+static struct vm_object *__vm_native
+native_vmruntime_maplibraryname(struct vm_object *name)
+{
+	NOT_IMPLEMENTED;
+	return name;
+}
+
 static void __vm_native native_vmruntime_println(struct vm_object *message)
 {
 	char *cstr = vm_string_to_cstr(message);
@@ -217,6 +224,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
 	DEFINE_NATIVE("java/lang/VMObject", "getClass", &native_vmobject_getclass),
 	DEFINE_NATIVE("java/lang/VMRuntime", "exit", &native_vmruntime_exit),
+	DEFINE_NATIVE("java/lang/VMRuntime", "mapLibraryName", &native_vmruntime_maplibraryname),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", &native_vmsystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
