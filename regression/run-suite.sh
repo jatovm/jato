@@ -51,41 +51,41 @@ while [ "$#" -ge 1 ]; do
 done
 
 if [ -z "$CLASS_LIST" ]; then
-    run_java jvm.ArrayTest 0
-    run_java jvm.ArrayMemberTest 0
-    run_java jvm.BranchTest 0
-    run_java jvm.ObjectArrayTest 0
-    run_java jvm.ExitStatusIsZeroTest 0
-    run_java jvm.ExitStatusIsOneTest 1
-    run_java jvm.GetstaticPatchingTest 0
-    run_java jvm.PutstaticPatchingTest 0
-    run_java jvm.InvokestaticPatchingTest 0
-    run_java jvm.InvokeinterfaceTest 0
-    run_java jvm.LoadConstantsTest 0
-    run_java jvm.IntegerArithmeticTest 0
-    run_java jvm.LongArithmeticTest 0
-    run_java jvm.FloatArithmeticTest 0
-    run_java jvm.ConversionTest 0
-    run_java jvm.ObjectCreationAndManipulationTest 0
-    run_java jvm.SynchronizationTest 0
-    run_java jvm.MethodInvocationAndReturnTest 0
-    run_java jvm.ControlTransferTest 0
-    run_java jvm.PutstaticTest 0
-    run_java jvm.PutfieldTest 0
-    run_java jvm.TrampolineBackpatchingTest 0
-    run_java jvm.RegisterAllocatorTortureTest 0
-    run_java jvm.ObjectStackTest 0
-    run_java jvm.ExceptionsTest 0
-    run_java jvm.FibonacciTest 0
-    run_java jvm.StringTest 0
-    run_java jvm.PrintTest 0
     run_java jvm.ArrayExceptionsTest 0
-    run_java jvm.IntegerArithmeticExceptionsTest 0
-    run_java jvm.LongArithmeticExceptionsTest 0
-    run_java jvm.MethodInvocationExceptionsTest 0
-    run_java jvm.ObjectCreationAndManipulationExceptionsTest 0
-    run_java jvm.SynchronizationExceptionsTest 0
+    run_java jvm.ArrayMemberTest 0
+    run_java jvm.ArrayTest 0
+    run_java jvm.BranchTest 0
     run_java jvm.ClassExceptionsTest 0
+    run_java jvm.ControlTransferTest 0
+    run_java jvm.ConversionTest 0
+    run_java jvm.ExceptionsTest 0
+    run_java jvm.ExitStatusIsOneTest 1
+    run_java jvm.ExitStatusIsZeroTest 0
+    run_java jvm.FibonacciTest 0
+    run_java jvm.FloatArithmeticTest 0
+    run_java jvm.GetstaticPatchingTest 0
+    run_java jvm.IntegerArithmeticExceptionsTest 0
+    run_java jvm.IntegerArithmeticTest 0
+    run_java jvm.InvokeinterfaceTest 0
+    run_java jvm.InvokestaticPatchingTest 0
+    run_java jvm.LoadConstantsTest 0
+    run_java jvm.LongArithmeticExceptionsTest 0
+    run_java jvm.LongArithmeticTest 0
+    run_java jvm.MethodInvocationAndReturnTest 0
+    run_java jvm.MethodInvocationExceptionsTest 0
+    run_java jvm.ObjectArrayTest 0
+    run_java jvm.ObjectCreationAndManipulationExceptionsTest 0
+    run_java jvm.ObjectCreationAndManipulationTest 0
+    run_java jvm.ObjectStackTest 0
+    run_java jvm.PrintTest 0
+    run_java jvm.PutfieldTest 0
+    run_java jvm.PutstaticPatchingTest 0
+    run_java jvm.PutstaticTest 0
+    run_java jvm.RegisterAllocatorTortureTest 0
+    run_java jvm.StringTest 0
+    run_java jvm.SynchronizationExceptionsTest 0
+    run_java jvm.SynchronizationTest 0
+    run_java jvm.TrampolineBackpatchingTest 0
 else 
     for i in $CLASS_LIST; do
 	run_java $i 0

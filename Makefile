@@ -211,42 +211,42 @@ test: monoburg
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.class \
-	regression/jvm/TestCase.class \
-	regression/jvm/ArrayTest.class \
+	regression/jvm/ArrayExceptionsTest.class \
 	regression/jvm/ArrayMemberTest.class \
+	regression/jvm/ArrayTest.class \
 	regression/jvm/BranchTest.class \
-	regression/jvm/GetstaticPatchingTest.class \
-	regression/jvm/PutstaticPatchingTest.class \
-	regression/jvm/InvokestaticPatchingTest.class \
-	regression/jvm/InvokeinterfaceTest.class \
-	regression/jvm/ObjectArrayTest.class \
+	regression/jvm/ClassExceptionsTest.class \
+	regression/jvm/ControlTransferTest.class \
+	regression/jvm/ConversionTest.class \
+	regression/jvm/ExceptionsTest.class \
 	regression/jvm/ExitStatusIsOneTest.class \
 	regression/jvm/ExitStatusIsZeroTest.class \
-	regression/jvm/LoadConstantsTest.class \
-	regression/jvm/IntegerArithmeticTest.class \
-	regression/jvm/FloatArithmeticTest.class \
-	regression/jvm/LongArithmeticTest.class \
-	regression/jvm/ObjectCreationAndManipulationTest.class \
-	regression/jvm/ControlTransferTest.class \
-	regression/jvm/SynchronizationTest.class \
-	regression/jvm/MethodInvocationAndReturnTest.class \
-	regression/jvm/ConversionTest.class \
-	regression/jvm/PutstaticTest.class \
-	regression/jvm/PutfieldTest.class \
-	regression/jvm/StringTest.class \
-	regression/jvm/TrampolineBackpatchingTest.class \
-	regression/jvm/RegisterAllocatorTortureTest.class \
-	regression/jvm/ExceptionsTest.class \
 	regression/jvm/FibonacciTest.class \
+	regression/jvm/FloatArithmeticTest.class \
+	regression/jvm/GetstaticPatchingTest.class \
+	regression/jvm/IntegerArithmeticExceptionsTest.class \
+	regression/jvm/IntegerArithmeticTest.class \
+	regression/jvm/InvokeinterfaceTest.class \
+	regression/jvm/InvokestaticPatchingTest.class \
+	regression/jvm/LoadConstantsTest.class \
+	regression/jvm/LongArithmeticExceptionsTest.class \
+	regression/jvm/LongArithmeticTest.class \
+	regression/jvm/MethodInvocationAndReturnTest.class \
+	regression/jvm/MethodInvocationExceptionsTest.class \
+	regression/jvm/ObjectArrayTest.class \
+	regression/jvm/ObjectCreationAndManipulationExceptionsTest.class \
+	regression/jvm/ObjectCreationAndManipulationTest.class \
 	regression/jvm/ObjectStackTest.class \
 	regression/jvm/PrintTest.class \
-	regression/jvm/ArrayExceptionsTest.class \
-	regression/jvm/IntegerArithmeticExceptionsTest.class \
-	regression/jvm/LongArithmeticExceptionsTest.class \
-	regression/jvm/MethodInvocationExceptionsTest.class \
-	regression/jvm/ObjectCreationAndManipulationExceptionsTest.class \
+	regression/jvm/PutfieldTest.class \
+	regression/jvm/PutstaticPatchingTest.class \
+	regression/jvm/PutstaticTest.class \
+	regression/jvm/RegisterAllocatorTortureTest.class \
+	regression/jvm/StringTest.class \
 	regression/jvm/SynchronizationExceptionsTest.class \
-	regression/jvm/ClassExceptionsTest.class
+	regression/jvm/SynchronizationTest.class \
+	regression/jvm/TestCase.class \
+	regression/jvm/TrampolineBackpatchingTest.class
 
 $(REGRESSION_TEST_SUITE_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
