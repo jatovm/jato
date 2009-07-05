@@ -21,6 +21,7 @@ extern enum vm_type get_method_return_type(char *);
 
 int count_arguments(const char *);
 enum vm_type bytecode_type_to_vmtype(int);
+int vmtype_to_bytecode_type(enum vm_type);
 int get_vmtype_size(enum vm_type);
 const char *get_vm_type_name(enum vm_type);
 

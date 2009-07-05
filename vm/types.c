@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "vm/system.h"
 #include "vm/types.h"
 #include "vm/die.h"
@@ -149,7 +151,30 @@ static enum vm_type bytecode_type_to_vmtype_map[] = {
 
 enum vm_type bytecode_type_to_vmtype(int type)
 {
+	/* Note: The cast below is okay, because we _know_ that type is non-
+	 * negative at that point. */
+	assert(type >= 0);
+	assert((unsigned int) type < ARRAY_SIZE(bytecode_type_to_vmtype_map));
+
 	return bytecode_type_to_vmtype_map[type];
+}
+
+static int vmtype_to_bytecode_type_map[] = {
+	[J_BOOLEAN] = T_BOOLEAN,
+	[J_CHAR] = T_CHAR,
+	[J_FLOAT] = T_FLOAT,
+	[J_DOUBLE] = T_DOUBLE,
+	[J_BYTE] = T_BYTE,
+	[J_SHORT] = T_SHORT,
+	[J_INT] = T_INT,
+	[J_LONG] = T_LONG,
+};
+
+int vmtype_to_bytecode_type(enum vm_type type)
+{
+	assert(type >= 0 && type < ARRAY_SIZE(vmtype_to_bytecode_type_map));
+
+	return vmtype_to_bytecode_type_map[type];
 }
 
 int get_vmtype_size(enum vm_type type)
