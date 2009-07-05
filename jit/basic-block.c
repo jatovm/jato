@@ -17,7 +17,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 
 struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
 {

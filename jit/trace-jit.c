@@ -20,10 +20,10 @@
 #include "vm/preload.h"
 #include "vm/object.h"
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include "vm/class.h"
 #include "vm/method.h"
-#include "vm/string.h"
+#include "lib/string.h"
 #include "vm/vm.h"
 
 #include "arch/stack-frame.h"

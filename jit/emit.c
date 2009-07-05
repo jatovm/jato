@@ -7,7 +7,7 @@
  * LICENSE for details.
  */
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include "vm/class.h"
 #include "vm/method.h"
 #include "vm/object.h"

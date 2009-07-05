@@ -9,7 +9,7 @@
 
 #include "jit/compiler.h"
 
-#include "vm/bitset.h"
+#include "lib/bitset.h"
 #include "vm/bytecodes.h"
 #include "vm/method.h"
 #include "vm/stream.h"

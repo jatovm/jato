@@ -4,7 +4,7 @@
 
 #include "jit/compilation-unit.h"
 #include "jit/compiler.h"
-#include "vm/bitset.h"
+#include "lib/bitset.h"
 #include "vm/class.h"
 #include "vm/method.h"
 #include "vm/vm.h"

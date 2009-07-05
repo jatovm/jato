@@ -32,7 +32,7 @@
 
 #include "arch/instruction.h"
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 
 /**
  * tree_patch_bc_offset - sets bytecode_offset field of a tree node

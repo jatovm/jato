@@ -28,8 +28,8 @@
 #include "jit/cu-mapping.h"
 
 #include "vm/alloc.h"
-#include "vm/radix-tree.h"
-#include "vm/buffer.h"
+#include "lib/radix-tree.h"
+#include "lib/buffer.h"
 #include "vm/die.h"
 
 #include <pthread.h>

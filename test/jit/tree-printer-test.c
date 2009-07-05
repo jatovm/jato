@@ -7,7 +7,7 @@
 #include "vm/class.h"
 #include "vm/field.h"
 #include "vm/method.h"
-#include "vm/string.h"
+#include "lib/string.h"
 #include "vm/types.h"
 
 #include <libharness.h>

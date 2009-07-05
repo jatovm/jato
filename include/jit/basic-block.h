@@ -1,7 +1,7 @@
 #ifndef __JIT_BASIC_BLOCK_H
 #define __JIT_BASIC_BLOCK_H
 
-#include "vm/list.h"
+#include "lib/list.h"
 #include <stdbool.h>
 
 struct compilation_unit;

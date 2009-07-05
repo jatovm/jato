@@ -27,7 +27,7 @@
 #include "arch/instruction.h"
 #include "jit/basic-block.h"
 #include "jit/emit-code.h"
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 
 #include <stdlib.h>
 

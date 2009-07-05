@@ -3,7 +3,7 @@
 
 #include "jit/basic-block.h"
 
-#include "vm/list.h"
+#include "lib/list.h"
 #include "vm/stack.h"
 #include "vm/static.h"
 

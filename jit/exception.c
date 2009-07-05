@@ -33,7 +33,7 @@
 #include "jit/exception.h"
 #include "jit/compiler.h"
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include "vm/class.h"
 #include "vm/die.h"
 #include "vm/guard-page.h"

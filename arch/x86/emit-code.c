@@ -18,8 +18,8 @@
 #include "jit/emit-code.h"
 #include "jit/text.h"
 
-#include "vm/list.h"
-#include "vm/buffer.h"
+#include "lib/list.h"
+#include "lib/buffer.h"
 #include "vm/method.h"
 #include "vm/object.h"
 

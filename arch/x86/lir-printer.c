@@ -31,10 +31,10 @@
 #include "jit/statement.h"
 #include "jit/compiler.h"
 
-#include "vm/list.h"
-#include "vm/buffer.h"
+#include "lib/list.h"
+#include "lib/buffer.h"
 #include "vm/method.h"
-#include "vm/string.h"
+#include "lib/string.h"
 
 #include "arch/instruction.h"
 #include "arch/memory.h"

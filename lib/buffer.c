@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>

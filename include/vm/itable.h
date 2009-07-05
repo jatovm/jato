@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "vm/list.h"
+#include "lib/list.h"
 
 extern bool opt_trace_itable;
 

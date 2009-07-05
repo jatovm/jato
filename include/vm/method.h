@@ -15,7 +15,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/compiler.h"
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 
 struct vm_class;
 

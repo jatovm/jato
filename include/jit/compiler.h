@@ -3,7 +3,7 @@
 
 #include "jit/compilation-unit.h"
 #include "jit/basic-block.h"
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include "vm/stack.h"
 #include "vm/vm.h"
 

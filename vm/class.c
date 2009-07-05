@@ -45,7 +45,7 @@
 #include "vm/itable.h"
 #include "vm/method.h"
 #include "vm/object.h"
-#include "vm/string.h"
+#include "lib/string.h"
 #include "vm/vm.h"
 
 #include "jit/exception.h"

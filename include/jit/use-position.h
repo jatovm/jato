@@ -2,7 +2,7 @@
 #define __JIT_USE_POSITION_H
 
 #include "jit/vars.h"
-#include "vm/list.h"
+#include "lib/list.h"
 
 struct insn;
 

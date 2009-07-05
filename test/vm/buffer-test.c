@@ -2,7 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include <libharness.h>
 
 #include <errno.h>

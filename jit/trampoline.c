@@ -30,13 +30,13 @@
 #include "jit/compiler.h"
 
 #include "vm/preload.h"
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include "vm/class.h"
 #include "vm/method.h"
 #include "vm/natives.h"
-#include "vm/string.h"
+#include "lib/string.h"
 #include "vm/method.h"
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include "vm/die.h"
 #include "vm/vm.h"
 

@@ -2,7 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include "vm/bitset.h"
+#include "lib/bitset.h"
 #include <stdlib.h>
 #include <libharness.h>
 

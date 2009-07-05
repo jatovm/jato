@@ -25,7 +25,7 @@
  */
 
 #include "arch/instruction.h"
-#include "vm/string.h"
+#include "lib/string.h"
 
 typedef int (*print_insn_fn) (struct string *str, struct insn *insn);
 

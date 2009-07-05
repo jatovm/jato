@@ -13,7 +13,7 @@
 #include "vm/preload.h"
 #include "vm/object.h"
 #include "vm/stdlib.h"
-#include "vm/string.h"
+#include "lib/string.h"
 #include "vm/types.h"
 #include "vm/utf8.h"
 

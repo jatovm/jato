@@ -7,8 +7,8 @@
 #include "jit/statement.h"
 #include "jit/emit-code.h"
 
-#include "vm/buffer.h"
-#include "vm/list.h"
+#include "lib/buffer.h"
+#include "lib/list.h"
 #include "vm/system.h"
 #include "vm/vm.h"
 

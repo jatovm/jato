@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "vm/list.h"
+#include "lib/list.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>

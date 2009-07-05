@@ -30,7 +30,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/stack-slot.h"
 #include "jit/vars.h"
-#include "vm/buffer.h"
+#include "lib/buffer.h"
 #include "vm/method.h"
 #include "vm/vm.h"
 

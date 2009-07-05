@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include "vm/list.h"
+#include "lib/list.h"
 
 #include "arch/instruction.h"
 

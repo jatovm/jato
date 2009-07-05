@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include "vm/string.h"
+#include "lib/string.h"
 
 #include <errno.h>
 #include <stdarg.h>

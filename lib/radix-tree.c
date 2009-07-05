@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "vm/radix-tree.h"
+#include "lib/radix-tree.h"
 #include "vm/stdlib.h"
 
 #include <stdbool.h>

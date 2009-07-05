@@ -7,7 +7,7 @@
 #include "jit/compiler.h"
 #include "jit/expression.h"
 #include "jit/statement.h"
-#include "vm/list.h"
+#include "lib/list.h"
 #include "vm/vm.h"
 
 #include <bc-test-utils.h>

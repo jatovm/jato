@@ -2,7 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include "vm/string.h"
+#include "lib/string.h"
 
 #include <libharness.h>
 #include <string.h>

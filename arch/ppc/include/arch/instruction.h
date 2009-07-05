@@ -2,7 +2,7 @@
 #define __PPC_INSTRUCTION_H
 
 #include <stdbool.h>
-#include "vm/list.h"
+#include "lib/list.h"
 #include "arch/registers.h"
 #include "jit/use-position.h"
 

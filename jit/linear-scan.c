@@ -37,7 +37,7 @@
 
 #include "jit/compiler.h"
 #include "jit/vars.h"
-#include "vm/bitset.h"
+#include "lib/bitset.h"
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>

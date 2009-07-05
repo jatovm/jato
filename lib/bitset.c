@@ -5,7 +5,7 @@
  * LICENSE for details.
  */
 
-#include "vm/bitset.h"
+#include "lib/bitset.h"
 #include "vm/system.h"
 #include "vm/stdlib.h"
 

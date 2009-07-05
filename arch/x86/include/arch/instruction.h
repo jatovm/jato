@@ -4,7 +4,7 @@
 #include "jit/use-position.h"
 #include "arch/registers.h"
 #include "arch/stack-frame.h"
-#include "vm/list.h"
+#include "lib/list.h"
 
 #include <stdbool.h>
 

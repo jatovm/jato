@@ -2,7 +2,7 @@
 #define __BYTECODE_CONVERTER_FIXTURE_H
 
 #include "jit/statement.h"
-#include "vm/list.h"
+#include "lib/list.h"
 
 struct compilation_unit;
 struct basic_block;
