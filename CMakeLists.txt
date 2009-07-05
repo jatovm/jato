@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project (cafebabe)
 
-set (CMAKE_C_FLAGS "-Wall -std=gnu99")
+set (CMAKE_C_FLAGS "-Wall -std=gnu99 -D_GNU_SOURCE")
 
 include_directories ($(CAFEBABE_SOURCE_DIR)/include)
 
