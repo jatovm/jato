@@ -86,6 +86,24 @@ jfieldID vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz,
 	return fb;
 }
 
+const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
+					 jboolean *is_copy)
+{
+	jbyte *array;
+
+	if (!string)
+		return NULL;
+
+	array = vm_string_to_cstr(string);
+	if (!array)
+		return NULL;
+
+	if (is_copy)
+		*is_copy = true;
+
+	return array;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -327,7 +345,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* ReleaseStringChars */
 	NULL, /* NewStringUTF */
 	NULL, /* GetStringUTFLength */
-	NULL, /* GetStringUTFChars */
+	vm_jni_get_string_utf_chars,
 
 	/* 170 */
 	NULL, /* ReleaseStringUTFChars */
