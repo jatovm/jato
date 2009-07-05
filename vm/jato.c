@@ -67,11 +67,24 @@ char *exe_name;
 
 static struct vm_object *__vm_native native_vmstackwalker_getclasscontext(void)
 {
+	struct stack_trace_elem st_elem;
+	struct compilation_unit *cu;
+	struct vm_class *class;
 	struct vm_object *res;
 
-	NOT_IMPLEMENTED;
+	if (init_stack_trace_elem(&st_elem))
+		return NULL;
+
+	cu = jit_lookup_cu(st_elem.addr);
+	if (!cu) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	class = cu->method->class;
 
 	res = vm_object_alloc_array(vm_java_lang_Class, 1);
+	array_set_field_ptr(res, 0, class->object);
 
 	return res;
 }
