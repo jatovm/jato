@@ -101,5 +101,6 @@ int cafebabe_class_get_field(const struct cafebabe_class *c,
 int cafebabe_class_get_method(const struct cafebabe_class *c,
 	const char *name, const char *descriptor,
 	unsigned int *r);
+char *cafebabe_class_get_source_file_name(const struct cafebabe_class *class);
 
 #endif

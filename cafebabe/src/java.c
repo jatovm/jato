@@ -25,8 +25,6 @@
  * Please refer to the file LICENSE for details.
  */
 
-#define _GNU_SOURCE
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

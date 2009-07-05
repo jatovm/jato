@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project (cafebabe)
 
-set (CMAKE_C_FLAGS "-Wall -std=gnu99")
+set (CMAKE_C_FLAGS "-Wall -std=gnu99 -D_GNU_SOURCE")
 
 include_directories ($(CAFEBABE_SOURCE_DIR)/include)
 
@@ -15,7 +15,9 @@ add_library (cafebabe SHARED
 	src/cafebabe/constant_pool.c
 	src/cafebabe/error.c
 	src/cafebabe/field_info.c
+	src/cafebabe/line_number_table_attribute.c
 	src/cafebabe/method_info.c
+	src/cafebabe/source_file_attribute.c
 	src/cafebabe/stream.c
 )
 

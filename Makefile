@@ -129,7 +129,9 @@ CAFEBABE_OBJS := \
 	constant_pool.o			\
 	error.o				\
 	field_info.o			\
+	line_number_table_attribute.o	\
 	method_info.o			\
+	source_file_attribute.o		\
 	stream.o
 
 CAFEBABE_OBJS := $(addprefix cafebabe/src/cafebabe/,$(CAFEBABE_OBJS))
