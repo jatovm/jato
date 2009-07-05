@@ -53,6 +53,7 @@
 #include "vm/fault-inject.h"
 #include "vm/preload.h"
 #include "vm/itable.h"
+#include "vm/jni.h"
 #include "vm/method.h"
 #include "vm/natives.h"
 #include "vm/object.h"
@@ -280,8 +281,7 @@ native_vmclass_getname(struct vm_object *object)
 {
 	struct vm_class *class;
 
-	class = (struct vm_class*)field_get_object(object,
-						   vm_java_lang_Class_vmdata);
+	class = vm_class_get_class_from_class_object(object);
 	assert(class != NULL);
 
 	return vm_object_alloc_string_from_c(class->name);
@@ -317,6 +317,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMObject", "getClass", &native_vmobject_getclass),
 	DEFINE_NATIVE("java/lang/VMRuntime", "exit", &native_vmruntime_exit),
 	DEFINE_NATIVE("java/lang/VMRuntime", "mapLibraryName", &native_vmruntime_maplibraryname),
+	DEFINE_NATIVE("java/lang/VMRuntime", "nativeLoad", &native_vmruntime_native_load),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", &native_vmsystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
@@ -433,6 +434,7 @@ main(int argc, char *argv[])
 	jit_init_natives();
 
 	static_fixup_init();
+	vm_jni_init();
 
 	/* Search $CLASSPATH last. */
 	char *classpath = getenv("CLASSPATH");

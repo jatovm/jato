@@ -128,5 +128,6 @@ bool vm_class_is_primitive_type_name(const char *class_name);
 char *vm_class_get_array_element_class_name(const char *class_name);
 struct vm_class *vm_class_get_array_element_class(const struct vm_class *array_class);
 enum vm_type vm_class_get_storage_vmtype(const struct vm_class *class);
+struct vm_class *vm_class_get_class_from_class_object(struct vm_object *clazz);
 
 #endif /* __CLASS_H */

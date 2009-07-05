@@ -797,3 +797,9 @@ enum vm_type vm_class_get_storage_vmtype(const struct vm_class *class)
 
 	return class->primitive_vm_type;
 }
+
+struct vm_class *vm_class_get_class_from_class_object(struct vm_object *clazz)
+{
+	return (struct vm_class*)field_get_object(clazz,
+						  vm_java_lang_Class_vmdata);
+}

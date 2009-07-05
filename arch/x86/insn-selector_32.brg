@@ -1917,7 +1917,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	struct insn *call_insn;
 	void *target;
 
-	if (cu == s->b_parent) {
+	if (pthread_mutex_trylock(&cu->mutex)) {
 		/*
 		 * This is a recursive method invocation. Threfore, we are
 		 * already holding cu->mutex here because we entered
@@ -1926,7 +1926,6 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 		is_compiled = false;
 		target = vm_method_trampoline_ptr(method);
 	} else {
-		pthread_mutex_lock(&cu->mutex);
 		is_compiled = cu->is_compiled;
 
 		if (is_compiled)

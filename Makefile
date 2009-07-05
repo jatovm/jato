@@ -109,7 +109,9 @@ VM_OBJS = \
 	vm/utf8.o		\
 	vm/zalloc.o		\
 	vm/preload.o		\
-	vm/fault-inject.o
+	vm/fault-inject.o 	\
+	vm/jni.o		\
+	vm/jni-interface.o
 
 LIB_OBJS = \
 	lib/bitset.o		\

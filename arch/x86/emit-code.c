@@ -20,6 +20,8 @@
 
 #include "lib/list.h"
 #include "lib/buffer.h"
+
+#include "vm/jni.h"
 #include "vm/method.h"
 #include "vm/object.h"
 
@@ -1381,6 +1383,28 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	__emit_pop_reg(buf, REG_EBP);
 	emit_indirect_jump_reg(buf, REG_EAX);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
+}
+
+void emit_jni_trampoline(struct buffer *buf, struct vm_jni_env *jni_env,
+			 void *target)
+{
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+
+	/* save return address into caller-saved register */
+	__emit_pop_reg(buf, REG_ESI);
+
+	__emit_push_imm(buf, (unsigned long) jni_env);
+	__emit_call(buf, target);
+	__emit_add_imm_reg(buf, 4, REG_ESP);
+
+	/* return to caller*/
+	__emit_push_reg(buf, REG_ESI);
+	emit_ret(buf);
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();

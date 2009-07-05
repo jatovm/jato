@@ -20,6 +20,8 @@ extern struct vm_class *vm_java_lang_ArrayIndexOutOfBoundsException;
 extern struct vm_class *vm_java_lang_ArrayStoreException;
 extern struct vm_class *vm_java_lang_RuntimeException;
 extern struct vm_class *vm_java_lang_ExceptionInInitializerError;
+extern struct vm_class *vm_java_lang_NoSuchFieldError;
+extern struct vm_class *vm_java_lang_NoSuchMethodError;
 extern struct vm_class *vm_boolean_class;
 extern struct vm_class *vm_char_class;
 extern struct vm_class *vm_float_class;

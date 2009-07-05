@@ -54,6 +54,8 @@ struct vm_class *vm_java_lang_ArrayIndexOutOfBoundsException;
 struct vm_class *vm_java_lang_ArrayStoreException;
 struct vm_class *vm_java_lang_RuntimeException;
 struct vm_class *vm_java_lang_ExceptionInInitializerError;
+struct vm_class *vm_java_lang_NoSuchFieldError;
+struct vm_class *vm_java_lang_NoSuchMethodError;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -83,6 +85,8 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/NullPointerException", &vm_java_lang_NullPointerException },
 	{ "java/lang/RuntimeException",	&vm_java_lang_RuntimeException },
 	{ "java/lang/UnsatisfiedLinkError", &vm_java_lang_UnsatisfiedLinkError },
+	{ "java/lang/NoSuchFieldError", &vm_java_lang_NoSuchFieldError },
+	{ "java/lang/NoSuchMethodError", &vm_java_lang_NoSuchMethodError },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {

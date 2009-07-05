@@ -129,6 +129,8 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 		return -1;
 	}
 
+	vmm->jni_trampoline = NULL;
+
 	vmm->trampoline = build_jit_trampoline(vmm->compilation_unit);
 	if (!vmm->trampoline) {
 		NOT_IMPLEMENTED;

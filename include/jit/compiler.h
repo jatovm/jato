@@ -31,6 +31,10 @@ struct jit_trampoline {
 	pthread_mutex_t mutex;
 };
 
+struct jni_trampoline {
+	struct buffer *objcode;
+};
+
 struct parse_context {
 	struct compilation_unit *cu;
 	struct basic_block *bb;
@@ -56,8 +60,11 @@ int emit_machine_code(struct compilation_unit *);
 void *jit_magic_trampoline(struct compilation_unit *);
 
 struct jit_trampoline *alloc_jit_trampoline(void);
+struct jni_trampoline *alloc_jni_trampoline(void);
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *);
+struct jni_trampoline *build_jni_trampoline(void *);
 void free_jit_trampoline(struct jit_trampoline *);
+void free_jni_trampoline(struct jni_trampoline *);
 
 struct fixup_site *alloc_fixup_site(void);
 void free_fixup_site(struct fixup_site *);
