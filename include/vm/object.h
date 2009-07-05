@@ -30,6 +30,8 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	int nr_dimensions, int *count);
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count);
 
+struct vm_object *vm_object_clone(struct vm_object *obj);
+
 struct vm_object *
 vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length);
 struct vm_object *vm_object_alloc_string_from_c(const char *bytes);

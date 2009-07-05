@@ -184,6 +184,84 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	return res;
 }
 
+struct vm_object *clone_regular(struct vm_object *obj)
+{
+	struct vm_class *vmc = obj->class;
+	struct vm_object *new = vm_object_alloc(vmc);
+
+	/* XXX: What do we do about exceptions? */
+	if (new)
+		memcpy(new + 1, obj + 1, vmc->object_size);
+
+	return new;
+}
+
+struct vm_object *clone_array(struct vm_object *obj)
+{
+	struct vm_class *vmc = obj->class;
+	struct vm_class *e_vmc = vmc->array_element_class;
+	int count = obj->array_length;
+
+	if (e_vmc->kind == VM_CLASS_KIND_PRIMITIVE) {
+		enum vm_type vmtype;
+		int type;
+		struct vm_object *new;
+
+		vmtype = e_vmc->primitive_vm_type;
+		type = vmtype_to_bytecode_type(vmtype);
+
+		/* XXX: This could be optimized by not doing the memset() in
+		 * object_alloc_native_array. */
+		new = vm_object_alloc_native_array(type, count);
+		if (new) {
+			memcpy(new + 1, obj + 1,
+				get_vmtype_size(vmtype) * count);
+		}
+
+		return new;
+	} else {
+		struct vm_object *new;
+
+		new = vm_object_alloc_array(vmc, count);
+		if (new) {
+			memcpy(new + 1, obj + 1,
+				sizeof(struct vm_object *) * count);
+		}
+
+		return new;
+	}
+}
+
+struct vm_object *clone_primitive(struct vm_object *obj)
+{
+	/* XXX: Is it even possible to create instances of primitive classes?
+	 * I suspect it will be just the same as a normal object clone,
+	 * though. Let's do that for now... */
+	NOT_IMPLEMENTED;
+	return clone_regular(obj);
+}
+
+struct vm_object *vm_object_clone(struct vm_object *obj)
+{
+	struct vm_class *vmc;
+
+	assert(obj);
+
+	/* (In order of likelyhood:) */
+	switch (obj->class->kind) {
+	case VM_CLASS_KIND_REGULAR:
+		return clone_regular(obj);
+	case VM_CLASS_KIND_ARRAY:
+		return clone_array(obj);
+	case VM_CLASS_KIND_PRIMITIVE:
+		return clone_primitive(obj);
+	}
+
+	/* Shouldn't happen. */
+	assert(0);
+	return NULL;
+}
+
 void vm_object_lock(struct vm_object *obj)
 {
 	if (pthread_mutex_lock(&obj->mutex))

@@ -350,8 +350,9 @@ int vm_class_link_array_class(struct vm_class *vmc, const char *class_name)
 	vmc->state = VM_CLASS_LINKED;
 
 	vmc->super = vm_java_lang_Object;
-	vmc->nr_interfaces = 0;
-	vmc->interfaces = NULL;
+	/* XXX: Actually, arrays should implement Serializable as well. */
+	vmc->nr_interfaces = 1;
+	vmc->interfaces = &vm_java_lang_Cloneable;
 	vmc->fields = NULL;
 	vmc->methods = NULL;
 

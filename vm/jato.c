@@ -265,8 +265,13 @@ static int32_t __vm_native native_vmsystem_identityhashcode(struct vm_object *ob
 static struct vm_object * __vm_native
 native_vmobject_clone(struct vm_object *object)
 {
-	NOT_IMPLEMENTED;
-	return vm_object_alloc(object->class);
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_from_native(sizeof object);
+		return NULL;
+	}
+
+	return vm_object_clone(object);
 }
 
 static struct vm_object * __vm_native
