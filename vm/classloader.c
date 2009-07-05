@@ -411,10 +411,7 @@ struct vm_class *load_class(const char *class_name)
 	}
 
 out_filename:
-	if (result)
-		result->source_file_name = filename;
-	else
-		free(filename);
+	free(filename);
 
 	return result;
 }

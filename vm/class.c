@@ -34,6 +34,7 @@
 #include <cafebabe/constant_pool.h>
 #include <cafebabe/field_info.h>
 #include <cafebabe/method_info.h>
+#include <cafebabe/stream.h>
 
 #include <vm/class.h>
 #include <vm/classloader.h>
@@ -145,6 +146,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	vmc->name = strndup((char *) name->bytes, name->length);
+
+	vmc->source_file_name = cafebabe_class_get_source_file_name(class);
 
 	if (class->super_class) {
 		const struct cafebabe_constant_info_class *constant_super;
@@ -322,6 +325,7 @@ int vm_class_link_bogus_class(struct vm_class *vmc, const char *class_name)
 	vmc->methods = NULL;
 	vmc->object_size = 0;
 	vmc->static_size = 0;
+	vmc->source_file_name = NULL;
 
 	vmc->vtable_size = vm_java_lang_Object->vtable_size;
 	vmc->vtable.native_ptr = vm_java_lang_Object->vtable.native_ptr;
