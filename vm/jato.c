@@ -130,8 +130,65 @@ static void __vm_native native_vmruntime_exit(int status)
 static struct vm_object *__vm_native
 native_vmruntime_maplibraryname(struct vm_object *name)
 {
-	NOT_IMPLEMENTED;
-	return name;
+	struct vm_object *result;
+	char *str;
+
+	if (!name) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_from_native(sizeof(struct vm_object));
+		return NULL;
+	}
+
+	str = vm_string_to_cstr(name);
+	if (!str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	char *result_str = NULL;
+	asprintf(&result_str, "lib%s.so", str);
+
+	free(str);
+
+	if (!result_str) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	result = vm_object_alloc_string_from_c(result_str);
+	free(result_str);
+
+	return result;
+}
+
+static int __vm_native
+native_vmruntime_native_load(struct vm_object *name,
+			     struct vm_object *classloader)
+{
+	char *name_str;
+	int result;
+
+	if (classloader != NULL) {
+		NOT_IMPLEMENTED;
+		return 0;
+	}
+
+	if (!name) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_from_native(sizeof(struct vm_object) * 2);
+		return 0;
+	}
+
+	name_str = vm_string_to_cstr(name);
+	if (!name_str) {
+		NOT_IMPLEMENTED;
+		return 0;
+	}
+
+	result  = vm_jni_load_object(name_str);
+	free(name_str);
+
+	return result == 0;
 }
 
 static void __vm_native native_vmruntime_println(struct vm_object *message)
