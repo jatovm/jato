@@ -713,7 +713,6 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	struct compilation_unit *cu;
 	unsigned long method_offset;
 	struct vm_method *method;
-	unsigned long args_count;
 	struct expression *expr;
 
 	expr	= to_expr(tree);
@@ -756,9 +755,8 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	/* invoke method */
 	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
 
-	args_count = nr_args(to_expr(expr->args_list));
-	if (args_count)
-		method_args_cleanup(s, tree, args_count);
+	if (method->args_count)
+		method_args_cleanup(s, tree, method->args_count);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx != NULL)
@@ -1961,7 +1959,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	struct expression *objectref_expr;
 	struct var_info *call_target;
 	unsigned long method_offset;
-	unsigned long args_count;
+	struct vm_method *method;
 
 	expr	= to_expr(tree);
 	method_offset = expr_method_index(expr) * sizeof(void *);
@@ -1988,9 +1986,10 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	/* invoke method */
 	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
 
-	args_count = nr_args(to_expr(expr->args_list));
-	if (args_count)
-		method_args_cleanup(s, tree, args_count);
+	method	= expr->target_method;
+
+	if (method->args_count)
+		method_args_cleanup(s, tree, method->args_count);
 }
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)
