@@ -105,6 +105,7 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 		{ "java.io.tmpdir", "/tmp"},
 		{ "file.separator", "/" },
 		{ "path.separator", "/" },
+		{ "line.separator", "\n" },
 	};
 
 	struct vm_object *(*trampoline)(struct vm_object *,
