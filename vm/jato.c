@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "cafebabe/access.h"
 #include "cafebabe/attribute_info.h"
@@ -306,6 +309,26 @@ native_vmclassloader_getprimitiveclass(int type)
 	return class->object;
 }
 
+static int __vm_native
+native_vmfile_is_directory(struct vm_object *dirpath)
+{
+	char *dirpath_str;
+	struct stat buf;
+
+	dirpath_str = vm_string_to_cstr(dirpath);
+	if (!dirpath_str)
+		return false;
+
+	if (stat(dirpath_str, &buf)) {
+		free(dirpath_str);
+		return false;
+	}
+
+	free(dirpath_str);
+
+	return S_ISDIR(buf.st_mode);
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -313,6 +336,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
+	DEFINE_NATIVE("java/io/VMFile", "isDirectory", &native_vmfile_is_directory),
 	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
 	DEFINE_NATIVE("java/lang/VMObject", "getClass", &native_vmobject_getclass),
 	DEFINE_NATIVE("java/lang/VMRuntime", "exit", &native_vmruntime_exit),
