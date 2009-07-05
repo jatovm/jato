@@ -104,6 +104,12 @@ const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
 	return array;
 }
 
+void vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
+				 const char *utf)
+{
+	free((char *)utf);
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -348,7 +354,7 @@ void *vm_jni_native_interface[] = {
 	vm_jni_get_string_utf_chars,
 
 	/* 170 */
-	NULL, /* ReleaseStringUTFChars */
+	vm_release_string_utf_chars,
 	NULL, /* GetArrayLength */
 	NULL, /* NewObjectArray */
 	NULL, /* GetObjectArrayElement */
