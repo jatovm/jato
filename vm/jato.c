@@ -272,10 +272,13 @@ native_vmobject_clone(struct vm_object *object)
 static struct vm_object * __vm_native
 native_vmobject_getclass(struct vm_object *object)
 {
-	if (!object || !object->class) {
+	if (!object) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		throw_from_native(sizeof object);
+		return NULL;
 	}
+
+	assert(object->class);
 
 	return object->class->object;
 }
