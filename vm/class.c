@@ -186,8 +186,9 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		vmc->super = NULL;
 	}
 
+	vmc->nr_interfaces = class->interfaces_count;
 	vmc->interfaces
-		= malloc(sizeof(*vmc->interfaces) * class->interfaces_count);
+		= malloc(sizeof(*vmc->interfaces) * vmc->nr_interfaces);
 	if (!vmc->interfaces) {
 		NOT_IMPLEMENTED;
 		return -1;
@@ -323,6 +324,7 @@ int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
 	vmc->state = VM_CLASS_LINKED;
 
 	vmc->super = vm_java_lang_Object;
+	vmc->nr_interfaces = 0;
 	vmc->interfaces = NULL;
 	vmc->fields = NULL;
 	vmc->methods = NULL;
@@ -348,6 +350,7 @@ int vm_class_link_array_class(struct vm_class *vmc, const char *class_name)
 	vmc->state = VM_CLASS_LINKED;
 
 	vmc->super = vm_java_lang_Object;
+	vmc->nr_interfaces = 0;
 	vmc->interfaces = NULL;
 	vmc->fields = NULL;
 	vmc->methods = NULL;
@@ -786,7 +789,7 @@ bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_cla
 	if (from->super && vm_class_is_assignable_from(vmc, from->super))
 		return true;
 
-	for (unsigned int i = 0; i < from->class->interfaces_count; ++i) {
+	for (unsigned int i = 0; i < from->nr_interfaces; ++i) {
 		if (vm_class_is_assignable_from(vmc, from->interfaces[i]))
 			return true;
 	}
