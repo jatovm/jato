@@ -39,6 +39,7 @@ OBJS = \
 	../../cafebabe/src/cafebabe/error.o \
 	../../cafebabe/src/cafebabe/field_info.o \
 	../../cafebabe/src/cafebabe/method_info.o \
+	../../cafebabe/src/cafebabe/source_file_attribute.o \
 	../../cafebabe/src/cafebabe/stream.o \
 	../../jit/basic-block.o \
 	../../jit/bc-offset-mapping.o \
