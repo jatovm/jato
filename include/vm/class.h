@@ -28,11 +28,8 @@ enum vm_class_kind {
 
 struct vm_class {
 	enum vm_class_kind kind;
-
 	const struct cafebabe_class *class;
-
 	enum vm_class_state state;
-
 	char *name;
 
 	struct vm_class *super;
@@ -70,7 +67,8 @@ struct vm_class {
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
-int vm_class_link_bogus_class(struct vm_class *vmc, const char *class_name);
+int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name);
+int vm_class_link_array_class(struct vm_class *vmc, const char *class_name);
 int vm_class_init(struct vm_class *vmc);
 
 static inline int vm_class_ensure_init(struct vm_class *vmc)

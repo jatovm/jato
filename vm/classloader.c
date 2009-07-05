@@ -333,9 +333,8 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	}
 
 	class->primitive_vm_type = str_to_type(class_name);
-	class->kind = VM_CLASS_KIND_PRIMITIVE;
 
-	if (vm_class_link_bogus_class(class, class_name)) {
+	if (vm_class_link_primitive_class(class, class_name)) {
 		NOT_IMPLEMENTED;
 		return NULL;
 	}
@@ -365,9 +364,7 @@ struct vm_class *load_array_class(const char *class_name)
 		return NULL;
 	}
 
-	array_class->kind = VM_CLASS_KIND_ARRAY;
-
-	if (vm_class_link_bogus_class(array_class, class_name)) {
+	if (vm_class_link_array_class(array_class, class_name)) {
 		NOT_IMPLEMENTED;
 		return NULL;
 	}

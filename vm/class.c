@@ -312,24 +312,53 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	return 0;
 }
 
-int vm_class_link_bogus_class(struct vm_class *vmc, const char *class_name)
+int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
 {
 	vmc->name = strdup(class_name);
 	if (!vmc->name)
 		return -ENOMEM;
 
+	vmc->kind = VM_CLASS_KIND_PRIMITIVE;
 	vmc->class = NULL;
 	vmc->state = VM_CLASS_LINKED;
+
 	vmc->super = vm_java_lang_Object;
+	vmc->interfaces = NULL;
 	vmc->fields = NULL;
 	vmc->methods = NULL;
+
 	vmc->object_size = 0;
 	vmc->static_size = 0;
-	vmc->source_file_name = NULL;
 
 	vmc->vtable_size = vm_java_lang_Object->vtable_size;
 	vmc->vtable.native_ptr = vm_java_lang_Object->vtable.native_ptr;
 
+	vmc->source_file_name = NULL;
+	return 0;
+}
+
+int vm_class_link_array_class(struct vm_class *vmc, const char *class_name)
+{
+	vmc->name = strdup(class_name);
+	if (!vmc->name)
+		return -ENOMEM;
+
+	vmc->kind = VM_CLASS_KIND_ARRAY;
+	vmc->class = NULL;
+	vmc->state = VM_CLASS_LINKED;
+
+	vmc->super = vm_java_lang_Object;
+	vmc->interfaces = NULL;
+	vmc->fields = NULL;
+	vmc->methods = NULL;
+
+	vmc->object_size = 0;
+	vmc->static_size = 0;
+
+	vmc->vtable_size = vm_java_lang_Object->vtable_size;
+	vmc->vtable.native_ptr = vm_java_lang_Object->vtable.native_ptr;
+
+	vmc->source_file_name = NULL;
 	return 0;
 }
 
