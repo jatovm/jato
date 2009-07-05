@@ -3,6 +3,7 @@
 
 #include <cafebabe/attribute_array.h>
 #include <cafebabe/attribute_info.h>
+#include <cafebabe/line_number_table_attribute.h>
 #include <cafebabe/class.h>
 #include <cafebabe/code_attribute.h>
 #include <cafebabe/constant_pool.h>
@@ -67,7 +68,7 @@ int vm_method_init(struct vm_method *vmm,
 
 	/*
 	 * Note: We can return here because the rest of the function deals
-	 * with loading the Code attribute (which native methods don't have).
+	 * with loading attributes which native and abstract methods don't have.
 	 */
 	if (vm_method_is_native(vmm) || vm_method_is_abstract(vmm)) {
 		/* Hm, we're now modifying a cafebabe structure. */
@@ -108,6 +109,14 @@ int vm_method_init(struct vm_method *vmm,
 	}
 
 	cafebabe_stream_close_buffer(&stream);
+
+	if (cafebabe_read_line_number_table_attribute(class,
+		&vmm->code_attribute.attributes,
+		&vmm->line_number_table_attribute))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
+	}
 
 	return 0;
 }

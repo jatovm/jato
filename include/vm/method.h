@@ -9,6 +9,7 @@
 
 #include <cafebabe/code_attribute.h>
 #include <cafebabe/class.h>
+#include <cafebabe/line_number_table_attribute.h>
 #include <cafebabe/method_info.h>
 
 #include <jit/compilation-unit.h>
@@ -30,6 +31,7 @@ struct vm_method {
 	int args_count;
 
 	struct cafebabe_code_attribute code_attribute;
+	struct cafebabe_line_number_table_attribute line_number_table_attribute;
 
 	struct compilation_unit *compilation_unit;
 	struct jit_trampoline *trampoline;

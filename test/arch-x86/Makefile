@@ -38,6 +38,7 @@ OBJS = \
 	../../cafebabe/src/cafebabe/constant_value_attribute.o \
 	../../cafebabe/src/cafebabe/error.o \
 	../../cafebabe/src/cafebabe/field_info.o \
+	../../cafebabe/src/cafebabe/line_number_table_attribute.o \
 	../../cafebabe/src/cafebabe/method_info.o \
 	../../cafebabe/src/cafebabe/source_file_attribute.o \
 	../../cafebabe/src/cafebabe/stream.o \
