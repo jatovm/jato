@@ -16,6 +16,7 @@ add_library (cafebabe SHARED
 	src/cafebabe/error.c
 	src/cafebabe/field_info.c
 	src/cafebabe/method_info.c
+	src/cafebabe/source_file_attribute.c
 	src/cafebabe/stream.c
 )
 

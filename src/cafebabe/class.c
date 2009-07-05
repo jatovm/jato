@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
@@ -27,6 +28,7 @@
 #include "cafebabe/error.h"
 #include "cafebabe/field_info.h"
 #include "cafebabe/method_info.h"
+#include "cafebabe/source_file_attribute.h"
 #include "cafebabe/stream.h"
 
 int
@@ -372,4 +374,39 @@ cafebabe_class_get_method(const struct cafebabe_class *c,
 
 	/* Not found */
 	return 1;
+}
+
+char *cafebabe_class_get_source_file_name(const struct cafebabe_class *class)
+{
+	unsigned int source_file_attrib_index = 0;
+	if (cafebabe_attribute_array_get(&class->attributes, "SourceFile",
+		class, &source_file_attrib_index))
+	{
+		return NULL;
+	}
+
+	const struct cafebabe_attribute_info *attribute
+		= &class->attributes.array[source_file_attrib_index];
+
+	struct cafebabe_stream stream;
+	cafebabe_stream_open_buffer(&stream,
+		attribute->info, attribute->attribute_length);
+
+	struct cafebabe_source_file_attribute source_file_attribute;
+	if (cafebabe_source_file_attribute_init(&source_file_attribute,
+		&stream))
+	{
+		return NULL;
+	}
+
+	cafebabe_stream_close_buffer(&stream);
+
+	const struct cafebabe_constant_info_utf8 *file_name;
+	if (cafebabe_class_constant_get_utf8(class,
+		source_file_attribute.sourcefile_index, &file_name))
+	{
+		return NULL;
+	}
+
+	return strndup((char *) file_name->bytes, file_name->length);
 }
