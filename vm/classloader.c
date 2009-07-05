@@ -66,7 +66,7 @@ static int add_dir_to_classpath(const char *dir)
 		return -ENOMEM;
 	}
 
-	list_add(&cp->node, &classpaths);
+	list_add_tail(&cp->node, &classpaths);
 	return 0;
 }
 
@@ -85,7 +85,7 @@ static int add_zip_to_classpath(const char *zip)
 		return -1;
 	}
 
-	list_add(&cp->node, &classpaths);
+	list_add_tail(&cp->node, &classpaths);
 	return 0;
 }
 
