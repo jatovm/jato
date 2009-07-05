@@ -34,31 +34,106 @@ static inline void trace_pop()
 	--trace_classloader_level;
 }
 
+enum classpath_type {
+	CLASSPATH_DIR,
+	CLASSPATH_ZIP,
+};
+
 struct classpath {
 	struct list_head node;
 
-	/* This can contain several paths separated by colons */
-	const char *paths;
+	enum classpath_type type;
+
+	union {
+		const char *dir;
+		struct zip *zip;
+	};
 };
 
 /* These are the directories we search for classes */
 struct list_head classpaths = LIST_HEAD_INIT(classpaths);
 
-int classloader_add_to_classpath(const char *classpath)
+static int add_dir_to_classpath(const char *dir)
 {
-	assert(classpath);
-
 	struct classpath *cp = malloc(sizeof *cp);
 	if (!cp)
 		return -ENOMEM;
 
-	cp->paths = strdup(classpath);
-	if (!cp->paths) {
+	cp->type = CLASSPATH_DIR;
+	cp->dir= strdup(dir);
+	if (!cp->dir) {
 		NOT_IMPLEMENTED;
 		return -ENOMEM;
 	}
 
 	list_add(&cp->node, &classpaths);
+	return 0;
+}
+
+static int add_zip_to_classpath(const char *zip)
+{
+	int zip_error;
+
+	struct classpath *cp = malloc(sizeof *cp);
+	if (!cp)
+		return -ENOMEM;
+
+	cp->type = CLASSPATH_ZIP;
+	cp->zip = zip_open(zip, 0, &zip_error);
+	if (!cp->zip) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	list_add(&cp->node, &classpaths);
+	return 0;
+}
+
+int classloader_add_to_classpath(const char *classpath)
+{
+	int i = 0;
+
+	assert(classpath);
+
+	while (classpath[i]) {
+		size_t n;
+		char *classpath_element;
+		struct stat st;
+
+		n = strspn(classpath + i, ":");
+		i += n;
+
+		n = strcspn(classpath + i, ":");
+		if (n == 0)
+			continue;
+
+		classpath_element = strndup(classpath + i, n);
+		if (!classpath_element) {
+			NOT_IMPLEMENTED;
+			break;
+		}
+
+		i += n;
+
+		if (!stat(classpath_element, &st)) {
+			/* XXX: We need to figure out what the semantics for
+			 * this function should be on error. IIRC, regular
+			 * java just ignores invalid classpath components.
+			 * We probably _shouldn't_ ignore those that we
+			 * couldn't add because we are out of memory. Also,
+			 * do we return error even if _some_ paths were
+			 * added successfully? */
+
+			if (S_ISDIR(st.st_mode))
+				add_dir_to_classpath(classpath_element);
+
+			if (S_ISREG(st.st_mode))
+				add_zip_to_classpath(classpath_element);
+		}
+
+		free(classpath_element);
+	}
+
 	return 0;
 }
 
@@ -134,10 +209,23 @@ out:
 	return NULL;
 }
 
-struct vm_class *load_class_from_zip(const char *zipfile, const char *file)
+struct vm_class *load_class_from_dir(const char *dir, const char *file)
 {
-	int zip_error;
-	struct zip *zip;
+	struct vm_class *vmc;
+	char *full_filename;
+
+	if (asprintf(&full_filename, "%s/%s", dir, file) == -1) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	vmc = load_class_from_file(full_filename);
+	free(full_filename);
+	return vmc;
+}
+
+struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
+{
 	int zip_file_index;
 	struct zip_stat zip_stat;
 	struct zip_file *zip_file;
@@ -146,12 +234,6 @@ struct vm_class *load_class_from_zip(const char *zipfile, const char *file)
 	struct cafebabe_stream stream;
 	struct cafebabe_class *class;
 	struct vm_class *result = NULL;
-
-	zip = zip_open(zipfile, 0, &zip_error);
-	if (!zip) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
 
 	zip_file_index = zip_name_locate(zip, file, 0);
 	if (zip_file_index == -1) {
@@ -193,7 +275,6 @@ struct vm_class *load_class_from_zip(const char *zipfile, const char *file)
 	/* If this returns error, what can we do? We've got all the data we
 	 * wanted, so there should be no point in returning the error. */
 	zip_fclose(zip_file);
-	zip_close(zip);
 
 	cafebabe_stream_open_buffer(&stream, zip_file_buf, zip_stat.size);
 
@@ -216,71 +297,18 @@ struct vm_class *load_class_from_zip(const char *zipfile, const char *file)
 	return result;
 }
 
-struct vm_class *load_class_from_path_file(const char *path, const char *file)
-{
-	struct stat st;
-
-	if (stat(path, &st) == -1) {
-		/* Doesn't exist or not accessible */
-		return NULL;
-	}
-
-	if (S_ISDIR(st.st_mode)) {
-		/* Directory */
-		struct vm_class *vmc;
-		char *full_filename;
-
-		if (asprintf(&full_filename, "%s/%s", path, file) == -1) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
-
-		vmc = load_class_from_file(full_filename);
-		free(full_filename);
-		return vmc;
-	}
-
-	if (S_ISREG(st.st_mode)) {
-		/* Regular file; could be .zip or .jar */
-		return load_class_from_zip(path, file);
-	}
-
-	return NULL;
-}
-
-struct vm_class *load_class_from_classpath_file(const char *classpath,
+struct vm_class *load_class_from_classpath_file(const struct classpath *cp,
 	const char *file)
 {
-	struct vm_class *result = NULL;
-	size_t i = 0;
-
-	while (classpath[i]) {
-		size_t n;
-		char *classpath_element;
-
-		n = strspn(classpath + i, ":");
-		i += n;
-
-		n = strcspn(classpath + i, ":");
-		if (n == 0)
-			continue;
-
-		classpath_element = strndup(classpath + i, n);
-		if (!classpath_element) {
-			NOT_IMPLEMENTED;
-			break;
-		}
-
-		i += n;
-
-		result = load_class_from_path_file(classpath_element, file);
-		free(classpath_element);
-
-		if (result)
-			break;
+	switch (cp->type) {
+	case CLASSPATH_DIR:
+		return load_class_from_dir(cp->dir, file);
+	case CLASSPATH_ZIP:
+		return load_class_from_zip(cp->zip, file);
 	}
 
-	return result;
+	/* Should never reach this. */
+	return NULL;
 }
 
 static struct vm_class *primitive_class_cache[VM_TYPE_MAX];
@@ -377,7 +405,7 @@ struct vm_class *load_class(const char *class_name)
 
 	struct classpath *cp;
 	list_for_each_entry(cp, &classpaths, node) {
-		result = load_class_from_classpath_file(cp->paths, filename);
+		result = load_class_from_classpath_file(cp, filename);
 		if (result)
 			break;
 	}
