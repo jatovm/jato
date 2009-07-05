@@ -216,6 +216,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ArrayTest.class \
 	regression/jvm/BranchTest.class \
 	regression/jvm/ClassExceptionsTest.class \
+	regression/jvm/CloneTest.class \
 	regression/jvm/ControlTransferTest.class \
 	regression/jvm/ConversionTest.class \
 	regression/jvm/ExceptionsTest.class \

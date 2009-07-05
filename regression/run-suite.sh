@@ -56,6 +56,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.ArrayTest 0
     run_java jvm.BranchTest 0
     run_java jvm.ClassExceptionsTest 0
+    run_java jvm.CloneTest 0
     run_java jvm.ControlTransferTest 0
     run_java jvm.ConversionTest 0
     run_java jvm.ExceptionsTest 0
