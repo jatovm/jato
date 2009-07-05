@@ -3,6 +3,7 @@
 
 extern struct vm_class *vm_java_lang_Object;
 extern struct vm_class *vm_java_lang_Class;
+extern struct vm_class *vm_java_lang_Cloneable;
 extern struct vm_class *vm_java_lang_String;
 extern struct vm_class *vm_java_lang_Throwable;
 extern struct vm_class *vm_java_util_Properties;
