@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 #include <stdlib.h>
 
 void free_insn(struct insn *insn)

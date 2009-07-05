@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/vars.h>
+#include "jit/vars.h"
 #include <libharness.h>
 
 void test_empty_range_does_not_contain_anything(void)

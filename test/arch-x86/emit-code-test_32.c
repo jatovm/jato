@@ -2,19 +2,19 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <jit/compilation-unit.h>
-#include <jit/basic-block.h>
-#include <jit/statement.h>
-#include <jit/emit-code.h>
+#include "jit/compilation-unit.h"
+#include "jit/basic-block.h"
+#include "jit/statement.h"
+#include "jit/emit-code.h"
 
-#include <vm/buffer.h>
-#include <vm/list.h>
-#include <vm/system.h>
-#include <vm/vm.h>
+#include "vm/buffer.h"
+#include "vm/list.h"
+#include "vm/system.h"
+#include "vm/vm.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
-#include <test/vars.h>
+#include "test/vars.h"
 #include <libharness.h>
 
 static struct vm_method method;

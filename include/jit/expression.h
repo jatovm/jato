@@ -1,16 +1,16 @@
 #ifndef __EXPRESSION_H
 #define __EXPRESSION_H
 
-#include <vm/class.h>
-#include <vm/field.h>
-#include <vm/method.h>
-#include <vm/system.h>
-#include <vm/types.h>
-#include <vm/vm.h>
+#include "vm/class.h"
+#include "vm/field.h"
+#include "vm/method.h"
+#include "vm/system.h"
+#include "vm/types.h"
+#include "vm/vm.h"
 
-#include <jit/tree-node.h>
+#include "jit/tree-node.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
 struct parse_context;
 

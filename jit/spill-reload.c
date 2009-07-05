@@ -24,9 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compilation-unit.h>
-#include <jit/stack-slot.h>
-#include <arch/instruction.h>
+#include "jit/compilation-unit.h"
+#include "jit/stack-slot.h"
+#include "arch/instruction.h"
 #include <errno.h>
 
 static struct insn *last_insn(struct live_interval *interval)

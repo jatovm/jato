@@ -34,7 +34,7 @@
 #ifndef _DISASS_H
 #define _DISASS_H
 
-#include <jit/compilation-unit.h>
+#include "jit/compilation-unit.h"
 #include <dis-asm.h>
 #include <stdbool.h>
 

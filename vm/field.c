@@ -1,15 +1,15 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <cafebabe/class.h>
-#include <cafebabe/constant_pool.h>
-#include <cafebabe/field_info.h>
-#include <cafebabe/stream.h>
+#include "cafebabe/class.h"
+#include "cafebabe/constant_pool.h"
+#include "cafebabe/field_info.h"
+#include "cafebabe/stream.h"
 
-#include <vm/class.h>
-#include <vm/field.h>
-#include <vm/method.h>
-#include <vm/stdlib.h>
+#include "vm/class.h"
+#include "vm/field.h"
+#include "vm/method.h"
+#include "vm/stdlib.h"
 
 int vm_field_init(struct vm_field *vmf,
 	struct vm_class *vmc, unsigned int field_index)

@@ -4,9 +4,9 @@
 
 #include <stdint.h>
 
-#include <vm/bytecodes.h>
-#include <vm/system.h>
-#include <vm/vm.h>
+#include "vm/bytecodes.h"
+#include "vm/system.h"
+#include "vm/vm.h"
 
 #include <libharness.h>
 

@@ -2,12 +2,12 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <jit/basic-block.h>
+#include "jit/basic-block.h"
 #include <bc-test-utils.h>
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <vm/stack.h>
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
+#include "jit/statement.h"
+#include "vm/stack.h"
 #include <args-test-utils.h>
 
 #include <libharness.h>

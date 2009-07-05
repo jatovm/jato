@@ -8,7 +8,7 @@
  * please refer to the following papers:
  */
 
-#include <vm/stdlib.h>
+#include "vm/stdlib.h"
 #include <stdlib.h>
 #include <string.h>
 

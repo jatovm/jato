@@ -2,17 +2,17 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <cafebabe/constant_pool.h>
+#include "cafebabe/constant_pool.h"
 
-#include <vm/system.h>
-#include <vm/types.h>
-#include <vm/vm.h>
-#include <vm/limits.h>
-#include <jit/expression.h>
-#include <jit/compiler.h>
+#include "vm/system.h"
+#include "vm/types.h"
+#include "vm/vm.h"
+#include "vm/limits.h"
+#include "jit/expression.h"
+#include "jit/compiler.h"
 #include <libharness.h>
 #include <string.h>
-#include <test/vm.h>
+#include "test/vm.h"
 
 #include "bc-test-utils.h"
 

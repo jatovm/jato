@@ -2,9 +2,9 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <vm/vm.h>
-#include <jit/expression.h>
-#include <jit/compiler.h>
+#include "vm/vm.h"
+#include "jit/expression.h"
+#include "jit/compiler.h"
 #include <libharness.h>
 
 #include "bc-test-utils.h"

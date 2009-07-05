@@ -23,9 +23,9 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <arch/instruction.h>
-#include <jit/vars.h>
-#include <vm/stdlib.h>
+#include "arch/instruction.h"
+#include "jit/vars.h"
+#include "vm/stdlib.h"
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>

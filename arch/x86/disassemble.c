@@ -31,10 +31,10 @@
 
 */
 
-#include <jit/bc-offset-mapping.h>
-#include <jit/disassemble.h>
-#include <jit/compiler.h>
-#include <vm/string.h>
+#include "jit/bc-offset-mapping.h"
+#include "jit/disassemble.h"
+#include "jit/compiler.h"
+#include "vm/string.h"
 
 #include <assert.h>
 #include <dis-asm.h>

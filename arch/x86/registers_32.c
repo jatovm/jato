@@ -24,8 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/registers.h>
-#include <jit/vars.h>
+#include "arch/registers.h"
+#include "jit/vars.h"
 
 static enum machine_reg_type register_types[] = {
 	[REG_EAX] = REG_TYPE_GPR,

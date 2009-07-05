@@ -5,9 +5,9 @@
  * LICENSE for details.
  */
 
-#include <vm/list.h>
+#include "vm/list.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
 #include <stdlib.h>
 #include <string.h>

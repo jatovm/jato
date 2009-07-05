@@ -26,13 +26,13 @@
 
 #include <stdio.h>
 
-#include <jit/bc-offset-mapping.h>
-#include <jit/statement.h>
-#include <jit/expression.h>
+#include "jit/bc-offset-mapping.h"
+#include "jit/statement.h"
+#include "jit/expression.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
-#include <vm/buffer.h>
+#include "vm/buffer.h"
 
 /**
  * tree_patch_bc_offset - sets bytecode_offset field of a tree node

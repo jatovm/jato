@@ -24,14 +24,14 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/stack-frame.h>
+#include "arch/stack-frame.h"
 
-#include <vm/natives.h>
-#include <vm/method.h>
-#include <vm/class.h>
+#include "vm/natives.h"
+#include "vm/method.h"
+#include "vm/class.h"
 
-#include <jit/compiler.h>
-#include <jit/text.h>
+#include "jit/compiler.h"
+#include "jit/text.h"
 
 #include <stdbool.h>
 #include <unistd.h>

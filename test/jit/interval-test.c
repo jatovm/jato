@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2008  Pekka Enberg
  */
-#include <arch/instruction.h>
-#include <jit/vars.h>
+#include "arch/instruction.h"
+#include "jit/vars.h"
 #include <libharness.h>
 #include <stdlib.h>
 

@@ -1,10 +1,10 @@
 #ifndef __ARCH_INSTRUCTION_H
 #define __ARCH_INSTRUCTION_H
 
-#include <arch/registers.h>
-#include <jit/basic-block.h>
-#include <jit/use-position.h>
-#include <jit/vars.h>
+#include "arch/registers.h"
+#include "jit/basic-block.h"
+#include "jit/use-position.h"
+#include "jit/vars.h"
 
 #include <stdbool.h>
 

@@ -23,7 +23,7 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <jit/compiler.h>
+#include "jit/compiler.h"
 
 int convert_nop(struct parse_context *ctx)
 {

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <vm/class.h>
-#include <vm/object.h>
+#include "vm/class.h"
+#include "vm/object.h"
 
 struct vm_object *
 vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length)

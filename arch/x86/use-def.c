@@ -5,8 +5,8 @@
  * LICENSE for details.
  */
 
-#include <jit/compilation-unit.h>
-#include <arch/instruction.h>
+#include "jit/compilation-unit.h"
+#include "arch/instruction.h"
 
 enum {
 	DEF_DST		= 1,

@@ -1,21 +1,21 @@
 #ifndef __VM_METHOD_H
 #define __VM_METHOD_H
 
-#include <vm/vm.h>
-#include <vm/types.h>
+#include "vm/vm.h"
+#include "vm/types.h"
 
 #include <stdbool.h>
 #include <string.h>
 
-#include <cafebabe/code_attribute.h>
-#include <cafebabe/class.h>
-#include <cafebabe/line_number_table_attribute.h>
-#include <cafebabe/method_info.h>
+#include "cafebabe/code_attribute.h"
+#include "cafebabe/class.h"
+#include "cafebabe/line_number_table_attribute.h"
+#include "cafebabe/method_info.h"
 
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
 
-#include <vm/buffer.h>
+#include "vm/buffer.h"
 
 struct vm_class;
 

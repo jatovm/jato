@@ -24,8 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/expression.h>
-#include <jit/statement.h>
+#include "jit/expression.h"
+#include "jit/statement.h"
 
 int node_nr_kids(struct tree_node *node)
 {

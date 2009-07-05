@@ -25,17 +25,17 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <jit/bc-offset-mapping.h>
-#include <jit/expression.h>
-#include <jit/statement.h>
-#include <jit/tree-node.h>
-#include <jit/compiler.h>
+#include "jit/bc-offset-mapping.h"
+#include "jit/expression.h"
+#include "jit/statement.h"
+#include "jit/tree-node.h"
+#include "jit/compiler.h"
 
-#include <vm/bytecode.h>
-#include <vm/bytecodes.h>
-#include <vm/die.h>
-#include <vm/method.h>
-#include <vm/stack.h>
+#include "vm/bytecode.h"
+#include "vm/bytecodes.h"
+#include "vm/die.h"
+#include "vm/method.h"
+#include "vm/stack.h"
 
 #include <stdlib.h>
 #include <string.h>

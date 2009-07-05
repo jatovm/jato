@@ -23,8 +23,8 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <vm/bytecode.h>
-#include <vm/bytecodes.h>
+#include "vm/bytecode.h"
+#include "vm/bytecodes.h"
 
 int8_t bytecode_read_s8(struct bytecode_buffer *buffer)
 {

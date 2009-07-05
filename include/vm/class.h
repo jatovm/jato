@@ -1,14 +1,14 @@
 #ifndef __CLASS_H
 #define __CLASS_H
 
-#include <vm/field.h>
-#include <vm/itable.h>
-#include <vm/method.h>
-#include <vm/static.h>
-#include <vm/types.h>
-#include <vm/vm.h>
+#include "vm/field.h"
+#include "vm/itable.h"
+#include "vm/method.h"
+#include "vm/static.h"
+#include "vm/types.h"
+#include "vm/vm.h"
 
-#include <jit/vtable.h>
+#include "jit/vtable.h"
 
 struct vm_object;
 

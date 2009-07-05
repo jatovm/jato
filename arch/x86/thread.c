@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/thread.h>
+#include "arch/thread.h"
 
 static unsigned long get_tls_address(void)
 {

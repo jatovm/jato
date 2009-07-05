@@ -1,10 +1,10 @@
 #ifndef __JIT_INSTRUCTION_H
 #define __JIT_INSTRUCTION_H
 
-#include <jit/use-position.h>
-#include <arch/registers.h>
-#include <arch/stack-frame.h>
-#include <vm/list.h>
+#include "jit/use-position.h"
+#include "arch/registers.h"
+#include "arch/stack-frame.h"
+#include "vm/list.h"
 
 #include <stdbool.h>
 

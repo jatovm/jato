@@ -1,8 +1,8 @@
 #ifndef __JIT_USE_POSITION_H
 #define __JIT_USE_POSITION_H
 
-#include <jit/vars.h>
-#include <vm/list.h>
+#include "jit/vars.h"
+#include "vm/list.h"
 
 struct insn;
 

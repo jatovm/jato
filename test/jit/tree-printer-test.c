@@ -2,18 +2,18 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <jit/tree-printer.h>
-#include <jit/statement.h>
-#include <vm/class.h>
-#include <vm/field.h>
-#include <vm/method.h>
-#include <vm/string.h>
-#include <vm/types.h>
+#include "jit/tree-printer.h"
+#include "jit/statement.h"
+#include "vm/class.h"
+#include "vm/field.h"
+#include "vm/method.h"
+#include "vm/string.h"
+#include "vm/types.h"
 
 #include <libharness.h>
 #include <stdlib.h>
 
-#include <test/vm.h>
+#include "test/vm.h"
 
 static struct vm_class vmc = {
 	.name = "Class",

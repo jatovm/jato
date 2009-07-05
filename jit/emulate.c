@@ -25,10 +25,10 @@
  */
 
 #include <math.h>
-#include <jit/exception.h>
-#include <jit/emulate.h>
-#include <vm/class.h>
-#include <vm/preload.h>
+#include "jit/exception.h"
+#include "jit/emulate.h"
+#include "vm/class.h"
+#include "vm/preload.h"
 
 int emulate_lcmp(long long value1, long long value2)
 {

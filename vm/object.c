@@ -5,17 +5,17 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include <jit/exception.h>
+#include "jit/exception.h"
 
-#include <vm/class.h>
-#include <vm/classloader.h>
-#include <vm/die.h>
-#include <vm/preload.h>
-#include <vm/object.h>
-#include <vm/stdlib.h>
-#include <vm/string.h>
-#include <vm/types.h>
-#include <vm/utf8.h>
+#include "vm/class.h"
+#include "vm/classloader.h"
+#include "vm/die.h"
+#include "vm/preload.h"
+#include "vm/object.h"
+#include "vm/stdlib.h"
+#include "vm/string.h"
+#include "vm/types.h"
+#include "vm/utf8.h"
 
 static pthread_mutexattr_t obj_mutexattr;
 

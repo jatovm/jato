@@ -30,12 +30,12 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include <arch/text.h>
-#include <jit/text.h>
+#include "arch/text.h"
+#include "jit/text.h"
 
-#include <vm/system.h>
-#include <vm/alloc.h>
-#include <vm/die.h>
+#include "vm/system.h"
+#include "vm/alloc.h"
+#include "vm/die.h"
 
 #define MAX_TEXT_SIZE (256 * 1024 * 1024) /* 256 MB */
 

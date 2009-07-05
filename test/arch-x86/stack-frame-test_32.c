@@ -2,9 +2,9 @@
  * Copyright (C) 2006-2008  Pekka Enberg
  */
 
-#include <jit/expression.h>
-#include <vm/vm.h>
-#include <arch/stack-frame.h>
+#include "jit/expression.h"
+#include "vm/vm.h"
+#include "arch/stack-frame.h"
 #include <stdlib.h>
 #include <libharness.h>
 

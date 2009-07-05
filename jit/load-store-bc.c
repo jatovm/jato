@@ -8,20 +8,20 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include <cafebabe/constant_pool.h>
+#include "cafebabe/constant_pool.h"
 
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <jit/expression.h>
+#include "jit/compiler.h"
+#include "jit/statement.h"
+#include "jit/expression.h"
 
-#include <vm/bytecode.h>
-#include <vm/bytecodes.h>
-#include <vm/class.h>
-#include <vm/classloader.h>
-#include <vm/object.h>
-#include <vm/resolve.h>
-#include <vm/stack.h>
-#include <vm/die.h>
+#include "vm/bytecode.h"
+#include "vm/bytecodes.h"
+#include "vm/class.h"
+#include "vm/classloader.h"
+#include "vm/object.h"
+#include "vm/resolve.h"
+#include "vm/stack.h"
+#include "vm/die.h"
 
 #include <stdint.h>
 #include <errno.h>

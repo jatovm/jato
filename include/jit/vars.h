@@ -1,8 +1,8 @@
 #ifndef __JIT_VARS_H
 #define __JIT_VARS_H
 
-#include <vm/list.h>
-#include <arch/registers.h>
+#include "vm/list.h"
+#include "arch/registers.h"
 #include <stdbool.h>
 #include <assert.h>
 

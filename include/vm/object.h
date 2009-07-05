@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <vm/field.h>
-#include <vm/vm.h>
+#include "vm/field.h"
+#include "vm/vm.h"
 
 struct vm_class;
 enum vm_type;

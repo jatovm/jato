@@ -25,11 +25,11 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <jit/expression.h>
+#include "jit/compiler.h"
+#include "jit/statement.h"
+#include "jit/expression.h"
 
-#include <vm/stack.h>
+#include "vm/stack.h"
 
 #include <errno.h>
 

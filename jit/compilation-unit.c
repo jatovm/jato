@@ -23,16 +23,16 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <arch/instruction.h>
-#include <arch/registers.h>
+#include "arch/instruction.h"
+#include "arch/registers.h"
 
-#include <jit/basic-block.h>
-#include <jit/compilation-unit.h>
-#include <jit/stack-slot.h>
-#include <jit/vars.h>
-#include <vm/buffer.h>
-#include <vm/method.h>
-#include <vm/vm.h>
+#include "jit/basic-block.h"
+#include "jit/compilation-unit.h"
+#include "jit/stack-slot.h"
+#include "jit/vars.h"
+#include "vm/buffer.h"
+#include "vm/method.h"
+#include "vm/vm.h"
 
 #include <errno.h>
 #include <stdlib.h>

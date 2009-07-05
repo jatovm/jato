@@ -1,10 +1,10 @@
 #ifndef __STATEMENT_H
 #define __STATEMENT_H
 
-#include <vm/list.h>
-#include <jit/expression.h>
+#include "vm/list.h"
+#include "jit/expression.h"
 #include <stddef.h>
-#include <vm/vm.h>
+#include "vm/vm.h"
 
 enum statement_type {
 	STMT_STORE = OP_LAST,

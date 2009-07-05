@@ -24,26 +24,26 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <cafebabe/code_attribute.h>
+#include "cafebabe/code_attribute.h"
 
-#include <jit/exception.h>
-#include <jit/compilation-unit.h>
-#include <jit/bc-offset-mapping.h>
-#include <jit/basic-block.h>
-#include <jit/exception.h>
-#include <jit/compiler.h>
+#include "jit/exception.h"
+#include "jit/compilation-unit.h"
+#include "jit/bc-offset-mapping.h"
+#include "jit/basic-block.h"
+#include "jit/exception.h"
+#include "jit/compiler.h"
 
-#include <vm/buffer.h>
-#include <vm/class.h>
-#include <vm/die.h>
-#include <vm/guard-page.h>
-#include <vm/method.h>
-#include <vm/object.h>
-#include <vm/preload.h>
-#include <vm/thread.h>
+#include "vm/buffer.h"
+#include "vm/class.h"
+#include "vm/die.h"
+#include "vm/guard-page.h"
+#include "vm/method.h"
+#include "vm/object.h"
+#include "vm/preload.h"
+#include "vm/thread.h"
 
-#include <arch/stack-frame.h>
-#include <arch/instruction.h>
+#include "arch/stack-frame.h"
+#include "arch/instruction.h"
 #include <errno.h>
 
 __thread struct vm_object *exception_holder = NULL;

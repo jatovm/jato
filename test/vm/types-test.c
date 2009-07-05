@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <vm/types.h>
+#include "vm/types.h"
 
 #include <libharness.h>
 

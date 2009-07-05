@@ -7,19 +7,19 @@
  * LICENSE for details.
  */
 
-#include <vm/buffer.h>
-#include <vm/class.h>
-#include <vm/method.h>
-#include <vm/object.h>
-#include <vm/vm.h>
+#include "vm/buffer.h"
+#include "vm/class.h"
+#include "vm/method.h"
+#include "vm/object.h"
+#include "vm/vm.h"
 
-#include <jit/compilation-unit.h>
-#include <jit/basic-block.h>
-#include <jit/emit-code.h>
-#include <jit/compiler.h>
-#include <jit/text.h>
+#include "jit/compilation-unit.h"
+#include "jit/basic-block.h"
+#include "jit/emit-code.h"
+#include "jit/compiler.h"
+#include "jit/text.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
 #include <stdlib.h>
 #include <string.h>

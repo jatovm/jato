@@ -24,8 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compilation-unit.h>
-#include <jit/expression.h>
+#include "jit/compilation-unit.h"
+#include "jit/expression.h"
 
 #include <bc-test-utils.h>
 #include <libharness.h>

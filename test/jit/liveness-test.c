@@ -2,13 +2,13 @@
  * Copyright (C) 2007  Pekka Enberg
  */
 
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <vm/bitset.h>
-#include <vm/class.h>
-#include <vm/method.h>
-#include <vm/vm.h>
-#include <arch/instruction.h>
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
+#include "vm/bitset.h"
+#include "vm/class.h"
+#include "vm/method.h"
+#include "vm/vm.h"
+#include "arch/instruction.h"
 #include <libharness.h>
 
 struct vm_method method;

@@ -24,21 +24,21 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/cu-mapping.h>
-#include <jit/emit-code.h>
-#include <jit/exception.h>
-#include <jit/compiler.h>
+#include "jit/cu-mapping.h"
+#include "jit/emit-code.h"
+#include "jit/exception.h"
+#include "jit/compiler.h"
 
-#include <vm/preload.h>
-#include <vm/buffer.h>
-#include <vm/class.h>
-#include <vm/method.h>
-#include <vm/natives.h>
-#include <vm/string.h>
-#include <vm/method.h>
-#include <vm/buffer.h>
-#include <vm/die.h>
-#include <vm/vm.h>
+#include "vm/preload.h"
+#include "vm/buffer.h"
+#include "vm/class.h"
+#include "vm/method.h"
+#include "vm/natives.h"
+#include "vm/string.h"
+#include "vm/method.h"
+#include "vm/buffer.h"
+#include "vm/die.h"
+#include "vm/vm.h"
 
 #include <stdio.h>
 

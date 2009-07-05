@@ -24,13 +24,13 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/cu-mapping.h>
-#include <jit/compiler.h>
+#include "jit/cu-mapping.h"
+#include "jit/compiler.h"
 
-#include <arch/stack-frame.h>
-#include <arch/signal.h>
+#include "arch/stack-frame.h"
+#include "arch/signal.h"
 
-#include <vm/signal.h>
+#include "vm/signal.h"
 
 extern void signal_bh_trampoline(void *bh);
 

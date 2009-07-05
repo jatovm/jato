@@ -2,11 +2,11 @@
  * Copyright (C) 2005  Pekka Enberg
  */
 
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <vm/list.h>
-#include <vm/stack.h>
-#include <vm/system.h>
+#include "jit/compiler.h"
+#include "jit/statement.h"
+#include "vm/list.h"
+#include "vm/stack.h"
+#include "vm/system.h"
 
 #include <bc-test-utils.h>
 #include <libharness.h>

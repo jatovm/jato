@@ -29,10 +29,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <vm/classloader.h>
-#include <vm/class.h>
-#include <vm/itable.h>
-#include <vm/method.h>
+#include "vm/classloader.h"
+#include "vm/class.h"
+#include "vm/itable.h"
+#include "vm/method.h"
 
 bool opt_trace_itable;
 

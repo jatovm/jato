@@ -8,17 +8,17 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <jit/args.h>
+#include "jit/compiler.h"
+#include "jit/statement.h"
+#include "jit/args.h"
 
-#include <vm/bytecode.h>
-#include <vm/bytecodes.h>
-#include <vm/classloader.h>
-#include <vm/field.h>
-#include <vm/object.h>
-#include <vm/stack.h>
-#include <vm/die.h>
+#include "vm/bytecode.h"
+#include "vm/bytecodes.h"
+#include "vm/classloader.h"
+#include "vm/field.h"
+#include "vm/object.h"
+#include "vm/stack.h"
+#include "vm/die.h"
 
 #include <stdlib.h>
 #include <string.h>

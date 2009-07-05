@@ -5,13 +5,13 @@
  * LICENSE for details.
  */
 
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <jit/vars.h>
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
+#include "jit/vars.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
-#include <test/vars.h>
+#include "test/vars.h"
 #include <bc-test-utils.h>
 #include <libharness.h>
 #include <stdlib.h>

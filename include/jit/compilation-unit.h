@@ -1,13 +1,13 @@
 #ifndef __JIT_COMPILATION_UNIT_H
 #define __JIT_COMPILATION_UNIT_H
 
-#include <jit/basic-block.h>
+#include "jit/basic-block.h"
 
-#include <vm/list.h>
-#include <vm/stack.h>
-#include <vm/static.h>
+#include "vm/list.h"
+#include "vm/stack.h"
+#include "vm/static.h"
 
-#include <arch/stack-frame.h>
+#include "arch/stack-frame.h"
 
 #include <stdbool.h>
 #include <pthread.h>

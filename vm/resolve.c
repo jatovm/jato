@@ -24,8 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <vm/resolve.h>
-#include <vm/vm.h>
+#include "vm/resolve.h"
+#include "vm/vm.h"
 
 #include <stddef.h>
 #include <stdio.h>

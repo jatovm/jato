@@ -1,7 +1,7 @@
 #ifndef __X86_FRAME_H
 #define __X86_FRAME_H
 
-#include <jit/stack-slot.h>
+#include "jit/stack-slot.h"
 #include <stdbool.h>
 
 struct vm_method;

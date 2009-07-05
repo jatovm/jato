@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/vtable.h>
+#include "jit/vtable.h"
 #include <stdlib.h>
 
 void vtable_init(struct vtable *vtable, unsigned int nr_methods)

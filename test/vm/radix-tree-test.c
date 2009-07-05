@@ -2,7 +2,7 @@
  * Copyright (C) 2009 Tomasz Grabiec
  */
 
-#include <vm/radix-tree.h>
+#include "vm/radix-tree.h"
 #include <libharness.h>
 #include <limits.h>
 

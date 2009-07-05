@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/signal.h>
+#include "arch/signal.h"
 
 bool signal_from_jit_method(void *ctx)
 {

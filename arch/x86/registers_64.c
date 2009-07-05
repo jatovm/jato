@@ -24,7 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <arch/registers.h>
+#include "arch/registers.h"
 
 static const char *register_names[] = {
 	[REG_RAX] = "RAX",

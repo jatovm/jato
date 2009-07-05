@@ -23,7 +23,7 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include <jit/stack-slot.h>
+#include "jit/stack-slot.h"
 #include <libharness.h>
 #include <stdlib.h>
 

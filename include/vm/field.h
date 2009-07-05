@@ -3,12 +3,12 @@
 
 #include <stdbool.h>
 
-#include <cafebabe/constant_pool.h>
-#include <cafebabe/constant_value_attribute.h>
-#include <cafebabe/field_info.h>
+#include "cafebabe/constant_pool.h"
+#include "cafebabe/constant_value_attribute.h"
+#include "cafebabe/field_info.h"
 
-#include <vm/vm.h>
-#include <vm/types.h>
+#include "vm/vm.h"
+#include "vm/types.h"
 
 struct vm_class;
 

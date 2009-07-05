@@ -1,4 +1,4 @@
-#include <jit/disassemble.h>
+#include "jit/disassemble.h"
 
 unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 {

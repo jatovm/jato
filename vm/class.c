@@ -30,27 +30,27 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <cafebabe/class.h>
-#include <cafebabe/constant_pool.h>
-#include <cafebabe/field_info.h>
-#include <cafebabe/method_info.h>
-#include <cafebabe/stream.h>
+#include "cafebabe/class.h"
+#include "cafebabe/constant_pool.h"
+#include "cafebabe/field_info.h"
+#include "cafebabe/method_info.h"
+#include "cafebabe/stream.h"
 
-#include <vm/class.h>
-#include <vm/classloader.h>
-#include <vm/die.h>
-#include <vm/fault-inject.h>
-#include <vm/field.h>
-#include <vm/preload.h>
-#include <vm/itable.h>
-#include <vm/method.h>
-#include <vm/object.h>
-#include <vm/string.h>
-#include <vm/vm.h>
+#include "vm/class.h"
+#include "vm/classloader.h"
+#include "vm/die.h"
+#include "vm/fault-inject.h"
+#include "vm/field.h"
+#include "vm/preload.h"
+#include "vm/itable.h"
+#include "vm/method.h"
+#include "vm/object.h"
+#include "vm/string.h"
+#include "vm/vm.h"
 
-#include <jit/exception.h>
-#include <jit/compiler.h>
-#include <jit/vtable.h>
+#include "jit/exception.h"
+#include "jit/compiler.h"
+#include "jit/vtable.h"
 
 static void
 setup_vtable(struct vm_class *vmc)

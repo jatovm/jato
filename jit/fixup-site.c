@@ -24,8 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compiler.h>
-#include <arch/instruction.h>
+#include "jit/compiler.h"
+#include "arch/instruction.h"
 #include <memory.h>
 #include <malloc.h>
 

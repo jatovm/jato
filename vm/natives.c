@@ -5,8 +5,8 @@
  * LICENSE for details.
  */
 
-#include <vm/natives.h>
-#include <vm/system.h>
+#include "vm/natives.h"
+#include "vm/system.h"
 
 #include <errno.h>
 #include <stdlib.h>

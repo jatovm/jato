@@ -3,16 +3,16 @@
 
 #include <stdbool.h>
 
-#include <cafebabe/code_attribute.h>
+#include "cafebabe/code_attribute.h"
 
-#include <arch/stack-frame.h>
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <jit/cu-mapping.h>
+#include "arch/stack-frame.h"
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
+#include "jit/cu-mapping.h"
 
-#include <vm/die.h>
-#include <vm/method.h>
-#include <vm/vm.h>
+#include "vm/die.h"
+#include "vm/method.h"
+#include "vm/vm.h"
 
 struct compilation_unit;
 struct jit_stack_frame;

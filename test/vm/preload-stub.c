@@ -1,5 +1,5 @@
-#include <vm/class.h>
-#include <vm/preload.h>
+#include "vm/class.h"
+#include "vm/preload.h"
 
 struct vm_class *vm_java_lang_Object;
 struct vm_class *vm_java_lang_Class;

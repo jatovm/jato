@@ -7,15 +7,15 @@
  * LICENSE for details.
  */
 
-#include <jit/compiler.h>
+#include "jit/compiler.h"
 
-#include <vm/bitset.h>
-#include <vm/bytecodes.h>
-#include <vm/method.h>
-#include <vm/stream.h>
-#include <vm/vm.h>
+#include "vm/bitset.h"
+#include "vm/bytecodes.h"
+#include "vm/method.h"
+#include "vm/stream.h"
+#include "vm/vm.h"
 
-#include <jit/exception.h>
+#include "jit/exception.h"
 
 #include <errno.h>
 #include <stdlib.h>

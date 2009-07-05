@@ -24,9 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/bc-offset-mapping.h>
+#include "jit/bc-offset-mapping.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
 #include <stdlib.h>
 #include <string.h>

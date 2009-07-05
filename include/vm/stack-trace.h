@@ -1,11 +1,11 @@
 #ifndef JATO_VM_STACK_TRACE_H
 #define JATO_VM_STACK_TRACE_H
 
-#include <arch/stack-frame.h>
+#include "arch/stack-frame.h"
 
-#include <vm/stack-trace.h>
-#include <vm/natives.h>
-#include <vm/vm.h>
+#include "vm/stack-trace.h"
+#include "vm/natives.h"
+#include "vm/vm.h"
 
 #include <stdbool.h>
 

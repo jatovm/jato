@@ -1,10 +1,10 @@
 #ifndef _BC_OFFSET_MAPPING
 #define _BC_OFFSET_MAPPING
 
-#include <jit/compilation-unit.h>
-#include <jit/tree-node.h>
-#include <vm/method.h>
-#include <vm/string.h>
+#include "jit/compilation-unit.h"
+#include "jit/tree-node.h"
+#include "vm/method.h"
+#include "vm/string.h"
 #include <limits.h>
 
 #define BC_OFFSET_UNKNOWN ULONG_MAX

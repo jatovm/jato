@@ -24,8 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/perf-map.h>
-#include <vm/die.h>
+#include "jit/perf-map.h"
+#include "vm/die.h"
 
 #include <sys/types.h>
 #include <pthread.h>

@@ -1,7 +1,7 @@
 #ifndef _ARCH_EXCEPTION_H
 #define _ARCH_EXCEPTION_H
 
-#include <vm/vm.h>
+#include "vm/vm.h"
 
 struct compilation_unit;
 

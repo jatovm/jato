@@ -5,14 +5,14 @@
  * LICENSE for details.
  */
 
-#include <jit/statement.h>
-#include <jit/expression.h>
-#include <jit/bc-offset-mapping.h>
+#include "jit/statement.h"
+#include "jit/expression.h"
+#include "jit/bc-offset-mapping.h"
 
-#include <vm/vm.h>
-#include <vm/method.h>
-#include <vm/object.h>
-#include <vm/die.h>
+#include "vm/vm.h"
+#include "vm/method.h"
+#include "vm/object.h"
+#include "vm/die.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 #ifndef __VM_UTILS_H
 #define __VM_UTILS_H
 
-#include <vm/vm.h>
+#include "vm/vm.h"
 #include <stdlib.h>
 
 static inline struct vm_class *new_class(void)

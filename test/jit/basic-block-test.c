@@ -2,13 +2,13 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <jit/basic-block.h>
-#include <jit/compilation-unit.h>
+#include "jit/basic-block.h"
+#include "jit/compilation-unit.h"
 #include <basic-block-assert.h>
-#include <jit/statement.h>
-#include <vm/vm.h>
+#include "jit/statement.h"
+#include "vm/vm.h"
 
-#include <arch/instruction.h>
+#include "arch/instruction.h"
 
 #include <libharness.h>
 #include <stddef.h>

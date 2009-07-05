@@ -3,8 +3,8 @@
  */
 
 #include <libharness.h>
-#include <vm/natives.h>
-#include <vm/system.h>
+#include "vm/natives.h"
+#include "vm/system.h"
 
 static void vm_class_is_instance(void)
 {

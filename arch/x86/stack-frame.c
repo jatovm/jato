@@ -27,14 +27,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <jit/expression.h>
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
+#include "jit/expression.h"
 
-#include <vm/method.h>
-#include <vm/vm.h>
+#include "vm/method.h"
+#include "vm/vm.h"
 
-#include <arch/stack-frame.h>
+#include "arch/stack-frame.h"
 
 /*
  * The three callee-saved registers are unconditionally stored on the stack

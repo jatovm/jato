@@ -2,9 +2,9 @@
 #define __PPC_INSTRUCTION_H
 
 #include <stdbool.h>
-#include <vm/list.h>
-#include <arch/registers.h>
-#include <jit/use-position.h>
+#include "vm/list.h"
+#include "arch/registers.h"
+#include "jit/use-position.h"
 
 struct var_info;
 

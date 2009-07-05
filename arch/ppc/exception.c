@@ -24,8 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/compilation-unit.h>
-#include <vm/vm.h>
+#include "jit/compilation-unit.h"
+#include "vm/vm.h"
 
 unsigned char *
 throw_exception(struct compilation_unit *cu, struct object *exception)

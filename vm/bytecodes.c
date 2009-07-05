@@ -7,9 +7,9 @@
  * The file contains utility functions for parsing a bytecode stream.
  */
 
-#include <vm/vm.h>
-#include <vm/bytecode.h>
-#include <vm/bytecodes.h>
+#include "vm/vm.h"
+#include "vm/bytecode.h"
+#include "vm/bytecodes.h"
 
 #include <stdint.h>
 #include <stdio.h>

@@ -2,7 +2,7 @@
  * Copyright (C) 2006  Pekka Enberg
  */
 
-#include <jit/expression.h>
+#include "jit/expression.h"
 
 #include <libharness.h>
 #include <stdlib.h>

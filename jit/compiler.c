@@ -7,15 +7,15 @@
  * LICENSE for details.
  */
 
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <jit/statement.h>
-#include <jit/bc-offset-mapping.h>
-#include <jit/exception.h>
-#include <jit/perf-map.h>
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
+#include "jit/statement.h"
+#include "jit/bc-offset-mapping.h"
+#include "jit/exception.h"
+#include "jit/perf-map.h"
 
-#include <vm/class.h>
-#include <vm/method.h>
+#include "vm/class.h"
+#include "vm/method.h"
 
 #include <errno.h>
 #include <stdlib.h>

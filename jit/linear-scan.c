@@ -35,9 +35,9 @@
  *   Press, New York, NY, 132-141.
  */
 
-#include <jit/compiler.h>
-#include <jit/vars.h>
-#include <vm/bitset.h>
+#include "jit/compiler.h"
+#include "jit/vars.h"
+#include "vm/bitset.h"
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>

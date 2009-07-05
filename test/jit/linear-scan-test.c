@@ -2,12 +2,12 @@
  * Copyright © 2007  Pekka Enberg
  */
 
-#include <jit/compiler.h>
-#include <arch/instruction.h>
+#include "jit/compiler.h"
+#include "arch/instruction.h"
 #include <libharness.h>
-#include <vm/class.h>
-#include <vm/method.h>
-#include <vm/vm.h>
+#include "vm/class.h"
+#include "vm/method.h"
+#include "vm/vm.h"
 
 struct vm_method method;
 

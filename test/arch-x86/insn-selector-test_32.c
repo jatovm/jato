@@ -3,19 +3,19 @@
  */
 
 #include <libharness.h>
-#include <jit/basic-block.h>
-#include <jit/expression.h>
-#include <jit/statement.h>
-#include <jit/compiler.h>
-#include <vm/class.h>
-#include <vm/field.h>
-#include <vm/method.h>
-#include <vm/object.h>
-#include <vm/vm.h>
-#include <arch/instruction.h>
+#include "jit/basic-block.h"
+#include "jit/expression.h"
+#include "jit/statement.h"
+#include "jit/compiler.h"
+#include "vm/class.h"
+#include "vm/field.h"
+#include "vm/method.h"
+#include "vm/object.h"
+#include "vm/vm.h"
+#include "arch/instruction.h"
 
-#include <test/vars.h>
-#include <test/vm.h>
+#include "test/vars.h"
+#include "test/vm.h"
 
 static struct vm_method method = { };
 

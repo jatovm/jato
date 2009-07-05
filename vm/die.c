@@ -2,8 +2,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <vm/backtrace.h>
-#include <vm/die.h>
+#include "vm/backtrace.h"
+#include "vm/die.h"
 
 void do_warn(const char *format, ...)
 {

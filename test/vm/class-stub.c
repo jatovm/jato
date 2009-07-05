@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <vm/class.h>
-#include <vm/field.h>
-#include <vm/method.h>
+#include "vm/class.h"
+#include "vm/field.h"
+#include "vm/method.h"
 
 int vm_class_init(struct vm_class *vmc)
 {

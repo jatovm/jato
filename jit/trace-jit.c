@@ -6,27 +6,27 @@
  * LICENSE for details.
  */
 
-#include <jit/bc-offset-mapping.h>
-#include <jit/compilation-unit.h>
-#include <jit/tree-printer.h>
-#include <jit/basic-block.h>
-#include <jit/disassemble.h>
-#include <jit/lir-printer.h>
-#include <jit/exception.h>
-#include <jit/cu-mapping.h>
-#include <jit/statement.h>
-#include <jit/vars.h>
-#include <jit/args.h>
-#include <vm/preload.h>
-#include <vm/object.h>
+#include "jit/bc-offset-mapping.h"
+#include "jit/compilation-unit.h"
+#include "jit/tree-printer.h"
+#include "jit/basic-block.h"
+#include "jit/disassemble.h"
+#include "jit/lir-printer.h"
+#include "jit/exception.h"
+#include "jit/cu-mapping.h"
+#include "jit/statement.h"
+#include "jit/vars.h"
+#include "jit/args.h"
+#include "vm/preload.h"
+#include "vm/object.h"
 
-#include <vm/buffer.h>
-#include <vm/class.h>
-#include <vm/method.h>
-#include <vm/string.h>
-#include <vm/vm.h>
+#include "vm/buffer.h"
+#include "vm/class.h"
+#include "vm/method.h"
+#include "vm/string.h"
+#include "vm/vm.h"
 
-#include <arch/stack-frame.h>
+#include "arch/stack-frame.h"
 
 #include <malloc.h>
 #include <stdlib.h>

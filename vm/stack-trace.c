@@ -24,20 +24,20 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <vm/class.h>
-#include <vm/classloader.h>
-#include <vm/object.h>
-#include <vm/method.h>
-#include <vm/natives.h>
-#include <vm/object.h>
-#include <vm/stack-trace.h>
-#include <vm/preload.h>
-#include <vm/system.h>
+#include "vm/class.h"
+#include "vm/classloader.h"
+#include "vm/object.h"
+#include "vm/method.h"
+#include "vm/natives.h"
+#include "vm/object.h"
+#include "vm/stack-trace.h"
+#include "vm/preload.h"
+#include "vm/system.h"
 
-#include <jit/bc-offset-mapping.h>
-#include <jit/cu-mapping.h>
-#include <jit/exception.h>
-#include <jit/compiler.h>
+#include "jit/bc-offset-mapping.h"
+#include "jit/cu-mapping.h"
+#include "jit/exception.h"
+#include "jit/compiler.h"
 
 #include <malloc.h>
 #include <stdio.h>

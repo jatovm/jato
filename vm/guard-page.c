@@ -24,9 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <vm/guard-page.h>
-#include <vm/alloc.h>
-#include <vm/die.h>
+#include "vm/guard-page.h"
+#include "vm/alloc.h"
+#include "vm/die.h"
 
 #include <sys/mman.h>
 #include <unistd.h>

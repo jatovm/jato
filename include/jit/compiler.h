@@ -1,11 +1,11 @@
 #ifndef __JIT_COMPILER_H
 #define __JIT_COMPILER_H
 
-#include <jit/compilation-unit.h>
-#include <jit/basic-block.h>
-#include <vm/buffer.h>
-#include <vm/stack.h>
-#include <vm/vm.h>
+#include "jit/compilation-unit.h"
+#include "jit/basic-block.h"
+#include "vm/buffer.h"
+#include "vm/stack.h"
+#include "vm/vm.h"
 
 #include <pthread.h>
 #include <stdbool.h>

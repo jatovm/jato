@@ -24,9 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <jit/expression.h>
+#include "jit/expression.h"
 
-#include <vm/stack.h>
+#include "vm/stack.h"
 
 struct expression *
 insert_arg(struct expression *root, struct expression *expr)

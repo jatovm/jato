@@ -5,9 +5,9 @@
  * LICENSE for details.
  */
 
-#include <vm/bitset.h>
-#include <vm/system.h>
-#include <vm/stdlib.h>
+#include "vm/bitset.h"
+#include "vm/system.h"
+#include "vm/stdlib.h"
 
 #include <assert.h>
 #include <stdlib.h>

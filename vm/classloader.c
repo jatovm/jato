@@ -5,12 +5,12 @@
 
 #include <zip.h>
 
-#include <cafebabe/class.h>
-#include <cafebabe/stream.h>
+#include "cafebabe/class.h"
+#include "cafebabe/stream.h"
 
-#include <vm/class.h>
-#include <vm/classloader.h>
-#include <vm/preload.h>
+#include "vm/class.h"
+#include "vm/classloader.h"
+#include "vm/preload.h"
 
 bool opt_trace_classloader;
 static int trace_classloader_level = 0;

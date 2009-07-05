@@ -7,26 +7,26 @@
  * LICENSE for details.
  */
 
-#include <cafebabe/method_info.h>
+#include "cafebabe/method_info.h"
 
-#include <jit/basic-block.h>
-#include <jit/statement.h>
-#include <jit/compilation-unit.h>
-#include <jit/compiler.h>
-#include <jit/exception.h>
-#include <jit/stack-slot.h>
-#include <jit/emit-code.h>
-#include <jit/text.h>
+#include "jit/basic-block.h"
+#include "jit/statement.h"
+#include "jit/compilation-unit.h"
+#include "jit/compiler.h"
+#include "jit/exception.h"
+#include "jit/stack-slot.h"
+#include "jit/emit-code.h"
+#include "jit/text.h"
 
-#include <vm/list.h>
-#include <vm/buffer.h>
-#include <vm/method.h>
-#include <vm/object.h>
+#include "vm/list.h"
+#include "vm/buffer.h"
+#include "vm/method.h"
+#include "vm/object.h"
 
-#include <arch/instruction.h>
-#include <arch/memory.h>
-#include <arch/stack-frame.h>
-#include <arch/thread.h>
+#include "arch/instruction.h"
+#include "arch/memory.h"
+#include "arch/stack-frame.h"
+#include "arch/thread.h"
 
 #include <assert.h>
 #include <errno.h>

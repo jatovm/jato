@@ -1,17 +1,17 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <cafebabe/attribute_array.h>
-#include <cafebabe/attribute_info.h>
-#include <cafebabe/line_number_table_attribute.h>
-#include <cafebabe/class.h>
-#include <cafebabe/code_attribute.h>
-#include <cafebabe/constant_pool.h>
-#include <cafebabe/method_info.h>
-#include <cafebabe/stream.h>
+#include "cafebabe/attribute_array.h"
+#include "cafebabe/attribute_info.h"
+#include "cafebabe/line_number_table_attribute.h"
+#include "cafebabe/class.h"
+#include "cafebabe/code_attribute.h"
+#include "cafebabe/constant_pool.h"
+#include "cafebabe/method_info.h"
+#include "cafebabe/stream.h"
 
-#include <vm/class.h>
-#include <vm/method.h>
+#include "vm/class.h"
+#include "vm/method.h"
 
 int vm_method_init(struct vm_method *vmm,
 	struct vm_class *vmc, unsigned int method_index)

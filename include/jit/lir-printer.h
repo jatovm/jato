@@ -1,7 +1,7 @@
 #ifndef JIT_LIR_PRINTER_H
 #define JIT_LIR_PRINTER_H
 
-#include <vm/string.h>
+#include "vm/string.h"
 
 struct insn;
 

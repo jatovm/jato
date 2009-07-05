@@ -2,22 +2,22 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include <cafebabe/constant_pool.h>
-#include <cafebabe/class.h>
+#include "cafebabe/constant_pool.h"
+#include "cafebabe/class.h"
 
-#include <jit/compilation-unit.h>
-#include <jit/basic-block.h>
+#include "jit/compilation-unit.h"
+#include "jit/basic-block.h"
 #include <bc-test-utils.h>
 #include <args-test-utils.h>
-#include <jit/tree-node.h>
-#include <jit/expression.h>
-#include <jit/statement.h>
-#include <jit/compiler.h>
-#include <vm/types.h>
+#include "jit/tree-node.h"
+#include "jit/expression.h"
+#include "jit/statement.h"
+#include "jit/compiler.h"
+#include "vm/types.h"
 #include <libharness.h>
 #include <stdlib.h>
 
-#include <test/vm.h>
+#include "test/vm.h"
 
 struct compilation_unit *
 alloc_simple_compilation_unit(struct vm_method *method)
