@@ -46,6 +46,10 @@
 		return NULL;						\
 	}
 
+#define check_class_object(x)						\
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))	\
+		return NULL;
+
 static jclass vm_jni_find_class(struct vm_jni_env *env, const char *name)
 {
 	struct vm_class *class;
@@ -71,6 +75,7 @@ static jmethodID vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz,
 	struct vm_class *class;
 
 	check_null(clazz);
+	check_class_object(clazz);
 
 	class = vm_class_get_class_from_class_object(clazz);
 	check_null(class);
@@ -95,6 +100,7 @@ static jfieldID vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz,
 	struct vm_class *class;
 
 	check_null(clazz);
+	check_class_object(clazz);
 
 	class = vm_class_get_class_from_class_object(clazz);
 	check_null(class);
