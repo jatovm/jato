@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 
+#include "vm/die.h"
 #include "vm/classloader.h"
 #include "vm/preload.h"
 #include "vm/class.h"
@@ -202,6 +203,8 @@ int preload_vm_classes(void)
 		struct vm_method *method = vm_class_get_method(*me->class,
 			me->name, me->type);
 		if (!method) {
+			warn("preload of %s.%s%s failed", (*me->class)->name,
+			     me->name, me->type);
 			NOT_IMPLEMENTED;
 			return 1;
 		}
