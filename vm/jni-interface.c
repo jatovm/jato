@@ -46,7 +46,7 @@
 		return NULL;						\
 	}
 
-jclass vm_jni_find_class(struct vm_jni_env *env, const char *name)
+static jclass vm_jni_find_class(struct vm_jni_env *env, const char *name)
 {
 	struct vm_class *class;
 
@@ -64,7 +64,7 @@ jclass vm_jni_find_class(struct vm_jni_env *env, const char *name)
 	return class->object;
 }
 
-jmethodID vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz,
+static jmethodID vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz,
 			       const char *name, const char *sig)
 {
 	struct vm_method *mb;
@@ -88,7 +88,7 @@ jmethodID vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz,
 	return mb;
 }
 
-jfieldID vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz,
+static jfieldID vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz,
 			     const char *name, const char *sig)
 {
 	struct vm_field *fb;
@@ -112,7 +112,7 @@ jfieldID vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz,
 	return fb;
 }
 
-const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
+static const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
 					 jboolean *is_copy)
 {
 	jbyte *array;
@@ -120,7 +120,7 @@ const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
 	if (!string)
 		return NULL;
 
-	array = vm_string_to_cstr(string);
+	array = (jbyte *) vm_string_to_cstr(string);
 	if (!array)
 		return NULL;
 
@@ -130,7 +130,7 @@ const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
 	return array;
 }
 
-void vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
+static void vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
 				 const char *utf)
 {
 	free((char *)utf);

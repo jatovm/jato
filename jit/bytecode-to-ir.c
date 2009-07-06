@@ -26,6 +26,7 @@
  * Please refer to the file LICENSE for details.
  */
 #include "jit/bc-offset-mapping.h"
+#include "jit/bytecode-to-ir.h"
 #include "jit/expression.h"
 #include "jit/statement.h"
 #include "jit/tree-node.h"
@@ -33,9 +34,9 @@
 
 #include "vm/bytecode.h"
 #include "vm/bytecodes.h"
-#include "vm/die.h"
 #include "vm/method.h"
 #include "vm/stack.h"
+#include "vm/die.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -58,18 +59,6 @@ static int convert_not_implemented(struct parse_context *ctx)
 #define convert_wide		convert_not_implemented
 #define convert_goto_w		convert_not_implemented
 #define convert_jsr_w		convert_not_implemented
-
-/*
- * This macro magic sets up the converter lookup table.
- */
-
-typedef int (*convert_fn_t) (struct parse_context *);
-
-#define DECLARE_CONVERTER(name) int name(struct parse_context *)
-
-#define BYTECODE(opc, name, size, type) DECLARE_CONVERTER(convert_ ## name);
-#  include <vm/bytecode-def.h>
-#undef BYTECODE
 
 #define BYTECODE(opc, name, size, type) [opc] = convert_ ## name,
 static convert_fn_t converters[] = {

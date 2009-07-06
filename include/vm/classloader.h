@@ -1,6 +1,8 @@
 #ifndef __VM_CLASSLOADER_H
 #define __VM_CLASSLOADER_H
 
+#include <stdbool.h>
+
 extern bool opt_trace_classloader;
 
 struct vm_class;

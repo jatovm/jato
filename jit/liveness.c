@@ -7,9 +7,12 @@
  */
 
 #include "jit/compilation-unit.h"
+#include "jit/compiler.h"
 #include "jit/vars.h"
-#include "lib/bitset.h"
+
 #include "arch/instruction.h"
+
+#include "lib/bitset.h"
 
 #include <errno.h>
 #include <stdlib.h>

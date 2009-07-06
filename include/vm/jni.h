@@ -47,7 +47,7 @@ struct vm_jni_env {
 };
 
 void vm_jni_init(void);
-struct vm_jni_env *vm_jni_get_jni_env();
+struct vm_jni_env *vm_jni_get_jni_env(void);
 int vm_jni_load_object(const char *name);
 void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 			   const char *method_type);

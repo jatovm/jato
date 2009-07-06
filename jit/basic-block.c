@@ -7,8 +7,8 @@
  * This file contains functions for basic block operations.
  */
 
-#include "jit/basic-block.h"
 #include "jit/compilation-unit.h"
+#include "jit/basic-block.h"
 #include "jit/statement.h"
 
 #include "arch/instruction.h"
@@ -147,7 +147,7 @@ void bb_add_insn(struct basic_block *bb, struct insn *insn)
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }
 
-int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
+static int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
 {
 	unsigned long new_size;
 	void *new_array;
@@ -172,10 +172,12 @@ int bb_add_successor(struct basic_block *bb, struct basic_block *successor)
 	return __bb_add_neighbor(successor, (void **)&bb->successors, &bb->nr_successors);
 }
 
+#if 0
 int bb_add_predecessor(struct basic_block *bb, struct basic_block *predecessor)
 {
 	return __bb_add_neighbor(predecessor, (void **)&bb->predecessors, &bb->nr_predecessors);
 }
+#endif
 
 int bb_add_mimic_stack_expr(struct basic_block *bb, struct expression *expr)
 {

@@ -9,7 +9,7 @@ struct vm_thread {
 	struct vm_object *exception;
 };
 
-struct vm_thread *vm_current_thread(void)
+static inline struct vm_thread *vm_current_thread(void)
 {
 	static struct vm_thread tmp;
 

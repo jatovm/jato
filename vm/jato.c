@@ -151,7 +151,9 @@ native_vmruntime_maplibraryname(struct vm_object *name)
 	}
 
 	char *result_str = NULL;
-	asprintf(&result_str, "lib%s.so", str);
+
+	if (asprintf(&result_str, "lib%s.so", str) < 0)
+		die("asprintf");
 
 	free(str);
 

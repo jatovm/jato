@@ -6,6 +6,6 @@ struct compilation_unit;
 int add_cu_mapping(unsigned long addr, struct compilation_unit *cu);
 void remove_cu_mapping(unsigned long addr);
 struct compilation_unit *jit_lookup_cu(unsigned long addr);
-void init_cu_mapping();
+void init_cu_mapping(void);
 
 #endif

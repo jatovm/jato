@@ -25,6 +25,7 @@
  */
 
 #include "jit/expression.h"
+#include "jit/args.h"
 
 #include "vm/stack.h"
 

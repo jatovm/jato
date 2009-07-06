@@ -5,6 +5,8 @@
  * LICENSE for details.
  */
 
+#include "vm/debug-dump.h"
+
 #include <stdio.h>
 
 void print_buffer(unsigned char *buffer, unsigned long size)

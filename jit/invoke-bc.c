@@ -8,6 +8,7 @@
  * and return instructions to immediate representation of the JIT compiler.
  */
 
+#include "jit/bytecode-to-ir.h"
 #include "jit/compiler.h"
 #include "jit/statement.h"
 #include "jit/args.h"

@@ -4,6 +4,7 @@
 
 #include "vm/object.h"
 #include "vm/types.h"
+#include "vm/utf8.h"
 
 int utf8_char_count(const uint8_t *bytes, unsigned int n, unsigned int *res)
 {

@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "vm/backtrace.h"
+
 #include <bfd.h>
 #include <execinfo.h>
 #include <signal.h>

@@ -8,11 +8,12 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include "jit/compiler.h"
+#include "jit/bytecode-to-ir.h"
 #include "jit/statement.h"
+#include "jit/compiler.h"
 
-#include "vm/bytecode.h"
 #include "vm/bytecodes.h"
+#include "vm/bytecode.h"
 #include "vm/stack.h"
 
 #include <errno.h>

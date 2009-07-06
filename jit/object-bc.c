@@ -8,8 +8,9 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
-#include "jit/compiler.h"
+#include "jit/bytecode-to-ir.h"
 #include "jit/statement.h"
+#include "jit/compiler.h"
 #include "jit/args.h"
 
 #include "vm/bytecode.h"
@@ -181,7 +182,7 @@ int convert_putfield(struct parse_context *ctx)
 	return 0;
 }
 
-int convert_array_load(struct parse_context *ctx, enum vm_type type)
+static int convert_array_load(struct parse_context *ctx, enum vm_type type)
 {
 	struct expression *index, *arrayref;
 	struct expression *src_expr, *dest_expr;

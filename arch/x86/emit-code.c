@@ -179,8 +179,8 @@ static void emit_leave(struct buffer *buf)
 	emit(buf, 0xc9);
 }
 
-void emit_branch_rel(struct buffer *buf, unsigned char prefix,
-		     unsigned char opc, long rel32)
+static void emit_branch_rel(struct buffer *buf, unsigned char prefix,
+			    unsigned char opc, long rel32)
 {
 	if (prefix)
 		emit(buf, prefix);

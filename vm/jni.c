@@ -121,7 +121,9 @@ int vm_jni_load_object(const char *name)
 	}
 
 	char *so_name = NULL;
-	asprintf(&so_name, "%s/lib/classpath/%s", classpath_install_dir, name);
+
+	if (asprintf(&so_name, "%s/lib/classpath/%s", classpath_install_dir, name) < 0)
+		die("asprintf");
 
 	handle = dlopen(so_name, RTLD_NOW);
 	free(so_name);
@@ -166,15 +168,17 @@ void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 	mangled_method_type = vm_jni_get_mangled_name(method_type);
 
 	symbol_name = NULL;
-	asprintf(&symbol_name, "Java_%s_%s__%s", mangled_class_name,
-		 mangled_method_name, mangled_method_type);
+	if (asprintf(&symbol_name, "Java_%s_%s__%s", mangled_class_name,
+		 mangled_method_name, mangled_method_type) < 0)
+		die("asprintf");
 
 	sym_addr = vm_jni_lookup_symbol(symbol_name);
 	if (sym_addr)
 		goto out;
 
-	asprintf(&symbol_name, "Java_%s_%s", mangled_class_name,
-		 mangled_method_name);
+	if (asprintf(&symbol_name, "Java_%s_%s", mangled_class_name,
+		 mangled_method_name) < 0)
+		die("asprintf");
 
 	sym_addr = vm_jni_lookup_symbol(symbol_name);
 

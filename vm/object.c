@@ -184,7 +184,7 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	return res;
 }
 
-struct vm_object *clone_regular(struct vm_object *obj)
+static struct vm_object *clone_regular(struct vm_object *obj)
 {
 	struct vm_class *vmc = obj->class;
 	struct vm_object *new = vm_object_alloc(vmc);
@@ -196,7 +196,7 @@ struct vm_object *clone_regular(struct vm_object *obj)
 	return new;
 }
 
-struct vm_object *clone_array(struct vm_object *obj)
+static struct vm_object *clone_array(struct vm_object *obj)
 {
 	struct vm_class *vmc = obj->class;
 	struct vm_class *e_vmc = vmc->array_element_class;
@@ -232,7 +232,7 @@ struct vm_object *clone_array(struct vm_object *obj)
 	}
 }
 
-struct vm_object *clone_primitive(struct vm_object *obj)
+static struct vm_object *clone_primitive(struct vm_object *obj)
 {
 	/* XXX: Is it even possible to create instances of primitive classes?
 	 * I suspect it will be just the same as a normal object clone,
@@ -243,8 +243,6 @@ struct vm_object *clone_primitive(struct vm_object *obj)
 
 struct vm_object *vm_object_clone(struct vm_object *obj)
 {
-	struct vm_class *vmc;
-
 	assert(obj);
 
 	/* (In order of likelyhood:) */

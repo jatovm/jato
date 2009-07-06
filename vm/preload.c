@@ -27,8 +27,9 @@
 
 #include <stdio.h>
 
-#include "vm/class.h"
 #include "vm/classloader.h"
+#include "vm/preload.h"
+#include "vm/class.h"
 
 struct preload_entry {
 	const char *name;

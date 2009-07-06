@@ -31,6 +31,7 @@
 #include "jit/compiler.h"
 #include "jit/expression.h"
 
+#include "vm/stack-trace.h"
 #include "vm/method.h"
 #include "vm/vm.h"
 

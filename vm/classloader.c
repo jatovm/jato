@@ -27,7 +27,7 @@ static inline void trace_push(const char *class_name)
 	++trace_classloader_level;
 }
 
-static inline void trace_pop()
+static inline void trace_pop(void)
 {
 	assert(trace_classloader_level >= 1);
 
@@ -159,7 +159,7 @@ static struct classloader_class *lookup_class(const char *class_name)
 	return NULL;
 }
 
-char *class_name_to_file_name(const char *class_name)
+static char *class_name_to_file_name(const char *class_name)
 {
 	char *filename;
 
@@ -176,7 +176,7 @@ char *class_name_to_file_name(const char *class_name)
 	return filename;
 }
 
-struct vm_class *load_class_from_file(const char *filename)
+static struct vm_class *load_class_from_file(const char *filename)
 {
 	struct cafebabe_stream stream;
 	struct cafebabe_class *class;
@@ -209,7 +209,7 @@ out:
 	return NULL;
 }
 
-struct vm_class *load_class_from_dir(const char *dir, const char *file)
+static struct vm_class *load_class_from_dir(const char *dir, const char *file)
 {
 	struct vm_class *vmc;
 	char *full_filename;
@@ -224,7 +224,7 @@ struct vm_class *load_class_from_dir(const char *dir, const char *file)
 	return vmc;
 }
 
-struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
+static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 {
 	int zip_file_index;
 	struct zip_stat zip_stat;
@@ -297,7 +297,7 @@ struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 	return result;
 }
 
-struct vm_class *load_class_from_classpath_file(const struct classpath *cp,
+static struct vm_class *load_class_from_classpath_file(const struct classpath *cp,
 	const char *file)
 {
 	switch (cp->type) {
@@ -344,7 +344,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	return class;
 }
 
-struct vm_class *load_array_class(const char *class_name)
+static struct vm_class *load_array_class(const char *class_name)
 {
 	struct vm_class *array_class;
 	char *elem_class_name;
@@ -382,7 +382,7 @@ struct vm_class *load_array_class(const char *class_name)
 	return array_class;
 }
 
-struct vm_class *load_class(const char *class_name)
+static struct vm_class *load_class(const char *class_name)
 {
 	struct vm_class *result;
 	char *filename;

@@ -27,6 +27,7 @@
 
 #include "jit/compilation-unit.h"
 #include "jit/basic-block.h"
+#include "jit/lir-printer.h"
 #include "jit/emit-code.h"
 #include "jit/statement.h"
 #include "jit/compiler.h"

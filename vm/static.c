@@ -22,8 +22,9 @@ void static_fixup_init(void)
 		abort();
 }
 
-int add_static_fixup_site(enum static_fixup_type type, struct insn *insn,
-	struct vm_field *vmf, struct compilation_unit *cu)
+static int
+add_static_fixup_site(enum static_fixup_type type, struct insn *insn,
+		      struct vm_field *vmf, struct compilation_unit *cu)
 {
 	struct vm_class *vmc;
 	struct static_fixup_site *site;
