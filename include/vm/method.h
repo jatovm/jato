@@ -36,8 +36,6 @@ struct vm_method {
 	struct compilation_unit *compilation_unit;
 	struct jit_trampoline *trampoline;
 	struct jni_trampoline *jni_trampoline;
-
-	void *jit_code;
 };
 
 int vm_method_init(struct vm_method *vmm,
