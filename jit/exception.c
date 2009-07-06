@@ -87,40 +87,49 @@ void signal_exception(struct vm_object *exception)
 	if (exception_holder)
 		return;
 
-	if (exception == NULL)
-		die("exception is NULL");
+	assert(exception);
 
 	trampoline_exception_guard = trampoline_exceptions_guard_page;
 	exception_guard  = exceptions_guard_page;
 	exception_holder = exception;
 }
 
-void signal_new_exception(struct vm_class *vmc, const char *msg)
+int signal_new_exception(struct vm_class *vmc, const char *msg)
 {
-	struct vm_object *e;
+	struct vm_object *exception;
 
-	e = new_exception(vmc, msg);
-	signal_exception(e);
+	exception = new_exception(vmc, msg);
+	if (!exception) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	signal_exception(exception);
+	return 0;
 }
 
 typedef struct vm_object * (*vm_throwable_init_cause_fn)(struct vm_object *,
 							 struct vm_object *);
 
-void signal_new_exception_with_cause(struct vm_class *vmc,
-				     struct vm_object *cause,
-				     const char *msg)
+int signal_new_exception_with_cause(struct vm_class *vmc,
+				    struct vm_object *cause,
+				    const char *msg)
 {
-	struct vm_object *e;
+	struct vm_object *exception;
 	vm_throwable_init_cause_fn init_cause;
 
 	init_cause = vm_method_trampoline_ptr(vm_java_lang_Throwable_initCause);
 
-	e = new_exception(vmc, msg);
-	if (!e || exception_occurred())
-		return;
+	exception = new_exception(vmc, msg);
+	if (!exception)
+		return -1;
 
-	init_cause(e, cause);
-	signal_exception(e);
+	init_cause(exception, cause);
+	if (exception_occurred())
+		return -1;
+
+	signal_exception(exception);
+	return 0;
 }
 
 void clear_exception(void)

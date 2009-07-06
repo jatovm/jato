@@ -55,10 +55,10 @@ void throw_exception_from_signal(void *ctx, struct vm_object *exception);
 void throw_exception_from_trampoline(void *ctx, struct vm_object *exception);
 void unwind(void);
 void signal_exception(struct vm_object *obj);
-void signal_new_exception(struct vm_class *vmc, const char *msg);
-void signal_new_exception_with_cause(struct vm_class *vmc,
-				     struct vm_object *cause,
-				     const char *msg);
+int signal_new_exception(struct vm_class *vmc, const char *msg);
+int signal_new_exception_with_cause(struct vm_class *vmc,
+				    struct vm_object *cause,
+				    const char *msg);
 void clear_exception(void);
 void init_exceptions(void);
 void thread_init_exceptions(void);

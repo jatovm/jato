@@ -335,13 +335,20 @@ struct vm_object *new_exception(struct vm_class *vmc, const char *message)
 	struct vm_object *obj;
 
 	obj = vm_object_alloc(vmc);
-	if (!obj)
+	if (!obj) {
+		NOT_IMPLEMENTED;
 		return NULL;
+	}
 
 	if (message == NULL)
 		message_str = NULL;
-	else
+	else {
 		message_str = vm_object_alloc_string_from_c(message);
+		if (!message_str) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+	}
 
 	mb = vm_class_get_method(vmc,
 		"<init>", "(Ljava/lang/String;)V");
@@ -350,6 +357,9 @@ struct vm_object *new_exception(struct vm_class *vmc, const char *message)
 
 	init = vm_method_trampoline_ptr(mb);
 	init(obj, message_str);
+
+	if (exception_occurred())
+		return NULL;
 
 	return obj;
 }
