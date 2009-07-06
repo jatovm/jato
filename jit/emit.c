@@ -121,12 +121,13 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
 	struct insn *insn;
 
 	bb->mach_offset = buffer_offset(buf);
+	bb->is_emitted = true;
+
 	backpatch_branches(buf, &bb->backpatch_insns, bb->mach_offset);
 
 	for_each_insn(insn, &bb->insn_list) {
 		emit_insn(buf, insn);
 	}
-	bb->is_emitted = true;
 }
 
 static struct buffer_operations exec_buf_ops = {
