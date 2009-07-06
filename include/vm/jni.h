@@ -24,6 +24,7 @@ typedef jint jsize;
 
 typedef struct vm_object *jobject;
 typedef jobject jclass;
+typedef jobject jthrowable;
 typedef struct vm_field *jfieldID;
 typedef struct vm_method *jmethodID;
 

@@ -38,6 +38,7 @@
 #include "vm/method.h"
 #include "vm/object.h"
 #include "vm/preload.h"
+#include "vm/stack-trace.h"
 
 #define check_null(x)							\
 	if (x == NULL) {						\
@@ -142,6 +143,52 @@ static void vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
 	free((char *)utf);
 }
 
+static jint vm_jni_throw(struct vm_jni_env *env, jthrowable exception)
+{
+	if (!vm_object_is_instance_of(exception, vm_java_lang_Throwable))
+		return -1;
+
+	signal_exception(exception);
+	return 0;
+}
+
+static jint vm_jni_throw_new(struct vm_jni_env *env, jclass clazz,
+			     const char *message)
+{
+	struct vm_class *class;
+
+	if (!clazz)
+		return -1;
+
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+		return -1;
+
+	class = vm_class_get_class_from_class_object(clazz);
+
+	return signal_new_exception(class, message);
+}
+
+static jthrowable vm_jni_exception_occurred(struct vm_jni_env *env)
+{
+	return exception_occurred();
+}
+
+static void vm_jni_exception_describe(struct vm_jni_env *env)
+{
+	if (exception_occurred())
+		vm_print_exception(exception_occurred());
+}
+
+static void vm_jni_exception_clear(struct vm_jni_env *env)
+{
+	clear_exception();
+}
+
+static void vm_jni_fatal_error(struct vm_jni_env *env, const char *msg)
+{
+	die("%s", msg);
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -165,14 +212,14 @@ void *vm_jni_native_interface[] = {
 	NULL, /* GetSuperclass */
 	NULL, /* IsAssignableFrom */
 	NULL,
-	NULL, /* Throw */
-	NULL, /* ThrowNew */
+	vm_jni_throw,
+	vm_jni_throw_new,
 
 	/* 15 */
-	NULL, /* ExceptionOccurred */
-	NULL, /* ExceptionDescribe */
-	NULL, /* ExceptionClear */
-	NULL, /* FatalError */
+	vm_jni_exception_occurred,
+	vm_jni_exception_describe,
+	vm_jni_exception_clear,
+	vm_jni_fatal_error,
 	NULL,
 
 	/* 20 */
