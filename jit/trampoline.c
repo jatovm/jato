@@ -46,31 +46,24 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 {
 	const char *method_name, *class_name, *method_type;
 	struct vm_method *method;
-	struct string *msg;
 	void *ret;
 
 	method = cu->method;
+
+	if (method->vm_native_ptr)
+		return method->vm_native_ptr;
+
 	class_name  = method->class->name;
 	method_name = method->name;
 	method_type = method->type;
 
-	ret = vm_lookup_native(class_name, method_name);
+	ret = vm_jni_lookup_method(class_name, method_name, method_type);
 	if (ret) {
 		add_cu_mapping((unsigned long)ret, cu);
 		return ret;
 	}
 
-	ret = vm_jni_lookup_method(class_name, method_name, method_type);
-	if (ret) {
-		add_cu_mapping((unsigned long)ret, cu);
-
-		if (!method->jni_trampoline)
-			method->jni_trampoline = build_jni_trampoline(ret);
-
-		return buffer_ptr(method->jni_trampoline->objcode);
-	}
-
-	msg = alloc_str();
+	struct string *msg = alloc_str();
 	if (!msg)
 		/* TODO: signal OutOfMemoryError */
 		die("out of memory");
@@ -148,16 +141,5 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 	trampoline = alloc_jit_trampoline();
 	if (trampoline)
 		emit_trampoline(cu, jit_magic_trampoline, trampoline);
-	return trampoline;
-}
-
-struct jni_trampoline *build_jni_trampoline(void *target)
-{
-	struct jni_trampoline *trampoline;
-
-	trampoline = alloc_jni_trampoline();
-	if (trampoline)
-		emit_jni_trampoline(trampoline->objcode, vm_jni_get_jni_env(),
-				    target);
 	return trampoline;
 }

@@ -205,34 +205,7 @@ struct jit_trampoline *alloc_jit_trampoline(void)
 	return NULL;
 }
 
-struct jni_trampoline *alloc_jni_trampoline(void)
-{
-	struct jni_trampoline *trampoline;
-
-	trampoline = malloc(sizeof(*trampoline));
-	if (!trampoline)
-		return NULL;
-
-	memset(trampoline, 0, sizeof(*trampoline));
-
-	trampoline->objcode = __alloc_buffer(&exec_buf_ops);
-	if (!trampoline->objcode)
-		goto failed;
-
-	return trampoline;
-
-  failed:
-	free_jni_trampoline(trampoline);
-	return NULL;
-}
-
 void free_jit_trampoline(struct jit_trampoline *trampoline)
-{
-	free_buffer(trampoline->objcode);
-	free(trampoline);
-}
-
-void free_jni_trampoline(struct jni_trampoline *trampoline)
 {
 	free_buffer(trampoline->objcode);
 	free(trampoline);

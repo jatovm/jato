@@ -65,6 +65,7 @@ OBJS = \
 	../vm/classloader-stub.o \
 	../vm/object-stub.o \
 	../vm/preload-stub.o \
+	../vm/jni-stub.o \
 	../jit/trace-stub.o \
 	args-test-utils.o \
 	arithmetic-bc-test.o \

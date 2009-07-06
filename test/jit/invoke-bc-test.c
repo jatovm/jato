@@ -94,7 +94,12 @@ build_invoke_bb(unsigned char invoke_opc,
 		unsigned short method_table_idx,
 		struct expression **args)
 {
+	const struct cafebabe_method_info target_method_info = {
+		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
+	};
+
 	struct vm_method target_method = {
+		.method = &target_method_info,
 		.type = type,
 		.args_count = nr_args,
 		.method_index = method_table_idx,
@@ -197,6 +202,10 @@ static void assert_invoke_return_type(unsigned char invoke_opc, enum vm_type exp
 static struct basic_block *
 invoke_discarded_return_value(unsigned char invoke_opc, struct vm_method *target_method)
 {
+	const struct cafebabe_method_info target_method_info = {
+		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
+	};
+
 	unsigned char code[] = {
 		invoke_opc, 0x00, 0x00,
 		OPC_POP
@@ -209,6 +218,7 @@ invoke_discarded_return_value(unsigned char invoke_opc, struct vm_method *target
 	
 	target_method->type = "()I";
 	target_method->args_count = 0;
+	target_method->method = &target_method_info;
 
 	bb = __alloc_simple_bb(&invoker_method);
 	convert_ir_invoke(bb->b_parent, target_method, 0);
@@ -234,7 +244,12 @@ static void assert_invoke_return_value_discarded(enum expression_type expected_t
 
 static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsigned char opc, char *return_type, int nr_args)
 {
+	const struct cafebabe_method_info target_method_info = {
+		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
+	};
+
 	struct vm_method target_method = {
+		.method = &target_method_info,
 		.type = return_type,
 		.args_count = nr_args,
 	};
@@ -358,6 +373,11 @@ void test_convert_invokestatic_for_void_return_type(void)
 	unsigned char code[] = {
 		OPC_INVOKESTATIC, 0x00, 0x00,
 	};
+
+	const struct cafebabe_method_info target_method_info = {
+		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
+	};
+
 	struct vm_method method = {
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
@@ -367,6 +387,7 @@ void test_convert_invokestatic_for_void_return_type(void)
 
 	mb.type = "()V";
 	mb.args_count = 0;
+	mb.method = &target_method_info;
 
 	bb = __alloc_simple_bb(&method);
 	convert_ir_invoke(bb->b_parent, &mb, 0);

@@ -19,6 +19,7 @@
 #include "vm/method.h"
 #include "vm/stack.h"
 #include "vm/die.h"
+#include "vm/jni.h"
 
 #include <string.h>
 #include <errno.h>
@@ -204,6 +205,14 @@ int convert_invokevirtual(struct parse_context *ctx)
 	return err;
 }
 
+static void append_arg(struct expression *expr, struct expression *arg)
+{
+	struct expression *args_list;
+
+	args_list = insert_arg(to_expr(expr->args_list), arg);
+	expr->args_list = &args_list->node;
+}
+
 int convert_invokespecial(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
@@ -227,6 +236,17 @@ int convert_invokespecial(struct parse_context *ctx)
 		goto failed;
 
 	null_check_first_arg(to_expr(expr->args_list));
+
+	if (vm_method_is_jni_method(invoke_target)) {
+		struct expression *jni_env_expr;
+
+		jni_env_expr = value_expr(J_REFERENCE,
+			(unsigned long)vm_jni_get_jni_env());
+		if (!jni_env_expr)
+			goto failed;
+
+		append_arg(expr, jni_env_expr);
+	}
 
 	err = insert_invoke_expr(ctx, expr);
 	if (err)
@@ -259,6 +279,25 @@ int convert_invokestatic(struct parse_context *ctx)
 	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
 		goto failed;
+
+	if (vm_method_is_jni_method(invoke_target)) {
+		struct expression *jni_env_expr;
+		struct expression *class_expr;
+
+		class_expr = value_expr(J_REFERENCE,
+			(unsigned long)invoke_target->class->object);
+		if (!class_expr)
+			goto failed;
+
+		append_arg(expr, class_expr);
+
+		jni_env_expr = value_expr(J_REFERENCE,
+			(unsigned long)vm_jni_get_jni_env());
+		if (!jni_env_expr)
+			goto failed;
+
+		append_arg(expr, jni_env_expr);
+	}
 
 	err = insert_invoke_expr(ctx, expr);
 	if (err)

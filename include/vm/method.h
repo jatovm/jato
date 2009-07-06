@@ -35,7 +35,8 @@ struct vm_method {
 
 	struct compilation_unit *compilation_unit;
 	struct jit_trampoline *trampoline;
-	struct jni_trampoline *jni_trampoline;
+
+	void *vm_native_ptr;
 };
 
 int vm_method_init(struct vm_method *vmm,
@@ -78,6 +79,12 @@ static inline bool method_is_virtual(struct vm_method *vmm)
 
 	return (vmm->method->access_flags & (CAFEBABE_METHOD_ACC_STATIC
 		| CAFEBABE_METHOD_ACC_PRIVATE)) == 0;
+}
+
+static inline bool vm_method_is_jni_method(struct vm_method *vmm)
+{
+	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_NATIVE
+		&& !vmm->vm_native_ptr;
 }
 
 static inline enum vm_type method_return_type(struct vm_method *method)
