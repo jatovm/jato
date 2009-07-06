@@ -382,7 +382,185 @@ native_vmthrowable_get_stack_trace(struct vm_object *this,
 	return result;
 }
 
-void vm_print_exception(struct vm_object *exception)
+typedef struct vm_object *(*vm_java_lang_Throwable_toString_fn)
+	(struct vm_object *);
+typedef struct vm_object *(*vm_java_lang_Throwable_getCause_fn)
+	(struct vm_object *);
+typedef struct vm_object *(*vm_java_lang_Throwable_getStackTrace_fn)
+	(struct vm_object *);
+typedef struct vm_object *(*vm_java_lang_StackTraceElement_getFileName_fn)
+	(struct vm_object *);
+typedef struct vm_object *(*vm_java_lang_StackTraceElement_getClassName_fn)
+	(struct vm_object *);
+typedef struct vm_object *(*vm_java_lang_StackTraceElement_getMethodName_fn)
+	(struct vm_object *);
+typedef int (*vm_java_lang_StackTraceElement_getLineNumber_fn)
+	(struct vm_object *);
+typedef bool (*vm_java_lang_StackTraceElement_isNativeMethod_fn)
+	(struct vm_object *);
+typedef bool (*vm_java_lang_StackTraceElement_equals_fn)
+	(struct vm_object *, struct vm_object *);
+
+static void
+vm_throwable_to_string(struct vm_object *this, struct string *str)
+{
+	vm_java_lang_Throwable_toString_fn toString =
+		vm_method_trampoline_ptr(vm_java_lang_Throwable_toString);
+	struct vm_object *string_obj;
+
+	string_obj = toString(this);
+	if (!string_obj)
+		return;
+
+	char *cstr = vm_string_to_cstr(string_obj);
+	str_append(str, cstr);
+	free(cstr);
+}
+
+static void vm_stack_trace_element_to_string(struct vm_object *elem,
+					     struct string *str)
+{
+	vm_java_lang_StackTraceElement_getFileName_fn getFileName;
+	vm_java_lang_StackTraceElement_getClassName_fn getClassName;
+	vm_java_lang_StackTraceElement_getMethodName_fn getMethodName;
+	vm_java_lang_StackTraceElement_getLineNumber_fn getLineNumber;
+	vm_java_lang_StackTraceElement_isNativeMethod_fn isNativeMethod;
+	struct vm_object *method_name;
+	struct vm_object *file_name;
+	struct vm_object *class_name;
+	char *method_name_str;
+	char *file_name_str;
+	char *class_name_str;
+	int line_number;
+	bool is_native;
+
+	getMethodName = vm_method_trampoline_ptr(
+		vm_java_lang_StackTraceElement_getMethodName);
+	getFileName = vm_method_trampoline_ptr(
+		vm_java_lang_StackTraceElement_getFileName);
+	getClassName = vm_method_trampoline_ptr(
+		vm_java_lang_StackTraceElement_getClassName);
+	getLineNumber = vm_method_trampoline_ptr(
+		vm_java_lang_StackTraceElement_getLineNumber);
+	isNativeMethod = vm_method_trampoline_ptr(
+		vm_java_lang_StackTraceElement_isNativeMethod);
+
+	file_name = getFileName(elem);
+	line_number = getLineNumber(elem);
+	class_name = getClassName(elem);
+	method_name = getMethodName(elem);
+	is_native = isNativeMethod(elem);
+
+	method_name_str = vm_string_to_cstr(method_name);
+	file_name_str = vm_string_to_cstr(file_name);
+	class_name_str = vm_string_to_cstr(class_name);
+
+	if (class_name_str) {
+		str_append(str, class_name_str);
+		if (method_name_str)
+			str_append(str, ".");
+	}
+
+	if (method_name_str)
+		str_append(str, method_name_str);
+
+	str_append(str, "(");
+
+	if (file_name_str) {
+		str_append(str, file_name_str);
+	} else {
+		if (is_native)
+			str_append(str, "Native Method");
+		else
+			str_append(str, "Unknown Source");
+	}
+
+	if (line_number >= 0)
+		str_append(str, ":%d", line_number);
+
+	str_append(str, ")");
+}
+
+static void
+vm_throwable_stack_trace(struct vm_object *this, struct string *str,
+			 struct vm_object *stack, int equal)
+{
+	vm_throwable_to_string(this, str);
+	str_append(str, "\n");
+
+	if (stack == NULL || stack->array_length == 0) {
+		str_append(str, "   <<No stacktrace available>>\n");
+		return;
+	}
+
+	for (int i = 0; i < stack->array_length - equal; i++) {
+		struct vm_object *elem = array_get_field_ptr(stack, i);
+
+		str_append(str, "   at ");
+	        if (!elem)
+			str_append(str, "<<Unknown>>");
+		else
+			vm_stack_trace_element_to_string(elem, str);
+
+		str_append(str, "\n");
+	}
+
+	if (equal > 0)
+		str_append(str, "   ...%d more\n", equal);
+}
+
+
+static void
+vm_throwable_print_stack_trace(struct vm_object *this, struct string *str)
+{
+	vm_java_lang_Throwable_getCause_fn getCause;
+	vm_java_lang_Throwable_getStackTrace_fn getStackTrace;
+	vm_java_lang_StackTraceElement_equals_fn ste_equals;
+	struct vm_object *stack;
+
+	getCause =
+		vm_method_trampoline_ptr(vm_java_lang_Throwable_getCause);
+	getStackTrace =
+		vm_method_trampoline_ptr(vm_java_lang_Throwable_getStackTrace);
+	ste_equals =
+		vm_method_trampoline_ptr(vm_java_lang_StackTraceElement_equals);
+
+	stack = getStackTrace(this);
+	vm_throwable_stack_trace(this, str, stack, 0);
+
+	struct vm_object *cause = this;
+	while ((cause = getCause(cause))) {
+		struct vm_object *p_stack;
+
+		str_append(str, "Caused by: ");
+
+		p_stack = stack;
+		stack = getStackTrace(cause);
+
+		if (p_stack == NULL || p_stack->array_length == 0) {
+			vm_throwable_stack_trace(cause, str, stack, 0);
+			continue;
+		}
+
+		int equal = 0;
+		int frame = stack->array_length - 1;
+		int p_frame = p_stack->array_length - 1;
+
+		while (frame > 0 && p_frame > 0) {
+			if (!ste_equals(array_get_field_ptr(stack, frame),
+					array_get_field_ptr(p_stack, p_frame)))
+				break;
+
+			equal++;
+			frame--;
+			p_frame--;
+		}
+
+		vm_throwable_stack_trace(cause, str, stack, equal);
+	}
+}
+
+static void vm_print_exception_description(struct vm_object *exception)
 {
 	struct vm_object *message_obj;
 
@@ -400,7 +578,32 @@ void vm_print_exception(struct vm_object *exception)
 		free(msg_str);
 	}
 
-	fprintf(stderr, "\n   <<No stack trace available>>\n");
+	fprintf(stderr, "\n    <<No stacktrace available>>\n");
+}
 
-	NOT_IMPLEMENTED;
+void vm_print_exception(struct vm_object *exception)
+{
+	struct string *str;
+
+	str = alloc_str();
+	if (!str)
+		goto error;
+
+	/* TODO: print correct thread name */
+	str_append(str, "Exception in thread \"main\" ");
+
+	vm_throwable_print_stack_trace(exception, str);
+	if (exception_occurred())
+		goto error;
+
+	fprintf(stderr, "%s", str->value);
+	free_str(str);
+
+	return;
+error:
+	warn("unable to print exception");
+	if (str)
+		free_str(str);
+
+	vm_print_exception_description(exception);
 }

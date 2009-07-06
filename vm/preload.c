@@ -136,6 +136,15 @@ struct method_preload_entry {
 
 struct vm_method *vm_java_util_Properties_setProperty;
 struct vm_method *vm_java_lang_Throwable_initCause;
+struct vm_method *vm_java_lang_Throwable_getCause;
+struct vm_method *vm_java_lang_Throwable_toString;
+struct vm_method *vm_java_lang_Throwable_getStackTrace;
+struct vm_method *vm_java_lang_StackTraceElement_getFileName;
+struct vm_method *vm_java_lang_StackTraceElement_getClassName;
+struct vm_method *vm_java_lang_StackTraceElement_getMethodName;
+struct vm_method *vm_java_lang_StackTraceElement_getLineNumber;
+struct vm_method *vm_java_lang_StackTraceElement_isNativeMethod;
+struct vm_method *vm_java_lang_StackTraceElement_equals;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -150,7 +159,60 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"(Ljava/lang/Throwable;)Ljava/lang/Throwable;",
 		&vm_java_lang_Throwable_initCause,
 	},
-
+	{
+		&vm_java_lang_Throwable,
+		"getCause",
+		"()Ljava/lang/Throwable;",
+		&vm_java_lang_Throwable_getCause,
+	},
+	{
+		&vm_java_lang_Throwable,
+		"getStackTrace",
+		"()[Ljava/lang/StackTraceElement;",
+		&vm_java_lang_Throwable_getStackTrace,
+	},
+	{
+		&vm_java_lang_Throwable,
+		"toString",
+		"()Ljava/lang/String;",
+		&vm_java_lang_Throwable_toString,
+	},
+	{
+		&vm_java_lang_StackTraceElement,
+		"getFileName",
+		"()Ljava/lang/String;",
+		&vm_java_lang_StackTraceElement_getFileName,
+	},
+	{
+		&vm_java_lang_StackTraceElement,
+		"getClassName",
+		"()Ljava/lang/String;",
+		&vm_java_lang_StackTraceElement_getClassName,
+	},
+	{
+		&vm_java_lang_StackTraceElement,
+		"getMethodName",
+		"()Ljava/lang/String;",
+		&vm_java_lang_StackTraceElement_getMethodName,
+	},
+	{
+		&vm_java_lang_StackTraceElement,
+		"getLineNumber",
+		"()I",
+		&vm_java_lang_StackTraceElement_getLineNumber,
+	},
+	{
+		&vm_java_lang_StackTraceElement,
+		"isNativeMethod",
+		"()Z",
+		&vm_java_lang_StackTraceElement_isNativeMethod,
+	},
+	{
+		&vm_java_lang_StackTraceElement,
+		"equals",
+		"(Ljava/lang/Object;)Z",
+		&vm_java_lang_StackTraceElement_equals,
+	},
 };
 
 int preload_vm_classes(void)
