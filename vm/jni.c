@@ -111,23 +111,9 @@ static int vm_jni_add_object_handle(void *handle)
 
 int vm_jni_load_object(const char *name)
 {
-	char *classpath_install_dir;
 	void *handle;
 
-	classpath_install_dir = getenv("CLASSPATH_INSTALL_DIR");
-	if (!classpath_install_dir) {
-		warn("environment variable CLASSPATH_INSTALL_DIR not set");
-		return -1;
-	}
-
-	char *so_name = NULL;
-
-	if (asprintf(&so_name, "%s/lib/classpath/%s", classpath_install_dir, name) < 0)
-		die("asprintf");
-
-	handle = dlopen(so_name, RTLD_NOW);
-	free(so_name);
-
+	handle = dlopen(name, RTLD_NOW);
 	if (!handle) {
 		fprintf(stderr, "%s: %s\n", __func__, dlerror());
 		return -1;

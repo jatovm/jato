@@ -93,6 +93,21 @@ static struct vm_object *__vm_native native_vmstackwalker_getclasscontext(void)
 	return res;
 }
 
+static void vm_properties_set_property(struct vm_object *p,
+				       const char *key, const char *value)
+{
+	struct vm_object *(*trampoline)(struct vm_object *,
+					struct vm_object *, struct vm_object *);
+
+	trampoline
+		= vm_method_trampoline_ptr(vm_java_util_Properties_setProperty);
+
+	struct vm_object *key_obj = vm_object_alloc_string_from_c(key);
+	struct vm_object *value_obj = vm_object_alloc_string_from_c(value);
+
+	trampoline(p, key_obj, value_obj);
+}
+
 static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 {
 	struct system_properties_entry {
@@ -101,8 +116,6 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 	};
 
 	static const struct system_properties_entry system_properties[] = {
-		/* XXX: Don't hardcode this, but detect it at run-time */
-		{ "java.library.path", "/usr/lib/classpath" },
 		{ "java.vm.name", "jato" },
 		{ "java.io.tmpdir", "/tmp" },
 		{ "file.separator", "/" },
@@ -110,21 +123,13 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 		{ "line.separator", "\n" },
 	};
 
-	struct vm_object *(*trampoline)(struct vm_object *,
-		struct vm_object *, struct vm_object *);
-
-	trampoline
-		= vm_method_trampoline_ptr(vm_java_util_Properties_setProperty);
+	vm_properties_set_property(p, "java.library.path",
+				   getenv("LD_LIBRARY_PATH"));
 
 	for (unsigned int i = 0; i < ARRAY_SIZE(system_properties); ++i) {
 		const struct system_properties_entry *e = &system_properties[i];
-		struct vm_object *key, *value;
 
-		key = vm_object_alloc_string_from_c(e->key);
-		value = vm_object_alloc_string_from_c(e->value);
-
-		/* XXX: Check exceptions? */
-		trampoline(p, key, value);
+		vm_properties_set_property(p, e->key, e->value);
 	}
 }
 
