@@ -1495,7 +1495,7 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
  * x86-64 code emitters *
  ************************/
 
-#define	REX		40
+#define	REX		0x40
 #define REX_W		(REX | 8)	/* 64-bit operands */
 #define REX_R		(REX | 4)	/* ModRM reg extension */
 #define REX_X		(REX | 2)	/* SIB index extension */
