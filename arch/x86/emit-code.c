@@ -409,6 +409,52 @@ static void fixup_vtable(struct compilation_unit *cu,
 	vmc->vtable.native_ptr[cu->method->virtual_index] = target;
 }
 
+int fixup_static(struct vm_class *vmc)
+{
+	struct static_fixup_site *this, *next;
+
+	if (vm_class_ensure_init(vmc))
+		return -1;
+
+	list_for_each_entry_safe(this, next,
+		&vmc->static_fixup_site_list, vmc_node)
+	{
+		struct vm_field *vmf = this->vmf;
+		void *site_addr = buffer_ptr(this->cu->objcode)
+			+ this->insn->mach_offset;
+		void *new_target = vmc->static_values + vmf->offset;
+
+		cpu_write_u32(site_addr + 2, (unsigned long) new_target);
+
+		list_del(&this->vmc_node);
+		list_del(&this->cu_node);
+		free(this);
+	}
+
+	return 0;
+}
+
+int fixup_static_at(unsigned long addr)
+{
+	struct compilation_unit *cu;
+	struct static_fixup_site *this;
+
+	cu = jit_lookup_cu(addr);
+	assert(cu);
+
+	list_for_each_entry(this, &cu->static_fixup_site_list, cu_node)
+	{
+		void *site_addr = buffer_ptr(cu->objcode)
+			+ this->insn->mach_offset;
+
+		if ((unsigned long) site_addr == addr) {
+			return fixup_static(this->vmf->class);
+		}
+	}
+
+	return 0;
+}
+
 #ifdef CONFIG_X86_32
 
 /************************
@@ -1289,52 +1335,6 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_XOR_REG_REG, emit_xor_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_XMM_REG_REG, emit_xor_xmm_reg_reg, TWO_OPERANDS),
 };
-
-int fixup_static(struct vm_class *vmc)
-{
-	struct static_fixup_site *this, *next;
-
-	if (vm_class_ensure_init(vmc))
-		return -1;
-
-	list_for_each_entry_safe(this, next,
-		&vmc->static_fixup_site_list, vmc_node)
-	{
-		struct vm_field *vmf = this->vmf;
-		void *site_addr = buffer_ptr(this->cu->objcode)
-			+ this->insn->mach_offset;
-		void *new_target = vmc->static_values + vmf->offset;
-
-		cpu_write_u32(site_addr + 2, (unsigned long) new_target);
-
-		list_del(&this->vmc_node);
-		list_del(&this->cu_node);
-		free(this);
-	}
-
-	return 0;
-}
-
-int fixup_static_at(unsigned long addr)
-{
-	struct compilation_unit *cu;
-	struct static_fixup_site *this;
-
-	cu = jit_lookup_cu(addr);
-	assert(cu);
-
-	list_for_each_entry(this, &cu->static_fixup_site_list, cu_node)
-	{
-		void *site_addr = buffer_ptr(cu->objcode)
-			+ this->insn->mach_offset;
-
-		if ((unsigned long) site_addr == addr) {
-			return fixup_static(this->vmf->class);
-		}
-	}
-
-	return 0;
-}
 
 void emit_trampoline(struct compilation_unit *cu,
 		     void *call_target,
