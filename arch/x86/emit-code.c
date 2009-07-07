@@ -260,27 +260,27 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 {
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+	__emit_add_imm_reg(buf, 0x04, REG_xSP);
 
-	__emit_push_reg(buf, REG_EAX);
-	emit_exception_test(buf, REG_EAX);
-	__emit_pop_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_xAX);
+	emit_exception_test(buf, REG_xAX);
+	__emit_pop_reg(buf, REG_xAX);
 }
 
 void emit_unlock(struct buffer *buf, struct vm_object *obj)
 {
 	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, REG_EAX);
-	__emit_push_reg(buf, REG_EDX);
+	__emit_push_reg(buf, REG_xAX);
+	__emit_push_reg(buf, REG_xDX);
 
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+	__emit_add_imm_reg(buf, 0x04, REG_xSP);
 
-	emit_exception_test(buf, REG_EAX);
+	emit_exception_test(buf, REG_xAX);
 
-	__emit_pop_reg(buf, REG_EDX);
-	__emit_pop_reg(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_xDX);
+	__emit_pop_reg(buf, REG_xAX);
 }
 
 void emit_lock_this(struct buffer *buf)
@@ -289,13 +289,13 @@ void emit_lock_this(struct buffer *buf)
 
 	this_arg_offset = offsetof(struct jit_stack_frame, args);
 
-	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_push_membase(buf, REG_xBP, this_arg_offset);
 	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+	__emit_add_imm_reg(buf, 0x04, REG_xSP);
 
-	__emit_push_reg(buf, REG_EAX);
-	emit_exception_test(buf, REG_EAX);
-	__emit_pop_reg(buf, REG_EAX);
+	__emit_push_reg(buf, REG_xAX);
+	emit_exception_test(buf, REG_xAX);
+	__emit_pop_reg(buf, REG_xAX);
 }
 
 void emit_unlock_this(struct buffer *buf)
@@ -305,17 +305,17 @@ void emit_unlock_this(struct buffer *buf)
 	this_arg_offset = offsetof(struct jit_stack_frame, args);
 
 	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, REG_EAX);
-	__emit_push_reg(buf, REG_EDX);
+	__emit_push_reg(buf, REG_xAX);
+	__emit_push_reg(buf, REG_xDX);
 
-	__emit_push_membase(buf, REG_EBP, this_arg_offset);
+	__emit_push_membase(buf, REG_xBP, this_arg_offset);
 	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+	__emit_add_imm_reg(buf, 0x04, REG_xSP);
 
-	emit_exception_test(buf, REG_EAX);
+	emit_exception_test(buf, REG_xAX);
 
-	__emit_pop_reg(buf, REG_EDX);
-	__emit_pop_reg(buf, REG_EAX);
+	__emit_pop_reg(buf, REG_xDX);
+	__emit_pop_reg(buf, REG_xAX);
 }
 
 void backpatch_branch_target(struct buffer *buf,
@@ -359,7 +359,7 @@ void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 {
 	__emit_push_imm(buf, (unsigned long) cu);
 	__emit_call(buf, &trace_invoke);
-	__emit_add_imm_reg(buf, sizeof(unsigned long), REG_XSP);
+	__emit_add_imm_reg(buf, sizeof(unsigned long), REG_xSP);
 }
 
 /*

@@ -26,17 +26,17 @@ enum machine_reg {
 	REG_RSP = NR_REGISTERS, /* R4 */
 	REG_RBP, /* R5 */
 
-	REG_UNASSIGNED = INT_MAX,
+	/* Either-R**-or-E** variants (for 32/64-bit common code). */
+	REG_xAX = REG_RAX,
+	REG_xCX = REG_RCX,
+	REG_xDX = REG_RDX,
+	REG_xBX = REG_RBX,
+	REG_xSI = REG_RSI,
+	REG_xDI = REG_RDI,
+	REG_xBP = REG_RBP,
+	REG_xSP = REG_RSP,
 
-	/* Aliases that aid the reuse of code from x86-32. */
-	REG_EAX = REG_RAX,
-	REG_ECX = REG_RCX,
-	REG_EDX = REG_RDX,
-	REG_EBX = REG_RBX,
-	REG_ESI = REG_RSI,
-	REG_EDI = REG_RDI,
-	REG_ESP = REG_RSP,
-	REG_EBP = REG_RBP,
+	REG_UNASSIGNED = INT_MAX,
 };
 
 const char *reg_name(enum machine_reg reg);

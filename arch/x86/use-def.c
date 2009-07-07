@@ -12,15 +12,25 @@ enum {
 	DEF_DST		= 1,
 	DEF_SRC		= 2,
 	DEF_NONE	= 4,
-	DEF_EAX		= 8,
-	DEF_ECX		= 16,
-	DEF_EDX		= 32,
+	DEF_xAX		= 8,
+	DEF_xCX		= 16,
+	DEF_xDX		= 32,
 	USE_DST		= 64,
 	USE_IDX_DST	= 128,	/* destination operand is memindex */
 	USE_IDX_SRC	= 256,	/* source operand is memindex */
 	USE_NONE	= 512,
 	USE_SRC		= 1024,
 	USE_FP		= 2048,	/* frame pointer */
+
+#ifdef CONFIG_X86_32
+	DEF_EAX		= DEF_xAX,
+	DEF_ECX		= DEF_xCX,
+	DEF_EDX		= DEF_xDX,
+#else
+	DEF_RAX		= DEF_xAX,
+	DEF_RCX		= DEF_xCX,
+	DEF_RDX		= DEF_xDX,
+#endif
 };
 
 struct insn_info {
@@ -115,9 +125,9 @@ struct mach_reg_def {
 };
 
 static struct mach_reg_def checkregs[] = {
-	{ REG_EAX, DEF_EAX },
-	{ REG_ECX, DEF_ECX },
-	{ REG_EDX, DEF_EDX },
+	{ REG_xAX, DEF_xAX },
+	{ REG_xCX, DEF_xCX },
+	{ REG_xDX, DEF_xDX },
 };
 
 

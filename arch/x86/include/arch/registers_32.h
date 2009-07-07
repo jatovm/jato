@@ -28,15 +28,15 @@ enum machine_reg {
 	REG_EBP = NR_REGISTERS,
 	REG_ESP,
 
-	/* Either-R**-or-E** variants (for word-size independent code). */
-	REG_XAX = REG_EAX,
-	REG_XCX,
-	REG_XDX,
-	REG_XBX,
-	REG_XSI,
-	REG_XDI,
-	REG_XBP = REG_EBP,
-	REG_XSP,
+	/* Either-R**-or-E** variants (for 32/64-bit common code). */
+	REG_xAX = REG_EAX,
+	REG_xCX = REG_ECX,
+	REG_xDX = REG_EDX,
+	REG_xBX = REG_EBX,
+	REG_xSI = REG_ESI,
+	REG_xDI = REG_EDI,
+	REG_xBP = REG_EBP,
+	REG_xSP = REG_ESP,
 
 	REG_UNASSIGNED = INT_MAX,
 };
