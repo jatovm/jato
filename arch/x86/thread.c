@@ -35,7 +35,9 @@ static unsigned long get_tls_address(void)
 		"movl %%gs:(0x0), %0 \n"
 		: "=r"(result) );
 #else
- #error not implemented
+	__asm__(
+		"movq %%fs:(0x0), %0 \n"
+		: "=r"(result) );
 #endif
 
 	return result;
@@ -43,9 +45,5 @@ static unsigned long get_tls_address(void)
 
 unsigned long get_thread_local_offset(void *thread_local_ptr)
 {
-#ifdef CONFIG_X86_32
 	return (unsigned long)thread_local_ptr - get_tls_address();
-#else
- #error not implemented
-#endif
 }

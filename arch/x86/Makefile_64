@@ -13,5 +13,6 @@ ARCH_OBJS = \
 	arch/x86/signal.o		\
 	arch/x86/signal-bh.o		\
 	arch/x86/stack-frame.o		\
+	arch/x86/thread.o		\
 	arch/x86/use-def.o		\
 	arch/x86/unwind_64.o

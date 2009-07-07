@@ -38,11 +38,12 @@
 
 /* Aliases and prototypes to make common emitters work as expected. */
 #ifdef CONFIG_X86_64
-# define __emit_add_imm_reg	__emit64_add_imm_reg
-# define __emit_pop_reg		__emit64_pop_reg
-# define __emit_push_imm	__emit64_push_imm
-# define __emit_push_membase	__emit64_push_membase
-# define __emit_push_reg	__emit64_push_reg
+# define __emit_add_imm_reg		__emit64_add_imm_reg
+# define __emit_pop_reg			__emit64_pop_reg
+# define __emit_push_imm		__emit64_push_imm
+# define __emit_push_membase		__emit64_push_membase
+# define __emit_push_reg		__emit64_push_reg
+# define __emit_mov_reg_reg		__emit64_mov_reg_reg
 #endif
 
 static unsigned char __encode_reg(enum machine_reg reg);
@@ -55,6 +56,10 @@ static void __emit_push_membase(struct buffer *buf,
 				enum machine_reg src_reg,
 				unsigned long disp);
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg);
+static void __emit_mov_reg_reg(struct buffer *buf,
+			       enum machine_reg src,
+			       enum machine_reg dst);
+static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg);
 static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
 static void emit_restore_regs(struct buffer *buf);
 
@@ -1572,6 +1577,13 @@ static inline unsigned char reg_high(unsigned char reg)
 	return (reg & 0x8);
 }
 
+static inline unsigned long rip_relative(struct buffer *buf,
+					 unsigned long addr,
+					 unsigned long insn_size)
+{
+	return addr - (unsigned long) buffer_current(buf) - insn_size;
+}
+
 static void __emit_reg(struct buffer *buf,
 		       int rex_w,
 		       unsigned char opc,
@@ -1762,10 +1774,10 @@ static void emit32_add_imm_reg(struct buffer *buf,
 	__emit64_add_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
-static void emit_imm64(struct buffer *buf, int imm)
+static void emit_imm64(struct buffer *buf, unsigned long imm)
 {
 	union {
-		int val;
+		unsigned long val;
 		unsigned char b[8];
 	} imm_buf;
 
@@ -1853,6 +1865,32 @@ static void __emit_membase(struct buffer *buf,
 		emit_imm(buf, disp);
 }
 
+static void __emit_membase_reg(struct buffer *buf,
+			       int rex_w,
+			       unsigned char opc,
+			       enum machine_reg base_reg,
+			       unsigned long disp,
+			       enum machine_reg dest_reg)
+{
+	__emit_membase(buf, rex_w, opc, base_reg, disp, __encode_reg(dest_reg));
+}
+
+static void emit_membase_reg(struct buffer *buf,
+			     int rex_w,
+			     unsigned char opc,
+			     struct operand *src,
+			     struct operand *dest)
+{
+	enum machine_reg base_reg, dest_reg;
+	unsigned long disp;
+
+	base_reg = mach_reg(&src->base_reg);
+	disp = src->disp;
+	dest_reg = mach_reg(&dest->reg);
+
+	__emit_membase_reg(buf, rex_w, opc, base_reg, disp, dest_reg);
+}
+
 static void __emit64_push_membase(struct buffer *buf,
 				  enum machine_reg src_reg,
 				  unsigned long disp)
@@ -1865,19 +1903,127 @@ static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
 	/* FIXME: implement this! */
 }
 
+static void __emit_memdisp(struct buffer *buf,
+			   int rex_w,
+			   unsigned char opc,
+			   unsigned long disp,
+			   unsigned char reg_opcode)
+{
+	unsigned char rex_pfx = 0, mod_rm;
+	size_t insn_size = 6;
+
+	if (rex_w)
+		rex_pfx |= REX_W;
+	if (reg_high(reg_opcode))
+		rex_pfx |= REX_R;
+
+	mod_rm = encode_modrm(0, reg_opcode, 5);
+
+	if (rex_pfx) {
+		emit(buf, rex_pfx);
+		insn_size++;
+	}
+	emit(buf, opc);
+	emit(buf, mod_rm);
+	emit_imm32(buf, rip_relative(buf, disp, insn_size));
+}
+
+static void __emit_memdisp_reg(struct buffer *buf,
+			       int rex_w,
+			       unsigned char opc,
+			       unsigned long disp,
+			       enum machine_reg reg)
+{
+	__emit_memdisp(buf, rex_w, opc, disp, __encode_reg(reg));
+}
+
+static void __emit64_test_membase_reg(struct buffer *buf,
+				      enum machine_reg src,
+				      unsigned long disp,
+				      enum machine_reg dest)
+{
+	__emit_membase_reg(buf, 1, 0x85, src, disp, dest);
+}
+
+static void __emit32_test_membase_reg(struct buffer *buf,
+				      enum machine_reg src,
+				      unsigned long disp,
+				      enum machine_reg dest)
+{
+	__emit_membase_reg(buf, 0, 0x85, src, disp, dest);
+}
+
+static void emit64_test_membase_reg(struct buffer *buf,
+				    struct operand *src,
+				    struct operand *dest)
+{
+	emit_membase_reg(buf, 1, 0x85, src, dest);
+}
+
+static void emit32_test_membase_reg(struct buffer *buf,
+				    struct operand *src,
+				    struct operand *dest)
+{
+	emit_membase_reg(buf, 0, 0x85, src, dest);
+}
+
+static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
+{
+	unsigned char __reg = __encode_reg(reg);
+
+	emit(buf, 0xff);
+	if (reg_high(__reg))
+		emit(buf, REX_B);
+	emit(buf, encode_modrm(0x3, 0x04, __reg));
+}
+
+static void __emit64_mov_imm_reg(struct buffer *buf,
+				 long imm,
+				 enum machine_reg reg)
+{
+	__emit_reg(buf, 1, 0xb8, reg);
+	emit_imm64(buf, imm);
+}
+
+static void emit64_mov_imm_reg(struct buffer *buf,
+			       struct operand *src,
+			       struct operand *dest)
+{
+	__emit64_mov_imm_reg(buf, src->imm, mach_reg(&dest->reg));
+}
+
+static void __emit64_mov_membase_reg(struct buffer *buf,
+				     enum machine_reg base_reg,
+				     unsigned long disp,
+				     enum machine_reg dest_reg)
+{
+	__emit_membase_reg(buf, 1, 0x8b, base_reg, disp, dest_reg);
+}
+
+static void emit64_mov_membase_reg(struct buffer *buf,
+				   struct operand *src,
+				   struct operand *dest)
+{
+	emit_membase_reg(buf, 1, 0x8b, src, dest);
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 
 	DECL_EMITTER(INSN64_ADD_IMM_REG, emit64_add_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN64_MOV_IMM_REG, emit64_mov_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN64_MOV_MEMBASE_REG, emit64_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN64_MOV_REG_REG, emit64_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN64_PUSH_IMM, emit64_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN64_PUSH_REG, emit64_push_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN64_POP_REG, emit64_pop_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN64_SUB_IMM_REG, emit64_sub_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN64_TEST_MEMBASE_REG, emit64_test_membase_reg, TWO_OPERANDS),
 
 	DECL_EMITTER(INSN32_ADD_IMM_REG, emit32_add_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN32_MOV_REG_REG, emit32_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN32_SUB_IMM_REG, emit32_sub_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN32_TEST_MEMBASE_REG, emit64_test_membase_reg, TWO_OPERANDS),
 };
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
@@ -1912,10 +2058,51 @@ static void emit_restore_regs(struct buffer *buf)
 	__emit_pop_reg(buf, REG_RBX);
 }
 
-void emit_trampoline(struct compilation_unit *cu, void *call_target,
+void emit_trampoline(struct compilation_unit *cu,
+		     void *call_target,
 		     struct jit_trampoline *trampoline)
 {
-	abort();
+	struct buffer *buf = trampoline->objcode;
+
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+
+	/* This is for __builtin_return_address() to work and to access
+	   call arguments in correct manner. */
+	__emit64_push_reg(buf, REG_RBP);
+	__emit64_mov_reg_reg(buf, REG_RSP, REG_RBP);
+
+	__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDI);
+	__emit_call(buf, call_target);
+
+	/*
+	 * Test for exception occurance.
+	 * We do this by polling a dedicated thread-specific pointer,
+	 * which triggers SIGSEGV when exception is set.
+	 *
+	 * mov fs:(0xXXX), %rcx
+	 * test (%rcx), %rcx
+	 */
+	emit(buf, 0x64);
+	__emit_memdisp_reg(buf, 1, 0x8b,
+			   get_thread_local_offset(&trampoline_exception_guard),
+			   REG_RCX);
+	__emit64_test_membase_reg(buf, REG_RCX, 0, REG_RCX);
+
+	__emit64_mov_reg_reg(buf, REG_RAX, REG_RDI);
+
+	if (method_is_virtual(cu->method)) {
+		__emit64_mov_membase_reg(buf, REG_RBP, 0x08, REG_RSI);
+		__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDX);
+		__emit_call(buf, fixup_vtable);
+	}
+
+	__emit64_pop_reg(buf, REG_RBP);
+	emit_indirect_jump_reg(buf, REG_RDX);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
 }
 
 #endif /* CONFIG_X86_32 */
