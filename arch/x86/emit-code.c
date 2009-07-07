@@ -68,6 +68,8 @@ static void emit_restore_regs(struct buffer *buf);
 
 #define CALL_INSN_SIZE 5
 
+#define PTR_SIZE	sizeof(long)
+
 #define GENERIC_X86_EMITTERS \
 	DECL_EMITTER(INSN_CALL_REL, emit_call, SINGLE_OPERAND),		\
 	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch, BRANCH),		\
@@ -260,7 +262,7 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 {
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, 0x04, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
 
 	__emit_push_reg(buf, REG_xAX);
 	emit_exception_test(buf, REG_xAX);
@@ -275,7 +277,7 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, 0x04, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
 
 	emit_exception_test(buf, REG_xAX);
 
@@ -291,7 +293,7 @@ void emit_lock_this(struct buffer *buf)
 
 	__emit_push_membase(buf, REG_xBP, this_arg_offset);
 	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, 0x04, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
 
 	__emit_push_reg(buf, REG_xAX);
 	emit_exception_test(buf, REG_xAX);
@@ -310,7 +312,7 @@ void emit_unlock_this(struct buffer *buf)
 
 	__emit_push_membase(buf, REG_xBP, this_arg_offset);
 	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, 0x04, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
 
 	emit_exception_test(buf, REG_xAX);
 
@@ -359,7 +361,7 @@ void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 {
 	__emit_push_imm(buf, (unsigned long) cu);
 	__emit_call(buf, &trace_invoke);
-	__emit_add_imm_reg(buf, sizeof(unsigned long), REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
 }
 
 /*
@@ -387,7 +389,7 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 		uint32_t new_target;
 
 		site_addr = fixup_site_addr(this);
-		new_target = target - ((uint32_t)site_addr + CALL_INSN_SIZE);
+		new_target = target - ((unsigned long) site_addr + CALL_INSN_SIZE);
 		cpu_write_u32(site_addr+1, new_target);
 
 		list_del(&this->fixup_list_node);
