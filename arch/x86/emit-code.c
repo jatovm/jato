@@ -1831,8 +1831,6 @@ static void __emit_membase(struct buffer *buf,
 
 	needs_sib = (base_reg == REG_RSP);
 
-	emit(buf, opc);
-
 	if (needs_sib)
 		rm = 0x04;
 	else
@@ -1854,6 +1852,8 @@ static void __emit_membase(struct buffer *buf,
 
 	if (rex_pfx)
 		emit(buf, rex_pfx);
+
+	emit(buf, opc);
 
 	mod_rm = encode_modrm(mod, reg_opcode, rm);
 	emit(buf, mod_rm);
