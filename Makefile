@@ -151,6 +151,7 @@ CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
 JAVAC_OPTS	:= -encoding utf-8
+INSTALL		:= install
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE
 
@@ -289,6 +290,14 @@ clean:
 	$(Q) - make -C test/jit/ clean
 	$(Q) - make -C test/arch-$(ARCH)/ clean
 .PHONY: clean
+
+INSTALL_PREFIX	?= $(HOME)
+
+install: $(PROGRAM)
+	$(E) "  INSTALL " $(PROGRAM)
+	$(Q) $(INSTALL) -d -m 755 $(INSTALL_PREFIX)/bin
+	$(Q) $(INSTALL) $(PROGRAM) $(INSTALL_PREFIX)/bin
+.PHONY: install
 
 PHONY += FORCE
 FORCE:
