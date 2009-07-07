@@ -168,9 +168,6 @@ public class ExceptionsTest extends TestCase {
         testNestedTryCatch();
         testEmptyCatchBlock();
         testAthrow();
-
         testStackTrace();
-
-        exit();
     }
-};
+}

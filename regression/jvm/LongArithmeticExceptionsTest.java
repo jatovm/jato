@@ -29,7 +29,7 @@ package jvm;
  * @author Tomasz Grabiec
  */
 public class LongArithmeticExceptionsTest extends TestCase {
-	    public static void testLdivThrowsAritmeticException() {
+    public static void testLdivThrowsAritmeticException() {
         boolean caught = false;
         long denominator = 0;
 
@@ -58,7 +58,5 @@ public class LongArithmeticExceptionsTest extends TestCase {
     public static void main(String[] args) {
         testLdivThrowsAritmeticException();
         testLremThrowsAritmeticException();
-
-        exit();
     }
 }

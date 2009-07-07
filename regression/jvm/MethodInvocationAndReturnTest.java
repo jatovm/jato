@@ -124,7 +124,5 @@ public class MethodInvocationAndReturnTest extends TestCase {
         testRecursiveInvocation();
         testInvokestaticLongReturnValue();
         testInvokevirtualLongReturnValue();
-
-        exit();
     }
 }

@@ -102,7 +102,5 @@ public class PutfieldTest extends TestCase {
         testPutFieldInstanceFieldLong();
         testPutFieldClassFieldLong();
         testPutFieldLocalLong();
-
-        exit();
     }
 }

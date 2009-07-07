@@ -142,6 +142,5 @@ public class FloatArithmeticTest extends TestCase {
         testFloatRemainder();
         testFloatNegation();
         testFloatIntConversion();
-        exit();
     }
 }

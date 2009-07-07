@@ -69,7 +69,5 @@ public class IntegerArithmeticExceptionsTest extends TestCase {
         testIntegerDivisionByZeroRegReg();
         testIdivThrowsAritmeticException();
         testIremThrowsAritmeticException();
-
-        exit();
     }
 }

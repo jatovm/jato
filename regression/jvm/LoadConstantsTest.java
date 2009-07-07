@@ -83,7 +83,5 @@ public class LoadConstantsTest extends TestCase {
         testAconstNull();
         testIconst();
         testLdcStringConstant();
-
-        exit();
     }
 }

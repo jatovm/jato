@@ -47,7 +47,5 @@ public class SynchronizationExceptionsTest extends TestCase {
     public static void main(String args[]) {
         testMonitorenterThrowsNullPointerException();
         /* TODO: testMonitorexit() */
-
-        exit();
     }
 }

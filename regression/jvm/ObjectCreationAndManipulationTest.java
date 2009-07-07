@@ -196,8 +196,6 @@ public class ObjectCreationAndManipulationTest extends TestCase {
         testCheckCast();
         testArrayLoadSideEffectBug();
         testArrayStoreSideEffectBug();
-
-        exit();
     }
 
     private static class InitializingClass {

@@ -285,7 +285,5 @@ public class LongArithmeticTest extends TestCase {
         testLongBitwiseAnd();
         testLongBitwiseExclusiveOr();
         testLongIncrementLocalByConstant();
-
-        exit();
     }
 }

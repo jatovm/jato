@@ -87,7 +87,5 @@ public class ObjectCreationAndManipulationExceptionsTest extends TestCase {
         testGetfieldThrowsNullPointerException();
         testPutfieldThrowsNullPointerException();
         testCheckcastThrowsClassCastException();
-
-        exit();
     }
 }

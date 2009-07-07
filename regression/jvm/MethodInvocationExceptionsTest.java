@@ -79,7 +79,5 @@ public class MethodInvocationExceptionsTest extends TestCase {
         testInvokespecialThrowsNullPointerException();
         testInvokevirtualThrowsNullPointerException();
         testInvokespecialThrowsUnsatisfiedLinkError();
-
-        exit();
     }
 }

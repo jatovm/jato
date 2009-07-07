@@ -85,7 +85,5 @@ public class TrampolineBackpatchingTest extends TestCase {
         testInvokestatic();
         t.testInvokevirtual();
         t.testInvokespecial();
-
-        exit();
     }
 }

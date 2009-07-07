@@ -61,6 +61,8 @@ public class ClassExceptionsTest extends TestCase {
     }
 
     public static void main(String []args) {
+/* FIXME
         testClassInitFailure();
+*/
     }
 }

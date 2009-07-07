@@ -179,7 +179,5 @@ public class ArrayExceptionsTest extends TestCase {
         testAnewarrayThrowsNegativeArraySizeException();
         testNewarrayThrowsNegativeArraySizeException();
         testMultianewarrayThrowsNegativeArraySizeException();
-
-        exit();
     }
 }

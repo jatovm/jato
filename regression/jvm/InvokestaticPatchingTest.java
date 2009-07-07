@@ -27,7 +27,5 @@ public class InvokestaticPatchingTest extends TestCase {
         /* Should not trap, therefore clinit_run remains false */
         X.f();
         assertFalse(clinit_run);
-
-        exit();
     }
 }

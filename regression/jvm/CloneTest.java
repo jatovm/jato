@@ -59,6 +59,5 @@ public class CloneTest extends TestCase {
         cloneObjectTest();
         clonePrimitiveArrayTest();
         cloneObjectArrayTest();
-        exit();
     }
 }

@@ -80,7 +80,5 @@ public class ObjectStackTest extends TestCase {
         testLoadAndIncrementLocal();
         testLoadAndIncrementClassField();
         testLoadAndIncrementInstanceField();
-
-        exit();
     }
 }

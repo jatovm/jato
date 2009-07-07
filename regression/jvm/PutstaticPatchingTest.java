@@ -27,7 +27,5 @@ public class PutstaticPatchingTest extends TestCase {
         X.x = i;
         X.y = i;
         assertFalse(clinit_run);
-
-        exit();
     }
 }

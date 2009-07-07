@@ -69,7 +69,5 @@ public class ConversionTest extends TestCase {
         testLongToIntegerConversion();
         testIntegerToLongConversion();
         testIntegerToByteConversion();
-
-        exit();
     }
 }

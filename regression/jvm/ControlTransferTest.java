@@ -230,7 +230,5 @@ public class ControlTransferTest extends TestCase {
         testIfAcmpNe();
         testIfLcmpEq();
         testIfLcmpGt();
-
-        exit();
     }
 }

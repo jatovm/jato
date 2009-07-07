@@ -25,7 +25,5 @@ public class GetstaticPatchingTest extends TestCase {
         assertEquals(1, X.x);
         assertEquals(2, X.y);
         assertFalse(clinit_run);
-
-        exit();
     }
 }

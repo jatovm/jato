@@ -171,7 +171,5 @@ public class InvokeinterfaceTest extends TestCase {
         D d = (D) x;
         d.dq();
         assertTrue(d_ok);
-
-        exit();
     }
 }

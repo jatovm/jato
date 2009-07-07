@@ -155,7 +155,5 @@ public class ArrayTest extends TestCase {
         testReferenceElementLoadStore();
 
         testArrayClass();
-
-        exit();
     }
 }

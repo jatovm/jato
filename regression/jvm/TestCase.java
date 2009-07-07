@@ -25,55 +25,51 @@
  */
 package jvm;
 
-import jato.internal.VM;
-
 public class TestCase {
-    private static int status;
-
     protected static void assertEquals(int expected, int actual) {
         if (expected != actual) {
-            fail(/* "Expected '" + expected + "', but was '" + actual + "'." */);
+            fail("Expected '" + expected + "', but was '" + actual + "'.");
         }
     }
 
     public static void assertEquals(long expected, long actual) {
         if (expected != actual) {
-            fail(/* "Expected '" + expected + "', but was '" + actual + "'." */);
+            fail("Expected '" + expected + "', but was '" + actual + "'.");
         }
     }
 
     public static void assertEquals(float expected, float actual) {
         if (expected != actual) {
-            fail(/* "Expected '" + expected + "', but was '" + actual + "'." */);
+            fail("Expected '" + expected + "', but was '" + actual + "'.");
         }
     }
     protected static void assertEquals(Object expected, Object actual) {
         if (expected != actual) {
-            fail(/* "Expected '" + expected + "', but was '" + actual + "'." */);
+            fail("Expected '" + expected + "', but was '" + actual + "'.");
         }
     }
 
     protected static void assertNull(Object actual) {
         if (actual != null) {
-            fail(/* "Expected null, but was '" + actual + "'." */);
+            fail("Expected null, but was '" + actual + "'.");
         }
     }
 
     protected static void assertNotNull(Object actual) {
         if (actual == null) {
-            fail(/* "Expected non-null, but was '" + actual + "'." */);
+            fail("Expected non-null, but was '" + actual + "'.");
         }
     }
 
     protected static void assertTrue(boolean actual) {
         if (actual == false) {
-            fail(/* "Expected true, but was false." */);
+            fail("Expected true, but was false.");
         }
     }
 
     protected static void assertFalse(boolean actual) {
         if (actual == true) {
-            fail(/* "Expected false, but was true." */);
+            fail("Expected false, but was true.");
         }
     }
 
@@ -85,14 +81,12 @@ public class TestCase {
         assertTrue(a.equals(b));
     }
 
-    protected static void fail(/* String msg */) {
-        // FIXME:
-        // System.out.println(msg);
-        status = 1;
+    protected static void fail(String s) {
+        throw new AssertionError(s);
     }
 
-    protected static void exit() {
-        VM.exit(status);
+    protected static void fail() {
+        throw new AssertionError();
     }
 
     public static void takeInt(int val) {}

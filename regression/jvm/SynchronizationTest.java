@@ -94,7 +94,5 @@ public class SynchronizationTest extends TestCase {
         testSynchronizedMethod();
         testStaticSynchronizedExceptingMethod();
         testSynchronizedExceptingMethod();
-
-        exit();
     }
 }

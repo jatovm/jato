@@ -278,7 +278,5 @@ public class IntegerArithmeticTest extends TestCase {
         testIntegerBitwiseAnd();
         testIntegerBitwiseExclusiveOr();
         testIntegerIncrementLocalByConstant();
-
-        exit();
     }
 }

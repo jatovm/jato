@@ -58,7 +58,5 @@ class BranchTest extends TestCase {
 
         testAndBranch();
         testOrBranch();
-
-        exit();
     }
 }
