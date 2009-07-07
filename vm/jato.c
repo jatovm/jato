@@ -101,8 +101,10 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 	};
 
 	static const struct system_properties_entry system_properties[] = {
-		{ "java.vm.name", "jato"},
-		{ "java.io.tmpdir", "/tmp"},
+		/* XXX: Don't hardcode this, but detect it at run-time */
+		{ "java.library.path", "/usr/lib/classpath" },
+		{ "java.vm.name", "jato" },
+		{ "java.io.tmpdir", "/tmp" },
 		{ "file.separator", "/" },
 		{ "path.separator", "/" },
 		{ "line.separator", "\n" },
