@@ -416,12 +416,9 @@ static void fixup_vtable(struct compilation_unit *cu,
 	vmc->vtable.native_ptr[cu->method->virtual_index] = target;
 }
 
-int fixup_static(struct vm_class *vmc)
+void fixup_static(struct vm_class *vmc)
 {
 	struct static_fixup_site *this, *next;
-
-	if (vm_class_ensure_init(vmc))
-		return -1;
 
 	list_for_each_entry_safe(this, next,
 		&vmc->static_fixup_site_list, vmc_node)
@@ -437,8 +434,6 @@ int fixup_static(struct vm_class *vmc)
 		list_del(&this->cu_node);
 		free(this);
 	}
-
-	return 0;
 }
 
 int fixup_static_at(unsigned long addr)
@@ -455,7 +450,12 @@ int fixup_static_at(unsigned long addr)
 			+ this->insn->mach_offset;
 
 		if ((unsigned long) site_addr == addr) {
-			return fixup_static(this->vmf->class);
+			int ret = vm_class_ensure_init(this->vmf->class);
+			if (ret)
+				return ret;
+
+			fixup_static(this->vmf->class);
+			return 0;
 		}
 	}
 
