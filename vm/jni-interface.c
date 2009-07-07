@@ -41,14 +41,14 @@
 #include "vm/stack-trace.h"
 
 #define check_null(x)							\
-	if (x == NULL) {						\
+	if ((x) == NULL) {						\
 		signal_new_exception(vm_java_lang_NullPointerException, \
 				     NULL);				\
 		return NULL;						\
 	}
 
 #define check_class_object(x)						\
-	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))	\
+	if (!vm_object_is_instance_of((x), vm_java_lang_Class))		\
 		return NULL;
 
 static jclass vm_jni_find_class(struct vm_jni_env *env, const char *name)
