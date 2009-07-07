@@ -106,7 +106,7 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 		{ "java.vm.name", "jato" },
 		{ "java.io.tmpdir", "/tmp" },
 		{ "file.separator", "/" },
-		{ "path.separator", "/" },
+		{ "path.separator", ":" },
 		{ "line.separator", "\n" },
 	};
 
