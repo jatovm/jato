@@ -471,6 +471,8 @@ main(int argc, char *argv[])
 	static_fixup_init();
 	vm_jni_init();
 
+	try_to_add_zip_to_classpath("/usr/share/classpath/glibj.zip");
+
 	/* Search $CLASSPATH last. */
 	char *classpath = getenv("CLASSPATH");
 	if (classpath)

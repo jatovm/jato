@@ -7,10 +7,7 @@ function run_java {
   JAVA_CLASS=$1
   EXPECTED=$2
 
-  CLASSPATH_INSTALL_DIR=`../tools/classpath-config`
-  GLIBJ="$CLASSPATH_INSTALL_DIR/share/classpath/glibj.zip"
-
-  $GDB ../jato $JAVA_OPTS -cp $PWD:../runtime/classpath:$GLIBJ $JAVA_CLASS
+  $GDB ../jato $JAVA_OPTS -cp $PWD:../runtime/classpath $JAVA_CLASS
 
   ACTUAL=$?
 
@@ -25,10 +22,6 @@ if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d "$GNU_CLASSPATH_ROOT"; then
   echo "Error! Cannot find GNU Classpath installed."
   exit
 fi
-
-GLIBJ=$GNU_CLASSPATH_ROOT/share/classpath/glibj.zip
-
-BOOTCLASSPATH=../lib/classes.zip:$GLIBJ
 
 while [ "$#" -ge 1 ]; do
     case "$1" in 

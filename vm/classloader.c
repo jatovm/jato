@@ -8,9 +8,10 @@
 #include "cafebabe/class.h"
 #include "cafebabe/stream.h"
 
-#include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/preload.h"
+#include "vm/class.h"
+#include "vm/die.h"
 
 bool opt_trace_classloader;
 static int trace_classloader_level = 0;
@@ -89,6 +90,19 @@ static int add_zip_to_classpath(const char *zip)
 	return 0;
 }
 
+int try_to_add_zip_to_classpath(const char *zip)
+{
+	struct stat st;
+
+	if (stat(zip, &st) != 0)
+		return -EINVAL;
+
+	if (!S_ISREG(st.st_mode))
+		return -EINVAL;
+
+	return add_zip_to_classpath(zip);
+}
+
 int classloader_add_to_classpath(const char *classpath)
 {
 	int i = 0;
@@ -116,20 +130,15 @@ int classloader_add_to_classpath(const char *classpath)
 		i += n;
 
 		if (!stat(classpath_element, &st)) {
-			/* XXX: We need to figure out what the semantics for
-			 * this function should be on error. IIRC, regular
-			 * java just ignores invalid classpath components.
-			 * We probably _shouldn't_ ignore those that we
-			 * couldn't add because we are out of memory. Also,
-			 * do we return error even if _some_ paths were
-			 * added successfully? */
-
 			if (S_ISDIR(st.st_mode))
 				add_dir_to_classpath(classpath_element);
-
-			if (S_ISREG(st.st_mode))
+			else if (S_ISREG(st.st_mode))
 				add_zip_to_classpath(classpath_element);
-		}
+			else {
+				warn("'%s' is not a regular file or a directory", classpath_element);
+			}
+		} else
+			warn("'%s' does not exist", classpath_element);
 
 		free(classpath_element);
 	}
