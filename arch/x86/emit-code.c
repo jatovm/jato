@@ -450,11 +450,16 @@ int fixup_static_at(unsigned long addr)
 			+ this->insn->mach_offset;
 
 		if ((unsigned long) site_addr == addr) {
-			int ret = vm_class_ensure_init(this->vmf->class);
+			struct vm_class *vmc = this->vmf->class;
+
+			/* Note: After this call, we can no longer access
+			 * "this" because it may have been deleted already
+			 * (from insite the class initializer of "vmc". */
+			int ret = vm_class_ensure_init(vmc);
 			if (ret)
 				return ret;
 
-			fixup_static(this->vmf->class);
+			fixup_static(vmc);
 			return 0;
 		}
 	}
