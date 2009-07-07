@@ -1810,7 +1810,7 @@ static void __emit64_push_imm(struct buffer *buf, long imm)
 		opc = 0x68;
 
 	emit(buf, opc);
-	emit64_imm(buf, imm);
+	emit_imm(buf, imm);
 }
 
 static void emit64_push_imm(struct buffer *buf, struct operand *operand)
