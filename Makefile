@@ -157,7 +157,7 @@ DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE
 # XXX: Temporary hack -Vegard
 DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
 
-WARNINGS	= -Wsign-compare -Wundef -Wall -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes -Werror
+WARNINGS	= -Wsign-compare -Wundef -Wall -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes -Werror -Wformat -Wformat-security
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
 OPTIMIZATIONS	+= -Os
