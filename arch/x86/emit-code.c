@@ -2105,4 +2105,11 @@ void emit_trampoline(struct compilation_unit *cu,
 	jit_text_unlock();
 }
 
+void *emit_itable_resolver_stub(struct vm_class *vmc,
+				struct itable_entry **table,
+				unsigned int nr_entries)
+{
+	return NULL;
+}
+
 #endif /* CONFIG_X86_32 */
