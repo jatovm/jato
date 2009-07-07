@@ -311,8 +311,10 @@ vm_object_alloc_string_from_c(const char *bytes)
 		return NULL;
 	}
 
+#if 0
 	/* XXX: Need to handle code points >= 0x80 */
 	NOT_IMPLEMENTED;
+#endif
 
 	for (unsigned int i = 0; i < n; ++i) {
 		array_set_field_char(array, i, bytes[i]);
