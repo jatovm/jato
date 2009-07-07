@@ -45,7 +45,9 @@ static void *jit_text;
 
 void jit_text_init(void)
 {
-	jit_text = mmap(NULL, MAX_TEXT_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+	jit_text = mmap(NULL, MAX_TEXT_SIZE,
+			PROT_READ | PROT_WRITE | PROT_EXEC,
+			MAP_PRIVATE | MAP_ANONYMOUS | TEXT_MAP_FLAGS, -1, 0);
 	if (jit_text == MAP_FAILED)
 		die("mmap");
 }

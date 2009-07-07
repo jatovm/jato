@@ -7,4 +7,10 @@
  */
 #define TEXT_ALIGNMENT 16
 
+#ifdef CONFIG_X86_64
+# define TEXT_MAP_FLAGS		MAP_32BIT
+#else
+# define TEXT_MAP_FLAGS		0
+#endif
+
 #endif /* JATO_X86_TEXT_H */
