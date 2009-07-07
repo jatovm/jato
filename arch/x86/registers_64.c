@@ -25,6 +25,24 @@
  */
 
 #include "arch/registers.h"
+#include "jit/vars.h"
+
+static enum machine_reg_type register_types[] = {
+	[REG_RAX] = REG_TYPE_GPR,
+	[REG_RBX] = REG_TYPE_GPR,
+	[REG_RCX] = REG_TYPE_GPR,
+	[REG_RDX] = REG_TYPE_GPR,
+	[REG_RDI] = REG_TYPE_GPR,
+	[REG_RSI] = REG_TYPE_GPR,
+	[REG_R8] = REG_TYPE_GPR,
+	[REG_R9] = REG_TYPE_GPR,
+	[REG_R10] = REG_TYPE_GPR,
+	[REG_R11] = REG_TYPE_GPR,
+	[REG_R12] = REG_TYPE_GPR,
+	[REG_R13] = REG_TYPE_GPR,
+	[REG_R14] = REG_TYPE_GPR,
+	[REG_R15] = REG_TYPE_GPR,
+};
 
 static const char *register_names[] = {
 	[REG_RAX] = "RAX",
@@ -51,4 +69,9 @@ const char *reg_name(enum machine_reg reg)
 		return "<unassigned>";
 
 	return register_names[reg];
+}
+
+enum machine_reg_type reg_type(enum machine_reg reg)
+{
+	return register_types[reg];
 }
