@@ -224,10 +224,7 @@ int vm_itable_setup(struct vm_class *vmc)
 			struct vm_method *c_vmm
 				= vm_class_get_method_recursive(vmc,
 					i_vmm->name, i_vmm->type);
-			if (!c_vmm) {
-				NOT_IMPLEMENTED;
-				continue;
-			}
+			assert(c_vmm);
 
 			entry->c_method = c_vmm;
 		}

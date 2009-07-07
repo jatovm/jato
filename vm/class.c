@@ -304,7 +304,9 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	if (!vm_class_is_interface(vmc)) {
 		setup_vtable(vmc);
-		vm_itable_setup(vmc);
+
+		if (!vm_class_is_abstract(vmc))
+			vm_itable_setup(vmc);
 	}
 
 	INIT_LIST_HEAD(&vmc->static_fixup_site_list);

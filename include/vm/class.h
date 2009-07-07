@@ -85,6 +85,11 @@ static inline bool vm_class_is_interface(const struct vm_class *vmc)
 	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
 }
 
+static inline bool vm_class_is_abstract(const struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_ABSTRACT;
+}
+
 static inline bool vm_class_is_array_class(const struct vm_class *vmc)
 {
 	return vmc->kind == VM_CLASS_KIND_ARRAY;
