@@ -1815,7 +1815,7 @@ static void __emit_membase(struct buffer *buf,
 	unsigned char __base_reg = __encode_reg(base_reg);
 	int needs_sib;
 
-	needs_sib = (base_reg == REG_ESP);
+	needs_sib = (base_reg == REG_RSP);
 
 	emit(buf, opc);
 
