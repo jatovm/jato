@@ -9,6 +9,7 @@
 #include "vm/class.h"
 #include "vm/field.h"
 #include "vm/method.h"
+#include "vm/object.h"
 #include "vm/stdlib.h"
 
 int vm_field_init(struct vm_field *vmf,
@@ -67,8 +68,9 @@ int vm_field_init_static(struct vm_field *vmf, unsigned int offset)
 	const struct cafebabe_field_info *field
 		= &class->fields[vmf->field_index];
 
-	/* XXX: Actually _use_ the ConstantValue attribute */
-	*(unsigned long *) &vmf->class->static_values[offset] = 0;
+	/* XXX: Might have to change this when our fields have different
+	 * sizes internally as well. */
+	*(unsigned long *) &vmc->static_values[offset] = 0;
 
 	unsigned int constant_value_index = 0;
 	if (cafebabe_attribute_array_get(&field->attributes,
@@ -94,5 +96,84 @@ int vm_field_init_static(struct vm_field *vmf, unsigned int offset)
 	}
 
 	cafebabe_stream_close_buffer(&stream);
+
+	int idx = constant_value_attribute.constant_value_index;
+	if (cafebabe_class_constant_index_invalid(class, idx)) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	struct cafebabe_constant_pool *cp;
+	cp = &class->constant_pool[idx];
+
+	/* XXX: I don't actually have any way to test that this works. We
+	 * should write a test case in Jasmine or something, I guess. */
+	switch (cp->tag) {
+	case CAFEBABE_CONSTANT_TAG_INTEGER:
+		if (strcmp(vmf->type, "I") && strcmp(vmf->type, "S")
+			&& strcmp(vmf->type, "C") && strcmp(vmf->type, "B")
+			&& strcmp(vmf->type, "Z"))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		vm_field_set_int32(vmf, cp->integer_.bytes);
+		break;
+	case CAFEBABE_CONSTANT_TAG_FLOAT:
+		if (strcmp(vmf->type, "F")) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		vm_field_set_float(vmf, uint32_to_float(cp->float_.bytes));
+		break;
+	case CAFEBABE_CONSTANT_TAG_STRING: {
+		if (strcmp(vmf->type, "Ljava/lang/String;")) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		const struct cafebabe_constant_info_utf8 *utf8;
+		if (cafebabe_class_constant_get_utf8(class,
+			cp->string.string_index, &utf8))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		struct vm_object *string
+			= vm_object_alloc_string_from_utf8(utf8->bytes,
+				utf8->length);
+		if (!string) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		vm_field_set_object(vmf, string);
+		break;
+	}
+	case CAFEBABE_CONSTANT_TAG_LONG:
+		if (strcmp(vmf->type, "J")) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		vm_field_set_int64(vmf,
+			((uint64_t) cp->long_.high_bytes << 32)
+			+ (uint64_t) cp->long_.low_bytes);
+		break;
+	case CAFEBABE_CONSTANT_TAG_DOUBLE:
+		if (strcmp(vmf->type, "D")) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		NOT_IMPLEMENTED;
+		break;
+	default:
+		return -1;
+	}
+
 	return 0;
 }
