@@ -382,6 +382,124 @@ static void usage(FILE *f, int retval)
 	exit(retval);
 }
 
+static void handle_help(void)
+{
+	usage(stdout, EXIT_SUCCESS);
+}
+
+static void handle_classpath(const char *arg)
+{
+	classloader_add_to_classpath(arg);
+}
+
+static char *classname;
+
+static void handle_perf(void)
+{
+	perf_enabled = true;
+}
+
+static void handle_trace_asm(void)
+{
+	opt_trace_method = true;
+	opt_trace_machine_code = true;
+}
+
+static void handle_trace_bytecode_offset(void)
+{
+	opt_trace_bytecode_offset = true;
+}
+
+static void handle_trace_classloader(void)
+{
+	opt_trace_classloader = true;
+}
+
+static void handle_trace_exceptions(void)
+{
+	opt_trace_exceptions = true;
+}
+
+static void handle_trace_invoke(void)
+{
+	opt_trace_invoke = true;
+}
+
+static void handle_trace_invoke_verbose(void)
+{
+	opt_trace_invoke = true;
+	opt_trace_invoke_verbose = true;
+}
+
+static void handle_trace_itable(void)
+{
+	opt_trace_itable = true;
+}
+
+static void handle_trace_jit(void)
+{
+	opt_trace_method = true;
+	opt_trace_cfg = true;
+	opt_trace_tree_ir = true;
+	opt_trace_lir = true;
+	opt_trace_liveness = true;
+	opt_trace_regalloc = true;
+	opt_trace_machine_code = true;
+	opt_trace_magic_trampoline = true;
+	opt_trace_bytecode_offset = true;
+}
+
+static void handle_trace_trampoline(void)
+{
+	opt_trace_magic_trampoline = true;
+}
+
+struct option {
+	const char *name;
+
+	bool arg;
+
+	union {
+		void (*func)(void);
+		void (*func_arg)(const char *arg);
+	} handler;
+};
+
+#define DEFINE_OPTION(_name, _handler) \
+	{ .name = _name, .arg = false, .handler.func = _handler }
+
+#define DEFINE_OPTION_ARG(_name, _handler) \
+	{ .name = _name, .arg = true, .handler.func_arg = _handler }
+
+const struct option options[] = {
+	DEFINE_OPTION("h",		handle_help),
+	DEFINE_OPTION("help",		handle_help),
+
+	DEFINE_OPTION_ARG("classpath",	handle_classpath),
+	DEFINE_OPTION_ARG("cp",		handle_classpath),
+
+	DEFINE_OPTION("Xperf",			handle_perf),
+	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
+	DEFINE_OPTION("Xtrace:bytecode-offset",	handle_trace_bytecode_offset),
+	DEFINE_OPTION("Xtrace:classloader",	handle_trace_classloader),
+	DEFINE_OPTION("Xtrace:exceptions",	handle_trace_exceptions),
+	DEFINE_OPTION("Xtrace:invoke",		handle_trace_invoke),
+	DEFINE_OPTION("Xtrace:invoke-verbose",	handle_trace_invoke_verbose),
+	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),
+	DEFINE_OPTION("Xtrace:jit",		handle_trace_jit),
+	DEFINE_OPTION("Xtrace:trampoline",	handle_trace_trampoline),
+};
+
+static const struct option *get_option(const char *name)
+{
+	for (unsigned int i = 0; i < ARRAY_SIZE(options); ++i) {
+		if (!strcmp(name, options[i].name))
+			return &options[i];
+	}
+
+	return NULL;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -395,70 +513,40 @@ main(int argc, char *argv[])
 	setvbuf(stderr, NULL, _IONBF, 0);
 #endif
 
-	/* We need to support at least this:
-	 *  -classpath/-cp
-	 *  -Xtrace:jit
-	 *  -Xtrace:trampoline
-	 *  -Xtrace:bytecode-offset
-	 *  -Xtrace:asm
-	 */
+	int optind;
+	for (optind = 1; optind < argc; ++optind) {
+		if (argv[optind][0] != '-')
+			break;
 
-	const char *classname = NULL;
+		const struct option *opt = get_option(argv[optind] + 1);
+		if (!opt)
+			usage(stderr, EXIT_FAILURE);
 
-	for (int i = 1; i < argc; ++i) {
-		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help")) {
-			usage(stdout, EXIT_SUCCESS);
-		} else if (!strcmp(argv[i], "-classpath")
-			|| !strcmp(argv[i], "-cp"))
-		{
-			if (++i >= argc) {
-				NOT_IMPLEMENTED;
-				break;
-			}
-
-			if (classloader_add_to_classpath(argv[i]))
-				NOT_IMPLEMENTED;
-		} else if (!strcmp(argv[i], "-Xtrace:asm")) {
-			opt_trace_method = true;
-			opt_trace_machine_code = true;
-		} else if (!strcmp(argv[i], "-Xtrace:bytecode-offset")) {
-			opt_trace_bytecode_offset = true;
-		} else if (!strcmp(argv[i], "-Xtrace:classloader")) {
-			opt_trace_classloader = true;
-		} else if (!strcmp(argv[i], "-Xtrace:invoke")) {
-			opt_trace_invoke = true;
-		} else if (!strcmp(argv[i], "-Xtrace:exceptions")) {
-			opt_trace_exceptions = true;
-		} else if (!strcmp(argv[i], "-Xtrace:invoke-verbose")) {
-			opt_trace_invoke = true;
-			opt_trace_invoke_verbose = true;
-		} else if (!strcmp(argv[i], "-Xtrace:itable")) {
-			opt_trace_itable = true;
-		} else if (!strcmp(argv[i], "-Xtrace:jit")) {
-			opt_trace_method = true;
-			opt_trace_cfg = true;
-			opt_trace_tree_ir = true;
-			opt_trace_lir = true;
-			opt_trace_liveness = true;
-			opt_trace_regalloc = true;
-			opt_trace_machine_code = true;
-			opt_trace_magic_trampoline = true;
-			opt_trace_bytecode_offset = true;
-		} else if (!strcmp(argv[i], "-Xtrace:trampoline")) {
-			opt_trace_magic_trampoline = true;
-		} else if (!strcmp(argv[i], "-Xperf")) {
-			perf_enabled = true;
-		} else {
-			if (argv[i][0] == '-')
-				usage(stderr, EXIT_FAILURE);
-
-			if (classname)
-				usage(stderr, EXIT_FAILURE);
-
-			classname = argv[i];
+		if (!opt->arg) {
+			opt->handler.func();
+			continue;
 		}
+
+		/* We wanted an argument, but there was none */
+		if (optind + 1 >= argc)
+			usage(stderr, EXIT_FAILURE);
+
+		opt->handler.func_arg(argv[++optind]);
 	}
 
+	if (optind < argc) {
+		/* Can't specify both a jar and a class file */
+		if (classname)
+			usage(stderr, EXIT_FAILURE);
+
+		classname = argv[optind++];
+	}
+
+	/* Should be no more options after this */
+	if (optind < argc)
+		usage(stderr, EXIT_FAILURE);
+
+	/* Can't specify neither a jar and a class file */
 	if (!classname)
 		usage(stderr, EXIT_FAILURE);
 
