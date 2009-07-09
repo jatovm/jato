@@ -29,9 +29,13 @@ package jvm;
  * @author Tomasz Grabiec
  */
 public class ArrayExceptionsTest extends TestCase {
-        public static void testArrayLoadThrowsNullPointerException() {
+    private static Object[] getNullObjectArray() {
+        return null;
+    }
+
+    public static void testArrayLoadThrowsNullPointerException() {
         boolean caught = false;
-        Object[] array = null;
+        Object[] array = getNullObjectArray();
 
         try {
             takeObject(array[0]);
@@ -62,7 +66,7 @@ public class ArrayExceptionsTest extends TestCase {
 
     public static void testArrayStoreThrowsNullPointerException() {
         boolean caught = false;
-        Object[] array = null;
+        Object[] array = getNullObjectArray();
 
         try {
             array[0] = null;
@@ -107,7 +111,7 @@ public class ArrayExceptionsTest extends TestCase {
 
     public static void testArraylengthThrowsNullPointerException() {
         boolean caught = false;
-        Object[] array = null;
+        Object[] array = getNullObjectArray();
 
         try {
             takeInt(array.length);
