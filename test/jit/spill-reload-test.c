@@ -58,8 +58,8 @@ void test_spill_insn_is_inserted_at_the_end_of_the_interval_if_necessary(void)
 	struct insn *insn;
 
         cu = compilation_unit_alloc(&method);
-        r1 = get_var(cu);
-        r2 = get_var(cu);
+        r1 = get_var(cu, J_INT);
+        r2 = get_var(cu, J_INT);
 
         insn_array[0] = arithmetic_insn(INSN_ADD, r1, r1, r1);
         insn_array[1] = arithmetic_insn(INSN_ADD, r2, r2, r2);
@@ -104,8 +104,8 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
 	struct insn *insn;
 
         cu = compilation_unit_alloc(&method);
-        r1 = get_var(cu);
-        r2 = get_var(cu);
+        r1 = get_var(cu, J_INT);
+        r2 = get_var(cu, J_INT);
 
         insn_array[0] = arithmetic_insn(INSN_ADD, r1, r1, r1);
         insn_array[1] = arithmetic_insn(INSN_ADD, r2, r2, r2);
@@ -151,7 +151,7 @@ void test_empty_interval_is_never_spilled(void)
 	cu = compilation_unit_alloc(&method);
 	bb = get_basic_block(cu, 0, 2);
 
-	r1 = get_var(cu);
+	r1 = get_var(cu, J_INT);
 	r1->interval->need_spill = true;
 
 	compute_insn_positions(cu);

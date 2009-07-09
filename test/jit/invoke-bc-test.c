@@ -25,7 +25,7 @@ static void assert_convert_return(enum vm_type vm_type, unsigned char opc)
 	struct basic_block *bb;
 
 	bb = __alloc_simple_bb(&method);
-	temporary = get_var(bb->b_parent);
+	temporary = get_var(bb->b_parent, J_INT);
 	return_value = temporary_expr(vm_type, NULL, temporary);
 	stack_push(bb->mimic_stack, return_value);
 	convert_to_ir(bb->b_parent);

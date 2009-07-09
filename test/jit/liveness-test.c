@@ -39,8 +39,8 @@ void test_variable_range_limited_to_basic_block(void)
 	struct insn *insn[3];
 
 	cu = compilation_unit_alloc(&method);
-	r1 = get_var(cu);
-	r2 = get_var(cu);
+	r1 = get_var(cu, J_INT);
+	r2 = get_var(cu, J_INT);
 
 	bb = get_basic_block(cu, 0, 3);
 
@@ -80,8 +80,8 @@ void test_variable_range_spans_two_basic_blocks(void)
 	struct insn *insn[4];
 
 	cu = compilation_unit_alloc(&method);
-	r1 = get_var(cu);
-	r2 = get_var(cu);
+	r1 = get_var(cu, J_INT);
+	r2 = get_var(cu, J_INT);
 
 	bb1 = get_basic_block(cu, 0, 2);
 	bb2 = get_basic_block(cu, 2, 4);

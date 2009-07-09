@@ -39,6 +39,8 @@ enum machine_reg {
 	REG_UNASSIGNED = INT_MAX,
 };
 
+#define GPR_VM_TYPE	J_LONG
+
 const char *reg_name(enum machine_reg reg);
 
 static inline bool is_caller_saved_reg(enum machine_reg reg)

@@ -14,4 +14,6 @@ enum machine_reg {
 
 enum machine_reg_type reg_type(enum machine_reg reg);
 
+#define GPR_VM_TYPE J_LONG
+
 #endif /* __JIT_REGISTERS_H */

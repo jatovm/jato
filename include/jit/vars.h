@@ -3,6 +3,7 @@
 
 #include "lib/list.h"
 #include "arch/registers.h"
+#include "vm/types.h"
 #include <stdbool.h>
 #include <assert.h>
 
@@ -102,7 +103,8 @@ struct var_info {
 	unsigned long		vreg;
 	struct var_info		*next;
 	struct live_interval	*interval;
-	enum machine_reg_type type;
+	enum machine_reg_type	type;
+	enum vm_type		vm_type;
 };
 
 struct live_interval *alloc_interval(struct var_info *);

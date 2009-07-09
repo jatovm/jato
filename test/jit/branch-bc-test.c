@@ -58,7 +58,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	list_add_tail(&bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 
-	temporary = get_var(cu);
+	temporary = get_var(cu, J_INT);
 	if_value = temporary_expr(J_INT, NULL, temporary);
 	stack_push(branch_bb->mimic_stack, if_value);
 
@@ -108,11 +108,11 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
-	temporary = get_var(cu);
+	temporary = get_var(cu, J_INT);
 	if_value1 = temporary_expr(vm_type, NULL, temporary);
 	stack_push(stmt_bb->mimic_stack, if_value1);
 
-	temporary = get_var(cu);
+	temporary = get_var(cu, J_INT);
 	if_value2 = temporary_expr(vm_type, NULL, temporary);
 	stack_push(stmt_bb->mimic_stack, if_value2);
 

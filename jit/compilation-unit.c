@@ -110,7 +110,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free(cu);
 }
 
-struct var_info *get_var(struct compilation_unit *cu)
+struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
 	struct var_info *ret;
 
@@ -123,6 +123,7 @@ struct var_info *get_var(struct compilation_unit *cu)
 	ret->interval = alloc_interval(ret);
 
 	ret->type = REG_TYPE_GPR;
+	ret->vm_type = vm_type;
 
 	cu->var_infos = ret;
   out:
@@ -131,7 +132,7 @@ struct var_info *get_var(struct compilation_unit *cu)
 
 struct var_info *get_fpu_var(struct compilation_unit *cu)
 {
-	struct var_info *ret = get_var(cu);
+	struct var_info *ret = get_var(cu, J_FLOAT);
 
 	ret->type = REG_TYPE_FPU;
 
@@ -142,11 +143,12 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 {
 	struct var_info *ret;
 
-	ret = get_var(cu);
+	ret = get_var(cu, J_INT);
 	if (ret) {
 		ret->interval->reg = reg;
 		ret->interval->fixed_reg = true;
 		ret->type = reg_type(reg);
+		ret->vm_type = GPR_VM_TYPE;
 	}
 
 	return ret;

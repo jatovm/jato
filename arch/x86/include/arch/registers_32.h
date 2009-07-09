@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <vm/types.h>
 
 enum machine_reg {
 	REG_EAX,
@@ -40,6 +41,8 @@ enum machine_reg {
 
 	REG_UNASSIGNED = INT_MAX,
 };
+
+#define GPR_VM_TYPE	J_INT
 
 const char *reg_name(enum machine_reg reg);
 enum machine_reg_type reg_type(enum machine_reg reg);

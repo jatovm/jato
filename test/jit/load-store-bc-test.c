@@ -511,7 +511,7 @@ static void __assert_convert_store(unsigned char *code,
 
 	bb = alloc_simple_bb(code, code_size);
 
-	temporary = get_var(bb->b_parent);
+	temporary = get_var(bb->b_parent, J_INT);
 	stack_push(bb->mimic_stack, temporary_expr(J_INT, NULL, temporary));
 
 	convert_to_ir(bb->b_parent);

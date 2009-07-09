@@ -41,10 +41,10 @@ static void assert_convert_binop(enum vm_type vm_type,
 
 	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(bb->b_parent);
+	temporary = get_var(bb->b_parent, J_INT);
 	left = temporary_expr(vm_type, NULL, temporary);
 
-	temporary = get_var(bb->b_parent);
+	temporary = get_var(bb->b_parent, J_INT);
 	right = temporary_expr(vm_type, NULL, temporary);
 
 	stack_push(bb->mimic_stack, left);
@@ -115,7 +115,7 @@ static void assert_convert_unop(enum vm_type vm_type,
 
 	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(bb->b_parent);
+	temporary = get_var(bb->b_parent, J_INT);
 	expression = temporary_expr(vm_type, NULL, temporary);
 	stack_push(bb->mimic_stack, expression);
 
@@ -223,10 +223,10 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 
 	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(bb->b_parent);
+	temporary = get_var(bb->b_parent, J_INT);
 	left = temporary_expr(type, NULL, temporary);
 
-	temporary = get_var(bb->b_parent);
+	temporary = get_var(bb->b_parent, J_INT);
 	right = temporary_expr(type, NULL, temporary);
 
 	stack_push(bb->mimic_stack, left);

@@ -334,9 +334,9 @@ static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
 		if (expr->entry != entry)
 			continue;
 
-		tmp_low = get_var(bb->b_parent);
+		tmp_low = get_var(bb->b_parent, J_INT);
 		if (expr->vm_type == J_LONG)
-			tmp_high = get_var(bb->b_parent);
+			tmp_high = get_var(bb->b_parent, J_INT);
 		else
 			tmp_high = NULL;
 

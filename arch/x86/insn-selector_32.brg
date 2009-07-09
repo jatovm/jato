@@ -157,7 +157,7 @@ reg:	freg 1
 	struct var_info *result, *in, *esp;
 
 	in = state->reg1;
-	result = get_var(s->b_parent);
+	result = get_var(s->b_parent, J_INT);
 	state->reg1 = result;
 
 	esp = get_fixed_var(s->b_parent, REG_ESP);
@@ -187,13 +187,13 @@ reg:	EXPR_VALUE	0
 
 	expr = to_expr(tree);
 
-	result = get_var(s->b_parent);
+	result = get_var(s->b_parent, J_INT);
 	state->reg1 = result;
 
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value & ~0UL, result));
 
 	if (expr->vm_type == J_LONG) {
-		result = get_var(s->b_parent);
+		result = get_var(s->b_parent, J_INT);
 		state->reg2 = result;
 		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value >> 32, state->reg2));
 	}
@@ -209,7 +209,7 @@ reg:	EXPR_LOCAL	1
 	expr = to_expr(tree);
 	slot = get_local_slot(cu->stack_frame, expr->local_index);
 
-	result = get_var(s->b_parent);
+	result = get_var(s->b_parent, J_INT);
 	state->reg1 = result;
 
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
@@ -217,7 +217,7 @@ reg:	EXPR_LOCAL	1
 	if (expr->vm_type == J_LONG) {
 		slot = get_local_slot(cu->stack_frame, expr->local_index + 1);
 
-		result = get_var(s->b_parent);
+		result = get_var(s->b_parent, J_INT);
 		state->reg2 = result;
 
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
@@ -390,9 +390,9 @@ reg: 	OP_MUL_64(reg, reg) 1
 	edx = get_fixed_var(s->b_parent, REG_EDX);
 
 	state->reg1 = eax;
-	state->reg2 = get_var(s->b_parent);
+	state->reg2 = get_var(s->b_parent, J_INT);
 
-	tmp1 = get_var(s->b_parent);
+	tmp1 = get_var(s->b_parent, J_INT);
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg2, tmp1));
 	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, tmp1));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg2, state->reg2));
@@ -691,11 +691,11 @@ reg:	EXPR_INVOKE(arg) 1
 	cu	= method->compilation_unit;
 
 	eax = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = get_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
 	if (get_method_return_type(method->type) == J_LONG) {
 		edx = get_fixed_var(s->b_parent, REG_EDX);
-		state->reg2 = get_var(s->b_parent);
+		state->reg2 = get_var(s->b_parent, J_INT);
 	}
 
 	invoke(s, tree, cu, method);
@@ -722,18 +722,18 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	method_offset = expr_method_index(expr) * sizeof(void *);
 
 	eax = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = get_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
 	if (get_method_return_type(method->type) == J_LONG) {
 		edx = get_fixed_var(s->b_parent, REG_EDX);
-		state->reg2 = get_var(s->b_parent);
+		state->reg2 = get_var(s->b_parent, J_INT);
 	}
 
 	/* object reference */
 	objectref_expr = get_first_arg(expr->args_list);
 
 	if (expr_type(objectref_expr) == EXPR_VALUE) {
-		call_target = get_var(s->b_parent);
+		call_target = get_var(s->b_parent, J_INT);
 		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
 	} else {
 		call_target = state->left->reg1;
@@ -793,11 +793,11 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 	method	= expr->target_method;
 
 	eax = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = get_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
 	if (get_method_return_type(method->type) == J_LONG) {
 		edx = get_fixed_var(s->b_parent, REG_EDX);
-		state->reg2 = get_var(s->b_parent);
+		state->reg2 = get_var(s->b_parent, J_INT);
 	}
 
 	invokevirtual(state, s, tree);
@@ -827,7 +827,7 @@ reg:	OP_CMPL(freg, freg) 1
 {
 	struct var_info *esp, *eax;
 
-	state->reg1 = get_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
 	esp = get_fixed_var(s->b_parent, REG_ESP);
 	eax = get_fixed_var(s->b_parent, REG_EAX);
@@ -856,7 +856,7 @@ reg:	OP_CMP(reg, EXPR_VALUE) 1
 	expr = to_expr(tree);
 	right = to_expr(expr->binary_right);
 
-	state->reg1 = get_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, J_INT);
 	eax = get_fixed_var(s->b_parent, REG_EAX);
 
 	if (right->vm_type != J_LONG) {
@@ -977,7 +977,7 @@ reg:	EXPR_CLASS_FIELD 1
 
 	expr   = to_expr(tree);
 
-	out = get_var(s->b_parent);
+	out = get_var(s->b_parent, J_INT);
 	state->reg1 = out;
 
 	vmf = expr->class_field;
@@ -1001,7 +1001,7 @@ reg:	EXPR_CLASS_FIELD 1
 	select_insn(s, tree, mov_insn);
 
 	if (expr->vm_type == J_LONG) {
-		state->reg2 = get_var(s->b_parent);
+		state->reg2 = get_var(s->b_parent, J_INT);
 		select_insn(s, tree, memdisp_reg_insn(INSN_MOV_MEMDISP_REG,
 			(unsigned long) vmc->static_values + vmf->offset + 4,
 			state->reg2));
@@ -1017,13 +1017,13 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	expr = to_expr(tree);
 
 	base = state->left->reg1;
-	state->reg1 = get_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
 	offset = sizeof(struct vm_object) + expr->instance_field->offset;
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
 
 	if (expr->vm_type == J_LONG) {
-		state->reg2 = get_var(s->b_parent);
+		state->reg2 = get_var(s->b_parent, J_INT);
 		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset + 4, state->reg2));
 	}
 }
@@ -1096,7 +1096,7 @@ reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
 	struct expression *expr;
 	struct expression *local;
 
-	reg = get_var(s->b_parent);
+	reg = get_var(s->b_parent, J_INT);
 	state->reg1 = reg;
 
 	expr = to_expr(tree);
@@ -1179,7 +1179,7 @@ reg:    EXPR_ARRAYLENGTH(reg)
 
 	arrayref = state->left->reg1;
 
-	arraylength = get_var(s->b_parent);
+	arraylength = get_var(s->b_parent, J_INT);
 	state->reg1 = arraylength;
 
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref,
@@ -1214,8 +1214,8 @@ reg:	EXPR_CONVERSION(reg)
 	src = to_expr(expr->from_expression);
 
 	if (src->vm_type == J_INT && expr->vm_type == J_LONG) {
-		state->reg1 = get_var(s->b_parent);
-		state->reg2 = get_var(s->b_parent);
+		state->reg1 = get_var(s->b_parent, J_INT);
+		state->reg2 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, state->reg1));
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, state->reg2));
@@ -1223,11 +1223,11 @@ reg:	EXPR_CONVERSION(reg)
 	} else if (src->vm_type == J_LONG && expr->vm_type == J_INT) {
 		state->reg1 = state->left->reg1;
 	} else if (src->vm_type == J_INT && expr->vm_type == J_BYTE) {
-		state->reg1 = get_var(s->b_parent);
+		state->reg1 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOVSX_8_REG_REG, state->left->reg1, state->reg1));
 	} else if (src->vm_type == J_INT && expr->vm_type == J_CHAR) {
-		state->reg1 = get_var(s->b_parent);
+		state->reg1 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOVSX_16_REG_REG, state->left->reg1, state->reg1));
 	} else {
@@ -1261,7 +1261,7 @@ reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
 	src = to_expr(expr->from_expression);
 
 	if (src->vm_type == J_FLOAT && expr->vm_type == J_INT) {
-		state->reg1 = get_var(s->b_parent);
+		state->reg1 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
 	} else {
@@ -1332,7 +1332,7 @@ reg:	EXPR_EXCEPTION_REF
 	struct var_info *result;
 	struct stack_slot *slot = s->b_parent->exception_spill_slot;
 
-	result = get_var(s->b_parent);
+	result = get_var(s->b_parent, J_INT);
 	state->reg1 = result;
 
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
@@ -1543,7 +1543,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 
 	state_base = state->left->reg1;
 
-	base = get_var(s->b_parent);
+	base = get_var(s->b_parent, J_INT);
 	state->reg1 = base;
 
 	state->reg2 = state->right->reg1;
@@ -1637,10 +1637,10 @@ array_check:	EXPR_ARRAY_DEREF(reg, reg) 2
 	state_base = state->left->reg1;
 	state_index = state->right->reg1;
 
-	base = get_var(s->b_parent);
+	base = get_var(s->b_parent, J_INT);
 	state->reg1 = base;
 
-	index = get_var(s->b_parent);
+	index = get_var(s->b_parent, J_INT);
 	state->reg2 = index;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
@@ -1747,7 +1747,7 @@ static void select_exception_test(struct basic_block *bb,
 	unsigned long exception_guard_offset;
 	struct var_info *reg;
 
-	reg = get_var(bb->b_parent);
+	reg = get_var(bb->b_parent, J_INT);
 
 	exception_guard_offset = get_thread_local_offset(&exception_guard);
 
@@ -1890,11 +1890,11 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	struct var_info *eax, *edx = NULL;
 
 	eax = get_fixed_var(s->b_parent, REG_EAX);
-	state->reg1 = get_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
 	if (return_type == J_LONG) {
 		edx = get_fixed_var(s->b_parent, REG_EDX);
-		state->reg2 = get_var(s->b_parent);
+		state->reg2 = get_var(s->b_parent, J_INT);
 	}
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg2));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
@@ -1968,7 +1968,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	objectref_expr = get_first_arg(expr->args_list);
 
 	if (expr_type(objectref_expr) == EXPR_VALUE) {
-		call_target = get_var(s->b_parent);
+		call_target = get_var(s->b_parent, J_INT);
 		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
 	} else {
 		call_target = state->left->reg1;

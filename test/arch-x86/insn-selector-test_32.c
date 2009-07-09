@@ -809,8 +809,8 @@ static void assert_select_if_statement_reg_reg(enum insn_type expected,
 	};
 
 	cu = compilation_unit_alloc(&method);
-	src = get_var(cu);
-	dst = get_var(cu);
+	src = get_var(cu, J_INT);
+	dst = get_var(cu, J_INT);
 	bb = get_basic_block(cu, 0, 1);
 	true_bb = get_basic_block(cu, 1, 2);
 
@@ -1053,7 +1053,7 @@ void test_select_store_value_to_var(void)
 
 	cu = compilation_unit_alloc(&method);
 
-	temporary = get_var(cu);
+	temporary = get_var(cu, J_INT);
 	store_dest = temporary_expr(J_REFERENCE, NULL, temporary);
 	store_src  = value_expr(J_REFERENCE, 0xdeadbeef);
 
@@ -1092,7 +1092,7 @@ void test_select_store_var_to_local(void)
 	cu = compilation_unit_alloc(&method);
 
 	store_dest = local_expr(J_INT, 0);
-	temporary = get_var(cu);
+	temporary = get_var(cu, J_INT);
 	store_src  = temporary_expr(J_INT, NULL, temporary);
 
 	stmt = alloc_statement(STMT_STORE);
