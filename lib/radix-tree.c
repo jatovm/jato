@@ -248,8 +248,8 @@ int radix_tree_insert(struct radix_tree *tree, unsigned long key, void *value)
 }
 
 static void
-free_slot(struct radix_tree *tree, struct radix_tree_node *node, int key,
-	  int level)
+free_slot(struct radix_tree *tree, struct radix_tree_node *node,
+	  unsigned long key, int level)
 {
 	node->slots[get_index(tree, key, level)] = NULL;
 	node->count--;
