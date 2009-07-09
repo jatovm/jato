@@ -35,9 +35,13 @@ public class MethodInvocationExceptionsTest extends TestCase {
     public void publicMethod() {
     }
 
+    private static MethodInvocationExceptionsTest getNullMethodInvocationExceptionsTest() {
+        return null;
+    }
+
     public static void testInvokespecialThrowsNullPointerException() {
         boolean caught = false;
-        MethodInvocationExceptionsTest test = null;
+        MethodInvocationExceptionsTest test = getNullMethodInvocationExceptionsTest();
 
         try {
             test.privateMethod();
@@ -50,7 +54,7 @@ public class MethodInvocationExceptionsTest extends TestCase {
 
     public static void testInvokevirtualThrowsNullPointerException() {
         boolean caught = false;
-        MethodInvocationExceptionsTest test = null;
+        MethodInvocationExceptionsTest test = getNullMethodInvocationExceptionsTest();
 
         try {
             test.publicMethod();
