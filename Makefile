@@ -194,7 +194,7 @@ monoburg:
 	$(E) "  AS      " $@
 	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
-arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
+arch/$(ARCH)/insn-selector.c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
 
