@@ -2005,11 +2005,26 @@ static void emit_mov_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 1, 0x8b, src, dest);
 }
 
+static void emit_mov_memlocal_reg(struct buffer *buf,
+				  struct operand *src,
+				  struct operand *dest)
+{
+	enum machine_reg dest_reg;
+	unsigned long disp;
+
+	dest_reg = mach_reg(&dest->reg);
+	disp = slot_offset(src->slot);
+
+	__emit_membase_reg(buf, is_64bit_reg(dest),
+			   0x8b, REG_RBP, disp, dest_reg);
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
