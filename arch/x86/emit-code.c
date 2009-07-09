@@ -1915,7 +1915,6 @@ static void __emit_memdisp(struct buffer *buf,
 			   unsigned char reg_opcode)
 {
 	unsigned char rex_pfx = 0, mod_rm;
-	size_t insn_size = 6;
 
 	if (rex_w)
 		rex_pfx |= REX_W;
@@ -1924,13 +1923,11 @@ static void __emit_memdisp(struct buffer *buf,
 
 	mod_rm = encode_modrm(0, reg_opcode, 5);
 
-	if (rex_pfx) {
+	if (rex_pfx)
 		emit(buf, rex_pfx);
-		insn_size++;
-	}
 	emit(buf, opc);
 	emit(buf, mod_rm);
-	emit_imm32(buf, rip_relative(buf, disp, insn_size));
+	emit_imm32(buf, rip_relative(buf, disp, 4));
 }
 
 static void __emit_memdisp_reg(struct buffer *buf,
