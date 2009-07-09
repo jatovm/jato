@@ -29,11 +29,17 @@ package jvm;
  * @author Tomasz Grabiec
  */
 public class ObjectCreationAndManipulationExceptionsTest extends TestCase {
-    public int field;
+    private static class X {
+        public int field;
+    }
+
+    private static X getNullX() {
+        return null;
+    }
 
     public static void testGetfieldThrowsNullPointerException() {
         boolean caught = false;
-        ObjectCreationAndManipulationExceptionsTest test = null;
+        X test = getNullX();
 
         try {
             takeInt(test.field);
@@ -46,7 +52,7 @@ public class ObjectCreationAndManipulationExceptionsTest extends TestCase {
 
     public static void testPutfieldThrowsNullPointerException() {
         boolean caught = false;
-        ObjectCreationAndManipulationExceptionsTest test = null;
+        X test = getNullX();
 
         try {
             test.field = 1;
