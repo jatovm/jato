@@ -2116,7 +2116,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	}
 
 	__emit64_pop_reg(buf, REG_RBP);
-	emit_indirect_jump_reg(buf, REG_RDX);
+	emit_indirect_jump_reg(buf, REG_RAX);
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
