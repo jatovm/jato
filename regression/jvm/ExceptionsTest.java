@@ -122,9 +122,13 @@ public class ExceptionsTest extends TestCase {
         } catch (Exception e) {}
     }
 
+    private static Exception getNullException() {
+        return null;
+    }
+
     public static void testAthrow() {
         boolean caught = false;
-        Exception exception = null;
+        Exception exception = getNullException();
 
         try {
             throw exception;
@@ -143,13 +147,13 @@ public class ExceptionsTest extends TestCase {
 
         assertEquals(3, e.length);
 
-        assertEquals(140, e[0].getLineNumber());
+        assertEquals(144, e[0].getLineNumber());
         assertObjectEquals("ExceptionsTest.java", e[0].getFileName());
         assertObjectEquals("jvm.ExceptionsTest", e[0].getClassName());
         assertObjectEquals("testGetStackTrace", e[0].getMethodName());
         assertFalse(e[0].isNativeMethod());
 
-        assertEquals(160, e[1].getLineNumber());
+        assertEquals(164, e[1].getLineNumber());
         assertObjectEquals("ExceptionsTest.java", e[1].getFileName());
         assertObjectEquals("jvm.ExceptionsTest", e[1].getClassName());
         assertObjectEquals("testStackTrace", e[1].getMethodName());
