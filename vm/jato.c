@@ -500,20 +500,10 @@ static const struct option *get_option(const char *name)
 	return NULL;
 }
 
-int
-main(int argc, char *argv[])
+static void parse_options(int argc, char *argv[])
 {
-	int status = EXIT_FAILURE;
-
-	exe_name = argv[0];
-
-#ifndef NDEBUG
-	/* Make stdout/stderr unbuffered; it really helps debugging! */
-	setvbuf(stdout, NULL, _IONBF, 0);
-	setvbuf(stderr, NULL, _IONBF, 0);
-#endif
-
 	int optind;
+
 	for (optind = 1; optind < argc; ++optind) {
 		if (argv[optind][0] != '-')
 			break;
@@ -549,6 +539,22 @@ main(int argc, char *argv[])
 	/* Can't specify neither a jar and a class file */
 	if (!classname)
 		usage(stderr, EXIT_FAILURE);
+}
+
+int
+main(int argc, char *argv[])
+{
+	int status = EXIT_FAILURE;
+
+	exe_name = argv[0];
+
+#ifndef NDEBUG
+	/* Make stdout/stderr unbuffered; it really helps debugging! */
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+#endif
+
+	parse_options(argc, argv);
 
 	init_vm_objects();
 
