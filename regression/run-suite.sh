@@ -56,6 +56,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.ExitStatusIsOneTest 1
     run_java jvm.ExitStatusIsZeroTest 0
     run_java jvm.FibonacciTest 0
+    run_java jvm.FinallyTest 0
     run_java jvm.FloatArithmeticTest 0
     run_java jvm.GetstaticPatchingTest 0
     run_java jvm.IntegerArithmeticExceptionsTest 0

@@ -226,6 +226,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ExitStatusIsOneTest.class \
 	regression/jvm/ExitStatusIsZeroTest.class \
 	regression/jvm/FibonacciTest.class \
+	regression/jvm/FinallyTest.class \
 	regression/jvm/FloatArithmeticTest.class \
 	regression/jvm/GetstaticPatchingTest.class \
 	regression/jvm/IntegerArithmeticExceptionsTest.class \
