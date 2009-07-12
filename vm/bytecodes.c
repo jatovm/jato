@@ -10,10 +10,14 @@
 #include "vm/vm.h"
 #include "vm/bytecode.h"
 #include "vm/bytecodes.h"
+#include "vm/die.h"
+#include "vm/opcodes.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 enum bytecode_type {
 	BYTECODE_NORMAL		= 0x01,
@@ -26,10 +30,11 @@ enum bytecode_type {
 struct bytecode_info {
 	unsigned char size;
 	enum bytecode_type type;
+	const char *name;
 };
 
 #define BYTECODE(__opc, __name, __size, __type) \
-	[__opc] = { .size = __size, .type = __type },
+	[__opc] = { .size = __size, .name = #__opc, .type = __type },
 
 static struct bytecode_info bytecode_infos[] = {
 #  include <vm/bytecode-def.h>
@@ -37,7 +42,7 @@ static struct bytecode_info bytecode_infos[] = {
 
 #undef BYTECODE
 
-unsigned long bc_insn_size(unsigned char *bc_start)
+unsigned long bc_insn_size(const unsigned char *bc_start)
 {
 	unsigned long size;
 
@@ -81,7 +86,7 @@ bool bc_is_return(unsigned char opc)
  *	bc_target_off - Return branch opcode target offset.
  *	@code: start of branch bytecode.
  */
-long bc_target_off(unsigned char *code)
+long bc_target_off(const unsigned char *code)
 {
 	unsigned char opc = *code;
 
@@ -89,4 +94,41 @@ long bc_target_off(unsigned char *code)
 		return read_s32(code + 1);
 
 	return read_s16(code + 1);
+}
+
+void bytecode_disassemble(const unsigned char *code, unsigned long size)
+{
+	unsigned long pc;
+
+	bytecode_for_each_insn(code, size, pc) {
+		const char *opc_name;
+		char tmp_name[16];
+		int size;
+		int i;
+
+		opc_name = bytecode_infos[code[pc]].name + 4;
+		size = bc_insn_size(&code[pc]);
+
+		for (i = 0; *opc_name; opc_name++, i++)
+			tmp_name[i] = tolower(*opc_name);
+
+		tmp_name[i] = 0;
+
+		printf("   [ %-3ld ]  0x%02x  ", pc, code[pc]);
+
+		if (size > 1)
+			printf("%-14s", tmp_name);
+		else
+			printf("%s", tmp_name);
+
+		if (bc_is_branch(code[pc])) {
+			printf(" %ld\n", bc_target_off(&code[pc]) + pc);
+			continue;
+		}
+
+		for (int i = 1; i < size; i++)
+			printf(" 0x%02x", (unsigned int)code[pc + i]);
+
+		printf("\n");
+	}
 }

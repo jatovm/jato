@@ -19,6 +19,7 @@
 #include "jit/args.h"
 #include "vm/preload.h"
 #include "vm/object.h"
+#include "vm/bytecodes.h"
 
 #include "lib/buffer.h"
 #include "vm/class.h"
@@ -44,6 +45,7 @@ bool opt_trace_bytecode_offset;
 bool opt_trace_invoke;
 bool opt_trace_invoke_verbose;
 bool opt_trace_exceptions;
+bool opt_trace_bytecode;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -437,4 +439,16 @@ void trace_exception_unwind_to_native(struct jit_stack_frame *frame)
 {
 	printf("\taction\t: unwind to native caller at %p\n",
 	       (void*)frame->return_address);
+}
+
+void trace_bytecode(struct vm_method *method)
+{
+	printf("Code:\n");
+	bytecode_disassemble(method->code_attribute.code,
+			     method->code_attribute.code_length);
+	printf("\nException table:\n");
+	print_exception_table(method,
+		method->code_attribute.exception_table,
+		method->code_attribute.exception_table_length);
+	printf("\n");
 }

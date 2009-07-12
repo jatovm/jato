@@ -14,9 +14,11 @@
 #include "vm/method.h"
 #include "vm/vm.h"
 
+struct cafebabe_code_attribute_exception;
 struct compilation_unit;
 struct jit_stack_frame;
 struct vm_object;
+struct vm_method;
 
 /*
  * This is a per-thread pointer to a memory location which should be
@@ -62,6 +64,8 @@ int signal_new_exception_with_cause(struct vm_class *vmc,
 void clear_exception(void);
 void init_exceptions(void);
 void thread_init_exceptions(void);
+void print_exception_table(const struct vm_method *,
+	const struct cafebabe_code_attribute_exception *, int);
 
 static inline bool
 exception_covers(struct cafebabe_code_attribute_exception *eh, unsigned long offset)

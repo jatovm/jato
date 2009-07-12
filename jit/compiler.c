@@ -53,6 +53,9 @@ int compile(struct compilation_unit *cu)
 	if (opt_trace_method)
 		trace_method(cu);
 
+	if (opt_trace_bytecode)
+		trace_bytecode(cu->method);
+
 	err = analyze_control_flow(cu);
 	if (err)
 		goto out;

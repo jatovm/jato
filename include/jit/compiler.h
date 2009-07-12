@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+struct vm_method;
 struct compilation_unit;
 struct expression;
 struct statement;
@@ -97,6 +98,7 @@ extern bool opt_trace_bytecode_offset;
 extern bool opt_trace_invoke;
 extern bool opt_trace_invoke_verbose;
 extern bool opt_trace_exceptions;
+extern bool opt_trace_bytecode;
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);
@@ -111,5 +113,6 @@ void trace_exception(struct compilation_unit *, struct jit_stack_frame *, unsign
 void trace_exception_handler(unsigned char *);
 void trace_exception_unwind(struct jit_stack_frame *);
 void trace_exception_unwind_to_native(struct jit_stack_frame *);
+void trace_bytecode(struct vm_method *);
 
 #endif

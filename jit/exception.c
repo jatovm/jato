@@ -288,3 +288,35 @@ throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
 
 	return bb_native_ptr(cu->unwind_bb);
 }
+
+void
+print_exception_table(const struct vm_method *method,
+	const struct cafebabe_code_attribute_exception *exception_table,
+	int exception_table_length)
+{
+	if (exception_table_length == 0) {
+		printf("\t(empty)\n");
+		return;
+	}
+
+	printf("\tfrom\tto\ttarget\ttype\n");
+	for (int i = 0; i < exception_table_length; i++) {
+		const struct cafebabe_code_attribute_exception *eh;
+
+		eh = &exception_table[i];
+
+		printf("\t%d\t%d\t%d\t", eh->start_pc, eh->end_pc,
+		       eh->handler_pc);
+
+		if (!eh->catch_type) {
+			printf("all\n");
+			return;
+		}
+
+		const struct vm_class *catch_class;
+		catch_class = vm_class_resolve_class(method->class,
+						     eh->catch_type);
+
+		printf("Class %s\n", catch_class->name);
+	}
+}

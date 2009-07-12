@@ -449,6 +449,12 @@ static void handle_trace_jit(void)
 	opt_trace_bytecode_offset = true;
 }
 
+static void handle_trace_bytecode(void)
+{
+	opt_trace_bytecode = true;
+	opt_trace_method = true;
+}
+
 static void handle_trace_trampoline(void)
 {
 	opt_trace_magic_trampoline = true;
@@ -479,7 +485,9 @@ const struct option options[] = {
 	DEFINE_OPTION_ARG("cp",		handle_classpath),
 
 	DEFINE_OPTION("Xperf",			handle_perf),
+
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
+	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
 	DEFINE_OPTION("Xtrace:bytecode-offset",	handle_trace_bytecode_offset),
 	DEFINE_OPTION("Xtrace:classloader",	handle_trace_classloader),
 	DEFINE_OPTION("Xtrace:exceptions",	handle_trace_exceptions),
