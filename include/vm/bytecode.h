@@ -22,4 +22,10 @@ uint16_t read_u16(const unsigned char *p);
 int32_t read_s32(const unsigned char *p);
 uint32_t read_u32(const unsigned char *p);
 
+void write_u8(unsigned char *p, uint8_t value);
+void write_s16(unsigned char *p, int16_t value);
+void write_u16(unsigned char *p, uint16_t value);
+void write_s32(unsigned char *p, int32_t value);
+void write_u32(unsigned char *p, uint32_t value);
+
 #endif

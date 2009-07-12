@@ -113,3 +113,32 @@ uint32_t read_u32(const unsigned char *p)
 
 	return result;
 }
+
+void write_u8(unsigned char *p, uint8_t value)
+{
+	*p = value;
+}
+
+void write_u16(unsigned char *p, uint16_t value)
+{
+	write_u8(p + 0, (value >> 8) & 0xff);
+	write_u8(p + 1, value & 0xff);
+}
+
+void write_u32(unsigned char *p, uint32_t value)
+{
+	write_u8(p + 0, (value >> 24) & 0xff);
+	write_u8(p + 1, (value >> 16) & 0xff);
+	write_u8(p + 2, (value >> 8) & 0xff);
+	write_u8(p + 3, value & 0xff);
+}
+
+void write_s16(unsigned char *p, int16_t value)
+{
+	write_u16(p, (uint16_t) value);
+}
+
+void write_s32(unsigned char *p, int32_t value)
+{
+	write_u32(p, (uint32_t) value);
+}
