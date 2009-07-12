@@ -13,6 +13,7 @@
 #include "jit/bc-offset-mapping.h"
 #include "jit/exception.h"
 #include "jit/perf-map.h"
+#include "jit/subroutine.h"
 
 #include "vm/class.h"
 #include "vm/method.h"
@@ -52,6 +53,10 @@ int compile(struct compilation_unit *cu)
 
 	if (opt_trace_method)
 		trace_method(cu);
+
+	err = inline_subroutines(cu->method);
+	if (err)
+		goto out;
 
 	if (opt_trace_bytecode)
 		trace_bytecode(cu->method);
@@ -116,6 +121,5 @@ int compile(struct compilation_unit *cu)
   out:
 	if (err)
 		compile_error(cu, err);
-
 	return err;
 }

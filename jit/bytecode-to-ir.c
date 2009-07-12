@@ -31,6 +31,7 @@
 #include "jit/statement.h"
 #include "jit/tree-node.h"
 #include "jit/compiler.h"
+#include "jit/subroutine.h"
 
 #include "vm/bytecode.h"
 #include "vm/bytecodes.h"
@@ -52,13 +53,10 @@ static int convert_not_implemented(struct parse_context *ctx)
 	return warn("bytecode %d is not supported", ctx->opc), -EINVAL;
 }
 
-#define convert_jsr		convert_not_implemented
-#define convert_ret		convert_not_implemented
 #define convert_tableswitch	convert_not_implemented
 #define convert_lookupswitch	convert_not_implemented
 #define convert_wide		convert_not_implemented
 #define convert_goto_w		convert_not_implemented
-#define convert_jsr_w		convert_not_implemented
 
 #define BYTECODE(opc, name, size, type) [opc] = convert_ ## name,
 static convert_fn_t converters[] = {

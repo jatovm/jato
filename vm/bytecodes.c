@@ -13,6 +13,7 @@
 #include "vm/die.h"
 #include "vm/opcodes.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,6 +83,48 @@ bool bc_is_return(unsigned char opc)
 	return bytecode_infos[opc].type & BYTECODE_RETURN;
 }
 
+bool bc_is_jsr(unsigned char opc)
+{
+	return opc == OPC_JSR || opc == OPC_JSR_W;
+}
+
+bool bc_is_ret(unsigned char opc)
+{
+	return opc == OPC_RET;
+}
+
+bool bc_is_astore(unsigned char opc)
+{
+	switch (opc) {
+	case OPC_ASTORE:
+	case OPC_ASTORE_0:
+	case OPC_ASTORE_1:
+	case OPC_ASTORE_2:
+	case OPC_ASTORE_3:
+		return true;
+	default:
+		return false;
+	}
+}
+
+unsigned char bc_get_astore_index(const unsigned char *code)
+{
+	switch (*code) {
+	case OPC_ASTORE:
+		return read_u8(code + 1);
+	case OPC_ASTORE_0:
+		return 0;
+	case OPC_ASTORE_1:
+		return 1;
+	case OPC_ASTORE_2:
+		return 2;
+	case OPC_ASTORE_3:
+		return 3;
+	default:
+		error("not an astore bytecode");
+	}
+}
+
 /**
  *	bc_target_off - Return branch opcode target offset.
  *	@code: start of branch bytecode.
@@ -94,6 +137,23 @@ long bc_target_off(const unsigned char *code)
 		return read_s32(code + 1);
 
 	return read_s16(code + 1);
+}
+
+/**
+ *	bc_set_target_off - Sets opcode target offset. The width of instruction
+ *	is untouched. It's the caller's responsibility to assure that
+ *	offset is within range.
+ *	@code: start of branch bytecode.
+ */
+void bc_set_target_off(unsigned char *code, long off)
+{
+	if (bc_is_wide(*code)) {
+		assert(off <= 0x7ffffffe && off >= -0x7fffffff);
+		write_s32(code + 1, (int32_t)off);
+	} else {
+		assert(off <= 0x7ffe && off >= -0x7fff);
+		write_s16(code + 1, (int16_t)off);
+	}
 }
 
 void bytecode_disassemble(const unsigned char *code, unsigned long size)

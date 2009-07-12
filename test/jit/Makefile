@@ -40,6 +40,8 @@ OBJS = \
 	../../jit/tree-node.o \
 	../../jit/tree-printer.o \
 	../../jit/typeconv-bc.o \
+	../../jit/subroutine.o \
+	../../jit/pc-map.o \
 	../../lib/bitset.o \
 	../../lib/buffer.o \
 	../../lib/list.o \

@@ -86,6 +86,8 @@ JIT_OBJS = \
 	jit/tree-printer.o	\
 	jit/typeconv-bc.o	\
 	jit/vtable.o		\
+	jit/subroutine.o	\
+	jit/pc-map.o
 
 VM_OBJS = \
 	vm/bytecode.o		\
