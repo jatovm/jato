@@ -153,6 +153,7 @@ RUNTIME_CLASSES =
 CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
+JASMIN		:= jasmin
 JAVAC_OPTS	:= -encoding utf-8
 INSTALL		:= install
 
@@ -253,9 +254,16 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/TestCase.class \
 	regression/jvm/TrampolineBackpatchingTest.class
 
+JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
+	regression/jvm/SubroutineTest.class
+
 $(REGRESSION_TEST_SUITE_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
 	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $<
+
+$(JASMIN_REGRESSION_TEST_SUITE_CLASSES): %.class: %.j
+	$(E) "  JASMIN  " $@
+	$(Q) $(JASMIN) $(JASMIN_OPTS) -d regression $< > /dev/null
 
 $(RUNTIME_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
@@ -265,7 +273,7 @@ lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES)
+regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES) $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
 	$(E) "  REGRESSION"
 	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
