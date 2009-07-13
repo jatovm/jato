@@ -38,7 +38,7 @@ public class ClassExceptionsTest extends TestCase {
     public static void testClassInitFailure() {
         boolean caught = false;
 
-        VM.enableFault(VM.FAULT_IN_CLASS_INIT, "ClassExceptionsTest$A");
+        VM.enableFault(VM.FAULT_IN_CLASS_INIT, "jvm/ClassExceptionsTest$A");
 
         try {
             A.field = 0;
@@ -61,8 +61,6 @@ public class ClassExceptionsTest extends TestCase {
     }
 
     public static void main(String []args) {
-/* FIXME
         testClassInitFailure();
-*/
     }
 }
