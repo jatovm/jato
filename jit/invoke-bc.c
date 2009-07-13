@@ -59,8 +59,7 @@ static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 		if (*a == 'J' || *a == 'D')
 			c--;
 		if (*a == 'L') {
-			++a;
-			while (*(a++) != ';')
+			while (*(++a) != ';')
 				;
 		}
 	}
