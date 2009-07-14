@@ -11,9 +11,10 @@ long bc_target_off(const unsigned char *);
 bool bc_is_athrow(unsigned char);
 bool bc_is_return(unsigned char);
 bool bc_is_jsr(unsigned char);
-bool bc_is_ret(unsigned char);
-bool bc_is_astore(unsigned char);
-unsigned char bc_get_astore_index(const unsigned char *);
+bool bc_is_ret(const unsigned char *);
+bool bc_is_astore(const unsigned char *);
+unsigned long bc_get_astore_index(const unsigned char *);
+unsigned long bc_get_ret_index(const unsigned char *);
 void bc_set_target_off(unsigned char *, long);
 
 void bytecode_disassemble(const unsigned char *, unsigned long);

@@ -92,14 +92,20 @@ bool bc_is_jsr(unsigned char opc)
 	return opc == OPC_JSR || opc == OPC_JSR_W;
 }
 
-bool bc_is_ret(unsigned char opc)
+bool bc_is_ret(const unsigned char *code)
 {
-	return opc == OPC_RET;
+	if (*code == OPC_WIDE)
+		code++;
+
+	return *code == OPC_RET;
 }
 
-bool bc_is_astore(unsigned char opc)
+bool bc_is_astore(const unsigned char *code)
 {
-	switch (opc) {
+	if (*code == OPC_WIDE)
+		code++;
+
+	switch (*code) {
 	case OPC_ASTORE:
 	case OPC_ASTORE_0:
 	case OPC_ASTORE_1:
@@ -111,8 +117,11 @@ bool bc_is_astore(unsigned char opc)
 	}
 }
 
-unsigned char bc_get_astore_index(const unsigned char *code)
+unsigned long bc_get_astore_index(const unsigned char *code)
 {
+	if (*code == OPC_WIDE)
+		return read_u16(code + 2);
+
 	switch (*code) {
 	case OPC_ASTORE:
 		return read_u8(code + 1);
@@ -125,8 +134,16 @@ unsigned char bc_get_astore_index(const unsigned char *code)
 	case OPC_ASTORE_3:
 		return 3;
 	default:
-		error("not an astore bytecode");
+		assert(!"not an astore instruction");
 	}
+}
+
+unsigned long bc_get_ret_index(const unsigned char *code)
+{
+	if (*code == OPC_WIDE)
+		return read_u16(code + 2);
+
+	return read_u8(code + 1);
 }
 
 /**

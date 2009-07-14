@@ -47,7 +47,6 @@
 #include "cafebabe/line_number_table_attribute.h"
 #include "cafebabe/code_attribute.h"
 
-#define RET_INSN_SIZE 2
 #define PC_UNKNOWN ULONG_MAX
 
 struct code_state {
@@ -58,8 +57,9 @@ struct code_state {
 struct subroutine {
 	unsigned long start_pc;
 	unsigned long end_pc;
-	uint8_t ret_index;
-	unsigned long body_offset;
+	unsigned long ret_index;
+	unsigned long prolog_size;
+	unsigned long epilog_size;
 
 	int nr_dependencies;
 
@@ -247,12 +247,12 @@ static void free_subroutine_scan_context(struct subroutine_scan_context *ctx)
 
 static inline unsigned long subroutine_get_body_size(struct subroutine *sub)
 {
-	return sub->end_pc - sub->start_pc - sub->body_offset;
+	return sub->end_pc - sub->start_pc - sub->prolog_size;
 }
 
 static inline unsigned long subroutine_get_size(struct subroutine *sub)
 {
-	return sub->end_pc + RET_INSN_SIZE - sub->start_pc;
+	return sub->end_pc + sub->epilog_size - sub->start_pc;
 }
 
 static struct subroutine *lookup_subroutine(struct inlining_context *ctx,
@@ -333,14 +333,15 @@ static int do_subroutine_scan(struct subroutine_scan_context *ctx,
 
 		ctx->visited_code[pc]++;
 
-		if (bc_is_ret(c[pc]) && c[pc + 1] == ctx->sub->ret_index) {
+		if (bc_is_ret(&c[pc]) &&
+		    bc_get_ret_index(&c[pc]) == ctx->sub->ret_index) {
 			if (ctx->sub->end_pc == PC_UNKNOWN ||
 			    pc > ctx->sub->end_pc)
 				ctx->sub->end_pc = pc;
 			return 0;
 		}
 
-		if (bc_is_astore(c[pc]) &&
+		if (bc_is_astore(&c[pc]) &&
 		    bc_get_astore_index(&c[pc]) == ctx->sub->ret_index)
 			return warn("return address override"), -EINVAL;
 
@@ -393,12 +394,12 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 	if (sub->start_pc >= ctx->code.code_length)
 		return warn("invalid branch offset"), -EINVAL;
 
-	if (!bc_is_astore(ctx->code.code[sub->start_pc]))
+	if (!bc_is_astore(&ctx->code.code[sub->start_pc]))
 		return warn("invalid subroutine start"), -EINVAL;
 
 	sub->ret_index = bc_get_astore_index(&ctx->code.code[sub->start_pc]);
 	target = next_pc(ctx->code.code, sub->start_pc);
-	sub->body_offset = target - sub->start_pc;
+	sub->prolog_size = target - sub->start_pc;
 
 	struct subroutine_scan_context *sub_ctx =
 		alloc_subroutine_scan_context(ctx, sub);
@@ -413,7 +414,7 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 		return err;
 
 	if (sub->end_pc != PC_UNKNOWN)
-		return 0;
+		goto out;
 
 	/*
 	 * In some situations ECJ compiler generates subroutines which
@@ -431,14 +432,18 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 	for (unsigned long pc = sub->start_pc; pc < ctx->code.code_length;
 	     pc = next_pc(ctx->code.code, pc))
 	{
-		if (bc_is_ret(ctx->code.code[pc]) &&
-		    ctx->code.code[pc + 1] == sub->ret_index) {
+		if (bc_is_ret(&ctx->code.code[pc]) &&
+		    bc_get_ret_index(&ctx->code.code[pc]) == sub->ret_index) {
 			sub->end_pc = pc;
-			return 0;
+			goto out;
 		}
 	}
 
 	return warn("subroutine end not found"), -EINVAL;
+
+ out:
+	sub->epilog_size = bc_insn_size(&ctx->code.code[sub->end_pc]);
+	return 0;
 }
 
 static int scan_subroutines(struct inlining_context *ctx)
@@ -619,9 +624,9 @@ static int bytecode_copy(struct code_state *dest, unsigned long *dest_pc,
 		*dest_pc += count_1;
 		src_pc += count_1;
 
-		src_pc += sub->end_pc + RET_INSN_SIZE - sub->start_pc;
+		src_pc += sub->end_pc + sub->epilog_size - sub->start_pc;
 
-		count_2 = upto - (sub->end_pc + RET_INSN_SIZE);
+		count_2 = upto - (sub->end_pc + sub->epilog_size);
 		err = do_bytecode_copy(dest, *dest_pc, src, src_pc, count_2,
 				       pc_map);
 		*dest_pc += count_2;
@@ -666,7 +671,7 @@ static int build_line_number_table(struct inlining_context *ctx)
 	index = 0;
 
 	bytecode_for_each_insn(code, code_length, pc) {
-		if (bc_is_jsr(code[pc]) || bc_is_ret(code[pc]))
+		if (bc_is_jsr(code[pc]) || bc_is_ret(&code[pc]))
 			continue;
 
 		unsigned long line_no
@@ -730,7 +735,7 @@ copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 
 	eh = &ctx->exception_table[*eh_index];
 
-	body_start_pc = s->start_pc + s->body_offset;
+	body_start_pc = s->start_pc + s->prolog_size;
 	body_size = subroutine_get_body_size(s);
 
 	if (eh->start_pc < body_start_pc)
@@ -783,7 +788,7 @@ update_and_copy_exception_handlers(struct inlining_context *ctx,
 		struct cafebabe_code_attribute_exception *eh
 			= &ctx->exception_table[i];
 
-		if (eh->start_pc >= s->end_pc + RET_INSN_SIZE ||
+		if (eh->start_pc >= s->end_pc + s->epilog_size ||
 		    eh->end_pc <= s->start_pc) {
 			unsigned long start_pc, end_pc, handler_pc;
 
@@ -821,12 +826,12 @@ update_and_copy_exception_handlers(struct inlining_context *ctx,
 		}
 
 		if (eh->start_pc < s->start_pc ||
-		    eh->end_pc > s->end_pc + RET_INSN_SIZE)
+		    eh->end_pc > s->end_pc + s->epilog_size)
 			return warn("handler range spans subroutine boundary"),
 				-EINVAL;
 
 		if (eh->handler_pc < s->start_pc ||
-		    eh->handler_pc >= s->end_pc + RET_INSN_SIZE)
+		    eh->handler_pc >= s->end_pc + s->epilog_size)
 			return warn("handler not inside subroutine"), -EINVAL;
 
 		err = copy_exception_handler(ctx, s, &i, pc_map);
@@ -897,7 +902,7 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 
 		/* Inline subroutine */
 		err = do_bytecode_copy(&new_code, new_code_pc, &ctx->code,
-				       sub->body_offset + sub->start_pc,
+				       sub->prolog_size + sub->start_pc,
 				       body_size, &pc_map);
 		if (err)
 			goto error;
@@ -1066,7 +1071,7 @@ static int split_exception_handlers(struct inlining_context *ctx)
 		for (int i = 0; i < this->nr_call_sites; i++) {
 			err = do_split_exception_handlers(ctx,
 					this->call_sites[i], this->start_pc,
-					this->end_pc + RET_INSN_SIZE);
+					this->end_pc + this->epilog_size);
 			if (err)
 				return err;
 		}
