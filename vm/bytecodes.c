@@ -207,18 +207,23 @@ void bytecode_disassemble(const unsigned char *code, unsigned long size)
 	bytecode_for_each_insn(code, size, pc) {
 		char *opc_name;
 		int size;
+		int _pc;
 
 		size = bc_insn_size(&code[pc]);
 
 		printf("   [ %-3ld ]  0x%02x  ", pc, code[pc]);
 
-		if (code[pc] == OPC_WIDE)
-			size--;
-
 		opc_name = bc_get_insn_name(&code[pc]);
 		if (!opc_name) {
 			printf("(string alloc failed)\n");
 			continue;
+		}
+
+		_pc = pc;
+
+		if (code[pc] == OPC_WIDE) {
+			_pc++;
+			size--;
 		}
 
 		if (size > 1)
@@ -228,13 +233,13 @@ void bytecode_disassemble(const unsigned char *code, unsigned long size)
 
 		free(opc_name);
 
-		if (bc_is_branch(code[pc])) {
-			printf(" %ld\n", bc_target_off(&code[pc]) + pc);
+		if (bc_is_branch(code[_pc])) {
+			printf(" %ld\n", bc_target_off(&code[_pc]) + _pc);
 			continue;
 		}
 
 		for (int i = 1; i < size; i++)
-			printf(" 0x%02x", (unsigned int)code[pc + i]);
+			printf(" 0x%02x", (unsigned int)code[_pc + i]);
 
 		printf("\n");
 	}
