@@ -47,14 +47,18 @@ unsigned long bc_insn_size(const unsigned char *bc_start)
 {
 	unsigned long size;
 
-	size = bytecode_infos[*bc_start].size;
-	if (*bc_start == OPC_WIDE)
-		size += bytecode_infos[*++bc_start].size;
+	if (*bc_start == OPC_WIDE) {
+		if (*(bc_start + 1) == OPC_IINC)
+			return 6;
 
-	if (size == 0) {
-		printf("%s: Unknown bytecode opcode: 0x%x\n", __func__, *bc_start);
-		abort();
+		return 4;
 	}
+
+	size = bytecode_infos[*bc_start].size;
+
+	if (size == 0)
+		error("unknown bytecode opcode: 0x%x\n", *bc_start);
+
 	return size;
 }
 
@@ -156,30 +160,56 @@ void bc_set_target_off(unsigned char *code, long off)
 	}
 }
 
+static char *bc_get_insn_name(const unsigned char *code)
+{
+	char buf[16];
+	int buf_index;
+
+	buf_index = 0;
+
+	if (*code == OPC_WIDE) {
+		strcpy(buf, "wide ");
+		buf_index = 5;
+		code++;
+	}
+
+	const char *opc_name = bytecode_infos[*code].name + 4;
+
+	while (*opc_name)
+		buf[buf_index++] = tolower(*opc_name++);
+
+	buf[buf_index] = 0;
+
+	return strdup(buf);
+}
+
 void bytecode_disassemble(const unsigned char *code, unsigned long size)
 {
 	unsigned long pc;
 
 	bytecode_for_each_insn(code, size, pc) {
-		const char *opc_name;
-		char tmp_name[16];
+		char *opc_name;
 		int size;
-		int i;
 
-		opc_name = bytecode_infos[code[pc]].name + 4;
 		size = bc_insn_size(&code[pc]);
-
-		for (i = 0; *opc_name; opc_name++, i++)
-			tmp_name[i] = tolower(*opc_name);
-
-		tmp_name[i] = 0;
 
 		printf("   [ %-3ld ]  0x%02x  ", pc, code[pc]);
 
+		if (code[pc] == OPC_WIDE)
+			size--;
+
+		opc_name = bc_get_insn_name(&code[pc]);
+		if (!opc_name) {
+			printf("(string alloc failed)\n");
+			continue;
+		}
+
 		if (size > 1)
-			printf("%-14s", tmp_name);
+			printf("%-14s", opc_name);
 		else
-			printf("%s", tmp_name);
+			printf("%s", opc_name);
+
+		free(opc_name);
 
 		if (bc_is_branch(code[pc])) {
 			printf(" %ld\n", bc_target_off(&code[pc]) + pc);

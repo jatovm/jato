@@ -24,23 +24,23 @@ void test_size_of_bytecode(void)
 
 static void assert_wide_bc_insn_size(unsigned long expected_len, unsigned char opc)
 {
-	unsigned char code[] = { OPC_WIDE, opc, 0x00, 0x00, 0x00 };
+	unsigned char code[] = { OPC_WIDE, opc, 0x00, 0x00, 0x00, 0x00 };
 	assert_int_equals(expected_len, bc_insn_size(code));
 }
 
 void test_size_of_wide_bytecode(void)
 {
-	assert_wide_bc_insn_size(5, OPC_ILOAD);
-	assert_wide_bc_insn_size(5, OPC_FLOAD);
-	assert_wide_bc_insn_size(5, OPC_ALOAD);
-	assert_wide_bc_insn_size(5, OPC_LLOAD);
-	assert_wide_bc_insn_size(5, OPC_DLOAD);
-	assert_wide_bc_insn_size(5, OPC_ISTORE);
-	assert_wide_bc_insn_size(5, OPC_FSTORE);
-	assert_wide_bc_insn_size(5, OPC_ASTORE);
-	assert_wide_bc_insn_size(5, OPC_LSTORE);
-	assert_wide_bc_insn_size(5, OPC_DSTORE);
-	assert_wide_bc_insn_size(5, OPC_RET);
+	assert_wide_bc_insn_size(4, OPC_ILOAD);
+	assert_wide_bc_insn_size(4, OPC_FLOAD);
+	assert_wide_bc_insn_size(4, OPC_ALOAD);
+	assert_wide_bc_insn_size(4, OPC_LLOAD);
+	assert_wide_bc_insn_size(4, OPC_DLOAD);
+	assert_wide_bc_insn_size(4, OPC_ISTORE);
+	assert_wide_bc_insn_size(4, OPC_FSTORE);
+	assert_wide_bc_insn_size(4, OPC_ASTORE);
+	assert_wide_bc_insn_size(4, OPC_LSTORE);
+	assert_wide_bc_insn_size(4, OPC_DSTORE);
+	assert_wide_bc_insn_size(4, OPC_RET);
 	assert_wide_bc_insn_size(6, OPC_IINC);
 }
 
