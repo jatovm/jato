@@ -56,6 +56,7 @@
 #include "vm/fault-inject.h"
 #include "vm/preload.h"
 #include "vm/itable.h"
+#include "vm/jar.h"
 #include "vm/jni.h"
 #include "vm/method.h"
 #include "vm/natives.h"
@@ -393,6 +394,37 @@ static void handle_classpath(const char *arg)
 }
 
 static char *classname;
+static struct vm_jar *jar_file;
+
+static void handle_jar(const char *arg)
+{
+	/* Can't specify more than one jar file */
+	if (jar_file)
+		usage(stderr, EXIT_FAILURE);
+
+	jar_file = vm_jar_open(arg);
+	if (!jar_file) {
+		NOT_IMPLEMENTED;
+		exit(EXIT_FAILURE);
+	}
+
+	const char *main_class = vm_jar_get_main_class(jar_file);
+	if (!main_class) {
+		NOT_IMPLEMENTED;
+		exit(EXIT_FAILURE);
+	}
+
+	classname = strdup(main_class);
+	if (!classname) {
+		NOT_IMPLEMENTED;
+		exit(EXIT_FAILURE);
+	}
+
+	/* XXX: Cheap solution. This can give funny results depending on where
+	 * you put the -jar relative to the -classpath(s). Besides, we should
+	 * save some memory and only open the zip file once. */
+	classloader_add_to_classpath(arg);
+}
 
 static void handle_perf(void)
 {
@@ -483,6 +515,7 @@ const struct option options[] = {
 
 	DEFINE_OPTION_ARG("classpath",	handle_classpath),
 	DEFINE_OPTION_ARG("cp",		handle_classpath),
+	DEFINE_OPTION_ARG("jar",	handle_jar),
 
 	DEFINE_OPTION("Xperf",			handle_perf),
 
@@ -534,7 +567,7 @@ static void parse_options(int argc, char *argv[])
 
 	if (optind < argc) {
 		/* Can't specify both a jar and a class file */
-		if (classname)
+		if (jar_file)
 			usage(stderr, EXIT_FAILURE);
 
 		classname = argv[optind++];

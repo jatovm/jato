@@ -99,6 +99,7 @@ VM_OBJS = \
 	vm/field.o		\
 	vm/guard-page.o		\
 	vm/itable.o		\
+	vm/jar.o		\
 	vm/jato.o		\
 	vm/method.o		\
 	vm/natives.o		\
