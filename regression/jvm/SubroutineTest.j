@@ -20,7 +20,19 @@ sub1:
     invokestatic jvm/TestCase/assertEquals(II)V
 .end method
 
+.method public static testWideInstructions()V
+    .limit locals 2
+
+    jsr_w subroutine
+    return
+
+subroutine:
+    astore 1
+    ret 1
+.end method
+
 .method public static main([Ljava/lang/String;)V
     invokestatic jvm/SubroutineTest/testSingleSubroutine()V
+    invokestatic jvm/SubroutineTest/testWideInstructions()V
     return
 .end method
