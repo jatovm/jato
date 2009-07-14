@@ -843,6 +843,16 @@ update_and_copy_exception_handlers(struct inlining_context *ctx,
 	return 0;
 }
 
+static int verify_no_recursion(struct subroutine *sub)
+{
+	for (int i = 0; i < sub->nr_call_sites; i++)
+		if (sub->call_sites[i] > sub->start_pc &&
+		    sub->call_sites[i] < sub->end_pc)
+			return warn("subroutine recursion"), -EINVAL;
+
+	return 0;
+}
+
 static int do_inline_subroutine(struct inlining_context *ctx,
 				struct subroutine *sub)
 {
@@ -866,6 +876,10 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 	if (err)
 		goto error_update_bytecode_offsets;
 
+	err = verify_no_recursion(sub);
+	if (err)
+		goto error_update_bytecode_offsets;
+
 	unsigned long body_size = subroutine_get_body_size(sub);
 	unsigned long sub_size = subroutine_get_size(sub);
 	unsigned long new_code_length = ctx->code.code_length - sub_size +
@@ -873,7 +887,7 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 		sub->call_sites_total_size;
 
 	if (code_state_init_empty(&new_code, new_code_length))
-		goto error_new_code;
+		goto error_update_bytecode_offsets;
 
 	subroutine_sort_call_sites(sub);
 
@@ -935,7 +949,6 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 
  error:
 	code_state_deinit(&new_code);
- error_new_code:
  error_update_bytecode_offsets:
 	pc_map_deinit(&pc_map);
 
@@ -1088,13 +1101,26 @@ static int split_exception_handlers(struct inlining_context *ctx)
 static int verify_correct_nesting(struct inlining_context *ctx)
 {
 	struct subroutine *this;
+	int *coverage;
+
+	coverage = zalloc(ctx->code.code_length * sizeof(int));
+	if (!coverage)
+		return -ENOMEM;
 
 	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
-		for (int i = 0; i < this->nr_dependants; i++)
-			if (this->end_pc > this->dependants[i]->end_pc)
+		int color = coverage[this->start_pc];
+
+		for (unsigned long i = this->start_pc; i < this->end_pc; i++) {
+			if (coverage[i] != color) {
+				free(coverage);
 				return warn("overlaping subroutines"), -EINVAL;
+			}
+
+			coverage[i]++;
+		}
 	}
 
+	free(coverage);
 	return 0;
 }
 
