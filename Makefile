@@ -232,6 +232,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/GetstaticPatchingTest.class \
 	regression/jvm/IntegerArithmeticExceptionsTest.class \
 	regression/jvm/IntegerArithmeticTest.class \
+	regression/jvm/InterfaceInheritanceTest.class \
 	regression/jvm/InvokeinterfaceTest.class \
 	regression/jvm/InvokestaticPatchingTest.class \
 	regression/jvm/LoadConstantsTest.class \
