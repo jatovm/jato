@@ -155,7 +155,7 @@ RUNTIME_CLASSES =
 CC		:= gcc
 MONOBURG	:= ./monoburg/monoburg
 JAVAC		:= ecj
-JASMIN		:= jasmin
+JASMIN		:= java -jar tools/jasmin/jasmin.jar
 JAVAC_OPTS	:= -encoding utf-8
 INSTALL		:= install
 
