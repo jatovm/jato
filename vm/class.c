@@ -682,6 +682,23 @@ struct vm_method *vm_class_get_method_recursive(const struct vm_class *vmc,
 	return NULL;
 }
 
+static struct vm_method *vm_class_get_interface_method_recursive(
+	const struct vm_class *vmc, const char *name, const char *type)
+{
+	struct vm_method *vmm = vm_class_get_method(vmc, name, type);
+	if (vmm)
+		return vmm;
+
+	for (unsigned int i = 0; i < vmc->nr_interfaces; ++i) {
+		vmm = vm_class_get_interface_method_recursive(
+			vmc->interfaces[i], name, type);
+		if (vmm)
+			return vmm;
+	}
+
+	return NULL;
+}
+
 int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type)
 {
@@ -776,7 +793,7 @@ vm_class_resolve_interface_method_recursive(const struct vm_class *vmc,
 		return NULL;
 	}
 
-	result = vm_class_get_method_recursive(class, name, type);
+	result = vm_class_get_interface_method_recursive(class, name, type);
 
 	free(name);
 	free(type);
