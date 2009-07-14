@@ -83,6 +83,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.SynchronizationTest 0
     run_java jvm.TrampolineBackpatchingTest 0
     run_java jvm.SubroutineTest 0
+    run_java jvm.WideTest 0
 else 
     for i in $CLASS_LIST; do
 	run_java $i 0
