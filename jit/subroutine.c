@@ -333,11 +333,12 @@ static int do_subroutine_scan(struct subroutine_scan_context *ctx,
 
 		ctx->visited_code[pc]++;
 
-		if (bc_is_ret(&c[pc]) &&
-		    bc_get_ret_index(&c[pc]) == ctx->sub->ret_index) {
-			if (ctx->sub->end_pc == PC_UNKNOWN ||
-			    pc > ctx->sub->end_pc)
-				ctx->sub->end_pc = pc;
+		if (bc_is_ret(&c[pc])) {
+			if (bc_get_ret_index(&c[pc]) == ctx->sub->ret_index &&
+			    (ctx->sub->end_pc == PC_UNKNOWN ||
+			     pc > ctx->sub->end_pc))
+					ctx->sub->end_pc = pc;
+
 			return 0;
 		}
 
