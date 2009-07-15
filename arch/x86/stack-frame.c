@@ -59,11 +59,15 @@
  *     |   Local m    :
  *     +--------------+
  */
+#ifdef CONFIG_X86_32
 #define ARGS_START_OFFSET (sizeof(unsigned long) * 5)
+#else
+#define ARGS_START_OFFSET (sizeof(unsigned long) * 7)
+#endif
 
 static unsigned long __index_to_offset(unsigned long index)
 {
-	return index * sizeof(unsigned int);
+	return index * sizeof(unsigned long);
 }
 
 static unsigned long
