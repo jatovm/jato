@@ -71,8 +71,12 @@ public class FinallyTest extends TestCase {
         assertEquals(0, methodWithNestedFinallyBlocks());
     }
 
+    private static Exception getNullException() {
+        return null;
+    }
+
     public static void testLineNumberTableAfterInlining() {
-        Exception e = null;
+        Exception e = getNullException();
         boolean b = true;
 
         try {
@@ -89,7 +93,7 @@ public class FinallyTest extends TestCase {
                 }
             }
 
-            assertEquals(86, e.getStackTrace()[0].getLineNumber());
+            assertEquals(90, e.getStackTrace()[0].getLineNumber());
         }
     }
 
