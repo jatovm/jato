@@ -670,7 +670,7 @@ main(int argc, char *argv[])
 
 	if (vm_class_ensure_init(vmc)) {
 		fprintf(stderr, "error: %s: couldn't initialize\n", classname);
-		goto out;
+		goto out_check_exception;
 	}
 
 	struct vm_method *vmm = vm_class_get_method_recursive(vmc,
@@ -692,6 +692,7 @@ main(int argc, char *argv[])
 		= vm_method_trampoline_ptr(vmm);
 	main_method_trampoline();
 
+out_check_exception:
 	if (exception_occurred()) {
 		struct vm_object *exception;
 
