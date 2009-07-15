@@ -109,23 +109,28 @@ static void vm_properties_set_property(struct vm_object *p,
 	trampoline(p, key_obj, value_obj);
 }
 
+struct system_properties_entry {
+	const char *key;
+	const char *value;
+};
+
+static const struct system_properties_entry system_properties[] = {
+	{ "java.vm.name", "jato" },
+	{ "java.io.tmpdir", "/tmp" },
+	{ "file.separator", "/" },
+	{ "path.separator", ":" },
+	{ "line.separator", "\n" },
+};
+
 static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 {
-	struct system_properties_entry {
-		const char *key;
-		const char *value;
-	};
+	char *s;
 
-	static const struct system_properties_entry system_properties[] = {
-		{ "java.vm.name", "jato" },
-		{ "java.io.tmpdir", "/tmp" },
-		{ "file.separator", "/" },
-		{ "path.separator", ":" },
-		{ "line.separator", "\n" },
-	};
+	s = getenv("LD_LIBRARY_PATH");
+	if (!s)
+		s = "";
 
-	vm_properties_set_property(p, "java.library.path",
-				   getenv("LD_LIBRARY_PATH"));
+	vm_properties_set_property(p, "java.library.path", s);
 
 	for (unsigned int i = 0; i < ARRAY_SIZE(system_properties); ++i) {
 		const struct system_properties_entry *e = &system_properties[i];
