@@ -1,5 +1,5 @@
-#ifndef __JIT_INSTRUCTION_H
-#define __JIT_INSTRUCTION_H
+#ifndef __X86_INSTRUCTION_H
+#define __X86_INSTRUCTION_H
 
 #include "jit/use-position.h"
 #include "arch/registers.h"
