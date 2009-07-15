@@ -33,6 +33,7 @@
 
 #include "vm/method.h"
 #include "vm/stack.h"
+#include "vm/jni.h"
 
 struct expression *
 insert_arg(struct expression *root,
@@ -75,9 +76,45 @@ struct expression *convert_args(struct stack *mimic_stack,
 	if (err)
 		return NULL;
 
+	if (vm_method_is_jni(method)) {
+		if (vm_method_is_static(method))
+			--nr_args;
+
+		--nr_args;
+	}
+
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
 		args_list = insert_arg(args_list, expr, &args_state, method);
+	}
+
+	if (vm_method_is_jni(method)) {
+		struct expression *jni_env_expr;
+
+		if (vm_method_is_static(method)) {
+			struct expression *class_expr;
+
+			class_expr = value_expr(J_REFERENCE,
+					(unsigned long) method->class->object);
+
+			if (!class_expr) {
+				expr_put(args_list);
+				return NULL;
+			}
+
+			args_list = insert_arg(args_list, class_expr,
+					       &args_state, method);
+		}
+
+		jni_env_expr = value_expr(J_REFERENCE,
+					  (unsigned long)vm_jni_get_jni_env());
+		if (!jni_env_expr) {
+			expr_put(args_list);
+			return NULL;
+		}
+
+		args_list = insert_arg(args_list, jni_env_expr, &args_state,
+				       method);
 	}
 
 	args_finish(&args_state);

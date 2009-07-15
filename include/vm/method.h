@@ -84,7 +84,7 @@ static inline bool method_is_virtual(struct vm_method *vmm)
 		| CAFEBABE_METHOD_ACC_PRIVATE)) == 0;
 }
 
-static inline bool vm_method_is_jni_method(struct vm_method *vmm)
+static inline bool vm_method_is_jni(struct vm_method *vmm)
 {
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_NATIVE
 		&& !vmm->vm_native_ptr;

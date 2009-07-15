@@ -73,6 +73,20 @@ int vm_method_init(struct vm_method *vmm,
 	if (!vm_method_is_static(vmm))
 		++vmm->args_count;
 
+	vmm->vm_native_ptr = NULL;
+
+	if (vm_method_is_native(vmm)) {
+		vmm->vm_native_ptr =
+			vm_lookup_native(vmm->class->name, vmm->name);
+
+		if (vm_method_is_jni(vmm)) {
+			if (vm_method_is_static(vmm))
+				++vmm->args_count;
+
+			++vmm->args_count;
+		}
+	}
+
 	/*
 	 * Note: We can return here because the rest of the function deals
 	 * with loading attributes which native and abstract methods don't have.
@@ -136,24 +150,14 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 		return -1;
 	}
 
-	if (!vm_method_is_native(vmm))
-		goto link_later;
-
-	vmm->vm_native_ptr = NULL;
-
-	void *native_ptr = vm_lookup_native(vmm->class->name, vmm->name);
-	if (native_ptr) {
-		vmm->vm_native_ptr = native_ptr;
-
-		if (add_cu_mapping((unsigned long)native_ptr,
-				   vmm->compilation_unit))
-		{
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+	if (vmm->vm_native_ptr &&
+	    add_cu_mapping((unsigned long)vmm->vm_native_ptr,
+			   vmm->compilation_unit))
+	{
+		NOT_IMPLEMENTED;
+		return -1;
 	}
 
-link_later:
 	vmm->trampoline = build_jit_trampoline(vmm->compilation_unit);
 	if (!vmm->trampoline) {
 		NOT_IMPLEMENTED;

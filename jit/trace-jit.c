@@ -326,7 +326,7 @@ static void trace_invoke_args(struct vm_method *vmm,
 	const char *type_str;
 	int arg_index;
 
-	if (vm_method_is_jni_method(vmm))
+	if (vm_method_is_jni(vmm))
 		arg_index += 2;
 
 	arg_index = 0;

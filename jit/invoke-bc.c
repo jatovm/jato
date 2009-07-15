@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 
 int convert_xreturn(struct parse_context *ctx)
 {
@@ -133,6 +134,17 @@ static void null_check_first_arg(struct expression *arg)
 		null_check_first_arg(to_expr(arg->args_right));
 }
 
+/* Replaces second argument with null check expression on that argument */
+static void null_check_second_arg(struct expression *arg)
+{
+	assert(expr_type(arg) != EXPR_ARG);
+
+	if (expr_type(to_expr(arg->args_right)) == EXPR_ARG)
+		null_check_first_arg(to_expr(arg->args_left));
+
+	null_check_second_arg(to_expr(arg->args_right));
+}
+
 int convert_invokeinterface(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
@@ -206,14 +218,6 @@ int convert_invokevirtual(struct parse_context *ctx)
 	return err;
 }
 
-static void append_arg(struct expression *expr, struct expression *arg)
-{
-	struct expression *args_list;
-
-	args_list = insert_arg(to_expr(expr->args_list), arg, NULL, NULL);
-	expr->args_list = &args_list->node;
-}
-
 int convert_invokespecial(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
@@ -236,18 +240,10 @@ int convert_invokespecial(struct parse_context *ctx)
 	if (err)
 		goto failed;
 
-	null_check_first_arg(to_expr(expr->args_list));
-
-	if (vm_method_is_jni_method(invoke_target)) {
-		struct expression *jni_env_expr;
-
-		jni_env_expr = value_expr(J_REFERENCE,
-			(unsigned long)vm_jni_get_jni_env());
-		if (!jni_env_expr)
-			goto failed;
-
-		append_arg(expr, jni_env_expr);
-	}
+	if (vm_method_is_jni(invoke_target))
+		null_check_second_arg(to_expr(expr->args_list));
+	else
+		null_check_first_arg(to_expr(expr->args_list));
 
 	err = insert_invoke_expr(ctx, expr);
 	if (err)
@@ -280,25 +276,6 @@ int convert_invokestatic(struct parse_context *ctx)
 	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
 		goto failed;
-
-	if (vm_method_is_jni_method(invoke_target)) {
-		struct expression *jni_env_expr;
-		struct expression *class_expr;
-
-		class_expr = value_expr(J_REFERENCE,
-			(unsigned long)invoke_target->class->object);
-		if (!class_expr)
-			goto failed;
-
-		append_arg(expr, class_expr);
-
-		jni_env_expr = value_expr(J_REFERENCE,
-			(unsigned long)vm_jni_get_jni_env());
-		if (!jni_env_expr)
-			goto failed;
-
-		append_arg(expr, jni_env_expr);
-	}
 
 	err = insert_invoke_expr(ctx, expr);
 	if (err)
