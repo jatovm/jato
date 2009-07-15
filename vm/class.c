@@ -559,6 +559,9 @@ int vm_class_resolve_field(const struct vm_class *vmc, uint16_t i,
 struct vm_field *vm_class_get_field(const struct vm_class *vmc,
 	const char *name, const char *type)
 {
+	if (vmc->kind != VM_CLASS_KIND_REGULAR)
+		return NULL;
+
 	unsigned int index = 0;
 	if (!cafebabe_class_get_field(vmc->class, name, type, &index))
 		return &vmc->fields[index];
@@ -661,6 +664,9 @@ int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
 struct vm_method *vm_class_get_method(const struct vm_class *vmc,
 	const char *name, const char *type)
 {
+	if (vmc->kind != VM_CLASS_KIND_REGULAR)
+		return NULL;
+
 	unsigned int index = 0;
 	if (!cafebabe_class_get_method(vmc->class, name, type, &index))
 		return &vmc->methods[index];
