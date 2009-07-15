@@ -299,6 +299,22 @@ native_vmobject_getclass(struct vm_object *object)
 }
 
 static struct vm_object * __vm_native
+native_vmclass_getclassloader(struct vm_object *object)
+{
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_from_native(sizeof object);
+		return 0;
+	}
+
+	struct vm_class *class = vm_class_get_class_from_class_object(object);
+	assert(class != NULL);
+
+	NOT_IMPLEMENTED;
+	return NULL;
+}
+
+static struct vm_object * __vm_native
 native_vmclass_getname(struct vm_object *object)
 {
 	struct vm_class *class;
@@ -369,6 +385,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
 	DEFINE_NATIVE("jato/internal/VM", "exit", &native_vmruntime_exit),
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
+	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", &native_vmclass_getclassloader),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
