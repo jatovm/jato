@@ -249,6 +249,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ObjectCreationAndManipulationExceptionsTest.class \
 	regression/jvm/ObjectCreationAndManipulationTest.class \
 	regression/jvm/ObjectStackTest.class \
+	regression/jvm/ParameterPassingTest.class \
 	regression/jvm/PrintTest.class \
 	regression/jvm/PutfieldTest.class \
 	regression/jvm/PutstaticPatchingTest.class \

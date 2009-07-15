@@ -73,6 +73,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.ObjectCreationAndManipulationExceptionsTest 0
     run_java jvm.ObjectCreationAndManipulationTest 0
     run_java jvm.ObjectStackTest 0
+    run_java jvm.ParameterPassingTest 55
     run_java jvm.PrintTest 0
     run_java jvm.PutfieldTest 0
     run_java jvm.PutstaticPatchingTest 0
