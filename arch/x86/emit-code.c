@@ -1704,6 +1704,24 @@ static void emit_mov_reg_reg(struct buffer *buf,
 				     mach_reg(&src->reg), mach_reg(&dest->reg));
 }
 
+static void emit_add_reg_reg(struct buffer *buf,
+			     struct operand *src, struct operand *dest)
+{
+	if (is_64bit_bin_reg_op(src, dest))
+		emit_reg_reg(buf, 1, 0x03, dest, src);
+	else
+		emit_reg_reg(buf, 0, 0x03, dest, src);
+}
+
+static void emit_sub_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	if (is_64bit_bin_reg_op(src, dest))
+		emit_reg_reg(buf, 1, 0x29, src, dest);
+	else
+		emit_reg_reg(buf, 0, 0x29, src, dest);
+}
+
 static void emit_alu_imm_reg(struct buffer *buf,
 			     int rex_w,
 			     unsigned char opc_ext,
@@ -2019,6 +2037,7 @@ static void emit_mov_memlocal_reg(struct buffer *buf,
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
@@ -2027,6 +2046,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg, TWO_OPERANDS),
 };
 
