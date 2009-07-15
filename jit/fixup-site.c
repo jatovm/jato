@@ -34,6 +34,9 @@ struct fixup_site *alloc_fixup_site(void)
 	struct fixup_site *site;
 
 	site = malloc(sizeof(*site));
+	if (!site)
+		return NULL;
+
 	memset(site, 0, sizeof(*site));
 
 	return site;
