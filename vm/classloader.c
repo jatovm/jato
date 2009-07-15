@@ -245,10 +245,8 @@ static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 	struct vm_class *result = NULL;
 
 	zip_file_index = zip_name_locate(zip, file, 0);
-	if (zip_file_index == -1) {
-		NOT_IMPLEMENTED;
+	if (zip_file_index == -1)
 		return NULL;
-	}
 
 	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1) {
 		NOT_IMPLEMENTED;
