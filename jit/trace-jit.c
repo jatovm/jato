@@ -351,9 +351,28 @@ static void trace_invoke_args(struct vm_method *vmm,
 	}
 }
 
+static void print_source_and_line(struct compilation_unit *cu,
+				  unsigned char *ptr)
+{
+	unsigned long pc;
+	const char *source_file;
+
+	source_file = cu->method->class->source_file_name;
+	if (source_file)
+		printf("%s", source_file);
+	else
+		printf("UNKNOWN");
+
+	pc = native_ptr_to_bytecode_offset(cu, ptr);
+	if (pc == BC_OFFSET_UNKNOWN)
+		return;
+
+	printf(":%d", bytecode_offset_to_line_no(cu->method, pc));
+}
+
 static void trace_return_address(struct jit_stack_frame *frame)
 {
-	printf("\tret\t: %p", (void*)frame->return_address);
+	printf("\tret\t: %p:", (void*)frame->return_address);
 
 	if (is_native(frame->return_address)) {
 		printf(" (native)\n");
@@ -371,10 +390,12 @@ static void trace_return_address(struct jit_stack_frame *frame)
 		vmm = cu->method;;
 		vmc = vmm->class;
 
-		printf(" (%s.%s%s)\n", vmc->name, vmm->name, vmm->type );
+		printf(" %s.%s%s\n", vmc->name, vmm->name, vmm->type );
+		printf("\t\t  (");
+		print_source_and_line(cu, (void *) frame->return_address);
+		printf(")\n");
 	}
 }
-
 
 void trace_invoke(struct compilation_unit *cu)
 {
@@ -411,13 +432,20 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	printf("trace exception: exception object %p (%s) thrown\n",
 	       exception, exception->class->name);
 
-	printf("\tfrom\t: %p (%s.%s%s)\n", native_ptr, vmc->name, vmm->name,
+	printf("\tfrom\t: %p: %s.%s%s\n", native_ptr, vmc->name, vmm->name,
 	       vmm->type);
+	printf("\t\t  (");
+	print_source_and_line(cu, native_ptr);
+	printf(")\n");
 }
 
-void trace_exception_handler(unsigned char *ptr)
+void trace_exception_handler(struct compilation_unit *cu,
+			     unsigned char *ptr)
 {
 	printf("\taction\t: jump to handler at %p\n", ptr);
+	printf("\t\t  (");
+	print_source_and_line(cu, ptr);
+	printf(")\n");
 }
 
 void trace_exception_unwind(struct jit_stack_frame *frame)
@@ -431,8 +459,11 @@ void trace_exception_unwind(struct jit_stack_frame *frame)
 	vmm = cu->method;
 	vmc = vmm->class;
 
-	printf("\taction\t: unwind to %p (%s.%s%s)\n",
+	printf("\taction\t: unwind to %p: %s.%s%s\n",
 	       (void*)frame->return_address, vmc->name, vmm->name, vmm->type);
+	printf("\t\t  (");
+	print_source_and_line(cu, (void *) frame->return_address);
+	printf(")\n");
 }
 
 void trace_exception_unwind_to_native(struct jit_stack_frame *frame)

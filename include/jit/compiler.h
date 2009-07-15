@@ -112,7 +112,7 @@ void trace_regalloc(struct compilation_unit *);
 void trace_machine_code(struct compilation_unit *);
 void trace_invoke(struct compilation_unit *);
 void trace_exception(struct compilation_unit *, struct jit_stack_frame *, unsigned char *);
-void trace_exception_handler(unsigned char *);
+void trace_exception_handler(struct compilation_unit *, unsigned char *);
 void trace_exception_unwind(struct jit_stack_frame *);
 void trace_exception_unwind_to_native(struct jit_stack_frame *);
 void trace_bytecode(struct vm_method *);

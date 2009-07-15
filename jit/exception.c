@@ -258,7 +258,7 @@ throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
 			signal_exception(exception);
 
 			if (opt_trace_exceptions)
-				trace_exception_handler(eh_ptr);
+				trace_exception_handler(cu, eh_ptr);
 
 			return eh_ptr;
 		}
