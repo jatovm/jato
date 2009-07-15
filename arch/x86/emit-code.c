@@ -2030,8 +2030,7 @@ static void emit_mov_memlocal_reg(struct buffer *buf,
 	dest_reg = mach_reg(&dest->reg);
 	disp = slot_offset(src->slot);
 
-	__emit_membase_reg(buf, is_64bit_reg(dest),
-			   0x8b, REG_RBP, disp, dest_reg);
+	__emit_membase_reg(buf, 1, 0x8b, REG_RBP, disp, dest_reg);
 }
 
 struct emitter emitters[] = {
