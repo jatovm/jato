@@ -2082,9 +2082,14 @@ void emit_trampoline(struct compilation_unit *cu,
 	 * to pass parameters, so save them if they get modified.
 	 */
 	__emit64_push_reg(buf, REG_RDI);
+	__emit64_push_reg(buf, REG_RSI);
+	__emit64_push_reg(buf, REG_RDX);
+	__emit64_push_reg(buf, REG_RCX);
+	__emit64_push_reg(buf, REG_R8);
+	__emit64_push_reg(buf, REG_R9);
+
 	__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDI);
 	__emit_call(buf, call_target);
-	__emit64_pop_reg(buf, REG_RDI);
 
 	/*
 	 * Test for exception occurance.
@@ -2094,26 +2099,25 @@ void emit_trampoline(struct compilation_unit *cu,
 	 * mov fs:(0xXXX), %rcx
 	 * test (%rcx), %rcx
 	 */
-	__emit64_push_reg(buf, REG_RCX);
 	emit(buf, 0x64);
 	__emit_memdisp_reg(buf, 1, 0x8b,
 			   get_thread_local_offset(&trampoline_exception_guard),
 			   REG_RCX);
 	__emit64_test_membase_reg(buf, REG_RCX, 0, REG_RCX);
-	__emit64_pop_reg(buf, REG_RCX);
 
 	if (method_is_virtual(cu->method)) {
-		__emit64_push_reg(buf, REG_RDI);
-		__emit64_push_reg(buf, REG_RSI);
-
 		__emit64_mov_reg_reg(buf, REG_RAX, REG_RDI);
 		__emit64_mov_membase_reg(buf, REG_RBP, 0x08, REG_RSI);
 		__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDX);
 		__emit_call(buf, fixup_vtable);
-
-		__emit64_pop_reg(buf, REG_RSI);
-		__emit64_pop_reg(buf, REG_RDI);
 	}
+
+	__emit64_pop_reg(buf, REG_R9);
+	__emit64_pop_reg(buf, REG_R8);
+	__emit64_pop_reg(buf, REG_RCX);
+	__emit64_pop_reg(buf, REG_RDX);
+	__emit64_pop_reg(buf, REG_RSI);
+	__emit64_pop_reg(buf, REG_RDI);
 
 	__emit64_pop_reg(buf, REG_RBP);
 	emit_indirect_jump_reg(buf, REG_RAX);
