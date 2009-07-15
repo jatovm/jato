@@ -24,18 +24,33 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <assert.h>
+
+#include "arch/args.h"
+
 #include "jit/expression.h"
 #include "jit/args.h"
 
+#include "vm/method.h"
 #include "vm/stack.h"
 
 struct expression *
-insert_arg(struct expression *root, struct expression *expr)
+insert_arg(struct expression *root,
+	   struct expression *expr,
+	   unsigned long *args_state,
+	   struct vm_method *method)
 {
 	struct expression *_expr;
+	int err;
 
 	_expr = arg_expr(expr);
 	_expr->bytecode_offset = expr->bytecode_offset;
+
+	if (args_state && method) {
+		err = args_set(args_state, method, _expr);
+		if (err)
+			return NULL;
+	}
 
 	if (!root)
 		return _expr;
@@ -43,21 +58,29 @@ insert_arg(struct expression *root, struct expression *expr)
 	return args_list_expr(root, _expr);
 }
 
-struct expression *
-convert_args(struct stack *mimic_stack, unsigned long nr_args)
+struct expression *convert_args(struct stack *mimic_stack,
+				unsigned long nr_args,
+				struct vm_method *method)
 {
 	struct expression *args_list = NULL;
-	unsigned long i;
+	unsigned long args_state, i;
+	int err;
 
 	if (nr_args == 0) {
 		args_list = no_args_expr();
 		goto out;
 	}
 
+	err = args_init(&args_state, method, nr_args);
+	if (err)
+		return NULL;
+
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
-		args_list = insert_arg(args_list, expr);
+		args_list = insert_arg(args_list, expr, &args_state, method);
 	}
+
+	args_finish(&args_state);
 
   out:
 	return args_list;

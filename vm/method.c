@@ -66,6 +66,10 @@ int vm_method_init(struct vm_method *vmm,
 		return -1;
 	}
 
+#ifdef CONFIG_REGPARM
+	vmm->reg_args_count = 0;	/* Updated later. */
+#endif
+
 	if (!vm_method_is_static(vmm))
 		++vmm->args_count;
 

@@ -29,6 +29,9 @@ struct vm_method {
 	char *name;
 	char *type;
 	int args_count;
+#ifdef	CONFIG_REGPARM
+	int reg_args_count;
+#endif
 
 	struct cafebabe_code_attribute code_attribute;
 	struct cafebabe_line_number_table_attribute line_number_table_attribute;

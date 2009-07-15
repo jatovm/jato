@@ -72,7 +72,9 @@ static int convert_and_add_args(struct parse_context *ctx,
 {
 	struct expression *args_list;
 
-	args_list = convert_args(ctx->bb->mimic_stack, method_real_argument_count(invoke_target));
+	args_list = convert_args(ctx->bb->mimic_stack,
+				 method_real_argument_count(invoke_target),
+				 invoke_target);
 	if (!args_list)
 		return -ENOMEM;
 
@@ -208,7 +210,7 @@ static void append_arg(struct expression *expr, struct expression *arg)
 {
 	struct expression *args_list;
 
-	args_list = insert_arg(to_expr(expr->args_list), arg);
+	args_list = insert_arg(to_expr(expr->args_list), arg, NULL, NULL);
 	expr->args_list = &args_list->node;
 }
 

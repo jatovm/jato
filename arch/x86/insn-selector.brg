@@ -16,6 +16,7 @@
 #include <jit/bc-offset-mapping.h>
 #include <jit/exception.h>
 
+#include <arch/args.h>
 #include <arch/instruction.h>
 #include <arch/stack-frame.h>
 #include <arch/thread.h>
@@ -74,7 +75,7 @@ static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
 	unsigned long args_size;
 
 	stack_ptr = bb->b_parent->stack_ptr;
-	args_size = args_count * sizeof(uint32_t);
+	args_size = args_count * sizeof(long);
 
 	select_insn(bb, tree, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
 }
@@ -199,6 +200,7 @@ reg:	EXPR_VALUE	0
 	}
 }
 
+%ifdef CONFIG_X86_32
 reg:	EXPR_LOCAL	1
 {
 	struct compilation_unit *cu = s->b_parent;
@@ -223,6 +225,32 @@ reg:	EXPR_LOCAL	1
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
 	}
 }
+%else
+reg:	EXPR_LOCAL	1
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *expr;
+	struct stack_slot *slot;
+	struct var_info *result;
+	enum machine_reg reg;
+	int index;
+
+	expr = to_expr(tree);
+	slot = get_local_slot(cu->stack_frame, expr->local_index);
+
+	reg = args_local_to_reg(s->b_parent->method, expr->local_index + 1);
+	if (reg == REG_UNASSIGNED) {
+		index = args_stack_index(cu->method, expr->local_index);
+		slot = get_local_slot(cu->stack_frame, index);
+		result = get_var(s->b_parent, J_LONG);
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+						       slot, result));
+	} else
+		result = get_fixed_var(s->b_parent, reg);
+
+	state->reg1 = result;
+}
+%endif
 
 freg:	EXPR_LOCAL 0
 {
@@ -1275,6 +1303,7 @@ arg:	EXPR_NO_ARGS
 	state->reg1 = NULL;
 }
 
+%ifdef CONFIG_X86_32
 arg:	EXPR_ARG(EXPR_VALUE) 1
 {
 	struct expression *expr, *arg_expr;
@@ -1290,6 +1319,27 @@ arg:	EXPR_ARG(EXPR_VALUE) 1
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
 }
+%else
+arg:	EXPR_ARG(EXPR_VALUE) 1
+{
+	struct expression *expr, *arg_expr;
+	enum machine_reg reg;
+	struct var_info *dst;
+	unsigned long imm;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+	imm  = arg_expr->value;
+
+	reg = args_select_reg(expr);
+
+	if (reg != REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, reg);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, dst));
+	} else
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm));
+}
+%endif
 
 arg:	EXPR_ARG(EXPR_FVALUE) 1
 {
@@ -1303,6 +1353,7 @@ arg:	EXPR_ARG(EXPR_FVALUE) 1
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
 }
 
+%ifdef CONFIG_X86_32
 arg:	EXPR_ARG(reg)
 {
 	struct var_info *src;
@@ -1321,6 +1372,28 @@ arg:	EXPR_ARG(reg)
 
 	state->reg1 = src;
 }
+%else
+arg:	EXPR_ARG(reg) 1
+{
+	struct var_info *src, *dst;
+	struct expression *expr, *arg_expr;
+	enum machine_reg reg;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	src = state->left->reg1;
+
+	reg = args_select_reg(expr);
+
+	if (reg != REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, reg);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
+
+	} else
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+}
+%endif
 
 arg:	EXPR_ARGS_LIST(arg, arg)
 {
@@ -1489,6 +1562,7 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	}
 }
 
+%ifdef CONFIG_X86_32
 stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 {
 	struct expression *exprdest, *exprsrc;
@@ -1512,6 +1586,33 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 	}
 
 }
+%else
+stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
+{
+	struct expression *exprdest, *exprsrc;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *dest;
+	enum machine_reg reg;
+	int index;
+
+	stmt = to_stmt(tree);
+
+	exprsrc = to_expr(stmt->store_src);
+	exprdest = to_expr(stmt->store_dest);
+
+	reg = args_local_to_reg(s->b_parent->method, exprsrc->local_index);
+	if (reg == REG_UNASSIGNED) {
+		index = args_stack_index(s->b_parent->method,
+					 exprsrc->local_index);
+		slot = get_local_slot(s->b_parent->stack_frame, index);
+		dest = exprdest->tmp_low;
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+						       slot, dest));
+	} else
+		exprdest->tmp_low = get_fixed_var(s->b_parent, reg);
+}
+%endif
 
 stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
 {

@@ -1,15 +1,4 @@
-ARCH		?= $(shell uname -m | sed -e s/i.86/i386/)
-OS		?= $(shell uname -s | tr "[:upper:]" "[:lower:]")
-
-ifeq ($(ARCH),i386)
-ARCH		= x86
-ARCH_POSTFIX	= _32
-endif
-
-ifeq ($(ARCH),x86_64)
-ARCH		= x86
-ARCH_POSTFIX	= _64
-endif
+MB_DEFINES	:= -DCONFIG_$(shell echo $(ARCH) | tr "[:lower:]" "[:upper:]")$(ARCH_POSTFIX)
 
 ARCH_CONFIG	:= ../../arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 DEFAULT_CFLAGS	:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99 -D_GNU_SOURCE
@@ -20,6 +9,7 @@ RUNNER=x86-test-runner
 SUITE=x86-test-suite.c
 
 OBJS = \
+	../../arch/x86/args.o \
 	../../arch/x86/backtrace.o \
 	../../arch/x86/emit-code.o \
 	../../arch/x86/exception.o \
@@ -95,6 +85,6 @@ TESTS = \
 
 ../../arch/x86/insn-selector.c: FORCE
 	$(E) "  MONOBURG" $@
-	$(Q) $(MONOBURG) -p -e ../../arch/x86/insn-selector.brg > $@
+	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
 include ../../scripts/build/test.mk
