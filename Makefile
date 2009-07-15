@@ -119,7 +119,8 @@ VM_OBJS = \
 	vm/preload.o		\
 	vm/fault-inject.o 	\
 	vm/jni.o		\
-	vm/jni-interface.o
+	vm/jni-interface.o	\
+	vm/call.o
 
 LIB_OBJS = \
 	lib/bitset.o		\
