@@ -20,6 +20,7 @@ ifeq ($(ARCH),i386)
 override ARCH	= x86
 ARCH_POSTFIX	= _32
 WARNINGS	+= -Werror
+MB_DEFINES	+= -DCONFIG_X86_32
 ifeq ($(BUILD_ARCH),x86_64)
 ARCH_CFLAGS	+= -m32
 TEST		= test
@@ -29,11 +30,13 @@ endif
 ifeq ($(ARCH),x86_64)
 override ARCH	= x86
 ARCH_POSTFIX	= _64
+MB_DEFINES	+= -DCONFIG_X86_64
 endif
 
 ifeq ($(ARCH),ppc)
 override ARCH	= ppc
 ARCH_POSTFIX	= _32
+MB_DEFINES	+= -DCONFIG_PPC
 endif
 
 export ARCH_CFLAGS
@@ -201,7 +204,7 @@ monoburg:
 
 arch/$(ARCH)/insn-selector.c: monoburg FORCE
 	$(E) "  MONOBURG" $@
-	$(Q) $(MONOBURG) -p -e $(@:.c=.brg) > $@
+	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
 $(PROGRAM): monoburg $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
 	$(E) "  LD      " $@
