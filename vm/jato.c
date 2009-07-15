@@ -309,6 +309,22 @@ native_vmclass_getname(struct vm_object *object)
 	return vm_object_alloc_string_from_c(class->name);
 }
 
+static int32_t __vm_native
+native_vmclass_isprimitive(struct vm_object *object)
+{
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_from_native(sizeof object);
+		return 0;
+	}
+
+	struct vm_class *class = vm_class_get_class_from_class_object(object);
+	assert(class != NULL);
+
+	/* Note: This function returns a boolean value (despite the int32_t) */
+	return class->kind == VM_CLASS_KIND_PRIMITIVE;
+}
+
 static struct vm_object * __vm_native
 native_vmclassloader_getprimitiveclass(int type)
 {
@@ -354,6 +370,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("jato/internal/VM", "exit", &native_vmruntime_exit),
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
+	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
 	DEFINE_NATIVE("java/io/VMFile", "isDirectory", &native_vmfile_is_directory),
 	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
