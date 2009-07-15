@@ -30,6 +30,7 @@
 
 #include "jit/exception.h"
 
+#include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/die.h"
@@ -216,6 +217,63 @@ static void vm_jni_fatal_error(struct vm_jni_env *env, const char *msg)
 	die("%s", msg);
 }
 
+static void vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
+					   jmethodID methodID, ...)
+{
+	va_list args;
+
+	va_start(args, methodID);
+	vm_call_method_v(methodID, args);
+	va_end(args);
+}
+
+static void
+vm_jni_call_static_void_method_v(struct vm_jni_env *env, jclass clazz,
+				 jmethodID methodID, va_list args)
+{
+	vm_call_method_v(methodID, args);
+}
+
+static jobject vm_jni_call_static_object_method(struct vm_jni_env *env,
+					jclass clazz, jmethodID methodID, ...)
+{
+	jobject result;
+	va_list args;
+
+	va_start(args, methodID);
+	result = (jobject) vm_call_method_v(methodID, args);
+	va_end(args);
+
+	return result;
+}
+
+static jobject
+vm_jni_call_static_object_method_v(struct vm_jni_env *env, jclass clazz,
+				   jmethodID methodID, va_list args)
+{
+	return (jobject) vm_call_method_v(methodID, args);
+}
+
+static jbyte vm_jni_call_static_byte_method(struct vm_jni_env *env,
+				jclass clazz, jmethodID methodID, ...)
+{
+	jbyte result;
+	va_list args;
+
+	va_start(args, methodID);
+	result = (jbyte) vm_call_method_v(methodID, args);
+	va_end(args);
+
+	return result;
+}
+
+static jbyte
+vm_jni_call_static_byte_method_v(struct vm_jni_env *env, jclass clazz,
+				 jmethodID methodID, va_list args)
+{
+	return (jbyte) vm_call_method_v(methodID, args);
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -380,18 +438,18 @@ void *vm_jni_native_interface[] = {
 	NULL, /* SetFloatField */
 	NULL, /* SetDoubleField */
 	vm_jni_get_static_method_id,
-	NULL, /* CallStaticObjectMethod */
+	vm_jni_call_static_object_method,
 
 	/* 115 */
-	NULL, /* CallStaticObjectMethodV */
+	vm_jni_call_static_object_method_v,
 	NULL, /* CallStaticObjectMethodA */
 	NULL, /* CallStaticBooleanMethod */
 	NULL, /* CallStaticBooleanMethodV */
 	NULL, /* CallStaticBooleanMethodA */
 
 	/* 120 */
-	NULL, /* CallStaticByteMethod */
-	NULL, /* CallStaticByteMethodV */
+	vm_jni_call_static_byte_method,
+	vm_jni_call_static_byte_method_v,
 	NULL, /* CallStaticByteMethodA */
 	NULL, /* CallStaticCharMethod */
 	NULL, /* CallStaticCharMethodV */
@@ -419,8 +477,8 @@ void *vm_jni_native_interface[] = {
 
 	/* 140 */
 	NULL, /* CallStaticDoubleMethodA */
-	NULL, /* CallStaticVoidMethod */
-	NULL, /* CallStaticVoidMethodV */
+	vm_jni_call_static_void_method,
+	vm_jni_call_static_void_method_v,
 	NULL, /* CallStaticVoidMethodA */
 	NULL, /* GetStaticFieldID */
 
