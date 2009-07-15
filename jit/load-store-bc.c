@@ -142,6 +142,17 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 			((uint64_t) cp->double_.high_bytes << 32)
 			+ (uint64_t) cp->double_.low_bytes);
 		break;
+	case CAFEBABE_CONSTANT_TAG_CLASS: {
+		/* Added for JDK 1.5 */
+		struct vm_class *ret = vm_class_resolve_class(vmc, cp_idx);
+		if (!ret) {
+			NOT_IMPLEMENTED;
+			break;
+		}
+
+		expr = value_expr(J_REFERENCE, (unsigned long) ret->object);
+		break;
+	}
 	default:
 		return warn("unknown tag: %d", cp->tag), -EINVAL;
 	}
