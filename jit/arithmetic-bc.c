@@ -234,21 +234,27 @@ int convert_iinc(struct parse_context *ctx)
 	struct statement *store_stmt;
 	struct expression *local_expression, *binop_expression,
 	    *const_expression;
-	unsigned char index;
-	char const_value;
+	unsigned int index;
+	int const_value;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt)
 		goto failed;
 
-	index = bytecode_read_u8(ctx->buffer);
+	if (ctx->is_wide) {
+		index = bytecode_read_u16(ctx->buffer);
+		const_value = bytecode_read_s16(ctx->buffer);
+	} else {
+		index = bytecode_read_u8(ctx->buffer);
+		const_value = bytecode_read_s8(ctx->buffer);
+	}
+
 	local_expression = local_expr(J_INT, index);
 	if (!local_expression)
 		goto failed;
 
 	store_stmt->store_dest = &local_expression->node;
 
-	const_value = bytecode_read_s8(ctx->buffer);
 	const_expression = value_expr(J_INT, const_value);
 	if (!const_expression)
 		goto failed;

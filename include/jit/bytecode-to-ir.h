@@ -15,5 +15,6 @@ typedef int (*convert_fn_t) (struct parse_context *);
 #  include <vm/bytecode-def.h>
 #undef BYTECODE
 
+int convert_instruction(struct parse_context *ctx);
 
 #endif /* JIT_BYTECODE_TO_IR_H */

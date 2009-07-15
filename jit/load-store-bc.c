@@ -180,7 +180,7 @@ int convert_ldc2_w(struct parse_context *ctx)
 	return __convert_ldc(ctx, idx);
 }
 
-static int convert_load(struct parse_context *ctx, unsigned char index, enum vm_type type)
+static int convert_load(struct parse_context *ctx, unsigned int index, enum vm_type type)
 {
 	struct expression *expr;
 
@@ -192,47 +192,55 @@ static int convert_load(struct parse_context *ctx, unsigned char index, enum vm_
 	return 0;
 }
 
+static unsigned int read_index(struct parse_context *ctx)
+{
+	if (ctx->is_wide)
+		return bytecode_read_u16(ctx->buffer);
+
+	return bytecode_read_u8(ctx->buffer);
+}
+
 int convert_iload(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_load(ctx, idx, J_INT);
 }
 
 int convert_lload(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_load(ctx, idx, J_LONG);
 }
 
 int convert_fload(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_load(ctx, idx, J_FLOAT);
 }
 
 int convert_dload(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_load(ctx, idx, J_DOUBLE);
 }
 
 int convert_aload(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_load(ctx, idx, J_REFERENCE);
 }
@@ -262,7 +270,7 @@ int convert_aload_n(struct parse_context *ctx)
 	return convert_load(ctx, ctx->opc - OPC_ALOAD_0, J_REFERENCE);
 }
 
-static int convert_store(struct parse_context *ctx, unsigned long index, enum vm_type type)
+static int convert_store(struct parse_context *ctx, unsigned int index, enum vm_type type)
 {
 	struct expression *src_expr, *dest_expr;
 	struct statement *stmt = alloc_statement(STMT_STORE);
@@ -283,45 +291,45 @@ static int convert_store(struct parse_context *ctx, unsigned long index, enum vm
 
 int convert_istore(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_store(ctx, idx, J_INT);
 }
 
 int convert_lstore(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_store(ctx, idx, J_LONG);
 }
 
 int convert_fstore(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_store(ctx, idx, J_FLOAT);
 }
 
 int convert_dstore(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_store(ctx, idx, J_DOUBLE);
 }
 
 int convert_astore(struct parse_context *ctx)
 {
-	unsigned char idx;
+	unsigned int idx;
 
-	idx = bytecode_read_u8(ctx->buffer);
+	idx = read_index(ctx);
 
 	return convert_store(ctx, idx, J_REFERENCE);
 }

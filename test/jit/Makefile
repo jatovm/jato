@@ -42,6 +42,7 @@ OBJS = \
 	../../jit/typeconv-bc.o \
 	../../jit/subroutine.o \
 	../../jit/pc-map.o \
+	../../jit/wide-bc.o \
 	../../lib/bitset.o \
 	../../lib/buffer.o \
 	../../lib/list.o \

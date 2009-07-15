@@ -41,6 +41,8 @@ struct parse_context {
 	unsigned long offset;
 	unsigned long code_size;
 	unsigned char opc;
+
+	bool is_wide;
 };
 
 void convert_expression(struct parse_context *ctx, struct expression *expr);

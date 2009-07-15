@@ -55,8 +55,8 @@ static int convert_not_implemented(struct parse_context *ctx)
 
 #define convert_tableswitch	convert_not_implemented
 #define convert_lookupswitch	convert_not_implemented
-#define convert_wide		convert_not_implemented
-#define convert_goto_w		convert_not_implemented
+
+#define convert_goto_w		convert_goto
 
 #define BYTECODE(opc, name, size, type) [opc] = convert_ ## name,
 static convert_fn_t converters[] = {
@@ -161,6 +161,22 @@ error_oom:
 	return NULL;
 }
 
+int convert_instruction(struct parse_context *ctx)
+{
+	convert_fn_t convert;
+
+	ctx->opc = bytecode_read_u8(ctx->buffer);
+
+	if (ctx->opc >= ARRAY_SIZE(converters))
+		return warn("%d out of bounds", ctx->opc), -EINVAL;
+
+	convert = converters[ctx->opc];
+	if (!convert)
+		return warn("no converter for %d found", ctx->opc), -EINVAL;
+
+	return convert(ctx);
+}
+
 static int do_convert_bb_to_ir(struct basic_block *bb)
 {
 	struct compilation_unit *cu = bb->b_parent;
@@ -170,6 +186,7 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 		.cu = cu,
 		.bb = bb,
 		.code = cu->method->code_attribute.code,
+		.is_wide = false,
 	};
 	int err = 0;
 
@@ -180,25 +197,9 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 		stack_push(bb->mimic_stack, exception_ref_expr());
 
 	while (buffer.pos < bb->end) {
-		convert_fn_t convert;
-
 		ctx.offset = ctx.buffer->pos;	/* this is fragile */
-		ctx.opc = bytecode_read_u8(ctx.buffer);
 
-		if (ctx.opc >= ARRAY_SIZE(converters)) {
-			warn("%d out of bounds", ctx.opc);
-			err = -EINVAL;
-			break;
-		}
-
-		convert = converters[ctx.opc];
-		if (!convert) {
-			warn("no converter for %d found", ctx.opc);
-			err = -EINVAL;
-			break;
-		}
-
-		err = convert(&ctx);
+		err = convert_instruction(&ctx);
 		if (err)
 			break;
 	}
