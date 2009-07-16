@@ -128,7 +128,7 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 
 	s = getenv("LD_LIBRARY_PATH");
 	if (!s)
-		s = "";
+		s = "/usr/lib/classpath/";
 
 	vm_properties_set_property(p, "java.library.path", s);
 
