@@ -93,3 +93,18 @@ long long emulate_lrem(long long value1, long long value2)
 
 	return value1 % value2;
 }
+
+int64_t emulate_lshl(int64_t value1, int32_t value2)
+{
+	return value1 << (value2 & 0x3f);
+}
+
+int64_t emulate_lshr(int64_t value1, int32_t value2)
+{
+	return value1 >> (value2 & 0x3f);
+}
+
+int64_t emulate_lushr(int64_t value1, int32_t value2)
+{
+	return (uint64_t) value1 >> (value2 & 0x3f);
+}

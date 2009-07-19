@@ -152,12 +152,12 @@ public class LongArithmeticTest extends TestCase {
         assertEquals(1, shl(1, 0));
         assertEquals(2, shl(1, 1));
         assertEquals(4, shl(1, 2));
-        assertEquals(Long.MIN_VALUE, shl(1, 31));
+        assertEquals(Long.MIN_VALUE, shl(1, 63));
     }
 
     public static void testLongLeftShiftDistanceIsMasked() {
-        assertEquals(1, shl(1, 32));
-        assertEquals(2, shl(1, 33));
+        assertEquals(1, shl(1, 64));
+        assertEquals(2, shl(1, 65));
     }
 
     public static long shl(long value, long distance) {
@@ -169,12 +169,12 @@ public class LongArithmeticTest extends TestCase {
         assertEquals(0, shr(1, 1));
         assertEquals(1, shr(2, 1));
         assertEquals(3, shr(15, 2));
-        assertEquals(0, shr(Long.MAX_VALUE, 31));
+        assertEquals(0, shr(Long.MAX_VALUE, 63));
     }
 
     public static void testLongRightShiftDistanceIsMasked() {
-        assertEquals(1, shr(1, 32));
-        assertEquals(0, shr(1, 33));
+        assertEquals(1, shr(1, 64));
+        assertEquals(0, shr(1, 65));
     }
 
     public static void testLongRightShiftSignExtends() {
@@ -190,12 +190,12 @@ public class LongArithmeticTest extends TestCase {
         assertEquals(0, ushr(1, 1));
         assertEquals(1, ushr(2, 1));
         assertEquals(3, ushr(15, 2));
-        assertEquals(0, ushr(Long.MAX_VALUE, 31));
+        assertEquals(0, ushr(Long.MAX_VALUE, 63));
     }
 
     public static void testLongUnsignedRightShiftDistanceIsMasked() {
-        assertEquals(1, ushr(1, 32));
-        assertEquals(0, ushr(1, 33));
+        assertEquals(1, ushr(1, 64));
+        assertEquals(0, ushr(1, 65));
     }
 
     public static void testLongUnsignedRightShiftZeroExtends() {
@@ -272,15 +272,14 @@ public class LongArithmeticTest extends TestCase {
         testLongRemainder();
         testLongNegation();
         testLongNegationOverflow();
-        // FIXME:
-        // testLongLeftShift();
-        // testLongLeftShiftDistanceIsMasked();
-        // testLongRightShift();
-        // testLongRightShiftDistanceIsMasked();
-        // testLongRightShiftSignExtends();
-        // testLongUnsignedRightShift();
-        // testLongUnsignedRightShiftDistanceIsMasked();
-        // testLongUnsignedRightShiftZeroExtends();
+        testLongLeftShift();
+        testLongLeftShiftDistanceIsMasked();
+        testLongRightShift();
+        testLongRightShiftDistanceIsMasked();
+        testLongRightShiftSignExtends();
+        testLongUnsignedRightShift();
+        testLongUnsignedRightShiftDistanceIsMasked();
+        testLongUnsignedRightShiftZeroExtends();
         testLongBitwiseInclusiveOr();
         testLongBitwiseAnd();
         testLongBitwiseExclusiveOr();

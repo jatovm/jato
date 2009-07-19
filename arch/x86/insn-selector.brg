@@ -462,7 +462,7 @@ freg:	OP_FDIV(freg, freg) 1
 
 reg:	OP_DIV_64(reg, reg) 1
 {
-	emulate_op_64(state, s, tree, emulate_ldiv, J_LONG);
+	emulate_op_64(state, s, tree, emulate_ldiv, J_LONG, J_LONG);
 }
 
 reg:	OP_REM(reg, EXPR_LOCAL) 1
@@ -514,7 +514,7 @@ freg:	OP_FREM(freg, freg) 1
 
 reg:	OP_REM_64(reg, reg) 1
 {
-	emulate_op_64(state, s, tree, emulate_lrem, J_LONG);
+	emulate_op_64(state, s, tree, emulate_lrem, J_LONG, J_LONG);
 }
 
 reg:	OP_NEG(reg) 1
@@ -573,7 +573,7 @@ reg:	OP_SHL(reg, EXPR_LOCAL) 1
 
 reg:	OP_SHL_64(reg, reg) 1
 {
-	assert(!"SHL_64 todo");
+	emulate_op_64(state, s, tree, emulate_lshl, J_INT, J_LONG);
 }
 
 reg:	OP_SHR(reg, EXPR_LOCAL) 1
@@ -595,7 +595,7 @@ reg:	OP_SHR(reg, reg) 1
 
 reg:	OP_SHR_64(reg, reg) 1
 {
-	assert(!"SHR_64 todo");
+	emulate_op_64(state, s, tree, emulate_lshr, J_INT, J_LONG);
 }
 
 reg:	OP_USHR(reg, EXPR_LOCAL) 1
@@ -617,7 +617,7 @@ reg:	OP_USHR(reg, reg) 1
 
 reg:	OP_USHR_64(reg, reg) 1
 {
-	assert(!"USHR_64 todo");
+	emulate_op_64(state, s, tree, emulate_lushr, J_INT, J_LONG);
 }
 
 reg:	OP_OR(reg, EXPR_LOCAL) 1
@@ -873,7 +873,7 @@ reg:	OP_CMPL(freg, freg) 1
 
 reg:	OP_CMP(reg, reg) 1
 {
-	emulate_op_64(state, s, tree, emulate_lcmp, J_INT);
+	emulate_op_64(state, s, tree, emulate_lcmp, J_LONG, J_INT);
 }
 
 reg:	OP_CMP(reg, EXPR_VALUE) 1
@@ -1986,7 +1986,8 @@ static void div_reg_local(struct _MBState *state, struct basic_block *bb,
 
 static void
 emulate_op_64(struct _MBState *state, struct basic_block *s,
-	      struct tree_node *tree, void *func, enum vm_type return_type)
+	      struct tree_node *tree, void *func, enum vm_type arg2_type,
+	      enum vm_type return_type)
 {
 	struct var_info *eax, *edx = NULL;
 
@@ -1997,8 +1998,11 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 		edx = get_fixed_var(s->b_parent, REG_xDX);
 		state->reg2 = get_var(s->b_parent, J_INT);
 	}
-	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg2));
+
+	if (arg2_type == J_LONG)
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg2));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
+
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg2));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
 
