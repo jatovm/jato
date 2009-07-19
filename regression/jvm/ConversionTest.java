@@ -55,19 +55,43 @@ public class ConversionTest extends TestCase {
         return (byte) value;
     }
 
-	public static void testIntegerToByteConversion() {
-        int b = 10;
-		int c = -1;
-        int a = b + 0x10000;
+    public static void testIntegerToByteConversion() {
+        assertEquals(-1, i2b(-1));
+        assertEquals(0, i2b(0));
+        assertEquals(1, i2b(1));
+        assertEquals(Byte.MAX_VALUE, i2b(Byte.MAX_VALUE));
+        assertEquals(-1, i2b(Integer.MAX_VALUE));
+    }
 
-        assertEquals(10, i2b(a));
-		assertEquals(10, i2b(b));
-        assertEquals(-1, i2b(c));
+    public static char i2c(int value) {
+        return (char) value;
+    }
+
+    public static void testIntegerToCharConversion() {
+        assertEquals(Character.MAX_VALUE, i2c(-1));
+        assertEquals(0, i2c(0));
+        assertEquals(1, i2c(1));
+        assertEquals(Character.MAX_VALUE, i2c(Character.MAX_VALUE));
+        assertEquals(Character.MAX_VALUE, i2c(Integer.MAX_VALUE));
+    }
+
+    public static short i2s(int value) {
+        return (short) value;
+    }
+
+    public static void testIntegerToShortConversion() {
+        assertEquals(-1, i2s(-1));
+        assertEquals(0, i2s(0));
+        assertEquals(1, i2s(1));
+        assertEquals(Short.MAX_VALUE, i2s(Short.MAX_VALUE));
+        assertEquals(-1, i2s(Integer.MAX_VALUE));
     }
 
     public static void main(String[] args) {
         testLongToIntegerConversion();
         testIntegerToLongConversion();
         testIntegerToByteConversion();
+        testIntegerToCharConversion();
+        testIntegerToShortConversion();
     }
 }

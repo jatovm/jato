@@ -677,6 +677,13 @@ static void emit_movsx_16_reg_reg(struct buffer *buf, struct operand *src,
 	__emit_reg_reg(buf, 0xbf, mach_reg(&dest->reg), mach_reg(&src->reg));
 }
 
+static void emit_movzx_16_reg_reg(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	emit(buf, 0x0f);
+	__emit_reg_reg(buf, 0xb7, mach_reg(&dest->reg), mach_reg(&src->reg));
+}
+
 static void
 emit_mov_memlocal_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
@@ -1321,6 +1328,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_MEMBASE_EAX, emit_mul_membase_eax, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg, TWO_OPERANDS),
