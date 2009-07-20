@@ -51,17 +51,37 @@ void trace_method(struct compilation_unit *cu)
 {
 	struct vm_method *method = cu->method;
 	unsigned char *p;
-	unsigned int i;
+	unsigned int i, j;
 
 	printf("\nTRACE: %s.%s%s\n",
 		method->class->name, method->name, method->type);
 
 	printf("Length: %d\n", method->code_attribute.code_length);
-	printf("Code: ");
+	printf("Code:\n");
 	p = method->code_attribute.code;
-	for (i = 0; i < method->code_attribute.code_length; i++) {
-		printf("%02x ", p[i]);
+
+	unsigned int n = method->code_attribute.code_length;
+	unsigned int rows = n / 16;
+	unsigned int cols = 16;
+
+	for (i = 0; i <= rows; ++i) {
+		if (i == rows) {
+			cols = n % 16;
+			if (!cols)
+				break;
+		}
+
+		printf("[ %04u ] ", i * 16);
+
+		for (j = 0; j < cols; ++j) {
+			printf("%02x%s",
+				p[i * 16 + j],
+				j == 7 ? "  " : " ");
+		}
+
+		printf("\n");
 	}
+
 	printf("\n\n");
 }
 
