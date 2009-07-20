@@ -360,9 +360,24 @@ static int print_local_expr(int lvl, struct string *str,
 static int print_temporary_expr(int lvl, struct string *str,
 				struct expression *expr)
 {
-	return str_append(str, "[temporary %s 0x%lx (high), 0x%lx (low)]",
-			  type_names[expr->vm_type], expr->tmp_high,
-			  expr->tmp_low);
+	int err;
+
+	err = str_append(str, "[temporary %s ", type_names[expr->vm_type]);
+	if (err)
+		goto out;
+
+	if (expr->tmp_high) {
+		err = str_append(str, "0x%lx (high), ", expr->tmp_high);
+		if (err)
+			goto out;
+	}
+
+	err = str_append(str, "0x%lx (low)]", expr->tmp_low);
+	if (err)
+		goto out;
+
+out:
+	return err;
 }
 
 static int print_mimic_stack_slot_expr(int lvl, struct string *str,

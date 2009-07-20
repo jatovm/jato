@@ -274,7 +274,7 @@ void assert_printed_temporary_expr(struct string *expected, enum vm_type type, s
 void test_should_print_temporary_expression(void)
 {
 	assert_printed_temporary_expr(str_aprintf(
-		"[temporary int 0x0 (high), 0x12345678 (low)]"),
+		"[temporary int 0x12345678 (low)]"),
 		J_INT, NULL, (struct var_info *)0x12345678);
 	assert_printed_temporary_expr(str_aprintf(
 		"[temporary boolean 0x85215975 (high), 0x87654321 (low)]"),
