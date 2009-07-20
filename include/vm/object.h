@@ -13,7 +13,10 @@ enum vm_type;
 
 struct vm_object {
 	/* For arrays, this points to the array type, e.g. for int arrays,
-	 * this points to the (artificial) class named "[I". */
+	 * this points to the (artificial) class named "[I". We actually rely
+	 * on this being the first field in the struct, because this way we
+	 * don't need a null-pointer check for accessing this object whenever
+	 * we access ->class first. */
 	struct vm_class *class;
 
 	pthread_mutex_t mutex;
@@ -21,6 +24,8 @@ struct vm_object {
 	int array_length;
 	uint8_t fields[];
 };
+
+/* XXX: BUILD_BUG_ON(offsetof(vm_object, class) != 0); */
 
 int init_vm_objects(void);
 

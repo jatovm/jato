@@ -98,7 +98,7 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 
 	/* Assume that zero-page access is caused by dereferencing a
 	   null pointer */
-	if ((unsigned long)si->si_addr < (unsigned long)getpagesize()) {
+	if (!si->si_addr) {
 		/* We must be extra caucious here because IP might be
 		   invalid */
 		if (get_signal_source_cu(ctx) == NULL)
