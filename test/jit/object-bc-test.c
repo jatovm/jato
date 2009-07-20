@@ -598,7 +598,8 @@ void test_convert_arraylength(void)
 	arraylen_exp = stack_pop(bb->mimic_stack);
 	assert_int_equals(EXPR_ARRAYLENGTH, expr_type(arraylen_exp));
 	assert_int_equals(J_REFERENCE, arraylen_exp->vm_type);
-	assert_ptr_equals(arrayref, to_expr(arraylen_exp->arraylength_ref));
+	assert_nullcheck_value_expr(J_REFERENCE, (unsigned long) class,
+				    arraylen_exp->arraylength_ref);
 
 	expr_put(arraylen_exp);
 	__free_simple_bb(bb);

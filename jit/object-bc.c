@@ -139,7 +139,7 @@ int convert_getfield(struct parse_context *ctx)
 	if (!fb)
 		return warn("field lookup failed"), -EINVAL;
 
-	objectref = stack_pop(ctx->bb->mimic_stack);
+	objectref = null_check_expr(stack_pop(ctx->bb->mimic_stack));
 
 	value = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!value)
@@ -165,7 +165,7 @@ int convert_putfield(struct parse_context *ctx)
 		return warn("field lookup failed"), -EINVAL;
 
 	src = stack_pop(ctx->bb->mimic_stack);
-	objectref = stack_pop(ctx->bb->mimic_stack);
+	objectref = null_check_expr(stack_pop(ctx->bb->mimic_stack));
 	dest = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!dest)
 		return -ENOMEM;
@@ -488,7 +488,7 @@ int convert_arraylength(struct parse_context *ctx)
 {
 	struct expression *arrayref, *arraylength_exp;
 
-	arrayref = stack_pop(ctx->bb->mimic_stack);
+	arrayref = null_check_expr(stack_pop(ctx->bb->mimic_stack));
 
 	arraylength_exp = arraylength_expr(arrayref);
 	if (!arraylength_exp)
