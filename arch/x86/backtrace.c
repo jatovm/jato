@@ -29,6 +29,7 @@
 #include <bfd.h>
 #include <execinfo.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,8 +53,9 @@ static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
 	return NULL;
 }
 
-static void show_function(void *addr)
+static bool show_exe_function(void *addr)
 {
+	bool ret;
 	const char *function_name;
 	bfd_vma symbol_offset;
 	bfd_vma symbol_start;
@@ -92,7 +94,7 @@ static void show_function(void *addr)
 		goto failed;
 
 	if (!bfd_find_nearest_line
-	    (abfd, sections, symbols, (unsigned long)addr, &filename,
+	    (abfd, sections, symbols, (unsigned long) addr, &filename,
 	     &function_name, &line))
 		goto failed;
 
@@ -101,21 +103,30 @@ static void show_function(void *addr)
 		goto failed;
 
 	symbol_start = bfd_asymbol_value(symbol);
-	symbol_offset = (unsigned long)addr - symbol_start;
+	symbol_offset = (unsigned long) addr - symbol_start;
 
-	printf(" [<%08lx>] %s+%llx (%s:%i)\n", (unsigned long) addr, function_name,
-	       (long long) symbol_offset, filename, line);
+	printf(" [<%08lx>] %s+%llx (%s:%i)\n", (unsigned long) addr,
+		function_name, (long long) symbol_offset, filename, line);
+	ret = true;
 
-  out:
+out:
 	free(symbols);
 
 	if (abfd)
 		bfd_close(abfd);
-	return;
+	return ret;
 
-  failed:
-	printf(" [<%08lx>] <unknown>\n", (unsigned long) addr);
+failed:
+	ret = false;
 	goto out;
+}
+
+static void show_function(void *addr)
+{
+	if (show_exe_function(addr))
+		return;
+
+	printf(" [<%08lx> <unknown>]\n", (unsigned long) addr);
 }
 
 /* Must be inline so this does not change the backtrace. */
