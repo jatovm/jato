@@ -139,15 +139,6 @@ public class ArrayTest extends TestCase {
         assertTrue(arr2.getClass().equals(big_arr[0][0].getClass()));
     }
 
-    public static void testArrayClone() {
-//        int a[] = new int[10];
-        int a[] = null;
-        int b[] = null;
-
-        b = (a != null ? (int[]) a.clone() : new int[0]);
-        assertNotNull(b);
-    }
-
     public static void main(String args[]) {
         testEmptyStaticArrayLength();
         testEmptyArrayLength();
@@ -164,6 +155,5 @@ public class ArrayTest extends TestCase {
         testReferenceElementLoadStore();
 
         testArrayClass();
-        testArrayClone();
     }
 }
