@@ -34,6 +34,8 @@ static enum machine_reg_type register_types[] = {
 	[REG_EDX] = REG_TYPE_GPR,
 	[REG_EDI] = REG_TYPE_GPR,
 	[REG_ESI] = REG_TYPE_GPR,
+	[REG_ESP] = REG_TYPE_GPR,
+	[REG_EBP] = REG_TYPE_GPR,
 
 	[REG_XMM0] = REG_TYPE_FPU,
 	[REG_XMM1] = REG_TYPE_FPU,
