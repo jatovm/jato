@@ -371,6 +371,12 @@ native_vmfile_is_directory(struct vm_object *dirpath)
 	char *dirpath_str;
 	struct stat buf;
 
+	if (!dirpath) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_from_native(sizeof(dirpath));
+		return false;
+	}
+
 	dirpath_str = vm_string_to_cstr(dirpath);
 	if (!dirpath_str)
 		return false;
