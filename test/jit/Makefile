@@ -55,10 +55,10 @@ OBJS = \
 	../../vm/stack.o \
 	../../vm/types.o \
 	../../vm/zalloc.o \
-	../arch-mmix/instruction.o \
-	../arch-mmix/register.o \
-	../arch-mmix/stack-frame.o \
-	../arch-mmix/use-def.o \
+	../../arch/mmix/instruction.o \
+	../../arch/mmix/register.o \
+	../../arch/mmix/stack-frame.o \
+	../../arch/mmix/use-def.o \
 	../jamvm/alloc-stub.o \
 	../jamvm/cast-stub.o \
 	../jamvm/resolve-stub.o \
@@ -91,5 +91,7 @@ OBJS = \
 	stack-slot-test.o \
 	tree-printer-test.o \
 	typeconv-bc-test.o
+
+CFLAGS += -I ../../arch/mmix/include
 
 include ../../scripts/build/test.mk
