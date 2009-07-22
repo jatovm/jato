@@ -477,6 +477,8 @@ static void emit_mov_reg_membase(struct buffer *buf, struct operand *src,
 				 struct operand *dest);
 static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
 				 struct operand *dest);
+static void __emit_mov_imm_membase(struct buffer *buf, long imm,
+				   enum machine_reg base, long disp);
 
 /*
  *	__encode_reg:	Encode register to be used in IA-32 instruction.
@@ -753,6 +755,16 @@ static void emit_mov_imm_thread_local_membase(struct buffer *buf,
 	emit_mov_imm_membase(buf, src, dest);
 }
 
+static void emit_mov_ip_thread_local_membase(struct buffer *buf,
+					     struct operand *dest)
+{
+	unsigned long addr
+		= (unsigned long)buffer_current(buf);
+
+	emit(buf, 0x65); /* GS segment override prefix */
+	__emit_mov_imm_membase(buf, addr, mach_reg(&dest->base_reg), dest->disp);
+}
+
 static void emit_mov_memdisp_reg(struct buffer *buf,
 				 struct operand *src,
 				 struct operand *dest)
@@ -787,18 +799,32 @@ static void emit_mov_imm_reg(struct buffer *buf, struct operand *src,
 	__emit_mov_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void __emit_mov_imm_membase(struct buffer *buf, long imm,
+				   enum machine_reg base, long disp)
+{
+	__emit_membase(buf, 0xc7, base, disp, 0);
+	emit_imm32(buf, imm);
+}
+
 static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
 				 struct operand *dest)
 {
-	__emit_membase(buf, 0xc7, mach_reg(&dest->base_reg), dest->disp, 0);
+	__emit_mov_imm_membase(buf, src->imm, mach_reg(&dest->base_reg),
+			       dest->disp);
+}
 
-	emit_imm32(buf, src->imm);
+static void __emit_mov_reg_membase(struct buffer *buf, enum machine_reg src,
+				   enum machine_reg base, unsigned long disp)
+{
+	__emit_membase(buf, 0x89, base, disp, __encode_reg(src));
 }
 
 static void
-emit_mov_reg_membase(struct buffer *buf, struct operand *src, struct operand *dest)
+emit_mov_reg_membase(struct buffer *buf, struct operand *src,
+		     struct operand *dest)
 {
-	__emit_membase(buf, 0x89, mach_reg(&dest->base_reg), dest->disp, encode_reg(&src->reg));
+	__emit_mov_reg_membase(buf, mach_reg(&src->reg),
+			       mach_reg(&dest->base_reg), dest->disp);
 }
 
 static void emit_mov_reg_memlocal(struct buffer *buf, struct operand *src,
@@ -1351,6 +1377,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_IP_THREAD_LOCAL_MEMBASE, emit_mov_ip_thread_local_membase, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_FREG, emit_mov_memlocal_freg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),

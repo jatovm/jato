@@ -133,28 +133,39 @@ static int print_tlmemdisp_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->dest);
 }
 
+static int print_tlmembase(struct string *str, struct operand *op)
+{
+	str_append(str, "gs:(");
+	print_membase(str, op);
+	return str_append(str, ")");
+}
+
+static int print_tlmemdisp(struct string *str, struct operand *op)
+{
+	str_append(str, "gs:(");
+	print_imm(str, op);
+	return str_append(str, ")");
+}
+
 static int print_reg_tlmemdisp(struct string *str, struct insn *insn)
 {
 	print_reg(str, &insn->src);
-	str_append(str, ", gs:(");
-	print_imm(str, &insn->dest);
-	return str_append(str, ")");
+	str_append(str, ", ");
+	return print_tlmemdisp(str, &insn->dest);
 }
 
 static int print_imm_tlmembase(struct string *str, struct insn *insn)
 {
 	print_imm(str, &insn->src);
-	str_append(str, ", gs:(");
-	print_membase(str, &insn->dest);
-	return str_append(str, ")");
+	str_append(str, ", ");
+	return print_tlmembase(str, &insn->dest);
 }
 
 static int print_reg_tlmembase(struct string *str, struct insn *insn)
 {
 	print_reg(str, &insn->src);
-	str_append(str, ", gs:(");
-	print_membase(str, &insn->dest);
-	return str_append(str, ")");
+	str_append(str, ", ");
+	return print_tlmembase(str, &insn->dest);
 }
 
 static int print_reg_membase(struct string *str, struct insn *insn)
@@ -461,6 +472,12 @@ static int print_mov_imm_tlmembase(struct string *str, struct insn *insn)
 	return print_imm_tlmembase(str, insn);
 }
 
+static int print_mov_ip_tlmembase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_tlmembase(str, &insn->operands[0]);
+}
+
 static int print_mov_reg_tlmembase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -717,6 +734,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_IMM_MEMBASE] = print_mov_imm_membase,
 	[INSN_MOV_IMM_REG] = print_mov_imm_reg,
 	[INSN_MOV_IMM_THREAD_LOCAL_MEMBASE] = print_mov_imm_tlmembase,
+	[INSN_MOV_IP_THREAD_LOCAL_MEMBASE] = print_mov_ip_tlmembase,
 	[INSN_MOV_MEMLOCAL_REG] = print_mov_memlocal_reg,
 	[INSN_MOV_MEMLOCAL_FREG] = print_mov_memlocal_freg,
 	[INSN_MOV_MEMBASE_REG] = print_mov_membase_reg,
