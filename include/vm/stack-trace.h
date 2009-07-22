@@ -37,10 +37,8 @@ int init_stack_trace_elem(struct stack_trace_elem *elem);
 int get_prev_stack_trace_elem(struct stack_trace_elem *elem);
 int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class);
 int get_stack_trace_depth(struct stack_trace_elem *elem);
-struct vm_object *get_stack_trace(struct stack_trace_elem *);
+struct vm_object *get_stack_trace(void);
 struct vm_object *get_stack_trace_from_ctx(void *ctx);
-struct vm_object *convert_stack_trace(struct vm_object *vmthrowable);
-struct vm_object *new_stack_trace_element(struct vm_method *, unsigned long);
 struct vm_object * __vm_native native_vmthrowable_fill_in_stack_trace(struct vm_object *);
 struct vm_object * __vm_native native_vmthrowable_get_stack_trace(struct vm_object *, struct vm_object *);
 

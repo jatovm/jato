@@ -172,7 +172,8 @@ int init_stack_trace_elem(struct stack_trace_elem *elem)
  *
  * Returns 0 on success and -1 when bottom of stack trace reached.
  */
-int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class)
+int skip_frames_from_class(struct stack_trace_elem *elem,
+			   struct vm_class *class)
 {
 	struct compilation_unit *cu;
 
@@ -212,26 +213,31 @@ int get_stack_trace_depth(struct stack_trace_elem *elem)
 }
 
 /**
- * get_stack_trace - creates instance of VMThrowable with
- *                   backtrace filled in.
- *
- * @st_elem: top most stack trace element.
+ * get_intermediate_stack_trace - returns an array with intermediate
+ *   java stack trace. Each stack trace element is described by two
+ *   consequtive elements: a pointer to struct vm_method and bytecode
+ *   offset.
  */
-struct vm_object *get_stack_trace(struct stack_trace_elem *st_elem)
+static struct vm_object *get_intermediate_stack_trace(void)
 {
+	struct stack_trace_elem st_elem;
 	struct compilation_unit *cu;
-	struct vm_object *vmstate;
 	struct vm_object *array;
 	int array_type;
 	int depth;
 	int i;
 
-	depth = get_stack_trace_depth(st_elem);
-	if (depth == 0)
+	if (init_stack_trace_elem(&st_elem))
 		return NULL;
 
-	vmstate = vm_object_alloc(vm_java_lang_VMThrowable);
-	if (!vmstate)
+	if (skip_frames_from_class(&st_elem, vm_java_lang_VMThrowable))
+		return NULL;
+
+	if (skip_frames_from_class(&st_elem, vm_java_lang_Throwable))
+		return NULL;
+
+	depth = get_stack_trace_depth(&st_elem);
+	if (depth == 0)
 		return NULL;
 
 	array_type = sizeof(unsigned long) == 4 ? T_INT : T_LONG;
@@ -243,11 +249,11 @@ struct vm_object *get_stack_trace(struct stack_trace_elem *st_elem)
 	do {
 		unsigned long bc_offset;
 
-		cu = jit_lookup_cu(st_elem->addr);
+		cu = jit_lookup_cu(st_elem.addr);
 		if (!cu) {
 			fprintf(stderr,
 				"%s: no compilation unit mapping for %p\n",
-				__func__, (void*)st_elem->addr);
+				__func__, (void*)st_elem.addr);
 			return NULL;
 		}
 
@@ -255,15 +261,13 @@ struct vm_object *get_stack_trace(struct stack_trace_elem *st_elem)
 			bc_offset = BC_OFFSET_UNKNOWN;
 		else
 			bc_offset = native_ptr_to_bytecode_offset(cu,
-				(unsigned char*)st_elem->addr);
+						(unsigned char*)st_elem.addr);
 
 		array_set_field_ptr(array, i++, cu->method);
 		array_set_field_ptr(array, i++, (void*)bc_offset);
-	} while (get_prev_stack_trace_elem(st_elem) == 0);
+	} while (get_prev_stack_trace_elem(&st_elem) == 0);
 
-	field_set_object(vmstate, vm_java_lang_VMThrowable_vmdata, array);
-
-	return vmstate;
+	return array;
 }
 
 /**
@@ -271,7 +275,7 @@ struct vm_object *get_stack_trace(struct stack_trace_elem *st_elem)
  *     java.lang.StackTraceElement for given method and bytecode
  *     offset.
  */
-struct vm_object *
+static struct vm_object *
 new_stack_trace_element(struct vm_method *mb, unsigned long bc_offset)
 {
 	struct vm_object *method_name;
@@ -308,23 +312,20 @@ new_stack_trace_element(struct vm_method *mb, unsigned long bc_offset)
 }
 
 /**
- * convert_stack_trace - returns java.lang.StackTraceElement[] array
- *     filled in using stack trace stored in given VMThrowable
- *     instance.
+ * convert_intermediate_stack_trace - returns
+ *     java.lang.StackTraceElement[] array filled in using data from
+ *     given intermediate stack trace array.
  *
- * @vmthrowable: instance of VMThrowable to get stack trace from.
+ * @array: intermediate stack trace array. Should have the same format
+ *     as the one returned by get_intermediate_stack_trace().
  */
-struct vm_object *convert_stack_trace(struct vm_object *vmthrowable)
+static struct vm_object *
+convert_intermediate_stack_trace(struct vm_object *array)
 {
 	struct vm_object *ste_array;
-	struct vm_object *array;
 	int depth;
 	int i;
 	int j;
-
-	array = field_get_object(vmthrowable, vm_java_lang_VMThrowable_vmdata);
-	if (!array)
-		return NULL;
 
 	depth = array->array_length;
 
@@ -351,30 +352,52 @@ struct vm_object *convert_stack_trace(struct vm_object *vmthrowable)
 	return ste_array;
 }
 
+/**
+ * get_stack_trace - returns an array of java.lang.StackTraceElement
+ *   representing the current java call stack.
+ */
+struct vm_object *get_stack_trace()
+{
+	struct vm_object *intermediate;
+
+	intermediate = get_intermediate_stack_trace();
+	if (!intermediate)
+		return NULL;
+
+	return convert_intermediate_stack_trace(intermediate);
+}
+
 struct vm_object * __vm_native
 native_vmthrowable_fill_in_stack_trace(struct vm_object *throwable)
 {
-	struct stack_trace_elem st_elem;
+	struct vm_object *vmstate;
+	struct vm_object *array;
 
-	if (init_stack_trace_elem(&st_elem))
+	vmstate = vm_object_alloc(vm_java_lang_VMThrowable);
+	if (!vmstate)
 		return NULL;
 
-	if (skip_frames_from_class(&st_elem, vm_java_lang_VMThrowable))
+	array = get_intermediate_stack_trace();
+	if (!array)
 		return NULL;
 
-	if (skip_frames_from_class(&st_elem, vm_java_lang_Throwable))
-		return NULL;
+	field_set_object(vmstate, vm_java_lang_VMThrowable_vmdata, array);
 
-	return get_stack_trace(&st_elem);
+	return vmstate;
 }
 
 struct vm_object * __vm_native
 native_vmthrowable_get_stack_trace(struct vm_object *this,
-			     struct vm_object *throwable)
+				   struct vm_object *throwable)
 {
 	struct vm_object *result;
+	struct vm_object *array;
 
-	result = convert_stack_trace(this);
+	array = field_get_object(this, vm_java_lang_VMThrowable_vmdata);
+	if (!array)
+		return NULL;
+
+	result = convert_intermediate_stack_trace(array);
 
 	if (exception_occurred())
 		throw_from_native(sizeof(struct vm_object *) * 2);
