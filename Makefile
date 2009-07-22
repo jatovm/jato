@@ -170,7 +170,7 @@ DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not imp
 WARNINGS	+= -Wsign-compare -Wundef -Wall -Wstrict-prototypes -Wmissing-declarations -Wmissing-prototypes -Wformat -Wformat-security
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
-OPTIMIZATIONS	+= -Os
+OPTIMIZATIONS	+= -Os -fno-delete-null-pointer-checks
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -Icafebabe/include -include $(ARCH_CONFIG)
