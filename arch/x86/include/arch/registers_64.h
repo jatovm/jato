@@ -42,6 +42,7 @@ enum machine_reg {
 #define GPR_VM_TYPE	J_LONG
 
 const char *reg_name(enum machine_reg reg);
+enum machine_reg_type reg_type(enum machine_reg reg);
 
 static inline bool is_caller_saved_reg(enum machine_reg reg)
 {
