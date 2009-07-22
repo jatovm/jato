@@ -53,14 +53,17 @@ OBJS = \
 	../../lib/list.o \
 	../../lib/radix-tree.o \
 	../../lib/string.o \
+	../../vm/call.o \
 	../../vm/class.o \
 	../../vm/die.o \
 	../../vm/field.o \
 	../../vm/guard-page.o \
 	../../vm/itable.o \
+	../../vm/jni-interface.o \
 	../../vm/method.o \
 	../../vm/object.o \
 	../../vm/stack.o \
+	../../vm/stack-trace.o \
 	../../vm/static.o \
 	../../vm/types.o \
 	../../vm/utf8.o \

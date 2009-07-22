@@ -24,14 +24,17 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
+#include "vm/guard-page.h"
+#include "vm/jni.h"
 #include "vm/object.h"
 #include "vm/method.h"
 #include "vm/natives.h"
 #include "vm/object.h"
-#include "vm/stack-trace.h"
 #include "vm/preload.h"
+#include "vm/stack-trace.h"
 #include "vm/system.h"
 
 #include "jit/bc-offset-mapping.h"
@@ -41,6 +44,16 @@
 
 #include <malloc.h>
 #include <stdio.h>
+
+void *vm_native_stack_offset_guard;
+void *vm_native_stack_badoffset;
+void *jni_stack_offset_guard;
+void *jni_stack_badoffset;
+
+__thread struct jni_stack_entry jni_stack[JNI_STACK_SIZE];
+__thread unsigned long jni_stack_offset;
+__thread struct vm_native_stack_entry vm_native_stack[VM_NATIVE_STACK_SIZE];
+__thread unsigned long vm_native_stack_offset;
 
 __thread struct native_stack_frame *bottom_stack_frame;
 
@@ -59,6 +72,23 @@ void init_stack_trace_printing(void)
 	struct vm_method *throwable_tostring_mb;
 	struct vm_method *throwable_stacktracestring_mb;
 
+	vm_native_stack_offset = 0;
+	jni_stack_offset = 0;
+
+	/* Initialize JNI and VM native stacks' offset guards */
+	unsigned long valid_size;
+
+	valid_size = VM_NATIVE_STACK_SIZE *
+		sizeof(struct vm_native_stack_entry);
+	vm_native_stack_offset_guard = alloc_offset_guard(valid_size, 1);
+	vm_native_stack_badoffset =
+		valid_size + vm_native_stack_offset_guard;
+
+	valid_size = JNI_STACK_SIZE * sizeof(struct jni_stack_entry);
+	jni_stack_offset_guard = alloc_offset_guard(valid_size, 1);
+	jni_stack_badoffset = valid_size + jni_stack_offset_guard;
+
+	/* Preload methods */
 	ste_init_mb = vm_class_get_method_recursive(
 		vm_java_lang_StackTraceElement,
 		"<init>",
@@ -83,17 +113,126 @@ void init_stack_trace_printing(void)
 		error("initialization failed");
 }
 
+static bool jni_stack_is_full(void)
+{
+	return jni_stack_index() == JNI_STACK_SIZE;
+}
+
+static bool vm_native_stack_is_full(void)
+{
+	return vm_native_stack_index() == VM_NATIVE_STACK_SIZE;
+}
+
+static inline struct jni_stack_entry *new_jni_stack_entry(void)
+{
+	struct jni_stack_entry *tr = (void*)jni_stack + jni_stack_offset;
+
+	jni_stack_offset += sizeof(struct jni_stack_entry);
+	return tr;
+}
+
+static inline struct vm_native_stack_entry *new_vm_native_stack_entry(void)
+{
+	struct vm_native_stack_entry *tr = (void*)vm_native_stack +
+		vm_native_stack_offset;
+
+	vm_native_stack_offset += sizeof(struct vm_native_stack_entry);
+	return tr;
+}
+
+int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
+		 struct vm_method *method)
+{
+	if (jni_stack_is_full()) {
+		struct vm_object *e = vm_alloc_stack_overflow_error();
+		if (!e)
+			error("failed to allocate exception");
+
+		signal_exception(e);
+		return -1;
+	}
+
+	struct jni_stack_entry *tr = new_jni_stack_entry();
+
+	tr->caller_frame = caller_frame;
+	tr->call_site_addr = call_site_addr;
+	tr->method = method;
+	return 0;
+}
+
+int vm_enter_vm_native(void *target, void *stack_ptr)
+{
+	if (vm_native_stack_is_full()) {
+		struct vm_object *e = vm_alloc_stack_overflow_error();
+		if (!e)
+			error("failed to allocate exception");
+
+		signal_exception(e);
+		return -1;
+	}
+
+	struct vm_native_stack_entry *tr = new_vm_native_stack_entry();
+
+	tr->stack_ptr = stack_ptr;
+	tr->target = target;
+	return 0;
+}
+
+void vm_leave_jni()
+{
+	jni_stack_offset -= sizeof(struct jni_stack_entry);
+}
+
+void vm_leave_vm_native()
+{
+	vm_native_stack_offset -= sizeof(struct vm_native_stack_entry);
+}
+
 /**
- * get_caller_stack_trace_elem - makes @elem to point to the stack
- *     trace element corresponding to the caller of given element.
+ * get_caller_stack_trace_elem - sets @elem to the previous element.
  *
- * Returns 0 on success and -1 when bottom of stack trace reached.
+ * Returns 0 on success and -1 when bottom of stack is reached.
  */
 static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
 {
 	unsigned long new_addr;
 	unsigned long ret_addr;
 	void *new_frame;
+
+	/* If previous element was a JNI call then we move to the JNI
+	 * caller's frame. We use the JNI stack_entry info to get the
+	 * frame because we don't trust JNI methods's frame
+	 * pointers. */
+	if (elem->type == STACK_TRACE_ELEM_TYPE_JNI) {
+		struct jni_stack_entry *tr =
+			&jni_stack[elem->jni_stack_index--];
+
+		new_frame = tr->caller_frame;
+		new_addr = tr->call_site_addr;
+		goto out;
+	}
+
+	/* Check if we hit the JNI interface frame */
+	if (elem->jni_stack_index >= 0) {
+		struct jni_stack_entry *tr =
+			&jni_stack[elem->jni_stack_index];
+
+		if (tr->jni_interface_frame == elem->frame) {
+			elem->type = STACK_TRACE_ELEM_TYPE_JNI;
+			elem->is_native = false;
+
+			/*
+			 * We don't need to lock the compilation_unit
+			 * because when JNI method is present in stack
+			 * trace it means that it has been resolved
+			 * and ->native_ptr can not change after that.
+			 */
+			elem->addr = (unsigned long)
+				tr->method->compilation_unit->native_ptr;
+			elem->frame = NULL;
+			return 0;
+		}
+	}
 
 	if (elem->is_native) {
 		struct native_stack_frame *frame;
@@ -121,9 +260,39 @@ static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
 	if (new_frame == bottom_stack_frame)
 		return -1;
 
-	elem->is_trampoline = elem->is_native &&
-		called_from_jit_trampoline(elem->frame);
-	elem->is_native = is_native(new_addr) || elem->is_trampoline;
+ out:
+	/* Check if we hit the VM native caller frame */
+	if (elem->vm_native_stack_index >= 0) {
+		struct vm_native_stack_entry *tr =
+			&vm_native_stack[elem->vm_native_stack_index];
+
+		if (tr->stack_ptr - sizeof(struct native_stack_frame)
+		    == new_frame)
+		{
+			elem->type = STACK_TRACE_ELEM_TYPE_VM_NATIVE;
+			elem->is_native = true;
+			new_addr = (unsigned long) tr->target;
+			--elem->vm_native_stack_index;
+
+			goto out2;
+		}
+	}
+
+	/* Check if previous elemement was called from JIT trampoline. */
+	if (elem->is_native && called_from_jit_trampoline(elem->frame)) {
+		elem->type = STACK_TRACE_ELEM_TYPE_TRAMPOLINE;
+		elem->is_native = true;
+		goto out2;
+	}
+
+	elem->is_native = is_native(new_addr);
+
+	if (elem->is_native)
+		elem->type = STACK_TRACE_ELEM_TYPE_OTHER;
+	else
+		elem->type = STACK_TRACE_ELEM_TYPE_JIT;
+
+ out2:
 	elem->addr = new_addr;
 	elem->frame = new_frame;
 
@@ -139,9 +308,8 @@ static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
  */
 int get_prev_stack_trace_elem(struct stack_trace_elem *elem)
 {
-	while (get_caller_stack_trace_elem(elem) == 0)  {
-		if (is_vm_native(elem->addr) ||
-		    !(elem->is_trampoline || elem->is_native))
+	while (get_caller_stack_trace_elem(elem) == 0) {
+		if (elem->type < STACK_TRACE_ELEM_TYPE_OTHER)
 			return 0;
 	}
 
@@ -157,9 +325,12 @@ int get_prev_stack_trace_elem(struct stack_trace_elem *elem)
 int init_stack_trace_elem(struct stack_trace_elem *elem)
 {
 	elem->is_native = true;
-	elem->is_trampoline = false;
+	elem->type = STACK_TRACE_ELEM_TYPE_OTHER;
 	elem->addr = (unsigned long)&init_stack_trace_elem;
 	elem->frame = __builtin_frame_address(0);
+
+	elem->vm_native_stack_index = vm_native_stack_index() - 1;
+	elem->jni_stack_index = jni_stack_index() - 1;
 
 	return get_prev_stack_trace_elem(elem);
 }
@@ -630,4 +801,29 @@ error:
 		free_str(str);
 
 	vm_print_exception_description(exception);
+}
+
+/**
+ * Creates an instance of StackOverflowError. We create exception
+ * object and fill stack trace in manually because throwable
+ * constructor calls fillInStackTrace which can cause StackOverflowError
+ * when VM native stack is full.
+ */
+struct vm_object *vm_alloc_stack_overflow_error(void)
+
+{	struct vm_object *stacktrace;
+	struct vm_object *obj;
+
+	obj = vm_object_alloc(vm_java_lang_StackOverflowError);
+	if (!obj) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	stacktrace = get_stack_trace();
+	if (stacktrace)
+		vm_call_method(vm_java_lang_Throwable_setStackTrace, obj,
+			       stacktrace);
+
+	return obj;
 }

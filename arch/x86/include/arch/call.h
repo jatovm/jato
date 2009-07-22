@@ -24,6 +24,41 @@
 		  : "%ecx", "%edi", "cc"				\
 								); \
 	}
+
+/**
+ * This calls a VM native function with call arguments copied from
+ * @args array. The array contains @args_count elements of machine
+ * word size. The @target must be a pointer to a VM function. Call
+ * result will be stored in @result.
+ */
+#define vm_native_call(target, args, args_count, result) {		\
+		__asm__ volatile (					\
+		  "movl %%ebx, %%ecx \n"				\
+		  "shl $2, %%ebx \n"					\
+		  "subl %%ebx, %%esp \n"				\
+		  "movl %%esp, %%edi \n"				\
+		  "cld \n"						\
+		  "rep movsd \n"					\
+		  "movl %%ebx, %%esi \n"				\
+									\
+		  "pushl %%esp \n"					\
+		  "pushl %3 \n"						\
+		  "call vm_enter_vm_native \n"				\
+		  "addl $8, %%esp \n"					\
+		  "test %%eax, %%eax \n"				\
+		  "jnz 1f \n"						\
+									\
+		  "call * -8(%%esp)\n"					\
+		  "movl %%eax, %0 \n"					\
+									\
+		  "call vm_leave_vm_native \n"				\
+									\
+		  "1: addl %%esi, %%esp \n"				\
+		  : "=r" (result)					\
+		  : "b" (args_count), "S"(args), "r"(target)		\
+		  : "%ecx", "%edi", "cc"				\
+		); \
+	}
 #else
  #error NOT IMPLEMENTED
 #endif

@@ -59,6 +59,7 @@ struct vm_class *vm_java_lang_RuntimeException;
 struct vm_class *vm_java_lang_ExceptionInInitializerError;
 struct vm_class *vm_java_lang_NoSuchFieldError;
 struct vm_class *vm_java_lang_NoSuchMethodError;
+struct vm_class *vm_java_lang_StackOverflowError;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -91,6 +92,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/UnsatisfiedLinkError", &vm_java_lang_UnsatisfiedLinkError },
 	{ "java/lang/NoSuchFieldError", &vm_java_lang_NoSuchFieldError },
 	{ "java/lang/NoSuchMethodError", &vm_java_lang_NoSuchMethodError },
+	{ "java/lang/StackOverflowError", &vm_java_lang_StackOverflowError },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -139,6 +141,7 @@ struct vm_method *vm_java_lang_Throwable_initCause;
 struct vm_method *vm_java_lang_Throwable_getCause;
 struct vm_method *vm_java_lang_Throwable_toString;
 struct vm_method *vm_java_lang_Throwable_getStackTrace;
+struct vm_method *vm_java_lang_Throwable_setStackTrace;
 struct vm_method *vm_java_lang_StackTraceElement_getFileName;
 struct vm_method *vm_java_lang_StackTraceElement_getClassName;
 struct vm_method *vm_java_lang_StackTraceElement_getMethodName;
@@ -170,6 +173,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"getStackTrace",
 		"()[Ljava/lang/StackTraceElement;",
 		&vm_java_lang_Throwable_getStackTrace,
+	},
+	{
+		&vm_java_lang_Throwable,
+		"setStackTrace",
+		"([Ljava/lang/StackTraceElement;)V",
+		&vm_java_lang_Throwable_setStackTrace,
 	},
 	{
 		&vm_java_lang_Throwable,

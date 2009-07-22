@@ -29,6 +29,8 @@
 #include "vm/preload.h"
 #include "vm/backtrace.h"
 #include "vm/signal.h"
+#include "vm/stack-trace.h"
+#include "vm/call.h"
 #include "vm/class.h"
 #include "vm/object.h"
 #include "vm/jni.h"
@@ -72,6 +74,19 @@ static unsigned long throw_arithmetic_exception(unsigned long src_addr)
 static unsigned long throw_null_pointer_exception(unsigned long src_addr)
 {
 	signal_new_exception(vm_java_lang_NullPointerException, NULL);
+	return throw_from_signal_bh(src_addr);
+}
+
+static unsigned long throw_stack_overflow_error(unsigned long src_addr)
+{
+	struct vm_object *obj;
+
+	obj = vm_alloc_stack_overflow_error();
+	if (!obj)
+		error("failed to allocate instance of StackOverflowError.");
+
+	signal_exception(obj);
+
 	return throw_from_signal_bh(src_addr);
 }
 
@@ -134,6 +149,12 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	/* Static field access */
 	if (si->si_addr == static_guard_page) {
 		install_signal_bh(ctx, &static_field_signal_bh);
+		return;
+	}
+
+	if (si->si_addr == jni_stack_badoffset ||
+	    si->si_addr == vm_native_stack_badoffset) {
+		install_signal_bh(ctx, throw_stack_overflow_error);
 		return;
 	}
 

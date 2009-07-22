@@ -52,9 +52,12 @@
 	if (!vm_object_is_instance_of((x), vm_java_lang_Class))		\
 		return NULL;
 
-static jclass vm_jni_find_class(struct vm_jni_env *env, const char *name)
+static jclass
+vm_jni_find_class(struct vm_jni_env *env, const char *name)
 {
 	struct vm_class *class;
+
+	vm_enter_jni_interface();
 
 	class = classloader_load(name);
 	if (!class) {
@@ -70,11 +73,14 @@ static jclass vm_jni_find_class(struct vm_jni_env *env, const char *name)
 	return class->object;
 }
 
-static jmethodID vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz,
-			       const char *name, const char *sig)
+static jmethodID
+vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz, const char *name,
+		     const char *sig)
 {
 	struct vm_method *mb;
 	struct vm_class *class;
+
+	vm_enter_jni_interface();
 
 	check_null(clazz);
 	check_class_object(clazz);
@@ -96,11 +102,14 @@ static jmethodID vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz,
 	return mb;
 }
 
-static jfieldID vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz,
-			     const char *name, const char *sig)
+static jfieldID
+vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz, const char *name,
+		    const char *sig)
 {
 	struct vm_field *fb;
 	struct vm_class *class;
+
+	vm_enter_jni_interface();
 
 	check_null(clazz);
 	check_class_object(clazz);
@@ -122,11 +131,14 @@ static jfieldID vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz,
 	return fb;
 }
 
-static jmethodID vm_jni_get_static_method_id(struct vm_jni_env *env,
-	jclass clazz, const char *name, const char *sig)
+static jmethodID
+vm_jni_get_static_method_id(struct vm_jni_env *env, jclass clazz,
+			    const char *name, const char *sig)
 {
 	struct vm_method *mb;
 	struct vm_class *class;
+
+	vm_enter_jni_interface();
 
 	check_null(clazz);
 
@@ -147,10 +159,13 @@ static jmethodID vm_jni_get_static_method_id(struct vm_jni_env *env,
 	return mb;
 }
 
-static const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
-					 jboolean *is_copy)
+static const jbyte*
+vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
+			    jboolean *is_copy)
 {
 	jbyte *array;
+
+	vm_enter_jni_interface();
 
 	if (!string)
 		return NULL;
@@ -165,14 +180,20 @@ static const jbyte* vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject 
 	return array;
 }
 
-static void vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
-				 const char *utf)
+static void
+vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
+			    const char *utf)
 {
+	vm_enter_jni_interface();
+
 	free((char *)utf);
 }
 
-static jint vm_jni_throw(struct vm_jni_env *env, jthrowable exception)
+static jint
+vm_jni_throw(struct vm_jni_env *env, jthrowable exception)
 {
+	vm_enter_jni_interface();
+
 	if (!vm_object_is_instance_of(exception, vm_java_lang_Throwable))
 		return -1;
 
@@ -180,10 +201,12 @@ static jint vm_jni_throw(struct vm_jni_env *env, jthrowable exception)
 	return 0;
 }
 
-static jint vm_jni_throw_new(struct vm_jni_env *env, jclass clazz,
-			     const char *message)
+static jint
+vm_jni_throw_new(struct vm_jni_env *env, jclass clazz, const char *message)
 {
 	struct vm_class *class;
+
+	vm_enter_jni_interface();
 
 	if (!clazz)
 		return -1;
@@ -198,47 +221,65 @@ static jint vm_jni_throw_new(struct vm_jni_env *env, jclass clazz,
 
 static jthrowable vm_jni_exception_occurred(struct vm_jni_env *env)
 {
+	vm_enter_jni_interface();
+
 	return exception_occurred();
 }
 
 static void vm_jni_exception_describe(struct vm_jni_env *env)
 {
+	vm_enter_jni_interface();
+
 	if (exception_occurred())
 		vm_print_exception(exception_occurred());
 }
 
 static void vm_jni_exception_clear(struct vm_jni_env *env)
 {
+	vm_enter_jni_interface();
+
 	clear_exception();
 }
 
-static void vm_jni_fatal_error(struct vm_jni_env *env, const char *msg)
+static void
+vm_jni_fatal_error(struct vm_jni_env *env, const char *msg)
 {
+	vm_enter_jni_interface();
+
 	die("%s", msg);
 }
 
-static void vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
-					   jmethodID methodID, ...)
+static void
+vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
+			       jmethodID methodID, ...)
 {
 	va_list args;
+
+	vm_enter_jni_interface();
 
 	va_start(args, methodID);
 	vm_call_method_v(methodID, args);
 	va_end(args);
 }
 
+extern void print_trace(void);
+
 static void
 vm_jni_call_static_void_method_v(struct vm_jni_env *env, jclass clazz,
 				 jmethodID methodID, va_list args)
 {
+	vm_enter_jni_interface();
 	vm_call_method_v(methodID, args);
 }
 
-static jobject vm_jni_call_static_object_method(struct vm_jni_env *env,
-					jclass clazz, jmethodID methodID, ...)
+static jobject
+vm_jni_call_static_object_method(struct vm_jni_env *env, jclass clazz,
+				 jmethodID methodID, ...)
 {
 	jobject result;
 	va_list args;
+
+	vm_enter_jni_interface();
 
 	va_start(args, methodID);
 	result = (jobject) vm_call_method_v(methodID, args);
@@ -251,14 +292,19 @@ static jobject
 vm_jni_call_static_object_method_v(struct vm_jni_env *env, jclass clazz,
 				   jmethodID methodID, va_list args)
 {
+	vm_enter_jni_interface();
+
 	return (jobject) vm_call_method_v(methodID, args);
 }
 
-static jbyte vm_jni_call_static_byte_method(struct vm_jni_env *env,
-				jclass clazz, jmethodID methodID, ...)
+static jbyte
+vm_jni_call_static_byte_method(struct vm_jni_env *env, jclass clazz,
+			       jmethodID methodID, ...)
 {
 	jbyte result;
 	va_list args;
+
+	vm_enter_jni_interface();
 
 	va_start(args, methodID);
 	result = (jbyte) vm_call_method_v(methodID, args);
@@ -271,6 +317,8 @@ static jbyte
 vm_jni_call_static_byte_method_v(struct vm_jni_env *env, jclass clazz,
 				 jmethodID methodID, va_list args)
 {
+	vm_enter_jni_interface();
+
 	return (jbyte) vm_call_method_v(methodID, args);
 }
 

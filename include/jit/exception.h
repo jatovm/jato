@@ -12,6 +12,7 @@
 
 #include "vm/die.h"
 #include "vm/method.h"
+#include "vm/stack-trace.h"
 #include "vm/vm.h"
 
 struct cafebabe_code_attribute_exception;
@@ -97,16 +98,18 @@ static inline struct vm_object *exception_occurred(void)
 	void *eh;							\
 									\
 	native_ptr = __builtin_return_address(0) - 1;			\
-	if (is_native((unsigned long)native_ptr))			\
-		die("must not be called from not-JIT code");		\
+	if (!is_native((unsigned long)native_ptr)) {			\
+		frame = __builtin_frame_address(1);			\
 									\
-	frame = __builtin_frame_address(1);				\
+		if (vm_native_stack_get_frame() == frame)		\
+			vm_leave_vm_native();				\
 									\
-	cu = jit_lookup_cu((unsigned long)native_ptr);	\
-	eh = throw_exception_from(cu, frame, native_ptr);		\
+		cu = jit_lookup_cu((unsigned long)native_ptr);		\
+		eh = throw_exception_from(cu, frame, native_ptr);	\
 									\
-	__override_return_address(eh);					\
-	__cleanup_args(args_size);					\
+		__override_return_address(eh);				\
+		__cleanup_args(args_size);				\
+	}								\
 })
 
 #endif /* JATO_JIT_EXCEPTION_H */
