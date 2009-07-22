@@ -50,9 +50,6 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 
 	method = cu->method;
 
-	if (method->vm_native_ptr)
-		return method->vm_native_ptr;
-
 	class_name  = method->class->name;
 	method_name = method->name;
 	method_type = method->type;
@@ -60,6 +57,10 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 	ret = vm_jni_lookup_method(class_name, method_name, method_type);
 	if (ret) {
 		add_cu_mapping((unsigned long)ret, cu);
+
+		cu->native_ptr = ret;
+		cu->is_compiled = true;
+
 		return ret;
 	}
 
@@ -82,9 +83,6 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
 {
-	if (cu->is_compiled)
-		return buffer_ptr(cu->objcode);
-
 	if (compile(cu)) {
 		assert(exception_occurred() != NULL);
 
@@ -114,7 +112,11 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 	pthread_mutex_lock(&cu->mutex);
 
-	if (vm_method_is_native(cu->method))
+	if (cu->is_compiled)
+		/* XXX: even if method is compiled we steel might need
+		 * to fixup some call sites. */
+		ret = cu->native_ptr;
+	else if (vm_method_is_native(cu->method))
 		ret = jit_native_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);

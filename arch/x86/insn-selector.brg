@@ -2024,25 +2024,16 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	struct insn *call_insn;
 	void *target;
 
-	if (pthread_mutex_trylock(&cu->mutex)) {
-		/*
-		 * This is a recursive method invocation. Threfore, we are
-		 * already holding cu->mutex here because we entered
-		 * instruction selection through jit_magic_trampoline().
-		 */
-		is_compiled = false;
+	/*
+	 * We can't use vm_method_call_ptr() here because we
+	 * later add fixup sites depending on whether target is
+	 * trampoline or native.
+	 */
+	is_compiled = cu->is_compiled;
+	if (is_compiled)
+		target = vm_method_native_ptr(method);
+	else
 		target = vm_method_trampoline_ptr(method);
-	} else {
-		is_compiled = cu->is_compiled;
-
-		if (is_compiled)
-			target = vm_method_native_ptr(method);
-		else
-			target = vm_method_trampoline_ptr(method);
-
-		pthread_mutex_unlock(&cu->mutex);
-	}
-
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 	select_insn(s, tree, call_insn);

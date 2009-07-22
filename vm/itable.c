@@ -144,7 +144,7 @@ static void *itable_create_conflict_resolver(struct vm_class *vmc,
 		struct itable_entry *entry = list_first_entry(methods,
 			struct itable_entry, node);
 
-		return vm_method_trampoline_ptr(entry->c_method);
+		return vm_method_call_ptr(entry->c_method);
 	}
 
 	unsigned int nr_entries = 0;

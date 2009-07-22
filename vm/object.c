@@ -357,7 +357,7 @@ struct vm_object *new_exception(struct vm_class *vmc, const char *message)
 	if (!mb)
 		error("constructor not found");
 
-	init = vm_method_trampoline_ptr(mb);
+	init = vm_method_call_ptr(mb);
 	init(obj, message_str);
 
 	if (exception_occurred())

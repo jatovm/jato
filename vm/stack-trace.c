@@ -72,10 +72,10 @@ void init_stack_trace_printing(void)
 		vm_class_get_method_recursive(vm_java_lang_Throwable,
 			"stackTraceString", "()Ljava/lang/String;");
 
-	ste_init = vm_method_trampoline_ptr(ste_init_mb);
-	throwable_tostring = vm_method_trampoline_ptr(throwable_tostring_mb);
+	ste_init = vm_method_call_ptr(ste_init_mb);
+	throwable_tostring = vm_method_call_ptr(throwable_tostring_mb);
 	throwable_stacktracestring =
-		vm_method_trampoline_ptr(throwable_stacktracestring_mb);
+		vm_method_call_ptr(throwable_stacktracestring_mb);
 
 	if (!ste_init_mb ||
 	    !throwable_tostring ||
@@ -405,7 +405,7 @@ static void
 vm_throwable_to_string(struct vm_object *this, struct string *str)
 {
 	vm_java_lang_Throwable_toString_fn toString =
-		vm_method_trampoline_ptr(vm_java_lang_Throwable_toString);
+		vm_method_call_ptr(vm_java_lang_Throwable_toString);
 	struct vm_object *string_obj;
 
 	string_obj = toString(this);
@@ -434,15 +434,15 @@ static void vm_stack_trace_element_to_string(struct vm_object *elem,
 	int line_number;
 	bool is_native;
 
-	getMethodName = vm_method_trampoline_ptr(
+	getMethodName = vm_method_call_ptr(
 		vm_java_lang_StackTraceElement_getMethodName);
-	getFileName = vm_method_trampoline_ptr(
+	getFileName = vm_method_call_ptr(
 		vm_java_lang_StackTraceElement_getFileName);
-	getClassName = vm_method_trampoline_ptr(
+	getClassName = vm_method_call_ptr(
 		vm_java_lang_StackTraceElement_getClassName);
-	getLineNumber = vm_method_trampoline_ptr(
+	getLineNumber = vm_method_call_ptr(
 		vm_java_lang_StackTraceElement_getLineNumber);
-	isNativeMethod = vm_method_trampoline_ptr(
+	isNativeMethod = vm_method_call_ptr(
 		vm_java_lang_StackTraceElement_isNativeMethod);
 
 	file_name = getFileName(elem);
@@ -520,11 +520,11 @@ vm_throwable_print_stack_trace(struct vm_object *this, struct string *str)
 	struct vm_object *stack;
 
 	getCause =
-		vm_method_trampoline_ptr(vm_java_lang_Throwable_getCause);
+		vm_method_call_ptr(vm_java_lang_Throwable_getCause);
 	getStackTrace =
-		vm_method_trampoline_ptr(vm_java_lang_Throwable_getStackTrace);
+		vm_method_call_ptr(vm_java_lang_Throwable_getStackTrace);
 	ste_equals =
-		vm_method_trampoline_ptr(vm_java_lang_StackTraceElement_equals);
+		vm_method_call_ptr(vm_java_lang_StackTraceElement_equals);
 
 	stack = getStackTrace(this);
 	vm_throwable_stack_trace(this, str, stack, 0);

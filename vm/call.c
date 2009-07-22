@@ -35,15 +35,16 @@
 #include "vm/jni.h"
 #include "vm/method.h"
 #include "vm/object.h"
+#include "vm/stack-trace.h"
 
 static unsigned long
 vm_call_method_a(struct vm_method *method, unsigned long *args)
 {
 	unsigned long result;
-	void *trampoline;
+	void *target;
 
-	trampoline = vm_method_trampoline_ptr(method);
-	native_call(trampoline, args, method->args_count, result);
+	target = vm_method_call_ptr(method);
+	native_call(target, args, method->args_count, result);
 
 	return result;
 }

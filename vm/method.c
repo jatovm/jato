@@ -73,10 +73,10 @@ int vm_method_init(struct vm_method *vmm,
 	if (!vm_method_is_static(vmm))
 		++vmm->args_count;
 
-	vmm->vm_native_ptr = NULL;
+	vmm->is_vm_native = false;
 
 	if (vm_method_is_native(vmm)) {
-		vmm->vm_native_ptr =
+		vmm->is_vm_native =
 			vm_lookup_native(vmm->class->name, vmm->name);
 
 		if (vm_method_is_jni(vmm)) {
@@ -144,21 +144,30 @@ int vm_method_init(struct vm_method *vmm,
 
 int vm_method_prepare_jit(struct vm_method *vmm)
 {
-	vmm->compilation_unit = compilation_unit_alloc(vmm);
-	if (!vmm->compilation_unit) {
+	struct compilation_unit *cu;
+
+	cu = compilation_unit_alloc(vmm);
+	if (!cu) {
 		NOT_IMPLEMENTED;
 		return -1;
 	}
 
-	if (vmm->vm_native_ptr &&
-	    add_cu_mapping((unsigned long)vmm->vm_native_ptr,
-			   vmm->compilation_unit))
-	{
-		NOT_IMPLEMENTED;
-		return -1;
+	vmm->compilation_unit = cu;
+
+	/*
+	 * VM native methods are linked on initialization.
+	 */
+	if (vm_method_is_vm_native(vmm)) {
+		cu->native_ptr = vm_lookup_native(vmm->class->name, vmm->name);
+		cu->is_compiled = true;
+
+		if (add_cu_mapping((unsigned long)cu->native_ptr, cu)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
 	}
 
-	vmm->trampoline = build_jit_trampoline(vmm->compilation_unit);
+	vmm->trampoline = build_jit_trampoline(cu);
 	if (!vmm->trampoline) {
 		NOT_IMPLEMENTED;
 		return -1;

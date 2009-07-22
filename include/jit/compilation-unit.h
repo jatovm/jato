@@ -53,6 +53,15 @@ struct compilation_unit {
 	unsigned char *unwind_past_unlock_ptr;
 
 	struct list_head static_fixup_site_list;
+
+	/*
+	 * This holds a pointer to the method's code. It's value is
+	 * valid only when ->is_compiled is true.
+	 * For non-native methods it's set to buffer_ptr(objcode). For
+	 * native functions it points to the actuall native function's
+	 * code (not trampoline).
+	 */
+	void *native_ptr;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

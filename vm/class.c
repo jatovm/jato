@@ -110,7 +110,7 @@ setup_vtable(struct vm_class *vmc)
 
 				vtable_setup_method(&vmc->vtable,
 					vmm2->virtual_index,
-					vm_method_trampoline_ptr(vmm));
+					vm_method_call_ptr(vmm));
 				continue;
 			}
 		}
@@ -119,7 +119,7 @@ setup_vtable(struct vm_class *vmc)
 
 		vtable_setup_method(&vmc->vtable,
 			super_vtable_size + vtable_size,
-			vm_method_trampoline_ptr(vmm));
+			vm_method_call_ptr(vmm));
 		++vtable_size;
 	}
 }
