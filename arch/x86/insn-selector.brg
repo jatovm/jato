@@ -2029,7 +2029,7 @@ static void select_jni_call(struct basic_block *s, struct tree_node *tree,
 	unsigned long guard;
 	unsigned long field;
 
-	frame_reg = get_fixed_var(s->b_parent, REG_EBP);
+	frame_reg = get_fixed_var(s->b_parent, REG_xBP);
 	offset_reg = get_var(s->b_parent, J_REFERENCE);
 
 	offset_tls = get_thread_local_offset(&jni_stack_offset);
@@ -2089,7 +2089,7 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 	unsigned long guard;
 	unsigned long field;
 
-	sp_reg = get_fixed_var(s->b_parent, REG_ESP);
+	sp_reg = get_fixed_var(s->b_parent, REG_xSP);
 	offset_reg = get_var(s->b_parent, J_REFERENCE);
 
 	offset_tls = get_thread_local_offset(&vm_native_stack_offset);
