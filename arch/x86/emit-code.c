@@ -473,6 +473,11 @@ int fixup_static_at(unsigned long addr)
  * x86-32 code emitters *
  ************************/
 
+static void emit_mov_reg_membase(struct buffer *buf, struct operand *src,
+				 struct operand *dest);
+static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
+				 struct operand *dest);
+
 /*
  *	__encode_reg:	Encode register to be used in IA-32 instruction.
  *	@reg: Register to encode.
@@ -722,6 +727,30 @@ static void emit_mov_thread_local_memdisp_reg(struct buffer *buf,
 {
 	emit(buf, 0x65); /* GS segment override prefix */
 	__emit_memdisp_reg(buf, 0x8b, src->imm, mach_reg(&dest->reg));
+}
+
+static void emit_mov_reg_thread_local_memdisp(struct buffer *buf,
+					      struct operand *src,
+					      struct operand *dest)
+{
+	emit(buf, 0x65); /* GS segment override prefix */
+	__emit_reg_memdisp(buf, 0x89, mach_reg(&src->reg), dest->imm);
+}
+
+static void emit_mov_reg_thread_local_membase(struct buffer *buf,
+					      struct operand *src,
+					      struct operand *dest)
+{
+	emit(buf, 0x65); /* GS segment override prefix */
+	emit_mov_reg_membase(buf, src, dest);
+}
+
+static void emit_mov_imm_thread_local_membase(struct buffer *buf,
+					      struct operand *src,
+					      struct operand *dest)
+{
+	emit(buf, 0x65); /* GS segment override prefix */
+	emit_mov_imm_membase(buf, src, dest);
 }
 
 static void emit_mov_memdisp_reg(struct buffer *buf,
@@ -1321,6 +1350,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, emit_mov_xmm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_FREG, emit_mov_memlocal_freg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
@@ -1331,6 +1361,8 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_FREG_MEMLOCAL, emit_mov_freg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg, TWO_OPERANDS),
