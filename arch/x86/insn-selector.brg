@@ -2059,6 +2059,9 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 
 	if (method->args_count)
 		method_args_cleanup(s, tree, method->args_count);
+
+	if (vm_method_is_jni(method))
+		select_exception_test(s, tree);
 }
 
 
