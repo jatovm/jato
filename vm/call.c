@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008  Tomasz Grabiec
+ * Copyright (c) 2009  Tomasz Grabiec
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -40,9 +40,9 @@ static unsigned long
 vm_call_method_a(struct vm_method *method, unsigned long *args)
 {
 	unsigned long result;
+	void *trampoline;
 
-	void (*trampoline)(void) = vm_method_trampoline_ptr(method);
-
+	trampoline = vm_method_trampoline_ptr(method);
 	native_call(trampoline, args, method->args_count, result);
 
 	return result;
