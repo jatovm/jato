@@ -70,7 +70,7 @@
 static bool perf_enabled;
 char *exe_name;
 
-static struct vm_object *__vm_native native_vmstackwalker_getclasscontext(void)
+static struct vm_object *native_vmstackwalker_getclasscontext(void)
 {
 	struct stack_trace_elem st_elem;
 	struct compilation_unit *cu;
@@ -122,7 +122,7 @@ static const struct system_properties_entry system_properties[] = {
 	{ "line.separator", "\n" },
 };
 
-static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
+static void native_vmsystemproperties_preinit(struct vm_object *p)
 {
 	char *s;
 
@@ -139,13 +139,13 @@ static void __vm_native native_vmsystemproperties_preinit(struct vm_object *p)
 	}
 }
 
-static void __vm_native native_vmruntime_exit(int status)
+static void native_vmruntime_exit(int status)
 {
 	/* XXX: exit gracefully */
 	exit(status);
 }
 
-static struct vm_object *__vm_native
+static struct vm_object *
 native_vmruntime_maplibraryname(struct vm_object *name)
 {
 	struct vm_object *result;
@@ -181,7 +181,7 @@ native_vmruntime_maplibraryname(struct vm_object *name)
 	return result;
 }
 
-static int __vm_native
+static int
 native_vmruntime_native_load(struct vm_object *name,
 			     struct vm_object *classloader)
 {
@@ -211,7 +211,7 @@ native_vmruntime_native_load(struct vm_object *name,
 	return result == 0;
 }
 
-static void __vm_native native_vmruntime_println(struct vm_object *message)
+static void native_vmruntime_println(struct vm_object *message)
 {
 	char *cstr = vm_string_to_cstr(message);
 
@@ -221,7 +221,7 @@ static void __vm_native native_vmruntime_println(struct vm_object *message)
 	free(cstr);
 }
 
-static void __vm_native
+static void
 native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 			  struct vm_object *dest, int dest_start, int len)
 {
@@ -272,12 +272,12 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	throw_from_native(sizeof(int) * 3 + sizeof(struct vm_object*) * 2);
 }
 
-static int32_t __vm_native native_vmsystem_identityhashcode(struct vm_object *obj)
+static int32_t native_vmsystem_identityhashcode(struct vm_object *obj)
 {
 	return (int32_t) obj;
 }
 
-static struct vm_object * __vm_native
+static struct vm_object *
 native_vmobject_clone(struct vm_object *object)
 {
 	if (!object) {
@@ -289,7 +289,7 @@ native_vmobject_clone(struct vm_object *object)
 	return vm_object_clone(object);
 }
 
-static struct vm_object * __vm_native
+static struct vm_object *
 native_vmobject_getclass(struct vm_object *object)
 {
 	if (!object) {
@@ -303,13 +303,13 @@ native_vmobject_getclass(struct vm_object *object)
 	return object->class->object;
 }
 
-static struct vm_object * __vm_native
+static struct vm_object *
 native_vmclass_getclassloader(struct vm_object *object)
 {
 	if (!object) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		throw_from_native(sizeof object);
-		return 0;
+		return NULL;
 	}
 
 	struct vm_class *class = vm_class_get_class_from_class_object(object);
@@ -319,7 +319,7 @@ native_vmclass_getclassloader(struct vm_object *object)
 	return NULL;
 }
 
-static struct vm_object * __vm_native
+static struct vm_object *
 native_vmclass_getname(struct vm_object *object)
 {
 	struct vm_class *class;
@@ -330,7 +330,7 @@ native_vmclass_getname(struct vm_object *object)
 	return vm_object_alloc_string_from_c(class->name);
 }
 
-static int32_t __vm_native
+static int32_t
 native_vmclass_isprimitive(struct vm_object *object)
 {
 	if (!object) {
@@ -346,7 +346,7 @@ native_vmclass_isprimitive(struct vm_object *object)
 	return class->kind == VM_CLASS_KIND_PRIMITIVE;
 }
 
-static struct vm_object * __vm_native
+static struct vm_object *
 native_vmclassloader_getprimitiveclass(int type)
 {
 	char primitive_class_name[] = { "X" };
@@ -365,7 +365,7 @@ native_vmclassloader_getprimitiveclass(int type)
 	return class->object;
 }
 
-static int __vm_native
+static int
 native_vmfile_is_directory(struct vm_object *dirpath)
 {
 	char *dirpath_str;

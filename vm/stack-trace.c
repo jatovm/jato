@@ -538,7 +538,7 @@ struct vm_object *get_stack_trace()
 	return convert_intermediate_stack_trace(intermediate);
 }
 
-struct vm_object * __vm_native
+struct vm_object *
 native_vmthrowable_fill_in_stack_trace(struct vm_object *throwable)
 {
 	struct vm_object *vmstate;
@@ -557,7 +557,7 @@ native_vmthrowable_fill_in_stack_trace(struct vm_object *throwable)
 	return vmstate;
 }
 
-struct vm_object * __vm_native
+struct vm_object *
 native_vmthrowable_get_stack_trace(struct vm_object *this,
 				   struct vm_object *throwable)
 {

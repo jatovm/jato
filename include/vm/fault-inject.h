@@ -15,9 +15,9 @@ enum vm_fault {
 bool vm_fault_enabled(enum vm_fault fault);
 struct vm_object *vm_fault_arg(enum vm_fault fault);
 
-void __vm_native native_vm_enable_fault(enum vm_fault fault,
-					struct vm_object *arg);
+void native_vm_enable_fault(enum vm_fault fault,
+			    struct vm_object *arg);
 
-void __vm_native native_vm_disable_fault(enum vm_fault fault);
+void native_vm_disable_fault(enum vm_fault fault);
 
 #endif

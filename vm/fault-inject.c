@@ -50,7 +50,7 @@ struct vm_object *vm_fault_arg(enum vm_fault fault)
 	return vm_fault_entries[fault].arg;
 }
 
-void __vm_native native_vm_enable_fault(enum vm_fault fault,
+void native_vm_enable_fault(enum vm_fault fault,
 					struct vm_object *arg)
 {
 	if (fault < 0 || fault >= VM_FAULT_MAX)
@@ -60,7 +60,7 @@ void __vm_native native_vm_enable_fault(enum vm_fault fault,
 	vm_fault_entries[fault].arg = arg;
 }
 
-void __vm_native native_vm_disable_fault(enum vm_fault fault)
+void native_vm_disable_fault(enum vm_fault fault)
 {
 	if (fault < 0 || fault >= VM_FAULT_MAX)
 		return;

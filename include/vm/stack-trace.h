@@ -134,8 +134,8 @@ int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class
 int get_stack_trace_depth(struct stack_trace_elem *elem);
 struct vm_object *get_stack_trace(void);
 struct vm_object *get_stack_trace_from_ctx(void *ctx);
-struct vm_object * __vm_native native_vmthrowable_fill_in_stack_trace(struct vm_object *);
-struct vm_object * __vm_native native_vmthrowable_get_stack_trace(struct vm_object *, struct vm_object *);
+struct vm_object *native_vmthrowable_fill_in_stack_trace(struct vm_object *);
+struct vm_object *native_vmthrowable_get_stack_trace(struct vm_object *, struct vm_object *);
 
 bool called_from_jit_trampoline(struct native_stack_frame *frame);
 void vm_print_exception(struct vm_object *exception);
