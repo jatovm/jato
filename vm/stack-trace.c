@@ -451,22 +451,23 @@ static void vm_stack_trace_element_to_string(struct vm_object *elem,
 	method_name = getMethodName(elem);
 	is_native = isNativeMethod(elem);
 
-	method_name_str = vm_string_to_cstr(method_name);
-	file_name_str = vm_string_to_cstr(file_name);
-	class_name_str = vm_string_to_cstr(class_name);
+	if (class_name) {
+		class_name_str = vm_string_to_cstr(class_name);
 
-	if (class_name_str) {
 		str_append(str, class_name_str);
-		if (method_name_str)
+		if (method_name)
 			str_append(str, ".");
 	}
 
-	if (method_name_str)
+	if (method_name) {
+		method_name_str = vm_string_to_cstr(method_name);
 		str_append(str, method_name_str);
+	}
 
 	str_append(str, "(");
 
-	if (file_name_str) {
+	if (file_name) {
+		file_name_str = vm_string_to_cstr(file_name);
 		str_append(str, file_name_str);
 	} else {
 		if (is_native)
