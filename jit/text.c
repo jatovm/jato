@@ -79,14 +79,14 @@ void jit_text_reserve(size_t size)
 	jit_text_offset += ALIGN(size, TEXT_ALIGNMENT);
 }
 
-void *alloc_page(void)
+void *alloc_pages(int n)
 {
 	int page_size;
 	void *p;
 
 	page_size = getpagesize();
 
-	if (posix_memalign(&p, page_size, page_size))
+	if (posix_memalign(&p, page_size, page_size * n))
 		return NULL;
 
 	return p;

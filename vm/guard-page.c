@@ -33,7 +33,7 @@
 
 void *alloc_guard_page(void)
 {
-	void *p = alloc_page();
+	void *p = alloc_pages(1);
 
 	if (p == NULL)
 		return NULL;
