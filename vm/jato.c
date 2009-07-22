@@ -272,9 +272,27 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	throw_from_native(sizeof(int) * 3 + sizeof(struct vm_object*) * 2);
 }
 
+static int32_t hash_ptr_to_int32(void *p)
+{
+#ifdef CONFIG_64_BIT
+	int64_t key = (int64_t) p;
+
+	key = (~key) + (key << 18);
+	key = key ^ (key >> 31);
+	key = key * 21;
+	key = key ^ (key >> 11);
+	key = key + (key << 6);
+	key = key ^ (key >> 22);
+
+	return key;
+#else
+	return (int32_t) p;
+#endif
+}
+
 static int32_t native_vmsystem_identityhashcode(struct vm_object *obj)
 {
-	return (int32_t) obj;
+	return hash_ptr_to_int32(obj);
 }
 
 static struct vm_object *
