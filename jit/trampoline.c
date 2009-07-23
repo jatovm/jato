@@ -39,6 +39,7 @@
 #include "vm/die.h"
 #include "vm/vm.h"
 #include "vm/jni.h"
+#include "vm/stack-trace.h"
 
 #include <stdio.h>
 
@@ -47,6 +48,8 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 	const char *method_name, *class_name, *method_type;
 	struct vm_method *method;
 	void *ret;
+
+	enter_vm_from_jni();
 
 	method = cu->method;
 

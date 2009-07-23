@@ -217,7 +217,7 @@ static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
 		struct jni_stack_entry *tr =
 			&jni_stack[elem->jni_stack_index];
 
-		if (tr->jni_interface_frame == elem->frame) {
+		if (tr->vm_frame == elem->frame) {
 			elem->type = STACK_TRACE_ELEM_TYPE_JNI;
 			elem->is_native = false;
 

@@ -57,7 +57,7 @@ vm_jni_find_class(struct vm_jni_env *env, const char *name)
 {
 	struct vm_class *class;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	class = classloader_load(name);
 	if (!class) {
@@ -80,7 +80,7 @@ vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz, const char *name,
 	struct vm_method *mb;
 	struct vm_class *class;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	check_null(clazz);
 	check_class_object(clazz);
@@ -109,7 +109,7 @@ vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz, const char *name,
 	struct vm_field *fb;
 	struct vm_class *class;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	check_null(clazz);
 	check_class_object(clazz);
@@ -138,7 +138,7 @@ vm_jni_get_static_method_id(struct vm_jni_env *env, jclass clazz,
 	struct vm_method *mb;
 	struct vm_class *class;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	check_null(clazz);
 
@@ -165,7 +165,7 @@ vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
 {
 	jbyte *array;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	if (!string)
 		return NULL;
@@ -184,7 +184,7 @@ static void
 vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
 			    const char *utf)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	free((char *)utf);
 }
@@ -192,7 +192,7 @@ vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
 static jint
 vm_jni_throw(struct vm_jni_env *env, jthrowable exception)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	if (!vm_object_is_instance_of(exception, vm_java_lang_Throwable))
 		return -1;
@@ -206,7 +206,7 @@ vm_jni_throw_new(struct vm_jni_env *env, jclass clazz, const char *message)
 {
 	struct vm_class *class;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	if (!clazz)
 		return -1;
@@ -221,14 +221,14 @@ vm_jni_throw_new(struct vm_jni_env *env, jclass clazz, const char *message)
 
 static jthrowable vm_jni_exception_occurred(struct vm_jni_env *env)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	return exception_occurred();
 }
 
 static void vm_jni_exception_describe(struct vm_jni_env *env)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	if (exception_occurred())
 		vm_print_exception(exception_occurred());
@@ -236,7 +236,7 @@ static void vm_jni_exception_describe(struct vm_jni_env *env)
 
 static void vm_jni_exception_clear(struct vm_jni_env *env)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	clear_exception();
 }
@@ -244,7 +244,7 @@ static void vm_jni_exception_clear(struct vm_jni_env *env)
 static void
 vm_jni_fatal_error(struct vm_jni_env *env, const char *msg)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	die("%s", msg);
 }
@@ -255,7 +255,7 @@ vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
 {
 	va_list args;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	va_start(args, methodID);
 	vm_call_method_v(methodID, args);
@@ -268,7 +268,7 @@ static void
 vm_jni_call_static_void_method_v(struct vm_jni_env *env, jclass clazz,
 				 jmethodID methodID, va_list args)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 	vm_call_method_v(methodID, args);
 }
 
@@ -279,7 +279,7 @@ vm_jni_call_static_object_method(struct vm_jni_env *env, jclass clazz,
 	jobject result;
 	va_list args;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	va_start(args, methodID);
 	result = (jobject) vm_call_method_v(methodID, args);
@@ -292,7 +292,7 @@ static jobject
 vm_jni_call_static_object_method_v(struct vm_jni_env *env, jclass clazz,
 				   jmethodID methodID, va_list args)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	return (jobject) vm_call_method_v(methodID, args);
 }
@@ -304,7 +304,7 @@ vm_jni_call_static_byte_method(struct vm_jni_env *env, jclass clazz,
 	jbyte result;
 	va_list args;
 
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	va_start(args, methodID);
 	result = (jbyte) vm_call_method_v(methodID, args);
@@ -317,7 +317,7 @@ static jbyte
 vm_jni_call_static_byte_method_v(struct vm_jni_env *env, jclass clazz,
 				 jmethodID methodID, va_list args)
 {
-	vm_enter_jni_interface();
+	enter_vm_from_jni();
 
 	return (jbyte) vm_call_method_v(methodID, args);
 }

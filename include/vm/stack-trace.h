@@ -23,14 +23,13 @@ struct jni_stack_entry {
 	 * when stack is traversed. */
 	struct vm_method *method;
 
-	/* This field is filled in on entry to any JNI interface
-	 * function. Having this field filled in allows the
-	 * stackwalker to skip whole JNI call. When JNI interface
-	 * fuction returns to JNI caller nothing is done because this
-	 * structure can be accessed only when we're in VM which can
-	 * happen only after some JNI interface function was
-	 * called. */
-	void *jni_interface_frame;
+	/* This field is filled in on VM entry from JNI method which
+	 * is not return from that method. Having this field filled in
+	 * allows the stackwalker to skip whole JNI call. When VM
+	 * returns to JNI nothing is done because this entry can be
+	 * accessed only from VM.
+	 */
+	void *vm_frame;
 } __attribute__((packed));
 
 struct vm_native_stack_entry {
@@ -83,8 +82,8 @@ static inline void *vm_native_stack_get_frame(void)
  * optimizations might optimize some function calls so that the target
  * function runs in the caller's frame. We want to avoid this situation.
  */
-#define vm_enter_jni_interface() {					\
-	jni_stack[jni_stack_index() - 1].jni_interface_frame = \
+#define enter_vm_from_jni() {						\
+		jni_stack[jni_stack_index() - 1].vm_frame =		\
 			__builtin_frame_address(0);			\
 	}
 
