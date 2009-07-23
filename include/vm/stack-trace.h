@@ -124,6 +124,8 @@ struct stack_trace_elem {
 	 * is undefined.
 	 */
 	void *frame;
+
+	struct compilation_unit *cu;
 };
 
 void init_stack_trace_printing(void);
@@ -131,6 +133,7 @@ int init_stack_trace_elem(struct stack_trace_elem *elem);
 int get_prev_stack_trace_elem(struct stack_trace_elem *elem);
 int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class);
 int get_stack_trace_depth(struct stack_trace_elem *elem);
+struct compilation_unit *stack_trace_elem_get_cu(struct stack_trace_elem *elem);
 struct vm_object *get_stack_trace(void);
 struct vm_object *get_stack_trace_from_ctx(void *ctx);
 struct vm_object *native_vmthrowable_fill_in_stack_trace(struct vm_object *);

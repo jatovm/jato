@@ -81,6 +81,12 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, msg->value);
 	free_str(msg);
 
+	/* We must remove the jni_stack_entry from call stack here
+	 * because we're not returning after call site - exception
+	 * will be caught by trampoline code.
+	 */
+	vm_leave_jni();
+
 	return NULL;
 }
 

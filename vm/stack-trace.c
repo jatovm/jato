@@ -221,14 +221,7 @@ static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
 			elem->type = STACK_TRACE_ELEM_TYPE_JNI;
 			elem->is_native = false;
 
-			/*
-			 * We don't need to lock the compilation_unit
-			 * because when JNI method is present in stack
-			 * trace it means that it has been resolved
-			 * and ->native_ptr can not change after that.
-			 */
-			elem->addr = (unsigned long)
-				tr->method->compilation_unit->native_ptr;
+			elem->cu = tr->method->compilation_unit;
 			elem->frame = NULL;
 			return 0;
 		}
@@ -335,6 +328,14 @@ int init_stack_trace_elem(struct stack_trace_elem *elem)
 	return get_prev_stack_trace_elem(elem);
 }
 
+struct compilation_unit *stack_trace_elem_get_cu(struct stack_trace_elem *elem)
+{
+	if (elem->type == STACK_TRACE_ELEM_TYPE_JNI)
+		return elem->cu;
+
+	return jit_lookup_cu(elem->addr);
+}
+
 /**
  * skip_frames_from_class - makes @elem to point to the nearest stack
  *     trace element which does not belong to any method of class
@@ -349,7 +350,7 @@ int skip_frames_from_class(struct stack_trace_elem *elem,
 	struct compilation_unit *cu;
 
 	do {
-		cu = jit_lookup_cu(elem->addr);
+		cu = stack_trace_elem_get_cu(elem);
 		if (cu == NULL) {
 			fprintf(stderr,
 				"%s: no compilation unit mapping for %p\n",
@@ -420,7 +421,7 @@ static struct vm_object *get_intermediate_stack_trace(void)
 	do {
 		unsigned long bc_offset;
 
-		cu = jit_lookup_cu(st_elem.addr);
+		cu = stack_trace_elem_get_cu(&st_elem);
 		if (!cu) {
 			fprintf(stderr,
 				"%s: no compilation unit mapping for %p\n",
