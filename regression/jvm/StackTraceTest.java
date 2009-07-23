@@ -83,8 +83,33 @@ public class StackTraceTest extends TestCase {
         doTestVMNativeInStackTrace();
     }
 
+	public static native void nativeMethod();
+
+	public static void testJNIUnsatisfiedLinkErrorStackTrace() {
+		StackTraceElement st[] = null;
+
+		try {
+			nativeMethod();
+		} catch (UnsatisfiedLinkError e) {
+			st = e.getStackTrace();
+		}
+
+		assertNotNull(st);
+		assertEquals(3, st.length);
+
+        assertStackTraceElement(st[0], -1, null,
+                "jvm.StackTraceTest",
+                "nativeMethod", true);
+
+        assertStackTraceElement(st[1], 92, "StackTraceTest.java",
+                "jvm.StackTraceTest",
+                "testJNIUnsatisfiedLinkErrorStackTrace",
+                false);
+	}
+
     public static void main(String []args) {
         testJITStackTrace();
         testVMNativeInStackTrace();
+        testJNIUnsatisfiedLinkErrorStackTrace();
     }
 }
