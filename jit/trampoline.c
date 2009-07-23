@@ -43,7 +43,7 @@
 
 #include <stdio.h>
 
-static void *jit_native_trampoline(struct compilation_unit *cu)
+static void *jit_jni_trampoline(struct compilation_unit *cu)
 {
 	const char *method_name, *class_name, *method_type;
 	struct vm_method *method;
@@ -83,7 +83,7 @@ static void *jit_native_trampoline(struct compilation_unit *cu)
 
 	/* We must remove the jni_stack_entry from call stack here
 	 * because we're not returning after call site - exception
-	 * will be caught by trampoline code.
+	 * will be caught in trampoline code and delivered to handler.
 	 */
 	vm_leave_jni();
 
@@ -126,7 +126,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 		 * to fixup some call sites. */
 		ret = cu->native_ptr;
 	else if (vm_method_is_native(cu->method))
-		ret = jit_native_trampoline(cu);
+		ret = jit_jni_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);
 
