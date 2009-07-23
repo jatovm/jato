@@ -293,23 +293,25 @@ void convert_ir_const(struct compilation_unit *cu,
 		      uint32_t *cp_infos,
 		      size_t nr_cp_infos, uint8_t *cp_types)
 {
-	struct vm_class *class = new_class();
-	struct cafebabe_class *cb = class->class;
+	struct vm_class *vmc = new_class();
+	struct cafebabe_class *class = malloc(sizeof *class);
 	unsigned i;
 
 	for (i = 0; i < nr_cp_infos; i++) {
-		struct cafebabe_constant_pool *cp = &cb->constant_pool[i];
+		struct cafebabe_constant_pool *cp = &class->constant_pool[i];
 
 		cp->long_ = *(struct cafebabe_constant_info_long *) &cp_infos[i];
 		cp->tag = cp_types[i];
 	}
 
-	cb->constant_pool_count = nr_cp_infos;
+	class->constant_pool_count = nr_cp_infos;
+	vmc->class = class;
 
-	cu->method->class = class;
+	cu->method->class = vmc;
 	convert_to_ir(cu);
 
 	free(class);
+	free(vmc);
 }
 
 struct statement *first_stmt(struct compilation_unit *cu)
