@@ -213,6 +213,12 @@ native_vmruntime_native_load(struct vm_object *name,
 
 static void native_vmruntime_println(struct vm_object *message)
 {
+	if (!message) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_from_native(sizeof(struct vm_object));
+		return;
+	}
+
 	char *cstr = vm_string_to_cstr(message);
 
 	if (cstr)
