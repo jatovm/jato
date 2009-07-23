@@ -36,6 +36,7 @@ extern void emit_lock_this(struct buffer *);
 extern void emit_unlock(struct buffer *, struct vm_object *);
 extern void emit_unlock_this(struct buffer *);
 extern void emit_body(struct basic_block *, struct buffer *);
+extern void emit_insn(struct buffer *buf, struct insn *insn);
 extern void backpatch_branch_target(struct buffer *buf, struct insn *insn,
 				    unsigned long target_offset);
 extern void emit_jni_trampoline(struct buffer *buf, struct vm_jni_env *jni_env,

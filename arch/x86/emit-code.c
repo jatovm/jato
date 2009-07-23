@@ -2228,3 +2228,66 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 }
 
 #endif /* CONFIG_X86_32 */
+
+typedef void (*emit_no_operands_fn) (struct buffer *);
+
+static void emit_no_operands(struct emitter *emitter, struct buffer *buf)
+{
+	emit_no_operands_fn emit = emitter->emit_fn;
+	emit(buf);
+}
+
+typedef void (*emit_single_operand_fn) (struct buffer *, struct operand * operand);
+
+static void emit_single_operand(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_single_operand_fn emit = emitter->emit_fn;
+	emit(buf, &insn->operand);
+}
+
+typedef void (*emit_two_operands_fn) (struct buffer *, struct operand * src, struct operand * dest);
+
+static void emit_two_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_two_operands_fn emit = emitter->emit_fn;
+	emit(buf, &insn->src, &insn->dest);
+}
+
+typedef void (*emit_branch_fn) (struct buffer *, struct insn *);
+
+static void emit_branch(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+{
+	emit_branch_fn emit = emitter->emit_fn;
+	emit(buf, insn);
+}
+
+static void __emit_insn(struct buffer *buf, struct insn *insn)
+{
+	struct emitter *emitter;
+
+	emitter = &emitters[insn->type];
+	switch (emitter->type) {
+	case NO_OPERANDS:
+		emit_no_operands(emitter, buf);
+		break;
+	case SINGLE_OPERAND:
+		emit_single_operand(emitter, buf, insn);
+		break;
+	case TWO_OPERANDS:
+		emit_two_operands(emitter, buf, insn);
+		break;
+	case BRANCH:
+		emit_branch(emitter, buf, insn);
+		break;
+	default:
+		printf("Oops. No emitter for 0x%x.\n", insn->type);
+		abort();
+	};
+}
+
+void emit_insn(struct buffer *buf, struct insn *insn)
+{
+	insn->mach_offset = buffer_offset(buf);
+
+	__emit_insn(buf, insn);
+}
