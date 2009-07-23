@@ -214,8 +214,7 @@ native_vmruntime_native_load(struct vm_object *name,
 static void native_vmruntime_println(struct vm_object *message)
 {
 	if (!message) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof(struct vm_object));
+		printf("null\n");
 		return;
 	}
 
