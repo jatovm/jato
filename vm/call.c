@@ -43,23 +43,24 @@ vm_call_method_a(struct vm_method *method, unsigned long *args)
 	unsigned long result;
 	void *target;
 
-	target = vm_method_call_ptr(method);
-
 	if (vm_method_is_vm_native(method)) {
-		vm_native_call(target, args, method->args_count,
-			       result);
+		target = vm_method_native_ptr(method);
+		vm_native_call(target, args, method->args_count, result);
 		return result;
 	}
 
-	if (vm_method_is_jni(method))
+	target = vm_method_call_ptr(method);
+
+	if (vm_method_is_jni(method)) {
 		if (vm_enter_jni(__builtin_frame_address(0), 0, method))
 			return 0;
 
-	native_call(target, args, method->args_count, result);
-
-	if (vm_method_is_jni(method))
+		native_call(target, args, method->args_count, result);
 		vm_leave_jni();
+		return result;
+	}
 
+	native_call(target, args, method->args_count, result);
 	return result;
 }
 
