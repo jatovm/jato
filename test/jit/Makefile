@@ -59,10 +59,6 @@ OBJS = \
 	../../arch/mmix/register.o \
 	../../arch/mmix/stack-frame.o \
 	../../arch/mmix/use-def.o \
-	../jamvm/alloc-stub.o \
-	../jamvm/cast-stub.o \
-	../jamvm/resolve-stub.o \
-	../jamvm/thread-stub.o \
 	../libharness/libharness.o \
 	../vm/class-stub.o \
 	../vm/classloader-stub.o \
