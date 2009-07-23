@@ -1,22 +1,23 @@
 RUNNER=vm-test-runner
 SUITE=vm-test-suite.c
 
-OBJS =					\
-	../../arch/$(ARCH)/backtrace.o	\
-	../../lib/bitset.o		\
-	../../lib/buffer.o		\
-	../../lib/list.o		\
-	../../lib/list.o		\
-	../../lib/radix-tree.o		\
-	../../lib/string.o		\
-	../../vm/bytecode.o		\
-	../../vm/bytecodes.o		\
-	../../vm/die.o			\
-	../../vm/natives.o		\
-	../../vm/stack.o		\
-	../../vm/types.o		\
-	../../vm/zalloc.o		\
-	../libharness/libharness.o	\
+TOPLEVEL_OBJS :=			\
+	arch/$(ARCH)/backtrace.o	\
+	lib/bitset.o			\
+	lib/buffer.o			\
+	lib/list.o			\
+	lib/radix-tree.o		\
+	lib/string.o			\
+	vm/bytecode.o			\
+	vm/bytecodes.o			\
+	vm/die.o			\
+	vm/natives.o			\
+	vm/stack.o			\
+	vm/types.o			\
+	vm/zalloc.o			\
+	test/libharness/libharness.o
+
+TEST_OBJS :=				\
 	bitset-test.o			\
 	buffer-test.o			\
 	bytecodes-test.o		\

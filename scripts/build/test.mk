@@ -13,25 +13,47 @@ else
 	TESTS_C = '*.c'
 endif
 
-%.o: %.c
-	$(E) "  CC      " $@
-	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `echo $@ | sed "s\/\-\g" | sed "s\[.][.]\p\g"`
+TOPLEVEL_C_SRCS := $(wildcard $(patsubst %.o,../../%.c,$(TOPLEVEL_OBJS)))
+TOPLEVEL_C_OBJS := $(patsubst ../../%.c,toplevel/%.o,$(TOPLEVEL_C_SRCS))
 
-%.o: %.S
+TOPLEVEL_S_SRCS := $(wildcard $(patsubst %.o,../../%.S,$(TOPLEVEL_OBJS)))
+TOPLEVEL_S_OBJS := $(patsubst ../../%.S,toplevel/%.o,$(TOPLEVEL_S_SRCS))
+
+$(TOPLEVEL_C_OBJS): toplevel/%.o: ../../%.c
+	@mkdir -p $(dir $@)
+	$(E) "  CC      " $@
+	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o $@
+
+$(TOPLEVEL_S_OBJS): toplevel/%.o: ../../%.S
+	@mkdir -p $(dir $@)
 	$(E) "  AS      " $@
-	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o `echo $@ | sed "s\/\-\g" | sed "s\[.][.]\p\g"`
+	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o $@
+
+TEST_C_SRCS := $(wildcard $(patsubst %.o,%.c,$(TEST_OBJS)))
+TEST_C_OBJS := $(patsubst %.c,%.o,$(TEST_C_SRCS))
+
+TEST_S_SRCS := $(wildcard $(patsubst %.o,%.S,$(TEST_OBJS)))
+TEST_S_OBJS := $(patsubst %.S,%.o,$(TEST_S_SRCS))
+
+$(TEST_C_OBJS): %.o: %.c
+	$(E) "  CC      " $@
+	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o $@
+
+$(TEST_S_OBJS): %.o: %.S
+	$(E) "  AS      " $@
+	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(DEFINES) -c $< -o $@
 
 test: run
 
-$(RUNNER): $(SUITE) $(OBJS)
+ALL_OBJS := $(TOPLEVEL_C_OBJS) $(TOPLEVEL_S_OBJS) $(TEST_C_OBJS) $(TEST_S_OBJS)
+
+$(RUNNER): $(SUITE) $(ALL_OBJS)
 	$(E) "  LD      " $@
-	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) *.o $(SUITE) -o $(RUNNER) $(LIBS) $(DEFAULT_LIBS)
+	$(Q) $(CC) $(ARCH_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(INCLUDE) $(ALL_OBJS) $(SUITE) -o $(RUNNER) $(LIBS) $(DEFAULT_LIBS)
 
 run: $(RUNNER)
 	$(E) "  RUN     " $@
 	$(Q) ./$(RUNNER)
-
-$(OBJS): FORCE
 
 $(SUITE): FORCE
 	$(E) "  SUITE   " $@
@@ -39,7 +61,7 @@ $(SUITE): FORCE
 
 clean: FORCE
 	$(E) "  CLEAN"
-	$(Q) rm -f *.o $(RUNNER) $(SUITE)
+	$(Q) rm -f *.o $(RUNNER) $(SUITE) $(ALL_OBJS)
 
 PHONY += FORCE
 FORCE:
