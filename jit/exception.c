@@ -84,9 +84,6 @@ void thread_init_exceptions(void)
  */
 void signal_exception(struct vm_object *exception)
 {
-	if (exception_holder)
-		return;
-
 	assert(exception);
 
 	trampoline_exception_guard = trampoline_exceptions_guard_page;
