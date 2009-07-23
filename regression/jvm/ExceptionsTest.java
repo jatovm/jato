@@ -140,30 +140,6 @@ public class ExceptionsTest extends TestCase {
         assertTrue(caught);
     }
 
-    public static void testGetStackTrace() {
-        StackTraceElement []e = new Exception().getStackTrace();
-
-        assertNotNull(e);
-
-        assertEquals(3, e.length);
-
-        assertEquals(144, e[0].getLineNumber());
-        assertObjectEquals("ExceptionsTest.java", e[0].getFileName());
-        assertObjectEquals("jvm.ExceptionsTest", e[0].getClassName());
-        assertObjectEquals("testGetStackTrace", e[0].getMethodName());
-        assertFalse(e[0].isNativeMethod());
-
-        assertEquals(164, e[1].getLineNumber());
-        assertObjectEquals("ExceptionsTest.java", e[1].getFileName());
-        assertObjectEquals("jvm.ExceptionsTest", e[1].getClassName());
-        assertObjectEquals("testStackTrace", e[1].getMethodName());
-        assertFalse(e[1].isNativeMethod());
-    }
-
-    public static void testStackTrace() {
-        testGetStackTrace();
-    }
-
     public static void main(String args[]) {
         testTryBlockDoesNotThrowAnything();
         testThrowAndCatchInTheSameMethod();
@@ -172,6 +148,5 @@ public class ExceptionsTest extends TestCase {
         testNestedTryCatch();
         testEmptyCatchBlock();
         testAthrow();
-        testStackTrace();
     }
 }

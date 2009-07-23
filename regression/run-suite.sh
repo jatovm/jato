@@ -79,6 +79,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.PutstaticPatchingTest 0
     run_java jvm.PutstaticTest 0
     run_java jvm.RegisterAllocatorTortureTest 0
+    run_java jvm.StackTraceTest 0
     run_java jvm.StringTest 0
     run_java jvm.SynchronizationExceptionsTest 0
     run_java jvm.SynchronizationTest 0

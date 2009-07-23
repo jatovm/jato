@@ -78,7 +78,25 @@ public class TestCase {
     }
 
     protected static void assertObjectEquals(String a, String b) {
+        if (a == null && b == null)
+            return;
+
         assertTrue(a.equals(b));
+    }
+
+    protected static void assertStackTraceElement(StackTraceElement e,
+        int lineNumber, String fileName, String className,
+        String methodName, boolean isNative)
+    {
+        assertEquals(lineNumber, e.getLineNumber());
+        assertObjectEquals(fileName, e.getFileName());
+        assertObjectEquals(className, e.getClassName());
+        assertObjectEquals(methodName, e.getMethodName());
+
+        if (isNative)
+            assertTrue(e.isNativeMethod());
+        else
+            assertFalse(e.isNativeMethod());
     }
 
     protected static void fail(String s) {

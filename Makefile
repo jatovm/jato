@@ -255,6 +255,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/PutstaticPatchingTest.class \
 	regression/jvm/PutstaticTest.class \
 	regression/jvm/RegisterAllocatorTortureTest.class \
+	regression/jvm/StackTraceTest.class \
 	regression/jvm/StringTest.class \
 	regression/jvm/SynchronizationExceptionsTest.class \
 	regression/jvm/SynchronizationTest.class \
