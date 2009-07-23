@@ -82,10 +82,10 @@ static inline void *vm_native_stack_get_frame(void)
  * optimizations might optimize some function calls so that the target
  * function runs in the caller's frame. We want to avoid this situation.
  */
-#define enter_vm_from_jni() {						\
+#define enter_vm_from_jni() do {					\
 		jni_stack[jni_stack_index() - 1].vm_frame =		\
 			__builtin_frame_address(0);			\
-	}
+	} while (0)
 
 
 /*
