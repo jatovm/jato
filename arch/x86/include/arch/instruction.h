@@ -208,6 +208,18 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 		return NULL;
 }
 
+static inline struct insn *
+push_slot_insn(struct stack_slot *from)
+{
+	return memlocal_insn(INSN_PUSH_MEMLOCAL, from);
+}
+
+static inline struct insn *
+pop_slot_insn(struct stack_slot *to)
+{
+	return memlocal_insn(INSN_POP_MEMLOCAL, to);
+}
+
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 

@@ -88,6 +88,18 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 }
 
 static inline struct insn *
+push_slot_insn(struct stack_slot *slot)
+{
+	return NULL;
+}
+
+static inline struct insn *
+pop_slot_insn(struct stack_slot *slot)
+{
+	return NULL;
+}
+
+static inline struct insn *
 exception_spill_insn(struct stack_slot *slot)
 {
 	return NULL;
@@ -98,6 +110,11 @@ void free_insn(struct insn *);
 
 bool insn_defs(struct insn *, struct var_info *);
 bool insn_uses(struct insn *, struct var_info *);
+
+static inline const char *reg_name(enum machine_reg reg)
+{
+	return "<unknown>";
+}
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 
