@@ -37,8 +37,8 @@
  * alloc_offset_guard - allocates a memory region with two
  *   sub-regions. The first one contains addresses from [0:valid_size[
  *   with access allowed. The second region contains addresses
- *   [valid_size:overflow_size[ and access to this region triggers
- *   SIGSEGV.
+ *   [valid_size:valid_size + overflow_size[ and access to this region
+ *   triggers SIGSEGV.
  */
 void *alloc_offset_guard(unsigned long valid_size, unsigned long overflow_size)
 {
