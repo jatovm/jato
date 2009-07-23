@@ -2137,16 +2137,23 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	struct insn *call_insn;
 	void *target;
 
-	/*
-	 * We can't use vm_method_call_ptr() here because we
-	 * later add fixup sites depending on whether target is
-	 * trampoline or native.
-	 */
-	is_compiled = cu->is_compiled;
-	if (is_compiled)
-		target = vm_method_native_ptr(method);
-	else
+	if (cu == s->b_parent) {
+		/*
+		 * This is recursive invocation so we call the trampoline.
+		 */
+		is_compiled = false;
 		target = vm_method_trampoline_ptr(method);
+	} else {
+		pthread_mutex_lock(&cu->mutex);
+
+		is_compiled = cu->is_compiled;
+		if (is_compiled)
+			target = vm_method_native_ptr(method);
+		else
+			target = vm_method_trampoline_ptr(method);
+
+		pthread_mutex_unlock(&cu->mutex);
+       }
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
