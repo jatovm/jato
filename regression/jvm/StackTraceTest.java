@@ -57,7 +57,7 @@ public class StackTraceTest extends TestCase {
         StackTraceElement []st = null;
 
         try {
-            VM.println(null);
+            VM.throwNullPointerException();
         } catch (NullPointerException e) {
             st = e.getStackTrace();
         }
@@ -66,7 +66,7 @@ public class StackTraceTest extends TestCase {
         assertEquals(4, st.length);
 
         assertStackTraceElement(st[0], -1, null, "jato.internal.VM",
-                "println", true);
+                "throwNullPointerException", true);
 
         assertStackTraceElement(st[1], 60, "StackTraceTest.java",
                 "jvm.StackTraceTest",

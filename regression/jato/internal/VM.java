@@ -7,4 +7,5 @@ public class VM {
   public static native void println(String line);
   public static native void enableFault(int kind, Object arg);
   public static native void disableFault(int kind);
+  public static native void throwNullPointerException();
 };

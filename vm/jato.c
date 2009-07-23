@@ -415,11 +415,19 @@ native_vmfile_is_directory(struct vm_object *dirpath)
 	return S_ISDIR(buf.st_mode);
 }
 
+static void
+native_vm_throw_null_pointer_exception(void)
+{
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);
+	throw_from_native(0);
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
 	DEFINE_NATIVE("jato/internal/VM", "exit", &native_vmruntime_exit),
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
+	DEFINE_NATIVE("jato/internal/VM", "throwNullPointerException", &native_vm_throw_null_pointer_exception),
 	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", &native_vmclass_getclassloader),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
