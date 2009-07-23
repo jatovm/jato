@@ -101,7 +101,8 @@ static inline struct vm_object *exception_occurred(void)
 	if (!is_native((unsigned long)native_ptr)) {			\
 		frame = __builtin_frame_address(1);			\
 									\
-		if (vm_native_stack_get_frame() == frame)		\
+		if (vm_native_stack_get_frame() ==			\
+		    __builtin_frame_address(0))				\
 			vm_leave_vm_native();				\
 									\
 		cu = jit_lookup_cu((unsigned long)native_ptr);		\
