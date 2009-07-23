@@ -121,3 +121,36 @@ unsigned long next_use_pos(struct live_interval *it, unsigned long pos)
 
 	return min;
 }
+
+struct live_interval *vreg_start_interval(struct compilation_unit *cu, unsigned long vreg)
+{
+	struct var_info *var;
+
+	var = cu->var_infos;
+
+	while (var) {
+		if (var->vreg == vreg)
+			break;
+
+		var = var->next;
+	}
+
+	if (var == NULL)
+		return NULL;
+
+	return var->interval;
+}
+
+struct live_interval *interval_child_at(struct live_interval *parent, unsigned long pos)
+{
+	struct live_interval *it = parent;
+
+	while (it) {
+		if (in_range(&it->range, pos))
+			return it;
+
+		it = it->next_child;
+	}
+
+	return NULL;
+}

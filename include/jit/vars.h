@@ -4,6 +4,7 @@
 #include "lib/list.h"
 #include "arch/registers.h"
 #include "vm/types.h"
+#include "compilation-unit.h"
 #include <stdbool.h>
 #include <assert.h>
 
@@ -111,5 +112,6 @@ struct live_interval *alloc_interval(struct var_info *);
 void free_interval(struct live_interval *);
 struct live_interval *split_interval_at(struct live_interval *, unsigned long pos);
 unsigned long next_use_pos(struct live_interval *, unsigned long);
-
+struct live_interval *vreg_start_interval(struct compilation_unit *, unsigned long);
+struct live_interval *interval_child_at(struct live_interval *, unsigned long);
 #endif /* __JIT_VARS_H */
