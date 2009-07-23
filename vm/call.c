@@ -30,6 +30,8 @@
 
 #include "arch/call.h"
 
+#include "jit/exception.h"
+
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/jni.h"
@@ -40,27 +42,42 @@
 static unsigned long
 vm_call_method_a(struct vm_method *method, unsigned long *args)
 {
+	struct vm_object *exception;
 	unsigned long result;
 	void *target;
+
+	/*
+	 * XXX: We cannot call JIT code with exception signalled
+	 * because it will be catched by the nearest exception
+	 * test. We must save pending exception and restore it upon
+	 * return unless new exception is signalled.
+	 */
+	exception = exception_occurred();
+	clear_exception();
 
 	if (vm_method_is_vm_native(method)) {
 		target = vm_method_native_ptr(method);
 		vm_native_call(target, args, method->args_count, result);
-		return result;
+		goto out;
 	}
 
 	target = vm_method_call_ptr(method);
 
 	if (vm_method_is_jni(method)) {
 		if (vm_enter_jni(__builtin_frame_address(0), 0, method))
-			return 0;
+			return -1;
 
 		native_call(target, args, method->args_count, result);
 		vm_leave_jni();
-		return result;
+		goto out;
 	}
 
 	native_call(target, args, method->args_count, result);
+
+ out:
+	if (!exception_occurred() && exception)
+		signal_exception(exception);
+
 	return result;
 }
 
