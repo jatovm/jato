@@ -439,7 +439,7 @@ void test_convert_sastore(void)
 static void assert_convert_new(unsigned long expected_type_idx,
 			       unsigned char idx_1, unsigned char idx_2)
 {
-	struct object *instance_class = new_class();
+	struct vm_class *instance_class = new_class();
 	unsigned char code[] = { OPC_NEW, 0x0, 0x0 };
 	struct basic_block *bb;
 	struct expression *new_expr;
@@ -586,7 +586,7 @@ void test_convert_arraylength(void)
 	};
 	struct expression *arrayref, *arraylen_exp;
 	struct basic_block *bb;
-	struct object *class = new_class();
+	struct vm_class *class = new_class();
 
 	bb = __alloc_simple_bb(&method);
 
@@ -649,7 +649,7 @@ void test_convert_monitorenter(void)
 	struct expression *ref;
 	struct statement *stmt;
 	struct basic_block *bb;
-	struct object *class = new_class();
+	struct vm_class *class = new_class();
 
 	bb = __alloc_simple_bb(&method);
 
@@ -676,7 +676,7 @@ void test_convert_monitorexit(void)
 	struct expression *ref;
 	struct statement *stmt;
 	struct basic_block *bb;
-	struct object *class = new_class();
+	struct vm_class *class = new_class();
 
 	bb = __alloc_simple_bb(&method);
 
