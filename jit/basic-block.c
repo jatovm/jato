@@ -147,6 +147,16 @@ void bb_add_insn(struct basic_block *bb, struct insn *insn)
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }
 
+struct insn *bb_first_insn(struct basic_block *bb)
+{
+	return list_entry(bb->insn_list.next, struct insn, insn_list_node);
+}
+
+struct insn *bb_last_insn(struct basic_block *bb)
+{
+	return list_entry(bb->insn_list.prev, struct insn, insn_list_node);
+}
+
 static int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
 {
 	unsigned long new_size;
