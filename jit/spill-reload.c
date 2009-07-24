@@ -186,31 +186,35 @@ static void insert_mov_insns(struct compilation_unit *cu,
 			     struct basic_block *to_bb)
 {
 	int i;
+	struct insn *spill_at_insn, *reload_at_insn;
+	struct live_interval *from_it, *to_it;
+	struct stack_slot *slots[nr_mapped];
+
+	spill_at_insn	= bb_last_insn(from_bb);
 
 	/* Spill all intervals that have to be resolved */
 	for (i = 0; i < nr_mapped; i++) {
-		struct insn *spill_at_insn, *reload_at_insn;
-		struct live_interval *from_it, *to_it;
-		struct stack_slot *slot;
-
-		spill_at_insn	= bb_last_insn(from_bb);
 		from_it		= mappings[i].from;
+
+		if (from_it->need_spill && from_it->range.end <= from_bb->end_insn) {
+			slots[i] = from_it->spill_slot;
+		} else {
+			slots[i] = spill_interval(from_it, cu, spill_at_insn, true);
+		}
+	}
+
+	/* Reload those intervals into their new location */
+	for (i = 0; i < nr_mapped; i++) {
 		to_it		= mappings[i].to;
 
-		if (from_it->need_spill && from_it->range.end <= from_bb->end_insn)
-			slot = from_it->spill_slot;
-		else
-			slot = spill_interval(from_it, cu, spill_at_insn, true);
-
-		/* Reload those intervals into their new location */
 		reload_at_insn = bb_first_insn(to_bb);
 
 		if (to_it->need_reload && to_it->range.start >= to_bb->start_insn) {
-			insert_copy_slot_insn(mappings[i].to, cu, slot,
+			insert_copy_slot_insn(mappings[i].to, cu, slots[i],
 					to_it->spill_parent->spill_slot,
 					spill_at_insn, reload_at_insn);
 		} else {
-			insert_reload_insn(from_it, cu, slot, reload_at_insn);
+			insert_reload_insn(to_it, cu, slots[i], spill_at_insn);
 		}
 	}
 }
@@ -254,8 +258,12 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 		assert(to_it);
 	}
 
+	/*
+	 * Same goes for the source interval, but we do not have a prev_child
+	 * field, so we need to cheat a bit.
+	 */
 	while (from_it->reg == REG_UNASSIGNED) {
-		from_it = from_it->next_child;
+		from_it = from_it->prev_child;
 		assert(from_it);
 	}
 
