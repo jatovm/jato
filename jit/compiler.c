@@ -99,12 +99,12 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
-	if (opt_trace_regalloc)
-		trace_regalloc(cu);
-
 	err = insert_spill_reload_insns(cu);
 	if (err)
 		goto out;
+
+	if (opt_trace_regalloc)
+		trace_regalloc(cu);
 
 	assert(all_insn_have_bytecode_offset(cu));
 

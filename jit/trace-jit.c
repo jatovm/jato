@@ -262,8 +262,14 @@ void trace_regalloc(struct compilation_unit *cu)
 			printf("  %2lu (pos: %2ld-%2lu):", var->vreg, (signed long)interval->range.start, interval->range.end);
 			printf("\t%s", reg_name(interval->reg));
 			printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
-			printf("\t%s", interval->need_spill ? "spill\t" : "no spill");
-			printf("\t%s", interval->need_reload ? "reload\t" : "no reload");
+			if (interval->need_spill)
+				printf("\tspill (%ld)", interval->spill_slot->index);
+			else
+				printf("\tno spill  ");
+			if (interval->need_reload)
+				printf("\treload (%ld)", interval->spill_parent->spill_slot->index);
+			else
+				printf("\tno reload  ");
 			printf("\n");
 		}
 	}
