@@ -66,7 +66,7 @@ static const char *register_names[] = {
 const char *reg_name(enum machine_reg reg)
 {
 	if (reg == REG_UNASSIGNED)
-		return "<unassigned>";
+		return "-";
 
 	return register_names[reg];
 }
