@@ -279,11 +279,11 @@ static void resolve_data_flow(struct compilation_unit *cu)
 		unsigned int i;
 
 		for (i = 0; i < from->nr_successors; i++) {
-			struct live_interval_mapping mappings[from->nr_predecessors];
+			struct live_interval_mapping mappings[cu->nr_vregs];
 			struct basic_block *to;
 			int nr_mapped = 0;
 
-			if (from->nr_predecessors == 0)
+			if (cu->nr_vregs == 0)
 				continue;
 
 			memset(mappings, 0, sizeof(mappings));
