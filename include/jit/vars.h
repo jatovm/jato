@@ -56,7 +56,7 @@ struct live_interval {
 	struct live_range range;
 
 	/* Linked list of child intervals.  */
-	struct live_interval *next_child;
+	struct live_interval *next_child, *prev_child;
 
 	/* Machine register of this interval.  */
 	enum machine_reg reg;

@@ -101,6 +101,7 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 		return NULL;
 	}
 	new->next_child = interval->next_child;
+	new->prev_child = interval;
 	interval->next_child = new;
 
 	return new;
