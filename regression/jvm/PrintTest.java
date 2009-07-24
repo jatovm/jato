@@ -30,8 +30,6 @@ package jvm;
  */
 public class PrintTest extends TestCase {
     public static void main(String[] args) {
-/*      FIXME
         System.out.write(4);
-*/
     }
 }
