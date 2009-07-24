@@ -56,7 +56,7 @@ static struct insn *last_insn(struct live_interval *interval)
 static struct stack_slot *
 spill_interval(struct live_interval *interval,
 	       struct compilation_unit *cu,
-	       struct insn *last)
+	       struct insn *last, bool tail)
 {
 	struct stack_slot *slot;
 	struct var_info *reg;
@@ -77,7 +77,10 @@ spill_interval(struct live_interval *interval,
 
 	spill->bytecode_offset = last->bytecode_offset;
 
-	list_add(&spill->insn_list_node, &last->insn_list_node);
+	if (tail)
+		list_add_tail(&spill->insn_list_node, &last->insn_list_node);
+	else
+		list_add(&spill->insn_list_node, &last->insn_list_node);
 
 	return slot;
 }
@@ -85,7 +88,7 @@ spill_interval(struct live_interval *interval,
 static int
 insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
-	interval->spill_slot = spill_interval(interval, cu, last_insn(interval));
+	interval->spill_slot = spill_interval(interval, cu, last_insn(interval), false);
 
 	if (!interval->spill_slot)
 		return -ENOMEM;
@@ -197,7 +200,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		if (from_it->need_spill)
 			slot = from_it->spill_slot;
 		else
-			slot = spill_interval(from_it, cu, spill_at_insn);
+			slot = spill_interval(from_it, cu, spill_at_insn, true);
 
 		/* Reload those intervals into their new location */
 		reload_at_insn = bb_first_insn(to_bb);
