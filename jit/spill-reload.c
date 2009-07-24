@@ -197,7 +197,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		from_it		= mappings[i].from;
 		to_it		= mappings[i].to;
 
-		if (from_it->need_spill)
+		if (from_it->need_spill && from_it->range.end <= from_bb->end_insn)
 			slot = from_it->spill_slot;
 		else
 			slot = spill_interval(from_it, cu, spill_at_insn, true);
@@ -205,7 +205,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		/* Reload those intervals into their new location */
 		reload_at_insn = bb_first_insn(to_bb);
 
-		if (to_it->need_reload) {
+		if (to_it->need_reload && to_it->range.start >= to_bb->start_insn) {
 			insert_copy_slot_insn(mappings[i].to, cu, slot,
 					to_it->spill_parent->spill_slot,
 					spill_at_insn, reload_at_insn);

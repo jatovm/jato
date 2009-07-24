@@ -63,8 +63,7 @@ public class RegisterAllocatorTortureTest extends TestCase {
     }
 
     public static void main(String[] args) {
-        testIntegerBigExpression();
-//      FIXME
-//      testComplexRegisterAllocatorPressure();
+      testIntegerBigExpression();
+      testComplexRegisterAllocatorPressure();
     }
 }
