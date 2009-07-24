@@ -196,7 +196,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 	for (i = 0; i < nr_mapped; i++) {
 		from_it		= mappings[i].from;
 
-		if (from_it->need_spill && from_it->range.end <= from_bb->end_insn) {
+		if (from_it->need_spill && from_it->range.end < from_bb->end_insn) {
 			slots[i] = from_it->spill_slot;
 		} else {
 			slots[i] = spill_interval(from_it, cu, spill_at_insn, true);
