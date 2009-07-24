@@ -2291,3 +2291,8 @@ void emit_insn(struct buffer *buf, struct insn *insn)
 
 	__emit_insn(buf, insn);
 }
+
+void emit_nop(struct buffer *buf)
+{
+	emit(buf, 0x90);
+}

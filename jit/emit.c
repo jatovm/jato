@@ -65,6 +65,9 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
 	for_each_insn(insn, &bb->insn_list) {
 		emit_insn(buf, insn);
 	}
+
+	if (opt_trace_machine_code)
+		emit_nop(buf);
 }
 
 static struct buffer_operations exec_buf_ops = {

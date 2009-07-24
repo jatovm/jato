@@ -16,6 +16,9 @@
 
 #include "test/vars.h"
 #include <libharness.h>
+#include <stdbool.h>
+
+bool opt_trace_machine_code;
 
 static struct vm_method method;
 
