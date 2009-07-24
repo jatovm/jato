@@ -26,20 +26,45 @@
 package jvm;
 
 public class RegisterAllocatorTortureTest extends TestCase {
-  public static int one() {
-    return 1;
-  }
+    public static int one() {
+      return 1;
+    }
 
-  public static void testIntegerBigExpression() {
-    int result;
+    public static void testIntegerBigExpression() {
+        int result;
 
-    /* Yes, this is ugly. But it generates tons of register pressure.  */
-    result = ((((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one())))) + ((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))))) + (((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one())))) + ((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))))));
+        /* Yes, this is ugly. But it generates tons of register pressure.  */
+        result = ((((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one())))) + ((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))))) + (((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one())))) + ((((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))) + (((1 + one()) + (1 + one())) + ((1 + one()) + (1 + one()))))));
 
-    assertEquals(64, result);
-  }
+        assertEquals(64, result);
+    }
 
-  public static void main(String[] args) {
-    testIntegerBigExpression();
-  }
+    public static void testComplexRegisterAllocatorPressure() {
+        /* This is a nice test case because it crashes.  */
+        new C().substring(1, 2);
+    }
+
+    private static class C {
+        private char[] value;
+
+        public C() {
+            this.value = new char[0];
+        }
+
+        public C(boolean d) {
+            if (!d)
+                jato.internal.VM.exit(1);
+        }
+
+        public C substring(int a, int b) {
+            int len = b - a;
+            return new C((len << 2) >= value.length);
+        }
+    }
+
+    public static void main(String[] args) {
+        testIntegerBigExpression();
+//      FIXME
+//      testComplexRegisterAllocatorPressure();
+    }
 }
