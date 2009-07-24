@@ -194,8 +194,6 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		from_it		= mappings[i].from;
 		to_it		= mappings[i].to;
 
-		printf("%s: to: %p, from: %p, i: %d\n", __func__, to_it, from_it, i);
-
 		if (from_it->need_spill)
 			slots[i] = from_it->spill_slot;
 		else
@@ -258,8 +256,6 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 
 	assert(to_it);
 	assert(from_it);
-
-	printf("%s: to: %p, from: %p, nr_mapped: %d\n", __func__, to_it, from_it, *nr_mapped);
 
 	mappings[*nr_mapped].from	= from_it;
 	mappings[*nr_mapped].to		= to_it;
