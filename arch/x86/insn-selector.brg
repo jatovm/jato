@@ -968,6 +968,7 @@ reg:	EXPR_NEW
 	select_exception_test(s, tree);
 }
 
+%ifdef	CONFIG_X86_32
 reg:	EXPR_ARRAY_SIZE_CHECK(reg)
 {
 	struct var_info *size;
@@ -979,7 +980,22 @@ reg:	EXPR_ARRAY_SIZE_CHECK(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
 	method_args_cleanup(s, tree, 1);
 }
+%else
+reg:	EXPR_ARRAY_SIZE_CHECK(reg)
+{
+	struct var_info *size, *rdi;
 
+	size = state->left->reg1;
+	state->reg1 = size;
+
+	rdi = get_fixed_var(s->b_parent, REG_RDI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rdi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
+}
+%endif
+
+%ifdef	CONFIG_X86_32
 reg:	EXPR_NEWARRAY(reg)
 {
 	struct var_info *var, *size;
@@ -987,7 +1003,7 @@ reg:	EXPR_NEWARRAY(reg)
 
 	expr = to_expr(tree);
 
-	var = get_fixed_var(s->b_parent, REG_xAX);
+	var = get_fixed_var(s->b_parent, REG_EAX);
 	state->reg1 = var;
 
 	size = state->left->reg1;
@@ -1000,6 +1016,31 @@ reg:	EXPR_NEWARRAY(reg)
 	method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
 }
+%else
+reg:	EXPR_NEWARRAY(reg)
+{
+	struct var_info *ret, *size, *rdi, *rsi;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	ret = get_fixed_var(s->b_parent, REG_RAX);
+	state->reg1 = ret;
+
+	size = state->left->reg1;
+
+	rdi = get_fixed_var(s->b_parent, REG_RDI);
+	rsi = get_fixed_var(s->b_parent, REG_RSI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rdi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
+					  expr->array_type, rsi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_alloc_native_array));
+
+	select_exception_test(s, tree);
+}
+%endif
 
 reg:	EXPR_NULL_CHECK(reg)
 {
