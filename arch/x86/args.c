@@ -25,6 +25,7 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 
 #include "arch/args.h"
 
@@ -32,6 +33,7 @@
 #include "jit/expression.h"
 
 #include "vm/method.h"
+#include "vm/types.h"
 
 #ifdef CONFIG_X86_64
 
@@ -39,11 +41,25 @@ int args_init(unsigned long *state,
 	      struct vm_method *method,
 	      unsigned long nr_args)
 {
-	char *type;
+	const char *type;
+	enum vm_type vm_type;
 
-	for (type = method->type; *type != ')'; type++) {
-		if (*type == 'I' || *type == 'L' || *type == 'J')
+	for (type = method->type + 1; *type != ')'; skip_type(&type)) {
+		vm_type = str_to_type(type);
+		switch (vm_type) {
+		case J_BYTE:
+		case J_CHAR:
+		case J_INT:
+		case J_LONG:
+		case J_SHORT:
+		case J_BOOLEAN:
+		case J_REFERENCE:
 			method->reg_args_count++;
+			break;
+		default:
+			NOT_IMPLEMENTED;
+			break;
+		}
 
 		if (method->reg_args_count == 6)
 			break;

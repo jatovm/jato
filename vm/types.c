@@ -46,7 +46,7 @@ enum vm_type get_method_return_type(char *type)
 
 static int count_skip_arguments(const char **type);
 
-static int skip_type(const char **type)
+int skip_type(const char **type)
 {
 	const char *ptr = *type;
 	int ret = 1;
