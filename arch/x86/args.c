@@ -42,14 +42,18 @@ int args_init(unsigned long *state,
 	char *type;
 
 	for (type = method->type; *type != ')'; type++) {
-		if (*type == 'I' || *type == 'L') {
-			method->args_count--;
+		if (*type == 'I' || *type == 'L' || *type == 'J')
 			method->reg_args_count++;
-		}
 
 		if (method->reg_args_count == 6)
 			break;
 	}
+
+	if (vm_method_is_jni(method))
+		method->reg_args_count += 2;
+
+	method->reg_args_count = min(method->reg_args_count, 6);
+	method->args_count -= method->reg_args_count;
 
 	*state = 1;
 
@@ -69,7 +73,9 @@ int args_set(unsigned long *state,
 		return 0;
 	}
 
-	assert((value_expr->vm_type == J_INT || value_expr->vm_type == J_LONG));
+	assert((value_expr->vm_type == J_INT ||
+		value_expr->vm_type == J_LONG ||
+		value_expr->vm_type == J_REFERENCE));
 
 	reg = (6 - method->reg_args_count) + (*state)++ - method->args_count;
 	expr->arg_private = (void *) reg;
