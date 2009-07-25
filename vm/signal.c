@@ -90,6 +90,11 @@ static unsigned long throw_stack_overflow_error(unsigned long src_addr)
 	return throw_from_signal_bh(src_addr);
 }
 
+static unsigned long rethrow_bh(unsigned long src_addr)
+{
+	return throw_from_signal_bh(src_addr);
+}
+
 static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 {
 	if (signal_from_native(ctx))
@@ -141,7 +146,7 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		if (si->si_addr == trampoline_exceptions_guard_page)
 			throw_from_trampoline(ctx, exception);
 		else
-			throw_from_signal(ctx, exception);
+			install_signal_bh(ctx, &rethrow_bh);
 
 		return;
 	}

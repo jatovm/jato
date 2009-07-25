@@ -54,7 +54,6 @@ unsigned char *throw_from_jit(struct compilation_unit *cu,
 int insert_exception_spill_insns(struct compilation_unit *cu);
 unsigned char *throw_exception(struct compilation_unit *cu,
 			       struct vm_object *exception);
-void throw_from_signal(void *ctx, struct vm_object *exception);
 void throw_from_trampoline(void *ctx, struct vm_object *exception);
 void unwind(void);
 void signal_exception(struct vm_object *obj);

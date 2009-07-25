@@ -50,27 +50,6 @@ throw_exception(struct compilation_unit *cu, struct vm_object *exception)
 	return throw_from_jit(cu, frame, native_ptr);
 }
 
-void throw_from_signal(void *ctx, struct vm_object *exception)
-{
-	struct jit_stack_frame *frame;
-	struct compilation_unit *cu;
-	unsigned long source_addr;
-	ucontext_t *uc;
-	void *eh;
-
-	signal_exception(exception);
-
-	uc = ctx;
-
-	source_addr = uc->uc_mcontext.gregs[REG_IP];
-	cu = jit_lookup_cu(source_addr);
-	frame = (struct jit_stack_frame*)uc->uc_mcontext.gregs[REG_BP];
-
-	eh = throw_from_jit(cu, frame, (unsigned char*)source_addr);
-
-	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)eh;
-}
-
 void throw_from_trampoline(void *ctx, struct vm_object *exception)
 {
 	unsigned long return_address;
