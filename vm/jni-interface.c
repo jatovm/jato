@@ -262,8 +262,6 @@ vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
 	va_end(args);
 }
 
-extern void print_trace(void);
-
 static void
 vm_jni_call_static_void_method_v(struct vm_jni_env *env, jclass clazz,
 				 jmethodID methodID, va_list args)
