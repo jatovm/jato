@@ -48,9 +48,9 @@ vm_call_method_a(struct vm_method *method, unsigned long *args)
 
 	/*
 	 * XXX: We cannot call JIT code with exception signalled
-	 * because it will be catched by the nearest exception
+	 * because it will be caught by the nearest exception
 	 * test. We must save pending exception and restore it upon
-	 * return unless new exception is signalled.
+	 * return unless called method signalled exception itself.
 	 */
 	exception = exception_occurred();
 	clear_exception();
