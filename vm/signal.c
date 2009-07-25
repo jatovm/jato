@@ -42,28 +42,6 @@
 #include <unistd.h>
 #include <stdio.h>
 
-unsigned long throw_from_signal_bh(unsigned long jit_addr)
-{
-	struct jit_stack_frame *frame;
-	struct compilation_unit *cu;
-
-	/*
-	 * The frame chain looks like this here:
-	 *
-	 * 0  <throw_from_signal_bh>
-	 * 1  <signal_bottom_half_handler>
-	 * 2  <signal_bh_trampoline>
-	 * 3  <jit_method>
-	 *    ...
-	 */
-	frame = __builtin_frame_address(3);
-
-	cu = jit_lookup_cu(jit_addr);
-
-	return (unsigned long)throw_from_jit(cu, frame,
-		(unsigned char *)jit_addr);
-}
-
 static unsigned long throw_arithmetic_exception(unsigned long src_addr)
 {
 	signal_new_exception(vm_java_lang_ArithmeticException,
