@@ -162,6 +162,9 @@ static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
 	unsigned long ret_addr;
 	void *new_frame;
 
+	if (elem->frame == bottom_stack_frame)
+		return -1;
+
 	/* If previous element was a JNI call then we move to the JNI
 	 * caller's frame. We use the JNI stack_entry info to get the
 	 * frame because we don't trust JNI methods's frame
@@ -212,9 +215,6 @@ static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
 	 * information to obtain bytecode offset.
 	 */
 	new_addr = ret_addr - 1;
-
-	if (new_frame == bottom_stack_frame)
-		return -1;
 
  out:
 	/* Check if we hit the VM native caller frame */
