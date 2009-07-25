@@ -142,6 +142,7 @@ struct vm_method *vm_java_lang_Throwable_getCause;
 struct vm_method *vm_java_lang_Throwable_toString;
 struct vm_method *vm_java_lang_Throwable_getStackTrace;
 struct vm_method *vm_java_lang_Throwable_setStackTrace;
+struct vm_method *vm_java_lang_StackTraceElement_init;
 struct vm_method *vm_java_lang_StackTraceElement_getFileName;
 struct vm_method *vm_java_lang_StackTraceElement_getClassName;
 struct vm_method *vm_java_lang_StackTraceElement_getMethodName;
@@ -221,6 +222,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"equals",
 		"(Ljava/lang/Object;)Z",
 		&vm_java_lang_StackTraceElement_equals,
+	},
+	{
+		&vm_java_lang_StackTraceElement,
+		"<init>",
+		"(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V",
+		&vm_java_lang_StackTraceElement_init,
 	},
 };
 

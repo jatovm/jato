@@ -34,6 +34,8 @@
 #include "jit/compiler.h"
 
 #include "lib/buffer.h"
+
+#include "vm/call.h"
 #include "vm/class.h"
 #include "vm/die.h"
 #include "vm/guard-page.h"
@@ -112,19 +114,12 @@ int signal_new_exception_with_cause(struct vm_class *vmc,
 				    struct vm_object *cause,
 				    const char *msg)
 {
-	struct vm_object *exception;
-	vm_throwable_init_cause_fn init_cause;
+	struct vm_object *exception = new_exception(vmc, msg);
 
-	init_cause = vm_method_trampoline_ptr(vm_java_lang_Throwable_initCause);
-
-	exception = new_exception(vmc, msg);
 	if (!exception)
 		return -1;
 
-	init_cause(exception, cause);
-	if (exception_occurred())
-		return -1;
-
+	vm_call_method(vm_java_lang_Throwable_initCause, exception, cause);
 	signal_exception(exception);
 	return 0;
 }

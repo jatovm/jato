@@ -46,6 +46,7 @@ extern struct vm_method *vm_java_lang_Throwable_getCause;
 extern struct vm_method *vm_java_lang_Throwable_toString;
 extern struct vm_method *vm_java_lang_Throwable_getStackTrace;
 extern struct vm_method *vm_java_lang_Throwable_setStackTrace;
+extern struct vm_method *vm_java_lang_StackTraceElement_init;
 extern struct vm_method *vm_java_lang_StackTraceElement_getFileName;
 extern struct vm_method *vm_java_lang_StackTraceElement_getClassName;
 extern struct vm_method *vm_java_lang_StackTraceElement_getMethodName;

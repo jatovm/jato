@@ -8,6 +8,7 @@
 #include "vm/vm.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 struct compilation_unit;
 struct vm_method;

@@ -7,6 +7,7 @@
 
 #include "jit/exception.h"
 
+#include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/die.h"
@@ -332,7 +333,6 @@ typedef void (*exception_init_fn)(struct vm_object *, struct vm_object *);
 struct vm_object *new_exception(struct vm_class *vmc, const char *message)
 {
 	struct vm_object *message_str;
-	exception_init_fn init;
 	struct vm_method *mb;
 	struct vm_object *obj;
 
@@ -352,17 +352,11 @@ struct vm_object *new_exception(struct vm_class *vmc, const char *message)
 		}
 	}
 
-	mb = vm_class_get_method(vmc,
-		"<init>", "(Ljava/lang/String;)V");
+	mb = vm_class_get_method(vmc, "<init>", "(Ljava/lang/String;)V");
 	if (!mb)
 		error("constructor not found");
 
-	init = vm_method_call_ptr(mb);
-	init(obj, message_str);
-
-	if (exception_occurred())
-		return NULL;
-
+	vm_call_method(mb, obj, message_str);
 	return obj;
 }
 

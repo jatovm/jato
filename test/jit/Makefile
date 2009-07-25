@@ -48,6 +48,7 @@ TOPLEVEL_OBJS := \
 	lib/list.o \
 	lib/radix-tree.o \
 	lib/string.o \
+	vm/call.o \
 	vm/bytecode.o \
 	vm/bytecodes.o \
 	vm/die.o \
@@ -65,6 +66,7 @@ TOPLEVEL_OBJS := \
 	test/vm/object-stub.o \
 	test/vm/preload-stub.o \
 	test/vm/jni-stub.o \
+	test/vm/stack-trace-stub.o \
 	test/jit/trace-stub.o
 
 TEST_OBJS := \
