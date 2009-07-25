@@ -1309,6 +1309,7 @@ reg:	EXPR_EXCEPTION_REF
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
 }
 
+%ifdef	CONFIG_X86_32
 stmt:	STMT_RETURN(reg) 1
 {
 	struct expression *expr;
@@ -1331,6 +1332,23 @@ stmt:	STMT_RETURN(reg) 1
 
 	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
 }
+%else
+stmt:	STMT_RETURN(reg) 1
+{
+	struct expression *expr;
+	struct var_info *src, *eax;
+
+	expr = to_expr(tree);
+	expr = to_expr(expr->unary_expression);
+
+	eax = get_fixed_var(s->b_parent, REG_xAX);
+	src = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, eax));
+
+	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
+}
+%endif
 
 stmt:	STMT_RETURN(freg) 1
 {
