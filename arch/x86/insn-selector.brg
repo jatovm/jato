@@ -1831,7 +1831,7 @@ static void select_exception_test(struct basic_block *bb,
 	unsigned long exception_guard_offset;
 	struct var_info *reg;
 
-	reg = get_var(bb->b_parent, J_INT);
+	reg = get_var(bb->b_parent, GPR_VM_TYPE);
 
 	exception_guard_offset = get_thread_local_offset(&exception_guard);
 
