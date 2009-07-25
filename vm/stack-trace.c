@@ -710,11 +710,15 @@ static void vm_print_exception_description(struct vm_object *exception)
 
 void vm_print_exception(struct vm_object *exception)
 {
+	struct vm_object *old_exception;
 	struct string *str;
 
 	str = alloc_str();
 	if (!str)
 		goto error;
+
+	old_exception = exception_occurred();
+	clear_exception();
 
 	/* TODO: print correct thread name */
 	str_append(str, "Exception in thread \"main\" ");
@@ -725,6 +729,9 @@ void vm_print_exception(struct vm_object *exception)
 
 	fprintf(stderr, "%s", str->value);
 	free_str(str);
+
+	if (old_exception)
+		signal_exception(old_exception);
 
 	return;
 error:
