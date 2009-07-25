@@ -2256,10 +2256,21 @@ static void emit_cmp_reg_reg(struct buffer *buf,
 	emit_reg_reg(buf, rex_w, 0x39, src, dest);
 }
 
+static void emit_indirect_call(struct buffer *buf, struct operand *operand)
+{
+	unsigned char reg = encode_reg(&operand->reg);
+
+	if (reg_high(reg))
+		emit(buf, REX_B);
+	emit(buf, 0xff);
+	emit(buf, encode_modrm(0x0, 0x2, reg));
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg, TWO_OPERANDS),
