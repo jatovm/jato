@@ -34,7 +34,7 @@ unwind:
 	pushl	%edx	# native ptr
 	pushl	%ebp	# frame
 	pushl	%ecx	# cu
-	call	throw_exception_from
+	call	throw_from_jit
 	addl	$12, %esp
 
 	pushl %eax

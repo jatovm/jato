@@ -34,7 +34,7 @@ unwind:
 	pushq	%rdx	# native ptr
 	pushq	%rbp	# frame
 	pushq	%rcx	# cu
-	call	throw_exception_from
+	call	throw_from_jit
 	addq	$24, %rsp
 
 	pushq %rax

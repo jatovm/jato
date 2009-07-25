@@ -212,9 +212,9 @@ is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
 }
 
 /**
- * throw_exception_from - returns native pointer inside jitted method
- *                        that sould be executed to handle exception.
- *                        This can be one of the following:
+ * throw_from_jit - returns native pointer inside jitted method
+ *                  that sould be executed to handle exception.
+ *                  This can be one of the following:
  *                        1) registered exception handler (catch/finally block)
  *                        2) method's unwind block (when no handler is found)
  *                        3) method's exit block (when no handler is found and
@@ -226,8 +226,8 @@ is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
  * @native_ptr: pointer to instruction that caused exception
  */
 unsigned char *
-throw_exception_from(struct compilation_unit *cu, struct jit_stack_frame *frame,
-		     unsigned char *native_ptr)
+throw_from_jit(struct compilation_unit *cu, struct jit_stack_frame *frame,
+	       unsigned char *native_ptr)
 {
 	struct vm_object *exception;
 	unsigned long bc_offset;

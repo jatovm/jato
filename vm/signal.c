@@ -60,7 +60,7 @@ unsigned long throw_from_signal_bh(unsigned long jit_addr)
 
 	cu = jit_lookup_cu(jit_addr);
 
-	return (unsigned long)throw_exception_from(cu, frame,
+	return (unsigned long)throw_from_jit(cu, frame,
 		(unsigned char *)jit_addr);
 }
 
@@ -139,9 +139,9 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		}
 
 		if (si->si_addr == trampoline_exceptions_guard_page)
-			throw_exception_from_trampoline(ctx, exception);
+			throw_from_trampoline(ctx, exception);
 		else
-			throw_exception_from_signal(ctx, exception);
+			throw_from_signal(ctx, exception);
 
 		return;
 	}

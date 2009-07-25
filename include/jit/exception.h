@@ -47,15 +47,15 @@ extern __thread struct vm_object *exception_holder;
 struct cafebabe_code_attribute_exception *
 lookup_eh_entry(struct vm_method *method, unsigned long target);
 
-unsigned char *throw_exception_from(struct compilation_unit *cu,
-				    struct jit_stack_frame *frame,
-				    unsigned char *native_ptr);
+unsigned char *throw_from_jit(struct compilation_unit *cu,
+			      struct jit_stack_frame *frame,
+			      unsigned char *native_ptr);
 
 int insert_exception_spill_insns(struct compilation_unit *cu);
 unsigned char *throw_exception(struct compilation_unit *cu,
 			       struct vm_object *exception);
-void throw_exception_from_signal(void *ctx, struct vm_object *exception);
-void throw_exception_from_trampoline(void *ctx, struct vm_object *exception);
+void throw_from_signal(void *ctx, struct vm_object *exception);
+void throw_from_trampoline(void *ctx, struct vm_object *exception);
 void unwind(void);
 void signal_exception(struct vm_object *obj);
 int signal_new_exception(struct vm_class *vmc, const char *msg);
@@ -106,7 +106,7 @@ static inline struct vm_object *exception_occurred(void)
 			vm_leave_vm_native();				\
 									\
 		cu = jit_lookup_cu((unsigned long)native_ptr);		\
-		eh = throw_exception_from(cu, frame, native_ptr);	\
+		eh = throw_from_jit(cu, frame, native_ptr);		\
 									\
 		__override_return_address(eh);				\
 		__cleanup_args(args_size);				\
