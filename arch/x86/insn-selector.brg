@@ -1570,7 +1570,7 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 	struct expression *exprdest, *exprsrc;
 	struct stack_slot *slot;
 	struct statement *stmt;
-	struct var_info *dest;
+	struct var_info *src, *dest;
 	enum machine_reg reg;
 	int index;
 
@@ -1579,16 +1579,19 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 	exprsrc = to_expr(stmt->store_src);
 	exprdest = to_expr(stmt->store_dest);
 
+	dest = exprdest->tmp_low;
+
 	reg = args_local_to_reg(s->b_parent->method, exprsrc->local_index);
 	if (reg == REG_UNASSIGNED) {
 		index = args_stack_index(s->b_parent->method,
 					 exprsrc->local_index);
 		slot = get_local_slot(s->b_parent->stack_frame, index);
-		dest = exprdest->tmp_low;
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
 						       slot, dest));
-	} else
-		exprdest->tmp_low = get_fixed_var(s->b_parent, reg);
+	} else {
+		src = get_fixed_var(s->b_parent, reg);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+	}
 }
 %endif
 
