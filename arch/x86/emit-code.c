@@ -2022,6 +2022,25 @@ static void __emit64_push_membase(struct buffer *buf,
 	__emit_membase(buf, 0, 0xff, src_reg, disp, 6);
 }
 
+static void __emit_mov_reg_membase(struct buffer *buf,
+				   int rex_w,
+				   enum machine_reg src,
+				   enum machine_reg base,
+				   unsigned long disp)
+{
+	__emit_membase(buf, rex_w, 0x89, base, disp, __encode_reg(src));
+}
+
+static void
+emit_mov_reg_membase(struct buffer *buf, struct operand *src,
+		     struct operand *dest)
+{
+	int rex_w = is_64bit_reg(src);
+
+	__emit_mov_reg_membase(buf, rex_w, mach_reg(&src->reg),
+			       mach_reg(&dest->base_reg), dest->disp);
+}
+
 static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
 {
 	/* FIXME: implement this! */
@@ -2093,6 +2112,24 @@ static void emit_mov_thread_local_memdisp_reg(struct buffer *buf,
 
 	emit(buf, 0x64); /* FS segment override prefix */
 	__emit_memdisp_reg(buf, rex_w, 0x8b, src->imm, mach_reg(&dest->reg));
+}
+
+static void emit_mov_reg_thread_local_memdisp(struct buffer *buf,
+					      struct operand *src,
+					      struct operand *dest)
+{
+	int rex_w = is_64bit_reg(src);
+
+	emit(buf, 0x64); /* FS segment override prefix */
+	__emit_reg_memdisp(buf, rex_w, 0x89, mach_reg(&src->reg), dest->imm);
+}
+
+static void emit_mov_reg_thread_local_membase(struct buffer *buf,
+					      struct operand *src,
+					      struct operand *dest)
+{
+	emit(buf, 0x64); /* FS segment override prefix */
+	emit_mov_reg_membase(buf, src, dest);
 }
 
 static void __emit64_test_membase_reg(struct buffer *buf,
@@ -2230,9 +2267,12 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
