@@ -61,6 +61,7 @@
 	}
 #else
 #define native_call(target, args, args_count, result)	abort();
+#define vm_native_call(target, args, args_count, result)	abort();
 #warning NOT IMPLEMENTED
 #endif
 
