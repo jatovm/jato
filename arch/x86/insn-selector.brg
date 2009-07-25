@@ -284,103 +284,47 @@ reg:   EXPR_TEMPORARY 0
 
 reg:	OP_ADD(reg, EXPR_LOCAL) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
 	binop_reg_local_low(state, s, tree, INSN_ADD_MEMBASE_REG);
-
-	if (expr->vm_type == J_LONG) {
-		binop_reg_local_high(state, s, tree, INSN_ADC_MEMBASE_REG);
-	}
+	binop_reg_local_high(state, s, tree, INSN_ADC_MEMBASE_REG);
 }
 
 reg:	OP_ADD(reg, EXPR_VALUE) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
 	binop_reg_value_low(state, s, tree, INSN_ADD_IMM_REG);
-
-	if (expr->vm_type == J_LONG) {
-		binop_reg_value_high(state, s, tree, INSN_ADC_IMM_REG);
-	}
+	binop_reg_value_high(state, s, tree, INSN_ADC_IMM_REG);
 }
 
 reg:	OP_ADD(reg, reg) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
 	binop_reg_reg_low(state, s, tree, INSN_ADD_REG_REG);
-
-	if (expr->vm_type == J_LONG) {
-		state->reg2 = state->left->reg2;
-		binop_reg_reg_high(state, s, tree, INSN_ADC_REG_REG);
-	}
+	binop_reg_reg_high(state, s, tree, INSN_ADC_REG_REG);
 }
 
 freg:	OP_FADD(freg, freg) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
 	binop_reg_reg_low(state, s, tree, INSN_FADD_REG_REG);
 }
 
 reg:	OP_SUB(reg, EXPR_LOCAL) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
 	binop_reg_local_low(state, s, tree, INSN_SUB_MEMBASE_REG);
-
-	if (expr->vm_type == J_LONG) {
-		binop_reg_local_high(state, s, tree, INSN_SBB_MEMBASE_REG);
-	}
+	binop_reg_local_high(state, s, tree, INSN_SBB_MEMBASE_REG);
 }
 
 reg:	OP_SUB(reg, EXPR_VALUE) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
 	binop_reg_value_low(state, s, tree, INSN_SUB_IMM_REG);
-
-	if (expr->vm_type == J_LONG) {
-		binop_reg_value_high(state, s, tree, INSN_SBB_IMM_REG);
-	}
+	binop_reg_value_high(state, s, tree, INSN_SBB_IMM_REG);
 }
 
 reg:	OP_SUB(reg, reg) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
 	binop_reg_reg_low(state, s, tree, INSN_SUB_REG_REG);
-
-	if (expr->vm_type == J_LONG) {
-		state->reg2 = state->left->reg2;
-		binop_reg_reg_high(state, s, tree, INSN_SBB_REG_REG);
-	}
+	binop_reg_reg_high(state, s, tree, INSN_SBB_REG_REG);
 }
 
 freg:	OP_FSUB(freg, freg) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
 	binop_reg_reg_low(state, s, tree, INSN_FSUB_REG_REG);
 }
 
@@ -623,89 +567,38 @@ reg:	OP_USHR_64(reg, reg) 1
 
 reg:	OP_OR(reg, EXPR_LOCAL) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
-
 	binop_reg_local_low(state, s, tree, INSN_OR_MEMBASE_REG);
-
-	if (expr->vm_type == J_LONG) {
-		state->reg2 = state->left->reg2;
-		binop_reg_local_high(state, s, tree, INSN_OR_MEMBASE_REG);
-	}
+	binop_reg_local_high(state, s, tree, INSN_OR_MEMBASE_REG);
 }
 
 reg:	OP_OR(reg, reg) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
 	binop_reg_reg_low(state, s, tree, INSN_OR_REG_REG);
-
-	if (expr->vm_type == J_LONG) {
-		state->reg2 = state->left->reg2;
-		binop_reg_reg_high(state, s, tree, INSN_OR_REG_REG);
-	}
+	binop_reg_reg_high(state, s, tree, INSN_OR_REG_REG);
 }
 
 reg:	OP_AND(reg, EXPR_LOCAL) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
 	binop_reg_local_low(state, s, tree, INSN_AND_MEMBASE_REG);
-
-	if (expr->vm_type == J_LONG) {
-		binop_reg_local_high(state, s, tree, INSN_AND_MEMBASE_REG);
-	}
+	binop_reg_local_high(state, s, tree, INSN_AND_MEMBASE_REG);
 }
 
 reg:	OP_AND(reg, reg) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
 	binop_reg_reg_low(state, s, tree, INSN_AND_REG_REG);
-
-	if (expr->vm_type == J_LONG) {
-		state->reg2 = state->left->reg2;
-		binop_reg_reg_high(state, s, tree, INSN_AND_REG_REG);
-	}
+	binop_reg_reg_high(state, s, tree, INSN_AND_REG_REG);
 }
 
 reg:	OP_XOR(reg, EXPR_LOCAL) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
 	binop_reg_local_low(state, s, tree, INSN_XOR_MEMBASE_REG);
-
-	if (expr->vm_type == J_LONG) {
-		binop_reg_local_high(state, s, tree, INSN_XOR_MEMBASE_REG);
-	}
+	binop_reg_local_high(state, s, tree, INSN_XOR_MEMBASE_REG);
 }
 
 reg:	OP_XOR(reg, reg) 1
 {
-	struct expression *expr;
-
-	expr = to_expr(tree);
-
-	state->reg1 = state->left->reg1;
 	binop_reg_reg_low(state, s, tree, INSN_XOR_REG_REG);
-
-	if (expr->vm_type == J_LONG) {
-		state->reg2 = state->left->reg2;
-		binop_reg_reg_high(state, s, tree, INSN_XOR_REG_REG);
-	}
+	binop_reg_reg_high(state, s, tree, INSN_XOR_REG_REG);
 }
 
 reg:	EXPR_INVOKE(arg) 1
@@ -1891,14 +1784,6 @@ static void binop_reg_local_low(struct _MBState *state, struct basic_block *bb,
 	__binop_reg_local(state, bb, tree, insn_type, state->left->reg1, 0);
 }
 
-static void binop_reg_local_high(struct _MBState *state, struct basic_block *bb,
-			    struct tree_node *tree, enum insn_type insn_type)
-{
-	state->reg2 = state->left->reg2;
-
-	__binop_reg_local(state, bb, tree, insn_type, state->left->reg2, 4);
-}
-
 static void binop_reg_value_low(struct _MBState *state, struct basic_block *bb,
 				struct tree_node *tree, enum insn_type insn_type)
 {
@@ -1912,19 +1797,6 @@ static void binop_reg_value_low(struct _MBState *state, struct basic_block *bb,
 	select_insn(bb, tree, imm_reg_insn(insn_type, right->value & ~0UL, state->reg1));
 }
 
-static void binop_reg_value_high(struct _MBState *state, struct basic_block *bb,
-				struct tree_node *tree, enum insn_type insn_type)
-{
-	struct expression *expr, *right;
-
-	state->reg2 = state->left->reg2;
-
-	expr = to_expr(tree);
-	right = to_expr(expr->binary_right);
-
-	select_insn(bb, tree, imm_reg_insn(insn_type, right->value >> 32, state->reg2));
-}
-
 static void binop_reg_reg_low(struct _MBState *state, struct basic_block *bb,
 			  struct tree_node *tree, enum insn_type insn_type)
 {
@@ -1933,19 +1805,74 @@ static void binop_reg_reg_low(struct _MBState *state, struct basic_block *bb,
 	src = state->right->reg1;
 	dst = state->left->reg1;
 
+	state->reg1 = dst;
+
 	select_insn(bb, tree, reg_reg_insn(insn_type, src, dst));
+}
+
+#ifdef CONFIG_X86_32
+static void binop_reg_local_high(struct _MBState *state, struct basic_block *bb,
+			    struct tree_node *tree, enum insn_type insn_type)
+{
+	struct expression *expr = to_expr(tree);
+
+	if (expr->vm_type != J_LONG)
+		return;
+
+	state->reg2 = state->left->reg2;
+
+	__binop_reg_local(state, bb, tree, insn_type, state->left->reg2, 4);
+}
+
+static void binop_reg_value_high(struct _MBState *state, struct basic_block *bb,
+				struct tree_node *tree, enum insn_type insn_type)
+{
+	struct expression *expr, *right;
+
+	expr = to_expr(tree);
+
+	if (expr->vm_type != J_LONG)
+		return;
+
+	state->reg2 = state->left->reg2;
+
+	right = to_expr(expr->binary_right);
+
+	select_insn(bb, tree, imm_reg_insn(insn_type, right->value >> 32, state->reg2));
 }
 
 static void binop_reg_reg_high(struct _MBState *state, struct basic_block *bb,
 			  struct tree_node *tree, enum insn_type insn_type)
 {
 	struct var_info *src, *dst;
+	struct expression *expr = to_expr(tree);
+
+	if (expr->vm_type != J_LONG)
+		return;
 
 	src = state->right->reg2;
 	dst = state->left->reg2;
 
+	state->reg2 = dst;
+
 	select_insn(bb, tree, reg_reg_insn(insn_type, src, dst));
 }
+#else /* CONFIG_X86_32 */
+static void binop_reg_local_high(struct _MBState *state, struct basic_block *bb,
+			    struct tree_node *tree, enum insn_type insn_type)
+{
+}
+
+static void binop_reg_value_high(struct _MBState *state, struct basic_block *bb,
+				struct tree_node *tree, enum insn_type insn_type)
+{
+}
+
+static void binop_reg_reg_high(struct _MBState *state, struct basic_block *bb,
+			  struct tree_node *tree, enum insn_type insn_type)
+{
+}
+#endif /* CONFIG_X86_32 */
 
 static void shift_reg_local(struct _MBState *state, struct basic_block *bb,
 			    struct tree_node *tree, enum insn_type insn_type)
