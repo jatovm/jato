@@ -77,7 +77,9 @@ static struct vm_object *native_vmstackwalker_getclasscontext(void)
 	struct vm_class *class;
 	struct vm_object *res;
 
-	if (init_stack_trace_elem(&st_elem))
+	init_stack_trace_elem_current(&st_elem);
+
+	if (stack_trace_elem_next_java(&st_elem))
 		return NULL;
 
 	cu = jit_lookup_cu(st_elem.addr);

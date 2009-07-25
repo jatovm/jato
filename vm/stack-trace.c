@@ -152,11 +152,11 @@ void vm_leave_vm_native()
 }
 
 /**
- * get_caller_stack_trace_elem - sets @elem to the previous element.
+ * stack_trace_elem_next - sets @elem to the next call stack element.
  *
  * Returns 0 on success and -1 when bottom of stack is reached.
  */
-static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
+int stack_trace_elem_next(struct stack_trace_elem *elem)
 {
 	unsigned long new_addr;
 	unsigned long ret_addr;
@@ -256,39 +256,48 @@ static int get_caller_stack_trace_elem(struct stack_trace_elem *elem)
 }
 
 /**
- * get_prev_stack_trace_elem - makes @elem to point to the previous
- *     stack_trace element that has a compilation unit (JIT method or
- *     VM native).
+ * stack_trace_elem_next_java - makes @elem to point to the nearest
+ *     element that corresponds to a java method call (has a
+ *     compilation unit). This can be JIT, VM NATIVE or JNI method.
  *
  * Returns 0 on success and -1 when bottom of stack trace reached.
  */
-int get_prev_stack_trace_elem(struct stack_trace_elem *elem)
+int stack_trace_elem_next_java(struct stack_trace_elem *elem)
 {
-	while (get_caller_stack_trace_elem(elem) == 0) {
-		if (elem->type < STACK_TRACE_ELEM_TYPE_OTHER)
+	while (stack_trace_elem_next(elem) == 0) {
+		if (stack_trace_elem_type_is_java(elem->type))
 			return 0;
 	}
 
 	return -1;
 }
 
-/**
- * init_stack_trace_elem - initializes stack trace element so that it
- *     points to the nearest JIT or VM native frame.
- *
- * Returns 0 on success and -1 when bottom of stack trace reached.
- */
-int init_stack_trace_elem(struct stack_trace_elem *elem)
+void init_stack_trace_elem(struct stack_trace_elem *elem, unsigned long addr,
+			   void *frame)
 {
-	elem->is_native = true;
-	elem->type = STACK_TRACE_ELEM_TYPE_OTHER;
-	elem->addr = (unsigned long)&init_stack_trace_elem;
-	elem->frame = __builtin_frame_address(0);
+	elem->is_native = is_native(addr);
+	elem->addr = addr;
+	elem->frame = frame;
+
+	if (elem->is_native)
+		elem->type = STACK_TRACE_ELEM_TYPE_OTHER;
+	else
+		elem->type = STACK_TRACE_ELEM_TYPE_JIT;
 
 	elem->vm_native_stack_index = vm_native_stack_index() - 1;
 	elem->jni_stack_index = jni_stack_index() - 1;
 
-	return get_prev_stack_trace_elem(elem);
+	if (vm_native_stack_get_frame() == frame) {
+		elem->type = STACK_TRACE_ELEM_TYPE_VM_NATIVE;
+		elem->vm_native_stack_index--;
+	}
+}
+
+void init_stack_trace_elem_current(struct stack_trace_elem *elem)
+{
+	init_stack_trace_elem(elem,
+			      (unsigned long)&init_stack_trace_elem_current,
+			      __builtin_frame_address(0));
 }
 
 struct compilation_unit *stack_trace_elem_get_cu(struct stack_trace_elem *elem)
@@ -324,16 +333,16 @@ int skip_frames_from_class(struct stack_trace_elem *elem,
 		if (!vm_class_is_assignable_from(class, cu->method->class))
 			return 0;
 
-	} while (get_prev_stack_trace_elem(elem) == 0);
+	} while (stack_trace_elem_next_java(elem) == 0);
 
 	return -1;
 }
 
 /**
- * get_stack_trace_depth - returns number of stack trace elements,
+ * get_java_stack_trace_depth - returns number of java stack trace elements,
  *     including @elem.
  */
-int get_stack_trace_depth(struct stack_trace_elem *elem)
+int get_java_stack_trace_depth(struct stack_trace_elem *elem)
 {
 	struct stack_trace_elem tmp;
 	int depth;
@@ -341,7 +350,7 @@ int get_stack_trace_depth(struct stack_trace_elem *elem)
 	tmp = *elem;
 	depth = 1;
 
-	while (get_prev_stack_trace_elem(&tmp) == 0)
+	while (stack_trace_elem_next_java(&tmp) == 0)
 		depth++;
 
 	return depth;
@@ -362,7 +371,9 @@ static struct vm_object *get_intermediate_stack_trace(void)
 	int depth;
 	int i;
 
-	if (init_stack_trace_elem(&st_elem))
+	init_stack_trace_elem_current(&st_elem);
+
+	if (stack_trace_elem_next_java(&st_elem))
 		return NULL;
 
 	if (skip_frames_from_class(&st_elem, vm_java_lang_VMThrowable))
@@ -371,7 +382,7 @@ static struct vm_object *get_intermediate_stack_trace(void)
 	if (skip_frames_from_class(&st_elem, vm_java_lang_Throwable))
 		return NULL;
 
-	depth = get_stack_trace_depth(&st_elem);
+	depth = get_java_stack_trace_depth(&st_elem);
 	if (depth == 0)
 		return NULL;
 
@@ -400,7 +411,7 @@ static struct vm_object *get_intermediate_stack_trace(void)
 
 		array_set_field_ptr(array, i++, cu->method);
 		array_set_field_ptr(array, i++, (void*)bc_offset);
-	} while (get_prev_stack_trace_elem(&st_elem) == 0);
+	} while (stack_trace_elem_next_java(&st_elem) == 0);
 
 	return array;
 }
@@ -492,7 +503,7 @@ convert_intermediate_stack_trace(struct vm_object *array)
  * get_stack_trace - returns an array of java.lang.StackTraceElement
  *   representing the current java call stack.
  */
-struct vm_object *get_stack_trace()
+struct vm_object *get_java_stack_trace()
 {
 	struct vm_object *intermediate;
 
@@ -759,7 +770,7 @@ struct vm_object *vm_alloc_stack_overflow_error(void)
 		return NULL;
 	}
 
-	stacktrace = get_stack_trace();
+	stacktrace = get_java_stack_trace();
 	if (stacktrace)
 		vm_call_method(vm_java_lang_Throwable_setStackTrace, obj,
 			       stacktrace);

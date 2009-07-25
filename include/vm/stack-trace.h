@@ -100,7 +100,7 @@ enum stack_trace_elem_type {
 	STACK_TRACE_ELEM_TYPE_JNI,
 	STACK_TRACE_ELEM_TYPE_VM_NATIVE,
 
-	STACK_TRACE_ELEM_TYPE_OTHER,
+	STACK_TRACE_ELEM_TYPE_OTHER, /* All values below this are java */
 	STACK_TRACE_ELEM_TYPE_TRAMPOLINE,
 };
 
@@ -129,14 +129,22 @@ struct stack_trace_elem {
 	struct compilation_unit *cu;
 };
 
+static inline bool
+stack_trace_elem_type_is_java(enum stack_trace_elem_type type)
+{
+	return type < STACK_TRACE_ELEM_TYPE_OTHER;
+}
+
 void init_stack_trace_printing(void);
-int init_stack_trace_elem(struct stack_trace_elem *elem);
-int get_prev_stack_trace_elem(struct stack_trace_elem *elem);
+void init_stack_trace_elem(struct stack_trace_elem *elem, unsigned long addr,
+			   void *frame);
+void init_stack_trace_elem_current(struct stack_trace_elem *elem);
+int stack_trace_elem_next(struct stack_trace_elem *elem);
+int stack_trace_elem_next_java(struct stack_trace_elem *elem);
 int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class);
-int get_stack_trace_depth(struct stack_trace_elem *elem);
+int get_java_stack_trace_depth(struct stack_trace_elem *elem);
 struct compilation_unit *stack_trace_elem_get_cu(struct stack_trace_elem *elem);
-struct vm_object *get_stack_trace(void);
-struct vm_object *get_stack_trace_from_ctx(void *ctx);
+struct vm_object *get_java_stack_trace(void);
 struct vm_object *native_vmthrowable_fill_in_stack_trace(struct vm_object *);
 struct vm_object *native_vmthrowable_get_stack_trace(struct vm_object *, struct vm_object *);
 
