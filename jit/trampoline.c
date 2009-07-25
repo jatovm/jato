@@ -156,7 +156,11 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 	struct jit_trampoline *trampoline;
 
 	trampoline = alloc_jit_trampoline();
-	if (trampoline)
-		emit_trampoline(cu, jit_magic_trampoline, trampoline);
+	if (!trampoline)
+		return NULL;
+
+	emit_trampoline(cu, jit_magic_trampoline, trampoline);
+	add_cu_mapping((unsigned long) buffer_ptr(trampoline->objcode), cu);
+
 	return trampoline;
 }
