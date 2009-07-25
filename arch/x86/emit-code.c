@@ -2058,6 +2058,24 @@ static void __emit_memdisp_reg(struct buffer *buf,
 	__emit_memdisp(buf, rex_w, opc, disp, __encode_reg(reg));
 }
 
+static void __emit_reg_memdisp(struct buffer *buf,
+			       int rex_w,
+			       unsigned char opc,
+			       enum machine_reg reg,
+			       unsigned long disp)
+{
+	__emit_memdisp(buf, rex_w, opc, disp, __encode_reg(reg));
+}
+
+static void emit_mov_reg_memdisp(struct buffer *buf,
+				 struct operand *src,
+				 struct operand *dest)
+{
+	int rex_w = is_64bit_reg(src);
+
+	__emit_reg_memdisp(buf, rex_w, 0x89, mach_reg(&src->reg), dest->imm);
+}
+
 static void __emit64_test_membase_reg(struct buffer *buf,
 				      enum machine_reg src,
 				      unsigned long disp,
@@ -2154,6 +2172,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
