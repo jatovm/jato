@@ -40,7 +40,5 @@ extern void emit_insn(struct buffer *buf, struct insn *insn);
 extern void emit_nop(struct buffer *buf);
 extern void backpatch_branch_target(struct buffer *buf, struct insn *insn,
 				    unsigned long target_offset);
-extern void emit_jni_trampoline(struct buffer *buf, struct vm_jni_env *jni_env,
-				void *target);
 
 #endif /* JATO_EMIT_CODE_H */
