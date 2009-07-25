@@ -189,6 +189,10 @@ int stack_trace_elem_next(struct stack_trace_elem *elem)
 
 			elem->cu = tr->method->compilation_unit;
 			elem->frame = NULL;
+
+			struct native_stack_frame *vm_frame = tr->vm_frame;
+			elem->addr = vm_frame->return_address;
+
 			return 0;
 		}
 	}
