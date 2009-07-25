@@ -534,6 +534,13 @@ static int print_movsx_16_reg_reg(struct string *str, struct insn *insn)
 	return str_append(str, "(16bit->32bit)");
 }
 
+static int print_movzx_16_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	print_reg_reg(str, insn);
+	return str_append(str, "(16bit->32bit)");
+}
+
 static int print_mul_membase_eax(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -751,6 +758,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_REG_REG] = print_mov_reg_reg,
 	[INSN_MOVSX_8_REG_REG] = print_movsx_8_reg_reg,
 	[INSN_MOVSX_16_REG_REG] = print_movsx_16_reg_reg,
+	[INSN_MOVZX_16_REG_REG] = print_movzx_16_reg_reg,
 	[INSN_MUL_MEMBASE_EAX] = print_mul_membase_eax,
 	[INSN_MUL_REG_EAX] = print_mul_reg_eax,
 	[INSN_MUL_REG_REG] = print_mul_reg_reg,
