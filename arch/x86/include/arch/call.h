@@ -60,7 +60,8 @@
 		); \
 	}
 #else
- #error NOT IMPLEMENTED
+#define native_call(target, args, args_count, result)	abort();
+#warning NOT IMPLEMENTED
 #endif
 
 #endif /* __X86_CALL_H */
