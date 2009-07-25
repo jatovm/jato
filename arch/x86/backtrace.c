@@ -98,6 +98,9 @@ static bool show_exe_function(void *addr)
 	     &function_name, &line))
 		goto failed;
 
+	if (!function_name)
+		goto failed;
+
 	symbol = lookup_symbol(symbols, nr_symbols, function_name);
 	if (!symbol)
 		goto failed;
