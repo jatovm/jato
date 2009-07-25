@@ -30,6 +30,7 @@ endif
 ifeq ($(ARCH),x86_64)
 override ARCH	= x86
 ARCH_POSTFIX	= _64
+ARCH_CFLAGS	+= -fno-omit-frame-pointer
 MB_DEFINES	+= -DCONFIG_X86_64
 endif
 
