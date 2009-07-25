@@ -452,7 +452,6 @@ int vm_class_init(struct vm_class *vmc)
 	exception = exception_occurred();
 
 	if (!vm_object_is_instance_of(exception, vm_java_lang_Error)) {
-		clear_exception();
 		signal_new_exception_with_cause(
 			vm_java_lang_ExceptionInInitializerError,
 			exception,
