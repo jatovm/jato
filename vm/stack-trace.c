@@ -306,6 +306,9 @@ void init_stack_trace_elem_current(struct stack_trace_elem *elem)
 
 struct compilation_unit *stack_trace_elem_get_cu(struct stack_trace_elem *elem)
 {
+	if (elem->type == STACK_TRACE_ELEM_TYPE_OTHER)
+		return NULL;
+
 	if (elem->type == STACK_TRACE_ELEM_TYPE_JNI)
 		return elem->cu;
 
