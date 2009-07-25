@@ -95,6 +95,9 @@ int vm_method_init(struct vm_method *vmm,
 		/* Hm, we're now modifying a cafebabe structure. */
 		vmm->code_attribute.max_stack = 0;
 		vmm->code_attribute.max_locals = vmm->args_count;
+
+		vmm->line_number_table_attribute.line_number_table_length = 0;
+		vmm->line_number_table_attribute.line_number_table = NULL;
 		return 0;
 	}
 
