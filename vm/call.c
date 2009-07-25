@@ -64,9 +64,10 @@ vm_call_method_a(struct vm_method *method, unsigned long *args)
 	target = vm_method_call_ptr(method);
 
 	if (vm_method_is_jni(method)) {
-		if (vm_enter_jni(__builtin_frame_address(0), 0, method))
+		if (vm_enter_jni(__builtin_frame_address(0),
+				 (unsigned long) &&call_site, method))
 			return -1;
-
+	call_site:
 		native_call(target, args, method->args_count, result);
 		vm_leave_jni();
 		goto out;
