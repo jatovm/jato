@@ -2031,6 +2031,61 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 }
 
+#ifdef CONFIG_X86_32
+static void select_jni_set_call_site_addr(struct basic_block *s,
+					  struct tree_node *tree,
+					  struct var_info *offset_reg,
+					  unsigned long field)
+{
+	select_insn(s, tree,
+		    membase_insn(INSN_MOV_IP_THREAD_LOCAL_MEMBASE,
+				 offset_reg, field));
+}
+
+static void select_jni_set_method(struct basic_block *s,
+				  struct tree_node *tree,
+				  struct vm_method *method,
+				  struct var_info *offset_reg,
+				  unsigned long field)
+{
+	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
+				(unsigned long) method, offset_reg, field));
+}
+#else /* CONFIG_X86_32 */
+static void select_jni_set_call_site_addr(struct basic_block *s,
+					  struct tree_node *tree,
+					  struct var_info *offset_reg,
+					  unsigned long field)
+{
+	struct var_info *ip_reg;
+
+	ip_reg = get_var(s->b_parent, J_LONG);
+
+	select_insn(s, tree, reg_insn(INSN_MOV_IP_REG, ip_reg));
+	select_insn(s, tree,
+		    reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
+				     ip_reg, offset_reg, field));
+}
+
+static void select_jni_set_method(struct basic_block *s,
+				  struct tree_node *tree,
+				  struct vm_method *method,
+				  struct var_info *offset_reg,
+				  unsigned long field)
+{
+	struct var_info *method_reg;
+
+	method_reg = get_var(s->b_parent, J_LONG);
+
+	select_insn(s, tree,
+		    imm_reg_insn(INSN_MOV_IMM_REG,
+				 (unsigned long) method, method_reg));
+	select_insn(s, tree,
+		    reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
+				     method_reg, offset_reg, field));
+}
+#endif /* CONFIG_X86_32 */
+
 static void select_jni_call(struct basic_block *s, struct tree_node *tree,
 			    struct insn *call_insn, struct vm_method *method)
 {
@@ -2073,14 +2128,11 @@ static void select_jni_call(struct basic_block *s, struct tree_node *tree,
 
 	/* Set ->call_site_addr */
 	field = tr_addr + offsetof(struct jni_stack_entry, call_site_addr);
-	select_insn(s, tree,
-		    membase_insn(INSN_MOV_IP_THREAD_LOCAL_MEMBASE,
-				 offset_reg, field));
+	select_jni_set_call_site_addr(s, tree, offset_reg, field);
 
 	/* Set ->method */
 	field = tr_addr + offsetof(struct jni_stack_entry, method);
-	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
-				(unsigned long) method, offset_reg, field));
+	select_jni_set_method(s, tree, method, offset_reg, field);
 
 	select_insn(s, tree, call_insn);
 
@@ -2092,6 +2144,36 @@ static void select_jni_call(struct basic_block *s, struct tree_node *tree,
 		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
 				     offset_reg, offset_tls));
 }
+
+#ifdef CONFIG_X86_32
+static void select_set_target(struct basic_block *s,
+			      struct tree_node *tree,
+			      void *target,
+			      struct var_info *offset_reg,
+			      unsigned long field)
+{
+	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
+				(unsigned long) target, offset_reg, field));
+}
+#else
+static void select_set_target(struct basic_block *s,
+			      struct tree_node *tree,
+			      void *target,
+			      struct var_info *offset_reg,
+			      unsigned long field)
+{
+	struct var_info *target_reg;
+
+	target_reg = get_var(s->b_parent, J_LONG);
+
+	select_insn(s, tree,
+		    imm_reg_insn(INSN_MOV_IMM_REG,
+				 (unsigned long) target, target_reg));
+	select_insn(s, tree,
+		    reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
+				     target_reg, offset_reg, field));
+}
+#endif
 
 static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 				  struct insn *call_insn, void *target)
@@ -2134,8 +2216,7 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 
 	/* Set ->target */
 	field = tr_addr + offsetof(struct vm_native_stack_entry, target);
-	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
-				(unsigned long) target, offset_reg, field));
+	select_set_target(s, tree, target, offset_reg, field);
 
 	select_insn(s, tree, call_insn);
 

@@ -2180,6 +2180,13 @@ static void emit_mov_imm_reg(struct buffer *buf,
 	__emit64_mov_imm_reg(buf, src->imm, mach_reg(&dest->reg));
 }
 
+static void emit_mov_ip_reg(struct buffer *buf, struct operand *dest)
+{
+	long addr = (long) buffer_current(buf);
+
+	__emit64_mov_imm_reg(buf, addr, mach_reg(&dest->reg));
+}
+
 static void __emit64_mov_membase_reg(struct buffer *buf,
 				     enum machine_reg base_reg,
 				     unsigned long disp,
@@ -2275,6 +2282,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_IP_REG, emit_mov_ip_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
