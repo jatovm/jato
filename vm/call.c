@@ -112,15 +112,3 @@ unsigned long vm_call_method_v(struct vm_method *method, va_list args)
 
 	return vm_call_method_a(method, args_array);
 }
-
-unsigned long vm_call_method(struct vm_method *method, ...)
-{
-	unsigned long result;
-	va_list args;
-
-	va_start(args, method);
-	result = vm_call_method_v(method, args);
-	va_end(args);
-
-	return result;
-}
