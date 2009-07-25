@@ -2044,6 +2044,16 @@ static void select_jni_call(struct basic_block *s, struct tree_node *tree,
 	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG,
 					      offset_reg, guard, offset_reg));
 
+	/* Advance jni_stack_offset */
+	select_insn(s, tree,
+		imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct jni_stack_entry),
+			     offset_reg));
+	select_insn(s, tree,
+		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
+				     offset_reg, offset_tls));
+
+	tr_addr -= sizeof(struct jni_stack_entry);
+
 	/* Set ->caller_frame */
 	field = tr_addr + offsetof(struct jni_stack_entry, caller_frame);
 	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
@@ -2059,14 +2069,6 @@ static void select_jni_call(struct basic_block *s, struct tree_node *tree,
 	field = tr_addr + offsetof(struct jni_stack_entry, method);
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
 				(unsigned long) method, offset_reg, field));
-
-	/* Advance jni_stack_offset */
-	select_insn(s, tree,
-		imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct jni_stack_entry),
-			     offset_reg));
-	select_insn(s, tree,
-		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
-				     offset_reg, offset_tls));
 
 	select_insn(s, tree, call_insn);
 
@@ -2104,6 +2106,15 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG,
 					      offset_reg, guard, offset_reg));
 
+	/* Advance vm_native_stack_offset */
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
+			sizeof(struct vm_native_stack_entry), offset_reg));
+	select_insn(s, tree,
+		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
+				     offset_reg, offset_tls));
+
+	tr_addr -= sizeof(struct vm_native_stack_entry);
+
 	/* Set ->stack_ptr */
 	field = tr_addr + offsetof(struct vm_native_stack_entry, stack_ptr);
 	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
@@ -2113,13 +2124,6 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 	field = tr_addr + offsetof(struct vm_native_stack_entry, target);
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
 				(unsigned long) target, offset_reg, field));
-
-	/* Advance vm_native_stack_offset */
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
-			sizeof(struct vm_native_stack_entry), offset_reg));
-	select_insn(s, tree,
-		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
-				     offset_reg, offset_tls));
 
 	select_insn(s, tree, call_insn);
 
@@ -2153,7 +2157,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 			target = vm_method_trampoline_ptr(method);
 
 		pthread_mutex_unlock(&cu->mutex);
-       }
+	}
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
