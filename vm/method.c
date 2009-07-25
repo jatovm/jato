@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
@@ -14,6 +15,7 @@
 #include "vm/method.h"
 #include "vm/natives.h"
 
+#include "jit/args.h"
 #include "jit/cu-mapping.h"
 
 int vm_method_init(struct vm_method *vmm,
@@ -66,10 +68,6 @@ int vm_method_init(struct vm_method *vmm,
 		return -1;
 	}
 
-#ifdef CONFIG_REGPARM
-	vmm->reg_args_count = 0;	/* Updated later. */
-#endif
-
 	if (!vm_method_is_static(vmm))
 		++vmm->args_count;
 
@@ -85,6 +83,11 @@ int vm_method_init(struct vm_method *vmm,
 
 			++vmm->args_count;
 		}
+	}
+
+	if (args_map_init(vmm)) {
+		abort();
+		return -1;
 	}
 
 	/*

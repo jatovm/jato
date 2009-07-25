@@ -19,6 +19,13 @@
 
 struct vm_class;
 
+#ifdef CONFIG_ARGS_MAP
+struct vm_args_map {
+	int			reg;
+	int			stack_index;
+};
+#endif
+
 struct vm_method {
 	struct vm_class *class;
 	unsigned int method_index;
@@ -29,8 +36,8 @@ struct vm_method {
 	char *name;
 	char *type;
 	int args_count;
-#ifdef	CONFIG_REGPARM
-	int reg_args_count;
+#ifdef CONFIG_ARGS_MAP
+	struct vm_args_map *args_map;
 #endif
 
 	struct cafebabe_code_attribute code_attribute;

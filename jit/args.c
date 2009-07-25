@@ -35,23 +35,43 @@
 #include "vm/stack.h"
 #include "vm/jni.h"
 
+#ifdef CONFIG_ARGS_MAP
+int get_stack_args_count(struct vm_method *method)
+{
+	int i, count = 0;
+
+	for (i = 0; i < method->args_count; i++)
+		if (method->args_map[i].reg == REG_UNASSIGNED)
+			count++;
+
+	return count;
+}
+
+static inline void set_expr_arg_reg(struct expression *expr,
+				    struct vm_method *method,
+				    int index)
+{
+	expr->arg_reg = method->args_map[index].reg;
+}
+#else /* CONFIG_ARGS_MAP */
+static void set_expr_arg_reg(struct expression *expr,
+			     struct vm_method *method,
+			     int index)
+{
+}
+#endif /* CONFIG_ARGS_MAP */
+
 struct expression *
 insert_arg(struct expression *root,
 	   struct expression *expr,
-	   unsigned long *args_state,
-	   struct vm_method *method)
+	   struct vm_method *method,
+	   int index)
 {
 	struct expression *_expr;
-	int err;
 
 	_expr = arg_expr(expr);
 	_expr->bytecode_offset = expr->bytecode_offset;
-
-	if (args_state && method) {
-		err = args_set(args_state, method, _expr);
-		if (err)
-			return NULL;
-	}
+	set_expr_arg_reg(_expr, method, index);
 
 	if (!root)
 		return _expr;
@@ -64,17 +84,12 @@ struct expression *convert_args(struct stack *mimic_stack,
 				struct vm_method *method)
 {
 	struct expression *args_list = NULL;
-	unsigned long args_state, i;
-	int err;
+	unsigned long i;
 
 	if (nr_args == 0) {
 		args_list = no_args_expr();
 		goto out;
 	}
-
-	err = args_init(&args_state, method, nr_args);
-	if (err)
-		return NULL;
 
 	if (vm_method_is_jni(method)) {
 		if (vm_method_is_static(method))
@@ -83,9 +98,14 @@ struct expression *convert_args(struct stack *mimic_stack,
 		--nr_args;
 	}
 
+	/*
+	 * We scan the args map in reverse order,
+	 * since the order of arguments is already reversed.
+	 */
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
-		args_list = insert_arg(args_list, expr, &args_state, method);
+		args_list = insert_arg(args_list, expr,
+				       method, nr_args - i - 1);
 	}
 
 	if (vm_method_is_jni(method)) {
@@ -102,8 +122,9 @@ struct expression *convert_args(struct stack *mimic_stack,
 				return NULL;
 			}
 
+			/* FIXME: Set index correctly */
 			args_list = insert_arg(args_list, class_expr,
-					       &args_state, method);
+					       method, 0);
 		}
 
 		jni_env_expr = value_expr(J_REFERENCE,
@@ -113,11 +134,9 @@ struct expression *convert_args(struct stack *mimic_stack,
 			return NULL;
 		}
 
-		args_list = insert_arg(args_list, jni_env_expr, &args_state,
-				       method);
+		/* FIXME: Set index correctly */
+		args_list = insert_arg(args_list, jni_env_expr, method, 0);
 	}
-
-	args_finish(&args_state);
 
   out:
 	return args_list;

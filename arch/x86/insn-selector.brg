@@ -7,6 +7,7 @@
  * LICENSE for details.
  */
 
+#include <jit/args.h>
 #include <jit/basic-block.h>
 #include <jit/compilation-unit.h>
 #include <jit/compiler.h>
@@ -233,16 +234,18 @@ reg:	EXPR_LOCAL	1
 	struct expression *expr;
 	struct stack_slot *slot;
 	struct var_info *result;
+	struct vm_method *method;
 	enum machine_reg reg;
 	int index;
 
 	expr = to_expr(tree);
-	slot = get_local_slot(cu->stack_frame, expr->local_index);
 
-	reg = args_local_to_reg(s->b_parent->method, expr->local_index + 1);
+	method = cu->method;
+
+	reg = method->args_map[expr->local_index].reg;
 	if (reg == REG_UNASSIGNED) {
-		index = args_stack_index(cu->method, expr->local_index);
-		slot = get_local_slot(cu->stack_frame, index);
+		index = method->args_map[expr->local_index].stack_index;
+		slot = get_local_slot(s->b_parent->stack_frame, index);
 		result = get_var(s->b_parent, J_LONG);
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
 						       slot, result));
@@ -636,6 +639,7 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	unsigned long method_offset;
 	struct vm_method *method;
 	struct expression *expr;
+	int nr_stack_args;
 
 	expr	= to_expr(tree);
 	method	= expr->target_method;
@@ -677,8 +681,9 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	/* invoke method */
 	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
 
-	if (method->args_count)
-		method_args_cleanup(s, tree, method->args_count);
+	nr_stack_args = get_stack_args_count(method);
+	if (nr_stack_args)
+		method_args_cleanup(s, tree, nr_stack_args);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx != NULL)
@@ -1283,7 +1288,6 @@ arg:	EXPR_ARG(EXPR_VALUE) 1
 arg:	EXPR_ARG(EXPR_VALUE) 1
 {
 	struct expression *expr, *arg_expr;
-	enum machine_reg reg;
 	struct var_info *dst;
 	unsigned long imm;
 
@@ -1291,10 +1295,8 @@ arg:	EXPR_ARG(EXPR_VALUE) 1
 	arg_expr = to_expr(expr->arg_expression);
 	imm  = arg_expr->value;
 
-	reg = args_select_reg(expr);
-
-	if (reg != REG_UNASSIGNED) {
-		dst = get_fixed_var(s->b_parent, reg);
+	if (expr->arg_reg != REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
 		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, dst));
 	} else
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm));
@@ -1337,17 +1339,14 @@ arg:	EXPR_ARG(reg) 1
 {
 	struct var_info *src, *dst;
 	struct expression *expr, *arg_expr;
-	enum machine_reg reg;
 
 	expr = to_expr(tree);
 	arg_expr = to_expr(expr->arg_expression);
 
 	src = state->left->reg1;
 
-	reg = args_select_reg(expr);
-
-	if (reg != REG_UNASSIGNED) {
-		dst = get_fixed_var(s->b_parent, reg);
+	if (expr->arg_reg != REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
 		state->reg1 = dst;
 	} else {
@@ -1573,6 +1572,7 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 	struct stack_slot *slot;
 	struct statement *stmt;
 	struct var_info *src, *dest;
+	struct vm_method *method;
 	enum machine_reg reg;
 	int index;
 
@@ -1583,10 +1583,11 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 
 	dest = exprdest->tmp_low;
 
-	reg = args_local_to_reg(s->b_parent->method, exprsrc->local_index);
+	method = s->b_parent->method;
+
+	reg = method->args_map[exprsrc->local_index].reg;
 	if (reg == REG_UNASSIGNED) {
-		index = args_stack_index(s->b_parent->method,
-					 exprsrc->local_index);
+		index = method->args_map[exprsrc->local_index].stack_index;
 		slot = get_local_slot(s->b_parent->stack_frame, index);
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
 						       slot, dest));
@@ -2233,6 +2234,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	bool is_compiled;
 	struct insn *call_insn;
 	void *target;
+	int nr_stack_args;
 
 	if (cu == s->b_parent) {
 		/*
@@ -2272,8 +2274,9 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 		trampoline_add_fixup_site(method->trampoline, fixup);
 	}
 
-	if (method->args_count)
-		method_args_cleanup(s, tree, method->args_count);
+	nr_stack_args = get_stack_args_count(method);
+	if (nr_stack_args)
+		method_args_cleanup(s, tree, nr_stack_args);
 
 	if (vm_method_is_jni(method))
 		select_exception_test(s, tree);
@@ -2287,6 +2290,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	struct var_info *call_target;
 	unsigned long method_offset;
 	struct vm_method *method;
+	int nr_stack_args;
 
 	expr	= to_expr(tree);
 	method_offset = expr_method_index(expr) * sizeof(void *);
@@ -2315,8 +2319,9 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 
 	method	= expr->target_method;
 
-	if (method->args_count)
-		method_args_cleanup(s, tree, method->args_count);
+	nr_stack_args = get_stack_args_count(method);
+	if (nr_stack_args)
+		method_args_cleanup(s, tree, nr_stack_args);
 }
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)

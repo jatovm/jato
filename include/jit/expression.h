@@ -203,7 +203,7 @@ struct expression {
 		    instruction selection only.  */
 		struct {
 			struct tree_node *arg_expression;
-			void *arg_private;
+			enum machine_reg arg_reg;
 		};
 
 		/*  EXPR_NO_ARGS is used for EXPR_INVOKE expression type when

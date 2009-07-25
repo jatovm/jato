@@ -26,25 +26,66 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "arch/args.h"
 
 #include "jit/args.h"
-#include "jit/expression.h"
 
 #include "vm/method.h"
 #include "vm/types.h"
 
 #ifdef CONFIG_X86_64
 
-int args_init(unsigned long *state,
-	      struct vm_method *method,
-	      unsigned long nr_args)
+static enum machine_reg args_map_alloc_gpr(int gpr)
+{
+	switch (gpr) {
+	case 0:
+		return REG_RDI;
+	case 1:
+		return REG_RSI;
+	case 2:
+		return REG_RDX;
+	case 3:
+		return REG_RCX;
+	case 4:
+		return REG_R8;
+	case 5:
+		return REG_R9;
+	default:
+		assert(gpr > 5);
+		return REG_UNASSIGNED;
+	}
+}
+
+int args_map_init(struct vm_method *method)
 {
 	const char *type;
 	enum vm_type vm_type;
+	int idx, gpr_count = 0, stack_count = 0;
+	struct vm_args_map *map;
+	size_t size;
 
+	/* If the method isn't static, we have a *this. */
+	size = method->args_count + !vm_method_is_static(method);
+
+	method->args_map = malloc(sizeof(*map) * size);
+	if (!method->args_map)
+		return -1;
+
+	/* We know *this is a J_REFERENCE, so allocate a GPR. */
+	if (!vm_method_is_static(method)) {
+		map = &method->args_map[0];
+		map->reg = args_map_alloc_gpr(gpr_count++);
+		map->stack_index = -1;
+		idx = 1;
+	} else
+		idx = 0;
+
+	/* Scan the real parameters and assign registers and stack slots. */
 	for (type = method->type + 1; *type != ')'; skip_type(&type)) {
+		map = &method->args_map[idx];
+
 		vm_type = str_to_type(type);
 		switch (vm_type) {
 		case J_BYTE:
@@ -54,90 +95,39 @@ int args_init(unsigned long *state,
 		case J_SHORT:
 		case J_BOOLEAN:
 		case J_REFERENCE:
-			method->reg_args_count++;
+			map->reg = args_map_alloc_gpr(gpr_count++);
+			map->stack_index = -1;
+			break;
+		case J_FLOAT:
+		case J_DOUBLE:
+			/*
+			 * FIXME: This is wrong, but let's us
+			 * not worry about the status of FP.
+			 */
+			map->reg = REG_UNASSIGNED;
+			map->stack_index = stack_count++;
 			break;
 		default:
-			NOT_IMPLEMENTED;
+			map->reg = REG_UNASSIGNED;
+			map->stack_index = stack_count++;
 			break;
 		}
 
-		if (method->reg_args_count == 6)
+		idx++;
+
+		if (gpr_count == 6)
 			break;
 	}
 
-	if (vm_method_is_jni(method))
-		method->reg_args_count += 2;
+	/* We're out of GPRs, so the remaining args go on the stack. */
+	for (; idx < method->args_count; idx++) {
+		map = &method->args_map[idx];
 
-	method->reg_args_count = min(method->reg_args_count, 6);
-	method->args_count -= method->reg_args_count;
-
-	*state = 1;
+		map->reg = REG_UNASSIGNED;
+		map->stack_index = stack_count++;
+	}
 
 	return 0;
 }
-
-int args_set(unsigned long *state,
-	     struct vm_method *method,
-	     struct expression *expr)
-{
-	struct expression *value_expr = to_expr(expr->arg_expression);
-	unsigned long reg;
-
-	if ((int) *state <= method->args_count) {
-		(*state)++;
-		expr->arg_private = NULL;
-		return 0;
-	}
-
-	assert((value_expr->vm_type == J_INT ||
-		value_expr->vm_type == J_LONG ||
-		value_expr->vm_type == J_REFERENCE));
-
-	reg = (6 - method->reg_args_count) + (*state)++ - method->args_count;
-	expr->arg_private = (void *) reg;
-
-	return 0;
-}
-
-static enum machine_reg __args_select_reg(unsigned long arg_idx)
-{
-	switch (arg_idx) {
-	case 0:
-		return REG_UNASSIGNED;
-	case 6:
-		return REG_RDI;
-	case 5:
-		return REG_RSI;
-	case 4:
-		return REG_RDX;
-	case 3:
-		return REG_RCX;
-	case 2:
-		return REG_R8;
-	case 1:
-		return REG_R9;
-	default:
-		assert(arg_idx > 6);
-		return REG_UNASSIGNED;
-	}
-}
-
-enum machine_reg args_select_reg(struct expression *expr)
-{
-	return __args_select_reg((unsigned long) expr->arg_private);
-}
-
-enum machine_reg args_local_to_reg(struct vm_method *method, int local_idx)
-{
-	local_idx++;
-
-	/* Check if local_idx refers to *this or stack parameters. */
-	if (local_idx > method->reg_args_count)
-		return REG_UNASSIGNED;
-
-	return __args_select_reg(local_idx);
-}
-
-#else /* CONFIG_X86_64 */
 
 #endif /* CONFIG_X86_64 */
