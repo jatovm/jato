@@ -736,12 +736,7 @@ main(int argc, char *argv[])
 
 out_check_exception:
 	if (exception_occurred()) {
-		struct vm_object *exception;
-
-		exception = exception_occurred();
-		clear_exception();
-
-		vm_print_exception(exception);
+		vm_print_exception(exception_occurred());
 		goto out;
 	}
 	status = EXIT_SUCCESS;
