@@ -734,6 +734,8 @@ main(int argc, char *argv[])
 		= vm_method_trampoline_ptr(vmm);
 	main_method_trampoline();
 
+	bottom_stack_frame = NULL;
+
 out_check_exception:
 	if (exception_occurred()) {
 		vm_print_exception(exception_occurred());
