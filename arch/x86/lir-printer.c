@@ -32,10 +32,12 @@
 #include "jit/statement.h"
 #include "jit/compiler.h"
 
-#include "lib/list.h"
-#include "lib/buffer.h"
 #include "vm/method.h"
+#include "vm/die.h"
+
+#include "lib/buffer.h"
 #include "lib/string.h"
+#include "lib/list.h"
 
 #include "arch/instruction.h"
 #include "arch/memory.h"
@@ -791,6 +793,9 @@ static print_insn_fn insn_printers[] = {
 int lir_print(struct insn *insn, struct string *str)
 {
 	print_insn_fn print = insn_printers[insn->type];
+
+	if (print == NULL)
+		return warn("unknown insn %d\n", insn->type), -EINVAL;
 
 	return print(str, insn);
 }
