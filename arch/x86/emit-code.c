@@ -2377,10 +2377,14 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit64_test_membase_reg(buf, REG_RCX, 0, REG_RCX);
 
 	if (method_is_virtual(cu->method)) {
-		__emit64_mov_reg_reg(buf, REG_RAX, REG_RDI);
-		__emit64_mov_membase_reg(buf, REG_RBP, 0x08, REG_RSI);
-		__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDX);
+		__emit64_push_reg(buf, REG_RAX);
+
+		__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDI);
+		__emit64_mov_membase_reg(buf, REG_RBP, 0x10, REG_RSI);
+		__emit64_mov_reg_reg(buf, REG_RAX, REG_RDX);
 		__emit_call(buf, fixup_vtable);
+
+		__emit64_pop_reg(buf, REG_RAX);
 	}
 
 	__emit64_pop_reg(buf, REG_R9);
