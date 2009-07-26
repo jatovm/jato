@@ -557,7 +557,7 @@ char *vm_string_to_cstr(const struct vm_object *string_obj)
 
 		ch = array_get_field_char(array_object, offset + i);
 
-		if (ch < 128 && isprint(ch))
+		if (ch < 128)
 			err = str_append(str, "%c", ch);
 		else
 			err = str_append(str, "<%d>", ch);
