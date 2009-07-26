@@ -107,19 +107,50 @@ int signal_new_exception(struct vm_class *vmc, const char *msg)
 	return 0;
 }
 
-typedef struct vm_object * (*vm_throwable_init_cause_fn)(struct vm_object *,
-							 struct vm_object *);
-
 int signal_new_exception_with_cause(struct vm_class *vmc,
 				    struct vm_object *cause,
 				    const char *msg)
 {
-	struct vm_object *exception = new_exception(vmc, msg);
+	struct vm_object *exception;
+	struct vm_method *init;
 
+	/*
+	 * Some exception classes have dedicated constructors for
+	 * setting exception's cause. For such classes we shouldn't
+	 * set the cause with initCause(). See for example
+	 * java/lang/ExceptionInInitializerError class.
+	 */
+	init = vm_class_get_method(vmc, "<init>", "(Ljava/lang/Throwable;)V");
+	if (init) {
+		exception = vm_object_alloc(
+				vm_java_lang_ExceptionInInitializerError);
+		if (!exception) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		clear_exception();
+
+		vm_call_method(init, exception, cause);
+
+		if (exception_occurred())
+			return -1;
+
+		signal_exception(exception);
+		return 0;
+	}
+
+	exception = new_exception(vmc, msg);
 	if (!exception)
 		return -1;
 
+	clear_exception();
+
 	vm_call_method(vm_java_lang_Throwable_initCause, exception, cause);
+
+	if (exception_occurred())
+		return -1;
+
 	signal_exception(exception);
 	return 0;
 }

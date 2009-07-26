@@ -45,3 +45,9 @@ bool vm_class_is_assignable_from(const struct vm_class *vmc,
 {
 	return false;
 }
+
+struct vm_method *vm_class_get_method(const struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	return NULL;
+}

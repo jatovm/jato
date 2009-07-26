@@ -68,3 +68,8 @@ void array_size_check(int size)
 void multiarray_size_check(int n, ...)
 {
 }
+
+struct vm_object *vm_object_alloc(struct vm_class *class)
+{
+	return NULL;
+}
