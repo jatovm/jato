@@ -24,6 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "vm/backtrace.h"
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
@@ -699,4 +700,46 @@ const char *stack_trace_elem_type_name(enum stack_trace_elem_type type)
 	assert(type >= 0 && type < ARRAY_LEN(stack_trace_elem_type_names));
 
 	return stack_trace_elem_type_names[type];
+}
+
+static void show_mixed_stack_trace(struct stack_trace_elem *elem)
+{
+	printf("Native and JAVA stack trace:\n");
+	do {
+		printf(" [<%08lx>] %-10s : ", elem->addr,
+		       stack_trace_elem_type_name(elem->type));
+
+		if (elem->type != STACK_TRACE_ELEM_TYPE_OTHER) {
+			print_java_stack_trace_elem(elem);
+			printf("\n");
+
+			printf("%-27s"," ");
+			if (!show_exe_function((void *) elem->addr))
+				printf("\r");
+
+			continue;
+		}
+
+		show_function((void *) elem->addr);
+	} while (stack_trace_elem_next(elem) == 0);
+}
+
+void print_trace(void)
+{
+	struct stack_trace_elem elem;
+
+	init_stack_trace_elem_current(&elem);
+
+	/* Skip init_stack_trace_elem_current() */
+	stack_trace_elem_next(&elem);
+
+	show_mixed_stack_trace(&elem);
+}
+
+void print_trace_from(unsigned long eip, void *frame)
+{
+	struct stack_trace_elem elem;
+
+	init_stack_trace_elem(&elem, eip, frame);
+	show_mixed_stack_trace(&elem);
 }

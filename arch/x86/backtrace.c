@@ -58,7 +58,7 @@ static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
 	return NULL;
 }
 
-static bool show_exe_function(void *addr)
+bool show_exe_function(void *addr)
 {
 	bool ret;
 	const char *function_name;
@@ -129,63 +129,12 @@ failed:
 	goto out;
 }
 
-static void show_function(void *addr)
+void show_function(void *addr)
 {
 	if (show_exe_function(addr))
 		return;
 
 	printf("<unknown>\n");
-}
-
-/* Must be inline so this does not change the backtrace. */
-static inline void __show_stack_trace(unsigned long start, unsigned long caller)
-{
-	void *array[10];
-	size_t size;
-	size_t i;
-
-	size = backtrace(array, 10);
-	array[1] = (void *) caller;
-
-	printf("Native stack trace:\n");
-	for (i = start; i < size; i++) {
-		printf(" [<%08lx>] ", (unsigned long) array[i]);
-		show_function(array[i]);
-	}
-}
-
-static void show_mixed_stack_trace(struct stack_trace_elem *elem)
-{
-	printf("Native and JAVA stack trace:\n");
-	do {
-		printf(" [<%08lx>] %-10s : ", elem->addr,
-		       stack_trace_elem_type_name(elem->type));
-
-		if (elem->type != STACK_TRACE_ELEM_TYPE_OTHER) {
-			print_java_stack_trace_elem(elem);
-			printf("\n");
-
-			printf("%-27s"," ");
-			if (!show_exe_function((void *) elem->addr))
-				printf("\r");
-
-			continue;
-		}
-
-		show_function((void *) elem->addr);
-	} while (stack_trace_elem_next(elem) == 0);
-}
-
-void print_trace(void)
-{
-	struct stack_trace_elem elem;
-
-	init_stack_trace_elem_current(&elem);
-
-	/* Skip init_stack_trace_elem_current() */
-	stack_trace_elem_next(&elem);
-
-	show_mixed_stack_trace(&elem);
 }
 
 static unsigned long get_greg(gregset_t gregs, int reg)
@@ -290,9 +239,7 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 	};
 	show_registers(uc->uc_mcontext.gregs);
 
-	struct stack_trace_elem elem;
-	init_stack_trace_elem(&elem, eip, (void *) ebp);
-	show_mixed_stack_trace(&elem);
+	print_trace_from(eip, (void *) ebp);
 
 	exit(1);
 }

@@ -1,3 +1,7 @@
+#include <execinfo.h>
+#include <stdio.h>
+
+#include "vm/backtrace.h"
 #include "vm/stack-trace.h"
 
 int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
@@ -36,4 +40,33 @@ void print_java_stack_trace_elem(struct stack_trace_elem *elem)
 const char *stack_trace_elem_type_name(enum stack_trace_elem_type type)
 {
 	return NULL;
+}
+
+/* Must be inline so this does not change the backtrace. */
+static inline void __show_stack_trace(unsigned long start, unsigned long caller)
+{
+	void *array[10];
+	size_t size;
+	size_t i;
+
+	size = backtrace(array, 10);
+
+	if (caller)
+		array[1] = (void *) caller;
+
+	printf("Native stack trace:\n");
+	for (i = start; i < size; i++) {
+		printf(" [<%08lx>] ", (unsigned long) array[i]);
+		show_function(array[i]);
+	}
+}
+
+void print_trace(void)
+{
+	__show_stack_trace(1, 0);
+}
+
+void print_trace_from(unsigned long eip, void *frame)
+{
+	__show_stack_trace(1, eip);
 }
