@@ -122,8 +122,7 @@ int signal_new_exception_with_cause(struct vm_class *vmc,
 	 */
 	init = vm_class_get_method(vmc, "<init>", "(Ljava/lang/Throwable;)V");
 	if (init) {
-		exception = vm_object_alloc(
-				vm_java_lang_ExceptionInInitializerError);
+		exception = vm_object_alloc(vmc);
 		if (!exception) {
 			NOT_IMPLEMENTED;
 			return -1;
