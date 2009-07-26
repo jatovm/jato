@@ -39,9 +39,22 @@ lab1:
     return
 .end method
 
+.method public static testLdc()V
+    ldc_w 1
+    pop
+    return
+.end method
+
+.method public static testLdc2()V
+    ldc2_w 1
+    pop2
+    return
+.end method
+
 .method public static main([Ljava/lang/String;)V
     invokestatic jvm/WideTest/testIstoreIload()V
     invokestatic jvm/WideTest/testIinc()V
     invokestatic jvm/WideTest/testGoto()V
+    invokestatic jvm/WideTest/testLdc()V
     return
 .end method
