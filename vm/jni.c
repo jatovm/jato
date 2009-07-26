@@ -114,10 +114,8 @@ int vm_jni_load_object(const char *name)
 	void *handle;
 
 	handle = dlopen(name, RTLD_NOW);
-	if (!handle) {
-		fprintf(stderr, "%s: %s\n", __func__, dlerror());
+	if (!handle)
 		return -1;
-	}
 
 	if (vm_jni_add_object_handle(handle)) {
 		dlclose(handle);
