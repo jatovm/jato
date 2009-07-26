@@ -51,6 +51,8 @@
 #include "jit/perf-map.h"
 #include "jit/text.h"
 
+#include "lib/list.h"
+
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/fault-inject.h"
@@ -112,32 +114,100 @@ static void vm_properties_set_property(struct vm_object *p,
 }
 
 struct system_properties_entry {
+	char *key;
+	char *value;
+	struct list_head list_node;
+};
+
+static struct list_head system_properties_list;
+
+static void add_system_property(char *key, char *value)
+{
+	struct system_properties_entry *this;
+
+	assert(key && value);
+
+	list_for_each_entry(this, &system_properties_list, list_node) {
+		if (strcmp(this->key, key) == 0) {
+			free(this->value);
+			free(key);
+
+			this->value = value;
+			return;
+		}
+	}
+
+	struct system_properties_entry *ent = malloc(sizeof *ent);
+	if (!ent)
+		error("out of memory");
+
+	ent->key = key;
+	ent->value = value;
+	list_add(&ent->list_node, &system_properties_list);
+}
+
+static void add_system_property_const(const char *key, const char *value)
+{
+	char *key_d;
+	char *value_d;
+
+	key_d = strdup(key);
+	value_d = strdup(value);
+
+	if (!key_d || !value_d)
+		error("out of memory");
+
+	add_system_property(key_d, value_d);
+}
+
+struct system_property {
 	const char *key;
 	const char *value;
 };
 
-static const struct system_properties_entry system_properties[] = {
-	{ "java.vm.name", "jato" },
-	{ "java.io.tmpdir", "/tmp" },
-	{ "file.separator", "/" },
-	{ "path.separator", ":" },
-	{ "line.separator", "\n" },
+static struct system_property system_properties[] = {
+	{ "java.vm.name",	"jato"	},
+	{ "java.io.tmpdir",	"/tmp"	},
+	{ "file.separator",	"/"	},
+	{ "path.separator",	":"	},
+	{ "line.separator",	"\n"	},
 };
 
-static void native_vmsystemproperties_preinit(struct vm_object *p)
+/*
+ * This sets default values of system properties. It should be called
+ * before command line arguments are parsed because these properties
+ * can be overriden by -Dkey=value option.
+ */
+static void init_system_properties(void)
 {
-	char *s;
+	INIT_LIST_HEAD(&system_properties_list);
 
-	s = getenv("LD_LIBRARY_PATH");
+	for (unsigned int i = 0; i < ARRAY_SIZE(system_properties); i++) {
+		struct system_property *p = &system_properties[i];
+
+		add_system_property_const(p->key, p->value);
+	}
+
+	const char *s = getenv("LD_LIBRARY_PATH");
 	if (!s)
 		s = "/usr/lib/classpath/";
 
-	vm_properties_set_property(p, "java.library.path", s);
+	add_system_property_const("java.library.path", s);
+}
 
-	for (unsigned int i = 0; i < ARRAY_SIZE(system_properties); ++i) {
-		const struct system_properties_entry *e = &system_properties[i];
+static void native_vmsystemproperties_preinit(struct vm_object *p)
+{
+	struct system_properties_entry *this, *t;
 
-		vm_properties_set_property(p, e->key, e->value);
+	list_for_each_entry(this, &system_properties_list, list_node)
+		vm_properties_set_property(p, this->key, this->value);
+
+	/* dealloc system properties list */
+	list_for_each_entry_safe(this, t, &system_properties_list, list_node) {
+		free(this->key);
+		free(this->value);
+		list_del(&this->list_node);
+		free(this);
 	}
 }
 
@@ -570,10 +640,39 @@ static void handle_trace_trampoline(void)
 	opt_trace_magic_trampoline = true;
 }
 
+static void handle_define(const char *arg)
+{
+	char *str, *ptr, *key, *value;
+
+	str = strdup(arg);
+	if (!str)
+		error("out of memory");
+
+	key = strtok_r(str, "=", &ptr);
+	value = strtok_r(NULL, "=", &ptr);
+
+	if (!key || !*key)
+		goto out;
+
+	if (!value)
+		value = "";
+
+	key = strdup(key);
+	value = strdup(value);
+
+	if (!key || !value)
+		error("out of memory");
+
+	add_system_property(key, value);
+ out:
+	free(str);
+}
+
 struct option {
 	const char *name;
 
 	bool arg;
+	bool arg_is_adjacent;
 
 	union {
 		void (*func)(void);
@@ -585,11 +684,16 @@ struct option {
 	{ .name = _name, .arg = false, .handler.func = _handler }
 
 #define DEFINE_OPTION_ARG(_name, _handler) \
-	{ .name = _name, .arg = true, .handler.func_arg = _handler }
+	{ .name = _name, .arg = true, .arg_is_adjacent = false, .handler.func_arg = _handler }
+
+#define DEFINE_OPTION_ADJACENT_ARG(_name, _handler) \
+	{ .name = _name, .arg = true, .arg_is_adjacent = true, .handler.func_arg = _handler }
 
 const struct option options[] = {
 	DEFINE_OPTION("h",		handle_help),
 	DEFINE_OPTION("help",		handle_help),
+
+	DEFINE_OPTION_ADJACENT_ARG("D",	handle_define),
 
 	DEFINE_OPTION_ARG("classpath",	handle_classpath),
 	DEFINE_OPTION_ARG("cp",		handle_classpath),
@@ -612,8 +716,14 @@ const struct option options[] = {
 static const struct option *get_option(const char *name)
 {
 	for (unsigned int i = 0; i < ARRAY_SIZE(options); ++i) {
-		if (!strcmp(name, options[i].name))
-			return &options[i];
+		const struct option *opt = &options[i];
+
+		if (opt->arg && opt->arg_is_adjacent &&
+		    !strncmp(name, opt->name, strlen(opt->name)))
+			return opt;
+
+		if (!strcmp(name, opt->name))
+			return opt;
 	}
 
 	return NULL;
@@ -633,6 +743,12 @@ static void parse_options(int argc, char *argv[])
 
 		if (!opt->arg) {
 			opt->handler.func();
+			continue;
+		}
+
+		if (opt->arg_is_adjacent) {
+			opt->handler.func_arg(argv[optind] + strlen(opt->name)
+					      + 1);
 			continue;
 		}
 
@@ -673,6 +789,7 @@ main(int argc, char *argv[])
 	setvbuf(stderr, NULL, _IONBF, 0);
 #endif
 
+	init_system_properties();
 	parse_options(argc, argv);
 
 	init_vm_objects();
