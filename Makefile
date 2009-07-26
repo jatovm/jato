@@ -264,6 +264,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/TrampolineBackpatchingTest.class
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
+	regression/jvm/DupTest.class \
 	regression/jvm/SubroutineTest.class \
 	regression/jvm/WideTest.class
 
