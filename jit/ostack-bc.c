@@ -63,7 +63,7 @@ static int __convert_dup(struct parse_context *ctx, struct expression *value)
 {
 	struct expression *dup;
 
-	dup = dup_expr(ctx, value);
+	dup = get_pure_expr(ctx, value);
 
 	convert_expression(ctx, dup);
 	convert_expression(ctx, dup_expr(ctx, expr_get(dup)));
@@ -84,7 +84,7 @@ static int __convert_dup_x1(struct parse_context *ctx, struct expression *value1
 {
 	struct expression *dup;
 
-	dup = dup_expr(ctx, value1);
+	dup = get_pure_expr(ctx, value1);
 
 	convert_expression(ctx, dup);
 	convert_expression(ctx, value2);
@@ -107,7 +107,7 @@ static int __convert_dup_x2(struct parse_context *ctx, struct expression *value1
 {
 	struct expression *dup;
 
-	dup = dup_expr(ctx, value1);
+	dup = get_pure_expr(ctx, value1);
 
 	convert_expression(ctx, dup);
 	convert_expression(ctx, value3);
@@ -132,8 +132,8 @@ static int __convert_dup2(struct parse_context *ctx, struct expression *value1, 
 {
 	struct expression *dup, *dup2;
 
-	dup = dup_expr(ctx, value1);
-	dup2 = dup_expr(ctx, value2);
+	dup = get_pure_expr(ctx, value1);
+	dup2 = get_pure_expr(ctx, value2);
 
 	convert_expression(ctx, dup2);
 	convert_expression(ctx, dup);
@@ -163,8 +163,8 @@ static int __convert_dup2_x1(struct parse_context * ctx, struct expression * val
 {
 	struct expression *dup, *dup2;
 
-	dup = dup_expr(ctx, value1);
-	dup2 = dup_expr(ctx, value2);
+	dup = get_pure_expr(ctx, value1);
+	dup2 = get_pure_expr(ctx, value2);
 
 	convert_expression(ctx, dup2);
 	convert_expression(ctx, dup);
@@ -196,8 +196,8 @@ static int __convert_dup2_x2(struct parse_context *ctx, struct expression *value
 {
 	struct expression *dup, *dup2;
 
-	dup = dup_expr(ctx, value1);
-	dup2 = dup_expr(ctx, value2);
+	dup = get_pure_expr(ctx, value1);
+	dup2 = get_pure_expr(ctx, value2);
 
 	convert_expression(ctx, dup2);
 	convert_expression(ctx, dup);

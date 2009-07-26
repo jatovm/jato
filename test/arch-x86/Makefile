@@ -43,6 +43,7 @@ TOPLEVEL_OBJS := \
 	jit/fixup-site.o \
 	jit/interval.o \
 	jit/method.o \
+	jit/ostack-bc.o \
 	jit/stack-slot.o \
 	jit/statement.o \
 	jit/text.o \
@@ -72,6 +73,7 @@ TOPLEVEL_OBJS := \
 	vm/natives.o \
 	test/jit/trampoline-stub.o \
 	test/jit/trace-stub.o \
+	test/jit/bytecode-to-ir-stub.o \
 	test/libharness/libharness.o \
 	test/vm/classloader-stub.o \
 	test/vm/preload-stub.o \
