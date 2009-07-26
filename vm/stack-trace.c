@@ -454,7 +454,10 @@ void print_java_stack_trace_elem(struct stack_trace_elem *elem)
 			goto out;
 	}
 
-        int line_no = bytecode_offset_to_line_no(vmm, bc_offset);
+	int line_no = bytecode_offset_to_line_no(vmm, bc_offset);
+	if (line_no == -1)
+		goto out;
+
 	printf(":%d", line_no);
 
  out:
