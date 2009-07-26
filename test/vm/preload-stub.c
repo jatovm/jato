@@ -34,13 +34,7 @@ struct vm_class *vm_java_lang_StackOverflowError;
 
 struct vm_method *vm_java_lang_Throwable_initCause;
 struct vm_method *vm_java_lang_Throwable_getCause;
-struct vm_method *vm_java_lang_Throwable_toString;
+struct vm_method *vm_java_lang_Throwable_stackTraceString;
 struct vm_method *vm_java_lang_Throwable_getStackTrace;
 struct vm_method *vm_java_lang_Throwable_setStackTrace;
 struct vm_method *vm_java_lang_StackTraceElement_init;
-struct vm_method *vm_java_lang_StackTraceElement_getFileName;
-struct vm_method *vm_java_lang_StackTraceElement_getClassName;
-struct vm_method *vm_java_lang_StackTraceElement_getMethodName;
-struct vm_method *vm_java_lang_StackTraceElement_getLineNumber;
-struct vm_method *vm_java_lang_StackTraceElement_isNativeMethod;
-struct vm_method *vm_java_lang_StackTraceElement_equals;
