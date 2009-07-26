@@ -143,6 +143,8 @@ int stack_trace_elem_next(struct stack_trace_elem *elem);
 int stack_trace_elem_next_java(struct stack_trace_elem *elem);
 int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class);
 int get_java_stack_trace_depth(struct stack_trace_elem *elem);
+void print_java_stack_trace_elem(struct stack_trace_elem *elem);
+const char *stack_trace_elem_type_name(enum stack_trace_elem_type type);
 struct compilation_unit *stack_trace_elem_get_cu(struct stack_trace_elem *elem);
 struct vm_object *get_java_stack_trace(void);
 struct vm_object *native_vmthrowable_fill_in_stack_trace(struct vm_object *);

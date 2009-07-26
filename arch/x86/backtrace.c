@@ -34,6 +34,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "vm/die.h"
+#include "vm/class.h"
+#include "vm/method.h"
+#include "vm/stack-trace.h"
+
 /* get REG_EIP from ucontext.h */
 #include <ucontext.h>
 
@@ -108,7 +113,7 @@ static bool show_exe_function(void *addr)
 	symbol_start = bfd_asymbol_value(symbol);
 	symbol_offset = (unsigned long) addr - symbol_start;
 
-	printf(" [<%08lx>] %s+%llx (%s:%i)\n", (unsigned long) addr,
+	printf("%s+%llx (%s:%i)\n",
 		function_name, (long long) symbol_offset, filename, line);
 	ret = true;
 
@@ -129,7 +134,7 @@ static void show_function(void *addr)
 	if (show_exe_function(addr))
 		return;
 
-	printf(" [<%08lx> <unknown>]\n", (unsigned long) addr);
+	printf("<unknown>\n");
 }
 
 /* Must be inline so this does not change the backtrace. */
@@ -143,13 +148,44 @@ static inline void __show_stack_trace(unsigned long start, unsigned long caller)
 	array[1] = (void *) caller;
 
 	printf("Native stack trace:\n");
-	for (i = start; i < size; i++)
+	for (i = start; i < size; i++) {
+		printf(" [<%08lx>] ", (unsigned long) array[i]);
 		show_function(array[i]);
+	}
+}
+
+static void show_mixed_stack_trace(struct stack_trace_elem *elem)
+{
+	printf("Native and JAVA stack trace:\n");
+	do {
+		printf(" [<%08lx>] %-10s : ", elem->addr,
+		       stack_trace_elem_type_name(elem->type));
+
+		if (elem->type != STACK_TRACE_ELEM_TYPE_OTHER) {
+			print_java_stack_trace_elem(elem);
+			printf("\n");
+
+			printf("%-27s"," ");
+			if (!show_exe_function((void *) elem->addr))
+				printf("\r");
+
+			continue;
+		}
+
+		show_function((void *) elem->addr);
+	} while (stack_trace_elem_next(elem) == 0);
 }
 
 void print_trace(void)
 {
-	__show_stack_trace(0, 0);
+	struct stack_trace_elem elem;
+
+	init_stack_trace_elem_current(&elem);
+
+	/* Skip init_stack_trace_elem_current() */
+	stack_trace_elem_next(&elem);
+
+	show_mixed_stack_trace(&elem);
 }
 
 static unsigned long get_greg(gregset_t gregs, int reg)
@@ -160,6 +196,8 @@ static unsigned long get_greg(gregset_t gregs, int reg)
 #ifndef CONFIG_X86_64
 
 #define IP_REG REG_EIP
+#define BP_REG REG_EBP
+
 #define IP_REG_NAME "EIP"
 
 static void show_registers(gregset_t gregs)
@@ -187,6 +225,8 @@ static void show_registers(gregset_t gregs)
 #else
 
 #define IP_REG REG_RIP
+#define BP_REG REG_RBP
+
 #define IP_REG_NAME "RIP"
 
 static void show_registers(gregset_t gregs)
@@ -233,9 +273,10 @@ static void show_registers(gregset_t gregs)
 void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 {
 	ucontext_t *uc = secret;
-	unsigned long eip, addr;
+	unsigned long eip, ebp, addr;
 
 	eip	= uc->uc_mcontext.gregs[IP_REG];
+	ebp     = uc->uc_mcontext.gregs[BP_REG];
 	addr	= (unsigned long) info->si_addr;
 
 	switch (sig) {
@@ -248,6 +289,10 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 		break;
 	};
 	show_registers(uc->uc_mcontext.gregs);
-	__show_stack_trace(1, eip);
+
+	struct stack_trace_elem elem;
+	init_stack_trace_elem(&elem, eip, (void *) ebp);
+	show_mixed_stack_trace(&elem);
+
 	exit(1);
 }

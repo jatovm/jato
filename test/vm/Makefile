@@ -15,7 +15,8 @@ TOPLEVEL_OBJS :=			\
 	vm/stack.o			\
 	vm/types.o			\
 	vm/zalloc.o			\
-	test/libharness/libharness.o
+	test/libharness/libharness.o	\
+	test/vm/stack-trace-stub.o
 
 TEST_OBJS :=				\
 	bitset-test.o			\
@@ -27,5 +28,7 @@ TEST_OBJS :=				\
 	stack-test.o			\
 	string-test.o			\
 	types-test.o
+
+CFLAGS += -I ../../arch/mmix/include
 
 include ../../scripts/build/test.mk

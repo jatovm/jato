@@ -423,6 +423,44 @@ static struct vm_object *get_intermediate_stack_trace(void)
 	return array;
 }
 
+void print_java_stack_trace_elem(struct stack_trace_elem *elem)
+{
+	struct compilation_unit *cu;
+	unsigned long bc_offset;
+
+	cu = stack_trace_elem_get_cu(elem);
+
+	struct vm_method *vmm = cu->method;
+	printf("%s.%s", vmm->class->name, vmm->name);
+
+	if (vm_method_is_native(vmm)) {
+		printf("(Native Method)");
+		return;
+	}
+
+	if (!vmm->class->source_file_name) {
+		printf("(Unknown Source)");
+		return;
+	}
+
+	printf("(%s", vmm->class->source_file_name);
+
+	if (elem->type == STACK_TRACE_ELEM_TYPE_TRAMPOLINE)
+		bc_offset = 0;
+	else {
+		bc_offset = native_ptr_to_bytecode_offset(cu,
+						(unsigned char*)elem->addr);
+		if (bc_offset == BC_OFFSET_UNKNOWN)
+			goto out;
+	}
+
+        int line_no = bytecode_offset_to_line_no(vmm, bc_offset);
+	printf(":%d", line_no);
+
+ out:
+	printf(")");
+}
+
 /**
  * new_stack_trace_element - creates new instance of
  *     java.lang.StackTraceElement for given method and bytecode
@@ -643,4 +681,19 @@ struct vm_object *vm_alloc_stack_overflow_error(void)
 			       stacktrace);
 
 	return obj;
+}
+
+static char *stack_trace_elem_type_names[] = {
+	[STACK_TRACE_ELEM_TYPE_JIT] = "jit",
+	[STACK_TRACE_ELEM_TYPE_VM_NATIVE] = "vm native",
+	[STACK_TRACE_ELEM_TYPE_JNI] = "jni",
+	[STACK_TRACE_ELEM_TYPE_OTHER] = "native",
+	[STACK_TRACE_ELEM_TYPE_TRAMPOLINE] = "trampoline",
+};
+
+const char *stack_trace_elem_type_name(enum stack_trace_elem_type type)
+{
+	assert(type >= 0 && type < ARRAY_LEN(stack_trace_elem_type_names));
+
+	return stack_trace_elem_type_names[type];
 }
