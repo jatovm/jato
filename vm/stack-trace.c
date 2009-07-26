@@ -559,6 +559,152 @@ native_vmthrowable_get_stack_trace(struct vm_object *this,
 	return result;
 }
 
+static void
+vm_throwable_to_string(struct vm_object *this, struct string *str)
+{
+	struct vm_object *string_obj;
+
+	string_obj = vm_call_method_object(vm_java_lang_Throwable_toString,
+					   this);
+	if (!string_obj)
+		return;
+
+	char *cstr = vm_string_to_cstr(string_obj);
+	str_append(str, cstr);
+	free(cstr);
+}
+
+static void vm_stack_trace_element_to_string(struct vm_object *elem,
+					     struct string *str)
+{
+	struct vm_object *method_name;
+	struct vm_object *file_name;
+	struct vm_object *class_name;
+	char *method_name_str;
+	char *file_name_str;
+	char *class_name_str;
+	jint line_number;
+	jboolean is_native;
+
+	file_name = vm_call_method_object(
+			vm_java_lang_StackTraceElement_getFileName, elem);
+	line_number = vm_call_method_jint(
+			vm_java_lang_StackTraceElement_getLineNumber, elem);
+	class_name = vm_call_method_object(
+			vm_java_lang_StackTraceElement_getClassName, elem);
+	method_name = vm_call_method_object(
+			vm_java_lang_StackTraceElement_getMethodName, elem);
+	is_native = vm_call_method_jboolean(
+			vm_java_lang_StackTraceElement_isNativeMethod, elem);
+
+	if (class_name) {
+		class_name_str = vm_string_to_cstr(class_name);
+
+		str_append(str, class_name_str);
+		if (method_name)
+			str_append(str, ".");
+	}
+
+	if (method_name) {
+		method_name_str = vm_string_to_cstr(method_name);
+		str_append(str, method_name_str);
+	}
+
+	str_append(str, "(");
+
+	if (file_name) {
+		file_name_str = vm_string_to_cstr(file_name);
+		str_append(str, file_name_str);
+	} else {
+		if (is_native)
+			str_append(str, "Native Method");
+		else
+			str_append(str, "Unknown Source");
+	}
+
+	if (line_number >= 0)
+		str_append(str, ":%d", line_number);
+
+	str_append(str, ")");
+}
+
+static void
+vm_throwable_stack_trace(struct vm_object *this, struct string *str,
+			 struct vm_object *stack, int equal)
+{
+	vm_throwable_to_string(this, str);
+	str_append(str, "\n");
+
+	if (stack == NULL || stack->array_length == 0) {
+		str_append(str, "   <<No stacktrace available>>\n");
+		return;
+	}
+
+	for (int i = 0; i < stack->array_length - equal; i++) {
+		struct vm_object *elem = array_get_field_ptr(stack, i);
+
+		str_append(str, "   at ");
+	        if (!elem)
+			str_append(str, "<<Unknown>>");
+		else
+			vm_stack_trace_element_to_string(elem, str);
+
+		str_append(str, "\n");
+	}
+
+	if (equal > 0)
+		str_append(str, "   ...%d more\n", equal);
+}
+
+
+static void
+vm_throwable_print_stack_trace(struct vm_object *this, struct string *str)
+{
+	struct vm_object *stack;
+	struct vm_object *cause;
+
+	stack = vm_call_method_object(
+				vm_java_lang_Throwable_getStackTrace, this);
+
+	vm_throwable_stack_trace(this, str, stack, 0);
+
+	cause = this;
+	while ((cause = vm_call_method_object(vm_java_lang_Throwable_getCause,
+					      cause)))
+	{
+		struct vm_object *p_stack;
+
+		str_append(str, "Caused by: ");
+
+		p_stack = stack;
+		stack = vm_call_method_object(
+				vm_java_lang_Throwable_getStackTrace, cause);
+
+		if (p_stack == NULL || p_stack->array_length == 0) {
+			vm_throwable_stack_trace(cause, str, stack, 0);
+			continue;
+		}
+
+		int equal = 0;
+		int frame = stack->array_length - 1;
+		int p_frame = p_stack->array_length - 1;
+
+		while (frame > 0 && p_frame > 0) {
+			if (!vm_call_method_jboolean(
+				vm_java_lang_StackTraceElement_equals,
+				array_get_field_ptr(stack, frame),
+				array_get_field_ptr(p_stack, p_frame)))
+				break;
+
+			equal++;
+			frame--;
+			p_frame--;
+		}
+
+		vm_throwable_stack_trace(cause, str, stack, equal);
+	}
+}
+
 static void vm_print_exception_description(struct vm_object *exception)
 {
 	struct vm_object *message_obj;
@@ -582,7 +728,7 @@ static void vm_print_exception_description(struct vm_object *exception)
 
 void vm_print_exception(struct vm_object *exception)
 {
-	struct vm_object *old_exception, *string;
+	struct vm_object *old_exception;
 	struct string *str;
 
 	str = alloc_str();
@@ -595,15 +741,9 @@ void vm_print_exception(struct vm_object *exception)
 	/* TODO: print correct thread name */
 	str_append(str, "Exception in thread \"main\" ");
 
-	string = vm_call_method_object(vm_java_lang_Throwable_stackTraceString, exception);
+	vm_throwable_print_stack_trace(exception, str);
 	if (exception_occurred())
 		goto error;
-
-	char *string_s = vm_string_to_cstr(string);
-	if (!string_s)
-		goto error;
-
-	str_append(str, string_s);
 
 	fprintf(stderr, "%s", str->value);
 	free_str(str);

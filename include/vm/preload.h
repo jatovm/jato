@@ -43,10 +43,16 @@ extern struct vm_field *vm_java_lang_VMThrowable_vmdata;
 extern struct vm_method *vm_java_util_Properties_setProperty;
 extern struct vm_method *vm_java_lang_Throwable_initCause;
 extern struct vm_method *vm_java_lang_Throwable_getCause;
-extern struct vm_method *vm_java_lang_Throwable_stackTraceString;
+extern struct vm_method *vm_java_lang_Throwable_toString;
 extern struct vm_method *vm_java_lang_Throwable_getStackTrace;
 extern struct vm_method *vm_java_lang_Throwable_setStackTrace;
 extern struct vm_method *vm_java_lang_StackTraceElement_init;
+extern struct vm_method *vm_java_lang_StackTraceElement_getFileName;
+extern struct vm_method *vm_java_lang_StackTraceElement_getClassName;
+extern struct vm_method *vm_java_lang_StackTraceElement_getMethodName;
+extern struct vm_method *vm_java_lang_StackTraceElement_getLineNumber;
+extern struct vm_method *vm_java_lang_StackTraceElement_isNativeMethod;
+extern struct vm_method *vm_java_lang_StackTraceElement_equals;
 
 int preload_vm_classes(void);
 
