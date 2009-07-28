@@ -34,6 +34,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "cafebabe/access.h"
@@ -554,6 +555,18 @@ static void native_vmobject_notify_all(struct vm_object *obj)
 		throw_from_native(sizeof(obj));
 }
 
+static jlong native_vmsystem_nano_time(void)
+{
+	struct timespec time;
+	if (clock_gettime(CLOCK_MONOTONIC, &time)) {
+		NOT_IMPLEMENTED;
+		return 0;
+	}
+
+	return (unsigned long long)time.tv_sec * 1000000000ull +
+		(unsigned long long)time.tv_nsec;
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -575,6 +588,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMRuntime", "runFinalizationForExit", &native_vmruntime_run_finalization_for_exit),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", &native_vmsystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
+	DEFINE_NATIVE("java/lang/VMSystem", "nanoTime", &native_vmsystem_nano_time),
 	DEFINE_NATIVE("java/lang/VMThread", "currentThread", &native_vmthread_current_thread),
 	DEFINE_NATIVE("java/lang/VMThread", "start", &native_vmthread_start),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
