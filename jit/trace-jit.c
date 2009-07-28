@@ -32,6 +32,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 
 bool opt_trace_method;
 bool opt_trace_cfg;
@@ -46,6 +47,39 @@ bool opt_trace_invoke;
 bool opt_trace_invoke_verbose;
 bool opt_trace_exceptions;
 bool opt_trace_bytecode;
+
+static pthread_mutex_t trace_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void print_current_thread(void)
+{
+	struct vm_object *thread;
+	struct vm_object *name;
+	struct vm_thread *self;
+
+	self = vm_thread_self();
+	if (!self)
+		return;
+
+	thread = vm_thread_get_java_thread(self);
+
+	name = field_get_object(thread, vm_java_lang_Thread_name);
+
+	char * name_s;
+
+	name_s = vm_string_to_cstr(name);
+	printf("[thread: %s] ", name_s);
+	free(name_s);
+}
+
+void trace_begin(void)
+{
+	pthread_mutex_lock(&trace_mutex);
+	print_current_thread();
+}
+
+void trace_end(void) {
+	pthread_mutex_unlock(&trace_mutex);
+}
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -438,6 +472,8 @@ void trace_invoke(struct compilation_unit *cu)
 	struct vm_method *vmm = cu->method;
 	struct vm_class *vmc = vmm->class;
 
+	trace_begin();
+
 	printf("trace invoke: %s.%s%s\n", vmc->name, vmm->name, vmm->type);
 
 	if (opt_trace_invoke_verbose) {
@@ -449,6 +485,8 @@ void trace_invoke(struct compilation_unit *cu)
 		trace_return_address(frame);
 		trace_invoke_args(vmm, frame);
 	}
+
+	trace_end();
 }
 
 void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
