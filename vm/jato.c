@@ -567,6 +567,17 @@ static jlong native_vmsystem_nano_time(void)
 		(unsigned long long)time.tv_nsec;
 }
 
+static void native_vmobject_wait(struct vm_object *object, jlong ms, jint ns)
+{
+	if (ms == 0 && ns == 0)
+		vm_monitor_wait(&object->monitor);
+	else
+		vm_monitor_timed_wait(&object->monitor, ms, ns);
+
+	if (exception_occurred())
+		throw_from_native(sizeof(object) + sizeof(ms) + sizeof(ns));
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -582,6 +593,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
 	DEFINE_NATIVE("java/lang/VMObject", "notifyAll", &native_vmobject_notify_all),
 	DEFINE_NATIVE("java/lang/VMObject", "getClass", &native_vmobject_getclass),
+	DEFINE_NATIVE("java/lang/VMObject", "wait", &native_vmobject_wait),
 	DEFINE_NATIVE("java/lang/VMRuntime", "exit", &native_vmruntime_exit),
 	DEFINE_NATIVE("java/lang/VMRuntime", "mapLibraryName", &native_vmruntime_maplibraryname),
 	DEFINE_NATIVE("java/lang/VMRuntime", "nativeLoad", &native_vmruntime_native_load),
