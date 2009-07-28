@@ -84,12 +84,15 @@ struct expression *convert_args(struct stack *mimic_stack,
 				struct vm_method *method)
 {
 	struct expression *args_list = NULL;
+	unsigned long nr_args_total;
 	unsigned long i;
 
 	if (nr_args == 0) {
 		args_list = no_args_expr();
 		goto out;
 	}
+
+	nr_args_total = nr_args;
 
 	if (vm_method_is_jni(method)) {
 		if (vm_method_is_static(method))
@@ -105,7 +108,7 @@ struct expression *convert_args(struct stack *mimic_stack,
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
 		args_list = insert_arg(args_list, expr,
-				       method, nr_args - i - 1);
+				       method, nr_args_total - i - 1);
 	}
 
 	if (vm_method_is_jni(method)) {
@@ -122,9 +125,8 @@ struct expression *convert_args(struct stack *mimic_stack,
 				return NULL;
 			}
 
-			/* FIXME: Set index correctly */
 			args_list = insert_arg(args_list, class_expr,
-					       method, 0);
+					       method, 1);
 		}
 
 		jni_env_expr = value_expr(J_REFERENCE,
@@ -134,7 +136,6 @@ struct expression *convert_args(struct stack *mimic_stack,
 			return NULL;
 		}
 
-		/* FIXME: Set index correctly */
 		args_list = insert_arg(args_list, jni_env_expr, method, 0);
 	}
 
