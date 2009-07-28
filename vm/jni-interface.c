@@ -320,6 +320,22 @@ vm_jni_call_static_byte_method_v(struct vm_jni_env *env, jclass clazz,
 	return (jbyte) vm_call_method_v(methodID, args);
 }
 
+static void vm_jni_set_object_field(struct vm_jni_env *env, jobject object,
+				    jfieldID field, jobject value)
+{
+	enter_vm_from_jni();
+
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return;
+	}
+
+	if (vm_field_type(field) != J_REFERENCE)
+		return;
+
+	field_set_object(object, field, value);
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -470,7 +486,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* GetLongField */
 	NULL, /* GetFloatField */
 	NULL, /* GetDoubleField */
-	NULL, /* SetObjectField */
+	vm_jni_set_object_field,
 
 	/* 105 */
 	NULL, /* SetBooleanField */
