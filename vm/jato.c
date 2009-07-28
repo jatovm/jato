@@ -415,6 +415,42 @@ native_vmclass_getclassloader(struct vm_object *object)
 }
 
 static struct vm_object *
+native_vmclass_forname(struct vm_object *name, jboolean initialize,
+		       struct vm_object *loader)
+{
+	if (!name) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		goto throw;
+	}
+
+	const char *class_name = vm_string_to_cstr(name);
+	if (!class_name) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	/* TODO: use @loader to load the class. */
+	struct vm_class *class = classloader_load(class_name);
+	if (!class) {
+		signal_new_exception(vm_java_lang_ClassNotFoundException,
+				     class_name);
+		goto throw;
+	}
+
+	if (initialize) {
+		vm_class_ensure_init(class);
+		if (exception_occurred())
+			goto throw;
+	}
+
+	return class->object;
+
+ throw:
+	throw_from_native(sizeof(name) + sizeof(initialize) + sizeof(loader));
+	return NULL;
+}
+
+static struct vm_object *
 native_vmclass_getname(struct vm_object *object)
 {
 	struct vm_class *class;
@@ -501,6 +537,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("jato/internal/VM", "throwNullPointerException", &native_vm_throw_null_pointer_exception),
 	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", &native_vmclass_getclassloader),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
+	DEFINE_NATIVE("java/lang/VMClass", "forName", &native_vmclass_forname),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
 	DEFINE_NATIVE("java/io/VMFile", "isDirectory", &native_vmfile_is_directory),

@@ -51,6 +51,7 @@ struct vm_class *vm_java_lang_ArithmeticException;
 struct vm_class *vm_java_lang_NullPointerException;
 struct vm_class *vm_java_lang_NegativeArraySizeException;
 struct vm_class *vm_java_lang_ClassCastException;
+struct vm_class *vm_java_lang_ClassNotFoundException;
 struct vm_class *vm_java_lang_NoClassDefFoundError;
 struct vm_class *vm_java_lang_UnsatisfiedLinkError;
 struct vm_class *vm_java_lang_ArrayIndexOutOfBoundsException;
@@ -83,6 +84,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ArrayIndexOutOfBoundsException", &vm_java_lang_ArrayIndexOutOfBoundsException },
 	{ "java/lang/ArrayStoreException", &vm_java_lang_ArrayStoreException },
 	{ "java/lang/ClassCastException", &vm_java_lang_ClassCastException },
+	{ "java/lang/ClassNotFoundException", &vm_java_lang_ClassNotFoundException },
 	{ "java/lang/Error",		&vm_java_lang_Error },
 	{ "java/lang/ExceptionInInitializerError", &vm_java_lang_ExceptionInInitializerError },
 	{ "java/lang/NegativeArraySizeException", &vm_java_lang_NegativeArraySizeException },

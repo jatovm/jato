@@ -15,6 +15,7 @@ extern struct vm_class *vm_java_lang_ArithmeticException;
 extern struct vm_class *vm_java_lang_NullPointerException;
 extern struct vm_class *vm_java_lang_NegativeArraySizeException;
 extern struct vm_class *vm_java_lang_ClassCastException;
+extern struct vm_class *vm_java_lang_ClassNotFoundException;
 extern struct vm_class *vm_java_lang_NoClassDefFoundError;
 extern struct vm_class *vm_java_lang_UnsatisfiedLinkError;
 extern struct vm_class *vm_java_lang_ArrayIndexOutOfBoundsException;
