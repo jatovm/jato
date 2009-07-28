@@ -247,6 +247,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/LongArithmeticTest.class \
 	regression/jvm/MethodInvocationAndReturnTest.class \
 	regression/jvm/MethodInvocationExceptionsTest.class \
+	regression/jvm/MultithreadingTest.class \
 	regression/jvm/ObjectArrayTest.class \
 	regression/jvm/ObjectCreationAndManipulationExceptionsTest.class \
 	regression/jvm/ObjectCreationAndManipulationTest.class \
