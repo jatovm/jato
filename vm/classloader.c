@@ -12,17 +12,23 @@
 #include "vm/preload.h"
 #include "vm/class.h"
 #include "vm/die.h"
+#include "vm/backtrace.h"
 
 bool opt_trace_classloader;
-static int trace_classloader_level = 0;
+static __thread int trace_classloader_level = 0;
+
+static pthread_mutex_t classloader_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t classloader_cond = PTHREAD_COND_INITIALIZER;
 
 static inline void trace_push(const char *class_name)
 {
 	assert(trace_classloader_level >= 0);
 
 	if (opt_trace_classloader) {
+		trace_begin();
 		fprintf(stderr, "classloader: %*s%s\n",
 			trace_classloader_level, "", class_name);
+		trace_end();
 	}
 
 	++trace_classloader_level;
@@ -147,25 +153,39 @@ int classloader_add_to_classpath(const char *classpath)
 }
 
 struct classloader_class {
-	struct vm_class *class;
+	/* If false then the class loading is in progress. */
+	bool loaded;
+
+	union {
+		/* When @loaded is false this holds the class's name. It
+		 * should not be referenced when class is loaded. */
+		const char *class_name;
+
+		struct vm_class *class;
+	};
 };
 
 static struct classloader_class *classes;
 static unsigned long max_classes;
 static unsigned long nr_classes;
 
-static struct classloader_class *lookup_class(const char *class_name)
+static int lookup_class(const char *class_name)
 {
 	unsigned long i;
 
 	for (i = 0; i < nr_classes; ++i) {
 		struct classloader_class *class = &classes[i];
 
-		if (!strcmp(class->class->name, class_name))
-			return class;
+		if (!class->loaded) {
+			if (!strcmp(class->class_name, class_name))
+				return i;
+		} else {
+			if (!strcmp(class->class->name, class_name))
+				return i;
+		}
 	}
 
-	return NULL;
+	return -1;
 }
 
 static char *class_name_to_file_name(const char *class_name)
@@ -423,26 +443,38 @@ out_filename:
 /* XXX: Should use hash table or tree, not linear search. -Vegard */
 struct vm_class *classloader_load(const char *class_name)
 {
-	struct classloader_class *class;
 	struct vm_class *vmc;
 	struct classloader_class *new_array;
 	unsigned long new_max_classes;
+	int class_index;
 
 	trace_push(class_name);
 
-	class = lookup_class(class_name);
-	if (class) {
-		vmc = class->class;
+	pthread_mutex_lock(&classloader_mutex);
+
+	/*
+	 * XXX: we must use index here not the entry pointer because
+	 * while we're loading a class or waiting for a class to get
+	 * loaded the classes array might get relocated.
+	 */
+	class_index = lookup_class(class_name);
+
+	if (class_index >= 0) {
+		/* If class is being loaded by another thread then wait
+		 * until loading is completed. */
+		while (!classes[class_index].loaded)
+			pthread_cond_wait(&classloader_cond,
+					  &classloader_mutex);
+
+		vmc = classes[class_index].class;
 		goto out;
 	}
 
-	vmc = load_class(class_name);
-	if (!vmc) {
-		NOT_IMPLEMENTED;
-		vmc = NULL;
-		goto out;
-	}
-
+	/*
+	 * We allocate cache space before loading to indicate that we
+	 * are loading this class and other threads wanting to load
+	 * that class in the same time should wait for us.
+	 */
 	if (nr_classes == max_classes) {
 		new_max_classes = 1 + max_classes * 2;
 		new_array = realloc(classes,
@@ -457,10 +489,36 @@ struct vm_class *classloader_load(const char *class_name)
 		classes = new_array;
 	}
 
-	class = &classes[nr_classes++];
-	class->class = vmc;
+	class_index = nr_classes++;
+
+	classes[class_index].loaded = false;
+	classes[class_index].class_name = class_name;
+
+	pthread_mutex_unlock(&classloader_mutex);
+
+	/*
+	 * XXX: We cannot hold classloader_mutex lock when calling
+	 * load_class() because for example vm_class_init() might call
+	 * classloader_load() for superclasses.
+	 */
+	vmc = load_class(class_name);
+	if (!vmc) {
+		NOT_IMPLEMENTED;
+		vmc = NULL;
+		goto out;
+	}
+
+	pthread_mutex_lock(&classloader_mutex);
+
+	classes[class_index].loaded = true;
+	classes[class_index].class = vmc;
+
+	/* Tell other threads that the class has been loaded. Would it
+	 * be worth to use a per-class condition variable for that? */
+	pthread_cond_broadcast(&classloader_cond);
 
 out:
+	pthread_mutex_unlock(&classloader_mutex);
 	trace_pop();
 	return vmc;
 }
