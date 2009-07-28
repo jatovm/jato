@@ -221,63 +221,65 @@ test: monoburg
 .PHONY: test
 
 REGRESSION_TEST_SUITE_CLASSES = \
-	regression/jato/internal/VM.class \
-	regression/jvm/ArrayExceptionsTest.class \
-	regression/jvm/ArrayMemberTest.class \
-	regression/jvm/ArrayTest.class \
-	regression/jvm/BranchTest.class \
-	regression/jvm/ClassExceptionsTest.class \
-	regression/jvm/CloneTest.class \
-	regression/jvm/ControlTransferTest.class \
-	regression/jvm/ConversionTest.class \
-	regression/jvm/ExceptionsTest.class \
-	regression/jvm/ExitStatusIsOneTest.class \
-	regression/jvm/ExitStatusIsZeroTest.class \
-	regression/jvm/FibonacciTest.class \
-	regression/jvm/FinallyTest.class \
-	regression/jvm/FloatArithmeticTest.class \
-	regression/jvm/GetstaticPatchingTest.class \
-	regression/jvm/IntegerArithmeticExceptionsTest.class \
-	regression/jvm/IntegerArithmeticTest.class \
-	regression/jvm/InterfaceInheritanceTest.class \
-	regression/jvm/InvokeinterfaceTest.class \
-	regression/jvm/InvokestaticPatchingTest.class \
-	regression/jvm/LoadConstantsTest.class \
-	regression/jvm/LongArithmeticExceptionsTest.class \
-	regression/jvm/LongArithmeticTest.class \
-	regression/jvm/MethodInvocationAndReturnTest.class \
-	regression/jvm/MethodInvocationExceptionsTest.class \
-	regression/jvm/MultithreadingTest.class \
-	regression/jvm/ObjectArrayTest.class \
-	regression/jvm/ObjectCreationAndManipulationExceptionsTest.class \
-	regression/jvm/ObjectCreationAndManipulationTest.class \
-	regression/jvm/ObjectStackTest.class \
-	regression/jvm/ParameterPassingTest.class \
-	regression/jvm/PrintTest.class \
-	regression/jvm/PutfieldTest.class \
-	regression/jvm/PutstaticPatchingTest.class \
-	regression/jvm/PutstaticTest.class \
-	regression/jvm/RegisterAllocatorTortureTest.class \
-	regression/jvm/StackTraceTest.class \
-	regression/jvm/StringTest.class \
-	regression/jvm/SynchronizationExceptionsTest.class \
-	regression/jvm/SynchronizationTest.class \
-	regression/jvm/TestCase.class \
-	regression/jvm/TrampolineBackpatchingTest.class
+	regression/jato/internal/VM.java \
+	regression/jvm/ArrayExceptionsTest.java \
+	regression/jvm/ArrayMemberTest.java \
+	regression/jvm/ArrayTest.java \
+	regression/jvm/BranchTest.java \
+	regression/jvm/ClassExceptionsTest.java \
+	regression/jvm/CloneTest.java \
+	regression/jvm/ControlTransferTest.java \
+	regression/jvm/ConversionTest.java \
+	regression/jvm/ExceptionsTest.java \
+	regression/jvm/ExitStatusIsOneTest.java \
+	regression/jvm/ExitStatusIsZeroTest.java \
+	regression/jvm/FibonacciTest.java \
+	regression/jvm/FinallyTest.java \
+	regression/jvm/FloatArithmeticTest.java \
+	regression/jvm/GetstaticPatchingTest.java \
+	regression/jvm/IntegerArithmeticExceptionsTest.java \
+	regression/jvm/IntegerArithmeticTest.java \
+	regression/jvm/InterfaceInheritanceTest.java \
+	regression/jvm/InvokeinterfaceTest.java \
+	regression/jvm/InvokestaticPatchingTest.java \
+	regression/jvm/LoadConstantsTest.java \
+	regression/jvm/LongArithmeticExceptionsTest.java \
+	regression/jvm/LongArithmeticTest.java \
+	regression/jvm/MethodInvocationAndReturnTest.java \
+	regression/jvm/MethodInvocationExceptionsTest.java \
+	regression/jvm/MultithreadingTest.java \
+	regression/jvm/ObjectArrayTest.java \
+	regression/jvm/ObjectCreationAndManipulationExceptionsTest.java \
+	regression/jvm/ObjectCreationAndManipulationTest.java \
+	regression/jvm/ObjectStackTest.java \
+	regression/jvm/ParameterPassingTest.java \
+	regression/jvm/PrintTest.java \
+	regression/jvm/PutfieldTest.java \
+	regression/jvm/PutstaticPatchingTest.java \
+	regression/jvm/PutstaticTest.java \
+	regression/jvm/RegisterAllocatorTortureTest.java \
+	regression/jvm/StackTraceTest.java \
+	regression/jvm/StringTest.java \
+	regression/jvm/SynchronizationExceptionsTest.java \
+	regression/jvm/SynchronizationTest.java \
+	regression/jvm/TestCase.java \
+	regression/jvm/TrampolineBackpatchingTest.java
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
-	regression/jvm/DupTest.class \
-	regression/jvm/PopTest.class \
-	regression/jvm/SubroutineTest.class \
-	regression/jvm/WideTest.class
+	regression/jvm/DupTest.j \
+	regression/jvm/PopTest.j \
+	regression/jvm/SubroutineTest.j \
+	regression/jvm/WideTest.j
 
-$(REGRESSION_TEST_SUITE_CLASSES): %.class: %.java
-	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $<
+java-regression: FORCE
+	$(E) "  JAVAC"
+	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $(REGRESSION_TEST_SUITE_CLASSES)
+.PHONY: java-regression
 
-$(JASMIN_REGRESSION_TEST_SUITE_CLASSES): %.class: %.j
-	$(E) "  JASMIN  " $@
-	$(Q) $(JASMIN) $(JASMIN_OPTS) -d regression $< > /dev/null
+jasmin-regression: FORCE
+	$(E) "  JASMIN"
+	$(Q) $(JASMIN) $(JASMIN_OPTS) -d regression $(JASMIN_REGRESSION_TEST_SUITE_CLASSES) > /dev/null
+.PHONY: jasmin-regression
 
 $(RUNTIME_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
@@ -287,7 +289,7 @@ lib: $(CLASSPATH_CONFIG)
 	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) $(REGRESSION_TEST_SUITE_CLASSES) $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
+regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-regression jasmin-regression
 	$(E) "  REGRESSION"
 	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
