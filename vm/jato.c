@@ -889,13 +889,9 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	bottom_stack_frame = __builtin_frame_address(0);
-
 	void (*main_method_trampoline)(void)
 		= vm_method_trampoline_ptr(vmm);
 	main_method_trampoline();
-
-	bottom_stack_frame = NULL;
 
 out_check_exception:
 	if (exception_occurred()) {

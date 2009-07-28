@@ -56,8 +56,6 @@ __thread unsigned long jni_stack_offset;
 __thread struct vm_native_stack_entry vm_native_stack[VM_NATIVE_STACK_SIZE];
 __thread unsigned long vm_native_stack_offset;
 
-__thread struct native_stack_frame *bottom_stack_frame;
-
 void init_stack_trace_printing(void)
 {
 	vm_native_stack_offset = 0;
@@ -163,9 +161,6 @@ int stack_trace_elem_next(struct stack_trace_elem *elem)
 	unsigned long ret_addr;
 	void *new_frame;
 
-	if (elem->frame == bottom_stack_frame)
-		return -1;
-
 	/* If previous element was a JNI call then we move to the JNI
 	 * caller's frame. We use the JNI stack_entry info to get the
 	 * frame because we don't trust JNI methods's frame
@@ -178,6 +173,9 @@ int stack_trace_elem_next(struct stack_trace_elem *elem)
 		new_addr = tr->call_site_addr;
 		goto out;
 	}
+
+	if (elem->frame == NULL)
+		return -1;
 
 	/* Check if we hit the JNI interface frame */
 	if (elem->jni_stack_index >= 0) {

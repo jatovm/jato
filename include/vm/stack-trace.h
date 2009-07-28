@@ -88,13 +88,6 @@ static inline void *vm_native_stack_get_frame(void)
 			__builtin_frame_address(0);			\
 	} while (0)
 
-
-/*
- * Points to a native stack frame that is considered as bottom-most
- * for given thread.
- */
-extern __thread struct native_stack_frame *bottom_stack_frame;
-
 enum stack_trace_elem_type {
 	STACK_TRACE_ELEM_TYPE_JIT,
 	STACK_TRACE_ELEM_TYPE_JNI,
