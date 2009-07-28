@@ -692,6 +692,6 @@ bool vm_jni_check_trap(void *ptr)
 	if (index < 0 || index >= table_size)
 		return false;
 
-	die("JNI handler for index %d not implemented.", index);
+	warn("JNI handler for index %d not implemented.", index);
 	return true;
 }
