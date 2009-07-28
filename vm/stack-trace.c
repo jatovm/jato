@@ -37,6 +37,7 @@
 #include "vm/preload.h"
 #include "vm/stack-trace.h"
 #include "vm/system.h"
+#include "vm/thread.h"
 
 #include "jit/bc-offset-mapping.h"
 #include "jit/cu-mapping.h"
@@ -632,8 +633,24 @@ void vm_print_exception(struct vm_object *exception)
 	old_exception = exception_occurred();
 	clear_exception();
 
-	/* TODO: print correct thread name */
-	str_append(str, "Exception in thread \"main\" ");
+	struct vm_thread *self = vm_thread_self();
+	if (self) {
+		struct vm_object *jthread = vm_thread_get_java_thread(self);
+		struct vm_object *name;
+
+		name = vm_call_method_object(vm_java_lang_Thread_getName,
+					     jthread);
+		char *name_s = vm_string_to_cstr(name);
+		if (!name_s)
+			goto error;
+
+		str_append(str, "Exception in thread \"");
+		str_append(str, name_s);
+		str_append(str, "\" ");
+
+		free(name_s);
+	} else
+		str_append(str, "Exception in thread \"main\" ");
 
 	string = vm_call_method_object(vm_java_lang_Throwable_stackTraceString, exception);
 	if (exception_occurred())

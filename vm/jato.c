@@ -53,6 +53,7 @@
 
 #include "lib/list.h"
 
+#include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/fault-inject.h"
@@ -67,6 +68,7 @@
 #include "vm/stack-trace.h"
 #include "vm/static.h"
 #include "vm/system.h"
+#include "vm/thread.h"
 #include "vm/vm.h"
 
 static bool perf_enabled;
@@ -533,6 +535,17 @@ native_vm_throw_null_pointer_exception(void)
 	throw_from_native(0);
 }
 
+static struct vm_object *native_vmthread_current_thread(void)
+{
+	return field_get_object(vm_get_exec_env()->thread->vmthread,
+				vm_java_lang_VMThread_thread);
+}
+
+static void native_vmthread_start(struct vm_object *vmthread, jlong stacksize)
+{
+	vm_thread_start(vmthread);
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -553,6 +566,8 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMRuntime", "runFinalizationForExit", &native_vmruntime_run_finalization_for_exit),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", &native_vmsystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
+	DEFINE_NATIVE("java/lang/VMThread", "currentThread", &native_vmthread_current_thread),
+	DEFINE_NATIVE("java/lang/VMThread", "start", &native_vmthread_start),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
 	DEFINE_NATIVE("java/lang/VMThrowable", "getStackTrace", &native_vmthrowable_get_stack_trace),
 	DEFINE_NATIVE("jato/internal/VM", "enableFault", &native_vm_enable_fault),
@@ -864,6 +879,10 @@ main(int argc, char *argv[])
 	}
 
 	init_stack_trace_printing();
+	if (init_threading()) {
+		fprintf(stderr, "could not initialize threading\n");
+		goto out_check_exception;
+	}
 
 	struct vm_class *vmc = classloader_load(classname);
 	if (!vmc) {
@@ -899,6 +918,8 @@ out_check_exception:
 		goto out;
 	}
 	status = EXIT_SUCCESS;
+
+	vm_thread_wait_for_non_daemons();
 out:
 	return status;
 }

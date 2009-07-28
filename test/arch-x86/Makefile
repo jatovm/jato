@@ -66,6 +66,7 @@ TOPLEVEL_OBJS := \
 	vm/stack.o \
 	vm/stack-trace.o \
 	vm/static.o \
+	vm/thread.o \
 	vm/types.o \
 	vm/utf8.o \
 	vm/zalloc.o \

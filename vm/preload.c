@@ -61,6 +61,10 @@ struct vm_class *vm_java_lang_ExceptionInInitializerError;
 struct vm_class *vm_java_lang_NoSuchFieldError;
 struct vm_class *vm_java_lang_NoSuchMethodError;
 struct vm_class *vm_java_lang_StackOverflowError;
+struct vm_class *vm_java_lang_Thread;
+struct vm_class *vm_java_lang_ThreadGroup;
+struct vm_class *vm_java_lang_VMThread;
+struct vm_class *vm_java_lang_IllegalMonitorStateException;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -95,6 +99,10 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/NoSuchFieldError", &vm_java_lang_NoSuchFieldError },
 	{ "java/lang/NoSuchMethodError", &vm_java_lang_NoSuchMethodError },
 	{ "java/lang/StackOverflowError", &vm_java_lang_StackOverflowError },
+	{ "java/lang/Thread", &vm_java_lang_Thread },
+	{ "java/lang/ThreadGroup", &vm_java_lang_ThreadGroup },
+	{ "java/lang/VMThread",	&vm_java_lang_VMThread },
+	{ "java/lang/IllegalMonitorStateException", &vm_java_lang_IllegalMonitorStateException },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -121,6 +129,15 @@ struct vm_field *vm_java_lang_String_count;
 struct vm_field *vm_java_lang_String_value;
 struct vm_field *vm_java_lang_Throwable_detailMessage;
 struct vm_field *vm_java_lang_VMThrowable_vmdata;
+struct vm_field *vm_java_lang_Thread_daemon;
+struct vm_field *vm_java_lang_Thread_group;
+struct vm_field *vm_java_lang_Thread_name;
+struct vm_field *vm_java_lang_Thread_priority;
+struct vm_field *vm_java_lang_Thread_contextClassLoader;
+struct vm_field *vm_java_lang_Thread_contextClassLoaderIsSystemClassLoader;
+struct vm_field *vm_java_lang_Thread_vmThread;
+struct vm_field *vm_java_lang_VMThread_thread;
+struct vm_field *vm_java_lang_VMThread_vmdata;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
@@ -129,6 +146,15 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_String, "value", "[C",	&vm_java_lang_String_value },
 	{ &vm_java_lang_Throwable, "detailMessage", "Ljava/lang/String;", &vm_java_lang_Throwable_detailMessage },
 	{ &vm_java_lang_VMThrowable, "vmdata", "Ljava/lang/Object;", &vm_java_lang_VMThrowable_vmdata },
+	{ &vm_java_lang_Thread, "daemon", "Z", &vm_java_lang_Thread_daemon },
+	{ &vm_java_lang_Thread, "group", "Ljava/lang/ThreadGroup;", &vm_java_lang_Thread_group },
+	{ &vm_java_lang_Thread, "name", "Ljava/lang/String;", &vm_java_lang_Thread_name },
+	{ &vm_java_lang_Thread, "priority", "I", &vm_java_lang_Thread_priority },
+	{ &vm_java_lang_Thread, "contextClassLoader", "Ljava/lang/ClassLoader;", &vm_java_lang_Thread_contextClassLoader },
+	{ &vm_java_lang_Thread, "contextClassLoaderIsSystemClassLoader", "Z", &vm_java_lang_Thread_contextClassLoaderIsSystemClassLoader },
+	{ &vm_java_lang_Thread, "vmThread", "Ljava/lang/VMThread;", &vm_java_lang_Thread_vmThread },
+	{ &vm_java_lang_VMThread, "thread", "Ljava/lang/Thread;", &vm_java_lang_VMThread_thread },
+	{ &vm_java_lang_VMThread, "vmdata", "Ljava/lang/Object;", &vm_java_lang_VMThread_vmdata },
 };
 
 struct method_preload_entry {
@@ -145,6 +171,13 @@ struct vm_method *vm_java_lang_Throwable_stackTraceString;
 struct vm_method *vm_java_lang_Throwable_getStackTrace;
 struct vm_method *vm_java_lang_Throwable_setStackTrace;
 struct vm_method *vm_java_lang_StackTraceElement_init;
+struct vm_method *vm_java_lang_Thread_init;
+struct vm_method *vm_java_lang_Thread_isDaemon;
+struct vm_method *vm_java_lang_Thread_getName;
+struct vm_method *vm_java_lang_ThreadGroup_init;
+struct vm_method *vm_java_lang_ThreadGroup_addThread;
+struct vm_method *vm_java_lang_VMThread_init;
+struct vm_method *vm_java_lang_VMThread_run;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -188,6 +221,48 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"<init>",
 		"(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V",
 		&vm_java_lang_StackTraceElement_init,
+	},
+	{
+		&vm_java_lang_Thread,
+		"<init>",
+		"(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V",
+		&vm_java_lang_Thread_init,
+	},
+	{
+		&vm_java_lang_Thread,
+		"isDaemon",
+		"()Z",
+		&vm_java_lang_Thread_isDaemon,
+	},
+	{
+		&vm_java_lang_Thread,
+		"getName",
+		"()Ljava/lang/String;",
+		&vm_java_lang_Thread_getName,
+	},
+	{
+		&vm_java_lang_ThreadGroup,
+		"<init>",
+		"()V",
+		&vm_java_lang_ThreadGroup_init,
+	},
+	{
+		&vm_java_lang_ThreadGroup,
+		"addThread",
+		"(Ljava/lang/Thread;)V",
+		&vm_java_lang_ThreadGroup_addThread,
+	},
+	{
+		&vm_java_lang_VMThread,
+		"<init>",
+		"(Ljava/lang/Thread;)V",
+		&vm_java_lang_VMThread_init,
+	},
+	{
+		&vm_java_lang_VMThread,
+		"run",
+		"()V",
+		&vm_java_lang_VMThread_run,
 	},
 };
 
