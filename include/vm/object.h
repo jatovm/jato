@@ -6,10 +6,34 @@
 #include <stdint.h>
 
 #include "vm/field.h"
+#include "vm/thread.h"
 #include "vm/vm.h"
 
 struct vm_class;
 enum vm_type;
+
+struct vm_monitor {
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+
+	/* Holds the owner of this monitor or NULL when not locked. */
+	struct vm_thread *owner;
+
+	/*
+	 * owner field might be read by other threads even if lock on
+	 * @mutex is not held by them. For example vm_monitor_unlock()
+	 * checks if the current thread is the owner of monitor. In
+	 * SMP systems we must either ensure atomicity and use memory
+	 * barriers or use a mutex. The latter approach is choosed.
+	 */
+	pthread_mutex_t owner_mutex;
+
+	/*
+	 * Holds the number of recursive locks on this monitor. This
+	 * field is protected by @mutex.
+	 */
+	int lock_count;
+};
 
 struct vm_object {
 	/* For arrays, this points to the array type, e.g. for int arrays,
@@ -19,7 +43,7 @@ struct vm_object {
 	 * we access ->class first. */
 	struct vm_class *class;
 
-	pthread_mutex_t mutex;
+	struct vm_monitor monitor;
 
 	int array_length;
 	uint8_t fields[];
@@ -54,6 +78,16 @@ void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type);
 void array_size_check(int size);
 void multiarray_size_check(int n, ...);
 char *vm_string_to_cstr(const struct vm_object *string);
+
+int vm_monitor_init(struct vm_monitor *mon);
+int vm_monitor_lock(struct vm_monitor *mon);
+int vm_monitor_unlock(struct vm_monitor *mon);
+int vm_monitor_wait(struct vm_monitor *mon);
+int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns);
+int vm_monitor_notify(struct vm_monitor *mon);
+int vm_monitor_notify_all(struct vm_monitor *mon);
+struct vm_thread *vm_monitor_get_owner(struct vm_monitor *mon);
+void vm_monitor_set_owner(struct vm_monitor *mon, struct vm_thread *owner);
 
 static inline void
 field_set_int32(struct vm_object *obj, const struct vm_field *field, int32_t value)

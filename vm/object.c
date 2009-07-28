@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "jit/exception.h"
 
@@ -51,8 +52,10 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 
 	res->class = class;
 
-	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
+	if (vm_monitor_init(&res->monitor)) {
 		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	return res;
 }
@@ -110,8 +113,10 @@ struct vm_object *vm_object_alloc_native_array(int type, int count)
 
 	res->array_length = count;
 
-	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
+	if (vm_monitor_init(&res->monitor)) {
 		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	return res;
 }
@@ -132,8 +137,10 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 		return NULL;
 	}
 
-	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
+	if (vm_monitor_init(&res->monitor)) {
 		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	res->array_length = counts[0];
 
@@ -171,8 +178,10 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 		return NULL;
 	}
 
-	if (pthread_mutex_init(&res->mutex, &obj_mutexattr))
+	if (vm_monitor_init(&res->monitor)) {
 		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	res->array_length = count;
 
@@ -263,14 +272,12 @@ struct vm_object *vm_object_clone(struct vm_object *obj)
 
 void vm_object_lock(struct vm_object *obj)
 {
-	if (pthread_mutex_lock(&obj->mutex))
-		NOT_IMPLEMENTED;
+	vm_monitor_lock(&obj->monitor);
 }
 
 void vm_object_unlock(struct vm_object *obj)
 {
-	if (pthread_mutex_unlock(&obj->mutex))
-		NOT_IMPLEMENTED;
+	vm_monitor_unlock(&obj->monitor);
 }
 
 struct vm_object *
@@ -571,4 +578,177 @@ char *vm_string_to_cstr(const struct vm_object *string_obj)
  exit:
 	free_str(str);
 	return result;
+}
+
+int vm_monitor_init(struct vm_monitor *mon)
+{
+	if (pthread_mutex_init(&mon->owner_mutex, NULL)) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	if (pthread_mutex_init(&mon->mutex, &obj_mutexattr)) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	if (pthread_cond_init(&mon->cond, NULL)) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	return 0;
+}
+
+struct vm_thread *vm_monitor_get_owner(struct vm_monitor *mon)
+{
+	struct vm_thread *owner;
+
+	pthread_mutex_lock(&mon->owner_mutex);
+	owner = mon->owner;
+	pthread_mutex_unlock(&mon->owner_mutex);
+
+	return owner;
+}
+
+void vm_monitor_set_owner(struct vm_monitor *mon, struct vm_thread *owner)
+{
+	pthread_mutex_lock(&mon->owner_mutex);
+	mon->owner = owner;
+	pthread_mutex_unlock(&mon->owner_mutex);
+}
+
+int vm_monitor_lock(struct vm_monitor *mon)
+{
+	struct vm_thread *self = vm_thread_self();
+
+	if (pthread_mutex_trylock(&mon->mutex)) {
+		/*
+		 * XXX: according to Thread.getState() documentation thread
+		 * state does not have to be precise, it's used rather
+		 * for monitoring.
+		 */
+		vm_thread_set_state(self, VM_THREAD_STATE_BLOCKED);
+		pthread_mutex_lock(&mon->mutex);
+		vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
+	}
+
+	vm_monitor_set_owner(mon, self);
+	mon->lock_count++;
+
+	return 0;
+}
+
+int vm_monitor_unlock(struct vm_monitor *mon)
+{
+	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
+		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
+				     NULL);
+		return -1;
+	}
+
+	if (--mon->lock_count == 0)
+		vm_monitor_set_owner(mon, NULL);
+
+	return pthread_mutex_unlock(&mon->mutex);
+}
+
+int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
+{
+	struct vm_thread *self;
+	struct timespec timespec;
+	int err;
+
+	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
+		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
+				     NULL);
+		return -1;
+	}
+
+	/*
+	 * XXX: we must use CLOCK_REALTIME here because
+	 * pthread_cond_timedwait() uses this clock.
+	 */
+	clock_gettime(CLOCK_REALTIME, &timespec);
+
+	timespec.tv_sec += ms / 1000;
+	timespec.tv_nsec += (long)ns + (long)(ms % 1000) * 1000000l;
+
+	if (timespec.tv_nsec >= 1000000000l) {
+		timespec.tv_sec++;
+		timespec.tv_nsec -= 1000000000l;
+	}
+
+	if (--mon->lock_count == 0)
+		vm_monitor_set_owner(mon, NULL);
+
+	self = vm_thread_self();
+
+	vm_thread_set_state(self, VM_THREAD_STATE_TIMED_WAITING);
+	err = pthread_cond_timedwait(&mon->cond, &mon->mutex, &timespec);
+	vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
+
+	if (err == ETIMEDOUT)
+		err = 0;
+
+	if (!err) {
+		/* reacquire the lock */
+		vm_monitor_set_owner(mon, self);
+		mon->lock_count++;
+	}
+
+	/* TODO: check if thread has been interrupted. */
+	return err;
+}
+
+int vm_monitor_wait(struct vm_monitor *mon)
+{
+	struct vm_thread *self;
+	int err;
+
+	self = vm_thread_self();
+
+	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
+		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
+				     NULL);
+		return -1;
+	}
+
+	if (--mon->lock_count == 0)
+		vm_monitor_set_owner(mon, NULL);
+
+	vm_thread_set_state(self, VM_THREAD_STATE_WAITING);
+	err = pthread_cond_wait(&mon->cond, &mon->mutex);
+	vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
+
+	if (!err) {
+		/* reacquire the lock */
+		vm_monitor_set_owner(mon, self);
+		mon->lock_count++;
+	}
+
+	/* TODO: check if thread has been interrupted. */
+	return err;
+}
+
+int vm_monitor_notify(struct vm_monitor *mon)
+{
+	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
+		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
+				     NULL);
+		return -1;
+	}
+
+	return pthread_cond_signal(&mon->cond);
+}
+
+int vm_monitor_notify_all(struct vm_monitor *mon)
+{
+	if (vm_monitor_get_owner(mon) != vm_get_exec_env()->thread) {
+		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
+				     NULL);
+		return -1;
+	}
+
+	return pthread_cond_broadcast(&mon->cond);
 }
