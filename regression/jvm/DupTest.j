@@ -1,17 +1,17 @@
 .class public jvm/DupTest
 .super jvm/TestCase
 
-.field public static counter int
+.field public static counter I
 
 .method public static advanceCounter()I
-    getstatic jvm/DupTest/counter int
+    getstatic jvm/DupTest/counter I
     iconst_1
     iadd
-    putstatic jvm/DupTest/counter int
+    putstatic jvm/DupTest/counter I
 
     ; we don't want to use 'dup' here because we shouldn't
     ; assume that dup works.
-    getstatic jvm/DupTest/counter int
+    getstatic jvm/DupTest/counter I
     ireturn
 .end method
 
@@ -20,7 +20,7 @@
     .limit locals 3
 
     iconst_0
-    putstatic jvm/DupTest/counter int
+    putstatic jvm/DupTest/counter I
 
     invokestatic jvm/DupTest/advanceCounter()I
     dup
@@ -47,7 +47,7 @@
     .limit locals 4
 
     iconst_0
-    putstatic jvm/DupTest/counter int
+    putstatic jvm/DupTest/counter I
 
     iconst_1
     invokestatic jvm/DupTest/advanceCounter()I
@@ -83,7 +83,7 @@
     .limit locals 5
 
     iconst_0
-    putstatic jvm/DupTest/counter int
+    putstatic jvm/DupTest/counter I
 
     iconst_3
     iconst_2
@@ -128,7 +128,7 @@
     .limit locals 5
 
     iconst_0
-    putstatic jvm/DupTest/counter int
+    putstatic jvm/DupTest/counter I
 
     iconst_2
     invokestatic jvm/DupTest/advanceCounter()I
@@ -173,7 +173,7 @@
     .limit locals 6
 
     iconst_0
-    putstatic jvm/DupTest/counter int
+    putstatic jvm/DupTest/counter I
 
     iconst_3
     iconst_2
@@ -226,7 +226,7 @@
     .limit locals 7
 
     iconst_0
-    putstatic jvm/DupTest/counter int
+    putstatic jvm/DupTest/counter I
 
     iconst_4
     iconst_3
