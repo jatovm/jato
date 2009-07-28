@@ -75,6 +75,16 @@
 static bool perf_enabled;
 char *exe_name;
 
+static void __attribute__((noreturn)) vm_exit(int status)
+{
+	clear_exception();
+	vm_call_method(vm_java_lang_System_exit, status);
+	if (exception_occurred())
+		vm_print_exception(exception_occurred());
+
+	error("System.exit() returned");
+}
+
 static struct vm_object *native_vmstackwalker_getclasscontext(void)
 {
 	struct stack_trace_elem st_elem;
@@ -956,5 +966,8 @@ out_check_exception:
 
 	vm_thread_wait_for_non_daemons();
 out:
-	return status;
+	vm_exit(status);
+
+	/* XXX: We should not get there */
+	return EXIT_FAILURE;
 }

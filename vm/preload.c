@@ -65,6 +65,7 @@ struct vm_class *vm_java_lang_Thread;
 struct vm_class *vm_java_lang_ThreadGroup;
 struct vm_class *vm_java_lang_VMThread;
 struct vm_class *vm_java_lang_IllegalMonitorStateException;
+struct vm_class *vm_java_lang_System;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -103,6 +104,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ThreadGroup", &vm_java_lang_ThreadGroup },
 	{ "java/lang/VMThread",	&vm_java_lang_VMThread },
 	{ "java/lang/IllegalMonitorStateException", &vm_java_lang_IllegalMonitorStateException },
+	{ "java/lang/System",	&vm_java_lang_System },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -178,6 +180,7 @@ struct vm_method *vm_java_lang_ThreadGroup_init;
 struct vm_method *vm_java_lang_ThreadGroup_addThread;
 struct vm_method *vm_java_lang_VMThread_init;
 struct vm_method *vm_java_lang_VMThread_run;
+struct vm_method *vm_java_lang_System_exit;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -263,6 +266,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"run",
 		"()V",
 		&vm_java_lang_VMThread_run,
+	},
+	{
+		&vm_java_lang_System,
+		"exit",
+		"(I)V",
+		&vm_java_lang_System_exit,
 	},
 };
 

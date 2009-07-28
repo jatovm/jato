@@ -68,6 +68,7 @@ extern struct vm_method *vm_java_lang_ThreadGroup_init;
 extern struct vm_method *vm_java_lang_ThreadGroup_addThread;
 extern struct vm_method *vm_java_lang_VMThread_init;
 extern struct vm_method *vm_java_lang_VMThread_run;
+extern struct vm_method *vm_java_lang_System_exit;
 
 int preload_vm_classes(void);
 
