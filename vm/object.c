@@ -657,6 +657,7 @@ int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
 {
 	struct vm_thread *self;
 	struct timespec timespec;
+	int old_lock_count;
 	int err;
 
 	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
@@ -679,8 +680,10 @@ int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
 		timespec.tv_nsec -= 1000000000l;
 	}
 
-	if (--mon->lock_count == 0)
-		vm_monitor_set_owner(mon, NULL);
+	old_lock_count = mon->lock_count;
+
+	mon->lock_count = 0;
+	vm_monitor_set_owner(mon, NULL);
 
 	self = vm_thread_self();
 
@@ -694,7 +697,7 @@ int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
 	if (!err) {
 		/* reacquire the lock */
 		vm_monitor_set_owner(mon, self);
-		mon->lock_count++;
+		mon->lock_count = old_lock_count;
 	}
 
 	/* TODO: check if thread has been interrupted. */
@@ -704,6 +707,7 @@ int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
 int vm_monitor_wait(struct vm_monitor *mon)
 {
 	struct vm_thread *self;
+	int old_lock_count;
 	int err;
 
 	self = vm_thread_self();
@@ -714,8 +718,10 @@ int vm_monitor_wait(struct vm_monitor *mon)
 		return -1;
 	}
 
-	if (--mon->lock_count == 0)
-		vm_monitor_set_owner(mon, NULL);
+	old_lock_count = mon->lock_count;
+
+	mon->lock_count = 0;
+	vm_monitor_set_owner(mon, NULL);
 
 	vm_thread_set_state(self, VM_THREAD_STATE_WAITING);
 	err = pthread_cond_wait(&mon->cond, &mon->mutex);
@@ -724,7 +730,7 @@ int vm_monitor_wait(struct vm_monitor *mon)
 	if (!err) {
 		/* reacquire the lock */
 		vm_monitor_set_owner(mon, self);
-		mon->lock_count++;
+		mon->lock_count = old_lock_count;
 	}
 
 	/* TODO: check if thread has been interrupted. */
