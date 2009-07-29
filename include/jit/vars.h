@@ -88,6 +88,11 @@ struct live_interval {
 	bool fixed_reg;
 };
 
+static inline bool has_use_positions(struct live_interval *it)
+{
+	return !list_is_empty(&it->use_positions);
+}
+
 static inline void
 mark_need_reload(struct live_interval *it, struct live_interval *parent)
 {

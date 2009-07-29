@@ -149,8 +149,11 @@ static void __spill_interval_intersecting(struct live_interval *current,
 		return;
 
 	new = split_interval_at(new, next_pos);
-	mark_need_reload(new, it);
 
+	if (!has_use_positions(new))
+		return;
+
+	mark_need_reload(new, it);
 	insert_to_list(new, unhandled);
 }
 
@@ -238,8 +241,12 @@ static void allocate_blocked_reg(struct live_interval *current,
 		 */
 		pos = next_use_pos(current, current->range.start);
 		new = split_interval_at(current, pos);
-		mark_need_reload(new, current);
-		insert_to_list(new, unhandled);
+
+		if (has_use_positions(new)) {
+			mark_need_reload(new, current);
+			insert_to_list(new, unhandled);
+		}
+
 		current->need_spill = 1;
 	} else if (block_pos[reg] > current->range.end) {
 		/* Spilling made a register free for the whole current */
@@ -248,7 +255,9 @@ static void allocate_blocked_reg(struct live_interval *current,
 						 inactive, unhandled);
 	} else {
 		new = split_interval_at(current, block_pos[reg]);
-		insert_to_list(new, unhandled);
+
+		if (has_use_positions(new))
+			insert_to_list(new, unhandled);
 
 		current->reg = reg;
 		spill_all_intervals_intersecting(current, reg, active,
@@ -300,8 +309,12 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		 * Register available for the first part of the interval.
 		 */
 		new = split_interval_at(current, free_until_pos[reg]);
-		mark_need_reload(new, current);
-		insert_to_list(new, unhandled);
+
+		if (has_use_positions(new)) {
+			mark_need_reload(new, current);
+			insert_to_list(new, unhandled);
+		}
+
 		current->reg = reg;
 		current->need_spill = 1;
 	}
