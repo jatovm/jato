@@ -620,7 +620,11 @@ void vm_monitor_set_owner(struct vm_monitor *mon, struct vm_thread *owner)
 
 int vm_monitor_lock(struct vm_monitor *mon)
 {
-	struct vm_thread *self = vm_thread_self();
+	struct vm_thread *self;
+	int err;
+
+	self = vm_thread_self();
+	err = 0;
 
 	if (pthread_mutex_trylock(&mon->mutex)) {
 		/*
@@ -629,14 +633,17 @@ int vm_monitor_lock(struct vm_monitor *mon)
 		 * for monitoring.
 		 */
 		vm_thread_set_state(self, VM_THREAD_STATE_BLOCKED);
-		pthread_mutex_lock(&mon->mutex);
+		err = pthread_mutex_lock(&mon->mutex);
 		vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
 	}
 
-	vm_monitor_set_owner(mon, self);
-	mon->lock_count++;
+	/* If err is non zero the lock has not been acquired. */
+	if (!err) {
+		vm_monitor_set_owner(mon, self);
+		mon->lock_count++;
+	}
 
-	return 0;
+	return err;
 }
 
 int vm_monitor_unlock(struct vm_monitor *mon)
@@ -650,7 +657,15 @@ int vm_monitor_unlock(struct vm_monitor *mon)
 	if (--mon->lock_count == 0)
 		vm_monitor_set_owner(mon, NULL);
 
-	return pthread_mutex_unlock(&mon->mutex);
+	int err = pthread_mutex_unlock(&mon->mutex);
+
+	/* If err is non zero the lock has not been released. */
+	if (err) {
+		++mon->lock_count;
+		vm_monitor_set_owner(mon, vm_thread_self());
+	}
+
+	return err;
 }
 
 int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
@@ -694,11 +709,8 @@ int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
 	if (err == ETIMEDOUT)
 		err = 0;
 
-	if (!err) {
-		/* reacquire the lock */
-		vm_monitor_set_owner(mon, self);
-		mon->lock_count = old_lock_count;
-	}
+	vm_monitor_set_owner(mon, self);
+	mon->lock_count = old_lock_count;
 
 	/* TODO: check if thread has been interrupted. */
 	return err;
@@ -727,11 +739,8 @@ int vm_monitor_wait(struct vm_monitor *mon)
 	err = pthread_cond_wait(&mon->cond, &mon->mutex);
 	vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
 
-	if (!err) {
-		/* reacquire the lock */
-		vm_monitor_set_owner(mon, self);
-		mon->lock_count = old_lock_count;
-	}
+	vm_monitor_set_owner(mon, self);
+	mon->lock_count = old_lock_count;
 
 	/* TODO: check if thread has been interrupted. */
 	return err;
