@@ -467,7 +467,7 @@ struct vm_class *classloader_load(const char *class_name)
 					  &classloader_mutex);
 
 		vmc = classes[class_index].class;
-		goto out;
+		goto out_unlock;
 	}
 
 	/*
@@ -482,7 +482,7 @@ struct vm_class *classloader_load(const char *class_name)
 		if (!new_array) {
 			NOT_IMPLEMENTED;
 			vmc = NULL;
-			goto out;
+			goto out_unlock;
 		}
 
 		max_classes = new_max_classes;
@@ -517,8 +517,10 @@ struct vm_class *classloader_load(const char *class_name)
 	 * be worth to use a per-class condition variable for that? */
 	pthread_cond_broadcast(&classloader_cond);
 
-out:
+ out_unlock:
 	pthread_mutex_unlock(&classloader_mutex);
+
+ out:
 	trace_pop();
 	return vmc;
 }
