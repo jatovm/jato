@@ -117,6 +117,19 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 	new_bb->predecessors = NULL;
 	new_bb->nr_predecessors = 0;
 
+	/* The original successors' predecessors must be updated to point to
+	 * the new basic block. */
+	for (unsigned int i = 0, n = new_bb->nr_successors; i < n; ++i) {
+		struct basic_block *successor = new_bb->successors[i];
+
+		for (unsigned int j = 0, m = successor->nr_predecessors;
+			j < m; ++j)
+		{
+			if (successor->predecessors[j] == orig_bb)
+				successor->predecessors[j] = new_bb;
+		}
+	}
+
 	if (orig_bb->has_branch) {
 		orig_bb->has_branch = false;
 		new_bb->has_branch = true;
