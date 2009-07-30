@@ -308,7 +308,6 @@ clean:
 	$(Q) - rm -f $(ARCH_TEST_SUITE)
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
-	$(Q) - rm -f $(REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) - rm -f $(RUNTIME_CLASSES)
 	$(Q) - find regression/ -name "*.class" | xargs rm -f
 	$(Q) - find runtime/ -name "*.class" | xargs rm -f
