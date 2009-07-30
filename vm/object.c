@@ -597,6 +597,9 @@ int vm_monitor_init(struct vm_monitor *mon)
 		return -1;
 	}
 
+	mon->owner = NULL;
+	mon->lock_count = 0;
+
 	return 0;
 }
 
