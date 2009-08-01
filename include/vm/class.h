@@ -195,6 +195,22 @@ vm_field_get_float(const struct vm_field *field)
 }
 
 static inline void
+vm_field_set_double(const struct vm_field *field, double value)
+{
+	assert(vm_field_is_static(field));
+
+	*(double *) &field->class->static_values[field->offset] = value;
+}
+
+static inline double
+vm_field_get_double(const struct vm_field *field)
+{
+	assert(vm_field_is_static(field));
+
+	return *(double *) &field->class->static_values[field->offset];
+}
+
+static inline void
 vm_field_set_object(const struct vm_field *field, struct vm_object *value)
 {
 	assert(vm_field_is_static(field));

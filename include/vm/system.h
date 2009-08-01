@@ -53,4 +53,14 @@ static inline int float_to_uint32(float value)
 	return a.iv;
 }
 
+static inline double uint64_to_double(uint32_t lowv, uint32_t highv)
+{
+	union {
+		uint64_t	val;
+		double		fv;
+	} a;
+	a.val = (uint64_t)highv << 32 | lowv;
+	return a.fv;
+}
+
 #endif
