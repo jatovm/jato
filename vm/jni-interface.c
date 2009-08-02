@@ -455,6 +455,24 @@ static void vm_jni_delete_local_ref(struct vm_jni_env *env, jobject ref)
 	NOT_IMPLEMENTED;
 }
 
+static jint vm_jni_get_int_field(struct vm_jni_env *env, jobject object,
+				 jfieldID field)
+{
+	enter_vm_from_jni();
+
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+
+	if (vm_field_type(field) != J_INT) {
+		NOT_IMPLEMENTED;
+		return 0;
+	}
+
+	return field_get_int32(object, field);
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -601,7 +619,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* GetShortField */
 
 	/* 100 */
-	NULL, /* GetIntField */
+	vm_jni_get_int_field,
 	NULL, /* GetLongField */
 	NULL, /* GetFloatField */
 	NULL, /* GetDoubleField */
