@@ -10,6 +10,9 @@ struct vm_method;
 struct vm_object;
 
 unsigned long vm_call_method_v(struct vm_method *method, va_list args);
+unsigned long vm_call_method_this_v(struct vm_method *method,
+				    struct vm_object *this,
+				    va_list args);
 
 #define DECLARE_VM_CALL_METHOD(type, suffix)				\
 	static inline type						\

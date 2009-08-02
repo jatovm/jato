@@ -497,6 +497,29 @@ static jint vm_jni_monitor_exit(struct vm_jni_env *env, jobject obj)
 	return err;
 }
 
+static jobject vm_jni_new_object(struct vm_jni_env *env, jobject clazz,
+				 jmethodID method, ...)
+{
+	va_list args;
+
+	enter_vm_from_jni();
+
+	struct vm_object *obj;
+	struct vm_class *class;
+
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+		return NULL;
+
+	class = vm_class_get_class_from_class_object(clazz);
+	obj = vm_object_alloc(class);
+
+	va_start(args, method);
+	vm_call_method_this_v(method, obj, args);
+	va_end(args);
+
+	return obj;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -541,7 +564,7 @@ void *vm_jni_native_interface[] = {
 	NULL,
 	NULL,
 	NULL, /* AllocObject */
-	NULL, /* NewObject */
+	vm_jni_new_object, /* NewObject */
 	NULL, /* NewObjectV */
 
 	/* 30 */

@@ -101,6 +101,26 @@ vm_call_jni_method_v(struct vm_method *method, va_list args)
 	return vm_call_method_a(method, args_array);
 }
 
+static unsigned long
+vm_call_jni_method_this_v(struct vm_method *method, struct vm_object *this,
+			  va_list args)
+{
+	unsigned long args_array[method->args_count];
+	int i;
+
+	i = 0;
+	args_array[i++] = (unsigned long)vm_jni_get_jni_env();
+
+	assert(!vm_method_is_static(method));
+
+	args_array[i++] = (unsigned long) this;
+
+	while (i < method->args_count)
+		args_array[i++] = va_arg(args, long);
+
+	return vm_call_method_a(method, args_array);
+}
+
 unsigned long vm_call_method_v(struct vm_method *method, va_list args)
 {
 	unsigned long args_array[method->args_count];
@@ -109,6 +129,23 @@ unsigned long vm_call_method_v(struct vm_method *method, va_list args)
 		return vm_call_jni_method_v(method, args);
 
 	for (int i = 0; i < method->args_count; i++)
+		args_array[i] = va_arg(args, unsigned long);
+
+	return vm_call_method_a(method, args_array);
+}
+
+unsigned long vm_call_method_this_v(struct vm_method *method,
+				    struct vm_object *this,
+				    va_list args)
+{
+	unsigned long args_array[method->args_count];
+
+	if (vm_method_is_jni(method))
+		return vm_call_jni_method_this_v(method, this, args);
+
+	args_array[0] = (unsigned long) this;
+
+	for (int i = 1; i < method->args_count; i++)
 		args_array[i] = va_arg(args, unsigned long);
 
 	return vm_call_method_a(method, args_array);
