@@ -206,6 +206,13 @@ static void init_system_properties(void)
 		s = "/usr/lib/classpath/";
 
 	add_system_property_const("java.library.path", s);
+
+	char *cwd = get_current_dir_name();
+	add_system_property_const("user.dir", cwd);
+	free(cwd);
+
+	add_system_property_const("user.name", getenv("USER"));
+	add_system_property_const("user.home", getenv("HOME"));
 }
 
 static void native_vmsystemproperties_preinit(struct vm_object *p)
