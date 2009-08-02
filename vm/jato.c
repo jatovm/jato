@@ -440,7 +440,7 @@ native_vmclass_forname(struct vm_object *name, jboolean initialize,
 		goto throw;
 	}
 
-	const char *class_name = vm_string_to_cstr(name);
+	char *class_name = vm_string_to_cstr(name);
 	if (!class_name) {
 		NOT_IMPLEMENTED;
 		return NULL;
@@ -448,6 +448,9 @@ native_vmclass_forname(struct vm_object *name, jboolean initialize,
 
 	/* TODO: use @loader to load the class. */
 	struct vm_class *class = classloader_load(class_name);
+
+	free(class_name);
+
 	if (!class) {
 		signal_new_exception(vm_java_lang_ClassNotFoundException,
 				     class_name);

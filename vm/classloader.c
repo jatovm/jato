@@ -188,6 +188,18 @@ static int lookup_class(const char *class_name)
 	return -1;
 }
 
+static char *dots_to_slash(const char *name)
+{
+	char *result = strdup(name);
+
+	for (unsigned int i = 0, n = strlen(name); i < n; ++i) {
+		if (result[i] == '.')
+			result[i] = '/';
+	}
+
+	return result;
+}
+
 static char *class_name_to_file_name(const char *class_name)
 {
 	char *filename;
@@ -195,11 +207,6 @@ static char *class_name_to_file_name(const char *class_name)
 	if (asprintf(&filename, "%s.class", class_name) == -1) {
 		NOT_IMPLEMENTED;
 		return NULL;
-	}
-
-	for (unsigned int i = 0, n = strlen(class_name); i < n; ++i) {
-		if (filename[i] == '.')
-			filename[i] = '/';
 	}
 
 	return filename;
@@ -450,6 +457,12 @@ struct vm_class *classloader_load(const char *class_name)
 
 	trace_push(class_name);
 
+	char *slash_class_name = dots_to_slash(class_name);
+	if (!slash_class_name) {
+		trace_pop();
+		return NULL;
+	}
+
 	pthread_mutex_lock(&classloader_mutex);
 
 	/*
@@ -457,8 +470,7 @@ struct vm_class *classloader_load(const char *class_name)
 	 * while we're loading a class or waiting for a class to get
 	 * loaded the classes array might get relocated.
 	 */
-	class_index = lookup_class(class_name);
-
+	class_index = lookup_class(slash_class_name);
 	if (class_index >= 0) {
 		/* If class is being loaded by another thread then wait
 		 * until loading is completed. */
@@ -492,7 +504,7 @@ struct vm_class *classloader_load(const char *class_name)
 	class_index = nr_classes++;
 
 	classes[class_index].loaded = false;
-	classes[class_index].class_name = class_name;
+	classes[class_index].class_name = slash_class_name;
 
 	pthread_mutex_unlock(&classloader_mutex);
 
@@ -501,7 +513,7 @@ struct vm_class *classloader_load(const char *class_name)
 	 * load_class() because for example vm_class_init() might call
 	 * classloader_load() for superclasses.
 	 */
-	vmc = load_class(class_name);
+	vmc = load_class(slash_class_name);
 	if (!vmc) {
 		NOT_IMPLEMENTED;
 		vmc = NULL;
@@ -521,6 +533,7 @@ struct vm_class *classloader_load(const char *class_name)
 	pthread_mutex_unlock(&classloader_mutex);
 
  out:
+	free(slash_class_name);
 	trace_pop();
 	return vmc;
 }
