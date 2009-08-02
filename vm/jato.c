@@ -557,6 +557,14 @@ static void native_vmthread_start(struct vm_object *vmthread, jlong stacksize)
 	vm_thread_start(vmthread);
 }
 
+static void native_vmobject_notify(struct vm_object *obj)
+{
+	vm_monitor_notify(&obj->monitor);
+
+	if (exception_occurred())
+		throw_from_native(sizeof(obj));
+}
+
 static void native_vmobject_notify_all(struct vm_object *obj)
 {
 	vm_monitor_notify_all(&obj->monitor);
@@ -601,6 +609,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
 	DEFINE_NATIVE("java/io/VMFile", "isDirectory", &native_vmfile_is_directory),
 	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
+	DEFINE_NATIVE("java/lang/VMObject", "notify", &native_vmobject_notify),
 	DEFINE_NATIVE("java/lang/VMObject", "notifyAll", &native_vmobject_notify_all),
 	DEFINE_NATIVE("java/lang/VMObject", "getClass", &native_vmobject_getclass),
 	DEFINE_NATIVE("java/lang/VMObject", "wait", &native_vmobject_wait),
