@@ -259,3 +259,14 @@ void vm_thread_wait_for_non_daemons(void)
 
 	pthread_mutex_unlock(&threads_mutex);
 }
+
+char *vm_thread_get_name(struct vm_thread *thread)
+{
+	struct vm_object *jthread;
+	struct vm_object *name;
+
+	jthread = vm_thread_get_java_thread(thread);
+	name = field_get_object(jthread, vm_java_lang_Thread_name);
+
+	return vm_string_to_cstr(name);
+}

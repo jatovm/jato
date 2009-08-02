@@ -49,5 +49,6 @@ int vm_thread_start(struct vm_object *vmthread);
 void vm_thread_wait_for_non_daemons(void);
 void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state);
 struct vm_object *vm_thread_get_java_thread(struct vm_thread *thread);
+char *vm_thread_get_name(struct vm_thread *thread);
 
 #endif
