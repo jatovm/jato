@@ -137,50 +137,6 @@ static int split_after_branches(struct stream *stream,
 	return err;
 }
 
-static int update_athrow_successors(struct stream *stream,
-				     struct compilation_unit *cu)
-{
-	struct vm_method *method;
-	int err = 0;
-
-	method = cu->method;
-
-	for (; stream_has_more(stream); stream_advance(stream)) {
-		struct basic_block *bb;
-		unsigned long offset;
-		int i;
-
-		offset = stream_offset(stream);
-
-		if (!bc_is_athrow(*stream->current))
-			continue;
-
-		bb = find_bb(cu, offset);
-
-		for (i = 0; i < method->code_attribute.exception_table_length;
-			i++)
-		{
-			struct cafebabe_code_attribute_exception *eh;
-
-			eh = &method->code_attribute.exception_table[i];
-
-			if (exception_covers(eh, offset)) {
-				struct basic_block *eh_bb;
-
-				eh_bb = find_bb(cu, eh->handler_pc);
-				assert(eh_bb != NULL);
-
-				err = bb_add_successor(bb, eh_bb);
-				if (err)
-					goto out;
-			}
-		}
-	}
-
- out:
-	return err;
-}
-
 static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
 {
 	struct vm_method *method = cu->method;
@@ -251,9 +207,6 @@ int analyze_control_flow(struct compilation_unit *cu)
 	detect_exception_handlers(cu);
 
 	bytecode_stream_init(&stream, cu->method);
-	err = update_athrow_successors(&stream, cu);
-	if (err)
-		goto out;
 
 	/*
 	 * This checks whether every exception handler has its own
