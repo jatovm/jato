@@ -124,10 +124,27 @@ setup_vtable(struct vm_class *vmc)
 	}
 }
 
+static int vm_class_link_common(struct vm_class *vmc)
+{
+	int err;
+
+	err = pthread_mutex_init(&vmc->mutex, NULL);
+	if (err)
+		return -err;
+
+	return 0;
+}
+
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
+	int err;
+
 	vmc->class = class;
 	vmc->kind = VM_CLASS_KIND_REGULAR;
+
+	err = vm_class_link_common(vmc);
+	if (err)
+		return -err;
 
 	const struct cafebabe_constant_info_class *constant_class;
 	if (cafebabe_class_constant_get_class(class,
@@ -312,11 +329,17 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	INIT_LIST_HEAD(&vmc->static_fixup_site_list);
 
 	vmc->state = VM_CLASS_LINKED;
-	return 0;
+	return 0;;
 }
 
 int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
 {
+	int err;
+
+	err = vm_class_link_common(vmc);
+	if (err)
+		return err;
+
 	vmc->name = strdup(class_name);
 	if (!vmc->name)
 		return -ENOMEM;
@@ -343,6 +366,12 @@ int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
 
 int vm_class_link_array_class(struct vm_class *vmc, const char *class_name)
 {
+	int err;
+
+	err = vm_class_link_common(vmc);
+	if (err)
+		return err;
+
 	vmc->name = strdup(class_name);
 	if (!vmc->name)
 		return -ENOMEM;

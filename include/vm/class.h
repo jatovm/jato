@@ -2,6 +2,7 @@
 #define _VM_CLASS_H
 
 #include <assert.h>
+#include <pthread.h>
 
 #include "vm/field.h"
 #include "vm/itable.h"
@@ -33,6 +34,8 @@ struct vm_class {
 	const struct cafebabe_class *class;
 	enum vm_class_state state;
 	char *name;
+
+	pthread_mutex_t mutex;
 
 	struct vm_class *super;
 	unsigned int nr_interfaces;

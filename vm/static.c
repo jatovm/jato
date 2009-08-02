@@ -39,7 +39,11 @@ add_static_fixup_site(enum static_fixup_type type, struct insn *insn,
 	site->insn = insn;
 	site->vmf = vmf;
 	site->cu = cu;
+
+	pthread_mutex_lock(&vmc->mutex);
 	list_add_tail(&site->vmc_node, &vmc->static_fixup_site_list);
+	pthread_mutex_unlock(&vmc->mutex);
+
 	list_add_tail(&site->cu_node, &cu->static_fixup_site_list);
 	return 0;
 }

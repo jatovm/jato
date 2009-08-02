@@ -420,6 +420,8 @@ void fixup_static(struct vm_class *vmc)
 {
 	struct static_fixup_site *this, *next;
 
+	pthread_mutex_lock(&vmc->mutex);
+
 	list_for_each_entry_safe(this, next,
 		&vmc->static_fixup_site_list, vmc_node)
 	{
@@ -431,26 +433,36 @@ void fixup_static(struct vm_class *vmc)
 		cpu_write_u32(site_addr + 2, (unsigned long) new_target);
 
 		list_del(&this->vmc_node);
+
+		pthread_mutex_lock(&this->cu->mutex);
 		list_del(&this->cu_node);
+		pthread_mutex_unlock(&this->cu->mutex);
+
 		free(this);
 	}
+
+	pthread_mutex_unlock(&vmc->mutex);
 }
 
 int fixup_static_at(unsigned long addr)
 {
 	struct compilation_unit *cu;
-	struct static_fixup_site *this;
+	struct static_fixup_site *this, *t;
 
 	cu = jit_lookup_cu(addr);
 	assert(cu);
 
-	list_for_each_entry(this, &cu->static_fixup_site_list, cu_node)
+	pthread_mutex_lock(&cu->mutex);
+
+	list_for_each_entry_safe(this, t, &cu->static_fixup_site_list, cu_node)
 	{
 		void *site_addr = buffer_ptr(cu->objcode)
 			+ this->insn->mach_offset;
 
 		if ((unsigned long) site_addr == addr) {
 			struct vm_class *vmc = this->vmf->class;
+
+			pthread_mutex_unlock(&cu->mutex);
 
 			/* Note: After this call, we can no longer access
 			 * "this" because it may have been deleted already
@@ -463,6 +475,8 @@ int fixup_static_at(unsigned long addr)
 			return 0;
 		}
 	}
+
+	pthread_mutex_unlock(&cu->mutex);
 
 	return 0;
 }
