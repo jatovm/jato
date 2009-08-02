@@ -448,6 +448,13 @@ vm_jni_is_assignable_from(struct vm_jni_env *env, jobject clazz1,
 	return vm_class_is_assignable_from(class1, class2);
 }
 
+static void vm_jni_delete_local_ref(struct vm_jni_env *env, jobject ref)
+{
+	enter_vm_from_jni();
+
+	NOT_IMPLEMENTED;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -485,7 +492,7 @@ void *vm_jni_native_interface[] = {
 	NULL,
 	vm_jni_new_global_ref,
 	vm_jni_delete_global_ref,
-	NULL, /* DeleteLocalRef */
+	vm_jni_delete_local_ref, /* DeleteLocalRef */
 	NULL, /* IsSameObject */
 
 	/* 25 */
