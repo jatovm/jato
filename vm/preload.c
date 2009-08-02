@@ -66,6 +66,9 @@ struct vm_class *vm_java_lang_ThreadGroup;
 struct vm_class *vm_java_lang_VMThread;
 struct vm_class *vm_java_lang_IllegalMonitorStateException;
 struct vm_class *vm_java_lang_System;
+struct vm_class *vm_java_lang_reflect_Constructor;
+struct vm_class *vm_array_of_java_lang_reflect_Constructor;
+struct vm_class *vm_array_of_java_lang_Class;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -105,6 +108,9 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/VMThread",	&vm_java_lang_VMThread },
 	{ "java/lang/IllegalMonitorStateException", &vm_java_lang_IllegalMonitorStateException },
 	{ "java/lang/System",	&vm_java_lang_System },
+	{ "java/lang/reflect/Constructor", &vm_java_lang_reflect_Constructor },
+	{ "[java/lang/Class",		&vm_array_of_java_lang_Class },
+	{ "[java/lang/reflect/Constructor", &vm_array_of_java_lang_reflect_Constructor },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -140,6 +146,8 @@ struct vm_field *vm_java_lang_Thread_contextClassLoaderIsSystemClassLoader;
 struct vm_field *vm_java_lang_Thread_vmThread;
 struct vm_field *vm_java_lang_VMThread_thread;
 struct vm_field *vm_java_lang_VMThread_vmdata;
+struct vm_field *vm_java_lang_reflect_Constructor_clazz;
+struct vm_field *vm_java_lang_reflect_Constructor_slot;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
@@ -157,6 +165,8 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Thread, "vmThread", "Ljava/lang/VMThread;", &vm_java_lang_Thread_vmThread },
 	{ &vm_java_lang_VMThread, "thread", "Ljava/lang/Thread;", &vm_java_lang_VMThread_thread },
 	{ &vm_java_lang_VMThread, "vmdata", "Ljava/lang/Object;", &vm_java_lang_VMThread_vmdata },
+	{ &vm_java_lang_reflect_Constructor, "clazz", "Ljava/lang/Class;", &vm_java_lang_reflect_Constructor_clazz },
+	{ &vm_java_lang_reflect_Constructor, "slot", "I", &vm_java_lang_reflect_Constructor_slot },
 };
 
 struct method_preload_entry {

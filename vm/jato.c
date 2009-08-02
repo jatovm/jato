@@ -65,6 +65,7 @@
 #include "vm/method.h"
 #include "vm/natives.h"
 #include "vm/object.h"
+#include "vm/reflection.h"
 #include "vm/signal.h"
 #include "vm/stack-trace.h"
 #include "vm/static.h"
@@ -504,6 +505,14 @@ native_vmclass_isprimitive(struct vm_object *object)
 	return class->kind == VM_CLASS_KIND_PRIMITIVE;
 }
 
+static jint native_vmclass_getmodifiers(struct vm_object *clazz)
+{
+	struct vm_class *class = vm_class_get_class_from_class_object(clazz);
+
+	NOT_IMPLEMENTED;
+	return class->class->access_flags;
+}
+
 static struct vm_object *
 native_vmclassloader_getprimitiveclass(int type)
 {
@@ -613,9 +622,11 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
 	DEFINE_NATIVE("jato/internal/VM", "throwNullPointerException", &native_vm_throw_null_pointer_exception),
 	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", &native_vmclass_getclassloader),
+	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredConstructors", &native_vmclass_get_declared_constructors),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClass", "forName", &native_vmclass_forname),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
+	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", &native_vmclass_getmodifiers),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
 	DEFINE_NATIVE("java/io/VMFile", "isDirectory", &native_vmfile_is_directory),
 	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
@@ -634,6 +645,9 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMThread", "start", &native_vmthread_start),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
 	DEFINE_NATIVE("java/lang/VMThrowable", "getStackTrace", &native_vmthrowable_get_stack_trace),
+	DEFINE_NATIVE("java/lang/reflect/Constructor", "getParameterTypes", &native_constructor_get_parameter_types),
+	DEFINE_NATIVE("java/lang/reflect/Constructor", "getModifiersInternal", &native_constructor_get_modifiers_internal),
+	DEFINE_NATIVE("java/lang/reflect/Constructor", "constructNative", &native_constructor_construct_native),
 	DEFINE_NATIVE("jato/internal/VM", "enableFault", &native_vm_enable_fault),
 	DEFINE_NATIVE("jato/internal/VM", "disableFault", &native_vm_disable_fault),
 };
