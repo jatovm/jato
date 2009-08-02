@@ -473,6 +473,30 @@ static jint vm_jni_get_int_field(struct vm_jni_env *env, jobject object,
 	return field_get_int32(object, field);
 }
 
+static jint vm_jni_monitor_enter(struct vm_jni_env *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	int err = vm_monitor_lock(&obj->monitor);
+
+	if (exception_occurred())
+		clear_exception();
+
+	return err;
+}
+
+static jint vm_jni_monitor_exit(struct vm_jni_env *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	int err = vm_monitor_unlock(&obj->monitor);
+
+	if (exception_occurred())
+		clear_exception();
+
+	return err;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -782,8 +806,8 @@ void *vm_jni_native_interface[] = {
 	/* 215 */
 	NULL, /* RegisterNatives */
 	NULL, /* UnregisterNatives */
-	NULL, /* MonitorEnter */
-	NULL, /* MonitorExit */
+	vm_jni_monitor_enter,
+	vm_jni_monitor_exit,
 	vm_jni_get_java_vm,
 
 	/* 220 */
