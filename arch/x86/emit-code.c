@@ -1489,7 +1489,13 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_push_reg(buf, REG_EAX);
 
 	if (method_is_virtual(cu->method)) {
-		__emit_push_membase(buf, REG_EBP, 0x08);
+		/* XXX: for JNI calls  'this' pointer is in the second
+		   call argument. */
+		if (vm_method_is_jni(cu->method))
+			__emit_push_membase(buf, REG_EBP, 0x0c);
+		else
+			__emit_push_membase(buf, REG_EBP, 0x08);
+
 		__emit_push_imm(buf, (unsigned long)cu);
 		__emit_call(buf, fixup_vtable);
 		__emit_add_imm_reg(buf, 0x08, REG_ESP);
@@ -2410,7 +2416,14 @@ void emit_trampoline(struct compilation_unit *cu,
 		__emit64_push_reg(buf, REG_RAX);
 
 		__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDI);
-		__emit64_mov_membase_reg(buf, REG_RBP, 0x10, REG_RSI);
+
+		/* XXX: for JNI calls 'this' pointer is in the second
+		   call argument. */
+		if (vm_method_is_jni(cu->method))
+			__emit64_mov_membase_reg(buf, REG_RBP, 0x18, REG_RSI);
+		else
+			__emit64_mov_membase_reg(buf, REG_RBP, 0x10, REG_RSI);
+
 		__emit64_mov_reg_reg(buf, REG_RAX, REG_RDX);
 		__emit_call(buf, fixup_vtable);
 
