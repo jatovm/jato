@@ -82,20 +82,6 @@ static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
 	select_insn(bb, tree, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
 }
 
-/*
- * Returns the right-most expression in argument list. It's the first
- * argument passed to method.
- */
-static struct expression *get_first_arg(struct tree_node *args)
-{
-	while (expr_type(to_expr(args)) == EXPR_ARGS_LIST)
-	      args = to_expr(args)->args_right;
-
-	assert(expr_type(to_expr(args)) == EXPR_ARG);
-
-	return to_expr(to_expr(args)->arg_expression);
-}
-
 struct _MBState;
 
 static void __binop_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type, struct var_info *, long);
@@ -633,12 +619,12 @@ reg:	EXPR_INVOKE(arg) 1
 reg:	EXPR_INVOKEINTERFACE(arg) 1
 {
 	struct var_info *eax, *edx = NULL;
-	struct expression *objectref_expr;
 	struct var_info *call_target;
 	struct compilation_unit *cu;
 	unsigned long method_offset;
 	struct vm_method *method;
 	struct expression *expr;
+	struct insn *call_insn;
 	int nr_stack_args;
 
 	expr	= to_expr(tree);
@@ -656,14 +642,7 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	}
 
 	/* object reference */
-	objectref_expr = get_first_arg(expr->args_list);
-
-	if (expr_type(objectref_expr) == EXPR_VALUE) {
-		call_target = get_var(s->b_parent, J_INT);
-		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
-	} else {
-		call_target = state->left->reg1;
-	}
+	call_target = state->left->reg1;
 
 	/* object class */
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG,
@@ -679,7 +658,12 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 		(unsigned long) method, eax));
 
 	/* invoke method */
-	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
+	call_insn = reg_insn(INSN_CALL_REG, call_target);
+
+	if (vm_method_is_jni(method))
+		select_jni_call(s, tree, call_insn, method);
+	else
+		select_insn(s, tree, call_insn);
 
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)
@@ -1269,6 +1253,46 @@ arg:	EXPR_NO_ARGS
 }
 
 %ifdef CONFIG_X86_32
+arg:	EXPR_ARG_THIS(reg) 1
+{
+	struct var_info *src;
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	assert(arg_expr->vm_type == J_REFERENCE);
+
+	src = state->left->reg1;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+	state->reg1 = src;
+}
+%else
+arg:	EXPR_ARG_THIS(reg) 1
+{
+	struct var_info *src, *dst;
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	assert(arg_expr->vm_type == J_REFERENCE);
+
+	src = state->left->reg1;
+
+	if (expr->arg_reg != REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
+		state->reg1 = dst;
+	} else {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+		state->reg1 = src;
+	}
+}
+%endif
+
+%ifdef CONFIG_X86_32
 arg:	EXPR_ARG(EXPR_VALUE) 1
 {
 	struct expression *expr, *arg_expr;
@@ -1283,6 +1307,8 @@ arg:	EXPR_ARG(EXPR_VALUE) 1
 	}
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
+
+	state->reg1 = NULL;
 }
 %else
 arg:	EXPR_ARG(EXPR_VALUE) 1
@@ -1300,6 +1326,8 @@ arg:	EXPR_ARG(EXPR_VALUE) 1
 		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, dst));
 	} else
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm));
+
+	state->reg1 = NULL;
 }
 %endif
 
@@ -1313,6 +1341,8 @@ arg:	EXPR_ARG(EXPR_FVALUE) 1
 	imm  = float_to_uint32(arg_expr->fvalue);
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
+
+	state->reg1 = NULL;
 }
 
 %ifdef CONFIG_X86_32
@@ -1332,7 +1362,7 @@ arg:	EXPR_ARG(reg)
 	src = state->left->reg1;
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
 
-	state->reg1 = src;
+	state->reg1 = NULL;
 }
 %else
 arg:	EXPR_ARG(reg) 1
@@ -1348,17 +1378,22 @@ arg:	EXPR_ARG(reg) 1
 	if (expr->arg_reg != REG_UNASSIGNED) {
 		dst = get_fixed_var(s->b_parent, expr->arg_reg);
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
-		state->reg1 = dst;
 	} else {
 		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
-		state->reg1 = src;
 	}
+
+	state->reg1 = NULL;
 }
 %endif
 
 arg:	EXPR_ARGS_LIST(arg, arg)
 {
-	state->reg1 = state->right->reg1;
+	/* We propagate the value from EXPR_ARG_THIS. EXPR_ARG should set
+	   state->reg1 to NULL. */
+	if (state->left->reg1)
+		state->reg1 = state->left->reg1;
+	else
+		state->reg1 = state->right->reg1;
 }
 
 reg:	EXPR_EXCEPTION_REF
@@ -2286,24 +2321,19 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 static void invokevirtual(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
 {
 	struct expression *expr;
-	struct expression *objectref_expr;
 	struct var_info *call_target;
 	unsigned long method_offset;
 	struct vm_method *method;
+	struct insn *call_insn;
 	int nr_stack_args;
 
 	expr	= to_expr(tree);
 	method_offset = expr_method_index(expr) * sizeof(void *);
 
-	/* object reference */
-	objectref_expr = get_first_arg(expr->args_list);
+	method	= expr->target_method;
 
-	if (expr_type(objectref_expr) == EXPR_VALUE) {
-		call_target = get_var(s->b_parent, J_INT);
-		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, objectref_expr->value, call_target));
-	} else {
-		call_target = state->left->reg1;
-	}
+	/* object reference */
+	call_target = state->left->reg1;
 
 	/* object class */
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
@@ -2315,9 +2345,12 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
 
 	/* invoke method */
-	select_insn(s, tree, reg_insn(INSN_CALL_REG, call_target));
+	call_insn = reg_insn(INSN_CALL_REG, call_target);
 
-	method	= expr->target_method;
+	if (vm_method_is_jni(method))
+		select_jni_call(s, tree, call_insn, method);
+	else
+		select_insn(s, tree, call_insn);
 
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)

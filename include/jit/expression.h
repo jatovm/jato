@@ -34,6 +34,7 @@ enum expression_type {
 	EXPR_FINVOKEVIRTUAL,
 	EXPR_ARGS_LIST,
 	EXPR_ARG,
+	EXPR_ARG_THIS,
 	EXPR_NO_ARGS,
 	EXPR_NEW,
 	EXPR_NEWARRAY,
@@ -170,7 +171,7 @@ struct expression {
 			struct tree_node *objectref_expression;
 			struct vm_field *instance_field;
 		};
-		
+
 		/*  EXPR_INVOKE represents a method invocation expression (see
 		    JLS 15.12.) for which the target method can be determined
 		    statically.  This expression type can contain side-effects
@@ -198,9 +199,13 @@ struct expression {
 			struct tree_node *args_right;
 		};
 
-		/*  EXPR_ARG represents an argument passed to method. This
-		    expression does not evaluate to a value and is used for
-		    instruction selection only.  */
+		/*  EXPR_ARG represents an argument passed to
+		    method. This expression does not evaluate to a
+		    value and is used for instruction selection
+		    only. The same fields are used by EXPR_ARG_THIS
+		    which represents the object reference on which the
+		    invocation is done. It evaluates to J_REFERENCE
+		    holding the object pointer.  */
 		struct {
 			struct tree_node *arg_expression;
 			enum machine_reg arg_reg;
@@ -211,7 +216,7 @@ struct expression {
 		struct {
 			/* Nothing. */
 		};
-		
+
 		/*  EXPR_NEW represents creation of a new instance that is
 		    unitialized .  */
 		struct {
@@ -318,6 +323,7 @@ struct expression *finvoke_expr(struct vm_method *);
 struct expression *finvokevirtual_expr(struct vm_method *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
+struct expression *arg_this_expr(struct expression *);
 struct expression *no_args_expr(void);
 struct expression *new_expr(struct vm_class *);
 struct expression *newarray_expr(unsigned long, struct expression *);

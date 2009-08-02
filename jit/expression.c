@@ -51,6 +51,7 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_FINVOKE:
 	case EXPR_FINVOKEVIRTUAL:
 	case EXPR_ARG:
+	case EXPR_ARG_THIS:
 	case EXPR_NEWARRAY:
 	case EXPR_ANEWARRAY:
 	case EXPR_MULTIANEWARRAY:
@@ -97,6 +98,7 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_CONVERSION_TO_FLOAT:
 	case EXPR_CONVERSION_FROM_FLOAT:
 	case EXPR_ARG:
+	case EXPR_ARG_THIS:
 	case EXPR_ARRAYLENGTH:
 	case EXPR_INSTANCEOF:
 	case EXPR_ARRAY_SIZE_CHECK:
@@ -389,6 +391,14 @@ struct expression *args_list_expr(struct expression *args_left,
 struct expression *arg_expr(struct expression *arg_expression)
 {
 	struct expression *expr = alloc_expression(EXPR_ARG, J_VOID);
+	if (expr)
+		expr->arg_expression = &arg_expression->node;
+	return expr;
+}
+
+struct expression *arg_this_expr(struct expression *arg_expression)
+{
+	struct expression *expr = alloc_expression(EXPR_ARG_THIS, J_REFERENCE);
 	if (expr)
 		expr->arg_expression = &arg_expression->node;
 	return expr;

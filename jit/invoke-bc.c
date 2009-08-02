@@ -120,29 +120,34 @@ static struct vm_method *resolve_invokeinterface_target(struct parse_context *ct
 	return vm_class_resolve_interface_method_recursive(ctx->cu->method->class, idx);
 }
 
-/* Replaces first argument with null check expression on that argument */
-static void null_check_first_arg(struct expression *arg)
+static void null_check_arg(struct expression *arg)
 {
 	struct expression *expr;
 
-	if (expr_type(arg) == EXPR_ARG) {
-		expr = null_check_expr(to_expr(arg->arg_expression));
-		arg->arg_expression = &expr->node;
-	}
-
-	if (expr_type(arg) == EXPR_ARGS_LIST)
-		null_check_first_arg(to_expr(arg->args_right));
+	expr = null_check_expr(to_expr(arg->arg_expression));
+	arg->arg_expression = &expr->node;
 }
 
-/* Replaces second argument with null check expression on that argument */
-static void null_check_second_arg(struct expression *arg)
+/**
+ * Searches the @arg list for EXPR_ARG_THIS and encapsulates its
+ * arg_expression in null check expression.
+ */
+static void null_check_this_arg(struct expression *arg)
 {
-	assert(expr_type(arg) != EXPR_ARG);
+	if (expr_type(arg) != EXPR_ARGS_LIST) {
+		if (expr_type(arg) == EXPR_ARG_THIS)
+			null_check_arg(arg);
 
-	if (expr_type(to_expr(arg->args_right)) == EXPR_ARG)
-		null_check_first_arg(to_expr(arg->args_left));
+		return;
+	}
 
-	null_check_second_arg(to_expr(arg->args_right));
+	struct expression *right_arg = to_expr(arg->args_right);
+	if (expr_type(right_arg) == EXPR_ARG_THIS) {
+		null_check_arg(right_arg);
+		return;
+	}
+
+	null_check_this_arg(to_expr(arg->args_left));
 }
 
 int convert_invokeinterface(struct parse_context *ctx)
@@ -240,10 +245,7 @@ int convert_invokespecial(struct parse_context *ctx)
 	if (err)
 		goto failed;
 
-	if (vm_method_is_jni(invoke_target))
-		null_check_second_arg(to_expr(expr->args_list));
-	else
-		null_check_first_arg(to_expr(expr->args_list));
+	null_check_this_arg(to_expr(expr->args_list));
 
 	err = insert_invoke_expr(ctx, expr);
 	if (err)

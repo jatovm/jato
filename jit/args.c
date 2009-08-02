@@ -69,7 +69,23 @@ insert_arg(struct expression *root,
 {
 	struct expression *_expr;
 
+	/* Check if we should put @expr in EXPR_ARG_THIS. */
+	if (!vm_method_is_static(method)) {
+		if (vm_method_is_jni(method)) {
+			if (index == 1) {
+				_expr = arg_this_expr(expr);
+				goto from_expr_this;
+			}
+		} else
+			if (index == 0) {
+				_expr = arg_this_expr(expr);
+				goto from_expr_this;
+			}
+	}
+
 	_expr = arg_expr(expr);
+
+ from_expr_this:
 	_expr->bytecode_offset = expr->bytecode_offset;
 	set_expr_arg_reg(_expr, method, index);
 

@@ -95,7 +95,7 @@ build_invoke_bb(unsigned char invoke_opc,
 		struct expression **args)
 {
 	const struct cafebabe_method_info target_method_info = {
-		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
+		.access_flags = 0,
 	};
 
 	struct vm_method target_method = {

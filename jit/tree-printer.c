@@ -662,6 +662,22 @@ out:
 	return err;
 }
 
+static int
+print_arg_this_expr(int lvl, struct string *str, struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "ARG_THIS:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "arg_expression",
+			       expr->arg_expression);
+
+out:
+	return err;
+}
+
 static int print_no_args_expr(int lvl, struct string *str,
 			      struct expression *expr)
 {
@@ -902,6 +918,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_FINVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_ARGS_LIST] = print_args_list_expr,
 	[EXPR_ARG] = print_arg_expr,
+	[EXPR_ARG_THIS] = print_arg_this_expr,
 	[EXPR_NO_ARGS] = print_no_args_expr,
 	[EXPR_NEW] = print_new_expr,
 	[EXPR_NEWARRAY] = print_newarray_expr,
