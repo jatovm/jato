@@ -320,6 +320,15 @@ vm_jni_call_static_byte_method_v(struct vm_jni_env *env, jclass clazz,
 	return (jbyte) vm_call_method_v(methodID, args);
 }
 
+static jshort
+vm_jni_call_static_short_method_v(struct vm_jni_env *env, jclass clazz,
+				  jmethodID methodID, va_list args)
+{
+	enter_vm_from_jni();
+
+	return (jshort) vm_call_method_v(methodID, args);
+}
+
 static void vm_jni_set_object_field(struct vm_jni_env *env, jobject object,
 				    jfieldID field, jobject value)
 {
@@ -519,7 +528,7 @@ void *vm_jni_native_interface[] = {
 	/* 125 */
 	NULL, /* CallStaticCharMethodA */
 	NULL, /* CallStaticShortMethod */
-	NULL, /* CallStaticShortMethodV */
+	vm_jni_call_static_short_method_v,
 	NULL, /* CallStaticShortMethodA */
 	NULL, /* CallStaticIntMethod */
 
