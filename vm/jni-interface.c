@@ -93,7 +93,7 @@ vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz, const char *name,
 		return NULL;
 
 	/* XXX: Make sure it's not static. */
-	mb = vm_class_get_method(class, name, sig);
+	mb = vm_class_get_method_recursive(class, name, sig);
 	if (!mb) {
 		signal_new_exception(vm_java_lang_NoSuchMethodError, NULL);
 		return NULL;
@@ -150,7 +150,7 @@ vm_jni_get_static_method_id(struct vm_jni_env *env, jclass clazz,
 		return NULL;
 
 	/* XXX: Make sure it's actually static. */
-	mb = vm_class_get_method(class, name, sig);
+	mb = vm_class_get_method_recursive(class, name, sig);
 	if (!mb) {
 		signal_new_exception(vm_java_lang_NoSuchMethodError, NULL);
 		return NULL;
