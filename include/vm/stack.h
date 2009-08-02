@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
-enum { MAX_ELEMENTS = 255 };
+enum { MAX_ELEMENTS = 512 };
 
 struct stack {
 	unsigned long nr_elements;
