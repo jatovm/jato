@@ -430,6 +430,24 @@ static jobject vm_jni_get_object_class(struct vm_jni_env *env, jobject obj)
 	return obj->class->object;
 }
 
+static jboolean
+vm_jni_is_assignable_from(struct vm_jni_env *env, jobject clazz1,
+			  jobject clazz2)
+{
+	struct vm_class *class1, *class2;
+
+	enter_vm_from_jni();
+
+	if (!vm_object_is_instance_of(clazz1, vm_java_lang_Class) ||
+	    !vm_object_is_instance_of(clazz2, vm_java_lang_Class))
+		return JNI_FALSE;
+
+	class1 = vm_class_get_class_from_class_object(clazz1);
+	class2 = vm_class_get_class_from_class_object(clazz2);
+
+	return vm_class_is_assignable_from(class1, class2);
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -451,7 +469,7 @@ void *vm_jni_native_interface[] = {
 
 	/* 10 */
 	NULL, /* GetSuperclass */
-	NULL, /* IsAssignableFrom */
+	vm_jni_is_assignable_from, /* IsAssignableFrom */
 	NULL,
 	vm_jni_throw,
 	vm_jni_throw_new,
