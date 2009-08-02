@@ -206,6 +206,13 @@ vm_jni_get_static_method_id(struct vm_jni_env *env, jclass clazz,
 	return mb;
 }
 
+static jobject vm_jni_new_string_utf(struct vm_jni_env *env, const char *bytes)
+{
+	enter_vm_from_jni();
+
+	return vm_object_alloc_string_from_c(bytes);
+}
+
 static const jbyte*
 vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
 			    jboolean *is_copy)
@@ -655,7 +662,7 @@ void *vm_jni_native_interface[] = {
 	/* 165 */
 	NULL, /* GetStringChars */
 	NULL, /* ReleaseStringChars */
-	NULL, /* NewStringUTF */
+	vm_jni_new_string_utf,
 	NULL, /* GetStringUTFLength */
 	vm_jni_get_string_utf_chars,
 
