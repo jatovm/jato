@@ -345,6 +345,22 @@ static void vm_jni_set_object_field(struct vm_jni_env *env, jobject object,
 	field_set_object(object, field, value);
 }
 
+static jobject vm_jni_new_global_ref(struct vm_jni_env *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	NOT_IMPLEMENTED;
+	return obj;
+}
+
+static void vm_jni_delete_global_ref(struct vm_jni_env *env, jobject obj)
+{
+	/* TODO: fix this when GC is implemented. */
+	enter_vm_from_jni();
+
+	NOT_IMPLEMENTED;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -380,8 +396,8 @@ void *vm_jni_native_interface[] = {
 
 	/* 20 */
 	NULL,
-	NULL, /* NewGlobalRef */
-	NULL, /* DeleteGlobalRef */
+	vm_jni_new_global_ref,
+	vm_jni_delete_global_ref,
 	NULL, /* DeleteLocalRef */
 	NULL, /* IsSameObject */
 
