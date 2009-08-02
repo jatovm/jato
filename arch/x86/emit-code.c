@@ -392,6 +392,22 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 				 fixup_list_node) {
 		unsigned char *site_addr;
 		uint32_t new_target;
+		bool is_compiled;
+
+		/*
+		 * XXX: it is possible that we're fixing calls to
+		 * method X() and another thread is compiling method
+		 * Y() which calls X(). Call sites from Y might be
+		 * added to X's trampoline but Y's ->objcode might not
+		 * be set yet. We should skip fixing callsites coming
+		 * from not yet compiled methods.  .
+		 */
+		pthread_mutex_lock(&this->cu->mutex);
+		is_compiled = this->cu->is_compiled;
+		pthread_mutex_unlock(&this->cu->mutex);
+
+		if (!is_compiled)
+			continue;
 
 		site_addr = fixup_site_addr(this);
 		new_target = target - ((unsigned long) site_addr + CALL_INSN_SIZE);
