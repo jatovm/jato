@@ -45,6 +45,7 @@
 #include "vm/itable.h"
 #include "vm/method.h"
 #include "vm/object.h"
+#include "vm/thread.h"
 #include "lib/string.h"
 #include "vm/vm.h"
 
@@ -129,6 +130,10 @@ static int vm_class_link_common(struct vm_class *vmc)
 	int err;
 
 	err = pthread_mutex_init(&vmc->mutex, NULL);
+	if (err)
+		return -err;
+
+	err = vm_monitor_init(&vmc->monitor);
 	if (err)
 		return -err;
 
@@ -414,16 +419,33 @@ int vm_class_init(struct vm_class *vmc)
 {
 	struct vm_object *exception;
 
+	vm_monitor_lock(&vmc->monitor);
+
+	if (vmc->state == VM_CLASS_INITIALIZING) {
+		/* XXX: we need to break recursion. */
+		if (vmc->initializing_thread == vm_thread_self())
+			goto out_unlock;
+
+		while (vmc->state == VM_CLASS_INITIALIZING)
+			vm_monitor_wait(&vmc->monitor);
+	}
+
+	if (vmc->state == VM_CLASS_INITIALIZED)
+		goto out_unlock;
+
 	if (vmc->state == VM_CLASS_ERRONEOUS) {
 		signal_new_exception(vm_java_lang_NoClassDefFoundError,
 				     vmc->name);
-		goto error;
+		vm_monitor_unlock(&vmc->monitor);
+		return -1;
 	}
 
 	assert(vmc->state == VM_CLASS_LINKED);
 
-	/* XXX: Not entirely true, but we need it to break the recursion. */
-	vmc->state = VM_CLASS_INITIALIZED;
+	vmc->state = VM_CLASS_INITIALIZING;
+	vmc->initializing_thread = vm_thread_self();
+
+	vm_monitor_unlock(&vmc->monitor);
 
 	/* Fault injection, for testing purposes */
 	if (vm_fault_enabled(VM_FAULT_CLASS_INIT)) {
@@ -475,6 +497,15 @@ int vm_class_init(struct vm_class *vmc)
 		}
 	}
 
+	vm_monitor_lock(&vmc->monitor);
+	vmc->state = VM_CLASS_INITIALIZED;
+	vm_monitor_notify_all(&vmc->monitor);
+	vm_monitor_unlock(&vmc->monitor);
+
+	return 0;
+
+ out_unlock:
+	vm_monitor_unlock(&vmc->monitor);
 	return 0;
 
  error:
@@ -487,7 +518,10 @@ int vm_class_init(struct vm_class *vmc)
 			vmc->name);
 	}
 
+	vm_monitor_lock(&vmc->monitor);
 	vmc->state = VM_CLASS_ERRONEOUS;
+	vm_monitor_notify_all(&vmc->monitor);
+	vm_monitor_unlock(&vmc->monitor);
 
 	return -1;
 }

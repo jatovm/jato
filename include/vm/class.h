@@ -7,6 +7,7 @@
 #include "vm/field.h"
 #include "vm/itable.h"
 #include "vm/method.h"
+#include "vm/object.h"
 #include "vm/static.h"
 #include "vm/types.h"
 #include "vm/vm.h"
@@ -14,6 +15,8 @@
 #include "jit/vtable.h"
 
 struct vm_object;
+struct vm_monitor;
+struct vm_thread;
 
 enum vm_class_state {
 	VM_CLASS_LOADED,
@@ -36,6 +39,13 @@ struct vm_class {
 	char *name;
 
 	pthread_mutex_t mutex;
+
+	/*
+	 * This monitor is used during class initialization because the one
+	 * in ->object is not yet created.
+	 */
+	struct vm_monitor monitor;
+	struct vm_thread *initializing_thread;
 
 	struct vm_class *super;
 	unsigned int nr_interfaces;
@@ -79,9 +89,6 @@ int vm_class_init(struct vm_class *vmc);
 
 static inline int vm_class_ensure_init(struct vm_class *vmc)
 {
-	if (vmc->state == VM_CLASS_INITIALIZED)
-		return 0;
-
 	return vm_class_init(vmc);
 }
 
