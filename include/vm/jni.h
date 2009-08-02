@@ -4,6 +4,22 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* Version numbers.  */
+#define JNI_VERSION_1_1 0x00010001
+#define JNI_VERSION_1_2 0x00010002
+#define JNI_VERSION_1_4 0x00010004
+#define JNI_VERSION_1_6 0x00010006
+
+/* Used when releasing array elements.  */
+#define JNI_COMMIT 1
+#define JNI_ABORT  2
+
+/* Error codes */
+#define JNI_OK            0
+#define JNI_ERR          (-1)
+#define JNI_EDETACHED    (-2)
+#define JNI_EVERSION     (-3)
+
 #define JNI_FALSE  0
 #define JNI_TRUE   1
 
@@ -46,6 +62,12 @@ void **vm_jni_loaded_objects;
 struct vm_jni_env {
 	void **jni_table;
 };
+
+struct java_vm {
+	void **jni_invoke_interface_table;
+};
+
+typedef struct java_vm JavaVM;
 
 void vm_jni_init(void);
 struct vm_jni_env *vm_jni_get_jni_env(void);

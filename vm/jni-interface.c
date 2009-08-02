@@ -52,6 +52,53 @@
 	if (!vm_object_is_instance_of((x), vm_java_lang_Class))		\
 		return NULL;
 
+static void vm_jni_destroy_java_vm(void) {
+	NOT_IMPLEMENTED;
+}
+
+static void vm_jni_attach_current_thread(void) {
+	NOT_IMPLEMENTED;
+}
+
+static void vm_jni_detach_current_thread(void) {
+	NOT_IMPLEMENTED;
+}
+
+static jint vm_jni_get_env(JavaVM *vm, void **env, jint version) {
+	enter_vm_from_jni();
+
+	/* XXX: We are actually supporting only a little part of 1.2 yet. */
+	if (version > JNI_VERSION_1_2) {
+		*env = NULL;
+		return JNI_EVERSION;
+	}
+
+	*env = vm_jni_get_jni_env();
+	return JNI_OK;
+}
+
+static void vm_jni_attach_current_thread_as_daemon(void) {
+	NOT_IMPLEMENTED;
+}
+
+void *vm_jni_invoke_interface[] = {
+	NULL,
+	NULL,
+	NULL,
+
+	vm_jni_destroy_java_vm,
+	vm_jni_attach_current_thread,
+	vm_jni_detach_current_thread,
+
+	/* JNI_VERSION_1_2 */
+	vm_jni_get_env,
+	vm_jni_attach_current_thread_as_daemon,
+};
+
+struct java_vm vm_jni_default_java_vm = {
+	.jni_invoke_interface_table = vm_jni_invoke_interface,
+};
+
 static jclass
 vm_jni_find_class(struct vm_jni_env *env, const char *name)
 {
@@ -359,6 +406,14 @@ static void vm_jni_delete_global_ref(struct vm_jni_env *env, jobject obj)
 	enter_vm_from_jni();
 
 	NOT_IMPLEMENTED;
+}
+
+static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
+{
+	enter_vm_from_jni();
+
+	*vm = &vm_jni_default_java_vm;
+	return 0;
 }
 
 /*
@@ -672,7 +727,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* UnregisterNatives */
 	NULL, /* MonitorEnter */
 	NULL, /* MonitorExit */
-	NULL, /* GetJavaVM */
+	vm_jni_get_java_vm,
 
 	/* 220 */
 	NULL, /* GetJavaVM */
