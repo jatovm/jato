@@ -423,6 +423,13 @@ static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
 	return 0;
 }
 
+static jobject vm_jni_get_object_class(struct vm_jni_env *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	return obj->class->object;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -472,7 +479,7 @@ void *vm_jni_native_interface[] = {
 
 	/* 30 */
 	NULL, /* NewObjectA */
-	NULL, /* GetObjectClass */
+	vm_jni_get_object_class, /* GetObjectClass */
 	NULL, /* IsInstanceOf */
 	vm_jni_get_method_id,
 	NULL, /* CallObjectMethod */
