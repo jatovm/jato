@@ -13,6 +13,7 @@
 #include "vm/class.h"
 #include "vm/die.h"
 #include "vm/backtrace.h"
+#include "vm/trace.h"
 
 bool opt_trace_classloader;
 static __thread int trace_classloader_level = 0;
@@ -25,10 +26,9 @@ static inline void trace_push(const char *class_name)
 	assert(trace_classloader_level >= 0);
 
 	if (opt_trace_classloader) {
-		trace_begin();
-		fprintf(stderr, "classloader: %*s%s\n",
-			trace_classloader_level, "", class_name);
-		trace_end();
+		trace_printf("classloader: %*s%s\n",
+			     trace_classloader_level, "", class_name);
+		trace_flush();
 	}
 
 	++trace_classloader_level;

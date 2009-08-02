@@ -20,6 +20,7 @@
 #include "vm/preload.h"
 #include "vm/object.h"
 #include "vm/bytecodes.h"
+#include "vm/trace.h"
 
 #include "lib/buffer.h"
 #include "vm/class.h"
@@ -47,39 +48,8 @@ bool opt_trace_invoke;
 bool opt_trace_invoke_verbose;
 bool opt_trace_exceptions;
 bool opt_trace_bytecode;
-
-static pthread_mutex_t trace_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static void print_current_thread(void)
-{
-	struct vm_object *thread;
-	struct vm_object *name;
-	struct vm_thread *self;
-
-	self = vm_thread_self();
-	if (!self)
-		return;
-
-	thread = vm_thread_get_java_thread(self);
-
-	name = field_get_object(thread, vm_java_lang_Thread_name);
-
-	char * name_s;
-
-	name_s = vm_string_to_cstr(name);
-	printf("[thread: %s] ", name_s);
-	free(name_s);
-}
-
-void trace_begin(void)
-{
-	pthread_mutex_lock(&trace_mutex);
-	print_current_thread();
-}
-
-void trace_end(void) {
-	pthread_mutex_unlock(&trace_mutex);
-}
+bool opt_trace_compile;
+bool opt_trace_threads;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -87,11 +57,11 @@ void trace_method(struct compilation_unit *cu)
 	unsigned char *p;
 	unsigned int i, j;
 
-	printf("\nTRACE: %s.%s%s\n",
+	trace_printf("\nTRACE: %s.%s%s\n",
 		method->class->name, method->name, method->type);
 
-	printf("Length: %d\n", method->code_attribute.code_length);
-	printf("Code:\n");
+	trace_printf("Length: %d\n", method->code_attribute.code_length);
+	trace_printf("Code:\n");
 	p = method->code_attribute.code;
 
 	unsigned int n = method->code_attribute.code_length;
@@ -105,62 +75,62 @@ void trace_method(struct compilation_unit *cu)
 				break;
 		}
 
-		printf("[ %04u ] ", i * 16);
+		trace_printf("[ %04u ] ", i * 16);
 
 		for (j = 0; j < cols; ++j) {
-			printf("%02x%s",
+			trace_printf("%02x%s",
 				p[i * 16 + j],
 				j == 7 ? "  " : " ");
 		}
 
-		printf("\n");
+		trace_printf("\n");
 	}
 
-	printf("\n\n");
+	trace_printf("\n\n");
 }
 
 void trace_cfg(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
 
-	printf("Control Flow Graph:\n\n");
-	printf("  #:\t\tRange\t\tSuccessors\t\tPredecessors\n");
+	trace_printf("Control Flow Graph:\n\n");
+	trace_printf("  #:\t\tRange\t\tSuccessors\t\tPredecessors\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		unsigned long i;
 
-		printf("  %p\t%lu..%lu\t", bb, bb->start, bb->end);
+		trace_printf("  %p\t%lu..%lu\t", bb, bb->start, bb->end);
 		if (bb->is_eh)
-			printf(" (eh)");
+			trace_printf(" (eh)");
 
-		printf("\t");
+		trace_printf("\t");
 
 		for (i = 0; i < bb->nr_successors; i++) {
 			if (i != 0)
-				printf(", ");
+				trace_printf(", ");
 
-			printf("%p", bb->successors[i]);
+			trace_printf("%p", bb->successors[i]);
 		}
 
 		if (i == 0)
-			printf("none    ");
+			trace_printf("none    ");
 
-		printf("\t");
+		trace_printf("\t");
 
 		for (i = 0; i < bb->nr_predecessors; i++) {
 			if (i != 0)
-				printf(", ");
+				trace_printf(", ");
 
-			printf("%p", bb->predecessors[i]);
+			trace_printf("%p", bb->predecessors[i]);
 		}
 
 		if (i == 0)
-			printf("none    ");
+			trace_printf("none    ");
 
-		printf("\n");
+		trace_printf("\n");
 	}
 
-	printf("\n");
+	trace_printf("\n");
 }
 
 void trace_tree_ir(struct compilation_unit *cu)
@@ -169,17 +139,17 @@ void trace_tree_ir(struct compilation_unit *cu)
 	struct statement *stmt;
 	struct string *str;
 
-	printf("High-Level Intermediate Representation (HIR):\n\n");
+	trace_printf("High-Level Intermediate Representation (HIR):\n\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
-		printf("[bb %p]:\n\n", bb);
+		trace_printf("[bb %p]:\n\n", bb);
 		for_each_stmt(stmt, &bb->stmt_list) {
 			str = alloc_str();
 			tree_print(&stmt->node, str);
-			printf("%s", str->value);
+			trace_printf("%s", str->value);
 			free_str(str);
 		}
-		printf("\n");
+		trace_printf("\n");
 	}
 }
 
@@ -190,11 +160,11 @@ void trace_lir(struct compilation_unit *cu)
 	struct string *str;
 	struct insn *insn;
 
-	printf("Low-Level Intermediate Representation (LIR):\n\n");
+	trace_printf("Low-Level Intermediate Representation (LIR):\n\n");
 
-	printf("Bytecode   LIR\n");
-	printf("offset     offset    Instruction          Operands\n");
-	printf("---------  -------   -----------          --------\n");
+	trace_printf("Bytecode   LIR\n");
+	trace_printf("offset     offset    Instruction          Operands\n");
+	trace_printf("---------  -------   -----------          --------\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		for_each_insn(insn, &bb->insn_list) {
@@ -209,16 +179,16 @@ void trace_lir(struct compilation_unit *cu)
 
 				print_bytecode_offset(bc_offset, bc_str);
 
-				printf("[ %5s ]  ", bc_str->value);
+				trace_printf("[ %5s ]  ", bc_str->value);
 				free_str(bc_str);
 			}
 
-			printf(" %5lu:   %s\n", offset++, str->value);
+			trace_printf(" %5lu:   %s\n", offset++, str->value);
 			free_str(str);
 		}
 	}
 
-	printf("\n");
+	trace_printf("\n");
 }
 
 static void
@@ -229,7 +199,7 @@ print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 	unsigned long offset;
 	struct insn *insn;
 
-	printf("  %2lu: ", var->vreg);
+	trace_printf("  %2lu: ", var->vreg);
 
 	offset = 0;
 	for_each_basic_block(bb, &cu->bb_list) {
@@ -237,24 +207,24 @@ print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 			if (in_range(range, offset)) {
 				if (next_use_pos(var->interval, offset) == offset) {
 					/* In use */
-					printf("UUU");
+					trace_printf("UUU");
 				} else {
 					if (var->interval->reg == REG_UNASSIGNED)
-						printf("***");
+						trace_printf("***");
 					else
-						printf("---");
+						trace_printf("---");
 				}
 			}
 			else
-				printf("   ");
+				trace_printf("   ");
 
 			offset++;
 		}
 	}
 	if (!range_is_empty(range))
-		printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
+		trace_printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
 	else
-		printf(" (empty)\n");
+		trace_printf(" (empty)\n");
 }
 
 void trace_liveness(struct compilation_unit *cu)
@@ -264,83 +234,85 @@ void trace_liveness(struct compilation_unit *cu)
 	unsigned long offset;
 	struct insn *insn;
 
-	printf("Liveness:\n\n");
+	trace_printf("Liveness:\n\n");
 
-	printf("Legend: (U) In use, (-) Fixed register, (*) Non-fixed register\n\n");
+	trace_printf("Legend: (U) In use, (-) Fixed register, (*) Non-fixed register\n\n");
 
-	printf("      ");
+	trace_printf("      ");
 	offset = 0;
 	for_each_basic_block(bb, &cu->bb_list) {
 		for_each_insn(insn, &bb->insn_list) {
-			printf("%-2lu ", offset++);
+			trace_printf("%-2lu ", offset++);
 		}
 	}
-	printf("\n");
+	trace_printf("\n");
 
 	for_each_variable(var, cu->var_infos)
 		print_var_liveness(cu, var);
 
-	printf("\n");
+	trace_printf("\n");
 }
 
 void trace_regalloc(struct compilation_unit *cu)
 {
 	struct var_info *var;
 
-	printf("Register Allocation:\n\n");
+	trace_printf("Register Allocation:\n\n");
 
 	for_each_variable(var, cu->var_infos) {
 		struct live_interval *interval;
 
 		for (interval = var->interval; interval != NULL; interval = interval->next_child) {
-			printf("  %2lu (pos: %2ld-%2lu):", var->vreg, (signed long)interval->range.start, interval->range.end);
-			printf("\t%s", reg_name(interval->reg));
-			printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
+			trace_printf("  %2lu (pos: %2ld-%2lu):", var->vreg, (signed long)interval->range.start, interval->range.end);
+			trace_printf("\t%s", reg_name(interval->reg));
+			trace_printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
 			if (interval->need_spill) {
 				unsigned long ndx = -1;
 
 				if (interval->spill_slot)
 					ndx = interval->spill_slot->index;
 
-				printf("\tspill (%ld)", ndx);
+				trace_printf("\tspill (%ld)", ndx);
 			} else
-				printf("\tno spill  ");
+				trace_printf("\tno spill  ");
 
 			if (interval->need_reload) {
 				unsigned long ndx = -1;
 
 				if (interval->spill_parent && interval->spill_parent->spill_slot)
 					ndx = interval->spill_parent->spill_slot->index;
-				printf("\treload (%ld)", ndx);
+				trace_printf("\treload (%ld)", ndx);
 			} else
-				printf("\tno reload  ");
-			printf("\n");
+				trace_printf("\tno reload  ");
+			trace_printf("\n");
 		}
 	}
-	printf("\n");
+	trace_printf("\n");
 }
 
 void trace_machine_code(struct compilation_unit *cu)
 {
 	void *start, *end;
 
-	printf("Disassembler Listing:\n\n");
+	trace_printf("Disassembler Listing:\n\n");
 
 	start  = buffer_ptr(cu->objcode);
 	end = buffer_current(cu->objcode);
 
 	disassemble(cu, start, end);
-	printf("\n");
+	trace_printf("\n");
 }
 
 void trace_magic_trampoline(struct compilation_unit *cu)
 {
-	printf("jit_magic_trampoline: ret0=%p, ret1=%p: %s.%s #%d\n",
+	trace_printf("jit_magic_trampoline: ret0=%p, ret1=%p: %s.%s #%d\n",
 	       __builtin_return_address(1),
 	       __builtin_return_address(2),
 	       cu->method->class->name,
 	       cu->method->name,
 	       cu->method->method_index);
+
+	trace_flush();
 }
 
 static void print_arg(enum vm_type arg_type, const unsigned long *args,
@@ -352,11 +324,11 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 		value = *(unsigned long long*)(args + *arg_index);
 		(*arg_index) += 2;
 
-		printf("0x%llx", value);
+		trace_printf("0x%llx", value);
 		return;
 	}
 
-	printf("0x%lx ", args[*arg_index]);
+	trace_printf("0x%lx ", args[*arg_index]);
 
 	if (arg_type == J_REFERENCE) {
 		struct vm_object *obj;
@@ -364,12 +336,12 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 		obj = (struct vm_object *)args[*arg_index];
 
 		if (!obj) {
-			printf("null");
+			trace_printf("null");
 			goto out;
 		}
 
 		if (!is_on_heap((unsigned long)obj)) {
-			printf("*** pointer not on heap ***");
+			trace_printf("*** pointer not on heap ***");
 			goto out;
 		}
 
@@ -377,16 +349,16 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 			char *str;
 
 			str = vm_string_to_cstr(obj);
-			printf("= \"%s\"", str);
+			trace_printf("= \"%s\"", str);
 			free(str);
 		}
 
-		printf(" (%s)", obj->class->name);
+		trace_printf(" (%s)", obj->class->name);
 	}
 
  out:
 	(*arg_index)++;
-	printf("\n");
+	trace_printf("\n");
 }
 
 static void trace_invoke_args(struct vm_method *vmm,
@@ -402,21 +374,21 @@ static void trace_invoke_args(struct vm_method *vmm,
 	arg_index = 0;
 
 	if (!vm_method_is_static(vmm)) {
-		printf("\tthis\t: ");
+		trace_printf("\tthis\t: ");
 		print_arg(J_REFERENCE, frame->args, &arg_index);
 	}
 
 	type_str = vmm->type;
 
 	if (!strncmp(type_str, "()", 2)) {
-		printf("\targs\t: none\n");
+		trace_printf("\targs\t: none\n");
 		return;
 	}
 
-	printf("\targs\t:\n");
+	trace_printf("\targs\t:\n");
 
 	while ((type_str = parse_method_args(type_str, &arg_type))) {
-		printf("\t   %-12s: ", get_vm_type_name(arg_type));
+		trace_printf("\t   %-12s: ", get_vm_type_name(arg_type));
 		print_arg(arg_type, frame->args, &arg_index);
 	}
 }
@@ -429,23 +401,23 @@ static void print_source_and_line(struct compilation_unit *cu,
 
 	source_file = cu->method->class->source_file_name;
 	if (source_file)
-		printf("%s", source_file);
+		trace_printf("%s", source_file);
 	else
-		printf("UNKNOWN");
+		trace_printf("UNKNOWN");
 
 	pc = native_ptr_to_bytecode_offset(cu, ptr);
 	if (pc == BC_OFFSET_UNKNOWN)
 		return;
 
-	printf(":%d", bytecode_offset_to_line_no(cu->method, pc));
+	trace_printf(":%d", bytecode_offset_to_line_no(cu->method, pc));
 }
 
 static void trace_return_address(struct jit_stack_frame *frame)
 {
-	printf("\tret\t: %p:", (void*)frame->return_address);
+	trace_printf("\tret\t: %p:", (void*)frame->return_address);
 
 	if (is_native(frame->return_address)) {
-		printf(" (native)\n");
+		trace_printf(" (native)\n");
 	} else {
 		struct compilation_unit *cu;
 		struct vm_method *vmm;
@@ -453,17 +425,17 @@ static void trace_return_address(struct jit_stack_frame *frame)
 
 		cu = jit_lookup_cu(frame->return_address);
 		if (!cu) {
-			printf(" (no compilation unit mapping)\n");
+			trace_printf(" (no compilation unit mapping)\n");
 			return;
 		}
 
 		vmm = cu->method;;
 		vmc = vmm->class;
 
-		printf(" %s.%s%s\n", vmc->name, vmm->name, vmm->type );
-		printf("\t\t  (");
+		trace_printf(" %s.%s%s\n", vmc->name, vmm->name, vmm->type );
+		trace_printf("\t\t  (");
 		print_source_and_line(cu, (void *) frame->return_address);
-		printf(")\n");
+		trace_printf(")\n");
 	}
 }
 
@@ -472,21 +444,20 @@ void trace_invoke(struct compilation_unit *cu)
 	struct vm_method *vmm = cu->method;
 	struct vm_class *vmc = vmm->class;
 
-	trace_begin();
-
-	printf("trace invoke: %s.%s%s\n", vmc->name, vmm->name, vmm->type);
+	trace_printf("trace invoke: %s.%s%s\n", vmc->name, vmm->name,
+		     vmm->type);
 
 	if (opt_trace_invoke_verbose) {
 		struct jit_stack_frame *frame;
 
 		frame =  __builtin_frame_address(1);
 
-		printf("\tentry\t: %p\n", buffer_ptr(cu->objcode));
+		trace_printf("\tentry\t: %p\n", buffer_ptr(cu->objcode));
 		trace_return_address(frame);
 		trace_invoke_args(vmm, frame);
 	}
 
-	trace_end();
+	trace_flush();
 }
 
 void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
@@ -503,23 +474,27 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	exception = exception_occurred();
 	assert(exception);
 
-	printf("trace exception: exception object %p (%s) thrown\n",
+	trace_printf("trace exception: exception object %p (%s) thrown\n",
 	       exception, exception->class->name);
 
-	printf("\tfrom\t: %p: %s.%s%s\n", native_ptr, vmc->name, vmm->name,
+	trace_printf("\tfrom\t: %p: %s.%s%s\n", native_ptr, vmc->name, vmm->name,
 	       vmm->type);
-	printf("\t\t  (");
+	trace_printf("\t\t  (");
 	print_source_and_line(cu, native_ptr);
-	printf(")\n");
+	trace_printf(")\n");
+
+	/* XXX: trace is flushed in one of the action tracers. */
 }
 
 void trace_exception_handler(struct compilation_unit *cu,
 			     unsigned char *ptr)
 {
-	printf("\taction\t: jump to handler at %p\n", ptr);
-	printf("\t\t  (");
+	trace_printf("\taction\t: jump to handler at %p\n", ptr);
+	trace_printf("\t\t  (");
 	print_source_and_line(cu, ptr);
-	printf(")\n");
+	trace_printf(")\n");
+
+	trace_flush();
 }
 
 void trace_exception_unwind(struct jit_stack_frame *frame)
@@ -533,27 +508,31 @@ void trace_exception_unwind(struct jit_stack_frame *frame)
 	vmm = cu->method;
 	vmc = vmm->class;
 
-	printf("\taction\t: unwind to %p: %s.%s%s\n",
+	trace_printf("\taction\t: unwind to %p: %s.%s%s\n",
 	       (void*)frame->return_address, vmc->name, vmm->name, vmm->type);
-	printf("\t\t  (");
+	trace_printf("\t\t  (");
 	print_source_and_line(cu, (void *) frame->return_address);
-	printf(")\n");
+	trace_printf(")\n");
+
+	trace_flush();
 }
 
 void trace_exception_unwind_to_native(struct jit_stack_frame *frame)
 {
-	printf("\taction\t: unwind to native caller at %p\n",
+	trace_printf("\taction\t: unwind to native caller at %p\n",
 	       (void*)frame->return_address);
+
+	trace_flush();
 }
 
 void trace_bytecode(struct vm_method *method)
 {
-	printf("Code:\n");
+	trace_printf("Code:\n");
 	bytecode_disassemble(method->code_attribute.code,
 			     method->code_attribute.code_length);
-	printf("\nException table:\n");
+	trace_printf("\nException table:\n");
 	print_exception_table(method,
 		method->code_attribute.exception_table,
 		method->code_attribute.exception_table_length);
-	printf("\n");
+	trace_printf("\n");
 }

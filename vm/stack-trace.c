@@ -38,6 +38,7 @@
 #include "vm/stack-trace.h"
 #include "vm/system.h"
 #include "vm/thread.h"
+#include "vm/trace.h"
 
 #include "jit/bc-offset-mapping.h"
 #include "jit/cu-mapping.h"
@@ -431,19 +432,19 @@ void print_java_stack_trace_elem(struct stack_trace_elem *elem)
 	cu = stack_trace_elem_get_cu(elem);
 
 	struct vm_method *vmm = cu->method;
-	printf("%s.%s", vmm->class->name, vmm->name);
+	trace_printf("%s.%s", vmm->class->name, vmm->name);
 
 	if (vm_method_is_native(vmm)) {
-		printf("(Native Method)");
+		trace_printf("(Native Method)");
 		return;
 	}
 
 	if (!vmm->class->source_file_name) {
-		printf("(Unknown Source)");
+		trace_printf("(Unknown Source)");
 		return;
 	}
 
-	printf("(%s", vmm->class->source_file_name);
+	trace_printf("(%s", vmm->class->source_file_name);
 
 	if (elem->type == STACK_TRACE_ELEM_TYPE_TRAMPOLINE)
 		bc_offset = 0;
@@ -458,10 +459,10 @@ void print_java_stack_trace_elem(struct stack_trace_elem *elem)
 	if (line_no == -1)
 		goto out;
 
-	printf(":%d", line_no);
+	trace_printf(":%d", line_no);
 
  out:
-	printf(")");
+	trace_printf(")");
 }
 
 /**
@@ -719,18 +720,18 @@ const char *stack_trace_elem_type_name(enum stack_trace_elem_type type)
 
 static void show_mixed_stack_trace(struct stack_trace_elem *elem)
 {
-	printf("Native and JAVA stack trace:\n");
+	trace_printf("Native and JAVA stack trace:\n");
 	do {
-		printf(" [<%08lx>] %-10s : ", elem->addr,
+		trace_printf(" [<%08lx>] %-10s : ", elem->addr,
 		       stack_trace_elem_type_name(elem->type));
 
 		if (elem->type != STACK_TRACE_ELEM_TYPE_OTHER) {
 			print_java_stack_trace_elem(elem);
-			printf("\n");
+			trace_printf("\n");
 
-			printf("%-27s"," ");
+			trace_printf("%-27s"," ");
 			if (!show_exe_function((void *) elem->addr))
-				printf("\r");
+				trace_printf("\r");
 
 			continue;
 		}
@@ -749,6 +750,8 @@ void print_trace(void)
 	stack_trace_elem_next(&elem);
 
 	show_mixed_stack_trace(&elem);
+
+	trace_flush();
 }
 
 void print_trace_from(unsigned long eip, void *frame)

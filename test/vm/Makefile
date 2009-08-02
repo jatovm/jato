@@ -13,10 +13,13 @@ TOPLEVEL_OBJS :=			\
 	vm/die.o			\
 	vm/natives.o			\
 	vm/stack.o			\
+	vm/trace.o 			\
 	vm/types.o			\
 	vm/zalloc.o			\
 	test/libharness/libharness.o	\
-	test/vm/stack-trace-stub.o
+	test/jit/trace-stub.o		\
+	test/vm/stack-trace-stub.o	\
+	test/vm/thread-stub.o
 
 TEST_OBJS :=				\
 	bitset-test.o			\

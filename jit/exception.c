@@ -43,6 +43,7 @@
 #include "vm/object.h"
 #include "vm/preload.h"
 #include "vm/thread.h"
+#include "vm/trace.h"
 
 #include "arch/stack-frame.h"
 #include "arch/instruction.h"
@@ -317,21 +318,21 @@ print_exception_table(const struct vm_method *method,
 	int exception_table_length)
 {
 	if (exception_table_length == 0) {
-		printf("\t(empty)\n");
+		trace_printf("\t(empty)\n");
 		return;
 	}
 
-	printf("\tfrom\tto\ttarget\ttype\n");
+	trace_printf("\tfrom\tto\ttarget\ttype\n");
 	for (int i = 0; i < exception_table_length; i++) {
 		const struct cafebabe_code_attribute_exception *eh;
 
 		eh = &exception_table[i];
 
-		printf("\t%d\t%d\t%d\t", eh->start_pc, eh->end_pc,
+		trace_printf("\t%d\t%d\t%d\t", eh->start_pc, eh->end_pc,
 		       eh->handler_pc);
 
 		if (!eh->catch_type) {
-			printf("all\n");
+			trace_printf("all\n");
 			return;
 		}
 
@@ -339,6 +340,6 @@ print_exception_table(const struct vm_method *method,
 		catch_class = vm_class_resolve_class(method->class,
 						     eh->catch_type);
 
-		printf("Class %s\n", catch_class->name);
+		trace_printf("Class %s\n", catch_class->name);
 	}
 }

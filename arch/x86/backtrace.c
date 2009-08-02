@@ -38,6 +38,7 @@
 #include "vm/class.h"
 #include "vm/method.h"
 #include "vm/stack-trace.h"
+#include "vm/trace.h"
 
 /* get REG_EIP from ucontext.h */
 #include <ucontext.h>
@@ -240,6 +241,8 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 	show_registers(uc->uc_mcontext.gregs);
 
 	print_trace_from(eip, (void *) ebp);
+
+	trace_flush();
 
 	exit(1);
 }

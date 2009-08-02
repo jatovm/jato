@@ -12,6 +12,9 @@
 #include "vm/bytecodes.h"
 #include "vm/die.h"
 #include "vm/opcodes.h"
+#include "vm/trace.h"
+
+#include "jit/compiler.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -211,11 +214,11 @@ void bytecode_disassemble(const unsigned char *code, unsigned long size)
 
 		size = bc_insn_size(&code[pc]);
 
-		printf("   [ %-3ld ]  0x%02x  ", pc, code[pc]);
+		trace_printf("   [ %-3ld ]  0x%02x  ", pc, code[pc]);
 
 		opc_name = bc_get_insn_name(&code[pc]);
 		if (!opc_name) {
-			printf("(string alloc failed)\n");
+			trace_printf("(string alloc failed)\n");
 			continue;
 		}
 
@@ -227,20 +230,20 @@ void bytecode_disassemble(const unsigned char *code, unsigned long size)
 		}
 
 		if (size > 1)
-			printf("%-14s", opc_name);
+			trace_printf("%-14s", opc_name);
 		else
-			printf("%s", opc_name);
+			trace_printf("%s", opc_name);
 
 		free(opc_name);
 
 		if (bc_is_branch(code[_pc])) {
-			printf(" %ld\n", bc_target_off(&code[_pc]) + _pc);
+			trace_printf(" %ld\n", bc_target_off(&code[_pc]) + _pc);
 			continue;
 		}
 
 		for (int i = 1; i < size; i++)
-			printf(" 0x%02x", (unsigned int)code[_pc + i]);
+			trace_printf(" 0x%02x", (unsigned int)code[_pc + i]);
 
-		printf("\n");
+		trace_printf("\n");
 	}
 }

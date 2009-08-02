@@ -8,6 +8,7 @@ struct compilation_unit;
 bool opt_trace_invoke = false;
 bool opt_trace_exceptions = false;
 bool opt_trace_bytecode = false;
+bool opt_trace_threads = false;
 
 void trace_invoke(struct compilation_unit *cu)
 {

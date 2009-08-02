@@ -114,6 +114,7 @@ VM_OBJS = \
 	vm/stack-trace.o	\
 	vm/static.o		\
 	vm/thread.o		\
+	vm/trace.o		\
 	vm/types.o		\
 	vm/utf8.o		\
 	vm/zalloc.o		\

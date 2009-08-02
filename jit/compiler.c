@@ -17,6 +17,7 @@
 
 #include "vm/class.h"
 #include "vm/method.h"
+#include "vm/trace.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -120,6 +121,9 @@ int compile(struct compilation_unit *cu)
 
 	perf_append_cu(cu);
   out:
+	if (opt_trace_compile)
+		trace_flush();
+
 	if (err)
 		compile_error(cu, err);
 	return err;

@@ -54,6 +54,7 @@ TOPLEVEL_OBJS := \
 	vm/die.o \
 	vm/guard-page.o \
 	vm/stack.o \
+	vm/trace.o \
 	vm/types.o \
 	vm/zalloc.o \
 	arch/mmix/instruction.o \
@@ -67,6 +68,7 @@ TOPLEVEL_OBJS := \
 	test/vm/preload-stub.o \
 	test/vm/jni-stub.o \
 	test/vm/stack-trace-stub.o \
+	test/vm/thread-stub.o \
 	test/jit/trace-stub.o
 
 TEST_OBJS := \

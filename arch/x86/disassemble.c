@@ -36,6 +36,8 @@
 #include "jit/compiler.h"
 #include "lib/string.h"
 
+#include "vm/trace.h"
+
 #include <assert.h>
 #include <dis-asm.h>
 #include <stdarg.h>
@@ -84,25 +86,25 @@ unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 
 		bc_offset = native_ptr_to_bytecode_offset(cu, code);
 		print_bytecode_offset(bc_offset, str);
-		printf("[ %5s ]", str->value);
+		trace_printf("[ %5s ]", str->value);
 		free_str(str);
 	}
 
-	printf("  0x%08lx:   ", (unsigned long) code);
+	trace_printf("  0x%08lx:   ", (unsigned long) code);
 
 	disass_len = 0;
 
 	seqlen = print_insn_i386((bfd_vma) (unsigned long) code, &info);
 
 	for (i = 0; i < seqlen; i++, code++) {
-		printf("%02x ", *code);
+		trace_printf("%02x ", *code);
 	}
 
 	for (; i < 8; i++) {
-		printf("   ");
+		trace_printf("   ");
 	}
 
-	printf("   %s\n", disass_buf);
+	trace_printf("   %s\n", disass_buf);
 
 	return code;
 }
