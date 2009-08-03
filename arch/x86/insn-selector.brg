@@ -754,6 +754,26 @@ reg:	OP_CMPL(freg, freg) 1
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 }
 
+reg:	OP_CMPG(freg, freg) 1
+{
+	struct var_info *esp, *eax;
+
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	esp = get_fixed_var(s->b_parent, REG_xSP);
+	eax = get_fixed_var(s->b_parent, REG_xAX);
+
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->left->reg1, esp, -8));
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->right->reg1, esp, -4));
+
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpg));
+	method_args_cleanup(s, tree, 2);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+}
+
 reg:	OP_CMP(reg, reg) 1
 {
 	emulate_op_64(state, s, tree, emulate_lcmp, J_LONG, J_INT);
