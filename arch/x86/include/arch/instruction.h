@@ -195,6 +195,8 @@ spill_insn(struct var_info *var, struct stack_slot *slot)
 {
 	enum insn_type insn_type;
 
+	assert(slot != NULL);
+
 	switch (var->type) {
 	case REG_TYPE_GPR:
 		insn_type = INSN_MOV_REG_MEMLOCAL;
@@ -213,6 +215,8 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 {
 	enum insn_type insn_type;
 
+	assert(slot != NULL);
+
 	switch (var->type) {
 	case REG_TYPE_GPR:
 		insn_type = INSN_MOV_MEMLOCAL_REG;
@@ -229,12 +233,16 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 static inline struct insn *
 push_slot_insn(struct stack_slot *from)
 {
+	assert(from != NULL);
+
 	return memlocal_insn(INSN_PUSH_MEMLOCAL, from);
 }
 
 static inline struct insn *
 pop_slot_insn(struct stack_slot *to)
 {
+	assert(to != NULL);
+
 	return memlocal_insn(INSN_POP_MEMLOCAL, to);
 }
 
