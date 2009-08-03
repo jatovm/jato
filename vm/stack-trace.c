@@ -720,7 +720,7 @@ const char *stack_trace_elem_type_name(enum stack_trace_elem_type type)
 
 static void show_mixed_stack_trace(struct stack_trace_elem *elem)
 {
-	trace_printf("Native and JAVA stack trace:\n");
+	trace_printf("Native and Java stack trace:\n");
 	do {
 		trace_printf(" [<%08lx>] %-10s : ", elem->addr,
 		       stack_trace_elem_type_name(elem->type));
