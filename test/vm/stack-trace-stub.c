@@ -3,6 +3,7 @@
 
 #include "vm/backtrace.h"
 #include "vm/stack-trace.h"
+#include "vm/trace.h"
 
 int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
 		 struct vm_method *method)
