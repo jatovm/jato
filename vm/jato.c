@@ -165,6 +165,9 @@ static void add_system_property_const(const char *key, const char *value)
 	char *key_d;
 	char *value_d;
 
+	if (value == NULL)
+		value = "";
+
 	key_d = strdup(key);
 	value_d = strdup(value);
 
