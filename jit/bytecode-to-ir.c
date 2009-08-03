@@ -97,13 +97,13 @@ static int spill_expression(struct basic_block *bb,
 	entry_tmp = mimic_stack_expr(expr->vm_type, 1, slot_ndx);
 
 	if (!exit_tmp || !entry_tmp)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	bb_add_mimic_stack_expr(bb, exit_tmp);
 
 	store = alloc_statement(STMT_STORE);
 	if (!store)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	store->store_dest = &exit_tmp->node;
 	store->store_src = &expr->node;
@@ -237,7 +237,7 @@ static int convert_bb_to_ir(struct basic_block *bb)
 	 */
 	reload_stack = spill_mimic_stack(bb);
 	if (!reload_stack)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	while (!stack_is_empty(reload_stack)) {
 		struct expression *expr = stack_pop(reload_stack);

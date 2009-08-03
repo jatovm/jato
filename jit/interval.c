@@ -24,12 +24,16 @@
  * Please refer to the file LICENSE for details.
  */
 #include "arch/instruction.h"
-#include "jit/vars.h"
+
 #include "vm/stdlib.h"
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
+#include "vm/die.h"
+
+#include "jit/vars.h"
+
 #include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 struct live_interval *alloc_interval(struct var_info *var)
 {
@@ -65,7 +69,7 @@ static int split_insn_array(struct live_interval *src, struct live_interval *dst
 	size = dst_len * sizeof(struct insn *);
 	dst->insn_array = zalloc(size);
 	if (!dst->insn_array)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	memcpy(dst->insn_array, src->insn_array + src_len, size);
 

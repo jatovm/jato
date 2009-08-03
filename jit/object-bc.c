@@ -77,11 +77,11 @@ int convert_getstatic(struct parse_context *ctx)
 
 	value = class_field_expr(vm_field_type(fb), fb);
 	if (!value)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	value_dup = dup_expr(ctx, value);
 	if (!value_dup)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, value_dup);
 	return 0;
@@ -100,12 +100,12 @@ int convert_putstatic(struct parse_context *ctx)
 	src = stack_pop(ctx->bb->mimic_stack);
 	dest = class_field_expr(vm_field_type(fb), fb);
 	if (!dest)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt) {
 		expr_put(dest);
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 	}
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
@@ -129,11 +129,11 @@ int convert_getfield(struct parse_context *ctx)
 
 	value = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!value)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	value_dup = dup_expr(ctx, value);
 	if (!value_dup)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, value_dup);
 	return 0;
@@ -154,12 +154,12 @@ int convert_putfield(struct parse_context *ctx)
 	objectref = null_check_expr(stack_pop(ctx->bb->mimic_stack));
 	dest = instance_field_expr(vm_field_type(fb), fb, objectref);
 	if (!dest)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	store_stmt = alloc_statement(STMT_STORE);
 	if (!store_stmt) {
 		expr_put(dest);
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 	}
 	store_stmt->store_dest = &dest->node;
 	store_stmt->store_src = &src->node;
@@ -220,7 +220,7 @@ static int convert_array_load(struct parse_context *ctx, enum vm_type type)
       failed_arraycheck:
 	free_statement(store_stmt);
       failed:
-	return -ENOMEM;
+	return warn("out of memory"), -ENOMEM;
 }
 
 int convert_iaload(struct parse_context *ctx)
@@ -320,7 +320,7 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
       failed_arraycheck:
 	free_statement(store_stmt);
       failed:
-	return -ENOMEM;
+	return warn("out of memory"), -ENOMEM;
 }
 
 int convert_iastore(struct parse_context *ctx)
@@ -376,7 +376,7 @@ int convert_new(struct parse_context *ctx)
 
 	expr = new_expr(class);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, expr);
 
@@ -394,11 +394,11 @@ int convert_newarray(struct parse_context *ctx)
 
 	size_check = array_size_check_expr(size);
 	if (!size_check)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	arrayref = newarray_expr(type, size_check);
 	if (!arrayref)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, arrayref);
 
@@ -425,11 +425,11 @@ int convert_anewarray(struct parse_context *ctx)
 
 	size_check = array_size_check_expr(size);
 	if (!size_check)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	arrayref = anewarray_expr(array_class, size_check);
 	if (!arrayref)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, arrayref);
 
@@ -451,17 +451,17 @@ int convert_multianewarray(struct parse_context *ctx)
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	method = ctx->cu->method;
 	if (!class)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	arrayref = multianewarray_expr(class);
 	if (!arrayref)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	args_list = convert_args(ctx->bb->mimic_stack, dimension, method);
 
 	size_check = multiarray_size_check_expr(args_list);
 	if (!size_check)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	arrayref->multianewarray_dimensions = &size_check->node;
 
@@ -478,7 +478,7 @@ int convert_arraylength(struct parse_context *ctx)
 
 	arraylength_exp = arraylength_expr(arrayref);
 	if (!arraylength_exp)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, arraylength_exp);
 
@@ -500,7 +500,7 @@ int convert_instanceof(struct parse_context *ctx)
 
 	expr = instanceof_expr(objectref, class);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, expr);
 
@@ -519,11 +519,11 @@ int convert_checkcast(struct parse_context *ctx)
 	type_idx = bytecode_read_u16(ctx->buffer);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
 	if (!class)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	checkcast_stmt = alloc_statement(STMT_CHECKCAST);
 	if (!checkcast_stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	checkcast_stmt->checkcast_class = class;
 	checkcast_stmt->checkcast_ref = &object_ref_tmp->node;
@@ -544,11 +544,11 @@ int convert_monitorenter(struct parse_context *ctx)
 
 	nullcheck = null_check_expr(exp);
 	if (!nullcheck)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	stmt = alloc_statement(STMT_MONITOR_ENTER);
 	if (!stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	expr_get(exp);
 	stmt->expression = &nullcheck->node;
@@ -567,11 +567,11 @@ int convert_monitorexit(struct parse_context *ctx)
 
 	nullcheck = null_check_expr(exp);
 	if (!nullcheck)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	stmt = alloc_statement(STMT_MONITOR_EXIT);
 	if (!stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	expr_get(exp);
 	stmt->expression = &nullcheck->node;

@@ -15,6 +15,7 @@
 #include "vm/bytecodes.h"
 #include "vm/bytecode.h"
 #include "vm/stack.h"
+#include "vm/die.h"
 
 #include <errno.h>
 
@@ -58,13 +59,13 @@ static int convert_if(struct parse_context *ctx, enum binary_operator binop)
 
 	zero_value = value_expr(J_INT, 0);
 	if (!zero_value)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	if_value = stack_pop(ctx->bb->mimic_stack);
 	stmt = __convert_if(ctx, J_INT, binop, if_value, zero_value);
 	if (!stmt) {
 		expr_put(zero_value);
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 	}
 	convert_statement(ctx, stmt);
 	return 0;
@@ -110,7 +111,7 @@ static int convert_if_cmp(struct parse_context *ctx, enum vm_type vm_type, enum 
 
 	stmt = __convert_if(ctx, vm_type, binop, if_value1, if_value2);
 	if (!stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_statement(ctx, stmt);
 	return 0;
@@ -168,7 +169,7 @@ int convert_goto(struct parse_context *ctx)
 
 	goto_stmt = alloc_statement(STMT_GOTO);
 	if (!goto_stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	goto_stmt->goto_target = target_bb;
 	convert_statement(ctx, goto_stmt);

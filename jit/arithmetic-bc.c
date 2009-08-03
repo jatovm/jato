@@ -15,6 +15,7 @@
 #include "vm/bytecodes.h"
 #include "vm/bytecode.h"
 #include "vm/stack.h"
+#include "vm/die.h"
 
 #include <errno.h>
 
@@ -28,7 +29,7 @@ static int convert_binop(struct parse_context *ctx, enum vm_type vm_type,
 
 	expr = binop_expr(vm_type, binary_operator, left, right);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, expr);
 	return 0;
@@ -143,7 +144,7 @@ static int convert_unary_op(struct parse_context *ctx, enum vm_type vm_type,
 
 	expr = unary_op_expr(vm_type, unary_operator, expression);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, expr);
 	return 0;
@@ -276,7 +277,7 @@ int convert_iinc(struct parse_context *ctx)
 
       failed:
 	free_statement(store_stmt);
-	return -ENOMEM;
+	return warn("out of memory"), -ENOMEM;
 }
 
 int convert_lcmp(struct parse_context *ctx)

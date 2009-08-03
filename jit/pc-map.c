@@ -30,8 +30,10 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "vm/stdlib.h"
 #include "jit/pc-map.h"
+
+#include "vm/stdlib.h"
+#include "vm/die.h"
 
 extern void print_trace(void);
 
@@ -51,7 +53,7 @@ int pc_map_add(struct pc_map *map, unsigned long from, unsigned long to)
 	new_size = sizeof(unsigned long) * (ent->nr_values + 1);
 	new_table = realloc(ent->values, new_size);
 	if (!new_table)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	new_table[ent->nr_values++] = to;
 	ent->values = new_table;
@@ -67,7 +69,7 @@ int pc_map_init_empty(struct pc_map *map, int size)
 	map->size = size;
 	map->map = zalloc(sizeof(struct pc_map_entry) * size);
 	if (!map->map)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	return 0;
 }
@@ -126,7 +128,7 @@ int pc_map_join(struct pc_map *map1, struct pc_map *map2)
 				err = pc_map_add(&result, i, *c);
 				if (err) {
 					pc_map_deinit(&result);
-					return -ENOMEM;
+					return warn("out of memory"), -ENOMEM;
 				}
 			}
 		}

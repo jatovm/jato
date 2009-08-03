@@ -14,6 +14,7 @@
 
 #include "vm/bytecodes.h"
 #include "vm/stack.h"
+#include "vm/die.h"
 
 #include <errno.h>
 
@@ -25,7 +26,7 @@ int convert_pop(struct parse_context *ctx)
 		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
 
 		if (!expr_stmt)
-			return -ENOMEM;
+			return warn("out of memory"), -ENOMEM;
 
 		expr_stmt->expression = &expr->node;
 		convert_statement(ctx, expr_stmt);

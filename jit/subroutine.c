@@ -134,7 +134,7 @@ static int code_state_init(struct code_state *code_state,
 	code_state->code_length = code_length;
 	code_state->code = malloc(code_length);
 	if (!code_state->code)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	memcpy(code_state->code, code, code_length);
 	return 0;
@@ -145,7 +145,7 @@ static int code_state_init_empty(struct code_state *code_state, int code_length)
 	code_state->code_length = code_length;
 	code_state->code = malloc(code_length);
 	if (!code_state->code)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	return 0;
 }
@@ -284,7 +284,7 @@ static int subroutine_add_call_site(struct subroutine *sub,
 	new_size = (sub->nr_call_sites + 1) * sizeof(unsigned long);
 	new_tab = realloc(sub->call_sites, new_size);
 	if (!new_tab)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	sub->call_sites = new_tab;
 	sub->call_sites[sub->nr_call_sites++] = call_site;
@@ -309,7 +309,7 @@ static int subroutine_add_dependency(struct inlining_context *ctx,
 	new_size = (target_sub->nr_dependants + 1) * sizeof(void *);
 	new_tab = realloc(target_sub->dependants, new_size);
 	if (!new_tab)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	target_sub->dependants = new_tab;
 	target_sub->dependants[target_sub->nr_dependants++] = sub;
@@ -405,7 +405,7 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 	struct subroutine_scan_context *sub_ctx =
 		alloc_subroutine_scan_context(ctx, sub);
 	if (!sub_ctx)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	sub->end_pc = PC_UNKNOWN;
 
@@ -486,14 +486,14 @@ static int detect_subroutines(struct inlining_context *ctx)
 		if (sub) {
 			err = subroutine_add_call_site(sub, c, pc);
 			if (err)
-				return -ENOMEM;
+				return warn("out of memory"), -ENOMEM;
 
 			continue;
 		}
 
 		sub = alloc_subroutine();
 		if (!sub)
-			return -ENOMEM;
+			return warn("out of memory"), -ENOMEM;
 
 		sub->start_pc = target;
 
@@ -595,7 +595,7 @@ static int do_bytecode_copy(struct code_state *dest, unsigned long dest_pc,
 {
 	for (unsigned long i = 0; i < count; i++)
 		if (pc_map_add(map, src_pc + i, dest_pc + i))
-			return -ENOMEM;
+			return warn("out of memory"), -ENOMEM;
 
 	memcpy(dest->code + dest_pc, src->code + src_pc, count);
 	return 0;
@@ -667,7 +667,7 @@ static int build_line_number_table(struct inlining_context *ctx)
 					  ctx->code.code_length);
 	new_table = malloc(sizeof(*new_table) * entry_count);
 	if (!new_table)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	index = 0;
 
@@ -764,7 +764,7 @@ copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 		else {
 			new_eh = eh_split(ctx, *eh_index);
 			if (!new_eh)
-				return -ENOMEM;
+				return warn("out of memory"), -ENOMEM;
 		}
 
 		new_eh->start_pc = sub_start + eh_start_pc_offset;
@@ -864,7 +864,7 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 
 	/* Allocate pc translation map for this inlining iteration */
 	if (pc_map_init_empty(&pc_map, ctx->code.code_length + 1))
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	/*
 	 * After inlining process was started all bytecode offsets
@@ -1056,7 +1056,7 @@ do_split_exception_handlers(struct inlining_context *ctx,
 
 		upper_eh = eh_split(ctx, i);
 		if (!upper_eh)
-			return -ENOMEM;
+			return warn("out of memory"), -ENOMEM;
 
 		eh = &ctx->exception_table[i];
 
@@ -1105,7 +1105,7 @@ static int verify_correct_nesting(struct inlining_context *ctx)
 
 	coverage = zalloc(ctx->code.code_length * sizeof(int));
 	if (!coverage)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
 		int color = coverage[this->start_pc];
@@ -1139,7 +1139,7 @@ int inline_subroutines(struct vm_method *method)
 
 	ctx = alloc_inlining_context(method);
 	if (!ctx)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	err = detect_subroutines(ctx);
 	if (err)

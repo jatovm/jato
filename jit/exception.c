@@ -35,15 +35,15 @@
 
 #include "lib/buffer.h"
 
-#include "vm/call.h"
-#include "vm/class.h"
-#include "vm/die.h"
 #include "vm/guard-page.h"
+#include "vm/preload.h"
 #include "vm/method.h"
 #include "vm/object.h"
-#include "vm/preload.h"
 #include "vm/thread.h"
+#include "vm/class.h"
 #include "vm/trace.h"
+#include "vm/call.h"
+#include "vm/die.h"
 
 #include "arch/stack-frame.h"
 #include "arch/instruction.h"

@@ -30,7 +30,7 @@ int convert_xreturn(struct parse_context *ctx)
 	struct expression *expr;
 	struct statement *return_stmt = alloc_statement(STMT_RETURN);
 	if (!return_stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	expr = stack_pop(ctx->bb->mimic_stack);
 	return_stmt->return_value = &expr->node;
@@ -42,7 +42,7 @@ int convert_return(struct parse_context *ctx)
 {
 	struct statement *return_stmt = alloc_statement(STMT_VOID_RETURN);
 	if (!return_stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	return_stmt->return_value = NULL;
 
@@ -77,7 +77,7 @@ static int convert_and_add_args(struct parse_context *ctx,
 				 method_real_argument_count(invoke_target),
 				 invoke_target);
 	if (!args_list)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	expr->args_list = &args_list->node;
 
@@ -92,7 +92,7 @@ static int insert_invoke_expr(struct parse_context *ctx,
 
 		expr_stmt = alloc_statement(STMT_EXPRESSION);
 		if (!expr_stmt)
-			return -ENOMEM;
+			return warn("out of memory"), -ENOMEM;
 
 		expr_stmt->expression = &invoke_expr->node;
 		convert_statement(ctx, expr_stmt);
@@ -164,7 +164,7 @@ int convert_invokeinterface(struct parse_context *ctx)
 
 	expr = invokeinterface_expr(invoke_target);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	count = bytecode_read_u8(ctx->buffer);
 	if (count == 0)
@@ -207,7 +207,7 @@ int convert_invokevirtual(struct parse_context *ctx)
 		expr = invokevirtual_expr(invoke_target);
 
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
@@ -239,7 +239,7 @@ int convert_invokespecial(struct parse_context *ctx)
 		expr = invoke_expr(invoke_target);
 
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)
@@ -273,7 +273,7 @@ int convert_invokestatic(struct parse_context *ctx)
 		expr = invoke_expr(invoke_target);
 
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	err = convert_and_add_args(ctx, invoke_target, expr);
 	if (err)

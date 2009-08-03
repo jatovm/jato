@@ -33,6 +33,8 @@
 #include "lib/bitset.h"
 #include "lib/buffer.h"
 
+#include "vm/die.h"
+
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
@@ -91,7 +93,7 @@ insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 	interval->spill_slot = spill_interval(interval, cu, last_insn(interval), false);
 
 	if (!interval->spill_slot)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	return 0;
 }
@@ -117,7 +119,7 @@ static int insert_reload_insn(struct live_interval *interval,
 	reg = get_fixed_var(cu, interval->reg);
 	reload = reload_insn(from, reg);
 	if (!reload)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	reload->bytecode_offset = first->bytecode_offset;
 
@@ -138,13 +140,13 @@ insert_copy_slot_insn(struct live_interval *interval,
 
 	push = push_slot_insn(from);
 	if (!push)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 	push->bytecode_offset = push_at_insn->bytecode_offset;
 
 	pop = pop_slot_insn(to);
 	if (!pop) {
 		free_insn(push);
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 	}
 	pop->bytecode_offset = pop_at_insn->bytecode_offset;
 

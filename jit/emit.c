@@ -11,6 +11,7 @@
 #include "vm/class.h"
 #include "vm/method.h"
 #include "vm/object.h"
+#include "vm/die.h"
 #include "vm/vm.h"
 
 #include "jit/compilation-unit.h"
@@ -84,7 +85,7 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	buf = __alloc_buffer(&exec_buf_ops);
 	if (!buf)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	jit_text_lock();
 

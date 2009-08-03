@@ -37,10 +37,14 @@
 
 #include "jit/compiler.h"
 #include "jit/vars.h"
+
 #include "lib/bitset.h"
-#include <errno.h>
+
+#include "vm/die.h"
+
 #include <limits.h>
 #include <stdlib.h>
+#include <errno.h>
 
 static void set_free_pos(unsigned long *free_until_pos, enum machine_reg reg,
 			 unsigned long pos)
@@ -331,7 +335,7 @@ int allocate_registers(struct compilation_unit *cu)
 
 	registers = alloc_bitset(NR_REGISTERS);
 	if (!registers)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	bitset_set_all(registers);
 

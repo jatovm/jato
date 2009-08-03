@@ -11,8 +11,8 @@
 #include "jit/vars.h"
 
 #include "arch/instruction.h"
-
 #include "lib/bitset.h"
+#include "vm/die.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -186,19 +186,19 @@ static int __init_sets(struct basic_block *bb, unsigned long nr_vregs)
 {
 	bb->use_set = alloc_bitset(nr_vregs);
 	if (!bb->use_set)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	bb->def_set = alloc_bitset(nr_vregs);
 	if (!bb->def_set)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	bb->live_in_set = alloc_bitset(nr_vregs);
 	if (!bb->live_in_set)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	bb->live_out_set = alloc_bitset(nr_vregs);
 	if (!bb->live_out_set)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	return 0;
 }

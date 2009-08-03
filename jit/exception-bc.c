@@ -31,6 +31,7 @@
 #include "jit/compiler.h"
 
 #include "vm/stack.h"
+#include "vm/die.h"
 
 #include <errno.h>
 
@@ -43,13 +44,13 @@ int convert_athrow(struct parse_context *ctx)
 
 	stmt = alloc_statement(STMT_ATHROW);
 	if (!stmt)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	exception_ref = stack_pop(mimic_stack);
 
 	nullcheck = null_check_expr(exception_ref);
 	if (!nullcheck)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	stmt->exception_ref = &nullcheck->node;
 

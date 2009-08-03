@@ -186,7 +186,7 @@ int analyze_control_flow(struct compilation_unit *cu)
 
 	branch_targets = alloc_bitset(cu->method->code_attribute.code_length);
 	if (!branch_targets)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	bytecode_stream_init(&stream, cu->method);
 

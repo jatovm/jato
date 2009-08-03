@@ -33,7 +33,7 @@ static int __convert_const(struct parse_context *ctx,
 {
 	struct expression *expr = value_expr(vm_type, value);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, expr);
 	return 0;
@@ -58,7 +58,7 @@ static int __convert_fconst(struct parse_context *ctx, double value, enum vm_typ
 {
 	struct expression *expr = fvalue_expr(vm_type, value);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, expr);
 	return 0;
@@ -158,7 +158,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	}
 
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, expr);
 	return 0;
@@ -197,7 +197,7 @@ static int convert_load(struct parse_context *ctx, unsigned int index, enum vm_t
 
 	expr = local_expr(type, index);
 	if (!expr)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, dup_expr(ctx, expr));
 	return 0;
@@ -297,7 +297,7 @@ static int convert_store(struct parse_context *ctx, unsigned int index, enum vm_
 	return 0;
       failed:
 	free_statement(stmt);
-	return -ENOMEM;
+	return warn("out of memory"), -ENOMEM;
 }
 
 int convert_istore(struct parse_context *ctx)

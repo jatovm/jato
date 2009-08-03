@@ -13,6 +13,8 @@
 
 #include "arch/instruction.h"
 
+#include "vm/die.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -193,7 +195,7 @@ static int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
 
 	new_array = realloc(*array, new_size);
 	if (new_array == NULL)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	*array = new_array;
 

@@ -14,6 +14,7 @@
 
 #include "vm/bytecodes.h"
 #include "vm/stack.h"
+#include "vm/die.h"
 
 #include <errno.h>
 
@@ -31,7 +32,7 @@ static int convert_conversion(struct parse_context *ctx, enum vm_type to_type)
 		conversion_expression = conversion_expr(to_type, from_expression);
 
 	if (!conversion_expression)
-		return -ENOMEM;
+		return warn("out of memory"), -ENOMEM;
 
 	convert_expression(ctx, conversion_expression);
 	return 0;
