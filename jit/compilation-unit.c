@@ -32,6 +32,7 @@
 #include "jit/vars.h"
 #include "lib/buffer.h"
 #include "vm/method.h"
+#include "vm/die.h"
 #include "vm/vm.h"
 
 #include <errno.h>
@@ -114,6 +115,9 @@ static struct var_info *
 do_get_var(struct compilation_unit *cu, enum vm_type vm_type, enum machine_reg_type reg_type)
 {
 	struct var_info *ret;
+
+	if (cu->is_reg_alloc_done)
+		die("cannot allocate temporaries after register allocation");
 
 	ret = malloc(sizeof *ret);
 	if (!ret)

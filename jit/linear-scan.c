@@ -400,5 +400,7 @@ int allocate_registers(struct compilation_unit *cu)
 	}
 	free(registers);
 
+	cu->is_reg_alloc_done = true;
+
 	return 0;
 }

@@ -26,6 +26,7 @@ struct compilation_unit {
 	struct basic_block *unwind_bb;
 	struct var_info *var_infos;
 	unsigned long nr_vregs;
+	bool is_reg_alloc_done;
 	struct buffer *objcode;
 	bool is_compiled;
 	pthread_mutex_t mutex;
