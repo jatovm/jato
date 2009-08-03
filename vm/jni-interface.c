@@ -524,6 +524,23 @@ static jobject vm_jni_new_object(struct vm_jni_env *env, jobject clazz,
 
 	return obj;
 }
+static jobject vm_jni_get_object_field(struct vm_jni_env *env, jobject object,
+				       jfieldID field)
+{
+	enter_vm_from_jni();
+
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+
+	if (vm_field_type(field) != J_REFERENCE) {
+		NOT_IMPLEMENTED;
+		return 0;
+	}
+
+	return field_get_object(object, field);
+}
 
 /*
  * The JNI native interface table.
@@ -664,7 +681,7 @@ void *vm_jni_native_interface[] = {
 	vm_jni_get_field_id,
 
 	/* 95 */
-	NULL, /* GetObjectField */
+	vm_jni_get_object_field,
 	NULL, /* GetBooleanField */
 	NULL, /* GetByteField */
 	NULL, /* GetCharField */
