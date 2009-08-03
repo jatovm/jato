@@ -38,8 +38,6 @@
 
 static pthread_mutex_t trace_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* Holds the trace output. It it initialized in trace_begin() and
-   printed in trace_end(). */
 static __thread struct string *trace_buffer = NULL;
 
 static void ensure_trace_buffer(void)
@@ -81,15 +79,11 @@ void trace_flush(void) {
 
 	pthread_mutex_lock(&trace_mutex);
 
-	if (opt_trace_threads) {
-		line = strtok_r(trace_buffer->value, "\n", &strtok_ptr);
-		while (line) {
-			fprintf(stderr, "[%s] %s\n", thread_name, line);
+	line = strtok_r(trace_buffer->value, "\n", &strtok_ptr);
+	while (line) {
+		fprintf(stderr, "[%s] %s\n", thread_name, line);
 
-			line = strtok_r(NULL, "\n", &strtok_ptr);
-		}
-	} else {
-		fprintf(stderr, "%s", trace_buffer->value);
+		line = strtok_r(NULL, "\n", &strtok_ptr);
 	}
 
 	pthread_mutex_unlock(&trace_mutex);

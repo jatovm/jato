@@ -814,11 +814,6 @@ static void handle_trace_bytecode(void)
 	opt_trace_compile = true;
 }
 
-static void handle_trace_threads(void)
-{
-	opt_trace_threads = true;
-}
-
 static void handle_trace_trampoline(void)
 {
 	opt_trace_magic_trampoline = true;
@@ -896,7 +891,6 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:invoke-verbose",	handle_trace_invoke_verbose),
 	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),
 	DEFINE_OPTION("Xtrace:jit",		handle_trace_jit),
-	DEFINE_OPTION("Xtrace:threads",		handle_trace_threads),
 	DEFINE_OPTION("Xtrace:trampoline",	handle_trace_trampoline),
 };
 

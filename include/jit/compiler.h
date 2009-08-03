@@ -102,7 +102,6 @@ extern bool opt_trace_invoke_verbose;
 extern bool opt_trace_exceptions;
 extern bool opt_trace_bytecode;
 extern bool opt_trace_compile;
-extern bool opt_trace_threads;
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);
