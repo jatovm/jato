@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BITS_PER_BYTE 8
 #define BYTES_PER_LONG sizeof(unsigned long)
+#define BITS_PER_BYTE 8
 
 /**
  *	bitset_alloc - Allocate a new bit set
@@ -35,21 +35,6 @@ struct bitset *alloc_bitset(unsigned long nr_bits)
 		bitset->size = size;
 	}
 	return bitset;
-}
-
-static inline unsigned long bit_mask(unsigned long bit)
-{
-	return 1UL << (bit & (BITS_PER_LONG-1));
-}
-
-int test_bit(unsigned long *bitset, unsigned long bit)
-{
-	unsigned long *addr, mask;
-
-	addr = bitset + (bit / BITS_PER_LONG);
-	mask = bit_mask(bit);
-
-	return ((*addr & mask) != 0);
 }
 
 void set_bit(unsigned long *bitset, unsigned long bit)
