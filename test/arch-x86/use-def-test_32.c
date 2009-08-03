@@ -194,7 +194,7 @@ void test_reg_reg_uses_source_defines_target(void)
 
 void test_imm_reg_defines_target(void)
 {
-	assert_defines_r0(imm_reg_insn(INSN_ADD_IMM_REG, 0xdeadbeef, &r0));
+	assert_uses_r0_defines_r0(imm_reg_insn(INSN_ADD_IMM_REG, 0xdeadbeef, &r0));
 	assert_uses_r0(imm_reg_insn(INSN_CMP_IMM_REG, 0xdeadbeef, &r0));
 	assert_defines_r0(imm_reg_insn(INSN_MOV_IMM_REG, 0xdeadbeef, &r0));
 }
