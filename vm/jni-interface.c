@@ -52,19 +52,23 @@
 	if (!vm_object_is_instance_of((x), vm_java_lang_Class))		\
 		return NULL;
 
-static void vm_jni_destroy_java_vm(void) {
+static void vm_jni_destroy_java_vm(void)
+{
 	NOT_IMPLEMENTED;
 }
 
-static void vm_jni_attach_current_thread(void) {
+static void vm_jni_attach_current_thread(void)
+{
 	NOT_IMPLEMENTED;
 }
 
-static void vm_jni_detach_current_thread(void) {
+static void vm_jni_detach_current_thread(void)
+{
 	NOT_IMPLEMENTED;
 }
 
-static jint vm_jni_get_env(JavaVM *vm, void **env, jint version) {
+static jint vm_jni_get_env(JavaVM *vm, void **env, jint version)
+{
 	enter_vm_from_jni();
 
 	/* XXX: We are actually supporting only a little part of 1.2 yet. */
@@ -77,7 +81,8 @@ static jint vm_jni_get_env(JavaVM *vm, void **env, jint version) {
 	return JNI_OK;
 }
 
-static void vm_jni_attach_current_thread_as_daemon(void) {
+static void vm_jni_attach_current_thread_as_daemon(void)
+{
 	NOT_IMPLEMENTED;
 }
 
