@@ -395,7 +395,7 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 		bool is_compiled;
 
 		/*
-		 * XXX: it is possible that we're fixing calls to
+		 * It is possible that we're fixing calls to
 		 * method X() and another thread is compiling method
 		 * Y() which calls X(). Call sites from Y might be
 		 * added to X's trampoline but Y's ->objcode might not
@@ -1489,8 +1489,8 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_push_reg(buf, REG_EAX);
 
 	if (method_is_virtual(cu->method)) {
-		/* XXX: for JNI calls  'this' pointer is in the second
-		   call argument. */
+		/* For JNI calls 'this' pointer is in the second call
+		   argument. */
 		if (vm_method_is_jni(cu->method))
 			__emit_push_membase(buf, REG_EBP, 0x0c);
 		else
@@ -2417,8 +2417,8 @@ void emit_trampoline(struct compilation_unit *cu,
 
 		__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDI);
 
-		/* XXX: for JNI calls 'this' pointer is in the second
-		   call argument. */
+		/* For JNI calls 'this' pointer is in the second call
+		   argument. */
 		if (vm_method_is_jni(cu->method))
 			__emit64_mov_membase_reg(buf, REG_RBP, 0x18, REG_RSI);
 		else
