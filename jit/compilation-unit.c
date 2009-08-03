@@ -110,7 +110,8 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free(cu);
 }
 
-struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
+static struct var_info *
+do_get_var(struct compilation_unit *cu, enum vm_type vm_type, enum machine_reg_type reg_type)
 {
 	struct var_info *ret;
 
@@ -122,33 +123,32 @@ struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 	ret->next = cu->var_infos;
 	ret->interval = alloc_interval(ret);
 
-	ret->type = REG_TYPE_GPR;
 	ret->vm_type = vm_type;
+	ret->type = reg_type;
 
 	cu->var_infos = ret;
   out:
 	return ret;
 }
 
+struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
+{
+	return do_get_var(cu, vm_type, REG_TYPE_GPR);
+}
+
 struct var_info *get_fpu_var(struct compilation_unit *cu)
 {
-	struct var_info *ret = get_var(cu, J_FLOAT);
-
-	ret->type = REG_TYPE_FPU;
-
-	return ret;
+	return do_get_var(cu, J_FLOAT, REG_TYPE_FPU);
 }
 
 struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
 {
 	struct var_info *ret;
 
-	ret = get_var(cu, J_INT);
+	ret = do_get_var(cu, GPR_VM_TYPE, REG_TYPE_GPR);
 	if (ret) {
 		ret->interval->reg = reg;
 		ret->interval->fixed_reg = true;
-		ret->type = reg_type(reg);
-		ret->vm_type = GPR_VM_TYPE;
 	}
 
 	return ret;
