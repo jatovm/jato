@@ -122,16 +122,16 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
 	insert_spill_reload_insns(cu);
 
 	/*
-	 * First instruction stays the same. 
+	 * A reload instruction is inserted at the beginning.
 	 */
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
-	assert_ptr_equals(insn_array[0], insn);
+	assert_ld_insn(INSN_LD_LOCAL, r2->interval->reg, r1->interval->spill_slot, insn);
 
 	/*
-	 * A reload instruction is inserted before the interval end.
-	 */ 
+	 * Second instruction stays the same.
+	 */
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_ld_insn(INSN_LD_LOCAL, r2->interval->reg, r1->interval->spill_slot, insn);
+	assert_ptr_equals(insn_array[0], insn);
 
 	/*
 	 * Last instruction stays the same. 

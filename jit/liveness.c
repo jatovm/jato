@@ -147,18 +147,18 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 	struct var_info *var;
 
 	for_each_variable(var, bb->b_parent->var_infos) {
+		if (insn_uses(insn, var)) {
+			/*
+			 * It's in the use set if and only if it has not
+			 * _already_ been defined by insn basic block.
+			 */
+			if (!test_bit(bb->def_set->bits, var->vreg))
+				set_bit(bb->use_set->bits, var->vreg);
+		}
+
 		if (insn_defs(insn, var))
 			set_bit(bb->def_set->bits, var->vreg);
-
-		if (insn_uses(insn, var))
-			set_bit(bb->use_set->bits, var->vreg);
 	}
-
-	/*
-	 * It's in the use set if and only if it has not been defined
-	 * by insn basic block.
-	 */
-	bitset_sub(bb->def_set, bb->use_set);
 }
 
 static void analyze_use_def(struct compilation_unit *cu)
