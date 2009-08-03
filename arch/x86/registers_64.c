@@ -27,6 +27,8 @@
 #include "arch/registers.h"
 #include "jit/vars.h"
 
+#include <assert.h>
+
 static enum machine_reg_type register_types[] = {
 	[REG_RAX] = REG_TYPE_GPR,
 	[REG_RBX] = REG_TYPE_GPR,
@@ -73,5 +75,7 @@ const char *reg_name(enum machine_reg reg)
 
 enum machine_reg_type reg_type(enum machine_reg reg)
 {
+	assert(reg != REG_UNASSIGNED);
+
 	return register_types[reg];
 }

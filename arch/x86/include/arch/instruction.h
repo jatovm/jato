@@ -2,9 +2,12 @@
 #define __X86_INSTRUCTION_H
 
 #include "jit/use-position.h"
-#include "arch/registers.h"
+
 #include "arch/stack-frame.h"
+#include "arch/registers.h"
+
 #include "lib/list.h"
+#include "vm/die.h"
 
 #include <stdbool.h>
 
@@ -190,23 +193,37 @@ struct insn *membase_insn(enum insn_type, struct var_info *, long);
 static inline struct insn *
 spill_insn(struct var_info *var, struct stack_slot *slot)
 {
-	if (var->type == REG_TYPE_GPR)
-		return reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, var, slot);
-	else if (var->type == REG_TYPE_FPU)
-		return reg_memlocal_insn(INSN_MOV_FREG_MEMLOCAL, var, slot);
-	else
-		return NULL;
+	enum insn_type insn_type;
+
+	switch (var->type) {
+	case REG_TYPE_GPR:
+		insn_type = INSN_MOV_REG_MEMLOCAL;
+		break;
+	case REG_TYPE_FPU:
+		insn_type = INSN_MOV_FREG_MEMLOCAL;
+		break;
+	default:
+		die("unknown register type: %d", var->type);
+	}
+	return reg_memlocal_insn(insn_type, var, slot);
 }
 
 static inline struct insn *
 reload_insn(struct stack_slot *slot, struct var_info *var)
 {
-	if (var->type == REG_TYPE_GPR)
-		return memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, var);
-	else if (var->type == REG_TYPE_FPU)
-		return memlocal_reg_insn(INSN_MOV_MEMLOCAL_FREG, slot, var);
-	else
-		return NULL;
+	enum insn_type insn_type;
+
+	switch (var->type) {
+	case REG_TYPE_GPR:
+		insn_type = INSN_MOV_MEMLOCAL_REG;
+		break;
+	case REG_TYPE_FPU:
+		insn_type = INSN_MOV_MEMLOCAL_FREG;
+		break;
+	default:
+		die("unknown register type: %d", var->type);
+	}
+	return memlocal_reg_insn(insn_type, slot, var);
 }
 
 static inline struct insn *
