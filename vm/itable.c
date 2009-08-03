@@ -29,8 +29,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "vm/stack-trace.h"
 #include "vm/classloader.h"
 #include "vm/class.h"
+#include "vm/object.h"
 #include "vm/itable.h"
 #include "vm/method.h"
 
@@ -111,9 +113,23 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 	return 0;
 }
 
-static void itable_resolver_stub_error(void)
+/* The regparm(1) makes GCC get the first argument from %ecx and the rest
+ * from the stack. This is convenient, because we use %ecx for passing the
+ * hidden "method" parameter. Interfaces are invoked on objects, so we also
+ * always get the object in the first stack parameter.
+ *
+ * XXX: This is arch-specific (x86_32) code, should do something else here. */
+static void __attribute__((regparm(1)))
+itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
 {
-	printf("itable resolver stub error!\n");
+	fprintf(stderr, "itable resolver stub error!\n");
+	fprintf(stderr, "invokeinterface called on method %s.%s%s "
+		"(itable index %d)\n",
+		method->class->name, method->name, method->type,
+		method->itable_index);
+	fprintf(stderr, "object class %s\n", obj->class->name);
+
+	print_trace();
 	abort();
 }
 
