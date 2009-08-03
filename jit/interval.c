@@ -44,6 +44,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 		interval->fixed_reg = false;
 		interval->range.start = ~0UL;
 		interval->range.end = 0UL;
+		interval->spill_reload_reg.interval = interval;
 		INIT_LIST_HEAD(&interval->interval_node);
 		INIT_LIST_HEAD(&interval->use_positions);
 	}

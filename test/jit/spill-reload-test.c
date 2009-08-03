@@ -114,6 +114,9 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
         bb_add_insn(bb, insn_array[0]);
         bb_add_insn(bb, insn_array[1]);
 
+	r1->interval->spill_reload_reg.interval = r1->interval;
+	r2->interval->spill_reload_reg.interval = r2->interval;
+
 	r2->interval->need_reload = true;
 	r2->interval->spill_parent = r1->interval;
 

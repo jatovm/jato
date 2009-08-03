@@ -61,19 +61,13 @@ spill_interval(struct live_interval *interval,
 	       struct insn *last, bool tail)
 {
 	struct stack_slot *slot;
-	struct var_info *reg;
 	struct insn *spill;
-	/*
-	 * We've already done register allocation, so use fixed registers for
-	 * spilling and reloading.
-	 */
-	reg = get_fixed_var(cu, interval->reg);
 
 	slot = get_spill_slot_32(cu->stack_frame);
 	if (!slot)
 		return NULL;
 
-	spill = spill_insn(reg, slot);
+	spill = spill_insn(&interval->spill_reload_reg, slot);
 	if (!spill)
 		return NULL;
 
@@ -114,10 +108,8 @@ static int insert_reload_insn(struct live_interval *interval,
 			      struct insn *first)
 {
 	struct insn *reload;
-	struct var_info *reg;
 
-	reg = get_fixed_var(cu, interval->reg);
-	reload = reload_insn(from, reg);
+	reload = reload_insn(from, &interval->spill_reload_reg);
 	if (!reload)
 		return warn("out of memory"), -ENOMEM;
 

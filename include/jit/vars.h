@@ -46,7 +46,20 @@ static inline bool range_is_empty(struct live_range *range)
 	return range_len(range) == 0;
 }
 
-struct var_info;
+struct live_interval;
+
+enum machine_reg_type {
+	REG_TYPE_GPR,
+	REG_TYPE_FPU,
+};
+
+struct var_info {
+	unsigned long		vreg;
+	struct var_info		*next;
+	struct live_interval	*interval;
+	enum machine_reg_type	type;
+	enum vm_type		vm_type;
+};
 
 struct live_interval {
 	/* Parent variable of this interval.  */
@@ -81,6 +94,10 @@ struct live_interval {
 	   true.  */
 	struct stack_slot *spill_slot;
 
+	/* This struct var_info is used during spill/reload stage to point to
+	   the allocated machine register for this interval.  */
+	struct var_info spill_reload_reg;
+
 	/* The live interval where spill happened.  */
 	struct live_interval *spill_parent;
 
@@ -100,23 +117,11 @@ mark_need_reload(struct live_interval *it, struct live_interval *parent)
 	it->spill_parent = parent;
 }
 
-enum machine_reg_type {
-	REG_TYPE_GPR,
-	REG_TYPE_FPU,
-};
-
-struct var_info {
-	unsigned long		vreg;
-	struct var_info		*next;
-	struct live_interval	*interval;
-	enum machine_reg_type	type;
-	enum vm_type		vm_type;
-};
-
 struct live_interval *alloc_interval(struct var_info *);
 void free_interval(struct live_interval *);
 struct live_interval *split_interval_at(struct live_interval *, unsigned long pos);
 unsigned long next_use_pos(struct live_interval *, unsigned long);
 struct live_interval *vreg_start_interval(struct compilation_unit *, unsigned long);
 struct live_interval *interval_child_at(struct live_interval *, unsigned long);
+
 #endif /* __JIT_VARS_H */
