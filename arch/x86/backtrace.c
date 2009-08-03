@@ -40,6 +40,8 @@
 #include "vm/stack-trace.h"
 #include "vm/trace.h"
 
+#include "lib/string.h"
+
 /* get REG_EIP from ucontext.h */
 #include <ucontext.h>
 
@@ -59,7 +61,7 @@ static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
 	return NULL;
 }
 
-bool show_exe_function(void *addr)
+bool show_exe_function(void *addr, struct string *str)
 {
 	bool ret;
 	const char *function_name;
@@ -114,8 +116,8 @@ bool show_exe_function(void *addr)
 	symbol_start = bfd_asymbol_value(symbol);
 	symbol_offset = (unsigned long) addr - symbol_start;
 
-	trace_printf("%s+%llx (%s:%i)\n",
-		function_name, (long long) symbol_offset, filename, line);
+	str_append(str, "%s+%llx (%s:%i)\n",
+		   function_name, (long long) symbol_offset, filename, line);
 	ret = true;
 
 out:
@@ -132,10 +134,17 @@ failed:
 
 void show_function(void *addr)
 {
-	if (show_exe_function(addr))
-		return;
+	struct string *str;
 
-	trace_printf("<unknown>\n");
+	str = alloc_str();
+
+	if (show_exe_function(addr, str)) {
+		trace_printf("%s", str->value);
+	} else {
+		trace_printf("<unknown>\n");
+	}
+
+	free_str(str);
 }
 
 static unsigned long get_greg(gregset_t gregs, int reg)

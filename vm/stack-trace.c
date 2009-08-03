@@ -729,9 +729,14 @@ static void show_mixed_stack_trace(struct stack_trace_elem *elem)
 			print_java_stack_trace_elem(elem);
 			trace_printf("\n");
 
-			trace_printf("%-27s"," ");
-			if (!show_exe_function((void *) elem->addr))
-				trace_printf("\r");
+			struct string *str;
+
+			str = alloc_str();
+
+			if (show_exe_function((void *) elem->addr, str))
+				trace_printf("%-27s%s", " ", str->value);
+
+			free_str(str);
 
 			continue;
 		}
