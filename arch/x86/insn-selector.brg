@@ -1208,8 +1208,7 @@ reg:	EXPR_CONVERSION(reg)
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOVSX_16_REG_REG, state->left->reg1, state->reg1));
 	} else {
-		printf("%d to %d\n", src->vm_type, expr->vm_type);
-		assert(!"conversion not implemented");
+		die("EXPR_CONVERSION: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
 }
 
@@ -1225,8 +1224,7 @@ freg:	EXPR_CONVERSION_TO_FLOAT(reg)
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU, state->left->reg1, state->reg1));
 	} else {
-		printf("%d to %d\n", src->vm_type, expr->vm_type);
-		assert(!"conversion not implemented");
+		die("EXPR_CONVERSION_TO_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
 }
 
@@ -1242,8 +1240,7 @@ reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
 	} else {
-		printf("%d to %d\n", src->vm_type, expr->vm_type);
-		assert(!"conversion not implemented");
+		die("EXPR_CONVERSION_FROM_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
 }
 
