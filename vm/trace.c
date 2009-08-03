@@ -66,8 +66,8 @@ int trace_printf(const char *fmt, ...)
 void trace_flush(void) {
 	struct vm_thread *self;
 	char *thread_name;
-	char *strtok_ptr;
 	char *line;
+	char *next;
 
 	ensure_trace_buffer();
 
@@ -79,17 +79,23 @@ void trace_flush(void) {
 
 	pthread_mutex_lock(&trace_mutex);
 
-	line = strtok_r(trace_buffer->value, "\n", &strtok_ptr);
-	while (line) {
+	line = trace_buffer->value;
+	next = index(line, '\n');
+	while (next) {
+		*next = 0;
+
 		fprintf(stderr, "[%s] %s\n", thread_name, line);
 
-		line = strtok_r(NULL, "\n", &strtok_ptr);
+		line = next + 1;
+		next = index(line, '\n');
 	}
+
+	/* Leave the rest of characters, which are not ended by '\n' */
+	memmove(trace_buffer->value, line, strlen(line) + 1);
+	trace_buffer->length = strlen(line);
 
 	pthread_mutex_unlock(&trace_mutex);
 
 	if (self)
 		free(thread_name);
-
-	trace_buffer->length = 0;
 }
