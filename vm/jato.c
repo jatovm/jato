@@ -679,11 +679,25 @@ static void handle_classpath(const char *arg)
 	classloader_add_to_classpath(arg);
 }
 
+enum operation {
+	OPERATION_MAIN_CLASS,
+	OPERATION_JAR_FILE,
+	OPERATION_METHOD_TRACE,
+};
+
+static enum operation operation = OPERATION_MAIN_CLASS;
+
 static char *classname;
 static struct vm_jar *jar_file;
 
+static char *method_trace_class_name;
+static char *method_trace_method_name;
+static char *method_trace_method_type;
+
 static void handle_jar(const char *arg)
 {
+	operation = OPERATION_JAR_FILE;
+
 	/* Can't specify more than one jar file */
 	if (jar_file)
 		usage(stderr, EXIT_FAILURE);
@@ -715,6 +729,30 @@ static void handle_jar(const char *arg)
 static void handle_perf(void)
 {
 	perf_enabled = true;
+}
+
+/* @arg must be in the format package/name/Class.method(Lsignature;)V */
+static void handle_trace_method(const char *arg)
+{
+	char *next;
+
+	operation = OPERATION_METHOD_TRACE;
+
+	next = strchr(arg, '.');
+	if (!next)
+		usage(stderr, EXIT_FAILURE);
+
+	method_trace_class_name = strndup(arg, next - arg);
+
+	arg = next + 1;
+	next = strchr(arg, '(');
+	if (!next)
+		usage(stderr, EXIT_FAILURE);
+
+	method_trace_method_name = strndup(arg, next - arg);
+
+	arg = next;
+	method_trace_method_type = strdup(arg);
 }
 
 static void handle_trace_asm(void)
@@ -847,6 +885,8 @@ const struct option options[] = {
 
 	DEFINE_OPTION("Xperf",			handle_perf),
 
+	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),
+
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
 	DEFINE_OPTION("Xtrace:bytecode-offset",	handle_trace_bytecode_offset),
@@ -906,9 +946,8 @@ static void parse_options(int argc, char *argv[])
 		opt->handler.func_arg(argv[++optind]);
 	}
 
-	if (optind < argc) {
-		/* Can't specify both a jar and a class file */
-		if (jar_file)
+	if (operation == OPERATION_MAIN_CLASS) {
+		if (optind >= argc)
 			usage(stderr, EXIT_FAILURE);
 
 		classname = argv[optind++];
@@ -917,10 +956,68 @@ static void parse_options(int argc, char *argv[])
 	/* Should be no more options after this */
 	if (optind < argc)
 		usage(stderr, EXIT_FAILURE);
+}
 
-	/* Can't specify neither a jar and a class file */
-	if (!classname)
-		usage(stderr, EXIT_FAILURE);
+static int
+do_main_class(void)
+{
+	struct vm_class *vmc = classloader_load(classname);
+	if (!vmc) {
+		fprintf(stderr, "error: %s: could not load\n", classname);
+		return -1;
+	}
+
+	if (vm_class_ensure_init(vmc)) {
+		fprintf(stderr, "error: %s: couldn't initialize\n", classname);
+		return -1;
+	}
+
+	struct vm_method *vmm = vm_class_get_method_recursive(vmc,
+		"main", "([Ljava/lang/String;)V");
+	if (!vmm) {
+		fprintf(stderr, "error: %s: no main method\n", classname);
+		return -1;
+	}
+
+	if (!vm_method_is_static(vmm)) {
+		fprintf(stderr, "error: %s: main method not static\n",
+			classname);
+		return -1;
+	}
+
+	void (*main_method_trampoline)(void)
+		= vm_method_trampoline_ptr(vmm);
+	main_method_trampoline();
+
+	return 0;
+}
+
+static int
+do_jar_file(void)
+{
+	/* XXX: This stub should be expanded in the future; see comment in
+	 * handle_jar(). */
+	return do_main_class();
+}
+
+static int
+do_method_trace(void)
+{
+	struct vm_class *vmc = classloader_load(method_trace_class_name);
+	if (!vmc) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	struct vm_method *vmm = vm_class_get_method_recursive(vmc,
+		method_trace_method_name, method_trace_method_type);
+	if (!vmm) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	compile(vmm->compilation_unit);
+	return 0;
 }
 
 int
@@ -936,9 +1033,9 @@ main(int argc, char *argv[])
 	setvbuf(stderr, NULL, _IONBF, 0);
 #endif
 
-	init_system_properties();
 	parse_options(argc, argv);
 
+	init_system_properties();
 	init_vm_objects();
 
 	jit_text_init();
@@ -974,33 +1071,18 @@ main(int argc, char *argv[])
 		goto out_check_exception;
 	}
 
-	struct vm_class *vmc = classloader_load(classname);
-	if (!vmc) {
-		fprintf(stderr, "error: %s: could not load\n", classname);
-		goto out;
+	switch (operation) {
+	case OPERATION_MAIN_CLASS:
+		do_main_class();
+		break;
+	case OPERATION_JAR_FILE:
+		do_jar_file();
+		break;
+	case OPERATION_METHOD_TRACE:
+		do_method_trace();
+		exit(EXIT_SUCCESS);
+		break;
 	}
-
-	if (vm_class_ensure_init(vmc)) {
-		fprintf(stderr, "error: %s: couldn't initialize\n", classname);
-		goto out_check_exception;
-	}
-
-	struct vm_method *vmm = vm_class_get_method_recursive(vmc,
-		"main", "([Ljava/lang/String;)V");
-	if (!vmm) {
-		fprintf(stderr, "error: %s: no main method\n", classname);
-		goto out;
-	}
-
-	if (!vm_method_is_static(vmm)) {
-		fprintf(stderr, "error: %s: main method not static\n",
-			classname);
-		goto out;
-	}
-
-	void (*main_method_trampoline)(void)
-		= vm_method_trampoline_ptr(vmm);
-	main_method_trampoline();
 
 out_check_exception:
 	if (exception_occurred()) {
