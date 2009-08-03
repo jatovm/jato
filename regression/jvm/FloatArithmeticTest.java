@@ -132,6 +132,26 @@ public class FloatArithmeticTest extends TestCase {
         assertEquals(-3000f, i2f(-3000));
     }
 
+    private static float zero = 0.0f;
+    private static float one = 1.0f;
+
+    public static void testFloatComparison() {
+        assertTrue(zero < one);
+        assertFalse(one < zero);
+        assertFalse(one < one);
+
+        assertTrue(zero <= one);
+        assertTrue(one <= one);
+
+        assertFalse(zero > one);
+        assertTrue(one > zero);
+        assertFalse(one > one);
+
+        assertTrue(one >= zero);
+        assertTrue(one >= one);
+    }
+
+
     public static void main(String[] args) {
         testFloatAddition();
         testFloatAdditionLocalSlot();
@@ -142,5 +162,6 @@ public class FloatArithmeticTest extends TestCase {
         testFloatRemainder();
         testFloatNegation();
         testFloatIntConversion();
+        testFloatComparison();
     }
 }
