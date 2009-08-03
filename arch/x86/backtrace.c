@@ -114,7 +114,7 @@ bool show_exe_function(void *addr)
 	symbol_start = bfd_asymbol_value(symbol);
 	symbol_offset = (unsigned long) addr - symbol_start;
 
-	printf("%s+%llx (%s:%i)\n",
+	trace_printf("%s+%llx (%s:%i)\n",
 		function_name, (long long) symbol_offset, filename, line);
 	ret = true;
 
@@ -135,7 +135,7 @@ void show_function(void *addr)
 	if (show_exe_function(addr))
 		return;
 
-	printf("<unknown>\n");
+	trace_printf("<unknown>\n");
 }
 
 static unsigned long get_greg(gregset_t gregs, int reg)
@@ -165,10 +165,10 @@ static void show_registers(gregset_t gregs)
 	ebp = get_greg(gregs, REG_EBP);
 	esp = get_greg(gregs, REG_ESP);
 
-	printf("Registers:\n");
-	printf(" eax: %08lx   ebx: %08lx   ecx: %08lx   edx: %08lx\n",
+	trace_printf("Registers:\n");
+	trace_printf(" eax: %08lx   ebx: %08lx   ecx: %08lx   edx: %08lx\n",
 	       eax, ebx, ecx, edx);
-	printf(" esi: %08lx   edi: %08lx   ebp: %08lx   esp: %08lx\n",
+	trace_printf(" esi: %08lx   edi: %08lx   ebp: %08lx   esp: %08lx\n",
 	       esi, edi, ebp, esp);
 }
 
@@ -210,13 +210,13 @@ static void show_registers(gregset_t gregs)
 	r14 = get_greg(gregs, REG_R14);
 	r15 = get_greg(gregs, REG_R15);
 
-	printf("Registers:\n");
-	printf(" rsp: %016lx\n", rsp);
-	printf(" rax: %016lx   ebx: %016lx   ecx: %016lx\n", rax, rbx, rcx);
-	printf(" rdx: %016lx   rsi: %016lx   rdi: %016lx\n", rdx, rsi, rdi);
-	printf(" rbp: %016lx   r8:  %016lx   r9:  %016lx\n", rbp, r8,  r9);
-	printf(" r10: %016lx   r11: %016lx   r12: %016lx\n", r10, r11, r12);
-	printf(" r13: %016lx   r14: %016lx   r15: %016lx\n", r13, r14, r15);
+	trace_printf("Registers:\n");
+	trace_printf(" rsp: %016lx\n", rsp);
+	trace_printf(" rax: %016lx   ebx: %016lx   ecx: %016lx\n", rax, rbx, rcx);
+	trace_printf(" rdx: %016lx   rsi: %016lx   rdi: %016lx\n", rdx, rsi, rdi);
+	trace_printf(" rbp: %016lx   r8:  %016lx   r9:  %016lx\n", rbp, r8,  r9);
+	trace_printf(" r10: %016lx   r11: %016lx   r12: %016lx\n", r10, r11, r12);
+	trace_printf(" r13: %016lx   r14: %016lx   r15: %016lx\n", r13, r14, r15);
 }
 #endif
 
@@ -231,11 +231,11 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 
 	switch (sig) {
 	case SIGSEGV:
-		printf("SIGSEGV at %s %08lx while accessing memory address %08lx.\n",
+		trace_printf("SIGSEGV at %s %08lx while accessing memory address %08lx.\n",
 			IP_REG_NAME, eip, addr);
 		break;
 	default:
-		printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, eip);
+		trace_printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, eip);
 		break;
 	};
 	show_registers(uc->uc_mcontext.gregs);

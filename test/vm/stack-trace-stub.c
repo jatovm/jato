@@ -54,11 +54,13 @@ static inline void __show_stack_trace(unsigned long start, unsigned long caller)
 	if (caller)
 		array[1] = (void *) caller;
 
-	printf("Native stack trace:\n");
+	trace_printf("Native stack trace:\n");
 	for (i = start; i < size; i++) {
-		printf(" [<%08lx>] ", (unsigned long) array[i]);
+		trace_printf(" [<%08lx>] ", (unsigned long) array[i]);
 		show_function(array[i]);
 	}
+
+	trace_flush();
 }
 
 void print_trace(void)
