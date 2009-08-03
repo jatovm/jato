@@ -17,15 +17,15 @@
 #include "jit/statement.h"
 #include "jit/vars.h"
 #include "jit/args.h"
-#include "vm/preload.h"
-#include "vm/object.h"
-#include "vm/bytecodes.h"
-#include "vm/trace.h"
-
 #include "lib/buffer.h"
+#include "lib/bitset.h"
+#include "lib/string.h"
+#include "vm/bytecodes.h"
 #include "vm/class.h"
 #include "vm/method.h"
-#include "lib/string.h"
+#include "vm/object.h"
+#include "vm/preload.h"
+#include "vm/trace.h"
 #include "vm/vm.h"
 
 #include "arch/stack-frame.h"
@@ -167,6 +167,7 @@ void trace_lir(struct compilation_unit *cu)
 	trace_printf("---------  -------   -----------          --------\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
+		trace_printf("[bb %p]:\n", bb);
 		for_each_insn(insn, &bb->insn_list) {
 			str = alloc_str();
 			lir_print(insn, str);
@@ -227,6 +228,42 @@ print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 		trace_printf(" (empty)\n");
 }
 
+static void print_bitset(struct bitset *bitset)
+{
+	for (unsigned int i = 0; i < bitset->nr_bits; ++i) {
+		trace_printf("%s", test_bit(bitset->bits, i)
+			? "***" : "---");
+	}
+}
+
+static void print_bb_live_sets(struct basic_block *bb)
+{
+	trace_printf("[bb %p]\n", bb);
+
+	trace_printf("          ");
+	for (unsigned int i = 0; i < bb->live_in_set->nr_bits; ++i)
+		trace_printf("%-3d", i);
+	trace_printf("\n");
+
+	trace_printf("live in:  ");
+	print_bitset(bb->live_in_set);
+	trace_printf("\n");
+
+	trace_printf("uses:     ");
+	print_bitset(bb->use_set);
+	trace_printf("\n");
+
+	trace_printf("defines:  ");
+	print_bitset(bb->def_set);
+	trace_printf("\n");
+
+	trace_printf("live out: ");
+	print_bitset(bb->live_out_set);
+	trace_printf("\n");
+
+	trace_printf("\n");
+}
+
 void trace_liveness(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
@@ -250,6 +287,10 @@ void trace_liveness(struct compilation_unit *cu)
 	for_each_variable(var, cu->var_infos)
 		print_var_liveness(cu, var);
 
+	trace_printf("\n");
+
+	for_each_basic_block(bb, &cu->bb_list)
+		print_bb_live_sets(bb);
 	trace_printf("\n");
 }
 
