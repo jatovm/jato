@@ -1761,8 +1761,8 @@ stmt:	STMT_ARRAY_STORE_CHECK(reg, reg) 1
 		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check));
 	} else {
-		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, src_expr->vm_type));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check_vmtype));
 	}
 
