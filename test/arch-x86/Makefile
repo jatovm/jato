@@ -64,7 +64,6 @@ TOPLEVEL_OBJS := \
 	vm/method.o \
 	vm/object.o \
 	vm/stack.o \
-	vm/stack-trace.o \
 	vm/static.o \
 	vm/thread.o \
 	vm/trace.o \
@@ -79,7 +78,8 @@ TOPLEVEL_OBJS := \
 	test/libharness/libharness.o \
 	test/vm/classloader-stub.o \
 	test/vm/preload-stub.o \
-	test/vm/signal-stub.o
+	test/vm/signal-stub.o \
+	test/vm/stack-trace-stub.o
 
 TEST_OBJS := \
 	emit-code-test$(ARCH_POSTFIX).o \

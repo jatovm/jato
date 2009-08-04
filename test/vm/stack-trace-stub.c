@@ -5,6 +5,29 @@
 #include "vm/stack-trace.h"
 #include "vm/trace.h"
 
+void *vm_native_stack_offset_guard;
+void *vm_native_stack_badoffset;
+void *jni_stack_offset_guard;
+void *jni_stack_badoffset;
+
+__thread struct jni_stack_entry jni_stack[JNI_STACK_SIZE];
+__thread unsigned long jni_stack_offset;
+__thread struct vm_native_stack_entry vm_native_stack[VM_NATIVE_STACK_SIZE];
+__thread unsigned long vm_native_stack_offset;
+
+void vm_print_exception(struct vm_object *exception)
+{
+}
+
+int vm_enter_vm_native(void *target, void *stack_ptr)
+{
+	return 0;
+}
+
+void vm_leave_vm_native(void)
+{
+}
+
 int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
 		 struct vm_method *method)
 {
