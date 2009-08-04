@@ -1361,6 +1361,14 @@ static void emit_conv_fpu_to_gpr(struct buffer *buf, struct operand *src,
 	emit_reg_reg(buf, 0x2d, dest, src);
 }
 
+static void emit_mov_xmm_xmm(struct buffer *buf, struct operand *src,
+			     struct operand *dest)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x10, dest, src);
+}
+
 static void emit_mov_membase_xmm(struct buffer *buf, struct operand *src,
 				struct operand *dest)
 {
@@ -1431,6 +1439,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_FREG_MEMLOCAL, emit_mov_freg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_XMM_XMM, emit_mov_xmm_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg, TWO_OPERANDS),
