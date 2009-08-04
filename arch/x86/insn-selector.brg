@@ -139,7 +139,7 @@ freg:	EXPR_FVALUE	0
 	expr = to_expr(tree);
 
 	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
-	result = get_fpu_var(s->b_parent);
+	result = get_var(s->b_parent, expr->vm_type);
 	state->reg1 = result;
 
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, float_to_uint32(expr->fvalue), esp, -4));
@@ -165,7 +165,7 @@ freg:	reg 1
 	struct var_info *result, *in, *esp;
 
 	in = state->reg1;
-	result = get_fpu_var(s->b_parent);
+	result = get_var(s->b_parent, J_FLOAT);
 	state->reg1 = result;
 
 	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
@@ -257,7 +257,7 @@ freg:	EXPR_LOCAL 0
 	expr = to_expr(tree);
 	slot = get_local_slot(cu->stack_frame, expr->local_index);
 
-	result = get_fpu_var(s->b_parent);
+	result = get_var(s->b_parent, expr->vm_type);
 	state->reg1 = result;
 
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_FREG, slot, result));
@@ -435,7 +435,7 @@ freg:	OP_FREM(freg, freg) 1
 {
 	struct var_info *esp, *eax;
 
-	state->reg1 = get_fpu_var(s->b_parent);
+	state->reg1 = get_var(s->b_parent, state->left->reg1->vm_type);
 
 	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
@@ -483,7 +483,7 @@ freg:	OP_FNEG(freg) 1
 
 	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 
-	result = get_fpu_var(s->b_parent);
+	result = get_var(s->b_parent, state->left->reg1->vm_type);
 
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0x80000000, esp, -4));
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_XMM, esp, -4, result));
@@ -682,6 +682,7 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 freg:	EXPR_FINVOKE(arg) 1
 {
 	struct compilation_unit *cu;
+	enum vm_type ret_vm_type;
 	struct vm_method *method;
 	struct expression *expr;
 	struct var_info *esp;
@@ -690,7 +691,8 @@ freg:	EXPR_FINVOKE(arg) 1
 	method	= expr->target_method;
 	cu	= method->compilation_unit;
 
-	state->reg1 = get_fpu_var(s->b_parent);
+	ret_vm_type = method_return_type(method);
+	state->reg1 = get_var(s->b_parent, ret_vm_type);
 
 	invoke(s, tree, cu, method);
 
@@ -725,12 +727,16 @@ reg:	EXPR_INVOKEVIRTUAL(arg) 1
 
 freg:	EXPR_FINVOKEVIRTUAL(arg) 1
 {
+	enum vm_type ret_vm_type;
 	struct var_info *esp;
 	struct expression *expr;
+	struct vm_method *method;
 
 	expr	= to_expr(tree);
+	method	= expr->target_method;
 
-	state->reg1 = get_fpu_var(s->b_parent);
+	ret_vm_type = method_return_type(method);
+	state->reg1 = get_var(s->b_parent, ret_vm_type);
 
 	invokevirtual(state, s, tree);
 
@@ -1245,7 +1251,7 @@ freg:	EXPR_CONVERSION_TO_FLOAT(reg)
 	src = to_expr(expr->from_expression);
 
 	if (src->vm_type == J_INT && expr->vm_type == J_FLOAT) {
-		state->reg1 = get_fpu_var(s->b_parent);
+		state->reg1 = get_var(s->b_parent, J_FLOAT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU, state->left->reg1, state->reg1));
 	} else {

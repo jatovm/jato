@@ -157,12 +157,10 @@ do_get_var(struct compilation_unit *cu, enum vm_type vm_type, enum machine_reg_t
 
 struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
-	return do_get_var(cu, vm_type, REG_TYPE_GPR);
-}
+	if (vm_type == J_FLOAT || vm_type == J_DOUBLE)
+		return do_get_var(cu, vm_type, REG_TYPE_FPU);
 
-struct var_info *get_fpu_var(struct compilation_unit *cu)
-{
-	return do_get_var(cu, J_FLOAT, REG_TYPE_FPU);
+	return do_get_var(cu, vm_type, REG_TYPE_GPR);
 }
 
 struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
