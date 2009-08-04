@@ -463,7 +463,7 @@ static void print_source_and_line(struct compilation_unit *cu,
 	else
 		trace_printf("UNKNOWN");
 
-	pc = native_ptr_to_bytecode_offset(cu, ptr);
+	pc = jit_lookup_bc_offset(cu, ptr);
 	if (pc == BC_OFFSET_UNKNOWN)
 		return;
 

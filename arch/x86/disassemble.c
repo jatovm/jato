@@ -84,7 +84,7 @@ unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 		struct string *str = alloc_str();
 		unsigned long bc_offset;
 
-		bc_offset = native_ptr_to_bytecode_offset(cu, code);
+		bc_offset = jit_lookup_bc_offset(cu, code);
 		print_bytecode_offset(bc_offset, str);
 		trace_printf("[ %5s ]", str->value);
 		free_str(str);

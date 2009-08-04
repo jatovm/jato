@@ -63,6 +63,12 @@ struct compilation_unit {
 	 * code (not trampoline).
 	 */
 	void *native_ptr;
+
+	/*
+	 * This maps bytecode offset to every native address
+	 * inside JIT code.
+	 */
+	unsigned long *bc_offset_map;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

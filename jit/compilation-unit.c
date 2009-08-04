@@ -95,6 +95,12 @@ static void free_var_infos(struct var_info *var_infos)
 	}
 }
 
+static void free_bc_offset_map(unsigned long *map)
+{
+	if (map)
+		free(map);
+}
+
 void free_compilation_unit(struct compilation_unit *cu)
 {
 	struct basic_block *bb, *tmp_bb;
@@ -108,6 +114,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_buffer(cu->objcode);
 	free_var_infos(cu->var_infos);
 	free_stack_frame(cu->stack_frame);
+	free_bc_offset_map(cu->bc_offset_map);
 	free(cu);
 }
 

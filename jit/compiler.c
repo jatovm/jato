@@ -113,6 +113,10 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	err = build_bc_offset_map(cu);
+	if (err)
+		goto out;
+
 	if (opt_trace_machine_code)
 		trace_machine_code(cu);
 

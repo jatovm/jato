@@ -274,7 +274,7 @@ throw_from_jit(struct compilation_unit *cu, struct jit_stack_frame *frame,
 
 	clear_exception();
 
-	bc_offset = native_ptr_to_bytecode_offset(cu, native_ptr);
+	bc_offset = jit_lookup_bc_offset(cu, native_ptr);
 	if (bc_offset != BC_OFFSET_UNKNOWN) {
 		eh_ptr = find_handler(cu, exception->class, bc_offset);
 		if (eh_ptr != NULL) {

@@ -414,7 +414,7 @@ static struct vm_object *get_intermediate_stack_trace(void)
 		if (vm_method_is_native(cu->method))
 			bc_offset = BC_OFFSET_UNKNOWN;
 		else
-			bc_offset = native_ptr_to_bytecode_offset(cu,
+			bc_offset = jit_lookup_bc_offset(cu,
 						(unsigned char*)st_elem.addr);
 
 		array_set_field_ptr(array, i++, cu->method);
@@ -449,8 +449,8 @@ void print_java_stack_trace_elem(struct stack_trace_elem *elem)
 	if (elem->type == STACK_TRACE_ELEM_TYPE_TRAMPOLINE)
 		bc_offset = 0;
 	else {
-		bc_offset = native_ptr_to_bytecode_offset(cu,
-						(unsigned char*)elem->addr);
+		bc_offset = jit_lookup_bc_offset(cu,
+						(unsigned char *) elem->addr);
 		if (bc_offset == BC_OFFSET_UNKNOWN)
 			goto out;
 	}

@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <errno.h>
+#include <malloc.h>
 #include <stdio.h>
 
 #include "jit/bc-offset-mapping.h"
@@ -54,43 +56,75 @@ void tree_patch_bc_offset(struct tree_node *node, unsigned long bc_offset)
 }
 
 /**
+ * Constructs native to bytecode offset translation table.
+ * Must be called after compiltion is finished.
+ */
+int build_bc_offset_map(struct compilation_unit *cu)
+{
+	unsigned long code_size;
+	struct basic_block *bb;
+	struct insn *insn;
+	struct insn *prev_insn;
+
+	code_size = buffer_offset(cu->objcode);
+	cu->bc_offset_map = malloc(sizeof(unsigned long) * code_size);
+	if (!cu->bc_offset_map)
+		return -ENOMEM;
+
+	/* Set all fields to unknown (ULONG_MAX) by default. */
+	memset(cu->bc_offset_map, 0xff, sizeof(unsigned long) * code_size);
+
+	prev_insn = NULL;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		for_each_insn(insn, &bb->insn_list) {
+			/* We put bc-offset mapping not only for the
+			 * insn offset but also for the offset of last
+			 * insn byte. That's because for call site
+			 * bc-offset we pall for return address - 1.
+			 */
+			if (prev_insn)
+				cu->bc_offset_map[insn->mach_offset - 1] =
+					prev_insn->bytecode_offset;
+
+			cu->bc_offset_map[insn->mach_offset] =
+				insn->bytecode_offset;
+
+			prev_insn = insn;
+		}
+	}
+
+	return 0;
+}
+
+/**
  * native_ptr_to_bytecode_offset - translates native instruction pointer
  *                                 to bytecode offset from which given
  *                                 instruction originates.
  * @cu: compilation unit of method containing @native_ptr.
  * @native_ptr: native instruction pointer to be translated.
  */
-unsigned long native_ptr_to_bytecode_offset(struct compilation_unit *cu,
-					    unsigned char *native_ptr)
+unsigned long
+jit_lookup_bc_offset(struct compilation_unit *cu, unsigned char *native_ptr)
 {
-	unsigned long method_addr = (unsigned long)buffer_ptr(cu->objcode);
+	unsigned long native_addr;
+	unsigned long method_addr;
 	unsigned long offset;
-	struct basic_block *bb;
-	struct insn *insn;
-	struct insn *prev_insn = NULL;
 
-	if ((unsigned long)native_ptr < method_addr)
+	if (!cu->bc_offset_map)
 		return BC_OFFSET_UNKNOWN;
 
-	offset = (unsigned long)native_ptr - method_addr;
+	native_addr = (unsigned long) native_ptr;
+	method_addr = (unsigned long) buffer_ptr(cu->objcode);
 
-	for_each_basic_block(bb, &cu->bb_list) {
-		for_each_insn(insn, &bb->insn_list) {
-			if (insn->mach_offset == offset)
-				return insn->bytecode_offset;
+	if (native_addr < method_addr)
+		return BC_OFFSET_UNKNOWN;
 
-			if (insn->mach_offset > offset) {
-				if (prev_insn &&
-				    prev_insn->mach_offset <= offset)
-					return prev_insn->bytecode_offset;
-				break;
-			}
+	offset = native_addr - method_addr;
+	if (offset >= buffer_offset(cu->objcode))
+		return BC_OFFSET_UNKNOWN;
 
-			prev_insn = insn;
-		}
-	}
-
-	return BC_OFFSET_UNKNOWN;
+	return cu->bc_offset_map[offset];
 }
 
 void print_bytecode_offset(unsigned long bytecode_offset, struct string *str)
