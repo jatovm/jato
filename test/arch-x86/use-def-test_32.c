@@ -73,6 +73,14 @@ static void assert_uses_r0_defines_r0(struct insn *insn)
 	free_insn(insn);
 }
 
+static void assert_uses_r0_r1(struct insn *insn)
+{
+	assert_use_mask(1, 1, 0, insn);
+	assert_def_mask(0, 0, 0, insn);
+
+	free_insn(insn);
+}
+
 static void assert_uses_r0_r1_and_r2(struct insn *insn)
 {
 	assert_use_mask(1, 1, 1, insn);
@@ -93,6 +101,14 @@ static void assert_uses_r0_defines_r0_and_r1(struct insn *insn)
 {
 	assert_use_mask(1, 0, 0, insn);
 	assert_def_mask(1, 1, 0, insn);
+
+	free_insn(insn);
+}
+
+static void assert_uses_r0_r1_defines_r1(struct insn *insn)
+{
+	assert_use_mask(1, 1, 0, insn);
+	assert_def_mask(0, 1, 0, insn);
 
 	free_insn(insn);
 }
