@@ -187,6 +187,18 @@ struct insn *membase_reg_insn(enum insn_type insn_type, struct var_info *src_bas
 	return insn;
 }
 
+struct insn *memindex_insn(enum insn_type insn_type,
+			   struct var_info *src_base_reg,
+			   struct var_info *src_index_reg,
+			   unsigned char src_shift)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_memindex_operand(insn, 0, src_base_reg, src_index_reg, src_shift);
+	}
+	return insn;
+}
+
 struct insn *memindex_reg_insn(enum insn_type insn_type,
 			       struct var_info *src_base_reg, struct var_info *src_index_reg,
 			       unsigned char src_shift, struct var_info *dest_reg)

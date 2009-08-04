@@ -408,6 +408,12 @@ static int print_jmp_branch(struct string *str, struct insn *insn)
 	return print_branch(str, &insn->operand);
 }
 
+static int print_jmp_memindex(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memindex(str, &insn->operand);
+}
+
 static int print_jne_branch(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -739,6 +745,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_JLE_BRANCH] = print_jle_branch,
 	[INSN_JL_BRANCH] = print_jl_branch,
 	[INSN_JMP_BRANCH] = print_jmp_branch,
+	[INSN_JMP_MEMINDEX] = print_jmp_memindex,
 	[INSN_JNE_BRANCH] = print_jne_branch,
 	[INSN_MOV_IMM_MEMBASE] = print_mov_imm_membase,
 	[INSN_MOV_IMM_REG] = print_mov_imm_reg,

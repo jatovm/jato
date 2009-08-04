@@ -1377,6 +1377,14 @@ static void emit_mov_xmm_membase(struct buffer *buf, struct operand *src,
 	emit_membase_reg(buf, 0x11, dest, src);
 }
 
+static void emit_jmp_memindex(struct buffer *buf, struct operand *target)
+{
+	emit(buf, 0xff);
+	emit(buf, encode_modrm(0x00, 0x04, 0x04));
+	emit(buf, encode_sib(target->shift, encode_reg(&target->index_reg),
+			     encode_reg(&target->base_reg)));
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg, TWO_OPERANDS),
@@ -1402,6 +1410,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_FSTP_MEMBASE, emit_fstp_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU, emit_conv_gpr_to_fpu, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_FPU_TO_GPR, emit_conv_fpu_to_gpr, TWO_OPERANDS),
+	DECL_EMITTER(INSN_JMP_MEMINDEX, emit_jmp_memindex, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMBASE_XMM, emit_mov_membase_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, emit_mov_xmm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
