@@ -138,6 +138,26 @@ static void *vm_jni_lookup_symbol(const char *symbol_name)
 	return NULL;
 }
 
+static char *get_method_args(const char *type)
+{
+	char *result, *end;
+
+	if (type[0] != '(')
+		return NULL;
+
+	result = strdup(type + 1);
+
+	end = index(result, ')');
+	if (!end) {
+		free(result);
+		return NULL;
+	}
+
+	*end = 0;
+
+	return result;
+}
+
 void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 			   const char *method_type)
 {
@@ -146,10 +166,13 @@ void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 	char *mangled_method_type;
 	char *symbol_name;
 	void *sym_addr;
+	char *method_args;
+
+	method_args = get_method_args(method_type);
 
 	mangled_class_name = vm_jni_get_mangled_name(class_name);
 	mangled_method_name = vm_jni_get_mangled_name(method_name);
-	mangled_method_type = vm_jni_get_mangled_name(method_type);
+	mangled_method_type = vm_jni_get_mangled_name(method_args);
 
 	symbol_name = NULL;
 	if (asprintf(&symbol_name, "Java_%s_%s__%s", mangled_class_name,
@@ -167,6 +190,7 @@ void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 	sym_addr = vm_jni_lookup_symbol(symbol_name);
 
  out:
+	free(method_args);
 	free(mangled_method_name);
 	free(mangled_class_name);
 	free(mangled_method_type);
