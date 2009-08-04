@@ -1385,6 +1385,14 @@ static void emit_mov_xmm_membase(struct buffer *buf, struct operand *src,
 	emit_membase_reg(buf, 0x11, dest, src);
 }
 
+static void emit_mov_xmm_memdisp(struct buffer *buf, struct operand *src,
+				 struct operand *dest)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	__emit_reg_memdisp(buf, 0x11, mach_reg(&src->reg), dest->imm);
+}
+
 static void emit_jmp_memindex(struct buffer *buf, struct operand *target)
 {
 	emit(buf, 0xff);
@@ -1439,6 +1447,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_FREG_MEMLOCAL, emit_mov_freg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_XMM_MEMDISP, emit_mov_xmm_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_XMM, emit_mov_xmm_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg, TWO_OPERANDS),
