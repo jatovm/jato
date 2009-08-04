@@ -146,7 +146,7 @@ void test_memlocal_reg_defines_target(void)
 void test_membase_reg_uses_source_defines_target(void)
 {
 	assert_uses_r0_r1_defines_r1(membase_reg_insn(INSN_ADD_MEMBASE_REG, &r0, 0, &r1));
-	assert_uses_r0_defines_r1(membase_reg_insn(INSN_AND_MEMBASE_REG, &r0, 0, &r1));
+	assert_uses_r0_r1_defines_r1(membase_reg_insn(INSN_AND_MEMBASE_REG, &r0, 0, &r1));
 	assert_uses_r0_defines_r1(membase_reg_insn(INSN_CMP_MEMBASE_REG, &r0, 0, &r1));
 	assert_uses_r0_r1_defines_r1(membase_reg_insn(INSN_DIV_MEMBASE_REG, &r0, 0, &r1));
 	assert_uses_r0_defines_r1(membase_reg_insn(INSN_MOV_MEMBASE_REG, &r0, 0, &r1));
