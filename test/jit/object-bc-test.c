@@ -254,7 +254,7 @@ static void assert_convert_array_load(enum vm_type expected_type,
 	assert_store_stmt(arrayref_pure_stmt);
 	assert_nullcheck_value_expr(J_REFERENCE, arrayref,
 				    arrayref_pure_stmt->store_src);
-	assert_temporary_expr(arrayref_pure_stmt->store_dest);
+	assert_temporary_expr(J_REFERENCE, arrayref_pure_stmt->store_dest);
 
 	assert_arraycheck_stmt(expected_type,
 			       to_expr(arrayref_pure_stmt->store_dest),
@@ -269,7 +269,7 @@ static void assert_convert_array_load(enum vm_type expected_type,
 
 	temporary_expr = stack_pop(bb->mimic_stack);
 
-	assert_temporary_expr(&temporary_expr->node);
+	assert_temporary_expr(expected_type, &temporary_expr->node);
 	expr_put(temporary_expr);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
@@ -362,11 +362,11 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	assert_store_stmt(arrayref_pure_stmt);
 	assert_nullcheck_value_expr(J_REFERENCE, arrayref,
 				    arrayref_pure_stmt->store_src);
-	assert_temporary_expr(arrayref_pure_stmt->store_dest);
+	assert_temporary_expr(J_REFERENCE, arrayref_pure_stmt->store_dest);
 
 	assert_store_stmt(value_dup_stmt);
 	assert_ptr_equals(&expr->node, value_dup_stmt->store_src);
-	assert_temporary_expr(value_dup_stmt->store_dest);
+	assert_temporary_expr(expected_type, value_dup_stmt->store_dest);
 
 	assert_arraycheck_stmt(expected_type,
 			       to_expr(arrayref_pure_stmt->store_dest),
@@ -381,7 +381,7 @@ static void assert_convert_array_store(enum vm_type expected_type,
 				to_expr(arrayref_pure_stmt->store_dest),
 				index_expr,
 				store_stmt->store_dest);
-	assert_temporary_expr(store_stmt->store_src);
+	assert_temporary_expr(expected_type, store_stmt->store_src);
 
 	assert_true(stack_is_empty(bb->mimic_stack));
 

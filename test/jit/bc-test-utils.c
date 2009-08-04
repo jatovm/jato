@@ -107,16 +107,24 @@ void assert_local_expr(enum vm_type expected_vm_type,
 {
 	struct expression *expr = to_expr(node);
 
-	assert_int_equals(EXPR_LOCAL, expr_type(expr));
+	if (vm_type_is_float(expected_vm_type))
+		assert_int_equals(EXPR_FLOAT_LOCAL, expr_type(expr));
+	else
+		assert_int_equals(EXPR_LOCAL, expr_type(expr));
+
 	assert_int_equals(expected_vm_type, expr->vm_type);
 	assert_int_equals(expected_index, expr->local_index);
 }
 
-void assert_temporary_expr(struct tree_node *node)
+void assert_temporary_expr(enum vm_type expected_vm_type,
+			   struct tree_node *node)
 {
 	struct expression *expr = to_expr(node);
 
-	assert_int_equals(EXPR_TEMPORARY, expr_type(expr));
+	if (vm_type_is_float(expected_vm_type))
+		assert_int_equals(EXPR_FLOAT_TEMPORARY, expr_type(expr));
+	else
+		assert_int_equals(EXPR_TEMPORARY, expr_type(expr));
 }
 
 void assert_null_check_expr(struct expression *expected,
@@ -188,7 +196,11 @@ void assert_class_field_expr(enum vm_type expected_vm_type,
 {
 	struct expression *expr = to_expr(node);
 
-	__assert_field_expr(EXPR_CLASS_FIELD, expected_vm_type, expr);
+	if (vm_type_is_float(expected_vm_type))
+		__assert_field_expr(EXPR_FLOAT_CLASS_FIELD, expected_vm_type, expr);
+	else
+		__assert_field_expr(EXPR_CLASS_FIELD, expected_vm_type, expr);
+
 	assert_ptr_equals(expected_field, expr->class_field);
 }
 
@@ -199,7 +211,11 @@ void assert_instance_field_expr(enum vm_type expected_vm_type,
 {
 	struct expression *expr = to_expr(node);
 
-	__assert_field_expr(EXPR_INSTANCE_FIELD, expected_vm_type, expr);
+	if (vm_type_is_float(expected_vm_type))
+		__assert_field_expr(EXPR_FLOAT_INSTANCE_FIELD, expected_vm_type, expr);
+	else
+		__assert_field_expr(EXPR_INSTANCE_FIELD, expected_vm_type, expr);
+
 	assert_ptr_equals(expected_field, expr->instance_field);
 	assert_ptr_equals(expected_objectref, to_expr(expr->objectref_expression));
 }

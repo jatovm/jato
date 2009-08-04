@@ -395,7 +395,7 @@ static void __assert_convert_load(unsigned char *code,
 	convert_to_ir(bb->b_parent);
 
 	expr = stack_pop(bb->mimic_stack);
-	assert_temporary_expr(&expr->node);
+	assert_temporary_expr(expected_type, &expr->node);
 
 	stmt = stmt_entry(bb->stmt_list.next);
 
@@ -511,14 +511,14 @@ static void __assert_convert_store(unsigned char *code,
 
 	bb = alloc_simple_bb(code, code_size);
 
-	temporary = get_var(bb->b_parent, J_INT);
-	stack_push(bb->mimic_stack, temporary_expr(J_INT, NULL, temporary));
+	temporary = get_var(bb->b_parent, expected_type);
+	stack_push(bb->mimic_stack, temporary_expr(expected_type, NULL, temporary));
 
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);
 
 	assert_store_stmt(stmt);
-	assert_temporary_expr(stmt->store_src);
+	assert_temporary_expr(expected_type, stmt->store_src);
 	assert_local_expr(expected_type, expected_index, stmt->store_dest);
 
 	assert_true(stack_is_empty(bb->mimic_stack));

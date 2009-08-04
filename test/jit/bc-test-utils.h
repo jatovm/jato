@@ -23,7 +23,7 @@ void assert_value_expr(enum vm_type, long long, struct tree_node *);
 void assert_nullcheck_value_expr(enum vm_type, long long, struct tree_node *);
 void assert_fvalue_expr(enum vm_type, double, struct tree_node *);
 void assert_local_expr(enum vm_type, unsigned long, struct tree_node *);
-void assert_temporary_expr(struct tree_node *);
+void assert_temporary_expr(enum vm_type, struct tree_node *);
 void assert_array_deref_expr(enum vm_type, struct expression *,
 			     struct expression *, struct tree_node *);
 void __assert_binop_expr(enum vm_type, enum binary_operator,

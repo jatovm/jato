@@ -565,6 +565,22 @@ vm_jni_get_byte_array_elements(struct vm_jni_env *env, jobject array,
 	return result;
 }
 
+static void
+vm_jni_release_byte_array_elements(struct vm_jni_env *env, jobject array,
+				   jbyte *elems, jint mode)
+{
+	if (!vm_class_is_array_class(array->class) ||
+	    vm_class_get_array_element_class(array->class) != vm_byte_class)
+		return;
+
+	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */
+		for (long i = 0; i < array->array_length; i++)
+			array_set_field_byte(array, i, elems[i]);
+	}
+
+	if (mode == 0 || mode == JNI_ABORT) /* free buffer */
+		free(elems);
+}
 
 /*
  * The JNI native interface table.
@@ -840,7 +856,7 @@ void *vm_jni_native_interface[] = {
 	/* 190 */
 	NULL, /* GetDoubleArrayElements */
 	NULL, /* ReleaseBooleanArrayElements */
-	NULL, /* ReleaseByteArrayElements */
+	vm_jni_release_byte_array_elements,
 	NULL, /* ReleaseCharArrayElements */
 	NULL, /* ReleaseShortArrayElements */
 

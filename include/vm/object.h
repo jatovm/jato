@@ -132,6 +132,12 @@ array_get_field_byte(struct vm_object *obj, int index)
 }
 
 static inline void
+array_set_field_byte(struct vm_object *obj, int index, uint8_t value)
+{
+	*(uint8_t *) &obj->fields[index * get_vmtype_size(J_BYTE)] = value;
+}
+
+static inline void
 array_set_field_ptr(struct vm_object *obj, int index, void *value)
 {
 	*(void **) &obj->fields[index * get_vmtype_size(J_REFERENCE)] = value;
