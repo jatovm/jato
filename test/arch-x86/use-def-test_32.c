@@ -154,7 +154,7 @@ void test_membase_reg_uses_source_defines_target(void)
 	assert_uses_r0_r1_defines_r1(membase_reg_insn(INSN_OR_MEMBASE_REG, &r0, 0, &r1));
 	assert_uses_r0_r1_defines_r1(membase_reg_insn(INSN_SBB_MEMBASE_REG, &r0, 0, &r1));
 	assert_uses_r0_r1_defines_r1(membase_reg_insn(INSN_SUB_MEMBASE_REG, &r0, 0, &r1));
-	assert_uses_r0_defines_r1(membase_reg_insn(INSN_XOR_MEMBASE_REG, &r0, 0, &r1));
+	assert_uses_r0_r1_defines_r1(membase_reg_insn(INSN_XOR_MEMBASE_REG, &r0, 0, &r1));
 }
 
 void test_memindex_reg_uses_source_defines_target(void)
