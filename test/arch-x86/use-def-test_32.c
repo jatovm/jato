@@ -205,7 +205,7 @@ void test_reg_reg_uses_source_defines_target(void)
 	assert_uses_r0_defines_r1(reg_reg_insn(INSN_MOV_REG_REG, &r0, &r1));
 	assert_uses_r0_r1_defines_r1(reg_reg_insn(INSN_SAR_REG_REG, &r0, &r1));
 	assert_uses_r0_r1_defines_r1(reg_reg_insn(INSN_SHL_REG_REG, &r0, &r1));
-	assert_uses_r0_defines_r1(reg_reg_insn(INSN_SHR_REG_REG, &r0, &r1));
+	assert_uses_r0_r1_defines_r1(reg_reg_insn(INSN_SHR_REG_REG, &r0, &r1));
 }
 
 void test_imm_reg_defines_target(void)
