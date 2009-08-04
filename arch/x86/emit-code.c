@@ -1385,12 +1385,32 @@ static void emit_mov_memdisp_xmm(struct buffer *buf, struct operand *src,
 	__emit_memdisp_reg(buf, 0x10, src->imm, mach_reg(&dest->reg));
 }
 
+static void emit_mov_memindex_xmm(struct buffer *buf, struct operand *src,
+				  struct operand *dest)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit(buf, 0x10);
+	emit(buf, encode_modrm(0x00, encode_reg(&dest->reg), 0x04));
+	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
+}
+
 static void emit_mov_xmm_membase(struct buffer *buf, struct operand *src,
 				struct operand *dest)
 {
 	emit(buf, 0xf3);
 	emit(buf, 0x0f);
 	emit_membase_reg(buf, 0x11, dest, src);
+}
+
+static void emit_mov_xmm_memindex(struct buffer *buf, struct operand *src,
+				  struct operand *dest)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit(buf, 0x11);
+	emit(buf, encode_modrm(0x00, encode_reg(&src->reg), 0x04));
+	emit(buf, encode_sib(dest->shift, encode_reg(&dest->index_reg), encode_reg(&dest->base_reg)));
 }
 
 static void emit_mov_xmm_memdisp(struct buffer *buf, struct operand *src,
@@ -1449,6 +1469,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_MEMINDEX_XMM, emit_mov_memindex_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
@@ -1457,6 +1478,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_FREG_MEMLOCAL, emit_mov_freg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMDISP, emit_mov_xmm_memdisp, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_XMM_MEMINDEX, emit_mov_xmm_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_XMM, emit_mov_xmm_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg, TWO_OPERANDS),

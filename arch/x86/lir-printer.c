@@ -510,6 +510,12 @@ static int print_mov_memindex_reg(struct string *str, struct insn *insn)
 	return print_memindex_reg(str, insn);
 }
 
+static int print_mov_memindex_xmm(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memindex_reg(str, insn);
+}
+
 static int print_mov_reg_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -517,6 +523,12 @@ static int print_mov_reg_membase(struct string *str, struct insn *insn)
 }
 
 static int print_mov_reg_memindex(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_memindex(str, insn);
+}
+
+static int print_mov_xmm_memindex(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memindex(str, insn);
@@ -774,6 +786,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_MEMBASE_REG] = print_mov_membase_reg,
 	[INSN_MOV_MEMDISP_REG] = print_mov_memdisp_reg,
 	[INSN_MOV_MEMDISP_XMM] = print_mov_memdisp_xmm,
+	[INSN_MOV_MEMINDEX_XMM] = print_mov_memindex_xmm,
 	[INSN_MOV_REG_MEMDISP] = print_mov_reg_memdisp,
 	[INSN_MOV_THREAD_LOCAL_MEMDISP_REG] = print_mov_tlmemdisp_reg,
 	[INSN_MOV_MEMINDEX_REG] = print_mov_memindex_reg,
@@ -785,6 +798,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_FREG_MEMLOCAL] = print_mov_freg_memlocal,
 	[INSN_MOV_REG_REG] = print_mov_reg_reg,
 	[INSN_MOV_XMM_MEMDISP] = print_mov_xmm_memdisp,
+	[INSN_MOV_XMM_MEMINDEX] = print_mov_xmm_memindex,
 	[INSN_MOV_XMM_XMM] = print_mov_xmm_xmm,
 	[INSN_MOVSX_8_REG_REG] = print_movsx_8_reg_reg,
 	[INSN_MOVSX_16_REG_REG] = print_movsx_16_reg_reg,
