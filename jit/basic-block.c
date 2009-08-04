@@ -104,9 +104,12 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 	if (offset < orig_bb->start || offset >= orig_bb->end)
 		return NULL;
 
-	new_bb = get_basic_block(orig_bb->b_parent, offset, orig_bb->end);
-	if (new_bb == NULL)
+	new_bb = alloc_basic_block(orig_bb->b_parent, offset, orig_bb->end);
+	if (!new_bb)
 		return NULL;
+
+	/* Insert new basic block after org_bb. */
+	list_add(&new_bb->bb_list_node, &orig_bb->bb_list_node);
 
 	orig_bb->end = offset;
 

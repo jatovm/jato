@@ -70,10 +70,6 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
-	err = sort_basic_blocks(cu);
-	if (err)
-		goto out;
-
 	if (opt_trace_cfg)
 		trace_cfg(cu);
 

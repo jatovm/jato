@@ -149,14 +149,14 @@ void test_multiple_branch_with_target_instruction_splitting(void)
 
 	assert_basic_block(cu, 0, 4, bb1);
 	assert_basic_block(cu, 4, 6, bb2);
-	assert_basic_block(cu, 6, 12, bb4);
-	assert_basic_block(cu, 12, 14, bb3);
+	assert_basic_block(cu, 6, 12, bb3);
+	assert_basic_block(cu, 12, 14, bb4);
 	assert_basic_block(cu, 14, 15, bb5);
 
-	assert_basic_block_successors((struct basic_block*[]){bb2, bb4}, 2, bb1);
-	assert_basic_block_successors((struct basic_block*[]){bb4     }, 1, bb2);
-	assert_basic_block_successors((struct basic_block*[]){bb3, bb5}, 2, bb4);
-	assert_basic_block_successors((struct basic_block*[]){bb5     }, 1, bb3);
+	assert_basic_block_successors((struct basic_block*[]){bb2, bb3}, 2, bb1);
+	assert_basic_block_successors((struct basic_block*[]){bb3     }, 1, bb2);
+	assert_basic_block_successors((struct basic_block*[]){bb4, bb5}, 2, bb3);
+	assert_basic_block_successors((struct basic_block*[]){bb5     }, 1, bb4);
 	assert_basic_block_successors((struct basic_block*[]){        }, 0, bb5);
 
 	free_compilation_unit(cu);
