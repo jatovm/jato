@@ -47,6 +47,8 @@ struct parse_context {
 
 void convert_expression(struct parse_context *ctx, struct expression *expr);
 void convert_statement(struct parse_context *ctx, struct statement *stmt);
+void do_convert_statement(struct basic_block *bb, struct statement *stmt,
+			  unsigned long bc_offset);
 
 int compile(struct compilation_unit *);
 int analyze_control_flow(struct compilation_unit *);

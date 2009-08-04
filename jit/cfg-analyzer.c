@@ -10,6 +10,7 @@
 #include "jit/compiler.h"
 
 #include "lib/bitset.h"
+#include "vm/bytecode.h"
 #include "vm/bytecodes.h"
 #include "vm/method.h"
 #include "vm/stream.h"
@@ -92,38 +93,62 @@ static inline bool bc_ends_basic_block(unsigned char code)
 	return bc_is_branch(code) || bc_is_athrow(code) || bc_is_return(code);
 }
 
-static int split_after_branches(struct stream *stream,
-				 struct basic_block *entry_bb,
-				 struct bitset *branch_targets)
+static int split_after_branches(const unsigned char *code,
+				unsigned long code_length,
+				struct basic_block *entry_bb,
+				struct bitset *branch_targets)
 {
 	struct basic_block *bb;
 	int err = 0;
 
 	bb = entry_bb;
 
-	for (; stream_has_more(stream); stream_advance(stream)) {
-		unsigned long offset, next_insn_off;
+	unsigned long offset;
+	bytecode_for_each_insn(code, code_length, offset) {
+		unsigned long next_insn_off;
 		long br_target_off;
 		struct basic_block *new_bb;
-		unsigned char *code;
+		unsigned char opcode;
 
-		code = stream->current;
+		opcode = code[offset];
 
-		if (!bc_ends_basic_block(*code))
+		if (!bc_ends_basic_block(opcode))
 			continue;
 
-		offset = stream_offset(stream);
-		next_insn_off = offset + bc_insn_size(code);
+		next_insn_off = offset + bc_insn_size(code, offset);
 
-		new_bb = bb_split(bb, next_insn_off);
-		if (bc_is_branch(*code) && !bc_is_goto(*code)) {
-			err = bb_add_successor(bb, new_bb);
-			if (err)
-				break;
+		if (next_insn_off != bb->end) {
+			new_bb = bb_split(bb, next_insn_off);
+
+			if (bc_is_branch(opcode) && !bc_is_goto(opcode)) {
+				err = bb_add_successor(bb, new_bb);
+				if (err)
+					break;
+			}
 		}
 
-		if (bc_is_branch(*code)) {
-			br_target_off = bc_target_off(code) + offset;
+		if (opcode == OPC_TABLESWITCH) {
+			struct tableswitch_info info;
+
+			get_tableswitch_info(code, offset, &info);
+
+			/*
+			 * We mark tableswitch targets to be split but
+			 * we do not connect them to this basic block
+			 * because it will be later split in
+			 * convert_tableswitch().
+			 */
+			set_bit(branch_targets->bits,
+				offset + info.default_target);
+
+			for (unsigned int i = 0; i < info.count; i++) {
+				int32_t target;
+
+				target = read_s32(info.targets + i * 4);
+				set_bit(branch_targets->bits, offset + target);
+			}
+		} else if (bc_is_branch(opcode)) {
+			br_target_off = bc_target_off(&code[offset]) + offset;
 
 			bb->br_target_off = br_target_off;
 			bb->has_branch = true;
@@ -157,42 +182,24 @@ static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
 	return true;
 }
 
-static unsigned char *bytecode_next_insn(struct stream *stream)
-{
-	unsigned long opc_size;
-
-	opc_size = bc_insn_size(stream->current);
-	assert(opc_size != 0);
-	return stream->current + opc_size;
-}
-
-static struct stream_operations bytecode_stream_ops = {
-	.new_position = bytecode_next_insn,
-};
-
-static void bytecode_stream_init(struct stream *stream, struct vm_method *method)
-{
-	stream_init(stream,
-		    method->code_attribute.code,
-		    method->code_attribute.code_length,
-		    &bytecode_stream_ops);
-}
-
 int analyze_control_flow(struct compilation_unit *cu)
 {
 	struct bitset *branch_targets;
-	struct stream stream;
+	const unsigned char *code;
+	int code_length;
 	int err = 0;
 
-	branch_targets = alloc_bitset(cu->method->code_attribute.code_length);
+	code = cu->method->code_attribute.code;
+	code_length = cu->method->code_attribute.code_length;
+
+	branch_targets = alloc_bitset(code_length);
 	if (!branch_targets)
 		return warn("out of memory"), -ENOMEM;
 
-	bytecode_stream_init(&stream, cu->method);
+	cu->entry_bb = get_basic_block(cu, 0, code_length);
 
-	cu->entry_bb = get_basic_block(cu, 0, cu->method->code_attribute.code_length);
-
-	err = split_after_branches(&stream, cu->entry_bb, branch_targets);
+	err = split_after_branches(code, code_length, cu->entry_bb,
+				   branch_targets);
 	if (err)
 		goto out;
 
@@ -205,8 +212,6 @@ int analyze_control_flow(struct compilation_unit *cu)
 		goto out;
 
 	detect_exception_handlers(cu);
-
-	bytecode_stream_init(&stream, cu->method);
 
 	/*
 	 * This checks whether every exception handler has its own

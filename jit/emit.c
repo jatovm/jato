@@ -18,6 +18,7 @@
 #include "jit/basic-block.h"
 #include "jit/emit-code.h"
 #include "jit/compiler.h"
+#include "jit/statement.h"
 #include "jit/text.h"
 
 #include "arch/instruction.h"
@@ -51,6 +52,22 @@ static void backpatch_branches(struct buffer *buf,
 	list_for_each_entry_safe(this, next, to_backpatch, branch_list_node) {
 		backpatch_branch_target(buf, this, target_offset);
 		list_del(&this->branch_list_node);
+	}
+}
+
+static void backpatch_tableswitch_targets(struct compilation_unit *cu)
+{
+	struct tableswitch *this;
+
+	list_for_each_entry(this, &cu->tableswitch_list, list_node)
+	{
+		int count;
+
+		count = this->high - this->low + 1;
+
+		for (int i = 0; i < count; i++)
+			this->lookup_table[i] =
+				bb_native_ptr(this->bb_lookup_table[i]);
 	}
 }
 
@@ -103,6 +120,8 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list)
 		emit_body(bb, cu->objcode);
+
+	backpatch_tableswitch_targets(cu);
 
 	emit_body(cu->exit_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))

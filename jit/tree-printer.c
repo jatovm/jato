@@ -296,6 +296,30 @@ out:
 	return err;
 }
 
+static int print_tableswitch_stmt(int lvl, struct string *str,
+				  struct statement *stmt)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "TABLESWITCH:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "index", stmt->expression);
+
+	unsigned int count = stmt->table->high - stmt->table->low + 1;
+	for (unsigned int i = 0; i < count; i++) {
+		char case_name[16];
+
+		sprintf(case_name, "case %d", stmt->table->low + i);
+		err = append_simple_attr(lvl + 1, str, case_name, "bb %p",
+					 stmt->table->bb_lookup_table[i]);
+	}
+
+out:
+	return err;
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -311,6 +335,7 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_CHECKCAST] = print_checkcast_stmt,
 	[STMT_ATHROW] = print_athrow_stmt,
 	[STMT_ARRAY_STORE_CHECK] = print_array_store_check_stmt,
+	[STMT_TABLESWITCH] = print_tableswitch_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)

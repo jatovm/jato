@@ -54,6 +54,7 @@ struct compilation_unit {
 	unsigned char *unwind_past_unlock_ptr;
 
 	struct list_head static_fixup_site_list;
+	struct list_head tableswitch_list;
 
 	/*
 	 * This holds a pointer to the method's code. It's value is

@@ -183,9 +183,11 @@ struct expression *expr_get(struct expression *expr)
 
 	return expr;
 }
-
+extern void print_trace(void);
 void expr_put(struct expression *expr)
 {
+	if (!(expr->refcount > 0))
+		print_trace();
 	assert(expr->refcount > 0);
 
 	expr->refcount--;

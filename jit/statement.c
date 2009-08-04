@@ -5,6 +5,8 @@
  * LICENSE for details.
  */
 
+#include "vm/bytecode.h"
+#include "vm/bytecodes.h"
 #include "vm/vm.h"
 #include <assert.h>
 #include "jit/expression.h"
@@ -28,6 +30,7 @@ int stmt_nr_kids(struct statement *stmt)
 	case STMT_MONITOR_ENTER:
 	case STMT_MONITOR_EXIT:
 	case STMT_CHECKCAST:
+	case STMT_TABLESWITCH:
 		return 1;
 	case STMT_GOTO:
 	case STMT_VOID_RETURN:
@@ -62,4 +65,41 @@ void free_statement(struct statement *stmt)
 			expr_put(to_expr(stmt->node.kids[i]));
 
 	free(stmt);
+}
+
+struct tableswitch *alloc_tableswitch(struct tableswitch_info *info,
+				      struct compilation_unit *cu,
+				      unsigned long offset)
+{
+	struct tableswitch *table;
+
+	table = malloc(sizeof(*table));
+	if (!table)
+		return NULL;
+
+	table->low = info->low;
+	table->high = info->high;
+
+	table->bb_lookup_table = malloc(sizeof(void *) * info->count);
+	if (!table->bb_lookup_table) {
+		free(table);
+		return NULL;
+	}
+
+	for (unsigned int i = 0; i < info->count; i++) {
+		int32_t target;
+
+		target = read_s32(info->targets + i * 4);
+		table->bb_lookup_table[i] = find_bb(cu, offset + target);
+	}
+
+	list_add(&table->list_node, &cu->tableswitch_list);
+
+	return table;
+}
+
+void free_tableswitch(struct tableswitch *table)
+{
+	free(table->lookup_table);
+	free(table);
 }

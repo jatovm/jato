@@ -36,6 +36,7 @@ TOPLEVEL_OBJS := \
 	jit/spill-reload.o \
 	jit/stack-slot.o \
 	jit/statement.o \
+	jit/switch-bc.o \
 	jit/text.o \
 	jit/tree-node.o \
 	jit/tree-printer.o \

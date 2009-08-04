@@ -46,21 +46,47 @@ static struct bytecode_info bytecode_infos[] = {
 
 #undef BYTECODE
 
-unsigned long bc_insn_size(const unsigned char *bc_start)
+void get_tableswitch_info(const unsigned char *code, unsigned long pc,
+			  struct tableswitch_info *info)
+{
+	unsigned long pad;
+
+	assert(code[pc] == OPC_TABLESWITCH);
+
+	pad = 3 - (pc % 4);
+	pc += pad + 1;
+
+	info->default_target = read_u32(&code[pc]);
+	info->low = read_u32(&code[pc + 4]);
+	info->high = read_u32(&code[pc + 8]);
+	info->targets = &code[pc + 12];
+
+	info->count = info->high - info->low + 1;
+	info->insn_size = 1 + pad + (3 + info->count) * 4;
+}
+
+unsigned long bc_insn_size(const unsigned char *code, unsigned long pc)
 {
 	unsigned long size;
 
-	if (*bc_start == OPC_WIDE) {
-		if (*(bc_start + 1) == OPC_IINC)
+	if (code[pc] == OPC_WIDE) {
+		if (code[pc + 1] == OPC_IINC)
 			return 6;
 
 		return 4;
 	}
 
-	size = bytecode_infos[*bc_start].size;
+	if (code[pc] == OPC_TABLESWITCH) {
+		struct tableswitch_info info;
+
+		get_tableswitch_info(code, pc, &info);
+		return info.insn_size;
+	}
+
+	size = bytecode_infos[code[pc]].size;
 
 	if (size == 0)
-		error("unknown bytecode opcode: 0x%x\n", *bc_start);
+		error("unknown bytecode opcode: 0x%x\n", code[pc]);
 
 	return size;
 }
@@ -212,7 +238,7 @@ void bytecode_disassemble(const unsigned char *code, unsigned long size)
 		int size;
 		int _pc;
 
-		size = bc_insn_size(&code[pc]);
+		size = bc_insn_size(code, pc);
 
 		trace_printf("   [ %-3ld ]  0x%02x  ", pc, code[pc]);
 
@@ -236,7 +262,7 @@ void bytecode_disassemble(const unsigned char *code, unsigned long size)
 
 		free(opc_name);
 
-		if (bc_is_branch(code[_pc])) {
+		if (bc_is_branch(code[_pc]) && code[_pc] != OPC_TABLESWITCH) {
 			trace_printf(" %ld\n", bc_target_off(&code[_pc]) + _pc);
 			continue;
 		}

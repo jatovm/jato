@@ -19,20 +19,14 @@
 
 #include <errno.h>
 
-static struct statement *__convert_if(struct parse_context *ctx,
-				      enum vm_type vm_type,
-				      enum binary_operator binop,
-				      struct expression *binary_left,
-				      struct expression *binary_right)
+struct statement *if_stmt(struct basic_block *true_bb,
+			  enum vm_type vm_type,
+			  enum binary_operator binop,
+			  struct expression *binary_left,
+			  struct expression *binary_right)
 {
-	struct basic_block *true_bb;
 	struct expression *if_conditional;
 	struct statement *if_stmt;
-	int32_t if_target;
-
-	if_target = bytecode_read_branch_target(ctx->opc, ctx->buffer);
-
-	true_bb = find_bb(ctx->cu, ctx->offset + if_target);
 
 	if_conditional = binop_expr(vm_type, binop, binary_left, binary_right);
 	if (!if_conditional)
@@ -50,6 +44,21 @@ static struct statement *__convert_if(struct parse_context *ctx,
 	expr_put(if_conditional);
       failed:
 	return NULL;
+}
+
+static struct statement *__convert_if(struct parse_context *ctx,
+				      enum vm_type vm_type,
+				      enum binary_operator binop,
+				      struct expression *binary_left,
+				      struct expression *binary_right)
+{
+	struct basic_block *true_bb;
+	int32_t if_target;
+
+	if_target = bytecode_read_branch_target(ctx->opc, ctx->buffer);
+	true_bb = find_bb(ctx->cu, ctx->offset + if_target);
+
+	return if_stmt(true_bb, vm_type, binop, binary_left, binary_right);
 }
 
 static int convert_if(struct parse_context *ctx, enum binary_operator binop)

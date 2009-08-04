@@ -53,7 +53,6 @@ static int convert_not_implemented(struct parse_context *ctx)
 	return warn("bytecode %d is not supported", ctx->opc), -EINVAL;
 }
 
-#define convert_tableswitch	convert_not_implemented
 #define convert_lookupswitch	convert_not_implemented
 
 #define convert_goto_w		convert_goto
@@ -74,8 +73,8 @@ void convert_expression(struct parse_context *ctx, struct expression *expr)
 	stack_push(ctx->bb->mimic_stack, expr);
 }
 
-static void
-do_convert_statement(struct basic_block *bb, struct statement *stmt, unsigned long bc_offset)
+void do_convert_statement(struct basic_block *bb, struct statement *stmt,
+			  unsigned long bc_offset)
 {
 	tree_patch_bc_offset(&stmt->node, bc_offset);
 	bb_add_stmt(bb, stmt);

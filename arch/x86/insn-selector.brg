@@ -53,10 +53,9 @@ static void select_insn(struct basic_block *bb, struct tree_node *tree,
 static void select_exception_test(struct basic_block *bb,
 				  struct tree_node *tree);
 
-static unsigned char type_to_scale(enum vm_type vm_type)
+static unsigned char size_to_scale(int size)
 {
-	/* Currently we can store not less than machine word at once */
-	switch (get_vmtype_size(vm_type)) {
+	switch (size) {
 	case 1:
 	     return 0;
 	case 2:
@@ -66,8 +65,14 @@ static unsigned char type_to_scale(enum vm_type vm_type)
 	case 8:
 	     return 3;
 	default:
-		error("Invalid type size");
+		error("Invalid size");
 	}
+}
+
+static unsigned char type_to_scale(enum vm_type vm_type)
+{
+	/* Currently we can store not less than machine word at once */
+	return size_to_scale(get_vmtype_size(vm_type));
 }
 
 static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
@@ -1817,6 +1822,26 @@ stmt:	STMT_GOTO
 	stmt = to_stmt(tree);
 
 	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, stmt->goto_target));
+}
+
+stmt:	STMT_TABLESWITCH(reg)
+{
+	struct statement *stmt;
+	struct var_info *base;
+	int scale;
+
+	stmt = to_stmt(tree);
+
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG,
+			(unsigned long) stmt->table->low, state->left->reg1));
+
+	base = get_var(s->b_parent, J_REFERENCE);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
+			(unsigned long) stmt->table->lookup_table, base));
+
+	scale = size_to_scale(sizeof(void *));
+	select_insn(s, tree, memindex_insn(INSN_JMP_MEMINDEX,
+					   base, state->left->reg1, scale));
 }
 
 stmt:	STMT_MONITOR_ENTER(reg)

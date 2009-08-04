@@ -82,6 +82,7 @@ JIT_OBJS = \
 	jit/spill-reload.o	\
 	jit/stack-slot.o	\
 	jit/statement.o		\
+	jit/switch-bc.o		\
 	jit/text.o		\
 	jit/trace-jit.o		\
 	jit/trampoline.o	\

@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include "vm/vm.h"
 
+struct tableswitch_info;
+
 enum statement_type {
 	STMT_STORE = OP_LAST,
 	STMT_IF,
@@ -19,7 +21,22 @@ enum statement_type {
 	STMT_MONITOR_EXIT,
 	STMT_CHECKCAST,
 	STMT_ARRAY_STORE_CHECK,
+	STMT_TABLESWITCH,
 	STMT_LAST,	/* Not a real type. Keep this last.  */
+};
+
+struct tableswitch {
+	uint32_t low;
+	uint32_t high;
+
+	union {
+		struct basic_block **bb_lookup_table;
+
+		/* Contains native pointers after instruction selection. */
+		void **lookup_table;
+	};
+
+	struct list_head list_node;
 };
 
 struct statement {
@@ -53,6 +70,11 @@ struct statement {
 			struct tree_node *store_check_src;
 			struct tree_node *store_check_array;
 		};
+		struct /* STMT_TABLESWITCH */ {
+			struct tree_node *index;
+			struct tableswitch *table;
+		};
+
 		/* STMT_EXPRESSION, STMT_ARRAY_CHECK */
 		struct tree_node *expression;
 	};
@@ -74,6 +96,10 @@ struct statement *alloc_statement(enum statement_type);
 void free_statement(struct statement *);
 int stmt_nr_kids(struct statement *);
 
+struct tableswitch *alloc_tableswitch(struct tableswitch_info *, struct compilation_unit *, unsigned long);
+void free_tableswitch(struct tableswitch *);
+struct statement *if_stmt(struct basic_block *, enum vm_type, enum binary_operator, struct expression *, struct expression *);
+
 #define for_each_stmt(stmt, stmt_list) list_for_each_entry(stmt, stmt_list, stmt_list_node)
-	
+
 #endif

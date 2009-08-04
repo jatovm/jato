@@ -29,6 +29,7 @@
 #include "jit/basic-block.h"
 #include "jit/compilation-unit.h"
 #include "jit/stack-slot.h"
+#include "jit/statement.h"
 #include "jit/vars.h"
 #include "lib/buffer.h"
 #include "vm/method.h"
@@ -70,6 +71,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 			goto out_of_memory;
 
 		INIT_LIST_HEAD(&cu->static_fixup_site_list);
+		INIT_LIST_HEAD(&cu->tableswitch_list);
 	}
 
 	return cu;
@@ -101,6 +103,16 @@ static void free_bc_offset_map(unsigned long *map)
 		free(map);
 }
 
+static void free_tableswitch_list(struct compilation_unit *cu)
+{
+	struct tableswitch *this, *next;
+
+	list_for_each_entry_safe(this, next, &cu->tableswitch_list, list_node) {
+		list_del(&this->list_node);
+		free_tableswitch(this);
+	}
+}
+
 void free_compilation_unit(struct compilation_unit *cu)
 {
 	struct basic_block *bb, *tmp_bb;
@@ -115,6 +127,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_var_infos(cu->var_infos);
 	free_stack_frame(cu->stack_frame);
 	free_bc_offset_map(cu->bc_offset_map);
+ 	free_tableswitch_list(cu);
 	free(cu);
 }
 

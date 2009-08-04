@@ -37,6 +37,7 @@
 #include "jit/exception.h"
 
 #include "vm/method.h"
+#include "vm/bytecode.h"
 #include "vm/bytecodes.h"
 #include "vm/stream.h"
 #include "vm/stdlib.h"
@@ -98,7 +99,7 @@ static unsigned long next_pc(const unsigned char *code, unsigned long current)
 {
 	unsigned long opc_size;
 
-	opc_size = bc_insn_size(&code[current]);
+	opc_size = bc_insn_size(code, current);
 	assert(opc_size != 0);
 
 	return current + opc_size;
@@ -289,7 +290,7 @@ static int subroutine_add_call_site(struct subroutine *sub,
 	sub->call_sites = new_tab;
 	sub->call_sites[sub->nr_call_sites++] = call_site;
 
-	sub->call_sites_total_size += bc_insn_size(&code[call_site]);
+	sub->call_sites_total_size += bc_insn_size(code, call_site);
 
 	return 0;
 }
@@ -354,7 +355,27 @@ static int do_subroutine_scan(struct subroutine_scan_context *ctx,
 			continue;
 		}
 
-		if (c[pc] == OPC_TABLESWITCH || c[pc] == OPC_LOOKUPSWITCH)
+		if (c[pc] == OPC_TABLESWITCH) {
+			struct tableswitch_info info;
+
+			get_tableswitch_info(c, pc, &info);
+			err = do_subroutine_scan(ctx, pc + info.default_target);
+			if (err)
+				return err;
+
+			for (unsigned int i = 0; i < info.count; i++) {
+				int32_t target;
+
+				target = read_s32(info.targets + i * 4);
+				err = do_subroutine_scan(ctx, pc + target);
+				if (err)
+					return err;
+			}
+
+			break;
+		}
+
+		if (c[pc] == OPC_LOOKUPSWITCH)
 			error("not implemented");
 
 		if (bc_is_jsr(c[pc])) {
@@ -443,7 +464,7 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 	return warn("subroutine end not found"), -EINVAL;
 
  out:
-	sub->epilog_size = bc_insn_size(&ctx->code.code[sub->end_pc]);
+	sub->epilog_size = bc_insn_size(ctx->code.code, sub->end_pc);
 	return 0;
 }
 

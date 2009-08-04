@@ -13,7 +13,7 @@
 static void assert_bc_insn_size(unsigned long expected_len, unsigned char opc)
 {
 	unsigned char code[] = { opc, 0x00, 0x00 };
-	assert_int_equals(expected_len, bc_insn_size(code));
+	assert_int_equals(expected_len, bc_insn_size(code, 0));
 }
 
 void test_size_of_bytecode(void)
@@ -25,7 +25,7 @@ void test_size_of_bytecode(void)
 static void assert_wide_bc_insn_size(unsigned long expected_len, unsigned char opc)
 {
 	unsigned char code[] = { OPC_WIDE, opc, 0x00, 0x00, 0x00, 0x00 };
-	assert_int_equals(expected_len, bc_insn_size(code));
+	assert_int_equals(expected_len, bc_insn_size(code, 0));
 }
 
 void test_size_of_wide_bytecode(void)

@@ -54,6 +54,8 @@ TOPLEVEL_OBJS := \
 	lib/list.o \
 	lib/radix-tree.o \
 	lib/string.o \
+	vm/bytecode.o \
+	vm/bytecodes.o \
 	vm/call.o \
 	vm/class.o \
 	vm/die.o \
