@@ -41,7 +41,7 @@ int get_stack_args_count(struct vm_method *method)
 	int i, count = 0;
 
 	for (i = 0; i < method->args_count; i++)
-		if (method->args_map[i].reg == REG_UNASSIGNED)
+		if (method->args_map[i].reg == MACH_REG_UNASSIGNED)
 			count++;
 
 	return count;

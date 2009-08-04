@@ -25,7 +25,7 @@
 	static struct live_interval interval##_var = {				\
 		.var_info = &_var,						\
 		.use_positions = LIST_HEAD_INIT(interval##_var.use_positions),	\
-		.reg = REG_UNASSIGNED,						\
+		.reg = MACH_REG_UNASSIGNED,						\
 	};									\
 
 #endif

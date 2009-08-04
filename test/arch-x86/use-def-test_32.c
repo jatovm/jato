@@ -24,9 +24,9 @@ DECLARE_STATIC_VREG(r2, VREG_OFFSET + 2);
 
 #define NR_VREGS VREG_OFFSET + 3
 
-DECLARE_STATIC_REG(eax, REG_EAX);
-DECLARE_STATIC_REG(ecx, REG_ECX);
-DECLARE_STATIC_REG(edx, REG_EDX);
+DECLARE_STATIC_REG(eax, MACH_REG_EAX);
+DECLARE_STATIC_REG(ecx, MACH_REG_ECX);
+DECLARE_STATIC_REG(edx, MACH_REG_EDX);
 
 static void assert_use_mask(int r0_set, int r1_set, int r2_set, struct insn *insn)
 {

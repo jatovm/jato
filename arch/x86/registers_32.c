@@ -30,47 +30,47 @@
 #include <assert.h>
 
 static enum machine_reg_type register_types[] = {
-	[REG_EAX] = REG_TYPE_GPR,
-	[REG_EBX] = REG_TYPE_GPR,
-	[REG_ECX] = REG_TYPE_GPR,
-	[REG_EDX] = REG_TYPE_GPR,
-	[REG_EDI] = REG_TYPE_GPR,
-	[REG_ESI] = REG_TYPE_GPR,
-	[REG_ESP] = REG_TYPE_GPR,
-	[REG_EBP] = REG_TYPE_GPR,
+	[MACH_REG_EAX] = REG_TYPE_GPR,
+	[MACH_REG_EBX] = REG_TYPE_GPR,
+	[MACH_REG_ECX] = REG_TYPE_GPR,
+	[MACH_REG_EDX] = REG_TYPE_GPR,
+	[MACH_REG_EDI] = REG_TYPE_GPR,
+	[MACH_REG_ESI] = REG_TYPE_GPR,
+	[MACH_REG_ESP] = REG_TYPE_GPR,
+	[MACH_REG_EBP] = REG_TYPE_GPR,
 
-	[REG_XMM0] = REG_TYPE_FPU,
-	[REG_XMM1] = REG_TYPE_FPU,
-	[REG_XMM2] = REG_TYPE_FPU,
-	[REG_XMM3] = REG_TYPE_FPU,
-	[REG_XMM4] = REG_TYPE_FPU,
-	[REG_XMM5] = REG_TYPE_FPU,
-	[REG_XMM6] = REG_TYPE_FPU,
-	[REG_XMM7] = REG_TYPE_FPU,
+	[MACH_REG_XMM0] = REG_TYPE_FPU,
+	[MACH_REG_XMM1] = REG_TYPE_FPU,
+	[MACH_REG_XMM2] = REG_TYPE_FPU,
+	[MACH_REG_XMM3] = REG_TYPE_FPU,
+	[MACH_REG_XMM4] = REG_TYPE_FPU,
+	[MACH_REG_XMM5] = REG_TYPE_FPU,
+	[MACH_REG_XMM6] = REG_TYPE_FPU,
+	[MACH_REG_XMM7] = REG_TYPE_FPU,
 };
 
 static const char *register_names[] = {
-	[REG_EAX] = "EAX",
-	[REG_ECX] = "ECX",
-	[REG_EDX] = "EDX",
-	[REG_EBX] = "EBX",
-	[REG_ESI] = "ESI",
-	[REG_EDI] = "EDI",
-	[REG_EBP] = "EBP",
-	[REG_ESP] = "ESP",
-	[REG_XMM0] = "XMM0",
-	[REG_XMM1] = "XMM1",
-	[REG_XMM2] = "XMM2",
-	[REG_XMM3] = "XMM3",
-	[REG_XMM4] = "XMM4",
-	[REG_XMM5] = "XMM5",
-	[REG_XMM6] = "XMM6",
-	[REG_XMM7] = "XMM7",
+	[MACH_REG_EAX] = "EAX",
+	[MACH_REG_ECX] = "ECX",
+	[MACH_REG_EDX] = "EDX",
+	[MACH_REG_EBX] = "EBX",
+	[MACH_REG_ESI] = "ESI",
+	[MACH_REG_EDI] = "EDI",
+	[MACH_REG_EBP] = "EBP",
+	[MACH_REG_ESP] = "ESP",
+	[MACH_REG_XMM0] = "XMM0",
+	[MACH_REG_XMM1] = "XMM1",
+	[MACH_REG_XMM2] = "XMM2",
+	[MACH_REG_XMM3] = "XMM3",
+	[MACH_REG_XMM4] = "XMM4",
+	[MACH_REG_XMM5] = "XMM5",
+	[MACH_REG_XMM6] = "XMM6",
+	[MACH_REG_XMM7] = "XMM7",
 };
 
 const char *reg_name(enum machine_reg reg)
 {
-	if (reg == REG_UNASSIGNED)
+	if (reg == MACH_REG_UNASSIGNED)
 		return "-";
 
 	return register_names[reg];
@@ -78,7 +78,7 @@ const char *reg_name(enum machine_reg reg)
 
 enum machine_reg_type reg_type(enum machine_reg reg)
 {
-	assert(reg != REG_UNASSIGNED);
+	assert(reg != MACH_REG_UNASSIGNED);
 
 	return register_types[reg];
 }

@@ -22,13 +22,13 @@ bool opt_trace_machine_code;
 
 static struct vm_method method;
 
-DECLARE_STATIC_REG(VAR_EAX, REG_EAX);
-DECLARE_STATIC_REG(VAR_EBX, REG_EBX);
-DECLARE_STATIC_REG(VAR_ECX, REG_ECX);
-DECLARE_STATIC_REG(VAR_EDX, REG_EDX);
+DECLARE_STATIC_REG(VAR_EAX, MACH_REG_EAX);
+DECLARE_STATIC_REG(VAR_EBX, MACH_REG_EBX);
+DECLARE_STATIC_REG(VAR_ECX, MACH_REG_ECX);
+DECLARE_STATIC_REG(VAR_EDX, MACH_REG_EDX);
 
-DECLARE_STATIC_REG(VAR_EBP, REG_EBP);
-DECLARE_STATIC_REG(VAR_ESP, REG_ESP);
+DECLARE_STATIC_REG(VAR_EBP, MACH_REG_EBP);
+DECLARE_STATIC_REG(VAR_ESP, MACH_REG_ESP);
 
 static void assert_emit_insn(unsigned char *expected,
 			     unsigned long expected_size,
@@ -523,8 +523,8 @@ assert_emit_target_for_backward_branches(unsigned char expected_prefix,
 	struct var_info *eax, *ebx;
 
 	cu = compilation_unit_alloc(&method);
-	eax = get_fixed_var(cu, REG_EAX);
-	ebx = get_fixed_var(cu, REG_EBX);
+	eax = get_fixed_var(cu, MACH_REG_EAX);
+	ebx = get_fixed_var(cu, MACH_REG_EBX);
 	
 	target_bb = get_basic_block(cu, 0, 1);
 
@@ -590,7 +590,7 @@ assert_backpatches_unresolved_branches_when_emitting_target(
 	struct var_info *eax;
 
 	cu = compilation_unit_alloc(&method);
-	eax = get_fixed_var(cu, REG_EAX);
+	eax = get_fixed_var(cu, MACH_REG_EAX);
 
 	branch_bb = get_basic_block(cu, 0, 1);
 	target_bb = get_basic_block(cu, 1, 2);

@@ -392,10 +392,10 @@ int allocate_registers(struct compilation_unit *cu)
 		if (!current->fixed_reg) {
 			try_to_allocate_free_reg(current, &active, &inactive, &unhandled);
 
-			if (current->reg == REG_UNASSIGNED)
+			if (current->reg == MACH_REG_UNASSIGNED)
 				allocate_blocked_reg(current, &active, &inactive, &unhandled);
 		}
-		if (current->reg != REG_UNASSIGNED)
+		if (current->reg != MACH_REG_UNASSIGNED)
 			list_add(&current->interval_node, &active);
 	}
 	free(registers);

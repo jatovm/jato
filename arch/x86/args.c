@@ -41,20 +41,20 @@ static enum machine_reg args_map_alloc_gpr(int gpr)
 {
 	switch (gpr) {
 	case 0:
-		return REG_RDI;
+		return MACH_REG_RDI;
 	case 1:
-		return REG_RSI;
+		return MACH_REG_RSI;
 	case 2:
-		return REG_RDX;
+		return MACH_REG_RDX;
 	case 3:
-		return REG_RCX;
+		return MACH_REG_RCX;
 	case 4:
-		return REG_R8;
+		return MACH_REG_R8;
 	case 5:
-		return REG_R9;
+		return MACH_REG_R9;
 	default:
 		assert(gpr > 5);
-		return REG_UNASSIGNED;
+		return MACH_REG_UNASSIGNED;
 	}
 }
 
@@ -104,11 +104,11 @@ int args_map_init(struct vm_method *method)
 			 * FIXME: This is wrong, but let's us
 			 * not worry about the status of FP.
 			 */
-			map->reg = REG_UNASSIGNED;
+			map->reg = MACH_REG_UNASSIGNED;
 			map->stack_index = stack_count++;
 			break;
 		default:
-			map->reg = REG_UNASSIGNED;
+			map->reg = MACH_REG_UNASSIGNED;
 			map->stack_index = stack_count++;
 			break;
 		}
@@ -123,7 +123,7 @@ int args_map_init(struct vm_method *method)
 	for (; idx < method->args_count; idx++) {
 		map = &method->args_map[idx];
 
-		map->reg = REG_UNASSIGNED;
+		map->reg = MACH_REG_UNASSIGNED;
 		map->stack_index = stack_count++;
 	}
 

@@ -267,27 +267,27 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 {
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
 
-	__emit_push_reg(buf, REG_xAX);
-	emit_exception_test(buf, REG_xAX);
-	__emit_pop_reg(buf, REG_xAX);
+	__emit_push_reg(buf, MACH_REG_xAX);
+	emit_exception_test(buf, MACH_REG_xAX);
+	__emit_pop_reg(buf, MACH_REG_xAX);
 }
 
 void emit_unlock(struct buffer *buf, struct vm_object *obj)
 {
 	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, REG_xAX);
-	__emit_push_reg(buf, REG_xDX);
+	__emit_push_reg(buf, MACH_REG_xAX);
+	__emit_push_reg(buf, MACH_REG_xDX);
 
 	__emit_push_imm(buf, (unsigned long)obj);
 	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
 
-	emit_exception_test(buf, REG_xAX);
+	emit_exception_test(buf, MACH_REG_xAX);
 
-	__emit_pop_reg(buf, REG_xDX);
-	__emit_pop_reg(buf, REG_xAX);
+	__emit_pop_reg(buf, MACH_REG_xDX);
+	__emit_pop_reg(buf, MACH_REG_xAX);
 }
 
 void emit_lock_this(struct buffer *buf)
@@ -296,13 +296,13 @@ void emit_lock_this(struct buffer *buf)
 
 	this_arg_offset = offsetof(struct jit_stack_frame, args);
 
-	__emit_push_membase(buf, REG_xBP, this_arg_offset);
+	__emit_push_membase(buf, MACH_REG_xBP, this_arg_offset);
 	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
 
-	__emit_push_reg(buf, REG_xAX);
-	emit_exception_test(buf, REG_xAX);
-	__emit_pop_reg(buf, REG_xAX);
+	__emit_push_reg(buf, MACH_REG_xAX);
+	emit_exception_test(buf, MACH_REG_xAX);
+	__emit_pop_reg(buf, MACH_REG_xAX);
 }
 
 void emit_unlock_this(struct buffer *buf)
@@ -312,17 +312,17 @@ void emit_unlock_this(struct buffer *buf)
 	this_arg_offset = offsetof(struct jit_stack_frame, args);
 
 	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, REG_xAX);
-	__emit_push_reg(buf, REG_xDX);
+	__emit_push_reg(buf, MACH_REG_xAX);
+	__emit_push_reg(buf, MACH_REG_xDX);
 
-	__emit_push_membase(buf, REG_xBP, this_arg_offset);
+	__emit_push_membase(buf, MACH_REG_xBP, this_arg_offset);
 	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
 
-	emit_exception_test(buf, REG_xAX);
+	emit_exception_test(buf, MACH_REG_xAX);
 
-	__emit_pop_reg(buf, REG_xDX);
-	__emit_pop_reg(buf, REG_xAX);
+	__emit_pop_reg(buf, MACH_REG_xDX);
+	__emit_pop_reg(buf, MACH_REG_xAX);
 }
 
 void backpatch_branch_target(struct buffer *buf,
@@ -366,7 +366,7 @@ void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 {
 	__emit_push_imm(buf, (unsigned long) cu);
 	__emit_call(buf, &trace_invoke);
-	__emit_add_imm_reg(buf, PTR_SIZE, REG_xSP);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
 }
 
 /*
@@ -521,39 +521,39 @@ static unsigned char __encode_reg(enum machine_reg reg)
 	unsigned char ret = 0;
 
 	switch (reg) {
-	case REG_EAX:
-	case REG_XMM0:
+	case MACH_REG_EAX:
+	case MACH_REG_XMM0:
 		ret = 0x00;
 		break;
-	case REG_EBX:
-	case REG_XMM3:
+	case MACH_REG_EBX:
+	case MACH_REG_XMM3:
 		ret = 0x03;
 		break;
-	case REG_ECX:
-	case REG_XMM1:
+	case MACH_REG_ECX:
+	case MACH_REG_XMM1:
 		ret = 0x01;
 		break;
-	case REG_EDX:
-	case REG_XMM2:
+	case MACH_REG_EDX:
+	case MACH_REG_XMM2:
 		ret = 0x02;
 		break;
-	case REG_ESI:
-	case REG_XMM6:
+	case MACH_REG_ESI:
+	case MACH_REG_XMM6:
 		ret = 0x06;
 		break;
-	case REG_EDI:
-	case REG_XMM7:
+	case MACH_REG_EDI:
+	case MACH_REG_XMM7:
 		ret = 0x07;
 		break;
-	case REG_ESP:
-	case REG_XMM4:
+	case MACH_REG_ESP:
+	case MACH_REG_XMM4:
 		ret = 0x04;
 		break;
-	case REG_EBP:
-	case REG_XMM5:
+	case MACH_REG_EBP:
+	case MACH_REG_XMM5:
 		ret = 0x05;
 		break;
-	case REG_UNASSIGNED:
+	case MACH_REG_UNASSIGNED:
 		assert(!"unassigned register in code emission");
 		break;
 	}
@@ -619,7 +619,7 @@ __emit_membase(struct buffer *buf, unsigned char opc,
 	unsigned char mod, rm, mod_rm;
 	int needs_sib;
 
-	needs_sib = (base_reg == REG_ESP);
+	needs_sib = (base_reg == MACH_REG_ESP);
 
 	emit(buf, opc);
 
@@ -730,7 +730,7 @@ emit_mov_memlocal_reg(struct buffer *buf, struct operand *src, struct operand *d
 	dest_reg = mach_reg(&dest->reg);
 	disp = slot_offset(src->slot);
 
-	__emit_membase_reg(buf, 0x8b, REG_EBP, disp, dest_reg);
+	__emit_membase_reg(buf, 0x8b, MACH_REG_EBP, disp, dest_reg);
 }
 
 static void
@@ -744,7 +744,7 @@ emit_mov_memlocal_freg(struct buffer *buf, struct operand *src, struct operand *
 
 	emit(buf, 0xf3);
 	emit(buf, 0x0f);
-	__emit_membase_reg(buf, 0x10, REG_EBP, disp, dest_reg);
+	__emit_membase_reg(buf, 0x10, MACH_REG_EBP, disp, dest_reg);
 }
 
 static void emit_mov_membase_reg(struct buffer *buf,
@@ -872,7 +872,7 @@ static void emit_mov_reg_memlocal(struct buffer *buf, struct operand *src,
 
 	emit(buf, 0x89);
 	emit(buf, encode_modrm(mod, encode_reg(&src->reg),
-			       __encode_reg(REG_EBP)));
+			       __encode_reg(MACH_REG_EBP)));
 
 	emit_imm(buf, disp);
 }
@@ -894,7 +894,7 @@ static void emit_mov_freg_memlocal(struct buffer *buf, struct operand *src,
 	emit(buf, 0x0f);
 	emit(buf, 0x11);
 	emit(buf, encode_modrm(mod, encode_reg(&src->reg),
-			       __encode_reg(REG_EBP)));
+			       __encode_reg(MACH_REG_EBP)));
 
 	emit_imm(buf, disp);
 }
@@ -961,29 +961,29 @@ static void emit_sbb_reg_reg(struct buffer *buf, struct operand *src,
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
 	/* Unconditionally push callee-saved registers */
-	__emit_push_reg(buf, REG_EDI);
-	__emit_push_reg(buf, REG_ESI);
-	__emit_push_reg(buf, REG_EBX);
+	__emit_push_reg(buf, MACH_REG_EDI);
+	__emit_push_reg(buf, MACH_REG_ESI);
+	__emit_push_reg(buf, MACH_REG_EBX);
 
-	__emit_push_reg(buf, REG_EBP);
-	__emit_mov_reg_reg(buf, REG_ESP, REG_EBP);
+	__emit_push_reg(buf, MACH_REG_EBP);
+	__emit_mov_reg_reg(buf, MACH_REG_ESP, MACH_REG_EBP);
 
 	if (nr_locals)
-		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), REG_ESP);
+		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), MACH_REG_ESP);
 }
 
 static void emit_pop_memlocal(struct buffer *buf, struct operand *operand)
 {
 	unsigned long disp = slot_offset(operand->slot);
 
-	__emit_membase(buf, 0x8f, REG_EBP, disp, 0);
+	__emit_membase(buf, 0x8f, MACH_REG_EBP, disp, 0);
 }
 
 static void emit_push_memlocal(struct buffer *buf, struct operand *operand)
 {
 	unsigned long disp = slot_offset(operand->slot);
 
-	__emit_membase(buf, 0xff, REG_EBP, disp, 6);
+	__emit_membase(buf, 0xff, MACH_REG_EBP, disp, 6);
 }
 
 static void emit_pop_reg(struct buffer *buf, struct operand *operand)
@@ -1011,9 +1011,9 @@ static void emit_push_imm(struct buffer *buf, struct operand *operand)
 
 static void emit_restore_regs(struct buffer *buf)
 {
-	__emit_pop_reg(buf, REG_EBX);
-	__emit_pop_reg(buf, REG_ESI);
-	__emit_pop_reg(buf, REG_EDI);
+	__emit_pop_reg(buf, MACH_REG_EBX);
+	__emit_pop_reg(buf, MACH_REG_ESI);
+	__emit_pop_reg(buf, MACH_REG_EDI);
 }
 
 static void emit_adc_reg_reg(struct buffer *buf,
@@ -1112,7 +1112,7 @@ static void __emit_div_mul_membase_eax(struct buffer *buf,
 	long disp;
 	int mod;
 
-	assert(mach_reg(&dest->reg) == REG_EAX);
+	assert(mach_reg(&dest->reg) == MACH_REG_EAX);
 
 	disp = src->disp;
 
@@ -1131,7 +1131,7 @@ static void __emit_div_mul_reg_eax(struct buffer *buf,
 				       struct operand *dest,
 				       unsigned char opc_ext)
 {
-	assert(mach_reg(&dest->reg) == REG_EAX);
+	assert(mach_reg(&dest->reg) == MACH_REG_EAX);
 
 	emit(buf, 0xf7);
 	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(&src->base_reg)));
@@ -1164,8 +1164,8 @@ static void emit_neg_reg(struct buffer *buf, struct operand *operand)
 
 static void emit_cltd_reg_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
-	assert(mach_reg(&src->reg) == REG_EAX);
-	assert(mach_reg(&dest->reg) == REG_EDX);
+	assert(mach_reg(&src->reg) == MACH_REG_EAX);
+	assert(mach_reg(&dest->reg) == MACH_REG_EDX);
 
 	emit(buf, 0x99);
 }
@@ -1186,7 +1186,7 @@ static void __emit_shift_reg_reg(struct buffer *buf,
 				 struct operand *src,
 				 struct operand *dest, unsigned char opc_ext)
 {
-	assert(mach_reg(&src->reg) == REG_ECX);
+	assert(mach_reg(&src->reg) == MACH_REG_ECX);
 
 	emit(buf, 0xd3);
 	emit(buf, encode_modrm(0x03, opc_ext, encode_reg(&dest->reg)));
@@ -1474,12 +1474,12 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	/* This is for __builtin_return_address() to work and to access
 	   call arguments in correct manner. */
-	__emit_push_reg(buf, REG_EBP);
-	__emit_mov_reg_reg(buf, REG_ESP, REG_EBP);
+	__emit_push_reg(buf, MACH_REG_EBP);
+	__emit_mov_reg_reg(buf, MACH_REG_ESP, MACH_REG_EBP);
 
 	__emit_push_imm(buf, (unsigned long)cu);
 	__emit_call(buf, call_target);
-	__emit_add_imm_reg(buf, 0x04, REG_ESP);
+	__emit_add_imm_reg(buf, 0x04, MACH_REG_ESP);
 
 	/*
 	 * Test for exeption occurance.
@@ -1492,28 +1492,28 @@ void emit_trampoline(struct compilation_unit *cu,
 	emit(buf, 0x65);
 	__emit_memdisp_reg(buf, 0x8b,
 			   get_thread_local_offset(&trampoline_exception_guard),
-			   REG_ECX);
-	__emit_test_membase_reg(buf, REG_ECX, 0, REG_ECX);
+			   MACH_REG_ECX);
+	__emit_test_membase_reg(buf, MACH_REG_ECX, 0, MACH_REG_ECX);
 
-	__emit_push_reg(buf, REG_EAX);
+	__emit_push_reg(buf, MACH_REG_EAX);
 
 	if (method_is_virtual(cu->method)) {
 		/* For JNI calls 'this' pointer is in the second call
 		   argument. */
 		if (vm_method_is_jni(cu->method))
-			__emit_push_membase(buf, REG_EBP, 0x0c);
+			__emit_push_membase(buf, MACH_REG_EBP, 0x0c);
 		else
-			__emit_push_membase(buf, REG_EBP, 0x08);
+			__emit_push_membase(buf, MACH_REG_EBP, 0x08);
 
 		__emit_push_imm(buf, (unsigned long)cu);
 		__emit_call(buf, fixup_vtable);
-		__emit_add_imm_reg(buf, 0x08, REG_ESP);
+		__emit_add_imm_reg(buf, 0x08, MACH_REG_ESP);
 	}
 
-	__emit_pop_reg(buf, REG_EAX);
+	__emit_pop_reg(buf, MACH_REG_EAX);
 
-	__emit_pop_reg(buf, REG_EBP);
-	emit_indirect_jump_reg(buf, REG_EAX);
+	__emit_pop_reg(buf, MACH_REG_EBP);
+	emit_indirect_jump_reg(buf, MACH_REG_EAX);
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
@@ -1533,7 +1533,7 @@ static void emit_itable_bsearch(struct buffer *buf,
 	/* No point in emitting the "cmp" if we're not going to test
 	 * anything */
 	if (b - a >= 1)
-		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, REG_EAX);
+		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
 
 	if (m - a > 0) {
 		/* open-coded "jb" */
@@ -1555,8 +1555,8 @@ static void emit_itable_bsearch(struct buffer *buf,
 		emit_imm32(buf, 0);
 	}
 
-	__emit_add_imm_reg(buf, 4 * table[m]->c_method->virtual_index, REG_ECX);
-	emit_really_indirect_jump_reg(buf, REG_ECX);
+	__emit_add_imm_reg(buf, 4 * table[m]->c_method->virtual_index, MACH_REG_ECX);
+	emit_really_indirect_jump_reg(buf, MACH_REG_ECX);
 
 	/* This emits the code for checking the interval [a, m> */
 	if (jb_addr) {
@@ -1604,7 +1604,7 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 
 	/* Load the start of the vtable into %ecx. Later we just add the
 	 * right offset to %ecx and jump to *(%ecx). */
-	__emit_mov_imm_reg(buf, (long) vmc->vtable.native_ptr, REG_ECX);
+	__emit_mov_imm_reg(buf, (long) vmc->vtable.native_ptr, MACH_REG_ECX);
 
 	emit_itable_bsearch(buf, table, 0, nr_entries - 1);
 
@@ -1637,55 +1637,55 @@ static unsigned char __encode_reg(enum machine_reg reg)
 	unsigned char ret = 0;
 
 	switch (reg) {
-	case REG_RAX:
+	case MACH_REG_RAX:
 		ret = 0x00;
 		break;
-	case REG_RBX:
+	case MACH_REG_RBX:
 		ret = 0x03;
 		break;
-	case REG_RCX:
+	case MACH_REG_RCX:
 		ret = 0x01;
 		break;
-	case REG_RDX:
+	case MACH_REG_RDX:
 		ret = 0x02;
 		break;
-	case REG_RSI:
+	case MACH_REG_RSI:
 		ret = 0x06;
 		break;
-	case REG_RDI:
+	case MACH_REG_RDI:
 		ret = 0x07;
 		break;
-	case REG_RSP:
+	case MACH_REG_RSP:
 		ret = 0x04;
 		break;
-	case REG_RBP:
+	case MACH_REG_RBP:
 		ret = 0x05;
 		break;
-	case REG_R8:
+	case MACH_REG_R8:
 		ret = 0x08;
 		break;
-	case REG_R9:
+	case MACH_REG_R9:
 		ret = 0x09;
 		break;
-	case REG_R10:
+	case MACH_REG_R10:
 		ret = 0x0A;
 		break;
-	case REG_R11:
+	case MACH_REG_R11:
 		ret = 0x0B;
 		break;
-	case REG_R12:
+	case MACH_REG_R12:
 		ret = 0x0C;
 		break;
-	case REG_R13:
+	case MACH_REG_R13:
 		ret = 0x0D;
 		break;
-	case REG_R14:
+	case MACH_REG_R14:
 		ret = 0x0E;
 		break;
-	case REG_R15:
+	case MACH_REG_R15:
 		ret = 0x0F;
 		break;
-	case REG_UNASSIGNED:
+	case MACH_REG_UNASSIGNED:
 		assert(!"unassigned register in code emission");
 		break;
 	}
@@ -1972,7 +1972,7 @@ static void __emit_membase(struct buffer *buf,
 	unsigned char __base_reg = __encode_reg(base_reg);
 	int needs_sib;
 
-	needs_sib = (base_reg == REG_RSP);
+	needs_sib = (base_reg == MACH_REG_RSP);
 
 	if (needs_sib)
 		rm = 0x04;
@@ -2257,7 +2257,7 @@ static void emit_mov_memlocal_reg(struct buffer *buf,
 	dest_reg = mach_reg(&dest->reg);
 	disp = slot_offset(src->slot);
 
-	__emit_membase_reg(buf, 1, 0x8b, REG_RBP, disp, dest_reg);
+	__emit_membase_reg(buf, 1, 0x8b, MACH_REG_RBP, disp, dest_reg);
 }
 
 static void emit_mov_reg_memlocal(struct buffer *buf,
@@ -2270,7 +2270,7 @@ static void emit_mov_reg_memlocal(struct buffer *buf,
 	src_reg = mach_reg(&src->reg);
 	disp = slot_offset(dest->slot);
 
-	__emit_reg_membase(buf, 1, 0x89, src_reg, REG_RBP, disp);
+	__emit_reg_membase(buf, 1, 0x89, src_reg, MACH_REG_RBP, disp);
 }
 
 static void __emit_cmp_imm_reg(struct buffer *buf,
@@ -2348,11 +2348,11 @@ struct emitter emitters[] = {
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
-	__emit_push_reg(buf, REG_RBX);
-	__emit_push_reg(buf, REG_R12);
-	__emit_push_reg(buf, REG_R13);
-	__emit_push_reg(buf, REG_R14);
-	__emit_push_reg(buf, REG_R15);
+	__emit_push_reg(buf, MACH_REG_RBX);
+	__emit_push_reg(buf, MACH_REG_R12);
+	__emit_push_reg(buf, MACH_REG_R13);
+	__emit_push_reg(buf, MACH_REG_R14);
+	__emit_push_reg(buf, MACH_REG_R15);
 
 	/*
 	 * The ABI requires us to clear DF, but we
@@ -2360,22 +2360,22 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 	 * emit(buf, 0xFC);
 	 */
 
-	__emit_push_reg(buf, REG_RBP);
-	__emit64_mov_reg_reg(buf, REG_RSP, REG_RBP);
+	__emit_push_reg(buf, MACH_REG_RBP);
+	__emit64_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
 
 	if (nr_locals)
 		__emit64_sub_imm_reg(buf,
 				     nr_locals * sizeof(unsigned long),
-				     REG_RSP);
+				     MACH_REG_RSP);
 }
 
 static void emit_restore_regs(struct buffer *buf)
 {
-	__emit_pop_reg(buf, REG_R15);
-	__emit_pop_reg(buf, REG_R14);
-	__emit_pop_reg(buf, REG_R13);
-	__emit_pop_reg(buf, REG_R12);
-	__emit_pop_reg(buf, REG_RBX);
+	__emit_pop_reg(buf, MACH_REG_R15);
+	__emit_pop_reg(buf, MACH_REG_R14);
+	__emit_pop_reg(buf, MACH_REG_R13);
+	__emit_pop_reg(buf, MACH_REG_R12);
+	__emit_pop_reg(buf, MACH_REG_RBX);
 }
 
 void emit_trampoline(struct compilation_unit *cu,
@@ -2390,21 +2390,21 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	/* This is for __builtin_return_address() to work and to access
 	   call arguments in correct manner. */
-	__emit64_push_reg(buf, REG_RBP);
-	__emit64_mov_reg_reg(buf, REG_RSP, REG_RBP);
+	__emit64_push_reg(buf, MACH_REG_RBP);
+	__emit64_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
 
 	/*
 	 * %rdi, %rsi, %rdx, %rcx, %r8 and %r9 are used
 	 * to pass parameters, so save them if they get modified.
 	 */
-	__emit64_push_reg(buf, REG_RDI);
-	__emit64_push_reg(buf, REG_RSI);
-	__emit64_push_reg(buf, REG_RDX);
-	__emit64_push_reg(buf, REG_RCX);
-	__emit64_push_reg(buf, REG_R8);
-	__emit64_push_reg(buf, REG_R9);
+	__emit64_push_reg(buf, MACH_REG_RDI);
+	__emit64_push_reg(buf, MACH_REG_RSI);
+	__emit64_push_reg(buf, MACH_REG_RDX);
+	__emit64_push_reg(buf, MACH_REG_RCX);
+	__emit64_push_reg(buf, MACH_REG_R8);
+	__emit64_push_reg(buf, MACH_REG_R9);
 
-	__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDI);
+	__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 	__emit_call(buf, call_target);
 
 	/*
@@ -2418,36 +2418,36 @@ void emit_trampoline(struct compilation_unit *cu,
 	emit(buf, 0x64);
 	__emit_memdisp_reg(buf, 1, 0x8b,
 			   get_thread_local_offset(&trampoline_exception_guard),
-			   REG_RCX);
-	__emit64_test_membase_reg(buf, REG_RCX, 0, REG_RCX);
+			   MACH_REG_RCX);
+	__emit64_test_membase_reg(buf, MACH_REG_RCX, 0, MACH_REG_RCX);
 
 	if (method_is_virtual(cu->method)) {
-		__emit64_push_reg(buf, REG_RAX);
+		__emit64_push_reg(buf, MACH_REG_RAX);
 
-		__emit64_mov_imm_reg(buf, (unsigned long) cu, REG_RDI);
+		__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 
 		/* For JNI calls 'this' pointer is in the second call
 		   argument. */
 		if (vm_method_is_jni(cu->method))
-			__emit64_mov_membase_reg(buf, REG_RBP, 0x18, REG_RSI);
+			__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x18, MACH_REG_RSI);
 		else
-			__emit64_mov_membase_reg(buf, REG_RBP, 0x10, REG_RSI);
+			__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x10, MACH_REG_RSI);
 
-		__emit64_mov_reg_reg(buf, REG_RAX, REG_RDX);
+		__emit64_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
 		__emit_call(buf, fixup_vtable);
 
-		__emit64_pop_reg(buf, REG_RAX);
+		__emit64_pop_reg(buf, MACH_REG_RAX);
 	}
 
-	__emit64_pop_reg(buf, REG_R9);
-	__emit64_pop_reg(buf, REG_R8);
-	__emit64_pop_reg(buf, REG_RCX);
-	__emit64_pop_reg(buf, REG_RDX);
-	__emit64_pop_reg(buf, REG_RSI);
-	__emit64_pop_reg(buf, REG_RDI);
+	__emit64_pop_reg(buf, MACH_REG_R9);
+	__emit64_pop_reg(buf, MACH_REG_R8);
+	__emit64_pop_reg(buf, MACH_REG_RCX);
+	__emit64_pop_reg(buf, MACH_REG_RDX);
+	__emit64_pop_reg(buf, MACH_REG_RSI);
+	__emit64_pop_reg(buf, MACH_REG_RDI);
 
-	__emit64_pop_reg(buf, REG_RBP);
-	emit_indirect_jump_reg(buf, REG_RAX);
+	__emit64_pop_reg(buf, MACH_REG_RBP);
+	emit_indirect_jump_reg(buf, MACH_REG_RAX);
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();

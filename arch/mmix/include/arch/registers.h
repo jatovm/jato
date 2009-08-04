@@ -9,7 +9,7 @@ enum machine_reg {
 	/* The above registers are available for register allocator.  */
 	NR_REGISTERS,
 
-	REG_UNASSIGNED = ~0UL,
+	MACH_REG_UNASSIGNED = ~0UL,
 };
 
 enum machine_reg_type reg_type(enum machine_reg reg);

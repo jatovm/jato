@@ -146,9 +146,9 @@ struct mach_reg_def {
 };
 
 static struct mach_reg_def checkregs[] = {
-	{ REG_xAX, DEF_xAX },
-	{ REG_xCX, DEF_xCX },
-	{ REG_xDX, DEF_xDX },
+	{ MACH_REG_xAX, DEF_xAX },
+	{ MACH_REG_xCX, DEF_xCX },
+	{ MACH_REG_xDX, DEF_xDX },
 };
 
 

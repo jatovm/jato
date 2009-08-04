@@ -40,7 +40,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 	struct live_interval *interval = zalloc(sizeof *interval);
 	if (interval) {
 		interval->var_info = var;
-		interval->reg = REG_UNASSIGNED;
+		interval->reg = MACH_REG_UNASSIGNED;
 		interval->fixed_reg = false;
 		interval->range.start = ~0UL;
 		interval->range.end = 0UL;
@@ -88,7 +88,7 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 	if (!new)
 		return NULL;
 
-	new->reg = REG_UNASSIGNED;
+	new->reg = MACH_REG_UNASSIGNED;
 	new->range.start = pos;
 	new->range.end = interval->range.end;
 	interval->range.end = pos;

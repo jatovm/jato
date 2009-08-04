@@ -247,7 +247,7 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 	 * In that case, we need to find what the *real* destination interval
 	 * is.
 	 */
-	while (to_it->reg == REG_UNASSIGNED) {
+	while (to_it->reg == MACH_REG_UNASSIGNED) {
 		to_it = to_it->next_child;
 		assert(to_it);
 	}
@@ -256,7 +256,7 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 	 * Same goes for the source interval, but we do not have a prev_child
 	 * field, so we need to cheat a bit.
 	 */
-	while (from_it->reg == REG_UNASSIGNED) {
+	while (from_it->reg == MACH_REG_UNASSIGNED) {
 		from_it = from_it->prev_child;
 		assert(from_it);
 	}

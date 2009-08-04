@@ -210,7 +210,7 @@ print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 					/* In use */
 					trace_printf("UUU");
 				} else {
-					if (var->interval->reg == REG_UNASSIGNED)
+					if (var->interval->reg == MACH_REG_UNASSIGNED)
 						trace_printf("***");
 					else
 						trace_printf("---");

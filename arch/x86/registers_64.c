@@ -30,44 +30,44 @@
 #include <assert.h>
 
 static enum machine_reg_type register_types[] = {
-	[REG_RAX] = REG_TYPE_GPR,
-	[REG_RBX] = REG_TYPE_GPR,
-	[REG_RCX] = REG_TYPE_GPR,
-	[REG_RDX] = REG_TYPE_GPR,
-	[REG_RDI] = REG_TYPE_GPR,
-	[REG_RSI] = REG_TYPE_GPR,
-	[REG_R8] = REG_TYPE_GPR,
-	[REG_R9] = REG_TYPE_GPR,
-	[REG_R10] = REG_TYPE_GPR,
-	[REG_R11] = REG_TYPE_GPR,
-	[REG_R12] = REG_TYPE_GPR,
-	[REG_R13] = REG_TYPE_GPR,
-	[REG_R14] = REG_TYPE_GPR,
-	[REG_R15] = REG_TYPE_GPR,
+	[MACH_REG_RAX] = REG_TYPE_GPR,
+	[MACH_REG_RBX] = REG_TYPE_GPR,
+	[MACH_REG_RCX] = REG_TYPE_GPR,
+	[MACH_REG_RDX] = REG_TYPE_GPR,
+	[MACH_REG_RDI] = REG_TYPE_GPR,
+	[MACH_REG_RSI] = REG_TYPE_GPR,
+	[MACH_REG_R8] = REG_TYPE_GPR,
+	[MACH_REG_R9] = REG_TYPE_GPR,
+	[MACH_REG_R10] = REG_TYPE_GPR,
+	[MACH_REG_R11] = REG_TYPE_GPR,
+	[MACH_REG_R12] = REG_TYPE_GPR,
+	[MACH_REG_R13] = REG_TYPE_GPR,
+	[MACH_REG_R14] = REG_TYPE_GPR,
+	[MACH_REG_R15] = REG_TYPE_GPR,
 };
 
 static const char *register_names[] = {
-	[REG_RAX] = "RAX",
-	[REG_RCX] = "RCX",
-	[REG_RDX] = "RDX",
-	[REG_RBX] = "RBX",
-	[REG_RSI] = "RSI",
-	[REG_RDI] = "RDI",
-	[REG_R8]  = "R8",
-	[REG_R9]  = "R9",
-	[REG_R10] = "R10",
-	[REG_R11] = "R11",
-	[REG_R12] = "R12",
-	[REG_R13] = "R13",
-	[REG_R14] = "R14",
-	[REG_R15] = "R15",
-	[REG_RSP] = "RSP",
-	[REG_RBP] = "RBP",
+	[MACH_REG_RAX] = "RAX",
+	[MACH_REG_RCX] = "RCX",
+	[MACH_REG_RDX] = "RDX",
+	[MACH_REG_RBX] = "RBX",
+	[MACH_REG_RSI] = "RSI",
+	[MACH_REG_RDI] = "RDI",
+	[MACH_REG_R8]  = "R8",
+	[MACH_REG_R9]  = "R9",
+	[MACH_REG_R10] = "R10",
+	[MACH_REG_R11] = "R11",
+	[MACH_REG_R12] = "R12",
+	[MACH_REG_R13] = "R13",
+	[MACH_REG_R14] = "R14",
+	[MACH_REG_R15] = "R15",
+	[MACH_REG_RSP] = "RSP",
+	[MACH_REG_RBP] = "RBP",
 };
 
 const char *reg_name(enum machine_reg reg)
 {
-	if (reg == REG_UNASSIGNED)
+	if (reg == MACH_REG_UNASSIGNED)
 		return "-";
 
 	return register_names[reg];
@@ -75,7 +75,7 @@ const char *reg_name(enum machine_reg reg)
 
 enum machine_reg_type reg_type(enum machine_reg reg)
 {
-	assert(reg != REG_UNASSIGNED);
+	assert(reg != MACH_REG_UNASSIGNED);
 
 	return register_types[reg];
 }
