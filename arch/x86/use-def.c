@@ -124,6 +124,16 @@ static struct insn_info insn_infos[] = {
 	DECLARE_INFO(INSN_XOR_XMM_REG_REG, USE_SRC | USE_DST | DEF_DST),
 };
 
+void insn_sanity_check(void)
+{
+	assert(ARRAY_SIZE(insn_infos) == NR_INSN_TYPES);
+
+	for (unsigned int i = 0; i < NR_INSN_TYPES; ++i) {
+		if (insn_infos[i].flags == 0)
+			die("missing insn_info for %d", i);
+	}
+}
+
 static inline struct insn_info *get_info(struct insn *insn)
 {
 	return insn_infos + insn->type;

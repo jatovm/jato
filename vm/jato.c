@@ -1014,6 +1014,12 @@ do_method_trace(void)
 	return 0;
 }
 
+/* XXX: This should probably be in arch headers, BUT: it's only used in one
+ * place _anyway_ (namely here), and we can't include arch headers here
+ * because our register definitions conflict with the system header
+ * ucontext.h. */
+void insn_sanity_check(void);
+
 int
 main(int argc, char *argv[])
 {
@@ -1026,6 +1032,9 @@ main(int argc, char *argv[])
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 #endif
+
+	/* Sanity checks first of all. */
+	insn_sanity_check();
 
 	parse_options(argc, argv);
 

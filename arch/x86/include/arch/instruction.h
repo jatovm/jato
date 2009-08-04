@@ -139,6 +139,9 @@ enum insn_type {
 	INSN_XOR_IMM_REG,
 	INSN_XOR_REG_REG,
 	INSN_XOR_XMM_REG_REG,
+
+	/* Must be last */
+	NR_INSN_TYPES,
 };
 
 struct insn {
@@ -160,6 +163,8 @@ struct insn {
 	bool escaped;
 	unsigned long bytecode_offset;
 };
+
+void insn_sanity_check(void);
 
 static inline unsigned long lir_position(struct use_position *reg)
 {
