@@ -105,7 +105,7 @@ static inline bool vm_method_is_vm_native(struct vm_method *vmm)
 
 static inline enum vm_type method_return_type(struct vm_method *method)
 {
-	char *return_type = method->type + (strlen(method->type) - 1);
+	char *return_type = index(method->type, ')') + 1;
 	return str_to_type(return_type);
 }
 
