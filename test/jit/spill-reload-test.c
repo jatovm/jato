@@ -62,7 +62,7 @@ void test_spill_insn_is_inserted_at_the_end_of_the_interval_if_necessary(void)
         r2 = get_var(cu, J_INT);
 
         insn_array[0] = arithmetic_insn(INSN_ADD, r1, r1, r1);
-        insn_array[1] = arithmetic_insn(INSN_ADD, r2, r2, r2);
+        insn_array[1] = arithmetic_insn(INSN_ADD, r1, r2, r2);
 
         bb = get_basic_block(cu, 0, 2);
         bb_add_insn(bb, insn_array[0]);
@@ -81,13 +81,13 @@ void test_spill_insn_is_inserted_at_the_end_of_the_interval_if_necessary(void)
 	assert_ptr_equals(insn_array[0], insn);
 
 	/*
-	 * Last instruction stays the same. 
+	 * Last instruction stays the same.
 	 */
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_ptr_equals(insn_array[1], insn);
 
 	/*
-	 * A spill instruction is inserted after the interval end.
+	 * A spill instruction is inserted at the end of the interval.
 	 */ 
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_st_insn(INSN_ST_LOCAL, r1->interval->spill_slot, r1->interval->reg, insn);

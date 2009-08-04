@@ -148,6 +148,7 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 
 	for_each_variable(var, bb->b_parent->var_infos) {
 		if (insn_uses(insn, var)) {
+			__update_live_range(&var->interval->range, insn->lir_pos);
 			/*
 			 * It's in the use set if and only if it has not
 			 * _already_ been defined by insn basic block.
@@ -156,8 +157,10 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 				set_bit(bb->use_set->bits, var->vreg);
 		}
 
-		if (insn_defs(insn, var))
+		if (insn_defs(insn, var)) {
+			__update_live_range(&var->interval->range, insn->lir_pos);
 			set_bit(bb->def_set->bits, var->vreg);
+		}
 	}
 }
 
@@ -169,15 +172,7 @@ static void analyze_use_def(struct compilation_unit *cu)
 		struct insn *insn;
 
 		for_each_insn(insn, &bb->insn_list) {
-			struct var_info *var;
-
 			__analyze_use_def(bb, insn);
-
-			for_each_variable(var, bb->b_parent->var_infos) {
-				if (test_bit(bb->def_set->bits, var->vreg) ||
-				    test_bit(bb->use_set->bits, var->vreg))
-					__update_live_range(&var->interval->range, insn->lir_pos);
-			}
 		}
 	}
 }
