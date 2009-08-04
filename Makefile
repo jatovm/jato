@@ -264,6 +264,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/RegisterAllocatorTortureTest.java \
 	regression/jvm/StackTraceTest.java \
 	regression/jvm/StringTest.java \
+	regression/jvm/SwitchTest.java \
 	regression/jvm/SynchronizationExceptionsTest.java \
 	regression/jvm/SynchronizationTest.java \
 	regression/jvm/TestCase.java \
