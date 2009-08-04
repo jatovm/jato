@@ -45,6 +45,7 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_CONVERSION_TO_FLOAT:
 	case EXPR_CONVERSION_FROM_FLOAT:
 	case EXPR_INSTANCE_FIELD:
+	case EXPR_FLOAT_INSTANCE_FIELD:
 	case EXPR_INVOKE:
 	case EXPR_INVOKEINTERFACE:
 	case EXPR_INVOKEVIRTUAL:
@@ -62,6 +63,9 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_MULTIARRAY_SIZE_CHECK:
 		return 1;
 	case EXPR_VALUE:
+	case EXPR_FLOAT_LOCAL:
+	case EXPR_FLOAT_TEMPORARY:
+	case EXPR_FLOAT_CLASS_FIELD:
 	case EXPR_FVALUE:
 	case EXPR_LOCAL:
 	case EXPR_TEMPORARY:
@@ -122,11 +126,15 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_VALUE:
 	case EXPR_FVALUE:
 	case EXPR_LOCAL:
+	case EXPR_FLOAT_LOCAL:
 	case EXPR_TEMPORARY:
+	case EXPR_FLOAT_TEMPORARY:
 	case EXPR_CLASS_FIELD:
+	case EXPR_FLOAT_CLASS_FIELD:
 	case EXPR_NO_ARGS:
 	case EXPR_EXCEPTION_REF:
 	case EXPR_INSTANCE_FIELD:
+	case EXPR_FLOAT_INSTANCE_FIELD:
 	case EXPR_MIMIC_STACK_SLOT:
 		return true;
 
@@ -215,7 +223,13 @@ struct expression *fvalue_expr(enum vm_type vm_type, double fvalue)
 
 struct expression *local_expr(enum vm_type vm_type, unsigned long local_index)
 {
-	struct expression *expr = alloc_expression(EXPR_LOCAL, vm_type);
+	struct expression *expr;
+
+	if (vm_type_is_float(vm_type))
+		expr = alloc_expression(EXPR_FLOAT_LOCAL, vm_type);
+	else
+		expr = alloc_expression(EXPR_LOCAL, vm_type);
+
 	if (expr)
 		expr->local_index = local_index;
 
@@ -224,7 +238,13 @@ struct expression *local_expr(enum vm_type vm_type, unsigned long local_index)
 
 struct expression *temporary_expr(enum vm_type vm_type, struct var_info *tmp_high, struct var_info *tmp_low)
 {
-	struct expression *expr = alloc_expression(EXPR_TEMPORARY, vm_type);
+	struct expression *expr;
+
+	if (vm_type_is_float(vm_type))
+		expr = alloc_expression(EXPR_FLOAT_TEMPORARY, vm_type);
+	else
+		expr = alloc_expression(EXPR_TEMPORARY, vm_type);
+
 	if (expr) {
 		expr->tmp_high = tmp_high;
 		expr->tmp_low = tmp_low;
@@ -310,7 +330,13 @@ struct expression *conversion_from_float_expr(enum vm_type vm_type,
 
 struct expression *class_field_expr(enum vm_type vm_type, struct vm_field *class_field)
 {
-	struct expression *expr = alloc_expression(EXPR_CLASS_FIELD, vm_type);
+	struct expression *expr;
+
+	if (vm_type_is_float(vm_type))
+		expr = alloc_expression(EXPR_FLOAT_CLASS_FIELD, vm_type);
+	else
+		expr = alloc_expression(EXPR_CLASS_FIELD, vm_type);
+
 	if (expr)
 		expr->class_field = class_field;
 	return expr;
@@ -320,7 +346,13 @@ struct expression *instance_field_expr(enum vm_type vm_type,
 				       struct vm_field *instance_field,
 				       struct expression *objectref_expression)
 {
-	struct expression *expr = alloc_expression(EXPR_INSTANCE_FIELD, vm_type);
+	struct expression *expr;
+
+	if (vm_type_is_float(vm_type))
+		expr = alloc_expression(EXPR_FLOAT_INSTANCE_FIELD, vm_type);
+	else
+		expr = alloc_expression(EXPR_INSTANCE_FIELD, vm_type);
+
 	if (expr) {
 		expr->objectref_expression = &objectref_expression->node;
 		expr->instance_field = instance_field;

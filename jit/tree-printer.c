@@ -88,7 +88,9 @@ static int simple_expr(struct expression *expr)
 	return type == EXPR_VALUE || type == EXPR_FVALUE || type == EXPR_LOCAL
 	    || type == EXPR_TEMPORARY || type == EXPR_CLASS_FIELD
 	    || type == EXPR_NO_ARGS || type == EXPR_EXCEPTION_REF
-	    || type == EXPR_MIMIC_STACK_SLOT;
+	    || type == EXPR_MIMIC_STACK_SLOT || type == EXPR_FLOAT_LOCAL
+	    || type == EXPR_FLOAT_TEMPORARY || type == EXPR_FLOAT_CLASS_FIELD
+	    || type == EXPR_FLOAT_INSTANCE_FIELD;
 }
 
 static int __tree_print(int, struct tree_node *, struct string *);
@@ -368,6 +370,14 @@ static int print_value_expr(int lvl, struct string *str,
 			  expr->value);
 }
 
+static int print_float_local_expr(int lvl, struct string *str,
+			    struct expression *expr)
+{
+	return str_append(str, "[float-local %s %lu]",
+			  type_names[expr->vm_type],
+			  expr->local_index);
+}
+
 static int print_fvalue_expr(int lvl, struct string *str,
 			     struct expression *expr)
 {
@@ -388,6 +398,30 @@ static int print_temporary_expr(int lvl, struct string *str,
 	int err;
 
 	err = str_append(str, "[temporary %s ", type_names[expr->vm_type]);
+	if (err)
+		goto out;
+
+	if (expr->tmp_high) {
+		err = str_append(str, "0x%lx (high), ", expr->tmp_high);
+		if (err)
+			goto out;
+	}
+
+	err = str_append(str, "0x%lx (low)]", expr->tmp_low);
+	if (err)
+		goto out;
+
+out:
+	return err;
+}
+
+static int print_float_temporary_expr(int lvl, struct string *str,
+				      struct expression *expr)
+{
+	int err;
+
+	err = str_append(str, "[float-temporary %s ",
+			 type_names[expr->vm_type]);
 	if (err)
 		goto out;
 
@@ -560,12 +594,52 @@ static int print_class_field_expr(int lvl, struct string *str,
 			  expr->class_field->name);
 }
 
+static int print_float_class_field_expr(int lvl, struct string *str,
+					struct expression *expr)
+{
+	return str_append(str, "[float_class_field %s %p '%s.%s']",
+			  type_names[expr->vm_type], expr->class_field,
+			  expr->class_field->class->name,
+			  expr->class_field->name);
+}
+
 static int print_instance_field_expr(int lvl, struct string *str,
 				     struct expression *expr)
 {
 	int err;
 
 	err = append_formatted(lvl, str, "INSTANCE_FIELD:\n");
+	if (err)
+		goto out;
+
+	err =
+	    append_simple_attr(lvl + 1, str, "vm_type",
+			       type_names[expr->vm_type]);
+	if (err)
+		goto out;
+
+	err =
+	    append_simple_attr(lvl + 1, str, "instance_field", "%p '%s.%s'",
+			       expr->instance_field,
+			       expr->instance_field->class->name,
+			       expr->instance_field->name);
+	if (err)
+		goto out;
+
+	err =
+	    append_tree_attr(lvl + 1, str, "objectref_expression",
+			     expr->objectref_expression);
+
+out:
+	return err;
+}
+
+static int print_float_instance_field_expr(int lvl, struct string *str,
+					   struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "FLOAT_INSTANCE_FIELD:\n");
 	if (err)
 		goto out;
 
@@ -925,6 +999,8 @@ typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
 	[EXPR_VALUE] = print_value_expr,
+	[EXPR_FLOAT_LOCAL] = print_float_local_expr,
+	[EXPR_FLOAT_TEMPORARY] = print_float_temporary_expr,
 	[EXPR_FVALUE] = print_fvalue_expr,
 	[EXPR_LOCAL] = print_local_expr,
 	[EXPR_TEMPORARY] = print_temporary_expr,
@@ -935,7 +1011,9 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_CONVERSION_FROM_FLOAT] = print_conversion_expr,
 	[EXPR_CONVERSION_TO_FLOAT] = print_conversion_expr,
 	[EXPR_CLASS_FIELD] = print_class_field_expr,
+	[EXPR_FLOAT_CLASS_FIELD] = print_float_class_field_expr,
 	[EXPR_INSTANCE_FIELD] = print_instance_field_expr,
+	[EXPR_FLOAT_INSTANCE_FIELD] = print_float_instance_field_expr,
 	[EXPR_INVOKE] = print_invoke_expr,
 	[EXPR_INVOKEINTERFACE] = print_invokeinterface_expr,
 	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,

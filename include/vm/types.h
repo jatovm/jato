@@ -1,6 +1,8 @@
 #ifndef __VM_TYPES_H
 #define __VM_TYPES_H
 
+#include <stdbool.h>
+
 enum vm_type {
 	J_VOID,
 	J_REFERENCE,
@@ -25,5 +27,10 @@ enum vm_type bytecode_type_to_vmtype(int);
 int vmtype_to_bytecode_type(enum vm_type);
 int get_vmtype_size(enum vm_type);
 const char *get_vm_type_name(enum vm_type);
+
+static inline bool vm_type_is_float(enum vm_type type)
+{
+	return type == J_FLOAT || type == J_DOUBLE;
+}
 
 #endif
