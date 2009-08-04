@@ -360,16 +360,33 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 		      int *arg_index)
 {
 	if (arg_type == J_LONG || arg_type == J_DOUBLE) {
-		unsigned long long value;
+		union {
+			unsigned long long ullvalue;
+			double dvalue;
+		} value;
 
-		value = *(unsigned long long*)(args + *arg_index);
+		value.ullvalue = *(unsigned long long*)(args + *arg_index);
 		(*arg_index) += 2;
 
-		trace_printf("0x%llx", value);
+		trace_printf("0x%llx", value.ullvalue);
+
+		if (arg_type == J_DOUBLE)
+			trace_printf("(%lf)", value.dvalue);
 		return;
 	}
 
 	trace_printf("0x%lx ", args[*arg_index]);
+
+	if (arg_type == J_FLOAT) {
+		union {
+			unsigned long ulvalue;
+			float fvalue;
+		} value;
+
+		value.ulvalue = args[*arg_index];
+
+		trace_printf("(%f)", value.fvalue);
+	}
 
 	if (arg_type == J_REFERENCE) {
 		struct vm_object *obj;
