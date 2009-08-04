@@ -542,6 +542,30 @@ static jobject vm_jni_get_object_field(struct vm_jni_env *env, jobject object,
 	return field_get_object(object, field);
 }
 
+static jbyte *
+vm_jni_get_byte_array_elements(struct vm_jni_env *env, jobject array,
+			       jboolean *is_copy)
+{
+	jbyte *result;
+
+	if (!vm_class_is_array_class(array->class) ||
+	    vm_class_get_array_element_class(array->class) != vm_byte_class)
+		return NULL;
+
+	result = malloc(sizeof(jbyte) * array->array_length);
+	if (!result)
+		return NULL;
+
+	for (long i = 0; i < array->array_length; i++)
+		result[i] = array_get_field_byte(array, i);
+
+	if (is_copy)
+		*is_copy = JNI_TRUE;
+
+	return result;
+}
+
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -804,7 +828,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* NewFloatArray */
 	NULL, /* NewDoubleArray */
 	NULL, /* GetBooleanArrayElements */
-	NULL, /* GetByteArrayElements */
+	vm_jni_get_byte_array_elements,
 
 	/* 185 */
 	NULL, /* GetCharArrayElements */
