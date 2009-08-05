@@ -40,6 +40,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+static struct var_info *
+do_get_var(struct compilation_unit *cu, enum vm_type vm_type, enum machine_reg_type reg_type)
+{
+	struct var_info *ret;
+
+	if (cu->is_reg_alloc_done) {
+		die("cannot allocate temporaries after register allocation");
+	}
+
+	ret = malloc(sizeof *ret);
+	if (!ret)
+		goto out;
+
+	ret->vreg = cu->nr_vregs++;
+	ret->next = cu->var_infos;
+	ret->interval = alloc_interval(ret);
+
+	ret->vm_type = vm_type;
+	ret->type = reg_type;
+
+	cu->var_infos = ret;
+  out:
+	return ret;
+}
+
 struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 {
 	struct compilation_unit *cu = malloc(sizeof *cu);
@@ -72,6 +97,18 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 		INIT_LIST_HEAD(&cu->static_fixup_site_list);
 		INIT_LIST_HEAD(&cu->tableswitch_list);
+
+		for (unsigned int i = 0; i < NR_FIXED_REGISTERS; ++i) {
+			struct var_info *ret;
+
+			ret = do_get_var(cu, GPR_VM_TYPE, REG_TYPE_GPR);
+			if (ret) {
+				ret->interval->reg = i;
+				ret->interval->fixed_reg = true;
+			}
+
+			cu->fixed_var_infos[i] = ret;
+		}
 	}
 
 	return cu;
@@ -131,30 +168,6 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free(cu);
 }
 
-static struct var_info *
-do_get_var(struct compilation_unit *cu, enum vm_type vm_type, enum machine_reg_type reg_type)
-{
-	struct var_info *ret;
-
-	if (cu->is_reg_alloc_done)
-		die("cannot allocate temporaries after register allocation");
-
-	ret = malloc(sizeof *ret);
-	if (!ret)
-		goto out;
-
-	ret->vreg = cu->nr_vregs++;
-	ret->next = cu->var_infos;
-	ret->interval = alloc_interval(ret);
-
-	ret->vm_type = vm_type;
-	ret->type = reg_type;
-
-	cu->var_infos = ret;
-  out:
-	return ret;
-}
-
 struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
 	if (vm_type == J_FLOAT || vm_type == J_DOUBLE)
@@ -165,15 +178,9 @@ struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 
 struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
 {
-	struct var_info *ret;
+	assert(reg < NR_FIXED_REGISTERS);
 
-	ret = do_get_var(cu, GPR_VM_TYPE, REG_TYPE_GPR);
-	if (ret) {
-		ret->interval->reg = reg;
-		ret->interval->fixed_reg = true;
-	}
-
-	return ret;
+	return cu->fixed_var_infos[reg];
 }
 
 /**

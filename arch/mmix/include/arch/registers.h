@@ -9,6 +9,9 @@ enum machine_reg {
 	/* The above registers are available for register allocator.  */
 	NR_REGISTERS,
 
+	/* The above registers are available for get_fixed_var().  */
+	NR_FIXED_REGISTERS = NR_REGISTERS,
+
 	MACH_REG_UNASSIGNED = ~0UL,
 };
 

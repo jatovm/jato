@@ -556,6 +556,9 @@ static unsigned char __encode_reg(enum machine_reg reg)
 	case MACH_REG_UNASSIGNED:
 		assert(!"unassigned register in code emission");
 		break;
+	case NR_FIXED_REGISTERS:
+		assert(!"NR_FIXED_REGISTERS");
+		break;
 	}
 	return ret;
 }
@@ -1736,6 +1739,9 @@ static unsigned char __encode_reg(enum machine_reg reg)
 		break;
 	case MACH_REG_UNASSIGNED:
 		assert(!"unassigned register in code emission");
+		break;
+	case NR_FIXED_REGISTERS:
+		assert(!"NR_FIXED_REGISTERS");
 		break;
 	}
 	return ret;

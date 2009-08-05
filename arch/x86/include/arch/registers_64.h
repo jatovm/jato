@@ -26,6 +26,9 @@ enum machine_reg {
 	MACH_REG_RSP = NR_REGISTERS, /* R4 */
 	MACH_REG_RBP, /* R5 */
 
+	/* The above registers are available for get_fixed_var().  */
+	NR_FIXED_REGISTERS,
+
 	/* Either-R**-or-E** variants (for 32/64-bit common code). */
 	MACH_REG_xAX = MACH_REG_RAX,
 	MACH_REG_xCX = MACH_REG_RCX,

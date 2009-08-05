@@ -1,6 +1,7 @@
 #ifndef __JIT_COMPILATION_UNIT_H
 #define __JIT_COMPILATION_UNIT_H
 
+#include "arch/registers.h"
 #include "jit/basic-block.h"
 
 #include "lib/list.h"
@@ -26,6 +27,7 @@ struct compilation_unit {
 	struct basic_block *unwind_bb;
 	struct var_info *var_infos;
 	unsigned long nr_vregs;
+	struct var_info *fixed_var_infos[NR_FIXED_REGISTERS];
 	bool is_reg_alloc_done;
 	struct buffer *objcode;
 	bool is_compiled;

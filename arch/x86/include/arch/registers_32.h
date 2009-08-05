@@ -29,6 +29,9 @@ enum machine_reg {
 	MACH_REG_EBP = NR_REGISTERS,
 	MACH_REG_ESP,
 
+	/* The above registers are available for get_fixed_var().  */
+	NR_FIXED_REGISTERS,
+
 	/* Either-R**-or-E** variants (for 32/64-bit common code). */
 	MACH_REG_xAX = MACH_REG_EAX,
 	MACH_REG_xCX = MACH_REG_ECX,
