@@ -53,7 +53,7 @@ static void assert_convert_binop(enum vm_type vm_type,
 	convert_to_ir(bb->b_parent);
 	expr = stack_pop(bb->mimic_stack);
 
-	//	assert_binop_expr(vm_type, binary_operator, left, right, &expr->node);
+	assert_binop_expr(vm_type, binary_operator, left, right, &expr->node);
 	assert_true(stack_is_empty(bb->mimic_stack));
 
 	expr_put(expr);
