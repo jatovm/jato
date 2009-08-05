@@ -609,6 +609,26 @@ static jint vm_jni_call_int_method(struct vm_jni_env *env, jobject this,
 	return result;
 }
 
+static jboolean vm_jni_call_boolean_method(struct vm_jni_env *env, jobject this,
+					   jmethodID methodID, ...)
+{
+	va_list args;
+	jboolean result;
+
+	enter_vm_from_jni();
+
+	/*
+	 * TODO: When these functions are used to call private methods
+	 * and constructors, the method ID must be derived from the
+	 * real class of obj, not from one of its superclasses.
+	 */
+	va_start(args, methodID);
+	result = (jboolean) vm_call_method_this_v(methodID, this, args);
+	va_end(args);
+
+	return result;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -666,7 +686,7 @@ void *vm_jni_native_interface[] = {
 	/* 35 */
 	NULL, /* CallObjectMethodV */
 	NULL, /* CallObjectMethodA */
-	NULL, /* CallBooleanMethod */
+	vm_jni_call_boolean_method,
 	NULL, /* CallBooleanMethodV */
 	NULL, /* CallBooleanMethodA */
 
