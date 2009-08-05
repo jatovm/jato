@@ -59,11 +59,8 @@
  *     |   Local m    :
  *     +--------------+
  */
-#ifdef CONFIG_X86_32
-#define ARGS_START_OFFSET (sizeof(unsigned long) * 5)
-#else
-#define ARGS_START_OFFSET (sizeof(unsigned long) * 7)
-#endif
+
+#define ARGS_START_OFFSET offsetof(struct jit_stack_frame, args)
 
 static unsigned long __index_to_offset(unsigned long index)
 {
