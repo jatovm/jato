@@ -14,6 +14,8 @@ struct native_stack_frame {
 	unsigned long args[0];
 } __attribute__((packed));
 
+#ifdef CONFIG_X86_32
+
 struct jit_stack_frame {
 	void *prev; /* previous stack frame link */
 	unsigned long old_ebx;
@@ -22,6 +24,21 @@ struct jit_stack_frame {
 	unsigned long return_address;
 	unsigned long args[0];
 } __attribute__((packed));
+
+#else
+
+struct jit_stack_frame {
+	void *prev; /* previous stack frame link */
+	unsigned long old_r15;
+	unsigned long old_r14;
+	unsigned long old_r13;
+	unsigned long old_r12;
+	unsigned long old_rbx;
+	unsigned long return_address;
+	unsigned long args[0];
+} __attribute__((packed));
+
+#endif /* CONFIG_X86_32 */
 
 unsigned long frame_local_offset(struct vm_method *, struct expression *);
 unsigned long slot_offset(struct stack_slot *slot);
