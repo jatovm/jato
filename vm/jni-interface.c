@@ -581,6 +581,14 @@ vm_jni_release_byte_array_elements(struct vm_jni_env *env, jobject array,
 		free(elems);
 }
 
+static void *
+vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
+{
+	/* We can't return direct buffer because we use machine word size
+	   elements for arrays. */
+	return NULL;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -914,7 +922,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* NewDirectByteBuffer */
 
 	/* 230 */
-	NULL, /* GetDirectBufferAddress */
+	vm_jni_get_direct_buffer_address,
 	NULL, /* GetDirectBufferCapacity */
 	NULL,
 	NULL,
