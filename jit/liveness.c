@@ -144,23 +144,32 @@ static int analyze_live_sets(struct compilation_unit *cu)
 
 static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 {
-	struct var_info *var;
+	struct var_info *uses[MAX_REG_OPERANDS];
+	struct var_info *defs[MAX_REG_OPERANDS];
+	int nr_uses;
+	int nr_defs;
+	int i;
 
-	for_each_variable(var, bb->b_parent->var_infos) {
-		if (insn_uses(insn, var)) {
-			__update_live_range(&var->interval->range, insn->lir_pos);
-			/*
-			 * It's in the use set if and only if it has not
-			 * _already_ been defined by insn basic block.
-			 */
-			if (!test_bit(bb->def_set->bits, var->vreg))
-				set_bit(bb->use_set->bits, var->vreg);
-		}
+	nr_uses = insn_uses(insn, uses);
+	for (i = 0; i < nr_uses; i++) {
+		struct var_info *var = uses[i];
 
-		if (insn_defs(insn, var)) {
-			__update_live_range(&var->interval->range, insn->lir_pos);
-			set_bit(bb->def_set->bits, var->vreg);
-		}
+		__update_live_range(&var->interval->range, insn->lir_pos);
+
+		/*
+		 * It's in the use set if and only if it has not
+		 * _already_ been defined by insn basic block.
+		 */
+		if (!test_bit(bb->def_set->bits, var->vreg))
+			set_bit(bb->use_set->bits, var->vreg);
+	}	
+	
+	nr_defs = insn_defs(bb->b_parent, insn, defs);
+	for (i = 0; i < nr_defs; i++) {
+		struct var_info *var = defs[i];
+
+		__update_live_range(&var->interval->range, insn->lir_pos);
+		set_bit(bb->def_set->bits, var->vreg);
 	}
 }
 

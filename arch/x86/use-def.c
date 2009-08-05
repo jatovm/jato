@@ -7,6 +7,7 @@
 
 #include "jit/compilation-unit.h"
 #include "arch/instruction.h"
+#include "jit/vars.h"
 
 enum {
 	DEF_DST		= 1,
@@ -157,61 +158,44 @@ static struct mach_reg_def checkregs[] = {
 };
 
 
-bool insn_defs(struct insn *insn, struct var_info *var)
+int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **defs)
 {
 	struct insn_info *info;
-	unsigned long vreg;
-	unsigned int i;
+	int nr = 0;
 
 	info = get_info(insn);
-	vreg = var->vreg;
 
-	if (info->flags & DEF_SRC) {
-		if (is_vreg(&insn->src.reg, vreg))
-			return true;
+	if (info->flags & DEF_SRC)
+		defs[nr++] = insn->src.reg.interval->var_info;
+
+	if (info->flags & DEF_DST)
+		defs[nr++] = insn->dest.reg.interval->var_info;
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(checkregs); i++) {
+		if (info->flags & checkregs[i].def)
+			defs[nr++] = cu->fixed_var_infos[checkregs[i].reg];
 	}
-
-	if (info->flags & DEF_DST) {
-		if (is_vreg(&insn->dest.reg, vreg))
-			return true;
-	}
-
-	for (i = 0; i < ARRAY_SIZE(checkregs); i++) {
-		if (info->flags & checkregs[i].def &&
-				var->interval->reg == checkregs[i].reg)
-			return true;
-	}
-
-	return false;
+	return nr;
 }
 
-bool insn_uses(struct insn *insn, struct var_info *var)
+int insn_uses(struct insn *insn, struct var_info **uses)
 {
 	struct insn_info *info;
-	unsigned long vreg;
+	int nr = 0;
 
 	info = get_info(insn);
-	vreg = var->vreg;
 
-	if (info->flags & USE_SRC) {
-		if (is_vreg(&insn->src.reg, vreg))
-			return true;
-	}
+	if (info->flags & USE_SRC)
+		uses[nr++] = insn->src.reg.interval->var_info;
 
-	if (info->flags & USE_DST) {
-		if (is_vreg(&insn->dest.reg, vreg))
-			return true;
-	}
+	if (info->flags & USE_DST)
+		uses[nr++] = insn->dest.reg.interval->var_info;
 
-	if (info->flags & USE_IDX_SRC) {
-		if (is_vreg(&insn->src.index_reg, vreg))
-			return true;
-	}
+	if (info->flags & USE_IDX_SRC)
+		uses[nr++] = insn->src.index_reg.interval->var_info;
 
-	if (info->flags & USE_IDX_DST) {
-		if (is_vreg(&insn->dest.index_reg, vreg))
-			return true;
-	}
+	if (info->flags & USE_IDX_DST)
+		uses[nr++] = insn->dest.index_reg.interval->var_info;
 
-	return false;
+	return nr;
 }

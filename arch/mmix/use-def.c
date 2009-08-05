@@ -32,36 +32,31 @@ static inline struct insn_info *get_info(struct insn *insn)
 	return insn_infos + insn->type;
 }
 
-bool insn_defs(struct insn *insn, struct var_info *var)
+int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **defs)
 {
 	struct insn_info *info;
-	unsigned long vreg;
+	int nr = 0;
 
 	info = get_info(insn);
-	vreg = var->vreg;
 
-	if (info->flags & DEF_X) {
-		if (is_vreg(&insn->x.reg, vreg))
-			return true;
-	}
-	return false;
+	if (info->flags & DEF_X)
+		defs[nr++] = insn->x.reg.interval->var_info;
+
+	return nr;
 }
 
-bool insn_uses(struct insn *insn, struct var_info *var)
+int insn_uses(struct insn *insn, struct var_info **uses)
 {
 	struct insn_info *info;
-	unsigned long vreg;
+	int nr = 0;
 
 	info = get_info(insn);
-	vreg = var->vreg;
 
-	if (info->flags & USE_Y) {
-		if (is_vreg(&insn->y.reg, vreg))
-			return true;
-	}
-	if (info->flags & USE_Z) {
-		if (is_vreg(&insn->z.reg, vreg))
-			return true;
-	}
-	return false;
+	if (info->flags & USE_Y)
+		uses[nr++] = insn->y.reg.interval->var_info;
+
+	if (info->flags & USE_Z)
+		uses[nr++] = insn->z.reg.interval->var_info;
+
+	return nr;
 }

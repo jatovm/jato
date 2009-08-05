@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 
+struct compilation_unit;
 struct stack_slot;
 
 /*
@@ -59,6 +60,8 @@ struct insn {
 	unsigned long bytecode_offset;
 };
 
+#define MAX_REG_OPERANDS 3
+
 static inline unsigned long lir_position(struct use_position *reg)
 {
 	return reg->insn->lir_pos;
@@ -108,8 +111,8 @@ exception_spill_insn(struct stack_slot *slot)
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
-bool insn_defs(struct insn *, struct var_info *);
-bool insn_uses(struct insn *, struct var_info *);
+int insn_defs(struct compilation_unit *, struct insn *, struct var_info **);
+int insn_uses(struct insn *, struct var_info **);
 
 static inline const char *reg_name(enum machine_reg reg)
 {

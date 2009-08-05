@@ -11,6 +11,7 @@
 
 #include <stdbool.h>
 
+struct compilation_unit;
 struct basic_block;
 struct bitset;
 
@@ -170,6 +171,11 @@ struct insn {
 	unsigned long bytecode_offset;
 };
 
+/* Each instruction has two operands and each of them can refer to two explicit
+   registers.  An instruction can also clobber EAX/RAX, ECX/RCX, and EDX/RDX
+   implicitly.  */
+#define MAX_REG_OPERANDS 4 + 3
+
 void insn_sanity_check(void);
 
 static inline unsigned long lir_position(struct use_position *reg)
@@ -261,8 +267,8 @@ pop_slot_insn(struct stack_slot *to)
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
-bool insn_defs(struct insn *, struct var_info *);
-bool insn_uses(struct insn *, struct var_info *);
+int insn_defs(struct compilation_unit *, struct insn *, struct var_info **);
+int insn_uses(struct insn *, struct var_info **);
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 
