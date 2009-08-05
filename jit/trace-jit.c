@@ -22,6 +22,7 @@
 #include "lib/string.h"
 #include "vm/bytecodes.h"
 #include "vm/class.h"
+#include "vm/jni.h"
 #include "vm/method.h"
 #include "vm/object.h"
 #include "vm/preload.h"
@@ -30,6 +31,7 @@
 
 #include "arch/stack-frame.h"
 
+#include <ctype.h>
 #include <malloc.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -356,6 +358,69 @@ void trace_magic_trampoline(struct compilation_unit *cu)
 	trace_flush();
 }
 
+static void print_array(struct vm_object *obj)
+{
+	const int max_elems = 20;
+	struct vm_class *elem_class;
+	enum vm_type type;
+
+	elem_class = vm_class_get_array_element_class(obj->class);
+	type = vm_class_get_storage_vmtype(elem_class);
+
+	trace_printf("= {");
+
+	for (int i = 0; i < obj->array_length && i < max_elems; i++) {
+		if (i > 0)
+			trace_printf(" ,");
+
+		if (type == J_CHAR) {
+			jchar c = array_get_field_char(obj, i);
+
+			if (isprint(c))
+				trace_printf("'%c'", c);
+			else
+				trace_printf("<%d>", c);
+
+			continue;
+		}
+
+		switch (type) {
+		case J_REFERENCE:
+			trace_printf("%p", array_get_field_ptr(obj, i));
+			break;
+		case J_BYTE:
+			trace_printf("%x", (int)array_get_field_byte(obj, i));
+			break;
+		case J_SHORT:
+			trace_printf("%x", (int)array_get_field_short(obj, i));
+			break;
+		case J_INT:
+			trace_printf("%x", array_get_field_int(obj, i));
+			break;
+		case J_LONG:
+			trace_printf("%llx", array_get_field_long(obj, i));
+			break;
+		case J_FLOAT:
+			trace_printf("%f", array_get_field_float(obj, i));
+			break;
+		case J_DOUBLE:
+			trace_printf("%f", array_get_field_double(obj, i));
+			break;
+		case J_BOOLEAN:
+			trace_printf("%s", array_get_field_boolean(obj, i)
+				     ? "true" : "false");
+			break;
+		default:
+			error("invalid array element type");
+		}
+	}
+
+	if (obj->array_length > max_elems)
+		trace_printf(", ...%d more", obj->array_length - max_elems);
+
+	trace_printf("}");
+}
+
 static void print_arg(enum vm_type arg_type, const unsigned long *args,
 		      int *arg_index)
 {
@@ -410,6 +475,9 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 			trace_printf("= \"%s\"", str);
 			free(str);
 		}
+
+		if (vm_class_is_array_class(obj->class))
+			print_array(obj);
 
 		trace_printf(" (%s)", obj->class->name);
 	}

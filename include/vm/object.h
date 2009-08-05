@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "vm/jni.h"
 #include "vm/field.h"
 #include "vm/thread.h"
 #include "vm/vm.h"
@@ -135,6 +136,42 @@ static inline void
 array_set_field_byte(struct vm_object *obj, int index, uint8_t value)
 {
 	*(uint8_t *) &obj->fields[index * get_vmtype_size(J_BYTE)] = value;
+}
+
+static inline jboolean
+array_get_field_boolean(struct vm_object *obj, int index)
+{
+	return *(jboolean *) &obj->fields[index * get_vmtype_size(J_BOOLEAN)];
+}
+
+static inline jshort
+array_get_field_short(struct vm_object *obj, int index)
+{
+	return *(jshort *) &obj->fields[index * get_vmtype_size(J_SHORT)];
+}
+
+static inline jint
+array_get_field_int(struct vm_object *obj, int index)
+{
+	return *(jint *) &obj->fields[index * get_vmtype_size(J_INT)];
+}
+
+static inline jlong
+array_get_field_long(struct vm_object *obj, int index)
+{
+	return *(jlong *) &obj->fields[index * get_vmtype_size(J_LONG)];
+}
+
+static inline float
+array_get_field_float(struct vm_object *obj, int index)
+{
+	return *(float *) &obj->fields[index * get_vmtype_size(J_FLOAT)];
+}
+
+static inline double
+array_get_field_double(struct vm_object *obj, int index)
+{
+	return *(double *) &obj->fields[index * get_vmtype_size(J_DOUBLE)];
 }
 
 static inline void
