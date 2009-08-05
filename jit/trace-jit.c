@@ -454,6 +454,13 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 		trace_printf("(%f)", value.fvalue);
 	}
 
+	if (arg_type == J_CHAR) {
+		char c = args[*arg_index] & 0xFF;
+
+		if (isprint(c))
+			trace_printf("('%c')", c);
+	}
+
 	if (arg_type == J_REFERENCE) {
 		struct vm_object *obj;
 
