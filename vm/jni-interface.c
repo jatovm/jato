@@ -589,6 +589,26 @@ vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
 	return NULL;
 }
 
+static jint vm_jni_call_int_method(struct vm_jni_env *env, jobject this,
+				   jmethodID methodID, ...)
+{
+	va_list args;
+	jint result;
+
+	enter_vm_from_jni();
+
+	/*
+	 * TODO: When these functions are used to call private methods
+	 * and constructors, the method ID must be derived from the
+	 * real class of obj, not from one of its superclasses.
+	 */
+	va_start(args, methodID);
+	result = (jint) vm_call_method_this_v(methodID, this, args);
+	va_end(args);
+
+	return result;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -662,7 +682,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* CallShortMethod */
 	NULL, /* CallShortMethodV */
 	NULL, /* CallShortMethodA */
-	NULL, /* CallIntMethod */
+	vm_jni_call_int_method,
 
 	/* 50 */
 	NULL, /* CallIntMethodV */
