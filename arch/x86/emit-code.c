@@ -63,6 +63,10 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg);
 static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
 static void emit_restore_regs(struct buffer *buf);
 
+static void __emit_mov_xmm_membase(struct buffer *buf, enum machine_reg src,
+				   enum machine_reg base, unsigned long offs);
+static void __emit_mov_membase_xmm(struct buffer *buf, enum machine_reg base, unsigned long offs, enum machine_reg dst);
+
 /************************
  * Common code emitters *
  ************************/
@@ -974,6 +978,16 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 	__emit_push_reg(buf, MACH_REG_ESI);
 	__emit_push_reg(buf, MACH_REG_EBX);
 
+	__emit_sub_imm_reg(buf, 4 * 8, MACH_REG_ESP);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM0, MACH_REG_ESP, 0);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM1, MACH_REG_ESP, 4);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM2, MACH_REG_ESP, 8);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM3, MACH_REG_ESP, 12);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM4, MACH_REG_ESP, 16);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM5, MACH_REG_ESP, 20);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM6, MACH_REG_ESP, 24);
+	__emit_mov_xmm_membase(buf, MACH_REG_XMM7, MACH_REG_ESP, 28);
+
 	__emit_push_reg(buf, MACH_REG_EBP);
 	__emit_mov_reg_reg(buf, MACH_REG_ESP, MACH_REG_EBP);
 
@@ -1020,6 +1034,16 @@ static void emit_push_imm(struct buffer *buf, struct operand *operand)
 
 static void emit_restore_regs(struct buffer *buf)
 {
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 0, MACH_REG_XMM0);
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 4, MACH_REG_XMM1);
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 8, MACH_REG_XMM2);
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 12, MACH_REG_XMM3);
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 16, MACH_REG_XMM4);
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 20, MACH_REG_XMM5);
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 24, MACH_REG_XMM6);
+	__emit_mov_membase_xmm(buf, MACH_REG_ESP, 28, MACH_REG_XMM7);
+	__emit_add_imm_reg(buf, 4 * 8, MACH_REG_ESP);
+
 	__emit_pop_reg(buf, MACH_REG_EBX);
 	__emit_pop_reg(buf, MACH_REG_ESI);
 	__emit_pop_reg(buf, MACH_REG_EDI);
@@ -1402,6 +1426,24 @@ static void emit_mov_memindex_xmm(struct buffer *buf, struct operand *src,
 	emit(buf, 0x10);
 	emit(buf, encode_modrm(0x00, encode_reg(&dest->reg), 0x04));
 	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
+}
+
+static void __emit_mov_xmm_membase(struct buffer *buf, enum machine_reg src,
+				   enum machine_reg base, unsigned long offs)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	__emit_membase_reg(buf, 0x11, base, offs, src);
+
+}
+
+static void __emit_mov_membase_xmm(struct buffer *buf, enum machine_reg base,
+				   unsigned long offs, enum machine_reg dst)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	__emit_membase_reg(buf, 0x10, base, offs, dst);
+
 }
 
 static void emit_mov_xmm_membase(struct buffer *buf, struct operand *src,

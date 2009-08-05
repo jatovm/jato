@@ -134,39 +134,6 @@ static void assert_emit_insn_7(unsigned char opcode, unsigned char modrm,
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
-void test_emit_prolog_no_locals(void)
-{
-	unsigned char expected[] = { 0x57, 0x56, 0x53, 0x55, 0x89, 0xe5};
-	struct buffer *buf;
-
-	buf = alloc_buffer();
-	emit_prolog(buf, 0);
-	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
-	free_buffer(buf);
-}
-
-void test_emit_prolog_has_locals(void)
-{
-	unsigned char expected[] = { 0x57, 0x56, 0x53, 0x55, 0x89, 0xe5, 0x81, 0xec, 0x80, 0x00, 0x00, 0x00 };
-	struct buffer *buf;
-
-	buf = alloc_buffer();
-	emit_prolog(buf, 0x20);
-	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
-	free_buffer(buf);
-}
-
-void test_emit_epilog(void)
-{
-	unsigned char expected[] = { 0xc9, 0x5b, 0x5e, 0x5f, 0xc3 };
-	struct buffer *buf;
-
-	buf = alloc_buffer();
-	emit_epilog(buf);
-	assert_mem_equals(expected, buffer_ptr(buf), ARRAY_SIZE(expected));
-	free_buffer(buf);
-}
-
 void test_emit_push_imm(void)
 {
 	assert_emit_insn_2(0x6a, 0x04, imm_insn(INSN_PUSH_IMM, 0x04));
