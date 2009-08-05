@@ -656,6 +656,9 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
+	if (opt_trace_return_value)
+		select_trace_return_value(s, tree, method);
+
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx != NULL)
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
@@ -2555,6 +2558,22 @@ static void select_set_target(struct basic_block *s,
 }
 #endif
 
+static void select_trace_return_value(struct basic_block *s,
+				      struct tree_node *tree,
+				      struct vm_method *vmm)
+{
+	struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	struct var_info *esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, eax));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) vmm));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+				      (unsigned long) trace_return_value));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(void *),
+					  esp));
+	select_insn(s, tree, reg_insn(INSN_POP_REG, eax));
+}
+
 static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 				  struct insn *call_insn, void *target)
 {
@@ -2657,6 +2676,9 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
+	if (opt_trace_return_value)
+		select_trace_return_value(s, tree, method);
+
 	if (vm_method_is_jni(method))
 		select_exception_test(s, tree);
 }
@@ -2699,6 +2721,9 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
+
+	if (opt_trace_return_value)
+		select_trace_return_value(s, tree, method);
 }
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)

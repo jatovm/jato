@@ -104,6 +104,7 @@ extern bool opt_trace_invoke_verbose;
 extern bool opt_trace_exceptions;
 extern bool opt_trace_bytecode;
 extern bool opt_trace_compile;
+extern bool opt_trace_return_value;
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);
@@ -119,5 +120,6 @@ void trace_exception_handler(struct compilation_unit *, unsigned char *);
 void trace_exception_unwind(struct jit_stack_frame *);
 void trace_exception_unwind_to_native(struct jit_stack_frame *);
 void trace_bytecode(struct vm_method *);
+void trace_return_value(struct vm_method *, unsigned long);
 
 #endif

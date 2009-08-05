@@ -52,6 +52,7 @@ bool opt_trace_exceptions;
 bool opt_trace_bytecode;
 bool opt_trace_compile;
 bool opt_trace_threads;
+bool opt_trace_return_value;
 
 void trace_method(struct compilation_unit *cu)
 {
@@ -661,4 +662,25 @@ void trace_bytecode(struct vm_method *method)
 		method->code_attribute.exception_table,
 		method->code_attribute.exception_table_length);
 	trace_printf("\n");
+}
+
+void trace_return_value(struct vm_method *vmm, unsigned long value)
+{
+	enum vm_type type;
+	int dummy;
+
+	dummy = 0;
+	type = method_return_type(vmm);
+
+	trace_printf("trace return: %s.%s%s\n", vmm->class->name, vmm->name,
+		     vmm->type);
+	if (type == J_VOID)
+		return;
+
+	trace_printf("%12s: ", get_vm_type_name(type));
+
+	print_arg(type, &value, &dummy);
+	trace_printf("\n");
+
+	trace_flush();
 }
