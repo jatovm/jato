@@ -681,13 +681,11 @@ void trace_return_value(struct vm_method *vmm, unsigned long value)
 
 	trace_printf("trace return: %s.%s%s\n", vmm->class->name, vmm->name,
 		     vmm->type);
-	if (type == J_VOID)
+	if (type == J_VOID || type == J_LONG || type == J_FLOAT ||
+	    type == J_DOUBLE)
 		return;
 
 	trace_printf("%12s: ", get_vm_type_name(type));
-
 	print_arg(type, &value, &dummy);
-	trace_printf("\n");
-
 	trace_flush();
 }
