@@ -706,8 +706,14 @@ static void emit_mov_reg_reg(struct buffer *buf, struct operand *src,
 static void emit_movsx_8_reg_reg(struct buffer *buf, struct operand *src,
 			     struct operand *dest)
 {
+	enum machine_reg src_reg = mach_reg(&src->reg);
+
 	emit(buf, 0x0f);
-	__emit_reg_reg(buf, 0xbe, mach_reg(&dest->reg), mach_reg(&src->reg));
+
+	/* We probably don't want %dh and %bh here. */
+	assert(src_reg != MACH_REG_ESI && src_reg != MACH_REG_EDI);
+
+	__emit_reg_reg(buf, 0xbe, mach_reg(&dest->reg), src_reg);
 }
 
 static void emit_movsx_16_reg_reg(struct buffer *buf, struct operand *src,
