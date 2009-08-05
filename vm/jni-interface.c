@@ -71,8 +71,7 @@ static jint vm_jni_get_env(JavaVM *vm, void **env, jint version)
 {
 	enter_vm_from_jni();
 
-	/* XXX: We are actually supporting only a little part of 1.2 yet. */
-	if (version > JNI_VERSION_1_2) {
+	if (version > JNI_VERSION_1_4) {
 		*env = NULL;
 		return JNI_EVERSION;
 	}
@@ -895,8 +894,31 @@ void *vm_jni_native_interface[] = {
 	vm_jni_monitor_exit,
 	vm_jni_get_java_vm,
 
+	/* JNI 1.2 functions */
+
 	/* 220 */
-	NULL, /* GetJavaVM */
+	NULL, /* GetStringRegion */
+	NULL, /* GetStringUTFRegion */
+	NULL, /* GetPrimitiveArrayCritical */
+	NULL, /* ReleasePrimitiveArrayCritical */
+	NULL, /* GetStringCritical */
+
+	/* 225 */
+	NULL, /* ReleaseStringCritical */
+	NULL, /* NewWeakGlobalRef */
+	NULL, /* DeleteWeakGlobalRef */
+	NULL, /* ExceptionCheck */
+
+	/* JNI 1.4 functions */
+
+	NULL, /* NewDirectByteBuffer */
+
+	/* 230 */
+	NULL, /* GetDirectBufferAddress */
+	NULL, /* GetDirectBufferCapacity */
+	NULL,
+	NULL,
+	NULL,
 };
 
 struct vm_jni_env vm_jni_default_env = {
