@@ -88,6 +88,30 @@ static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
 	select_insn(bb, tree, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
 }
 
+/**
+ * Returns the local slot for 64-bit value. On x86 such value requires
+ * 2 stack slots. We must return the one which has lower memory
+ * address.
+ */
+static struct stack_slot *
+get_local_slot_64(struct stack_frame *frame, unsigned long idx)
+{
+	struct stack_slot *s1, *s2;
+
+#ifdef CONFIG_X86_32
+	s1 = get_local_slot(frame, idx);
+	s2 = get_local_slot(frame, idx + 1);
+
+	if ((long) slot_offset(s1) < 0)
+		return s2; /* Local variable, decreasing addresses. */
+
+	/* This slot corresponds to call argument, increasing addresses. */
+	return s1;
+#else
+	return get_local_slot(frame, idx);
+#endif
+}
+
 struct _MBState;
 
 static void __binop_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type, struct var_info *, long);
