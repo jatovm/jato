@@ -15,6 +15,8 @@ struct expression *insert_arg(struct expression *root,
 struct expression *convert_args(struct stack *mimic_stack,
 				unsigned long nr_args,
 				struct vm_method *method);
+struct expression *convert_native_args(struct stack *mimic_stack,
+				       unsigned long nr_args);
 const char *parse_method_args(const char *type_str, enum vm_type *vmtype);
 
 #ifndef CONFIG_ARGS_MAP

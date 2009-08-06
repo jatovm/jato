@@ -444,12 +444,10 @@ int convert_multianewarray(struct parse_context *ctx)
 	unsigned long type_idx;
 	unsigned char dimension;
 	struct vm_class *class;
-	struct vm_method *method;
 
 	type_idx = bytecode_read_u16(ctx->buffer);
 	dimension = bytecode_read_u8(ctx->buffer);
 	class = vm_class_resolve_class(ctx->cu->method->class, type_idx);
-	method = ctx->cu->method;
 	if (!class)
 		return warn("out of memory"), -ENOMEM;
 
@@ -457,7 +455,7 @@ int convert_multianewarray(struct parse_context *ctx)
 	if (!arrayref)
 		return warn("out of memory"), -ENOMEM;
 
-	args_list = convert_args(ctx->bb->mimic_stack, dimension, method);
+	args_list = convert_native_args(ctx->bb->mimic_stack, dimension);
 
 	size_check = multiarray_size_check_expr(args_list);
 	if (!size_check)

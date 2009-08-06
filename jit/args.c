@@ -159,6 +159,44 @@ struct expression *convert_args(struct stack *mimic_stack,
 	return args_list;
 }
 
+static struct expression *
+insert_native_arg(struct expression *root, struct expression *expr)
+{
+	struct expression *_expr;
+
+	_expr = arg_expr(expr);
+	_expr->bytecode_offset = expr->bytecode_offset;
+
+	if (!root)
+		return _expr;
+
+	return args_list_expr(root, _expr);
+}
+
+/**
+ * This function prepares argument list that will be used
+ * with the native VM call. All arguments are passed on stack.
+ */
+struct expression *
+convert_native_args(struct stack *mimic_stack, unsigned long nr_args)
+{
+	struct expression *args_list = NULL;
+	unsigned long i;
+
+	if (nr_args == 0) {
+		args_list = no_args_expr();
+		goto out;
+	}
+
+	for (i = 0; i < nr_args; i++) {
+		struct expression *expr = stack_pop(mimic_stack);
+		args_list = insert_native_arg(args_list, expr);
+	}
+
+  out:
+	return args_list;
+}
+
 const char *parse_method_args(const char *type_str, enum vm_type *vmtype)
 {
 	char type_name[] = { "X" };
