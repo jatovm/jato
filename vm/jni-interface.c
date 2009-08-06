@@ -696,6 +696,22 @@ vm_jni_get_static_double_field(struct vm_jni_env *env, jobject object,
 	return field_get_int64(object, field);
 }
 
+static jboolean
+vm_jni_call_static_boolean_method(struct vm_jni_env *env, jclass clazz,
+				  jmethodID methodID, ...)
+{
+	va_list args;
+	jboolean result;
+
+	enter_vm_from_jni();
+
+	va_start(args, methodID);
+	result = (jboolean) vm_call_method_v(methodID, args);
+	va_end(args);
+
+	return result;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -865,7 +881,7 @@ void *vm_jni_native_interface[] = {
 	/* 115 */
 	vm_jni_call_static_object_method_v,
 	NULL, /* CallStaticObjectMethodA */
-	NULL, /* CallStaticBooleanMethod */
+	vm_jni_call_static_boolean_method,
 	NULL, /* CallStaticBooleanMethodV */
 	NULL, /* CallStaticBooleanMethodA */
 
