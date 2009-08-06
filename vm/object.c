@@ -60,7 +60,7 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 	return res;
 }
 
-struct vm_object *vm_object_alloc_native_array(int type, int count)
+struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 {
 	struct vm_object *res;
 	int vm_type;
@@ -221,8 +221,8 @@ static struct vm_object *clone_array(struct vm_object *obj)
 		type = vmtype_to_bytecode_type(vmtype);
 
 		/* XXX: This could be optimized by not doing the memset() in
-		 * object_alloc_native_array. */
-		new = vm_object_alloc_native_array(type, count);
+		 * object_alloc_primitive_array. */
+		new = vm_object_alloc_primitive_array(type, count);
 		if (new) {
 			memcpy(new + 1, obj + 1,
 				get_vmtype_size(vmtype) * count);
@@ -313,7 +313,7 @@ vm_object_alloc_string_from_c(const char *bytes)
 
 	unsigned int n = strlen(bytes);
 	struct vm_object *array
-		= vm_object_alloc_native_array(T_CHAR, n);
+		= vm_object_alloc_primitive_array(T_CHAR, n);
 	if (!array) {
 		NOT_IMPLEMENTED;
 		return NULL;

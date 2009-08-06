@@ -55,7 +55,7 @@ struct vm_object {
 int init_vm_objects(void);
 
 struct vm_object *vm_object_alloc(struct vm_class *class);
-struct vm_object *vm_object_alloc_native_array(int type, int count);
+struct vm_object *vm_object_alloc_primitive_array(int type, int count);
 struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	int nr_dimensions, int *count);
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count);
