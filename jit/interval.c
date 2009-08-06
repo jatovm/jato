@@ -56,25 +56,7 @@ void free_interval(struct live_interval *interval)
 	if (interval->next_child)
 		free_interval(interval->next_child);
 
-	free(interval->insn_array);
 	free(interval);
-}
-
-static int split_insn_array(struct live_interval *src, struct live_interval *dst)
-{
-	unsigned long src_len, dst_len, size;
-
-	src_len = range_len(&src->range);
-	dst_len = range_len(&dst->range);
-
-	size = dst_len * sizeof(struct insn *);
-	dst->insn_array = zalloc(size);
-	if (!dst->insn_array)
-		return warn("out of memory"), -ENOMEM;
-
-	memcpy(dst->insn_array, src->insn_array + src_len, size);
-
-	return 0;
 }
 
 struct live_interval *split_interval_at(struct live_interval *interval,
@@ -82,7 +64,6 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 {
 	struct use_position *this, *next;
 	struct live_interval *new;
-	int err;
 
 	new = alloc_interval(interval->var_info);
 	if (!new)
@@ -100,11 +81,7 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 		list_move(&this->use_pos_list, &new->use_positions);
 		this->interval = new;
 	}
-	err = split_insn_array(interval, new);
-	if (err) {
-		free_interval(new);
-		return NULL;
-	}
+
 	new->next_child = interval->next_child;
 	new->prev_child = interval;
 	interval->next_child = new;

@@ -43,13 +43,21 @@ struct live_interval_mapping {
 	struct live_interval *from, *to;
 };
 
-static struct insn *last_insn(struct live_interval *interval)
+static struct insn *first_insn(struct compilation_unit *cu, struct live_interval *interval)
 {
-	unsigned long end;
 	struct insn *ret;
 
-	end = range_len(&interval->range) - 1;
-	ret = interval->insn_array[end];
+	ret = radix_tree_lookup(cu->lir_insn_map, interval->range.start);
+	assert(ret != NULL);
+
+	return ret;
+}
+
+static struct insn *last_insn(struct compilation_unit *cu, struct live_interval *interval)
+{
+	struct insn *ret;
+
+	ret = radix_tree_lookup(cu->lir_insn_map, interval->range.end - 1);
 	assert(ret != NULL);
 
 	return ret;
@@ -84,22 +92,12 @@ spill_interval(struct live_interval *interval,
 static int
 insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
-	interval->spill_slot = spill_interval(interval, cu, last_insn(interval), false);
+	interval->spill_slot = spill_interval(interval, cu, last_insn(cu, interval), false);
 
 	if (!interval->spill_slot)
 		return warn("out of memory"), -ENOMEM;
 
 	return 0;
-}
-
-static struct insn *first_insn(struct live_interval *interval)
-{
-	struct insn *ret;
-
-	ret = interval->insn_array[0];
-	assert(ret != NULL);
-
-	return ret;
 }
 
 static int insert_reload_insn(struct live_interval *interval,
@@ -159,7 +157,7 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 	if (interval->need_reload) {
 		err = insert_reload_insn(interval, cu,
 				interval->spill_parent->spill_slot,
-				first_insn(interval));
+				first_insn(cu, interval));
 		if (err)
 			goto out;
 	}

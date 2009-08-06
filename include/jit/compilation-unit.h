@@ -3,8 +3,8 @@
 
 #include "arch/registers.h"
 #include "jit/basic-block.h"
-
 #include "lib/list.h"
+#include "lib/radix-tree.h"
 #include "vm/stack.h"
 #include "vm/static.h"
 #include "vm/types.h"
@@ -72,6 +72,11 @@ struct compilation_unit {
 	 * inside JIT code.
 	 */
 	unsigned long *bc_offset_map;
+
+	/*
+	 * This maps LIR offset to instruction.
+	 */
+	struct radix_tree *lir_insn_map;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

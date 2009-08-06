@@ -109,6 +109,8 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 			cu->fixed_var_infos[i] = ret;
 		}
+
+		cu->lir_insn_map = NULL;
 	}
 
 	return cu;
@@ -136,8 +138,7 @@ static void free_var_infos(struct var_info *var_infos)
 
 static void free_bc_offset_map(unsigned long *map)
 {
-	if (map)
-		free(map);
+	free(map);
 }
 
 static void free_tableswitch_list(struct compilation_unit *cu)
@@ -148,6 +149,11 @@ static void free_tableswitch_list(struct compilation_unit *cu)
 		list_del(&this->list_node);
 		free_tableswitch(this);
 	}
+}
+
+static void free_lir_insn_map(struct compilation_unit *cu)
+{
+	free_radix_tree(cu->lir_insn_map);
 }
 
 void free_compilation_unit(struct compilation_unit *cu)
@@ -165,6 +171,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_stack_frame(cu->stack_frame);
 	free_bc_offset_map(cu->bc_offset_map);
  	free_tableswitch_list(cu);
+	free_lir_insn_map(cu);
 	free(cu);
 }
 
@@ -219,11 +226,19 @@ void compute_insn_positions(struct compilation_unit *cu)
 	struct basic_block *bb;
 	unsigned long pos = 0;
 
+	cu->lir_insn_map = alloc_radix_tree(8, 8 * sizeof(pos));
+	if (!cu->lir_insn_map)
+		die("oom");
+
 	for_each_basic_block(bb, &cu->bb_list) {
 		struct insn *insn;
 
 		for_each_insn(insn, &bb->insn_list) {
-			insn->lir_pos = pos++;
+			insn->lir_pos = pos;
+
+			radix_tree_insert(cu->lir_insn_map, pos, insn);
+
+			++pos;
 		}
 	}
 }

@@ -31,6 +31,16 @@ static void assert_defines(struct basic_block *bb, struct var_info *var)
 	assert_false(test_bit(bb->use_set->bits, var->vreg));
 }
 
+static void assert_insn_at_equals(struct insn *insn, struct compilation_unit *cu, struct live_interval *interval, unsigned int offset)
+{
+	struct insn *insn2;
+
+	insn2 = radix_tree_lookup(cu->lir_insn_map,
+		interval->range.start + offset);
+
+	assert_ptr_equals(insn, insn2);
+}
+
 void test_variable_range_limited_to_basic_block(void)
 {
 	struct compilation_unit *cu;
@@ -62,12 +72,12 @@ void test_variable_range_limited_to_basic_block(void)
 	assert_live_range(r1->interval, 0, 3);
 	assert_live_range(r2->interval, 1, 3);
 
-	assert_ptr_equals(insn[0], r1->interval->insn_array[0]);
-	assert_ptr_equals(insn[1], r1->interval->insn_array[1]);
-	assert_ptr_equals(insn[2], r1->interval->insn_array[2]);
+	assert_insn_at_equals(insn[0], cu, r1->interval, 0);
+	assert_insn_at_equals(insn[1], cu, r1->interval, 1);
+	assert_insn_at_equals(insn[2], cu, r1->interval, 2);
 
-	assert_ptr_equals(insn[1], r2->interval->insn_array[0]);
-	assert_ptr_equals(insn[2], r2->interval->insn_array[1]);
+	assert_insn_at_equals(insn[1], cu, r2->interval, 0);
+	assert_insn_at_equals(insn[2], cu, r2->interval, 1);
 
 	free_compilation_unit(cu);
 }
@@ -109,13 +119,13 @@ void test_variable_range_spans_two_basic_blocks(void)
 	assert_live_range(r1->interval, 0, 4);
 	assert_live_range(r2->interval, 2, 4);
 
-	assert_ptr_equals(insn[0], r1->interval->insn_array[0]);
-	assert_ptr_equals(insn[1], r1->interval->insn_array[1]);
-	assert_ptr_equals(insn[2], r1->interval->insn_array[2]);
-	assert_ptr_equals(insn[3], r1->interval->insn_array[3]);
+	assert_insn_at_equals(insn[0], cu, r1->interval, 0);
+	assert_insn_at_equals(insn[1], cu, r1->interval, 1);
+	assert_insn_at_equals(insn[2], cu, r1->interval, 2);
+	assert_insn_at_equals(insn[3], cu, r1->interval, 3);
 
-	assert_ptr_equals(insn[2], r2->interval->insn_array[0]);
-	assert_ptr_equals(insn[3], r2->interval->insn_array[1]);
+	assert_insn_at_equals(insn[2], cu, r2->interval, 0);
+	assert_insn_at_equals(insn[3], cu, r2->interval, 1);
 
 	free_compilation_unit(cu);
 }

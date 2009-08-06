@@ -81,9 +81,6 @@ struct live_interval {
 	   linear scan.  */
 	struct list_head interval_node;
 
-	/* Array of instructions within this interval.  */
-	struct insn **insn_array;
-
 	/* Do we need to spill the register of this interval?  */
 	bool need_spill;
 

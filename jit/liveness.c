@@ -36,45 +36,6 @@
 #include <errno.h>
 #include <stdlib.h>
 
-static void __update_interval_insn(struct live_interval *interval,
-				   struct basic_block *bb)
-{
-	struct insn *insn;
-
-	for_each_insn(insn, &bb->insn_list) {
-		unsigned long offset;
-
-		if (!in_range(&interval->range, insn->lir_pos))
-			continue;
-
-		offset = insn->lir_pos - interval->range.start;
-		interval->insn_array[offset] = insn;
-	}
-}
-
-static int update_interval_insns(struct compilation_unit *cu)
-{
-	struct var_info *var;
-	int err = 0;
-
-	for_each_variable(var, cu->var_infos) {
-		struct live_interval *interval = var->interval;
-		struct basic_block *bb;
-		unsigned long nr;
-
-		nr = range_len(&interval->range);
-		interval->insn_array = calloc(nr, sizeof(struct insn *));
-		if (!interval->insn_array) {
-			err = -ENOMEM;
-			break;
-		}
-		for_each_basic_block(bb, &cu->bb_list) {
-			__update_interval_insn(var->interval, bb);
-		}
-	}
-	return err;
-}
-
 static void __update_live_range(struct live_range *range, unsigned long pos)
 {
 	if (range->start > pos)
@@ -272,7 +233,6 @@ int analyze_liveness(struct compilation_unit *cu)
 
 	update_live_ranges(cu);
 
-	err = update_interval_insns(cu);
   out:
 	return err;
 }
