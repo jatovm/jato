@@ -52,6 +52,31 @@
 	if (!vm_object_is_instance_of((x), vm_java_lang_Class))		\
 		return NULL;
 
+static jfieldID
+vm_jni_common_get_field_id(jclass clazz, const char *name, const char *sig)
+{
+	struct vm_class *class;
+	struct vm_field *fb;
+
+	check_null(clazz);
+	check_class_object(clazz);
+
+	class = vm_class_get_class_from_class_object(clazz);
+	check_null(class);
+
+	vm_class_ensure_init(class);
+	if (exception_occurred())
+		return NULL;
+
+	fb = vm_class_get_field(class, name, sig);
+	if (!fb) {
+		signal_new_exception(vm_java_lang_NoSuchFieldError, NULL);
+		return NULL;
+	}
+
+	return fb;
+}
+
 static void vm_jni_destroy_java_vm(void)
 {
 	NOT_IMPLEMENTED;
@@ -158,26 +183,13 @@ vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz, const char *name,
 		    const char *sig)
 {
 	struct vm_field *fb;
-	struct vm_class *class;
 
 	enter_vm_from_jni();
 
-	check_null(clazz);
-	check_class_object(clazz);
+	fb = vm_jni_common_get_field_id(clazz, name, sig);
 
-	class = vm_class_get_class_from_class_object(clazz);
-	check_null(class);
-
-	vm_class_ensure_init(class);
-	if (exception_occurred())
+	if (vm_field_is_static(fb))
 		return NULL;
-
-	/* XXX: Make sure it's not static. */
-	fb = vm_class_get_field(class, name, sig);
-	if (!fb) {
-		signal_new_exception(vm_java_lang_NoSuchFieldError, NULL);
-		return NULL;
-	}
 
 	return fb;
 }
@@ -654,25 +666,10 @@ vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
 			   const char *name, const char *sig)
 {
 	struct vm_field *fb;
-	struct vm_class *class;
 
 	enter_vm_from_jni();
 
-	check_null(clazz);
-	check_class_object(clazz);
-
-	class = vm_class_get_class_from_class_object(clazz);
-	check_null(class);
-
-	vm_class_ensure_init(class);
-	if (exception_occurred())
-		return NULL;
-
-	fb = vm_class_get_field(class, name, sig);
-	if (!fb) {
-		signal_new_exception(vm_java_lang_NoSuchFieldError, NULL);
-		return NULL;
-	}
+	fb = vm_jni_common_get_field_id(clazz, name, sig);
 
 	if (!vm_field_is_static(fb))
 		return NULL;
