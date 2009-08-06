@@ -127,6 +127,18 @@ public class ArrayTest extends TestCase {
         assertEquals(a, array[1]);
     }
 
+    private static void testFloatElementLoadStore() {
+        float array[] = new float[2];
+        float a = 1.34567f;
+        float b = -5.2311f;
+
+        array[1] = a;
+        array[0] = b;
+
+        assertEquals(b, array[0]);
+        assertEquals(a, array[1]);
+    }
+
     public static void testArrayClass() {
         int big_arr[][][]  = new int[2][2][2];
 
@@ -153,6 +165,7 @@ public class ArrayTest extends TestCase {
         testShortElementLoadStore();
         /* FIXME: testLongElementLoadStore(); */
         testReferenceElementLoadStore();
+        testFloatElementLoadStore();
 
         testArrayClass();
     }
