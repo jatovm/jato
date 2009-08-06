@@ -53,6 +53,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.CloneTest 0
     run_java jvm.ControlTransferTest 0
     run_java jvm.ConversionTest 0
+    run_java jvm.DoubleArithmeticTest 0
     run_java jvm.DupTest 0
     run_java jvm.ExceptionsTest 0
     run_java jvm.ExitStatusIsOneTest 1

@@ -234,6 +234,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/CloneTest.java \
 	regression/jvm/ControlTransferTest.java \
 	regression/jvm/ConversionTest.java \
+	regression/jvm/DoubleArithmeticTest.java \
 	regression/jvm/ExceptionsTest.java \
 	regression/jvm/ExitStatusIsOneTest.java \
 	regression/jvm/ExitStatusIsZeroTest.java \
