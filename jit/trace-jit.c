@@ -673,7 +673,7 @@ void trace_bytecode(struct vm_method *method)
 	trace_printf("\n");
 }
 
-void trace_return_value(struct vm_method *vmm, unsigned long value)
+void trace_return_value(struct vm_method *vmm, unsigned long long value)
 {
 	enum vm_type type;
 	int dummy;
@@ -683,11 +683,10 @@ void trace_return_value(struct vm_method *vmm, unsigned long value)
 
 	trace_printf("trace return: %s.%s%s\n", vmm->class->name, vmm->name,
 		     vmm->type);
-	if (type == J_VOID || type == J_LONG || type == J_FLOAT ||
-	    type == J_DOUBLE)
+	if (type == J_VOID || type == J_LONG)
 		return;
 
 	trace_printf("%12s: ", get_vm_type_name(type));
-	print_arg(type, &value, &dummy);
+	print_arg(type,(unsigned long *)  &value, &dummy);
 	trace_flush();
 }

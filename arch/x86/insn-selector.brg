@@ -2781,13 +2781,32 @@ static void select_trace_return_value(struct basic_block *s,
 	struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 	struct var_info *esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 
-	select_insn(s, tree, reg_insn(INSN_PUSH_REG, eax));
+	enum vm_type ret_vm_type = method_return_type(vmm);
+
+	if (ret_vm_type == J_FLOAT) {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, esp));
+		select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, 0));
+	} else if (ret_vm_type == J_DOUBLE) {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+		select_insn(s, tree, membase_insn(INSN_FSTP_64_MEMBASE, esp, 0));
+	} else {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, eax));
+	}
+
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) vmm));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
 				      (unsigned long) trace_return_value));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(void *),
-					  esp));
-	select_insn(s, tree, reg_insn(INSN_POP_REG, eax));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(void *), esp));
+
+	if (ret_vm_type == J_FLOAT) {
+		select_insn(s, tree, membase_insn(INSN_FLD_MEMBASE, esp, 0));
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, esp));
+	} else if (ret_vm_type == J_DOUBLE) {
+		select_insn(s, tree, membase_insn(INSN_FLD_64_MEMBASE, esp, 0));
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 8, esp));
+	} else {
+		select_insn(s, tree, reg_insn(INSN_POP_REG, eax));
+	}
 }
 
 static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
