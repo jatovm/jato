@@ -196,7 +196,7 @@ static int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	index_pure = get_pure_expr(ctx, index);
 	src_expr = array_deref_expr(type, arrayref_pure, index_pure);
 
-	temporary = get_var(ctx->cu, J_INT);
+	temporary = get_var(ctx->cu, type);
 	dest_expr = temporary_expr(type, NULL, temporary);
 
 	store_stmt->store_src = &src_expr->node;
