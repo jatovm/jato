@@ -103,6 +103,18 @@ field_get_int32(const struct vm_object *obj, const struct vm_field *field)
 }
 
 static inline void
+field_set_int64(struct vm_object *obj, const struct vm_field *field, int64_t value)
+{
+	*(int64_t *) &obj->fields[field->offset] = value;
+}
+
+static inline int64_t
+field_get_int64(const struct vm_object *obj, const struct vm_field *field)
+{
+	return *(int64_t *) &obj->fields[field->offset];
+}
+
+static inline void
 field_set_object(struct vm_object *obj, const struct vm_field *field, struct vm_object *value)
 {
 	*(void **) &obj->fields[field->offset] = value;

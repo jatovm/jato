@@ -677,6 +677,25 @@ vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
 	return fb;
 }
 
+static jdouble
+vm_jni_get_static_double_field(struct vm_jni_env *env, jobject object,
+			       jfieldID field)
+{
+	enter_vm_from_jni();
+
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+
+	if (vm_field_type(field) != J_DOUBLE || !vm_field_is_static(field)) {
+		NOT_IMPLEMENTED;
+		return 0;
+	}
+
+	return field_get_int64(object, field);
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -896,7 +915,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* GetStaticIntField */
 	NULL, /* GetStaticLongField */
 	NULL, /* GetStaticFloatField */
-	NULL, /* GetStaticDoubleField */
+	vm_jni_get_static_double_field,
 	NULL, /* SetStaticObjectField */
 
 	/* 155 */
