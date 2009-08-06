@@ -30,6 +30,8 @@ DECLARE_STATIC_REG(VAR_EDX, MACH_REG_EDX);
 DECLARE_STATIC_REG(VAR_EBP, MACH_REG_EBP);
 DECLARE_STATIC_REG(VAR_ESP, MACH_REG_ESP);
 
+#define ARG_OFFSET(arg) (offsetof(struct jit_stack_frame, args) + sizeof(long) * (arg))
+
 static void assert_emit_insn(unsigned char *expected,
 			     unsigned long expected_size,
 			     struct insn *insn)
@@ -240,8 +242,8 @@ void test_emit_mov_reg_memlocal(void)
 	slot = get_local_slot(frame, 0);
 	wide_slot = get_local_slot(frame, 31);
 
-	assert_emit_insn_3(0x89, 0x45, 0x14, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EAX, slot));
-	assert_emit_insn_6(0x89, 0x9d, 0x90, 0x00, 0x00, 0x00, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EBX, wide_slot));
+	assert_emit_insn_3(0x89, 0x45, ARG_OFFSET(0), reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EAX, slot));
+	assert_emit_insn_6(0x89, 0x9d, ARG_OFFSET(31), 0x00, 0x00, 0x00, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, &VAR_EBX, wide_slot));
 
 	free_stack_frame(frame);
 }

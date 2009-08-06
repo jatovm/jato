@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <libharness.h>
 
+#define ARG_OFFSET(arg) (offsetof(struct jit_stack_frame, args) + sizeof(long) * (arg))
+
 /* Stub required by called_from_jit_trampoline() in arch/x86/stack-frame.c */
 void *jit_magic_trampoline(struct compilation_unit *cu)
 {
@@ -25,13 +27,13 @@ static void assert_local_offset(unsigned long expected, struct expression *local
 
 void test_should_map_local_index_to_frame_offset(void)
 {
-	assert_local_offset(20, local_expr(J_INT, 0), 2);
-	assert_local_offset(24, local_expr(J_INT, 1), 2);
+	assert_local_offset(ARG_OFFSET(0), local_expr(J_INT, 0), 2);
+	assert_local_offset(ARG_OFFSET(1), local_expr(J_INT, 1), 2);
 }
 
 void test_should_map_local_variables_after_last_arg_at_negative_offsets(void)
 {
-	assert_local_offset(20, local_expr(J_INT, 0), 1);
+	assert_local_offset(ARG_OFFSET(0), local_expr(J_INT, 0), 1);
 	assert_local_offset(-4, local_expr(J_INT, 1), 1);
 	assert_local_offset(-8, local_expr(J_INT, 2), 1);
 }
@@ -49,8 +51,8 @@ void test_arguments_are_at_successive_positive_offsets(void)
 	param1 = get_local_slot(frame, 0);
 	param2 = get_local_slot(frame, 1);
 
-	assert_int_equals(0x14, slot_offset(param1));
-	assert_int_equals(0x18, slot_offset(param2));
+	assert_int_equals(ARG_OFFSET(0), slot_offset(param1));
+	assert_int_equals(ARG_OFFSET(1), slot_offset(param2));
 
 	free_stack_frame(frame);
 }
