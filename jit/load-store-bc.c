@@ -137,10 +137,8 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 			+ (uint64_t) cp->long_.low_bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_DOUBLE:
-		NOT_IMPLEMENTED;
-		expr = fvalue_expr(J_DOUBLE,
-			((uint64_t) cp->double_.high_bytes << 32)
-			+ (uint64_t) cp->double_.low_bytes);
+		expr = fvalue_expr(J_DOUBLE, uint64_to_double(
+				cp->double_.low_bytes, cp->double_.high_bytes));
 		break;
 	case CAFEBABE_CONSTANT_TAG_CLASS: {
 		/* Added for JDK 1.5 */
