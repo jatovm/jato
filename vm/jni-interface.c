@@ -649,6 +649,37 @@ static jobject vm_jni_call_object_method(struct vm_jni_env *env, jobject this,
 	return result;
 }
 
+static jfieldID
+vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
+			   const char *name, const char *sig)
+{
+	struct vm_field *fb;
+	struct vm_class *class;
+
+	enter_vm_from_jni();
+
+	check_null(clazz);
+	check_class_object(clazz);
+
+	class = vm_class_get_class_from_class_object(clazz);
+	check_null(class);
+
+	vm_class_ensure_init(class);
+	if (exception_occurred())
+		return NULL;
+
+	fb = vm_class_get_field(class, name, sig);
+	if (!fb) {
+		signal_new_exception(vm_java_lang_NoSuchFieldError, NULL);
+		return NULL;
+	}
+
+	if (!vm_field_is_static(fb))
+		return NULL;
+
+	return fb;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -855,7 +886,7 @@ void *vm_jni_native_interface[] = {
 	vm_jni_call_static_void_method,
 	vm_jni_call_static_void_method_v,
 	NULL, /* CallStaticVoidMethodA */
-	NULL, /* GetStaticFieldID */
+	vm_jni_get_static_field_id, /* GetStaticFieldID */
 
 	/* 145 */
 	NULL, /* GetStaticObjectField */
