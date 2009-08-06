@@ -414,7 +414,19 @@ static int print_conv_fpu_to_gpr(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_conv_fpu64_to_gpr(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 static int print_conv_gpr_to_fpu(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
+static int print_conv_gpr_to_fpu64(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
@@ -872,7 +884,9 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_XMM_MEMBASE] = print_mov_xmm_membase,
 	[INSN_MOV_64_XMM_MEMBASE] = print_mov_64_xmm_membase,
 	[INSN_CONV_FPU_TO_GPR] = print_conv_fpu_to_gpr,
+	[INSN_CONV_FPU64_TO_GPR] = print_conv_fpu64_to_gpr,
 	[INSN_CONV_GPR_TO_FPU] = print_conv_gpr_to_fpu,
+	[INSN_CONV_GPR_TO_FPU64] = print_conv_gpr_to_fpu64,
 	[INSN_JE_BRANCH] = print_je_branch,
 	[INSN_JGE_BRANCH] = print_jge_branch,
 	[INSN_JG_BRANCH] = print_jg_branch,

@@ -1474,10 +1474,26 @@ static void emit_conv_gpr_to_fpu(struct buffer *buf, struct operand *src,
 	emit_reg_reg(buf, 0x2a, dest, src);
 }
 
+static void emit_conv_gpr_to_fpu64(struct buffer *buf, struct operand *src,
+				   struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x2a, dest, src);
+}
+
 static void emit_conv_fpu_to_gpr(struct buffer *buf, struct operand *src,
 				struct operand *dest)
 {
 	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x2d, dest, src);
+}
+
+static void emit_conv_fpu64_to_gpr(struct buffer *buf, struct operand *src,
+				   struct operand *dest)
+{
+	emit(buf, 0xf2);
 	emit(buf, 0x0f);
 	emit_reg_reg(buf, 0x2d, dest, src);
 }
@@ -1657,7 +1673,9 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_FSTP_MEMBASE, emit_fstp_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FSTP_64_MEMBASE, emit_fstp_64_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU, emit_conv_gpr_to_fpu, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CONV_GPR_TO_FPU64, emit_conv_gpr_to_fpu64, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_FPU_TO_GPR, emit_conv_fpu_to_gpr, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CONV_FPU64_TO_GPR, emit_conv_fpu64_to_gpr, TWO_OPERANDS),
 	DECL_EMITTER(INSN_JMP_MEMINDEX, emit_jmp_memindex, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMBASE_XMM, emit_mov_membase_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_64_MEMBASE_XMM, emit_mov_64_membase_xmm, TWO_OPERANDS),
