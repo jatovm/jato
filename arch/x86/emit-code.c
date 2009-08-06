@@ -747,7 +747,7 @@ emit_mov_memlocal_reg(struct buffer *buf, struct operand *src, struct operand *d
 }
 
 static void
-emit_mov_memlocal_freg(struct buffer *buf, struct operand *src, struct operand *dest)
+emit_mov_memlocal_xmm(struct buffer *buf, struct operand *src, struct operand *dest)
 {
 	enum machine_reg dest_reg;
 	unsigned long disp;
@@ -890,7 +890,7 @@ static void emit_mov_reg_memlocal(struct buffer *buf, struct operand *src,
 	emit_imm(buf, disp);
 }
 
-static void emit_mov_freg_memlocal(struct buffer *buf, struct operand *src,
+static void emit_mov_xmm_memlocal(struct buffer *buf, struct operand *src,
 				struct operand *dest)
 {
 	unsigned long disp;
@@ -1513,7 +1513,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IP_THREAD_LOCAL_MEMBASE, emit_mov_ip_thread_local_membase, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
-	DECL_EMITTER(INSN_MOV_MEMLOCAL_FREG, emit_mov_memlocal_freg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_MEMLOCAL_XMM, emit_mov_memlocal_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMDISP_XMM, emit_mov_memdisp_xmm, TWO_OPERANDS),
@@ -1526,7 +1526,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp, TWO_OPERANDS),
-	DECL_EMITTER(INSN_MOV_FREG_MEMLOCAL, emit_mov_freg_memlocal, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_XMM_MEMLOCAL, emit_mov_xmm_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMDISP, emit_mov_xmm_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMINDEX, emit_mov_xmm_memindex, TWO_OPERANDS),

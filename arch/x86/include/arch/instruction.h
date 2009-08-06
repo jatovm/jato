@@ -96,7 +96,7 @@ enum insn_type {
 	INSN_MOV_IP_REG,
 	INSN_MOV_IP_THREAD_LOCAL_MEMBASE,
 	INSN_MOV_MEMLOCAL_REG,
-	INSN_MOV_MEMLOCAL_FREG,
+	INSN_MOV_MEMLOCAL_XMM,
 	INSN_MOV_MEMBASE_REG,
 	INSN_MOV_MEMDISP_REG,
 	INSN_MOV_MEMDISP_XMM,
@@ -108,7 +108,7 @@ enum insn_type {
 	INSN_MOV_REG_MEMBASE,
 	INSN_MOV_REG_MEMINDEX,
 	INSN_MOV_REG_MEMLOCAL,
-	INSN_MOV_FREG_MEMLOCAL,
+	INSN_MOV_XMM_MEMLOCAL,
 	INSN_MOV_REG_REG,
 	INSN_MOV_MEMBASE_XMM,
 	INSN_MOV_MEMINDEX_XMM,
@@ -220,7 +220,7 @@ spill_insn(struct var_info *var, struct stack_slot *slot)
 		insn_type = INSN_MOV_REG_MEMLOCAL;
 		break;
 	case REG_TYPE_FPU:
-		insn_type = INSN_MOV_FREG_MEMLOCAL;
+		insn_type = INSN_MOV_XMM_MEMLOCAL;
 		break;
 	default:
 		die("unknown register type: %d", var->type);
@@ -240,7 +240,7 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 		insn_type = INSN_MOV_MEMLOCAL_REG;
 		break;
 	case REG_TYPE_FPU:
-		insn_type = INSN_MOV_MEMLOCAL_FREG;
+		insn_type = INSN_MOV_MEMLOCAL_XMM;
 		break;
 	default:
 		die("unknown register type: %d", var->type);
