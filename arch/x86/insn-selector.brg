@@ -253,7 +253,7 @@ reg:	EXPR_LOCAL	1
 }
 %endif
 
-freg:	EXPR_LOCAL 0
+freg:	EXPR_FLOAT_LOCAL 0
 {
 	struct compilation_unit *cu = s->b_parent;
 	struct expression *expr;
