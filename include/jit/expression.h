@@ -91,12 +91,19 @@ enum binary_operator {
 	OP_FDIV,
 	OP_FREM,
 
+	OP_DADD,
+	OP_DSUB,
+	OP_DMUL,
+	OP_DDIV,
+	OP_DREM,
+
 	BINOP_LAST,	/* Not a real operator. Keep this last. */
 };
 
 enum unary_operator {
 	OP_NEG	= BINOP_LAST,
 	OP_FNEG,
+	OP_DNEG,
 	OP_LAST,	/* Not a real operator. Keep this last. */
 };
 

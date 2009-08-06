@@ -11,5 +11,7 @@ int64_t emulate_lshr(int64_t value1, int32_t value2);
 int64_t emulate_lushr(int64_t value1, int32_t value2);
 int emulate_fcmpl(float value1, float value2);
 int emulate_fcmpg(float value1, float value2);
+int emulate_dcmpl(double value1, double value2);
+int emulate_dcmpg(double value1, double value2);
 
 #endif /* __JIT_EMULATE_H */

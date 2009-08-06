@@ -52,7 +52,7 @@ int convert_fadd(struct parse_context *ctx)
 
 int convert_dadd(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_DOUBLE, OP_ADD);
+	return convert_binop(ctx, J_DOUBLE, OP_DADD);
 }
 
 int convert_isub(struct parse_context *ctx)
@@ -72,7 +72,7 @@ int convert_fsub(struct parse_context *ctx)
 
 int convert_dsub(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_DOUBLE, OP_SUB);
+	return convert_binop(ctx, J_DOUBLE, OP_DSUB);
 }
 
 int convert_imul(struct parse_context *ctx)
@@ -92,7 +92,7 @@ int convert_fmul(struct parse_context *ctx)
 
 int convert_dmul(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_DOUBLE, OP_MUL);
+	return convert_binop(ctx, J_DOUBLE, OP_DMUL);
 }
 
 int convert_idiv(struct parse_context *ctx)
@@ -112,7 +112,7 @@ int convert_fdiv(struct parse_context *ctx)
 
 int convert_ddiv(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_DOUBLE, OP_DIV);
+	return convert_binop(ctx, J_DOUBLE, OP_DDIV);
 }
 
 int convert_irem(struct parse_context *ctx)
@@ -132,7 +132,7 @@ int convert_frem(struct parse_context *ctx)
 
 int convert_drem(struct parse_context *ctx)
 {
-	return convert_binop(ctx, J_DOUBLE, OP_REM);
+	return convert_binop(ctx, J_DOUBLE, OP_DREM);
 }
 
 static int convert_unary_op(struct parse_context *ctx, enum vm_type vm_type,
@@ -167,7 +167,7 @@ int convert_fneg(struct parse_context *ctx)
 
 int convert_dneg(struct parse_context *ctx)
 {
-	return convert_unary_op(ctx, J_DOUBLE, OP_FNEG);
+	return convert_unary_op(ctx, J_DOUBLE, OP_DNEG);
 }
 
 int convert_ishl(struct parse_context *ctx)

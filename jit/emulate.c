@@ -54,6 +54,19 @@ static int __emulate_fcmpx(float value1, float value2)
 	return 0;
 }
 
+static int __emulate_dcmpx(double value1, double value2)
+{
+	double tmp;
+	tmp	= value1 - value2;
+
+	if (tmp < 0)
+		return -1;
+	else if (tmp > 0)
+		return 1;
+
+	return 0;
+}
+
 int emulate_fcmpl(float value1, float value2)
 {
 	if (isnan(value1) || isnan(value2))
@@ -68,6 +81,22 @@ int emulate_fcmpg(float value1, float value2)
 		return 1;
 
 	return __emulate_fcmpx(value1, value2);
+}
+
+int emulate_dcmpl(double value1, double value2)
+{
+	if (isnan(value1) || isnan(value2))
+		return -1;
+
+	return __emulate_dcmpx(value1, value2);
+}
+
+int emulate_dcmpg(double value1, double value2)
+{
+	if (isnan(value1) || isnan(value2))
+		return 1;
+
+	return __emulate_dcmpx(value1, value2);
 }
 
 long long emulate_ldiv(long long value1, long long value2)

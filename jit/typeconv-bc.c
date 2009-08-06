@@ -24,9 +24,9 @@ static int convert_conversion(struct parse_context *ctx, enum vm_type to_type)
 
 	from_expression = stack_pop(ctx->bb->mimic_stack);
 
-	if (to_type == J_FLOAT)
+	if (vm_type_is_float(to_type))
 		conversion_expression = conversion_to_float_expr(to_type, from_expression);
-	else if (from_expression->vm_type == J_FLOAT)
+	else if (vm_type_is_float(from_expression->vm_type))
 		conversion_expression = conversion_from_float_expr(to_type, from_expression);
 	else
 		conversion_expression = conversion_expr(to_type, from_expression);
