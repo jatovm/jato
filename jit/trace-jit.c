@@ -438,6 +438,8 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 
 		if (arg_type == J_DOUBLE)
 			trace_printf("(%lf)", value.dvalue);
+
+		trace_printf("\n");
 		return;
 	}
 
