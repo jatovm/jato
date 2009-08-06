@@ -74,6 +74,10 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 	new->range.end = interval->range.end;
 	interval->range.end = pos;
 
+	new->fixed_reg = interval->fixed_reg;
+	if (new->fixed_reg)
+		new->reg = interval->reg;
+
 	list_for_each_entry_safe(this, next, &interval->use_positions, use_pos_list) {
 		if (lir_position(this) < pos)
 			continue;
