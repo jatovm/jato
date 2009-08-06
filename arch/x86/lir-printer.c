@@ -256,7 +256,19 @@ static int print_fadd_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_fadd_64_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 static int print_fsub_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
+static int print_fsub_64_reg_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
@@ -268,7 +280,19 @@ static int print_fmul_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_fmul_64_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 static int print_fdiv_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
+static int print_fdiv_64_reg_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
@@ -280,7 +304,19 @@ static int print_fld_membase(struct string *str, struct insn *insn)
 	return print_membase(str, &insn->operand);
 }
 
+static int print_fld_64_membase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase(str, &insn->operand);
+}
+
 static int print_fstp_membase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase(str, &insn->operand);
+}
+
+static int print_fstp_64_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_membase(str, &insn->operand);
@@ -354,7 +390,19 @@ static int print_mov_membase_xmm(struct string *str, struct insn *insn)
 	return print_membase_reg(str, insn);
 }
 
+static int print_mov_64_membase_xmm(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase_reg(str, insn);
+}
+
 static int print_mov_xmm_membase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_membase(str, insn);
+}
+
+static int print_mov_64_xmm_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_membase(str, insn);
@@ -444,6 +492,12 @@ static int print_mov_memlocal_xmm(struct string *str, struct insn *insn)
 	return print_memlocal_reg(str, insn);
 }
 
+static int print_mov_64_memlocal_xmm(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memlocal_reg(str, insn);
+}
+
 static int print_mov_membase_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -462,6 +516,12 @@ static int print_mov_memdisp_xmm(struct string *str, struct insn *insn)
 	return print_memdisp_reg(str, insn);
 }
 
+static int print_mov_64_memdisp_xmm(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memdisp_reg(str, insn);
+}
+
 static int print_mov_reg_memdisp(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -469,6 +529,12 @@ static int print_mov_reg_memdisp(struct string *str, struct insn *insn)
 }
 
 static int print_mov_xmm_memdisp(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_memdisp(str, insn);
+}
+
+static int print_mov_64_xmm_memdisp(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memdisp(str, insn);
@@ -516,6 +582,12 @@ static int print_mov_memindex_xmm(struct string *str, struct insn *insn)
 	return print_memindex_reg(str, insn);
 }
 
+static int print_mov_64_memindex_xmm(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memindex_reg(str, insn);
+}
+
 static int print_mov_reg_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -534,6 +606,12 @@ static int print_mov_xmm_memindex(struct string *str, struct insn *insn)
 	return print_reg_memindex(str, insn);
 }
 
+static int print_mov_64_xmm_memindex(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_memindex(str, insn);
+}
+
 static int print_mov_reg_memlocal(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -546,6 +624,12 @@ static int print_mov_xmm_memlocal(struct string *str, struct insn *insn)
 	return print_reg_memlocal(str, insn);
 }
 
+static int print_mov_64_xmm_memlocal(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_memlocal(str, insn);
+}
+
 static int print_mov_reg_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -553,6 +637,12 @@ static int print_mov_reg_reg(struct string *str, struct insn *insn)
 }
 
 static int print_mov_xmm_xmm(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
+static int print_mov_64_xmm_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
@@ -740,6 +830,12 @@ static int print_xor_xmm_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_xor_64_xmm_reg_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_reg(str, insn);
+}
+
 typedef int (*print_insn_fn) (struct string *str, struct insn *insn);
 
 static print_insn_fn insn_printers[] = {
@@ -760,13 +856,21 @@ static print_insn_fn insn_printers[] = {
 	[INSN_DIV_MEMBASE_REG] = print_div_membase_reg,
 	[INSN_DIV_REG_REG] = print_div_reg_reg,
 	[INSN_FADD_REG_REG] = print_fadd_reg_reg,
+	[INSN_FADD_64_REG_REG] = print_fadd_64_reg_reg,
 	[INSN_FSUB_REG_REG] = print_fsub_reg_reg,
+	[INSN_FSUB_64_REG_REG] = print_fsub_64_reg_reg,
 	[INSN_FMUL_REG_REG] = print_fmul_reg_reg,
+	[INSN_FMUL_64_REG_REG] = print_fmul_64_reg_reg,
 	[INSN_FDIV_REG_REG] = print_fdiv_reg_reg,
+	[INSN_FDIV_64_REG_REG] = print_fdiv_64_reg_reg,
 	[INSN_FLD_MEMBASE] = print_fld_membase,
+	[INSN_FLD_64_MEMBASE] = print_fld_64_membase,
 	[INSN_FSTP_MEMBASE] = print_fstp_membase,
+	[INSN_FSTP_64_MEMBASE] = print_fstp_64_membase,
 	[INSN_MOV_MEMBASE_XMM] = print_mov_membase_xmm,
+	[INSN_MOV_64_MEMBASE_XMM] = print_mov_64_membase_xmm,
 	[INSN_MOV_XMM_MEMBASE] = print_mov_xmm_membase,
+	[INSN_MOV_64_XMM_MEMBASE] = print_mov_64_xmm_membase,
 	[INSN_CONV_FPU_TO_GPR] = print_conv_fpu_to_gpr,
 	[INSN_CONV_GPR_TO_FPU] = print_conv_gpr_to_fpu,
 	[INSN_JE_BRANCH] = print_je_branch,
@@ -783,10 +887,13 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_IP_THREAD_LOCAL_MEMBASE] = print_mov_ip_tlmembase,
 	[INSN_MOV_MEMLOCAL_REG] = print_mov_memlocal_reg,
 	[INSN_MOV_MEMLOCAL_XMM] = print_mov_memlocal_xmm,
+	[INSN_MOV_64_MEMLOCAL_XMM] = print_mov_64_memlocal_xmm,
 	[INSN_MOV_MEMBASE_REG] = print_mov_membase_reg,
 	[INSN_MOV_MEMDISP_REG] = print_mov_memdisp_reg,
 	[INSN_MOV_MEMDISP_XMM] = print_mov_memdisp_xmm,
+	[INSN_MOV_64_MEMDISP_XMM] = print_mov_64_memdisp_xmm,
 	[INSN_MOV_MEMINDEX_XMM] = print_mov_memindex_xmm,
+	[INSN_MOV_64_MEMINDEX_XMM] = print_mov_64_memindex_xmm,
 	[INSN_MOV_REG_MEMDISP] = print_mov_reg_memdisp,
 	[INSN_MOV_THREAD_LOCAL_MEMDISP_REG] = print_mov_tlmemdisp_reg,
 	[INSN_MOV_MEMINDEX_REG] = print_mov_memindex_reg,
@@ -796,10 +903,14 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_REG_THREAD_LOCAL_MEMBASE] = print_mov_reg_tlmembase,
 	[INSN_MOV_REG_THREAD_LOCAL_MEMDISP] = print_mov_reg_tlmemdisp,
 	[INSN_MOV_XMM_MEMLOCAL] = print_mov_xmm_memlocal,
+	[INSN_MOV_64_XMM_MEMLOCAL] = print_mov_64_xmm_memlocal,
 	[INSN_MOV_REG_REG] = print_mov_reg_reg,
 	[INSN_MOV_XMM_MEMDISP] = print_mov_xmm_memdisp,
+	[INSN_MOV_64_XMM_MEMDISP] = print_mov_64_xmm_memdisp,
 	[INSN_MOV_XMM_MEMINDEX] = print_mov_xmm_memindex,
+	[INSN_MOV_64_XMM_MEMINDEX] = print_mov_64_xmm_memindex,
 	[INSN_MOV_XMM_XMM] = print_mov_xmm_xmm,
+	[INSN_MOV_64_XMM_XMM] = print_mov_64_xmm_xmm,
 	[INSN_MOVSX_8_REG_REG] = print_movsx_8_reg_reg,
 	[INSN_MOVSX_16_REG_REG] = print_movsx_16_reg_reg,
 	[INSN_MOVZX_16_REG_REG] = print_movzx_16_reg_reg,
@@ -830,6 +941,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_XOR_IMM_REG] = print_xor_imm_reg,
 	[INSN_XOR_REG_REG] = print_xor_reg_reg,
 	[INSN_XOR_XMM_REG_REG] = print_xor_xmm_reg_reg,
+	[INSN_XOR_64_XMM_REG_REG] = print_xor_64_xmm_reg_reg,
 };
 
 int lir_print(struct insn *insn, struct string *str)

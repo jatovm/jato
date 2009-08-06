@@ -760,6 +760,20 @@ emit_mov_memlocal_xmm(struct buffer *buf, struct operand *src, struct operand *d
 	__emit_membase_reg(buf, 0x10, MACH_REG_EBP, disp, dest_reg);
 }
 
+static void
+emit_mov_64_memlocal_xmm(struct buffer *buf, struct operand *src, struct operand *dest)
+{
+	enum machine_reg dest_reg;
+	unsigned long disp;
+
+	dest_reg = mach_reg(&dest->reg);
+	disp = slot_offset(src->slot);
+
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	__emit_membase_reg(buf, 0x10, MACH_REG_EBP, disp, dest_reg);
+}
+
 static void emit_mov_membase_reg(struct buffer *buf,
 				 struct operand *src, struct operand *dest)
 {
@@ -904,6 +918,28 @@ static void emit_mov_xmm_memlocal(struct buffer *buf, struct operand *src,
 		mod = 0x02;
 
 	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit(buf, 0x11);
+	emit(buf, encode_modrm(mod, encode_reg(&src->reg),
+			       __encode_reg(MACH_REG_EBP)));
+
+	emit_imm(buf, disp);
+}
+
+static void emit_mov_64_xmm_memlocal(struct buffer *buf, struct operand *src,
+				struct operand *dest)
+{
+	unsigned long disp;
+	int mod;
+
+	disp = slot_offset(dest->slot);
+
+	if (is_imm_8(disp))
+		mod = 0x01;
+	else
+		mod = 0x02;
+
+	emit(buf, 0xf2);
 	emit(buf, 0x0f);
 	emit(buf, 0x11);
 	emit(buf, encode_modrm(mod, encode_reg(&src->reg),
@@ -1075,6 +1111,14 @@ static void emit_fadd_reg_reg(struct buffer *buf,
 	emit_reg_reg(buf, 0x58, dest, src);
 }
 
+static void emit_fadd_64_reg_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x58, dest, src);
+}
+
 static void emit_fsub_reg_reg(struct buffer *buf,
 			     struct operand *src, struct operand *dest)
 {
@@ -1082,6 +1126,15 @@ static void emit_fsub_reg_reg(struct buffer *buf,
 	emit(buf, 0x0f);
 	emit_reg_reg(buf, 0x5c, dest, src);
 }
+
+static void emit_fsub_64_reg_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x5c, dest, src);
+}
+
 static void emit_fmul_reg_reg(struct buffer *buf,
 			     struct operand *src, struct operand *dest)
 {
@@ -1089,10 +1142,27 @@ static void emit_fmul_reg_reg(struct buffer *buf,
 	emit(buf, 0x0f);
 	emit_reg_reg(buf, 0x59, dest, src);
 }
+
+static void emit_fmul_64_reg_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x59, dest, src);
+}
+
 static void emit_fdiv_reg_reg(struct buffer *buf,
 			     struct operand *src, struct operand *dest)
 {
 	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x5e, dest, src);
+}
+
+static void emit_fdiv_64_reg_reg(struct buffer *buf,
+				 struct operand *src, struct operand *dest)
+{
+	emit(buf, 0xf2);
 	emit(buf, 0x0f);
 	emit_reg_reg(buf, 0x5e, dest, src);
 }
@@ -1102,9 +1172,19 @@ static void emit_fld_membase(struct buffer *buf, struct operand *src)
 	__emit_membase(buf, 0xd9, mach_reg(&src->base_reg), src->disp, 0);
 }
 
+static void emit_fld_64_membase(struct buffer *buf, struct operand *src)
+{
+	__emit_membase(buf, 0xdd, mach_reg(&src->base_reg), src->disp, 0);
+}
+
 static void emit_fstp_membase(struct buffer *buf, struct operand *dest)
 {
 	__emit_membase(buf, 0xd9, mach_reg(&dest->base_reg), dest->disp, 3);
+}
+
+static void emit_fstp_64_membase(struct buffer *buf, struct operand *dest)
+{
+	__emit_membase(buf, 0xdd, mach_reg(&dest->base_reg), dest->disp, 3);
 }
 
 static void emit_add_membase_reg(struct buffer *buf,
@@ -1276,6 +1356,14 @@ static void emit_xor_xmm_reg_reg(struct buffer *buf, struct operand *src,
 	emit_reg_reg(buf, 0x57, dest, src);
 }
 
+static void emit_xor_64_xmm_reg_reg(struct buffer *buf, struct operand *src,
+				    struct operand *dest)
+{
+	emit(buf, 0x66);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x57, dest, src);
+}
+
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x00, imm, reg);
@@ -1402,6 +1490,14 @@ static void emit_mov_xmm_xmm(struct buffer *buf, struct operand *src,
 	emit_reg_reg(buf, 0x10, dest, src);
 }
 
+static void emit_mov_64_xmm_xmm(struct buffer *buf, struct operand *src,
+				struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x10, dest, src);
+}
+
 static void emit_mov_membase_xmm(struct buffer *buf, struct operand *src,
 				struct operand *dest)
 {
@@ -1410,10 +1506,26 @@ static void emit_mov_membase_xmm(struct buffer *buf, struct operand *src,
 	emit_membase_reg(buf, 0x10, src, dest);
 }
 
+static void emit_mov_64_membase_xmm(struct buffer *buf, struct operand *src,
+				    struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit_membase_reg(buf, 0x10, src, dest);
+}
+
 static void emit_mov_memdisp_xmm(struct buffer *buf, struct operand *src,
 				 struct operand *dest)
 {
 	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	__emit_memdisp_reg(buf, 0x10, src->imm, mach_reg(&dest->reg));
+}
+
+static void emit_mov_64_memdisp_xmm(struct buffer *buf, struct operand *src,
+				    struct operand *dest)
+{
+	emit(buf, 0xf2);
 	emit(buf, 0x0f);
 	__emit_memdisp_reg(buf, 0x10, src->imm, mach_reg(&dest->reg));
 }
@@ -1443,13 +1555,30 @@ static void __emit_mov_membase_xmm(struct buffer *buf, enum machine_reg base,
 	emit(buf, 0xf3);
 	emit(buf, 0x0f);
 	__emit_membase_reg(buf, 0x10, base, offs, dst);
+}
 
+static void emit_mov_64_memindex_xmm(struct buffer *buf, struct operand *src,
+				     struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit(buf, 0x10);
+	emit(buf, encode_modrm(0x00, encode_reg(&dest->reg), 0x04));
+	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
 }
 
 static void emit_mov_xmm_membase(struct buffer *buf, struct operand *src,
 				struct operand *dest)
 {
 	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit_membase_reg(buf, 0x11, dest, src);
+}
+
+static void emit_mov_64_xmm_membase(struct buffer *buf, struct operand *src,
+				    struct operand *dest)
+{
+	emit(buf, 0xf2);
 	emit(buf, 0x0f);
 	emit_membase_reg(buf, 0x11, dest, src);
 }
@@ -1464,10 +1593,28 @@ static void emit_mov_xmm_memindex(struct buffer *buf, struct operand *src,
 	emit(buf, encode_sib(dest->shift, encode_reg(&dest->index_reg), encode_reg(&dest->base_reg)));
 }
 
+static void emit_mov_64_xmm_memindex(struct buffer *buf, struct operand *src,
+				     struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit(buf, 0x11);
+	emit(buf, encode_modrm(0x00, encode_reg(&src->reg), 0x04));
+	emit(buf, encode_sib(dest->shift, encode_reg(&dest->index_reg), encode_reg(&dest->base_reg)));
+}
+
 static void emit_mov_xmm_memdisp(struct buffer *buf, struct operand *src,
 				 struct operand *dest)
 {
 	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	__emit_reg_memdisp(buf, 0x11, mach_reg(&src->reg), dest->imm);
+}
+
+static void emit_mov_64_xmm_memdisp(struct buffer *buf, struct operand *src,
+				    struct operand *dest)
+{
+	emit(buf, 0xf2);
 	emit(buf, 0x0f);
 	__emit_reg_memdisp(buf, 0x11, mach_reg(&src->reg), dest->imm);
 }
@@ -1498,39 +1645,54 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FADD_REG_REG, emit_fadd_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FADD_64_REG_REG, emit_fadd_64_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FSUB_REG_REG, emit_fsub_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FSUB_64_REG_REG, emit_fsub_64_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FMUL_REG_REG, emit_fmul_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FMUL_64_REG_REG, emit_fmul_64_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FDIV_REG_REG, emit_fdiv_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FDIV_64_REG_REG, emit_fdiv_64_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FLD_MEMBASE, emit_fld_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FLD_64_MEMBASE, emit_fld_64_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FSTP_MEMBASE, emit_fstp_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FSTP_64_MEMBASE, emit_fstp_64_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU, emit_conv_gpr_to_fpu, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_FPU_TO_GPR, emit_conv_fpu_to_gpr, TWO_OPERANDS),
 	DECL_EMITTER(INSN_JMP_MEMINDEX, emit_jmp_memindex, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMBASE_XMM, emit_mov_membase_xmm, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_MEMBASE_XMM, emit_mov_64_membase_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, emit_mov_xmm_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMBASE, emit_mov_64_xmm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IP_THREAD_LOCAL_MEMBASE, emit_mov_ip_thread_local_membase, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_XMM, emit_mov_memlocal_xmm, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_MEMLOCAL_XMM, emit_mov_64_memlocal_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMDISP_XMM, emit_mov_memdisp_xmm, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_MEMDISP_XMM, emit_mov_64_memdisp_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_XMM, emit_mov_memindex_xmm, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_MEMINDEX_XMM, emit_mov_64_memindex_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMLOCAL, emit_mov_xmm_memlocal, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMLOCAL, emit_mov_64_xmm_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMDISP, emit_mov_xmm_memdisp, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMDISP, emit_mov_64_xmm_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_MEMINDEX, emit_mov_xmm_memindex, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMINDEX, emit_mov_64_xmm_memindex, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_XMM_XMM, emit_mov_xmm_xmm, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_64_XMM_XMM, emit_mov_64_xmm_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg, TWO_OPERANDS),
@@ -1560,6 +1722,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_REG_REG, emit_xor_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_XMM_REG_REG, emit_xor_xmm_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_XOR_64_XMM_REG_REG, emit_xor_64_xmm_reg_reg, TWO_OPERANDS),
 };
 
 void emit_trampoline(struct compilation_unit *cu,
