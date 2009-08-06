@@ -27,8 +27,12 @@ enum expression_type {
 	EXPR_BINOP,
 	EXPR_UNARY_OP,
 	EXPR_CONVERSION,
+	EXPR_CONVERSION_FLOAT_TO_DOUBLE,
+	EXPR_CONVERSION_DOUBLE_TO_FLOAT,
 	EXPR_CONVERSION_FROM_FLOAT,
 	EXPR_CONVERSION_TO_FLOAT,
+	EXPR_CONVERSION_FROM_DOUBLE,
+	EXPR_CONVERSION_TO_DOUBLE,
 	EXPR_CLASS_FIELD,
 	EXPR_INSTANCE_FIELD,
 	EXPR_INVOKE,
@@ -323,8 +327,13 @@ struct expression *array_deref_expr(enum vm_type, struct expression *, struct ex
 struct expression *binop_expr(enum vm_type, enum binary_operator, struct expression *, struct expression *);
 struct expression *unary_op_expr(enum vm_type, enum unary_operator, struct expression *);
 struct expression *conversion_expr(enum vm_type, struct expression *);
+struct expression *conversion_double_to_float_expr(struct expression *);
+struct expression *conversion_float_to_double_expr(struct expression *);
 struct expression *conversion_from_float_expr(enum vm_type, struct expression *);
 struct expression *conversion_to_float_expr(enum vm_type, struct expression *);
+struct expression *conversion_from_double_expr(enum vm_type, struct expression *);
+struct expression *conversion_to_double_expr(enum vm_type, struct expression *);
+
 struct expression *class_field_expr(enum vm_type, struct vm_field *);
 struct expression *instance_field_expr(enum vm_type, struct vm_field *, struct expression *);
 struct expression *invoke_expr(struct vm_method *);

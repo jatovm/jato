@@ -42,8 +42,12 @@ int expr_nr_kids(struct expression *expr)
 		return 2;
 	case EXPR_UNARY_OP:
 	case EXPR_CONVERSION:
+	case EXPR_CONVERSION_FLOAT_TO_DOUBLE:
+	case EXPR_CONVERSION_DOUBLE_TO_FLOAT:
 	case EXPR_CONVERSION_TO_FLOAT:
 	case EXPR_CONVERSION_FROM_FLOAT:
+	case EXPR_CONVERSION_TO_DOUBLE:
+	case EXPR_CONVERSION_FROM_DOUBLE:
 	case EXPR_INSTANCE_FIELD:
 	case EXPR_FLOAT_INSTANCE_FIELD:
 	case EXPR_INVOKE:
@@ -99,8 +103,12 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_ARGS_LIST:
 	case EXPR_UNARY_OP:
 	case EXPR_CONVERSION:
+	case EXPR_CONVERSION_FLOAT_TO_DOUBLE:
+	case EXPR_CONVERSION_DOUBLE_TO_FLOAT:
 	case EXPR_CONVERSION_TO_FLOAT:
 	case EXPR_CONVERSION_FROM_FLOAT:
+	case EXPR_CONVERSION_TO_DOUBLE:
+	case EXPR_CONVERSION_FROM_DOUBLE:
 	case EXPR_ARG:
 	case EXPR_ARG_THIS:
 	case EXPR_ARRAYLENGTH:
@@ -310,6 +318,28 @@ struct expression *conversion_expr(enum vm_type vm_type,
 	return expr;
 }
 
+struct expression *
+conversion_double_to_float_expr(struct expression *from_expression)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_CONVERSION_DOUBLE_TO_FLOAT, J_FLOAT);
+	if (expr)
+		expr->from_expression = &from_expression->node;
+	return expr;
+}
+
+struct expression *
+conversion_float_to_double_expr(struct expression *from_expression)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_CONVERSION_FLOAT_TO_DOUBLE, J_DOUBLE);
+	if (expr)
+		expr->from_expression = &from_expression->node;
+	return expr;
+}
+
 struct expression *conversion_to_float_expr(enum vm_type vm_type,
 				   struct expression *from_expression)
 {
@@ -323,6 +353,25 @@ struct expression *conversion_from_float_expr(enum vm_type vm_type,
 				   struct expression *from_expression)
 {
 	struct expression *expr = alloc_expression(EXPR_CONVERSION_FROM_FLOAT, vm_type);
+	if (expr)
+		expr->from_expression = &from_expression->node;
+	return expr;
+}
+
+struct expression *conversion_to_double_expr(enum vm_type vm_type,
+					     struct expression *from_expression)
+{
+	struct expression *expr = alloc_expression(EXPR_CONVERSION_TO_DOUBLE, vm_type);
+	if (expr)
+		expr->from_expression = &from_expression->node;
+	return expr;
+}
+
+struct expression *conversion_from_double_expr(enum vm_type vm_type,
+					struct expression *from_expression)
+{
+	struct expression *expr = alloc_expression(EXPR_CONVERSION_FROM_DOUBLE,
+						   vm_type);
 	if (expr)
 		expr->from_expression = &from_expression->node;
 	return expr;

@@ -21,13 +21,23 @@
 static int convert_conversion(struct parse_context *ctx, enum vm_type to_type)
 {
 	struct expression *from_expression, *conversion_expression;
+	enum vm_type from_type;
 
 	from_expression = stack_pop(ctx->bb->mimic_stack);
+	from_type = from_expression->vm_type;
 
-	if (vm_type_is_float(to_type))
+	if (from_type == J_DOUBLE && to_type == J_FLOAT)
+		conversion_expression = conversion_double_to_float_expr(from_expression);
+	else if (from_type == J_FLOAT && to_type == J_DOUBLE)
+		conversion_expression = conversion_float_to_double_expr(from_expression);
+	else if (to_type == J_FLOAT)
 		conversion_expression = conversion_to_float_expr(to_type, from_expression);
-	else if (vm_type_is_float(from_expression->vm_type))
+	else if (from_type == J_FLOAT)
 		conversion_expression = conversion_from_float_expr(to_type, from_expression);
+	else if (to_type == J_DOUBLE)
+		conversion_expression = conversion_to_double_expr(to_type, from_expression);
+	else if (from_type == J_DOUBLE)
+		conversion_expression = conversion_from_double_expr(to_type, from_expression);
 	else
 		conversion_expression = conversion_expr(to_type, from_expression);
 

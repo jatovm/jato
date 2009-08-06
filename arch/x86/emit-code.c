@@ -1466,6 +1466,22 @@ static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
 	__emit_test_membase_reg(buf, reg, 0, reg);
 }
 
+static void emit_conv_xmm_to_xmm64(struct buffer *buf, struct operand *src,
+				   struct operand *dest)
+{
+	emit(buf, 0xf3);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x5a, dest, src);
+}
+
+static void emit_conv_xmm64_to_xmm(struct buffer *buf, struct operand *src,
+				   struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	emit_reg_reg(buf, 0x5a, dest, src);
+}
+
 static void emit_conv_gpr_to_fpu(struct buffer *buf, struct operand *src,
 				struct operand *dest)
 {
@@ -1676,6 +1692,8 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU64, emit_conv_gpr_to_fpu64, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_FPU_TO_GPR, emit_conv_fpu_to_gpr, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_FPU64_TO_GPR, emit_conv_fpu64_to_gpr, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CONV_XMM_TO_XMM64, emit_conv_xmm_to_xmm64, TWO_OPERANDS),
+	DECL_EMITTER(INSN_CONV_XMM64_TO_XMM, emit_conv_xmm64_to_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_JMP_MEMINDEX, emit_jmp_memindex, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMBASE_XMM, emit_mov_membase_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_64_MEMBASE_XMM, emit_mov_64_membase_xmm, TWO_OPERANDS),

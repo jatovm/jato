@@ -1438,6 +1438,28 @@ reg:	EXPR_CONVERSION(reg)
 	}
 }
 
+freg:	EXPR_CONVERSION_FLOAT_TO_DOUBLE(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	state->reg1 = get_var(s->b_parent, J_DOUBLE);
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM_TO_XMM64, state->left->reg1, state->reg1));
+}
+
+freg:	EXPR_CONVERSION_DOUBLE_TO_FLOAT(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	state->reg1 = get_var(s->b_parent, J_FLOAT);
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM64_TO_XMM, state->left->reg1, state->reg1));
+}
+
 freg:	EXPR_CONVERSION_TO_FLOAT(reg)
 {
 	struct expression *expr, *src;
@@ -1445,13 +1467,28 @@ freg:	EXPR_CONVERSION_TO_FLOAT(reg)
 	expr = to_expr(tree);
 	src = to_expr(expr->from_expression);
 
-	if (src->vm_type == J_INT && expr->vm_type == J_FLOAT) {
+	assert(expr->vm_type == J_FLOAT);
+
+	if (src->vm_type == J_INT) {
 		state->reg1 = get_var(s->b_parent, J_FLOAT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU, state->left->reg1, state->reg1));
-	} else if (src->vm_type == J_INT && expr->vm_type == J_DOUBLE) {
-		state->reg1 = get_var(s->b_parent, J_DOUBLE);
+	} else {
+		die("EXPR_CONVERSION_TO_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+	}
+}
 
+freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(expr->vm_type == J_DOUBLE);
+
+	if (src->vm_type == J_INT) {
+		state->reg1 = get_var(s->b_parent, J_DOUBLE);
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, state->left->reg1, state->reg1));
 	} else {
 		die("EXPR_CONVERSION_TO_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
@@ -1465,16 +1502,32 @@ reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
 	expr = to_expr(tree);
 	src = to_expr(expr->from_expression);
 
-	if (src->vm_type == J_FLOAT && expr->vm_type == J_INT) {
+	assert(src->vm_type == J_FLOAT);
+
+	if (expr->vm_type == J_INT) {
 		state->reg1 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
-	} else if (src->vm_type == J_DOUBLE && expr->vm_type == J_INT) {
+	} else {
+		die("EXPR_CONVERSION_FROM_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+	}
+}
+
+reg:	EXPR_CONVERSION_FROM_DOUBLE(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(src->vm_type == J_DOUBLE);
+
+	if (expr->vm_type == J_INT) {
 		state->reg1 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU64_TO_GPR, state->left->reg1, state->reg1));
 	} else {
-		die("EXPR_CONVERSION_FROM_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+		die("EXPR_CONVERSION_FROM_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
 }
 
