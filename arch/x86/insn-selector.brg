@@ -446,6 +446,7 @@ freg:	OP_FDIV(freg, freg) 1
 reg:	OP_DIV_64(reg, reg) 1
 {
 	emulate_op_64(state, s, tree, emulate_ldiv, J_LONG, J_LONG);
+	select_exception_test(s, tree);
 }
 
 reg:	OP_REM(reg, EXPR_LOCAL) 1
@@ -518,6 +519,7 @@ freg:	OP_FREM(freg, freg) 1
 reg:	OP_REM_64(reg, reg) 1
 {
 	emulate_op_64(state, s, tree, emulate_lrem, J_LONG, J_LONG);
+	select_exception_test(s, tree);
 }
 
 reg:	OP_NEG(reg) 1
@@ -931,7 +933,6 @@ reg:	OP_CMP(reg, EXPR_VALUE) 1
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_lcmp));
 	method_args_cleanup(s, tree, 4);
-	select_exception_test(s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 }
@@ -2689,6 +2690,8 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 		method_args_cleanup(s, tree, 4);
 	else
 		method_args_cleanup(s, tree, 3);
+
+	select_exception_test(s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx)
