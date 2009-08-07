@@ -315,6 +315,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		new = split_interval_at(current, free_until_pos[reg]);
 
 		if (has_use_positions(new)) {
+			new = split_interval_at(new, next_use_pos(new, 0));
 			mark_need_reload(new, current);
 			insert_to_list(new, unhandled);
 		}
