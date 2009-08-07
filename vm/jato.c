@@ -73,6 +73,8 @@
 #include "vm/thread.h"
 #include "vm/vm.h"
 
+#include "arch/init.h"
+
 static bool perf_enabled;
 char *exe_name;
 
@@ -1032,6 +1034,8 @@ main(int argc, char *argv[])
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 #endif
+
+	arch_init();
 
 	/* Sanity checks first of all. */
 	insn_sanity_check();
