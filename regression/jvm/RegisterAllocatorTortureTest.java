@@ -62,8 +62,24 @@ public class RegisterAllocatorTortureTest extends TestCase {
         }
     }
 
+    static class TestClass {
+        public int get(int index) {
+            return index;
+        }
+    };
+
+    private static int doTestIntervalSplitOnRegisterAllocatorPressure(TestClass obj, int index) {
+        return obj.get(index) + obj.get(index) + obj.get(index);
+    }
+
+    public static void testIntervalSplitOnRegisterAllocatorPressure() {
+        TestClass obj = new TestClass();
+        doTestIntervalSplitOnRegisterAllocatorPressure(obj, 0);
+    }
+
     public static void main(String[] args) {
       testIntegerBigExpression();
       testComplexRegisterAllocatorPressure();
+      testIntervalSplitOnRegisterAllocatorPressure();
     }
 }
