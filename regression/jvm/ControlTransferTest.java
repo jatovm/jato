@@ -211,6 +211,66 @@ public class ControlTransferTest extends TestCase {
         assertFalse(if_lcmpgt(1, 1));
     }
 
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    public static boolean lessThan100(float f) {
+        if (f < 100.0f) {
+            return true;
+        } else {
+            return false;			
+        }
+    }
+
+    public static void testFcmpg() {
+        assertFalse(lessThan100(Float.NaN));
+        assertFalse(lessThan100(101.0f));
+        assertTrue(lessThan100(99.0f));
+    }
+
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    public static boolean greaterThan100(float f) {
+        if (f > 100.0f) {
+            return true;
+        } else {
+            return false;			
+        }
+    }
+
+    public static void testFcmpl() {
+        assertFalse(greaterThan100(Float.NaN));
+        assertTrue(greaterThan100(101.0f));
+        assertFalse(greaterThan100(99.0f));
+    }
+
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    public static boolean lessThan100(double d) {
+        if (d < 100.0) {
+            return true;
+        } else {
+            return false;			
+        }
+    }
+
+    public static void testDcmpg() {
+        assertFalse(lessThan100(Double.NaN));
+        assertFalse(lessThan100(101.0));
+        assertTrue(lessThan100(99.0));
+    }
+
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    public static boolean greaterThan100(double d) {
+        if (d > 100.0) {
+            return true;
+        } else {
+            return false;			
+        }
+    }
+
+    public static void testDcmpl() {
+        assertFalse(greaterThan100(Double.NaN));
+        assertTrue(greaterThan100(101.0));
+        assertFalse(greaterThan100(99.0));
+    }
+
     public static void main(String [] args) {
         testLabeledBreak();
         testForLoop();
@@ -230,5 +290,9 @@ public class ControlTransferTest extends TestCase {
         testIfAcmpNe();
         testIfLcmpEq();
         testIfLcmpGt();
+        testFcmpg();
+        testFcmpl();
+        testDcmpg();
+        testDcmpl();
     }
 }
