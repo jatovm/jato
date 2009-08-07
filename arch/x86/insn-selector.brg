@@ -2684,7 +2684,11 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) func));
-	method_args_cleanup(s, tree, 4);
+
+	if (arg2_type == J_LONG)
+		method_args_cleanup(s, tree, 4);
+	else
+		method_args_cleanup(s, tree, 3);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx)
