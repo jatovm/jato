@@ -161,7 +161,7 @@ OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 RUNTIME_CLASSES =
 
 CC		:= gcc
-MONOBURG	:= ./monoburg/monoburg
+MONOBURG	:= ./tools/monoburg/monoburg
 JAVAC		:= ecj
 JASMIN		:= java -jar tools/jasmin/jasmin.jar
 JAVAC_OPTS	:= -encoding utf-8
@@ -195,7 +195,7 @@ $(CLASSPATH_CONFIG):
 	$(Q) $(CC) -Wall $(CLASSPATH_CONFIG).c -o $(CLASSPATH_CONFIG)
 
 monoburg:
-	$(Q) make -C monoburg/
+	$(Q) make -C tools/monoburg/
 .PHONY: monoburg
 
 %.o: %.c
