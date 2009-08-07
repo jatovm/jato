@@ -1209,6 +1209,7 @@ reg:	EXPR_ARRAY_SIZE_CHECK(reg)
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
 }
 %else
 reg:	EXPR_ARRAY_SIZE_CHECK(reg)
@@ -1222,6 +1223,7 @@ reg:	EXPR_ARRAY_SIZE_CHECK(reg)
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rdi));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
+	select_exception_test(s, tree);
 }
 %endif
 
@@ -1313,6 +1315,7 @@ arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) multiarray_size_check));
 	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
 }
 
 reg:	EXPR_MULTIANEWARRAY(arg)
@@ -2322,6 +2325,7 @@ stmt:	STMT_ARRAY_STORE_CHECK(reg, reg) 1
 	}
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_ARRAY_STORE_CHECK(freg, reg) 1
@@ -2336,6 +2340,7 @@ stmt:	STMT_ARRAY_STORE_CHECK(freg, reg) 1
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check_vmtype));
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_ATHROW(reg)
@@ -2383,6 +2388,7 @@ stmt:	STMT_ARRAY_CHECK(array_check)
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array));
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 stmt:	STMT_IF(reg)
@@ -2467,6 +2473,7 @@ stmt:	STMT_CHECKCAST(reg)
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_cast));
 
 	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
 }
 
 %%

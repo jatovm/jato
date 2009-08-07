@@ -392,7 +392,7 @@ void vm_object_check_array(struct vm_object *obj, unsigned int index)
 	if (!vm_class_is_array_class(cb)) {
 		signal_new_exception(vm_java_lang_RuntimeException,
 				     "object is not an array");
-		goto throw;
+		return;
 	}
 
 	array_len = obj->array_length;
@@ -403,9 +403,6 @@ void vm_object_check_array(struct vm_object *obj, unsigned int index)
 	sprintf(index_str, "%d > %d", index, array_len - 1);
 	signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException,
 			     index_str);
-
- throw:
-	throw_from_native(sizeof(struct vm_object *) + sizeof(unsigned int));
 }
 
 void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
@@ -423,7 +420,7 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 	if (!vm_class_is_array_class(class)) {
 		signal_new_exception(vm_java_lang_RuntimeException,
 				     "object is not an array");
-		goto throw;
+		return;
 	}
 
 	element_class = vm_class_get_array_element_class(class);
@@ -442,11 +439,7 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 
 	signal_new_exception(vm_java_lang_ArrayStoreException, str->value);
 	free_str(str);
-
- throw:
-	throw_from_native(2 * sizeof(struct vm_object *));
 	return;
-
  error:
 	if (str)
 		free_str(str);
@@ -473,7 +466,7 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 		return;
 
 	if (exception_occurred())
-		goto throw;
+		return;
 
 	str = alloc_str();
 	if (str == NULL) {
@@ -495,10 +488,7 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 
 	signal_new_exception(vm_java_lang_ClassCastException, str->value);
 	free_str(str);
- throw:
-	throw_from_native(2 * sizeof(struct vm_object *));
 	return;
-
  error:
 	if (str)
 		free_str(str);
@@ -511,11 +501,10 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 
 void array_size_check(int size)
 {
-	if (size < 0) {
-		signal_new_exception(
-			vm_java_lang_NegativeArraySizeException, NULL);
-		throw_from_native(sizeof(int));
-	}
+	if (size >= 0)
+		return;
+
+	signal_new_exception(vm_java_lang_NegativeArraySizeException, NULL);
 }
 
 void multiarray_size_check(int n, ...)
@@ -532,7 +521,6 @@ void multiarray_size_check(int n, ...)
 		signal_new_exception(vm_java_lang_NegativeArraySizeException,
 				     NULL);
 		va_end(ap);
-		throw_from_native(sizeof(int) * (n + 1));
 		return;
 	}
 
