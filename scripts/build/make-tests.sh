@@ -13,8 +13,10 @@ echo '
 /* This is auto-generated code. Edit at your own peril. */
 
 #include <libharness.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+
+extern unsigned long nr_failed;
 '
 
 cat $FILES | grep '^void test_' | grep -v "__ignore" | 
@@ -46,6 +48,10 @@ int main(int argc, char *argv[])
 {
     exe_name = argv[0];
     run_tests();
-    return 0;
+
+    if (nr_failed > 0)
+        return EXIT_FAILURE;
+
+    return EXIT_SUCCESS;
 }
 '
