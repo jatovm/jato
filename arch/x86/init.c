@@ -1,6 +1,7 @@
 #include <stdbool.h>
 
 #include "arch/init.h"
+#include "vm/die.h"
 
 unsigned long x86_cpu_features;
 
@@ -31,4 +32,7 @@ static void init_cpu_features(void)
 void arch_init(void)
 {
 	init_cpu_features();
+
+	if (!cpu_has(X86_FEATURE_SSE))
+		warn("CPU does not support SSE. Floating point arithmetic will not work.");
 }

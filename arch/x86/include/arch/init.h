@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+#define X86_FEATURE_SSE 	25
 #define X86_FEATURE_SSE2	26
 
 extern unsigned long x86_cpu_features;
