@@ -9,7 +9,7 @@ bool opt_trace_invoke = false;
 bool opt_trace_exceptions = false;
 bool opt_trace_bytecode = false;
 bool opt_trace_threads = false;
-bool opt_trace_return_value = false;
+bool opt_trace_invoke_verbose = false;
 
 void trace_invoke(struct compilation_unit *cu)
 {

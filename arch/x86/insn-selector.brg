@@ -753,7 +753,7 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (opt_trace_return_value)
+	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
@@ -2972,7 +2972,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (opt_trace_return_value)
+	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);
 
 	if (vm_method_is_jni(method))
@@ -3018,7 +3018,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (opt_trace_return_value)
+	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);
 }
 

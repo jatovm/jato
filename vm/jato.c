@@ -847,11 +847,6 @@ static void handle_define(const char *arg)
 	free(str);
 }
 
-static void handle_trace_return(void)
-{
-	opt_trace_return_value = true;
-}
-
 struct option {
 	const char *name;
 
@@ -897,7 +892,6 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),
 	DEFINE_OPTION("Xtrace:jit",		handle_trace_jit),
 	DEFINE_OPTION("Xtrace:trampoline",	handle_trace_trampoline),
-	DEFINE_OPTION("Xtrace:return",		handle_trace_return),
 };
 
 static const struct option *get_option(const char *name)

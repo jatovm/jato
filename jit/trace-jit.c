@@ -52,7 +52,6 @@ bool opt_trace_exceptions;
 bool opt_trace_bytecode;
 bool opt_trace_compile;
 bool opt_trace_threads;
-bool opt_trace_return_value;
 
 void trace_method(struct compilation_unit *cu)
 {
