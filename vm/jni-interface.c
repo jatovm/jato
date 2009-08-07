@@ -419,16 +419,16 @@ static jobject vm_jni_new_global_ref(struct vm_jni_env *env, jobject obj)
 {
 	enter_vm_from_jni();
 
-	NOT_IMPLEMENTED;
+	/* TODO: fix this when GC is implemented. */
+
 	return obj;
 }
 
 static void vm_jni_delete_global_ref(struct vm_jni_env *env, jobject obj)
 {
-	/* TODO: fix this when GC is implemented. */
 	enter_vm_from_jni();
 
-	NOT_IMPLEMENTED;
+	/* TODO: fix this when GC is implemented. */
 }
 
 static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
@@ -468,7 +468,7 @@ static void vm_jni_delete_local_ref(struct vm_jni_env *env, jobject ref)
 {
 	enter_vm_from_jni();
 
-	NOT_IMPLEMENTED;
+	/* TODO: fix this when GC is implemented. */
 }
 
 static jint vm_jni_get_int_field(struct vm_jni_env *env, jobject object,
