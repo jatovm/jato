@@ -37,6 +37,8 @@
 #include "cafebabe/method_info.h"
 #include "cafebabe/stream.h"
 
+#include "lib/string.h"
+
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/die.h"
@@ -46,8 +48,8 @@
 #include "vm/itable.h"
 #include "vm/method.h"
 #include "vm/object.h"
+#include "vm/stdlib.h"
 #include "vm/thread.h"
-#include "lib/string.h"
 #include "vm/vm.h"
 
 #include "jit/exception.h"
@@ -139,6 +141,64 @@ static int vm_class_link_common(struct vm_class *vmc)
 		return -err;
 
 	return 0;
+}
+
+/*
+ * This is used for grouping fields by their type, so that we can:
+ *
+ *   1. put reference types first (improves GC)
+ *   2. sort the rest of the fields by size (improves object layout)
+ */
+struct field_bucket {
+	unsigned int nr;
+	struct vm_field **fields;
+};
+
+static void bucket_order_fields(struct field_bucket *bucket,
+	unsigned int size, unsigned int *offset)
+{
+	unsigned int tmp_offset = *offset;
+
+	for (unsigned int i = 0; i < bucket->nr; ++i) {
+		struct vm_field *vmf = bucket->fields[i];
+
+		vmf->offset = tmp_offset;
+		tmp_offset += size;
+	}
+
+	*offset = tmp_offset;
+}
+
+static void buckets_order_fields(struct field_bucket buckets[VM_TYPE_MAX],
+	unsigned int *ref_size, unsigned int *size)
+{
+	unsigned int offset = *size;
+
+	/* We need to align here, because offset might be non-zero from the
+	 * parent class. */
+	offset = ALIGN(offset, sizeof(void *));
+	bucket_order_fields(&buckets[J_REFERENCE], sizeof(void *), &offset);
+
+	/* Align with 8-byte boundary here. We don't need to align anything
+	 * after this, since we _know_ e.g. that after 8-byte fields, we will
+	 * always be 8-byte aligned, which is also always 4-byte aligned. */
+	offset = ALIGN(offset, 8);
+
+	bucket_order_fields(&buckets[J_DOUBLE], 8, &offset);
+	bucket_order_fields(&buckets[J_LONG], 8, &offset);
+
+	bucket_order_fields(&buckets[J_FLOAT], 4, &offset);
+	bucket_order_fields(&buckets[J_INT], 4, &offset);
+
+	/* XXX: Should be size = 2 */
+	bucket_order_fields(&buckets[J_SHORT], 4, &offset);
+	bucket_order_fields(&buckets[J_CHAR], 4, &offset);
+
+	/* XXX: Should be size = 1 */
+	bucket_order_fields(&buckets[J_BYTE], 4, &offset);
+	bucket_order_fields(&buckets[J_BOOLEAN], 4, &offset);
+
+	*size = offset;
 }
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
@@ -254,20 +314,6 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		return -1;
 	}
 
-	unsigned int offset;
-	unsigned int static_offset;
-
-	if (vmc->super) {
-		offset = vmc->super->object_size;
-		static_offset = vmc->super->static_size;
-	} else {
-		offset = 0;
-		static_offset = 0;
-	}
-
-	unsigned int static_size = 0;
-	unsigned int object_size = 0;
-
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 
@@ -275,34 +321,69 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 			NOT_IMPLEMENTED;
 			return -1;
 		}
-
-		if (vm_field_is_static(vmf))
-			static_size += 8;
-		else
-			object_size += 8;
 	}
 
-	/* XXX: only static fields, right size, etc. */
-	vmc->static_size = static_offset + static_size;
-	vmc->static_values = malloc(vmc->static_size);
+	if (vmc->super) {
+		vmc->static_size = vmc->super->static_size;
+		vmc->object_size = vmc->super->object_size;
+	} else {
+		vmc->static_size = 0;
+		vmc->object_size = 0;
+	}
 
-	vmc->object_size = offset + object_size;
+	struct field_bucket field_buckets[2][VM_TYPE_MAX];
+	for (unsigned int i = 0; i < VM_TYPE_MAX; ++i) {
+		field_buckets[0][i].nr = 0;
+		field_buckets[1][i].nr = 0;
+	}
+
+	/* Count the number of fields for each bucket */
+	for (uint16_t i = 0; i < class->fields_count; ++i) {
+		struct vm_field *vmf = &vmc->fields[i];
+		unsigned int stat = vm_field_is_static(vmf) ? 0 : 1;
+		enum vm_type type = str_to_type(vmf->type);
+		struct field_bucket *bucket = &field_buckets[stat][type];
+
+		++bucket->nr;
+	}
+
+	/* Allocate enough space in each bucket */
+	for (unsigned int i = 0; i < VM_TYPE_MAX; ++i) {
+		for (unsigned int j = 0; j < 2; ++j) {
+			struct field_bucket *bucket = &field_buckets[j][i];
+
+			bucket->fields = malloc(bucket->nr * sizeof(*bucket->fields));
+			bucket->nr = 0;
+		}
+	}
+
+	/* Place the fields in the buckets */
+	for (uint16_t i = 0; i < class->fields_count; ++i) {
+		struct vm_field *vmf = &vmc->fields[i];
+		unsigned int stat = vm_field_is_static(vmf) ? 0 : 1;
+		enum vm_type type = str_to_type(vmf->type);
+		struct field_bucket *bucket = &field_buckets[stat][type];
+
+		bucket->fields[bucket->nr++] = vmf;
+	}
+
+	unsigned int tmp;
+	buckets_order_fields(field_buckets[0], &tmp, &vmc->static_size);
+	buckets_order_fields(field_buckets[1], &tmp, &vmc->object_size);
+
+	/* XXX: only static fields, right size, etc. */
+	vmc->static_values = zalloc(vmc->static_size);
 
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 
 		if (vm_field_is_static(vmf)) {
-			if (vm_field_init_static(vmf, static_offset)) {
+			if (vm_field_init_static(vmf)) {
 				NOT_IMPLEMENTED;
 				return -1;
 			}
-
-			/* XXX: Same as below */
-			static_offset += 8;
 		} else {
-			vm_field_init_nonstatic(vmf, offset);
-			/* XXX: Do field reordering and use the right sizes */
-			offset += 8;
+			vm_field_init_nonstatic(vmf);
 		}
 	}
 

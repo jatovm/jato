@@ -25,8 +25,8 @@ struct vm_field {
 
 int vm_field_init(struct vm_field *vmf,
 	struct vm_class *vmc, unsigned int field_index);
-void vm_field_init_nonstatic(struct vm_field *vmf, unsigned int offset);
-int vm_field_init_static(struct vm_field *vmf, unsigned int offset);
+void vm_field_init_nonstatic(struct vm_field *vmf);
+int vm_field_init_static(struct vm_field *vmf);
 
 static inline bool vm_field_is_static(const struct vm_field *vmf)
 {
