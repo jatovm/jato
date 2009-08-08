@@ -266,6 +266,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	unsigned int static_size = 0;
+	unsigned int object_size = 0;
 
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
@@ -277,10 +278,15 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 		if (vm_field_is_static(vmf))
 			static_size += 8;
+		else
+			object_size += 8;
 	}
 
 	/* XXX: only static fields, right size, etc. */
-	vmc->static_values = malloc(static_offset + static_size);
+	vmc->static_size = static_offset + static_size;
+	vmc->static_values = malloc(vmc->static_size);
+
+	vmc->object_size = offset + object_size;
 
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
@@ -299,9 +305,6 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 			offset += 8;
 		}
 	}
-
-	vmc->object_size = offset;
-	vmc->static_size = static_offset + static_size;
 
 	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
 	if (!vmc->methods) {
