@@ -80,7 +80,7 @@ bool show_exe_function(void *addr, struct string *str)
 
 	bfd_init();
 
-	abfd = bfd_openr(exe_name, NULL);
+	abfd = bfd_openr("/proc/self/exe", NULL);
 	if (!abfd)
 		goto failed;
 
