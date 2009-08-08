@@ -47,8 +47,17 @@ public class VMClassTest extends TestCase {
         assertFalse(VMClass.isArray(new Object() { }.getClass()));
     }
 
+    public static void testIsPrimitive() {
+        assertTrue(VMClass.isPrimitive(int.class));
+        assertFalse(VMClass.isPrimitive(int[].class));
+        assertFalse(VMClass.isPrimitive(Object.class));
+        assertFalse(VMClass.isPrimitive(Object[].class));
+        assertFalse(VMClass.isPrimitive(new Object() { }.getClass()));
+    }
+
     public static void main(String[] args) {
         testIsAnonymousClass();
         testIsArray();
+        testIsPrimitive();
     }
 }
