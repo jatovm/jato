@@ -422,17 +422,24 @@ native_vmobject_getclass(struct vm_object *object)
 	return object->class->object;
 }
 
+static struct vm_class *to_vmclass(struct vm_object *object)
+{
+	struct vm_class *vmc;
+
+	if (!object)
+		goto throw;
+	vmc = vm_class_get_class_from_class_object(object);
+	if (!vmc)
+		goto throw;
+	return vmc;
+throw:
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);
+	return NULL;
+}
+
 static struct vm_object *
 native_vmclass_getclassloader(struct vm_object *object)
 {
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return NULL;
-	}
-
-	struct vm_class *class = vm_class_get_class_from_class_object(object);
-	assert(class != NULL);
-
 	NOT_IMPLEMENTED;
 	return NULL;
 }
@@ -478,10 +485,10 @@ native_vmclass_forname(struct vm_object *name, jboolean initialize,
 static struct vm_object *
 native_vmclass_getname(struct vm_object *object)
 {
-	struct vm_class *class;
+	struct vm_class *class = to_vmclass(object);
 
-	class = vm_class_get_class_from_class_object(object);
-	assert(class != NULL);
+	if (!class)
+		return NULL;
 
 	return vm_object_alloc_string_from_c(class->name);
 }
@@ -489,14 +496,10 @@ native_vmclass_getname(struct vm_object *object)
 static int32_t
 native_vmclass_is_anonymous_class(struct vm_object *object)
 {
-	struct vm_class *class;
+	struct vm_class *class = to_vmclass(object);
 
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+	if (!class)
 		return false;
-	}
-	class = vm_class_get_class_from_class_object(object);
-	assert(class != NULL);
 
 	return vm_class_is_anonymous(class);
 }
@@ -504,13 +507,10 @@ native_vmclass_is_anonymous_class(struct vm_object *object)
 static int32_t
 native_vmclass_isarray(struct vm_object *object)
 {
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
+	struct vm_class *class = to_vmclass(object);
 
-	struct vm_class *class = vm_class_get_class_from_class_object(object);
-	assert(class != NULL);
+	if (!class)
+		return false;
 
 	return vm_class_is_array_class(class);
 }
@@ -518,16 +518,12 @@ native_vmclass_isarray(struct vm_object *object)
 static int32_t
 native_vmclass_isprimitive(struct vm_object *object)
 {
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
+	struct vm_class *class = to_vmclass(object);
 
-	struct vm_class *class = vm_class_get_class_from_class_object(object);
-	assert(class != NULL);
+	if (!class)
+		return false;
 
-	/* Note: This function returns a boolean value (despite the int32_t) */
-	return class->kind == VM_CLASS_KIND_PRIMITIVE;
+	return vm_class_is_primitive_class(class);
 }
 
 static jint native_vmclass_getmodifiers(struct vm_object *clazz)
