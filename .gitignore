@@ -26,7 +26,7 @@ test/vm/vm-test-suite.c
 jato
 lib/classes.zip
 lib/inst_classes.zip
-monoburg/monoburg
+tools/monoburg/monoburg
 test/arch-x86/x86-test-runner
 test/jit/jit-test-runner
 test/vm/vm-test-runner
