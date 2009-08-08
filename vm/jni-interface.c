@@ -593,6 +593,46 @@ vm_jni_release_byte_array_elements(struct vm_jni_env *env, jobject array,
 		free(elems);
 }
 
+static jdouble *
+vm_jni_get_double_array_elements(struct vm_jni_env *env, jobject array,
+			       jboolean *is_copy)
+{
+	jdouble *result;
+
+	if (!vm_class_is_array_class(array->class) ||
+	    vm_class_get_array_element_class(array->class) != vm_double_class)
+		return NULL;
+
+	result = malloc(sizeof(jdouble) * array->array_length);
+	if (!result)
+		return NULL;
+
+	for (long i = 0; i < array->array_length; i++)
+		result[i] = array_get_field_double(array, i);
+
+	if (is_copy)
+		*is_copy = JNI_TRUE;
+
+	return result;
+}
+
+static void
+vm_jni_release_double_array_elements(struct vm_jni_env *env, jobject array,
+				   jdouble *elems, jint mode)
+{
+	if (!vm_class_is_array_class(array->class) ||
+	    vm_class_get_array_element_class(array->class) != vm_double_class)
+		return;
+
+	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */
+		for (long i = 0; i < array->array_length; i++)
+			array_set_field_double(array, i, elems[i]);
+	}
+
+	if (mode == 0 || mode == JNI_ABORT) /* free buffer */
+		free(elems);
+}
+
 static void *
 vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
 {
@@ -1001,7 +1041,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* GetFloatArrayElements */
 
 	/* 190 */
-	NULL, /* GetDoubleArrayElements */
+	vm_jni_get_double_array_elements,
 	NULL, /* ReleaseBooleanArrayElements */
 	vm_jni_release_byte_array_elements,
 	NULL, /* ReleaseCharArrayElements */
@@ -1011,7 +1051,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* ReleaseIntArrayElements */
 	NULL, /* ReleaseLongArrayElements */
 	NULL, /* ReleaseFloatArrayElements */
-	NULL, /* ReleaseDoubleArrayElements */
+	vm_jni_release_double_array_elements,
 	NULL, /* GetBooleanArrayRegion */
 
 	/* 200 */

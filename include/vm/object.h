@@ -180,6 +180,12 @@ array_get_field_float(struct vm_object *obj, int index)
 	return *(float *) &obj->fields[index * get_vmtype_size(J_FLOAT)];
 }
 
+static inline void
+array_set_field_double(struct vm_object *obj, int index, uint16_t value)
+{
+	*(uint16_t *) &obj->fields[index * get_vmtype_size(J_DOUBLE)] = value;
+}
+
 static inline double
 array_get_field_double(struct vm_object *obj, int index)
 {
