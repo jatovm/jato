@@ -13,7 +13,4 @@ struct native_stack_frame {
 	unsigned long return_address;
 };
 
-#define __override_return_address(ret) ;
-#define __cleanup_args(argssize) ;
-
 #endif /* MMIX_STACK_FRAME_H */
