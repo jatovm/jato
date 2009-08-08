@@ -885,7 +885,7 @@ bool vm_class_is_anonymous(struct vm_class *vmc)
 	if (!vm_class_is_regular_class(vmc))
 		return false;
 
-	if (vm_class_is_abstract(vmc) || !vm_class_is_final(vmc))
+	if (vm_class_is_abstract(vmc))
 		return false;
 
 	char *separator = strchr(vmc->name, '$');
