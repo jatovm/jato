@@ -117,6 +117,11 @@ static inline bool vm_class_is_primitive_class(const struct vm_class *vmc)
 	return vmc->kind == VM_CLASS_KIND_PRIMITIVE;
 }
 
+static inline bool vm_class_is_regular_class(const struct vm_class *vmc)
+{
+	return vmc->kind == VM_CLASS_KIND_REGULAR;
+}
+
 bool vm_class_is_anonymous(struct vm_class *vmc);
 
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i);

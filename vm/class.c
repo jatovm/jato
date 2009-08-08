@@ -882,6 +882,9 @@ static bool is_numeric(const char *s)
 /* See Section 15.9.5 ("Anonymous Class Declarations") of the JLS for details.  */
 bool vm_class_is_anonymous(struct vm_class *vmc)
 {
+	if (!vm_class_is_regular_class(vmc))
+		return false;
+
 	if (vm_class_is_abstract(vmc) || !vm_class_is_final(vmc))
 		return false;
 

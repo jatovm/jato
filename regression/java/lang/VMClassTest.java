@@ -32,12 +32,12 @@ import jvm.TestCase;
  */
 public class VMClassTest extends TestCase {
     public static void testIsAnonymousClass() {
-        assertFalse(VMClass.isAnonymousClass(StaticClass.class));
+        assertFalse(VMClass.isAnonymousClass(int.class));
+        assertFalse(VMClass.isAnonymousClass(int[].class));
+        assertFalse(VMClass.isAnonymousClass(Object.class));
+        assertFalse(VMClass.isAnonymousClass(Object[].class));
         assertTrue(VMClass.isAnonymousClass(new Object() { }.getClass()));
     }
-
-    public static class StaticClass {
-    };
 
     public static void main(String[] args) {
         testIsAnonymousClass();
