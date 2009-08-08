@@ -39,7 +39,16 @@ public class VMClassTest extends TestCase {
         assertTrue(VMClass.isAnonymousClass(new Object() { }.getClass()));
     }
 
+    public static void testIsArray() {
+        assertFalse(VMClass.isArray(int.class));
+        assertTrue(VMClass.isArray(int[].class));
+        assertFalse(VMClass.isArray(Object.class));
+        assertTrue(VMClass.isArray(Object[].class));
+        assertFalse(VMClass.isArray(new Object() { }.getClass()));
+    }
+
     public static void main(String[] args) {
         testIsAnonymousClass();
+        testIsArray();
     }
 }

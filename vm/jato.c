@@ -502,6 +502,20 @@ native_vmclass_is_anonymous_class(struct vm_object *object)
 }
 
 static int32_t
+native_vmclass_isarray(struct vm_object *object)
+{
+	if (!object) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+
+	struct vm_class *class = vm_class_get_class_from_class_object(object);
+	assert(class != NULL);
+
+	return vm_class_is_array_class(class);
+}
+
+static int32_t
 native_vmclass_isprimitive(struct vm_object *object)
 {
 	if (!object) {
@@ -632,6 +646,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClass", "forName", &native_vmclass_forname),
 	DEFINE_NATIVE("java/lang/VMClass", "isAnonymousClass", &native_vmclass_is_anonymous_class),
+	DEFINE_NATIVE("java/lang/VMClass", "isArray", &native_vmclass_isarray),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
 	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", &native_vmclass_getmodifiers),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
