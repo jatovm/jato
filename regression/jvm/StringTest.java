@@ -10,6 +10,11 @@ public class StringTest extends TestCase {
 
         String t = "ヒラガナ";
         assertEquals(t.length(), 4);
+
+        String p = "\u1234\u5678\uabcd";
+        assertEquals(0x1234, (int)p.charAt(0));
+        assertEquals(0x5678, (int)p.charAt(1));
+        assertEquals(0xabcd, (int)p.charAt(2));
     }
 
     public static void testStringConcatenation() {

@@ -66,16 +66,16 @@ struct vm_object *utf8_to_char_array(const uint8_t *bytes, unsigned int n)
 		}
 
 		if ((bytes[i] & 0xe0) == 0xc0) {
-			uint16_t ch = (uint16_t) (bytes[i++] & 0x1f) << 6;
-			ch += bytes[i++] & 0x3f;
+			uint16_t ch = (uint16_t) (bytes[i] & 0x1f) << 6;
+			ch += bytes[++i] & 0x3f;
 			array_set_field_char(array, j++, ch);
 			continue;
 		}
 
 		if ((bytes[i] & 0xf0) == 0xe0) {
-			uint16_t ch = (uint16_t) (bytes[i++] & 0xf) << 12;
-			ch += (uint16_t) (bytes[i++] & 0x3f) << 6;
-			ch += bytes[i++] & 0x3f;
+			uint16_t ch = (uint16_t) (bytes[i] & 0xf) << 12;
+			ch += (uint16_t) (bytes[++i] & 0x3f) << 6;
+			ch += bytes[++i] & 0x3f;
 			array_set_field_char(array, j++, ch);
 			continue;
 		}
