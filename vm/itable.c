@@ -135,8 +135,8 @@ itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
 
 static int itable_entry_compare(const void *a, const void *b)
 {
-	const struct itable_entry *ae = a;
-	const struct itable_entry *be = b;
+	const struct itable_entry *ae = *(const struct itable_entry **) a;
+	const struct itable_entry *be = *(const struct itable_entry **) b;
 
 	if (ae->i_method < be->i_method)
 		return -1;
