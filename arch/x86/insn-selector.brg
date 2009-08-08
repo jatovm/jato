@@ -2989,7 +2989,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);
 
-	if (vm_method_is_jni(method))
+	if (vm_method_is_native(method))
 		select_exception_test(s, tree);
 }
 

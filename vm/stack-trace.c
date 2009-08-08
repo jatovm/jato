@@ -596,7 +596,7 @@ native_vmthrowable_get_stack_trace(struct vm_object *this,
 	result = convert_intermediate_stack_trace(array);
 
 	if (exception_occurred())
-		throw_from_native(sizeof(struct vm_object *) * 2);
+		return NULL;
 
 	return result;
 }

@@ -255,7 +255,6 @@ native_vmruntime_maplibraryname(struct vm_object *name)
 
 	if (!name) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof(struct vm_object));
 		return NULL;
 	}
 
@@ -297,7 +296,6 @@ native_vmruntime_native_load(struct vm_object *name,
 
 	if (!name) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof(struct vm_object) * 2);
 		return 0;
 	}
 
@@ -339,20 +337,20 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 
 	if (!src || !dest || !src->class || !dest->class) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		goto throw;
+		return;
 	}
 
 	if (!vm_class_is_array_class(src->class) ||
 	    !vm_class_is_array_class(dest->class)) {
 		signal_new_exception(vm_java_lang_ArrayStoreException, NULL);
-		goto throw;
+		return;
 	}
 
 	src_elem_class = vm_class_get_array_element_class(src->class);
 	dest_elem_class = vm_class_get_array_element_class(dest->class);
 	if (!src_elem_class || !dest_elem_class) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		goto throw;
+		return;
 	}
 
 	elem_type = vm_class_get_storage_vmtype(src_elem_class);
@@ -366,7 +364,7 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	    dest_start < 0 || dest_start + len > dest->array_length) {
 		signal_new_exception(
 			vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
-		goto throw;
+		return;
 	}
 
 	elem_size = get_vmtype_size(elem_type);
@@ -375,8 +373,6 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 		len * elem_size);
 
 	return;
- throw:
-	throw_from_native(sizeof(int) * 3 + sizeof(struct vm_object*) * 2);
 }
 
 static int32_t hash_ptr_to_int32(void *p)
@@ -407,7 +403,6 @@ native_vmobject_clone(struct vm_object *object)
 {
 	if (!object) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof object);
 		return NULL;
 	}
 
@@ -419,7 +414,6 @@ native_vmobject_getclass(struct vm_object *object)
 {
 	if (!object) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof object);
 		return NULL;
 	}
 
@@ -433,7 +427,6 @@ native_vmclass_getclassloader(struct vm_object *object)
 {
 	if (!object) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof object);
 		return NULL;
 	}
 
@@ -479,7 +472,6 @@ native_vmclass_forname(struct vm_object *name, jboolean initialize,
 	return class->object;
 
  throw:
-	throw_from_native(sizeof(name) + sizeof(initialize) + sizeof(loader));
 	return NULL;
 }
 
@@ -499,7 +491,6 @@ native_vmclass_isprimitive(struct vm_object *object)
 {
 	if (!object) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof object);
 		return 0;
 	}
 
@@ -532,7 +523,7 @@ native_vmclassloader_getprimitiveclass(int type)
 
 	vm_class_ensure_init(class);
 	if (exception_occurred())
-		throw_from_native(sizeof(int));
+		return NULL;
 
 	return class->object;
 }
@@ -545,7 +536,6 @@ native_vmfile_is_directory(struct vm_object *dirpath)
 
 	if (!dirpath) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		throw_from_native(sizeof(dirpath));
 		return false;
 	}
 
@@ -567,7 +557,6 @@ static void
 native_vm_throw_null_pointer_exception(void)
 {
 	signal_new_exception(vm_java_lang_NullPointerException, NULL);
-	throw_from_native(0);
 }
 
 static struct vm_object *native_vmthread_current_thread(void)
@@ -586,7 +575,7 @@ static void native_vmobject_notify(struct vm_object *obj)
 	vm_monitor_notify(&obj->monitor);
 
 	if (exception_occurred())
-		throw_from_native(sizeof(obj));
+		return;
 }
 
 static void native_vmobject_notify_all(struct vm_object *obj)
@@ -594,7 +583,7 @@ static void native_vmobject_notify_all(struct vm_object *obj)
 	vm_monitor_notify_all(&obj->monitor);
 
 	if (exception_occurred())
-		throw_from_native(sizeof(obj));
+		return;
 }
 
 static jlong native_vmsystem_nano_time(void)
@@ -615,9 +604,6 @@ static void native_vmobject_wait(struct vm_object *object, jlong ms, jint ns)
 		vm_monitor_wait(&object->monitor);
 	else
 		vm_monitor_timed_wait(&object->monitor, ms, ns);
-
-	if (exception_occurred())
-		throw_from_native(sizeof(object) + sizeof(ms) + sizeof(ns));
 }
 
 static struct vm_native natives[] = {
