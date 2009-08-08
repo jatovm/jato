@@ -225,6 +225,7 @@ test: monoburg
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.java \
+	regression/java/lang/VMClassTest.java \
 	regression/jvm/ArrayExceptionsTest.java \
 	regression/jvm/ArrayMemberTest.java \
 	regression/jvm/ArrayTest.java \

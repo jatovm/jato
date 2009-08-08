@@ -92,14 +92,19 @@ static inline int vm_class_ensure_init(struct vm_class *vmc)
 	return vm_class_init(vmc);
 }
 
-static inline bool vm_class_is_interface(const struct vm_class *vmc)
-{
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
-}
-
 static inline bool vm_class_is_abstract(const struct vm_class *vmc)
 {
 	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_ABSTRACT;
+}
+
+static inline bool vm_class_is_final(const struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_FINAL;
+}
+
+static inline bool vm_class_is_interface(const struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
 }
 
 static inline bool vm_class_is_array_class(const struct vm_class *vmc)
@@ -111,6 +116,8 @@ static inline bool vm_class_is_primitive_class(const struct vm_class *vmc)
 {
 	return vmc->kind == VM_CLASS_KIND_PRIMITIVE;
 }
+
+bool vm_class_is_anonymous(struct vm_class *vmc);
 
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i);
 

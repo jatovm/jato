@@ -25,10 +25,11 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "cafebabe/class.h"
 #include "cafebabe/constant_pool.h"
@@ -866,6 +867,33 @@ vm_class_resolve_interface_method_recursive(const struct vm_class *vmc,
 	free(name);
 	free(type);
 	return result;
+}
+
+static bool is_numeric(const char *s)
+{
+	for (unsigned int i = 0; i < strlen(s); i++) {
+		if (!isdigit(s[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/* See Section 15.9.5 ("Anonymous Class Declarations") of the JLS for details.  */
+bool vm_class_is_anonymous(struct vm_class *vmc)
+{
+	if (vm_class_is_abstract(vmc) || !vm_class_is_final(vmc))
+		return false;
+
+	char *separator = strchr(vmc->name, '$');
+	if (!separator)
+		return false;
+
+	size_t len = strlen(separator);
+	if (len == 0)
+		return false;
+
+	return is_numeric(separator + 1);
 }
 
 /* Reference: http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
