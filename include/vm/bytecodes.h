@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+struct vm_class;
+
 unsigned long bc_insn_size(const unsigned char *, unsigned long);
 bool bc_is_branch(unsigned char);
 bool bc_is_goto(unsigned char);
@@ -18,7 +20,7 @@ unsigned long bc_get_astore_index(const unsigned char *);
 unsigned long bc_get_ret_index(const unsigned char *);
 void bc_set_target_off(unsigned char *, long);
 
-void bytecode_disassemble(const unsigned char *, unsigned long);
+void bytecode_disassemble(struct vm_class *, const unsigned char *, unsigned long);
 
 static inline bool bc_branches_to_follower(unsigned char code)
 {

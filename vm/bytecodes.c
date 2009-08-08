@@ -10,6 +10,7 @@
 #include "vm/vm.h"
 #include "vm/bytecode.h"
 #include "vm/bytecodes.h"
+#include "vm/class.h"
 #include "vm/die.h"
 #include "vm/opcodes.h"
 #include "vm/trace.h"
@@ -229,7 +230,8 @@ static char *bc_get_insn_name(const unsigned char *code)
 	return strdup(buf);
 }
 
-void bytecode_disassemble(const unsigned char *code, unsigned long size)
+void bytecode_disassemble(struct vm_class *vmc, const unsigned char *code,
+			  unsigned long size)
 {
 	unsigned long pc;
 
@@ -269,6 +271,30 @@ void bytecode_disassemble(const unsigned char *code, unsigned long size)
 
 		for (int i = 1; i < size; i++)
 			trace_printf(" 0x%02x", (unsigned int)code[_pc + i]);
+
+		if (code[_pc] == OPC_INVOKESPECIAL ||
+		    code[_pc] == OPC_INVOKESTATIC ||
+		    code[_pc] == OPC_INVOKEINTERFACE ||
+		    code[_pc] == OPC_INVOKEVIRTUAL) {
+			struct vm_class *r_vmc;
+			char *r_name;
+			char *r_type;
+			uint16_t index;
+			int err;
+
+			index = read_u16(&code[_pc + 1]);
+
+			if (code[_pc] == OPC_INVOKEINTERFACE)
+				err = vm_class_resolve_interface_method(vmc,
+					index, &r_vmc, &r_name, &r_type);
+			else
+				err = vm_class_resolve_method(vmc, index, &r_vmc,
+						      &r_name, &r_type);
+
+			if (!err)
+				trace_printf(" // %s.%s%s", r_vmc->name, r_name,
+					     r_type);
+		}
 
 		trace_printf("\n");
 	}

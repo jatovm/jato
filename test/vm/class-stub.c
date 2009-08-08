@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <errno.h>
 #include <stdio.h>
 
 #include "vm/class.h"
@@ -31,6 +32,18 @@ struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
 	 * we assume that "methodref" is actually an index into the class'
 	 * own method table. */
 	return &vmc->methods[i];
+}
+
+int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
+			struct vm_class **r_vmc, char **r_name, char **r_type)
+{
+	return -EINVAL;
+}
+
+int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type)
+{
+	return -EINVAL;
 }
 
 struct vm_method *vm_class_resolve_interface_method_recursive(

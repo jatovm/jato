@@ -663,7 +663,8 @@ void trace_exception_unwind_to_native(struct jit_stack_frame *frame)
 void trace_bytecode(struct vm_method *method)
 {
 	trace_printf("Code:\n");
-	bytecode_disassemble(method->code_attribute.code,
+	bytecode_disassemble(method->class,
+			     method->code_attribute.code,
 			     method->code_attribute.code_length);
 	trace_printf("\nException table:\n");
 	print_exception_table(method,

@@ -18,6 +18,7 @@ TOPLEVEL_OBJS :=			\
 	vm/zalloc.o			\
 	test/libharness/libharness.o	\
 	test/jit/trace-stub.o		\
+	test/vm/class-stub.o		\
 	test/vm/stack-trace-stub.o	\
 	test/vm/thread-stub.o
 
