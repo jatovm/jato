@@ -99,7 +99,7 @@ static enum machine_reg pick_register(unsigned long *free_until_pos, enum machin
 		if (reg_type(i) != type)
 			continue;
 
-		if (pos > max_pos) {
+		if (pos >= max_pos) {
 			max_pos = pos;
 			ret = i;
 		}

@@ -28,8 +28,7 @@ void test_allocates_different_registers_for_overlapping_intervals(void)
 
 	allocate_registers(cu);
 
-	assert_int_equals(R0, v1->interval->reg);
-	assert_int_equals(R1, v2->interval->reg);
+	assert(v1->interval->reg != v2->interval->reg);
 
 	free_compilation_unit(cu);
 }
@@ -51,8 +50,7 @@ void test_reuses_registers_for_non_overlapping_intervals(void)
 
 	allocate_registers(cu);
 
-	assert_int_equals(R0, v1->interval->reg);
-	assert_int_equals(R0, v2->interval->reg);
+	assert_int_equals(v1->interval->reg, v2->interval->reg);
 
 	free_compilation_unit(cu);
 }
@@ -74,8 +72,7 @@ void test_honors_fixed_interval_register_constraint_for_overlapping_intervals(vo
 
 	allocate_registers(cu);
 
-	assert_int_equals(R0, v1->interval->reg);
-	assert_int_equals(R1, v2->interval->reg);
+	assert(v1->interval->reg != v2->interval->reg);
 
 	free_compilation_unit(cu);
 }
