@@ -34,7 +34,9 @@
 #include "lib/buffer.h"
 
 #include "vm/die.h"
+#include "vm/trace.h"
 
+#include <malloc.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
@@ -205,9 +207,24 @@ static void insert_mov_insns(struct compilation_unit *cu,
 			insert_copy_slot_insn(mappings[i].to, cu, slots[i],
 					to_it->spill_parent->spill_slot,
 					spill_at_insn, reload_at_insn);
-		} else {
-			insert_reload_insn(to_it, cu, slots[i], spill_at_insn);
+			continue;
 		}
+
+		/*
+		 * Reload instructions should be inserted to per-edge
+		 * resolution blocks because register we are reloading
+		 * to might be already allocated to another interval
+		 * at this position. Especially it can be used in a
+		 * branch instruction which ends @from_bb basic block
+		 * (see tableswitch).
+		 */
+		struct insn *reload;
+		int idx;
+
+		idx = bb_lookup_successor_index(from_bb, to_bb);
+		reload = reload_insn(slots[i], &to_it->spill_reload_reg);
+		list_add_tail(&reload->insn_list_node,
+			      &from_bb->resolution_blocks[idx].insns);
 	}
 }
 
@@ -267,7 +284,7 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 	(*nr_mapped)++;
 }
 
-static void resolve_data_flow(struct compilation_unit *cu)
+static int resolve_data_flow(struct compilation_unit *cu)
 {
 	struct basic_block *from;
 	unsigned long vreg;
@@ -277,12 +294,20 @@ static void resolve_data_flow(struct compilation_unit *cu)
 	 * Section 5.8 ("Resolving the Data Flow") of Wimmer 2004.
 	 */
 	for_each_basic_block(from, &cu->bb_list) {
+		unsigned long rb_size;
 		unsigned int i;
+
+		rb_size = sizeof(struct resolution_block) * from->nr_successors;
+		from->resolution_blocks = malloc(rb_size);
+		if (!from->resolution_blocks)
+			return -ENOMEM;
 
 		for (i = 0; i < from->nr_successors; i++) {
 			struct live_interval_mapping mappings[cu->nr_vregs];
 			struct basic_block *to;
 			int nr_mapped = 0;
+
+			resolution_block_init(&from->resolution_blocks[i]);
 
 			if (cu->nr_vregs == 0)
 				continue;
@@ -300,6 +325,8 @@ static void resolve_data_flow(struct compilation_unit *cu)
 			insert_mov_insns(cu, mappings, nr_mapped, from, to);
 		}
 	}
+
+	return 0;
 }
 
 int insert_spill_reload_insns(struct compilation_unit *cu)
@@ -321,7 +348,7 @@ int insert_spill_reload_insns(struct compilation_unit *cu)
 	 * Make sure intervals spilled across basic block boundaries will be
 	 * reloaded correctly.
 	 */
-	resolve_data_flow(cu);
+	err = resolve_data_flow(cu);
 
 	return err;
 }

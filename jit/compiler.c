@@ -104,7 +104,7 @@ int compile(struct compilation_unit *cu)
 		trace_regalloc(cu);
 
 	assert(all_insn_have_bytecode_offset(cu));
-
+	trace_flush();
 	err = emit_machine_code(cu);
 	if (err)
 		goto out;

@@ -84,6 +84,10 @@ void free_basic_block(struct basic_block *bb)
 	free(bb->def_set);
 	free(bb->live_in_set);
 	free(bb->live_out_set);
+
+	if (bb->resolution_blocks)
+		free(bb->resolution_blocks);
+
 	free(bb);
 }
 
@@ -229,4 +233,24 @@ int bb_add_mimic_stack_expr(struct basic_block *bb, struct expression *expr)
 unsigned char *bb_native_ptr(struct basic_block *bb)
 {
 	return buffer_ptr(bb->b_parent->objcode) + bb->mach_offset;
+}
+
+void resolution_block_init(struct resolution_block *block)
+{
+	INIT_LIST_HEAD(&block->insns);
+	INIT_LIST_HEAD(&block->backpatch_insns);
+}
+
+int bb_lookup_successor_index(struct basic_block *from, struct basic_block *to)
+{
+	for (unsigned long i = 0; i < from->nr_successors; i++)
+		if (from->successors[i] == to)
+			return i;
+
+	return -1;
+}
+
+bool branch_needs_resolution_block(struct basic_block *from, int idx)
+{
+	return !list_is_empty(&from->resolution_blocks[idx].insns);
 }

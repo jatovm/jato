@@ -209,18 +209,27 @@ static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
 	return ret;
 }
 
-static void __emit_branch(struct buffer *buf, unsigned char prefix,
-			  unsigned char opc, struct insn *insn)
+static void __emit_branch(struct buffer *buf, struct basic_block *bb,
+		unsigned char prefix, unsigned char opc, struct insn *insn)
 {
 	struct basic_block *target_bb;
 	long addr = 0;
+	int idx;
 
 	if (prefix)
 		insn->escaped = true;
 
 	target_bb = insn->operand.branch_target;
 
-	if (target_bb->is_emitted) {
+	if (!bb)
+		idx = -1;
+	else
+		idx = bb_lookup_successor_index(bb, target_bb);
+
+	if (idx >= 0 && branch_needs_resolution_block(bb, idx)) {
+		list_add(&insn->branch_list_node,
+			 &bb->resolution_blocks[idx].backpatch_insns);
+	} else if (target_bb->is_emitted) {
 		struct insn *target_insn =
 		    list_first_entry(&target_bb->insn_list, struct insn,
 			       insn_list_node);
@@ -232,39 +241,39 @@ static void __emit_branch(struct buffer *buf, unsigned char prefix,
 	emit_branch_rel(buf, prefix, opc, addr);
 }
 
-static void emit_je_branch(struct buffer *buf, struct insn *insn)
+static void emit_je_branch(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	__emit_branch(buf, 0x0f, 0x84, insn);
+	__emit_branch(buf, bb, 0x0f, 0x84, insn);
 }
 
-static void emit_jne_branch(struct buffer *buf, struct insn *insn)
+static void emit_jne_branch(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	__emit_branch(buf, 0x0f, 0x85, insn);
+	__emit_branch(buf, bb, 0x0f, 0x85, insn);
 }
 
-static void emit_jge_branch(struct buffer *buf, struct insn *insn)
+static void emit_jge_branch(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	__emit_branch(buf, 0x0f, 0x8d, insn);
+	__emit_branch(buf, bb, 0x0f, 0x8d, insn);
 }
 
-static void emit_jg_branch(struct buffer *buf, struct insn *insn)
+static void emit_jg_branch(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	__emit_branch(buf, 0x0f, 0x8f, insn);
+	__emit_branch(buf, bb, 0x0f, 0x8f, insn);
 }
 
-static void emit_jle_branch(struct buffer *buf, struct insn *insn)
+static void emit_jle_branch(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	__emit_branch(buf, 0x0f, 0x8e, insn);
+	__emit_branch(buf, bb, 0x0f, 0x8e, insn);
 }
 
-static void emit_jl_branch(struct buffer *buf, struct insn *insn)
+static void emit_jl_branch(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	__emit_branch(buf, 0x0f, 0x8c, insn);
+	__emit_branch(buf, bb, 0x0f, 0x8c, insn);
 }
 
-static void emit_jmp_branch(struct buffer *buf, struct insn *insn)
+static void emit_jmp_branch(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	__emit_branch(buf, 0x00, 0xe9, insn);
+	__emit_branch(buf, bb, 0x00, 0xe9, insn);
 }
 
 void emit_lock(struct buffer *buf, struct vm_object *obj)
@@ -2788,15 +2797,17 @@ static void emit_two_operands(struct emitter *emitter, struct buffer *buf, struc
 	emit(buf, &insn->src, &insn->dest);
 }
 
-typedef void (*emit_branch_fn) (struct buffer *, struct insn *);
+typedef void (*emit_branch_fn) (struct buffer *, struct basic_block *, struct insn *);
 
-static void emit_branch(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+static void emit_branch(struct emitter *emitter, struct buffer *buf,
+			struct basic_block *bb, struct insn *insn)
 {
 	emit_branch_fn emit = emitter->emit_fn;
-	emit(buf, insn);
+	emit(buf, bb, insn);
 }
 
-static void __emit_insn(struct buffer *buf, struct insn *insn)
+static void __emit_insn(struct buffer *buf, struct basic_block *bb,
+			struct insn *insn)
 {
 	struct emitter *emitter;
 
@@ -2812,7 +2823,7 @@ static void __emit_insn(struct buffer *buf, struct insn *insn)
 		emit_two_operands(emitter, buf, insn);
 		break;
 	case BRANCH:
-		emit_branch(emitter, buf, insn);
+		emit_branch(emitter, buf, bb, insn);
 		break;
 	default:
 		printf("Oops. No emitter for 0x%x.\n", insn->type);
@@ -2820,11 +2831,11 @@ static void __emit_insn(struct buffer *buf, struct insn *insn)
 	};
 }
 
-void emit_insn(struct buffer *buf, struct insn *insn)
+void emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
 	insn->mach_offset = buffer_offset(buf);
 
-	__emit_insn(buf, insn);
+	__emit_insn(buf, bb, insn);
 }
 
 void emit_nop(struct buffer *buf)

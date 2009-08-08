@@ -75,10 +75,6 @@ int convert_tableswitch(struct parse_context *ctx)
 	get_tableswitch_info(ctx->code, ctx->offset, &info);
 	ctx->buffer->pos += info.insn_size;
 
-	table = alloc_tableswitch(&info, ctx->cu, ctx->offset);
-	if (!table)
-		return -ENOMEM;
-
 	default_bb = find_bb(ctx->cu, ctx->offset + info.default_target);
 	if (!default_bb)
 		goto fail_default_bb;
@@ -108,6 +104,10 @@ int convert_tableswitch(struct parse_context *ctx)
 
 		bb_add_successor(b2, target_bb);
 	}
+
+	table = alloc_tableswitch(&info, ctx->cu, b2, ctx->offset);
+	if (!table)
+		return -ENOMEM;
 
 	struct statement *if_lesser_stmt;
 	struct statement *if_greater_stmt;
@@ -143,7 +143,7 @@ int convert_tableswitch(struct parse_context *ctx)
  fail_greater_stmt:
 	free_statement(if_lesser_stmt);
  fail_lesser_stmt:
- fail_default_bb:
 	free_tableswitch(table);
+ fail_default_bb:
 	return -1;
 }

@@ -77,9 +77,34 @@ public class RegisterAllocatorTortureTest extends TestCase {
         doTestIntervalSplitOnRegisterAllocatorPressure(obj, 0);
     }
 
+    static class DataFlowTestClass {
+        private void test2(int a, int b, int c, int d, int e, int f, int g, int h, int i) {
+            assertEquals(0, a);
+            assertEquals(1, b);
+            assertEquals(2, c);
+            assertEquals(3, d);
+            assertEquals(4, e);
+            assertEquals(5, f);
+            assertEquals(6, g);
+            assertEquals(1, h);
+            assertEquals(7, i);
+        }
+
+        public void test(int a, int b, int c, int d, int e, int f, int g, int h){
+            test2(a, b, c, d, e, f, g, ((f != 0) ? 1 : 0), h);
+        }
+    };
+
+    public static void testDataFlowResolution() {
+        DataFlowTestClass x = new DataFlowTestClass();
+
+        x.test(0, 1, 2, 3, 4, 5, 6, 7);
+    }
+
     public static void main(String[] args) {
       testIntegerBigExpression();
       testComplexRegisterAllocatorPressure();
       testIntervalSplitOnRegisterAllocatorPressure();
+      testDataFlowResolution();
     }
 }

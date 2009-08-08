@@ -69,6 +69,7 @@ void free_statement(struct statement *stmt)
 
 struct tableswitch *alloc_tableswitch(struct tableswitch_info *info,
 				      struct compilation_unit *cu,
+				      struct basic_block *bb,
 				      unsigned long offset)
 {
 	struct tableswitch *table;
@@ -76,6 +77,8 @@ struct tableswitch *alloc_tableswitch(struct tableswitch_info *info,
 	table = malloc(sizeof(*table));
 	if (!table)
 		return NULL;
+
+	table->src = bb;
 
 	table->low = info->low;
 	table->high = info->high;

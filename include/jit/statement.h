@@ -29,6 +29,9 @@ struct tableswitch {
 	uint32_t low;
 	uint32_t high;
 
+	/* basic block containing this tableswitch. */
+	struct basic_block *src;
+
 	union {
 		struct basic_block **bb_lookup_table;
 
@@ -96,7 +99,7 @@ struct statement *alloc_statement(enum statement_type);
 void free_statement(struct statement *);
 int stmt_nr_kids(struct statement *);
 
-struct tableswitch *alloc_tableswitch(struct tableswitch_info *, struct compilation_unit *, unsigned long);
+struct tableswitch *alloc_tableswitch(struct tableswitch_info *, struct compilation_unit *, struct basic_block *, unsigned long);
 void free_tableswitch(struct tableswitch *);
 struct statement *if_stmt(struct basic_block *, enum vm_type, enum binary_operator, struct expression *, struct expression *);
 

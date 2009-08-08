@@ -8,6 +8,13 @@ struct compilation_unit;
 struct insn;
 struct statement;
 
+struct resolution_block {
+	unsigned long addr;
+
+	struct list_head insns;
+	struct list_head backpatch_insns;
+};
+
 struct basic_block {
 	struct compilation_unit *b_parent;
 	unsigned long start;
@@ -29,6 +36,9 @@ struct basic_block {
 	unsigned long nr_mimic_stack_expr;
 	struct expression **mimic_stack_expr;
 	unsigned long mach_offset;
+
+	/* Contains data flow resultion blocks for each outgoing CFG edge. */
+	struct resolution_block *resolution_blocks;
 
 	/* The mimic stack is used to simulate JVM operand stack at
 	   compile-time.  See Section 2.2 ("Lazy code selection") of the paper
@@ -76,6 +86,9 @@ int bb_add_successor(struct basic_block *, struct basic_block *);
 int bb_add_mimic_stack_expr(struct basic_block *, struct expression *);
 struct statement *bb_remove_last_stmt(struct basic_block *bb);
 unsigned char *bb_native_ptr(struct basic_block *bb);
+void resolution_block_init(struct resolution_block *block);
+bool branch_needs_resolution_block(struct basic_block *from, int idx);
+int bb_lookup_successor_index(struct basic_block *from, struct basic_block *to);
 
 #define for_each_basic_block(bb, bb_list) list_for_each_entry(bb, bb_list, bb_list_node)
 #define for_each_basic_block_reverse(bb, bb_list) list_for_each_entry_reverse(bb, bb_list, bb_list_node)

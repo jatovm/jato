@@ -55,19 +55,33 @@ static void backpatch_branches(struct buffer *buf,
 	}
 }
 
+static void backpatch_tableswitch(struct tableswitch *table)
+{
+	int count;
+
+	count = table->high - table->low + 1;
+
+	for (int i = 0; i < count; i++) {
+		int idx = bb_lookup_successor_index(table->src,
+						    table->bb_lookup_table[i]);
+
+		if (branch_needs_resolution_block(table->src, idx)) {
+			table->lookup_table[i] =
+				(void *)table->src->resolution_blocks[idx].addr;
+		} else {
+			table->lookup_table[i] =
+				bb_native_ptr(table->bb_lookup_table[i]);
+		}
+	}
+}
+
 static void backpatch_tableswitch_targets(struct compilation_unit *cu)
 {
 	struct tableswitch *this;
 
 	list_for_each_entry(this, &cu->tableswitch_list, list_node)
 	{
-		int count;
-
-		count = this->high - this->low + 1;
-
-		for (int i = 0; i < count; i++)
-			this->lookup_table[i] =
-				bb_native_ptr(this->bb_lookup_table[i]);
+		backpatch_tableswitch(this);
 	}
 }
 
@@ -81,11 +95,35 @@ void emit_body(struct basic_block *bb, struct buffer *buf)
 	backpatch_branches(buf, &bb->backpatch_insns, bb->mach_offset);
 
 	for_each_insn(insn, &bb->insn_list) {
-		emit_insn(buf, insn);
+		emit_insn(buf, bb, insn);
 	}
 
 	if (opt_trace_machine_code)
 		emit_nop(buf);
+}
+
+static void emit_resolution_blocks(struct basic_block *bb, struct buffer *buf)
+{
+	for (unsigned int i = 0; i < bb->nr_successors; i++) {
+		struct resolution_block *block;
+		unsigned long mach_offset;
+		struct insn *insn;
+
+		mach_offset = buffer_offset(buf);
+		block = &bb->resolution_blocks[i];
+		block->addr = (unsigned long) buffer_ptr(buf) + mach_offset;
+
+		if (list_is_empty(&block->insns))
+			continue;
+
+		backpatch_branches(buf, &block->backpatch_insns, mach_offset);
+
+		for_each_insn(insn, &block->insns) {
+			emit_insn(buf, NULL, insn);
+		}
+
+		emit_insn(buf, NULL, jump_insn(bb->successors[i]));
+	}
 }
 
 static struct buffer_operations exec_buf_ops = {
@@ -121,8 +159,6 @@ int emit_machine_code(struct compilation_unit *cu)
 	for_each_basic_block(bb, &cu->bb_list)
 		emit_body(bb, cu->objcode);
 
-	backpatch_tableswitch_targets(cu);
-
 	emit_body(cu->exit_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))
 		emit_monitorexit(cu);
@@ -134,6 +170,12 @@ int emit_machine_code(struct compilation_unit *cu)
 		emit_monitorexit(cu);
 	cu->unwind_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_unwind(cu->objcode);
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		emit_resolution_blocks(bb, cu->objcode);
+	}
+
+	backpatch_tableswitch_targets(cu);
 
 	jit_text_reserve(buffer_offset(cu->objcode));
 	jit_text_unlock();

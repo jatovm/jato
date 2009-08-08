@@ -284,6 +284,11 @@ pop_slot_insn(struct stack_slot *to)
 	return memlocal_insn(INSN_POP_MEMLOCAL, to);
 }
 
+static inline struct insn *jump_insn(struct basic_block *bb)
+{
+	return branch_insn(INSN_JMP_BRANCH, bb);
+}
+
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 
