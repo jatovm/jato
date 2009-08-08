@@ -559,6 +559,8 @@ vm_jni_get_byte_array_elements(struct vm_jni_env *env, jobject array,
 {
 	jbyte *result;
 
+	enter_vm_from_jni();
+
 	if (!vm_class_is_array_class(array->class) ||
 	    vm_class_get_array_element_class(array->class) != vm_byte_class)
 		return NULL;
@@ -580,6 +582,8 @@ static void
 vm_jni_release_byte_array_elements(struct vm_jni_env *env, jobject array,
 				   jbyte *elems, jint mode)
 {
+	enter_vm_from_jni();
+
 	if (!vm_class_is_array_class(array->class) ||
 	    vm_class_get_array_element_class(array->class) != vm_byte_class)
 		return;
@@ -598,6 +602,8 @@ vm_jni_get_double_array_elements(struct vm_jni_env *env, jobject array,
 			       jboolean *is_copy)
 {
 	jdouble *result;
+
+	enter_vm_from_jni();
 
 	if (!vm_class_is_array_class(array->class) ||
 	    vm_class_get_array_element_class(array->class) != vm_double_class)
@@ -620,6 +626,8 @@ static void
 vm_jni_release_double_array_elements(struct vm_jni_env *env, jobject array,
 				   jdouble *elems, jint mode)
 {
+	enter_vm_from_jni();
+
 	if (!vm_class_is_array_class(array->class) ||
 	    vm_class_get_array_element_class(array->class) != vm_double_class)
 		return;
@@ -636,6 +644,8 @@ vm_jni_release_double_array_elements(struct vm_jni_env *env, jobject array,
 static void *
 vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
 {
+	enter_vm_from_jni();
+
 	/* We can't return direct buffer because we use machine word size
 	   elements for arrays. */
 	return NULL;
