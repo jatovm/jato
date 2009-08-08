@@ -20,6 +20,7 @@ enum vm_type {
 
 extern enum vm_type str_to_type(const char *);
 extern enum vm_type get_method_return_type(char *);
+extern unsigned int vm_type_size(enum vm_type);
 
 int skip_type(const char **type);
 int count_arguments(const char *);

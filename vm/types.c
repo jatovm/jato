@@ -42,6 +42,25 @@ enum vm_type get_method_return_type(char *type)
 	return str_to_type(type + 1);
 }
 
+unsigned int vm_type_size(enum vm_type type)
+{
+	static const int size[VM_TYPE_MAX] = {
+		[J_VOID] = 0,
+		[J_REFERENCE] = sizeof(void *),
+		[J_BYTE] = 1,
+		[J_SHORT] = 2,
+		[J_INT] = 4,
+		[J_LONG] = 8,
+		[J_CHAR] = 2,
+		[J_FLOAT] = 4,
+		[J_DOUBLE] = 8,
+		[J_BOOLEAN] = 1,
+		[J_RETURN_ADDRESS] = sizeof(void *),
+	};
+
+	return size[type];
+}
+
 #include <stdio.h>
 
 static int count_skip_arguments(const char **type);
