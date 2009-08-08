@@ -3032,6 +3032,9 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
+	if (vm_method_is_native(method))
+		select_exception_test(s, tree);
+
 	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);
 }
