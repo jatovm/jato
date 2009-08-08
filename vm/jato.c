@@ -535,6 +535,22 @@ static jint native_vmclass_getmodifiers(struct vm_object *clazz)
 }
 
 static struct vm_object *
+native_vmclass_getcomponenttype(struct vm_object *object)
+{
+	struct vm_class *class = to_vmclass(object);
+
+	if (!class)
+		return NULL;
+
+	if (!vm_class_is_array_class(class)) {
+		warn("%s", class->name);
+		return NULL;
+	}
+
+	return vm_class_get_array_element_class(class)->object;
+}
+
+static struct vm_object *
 native_vmclassloader_getprimitiveclass(int type)
 {
 	char primitive_class_name[] = { "X" };
@@ -645,6 +661,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "isArray", &native_vmclass_isarray),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
 	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", &native_vmclass_getmodifiers),
+	DEFINE_NATIVE("java/lang/VMClass", "getComponentType", &native_vmclass_getcomponenttype),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
 	DEFINE_NATIVE("java/io/VMFile", "isDirectory", &native_vmfile_is_directory),
 	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
