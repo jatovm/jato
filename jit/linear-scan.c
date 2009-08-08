@@ -88,15 +88,15 @@ static void set_block_pos(unsigned long *block_pos, unsigned long *use_pos,
 }
 
 /* Find the register that is used the latest.  */
-static enum machine_reg pick_register(unsigned long *free_until_pos, enum machine_reg_type type)
+static enum machine_reg pick_register(unsigned long *free_until_pos, enum vm_type type)
 {
 	unsigned long max_pos = 0;
-	int i, ret = 0;
+	int ret = -1;
 
-	for (i = 0; i < NR_REGISTERS; i++) {
+	for (unsigned int i = 0; i < NR_REGISTERS; i++) {
 		unsigned long pos = free_until_pos[i];
 
-		if (reg_type(i) != type)
+		if (!reg_supports_type(i, type))
 			continue;
 
 		if (pos >= max_pos) {
@@ -104,6 +104,8 @@ static enum machine_reg pick_register(unsigned long *free_until_pos, enum machin
 			ret = i;
 		}
 	}
+
+	assert(ret != -1);
 	return ret;
 }
 
@@ -235,7 +237,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 		}
 	}
 
-	reg = pick_register(use_pos, current->var_info->type);
+	reg = pick_register(use_pos, current->var_info->vm_type);
 	if (use_pos[reg] < next_use_pos(current, 0)) {
 		unsigned long pos;
 
@@ -295,7 +297,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		}
 	}
 
-	reg = pick_register(free_until_pos, current->var_info->type);
+	reg = pick_register(free_until_pos, current->var_info->vm_type);
 	if (free_until_pos[reg] == 0) {
 		/*
 		 * No register available without spilling.

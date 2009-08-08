@@ -28,26 +28,7 @@
 #include "jit/vars.h"
 
 #include <assert.h>
-
-static enum machine_reg_type register_types[] = {
-	[MACH_REG_EAX] = REG_TYPE_GPR,
-	[MACH_REG_EBX] = REG_TYPE_GPR,
-	[MACH_REG_ECX] = REG_TYPE_GPR,
-	[MACH_REG_EDX] = REG_TYPE_GPR,
-	[MACH_REG_EDI] = REG_TYPE_GPR,
-	[MACH_REG_ESI] = REG_TYPE_GPR,
-	[MACH_REG_ESP] = REG_TYPE_GPR,
-	[MACH_REG_EBP] = REG_TYPE_GPR,
-
-	[MACH_REG_XMM0] = REG_TYPE_FPU,
-	[MACH_REG_XMM1] = REG_TYPE_FPU,
-	[MACH_REG_XMM2] = REG_TYPE_FPU,
-	[MACH_REG_XMM3] = REG_TYPE_FPU,
-	[MACH_REG_XMM4] = REG_TYPE_FPU,
-	[MACH_REG_XMM5] = REG_TYPE_FPU,
-	[MACH_REG_XMM6] = REG_TYPE_FPU,
-	[MACH_REG_XMM7] = REG_TYPE_FPU,
-};
+#include <stdbool.h>
 
 static const char *register_names[] = {
 	[MACH_REG_EAX] = "EAX",
@@ -76,9 +57,40 @@ const char *reg_name(enum machine_reg reg)
 	return register_names[reg];
 }
 
-enum machine_reg_type reg_type(enum machine_reg reg)
-{
-	assert(reg != MACH_REG_UNASSIGNED);
+#define GPR_32 (1UL << J_REFERENCE) | (1UL << J_INT)
+#define GPR_16 (1UL << J_SHORT) | (1UL << J_CHAR)
+#define GPR_8 (1UL << J_BYTE) | (1UL << J_BOOLEAN)
+#define FPU (1UL << J_FLOAT) | (1UL << J_DOUBLE)
 
-	return register_types[reg];
+bool reg_supports_type(enum machine_reg reg, enum vm_type type)
+{
+	static const uint32_t table[NR_REGISTERS] = {
+		[MACH_REG_EAX] = GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_ECX] = GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_EDX] = GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_EBX] = GPR_32 | GPR_16 | GPR_8,
+
+		/* XXX: We can't access the lower nibbles of these registers,
+		 * so they shouldn't have GPR_16 or GPR_8, but we need it for
+		 * now to work around a reg-alloc bug. */
+		[MACH_REG_ESI] = GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_EDI] = GPR_32 | GPR_16 | GPR_8,
+
+		[MACH_REG_XMM0] = FPU,
+		[MACH_REG_XMM1] = FPU,
+		[MACH_REG_XMM2] = FPU,
+		[MACH_REG_XMM3] = FPU,
+		[MACH_REG_XMM4] = FPU,
+		[MACH_REG_XMM5] = FPU,
+		[MACH_REG_XMM6] = FPU,
+		[MACH_REG_XMM7] = FPU,
+	};
+
+	assert(reg < NR_REGISTERS);
+	assert(type < VM_TYPE_MAX);
+	assert(type != J_VOID);
+	assert(type != J_RETURN_ADDRESS);
+	assert(type != J_LONG);
+
+	return table[reg] & (1UL << type);
 }

@@ -1,6 +1,10 @@
 #ifndef __JIT_REGISTERS_H
 #define __JIT_REGISTERS_H
 
+#include <stdbool.h>
+
+#include "vm/types.h"
+
 enum machine_reg {
 	R0,
 	R1,
@@ -16,6 +20,11 @@ enum machine_reg {
 };
 
 enum machine_reg_type reg_type(enum machine_reg reg);
+
+static inline bool reg_supports_type(enum machine_reg reg, enum vm_type type)
+{
+	return true;
+}
 
 #define GPR_VM_TYPE J_LONG
 
