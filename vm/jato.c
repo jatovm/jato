@@ -78,6 +78,10 @@
 static bool perf_enabled;
 char *exe_name;
 
+/* Arguments passed to the main class.  */
+static unsigned int nr_java_args;
+static char **java_args;
+
 static void __attribute__((noreturn)) vm_exit(int status)
 {
 	clear_exception();
@@ -995,9 +999,10 @@ static void parse_options(int argc, char *argv[])
 		classname = argv[optind++];
 	}
 
-	/* Should be no more options after this */
-	if (optind < argc)
-		usage(stderr, EXIT_FAILURE);
+	if (optind < argc) {
+		nr_java_args	= argc - optind;
+		java_args	= &argv[optind];
+	}
 }
 
 static int
@@ -1027,9 +1032,23 @@ do_main_class(void)
 		return -1;
 	}
 
-	void (*main_method_trampoline)(void)
+	struct vm_object *args;
+
+	args = vm_object_alloc_array(vm_array_of_java_lang_String, nr_java_args);
+	if (!args)
+		die("out of memory");
+
+	for (unsigned int i = 0; i < nr_java_args; i++) {
+		struct vm_object *arg;
+
+		arg = vm_object_alloc_string_from_c(java_args[i]);
+
+		array_set_field_ptr(args, i, arg);
+	}
+
+	void (*main_method_trampoline)(void *)
 		= vm_method_trampoline_ptr(vmm);
-	main_method_trampoline();
+	main_method_trampoline(args);
 
 	return 0;
 }

@@ -41,6 +41,7 @@ struct vm_class *vm_java_lang_Object;
 struct vm_class *vm_java_lang_Class;
 struct vm_class *vm_java_lang_Cloneable;
 struct vm_class *vm_java_lang_String;
+struct vm_class *vm_array_of_java_lang_String;
 struct vm_class *vm_java_lang_Throwable;
 struct vm_class *vm_java_util_Properties;
 struct vm_class *vm_java_lang_VMThrowable;
@@ -94,6 +95,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Class",		&vm_java_lang_Class },
 	{ "java/lang/Cloneable",	&vm_java_lang_Cloneable },
 	{ "java/lang/String",		&vm_java_lang_String },
+	{ "[Ljava/lang/String;",	&vm_array_of_java_lang_String },
 	{ "java/lang/Throwable",	&vm_java_lang_Throwable },
 	{ "java/util/Properties",	&vm_java_util_Properties },
 	{ "java/lang/StackTraceElement", &vm_java_lang_StackTraceElement },

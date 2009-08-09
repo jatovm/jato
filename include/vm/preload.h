@@ -3,6 +3,7 @@
 
 extern struct vm_class *vm_array_of_java_lang_Class;
 extern struct vm_class *vm_array_of_java_lang_StackTraceElement;
+extern struct vm_class *vm_array_of_java_lang_String;
 extern struct vm_class *vm_array_of_java_lang_reflect_Constructor;
 extern struct vm_class *vm_array_of_java_lang_reflect_Field;
 extern struct vm_class *vm_java_lang_Object;

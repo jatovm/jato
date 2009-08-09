@@ -45,6 +45,7 @@ done
 
 if [ -z "$CLASS_LIST" ]; then
     run_java java.lang.VMClassTest 0
+    run_java jvm.ArgsTest 0
     run_java jvm.ArrayExceptionsTest 0
     run_java jvm.ArrayMemberTest 0
     run_java jvm.ArrayTest 0
