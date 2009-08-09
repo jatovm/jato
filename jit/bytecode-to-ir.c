@@ -271,7 +271,11 @@ assign_temporary(struct basic_block *bb, int entry, int slot_ndx,
 				expr->slot_ndx != slot_ndx)
 			continue;
 
-		expr_set_type(expr, EXPR_TEMPORARY);
+		if (vm_type_is_float(expr->vm_type))
+			expr_set_type(expr, EXPR_FLOAT_TEMPORARY);
+		else
+			expr_set_type(expr, EXPR_TEMPORARY);
+
 		expr->tmp_high = tmp_high;
 		expr->tmp_low = tmp_low;
 	}
@@ -321,11 +325,13 @@ static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
 		if (expr->entry != entry)
 			continue;
 
-		tmp_low = get_var(bb->b_parent, J_INT);
-		if (expr->vm_type == J_LONG)
+		if (expr->vm_type == J_LONG) {
 			tmp_high = get_var(bb->b_parent, J_INT);
-		else
+			tmp_low = get_var(bb->b_parent, J_INT);
+		} else {
+			tmp_low = get_var(bb->b_parent, expr->vm_type);
 			tmp_high = NULL;
+		}
 
 		/* Save the slot number */
 		slot_ndx = expr->slot_ndx;
