@@ -190,8 +190,6 @@ native_constructor_construct_native(struct vm_object *this,
 
 	result = vm_object_alloc(class);
 
-	NOT_IMPLEMENTED;
-
 	/* TODO: We support only ()V constructors yet. */
 	assert(args == NULL || args->array_length == 0);
 
