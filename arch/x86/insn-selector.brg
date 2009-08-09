@@ -2435,9 +2435,8 @@ stmt:	STMT_TABLESWITCH(reg)
 
 stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
 {
-	select_insn(s, tree, membase_insn(INSN_PUSH_MEMBASE, state->left->reg1,
+	select_insn(s, tree, membase_insn(INSN_JMP_MEMBASE, state->left->reg1,
 				offsetof(struct lookupswitch_pair, target)));
-	select_insn(s, tree, insn(INSN_RET));
 }
 
 reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
