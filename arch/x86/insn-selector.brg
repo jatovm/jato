@@ -96,9 +96,9 @@ static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
 static struct stack_slot *
 get_local_slot_64(struct stack_frame *frame, unsigned long idx)
 {
+#ifdef CONFIG_X86_32
 	struct stack_slot *s1, *s2;
 
-#ifdef CONFIG_X86_32
 	s1 = get_local_slot(frame, idx);
 	s2 = get_local_slot(frame, idx + 1);
 
