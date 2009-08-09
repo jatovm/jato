@@ -5,16 +5,32 @@
 #include "vm/reflection.h"
 #include "jit/exception.h"
 
+static struct vm_class *to_vmclass(struct vm_object *object)
+{
+	struct vm_class *vmc;
+
+	if (!object)
+		goto throw;
+
+	vmc = vm_class_get_class_from_class_object(object);
+	if (!vmc)
+		goto throw;
+
+	return vmc;
+throw:
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);
+	return NULL;
+}
+
 struct vm_object *
-native_vmclass_get_declared_fields(struct vm_object *class_object,
+native_vmclass_get_declared_fields(struct vm_object *clazz,
 				   jboolean public_only)
 {
 	struct vm_class *vmc;
 
-	if (!vm_object_is_instance_of(class_object, vm_java_lang_Class))
+	vmc = to_vmclass(clazz);
+	if (!vmc)
 		return NULL;
-
-	vmc = vm_class_get_class_from_class_object(class_object);
 
 	int count;
 
@@ -64,7 +80,7 @@ native_vmclass_get_declared_fields(struct vm_object *class_object,
 		}
 
 		field_set_object(field, vm_java_lang_reflect_Field_declaringClass,
-				 class_object);
+				 clazz);
 		field_set_object(field, vm_java_lang_reflect_Field_name,
 				 name_object);
 		field_set_int32(field, vm_java_lang_reflect_Field_slot,
@@ -77,15 +93,14 @@ native_vmclass_get_declared_fields(struct vm_object *class_object,
 }
 
 struct vm_object *
-native_vmclass_get_declared_constructors(struct vm_object *class_object,
+native_vmclass_get_declared_constructors(struct vm_object *clazz,
 					 jboolean public_only)
 {
 	struct vm_class *vmc;
 
-	if (!vm_object_is_instance_of(class_object, vm_java_lang_Class))
+	vmc = to_vmclass(clazz);
+	if (!vmc)
 		return NULL;
-
-	vmc = vm_class_get_class_from_class_object(class_object);
 
 	int count = 0;
 
@@ -124,7 +139,7 @@ native_vmclass_get_declared_constructors(struct vm_object *class_object,
 		}
 
 		field_set_object(ctor, vm_java_lang_reflect_Constructor_clazz,
-				 class_object);
+				 clazz);
 		field_set_int32(ctor, vm_java_lang_reflect_Constructor_slot,
 				i);
 
@@ -142,6 +157,11 @@ native_constructor_get_parameter_types(struct vm_object *ctor)
 	struct vm_class *class;
 	struct vm_method *vmm;
 	int slot;
+
+	if (!ctor) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return NULL;
+	}
 
 	clazz = field_get_object(ctor, vm_java_lang_reflect_Constructor_clazz);
 	slot = field_get_int32(ctor, vm_java_lang_reflect_Constructor_slot);
@@ -163,6 +183,11 @@ jint native_constructor_get_modifiers_internal(struct vm_object *ctor)
 	struct vm_method *vmm;
 	int slot;
 
+	if (!ctor) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+
 	clazz = field_get_object(ctor, vm_java_lang_reflect_Constructor_clazz);
 	slot = field_get_int32(ctor, vm_java_lang_reflect_Constructor_slot);
 
@@ -182,18 +207,22 @@ native_constructor_construct_native(struct vm_object *this,
 	struct vm_class *class;
 	struct vm_method *vmm;
 
-	if (!vm_object_is_instance_of(declaring_class, vm_java_lang_Class))
+	class = to_vmclass(declaring_class);
+	if (!class)
 		return NULL;
 
-	class = vm_class_get_class_from_class_object(declaring_class);
 	vmm = &class->methods[slot];
 
 	result = vm_object_alloc(class);
+	if (!result) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
 
 	/* TODO: We support only ()V constructors yet. */
 	assert(args == NULL || args->array_length == 0);
 
-	vm_call_method_object(vmm, result);
+	vm_call_method(vmm, result);
 	return result;
 }
 
@@ -201,10 +230,9 @@ struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz)
 {
 	struct vm_class *vmc;
 
-	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+	vmc = to_vmclass(clazz);
+	if (!vmc)
 		return NULL;
-
-	vmc = vm_class_get_class_from_class_object(clazz);
 
 	struct vm_object *array
 		= vm_object_alloc_array(vm_array_of_java_lang_Class,
@@ -229,13 +257,9 @@ struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz)
 {
 	struct vm_class *vmc;
 
-	if (!clazz)
+	vmc = to_vmclass(clazz);
+	if (!vmc)
 		return NULL;
-
-	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
-		return NULL;
-
-	vmc = vm_class_get_class_from_class_object(clazz);
 
 	if (vm_class_is_array_class(vmc))
 		return vm_java_lang_Object->object;
@@ -320,6 +344,11 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 	unsigned int slot;
 	void *value_p;
 
+	if (!this) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return NULL;
+	}
+
 	clazz = field_get_object(this, vm_java_lang_reflect_Field_declaringClass);
 	slot = field_get_int32(this, vm_java_lang_reflect_Field_slot);
 
@@ -340,9 +369,9 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 
 	enum vm_type type = vm_field_type(vmf);
 
-	if (vm_field_is_static(vmf))
+	if (vm_field_is_static(vmf)) {
 		value_p = vmc->static_values + vmf->offset;
-	else {
+	} else {
 		/*
 		 * If o is null, you get a NullPointerException, and
 		 * if it is incompatible with the declaring class of
