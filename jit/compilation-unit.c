@@ -96,6 +96,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 		INIT_LIST_HEAD(&cu->static_fixup_site_list);
 		INIT_LIST_HEAD(&cu->tableswitch_list);
+		INIT_LIST_HEAD(&cu->lookupswitch_list);
 
 		for (unsigned int i = 0; i < NR_FIXED_REGISTERS; ++i) {
 			struct var_info *ret;
@@ -150,6 +151,17 @@ static void free_tableswitch_list(struct compilation_unit *cu)
 	}
 }
 
+static void free_lookupswitch_list(struct compilation_unit *cu)
+{
+	struct lookupswitch *this, *next;
+
+	list_for_each_entry_safe(this, next, &cu->lookupswitch_list, list_node)
+	{
+		list_del(&this->list_node);
+		free_lookupswitch(this);
+	}
+}
+
 static void free_lir_insn_map(struct compilation_unit *cu)
 {
 	free_radix_tree(cu->lir_insn_map);
@@ -170,6 +182,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_stack_frame(cu->stack_frame);
 	free_bc_offset_map(cu->bc_offset_map);
  	free_tableswitch_list(cu);
+	free_lookupswitch_list(cu);
 	free_lir_insn_map(cu);
 	free(cu);
 }

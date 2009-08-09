@@ -44,17 +44,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-/*
- * The following bytecodes are not supported yet.
- */
-
-static int convert_not_implemented(struct parse_context *ctx)
-{
-	return warn("bytecode %d is not supported", ctx->opc), -EINVAL;
-}
-
-#define convert_lookupswitch	convert_not_implemented
-
 #define convert_goto_w		convert_goto
 
 #define BYTECODE(opc, name, size, type) [opc] = convert_ ## name,

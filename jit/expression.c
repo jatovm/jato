@@ -65,6 +65,7 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_NULL_CHECK:
 	case EXPR_ARRAY_SIZE_CHECK:
 	case EXPR_MULTIARRAY_SIZE_CHECK:
+	case EXPR_LOOKUPSWITCH_BSEARCH:
 		return 1;
 	case EXPR_VALUE:
 	case EXPR_FLOAT_LOCAL:
@@ -116,6 +117,7 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_ARRAY_SIZE_CHECK:
 	case EXPR_MULTIARRAY_SIZE_CHECK:
 	case EXPR_NULL_CHECK:
+	case EXPR_LOOKUPSWITCH_BSEARCH:
 
 		/* These expression types should be always assumed to
 		   have side-effects. */
@@ -611,6 +613,20 @@ struct expression *multiarray_size_check_expr(struct expression *dimensions)
 		return NULL;
 
 	expr->size_expr = &dimensions->node;
+
+	return expr;
+}
+
+struct expression *lookupswitch_bsearch_expr(struct expression *key, struct lookupswitch *table)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_LOOKUPSWITCH_BSEARCH, vm_pointer_type());
+	if (!expr)
+		return NULL;
+
+	expr->key = &key->node;
+	expr->lookupswitch_table = table;
 
 	return expr;
 }

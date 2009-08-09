@@ -65,7 +65,7 @@ int compile(struct compilation_unit *cu)
 	err = analyze_control_flow(cu);
 	if (err)
 		goto out;
-
+	trace_flush();
 	err = convert_to_ir(cu);
 	if (err)
 		goto out;

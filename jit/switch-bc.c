@@ -63,6 +63,18 @@ static struct statement *branch_if_greater_stmt(struct basic_block *target,
 	return if_stmt(target, J_INT, OP_GT, left, right_expr);
 }
 
+static struct statement *branch_if_null_stmt(struct basic_block *target,
+					     struct expression *left)
+{
+	struct expression *right_expr;
+
+	right_expr = value_expr(vm_pointer_type(), 0);
+	if (!right_expr)
+		return NULL;
+
+	return if_stmt(target, vm_pointer_type(), OP_EQ, left, right_expr);
+}
+
 int convert_tableswitch(struct parse_context *ctx)
 {
 	struct tableswitch_info info;
@@ -84,10 +96,10 @@ int convert_tableswitch(struct parse_context *ctx)
 	b1 = bb_split(master_bb, ctx->offset);
 	b2 = bb_split(b1, ctx->offset);
 
+	assert(b1 && b2);
+
 	b1->is_converted = true;
 	b2->is_converted = true;
-
-	assert(b1 && b2);
 
 	bb_add_successor(master_bb, default_bb );
 	bb_add_successor(master_bb, b1);
@@ -144,6 +156,83 @@ int convert_tableswitch(struct parse_context *ctx)
 	free_statement(if_lesser_stmt);
  fail_lesser_stmt:
 	free_tableswitch(table);
+ fail_default_bb:
+	return -1;
+}
+
+int convert_lookupswitch(struct parse_context *ctx)
+{
+	struct lookupswitch_info info;
+	struct lookupswitch *table;
+	struct basic_block *master_bb;
+	struct basic_block *default_bb;
+	struct basic_block *b1;
+
+	get_lookupswitch_info(ctx->code, ctx->offset, &info);
+	ctx->buffer->pos += info.insn_size;
+
+	default_bb = find_bb(ctx->cu, ctx->offset + info.default_target);
+	if (!default_bb)
+		goto fail_default_bb;
+
+	master_bb = ctx->bb;
+
+	b1 = bb_split(master_bb, ctx->offset);
+
+	assert(b1);
+
+	b1->is_converted = true;
+
+	bb_add_successor(master_bb, default_bb );
+	bb_add_successor(master_bb, b1);
+
+	for (unsigned int i = 0; i < info.count; i++) {
+		struct basic_block *target_bb;
+		int32_t target;
+
+		target = read_lookupswitch_target(&info, i);
+		target_bb = find_bb(ctx->cu, ctx->offset + target);
+
+		bb_add_successor(b1, target_bb);
+	}
+
+	table = alloc_lookupswitch(&info, ctx->cu, b1, ctx->offset);
+	if (!table)
+		return -ENOMEM;
+
+	struct statement *if_null_stmt;
+	struct statement *stmt;
+	struct expression *key;
+	struct expression *bsearch;
+	struct expression *pure_bsearch;
+
+	key = stack_pop(ctx->bb->mimic_stack);
+
+	bsearch = lookupswitch_bsearch_expr(key, table);
+	if (!bsearch)
+		return -1;
+
+	pure_bsearch = get_pure_expr(ctx, bsearch);
+
+	if_null_stmt =
+		branch_if_null_stmt(default_bb, pure_bsearch);
+	if (!if_null_stmt)
+		goto fail_null_stmt;
+
+	stmt = alloc_statement(STMT_LOOKUPSWITCH_JUMP);
+	if (!stmt)
+		goto fail_stmt;
+
+	stmt->lookupswitch_target = &pure_bsearch->node;
+
+	convert_statement(ctx, if_null_stmt);
+	do_convert_statement(b1, stmt, ctx->offset);
+	return 0;
+
+ fail_stmt:
+	free_statement(if_null_stmt);
+ fail_null_stmt:
+	free_lookupswitch(table);
  fail_default_bb:
 	return -1;
 }

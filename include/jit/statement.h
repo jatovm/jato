@@ -7,6 +7,7 @@
 #include "vm/vm.h"
 
 struct tableswitch_info;
+struct lookupswitch_info;
 
 enum statement_type {
 	STMT_STORE = OP_LAST,
@@ -22,6 +23,7 @@ enum statement_type {
 	STMT_CHECKCAST,
 	STMT_ARRAY_STORE_CHECK,
 	STMT_TABLESWITCH,
+	STMT_LOOKUPSWITCH_JUMP,
 	STMT_LAST,	/* Not a real type. Keep this last.  */
 };
 
@@ -38,6 +40,25 @@ struct tableswitch {
 		/* Contains native pointers after instruction selection. */
 		void **lookup_table;
 	};
+
+	struct list_head list_node;
+};
+
+struct lookupswitch_pair {
+	int32_t match;
+	union {
+		struct basic_block *bb_target;
+		void *target;
+	};
+} __attribute__((packed));
+
+struct lookupswitch {
+	uint32_t count;
+
+	/* basic block containing this lookupswitch. */
+	struct basic_block *src;
+
+	struct lookupswitch_pair *pairs;
 
 	struct list_head list_node;
 };
@@ -77,6 +98,9 @@ struct statement {
 			struct tree_node *index;
 			struct tableswitch *table;
 		};
+		struct /* STMT_LOOKUPSWITCH_JUMP */ {
+			struct tree_node *lookupswitch_target;
+		};
 
 		/* STMT_EXPRESSION, STMT_ARRAY_CHECK */
 		struct tree_node *expression;
@@ -101,6 +125,9 @@ int stmt_nr_kids(struct statement *);
 
 struct tableswitch *alloc_tableswitch(struct tableswitch_info *, struct compilation_unit *, struct basic_block *, unsigned long);
 void free_tableswitch(struct tableswitch *);
+struct lookupswitch *alloc_lookupswitch(struct lookupswitch_info *, struct compilation_unit *, struct basic_block *, unsigned long);
+void free_lookupswitch(struct lookupswitch *);
+int lookupswitch_pair_comp(const void *, const void *);
 struct statement *if_stmt(struct basic_block *, enum vm_type, enum binary_operator, struct expression *, struct expression *);
 
 #define for_each_stmt(stmt, stmt_list) list_for_each_entry(stmt, stmt_list, stmt_list_node)

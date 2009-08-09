@@ -12,6 +12,7 @@
 
 #include "arch/instruction.h"
 
+struct lookupswitch;
 struct parse_context;
 
 enum expression_type {
@@ -55,6 +56,7 @@ enum expression_type {
 	EXPR_ARRAY_SIZE_CHECK,
 	EXPR_MULTIARRAY_SIZE_CHECK,
 	EXPR_MIMIC_STACK_SLOT,
+	EXPR_LOOKUPSWITCH_BSEARCH,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -282,6 +284,11 @@ struct expression {
 			int slot_ndx;
 		};
 
+		/* EXPR_LOOKUPSWITCH_BSEARCH */
+		struct  {
+			struct tree_node *key;
+			struct lookupswitch *lookupswitch_table;
+		};
 	};
 };
 
@@ -357,7 +364,7 @@ struct expression *array_size_check_expr(struct expression *);
 struct expression *multiarray_size_check_expr(struct expression *);
 struct expression *dup_expr(struct parse_context *, struct expression *);
 struct expression *get_pure_expr(struct parse_context *, struct expression *);
-
+struct expression *lookupswitch_bsearch_expr(struct expression *, struct lookupswitch *);
 unsigned long nr_args(struct expression *);
 int expr_nr_kids(struct expression *);
 int expr_is_pure(struct expression *);

@@ -66,6 +66,23 @@ void get_tableswitch_info(const unsigned char *code, unsigned long pc,
 	info->insn_size = 1 + pad + (3 + info->count) * 4;
 }
 
+void get_lookupswitch_info(const unsigned char *code, unsigned long pc,
+			   struct lookupswitch_info *info)
+{
+	unsigned long pad;
+
+	assert(code[pc] == OPC_LOOKUPSWITCH);
+
+	pad = 3 - (pc % 4);
+	pc += pad + 1;
+
+	info->default_target = read_u32(&code[pc]);
+	info->count = read_u32(&code[pc + 4]);
+	info->pairs = &code[pc + 8];
+
+	info->insn_size = 1 + pad + 2 * 4 + info->count * 8;
+}
+
 unsigned long bc_insn_size(const unsigned char *code, unsigned long pc)
 {
 	unsigned long size;
@@ -81,6 +98,13 @@ unsigned long bc_insn_size(const unsigned char *code, unsigned long pc)
 		struct tableswitch_info info;
 
 		get_tableswitch_info(code, pc, &info);
+		return info.insn_size;
+	}
+
+	if (code[pc] == OPC_LOOKUPSWITCH) {
+		struct lookupswitch_info info;
+
+		get_lookupswitch_info(code, pc, &info);
 		return info.insn_size;
 	}
 

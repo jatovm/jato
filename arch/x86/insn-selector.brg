@@ -2433,6 +2433,37 @@ stmt:	STMT_TABLESWITCH(reg)
 					   base, state->left->reg1, scale));
 }
 
+stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
+{
+	select_insn(s, tree, membase_insn(INSN_PUSH_MEMBASE, state->left->reg1,
+				offsetof(struct lookupswitch_pair, target)));
+	select_insn(s, tree, insn(INSN_RET));
+}
+
+reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+				      (unsigned long) &lookupswitch_pair_comp));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+				      sizeof(struct lookupswitch_pair)));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+				      expr->lookupswitch_table->count));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+			(unsigned long) expr->lookupswitch_table->pairs));
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+
+	state->reg1 = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &bsearch));
+}
+
 stmt:	STMT_MONITOR_ENTER(reg)
 {
 	struct var_info *ref;

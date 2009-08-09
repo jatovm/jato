@@ -322,6 +322,22 @@ out:
 	return err;
 }
 
+static int print_lookupswitch_jump_stmt(int lvl, struct string *str,
+					struct statement *stmt)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "LOOKUPSWITCH_JUMP:\n");
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "target",
+			       stmt->lookupswitch_target);
+
+ out:
+	return err;
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -338,6 +354,7 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_ATHROW] = print_athrow_stmt,
 	[STMT_ARRAY_STORE_CHECK] = print_array_store_check_stmt,
 	[STMT_TABLESWITCH] = print_tableswitch_stmt,
+	[STMT_LOOKUPSWITCH_JUMP] = print_lookupswitch_jump_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)
@@ -1001,6 +1018,29 @@ out:
 	return err;
 }
 
+static int print_lookupswitch_bsearch_expr(int lvl, struct string *str,
+					   struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "LOOKUPSWITCH_BSEARCH:\n");
+	if (err)
+		goto out;
+
+	struct lookupswitch *table = expr->lookupswitch_table;
+
+	for (unsigned int i = 0; i < table->count; i++) {
+		char case_name[16];
+
+		sprintf(case_name, "case %d", table->pairs[i].match);
+		err = append_simple_attr(lvl + 1, str, case_name, "bb %p",
+					 table->pairs[i].bb_target);
+	}
+
+out:
+	return err;
+}
+
 typedef int (*print_expr_fn) (int, struct string * str, struct expression *);
 
 static print_expr_fn expr_printers[] = {
@@ -1044,7 +1084,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_ARRAY_SIZE_CHECK] = print_array_size_check_expr,
 	[EXPR_MULTIARRAY_SIZE_CHECK] = print_multiarray_size_check_expr,
 	[EXPR_MIMIC_STACK_SLOT] = print_mimic_stack_slot_expr,
-
+	[EXPR_LOOKUPSWITCH_BSEARCH] = print_lookupswitch_bsearch_expr,
 };
 
 static int print_expr(int lvl, struct tree_node *root, struct string *str)

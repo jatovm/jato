@@ -75,6 +75,22 @@ static void backpatch_tableswitch(struct tableswitch *table)
 	}
 }
 
+static void backpatch_lookupswitch(struct lookupswitch *table)
+{
+	for (unsigned int i = 0; i < table->count; i++) {
+		int idx = bb_lookup_successor_index(table->src,
+						    table->pairs[i].bb_target);
+
+		if (branch_needs_resolution_block(table->src, idx)) {
+			table->pairs[i].target =
+				(void *)table->src->resolution_blocks[idx].addr;
+		} else {
+			table->pairs[i].target =
+				bb_native_ptr(table->pairs[i].bb_target);
+		}
+	}
+}
+
 static void backpatch_tableswitch_targets(struct compilation_unit *cu)
 {
 	struct tableswitch *this;
@@ -82,6 +98,16 @@ static void backpatch_tableswitch_targets(struct compilation_unit *cu)
 	list_for_each_entry(this, &cu->tableswitch_list, list_node)
 	{
 		backpatch_tableswitch(this);
+	}
+}
+
+static void backpatch_lookupswitch_targets(struct compilation_unit *cu)
+{
+	struct lookupswitch *this;
+
+	list_for_each_entry(this, &cu->lookupswitch_list, list_node)
+	{
+		backpatch_lookupswitch(this);
 	}
 }
 
@@ -176,6 +202,7 @@ int emit_machine_code(struct compilation_unit *cu)
 	}
 
 	backpatch_tableswitch_targets(cu);
+	backpatch_lookupswitch_targets(cu);
 
 	jit_text_reserve(buffer_offset(cu->objcode));
 	jit_text_unlock();

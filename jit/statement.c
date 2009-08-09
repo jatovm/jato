@@ -31,6 +31,7 @@ int stmt_nr_kids(struct statement *stmt)
 	case STMT_MONITOR_EXIT:
 	case STMT_CHECKCAST:
 	case STMT_TABLESWITCH:
+	case STMT_LOOKUPSWITCH_JUMP:
 		return 1;
 	case STMT_GOTO:
 	case STMT_VOID_RETURN:
@@ -105,4 +106,51 @@ void free_tableswitch(struct tableswitch *table)
 {
 	free(table->lookup_table);
 	free(table);
+}
+
+struct lookupswitch *alloc_lookupswitch(struct lookupswitch_info *info,
+				       struct compilation_unit *cu,
+				       struct basic_block *bb,
+				       unsigned long offset)
+{
+	struct lookupswitch *table;
+
+	table = malloc(sizeof(*table));
+	if (!table)
+		return NULL;
+
+	table->src = bb;
+
+	table->count = info->count;
+
+	table->pairs = malloc(sizeof(struct lookupswitch_pair) * info->count);
+	if (!table->pairs) {
+		free(table);
+		return NULL;
+	}
+
+	for (unsigned int i = 0; i < info->count; i++) {
+		int32_t target;
+
+		target = read_lookupswitch_target(info, i);
+		table->pairs[i].match = read_lookupswitch_match(info, i);
+		table->pairs[i].bb_target = find_bb(cu, offset + target);
+	}
+
+	list_add(&table->list_node, &cu->lookupswitch_list);
+
+	return table;
+}
+
+void free_lookupswitch(struct lookupswitch *table)
+{
+	free(table->pairs);
+	free(table);
+}
+
+int lookupswitch_pair_comp(const void *key, const void *elem)
+{
+	const struct lookupswitch_pair *pair = elem;
+
+	return (int32_t)key - pair->match;
 }

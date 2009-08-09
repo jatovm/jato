@@ -133,10 +133,10 @@ static int split_after_branches(const unsigned char *code,
 			get_tableswitch_info(code, offset, &info);
 
 			/*
-			 * We mark tableswitch targets to be split but
-			 * we do not connect them to this basic block
-			 * because it will be later split in
-			 * convert_tableswitch().
+			 * We mark tableswitch (and lookupswitch)
+			 * targets to be split but we do not connect
+			 * them to this basic block because it will be
+			 * later split in convert_tableswitch().
 			 */
 			set_bit(branch_targets->bits,
 				offset + info.default_target);
@@ -145,6 +145,20 @@ static int split_after_branches(const unsigned char *code,
 				int32_t target;
 
 				target = read_s32(info.targets + i * 4);
+				set_bit(branch_targets->bits, offset + target);
+			}
+		} else if (opcode == OPC_LOOKUPSWITCH) {
+			struct lookupswitch_info info;
+
+			get_lookupswitch_info(code, offset, &info);
+
+			set_bit(branch_targets->bits,
+				offset + info.default_target);
+
+			for (unsigned int i = 0; i < info.count; i++) {
+				int32_t target;
+
+				target = read_lookupswitch_target(&info, i);
 				set_bit(branch_targets->bits, offset + target);
 			}
 		} else if (bc_is_branch(opcode)) {

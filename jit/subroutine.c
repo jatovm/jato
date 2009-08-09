@@ -375,8 +375,25 @@ static int do_subroutine_scan(struct subroutine_scan_context *ctx,
 			break;
 		}
 
-		if (c[pc] == OPC_LOOKUPSWITCH)
-			error("not implemented");
+		if (c[pc] == OPC_LOOKUPSWITCH) {
+			struct lookupswitch_info info;
+
+			get_lookupswitch_info(c, pc, &info);
+			err = do_subroutine_scan(ctx, pc + info.default_target);
+			if (err)
+				return err;
+
+			for (unsigned int i = 0; i < info.count; i++) {
+				int32_t target;
+
+				target = read_s32(info.pairs + i * 8 + 4);
+				err = do_subroutine_scan(ctx, pc + target);
+				if (err)
+					return err;
+			}
+
+			break;
+		}
 
 		if (bc_is_jsr(c[pc])) {
 			unsigned long target = pc + bc_target_off(&c[pc]);

@@ -1,6 +1,8 @@
 #ifndef __JIT_BYTECODES_H
 #define __JIT_BYTECODES_H
 
+#include "vm/bytecode.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -40,8 +42,31 @@ struct tableswitch_info {
 	unsigned long insn_size;
 };
 
+struct lookupswitch_info {
+	int32_t default_target;
+	const unsigned char *pairs;
+
+	uint32_t count;
+	unsigned long insn_size;
+};
+
 void get_tableswitch_info(const unsigned char *code, unsigned long pc,
 			  struct tableswitch_info *info);
+
+void get_lookupswitch_info(const unsigned char *code, unsigned long pc,
+			   struct lookupswitch_info *info);
+
+static inline int32_t read_lookupswitch_target(struct lookupswitch_info *info,
+					       unsigned int idx)
+{
+	return read_s32(info->pairs + idx * 8 + 4);
+}
+
+static inline int32_t read_lookupswitch_match(struct lookupswitch_info *info,
+					      unsigned int idx)
+{
+	return read_s32(info->pairs + idx * 8);
+}
 
 static inline unsigned long bytecode_insn_count(const unsigned char *code,
 						unsigned long code_length)
