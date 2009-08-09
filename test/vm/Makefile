@@ -6,6 +6,7 @@ TOPLEVEL_OBJS :=			\
 	lib/bitset.o			\
 	lib/buffer.o			\
 	lib/list.o			\
+	lib/pqueue.o			\
 	lib/radix-tree.o		\
 	lib/string.o			\
 	vm/bytecode.o			\
@@ -28,6 +29,7 @@ TEST_OBJS :=				\
 	bytecodes-test.o		\
 	list-test.o			\
 	natives-test.o			\
+	pqueue-test.o			\
 	radix-tree-test.o		\
 	stack-test.o			\
 	string-test.o			\
