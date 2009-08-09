@@ -23,6 +23,7 @@ struct buffer {
 	struct buffer_operations *ops;
 };
 
+struct buffer *alloc_exec_buffer(void);
 struct buffer *__alloc_buffer(struct buffer_operations *);
 struct buffer *alloc_buffer(void);
 void free_buffer(struct buffer *);

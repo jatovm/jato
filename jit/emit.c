@@ -152,11 +152,6 @@ static void emit_resolution_blocks(struct basic_block *bb, struct buffer *buf)
 	}
 }
 
-static struct buffer_operations exec_buf_ops = {
-	.expand = NULL,
-	.free   = NULL,
-};
-
 int emit_machine_code(struct compilation_unit *cu)
 {
 	unsigned long frame_size;
@@ -164,7 +159,7 @@ int emit_machine_code(struct compilation_unit *cu)
 	struct buffer *buf;
 	int err = 0;
 
-	buf = __alloc_buffer(&exec_buf_ops);
+	buf = alloc_exec_buffer();
 	if (!buf)
 		return warn("out of memory"), -ENOMEM;
 
@@ -220,7 +215,7 @@ struct jit_trampoline *alloc_jit_trampoline(void)
 
 	memset(trampoline, 0, sizeof(*trampoline));
 
-	trampoline->objcode = __alloc_buffer(&exec_buf_ops);
+	trampoline->objcode = alloc_exec_buffer();
 	if (!trampoline->objcode)
 		goto failed;
 

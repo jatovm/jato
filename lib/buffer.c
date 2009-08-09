@@ -10,10 +10,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+static struct buffer_operations exec_buf_ops = {
+	.expand = NULL,
+	.free   = NULL,
+};
+
+struct buffer *alloc_exec_buffer(void)
+{
+	return __alloc_buffer(&exec_buf_ops);
+}
+
 struct buffer *__alloc_buffer(struct buffer_operations *ops)
 {
 	struct buffer *buf;
-       
+
 	buf = malloc(sizeof *buf);
 	if (!buf)
 		return NULL;
