@@ -132,6 +132,17 @@ public class FloatArithmeticTest extends TestCase {
         assertEquals(-3000f, i2f(-3000));
     }
 
+    public static float l2f(long val) {
+        return (float) val;
+    }
+
+    public static void testFloatLongConversion() {
+//      assertEquals(2, f2l(2.5f));
+//      assertEquals(-1000, f2l(-1000.0101f));
+        assertEquals(2.0f, l2f(2));
+        assertEquals(-3000f, l2f(-3000));
+    }
+
     private static float zero = 0.0f;
     private static float one = 1.0f;
 
@@ -162,6 +173,7 @@ public class FloatArithmeticTest extends TestCase {
         testFloatRemainder();
         testFloatNegation();
         testFloatIntConversion();
+        testFloatLongConversion();
         testFloatComparison();
     }
 }
