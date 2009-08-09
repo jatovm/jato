@@ -310,6 +310,12 @@ static int print_fld_64_membase(struct string *str, struct insn *insn)
 	return print_membase(str, &insn->operand);
 }
 
+static int print_fild_64_membase(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_membase(str, &insn->operand);
+}
+
 static int print_fstp_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -901,6 +907,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_FDIV_64_REG_REG] = print_fdiv_64_reg_reg,
 	[INSN_FLD_MEMBASE] = print_fld_membase,
 	[INSN_FLD_64_MEMBASE] = print_fld_64_membase,
+	[INSN_FILD_64_MEMBASE] = print_fild_64_membase,
 	[INSN_FSTP_MEMBASE] = print_fstp_membase,
 	[INSN_FSTP_64_MEMBASE] = print_fstp_64_membase,
 	[INSN_MOV_MEMBASE_XMM] = print_mov_membase_xmm,
