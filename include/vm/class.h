@@ -157,6 +157,7 @@ char *vm_class_get_array_element_class_name(const char *class_name);
 struct vm_class *vm_class_get_array_element_class(const struct vm_class *array_class);
 enum vm_type vm_class_get_storage_vmtype(const struct vm_class *class);
 struct vm_class *vm_class_get_class_from_class_object(struct vm_object *clazz);
+struct vm_class *vm_class_get_array_class(struct vm_class *element_class);
 
 static inline void
 vm_field_set_int32(const struct vm_field *field, int32_t value)

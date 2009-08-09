@@ -1038,3 +1038,17 @@ struct vm_class *vm_class_get_class_from_class_object(struct vm_object *clazz)
 	return (struct vm_class*)field_get_object(clazz,
 						  vm_java_lang_Class_vmdata);
 }
+
+struct vm_class *vm_class_get_array_class(struct vm_class *element_class)
+{
+	struct vm_class *result;
+	char *name;
+
+	if (!asprintf(&name, "[%s", element_class->name))
+		return NULL;
+
+	result = classloader_load(name);
+
+	free(name);
+	return result;
+}
