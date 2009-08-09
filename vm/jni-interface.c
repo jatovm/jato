@@ -779,6 +779,36 @@ static void vm_jni_call_void_method(struct vm_jni_env *env, jobject this,
 	va_end(args);
 }
 
+static jobject
+vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
+			jclass element_class, jobject initial_element)
+{
+	struct vm_object *array;
+	struct vm_class *vmc;
+
+	check_null(element_class);
+
+	vmc = vm_class_get_class_from_class_object(element_class);
+	if (!vmc)
+		return NULL;
+
+	vmc = vm_class_get_array_class(vmc);
+	if (!vmc)
+		return NULL;
+
+	array = vm_object_alloc_array(vmc, size);
+	if (!array) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	while (size)
+		array_set_field_ptr(array, --size, initial_element);
+
+	return array;
+}
+
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -1025,7 +1055,7 @@ void *vm_jni_native_interface[] = {
 	/* 170 */
 	vm_release_string_utf_chars,
 	NULL, /* GetArrayLength */
-	NULL, /* NewObjectArray */
+	vm_jni_new_object_array,
 	NULL, /* GetObjectArrayElement */
 	NULL, /* SetObjectArrayElement */
 
