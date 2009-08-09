@@ -198,3 +198,31 @@ native_constructor_construct_native(struct vm_object *this,
 	vm_call_method_object(vmm, result);
 	return result;
 }
+
+struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz)
+{
+	struct vm_class *vmc;
+
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+		return NULL;
+
+	vmc = vm_class_get_class_from_class_object(clazz);
+
+	struct vm_object *array
+		= vm_object_alloc_array(vm_array_of_java_lang_Class,
+					vmc->nr_interfaces);
+	if (!array) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	for (unsigned int i = 0; i < vmc->nr_interfaces; i++) {
+		vm_class_ensure_init(vmc->interfaces[i]);
+		if (exception_occurred())
+			return NULL;
+
+		array_set_field_ptr(array, i, vmc->interfaces[i]->object);
+	}
+
+	return array;
+}
