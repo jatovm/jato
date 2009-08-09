@@ -125,10 +125,14 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 		/* XXX: even if method is compiled we steel might need
 		 * to fixup some call sites. */
 		ret = cu->native_ptr;
-	else if (vm_method_is_native(cu->method))
-		ret = jit_jni_trampoline(cu);
-	else
-		ret = jit_java_trampoline(cu);
+	else {
+		if (vm_method_is_native(cu->method))
+			ret = jit_jni_trampoline(cu);
+		else
+			ret = jit_java_trampoline(cu);
+
+		shrink_compilation_unit(cu);
+	}
 
 	/*
 	 * A method can be invoked by invokevirtual and invokespecial. For

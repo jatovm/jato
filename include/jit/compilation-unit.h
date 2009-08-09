@@ -83,6 +83,7 @@ struct compilation_unit {
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);
 int init_stack_slots(struct compilation_unit *cu);
 void free_compilation_unit(struct compilation_unit *);
+void shrink_compilation_unit(struct compilation_unit *);
 struct var_info *get_var(struct compilation_unit *, enum vm_type);
 struct var_info *get_fixed_var(struct compilation_unit *, enum machine_reg);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);

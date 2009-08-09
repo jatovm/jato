@@ -126,5 +126,6 @@ int compile(struct compilation_unit *cu)
 
 	if (err)
 		compile_error(cu, err);
+
 	return err;
 }

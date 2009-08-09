@@ -167,9 +167,21 @@ static void free_lir_insn_map(struct compilation_unit *cu)
 	free_radix_tree(cu->lir_insn_map);
 }
 
+/* Free everything that is not required at run-time.  */
+void shrink_compilation_unit(struct compilation_unit *cu)
+{
+	free_var_infos(cu->var_infos);
+	cu->var_infos = NULL;
+
+	free_lookupswitch_list(cu);
+	free_tableswitch_list(cu);
+}
+
 void free_compilation_unit(struct compilation_unit *cu)
 {
 	struct basic_block *bb, *tmp_bb;
+
+	shrink_compilation_unit(cu);
 
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
 		free_basic_block(bb);
@@ -178,11 +190,8 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_basic_block(cu->exit_bb);
 	free_basic_block(cu->unwind_bb);
 	free_buffer(cu->objcode);
-	free_var_infos(cu->var_infos);
 	free_stack_frame(cu->stack_frame);
 	free_bc_offset_map(cu->bc_offset_map);
-	free_tableswitch_list(cu);
-	free_lookupswitch_list(cu);
 	free_lir_insn_map(cu);
 	free(cu);
 }
