@@ -788,6 +788,16 @@ vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
 	return array;
 }
 
+static jsize vm_jni_get_array_length(struct vm_jni_env *env, jarray array)
+{
+	if (!vm_class_is_array_class(array->class)) {
+		warn("argument is not an array");
+		return 0;
+	}
+
+	return array->array_length;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -1033,7 +1043,7 @@ void *vm_jni_native_interface[] = {
 
 	/* 170 */
 	vm_release_string_utf_chars,
-	NULL, /* GetArrayLength */
+	vm_jni_get_array_length,
 	vm_jni_new_object_array,
 	NULL, /* GetObjectArrayElement */
 	NULL, /* SetObjectArrayElement */
