@@ -301,6 +301,9 @@ regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-regression jasmin-regre
 	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
 .PHONY: regression
 
+check: test regression
+.PHONY: check
+
 clean:
 	$(E) "  CLEAN"
 	$(Q) - rm -f $(PROGRAM)
