@@ -41,7 +41,7 @@
 #include <string.h>
 
 static struct var_info *
-do_get_var(struct compilation_unit *cu, enum vm_type vm_type, enum machine_reg_type reg_type)
+do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
 	struct var_info *ret;
 
@@ -58,7 +58,6 @@ do_get_var(struct compilation_unit *cu, enum vm_type vm_type, enum machine_reg_t
 	ret->interval = alloc_interval(ret);
 
 	ret->vm_type = vm_type;
-	ret->type = reg_type;
 
 	cu->var_infos = ret;
   out:
@@ -101,7 +100,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		for (unsigned int i = 0; i < NR_FIXED_REGISTERS; ++i) {
 			struct var_info *ret;
 
-			ret = do_get_var(cu, GPR_VM_TYPE, REG_TYPE_GPR);
+			ret = do_get_var(cu, GPR_VM_TYPE);
 			if (ret) {
 				ret->interval->reg = i;
 				ret->interval->fixed_reg = true;
@@ -177,10 +176,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 
 struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
-	if (vm_type == J_FLOAT || vm_type == J_DOUBLE)
-		return do_get_var(cu, vm_type, REG_TYPE_FPU);
-
-	return do_get_var(cu, vm_type, REG_TYPE_GPR);
+	return do_get_var(cu, vm_type);
 }
 
 struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)

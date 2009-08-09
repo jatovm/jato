@@ -19,8 +19,6 @@ enum machine_reg {
 	MACH_REG_UNASSIGNED = ~0UL,
 };
 
-enum machine_reg_type reg_type(enum machine_reg reg);
-
 static inline bool reg_supports_type(enum machine_reg reg, enum vm_type type)
 {
 	return true;

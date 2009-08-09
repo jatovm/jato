@@ -48,16 +48,10 @@ static inline bool range_is_empty(struct live_range *range)
 
 struct live_interval;
 
-enum machine_reg_type {
-	REG_TYPE_GPR,
-	REG_TYPE_FPU,
-};
-
 struct var_info {
 	unsigned long		vreg;
 	struct var_info		*next;
 	struct live_interval	*interval;
-	enum machine_reg_type	type;
 	enum vm_type		vm_type;
 };
 

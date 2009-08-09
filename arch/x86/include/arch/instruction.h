@@ -237,16 +237,11 @@ spill_insn(struct var_info *var, struct stack_slot *slot)
 
 	assert(slot != NULL);
 
-	switch (var->type) {
-	case REG_TYPE_GPR:
-		insn_type = INSN_MOV_REG_MEMLOCAL;
-		break;
-	case REG_TYPE_FPU:
+	if (var->vm_type == J_FLOAT || var->vm_type == J_DOUBLE)
 		insn_type = INSN_MOV_XMM_MEMLOCAL;
-		break;
-	default:
-		die("unknown register type: %d", var->type);
-	}
+	else
+		insn_type = INSN_MOV_REG_MEMLOCAL;
+
 	return reg_memlocal_insn(insn_type, var, slot);
 }
 
@@ -257,16 +252,11 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 
 	assert(slot != NULL);
 
-	switch (var->type) {
-	case REG_TYPE_GPR:
-		insn_type = INSN_MOV_MEMLOCAL_REG;
-		break;
-	case REG_TYPE_FPU:
+	if (var->vm_type == J_FLOAT || var->vm_type == J_DOUBLE)
 		insn_type = INSN_MOV_MEMLOCAL_XMM;
-		break;
-	default:
-		die("unknown register type: %d", var->type);
-	}
+	else
+		insn_type = INSN_MOV_MEMLOCAL_REG;
+
 	return memlocal_reg_insn(insn_type, slot, var);
 }
 
