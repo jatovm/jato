@@ -989,6 +989,18 @@ bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_cla
 	if (vmc == from)
 		return true;
 
+	if (vm_class_is_array_class(vmc)) {
+		if (!vm_class_is_array_class(from))
+			return from == vm_java_lang_Object;
+
+		const struct vm_class *vmc_el
+			= vm_class_get_array_element_class(vmc);
+		const struct vm_class *from_el
+			= vm_class_get_array_element_class(vmc);
+
+		return vm_class_is_assignable_from(vmc_el, from_el);
+	}
+
 	if (from->super && vm_class_is_assignable_from(vmc, from->super))
 		return true;
 
