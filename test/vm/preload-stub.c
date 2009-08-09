@@ -6,8 +6,14 @@ struct vm_class *vm_java_lang_Class;
 struct vm_field *vm_java_lang_Class_vmdata;
 struct vm_class *vm_java_lang_Cloneable;
 struct vm_class *vm_java_lang_String;
+struct vm_class *vm_boolean_class;
 struct vm_class *vm_byte_class;
+struct vm_class *vm_char_class;
 struct vm_class *vm_double_class;
+struct vm_class *vm_float_class;
+struct vm_class *vm_int_class;
+struct vm_class *vm_long_class;
+struct vm_class *vm_short_class;
 
 struct vm_field *vm_java_lang_String_offset;
 struct vm_field *vm_java_lang_String_count;

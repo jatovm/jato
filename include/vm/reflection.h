@@ -21,5 +21,6 @@ native_constructor_construct_native(struct vm_object *this,
 				    int slot);
 struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz);
 struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz);
+struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
 
 #endif /* __JATO_VM_REFLECTION_H */

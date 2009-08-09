@@ -71,6 +71,15 @@ struct vm_class *vm_java_lang_reflect_Field;
 struct vm_class *vm_array_of_java_lang_reflect_Constructor;
 struct vm_class *vm_array_of_java_lang_reflect_Field;
 struct vm_class *vm_array_of_java_lang_Class;
+struct vm_class *vm_java_lang_IllegalArgumentException;
+struct vm_class *vm_java_lang_Byte;
+struct vm_class *vm_java_lang_Boolean;
+struct vm_class *vm_java_lang_Character;
+struct vm_class *vm_java_lang_Double;
+struct vm_class *vm_java_lang_Float;
+struct vm_class *vm_java_lang_Integer;
+struct vm_class *vm_java_lang_Long;
+struct vm_class *vm_java_lang_Short;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -115,6 +124,15 @@ static const struct preload_entry preload_entries[] = {
 	{ "[java/lang/Class",		&vm_array_of_java_lang_Class },
 	{ "[java/lang/reflect/Constructor", &vm_array_of_java_lang_reflect_Constructor },
 	{ "[java/lang/reflect/Field", &vm_array_of_java_lang_reflect_Field },
+	{ "java/lang/IllegalArgumentException", &vm_java_lang_IllegalArgumentException },
+	{ "java/lang/Boolean", &vm_java_lang_Boolean },
+	{ "java/lang/Byte", &vm_java_lang_Byte },
+	{ "java/lang/Character", &vm_java_lang_Character },
+	{ "java/lang/Short", &vm_java_lang_Short },
+	{ "java/lang/Float", &vm_java_lang_Float },
+	{ "java/lang/Integer", &vm_java_lang_Integer },
+	{ "java/lang/Double", &vm_java_lang_Double },
+	{ "java/lang/Long", &vm_java_lang_Long },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -201,6 +219,14 @@ struct vm_method *vm_java_lang_ThreadGroup_addThread;
 struct vm_method *vm_java_lang_VMThread_init;
 struct vm_method *vm_java_lang_VMThread_run;
 struct vm_method *vm_java_lang_System_exit;
+struct vm_method *vm_java_lang_Boolean_init;
+struct vm_method *vm_java_lang_Byte_init;
+struct vm_method *vm_java_lang_Character_init;
+struct vm_method *vm_java_lang_Double_init;
+struct vm_method *vm_java_lang_Float_init;
+struct vm_method *vm_java_lang_Integer_init;
+struct vm_method *vm_java_lang_Long_init;
+struct vm_method *vm_java_lang_Short_init;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -293,6 +319,54 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"(I)V",
 		&vm_java_lang_System_exit,
 	},
+	{
+		&vm_java_lang_Boolean,
+		"<init>",
+		"(Z)V",
+		&vm_java_lang_Boolean_init,
+	},
+	{
+		&vm_java_lang_Byte,
+		"<init>",
+		"(B)V",
+		&vm_java_lang_Byte_init,
+	},
+	{
+		&vm_java_lang_Character,
+		"<init>",
+		"(C)V",
+		&vm_java_lang_Character_init,
+	},
+	{
+		&vm_java_lang_Double,
+		"<init>",
+		"(D)V",
+		&vm_java_lang_Double_init,
+	},
+	{
+		&vm_java_lang_Long,
+		"<init>",
+		"(J)V",
+		&vm_java_lang_Long_init,
+	},
+	{
+		&vm_java_lang_Short,
+		"<init>",
+		"(S)V",
+		&vm_java_lang_Short_init,
+	},
+	{
+		&vm_java_lang_Float,
+		"<init>",
+		"(F)V",
+		&vm_java_lang_Float_init,
+	},
+	{
+		&vm_java_lang_Integer,
+		"<init>",
+		"(I)V",
+		&vm_java_lang_Integer_init,
+	},
 };
 
 int preload_vm_classes(void)
@@ -304,6 +378,7 @@ int preload_vm_classes(void)
 
 		struct vm_class *class = classloader_load(pe->name);
 		if (!class) {
+			printf("%s\n", pe->name);
 			NOT_IMPLEMENTED;
 			return 1;
 		}

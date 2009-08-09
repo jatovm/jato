@@ -249,3 +249,120 @@ struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz)
 
 	return vmc->super->object;
 }
+
+static struct vm_object *encapsulate_value(void *value_p, enum vm_type type)
+{
+	struct vm_object *obj;
+
+	switch (type) {
+	case J_REFERENCE:
+		return *(struct vm_object **) value_p;
+	case J_BOOLEAN:
+		obj = vm_object_alloc(vm_java_lang_Boolean);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Boolean_init, obj, *(jboolean *) value_p);
+		return obj;
+	case J_BYTE:
+		obj = vm_object_alloc(vm_java_lang_Byte);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Byte_init, obj, *(jbyte *) value_p);
+		return obj;
+	case J_CHAR:
+		obj = vm_object_alloc(vm_java_lang_Character);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Character_init, obj, *(jchar *) value_p);
+		return obj;
+	case J_SHORT:
+		obj = vm_object_alloc(vm_java_lang_Short);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Short_init, obj, *(jshort *) value_p);
+		return obj;
+	case J_FLOAT:
+		obj = vm_object_alloc(vm_java_lang_Float);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Float_init, obj, *(jfloat *) value_p);
+		return obj;
+	case J_INT:
+		obj = vm_object_alloc(vm_java_lang_Integer);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Integer_init, obj, *(jint *) value_p);
+		return obj;
+	case J_DOUBLE:
+		obj = vm_object_alloc(vm_java_lang_Double);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Double_init, obj, *(jdouble *) value_p);
+		return obj;
+	case J_LONG:
+		obj = vm_object_alloc(vm_java_lang_Long);
+		if (!obj)
+			goto failed_obj;
+		vm_call_method(vm_java_lang_Long_init, obj, *(jlong *) value_p);
+		return obj;
+	default:
+		error("invalid type");
+	}
+
+ failed_obj:
+	NOT_IMPLEMENTED;
+	return NULL;
+}
+
+struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
+{
+	struct vm_field *vmf;
+	struct vm_class *vmc;
+	struct vm_object *clazz;
+	unsigned int slot;
+	void *value_p;
+
+	clazz = field_get_object(this, vm_java_lang_reflect_Field_declaringClass);
+	slot = field_get_int32(this, vm_java_lang_reflect_Field_slot);
+
+	vmc = vm_class_get_class_from_class_object(clazz);
+
+	vm_class_ensure_init(vmc);
+	if (exception_occurred())
+		return NULL;
+
+	vmf = &vmc->fields[slot];
+
+	/*
+	 * TODO: "If this Field enforces access control, your runtime
+	 * context is evaluated, and you may have an
+	 * IllegalAccessException if you could not access this field
+	 * in similar compiled code". (java/lang/reflect/Field.java)
+	 */
+
+	enum vm_type type = vm_field_type(vmf);
+
+	if (vm_field_is_static(vmf))
+		value_p = vmc->static_values + vmf->offset;
+	else {
+		/*
+		 * If o is null, you get a NullPointerException, and
+		 * if it is incompatible with the declaring class of
+		 * the field, you get an IllegalArgumentException.
+		 */
+		if (!o) {
+			signal_new_exception(vm_java_lang_NullPointerException,
+					     NULL);
+			return NULL;
+		}
+
+		if (o->class != vmc) {
+			signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+			return NULL;
+		}
+
+		value_p = &o->fields[vmf->offset];
+	}
+
+	return encapsulate_value(value_p, type);
+}
