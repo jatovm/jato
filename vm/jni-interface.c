@@ -461,7 +461,7 @@ vm_jni_is_assignable_from(struct vm_jni_env *env, jobject clazz1,
 	class1 = vm_class_get_class_from_class_object(clazz1);
 	class2 = vm_class_get_class_from_class_object(clazz2);
 
-	return vm_class_is_assignable_from(class1, class2);
+	return vm_class_is_assignable_from(class2, class1);
 }
 
 static void vm_jni_delete_local_ref(struct vm_jni_env *env, jobject ref)
