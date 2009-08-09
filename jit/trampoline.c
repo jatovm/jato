@@ -49,8 +49,6 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 	struct vm_method *method;
 	void *ret;
 
-	enter_vm_from_jni();
-
 	method = cu->method;
 
 	class_name  = method->class->name;
@@ -59,12 +57,21 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 
 	ret = vm_jni_lookup_method(class_name, method_name, method_type);
 	if (ret) {
-		add_cu_mapping((unsigned long)ret, cu);
+		struct buffer *buf;
 
-		cu->native_ptr = ret;
+		if (add_cu_mapping((unsigned long)ret, cu))
+			return NULL;
+
+		buf = alloc_exec_buffer();
+		if (!buf)
+			return NULL;
+
+		emit_jni_trampoline(buf, method, ret);
+
+		cu->native_ptr = buffer_ptr(buf);
 		cu->is_compiled = true;
 
-		return ret;
+		return cu->native_ptr;
 	}
 
 	struct string *msg = alloc_str();
@@ -80,12 +87,6 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 
 	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, msg->value);
 	free_str(msg);
-
-	/* We must remove the jni_stack_entry from call stack here
-	 * because we're not returning after call site - exception
-	 * will be caught in trampoline code and delivered to handler.
-	 */
-	vm_leave_jni();
 
 	return NULL;
 }

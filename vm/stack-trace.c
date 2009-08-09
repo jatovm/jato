@@ -104,8 +104,8 @@ static inline struct vm_native_stack_entry *new_vm_native_stack_entry(void)
 	return tr;
 }
 
-int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
-		 struct vm_method *method)
+int vm_enter_jni(void *caller_frame, struct vm_method *method,
+		 unsigned long return_address)
 {
 	if (jni_stack_is_full()) {
 		struct vm_object *e = vm_alloc_stack_overflow_error();
@@ -119,7 +119,7 @@ int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
 	struct jni_stack_entry *tr = new_jni_stack_entry();
 
 	tr->caller_frame = caller_frame;
-	tr->call_site_addr = call_site_addr;
+	tr->return_address = return_address;
 	tr->method = method;
 	return 0;
 }
@@ -142,9 +142,10 @@ int vm_enter_vm_native(void *target, void *stack_ptr)
 	return 0;
 }
 
-void vm_leave_jni()
+unsigned long vm_leave_jni()
 {
 	jni_stack_offset -= sizeof(struct jni_stack_entry);
+	return jni_stack[jni_stack_index()].return_address;
 }
 
 void vm_leave_vm_native()
@@ -172,7 +173,7 @@ int stack_trace_elem_next(struct stack_trace_elem *elem)
 			&jni_stack[elem->jni_stack_index--];
 
 		new_frame = tr->caller_frame;
-		new_addr = tr->call_site_addr;
+		new_addr = tr->return_address - 1;
 		goto out;
 	}
 

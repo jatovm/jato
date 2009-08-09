@@ -746,10 +746,7 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 	/* invoke method */
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
 
-	if (vm_method_is_jni(method))
-		select_jni_call(s, tree, call_insn, method);
-	else
-		select_insn(s, tree, call_insn);
+	select_insn(s, tree, call_insn);
 
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)
@@ -2748,120 +2745,6 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 }
 
 #ifdef CONFIG_X86_32
-static void select_jni_set_call_site_addr(struct basic_block *s,
-					  struct tree_node *tree,
-					  struct var_info *offset_reg,
-					  unsigned long field)
-{
-	select_insn(s, tree,
-		    membase_insn(INSN_MOV_IP_THREAD_LOCAL_MEMBASE,
-				 offset_reg, field));
-}
-
-static void select_jni_set_method(struct basic_block *s,
-				  struct tree_node *tree,
-				  struct vm_method *method,
-				  struct var_info *offset_reg,
-				  unsigned long field)
-{
-	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
-				(unsigned long) method, offset_reg, field));
-}
-#else /* CONFIG_X86_32 */
-static void select_jni_set_call_site_addr(struct basic_block *s,
-					  struct tree_node *tree,
-					  struct var_info *offset_reg,
-					  unsigned long field)
-{
-	struct var_info *ip_reg;
-
-	ip_reg = get_var(s->b_parent, J_LONG);
-
-	select_insn(s, tree, reg_insn(INSN_MOV_IP_REG, ip_reg));
-	select_insn(s, tree,
-		    reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
-				     ip_reg, offset_reg, field));
-}
-
-static void select_jni_set_method(struct basic_block *s,
-				  struct tree_node *tree,
-				  struct vm_method *method,
-				  struct var_info *offset_reg,
-				  unsigned long field)
-{
-	struct var_info *method_reg;
-
-	method_reg = get_var(s->b_parent, J_LONG);
-
-	select_insn(s, tree,
-		    imm_reg_insn(INSN_MOV_IMM_REG,
-				 (unsigned long) method, method_reg));
-	select_insn(s, tree,
-		    reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
-				     method_reg, offset_reg, field));
-}
-#endif /* CONFIG_X86_32 */
-
-static void select_jni_call(struct basic_block *s, struct tree_node *tree,
-			    struct insn *call_insn, struct vm_method *method)
-{
-	struct var_info *offset_reg;
-	struct var_info *frame_reg;
-	unsigned long offset_tls;
-	unsigned long tr_addr;
-	unsigned long guard;
-	unsigned long field;
-
-	frame_reg = get_fixed_var(s->b_parent, MACH_REG_xBP);
-	offset_reg = get_var(s->b_parent, J_REFERENCE);
-
-	offset_tls = get_thread_local_offset(&jni_stack_offset);
-	select_insn(s, tree,
-		    memdisp_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
-				     offset_tls, offset_reg));
-
-	tr_addr = get_thread_local_offset(&jni_stack);
-
-	/* Check for stack overflow */
-	guard = (unsigned long) jni_stack_offset_guard;
-	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG,
-					      offset_reg, guard, offset_reg));
-
-	/* Advance jni_stack_offset */
-	select_insn(s, tree,
-		imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct jni_stack_entry),
-			     offset_reg));
-	select_insn(s, tree,
-		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
-				     offset_reg, offset_tls));
-
-	tr_addr -= sizeof(struct jni_stack_entry);
-
-	/* Set ->caller_frame */
-	field = tr_addr + offsetof(struct jni_stack_entry, caller_frame);
-	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
-					      frame_reg, offset_reg, field));
-
-	/* Set ->call_site_addr */
-	field = tr_addr + offsetof(struct jni_stack_entry, call_site_addr);
-	select_jni_set_call_site_addr(s, tree, offset_reg, field);
-
-	/* Set ->method */
-	field = tr_addr + offsetof(struct jni_stack_entry, method);
-	select_jni_set_method(s, tree, method, offset_reg, field);
-
-	select_insn(s, tree, call_insn);
-
-	/* Restore jni_stack_ffset (pop) */
-	select_insn(s, tree,
-		imm_reg_insn(INSN_SUB_IMM_REG, sizeof(struct jni_stack_entry),
-			     offset_reg));
-	select_insn(s, tree,
-		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
-				     offset_reg, offset_tls));
-}
-
-#ifdef CONFIG_X86_32
 static void select_set_target(struct basic_block *s,
 			      struct tree_node *tree,
 			      void *target,
@@ -3006,9 +2889,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
-	if (vm_method_is_jni(method))
-		select_jni_call(s, tree, call_insn, method);
-	else if (vm_method_is_vm_native(method))
+	if (vm_method_is_vm_native(method))
 		select_vm_native_call(s, tree, call_insn,
 				      vm_method_native_ptr(method));
 	else
@@ -3065,10 +2946,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	/* invoke method */
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
 
-	if (vm_method_is_jni(method))
-		select_jni_call(s, tree, call_insn, method);
-	else
-		select_insn(s, tree, call_insn);
+	select_insn(s, tree, call_insn);
 
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)

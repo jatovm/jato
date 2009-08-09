@@ -28,14 +28,15 @@ void vm_leave_vm_native(void)
 {
 }
 
-int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
-		 struct vm_method *method)
+int vm_enter_jni(void *caller_frame, struct vm_method *method,
+		 unsigned long return_address)
 {
 	return 0;
 }
 
-void vm_leave_jni(void)
+unsigned long vm_leave_jni(void)
 {
+	return 0;
 }
 
 void init_stack_trace_elem(struct stack_trace_elem *elem, unsigned long addr,

@@ -16,7 +16,7 @@ struct vm_class;
 
 struct jni_stack_entry {
 	void *caller_frame;
-	unsigned long call_site_addr;
+	unsigned long return_address;
 
 	/* We don't know the address of JNI callee at compilation time
 	 * so code generated for JNI call site stores a pointer to
@@ -51,10 +51,10 @@ extern __thread unsigned long jni_stack_offset;
 extern __thread struct vm_native_stack_entry vm_native_stack[VM_NATIVE_STACK_SIZE];
 extern __thread unsigned long vm_native_stack_offset;
 
-int vm_enter_jni(void *caller_frame, unsigned long call_site_addr,
-		 struct vm_method *method);
+int vm_enter_jni(void *caller_frame, struct vm_method *method,
+		 unsigned long return_address);
 int vm_enter_vm_native(void *target, void *stack_ptr);
-void vm_leave_jni(void);
+unsigned long vm_leave_jni(void);
 void vm_leave_vm_native(void);
 
 static inline int jni_stack_index(void)

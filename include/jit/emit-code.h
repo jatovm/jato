@@ -8,6 +8,7 @@ struct buffer;
 struct insn;
 struct vm_object;
 struct vm_jni_env;
+struct vm_method;
 
 enum emitter_type {
 	NO_OPERANDS = 1,
@@ -40,5 +41,6 @@ extern void emit_insn(struct buffer *, struct basic_block *, struct insn *);
 extern void emit_nop(struct buffer *buf);
 extern void backpatch_branch_target(struct buffer *buf, struct insn *insn,
 				    unsigned long target_offset);
+extern void emit_jni_trampoline(struct buffer *, struct vm_method *, void *);
 
 #endif /* JATO_EMIT_CODE_H */

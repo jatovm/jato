@@ -1856,12 +1856,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_push_reg(buf, MACH_REG_EAX);
 
 	if (method_is_virtual(cu->method)) {
-		/* For JNI calls 'this' pointer is in the second call
-		   argument. */
-		if (vm_method_is_jni(cu->method))
-			__emit_push_membase(buf, MACH_REG_EBP, 0x0c);
-		else
-			__emit_push_membase(buf, MACH_REG_EBP, 0x08);
+		__emit_push_membase(buf, MACH_REG_EBP, 0x08);
 
 		__emit_push_imm(buf, (unsigned long)cu);
 		__emit_call(buf, fixup_vtable);
@@ -1884,6 +1879,63 @@ static void fixup_branch_target(uint8_t *target_p, void *target)
 	target_p[2] = cur >> 16;
 	target_p[1] = cur >> 8;
 	target_p[0] = cur;
+}
+
+void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
+			 void *target)
+{
+	uint8_t *jne_target;
+
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+
+	/* return address is passed implicitly as last argument */
+	__emit_push_imm(buf, (unsigned long) vmm);
+	__emit_push_reg(buf, MACH_REG_EBP);
+
+	/* If this returns non-zero then StackOverflowError occurred. */
+	__emit_call(buf, vm_enter_jni);
+
+	/* test %eax, %eax */
+	__emit_reg_reg(buf, 0x33, MACH_REG_EAX, MACH_REG_EAX);
+
+	/* jne */
+	emit(buf, 0x0f);
+	emit(buf, 0x85);
+	jne_target = buffer_current(buf);
+	emit_imm32(buf, 0);
+
+	/* Cleanup call arguments and return address. */
+	__emit_add_imm_reg(buf, 3 * sizeof(long), MACH_REG_ESP);
+
+	if (vm_method_is_static(vmm))
+		__emit_push_imm(buf, (unsigned long) vmm->class->object);
+
+	__emit_push_imm(buf, (unsigned long) vm_jni_get_jni_env());
+
+	__emit_call(buf, target);
+
+	/* Cleanup args. Leave one slot for return address. */
+	if (vm_method_is_static(vmm))
+		__emit_add_imm_reg(buf, sizeof(long), MACH_REG_ESP);
+
+	__emit_push_reg(buf, MACH_REG_EAX);
+	__emit_call(buf, vm_leave_jni);
+	__emit_mov_reg_membase(buf, MACH_REG_EAX, MACH_REG_ESP, sizeof(long));
+	__emit_pop_reg(buf, MACH_REG_EAX);
+
+	emit_ret(buf);
+
+	/* We will jump here if StackOverflowError occurred. */
+	fixup_branch_target(jne_target, buffer_current(buf));
+
+	/* cleanup vm_enter_jni() call arguments. */
+	__emit_add_imm_reg(buf, 2 * sizeof(long), MACH_REG_ESP);
+	emit_ret(buf);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
 }
 
 /* Note: a < b, always */
@@ -2786,12 +2838,7 @@ void emit_trampoline(struct compilation_unit *cu,
 
 		__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 
-		/* For JNI calls 'this' pointer is in the second call
-		   argument. */
-		if (vm_method_is_jni(cu->method))
-			__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x18, MACH_REG_RSI);
-		else
-			__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x10, MACH_REG_RSI);
+		__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x10, MACH_REG_RSI);
 
 		__emit64_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
 		__emit_call(buf, fixup_vtable);

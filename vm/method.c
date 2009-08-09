@@ -76,13 +76,6 @@ int vm_method_init(struct vm_method *vmm,
 	if (vm_method_is_native(vmm)) {
 		vmm->is_vm_native =
 			vm_lookup_native(vmm->class->name, vmm->name);
-
-		if (vm_method_is_jni(vmm)) {
-			if (vm_method_is_static(vmm))
-				++vmm->args_count;
-
-			++vmm->args_count;
-		}
 	}
 
 	if (args_map_init(vmm)) {

@@ -33,7 +33,6 @@
 
 #include "vm/method.h"
 #include "vm/stack.h"
-#include "vm/jni.h"
 
 #ifdef CONFIG_ARGS_MAP
 int get_stack_args_count(struct vm_method *method)
@@ -70,22 +69,11 @@ insert_arg(struct expression *root,
 	struct expression *_expr;
 
 	/* Check if we should put @expr in EXPR_ARG_THIS. */
-	if (!vm_method_is_static(method)) {
-		if (vm_method_is_jni(method)) {
-			if (index == 1) {
-				_expr = arg_this_expr(expr);
-				goto from_expr_this;
-			}
-		} else
-			if (index == 0) {
-				_expr = arg_this_expr(expr);
-				goto from_expr_this;
-			}
-	}
+	if (!vm_method_is_static(method) && index == 0)
+		_expr = arg_this_expr(expr);
+	else
+		_expr = arg_expr(expr);
 
-	_expr = arg_expr(expr);
-
- from_expr_this:
 	_expr->bytecode_offset = expr->bytecode_offset;
 	set_expr_arg_reg(_expr, method, index);
 
@@ -100,21 +88,11 @@ struct expression *convert_args(struct stack *mimic_stack,
 				struct vm_method *method)
 {
 	struct expression *args_list = NULL;
-	unsigned long nr_args_total;
 	unsigned long i;
 
 	if (nr_args == 0) {
 		args_list = no_args_expr();
 		goto out;
-	}
-
-	nr_args_total = nr_args;
-
-	if (vm_method_is_jni(method)) {
-		if (vm_method_is_static(method))
-			--nr_args;
-
-		--nr_args;
 	}
 
 	/*
@@ -124,35 +102,7 @@ struct expression *convert_args(struct stack *mimic_stack,
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
 		args_list = insert_arg(args_list, expr,
-				       method, nr_args_total - i - 1);
-	}
-
-	if (vm_method_is_jni(method)) {
-		struct expression *jni_env_expr;
-
-		if (vm_method_is_static(method)) {
-			struct expression *class_expr;
-
-			class_expr = value_expr(J_REFERENCE,
-					(unsigned long) method->class->object);
-
-			if (!class_expr) {
-				expr_put(args_list);
-				return NULL;
-			}
-
-			args_list = insert_arg(args_list, class_expr,
-					       method, 1);
-		}
-
-		jni_env_expr = value_expr(J_REFERENCE,
-					  (unsigned long)vm_jni_get_jni_env());
-		if (!jni_env_expr) {
-			expr_put(args_list);
-			return NULL;
-		}
-
-		args_list = insert_arg(args_list, jni_env_expr, method, 0);
+				       method, nr_args - i - 1);
 	}
 
   out:
