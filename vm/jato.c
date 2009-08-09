@@ -684,6 +684,30 @@ static void native_vmobject_wait(struct vm_object *object, jlong ms, jint ns)
 		vm_monitor_timed_wait(&object->monitor, ms, ns);
 }
 
+static struct vm_object *
+native_vmclassloader_findloadedclass(struct vm_object *classloader,
+				     struct vm_object *name)
+{
+	struct vm_class *vmc;
+	char *c_name;
+
+	c_name = vm_string_to_cstr(name);
+	if (!c_name)
+		return NULL;
+
+	vmc = classloader_find_class(c_name);
+	free(c_name);
+
+	if (!vmc)
+		return NULL;
+
+	if (vmc->classloader != classloader)
+		return NULL;
+
+	vm_class_ensure_init(vmc);
+	return vmc->object;
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -704,6 +728,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "getInterfaces", &native_vmclass_get_interfaces),
 	DEFINE_NATIVE("java/lang/VMClass", "getSuperclass", &native_vmclass_get_superclass),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", &native_vmclassloader_getprimitiveclass),
+	DEFINE_NATIVE("java/lang/VMClassLoader", "findLoadedClass", &native_vmclassloader_findloadedclass),
 	DEFINE_NATIVE("java/io/VMFile", "isDirectory", &native_vmfile_is_directory),
 	DEFINE_NATIVE("java/lang/VMObject", "clone", &native_vmobject_clone),
 	DEFINE_NATIVE("java/lang/VMObject", "notify", &native_vmobject_notify),
