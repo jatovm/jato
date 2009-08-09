@@ -1,6 +1,7 @@
 #ifndef __VM_TYPES_H
 #define __VM_TYPES_H
 
+#include <assert.h>
 #include <stdbool.h>
 
 enum vm_type {
@@ -17,6 +18,19 @@ enum vm_type {
 	J_RETURN_ADDRESS,
 	VM_TYPE_MAX,
 };
+
+/**
+ * Returns the vm type which has the same size as native pointers.
+ */
+static inline enum vm_type vm_pointer_type(void)
+{
+	if (sizeof(long) == 4)
+		return J_INT;
+
+	assert(sizeof(long) == 8);
+
+	return J_LONG;
+}
 
 extern enum vm_type str_to_type(const char *);
 extern enum vm_type get_method_return_type(char *);
