@@ -553,93 +553,73 @@ static jobject vm_jni_get_object_field(struct vm_jni_env *env, jobject object,
 	return field_get_object(object, field);
 }
 
-static jbyte *
-vm_jni_get_byte_array_elements(struct vm_jni_env *env, jobject array,
-			       jboolean *is_copy)
-{
-	jbyte *result;
-
-	enter_vm_from_jni();
-
-	if (!vm_class_is_array_class(array->class) ||
-	    vm_class_get_array_element_class(array->class) != vm_byte_class)
-		return NULL;
-
-	result = malloc(sizeof(jbyte) * array->array_length);
-	if (!result)
-		return NULL;
-
-	for (long i = 0; i < array->array_length; i++)
-		result[i] = array_get_field_byte(array, i);
-
-	if (is_copy)
-		*is_copy = JNI_TRUE;
-
-	return result;
+#define DECLARE_GET_XXX_ARRAY_ELEMENTS(type)				\
+static j ## type *							\
+vm_jni_get_ ## type ## _array_elements(struct vm_jni_env *env,		\
+				       jobject array,			\
+				       jboolean *is_copy)		\
+{									\
+	j ## type *result;						\
+									\
+	enter_vm_from_jni();						\
+									\
+	if (!vm_class_is_array_class(array->class) ||			\
+	    vm_class_get_array_element_class(array->class)		\
+	    != vm_ ## type ## _class)					\
+		return NULL;						\
+									\
+	result = malloc(sizeof(j ## type) * array->array_length);	\
+	if (!result)							\
+		return NULL;						\
+									\
+	for (long i = 0; i < array->array_length; i++)			\
+		result[i] = array_get_field_##type(array, i);		\
+									\
+	if (is_copy)							\
+		*is_copy = JNI_TRUE;					\
+									\
+	return result;							\
 }
 
-static void
-vm_jni_release_byte_array_elements(struct vm_jni_env *env, jobject array,
-				   jbyte *elems, jint mode)
-{
-	enter_vm_from_jni();
+DECLARE_GET_XXX_ARRAY_ELEMENTS(byte);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(char);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(double);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(float);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(int);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(long);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(short);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(boolean);
 
-	if (!vm_class_is_array_class(array->class) ||
-	    vm_class_get_array_element_class(array->class) != vm_byte_class)
-		return;
-
-	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */
-		for (long i = 0; i < array->array_length; i++)
-			array_set_field_byte(array, i, elems[i]);
-	}
-
-	if (mode == 0 || mode == JNI_ABORT) /* free buffer */
-		free(elems);
+#define DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(type)			\
+static void								\
+vm_jni_release_ ## type ## _array_elements(struct vm_jni_env *env,	\
+					   jobject array,		\
+					   j ## type *elems, jint mode)	\
+{									\
+	enter_vm_from_jni();						\
+									\
+	if (!vm_class_is_array_class(array->class) ||			\
+	    vm_class_get_array_element_class(array->class)		\
+	    != vm_ ## type ## _class)					\
+		return;							\
+									\
+	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */		\
+		for (long i = 0; i < array->array_length; i++)		\
+			array_set_field_ ## type(array, i, elems[i]); \
+	}								\
+									\
+	if (mode == 0 || mode == JNI_ABORT) /* free buffer */		\
+		free(elems);						\
 }
 
-static jdouble *
-vm_jni_get_double_array_elements(struct vm_jni_env *env, jobject array,
-			       jboolean *is_copy)
-{
-	jdouble *result;
-
-	enter_vm_from_jni();
-
-	if (!vm_class_is_array_class(array->class) ||
-	    vm_class_get_array_element_class(array->class) != vm_double_class)
-		return NULL;
-
-	result = malloc(sizeof(jdouble) * array->array_length);
-	if (!result)
-		return NULL;
-
-	for (long i = 0; i < array->array_length; i++)
-		result[i] = array_get_field_double(array, i);
-
-	if (is_copy)
-		*is_copy = JNI_TRUE;
-
-	return result;
-}
-
-static void
-vm_jni_release_double_array_elements(struct vm_jni_env *env, jobject array,
-				   jdouble *elems, jint mode)
-{
-	enter_vm_from_jni();
-
-	if (!vm_class_is_array_class(array->class) ||
-	    vm_class_get_array_element_class(array->class) != vm_double_class)
-		return;
-
-	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */
-		for (long i = 0; i < array->array_length; i++)
-			array_set_field_double(array, i, elems[i]);
-	}
-
-	if (mode == 0 || mode == JNI_ABORT) /* free buffer */
-		free(elems);
-}
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(byte);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(char);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(double);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(float);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(int);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(long);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(short);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(boolean);
 
 static void *
 vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
@@ -807,7 +787,6 @@ vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
 
 	return array;
 }
-
 
 /*
  * The JNI native interface table.
@@ -1070,27 +1049,27 @@ void *vm_jni_native_interface[] = {
 	NULL, /* NewLongArray */
 	NULL, /* NewFloatArray */
 	NULL, /* NewDoubleArray */
-	NULL, /* GetBooleanArrayElements */
+	vm_jni_get_boolean_array_elements,
 	vm_jni_get_byte_array_elements,
 
 	/* 185 */
-	NULL, /* GetCharArrayElements */
-	NULL, /* GetShortArrayElements */
-	NULL, /* GetIntArrayElements */
-	NULL, /* GetLongArrayElements */
-	NULL, /* GetFloatArrayElements */
+	vm_jni_get_char_array_elements,
+	vm_jni_get_short_array_elements,
+	vm_jni_get_int_array_elements,
+	vm_jni_get_long_array_elements,
+	vm_jni_get_float_array_elements,
 
 	/* 190 */
 	vm_jni_get_double_array_elements,
-	NULL, /* ReleaseBooleanArrayElements */
+	vm_jni_release_boolean_array_elements,
 	vm_jni_release_byte_array_elements,
-	NULL, /* ReleaseCharArrayElements */
-	NULL, /* ReleaseShortArrayElements */
+	vm_jni_release_char_array_elements,
+	vm_jni_release_short_array_elements,
 
 	/* 195 */
-	NULL, /* ReleaseIntArrayElements */
-	NULL, /* ReleaseLongArrayElements */
-	NULL, /* ReleaseFloatArrayElements */
+	vm_jni_release_int_array_elements,
+	vm_jni_release_long_array_elements,
+	vm_jni_release_float_array_elements,
 	vm_jni_release_double_array_elements,
 	NULL, /* GetBooleanArrayRegion */
 
