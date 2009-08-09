@@ -181,7 +181,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_var_infos(cu->var_infos);
 	free_stack_frame(cu->stack_frame);
 	free_bc_offset_map(cu->bc_offset_map);
- 	free_tableswitch_list(cu);
+	free_tableswitch_list(cu);
 	free_lookupswitch_list(cu);
 	free_lir_insn_map(cu);
 	free(cu);
