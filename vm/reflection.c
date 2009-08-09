@@ -226,3 +226,26 @@ struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz)
 
 	return array;
 }
+
+struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz)
+{
+	struct vm_class *vmc;
+
+	if (!clazz)
+		return NULL;
+
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+		return NULL;
+
+	vmc = vm_class_get_class_from_class_object(clazz);
+
+	if (vm_class_is_array_class(vmc))
+		return vm_java_lang_Object->object;
+
+	if (vm_class_is_interface(vmc) ||
+	    vm_class_is_primitive_class(vmc) ||
+	    vmc == vm_java_lang_Object)
+		return NULL;
+
+	return vmc->super->object;
+}
