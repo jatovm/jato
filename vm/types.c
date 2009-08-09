@@ -104,7 +104,8 @@ int skip_type(const char **type)
 		/* ArrayType */
 	case '[':
 		++ptr;
-		ret = skip_type(&ptr);
+		skip_type(&ptr);
+		ret = 1;
 		break;
 
 	default:

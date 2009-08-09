@@ -118,11 +118,19 @@ public class MethodInvocationAndReturnTest extends TestCase {
         }
     }
 
+    public static void takeDoubleArray(double[] d) {
+    }
+
+    public static void testPassingArrays() {
+        takeDoubleArray(new double[0]);
+    }
+
     public static void main(String[] args) {
         testReturnFromInvokeVirtualReinstatesTheFrameOfTheInvoker();
         testInvokeVirtualInvokesSuperClassMethodIfMethodIsNotOverridden();
         testRecursiveInvocation();
         testInvokestaticLongReturnValue();
         testInvokevirtualLongReturnValue();
+        testPassingArrays();
     }
 }
