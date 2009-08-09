@@ -150,10 +150,22 @@ array_set_field_byte(struct vm_object *obj, int index, uint8_t value)
 	*(uint8_t *) &obj->fields[index * get_vmtype_size(J_BYTE)] = value;
 }
 
+static inline void
+array_set_field_boolean(struct vm_object *obj, int index, jboolean value)
+{
+	*(jboolean *) &obj->fields[index * get_vmtype_size(J_BOOLEAN)] = value;
+}
+
 static inline jboolean
 array_get_field_boolean(struct vm_object *obj, int index)
 {
 	return *(jboolean *) &obj->fields[index * get_vmtype_size(J_BOOLEAN)];
+}
+
+static inline void
+array_set_field_short(struct vm_object *obj, int index, jshort value)
+{
+	*(jshort *) &obj->fields[index * get_vmtype_size(J_SHORT)] = value;
 }
 
 static inline jshort
@@ -162,16 +174,34 @@ array_get_field_short(struct vm_object *obj, int index)
 	return *(jshort *) &obj->fields[index * get_vmtype_size(J_SHORT)];
 }
 
+static inline void
+array_set_field_int(struct vm_object *obj, int index, jint value)
+{
+	*(jint *) &obj->fields[index * get_vmtype_size(J_INT)] = value;
+}
+
 static inline jint
 array_get_field_int(struct vm_object *obj, int index)
 {
 	return *(jint *) &obj->fields[index * get_vmtype_size(J_INT)];
 }
 
+static inline void
+array_set_field_long(struct vm_object *obj, int index, jlong value)
+{
+	*(jlong *) &obj->fields[index * get_vmtype_size(J_LONG)] = value;
+}
+
 static inline jlong
 array_get_field_long(struct vm_object *obj, int index)
 {
 	return *(jlong *) &obj->fields[index * get_vmtype_size(J_LONG)];
+}
+
+static inline void
+array_set_field_float(struct vm_object *obj, int index, jfloat value)
+{
+	*(jfloat *) &obj->fields[index * get_vmtype_size(J_FLOAT)] = value;
 }
 
 static inline float
