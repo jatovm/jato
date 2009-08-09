@@ -569,6 +569,17 @@ native_vmclassloader_getprimitiveclass(int type)
 	return class->object;
 }
 
+static jboolean
+native_vmclass_isinstance(struct vm_object *clazz, struct vm_object *object)
+{
+	struct vm_class *class = to_vmclass(clazz);
+
+	if (!object || !class)
+		return false;
+
+	return vm_class_is_assignable_from(class, object->class);
+}
+
 static int
 native_vmfile_is_directory(struct vm_object *dirpath)
 {
@@ -660,6 +671,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "forName", &native_vmclass_forname),
 	DEFINE_NATIVE("java/lang/VMClass", "isAnonymousClass", &native_vmclass_is_anonymous_class),
 	DEFINE_NATIVE("java/lang/VMClass", "isArray", &native_vmclass_isarray),
+	DEFINE_NATIVE("java/lang/VMClass", "isInstance", &native_vmclass_isinstance),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
 	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", &native_vmclass_getmodifiers),
 	DEFINE_NATIVE("java/lang/VMClass", "getComponentType", &native_vmclass_getcomponenttype),
