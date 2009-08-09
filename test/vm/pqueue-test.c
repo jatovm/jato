@@ -30,7 +30,7 @@
 
 struct pqueue *pqueue;
 
-int compare(void *a, void *b)
+static int compare(void *a, void *b)
 {
 	unsigned long x = (unsigned long) a;
 	unsigned long y = (unsigned long) b;
