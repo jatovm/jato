@@ -12,5 +12,6 @@ int try_to_add_zip_to_classpath(const char *zip);
 
 struct vm_class *classloader_load(const char *class_name);
 struct vm_class *classloader_load_primitive(const char *class_name);
+struct vm_class *classloader_find_class(const char *name);
 
 #endif

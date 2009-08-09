@@ -537,3 +537,40 @@ struct vm_class *classloader_load(const char *class_name)
 	trace_pop();
 	return vmc;
 }
+
+/**
+ * Returns class for a given name if it has already been loaded or
+ * NULL otherwise. It may block if class it being loaded.
+ */
+struct vm_class *classloader_find_class(const char *name)
+{
+	struct vm_class *vmc;
+	char *slash_class_name;
+	int class_index;
+
+	slash_class_name = dots_to_slash(name);
+	if (!slash_class_name) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	vmc = NULL;
+
+	pthread_mutex_lock(&classloader_mutex);
+
+	class_index = lookup_class(slash_class_name);
+	if (class_index >= 0) {
+		/* If class is being loaded by another thread then wait
+		 * until loading is completed. */
+		while (!classes[class_index].loaded)
+			pthread_cond_wait(&classloader_cond,
+					  &classloader_mutex);
+
+		vmc = classes[class_index].class;
+	}
+
+	free(slash_class_name);
+
+	pthread_mutex_unlock(&classloader_mutex);
+	return vmc;
+}
