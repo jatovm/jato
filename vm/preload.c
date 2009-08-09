@@ -73,6 +73,7 @@ struct vm_class *vm_array_of_java_lang_reflect_Constructor;
 struct vm_class *vm_array_of_java_lang_reflect_Field;
 struct vm_class *vm_array_of_java_lang_Class;
 struct vm_class *vm_java_lang_IllegalArgumentException;
+struct vm_class *vm_java_lang_ClassLoader;
 struct vm_class *vm_java_lang_Byte;
 struct vm_class *vm_java_lang_Boolean;
 struct vm_class *vm_java_lang_Character;
@@ -135,6 +136,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Integer", &vm_java_lang_Integer },
 	{ "java/lang/Double", &vm_java_lang_Double },
 	{ "java/lang/Long", &vm_java_lang_Long },
+	{ "java/lang/ClassLoader", &vm_java_lang_ClassLoader},
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -229,6 +231,7 @@ struct vm_method *vm_java_lang_Float_init;
 struct vm_method *vm_java_lang_Integer_init;
 struct vm_method *vm_java_lang_Long_init;
 struct vm_method *vm_java_lang_Short_init;
+struct vm_method *vm_java_lang_ClassLoader_loadClass;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -368,6 +371,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"<init>",
 		"(I)V",
 		&vm_java_lang_Integer_init,
+	},
+	{
+		&vm_java_lang_ClassLoader,
+		"loadClass",
+		"(Ljava/lang/String;)Ljava/lang/Class;",
+		&vm_java_lang_ClassLoader_loadClass,
 	},
 };
 

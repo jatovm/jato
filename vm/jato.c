@@ -452,27 +452,39 @@ static struct vm_object *
 native_vmclass_forname(struct vm_object *name, jboolean initialize,
 		       struct vm_object *loader)
 {
+	struct vm_class *class;
+	char *class_name;
+
 	if (!name) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		goto throw;
 	}
 
-	char *class_name = vm_string_to_cstr(name);
-	if (!class_name) {
-		NOT_IMPLEMENTED;
-		return NULL;
+	if (loader != NULL) {
+		struct vm_object *obj;
+
+		obj = vm_call_method_object(vm_java_lang_ClassLoader_loadClass,
+					  loader, name);
+		if (exception_occurred())
+			return NULL;
+
+		if (!obj)
+			goto throw;
+
+		class = vm_class_get_class_from_class_object(obj);
+	} else {
+		class_name = vm_string_to_cstr(name);
+		if (!class_name) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		class = classloader_load(class_name);
+		free(class_name);
 	}
 
-	/* TODO: use @loader to load the class. */
-	struct vm_class *class = classloader_load(class_name);
-
-	free(class_name);
-
-	if (!class) {
-		signal_new_exception(vm_java_lang_ClassNotFoundException,
-				     class_name);
+	if (!class)
 		goto throw;
-	}
 
 	if (initialize) {
 		vm_class_ensure_init(class);
@@ -483,6 +495,16 @@ native_vmclass_forname(struct vm_object *name, jboolean initialize,
 	return class->object;
 
  throw:
+	class_name = vm_string_to_cstr(name);
+
+	if (!class_name) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	signal_new_exception(vm_java_lang_ClassNotFoundException,
+			     class_name);
+	free(class_name);
 	return NULL;
 }
 

@@ -44,6 +44,7 @@ extern struct vm_class *vm_java_lang_Integer;
 extern struct vm_class *vm_java_lang_Long;
 extern struct vm_class *vm_java_lang_Short;
 extern struct vm_class *vm_java_lang_IllegalArgumentException;
+extern struct vm_class *vm_java_lang_ClassLoader;
 extern struct vm_class *vm_boolean_class;
 extern struct vm_class *vm_char_class;
 extern struct vm_class *vm_float_class;
@@ -97,6 +98,7 @@ extern struct vm_method *vm_java_lang_Float_init;
 extern struct vm_method *vm_java_lang_Integer_init;
 extern struct vm_method *vm_java_lang_Long_init;
 extern struct vm_method *vm_java_lang_Short_init;
+extern struct vm_method *vm_java_lang_ClassLoader_loadClass;
 
 int preload_vm_classes(void);
 
