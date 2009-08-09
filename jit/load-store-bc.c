@@ -11,6 +11,7 @@
 #include "cafebabe/constant_pool.h"
 
 #include "jit/bytecode-to-ir.h"
+#include "jit/exception.h"
 #include "jit/expression.h"
 #include "jit/statement.h"
 #include "jit/compiler.h"
@@ -147,6 +148,10 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 			NOT_IMPLEMENTED;
 			break;
 		}
+
+		vm_class_ensure_init(ret);
+		if (exception_occurred())
+			return -1;
 
 		expr = value_expr(J_REFERENCE, (unsigned long) ret->object);
 		break;
