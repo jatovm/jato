@@ -1268,7 +1268,7 @@ reg:	EXPR_NEWARRAY(reg)
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
 					  expr->array_type, rsi));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc_primiive_array));
+		(unsigned long) vm_object_alloc_primitive_array));
 
 	select_exception_test(s, tree);
 }
