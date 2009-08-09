@@ -79,6 +79,10 @@ struct vm_class {
 		struct vm_class *array_element_class;
 	};
 
+	/* Reference to a classloader which loaded this class. Can be
+	   NULL for default classloader. */
+	struct vm_object *classloader;
+
 	void *itable[VM_ITABLE_SIZE];
 };
 

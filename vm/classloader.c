@@ -522,6 +522,8 @@ struct vm_class *classloader_load(const char *class_name)
 
 	pthread_mutex_lock(&classloader_mutex);
 
+	vmc->classloader = NULL;
+
 	classes[class_index].loaded = true;
 	classes[class_index].class = vmc;
 
