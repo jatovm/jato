@@ -39,6 +39,7 @@
 #include "jit/vars.h"
 
 #include "lib/bitset.h"
+#include "lib/pqueue.h"
 
 #include "vm/die.h"
 
@@ -109,33 +110,10 @@ static enum machine_reg pick_register(unsigned long *free_until_pos, enum vm_typ
 	return ret;
 }
 
-/* Inserts to a list of intervals sorted by increasing start position.  */
-static void
-insert_to_list(struct live_interval *interval, struct list_head *interval_list)
-{
-	struct live_interval *this;
-
-	/*
-	 * If we find an existing interval, that starts _after_ the
-	 * new interval, add ours before that.
-	 */
-	list_for_each_entry(this, interval_list, interval_node) {
-		if (interval->range.start < this->range.start) {
-			list_add_tail(&interval->interval_node, &this->interval_node);
-			return;
-		}
-	}
-
-	/*
-	 * Otherwise the new interval goes to the end of the list.
-	 */
-	list_add_tail(&interval->interval_node, interval_list);
-}
-
 static void __spill_interval_intersecting(struct live_interval *current,
 					  enum machine_reg reg,
 					  struct live_interval *it,
-					  struct list_head *unhandled)
+					  struct pqueue *unhandled)
 {
 	struct live_interval *new;
 	unsigned long next_pos;
@@ -160,14 +138,14 @@ static void __spill_interval_intersecting(struct live_interval *current,
 		return;
 
 	mark_need_reload(new, it);
-	insert_to_list(new, unhandled);
+	pqueue_insert(unhandled, new);
 }
 
 static void spill_all_intervals_intersecting(struct live_interval *current,
 					     enum machine_reg reg,
 					     struct list_head *active,
 					     struct list_head *inactive,
-					     struct list_head *unhandled)
+					     struct pqueue *unhandled)
 {
 	struct live_interval *it;
 
@@ -184,7 +162,7 @@ static void spill_all_intervals_intersecting(struct live_interval *current,
 static void allocate_blocked_reg(struct live_interval *current,
 				 struct list_head *active,
 				 struct list_head *inactive,
-				 struct list_head *unhandled)
+				 struct pqueue *unhandled)
 {
 	unsigned long use_pos[NR_REGISTERS], block_pos[NR_REGISTERS];
 	struct live_interval *it, *new;
@@ -250,7 +228,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 
 		if (has_use_positions(new)) {
 			mark_need_reload(new, current);
-			insert_to_list(new, unhandled);
+			pqueue_insert(unhandled, new);
 		}
 
 		current->need_spill = 1;
@@ -263,7 +241,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 		new = split_interval_at(current, block_pos[reg]);
 
 		if (has_use_positions(new))
-			insert_to_list(new, unhandled);
+			pqueue_insert(unhandled, new);
 
 		current->reg = reg;
 		spill_all_intervals_intersecting(current, reg, active,
@@ -274,7 +252,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 static void try_to_allocate_free_reg(struct live_interval *current,
 				     struct list_head *active,
 				     struct list_head *inactive,
-				     struct list_head *unhandled)
+				     struct pqueue *unhandled)
 {
 	unsigned long free_until_pos[NR_REGISTERS];
 	struct live_interval *it, *new;
@@ -319,7 +297,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		if (has_use_positions(new)) {
 			new = split_interval_at(new, next_use_pos(new, 0));
 			mark_need_reload(new, current);
-			insert_to_list(new, unhandled);
+			pqueue_insert(unhandled, new);
 		}
 
 		current->reg = reg;
@@ -327,12 +305,20 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 	}
 }
 
+static int interval_compare(void *a, void *b)
+{
+	struct live_interval *x = a;
+	struct live_interval *y = b;
+
+	return (int)(y->range.start - x->range.start);
+}
+
 int allocate_registers(struct compilation_unit *cu)
 {
-	struct list_head unhandled = LIST_HEAD_INIT(unhandled);
 	struct list_head inactive = LIST_HEAD_INIT(inactive);
 	struct list_head active = LIST_HEAD_INIT(active);
 	struct live_interval *current;
+	struct pqueue *unhandled;
 	struct bitset *registers;
 	struct var_info *var;
 
@@ -341,6 +327,12 @@ int allocate_registers(struct compilation_unit *cu)
 		return warn("out of memory"), -ENOMEM;
 
 	bitset_set_all(registers);
+
+	unhandled = pqueue_alloc(interval_compare);
+	if (!unhandled) {
+		free(registers);
+		return warn("out of memory"), -ENOMEM;
+	}
 
 	/*
 	 * Fixed intervals are placed on the inactive list initially so that
@@ -351,15 +343,14 @@ int allocate_registers(struct compilation_unit *cu)
 		if (var->interval->fixed_reg)
 			list_add(&var->interval->interval_node, &inactive);
 		else
-			insert_to_list(var->interval, &unhandled);
+			pqueue_insert(unhandled, var->interval);
 	}
 
-	while (!list_is_empty(&unhandled)) {
+	while (!pqueue_is_empty(unhandled)) {
 		struct live_interval *it, *prev;
 		unsigned long position;
 
-		current = list_first_entry(&unhandled, struct live_interval, interval_node);
-		list_del(&current->interval_node);
+		current = pqueue_remove_top(unhandled);
 		position = current->range.start;
 
 		list_for_each_entry_safe(it, prev, &active, interval_node) {
@@ -390,10 +381,10 @@ int allocate_registers(struct compilation_unit *cu)
 		 * Don't allocate registers for fixed intervals.
 		 */
 		if (!current->fixed_reg) {
-			try_to_allocate_free_reg(current, &active, &inactive, &unhandled);
+			try_to_allocate_free_reg(current, &active, &inactive, unhandled);
 
 			if (current->reg == MACH_REG_UNASSIGNED)
-				allocate_blocked_reg(current, &active, &inactive, &unhandled);
+				allocate_blocked_reg(current, &active, &inactive, unhandled);
 		}
 		if (current->reg != MACH_REG_UNASSIGNED)
 			list_add(&current->interval_node, &active);

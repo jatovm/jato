@@ -47,6 +47,7 @@ TOPLEVEL_OBJS := \
 	lib/bitset.o \
 	lib/buffer.o \
 	lib/list.o \
+	lib/pqueue.o \
 	lib/radix-tree.o \
 	lib/string.o \
 	vm/call.o \
