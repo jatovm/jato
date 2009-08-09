@@ -349,11 +349,8 @@ int allocate_registers(struct compilation_unit *cu)
 	 */
 	for_each_variable(var, cu->var_infos) {
 		if (var->interval->fixed_reg)
-			insert_to_list(var->interval, &inactive);
-	}
-
-	for_each_variable(var, cu->var_infos) {
-		if (!var->interval->fixed_reg)
+			list_add(&var->interval->interval_node, &inactive);
+		else
 			insert_to_list(var->interval, &unhandled);
 	}
 
