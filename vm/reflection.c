@@ -92,7 +92,8 @@ native_vmclass_get_declared_constructors(struct vm_object *class_object,
 	for (int i = 0; i < vmc->class->methods_count; i++) {
 		struct vm_method *vmm = &vmc->methods[i];
 
-		if (vm_method_is_constructor(vmm))
+		if (vm_method_is_constructor(vmm) &&
+		    (vm_method_is_public(vmm) || !public_only))
 			count++;
 	}
 
@@ -110,7 +111,8 @@ native_vmclass_get_declared_constructors(struct vm_object *class_object,
 	for (int i = 0; i < vmc->class->methods_count; i++) {
 		struct vm_method *vmm = &vmc->methods[i];
 
-		if (!vm_method_is_constructor(vmm))
+		if (!vm_method_is_constructor(vmm) ||
+		    (!vm_method_is_public(vmm) && public_only))
 			continue;
 
 		struct vm_object *ctor
