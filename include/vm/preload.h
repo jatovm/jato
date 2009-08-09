@@ -4,6 +4,7 @@
 extern struct vm_class *vm_array_of_java_lang_Class;
 extern struct vm_class *vm_array_of_java_lang_StackTraceElement;
 extern struct vm_class *vm_array_of_java_lang_reflect_Constructor;
+extern struct vm_class *vm_array_of_java_lang_reflect_Field;
 extern struct vm_class *vm_java_lang_Object;
 extern struct vm_class *vm_java_lang_Class;
 extern struct vm_class *vm_java_lang_Cloneable;
@@ -32,6 +33,7 @@ extern struct vm_class *vm_java_lang_ThreadGroup;
 extern struct vm_class *vm_java_lang_VMThread;
 extern struct vm_class *vm_java_lang_IllegalMonitorStateException;
 extern struct vm_class *vm_java_lang_reflect_Constructor;
+extern struct vm_class *vm_java_lang_reflect_Field;
 extern struct vm_class *vm_boolean_class;
 extern struct vm_class *vm_char_class;
 extern struct vm_class *vm_float_class;
@@ -58,6 +60,9 @@ extern struct vm_field *vm_java_lang_VMThread_thread;
 extern struct vm_field *vm_java_lang_VMThread_vmdata;
 extern struct vm_field *vm_java_lang_reflect_Constructor_clazz;
 extern struct vm_field *vm_java_lang_reflect_Constructor_slot;
+extern struct vm_field *vm_java_lang_reflect_Field_declaringClass;
+extern struct vm_field *vm_java_lang_reflect_Field_name;
+extern struct vm_field *vm_java_lang_reflect_Field_slot;
 
 extern struct vm_method *vm_java_util_Properties_setProperty;
 extern struct vm_method *vm_java_lang_Throwable_initCause;

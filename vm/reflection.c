@@ -3,6 +3,78 @@
 #include "vm/die.h"
 #include "vm/preload.h"
 #include "vm/reflection.h"
+#include "jit/exception.h"
+
+struct vm_object *
+native_vmclass_get_declared_fields(struct vm_object *class_object,
+				   jboolean public_only)
+{
+	struct vm_class *vmc;
+
+	if (!vm_object_is_instance_of(class_object, vm_java_lang_Class))
+		return NULL;
+
+	vmc = vm_class_get_class_from_class_object(class_object);
+
+	int count;
+
+	if (public_only) {
+		count = 0;
+
+		for (int i = 0; i < vmc->class->fields_count; i++) {
+			struct vm_field *vmf = &vmc->fields[i];
+
+			if (vm_field_is_public(vmf))
+				count ++;
+		}
+	} else {
+		count = vmc->class->fields_count;
+	}
+
+	struct vm_object *array
+		= vm_object_alloc_array(vm_array_of_java_lang_reflect_Field,
+					count);
+	if (!array) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	int index = 0;
+
+	for (int i = 0; i < vmc->class->fields_count; i++) {
+		struct vm_field *vmf = &vmc->fields[i];
+
+		if (public_only && !vm_field_is_public(vmf))
+			continue;
+
+		struct vm_object *field
+			= vm_object_alloc(vm_java_lang_reflect_Field);
+
+		if (!field) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		struct vm_object *name_object
+			= vm_object_alloc_string_from_c(vmf->name);
+
+		if (!name_object) {
+			NOT_IMPLEMENTED;
+			return NULL;
+		}
+
+		field_set_object(field, vm_java_lang_reflect_Field_declaringClass,
+				 class_object);
+		field_set_object(field, vm_java_lang_reflect_Field_name,
+				 name_object);
+		field_set_int32(field, vm_java_lang_reflect_Field_slot,
+				i);
+
+		array_set_field_ptr(array, index++, field);
+	}
+
+	return array;
+}
 
 struct vm_object *
 native_vmclass_get_declared_constructors(struct vm_object *class_object,

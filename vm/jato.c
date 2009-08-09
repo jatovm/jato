@@ -654,6 +654,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
 	DEFINE_NATIVE("jato/internal/VM", "throwNullPointerException", &native_vm_throw_null_pointer_exception),
 	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", &native_vmclass_getclassloader),
+	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredFields", &native_vmclass_get_declared_fields),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredConstructors", &native_vmclass_get_declared_constructors),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClass", "forName", &native_vmclass_forname),

@@ -38,6 +38,11 @@ static inline bool vm_field_is_final(const struct vm_field *vmf)
 	return vmf->field->access_flags & CAFEBABE_FIELD_ACC_FINAL;
 }
 
+static inline bool vm_field_is_public(const struct vm_field *vmf)
+{
+	return vmf->field->access_flags & CAFEBABE_FIELD_ACC_PUBLIC;
+}
+
 static inline enum vm_type vm_field_type(const struct vm_field *vmf)
 {
 	return str_to_type(vmf->type);
