@@ -53,17 +53,14 @@ int convert_return(struct parse_context *ctx)
 static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 {
 	unsigned int c = invoke_target->args_count;
-	char * a = invoke_target->type;
+	const char * a = invoke_target->type;
+	enum vm_type vmtype;
 
-	/* FIXME: Make more robust, verify correctness. */
-	while (*(a++) != ')') {
-		if (*a == 'J' || *a == 'D')
+	/* FIXME: Make more robust. */
+	while ((a = parse_method_args(a, &vmtype)))
+		if (vmtype == J_LONG || vmtype == J_DOUBLE)
 			c--;
-		if (*a == 'L') {
-			while (*(++a) != ';')
-				;
-		}
-	}
+
 	return c;
 }
 
