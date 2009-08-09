@@ -1877,6 +1877,15 @@ void emit_trampoline(struct compilation_unit *cu,
 	jit_text_unlock();
 }
 
+static void fixup_branch_target(uint8_t *target_p, void *target)
+{
+	long cur = (long) (target - (void *) target_p) - 4;
+	target_p[3] = cur >> 24;
+	target_p[2] = cur >> 16;
+	target_p[1] = cur >> 8;
+	target_p[0] = cur;
+}
+
 /* Note: a < b, always */
 static void emit_itable_bsearch(struct buffer *buf,
 	struct itable_entry **table, unsigned int a, unsigned int b)
@@ -1918,23 +1927,13 @@ static void emit_itable_bsearch(struct buffer *buf,
 
 	/* This emits the code for checking the interval [a, m> */
 	if (jb_addr) {
-		long cur = (long) (buffer_current(buf) - (void *) jb_addr) - 4;
-		jb_addr[3] = cur >> 24;
-		jb_addr[2] = cur >> 16;
-		jb_addr[1] = cur >> 8;
-		jb_addr[0] = cur;
-
+		fixup_branch_target(jb_addr, buffer_current(buf));
 		emit_itable_bsearch(buf, table, a, m - 1);
 	}
 
 	/* This emits the code for checking the interval <m, b] */
 	if (ja_addr) {
-		long cur = (long) (buffer_current(buf) - (void *) ja_addr) - 4;
-		ja_addr[3] = cur >> 24;
-		ja_addr[2] = cur >> 16;
-		ja_addr[1] = cur >> 8;
-		ja_addr[0] = cur;
-
+		fixup_branch_target(ja_addr, buffer_current(buf));
 		emit_itable_bsearch(buf, table, m + 1, b);
 	}
 }
