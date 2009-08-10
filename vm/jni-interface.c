@@ -799,6 +799,27 @@ static jsize vm_jni_get_array_length(struct vm_jni_env *env, jarray array)
 	return array->array_length;
 }
 
+#define DECLARE_NEW_XXX_ARRAY(type, arr_type)				\
+static jobject								\
+vm_jni_new_ ## type ## _array(struct vm_jni_env *env, jsize size)	\
+{									\
+	jobject result;							\
+									\
+	enter_vm_from_jni();						\
+									\
+	result = vm_object_alloc_primitive_array(arr_type, size);	\
+	return result;							\
+}
+
+DECLARE_NEW_XXX_ARRAY(boolean, T_BOOLEAN);
+DECLARE_NEW_XXX_ARRAY(byte, T_BYTE);
+DECLARE_NEW_XXX_ARRAY(char, T_CHAR);
+DECLARE_NEW_XXX_ARRAY(double, T_DOUBLE);
+DECLARE_NEW_XXX_ARRAY(float, T_FLOAT);
+DECLARE_NEW_XXX_ARRAY(long, T_LONG);
+DECLARE_NEW_XXX_ARRAY(int, T_INT);
+DECLARE_NEW_XXX_ARRAY(short, T_SHORT);
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -1050,16 +1071,16 @@ void *vm_jni_native_interface[] = {
 	NULL, /* SetObjectArrayElement */
 
 	/* 175 */
-	NULL, /* NewBooleanArray */
-	NULL, /* NewByteArray */
-	NULL, /* NewCharArray */
-	NULL, /* NewShortArray */
-	NULL, /* NewIntArray */
+	vm_jni_new_boolean_array,
+	vm_jni_new_byte_array,
+	vm_jni_new_char_array,
+	vm_jni_new_short_array,
+	vm_jni_new_int_array,
 
 	/* 180 */
-	NULL, /* NewLongArray */
-	NULL, /* NewFloatArray */
-	NULL, /* NewDoubleArray */
+	vm_jni_new_long_array,
+	vm_jni_new_float_array,
+	vm_jni_new_double_array,
 	vm_jni_get_boolean_array_elements,
 	vm_jni_get_byte_array_elements,
 
