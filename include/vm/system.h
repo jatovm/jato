@@ -78,4 +78,14 @@ static inline double uint64_to_double(uint32_t lowv, uint32_t highv)
 	return a.fv;
 }
 
+static inline uint32_t high_64(uint64_t val)
+{
+	return (val >> 32) & ~(uint32_t)0;
+}
+
+static inline uint32_t low_64(uint64_t val)
+{
+	return val & ~(uint32_t)0;
+}
+
 #endif

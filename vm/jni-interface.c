@@ -820,12 +820,12 @@ DECLARE_NEW_XXX_ARRAY(long, T_LONG);
 DECLARE_NEW_XXX_ARRAY(int, T_INT);
 DECLARE_NEW_XXX_ARRAY(short, T_SHORT);
 
-static void pack_args(struct vm_method *vmm, unsigned long *packed_args,
-		      uint64_t *args)
+static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
+			     uint64_t *args)
 {
-#ifdef CONFIG_X86_32
-	enum vm_type type;
+#ifdef CONFIG_32_BIT
 	const char *type_str;
+	enum vm_type type;
 	int packed_idx;
 	int idx;
 
@@ -835,14 +835,17 @@ static void pack_args(struct vm_method *vmm, unsigned long *packed_args,
 
 	while ((type_str = parse_method_args(type_str, &type, NULL))) {
 		if (type != J_LONG && type != J_DOUBLE) {
-			double_to_uint64(args[idx++],
-				(uint32_t*) &packed_args[packed_idx],
-				(uint32_t*) &packed_args[packed_idx + 1]);
-			packed_idx += 2;
+			packed_args[packed_idx++] = low_64(args[idx]);
+			packed_args[packed_idx++] = high_64(args[idx++]);
 		} else {
 			packed_args[packed_idx++] = args[idx++] & ~0ul;
 		}
 	}
+#else
+	int count;
+
+	count = count_java_arguments(vmm->type);
+	memcpy(packed_args, args, sizeof(uint64_t) * count);
 #endif
 }
 
