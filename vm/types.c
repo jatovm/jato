@@ -5,6 +5,8 @@
 #include "vm/die.h"
 #include "vm/vm.h"
 
+#include "jit/args.h"
+
 /* See Table 4.2 in Section 4.3.2 ("Field Descriptors") of the JVM
    specification.  */
 enum vm_type str_to_type(const char *type)
@@ -61,101 +63,21 @@ unsigned int vm_type_size(enum vm_type type)
 	return size[type];
 }
 
-#include <stdio.h>
-
-static int count_skip_arguments(const char **type);
-
-int skip_type(const char **type)
-{
-	const char *ptr = *type;
-	int ret = 1;
-
-	switch (*ptr) {
-		/* BaseType */
-	case 'B':
-	case 'C':
-	case 'F':
-	case 'I':
-	case 'S':
-	case 'Z':
-		++ptr;
-		break;
-
-	case 'D':
-	case 'J':
-		++ptr;
-		ret = 2;
-		break;
-
-		/* ObjectType */
-	case 'L':
-		while (1) {
-			if (!*ptr)
-				return -1;
-			if (*ptr == ';')
-				break;
-
-			++ptr;
-		}
-
-		++ptr;
-		break;
-
-		/* ArrayType */
-	case '[':
-		++ptr;
-		skip_type(&ptr);
-		ret = 1;
-		break;
-
-	default:
-		NOT_IMPLEMENTED;
-		return -1;
-	}
-
-	*type = ptr;
-	return ret;
-}
-
-static int count_skip_arguments(const char **type)
-{
-	unsigned int args = 0;
-	const char *ptr = *type;
-
-	while (1) {
-		int ret;
-
-		if (!*ptr)
-			break;
-
-		if (*ptr == ')')
-			break;
-
-		ret = skip_type(&ptr);
-		if (ret < 0)
-			return -1;
-
-		args += ret;
-	}
-
-	*type = ptr;
-	return args;
-}
-
 int count_arguments(const char *type)
 {
-	unsigned int args = 0;
+	enum vm_type vmtype;
+	int count;
 
-	if (*type != '(')
-		return -1;
-	++type;
+	count = 0;
 
-	args = count_skip_arguments(&type);
+	while ((type = parse_method_args(type, &vmtype, NULL))) {
+		if (vmtype == J_LONG || vmtype == J_DOUBLE)
+			count += 2;
+		else
+			count++;
+	}
 
-	if (*type != ')')
-		return -1;
-
-	return args;
+	return count;
 }
 
 static enum vm_type bytecode_type_to_vmtype_map[] = {

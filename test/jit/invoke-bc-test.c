@@ -8,6 +8,7 @@
 #include "jit/compiler.h"
 #include "jit/statement.h"
 #include "vm/stack.h"
+#include "lib/string.h"
 #include <args-test-utils.h>
 
 #include <libharness.h>
@@ -172,9 +173,18 @@ static void assert_invoke_args(unsigned char invoke_opc, unsigned long nr_args)
 	struct expression *second_arg;
 	struct basic_block *bb;
 	struct statement *stmt;
+	struct string *str;
+
+	str = alloc_str();
+
+	str_append(str, "(");
+	for (int i = 0; i < nr_args; i++)
+		str_append(str, "I");
+	str_append(str, ")V");
 
 	create_args(args, ARRAY_SIZE(args));
-	bb = build_invoke_bb(invoke_opc, "()V", nr_args+1, 0, 0, 0, args);
+	bb = build_invoke_bb(invoke_opc, str->value, nr_args+1, 0, 0, 0, args);
+	free_str(str);
 
 	stmt = first_stmt(bb->b_parent);
 	invoke_expr = to_expr(stmt->expression);
@@ -361,10 +371,10 @@ void test_convert_invokestatic(void)
 {
 	assert_converts_to_invoke_expr(J_BYTE, OPC_INVOKESTATIC, "()B", 0);
 	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()I", 0);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()I", 1);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()I", 2);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()I", 3);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()I", 5);
+	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(I)I", 1);
+	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(II)I", 2);
+	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(III)I", 3);
+	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(IIIII)I", 5);
 }
 
 void test_convert_invokestatic_for_void_return_type(void)
