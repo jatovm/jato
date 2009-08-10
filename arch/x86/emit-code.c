@@ -1276,6 +1276,21 @@ static void emit_fild_64_membase(struct buffer *buf, struct operand *src)
 	__emit_membase(buf, 0xdf, mach_reg(&src->base_reg), src->disp, 5);
 }
 
+static void emit_fldcw_membase(struct buffer *buf, struct operand *src)
+{
+	__emit_membase(buf, 0xd9, mach_reg(&src->base_reg), src->disp, 5);
+}
+
+static void emit_fnstcw_membase(struct buffer *buf, struct operand *dest)
+{
+	__emit_membase(buf, 0xd9, mach_reg(&dest->base_reg), dest->disp, 7);
+}
+
+static void emit_fistp_64_membase(struct buffer *buf, struct operand *dest)
+{
+	__emit_membase(buf, 0xdf, mach_reg(&dest->base_reg), dest->disp, 7);
+}
+
 static void emit_fstp_membase(struct buffer *buf, struct operand *dest)
 {
 	__emit_membase(buf, 0xd9, mach_reg(&dest->base_reg), dest->disp, 3);
@@ -1810,7 +1825,10 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_FDIV_64_REG_REG, emit_fdiv_64_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FLD_MEMBASE, emit_fld_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FLD_64_MEMBASE, emit_fld_64_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FLDCW_MEMBASE, emit_fldcw_membase, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_FILD_64_MEMBASE, emit_fild_64_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FISTP_64_MEMBASE, emit_fistp_64_membase, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_FNSTCW_MEMBASE, emit_fnstcw_membase, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_FSTP_MEMBASE, emit_fstp_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FSTP_64_MEMBASE, emit_fstp_64_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU, emit_conv_gpr_to_fpu, TWO_OPERANDS),
