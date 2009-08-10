@@ -70,6 +70,11 @@ static inline int print_membase(struct string *str, struct operand *op)
 	return str_append(str, "$0x%lx(r%lu)", op->disp, op->base_reg.interval->var_info->vreg);
 }
 
+static inline int print_memdisp(struct string *str, struct operand *op)
+{
+	return str_append(str, "($0x%lx)", op->disp);
+}
+
 static inline int print_memlocal(struct string *str, struct operand *op)
 {
 	return str_append(str, "@%ld(bp)", op->slot->index);
@@ -102,6 +107,13 @@ static int print_imm_membase(struct string *str, struct insn *insn)
 	print_imm(str, &insn->src);
 	str_append(str, ", ");
 	return print_membase(str, &insn->dest);
+}
+
+static int print_imm_memdisp(struct string *str, struct insn *insn)
+{
+	print_imm(str, &insn->operands[0]);
+	str_append(str, ", ");
+	return print_memdisp(str, &insn->operands[1]);
 }
 
 static int print_membase_reg(struct string *str, struct insn *insn)
@@ -842,6 +854,12 @@ static int print_sub_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_test_imm_memdisp(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_imm_memdisp(str, insn);
+}
+
 static int print_test_membase_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -985,6 +1003,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_SUB_IMM_REG] = print_sub_imm_reg,
 	[INSN_SUB_MEMBASE_REG] = print_sub_membase_reg,
 	[INSN_SUB_REG_REG] = print_sub_reg_reg,
+	[INSN_TEST_IMM_MEMDISP] = print_test_imm_memdisp,
 	[INSN_TEST_MEMBASE_REG] = print_test_membase_reg,
 	[INSN_XOR_MEMBASE_REG] = print_xor_membase_reg,
 	[INSN_XOR_IMM_REG] = print_xor_imm_reg,
