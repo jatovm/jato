@@ -820,6 +820,54 @@ DECLARE_NEW_XXX_ARRAY(long, T_LONG);
 DECLARE_NEW_XXX_ARRAY(int, T_INT);
 DECLARE_NEW_XXX_ARRAY(short, T_SHORT);
 
+static void pack_args(struct vm_method *vmm, unsigned long *packed_args,
+		      uint64_t *args)
+{
+#ifdef CONFIG_X86_32
+	enum vm_type type;
+	const char *type_str;
+	int packed_idx;
+	int idx;
+
+	type_str = vmm->type;
+	packed_idx = 0;
+	idx = 0;
+
+	while ((type_str = parse_method_args(type_str, &type, NULL))) {
+		if (type != J_LONG && type != J_DOUBLE) {
+			double_to_uint64(args[idx++],
+				(uint32_t*) &packed_args[packed_idx],
+				(uint32_t*) &packed_args[packed_idx + 1]);
+			packed_idx += 2;
+		} else {
+			packed_args[packed_idx++] = args[idx++] & ~0ul;
+		}
+	}
+#endif
+}
+
+static jobject
+vm_jni_new_object_a(struct vm_jni_env *env, jclass clazz, jmethodID method,
+		    uint64_t *args)
+{
+	struct vm_class *vmc;
+	struct vm_object *result;
+
+	enter_vm_from_jni();
+
+	vmc = vm_class_get_class_from_class_object(clazz);
+	result = vm_object_alloc(vmc);
+
+	unsigned long packed_args[method->args_count];
+
+	packed_args[0] = (unsigned long) result;
+	pack_args(method, packed_args + 1, args);
+
+	vm_call_method_a(method, packed_args);
+
+	return result;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -868,7 +916,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* NewObjectV */
 
 	/* 30 */
-	NULL, /* NewObjectA */
+	vm_jni_new_object_a,
 	vm_jni_get_object_class, /* GetObjectClass */
 	NULL, /* IsInstanceOf */
 	vm_jni_get_method_id,
