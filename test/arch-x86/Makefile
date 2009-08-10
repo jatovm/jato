@@ -13,6 +13,7 @@ TOPLEVEL_OBJS := \
 	arch/x86/backtrace.o \
 	arch/x86/emit-code.o \
 	arch/x86/exception.o \
+	arch/x86/init.o \
 	arch/x86/insn-selector.o \
 	arch/x86/registers$(ARCH_POSTFIX).o \
 	arch/x86/instruction.o \
