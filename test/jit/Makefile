@@ -66,6 +66,7 @@ TOPLEVEL_OBJS := \
 	test/libharness/libharness.o \
 	test/vm/class-stub.o \
 	test/vm/classloader-stub.o \
+	test/vm/gc-stub.o \
 	test/vm/object-stub.o \
 	test/vm/preload-stub.o \
 	test/vm/jni-stub.o \

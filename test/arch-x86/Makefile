@@ -79,6 +79,7 @@ TOPLEVEL_OBJS := \
 	test/jit/bytecode-to-ir-stub.o \
 	test/libharness/libharness.o \
 	test/vm/classloader-stub.o \
+	test/vm/gc-stub.o \
 	test/vm/preload-stub.o \
 	test/vm/signal-stub.o \
 	test/vm/stack-trace-stub.o

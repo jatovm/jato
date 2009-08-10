@@ -27,6 +27,7 @@
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/die.h"
+#include "vm/gc.h"
 #include "vm/object.h"
 #include "vm/preload.h"
 #include "vm/signal.h"
@@ -114,11 +115,15 @@ static void vm_thread_attach_thread(struct vm_thread *thread)
 	pthread_mutex_lock(&threads_mutex);
 	list_add(&thread->list_node, &thread_list);
 	pthread_mutex_unlock(&threads_mutex);
+
+	gc_attach_thread();
 }
 
 static void vm_thread_detach_thread(struct vm_thread *thread)
 {
 	vm_thread_set_state(thread, VM_THREAD_STATE_TERMINATED);
+
+	gc_detach_thread();
 
 	pthread_mutex_lock(&threads_mutex);
 
