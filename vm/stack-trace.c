@@ -24,11 +24,12 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "lib/guard-page.h"
+
 #include "vm/backtrace.h"
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
-#include "vm/guard-page.h"
 #include "vm/jni.h"
 #include "vm/object.h"
 #include "vm/method.h"

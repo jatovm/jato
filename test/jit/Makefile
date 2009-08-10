@@ -47,6 +47,7 @@ TOPLEVEL_OBJS := \
 	lib/bitset.o \
 	lib/buffer.o \
 	lib/list.o \
+	lib/guard-page.o \
 	lib/pqueue.o \
 	lib/radix-tree.o \
 	lib/string.o \
@@ -54,7 +55,6 @@ TOPLEVEL_OBJS := \
 	vm/bytecode.o \
 	vm/bytecodes.o \
 	vm/die.o \
-	vm/guard-page.o \
 	vm/stack.o \
 	vm/trace.o \
 	vm/types.o \

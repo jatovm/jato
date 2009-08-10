@@ -34,8 +34,8 @@
 #include "jit/compiler.h"
 
 #include "lib/buffer.h"
+#include "lib/guard-page.h"
 
-#include "vm/guard-page.h"
 #include "vm/preload.h"
 #include "vm/method.h"
 #include "vm/object.h"

@@ -1,8 +1,9 @@
 #include "jit/cu-mapping.h"
 #include "jit/exception.h"
 
+#include "lib/guard-page.h"
+
 #include "vm/class.h"
-#include "vm/guard-page.h"
 #include "vm/object.h"
 #include "vm/signal.h"
 

@@ -30,11 +30,12 @@
 
 #include "jit/exception.h"
 
+#include "lib/guard-page.h"
+
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/die.h"
-#include "vm/guard-page.h"
 #include "vm/jni.h"
 #include "vm/method.h"
 #include "vm/object.h"

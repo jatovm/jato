@@ -1,6 +1,6 @@
+#include "lib/guard-page.h"
 #include "vm/die.h"
 #include "vm/gc.h"
-#include "vm/guard-page.h"
 
 void *gc_safepoint_page;
 

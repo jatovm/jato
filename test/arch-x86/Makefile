@@ -52,6 +52,7 @@ TOPLEVEL_OBJS := \
 	jit/vtable.o \
 	lib/buffer.o \
 	lib/list.o \
+	lib/guard-page.o \
 	lib/radix-tree.o \
 	lib/string.o \
 	vm/bytecode.o \
@@ -60,7 +61,6 @@ TOPLEVEL_OBJS := \
 	vm/class.o \
 	vm/die.o \
 	vm/field.o \
-	vm/guard-page.o \
 	vm/itable.o \
 	vm/jni-interface.o \
 	vm/method.o \

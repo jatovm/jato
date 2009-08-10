@@ -105,7 +105,6 @@ VM_OBJS = \
 	vm/fault-inject.o 	\
 	vm/field.o		\
 	vm/gc.o			\
-	vm/guard-page.o		\
 	vm/itable.o		\
 	vm/jar.o		\
 	vm/jato.o		\
@@ -130,6 +129,7 @@ VM_OBJS = \
 LIB_OBJS = \
 	lib/bitset.o		\
 	lib/buffer.o		\
+	lib/guard-page.o	\
 	lib/list.o		\
 	lib/pqueue.o		\
 	lib/radix-tree.o	\
