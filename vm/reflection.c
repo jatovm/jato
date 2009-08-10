@@ -9,6 +9,9 @@
 #include "jit/args.h"
 #include "jit/exception.h"
 
+static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
+				   struct vm_object *args_array);
+
 static struct vm_class *to_vmclass(struct vm_object *object)
 {
 	struct vm_class *vmc;
@@ -355,7 +358,7 @@ jint native_constructor_get_modifiers_internal(struct vm_object *ctor)
 
 struct vm_object *
 native_constructor_construct_native(struct vm_object *this,
-				    struct vm_object *args,
+				    struct vm_object *args_array,
 				    struct vm_object *declaring_class,
 				    int slot)
 {
@@ -375,10 +378,13 @@ native_constructor_construct_native(struct vm_object *this,
 		return NULL;
 	}
 
-	/* TODO: We support only ()V constructors yet. */
-	assert(args == NULL || args->array_length == 0);
+	unsigned long args[vmm->args_count];
 
-	vm_call_method(vmm, result);
+	args[0] = (unsigned long) result;
+	if (marshall_call_arguments(vmm, args + 1, args_array))
+		return NULL;
+
+	vm_call_method_a(vmm, args);
 	return result;
 }
 
