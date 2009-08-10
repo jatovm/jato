@@ -17,7 +17,7 @@ struct expression *convert_args(struct stack *mimic_stack,
 				struct vm_method *method);
 struct expression *convert_native_args(struct stack *mimic_stack,
 				       unsigned long nr_args);
-const char *parse_method_args(const char *type_str, enum vm_type *vmtype);
+const char *parse_method_args(const char *type_str, enum vm_type *vmtype, char **name_p);
 
 #ifndef CONFIG_ARGS_MAP
 static inline int args_map_init(struct vm_method *method)

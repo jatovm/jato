@@ -572,7 +572,7 @@ static void trace_invoke_args(struct vm_method *vmm,
 
 	trace_printf("\targs\t:\n");
 
-	while ((type_str = parse_method_args(type_str, &arg_type))) {
+	while ((type_str = parse_method_args(type_str, &arg_type, NULL))) {
 		trace_printf("\t   %-12s: ", get_vm_type_name(arg_type));
 		print_arg(arg_type, frame->args, &arg_index);
 	}

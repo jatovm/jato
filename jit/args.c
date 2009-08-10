@@ -147,12 +147,18 @@ convert_native_args(struct stack *mimic_stack, unsigned long nr_args)
 	return args_list;
 }
 
-const char *parse_method_args(const char *type_str, enum vm_type *vmtype)
+const char *parse_method_args(const char *type_str, enum vm_type *vmtype,
+			      char **name_p)
 {
-	char type_name[] = { "X" };
+	const char *type_name_start;
 
 	if (*type_str == '(')
 		type_str++;
+
+	type_name_start = type_str;
+
+	if (name_p)
+		*name_p = NULL;
 
 	if (*type_str == ')')
 		return NULL;
@@ -162,18 +168,34 @@ const char *parse_method_args(const char *type_str, enum vm_type *vmtype)
 		type_str++;
 
 		if (*type_str != 'L') {
-			return type_str + 1;
+			type_str++;
+			goto out;
 		}
 	}
 
 	if (*type_str == 'L') {
+		++type_name_start;
 		++type_str;
 		while (*(type_str++) != ';')
 			;
 		*vmtype = J_REFERENCE;
 	} else {
-		type_name[0] = *(type_str++);
-		*vmtype = str_to_type(type_name);
+		char primitive_name[2];
+
+		primitive_name[0] = *(type_str++);
+		primitive_name[1] = 0;
+
+		*vmtype = str_to_type(primitive_name);
+	}
+
+ out:
+	if (name_p) {
+		size_t size = (size_t) type_str - (size_t) type_name_start;
+
+		if (*vmtype == J_REFERENCE)
+			size--;
+
+		*name_p = strndup(type_name_start, size);
 	}
 
 	return type_str;
