@@ -2454,7 +2454,7 @@ stmt:	STMT_TABLESWITCH(reg)
 	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG,
 			(unsigned long) stmt->table->low, state->left->reg1));
 
-	base = get_var(s->b_parent, J_REFERENCE);
+	base = get_var(s->b_parent, vm_pointer_type());
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
 			(unsigned long) stmt->table->lookup_table, base));
 
@@ -2841,7 +2841,7 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 	unsigned long field;
 
 	sp_reg = get_fixed_var(s->b_parent, MACH_REG_xSP);
-	offset_reg = get_var(s->b_parent, J_REFERENCE);
+	offset_reg = get_var(s->b_parent, vm_pointer_type());
 
 	offset_tls = get_thread_local_offset(&vm_native_stack_offset);
 	select_insn(s, tree,
