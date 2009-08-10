@@ -1,8 +1,12 @@
 #include "vm/call.h"
 #include "vm/class.h"
+#include "vm/classloader.h"
 #include "vm/die.h"
 #include "vm/preload.h"
 #include "vm/reflection.h"
+#include "vm/types.h"
+
+#include "jit/args.h"
 #include "jit/exception.h"
 
 static struct vm_class *to_vmclass(struct vm_object *object)
@@ -219,10 +223,96 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 	return array;
 }
 
+static struct vm_class *vm_type_to_class(char *type_name, enum vm_type type)
+{
+	switch (type) {
+	case J_BOOLEAN:
+		return vm_boolean_class;
+	case J_CHAR:
+		return vm_char_class;
+	case J_FLOAT:
+		return vm_float_class;
+	case J_DOUBLE:
+		return vm_double_class;
+	case J_BYTE:
+		return vm_byte_class;
+	case J_SHORT:
+		return vm_short_class;
+	case J_INT:
+		return vm_int_class;
+	case J_LONG:
+		return vm_long_class;
+	case J_REFERENCE:
+		return classloader_load(type_name);
+	default:
+		NOT_IMPLEMENTED;
+	}
+
+	return NULL;
+}
+
+static struct vm_object *get_method_parameter_types(struct vm_method *vmm)
+{
+	struct vm_object *array;
+	unsigned int count;
+	enum vm_type type;
+	const char *type_str;
+	char *type_name;
+	int i;
+
+	count = count_java_arguments(vmm->type);
+	array = vm_object_alloc_array(vm_array_of_java_lang_Class, count);
+	if (!array) {
+		NOT_IMPLEMENTED;
+		return NULL;
+	}
+
+	type_str = vmm->type;
+	i = 0;
+
+	while ((type_str = parse_method_args(type_str, &type, &type_name))) {
+		struct vm_class *class;
+
+		class = vm_type_to_class(type_name, type);
+		free(type_name);
+
+		if (class)
+			vm_class_ensure_init(class);
+
+		if (!class || exception_occurred())
+			return NULL;
+
+		array_set_field_ptr(array, i++, class->object);
+	}
+
+	return array;
+}
+
+struct vm_object *
+native_method_get_parameter_types(struct vm_object *method)
+{
+	struct vm_object *clazz;
+	struct vm_class *class;
+	struct vm_method *vmm;
+	int slot;
+
+	if (!method) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return NULL;
+	}
+
+	clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
+	slot = field_get_int32(method, vm_java_lang_reflect_Method_slot);
+
+	class = vm_class_get_class_from_class_object(clazz);
+	vmm = &class->methods[slot];
+
+	return get_method_parameter_types(vmm);
+}
+
 struct vm_object *
 native_constructor_get_parameter_types(struct vm_object *ctor)
 {
-	struct vm_object *array;
 	struct vm_object *clazz;
 	struct vm_class *class;
 	struct vm_method *vmm;
@@ -239,11 +329,7 @@ native_constructor_get_parameter_types(struct vm_object *ctor)
 	class = vm_class_get_class_from_class_object(clazz);
 	vmm = &class->methods[slot];
 
-	/* TODO: We support only ()V constructors yet. */
-	assert(!strcmp(vmm->type, "()V"));
-
-	array = vm_object_alloc_array(vm_array_of_java_lang_Class, 0);
-	return array;
+	return get_method_parameter_types(vmm);
 }
 
 jint native_constructor_get_modifiers_internal(struct vm_object *ctor)
