@@ -1,6 +1,7 @@
 #include <stdbool.h>
 
 #include "arch/init.h"
+#include "arch/instruction.h"
 #include "vm/die.h"
 
 unsigned long x86_cpu_features;
@@ -31,6 +32,8 @@ static void init_cpu_features(void)
 
 void arch_init(void)
 {
+	insn_sanity_check();
+
 	init_cpu_features();
 
 	if (!cpu_has(X86_FEATURE_SSE))
