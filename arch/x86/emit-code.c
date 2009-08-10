@@ -1050,6 +1050,28 @@ static void emit_sbb_reg_reg(struct buffer *buf, struct operand *src,
 	emit_reg_reg(buf, 0x19, src, dest);
 }
 
+static void __emit_test_imm_memdisp(struct buffer *buf,
+	long imm, long disp)
+{
+	/* XXX: Supports only byte or long imms */
+
+	if (is_imm_8(imm))
+		emit(buf, 0xf6);
+	else
+		emit(buf, 0xf7);
+
+	emit(buf, 0x04);
+	emit(buf, 0x25);
+	emit_imm32(buf, disp);
+	emit_imm(buf, imm);
+}
+
+static void emit_test_imm_memdisp(struct buffer *buf,
+	struct operand *imm, struct operand *disp)
+{
+	__emit_test_imm_memdisp(buf, imm->imm, disp->imm);
+}
+
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
 	/* Unconditionally push callee-saved registers */
@@ -1812,6 +1834,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),

@@ -280,6 +280,16 @@ struct insn *reg_memdisp_insn(enum insn_type insn_type,
 	return insn;
 }
 
+struct insn *imm_memdisp_insn(enum insn_type insn_type, long imm, long disp)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_imm_operand(insn, 0, imm);
+		init_imm_operand(insn, 1, imm);
+	}
+	return insn;
+}
+
 struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 			      struct var_info *base_reg, long disp)
 {

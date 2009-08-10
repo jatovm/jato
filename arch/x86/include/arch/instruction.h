@@ -165,6 +165,7 @@ enum insn_type {
 	INSN_SUB_IMM_REG,
 	INSN_SUB_MEMBASE_REG,
 	INSN_SUB_REG_REG,
+	INSN_TEST_IMM_MEMDISP,
 	INSN_TEST_MEMBASE_REG,
 	INSN_XOR_MEMBASE_REG,
 	INSN_XOR_IMM_REG,
@@ -221,6 +222,7 @@ struct insn *reg_reg_insn(enum insn_type, struct var_info *, struct var_info *);
 struct insn *imm_reg_insn(enum insn_type, unsigned long, struct var_info *);
 struct insn *memdisp_reg_insn(enum insn_type, unsigned long, struct var_info *);
 struct insn *reg_memdisp_insn(enum insn_type, struct var_info *, unsigned long);
+struct insn *imm_memdisp_insn(enum insn_type, long, long);
 struct insn *imm_membase_insn(enum insn_type, unsigned long, struct var_info *, long);
 struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
