@@ -26,6 +26,9 @@ int gc_map_init(struct compilation_unit *cu)
 
 			struct var_info *var;
 			for_each_variable(var, cu->var_infos) {
+				if  (var->vm_type != J_REFERENCE)
+					continue;
+
 				if (!in_range(&var->interval->range,
 					insn->mach_offset))
 				{
