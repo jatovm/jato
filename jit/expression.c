@@ -542,7 +542,7 @@ struct expression *multianewarray_expr(struct vm_class *class)
 
 struct expression *arraylength_expr(struct expression *arrayref)
 {
-	struct expression *expr = alloc_expression(EXPR_ARRAYLENGTH, J_REFERENCE);
+	struct expression *expr = alloc_expression(EXPR_ARRAYLENGTH, J_INT);
 
 	if (expr)
 		expr->arraylength_ref = &arrayref->node;

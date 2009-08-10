@@ -599,7 +599,7 @@ void test_print_arraylength_expression(void)
 {
 	assert_print_expr(str_aprintf(
 		"ARRAYLENGTH:\n"
-		"  vm_type: [reference]\n"
+		"  vm_type: [int]\n"
 		"  arraylength_ref: [value reference 0xcafe]\n"),
 		arraylength_expr(value_expr(J_REFERENCE, 0xcafe)));
 }
