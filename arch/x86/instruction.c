@@ -110,6 +110,16 @@ static void init_membase_operand(struct insn *insn, unsigned long idx,
 	init_register(&operand->base_reg, insn, base_reg->interval);
 }
 
+static void init_memdisp_operand(struct insn *insn, unsigned long idx,
+	unsigned long disp)
+{
+	struct operand *operand;
+
+	operand = &insn->operands[idx];
+	operand->type = OPERAND_MEMDISP;
+	operand->disp = disp;
+}
+
 static void init_memindex_operand(struct insn *insn, unsigned long idx,
 				  struct var_info *base_reg,
 				  struct var_info *index_reg, unsigned long shift)
@@ -285,7 +295,7 @@ struct insn *imm_memdisp_insn(enum insn_type insn_type, long imm, long disp)
 	struct insn *insn = alloc_insn(insn_type);
 	if (insn) {
 		init_imm_operand(insn, 0, imm);
-		init_imm_operand(insn, 1, imm);
+		init_memdisp_operand(insn, 1, disp);
 	}
 	return insn;
 }

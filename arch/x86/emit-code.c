@@ -1069,7 +1069,7 @@ static void __emit_test_imm_memdisp(struct buffer *buf,
 static void emit_test_imm_memdisp(struct buffer *buf,
 	struct operand *imm, struct operand *disp)
 {
-	__emit_test_imm_memdisp(buf, imm->imm, disp->imm);
+	__emit_test_imm_memdisp(buf, imm->imm, disp->disp);
 }
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
