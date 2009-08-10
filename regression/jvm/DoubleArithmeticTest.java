@@ -133,6 +133,17 @@ public class DoubleArithmeticTest extends TestCase {
         assertEquals(-3000, i2d(-3000));
     }
 
+    public static double l2d(long val) {
+        return (double) val;
+    }
+
+    public static void testDoubleLongConversion() {
+//      assertEquals(2, d2l(2.));
+//      assertEquals(-1000, d2l(-1000.0101));
+        assertEquals(2.0, l2d(2));
+        assertEquals(-3000, l2d(-3000));
+    }
+
     private static double zero = 0.0;
     private static double one = 1.0;
 
@@ -163,6 +174,7 @@ public class DoubleArithmeticTest extends TestCase {
         testDoubleRemainder();
         testDoubleNegation();
         testDoubleIntConversion();
+        testDoubleLongConversion();
         testDoubleComparison();
     }
 }

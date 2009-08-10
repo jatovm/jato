@@ -50,6 +50,10 @@
 #define MONOBURG_LOG 1
 #define HAVE_ARRAY_ELEM_INIT 1
 
+/* GCC magic for long long to double conversion.  See below for more...  */
+static unsigned long long xmm_double_magic_0 = 0x41f0000000000000;
+static unsigned long long xmm_double_magic_1 = 0x41e0000000000000;
+
 static void select_insn(struct basic_block *bb, struct tree_node *tree,
 			struct insn *instruction);
 static void select_exception_test(struct basic_block *bb,
@@ -1501,11 +1505,25 @@ freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
 
 	assert(expr->vm_type == J_DOUBLE);
 
+	state->reg1 = get_var(s->b_parent, J_DOUBLE);
 	if (src->vm_type == J_INT) {
-		state->reg1 = get_var(s->b_parent, J_DOUBLE);
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, state->left->reg1, state->reg1));
+	} else if (src->vm_type == J_LONG) {
+		struct var_info *ftmp, *tmp;
+
+		ftmp = get_var(s->b_parent, J_DOUBLE);
+		tmp  = get_var(s->b_parent, J_INT);
+
+		/* GCC produces this fragment, don't ask! */
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, tmp));
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 0x80000000, tmp));
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, state->left->reg2, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, tmp, ftmp));
+		select_insn(s, tree, memdisp_reg_insn(INSN_FMUL_64_MEMDISP_REG, (unsigned long) &xmm_double_magic_0, state->reg1));
+		select_insn(s, tree, memdisp_reg_insn(INSN_FADD_64_MEMDISP_REG, (unsigned long) &xmm_double_magic_1, ftmp));
+		select_insn(s, tree, reg_reg_insn(INSN_FADD_64_REG_REG, ftmp, state->reg1));
 	} else {
-		die("EXPR_CONVERSION_TO_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+		die("EXPR_CONVERSION_TO_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
 }
 
