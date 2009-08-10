@@ -7,7 +7,7 @@ typedef int (*pqueue_compare_fn) (void *v1, void *v2);
 
 /* A priority queue */
 struct pqueue {
-	pqueue_compare_fn		compare;
+	pqueue_compare_fn	compare;
 	unsigned long		size;
 	void **			data;
 };
