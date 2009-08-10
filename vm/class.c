@@ -101,30 +101,12 @@ setup_vtable(struct vm_class *vmc)
 			super_vtable->native_ptr[i]);
 
 	/* Our methods */
-	vtable_size = 0;
 	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
 		struct vm_method *vmm = &vmc->methods[i];
 
-		if (super) {
-			struct vm_method *vmm2
-				= vm_class_get_method_recursive(super,
-					vmm->name, vmm->type);
-			if (vmm2) {
-				vmm->virtual_index = vmm2->virtual_index;
-
-				vtable_setup_method(&vmc->vtable,
-					vmm2->virtual_index,
-					vm_method_call_ptr(vmm));
-				continue;
-			}
-		}
-
-		vmm->virtual_index = super_vtable_size + vtable_size;
-
 		vtable_setup_method(&vmc->vtable,
-			super_vtable_size + vtable_size,
-			vm_method_call_ptr(vmm));
-		++vtable_size;
+				    vmm->virtual_index,
+				    vm_method_call_ptr(vmm));
 	}
 }
 
