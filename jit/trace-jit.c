@@ -356,15 +356,20 @@ static void print_gc_map(struct compilation_unit *cu, struct insn *insn)
 	trace_printf(" * %p: ", buffer_ptr(cu->objcode) + insn->mach_offset);
 
 	struct var_info *var;
+	unsigned int i = NR_REGISTERS;
 	for_each_variable(var, cu->var_infos) {
-		if (!test_bit(live_vars->bits, var->vreg))
+		if (var->vm_type != J_REFERENCE)
 			continue;
 
-		if (in_range(&var->interval->range, insn->mach_offset)) {
+		if (!test_bit(live_vars->bits, i++))
+			continue;
+
+		if (in_range(&var->interval->range, insn->lir_pos)) {
 			trace_printf("%d (%s), ",
 				var->vreg, reg_name(var->interval->reg));
-		} else {
-			trace_printf("%d (stack), ", var->vreg);
+		} else if (var->interval->need_spill) {
+			trace_printf("%d (%d), ",
+				var->vreg, var->interval->spill_slot->index);
 		}
 	}
 
