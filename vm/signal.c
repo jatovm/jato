@@ -26,14 +26,15 @@
 
 #include "jit/exception.h"
 
-#include "vm/preload.h"
 #include "vm/backtrace.h"
-#include "vm/signal.h"
-#include "vm/stack-trace.h"
 #include "vm/call.h"
 #include "vm/class.h"
-#include "vm/object.h"
+#include "vm/gc.h"
 #include "vm/jni.h"
+#include "vm/object.h"
+#include "vm/preload.h"
+#include "vm/signal.h"
+#include "vm/stack-trace.h"
 
 #include "arch/signal.h"
 
@@ -73,6 +74,12 @@ static unsigned long rethrow_bh(unsigned long src_addr)
 	return throw_from_signal_bh(src_addr);
 }
 
+static unsigned long gc_safepoint_bh(unsigned long addr)
+{
+	gc_safepoint();
+	return addr;
+}
+
 static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 {
 	if (signal_from_native(ctx))
@@ -107,6 +114,12 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 
 		fprintf(stderr, "%s: install_signal_bh() failed.\n", __func__);
 		goto exit;
+	}
+
+	/* Garbage collection safepoint */
+	if (si->si_addr == gc_safepoint_page) {
+		install_signal_bh(ctx, gc_safepoint_bh);
+		return;
 	}
 
 	/* Check if exception was triggered by exception guard */

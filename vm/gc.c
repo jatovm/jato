@@ -10,3 +10,7 @@ void gc_init(void)
 	if (!gc_safepoint_page)
 		die("Couldn't allocate GC safepoint guard page");
 }
+
+void gc_safepoint(void)
+{
+}
