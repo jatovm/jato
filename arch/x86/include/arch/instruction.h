@@ -3,6 +3,7 @@
 
 #include "jit/use-position.h"
 
+#include "arch/init.h"
 #include "arch/stack-frame.h"
 #include "arch/registers.h"
 
@@ -245,10 +246,16 @@ spill_insn(struct var_info *var, struct stack_slot *slot)
 
 	assert(slot != NULL);
 
-	if (var->vm_type == J_FLOAT || var->vm_type == J_DOUBLE)
+	if (var->vm_type == J_FLOAT) {
 		insn_type = INSN_MOV_XMM_MEMLOCAL;
-	else
+	} else if (var->vm_type == J_DOUBLE) {
+		if (cpu_has(X86_FEATURE_SSE2))
+			insn_type = INSN_MOV_64_XMM_MEMLOCAL;
+		else
+			error("not implemented");
+	} else {
 		insn_type = INSN_MOV_REG_MEMLOCAL;
+	}
 
 	return reg_memlocal_insn(insn_type, var, slot);
 }
@@ -260,10 +267,16 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 
 	assert(slot != NULL);
 
-	if (var->vm_type == J_FLOAT || var->vm_type == J_DOUBLE)
+	if (var->vm_type == J_FLOAT) {
 		insn_type = INSN_MOV_MEMLOCAL_XMM;
-	else
+	} else if (var->vm_type == J_DOUBLE) {
+		if (cpu_has(X86_FEATURE_SSE2))
+			insn_type = INSN_MOV_64_MEMLOCAL_XMM;
+		else
+			error("not implemented");
+	} else {
 		insn_type = INSN_MOV_MEMLOCAL_REG;
+	}
 
 	return memlocal_reg_insn(insn_type, slot, var);
 }
