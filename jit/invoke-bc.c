@@ -52,16 +52,14 @@ int convert_return(struct parse_context *ctx)
 
 static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 {
-	unsigned int c = invoke_target->args_count;
-	const char * a = invoke_target->type;
-	enum vm_type vmtype;
+	int argc;
 
-	/* FIXME: Make more robust. */
-	while ((a = parse_method_args(a, &vmtype)))
-		if (vmtype == J_LONG || vmtype == J_DOUBLE)
-			c--;
+	argc = count_java_arguments(invoke_target->type);
 
-	return c;
+	if (!vm_method_is_static(invoke_target))
+		argc++;
+
+	return argc;
 }
 
 static int convert_and_add_args(struct parse_context *ctx,

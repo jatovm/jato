@@ -214,3 +214,16 @@ const char *parse_method_args(const char *type_str, enum vm_type *vmtype,
 
 	return type_str;
 }
+
+unsigned int count_java_arguments(const char *type)
+{
+	unsigned int count;
+	enum vm_type vmtype;
+
+	count = 0;
+
+	while ((type = parse_method_args(type, &vmtype, NULL)))
+		count ++;
+
+	return count;
+}
