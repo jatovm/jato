@@ -274,6 +274,12 @@ static int print_fadd_64_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_fadd_64_memdisp_reg(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memdisp_reg(str, insn);
+}
+
 static int print_fsub_reg_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -923,6 +929,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_DIV_REG_REG] = print_div_reg_reg,
 	[INSN_FADD_REG_REG] = print_fadd_reg_reg,
 	[INSN_FADD_64_REG_REG] = print_fadd_64_reg_reg,
+	[INSN_FADD_64_MEMDISP_REG] = print_fadd_64_memdisp_reg,
 	[INSN_FSUB_REG_REG] = print_fsub_reg_reg,
 	[INSN_FSUB_64_REG_REG] = print_fsub_64_reg_reg,
 	[INSN_FMUL_REG_REG] = print_fmul_reg_reg,

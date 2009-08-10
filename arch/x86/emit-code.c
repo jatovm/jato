@@ -1198,6 +1198,14 @@ static void emit_fadd_64_reg_reg(struct buffer *buf,
 	emit_reg_reg(buf, 0x58, dest, src);
 }
 
+static void emit_fadd_64_memdisp_reg(struct buffer *buf, struct operand *src,
+				     struct operand *dest)
+{
+	emit(buf, 0xf2);
+	emit(buf, 0x0f);
+	__emit_memdisp_reg(buf, 0x58, src->imm, mach_reg(&dest->reg));
+}
+
 static void emit_fsub_reg_reg(struct buffer *buf,
 			     struct operand *src, struct operand *dest)
 {
@@ -1792,6 +1800,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FADD_REG_REG, emit_fadd_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FADD_64_REG_REG, emit_fadd_64_reg_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_FADD_64_MEMDISP_REG, emit_fadd_64_memdisp_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FSUB_REG_REG, emit_fsub_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FSUB_64_REG_REG, emit_fsub_64_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_FMUL_REG_REG, emit_fmul_reg_reg, TWO_OPERANDS),
