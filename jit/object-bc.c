@@ -173,7 +173,6 @@ static int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	struct expression *index, *arrayref;
 	struct expression *src_expr, *dest_expr;
 	struct statement *store_stmt, *arraycheck;
-	struct var_info *temporary;
 	struct expression *arrayref_pure;
 	struct expression *index_pure;
 
@@ -196,8 +195,7 @@ static int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	index_pure = get_pure_expr(ctx, index);
 	src_expr = array_deref_expr(type, arrayref_pure, index_pure);
 
-	temporary = get_var(ctx->cu, type);
-	dest_expr = temporary_expr(type, NULL, temporary);
+	dest_expr = temporary_expr(type, ctx->cu);
 
 	store_stmt->store_src = &src_expr->node;
 	store_stmt->store_dest = &dest_expr->node;

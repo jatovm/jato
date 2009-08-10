@@ -41,16 +41,8 @@ dup_expr(struct parse_context *ctx, struct expression *expr)
 {
 	struct expression *dest;
 	struct statement *stmt;
-	struct var_info *tmp_low, *tmp_high = NULL;
 
-	if (expr->vm_type == J_LONG) {
-		tmp_low = get_var(ctx->cu, J_INT);
-		tmp_high = get_var(ctx->cu, J_INT);
-	} else {
-		tmp_low = get_var(ctx->cu, expr->vm_type);
-	}
-
-	dest = temporary_expr(expr->vm_type, tmp_high, tmp_low);
+	dest = temporary_expr(expr->vm_type, ctx->cu);
 
 	expr_get(dest);
 	stmt = alloc_statement(STMT_STORE);

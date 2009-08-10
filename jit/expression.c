@@ -246,7 +246,7 @@ struct expression *local_expr(enum vm_type vm_type, unsigned long local_index)
 	return expr;
 }
 
-struct expression *temporary_expr(enum vm_type vm_type, struct var_info *tmp_high, struct var_info *tmp_low)
+struct expression *temporary_expr(enum vm_type vm_type, struct compilation_unit *cu)
 {
 	struct expression *expr;
 
@@ -255,9 +255,15 @@ struct expression *temporary_expr(enum vm_type vm_type, struct var_info *tmp_hig
 	else
 		expr = alloc_expression(EXPR_TEMPORARY, vm_type);
 
-	if (expr) {
-		expr->tmp_high = tmp_high;
-		expr->tmp_low = tmp_low;
+	if (!expr)
+		return NULL;
+
+	if (expr->vm_type == J_LONG) {
+		expr->tmp_low = get_var(cu, J_INT);
+		expr->tmp_high = get_var(cu, J_INT);
+	} else {
+		expr->tmp_low = get_var(cu, expr->vm_type);
+		expr->tmp_high = NULL;
 	}
 
 	return expr;

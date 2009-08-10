@@ -506,13 +506,11 @@ static void __assert_convert_store(unsigned char *code,
 				   unsigned char expected_index)
 {
 	struct statement *stmt;
-	struct var_info *temporary;
 	struct basic_block *bb;
 
 	bb = alloc_simple_bb(code, code_size);
 
-	temporary = get_var(bb->b_parent, expected_type);
-	stack_push(bb->mimic_stack, temporary_expr(expected_type, NULL, temporary));
+	stack_push(bb->mimic_stack, temporary_expr(expected_type, bb->b_parent));
 
 	convert_to_ir(bb->b_parent);
 	stmt = stmt_entry(bb->stmt_list.next);

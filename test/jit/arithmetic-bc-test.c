@@ -36,16 +36,12 @@ static void assert_convert_binop(enum vm_type vm_type,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code)
 	};
-	struct var_info *temporary;
 	struct basic_block *bb;
 
 	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(bb->b_parent, vm_type);
-	left = temporary_expr(vm_type, NULL, temporary);
-
-	temporary = get_var(bb->b_parent, vm_type);
-	right = temporary_expr(vm_type, NULL, temporary);
+	left = temporary_expr(vm_type, bb->b_parent);
+	right = temporary_expr(vm_type, bb->b_parent);
 
 	stack_push(bb->mimic_stack, left);
 	stack_push(bb->mimic_stack, right);
@@ -110,13 +106,11 @@ static void assert_convert_unop(enum vm_type vm_type,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code)
 	};
-	struct var_info *temporary;
 	struct basic_block *bb;
 
 	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(bb->b_parent, J_INT);
-	expression = temporary_expr(vm_type, NULL, temporary);
+	expression = temporary_expr(vm_type, bb->b_parent);
 	stack_push(bb->mimic_stack, expression);
 
 	convert_to_ir(bb->b_parent);
@@ -218,16 +212,12 @@ static void assert_convert_cmp(unsigned char opc, enum binary_operator op,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
-	struct var_info *temporary;
 	struct basic_block *bb;
 
 	bb = __alloc_simple_bb(&method);
 
-	temporary = get_var(bb->b_parent, J_INT);
-	left = temporary_expr(type, NULL, temporary);
-
-	temporary = get_var(bb->b_parent, J_INT);
-	right = temporary_expr(type, NULL, temporary);
+	left = temporary_expr(type, bb->b_parent);
+	right = temporary_expr(type, bb->b_parent);
 
 	stack_push(bb->mimic_stack, left);
 	stack_push(bb->mimic_stack, right);

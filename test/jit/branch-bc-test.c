@@ -40,7 +40,6 @@ static void assert_convert_if(enum binary_operator expected_operator,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
-	struct var_info *temporary;
 
 	cu = compilation_unit_alloc(&method);
 
@@ -58,8 +57,7 @@ static void assert_convert_if(enum binary_operator expected_operator,
 	list_add_tail(&bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&target_bb->bb_list_node, &cu->bb_list);
 
-	temporary = get_var(cu, J_INT);
-	if_value = temporary_expr(J_INT, NULL, temporary);
+	if_value = temporary_expr(J_INT, cu);
 	stack_push(branch_bb->mimic_stack, if_value);
 
 	convert_to_ir(cu);
@@ -97,7 +95,6 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
-	struct var_info *temporary;
 
 	cu = compilation_unit_alloc(&method);
 	stmt_bb = alloc_basic_block(cu, 0, 1);
@@ -108,12 +105,10 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 	list_add_tail(&stmt_bb->bb_list_node, &cu->bb_list);
 	list_add_tail(&true_bb->bb_list_node, &cu->bb_list);
 
-	temporary = get_var(cu, J_INT);
-	if_value1 = temporary_expr(vm_type, NULL, temporary);
+	if_value1 = temporary_expr(vm_type, cu);
 	stack_push(stmt_bb->mimic_stack, if_value1);
 
-	temporary = get_var(cu, J_INT);
-	if_value2 = temporary_expr(vm_type, NULL, temporary);
+	if_value2 = temporary_expr(vm_type, cu);
 	stack_push(stmt_bb->mimic_stack, if_value2);
 
 	convert_to_ir(cu);

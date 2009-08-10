@@ -21,12 +21,10 @@ static void assert_conversion_mimic_stack(unsigned char opc,
 	};
 	struct expression *conversion_expression;
 	struct expression *expression;
-	struct var_info *temporary;
 	struct basic_block *bb;
 
 	bb = __alloc_simple_bb(&method);
-	temporary = get_var(bb->b_parent, J_INT);
-	expression = temporary_expr(from_type, NULL, temporary);
+	expression = temporary_expr(from_type, bb->b_parent);
 	stack_push(bb->mimic_stack, expression);
 	convert_to_ir(bb->b_parent);
 

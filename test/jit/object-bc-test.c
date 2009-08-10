@@ -337,14 +337,12 @@ static void assert_convert_array_store(enum vm_type expected_type,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
-	struct var_info *temporary;
 
 	bb = __alloc_simple_bb(&method);
 
 	arrayref_expr = value_expr(J_REFERENCE, arrayref);
 	index_expr = value_expr(J_INT, index);
-	temporary = get_var(bb->b_parent, J_INT);
-	expr = temporary_expr(expected_type, NULL, temporary);
+	expr = temporary_expr(expected_type, bb->b_parent);
 
 	stack_push(bb->mimic_stack, arrayref_expr);
 	stack_push(bb->mimic_stack, index_expr);

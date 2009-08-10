@@ -267,7 +267,14 @@ void assert_printed_temporary_expr(struct string *expected, enum vm_type type, s
 {
 	struct expression *expr;
 
-	expr = temporary_expr(type, var, var2);
+	if (vm_type_is_float(type))
+		expr = alloc_expression(EXPR_FLOAT_TEMPORARY, type);
+	else
+		expr = alloc_expression(EXPR_TEMPORARY, type);
+
+	expr->tmp_low = var2;
+	expr->tmp_high = var;
+
 	assert_print_expr(expected, expr);
 }
 
