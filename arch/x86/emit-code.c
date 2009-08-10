@@ -1451,6 +1451,13 @@ static void emit_or_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x0b, src, dest);
 }
 
+static void emit_or_imm_membase(struct buffer *buf,
+				struct operand *src, struct operand *dest)
+{
+	__emit_membase(buf, 0x81, mach_reg(&dest->base_reg), dest->disp, 1);
+	emit_imm32(buf, src->disp);
+}
+
 static void emit_or_reg_reg(struct buffer *buf, struct operand *src,
 			    struct operand *dest)
 {
@@ -1882,6 +1889,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg, SINGLE_OPERAND),
+	DECL_EMITTER(INSN_OR_IMM_MEMBASE, emit_or_imm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
