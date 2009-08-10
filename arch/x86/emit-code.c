@@ -433,18 +433,6 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 	pthread_mutex_unlock(&t->mutex);
 }
 
-/*
- * This function replaces pointers in vtable so that they point
- * directly to compiled code instead of trampoline code.
- */
-static void fixup_vtable(struct compilation_unit *cu,
-	struct vm_object *objref, void *target)
-{
-	struct vm_class *vmc = objref->class;
-
-	vmc->vtable.native_ptr[cu->method->virtual_index] = target;
-}
-
 void fixup_static(struct vm_class *vmc)
 {
 	struct static_fixup_site *this, *next;
@@ -1876,18 +1864,6 @@ void emit_trampoline(struct compilation_unit *cu,
 			   MACH_REG_ECX);
 	__emit_test_membase_reg(buf, MACH_REG_ECX, 0, MACH_REG_ECX);
 
-	__emit_push_reg(buf, MACH_REG_EAX);
-
-	if (method_is_virtual(cu->method)) {
-		__emit_push_membase(buf, MACH_REG_EBP, 0x08);
-
-		__emit_push_imm(buf, (unsigned long)cu);
-		__emit_call(buf, fixup_vtable);
-		__emit_add_imm_reg(buf, 0x08, MACH_REG_ESP);
-	}
-
-	__emit_pop_reg(buf, MACH_REG_EAX);
-
 	__emit_pop_reg(buf, MACH_REG_EBP);
 	emit_indirect_jump_reg(buf, MACH_REG_EAX);
 
@@ -2855,19 +2831,6 @@ void emit_trampoline(struct compilation_unit *cu,
 			   get_thread_local_offset(&trampoline_exception_guard),
 			   MACH_REG_RCX);
 	__emit64_test_membase_reg(buf, MACH_REG_RCX, 0, MACH_REG_RCX);
-
-	if (method_is_virtual(cu->method)) {
-		__emit64_push_reg(buf, MACH_REG_RAX);
-
-		__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
-
-		__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x10, MACH_REG_RSI);
-
-		__emit64_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
-		__emit_call(buf, fixup_vtable);
-
-		__emit64_pop_reg(buf, MACH_REG_RAX);
-	}
 
 	__emit64_pop_reg(buf, MACH_REG_R9);
 	__emit64_pop_reg(buf, MACH_REG_R8);

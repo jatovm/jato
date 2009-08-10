@@ -144,6 +144,10 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	 * Therefore, do fixup for direct call sites unconditionally and fixup
 	 * vtables if method can be invoked via invokevirtual.
 	 */
+
+	if (ret && method_is_virtual(method))
+		fixup_vtable(cu, ret);
+
 	pthread_mutex_unlock(&cu->mutex);
 
 	/*
