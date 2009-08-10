@@ -58,6 +58,7 @@
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/fault-inject.h"
+#include "vm/gc.h"
 #include "vm/preload.h"
 #include "vm/itable.h"
 #include "vm/jar.h"
@@ -1180,6 +1181,7 @@ main(int argc, char *argv[])
 
 	jit_init_natives();
 
+	gc_init();
 	static_fixup_init();
 	vm_jni_init();
 

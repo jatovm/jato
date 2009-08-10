@@ -97,15 +97,20 @@ JIT_OBJS = \
 VM_OBJS = \
 	vm/bytecode.o		\
 	vm/bytecodes.o		\
+	vm/call.o		\
 	vm/class.o		\
 	vm/classloader.o	\
 	vm/debug-dump.o		\
 	vm/die.o		\
+	vm/fault-inject.o 	\
 	vm/field.o		\
+	vm/gc.o			\
 	vm/guard-page.o		\
 	vm/itable.o		\
 	vm/jar.o		\
 	vm/jato.o		\
+	vm/jni.o		\
+	vm/jni-interface.o	\
 	vm/method.o		\
 	vm/natives.o		\
 	vm/object.o		\
@@ -120,11 +125,7 @@ VM_OBJS = \
 	vm/utf8.o		\
 	vm/zalloc.o		\
 	vm/preload.o		\
-	vm/reflection.o		\
-	vm/fault-inject.o 	\
-	vm/jni.o		\
-	vm/jni-interface.o	\
-	vm/call.o
+	vm/reflection.o
 
 LIB_OBJS = \
 	lib/bitset.o		\
