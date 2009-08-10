@@ -729,6 +729,16 @@ native_vmclassloader_loadclass(struct vm_object *name, jboolean resolve)
 	return vmc->object;
 }
 
+static jboolean
+native_vmclass_isinterface(struct vm_object *clazz)
+{
+	struct vm_class *class = to_vmclass(clazz);
+	if (!class)
+		return false;
+
+	return vm_class_is_interface(class);
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -744,6 +754,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "isAnonymousClass", &native_vmclass_is_anonymous_class),
 	DEFINE_NATIVE("java/lang/VMClass", "isArray", &native_vmclass_isarray),
 	DEFINE_NATIVE("java/lang/VMClass", "isInstance", &native_vmclass_isinstance),
+	DEFINE_NATIVE("java/lang/VMClass", "isInterface", &native_vmclass_isinterface),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", &native_vmclass_isprimitive),
 	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", &native_vmclass_getmodifiers),
 	DEFINE_NATIVE("java/lang/VMClass", "getComponentType", &native_vmclass_getcomponenttype),
