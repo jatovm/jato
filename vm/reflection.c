@@ -549,3 +549,96 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 
 	return encapsulate_value(value_p, type);
 }
+
+static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
+				   struct vm_object *args_array)
+{
+	enum vm_type type;
+	const char *type_str;
+	char *type_name;
+	int args_array_idx;
+	int idx;
+
+	type_str = vmm->type;
+	idx = 0;
+	args_array_idx = 0;
+
+	if (args_array == NULL)
+		return 0;
+
+	while ((type_str = parse_method_args(type_str, &type, &type_name))) {
+		struct vm_object *arg;
+
+		arg = array_get_field_ptr(args_array, args_array_idx++);
+
+		if (type == J_REFERENCE)
+			*(jobject *) &args[idx++] = arg;
+		else {
+			/* XXX: marshalling of primitive types not
+			   implemented yet. */
+			error("primitive type marshalling not implemented");
+		}
+	}
+
+	return 0;
+}
+
+static struct vm_object *
+call_virtual_method(struct vm_method *vmm, struct vm_object *o,
+		    struct vm_object *args_array)
+{
+	unsigned long args[vmm->args_count];
+
+	if (marshall_call_arguments(vmm, args, args_array))
+		return NULL;
+
+	return (struct vm_object *) vm_call_method_this_a(vmm, o, args);
+}
+
+static struct vm_object *
+call_static_method(struct vm_method *vmm, struct vm_object *args_array)
+{
+	unsigned long args[vmm->args_count];
+
+	if (marshall_call_arguments(vmm, args, args_array))
+		return NULL;
+
+	return (struct vm_object *) vm_call_method_a(vmm, args);
+}
+
+struct vm_object *
+native_method_invokenative(struct vm_object *method, struct vm_object *o,
+			   struct vm_object *args,
+			   struct vm_object *declaringClass,
+			   jint slot)
+{
+	struct vm_method *vmm;
+	struct vm_class *vmc;
+
+	vmc = to_vmclass(declaringClass);
+	if (!vmc)
+		return NULL;
+
+	if (slot < 0 || slot >= vmc->class->methods_count)
+		goto throw_illegal;
+
+	vmm = &vmc->methods[slot];
+
+	if (vm_method_is_static(vmm)) {
+		return call_static_method(vmm, args);
+	}
+
+	if (!o) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return NULL;
+	}
+
+	if (!vm_object_is_instance_of(o, vmc))
+		goto throw_illegal;
+
+	return call_virtual_method(vmm, o, args);
+
+ throw_illegal:
+	signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+	return NULL;
+}

@@ -28,4 +28,10 @@ struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz);
 struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz);
 struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
 
+struct vm_object *
+native_method_invokenative(struct vm_object *method, struct vm_object *o,
+			   struct vm_object *args,
+			   struct vm_object *declaringClass,
+			   jint slot);
+
 #endif /* __JATO_VM_REFLECTION_H */
