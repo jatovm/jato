@@ -360,8 +360,12 @@ static void print_gc_map(struct compilation_unit *cu, struct insn *insn)
 		if (!test_bit(live_vars->bits, var->vreg))
 			continue;
 
-		trace_printf("%d (%s), ",
-			var->vreg, "" /* reg_name(var->interval->reg) */);
+		if (in_range(&var->interval->range, insn->mach_offset)) {
+			trace_printf("%d (%s), ",
+				var->vreg, reg_name(var->interval->reg));
+		} else {
+			trace_printf("%d (stack), ", var->vreg);
+		}
 	}
 
 	trace_printf("\n");

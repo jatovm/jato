@@ -29,12 +29,6 @@ int gc_map_init(struct compilation_unit *cu)
 				if  (var->vm_type != J_REFERENCE)
 					continue;
 
-				if (!in_range(&var->interval->range,
-					insn->mach_offset))
-				{
-					continue;
-				}
-
 				set_bit(live_vars->bits, var->vreg);
 			}
 
