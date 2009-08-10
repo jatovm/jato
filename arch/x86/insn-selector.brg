@@ -31,6 +31,7 @@
 
 #include <vm/class.h>
 #include <vm/field.h>
+#include <vm/gc.h>
 #include <vm/method.h>
 #include <vm/object.h>
 #include <vm/stack-trace.h>
@@ -2862,6 +2863,17 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 				     offset_reg, offset_tls));
 }
 
+static void select_safepoint(struct basic_block *s, struct tree_node *tree)
+{
+	struct insn *gc_safepoint_insn;
+
+	assert(gc_safepoint_page);
+	gc_safepoint_insn = imm_memdisp_insn(INSN_TEST_IMM_MEMDISP,
+		0, (unsigned long) gc_safepoint_page);
+	gc_safepoint_insn->safepoint = true;
+	select_insn(s, tree, gc_safepoint_insn);
+}
+
 static void invoke(struct basic_block *s, struct tree_node *tree, struct compilation_unit *cu, struct vm_method *method)
 {
 	bool is_compiled;
@@ -2886,6 +2898,8 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 
 		pthread_mutex_unlock(&cu->mutex);
 	}
+
+	select_safepoint(s, tree);
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
@@ -2942,6 +2956,8 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 
 	/* native ptr */
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
+
+	select_safepoint(s, tree);
 
 	/* invoke method */
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
