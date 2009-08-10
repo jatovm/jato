@@ -1152,7 +1152,7 @@ static void *jni_not_implemented_trap;
 
 void vm_jni_init(void)
 {
-	jni_not_implemented_trap = alloc_guard_page();
+	jni_not_implemented_trap = alloc_guard_page(true);
 	if (!jni_not_implemented_trap)
 		die("guard page alloc failed");
 

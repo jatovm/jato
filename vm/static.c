@@ -18,7 +18,7 @@ void *static_guard_page;
 
 void static_fixup_init(void)
 {
-	static_guard_page = alloc_guard_page();
+	static_guard_page = alloc_guard_page(true);
 	if (!static_guard_page)
 		abort();
 }

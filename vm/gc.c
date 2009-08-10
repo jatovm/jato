@@ -6,7 +6,7 @@ void *gc_safepoint_page;
 
 void gc_init(void)
 {
-	gc_safepoint_page = alloc_guard_page();
+	gc_safepoint_page = alloc_guard_page(false);
 	if (!gc_safepoint_page)
 		die("Couldn't allocate GC safepoint guard page");
 }

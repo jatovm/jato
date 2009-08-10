@@ -66,15 +66,16 @@ void *alloc_offset_guard(unsigned long valid_size, unsigned long overflow_size)
 	return result + offset;
 }
 
-void *alloc_guard_page(void)
+void *alloc_guard_page(bool hidden)
 {
 	void *p = alloc_pages(1);
-
-	if (p == NULL)
+	if (!p)
 		return NULL;
 
-	if (hide_guard_page(p))
-		return NULL;
+	if (hidden) {
+		if (hide_guard_page(p))
+			return NULL;
+	}
 
 	return p;
 }

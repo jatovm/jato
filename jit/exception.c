@@ -58,8 +58,8 @@ void *trampoline_exceptions_guard_page;
 
 void init_exceptions(void)
 {
-	exceptions_guard_page = alloc_guard_page();
-	trampoline_exceptions_guard_page = alloc_guard_page();
+	exceptions_guard_page = alloc_guard_page(true);
+	trampoline_exceptions_guard_page = alloc_guard_page(true);
 
 	if (!exceptions_guard_page || !trampoline_exceptions_guard_page)
 		die("failed to allocate exceptions guard page");
