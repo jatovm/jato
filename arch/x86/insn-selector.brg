@@ -2234,11 +2234,13 @@ stmt:	STMT_STORE(array_deref, reg)
 {
 	struct var_info *src, *base, *index;
 	struct expression *dest_expr;
+	struct expression *src_expr;
 	struct statement *stmt;
 	unsigned char scale;
 
 	stmt = to_stmt(tree);
 	dest_expr = to_expr(stmt->store_dest);
+	src_expr = to_expr(stmt->store_src);
 
 	scale = type_to_scale(dest_expr->vm_type);
 
@@ -2247,6 +2249,15 @@ stmt:	STMT_STORE(array_deref, reg)
 	src = state->right->reg1;
 
 	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+
+	if (src_expr->vm_type == J_LONG) {
+		src = state->right->reg2;
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, base));
+		select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+		/* We should not modify base permanently here because
+		   this expression might be reused. */
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, base));
+	}
 }
 
 stmt:	STMT_STORE(array_deref, freg)
@@ -2275,11 +2286,13 @@ stmt:	STMT_STORE(reg, array_deref)
 {
 	struct var_info *dest, *base, *index;
 	struct expression *src_expr;
+	struct expression *dest_expr;
 	struct statement *stmt;
 	unsigned char scale;
 
 	stmt = to_stmt(tree);
 	src_expr = to_expr(stmt->store_src);
+	dest_expr = to_expr(stmt->store_dest);
 
 	scale = type_to_scale(src_expr->vm_type);
 
@@ -2287,9 +2300,16 @@ stmt:	STMT_STORE(reg, array_deref)
 	index = state->right->reg2;
 	dest = state->left->reg1;
 
-	state->reg1 = dest;
-
 	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+
+	if (dest_expr->vm_type == J_LONG) {
+		dest = state->left->reg2;
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, base));
+		select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+		/* We should not modify base permanently here because
+		   this expression might be reused. */
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, base));
+	}
 }
 
 stmt:	STMT_STORE(freg, array_deref)

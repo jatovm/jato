@@ -175,7 +175,7 @@ public class ArrayTest extends TestCase {
         testCharElementLoadStore();
         testByteElementLoadStore();
         testShortElementLoadStore();
-        /* FIXME: testLongElementLoadStore(); */
+        testLongElementLoadStore();
         testReferenceElementLoadStore();
         testFloatElementLoadStore();
         testDoubleElementLoadStore();
