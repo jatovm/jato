@@ -194,6 +194,8 @@ struct insn {
 	/* Position of this instruction in LIR.  */
 	unsigned long lir_pos;
 	bool escaped;
+	/* True if this instruction is a GC safepoint */
+	bool safepoint;
 	unsigned long bytecode_offset;
 };
 

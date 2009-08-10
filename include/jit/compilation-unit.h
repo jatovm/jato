@@ -78,6 +78,11 @@ struct compilation_unit {
 	 * This maps LIR offset to instruction.
 	 */
 	struct radix_tree *lir_insn_map;
+
+	/*
+	 * This maps machine-code offset (of gc safepoint) to gc map
+	 */
+	struct radix_tree *safepoint_map;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);
