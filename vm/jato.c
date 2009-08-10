@@ -1185,9 +1185,10 @@ main(int argc, char *argv[])
 
 	arch_init();
 
+	init_system_properties();
+
 	parse_options(argc, argv);
 
-	init_system_properties();
 	init_vm_objects();
 
 	jit_text_init();
