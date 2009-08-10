@@ -204,22 +204,22 @@ array_set_field_float(struct vm_object *obj, int index, jfloat value)
 	*(jfloat *) &obj->fields[index * get_vmtype_size(J_FLOAT)] = value;
 }
 
-static inline float
+static inline jfloat
 array_get_field_float(struct vm_object *obj, int index)
 {
-	return *(float *) &obj->fields[index * get_vmtype_size(J_FLOAT)];
+	return *(jfloat *) &obj->fields[index * get_vmtype_size(J_FLOAT)];
 }
 
 static inline void
-array_set_field_double(struct vm_object *obj, int index, double value)
+array_set_field_double(struct vm_object *obj, int index, jdouble value)
 {
-	*(double *) &obj->fields[index * get_vmtype_size(J_DOUBLE)] = value;
+	*(jdouble *) &obj->fields[index * get_vmtype_size(J_DOUBLE)] = value;
 }
 
-static inline double
+static inline jdouble
 array_get_field_double(struct vm_object *obj, int index)
 {
-	return *(double *) &obj->fields[index * get_vmtype_size(J_DOUBLE)];
+	return *(jdouble *) &obj->fields[index * get_vmtype_size(J_DOUBLE)];
 }
 
 static inline void
