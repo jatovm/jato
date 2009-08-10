@@ -42,6 +42,7 @@ enum vm_type bytecode_type_to_vmtype(int);
 int vmtype_to_bytecode_type(enum vm_type);
 int get_vmtype_size(enum vm_type);
 const char *get_vm_type_name(enum vm_type);
+const char *parse_method_args(const char *, enum vm_type *, char **);
 
 static inline bool vm_type_is_float(enum vm_type type)
 {
