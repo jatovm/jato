@@ -69,8 +69,10 @@ struct vm_class *vm_java_lang_IllegalMonitorStateException;
 struct vm_class *vm_java_lang_System;
 struct vm_class *vm_java_lang_reflect_Constructor;
 struct vm_class *vm_java_lang_reflect_Field;
+struct vm_class *vm_java_lang_reflect_Method;
 struct vm_class *vm_array_of_java_lang_reflect_Constructor;
 struct vm_class *vm_array_of_java_lang_reflect_Field;
+struct vm_class *vm_array_of_java_lang_reflect_Method;
 struct vm_class *vm_array_of_java_lang_Class;
 struct vm_class *vm_java_lang_IllegalArgumentException;
 struct vm_class *vm_java_lang_ClassLoader;
@@ -124,9 +126,11 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/System",	&vm_java_lang_System },
 	{ "java/lang/reflect/Field", &vm_java_lang_reflect_Field },
 	{ "java/lang/reflect/Constructor", &vm_java_lang_reflect_Constructor },
+	{ "java/lang/reflect/Method", &vm_java_lang_reflect_Method },
 	{ "[java/lang/Class",		&vm_array_of_java_lang_Class },
 	{ "[java/lang/reflect/Constructor", &vm_array_of_java_lang_reflect_Constructor },
 	{ "[java/lang/reflect/Field", &vm_array_of_java_lang_reflect_Field },
+	{ "[java/lang/reflect/Method", &vm_array_of_java_lang_reflect_Method },
 	{ "java/lang/IllegalArgumentException", &vm_java_lang_IllegalArgumentException },
 	{ "java/lang/Boolean", &vm_java_lang_Boolean },
 	{ "java/lang/Byte", &vm_java_lang_Byte },
@@ -177,6 +181,9 @@ struct vm_field *vm_java_lang_reflect_Constructor_slot;
 struct vm_field *vm_java_lang_reflect_Field_declaringClass;
 struct vm_field *vm_java_lang_reflect_Field_name;
 struct vm_field *vm_java_lang_reflect_Field_slot;
+struct vm_field *vm_java_lang_reflect_Method_declaringClass;
+struct vm_field *vm_java_lang_reflect_Method_name;
+struct vm_field *vm_java_lang_reflect_Method_slot;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
@@ -199,6 +206,9 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_reflect_Field, "declaringClass", "Ljava/lang/Class;", &vm_java_lang_reflect_Field_declaringClass },
 	{ &vm_java_lang_reflect_Field, "slot", "I", &vm_java_lang_reflect_Field_slot },
 	{ &vm_java_lang_reflect_Field, "name", "Ljava/lang/String;", &vm_java_lang_reflect_Field_name },
+	{ &vm_java_lang_reflect_Method, "declaringClass", "Ljava/lang/Class;", &vm_java_lang_reflect_Method_declaringClass },
+	{ &vm_java_lang_reflect_Method, "slot", "I", &vm_java_lang_reflect_Method_slot },
+	{ &vm_java_lang_reflect_Method, "name", "Ljava/lang/String;", &vm_java_lang_reflect_Method_name },
 };
 
 struct method_preload_entry {

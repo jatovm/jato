@@ -9,6 +9,9 @@ struct vm_object *
 native_vmclass_get_declared_fields(struct vm_object *class_object,
 				   jboolean public_only);
 struct vm_object *
+native_vmclass_get_declared_methods(struct vm_object *class_object,
+				    jboolean public_only);
+struct vm_object *
 native_vmclass_get_declared_constructors(struct vm_object *class_object,
 					 jboolean public_only);
 struct vm_object *
