@@ -551,7 +551,7 @@ struct expression *arraylength_expr(struct expression *arrayref)
 
 struct expression *instanceof_expr(struct expression *objectref, struct vm_class *class)
 {
-	struct expression *expr = alloc_expression(EXPR_INSTANCEOF, J_REFERENCE);
+	struct expression *expr = alloc_expression(EXPR_INSTANCEOF, J_INT);
 
 	if (expr) {
 		expr->instanceof_class = class;

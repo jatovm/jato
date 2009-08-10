@@ -608,7 +608,7 @@ void test_print_instanceof_expression(void)
 {
 	assert_print_expr(str_aprintf(
 		"INSTANCEOF:\n"
-		"  vm_type: [reference]\n"
+		"  vm_type: [int]\n"
 		"  instanceof_class: [%p '%s']\n"
 		"  instanceof_ref: [value reference 0x55]\n",
 		&vmc, vmc.name),
