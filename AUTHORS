@@ -1,25 +1,21 @@
-  (N) - Name, (E) - Email, (D) - Description, (L) - Location
+  (N) - Name and email, (D) - Description, (L) - Location
 
 -------
 
-N: Pekka Enberg
-E: penberg@cs.helsinki.fi
+N: Pekka Enberg <penberg@cs.helsinki.fi>
 W: http://www.cs.helsinki.fi/u/penberg/
 D: Author and maintainer, initial work on i386 JIT
 L: Finland
 
-N: Tomasz Grabiec
-E: tgrabiec@gmail.com
+N: Tomasz Grabiec <tgrabiec@gmail.com>
 D: Exception handling mechanisms (GSoC 2009)
 L: Cracow, Poland
 
-N: Vegard Nossum
-E: vegard.nossum@gmail.com
+N: Vegard Nossum <vegard.nossum@gmail.com>
 W: http://folk.uio.no/vegardno/
 D: Class loading (GSoC 2009), VM core
 L: Oslo, Norway
 
-N: Saeed Siam
-E: saeed.siam@gmail.com
+N: Saeed Siam <saeed.siam@gmail.com>
 D: Array handling, VMT
 L: Dhaka, Bangladesh
