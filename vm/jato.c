@@ -248,6 +248,16 @@ static void init_system_properties(void)
 	add_system_property_const("os.version", info.release);
 }
 
+
+/**
+ * This should be called after parsing of call arguments.
+ */
+static void init_configurable_system_properties(void)
+{
+	/* XXX: currently user defined -Djava.class.path=value is overriden. */
+	add_system_property_const("java.class.path", get_classpath());
+}
+
 static void native_vmsystemproperties_preinit(struct vm_object *p)
 {
 	struct system_properties_entry *this, *t;
@@ -1215,6 +1225,8 @@ main(int argc, char *argv[])
 	init_system_properties();
 
 	parse_options(argc, argv);
+
+	init_configurable_system_properties();
 
 	init_vm_objects();
 
