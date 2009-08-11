@@ -74,6 +74,7 @@ static void assert_emit_insn_3(unsigned char opcode, unsigned char modrm,
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
 
+#if 0
 static void assert_emit_insn_4(unsigned char opcode, unsigned char modrm,
 			       unsigned char b1, unsigned char b2, struct insn *insn)
 {
@@ -81,6 +82,7 @@ static void assert_emit_insn_4(unsigned char opcode, unsigned char modrm,
 
 	assert_emit_insn(expected, ARRAY_SIZE(expected), insn);
 }
+#endif
 
 static void assert_emit_insn_5(unsigned char opcode, unsigned char modrm,
 			       unsigned char b1, unsigned char b2,
