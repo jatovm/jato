@@ -400,21 +400,33 @@ vm_jni_call_static_short_method_v(struct vm_jni_env *env, jclass clazz,
 	return (jshort) vm_call_method_v(methodID, args);
 }
 
-static void vm_jni_set_object_field(struct vm_jni_env *env, jobject object,
-				    jfieldID field, jobject value)
-{
-	enter_vm_from_jni();
-
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return;
-	}
-
-	if (vm_field_type(field) != J_REFERENCE)
-		return;
-
-	field_set_object(object, field, value);
+#define DECLARE_SET_XXX_FIELD(type, vmtype)				\
+static void								\
+vm_jni_set_ ## type ## _field(struct vm_jni_env *env, jobject object,	\
+			      jfieldID field, j ## type value)		\
+	{								\
+	enter_vm_from_jni();						\
+									\
+	if (!object) {							\
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);	\
+	return;								\
+	}								\
+									\
+	if (vm_field_type(field) != vmtype)				\
+		return;							\
+									\
+	field_set_ ## type (object, field, value);			\
 }
+
+DECLARE_SET_XXX_FIELD(boolean, J_BOOLEAN);
+DECLARE_SET_XXX_FIELD(byte, J_BYTE);
+DECLARE_SET_XXX_FIELD(char, J_CHAR);
+DECLARE_SET_XXX_FIELD(double, J_DOUBLE);
+DECLARE_SET_XXX_FIELD(float, J_FLOAT);
+DECLARE_SET_XXX_FIELD(int, J_INT);
+DECLARE_SET_XXX_FIELD(long, J_LONG);
+DECLARE_SET_XXX_FIELD(object, J_REFERENCE);
+DECLARE_SET_XXX_FIELD(short, J_SHORT);
 
 static jobject vm_jni_new_global_ref(struct vm_jni_env *env, jobject obj)
 {
@@ -1019,16 +1031,16 @@ void *vm_jni_native_interface[] = {
 	vm_jni_set_object_field,
 
 	/* 105 */
-	NULL, /* SetBooleanField */
-	NULL, /* SetByteField */
-	NULL, /* SetCharField */
-	NULL, /* SetShortField */
-	NULL, /* SetIntField */
+	vm_jni_set_boolean_field,
+	vm_jni_set_byte_field,
+	vm_jni_set_char_field,
+	vm_jni_set_short_field,
+	vm_jni_set_int_field,
 
 	/* 110 */
-	NULL, /* SetLongField */
-	NULL, /* SetFloatField */
-	NULL, /* SetDoubleField */
+	vm_jni_set_long_field,
+	vm_jni_set_float_field,
+	vm_jni_set_double_field,
 	vm_jni_get_static_method_id,
 	vm_jni_call_static_object_method,
 
