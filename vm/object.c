@@ -295,8 +295,8 @@ vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length)
 		return NULL;
 	}
 
-	field_set_int32(string, vm_java_lang_String_offset, 0);
-	field_set_int32(string, vm_java_lang_String_count, array->array_length);
+	field_set_int(string, vm_java_lang_String_offset, 0);
+	field_set_int(string, vm_java_lang_String_count, array->array_length);
 	field_set_object(string, vm_java_lang_String_value, array);
 
 	return string;
@@ -328,8 +328,8 @@ vm_object_alloc_string_from_c(const char *bytes)
 		array_set_field_char(array, i, bytes[i]);
 	}
 
-	field_set_int32(string, vm_java_lang_String_offset, 0);
-	field_set_int32(string, vm_java_lang_String_count, array->array_length);
+	field_set_int(string, vm_java_lang_String_offset, 0);
+	field_set_int(string, vm_java_lang_String_count, array->array_length);
 	field_set_object(string, vm_java_lang_String_value, array);
 
 	return string;
@@ -536,8 +536,8 @@ char *vm_string_to_cstr(const struct vm_object *string_obj)
 	int32_t count;
 	char *result;
 
-	offset = field_get_int32(string_obj, vm_java_lang_String_offset);
-	count = field_get_int32(string_obj, vm_java_lang_String_count);
+	offset = field_get_int(string_obj, vm_java_lang_String_offset);
+	count = field_get_int(string_obj, vm_java_lang_String_count);
 	array_object = field_get_object(string_obj, vm_java_lang_String_value);
 
 	str = alloc_str();

@@ -100,7 +100,7 @@ static bool vm_thread_is_daemon(struct vm_thread *thread)
 	struct vm_object *jthread;
 
 	jthread = vm_thread_get_java_thread(thread);
-	return field_get_int32(jthread, vm_java_lang_Thread_daemon) != 0;
+	return field_get_int(jthread, vm_java_lang_Thread_daemon) != 0;
 }
 
 void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state)
@@ -173,15 +173,15 @@ int init_threading(void) {
 
 	vm_get_exec_env()->thread = main_thread;
 
-	field_set_int32(thread, vm_java_lang_Thread_priority, 5);
-	field_set_int32(thread, vm_java_lang_Thread_daemon, 0);
+	field_set_int(thread, vm_java_lang_Thread_priority, 5);
+	field_set_int(thread, vm_java_lang_Thread_daemon, 0);
 	field_set_object(thread, vm_java_lang_Thread_name, thread_name);
 	field_set_object(thread, vm_java_lang_Thread_group, main_thread_group);
 	field_set_object(thread, vm_java_lang_Thread_vmThread, vmthread);
 
 	field_set_object(thread,
 		vm_java_lang_Thread_contextClassLoader, NULL);
-	field_set_int32(thread,
+	field_set_int(thread,
 		vm_java_lang_Thread_contextClassLoaderIsSystemClassLoader, 1);
 
 	field_set_object(vmthread,

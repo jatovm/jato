@@ -90,148 +90,86 @@ int vm_monitor_notify_all(struct vm_monitor *mon);
 struct vm_thread *vm_monitor_get_owner(struct vm_monitor *mon);
 void vm_monitor_set_owner(struct vm_monitor *mon, struct vm_thread *owner);
 
-static inline void
-field_set_int32(struct vm_object *obj, const struct vm_field *field, int32_t value)
-{
-	*(int32_t *) &obj->fields[field->offset] = value;
+#define DECLARE_FIELD_SETTER(type)					\
+static inline void							\
+field_set_ ## type (struct vm_object *obj, const struct vm_field *field,\
+		    j ## type value)					\
+{									\
+	*(j ## type *) &obj->fields[field->offset] = value;		\
 }
 
-static inline int32_t
-field_get_int32(const struct vm_object *obj, const struct vm_field *field)
-{
-	return *(int32_t *) &obj->fields[field->offset];
+#define DECLARE_FIELD_GETTER(type)					\
+static inline j ## type							\
+field_get_ ## type (const struct vm_object *obj, const struct vm_field *field)\
+{									\
+	return *(j ## type *) &obj->fields[field->offset];		\
 }
 
-static inline void
-field_set_int64(struct vm_object *obj, const struct vm_field *field, int64_t value)
-{
-	*(int64_t *) &obj->fields[field->offset] = value;
+DECLARE_FIELD_SETTER(byte);
+DECLARE_FIELD_SETTER(boolean);
+DECLARE_FIELD_SETTER(char);
+DECLARE_FIELD_SETTER(double);
+DECLARE_FIELD_SETTER(float);
+DECLARE_FIELD_SETTER(int);
+DECLARE_FIELD_SETTER(long);
+DECLARE_FIELD_SETTER(object);
+DECLARE_FIELD_SETTER(short);
+
+DECLARE_FIELD_GETTER(byte);
+DECLARE_FIELD_GETTER(boolean);
+DECLARE_FIELD_GETTER(char);
+DECLARE_FIELD_GETTER(double);
+DECLARE_FIELD_GETTER(float);
+DECLARE_FIELD_GETTER(int);
+DECLARE_FIELD_GETTER(long);
+DECLARE_FIELD_GETTER(object);
+DECLARE_FIELD_GETTER(short);
+
+#define DECLARE_ARRAY_FIELD_SETTER(type, vmtype)			\
+static inline void							\
+array_set_field_ ## type(struct vm_object *obj, int index,		\
+			 j ## type value)				\
+{									\
+	*(j ## type *) &obj->fields[index * get_vmtype_size(vmtype)] = value; \
 }
 
-static inline int64_t
-field_get_int64(const struct vm_object *obj, const struct vm_field *field)
-{
-	return *(int64_t *) &obj->fields[field->offset];
+#define DECLARE_ARRAY_FIELD_GETTER(type, vmtype)			\
+static inline j ## type							\
+array_get_field_ ## type(const struct vm_object *obj, int index)	\
+{									\
+	return *(j ## type *) &obj->fields[index * get_vmtype_size(vmtype)]; \
 }
 
-static inline void
-field_set_object(struct vm_object *obj, const struct vm_field *field, struct vm_object *value)
-{
-	*(void **) &obj->fields[field->offset] = value;
-}
+DECLARE_ARRAY_FIELD_SETTER(byte, J_BYTE);
+DECLARE_ARRAY_FIELD_SETTER(boolean, J_BOOLEAN);
+DECLARE_ARRAY_FIELD_SETTER(char, J_CHAR);
+DECLARE_ARRAY_FIELD_SETTER(double, J_DOUBLE);
+DECLARE_ARRAY_FIELD_SETTER(float, J_FLOAT);
+DECLARE_ARRAY_FIELD_SETTER(int, J_INT);
+DECLARE_ARRAY_FIELD_SETTER(long, J_LONG);
+DECLARE_ARRAY_FIELD_SETTER(object, J_REFERENCE);
+DECLARE_ARRAY_FIELD_SETTER(short, J_SHORT);
 
-static inline struct vm_object *
-field_get_object(const struct vm_object *obj, const struct vm_field *field)
-{
-	return *(struct vm_object **) &obj->fields[field->offset];
-}
-
-static inline void
-array_set_field_char(struct vm_object *obj, int index, uint16_t value)
-{
-	*(uint16_t *) &obj->fields[index * get_vmtype_size(J_CHAR)] = value;
-}
-
-static inline uint16_t
-array_get_field_char(struct vm_object *obj, int index)
-{
-	return *(uint16_t *) &obj->fields[index * get_vmtype_size(J_CHAR)];
-}
-
-static inline uint8_t
-array_get_field_byte(struct vm_object *obj, int index)
-{
-	return *(uint8_t *) &obj->fields[index * get_vmtype_size(J_BYTE)];
-}
-
-static inline void
-array_set_field_byte(struct vm_object *obj, int index, uint8_t value)
-{
-	*(uint8_t *) &obj->fields[index * get_vmtype_size(J_BYTE)] = value;
-}
-
-static inline void
-array_set_field_boolean(struct vm_object *obj, int index, jboolean value)
-{
-	*(jboolean *) &obj->fields[index * get_vmtype_size(J_BOOLEAN)] = value;
-}
-
-static inline jboolean
-array_get_field_boolean(struct vm_object *obj, int index)
-{
-	return *(jboolean *) &obj->fields[index * get_vmtype_size(J_BOOLEAN)];
-}
-
-static inline void
-array_set_field_short(struct vm_object *obj, int index, jshort value)
-{
-	*(jshort *) &obj->fields[index * get_vmtype_size(J_SHORT)] = value;
-}
-
-static inline jshort
-array_get_field_short(struct vm_object *obj, int index)
-{
-	return *(jshort *) &obj->fields[index * get_vmtype_size(J_SHORT)];
-}
-
-static inline void
-array_set_field_int(struct vm_object *obj, int index, jint value)
-{
-	*(jint *) &obj->fields[index * get_vmtype_size(J_INT)] = value;
-}
-
-static inline jint
-array_get_field_int(struct vm_object *obj, int index)
-{
-	return *(jint *) &obj->fields[index * get_vmtype_size(J_INT)];
-}
-
-static inline void
-array_set_field_long(struct vm_object *obj, int index, jlong value)
-{
-	*(jlong *) &obj->fields[index * get_vmtype_size(J_LONG)] = value;
-}
-
-static inline jlong
-array_get_field_long(struct vm_object *obj, int index)
-{
-	return *(jlong *) &obj->fields[index * get_vmtype_size(J_LONG)];
-}
-
-static inline void
-array_set_field_float(struct vm_object *obj, int index, jfloat value)
-{
-	*(jfloat *) &obj->fields[index * get_vmtype_size(J_FLOAT)] = value;
-}
-
-static inline jfloat
-array_get_field_float(struct vm_object *obj, int index)
-{
-	return *(jfloat *) &obj->fields[index * get_vmtype_size(J_FLOAT)];
-}
-
-static inline void
-array_set_field_double(struct vm_object *obj, int index, jdouble value)
-{
-	*(jdouble *) &obj->fields[index * get_vmtype_size(J_DOUBLE)] = value;
-}
-
-static inline jdouble
-array_get_field_double(struct vm_object *obj, int index)
-{
-	return *(jdouble *) &obj->fields[index * get_vmtype_size(J_DOUBLE)];
-}
+DECLARE_ARRAY_FIELD_GETTER(byte, J_BYTE);
+DECLARE_ARRAY_FIELD_GETTER(boolean, J_BOOLEAN);
+DECLARE_ARRAY_FIELD_GETTER(char, J_CHAR);
+DECLARE_ARRAY_FIELD_GETTER(double, J_DOUBLE);
+DECLARE_ARRAY_FIELD_GETTER(float, J_FLOAT);
+DECLARE_ARRAY_FIELD_GETTER(int, J_INT);
+DECLARE_ARRAY_FIELD_GETTER(long, J_LONG);
+DECLARE_ARRAY_FIELD_GETTER(object, J_REFERENCE);
+DECLARE_ARRAY_FIELD_GETTER(short, J_SHORT);
 
 static inline void
 array_set_field_ptr(struct vm_object *obj, int index, void *value)
 {
-	*(void **) &obj->fields[index * get_vmtype_size(J_REFERENCE)] = value;
+	*(void **) &obj->fields[index * get_vmtype_size(J_NATIVE_PTR)] = value;
 }
 
 static inline void *
 array_get_field_ptr(struct vm_object *obj, int index)
 {
-	return *(void **) &obj->fields[index * get_vmtype_size(J_REFERENCE)];
+	return *(void **) &obj->fields[index * get_vmtype_size(J_NATIVE_PTR)];
 }
 
 #endif

@@ -114,7 +114,7 @@ static struct vm_object *native_vmstackwalker_getclasscontext(void)
 	class = cu->method->class;
 
 	res = vm_object_alloc_array(vm_java_lang_Class, 1);
-	array_set_field_ptr(res, 0, class->object);
+	array_set_field_object(res, 0, class->object);
 
 	return res;
 }
@@ -1133,7 +1133,7 @@ do_main_class(void)
 
 		arg = vm_object_alloc_string_from_c(java_args[i]);
 
-		array_set_field_ptr(args, i, arg);
+		array_set_field_object(args, i, arg);
 	}
 
 	void (*main_method_trampoline)(void *)

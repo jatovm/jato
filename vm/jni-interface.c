@@ -724,7 +724,7 @@ vm_jni_get_static_double_field(struct vm_jni_env *env, jobject object,
 		return 0;
 	}
 
-	return field_get_int64(object, field);
+	return field_get_double(object, field);
 }
 
 static jboolean
@@ -784,7 +784,7 @@ vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
 	}
 
 	while (size)
-		array_set_field_ptr(array, --size, initial_element);
+		array_set_field_object(array, --size, initial_element);
 
 	return array;
 }

@@ -116,8 +116,7 @@ native_vmclass_get_declared_fields(struct vm_object *clazz,
 				 clazz);
 		field_set_object(field, vm_java_lang_reflect_Field_name,
 				 name_object);
-		field_set_int32(field, vm_java_lang_reflect_Field_slot,
-				i);
+		field_set_int(field, vm_java_lang_reflect_Field_slot, i);
 
 		array_set_field_ptr(array, index++, field);
 	}
@@ -186,8 +185,7 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 				 clazz);
 		field_set_object(method, vm_java_lang_reflect_Method_name,
 				 name_object);
-		field_set_int32(method, vm_java_lang_reflect_Method_slot,
-				i);
+		field_set_int(method, vm_java_lang_reflect_Method_slot, i);
 
 		array_set_field_ptr(array, index++, method);
 	}
@@ -243,8 +241,7 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 
 		field_set_object(ctor, vm_java_lang_reflect_Constructor_clazz,
 				 clazz);
-		field_set_int32(ctor, vm_java_lang_reflect_Constructor_slot,
-				i);
+		field_set_int(ctor, vm_java_lang_reflect_Constructor_slot, i);
 
 		array_set_field_ptr(array, index++, ctor);
 	}
@@ -331,7 +328,7 @@ native_method_get_parameter_types(struct vm_object *method)
 	}
 
 	clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
-	slot = field_get_int32(method, vm_java_lang_reflect_Method_slot);
+	slot = field_get_int(method, vm_java_lang_reflect_Method_slot);
 
 	class = vm_class_get_class_from_class_object(clazz);
 	vmm = &class->methods[slot];
@@ -353,7 +350,7 @@ native_constructor_get_parameter_types(struct vm_object *ctor)
 	}
 
 	clazz = field_get_object(ctor, vm_java_lang_reflect_Constructor_clazz);
-	slot = field_get_int32(ctor, vm_java_lang_reflect_Constructor_slot);
+	slot = field_get_int(ctor, vm_java_lang_reflect_Constructor_slot);
 
 	class = vm_class_get_class_from_class_object(clazz);
 	vmm = &class->methods[slot];
@@ -374,7 +371,7 @@ jint native_constructor_get_modifiers_internal(struct vm_object *ctor)
 	}
 
 	clazz = field_get_object(ctor, vm_java_lang_reflect_Constructor_clazz);
-	slot = field_get_int32(ctor, vm_java_lang_reflect_Constructor_slot);
+	slot = field_get_int(ctor, vm_java_lang_reflect_Constructor_slot);
 
 	class = vm_class_get_class_from_class_object(clazz);
 	vmm = &class->methods[slot];
@@ -538,7 +535,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 	}
 
 	clazz = field_get_object(this, vm_java_lang_reflect_Field_declaringClass);
-	slot = field_get_int32(this, vm_java_lang_reflect_Field_slot);
+	slot = field_get_int(this, vm_java_lang_reflect_Field_slot);
 
 	vmc = vm_class_get_class_from_class_object(clazz);
 

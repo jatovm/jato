@@ -436,7 +436,7 @@ static void print_array(struct vm_object *obj)
 
 		switch (type) {
 		case J_REFERENCE:
-			trace_printf("%p", array_get_field_ptr(obj, i));
+			trace_printf("%p", array_get_field_object(obj, i));
 			break;
 		case J_BYTE:
 			trace_printf("%x", (int)array_get_field_byte(obj, i));

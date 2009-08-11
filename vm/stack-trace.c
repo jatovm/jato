@@ -377,7 +377,6 @@ static struct vm_object *get_intermediate_stack_trace(void)
 	struct stack_trace_elem st_elem;
 	struct compilation_unit *cu;
 	struct vm_object *array;
-	int array_type;
 	int depth;
 	int i;
 
@@ -396,8 +395,7 @@ static struct vm_object *get_intermediate_stack_trace(void)
 	if (depth == 0)
 		return NULL;
 
-	array_type = sizeof(unsigned long) == 4 ? T_INT : T_LONG;
-	array = vm_object_alloc_primitive_array(array_type, depth * 2);
+	array = vm_object_alloc_primitive_array(J_NATIVE_PTR, depth * 2);
 	if (!array)
 		return NULL;
 
