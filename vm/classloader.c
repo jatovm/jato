@@ -15,6 +15,8 @@
 #include "vm/backtrace.h"
 #include "vm/trace.h"
 
+#include "lib/string.h"
+
 bool opt_trace_classloader;
 static __thread int trace_classloader_level = 0;
 
@@ -51,14 +53,37 @@ struct classpath {
 
 	enum classpath_type type;
 
-	union {
-		const char *dir;
-		struct zip *zip;
-	};
+	const char *path;
+	struct zip *zip;
 };
 
 /* These are the directories we search for classes */
 struct list_head classpaths = LIST_HEAD_INIT(classpaths);
+
+char *get_classpath(void)
+{
+	struct classpath *cp;
+	struct string *str;
+	char *value;
+	bool first;
+
+	str = alloc_str();
+	first = true;
+
+	list_for_each_entry(cp, &classpaths, node) {
+		if (!first) {
+			str_append(str, ":");
+			first = false;
+		}
+
+		str_append(str, "%s", cp->path);
+	}
+
+	value = strdup(str->value);
+	free_str(str);
+
+	return value;
+}
 
 static int add_dir_to_classpath(const char *dir)
 {
@@ -67,8 +92,8 @@ static int add_dir_to_classpath(const char *dir)
 		return -ENOMEM;
 
 	cp->type = CLASSPATH_DIR;
-	cp->dir= strdup(dir);
-	if (!cp->dir) {
+	cp->path = strdup(dir);
+	if (!cp->path) {
 		NOT_IMPLEMENTED;
 		return -ENOMEM;
 	}
@@ -86,6 +111,12 @@ static int add_zip_to_classpath(const char *zip)
 		return -ENOMEM;
 
 	cp->type = CLASSPATH_ZIP;
+	cp->path = strdup(zip);
+	if (!cp->path) {
+		NOT_IMPLEMENTED;
+		return -ENOMEM;
+	}
+
 	cp->zip = zip_open(zip, 0, &zip_error);
 	if (!cp->zip) {
 		NOT_IMPLEMENTED;
@@ -336,7 +367,7 @@ static struct vm_class *load_class_from_classpath_file(const struct classpath *c
 {
 	switch (cp->type) {
 	case CLASSPATH_DIR:
-		return load_class_from_dir(cp->dir, file);
+		return load_class_from_dir(cp->path, file);
 	case CLASSPATH_ZIP:
 		return load_class_from_zip(cp->zip, file);
 	}
