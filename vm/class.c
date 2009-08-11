@@ -701,10 +701,18 @@ struct vm_field *vm_class_get_field(const struct vm_class *vmc,
 struct vm_field *vm_class_get_field_recursive(const struct vm_class *vmc,
 	const char *name, const char *type)
 {
+	/* See JVM Spec, 2nd ed., 5.4.3.2 "Field Resolution" */
 	do {
 		struct vm_field *vmf = vm_class_get_field(vmc, name, type);
 		if (vmf)
 			return vmf;
+
+		for (unsigned int i = 0; i < vmc->nr_interfaces; ++i) {
+			vmf = vm_class_get_field_recursive(
+				vmc->interfaces[i], name, type);
+			if (vmf)
+				return vmf;
+		}
 
 		vmc = vmc->super;
 	} while(vmc);
