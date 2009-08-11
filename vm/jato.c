@@ -34,6 +34,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -190,12 +191,25 @@ struct system_property {
 };
 
 static struct system_property system_properties[] = {
-	{ "java.vm.name",	"jato"	},
-	{ "java.io.tmpdir",	"/tmp"	},
-	{ "file.separator",	"/"	},
-	{ "path.separator",	":"	},
-	{ "line.separator",	"\n"	},
-	{ "os.name",		"Linux"	},
+	{ "java.vm.name",			"jato"				},
+	{ "java.vm.vendor",			"Pekka Enberg"			},
+	{ "java.vm.vendor.url",			"http://jatovm.sourceforge.net/"},
+	{ "java.io.tmpdir",			"/tmp"				},
+	{ "file.separator",			"/"				},
+	{ "path.separator",			":"				},
+	{ "line.separator",			"\n"				},
+	{ "java.version",			"1.4"				},
+	{ "java.vendor",			"GNU Classpath"			},
+	{ "java.vendor.url",			"http://www.classpath.org"	},
+	{ "java.vm.specification.version",	"1.0"				},
+	{ "java.vm.specification.vendor",	"Sun Microsystems, Inc."	},
+	{ "java.vm.specification.name",		"Java Virtual Machine Specification"},
+	{ "java.specification.version",		"1.4"				},
+	{ "java.specification.vendor",		"Sun Microsystems, Inc."	},
+	{ "java.specification.name",		"Java Platform API Specification"},
+	{ "java.class.version",			"48.0"				},
+	{ "java.compiler",			"jato"				},
+	{ "java.ext.dirs",			""				},
 };
 
 /*
@@ -225,6 +239,13 @@ static void init_system_properties(void)
 
 	add_system_property_const("user.name", getenv("USER"));
 	add_system_property_const("user.home", getenv("HOME"));
+
+	struct utsname info;
+
+	uname(&info);
+	add_system_property_const("os.arch", ARCH_NAME);
+	add_system_property_const("os.name", info.sysname);
+	add_system_property_const("os.version", info.release);
 }
 
 static void native_vmsystemproperties_preinit(struct vm_object *p)
