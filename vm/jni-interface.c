@@ -878,6 +878,40 @@ vm_jni_new_object_a(struct vm_jni_env *env, jclass clazz, jmethodID method,
 	return result;
 }
 
+#define DECLARE_GET_XXX_ARRAY_REGION(type)				\
+static void								\
+ vm_jni_get_ ## type ## _array_region(struct vm_jni_env *env,		\
+				      jobject array,			\
+				      jsize start,			\
+				      jsize len,			\
+				      j ## type *buf)			\
+{									\
+	enter_vm_from_jni();						\
+									\
+	if (!vm_class_is_array_class(array->class) ||			\
+	    vm_class_get_array_element_class(array->class)		\
+	    != vm_ ## type ## _class)					\
+		return;							\
+									\
+	if (start < 0 || len < 0 || start + len > array->array_length) { \
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
+				     NULL);				\
+		return;							\
+	}								\
+									\
+	for (long i = 0; i < len; i++)					\
+		buf[i] = array_get_field_##type(array, start + i);	\
+}
+
+DECLARE_GET_XXX_ARRAY_REGION(byte);
+DECLARE_GET_XXX_ARRAY_REGION(char);
+DECLARE_GET_XXX_ARRAY_REGION(double);
+DECLARE_GET_XXX_ARRAY_REGION(float);
+DECLARE_GET_XXX_ARRAY_REGION(int);
+DECLARE_GET_XXX_ARRAY_REGION(long);
+DECLARE_GET_XXX_ARRAY_REGION(short);
+DECLARE_GET_XXX_ARRAY_REGION(boolean);
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -1161,18 +1195,18 @@ void *vm_jni_native_interface[] = {
 	vm_jni_release_long_array_elements,
 	vm_jni_release_float_array_elements,
 	vm_jni_release_double_array_elements,
-	NULL, /* GetBooleanArrayRegion */
+	vm_jni_get_boolean_array_region,
 
 	/* 200 */
-	NULL, /* GetByteArrayRegion */
-	NULL, /* GetCharArrayRegion */
-	NULL, /* GetShortArrayRegion */
-	NULL, /* GetIntArrayRegion */
-	NULL, /* GetLongArrayRegion */
+	vm_jni_get_byte_array_region,
+	vm_jni_get_char_array_region,
+	vm_jni_get_short_array_region,
+	vm_jni_get_int_array_region,
+	vm_jni_get_long_array_region,
 
 	/* 205 */
-	NULL, /* GetFloatArrayRegion */
-	NULL, /* GetDoubleArrayRegion */
+	vm_jni_get_float_array_region,
+	vm_jni_get_double_array_region,
 	NULL, /* SetBooleanArrayRegion */
 	NULL, /* SetByteArrayRegion */
 	NULL, /* SetCharArrayRegion */
