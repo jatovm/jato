@@ -472,24 +472,6 @@ static void vm_jni_delete_local_ref(struct vm_jni_env *env, jobject ref)
 	/* TODO: fix this when GC is implemented. */
 }
 
-static jint vm_jni_get_int_field(struct vm_jni_env *env, jobject object,
-				 jfieldID field)
-{
-	enter_vm_from_jni();
-
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
-
-	if (vm_field_type(field) != J_INT) {
-		NOT_IMPLEMENTED;
-		return 0;
-	}
-
-	return field_get_int32(object, field);
-}
-
 static jint vm_jni_monitor_enter(struct vm_jni_env *env, jobject obj)
 {
 	enter_vm_from_jni();
@@ -536,23 +518,36 @@ static jobject vm_jni_new_object(struct vm_jni_env *env, jobject clazz,
 
 	return obj;
 }
-static jobject vm_jni_get_object_field(struct vm_jni_env *env, jobject object,
-				       jfieldID field)
-{
-	enter_vm_from_jni();
 
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
-
-	if (vm_field_type(field) != J_REFERENCE) {
-		NOT_IMPLEMENTED;
-		return 0;
-	}
-
-	return field_get_object(object, field);
+#define DECLARE_GET_XXX_FIELD(type, vmtype)				\
+static j ## type							\
+vm_jni_get_ ## type ## _field(struct vm_jni_env *env, jobject object,	\
+			      jfieldID field)				\
+	{								\
+	enter_vm_from_jni();						\
+									\
+	if (!object) {							\
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);	\
+	return 0;							\
+	}								\
+									\
+	if (vm_field_type(field) != vmtype) {				\
+	NOT_IMPLEMENTED;						\
+	return 0;							\
+	}								\
+									\
+	return field_get_ ## type (object, field);			\
 }
+
+DECLARE_GET_XXX_FIELD(boolean, J_BOOLEAN);
+DECLARE_GET_XXX_FIELD(byte, J_BYTE);
+DECLARE_GET_XXX_FIELD(char, J_CHAR);
+DECLARE_GET_XXX_FIELD(double, J_DOUBLE);
+DECLARE_GET_XXX_FIELD(float, J_FLOAT);
+DECLARE_GET_XXX_FIELD(int, J_INT);
+DECLARE_GET_XXX_FIELD(long, J_LONG);
+DECLARE_GET_XXX_FIELD(object, J_REFERENCE);
+DECLARE_GET_XXX_FIELD(short, J_SHORT);
 
 #define DECLARE_GET_XXX_ARRAY_ELEMENTS(type)				\
 static j ## type *							\
@@ -1011,16 +1006,16 @@ void *vm_jni_native_interface[] = {
 
 	/* 95 */
 	vm_jni_get_object_field,
-	NULL, /* GetBooleanField */
-	NULL, /* GetByteField */
-	NULL, /* GetCharField */
-	NULL, /* GetShortField */
+	vm_jni_get_boolean_field,
+	vm_jni_get_byte_field,
+	vm_jni_get_char_field,
+	vm_jni_get_short_field,
 
 	/* 100 */
 	vm_jni_get_int_field,
-	NULL, /* GetLongField */
-	NULL, /* GetFloatField */
-	NULL, /* GetDoubleField */
+	vm_jni_get_long_field,
+	vm_jni_get_float_field,
+	vm_jni_get_double_field,
 	vm_jni_set_object_field,
 
 	/* 105 */
