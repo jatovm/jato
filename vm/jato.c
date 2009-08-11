@@ -467,8 +467,13 @@ throw:
 static struct vm_object *
 native_vmclass_getclassloader(struct vm_object *object)
 {
-	NOT_IMPLEMENTED;
-	return NULL;
+	struct vm_class *vmc;
+
+	vmc = to_vmclass(object);
+	if (!vmc)
+		return NULL;
+
+	return vmc->classloader;
 }
 
 static struct vm_object *
