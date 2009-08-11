@@ -68,11 +68,11 @@ static struct statement *branch_if_null_stmt(struct basic_block *target,
 {
 	struct expression *right_expr;
 
-	right_expr = value_expr(vm_pointer_type(), 0);
+	right_expr = value_expr(J_NATIVE_PTR, 0);
 	if (!right_expr)
 		return NULL;
 
-	return if_stmt(target, vm_pointer_type(), OP_EQ, left, right_expr);
+	return if_stmt(target, J_NATIVE_PTR, OP_EQ, left, right_expr);
 }
 
 int convert_tableswitch(struct parse_context *ctx)

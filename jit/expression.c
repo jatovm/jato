@@ -627,7 +627,7 @@ struct expression *lookupswitch_bsearch_expr(struct expression *key, struct look
 {
 	struct expression *expr;
 
-	expr = alloc_expression(EXPR_LOOKUPSWITCH_BSEARCH, vm_pointer_type());
+	expr = alloc_expression(EXPR_LOOKUPSWITCH_BSEARCH, J_NATIVE_PTR);
 	if (!expr)
 		return NULL;
 

@@ -19,18 +19,11 @@ enum vm_type {
 	VM_TYPE_MAX,
 };
 
-/**
- * Returns the vm type which has the same size as native pointers.
- */
-static inline enum vm_type vm_pointer_type(void)
-{
-	if (sizeof(long) == 4)
-		return J_INT;
-
-	assert(sizeof(long) == 8);
-
-	return J_LONG;
-}
+#ifdef CONFIG_32_BIT
+#  define J_NATIVE_PTR J_INT
+#else
+#  define J_NATIVE_PTR J_LONG
+#endif
 
 extern enum vm_type str_to_type(const char *);
 extern enum vm_type get_method_return_type(char *);
