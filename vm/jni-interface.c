@@ -912,6 +912,40 @@ DECLARE_GET_XXX_ARRAY_REGION(long);
 DECLARE_GET_XXX_ARRAY_REGION(short);
 DECLARE_GET_XXX_ARRAY_REGION(boolean);
 
+#define DECLARE_SET_XXX_ARRAY_REGION(type)				\
+static void								\
+ vm_jni_set_ ## type ## _array_region(struct vm_jni_env *env,		\
+				      jobject array,			\
+				      jsize start,			\
+				      jsize len,			\
+				      j ## type *buf)			\
+{									\
+	enter_vm_from_jni();						\
+									\
+	if (!vm_class_is_array_class(array->class) ||			\
+	    vm_class_get_array_element_class(array->class)		\
+	    != vm_ ## type ## _class)					\
+		return;							\
+									\
+	if (start < 0 || len < 0 || start + len > array->array_length) { \
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
+				     NULL);				\
+		return;							\
+	}								\
+									\
+	for (long i = 0; i < len; i++)					\
+		array_set_field_##type(array, start + i, buf[i]);	\
+}
+
+DECLARE_SET_XXX_ARRAY_REGION(byte);
+DECLARE_SET_XXX_ARRAY_REGION(char);
+DECLARE_SET_XXX_ARRAY_REGION(double);
+DECLARE_SET_XXX_ARRAY_REGION(float);
+DECLARE_SET_XXX_ARRAY_REGION(int);
+DECLARE_SET_XXX_ARRAY_REGION(long);
+DECLARE_SET_XXX_ARRAY_REGION(short);
+DECLARE_SET_XXX_ARRAY_REGION(boolean);
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -1207,16 +1241,16 @@ void *vm_jni_native_interface[] = {
 	/* 205 */
 	vm_jni_get_float_array_region,
 	vm_jni_get_double_array_region,
-	NULL, /* SetBooleanArrayRegion */
-	NULL, /* SetByteArrayRegion */
-	NULL, /* SetCharArrayRegion */
+	vm_jni_set_boolean_array_region,
+	vm_jni_set_byte_array_region,
+	vm_jni_set_char_array_region,
 
 	/* 210 */
-	NULL, /* SetShortArrayRegion */
-	NULL, /* SetIntArrayRegion */
-	NULL, /* SetLongArrayRegion */
-	NULL, /* SetFloatArrayRegion */
-	NULL, /* SetDoubleArrayRegion */
+	vm_jni_set_short_array_region,
+	vm_jni_set_int_array_region,
+	vm_jni_set_long_array_region,
+	vm_jni_set_float_array_region,
+	vm_jni_set_double_array_region,
 
 	/* 215 */
 	NULL, /* RegisterNatives */
