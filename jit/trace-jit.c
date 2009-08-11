@@ -524,7 +524,7 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 
 		if (!is_on_heap((unsigned long)obj)) {
 			trace_printf("*** pointer not on heap ***");
-			goto out;
+			trace_flush();
 		}
 
 		if (obj->class == vm_java_lang_String) {
