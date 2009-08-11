@@ -195,6 +195,7 @@ static struct system_property system_properties[] = {
 	{ "file.separator",	"/"	},
 	{ "path.separator",	":"	},
 	{ "line.separator",	"\n"	},
+	{ "os.name",		"Linux"	},
 };
 
 /*
