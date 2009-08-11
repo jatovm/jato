@@ -568,6 +568,18 @@ native_vmclass_is_anonymous_class(struct vm_object *object)
 	return vm_class_is_anonymous(class);
 }
 
+static jboolean
+native_vmclass_is_assignable_from(struct vm_object *clazz_1, struct vm_object *clazz_2)
+{
+	struct vm_class *vmc_1 = to_vmclass(clazz_1);
+	struct vm_class *vmc_2 = to_vmclass(clazz_2);
+
+	if (!vmc_1 || !vmc_2)
+		return false;
+
+	return vm_class_is_assignable_from(vmc_1, vmc_2);
+}
+
 static int32_t
 native_vmclass_isarray(struct vm_object *object)
 {
@@ -789,6 +801,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "getName", &native_vmclass_getname),
 	DEFINE_NATIVE("java/lang/VMClass", "forName", &native_vmclass_forname),
 	DEFINE_NATIVE("java/lang/VMClass", "isAnonymousClass", &native_vmclass_is_anonymous_class),
+	DEFINE_NATIVE("java/lang/VMClass", "isAssignableFrom", &native_vmclass_is_assignable_from),
 	DEFINE_NATIVE("java/lang/VMClass", "isArray", &native_vmclass_isarray),
 	DEFINE_NATIVE("java/lang/VMClass", "isInstance", &native_vmclass_isinstance),
 	DEFINE_NATIVE("java/lang/VMClass", "isInterface", &native_vmclass_isinterface),
