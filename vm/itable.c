@@ -89,6 +89,9 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 	if (vm_class_is_interface(vmc)) {
 		for (unsigned int i = 0; i < class->methods_count; ++i) {
 			struct vm_method *vmm = &vmc->methods[i];
+			if (!vm_method_is_abstract(vmm))
+				continue;
+
 			unsigned int bucket = itable_hash(vmm);
 
 			struct itable_entry *entry = malloc(sizeof *entry);
