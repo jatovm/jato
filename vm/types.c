@@ -179,7 +179,9 @@ const char *parse_method_args(const char *type_str, enum vm_type *vmtype,
 
 	if (*type_str == '[') {
 		*vmtype = J_REFERENCE;
-		type_str++;
+
+		while (*type_str == '[')
+			type_str++;
 
 		if (*type_str != 'L') {
 			type_str++;
