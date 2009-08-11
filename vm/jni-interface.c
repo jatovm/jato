@@ -892,7 +892,7 @@ void *vm_jni_native_interface[] = {
 
 	/* 10 */
 	NULL, /* GetSuperclass */
-	vm_jni_is_assignable_from, /* IsAssignableFrom */
+	vm_jni_is_assignable_from,
 	NULL,
 	vm_jni_throw,
 	vm_jni_throw_new,
@@ -908,19 +908,19 @@ void *vm_jni_native_interface[] = {
 	NULL,
 	vm_jni_new_global_ref,
 	vm_jni_delete_global_ref,
-	vm_jni_delete_local_ref, /* DeleteLocalRef */
+	vm_jni_delete_local_ref,
 	NULL, /* IsSameObject */
 
 	/* 25 */
 	NULL,
 	NULL,
 	NULL, /* AllocObject */
-	vm_jni_new_object, /* NewObject */
+	vm_jni_new_object,
 	NULL, /* NewObjectV */
 
 	/* 30 */
 	vm_jni_new_object_a,
-	vm_jni_get_object_class, /* GetObjectClass */
+	vm_jni_get_object_class,
 	NULL, /* IsInstanceOf */
 	vm_jni_get_method_id,
 	vm_jni_call_object_method,
