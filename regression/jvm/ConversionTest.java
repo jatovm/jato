@@ -87,11 +87,22 @@ public class ConversionTest extends TestCase {
         assertEquals(-1, i2s(Integer.MAX_VALUE));
     }
 
+    public static char b2c(byte b) {
+        return (char) b;
+    }
+
+    public static void testByteToCharConversion() {
+        assertEquals(0, b2c((byte) 0));
+        assertEquals((char) 0x7f, b2c((byte) 0x7f));
+        assertEquals((char) 0xffc0, b2c((byte) -0x40));
+    }
+
     public static void main(String[] args) {
         testLongToIntegerConversion();
         testIntegerToLongConversion();
         testIntegerToByteConversion();
         testIntegerToCharConversion();
         testIntegerToShortConversion();
+        testByteToCharConversion();
     }
 }

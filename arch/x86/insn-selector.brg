@@ -1439,6 +1439,8 @@ reg:	EXPR_CONVERSION(reg)
 		state->reg1 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOVSX_16_REG_REG, state->left->reg1, state->reg1));
+	} else if (src->vm_type == J_BYTE && expr->vm_type == J_CHAR) {
+		state->reg1 = state->left->reg1;
 	} else {
 		die("EXPR_CONVERSION: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}

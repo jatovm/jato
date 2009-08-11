@@ -50,6 +50,12 @@ public class TestCase {
         }
     }
 
+    public static void assertEquals(char expected, char actual) {
+        if (expected != actual) {
+            fail("Expected '" + expected + "', but was '" + actual + "'.");
+        }
+    }
+
     protected static void assertEquals(Object expected, Object actual) {
         if (expected != actual) {
             fail("Expected '" + expected + "', but was '" + actual + "'.");
