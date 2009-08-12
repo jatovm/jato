@@ -1241,6 +1241,8 @@ main(int argc, char *argv[])
 
 	init_configurable_system_properties();
 
+	classloader_init();
+
 	init_vm_objects();
 
 	jit_text_init();

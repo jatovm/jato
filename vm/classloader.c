@@ -16,6 +16,7 @@
 #include "vm/trace.h"
 
 #include "lib/string.h"
+#include "lib/hash-map.h"
 
 bool opt_trace_classloader;
 static __thread int trace_classloader_level = 0;
@@ -184,39 +185,27 @@ int classloader_add_to_classpath(const char *classpath)
 }
 
 struct classloader_class {
-	/* If false then the class loading is in progress. */
 	bool loaded;
-
-	union {
-		/* When @loaded is false this holds the class's name. It
-		 * should not be referenced when class is loaded. */
-		const char *class_name;
-
-		struct vm_class *class;
-	};
+	struct vm_class *class;
 };
 
-static struct classloader_class *classes;
-static unsigned long max_classes;
-static unsigned long nr_classes;
+static struct hash_map *classes;
 
-static int lookup_class(const char *class_name)
+void classloader_init(void)
 {
-	unsigned long i;
+	classes = alloc_hash_map(10000, string_hash, string_compare);
+	if (!classes)
+		error("failed to initialize class loader");
+}
 
-	for (i = 0; i < nr_classes; ++i) {
-		struct classloader_class *class = &classes[i];
+static struct classloader_class *lookup_class(const char *class_name)
+{
+	void *class;
 
-		if (!class->loaded) {
-			if (!strcmp(class->class_name, class_name))
-				return i;
-		} else {
-			if (!strcmp(class->class->name, class_name))
-				return i;
-		}
-	}
+	if (hash_map_get(classes, class_name, &class))
+		return NULL;
 
-	return -1;
+	return class;
 }
 
 static char *dots_to_slash(const char *name)
@@ -482,9 +471,7 @@ out_filename:
 struct vm_class *classloader_load(const char *class_name)
 {
 	struct vm_class *vmc;
-	struct classloader_class *new_array;
-	unsigned long new_max_classes;
-	int class_index;
+	struct classloader_class *class;
 
 	trace_push(class_name);
 
@@ -496,46 +483,25 @@ struct vm_class *classloader_load(const char *class_name)
 
 	pthread_mutex_lock(&classloader_mutex);
 
-	/*
-	 * XXX: we must use index here not the entry pointer because
-	 * while we're loading a class or waiting for a class to get
-	 * loaded the classes array might get relocated.
-	 */
-	class_index = lookup_class(slash_class_name);
-	if (class_index >= 0) {
+	class = lookup_class(slash_class_name);
+	if (class) {
 		/* If class is being loaded by another thread then wait
 		 * until loading is completed. */
-		while (!classes[class_index].loaded)
-			pthread_cond_wait(&classloader_cond,
-					  &classloader_mutex);
+		while (!class->loaded)
+			pthread_cond_wait(&classloader_cond, &classloader_mutex);
 
-		vmc = classes[class_index].class;
+		vmc = class->class;
 		goto out_unlock;
 	}
 
-	/*
-	 * We allocate cache space before loading to indicate that we
-	 * are loading this class and other threads wanting to load
-	 * that class in the same time should wait for us.
-	 */
-	if (nr_classes == max_classes) {
-		new_max_classes = 1 + max_classes * 2;
-		new_array = realloc(classes,
-			new_max_classes * sizeof(struct classloader_class));
-		if (!new_array) {
-			NOT_IMPLEMENTED;
-			vmc = NULL;
-			goto out_unlock;
-		}
+	class = malloc(sizeof(*class));
+	class->loaded = false;
 
-		max_classes = new_max_classes;
-		classes = new_array;
+	if (hash_map_put(classes, strdup(slash_class_name), class)) {
+		NOT_IMPLEMENTED;
+		vmc = NULL;
+		goto out_unlock;
 	}
-
-	class_index = nr_classes++;
-
-	classes[class_index].loaded = false;
-	classes[class_index].class_name = slash_class_name;
 
 	pthread_mutex_unlock(&classloader_mutex);
 
@@ -546,6 +512,10 @@ struct vm_class *classloader_load(const char *class_name)
 	 */
 	vmc = load_class(slash_class_name);
 	if (!vmc) {
+		/*
+		 * We should remove the entry from map but other threads
+		 * might be waiting on it.
+		 */
 		NOT_IMPLEMENTED;
 		vmc = NULL;
 		goto out;
@@ -555,8 +525,8 @@ struct vm_class *classloader_load(const char *class_name)
 
 	vmc->classloader = NULL;
 
-	classes[class_index].loaded = true;
-	classes[class_index].class = vmc;
+	class->class = vmc;
+	class->loaded = true;
 
 	/* Tell other threads that the class has been loaded. Would it
 	 * be worth to use a per-class condition variable for that? */
@@ -579,7 +549,7 @@ struct vm_class *classloader_find_class(const char *name)
 {
 	struct vm_class *vmc;
 	char *slash_class_name;
-	int class_index;
+	struct classloader_class *class;
 
 	slash_class_name = dots_to_slash(name);
 	if (!slash_class_name) {
@@ -591,15 +561,14 @@ struct vm_class *classloader_find_class(const char *name)
 
 	pthread_mutex_lock(&classloader_mutex);
 
-	class_index = lookup_class(slash_class_name);
-	if (class_index >= 0) {
+	class = lookup_class(slash_class_name);
+	if (class) {
 		/* If class is being loaded by another thread then wait
 		 * until loading is completed. */
-		while (!classes[class_index].loaded)
-			pthread_cond_wait(&classloader_cond,
-					  &classloader_mutex);
+		while (!class->loaded)
+			pthread_cond_wait(&classloader_cond, &classloader_mutex);
 
-		vmc = classes[class_index].class;
+		vmc = class->class;
 	}
 
 	free(slash_class_name);
