@@ -124,14 +124,19 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	int nr_dimensions, int *counts)
 {
+	struct vm_class *elem_class;
+	struct vm_object *res;
+	int elem_size;
+
 	assert(nr_dimensions > 0);
 
 	if (vm_class_ensure_init(class))
 		return NULL;
 
-	struct vm_object *res;
+	elem_class = vm_class_get_array_element_class(class);
+	elem_size  = get_vmtype_size(vm_class_get_storage_vmtype(elem_class));
 
-	res = zalloc(sizeof(*res) + sizeof(struct vm_object *) * counts[0]);
+	res = zalloc(sizeof(*res) + elem_size * counts[0]);
 	if (!res) {
 		NOT_IMPLEMENTED;
 		return NULL;
@@ -143,24 +148,17 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	}
 
 	res->array_length = counts[0];
+	res->class = class;
+
+	if (nr_dimensions == 1)
+		return res;
 
 	struct vm_object **elems = (struct vm_object **) (res + 1);
 
-	if (nr_dimensions == 1) {
-		for (int i = 0; i < counts[0]; ++i)
-			elems[i] = NULL;
-	} else {
-		struct vm_class *elem_class;
-
-		elem_class = vm_class_get_array_element_class(class);
-
-		for (int i = 0; i < counts[0]; ++i) {
-			elems[i] = vm_object_alloc_multi_array(elem_class,
-				nr_dimensions - 1, counts + 1);
-		}
+	for (int i = 0; i < counts[0]; ++i) {
+		elems[i] = vm_object_alloc_multi_array(elem_class,
+						nr_dimensions - 1, counts + 1);
 	}
-
-	res->class = class;
 
 	return res;
 }
