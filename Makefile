@@ -134,6 +134,7 @@ LIB_OBJS = \
 	lib/list.o		\
 	lib/pqueue.o		\
 	lib/radix-tree.o	\
+	lib/hash-map.o		\
 	lib/string.o
 
 JAMVM_OBJS =
