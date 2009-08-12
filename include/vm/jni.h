@@ -72,6 +72,7 @@ typedef struct java_vm JavaVM;
 
 void vm_jni_init(void);
 struct vm_jni_env *vm_jni_get_jni_env(void);
+struct java_vm *vm_jni_get_current_java_vm(void);
 int vm_jni_load_object(const char *name);
 void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 			   const char *method_type);

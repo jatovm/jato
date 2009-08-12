@@ -35,6 +35,7 @@
 
 #include "vm/die.h"
 #include "vm/jni.h"
+#include "vm/stack-trace.h"
 
 #include "lib/string.h"
 
@@ -109,6 +110,8 @@ static int vm_jni_add_object_handle(void *handle)
 	return 0;
 }
 
+typedef jint onload_fn(JavaVM *, void *);
+
 int vm_jni_load_object(const char *name)
 {
 	void *handle;
@@ -121,6 +124,17 @@ int vm_jni_load_object(const char *name)
 		dlclose(handle);
 		return -ENOMEM;
 	}
+
+	onload_fn *onload = dlsym(handle, "JNI_OnLoad");
+	if (!onload)
+		return 0;
+
+	vm_enter_jni(__builtin_frame_address(0), NULL,
+		     (unsigned long) &&call_site);
+ call_site:
+
+	onload(vm_jni_get_current_java_vm(), NULL);
+	vm_leave_jni();
 
 	return 0;
 }

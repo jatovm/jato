@@ -187,6 +187,16 @@ int stack_trace_elem_next(struct stack_trace_elem *elem)
 			&jni_stack[elem->jni_stack_index];
 
 		if (tr->vm_frame == elem->frame) {
+			if (!tr->method) {
+				/* This happens for JNI_OnLoad invocations */
+				elem->type = STACK_TRACE_ELEM_TYPE_OTHER;
+				elem->is_native = true;
+
+				elem->addr  = tr->return_address;
+				elem->frame = tr->caller_frame;
+				return 0;
+			}
+
 			elem->type = STACK_TRACE_ELEM_TYPE_JNI;
 			elem->is_native = false;
 
