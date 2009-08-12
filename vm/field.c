@@ -111,7 +111,7 @@ int vm_field_init_static(struct vm_field *vmf)
 			return -1;
 		}
 
-		vm_field_set_int32(vmf, cp->integer_.bytes);
+		static_field_set_int(vmf, cp->integer_.bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
 		if (strcmp(vmf->type, "F")) {
@@ -119,7 +119,7 @@ int vm_field_init_static(struct vm_field *vmf)
 			return -1;
 		}
 
-		vm_field_set_float(vmf, uint32_to_float(cp->float_.bytes));
+		static_field_set_float(vmf, cp->float_.bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING: {
 		if (strcmp(vmf->type, "Ljava/lang/String;")) {
@@ -143,7 +143,7 @@ int vm_field_init_static(struct vm_field *vmf)
 			return -1;
 		}
 
-		vm_field_set_object(vmf, string);
+		static_field_set_object(vmf, string);
 		break;
 	}
 	case CAFEBABE_CONSTANT_TAG_LONG:
@@ -152,7 +152,7 @@ int vm_field_init_static(struct vm_field *vmf)
 			return -1;
 		}
 
-		vm_field_set_int64(vmf,
+		static_field_set_long(vmf,
 			((uint64_t) cp->long_.high_bytes << 32)
 			+ (uint64_t) cp->long_.low_bytes);
 		break;
@@ -162,7 +162,8 @@ int vm_field_init_static(struct vm_field *vmf)
 			return -1;
 		}
 
-		vm_field_set_double(vmf, uint64_to_double(cp->double_.low_bytes, cp->double_.high_bytes));
+		static_field_set_double(vmf, ((uint64_t) cp->long_.high_bytes << 32)
+			+ (uint64_t) cp->long_.low_bytes);
 		break;
 	default:
 		return -1;

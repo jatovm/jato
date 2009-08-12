@@ -164,85 +164,83 @@ enum vm_type vm_class_get_storage_vmtype(const struct vm_class *class);
 struct vm_class *vm_class_get_class_from_class_object(struct vm_object *clazz);
 struct vm_class *vm_class_get_array_class(struct vm_class *element_class);
 
-static inline void
-vm_field_set_int32(const struct vm_field *field, int32_t value)
-{
-	assert(vm_field_is_static(field));
-
-	*(int32_t *) &field->class->static_values[field->offset] = value;
+#define DECLARE_STATIC_FIELD_GETTER(type)				\
+static inline j ## type							\
+static_field_get_ ## type (const struct vm_field *field)		\
+{									\
+	assert(vm_field_is_static(field));				\
+									\
+	return *(j ## type *) &field->class->static_values[field->offset]; \
 }
 
-static inline int32_t
-vm_field_get_int32(const struct vm_field *field)
-{
-	assert(vm_field_is_static(field));
+DECLARE_STATIC_FIELD_GETTER(byte);
+DECLARE_STATIC_FIELD_GETTER(boolean);
+DECLARE_STATIC_FIELD_GETTER(char);
+DECLARE_STATIC_FIELD_GETTER(double);
+DECLARE_STATIC_FIELD_GETTER(float);
+DECLARE_STATIC_FIELD_GETTER(int);
+DECLARE_STATIC_FIELD_GETTER(long);
+DECLARE_STATIC_FIELD_GETTER(object);
+DECLARE_STATIC_FIELD_GETTER(short);
 
-	return *(int32_t *) &field->class->static_values[field->offset];
+#define DECLARE_STATIC_FIELD_SETTER(type)				\
+static inline void							\
+static_field_set_ ## type (const struct vm_field *field,		\
+			   j ## type value)				\
+{									\
+	assert(vm_field_is_static(field));				\
+									\
+	*(j ## type *) &field->class->static_values[field->offset] = value; \
 }
 
-static inline void
-vm_field_set_int64(const struct vm_field *field, int64_t value)
-{
-	assert(vm_field_is_static(field));
-
-	*(int64_t *) &field->class->static_values[field->offset] = value;
-}
-
-static inline int64_t
-vm_field_get_int64(const struct vm_field *field)
-{
-	assert(vm_field_is_static(field));
-
-	return *(int64_t *) &field->class->static_values[field->offset];
-}
-
-static inline void
-vm_field_set_float(const struct vm_field *field, float value)
-{
-	assert(vm_field_is_static(field));
-
-	*(float *) &field->class->static_values[field->offset] = value;
-}
-
-static inline float
-vm_field_get_float(const struct vm_field *field)
-{
-	assert(vm_field_is_static(field));
-
-	return *(float *) &field->class->static_values[field->offset];
-}
+/*
+ * We can not use generic setters for types of size less than machine
+ * word. We currently load/store whole machine words therefore we must
+ * set higher bits too, with sign extension for signed types.
+ *
+ * This should be fixed when register allocator finally supports
+ * register constraints so that 8-bit and 16-bit load and stores can
+ * be implemented in instruction selector.
+ */
 
 static inline void
-vm_field_set_double(const struct vm_field *field, double value)
+static_field_set_byte(const struct vm_field *field, jbyte value)
 {
 	assert(vm_field_is_static(field));
 
-	*(double *) &field->class->static_values[field->offset] = value;
-}
-
-static inline double
-vm_field_get_double(const struct vm_field *field)
-{
-	assert(vm_field_is_static(field));
-
-	return *(double *) &field->class->static_values[field->offset];
+	*(long *) &field->class->static_values[field->offset] = value;
 }
 
 static inline void
-vm_field_set_object(const struct vm_field *field, struct vm_object *value)
+static_field_set_short(const struct vm_field *field,
+		jshort value)
 {
 	assert(vm_field_is_static(field));
 
-	*(void **) &field->class->static_values[field->offset] = value;
+	*(long *) &field->class->static_values[field->offset] = value;
 }
 
-static inline struct vm_object *
-vm_field_get_object(const struct vm_field *field)
+static inline void
+static_field_set_boolean(const struct vm_field *field,
+		  jboolean value)
 {
 	assert(vm_field_is_static(field));
 
-	return *(struct vm_object **)
-		&field->class->static_values[field->offset];
+	*(unsigned long *) &field->class->static_values[field->offset] = value;
 }
+
+static inline void
+static_field_set_char(const struct vm_field *field, jchar value)
+{
+	assert(vm_field_is_static(field));
+
+	*(unsigned long *) &field->class->static_values[field->offset] = value;
+}
+
+DECLARE_STATIC_FIELD_SETTER(double);
+DECLARE_STATIC_FIELD_SETTER(float);
+DECLARE_STATIC_FIELD_SETTER(int);
+DECLARE_STATIC_FIELD_SETTER(long);
+DECLARE_STATIC_FIELD_SETTER(object);
 
 #endif /* __CLASS_H */
