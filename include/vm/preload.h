@@ -16,6 +16,7 @@ extern struct vm_class *vm_java_util_Properties;
 extern struct vm_class *vm_java_lang_VMThrowable;
 extern struct vm_class *vm_java_lang_StackTraceElement;
 extern struct vm_class *vm_java_lang_Error;
+extern struct vm_class *vm_java_lang_OutOfMemoryError;
 extern struct vm_class *vm_java_lang_ArithmeticException;
 extern struct vm_class *vm_java_lang_NullPointerException;
 extern struct vm_class *vm_java_lang_NegativeArraySizeException;

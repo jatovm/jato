@@ -75,9 +75,10 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 	}
 
 	struct string *msg = alloc_str();
-	if (!msg)
-		/* TODO: signal OutOfMemoryError */
-		die("out of memory");
+	if (!msg) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		goto out;
+	}
 
 	str_printf(msg, "%s.%s%s", method->class->name, method->name,
 		   method->type);
@@ -87,7 +88,7 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 
 	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, msg->value);
 	free_str(msg);
-
+out:
 	return NULL;
 }
 
@@ -99,9 +100,10 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 		return NULL;
 	}
 
-	if (add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu) != 0)
-		/* TODO: throw OutOfMemoryError */
-		die("out of memory");
+	if (add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu) != 0) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		return NULL;
+	}
 
 	return buffer_ptr(cu->objcode);
 }

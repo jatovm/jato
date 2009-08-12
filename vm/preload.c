@@ -48,6 +48,7 @@ struct vm_class *vm_java_lang_VMThrowable;
 struct vm_class *vm_java_lang_StackTraceElement;
 struct vm_class *vm_array_of_java_lang_StackTraceElement;
 struct vm_class *vm_java_lang_Error;
+struct vm_class *vm_java_lang_OutOfMemoryError;
 struct vm_class *vm_java_lang_ArithmeticException;
 struct vm_class *vm_java_lang_NullPointerException;
 struct vm_class *vm_java_lang_NegativeArraySizeException;
@@ -110,6 +111,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ClassCastException", &vm_java_lang_ClassCastException },
 	{ "java/lang/ClassNotFoundException", &vm_java_lang_ClassNotFoundException },
 	{ "java/lang/Error",		&vm_java_lang_Error },
+	{ "java/lang/OutOfMemoryError",	 &vm_java_lang_OutOfMemoryError },
 	{ "java/lang/ExceptionInInitializerError", &vm_java_lang_ExceptionInInitializerError },
 	{ "java/lang/NegativeArraySizeException", &vm_java_lang_NegativeArraySizeException },
 	{ "java/lang/NoClassDefFoundError", &vm_java_lang_NoClassDefFoundError },
