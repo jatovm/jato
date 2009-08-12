@@ -105,15 +105,47 @@ field_get_ ## type (const struct vm_object *obj, const struct vm_field *field)\
 	return *(j ## type *) &obj->fields[field->offset];		\
 }
 
-DECLARE_FIELD_SETTER(byte);
-DECLARE_FIELD_SETTER(boolean);
-DECLARE_FIELD_SETTER(char);
+/*
+ * We can not use generic setters for types of size less than machine
+ * word. We currently load/store whole machine words therefore we must
+ * set higher bits too, with sign extension for signed types.
+ *
+ * This should be fixed when register allocator finally supports
+ * register constraints so that 8-bit and 16-bit load and stores can
+ * be implemented in instruction selector.
+ */
+
+static inline void
+field_set_byte(struct vm_object *obj, const struct vm_field *field, jbyte value)
+{
+	*(long *) &obj->fields[field->offset] = value;
+}
+
+static inline void
+field_set_short(struct vm_object *obj, const struct vm_field *field,
+		jshort value)
+{
+	*(long *) &obj->fields[field->offset] = value;
+}
+
+static inline void
+field_set_boolean(struct vm_object *obj, const struct vm_field *field,
+		  jboolean value)
+{
+	*(unsigned long *) &obj->fields[field->offset] = value;
+}
+
+static inline void
+field_set_char(struct vm_object *obj, const struct vm_field *field, jchar value)
+{
+	*(unsigned long *) &obj->fields[field->offset] = value;
+}
+
 DECLARE_FIELD_SETTER(double);
 DECLARE_FIELD_SETTER(float);
 DECLARE_FIELD_SETTER(int);
 DECLARE_FIELD_SETTER(long);
 DECLARE_FIELD_SETTER(object);
-DECLARE_FIELD_SETTER(short);
 
 DECLARE_FIELD_GETTER(byte);
 DECLARE_FIELD_GETTER(boolean);
@@ -140,15 +172,35 @@ array_get_field_ ## type(const struct vm_object *obj, int index)	\
 	return *(j ## type *) &obj->fields[index * get_vmtype_size(vmtype)]; \
 }
 
-DECLARE_ARRAY_FIELD_SETTER(byte, J_BYTE);
-DECLARE_ARRAY_FIELD_SETTER(boolean, J_BOOLEAN);
-DECLARE_ARRAY_FIELD_SETTER(char, J_CHAR);
+static inline void
+array_set_field_byte(struct vm_object *obj, int index, jbyte value)
+{
+	*(long *) &obj->fields[index * get_vmtype_size(J_BYTE)] = value;
+}
+
+static inline void
+array_set_field_short(struct vm_object *obj, int index, jshort value)
+{
+	*(long *) &obj->fields[index * get_vmtype_size(J_SHORT)] = value;
+}
+
+static inline void
+array_set_field_boolean(struct vm_object *obj, int index, jboolean value)
+{
+	*(unsigned long *) &obj->fields[index * get_vmtype_size(J_BOOLEAN)] = value;
+}
+
+static inline void
+array_set_field_char(struct vm_object *obj, int index, jchar value)
+{
+	*(unsigned long *) &obj->fields[index * get_vmtype_size(J_CHAR)] = value;
+}
+
 DECLARE_ARRAY_FIELD_SETTER(double, J_DOUBLE);
 DECLARE_ARRAY_FIELD_SETTER(float, J_FLOAT);
 DECLARE_ARRAY_FIELD_SETTER(int, J_INT);
 DECLARE_ARRAY_FIELD_SETTER(long, J_LONG);
 DECLARE_ARRAY_FIELD_SETTER(object, J_REFERENCE);
-DECLARE_ARRAY_FIELD_SETTER(short, J_SHORT);
 
 DECLARE_ARRAY_FIELD_GETTER(byte, J_BYTE);
 DECLARE_ARRAY_FIELD_GETTER(boolean, J_BOOLEAN);
