@@ -126,6 +126,7 @@ int expr_is_pure(struct expression *expr)
 		   have side-effects. */
 	case EXPR_INVOKE:
 	case EXPR_INVOKEVIRTUAL:
+	case EXPR_INVOKEINTERFACE:
 	case EXPR_FINVOKE:
 	case EXPR_FINVOKEVIRTUAL:
 	case EXPR_NEWARRAY:
@@ -161,7 +162,7 @@ int expr_is_pure(struct expression *expr)
 		return true;
 
 	default:
-		assert(!"Invalid expression type");
+		error("Invalid expression type: %d", expr_type(expr));
 	}
 }
 
