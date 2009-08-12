@@ -13,6 +13,7 @@
 #include "vm/method.h"
 #include "vm/object.h"
 #include "vm/die.h"
+#include "vm/stack-trace.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -41,6 +42,7 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_ARGS_LIST:
 		return 2;
 	case EXPR_UNARY_OP:
+	case EXPR_TRUNCATION:
 	case EXPR_CONVERSION:
 	case EXPR_CONVERSION_FLOAT_TO_DOUBLE:
 	case EXPR_CONVERSION_DOUBLE_TO_FLOAT:
@@ -103,6 +105,7 @@ int expr_is_pure(struct expression *expr)
 		 */
 	case EXPR_ARGS_LIST:
 	case EXPR_UNARY_OP:
+	case EXPR_TRUNCATION:
 	case EXPR_CONVERSION:
 	case EXPR_CONVERSION_FLOAT_TO_DOUBLE:
 	case EXPR_CONVERSION_DOUBLE_TO_FLOAT:
@@ -201,7 +204,7 @@ struct expression *expr_get(struct expression *expr)
 
 	return expr;
 }
-extern void print_trace(void);
+
 void expr_put(struct expression *expr)
 {
 	if (!(expr->refcount > 0))
@@ -633,6 +636,21 @@ struct expression *lookupswitch_bsearch_expr(struct expression *key, struct look
 
 	expr->key = &key->node;
 	expr->lookupswitch_table = table;
+
+	return expr;
+}
+
+struct expression *truncation_expr(enum vm_type to_type,
+				   struct expression *from_expression)
+{
+	struct expression *expr;
+
+	expr = alloc_expression(EXPR_TRUNCATION, J_INT);
+	if (!expr)
+		return NULL;
+
+	expr->from_expression = &from_expression->node;
+	expr->to_type = to_type;
 
 	return expr;
 }

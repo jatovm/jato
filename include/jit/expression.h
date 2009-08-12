@@ -57,6 +57,7 @@ enum expression_type {
 	EXPR_MULTIARRAY_SIZE_CHECK,
 	EXPR_MIMIC_STACK_SLOT,
 	EXPR_LOOKUPSWITCH_BSEARCH,
+	EXPR_TRUNCATION,
 	EXPR_LAST,	/* Not a real type. Keep this last. */
 };
 
@@ -289,6 +290,13 @@ struct expression {
 			struct tree_node *key;
 			struct lookupswitch *lookupswitch_table;
 		};
+
+		/* EXPR_TRUNCATION represents conversion from J_INT to
+		 * J_CHAR, J_BYTE or J_SHORT. */
+		struct {
+			struct tree_node *from_expression;
+			enum vm_type to_type;
+		};
 	};
 };
 
@@ -365,6 +373,7 @@ struct expression *multiarray_size_check_expr(struct expression *);
 struct expression *dup_expr(struct parse_context *, struct expression *);
 struct expression *get_pure_expr(struct parse_context *, struct expression *);
 struct expression *lookupswitch_bsearch_expr(struct expression *, struct lookupswitch *);
+struct expression *truncation_expr(enum vm_type, struct expression *);
 unsigned long nr_args(struct expression *);
 int expr_nr_kids(struct expression *);
 int expr_is_pure(struct expression *);

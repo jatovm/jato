@@ -48,6 +48,22 @@ static int convert_conversion(struct parse_context *ctx, enum vm_type to_type)
 	return 0;
 }
 
+static int convert_truncation(struct parse_context *ctx, enum vm_type to_type)
+{
+	struct expression *from_expression, *expr;
+
+	from_expression = stack_pop(ctx->bb->mimic_stack);
+	assert(from_expression->vm_type == J_INT);
+
+	expr = truncation_expr(to_type, from_expression);
+	if (!expr)
+		return warn("out of memory"), -ENOMEM;
+
+	convert_expression(ctx, expr);
+	return 0;
+}
+
+
 int convert_i2l(struct parse_context *ctx)
 {
 	return convert_conversion(ctx, J_LONG);
@@ -110,15 +126,15 @@ int convert_d2f(struct parse_context *ctx)
 
 int convert_i2b(struct parse_context *ctx)
 {
-	return convert_conversion(ctx, J_BYTE);
+	return convert_truncation(ctx, J_BYTE);
 }
 
 int convert_i2c(struct parse_context *ctx)
 {
-	return convert_conversion(ctx, J_CHAR);
+	return convert_truncation(ctx, J_CHAR);
 }
 
 int convert_i2s(struct parse_context *ctx)
 {
-	return convert_conversion(ctx, J_SHORT);
+	return convert_truncation(ctx, J_SHORT);
 }

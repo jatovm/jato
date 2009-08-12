@@ -36,6 +36,33 @@ static void assert_conversion_mimic_stack(unsigned char opc,
 	__free_simple_bb(bb);
 }
 
+static void assert_truncation_mimic_stack(unsigned char opc,
+					  enum expression_type expr_type,
+					  enum vm_type from_type,
+					  enum vm_type to_type)
+{
+	unsigned char code[] = { opc };
+	struct vm_method method = {
+		.code_attribute.code = code,
+		.code_attribute.code_length = ARRAY_SIZE(code),
+	};
+	struct expression *truncation_expression;
+	struct expression *expression;
+	struct basic_block *bb;
+
+	bb = __alloc_simple_bb(&method);
+	expression = temporary_expr(from_type, bb->b_parent);
+	stack_push(bb->mimic_stack, expression);
+	convert_to_ir(bb->b_parent);
+
+	truncation_expression = stack_pop(bb->mimic_stack);
+	assert_trunc_expr(to_type, expr_type, expression, &truncation_expression->node);
+	assert_true(stack_is_empty(bb->mimic_stack));
+
+	expr_put(truncation_expression);
+	__free_simple_bb(bb);
+}
+
 void test_convert_int_widening(void)
 {
 	assert_conversion_mimic_stack(OPC_I2L, EXPR_CONVERSION, J_INT, J_LONG);
@@ -66,7 +93,7 @@ void test_convert_double_conversion(void)
 
 void test_convert_int_narrowing(void)
 {
-	assert_conversion_mimic_stack(OPC_I2B, EXPR_CONVERSION, J_INT, J_BYTE);
-	assert_conversion_mimic_stack(OPC_I2C, EXPR_CONVERSION, J_INT, J_CHAR);
-	assert_conversion_mimic_stack(OPC_I2S, EXPR_CONVERSION, J_INT, J_SHORT);
+	assert_truncation_mimic_stack(OPC_I2B, EXPR_TRUNCATION, J_INT, J_BYTE);
+	assert_truncation_mimic_stack(OPC_I2C, EXPR_TRUNCATION, J_INT, J_CHAR);
+	assert_truncation_mimic_stack(OPC_I2S, EXPR_TRUNCATION, J_INT, J_SHORT);
 }

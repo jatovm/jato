@@ -97,6 +97,20 @@ public class ConversionTest extends TestCase {
         assertEquals((char) 0xffc0, b2c((byte) -0x40));
     }
 
+    public static void testConversionFromIntPushesInt() {
+        char c1, c2;
+        int i = 1;
+
+        // conversion from int to byte should push int onto mimic stack
+        // so the following expression should not trigger byte -> char
+        // and short -> char conversion.
+        c1 = (char) (byte) i;
+        c2 = (char) (short) i;
+
+        takeInt(c1);
+        takeInt(c2);
+    }
+
     public static void main(String[] args) {
         testLongToIntegerConversion();
         testIntegerToLongConversion();
@@ -104,5 +118,6 @@ public class ConversionTest extends TestCase {
         testIntegerToCharConversion();
         testIntegerToShortConversion();
         testByteToCharConversion();
+        testConversionFromIntPushesInt();
     }
 }

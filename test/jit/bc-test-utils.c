@@ -182,6 +182,19 @@ void assert_conv_expr(enum vm_type expected_type,
 	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
 }
 
+void assert_trunc_expr(enum vm_type expected_to_type,
+		       enum expression_type expected_expr_type,
+		       struct expression *expected_expression,
+		       struct tree_node *node)
+{
+	struct expression *expr = to_expr(node);
+
+	assert_int_equals(expected_expr_type, expr_type(expr));
+	assert_int_equals(expected_to_type, expr->to_type);
+	assert_int_equals(J_INT, expr->vm_type);
+	assert_ptr_equals(expected_expression, to_expr(expr->from_expression));
+}
+
 static void __assert_field_expr(enum expression_type expected_expr_type,
 				enum vm_type expected_type,
 				struct expression *expr)
