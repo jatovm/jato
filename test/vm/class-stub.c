@@ -12,6 +12,11 @@ int vm_class_init(struct vm_class *vmc)
 	return 0;
 }
 
+int vm_class_ensure_object(struct vm_class *vmc)
+{
+	return 0;
+}
+
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 {
 	NOT_IMPLEMENTED;

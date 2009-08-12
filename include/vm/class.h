@@ -90,6 +90,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
 int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name);
 int vm_class_link_array_class(struct vm_class *vmc, const char *class_name);
 int vm_class_init(struct vm_class *vmc);
+int vm_class_ensure_object(struct vm_class *vmc);
 
 static inline int vm_class_ensure_init(struct vm_class *vmc)
 {

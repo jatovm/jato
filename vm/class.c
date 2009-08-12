@@ -122,6 +122,8 @@ static int vm_class_link_common(struct vm_class *vmc)
 	if (err)
 		return -err;
 
+	vmc->object = NULL;
+
 	return 0;
 }
 
@@ -482,6 +484,32 @@ static bool vm_class_check_class_init_fault(struct vm_class *vmc,
 	return fault;
 }
 
+int vm_class_ensure_object(struct vm_class *vmc)
+{
+	vm_monitor_lock(&vmc->monitor);
+
+	if (vmc->object)
+		goto out;
+
+	/*
+	 * Set the .object member of struct vm_class to point to
+	 * the object (of type java.lang.Class) for this class.
+	 */
+	vmc->object = vm_object_alloc(vm_java_lang_Class);
+	if (!vmc->object) {
+		NOT_IMPLEMENTED;
+		vm_monitor_unlock(&vmc->monitor);
+		return -1;
+	}
+
+	field_set_object(vmc->object, vm_java_lang_Class_vmdata,
+		(struct vm_object *)vmc);
+
+ out:
+	vm_monitor_unlock(&vmc->monitor);
+	return 0;
+}
+
 int vm_class_init(struct vm_class *vmc)
 {
 	struct vm_object *exception;
@@ -536,18 +564,7 @@ int vm_class_init(struct vm_class *vmc)
 			goto error;
 	}
 
-	/*
-	 * Set the .object member of struct vm_class to point to
-	 * the object (of type java.lang.Class) for this class.
-	 */
-	vmc->object = vm_object_alloc(vm_java_lang_Class);
-	if (!vmc->object) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
-
-	field_set_object(vmc->object, vm_java_lang_Class_vmdata,
-		(struct vm_object *)vmc);
+	vm_class_ensure_object(vmc);
 
 	if (vmc->class) {
 		/* XXX: Make sure there's at most one of these. */

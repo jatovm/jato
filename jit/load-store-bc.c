@@ -149,8 +149,7 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 			break;
 		}
 
-		vm_class_ensure_init(ret);
-		if (exception_occurred())
+		if (vm_class_ensure_object(ret))
 			return -1;
 
 		expr = value_expr(J_REFERENCE, (unsigned long) ret->object);
