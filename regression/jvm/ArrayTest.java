@@ -163,6 +163,19 @@ public class ArrayTest extends TestCase {
         assertTrue(arr2.getClass().equals(big_arr[0][0].getClass()));
     }
 
+    public static void testByteCharShortLoadPushesInt() {
+        char c[] = { 0 };
+        byte b[] = { 0 };
+        short s[] = { 0 };
+
+        // caload, baload, saload should push INT on stack. If
+        // they don't the following will trigger assertion
+        // failure in convert_truncation().
+        takeInt( (byte) c[0] );
+        takeInt( (char) b[0] );
+        takeInt( (byte) s[0] );
+    }
+
     public static void main(String args[]) {
         testEmptyStaticArrayLength();
         testEmptyArrayLength();
@@ -181,5 +194,6 @@ public class ArrayTest extends TestCase {
         testDoubleElementLoadStore();
 
         testArrayClass();
+        testByteCharShortLoadPushesInt();
     }
 }
