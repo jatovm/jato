@@ -256,7 +256,9 @@ static void init_system_properties(void)
 static void init_configurable_system_properties(void)
 {
 	/* XXX: currently user defined -Djava.class.path=value is overriden. */
-	add_system_property_const("java.class.path", get_classpath());
+	char *cp = get_classpath();
+	add_system_property_const("java.class.path", cp);
+	free(cp);
 }
 
 static void native_vmsystemproperties_preinit(struct vm_object *p)
