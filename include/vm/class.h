@@ -97,6 +97,26 @@ static inline int vm_class_ensure_init(struct vm_class *vmc)
 	return vm_class_init(vmc);
 }
 
+static inline bool vm_class_is_public(const struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_PUBLIC;
+}
+
+static inline bool vm_class_is_private(const struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_PRIVATE;
+}
+
+static inline bool vm_class_is_protected(const struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_PROTECTED;
+}
+
+static inline bool vm_class_is_static(const struct vm_class *vmc)
+{
+	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_STATIC;
+}
+
 static inline bool vm_class_is_abstract(const struct vm_class *vmc)
 {
 	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_ABSTRACT;
