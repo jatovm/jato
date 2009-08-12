@@ -94,23 +94,20 @@ void signal_exception(struct vm_object *exception)
 	exception_holder = exception;
 }
 
-int signal_new_exception(struct vm_class *vmc, const char *msg)
+void signal_new_exception(struct vm_class *vmc, const char *msg)
 {
 	struct vm_object *exception;
 
 	exception = new_exception(vmc, msg);
-	if (!exception) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (!exception)
+		die("out of memory");
 
 	signal_exception(exception);
-	return 0;
 }
 
-int signal_new_exception_with_cause(struct vm_class *vmc,
-				    struct vm_object *cause,
-				    const char *msg)
+void signal_new_exception_with_cause(struct vm_class *vmc,
+				     struct vm_object *cause,
+				     const char *msg)
 {
 	struct vm_object *exception;
 	struct vm_method *init;
@@ -124,35 +121,31 @@ int signal_new_exception_with_cause(struct vm_class *vmc,
 	init = vm_class_get_method(vmc, "<init>", "(Ljava/lang/Throwable;)V");
 	if (init) {
 		exception = vm_object_alloc(vmc);
-		if (!exception) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (!exception)
+			die("out of memory");
 
 		clear_exception();
 
 		vm_call_method(init, exception, cause);
 
 		if (exception_occurred())
-			return -1;
+			return;
 
 		signal_exception(exception);
-		return 0;
 	}
 
 	exception = new_exception(vmc, msg);
 	if (!exception)
-		return -1;
+		die("out of memory");
 
 	clear_exception();
 
 	vm_call_method(vm_java_lang_Throwable_initCause, exception, cause);
 
 	if (exception_occurred())
-		return -1;
+		return;
 
 	signal_exception(exception);
-	return 0;
 }
 
 void clear_exception(void)

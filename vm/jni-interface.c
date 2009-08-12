@@ -294,7 +294,9 @@ vm_jni_throw_new(struct vm_jni_env *env, jclass clazz, const char *message)
 
 	class = vm_class_get_class_from_class_object(clazz);
 
-	return signal_new_exception(class, message);
+	signal_new_exception(class, message);
+
+	return 0;
 }
 
 static jthrowable vm_jni_exception_occurred(struct vm_jni_env *env)
