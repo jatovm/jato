@@ -129,6 +129,11 @@ struct java_vm vm_jni_default_java_vm = {
 	.jni_invoke_interface_table = vm_jni_invoke_interface,
 };
 
+struct java_vm *vm_jni_get_current_java_vm(void)
+{
+	return &vm_jni_default_java_vm;
+}
+
 static jclass
 vm_jni_find_class(struct vm_jni_env *env, const char *name)
 {
@@ -188,6 +193,8 @@ vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz, const char *name,
 	enter_vm_from_jni();
 
 	fb = vm_jni_common_get_field_id(clazz, name, sig);
+	if (!fb)
+		return NULL;
 
 	if (vm_field_is_static(fb))
 		return NULL;
@@ -448,7 +455,7 @@ static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
 {
 	enter_vm_from_jni();
 
-	*vm = &vm_jni_default_java_vm;
+	*vm = vm_jni_get_current_java_vm();
 	return 0;
 }
 
@@ -708,6 +715,8 @@ vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
 	enter_vm_from_jni();
 
 	fb = vm_jni_common_get_field_id(clazz, name, sig);
+	if (!fb)
+		return NULL;
 
 	if (!vm_field_is_static(fb))
 		return NULL;
