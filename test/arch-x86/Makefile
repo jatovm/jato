@@ -56,6 +56,7 @@ TOPLEVEL_OBJS := \
 	lib/guard-page.o \
 	lib/radix-tree.o \
 	lib/string.o \
+	lib/hash-map.o \
 	vm/bytecode.o \
 	vm/bytecodes.o \
 	vm/call.o \
@@ -68,6 +69,7 @@ TOPLEVEL_OBJS := \
 	vm/object.o \
 	vm/stack.o \
 	vm/static.o \
+	vm/string.o \
 	vm/thread.o \
 	vm/trace.o \
 	vm/types.o \

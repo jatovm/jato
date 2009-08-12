@@ -71,6 +71,7 @@
 #include "vm/signal.h"
 #include "vm/stack-trace.h"
 #include "vm/static.h"
+#include "vm/string.h"
 #include "vm/system.h"
 #include "vm/thread.h"
 #include "vm/vm.h"
@@ -788,6 +789,11 @@ native_vmclass_isinterface(struct vm_object *clazz)
 	return vm_class_is_interface(class);
 }
 
+static struct vm_object *native_vmstring_intern(struct vm_object *str)
+{
+	return vm_string_intern(str);
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -823,6 +829,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMRuntime", "mapLibraryName", &native_vmruntime_maplibraryname),
 	DEFINE_NATIVE("java/lang/VMRuntime", "nativeLoad", &native_vmruntime_native_load),
 	DEFINE_NATIVE("java/lang/VMRuntime", "runFinalizationForExit", &native_vmruntime_run_finalization_for_exit),
+	DEFINE_NATIVE("java/lang/VMString", "intern", &native_vmstring_intern),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", &native_vmsystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", &native_vmsystem_identityhashcode),
 	DEFINE_NATIVE("java/lang/VMSystem", "nanoTime", &native_vmsystem_nano_time),
@@ -1234,7 +1241,7 @@ main(int argc, char *argv[])
 #endif
 
 	arch_init();
-
+	init_literals_hash_map();
 	init_system_properties();
 
 	parse_options(argc, argv);

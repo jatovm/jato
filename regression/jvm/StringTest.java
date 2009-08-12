@@ -24,8 +24,16 @@ public class StringTest extends TestCase {
         assertObjectEquals("123abcd", a + b);
     }
 
+    public static String test_literal = "Test";
+
+    public static void testStringIntern() {
+        String s1 = new String("Test");
+        assertEquals(s1.intern(), test_literal);
+    }
+
     public static void main(String args[]) {
         testUnicode();
         testStringConcatenation();
+        testStringIntern();
     }
 }

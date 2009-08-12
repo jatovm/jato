@@ -119,6 +119,7 @@ VM_OBJS = \
 	vm/stack.o		\
 	vm/stack-trace.o	\
 	vm/static.o		\
+	vm/string.o		\
 	vm/thread.o		\
 	vm/trace.o		\
 	vm/types.o		\

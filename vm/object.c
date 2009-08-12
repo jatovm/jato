@@ -15,9 +15,11 @@
 #include "vm/preload.h"
 #include "vm/object.h"
 #include "vm/stdlib.h"
-#include "lib/string.h"
+#include "vm/string.h"
 #include "vm/types.h"
 #include "vm/utf8.h"
+
+#include "lib/string.h"
 
 static pthread_mutexattr_t obj_mutexattr;
 
@@ -297,7 +299,7 @@ vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length)
 	field_set_int(string, vm_java_lang_String_count, array->array_length);
 	field_set_object(string, vm_java_lang_String_value, array);
 
-	return string;
+	return vm_string_intern(string);
 }
 
 struct vm_object *
@@ -330,7 +332,7 @@ vm_object_alloc_string_from_c(const char *bytes)
 	field_set_int(string, vm_java_lang_String_count, array->array_length);
 	field_set_object(string, vm_java_lang_String_value, array);
 
-	return string;
+	return vm_string_intern(string);
 }
 
 typedef void (*exception_init_fn)(struct vm_object *, struct vm_object *);

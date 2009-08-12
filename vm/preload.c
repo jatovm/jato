@@ -29,8 +29,11 @@
 
 #include "vm/die.h"
 #include "vm/classloader.h"
+#include "vm/natives.h"
 #include "vm/preload.h"
 #include "vm/class.h"
+
+#include "jit/cu-mapping.h"
 
 struct preload_entry {
 	const char *name;
@@ -85,6 +88,7 @@ struct vm_class *vm_java_lang_Float;
 struct vm_class *vm_java_lang_Integer;
 struct vm_class *vm_java_lang_Long;
 struct vm_class *vm_java_lang_Short;
+struct vm_class *vm_java_lang_VMString;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -143,6 +147,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Double", &vm_java_lang_Double },
 	{ "java/lang/Long", &vm_java_lang_Long },
 	{ "java/lang/ClassLoader", &vm_java_lang_ClassLoader},
+	{ "java/lang/VMString", &vm_java_lang_VMString},
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -244,6 +249,7 @@ struct vm_method *vm_java_lang_Integer_init;
 struct vm_method *vm_java_lang_Long_init;
 struct vm_method *vm_java_lang_Short_init;
 struct vm_method *vm_java_lang_ClassLoader_loadClass;
+struct vm_method *vm_java_lang_VMString_intern;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -390,6 +396,20 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"(Ljava/lang/String;)Ljava/lang/Class;",
 		&vm_java_lang_ClassLoader_loadClass,
 	},
+	{
+		&vm_java_lang_VMString,
+		"intern",
+		"(Ljava/lang/String;)Ljava/lang/String;",
+		&vm_java_lang_VMString_intern,
+	},
+};
+
+/*
+ * Methods put in this table will be forcibly marked as native which
+ * will allow VM to provide its own impementation for them.
+ */
+static struct vm_method **native_override_entries[] = {
+	&vm_java_lang_VMString_intern,
 };
 
 int preload_vm_classes(void)
@@ -450,6 +470,32 @@ int preload_vm_classes(void)
 		}
 
 		*me->method = method;
+	}
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(native_override_entries); ++i) {
+		struct cafebabe_method_info *m_info;
+		struct compilation_unit *cu;
+		struct vm_method *vmm;
+
+		vmm = *native_override_entries[i];
+		vmm->is_vm_native = true;
+
+		cu = vmm->compilation_unit;
+
+		cu->native_ptr = vm_lookup_native(vmm->class->name, vmm->name);
+		if (!cu->native_ptr)
+			error("no VM native for overriden method: %s.%s%s",
+			      vmm->class->name, vmm->name, vmm->type);
+
+		cu->is_compiled = true;
+
+		if (add_cu_mapping((unsigned long)cu->native_ptr, cu)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+
+		m_info = (struct cafebabe_method_info *)vmm->method;
+		m_info->access_flags |= CAFEBABE_METHOD_ACC_NATIVE;
 	}
 
 	return 0;
