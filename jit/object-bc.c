@@ -289,12 +289,11 @@ static int convert_array_store(struct parse_context *ctx, enum vm_type type)
 	if (!store_stmt)
 		goto failed;
 
-
 	arrayref_pure = get_pure_expr(ctx, arrayref);
 	index_pure = get_pure_expr(ctx, index);
 	dest_expr = array_deref_expr(type, arrayref_pure, index_pure);
 
-	src_expr = dup_expr(ctx, value);
+	src_expr = get_pure_expr(ctx, value);
 
 	store_stmt->store_dest = &dest_expr->node;
 	store_stmt->store_src = &src_expr->node;

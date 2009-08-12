@@ -352,8 +352,7 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	stmt = stmt_entry(bb->stmt_list.next);
 
 	struct statement *arrayref_pure_stmt = stmt;
-	struct statement *value_dup_stmt = stmt_entry(arrayref_pure_stmt->stmt_list_node.next);
-	struct statement *arraycheck_stmt = stmt_entry(value_dup_stmt->stmt_list_node.next);
+	struct statement *arraycheck_stmt = stmt_entry(arrayref_pure_stmt->stmt_list_node.next);
 	struct statement *storecheck_stmt = stmt_entry(arraycheck_stmt->stmt_list_node.next);
 	struct statement *store_stmt = stmt_entry(storecheck_stmt->stmt_list_node.next);
 
@@ -361,10 +360,6 @@ static void assert_convert_array_store(enum vm_type expected_type,
 	assert_nullcheck_value_expr(J_REFERENCE, arrayref,
 				    arrayref_pure_stmt->store_src);
 	assert_temporary_expr(J_REFERENCE, arrayref_pure_stmt->store_dest);
-
-	assert_store_stmt(value_dup_stmt);
-	assert_ptr_equals(&expr->node, value_dup_stmt->store_src);
-	assert_temporary_expr(expected_type, value_dup_stmt->store_dest);
 
 	assert_arraycheck_stmt(expected_type,
 			       to_expr(arrayref_pure_stmt->store_dest),
