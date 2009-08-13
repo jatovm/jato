@@ -582,7 +582,14 @@ native_vmclass_getname(struct vm_object *object)
 	if (!class)
 		return NULL;
 
-	return vm_object_alloc_string_from_c(class->name);
+	struct vm_object *obj;
+	char *dot_name;
+
+	dot_name = slash2dots(class->name);
+	obj =  vm_object_alloc_string_from_c(dot_name);
+	free(dot_name);
+
+	return obj;
 }
 
 static int32_t
