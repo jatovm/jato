@@ -39,9 +39,12 @@ typedef uint64_t jdouble;
 typedef jint jsize;
 
 typedef struct vm_object *jobject;
+
 typedef jobject jarray;
 typedef jobject jclass;
+typedef jobject jobjectArray;
 typedef jobject jthrowable;
+
 typedef struct vm_field *jfieldID;
 typedef struct vm_method *jmethodID;
 

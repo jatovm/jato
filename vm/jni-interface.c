@@ -807,6 +807,39 @@ vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
 	return array;
 }
 
+static jobject vm_jni_get_object_array_element(struct vm_jni_env *env,
+					       jobjectArray array,
+					       jsize index)
+{
+	if (array == NULL) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return NULL;
+	}
+	if (index >= array->array_length) {
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
+		return NULL;
+	}
+
+	return array_get_field_object(array, index);
+}
+
+static void vm_jni_set_object_array_element(struct vm_jni_env *env,
+					    jobjectArray array,
+					    jsize index,
+					    jobject value)
+{
+	if (array == NULL) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return;
+	}
+	if (index >= array->array_length) {
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
+		return;
+	}
+
+	return array_set_field_object(array, index, value);
+}
+
 static jsize vm_jni_get_array_length(struct vm_jni_env *env, jarray array)
 {
 	if (!vm_class_is_array_class(array->class)) {
@@ -1204,8 +1237,8 @@ void *vm_jni_native_interface[] = {
 	vm_release_string_utf_chars,
 	vm_jni_get_array_length,
 	vm_jni_new_object_array,
-	NULL, /* GetObjectArrayElement */
-	NULL, /* SetObjectArrayElement */
+	vm_jni_get_object_array_element,
+	vm_jni_set_object_array_element,
 
 	/* 175 */
 	vm_jni_new_boolean_array,
