@@ -89,7 +89,6 @@ struct vm_class *vm_java_lang_Integer;
 struct vm_class *vm_java_lang_Long;
 struct vm_class *vm_java_lang_Short;
 struct vm_class *vm_java_lang_VMString;
-struct vm_class *vm_java_lang_reflect_Modifier;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -149,7 +148,6 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Long", &vm_java_lang_Long },
 	{ "java/lang/ClassLoader", &vm_java_lang_ClassLoader},
 	{ "java/lang/VMString", &vm_java_lang_VMString},
-	{ "java/lang/reflect/Modifier", &vm_java_lang_reflect_Modifier},
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -193,13 +191,6 @@ struct vm_field *vm_java_lang_reflect_Field_slot;
 struct vm_field *vm_java_lang_reflect_Method_declaringClass;
 struct vm_field *vm_java_lang_reflect_Method_name;
 struct vm_field *vm_java_lang_reflect_Method_slot;
-struct vm_field *vm_java_lang_reflect_Modifier_PUBLIC;
-struct vm_field *vm_java_lang_reflect_Modifier_PRIVATE;
-struct vm_field *vm_java_lang_reflect_Modifier_PROTECTED;
-struct vm_field *vm_java_lang_reflect_Modifier_STATIC;
-struct vm_field *vm_java_lang_reflect_Modifier_FINAL;
-struct vm_field *vm_java_lang_reflect_Modifier_ABSTRACT;
-struct vm_field *vm_java_lang_reflect_Modifier_INTERFACE;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
@@ -225,12 +216,6 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_reflect_Method, "declaringClass", "Ljava/lang/Class;", &vm_java_lang_reflect_Method_declaringClass },
 	{ &vm_java_lang_reflect_Method, "slot", "I", &vm_java_lang_reflect_Method_slot },
 	{ &vm_java_lang_reflect_Method, "name", "Ljava/lang/String;", &vm_java_lang_reflect_Method_name },
-	{ &vm_java_lang_reflect_Modifier, "PUBLIC", "I", &vm_java_lang_reflect_Modifier_PUBLIC },
-	{ &vm_java_lang_reflect_Modifier, "PROTECTED", "I", &vm_java_lang_reflect_Modifier_PROTECTED },
-	{ &vm_java_lang_reflect_Modifier, "PRIVATE", "I", &vm_java_lang_reflect_Modifier_PRIVATE },
-	{ &vm_java_lang_reflect_Modifier, "ABSTRACT", "I", &vm_java_lang_reflect_Modifier_ABSTRACT },
-	{ &vm_java_lang_reflect_Modifier, "INTERFACE", "I", &vm_java_lang_reflect_Modifier_INTERFACE },
-	{ &vm_java_lang_reflect_Modifier, "STATIC", "I", &vm_java_lang_reflect_Modifier_STATIC },
 };
 
 struct method_preload_entry {

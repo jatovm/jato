@@ -630,32 +630,11 @@ native_vmclass_isprimitive(struct vm_object *object)
 
 static jint native_vmclass_getmodifiers(struct vm_object *clazz)
 {
-	struct vm_class *vmc = to_vmclass(clazz);
-	if (!vmc)
+	struct vm_class *class = to_vmclass(clazz);
+	if (!class)
 		return 0;
 
-	jint flags = 0;
-
-	if (vm_class_ensure_init(vm_java_lang_reflect_Modifier))
-		return 0;
-
-	if (vm_class_is_public(vmc))
-		flags |= static_field_get_int(vm_java_lang_reflect_Modifier_PUBLIC);
-	else if (vm_class_is_private(vmc))
-		flags |= static_field_get_int(vm_java_lang_reflect_Modifier_PRIVATE);
-	else if (vm_class_is_protected(vmc))
-		flags |= static_field_get_int(vm_java_lang_reflect_Modifier_PROTECTED);
-
-	if (vm_class_is_interface(vmc))
-		flags |= static_field_get_int(vm_java_lang_reflect_Modifier_INTERFACE);
-
-	if (vm_class_is_abstract(vmc))
-		flags |= static_field_get_int(vm_java_lang_reflect_Modifier_ABSTRACT);
-
-	if (vm_class_is_static(vmc))
-		flags |= static_field_get_int(vm_java_lang_reflect_Modifier_STATIC);
-
-	return flags;
+	return class->class->access_flags;
 }
 
 static struct vm_object *
