@@ -474,6 +474,8 @@ static void print_array(struct vm_object *obj)
 static void print_arg(enum vm_type arg_type, const unsigned long *args,
 		      int *arg_index)
 {
+	const int MAX_STRING_LENGTH = 50;
+
 	if (arg_type == J_LONG || arg_type == J_DOUBLE) {
 		union {
 			unsigned long long ullvalue;
@@ -529,9 +531,19 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 
 		if (obj->class == vm_java_lang_String) {
 			char *str;
+			int len;
 
 			str = vm_string_to_cstr(obj);
-			trace_printf("= \"%s\"", str);
+			len = strlen(str);
+
+			if (len > MAX_STRING_LENGTH) {
+				str[MAX_STRING_LENGTH] = 0;
+				trace_printf("= \"%s\" (...%d more)", str,
+					     len - MAX_STRING_LENGTH);
+			} else {
+				trace_printf("= \"%s\"", str);
+			}
+
 			free(str);
 		}
 
