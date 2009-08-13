@@ -133,6 +133,7 @@ int convert_tableswitch(struct parse_context *ctx)
 	if (!if_lesser_stmt)
 		goto fail_lesser_stmt;
 
+	expr_get(pure_index);
 	if_greater_stmt =
 		branch_if_greater_stmt(default_bb, pure_index, info.high);
 	if (!if_greater_stmt)
@@ -142,6 +143,7 @@ int convert_tableswitch(struct parse_context *ctx)
 	if (!stmt)
 		goto fail_stmt;
 
+	expr_get(pure_index);
 	stmt->index = &pure_index->node;
 	stmt->table = table;
 
@@ -223,6 +225,7 @@ int convert_lookupswitch(struct parse_context *ctx)
 	if (!stmt)
 		goto fail_stmt;
 
+	expr_get(pure_bsearch);
 	stmt->lookupswitch_target = &pure_bsearch->node;
 
 	convert_statement(ctx, if_null_stmt);
