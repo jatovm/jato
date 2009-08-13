@@ -1088,6 +1088,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_FLOAT_INSTANCE_FIELD] = print_float_instance_field_expr,
 	[EXPR_INVOKE] = print_invoke_expr,
 	[EXPR_INVOKEINTERFACE] = print_invokeinterface_expr,
+	[EXPR_FINVOKEINTERFACE] = print_invokeinterface_expr,
 	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_FINVOKE] = print_invoke_expr,
 	[EXPR_FINVOKEVIRTUAL] = print_invokevirtual_expr,

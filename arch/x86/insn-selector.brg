@@ -707,22 +707,40 @@ reg:	EXPR_INVOKE(arg) 1
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 }
 
-reg:	EXPR_INVOKEINTERFACE(arg) 1
+freg:	EXPR_FINVOKEINTERFACE(arg) 1
 {
-	struct var_info *eax, *edx = NULL;
-	struct var_info *call_target;
-	struct compilation_unit *cu;
-	unsigned long method_offset;
-	struct vm_method *method;
+	enum vm_type ret_vm_type;
+	struct var_info *esp;
 	struct expression *expr;
-	struct insn *call_insn;
-	int nr_stack_args;
+	struct vm_method *method;
 
 	expr	= to_expr(tree);
 	method	= expr->target_method;
-	cu	= method->compilation_unit;
 
-	method_offset = expr_method_index(expr) * sizeof(void *);
+	ret_vm_type = method_return_type(method);
+	state->reg1 = get_var(s->b_parent, ret_vm_type);
+
+	invokeinterface(state, s, tree);
+
+	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+
+	if (ret_vm_type == J_FLOAT) {
+		select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, -4));
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_XMM, esp, -4, state->reg1));
+	} else {
+		select_insn(s, tree, membase_insn(INSN_FSTP_64_MEMBASE, esp, -8));
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_64_MEMBASE_XMM, esp, -8, state->reg1));
+	}
+}
+
+reg:	EXPR_INVOKEINTERFACE(arg) 1
+{
+	struct var_info *eax, *edx = NULL;
+	struct expression *expr;
+	struct vm_method *method;
+
+	expr	= to_expr(tree);
+	method	= expr->target_method;
 
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 	state->reg1 = get_var(s->b_parent, J_INT);
@@ -732,33 +750,7 @@ reg:	EXPR_INVOKEINTERFACE(arg) 1
 		state->reg2 = get_var(s->b_parent, J_INT);
 	}
 
-	/* object reference */
-	call_target = state->left->reg1;
-
-	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG,
-		call_target, offsetof(struct vm_object, class), call_target));
-
-	/* itable entry */
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
-		offsetof(struct vm_class, itable) + method->itable_index * 4,
-		call_target));
-
-	/* hidden parameter to the conflict resolution stub */
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
-		(unsigned long) method, eax));
-
-	/* invoke method */
-	call_insn = reg_insn(INSN_CALL_REG, call_target);
-
-	select_insn(s, tree, call_insn);
-
-	nr_stack_args = get_stack_args_count(method);
-	if (nr_stack_args)
-		method_args_cleanup(s, tree, nr_stack_args);
-
-	if (opt_trace_invoke_verbose)
-		select_trace_return_value(s, tree, method);
+	invokeinterface(state, s, tree);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx != NULL)
@@ -3067,6 +3059,54 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 
 	if (vm_method_is_native(method))
 		select_exception_test(s, tree);
+
+	if (opt_trace_invoke_verbose)
+		select_trace_return_value(s, tree, method);
+}
+
+static void invokeinterface(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
+{
+	struct var_info *eax;
+	struct var_info *call_target;
+	struct compilation_unit *cu;
+	unsigned long method_offset;
+	struct vm_method *method;
+	struct expression *expr;
+	struct insn *call_insn;
+	int nr_stack_args;
+
+	expr	= to_expr(tree);
+	method	= expr->target_method;
+	cu	= method->compilation_unit;
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	method_offset = expr_method_index(expr) * sizeof(void *);
+
+	/* object reference */
+	call_target = state->left->reg1;
+
+	/* object class */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG,
+		call_target, offsetof(struct vm_object, class), call_target));
+
+	/* itable entry */
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
+		offsetof(struct vm_class, itable) + method->itable_index * 4,
+		call_target));
+
+	/* hidden parameter to the conflict resolution stub */
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
+		(unsigned long) method, eax));
+
+	/* invoke method */
+	call_insn = reg_insn(INSN_CALL_REG, call_target);
+
+	select_insn(s, tree, call_insn);
+
+	nr_stack_args = get_stack_args_count(method);
+	if (nr_stack_args)
+		method_args_cleanup(s, tree, nr_stack_args);
 
 	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);

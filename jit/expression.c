@@ -54,6 +54,7 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_FLOAT_INSTANCE_FIELD:
 	case EXPR_INVOKE:
 	case EXPR_INVOKEINTERFACE:
+	case EXPR_FINVOKEINTERFACE:
 	case EXPR_INVOKEVIRTUAL:
 	case EXPR_FINVOKE:
 	case EXPR_FINVOKEVIRTUAL:
@@ -127,6 +128,7 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_INVOKE:
 	case EXPR_INVOKEVIRTUAL:
 	case EXPR_INVOKEINTERFACE:
+	case EXPR_FINVOKEINTERFACE:
 	case EXPR_FINVOKE:
 	case EXPR_FINVOKEVIRTUAL:
 	case EXPR_NEWARRAY:
@@ -437,6 +439,9 @@ struct expression *invokeinterface_expr(struct vm_method *target)
 	enum vm_type return_type;
 
 	return_type = method_return_type(target);
+	if (vm_type_is_float(return_type))
+		return __invoke_expr(EXPR_FINVOKEINTERFACE, return_type, target);
+
 	return __invoke_expr(EXPR_INVOKEINTERFACE, return_type, target);
 }
 
