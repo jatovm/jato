@@ -72,12 +72,11 @@ char *get_classpath(void)
 	first = true;
 
 	list_for_each_entry(cp, &classpaths, node) {
-		if (!first) {
+		if (!first)
 			str_append(str, ":");
-			first = false;
-		}
 
 		str_append(str, "%s", cp->path);
+		first = false;
 	}
 
 	value = strdup(str->value);
