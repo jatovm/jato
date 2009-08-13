@@ -183,9 +183,18 @@ int classloader_add_to_classpath(const char *classpath)
 	return 0;
 }
 
+enum class_load_status {
+	CLASS_LOADING,
+	CLASS_LOADED,
+	CLASS_NOT_FOUND,
+};
+
 struct classloader_class {
-	bool loaded;
+	enum class_load_status status;
 	struct vm_class *class;
+
+	/* number of threads waiting for a class. */
+	unsigned long nr_waiting;
 };
 
 static struct hash_map *classes;
@@ -466,6 +475,32 @@ out_filename:
 	return result;
 }
 
+static struct classloader_class *find_class(const char *name)
+{
+	struct classloader_class *class;
+
+	class = lookup_class(name);
+	if (class) {
+		/*
+		 * If class is being loaded by another thread then wait
+		 * until loading is completed.
+		 */
+
+		++class->nr_waiting;
+		while (class->status == CLASS_LOADING)
+			pthread_cond_wait(&classloader_cond, &classloader_mutex);
+		--class->nr_waiting;
+
+		if (class->status == CLASS_NOT_FOUND && !class->nr_waiting) {
+			hash_map_remove(classes, name);
+			free(class);
+			class = NULL;
+		}
+	}
+
+	return class;
+}
+
 /* XXX: Should use hash table or tree, not linear search. -Vegard */
 struct vm_class *classloader_load(const char *class_name)
 {
@@ -480,24 +515,22 @@ struct vm_class *classloader_load(const char *class_name)
 		return NULL;
 	}
 
+	vmc = NULL;
+
 	pthread_mutex_lock(&classloader_mutex);
 
-	class = lookup_class(slash_class_name);
+	class = find_class(slash_class_name);
 	if (class) {
-		/* If class is being loaded by another thread then wait
-		 * until loading is completed. */
-		while (!class->loaded)
-			pthread_cond_wait(&classloader_cond, &classloader_mutex);
+		if (class->status == CLASS_LOADED)
+			vmc = class->class;
 
-		vmc = class->class;
 		goto out_unlock;
 	}
 
 	class = malloc(sizeof(*class));
-	class->loaded = false;
+	class->status = CLASS_LOADING;
 
 	if (hash_map_put(classes, strdup(slash_class_name), class)) {
-		NOT_IMPLEMENTED;
 		vmc = NULL;
 		goto out_unlock;
 	}
@@ -511,13 +544,23 @@ struct vm_class *classloader_load(const char *class_name)
 	 */
 	vmc = load_class(slash_class_name);
 	if (!vmc) {
+		pthread_mutex_lock(&classloader_mutex);
+
 		/*
-		 * We should remove the entry from map but other threads
-		 * might be waiting on it.
+		 * If there are other threads waiting for class to be
+		 * loaded then do not remove the entry. Last thread
+		 * removes the entry.
 		 */
-		NOT_IMPLEMENTED;
+		if (class->nr_waiting == 0) {
+			hash_map_remove(classes, slash_class_name);
+			free(class);
+		} else {
+			class->status = CLASS_NOT_FOUND;
+			pthread_cond_broadcast(&classloader_cond);
+		}
+
 		vmc = NULL;
-		goto out;
+		goto out_unlock;
 	}
 
 	pthread_mutex_lock(&classloader_mutex);
@@ -525,7 +568,7 @@ struct vm_class *classloader_load(const char *class_name)
 	vmc->classloader = NULL;
 
 	class->class = vmc;
-	class->loaded = true;
+	class->status = CLASS_LOADED;
 
 	/* Tell other threads that the class has been loaded. Would it
 	 * be worth to use a per-class condition variable for that? */
@@ -533,8 +576,6 @@ struct vm_class *classloader_load(const char *class_name)
 
  out_unlock:
 	pthread_mutex_unlock(&classloader_mutex);
-
- out:
 	free(slash_class_name);
 	trace_pop();
 	return vmc;
@@ -560,15 +601,9 @@ struct vm_class *classloader_find_class(const char *name)
 
 	pthread_mutex_lock(&classloader_mutex);
 
-	class = lookup_class(slash_class_name);
-	if (class) {
-		/* If class is being loaded by another thread then wait
-		 * until loading is completed. */
-		while (!class->loaded)
-			pthread_cond_wait(&classloader_cond, &classloader_mutex);
-
+	class = find_class(slash_class_name);
+	if (class && class->status == CLASS_LOADED)
 		vmc = class->class;
-	}
 
 	free(slash_class_name);
 
