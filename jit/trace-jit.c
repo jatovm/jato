@@ -663,7 +663,8 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	struct vm_object *exception;
 	struct vm_method *vmm;
 	struct vm_class *vmc;
-
+	struct vm_object *msg;
+	int dummy;
 
 	vmm = cu->method;
 	vmc = vmm->class;
@@ -673,6 +674,12 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 
 	trace_printf("trace exception: exception object %p (%s) thrown\n",
 	       exception, exception->class->name);
+
+	dummy = 0;
+	msg = field_get_object(exception, vm_java_lang_Throwable_detailMessage);
+
+	trace_printf("\tmessage\t: ");
+	print_arg(J_REFERENCE, (unsigned long *)  &msg, &dummy);
 
 	trace_printf("\tfrom\t: %p: %s.%s%s\n", native_ptr, vmc->name, vmm->name,
 	       vmm->type);
