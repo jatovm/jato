@@ -83,6 +83,13 @@ struct compilation_unit {
 	 * This maps machine-code offset (of gc safepoint) to gc map
 	 */
 	struct radix_tree *safepoint_map;
+
+	/*
+	 * Contains native pointers of exception handlers.  Indices to
+	 * this table are the same as for exception table in code
+	 * attribute.
+	 */
+	void **exception_handlers;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

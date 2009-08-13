@@ -192,6 +192,8 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_lookupswitch_list(cu);
 	free_tableswitch_list(cu);
 	free_lir_insn_map(cu);
+	free(cu->exception_handlers);
+
 	free(cu);
 }
 

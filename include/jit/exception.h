@@ -66,6 +66,7 @@ void init_exceptions(void);
 void thread_init_exceptions(void);
 void print_exception_table(const struct vm_method *,
 	const struct cafebabe_code_attribute_exception *, int);
+int build_exception_handlers_table(struct compilation_unit *cu);
 
 static inline bool
 exception_covers(struct cafebabe_code_attribute_exception *eh, unsigned long offset)

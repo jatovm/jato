@@ -182,6 +182,32 @@ static unsigned char *eh_native_ptr(struct compilation_unit *cu,
 	return bb_native_ptr(bb);
 }
 
+int build_exception_handlers_table(struct compilation_unit *cu)
+{
+	struct vm_method *method;
+	int size;
+	int i;
+
+	method = cu->method;
+	size = method->code_attribute.exception_table_length;
+
+	if (size == 0)
+		return 0;
+
+	cu->exception_handlers = malloc(sizeof(void *) * size);
+	if (!cu->exception_handlers)
+		return -ENOMEM;
+
+	for (i = 0; i < size; i++) {
+		struct cafebabe_code_attribute_exception *eh
+			= &method->code_attribute.exception_table[i];
+
+		cu->exception_handlers[i] = eh_native_ptr(cu, eh);
+	}
+
+	return 0;
+}
+
 /**
  * find_handler - return native pointer to exception handler for given
  *                @exception_class and @bc_offset of source.
@@ -216,7 +242,7 @@ static unsigned char *find_handler(struct compilation_unit *cu,
 	}
 
 	if (i < size)
-		return eh_native_ptr(cu, eh);
+		return cu->exception_handlers[i];
 
 	return NULL;
 }

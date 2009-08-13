@@ -17,6 +17,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/basic-block.h"
 #include "jit/emit-code.h"
+#include "jit/exception.h"
 #include "jit/compiler.h"
 #include "jit/statement.h"
 #include "jit/text.h"
@@ -198,6 +199,7 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	backpatch_tableswitch_targets(cu);
 	backpatch_lookupswitch_targets(cu);
+	build_exception_handlers_table(cu);
 
 	jit_text_reserve(buffer_offset(cu->objcode));
 	jit_text_unlock();
