@@ -269,6 +269,8 @@ static void init_system_properties(void)
 	add_system_property_const("os.arch", ARCH_NAME);
 	add_system_property_const("os.name", info.sysname);
 	add_system_property_const("os.version", info.release);
+
+	add_system_property_const("gnu.cpu.endian", "little");
 }
 
 
