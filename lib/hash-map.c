@@ -111,7 +111,7 @@ int hash_map_get(struct hash_map *map, const void *key, void **value_p)
 	return 0;
 }
 
-int hash_map_remove(struct hash_map *map, void *key)
+int hash_map_remove(struct hash_map *map, const void *key)
 {
 	struct hash_map_entry *ent;
 

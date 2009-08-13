@@ -24,7 +24,7 @@ struct hash_map *alloc_hash_map(unsigned long size, hash_fn *hash, compare_fn *c
 void free_hash_map(struct hash_map *map);
 int hash_map_put(struct hash_map *map, const void *key, void *value);
 int hash_map_get(struct hash_map *map, const void *key, void **value_p);
-int hash_map_remove(struct hash_map *map, void *key);
+int hash_map_remove(struct hash_map *map, const void *key);
 
 hash_fn string_hash;
 compare_fn string_compare;
