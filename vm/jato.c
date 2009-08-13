@@ -973,7 +973,6 @@ static void handle_trace_method(const char *arg)
 
 static void handle_trace_asm(void)
 {
-	opt_trace_method = true;
 	opt_trace_machine_code = true;
 	opt_trace_compile = true;
 }
@@ -986,6 +985,11 @@ static void handle_trace_bytecode_offset(void)
 static void handle_trace_classloader(void)
 {
 	opt_trace_classloader = true;
+}
+
+static void handle_trace_compile(void)
+{
+	opt_trace_compile = true;
 }
 
 static void handle_trace_exceptions(void)
@@ -1016,7 +1020,6 @@ static void handle_trace_itable(void)
 
 static void handle_trace_jit(void)
 {
-	opt_trace_method = true;
 	opt_trace_cfg = true;
 	opt_trace_tree_ir = true;
 	opt_trace_lir = true;
@@ -1031,7 +1034,6 @@ static void handle_trace_jit(void)
 static void handle_trace_bytecode(void)
 {
 	opt_trace_bytecode = true;
-	opt_trace_method = true;
 	opt_trace_compile = true;
 }
 
@@ -1107,6 +1109,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
 	DEFINE_OPTION("Xtrace:bytecode-offset",	handle_trace_bytecode_offset),
 	DEFINE_OPTION("Xtrace:classloader",	handle_trace_classloader),
+	DEFINE_OPTION("Xtrace:compile",		handle_trace_compile),
 	DEFINE_OPTION("Xtrace:exceptions",	handle_trace_exceptions),
 	DEFINE_OPTION("Xtrace:gc-maps",		handle_trace_gc_maps),
 	DEFINE_OPTION("Xtrace:invoke",		handle_trace_invoke),

@@ -53,7 +53,7 @@ int compile(struct compilation_unit *cu)
 {
 	int err;
 
-	if (opt_trace_method)
+	if (opt_trace_compile)
 		trace_method(cu);
 
 	err = inline_subroutines(cu->method);
