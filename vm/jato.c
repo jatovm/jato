@@ -144,23 +144,34 @@ struct system_properties_entry {
 
 static struct list_head system_properties_list;
 
-static void add_system_property(char *key, char *value)
+static struct system_properties_entry *find_system_property(const char *key)
 {
 	struct system_properties_entry *this;
 
-	assert(key && value);
-
 	list_for_each_entry(this, &system_properties_list, list_node) {
-		if (strcmp(this->key, key) == 0) {
-			free(this->value);
-			free(key);
-
-			this->value = value;
-			return;
-		}
+		if (strcmp(this->key, key) == 0)
+			return this;
 	}
 
-	struct system_properties_entry *ent = malloc(sizeof *ent);
+	return NULL;
+}
+
+static void add_system_property(char *key, char *value)
+{
+	struct system_properties_entry *ent;
+
+	assert(key && value);
+
+	ent = find_system_property(key);
+	if (ent) {
+		free(ent->value);
+		free(key);
+
+		ent->value = value;
+		return;
+	}
+
+	ent = malloc(sizeof *ent);
 	if (!ent)
 		error("out of memory");
 
@@ -184,6 +195,20 @@ static void add_system_property_const(const char *key, const char *value)
 		error("out of memory");
 
 	add_system_property(key_d, value_d);
+}
+
+static void system_property_append_path(const char *key, const char *path)
+{
+	struct system_properties_entry *ent;
+
+	ent = find_system_property(key);
+	if (!ent) {
+		add_system_property_const(key, path);
+		return;
+	}
+
+	if (asprintf(&ent->value, "%s:%s", ent->value, path) < 0)
+		error("out of memory");
 }
 
 struct system_property {
@@ -228,11 +253,8 @@ static void init_system_properties(void)
 		add_system_property_const(p->key, p->value);
 	}
 
-	const char *s = getenv("LD_LIBRARY_PATH");
-	if (!s)
-		s = "/usr/lib/classpath/";
-
-	add_system_property_const("java.library.path", s);
+	add_system_property_const("java.library.path",
+				  getenv("LD_LIBRARY_PATH"));
 
 	char *cwd = get_current_dir_name();
 	add_system_property_const("user.dir", cwd);
@@ -1254,6 +1276,35 @@ do_method_trace(void)
 	return 0;
 }
 
+struct gnu_classpath_config {
+	char *glibj;
+	char *lib;
+};
+
+struct gnu_classpath_config gnu_classpath_configs[] = {
+	{
+		"/usr/local/classpath/share/classpath/glibj.zip",
+		"/usr/local/classpath/lib/classpath"
+	},
+	{
+		"/usr/share/classpath/glibj.zip",
+		"/usr/lib/classpath/"
+	},
+};
+
+static void gnu_classpath_autodiscovery(void)
+{
+	for (unsigned int i = 0; i < ARRAY_SIZE(gnu_classpath_configs); i++) {
+		struct gnu_classpath_config *config = &gnu_classpath_configs[i];
+
+		if (try_to_add_zip_to_classpath(config->glibj) < 0)
+			continue;
+
+		system_property_append_path("java.library.path", config->lib);
+		break;
+	}
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1294,8 +1345,7 @@ main(int argc, char *argv[])
 	static_fixup_init();
 	vm_jni_init();
 
-	if (try_to_add_zip_to_classpath("/usr/local/classpath/share/classpath/glibj.zip") < 0)
-		try_to_add_zip_to_classpath("/usr/share/classpath/glibj.zip");
+	gnu_classpath_autodiscovery();
 
 	/* Search $CLASSPATH last. */
 	char *classpath = getenv("CLASSPATH");
