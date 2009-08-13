@@ -55,6 +55,12 @@ struct compilation_unit {
 	unsigned char *exit_past_unlock_ptr;
 	unsigned char *unwind_past_unlock_ptr;
 
+	/*
+	 * These are native pointers to basic blocks.
+	 */
+	unsigned char *exit_bb_ptr;
+	unsigned char *unwind_bb_ptr;
+
 	struct list_head static_fixup_site_list;
 	struct list_head tableswitch_list;
 	struct list_head lookupswitch_list;

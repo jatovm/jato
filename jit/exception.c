@@ -250,14 +250,14 @@ static unsigned char *find_handler(struct compilation_unit *cu,
 static bool
 is_inside_exit_unlock(struct compilation_unit *cu, unsigned char *ptr)
 {
-	return ptr >= bb_native_ptr(cu->exit_bb) &&
+	return ptr >= cu->exit_bb_ptr &&
 		ptr < cu->exit_past_unlock_ptr;
 }
 
 static bool
 is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
 {
-	return ptr >= bb_native_ptr(cu->unwind_bb) &&
+	return ptr >= cu->unwind_bb_ptr &&
 		ptr < cu->unwind_past_unlock_ptr;
 }
 
@@ -319,7 +319,7 @@ throw_from_jit(struct compilation_unit *cu, struct jit_stack_frame *frame,
 		if (is_inside_exit_unlock(cu, native_ptr))
 			return cu->exit_past_unlock_ptr;
 
-		return bb_native_ptr(cu->exit_bb);
+		return cu->exit_bb_ptr;
 	}
 
 	if (opt_trace_exceptions)
@@ -328,7 +328,7 @@ throw_from_jit(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	if (is_inside_unwind_unlock(cu, native_ptr))
 		return cu->unwind_past_unlock_ptr;
 
-	return bb_native_ptr(cu->unwind_bb);
+	return cu->unwind_bb_ptr;
 }
 
 void

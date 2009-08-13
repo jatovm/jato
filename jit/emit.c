@@ -201,6 +201,9 @@ int emit_machine_code(struct compilation_unit *cu)
 	backpatch_lookupswitch_targets(cu);
 	build_exception_handlers_table(cu);
 
+	cu->exit_bb_ptr = bb_native_ptr(cu->exit_bb);
+	cu->unwind_bb_ptr = bb_native_ptr(cu->unwind_bb);
+
 	jit_text_reserve(buffer_offset(cu->objcode));
 	jit_text_unlock();
 
