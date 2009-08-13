@@ -608,6 +608,27 @@ out:
 	return err;
 }
 
+static int print_truncation_expr(int lvl, struct string *str,
+				 struct expression *expr)
+{
+	int err;
+
+	err = append_formatted(lvl, str, "TRUNCATION:\n");
+	if (err)
+		goto out;
+
+	err = append_simple_attr(lvl + 1, str, "to_type",
+				 type_names[expr->to_type]);
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "from_expression",
+			       expr->unary_expression);
+
+out:
+	return err;
+}
+
 static int print_class_field_expr(int lvl, struct string *str,
 				  struct expression *expr)
 {
@@ -1053,6 +1074,7 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_ARRAY_DEREF] = print_array_deref_expr,
 	[EXPR_BINOP] = print_binop_expr,
 	[EXPR_UNARY_OP] = print_unary_op_expr,
+	[EXPR_TRUNCATION] = print_truncation_expr,
 	[EXPR_CONVERSION] = print_conversion_expr,
 	[EXPR_CONVERSION_FLOAT_TO_DOUBLE] = print_conversion_expr,
 	[EXPR_CONVERSION_DOUBLE_TO_FLOAT] = print_conversion_expr,
