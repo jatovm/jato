@@ -785,6 +785,8 @@ vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
 	struct vm_object *array;
 	struct vm_class *vmc;
 
+	enter_vm_from_jni();
+
 	check_null(element_class);
 
 	vmc = vm_class_get_class_from_class_object(element_class);
@@ -811,6 +813,8 @@ static jobject vm_jni_get_object_array_element(struct vm_jni_env *env,
 					       jobjectArray array,
 					       jsize index)
 {
+	enter_vm_from_jni();
+
 	if (array == NULL) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		return NULL;
@@ -828,6 +832,8 @@ static void vm_jni_set_object_array_element(struct vm_jni_env *env,
 					    jsize index,
 					    jobject value)
 {
+	enter_vm_from_jni();
+
 	if (array == NULL) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		return;
@@ -842,6 +848,8 @@ static void vm_jni_set_object_array_element(struct vm_jni_env *env,
 
 static jsize vm_jni_get_array_length(struct vm_jni_env *env, jarray array)
 {
+	enter_vm_from_jni();
+
 	if (!vm_class_is_array_class(array->class)) {
 		warn("argument is not an array");
 		return 0;
