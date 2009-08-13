@@ -1324,8 +1324,6 @@ main(int argc, char *argv[])
 
 	parse_options(argc, argv);
 
-	init_configurable_system_properties();
-
 	classloader_init();
 
 	init_vm_objects();
@@ -1351,6 +1349,8 @@ main(int argc, char *argv[])
 	char *classpath = getenv("CLASSPATH");
 	if (classpath)
 		classloader_add_to_classpath(classpath);
+
+	init_configurable_system_properties();
 
 	if (preload_vm_classes()) {
 		NOT_IMPLEMENTED;
