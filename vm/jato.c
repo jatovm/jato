@@ -487,27 +487,12 @@ native_vmobject_getclass(struct vm_object *object)
 	return object->class->object;
 }
 
-static struct vm_class *to_vmclass(struct vm_object *object)
-{
-	struct vm_class *vmc;
-
-	if (!object)
-		goto throw;
-	vmc = vm_class_get_class_from_class_object(object);
-	if (!vmc)
-		goto throw;
-	return vmc;
-throw:
-	signal_new_exception(vm_java_lang_NullPointerException, NULL);
-	return NULL;
-}
-
 static struct vm_object *
 native_vmclass_getclassloader(struct vm_object *object)
 {
 	struct vm_class *vmc;
 
-	vmc = to_vmclass(object);
+	vmc = vm_object_to_vm_class(object);
 	if (!vmc)
 		return NULL;
 
@@ -577,7 +562,7 @@ native_vmclass_forname(struct vm_object *name, jboolean initialize,
 static struct vm_object *
 native_vmclass_getname(struct vm_object *object)
 {
-	struct vm_class *class = to_vmclass(object);
+	struct vm_class *class = vm_object_to_vm_class(object);
 
 	if (!class)
 		return NULL;
@@ -595,7 +580,7 @@ native_vmclass_getname(struct vm_object *object)
 static int32_t
 native_vmclass_is_anonymous_class(struct vm_object *object)
 {
-	struct vm_class *class = to_vmclass(object);
+	struct vm_class *class = vm_object_to_vm_class(object);
 
 	if (!class)
 		return false;
@@ -606,8 +591,8 @@ native_vmclass_is_anonymous_class(struct vm_object *object)
 static jboolean
 native_vmclass_is_assignable_from(struct vm_object *clazz_1, struct vm_object *clazz_2)
 {
-	struct vm_class *vmc_1 = to_vmclass(clazz_1);
-	struct vm_class *vmc_2 = to_vmclass(clazz_2);
+	struct vm_class *vmc_1 = vm_object_to_vm_class(clazz_1);
+	struct vm_class *vmc_2 = vm_object_to_vm_class(clazz_2);
 
 	if (!vmc_1 || !vmc_2)
 		return false;
@@ -618,7 +603,7 @@ native_vmclass_is_assignable_from(struct vm_object *clazz_1, struct vm_object *c
 static int32_t
 native_vmclass_isarray(struct vm_object *object)
 {
-	struct vm_class *class = to_vmclass(object);
+	struct vm_class *class = vm_object_to_vm_class(object);
 
 	if (!class)
 		return false;
@@ -629,7 +614,7 @@ native_vmclass_isarray(struct vm_object *object)
 static int32_t
 native_vmclass_isprimitive(struct vm_object *object)
 {
-	struct vm_class *class = to_vmclass(object);
+	struct vm_class *class = vm_object_to_vm_class(object);
 
 	if (!class)
 		return false;
@@ -639,7 +624,7 @@ native_vmclass_isprimitive(struct vm_object *object)
 
 static jint native_vmclass_getmodifiers(struct vm_object *clazz)
 {
-	struct vm_class *class = to_vmclass(clazz);
+	struct vm_class *class = vm_object_to_vm_class(clazz);
 	if (!class)
 		return 0;
 
@@ -649,7 +634,7 @@ static jint native_vmclass_getmodifiers(struct vm_object *clazz)
 static struct vm_object *
 native_vmclass_getcomponenttype(struct vm_object *object)
 {
-	struct vm_class *class = to_vmclass(object);
+	struct vm_class *class = vm_object_to_vm_class(object);
 
 	if (!class)
 		return NULL;
@@ -684,7 +669,7 @@ native_vmclassloader_getprimitiveclass(int type)
 static jboolean
 native_vmclass_isinstance(struct vm_object *clazz, struct vm_object *object)
 {
-	struct vm_class *class = to_vmclass(clazz);
+	struct vm_class *class = vm_object_to_vm_class(clazz);
 
 	if (!object || !class)
 		return false;
@@ -817,7 +802,7 @@ native_vmclassloader_loadclass(struct vm_object *name, jboolean resolve)
 static jboolean
 native_vmclass_isinterface(struct vm_object *clazz)
 {
-	struct vm_class *class = to_vmclass(clazz);
+	struct vm_class *class = vm_object_to_vm_class(clazz);
 	if (!class)
 		return false;
 

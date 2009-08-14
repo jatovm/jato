@@ -38,7 +38,7 @@
 static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 				   struct vm_object *args_array);
 
-static struct vm_class *to_vmclass(struct vm_object *object)
+struct vm_class *vm_object_to_vm_class(struct vm_object *object)
 {
 	struct vm_class *vmc;
 
@@ -81,7 +81,7 @@ native_vmclass_get_declared_fields(struct vm_object *clazz,
 {
 	struct vm_class *vmc;
 
-	vmc = to_vmclass(clazz);
+	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
 
@@ -150,7 +150,7 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 {
 	struct vm_class *vmc;
 
-	vmc = to_vmclass(clazz);
+	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
 
@@ -219,7 +219,7 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 {
 	struct vm_class *vmc;
 
-	vmc = to_vmclass(clazz);
+	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
 
@@ -409,7 +409,7 @@ native_constructor_construct_native(struct vm_object *this,
 	struct vm_class *class;
 	struct vm_method *vmm;
 
-	class = to_vmclass(declaring_class);
+	class = vm_object_to_vm_class(declaring_class);
 	if (!class)
 		return NULL;
 
@@ -435,7 +435,7 @@ struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz)
 {
 	struct vm_class *vmc;
 
-	vmc = to_vmclass(clazz);
+	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
 
@@ -462,7 +462,7 @@ struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz)
 {
 	struct vm_class *vmc;
 
-	vmc = to_vmclass(clazz);
+	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
 
@@ -664,7 +664,7 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
 	struct vm_method *vmm;
 	struct vm_class *vmc;
 
-	vmc = to_vmclass(declaringClass);
+	vmc = vm_object_to_vm_class(declaringClass);
 	if (!vmc)
 		return NULL;
 
