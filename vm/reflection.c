@@ -55,6 +55,26 @@ throw:
 	return NULL;
 }
 
+struct vm_field *vm_object_to_vm_field(struct vm_object *field)
+{
+	struct vm_object *class;
+	struct vm_class *vmc;
+	int slot;
+
+	class = field_get_object(field, vm_java_lang_reflect_Field_declaringClass);
+	slot = field_get_int(field, vm_java_lang_reflect_Field_slot);
+
+	vmc = vm_class_get_class_from_class_object(class);
+	if (!vmc)
+		return NULL;
+
+	vm_class_ensure_init(vmc);
+	if (exception_occurred())
+		return NULL;
+
+	return &vmc->fields[slot];
+}
+
 struct vm_object *
 native_vmclass_get_declared_fields(struct vm_object *clazz,
 				   jboolean public_only)

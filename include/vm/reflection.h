@@ -5,6 +5,8 @@
 
 struct vm_object;
 
+struct vm_field *vm_object_to_vm_field(struct vm_object *field);
+
 struct vm_object *
 native_vmclass_get_declared_fields(struct vm_object *class_object,
 				   jboolean public_only);

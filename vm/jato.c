@@ -829,6 +829,23 @@ static struct vm_object *native_vmstring_intern(struct vm_object *str)
 	return vm_string_intern(str);
 }
 
+static jlong native_unsafe_object_field_offset(struct vm_object *this, struct vm_object *field)
+{
+	struct vm_field *vmf;
+
+	if (!field) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+	vmf = vm_object_to_vm_field(field);
+	if (!vmf) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+
+	return vmf->offset;
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
@@ -880,6 +897,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/Method", "invokeNative", &native_method_invokenative),
 	DEFINE_NATIVE("jato/internal/VM", "enableFault", &native_vm_enable_fault),
 	DEFINE_NATIVE("jato/internal/VM", "disableFault", &native_vm_disable_fault),
+	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", native_unsafe_object_field_offset),
 };
 
 static void jit_init_natives(void)
