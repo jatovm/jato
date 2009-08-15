@@ -74,8 +74,6 @@ static int str_vprintf(struct string *str, unsigned long offset,
 	va_end(tmp_args);
 
 	if ((unsigned long)nr >= size) {
-		int err;
-	
 		err = str_resize(str, str->capacity * 2);
 		if (err)
 			goto out;
