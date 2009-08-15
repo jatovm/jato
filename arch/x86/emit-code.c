@@ -2817,6 +2817,34 @@ static void emit_indirect_call(struct buffer *buf, struct operand *operand)
 	emit(buf, encode_modrm(0x0, 0x2, reg));
 }
 
+static void __emit_test_imm_memdisp(struct buffer *buf,
+				    int rex_w,
+				    long imm,
+				    long disp)
+{
+	/* XXX: Supports only byte or long imms */
+
+	if (rex_w)
+		emit(buf, REX_W);
+
+	if (is_imm_8(imm))
+		emit(buf, 0xf6);
+	else
+		emit(buf, 0xf7);
+
+	emit(buf, 0x04);
+	emit(buf, 0x25);
+	emit_imm32(buf, disp);
+	emit_imm(buf, imm);
+}
+
+static void emit_test_imm_memdisp(struct buffer *buf,
+				  struct operand *imm,
+				  struct operand *disp)
+{
+	__emit_test_imm_memdisp(buf, 0, imm->imm, disp->disp);
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
@@ -2843,6 +2871,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp, TWO_OPERANDS),
 };
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
