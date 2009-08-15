@@ -2973,6 +2973,62 @@ void emit_trampoline(struct compilation_unit *cu,
 	jit_text_unlock();
 }
 
+void emit_lock(struct buffer *buf, struct vm_object *obj)
+{
+	emit_save_regparm(buf);
+
+	__emit64_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
+	__emit_call(buf, vm_object_lock);
+
+	emit_restore_regparm(buf);
+
+	__emit64_push_reg(buf, MACH_REG_RAX);
+	emit_exception_test(buf, MACH_REG_RAX);
+	__emit64_pop_reg(buf, MACH_REG_RAX);
+}
+
+void emit_unlock(struct buffer *buf, struct vm_object *obj)
+{
+	__emit64_push_reg(buf, MACH_REG_RAX);
+	emit_save_regparm(buf);
+
+	__emit64_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
+	__emit_call(buf, vm_object_unlock);
+
+	emit_exception_test(buf, MACH_REG_RAX);
+
+	emit_restore_regparm(buf);
+	__emit64_pop_reg(buf, MACH_REG_RAX);
+}
+
+void emit_lock_this(struct buffer *buf)
+{
+	emit_save_regparm(buf);
+
+	/* %rdi already contains *this. */
+	__emit_call(buf, vm_object_lock);
+
+	emit_restore_regparm(buf);
+
+	__emit_push_reg(buf, MACH_REG_RAX);
+	emit_exception_test(buf, MACH_REG_RAX);
+	__emit_pop_reg(buf, MACH_REG_RAX);
+}
+
+void emit_unlock_this(struct buffer *buf)
+{
+	__emit_push_reg(buf, MACH_REG_RAX);
+	emit_save_regparm(buf);
+
+	/* %rdi already contains *this. */
+	__emit_call(buf, vm_object_unlock);
+
+	emit_exception_test(buf, MACH_REG_RAX);
+
+	emit_restore_regparm(buf);
+	__emit_pop_reg(buf, MACH_REG_RAX);
+}
+
 void *emit_itable_resolver_stub(struct vm_class *vmc,
 				struct itable_entry **table,
 				unsigned int nr_entries)
