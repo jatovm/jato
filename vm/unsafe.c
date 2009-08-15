@@ -34,13 +34,24 @@
 #include "vm/unsafe.h"
 #include "vm/jni.h"
 
-jboolean native_unsafe_compare_and_swap_int(struct vm_object *this,
-					    struct vm_object *obj, jlong offset,
-					    jint expect, jint update)
+jint native_unsafe_compare_and_swap_int(struct vm_object *this,
+					struct vm_object *obj, jlong offset,
+					jint expect, jint update)
 {
 	void *p = &obj->fields[offset];
 
 	return atomic_cmpxchg_32(p, (uint32_t)expect, (uint32_t)update) == (uint32_t)expect;
+}
+
+jint native_unsafe_compare_and_swap_object(struct vm_object *this,
+					   struct vm_object *obj,
+					   jlong offset,
+					   struct vm_object *expect,
+					    struct vm_object *update)
+{
+	void *p = &obj->fields[offset];
+
+	return atomic_cmpxchg_ptr(p, expect, update) == expect;
 }
 
 jlong native_unsafe_object_field_offset(struct vm_object *this,

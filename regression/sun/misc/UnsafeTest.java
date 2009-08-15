@@ -42,30 +42,62 @@ public class UnsafeTest extends TestCase {
     }
 
     public static void assertSwapsInt(int expect, int update) throws Exception {
-        UnsafeObject object = new UnsafeObject();
+        UnsafeIntObject object = new UnsafeIntObject();
         object.value = expect;
         assertTrue(compareAndSwapInt(object, expect, update));
         assertEquals(update, object.value);
     }
 
     public static void assertDoesNotSwapInt(int initial, int expect, int update) throws Exception {
-        UnsafeObject object = new UnsafeObject();
+        UnsafeIntObject object = new UnsafeIntObject();
         object.value = initial;
         assertFalse(compareAndSwapInt(object, expect, update));
         assertEquals(initial, object.value);
     }
 
     public static boolean compareAndSwapInt(Object object, int expect, int update) throws Exception {
-        Field field = UnsafeObject.class.getDeclaredField("value");
+        Field field = UnsafeIntObject.class.getDeclaredField("value");
         long valueOffset = unsafe.objectFieldOffset(field);
         return unsafe.compareAndSwapInt(object, valueOffset, expect, update);
     }
 
-    public static class UnsafeObject {
+    public static class UnsafeIntObject {
         public int value;
+    }
+
+    public static void testCompareAndSwapObject() throws Exception {
+        assertSwapsObject(new Object(), new Object());
+        assertSwapsObject(new Object(), new Object());
+
+        assertDoesNotSwapObject(new Object(), new Object(), new Object());
+    }
+
+    public static void assertSwapsObject(Object expect, Object update) throws Exception {
+        UnsafeObjectObject object = new UnsafeObjectObject();
+        object.value = expect;
+        assertTrue(compareAndSwapObject(object, expect, update));
+        assertEquals(update, object.value);
+    }
+
+    public static void assertDoesNotSwapObject(Object initial, Object expect, Object update) throws Exception {
+        UnsafeObjectObject object = new UnsafeObjectObject();
+        object.value = initial;
+        assertFalse(compareAndSwapObject(object, expect, update));
+        assertEquals(initial, object.value);
+    }
+
+    public static boolean compareAndSwapObject(Object object, Object expect, Object update) throws Exception {
+        Field field = UnsafeObjectObject.class.getDeclaredField("value");
+        long valueOffset = unsafe.objectFieldOffset(field);
+        return unsafe.compareAndSwapObject(object, valueOffset, expect, update);
+    }
+
+    public static class UnsafeObjectObject {
+        public Object value;
     }
 
     public static void main(String[] args) throws Exception {
         testCompareAndSwapInt();
+        testCompareAndSwapObject();
     }
 }
