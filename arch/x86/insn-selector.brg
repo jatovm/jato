@@ -3222,6 +3222,28 @@ static void insn_select(struct basic_block *bb)
 	}
 }
 
+#ifdef CONFIG_X86_32
+static void setup_caller_saved_regs(struct compilation_unit *cu)
+{
+	get_fixed_var(cu, MACH_REG_EAX);
+	get_fixed_var(cu, MACH_REG_ECX);
+	get_fixed_var(cu, MACH_REG_EDX);
+}
+#else /* CONFIG_X86_32 */
+static void setup_caller_saved_regs(struct compilation_unit *cu)
+{
+	get_fixed_var(cu, MACH_REG_RAX);
+	get_fixed_var(cu, MACH_REG_RDI);
+	get_fixed_var(cu, MACH_REG_RSI);
+	get_fixed_var(cu, MACH_REG_RDX);
+	get_fixed_var(cu, MACH_REG_RCX);
+	get_fixed_var(cu, MACH_REG_R8);
+	get_fixed_var(cu, MACH_REG_R9);
+	get_fixed_var(cu, MACH_REG_R10);
+	get_fixed_var(cu, MACH_REG_R11);
+}
+#endif /* CONFIG_X86_32 */
+
 int select_instructions(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
@@ -3242,9 +3264,7 @@ int select_instructions(struct compilation_unit *cu)
 	/*
 	 * Let the liveness analysis pass know about caller saved registers.
 	 */
-	get_fixed_var(cu, MACH_REG_xAX);
-	get_fixed_var(cu, MACH_REG_xCX);
-	get_fixed_var(cu, MACH_REG_xDX);
+	setup_caller_saved_regs(cu);
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		insn_select(bb);

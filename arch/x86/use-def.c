@@ -10,18 +10,19 @@
 #include "jit/vars.h"
 
 enum {
-	DEF_DST		= 1,
-	DEF_SRC		= 2,
-	DEF_NONE	= 4,
-	DEF_xAX		= 8,
-	DEF_xCX		= 16,
-	DEF_xDX		= 32,
-	USE_DST		= 64,
-	USE_IDX_DST	= 128,	/* destination operand is memindex */
-	USE_IDX_SRC	= 256,	/* source operand is memindex */
-	USE_NONE	= 512,
-	USE_SRC		= 1024,
-	USE_FP		= 2048,	/* frame pointer */
+	DEF_DST			= 1,
+	DEF_SRC			= 2,
+	DEF_NONE		= 4,
+	DEF_xAX			= 8,
+	DEF_xCX			= 16,
+	DEF_xDX			= 32,
+	USE_DST			= 64,
+	USE_IDX_DST		= 128,	/* destination operand is memindex */
+	USE_IDX_SRC		= 256,	/* source operand is memindex */
+	USE_NONE		= 512,
+	USE_SRC			= 1024,
+	USE_FP			= 2048,	/* frame pointer */
+	DEF_CALLER_SAVED	= 4096,
 
 #ifdef CONFIG_X86_32
 	DEF_EAX		= DEF_xAX,
@@ -49,8 +50,8 @@ static struct insn_info insn_infos[] = {
 	DECLARE_INFO(INSN_ADD_REG_REG, USE_SRC | USE_DST | DEF_DST),
 	DECLARE_INFO(INSN_AND_MEMBASE_REG, USE_SRC | USE_DST | DEF_DST),
 	DECLARE_INFO(INSN_AND_REG_REG, USE_SRC | USE_DST | DEF_DST),
-	DECLARE_INFO(INSN_CALL_REG, USE_SRC | DEF_xAX | DEF_xCX | DEF_xDX),
-	DECLARE_INFO(INSN_CALL_REL, USE_NONE | DEF_xAX | DEF_xCX | DEF_xDX),
+	DECLARE_INFO(INSN_CALL_REG, USE_SRC | DEF_CALLER_SAVED),
+	DECLARE_INFO(INSN_CALL_REL, USE_NONE | DEF_CALLER_SAVED),
 	DECLARE_INFO(INSN_CLTD_REG_REG, USE_SRC | DEF_SRC | DEF_DST),
 	DECLARE_INFO(INSN_CMP_IMM_REG, USE_DST),
 	DECLARE_INFO(INSN_CMP_MEMBASE_REG, USE_SRC | USE_DST),
@@ -187,6 +188,22 @@ static struct mach_reg_def checkregs[] = {
 	{ MACH_REG_xAX, DEF_xAX },
 	{ MACH_REG_xCX, DEF_xCX },
 	{ MACH_REG_xDX, DEF_xDX },
+
+#ifdef CONFIG_X86_32
+	{ MACH_REG_EAX, DEF_CALLER_SAVED },
+	{ MACH_REG_ECX, DEF_CALLER_SAVED },
+	{ MACH_REG_EDX, DEF_CALLER_SAVED },
+#else
+	{ MACH_REG_RAX, DEF_CALLER_SAVED },
+	{ MACH_REG_RDI, DEF_CALLER_SAVED },
+	{ MACH_REG_RSI, DEF_CALLER_SAVED },
+	{ MACH_REG_RDX, DEF_CALLER_SAVED },
+	{ MACH_REG_RCX, DEF_CALLER_SAVED },
+	{ MACH_REG_R8, DEF_CALLER_SAVED },
+	{ MACH_REG_R9, DEF_CALLER_SAVED },
+	{ MACH_REG_R10, DEF_CALLER_SAVED },
+	{ MACH_REG_R11, DEF_CALLER_SAVED },
+#endif
 };
 
 
