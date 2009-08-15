@@ -91,6 +91,9 @@ native_vmclass_get_declared_fields(struct vm_object *clazz,
 	if (!vmc)
 		return NULL;
 
+	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Field, 0);
+
 	int count;
 
 	if (public_only) {
@@ -160,6 +163,9 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 	if (!vmc)
 		return NULL;
 
+	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Field, 0);
+
 	int count;
 
 	if (public_only) {
@@ -228,6 +234,9 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
+
+	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Field, 0);
 
 	int count = 0;
 
