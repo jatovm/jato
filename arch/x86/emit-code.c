@@ -2467,16 +2467,17 @@ static void __emit_membase(struct buffer *buf,
 {
 	unsigned char rex_pfx = 0, mod, rm, mod_rm;
 	unsigned char __base_reg = __encode_reg(base_reg);
-	int needs_sib;
+	int needs_sib, needs_disp;
 
-	needs_sib = (base_reg == MACH_REG_RSP);
+	needs_sib = (base_reg == MACH_REG_RSP || base_reg == MACH_REG_R12);
+	needs_disp = (disp || base_reg == MACH_REG_R13);
 
 	if (needs_sib)
 		rm = 0x04;
 	else
 		rm = __base_reg;
 
-	if (disp == 0)
+	if (!needs_disp)
 		mod = 0x00;
 	else if (is_imm_8(disp))
 		mod = 0x01;
@@ -2501,7 +2502,7 @@ static void __emit_membase(struct buffer *buf,
 	if (needs_sib)
 		emit(buf, encode_sib(0x00, 0x04, __base_reg));
 
-	if (disp)
+	if (needs_disp)
 		emit_imm(buf, disp);
 }
 
