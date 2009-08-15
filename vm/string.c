@@ -37,7 +37,7 @@
 #include <memory.h>
 
 static struct hash_map *literals;
-pthread_rwlock_t literals_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+static pthread_rwlock_t literals_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
 static int string_obj_comparator(const void *key1, const void *key2)
 {
