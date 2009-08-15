@@ -27,6 +27,10 @@
 
 #include <stdlib.h>
 
+#include "arch/registers.h"
+
+#include "jit/args.h"
+
 #include "vm/call.h"
 #include "vm/method.h"
 
@@ -110,7 +114,46 @@ unsigned long native_call(struct vm_method *method,
 			  const void *target,
 			  unsigned long *args)
 {
-	abort();
+	int i, sp = 0, r = 0;
+	unsigned long *stack, regs[6];
+	unsigned long result;
+
+	stack = malloc(sizeof(unsigned long) * method->args_count);
+	if (!stack)
+		abort();
+
+	for (i = 0; i < method->args_count; i++)
+		if (method->args_map[i].reg == MACH_REG_UNASSIGNED)
+			stack[sp++] = args[i];
+		else
+			regs[r++] = args[i];
+
+	__asm__ volatile (
+		/* Copy stack arguments onto the stack. */
+		"movq %%rbx, %%rcx \n"
+		"shl $3, %%rbx \n"
+		"subq %%rbx, %%rsp \n"
+		"movq %%rsp, %%rdi \n"
+		"cld \n"
+		"rep movsq \n"
+
+		/* Assign registers to register arguments. */
+		"movq 0x00(%%rax), %%rdi \n"
+		"movq 0x08(%%rax), %%rsi \n"
+		"movq 0x10(%%rax), %%rdx \n"
+		"movq 0x18(%%rax), %%rcx \n"
+		"movq 0x20(%%rax), %%r8 \n"
+		"movq 0x28(%%rax), %%r9 \n"
+
+		"call *%3 \n"
+		"addq %%rbx, %%rsp \n"
+		: "=a" (result)
+		: "b" (get_stack_args_count(method)), "S" (stack),
+		  "m" (target), "a" (regs)
+		: "%rcx", "%rdi", "%r8", "%r9", "cc"
+	);
+
+	free(stack);
 
 	return 0;
 }
