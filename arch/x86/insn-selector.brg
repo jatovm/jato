@@ -244,15 +244,23 @@ reg:	EXPR_LOCAL	1
 
 	method = cu->method;
 
-	reg = method->args_map[expr->local_index].reg;
-	if (reg == MACH_REG_UNASSIGNED) {
-		index = method->args_map[expr->local_index].stack_index;
+	if (expr->local_index < (unsigned long) method->args_count) {
+		reg = method->args_map[expr->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			index = method->args_map[expr->local_index].stack_index;
+			slot = get_local_slot(s->b_parent->stack_frame, index);
+			result = get_var(s->b_parent, J_LONG);
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+							       slot, result));
+		} else
+			result = get_fixed_var(s->b_parent, reg);
+	} else {
+		index = expr->local_index - method->reg_args_count;
 		slot = get_local_slot(s->b_parent->stack_frame, index);
 		result = get_var(s->b_parent, J_LONG);
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
 						       slot, result));
-	} else
-		result = get_fixed_var(s->b_parent, reg);
+	}
 
 	state->reg1 = result;
 }
