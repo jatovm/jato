@@ -31,6 +31,7 @@ struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz);
 struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz);
 struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
 jint native_field_get_modifiers_internal(struct vm_object *this);
+struct vm_object *native_field_gettype(struct vm_object *this);
 
 struct vm_object *
 native_method_invokenative(struct vm_object *method, struct vm_object *o,

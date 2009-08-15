@@ -701,3 +701,32 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
 	signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 	return NULL;
 }
+
+struct vm_object *native_field_gettype(struct vm_object *this)
+{
+	struct vm_field *vmf;
+
+	if (!this) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return 0;
+	}
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return 0;
+
+	enum vm_type vmtype;
+	char *type_name;
+
+	if (!parse_type(vmf->type, &vmtype, &type_name)) {
+		warn("type parsing failed");
+		return NULL;
+	}
+
+	struct vm_class *vmc = vm_type_to_class(type_name, vmtype);
+
+	if (vm_class_ensure_init(vmc))
+		return NULL;
+
+	return vmc->object;
+}

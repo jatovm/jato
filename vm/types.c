@@ -161,20 +161,15 @@ const char *get_vm_type_name(enum vm_type type) {
 	return vm_type_names[type];
 }
 
-const char *parse_method_args(const char *type_str, enum vm_type *vmtype,
-			      char **name_p)
+const char *parse_type(const char *type_str, enum vm_type *vmtype,
+		       char **name_p)
 {
-	const char *type_name_start;
-
-	if (*type_str == '(')
-		type_str++;
-
-	type_name_start = type_str;
+	const char *type_name_start = type_str;
 
 	if (name_p)
 		*name_p = NULL;
 
-	if (*type_str == ')')
+	if (!type_str || *type_str == ')')
 		return NULL;
 
 	if (*type_str == '[') {
@@ -215,6 +210,15 @@ const char *parse_method_args(const char *type_str, enum vm_type *vmtype,
 	}
 
 	return type_str;
+}
+
+const char *parse_method_args(const char *type_str, enum vm_type *vmtype,
+			      char **name_p)
+{
+	if (*type_str == '(')
+		type_str++;
+
+	return parse_type(type_str, vmtype, name_p);
 }
 
 unsigned int count_java_arguments(const char *type)
