@@ -60,7 +60,7 @@ static enum machine_reg args_map_alloc_gpr(int gpr)
 
 int args_map_init(struct vm_method *method)
 {
-	const char *type;
+	const char *type = method->type;
 	enum vm_type vm_type;
 	int idx, gpr_count = 0, stack_count = 0;
 	struct vm_args_map *map;
@@ -83,10 +83,9 @@ int args_map_init(struct vm_method *method)
 		idx = 0;
 
 	/* Scan the real parameters and assign registers and stack slots. */
-	for (type = method->type + 1; *type != ')'; skip_type(&type)) {
+	while ((type = parse_method_args(type, &vm_type, NULL))) {
 		map = &method->args_map[idx];
 
-		vm_type = str_to_type(type);
 		switch (vm_type) {
 		case J_BYTE:
 		case J_CHAR:
