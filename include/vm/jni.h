@@ -60,9 +60,6 @@ union jvalue {
 	jobject  l;
 };
 
-int vm_jni_nr_loaded_objects;
-void **vm_jni_loaded_objects;
-
 struct vm_jni_env {
 	void **jni_table;
 };

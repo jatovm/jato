@@ -39,6 +39,9 @@
 
 #include "lib/string.h"
 
+static int vm_jni_nr_loaded_objects;
+static void **vm_jni_loaded_objects;
+
 static char *vm_jni_get_mangled_name(const char *name)
 {
 	struct string *str;
