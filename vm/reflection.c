@@ -605,6 +605,17 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 	return encapsulate_value(value_p, type);
 }
 
+jint native_field_get_modifiers_internal(struct vm_object *this)
+{
+	struct vm_field *vmf;
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return 0;
+
+	return vmf->field->access_flags;
+}
+
 static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 				   struct vm_object *args_array)
 {
