@@ -280,68 +280,6 @@ static void emit_jmp_branch(struct buffer *buf, struct basic_block *bb, struct i
 	__emit_branch(buf, bb, 0x00, 0xe9, insn);
 }
 
-void emit_lock(struct buffer *buf, struct vm_object *obj)
-{
-	__emit_push_imm(buf, (unsigned long)obj);
-	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
-
-	__emit_push_reg(buf, MACH_REG_xAX);
-	emit_exception_test(buf, MACH_REG_xAX);
-	__emit_pop_reg(buf, MACH_REG_xAX);
-}
-
-void emit_unlock(struct buffer *buf, struct vm_object *obj)
-{
-	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, MACH_REG_xAX);
-	__emit_push_reg(buf, MACH_REG_xDX);
-
-	__emit_push_imm(buf, (unsigned long)obj);
-	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
-
-	emit_exception_test(buf, MACH_REG_xAX);
-
-	__emit_pop_reg(buf, MACH_REG_xDX);
-	__emit_pop_reg(buf, MACH_REG_xAX);
-}
-
-void emit_lock_this(struct buffer *buf)
-{
-	unsigned long this_arg_offset;
-
-	this_arg_offset = offsetof(struct jit_stack_frame, args);
-
-	__emit_push_membase(buf, MACH_REG_xBP, this_arg_offset);
-	__emit_call(buf, vm_object_lock);
-	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
-
-	__emit_push_reg(buf, MACH_REG_xAX);
-	emit_exception_test(buf, MACH_REG_xAX);
-	__emit_pop_reg(buf, MACH_REG_xAX);
-}
-
-void emit_unlock_this(struct buffer *buf)
-{
-	unsigned long this_arg_offset;
-
-	this_arg_offset = offsetof(struct jit_stack_frame, args);
-
-	/* Save caller-saved registers which contain method's return value */
-	__emit_push_reg(buf, MACH_REG_xAX);
-	__emit_push_reg(buf, MACH_REG_xDX);
-
-	__emit_push_membase(buf, MACH_REG_xBP, this_arg_offset);
-	__emit_call(buf, vm_object_unlock);
-	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
-
-	emit_exception_test(buf, MACH_REG_xAX);
-
-	__emit_pop_reg(buf, MACH_REG_xDX);
-	__emit_pop_reg(buf, MACH_REG_xAX);
-}
-
 void backpatch_branch_target(struct buffer *buf,
 			     struct insn *insn,
 			     unsigned long target_offset)
@@ -1955,6 +1893,68 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
+}
+
+void emit_lock(struct buffer *buf, struct vm_object *obj)
+{
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, vm_object_lock);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
+
+	__emit_push_reg(buf, MACH_REG_EAX);
+	emit_exception_test(buf, MACH_REG_EAX);
+	__emit_pop_reg(buf, MACH_REG_EAX);
+}
+
+void emit_unlock(struct buffer *buf, struct vm_object *obj)
+{
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, MACH_REG_EAX);
+	__emit_push_reg(buf, MACH_REG_EDX);
+
+	__emit_push_imm(buf, (unsigned long)obj);
+	__emit_call(buf, vm_object_unlock);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_ESP);
+
+	emit_exception_test(buf, MACH_REG_EAX);
+
+	__emit_pop_reg(buf, MACH_REG_EDX);
+	__emit_pop_reg(buf, MACH_REG_EAX);
+}
+
+void emit_lock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	__emit_push_membase(buf, MACH_REG_EBP, this_arg_offset);
+	__emit_call(buf, vm_object_lock);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_ESP);
+
+	__emit_push_reg(buf, MACH_REG_EAX);
+	emit_exception_test(buf, MACH_REG_EAX);
+	__emit_pop_reg(buf, MACH_REG_EAX);
+}
+
+void emit_unlock_this(struct buffer *buf)
+{
+	unsigned long this_arg_offset;
+
+	this_arg_offset = offsetof(struct jit_stack_frame, args);
+
+	/* Save caller-saved registers which contain method's return value */
+	__emit_push_reg(buf, MACH_REG_EAX);
+	__emit_push_reg(buf, MACH_REG_EDX);
+
+	__emit_push_membase(buf, MACH_REG_EBP, this_arg_offset);
+	__emit_call(buf, vm_object_unlock);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_ESP);
+
+	emit_exception_test(buf, MACH_REG_EAX);
+
+	__emit_pop_reg(buf, MACH_REG_EDX);
+	__emit_pop_reg(buf, MACH_REG_EAX);
 }
 
 static void fixup_branch_target(uint8_t *target_p, void *target)
