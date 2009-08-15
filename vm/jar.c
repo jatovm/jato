@@ -29,18 +29,18 @@ void jar_header_free(struct jar_header *jh);
 
 #if 0
 static bool parse_section(struct parse_buffer *b,
-	struct jar_section **section_result);
+			  struct jar_section **section_result);
 static bool parse_nonempty_section(struct parse_buffer *b,
-	struct jar_section **section_result);
+				   struct jar_section **section_result);
 #endif
 
 static bool parse_newline(struct parse_buffer *b);
 static bool parse_header(struct parse_buffer *b,
-	struct jar_header **header_result);
+			 struct jar_header **header_result);
 static bool parse_name(struct parse_buffer *b, char **name_result);
 static bool parse_value(struct parse_buffer *b, char **value_result);
 static bool parse_continuation(struct parse_buffer *b,
-	char **continuation_result);
+			       char **continuation_result);
 static bool parse_alphanum(struct parse_buffer *b, char *alphanum_result);
 static bool parse_headerchar(struct parse_buffer *b, char *headerchar_result);
 static bool parse_otherchar(struct parse_buffer *b, char *otherchar_result);
@@ -58,7 +58,7 @@ void jar_section_free(struct jar_section *js)
 	struct jar_header *header, *tmp_header;
 
 	list_for_each_entry_safe(header, tmp_header, &js->headers, node)
-		free(header);
+	    free(header);
 
 	free(js);
 }
@@ -77,7 +77,7 @@ void jar_header_free(struct jar_header *jh)
 
 #if 0
 static bool parse_section(struct parse_buffer *b,
-	struct jar_section **section_result)
+			  struct jar_section **section_result)
 {
 	struct jar_section *section = jar_section_alloc();
 
@@ -88,8 +88,7 @@ static bool parse_section(struct parse_buffer *b,
 	if (!parse_newline(b))
 		goto out_free_section;
 
-	while (parse_newline(b))
-		;
+	while (parse_newline(b)) ;
 
 	*section_result = section;
 	return true;
@@ -100,7 +99,7 @@ out_free_section:
 }
 
 static bool parse_nonempty_section(struct parse_buffer *b,
-	struct jar_section **section_result)
+				   struct jar_section **section_result)
 {
 	struct jar_header *header;
 	if (!parse_header(b, &header))
@@ -114,8 +113,7 @@ static bool parse_nonempty_section(struct parse_buffer *b,
 	if (!parse_newline(b))
 		goto out_free_section;
 
-	while (parse_newline(b))
-		;
+	while (parse_newline(b)) ;
 
 	*section_result = section;
 	return true;
@@ -147,7 +145,7 @@ static bool parse_newline(struct parse_buffer *b)
 }
 
 static bool parse_header(struct parse_buffer *b,
-	struct jar_header **header_result)
+			 struct jar_header **header_result)
 {
 	char *name;
 	if (!parse_name(b, &name))
@@ -223,7 +221,7 @@ out_free_value:
 }
 
 static bool parse_continuation(struct parse_buffer *b,
-	char **continuation_result)
+			       char **continuation_result)
 {
 	if (b->data[b->i] != ' ')
 		return false;
@@ -253,8 +251,7 @@ static bool parse_alphanum(struct parse_buffer *b, char *alphanum_result)
 	char c = b->data[b->i];
 
 	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
-		|| (c >= '0' && c <= '9'))
-	{
+	    || (c >= '0' && c <= '9')) {
 		*alphanum_result = c;
 		++b->i;
 		return true;
@@ -302,13 +299,14 @@ struct jar_individual_section *jar_individual_section_alloc(void);
 void jar_individual_section_free(struct jar_individual_section *jis);
 
 static bool parse_manifest_file(struct parse_buffer *b,
-	struct jar_manifest **manifest_result);
+				struct jar_manifest **manifest_result);
 static bool parse_main_section(struct parse_buffer *b,
-	struct jar_main_section **main_section_result);
+			       struct jar_main_section **main_section_result);
 static bool parse_version_info(struct parse_buffer *b,
-	unsigned int *major_version_result, unsigned int *minor_version_result);
+			       unsigned int *major_version_result,
+			       unsigned int *minor_version_result);
 static bool parse_version_number(struct parse_buffer *b,
-	unsigned int *version_number_result);
+				 unsigned int *version_number_result);
 
 static bool parse_digit(struct parse_buffer *b, unsigned int *digit_result);
 
@@ -328,8 +326,7 @@ void jar_manifest_free(struct jar_manifest *jm)
 
 	struct jar_individual_section *section, *tmp_section;
 	list_for_each_entry_safe(section, tmp_section,
-		&jm->individual_sections, node)
-	{
+				 &jm->individual_sections, node) {
 		free(section);
 	}
 
@@ -366,8 +363,7 @@ void jar_individual_section_free(struct jar_individual_section *jis)
 
 	struct jar_header *header, *tmp_header;
 	list_for_each_entry_safe(header, tmp_header,
-		&jis->perentry_attributes, node)
-	{
+				 &jis->perentry_attributes, node) {
 		free(header);
 	}
 
@@ -378,7 +374,7 @@ static struct jar_individual_section *
 parse_individual_section(struct parse_buffer *b)
 {
 	struct jar_individual_section *individual_section
-		= jar_individual_section_alloc();
+	    = jar_individual_section_alloc();
 
 	if (!parse_header(b, &individual_section->name_header))
 		goto out_free_individual_section;
@@ -389,7 +385,7 @@ parse_individual_section(struct parse_buffer *b)
 	struct jar_header *perentry_attribute;
 	while (parse_header(b, &perentry_attribute)) {
 		list_add_tail(&perentry_attribute->node,
-			&individual_section->perentry_attributes);
+			      &individual_section->perentry_attributes);
 	}
 
 	return individual_section;
@@ -400,7 +396,7 @@ out_free_individual_section:
 }
 
 static bool parse_manifest_file(struct parse_buffer *b,
-	struct jar_manifest **manifest_result)
+				struct jar_manifest **manifest_result)
 {
 	struct jar_manifest *manifest = jar_manifest_alloc();
 
@@ -424,16 +420,15 @@ out_free_manifest:
 }
 
 static bool parse_main_section(struct parse_buffer *b,
-	struct jar_main_section **main_section_result)
+			       struct jar_main_section **main_section_result)
 {
 	struct jar_main_section *main_section = jar_main_section_alloc();
 
 	if (!parse_version_info(b,
-		&main_section->major_version, &main_section->minor_version))
-	{
+				&main_section->major_version,
+				&main_section->minor_version)) {
 		goto out_free_main_section;
 	}
-
 #if 0
 	/* Note: Although the grammar specifies a newline here, it is actually
 	 * part of the version-info we parsed above (version-info is actually
@@ -455,7 +450,8 @@ out_free_main_section:
 }
 
 static bool parse_version_info(struct parse_buffer *b,
-	unsigned int *major_version_result, unsigned int *minor_version_result)
+			       unsigned int *major_version_result,
+			       unsigned int *minor_version_result)
 {
 	struct jar_header *header;
 	if (!parse_header(b, &header))
@@ -492,7 +488,7 @@ out_free_header:
 }
 
 static bool parse_version_number(struct parse_buffer *b,
-	unsigned int *version_number_result)
+				 unsigned int *version_number_result)
 {
 	unsigned int version_number = 0;
 
@@ -554,7 +550,7 @@ static struct jar_manifest *read_manifest(struct zip *zip)
 		int ret;
 
 		ret = zip_fread(zip_file,
-			zip_file_buf + offset, zip_stat.size - offset);
+				zip_file_buf + offset, zip_stat.size - offset);
 		if (ret == -1) {
 			NOT_IMPLEMENTED;
 			return NULL;
@@ -566,7 +562,7 @@ static struct jar_manifest *read_manifest(struct zip *zip)
 	zip_fclose(zip_file);
 
 	struct parse_buffer pb;
-	pb.data = (char *) zip_file_buf;
+	pb.data = (char *)zip_file_buf;
 	pb.i = 0;
 
 	struct jar_manifest *manifest;
