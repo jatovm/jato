@@ -166,9 +166,10 @@ OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
 RUNTIME_CLASSES =
 
-CC		:= gcc
+CC		?= gcc
+LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
-JAVAC		:= ecj
+JAVAC		?= ecj
 JASMIN		:= java -jar tools/jasmin/jasmin.jar
 JAVAC_OPTS	:= -encoding utf-8
 INSTALL		:= install
@@ -197,8 +198,8 @@ all: $(PROGRAM) $(TEST)
 .DEFAULT: all
 
 $(CLASSPATH_CONFIG):
-	$(E) "  LD      " $@
-	$(Q) $(CC) -Wall $(CLASSPATH_CONFIG).c -o $(CLASSPATH_CONFIG)
+	$(E) "  LINK    " $@
+	$(Q) $(LINK) -Wall $(CLASSPATH_CONFIG).c -o $(CLASSPATH_CONFIG)
 
 monoburg:
 	$(Q) make -C tools/monoburg/
@@ -218,8 +219,8 @@ arch/$(ARCH)/insn-selector.c: monoburg FORCE
 	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
 $(PROGRAM): monoburg $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
-	$(E) "  LD      " $@
-	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+	$(E) "  LINK      " $@
+	$(Q) $(LINK) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
 compile: $(OBJS)
 
