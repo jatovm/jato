@@ -1342,7 +1342,7 @@ struct vm_jni_env vm_jni_default_env = {
 	.jni_table = vm_jni_native_interface,
 };
 
-struct vm_jni_env *vm_jni_get_jni_env()
+struct vm_jni_env *vm_jni_get_jni_env(void)
 {
 	return &vm_jni_default_env;
 }

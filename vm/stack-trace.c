@@ -143,13 +143,13 @@ int vm_enter_vm_native(void *target, void *stack_ptr)
 	return 0;
 }
 
-unsigned long vm_leave_jni()
+unsigned long vm_leave_jni(void)
 {
 	jni_stack_offset -= sizeof(struct jni_stack_entry);
 	return jni_stack[jni_stack_index()].return_address;
 }
 
-void vm_leave_vm_native()
+void vm_leave_vm_native(void)
 {
 	vm_native_stack_offset -= sizeof(struct vm_native_stack_entry);
 }
@@ -562,7 +562,7 @@ convert_intermediate_stack_trace(struct vm_object *array)
  * get_stack_trace - returns an array of java.lang.StackTraceElement
  *   representing the current java call stack.
  */
-struct vm_object *get_java_stack_trace()
+struct vm_object *get_java_stack_trace(void)
 {
 	struct vm_object *intermediate;
 
