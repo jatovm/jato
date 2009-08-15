@@ -97,6 +97,7 @@ struct vm_class *vm_byte_class;
 struct vm_class *vm_short_class;
 struct vm_class *vm_int_class;
 struct vm_class *vm_long_class;
+struct vm_class *vm_void_class;
 
 static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Object",		&vm_java_lang_Object },
@@ -159,6 +160,7 @@ static const struct preload_entry primitive_preload_entries[] = {
 	{"S", &vm_short_class},
 	{"I", &vm_int_class},
 	{"J", &vm_long_class},
+	{"V", &vm_void_class},
 };
 
 struct field_preload_entry {

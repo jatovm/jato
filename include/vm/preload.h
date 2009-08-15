@@ -56,6 +56,7 @@ extern struct vm_class *vm_byte_class;
 extern struct vm_class *vm_short_class;
 extern struct vm_class *vm_int_class;
 extern struct vm_class *vm_long_class;
+extern struct vm_class *vm_void_class;
 
 extern struct vm_field *vm_java_lang_Class_vmdata;
 extern struct vm_field *vm_java_lang_String_offset;

@@ -294,10 +294,13 @@ static struct vm_class *vm_type_to_class(char *type_name, enum vm_type type)
 		return vm_int_class;
 	case J_LONG:
 		return vm_long_class;
+	case J_VOID:
+		return vm_void_class;
 	case J_REFERENCE:
 		return classloader_load(type_name);
-	default:
-		NOT_IMPLEMENTED;
+	case J_RETURN_ADDRESS:
+	case VM_TYPE_MAX:
+		error("invalid type");
 	}
 
 	return NULL;

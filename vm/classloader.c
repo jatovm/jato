@@ -382,7 +382,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 
 	cache_index = str_to_type(class_name);
 
-	if (cache_index == J_VOID || cache_index == J_REFERENCE)
+	if (cache_index == J_REFERENCE)
 		return NULL;
 
 	if (primitive_class_cache[cache_index])
