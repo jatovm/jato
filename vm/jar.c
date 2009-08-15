@@ -27,13 +27,6 @@ void jar_section_free(struct jar_section *js);
 struct jar_header *jar_header_alloc(void);
 void jar_header_free(struct jar_header *jh);
 
-#if 0
-static bool parse_section(struct parse_buffer *b,
-			  struct jar_section **section_result);
-static bool parse_nonempty_section(struct parse_buffer *b,
-				   struct jar_section **section_result);
-#endif
-
 static bool parse_newline(struct parse_buffer *b);
 static bool parse_header(struct parse_buffer *b,
 			 struct jar_header **header_result);
@@ -74,55 +67,6 @@ void jar_header_free(struct jar_header *jh)
 	free(jh->value);
 	free(jh);
 }
-
-#if 0
-static bool parse_section(struct parse_buffer *b,
-			  struct jar_section **section_result)
-{
-	struct jar_section *section = jar_section_alloc();
-
-	struct jar_header *header;
-	while (parse_header(b, &header))
-		list_add_tail(&header->node, &section->headers);
-
-	if (!parse_newline(b))
-		goto out_free_section;
-
-	while (parse_newline(b)) ;
-
-	*section_result = section;
-	return true;
-
-out_free_section:
-	jar_section_free(section);
-	return false;
-}
-
-static bool parse_nonempty_section(struct parse_buffer *b,
-				   struct jar_section **section_result)
-{
-	struct jar_header *header;
-	if (!parse_header(b, &header))
-		return false;
-
-	struct jar_section *section = jar_section_alloc();
-
-	while (parse_header(b, &header))
-		list_add_tail(&header->node, &section->headers);
-
-	if (!parse_newline(b))
-		goto out_free_section;
-
-	while (parse_newline(b)) ;
-
-	*section_result = section;
-	return true;
-
-out_free_section:
-	jar_section_free(section);
-	return false;
-}
-#endif
 
 static bool parse_newline(struct parse_buffer *b)
 {
