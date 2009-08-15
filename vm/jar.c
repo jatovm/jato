@@ -581,24 +581,29 @@ static struct jar_manifest *read_manifest(struct zip *zip)
 
 struct vm_jar *vm_jar_open(const char *filename)
 {
-	int zip_error;
+	struct jar_manifest *manifest;
+	struct vm_jar *jar = NULL;
 	struct zip *zip;
+	int zip_error;
 
 	zip = zip_open(filename, 0, &zip_error);
-	if (!zip) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!zip)
+		goto error_out;
 
-	struct jar_manifest *manifest = read_manifest(zip);
+	jar = malloc(sizeof *jar);
+	if (!jar)
+		goto error_out_close;
+
+	manifest = read_manifest(zip);
 	if (!manifest) {
-		NOT_IMPLEMENTED;
-		return NULL;
+		free(jar);
+		goto error_out_close;
 	}
 
-	struct vm_jar *jar = malloc(sizeof *jar);
 	jar->manifest = manifest;
-
+error_out_close:
+	zip_close(zip);
+error_out:
 	return jar;
 }
 
