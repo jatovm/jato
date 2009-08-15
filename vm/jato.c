@@ -80,7 +80,7 @@
 #include "arch/init.h"
 
 static bool perf_enabled;
-char *exe_name;
+static char *exe_name;
 
 /* Arguments passed to the main class.  */
 static unsigned int nr_java_args;

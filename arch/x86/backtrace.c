@@ -45,8 +45,6 @@
 /* get REG_EIP from ucontext.h */
 #include <ucontext.h>
 
-extern char *exe_name;
-
 static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
 			      const char *symbol_name)
 {
