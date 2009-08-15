@@ -96,6 +96,6 @@ TEST_OBJS := \
 	tree-printer-test.o \
 	typeconv-bc-test.o
 
-CFLAGS += -I ../../arch/mmix/include
+DEFAULT_CFLAGS += -I../../arch/mmix/include -std=gnu99
 
 include ../../scripts/build/test.mk

@@ -4,7 +4,9 @@ DEFAULT_CFLAGS	?= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99 -D_GN
 # XXX: Temporary hack -Vegard
 DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
 
-INCLUDE		?= -I../include/ -I. -I../libharness -I../../include -I../../jit/glib -I../../cafebabe/include/ -include $(ARCH_CONFIG)
+INCLUDE		?= -I../include/ -I. -I../libharness -I../../include \
+		   -I../../jit/glib -I../../cafebabe/include/ \
+		   -I../../arch/$(ARCH)/include -include $(ARCH_CONFIG)
 DEFAULT_LIBS	?= -lrt -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty
 
 ifdef TESTS
