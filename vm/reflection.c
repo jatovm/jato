@@ -81,6 +81,21 @@ throw:
 	return NULL;
 }
 
+static struct vm_method *vm_object_to_vm_method(struct vm_object *method)
+{
+	struct vm_object *clazz;
+	struct vm_class *vmc;
+	int slot;
+
+	clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	slot  = field_get_int(method, vm_java_lang_reflect_Method_slot);
+	return &vmc->methods[slot];
+}
+
 struct vm_object *
 native_vmclass_get_declared_fields(struct vm_object *clazz,
 				   jboolean public_only)
@@ -355,21 +370,16 @@ static struct vm_object *get_method_parameter_types(struct vm_method *vmm)
 struct vm_object *
 native_method_get_parameter_types(struct vm_object *method)
 {
-	struct vm_object *clazz;
-	struct vm_class *class;
-	struct vm_method *vmm;
-	int slot;
-
 	if (!method) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		return NULL;
 	}
 
-	clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
-	slot = field_get_int(method, vm_java_lang_reflect_Method_slot);
+	struct vm_method *vmm
+		= vm_object_to_vm_method(method);
 
-	class = vm_class_get_class_from_class_object(clazz);
-	vmm = &class->methods[slot];
+	if (!vmm)
+		return NULL;
 
 	return get_method_parameter_types(vmm);
 }
