@@ -37,7 +37,6 @@
 #include <stdio.h>
 #include <pthread.h>
 
-bool opt_trace_method;
 bool opt_trace_cfg;
 bool opt_trace_tree_ir;
 bool opt_trace_lir;
@@ -52,7 +51,6 @@ bool opt_trace_invoke_verbose;
 bool opt_trace_exceptions;
 bool opt_trace_bytecode;
 bool opt_trace_compile;
-bool opt_trace_threads;
 
 void trace_method(struct compilation_unit *cu)
 {
