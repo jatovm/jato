@@ -2941,6 +2941,13 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 	return NULL;
 }
 
+void emit_jni_trampoline(struct buffer *buf,
+			 struct vm_method *vmm,
+			 void *target)
+{
+	abort();
+}
+
 #endif /* CONFIG_X86_32 */
 
 typedef void (*emit_no_operands_fn) (struct buffer *);
