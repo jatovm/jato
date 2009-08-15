@@ -2208,7 +2208,8 @@ static inline unsigned long rip_relative(struct buffer *buf,
 
 static inline int is_64bit_reg(struct operand *reg)
 {
-	return (reg->reg.interval->var_info->vm_type == J_LONG);
+	return (reg->reg.interval->var_info->vm_type == J_LONG ||
+		reg->reg.interval->var_info->vm_type == J_REFERENCE);
 }
 
 static int is_64bit_bin_reg_op(struct operand *a, struct operand *b)
