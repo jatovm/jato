@@ -111,7 +111,7 @@ static void vm_jni_attach_current_thread_as_daemon(void)
 	NOT_IMPLEMENTED;
 }
 
-void *vm_jni_invoke_interface[] = {
+static void *vm_jni_invoke_interface[] = {
 	NULL,
 	NULL,
 	NULL,
@@ -125,7 +125,7 @@ void *vm_jni_invoke_interface[] = {
 	vm_jni_attach_current_thread_as_daemon,
 };
 
-struct java_vm vm_jni_default_java_vm = {
+static struct java_vm vm_jni_default_java_vm = {
 	.jni_invoke_interface_table = vm_jni_invoke_interface,
 };
 
