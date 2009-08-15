@@ -553,9 +553,6 @@ static struct vm_object *encapsulate_value(void *value_p, enum vm_type type)
 struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
-	struct vm_class *vmc;
-	struct vm_object *clazz;
-	unsigned int slot;
 	void *value_p;
 
 	if (!this) {
@@ -563,16 +560,9 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 		return NULL;
 	}
 
-	clazz = field_get_object(this, vm_java_lang_reflect_Field_declaringClass);
-	slot = field_get_int(this, vm_java_lang_reflect_Field_slot);
-
-	vmc = vm_class_get_class_from_class_object(clazz);
-
-	vm_class_ensure_init(vmc);
-	if (exception_occurred())
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
 		return NULL;
-
-	vmf = &vmc->fields[slot];
 
 	/*
 	 * TODO: "If this Field enforces access control, your runtime
@@ -584,7 +574,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 	enum vm_type type = vm_field_type(vmf);
 
 	if (vm_field_is_static(vmf)) {
-		value_p = vmc->static_values + vmf->offset;
+		value_p = vmf->class->static_values + vmf->offset;
 	} else {
 		/*
 		 * If o is null, you get a NullPointerException, and
@@ -597,7 +587,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 			return NULL;
 		}
 
-		if (o->class != vmc) {
+		if (o->class != vmf->class) {
 			signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 			return NULL;
 		}
