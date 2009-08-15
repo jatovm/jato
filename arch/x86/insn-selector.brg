@@ -1133,7 +1133,7 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	base = state->left->reg1;
 	state->reg1 = get_var(s->b_parent, J_INT);
 
-	offset = sizeof(struct vm_object) + expr->instance_field->offset;
+	offset = offsetof(struct vm_object, fields) + expr->instance_field->offset;
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
 
 	if (expr->vm_type == J_LONG) {
