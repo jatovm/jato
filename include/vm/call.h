@@ -50,4 +50,11 @@ DECLARE_VM_CALL_METHOD(short);
 DECLARE_VM_CALL_METHOD(object);
 DECLARE_VM_CALL_METHOD(int);
 
+extern unsigned long native_call(struct vm_method *method,
+				 const void *target,
+				 unsigned long *args);
+extern unsigned long vm_native_call(struct vm_method *method,
+				    const void *target,
+				    unsigned long *args);
+
 #endif

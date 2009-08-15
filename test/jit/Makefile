@@ -59,6 +59,7 @@ TOPLEVEL_OBJS := \
 	vm/trace.o \
 	vm/types.o \
 	vm/zalloc.o \
+	arch/mmix/call.o \
 	arch/mmix/instruction.o \
 	arch/mmix/register.o \
 	arch/mmix/stack-frame.o \

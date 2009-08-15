@@ -28,8 +28,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "arch/call.h"
-
 #include "jit/exception.h"
 
 #include "vm/call.h"
@@ -54,11 +52,11 @@ call_method_a(struct vm_method *method, void *target, unsigned long *args)
 	clear_exception();
 
 	if (vm_method_is_vm_native(method)) {
-		vm_native_call(target, args, method->args_count, result);
+		result = vm_native_call(method, target, args);
 		goto out;
 	}
 
-	native_call(target, args, method->args_count, result);
+	result = native_call(method, target, args);
 
  out:
 	if (!exception_occurred() && exception)

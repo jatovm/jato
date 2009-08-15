@@ -11,12 +11,13 @@ SUITE=x86-test-suite.c
 TOPLEVEL_OBJS := \
 	arch/x86/args.o \
 	arch/x86/backtrace.o \
+	arch/x86/call.o \
 	arch/x86/emit-code.o \
 	arch/x86/exception.o \
 	arch/x86/init.o \
 	arch/x86/insn-selector.o \
-	arch/x86/registers$(ARCH_POSTFIX).o \
 	arch/x86/instruction.o \
+	arch/x86/registers$(ARCH_POSTFIX).o \
 	arch/x86/stack-frame.o \
 	arch/x86/thread.o \
 	arch/x86/unwind$(ARCH_POSTFIX).o \
