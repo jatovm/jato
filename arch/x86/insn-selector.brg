@@ -3078,7 +3078,9 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	method	= expr->target_method;
 
 	/* object reference */
-	call_target = state->left->reg1;
+	call_target = get_var(s->b_parent, J_REFERENCE);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG,
+					  state->left->reg1, call_target));
 
 	/* object class */
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
