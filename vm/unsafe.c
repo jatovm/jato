@@ -59,15 +59,9 @@ jlong native_unsafe_object_field_offset(struct vm_object *this,
 {
 	struct vm_field *vmf;
 
-	if (!field) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
 	vmf = vm_object_to_vm_field(field);
-	if (!vmf) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+	if (!vmf)
 		return 0;
-	}
 
 	return vmf->offset;
 }

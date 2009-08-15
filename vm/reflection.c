@@ -61,18 +61,24 @@ struct vm_field *vm_object_to_vm_field(struct vm_object *field)
 	struct vm_class *vmc;
 	int slot;
 
+	if (!field)
+		goto throw;
+
 	class = field_get_object(field, vm_java_lang_reflect_Field_declaringClass);
 	slot = field_get_int(field, vm_java_lang_reflect_Field_slot);
 
 	vmc = vm_class_get_class_from_class_object(class);
 	if (!vmc)
-		return NULL;
+		goto throw;
 
 	vm_class_ensure_init(vmc);
 	if (exception_occurred())
 		return NULL;
 
 	return &vmc->fields[slot];
+throw:
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);
+	return NULL;
 }
 
 struct vm_object *
