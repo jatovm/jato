@@ -1574,6 +1574,7 @@ reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
 	}
 }
 
+%ifdef CONFIG_X86_32
 reg:	EXPR_CONVERSION_FROM_DOUBLE(freg)
 {
 	struct expression *expr, *src;
@@ -1621,6 +1622,7 @@ reg:	EXPR_CONVERSION_FROM_DOUBLE(freg)
 		die("EXPR_CONVERSION_FROM_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
 }
+%endif
 
 arg:	EXPR_NO_ARGS
 {
