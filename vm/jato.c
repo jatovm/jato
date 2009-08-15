@@ -866,6 +866,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/Method", "invokeNative", &native_method_invokenative),
 	DEFINE_NATIVE("jato/internal/VM", "enableFault", &native_vm_enable_fault),
 	DEFINE_NATIVE("jato/internal/VM", "disableFault", &native_vm_disable_fault),
+	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapInt", native_unsafe_compare_and_swap_int),
 	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", native_unsafe_object_field_offset),
 };
 

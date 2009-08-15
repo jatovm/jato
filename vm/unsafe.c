@@ -24,15 +24,27 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "jit/exception.h"
+
+#include "arch/atomic.h"
+
 #include "vm/reflection.h"
 #include "vm/preload.h"
 #include "vm/object.h"
 #include "vm/unsafe.h"
 #include "vm/jni.h"
 
-#include "jit/exception.h"
+jboolean native_unsafe_compare_and_swap_int(struct vm_object *this,
+					    struct vm_object *obj, jlong offset,
+					    jint expect, jint update)
+{
+	void *p = &obj->fields[offset];
 
-jlong native_unsafe_object_field_offset(struct vm_object *this, struct vm_object *field)
+	return atomic_cmpxchg_32(p, (uint32_t)expect, (uint32_t)update) == (uint32_t)expect;
+}
+
+jlong native_unsafe_object_field_offset(struct vm_object *this,
+					struct vm_object *field)
 {
 	struct vm_field *vmf;
 

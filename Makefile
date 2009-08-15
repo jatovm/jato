@@ -278,7 +278,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/SynchronizationExceptionsTest.java \
 	regression/jvm/SynchronizationTest.java \
 	regression/jvm/TestCase.java \
-	regression/jvm/TrampolineBackpatchingTest.java
+	regression/jvm/TrampolineBackpatchingTest.java \
+	regression/sun/misc/UnsafeTest.java
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/DupTest.j \
