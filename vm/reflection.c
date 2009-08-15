@@ -653,6 +653,53 @@ static int unwrap_and_set_field(void *field_ptr, enum vm_type type,
 	return 0;
 }
 
+void native_field_set(struct vm_object *this, struct vm_object *o,
+		      struct vm_object *value_obj)
+{
+	struct vm_field *vmf;
+
+	if (!this) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return;
+	}
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return;
+
+	/*
+	 * TODO: "If this Field enforces access control, your runtime
+	 * context is evaluated, and you may have an
+	 * IllegalAccessException if you could not access this field
+	 * in similar compiled code". (java/lang/reflect/Field.java)
+	 */
+
+	enum vm_type type = vm_field_type(vmf);
+
+	if (vm_field_is_static(vmf)) {
+		unwrap_and_set_field(vmf->class->static_values + vmf->offset,
+				     type, value_obj);
+	} else {
+		/*
+		 * If o is null, you get a NullPointerException, and
+		 * if it is incompatible with the declaring class of
+		 * the field, you get an IllegalArgumentException.
+		 */
+		if (!o) {
+			signal_new_exception(vm_java_lang_NullPointerException,
+					     NULL);
+			return;
+		}
+
+		if (o->class != vmf->class) {
+			signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+			return;
+		}
+
+		unwrap_and_set_field(&o->fields[vmf->offset], type, value_obj);
+	}
+}
+
 static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 				   struct vm_object *args_array)
 {

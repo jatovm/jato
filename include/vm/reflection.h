@@ -38,5 +38,6 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
 			   struct vm_object *args,
 			   struct vm_object *declaringClass,
 			   jint slot);
+void native_field_set(struct vm_object *this, struct vm_object *o, struct vm_object *value_obj);
 
 #endif /* __JATO_VM_REFLECTION_H */
