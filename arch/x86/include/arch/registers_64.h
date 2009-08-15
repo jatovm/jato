@@ -4,6 +4,8 @@
 #include <limits.h>
 #include <stdbool.h>
 
+#include "vm/types.h"
+
 enum machine_reg {
 	MACH_REG_RAX, /* R0 */
 	MACH_REG_RCX, /* R1 */
@@ -46,6 +48,7 @@ enum machine_reg {
 
 const char *reg_name(enum machine_reg reg);
 enum machine_reg_type reg_type(enum machine_reg reg);
+bool reg_supports_type(enum machine_reg reg, enum vm_type type);
 
 static inline bool is_caller_saved_reg(enum machine_reg reg)
 {

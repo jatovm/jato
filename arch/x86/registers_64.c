@@ -29,23 +29,6 @@
 
 #include <assert.h>
 
-static enum machine_reg_type register_types[] = {
-	[MACH_REG_RAX] = REG_TYPE_GPR,
-	[MACH_REG_RBX] = REG_TYPE_GPR,
-	[MACH_REG_RCX] = REG_TYPE_GPR,
-	[MACH_REG_RDX] = REG_TYPE_GPR,
-	[MACH_REG_RDI] = REG_TYPE_GPR,
-	[MACH_REG_RSI] = REG_TYPE_GPR,
-	[MACH_REG_R8] = REG_TYPE_GPR,
-	[MACH_REG_R9] = REG_TYPE_GPR,
-	[MACH_REG_R10] = REG_TYPE_GPR,
-	[MACH_REG_R11] = REG_TYPE_GPR,
-	[MACH_REG_R12] = REG_TYPE_GPR,
-	[MACH_REG_R13] = REG_TYPE_GPR,
-	[MACH_REG_R14] = REG_TYPE_GPR,
-	[MACH_REG_R15] = REG_TYPE_GPR,
-};
-
 static const char *register_names[] = {
 	[MACH_REG_RAX] = "RAX",
 	[MACH_REG_RCX] = "RCX",
@@ -73,9 +56,39 @@ const char *reg_name(enum machine_reg reg)
 	return register_names[reg];
 }
 
-enum machine_reg_type reg_type(enum machine_reg reg)
-{
-	assert(reg != MACH_REG_UNASSIGNED);
+#define GPR_64 (1UL << J_LONG) | (1UL << J_REFERENCE)
+#define GPR_32 (1UL << J_INT)
+#define GPR_16 (1UL << J_SHORT) | (1UL << J_CHAR)
+#define GPR_8 (1UL << J_BYTE) | (1UL << J_BOOLEAN)
+#define FPU (1UL << J_FLOAT) | (1UL << J_DOUBLE)
 
-	return register_types[reg];
+bool reg_supports_type(enum machine_reg reg, enum vm_type type)
+{
+	static const uint32_t table[NR_REGISTERS] = {
+		[MACH_REG_RAX] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_RCX] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_RDX] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_RBX] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R8] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R9] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R10] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R11] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R12] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R13] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R14] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_R15] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+
+		/* XXX: We can't access the lower nibbles of these registers,
+		 * so they shouldn't have GPR_16 or GPR_8, but we need it for
+		 * now to work around a reg-alloc bug. */
+		[MACH_REG_RSI] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+		[MACH_REG_RDI] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+	};
+
+	assert(reg < NR_REGISTERS);
+	assert(type < VM_TYPE_MAX);
+	assert(type != J_VOID);
+	assert(type != J_RETURN_ADDRESS);
+
+	return table[reg] & (1UL << type);
 }
