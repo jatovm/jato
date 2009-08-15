@@ -42,6 +42,10 @@
 #include <dis-asm.h>
 #include <stdarg.h>
 
+#ifdef CONFIG_X86_32
+
+# define JIT_BFD_MACH	bfd_mach_i386_i386
+
 char *regs[] = {
 	"eax",
 	"ecx",
@@ -53,6 +57,30 @@ char *regs[] = {
 	"edi"
 };
 
+#else /* CONFIG_X86_32 */
+
+# define JIT_BFD_MACH	bfd_mach_x86_64
+
+char *regs[] = {
+	"rax",
+	"rcx",
+	"rdx",
+	"rbx",
+	"rsp",
+	"rbp",
+	"rsi",
+	"rdi",
+	"r8",
+	"r9",
+	"r10",
+	"r11",
+	"r12",
+	"r13",
+	"r14",
+	"r15"
+};
+
+#endif /* CONFIG_X86_32 */
 
 /* disassinstr *****************************************************************
 
@@ -74,7 +102,7 @@ unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 		/* setting the struct members must be done after
 		   INIT_DISASSEMBLE_INFO */
 
-		info.mach             = bfd_mach_i386_i386;
+		info.mach             = JIT_BFD_MACH;
 		info.read_memory_func = &disass_buffer_read_memory;
 
 		disass_initialized = 1;
