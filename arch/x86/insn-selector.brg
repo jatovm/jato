@@ -2579,6 +2579,7 @@ stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
 				offsetof(struct lookupswitch_pair, target)));
 }
 
+%ifdef	CONFIG_X86_32
 reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
 {
 	struct expression *expr;
@@ -2602,6 +2603,7 @@ reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
 	state->reg1 = get_fixed_var(s->b_parent, MACH_REG_EAX);
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &bsearch));
 }
+%endif
 
 stmt:	STMT_MONITOR_ENTER(reg)
 {
