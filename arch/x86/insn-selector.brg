@@ -1800,7 +1800,7 @@ arg:	EXPR_ARG(reg) 1
 
 arg:	EXPR_ARG(freg)
 {
-	struct var_info *src, *esp;
+	struct var_info *src, *esp, *dst;
 	struct expression *expr, *arg_expr;
 
 	expr = to_expr(tree);
@@ -2250,7 +2250,10 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
 	struct expression *exprdest, *exprsrc;
 	struct stack_slot *slot;
 	struct statement *stmt;
-	struct var_info *dest;
+	struct var_info *src, *dest;
+	struct vm_method *method = s->b_parent->method;
+	enum machine_reg reg;
+	int index;
 
 	stmt = to_stmt(tree);
 
