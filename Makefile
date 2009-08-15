@@ -109,24 +109,25 @@ VM_OBJS = \
 	vm/itable.o		\
 	vm/jar.o		\
 	vm/jato.o		\
-	vm/jni.o		\
 	vm/jni-interface.o	\
+	vm/jni.o		\
 	vm/method.o		\
 	vm/natives.o		\
 	vm/object.o		\
+	vm/preload.o		\
+	vm/reflection.o		\
 	vm/resolve.o		\
 	vm/signal.o		\
-	vm/stack.o		\
 	vm/stack-trace.o	\
+	vm/stack.o		\
 	vm/static.o		\
 	vm/string.o		\
 	vm/thread.o		\
 	vm/trace.o		\
 	vm/types.o		\
+	vm/unsafe.o		\
 	vm/utf8.o		\
-	vm/zalloc.o		\
-	vm/preload.o		\
-	vm/reflection.o
+	vm/zalloc.o
 
 LIB_OBJS = \
 	lib/bitset.o		\

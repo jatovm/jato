@@ -55,25 +55,26 @@
 
 #include "lib/list.h"
 
-#include "vm/call.h"
-#include "vm/class.h"
-#include "vm/classloader.h"
 #include "vm/fault-inject.h"
-#include "vm/gc.h"
+#include "vm/classloader.h"
+#include "vm/stack-trace.h"
+#include "vm/reflection.h"
+#include "vm/natives.h"
 #include "vm/preload.h"
 #include "vm/itable.h"
-#include "vm/jar.h"
-#include "vm/jni.h"
 #include "vm/method.h"
-#include "vm/natives.h"
 #include "vm/object.h"
-#include "vm/reflection.h"
 #include "vm/signal.h"
-#include "vm/stack-trace.h"
 #include "vm/static.h"
 #include "vm/string.h"
 #include "vm/system.h"
 #include "vm/thread.h"
+#include "vm/unsafe.h"
+#include "vm/class.h"
+#include "vm/call.h"
+#include "vm/jar.h"
+#include "vm/jni.h"
+#include "vm/gc.h"
 #include "vm/vm.h"
 
 #include "arch/init.h"
@@ -812,23 +813,6 @@ native_vmclass_isinterface(struct vm_object *clazz)
 static struct vm_object *native_vmstring_intern(struct vm_object *str)
 {
 	return vm_string_intern(str);
-}
-
-static jlong native_unsafe_object_field_offset(struct vm_object *this, struct vm_object *field)
-{
-	struct vm_field *vmf;
-
-	if (!field) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
-	vmf = vm_object_to_vm_field(field);
-	if (!vmf) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
-
-	return vmf->offset;
 }
 
 static struct vm_native natives[] = {
