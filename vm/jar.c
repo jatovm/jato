@@ -309,8 +309,8 @@ static bool parse_version_info(struct parse_buffer *b,
 	unsigned int *major_version_result, unsigned int *minor_version_result);
 static bool parse_version_number(struct parse_buffer *b,
 	unsigned int *version_number_result);
-static bool parse_individual_section(struct parse_buffer *b,
-	struct jar_individual_section **individual_section_result);
+static struct jar_individual_section *parse_individual_section(struct parse_buffer *b);
+
 static bool parse_digit(struct parse_buffer *b, unsigned int *digit_result);
 
 struct jar_manifest *jar_manifest_alloc(void)
@@ -387,8 +387,9 @@ static bool parse_manifest_file(struct parse_buffer *b,
 		goto out_free_manifest;
 
 	struct jar_individual_section *section;
-	while (parse_individual_section(b, &section))
+	while ((section = parse_individual_section(b)) != NULL) {
 		list_add_tail(&section->node, &manifest->individual_sections);
+	}
 
 	*manifest_result = manifest;
 	return true;
@@ -482,8 +483,8 @@ static bool parse_version_number(struct parse_buffer *b,
 	return true;
 }
 
-static bool parse_individual_section(struct parse_buffer *b,
-	struct jar_individual_section **individual_section_result)
+static struct jar_individual_section *
+parse_individual_section(struct parse_buffer *b)
 {
 	struct jar_individual_section *individual_section
 		= jar_individual_section_alloc();
@@ -500,11 +501,11 @@ static bool parse_individual_section(struct parse_buffer *b,
 			&individual_section->perentry_attributes);
 	}
 
-	return true;
+	return individual_section;
 
 out_free_individual_section:
 	jar_individual_section_free(individual_section);
-	return false;
+	return NULL;
 }
 
 static bool parse_digit(struct parse_buffer *b, unsigned int *digit_result)
