@@ -35,17 +35,6 @@
 #include "vm/stack.h"
 
 #ifdef CONFIG_ARGS_MAP
-int get_stack_args_count(struct vm_method *method)
-{
-	int i, count = 0;
-
-	for (i = 0; i < method->args_count; i++)
-		if (method->args_map[i].reg == MACH_REG_UNASSIGNED)
-			count++;
-
-	return count;
-}
-
 static inline void set_expr_arg_reg(struct expression *expr,
 				    struct vm_method *method,
 				    int index)

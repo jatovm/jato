@@ -38,6 +38,7 @@ struct vm_method {
 	int args_count;
 #ifdef CONFIG_ARGS_MAP
 	struct vm_args_map *args_map;
+	int reg_args_count;
 #endif
 
 	struct cafebabe_code_attribute code_attribute;

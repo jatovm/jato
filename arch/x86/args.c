@@ -127,6 +127,8 @@ int args_map_init(struct vm_method *method)
 		map->stack_index = stack_count++;
 	}
 
+	method->reg_args_count = gpr_count;
+
 	return 0;
 }
 
