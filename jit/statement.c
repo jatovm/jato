@@ -152,5 +152,5 @@ int lookupswitch_pair_comp(const void *key, const void *elem)
 {
 	const struct lookupswitch_pair *pair = elem;
 
-	return (int32_t)key - pair->match;
+	return (int32_t) ((intptr_t) key) - pair->match;
 }
