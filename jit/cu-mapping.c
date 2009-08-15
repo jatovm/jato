@@ -40,8 +40,8 @@
  * structure, so that inserting and removing compilation unit mapping
  * is fast.
  */
-struct radix_tree *cu_map;
-pthread_rwlock_t cu_map_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+static struct radix_tree *cu_map;
+static pthread_rwlock_t cu_map_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
 #define BITS_PER_LEVEL 6
 
