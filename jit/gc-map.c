@@ -7,6 +7,7 @@
 
 int gc_map_init(struct compilation_unit *cu)
 {
+#if 0
 	cu->safepoint_map = alloc_radix_tree(8, 8 * sizeof(unsigned long));
 	if (!cu->safepoint_map)
 		return -ENOMEM;
@@ -46,6 +47,6 @@ int gc_map_init(struct compilation_unit *cu)
 				insn->mach_offset, live_vars);
 		}
 	}
-
+#endif
 	return 0;
 }
