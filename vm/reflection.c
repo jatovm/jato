@@ -618,6 +618,41 @@ jint native_field_get_modifiers_internal(struct vm_object *this)
 	return vmf->field->access_flags;
 }
 
+static int unwrap_and_set_field(void *field_ptr, enum vm_type type,
+				struct vm_object *value)
+{
+	switch (type) {
+	case J_REFERENCE:
+		*(jobject *) field_ptr = value;
+		return 0;
+	case J_BYTE:
+	case J_BOOLEAN:
+	case J_SHORT:
+	case J_CHAR:
+	case J_INT:
+		/*
+		 * We can handle those as int because these values are
+		 * returned by ireturn anyway.
+		 */
+		*(long *) field_ptr = vm_call_method_this_a(vm_java_lang_Number_intValue,
+							    value, NULL);
+		return 0;
+	case J_FLOAT:
+		*(jfloat *) field_ptr = (jfloat) vm_call_method_this_a(vm_java_lang_Number_floatValue,
+								       value, NULL);
+		return 0;
+	case J_LONG:
+	case J_DOUBLE:
+		error("not implemented");
+	case J_VOID:
+	case J_RETURN_ADDRESS:
+	case VM_TYPE_MAX:
+		error("unexpected type");
+	}
+
+	return 0;
+}
+
 static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 				   struct vm_object *args_array)
 {
@@ -639,13 +674,8 @@ static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 
 		arg = array_get_field_ptr(args_array, args_array_idx++);
 
-		if (type == J_REFERENCE)
-			*(jobject *) &args[idx++] = arg;
-		else {
-			/* XXX: marshalling of primitive types not
-			   implemented yet. */
-			error("primitive type marshalling not implemented");
-		}
+		if (unwrap_and_set_field(&args[idx++], type, arg))
+			return -1;
 	}
 
 	return 0;

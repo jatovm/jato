@@ -89,6 +89,7 @@ struct vm_class *vm_java_lang_Integer;
 struct vm_class *vm_java_lang_Long;
 struct vm_class *vm_java_lang_Short;
 struct vm_class *vm_java_lang_VMString;
+struct vm_class *vm_java_lang_Number;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -149,6 +150,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Long", &vm_java_lang_Long },
 	{ "java/lang/ClassLoader", &vm_java_lang_ClassLoader},
 	{ "java/lang/VMString", &vm_java_lang_VMString},
+	{ "java/lang/Number", &vm_java_lang_Number },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -252,6 +254,8 @@ struct vm_method *vm_java_lang_Long_init;
 struct vm_method *vm_java_lang_Short_init;
 struct vm_method *vm_java_lang_ClassLoader_loadClass;
 struct vm_method *vm_java_lang_VMString_intern;
+struct vm_method *vm_java_lang_Number_intValue;
+struct vm_method *vm_java_lang_Number_floatValue;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -403,6 +407,18 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"intern",
 		"(Ljava/lang/String;)Ljava/lang/String;",
 		&vm_java_lang_VMString_intern,
+	},
+	{
+		&vm_java_lang_Number,
+		"intValue",
+		"()I",
+		&vm_java_lang_Number_intValue,
+	},
+	{
+		&vm_java_lang_Number,
+		"floatValue",
+		"()F",
+		&vm_java_lang_Number_floatValue,
 	},
 };
 
