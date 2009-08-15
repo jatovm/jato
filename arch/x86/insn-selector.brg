@@ -1293,7 +1293,7 @@ reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
 	struct expression *expr;
 	struct expression *local;
 
-	reg = get_var(s->b_parent, J_INT);
+	reg = get_var(s->b_parent, GPR_VM_TYPE);
 	state->reg1 = reg;
 
 	expr = to_expr(tree);
