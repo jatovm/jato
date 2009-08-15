@@ -2081,6 +2081,7 @@ stmt:	STMT_STORE(float_inst_field, freg)
 		    reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, src, base, offset));
 }
 
+%ifdef	CONFIG_X86_32
 stmt:	STMT_STORE(EXPR_LOCAL, reg)
 {
 	struct compilation_unit *cu = s->b_parent;
@@ -2105,6 +2106,26 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
 	}
 }
+%else
+stmt:	STMT_STORE(EXPR_LOCAL, reg)
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *local;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *src;
+	int index;
+
+	src = state->right->reg1;
+
+	stmt = to_stmt(tree);
+	local = to_expr(stmt->store_dest);
+	index = local->local_index - cu->method->reg_args_count;
+	slot = get_local_slot(cu->stack_frame, index);
+
+	select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+}
+%endif
 
 stmt:	STMT_STORE(EXPR_FLOAT_LOCAL, freg)
 {
