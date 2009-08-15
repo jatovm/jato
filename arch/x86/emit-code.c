@@ -2585,11 +2585,6 @@ emit_mov_reg_membase(struct buffer *buf, struct operand *src,
 			       mach_reg(&dest->base_reg), dest->disp);
 }
 
-static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
-{
-	/* FIXME: implement this! */
-}
-
 static void __emit_memdisp(struct buffer *buf,
 			   int rex_w,
 			   unsigned char opc,
@@ -2971,6 +2966,17 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
+}
+
+static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
+{
+	/* mov fs:(0xXXX), %reg */
+	emit(buf, 0x64);
+	__emit_memdisp_reg(buf, 1, 0x8b,
+		get_thread_local_offset(&exception_guard), reg);
+
+	/* test (%reg), %reg */
+	__emit64_test_membase_reg(buf, reg, 0, reg);
 }
 
 void emit_lock(struct buffer *buf, struct vm_object *obj)
