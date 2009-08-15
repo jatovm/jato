@@ -2906,6 +2906,26 @@ static void emit_restore_regs(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_RBX);
 }
 
+static void emit_save_regparm(struct buffer *buf)
+{
+	__emit64_push_reg(buf, MACH_REG_RDI);
+	__emit64_push_reg(buf, MACH_REG_RSI);
+	__emit64_push_reg(buf, MACH_REG_RDX);
+	__emit64_push_reg(buf, MACH_REG_RCX);
+	__emit64_push_reg(buf, MACH_REG_R8);
+	__emit64_push_reg(buf, MACH_REG_R9);
+}
+
+static void emit_restore_regparm(struct buffer *buf)
+{
+	__emit64_pop_reg(buf, MACH_REG_R9);
+	__emit64_pop_reg(buf, MACH_REG_R8);
+	__emit64_pop_reg(buf, MACH_REG_RCX);
+	__emit64_pop_reg(buf, MACH_REG_RDX);
+	__emit64_pop_reg(buf, MACH_REG_RSI);
+	__emit64_pop_reg(buf, MACH_REG_RDI);
+}
+
 void emit_trampoline(struct compilation_unit *cu,
 		     void *call_target,
 		     struct jit_trampoline *trampoline)
@@ -2925,12 +2945,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	 * %rdi, %rsi, %rdx, %rcx, %r8 and %r9 are used
 	 * to pass parameters, so save them if they get modified.
 	 */
-	__emit64_push_reg(buf, MACH_REG_RDI);
-	__emit64_push_reg(buf, MACH_REG_RSI);
-	__emit64_push_reg(buf, MACH_REG_RDX);
-	__emit64_push_reg(buf, MACH_REG_RCX);
-	__emit64_push_reg(buf, MACH_REG_R8);
-	__emit64_push_reg(buf, MACH_REG_R9);
+	emit_save_regparm(buf);
 
 	__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 	__emit_call(buf, call_target);
@@ -2949,12 +2964,7 @@ void emit_trampoline(struct compilation_unit *cu,
 			   MACH_REG_RCX);
 	__emit64_test_membase_reg(buf, MACH_REG_RCX, 0, MACH_REG_RCX);
 
-	__emit64_pop_reg(buf, MACH_REG_R9);
-	__emit64_pop_reg(buf, MACH_REG_R8);
-	__emit64_pop_reg(buf, MACH_REG_RCX);
-	__emit64_pop_reg(buf, MACH_REG_RDX);
-	__emit64_pop_reg(buf, MACH_REG_RSI);
-	__emit64_pop_reg(buf, MACH_REG_RDI);
+	emit_restore_regparm(buf);
 
 	__emit64_pop_reg(buf, MACH_REG_RBP);
 	emit_indirect_jump_reg(buf, MACH_REG_RAX);
