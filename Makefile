@@ -193,7 +193,8 @@ WARNINGS	+=				\
 		-Wsign-compare			\
 		-Wstrict-prototypes		\
 		-Wundef				\
-		-Wvolatile-register-var
+		-Wvolatile-register-var		\
+		-Wwrite-strings
 
 DEFAULT_CFLAGS	+= $(WARNINGS)
 

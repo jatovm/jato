@@ -75,7 +75,7 @@ void trace_flush(void) {
 	if (self)
 		thread_name = vm_thread_get_name(self);
 	else
-		thread_name = "unknown";
+		thread_name = strdup("unknown");
 
 	pthread_mutex_lock(&trace_mutex);
 

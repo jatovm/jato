@@ -713,7 +713,7 @@ struct vm_object *vm_alloc_stack_overflow_error(void)
 	return obj;
 }
 
-static char *stack_trace_elem_type_names[] = {
+static const char *stack_trace_elem_type_names[] = {
 	[STACK_TRACE_ELEM_TYPE_JIT] = "jit",
 	[STACK_TRACE_ELEM_TYPE_VM_NATIVE] = "vm native",
 	[STACK_TRACE_ELEM_TYPE_JNI] = "jni",

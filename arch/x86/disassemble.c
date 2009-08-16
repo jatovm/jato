@@ -46,39 +46,9 @@
 
 # define JIT_BFD_MACH	bfd_mach_i386_i386
 
-char *regs[] = {
-	"eax",
-	"ecx",
-	"edx",
-	"ebx",
-	"esp",
-	"ebp",
-	"esi",
-	"edi"
-};
-
 #else /* CONFIG_X86_32 */
 
 # define JIT_BFD_MACH	bfd_mach_x86_64
-
-char *regs[] = {
-	"rax",
-	"rcx",
-	"rdx",
-	"rbx",
-	"rsp",
-	"rbp",
-	"rsi",
-	"rdi",
-	"r8",
-	"r9",
-	"r10",
-	"r11",
-	"r12",
-	"r13",
-	"r14",
-	"r15"
-};
 
 #endif /* CONFIG_X86_32 */
 

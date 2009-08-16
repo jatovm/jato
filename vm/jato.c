@@ -1059,11 +1059,12 @@ static void handle_define(const char *arg)
 	if (!key || !*key)
 		goto out;
 
-	if (!value)
-		value = "";
-
 	key = strdup(key);
-	value = strdup(value);
+
+	if (value)
+		value = strdup(value);
+	else
+		value = strdup("");
 
 	if (!key || !value)
 		error("out of memory");
@@ -1258,8 +1259,8 @@ do_method_trace(void)
 }
 
 struct gnu_classpath_config {
-	char *glibj;
-	char *lib;
+	const char *glibj;
+	const char *lib;
 };
 
 struct gnu_classpath_config gnu_classpath_configs[] = {

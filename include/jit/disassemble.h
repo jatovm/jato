@@ -52,8 +52,6 @@
 extern disassemble_info info;
 extern bool disass_initialized;
 
-extern char *regs[];
-
 extern char disass_buf[512];
 extern unsigned long disass_len;
 
