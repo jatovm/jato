@@ -174,7 +174,7 @@ JASMIN		:= java -jar tools/jasmin/jasmin.jar
 JAVAC_OPTS	:= -encoding utf-8
 INSTALL		:= install
 
-DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE
+DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
 
 # XXX: Temporary hack -Vegard
 DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
