@@ -15,6 +15,7 @@
 #include "vm/class.h"
 #include "vm/die.h"
 #include "vm/backtrace.h"
+#include "vm/thread.h"
 #include "vm/trace.h"
 
 #include "lib/string.h"
@@ -199,6 +200,7 @@ struct classloader_class {
 
 	/* number of threads waiting for a class. */
 	unsigned long nr_waiting;
+	struct vm_thread *loading_thread;
 };
 
 static struct hash_map *classes;
@@ -518,8 +520,18 @@ static struct classloader_class *find_class(const char *name)
 	class = lookup_class(name);
 	if (class) {
 		/*
-		 * If class is being loaded by another thread then wait
-		 * until loading is completed.
+		 * If class is being loaded by current thread then we
+		 * should return NULL. We do this because class
+		 * loading might be delegated to external class
+		 * loaders which might query the VM before loading.
+		 */
+		if (class->status == CLASS_LOADING &&
+		    class->loading_thread == vm_thread_self())
+			return NULL;
+
+		/*
+		 * If class is being loaded by another thread then
+		 * wait until loading is completed.
 		 */
 
 		++class->nr_waiting;
@@ -572,6 +584,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 
 	class = malloc(sizeof(*class));
 	class->status = CLASS_LOADING;
+	class->loading_thread = vm_thread_self();
 
 	if (hash_map_put(classes, strdup(slash_class_name), class)) {
 		vmc = NULL;
