@@ -82,6 +82,7 @@ extern struct vm_field *vm_java_lang_reflect_Field_slot;
 extern struct vm_field *vm_java_lang_reflect_Method_declaringClass;
 extern struct vm_field *vm_java_lang_reflect_Method_name;
 extern struct vm_field *vm_java_lang_reflect_Method_slot;
+extern struct vm_field *vm_java_lang_ClassLoader_systemClassLoader;
 
 extern struct vm_method *vm_java_util_Properties_setProperty;
 extern struct vm_method *vm_java_lang_Throwable_initCause;
@@ -107,6 +108,7 @@ extern struct vm_method *vm_java_lang_Integer_init;
 extern struct vm_method *vm_java_lang_Long_init;
 extern struct vm_method *vm_java_lang_Short_init;
 extern struct vm_method *vm_java_lang_ClassLoader_loadClass;
+extern struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
 extern struct vm_method *vm_java_lang_Number_intValue;
 extern struct vm_method *vm_java_lang_Number_floatValue;
 

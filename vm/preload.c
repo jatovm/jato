@@ -253,6 +253,7 @@ struct vm_method *vm_java_lang_Integer_init;
 struct vm_method *vm_java_lang_Long_init;
 struct vm_method *vm_java_lang_Short_init;
 struct vm_method *vm_java_lang_ClassLoader_loadClass;
+struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
 struct vm_method *vm_java_lang_VMString_intern;
 struct vm_method *vm_java_lang_Number_intValue;
 struct vm_method *vm_java_lang_Number_floatValue;
@@ -401,6 +402,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"loadClass",
 		"(Ljava/lang/String;)Ljava/lang/Class;",
 		&vm_java_lang_ClassLoader_loadClass,
+	},
+	{
+		&vm_java_lang_ClassLoader,
+		"getSystemClassLoader",
+		"()Ljava/lang/ClassLoader;",
+		&vm_java_lang_ClassLoader_getSystemClassLoader,
 	},
 	{
 		&vm_java_lang_VMString,

@@ -1187,10 +1187,24 @@ static void parse_options(int argc, char *argv[])
 	}
 }
 
+static struct vm_object *get_system_class_loader(void)
+{
+	if (vm_class_ensure_init(vm_java_lang_ClassLoader))
+		return NULL;
+
+	return vm_call_method_object(vm_java_lang_ClassLoader_getSystemClassLoader);
+}
+
 static int
 do_main_class(void)
 {
-	struct vm_class *vmc = classloader_load(NULL, classname);
+	struct vm_object *loader;
+
+	loader = get_system_class_loader();
+	if (!loader)
+		return -1;
+
+	struct vm_class *vmc = classloader_load(loader, classname);
 	if (!vmc) {
 		fprintf(stderr, "error: %s: could not load\n", classname);
 		return -1;
@@ -1246,7 +1260,14 @@ do_jar_file(void)
 static int
 do_method_trace(void)
 {
-	struct vm_class *vmc = classloader_load(NULL, method_trace_class_name);
+	struct vm_object *loader;
+
+	loader = get_system_class_loader();
+	if (!loader)
+		return -1;
+
+	struct vm_class *vmc =
+		classloader_load(loader, method_trace_class_name);
 	if (!vmc) {
 		NOT_IMPLEMENTED;
 		return -1;
