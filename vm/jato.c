@@ -385,11 +385,6 @@ native_vmruntime_native_load(struct vm_object *name,
 	char *name_str;
 	int result;
 
-	if (classloader != NULL) {
-		NOT_IMPLEMENTED;
-		return 0;
-	}
-
 	if (!name) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		return 0;
@@ -401,7 +396,7 @@ native_vmruntime_native_load(struct vm_object *name,
 		return 0;
 	}
 
-	result  = vm_jni_load_object(name_str);
+	result  = vm_jni_load_object(name_str, classloader);
 	free(name_str);
 
 	return result == 0;

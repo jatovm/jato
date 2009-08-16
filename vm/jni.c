@@ -42,6 +42,7 @@
 
 struct jni_object {
 	void *handle; /* returned by dlopen() */
+	struct vm_object *classloader;
 };
 
 static unsigned long jni_object_hash(const void *key, unsigned long size)
@@ -102,7 +103,7 @@ static char *vm_jni_get_mangled_name(const char *name)
 	return result;
 }
 
-static int vm_jni_add_object(void *handle)
+static int vm_jni_add_object(void *handle, struct vm_object *classloader)
 {
 	struct jni_object *object;
 
@@ -114,6 +115,7 @@ static int vm_jni_add_object(void *handle)
 		return -ENOMEM;
 
 	object->handle = handle;
+	object->classloader = classloader;
 
 	if (hash_map_put(jni_objects, handle, object)) {
 		free(object);
@@ -134,7 +136,7 @@ void vm_jni_init(void)
 
 typedef jint onload_fn(JavaVM *, void *);
 
-int vm_jni_load_object(const char *name)
+int vm_jni_load_object(const char *name, struct vm_object *classloader)
 {
 	void *handle;
 
@@ -142,7 +144,7 @@ int vm_jni_load_object(const char *name)
 	if (!handle)
 		return -1;
 
-	if (vm_jni_add_object(handle)) {
+	if (vm_jni_add_object(handle, classloader)) {
 		dlclose(handle);
 		return -ENOMEM;
 	}
