@@ -181,14 +181,19 @@ DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not imp
 
 WARNINGS	+=				\
 		-Wall				\
-		-Wformat			\
-		-Wformat-security		\
+		-Wcast-align			\
+		-Wformat=2			\
+		-Winit-self			\
 		-Wmissing-declarations		\
 		-Wmissing-prototypes		\
+		-Wnested-externs		\
+		-Wno-system-headers		\
+		-Wold-style-definition		\
 		-Wredundant-decls		\
 		-Wsign-compare			\
 		-Wstrict-prototypes		\
-		-Wundef
+		-Wundef				\
+		-Wvolatile-register-var
 
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
