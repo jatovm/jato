@@ -800,7 +800,9 @@ native_vmclassloader_loadclass(struct vm_object *name, jboolean resolve)
 	if (!vmc)
 		return NULL;
 
-	vm_class_ensure_init(vmc);
+	if (vm_class_ensure_object(vmc))
+		return NULL;
+
 	return vmc->object;
 }
 
