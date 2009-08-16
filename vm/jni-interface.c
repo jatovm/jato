@@ -1350,7 +1350,7 @@ struct vm_jni_env *vm_jni_get_jni_env(void)
 
 static void *jni_not_implemented_trap;
 
-void vm_jni_init(void)
+void vm_jni_init_interface(void)
 {
 	jni_not_implemented_trap = alloc_guard_page(true);
 	if (!jni_not_implemented_trap)

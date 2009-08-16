@@ -37,10 +37,27 @@
 #include "vm/jni.h"
 #include "vm/stack-trace.h"
 
+#include "lib/hash-map.h"
 #include "lib/string.h"
 
-static int vm_jni_nr_loaded_objects;
-static void **vm_jni_loaded_objects;
+struct jni_object {
+	void *handle; /* returned by dlopen() */
+};
+
+static unsigned long jni_object_hash(const void *key, unsigned long size)
+{
+	unsigned long a;
+
+	a = (unsigned long) key;
+	return ((a >> 24) ^ (a >> 16) ^ (a >> 8) ^ a) % size;
+}
+
+static int jni_object_compare(const void *key1, const void *key2)
+{
+	return (long) key1 - (long) key2;
+}
+
+struct hash_map *jni_objects;
 
 static char *vm_jni_get_mangled_name(const char *name)
 {
@@ -85,32 +102,34 @@ static char *vm_jni_get_mangled_name(const char *name)
 	return result;
 }
 
-static int vm_jni_lookup_object_handle(void *handle)
+static int vm_jni_add_object(void *handle)
 {
-	for (int i = 0; i < vm_jni_nr_loaded_objects; i++)
-		if (vm_jni_loaded_objects[i] == handle)
-			return i;
+	struct jni_object *object;
 
-	return -1;
-}
+	if (hash_map_contains(jni_objects, handle))
+		return 0;
 
-static int vm_jni_add_object_handle(void *handle)
-{
-	void **new_table;
-	int new_size;
-
-	if (vm_jni_lookup_object_handle(handle) >= 0)
-		return 0; /* handle already in table */
-
-	new_size = sizeof(void *) * (vm_jni_nr_loaded_objects + 1);
-	new_table = realloc(vm_jni_loaded_objects, new_size);
-	if (!new_table)
+	object = malloc(sizeof(*object));
+	if (!object)
 		return -ENOMEM;
 
-	vm_jni_loaded_objects = new_table;
-	vm_jni_loaded_objects[vm_jni_nr_loaded_objects++] = handle;
+	object->handle = handle;
+
+	if (hash_map_put(jni_objects, handle, object)) {
+		free(object);
+		return -1;
+	}
 
 	return 0;
+}
+
+void vm_jni_init(void)
+{
+	jni_objects = alloc_hash_map(100, jni_object_hash, jni_object_compare);
+	if (!jni_objects)
+		error("failed to create jni_objects hash map");
+
+	vm_jni_init_interface();
 }
 
 typedef jint onload_fn(JavaVM *, void *);
@@ -123,7 +142,7 @@ int vm_jni_load_object(const char *name)
 	if (!handle)
 		return -1;
 
-	if (vm_jni_add_object_handle(handle)) {
+	if (vm_jni_add_object(handle)) {
 		dlclose(handle);
 		return -ENOMEM;
 	}
@@ -144,10 +163,15 @@ int vm_jni_load_object(const char *name)
 
 static void *vm_jni_lookup_symbol(const char *symbol_name)
 {
-	for (int i = 0; i < vm_jni_nr_loaded_objects; i++) {
+	struct hash_map_entry *this;
+
+	hash_map_for_each_entry(this, jni_objects) {
+		struct jni_object *object;
 		void *addr;
 
-		addr = dlsym(vm_jni_loaded_objects[i], symbol_name);
+		object = this->value;
+
+		addr = dlsym(object->handle, symbol_name);
 		if (addr)
 			return addr;
 	}
