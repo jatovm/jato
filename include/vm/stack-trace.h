@@ -146,7 +146,5 @@ struct vm_object *native_vmthrowable_get_stack_trace(struct vm_object *, struct 
 bool called_from_jit_trampoline(struct native_stack_frame *frame);
 void vm_print_exception(struct vm_object *exception);
 struct vm_object *vm_alloc_stack_overflow_error(void);
-void print_trace_from(unsigned long eip, void *frame);
-void print_trace(void);
 
 #endif /* JATO_VM_STACK_TRACE_H */

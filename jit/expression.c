@@ -9,11 +9,11 @@
 #include "jit/expression.h"
 #include "jit/bc-offset-mapping.h"
 
-#include "vm/vm.h"
+#include "vm/backtrace.h"
 #include "vm/method.h"
 #include "vm/object.h"
 #include "vm/die.h"
-#include "vm/stack-trace.h"
+#include "vm/vm.h"
 
 #include <stdlib.h>
 #include <string.h>

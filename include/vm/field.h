@@ -48,6 +48,4 @@ static inline enum vm_type vm_field_type(const struct vm_field *vmf)
 	return str_to_type(vmf->type);
 }
 
-extern void *static_guard_page;
-
 #endif

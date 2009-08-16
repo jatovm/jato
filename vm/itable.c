@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "vm/stack-trace.h"
 #include "vm/classloader.h"
+#include "vm/backtrace.h"
 #include "vm/class.h"
 #include "vm/object.h"
 #include "vm/itable.h"
