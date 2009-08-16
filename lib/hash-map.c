@@ -123,6 +123,11 @@ int hash_map_remove(struct hash_map *map, const void *key)
 	return 0;
 }
 
+bool hash_map_contains(struct hash_map *map, const void *key)
+{
+	return hash_map_lookup_entry(map, key) != NULL;
+}
+
 unsigned long string_hash(const void *key, unsigned long size)
 {
 	unsigned long hash;
