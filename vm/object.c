@@ -78,28 +78,28 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 
 	switch (type) {
 	case T_BOOLEAN:
-		res->class = classloader_load("[Z");
+		res->class = classloader_load(NULL, "[Z");
 		break;
 	case T_CHAR:
-		res->class = classloader_load("[C");
+		res->class = classloader_load(NULL, "[C");
 		break;
 	case T_FLOAT:
-		res->class = classloader_load("[F");
+		res->class = classloader_load(NULL, "[F");
 		break;
 	case T_DOUBLE:
-		res->class = classloader_load("[D");
+		res->class = classloader_load(NULL, "[D");
 		break;
 	case T_BYTE:
-		res->class = classloader_load("[B");
+		res->class = classloader_load(NULL, "[B");
 		break;
 	case T_SHORT:
-		res->class = classloader_load("[S");
+		res->class = classloader_load(NULL, "[S");
 		break;
 	case T_INT:
-		res->class = classloader_load("[I");
+		res->class = classloader_load(NULL, "[I");
 		break;
 	case T_LONG:
-		res->class = classloader_load("[J");
+		res->class = classloader_load(NULL, "[J");
 		break;
 	default:
 		NOT_IMPLEMENTED;

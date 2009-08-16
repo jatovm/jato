@@ -437,7 +437,7 @@ int preload_vm_classes(void)
 	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
 		const struct preload_entry *pe = &preload_entries[i];
 
-		struct vm_class *class = classloader_load(pe->name);
+		struct vm_class *class = classloader_load(NULL, pe->name);
 		if (!class) {
 			printf("%s\n", pe->name);
 			NOT_IMPLEMENTED;

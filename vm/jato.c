@@ -144,8 +144,6 @@ static struct vm_object *native_vmstackwalker_getclasscontext(void)
 		if (vm_class_ensure_init(vmc))
 			return NULL;
 
-		printf("%d: %s.%s\n", idx, vmc->name, cu->method->name);
-
 		array_set_field_object(res, idx++, vmc->object);
 	}
 
@@ -541,53 +539,27 @@ native_vmclass_forname(struct vm_object *name, jboolean initialize,
 
 	if (!name) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		goto throw;
-	}
-
-	if (loader != NULL) {
-		struct vm_object *obj;
-
-		obj = vm_call_method_object(vm_java_lang_ClassLoader_loadClass,
-					  loader, name);
-		if (exception_occurred())
-			return NULL;
-
-		if (!obj)
-			goto throw;
-
-		class = vm_class_get_class_from_class_object(obj);
-	} else {
-		class_name = vm_string_to_cstr(name);
-		if (!class_name) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
-
-		class = classloader_load(class_name);
-		free(class_name);
-	}
-
-	if (!class)
-		goto throw;
-
-	if (initialize) {
-		vm_class_ensure_init(class);
-		if (exception_occurred())
-			goto throw;
-	}
-
-	return class->object;
-
- throw:
-	class_name = vm_string_to_cstr(name);
-
-	if (!class_name) {
-		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
-	signal_new_exception(vm_java_lang_ClassNotFoundException,
-			     class_name);
+	class_name = vm_string_to_cstr(name);
+	if (!class_name) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		return NULL;
+	}
+
+	class = classloader_load(loader, class_name);
+	if (!class)
+		goto throw_cnf;
+
+	if (initialize) {
+		if (vm_class_ensure_init(class))
+			goto throw_cnf;
+	}
+
+	return class->object;
+ throw_cnf:
+	signal_new_exception(vm_java_lang_ClassNotFoundException, class_name);
 	free(class_name);
 	return NULL;
 }
@@ -823,7 +795,7 @@ native_vmclassloader_loadclass(struct vm_object *name, jboolean resolve)
 	if (!c_name)
 		return NULL;
 
-	vmc = classloader_load(c_name);
+	vmc = classloader_load(NULL, c_name);
 	free(c_name);
 	if (!vmc)
 		return NULL;
@@ -1218,7 +1190,7 @@ static void parse_options(int argc, char *argv[])
 static int
 do_main_class(void)
 {
-	struct vm_class *vmc = classloader_load(classname);
+	struct vm_class *vmc = classloader_load(NULL, classname);
 	if (!vmc) {
 		fprintf(stderr, "error: %s: could not load\n", classname);
 		return -1;
@@ -1274,7 +1246,7 @@ do_jar_file(void)
 static int
 do_method_trace(void)
 {
-	struct vm_class *vmc = classloader_load(method_trace_class_name);
+	struct vm_class *vmc = classloader_load(NULL, method_trace_class_name);
 	if (!vmc) {
 		NOT_IMPLEMENTED;
 		return -1;

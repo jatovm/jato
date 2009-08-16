@@ -46,11 +46,8 @@ static struct vm_class *class_to_array_class(struct vm_class *class)
 	struct vm_class *array_class;
 	char *array_class_name;
 
-	/* XXX: This is not entirely right. We need to make sure that we're
-	 * using the same class loader as the original class. We don't support
-	 * multiple (different) class loaders yet. */
 	array_class_name = class_name_to_array_name(class->name);
-	array_class = classloader_load(array_class_name);
+	array_class = classloader_load(class->classloader, array_class_name);
 	free(array_class_name);
 
 	return array_class;

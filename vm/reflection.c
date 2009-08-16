@@ -299,7 +299,9 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 	return array;
 }
 
-static struct vm_class *vm_type_to_class(char *type_name, enum vm_type type)
+static struct vm_class *
+vm_type_to_class(struct vm_object *classloader, char *type_name,
+		 enum vm_type type)
 {
 	switch (type) {
 	case J_BOOLEAN:
@@ -321,7 +323,7 @@ static struct vm_class *vm_type_to_class(char *type_name, enum vm_type type)
 	case J_VOID:
 		return vm_void_class;
 	case J_REFERENCE:
-		return classloader_load(type_name);
+		return classloader_load(classloader, type_name);
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
 		error("invalid type");
@@ -352,7 +354,8 @@ static struct vm_object *get_method_parameter_types(struct vm_method *vmm)
 	while ((type_str = parse_method_args(type_str, &type, &type_name))) {
 		struct vm_class *class;
 
-		class = vm_type_to_class(type_name, type);
+		class = vm_type_to_class(vmm->class->classloader, type_name,
+					 type);
 		free(type_name);
 
 		if (class)
@@ -801,6 +804,8 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
 struct vm_object *native_field_gettype(struct vm_object *this)
 {
 	struct vm_field *vmf;
+	enum vm_type vmtype;
+	char *type_name;
 
 	if (!this) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
@@ -811,15 +816,13 @@ struct vm_object *native_field_gettype(struct vm_object *this)
 	if (!vmf)
 		return 0;
 
-	enum vm_type vmtype;
-	char *type_name;
-
 	if (!parse_type(vmf->type, &vmtype, &type_name)) {
 		warn("type parsing failed");
 		return NULL;
 	}
 
-	struct vm_class *vmc = vm_type_to_class(type_name, vmtype);
+	struct vm_class *vmc =
+		vm_type_to_class(vmf->class->classloader, type_name, vmtype);
 
 	if (vm_class_ensure_init(vmc))
 		return NULL;

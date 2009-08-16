@@ -141,7 +141,8 @@ vm_jni_find_class(struct vm_jni_env *env, const char *name)
 
 	enter_vm_from_jni();
 
-	class = classloader_load(name);
+	/* XXX: which classloader should we use here? */
+	class = classloader_load(NULL, name);
 	if (!class) {
 		signal_new_exception(vm_java_lang_NoClassDefFoundError,
 				     name);

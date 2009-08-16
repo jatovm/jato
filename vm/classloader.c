@@ -8,8 +8,10 @@
 #include "cafebabe/class.h"
 #include "cafebabe/stream.h"
 
+#include "vm/call.h"
 #include "vm/classloader.h"
 #include "vm/preload.h"
+#include "vm/reflection.h"
 #include "vm/class.h"
 #include "vm/die.h"
 #include "vm/backtrace.h"
@@ -17,6 +19,8 @@
 
 #include "lib/string.h"
 #include "lib/hash-map.h"
+
+#include "jit/exception.h"
 
 bool opt_trace_classloader;
 static __thread int trace_classloader_level = 0;
@@ -406,7 +410,8 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	return class;
 }
 
-static struct vm_class *load_array_class(const char *class_name)
+static struct vm_class *
+load_array_class(struct vm_object *loader, const char *class_name)
 {
 	struct vm_class *array_class;
 	char *elem_class_name;
@@ -436,7 +441,7 @@ static struct vm_class *load_array_class(const char *class_name)
 			classloader_load_primitive(elem_class_name);
 	} else {
 		array_class->array_element_class =
-			classloader_load(elem_class_name);
+			classloader_load(loader, elem_class_name);
 	}
 
 	free(elem_class_name);
@@ -444,13 +449,44 @@ static struct vm_class *load_array_class(const char *class_name)
 	return array_class;
 }
 
-static struct vm_class *load_class(const char *class_name)
+static struct vm_class *
+load_class_with(struct vm_object *loader, const char *name)
+{
+	struct vm_object *name_string;
+	struct vm_object *clazz;
+	struct vm_class *vmc;
+
+	name_string = vm_object_alloc_string_from_c(name);
+	if (!name_string) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		return NULL;
+	}
+
+	clazz = vm_call_method_this_object(vm_java_lang_ClassLoader_loadClass,
+					   loader, name_string);
+	if (!clazz || exception_occurred())
+		return NULL;
+
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	vmc->classloader = loader;
+
+	return vmc;
+}
+
+static struct vm_class *load_class(struct vm_object *loader,
+				   const char *class_name)
 {
 	struct vm_class *result;
 	char *filename;
 
 	if (class_name[0] == '[')
-		return load_array_class(class_name);
+		return load_array_class(loader, class_name);
+
+	if (loader)
+		return load_class_with(loader, class_name);
 
 	filename = class_name_to_file_name(class_name);
 	if (!filename) {
@@ -501,8 +537,15 @@ static struct classloader_class *find_class(const char *name)
 	return class;
 }
 
-/* XXX: Should use hash table or tree, not linear search. -Vegard */
-struct vm_class *classloader_load(const char *class_name)
+/**
+ * Loads a class of given name. if @loader is not NULL then
+ * loading of a class will be delegated to @loader.
+ *
+ * If @class_name refers to an array class then @loader
+ * will be called only for array element class.
+ */
+struct vm_class *
+classloader_load(struct vm_object *loader, const char *class_name)
 {
 	struct vm_class *vmc;
 	struct classloader_class *class;
@@ -542,7 +585,7 @@ struct vm_class *classloader_load(const char *class_name)
 	 * load_class() because for example vm_class_init() might call
 	 * classloader_load() for superclasses.
 	 */
-	vmc = load_class(slash_class_name);
+	vmc = load_class(loader, slash_class_name);
 	if (!vmc) {
 		pthread_mutex_lock(&classloader_mutex);
 
@@ -565,7 +608,7 @@ struct vm_class *classloader_load(const char *class_name)
 
 	pthread_mutex_lock(&classloader_mutex);
 
-	vmc->classloader = NULL;
+	vmc->classloader = loader;
 
 	class->class = vmc;
 	class->status = CLASS_LOADED;

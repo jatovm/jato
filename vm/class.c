@@ -123,6 +123,7 @@ static int vm_class_link_common(struct vm_class *vmc)
 		return -err;
 
 	vmc->object = NULL;
+	vmc->classloader = NULL;
 
 	return 0;
 }
@@ -237,7 +238,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 			super_name->length);
 
 		/* XXX: Circularity check */
-		vmc->super = classloader_load(super_name_str);
+		vmc->super = classloader_load(NULL, super_name_str);
 		if (!vmc->super) {
 			NOT_IMPLEMENTED;
 			return -1;
@@ -284,7 +285,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 			return -1;
 		}
 
-		struct vm_class *vmi = classloader_load(c_name);
+		struct vm_class *vmi = classloader_load(NULL, c_name);
 		free(c_name);
 		if (!vmi)
 			return -1;
@@ -635,7 +636,8 @@ struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 		return NULL;
 	}
 
-	struct vm_class *class = classloader_load(class_name_str);
+	struct vm_class *class
+		= classloader_load(vmc->classloader, class_name_str);
 	if (!class) {
 		NOT_IMPLEMENTED;
 		return NULL;
@@ -1063,11 +1065,12 @@ struct vm_class *vm_class_get_array_class(struct vm_class *element_class)
 	struct vm_class *result;
 	char *name;
 
-	if (!asprintf(&name, "[%s", element_class->name))
+	if (!asprintf(&name, "[%s", element_class->name)) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
 		return NULL;
+	}
 
-	result = classloader_load(name);
-
+	result = classloader_load(element_class->classloader, name);
 	free(name);
 	return result;
 }
