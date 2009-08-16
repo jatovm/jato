@@ -817,6 +817,7 @@ static struct vm_object *native_vmstring_intern(struct vm_object *str)
 
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", &native_vmstackwalker_getclasscontext),
+	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassLoader", &native_vmclass_getclassloader),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", &native_vmsystemproperties_preinit),
 	DEFINE_NATIVE("jato/internal/VM", "exit", &native_vmruntime_exit),
 	DEFINE_NATIVE("jato/internal/VM", "println", &native_vmruntime_println),
