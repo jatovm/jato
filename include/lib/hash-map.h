@@ -27,6 +27,10 @@ int hash_map_get(struct hash_map *map, const void *key, void **value_p);
 int hash_map_remove(struct hash_map *map, const void *key);
 bool hash_map_contains(struct hash_map *map, const void *key);
 
+#define hash_map_for_each_entry(this, hashmap)				\
+	for (unsigned long __i = 0; __i < (hashmap)->size; __i++)	\
+		list_for_each_entry(this, &(hashmap)->table[__i], list_node)
+
 hash_fn string_hash;
 compare_fn string_compare;
 
