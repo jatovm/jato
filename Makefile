@@ -257,6 +257,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/CFGCrashTest.java \
 	regression/jvm/ClassExceptionsTest.java \
 	regression/jvm/ClassLoaderTest.java \
+	regression/jvm/ClassTest.java \
 	regression/jvm/CloneTest.java \
 	regression/jvm/ControlTransferTest.java \
 	regression/jvm/ConversionTest.java \

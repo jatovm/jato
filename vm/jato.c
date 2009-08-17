@@ -628,7 +628,7 @@ static jint native_vmclass_getmodifiers(struct vm_object *clazz)
 	if (!class)
 		return 0;
 
-	return class->class->access_flags;
+	return class->access_flags;
 }
 
 static struct vm_object *

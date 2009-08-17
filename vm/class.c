@@ -188,14 +188,11 @@ static void buckets_order_fields(struct field_bucket buckets[VM_TYPE_MAX],
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
-	int err;
-
 	vmc->class = class;
 	vmc->kind = VM_CLASS_KIND_REGULAR;
 
-	err = vm_class_link_common(vmc);
-	if (err)
-		return -err;
+	if (vm_class_link_common(vmc))
+		return -1;
 
 	const struct cafebabe_constant_info_class *constant_class;
 	if (cafebabe_class_constant_get_class(class,
@@ -214,6 +211,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	}
 
 	vmc->name = strndup((char *) name->bytes, name->length);
+
+	vmc->access_flags = class->access_flags;
 
 	vmc->source_file_name = cafebabe_class_get_source_file_name(class);
 
@@ -423,6 +422,8 @@ int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
 	vmc->class = NULL;
 	vmc->state = VM_CLASS_LINKED;
 
+	vmc->access_flags = CAFEBABE_CLASS_ACC_PUBLIC | CAFEBABE_CLASS_ACC_FINAL | CAFEBABE_CLASS_ACC_ABSTRACT;
+
 	vmc->super = vm_java_lang_Object;
 	vmc->nr_interfaces = 0;
 	vmc->interfaces = NULL;
@@ -439,7 +440,8 @@ int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
 	return 0;
 }
 
-int vm_class_link_array_class(struct vm_class *vmc, const char *class_name)
+int vm_class_link_array_class(struct vm_class *vmc, struct vm_class *elem_class,
+			      const char *class_name)
 {
 	int err;
 
@@ -454,6 +456,10 @@ int vm_class_link_array_class(struct vm_class *vmc, const char *class_name)
 	vmc->kind = VM_CLASS_KIND_ARRAY;
 	vmc->class = NULL;
 	vmc->state = VM_CLASS_LINKED;
+
+	vmc->array_element_class = elem_class;
+	vmc->access_flags = (elem_class->access_flags & ~CAFEBABE_CLASS_ACC_INTERFACE)
+		| CAFEBABE_CLASS_ACC_FINAL | CAFEBABE_CLASS_ACC_ABSTRACT;
 
 	vmc->super = vm_java_lang_Object;
 	/* XXX: Actually, arrays should implement Serializable as well. */

@@ -36,6 +36,7 @@ struct vm_class {
 	enum vm_class_kind kind;
 	const struct cafebabe_class *class;
 	enum vm_class_state state;
+	uint16_t access_flags;
 	char *name;
 
 	pthread_mutex_t mutex;
@@ -88,7 +89,7 @@ struct vm_class {
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
 int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name);
-int vm_class_link_array_class(struct vm_class *vmc, const char *class_name);
+int vm_class_link_array_class(struct vm_class *vmc, struct vm_class *elem_class, const char *class_name);
 int vm_class_init(struct vm_class *vmc);
 int vm_class_ensure_object(struct vm_class *vmc);
 
@@ -99,37 +100,37 @@ static inline int vm_class_ensure_init(struct vm_class *vmc)
 
 static inline bool vm_class_is_public(const struct vm_class *vmc)
 {
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_PUBLIC;
+	return vmc->access_flags & CAFEBABE_CLASS_ACC_PUBLIC;
 }
 
 static inline bool vm_class_is_private(const struct vm_class *vmc)
 {
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_PRIVATE;
+	return vmc->access_flags & CAFEBABE_CLASS_ACC_PRIVATE;
 }
 
 static inline bool vm_class_is_protected(const struct vm_class *vmc)
 {
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_PROTECTED;
+	return vmc->access_flags & CAFEBABE_CLASS_ACC_PROTECTED;
 }
 
 static inline bool vm_class_is_static(const struct vm_class *vmc)
 {
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_STATIC;
+	return vmc->access_flags & CAFEBABE_CLASS_ACC_STATIC;
 }
 
 static inline bool vm_class_is_abstract(const struct vm_class *vmc)
 {
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_ABSTRACT;
+	return vmc->access_flags & CAFEBABE_CLASS_ACC_ABSTRACT;
 }
 
 static inline bool vm_class_is_final(const struct vm_class *vmc)
 {
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_FINAL;
+	return vmc->access_flags & CAFEBABE_CLASS_ACC_FINAL;
 }
 
 static inline bool vm_class_is_interface(const struct vm_class *vmc)
 {
-	return vmc->class->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
+	return vmc->access_flags & CAFEBABE_CLASS_ACC_INTERFACE;
 }
 
 static inline bool vm_class_is_array_class(const struct vm_class *vmc)

@@ -416,6 +416,7 @@ static struct vm_class *
 load_array_class(struct vm_object *loader, const char *class_name)
 {
 	struct vm_class *array_class;
+	struct vm_class *elem_class;
 	char *elem_class_name;
 
 	assert(class_name[0] == '[');
@@ -429,25 +430,21 @@ load_array_class(struct vm_object *loader, const char *class_name)
 	elem_class_name =
 		vm_class_get_array_element_class_name(class_name);
 	if (!elem_class_name) {
-		NOT_IMPLEMENTED;
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
 		return NULL;
 	}
 
-	if (vm_class_link_array_class(array_class, class_name)) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (str_to_type(class_name + 1) != J_REFERENCE)
+		elem_class = classloader_load_primitive(elem_class_name);
+	else
+		elem_class = classloader_load(loader, elem_class_name);
 
-	if (str_to_type(class_name + 1) != J_REFERENCE) {
-		array_class->array_element_class =
-			classloader_load_primitive(elem_class_name);
-	} else {
-		array_class->array_element_class =
-			classloader_load(loader, elem_class_name);
+	if (vm_class_link_array_class(array_class, elem_class, class_name)) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		return NULL;
 	}
 
 	free(elem_class_name);
-
 	return array_class;
 }
 
