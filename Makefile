@@ -303,7 +303,8 @@ JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/DupTest.j \
 	regression/jvm/PopTest.j \
 	regression/jvm/SubroutineTest.j \
-	regression/jvm/WideTest.j
+	regression/jvm/WideTest.j \
+	regression/jvm/InvokeResultTest.j
 
 java-regression: FORCE
 	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)

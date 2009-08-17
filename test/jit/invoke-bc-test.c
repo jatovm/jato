@@ -320,7 +320,7 @@ void test_invokespecial_should_parse_passed_arguments(void)
 
 void test_invokespecial_should_parse_return_type(void)
 {
-	assert_invoke_return_type(OPC_INVOKESPECIAL, J_BYTE, "()B");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()B");
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()I");
 }
 
@@ -352,7 +352,7 @@ void test_invokevirtual_should_parse_passed_arguments(void)
 
 void test_invokevirtual_should_parse_return_type(void)
 {
-	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_BYTE, "()B");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()B");
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()I");
 }
 
@@ -367,7 +367,7 @@ void test_convert_invokevirtual_when_return_value_is_discarded(void)
 
 void test_convert_invokestatic(void)
 {
-	assert_converts_to_invoke_expr(J_BYTE, OPC_INVOKESTATIC, "()B", 0);
+	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()B", 0);
 	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()I", 0);
 	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(I)I", 1);
 	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(II)I", 2);

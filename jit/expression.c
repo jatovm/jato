@@ -426,7 +426,8 @@ struct expression *instance_field_expr(enum vm_type vm_type,
 static struct expression *
 __invoke_expr(enum expression_type expr_type, enum vm_type vm_type, struct vm_method *target_method)
 {
-	struct expression *expr = alloc_expression(expr_type, vm_type);
+	struct expression *expr = alloc_expression(expr_type,
+						   mimic_stack_type(vm_type));
 
 	if (expr)
 		expr->target_method = target_method;
