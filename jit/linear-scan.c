@@ -232,7 +232,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 		}
 
 		current->need_spill = 1;
-	} else if (block_pos[reg] > current->range.end) {
+	} else if (block_pos[reg] >= current->range.end) {
 		/* Spilling made a register free for the whole current */
 		current->reg = reg;
 		spill_all_intervals_intersecting(current, reg, active,
@@ -283,7 +283,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		return;
 	}
 
-	if (current->range.end < free_until_pos[reg]) {
+	if (current->range.end <= free_until_pos[reg]) {
 		/*
 		 * Register available for the full interval.
 		 */
