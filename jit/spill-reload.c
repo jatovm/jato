@@ -125,8 +125,7 @@ insert_copy_slot_insn(struct live_interval *interval,
 		      struct compilation_unit *cu,
 		      struct stack_slot *from,
 		      struct stack_slot *to,
-		      struct insn *push_at_insn,
-		      struct insn *pop_at_insn)
+		      struct insn *push_at_insn)
 {
 	struct insn *push, *pop;
 
@@ -140,7 +139,7 @@ insert_copy_slot_insn(struct live_interval *interval,
 		free_insn(push);
 		return warn("out of memory"), -ENOMEM;
 	}
-	pop->bytecode_offset = pop_at_insn->bytecode_offset;
+	pop->bytecode_offset = push_at_insn->bytecode_offset;
 
 	list_add_tail(&push->insn_list_node, &push_at_insn->insn_list_node);
 	list_add(&pop->insn_list_node, &push->insn_list_node);
@@ -179,10 +178,10 @@ static void insert_mov_insns(struct compilation_unit *cu,
 			     struct basic_block *from_bb,
 			     struct basic_block *to_bb)
 {
-	int i;
-	struct insn *spill_at_insn, *reload_at_insn;
 	struct live_interval *from_it, *to_it;
 	struct stack_slot *slots[nr_mapped];
+	struct insn *spill_at_insn;
+	int i;
 
 	spill_at_insn	= bb_last_insn(from_bb);
 
@@ -201,12 +200,10 @@ static void insert_mov_insns(struct compilation_unit *cu,
 	for (i = 0; i < nr_mapped; i++) {
 		to_it		= mappings[i].to;
 
-		reload_at_insn = bb_first_insn(to_bb);
-
 		if (to_it->need_reload && to_it->range.start >= to_bb->start_insn) {
 			insert_copy_slot_insn(mappings[i].to, cu, slots[i],
 					to_it->spill_parent->spill_slot,
-					spill_at_insn, reload_at_insn);
+					spill_at_insn);
 			continue;
 		}
 
