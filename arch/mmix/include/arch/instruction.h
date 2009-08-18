@@ -108,6 +108,11 @@ exception_spill_insn(struct stack_slot *slot)
 	return NULL;
 }
 
+static inline bool insn_is_branch(struct insn *insn)
+{
+	return insn->type == INSN_JMP;
+}
+
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 

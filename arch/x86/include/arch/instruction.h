@@ -308,6 +308,25 @@ static inline struct insn *jump_insn(struct basic_block *bb)
 	return branch_insn(INSN_JMP_BRANCH, bb);
 }
 
+
+static inline bool insn_is_branch(struct insn *insn)
+{
+	switch (insn->type) {
+	case INSN_JE_BRANCH:
+	case INSN_JGE_BRANCH:
+	case INSN_JG_BRANCH:
+	case INSN_JLE_BRANCH:
+	case INSN_JL_BRANCH:
+	case INSN_JMP_BRANCH:
+	case INSN_JMP_MEMBASE:
+	case INSN_JMP_MEMINDEX:
+	case INSN_JNE_BRANCH:
+		return true;
+	default:
+		return false;
+	}
+}
+
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
 

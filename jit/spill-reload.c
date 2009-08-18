@@ -68,7 +68,7 @@ static struct insn *last_insn(struct compilation_unit *cu, struct live_interval 
 static struct stack_slot *
 spill_interval(struct live_interval *interval,
 	       struct compilation_unit *cu,
-	       struct insn *last, bool tail)
+	       struct insn *last)
 {
 	struct stack_slot *slot;
 	struct insn *spill;
@@ -83,7 +83,7 @@ spill_interval(struct live_interval *interval,
 
 	spill->bytecode_offset = last->bytecode_offset;
 
-	if (tail)
+	if (insn_is_branch(last))
 		list_add_tail(&spill->insn_list_node, &last->insn_list_node);
 	else
 		list_add(&spill->insn_list_node, &last->insn_list_node);
@@ -94,7 +94,7 @@ spill_interval(struct live_interval *interval,
 static int
 insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
-	interval->spill_slot = spill_interval(interval, cu, last_insn(cu, interval), false);
+	interval->spill_slot = spill_interval(interval, cu, last_insn(cu, interval));
 
 	if (!interval->spill_slot)
 		return warn("out of memory"), -ENOMEM;
@@ -193,7 +193,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		if (from_it->need_spill && from_it->range.end < from_bb->end_insn) {
 			slots[i] = from_it->spill_slot;
 		} else {
-			slots[i] = spill_interval(from_it, cu, spill_at_insn, true);
+			slots[i] = spill_interval(from_it, cu, spill_at_insn);
 		}
 	}
 
