@@ -81,7 +81,6 @@ struct basic_block *bb_split(struct basic_block *, unsigned long);
 void bb_add_stmt(struct basic_block *, struct statement *);
 void bb_add_insn(struct basic_block *, struct insn *);
 struct insn *bb_first_insn(struct basic_block *);
-struct insn *bb_last_insn(struct basic_block *);
 int bb_add_successor(struct basic_block *, struct basic_block *);
 int bb_add_mimic_stack_expr(struct basic_block *, struct expression *);
 struct statement *bb_remove_last_stmt(struct basic_block *bb);

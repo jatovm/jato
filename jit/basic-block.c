@@ -174,25 +174,6 @@ struct insn *bb_first_insn(struct basic_block *bb)
 	return list_entry(bb->insn_list.next, struct insn, insn_list_node);
 }
 
-struct insn *bb_last_insn(struct basic_block *bb)
-{
-	struct insn *this = list_entry(bb->insn_list.prev, struct insn, insn_list_node);
-
-	/*
-	 * We want to return the last "real" instruction of the basic block. Taking the
-	 * last of the insn_list will not work in case a live interval has been spilled
-	 * right after the final jump of the basic block.
-	 * This is a side effect of the linear scan algorithm.
-	 *
-	 * As a result, we browse instructions starting from the last, in order to find the one
-	 * that has a LIR position matching the position for the end of the block.
-	 */
-	while (this->lir_pos != bb->end_insn - 1) {
-		this = list_entry(this->insn_list_node.prev, struct insn, insn_list_node);
-	}
-	return this;
-}
-
 static int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
 {
 	unsigned long new_size;

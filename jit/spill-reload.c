@@ -25,6 +25,7 @@
  */
 
 #include "jit/compilation-unit.h"
+#include "jit/instruction.h"
 #include "jit/stack-slot.h"
 #include "jit/compiler.h"
 
@@ -65,10 +66,40 @@ static struct insn *last_insn(struct compilation_unit *cu, struct live_interval 
 	return ret;
 }
 
+/**
+ * Returns the node before which spill instructions should be inserted
+ * when they are supposed to be executed just before control leaves
+ * given basic block. When basic block is ended with a branch
+ * instruction it returns node of that branch; otherwise it returns
+ * the next node.
+ */
+static struct list_head *bb_last_spill_node(struct basic_block *bb)
+{
+	struct insn *last;
+
+	/*
+	 * basic block's instruction list might not be empty and
+	 * contain only spill/reload instructions. In this situation
+	 * we also consider basic block as empty (no lir positions) so
+	 * we don't rely on ->insn_list here.
+	 */
+	if (bb->end_insn == bb->start_insn)
+		return &bb->insn_list;
+
+	last = radix_tree_lookup(bb->b_parent->lir_insn_map, bb->end_insn - 1);
+	assert(last);
+
+	if (insn_is_branch(last))
+		return &last->insn_list_node;
+
+	return last->insn_list_node.next;
+}
+
 static struct stack_slot *
 spill_interval(struct live_interval *interval,
 	       struct compilation_unit *cu,
-	       struct insn *last)
+	       struct list_head *spill_before,
+	       unsigned long bc_offset)
 {
 	struct stack_slot *slot;
 	struct insn *spill;
@@ -81,21 +112,23 @@ spill_interval(struct live_interval *interval,
 	if (!spill)
 		return NULL;
 
-	spill->bytecode_offset = last->bytecode_offset;
+	spill->bytecode_offset = bc_offset;
 
-	if (insn_is_branch(last))
-		list_add_tail(&spill->insn_list_node, &last->insn_list_node);
-	else
-		list_add(&spill->insn_list_node, &last->insn_list_node);
-
+	list_add_tail(&spill->insn_list_node, spill_before);
 	return slot;
 }
 
 static int
 insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
-	interval->spill_slot = spill_interval(interval, cu, last_insn(cu, interval));
+	struct insn *last;
 
+	last = last_insn(cu, interval);
+	if (!insn_is_branch(last))
+		last = next_insn(last);
+
+	interval->spill_slot = spill_interval(interval, cu, &last->insn_list_node,
+					      last->bytecode_offset);
 	if (!interval->spill_slot)
 		return warn("out of memory"), -ENOMEM;
 
@@ -125,23 +158,24 @@ insert_copy_slot_insn(struct live_interval *interval,
 		      struct compilation_unit *cu,
 		      struct stack_slot *from,
 		      struct stack_slot *to,
-		      struct insn *push_at_insn)
+		      struct list_head *push_before,
+		      unsigned long bc_offset)
 {
 	struct insn *push, *pop;
 
 	push = push_slot_insn(from);
 	if (!push)
 		return warn("out of memory"), -ENOMEM;
-	push->bytecode_offset = push_at_insn->bytecode_offset;
+	push->bytecode_offset = bc_offset;
 
 	pop = pop_slot_insn(to);
 	if (!pop) {
 		free_insn(push);
 		return warn("out of memory"), -ENOMEM;
 	}
-	pop->bytecode_offset = push_at_insn->bytecode_offset;
+	pop->bytecode_offset = bc_offset;
 
-	list_add_tail(&push->insn_list_node, &push_at_insn->insn_list_node);
+	list_add_tail(&push->insn_list_node, push_before);
 	list_add(&pop->insn_list_node, &push->insn_list_node);
 
 	return 0;
@@ -180,10 +214,12 @@ static void insert_mov_insns(struct compilation_unit *cu,
 {
 	struct live_interval *from_it, *to_it;
 	struct stack_slot *slots[nr_mapped];
-	struct insn *spill_at_insn;
+	struct list_head *spill_before;
+	unsigned long bc_offset;
 	int i;
 
-	spill_at_insn	= bb_last_insn(from_bb);
+	spill_before = bb_last_spill_node(from_bb);
+	bc_offset = from_bb->end - 1;
 
 	/* Spill all intervals that have to be resolved */
 	for (i = 0; i < nr_mapped; i++) {
@@ -192,7 +228,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		if (from_it->need_spill && from_it->range.end < from_bb->end_insn) {
 			slots[i] = from_it->spill_slot;
 		} else {
-			slots[i] = spill_interval(from_it, cu, spill_at_insn);
+			slots[i] = spill_interval(from_it, cu, spill_before, bc_offset);
 		}
 	}
 
@@ -202,8 +238,8 @@ static void insert_mov_insns(struct compilation_unit *cu,
 
 		if (to_it->need_reload && to_it->range.start >= to_bb->start_insn) {
 			insert_copy_slot_insn(mappings[i].to, cu, slots[i],
-					to_it->spill_parent->spill_slot,
-					spill_at_insn);
+					      to_it->spill_parent->spill_slot,
+					      spill_before, bc_offset);
 			continue;
 		}
 
