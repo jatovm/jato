@@ -321,6 +321,7 @@ static inline bool insn_is_branch(struct insn *insn)
 	case INSN_JMP_MEMBASE:
 	case INSN_JMP_MEMINDEX:
 	case INSN_JNE_BRANCH:
+	case INSN_RET:
 		return true;
 	default:
 		return false;
