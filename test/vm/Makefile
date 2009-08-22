@@ -8,12 +8,12 @@ TOPLEVEL_OBJS :=			\
 	lib/list.o			\
 	lib/pqueue.o			\
 	lib/radix-tree.o		\
+	lib/stack.o			\
 	lib/string.o			\
 	vm/bytecode.o			\
 	vm/bytecodes.o			\
 	vm/die.o			\
 	vm/natives.o			\
-	vm/stack.o			\
 	vm/trace.o 			\
 	vm/types.o			\
 	vm/zalloc.o			\

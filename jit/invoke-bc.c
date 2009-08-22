@@ -17,7 +17,7 @@
 #include "vm/bytecodes.h"
 #include "vm/class.h"
 #include "vm/method.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/die.h"
 #include "vm/jni.h"
 

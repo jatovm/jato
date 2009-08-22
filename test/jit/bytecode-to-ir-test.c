@@ -5,7 +5,7 @@
 #include "jit/compiler.h"
 #include "jit/statement.h"
 #include "lib/list.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/system.h"
 
 #include <bc-test-utils.h>

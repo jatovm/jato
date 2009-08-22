@@ -32,7 +32,7 @@
 #include "jit/args.h"
 
 #include "vm/method.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 
 #ifdef CONFIG_ARGS_MAP
 static inline void set_expr_arg_reg(struct expression *expr,

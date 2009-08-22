@@ -13,7 +13,7 @@
 #include "jit/compiler.h"
 
 #include "vm/bytecodes.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/die.h"
 
 #include <errno.h>

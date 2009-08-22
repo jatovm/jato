@@ -8,7 +8,7 @@
 #include "jit/expression.h"
 #include "jit/compiler.h"
 #include <libharness.h>
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/system.h"
 #include "vm/types.h"
 #include "vm/vm.h"

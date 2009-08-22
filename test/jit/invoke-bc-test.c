@@ -7,7 +7,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/compiler.h"
 #include "jit/statement.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "lib/string.h"
 #include <args-test-utils.h>
 

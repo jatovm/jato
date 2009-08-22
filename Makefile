@@ -119,7 +119,6 @@ VM_OBJS = \
 	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack-trace.o	\
-	vm/stack.o		\
 	vm/static.o		\
 	vm/string.o		\
 	vm/thread.o		\
@@ -133,10 +132,11 @@ LIB_OBJS = \
 	lib/bitset.o		\
 	lib/buffer.o		\
 	lib/guard-page.o	\
+	lib/hash-map.o		\
 	lib/list.o		\
 	lib/pqueue.o		\
 	lib/radix-tree.o	\
-	lib/hash-map.o		\
+	lib/stack.o		\
 	lib/string.o
 
 JAMVM_OBJS =

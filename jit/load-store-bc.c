@@ -22,7 +22,7 @@
 #include "vm/classloader.h"
 #include "vm/object.h"
 #include "vm/resolve.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/die.h"
 
 #include <stdint.h>

@@ -5,7 +5,7 @@
 #include "jit/basic-block.h"
 #include "lib/list.h"
 #include "lib/radix-tree.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/static.h"
 #include "vm/types.h"
 

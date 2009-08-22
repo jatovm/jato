@@ -46,16 +46,16 @@ TOPLEVEL_OBJS := \
 	jit/wide-bc.o \
 	lib/bitset.o \
 	lib/buffer.o \
-	lib/list.o \
 	lib/guard-page.o \
+	lib/list.o \
 	lib/pqueue.o \
 	lib/radix-tree.o \
+	lib/stack.o \
 	lib/string.o \
 	vm/call.o \
 	vm/bytecode.o \
 	vm/bytecodes.o \
 	vm/die.o \
-	vm/stack.o \
 	vm/trace.o \
 	vm/types.o \
 	vm/zalloc.o \

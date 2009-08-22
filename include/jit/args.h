@@ -6,7 +6,7 @@
 #include "jit/expression.h"
 
 #include "vm/method.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 
 struct expression *insert_arg(struct expression *root,
 			      struct expression *expr,

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2008 Saeed Siam
- * Copyright (c) 2009 Tomasz Grabiec
+ * Copyright (c) 2006 Tomasz Grabiec
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -25,45 +24,21 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "jit/bytecode-to-ir.h"
-#include "jit/expression.h"
-#include "jit/statement.h"
-#include "jit/compiler.h"
-
 #include "lib/stack.h"
-#include "vm/die.h"
 
-#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
-int convert_athrow(struct parse_context *ctx)
+struct stack *alloc_stack(void)
 {
-	struct stack *mimic_stack = ctx->bb->mimic_stack;
-	struct expression *exception_ref;
-	struct expression *nullcheck;
-	struct statement *stmt;
+	struct stack *stack = malloc(sizeof(*stack));
+	if (stack)
+		memset(stack, 0, sizeof(*stack));
+	return stack;
+}
 
-	stmt = alloc_statement(STMT_ATHROW);
-	if (!stmt)
-		return warn("out of memory"), -ENOMEM;
-
-	exception_ref = stack_pop(mimic_stack);
-
-	nullcheck = null_check_expr(exception_ref);
-	if (!nullcheck)
-		return warn("out of memory"), -ENOMEM;
-
-	stmt->exception_ref = &nullcheck->node;
-
-	/*
-	 * According to the JVM specification athrow operation is
-	 * supposed to discard the java stack and push exception
-	 * reference on it. We don't do the latter because exception
-	 * reference is not transferred to exception handlers in
-	 * BC2IR layer.
-	 */
-	clear_mimic_stack(ctx->bb);
-
-	convert_statement(ctx, stmt);
-
-	return 0;
+void free_stack(struct stack *stack)
+{
+	free(stack->elements);
+	free(stack);
 }

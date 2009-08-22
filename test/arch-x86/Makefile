@@ -53,11 +53,12 @@ TOPLEVEL_OBJS := \
 	jit/tree-printer.o \
 	jit/vtable.o \
 	lib/buffer.o \
-	lib/list.o \
 	lib/guard-page.o \
-	lib/radix-tree.o \
-	lib/string.o \
 	lib/hash-map.o \
+	lib/list.o \
+	lib/radix-tree.o \
+	lib/stack.o \
+	lib/string.o \
 	vm/bytecode.o \
 	vm/bytecodes.o \
 	vm/call.o \
@@ -68,7 +69,6 @@ TOPLEVEL_OBJS := \
 	vm/jni-interface.o \
 	vm/method.o \
 	vm/object.o \
-	vm/stack.o \
 	vm/static.o \
 	vm/string.o \
 	vm/thread.o \

@@ -5,7 +5,7 @@
 #include "jit/statement.h"
 #include "jit/compiler.h"
 #include "lib/list.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/system.h"
 
 #include <libharness.h>

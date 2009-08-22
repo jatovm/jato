@@ -34,7 +34,7 @@
 
 #include "vm/bytecode.h"
 #include "vm/bytecodes.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/die.h"
 
 static struct statement *branch_if_lesser_stmt(struct basic_block *target,

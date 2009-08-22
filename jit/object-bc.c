@@ -18,7 +18,7 @@
 #include "vm/classloader.h"
 #include "vm/field.h"
 #include "vm/object.h"
-#include "vm/stack.h"
+#include "lib/stack.h"
 #include "vm/die.h"
 
 #include <stdlib.h>
