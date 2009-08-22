@@ -262,12 +262,14 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/ControlTransferTest.java \
 	regression/jvm/ConversionTest.java \
 	regression/jvm/DoubleArithmeticTest.java \
+	regression/jvm/DoubleConversionTest.java \
 	regression/jvm/ExceptionsTest.java \
 	regression/jvm/ExitStatusIsOneTest.java \
 	regression/jvm/ExitStatusIsZeroTest.java \
 	regression/jvm/FibonacciTest.java \
 	regression/jvm/FinallyTest.java \
 	regression/jvm/FloatArithmeticTest.java \
+	regression/jvm/FloatConversionTest.java \
 	regression/jvm/GetstaticPatchingTest.java \
 	regression/jvm/IntegerArithmeticExceptionsTest.java \
 	regression/jvm/IntegerArithmeticTest.java \

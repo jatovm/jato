@@ -118,36 +118,6 @@ public class DoubleArithmeticTest extends TestCase {
         return -n;
     }
 
-    public static double i2d(int val) {
-        return (double) val;
-    }
-
-    public static int d2i(double val) {
-        return (int) val;
-    }
-
-    public static double l2d(long val) {
-        return (double) val;
-    }
-
-    public static long d2l(double val) {
-        return (long) val;
-    }
-
-    public static void testDoubleIntConversion() {
-        assertEquals(2, d2i(2.5));
-        assertEquals(-1000, d2i(-1000.0101));
-        assertEquals(2.0, i2d(2));
-        assertEquals(-3000, i2d(-3000));
-    }
-
-    public static void testDoubleLongConversion() {
-        assertEquals(2, d2l(2.));
-        assertEquals(-1000, d2l(-1000.0101));
-        assertEquals(2.0, l2d(2));
-        assertEquals(-3000, l2d(-3000));
-    }
-
     private static double zero = 0.0;
     private static double one = 1.0;
 
@@ -177,8 +147,6 @@ public class DoubleArithmeticTest extends TestCase {
         testDoubleDivision();
         testDoubleRemainder();
         testDoubleNegation();
-        testDoubleIntConversion();
-        testDoubleLongConversion();
         testDoubleComparison();
     }
 }

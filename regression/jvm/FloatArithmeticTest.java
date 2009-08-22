@@ -117,36 +117,6 @@ public class FloatArithmeticTest extends TestCase {
         return -n;
     }
 
-    public static float i2f(int val) {
-        return (float) val;
-    }
-
-    public static int f2i(float val) {
-        return (int) val;
-    }
-
-    public static void testFloatIntConversion() {
-        assertEquals(2, f2i(2.5f));
-        assertEquals(-1000, f2i(-1000.0101f));
-        assertEquals(2.0f, i2f(2));
-        assertEquals(-3000f, i2f(-3000));
-    }
-
-    public static float l2f(long val) {
-        return (float) val;
-    }
-
-    public static long f2l(float val) {
-        return (long) val;
-    }
-
-    public static void testFloatLongConversion() {
-        assertEquals(2L, f2l(2.5f));
-        assertEquals(-1000L, f2l(-1000.0101f));
-        assertEquals(2.0f, l2f(2L));
-        assertEquals(-3000f, l2f(-3000L));
-    }
-
     private static float zero = 0.0f;
     private static float one = 1.0f;
 
@@ -166,7 +136,6 @@ public class FloatArithmeticTest extends TestCase {
         assertTrue(one >= one);
     }
 
-
     public static void main(String[] args) {
         testFloatAddition();
         testFloatAdditionLocalSlot();
@@ -176,8 +145,6 @@ public class FloatArithmeticTest extends TestCase {
         testFloatDivision();
         testFloatRemainder();
         testFloatNegation();
-        testFloatIntConversion();
-        testFloatLongConversion();
         testFloatComparison();
     }
 }
