@@ -136,11 +136,15 @@ public class FloatArithmeticTest extends TestCase {
         return (float) val;
     }
 
+    public static long f2l(float val) {
+        return (long) val;
+    }
+
     public static void testFloatLongConversion() {
-//      assertEquals(2, f2l(2.5f));
-//      assertEquals(-1000, f2l(-1000.0101f));
-        assertEquals(2.0f, l2f(2));
-        assertEquals(-3000f, l2f(-3000));
+        assertEquals(2L, f2l(2.5f));
+        assertEquals(-1000L, f2l(-1000.0101f));
+        assertEquals(2.0f, l2f(2L));
+        assertEquals(-3000f, l2f(-3000L));
     }
 
     private static float zero = 0.0f;

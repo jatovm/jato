@@ -135,3 +135,8 @@ int64_t emulate_lushr(int64_t value1, int32_t value2)
 {
 	return (uint64_t) value1 >> (value2 & 0x3f);
 }
+
+int64_t emulate_f2l(float value)
+{
+	return value;
+}

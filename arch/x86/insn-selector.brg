@@ -1595,6 +1595,22 @@ reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
 		state->reg1 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
+	} else if (expr->vm_type == J_LONG) {
+		struct var_info *esp, *eax, *edx;
+
+		esp = get_fixed_var(s->b_parent, MACH_REG_ESP);
+		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+
+		state->reg1 = get_var(s->b_parent, J_INT);
+		state->reg2 = get_var(s->b_parent, J_INT);
+
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_f2l));
+		method_args_cleanup(s, tree, 1);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 	} else {
 		die("EXPR_CONVERSION_FROM_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}

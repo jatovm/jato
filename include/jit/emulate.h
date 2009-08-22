@@ -13,5 +13,6 @@ int emulate_fcmpl(float value1, float value2);
 int emulate_fcmpg(float value1, float value2);
 int emulate_dcmpl(double value1, double value2);
 int emulate_dcmpg(double value1, double value2);
+int64_t emulate_f2l(float value);
 
 #endif /* __JIT_EMULATE_H */
