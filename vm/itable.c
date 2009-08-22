@@ -35,6 +35,7 @@
 #include "vm/object.h"
 #include "vm/itable.h"
 #include "vm/method.h"
+#include "vm/trace.h"
 
 bool opt_trace_itable;
 
@@ -193,25 +194,28 @@ static void *itable_create_conflict_resolver(struct vm_class *vmc,
 
 static void trace_itable(struct vm_class *vmc, struct list_head *itable)
 {
-	printf("trace itable: %s\n", vmc->name);
+	trace_printf("trace itable: %s\n", vmc->name);
 
 	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
 		if (list_is_empty(&itable[i]))
 			continue;
 
-		printf(" %d: ", i);
+		trace_printf(" %d:\n", i);
 
 		struct itable_entry *entry;
 		list_for_each_entry(entry, &itable[i], node) {
-			struct vm_method *vmm = entry->i_method;
+			struct vm_method *i_vmm = entry->i_method;
+			struct vm_method *c_vmm = entry->c_method;
 
-			printf("%s.%s%s%s",
-				vmm->class->name, vmm->name, vmm->type,
-				&entry->node == list_last(&itable[i])
-					? "" : ", ");
+			assert(vm_class_is_interface(i_vmm->class));
+			assert(!vm_class_is_interface(c_vmm->class));
+			assert(!strcmp(c_vmm->name, i_vmm->name));
+			assert(!strcmp(c_vmm->type, i_vmm->type));
+
+			trace_printf("  * %s.%s%s -> %s\n",
+				i_vmm->class->name, i_vmm->name, i_vmm->type,
+				c_vmm->class->name);
 		}
-
-		printf("\n");
 	}
 }
 
@@ -229,9 +233,6 @@ int vm_itable_setup(struct vm_class *vmc)
 
 	itable_add_entries(vmc, itable);
 
-	if (opt_trace_itable)
-		trace_itable(vmc, itable);
-
 	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
 		struct itable_entry *entry;
 
@@ -248,6 +249,9 @@ int vm_itable_setup(struct vm_class *vmc)
 			entry->c_method = c_vmm;
 		}
 	}
+
+	if (opt_trace_itable)
+		trace_itable(vmc, itable);
 
 	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
 		vmc->itable[i]
