@@ -373,7 +373,7 @@ bool vm_object_is_instance_of(const struct vm_object *obj,
 	if (!obj)
 		return false;
 
-	return vm_class_is_assignable_from(class, obj->class);;
+	return vm_class_is_assignable_from(class, obj->class);
 }
 
 void vm_object_check_null(struct vm_object *obj)
