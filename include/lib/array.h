@@ -87,4 +87,8 @@ static inline void array_qsort(struct array *a,
 	qsort(a->ptr, a->size, sizeof(void *), cmp);
 }
 
+/* Remove duplicate elements from the array. NOTE: The array must already
+ * be sorted! */
+void array_unique(struct array *a, int (*cmp)(const void *, const void *));
+
 #endif

@@ -52,6 +52,7 @@ TOPLEVEL_OBJS := \
 	jit/tree-node.o \
 	jit/tree-printer.o \
 	jit/vtable.o \
+	lib/array.o \
 	lib/buffer.o \
 	lib/guard-page.o \
 	lib/hash-map.o \

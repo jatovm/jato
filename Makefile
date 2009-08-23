@@ -129,6 +129,7 @@ VM_OBJS = \
 	vm/zalloc.o
 
 LIB_OBJS = \
+	lib/array.o		\
 	lib/bitset.o		\
 	lib/buffer.o		\
 	lib/guard-page.o	\
