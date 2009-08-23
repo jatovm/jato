@@ -81,4 +81,10 @@ static inline int array_append(struct array *a, void *element)
 	return 0;
 }
 
+static inline void array_qsort(struct array *a,
+			       int (*cmp)(const void *, const void *))
+{
+	qsort(a->ptr, a->size, sizeof(void *), cmp);
+}
+
 #endif
