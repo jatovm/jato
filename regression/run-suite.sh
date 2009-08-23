@@ -99,6 +99,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.SynchronizationTest 0
     run_java jvm.TrampolineBackpatchingTest 0
     run_java jvm.SubroutineTest 0
+    run_java jvm.VirtualAbstractInterfaceMethodTest 0
     run_java jvm.WideTest 0
     run_java sun.misc.UnsafeTest 0
 else 
