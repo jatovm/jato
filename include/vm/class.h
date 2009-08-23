@@ -52,6 +52,7 @@ struct vm_class {
 	unsigned int nr_interfaces;
 	struct vm_class **interfaces;
 	struct vm_field *fields;
+	unsigned int nr_methods;
 	struct vm_method *methods;
 
 	unsigned int object_size;

@@ -141,6 +141,26 @@ int vm_method_init(struct vm_method *vmm,
 	return 0;
 }
 
+int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
+				  unsigned int method_index,
+				  struct vm_method *interface_method)
+{
+	/* NOTE: If we ever keep reference counts on loaded classes, we should
+	 * perhaps _copy_ the interformation from the interface method instead
+	 * of just grabbing a reference to the same information. */
+
+	vmm->class = vmc;
+	vmm->method_index = method_index;
+	vmm->method = interface_method->method;
+
+	vmm->name = interface_method->name;
+	vmm->type = interface_method->type;
+
+	vmm->args_count = interface_method->args_count;
+	vmm->is_vm_native = false;
+	return 0;
+}
+
 int vm_method_prepare_jit(struct vm_method *vmm)
 {
 	struct compilation_unit *cu;

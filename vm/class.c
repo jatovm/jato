@@ -37,6 +37,7 @@
 #include "cafebabe/method_info.h"
 #include "cafebabe/stream.h"
 
+#include "lib/array.h"
 #include "lib/string.h"
 
 #include "vm/class.h"
@@ -74,7 +75,7 @@ setup_vtable(struct vm_class *vmc)
 	}
 
 	vtable_size = 0;
-	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
+	for (uint16_t i = 0; i < vmc->nr_methods; ++i) {
 		struct vm_method *vmm = &vmc->methods[i];
 
 		if (super) {
@@ -101,7 +102,7 @@ setup_vtable(struct vm_class *vmc)
 			super_vtable->native_ptr[i]);
 
 	/* Our methods */
-	for (uint16_t i = 0; i < vmc->class->methods_count; ++i) {
+	for (uint16_t i = 0; i < vmc->nr_methods; ++i) {
 		struct vm_method *vmm = &vmc->methods[i];
 
 		vtable_setup_method(&vmc->vtable,
@@ -184,6 +185,24 @@ static void buckets_order_fields(struct field_bucket buckets[VM_TYPE_MAX],
 	bucket_order_fields(&buckets[J_BOOLEAN], 4, &offset);
 
 	*size = offset;
+}
+
+static int insert_interface_method(struct vm_class *vmc,
+				   struct array *extra_methods,
+				   struct vm_method *vmm)
+{
+	/* We need this "manual" recursive lookup because we haven't
+	 * initialized this class' list of methods yet... */
+	unsigned int idx = 0;
+	if (!cafebabe_class_get_method(vmc->class, vmm->name, vmm->type, &idx))
+		return 0;
+
+	if (!vmc->super)
+		return 0;
+	if (vm_class_get_method_recursive(vmc->super, vmm->name, vmm->type))
+		return 0;
+
+	return array_append(extra_methods, vmm);
 }
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
@@ -371,7 +390,36 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		}
 	}
 
-	vmc->methods = malloc(sizeof(*vmc->methods) * class->methods_count);
+	struct array extra_methods;
+	array_init(&extra_methods);
+
+	/* The array is temporary anyway, so there's no harm in allocating a
+	 * bit more just in case. If it's too little, the array will expand. */
+	array_resize(&extra_methods, 64);
+
+	/* If in any of the superinterfaces we find a method which is not
+	 * defined in this class file, we need to add a "miranda" method.
+	 * Note that we don't need to do this recursively for all super-
+	 * interfaces because they will have already done this very same
+	 * procedure themselves. */
+	for (unsigned int i = 0; i < class->interfaces_count; ++i) {
+		struct vm_class *vmi = vmc->interfaces[i];
+
+		for (unsigned int j = 0; j < vmi->nr_methods; ++j) {
+			struct vm_method *vmm = &vmi->methods[j];
+
+			int err = insert_interface_method(vmc,
+				&extra_methods, vmm);
+			if (err) {
+				NOT_IMPLEMENTED;
+				return -1;
+			}
+		}
+	}
+
+	vmc->nr_methods = class->methods_count + extra_methods.size;
+
+	vmc->methods = malloc(sizeof(*vmc->methods) * vmc->nr_methods);
 	if (!vmc->methods) {
 		NOT_IMPLEMENTED;
 		return -1;
@@ -380,18 +428,35 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	for (uint16_t i = 0; i < class->methods_count; ++i) {
 		struct vm_method *vmm = &vmc->methods[i];
 
-		if (vm_method_init(&vmc->methods[i], vmc, i)) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
-
-		vmm->itable_index = itable_hash(vmm);
-
-		if (vm_method_prepare_jit(&vmc->methods[i])) {
+		if (vm_method_init(vmm, vmc, i)) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}
 	}
+
+	for (unsigned int i = 0; i < extra_methods.size; ++i) {
+		struct vm_method *vmm = &vmc->methods[class->methods_count + i];
+
+		if (vm_method_init_from_interface(vmm, vmc,
+			class->methods_count + i, extra_methods.ptr[i]))
+		{
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+	}
+
+	for (uint16_t i = 0; i < vmc->nr_methods; ++i) {
+		struct vm_method *vmm = &vmc->methods[i];
+
+		vmm->itable_index = itable_hash(vmm);
+
+		if (vm_method_prepare_jit(vmm)) {
+			NOT_IMPLEMENTED;
+			return -1;
+		}
+	}
+
+	array_destroy(&extra_methods);
 
 	if (!vm_class_is_interface(vmc)) {
 		setup_vtable(vmc);
@@ -403,7 +468,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	INIT_LIST_HEAD(&vmc->static_fixup_site_list);
 
 	vmc->state = VM_CLASS_LINKED;
-	return 0;;
+	return 0;
 }
 
 int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
@@ -829,9 +894,12 @@ struct vm_method *vm_class_get_method(const struct vm_class *vmc,
 	if (vmc->kind != VM_CLASS_KIND_REGULAR)
 		return NULL;
 
-	unsigned int index = 0;
-	if (!cafebabe_class_get_method(vmc->class, name, type, &index))
-		return &vmc->methods[index];
+	for (unsigned int i = 0; i < vmc->nr_methods; ++i) {
+		struct vm_method *vmm = &vmc->methods[i];
+
+		if (!strcmp(vmm->name, name) && !strcmp(vmm->type, type))
+			return vmm;
+	}
 
 	return NULL;
 }

@@ -53,6 +53,9 @@ struct vm_method {
 int vm_method_init(struct vm_method *vmm,
 	struct vm_class *vmc, unsigned int method_index);
 
+int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
+	unsigned int method_index, struct vm_method *interface_method);
+
 static inline bool vm_method_is_public(struct vm_method *vmm)
 {
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_PUBLIC;
