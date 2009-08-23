@@ -8,7 +8,9 @@
 #include "vm/vm.h"
 
 #include <pthread.h>
+#include <regex.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 struct vm_method;
 struct compilation_unit;
@@ -90,6 +92,9 @@ bool is_on_heap(unsigned long addr);
 
 void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target);
 
+extern bool opt_trace_method;
+extern regex_t method_trace_regex;
+
 extern bool opt_trace_cfg;
 extern bool opt_trace_tree_ir;
 extern bool opt_trace_lir;
@@ -104,6 +109,13 @@ extern bool opt_trace_invoke_verbose;
 extern bool opt_trace_exceptions;
 extern bool opt_trace_bytecode;
 extern bool opt_trace_compile;
+
+bool method_matches_regex(struct vm_method *vmm);
+
+static inline bool cu_matches_regex(struct compilation_unit *cu)
+{
+	return method_matches_regex(cu->method);
+}
 
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);

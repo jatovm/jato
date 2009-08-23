@@ -27,6 +27,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <regex.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -903,17 +904,12 @@ static void handle_classpath(const char *arg)
 enum operation {
 	OPERATION_MAIN_CLASS,
 	OPERATION_JAR_FILE,
-	OPERATION_METHOD_TRACE,
 };
 
 static enum operation operation = OPERATION_MAIN_CLASS;
 
 static char *classname;
 static struct vm_jar *jar_file;
-
-static char *method_trace_class_name;
-static char *method_trace_method_name;
-static char *method_trace_method_type;
 
 static void handle_jar(const char *arg)
 {
@@ -955,25 +951,19 @@ static void handle_perf(void)
 /* @arg must be in the format package/name/Class.method(Lsignature;)V */
 static void handle_trace_method(const char *arg)
 {
-	char *next;
+	opt_trace_method = true;
 
-	operation = OPERATION_METHOD_TRACE;
+	int err = regcomp(&method_trace_regex, arg, REG_EXTENDED | REG_NOSUB);
+	if (err) {
+		unsigned int size = regerror(err, &method_trace_regex, NULL, 0);
+		char *errbuf = malloc(size);
+		regerror(err, &method_trace_regex, errbuf, size);
 
-	next = strchr(arg, '.');
-	if (!next)
-		usage(stderr, EXIT_FAILURE);
+		fprintf(stderr, "error: regcomp: %s\n", errbuf);
+		free(errbuf);
 
-	method_trace_class_name = strndup(arg, next - arg);
-
-	arg = next + 1;
-	next = strchr(arg, '(');
-	if (!next)
-		usage(stderr, EXIT_FAILURE);
-
-	method_trace_method_name = strndup(arg, next - arg);
-
-	arg = next;
-	method_trace_method_type = strdup(arg);
+		exit(EXIT_FAILURE);
+	}
 }
 
 static void handle_trace_asm(void)
@@ -1254,33 +1244,6 @@ do_jar_file(void)
 	return do_main_class();
 }
 
-static int
-do_method_trace(void)
-{
-	struct vm_object *loader;
-
-	loader = get_system_class_loader();
-	if (!loader)
-		return -1;
-
-	struct vm_class *vmc =
-		classloader_load(loader, method_trace_class_name);
-	if (!vmc) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
-
-	struct vm_method *vmm = vm_class_get_method_recursive(vmc,
-		method_trace_method_name, method_trace_method_type);
-	if (!vmm) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
-
-	compile(vmm->compilation_unit);
-	return 0;
-}
-
 struct gnu_classpath_config {
 	const char *glibj;
 	const char *lib;
@@ -1374,10 +1337,6 @@ main(int argc, char *argv[])
 		break;
 	case OPERATION_JAR_FILE:
 		do_jar_file();
-		break;
-	case OPERATION_METHOD_TRACE:
-		do_method_trace();
-		exit(EXIT_SUCCESS);
 		break;
 	}
 

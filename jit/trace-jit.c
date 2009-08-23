@@ -33,9 +33,14 @@
 
 #include <ctype.h>
 #include <malloc.h>
+#include <pthread.h>
+#include <regex.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
+#include <sys/types.h>
+
+bool opt_trace_method;
+regex_t method_trace_regex;
 
 bool opt_trace_cfg;
 bool opt_trace_tree_ir;
@@ -52,11 +57,33 @@ bool opt_trace_exceptions;
 bool opt_trace_bytecode;
 bool opt_trace_compile;
 
+bool method_matches_regex(struct vm_method *vmm)
+{
+	if (!opt_trace_method)
+		return true;
+
+	int err;
+
+	char *signature;
+	err = asprintf(&signature, "%s.%s%s",
+		vmm->class->name, vmm->name, vmm->type);
+	if (err == -1)
+		die("asprintf");
+
+	err = regexec(&method_trace_regex, signature, 0, NULL, 0);
+	free(signature);
+
+	return err == 0;
+}
+
 void trace_method(struct compilation_unit *cu)
 {
 	struct vm_method *method = cu->method;
 	unsigned char *p;
 	unsigned int i, j;
+
+	if (!method_matches_regex(method))
+		return;
 
 	trace_printf("\nTRACE: %s.%s%s\n",
 		method->class->name, method->name, method->type);
@@ -93,6 +120,9 @@ void trace_method(struct compilation_unit *cu)
 void trace_cfg(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
+
+	if (!cu_matches_regex(cu))
+		return;
 
 	trace_printf("Control Flow Graph:\n\n");
 	trace_printf("  #:\t\tRange\t\tSuccessors\t\tPredecessors\n");
@@ -140,6 +170,9 @@ void trace_tree_ir(struct compilation_unit *cu)
 	struct statement *stmt;
 	struct string *str;
 
+	if (!cu_matches_regex(cu))
+		return;
+
 	trace_printf("High-Level Intermediate Representation (HIR):\n\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
@@ -160,6 +193,9 @@ void trace_lir(struct compilation_unit *cu)
 	struct basic_block *bb;
 	struct string *str;
 	struct insn *insn;
+
+	if (!cu_matches_regex(cu))
+		return;
 
 	trace_printf("Low-Level Intermediate Representation (LIR):\n\n");
 
@@ -272,6 +308,9 @@ void trace_liveness(struct compilation_unit *cu)
 	unsigned long offset;
 	struct insn *insn;
 
+	if (!cu_matches_regex(cu))
+		return;
+
 	trace_printf("Liveness:\n\n");
 
 	trace_printf("Legend: (U) In use, (-) Fixed register, (*) Non-fixed register\n\n");
@@ -298,6 +337,9 @@ void trace_liveness(struct compilation_unit *cu)
 void trace_regalloc(struct compilation_unit *cu)
 {
 	struct var_info *var;
+
+	if (!cu_matches_regex(cu))
+		return;
 
 	trace_printf("Register Allocation:\n\n");
 
@@ -335,6 +377,9 @@ void trace_regalloc(struct compilation_unit *cu)
 void trace_machine_code(struct compilation_unit *cu)
 {
 	void *start, *end;
+
+	if (!cu_matches_regex(cu))
+		return;
 
 	trace_printf("Disassembler Listing:\n\n");
 
@@ -376,6 +421,9 @@ static void print_gc_map(struct compilation_unit *cu, struct insn *insn)
 
 void trace_gc_maps(struct compilation_unit *cu)
 {
+	if (!cu_matches_regex(cu))
+		return;
+
 	trace_printf("GC Map:\n\n");
 
 	struct basic_block *bb;
@@ -396,6 +444,9 @@ void trace_gc_maps(struct compilation_unit *cu)
 
 void trace_magic_trampoline(struct compilation_unit *cu)
 {
+	if (!cu_matches_regex(cu))
+		return;
+
 	trace_printf("jit_magic_trampoline: ret0=%p, ret1=%p: %s.%s #%d\n",
 	       __builtin_return_address(1),
 	       __builtin_return_address(2),
@@ -632,6 +683,9 @@ static void trace_return_address(struct jit_stack_frame *frame)
 void trace_invoke(struct compilation_unit *cu)
 {
 	struct vm_method *vmm = cu->method;
+	if (!method_matches_regex(vmm))
+		return;
+
 	struct vm_class *vmc = vmm->class;
 
 	trace_printf("trace invoke: %s.%s%s\n", vmc->name, vmm->name,
@@ -658,6 +712,9 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	struct vm_class *vmc;
 	struct vm_object *msg;
 	int dummy;
+
+	if (!cu_matches_regex(cu))
+		return;
 
 	vmm = cu->method;
 	vmc = vmm->class;
@@ -686,6 +743,9 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 void trace_exception_handler(struct compilation_unit *cu,
 			     unsigned char *ptr)
 {
+	if (!cu_matches_regex(cu))
+		return;
+
 	trace_printf("\taction\t: jump to handler at %p\n", ptr);
 	trace_printf("\t\t  (");
 	print_source_and_line(cu, ptr);
@@ -724,6 +784,9 @@ void trace_exception_unwind_to_native(struct jit_stack_frame *frame)
 
 void trace_bytecode(struct vm_method *method)
 {
+	if (!method_matches_regex(method))
+		return;
+
 	trace_printf("Code:\n");
 	bytecode_disassemble(method->class,
 			     method->code_attribute.code,
@@ -739,6 +802,9 @@ void trace_return_value(struct vm_method *vmm, unsigned long long value)
 {
 	enum vm_type type;
 	int dummy;
+
+	if (!method_matches_regex(vmm))
+		return;
 
 	dummy = 0;
 	type = method_return_type(vmm);
