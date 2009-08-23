@@ -205,6 +205,22 @@ static int insert_interface_method(struct vm_class *vmc,
 	return array_append(extra_methods, vmm);
 }
 
+static int compare_method_signatures(const void *a, const void *b)
+{
+	const struct vm_method *x = *(const struct vm_method **) a;
+	const struct vm_method *y = *(const struct vm_method **) b;
+
+	int name = strcmp(x->name, y->name);
+	if (name)
+		return name;
+
+	int type = strcmp(x->type, y->type);
+	if (type)
+		return type;
+
+	return 0;
+}
+
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
 	vmc->class = class;
@@ -416,6 +432,13 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 			}
 		}
 	}
+
+	/* We need to weed out duplicate signatures in order to avoid a
+	 * situation where two interfaces define the same method and a class
+	 * implements both interfaces. We shouldn't add two methods with the
+	 * same signature to the same class. */
+	array_qsort(&extra_methods, &compare_method_signatures);
+	array_unique(&extra_methods, &compare_method_signatures);
 
 	vmc->nr_methods = class->methods_count + extra_methods.size;
 
