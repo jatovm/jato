@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lib/array.h"
+
 #include "vm/classloader.h"
 #include "vm/backtrace.h"
 #include "vm/class.h"
@@ -167,34 +169,27 @@ static void *itable_create_conflict_resolver(struct vm_class *vmc,
 		return vm_method_call_ptr(entry->c_method);
 	}
 
-	unsigned int nr_entries = 0;
+	struct array sorted_table;
+	array_init(&sorted_table);
+	array_resize(&sorted_table, 64);
+
 	struct itable_entry *entry;
 	list_for_each_entry(entry, methods, node)
-		++nr_entries;
+		array_append(&sorted_table, entry);
 
-	struct itable_entry **sorted_table
-		= malloc(nr_entries * sizeof(*sorted_table));
-	if (!sorted_table) {
-		NOT_IMPLEMENTED;
-		return &itable_resolver_stub_error;
-	}
+	array_qsort(&sorted_table, &itable_entry_compare);
+	array_unique(&sorted_table, &itable_entry_compare);
 
-	unsigned int i = 0;
-	list_for_each_entry(entry, methods, node)
-		sorted_table[i++] = entry;
-
-	qsort(sorted_table, nr_entries, sizeof(*sorted_table),
-		&itable_entry_compare);
-
-	void *ret = emit_itable_resolver_stub(vmc, sorted_table, nr_entries);
-	free(sorted_table);
+	void *ret = emit_itable_resolver_stub(vmc,
+		(struct itable_entry **) sorted_table.ptr, sorted_table.size);
+	array_destroy(&sorted_table);
 
 	return ret;
 }
 
 static void trace_itable(struct vm_class *vmc, struct list_head *itable)
 {
-	trace_printf("trace itable: %s\n", vmc->name);
+	trace_printf("trace itable (duplicates included): %s\n", vmc->name);
 
 	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
 		if (list_is_empty(&itable[i]))
