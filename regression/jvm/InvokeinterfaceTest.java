@@ -153,7 +153,7 @@ public class InvokeinterfaceTest extends TestCase {
 
     private static boolean a_ok, b_ok, c_ok, d_ok;
 
-    public static void main(String[] args) {
+    private static void testInvokeinterface() {
         X x = new X();
 
         A a = (A) x;
@@ -171,5 +171,33 @@ public class InvokeinterfaceTest extends TestCase {
         D d = (D) x;
         d.dq();
         assertTrue(d_ok);
+    }
+
+    private static void testInvokeinterfaceItableHashCollision() {
+        ISeq iseq = (ISeq) new Cons();
+        iseq.seq();
+    }
+
+    private static final class Cons implements ISeq {
+        public void j() {
+            throw new AssertionError("wrong method");
+        }
+
+        public void seq() {
+        }
+    }
+
+    private static interface ISeq extends Seqable {
+        public void j();
+    }
+
+    private static interface Seqable {
+        public void seq();
+    }
+
+    public static void main(String[] args) {
+        testInvokeinterface();
+//      FIXME:
+//      testInvokeinterfaceItableHashCollision();
     }
 }
