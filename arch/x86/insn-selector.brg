@@ -1368,7 +1368,7 @@ reg:    EXPR_ANEWARRAY(reg)
         select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc_array));
 
-        method_args_cleanup(s, tree, 3);
+        method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
 }
 %else
