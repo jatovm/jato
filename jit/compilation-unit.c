@@ -252,6 +252,8 @@ void compute_insn_positions(struct compilation_unit *cu)
 	for_each_basic_block(bb, &cu->bb_list) {
 		struct insn *insn;
 
+		bb->start_insn = pos;
+
 		for_each_insn(insn, &bb->insn_list) {
 			insn->lir_pos = pos;
 
@@ -259,5 +261,7 @@ void compute_insn_positions(struct compilation_unit *cu)
 
 			++pos;
 		}
+
+		bb->end_insn = pos;
 	}
 }

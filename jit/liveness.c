@@ -200,26 +200,9 @@ static int init_sets(struct compilation_unit *cu)
 	return err;
 }
 
-static void compute_boundaries(struct compilation_unit *cu)
-{
-	unsigned long insn_idx = 0;
-	struct basic_block *bb;
-	struct insn *insn;
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		bb->start_insn = insn_idx;
-		for_each_insn(insn, &bb->insn_list) {
-			insn_idx++;
-		}
-		bb->end_insn = insn_idx;
-	}
-}
-
 int analyze_liveness(struct compilation_unit *cu)
 {
 	int err = 0;
-
-	compute_boundaries(cu);
 
 	err = init_sets(cu);
 	if (err)
