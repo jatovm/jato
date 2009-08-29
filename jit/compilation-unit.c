@@ -261,18 +261,3 @@ void compute_insn_positions(struct compilation_unit *cu)
 		}
 	}
 }
-
-static int bb_list_compare(const struct list_head **e1, const struct list_head **e2)
-{
-	struct basic_block *bb1, *bb2;
-
-	bb1 = list_entry(*e1, struct basic_block, bb_list_node);
-	bb2 = list_entry(*e2, struct basic_block, bb_list_node);
-
-	return bb1->start - bb2->start;
-}
-
-int sort_basic_blocks(struct compilation_unit *cu)
-{
-	return list_sort(&cu->bb_list, bb_list_compare);
-}
