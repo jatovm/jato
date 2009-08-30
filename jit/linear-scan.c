@@ -123,8 +123,18 @@ static void spill_interval(struct live_interval *it, unsigned long pos,
 		if (next_pos > interval_start(new))
 			new = split_interval_at(new, next_pos);
 
+		/*
+		 * When next use position is a write then we must not
+		 * reload the new interval. One reason for this is
+		 * that it's unnecessary. Another one is that we won't
+		 * be able to insert a reload instruction in the
+		 * middle of instruction when new interval starts at odd
+		 * position.
+		 */
+		if ((next_pos & 1) == 0)
+			mark_need_reload(new, it);
+
 		it->need_spill = true;
-		mark_need_reload(new, it);
 		pqueue_insert(unhandled, new);
 	}
 }
@@ -134,16 +144,19 @@ static void __spill_interval_intersecting(struct live_interval *current,
 					  struct live_interval *it,
 					  struct pqueue *unhandled)
 {
+	unsigned long start;
+
 	if (it->reg != reg)
 		return;
 
 	if (!intervals_intersect(it, current))
 		return;
 
-	if (interval_start(current) == interval_start(it))
+	start = interval_intersection_start(current, it);
+	if (start == interval_start(it))
 		return;
 
-	spill_interval(it, interval_start(current), unhandled);
+	spill_interval(it, start, unhandled);
 }
 
 static void spill_all_intervals_intersecting(struct live_interval *current,
@@ -236,7 +249,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 		 */
 		current->reg = reg;
 
-		if (block_pos[reg] < interval_start(current))
+		if (block_pos[reg] < interval_end(current))
 			spill_interval(current, block_pos[reg], unhandled);
 
 		spill_all_intervals_intersecting(current, reg, active,

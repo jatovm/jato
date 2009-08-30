@@ -36,18 +36,32 @@
 #include <errno.h>
 #include <stdlib.h>
 
-static void __update_live_range(struct live_interval *it, unsigned long pos)
+static void __update_live_ranges(struct compilation_unit *cu, struct basic_block *bb)
 {
-	if (interval_is_empty(it))
-		interval_add_range(it, pos, pos + 1);
-	else {
-		struct live_range *r = interval_first_range(it);
+	struct var_info *uses[MAX_REG_OPERANDS];
+	struct var_info *defs[MAX_REG_OPERANDS];
+	struct insn *insn;
+	int nr_uses;
+	int nr_defs;
+	int i;
 
-		if (r->start > pos)
-			r->start = pos;
+	for_each_insn_reverse(insn, &bb->insn_list) {
+		nr_defs = insn_defs(bb->b_parent, insn, defs);
+		for (i = 0; i < nr_defs; i++) {
+			if (interval_is_empty(defs[i]->interval)) {
+				interval_add_range(defs[i]->interval, insn->lir_pos + 1, bb->end_insn);
+				continue;
+			}
 
-		if (r->end < (pos + 1))
-			r->end = pos + 1;
+			struct live_range *r
+				= interval_first_range(defs[i]->interval);
+
+			r->start = insn->lir_pos + 1;
+		}
+
+		nr_uses = insn_uses(insn, uses);
+		for (i = 0; i < nr_uses; i++)
+			interval_add_range(uses[i]->interval, bb->start_insn, insn->lir_pos + 1);
 	}
 }
 
@@ -55,16 +69,15 @@ static void update_live_ranges(struct compilation_unit *cu)
 {
 	struct basic_block *this;
 
-	for_each_basic_block(this, &cu->bb_list) {
+	for_each_basic_block_reverse(this, &cu->bb_list) {
 		struct var_info *var;
 
 		for_each_variable(var, cu->var_infos) {
-			if (test_bit(this->live_in_set->bits, var->vreg))
-				__update_live_range(var->interval, this->start_insn);
-
 			if (test_bit(this->live_out_set->bits, var->vreg))
-				__update_live_range(var->interval, this->end_insn);
+				interval_add_range(var->interval, this->start_insn, this->end_insn);
 		}
+
+		__update_live_ranges(cu, this);
 	}
 }
 
@@ -140,8 +153,6 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 	for (i = 0; i < nr_uses; i++) {
 		struct var_info *var = uses[i];
 
-		__update_live_range(var->interval, insn->lir_pos);
-
 		/*
 		 * It's in the use set if and only if it has not
 		 * _already_ been defined by insn basic block.
@@ -154,7 +165,6 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 	for (i = 0; i < nr_defs; i++) {
 		struct var_info *var = defs[i];
 
-		__update_live_range(var->interval, insn->lir_pos);
 		set_bit(bb->def_set->bits, var->vreg);
 	}
 }

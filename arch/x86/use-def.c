@@ -248,3 +248,31 @@ int insn_uses(struct insn *insn, struct var_info **uses)
 
 	return nr;
 }
+
+int insn_operand_use_kind(struct insn *insn, int idx)
+{
+	struct insn_info *info;
+	int use_mask;
+	int def_mask;
+	int kind_mask;
+
+	info = get_info(insn);
+
+	if (idx == 0) {
+		use_mask = USE_SRC;
+		def_mask = DEF_SRC;
+	} else {
+		assert(idx == 1);
+		use_mask = USE_DST;
+		def_mask = DEF_DST;
+	}
+
+	kind_mask = 0;
+	if (info->flags & use_mask)
+		kind_mask |= USE_KIND_INPUT;
+
+	if (info->flags & def_mask)
+		kind_mask |= USE_KIND_OUTPUT;
+
+	return kind_mask;
+}

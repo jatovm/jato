@@ -149,16 +149,6 @@ static inline unsigned long interval_end(struct live_interval *it)
 	return node_to_range(it->range_list.prev)->end;
 }
 
-static inline unsigned long interval_last_insn_pos(struct live_interval *it)
-{
-	return (interval_end(it) - 1) & ~1ul;
-}
-
-static inline unsigned long interval_first_insn_pos(struct live_interval *it)
-{
-	return interval_start(it) & ~1ul;
-}
-
 static inline bool interval_is_empty(struct live_interval *it)
 {
 	return list_is_empty(&it->range_list);
@@ -183,5 +173,10 @@ bool interval_covers(struct live_interval *, unsigned long);
 int interval_add_range(struct live_interval *, unsigned long, unsigned long);
 struct live_range *interval_range_at(struct live_interval *, unsigned long);
 void interval_update_current_range(struct live_interval *, unsigned long);
+
+static inline unsigned long first_use_pos(struct live_interval *it)
+{
+	return next_use_pos(it, 0);
+}
 
 #endif /* __JIT_VARS_H */

@@ -149,7 +149,11 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 		new->reg = interval->reg;
 
 	list_for_each_entry_safe(this, next, &interval->use_positions, use_pos_list) {
-		if (lir_position(this) < pos)
+		unsigned long use_pos[2];
+
+		get_lir_positions(this, use_pos);
+
+		if (use_pos[0] < pos)
 			continue;
 
 		list_move(&this->use_pos_list, &new->use_positions);
@@ -169,11 +173,18 @@ unsigned long next_use_pos(struct live_interval *it, unsigned long pos)
 	unsigned long min = LONG_MAX;
 
 	list_for_each_entry(this, &it->use_positions, use_pos_list) {
-		if (lir_position(this) < pos)
-			continue;
+		unsigned long use_pos[2];
+		int nr_use_pos;
+		int i;
 
-		if (lir_position(this) < min)
-			min = lir_position(this);
+		nr_use_pos = get_lir_positions(this, use_pos);
+		for (i = 0; i < nr_use_pos; i++) {
+			if (use_pos[i] < pos)
+				continue;
+
+			if (use_pos[i] < min)
+				min = use_pos[i];
+		}
 	}
 
 	return min;
@@ -356,4 +367,21 @@ int interval_add_range(struct live_interval *it, unsigned long start,
 
 	list_add_tail(&new->range_list_node, &it->range_list);
 	return 0;
+}
+
+int get_lir_positions(struct use_position *reg, unsigned long *pos)
+{
+	int nr_pos;
+
+	nr_pos = 0;
+
+	assert(reg->kind);
+
+	if (reg->kind & USE_KIND_INPUT)
+		pos[nr_pos++] = reg->insn->lir_pos;
+
+	if (reg->kind & USE_KIND_OUTPUT)
+		pos[nr_pos++] = reg->insn->lir_pos + 1;
+
+	return nr_pos;
 }

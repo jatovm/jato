@@ -214,11 +214,6 @@ struct insn {
 
 void insn_sanity_check(void);
 
-static inline unsigned long lir_position(struct use_position *reg)
-{
-	return reg->insn->lir_pos;
-}
-
 struct insn *insn(enum insn_type);
 struct insn *memlocal_reg_insn(enum insn_type, struct stack_slot *, struct var_info *);
 struct insn *membase_reg_insn(enum insn_type, struct var_info *, long, struct var_info *);

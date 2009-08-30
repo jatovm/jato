@@ -49,7 +49,7 @@ static void assert_ld_insn(enum insn_type type, enum machine_reg reg, struct sta
 }
 
 
-void test_spill_insn_is_inserted_at_the_end_of_the_interval_if_necessary(void)
+void test_spill_insn_is_inserted_before_last_read_if_necessary(void)
 {
         struct compilation_unit *cu;
         struct insn *insn_array[2];
@@ -75,22 +75,22 @@ void test_spill_insn_is_inserted_at_the_end_of_the_interval_if_necessary(void)
 	insert_spill_reload_insns(cu);
 
 	/*
-	 * First instruction stays the same. 
+	 * First instruction stays the same.
 	 */
 	insn = list_first_entry(&bb->insn_list, struct insn, insn_list_node);
 	assert_ptr_equals(insn_array[0], insn);
+
+	/*
+	 * A spill instruction is inserted before last read-use position
+	 */
+	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
+	assert_st_insn(INSN_ST_LOCAL, r1->interval->spill_slot, r1->interval->reg, insn);
 
 	/*
 	 * Last instruction stays the same.
 	 */
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_ptr_equals(insn_array[1], insn);
-
-	/*
-	 * A spill instruction is inserted at the end of the interval.
-	 */ 
-	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
-	assert_st_insn(INSN_ST_LOCAL, r1->interval->spill_slot, r1->interval->reg, insn);
 
 	free_compilation_unit(cu);
 }

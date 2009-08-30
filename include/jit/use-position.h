@@ -6,6 +6,9 @@
 
 struct insn;
 
+#define USE_KIND_INPUT		0x1
+#define USE_KIND_OUTPUT		0x2
+
 /**
  * struct use_position - register use position
  *
@@ -22,6 +25,7 @@ struct use_position {
 	struct insn		*insn;
 	struct live_interval	*interval;
 	struct list_head	use_pos_list;	/* node in interval use position list */
+	int			kind;
 };
 
 static inline void register_set_insn(struct use_position *reg, struct insn *insn)
@@ -59,5 +63,7 @@ static inline bool is_vreg(struct use_position *reg, unsigned long vreg)
 {
 	return reg->interval->var_info->vreg == vreg;
 }
+
+int get_lir_positions(struct use_position *reg, unsigned long *pos);
 
 #endif /* __JIT_USE_POSITION_H */

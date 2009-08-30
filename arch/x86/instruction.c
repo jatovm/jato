@@ -107,6 +107,7 @@ static void init_membase_operand(struct insn *insn, unsigned long idx,
 	operand->disp = disp;
 
 	init_register(&operand->base_reg, insn, base_reg->interval);
+	operand->base_reg.kind = USE_KIND_INPUT;
 }
 
 static void init_memdisp_operand(struct insn *insn, unsigned long idx,
@@ -131,6 +132,9 @@ static void init_memindex_operand(struct insn *insn, unsigned long idx,
 
 	init_register(&operand->base_reg, insn, base_reg->interval);
 	init_register(&operand->index_reg, insn, index_reg->interval);
+
+	operand->base_reg.kind  = USE_KIND_INPUT;
+	operand->index_reg.kind = USE_KIND_INPUT;
 }
 
 static void init_memlocal_operand(struct insn *insn, unsigned long idx,
@@ -152,6 +156,7 @@ static void init_reg_operand(struct insn *insn, unsigned long idx,
 	operand->type = OPERAND_REG;
 
 	init_register(&operand->reg, insn, reg->interval);
+	operand->reg.kind = insn_operand_use_kind(insn, idx);
 }
 
 static void init_rel_operand(struct insn *insn, unsigned long idx,

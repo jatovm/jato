@@ -46,32 +46,65 @@ struct live_interval_mapping {
 	struct live_interval *from, *to;
 };
 
-static struct insn *first_insn(struct compilation_unit *cu, struct live_interval *interval)
+static struct insn *
+get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interval)
 {
 	struct insn *ret;
 
-	ret = radix_tree_lookup(cu->lir_insn_map, interval_first_insn_pos(interval));
-	assert(ret != NULL);
+	unsigned long start = interval_start(interval);
 
+	ret = radix_tree_lookup(cu->lir_insn_map, start);
+
+	if (start & 1) {
+		/*
+		 * If interval starts at odd position and has a use
+		 * position there then it means that it's value is
+		 * being defined. In this case, there is no need to
+		 * reload anything. Otherwise, if interval starts at
+		 * odd position and has no use at this position, we
+		 * should reload after that instruction.
+		 */
+		if (first_use_pos(interval) == interval_start(interval))
+			error("interval begins with a def-use and is marked for reload");
+
+		ret = next_insn(ret);
+	}
+
+	assert(ret != NULL);
 	return ret;
 }
 
-static struct insn *last_insn(struct compilation_unit *cu, struct live_interval *interval)
+static struct insn *
+get_spill_after_insn(struct compilation_unit *cu, struct live_interval *interval)
 {
 	struct insn *ret;
 
-	ret = radix_tree_lookup(cu->lir_insn_map, interval_last_insn_pos(interval));
+	/*
+	 * If interval ends at even position then it is not written to
+	 * at last instruction and we can safely spill before the last
+	 * insn. If interval ends at odd position then we must spill
+	 * after last instruction.
+	 */
+	unsigned long last_pos = interval_end(interval) - 1;
+
+	if (last_pos & 1) {
+		ret = radix_tree_lookup(cu->lir_insn_map, last_pos - 1);
+	} else {
+		ret = radix_tree_lookup(cu->lir_insn_map, last_pos);
+		ret = prev_insn(ret);
+	}
+
 	assert(ret != NULL);
 
 	return ret;
 }
 
 /**
- * Returns the node before which spill instructions should be inserted
+ * Returns the node after which spill instructions should be inserted
  * when they are supposed to be executed just before control leaves
  * given basic block. When basic block is ended with a branch
- * instruction it returns node of that branch; otherwise it returns
- * the next node.
+ * instruction it returns node before that branch; otherwise it returns
+ * the last node.
  */
 static struct list_head *bb_last_spill_node(struct basic_block *bb)
 {
@@ -90,15 +123,15 @@ static struct list_head *bb_last_spill_node(struct basic_block *bb)
 	assert(last);
 
 	if (insn_is_branch(last))
-		return &last->insn_list_node;
+		return last->insn_list_node.prev;
 
-	return last->insn_list_node.next;
+	return &last->insn_list_node;
 }
 
 static struct stack_slot *
 spill_interval(struct live_interval *interval,
 	       struct compilation_unit *cu,
-	       struct list_head *spill_before,
+	       struct list_head *spill_after,
 	       unsigned long bc_offset)
 {
 	struct stack_slot *slot;
@@ -114,21 +147,19 @@ spill_interval(struct live_interval *interval,
 
 	spill->bytecode_offset = bc_offset;
 
-	list_add_tail(&spill->insn_list_node, spill_before);
+	list_add(&spill->insn_list_node, spill_after);
 	return slot;
 }
 
 static int
 insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
-	struct insn *last;
+	struct insn *spill_after;
 
-	last = last_insn(cu, interval);
-	if (!insn_is_branch(last))
-		last = next_insn(last);
-
-	interval->spill_slot = spill_interval(interval, cu, &last->insn_list_node,
-					      last->bytecode_offset);
+	spill_after = get_spill_after_insn(cu, interval);
+	interval->spill_slot = spill_interval(interval, cu,
+					      &spill_after->insn_list_node,
+					      spill_after->bytecode_offset);
 	if (!interval->spill_slot)
 		return warn("out of memory"), -ENOMEM;
 
@@ -198,11 +229,11 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 		 * can't insert a reload instruction in the middle of
 		 * instruction.
 		 */
-		assert((interval_start(interval) & 1) == 0);
+		if ((interval_start(interval) & 1) == 0);
 
 		err = insert_reload_insn(interval, cu,
 				interval->spill_parent->spill_slot,
-				first_insn(cu, interval));
+				get_reload_before_insn(cu, interval));
 		if (err)
 			goto out;
 	}
@@ -224,21 +255,25 @@ static void insert_mov_insns(struct compilation_unit *cu,
 {
 	struct live_interval *from_it, *to_it;
 	struct stack_slot *slots[nr_mapped];
-	struct list_head *spill_before;
+	struct list_head *spill_after;
+	struct list_head *push_before;
 	unsigned long bc_offset;
 	int i;
 
-	spill_before = bb_last_spill_node(from_bb);
+	spill_after = bb_last_spill_node(from_bb);
+	push_before = spill_after->next;
 	bc_offset = from_bb->end - 1;
 
 	/* Spill all intervals that have to be resolved */
 	for (i = 0; i < nr_mapped; i++) {
 		from_it		= mappings[i].from;
+		if (!from_it)
+			continue;
 
 		if (from_it->need_spill && interval_end(from_it) < from_bb->end_insn) {
 			slots[i] = from_it->spill_slot;
 		} else {
-			slots[i] = spill_interval(from_it, cu, spill_before, bc_offset);
+			slots[i] = spill_interval(from_it, cu, spill_after, bc_offset);
 		}
 	}
 
@@ -249,7 +284,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		if (to_it->need_reload && interval_start(to_it) >= to_bb->start_insn) {
 			insert_copy_slot_insn(mappings[i].to, cu, slots[i],
 					      to_it->spill_parent->spill_slot,
-					      spill_before, bc_offset);
+					      push_before, bc_offset);
 			continue;
 		}
 
