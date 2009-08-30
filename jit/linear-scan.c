@@ -120,7 +120,7 @@ static void spill_interval(struct live_interval *it, unsigned long pos,
 		unsigned long next_pos = next_use_pos(new, 0);
 
 		/* Trim interval if it does not start with a use position. */
-		if (next_pos > new->range.start)
+		if (next_pos > interval_start(new))
 			new = split_interval_at(new, next_pos);
 
 		it->need_spill = true;
@@ -137,13 +137,13 @@ static void __spill_interval_intersecting(struct live_interval *current,
 	if (it->reg != reg)
 		return;
 
-	if (!ranges_intersect(&it->range, &current->range))
+	if (!intervals_intersect(it, current))
 		return;
 
-	if (current->range.start == it->range.start)
+	if (interval_start(current) == interval_start(it))
 		return;
 
-	spill_interval(it, current->range.start, unhandled);
+	spill_interval(it, interval_start(current), unhandled);
 }
 
 static void spill_all_intervals_intersecting(struct live_interval *current,
@@ -185,7 +185,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 		if (it->fixed_reg)
 			continue;
 
-		pos = next_use_pos(it, current->range.start);
+		pos = next_use_pos(it, interval_start(current));
 		set_use_pos(use_pos, it->reg, pos);
 	}
 
@@ -195,8 +195,8 @@ static void allocate_blocked_reg(struct live_interval *current,
 		if (it->fixed_reg)
 			continue;
 
-		if (ranges_intersect(&it->range, &current->range)) {
-			pos = next_use_pos(it, current->range.start);
+		if (intervals_intersect(it, current)) {
+			pos = next_use_pos(it, interval_start(current));
 			set_use_pos(use_pos, it->reg, pos);
 		}
 	}
@@ -212,10 +212,10 @@ static void allocate_blocked_reg(struct live_interval *current,
 		if (!it->fixed_reg)
 			continue;
 
-		if (ranges_intersect(&it->range, &current->range)) {
+		if (intervals_intersect(it, current)) {
 			unsigned long pos;
 
-			pos = range_intersection_start(&it->range, &current->range);
+			pos = interval_intersection_start(it, current);
 			set_block_pos(block_pos, use_pos, it->reg, pos);
 		}
 	}
@@ -228,7 +228,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 		 * All active and inactive intervals are used before current,
 		 * so it is best to spill current itself
 		 */
-		pos = next_use_pos(current, current->range.start);
+		pos = next_use_pos(current, interval_start(current));
 		spill_interval(current, pos, unhandled);
 	} else {
 		/*
@@ -236,7 +236,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 		 */
 		current->reg = reg;
 
-		if (block_pos[reg] < current->range.end)
+		if (block_pos[reg] < interval_start(current))
 			spill_interval(current, block_pos[reg], unhandled);
 
 		spill_all_intervals_intersecting(current, reg, active,
@@ -262,10 +262,10 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 	}
 
 	list_for_each_entry(it, inactive, interval_node) {
-		if (ranges_intersect(&it->range, &current->range)) {
+		if (intervals_intersect(it, current)) {
 			unsigned long pos;
 
-			pos = range_intersection_start(&it->range, &current->range);
+			pos = interval_intersection_start(it, current);
 			set_free_pos(free_until_pos, it->reg, pos);
 		}
 	}
@@ -278,7 +278,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		return;
 	}
 
-	if (current->range.end <= free_until_pos[reg]) {
+	if (interval_end(current) <= free_until_pos[reg]) {
 		/*
 		 * Register available for the full interval.
 		 */
@@ -297,7 +297,7 @@ static int interval_compare(void *a, void *b)
 	struct live_interval *x = a;
 	struct live_interval *y = b;
 
-	return (int)(y->range.start - x->range.start);
+	return (int)(interval_start(y) - interval_start(x));
 }
 
 int allocate_registers(struct compilation_unit *cu)
@@ -327,6 +327,11 @@ int allocate_registers(struct compilation_unit *cu)
 	 * non-fixed interval.
 	 */
 	for_each_variable(var, cu->var_infos) {
+		if (interval_is_empty(var->interval))
+			continue;
+
+		var->interval->current_range = interval_first_range(var->interval);
+
 		if (var->interval->fixed_reg)
 			list_add(&var->interval->interval_node, &inactive);
 		else
@@ -338,29 +343,35 @@ int allocate_registers(struct compilation_unit *cu)
 		unsigned long position;
 
 		current = pqueue_remove_top(unhandled);
-		position = current->range.start;
+		position = interval_start(current);
 
 		list_for_each_entry_safe(it, prev, &active, interval_node) {
-			if (it->range.end <= position) {
+			if (interval_end(it) <= position) {
 				/*
 				 * Remove handled interval from active list.
 				 */
 				list_del(&it->interval_node);
 				continue;
 			}
-			if (!in_range(&it->range, position))
+
+			interval_update_current_range(it, position);
+
+			if (!interval_covers(it, position))
 				list_move(&it->interval_node, &inactive);
 		}
 
 		list_for_each_entry_safe(it, prev, &inactive, interval_node) {
-			if (it->range.end <= position) {
+			if (interval_end(it) <= position) {
 				/*
 				 * Remove handled interval from inactive list.
 				 */
 				list_del(&it->interval_node);
 				continue;
 			}
-			if (in_range(&it->range, position))
+
+			interval_update_current_range(it, position);
+
+			if (interval_covers(it, position))
 				list_move(&it->interval_node, &active);
 		}
 

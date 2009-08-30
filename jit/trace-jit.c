@@ -238,14 +238,14 @@ print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 	interval = var->interval;
 	offset = 0;
 
-	if (range_is_empty(&interval->range))
+	if (interval_is_empty(interval))
 		goto skip;
 
-	for (; offset < interval->range.start; offset++)
+	for (; offset < interval_start(interval); offset++)
 		trace_printf("   ");
 
-	for (; offset < interval->range.end; offset++) {
-		if (in_range(&interval->range, offset)) {
+	for (; offset < interval_end(interval); offset++) {
+		if (interval_covers(interval, offset)) {
 			if (next_use_pos(var->interval, offset) == offset) {
 				/* In use */
 				trace_printf("UUU");
@@ -263,10 +263,10 @@ print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 	for (; offset < cu->last_insn; offset++)
 		trace_printf("   ");
 
-	if (!range_is_empty(&interval->range))
+	if (!interval_is_empty(interval))
 		trace_printf(" (start: %2lu, end: %2lu)\n",
-			     interval->range.start,
-			     interval->range.end);
+			     interval_start(interval),
+			     interval_end(interval));
 	else
 		trace_printf(" (empty)\n");
 }
@@ -349,7 +349,15 @@ void trace_regalloc(struct compilation_unit *cu)
 		struct live_interval *interval;
 
 		for (interval = var->interval; interval != NULL; interval = interval->next_child) {
-			trace_printf("  %2lu (pos: %2ld-%2lu):", var->vreg, (signed long)interval->range.start, interval->range.end);
+			trace_printf("  %2lu ", var->vreg);
+
+			if (interval_is_empty(interval))
+				trace_printf("(empty)       :");
+			else
+				trace_printf("(pos: %3lu-%3lu):",
+					     interval_start(interval),
+					     interval_end(interval));
+
 			trace_printf("\t%s", reg_name(interval->reg));
 			trace_printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
 			if (interval->need_spill) {
@@ -409,7 +417,7 @@ static void print_gc_map(struct compilation_unit *cu, struct insn *insn)
 		if (!test_bit(live_vars->bits, i++))
 			continue;
 
-		if (in_range(&var->interval->range, insn->lir_pos)) {
+		if (interval_covers(var->interval, insn->lir_pos)) {
 			trace_printf("%d (%s), ",
 				var->vreg, reg_name(var->interval->reg));
 		} else if (var->interval->need_spill) {

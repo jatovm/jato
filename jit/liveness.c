@@ -36,13 +36,19 @@
 #include <errno.h>
 #include <stdlib.h>
 
-static void __update_live_range(struct live_range *range, unsigned long pos)
+static void __update_live_range(struct live_interval *it, unsigned long pos)
 {
-	if (range->start > pos)
-		range->start = pos;
+	if (interval_is_empty(it))
+		interval_add_range(it, pos, pos + 1);
+	else {
+		struct live_range *r = interval_first_range(it);
 
-	if (range->end < (pos + 1))
-		range->end = pos + 1;
+		if (r->start > pos)
+			r->start = pos;
+
+		if (r->end < (pos + 1))
+			r->end = pos + 1;
+	}
 }
 
 static void update_live_ranges(struct compilation_unit *cu)
@@ -54,10 +60,10 @@ static void update_live_ranges(struct compilation_unit *cu)
 
 		for_each_variable(var, cu->var_infos) {
 			if (test_bit(this->live_in_set->bits, var->vreg))
-				__update_live_range(&var->interval->range, this->start_insn);
+				__update_live_range(var->interval, this->start_insn);
 
 			if (test_bit(this->live_out_set->bits, var->vreg))
-				__update_live_range(&var->interval->range, this->end_insn);
+				__update_live_range(var->interval, this->end_insn);
 		}
 	}
 }
@@ -134,7 +140,7 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 	for (i = 0; i < nr_uses; i++) {
 		struct var_info *var = uses[i];
 
-		__update_live_range(&var->interval->range, insn->lir_pos);
+		__update_live_range(var->interval, insn->lir_pos);
 
 		/*
 		 * It's in the use set if and only if it has not
@@ -148,7 +154,7 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 	for (i = 0; i < nr_defs; i++) {
 		struct var_info *var = defs[i];
 
-		__update_live_range(&var->interval->range, insn->lir_pos);
+		__update_live_range(var->interval, insn->lir_pos);
 		set_bit(bb->def_set->bits, var->vreg);
 	}
 }

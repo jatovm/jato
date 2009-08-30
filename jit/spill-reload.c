@@ -50,7 +50,7 @@ static struct insn *first_insn(struct compilation_unit *cu, struct live_interval
 {
 	struct insn *ret;
 
-	ret = radix_tree_lookup(cu->lir_insn_map, range_first_insn_pos(&interval->range));
+	ret = radix_tree_lookup(cu->lir_insn_map, interval_first_insn_pos(interval));
 	assert(ret != NULL);
 
 	return ret;
@@ -60,7 +60,7 @@ static struct insn *last_insn(struct compilation_unit *cu, struct live_interval 
 {
 	struct insn *ret;
 
-	ret = radix_tree_lookup(cu->lir_insn_map, range_last_insn_pos(&interval->range));
+	ret = radix_tree_lookup(cu->lir_insn_map, interval_last_insn_pos(interval));
 	assert(ret != NULL);
 
 	return ret;
@@ -186,7 +186,7 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 {
 	int err = 0;
 
-	if (range_is_empty(&interval->range))
+	if (interval_is_empty(interval))
 		goto out;
 
 	if (interval->need_reload) {
@@ -198,7 +198,7 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 		 * can't insert a reload instruction in the middle of
 		 * instruction.
 		 */
-		assert((interval->range.start & 1) == 0);
+		assert((interval_start(interval) & 1) == 0);
 
 		err = insert_reload_insn(interval, cu,
 				interval->spill_parent->spill_slot,
@@ -235,7 +235,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 	for (i = 0; i < nr_mapped; i++) {
 		from_it		= mappings[i].from;
 
-		if (from_it->need_spill && from_it->range.end < from_bb->end_insn) {
+		if (from_it->need_spill && interval_end(from_it) < from_bb->end_insn) {
 			slots[i] = from_it->spill_slot;
 		} else {
 			slots[i] = spill_interval(from_it, cu, spill_before, bc_offset);
@@ -246,7 +246,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 	for (i = 0; i < nr_mapped; i++) {
 		to_it		= mappings[i].to;
 
-		if (to_it->need_reload && to_it->range.start >= to_bb->start_insn) {
+		if (to_it->need_reload && interval_start(to_it) >= to_bb->start_insn) {
 			insert_copy_slot_insn(mappings[i].to, cu, slots[i],
 					      to_it->spill_parent->spill_slot,
 					      spill_before, bc_offset);

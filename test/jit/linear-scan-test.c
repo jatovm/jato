@@ -19,12 +19,10 @@ void test_allocates_different_registers_for_overlapping_intervals(void)
 	cu = compilation_unit_alloc(&method);
 
 	v1 = get_var(cu, J_INT);
-	v1->interval->range.start = 0;
-	v1->interval->range.end   = 2;
+	interval_add_range(v1->interval, 0, 2);
 
 	v2 = get_var(cu, J_INT);
-	v2->interval->range.start = 1;
-	v2->interval->range.end   = 2;
+	interval_add_range(v2->interval, 1, 2);
 
 	allocate_registers(cu);
 
@@ -41,12 +39,10 @@ void test_reuses_registers_for_non_overlapping_intervals(void)
 	cu = compilation_unit_alloc(&method);
 
 	v1 = get_var(cu, J_INT);
-	v1->interval->range.start = 0;
-	v1->interval->range.end   = 2;
+	interval_add_range(v1->interval, 0, 2);
 
 	v2 = get_var(cu, J_INT);
-	v2->interval->range.start = 2;
-	v2->interval->range.end   = 4;
+	interval_add_range(v2->interval, 2, 4);
 
 	allocate_registers(cu);
 
@@ -63,12 +59,10 @@ void test_honors_fixed_interval_register_constraint_for_overlapping_intervals(vo
 	cu = compilation_unit_alloc(&method);
 
 	v1 = get_fixed_var(cu, R0);
-	v1->interval->range.start = 0;
-	v1->interval->range.end   = 2;
+	interval_add_range(v1->interval, 0, 2);
 
 	v2 = get_var(cu, J_INT);
-	v2->interval->range.start = 0;
-	v2->interval->range.end   = 2;
+	interval_add_range(v2->interval, 0, 2);
 
 	allocate_registers(cu);
 

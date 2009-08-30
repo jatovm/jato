@@ -15,8 +15,8 @@ struct vm_method method;
 
 static void assert_live_range(struct live_interval *interval, unsigned long expected_start, unsigned long expected_end)
 {
-	assert_int_equals(expected_start, interval->range.start);
-	assert_int_equals(expected_end, interval->range.end);
+	assert_int_equals(expected_start, interval_start(interval));
+	assert_int_equals(expected_end, interval_end(interval));
 }
 
 static void assert_uses(struct basic_block *bb, struct var_info *var)
@@ -35,9 +35,7 @@ static void assert_insn_at_equals(struct insn *insn, struct compilation_unit *cu
 {
 	struct insn *insn2;
 
-	insn2 = radix_tree_lookup(cu->lir_insn_map,
-		interval->range.start + offset);
-
+	insn2 = radix_tree_lookup(cu->lir_insn_map, interval_start(interval) + offset);
 	assert_ptr_equals(insn, insn2);
 }
 

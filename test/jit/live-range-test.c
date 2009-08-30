@@ -84,3 +84,53 @@ void test_ranges_that_do_not_intersect(void)
 	assert_false(ranges_intersect(&range1, &range2));
 	assert_false(ranges_intersect(&range2, &range1));
 }
+
+void test_interval_add_range(void)
+{
+	struct live_interval it;
+	struct live_range *r;
+
+	INIT_LIST_HEAD(&it.range_list);
+
+	interval_add_range(&it, 1, 3);
+	r = interval_first_range(&it);
+	assert_int_equals(1, r->start);
+	assert_int_equals(3, r->end);
+	assert_ptr_equals(NULL, next_range(&it.range_list, r));
+
+	interval_add_range(&it, 5, 7);
+	r = interval_first_range(&it);
+	assert_int_equals(1, r->start);
+	assert_int_equals(3, r->end);
+	r = next_range(&it.range_list, r);
+	assert_int_equals(5, r->start);
+	assert_int_equals(7, r->end);
+	assert_ptr_equals(NULL, next_range(&it.range_list, r));
+
+	interval_add_range(&it, 3, 5);
+	r = interval_first_range(&it);
+	assert_int_equals(1, r->start);
+	assert_int_equals(7, r->end);
+	assert_ptr_equals(NULL, next_range(&it.range_list, r));
+
+	interval_add_range(&it, 7, 8);
+	r = interval_first_range(&it);
+	assert_int_equals(1, r->start);
+	assert_int_equals(8, r->end);
+	assert_ptr_equals(NULL, next_range(&it.range_list, r));
+
+	interval_add_range(&it, 10, 13);
+	r = interval_first_range(&it);
+	assert_int_equals(1, r->start);
+	assert_int_equals(8, r->end);
+	r = next_range(&it.range_list, r);
+	assert_int_equals(10, r->start);
+	assert_int_equals(13, r->end);
+	assert_ptr_equals(NULL, next_range(&it.range_list, r));
+
+	interval_add_range(&it, 0, 14);
+	r = interval_first_range(&it);
+	assert_int_equals(0, r->start);
+	assert_int_equals(14, r->end);
+	assert_ptr_equals(NULL, next_range(&it.range_list, r));
+}

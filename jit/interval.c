@@ -35,6 +35,65 @@
 #include <string.h>
 #include <errno.h>
 
+static struct live_range *alloc_live_range(unsigned long start, unsigned long end)
+{
+	struct live_range *range;
+
+	range = malloc(sizeof *range);
+	if (!range)
+		return NULL;
+
+	range->start = start;
+	range->end = end;
+	INIT_LIST_HEAD(&range->range_list_node);
+	return range;
+}
+
+static int split_ranges(struct live_interval *new, struct live_interval *it,
+			unsigned long pos)
+{
+	struct live_range *this;
+
+	list_for_each_entry(this, &it->range_list, range_list_node) {
+		struct live_range *next;
+
+		if (!in_range(this, pos))
+			continue;
+
+		next = next_range(&it->range_list, this);
+
+		if (this->start == pos) {
+			list_move(&this->range_list_node, &new->range_list);
+		} else {
+			struct live_range *range;
+
+			range = alloc_live_range(pos, this->end);
+			if (!range)
+				return -ENOMEM;
+
+			this->end = pos;
+			list_add(&range->range_list_node, &new->range_list);
+		}
+
+		this = next;
+		if (!this)
+			return 0;
+
+		while (&this->range_list_node != &it->range_list) {
+			struct list_head *next;
+
+			next = this->range_list_node.next;
+
+			list_move(&this->range_list_node, new->range_list.prev);
+			this = node_to_range(next);
+		}
+
+		return 0;
+	}
+
+	error("pos is not within an interval live ranges");
+}
+
 struct live_interval *alloc_interval(struct var_info *var)
 {
 	struct live_interval *interval = zalloc(sizeof *interval);
@@ -42,11 +101,10 @@ struct live_interval *alloc_interval(struct var_info *var)
 		interval->var_info = var;
 		interval->reg = MACH_REG_UNASSIGNED;
 		interval->fixed_reg = false;
-		interval->range.start = ~0UL;
-		interval->range.end = 0UL;
 		interval->spill_reload_reg.interval = interval;
 		INIT_LIST_HEAD(&interval->interval_node);
 		INIT_LIST_HEAD(&interval->use_positions);
+		INIT_LIST_HEAD(&interval->range_list);
 	}
 	return interval;
 }
@@ -55,6 +113,11 @@ void free_interval(struct live_interval *interval)
 {
 	if (interval->next_child)
 		free_interval(interval->next_child);
+
+	struct live_range *this, *next;
+	list_for_each_entry_safe(this, next, &interval->range_list, range_list_node) {
+		free(this);
+	}
 
 	free(interval);
 }
@@ -65,14 +128,21 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 	struct use_position *this, *next;
 	struct live_interval *new;
 
+	assert(pos > interval_start(interval));
+	assert(pos < interval_end(interval));
+
 	new = alloc_interval(interval->var_info);
 	if (!new)
 		return NULL;
 
 	new->reg = MACH_REG_UNASSIGNED;
-	new->range.start = pos;
-	new->range.end = interval->range.end;
-	interval->range.end = pos;
+
+	if (split_ranges(new, interval, pos)) {
+		free(new);
+		return NULL;
+	}
+
+	new->current_range = interval_first_range(new);
 
 	new->fixed_reg = interval->fixed_reg;
 	if (new->fixed_reg)
@@ -128,16 +198,162 @@ struct live_interval *vreg_start_interval(struct compilation_unit *cu, unsigned 
 	return var->interval;
 }
 
+/**
+ * Advances @it->current_range to the last range which covers @pos or
+ * is before @pos.
+ */
+void interval_update_current_range(struct live_interval *it, unsigned long pos)
+{
+	if (pos < interval_start(it) || pos >= interval_end(it))
+		return;
+
+	assert (pos >= it->current_range->start);
+
+	while (!in_range(it->current_range, pos)) {
+		struct live_range *next;
+
+		next = next_range(&it->range_list, it->current_range);
+		if (pos < next->start)
+			break;
+
+		it->current_range = next;
+	}
+}
+
+struct live_range *interval_range_at(struct live_interval *it, unsigned long pos)
+{
+	struct live_range *range;
+
+	if (pos < interval_start(it) || pos >= interval_end(it))
+		return NULL;
+
+	range = it->current_range;
+	if (pos < range->start)
+		range = interval_first_range(it);
+
+	while (range && pos >= range->start) {
+		if (in_range(range, pos))
+			return range;
+
+		range = next_range(&it->range_list, range);
+	}
+
+	return NULL;
+}
+
 struct live_interval *interval_child_at(struct live_interval *parent, unsigned long pos)
 {
 	struct live_interval *it = parent;
 
 	while (it) {
-		if (in_range(&it->range, pos))
+		struct live_range *range;
+
+		range = interval_range_at(it, pos);
+		if (range)
 			return it;
 
 		it = it->next_child;
 	}
 
 	return NULL;
+}
+
+bool intervals_intersect(struct live_interval *it1, struct live_interval *it2)
+{
+	struct live_range *r1, *r2;
+
+	if (interval_start(it1) >= interval_end(it2) ||
+	    interval_start(it2) >= interval_end(it1))
+		return false;
+
+	if (interval_is_empty(it1) || interval_is_empty(it2))
+		return false;
+
+	r1 = it1->current_range;
+	r2 = it2->current_range;
+
+	while (r1 && r1->end <= r2->start)
+		r1 = next_range(&it1->range_list, r1);
+
+	while (r2 && r2->end <= r1->start)
+		r2 = next_range(&it2->range_list, r2);
+
+	while (r1 && r2) {
+		if (ranges_intersect(r1, r2))
+			return true;
+
+		if (r1->start < r2->start)
+			r1 = next_range(&it1->range_list, r1);
+		else
+			r2 = next_range(&it2->range_list, r2);
+	}
+
+	return false;
+}
+
+unsigned long
+interval_intersection_start(struct live_interval *it1, struct live_interval *it2)
+{
+	struct live_range *r1, *r2;
+
+	assert(!interval_is_empty(it1) && !interval_is_empty(it2));
+
+	r1 = it1->current_range;
+	r2 = it2->current_range;
+
+	while (r1 && r1->end <= r2->start)
+		r1 = next_range(&it1->range_list, r1);
+
+	while (r2 && r2->end <= r1->start)
+		r2 = next_range(&it2->range_list, r2);
+
+	while (r1 && r2) {
+		if (ranges_intersect(r1, r2))
+			return range_intersection_start(r1, r2);
+
+		if (r1->start < r2->start)
+			r1 = next_range(&it1->range_list, r1);
+		else
+			r2 = next_range(&it2->range_list, r2);
+	}
+
+	error("intervals do not overlap");
+}
+
+bool interval_covers(struct live_interval *it, unsigned long pos)
+{
+	return interval_range_at(it, pos) != NULL;
+}
+
+int interval_add_range(struct live_interval *it, unsigned long start,
+		       unsigned long end)
+{
+	struct live_range *range, *next, *new;
+
+	new = alloc_live_range(start, end);
+	if (!new)
+		return -ENOMEM;
+
+	list_for_each_entry_safe(range, next, &it->range_list, range_list_node) {
+		if (range->start > end)
+			break;
+
+		if (range->start <= new->end && new->start <= range->end) {
+			new->start = min(new->start, range->start);
+			new->end = max(new->end, range->end);
+			list_del(&range->range_list_node);
+			free(range);
+		}
+	}
+
+	list_for_each_entry_safe(range, next, &it->range_list, range_list_node) {
+		if (new->start > range->start)
+			continue;
+
+		list_add_tail(&new->range_list_node, &range->range_list_node);
+		return 0;
+	}
+
+	list_add_tail(&new->range_list_node, &it->range_list);
+	return 0;
 }
