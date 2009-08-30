@@ -36,6 +36,6 @@ void pc_map_print(struct pc_map *map);
 	for ((value_ptr) = (pc_map)->map[key].values +			\
 				   (pc_map)->map[key].nr_values - 1;	\
 	     (value_ptr) >= (pc_map)->map[key].values;			\
-	     value_ptr++)
+	     value_ptr--)
 
 #endif
