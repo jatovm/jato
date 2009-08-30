@@ -21,11 +21,13 @@
 #include "lib/list.h"
 #include "lib/buffer.h"
 
+#include "vm/backtrace.h"
 #include "vm/method.h"
 #include "vm/object.h"
 
 #include "arch/init.h"
 #include "arch/instruction.h"
+#include "arch/itable.h"
 #include "arch/memory.h"
 #include "arch/stack-frame.h"
 #include "arch/thread.h"
@@ -2021,6 +2023,24 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
+}
+
+/* The regparm(1) makes GCC get the first argument from %ecx and the rest
+ * from the stack. This is convenient, because we use %ecx for passing the
+ * hidden "method" parameter. Interfaces are invoked on objects, so we also
+ * always get the object in the first stack parameter. */
+void __attribute__((regparm(1)))
+itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
+{
+	fprintf(stderr, "itable resolver stub error!\n");
+	fprintf(stderr, "invokeinterface called on method %s.%s%s "
+		"(itable index %d)\n",
+		method->class->name, method->name, method->type,
+		method->itable_index);
+	fprintf(stderr, "object class %s\n", obj->class->name);
+
+	print_trace();
+	abort();
 }
 
 /* Note: a < b, always */
