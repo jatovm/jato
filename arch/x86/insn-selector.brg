@@ -367,14 +367,16 @@ freg:	OP_FSUB(freg, freg) 1
 
 reg:	OP_MUL(reg, EXPR_LOCAL) 1
 {
-	struct var_info *eax;
+	struct var_info *eax, *result;
 
+	result = get_var(s->b_parent, J_INT);
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
-	state->reg1 = eax;
+	state->reg1 = result;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
 	__binop_reg_local(state, s, tree, INSN_MUL_MEMBASE_EAX, eax, 0);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, result));
 }
 
 reg:	OP_MUL(reg, reg) 1
@@ -406,7 +408,7 @@ reg: 	OP_MUL_64(reg, reg) 1
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
 
-	state->reg1 = eax;
+	state->reg1 = get_var(s->b_parent, J_INT);
 	state->reg2 = get_var(s->b_parent, J_INT);
 
 	tmp1 = get_var(s->b_parent, J_INT);
@@ -418,28 +420,39 @@ reg: 	OP_MUL_64(reg, reg) 1
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, eax));
 	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_EAX, state->left->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 
 	select_insn(s, tree, reg_reg_insn(INSN_ADD_REG_REG, edx, state->reg2));
 }
 
 reg:	OP_DIV(reg, EXPR_LOCAL) 1
 {
+	struct var_info *eax;
+
 	div_reg_local(state, s, tree);
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 }
 
 reg:	OP_DIV(reg, reg) 1
 {
+	struct var_info *eax;
 	struct var_info *edx;
 	struct var_info *result;
 
 	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
-	result = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
+	result = get_var(s->b_parent, J_INT);
 	state->reg1 = result;
 
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, result));
-	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, result, edx));
-	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, result));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
+	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, result));
 }
 
 freg:	OP_DDIV(freg, freg) 1
@@ -464,29 +477,32 @@ reg:	OP_DIV_64(reg, reg) 1
 
 reg:	OP_REM(reg, EXPR_LOCAL) 1
 {
-	struct var_info *result, *remainder;
+	struct var_info *edx;
 
 	div_reg_local(state, s, tree);
 
-	result = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	remainder = get_fixed_var(s->b_parent, MACH_REG_xDX);
+	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, remainder, result));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg1));
 }
 
 reg:	OP_REM(reg, reg) 1
 {
 	struct var_info *eax;
+	struct var_info *edx;
 	struct var_info *result;
 
+	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	result = get_fixed_var(s->b_parent, MACH_REG_xDX);
 
+	result = get_var(s->b_parent, J_INT);
 	state->reg1 = result;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
-	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, result));
+	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
 	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, result));
 }
 
 freg:	OP_DREM(freg, freg) 1
@@ -1165,17 +1181,16 @@ freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 reg:	EXPR_NEW
 {
 	struct expression *expr;
-	struct var_info *var;
+	struct var_info *eax;
 
 	expr = to_expr(tree);
 
-	var = get_fixed_var(s->b_parent, MACH_REG_EAX);
-	state->reg1 = var;
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
-		(unsigned long) expr->class));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->class));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	method_args_cleanup(s, tree, 1);
 	select_exception_test(s, tree);
 }
@@ -1183,19 +1198,18 @@ reg:	EXPR_NEW
 reg:	EXPR_NEW
 {
 	struct expression *expr;
-	struct var_info *var, *rdi;
+	struct var_info *rax, *rdi;
 
 	expr = to_expr(tree);
 
-	var = get_fixed_var(s->b_parent, MACH_REG_RAX);
-	state->reg1 = var;
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
 	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
 
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
-		(unsigned long) expr->class, rdi));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->class, rdi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 	select_exception_test(s, tree);
 }
 %endif
@@ -1232,13 +1246,13 @@ reg:	EXPR_ARRAY_SIZE_CHECK(reg)
 %ifdef	CONFIG_X86_32
 reg:	EXPR_NEWARRAY(reg)
 {
-	struct var_info *var, *size;
+	struct var_info *eax, *size;
 	struct expression *expr;
 
 	expr = to_expr(tree);
 
-	var = get_fixed_var(s->b_parent, MACH_REG_EAX);
-	state->reg1 = var;
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
 	size = state->left->reg1;
 
@@ -1246,6 +1260,7 @@ reg:	EXPR_NEWARRAY(reg)
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, expr->array_type));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc_primitive_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 
 	method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
@@ -1253,13 +1268,13 @@ reg:	EXPR_NEWARRAY(reg)
 %else
 reg:	EXPR_NEWARRAY(reg)
 {
-	struct var_info *ret, *size, *rdi, *rsi;
+	struct var_info *rax, *size, *rdi, *rsi;
 	struct expression *expr;
 
 	expr = to_expr(tree);
 
-	ret = get_fixed_var(s->b_parent, MACH_REG_RAX);
-	state->reg1 = ret;
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
 	size = state->left->reg1;
 
@@ -1267,10 +1282,10 @@ reg:	EXPR_NEWARRAY(reg)
 	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rdi));
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
-					  expr->array_type, rsi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->array_type, rsi));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc_primitive_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 
 	select_exception_test(s, tree);
 }
@@ -1322,7 +1337,7 @@ arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
 
 reg:	EXPR_MULTIANEWARRAY(arg)
 {
-	struct var_info *var;
+	struct var_info *xax;
 	struct var_info *stack_ptr;
 	unsigned int dimension;
 	struct expression *expr;
@@ -1330,8 +1345,8 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 
 	expr = to_expr(tree);
 
-	var = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	state->reg1 = var;
+	xax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
 	stack_ptr = get_fixed_var(s->b_parent, MACH_REG_xSP);
 
@@ -1344,6 +1359,7 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 		(unsigned long) expr->multianewarray_ref_type));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc_multi_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xax, state->reg1));
 
 	method_args_cleanup(s, tree, dimension + 3);
 	select_exception_test(s, tree);
@@ -1352,13 +1368,13 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 %ifdef	CONFIG_X86_32
 reg:    EXPR_ANEWARRAY(reg)
 {
-        struct var_info *var, *size;
+        struct var_info *eax, *size;
         struct expression *expr;
 
         expr = to_expr(tree);
 
-        var = get_fixed_var(s->b_parent, MACH_REG_EAX);
-        state->reg1 = var;
+        eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+        state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
         size = state->left->reg1;
 
@@ -1367,6 +1383,7 @@ reg:    EXPR_ANEWARRAY(reg)
 		(unsigned long) expr->anewarray_ref_type));
         select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 
         method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
@@ -1374,13 +1391,13 @@ reg:    EXPR_ANEWARRAY(reg)
 %else
 reg:    EXPR_ANEWARRAY(reg)
 {
-        struct var_info *var, *size, *rdi, *rsi;
+        struct var_info *rax, *size, *rdi, *rsi;
         struct expression *expr;
 
         expr = to_expr(tree);
 
-        var = get_fixed_var(s->b_parent, MACH_REG_RAX);
-        state->reg1 = var;
+        rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+        state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
         size = state->left->reg1;
 
@@ -1392,6 +1409,7 @@ reg:    EXPR_ANEWARRAY(reg)
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rsi));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_alloc_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 
 	select_exception_test(s, tree);
 }
@@ -1412,19 +1430,20 @@ reg:    EXPR_ARRAYLENGTH(reg)
 
 reg:	EXPR_INSTANCEOF(reg)
 {
-	struct var_info *ref, *instanceof_result;
+	struct var_info *ref, *xax;
 	struct expression *expr;
 
 	expr = to_expr(tree);
 
 	ref = state->left->reg1;
 
-	instanceof_result = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	state->reg1 = instanceof_result;
+	xax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	state->reg1 = get_var(s->b_parent, J_INT);
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->instanceof_class));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xax, state->reg1));
 
 	method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
@@ -2625,6 +2644,7 @@ stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
 reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
 {
 	struct expression *expr;
+	struct var_info *eax;
 
 	expr = to_expr(tree);
 
@@ -2642,8 +2662,11 @@ reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
 
-	state->reg1 = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	state->reg1 = get_var(s->b_parent, J_NATIVE_PTR);
+
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &bsearch));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 }
 %endif
 
@@ -2864,7 +2887,7 @@ static void shift_reg_local(struct _MBState *state, struct basic_block *bb,
 static void div_reg_local(struct _MBState *state, struct basic_block *bb,
 			  struct tree_node *tree)
 {
-	struct var_info *edx, *result, *frame_ptr;
+	struct var_info *eax, *edx, *frame_ptr;
 	struct expression *expr;
 	unsigned long disp;
 
@@ -2872,15 +2895,13 @@ static void div_reg_local(struct _MBState *state, struct basic_block *bb,
 	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
 
 	edx = get_fixed_var(bb->b_parent, MACH_REG_xDX);
-	result = get_fixed_var(bb->b_parent, MACH_REG_xAX);
-	state->reg1 = result;
+	eax = get_fixed_var(bb->b_parent, MACH_REG_xAX);
 
 	frame_ptr = bb->b_parent->frame_ptr;
 
-	select_insn(bb, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, result));
-	select_insn(bb, tree, reg_reg_insn(INSN_CLTD_REG_REG, result, edx));
-	select_insn(bb, tree, membase_reg_insn(INSN_DIV_MEMBASE_REG, frame_ptr, disp, result));
-
+	select_insn(bb, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
+	select_insn(bb, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
+	select_insn(bb, tree, membase_reg_insn(INSN_DIV_MEMBASE_REG, frame_ptr, disp, eax));
 }
 
 static void
@@ -3221,6 +3242,9 @@ static void emit_code(struct basic_block *bb, MBState *state, int goal)
 		emit_code(bb, kids[i], nts[i]);
 
 	mono_burg_emit(ern, state, state->tree, bb);
+
+	if (state->reg1)
+		assert(!state->reg1->interval->fixed_reg);
 }
 
 static void free_state(MBState *state)
