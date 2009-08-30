@@ -210,6 +210,9 @@ static void allocate_blocked_reg(struct live_interval *current,
 		if (it->fixed_reg)
 			continue;
 
+		if (!reg_supports_type(it->reg, current->var_info->vm_type))
+			continue;
+
 		if (intervals_intersect(it, current)) {
 			pos = next_use_pos(it, interval_start(current));
 			set_use_pos(use_pos, it->reg, pos);
@@ -225,6 +228,9 @@ static void allocate_blocked_reg(struct live_interval *current,
 
 	list_for_each_entry(it, inactive, interval_node) {
 		if (!it->fixed_reg)
+			continue;
+
+		if (!reg_supports_type(it->reg, current->var_info->vm_type))
 			continue;
 
 		if (intervals_intersect(it, current)) {
@@ -277,6 +283,9 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 	}
 
 	list_for_each_entry(it, inactive, interval_node) {
+		if (!reg_supports_type(it->reg, current->var_info->vm_type))
+			continue;
+
 		if (intervals_intersect(it, current)) {
 			unsigned long pos;
 
