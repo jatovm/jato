@@ -2056,28 +2056,52 @@ static void emit_itable_bsearch(struct buffer *buf,
 
 	/* No point in emitting the "cmp" if we're not going to test
 	 * anything */
-	if (b - a >= 1)
+	if (b - a >= 1) {
 		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
 
-	if (m - a > 0) {
-		/* open-coded "jb" */
-		emit(buf, 0x0f);
-		emit(buf, 0x82);
+		if (m - a > 0) {
+			/* open-coded "jb" */
+			emit(buf, 0x0f);
+			emit(buf, 0x82);
 
-		/* placeholder address */
-		jb_addr = buffer_current(buf);
-		emit_imm32(buf, 0);
+			/* placeholder address */
+			jb_addr = buffer_current(buf);
+			emit_imm32(buf, 0);
+		}
+
+		if (b - m > 0) {
+			/* open-coded "ja" */
+			emit(buf, 0x0f);
+			emit(buf, 0x87);
+
+			/* placeholder address */
+			ja_addr = buffer_current(buf);
+			emit_imm32(buf, 0);
+		}
 	}
 
-	if (b - m > 0) {
-		/* open-coded "ja" */
-		emit(buf, 0x0f);
-		emit(buf, 0x87);
+#ifndef NDEBUG
+	/* Make sure what we wanted is what we got;
+	 *
+	 *     cmp i_method, %eax
+	 *     je .okay
+	 *     jmp itable_resolver_stub_error
+	 * .okay:
+	 *
+	 */
+	__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
 
-		/* placeholder address */
-		ja_addr = buffer_current(buf);
-		emit_imm32(buf, 0);
-	}
+	/* open-coded "je" */
+	emit(buf, 0x0f);
+	emit(buf, 0x84);
+
+	uint8_t *je_addr = buffer_current(buf);
+	emit_imm32(buf, 0);
+
+	__emit_jmp(buf, (unsigned long) &itable_resolver_stub_error);
+
+	fixup_branch_target(je_addr, buffer_current(buf));
+#endif
 
 	__emit_add_imm_reg(buf, 4 * table[m]->c_method->virtual_index, MACH_REG_ECX);
 	emit_really_indirect_jump_reg(buf, MACH_REG_ECX);
