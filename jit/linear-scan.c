@@ -75,6 +75,7 @@ static void set_use_pos(unsigned long *use_pos, enum machine_reg reg,
 	/*
 	 * This function does the same as set_free_pos so we call this directly
 	 */
+	assert(reg < NR_REGISTERS);
 	set_free_pos(use_pos, reg, pos);
 }
 
@@ -84,6 +85,7 @@ static void set_block_pos(unsigned long *block_pos, unsigned long *use_pos,
 	/*
 	 * This function does the same as set_free_pos so we call this directly
 	 */
+	assert(reg < NR_REGISTERS);
 	set_free_pos(block_pos, reg, pos);
 	set_free_pos(use_pos, reg, pos);
 }
@@ -345,9 +347,10 @@ int allocate_registers(struct compilation_unit *cu)
 
 		var->interval->current_range = interval_first_range(var->interval);
 
-		if (var->interval->fixed_reg)
-			list_add(&var->interval->interval_node, &inactive);
-		else
+		if (var->interval->fixed_reg) {
+			if (var->interval->reg < NR_REGISTERS)
+				list_add(&var->interval->interval_node, &inactive);
+		} else
 			pqueue_insert(unhandled, var->interval);
 	}
 
