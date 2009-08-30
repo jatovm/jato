@@ -55,9 +55,9 @@ do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
 
 	ret->vreg = cu->nr_vregs++;
 	ret->next = cu->var_infos;
-	ret->interval = alloc_interval(ret);
-
 	ret->vm_type = vm_type;
+
+	ret->interval = alloc_interval(ret);
 
 	cu->var_infos = ret;
   out:

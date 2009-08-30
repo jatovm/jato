@@ -102,6 +102,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 		interval->reg = MACH_REG_UNASSIGNED;
 		interval->fixed_reg = false;
 		interval->spill_reload_reg.interval = interval;
+		interval->spill_reload_reg.vm_type = var->vm_type;
 		INIT_LIST_HEAD(&interval->interval_node);
 		INIT_LIST_HEAD(&interval->use_positions);
 		INIT_LIST_HEAD(&interval->range_list);

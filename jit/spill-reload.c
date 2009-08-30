@@ -141,6 +141,7 @@ spill_interval(struct live_interval *interval,
 	if (!slot)
 		return NULL;
 
+	assert(interval->spill_reload_reg.vm_type == interval->var_info->vm_type);
 	spill = spill_insn(&interval->spill_reload_reg, slot);
 	if (!spill)
 		return NULL;
