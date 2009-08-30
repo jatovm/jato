@@ -360,6 +360,7 @@ void trace_regalloc(struct compilation_unit *cu)
 					     interval_end(interval));
 
 			trace_printf("\t%s", reg_name(interval->reg));
+			trace_printf("\t%-11s", get_vm_type_name(var->vm_type));
 			trace_printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
 			if (interval->need_spill) {
 				unsigned long ndx = -1;
