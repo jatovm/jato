@@ -110,35 +110,40 @@ static enum machine_reg pick_register(unsigned long *free_until_pos, enum vm_typ
 	return ret;
 }
 
+static void spill_interval(struct live_interval *it, unsigned long pos,
+			   struct pqueue *unhandled)
+{
+	struct live_interval *new;
+
+	new = split_interval_at(it, pos);
+	if (has_use_positions(new)) {
+		unsigned long next_pos = next_use_pos(new, 0);
+
+		/* Trim interval if it does not start with a use position. */
+		if (next_pos > new->range.start)
+			new = split_interval_at(new, next_pos);
+
+		it->need_spill = true;
+		mark_need_reload(new, it);
+		pqueue_insert(unhandled, new);
+	}
+}
+
 static void __spill_interval_intersecting(struct live_interval *current,
 					  enum machine_reg reg,
 					  struct live_interval *it,
 					  struct pqueue *unhandled)
 {
-	struct live_interval *new;
-	unsigned long next_pos;
-
 	if (it->reg != reg)
 		return;
 
 	if (!ranges_intersect(&it->range, &current->range))
 		return;
 
-	new = split_interval_at(it, current->range.start);
-	it->need_spill = true;
-
-	next_pos = next_use_pos(new, new->range.start);
-
-	if (next_pos == LONG_MAX)
+	if (current->range.start == it->range.start)
 		return;
 
-	new = split_interval_at(new, next_pos);
-
-	if (!has_use_positions(new))
-		return;
-
-	mark_need_reload(new, it);
-	pqueue_insert(unhandled, new);
+	spill_interval(it, current->range.start, unhandled);
 }
 
 static void spill_all_intervals_intersecting(struct live_interval *current,
@@ -165,7 +170,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 				 struct pqueue *unhandled)
 {
 	unsigned long use_pos[NR_REGISTERS], block_pos[NR_REGISTERS];
-	struct live_interval *it, *new;
+	struct live_interval *it;
 	int i;
 	enum machine_reg reg;
 
@@ -224,26 +229,16 @@ static void allocate_blocked_reg(struct live_interval *current,
 		 * so it is best to spill current itself
 		 */
 		pos = next_use_pos(current, current->range.start);
-		new = split_interval_at(current, pos);
-
-		if (has_use_positions(new)) {
-			mark_need_reload(new, current);
-			pqueue_insert(unhandled, new);
-		}
-
-		current->need_spill = 1;
-	} else if (block_pos[reg] >= current->range.end) {
-		/* Spilling made a register free for the whole current */
-		current->reg = reg;
-		spill_all_intervals_intersecting(current, reg, active,
-						 inactive, unhandled);
+		spill_interval(current, pos, unhandled);
 	} else {
-		new = split_interval_at(current, block_pos[reg]);
-
-		if (has_use_positions(new))
-			pqueue_insert(unhandled, new);
-
+		/*
+		 * Register is available for whole or some part of interval
+		 */
 		current->reg = reg;
+
+		if (block_pos[reg] < current->range.end)
+			spill_interval(current, block_pos[reg], unhandled);
+
 		spill_all_intervals_intersecting(current, reg, active,
 						 inactive, unhandled);
 	}
@@ -255,7 +250,7 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 				     struct pqueue *unhandled)
 {
 	unsigned long free_until_pos[NR_REGISTERS];
-	struct live_interval *it, *new;
+	struct live_interval *it;
 	enum machine_reg reg;
 	int i;
 
@@ -292,16 +287,8 @@ static void try_to_allocate_free_reg(struct live_interval *current,
 		/*
 		 * Register available for the first part of the interval.
 		 */
-		new = split_interval_at(current, free_until_pos[reg]);
-
-		if (has_use_positions(new)) {
-			new = split_interval_at(new, next_use_pos(new, 0));
-			mark_need_reload(new, current);
-			pqueue_insert(unhandled, new);
-		}
-
+		spill_interval(current, free_until_pos[reg], unhandled);
 		current->reg = reg;
-		current->need_spill = 1;
 	}
 }
 
@@ -380,12 +367,13 @@ int allocate_registers(struct compilation_unit *cu)
 		/*
 		 * Don't allocate registers for fixed intervals.
 		 */
-		if (!current->fixed_reg) {
-			try_to_allocate_free_reg(current, &active, &inactive, unhandled);
+		assert(!current->fixed_reg);
 
-			if (current->reg == MACH_REG_UNASSIGNED)
-				allocate_blocked_reg(current, &active, &inactive, unhandled);
-		}
+		try_to_allocate_free_reg(current, &active, &inactive, unhandled);
+
+		if (current->reg == MACH_REG_UNASSIGNED)
+			allocate_blocked_reg(current, &active, &inactive, unhandled);
+
 		if (current->reg != MACH_REG_UNASSIGNED)
 			list_add(&current->interval_node, &active);
 	}
