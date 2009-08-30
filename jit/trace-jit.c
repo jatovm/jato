@@ -189,7 +189,6 @@ void trace_tree_ir(struct compilation_unit *cu)
 
 void trace_lir(struct compilation_unit *cu)
 {
-	unsigned long offset = 0;
 	struct basic_block *bb;
 	struct string *str;
 	struct insn *insn;
@@ -221,7 +220,7 @@ void trace_lir(struct compilation_unit *cu)
 				free_str(bc_str);
 			}
 
-			trace_printf(" %5lu:   %s\n", offset++, str->value);
+			trace_printf(" %5lu:   %s\n", insn->lir_pos, str->value);
 			free_str(str);
 		}
 	}
@@ -232,35 +231,42 @@ void trace_lir(struct compilation_unit *cu)
 static void
 print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 {
-	struct live_range *range = &var->interval->range;
-	struct basic_block *bb;
+	struct live_interval *interval;
 	unsigned long offset;
-	struct insn *insn;
 
 	trace_printf("  %2lu: ", var->vreg);
-
+	interval = var->interval;
 	offset = 0;
-	for_each_basic_block(bb, &cu->bb_list) {
-		for_each_insn(insn, &bb->insn_list) {
-			if (in_range(range, offset)) {
-				if (next_use_pos(var->interval, offset) == offset) {
-					/* In use */
-					trace_printf("UUU");
-				} else {
-					if (var->interval->reg == MACH_REG_UNASSIGNED)
-						trace_printf("***");
-					else
-						trace_printf("---");
-				}
-			}
-			else
-				trace_printf("   ");
 
-			offset++;
-		}
+	if (range_is_empty(&interval->range))
+		goto skip;
+
+	for (; offset < interval->range.start; offset++)
+		trace_printf("   ");
+
+	for (; offset < interval->range.end; offset++) {
+		if (in_range(&interval->range, offset)) {
+			if (next_use_pos(var->interval, offset) == offset) {
+				/* In use */
+				trace_printf("UUU");
+			} else {
+				if (var->interval->reg == MACH_REG_UNASSIGNED)
+					trace_printf("***");
+				else
+					trace_printf("---");
+			}
+		} else
+			trace_printf("   ");
 	}
-	if (!range_is_empty(range))
-		trace_printf(" (start: %2lu, end: %2lu)\n", range->start, range->end);
+
+ skip:
+	for (; offset < cu->last_insn; offset++)
+		trace_printf("   ");
+
+	if (!range_is_empty(&interval->range))
+		trace_printf(" (start: %2lu, end: %2lu)\n",
+			     interval->range.start,
+			     interval->range.end);
 	else
 		trace_printf(" (empty)\n");
 }
@@ -306,7 +312,6 @@ void trace_liveness(struct compilation_unit *cu)
 	struct basic_block *bb;
 	struct var_info *var;
 	unsigned long offset;
-	struct insn *insn;
 
 	if (!cu_matches_regex(cu))
 		return;
@@ -314,14 +319,11 @@ void trace_liveness(struct compilation_unit *cu)
 	trace_printf("Liveness:\n\n");
 
 	trace_printf("Legend: (U) In use, (-) Fixed register, (*) Non-fixed register\n\n");
-
 	trace_printf("      ");
-	offset = 0;
-	for_each_basic_block(bb, &cu->bb_list) {
-		for_each_insn(insn, &bb->insn_list) {
-			trace_printf("%-2lu ", offset++);
-		}
-	}
+
+	for (offset = 0; offset < cu->last_insn; offset++)
+		trace_printf("%-2lu ", offset);
+
 	trace_printf("\n");
 
 	for_each_variable(var, cu->var_infos)

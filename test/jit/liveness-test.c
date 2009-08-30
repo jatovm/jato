@@ -69,15 +69,15 @@ void test_variable_range_limited_to_basic_block(void)
 	assert_defines(bb, r1);
 	assert_defines(bb, r2);
 
-	assert_live_range(r1->interval, 0, 3);
-	assert_live_range(r2->interval, 1, 3);
+	assert_live_range(r1->interval, 0, 5);
+	assert_live_range(r2->interval, 2, 5);
 
 	assert_insn_at_equals(insn[0], cu, r1->interval, 0);
-	assert_insn_at_equals(insn[1], cu, r1->interval, 1);
-	assert_insn_at_equals(insn[2], cu, r1->interval, 2);
+	assert_insn_at_equals(insn[1], cu, r1->interval, 2);
+	assert_insn_at_equals(insn[2], cu, r1->interval, 4);
 
 	assert_insn_at_equals(insn[1], cu, r2->interval, 0);
-	assert_insn_at_equals(insn[2], cu, r2->interval, 1);
+	assert_insn_at_equals(insn[2], cu, r2->interval, 2);
 
 	free_compilation_unit(cu);
 }
@@ -116,16 +116,16 @@ void test_variable_range_spans_two_basic_blocks(void)
 	assert_defines(bb2, r2);
 	assert_uses(bb2, r1);
 
-	assert_live_range(r1->interval, 0, 4);
-	assert_live_range(r2->interval, 2, 4);
+	assert_live_range(r1->interval, 0, 7);
+	assert_live_range(r2->interval, 4, 7);
 
 	assert_insn_at_equals(insn[0], cu, r1->interval, 0);
-	assert_insn_at_equals(insn[1], cu, r1->interval, 1);
-	assert_insn_at_equals(insn[2], cu, r1->interval, 2);
-	assert_insn_at_equals(insn[3], cu, r1->interval, 3);
+	assert_insn_at_equals(insn[1], cu, r1->interval, 2);
+	assert_insn_at_equals(insn[2], cu, r1->interval, 4);
+	assert_insn_at_equals(insn[3], cu, r1->interval, 6);
 
 	assert_insn_at_equals(insn[2], cu, r2->interval, 0);
-	assert_insn_at_equals(insn[3], cu, r2->interval, 1);
+	assert_insn_at_equals(insn[3], cu, r2->interval, 2);
 
 	free_compilation_unit(cu);
 }

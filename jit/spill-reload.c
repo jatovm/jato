@@ -50,7 +50,7 @@ static struct insn *first_insn(struct compilation_unit *cu, struct live_interval
 {
 	struct insn *ret;
 
-	ret = radix_tree_lookup(cu->lir_insn_map, interval->range.start);
+	ret = radix_tree_lookup(cu->lir_insn_map, range_first_insn_pos(&interval->range));
 	assert(ret != NULL);
 
 	return ret;
@@ -60,7 +60,7 @@ static struct insn *last_insn(struct compilation_unit *cu, struct live_interval 
 {
 	struct insn *ret;
 
-	ret = radix_tree_lookup(cu->lir_insn_map, interval->range.end - 1);
+	ret = radix_tree_lookup(cu->lir_insn_map, range_last_insn_pos(&interval->range));
 	assert(ret != NULL);
 
 	return ret;
@@ -86,7 +86,7 @@ static struct list_head *bb_last_spill_node(struct basic_block *bb)
 	if (bb->end_insn == bb->start_insn)
 		return &bb->insn_list;
 
-	last = radix_tree_lookup(bb->b_parent->lir_insn_map, bb->end_insn - 1);
+	last = radix_tree_lookup(bb->b_parent->lir_insn_map, bb->end_insn - 2);
 	assert(last);
 
 	if (insn_is_branch(last))
@@ -190,6 +190,16 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 		goto out;
 
 	if (interval->need_reload) {
+		/*
+		 * Intervals which start with a DEF position (odd
+		 * numbers) should not be reloaded. One reason for
+		 * this is that they do not have to because register
+		 * content is overriden. Another reason is that we
+		 * can't insert a reload instruction in the middle of
+		 * instruction.
+		 */
+		assert((interval->range.start & 1) == 0);
+
 		err = insert_reload_insn(interval, cu,
 				interval->spill_parent->spill_slot,
 				first_insn(cu, interval));

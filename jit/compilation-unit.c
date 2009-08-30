@@ -259,9 +259,11 @@ void compute_insn_positions(struct compilation_unit *cu)
 
 			radix_tree_insert(cu->lir_insn_map, pos, insn);
 
-			++pos;
+			pos += 2;
 		}
 
 		bb->end_insn = pos;
 	}
+
+	cu->last_insn = pos;
 }

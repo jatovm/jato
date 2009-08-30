@@ -12,6 +12,16 @@ struct live_range {
 	unsigned long start, end;	/* end is exclusive */
 };
 
+static inline unsigned long range_last_insn_pos(struct live_range *range)
+{
+	return (range->end - 1) & ~1;
+}
+
+static inline unsigned long range_first_insn_pos(struct live_range *range)
+{
+	return range->start & ~1;
+}
+
 static inline bool in_range(struct live_range *range, unsigned long offset)
 {
 	return (offset >= range->start) && (offset < range->end);

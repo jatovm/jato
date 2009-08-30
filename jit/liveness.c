@@ -142,8 +142,8 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 		 */
 		if (!test_bit(bb->def_set->bits, var->vreg))
 			set_bit(bb->use_set->bits, var->vreg);
-	}	
-	
+	}
+
 	nr_defs = insn_defs(bb->b_parent, insn, defs);
 	for (i = 0; i < nr_defs; i++) {
 		struct var_info *var = defs[i];

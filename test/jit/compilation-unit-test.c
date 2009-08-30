@@ -65,7 +65,7 @@ void test_instruction_positions_are_computed_in_basic_block_order(void)
 	compute_insn_positions(cu);
 
 	for (i = 0; i < ARRAY_SIZE(insns); i++)
-		assert_int_equals(i, insns[i]->lir_pos);
+		assert_int_equals(i * 2, insns[i]->lir_pos);
 
 	free_compilation_unit(cu);
 }

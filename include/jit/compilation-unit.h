@@ -85,6 +85,8 @@ struct compilation_unit {
 	 */
 	struct radix_tree *lir_insn_map;
 
+	unsigned long last_insn;
+
 	/*
 	 * This maps machine-code offset (of gc safepoint) to gc map
 	 */
