@@ -6,7 +6,7 @@
  */
 
 #include "jit/compilation-unit.h"
-#include "arch/instruction.h"
+#include "jit/instruction.h"
 #include "jit/vars.h"
 
 enum {

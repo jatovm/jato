@@ -9,9 +9,8 @@
 
 #include "jit/compilation-unit.h"
 #include "jit/basic-block.h"
+#include "jit/instruction.h"
 #include "jit/statement.h"
-
-#include "arch/instruction.h"
 
 #include "vm/die.h"
 

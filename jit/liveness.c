@@ -27,9 +27,9 @@
 
 #include "jit/compilation-unit.h"
 #include "jit/compiler.h"
+#include "jit/instruction.h"
 #include "jit/vars.h"
 
-#include "arch/instruction.h"
 #include "lib/bitset.h"
 #include "vm/die.h"
 

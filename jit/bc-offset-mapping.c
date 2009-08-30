@@ -31,8 +31,7 @@
 #include "jit/bc-offset-mapping.h"
 #include "jit/statement.h"
 #include "jit/expression.h"
-
-#include "arch/instruction.h"
+#include "jit/instruction.h"
 
 #include "lib/buffer.h"
 

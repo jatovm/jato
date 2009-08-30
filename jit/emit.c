@@ -16,13 +16,12 @@
 
 #include "jit/compilation-unit.h"
 #include "jit/basic-block.h"
+#include "jit/compiler.h"
 #include "jit/emit-code.h"
 #include "jit/exception.h"
-#include "jit/compiler.h"
+#include "jit/instruction.h"
 #include "jit/statement.h"
 #include "jit/text.h"
-
-#include "arch/instruction.h"
 
 #include <stdlib.h>
 #include <string.h>

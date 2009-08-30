@@ -25,8 +25,7 @@
  */
 
 #include "jit/bc-offset-mapping.h"
-
-#include "arch/instruction.h"
+#include "jit/instruction.h"
 
 #include <stdlib.h>
 #include <string.h>

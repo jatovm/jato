@@ -23,11 +23,11 @@
  *
  * Please refer to the file LICENSE for details.
  */
-#include "arch/instruction.h"
 #include "arch/registers.h"
 
 #include "jit/basic-block.h"
 #include "jit/compilation-unit.h"
+#include "jit/instruction.h"
 #include "jit/stack-slot.h"
 #include "jit/statement.h"
 #include "jit/vars.h"

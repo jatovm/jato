@@ -11,6 +11,7 @@
 #include "jit/tree-printer.h"
 #include "jit/basic-block.h"
 #include "jit/disassemble.h"
+#include "jit/instruction.h"
 #include "jit/lir-printer.h"
 #include "jit/exception.h"
 #include "jit/cu-mapping.h"
