@@ -118,4 +118,9 @@ static inline const char *reg_name(enum machine_reg reg)
 	return "<unknown>";
 }
 
+static inline bool insn_is_call(struct insn *insn)
+{
+	return false;
+}
+
 #endif /* __ARCH_INSTRUCTION_H */

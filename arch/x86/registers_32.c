@@ -26,9 +26,25 @@
 
 #include "arch/registers.h"
 #include "jit/vars.h"
+#include "vm/system.h"
 
 #include <assert.h>
 #include <stdbool.h>
+
+enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS] = {
+	MACH_REG_EAX,
+	MACH_REG_ECX,
+	MACH_REG_EDX,
+
+	MACH_REG_XMM0,
+	MACH_REG_XMM1,
+	MACH_REG_XMM2,
+	MACH_REG_XMM3,
+	MACH_REG_XMM4,
+	MACH_REG_XMM5,
+	MACH_REG_XMM6,
+	MACH_REG_XMM7
+};
 
 static const char *register_names[] = {
 	[MACH_REG_EAX] = "EAX",

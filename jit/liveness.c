@@ -41,9 +41,9 @@ static void __update_live_ranges(struct compilation_unit *cu, struct basic_block
 	struct var_info *uses[MAX_REG_OPERANDS];
 	struct var_info *defs[MAX_REG_OPERANDS];
 	struct insn *insn;
-	int nr_uses;
-	int nr_defs;
-	int i;
+	unsigned int nr_uses;
+	unsigned int nr_defs;
+	unsigned int i;
 
 	for_each_insn_reverse(insn, &bb->insn_list) {
 		nr_defs = insn_defs(bb->b_parent, insn, defs);
@@ -62,6 +62,15 @@ static void __update_live_ranges(struct compilation_unit *cu, struct basic_block
 		nr_uses = insn_uses(insn, uses);
 		for (i = 0; i < nr_uses; i++)
 			interval_add_range(uses[i]->interval, bb->start_insn, insn->lir_pos + 1);
+
+		if (insn_is_call(insn)) {
+			for (i = 0; i < NR_CALLER_SAVE_REGS; i++) {
+				struct live_interval *reg;
+
+				reg = cu->fixed_var_infos[caller_save_regs[i]]->interval;
+				interval_add_range(reg, insn->lir_pos + 1, insn->lir_pos + 2);
+			}
+		}
 	}
 }
 

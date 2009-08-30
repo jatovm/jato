@@ -323,4 +323,15 @@ static inline bool insn_is_branch(struct insn *insn)
 	}
 }
 
+static inline bool insn_is_call(struct insn *insn)
+{
+	switch (insn->type) {
+	case INSN_CALL_REG:
+	case INSN_CALL_REL:
+		return true;
+	default:
+		return false;
+	}
+}
+
 #endif

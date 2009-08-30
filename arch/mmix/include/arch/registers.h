@@ -20,6 +20,9 @@ enum machine_reg {
 	MACH_REG_UNASSIGNED = INT_MAX,
 };
 
+#define NR_CALLER_SAVE_REGS 0
+extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
+
 static inline bool reg_supports_type(enum machine_reg reg, enum vm_type type)
 {
 	return true;
