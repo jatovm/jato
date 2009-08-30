@@ -189,6 +189,18 @@ static void *itable_create_conflict_resolver(struct vm_class *vmc,
 
 static void trace_itable(struct vm_class *vmc, struct list_head *itable)
 {
+	bool empty = true;
+	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
+		if (list_is_empty(&itable[i]))
+			continue;
+
+		empty = false;
+		break;
+	}
+
+	if (empty)
+		return;
+
 	trace_printf("trace itable (duplicates included): %s\n", vmc->name);
 
 	for (unsigned int i = 0; i < VM_ITABLE_SIZE; ++i) {
@@ -212,6 +224,9 @@ static void trace_itable(struct vm_class *vmc, struct list_head *itable)
 				c_vmm->class->name);
 		}
 	}
+
+	trace_printf("\n");
+	trace_flush();
 }
 
 int vm_itable_setup(struct vm_class *vmc)
