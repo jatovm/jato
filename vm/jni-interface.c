@@ -746,6 +746,26 @@ vm_jni_get_static_double_field(struct vm_jni_env *env, jobject object,
 	return field_get_double(object, field);
 }
 
+#define DEFINE_SET_STATIC_FIELD(func, type, set)			\
+	static void							\
+	func(struct vm_jni_env *env, jobject object,			\
+		 jfieldID field, type value)				\
+	{								\
+		enter_vm_from_jni();					\
+									\
+		set(object, field, value);				\
+	}								\
+
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_object_field, jobject, field_set_object);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_boolean_field, jboolean, field_set_boolean);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_byte_field, jbyte, field_set_byte);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_char_field, jchar, field_set_char);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_short_field, jshort, field_set_short);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_int_field, jint, field_set_int);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_long_field, jlong, field_set_long);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_float_field, jfloat, field_set_float);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_double_field, jdouble, field_set_double);
+
 static jboolean
 vm_jni_call_static_boolean_method(struct vm_jni_env *env, jclass clazz,
 				  jmethodID methodID, ...)
@@ -1219,19 +1239,19 @@ void *vm_jni_native_interface[] = {
 	NULL, /* GetStaticLongField */
 	NULL, /* GetStaticFloatField */
 	vm_jni_get_static_double_field,
-	NULL, /* SetStaticObjectField */
+	vm_jni_set_static_object_field,
 
 	/* 155 */
-	NULL, /* SetStaticBooleanField */
-	NULL, /* SetStaticByteField */
-	NULL, /* SetStaticCharField */
-	NULL, /* SetStaticShortField */
-	NULL, /* SetStaticIntField */
+	vm_jni_set_static_boolean_field,
+	vm_jni_set_static_byte_field,
+	vm_jni_set_static_char_field,
+	vm_jni_set_static_short_field,
+	vm_jni_set_static_int_field,
 
 	/* 160 */
-	NULL, /* SetStaticLongField */
-	NULL, /* SetStaticFloatField */
-	NULL, /* SetStaticDoubleField */
+	vm_jni_set_static_long_field,
+	vm_jni_set_static_float_field,
+	vm_jni_set_static_double_field,
 	NULL, /* NewString */
 	NULL, /* GetStringLength */
 
