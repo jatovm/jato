@@ -44,4 +44,11 @@ static inline bool vm_type_is_float(enum vm_type type)
 	return type == J_FLOAT || type == J_DOUBLE;
 }
 
+static inline int vm_type_slot_size(enum vm_type type)
+{
+	if (type == J_DOUBLE || type == J_LONG)
+		return 2;
+	return 1;
+}
+
 #endif

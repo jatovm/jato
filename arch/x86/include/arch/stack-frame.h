@@ -43,6 +43,7 @@ struct jit_stack_frame {
 
 unsigned long frame_local_offset(struct vm_method *, struct expression *);
 unsigned long slot_offset(struct stack_slot *slot);
+unsigned long slot_offset_64(struct stack_slot *slot);
 unsigned long frame_locals_size(struct stack_frame *frame);
 unsigned long cu_frame_locals_offset(struct compilation_unit *cu);
 

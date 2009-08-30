@@ -736,7 +736,7 @@ emit_mov_64_memlocal_xmm(struct buffer *buf, struct operand *src, struct operand
 	unsigned long disp;
 
 	dest_reg = mach_reg(&dest->reg);
-	disp = slot_offset(src->slot);
+	disp = slot_offset_64(src->slot);
 
 	emit(buf, 0xf2);
 	emit(buf, 0x0f);
@@ -907,7 +907,7 @@ static void emit_mov_64_xmm_memlocal(struct buffer *buf, struct operand *src,
 	unsigned long disp;
 	int mod;
 
-	disp = slot_offset(dest->slot);
+	disp = slot_offset_64(dest->slot);
 
 	if (is_imm_8(disp))
 		mod = 0x01;

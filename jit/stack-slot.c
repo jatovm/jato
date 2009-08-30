@@ -102,3 +102,13 @@ struct stack_slot *get_spill_slot_64(struct stack_frame *frame)
 {
 	return __get_spill_slot(frame, 2);
 }
+
+struct stack_slot *get_spill_slot(struct stack_frame *frame, enum vm_type type)
+{
+	return __get_spill_slot(frame, vm_type_slot_size(type));
+}
+
+struct stack_slot *get_next_slot(struct stack_slot *slot)
+{
+	return get_local_slot(slot->parent, slot->index + 1);
+}

@@ -1,6 +1,8 @@
 #ifndef __JIT_STACK_SLOT_H
 #define __JIT_STACK_SLOT_H
 
+#include "vm/types.h"
+
 struct stack_frame;
 
 struct stack_slot {
@@ -42,5 +44,7 @@ void free_stack_frame(struct stack_frame *frame);
 struct stack_slot *get_local_slot(struct stack_frame *frame, unsigned long index);
 struct stack_slot *get_spill_slot_32(struct stack_frame *frame);
 struct stack_slot *get_spill_slot_64(struct stack_frame *frame);
+struct stack_slot *get_spill_slot(struct stack_frame *frame, enum vm_type type);
+struct stack_slot *get_next_slot(struct stack_slot *slot);
 
 #endif /* __JIT_STACK_SLOT_H */

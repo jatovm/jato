@@ -68,12 +68,12 @@ static unsigned long __index_to_offset(unsigned long index)
 }
 
 static unsigned long
-index_to_offset(unsigned long idx, unsigned long nr_args)
+index_to_offset(unsigned long idx, int size, unsigned long nr_args)
 {
 	if (idx < nr_args)
 		return ARGS_START_OFFSET + __index_to_offset(idx);
 
-	return 0UL - __index_to_offset(idx - nr_args + 1);
+	return 0UL - __index_to_offset(idx - nr_args + size);
 }
 
 unsigned long frame_local_offset(struct vm_method *method,
@@ -84,14 +84,21 @@ unsigned long frame_local_offset(struct vm_method *method,
 	idx = local->local_index;
 	nr_args = method->args_count;
 
-	return index_to_offset(idx, nr_args);
+	return index_to_offset(idx, vm_type_slot_size(local->vm_type), nr_args);
 }
 
 unsigned long slot_offset(struct stack_slot *slot)
 {
 	struct stack_frame *frame = slot->parent;
 
-	return index_to_offset(slot->index, frame->nr_args);
+	return index_to_offset(slot->index, 1, frame->nr_args);
+}
+
+unsigned long slot_offset_64(struct stack_slot *slot)
+{
+	struct stack_frame *frame = slot->parent;
+
+	return index_to_offset(slot->index, 2, frame->nr_args);
 }
 
 unsigned long frame_locals_size(struct stack_frame *frame)

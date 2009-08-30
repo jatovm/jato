@@ -240,6 +240,9 @@ struct insn *membase_insn(enum insn_type, struct var_info *, long);
  * instructions.
  */
 
+int insert_copy_slot_32_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
+int insert_copy_slot_64_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
+
 static inline struct insn *
 spill_insn(struct var_info *var, struct stack_slot *slot)
 {
@@ -280,22 +283,6 @@ reload_insn(struct stack_slot *slot, struct var_info *var)
 	}
 
 	return memlocal_reg_insn(insn_type, slot, var);
-}
-
-static inline struct insn *
-push_slot_insn(struct stack_slot *from)
-{
-	assert(from != NULL);
-
-	return memlocal_insn(INSN_PUSH_MEMLOCAL, from);
-}
-
-static inline struct insn *
-pop_slot_insn(struct stack_slot *to)
-{
-	assert(to != NULL);
-
-	return memlocal_insn(INSN_POP_MEMLOCAL, to);
 }
 
 static inline struct insn *jump_insn(struct basic_block *bb)

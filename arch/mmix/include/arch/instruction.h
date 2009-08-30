@@ -78,6 +78,9 @@ struct insn *ld_insn(enum insn_type, struct stack_slot *, struct var_info *);
  * instructions.
  */
 
+int insert_copy_slot_32_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
+int insert_copy_slot_64_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
+
 static inline struct insn *
 spill_insn(struct var_info *var, struct stack_slot *slot)
 {
@@ -88,18 +91,6 @@ static inline struct insn *
 reload_insn(struct stack_slot *slot, struct var_info *var)
 {
 	return ld_insn(INSN_LD_LOCAL, slot, var);
-}
-
-static inline struct insn *
-push_slot_insn(struct stack_slot *slot)
-{
-	return NULL;
-}
-
-static inline struct insn *
-pop_slot_insn(struct stack_slot *slot)
-{
-	return NULL;
 }
 
 static inline struct insn *

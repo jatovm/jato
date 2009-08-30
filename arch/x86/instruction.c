@@ -384,3 +384,88 @@ struct insn *membase_insn(enum insn_type insn_type, struct var_info *src_base_re
 	}
 	return insn;
 }
+
+int insert_copy_slot_32_insns(struct stack_slot *from, struct stack_slot *to,
+			      struct list_head *add_before, unsigned long bc_offset)
+{
+	struct insn *push;
+	struct insn *pop;
+
+	assert(from);
+	assert(to);
+
+	push = memlocal_insn(INSN_PUSH_MEMLOCAL, from);
+	if (!push)
+		return -1;
+
+	pop = memlocal_insn(INSN_POP_MEMLOCAL, to);
+	if (!pop) {
+		free_insn(push);
+		return -1;
+	}
+
+	push->bytecode_offset = bc_offset;
+	pop->bytecode_offset = bc_offset;
+
+	list_add_tail(&push->insn_list_node, add_before);
+	list_add(&pop->insn_list_node, &push->insn_list_node);
+	return 0;
+}
+
+#ifdef CONFIG_X86_32
+
+int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
+			      struct list_head *add_before, unsigned long bc_offset)
+{
+	struct insn *push_lo, *push_hi;
+	struct insn *pop_lo, *pop_hi;
+
+	assert(from);
+	assert(to);
+
+	push_hi = memlocal_insn(INSN_PUSH_MEMLOCAL, from);
+	if (!push_hi)
+		goto fail_push_hi;
+
+	push_lo = memlocal_insn(INSN_PUSH_MEMLOCAL, get_next_slot(from));
+	if (!push_lo)
+		goto fail_push_lo;
+
+	pop_hi = memlocal_insn(INSN_POP_MEMLOCAL, to);
+	if (!pop_hi)
+		goto fail_pop_hi;
+
+	pop_lo = memlocal_insn(INSN_POP_MEMLOCAL, get_next_slot(to));
+	if (!pop_lo)
+		goto fail_pop_lo;
+
+	push_lo->bytecode_offset = bc_offset;
+	push_hi->bytecode_offset = bc_offset;
+	pop_lo->bytecode_offset = bc_offset;
+	pop_hi->bytecode_offset = bc_offset;
+
+	list_add_tail(&push_lo->insn_list_node, add_before);
+	list_add(&push_hi->insn_list_node, &push_lo->insn_list_node);
+	list_add(&pop_hi->insn_list_node, &push_hi->insn_list_node);
+	list_add(&pop_lo->insn_list_node, &pop_hi->insn_list_node);
+	return 0;
+
+ fail_pop_lo:
+	free_insn(pop_hi);
+ fail_pop_hi:
+	free_insn(push_lo);
+ fail_push_lo:
+	free_insn(push_hi);
+ fail_push_hi:
+	return -1;
+}
+
+#else
+
+int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
+			      struct list_head *add_before, unsigned long bc_offset)
+{
+	return insert_copy_slot_32_insns(from, to, add_before, bc_offset);
+}
+
+#endif  /* CONFIG_X86_32 */

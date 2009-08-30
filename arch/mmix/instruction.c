@@ -122,3 +122,15 @@ struct insn *ld_insn(enum insn_type insn_type, struct stack_slot *slot, struct v
 	}
 	return insn;
 }
+
+int insert_copy_slot_32_insns(struct stack_slot *from, struct stack_slot *to,
+			      struct list_head *add_before, unsigned long bc_offset)
+{
+	return 0;
+}
+
+int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
+			      struct list_head *add_before, unsigned long bc_offset)
+{
+	return 0;
+}

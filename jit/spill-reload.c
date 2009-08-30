@@ -137,7 +137,7 @@ spill_interval(struct live_interval *interval,
 	struct stack_slot *slot;
 	struct insn *spill;
 
-	slot = get_spill_slot_32(cu->stack_frame);
+	slot = get_spill_slot(cu->stack_frame, interval->spill_reload_reg.vm_type);
 	if (!slot)
 		return NULL;
 
@@ -185,33 +185,27 @@ static int insert_reload_insn(struct live_interval *interval,
 	return 0;
 }
 
-static int
-insert_copy_slot_insn(struct live_interval *interval,
-		      struct compilation_unit *cu,
-		      struct stack_slot *from,
-		      struct stack_slot *to,
-		      struct list_head *push_before,
-		      unsigned long bc_offset)
+static int insert_copy_slot_insn(struct stack_slot *from,
+				 struct stack_slot *to,
+				 enum vm_type vm_type,
+				 struct list_head *push_before,
+				 unsigned long bc_offset)
 {
-	struct insn *push, *pop;
+	int slot_size;
+	int err;
 
-	push = push_slot_insn(from);
-	if (!push)
+	slot_size = vm_type_slot_size(vm_type);
+	assert(slot_size == 1 || slot_size == 2);
+
+	if (slot_size == 1)
+		err = insert_copy_slot_32_insns(from, to, push_before, bc_offset);
+	else
+		err = insert_copy_slot_64_insns(from, to, push_before, bc_offset);
+
+	if (err)
 		return warn("out of memory"), -ENOMEM;
-	push->bytecode_offset = bc_offset;
-
-	pop = pop_slot_insn(to);
-	if (!pop) {
-		free_insn(push);
-		return warn("out of memory"), -ENOMEM;
-	}
-	pop->bytecode_offset = bc_offset;
-
-	list_add_tail(&push->insn_list_node, push_before);
-	list_add(&pop->insn_list_node, &push->insn_list_node);
 
 	return 0;
-
 }
 
 static int __insert_spill_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
@@ -283,8 +277,8 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		to_it		= mappings[i].to;
 
 		if (to_it->need_reload && interval_start(to_it) >= to_bb->start_insn) {
-			insert_copy_slot_insn(mappings[i].to, cu, slots[i],
-					      to_it->spill_parent->spill_slot,
+			insert_copy_slot_insn(slots[i], to_it->spill_parent->spill_slot,
+					      to_it->var_info->vm_type,
 					      push_before, bc_offset);
 			continue;
 		}

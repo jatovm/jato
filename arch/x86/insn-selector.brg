@@ -93,30 +93,6 @@ static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
 	select_insn(bb, tree, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
 }
 
-/**
- * Returns the local slot for 64-bit value. On x86 such value requires
- * 2 stack slots. We must return the one which has lower memory
- * address.
- */
-static struct stack_slot *
-get_local_slot_64(struct stack_frame *frame, unsigned long idx)
-{
-#ifdef CONFIG_X86_32
-	struct stack_slot *s1, *s2;
-
-	s1 = get_local_slot(frame, idx);
-	s2 = get_local_slot(frame, idx + 1);
-
-	if ((long) slot_offset(s1) < 0)
-		return s2; /* Local variable, decreasing addresses. */
-
-	/* This slot corresponds to call argument, increasing addresses. */
-	return s1;
-#else
-	return get_local_slot(frame, idx);
-#endif
-}
-
 struct _MBState;
 
 static void __binop_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type, struct var_info *, long);
@@ -278,13 +254,12 @@ freg:	EXPR_FLOAT_LOCAL 0
 	result = get_var(s->b_parent, expr->vm_type);
 	state->reg1 = result;
 
-	if (expr->vm_type == J_FLOAT) {
-		slot = get_local_slot(cu->stack_frame, expr->local_index);
+	slot = get_local_slot(cu->stack_frame, expr->local_index);
+
+	if (expr->vm_type == J_FLOAT)
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, slot, result));
-	} else {
-		slot = get_local_slot_64(cu->stack_frame, expr->local_index);
+	else
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, slot, result));
-	}
 }
 
 reg:   EXPR_TEMPORARY 0
@@ -2211,13 +2186,12 @@ stmt:	STMT_STORE(EXPR_FLOAT_LOCAL, freg)
 	stmt = to_stmt(tree);
 	local = to_expr(stmt->store_dest);
 
-	if (local->vm_type == J_FLOAT) {
-		slot = get_local_slot(cu->stack_frame, local->local_index);
+	slot = get_local_slot(cu->stack_frame, local->local_index);
+
+	if (local->vm_type == J_FLOAT)
 		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_XMM_MEMLOCAL, src, slot));
-	} else {
-		slot = get_local_slot_64(cu->stack_frame, local->local_index);
+	else
 		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_64_XMM_MEMLOCAL, src, slot));
-	}
 }
 
 %ifdef CONFIG_X86_32
@@ -2258,14 +2232,12 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
 	exprdest = to_expr(stmt->store_dest);
 
 	dest = exprdest->tmp_low;
+	slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index);
 
-	if (exprsrc->vm_type == J_FLOAT) {
-		slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index);
+	if (exprsrc->vm_type == J_FLOAT)
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, slot, dest));
-	} else {
-		slot = get_local_slot_64(s->b_parent->stack_frame, exprsrc->local_index);
+	else
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, slot, dest));
-	}
 }
 %else
 stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
@@ -2754,12 +2726,7 @@ static void __binop_reg_local(struct _MBState *state, struct basic_block *bb,
 
 	expr = to_expr(tree);
 	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
-	if (disp < 0)
-		/* local stack slot, decreasing offset values */
-		disp -= disp_offset;
-	else
-		/* method argument slot, increasing offset values */
-		disp += disp_offset;
+	disp += disp_offset;
 
 	frame_ptr = bb->b_parent->frame_ptr;
 
