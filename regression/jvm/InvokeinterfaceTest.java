@@ -197,7 +197,6 @@ public class InvokeinterfaceTest extends TestCase {
 
     public static void main(String[] args) {
         testInvokeinterface();
-//      FIXME:
-//      testInvokeinterfaceItableHashCollision();
+        testInvokeinterfaceItableHashCollision();
     }
 }

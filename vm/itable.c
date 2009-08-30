@@ -90,7 +90,7 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 	 * added to the itable so far. That really simplifies this whole
 	 * function. */
 	if (vm_class_is_interface(vmc)) {
-		for (unsigned int i = 0; i < class->methods_count; ++i) {
+		for (unsigned int i = 0; i < vmc->nr_methods; ++i) {
 			struct vm_method *vmm = &vmc->methods[i];
 			if (!vm_method_is_abstract(vmm))
 				continue;
