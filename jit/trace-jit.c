@@ -811,8 +811,10 @@ void trace_return_value(struct vm_method *vmm, unsigned long long value)
 
 	trace_printf("trace return: %s.%s%s\n", vmm->class->name, vmm->name,
 		     vmm->type);
-	if (type == J_VOID)
+	if (type == J_VOID) {
+		trace_flush();
 		return;
+	}
 
 	trace_printf("%12s: ", get_vm_type_name(type));
 	print_arg(type,(unsigned long *)  &value, &dummy);
