@@ -354,8 +354,6 @@ int allocate_registers(struct compilation_unit *cu)
 		if (interval_is_empty(var->interval))
 			continue;
 
-		var->interval->current_range = interval_first_range(var->interval);
-
 		if (var->interval->fixed_reg) {
 			if (var->interval->reg < NR_REGISTERS)
 				list_add(&var->interval->interval_node, &inactive);
@@ -379,7 +377,7 @@ int allocate_registers(struct compilation_unit *cu)
 				continue;
 			}
 
-			interval_update_current_range(it, position);
+			interval_expire_ranges_before(it, position);
 
 			if (!interval_covers(it, position))
 				list_move(&it->interval_node, &inactive);
@@ -394,7 +392,7 @@ int allocate_registers(struct compilation_unit *cu)
 				continue;
 			}
 
-			interval_update_current_range(it, position);
+			interval_expire_ranges_before(it, position);
 
 			if (interval_covers(it, position))
 				list_move(&it->interval_node, &active);
@@ -414,6 +412,15 @@ int allocate_registers(struct compilation_unit *cu)
 			list_add(&current->interval_node, &active);
 	}
 	free(registers);
+
+	for_each_variable(var, cu->var_infos) {
+		struct live_interval *it = var->interval;
+
+		while (it) {
+			interval_restore_expired_ranges(it);
+			it = it->next_child;
+		}
+	}
 
 	cu->is_reg_alloc_done = true;
 

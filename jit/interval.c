@@ -106,6 +106,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 		INIT_LIST_HEAD(&interval->interval_node);
 		INIT_LIST_HEAD(&interval->use_positions);
 		INIT_LIST_HEAD(&interval->range_list);
+		INIT_LIST_HEAD(&interval->expired_range_list);
 	}
 	return interval;
 }
@@ -142,8 +143,6 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 		free(new);
 		return NULL;
 	}
-
-	new->current_range = interval_first_range(new);
 
 	new->fixed_reg = interval->fixed_reg;
 	if (new->fixed_reg)
@@ -210,25 +209,33 @@ struct live_interval *vreg_start_interval(struct compilation_unit *cu, unsigned 
 	return var->interval;
 }
 
-/**
- * Advances @it->current_range to the last range which covers @pos or
- * is before @pos.
- */
-void interval_update_current_range(struct live_interval *it, unsigned long pos)
+void interval_expire_ranges_before(struct live_interval *it, unsigned long pos)
 {
+	struct live_range *range;
+
 	if (pos < interval_start(it) || pos >= interval_end(it))
 		return;
 
-	assert (pos >= it->current_range->start);
+	range = interval_first_range(it);
 
-	while (!in_range(it->current_range, pos)) {
+	while (!in_range(range, pos)) {
 		struct live_range *next;
 
-		next = next_range(&it->range_list, it->current_range);
+		next = next_range(&it->range_list, range);
 		if (pos < next->start)
 			break;
 
-		it->current_range = next;
+		list_move(&range->range_list_node, &it->expired_range_list);
+		range = next;
+	}
+}
+
+void interval_restore_expired_ranges(struct live_interval *it)
+{
+	struct live_range *this, *next;
+
+	list_for_each_entry_safe(this, next, &it->expired_range_list, range_list_node) {
+		list_move(&this->range_list_node, &it->range_list);
 	}
 }
 
@@ -239,9 +246,7 @@ struct live_range *interval_range_at(struct live_interval *it, unsigned long pos
 	if (pos < interval_start(it) || pos >= interval_end(it))
 		return NULL;
 
-	range = it->current_range;
-	if (pos < range->start)
-		range = interval_first_range(it);
+	range = interval_first_range(it);
 
 	while (range && pos >= range->start) {
 		if (in_range(range, pos))
@@ -281,8 +286,8 @@ bool intervals_intersect(struct live_interval *it1, struct live_interval *it2)
 	if (interval_is_empty(it1) || interval_is_empty(it2))
 		return false;
 
-	r1 = it1->current_range;
-	r2 = it2->current_range;
+	r1 = interval_first_range(it1);
+	r2 = interval_first_range(it2);
 
 	while (r1 && r1->end <= r2->start)
 		r1 = next_range(&it1->range_list, r1);
@@ -310,8 +315,8 @@ interval_intersection_start(struct live_interval *it1, struct live_interval *it2
 
 	assert(!interval_is_empty(it1) && !interval_is_empty(it2));
 
-	r1 = it1->current_range;
-	r2 = it2->current_range;
+	r1 = interval_first_range(it1);
+	r2 = interval_first_range(it2);
 
 	while (r1 && r1->end <= r2->start)
 		r1 = next_range(&it1->range_list, r1);

@@ -65,16 +65,13 @@ struct live_interval {
 	struct list_head range_list;
 
 	/*
-	 * Points to a range from range_list which should be
-	 * considered as interval's starting range in operations:
-	 * intervals_intersect(), interval_intersection_start(),
-	 * interval_range_at(). It's used to speedup register
-	 * allocation. Intervals can have a lot of live ranges. Linear
-	 * scan algorithm goes through intervals in ascending order by
-	 * interval start. We can take advantage of this and don't
-	 * browse ranges past current position in some operations.
+	 * Contains ranges which were moved from range_list to speedup
+	 * some interval oprations. Intervals can have a lot of live
+	 * ranges. Linear scan algorithm goes through intervals in
+	 * ascending order by interval start. We can take advantage of
+	 * this and don't check ranges before current position.
 	 */
-	struct live_range *current_range;
+	struct list_head expired_range_list;
 
 	/* Linked list of child intervals.  */
 	struct live_interval *next_child, *prev_child;
@@ -172,7 +169,8 @@ unsigned long interval_intersection_start(struct live_interval *, struct live_in
 bool interval_covers(struct live_interval *, unsigned long);
 int interval_add_range(struct live_interval *, unsigned long, unsigned long);
 struct live_range *interval_range_at(struct live_interval *, unsigned long);
-void interval_update_current_range(struct live_interval *, unsigned long);
+void interval_expire_ranges_before(struct live_interval *, unsigned long);
+void interval_restore_expired_ranges(struct live_interval *);
 
 static inline unsigned long first_use_pos(struct live_interval *it)
 {
