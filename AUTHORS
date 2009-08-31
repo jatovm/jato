@@ -11,6 +11,11 @@ N: Tomasz Grabiec <tgrabiec@gmail.com>
 D: Exception handling mechanisms (GSoC 2009)
 L: Cracow, Poland
 
+N: Arthur Huillet <arthur.huillet AT free.fr>
+W: http://www.agoctrl.org/
+D: x86, register allocation
+L: France
+
 N: Vegard Nossum <vegard.nossum@gmail.com>
 W: http://folk.uio.no/vegardno/
 D: Class loading (GSoC 2009), VM core
