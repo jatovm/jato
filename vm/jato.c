@@ -25,19 +25,20 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include <valgrind/valgrind.h>
+#include <sys/utsname.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
 #include <regex.h>
-#include <signal.h>
-#include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/utsname.h>
 #include <time.h>
-#include <unistd.h>
 
 #include "cafebabe/access.h"
 #include "cafebabe/attribute_info.h"
@@ -86,6 +87,11 @@ static char *exe_name;
 /* Arguments passed to the main class.  */
 static unsigned int nr_java_args;
 static char **java_args;
+
+/*
+ * Enable JIT workarounds for valgrind.
+ */
+bool running_on_valgrind;
 
 static void __attribute__((noreturn)) vm_exit(int status)
 {
@@ -1285,6 +1291,11 @@ main(int argc, char *argv[])
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 #endif
+
+	if (RUNNING_ON_VALGRIND) {
+		printf("JIT: Enabling workarounds for valgrind.\n");
+		running_on_valgrind = true;
+	}
 
 	arch_init();
 	init_literals_hash_map();
