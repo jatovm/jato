@@ -267,3 +267,11 @@ void compute_insn_positions(struct compilation_unit *cu)
 
 	cu->last_insn = pos;
 }
+
+struct stack_slot *get_scratch_slot(struct compilation_unit *cu)
+{
+	if (!cu->scratch_slot)
+		cu->scratch_slot = get_spill_slot_64(cu->stack_frame);
+
+	return cu->scratch_slot;
+}

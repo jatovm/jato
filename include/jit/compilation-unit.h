@@ -93,11 +93,17 @@ struct compilation_unit {
 	struct radix_tree *safepoint_map;
 
 	/*
-	 * Contains native pointers of exception handlers.  Indices to
+	 * Contains native pointers of exception handlers. Indices to
 	 * this table are the same as for exception table in code
 	 * attribute.
 	 */
 	void **exception_handlers;
+
+	/*
+	 * These stack slot for storing temporary results within one monoburg
+	 * rule where we can not use a register.
+	 */
+	struct stack_slot *scratch_slot;
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);
@@ -109,6 +115,7 @@ struct var_info *get_fixed_var(struct compilation_unit *, enum machine_reg);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 unsigned long nr_bblocks(struct compilation_unit *);
 void compute_insn_positions(struct compilation_unit *);
+struct stack_slot *get_scratch_slot(struct compilation_unit *);
 
 #define for_each_variable(var, var_list) for (var = var_list; var != NULL; var = var->next)
 
