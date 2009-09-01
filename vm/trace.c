@@ -24,23 +24,21 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "jit/compiler.h"
-
 #include "lib/string.h"
-
-#include "vm/die.h"
 #include "vm/thread.h"
 #include "vm/trace.h"
+#include "vm/die.h"
 
 static pthread_mutex_t trace_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static __thread struct string *trace_buffer = NULL;
+static __thread struct string *trace_buffer;
 
-static void ensure_trace_buffer(void)
+static void setup_trace_buffer(void)
 {
 	if (trace_buffer)
 		return;
@@ -52,24 +50,26 @@ static void ensure_trace_buffer(void)
 
 int trace_printf(const char *fmt, ...)
 {
-	int err;
 	va_list args;
+	int err;
 
-	ensure_trace_buffer();
+	setup_trace_buffer();
 
 	va_start(args, fmt);
 	err = str_vappend(trace_buffer, fmt, args);
 	va_end(args);
+
 	return err;
 }
 
-void trace_flush(void) {
+void trace_flush(void)
+{
 	struct vm_thread *self;
 	char *thread_name;
 	char *line;
 	char *next;
 
-	ensure_trace_buffer();
+	setup_trace_buffer();
 
 	self = vm_thread_self();
 	if (self)
