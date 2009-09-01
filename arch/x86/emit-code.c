@@ -855,21 +855,7 @@ emit_push_membase(struct buffer *buf, struct operand *src)
 static void emit_mov_reg_memlocal(struct buffer *buf, struct operand *src,
 				  struct operand *dest)
 {
-	unsigned long disp;
-	int mod;
-
-	disp = slot_offset(dest->slot);
-
-	if (is_imm_8(disp))
-		mod = 0x01;
-	else
-		mod = 0x02;
-
-	emit(buf, 0x89);
-	emit(buf, encode_modrm(mod, encode_reg(&src->reg),
-			       __encode_reg(MACH_REG_EBP)));
-
-	emit_imm(buf, disp);
+	__emit_mov_reg_membase(buf, mach_reg(&src->reg), MACH_REG_EBP, slot_offset(dest->slot));
 }
 
 static void emit_mov_xmm_memlocal(struct buffer *buf, struct operand *src,
