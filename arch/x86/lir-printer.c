@@ -335,10 +335,22 @@ static int print_fld_membase(struct string *str, struct insn *insn)
 	return print_membase(str, &insn->operand);
 }
 
+static int print_fld_memlocal(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memlocal(str, &insn->operand);
+}
+
 static int print_fld_64_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_membase(str, &insn->operand);
+}
+
+static int print_fld_64_memlocal(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memlocal(str, &insn->operand);
 }
 
 static int print_fild_64_membase(struct string *str, struct insn *insn)
@@ -357,6 +369,18 @@ static int print_fstp_64_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_membase(str, &insn->operand);
+}
+
+static int print_fstp_memlocal(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memlocal(str, &insn->operand);
+}
+
+static int print_fstp_64_memlocal(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_memlocal(str, &insn->operand);
 }
 
 static int print_fnstcw_membase(struct string *str, struct insn *insn)
@@ -975,13 +999,17 @@ static print_insn_fn insn_printers[] = {
 	[INSN_FDIV_REG_REG] = print_fdiv_reg_reg,
 	[INSN_FDIV_64_REG_REG] = print_fdiv_64_reg_reg,
 	[INSN_FLD_MEMBASE] = print_fld_membase,
+	[INSN_FLD_MEMLOCAL] = print_fld_memlocal,
 	[INSN_FLD_64_MEMBASE] = print_fld_64_membase,
+	[INSN_FLD_64_MEMLOCAL] = print_fld_64_memlocal,
 	[INSN_FLDCW_MEMBASE] = print_fldcw_membase,
 	[INSN_FILD_64_MEMBASE] = print_fild_64_membase,
 	[INSN_FISTP_64_MEMBASE] = print_fistp_64_membase,
 	[INSN_FNSTCW_MEMBASE] = print_fnstcw_membase,
 	[INSN_FSTP_MEMBASE] = print_fstp_membase,
+	[INSN_FSTP_MEMLOCAL] = print_fstp_memlocal,
 	[INSN_FSTP_64_MEMBASE] = print_fstp_64_membase,
+	[INSN_FSTP_64_MEMLOCAL] = print_fstp_64_memlocal,
 	[INSN_MOV_MEMBASE_XMM] = print_mov_membase_xmm,
 	[INSN_MOV_64_MEMBASE_XMM] = print_mov_64_membase_xmm,
 	[INSN_MOV_XMM_MEMBASE] = print_mov_xmm_membase,
