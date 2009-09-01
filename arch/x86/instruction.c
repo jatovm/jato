@@ -385,6 +385,18 @@ struct insn *membase_insn(enum insn_type insn_type, struct var_info *src_base_re
 	return insn;
 }
 
+struct insn *imm_memlocal_insn(enum insn_type insn_type,
+			       unsigned long imm,
+			       struct stack_slot *dst_slot)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	if (insn) {
+		init_imm_operand(insn, 0, imm);
+		init_memlocal_operand(insn, 1, dst_slot);
+	}
+	return insn;
+}
+
 int insert_copy_slot_32_insns(struct stack_slot *from, struct stack_slot *to,
 			      struct list_head *add_before, unsigned long bc_offset)
 {

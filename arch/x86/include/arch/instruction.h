@@ -110,6 +110,7 @@ enum insn_type {
 	INSN_JMP_BRANCH,
 	INSN_JNE_BRANCH,
 	INSN_MOV_IMM_MEMBASE,
+	INSN_MOV_IMM_MEMLOCAL,
 	INSN_MOV_IMM_REG,
 	INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
 	INSN_MOV_IP_REG,
@@ -229,6 +230,7 @@ struct insn *memdisp_reg_insn(enum insn_type, unsigned long, struct var_info *);
 struct insn *reg_memdisp_insn(enum insn_type, struct var_info *, unsigned long);
 struct insn *imm_memdisp_insn(enum insn_type, long, long);
 struct insn *imm_membase_insn(enum insn_type, unsigned long, struct var_info *, long);
+struct insn *imm_memlocal_insn(enum insn_type, unsigned long, struct stack_slot *);
 struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);

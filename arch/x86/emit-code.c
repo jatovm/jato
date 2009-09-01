@@ -569,7 +569,7 @@ __emit_membase(struct buffer *buf, unsigned char opc,
 	else
 		rm = __encode_reg(base_reg);
 
-	if (disp == 0)
+	if (disp == 0 && base_reg != MACH_REG_EBP)
 		mod = 0x00;
 	else if (is_imm_8(disp))
 		mod = 0x01;
@@ -830,6 +830,12 @@ static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
 {
 	__emit_mov_imm_membase(buf, src->imm, mach_reg(&dest->base_reg),
 			       dest->disp);
+}
+
+static void emit_mov_imm_memlocal(struct buffer *buf, struct operand *src,
+				  struct operand *dest)
+{
+	__emit_mov_imm_membase(buf, src->imm, MACH_REG_EBP, slot_offset(dest->slot));
 }
 
 static void __emit_mov_reg_membase(struct buffer *buf, enum machine_reg src,
@@ -1694,6 +1700,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, emit_mov_xmm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_64_XMM_MEMBASE, emit_mov_64_xmm_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_IMM_MEMLOCAL, emit_mov_imm_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IP_THREAD_LOCAL_MEMBASE, emit_mov_ip_thread_local_membase, SINGLE_OPERAND),
