@@ -104,7 +104,7 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 {
 	struct basic_block *new_bb;
 
-	if (offset < orig_bb->start || offset >= orig_bb->end)
+	if (offset < orig_bb->start || offset > orig_bb->end)
 		return NULL;
 
 	new_bb = alloc_basic_block(orig_bb->b_parent, offset, orig_bb->end);

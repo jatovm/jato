@@ -24,7 +24,7 @@ void test_split_with_out_of_range_offset(void)
 	bb = get_basic_block(cu, 1, 2);
 
 	assert_ptr_equals(NULL, bb_split(bb, 0));
-	assert_ptr_equals(NULL, bb_split(bb, 2));
+	assert_ptr_equals(NULL, bb_split(bb, 3));
 
 	free_compilation_unit(cu);
 }

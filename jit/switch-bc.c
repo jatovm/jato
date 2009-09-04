@@ -93,8 +93,8 @@ int convert_tableswitch(struct parse_context *ctx)
 
 	master_bb = ctx->bb;
 
-	b1 = bb_split(master_bb, ctx->offset);
-	b2 = bb_split(b1, ctx->offset);
+	b1 = bb_split(master_bb, master_bb->end);
+	b2 = bb_split(b1, master_bb->end);
 
 	assert(b1 && b2);
 
@@ -179,7 +179,7 @@ int convert_lookupswitch(struct parse_context *ctx)
 
 	master_bb = ctx->bb;
 
-	b1 = bb_split(master_bb, ctx->offset);
+	b1 = bb_split(master_bb, master_bb->end);
 
 	assert(b1);
 
