@@ -98,8 +98,9 @@ int convert_tableswitch(struct parse_context *ctx)
 
 	assert(b1 && b2);
 
-	b1->is_converted = true;
-	b2->is_converted = true;
+	master_bb->has_branch = true;
+	b1->has_branch = true;
+	b2->has_branch = true;
 
 	bb_add_successor(master_bb, default_bb );
 	bb_add_successor(master_bb, b1);
@@ -183,7 +184,7 @@ int convert_lookupswitch(struct parse_context *ctx)
 
 	assert(b1);
 
-	b1->is_converted = true;
+	b1->has_branch = true;
 
 	bb_add_successor(master_bb, default_bb );
 	bb_add_successor(master_bb, b1);
