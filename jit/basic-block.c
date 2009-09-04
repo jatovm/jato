@@ -235,12 +235,12 @@ bool branch_needs_resolution_block(struct basic_block *from, int idx)
 	return !list_is_empty(&from->resolution_blocks[idx].insns);
 }
 
-void clear_mimic_stack(struct basic_block *bb)
+void clear_mimic_stack(struct stack *stack)
 {
 	struct expression *expr;
 
-	while (!stack_is_empty(bb->mimic_stack)) {
-		expr = stack_pop(bb->mimic_stack);
+	while (!stack_is_empty(stack)) {
+		expr = stack_pop(stack);
 		expr_put(expr);
 	}
 }

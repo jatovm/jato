@@ -88,7 +88,7 @@ unsigned char *bb_native_ptr(struct basic_block *bb);
 void resolution_block_init(struct resolution_block *block);
 bool branch_needs_resolution_block(struct basic_block *from, int idx);
 int bb_lookup_successor_index(struct basic_block *from, struct basic_block *to);
-void clear_mimic_stack(struct basic_block *bb);
+void clear_mimic_stack(struct stack *);
 
 #define for_each_basic_block(bb, bb_list) list_for_each_entry(bb, bb_list, bb_list_node)
 #define for_each_basic_block_reverse(bb, bb_list) list_for_each_entry_reverse(bb, bb_list, bb_list_node)

@@ -61,7 +61,7 @@ int convert_athrow(struct parse_context *ctx)
 	 * reference is not transferred to exception handlers in
 	 * BC2IR layer.
 	 */
-	clear_mimic_stack(ctx->bb);
+	clear_mimic_stack(ctx->bb->mimic_stack);
 
 	convert_statement(ctx, stmt);
 

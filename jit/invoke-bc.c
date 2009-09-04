@@ -35,7 +35,7 @@ int convert_xreturn(struct parse_context *ctx)
 	expr = stack_pop(ctx->bb->mimic_stack);
 	return_stmt->return_value = &expr->node;
 	convert_statement(ctx, return_stmt);
-	clear_mimic_stack(ctx->bb);
+	clear_mimic_stack(ctx->bb->mimic_stack);
 	return 0;
 }
 
@@ -48,7 +48,7 @@ int convert_return(struct parse_context *ctx)
 	return_stmt->return_value = NULL;
 
 	convert_statement(ctx, return_stmt);
-	clear_mimic_stack(ctx->bb);
+	clear_mimic_stack(ctx->bb->mimic_stack);
 	return 0;
 }
 
