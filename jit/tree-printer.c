@@ -338,6 +338,58 @@ static int print_lookupswitch_jump_stmt(int lvl, struct string *str,
 	return err;
 }
 
+
+static int __print_invoke_stmt(int lvl, struct string *str,
+			       struct statement *stmt, const char *name)
+{
+	struct vm_method *method;
+	int err;
+
+	err = append_formatted(lvl, str, "%s:\n", name);
+	if (err)
+		goto out;
+
+	method = stmt->target_method;
+
+	err =
+	    append_simple_attr(lvl + 1, str, "target_method",
+			       "%p '%s.%s%s' (%lu)", method,
+			       method->class->name, method->name, method->type,
+			       stmt_method_index(stmt));
+	if (err)
+		goto out;
+
+	err = append_tree_attr(lvl + 1, str, "args_list", stmt->args_list);
+	if (err)
+		goto out;
+
+	if (stmt->invoke_result)
+		err = append_tree_attr(lvl + 1, str, "result", &stmt->invoke_result->node);
+	else
+		err = append_simple_attr(lvl + 1, str, "result", "void");
+
+out:
+	return err;
+}
+
+static int print_invoke_stmt(int lvl, struct string *str,
+				    struct statement *stmt)
+{
+	return __print_invoke_stmt(lvl, str, stmt, "INVOKE");
+}
+
+static int print_invokeinterface_stmt(int lvl, struct string *str,
+				      struct statement *stmt)
+{
+	return __print_invoke_stmt(lvl, str, stmt, "INVOKEINTERFACE");
+}
+
+static int print_invokevirtual_stmt(int lvl, struct string *str,
+				    struct statement *stmt)
+{
+	return __print_invoke_stmt(lvl, str, stmt, "INVOKEVIRTUAL");
+}
+
 typedef int (*print_stmt_fn) (int, struct string * str, struct statement *);
 
 static print_stmt_fn stmt_printers[] = {
@@ -355,6 +407,9 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_ARRAY_STORE_CHECK] = print_array_store_check_stmt,
 	[STMT_TABLESWITCH] = print_tableswitch_stmt,
 	[STMT_LOOKUPSWITCH_JUMP] = print_lookupswitch_jump_stmt,
+	[STMT_INVOKE] = print_invoke_stmt,
+	[STMT_INVOKEINTERFACE] = print_invokeinterface_stmt,
+	[STMT_INVOKEVIRTUAL] = print_invokevirtual_stmt,
 };
 
 static int print_stmt(int lvl, struct tree_node *root, struct string *str)
@@ -709,68 +764,6 @@ out:
 	return err;
 }
 
-static int print_invoke_expr(int lvl, struct string *str,
-			     struct expression *expr)
-{
-	struct vm_method *method;
-	int err;
-
-	err = append_formatted(lvl, str, "INVOKE:\n");
-	if (err)
-		goto out;
-
-	method = expr->target_method;
-
-	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s'",
-				 method, method->class->name, method->name,
-				 method->type);
-	if (err)
-		goto out;
-
-	err = append_tree_attr(lvl + 1, str, "args_list", expr->args_list);
-
-out:
-	return err;
-}
-
-static int __print_invoke_expr(int lvl, struct string *str,
-			       struct expression *expr, const char *name)
-{
-	struct vm_method *method;
-	int err;
-
-	err = append_formatted(lvl, str, "%s:\n", name);
-	if (err)
-		goto out;
-
-	method = expr->target_method;
-
-	err =
-	    append_simple_attr(lvl + 1, str, "target_method",
-			       "%p '%s.%s%s' (%lu)", method,
-			       method->class->name, method->name, method->type,
-			       expr_method_index(expr));
-	if (err)
-		goto out;
-
-	err = append_tree_attr(lvl + 1, str, "args_list", expr->args_list);
-
-out:
-	return err;
-}
-
-static int print_invokeinterface_expr(int lvl, struct string *str,
-				    struct expression *expr)
-{
-	return __print_invoke_expr(lvl, str, expr, "INVOKEINTERFACE");
-}
-
-static int print_invokevirtual_expr(int lvl, struct string *str,
-				    struct expression *expr)
-{
-	return __print_invoke_expr(lvl, str, expr, "INVOKEVIRTUAL");
-}
-
 static int print_args_list_expr(int lvl, struct string *str,
 				struct expression *expr)
 {
@@ -1086,12 +1079,6 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_FLOAT_CLASS_FIELD] = print_float_class_field_expr,
 	[EXPR_INSTANCE_FIELD] = print_instance_field_expr,
 	[EXPR_FLOAT_INSTANCE_FIELD] = print_float_instance_field_expr,
-	[EXPR_INVOKE] = print_invoke_expr,
-	[EXPR_INVOKEINTERFACE] = print_invokeinterface_expr,
-	[EXPR_FINVOKEINTERFACE] = print_invokeinterface_expr,
-	[EXPR_INVOKEVIRTUAL] = print_invokevirtual_expr,
-	[EXPR_FINVOKE] = print_invoke_expr,
-	[EXPR_FINVOKEVIRTUAL] = print_invokevirtual_expr,
 	[EXPR_ARGS_LIST] = print_args_list_expr,
 	[EXPR_ARG] = print_arg_expr,
 	[EXPR_ARG_THIS] = print_arg_this_expr,

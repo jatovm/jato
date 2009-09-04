@@ -66,7 +66,7 @@ static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 
 static int convert_and_add_args(struct parse_context *ctx,
 				struct vm_method *invoke_target,
-				struct expression *expr)
+				struct statement *stmt)
 {
 	struct expression *args_list;
 
@@ -74,29 +74,63 @@ static int convert_and_add_args(struct parse_context *ctx,
 				 method_real_argument_count(invoke_target),
 				 invoke_target);
 	if (!args_list)
-		return warn("out of memory"), -ENOMEM;
+		return warn("out of memory"), -EINVAL;
 
-	expr->args_list = &args_list->node;
-
+	stmt->args_list = &args_list->node;
 	return 0;
 }
 
-static int insert_invoke_expr(struct parse_context *ctx,
-			      struct expression *invoke_expr)
+static struct statement * invoke_stmt(struct parse_context *ctx,
+				      enum statement_type type,
+				      struct vm_method *target)
 {
-	if (invoke_expr->vm_type == J_VOID) {
-		struct statement *expr_stmt;
+	struct statement *stmt;
+	enum vm_type return_type;
 
-		expr_stmt = alloc_statement(STMT_EXPRESSION);
-		if (!expr_stmt)
-			return warn("out of memory"), -ENOMEM;
+	assert(type == STMT_INVOKE || type == STMT_INVOKEVIRTUAL ||
+	       type == STMT_INVOKEINTERFACE);
 
-		expr_stmt->expression = &invoke_expr->node;
-		convert_statement(ctx, expr_stmt);
-	} else
-		convert_expression(ctx, invoke_expr);
+	stmt = alloc_statement(type);
+	if (!stmt)
+		return NULL;
 
-	return 0;
+	stmt->target_method = target;
+
+	return_type = method_return_type(target);
+	switch (return_type) {
+	case J_VOID:
+		stmt->invoke_result = NULL;
+		break;
+	case J_LONG:
+	case J_FLOAT:
+	case J_DOUBLE:
+		stmt->invoke_result = temporary_expr(return_type, ctx->cu);
+		break;
+	case J_BYTE:
+	case J_BOOLEAN:
+	case J_CHAR:
+	case J_INT:
+	case J_SHORT:
+		stmt->invoke_result = temporary_expr(J_INT, ctx->cu);
+		break;
+	case J_REFERENCE:
+		stmt->invoke_result = temporary_expr(J_REFERENCE, ctx->cu);
+		break;
+	default:
+		error("invalid method return type %d", return_type);
+	};
+
+	return stmt;
+}
+
+static void insert_invoke_stmt(struct parse_context *ctx, struct statement *stmt)
+{
+	convert_statement(ctx, stmt);
+
+	if (stmt->invoke_result) {
+		expr_get(stmt->invoke_result);
+		convert_expression(ctx, stmt->invoke_result);
+	}
 }
 
 static struct vm_method *resolve_invoke_target(struct parse_context *ctx)
@@ -150,7 +184,7 @@ static void null_check_this_arg(struct expression *arg)
 int convert_invokeinterface(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
-	struct expression *expr;
+	struct statement *stmt;
 	int count;
 	int zero;
 	int err;
@@ -159,8 +193,8 @@ int convert_invokeinterface(struct parse_context *ctx)
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
-	expr = invokeinterface_expr(invoke_target);
-	if (!expr)
+	stmt = invoke_stmt(ctx, STMT_INVOKEINTERFACE, invoke_target);
+	if (!stmt)
 		return warn("out of memory"), -ENOMEM;
 
 	count = bytecode_read_u8(ctx->buffer);
@@ -173,115 +207,91 @@ int convert_invokeinterface(struct parse_context *ctx)
 			-EINVAL;
 	}
 
-	err = convert_and_add_args(ctx, invoke_target, expr);
+	err = convert_and_add_args(ctx, invoke_target, stmt);
 	if (err)
 		goto failed;
 
-	err = insert_invoke_expr(ctx, expr);
-	if (err)
-		goto failed;
-
+	insert_invoke_stmt(ctx, stmt);
 	return 0;
 
 failed:
-	expr_put(expr);
+	free_statement(stmt);
 	return err;
 }
 
 int convert_invokevirtual(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
-	struct expression *expr;
+	struct statement *stmt;
 	int err = -ENOMEM;
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
-	if (vm_type_is_float(method_return_type(invoke_target)))
-		expr = finvokevirtual_expr(invoke_target);
-	else
-		expr = invokevirtual_expr(invoke_target);
-
-	if (!expr)
+	stmt = invoke_stmt(ctx, STMT_INVOKEVIRTUAL, invoke_target);
+	if (!stmt)
 		return warn("out of memory"), -ENOMEM;
 
-	err = convert_and_add_args(ctx, invoke_target, expr);
+	err = convert_and_add_args(ctx, invoke_target, stmt);
 	if (err)
 		goto failed;
 
-	err = insert_invoke_expr(ctx, expr);
-	if (err)
-		goto failed;
-
+	insert_invoke_stmt(ctx, stmt);
 	return 0;
       failed:
-	expr_put(expr);
+	free_statement(stmt);
 	return err;
 }
 
 int convert_invokespecial(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
-	struct expression *expr;
+	struct statement *stmt;
 	int err;
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
-	if (vm_type_is_float(method_return_type(invoke_target)))
-		expr = finvoke_expr(invoke_target);
-	else
-		expr = invoke_expr(invoke_target);
-
-	if (!expr)
+	stmt = invoke_stmt(ctx, STMT_INVOKE, invoke_target);
+	if (!stmt)
 		return warn("out of memory"), -ENOMEM;
 
-	err = convert_and_add_args(ctx, invoke_target, expr);
+	err = convert_and_add_args(ctx, invoke_target, stmt);
 	if (err)
 		goto failed;
 
-	null_check_this_arg(to_expr(expr->args_list));
+	null_check_this_arg(to_expr(stmt->args_list));
 
-	err = insert_invoke_expr(ctx, expr);
-	if (err)
-		goto failed;
-
+	insert_invoke_stmt(ctx, stmt);
 	return 0;
       failed:
-	expr_put(expr);
+	free_statement(stmt);
 	return err;
 }
 
 int convert_invokestatic(struct parse_context *ctx)
 {
 	struct vm_method *invoke_target;
-	struct expression *expr;
+	struct statement *stmt;
 	int err;
 
 	invoke_target = resolve_invoke_target(ctx);
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
-	if (vm_type_is_float(method_return_type(invoke_target)))
-		expr = finvoke_expr(invoke_target);
-	else
-		expr = invoke_expr(invoke_target);
-
-	if (!expr)
+	stmt = invoke_stmt(ctx, STMT_INVOKE, invoke_target);
+	if (!stmt)
 		return warn("out of memory"), -ENOMEM;
 
-	err = convert_and_add_args(ctx, invoke_target, expr);
+	err = convert_and_add_args(ctx, invoke_target, stmt);
 	if (err)
 		goto failed;
 
-	err = insert_invoke_expr(ctx, expr);
-	if (err)
-		goto failed;
-
+	insert_invoke_stmt(ctx, stmt);
 	return 0;
       failed:
-	expr_put(expr);
+	free_statement(stmt);
 	return err;
 }

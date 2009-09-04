@@ -125,34 +125,17 @@ build_invoke_bb(unsigned char invoke_opc,
 	return bb;
 }
 
-static void assert_invoke_expression_type(enum expression_type expected_type, unsigned char invoke_opc)
-{
-	struct expression *invoke_expr;
-	struct basic_block *bb;
-	struct statement *stmt;
-
-	bb = build_invoke_bb(invoke_opc, "()V", 1, 0, 0, 0, NULL);
-	stmt = first_stmt(bb->b_parent);
-	invoke_expr = to_expr(stmt->expression);
-
-	assert_int_equals(expected_type, expr_type(invoke_expr));
-
-	__free_simple_bb(bb);
-}
-
 static void assert_invoke_passes_objectref(unsigned char invoke_opc,
 					   bool nullcheck)
 {
-	struct expression *invoke_expr;
+	struct statement *invoke_stmt;
 	struct expression *arg_expr;
 	struct basic_block *bb;
-	struct statement *stmt;
 
 	bb = build_invoke_bb(invoke_opc, "()V", 1, 0xdeadbeef, 0, 0, NULL);
 
-	stmt = first_stmt(bb->b_parent);
-	invoke_expr = to_expr(stmt->expression);
-	arg_expr = to_expr(invoke_expr->args_list);
+	invoke_stmt = first_stmt(bb->b_parent);
+	arg_expr = to_expr(invoke_stmt->args_list);
 
 	if (nullcheck)
 		assert_nullcheck_value_expr(J_REFERENCE, 0xdeadbeef,
@@ -167,16 +150,15 @@ static void assert_invoke_args(unsigned char invoke_opc, unsigned long nr_args)
 {
 	struct expression *args_list_expr;
 	struct expression *args[nr_args];
-	struct expression *invoke_expr;
+	struct statement *invoke_stmt;
 	struct expression *second_arg;
 	struct basic_block *bb;
-	struct statement *stmt;
 	struct string *str;
 
 	str = alloc_str();
 
 	str_append(str, "(");
-	for (int i = 0; i < nr_args; i++)
+	for (unsigned int i = 0; i < nr_args; i++)
 		str_append(str, "I");
 	str_append(str, ")V");
 
@@ -184,9 +166,8 @@ static void assert_invoke_args(unsigned char invoke_opc, unsigned long nr_args)
 	bb = build_invoke_bb(invoke_opc, str->value, nr_args+1, 0, 0, 0, args);
 	free_str(str);
 
-	stmt = first_stmt(bb->b_parent);
-	invoke_expr = to_expr(stmt->expression);
-	args_list_expr = to_expr(invoke_expr->args_list);
+	invoke_stmt = first_stmt(bb->b_parent);
+	args_list_expr = to_expr(invoke_stmt->args_list);
 	second_arg = to_expr(args_list_expr->args_left);
 
 	assert_args(args, ARRAY_SIZE(args), second_arg);
@@ -196,61 +177,21 @@ static void assert_invoke_args(unsigned char invoke_opc, unsigned long nr_args)
 
 static void assert_invoke_return_type(unsigned char invoke_opc, enum vm_type expected, char *type)
 {
-	struct expression *invoke_expr;
+	struct statement *invoke_stmt;
 	struct basic_block *bb;
 
 	bb = build_invoke_bb(invoke_opc, type, 1, 0, 0, 0, NULL);
-	invoke_expr = stack_pop(bb->mimic_stack);
-	assert_int_equals(expected, invoke_expr->vm_type);
+	invoke_stmt = first_stmt(bb->b_parent);
 
-	expr_put(invoke_expr);
-	__free_simple_bb(bb);
-}
-
-static struct basic_block *
-invoke_discarded_return_value(unsigned char invoke_opc, struct vm_method *target_method)
-{
-	const struct cafebabe_method_info target_method_info = {
-		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
-	};
-
-	unsigned char code[] = {
-		invoke_opc, 0x00, 0x00,
-		OPC_POP
-	};
-	struct vm_method invoker_method = {
-		.code_attribute.code = code,
-		.code_attribute.code_length = ARRAY_SIZE(code),
-	};
-	struct basic_block *bb;
-	
-	target_method->type = "()I";
-	target_method->args_count = 0;
-	target_method->method = &target_method_info;
-
-	bb = __alloc_simple_bb(&invoker_method);
-	convert_ir_invoke(bb->b_parent, target_method, 0);
-
-	return bb;
-}
-
-static void assert_invoke_return_value_discarded(enum expression_type expected_type, unsigned char invoke_opc)
-{
-	struct vm_method target_method;
-	struct basic_block *bb;
-	struct statement *stmt;
-
-	bb = invoke_discarded_return_value(invoke_opc, &target_method);
-	stmt = first_stmt(bb->b_parent);
-
-	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_int_equals(expected_type, expr_type(to_expr(stmt->expression)));
-	assert_true(stack_is_empty(bb->mimic_stack));
+	if (expected == J_VOID)
+		assert_ptr_equals(NULL, invoke_stmt->invoke_result);
+	else
+		assert_temporary_expr(expected, &invoke_stmt->invoke_result->node);
 
 	__free_simple_bb(bb);
 }
 
-static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsigned char opc, char *return_type, int nr_args)
+static void assert_converts_to_invoke_stmt(enum vm_type expected_result_type, unsigned char opc, char *return_type, int nr_args)
 {
 	const struct cafebabe_method_info target_method_info = {
 		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
@@ -262,8 +203,7 @@ static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsign
 		.args_count = nr_args,
 	};
 	unsigned char code[] = {
-		opc, 0x00, 0x00,
-		OPC_IRETURN
+		opc, 0x00, 0x00
 	};
 	struct vm_method method = {
 		.code_attribute.code = code,
@@ -281,13 +221,22 @@ static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsign
 	convert_ir_invoke(bb->b_parent, &target_method, 0);
 	stmt = stmt_entry(bb->stmt_list.next);
 
-	assert_int_equals(STMT_RETURN, stmt_type(stmt));
-	assert_invoke_expr(expected_vm_type, &target_method, stmt->return_value);
+	assert_invoke_stmt(expected_result_type, &target_method, &stmt->node);
 
-	actual_args = to_expr(to_expr(stmt->return_value)->args_list);
+	actual_args = to_expr(stmt->args_list);
 	assert_args(args, nr_args, actual_args);
 
-	assert_true(stack_is_empty(bb->mimic_stack));
+	if (expected_result_type == J_VOID)
+		assert_true(stack_is_empty(bb->mimic_stack));
+	else {
+		struct expression *result;
+
+		assert_false(stack_is_empty(bb->mimic_stack));
+		result = stack_pop(bb->mimic_stack);
+		assert_temporary_expr(expected_result_type, &result->node);
+		expr_put(result);
+		assert_true(stack_is_empty(bb->mimic_stack));
+	}
 
 	__free_simple_bb(bb);
 }
@@ -296,19 +245,14 @@ static void assert_converts_to_invoke_expr(enum vm_type expected_vm_type, unsign
  * 	INVOKESPECIAL
  */
 
-void test_invokespecial_should_be_converted_to_invokespecial_expr(void)
-{
-	assert_invoke_expression_type(EXPR_INVOKE, OPC_INVOKESPECIAL);
-}
-
 void test_invokespecial_should_pass_objectref_as_first_argument(void)
 {
 	assert_invoke_passes_objectref(OPC_INVOKESPECIAL, true);
 }
 
-void test_invokespecial_converts_to_invoke_expr(void)
+void test_invokespecial_converts_to_invoke_stmt(void)
 {
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESPECIAL, "()I", 0);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESPECIAL, "()I", 0);
 }
 
 void test_invokespecial_should_parse_passed_arguments(void)
@@ -320,23 +264,20 @@ void test_invokespecial_should_parse_passed_arguments(void)
 
 void test_invokespecial_should_parse_return_type(void)
 {
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_VOID, "()V");
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()B");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()Z");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()C");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()S");
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()I");
-}
-
-void test_convert_invokespecial_when_return_value_is_discarded(void)
-{
-	assert_invoke_return_value_discarded(EXPR_INVOKE, OPC_INVOKESPECIAL);
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_LONG, "()L");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_FLOAT, "()F");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_DOUBLE, "()D");
 }
 
 /*
  * 	INVOKEVIRTUAL
  */
-
-void test_invokevirtual_should_be_converted_to_invokevirtual_expr(void)
-{
-	assert_invoke_expression_type(EXPR_INVOKEVIRTUAL, OPC_INVOKEVIRTUAL);
-}
 
 void test_invokevirtual_should_pass_objectref_as_first_argument(void)
 {
@@ -352,13 +293,15 @@ void test_invokevirtual_should_parse_passed_arguments(void)
 
 void test_invokevirtual_should_parse_return_type(void)
 {
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_VOID, "()V");
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()B");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()Z");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()C");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()S");
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()I");
-}
-
-void test_convert_invokevirtual_when_return_value_is_discarded(void)
-{
-	assert_invoke_return_value_discarded(EXPR_INVOKEVIRTUAL, OPC_INVOKEVIRTUAL);
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_LONG, "()L");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_FLOAT, "()F");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_DOUBLE, "()D");
 }
 
 /*
@@ -367,61 +310,20 @@ void test_convert_invokevirtual_when_return_value_is_discarded(void)
 
 void test_convert_invokestatic(void)
 {
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()B", 0);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "()I", 0);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(I)I", 1);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(II)I", 2);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(III)I", 3);
-	assert_converts_to_invoke_expr(J_INT, OPC_INVOKESTATIC, "(IIIII)I", 5);
-}
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()B", 0);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()Z", 0);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()C", 0);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()S", 0);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()I", 0);
+	assert_converts_to_invoke_stmt(J_LONG, OPC_INVOKESTATIC, "()L", 0);
+	assert_converts_to_invoke_stmt(J_VOID, OPC_INVOKESTATIC, "()V", 0);
+	assert_converts_to_invoke_stmt(J_FLOAT, OPC_INVOKESTATIC, "()F", 0);
+	assert_converts_to_invoke_stmt(J_DOUBLE, OPC_INVOKESTATIC, "()D", 0);
 
-void test_convert_invokestatic_for_void_return_type(void)
-{
-	struct vm_method mb;
-	unsigned char code[] = {
-		OPC_INVOKESTATIC, 0x00, 0x00,
-	};
-
-	const struct cafebabe_method_info target_method_info = {
-		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
-	};
-
-	struct vm_method method = {
-		.code_attribute.code = code,
-		.code_attribute.code_length = ARRAY_SIZE(code),
-	};
-	struct basic_block *bb;
-	struct statement *stmt;
-
-	mb.type = "()V";
-	mb.args_count = 0;
-	mb.method = &target_method_info;
-
-	bb = __alloc_simple_bb(&method);
-	convert_ir_invoke(bb->b_parent, &mb, 0);
-	stmt = stmt_entry(bb->stmt_list.next);
-
-	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_invoke_expr(J_VOID, &mb, stmt->expression);
-	assert_true(stack_is_empty(bb->mimic_stack));
-
-	__free_simple_bb(bb);
-}
-
-void test_convert_invokestatic_when_return_value_is_discarded(void)
-{
-	struct basic_block *bb;
-	struct statement *stmt;
-	struct vm_method mb;
-
-	bb = invoke_discarded_return_value(OPC_INVOKESTATIC, &mb);
-	stmt = stmt_entry(bb->stmt_list.next);
-
-	assert_int_equals(STMT_EXPRESSION, stmt_type(stmt));
-	assert_invoke_expr(J_INT, &mb, stmt->expression);
-	assert_true(stack_is_empty(bb->mimic_stack));
-
-	free_compilation_unit(bb->b_parent);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "(I)I", 1);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "(II)I", 2);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "(III)I", 3);
+	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "(IIIII)I", 5);
 }
 
 /* MISSING: invokeinterface */

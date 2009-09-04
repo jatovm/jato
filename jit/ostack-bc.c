@@ -20,19 +20,7 @@
 
 int convert_pop(struct parse_context *ctx)
 {
-	struct expression *expr = stack_pop(ctx->bb->mimic_stack);
-
-	if (is_invoke_expr(expr)) {
-		struct statement *expr_stmt = alloc_statement(STMT_EXPRESSION);
-
-		if (!expr_stmt)
-			return warn("out of memory"), -ENOMEM;
-
-		expr_stmt->expression = &expr->node;
-		convert_statement(ctx, expr_stmt);
-	} else
-		expr_put(expr);
-
+	expr_put(stack_pop(ctx->bb->mimic_stack));
 	return 0;
 }
 

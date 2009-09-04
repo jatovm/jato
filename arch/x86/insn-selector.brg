@@ -58,7 +58,7 @@ struct _MBState;
 
 static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *instruction);
 static void select_exception_test(struct basic_block *bb, struct tree_node *tree);
-void finvoke_return_value(struct _MBState *state, struct basic_block *s, struct tree_node *tree, enum vm_type ret_vm_type);
+void save_invoke_result(struct basic_block *s, struct tree_node *tree, struct vm_method *method, struct statement *stmt);
 
 static unsigned char size_to_scale(int size)
 {
@@ -695,130 +695,6 @@ reg:	OP_XOR(reg, reg) 1
 {
 	binop_reg_reg_low(state, s, tree, INSN_XOR_REG_REG);
 	binop_reg_reg_high(state, s, tree, INSN_XOR_REG_REG);
-}
-
-reg:	EXPR_INVOKE(arg) 1
-{
-	struct var_info *eax, *edx = NULL;
-	struct compilation_unit *cu;
-	struct vm_method *method;
-	struct expression *expr;
-
-	expr	= to_expr(tree);
-	method	= expr->target_method;
-	cu	= method->compilation_unit;
-
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	state->reg1 = get_var(s->b_parent, J_INT);
-
-	if (get_method_return_type(method->type) == J_LONG) {
-		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
-		state->reg2 = get_var(s->b_parent, J_INT);
-	}
-
-	invoke(s, tree, cu, method);
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
-	if (edx != NULL)
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
-}
-
-freg:	EXPR_FINVOKEINTERFACE(arg) 1
-{
-	enum vm_type ret_vm_type;
-	struct expression *expr;
-	struct vm_method *method;
-
-	expr	= to_expr(tree);
-	method	= expr->target_method;
-
-	ret_vm_type = method_return_type(method);
-	state->reg1 = get_var(s->b_parent, ret_vm_type);
-
-	invokeinterface(state, s, tree);
-	finvoke_return_value(state, s, tree, ret_vm_type);
-}
-
-reg:	EXPR_INVOKEINTERFACE(arg) 1
-{
-	struct var_info *eax, *edx = NULL;
-	struct expression *expr;
-	struct vm_method *method;
-
-	expr	= to_expr(tree);
-	method	= expr->target_method;
-
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	state->reg1 = get_var(s->b_parent, J_INT);
-
-	if (get_method_return_type(method->type) == J_LONG) {
-		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
-		state->reg2 = get_var(s->b_parent, J_INT);
-	}
-
-	invokeinterface(state, s, tree);
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
-	if (edx != NULL)
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
-}
-
-freg:	EXPR_FINVOKE(arg) 1
-{
-	struct compilation_unit *cu;
-	enum vm_type ret_vm_type;
-	struct vm_method *method;
-	struct expression *expr;
-
-	expr	= to_expr(tree);
-	method	= expr->target_method;
-	cu	= method->compilation_unit;
-
-	ret_vm_type = method_return_type(method);
-	state->reg1 = get_var(s->b_parent, ret_vm_type);
-
-	invoke(s, tree, cu, method);
-	finvoke_return_value(state, s, tree, ret_vm_type);
-}
-
-reg:	EXPR_INVOKEVIRTUAL(arg) 1
-{
-	struct var_info *eax, *edx = NULL;
-	struct vm_method *method;
-	struct expression *expr;
-
-	expr	= to_expr(tree);
-	method	= expr->target_method;
-
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	state->reg1 = get_var(s->b_parent, J_INT);
-
-	if (get_method_return_type(method->type) == J_LONG) {
-		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
-		state->reg2 = get_var(s->b_parent, J_INT);
-	}
-
-	invokevirtual(state, s, tree);
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
-	if (edx != NULL)
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
-}
-
-freg:	EXPR_FINVOKEVIRTUAL(arg) 1
-{
-	enum vm_type ret_vm_type;
-	struct expression *expr;
-	struct vm_method *method;
-
-	expr	= to_expr(tree);
-	method	= expr->target_method;
-
-	ret_vm_type = method_return_type(method);
-	state->reg1 = get_var(s->b_parent, ret_vm_type);
-
-	invokevirtual(state, s, tree);
-	finvoke_return_value(state, s, tree, ret_vm_type);
 }
 
 reg:	OP_CMPL(freg, freg) 1
@@ -1895,6 +1771,21 @@ reg:	EXPR_EXCEPTION_REF
 	state->reg1 = result;
 
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
+}
+
+stmt:	STMT_INVOKE(arg) 1
+{
+	invoke(s, tree);
+}
+
+stmt:	STMT_INVOKEINTERFACE(arg) 1
+{
+	invokeinterface(state, s, tree);
+}
+
+stmt:	STMT_INVOKEVIRTUAL(arg) 1
+{
+	invokevirtual(state, s, tree);
 }
 
 %ifdef	CONFIG_X86_32
@@ -3012,26 +2903,53 @@ static void select_trace_return_value(struct basic_block *s,
 	}
 }
 
-void finvoke_return_value(struct _MBState *state, struct basic_block *s,
-			  struct tree_node *tree, enum vm_type ret_vm_type)
+void save_invoke_result(struct basic_block *s, struct tree_node *tree,
+			struct vm_method *method, struct statement *stmt)
 {
-	struct var_info *esp;
 	struct stack_slot *scratch;
+	struct expression *tmp;
+	struct var_info *esp;
+	struct var_info *eax;
+	struct var_info *edx;
 
-	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+	if (opt_trace_invoke_verbose)
+		select_trace_return_value(s, tree, method);
 
-	if (ret_vm_type == J_FLOAT) {
+	tmp = stmt->invoke_result;
+	if (!tmp)
+		return;
+
+	switch (tmp->vm_type) {
+	case J_FLOAT:
 		scratch = get_scratch_slot(s->b_parent);
+		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 		select_insn(s, tree, memlocal_insn(INSN_FSTP_MEMLOCAL, scratch));
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, scratch, state->reg1));
-	} else {
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, scratch, tmp->tmp_low));
+		break;
+	case J_DOUBLE:
 		scratch = get_scratch_slot(s->b_parent);
+		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 		select_insn(s, tree, memlocal_insn(INSN_FSTP_64_MEMLOCAL, scratch));
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, state->reg1));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, tmp->tmp_low));
+		break;
+	case J_LONG:
+		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, tmp->tmp_high));
+		break;
+	case J_INT:
+	case J_REFERENCE:
+		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
+		break;
+	default:
+		error("invalid result type");
 	}
 }
 
 static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
+				  struct vm_method *method, struct statement *stmt,
 				  struct insn *call_insn, void *target)
 {
 	struct var_info *offset_reg;
@@ -3076,6 +2994,8 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 
 	select_insn(s, tree, call_insn);
 
+	save_invoke_result(s, tree, method, stmt);
+
 	/* Restore vm_native_stack_offset (pop) */
 	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG,
 			sizeof(struct vm_native_stack_entry), offset_reg));
@@ -3095,12 +3015,19 @@ static void select_safepoint(struct basic_block *s, struct tree_node *tree)
 	select_insn(s, tree, gc_safepoint_insn);
 }
 
-static void invoke(struct basic_block *s, struct tree_node *tree, struct compilation_unit *cu, struct vm_method *method)
+static void invoke(struct basic_block *s, struct tree_node *tree)
 {
-	bool is_compiled;
+	struct compilation_unit *cu;
+	struct vm_method *method;
+	struct statement *stmt;
 	struct insn *call_insn;
-	void *target;
 	int nr_stack_args;
+	bool is_compiled;
+	void *target;
+
+	stmt	= to_stmt(tree);
+	method	= stmt->target_method;
+	cu	= method->compilation_unit;
 
 	if (cu == s->b_parent) {
 		/*
@@ -3125,10 +3052,11 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
 	if (vm_method_is_vm_native(method))
-		select_vm_native_call(s, tree, call_insn,
-				      vm_method_native_ptr(method));
-	else
+		select_vm_native_call(s, tree, method, stmt, call_insn, vm_method_native_ptr(method));
+	else {
 		select_insn(s, tree, call_insn);
+		save_invoke_result(s, tree, method, stmt);
+	}
 
 	if (!is_compiled) {
 		struct fixup_site *fixup;
@@ -3144,9 +3072,6 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (opt_trace_invoke_verbose)
-		select_trace_return_value(s, tree, method);
-
 	if (vm_method_is_native(method))
 		select_exception_test(s, tree);
 }
@@ -3154,22 +3079,21 @@ static void invoke(struct basic_block *s, struct tree_node *tree, struct compila
 
 static void invokevirtual(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
 {
-	struct expression *expr;
+	struct statement *stmt;
 	struct var_info *call_target;
 	unsigned long method_offset;
 	struct vm_method *method;
 	struct insn *call_insn;
 	int nr_stack_args;
 
-	expr	= to_expr(tree);
-	method_offset = expr_method_index(expr) * sizeof(void *);
+	stmt	= to_stmt(tree);
+	method_offset = stmt_method_index(stmt) * sizeof(void *);
 
-	method	= expr->target_method;
+	method	= stmt->target_method;
 
 	/* object reference */
 	call_target = get_var(s->b_parent, J_REFERENCE);
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG,
-					  state->left->reg1, call_target));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, call_target));
 
 	/* object class */
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
@@ -3186,6 +3110,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
 
 	select_insn(s, tree, call_insn);
+	save_invoke_result(s, tree, method, stmt);
 
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)
@@ -3193,9 +3118,6 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 
 	if (vm_method_is_native(method))
 		select_exception_test(s, tree);
-
-	if (opt_trace_invoke_verbose)
-		select_trace_return_value(s, tree, method);
 }
 
 static void invokeinterface(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
@@ -3205,17 +3127,17 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 	struct compilation_unit *cu;
 	unsigned long method_offset;
 	struct vm_method *method;
-	struct expression *expr;
+	struct statement *stmt;
 	struct insn *call_insn;
 	int nr_stack_args;
 
-	expr	= to_expr(tree);
-	method	= expr->target_method;
+	stmt	= to_stmt(tree);
+	method	= stmt->target_method;
 	cu	= method->compilation_unit;
 
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
-	method_offset = expr_method_index(expr) * sizeof(void *);
+	method_offset = stmt_method_index(stmt) * sizeof(void *);
 
 	/* object reference */
 	call_target = state->left->reg1;
@@ -3237,13 +3159,11 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
 
 	select_insn(s, tree, call_insn);
+	save_invoke_result(s, tree, method, stmt);
 
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
-
-	if (opt_trace_invoke_verbose)
-		select_trace_return_value(s, tree, method);
 }
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)

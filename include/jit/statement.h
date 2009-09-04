@@ -24,6 +24,9 @@ enum statement_type {
 	STMT_ARRAY_STORE_CHECK,
 	STMT_TABLESWITCH,
 	STMT_LOOKUPSWITCH_JUMP,
+	STMT_INVOKE,
+	STMT_INVOKEINTERFACE,
+	STMT_INVOKEVIRTUAL,
 	STMT_LAST,	/* Not a real type. Keep this last.  */
 };
 
@@ -102,9 +105,22 @@ struct statement {
 			struct tree_node *lookupswitch_target;
 		};
 
+		struct /* STMT_LOOKUPSWITCH_JUMP */ {
+			struct tree_node *args_list;
+			struct vm_method *target_method;
+		};
+
 		/* STMT_EXPRESSION, STMT_ARRAY_CHECK */
 		struct tree_node *expression;
 	};
+
+	union {
+		/* STMT_INVOKE, STMT_INVOKEVIRTUAL, STMT_INVOKEINTERFACE */
+		struct {
+			struct expression *invoke_result;
+		};
+	};
+
 	struct list_head stmt_list_node;
 	unsigned long bytecode_offset;
 };
@@ -129,6 +145,11 @@ struct lookupswitch *alloc_lookupswitch(struct lookupswitch_info *, struct compi
 void free_lookupswitch(struct lookupswitch *);
 int lookupswitch_pair_comp(const void *, const void *);
 struct statement *if_stmt(struct basic_block *, enum vm_type, enum binary_operator, struct expression *, struct expression *);
+
+static inline unsigned long stmt_method_index(struct statement *stmt)
+{
+	return stmt->target_method->virtual_index;
+}
 
 #define for_each_stmt(stmt, stmt_list) list_for_each_entry(stmt, stmt_list, stmt_list_node)
 

@@ -442,46 +442,41 @@ void test_should_print_instance_field_expression(void)
 		&vmf, vmf.class->name, vmf.name), J_INT, &vmf, objectref);
 }
 
-void assert_printed_invoke_expr(struct string *expected,
+void assert_printed_invoke_stmt(enum vm_type type,
+				struct string *expected,
 				struct vm_method *method,
-				struct expression *args_list)
+				struct expression *args_list,
+				struct expression *result)
 {
-	struct expression *expr;
+	struct statement *stmt;
 
-	expr = invoke_expr(method);
-	expr->args_list = &args_list->node;
-	assert_print_expr(expected, expr);
+	stmt = alloc_statement(type);
+	stmt->invoke_result = result;
+	stmt->args_list = &args_list->node;
+	stmt->target_method = method;
+	assert_print_stmt(expected, stmt);
 }
 
-void test_should_print_invoke_expression(void)
-{	
-	assert_printed_invoke_expr(str_aprintf(
+void test_should_print_invoke_statement(void)
+{
+	assert_printed_invoke_stmt(STMT_INVOKE, str_aprintf(
 		"INVOKE:\n"
-		"  target_method: [%p '%s.%s%s']\n"
-		"  args_list: [no args]\n",
-		&vmm, vmm.class->name, vmm.name, vmm.type),
-		&vmm, no_args_expr());
-}
-
-void assert_printed_invokevirtual_expr(struct string *expected,
-				       struct vm_method *target,
-				       struct expression *args_list)
-{
-	struct expression *expr;
-
-	expr = invokevirtual_expr(target);
-	expr->args_list = &args_list->node;
-	assert_print_expr(expected, expr);
+		"  target_method: [%p '%s.%s%s' (%lu)]\n"
+		"  args_list: [no args]\n"
+		"  result: [void]\n",
+		&vmm, vmm.class->name, vmm.name, vmm.type, vmm.virtual_index),
+		&vmm, no_args_expr(), NULL);
 }
 
 void test_should_print_invokevirtual_expression(void)
 {
-	assert_printed_invokevirtual_expr(str_aprintf(
+	assert_printed_invoke_stmt(STMT_INVOKEVIRTUAL, str_aprintf(
 		"INVOKEVIRTUAL:\n"
 		"  target_method: [%p '%s.%s%s' (%lu)]\n"
-		"  args_list: [no args]\n",
+		"  args_list: [no args]\n"
+		"  result: [void]\n",
 		&vmm, vmm.class->name, vmm.name, vmm.type, vmm.virtual_index),
-		&vmm, no_args_expr());
+		&vmm, no_args_expr(), NULL);
 }
 
 void assert_printed_args_list_expr(struct string *expected,

@@ -32,6 +32,9 @@ int stmt_nr_kids(struct statement *stmt)
 	case STMT_CHECKCAST:
 	case STMT_TABLESWITCH:
 	case STMT_LOOKUPSWITCH_JUMP:
+	case STMT_INVOKE:
+	case STMT_INVOKEINTERFACE:
+	case STMT_INVOKEVIRTUAL:
 		return 1;
 	case STMT_GOTO:
 	case STMT_VOID_RETURN:
@@ -64,6 +67,17 @@ void free_statement(struct statement *stmt)
 	for (i = 0; i < stmt_nr_kids(stmt); i++)
 		if (stmt->node.kids[i])
 			expr_put(to_expr(stmt->node.kids[i]));
+
+	switch (stmt_type(stmt)) {
+	case STMT_INVOKE:
+	case STMT_INVOKEVIRTUAL:
+	case STMT_INVOKEINTERFACE:
+		if (stmt->invoke_result)
+			expr_put(stmt->invoke_result);
+		break;
+	default:
+		break;
+	}
 
 	free(stmt);
 }

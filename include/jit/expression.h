@@ -36,12 +36,6 @@ enum expression_type {
 	EXPR_CONVERSION_TO_DOUBLE,
 	EXPR_CLASS_FIELD,
 	EXPR_INSTANCE_FIELD,
-	EXPR_INVOKE,
-	EXPR_FINVOKE,
-	EXPR_INVOKEINTERFACE,
-	EXPR_FINVOKEINTERFACE,
-	EXPR_INVOKEVIRTUAL,
-	EXPR_FINVOKEVIRTUAL,
 	EXPR_ARGS_LIST,
 	EXPR_ARG,
 	EXPR_ARG_THIS,
@@ -191,25 +185,6 @@ struct expression {
 			struct vm_field *instance_field;
 		};
 
-		/*  EXPR_INVOKE represents a method invocation expression (see
-		    JLS 15.12.) for which the target method can be determined
-		    statically.  This expression type can contain side-effects
-		    and can be used as an rvalue only.
-
-		    EXPR_INVOKESPECIAL and EXPR_INVOKEVIRTUAL represent a
-		    method invocation (see JLS 15.12.) for which the target
-		    method has to be determined from instance class vtable at
-		    the call site.
-
-		    The first argument in the argument list is always the
-		    object reference for the invocation.  This expression type
-		    can contain side-effects and can be used as an rvalue
-		    only.  */
-		struct {
-			struct tree_node *args_list;
-			struct vm_method *target_method;
-		};
-
 		/*  EXPR_ARGS_LIST represents list of arguments passed to
 		    method. This expression does not evaluate to a value and
 		    is used for instruction selection only.  */
@@ -230,7 +205,7 @@ struct expression {
 			enum machine_reg arg_reg;
 		};
 
-		/*  EXPR_NO_ARGS is used for EXPR_INVOKE expression type when
+		/*  EXPR_NO_ARGS is used for STMT_INVOKE expression type when
 		    there are no arguments to pass.  */
 		struct {
 			/* Nothing. */
@@ -352,11 +327,6 @@ struct expression *conversion_to_double_expr(enum vm_type, struct expression *);
 
 struct expression *class_field_expr(enum vm_type, struct vm_field *);
 struct expression *instance_field_expr(enum vm_type, struct vm_field *, struct expression *);
-struct expression *invoke_expr(struct vm_method *);
-struct expression *invokeinterface_expr(struct vm_method *);
-struct expression *invokevirtual_expr(struct vm_method *);
-struct expression *finvoke_expr(struct vm_method *);
-struct expression *finvokevirtual_expr(struct vm_method *);
 struct expression *args_list_expr(struct expression *, struct expression *);
 struct expression *arg_expr(struct expression *);
 struct expression *arg_this_expr(struct expression *);
@@ -390,22 +360,6 @@ static inline enum vm_type mimic_stack_type(enum vm_type type)
 	default:
 		return type;
 	}
-}
-
-static inline int is_invoke_expr(struct expression *expr)
-{
-	enum expression_type type = expr_type(expr);
-
-	return (type == EXPR_INVOKE)
-		|| (type == EXPR_INVOKEINTERFACE)
-		|| (type == EXPR_INVOKEVIRTUAL)
-		|| (type == EXPR_FINVOKE)
-		|| (type == EXPR_FINVOKEVIRTUAL);
-}
-
-static inline unsigned long expr_method_index(struct expression *expr)
-{
-	return expr->target_method->virtual_index;
 }
 
 #endif

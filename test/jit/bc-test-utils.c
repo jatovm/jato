@@ -233,15 +233,20 @@ void assert_instance_field_expr(enum vm_type expected_vm_type,
 	assert_ptr_equals(expected_objectref, to_expr(expr->objectref_expression));
 }
 
-void assert_invoke_expr(enum vm_type expected_type,
+void assert_invoke_stmt(enum vm_type result_type,
 			struct vm_method *expected_method,
 			struct tree_node *node)
 {
-	struct expression *expr = to_expr(node);
+	struct statement *stmt = to_stmt(node);
 
-	assert_int_equals(EXPR_INVOKE, expr_type(expr));
-	assert_int_equals(expected_type, expr->vm_type);
-	assert_ptr_equals(expected_method, expr->target_method);
+	assert_int_equals(STMT_INVOKE, stmt_type(stmt));
+
+	if (result_type == J_VOID)
+		assert_ptr_equals(NULL, stmt->invoke_result);
+	else
+		assert_temporary_expr(result_type, &stmt->invoke_result->node);
+
+	assert_ptr_equals(expected_method, stmt->target_method);
 }
 
 void assert_array_size_check_expr(struct expression *expected,
