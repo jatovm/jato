@@ -46,6 +46,10 @@ struct basic_block {
 	   Adl-Tabatabai et al (1998) for more in-depth explanation.  */
 	struct stack *mimic_stack;
 
+	/* Holds the size of mimic stack at basic block entry. If
+	   mimic stack has not yet been resolved it's set to -1. */
+	long entry_mimic_stack_size;
+
 	/* Is this basic block an exception handler? */
 	bool is_eh;
 
@@ -72,6 +76,11 @@ struct basic_block {
 static inline struct basic_block *bb_entry(struct list_head *head)
 {
 	return list_entry(head, struct basic_block, bb_list_node);
+}
+
+static inline bool bb_mimic_stack_is_resolved(struct basic_block *bb)
+{
+	return bb->entry_mimic_stack_size != -1;
 }
 
 struct basic_block *alloc_basic_block(struct compilation_unit *, unsigned long, unsigned long);

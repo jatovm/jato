@@ -1,9 +1,11 @@
 #ifndef LIB_STACK_H
 #define LIB_STACK_H
 
+#include <assert.h>
+#include <errno.h>
+#include <memory.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <assert.h>
 
 struct stack {
 	unsigned long	nr_elements;
@@ -36,5 +38,12 @@ static inline bool stack_is_empty(struct stack *stack)
 {
 	return !stack->nr_elements;
 }
+
+static inline unsigned long stack_size(struct stack *stack)
+{
+	return stack->nr_elements;
+}
+
+void stack_copy(struct stack *src, struct stack *dst);
 
 #endif

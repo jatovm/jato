@@ -41,6 +41,7 @@ struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigne
 	bb->b_parent = b_parent;
 	bb->start = start;
 	bb->end = end;
+	bb->entry_mimic_stack_size = -1;
 
 	return bb;
 }

@@ -181,8 +181,14 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 	buffer.buffer = cu->method->code_attribute.code;
 	buffer.pos = bb->start;
 
-	if (bb->is_eh)
+	if (bb->is_eh) {
+		assert(!bb_mimic_stack_is_resolved(bb));
 		stack_push(bb->mimic_stack, exception_ref_expr());
+		bb->entry_mimic_stack_size = 1;
+	}
+
+	if (!bb_mimic_stack_is_resolved(bb))
+		bb->entry_mimic_stack_size = 0;
 
 	while (buffer.pos < bb->end) {
 		ctx.offset = ctx.buffer->pos;	/* this is fragile */
@@ -192,6 +198,32 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 			break;
 	}
 	return err;
+}
+
+static int reload_mimic_stack(struct basic_block *bb, struct stack *reload)
+{
+	unsigned int i;
+
+	for (i = 0; i < reload->nr_elements; i++)
+		bb_add_mimic_stack_expr(bb, reload->elements[i]);
+
+	if (bb_mimic_stack_is_resolved(bb)) {
+		if (stack_size(reload) == (unsigned long) bb->entry_mimic_stack_size)
+			return 0;
+
+		return warn("stack size differs on different paths"), -EINVAL;
+	}
+
+	for (i = 0; i < reload->nr_elements; i++) {
+		struct expression *elem;
+
+		elem = reload->elements[reload->nr_elements - i - 1];
+		expr_get(elem);
+		stack_push(bb->mimic_stack, elem);
+	}
+
+	bb->entry_mimic_stack_size = stack_size(bb->mimic_stack);
+	return 0;
 }
 
 static int convert_bb_to_ir(struct basic_block *bb)
@@ -227,20 +259,10 @@ static int convert_bb_to_ir(struct basic_block *bb)
 	if (!reload_stack)
 		return warn("out of memory"), -ENOMEM;
 
-	while (!stack_is_empty(reload_stack)) {
-		struct expression *expr = stack_pop(reload_stack);
+	for (i = 0; i < bb->nr_successors; i++)
+		reload_mimic_stack(bb->successors[i], reload_stack);
 
-		for (i = 0; i < bb->nr_successors; i++) {
-			struct basic_block *s = bb->successors[i];
-
-			expr_get(expr);
-
-			bb_add_mimic_stack_expr(s, expr);
-
-			stack_push(s->mimic_stack, expr);
-		}
-		expr_put(expr);
-	}
+	clear_mimic_stack(reload_stack);
 	free_stack(reload_stack);
 
 	for (i = 0; i < bb->nr_successors; i++) {

@@ -26,6 +26,8 @@
 
 #include "lib/stack.h"
 
+#include "vm/die.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,4 +43,19 @@ void free_stack(struct stack *stack)
 {
 	free(stack->elements);
 	free(stack);
+}
+
+void stack_copy(struct stack *src, struct stack *dst)
+{
+	void **new_elements;
+	unsigned long size;
+
+	size = src->nr_elements * sizeof(void*);
+	new_elements = realloc(dst->elements, size);
+	if (!new_elements)
+		error("out of memory");
+
+	dst->elements = new_elements;
+	dst->nr_elements = src->nr_elements;
+	memcpy(new_elements, src->elements, size);
 }
