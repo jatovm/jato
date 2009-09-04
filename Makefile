@@ -271,6 +271,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/FinallyTest.java \
 	regression/jvm/FloatArithmeticTest.java \
 	regression/jvm/FloatConversionTest.java \
+	regression/jvm/GcTortureTest.java \
 	regression/jvm/GetstaticPatchingTest.java \
 	regression/jvm/IntegerArithmeticExceptionsTest.java \
 	regression/jvm/IntegerArithmeticTest.java \
