@@ -2280,7 +2280,7 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
 							       slot, dest));
 		} else {
-			src = get_fixed_var(s->b_parent, reg);
+			src = s->b_parent->non_fixed_args[exprsrc->local_index];
 			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
 		}
 	} else {
@@ -3388,15 +3388,39 @@ static void setup_caller_saved_regs(struct compilation_unit *cu)
 #else /* CONFIG_X86_32 */
 static void setup_caller_saved_regs(struct compilation_unit *cu)
 {
+	struct var_info **map;
+	struct var_info *rdi, *rsi, *rdx, *rcx, *r8, *r9;
+	struct basic_block *bb = cu->entry_bb;
+
 	get_fixed_var(cu, MACH_REG_RAX);
-	get_fixed_var(cu, MACH_REG_RDI);
-	get_fixed_var(cu, MACH_REG_RSI);
-	get_fixed_var(cu, MACH_REG_RDX);
-	get_fixed_var(cu, MACH_REG_RCX);
-	get_fixed_var(cu, MACH_REG_R8);
-	get_fixed_var(cu, MACH_REG_R9);
 	get_fixed_var(cu, MACH_REG_R10);
 	get_fixed_var(cu, MACH_REG_R11);
+
+	cu->non_fixed_args = malloc(6 * sizeof(struct var_info *));
+	if (!cu->non_fixed_args)
+		abort();
+	map = cu->non_fixed_args;
+
+	rdi = get_fixed_var(cu, MACH_REG_RDI);
+	rsi = get_fixed_var(cu, MACH_REG_RSI);
+	rdx = get_fixed_var(cu, MACH_REG_RDX);
+	rcx = get_fixed_var(cu, MACH_REG_RCX);
+	r8 = get_fixed_var(cu, MACH_REG_R8);
+	r9 = get_fixed_var(cu, MACH_REG_R9);
+
+	map[0] = get_var(cu, J_REFERENCE);
+	map[1] = get_var(cu, J_REFERENCE);
+	map[2] = get_var(cu, J_REFERENCE);
+	map[3] = get_var(cu, J_REFERENCE);
+	map[4] = get_var(cu, J_REFERENCE);
+	map[5] = get_var(cu, J_REFERENCE);
+
+	eh_add_insn(bb, reg_reg_insn(INSN_MOV_REG_REG, rdi, map[0]));
+	eh_add_insn(bb, reg_reg_insn(INSN_MOV_REG_REG, rsi, map[1]));
+	eh_add_insn(bb, reg_reg_insn(INSN_MOV_REG_REG, rdx, map[2]));
+	eh_add_insn(bb, reg_reg_insn(INSN_MOV_REG_REG, rcx, map[3]));
+	eh_add_insn(bb, reg_reg_insn(INSN_MOV_REG_REG, r8, map[4]));
+	eh_add_insn(bb, reg_reg_insn(INSN_MOV_REG_REG, r9, map[5]));
 }
 #endif /* CONFIG_X86_32 */
 
