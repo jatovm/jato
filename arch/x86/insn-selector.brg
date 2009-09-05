@@ -136,6 +136,7 @@ static enum insn_type br_binop_to_insn_type(enum binary_operator binop)
 
 %start stmt
 
+%ifdef	CONFIG_X86_32
 freg:	EXPR_FVALUE	0
 {
 	struct expression *expr;
@@ -168,6 +169,7 @@ freg:	EXPR_FVALUE	0
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, result));
 	}
 }
+%endif
 
 reg:	EXPR_VALUE	0
 {
@@ -559,6 +561,7 @@ reg:	OP_NEG(reg) 1
 	}
 }
 
+%ifdef	CONFIG_X86_32
 freg:	OP_DNEG(freg) 1
 {
 	struct var_info *result, *ebp;
@@ -579,6 +582,7 @@ freg:	OP_DNEG(freg) 1
 
 	state->reg1 = result;
 }
+%endif
 
 freg:	OP_FNEG(freg) 1
 {
