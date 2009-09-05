@@ -8,53 +8,41 @@
  *                        signal bottom half hanlder.
  */
 signal_bh_trampoline:
-	push %xbp
-	mov %xsp, %xbp
+	push %ebp
+	movl %esp, %ebp
 
 	/* save caller saved registers */
-	push %xax
-	push %xcx
-	push %xdx
-#ifdef CONFIG_X86_64
-	pushq %r8
-	pushq %r9
-	pushq %r10
-	pushq %r11
-#endif
+	push %eax
+	push %ecx
+	push %edx
 
 	/* push signal bottom half handler's argument - address of
 	   faulting instruction. */
-	push (PTR_SIZE)(%xbp)
+	push 0x04(%ebp)
 
 	/* call the signal bottom half handler */
 	push $.bh_return
-	push (2 * PTR_SIZE)(%xbp)
+	push 0x08(%ebp)
 	ret
 
 .bh_return:
 	/* cleanup call arguments */
-	add $PTR_SIZE, %xsp
+	addl $0x04, %esp
 
 	/* overwrite return address */
-	mov %xax, (2 * PTR_SIZE)(%xbp)
+	movl %eax, 0x08(%ebp)
 
 	/* restore caller saved registers */
-#ifdef CONFIG_X86_64
-	popq %r11
-	popq %r10
-	popq %r9
-	popq %r8
-#endif
-	pop %xdx
-	pop %xcx
-	pop %xax
+	pop %edx
+	pop %ecx
+	pop %eax
 
-	pop %xbp
+	pop %ebp
 
 	/*
 	 * Cleanup bottom half handler address pushed by signal_install_bh().
 	 * We do this by popping the return address from stack into
 	 * the call argument.
 	 */
-	add $PTR_SIZE, %xsp
+	addl $0x04, %esp
 	ret
