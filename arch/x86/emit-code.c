@@ -2995,7 +2995,7 @@ void emit_lock_this(struct buffer *buf)
 {
 	emit_save_regparm(buf);
 
-	/* %rdi already contains *this. */
+	__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x08, MACH_REG_RDI);
 	__emit_call(buf, vm_object_lock);
 
 	emit_restore_regparm(buf);
@@ -3010,7 +3010,7 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_save_regparm(buf);
 
-	/* %rdi already contains *this. */
+	__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x08, MACH_REG_RDI);
 	__emit_call(buf, vm_object_unlock);
 
 	emit_exception_test(buf, MACH_REG_RAX);
