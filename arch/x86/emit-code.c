@@ -370,34 +370,6 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 	pthread_mutex_unlock(&t->mutex);
 }
 
-void fixup_static(struct vm_class *vmc)
-{
-	struct static_fixup_site *this, *next;
-
-	pthread_mutex_lock(&vmc->mutex);
-
-	list_for_each_entry_safe(this, next,
-		&vmc->static_fixup_site_list, vmc_node)
-	{
-		struct vm_field *vmf = this->vmf;
-		void *site_addr = buffer_ptr(this->cu->objcode)
-			+ this->insn->mach_offset;
-		void *new_target = vmc->static_values + vmf->offset;
-
-		cpu_write_u32(site_addr + 2, (unsigned long) new_target);
-
-		list_del(&this->vmc_node);
-
-		pthread_mutex_lock(&this->cu->mutex);
-		list_del(&this->cu_node);
-		pthread_mutex_unlock(&this->cu->mutex);
-
-		free(this);
-	}
-
-	pthread_mutex_unlock(&vmc->mutex);
-}
-
 int fixup_static_at(unsigned long addr)
 {
 	struct compilation_unit *cu;
@@ -1902,6 +1874,34 @@ static void fixup_branch_target(uint8_t *target_p, void *target)
 	target_p[0] = cur;
 }
 
+void fixup_static(struct vm_class *vmc)
+{
+	struct static_fixup_site *this, *next;
+
+	pthread_mutex_lock(&vmc->mutex);
+
+	list_for_each_entry_safe(this, next,
+		&vmc->static_fixup_site_list, vmc_node)
+	{
+		struct vm_field *vmf = this->vmf;
+		void *site_addr = buffer_ptr(this->cu->objcode)
+			+ this->insn->mach_offset;
+		void *new_target = vmc->static_values + vmf->offset;
+
+		cpu_write_u32(site_addr + 2, (unsigned long) new_target);
+
+		list_del(&this->vmc_node);
+
+		pthread_mutex_lock(&this->cu->mutex);
+		list_del(&this->cu_node);
+		pthread_mutex_unlock(&this->cu->mutex);
+
+		free(this);
+	}
+
+	pthread_mutex_unlock(&vmc->mutex);
+}
+
 void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 			 void *target)
 {
@@ -3027,6 +3027,41 @@ void emit_unlock_this(struct buffer *buf)
 
 	emit_restore_regparm(buf);
 	__emit_pop_reg(buf, MACH_REG_RAX);
+}
+
+void fixup_static(struct vm_class *vmc)
+{
+	struct static_fixup_site *this, *next;
+
+	pthread_mutex_lock(&vmc->mutex);
+
+	list_for_each_entry_safe(this, next,
+		&vmc->static_fixup_site_list, vmc_node)
+	{
+		struct vm_field *vmf = this->vmf;
+		void *site_addr = buffer_ptr(this->cu->objcode)
+			+ this->insn->mach_offset;
+		void *new_target = vmc->static_values + vmf->offset;
+		int skip_count = 2;
+
+		/* Does the instruction begin with a REX prefix? */
+		if ((*(unsigned char *) site_addr & 0xf0) == REX)
+			skip_count++;
+
+		/* We need RIP-relative addressing. */
+		cpu_write_u32(site_addr + skip_count,
+			      new_target - site_addr - (skip_count + 4));
+
+		list_del(&this->vmc_node);
+
+		pthread_mutex_lock(&this->cu->mutex);
+		list_del(&this->cu_node);
+		pthread_mutex_unlock(&this->cu->mutex);
+
+		free(this);
+	}
+
+	pthread_mutex_unlock(&vmc->mutex);
 }
 
 void *emit_itable_resolver_stub(struct vm_class *vmc,
