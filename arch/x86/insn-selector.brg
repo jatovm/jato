@@ -1996,7 +1996,8 @@ inst_field: EXPR_INSTANCE_FIELD(reg) 1
 	expr = to_expr(tree);
 
 	state->reg1 = state->left->reg1;
-	state->reg2 = (void*)(sizeof(struct vm_object) + expr->instance_field->offset);
+	state->reg2 = (void *) (offsetof(struct vm_object, fields) +
+				expr->instance_field->offset);
 }
 
 float_inst_field: EXPR_FLOAT_INSTANCE_FIELD(reg) 1
@@ -2006,7 +2007,8 @@ float_inst_field: EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 	expr = to_expr(tree);
 
 	state->reg1 = state->left->reg1;
-	state->reg2 = (void*)(sizeof(struct vm_object) + expr->instance_field->offset);
+	state->reg2 = (void *) (offsetof(struct vm_object, fields) +
+				expr->instance_field->offset);
 }
 
 stmt:	STMT_STORE(inst_field, reg)
