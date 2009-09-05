@@ -2855,6 +2855,9 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 	__emit_push_reg(buf, MACH_REG_R14);
 	__emit_push_reg(buf, MACH_REG_R15);
 
+	/* Save *this. */
+	__emit_push_reg(buf, MACH_REG_RDI);
+
 	/*
 	 * The ABI requires us to clear DF, but we
 	 * don't need to. Though keep this in mind:
@@ -2872,6 +2875,9 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 
 static void emit_restore_regs(struct buffer *buf)
 {
+	/* Clear *this from stack. */
+	__emit64_add_imm_reg(buf, 0x08, MACH_REG_RSP);
+
 	__emit_pop_reg(buf, MACH_REG_R15);
 	__emit_pop_reg(buf, MACH_REG_R14);
 	__emit_pop_reg(buf, MACH_REG_R13);

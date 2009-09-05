@@ -34,6 +34,7 @@ struct jit_stack_frame {
 	unsigned long old_r13;
 	unsigned long old_r12;
 	unsigned long old_rbx;
+	unsigned long this;
 	unsigned long return_address;
 	unsigned long args[0];
 } __attribute__((packed));
