@@ -2589,6 +2589,7 @@ reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
 }
 %endif
 
+%ifdef CONFIG_X86_32
 stmt:	STMT_MONITOR_ENTER(reg)
 {
 	struct var_info *ref;
@@ -2614,6 +2615,35 @@ stmt:	STMT_MONITOR_EXIT(reg)
 	method_args_cleanup(s, tree, 1);
 	select_exception_test(s, tree);
 }
+%else
+stmt:	STMT_MONITOR_ENTER(reg)
+{
+	struct var_info *ref, *rdi;
+
+	ref = state->left->reg1;
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+				      (unsigned long) vm_object_lock));
+
+	select_exception_test(s, tree);
+}
+
+stmt:	STMT_MONITOR_EXIT(reg)
+{
+	struct var_info *ref, *rdi;
+
+	ref = state->left->reg1;
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+				      (unsigned long) vm_object_unlock));
+
+	select_exception_test(s, tree);
+}
+%endif
 
 stmt:	STMT_CHECKCAST(reg)
 {
