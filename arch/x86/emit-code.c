@@ -2818,6 +2818,15 @@ static void emit_test_imm_memdisp(struct buffer *buf,
 	__emit_test_imm_memdisp(buf, 0, imm->imm, disp->disp);
 }
 
+static void emit_mov_memindex_reg(struct buffer *buf,
+				  struct operand *src, struct operand *dest)
+{
+	emit(buf, REX_W);
+	emit(buf, 0x8b);
+	emit(buf, encode_modrm(0x00, encode_reg(&dest->reg), 0x04));
+	emit(buf, encode_sib(src->shift, encode_reg(&src->index_reg), encode_reg(&src->base_reg)));
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg, TWO_OPERANDS),
@@ -2830,6 +2839,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IP_REG, emit_mov_ip_reg, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg, TWO_OPERANDS),
+	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp, TWO_OPERANDS),
