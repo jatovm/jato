@@ -3071,6 +3071,19 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 	return NULL;
 }
 
+void itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
+{
+	fprintf(stderr, "itable resolver stub error!\n");
+	fprintf(stderr, "invokeinterface called on method %s.%s%s "
+		"(itable index %d)\n",
+		method->class->name, method->name, method->type,
+		method->itable_index);
+	fprintf(stderr, "object class %s\n", obj->class->name);
+
+	print_trace();
+	abort();
+}
+
 void emit_jni_trampoline(struct buffer *buf,
 			 struct vm_method *vmm,
 			 void *target)
