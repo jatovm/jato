@@ -29,6 +29,27 @@
 
 #include <assert.h>
 
+enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS] = {
+	MACH_REG_RAX,
+	MACH_REG_RDI,
+	MACH_REG_RSI,
+	MACH_REG_RDX,
+	MACH_REG_RCX,
+	MACH_REG_R8,
+	MACH_REG_R9,
+	MACH_REG_R10,
+	MACH_REG_R11,
+
+	MACH_REG_XMM0,
+	MACH_REG_XMM1,
+	MACH_REG_XMM2,
+	MACH_REG_XMM3,
+	MACH_REG_XMM4,
+	MACH_REG_XMM5,
+	MACH_REG_XMM6,
+	MACH_REG_XMM7
+};
+
 static const char *register_names[] = {
 	[MACH_REG_RAX] = "RAX",
 	[MACH_REG_RCX] = "RCX",

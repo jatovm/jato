@@ -55,6 +55,9 @@ enum machine_reg {
 
 #define GPR_VM_TYPE	J_LONG
 
+#define NR_CALLER_SAVE_REGS 17
+extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
+
 const char *reg_name(enum machine_reg reg);
 enum machine_reg_type reg_type(enum machine_reg reg);
 bool reg_supports_type(enum machine_reg reg, enum vm_type type);
