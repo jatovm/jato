@@ -128,6 +128,9 @@ unsigned long native_call(struct vm_method *method,
 		else
 			regs[r++] = args[i];
 
+	while (r < 6)
+		regs[r++] = 0;
+
 	__asm__ volatile (
 		/* Copy stack arguments onto the stack. */
 		"movq %%rbx, %%rcx \n"
