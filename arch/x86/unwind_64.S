@@ -8,34 +8,32 @@
  *          2) Rethrows the exception in caller's context
  */
 unwind:
-	popq	%rdx	# return address of the method
-	decq	%rdx
-
 	/*
 	 * Lookup pointer to compilation unit.
 	 */
-	push	%rdx
+	movq	(%rsp), %rdi	# return address of the method
+	decq	%rdi
 	call	jit_lookup_cu
-	movq 	%rax, %rcx
-	pop	%rdx
 
 	/*
 	 * Restore stack pointer. We need to restore space for locals too.
 	 */
-	push	%rdx
-	push	%rcx
+	push	%rax		# save cu
+
+	movq 	%rax, %rdi
+	movq	0x08(%rsp), %rsi
 	call	cu_frame_locals_offset
-	pop	%rcx
+
+	pop	%rdi
 	pop	%rdx
 
 	movq	%rbp, %rsp
 	subq	%rax, %rsp
 
-	pushq	%rdx	# native ptr
-	pushq	%rbp	# frame
-	pushq	%rcx	# cu
+	/* cu is already in %rdi */
+	movq	%rbp, %rsi
+	/* native ptr is already in %rdx */
 	call	throw_from_jit
-	addq	$24, %rsp
 
 	pushq %rax
 	ret
