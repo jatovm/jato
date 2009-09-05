@@ -83,6 +83,15 @@ bool reg_supports_type(enum machine_reg reg, enum vm_type type)
 		 * now to work around a reg-alloc bug. */
 		[MACH_REG_RSI] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
 		[MACH_REG_RDI] = GPR_64 | GPR_32 | GPR_16 | GPR_8,
+
+		[MACH_REG_XMM0] = FPU,
+		[MACH_REG_XMM1] = FPU,
+		[MACH_REG_XMM2] = FPU,
+		[MACH_REG_XMM3] = FPU,
+		[MACH_REG_XMM4] = FPU,
+		[MACH_REG_XMM5] = FPU,
+		[MACH_REG_XMM6] = FPU,
+		[MACH_REG_XMM7] = FPU,
 	};
 
 	assert(reg < NR_REGISTERS);

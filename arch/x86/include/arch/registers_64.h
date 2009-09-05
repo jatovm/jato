@@ -22,6 +22,15 @@ enum machine_reg {
 	MACH_REG_R14,
 	MACH_REG_R15,
 
+	MACH_REG_XMM0,
+	MACH_REG_XMM1,
+	MACH_REG_XMM2,
+	MACH_REG_XMM3,
+	MACH_REG_XMM4,
+	MACH_REG_XMM5,
+	MACH_REG_XMM6,
+	MACH_REG_XMM7,
+
 	/* The above registers are available for register allocator.  */
 	NR_REGISTERS,
 
