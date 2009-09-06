@@ -581,6 +581,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 
 	class = malloc(sizeof(*class));
 	class->status = CLASS_LOADING;
+	class->nr_waiting = 0;
 	class->loading_thread = vm_thread_self();
 
 	if (hash_map_put(classes, strdup(slash_class_name), class)) {
