@@ -18,6 +18,16 @@
 #include "jit/args.h"
 #include "jit/cu-mapping.h"
 
+static void init_abstract_method(struct vm_method *vmm)
+{
+	/* Hm, we're now modifying a cafebabe structure. */
+	vmm->code_attribute.max_stack = 0;
+	vmm->code_attribute.max_locals = vmm->args_count;
+
+	vmm->line_number_table_attribute.line_number_table_length = 0;
+	vmm->line_number_table_attribute.line_number_table = NULL;
+}
+
 int vm_method_init(struct vm_method *vmm,
 	struct vm_class *vmc, unsigned int method_index)
 {
@@ -88,12 +98,7 @@ int vm_method_init(struct vm_method *vmm,
 	 * with loading attributes which native and abstract methods don't have.
 	 */
 	if (vm_method_is_native(vmm) || vm_method_is_abstract(vmm)) {
-		/* Hm, we're now modifying a cafebabe structure. */
-		vmm->code_attribute.max_stack = 0;
-		vmm->code_attribute.max_locals = vmm->args_count;
-
-		vmm->line_number_table_attribute.line_number_table_length = 0;
-		vmm->line_number_table_attribute.line_number_table = NULL;
+		init_abstract_method(vmm);
 		return 0;
 	}
 
@@ -158,6 +163,9 @@ int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
 
 	vmm->args_count = interface_method->args_count;
 	vmm->is_vm_native = false;
+
+	init_abstract_method(vmm);
+
 	return 0;
 }
 
