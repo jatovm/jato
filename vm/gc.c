@@ -5,6 +5,7 @@
 
 #include "lib/guard-page.h"
 #include "vm/thread.h"
+#include "vm/stdlib.h"
 #include "vm/die.h"
 #include "vm/gc.h"
 
@@ -26,6 +27,11 @@ void gc_init(void)
 	gc_safepoint_page = alloc_guard_page(false);
 	if (!gc_safepoint_page)
 		die("Couldn't allocate GC safepoint guard page");
+}
+
+void *gc_alloc(size_t size)
+{
+	return zalloc(size);
 }
 
 void gc_attach_thread(void)

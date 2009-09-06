@@ -18,6 +18,7 @@
 #include "vm/string.h"
 #include "vm/types.h"
 #include "vm/utf8.h"
+#include "vm/gc.h"
 
 #include "lib/string.h"
 
@@ -46,7 +47,7 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 	if (vm_class_ensure_init(class))
 		return NULL;
 
-	res = zalloc(sizeof(*res) + class->object_size);
+	res = gc_alloc(sizeof(*res) + class->object_size);
 	if (!res) {
 		NOT_IMPLEMENTED;
 		return NULL;
@@ -70,7 +71,7 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	vm_type = bytecode_type_to_vmtype(type);
 	assert(vm_type != J_VOID);
 
-	res = zalloc(sizeof(*res) + get_vmtype_size(vm_type) * count);
+	res = gc_alloc(sizeof(*res) + get_vmtype_size(vm_type) * count);
 	if (!res) {
 		NOT_IMPLEMENTED;
 		return NULL;
@@ -138,7 +139,7 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	elem_class = vm_class_get_array_element_class(class);
 	elem_size  = get_vmtype_size(vm_class_get_storage_vmtype(elem_class));
 
-	res = zalloc(sizeof(*res) + elem_size * counts[0]);
+	res = gc_alloc(sizeof(*res) + elem_size * counts[0]);
 	if (!res) {
 		NOT_IMPLEMENTED;
 		return NULL;
@@ -172,7 +173,7 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	if (vm_class_ensure_init(class))
 		return NULL;
 
-	res = zalloc(sizeof(*res) + sizeof(struct vm_object *) * count);
+	res = gc_alloc(sizeof(*res) + sizeof(struct vm_object *) * count);
 	if (!res) {
 		NOT_IMPLEMENTED;
 		return NULL;
