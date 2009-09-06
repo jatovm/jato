@@ -23,6 +23,7 @@ static pthread_cond_t can_continue_cond = PTHREAD_COND_INITIALIZER;
 static bool can_continue = true;
 
 bool verbose_gc;
+bool gc_enabled;
 
 void gc_init(void)
 {
@@ -33,6 +34,9 @@ void gc_init(void)
 
 void *gc_alloc(size_t size)
 {
+	if (gc_enabled)
+		gc_start();
+
 	return zalloc(size);
 }
 

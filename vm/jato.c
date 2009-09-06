@@ -949,6 +949,11 @@ static void handle_jar(const char *arg)
 	classloader_add_to_classpath(arg);
 }
 
+static void handle_gc(void)
+{
+	gc_enabled = true;
+}
+
 static void handle_perf(void)
 {
 	perf_enabled = true;
@@ -1109,6 +1114,7 @@ const struct option options[] = {
 	DEFINE_OPTION_ARG("jar",	handle_jar),
 	DEFINE_OPTION("verbose:gc",	handle_verbose_gc),
 
+	DEFINE_OPTION("Xgc",			handle_gc),
 	DEFINE_OPTION("Xperf",			handle_perf),
 
 	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),

@@ -5,6 +5,7 @@
 
 extern void *gc_safepoint_page;
 extern bool verbose_gc;
+extern bool gc_enabled;
 
 void gc_init(void);
 
