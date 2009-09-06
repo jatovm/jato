@@ -32,6 +32,8 @@ struct vm_exec_env {
 	struct vm_thread *thread;
 };
 
+unsigned int vm_nr_threads_running(void);
+
 extern __thread struct vm_exec_env current_exec_env;
 
 static inline struct vm_exec_env *vm_get_exec_env(void)
