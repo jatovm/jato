@@ -1072,6 +1072,11 @@ static void handle_define(const char *arg)
 	free(str);
 }
 
+static void handle_verbose_gc(void)
+{
+	verbose_gc = true;
+}
+
 struct option {
 	const char *name;
 
@@ -1102,6 +1107,7 @@ const struct option options[] = {
 	DEFINE_OPTION_ARG("classpath",	handle_classpath),
 	DEFINE_OPTION_ARG("cp",		handle_classpath),
 	DEFINE_OPTION_ARG("jar",	handle_jar),
+	DEFINE_OPTION("verbose:gc",	handle_verbose_gc),
 
 	DEFINE_OPTION("Xperf",			handle_perf),
 

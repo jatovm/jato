@@ -1,7 +1,10 @@
 #ifndef VM_GC_H
 #define VM_GC_H
 
+#include <stdbool.h>
+
 extern void *gc_safepoint_page;
+extern bool verbose_gc;
 
 void gc_init(void);
 

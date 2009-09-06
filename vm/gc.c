@@ -22,6 +22,8 @@ static unsigned int nr_in_safepoint;
 static pthread_cond_t can_continue_cond = PTHREAD_COND_INITIALIZER;
 static bool can_continue = true;
 
+bool verbose_gc;
+
 void gc_init(void)
 {
 	gc_safepoint_page = alloc_guard_page(false);
@@ -54,6 +56,9 @@ static void unhide_safepoint_guard_page(void)
 
 static void do_gc_reclaim(void)
 {
+	if (verbose_gc)
+		fprintf(stderr, "[GC]\n");
+
 	/* TODO: Do main GC work here. */
 }
 
