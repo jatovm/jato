@@ -24,6 +24,7 @@ TOPLEVEL_OBJS := \
 	jit/exception-bc.o \
 	jit/exception.o \
 	jit/expression.o \
+	jit/fixup-site.o \
 	jit/interval.o \
 	jit/invoke-bc.o \
 	jit/linear-scan.o \

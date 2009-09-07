@@ -338,11 +338,9 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 
 	pthread_mutex_lock(&t->mutex);
 
-	list_for_each_entry_safe(this, next, &t->fixup_site_list,
-				 fixup_list_node) {
+	list_for_each_entry_safe(this, next, &t->fixup_site_list, trampoline_node) {
 		unsigned char *site_addr;
 		uint32_t new_target;
-		bool is_compiled;
 
 		/*
 		 * It is possible that we're fixing calls to
@@ -352,18 +350,14 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 		 * be set yet. We should skip fixing callsites coming
 		 * from not yet compiled methods.  .
 		 */
-		pthread_mutex_lock(&this->cu->mutex);
-		is_compiled = this->cu->is_compiled;
-		pthread_mutex_unlock(&this->cu->mutex);
-
-		if (!is_compiled)
+		if (!fixup_site_is_ready(this))
 			continue;
 
 		site_addr = fixup_site_addr(this);
 		new_target = target - ((unsigned long) site_addr + CALL_INSN_SIZE);
 		cpu_write_u32(site_addr+1, new_target);
 
-		list_del(&this->fixup_list_node);
+		list_del(&this->trampoline_node);
 		free_fixup_site(this);
 	}
 

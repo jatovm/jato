@@ -19,12 +19,17 @@ struct statement;
 struct buffer;
 
 struct fixup_site {
+	pthread_mutex_t mutex;
+	bool ready;
+
+	struct jit_trampoline *target;
 	/* Compilation unit to which relcall_insn belongs */
 	struct compilation_unit *cu;
 	/* We need this, because we don't have native pointer at
 	   instruction selection */
 	struct insn *relcall_insn;
-	struct list_head fixup_list_node;
+	struct list_head trampoline_node;
+	struct list_head cu_node;
 };
 
 struct jit_trampoline {
@@ -65,10 +70,12 @@ void *jit_magic_trampoline(struct compilation_unit *);
 struct jit_trampoline *alloc_jit_trampoline(void);
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *);
 void free_jit_trampoline(struct jit_trampoline *);
-struct fixup_site *alloc_fixup_site(void);
+struct fixup_site *alloc_fixup_site(struct compilation_unit *, struct insn *);
 void free_fixup_site(struct fixup_site *);
 void trampoline_add_fixup_site(struct jit_trampoline *, struct fixup_site *);
 unsigned char *fixup_site_addr(struct fixup_site *);
+bool fixup_site_is_ready(struct fixup_site *);
+void prepare_call_fixup_sites(struct compilation_unit *);
 
 const char *method_symbol(struct vm_method *method, char *symbol, size_t len);
 

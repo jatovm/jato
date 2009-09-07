@@ -3207,9 +3207,9 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	if (!is_compiled) {
 		struct fixup_site *fixup;
 
-		fixup = alloc_fixup_site();
-		fixup->cu = s->b_parent;
-		fixup->relcall_insn = call_insn;
+		fixup = alloc_fixup_site(s->b_parent, call_insn);
+		if (!fixup)
+			error("out of memory");
 
 		trampoline_add_fixup_site(method->trampoline, fixup);
 	}

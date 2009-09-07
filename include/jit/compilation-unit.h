@@ -62,6 +62,7 @@ struct compilation_unit {
 	unsigned char *unwind_bb_ptr;
 
 	struct list_head static_fixup_site_list;
+	struct list_head call_fixup_site_list;
 	struct list_head tableswitch_list;
 	struct list_head lookupswitch_list;
 

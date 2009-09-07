@@ -26,24 +26,32 @@
 
 #include "jit/compiler.h"
 #include "arch/instruction.h"
+#include "vm/stdlib.h"
+
 #include <memory.h>
 #include <malloc.h>
 
-struct fixup_site *alloc_fixup_site(void)
+struct fixup_site *
+alloc_fixup_site(struct compilation_unit *cu, struct insn *call_insn)
 {
 	struct fixup_site *site;
 
-	site = malloc(sizeof(*site));
+	site = zalloc(sizeof(*site));
 	if (!site)
 		return NULL;
 
-	memset(site, 0, sizeof(*site));
+	site->cu = cu;
+	site->relcall_insn = call_insn;
+
+	list_add(&site->cu_node, &cu->call_fixup_site_list);
+	pthread_mutex_init(&site->mutex, NULL);
 
 	return site;
 }
 
 void free_fixup_site(struct fixup_site *site)
 {
+	pthread_mutex_destroy(&site->mutex);
 	free(site);
 }
 
@@ -51,11 +59,22 @@ void trampoline_add_fixup_site(struct jit_trampoline *trampoline,
 			       struct fixup_site *site)
 {
 	pthread_mutex_lock(&trampoline->mutex);
-	list_add_tail(&site->fixup_list_node, &trampoline->fixup_site_list);
+	list_add_tail(&site->trampoline_node, &trampoline->fixup_site_list);
 	pthread_mutex_unlock(&trampoline->mutex);
 }
 
 unsigned char *fixup_site_addr(struct fixup_site *site)
 {
 	return buffer_ptr(site->cu->objcode) + site->relcall_insn->mach_offset;
+}
+
+bool fixup_site_is_ready(struct fixup_site *site)
+{
+	bool result;
+
+	pthread_mutex_lock(&site->mutex);
+	result = site->ready;
+	pthread_mutex_unlock(&site->mutex);
+
+	return result;
 }

@@ -95,6 +95,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 			goto out_of_memory;
 
 		INIT_LIST_HEAD(&cu->static_fixup_site_list);
+		INIT_LIST_HEAD(&cu->call_fixup_site_list);
 		INIT_LIST_HEAD(&cu->tableswitch_list);
 		INIT_LIST_HEAD(&cu->lookupswitch_list);
 
@@ -162,6 +163,22 @@ static void free_lookupswitch_list(struct compilation_unit *cu)
 	}
 }
 
+static void free_call_fixup_sites(struct compilation_unit *cu)
+{
+	struct fixup_site *this, *next;
+
+	list_for_each_entry_safe(this, next, &cu->call_fixup_site_list, cu_node)
+	{
+		list_del(&this->cu_node);
+
+		pthread_mutex_lock(&this->target->mutex);
+		list_del(&this->trampoline_node);
+		pthread_mutex_unlock(&this->target->mutex);
+
+		free_fixup_site(this);
+	}
+}
+
 static void free_lir_insn_map(struct compilation_unit *cu)
 {
 	free_radix_tree(cu->lir_insn_map);
@@ -178,6 +195,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 {
 	struct basic_block *bb, *tmp_bb;
 
+	free_call_fixup_sites(cu);
 	shrink_compilation_unit(cu);
 
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
