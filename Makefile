@@ -1,3 +1,5 @@
+VERSION = 0.0.0
+
 CLASSPATH_CONFIG = tools/classpath-config
 
 JAMVM_INSTALL_DIR	:= /usr/local
@@ -214,6 +216,12 @@ all: $(PROGRAM) $(TEST)
 .PHONY: all
 .DEFAULT: all
 
+VERSION_HEADER = include/vm/version.h
+
+$(VERSION_HEADER): FORCE
+	$(E) "  GEN     " $@
+	$(Q) echo "#define JATO_VERSION \"$(VERSION)\"" > $(VERSION_HEADER)
+
 $(CLASSPATH_CONFIG):
 	$(E) "  LINK    " $@
 	$(Q) $(LINK) -Wall $(CLASSPATH_CONFIG).c -o $(CLASSPATH_CONFIG)
@@ -235,7 +243,7 @@ arch/$(ARCH)/insn-selector.c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
-$(PROGRAM): monoburg $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
+$(PROGRAM): monoburg $(VERSION_HEADER) $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
 	$(E) "  LINK    " $@
 	$(Q) $(LINK) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
@@ -342,6 +350,7 @@ check: test regression
 clean:
 	$(E) "  CLEAN"
 	$(Q) - rm -f $(PROGRAM)
+	$(Q) - rm -f $(VERSION_HEADER)
 	$(Q) - rm -f $(CLASSPATH_CONFIG)
 	$(Q) - rm -f $(OBJS)
 	$(Q) - rm -f $(OBJS:.o=.d)

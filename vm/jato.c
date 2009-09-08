@@ -63,6 +63,7 @@
 #include "vm/reflection.h"
 #include "vm/natives.h"
 #include "vm/preload.h"
+#include "vm/version.h"
 #include "vm/itable.h"
 #include "vm/method.h"
 #include "vm/object.h"
@@ -897,6 +898,12 @@ static void usage(FILE *f, int retval)
 	exit(retval);
 }
 
+static void handle_version(void)
+{
+	fprintf(stdout, "Jato VM version %s\n", JATO_VERSION);
+	exit(EXIT_SUCCESS);
+}
+
 static void handle_help(void)
 {
 	usage(stdout, EXIT_SUCCESS);
@@ -1104,6 +1111,7 @@ struct option {
 	{ .name = _name, .arg = true, .arg_is_adjacent = true, .handler.func_arg = _handler }
 
 const struct option options[] = {
+	DEFINE_OPTION("version",	handle_version),
 	DEFINE_OPTION("h",		handle_help),
 	DEFINE_OPTION("help",		handle_help),
 
