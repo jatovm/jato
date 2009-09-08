@@ -10,6 +10,7 @@
 # Generated include files
 #
 include/vm/arch.h
+include/vm/version.h
 
 #
 # Generated source files
