@@ -3,4 +3,4 @@
 name=$1
 version=$2
 
-git archive --prefix=$name-$version/ v$version | bzip2 >$name-$version.tar.bz2
+git archive --prefix=$name-$version/ v$version | gzip >$name-$version.tar.gz
