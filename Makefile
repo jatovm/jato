@@ -1,4 +1,4 @@
-VERSION = 0.0.0
+VERSION = 0.0.1
 
 CLASSPATH_CONFIG = tools/classpath-config
 
