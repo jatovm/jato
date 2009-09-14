@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
+#include "arch/registers.h"
 #include "lib/guard-page.h"
 #include "vm/thread.h"
 #include "vm/stdlib.h"
@@ -34,8 +35,12 @@ void gc_init(void)
 
 void *gc_alloc(size_t size)
 {
+	struct register_state regs;
+
+	save_registers(&regs);
+
 	if (gc_enabled)
-		gc_start();
+		gc_start(&regs);
 
 	return zalloc(size);
 }
@@ -94,7 +99,7 @@ static void do_gc_safepoint(void)
 	--nr_in_safepoint;
 }
 
-void gc_safepoint(void)
+void gc_safepoint(struct register_state *regs)
 {
 	pthread_mutex_lock(&safepoint_mutex);
 
@@ -108,7 +113,7 @@ void gc_safepoint(void)
 /*
  * This is the main entrypoint to the stop-the-world GC.
  */
-void gc_start(void)
+void gc_start(struct register_state *regs)
 {
 	pthread_mutex_lock(&safepoint_mutex);
 

@@ -43,6 +43,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
+static __thread struct register_state thread_register_state;
+
 static unsigned long throw_arithmetic_exception(unsigned long src_addr)
 {
 	signal_new_exception(vm_java_lang_ArithmeticException,
@@ -76,7 +78,8 @@ static unsigned long rethrow_bh(unsigned long src_addr)
 
 static unsigned long gc_safepoint_bh(unsigned long addr)
 {
-	gc_safepoint();
+	gc_safepoint(&thread_register_state);
+
 	return addr;
 }
 
@@ -118,6 +121,9 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 
 	/* Garbage collection safepoint */
 	if (si->si_addr == gc_safepoint_page) {
+		ucontext_t *uc = ctx;
+
+		save_signal_registers(&thread_register_state, uc->uc_mcontext.gregs);
 		install_signal_bh(ctx, gc_safepoint_bh);
 		return;
 	}
