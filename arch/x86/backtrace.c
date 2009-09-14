@@ -145,11 +145,6 @@ void show_function(void *addr)
 	free_str(str);
 }
 
-static unsigned long get_greg(gregset_t gregs, int reg)
-{
-	return (unsigned long)gregs[reg];
-}
-
 #ifndef CONFIG_X86_64
 
 #define IP_REG REG_EIP
@@ -162,15 +157,15 @@ static void show_registers(gregset_t gregs)
 	unsigned long eax, ebx, ecx, edx;
 	unsigned long esi, edi, ebp, esp;
 
-	eax = get_greg(gregs, REG_EAX);
-	ebx = get_greg(gregs, REG_EBX);
-	ecx = get_greg(gregs, REG_ECX);
-	edx = get_greg(gregs, REG_EDX);
+	eax = gregs[REG_EAX];
+	ebx = gregs[REG_EBX];
+	ecx = gregs[REG_ECX];
+	edx = gregs[REG_EDX];
 
-	esi = get_greg(gregs, REG_ESI);
-	edi = get_greg(gregs, REG_EDI);
-	ebp = get_greg(gregs, REG_EBP);
-	esp = get_greg(gregs, REG_ESP);
+	esi = gregs[REG_ESI];
+	edi = gregs[REG_EDI];
+	ebp = gregs[REG_EBP];
+	esp = gregs[REG_ESP];
 
 	trace_printf("Registers:\n");
 	trace_printf(" eax: %08lx   ebx: %08lx   ecx: %08lx   edx: %08lx\n",
@@ -195,27 +190,27 @@ static void show_registers(gregset_t gregs)
 	unsigned long r10, r11, r12;
 	unsigned long r13, r14, r15;
 
-	rsp = get_greg(gregs, REG_RSP);
+	rsp = gregs[REG_RSP];
 
-	rax = get_greg(gregs, REG_RAX);
-	rbx = get_greg(gregs, REG_RBX);
-	rcx = get_greg(gregs, REG_RCX);
+	rax = gregs[REG_RAX];
+	rbx = gregs[REG_RBX];
+	rcx = gregs[REG_RCX];
 
-	rdx = get_greg(gregs, REG_RDX);
-	rsi = get_greg(gregs, REG_RSI);
-	rdi = get_greg(gregs, REG_RDI);
+	rdx = gregs[REG_RDX];
+	rsi = gregs[REG_RSI];
+	rdi = gregs[REG_RDI];
 
-	rbp = get_greg(gregs, REG_RBP);
-	r8  = get_greg(gregs, REG_R8);
-	r9  = get_greg(gregs, REG_R9);
+	rbp = gregs[REG_RBP];
+	r8  = gregs[REG_R8];
+	r9  = gregs[REG_R9];
 
-	r10 = get_greg(gregs, REG_R10);
-	r11 = get_greg(gregs, REG_R11);
-	r12 = get_greg(gregs, REG_R12);
+	r10 = gregs[REG_R10];
+	r11 = gregs[REG_R11];
+	r12 = gregs[REG_R12];
 
-	r13 = get_greg(gregs, REG_R13);
-	r14 = get_greg(gregs, REG_R14);
-	r15 = get_greg(gregs, REG_R15);
+	r13 = gregs[REG_R13];
+	r14 = gregs[REG_R14];
+	r15 = gregs[REG_R15];
 
 	trace_printf("Registers:\n");
 	trace_printf(" rsp: %016lx\n", rsp);
