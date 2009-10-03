@@ -1010,11 +1010,6 @@ static void handle_trace_exceptions(void)
 	opt_trace_exceptions = true;
 }
 
-static void handle_trace_gc_maps(void)
-{
-	opt_trace_gc_maps = true;
-}
-
 static void handle_trace_invoke(void)
 {
 	opt_trace_invoke = true;
@@ -1133,7 +1128,6 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:classloader",	handle_trace_classloader),
 	DEFINE_OPTION("Xtrace:compile",		handle_trace_compile),
 	DEFINE_OPTION("Xtrace:exceptions",	handle_trace_exceptions),
-	DEFINE_OPTION("Xtrace:gc-maps",		handle_trace_gc_maps),
 	DEFINE_OPTION("Xtrace:invoke",		handle_trace_invoke),
 	DEFINE_OPTION("Xtrace:invoke-verbose",	handle_trace_invoke_verbose),
 	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),

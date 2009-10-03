@@ -89,11 +89,6 @@ struct compilation_unit {
 	unsigned long last_insn;
 
 	/*
-	 * This maps machine-code offset (of gc safepoint) to gc map
-	 */
-	struct radix_tree *safepoint_map;
-
-	/*
 	 * Contains native pointers of exception handlers. Indices to
 	 * this table are the same as for exception table in code
 	 * attribute.

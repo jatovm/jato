@@ -49,7 +49,6 @@ bool opt_trace_lir;
 bool opt_trace_liveness;
 bool opt_trace_regalloc;
 bool opt_trace_machine_code;
-bool opt_trace_gc_maps;
 bool opt_trace_magic_trampoline;
 bool opt_trace_bytecode_offset;
 bool opt_trace_invoke;
@@ -399,58 +398,6 @@ void trace_machine_code(struct compilation_unit *cu)
 	end = buffer_current(cu->objcode);
 
 	disassemble(cu, start, end);
-	trace_printf("\n");
-}
-
-static void print_gc_map(struct compilation_unit *cu, struct insn *insn)
-{
-	struct bitset *live_vars
-		= radix_tree_lookup(cu->safepoint_map, insn->mach_offset);
-	assert(live_vars);
-
-	trace_printf(" * %p: ", buffer_ptr(cu->objcode) + insn->mach_offset);
-
-	struct var_info *var;
-	unsigned int i = NR_REGISTERS;
-	for_each_variable(var, cu->var_infos) {
-		if (var->vm_type != J_REFERENCE)
-			continue;
-
-		if (!test_bit(live_vars->bits, i++))
-			continue;
-
-		if (interval_covers(var->interval, insn->lir_pos)) {
-			trace_printf("%d (%s), ",
-				var->vreg, reg_name(var->interval->reg));
-		} else if (var->interval->need_spill) {
-			trace_printf("%d (%d), ",
-				var->vreg, var->interval->spill_slot->index);
-		}
-	}
-
-	trace_printf("\n");
-}
-
-void trace_gc_maps(struct compilation_unit *cu)
-{
-	if (!cu_matches_regex(cu))
-		return;
-
-	trace_printf("GC Map:\n\n");
-
-	struct basic_block *bb;
-	for_each_basic_block(bb, &cu->bb_list) {
-		trace_printf("[bb %p]:\n", bb);
-
-		struct insn *insn;
-		for_each_insn(insn, &bb->insn_list) {
-			if (!insn->safepoint)
-				continue;
-
-			print_gc_map(cu, insn);
-		}
-	}
-
 	trace_printf("\n");
 }
 

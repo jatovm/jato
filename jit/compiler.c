@@ -121,9 +121,6 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
-	if (opt_trace_gc_maps)
-		trace_gc_maps(cu);
-
 	cu->native_ptr = buffer_ptr(cu->objcode);
 	cu->is_compiled = true;
 
