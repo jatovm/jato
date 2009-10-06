@@ -810,3 +810,21 @@ struct vm_object *native_field_gettype(struct vm_object *this)
 
 	return vmc->object;
 }
+
+struct vm_object *native_method_getreturntype(struct vm_object *method)
+{
+	struct vm_method *vmm = vm_object_to_vm_method(method);
+	if (!vmm)
+		return NULL;
+
+	struct vm_class *vmc;
+
+	vmc = vm_type_to_class(vmm->class->classloader, &vmm->return_type);
+	if (vmc)
+		vm_class_ensure_init(vmc);
+
+	if (!vmc || exception_occurred())
+		return NULL;
+
+	return vmc->object;
+}
