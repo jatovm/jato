@@ -2,6 +2,8 @@
 
 #include "vm/system.h"
 #include "vm/types.h"
+#include "vm/method.h"
+#include "vm/field.h"
 #include "vm/die.h"
 #include "vm/vm.h"
 
@@ -63,15 +65,15 @@ unsigned int vm_type_size(enum vm_type type)
 	return size[type];
 }
 
-int count_arguments(const char *type)
+int count_arguments(const struct vm_method *vmm)
 {
-	enum vm_type vmtype;
+	struct vm_method_arg *arg;
 	int count;
 
 	count = 0;
-
-	while ((type = parse_method_args(type, &vmtype, NULL))) {
-		if (vmtype == J_LONG || vmtype == J_DOUBLE)
+	list_for_each_entry(arg, &vmm->args, list_node) {
+		if (arg->type_info.vm_type == J_LONG ||
+		    arg->type_info.vm_type == J_DOUBLE)
 			count += 2;
 		else
 			count++;
@@ -154,82 +156,155 @@ static const char *vm_type_names[] = {
 	[J_RETURN_ADDRESS] = "J_RETURN_ADDRESS"
 };
 
-const char *get_vm_type_name(enum vm_type type) {
+const char *get_vm_type_name(enum vm_type type)
+{
 	if (type < 0 || type >= ARRAY_SIZE(vm_type_names))
 		return NULL;
 
 	return vm_type_names[type];
 }
 
-const char *parse_type(const char *type_str, enum vm_type *vmtype,
-		       char **name_p)
+static int parse_class_name(char **type_str)
 {
-	const char *type_name_start = type_str;
+	do {
+		if (**type_str == 0)
+			return -1;
 
-	if (name_p)
-		*name_p = NULL;
+		(*type_str)++;
+	} while (**type_str != ';');
 
-	if (!type_str || *type_str == ')')
+	(*type_str)++;
+	return 0;
+}
+
+static int parse_array_element_type(char **type_str)
+{
+	switch (**type_str) {
+	case '[':
+		(*type_str)++;
+		return parse_array_element_type(type_str);
+	case 'L':
+		(*type_str)++;
+		return parse_class_name(type_str);
+	case 'V':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'F':
+	case 'I':
+	case 'J':
+	case 'S':
+	case 'Z':
+		(*type_str)++;
+		return 0;
+	default:
+		return -1;
+	}
+}
+
+int parse_type(char **type_str, struct vm_type_info *type_info)
+{
+	char *name_start;
+
+	switch (**type_str) {
+	case '[':
+		name_start = (*type_str)++;
+		if (parse_array_element_type(type_str))
+			return -1;
+
+		type_info->vm_type = J_REFERENCE;
+		type_info->class_name = strndup(name_start,
+			(size_t) *type_str - (size_t) name_start);
+		return 0;
+	case 'L':
+		name_start = ++(*type_str);
+		if (parse_class_name(type_str))
+			return -1;
+
+		type_info->vm_type = J_REFERENCE;
+		type_info->class_name = strndup(name_start,
+			(size_t) *type_str - (size_t) name_start - 1);
+		return 0;
+	case 'V':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'F':
+	case 'I':
+	case 'J':
+	case 'S':
+	case 'Z':
+		type_info->class_name = strndup(*type_str, 1);
+		type_info->vm_type = str_to_type(type_info->class_name);
+		(*type_str)++;
+		return 0;
+	default:
+		return -1;
+	}
+}
+
+static struct vm_method_arg *alloc_method_arg(void)
+{
+	struct vm_method_arg *arg;
+
+	arg = malloc(sizeof(*arg));
+	if (!arg)
 		return NULL;
 
-	if (*type_str == '[') {
-		*vmtype = J_REFERENCE;
-
-		while (*type_str == '[')
-			type_str++;
-
-		if (*type_str != 'L') {
-			type_str++;
-			goto out;
-		}
-	}
-
-	if (*type_str == 'L') {
-		++type_name_start;
-		++type_str;
-		while (*(type_str++) != ';')
-			;
-		*vmtype = J_REFERENCE;
-	} else {
-		char primitive_name[2];
-
-		primitive_name[0] = *(type_str++);
-		primitive_name[1] = 0;
-
-		*vmtype = str_to_type(primitive_name);
-	}
-
- out:
-	if (name_p) {
-		size_t size = (size_t) type_str - (size_t) type_name_start;
-
-		if (*vmtype == J_REFERENCE)
-			size--;
-
-		*name_p = strndup(type_name_start, size);
-	}
-
-	return type_str;
+	INIT_LIST_HEAD(&arg->list_node);
+	return arg;
 }
 
-const char *parse_method_args(const char *type_str, enum vm_type *vmtype,
-			      char **name_p)
+int parse_method_type(struct vm_method *vmm)
 {
-	if (*type_str == '(')
-		type_str++;
+	char *type_str;
 
-	return parse_type(type_str, vmtype, name_p);
+	INIT_LIST_HEAD(&vmm->args);
+	type_str = vmm->type;
+
+	if (*type_str++ != '(')
+		return -1;
+
+	while (*type_str != ')') {
+		struct vm_method_arg *arg = alloc_method_arg();
+		if (!arg)
+			return -ENOMEM;
+
+		if (parse_type(&type_str, &arg->type_info))
+			return -1;
+
+		list_add(&arg->list_node, &vmm->args);
+	}
+
+	type_str++;
+
+	/* parse return type */
+	if (parse_type(&type_str, &vmm->return_type))
+		return -1;
+
+	if (*type_str != 0)
+		return -1; /* junk after return type */
+
+	return 0;
 }
 
-unsigned int count_java_arguments(const char *type)
+int parse_field_type(struct vm_field *vmf)
 {
+	char *type_str;
+
+	type_str = vmf->type;
+	return parse_type(&type_str, &vmf->type_info);
+}
+
+unsigned int count_java_arguments(const struct vm_method *vmm)
+{
+	struct vm_method_arg *arg;
 	unsigned int count;
-	enum vm_type vmtype;
 
 	count = 0;
-
-	while ((type = parse_method_args(type, &vmtype, NULL)))
+	list_for_each_entry(arg, &vmm->args, list_node) {
 		count ++;
+	}
 
 	return count;
 }

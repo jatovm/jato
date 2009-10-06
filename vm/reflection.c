@@ -300,10 +300,9 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 }
 
 static struct vm_class *
-vm_type_to_class(struct vm_object *classloader, char *type_name,
-		 enum vm_type type)
+vm_type_to_class(struct vm_object *classloader, struct vm_type_info *type_info)
 {
-	switch (type) {
+	switch (type_info->vm_type) {
 	case J_BOOLEAN:
 		return vm_boolean_class;
 	case J_CHAR:
@@ -323,7 +322,7 @@ vm_type_to_class(struct vm_object *classloader, char *type_name,
 	case J_VOID:
 		return vm_void_class;
 	case J_REFERENCE:
-		return classloader_load(classloader, type_name);
+		return classloader_load(classloader, type_info->class_name);
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
 		error("invalid type");
@@ -333,31 +332,25 @@ vm_type_to_class(struct vm_object *classloader, char *type_name,
 }
 
 static struct vm_object *get_method_parameter_types(struct vm_method *vmm)
+
 {
+	struct vm_method_arg *arg;
 	struct vm_object *array;
 	unsigned int count;
-	enum vm_type type;
-	const char *type_str;
-	char *type_name;
 	int i;
 
-	count = count_java_arguments(vmm->type);
+	count = count_java_arguments(vmm);
 	array = vm_object_alloc_array(vm_array_of_java_lang_Class, count);
 	if (!array) {
 		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
-	type_str = vmm->type;
 	i = 0;
-
-	while ((type_str = parse_method_args(type_str, &type, &type_name))) {
+	list_for_each_entry(arg, &vmm->args, list_node) {
 		struct vm_class *class;
 
-		class = vm_type_to_class(vmm->class->classloader, type_name,
-					 type);
-		free(type_name);
-
+		class = vm_type_to_class(vmm->class->classloader, &arg->type_info);
 		if (class)
 			vm_class_ensure_init(class);
 
@@ -716,25 +709,21 @@ void native_field_set(struct vm_object *this, struct vm_object *o,
 static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 				   struct vm_object *args_array)
 {
-	enum vm_type type;
-	const char *type_str;
-	char *type_name;
+	struct vm_method_arg *arg;
 	int args_array_idx;
 	int idx;
 
-	type_str = vmm->type;
-	idx = 0;
 	args_array_idx = 0;
+	idx = 0;
 
 	if (args_array == NULL)
 		return 0;
 
-	while ((type_str = parse_method_args(type_str, &type, &type_name))) {
-		struct vm_object *arg;
+	list_for_each_entry(arg, &vmm->args, list_node) {
+		struct vm_object *arg_obj;
 
-		arg = array_get_field_ptr(args_array, args_array_idx++);
-
-		if (unwrap_and_set_field(&args[idx++], type, arg))
+		arg_obj = array_get_field_ptr(args_array, args_array_idx++);
+		if (unwrap_and_set_field(&args[idx++], arg->type_info.vm_type, arg_obj))
 			return -1;
 	}
 
@@ -804,8 +793,6 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
 struct vm_object *native_field_gettype(struct vm_object *this)
 {
 	struct vm_field *vmf;
-	enum vm_type vmtype;
-	char *type_name;
 
 	if (!this) {
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
@@ -816,14 +803,8 @@ struct vm_object *native_field_gettype(struct vm_object *this)
 	if (!vmf)
 		return 0;
 
-	if (!parse_type(vmf->type, &vmtype, &type_name)) {
-		warn("type parsing failed");
-		return NULL;
-	}
-
-	struct vm_class *vmc =
-		vm_type_to_class(vmf->class->classloader, type_name, vmtype);
-
+	struct vm_class *vmc = vm_type_to_class(vmf->class->classloader,
+						&vmf->type_info);
 	if (vm_class_ensure_init(vmc))
 		return NULL;
 

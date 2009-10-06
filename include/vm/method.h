@@ -26,6 +26,11 @@ struct vm_args_map {
 };
 #endif
 
+struct vm_method_arg {
+	struct vm_type_info type_info;
+	struct list_head list_node;
+};
+
 struct vm_method {
 	struct vm_class *class;
 	unsigned int method_index;
@@ -40,6 +45,8 @@ struct vm_method {
 	struct vm_args_map *args_map;
 	int reg_args_count;
 #endif
+	struct list_head args;
+	struct vm_type_info return_type;
 
 	struct cafebabe_code_attribute code_attribute;
 	struct cafebabe_line_number_table_attribute line_number_table_attribute;

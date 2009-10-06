@@ -564,8 +564,7 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 static void trace_invoke_args(struct vm_method *vmm,
 			      struct jit_stack_frame *frame)
 {
-	enum vm_type arg_type;
-	const char *type_str;
+	struct vm_method_arg *arg;
 	int arg_index;
 
 	if (vm_method_is_jni(vmm))
@@ -578,18 +577,17 @@ static void trace_invoke_args(struct vm_method *vmm,
 		print_arg(J_REFERENCE, frame->args, &arg_index);
 	}
 
-	type_str = vmm->type;
-
-	if (!strncmp(type_str, "()", 2)) {
+	if (list_is_empty(&vmm->args)) {
 		trace_printf("\targs\t: none\n");
 		return;
 	}
 
 	trace_printf("\targs\t:\n");
 
-	while ((type_str = parse_method_args(type_str, &arg_type, NULL))) {
-		trace_printf("\t   %-12s: ", get_vm_type_name(arg_type));
-		print_arg(arg_type, frame->args, &arg_index);
+	list_for_each_entry(arg, &vmm->args, list_node) {
+		trace_printf("\t   %-12s: ",
+			     get_vm_type_name(arg->type_info.vm_type));
+		print_arg(arg->type_info.vm_type, frame->args, &arg_index);
 	}
 }
 

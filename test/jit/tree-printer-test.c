@@ -22,7 +22,7 @@ static struct vm_class vmc = {
 static struct vm_field vmf = {
 	.class = &vmc,
 	.name = "field",
-	.type = "I",
+	.type_info = { .vm_type = J_INT, .class_name = "I" }
 };
 
 static struct vm_method vmm = {
@@ -415,7 +415,7 @@ void test_should_print_class_field_expression(void)
 {
 	assert_printed_class_field_expr(str_aprintf(
 		"[class_field int %p '%s.%s']",
-		&vmf, vmf.class->name, vmf.name, vmf.type), J_INT, &vmf);
+		&vmf, vmf.class->name, vmf.name, "I"), J_INT, &vmf);
 }
 
 void assert_printed_instance_field_expr(struct string *expected, enum vm_type type,

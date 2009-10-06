@@ -9,6 +9,7 @@
 #include "jit/statement.h"
 #include "lib/stack.h"
 #include "lib/string.h"
+#include "vm/method.h"
 #include <args-test-utils.h>
 
 #include <libharness.h>
@@ -113,6 +114,8 @@ build_invoke_bb(unsigned char invoke_opc,
 	struct expression *objectref_expr;
 	struct basic_block *bb;
 
+	assert_int_equals(0, parse_method_type(&target_method));
+
 	bb = __alloc_simple_bb(&method);
 
 	objectref_expr = value_expr(J_REFERENCE, objectref);
@@ -215,7 +218,7 @@ static void assert_converts_to_invoke_stmt(enum vm_type expected_result_type, un
 	struct statement *stmt;
 
 	bb = __alloc_simple_bb(&method);
-
+	assert_int_equals(0, parse_method_type(&target_method));
 	create_args(args, nr_args);
 	push_args(bb, args, nr_args);
 	convert_ir_invoke(bb->b_parent, &target_method, 0);
@@ -270,7 +273,7 @@ void test_invokespecial_should_parse_return_type(void)
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()C");
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()S");
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_INT, "()I");
-	assert_invoke_return_type(OPC_INVOKESPECIAL, J_LONG, "()L");
+	assert_invoke_return_type(OPC_INVOKESPECIAL, J_LONG, "()J");
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_FLOAT, "()F");
 	assert_invoke_return_type(OPC_INVOKESPECIAL, J_DOUBLE, "()D");
 }
@@ -299,7 +302,7 @@ void test_invokevirtual_should_parse_return_type(void)
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()C");
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()S");
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_INT, "()I");
-	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_LONG, "()L");
+	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_LONG, "()J");
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_FLOAT, "()F");
 	assert_invoke_return_type(OPC_INVOKEVIRTUAL, J_DOUBLE, "()D");
 }
@@ -315,7 +318,7 @@ void test_convert_invokestatic(void)
 	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()C", 0);
 	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()S", 0);
 	assert_converts_to_invoke_stmt(J_INT, OPC_INVOKESTATIC, "()I", 0);
-	assert_converts_to_invoke_stmt(J_LONG, OPC_INVOKESTATIC, "()L", 0);
+	assert_converts_to_invoke_stmt(J_LONG, OPC_INVOKESTATIC, "()J", 0);
 	assert_converts_to_invoke_stmt(J_VOID, OPC_INVOKESTATIC, "()V", 0);
 	assert_converts_to_invoke_stmt(J_FLOAT, OPC_INVOKESTATIC, "()F", 0);
 	assert_converts_to_invoke_stmt(J_DOUBLE, OPC_INVOKESTATIC, "()D", 0);

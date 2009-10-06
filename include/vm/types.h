@@ -4,6 +4,11 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include "lib/list.h"
+
+struct vm_method;
+struct vm_field;
+
 enum vm_type {
 	J_VOID,
 	J_REFERENCE,
@@ -25,19 +30,25 @@ enum vm_type {
 #  define J_NATIVE_PTR J_LONG
 #endif
 
+struct vm_type_info {
+	enum vm_type vm_type;
+	char *class_name;
+};
+
 extern enum vm_type str_to_type(const char *);
 extern enum vm_type get_method_return_type(char *);
 extern unsigned int vm_type_size(enum vm_type);
 
 int skip_type(const char **type);
-int count_arguments(const char *);
+int count_arguments(const struct vm_method *);
 enum vm_type bytecode_type_to_vmtype(int);
 int vmtype_to_bytecode_type(enum vm_type);
 int get_vmtype_size(enum vm_type);
 const char *get_vm_type_name(enum vm_type);
-const char *parse_method_args(const char *, enum vm_type *, char **);
-const char *parse_type(const char *, enum vm_type *, char **);
-unsigned int count_java_arguments(const char *);
+int parse_type(char **, struct vm_type_info *);
+unsigned int count_java_arguments(const struct vm_method *);
+int parse_method_type(struct vm_method *);
+int parse_field_type(struct vm_field *);
 
 static inline bool vm_type_is_float(enum vm_type type)
 {
@@ -49,6 +60,19 @@ static inline int vm_type_slot_size(enum vm_type type)
 	if (type == J_DOUBLE || type == J_LONG)
 		return 2;
 	return 1;
+}
+
+static inline enum vm_type mimic_stack_type(enum vm_type type)
+{
+	switch (type) {
+	case J_BOOLEAN:
+	case J_BYTE:
+	case J_CHAR:
+	case J_SHORT:
+		return J_INT;
+	default:
+		return type;
+	}
 }
 
 #endif

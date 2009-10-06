@@ -20,6 +20,8 @@ struct vm_field {
 	char *name;
 	char *type;
 
+	struct vm_type_info type_info;
+
 	unsigned int offset;
 };
 
@@ -45,7 +47,7 @@ static inline bool vm_field_is_public(const struct vm_field *vmf)
 
 static inline enum vm_type vm_field_type(const struct vm_field *vmf)
 {
-	return str_to_type(vmf->type);
+	return vmf->type_info.vm_type;
 }
 
 #endif

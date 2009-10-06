@@ -360,7 +360,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 		unsigned int stat = vm_field_is_static(vmf) ? 0 : 1;
-		enum vm_type type = str_to_type(vmf->type);
+		enum vm_type type = vmf->type_info.vm_type;
 		struct field_bucket *bucket = &field_buckets[stat][type];
 
 		++bucket->nr;
@@ -380,7 +380,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 		unsigned int stat = vm_field_is_static(vmf) ? 0 : 1;
-		enum vm_type type = str_to_type(vmf->type);
+		enum vm_type type = vmf->type_info.vm_type;
 		struct field_bucket *bucket = &field_buckets[stat][type];
 
 		bucket->fields[bucket->nr++] = vmf;

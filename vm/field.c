@@ -46,7 +46,10 @@ int vm_field_init(struct vm_field *vmf,
 	}
 
 	vmf->type = strndup((char *) type->bytes, type->length);
-	if (!vmf->type) {
+	if (!vmf->type)
+		return -ENOMEM;
+
+	if (parse_field_type(vmf)) {
 		NOT_IMPLEMENTED;
 		return -1;
 	}
@@ -103,10 +106,7 @@ int vm_field_init_static(struct vm_field *vmf)
 	 * should write a test case in Jasmine or something, I guess. */
 	switch (cp->tag) {
 	case CAFEBABE_CONSTANT_TAG_INTEGER:
-		if (strcmp(vmf->type, "I") && strcmp(vmf->type, "S")
-			&& strcmp(vmf->type, "C") && strcmp(vmf->type, "B")
-			&& strcmp(vmf->type, "Z"))
-		{
+		if (mimic_stack_type(vmf->type_info.vm_type) != J_INT) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}
@@ -114,7 +114,7 @@ int vm_field_init_static(struct vm_field *vmf)
 		static_field_set_int(vmf, cp->integer_.bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
-		if (strcmp(vmf->type, "F")) {
+		if (vmf->type_info.vm_type != J_FLOAT) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}
@@ -122,7 +122,7 @@ int vm_field_init_static(struct vm_field *vmf)
 		static_field_set_float(vmf, cp->float_.bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING: {
-		if (strcmp(vmf->type, "Ljava/lang/String;")) {
+		if (strcmp(vmf->type_info.class_name, "java/lang/String")) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}
@@ -147,7 +147,7 @@ int vm_field_init_static(struct vm_field *vmf)
 		break;
 	}
 	case CAFEBABE_CONSTANT_TAG_LONG:
-		if (strcmp(vmf->type, "J")) {
+		if (vmf->type_info.vm_type != J_LONG) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}
@@ -157,7 +157,7 @@ int vm_field_init_static(struct vm_field *vmf)
 			+ (uint64_t) cp->long_.low_bytes);
 		break;
 	case CAFEBABE_CONSTANT_TAG_DOUBLE:
-		if (strcmp(vmf->type, "D")) {
+		if (vmf->type_info.vm_type != J_DOUBLE) {
 			NOT_IMPLEMENTED;
 			return -1;
 		}

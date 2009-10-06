@@ -349,17 +349,4 @@ unsigned long nr_args(struct expression *);
 int expr_nr_kids(struct expression *);
 int expr_is_pure(struct expression *);
 
-static inline enum vm_type mimic_stack_type(enum vm_type type)
-{
-	switch (type) {
-	case J_BOOLEAN:
-	case J_BYTE:
-	case J_CHAR:
-	case J_SHORT:
-		return J_INT;
-	default:
-		return type;
-	}
-}
-
 #endif

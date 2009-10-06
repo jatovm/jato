@@ -67,12 +67,17 @@ int vm_method_init(struct vm_method *vmm,
 		return -1;
 	}
 
+	if (parse_method_type(vmm)) {
+		warn("method type parsing failed for: %s", vmm->type);
+		return -1;
+	}
+
 	/*
 	 * XXX: Jam VM legacy? It seems that JamVM counts the number of
 	 * _32-bit_ arguments. This probably needs some fixing. What do we do
 	 * on x86_64?
 	 */
-	vmm->args_count = count_arguments(vmm->type);
+	vmm->args_count = count_arguments(vmm);
 	if (vmm->args_count < 0) {
 		NOT_IMPLEMENTED;
 		return -1;
@@ -163,6 +168,11 @@ int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
 
 	vmm->args_count = interface_method->args_count;
 	vmm->is_vm_native = false;
+
+	if (parse_method_type(vmm)) {
+		warn("method type parsing failed for: %s", vmm->type);
+		return -1;
+	}
 
 	init_abstract_method(vmm);
 

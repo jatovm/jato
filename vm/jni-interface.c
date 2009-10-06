@@ -904,17 +904,16 @@ static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
 			     uint64_t *args)
 {
 #ifdef CONFIG_32_BIT
-	const char *type_str;
-	enum vm_type type;
+	struct vm_method_arg *arg;
 	int packed_idx;
 	int idx;
 
-	type_str = vmm->type;
 	packed_idx = 0;
 	idx = 0;
 
-	while ((type_str = parse_method_args(type_str, &type, NULL))) {
-		if (type != J_LONG && type != J_DOUBLE) {
+	list_for_each_entry(arg, &vmm->args, list_node) {
+		if (arg->type_info.vm_type != J_LONG &&
+		    arg->type_info.vm_type != J_DOUBLE) {
 			packed_args[packed_idx++] = low_64(args[idx]);
 			packed_args[packed_idx++] = high_64(args[idx++]);
 		} else {

@@ -55,7 +55,7 @@ static void __assert_convert_getstatic(unsigned char opc,
 	};
 	struct basic_block *bb;
 
-	fb.type = field_type;
+	assert_int_equals(0, parse_type(&field_type, &fb.type_info));
 
 	bb = __alloc_simple_bb(&method);
 
@@ -97,7 +97,7 @@ static void __assert_convert_getfield(unsigned char opc,
 	};
 	struct basic_block *bb;
 
-	fb.type = field_type;
+	assert_int_equals(0, parse_type(&field_type, &fb.type_info));
 
 	bb = __alloc_simple_bb(&method);
 
@@ -142,7 +142,7 @@ static void __assert_convert_putstatic(unsigned char opc,
 	struct basic_block *bb;
 	struct expression *value;
 
-	fb.type = field_type;
+	assert_int_equals(0, parse_type(&field_type, &fb.type_info));
 	value = value_expr(expected_vm_type, 0xdeadbeef);
 	bb = __alloc_simple_bb(&method);
 	stack_push(bb->mimic_stack, value);
@@ -187,7 +187,7 @@ static void __assert_convert_putfield(unsigned char opc,
 	struct expression *objectref;
 	struct expression *value;
 
-	fb.type = field_type;
+	assert_int_equals(0, parse_type(&field_type, &fb.type_info));
 	bb = __alloc_simple_bb(&method);
 
 	objectref = value_expr(J_REFERENCE, 0xdeadbeef);
