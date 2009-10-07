@@ -53,6 +53,7 @@ struct vm_object {
 /* XXX: BUILD_BUG_ON(offsetof(vm_object, class) != 0); */
 
 int init_vm_objects(void);
+int init_vm_monitors(void);
 
 struct vm_object *vm_object_alloc(struct vm_class *class);
 struct vm_object *vm_object_alloc_primitive_array(int type, int count);

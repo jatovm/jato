@@ -68,6 +68,7 @@ TOPLEVEL_OBJS := \
 	vm/itable.o \
 	vm/jni-interface.o \
 	vm/method.o \
+	vm/monitor.o \
 	vm/object.o \
 	vm/static.o \
 	vm/string.o \

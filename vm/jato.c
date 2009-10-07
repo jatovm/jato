@@ -1321,6 +1321,7 @@ main(int argc, char *argv[])
 	classloader_init();
 
 	init_vm_objects();
+	init_vm_monitors();
 
 	jit_text_init();
 

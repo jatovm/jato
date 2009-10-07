@@ -114,6 +114,7 @@ VM_OBJS = \
 	vm/jni-interface.o	\
 	vm/jni.o		\
 	vm/method.o		\
+	vm/monitor.o		\
 	vm/natives.o		\
 	vm/object.o		\
 	vm/preload.o		\
