@@ -273,7 +273,7 @@ int parse_method_type(struct vm_method *vmm)
 		if (parse_type(&type_str, &arg->type_info))
 			return -1;
 
-		list_add(&arg->list_node, &vmm->args);
+		list_add_tail(&arg->list_node, &vmm->args);
 	}
 
 	type_str++;
