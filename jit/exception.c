@@ -362,3 +362,13 @@ print_exception_table(const struct vm_method *method,
 		trace_printf("Class %s\n", catch_class->name);
 	}
 }
+
+unsigned char *
+throw_from_jit_checked(struct compilation_unit *cu, struct jit_stack_frame *frame,
+		       unsigned char *native_ptr)
+{
+	if (exception_occurred())
+		return throw_from_jit(cu, frame, native_ptr);
+
+	return NULL;
+}

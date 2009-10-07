@@ -50,12 +50,15 @@ lookup_eh_entry(struct vm_method *method, unsigned long target);
 unsigned char *throw_from_jit(struct compilation_unit *cu,
 			      struct jit_stack_frame *frame,
 			      unsigned char *native_ptr);
-
+unsigned char *throw_from_jit_checked(struct compilation_unit *cu,
+				      struct jit_stack_frame *frame,
+				      unsigned char *native_ptr);
 int insert_exception_spill_insns(struct compilation_unit *cu);
 unsigned char *throw_exception(struct compilation_unit *cu,
 			       struct vm_object *exception);
 void throw_from_trampoline(void *ctx, struct vm_object *exception);
 void unwind(void);
+void exception_check(void);
 void signal_exception(struct vm_object *obj);
 void signal_new_exception(struct vm_class *vmc, const char *msg);
 void signal_new_exception_with_cause(struct vm_class *vmc,

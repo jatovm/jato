@@ -1,4 +1,5 @@
 .global unwind
+.global exception_check
 .text
 
 /*
@@ -38,4 +39,30 @@ unwind:
 	addl	$12, %esp
 
 	pushl %eax
+	ret
+
+/*
+ * exception_check - is a part of valgrind workaround for exception guards.
+ * it checks whether exception has occurred and if it has control
+ * is transfered directly to exception handler (possibly unwind block).
+ */
+exception_check:
+	/* push return address - 1 */
+	pushl	(%esp)
+	decl	(%esp)
+
+	pushl	%ebp
+
+	pushl	4(%esp)	# return address
+	call	jit_lookup_cu
+	add	$4, %esp
+	push	%eax
+
+	call throw_from_jit_checked
+	addl $12, %esp
+	test %eax, %eax
+	jz 1f
+	pushl %eax
+	ret
+1:
 	ret

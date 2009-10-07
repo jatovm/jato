@@ -2778,6 +2778,11 @@ static void select_exception_test(struct basic_block *bb,
 	unsigned long exception_guard_offset;
 	struct var_info *reg;
 
+	if (running_on_valgrind) {
+		select_insn(bb, tree, rel_insn(INSN_CALL_REL, (unsigned long) exception_check));
+		return;
+	}
+
 	reg = get_var(bb->b_parent, GPR_VM_TYPE);
 
 	exception_guard_offset = get_thread_local_offset(&exception_guard);
@@ -2970,11 +2975,11 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	else
 		method_args_cleanup(s, tree, 3);
 
-	select_exception_test(s, tree);
-
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx)
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
+
+	select_exception_test(s, tree);
 }
 
 #ifdef CONFIG_X86_32
