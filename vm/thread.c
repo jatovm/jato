@@ -78,6 +78,8 @@ static struct vm_thread *vm_thread_alloc(void)
 	thread->state = VM_THREAD_STATE_NEW;
 	thread->vmthread = NULL;
 	thread->posix_id = -1;
+	thread->interrupted = false;
+	thread->wait_mon = NULL;
 
 	return thread;
 }
@@ -311,4 +313,49 @@ char *vm_thread_get_name(struct vm_thread *thread)
 	name = field_get_object(jthread, vm_java_lang_Thread_name);
 
 	return vm_string_to_cstr(name);
+}
+
+bool vm_thread_is_interrupted(struct vm_thread *thread)
+{
+	bool status;
+
+	pthread_mutex_lock(&thread->mutex);
+	status = thread->interrupted;
+	pthread_mutex_unlock(&thread->mutex);
+	return status;
+}
+
+bool vm_thread_interrupted(struct vm_thread *thread)
+{
+	bool status;
+
+	pthread_mutex_lock(&thread->mutex);
+	status = thread->interrupted;
+	thread->interrupted = false;
+	pthread_mutex_unlock(&thread->mutex);
+	return status;
+}
+
+void vm_thread_interrupt(struct vm_thread *thread)
+{
+	struct vm_monitor *mon;
+
+	pthread_mutex_lock(&thread->mutex);
+	thread->interrupted = true;
+	mon = thread->wait_mon;
+	pthread_mutex_unlock(&thread->mutex);
+
+	if (!mon)
+		return;
+
+	/*
+	 * We should wait until thread actually enters a conditional
+	 * wait so that the signal will not be lost. This can
+	 * spuriously wake threads after @thread has left the wait()
+	 * operation but it is fine with the JVM spec.
+	 */
+	while (pthread_mutex_trylock(&mon->mutex))
+		sched_yield();
+	pthread_cond_broadcast(&mon->cond);
+	pthread_mutex_unlock(&mon->mutex);
 }

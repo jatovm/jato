@@ -727,6 +727,27 @@ static void native_vmthread_start(struct vm_object *vmthread, jlong stacksize)
 	vm_thread_start(vmthread);
 }
 
+static jboolean native_vmthread_interrupted(void)
+{
+	return vm_thread_interrupted(vm_thread_self());
+}
+
+static jboolean native_vmthread_isinterrupted(struct vm_object *vmthread)
+{
+	struct vm_thread *thread;
+
+	thread = (struct vm_thread *)field_get_object(vmthread, vm_java_lang_VMThread_vmdata);
+	return vm_thread_is_interrupted(thread);
+}
+
+static void native_vmthread_interrupt(struct vm_object *vmthread)
+{
+	struct vm_thread *thread;
+
+	thread = (struct vm_thread *)field_get_object(vmthread, vm_java_lang_VMThread_vmdata);
+	vm_thread_interrupt(thread);
+}
+
 static void native_vmobject_notify(struct vm_object *obj)
 {
 	vm_monitor_notify(&obj->monitor);
@@ -866,6 +887,9 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMSystem", "nanoTime", &native_vmsystem_nano_time),
 	DEFINE_NATIVE("java/lang/VMThread", "currentThread", &native_vmthread_current_thread),
 	DEFINE_NATIVE("java/lang/VMThread", "start", &native_vmthread_start),
+	DEFINE_NATIVE("java/lang/VMThread", "isInterrupted", &native_vmthread_isinterrupted),
+	DEFINE_NATIVE("java/lang/VMThread", "interrupted", &native_vmthread_interrupted),
+	DEFINE_NATIVE("java/lang/VMThread", "interrupt", &native_vmthread_interrupt),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", &native_vmthrowable_fill_in_stack_trace),
 	DEFINE_NATIVE("java/lang/VMThrowable", "getStackTrace", &native_vmthrowable_get_stack_trace),
 	DEFINE_NATIVE("java/lang/reflect/Constructor", "getParameterTypes", &native_constructor_get_parameter_types),

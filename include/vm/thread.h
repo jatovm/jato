@@ -3,6 +3,8 @@
 
 #include "lib/list.h"
 
+#include "vm/object.h"
+
 #include <stdio.h> /* for NOT_IMPLEMENTED */
 #include <pthread.h>
 
@@ -26,6 +28,8 @@ struct vm_thread {
 	pthread_t posix_id;
 	enum vm_thread_state state;
 	struct list_head list_node;
+	bool interrupted;
+	struct vm_monitor *wait_mon;
 };
 
 struct vm_exec_env {
@@ -52,5 +56,8 @@ void vm_thread_wait_for_non_daemons(void);
 void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state);
 struct vm_object *vm_thread_get_java_thread(struct vm_thread *thread);
 char *vm_thread_get_name(struct vm_thread *thread);
+bool vm_thread_is_interrupted(struct vm_thread *thread);
+bool vm_thread_interrupted(struct vm_thread *thread);
+void vm_thread_interrupt(struct vm_thread *thread);
 
 #endif

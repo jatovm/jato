@@ -49,6 +49,7 @@ extern struct vm_class *vm_java_lang_Short;
 extern struct vm_class *vm_java_lang_IllegalArgumentException;
 extern struct vm_class *vm_java_lang_ClassLoader;
 extern struct vm_class *vm_java_lang_Number;
+extern struct vm_class *vm_java_lang_InterruptedException;
 extern struct vm_class *vm_boolean_class;
 extern struct vm_class *vm_char_class;
 extern struct vm_class *vm_float_class;

@@ -145,6 +145,7 @@ static int vm_monitor_do_wait(struct vm_monitor *mon, struct timespec *timespec)
 {
 	struct vm_thread *self;
 	int old_lock_count;
+	bool interrupted;
 	int err;
 
 	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
@@ -165,21 +166,32 @@ static int vm_monitor_do_wait(struct vm_monitor *mon, struct timespec *timespec)
 	else
 		self->state = VM_THREAD_STATE_WAITING;
 
+	self->wait_mon = mon;
+	interrupted = self->interrupted;
 	pthread_mutex_unlock(&self->mutex);
 
-	if (timespec) {
+	if (interrupted)
+		err = 0;
+	else if (timespec) {
 		err = pthread_cond_timedwait(&mon->cond, &mon->mutex, timespec);
 		if (err == ETIMEDOUT)
 			err = 0;
 	} else
 		err = pthread_cond_wait(&mon->cond, &mon->mutex);
 
-	vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
+	pthread_mutex_lock(&self->mutex);
+	self->state = VM_THREAD_STATE_RUNNABLE;
+	self->wait_mon = NULL;
+	pthread_mutex_unlock(&self->mutex);
 
 	vm_monitor_set_owner(mon, self);
 	mon->lock_count = old_lock_count;
 
-	/* TODO: check if thread has been interrupted. */
+	if (vm_thread_interrupted(self)) {
+		signal_new_exception(vm_java_lang_InterruptedException, NULL);
+		return -1;
+	}
+
 	return err;
 }
 
