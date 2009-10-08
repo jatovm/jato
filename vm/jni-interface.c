@@ -753,18 +753,18 @@ vm_jni_get_static_double_field(struct vm_jni_env *env, jobject object,
 	{								\
 		enter_vm_from_jni();					\
 									\
-		set(object, field, value);				\
+		set(field, value);					\
 	}								\
 
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_object_field, jobject, field_set_object);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_boolean_field, jboolean, field_set_boolean);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_byte_field, jbyte, field_set_byte);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_char_field, jchar, field_set_char);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_short_field, jshort, field_set_short);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_int_field, jint, field_set_int);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_long_field, jlong, field_set_long);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_float_field, jfloat, field_set_float);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_double_field, jdouble, field_set_double);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_object_field, jobject, static_field_set_object);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_boolean_field, jboolean, static_field_set_boolean);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_byte_field, jbyte, static_field_set_byte);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_char_field, jchar, static_field_set_char);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_short_field, jshort, static_field_set_short);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_int_field, jint, static_field_set_int);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_long_field, jlong, static_field_set_long);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_float_field, jfloat, static_field_set_float);
+DEFINE_SET_STATIC_FIELD(vm_jni_set_static_double_field, jdouble, static_field_set_double);
 
 static jboolean
 vm_jni_call_static_boolean_method(struct vm_jni_env *env, jclass clazz,
