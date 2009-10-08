@@ -945,7 +945,7 @@ vm_jni_new_object_a(struct vm_jni_env *env, jclass clazz, jmethodID method,
 	packed_args[0] = (unsigned long) result;
 	pack_args(method, packed_args + 1, args);
 
-	vm_call_method_a(method, packed_args);
+	vm_call_method_this_a(method, result, packed_args);
 
 	return result;
 }
