@@ -912,12 +912,12 @@ static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
 	idx = 0;
 
 	list_for_each_entry(arg, &vmm->args, list_node) {
-		if (arg->type_info.vm_type != J_LONG &&
-		    arg->type_info.vm_type != J_DOUBLE) {
+		if (arg->type_info.vm_type == J_LONG ||
+		    arg->type_info.vm_type == J_DOUBLE) {
 			packed_args[packed_idx++] = low_64(args[idx]);
 			packed_args[packed_idx++] = high_64(args[idx++]);
 		} else {
-			packed_args[packed_idx++] = args[idx++] & ~0ul;
+			packed_args[packed_idx++] = low_64(args[idx++]);
 		}
 	}
 #else
