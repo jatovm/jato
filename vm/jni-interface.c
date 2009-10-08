@@ -743,7 +743,7 @@ vm_jni_get_static_double_field(struct vm_jni_env *env, jobject object,
 		return 0;
 	}
 
-	return field_get_double(object, field);
+	return static_field_get_double(field);
 }
 
 #define DEFINE_SET_STATIC_FIELD(func, type, set)			\
