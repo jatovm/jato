@@ -727,24 +727,24 @@ vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
 	return fb;
 }
 
-static jdouble
-vm_jni_get_static_double_field(struct vm_jni_env *env, jobject object,
-			       jfieldID field)
-{
-	enter_vm_from_jni();
+#define DEFINE_GET_STATIC_FIELD(func, type, get)			\
+	static type							\
+	func(struct vm_jni_env *env, jobject object, jfieldID field)	\
+	{								\
+		enter_vm_from_jni();					\
+									\
+		return get(field);					\
+	}								\
 
-	if (!object) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
-
-	if (vm_field_type(field) != J_DOUBLE || !vm_field_is_static(field)) {
-		NOT_IMPLEMENTED;
-		return 0;
-	}
-
-	return static_field_get_double(field);
-}
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_object_field, jobject, static_field_get_object);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_boolean_field, jboolean, static_field_get_boolean);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_byte_field, jbyte, static_field_get_byte);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_char_field, jchar, static_field_get_char);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_short_field, jshort, static_field_get_short);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_int_field, jint, static_field_get_int);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_long_field, jlong, static_field_get_long);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_float_field, jfloat, static_field_get_float);
+DEFINE_GET_STATIC_FIELD(vm_jni_get_static_double_field, jdouble, static_field_get_double);
 
 #define DEFINE_SET_STATIC_FIELD(func, type, set)			\
 	static void							\
@@ -1224,19 +1224,19 @@ void *vm_jni_native_interface[] = {
 	vm_jni_call_static_void_method,
 	vm_jni_call_static_void_method_v,
 	NULL, /* CallStaticVoidMethodA */
-	vm_jni_get_static_field_id, /* GetStaticFieldID */
+	vm_jni_get_static_field_id,
 
 	/* 145 */
-	NULL, /* GetStaticObjectField */
-	NULL, /* GetStaticBooleanField */
-	NULL, /* GetStaticByteField */
-	NULL, /* GetStaticCharField */
-	NULL, /* GetStaticShortField */
+	vm_jni_get_static_object_field,
+	vm_jni_get_static_boolean_field,
+	vm_jni_get_static_byte_field,
+	vm_jni_get_static_char_field,
+	vm_jni_get_static_short_field,
 
 	/* 150 */
-	NULL, /* GetStaticIntField */
-	NULL, /* GetStaticLongField */
-	NULL, /* GetStaticFloatField */
+	vm_jni_get_static_int_field,
+	vm_jni_get_static_long_field,
+	vm_jni_get_static_float_field,
 	vm_jni_get_static_double_field,
 	vm_jni_set_static_object_field,
 
