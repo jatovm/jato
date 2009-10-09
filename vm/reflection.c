@@ -627,6 +627,8 @@ jint native_field_get_modifiers_internal(struct vm_object *this)
 static int unwrap_and_set_field(void *field_ptr, enum vm_type type,
 				struct vm_object *value)
 {
+	unsigned long args[] = { (unsigned long) value };
+
 	switch (type) {
 	case J_REFERENCE:
 		*(jobject *) field_ptr = value;
@@ -641,11 +643,11 @@ static int unwrap_and_set_field(void *field_ptr, enum vm_type type,
 		 * returned by ireturn anyway.
 		 */
 		*(long *) field_ptr = vm_call_method_this_a(vm_java_lang_Number_intValue,
-							    value, NULL);
+							    value, args);
 		return 0;
 	case J_FLOAT:
 		*(jfloat *) field_ptr = (jfloat) vm_call_method_this_a(vm_java_lang_Number_floatValue,
-								       value, NULL);
+								       value, args);
 		return 0;
 	case J_LONG:
 	case J_DOUBLE:
