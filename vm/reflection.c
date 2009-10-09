@@ -736,7 +736,8 @@ call_virtual_method(struct vm_method *vmm, struct vm_object *o,
 {
 	unsigned long args[vmm->args_count];
 
-	if (marshall_call_arguments(vmm, args, args_array))
+	args[0] = (unsigned long) o;
+	if (marshall_call_arguments(vmm, args + 1, args_array))
 		return NULL;
 
 	return (struct vm_object *) vm_call_method_this_a(vmm, o, args);

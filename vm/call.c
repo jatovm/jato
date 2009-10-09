@@ -80,7 +80,11 @@ unsigned long vm_call_method_this_a(struct vm_method *method,
 				    struct vm_object *this,
 				    unsigned long *args)
 {
-	void *target = this->class->vtable.native_ptr[method->virtual_index];
+	void *target;
+
+	target = this->class->vtable.native_ptr[method->virtual_index];
+	assert(args[0] == (unsigned long) this);
+
 	return call_method_a(method, target, args);
 }
 
