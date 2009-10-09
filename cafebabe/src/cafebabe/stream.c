@@ -103,7 +103,7 @@ cafebabe_stream_close(struct cafebabe_stream *s)
 
 	/* We try not to leak file descriptors. */
 	do {
-		if (close(s->fd == -1)) {
+		if (close(s->fd) == -1) {
 			if (errno == EINTR)
 				continue;
 
