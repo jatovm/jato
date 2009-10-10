@@ -189,7 +189,8 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 		for (int i = 0; i < vmc->class->methods_count; i++) {
 			struct vm_method *vmm = &vmc->methods[i];
 
-			if (vm_method_is_public(vmm))
+			if (vm_method_is_public(vmm) &&
+			    !vm_method_is_special(vmm))
 				count ++;
 		}
 	} else {
@@ -210,6 +211,9 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 		struct vm_method *vmm = &vmc->methods[i];
 
 		if (public_only && !vm_method_is_public(vmm))
+			continue;
+
+		if (vm_method_is_special(vmm))
 			continue;
 
 		struct vm_object *method
