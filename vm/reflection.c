@@ -624,7 +624,7 @@ jint native_field_get_modifiers_internal(struct vm_object *this)
 	return vmf->field->access_flags;
 }
 
-static int unwrap_and_set_field(void *field_ptr, enum vm_type type,
+static int unwrap(void *field_ptr, enum vm_type type,
 				struct vm_object *value)
 {
 	unsigned long args[] = { (unsigned long) value };
@@ -685,7 +685,7 @@ void native_field_set(struct vm_object *this, struct vm_object *o,
 	enum vm_type type = vm_field_type(vmf);
 
 	if (vm_field_is_static(vmf)) {
-		unwrap_and_set_field(vmf->class->static_values + vmf->offset,
+		unwrap(vmf->class->static_values + vmf->offset,
 				     type, value_obj);
 	} else {
 		/*
@@ -704,7 +704,7 @@ void native_field_set(struct vm_object *this, struct vm_object *o,
 			return;
 		}
 
-		unwrap_and_set_field(&o->fields[vmf->offset], type, value_obj);
+		unwrap(&o->fields[vmf->offset], type, value_obj);
 	}
 }
 
@@ -725,7 +725,7 @@ static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 		struct vm_object *arg_obj;
 
 		arg_obj = array_get_field_ptr(args_array, args_array_idx++);
-		if (unwrap_and_set_field(&args[idx++], arg->type_info.vm_type, arg_obj))
+		if (unwrap(&args[idx++], arg->type_info.vm_type, arg_obj))
 			return -1;
 	}
 
