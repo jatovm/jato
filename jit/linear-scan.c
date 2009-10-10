@@ -126,6 +126,20 @@ static void spill_interval(struct live_interval *it, unsigned long pos,
 			new = split_interval_at(new, next_pos);
 
 		/*
+		 * If any child interval of @it must be reloaded from
+		 * @it then we have to update its spill parent to @new.
+		 */
+		struct live_interval *child = new->next_child;
+		while (child) {
+			if (child->need_reload && child->spill_parent == it)
+				child->spill_parent = new;
+
+			child = child->next_child;
+		}
+
+		new->need_spill = it->need_spill;
+
+		/*
 		 * When next use position is a write then we must not
 		 * reload the new interval. One reason for this is
 		 * that it's unnecessary. Another one is that we won't
