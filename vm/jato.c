@@ -959,21 +959,19 @@ static void handle_jar(const char *arg)
 
 	jar_file = vm_jar_open(arg);
 	if (!jar_file) {
-		NOT_IMPLEMENTED;
+		fprintf(stdout, "Unable to open JAR file %s\n", arg);
 		exit(EXIT_FAILURE);
 	}
 
 	const char *main_class = vm_jar_get_main_class(jar_file);
 	if (!main_class) {
-		NOT_IMPLEMENTED;
+		fprintf(stdout, "Unable to look up main class in JAR file %s\n", arg);
 		exit(EXIT_FAILURE);
 	}
 
 	classname = strdup(main_class);
-	if (!classname) {
-		NOT_IMPLEMENTED;
-		exit(EXIT_FAILURE);
-	}
+	if (!classname)
+		die("out of memory");
 
 	/* XXX: Cheap solution. This can give funny results depending on where
 	 * you put the -jar relative to the -classpath(s). Besides, we should
