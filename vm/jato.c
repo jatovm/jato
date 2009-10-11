@@ -845,6 +845,11 @@ static struct vm_object *native_vmstring_intern(struct vm_object *str)
 	return vm_string_intern(str);
 }
 
+static jboolean native_atomiclong_vm_supports_cs8(void)
+{
+	return false;
+}
+
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassLoader", native_vmclass_getclassloader),
@@ -905,6 +910,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/Method", "getParameterTypes", native_method_get_parameter_types),
 	DEFINE_NATIVE("java/lang/reflect/Method", "getReturnType", native_method_getreturntype),
 	DEFINE_NATIVE("java/lang/reflect/Method", "invokeNative", native_method_invokenative),
+	DEFINE_NATIVE("java/util/concurrent/atomic/AtomicLong", "VMSupportsCS8", native_atomiclong_vm_supports_cs8),
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapInt", native_unsafe_compare_and_swap_int),
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapObject", native_unsafe_compare_and_swap_object),
 	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", native_unsafe_object_field_offset),
