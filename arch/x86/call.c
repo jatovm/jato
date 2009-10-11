@@ -137,7 +137,7 @@ void native_call(struct vm_method *method,
 	case J_LONG:
 	case J_DOUBLE:
 	case J_FLOAT:
-		NOT_IMPLEMENTED;
+		error("not implemented");
 		break;
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
@@ -181,7 +181,7 @@ void vm_native_call(struct vm_method *method,
 	case J_LONG:
 	case J_DOUBLE:
 	case J_FLOAT:
-		NOT_IMPLEMENTED;
+		error("not implemented");
 		break;
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
@@ -294,7 +294,7 @@ void native_call(struct vm_method *method,
 		break;
 	case J_DOUBLE:
 	case J_FLOAT:
-		NOT_IMPLEMENTED;
+		error("not implemented");
 		break;
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
@@ -340,7 +340,7 @@ void vm_native_call(struct vm_method *method,
 		break;
 	case J_DOUBLE:
 	case J_FLOAT:
-		NOT_IMPLEMENTED;
+		error("not implemented");
 		break;
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
