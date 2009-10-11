@@ -90,7 +90,7 @@ public class TestCase {
         assertTrue(o.getClass().getName().equals(className));
     }
 
-    protected static void assertObjectEquals(String a, String b) {
+    protected static void assertObjectEquals(Object a, Object b) {
         if (a == null && b == null)
             return;
 
