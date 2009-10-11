@@ -173,6 +173,7 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 				    jboolean public_only)
 {
 	struct vm_class *vmc;
+	int count;
 
 	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
@@ -181,25 +182,21 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
 		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Field, 0);
 
-	int count;
+	count = 0;
+	for (int i = 0; i < vmc->class->methods_count; i++) {
+		struct vm_method *vmm = &vmc->methods[i];
 
-	if (public_only) {
-		count = 0;
+		if (public_only && !vm_method_is_public(vmm))
+			continue;
 
-		for (int i = 0; i < vmc->class->methods_count; i++) {
-			struct vm_method *vmm = &vmc->methods[i];
+		if (vm_method_is_special(vmm))
+			continue;
 
-			if (vm_method_is_public(vmm) &&
-			    !vm_method_is_special(vmm))
-				count ++;
-		}
-	} else {
-		count = vmc->class->methods_count;
+		count ++;
 	}
 
 	struct vm_object *array
-		= vm_object_alloc_array(vm_array_of_java_lang_reflect_Method,
-					count);
+		= vm_object_alloc_array(vm_array_of_java_lang_reflect_Method, count);
 	if (!array) {
 		NOT_IMPLEMENTED;
 		return NULL;
