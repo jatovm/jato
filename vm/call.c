@@ -36,11 +36,11 @@
 #include "vm/object.h"
 #include "vm/stack-trace.h"
 
-static unsigned long
-call_method_a(struct vm_method *method, void *target, unsigned long *args)
+static void
+call_method_a(struct vm_method *method, void *target, unsigned long *args,
+	      union jvalue *result)
 {
 	struct vm_object *exception;
-	unsigned long result;
 
 	/*
 	 * XXX: We cannot call JIT code with exception signalled
@@ -52,20 +52,19 @@ call_method_a(struct vm_method *method, void *target, unsigned long *args)
 	clear_exception();
 
 	if (vm_method_is_vm_native(method)) {
-		result = vm_native_call(method, target, args);
+		vm_native_call(method, target, args, result);
 		goto out;
 	}
 
-	result = native_call(method, target, args);
+	native_call(method, target, args, result);
 
  out:
 	if (!exception_occurred() && exception)
 		signal_exception(exception);
-
-	return result;
 }
 
-unsigned long vm_call_method_v(struct vm_method *method, va_list args)
+void vm_call_method_v(struct vm_method *method, va_list args,
+		      union jvalue *result)
 {
 	unsigned long args_array[method->args_count];
 
@@ -73,29 +72,32 @@ unsigned long vm_call_method_v(struct vm_method *method, va_list args)
 		args_array[i] = va_arg(args, unsigned long);
 
 	void *target = vm_method_call_ptr(method);
-	return call_method_a(method, target, args_array);
+	call_method_a(method, target, args_array, result);
 }
 
-unsigned long vm_call_method_this_a(struct vm_method *method,
-				    struct vm_object *this,
-				    unsigned long *args)
+void vm_call_method_this_a(struct vm_method *method,
+			   struct vm_object *this,
+			   unsigned long *args,
+			   union jvalue *result)
 {
 	void *target;
 
 	target = this->class->vtable.native_ptr[method->virtual_index];
 	assert(args[0] == (unsigned long) this);
 
-	return call_method_a(method, target, args);
+	call_method_a(method, target, args, result);
 }
 
-unsigned long vm_call_method_a(struct vm_method *method, unsigned long *args)
+void vm_call_method_a(struct vm_method *method, unsigned long *args,
+		      union jvalue *result)
 {
-	return call_method_a(method, vm_method_call_ptr(method), args);
+	call_method_a(method, vm_method_call_ptr(method), args, result);
 }
 
-unsigned long vm_call_method_this_v(struct vm_method *method,
-				    struct vm_object *this,
-				    va_list args)
+void vm_call_method_this_v(struct vm_method *method,
+			   struct vm_object *this,
+			   va_list args,
+			   union jvalue *result)
 {
 	unsigned long args_array[method->args_count];
 
@@ -104,5 +106,5 @@ unsigned long vm_call_method_this_v(struct vm_method *method,
 	for (int i = 1; i < method->args_count; i++)
 		args_array[i] = va_arg(args, unsigned long);
 
-	return vm_call_method_this_a(method, this, args_array);
+	vm_call_method_this_a(method, this, args_array, result);
 }

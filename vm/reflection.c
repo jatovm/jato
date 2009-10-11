@@ -455,7 +455,7 @@ native_constructor_construct_native(struct vm_object *this,
 	if (marshall_call_arguments(vmm, args + 1, args_array))
 		return NULL;
 
-	vm_call_method_a(vmm, args);
+	vm_call_method_a(vmm, args, NULL);
 	return result;
 }
 
@@ -629,9 +629,10 @@ jint native_field_get_modifiers_internal(struct vm_object *this)
 }
 
 static int unwrap(void *field_ptr, enum vm_type type,
-				struct vm_object *value)
+		  struct vm_object *value)
 {
 	unsigned long args[] = { (unsigned long) value };
+	union jvalue result;
 
 	switch (type) {
 	case J_REFERENCE:
@@ -646,12 +647,12 @@ static int unwrap(void *field_ptr, enum vm_type type,
 		 * We can handle those as int because these values are
 		 * returned by ireturn anyway.
 		 */
-		*(long *) field_ptr = vm_call_method_this_a(vm_java_lang_Number_intValue,
-							    value, args);
+		vm_call_method_this_a(vm_java_lang_Number_intValue, value, args, &result);
+		*(long *) field_ptr = result.i;
 		return 0;
 	case J_FLOAT:
-		*(jfloat *) field_ptr = (jfloat) vm_call_method_this_a(vm_java_lang_Number_floatValue,
-								       value, args);
+		vm_call_method_this_a(vm_java_lang_Number_floatValue, value, args, &result);
+		*(jfloat *) field_ptr = result.f;
 		return 0;
 	case J_LONG:
 	case J_DOUBLE:
@@ -741,23 +742,27 @@ call_virtual_method(struct vm_method *vmm, struct vm_object *o,
 		    struct vm_object *args_array)
 {
 	unsigned long args[vmm->args_count];
+	union jvalue result;
 
 	args[0] = (unsigned long) o;
 	if (marshall_call_arguments(vmm, args + 1, args_array))
 		return NULL;
 
-	return (struct vm_object *) vm_call_method_this_a(vmm, o, args);
+	vm_call_method_this_a(vmm, o, args, &result);
+	return result.l;
 }
 
 static struct vm_object *
 call_static_method(struct vm_method *vmm, struct vm_object *args_array)
 {
 	unsigned long args[vmm->args_count];
+	union jvalue result;
 
 	if (marshall_call_arguments(vmm, args, args_array))
 		return NULL;
 
-	return (struct vm_object *) vm_call_method_a(vmm, args);
+	vm_call_method_a(vmm, args, &result);
+	return result.l;
 }
 
 jint native_method_get_modifiers_internal(struct vm_object *this)

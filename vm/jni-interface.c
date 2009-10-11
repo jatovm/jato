@@ -339,7 +339,7 @@ vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
 	enter_vm_from_jni();
 
 	va_start(args, methodID);
-	vm_call_method_v(methodID, args);
+	vm_call_method_v(methodID, args, NULL);
 	va_end(args);
 }
 
@@ -348,67 +348,57 @@ vm_jni_call_static_void_method_v(struct vm_jni_env *env, jclass clazz,
 				 jmethodID methodID, va_list args)
 {
 	enter_vm_from_jni();
-	vm_call_method_v(methodID, args);
+	vm_call_method_v(methodID, args, NULL);
 }
 
-static jobject
-vm_jni_call_static_object_method(struct vm_jni_env *env, jclass clazz,
-				 jmethodID methodID, ...)
-{
-	jobject result;
-	va_list args;
+#define DECLARE_CALL_STATIC_XXX_METHOD(name, symbol)			\
+	static j ## name vm_jni_call_static_ ## name ## _method		\
+	(struct vm_jni_env *env, jclass clazz, jmethodID methodID, ...) \
+	{								\
+		union jvalue result;					\
+		va_list args;						\
+									\
+		enter_vm_from_jni();					\
+									\
+		va_start(args, methodID);				\
+		vm_call_method_v(methodID, args, &result);		\
+		va_end(args);						\
+									\
+		return result.symbol;					\
+	}
 
-	enter_vm_from_jni();
+DECLARE_CALL_STATIC_XXX_METHOD(boolean, z);
+DECLARE_CALL_STATIC_XXX_METHOD(byte, b);
+DECLARE_CALL_STATIC_XXX_METHOD(char, c);
+DECLARE_CALL_STATIC_XXX_METHOD(short, s);
+DECLARE_CALL_STATIC_XXX_METHOD(int, i);
+DECLARE_CALL_STATIC_XXX_METHOD(long, j);
+DECLARE_CALL_STATIC_XXX_METHOD(float, f);
+DECLARE_CALL_STATIC_XXX_METHOD(double, d);
+DECLARE_CALL_STATIC_XXX_METHOD(object, l);
 
-	va_start(args, methodID);
-	result = (jobject) vm_call_method_v(methodID, args);
-	va_end(args);
+#define DECLARE_CALL_STATIC_XXX_METHOD_V(name, symbol)			\
+	static j ## name vm_jni_call_static_ ## name ## _method_v	\
+	(struct vm_jni_env *env, jclass clazz,				\
+	 jmethodID methodID, va_list args)				\
+	{								\
+		union jvalue result;					\
+									\
+		enter_vm_from_jni();					\
+									\
+		vm_call_method_v(methodID, args, &result);		\
+		return result.symbol;					\
+	}
 
-	return result;
-}
-
-static jobject
-vm_jni_call_static_object_method_v(struct vm_jni_env *env, jclass clazz,
-				   jmethodID methodID, va_list args)
-{
-	enter_vm_from_jni();
-
-	return (jobject) vm_call_method_v(methodID, args);
-}
-
-static jbyte
-vm_jni_call_static_byte_method(struct vm_jni_env *env, jclass clazz,
-			       jmethodID methodID, ...)
-{
-	jbyte result;
-	va_list args;
-
-	enter_vm_from_jni();
-
-	va_start(args, methodID);
-	result = (jbyte) vm_call_method_v(methodID, args);
-	va_end(args);
-
-	return result;
-}
-
-static jbyte
-vm_jni_call_static_byte_method_v(struct vm_jni_env *env, jclass clazz,
-				 jmethodID methodID, va_list args)
-{
-	enter_vm_from_jni();
-
-	return (jbyte) vm_call_method_v(methodID, args);
-}
-
-static jshort
-vm_jni_call_static_short_method_v(struct vm_jni_env *env, jclass clazz,
-				  jmethodID methodID, va_list args)
-{
-	enter_vm_from_jni();
-
-	return (jshort) vm_call_method_v(methodID, args);
-}
+DECLARE_CALL_STATIC_XXX_METHOD_V(boolean, z);
+DECLARE_CALL_STATIC_XXX_METHOD_V(byte, b);
+DECLARE_CALL_STATIC_XXX_METHOD_V(char, c);
+DECLARE_CALL_STATIC_XXX_METHOD_V(short, s);
+DECLARE_CALL_STATIC_XXX_METHOD_V(int, i);
+DECLARE_CALL_STATIC_XXX_METHOD_V(long, j);
+DECLARE_CALL_STATIC_XXX_METHOD_V(float, f);
+DECLARE_CALL_STATIC_XXX_METHOD_V(double, d);
+DECLARE_CALL_STATIC_XXX_METHOD_V(object, l);
 
 #define DECLARE_SET_XXX_FIELD(type, vmtype)				\
 static void								\
@@ -535,7 +525,7 @@ static jobject vm_jni_new_object(struct vm_jni_env *env, jobject clazz,
 	obj = vm_object_alloc(class);
 
 	va_start(args, method);
-	vm_call_method_this_v(method, obj, args);
+	vm_call_method_this_v(method, obj, args, NULL);
 	va_end(args);
 
 	return obj;
@@ -649,65 +639,53 @@ vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
 	return NULL;
 }
 
-static jint vm_jni_call_int_method(struct vm_jni_env *env, jobject this,
-				   jmethodID methodID, ...)
+/*
+ * TODO: When these functions are used to call private methods and
+ * constructors, the method ID must be derived from the real class of
+ * obj, not from one of its superclasses.
+ */
+static void vm_jni_call_void_method(struct vm_jni_env *env, jobject this,
+				    jmethodID methodID, ...)
 {
 	va_list args;
-	jint result;
 
 	enter_vm_from_jni();
 
-	/*
-	 * TODO: When these functions are used to call private methods
-	 * and constructors, the method ID must be derived from the
-	 * real class of obj, not from one of its superclasses.
-	 */
 	va_start(args, methodID);
-	result = (jint) vm_call_method_this_v(methodID, this, args);
+	vm_call_method_this_v(methodID, this, args, NULL);
 	va_end(args);
-
-	return result;
 }
 
-static jboolean vm_jni_call_boolean_method(struct vm_jni_env *env, jobject this,
-					   jmethodID methodID, ...)
-{
-	va_list args;
-	jboolean result;
+/*
+ * TODO: When these functions are used to call private methods and
+ * constructors, the method ID must be derived from the real class of
+ * obj, not from one of its superclasses.
+ */
+#define DECLARE_CALL_XXX_METHOD(type, symbol)				\
+	static j ## type vm_jni_call_ ## type ## _method		\
+	(struct vm_jni_env *env, jobject this, jmethodID methodID, ...)	\
+	{								\
+		va_list args;						\
+		union jvalue result;					\
+									\
+		enter_vm_from_jni();					\
+									\
+		va_start(args, methodID);				\
+		vm_call_method_this_v(methodID, this, args, &result);	\
+		va_end(args);						\
+									\
+		return result.symbol;					\
+	}
 
-	enter_vm_from_jni();
-
-	/*
-	 * TODO: When these functions are used to call private methods
-	 * and constructors, the method ID must be derived from the
-	 * real class of obj, not from one of its superclasses.
-	 */
-	va_start(args, methodID);
-	result = (jboolean) vm_call_method_this_v(methodID, this, args);
-	va_end(args);
-
-	return result;
-}
-
-static jobject vm_jni_call_object_method(struct vm_jni_env *env, jobject this,
-					 jmethodID methodID, ...)
-{
-	va_list args;
-	jobject result;
-
-	enter_vm_from_jni();
-
-	/*
-	 * TODO: When these functions are used to call private methods
-	 * and constructors, the method ID must be derived from the
-	 * real class of obj, not from one of its superclasses.
-	 */
-	va_start(args, methodID);
-	result = (jobject) vm_call_method_this_v(methodID, this, args);
-	va_end(args);
-
-	return result;
-}
+DECLARE_CALL_XXX_METHOD(boolean, z);
+DECLARE_CALL_XXX_METHOD(byte, b);
+DECLARE_CALL_XXX_METHOD(char, c);
+DECLARE_CALL_XXX_METHOD(short, s);
+DECLARE_CALL_XXX_METHOD(int, i);
+DECLARE_CALL_XXX_METHOD(long, j);
+DECLARE_CALL_XXX_METHOD(float, f);
+DECLARE_CALL_XXX_METHOD(double, d);
+DECLARE_CALL_XXX_METHOD(object, l);
 
 static jfieldID
 vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
@@ -765,39 +743,6 @@ DEFINE_SET_STATIC_FIELD(vm_jni_set_static_int_field, jint, static_field_set_int)
 DEFINE_SET_STATIC_FIELD(vm_jni_set_static_long_field, jlong, static_field_set_long);
 DEFINE_SET_STATIC_FIELD(vm_jni_set_static_float_field, jfloat, static_field_set_float);
 DEFINE_SET_STATIC_FIELD(vm_jni_set_static_double_field, jdouble, static_field_set_double);
-
-static jboolean
-vm_jni_call_static_boolean_method(struct vm_jni_env *env, jclass clazz,
-				  jmethodID methodID, ...)
-{
-	va_list args;
-	jboolean result;
-
-	enter_vm_from_jni();
-
-	va_start(args, methodID);
-	result = (jboolean) vm_call_method_v(methodID, args);
-	va_end(args);
-
-	return result;
-}
-
-static void vm_jni_call_void_method(struct vm_jni_env *env, jobject this,
-				    jmethodID methodID, ...)
-{
-	va_list args;
-
-	enter_vm_from_jni();
-
-	/*
-	 * TODO: When these functions are used to call private methods
-	 * and constructors, the method ID must be derived from the
-	 * real class of obj, not from one of its superclasses.
-	 */
-	va_start(args, methodID);
-	vm_call_method_this_v(methodID, this, args);
-	va_end(args);
-}
 
 static jobject
 vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
@@ -945,7 +890,7 @@ vm_jni_new_object_a(struct vm_jni_env *env, jclass clazz, jmethodID method,
 	packed_args[0] = (unsigned long) result;
 	pack_args(method, packed_args + 1, args);
 
-	vm_call_method_this_a(method, result, packed_args);
+	vm_call_method_this_a(method, result, packed_args, NULL);
 
 	return result;
 }
@@ -1080,15 +1025,15 @@ void *vm_jni_native_interface[] = {
 	NULL, /* CallBooleanMethodA */
 
 	/* 40 */
-	NULL, /* CallByteMethod */
+	vm_jni_call_byte_method,
 	NULL, /* CallByteMethodV */
 	NULL, /* CallByteMethodA */
-	NULL, /* CallCharMethod */
+	vm_jni_call_char_method,
 	NULL, /* CallCharMethodV */
 
 	/* 45 */
 	NULL, /* CallCharMethodA */
-	NULL, /* CallShortMethod */
+	vm_jni_call_short_method,
 	NULL, /* CallShortMethodV */
 	NULL, /* CallShortMethodA */
 	vm_jni_call_int_method,
@@ -1096,15 +1041,15 @@ void *vm_jni_native_interface[] = {
 	/* 50 */
 	NULL, /* CallIntMethodV */
 	NULL, /* CallIntMethodA */
-	NULL, /* CallLongMethod */
+	vm_jni_call_long_method,
 	NULL, /* CallLongMethodV */
 	NULL, /* CallLongMethodA */
 
 	/* 55 */
-	NULL, /* CallFloatMethod */
+	vm_jni_call_float_method,
 	NULL, /* CallFloatMethodV */
 	NULL, /* CallFloatMethodA */
-	NULL, /* CallDoubleMethod */
+	vm_jni_call_double_method,
 	NULL, /* CallDoubleMethodV */
 
 	/* 60 */
@@ -1188,36 +1133,36 @@ void *vm_jni_native_interface[] = {
 	vm_jni_call_static_object_method_v,
 	NULL, /* CallStaticObjectMethodA */
 	vm_jni_call_static_boolean_method,
-	NULL, /* CallStaticBooleanMethodV */
+	vm_jni_call_static_boolean_method_v,
 	NULL, /* CallStaticBooleanMethodA */
 
 	/* 120 */
 	vm_jni_call_static_byte_method,
 	vm_jni_call_static_byte_method_v,
 	NULL, /* CallStaticByteMethodA */
-	NULL, /* CallStaticCharMethod */
-	NULL, /* CallStaticCharMethodV */
+	vm_jni_call_static_char_method,
+	vm_jni_call_static_char_method_v,
 
 	/* 125 */
 	NULL, /* CallStaticCharMethodA */
-	NULL, /* CallStaticShortMethod */
+	vm_jni_call_static_short_method,
 	vm_jni_call_static_short_method_v,
 	NULL, /* CallStaticShortMethodA */
-	NULL, /* CallStaticIntMethod */
+	vm_jni_call_static_int_method,
 
 	/* 130 */
-	NULL, /* CallStaticIntMethodV */
+	vm_jni_call_static_int_method_v,
 	NULL, /* CallStaticIntMethodA */
-	NULL, /* CallStaticLongMethod */
-	NULL, /* CallStaticLongMethodV */
+	vm_jni_call_static_long_method,
+	vm_jni_call_static_long_method_v,
 	NULL, /* CallStaticLongMethodA */
 
 	/* 135 */
-	NULL, /* CallStaticFloatMethod */
-	NULL, /* CallStaticFloatMethodV */
+	vm_jni_call_static_float_method,
+	vm_jni_call_static_float_method_v,
 	NULL, /* CallStaticFloatMethodA */
-	NULL, /* CallStaticDoubleMethod */
-	NULL, /* CallStaticDoubleMethodV */
+	vm_jni_call_static_double_method,
+	vm_jni_call_static_double_method_v,
 
 	/* 140 */
 	NULL, /* CallStaticDoubleMethodA */
