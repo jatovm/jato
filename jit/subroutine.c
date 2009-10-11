@@ -1,4 +1,5 @@
 /*
+ * Subroutine bytecode inlining
  * Copyright (c) 2009 Tomasz Grabiec
  *
  * This file is released under the GPL version 2 with the following
@@ -22,6 +23,12 @@
  *     version.
  *
  * Please refer to the file LICENSE for details.
+ *
+ * Inlines all subroutines. This eliminates  JSR, JSR_W and RET
+ * instructions. The algorithm is based on the following work:
+ *
+ *   "Subroutine Inlining and Bytecode Abstraction to Simplify Static
+ *    and Dynamic Analysis", Cyrille Artho, Armin Biere.
  */
 
 #include <stdint.h>
@@ -1163,11 +1170,6 @@ static int verify_correct_nesting(struct inlining_context *ctx)
 }
 
 /**
- * Inlines all subroutines. This eliminates  JSR, JSR_W and RET
- * instructions. The algorithm is based on the following work:
- *   "Subroutine Inlining and Bytecode Abstraction to Simplify Static
- *    and Dynamic Analysis", Cyrille Artho, Armin Biere.
- *
  * Changes to @method are made only when function returns successfully.
  */
 int inline_subroutines(struct vm_method *method)
