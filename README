@@ -63,8 +63,8 @@ Development
   and email to .git/config file.  You can do that by running the following
   commands:
 
-    git config user.name "Pekka Enberg"
-    git config user.email penberg@cs.helsinki.fi
+    $ git config user.name "Pekka Enberg"
+    $ git config user.email penberg@cs.helsinki.fi
 
 
 How to run the regression test suite?
@@ -76,7 +76,7 @@ How to run the regression test suite?
 
   To run the test suite, execute the following commands:
 
-    $ make regression
+    $ make check
 
 
 How do I launch a simple application?
@@ -88,11 +88,7 @@ How do I launch a simple application?
 
   and launch it with the following command:
 
-    $ ./scripts/java -Xtrace:jit -jar tetris.jar
-
-  Note: Jato interacts badly with JamVM GC which is why you should make
-  the initial heap size big enough for GC not to trigger during
-  execution.
+    $ java -jar tetris.jar
 
   To launch the application under gdb, use the following command:
 
@@ -126,7 +122,8 @@ Acknowledgements
   I would like to thank the following people and organizations for supporting
   Jato development:
 
-    Reaktor Innovations Oy for sponsoring initial development of Jato.
+    Reaktor Innovations Oy for sponsoring initial Jato development back in
+    2005.
 
     Kernel.org for providing git hosting for Jato.
 
