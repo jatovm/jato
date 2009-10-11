@@ -259,6 +259,8 @@ test: monoburg
 REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jato/internal/VM.java \
 	regression/java/lang/VMClassTest.java \
+	regression/java/lang/reflect/ClassTest.java \
+	regression/java/lang/reflect/MethodTest.java \
 	regression/jvm/ArgsTest.java \
 	regression/jvm/ArrayExceptionsTest.java \
 	regression/jvm/ArrayMemberTest.java \
@@ -267,7 +269,6 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/CFGCrashTest.java \
 	regression/jvm/ClassExceptionsTest.java \
 	regression/jvm/ClassLoaderTest.java \
-	regression/jvm/ClassTest.java \
 	regression/jvm/CloneTest.java \
 	regression/jvm/ControlTransferTest.java \
 	regression/jvm/ConversionTest.java \
@@ -293,7 +294,6 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/LongArithmeticTest.java \
 	regression/jvm/MethodInvocationAndReturnTest.java \
 	regression/jvm/MethodInvocationExceptionsTest.java \
-	regression/jvm/MethodTest.java \
 	regression/jvm/MonitorTest.java \
 	regression/jvm/MultithreadingTest.java \
 	regression/jvm/ObjectArrayTest.java \

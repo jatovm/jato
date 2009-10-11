@@ -23,9 +23,10 @@
  *
  * Please refer to the file LICENSE for details.
  */
-package jvm;
+package java.lang.reflect;
 
 import java.lang.reflect.Modifier;
+import jvm.TestCase;
 
 /**
  * @author Pekka Enberg
@@ -38,7 +39,8 @@ public class MethodTest extends TestCase {
     }
 
     private static int modifiers(String name) throws Exception {
-      return Klass.class.getMethod(name, new Class[] { }).getModifiers();
+      Method m = Klass.class.getMethod(name, new Class[] { });
+      return m.getModifiers();
     }
 
     public static class Klass {

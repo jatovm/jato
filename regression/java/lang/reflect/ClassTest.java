@@ -23,9 +23,10 @@
  *
  * Please refer to the file LICENSE for details.
  */
-package jvm;
+package java.lang.reflect;
 
 import java.lang.reflect.Modifier;
+import jvm.TestCase;
 
 /**
  * @author Tomasz Grabiec

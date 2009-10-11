@@ -45,6 +45,8 @@ done
 
 if [ -z "$CLASS_LIST" ]; then
     run_java java.lang.VMClassTest 0
+    run_java java.lang.reflect.ClassTest 0
+    run_java java.lang.reflect.MethodTest 0
     run_java jvm.ArgsTest 0
     run_java jvm.ArrayExceptionsTest 0
     run_java jvm.ArrayMemberTest 0
@@ -53,7 +55,6 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.CFGCrashTest 0
     run_java jvm.ClassExceptionsTest 0
     run_java jvm.ClassLoaderTest 0
-    run_java jvm.ClassTest 0
     run_java jvm.CloneTest 0
     run_java jvm.ControlTransferTest 0
     run_java jvm.ConversionTest 0
@@ -82,7 +83,6 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.LongArithmeticTest 0
     run_java jvm.MethodInvocationAndReturnTest 0
     run_java jvm.MethodInvocationExceptionsTest 0
-    run_java jvm.MethodTest 0
     run_java jvm.MultithreadingTest 0
     run_java jvm.ObjectArrayTest 0
     run_java jvm.ObjectCreationAndManipulationExceptionsTest 0
