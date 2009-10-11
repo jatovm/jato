@@ -655,8 +655,13 @@ static int unwrap(void *field_ptr, enum vm_type type,
 		*(jfloat *) field_ptr = result.f;
 		return 0;
 	case J_LONG:
+		vm_call_method_this_a(vm_java_lang_Number_longValue, value, args, &result);
+		*(jlong *) field_ptr = result.j;
+		return 0;
 	case J_DOUBLE:
-		error("not implemented");
+		vm_call_method_this_a(vm_java_lang_Number_doubleValue, value, args, &result);
+		*(jdouble *) field_ptr = result.d;
+		return 0;
 	case J_VOID:
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:

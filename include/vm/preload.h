@@ -112,6 +112,8 @@ extern struct vm_method *vm_java_lang_ClassLoader_loadClass;
 extern struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
 extern struct vm_method *vm_java_lang_Number_intValue;
 extern struct vm_method *vm_java_lang_Number_floatValue;
+extern struct vm_method *vm_java_lang_Number_longValue;
+extern struct vm_method *vm_java_lang_Number_doubleValue;
 
 int preload_vm_classes(void);
 

@@ -259,6 +259,8 @@ struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
 struct vm_method *vm_java_lang_VMString_intern;
 struct vm_method *vm_java_lang_Number_intValue;
 struct vm_method *vm_java_lang_Number_floatValue;
+struct vm_method *vm_java_lang_Number_longValue;
+struct vm_method *vm_java_lang_Number_doubleValue;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -428,6 +430,18 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"floatValue",
 		"()F",
 		&vm_java_lang_Number_floatValue,
+	},
+	{
+		&vm_java_lang_Number,
+		"longValue",
+		"()J",
+		&vm_java_lang_Number_longValue,
+	},
+	{
+		&vm_java_lang_Number,
+		"doubleValue",
+		"()D",
+		&vm_java_lang_Number_doubleValue,
 	},
 };
 
