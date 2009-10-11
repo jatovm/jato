@@ -434,6 +434,9 @@ int convert_to_ir(struct compilation_unit *cu)
 	 * really converted all basic blocks.
 	 */
 	for_each_basic_block(bb, &cu->bb_list) {
+		if (!bb->is_eh)
+			continue;
+
 		err = convert_bb_to_ir(bb);
 		if (err)
 			break;
