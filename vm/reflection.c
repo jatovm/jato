@@ -721,7 +721,7 @@ call_virtual_method(struct vm_method *vmm, struct vm_object *o,
 		return NULL;
 
 	vm_call_method_this_a(vmm, o, args, &result);
-	return result.l;
+	return wrap(&result, vmm->return_type.vm_type);
 }
 
 static struct vm_object *
@@ -734,7 +734,7 @@ call_static_method(struct vm_method *vmm, struct vm_object *args_array)
 		return NULL;
 
 	vm_call_method_a(vmm, args, &result);
-	return result.l;
+	return wrap(&result, vmm->return_type.vm_type);
 }
 
 jint native_method_get_modifiers_internal(struct vm_object *this)
