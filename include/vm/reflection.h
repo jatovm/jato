@@ -33,6 +33,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
 jint native_field_get_modifiers_internal(struct vm_object *this);
 struct vm_object *native_field_gettype(struct vm_object *this);
 
+jint native_method_get_modifiers_internal(struct vm_object *this);
 struct vm_object *
 native_method_invokenative(struct vm_object *method, struct vm_object *o,
 			   struct vm_object *args,

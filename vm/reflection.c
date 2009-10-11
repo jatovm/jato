@@ -760,6 +760,17 @@ call_static_method(struct vm_method *vmm, struct vm_object *args_array)
 	return (struct vm_object *) vm_call_method_a(vmm, args);
 }
 
+jint native_method_get_modifiers_internal(struct vm_object *this)
+{
+	struct vm_method *vmm;
+
+	vmm = vm_object_to_vm_method(this);
+	if (!vmm)
+		return 0;
+
+	return vmm->method->access_flags;
+}
+
 struct vm_object *
 native_method_invokenative(struct vm_object *method, struct vm_object *o,
 			   struct vm_object *args,
