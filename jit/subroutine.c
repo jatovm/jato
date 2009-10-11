@@ -1235,8 +1235,9 @@ int inline_subroutines(struct vm_method *method)
 	return err;
 }
 
-int subroutines_should_not_occure(struct parse_context *ctx)
+int fail_subroutine_bc(struct parse_context *ctx)
 {
-	error("jsr/jsr_w/ret should have been eliminated by inlining");
+	error("subroutine bytecode (%d) should have been eliminated by inlining", ctx->opc);
+
 	return -1;
 }

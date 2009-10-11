@@ -1,14 +1,14 @@
-#ifndef JATO_JIT_SUBROUTINE
-#define JATO_JIT_SUBROUTINE
+#ifndef JIT_SUBROUTINE_H
+#define JIT_SUBROUTINE_H
 
-struct vm_method;
 struct parse_context;
+struct vm_method;
 
 int inline_subroutines(struct vm_method *method);
-int subroutines_should_not_occure(struct parse_context *ctx);
+int fail_subroutine_bc(struct parse_context *ctx);
 
-#define convert_jsr subroutines_should_not_occure
-#define convert_jsr_w subroutines_should_not_occure
-#define convert_ret subroutines_should_not_occure
+#define convert_jsr	fail_subroutine_bc
+#define convert_jsr_w	fail_subroutine_bc
+#define convert_ret	fail_subroutine_bc
 
-#endif
+#endif /* JIT_SUBROUTINE_H */
