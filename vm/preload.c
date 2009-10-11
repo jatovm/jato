@@ -247,13 +247,21 @@ struct vm_method *vm_java_lang_VMThread_init;
 struct vm_method *vm_java_lang_VMThread_run;
 struct vm_method *vm_java_lang_System_exit;
 struct vm_method *vm_java_lang_Boolean_init;
+struct vm_method *vm_java_lang_Boolean_valueOf;
 struct vm_method *vm_java_lang_Byte_init;
+struct vm_method *vm_java_lang_Byte_valueOf;
 struct vm_method *vm_java_lang_Character_init;
+struct vm_method *vm_java_lang_Character_valueOf;
 struct vm_method *vm_java_lang_Double_init;
+struct vm_method *vm_java_lang_Double_valueOf;
 struct vm_method *vm_java_lang_Float_init;
+struct vm_method *vm_java_lang_Float_valueOf;
 struct vm_method *vm_java_lang_Integer_init;
+struct vm_method *vm_java_lang_Integer_valueOf;
 struct vm_method *vm_java_lang_Long_init;
+struct vm_method *vm_java_lang_Long_valueOf;
 struct vm_method *vm_java_lang_Short_init;
+struct vm_method *vm_java_lang_Short_valueOf;
 struct vm_method *vm_java_lang_ClassLoader_loadClass;
 struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
 struct vm_method *vm_java_lang_VMString_intern;
@@ -360,10 +368,22 @@ static const struct method_preload_entry method_preload_entries[] = {
 		&vm_java_lang_Boolean_init,
 	},
 	{
+		&vm_java_lang_Boolean,
+		"valueOf",
+		"(Z)Ljava/lang/Boolean;",
+		&vm_java_lang_Boolean_valueOf,
+	},
+	{
 		&vm_java_lang_Byte,
 		"<init>",
 		"(B)V",
 		&vm_java_lang_Byte_init,
+	},
+	{
+		&vm_java_lang_Byte,
+		"valueOf",
+		"(B)Ljava/lang/Byte;",
+		&vm_java_lang_Byte_valueOf,
 	},
 	{
 		&vm_java_lang_Character,
@@ -372,10 +392,22 @@ static const struct method_preload_entry method_preload_entries[] = {
 		&vm_java_lang_Character_init,
 	},
 	{
+		&vm_java_lang_Character,
+		"valueOf",
+		"(C)Ljava/lang/Character;",
+		&vm_java_lang_Character_valueOf,
+	},
+	{
 		&vm_java_lang_Double,
 		"<init>",
 		"(D)V",
 		&vm_java_lang_Double_init,
+	},
+	{
+		&vm_java_lang_Double,
+		"valueOf",
+		"(D)Ljava/lang/Double;",
+		&vm_java_lang_Double_valueOf,
 	},
 	{
 		&vm_java_lang_Long,
@@ -384,10 +416,22 @@ static const struct method_preload_entry method_preload_entries[] = {
 		&vm_java_lang_Long_init,
 	},
 	{
+		&vm_java_lang_Long,
+		"valueOf",
+		"(J)Ljava/lang/Long;",
+		&vm_java_lang_Long_valueOf,
+	},
+	{
 		&vm_java_lang_Short,
 		"<init>",
 		"(S)V",
 		&vm_java_lang_Short_init,
+	},
+	{
+		&vm_java_lang_Short,
+		"valueOf",
+		"(S)Ljava/lang/Short;",
+		&vm_java_lang_Short_valueOf,
 	},
 	{
 		&vm_java_lang_Float,
@@ -396,10 +440,22 @@ static const struct method_preload_entry method_preload_entries[] = {
 		&vm_java_lang_Float_init,
 	},
 	{
+		&vm_java_lang_Float,
+		"valueOf",
+		"(F)Ljava/lang/Float;",
+		&vm_java_lang_Float_valueOf,
+	},
+	{
 		&vm_java_lang_Integer,
 		"<init>",
 		"(I)V",
 		&vm_java_lang_Integer_init,
+	},
+	{
+		&vm_java_lang_Integer,
+		"valueOf",
+		"(I)Ljava/lang/Integer;",
+		&vm_java_lang_Integer_valueOf,
 	},
 	{
 		&vm_java_lang_ClassLoader,

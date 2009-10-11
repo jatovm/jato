@@ -505,67 +505,77 @@ struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz)
 	return vmc->super->object;
 }
 
-static struct vm_object *encapsulate_value(void *value_p, enum vm_type type)
+static int unwrap(void *field_ptr, enum vm_type type,
+		  struct vm_object *value)
 {
-	struct vm_object *obj;
+	unsigned long args[] = { (unsigned long) value };
+	union jvalue result;
 
 	switch (type) {
 	case J_REFERENCE:
-		return *(struct vm_object **) value_p;
-	case J_BOOLEAN:
-		obj = vm_object_alloc(vm_java_lang_Boolean);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Boolean_init, obj, *(jboolean *) value_p);
-		return obj;
+		*(jobject *) field_ptr = value;
+		return 0;
 	case J_BYTE:
-		obj = vm_object_alloc(vm_java_lang_Byte);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Byte_init, obj, *(jbyte *) value_p);
-		return obj;
-	case J_CHAR:
-		obj = vm_object_alloc(vm_java_lang_Character);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Character_init, obj, *(jchar *) value_p);
-		return obj;
+	case J_BOOLEAN:
 	case J_SHORT:
-		obj = vm_object_alloc(vm_java_lang_Short);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Short_init, obj, *(jshort *) value_p);
-		return obj;
-	case J_FLOAT:
-		obj = vm_object_alloc(vm_java_lang_Float);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Float_init, obj, *(jfloat *) value_p);
-		return obj;
+	case J_CHAR:
 	case J_INT:
-		obj = vm_object_alloc(vm_java_lang_Integer);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Integer_init, obj, *(jint *) value_p);
-		return obj;
-	case J_DOUBLE:
-		obj = vm_object_alloc(vm_java_lang_Double);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Double_init, obj, *(jdouble *) value_p);
-		return obj;
+		/*
+		 * We can handle those as int because these values are
+		 * returned by ireturn anyway.
+		 */
+		vm_call_method_this_a(vm_java_lang_Number_intValue, value, args, &result);
+		*(long *) field_ptr = result.i;
+		return 0;
+	case J_FLOAT:
+		vm_call_method_this_a(vm_java_lang_Number_floatValue, value, args, &result);
+		*(jfloat *) field_ptr = result.f;
+		return 0;
 	case J_LONG:
-		obj = vm_object_alloc(vm_java_lang_Long);
-		if (!obj)
-			goto failed_obj;
-		vm_call_method(vm_java_lang_Long_init, obj, *(jlong *) value_p);
-		return obj;
-	default:
-		error("invalid type");
+		vm_call_method_this_a(vm_java_lang_Number_longValue, value, args, &result);
+		*(jlong *) field_ptr = result.j;
+		return 0;
+	case J_DOUBLE:
+		vm_call_method_this_a(vm_java_lang_Number_doubleValue, value, args, &result);
+		*(jdouble *) field_ptr = result.d;
+		return 0;
+	case J_VOID:
+	case J_RETURN_ADDRESS:
+	case VM_TYPE_MAX:
+		error("unexpected type");
 	}
 
- failed_obj:
-	NOT_IMPLEMENTED;
+	return 0;
+}
+
+static struct vm_object *wrap(union jvalue *value, enum vm_type vm_type)
+{
+	switch (vm_type) {
+	case J_VOID:
+		return NULL;
+	case J_REFERENCE:
+		return value->l;
+	case J_BOOLEAN:
+		return vm_call_method_object(vm_java_lang_Boolean_valueOf, value->z);
+	case J_BYTE:
+		return vm_call_method_object(vm_java_lang_Byte_valueOf, value->b);
+	case J_CHAR:
+		return vm_call_method_object(vm_java_lang_Character_valueOf, value->c);
+	case J_SHORT:
+		return vm_call_method_object(vm_java_lang_Short_valueOf, value->s);
+	case J_LONG:
+		return vm_call_method_object(vm_java_lang_Long_valueOf, value->j);
+	case J_INT:
+		return vm_call_method_object(vm_java_lang_Integer_valueOf, value->i);
+	case J_FLOAT:
+		return vm_call_method_object(vm_java_lang_Float_valueOf, value->f);
+	case J_DOUBLE:
+		return vm_call_method_object(vm_java_lang_Double_valueOf, value->d);
+	case J_RETURN_ADDRESS:
+	case VM_TYPE_MAX:
+		die("unexpected type");
+	}
+
 	return NULL;
 }
 
@@ -614,7 +624,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 		value_p = &o->fields[vmf->offset];
 	}
 
-	return encapsulate_value(value_p, type);
+	return wrap((union jvalue *) &value_p, type);
 }
 
 jint native_field_get_modifiers_internal(struct vm_object *this)
@@ -626,49 +636,6 @@ jint native_field_get_modifiers_internal(struct vm_object *this)
 		return 0;
 
 	return vmf->field->access_flags;
-}
-
-static int unwrap(void *field_ptr, enum vm_type type,
-		  struct vm_object *value)
-{
-	unsigned long args[] = { (unsigned long) value };
-	union jvalue result;
-
-	switch (type) {
-	case J_REFERENCE:
-		*(jobject *) field_ptr = value;
-		return 0;
-	case J_BYTE:
-	case J_BOOLEAN:
-	case J_SHORT:
-	case J_CHAR:
-	case J_INT:
-		/*
-		 * We can handle those as int because these values are
-		 * returned by ireturn anyway.
-		 */
-		vm_call_method_this_a(vm_java_lang_Number_intValue, value, args, &result);
-		*(long *) field_ptr = result.i;
-		return 0;
-	case J_FLOAT:
-		vm_call_method_this_a(vm_java_lang_Number_floatValue, value, args, &result);
-		*(jfloat *) field_ptr = result.f;
-		return 0;
-	case J_LONG:
-		vm_call_method_this_a(vm_java_lang_Number_longValue, value, args, &result);
-		*(jlong *) field_ptr = result.j;
-		return 0;
-	case J_DOUBLE:
-		vm_call_method_this_a(vm_java_lang_Number_doubleValue, value, args, &result);
-		*(jdouble *) field_ptr = result.d;
-		return 0;
-	case J_VOID:
-	case J_RETURN_ADDRESS:
-	case VM_TYPE_MAX:
-		error("unexpected type");
-	}
-
-	return 0;
 }
 
 void native_field_set(struct vm_object *this, struct vm_object *o,
