@@ -36,7 +36,7 @@ public class MethodTest extends TestCase {
         assertEquals(Modifier.STATIC | Modifier.PUBLIC, modifiers("publicClassMethod"));
         assertEquals(Modifier.PUBLIC, modifiers("publicInstanceMethod"));
     }
- 
+
     private static int modifiers(String name) throws Exception {
       return Klass.class.getMethod(name, new Class[] { }).getModifiers();
     }
@@ -45,9 +45,27 @@ public class MethodTest extends TestCase {
       public final void publicFinalInstanceMethod() { }
       public static void publicClassMethod() { }
       public void publicInstanceMethod() { }
+
+      public static int intIncrement(int x) {
+          return x + 1;
+      }
+    }
+
+    public static Object invoke(String name, Class arg_class, Object arg) {
+        try {
+            return Klass.class.getMethod(name, new Class[] { arg_class }).invoke(null, new Object[] { arg });
+        } catch (Exception e) {
+            fail();
+            return null;
+        }
+    }
+
+    public static void testMethodReflectionInvoke() {
+        assertObjectEquals(Integer.valueOf(2), invoke("intIncrement", int.class, Integer.valueOf(1)));
     }
 
     public static void main(String[] args) throws Exception {
         testMethodModifiers();
+        testMethodReflectionInvoke();
     }
 }
