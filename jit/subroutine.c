@@ -31,29 +31,29 @@
  *    and Dynamic Analysis", Cyrille Artho, Armin Biere.
  */
 
-#include <stdint.h>
-#include <errno.h>
-#include <malloc.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
+#include "cafebabe/line_number_table_attribute.h"
+#include "cafebabe/code_attribute.h"
 
-#include "jit/subroutine.h"
 #include "jit/bc-offset-mapping.h"
-#include "jit/pc-map.h"
+#include "jit/subroutine.h"
 #include "jit/exception.h"
+#include "jit/pc-map.h"
 
-#include "vm/method.h"
-#include "vm/bytecode.h"
 #include "vm/bytecodes.h"
-#include "vm/stream.h"
+#include "vm/bytecode.h"
+#include "vm/method.h"
 #include "vm/stdlib.h"
+#include "vm/stream.h"
 #include "vm/die.h"
 
 #include "lib/list.h"
 
-#include "cafebabe/line_number_table_attribute.h"
-#include "cafebabe/code_attribute.h"
+#include <limits.h>
+#include <malloc.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <stdio.h>
 
 #define PC_UNKNOWN ULONG_MAX
 
