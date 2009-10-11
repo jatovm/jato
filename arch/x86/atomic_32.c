@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Pekka Enberg
+ * Copyright (C) 2009  Pekka Enberg
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -24,53 +24,19 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "jit/exception.h"
-
 #include "arch/atomic.h"
 
-#include "vm/reflection.h"
-#include "vm/preload.h"
-#include "vm/object.h"
-#include "vm/unsafe.h"
-#include "vm/jni.h"
+#include <stdint.h>
 
-jint native_unsafe_compare_and_swap_int(struct vm_object *this,
-					struct vm_object *obj, jlong offset,
-					jint expect, jint update)
+uint64_t atomic_cmpxchg_64(uint64_t *p, uint64_t old, uint64_t new)
 {
-	void *p = &obj->fields[offset];
+	uint32_t low = new;
+	uint32_t high = new >> 32;
 
-	return atomic_cmpxchg_32(p, (uint32_t)expect, (uint32_t)update) == (uint32_t)expect;
-}
-
-jint native_unsafe_compare_and_swap_long(struct vm_object *this,
-					 struct vm_object *obj, jlong offset,
-					 jlong expect, jlong update)
-{
-	void *p = &obj->fields[offset];
-
-	return atomic_cmpxchg_64(p, (uint64_t)expect, (uint64_t)update) == (uint64_t)expect;
-}
-
-jint native_unsafe_compare_and_swap_object(struct vm_object *this,
-					   struct vm_object *obj,
-					   jlong offset,
-					   struct vm_object *expect,
-					    struct vm_object *update)
-{
-	void *p = &obj->fields[offset];
-
-	return atomic_cmpxchg_ptr(p, expect, update) == expect;
-}
-
-jlong native_unsafe_object_field_offset(struct vm_object *this,
-					struct vm_object *field)
-{
-	struct vm_field *vmf;
-
-	vmf = vm_object_to_vm_field(field);
-	if (!vmf)
-		return 0;
-
-	return vmf->offset;
+	asm volatile (
+		"lock; cmpxchg8b %1\n"
+		     : "+A" (old), "+m" (*p)
+		     :  "b" (low),  "c" (high)
+		     );
+        return old;
 }

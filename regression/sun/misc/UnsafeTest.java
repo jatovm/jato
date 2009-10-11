@@ -65,6 +65,37 @@ public class UnsafeTest extends TestCase {
         public int value;
     }
 
+    public static void testCompareAndSwapLong() throws Exception {
+        assertSwapsLong(Long.MIN_VALUE, Long.MAX_VALUE);
+        assertSwapsLong(Long.MAX_VALUE, Long.MIN_VALUE);
+
+        assertDoesNotSwapLong(0, Long.MIN_VALUE, Long.MAX_VALUE);
+    }
+
+    public static void assertSwapsLong(long expect, long update) throws Exception {
+        UnsafeLongObject object = new UnsafeLongObject();
+        object.value = expect;
+        assertTrue(compareAndSwapLong(object, expect, update));
+        assertEquals(update, object.value);
+    }
+
+    public static void assertDoesNotSwapLong(long initial, long expect, long update) throws Exception {
+        UnsafeLongObject object = new UnsafeLongObject();
+        object.value = initial;
+        assertFalse(compareAndSwapLong(object, expect, update));
+        assertEquals(initial, object.value);
+    }
+
+    public static boolean compareAndSwapLong(Object object, long expect, long update) throws Exception {
+        Field field = UnsafeLongObject.class.getDeclaredField("value");
+        long valueOffset = unsafe.objectFieldOffset(field);
+        return unsafe.compareAndSwapLong(object, valueOffset, expect, update);
+    }
+
+    public static class UnsafeLongObject {
+        public long value;
+    }
+
     public static void testCompareAndSwapObject() throws Exception {
         assertSwapsObject(new Object(), new Object());
         assertSwapsObject(new Object(), new Object());
@@ -98,6 +129,7 @@ public class UnsafeTest extends TestCase {
 
     public static void main(String[] args) throws Exception {
         testCompareAndSwapInt();
+        testCompareAndSwapLong();
         testCompareAndSwapObject();
     }
 }

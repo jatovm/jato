@@ -912,6 +912,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/Method", "invokeNative", native_method_invokenative),
 	DEFINE_NATIVE("java/util/concurrent/atomic/AtomicLong", "VMSupportsCS8", native_atomiclong_vm_supports_cs8),
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapInt", native_unsafe_compare_and_swap_int),
+	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapLong", native_unsafe_compare_and_swap_long),
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapObject", native_unsafe_compare_and_swap_object),
 	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", native_unsafe_object_field_offset),
 };
