@@ -88,7 +88,7 @@ How do I launch a simple application?
 
   and launch it with the following command:
 
-    $ java -jar tetris.jar
+    $ jato -jar tetris.jar
 
   To launch the application under gdb, use the following command:
 
