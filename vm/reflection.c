@@ -621,7 +621,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 		value_p = &o->fields[vmf->offset];
 	}
 
-	return wrap((union jvalue *) &value_p, type);
+	return wrap((union jvalue *) value_p, type);
 }
 
 jint native_field_get_modifiers_internal(struct vm_object *this)
