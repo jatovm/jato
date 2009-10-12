@@ -99,6 +99,7 @@ JIT_OBJS = \
 
 VM_OBJS = \
 	runtime/reflection.o	\
+	runtime/stack-walker.o	\
 	runtime/unsafe.o	\
 	vm/bytecode.o		\
 	vm/bytecodes.o		\
