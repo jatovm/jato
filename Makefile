@@ -98,6 +98,8 @@ JIT_OBJS = \
 	jit/wide-bc.o
 
 VM_OBJS = \
+	runtime/reflection.o	\
+	runtime/unsafe.o	\
 	vm/bytecode.o		\
 	vm/bytecodes.o		\
 	vm/call.o		\
@@ -118,7 +120,6 @@ VM_OBJS = \
 	vm/natives.o		\
 	vm/object.o		\
 	vm/preload.o		\
-	vm/reflection.o		\
 	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack-trace.o	\
@@ -127,7 +128,6 @@ VM_OBJS = \
 	vm/thread.o		\
 	vm/trace.o		\
 	vm/types.o		\
-	vm/unsafe.o		\
 	vm/utf8.o		\
 	vm/zalloc.o
 
