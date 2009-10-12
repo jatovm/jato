@@ -3180,15 +3180,17 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	method	= stmt->target_method;
 	cu	= method->compilation_unit;
 
-	if (cu == s->b_parent) {
-		/*
-		 * This is recursive invocation so we call the trampoline.
-		 */
-		is_compiled = false;
-		target = vm_method_trampoline_ptr(method);
-	} else {
-		pthread_mutex_lock(&cu->mutex);
+	is_compiled	= false;
+	target		= vm_method_trampoline_ptr(method);
 
+	/*
+	 * Look out for an ABBA deadlock during compilation if a method
+	 * A invokes method B and the same method B invokes method A as
+	 * well. Therefore, if cu->mutex is under contention, treat the
+	 * target method as not compiled and let trampoline
+	 * backpatching deal with it later.
+	 */
+	if (pthread_mutex_trylock(&cu->mutex) == 0) {
 		is_compiled = cu->is_compiled;
 		if (is_compiled)
 			target = vm_method_native_ptr(method);
