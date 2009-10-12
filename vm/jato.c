@@ -50,6 +50,7 @@
 #include "cafebabe/stream.h"
 
 #include "runtime/stack-walker.h"
+#include "runtime/runtime.h"
 #include "runtime/unsafe.h"
 
 #include "jit/compiler.h"
@@ -285,75 +286,6 @@ static void native_vmsystemproperties_preinit(struct vm_object *p)
 		list_del(&this->list_node);
 		free(this);
 	}
-}
-
-static void native_vmruntime_exit(int status)
-{
-	/* XXX: exit gracefully */
-	exit(status);
-}
-
-static void native_vmruntime_run_finalization_for_exit(void)
-{
-}
-
-static struct vm_object *
-native_vmruntime_maplibraryname(struct vm_object *name)
-{
-	struct vm_object *result;
-	char *str;
-
-	if (!name) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return NULL;
-	}
-
-	str = vm_string_to_cstr(name);
-	if (!str) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	char *result_str = NULL;
-
-	if (asprintf(&result_str, "lib%s.so", str) < 0)
-		die("asprintf");
-
-	free(str);
-
-	if (!result_str) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	result = vm_object_alloc_string_from_c(result_str);
-	free(result_str);
-
-	return result;
-}
-
-static int
-native_vmruntime_native_load(struct vm_object *name,
-			     struct vm_object *classloader)
-{
-	char *name_str;
-	int result;
-
-	if (!name) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return 0;
-	}
-
-	name_str = vm_string_to_cstr(name);
-	if (!name_str) {
-		NOT_IMPLEMENTED;
-		return 0;
-	}
-
-	result  = vm_jni_load_object(name_str, classloader);
-	free(name_str);
-
-	return result == 0;
 }
 
 static void native_vmruntime_println(struct vm_object *message)
