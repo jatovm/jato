@@ -50,6 +50,8 @@
 #include "cafebabe/stream.h"
 
 #include "runtime/stack-walker.h"
+#include "runtime/unsafe.h"
+
 #include "jit/compiler.h"
 #include "jit/cu-mapping.h"
 #include "jit/exception.h"
@@ -73,7 +75,6 @@
 #include "vm/string.h"
 #include "vm/system.h"
 #include "vm/thread.h"
-#include "vm/unsafe.h"
 #include "vm/class.h"
 #include "vm/call.h"
 #include "vm/jar.h"

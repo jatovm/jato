@@ -24,14 +24,13 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "runtime/unsafe.h"
 #include "jit/exception.h"
-
 #include "arch/atomic.h"
 
 #include "vm/reflection.h"
 #include "vm/preload.h"
 #include "vm/object.h"
-#include "vm/unsafe.h"
 #include "vm/jni.h"
 
 jint native_unsafe_compare_and_swap_int(struct vm_object *this,
