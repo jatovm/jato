@@ -98,6 +98,7 @@ JIT_OBJS = \
 	jit/wide-bc.o
 
 VM_OBJS = \
+	runtime/class.o		\
 	runtime/reflection.o	\
 	runtime/runtime.o	\
 	runtime/stack-walker.o	\
