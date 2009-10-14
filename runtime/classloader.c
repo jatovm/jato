@@ -62,13 +62,10 @@ jobject native_vmclassloader_findloadedclass(jobject classloader, jobject name)
 	if (!c_name)
 		return NULL;
 
-	vmc = classloader_find_class(c_name);
+	vmc = classloader_find_class(classloader, c_name);
 	free(c_name);
 
 	if (!vmc)
-		return NULL;
-
-	if (vmc->classloader != classloader)
 		return NULL;
 
 	vm_class_ensure_init(vmc);

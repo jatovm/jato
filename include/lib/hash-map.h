@@ -32,6 +32,7 @@ bool hash_map_contains(struct hash_map *map, const void *key);
 		list_for_each_entry(this, &(hashmap)->table[__i], list_node)
 
 hash_fn string_hash;
+hash_fn ptr_hash;
 compare_fn string_compare;
 
 #endif

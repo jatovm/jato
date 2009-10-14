@@ -194,6 +194,11 @@ enum class_load_status {
 	CLASS_NOT_FOUND,
 };
 
+struct classes_key {
+	char *class_name;
+	struct vm_object *classloader;
+};
+
 struct classloader_class {
 	enum class_load_status status;
 	struct vm_class *class;
@@ -201,25 +206,63 @@ struct classloader_class {
 	/* number of threads waiting for a class. */
 	unsigned long nr_waiting;
 	struct vm_thread *loading_thread;
+	struct vm_object *classloader;
+
+	struct classes_key key;
 };
 
 static struct hash_map *classes;
 
+static unsigned long classes_key_hash(const void *key, unsigned long size)
+{
+	const struct classes_key *classes_key = key;
+
+	return (string_hash(classes_key->class_name, size) ^
+		ptr_hash(classes_key->classloader, size)) % size;
+}
+
+static int classes_key_compare(const void *key1, const void *key2)
+{
+	const struct classes_key *classes_key1 = key1;
+	const struct classes_key *classes_key2 = key2;
+
+	if (!strcmp(classes_key1->class_name, classes_key2->class_name) &&
+	    classes_key1->classloader == classes_key2->classloader)
+		return 0;
+
+	return -1;
+}
+
 void classloader_init(void)
 {
-	classes = alloc_hash_map(10000, string_hash, string_compare);
+	classes = alloc_hash_map(10000, classes_key_hash, classes_key_compare);
 	if (!classes)
 		error("failed to initialize class loader");
 }
 
-static struct classloader_class *lookup_class(const char *class_name)
+static struct classloader_class *
+lookup_class(struct vm_object *loader, const char *class_name)
 {
 	void *class;
+	struct classes_key key;
 
-	if (hash_map_get(classes, class_name, &class))
+	key.class_name  = (char *) class_name;
+	key.classloader = loader;
+
+	if (hash_map_get(classes, &key, &class))
 		return NULL;
 
 	return class;
+}
+
+static void remove_class(struct vm_object *loader, const char *class_name)
+{
+	struct classes_key key;
+
+	key.class_name  = (char *) class_name;
+	key.classloader = loader;
+
+	hash_map_remove(classes, &key);
 }
 
 static char *dots_to_slash(const char *name)
@@ -515,11 +558,12 @@ out_filename:
 	return result;
 }
 
-static struct classloader_class *find_class(const char *name)
+static struct classloader_class *
+find_class(struct vm_object *loader, const char *name)
 {
 	struct classloader_class *class;
 
-	class = lookup_class(name);
+	class = lookup_class(loader, name);
 	if (class) {
 		/*
 		 * If class is being loaded by current thread then we
@@ -542,7 +586,7 @@ static struct classloader_class *find_class(const char *name)
 		--class->nr_waiting;
 
 		if (class->status == CLASS_NOT_FOUND && !class->nr_waiting) {
-			hash_map_remove(classes, name);
+			remove_class(loader, name);
 			free(class);
 			class = NULL;
 		}
@@ -583,7 +627,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 
 	pthread_mutex_lock(&classloader_mutex);
 
-	class = find_class(slash_class_name);
+	class = find_class(loader, slash_class_name);
 	if (class) {
 		if (class->status == CLASS_LOADED)
 			vmc = class->class;
@@ -595,8 +639,10 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	class->status = CLASS_LOADING;
 	class->nr_waiting = 0;
 	class->loading_thread = vm_thread_self();
+	class->key.classloader = loader;
+	class->key.class_name = strdup(slash_class_name);
 
-	if (hash_map_put(classes, strdup(slash_class_name), class)) {
+	if (hash_map_put(classes, &class->key, class)) {
 		vmc = NULL;
 		goto out_unlock;
 	}
@@ -618,7 +664,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		 * removes the entry.
 		 */
 		if (class->nr_waiting == 0) {
-			hash_map_remove(classes, slash_class_name);
+			remove_class(loader, slash_class_name);
 			free(class);
 		} else {
 			class->status = CLASS_NOT_FOUND;
@@ -649,7 +695,8 @@ classloader_load(struct vm_object *loader, const char *class_name)
  * Returns class for a given name if it has already been loaded or
  * NULL otherwise. It may block if class it being loaded.
  */
-struct vm_class *classloader_find_class(const char *name)
+struct vm_class *
+classloader_find_class(struct vm_object *loader, const char *name)
 {
 	struct vm_class *vmc;
 	char *slash_class_name;
@@ -665,7 +712,7 @@ struct vm_class *classloader_find_class(const char *name)
 
 	pthread_mutex_lock(&classloader_mutex);
 
-	class = find_class(slash_class_name);
+	class = find_class(loader, slash_class_name);
 	if (class && class->status == CLASS_LOADED)
 		vmc = class->class;
 
