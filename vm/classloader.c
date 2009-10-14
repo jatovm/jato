@@ -400,6 +400,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 		return NULL;
 	}
 
+	class->classloader = NULL;
 	class->primitive_vm_type = str_to_type(class_name);
 
 	if (vm_class_link_primitive_class(class, class_name)) {
@@ -438,6 +439,8 @@ load_array_class(struct vm_object *loader, const char *class_name)
 		elem_class = classloader_load_primitive(elem_class_name);
 	else
 		elem_class = classloader_load(loader, elem_class_name);
+
+	array_class->classloader = elem_class->classloader;
 
 	if (vm_class_link_array_class(array_class, elem_class, class_name)) {
 		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
@@ -505,8 +508,10 @@ static struct vm_class *load_class(struct vm_object *loader,
 	}
 
 out_filename:
-	free(filename);
+	if (result)
+		result->classloader = NULL;
 
+	free(filename);
 	return result;
 }
 
@@ -569,6 +574,13 @@ classloader_load(struct vm_object *loader, const char *class_name)
 
 	vmc = NULL;
 
+	/*
+	 * Array classes have classloader set to the classloader of its elements.
+	 * Primitive types are always loaded with bootstrap classloader.
+	 */
+	if (is_primitive_array(class_name))
+		loader = NULL;
+
 	pthread_mutex_lock(&classloader_mutex);
 
 	class = find_class(slash_class_name);
@@ -618,8 +630,6 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	}
 
 	pthread_mutex_lock(&classloader_mutex);
-
-	vmc->classloader = loader;
 
 	class->class = vmc;
 	class->status = CLASS_LOADED;

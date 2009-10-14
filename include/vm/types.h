@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "lib/list.h"
 
@@ -60,6 +61,11 @@ static inline int vm_type_slot_size(enum vm_type type)
 	if (type == J_DOUBLE || type == J_LONG)
 		return 2;
 	return 1;
+}
+
+static inline bool is_primitive_array(const char *name)
+{
+	return name[0] == '[' && name[strlen(name) - 1] != ';';
 }
 
 static inline enum vm_type mimic_stack_type(enum vm_type type)
