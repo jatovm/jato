@@ -150,20 +150,18 @@ LIB_OBJS = \
 JAMVM_OBJS =
 
 CAFEBABE_OBJS := \
-	attribute_array.o		\
-	attribute_info.o		\
-	class.o				\
-	code_attribute.o		\
-	constant_value_attribute.o	\
-	constant_pool.o			\
-	error.o				\
-	field_info.o			\
-	line_number_table_attribute.o	\
-	method_info.o			\
-	source_file_attribute.o		\
-	stream.o
-
-CAFEBABE_OBJS := $(addprefix cafebabe/src/cafebabe/,$(CAFEBABE_OBJS))
+	cafebabe/attribute_array.o		\
+	cafebabe/attribute_info.o		\
+	cafebabe/class.o			\
+	cafebabe/code_attribute.o		\
+	cafebabe/constant_value_attribute.o	\
+	cafebabe/constant_pool.o		\
+	cafebabe/error.o			\
+	cafebabe/field_info.o			\
+	cafebabe/line_number_table_attribute.o	\
+	cafebabe/method_info.o			\
+	cafebabe/source_file_attribute.o	\
+	cafebabe/stream.o
 
 LIBHARNESS_OBJS = \
 	test/libharness/libharness.o
@@ -209,7 +207,7 @@ DEFAULT_CFLAGS	+= $(WARNINGS)
 OPTIMIZATIONS	+= -Os -fno-delete-null-pointer-checks
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -Icafebabe/include -include $(ARCH_CONFIG)
+INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG)
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
 DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"

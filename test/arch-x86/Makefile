@@ -21,18 +21,18 @@ TOPLEVEL_OBJS := \
 	arch/x86/thread.o \
 	arch/x86/unwind$(ARCH_POSTFIX).o \
 	arch/x86/use-def.o \
-	cafebabe/src/cafebabe/attribute_array.o \
-	cafebabe/src/cafebabe/attribute_info.o \
-	cafebabe/src/cafebabe/class.o \
-	cafebabe/src/cafebabe/code_attribute.o \
-	cafebabe/src/cafebabe/constant_pool.o \
-	cafebabe/src/cafebabe/constant_value_attribute.o \
-	cafebabe/src/cafebabe/error.o \
-	cafebabe/src/cafebabe/field_info.o \
-	cafebabe/src/cafebabe/line_number_table_attribute.o \
-	cafebabe/src/cafebabe/method_info.o \
-	cafebabe/src/cafebabe/source_file_attribute.o \
-	cafebabe/src/cafebabe/stream.o \
+	cafebabe/attribute_array.o \
+	cafebabe/attribute_info.o \
+	cafebabe/class.o \
+	cafebabe/code_attribute.o \
+	cafebabe/constant_pool.o \
+	cafebabe/constant_value_attribute.o \
+	cafebabe/error.o \
+	cafebabe/field_info.o \
+	cafebabe/line_number_table_attribute.o \
+	cafebabe/method_info.o \
+	cafebabe/source_file_attribute.o \
+	cafebabe/stream.o \
 	jit/basic-block.o \
 	jit/bc-offset-mapping.o \
 	jit/compilation-unit.o \

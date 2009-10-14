@@ -3,15 +3,15 @@ SUITE=jit-test-suite.c
 
 TOPLEVEL_OBJS := \
 	arch/$(ARCH)/backtrace.o \
-	cafebabe/src/cafebabe/attribute_array.o \
-	cafebabe/src/cafebabe/attribute_info.o \
-	cafebabe/src/cafebabe/class.o \
-	cafebabe/src/cafebabe/constant_pool.o \
-	cafebabe/src/cafebabe/error.o \
-	cafebabe/src/cafebabe/field_info.o \
-	cafebabe/src/cafebabe/method_info.o \
-	cafebabe/src/cafebabe/source_file_attribute.o \
-	cafebabe/src/cafebabe/stream.o \
+	cafebabe/attribute_array.o \
+	cafebabe/attribute_info.o \
+	cafebabe/class.o \
+	cafebabe/constant_pool.o \
+	cafebabe/error.o \
+	cafebabe/field_info.o \
+	cafebabe/method_info.o \
+	cafebabe/source_file_attribute.o \
+	cafebabe/stream.o \
 	jit/args.o \
 	jit/arithmetic-bc.o \
 	jit/basic-block.o \
