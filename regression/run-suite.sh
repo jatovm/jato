@@ -74,10 +74,10 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.IntegerArithmeticTest 0
     run_java jvm.InterfaceFieldInheritanceTest 0
     run_java jvm.InterfaceInheritanceTest 0
-    run_java jvm.InvokeinterfaceTest 0
-    run_java jvm.InvokestaticPatchingTest 0
     run_java jvm.InvokeResultTest 0
     run_java jvm.InvokeTest 0
+    run_java jvm.InvokeinterfaceTest 0
+    run_java jvm.InvokestaticPatchingTest 0
     run_java jvm.LoadConstantsTest 0
     run_java jvm.LongArithmeticExceptionsTest 0
     run_java jvm.LongArithmeticTest 0
@@ -97,13 +97,14 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.RegisterAllocatorTortureTest 0
     run_java jvm.StackTraceTest 0
     run_java jvm.StringTest 0
+    run_java jvm.SubroutineTest 0
     run_java jvm.SwitchTest 0
     run_java jvm.SynchronizationExceptionsTest 0
     run_java jvm.SynchronizationTest 0
     run_java jvm.TrampolineBackpatchingTest 0
-    run_java jvm.SubroutineTest 0
     run_java jvm.VirtualAbstractInterfaceMethodTest 0
     run_java jvm.WideTest 0
+    run_java jvm.lang.reflect.FieldTest 0
     run_java sun.misc.UnsafeTest 0
 else 
     for i in $CLASS_LIST; do

@@ -576,19 +576,9 @@ static struct vm_object *wrap(union jvalue *value, enum vm_type vm_type)
 	return NULL;
 }
 
-struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
+static void *field_get_value(struct vm_field *vmf, struct vm_object *o)
 {
-	struct vm_field *vmf;
 	void *value_p;
-
-	if (!this) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return NULL;
-	}
-
-	vmf = vm_object_to_vm_field(this);
-	if (!vmf)
-		return NULL;
 
 	/*
 	 * TODO: "If this Field enforces access control, your runtime
@@ -596,8 +586,6 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 	 * IllegalAccessException if you could not access this field
 	 * in similar compiled code". (java/lang/reflect/Field.java)
 	 */
-
-	enum vm_type type = vm_field_type(vmf);
 
 	if (vm_field_is_static(vmf)) {
 		value_p = vmf->class->static_values + vmf->offset;
@@ -621,7 +609,67 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 		value_p = &o->fields[vmf->offset];
 	}
 
+	return value_p;
+}
+
+struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
+{
+	struct vm_field *vmf;
+	enum vm_type type;
+	void *value_p;
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return NULL;
+
+	type	= vm_field_type(vmf);
+	value_p	= field_get_value(vmf, NULL);
+
 	return wrap((union jvalue *) value_p, type);
+}
+
+static jlong to_primitive_value(union jvalue *value, enum vm_type vm_type)
+{
+	switch (vm_type) {
+	case J_BYTE:
+		return value->b;
+	case J_CHAR:
+		return value->c;
+	case J_SHORT:
+		return value->s;
+	case J_LONG:
+		return value->j;
+	case J_INT:
+		return value->i;
+	case J_BOOLEAN:
+	case J_DOUBLE:
+	case J_FLOAT:
+	case J_REFERENCE: {
+		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+		return 0;
+	}
+	case J_RETURN_ADDRESS:
+	case J_VOID:
+	case VM_TYPE_MAX:
+		break;
+	}
+	die("unexpected type %d", vm_type);
+}
+
+jlong native_field_get_long(struct vm_object *this, struct vm_object *o)
+{
+	struct vm_field *vmf;
+	union jvalue *value;
+	enum vm_type type;
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return 0;
+
+	type	= vm_field_type(vmf);
+	value	= field_get_value(vmf, NULL);
+
+	return to_primitive_value(value, type);
 }
 
 jint native_field_get_modifiers_internal(struct vm_object *this)

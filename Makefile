@@ -318,6 +318,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/TestCase.java \
 	regression/jvm/TrampolineBackpatchingTest.java \
 	regression/jvm/VirtualAbstractInterfaceMethodTest.java \
+	regression/jvm/lang/reflect/FieldTest.java \
 	regression/sun/misc/UnsafeTest.java
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
