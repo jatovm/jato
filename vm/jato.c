@@ -53,6 +53,7 @@
 #include "runtime/runtime.h"
 #include "runtime/unsafe.h"
 #include "runtime/class.h"
+#include "runtime/classloader.h"
 
 #include "jit/compiler.h"
 #include "jit/cu-mapping.h"
@@ -400,25 +401,6 @@ native_vmobject_getclass(struct vm_object *object)
 	return object->class->object;
 }
 
-static struct vm_object *
-native_vmclassloader_getprimitiveclass(int type)
-{
-	char primitive_class_name[] = { "X" };
-	struct vm_class *class;
-
-	primitive_class_name[0] = (char)type;
-
-	class = classloader_load_primitive(primitive_class_name);
-	if (!class)
-		return NULL;
-
-	vm_class_ensure_init(class);
-	if (exception_occurred())
-		return NULL;
-
-	return class->object;
-}
-
 static int
 native_vmfile_is_directory(struct vm_object *dirpath)
 {
@@ -516,52 +498,6 @@ static void native_vmobject_wait(struct vm_object *object, jlong ms, jint ns)
 		vm_monitor_wait(&object->monitor);
 	else
 		vm_monitor_timed_wait(&object->monitor, ms, ns);
-}
-
-static struct vm_object *
-native_vmclassloader_findloadedclass(struct vm_object *classloader,
-				     struct vm_object *name)
-{
-	struct vm_class *vmc;
-	char *c_name;
-
-	c_name = vm_string_to_cstr(name);
-	if (!c_name)
-		return NULL;
-
-	vmc = classloader_find_class(c_name);
-	free(c_name);
-
-	if (!vmc)
-		return NULL;
-
-	if (vmc->classloader != classloader)
-		return NULL;
-
-	vm_class_ensure_init(vmc);
-	return vmc->object;
-}
-
-static struct vm_object *
-native_vmclassloader_loadclass(struct vm_object *name, jboolean resolve)
-{
-	/* XXX: what does @resolve parameter mean? */
-	struct vm_class *vmc;
-	char *c_name;
-
-	c_name = vm_string_to_cstr(name);
-	if (!c_name)
-		return NULL;
-
-	vmc = classloader_load(NULL, c_name);
-	free(c_name);
-	if (!vmc)
-		return NULL;
-
-	if (vm_class_ensure_object(vmc))
-		return NULL;
-
-	return vmc->object;
 }
 
 static struct vm_object *native_vmstring_intern(struct vm_object *str)

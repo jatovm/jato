@@ -99,6 +99,7 @@ JIT_OBJS = \
 
 VM_OBJS = \
 	runtime/class.o		\
+	runtime/classloader.o	\
 	runtime/reflection.o	\
 	runtime/runtime.o	\
 	runtime/stack-walker.o	\
