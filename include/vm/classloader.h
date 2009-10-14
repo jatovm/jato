@@ -17,5 +17,6 @@ struct vm_class *classloader_load(struct vm_object *loader,
 				  const char *class_name);
 struct vm_class *classloader_load_primitive(const char *class_name);
 struct vm_class *classloader_find_class(struct vm_object *loader, const char *name);
+int classloader_add_to_cache(struct vm_object *loader, struct vm_class *class);
 
 #endif

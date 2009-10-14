@@ -721,3 +721,31 @@ classloader_find_class(struct vm_object *loader, const char *name)
 	pthread_mutex_unlock(&classloader_mutex);
 	return vmc;
 }
+
+int classloader_add_to_cache(struct vm_object *loader, struct vm_class *vmc)
+{
+	struct classloader_class *class;
+
+	class = malloc(sizeof(*class));
+	if (!class)
+		return -ENOMEM;
+
+	class->class = vmc;
+	class->status = CLASS_LOADED;
+	class->nr_waiting = 0;
+	class->loading_thread = vm_thread_self();
+	class->key.classloader = loader;
+	class->key.class_name = strdup(vmc->name);
+
+	pthread_mutex_lock(&classloader_mutex);
+
+	if (hash_map_put(classes, &class->key, class)) {
+		pthread_mutex_unlock(&classloader_mutex);
+		free(class->key.class_name);
+		free(class);
+		return -ENOMEM;
+	}
+
+	pthread_mutex_unlock(&classloader_mutex);
+	return 0;
+}

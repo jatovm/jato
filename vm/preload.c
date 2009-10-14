@@ -91,6 +91,7 @@ struct vm_class *vm_java_lang_Short;
 struct vm_class *vm_java_lang_VMString;
 struct vm_class *vm_java_lang_Number;
 struct vm_class *vm_java_lang_InterruptedException;
+struct vm_class *vm_java_lang_ClassFormatError;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -142,6 +143,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "[java/lang/reflect/Method", &vm_array_of_java_lang_reflect_Method },
 	{ "java/lang/IllegalArgumentException", &vm_java_lang_IllegalArgumentException },
 	{ "java/lang/InterruptedException", &vm_java_lang_InterruptedException },
+	{ "java/lang/ClassFormatError", &vm_java_lang_ClassFormatError },
 	{ "java/lang/Boolean", &vm_java_lang_Boolean },
 	{ "java/lang/Byte", &vm_java_lang_Byte },
 	{ "java/lang/Character", &vm_java_lang_Character },

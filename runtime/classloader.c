@@ -29,8 +29,9 @@
 #include "runtime/classloader.h"
 
 #include "vm/class.h"
-#include "vm/object.h"
 #include "vm/classloader.h"
+#include "vm/object.h"
+#include "vm/preload.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -91,4 +92,41 @@ jobject native_vmclassloader_loadclass(jobject name, jboolean resolve)
 		return NULL;
 
 	return vmc->object;
+}
+
+jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
+	jobject data, jint offset, jint len, jobject pd)
+{
+	struct vm_class *class;
+	char *c_name;
+	uint8_t *buf;
+
+	buf = malloc(len);
+	if (!buf) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		return NULL;
+	}
+
+	for (jint i = 0; i < len; i++)
+		buf[i] = array_get_field_byte(data, offset + i);
+
+	if (name)
+		c_name = vm_string_to_cstr(name);
+	else
+		c_name = strdup("unknown");
+
+	class = vm_class_define(c_name, buf, len);
+	free(buf);
+
+	if (!class)
+		return NULL;
+
+	class->classloader = classloader;
+	if (classloader_add_to_cache(classloader, class)) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		return NULL;
+	}
+
+	vm_class_ensure_object(class);
+	return class->object;
 }

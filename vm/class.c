@@ -733,7 +733,7 @@ struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 	struct vm_class *class
 		= classloader_load(vmc->classloader, class_name_str);
 	if (!class) {
-		NOT_IMPLEMENTED;
+		warn("failed to load class %s", class_name_str);
 		return NULL;
 	}
 
@@ -1170,4 +1170,37 @@ struct vm_class *vm_class_get_array_class(struct vm_class *element_class)
 	result = classloader_load(element_class->classloader, name);
 	free(name);
 	return result;
+}
+
+struct vm_class *
+vm_class_define(const char *name, uint8_t *data, unsigned long len)
+{
+	struct cafebabe_stream stream;
+	struct cafebabe_class *class;
+	struct vm_class *result = NULL;
+
+	cafebabe_stream_open_buffer(&stream, data, len);
+
+	class = malloc(sizeof *class);
+	if (cafebabe_class_init(class, &stream)) {
+		signal_new_exception(vm_java_lang_ClassFormatError, NULL);
+		goto out_stream;
+	}
+
+	cafebabe_stream_close_buffer(&stream);
+
+	result = malloc(sizeof *result);
+	if (!result) {
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		return NULL;
+	}
+
+	if (vm_class_link(result, class))
+		return NULL;
+
+	return result;
+
+out_stream:
+	cafebabe_stream_close_buffer(&stream);
+	return NULL;
 }
