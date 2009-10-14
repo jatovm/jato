@@ -352,7 +352,7 @@ print_exception_table(const struct vm_method *method,
 
 		if (!eh->catch_type) {
 			trace_printf("all\n");
-			return;
+			continue;
 		}
 
 		const struct vm_class *catch_class;
