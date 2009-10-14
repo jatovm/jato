@@ -628,7 +628,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 	return wrap((union jvalue *) value_p, type);
 }
 
-static jlong to_primitive_value(union jvalue *value, enum vm_type vm_type)
+static jlong to_jlong_value(union jvalue *value, enum vm_type vm_type)
 {
 	switch (vm_type) {
 	case J_BYTE:
@@ -669,7 +669,7 @@ jlong native_field_get_long(struct vm_object *this, struct vm_object *o)
 	type	= vm_field_type(vmf);
 	value	= field_get_value(vmf, NULL);
 
-	return to_primitive_value(value, type);
+	return to_jlong_value(value, type);
 }
 
 jint native_field_get_modifiers_internal(struct vm_object *this)
