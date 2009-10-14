@@ -768,6 +768,42 @@ eh_split(struct inlining_context *ctx, int i)
 	return &new_table[i + 1];
 }
 
+static inline bool
+eh_outside_subroutine(struct cafebabe_code_attribute_exception *eh,
+		      struct subroutine *s)
+{
+	return eh->start_pc >= s->end_pc + s->epilog_size ||
+		eh->end_pc <= s->start_pc;
+}
+
+static inline bool
+eh_inside_subroutine(struct cafebabe_code_attribute_exception *eh,
+		     struct subroutine *s)
+{
+	return eh->start_pc >= s->start_pc &&
+		eh->end_pc <= s->end_pc + s->epilog_size;
+}
+
+static inline bool
+eh_covers_subroutine(struct cafebabe_code_attribute_exception *eh,
+		     struct subroutine *s)
+{
+	return eh->start_pc <= s->start_pc &&
+		eh->end_pc >= s->end_pc + s->epilog_size;
+}
+
+static inline bool
+eh_target_inside_subroutine(struct cafebabe_code_attribute_exception *eh,
+			    struct subroutine *s)
+{
+	return eh->handler_pc >= s->start_pc &&
+		eh->handler_pc < s->end_pc + s->epilog_size;
+}
+
+/**
+ * Duplicates exception handler entry so that it covers all instances
+ * of inlined subroutines it belongs to.
+ */
 static int
 copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 		       int *eh_index, struct pc_map *pc_map)
@@ -775,11 +811,13 @@ copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 	struct cafebabe_code_attribute_exception *eh;
 	unsigned long eh_start_pc_offset;
 	unsigned long eh_end_pc_offset;
-	unsigned long eh_handler_pc_offset;
+	unsigned long eh_handler_pc;
 	unsigned long body_start_pc;
 	unsigned long body_size;
 
 	eh = &ctx->exception_table[*eh_index];
+
+	eh_handler_pc = eh->handler_pc;
 
 	body_start_pc = s->start_pc + s->prolog_size;
 	body_size = subroutine_get_body_size(s);
@@ -794,8 +832,6 @@ copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 	else
 		eh_end_pc_offset = eh->end_pc - body_start_pc;
 
-	eh_handler_pc_offset = eh->handler_pc - body_start_pc;
-
 	for (int i = 0; i < s->nr_call_sites; i++) {
 		struct cafebabe_code_attribute_exception *new_eh;
 		unsigned long sub_start;
@@ -804,23 +840,81 @@ copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 		if (pc_map_get_unique(pc_map, &sub_start))
 			return warn("no or ambiguous mapping"), -EINVAL;
 
-		if (i == s->nr_call_sites - 1)
-			new_eh = &ctx->exception_table[*eh_index];
-		else {
-			new_eh = eh_split(ctx, *eh_index);
-			if (!new_eh)
-				return warn("out of memory"), -ENOMEM;
-		}
+		new_eh = eh_split(ctx, *eh_index);
+		if (!new_eh)
+			return warn("out of memory"), -ENOMEM;
 
 		new_eh->start_pc = sub_start + eh_start_pc_offset;
 		new_eh->end_pc = sub_start + eh_end_pc_offset;
-		new_eh->handler_pc = sub_start + eh_handler_pc_offset;
 		new_eh->catch_type = ctx->exception_table[*eh_index].catch_type;
+
+		if (eh_target_inside_subroutine(eh, s)) {
+			new_eh->handler_pc = sub_start + eh_handler_pc - body_start_pc;
+		} else {
+			unsigned long pc = eh_handler_pc;
+			if (pc_map_get_unique(pc_map, &pc))
+				return -EINVAL;
+
+			new_eh->handler_pc = pc;
+		}
 	}
 
-	*eh_index = *eh_index + s->nr_call_sites - 1;
+	*eh_index = *eh_index + s->nr_call_sites;
 
 	return 0;
+}
+
+static int
+update_exception_handler(struct cafebabe_code_attribute_exception *eh,
+			 struct pc_map *pc_map)
+{
+	unsigned long start_pc, end_pc, handler_pc;
+	int err;
+
+	start_pc = eh->start_pc;
+	end_pc = eh->end_pc;
+	handler_pc = eh->handler_pc;
+
+	err = pc_map_get_unique(pc_map, &start_pc);
+	if (err)
+		return warn("no or ambiguous mapping"), -EINVAL;
+
+	err = pc_map_get_unique(pc_map, &end_pc);
+	if (err)
+		return warn("no or ambiguous mapping"), -EINVAL;
+
+	err = pc_map_get_unique(pc_map, &handler_pc);
+	if (err) {
+		/*
+		 * If handler_pc is in realation with more than one
+		 * address it means that the handler is within
+		 * subroutine which have been previously inlined. We
+		 * don't handle this.
+		 */
+		if (pc_map_has_value_for(pc_map, handler_pc))
+			return warn("invalid handler"), -EINVAL;
+
+		return warn("no mapping for handler"), -EINVAL;
+	}
+
+	eh->start_pc = start_pc;
+	eh->end_pc = end_pc;
+	eh->handler_pc = handler_pc;
+	return 0;
+}
+
+static void eh_remove(struct inlining_context *ctx, int i)
+{
+	unsigned long size;
+
+	size = (ctx->exception_table_length - i - 1) *
+		sizeof(struct cafebabe_code_attribute_exception);
+
+	memmove(ctx->exception_table + i,
+		ctx->exception_table + i + 1,
+		size);
+
+	ctx->exception_table_length--;
 }
 
 static int
@@ -834,55 +928,35 @@ update_and_copy_exception_handlers(struct inlining_context *ctx,
 		struct cafebabe_code_attribute_exception *eh
 			= &ctx->exception_table[i];
 
-		if (eh->start_pc >= s->end_pc + s->epilog_size ||
-		    eh->end_pc <= s->start_pc) {
-			unsigned long start_pc, end_pc, handler_pc;
+		if (eh_outside_subroutine(eh, s)) {
+			if (update_exception_handler(eh, pc_map))
+				return -EINVAL;
+		} else if (eh_inside_subroutine(eh, s)) {
+			int old_i = i;
 
-			start_pc = eh->start_pc;
-			end_pc = eh->end_pc;
-			handler_pc = eh->handler_pc;
-
-			err = pc_map_get_unique(pc_map, &start_pc);
+			err = copy_exception_handler(ctx, s, &i, pc_map);
 			if (err)
-				return warn("no or ambiguous mapping"), -EINVAL;
+				return err;
 
-			err = pc_map_get_unique(pc_map, &end_pc);
+			eh_remove(ctx, old_i);
+			i--;
+		} else if (eh_covers_subroutine(eh, s)) {
+			int old_i = i;
+
+			if (eh_target_inside_subroutine(eh, s))
+				return warn("exception handler jumps into subroutine"),
+					-EINVAL;
+
+			err = copy_exception_handler(ctx, s, &i, pc_map);
 			if (err)
-				return warn("no or ambiguous mapping"), -EINVAL;
+				return err;
 
-			err = pc_map_get_unique(pc_map, &handler_pc);
-			if (err) {
-				/*
-				 * If handler_pc is in realation with more
-				 * than one address it means that the handler
-				 * is within subroutine which have been
-				 * previously inlined. We don't handle this.
-				 */
-				if (pc_map_has_value_for(pc_map, handler_pc))
-					return warn("invalid handler"), -EINVAL;
-
-				return warn("no mapping for handler"), -EINVAL;
-			}
-
-			eh->start_pc = start_pc;
-			eh->end_pc = end_pc;
-			eh->handler_pc = handler_pc;
-
-			continue;
-		}
-
-		if (eh->start_pc < s->start_pc ||
-		    eh->end_pc > s->end_pc + s->epilog_size)
+			eh = &ctx->exception_table[old_i];
+			if (update_exception_handler(eh, pc_map))
+				return -EINVAL;
+		} else
 			return warn("handler range spans subroutine boundary"),
 				-EINVAL;
-
-		if (eh->handler_pc < s->start_pc ||
-		    eh->handler_pc >= s->end_pc + s->epilog_size)
-			return warn("handler not inside subroutine"), -EINVAL;
-
-		err = copy_exception_handler(ctx, s, &i, pc_map);
-		if (err)
-			return err;
 	}
 
 	return 0;
