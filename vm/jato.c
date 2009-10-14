@@ -461,12 +461,12 @@ static void native_vmthread_start(struct vm_object *vmthread, jlong stacksize)
 	vm_thread_start(vmthread);
 }
 
-static jboolean native_vmthread_interrupted(void)
+static jint native_vmthread_interrupted(void)
 {
 	return vm_thread_interrupted(vm_thread_self());
 }
 
-static jboolean native_vmthread_isinterrupted(struct vm_object *vmthread)
+static jint native_vmthread_isinterrupted(struct vm_object *vmthread)
 {
 	struct vm_thread *thread;
 
@@ -569,7 +569,7 @@ static struct vm_object *native_vmstring_intern(struct vm_object *str)
 	return vm_string_intern(str);
 }
 
-static jboolean native_atomiclong_vm_supports_cs8(void)
+static jint native_atomiclong_vm_supports_cs8(void)
 {
 	return false;
 }

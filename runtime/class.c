@@ -108,7 +108,7 @@ int32_t native_vmclass_is_anonymous_class(struct vm_object *object)
 	return vm_class_is_anonymous(class);
 }
 
-jboolean native_vmclass_is_assignable_from(struct vm_object *clazz_1,
+jint native_vmclass_is_assignable_from(struct vm_object *clazz_1,
 					   struct vm_object *clazz_2)
 {
 	struct vm_class *vmc_1 = vm_object_to_vm_class(clazz_1);
@@ -164,7 +164,7 @@ struct vm_object *native_vmclass_getcomponenttype(struct vm_object *object)
 	return vm_class_get_array_element_class(class)->object;
 }
 
-jboolean native_vmclass_isinstance(struct vm_object *clazz,
+jint native_vmclass_isinstance(struct vm_object *clazz,
 				   struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(clazz);
@@ -175,7 +175,7 @@ jboolean native_vmclass_isinstance(struct vm_object *clazz,
 	return vm_class_is_assignable_from(class, object->class);
 }
 
-jboolean native_vmclass_isinterface(struct vm_object *clazz)
+jint native_vmclass_isinterface(struct vm_object *clazz)
 {
 	struct vm_class *class = vm_object_to_vm_class(clazz);
 	if (!class)
