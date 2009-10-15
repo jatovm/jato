@@ -80,12 +80,8 @@ DECLARE_VM_CALL_METHOD_THIS(object, l);
 DECLARE_VM_CALL_METHOD_THIS(int, i);
 
 extern void native_call(struct vm_method *method,
-			const void *target,
+			void *target,
 			unsigned long *args,
 			union jvalue *result);
-extern void vm_native_call(struct vm_method *method,
-			   const void *target,
-			   unsigned long *args,
-			   union jvalue *result);
 
 #endif

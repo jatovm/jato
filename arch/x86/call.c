@@ -33,150 +33,92 @@
 
 #include "vm/call.h"
 #include "vm/method.h"
+#include "vm/stack-trace.h"
 
 #ifdef CONFIG_X86_32
 
-/**
- * Calls @method which address is obtained from a memory
- * pointed by @target. Function returns call result which
- * is supposed to be saved to %eax.
- */
-static unsigned long native_call_gp(struct vm_method *method,
-				    const void *target,
-				    unsigned long *args)
+static void native_call_eax(struct vm_method *method, void *target,
+			    unsigned long *args, union jvalue *result)
 {
-	unsigned long result;
+	__asm__ volatile
+		(
+	 "movl %%ebx, %%ecx \n"
+	 "shl $2, %%ebx \n"
+	 "subl %%ebx, %%esp \n"
+	 "movl %%esp, %%edi \n"
+	 "cld \n"
+	 "rep movsd \n"
+	 "mov %%ebx, %%esi \n"
 
-	__asm__ volatile (
-		"movl %%ebx, %%ecx \n"
-		"shl $2, %%ebx \n"
-		"subl %%ebx, %%esp \n"
-		"movl %%esp, %%edi \n"
-		"cld \n"
-		"rep movsd \n"
-		"movl %%ebx, %%esi \n"
-		"call *%3 \n"
-		"addl %%esi, %%esp \n"
-		: "=a" (result)
-		: "b" (method->args_count), "S"(args), "m"(target)
-		: "%ecx", "%edi", "cc"
-	);
+	 "test %4, %4 \n"
+	 "jz 1f \n"
 
-	return result;
-}
+	 "pushl %%esp \n"
+	 "pushl %2 \n"
+	 "call vm_enter_vm_native \n"
+	 "addl $8, %%esp \n"
+	 "test %%eax, %%eax \n"
+	 "jnz 2f \n"
 
-static unsigned long vm_native_call_gp(struct vm_method *method,
-				       const void *target,
-				       unsigned long *args)
-{
-	unsigned long result;
+	 "call *%2 \n"
+	 "movl %3, %%edi \n"
+	 "movl %%eax, (%%edi) \n"
 
-	__asm__ volatile (
-		"movl %%ebx, %%ecx \n"
-		"shl $2, %%ebx \n"
-		"subl %%ebx, %%esp \n"
-		"movl %%esp, %%edi \n"
-		"cld \n"
-		"rep movsd \n"
-		"movl %%ebx, %%esi \n"
+	 "call vm_leave_vm_native \n"
+	 "jmp 2f \n"
+"1: \n"
+	 "call *%2 \n"
+	 "movl %3, %%edi \n"
+	 "movl %%eax, (%%edi) \n"
 
-		"pushl %%esp \n"
-		"pushl %3 \n"
-		"call vm_enter_vm_native \n"
-		"addl $8, %%esp \n"
-		"test %%eax, %%eax \n"
-		"jnz 1f \n"
+"2: \n"
 
-		"call * -8(%%esp)\n"
-		"movl %%eax, %0 \n"
-
-		"call vm_leave_vm_native \n"
-
-		"1: addl %%esi, %%esp \n"
-		: "=r" (result)
-		: "b" (method->args_count), "S"(args), "r"(target)
-		: "%ecx", "%edi", "cc"
-	);
-
-	return result;
+	 "addl %%esi, %%esp \n"
+	 :
+	 : "b" (method->args_count),
+	   "S" (args),
+	   "m" (target),
+	   "m" (result),
+	   "r" (vm_method_is_vm_native(method))
+	 : "%ecx", "%edi", "cc", "memory");
 }
 
 /**
  * This calls a function with call arguments copied from @args
  * array. The array contains @args_count elements of machine word
- * size. The @target must be a variable holding a function
- * pointer. Call result will be stored in @result.
+ * size. Call result will be stored in @result.
  */
-void native_call(struct vm_method *method,
-		 const void *target,
-		 unsigned long *args,
-		 union jvalue *result)
+void native_call(struct vm_method *method, void *target,
+		 unsigned long *args, union jvalue *result)
 {
 	switch (method->return_type.vm_type) {
 	case J_VOID:
-		native_call_gp(method, target, args);
+		{
+			union jvalue r;
+			native_call_eax(method, target, args, &r);
+		}
 		break;
 	case J_REFERENCE:
-		result->l = (jobject) native_call_gp(method, target, args);
+		native_call_eax(method, target, args, result);
 		break;
 	case J_INT:
-		result->i = (jint) native_call_gp(method, target, args);
+		native_call_eax(method, target, args, result);
 		break;
 	case J_CHAR:
-		result->c = (jchar) native_call_gp(method, target, args);
+		native_call_eax(method, target, args, result);
+		result->i = (jint) result->c;
 		break;
 	case J_BYTE:
-		result->b = (jbyte) native_call_gp(method, target, args);
+		native_call_eax(method, target, args, result);
+		result->i = (jint) result->b;
 		break;
 	case J_SHORT:
-		result->s = (jshort) native_call_gp(method, target, args);
+		native_call_eax(method, target, args, result);
+		result->i = (jint) result->s;
 		break;
 	case J_BOOLEAN:
-		result->z = (jboolean) native_call_gp(method, target, args);
-		break;
-	case J_LONG:
-	case J_DOUBLE:
-	case J_FLOAT:
-		error("not implemented");
-		break;
-	case J_RETURN_ADDRESS:
-	case VM_TYPE_MAX:
-		die("unexpected type");
-	}
-}
-
-/**
- * This calls a VM native function with call arguments copied from
- * @args array. The array contains @args_count elements of machine
- * word size. The @target must be a pointer to a VM function. Call
- * result will be stored in @result.
- */
-void vm_native_call(struct vm_method *method,
-		    const void *target,
-		    unsigned long *args,
-		    union jvalue *result)
-{
-	switch (method->return_type.vm_type) {
-	case J_VOID:
-		vm_native_call_gp(method, target, args);
-		break;
-	case J_REFERENCE:
-		result->l = (jobject) vm_native_call_gp(method, target, args);
-		break;
-	case J_INT:
-		result->i = (jint) vm_native_call_gp(method, target, args);
-		break;
-	case J_CHAR:
-		result->c = (jchar) vm_native_call_gp(method, target, args);
-		break;
-	case J_BYTE:
-		result->b = (jbyte) vm_native_call_gp(method, target, args);
-		break;
-	case J_SHORT:
-		result->s = (jshort) vm_native_call_gp(method, target, args);
-		break;
-	case J_BOOLEAN:
-		result->z = (jboolean) vm_native_call_gp(method, target, args);
+		native_call_eax(method, target, args, result);
+		result->i = (jint) result->z;
 		break;
 	case J_LONG:
 	case J_DOUBLE:
