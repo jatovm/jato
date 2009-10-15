@@ -83,6 +83,54 @@ static void native_call_eax(struct vm_method *method, void *target,
 	 : "%ecx", "%edi", "cc", "memory");
 }
 
+static void native_call_long(struct vm_method *method, void *target,
+			     unsigned long *args, union jvalue *result)
+{
+	__asm__ volatile
+		(
+	 "movl %%ebx, %%ecx \n"
+	 "shl $2, %%ebx \n"
+	 "subl %%ebx, %%esp \n"
+	 "movl %%esp, %%edi \n"
+	 "cld \n"
+	 "rep movsd \n"
+	 "mov %%ebx, %%esi \n"
+
+	 "test %4, %4 \n"
+	 "jz 1f \n"
+
+	 "pushl %%esp \n"
+	 "pushl %2 \n"
+	 "call vm_enter_vm_native \n"
+	 "addl $8, %%esp \n"
+	 "test %%eax, %%eax \n"
+	 "jnz 2f \n"
+
+	 "call *%2 \n"
+	 "movl %3, %%edi \n"
+	 "movl %%eax, (%%edi) \n"
+	 "movl %%edx, 4(%%edi) \n"
+
+	 "call vm_leave_vm_native \n"
+	 "jmp 2f \n"
+"1: \n"
+	 "call *%2 \n"
+	 "movl %3, %%edi \n"
+	 "movl %%eax, (%%edi) \n"
+	 "movl %%edx, 4(%%edi) \n"
+
+"2: \n"
+
+	 "addl %%esi, %%esp \n"
+	 :
+	 : "b" (method->args_count),
+	   "S" (args),
+	   "m" (target),
+	   "m" (result),
+	   "r" (vm_method_is_vm_native(method))
+	 : "%ecx", "%edi", "cc", "memory");
+}
+
 /**
  * This calls a function with call arguments copied from @args
  * array. The array contains @args_count elements of machine word
@@ -121,6 +169,8 @@ void native_call(struct vm_method *method, void *target,
 		result->i = (jint) result->z;
 		break;
 	case J_LONG:
+		native_call_long(method, target, args, result);
+		break;
 	case J_DOUBLE:
 	case J_FLOAT:
 		error("not implemented");

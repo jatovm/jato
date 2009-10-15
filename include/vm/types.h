@@ -81,4 +81,9 @@ static inline enum vm_type mimic_stack_type(enum vm_type type)
 	}
 }
 
+static inline int get_arg_size(enum vm_type type)
+{
+	return get_vmtype_size(type) / sizeof(unsigned long);
+}
+
 #endif

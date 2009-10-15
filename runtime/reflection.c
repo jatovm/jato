@@ -747,8 +747,10 @@ static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 		struct vm_object *arg_obj;
 
 		arg_obj = array_get_field_ptr(args_array, args_array_idx++);
-		if (unwrap(&args[idx++], arg->type_info.vm_type, arg_obj))
+		if (unwrap(&args[idx], arg->type_info.vm_type, arg_obj))
 			return -1;
+
+		idx += get_arg_size(arg->type_info.vm_type);
 	}
 
 	return 0;
