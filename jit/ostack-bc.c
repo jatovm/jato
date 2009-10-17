@@ -105,6 +105,10 @@ int convert_dup_x2(struct parse_context *ctx)
 
 	value1 = stack_pop(ctx->bb->mimic_stack);
 	value2 = stack_pop(ctx->bb->mimic_stack);
+
+	if (vm_type_slot_size(value2->vm_type) == 2)
+		return __convert_dup_x1(ctx, value1, value2);
+
 	value3 = stack_pop(ctx->bb->mimic_stack);
 
 	return __convert_dup_x2(ctx, value1, value2, value3);

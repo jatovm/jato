@@ -123,6 +123,42 @@
     invokestatic jvm/TestCase/assertEquals(II)V
 .end method
 
+; Test 'dup_x2' instruction when value2 has computational type of category 2
+.method public static testDup_x2_long()V
+    .limit locals 5
+
+    iconst_0
+    putstatic jvm/DupTest/counter I
+
+    dconst_0
+    invokestatic jvm/DupTest/advanceCounter()I
+    dup_x2
+
+    iconst_1
+    iadd
+    istore_1
+
+    dconst_1
+    dadd
+    dstore_2
+
+    iconst_3
+    iadd
+    istore 4
+
+    iconst_2
+    iload_1
+    invokestatic jvm/TestCase/assertEquals(II)V
+
+    dconst_1
+    dload_2
+    invokestatic jvm/TestCase/assertEquals(DD)V
+
+    bipush 4
+    iload 4
+    invokestatic jvm/TestCase/assertEquals(II)V
+.end method
+
 ; Test 'dup2' instruction
 .method public static testDup2()V
     .limit locals 5
@@ -287,6 +323,7 @@
     invokestatic jvm/DupTest/testDup()V
     invokestatic jvm/DupTest/testDup_x1()V
     invokestatic jvm/DupTest/testDup_x2()V
+    invokestatic jvm/DupTest/testDup_x2_long()V
     invokestatic jvm/DupTest/testDup2()V
     invokestatic jvm/DupTest/testDup2_x1()V
     invokestatic jvm/DupTest/testDup2_x2()V
