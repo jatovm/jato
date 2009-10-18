@@ -27,10 +27,6 @@
 #include "vm/method.h"
 #include "vm/call.h"
 
-void native_call(struct vm_method *method, const void *target, unsigned long *args, union jvalue *result)
-{
-}
-
-void vm_native_call(struct vm_method *method, const void *target, unsigned long *args, union jvalue *result)
+void native_call(struct vm_method *method, void *target, unsigned long *args, union jvalue *result)
 {
 }
