@@ -2237,6 +2237,12 @@ static int is_64bit_bin_reg_op(struct operand *a, struct operand *b)
 	return is_64bit_reg(a) || is_64bit_reg(b);
 }
 
+static inline int is_xmm_reg(struct operand *reg)
+{
+	return (reg->reg.interval->var_info->vm_type == J_FLOAT ||
+		reg->reg.interval->var_info->vm_type == J_DOUBLE);
+}
+
 static void __emit_reg(struct buffer *buf,
 		       int rex_w,
 		       unsigned char opc,
@@ -2340,10 +2346,40 @@ static void __emit32_mov_reg_reg(struct buffer *buf,
 	__emit_reg_reg(buf, 0, 0x89, src, dst);
 }
 
+static void emit_mov_xmm_xmm(struct buffer *buf,
+			     struct operand *src,
+			     struct operand *dest)
+{
+	unsigned char opc[3];
+
+	if (src->reg.interval->var_info->vm_type == J_FLOAT)
+		/* MOVSS */
+		opc[0] = 0xF3;
+	else
+		/* MOVSD */
+		opc[0] = 0xF2;
+	opc[1] = 0x0F;
+	opc[2] = 0x10;
+
+	__emit_lopc_reg_reg(buf, 0, opc, 3,
+			    mach_reg(&src->reg), mach_reg(&dest->reg));
+}
+
 static void emit_mov_reg_reg(struct buffer *buf,
 			     struct operand *src,
 			     struct operand *dest)
 {
+	int fp;
+
+	fp = is_xmm_reg(src);
+	if (fp != is_xmm_reg(dest))
+		assert(!"Can't do 'mov' between XMM and GPR!");
+
+	if (fp) {
+		emit_mov_xmm_xmm(buf, src, dest);
+		return;
+	}
+
 	if (is_64bit_bin_reg_op(src, dest))
 		__emit64_mov_reg_reg(buf,
 				     mach_reg(&src->reg), mach_reg(&dest->reg));
