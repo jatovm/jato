@@ -31,6 +31,14 @@ enum machine_reg {
 	MACH_REG_XMM5,
 	MACH_REG_XMM6,
 	MACH_REG_XMM7,
+	MACH_REG_XMM8,
+	MACH_REG_XMM9,
+	MACH_REG_XMM10,
+	MACH_REG_XMM11,
+	MACH_REG_XMM12,
+	MACH_REG_XMM13,
+	MACH_REG_XMM14,
+	MACH_REG_XMM15,
 
 	/* The above registers are available for register allocator.  */
 	NR_REGISTERS,
@@ -56,7 +64,7 @@ enum machine_reg {
 
 #define GPR_VM_TYPE	J_LONG
 
-#define NR_CALLER_SAVE_REGS 17
+#define NR_CALLER_SAVE_REGS 25
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
 const char *reg_name(enum machine_reg reg);

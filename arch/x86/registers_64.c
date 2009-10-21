@@ -47,7 +47,15 @@ enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS] = {
 	MACH_REG_XMM4,
 	MACH_REG_XMM5,
 	MACH_REG_XMM6,
-	MACH_REG_XMM7
+	MACH_REG_XMM7,
+	MACH_REG_XMM8,
+	MACH_REG_XMM9,
+	MACH_REG_XMM10,
+	MACH_REG_XMM11,
+	MACH_REG_XMM12,
+	MACH_REG_XMM13,
+	MACH_REG_XMM14,
+	MACH_REG_XMM15,
 };
 
 static const char *register_names[] = {
@@ -67,6 +75,23 @@ static const char *register_names[] = {
 	[MACH_REG_R15] = "R15",
 	[MACH_REG_RSP] = "RSP",
 	[MACH_REG_RBP] = "RBP",
+
+	[MACH_REG_XMM0]		= "XMM0",
+	[MACH_REG_XMM1]		= "XMM1",
+	[MACH_REG_XMM2]		= "XMM2",
+	[MACH_REG_XMM3]		= "XMM3",
+	[MACH_REG_XMM4]		= "XMM4",
+	[MACH_REG_XMM5]		= "XMM5",
+	[MACH_REG_XMM6]		= "XMM6",
+	[MACH_REG_XMM7]		= "XMM7",
+	[MACH_REG_XMM8]		= "XMM8",
+	[MACH_REG_XMM9]		= "XMM9",
+	[MACH_REG_XMM10]	= "XMM10",
+	[MACH_REG_XMM11]	= "XMM11",
+	[MACH_REG_XMM12]	= "XMM12",
+	[MACH_REG_XMM13]	= "XMM13",
+	[MACH_REG_XMM14]	= "XMM14",
+	[MACH_REG_XMM15]	= "XMM15",
 };
 
 const char *reg_name(enum machine_reg reg)
