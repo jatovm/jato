@@ -58,11 +58,37 @@ static enum machine_reg args_map_alloc_gpr(int gpr)
 	}
 }
 
+static enum machine_reg args_map_alloc_xmm(int xmm)
+{
+	switch (xmm) {
+	case 0:
+		return MACH_REG_XMM0;
+	case 1:
+		return MACH_REG_XMM1;
+	case 2:
+		return MACH_REG_XMM2;
+	case 3:
+		return MACH_REG_XMM3;
+	case 4:
+		return MACH_REG_XMM4;
+	case 5:
+		return MACH_REG_XMM5;
+	case 6:
+		return MACH_REG_XMM6;
+	case 7:
+		return MACH_REG_XMM7;
+	default:
+		assert(xmm > 7);
+		return MACH_REG_UNASSIGNED;
+	}
+}
+
 int args_map_init(struct vm_method *method)
 {
 	const char *type = method->type;
 	enum vm_type vm_type;
-	int idx, gpr_count = 0, stack_count = 0;
+	int idx;
+	int gpr_count = 0, xmm_count = 0, stack_count = 0;
 	struct vm_args_map *map;
 	size_t size;
 
@@ -95,17 +121,23 @@ int args_map_init(struct vm_method *method)
 		case J_SHORT:
 		case J_BOOLEAN:
 		case J_REFERENCE:
-			map->reg = args_map_alloc_gpr(gpr_count++);
-			map->stack_index = -1;
+			if (gpr_count < 6) {
+				map->reg = args_map_alloc_gpr(gpr_count++);
+				map->stack_index = -1;
+			} else {
+				map->reg = MACH_REG_UNASSIGNED;
+				map->stack_index = stack_count++;
+			}
 			break;
 		case J_FLOAT:
 		case J_DOUBLE:
-			/*
-			 * FIXME: This is wrong, but let's us
-			 * not worry about the status of FP.
-			 */
-			map->reg = MACH_REG_UNASSIGNED;
-			map->stack_index = stack_count++;
+			if (xmm_count < 8) {
+				map->reg = args_map_alloc_xmm(xmm_count++);
+				map->stack_index = -1;
+			} else {
+				map->reg = MACH_REG_UNASSIGNED;
+				map->stack_index = stack_count++;
+			}
 			break;
 		default:
 			map->reg = MACH_REG_UNASSIGNED;
@@ -116,22 +148,9 @@ int args_map_init(struct vm_method *method)
 		map->type = vm_type;
 
 		idx++;
-
-		if (gpr_count == 6)
-			break;
 	}
 
-	/* We're out of GPRs, so the remaining args go on the stack. */
-	for (; type && idx < method->args_count; idx++) {
-		map = &method->args_map[idx];
-		type = parse_method_args(type, &vm_type, NULL);
-
-		map->reg = MACH_REG_UNASSIGNED;
-		map->stack_index = stack_count++;
-		map->type = vm_type;
-	}
-
-	method->reg_args_count = gpr_count;
+	method->reg_args_count = gpr_count + xmm_count;
 
 	return 0;
 }
