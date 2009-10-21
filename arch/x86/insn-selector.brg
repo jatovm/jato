@@ -2284,7 +2284,7 @@ stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
 			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
 							       slot, dest));
 		} else {
-			src = get_fixed_var(s->b_parent, reg);
+			src = s->b_parent->non_fixed_args[exprsrc->local_index];
 			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
 		}
 	} else {
@@ -3431,15 +3431,34 @@ static void setup_caller_saved_regs(struct compilation_unit *cu)
 #else /* CONFIG_X86_32 */
 static void setup_caller_saved_regs(struct compilation_unit *cu)
 {
+	struct var_info **map, *fixed, *non_fixed;
+	enum machine_reg mach_reg;
+	int i, count, max_count = cu->method->reg_args_count;
+
 	get_fixed_var(cu, MACH_REG_RAX);
-	get_fixed_var(cu, MACH_REG_RDI);
-	get_fixed_var(cu, MACH_REG_RSI);
-	get_fixed_var(cu, MACH_REG_RDX);
-	get_fixed_var(cu, MACH_REG_RCX);
-	get_fixed_var(cu, MACH_REG_R8);
-	get_fixed_var(cu, MACH_REG_R9);
 	get_fixed_var(cu, MACH_REG_R10);
 	get_fixed_var(cu, MACH_REG_R11);
+
+	cu->non_fixed_args = malloc(max_count * sizeof(struct var_info *));
+	if (!cu->non_fixed_args)
+		abort();
+	map = cu->non_fixed_args;
+
+	for (i = 0, count = 0; i < cu->method->args_count; i++) {
+		if (count >= max_count)
+			break;
+	
+		mach_reg = cu->method->args_map[i].reg;
+		if (mach_reg == MACH_REG_UNASSIGNED)
+			continue;
+
+		fixed = get_fixed_var(cu, mach_reg);
+		non_fixed = get_var(cu, cu->method->args_map[i].type);
+		eh_add_insn(cu->entry_bb,
+			    reg_reg_insn(INSN_MOV_REG_REG, fixed, non_fixed));
+
+		map[count++] = non_fixed;
+	}
 }
 #endif /* CONFIG_X86_32 */
 

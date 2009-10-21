@@ -100,6 +100,10 @@ struct compilation_unit {
 	 * rule where we can not use a register.
 	 */
 	struct stack_slot *scratch_slot;
+
+#ifdef CONFIG_ARGS_MAP
+	struct var_info **non_fixed_args;
+#endif
 };
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);
