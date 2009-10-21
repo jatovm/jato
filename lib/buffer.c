@@ -43,17 +43,20 @@ void free_buffer(struct buffer *buf)
 	free(buf);
 }
 
-int append_buffer(struct buffer *buf, unsigned char c)
+int append_buffer_str(struct buffer *buf, unsigned char *str, size_t len)
 {
-	if (buf->offset == buf->size) {
-		int err = 0;
+	int err;
 
-		if (buf->ops->expand)
+	if (buf->ops->expand)
+		while (buf->size - buf->offset < len) {
 			err = buf->ops->expand(buf);
-		if (err)
-			return err;
-	}
-	buf->buf[buf->offset++] = c;
+			if (err)
+				return err;
+		}
+
+	memcpy(buf->buf + buf->offset, str, len);
+	buf->offset += len;
+
 	return 0;
 }
 

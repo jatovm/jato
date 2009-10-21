@@ -27,7 +27,7 @@ struct buffer *alloc_exec_buffer(void);
 struct buffer *__alloc_buffer(struct buffer_operations *);
 struct buffer *alloc_buffer(void);
 void free_buffer(struct buffer *);
-int append_buffer(struct buffer *buf, unsigned char);
+int append_buffer_str(struct buffer *buf, unsigned char *str, size_t len);
 
 static inline void *buffer_ptr(struct buffer *buf)
 {
@@ -42,6 +42,11 @@ static inline void *buffer_current(struct buffer *buf)
 static inline size_t buffer_offset(struct buffer *buf)
 {
 	return buf->offset;
+}
+
+static inline int append_buffer(struct buffer *buf, unsigned char c)
+{
+	return append_buffer_str(buf, &c, 1);
 }
 
 void generic_buffer_free(struct buffer *);
