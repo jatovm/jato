@@ -78,6 +78,7 @@ int args_map_init(struct vm_method *method)
 		map = &method->args_map[0];
 		map->reg = args_map_alloc_gpr(gpr_count++);
 		map->stack_index = -1;
+		map->type = J_REFERENCE;
 		idx = 1;
 	} else
 		idx = 0;
@@ -112,6 +113,8 @@ int args_map_init(struct vm_method *method)
 			break;
 		}
 
+		map->type = vm_type;
+
 		idx++;
 
 		if (gpr_count == 6)
@@ -119,11 +122,13 @@ int args_map_init(struct vm_method *method)
 	}
 
 	/* We're out of GPRs, so the remaining args go on the stack. */
-	for (; idx < method->args_count; idx++) {
+	for (; type && idx < method->args_count; idx++) {
 		map = &method->args_map[idx];
+		type = parse_method_args(type, &vm_type, NULL);
 
 		map->reg = MACH_REG_UNASSIGNED;
 		map->stack_index = stack_count++;
+		map->type = vm_type;
 	}
 
 	method->reg_args_count = gpr_count;

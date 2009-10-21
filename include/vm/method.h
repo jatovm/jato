@@ -23,6 +23,7 @@ struct vm_class;
 struct vm_args_map {
 	int			reg;
 	int			stack_index;
+	enum vm_type		type;
 };
 #endif
 
