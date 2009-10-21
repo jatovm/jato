@@ -2800,12 +2800,8 @@ static void emit_cmp_reg_reg(struct buffer *buf,
 
 static void emit_indirect_call(struct buffer *buf, struct operand *operand)
 {
-	unsigned char reg = encode_reg(&operand->reg);
-
-	if (reg_high(reg))
-		emit(buf, REX_B);
-	emit(buf, 0xff);
-	emit(buf, encode_modrm(0x0, 0x2, reg));
+	/* Go through __emit_membase() to handle %r13. */
+	__emit_membase(buf, 0, 0xff, mach_reg(&operand->reg), 0, 0x2);
 }
 
 static void __emit_test_imm_memdisp(struct buffer *buf,
