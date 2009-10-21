@@ -147,6 +147,14 @@ static inline void emit(struct buffer *buf, unsigned char c)
 	assert(!err);
 }
 
+static inline void emit_str(struct buffer *buf, unsigned char *str, size_t len)
+{
+	int err;
+
+	err = append_buffer_str(buf, str, len);
+	assert(!err);
+}
+
 static void write_imm32(struct buffer *buf, unsigned long offset, long imm32)
 {
 	unsigned char *buffer;
@@ -2267,11 +2275,12 @@ static void emit_pop_reg(struct buffer *buf, struct operand *operand)
 	__emit_pop_reg(buf, mach_reg(&operand->reg));
 }
 
-static void __emit_reg_reg(struct buffer *buf,
-			   int rex_w,
-			   unsigned char opc,
-			   enum machine_reg direct_reg,
-			   enum machine_reg rm_reg)
+static void __emit_lopc_reg_reg(struct buffer *buf,
+				int rex_w,
+				unsigned char *lopc,
+				size_t lopc_size,
+				enum machine_reg direct_reg,
+				enum machine_reg rm_reg)
 {
 	unsigned char rex_pfx = 0, mod_rm;
 	unsigned char direct, rm;
@@ -2290,8 +2299,17 @@ static void __emit_reg_reg(struct buffer *buf,
 
 	if (rex_pfx)
 		emit(buf, rex_pfx);
-	emit(buf, opc);
+	emit_str(buf, lopc, lopc_size);
 	emit(buf, mod_rm);
+}
+
+static inline void __emit_reg_reg(struct buffer *buf,
+				  int rex_w,
+				  unsigned char opc,
+				  enum machine_reg direct_reg,
+				  enum machine_reg rm_reg)
+{
+	__emit_lopc_reg_reg(buf, rex_w, &opc, 1, direct_reg, rm_reg);
 }
 
 static void emit_reg_reg(struct buffer *buf,
