@@ -118,24 +118,15 @@ static void emit_restore_regs(struct buffer *buf);
 static unsigned char __encode_reg(enum machine_reg reg)
 {
 	static unsigned char register_numbers[] = {
-#ifdef CONFIG_X86_32
-		[MACH_REG_EAX]		= 0x00,
-		[MACH_REG_ECX]		= 0x01,
-		[MACH_REG_EDX]		= 0x02,
-		[MACH_REG_EBX]		= 0x03,
-		[MACH_REG_ESP]		= 0x04,
-		[MACH_REG_EBP]		= 0x05,
-		[MACH_REG_ESI]		= 0x06,
-		[MACH_REG_EDI]		= 0x07,
-#else /* CONFIG_X86_64 */
-		[MACH_REG_RAX]		= 0x00,
-		[MACH_REG_RCX]		= 0x01,
-		[MACH_REG_RDX]		= 0x02,
-		[MACH_REG_RBX]		= 0x03,
-		[MACH_REG_RSP]		= 0x04,
-		[MACH_REG_RBP]		= 0x05,
-		[MACH_REG_RSI]		= 0x06,
-		[MACH_REG_RDI]		= 0x07,
+		[MACH_REG_xAX]		= 0x00,
+		[MACH_REG_xCX]		= 0x01,
+		[MACH_REG_xDX]		= 0x02,
+		[MACH_REG_xBX]		= 0x03,
+		[MACH_REG_xSP]		= 0x04,
+		[MACH_REG_xBP]		= 0x05,
+		[MACH_REG_xSI]		= 0x06,
+		[MACH_REG_xDI]		= 0x07,
+#ifdef CONFIG_X86_64
 		[MACH_REG_R8]		= 0x08,
 		[MACH_REG_R9]		= 0x09,
 		[MACH_REG_R10]		= 0x0A,
