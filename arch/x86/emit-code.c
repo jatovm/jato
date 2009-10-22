@@ -127,15 +127,6 @@ static unsigned char __encode_reg(enum machine_reg reg)
 		[MACH_REG_EBP]		= 0x05,
 		[MACH_REG_ESI]		= 0x06,
 		[MACH_REG_EDI]		= 0x07,
-
-		[MACH_REG_XMM0]		= 0x00,
-		[MACH_REG_XMM1]		= 0x01,
-		[MACH_REG_XMM2]		= 0x02,
-		[MACH_REG_XMM3]		= 0x03,
-		[MACH_REG_XMM4]		= 0x04,
-		[MACH_REG_XMM5]		= 0x05,
-		[MACH_REG_XMM6]		= 0x06,
-		[MACH_REG_XMM7]		= 0x07,
 #else /* CONFIG_X86_64 */
 		[MACH_REG_RAX]		= 0x00,
 		[MACH_REG_RCX]		= 0x01,
@@ -153,7 +144,8 @@ static unsigned char __encode_reg(enum machine_reg reg)
 		[MACH_REG_R13]		= 0x0D,
 		[MACH_REG_R14]		= 0x0E,
 		[MACH_REG_R15]		= 0x0F,
-
+#endif
+		/* XMM registers */
 		[MACH_REG_XMM0] 	= 0x00,
 		[MACH_REG_XMM1] 	= 0x01,
 		[MACH_REG_XMM2] 	= 0x02,
@@ -162,6 +154,7 @@ static unsigned char __encode_reg(enum machine_reg reg)
 		[MACH_REG_XMM5] 	= 0x05,
 		[MACH_REG_XMM6] 	= 0x06,
 		[MACH_REG_XMM7] 	= 0x07,
+#ifdef CONFIG_X86_64
 		[MACH_REG_XMM8] 	= 0x08,
 		[MACH_REG_XMM9] 	= 0x09,
 		[MACH_REG_XMM10] 	= 0x0A,
