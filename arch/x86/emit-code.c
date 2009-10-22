@@ -70,7 +70,6 @@
 # define __emit_mov_reg_reg		__emit64_mov_reg_reg
 #endif
 
-static unsigned char __encode_reg(enum machine_reg reg);
 static void __emit_add_imm_reg(struct buffer *buf,
 			       long imm,
 			       enum machine_reg reg);
@@ -109,6 +108,80 @@ static void emit_restore_regs(struct buffer *buf);
 	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch, BRANCH),		\
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch, BRANCH),		\
 	DECL_EMITTER(INSN_RET, emit_ret, NO_OPERANDS)
+
+/*
+ *	__encode_reg:	Encode register to be used in IA-32 instruction.
+ *	@reg: Register to encode.
+ *
+ *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
+ */
+static unsigned char __encode_reg(enum machine_reg reg)
+{
+	static unsigned char register_numbers[] = {
+#ifdef CONFIG_X86_32
+		[MACH_REG_EAX]		= 0x00,
+		[MACH_REG_ECX]		= 0x01,
+		[MACH_REG_EDX]		= 0x02,
+		[MACH_REG_EBX]		= 0x03,
+		[MACH_REG_ESP]		= 0x04,
+		[MACH_REG_EBP]		= 0x05,
+		[MACH_REG_ESI]		= 0x06,
+		[MACH_REG_EDI]		= 0x07,
+
+		[MACH_REG_XMM0]		= 0x00,
+		[MACH_REG_XMM1]		= 0x01,
+		[MACH_REG_XMM2]		= 0x02,
+		[MACH_REG_XMM3]		= 0x03,
+		[MACH_REG_XMM4]		= 0x04,
+		[MACH_REG_XMM5]		= 0x05,
+		[MACH_REG_XMM6]		= 0x06,
+		[MACH_REG_XMM7]		= 0x07,
+#else /* CONFIG_X86_64 */
+		[MACH_REG_RAX]		= 0x00,
+		[MACH_REG_RCX]		= 0x01,
+		[MACH_REG_RDX]		= 0x02,
+		[MACH_REG_RBX]		= 0x03,
+		[MACH_REG_RSP]		= 0x04,
+		[MACH_REG_RBP]		= 0x05,
+		[MACH_REG_RSI]		= 0x06,
+		[MACH_REG_RDI]		= 0x07,
+		[MACH_REG_R8]		= 0x08,
+		[MACH_REG_R9]		= 0x09,
+		[MACH_REG_R10]		= 0x0A,
+		[MACH_REG_R11]		= 0x0B,
+		[MACH_REG_R12]		= 0x0C,
+		[MACH_REG_R13]		= 0x0D,
+		[MACH_REG_R14]		= 0x0E,
+		[MACH_REG_R15]		= 0x0F,
+
+		[MACH_REG_XMM0] 	= 0x00,
+		[MACH_REG_XMM1] 	= 0x01,
+		[MACH_REG_XMM2] 	= 0x02,
+		[MACH_REG_XMM3] 	= 0x03,
+		[MACH_REG_XMM4] 	= 0x04,
+		[MACH_REG_XMM5] 	= 0x05,
+		[MACH_REG_XMM6] 	= 0x06,
+		[MACH_REG_XMM7] 	= 0x07,
+		[MACH_REG_XMM8] 	= 0x08,
+		[MACH_REG_XMM9] 	= 0x09,
+		[MACH_REG_XMM10] 	= 0x0A,
+		[MACH_REG_XMM11] 	= 0x0B,
+		[MACH_REG_XMM12]	= 0x0C,
+		[MACH_REG_XMM13] 	= 0x0D,
+		[MACH_REG_XMM14]	= 0x0E,
+		[MACH_REG_XMM15] 	= 0x0F,
+#endif
+	};
+
+	if (reg == MACH_REG_UNASSIGNED)
+		die("unassigned register during code emission");
+
+	if (reg < 0 || reg >= ARRAY_SIZE(register_numbers))
+		die("unknown register %d", reg);
+
+	return register_numbers[reg];
+}
+
 
 static unsigned char encode_reg(struct use_position *reg)
 {
@@ -445,43 +518,6 @@ static void emit_mov_imm_membase(struct buffer *buf, struct operand *src,
 				 struct operand *dest);
 static void __emit_mov_imm_membase(struct buffer *buf, long imm,
 				   enum machine_reg base, long disp);
-
-/*
- *	__encode_reg:	Encode register to be used in IA-32 instruction.
- *	@reg: Register to encode.
- *
- *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
- */
-static unsigned char __encode_reg(enum machine_reg reg)
-{
-	static unsigned char register_numbers[] = {
-		[MACH_REG_EAX]		= 0x00,
-		[MACH_REG_ECX]		= 0x01,
-		[MACH_REG_EDX]		= 0x02,
-		[MACH_REG_EBX]		= 0x03,
-		[MACH_REG_ESP]		= 0x04,
-		[MACH_REG_EBP]		= 0x05,
-		[MACH_REG_ESI]		= 0x06,
-		[MACH_REG_EDI]		= 0x07,
-
-		[MACH_REG_XMM0]		= 0x00,
-		[MACH_REG_XMM1]		= 0x01,
-		[MACH_REG_XMM2]		= 0x02,
-		[MACH_REG_XMM3]		= 0x03,
-		[MACH_REG_XMM4]		= 0x04,
-		[MACH_REG_XMM5]		= 0x05,
-		[MACH_REG_XMM6]		= 0x06,
-		[MACH_REG_XMM7]		= 0x07,
-	};
-
-	if (reg == MACH_REG_UNASSIGNED)
-		die("unassigned register during code emission");
-
-	if (reg < 0 || reg >= ARRAY_SIZE(register_numbers))
-		die("unknown register %d", reg);
-
-	return register_numbers[reg];
-}
 
 static void
 __emit_reg_reg(struct buffer *buf, unsigned char opc,
@@ -2107,59 +2143,6 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 #define REX_R		(REX | 4)	/* ModRM reg extension */
 #define REX_X		(REX | 2)	/* SIB index extension */
 #define REX_B		(REX | 1)	/* ModRM r/m extension */
-
-/*
- *	__encode_reg:	Encode register to be used in x86-64 instruction.
- *	@reg: Register to encode.
- *
- *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
- */
-static unsigned char __encode_reg(enum machine_reg reg)
-{
-	static unsigned char register_numbers[] = {
-		[MACH_REG_RAX]		= 0x00,
-		[MACH_REG_RCX]		= 0x01,
-		[MACH_REG_RDX]		= 0x02,
-		[MACH_REG_RBX]		= 0x03,
-		[MACH_REG_RSP]		= 0x04,
-		[MACH_REG_RBP]		= 0x05,
-		[MACH_REG_RSI]		= 0x06,
-		[MACH_REG_RDI]		= 0x07,
-		[MACH_REG_R8]		= 0x08,
-		[MACH_REG_R9]		= 0x09,
-		[MACH_REG_R10]		= 0x0A,
-		[MACH_REG_R11]		= 0x0B,
-		[MACH_REG_R12]		= 0x0C,
-		[MACH_REG_R13]		= 0x0D,
-		[MACH_REG_R14]		= 0x0E,
-		[MACH_REG_R15]		= 0x0F,
-
-		[MACH_REG_XMM0] 	= 0x00,
-		[MACH_REG_XMM1] 	= 0x01,
-		[MACH_REG_XMM2] 	= 0x02,
-		[MACH_REG_XMM3] 	= 0x03,
-		[MACH_REG_XMM4] 	= 0x04,
-		[MACH_REG_XMM5] 	= 0x05,
-		[MACH_REG_XMM6] 	= 0x06,
-		[MACH_REG_XMM7] 	= 0x07,
-		[MACH_REG_XMM8] 	= 0x08,
-		[MACH_REG_XMM9] 	= 0x09,
-		[MACH_REG_XMM10] 	= 0x0A,
-		[MACH_REG_XMM11] 	= 0x0B,
-		[MACH_REG_XMM12]	= 0x0C,
-		[MACH_REG_XMM13] 	= 0x0D,
-		[MACH_REG_XMM14]	= 0x0E,
-		[MACH_REG_XMM15] 	= 0x0F,
-	};
-
-	if (reg == MACH_REG_UNASSIGNED)
-		die("unassigned register during code emission");
-
-	if (reg < 0 || reg >= ARRAY_SIZE(register_numbers))
-		die("unknown register %d", reg);
-
-	return register_numbers[reg];
-}
 
 static inline unsigned char reg_low(unsigned char reg)
 {
