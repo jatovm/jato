@@ -2116,81 +2116,49 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
  */
 static unsigned char __encode_reg(enum machine_reg reg)
 {
-	unsigned char ret = 0;
+	static unsigned char register_numbers[] = {
+		[MACH_REG_RAX]		= 0x00,
+		[MACH_REG_RCX]		= 0x01,
+		[MACH_REG_RDX]		= 0x02,
+		[MACH_REG_RBX]		= 0x03,
+		[MACH_REG_RSP]		= 0x04,
+		[MACH_REG_RBP]		= 0x05,
+		[MACH_REG_RSI]		= 0x06,
+		[MACH_REG_RDI]		= 0x07,
+		[MACH_REG_R8]		= 0x08,
+		[MACH_REG_R9]		= 0x09,
+		[MACH_REG_R10]		= 0x0A,
+		[MACH_REG_R11]		= 0x0B,
+		[MACH_REG_R12]		= 0x0C,
+		[MACH_REG_R13]		= 0x0D,
+		[MACH_REG_R14]		= 0x0E,
+		[MACH_REG_R15]		= 0x0F,
 
-	switch (reg) {
-	case MACH_REG_RAX:
-	case MACH_REG_XMM0:
-		ret = 0x00;
-		break;
-	case MACH_REG_RBX:
-	case MACH_REG_XMM3:
-		ret = 0x03;
-		break;
-	case MACH_REG_RCX:
-	case MACH_REG_XMM1:
-		ret = 0x01;
-		break;
-	case MACH_REG_RDX:
-	case MACH_REG_XMM2:
-		ret = 0x02;
-		break;
-	case MACH_REG_RSI:
-	case MACH_REG_XMM6:
-		ret = 0x06;
-		break;
-	case MACH_REG_RDI:
-	case MACH_REG_XMM7:
-		ret = 0x07;
-		break;
-	case MACH_REG_RSP:
-	case MACH_REG_XMM4:
-		ret = 0x04;
-		break;
-	case MACH_REG_RBP:
-	case MACH_REG_XMM5:
-		ret = 0x05;
-		break;
-	case MACH_REG_R8:
-	case MACH_REG_XMM8:
-		ret = 0x08;
-		break;
-	case MACH_REG_R9:
-	case MACH_REG_XMM9:
-		ret = 0x09;
-		break;
-	case MACH_REG_R10:
-	case MACH_REG_XMM10:
-		ret = 0x0A;
-		break;
-	case MACH_REG_R11:
-	case MACH_REG_XMM11:
-		ret = 0x0B;
-		break;
-	case MACH_REG_R12:
-	case MACH_REG_XMM12:
-		ret = 0x0C;
-		break;
-	case MACH_REG_R13:
-	case MACH_REG_XMM13:
-		ret = 0x0D;
-		break;
-	case MACH_REG_R14:
-	case MACH_REG_XMM14:
-		ret = 0x0E;
-		break;
-	case MACH_REG_R15:
-	case MACH_REG_XMM15:
-		ret = 0x0F;
-		break;
-	case MACH_REG_UNASSIGNED:
-		assert(!"unassigned register in code emission");
-		break;
-	case NR_FIXED_REGISTERS:
-		assert(!"NR_FIXED_REGISTERS");
-		break;
-	}
-	return ret;
+		[MACH_REG_XMM0] 	= 0x00,
+		[MACH_REG_XMM1] 	= 0x01,
+		[MACH_REG_XMM2] 	= 0x02,
+		[MACH_REG_XMM3] 	= 0x03,
+		[MACH_REG_XMM4] 	= 0x04,
+		[MACH_REG_XMM5] 	= 0x05,
+		[MACH_REG_XMM6] 	= 0x06,
+		[MACH_REG_XMM7] 	= 0x07,
+		[MACH_REG_XMM8] 	= 0x08,
+		[MACH_REG_XMM9] 	= 0x09,
+		[MACH_REG_XMM10] 	= 0x0A,
+		[MACH_REG_XMM11] 	= 0x0B,
+		[MACH_REG_XMM12]	= 0x0C,
+		[MACH_REG_XMM13] 	= 0x0D,
+		[MACH_REG_XMM14]	= 0x0E,
+		[MACH_REG_XMM15] 	= 0x0F,
+	};
+
+	if (reg == MACH_REG_UNASSIGNED)
+		die("unassigned register during code emission");
+
+	if (reg < 0 || reg >= ARRAY_SIZE(register_numbers))
+		die("unknown register %d", reg);
+
+	return register_numbers[reg];
 }
 
 static inline unsigned char reg_low(unsigned char reg)
