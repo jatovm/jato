@@ -454,49 +454,33 @@ static void __emit_mov_imm_membase(struct buffer *buf, long imm,
  */
 static unsigned char __encode_reg(enum machine_reg reg)
 {
-	unsigned char ret = 0;
+	static unsigned char register_numbers[] = {
+		[MACH_REG_EAX]		= 0x00,
+		[MACH_REG_ECX]		= 0x01,
+		[MACH_REG_EDX]		= 0x02,
+		[MACH_REG_EBX]		= 0x03,
+		[MACH_REG_ESP]		= 0x04,
+		[MACH_REG_EBP]		= 0x05,
+		[MACH_REG_ESI]		= 0x06,
+		[MACH_REG_EDI]		= 0x07,
 
-	switch (reg) {
-	case MACH_REG_EAX:
-	case MACH_REG_XMM0:
-		ret = 0x00;
-		break;
-	case MACH_REG_EBX:
-	case MACH_REG_XMM3:
-		ret = 0x03;
-		break;
-	case MACH_REG_ECX:
-	case MACH_REG_XMM1:
-		ret = 0x01;
-		break;
-	case MACH_REG_EDX:
-	case MACH_REG_XMM2:
-		ret = 0x02;
-		break;
-	case MACH_REG_ESI:
-	case MACH_REG_XMM6:
-		ret = 0x06;
-		break;
-	case MACH_REG_EDI:
-	case MACH_REG_XMM7:
-		ret = 0x07;
-		break;
-	case MACH_REG_ESP:
-	case MACH_REG_XMM4:
-		ret = 0x04;
-		break;
-	case MACH_REG_EBP:
-	case MACH_REG_XMM5:
-		ret = 0x05;
-		break;
-	case MACH_REG_UNASSIGNED:
-		assert(!"unassigned register in code emission");
-		break;
-	case NR_FIXED_REGISTERS:
-		assert(!"NR_FIXED_REGISTERS");
-		break;
-	}
-	return ret;
+		[MACH_REG_XMM0]		= 0x00,
+		[MACH_REG_XMM1]		= 0x01,
+		[MACH_REG_XMM2]		= 0x02,
+		[MACH_REG_XMM3]		= 0x03,
+		[MACH_REG_XMM4]		= 0x04,
+		[MACH_REG_XMM5]		= 0x05,
+		[MACH_REG_XMM6]		= 0x06,
+		[MACH_REG_XMM7]		= 0x07,
+	};
+
+	if (reg == MACH_REG_UNASSIGNED)
+		die("unassigned register during code emission");
+
+	if (reg < 0 || reg >= ARRAY_SIZE(register_numbers))
+		die("unknown register %d", reg);
+
+	return register_numbers[reg];
 }
 
 static void
