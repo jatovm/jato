@@ -56,7 +56,8 @@ static double xmm_double_constant_1 = 0x080000000;
 
 struct _MBState;
 
-static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *instruction);
+static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn);
+static void select_safepoint_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn);
 static void select_exception_test(struct basic_block *bb, struct tree_node *tree);
 void save_invoke_result(struct basic_block *s, struct tree_node *tree, struct vm_method *method, struct statement *stmt);
 
@@ -1097,7 +1098,7 @@ reg:	EXPR_NEW
 	state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->class));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	method_args_cleanup(s, tree, 1);
 	select_exception_test(s, tree);
@@ -1116,7 +1117,7 @@ reg:	EXPR_NEW
 	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
 
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->class, rdi));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 	select_exception_test(s, tree);
 }
@@ -1166,8 +1167,7 @@ reg:	EXPR_NEWARRAY(reg)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, expr->array_type));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc_primitive_array));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_primitive_array));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 
 	method_args_cleanup(s, tree, 2);
@@ -1191,8 +1191,7 @@ reg:	EXPR_NEWARRAY(reg)
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rdi));
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->array_type, rsi));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc_primitive_array));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_primitive_array));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 
 	select_exception_test(s, tree);
@@ -1263,10 +1262,8 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, stack_ptr));
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimension));
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
-		(unsigned long) expr->multianewarray_ref_type));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc_multi_array));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->multianewarray_ref_type));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_multi_array));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xax, state->reg1));
 
 	method_args_cleanup(s, tree, dimension + 3);
@@ -1287,10 +1284,8 @@ reg:    EXPR_ANEWARRAY(reg)
         size = state->left->reg1;
 
         select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
-        select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
-		(unsigned long) expr->anewarray_ref_type));
-        select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc_array));
+        select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->anewarray_ref_type));
+        select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_array));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 
         method_args_cleanup(s, tree, 2);
@@ -1312,11 +1307,9 @@ reg:    EXPR_ANEWARRAY(reg)
 	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
 	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
 
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
-		(unsigned long) expr->anewarray_ref_type, rdi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->anewarray_ref_type, rdi));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rsi));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) vm_object_alloc_array));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_array));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 
 	select_exception_test(s, tree);
@@ -2809,11 +2802,19 @@ stmt:	STMT_CHECKCAST(reg)
 
 %%
 
-static void select_insn(struct basic_block *bb, struct tree_node *tree,
-			struct insn *instruction)
+static void
+select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn)
 {
-	instruction->bytecode_offset = tree->bytecode_offset;
-	bb_add_insn(bb, instruction);
+	insn->bytecode_offset = tree->bytecode_offset;
+	bb_add_insn(bb, insn);
+}
+
+static void
+select_safepoint_insn(struct basic_block *bb, struct tree_node *tree,
+		      struct insn *insn)
+{
+	insn->safepoint = true;
+	select_insn(bb, tree, insn);
 }
 
 /*
@@ -3239,15 +3240,13 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 				     offset_reg, offset_tls));
 }
 
-static void select_safepoint(struct basic_block *s, struct tree_node *tree)
+static void select_poll_safepoint(struct basic_block *s, struct tree_node *tree)
 {
-	struct insn *gc_safepoint_insn;
+	struct insn *insn;
 
 	assert(gc_safepoint_page);
-	gc_safepoint_insn = imm_memdisp_insn(INSN_TEST_IMM_MEMDISP,
-		0, (unsigned long) gc_safepoint_page);
-	gc_safepoint_insn->safepoint = true;
-	select_insn(s, tree, gc_safepoint_insn);
+	insn = imm_memdisp_insn(INSN_TEST_IMM_MEMDISP, 0, (unsigned long) gc_safepoint_page);
+	select_safepoint_insn(s, tree, insn);
 }
 
 static void invoke(struct basic_block *s, struct tree_node *tree)
@@ -3284,7 +3283,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 		pthread_mutex_unlock(&cu->mutex);
 	}
 
-	select_safepoint(s, tree);
+	select_poll_safepoint(s, tree);
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
@@ -3341,7 +3340,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	/* native ptr */
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
 
-	select_safepoint(s, tree);
+	select_poll_safepoint(s, tree);
 
 	/* invoke method */
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
