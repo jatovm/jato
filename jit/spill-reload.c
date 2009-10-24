@@ -168,20 +168,20 @@ insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 	return 0;
 }
 
-static int insert_reload_insn(struct live_interval *interval,
-			      struct compilation_unit *cu,
-			      struct stack_slot *from,
-			      struct insn *first)
+static int
+insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
+	struct insn *reload_before;
 	struct insn *reload;
 
-	reload = reload_insn(from, &interval->spill_reload_reg);
+	reload = reload_insn(interval->spill_parent->spill_slot,
+			     &interval->spill_reload_reg);
 	if (!reload)
 		return warn("out of memory"), -ENOMEM;
 
-	reload->bytecode_offset = first->bytecode_offset;
-
-	list_add_tail(&reload->insn_list_node, &first->insn_list_node);
+	reload_before = get_reload_before_insn(cu, interval);
+	reload->bytecode_offset = reload_before->bytecode_offset;
+	list_add_tail(&reload->insn_list_node, &reload_before->insn_list_node);
 
 	return 0;
 }
@@ -227,9 +227,7 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 		 */
 		assert((interval_start(interval) & 1) == 0);
 
-		err = insert_reload_insn(interval, cu,
-				interval->spill_parent->spill_slot,
-				get_reload_before_insn(cu, interval));
+		err = insert_reload_insn(interval, cu);
 		if (err)
 			goto out;
 	}
