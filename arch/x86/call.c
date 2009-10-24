@@ -255,7 +255,7 @@ static unsigned long vm_native_call_gp(struct vm_method *method,
  * pointer. Call result will be stored in @result.
  */
 void native_call(struct vm_method *method,
-		 const void *target,
+		 void *target,
 		 unsigned long *args,
 		 union jvalue *result)
 {
