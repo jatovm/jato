@@ -24,6 +24,7 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "jit/bc-offset-mapping.h"
 #include "jit/compilation-unit.h"
 #include "jit/instruction.h"
 #include "jit/stack-slot.h"
@@ -69,12 +70,12 @@ get_reload_before_node(struct compilation_unit *cu,
 			error("interval begins with a def-use and is marked for reload");
 
 		insn = radix_tree_lookup(cu->lir_insn_map, start - 1);
-		*bc_offset = insn->bytecode_offset;
+		*bc_offset = insn_get_bc_offset(insn);
 		return insn->insn_list_node.next;
 	}
 
 	insn = radix_tree_lookup(cu->lir_insn_map, start);
-	*bc_offset = insn->bytecode_offset;
+	*bc_offset = insn_get_bc_offset(insn);
 	return &insn->insn_list_node;
 }
 
@@ -95,12 +96,12 @@ get_spill_after_node(struct compilation_unit *cu,
 
 	if (last_pos & 1) {
 		insn = radix_tree_lookup(cu->lir_insn_map, last_pos - 1);
-		*bc_offset = insn->bytecode_offset;
+		*bc_offset = insn_get_bc_offset(insn);
 		return &insn->insn_list_node;
 	}
 
 	insn = radix_tree_lookup(cu->lir_insn_map, last_pos);
-	*bc_offset = insn->bytecode_offset;
+	*bc_offset = insn_get_bc_offset(insn);
 	return insn->insn_list_node.prev;
 }
 
@@ -151,7 +152,7 @@ spill_interval(struct live_interval *interval,
 	if (!spill)
 		return NULL;
 
-	spill->bytecode_offset = bc_offset;
+	insn_set_bc_offset(spill, bc_offset);
 
 	list_add(&spill->insn_list_node, spill_after);
 	return slot;
@@ -186,7 +187,7 @@ insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 		return warn("out of memory"), -ENOMEM;
 
 	reload_before = get_reload_before_node(cu, interval, &bc_offset);
-	reload->bytecode_offset = bc_offset;
+	insn_set_bc_offset(reload, bc_offset);
 	list_add_tail(&reload->insn_list_node, reload_before);
 
 	return 0;

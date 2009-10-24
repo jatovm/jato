@@ -3,9 +3,9 @@
 
 #include "jit/use-position.h"
 
-#include "arch/init.h"
 #include "arch/stack-frame.h"
 #include "arch/registers.h"
+#include "arch/init.h"
 
 #include "lib/list.h"
 #include "vm/die.h"
@@ -193,12 +193,13 @@ enum insn_type {
 enum insn_flag_type {
 	INSN_FLAG_ESCAPED		= 1U << 0,
 	INSN_FLAG_SAFEPOINT		= 1U << 1,
+	INSN_FLAG_KNOWN_BC_OFFSET	= 1U << 2,
 };
 
 struct insn {
 	uint8_t			type;		 /* see enum insn_type */
 	uint8_t			flags;		 /* see enum insn_flag_type */
-	uint32_t		bytecode_offset; /* offset in bytecode */
+	uint16_t		bc_offset;	 /* offset in bytecode */
 	uint32_t		mach_offset;	 /* offset in machine code */
 	uint32_t		lir_pos;	 /* offset in LIR */
 	struct list_head	insn_list_node;

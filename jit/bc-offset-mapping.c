@@ -28,6 +28,8 @@
 #include <malloc.h>
 #include <stdio.h>
 
+#include "arch/instruction.h"
+
 #include "jit/bc-offset-mapping.h"
 #include "jit/statement.h"
 #include "jit/expression.h"
@@ -84,10 +86,10 @@ int build_bc_offset_map(struct compilation_unit *cu)
 			 */
 			if (prev_insn)
 				cu->bc_offset_map[insn->mach_offset - 1] =
-					prev_insn->bytecode_offset;
+					insn_get_bc_offset(prev_insn);
 
 			cu->bc_offset_map[insn->mach_offset] =
-				insn->bytecode_offset;
+				insn_get_bc_offset(insn);
 
 			prev_insn = insn;
 		}
@@ -144,7 +146,7 @@ bool all_insn_have_bytecode_offset(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		for_each_insn(insn, &bb->insn_list) {
-			if (insn->bytecode_offset == BC_OFFSET_UNKNOWN)
+			if (!(insn->flags & INSN_FLAG_KNOWN_BC_OFFSET))
 				return false;
 		}
 	}

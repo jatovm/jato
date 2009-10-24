@@ -2805,7 +2805,7 @@ stmt:	STMT_CHECKCAST(reg)
 static void
 select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn)
 {
-	insn->bytecode_offset = tree->bytecode_offset;
+	insn_set_bc_offset(insn, tree->bytecode_offset);
 	bb_add_insn(bb, insn);
 }
 
@@ -3437,7 +3437,7 @@ static void free_state(MBState *state)
 
 static void eh_add_insn(struct basic_block *bb, struct insn *insn)
 {
-	insn->bytecode_offset = bb->start;
+	insn_set_bc_offset(insn, bb->start);
 	bb_add_insn(bb, insn);
 }
 

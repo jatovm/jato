@@ -38,7 +38,6 @@ struct insn *alloc_insn(enum insn_type type)
 		INIT_LIST_HEAD(&insn->insn_list_node);
 		INIT_LIST_HEAD(&insn->branch_list_node);
 		insn->type = type;
-		insn->bytecode_offset = BC_OFFSET_UNKNOWN;
 	}
 	return insn;
 }
@@ -416,8 +415,8 @@ int insert_copy_slot_32_insns(struct stack_slot *from, struct stack_slot *to,
 		return -1;
 	}
 
-	push->bytecode_offset = bc_offset;
-	pop->bytecode_offset = bc_offset;
+	insn_set_bc_offset(push, bc_offset);
+	insn_set_bc_offset(pop, bc_offset);
 
 	list_add_tail(&push->insn_list_node, add_before);
 	list_add(&pop->insn_list_node, &push->insn_list_node);
@@ -451,10 +450,10 @@ int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
 	if (!pop_lo)
 		goto fail_pop_lo;
 
-	push_lo->bytecode_offset = bc_offset;
-	push_hi->bytecode_offset = bc_offset;
-	pop_lo->bytecode_offset = bc_offset;
-	pop_hi->bytecode_offset = bc_offset;
+	insn_set_bc_offset(push_lo, bc_offset);
+	insn_set_bc_offset(push_hi, bc_offset);
+	insn_set_bc_offset(pop_lo, bc_offset);
+	insn_set_bc_offset(pop_hi, bc_offset);
 
 	list_add_tail(&push_lo->insn_list_node, add_before);
 	list_add(&push_hi->insn_list_node, &push_lo->insn_list_node);

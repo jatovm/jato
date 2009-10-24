@@ -2,8 +2,9 @@
 #define __ARCH_INSTRUCTION_H
 
 #include "arch/registers.h"
-#include "jit/basic-block.h"
+
 #include "jit/use-position.h"
+#include "jit/basic-block.h"
 #include "jit/vars.h"
 
 #include <stdbool.h>
@@ -43,8 +44,17 @@ enum insn_type {
 	INSN_ST_LOCAL,	/* X = source reg, Y = destination stack slot */
 };
 
+enum insn_flag_type {
+	INSN_FLAG_KNOWN_BC_OFFSET	= 1U << 0,
+};
+
 struct insn {
-	enum insn_type type;
+	uint8_t			type;		/* see enum insn_type */
+	uint8_t			flags;		/* see enum insn_flag_type */
+	uint16_t		bc_offset;
+	unsigned long		lir_pos;	/* offset in LIR */
+	unsigned long		mach_offset;	/* offset in machine code */
+	struct list_head	insn_list_node;
         union {
 		struct operand operands[3];
                 struct {
@@ -52,12 +62,6 @@ struct insn {
                 };
                 struct operand operand;
         };
-        struct list_head insn_list_node;
-	/* Position of this instruction in LIR.  */
-	unsigned long		lir_pos;
-	/* Offset in machine code.  */
-	unsigned long mach_offset;
-	unsigned long bytecode_offset;
 };
 
 #define MAX_REG_OPERANDS 3

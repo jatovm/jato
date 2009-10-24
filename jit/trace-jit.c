@@ -209,9 +209,10 @@ void trace_lir(struct compilation_unit *cu)
 			lir_print(insn, str);
 
 			if (opt_trace_bytecode_offset) {
-				unsigned long bc_offset = insn->bytecode_offset;
+				unsigned long bc_offset;
 				struct string *bc_str;
 
+				bc_offset = insn_get_bc_offset(insn);
 				bc_str = alloc_str();
 
 				print_bytecode_offset(bc_offset, bc_str);
