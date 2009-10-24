@@ -190,6 +190,11 @@ enum insn_type {
 	NR_INSN_TYPES,
 };
 
+enum insn_flag_type {
+	INSN_FLAG_ESCAPED		= 1U << 0,
+	INSN_FLAG_SAFEPOINT		= 1U << 1,
+};
+
 struct insn {
 	enum insn_type type;
 	union {
@@ -206,9 +211,7 @@ struct insn {
 	unsigned long mach_offset;
 	/* Position of this instruction in LIR.  */
 	unsigned long lir_pos;
-	bool escaped;
-	/* True if this instruction is a GC safepoint */
-	bool safepoint;
+	unsigned long flags;		/* See enum insn_flag_type */
 	unsigned long bytecode_offset;
 };
 

@@ -2813,7 +2813,7 @@ static void
 select_safepoint_insn(struct basic_block *bb, struct tree_node *tree,
 		      struct insn *insn)
 {
-	insn->safepoint = true;
+	insn->flags |= INSN_FLAG_SAFEPOINT;
 	select_insn(bb, tree, insn);
 }
 

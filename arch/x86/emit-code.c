@@ -288,7 +288,7 @@ static long branch_rel_addr(struct insn *insn, unsigned long target_offset)
 	long ret;
 
 	ret = target_offset - insn->mach_offset - BRANCH_INSN_SIZE;
-	if (insn->escaped)
+	if (insn->flags & INSN_FLAG_ESCAPED)
 		ret -= PREFIX_SIZE;
 
 	return ret;
@@ -302,7 +302,7 @@ static void __emit_branch(struct buffer *buf, struct basic_block *bb,
 	int idx;
 
 	if (prefix)
-		insn->escaped = true;
+		insn->flags |= INSN_FLAG_ESCAPED;
 
 	target_bb = insn->operand.branch_target;
 
@@ -369,7 +369,7 @@ void backpatch_branch_target(struct buffer *buf,
 	long relative_addr;
 
 	backpatch_offset = insn->mach_offset + BRANCH_TARGET_OFFSET;
-	if (insn->escaped)
+	if (insn->flags & INSN_FLAG_ESCAPED)
 		backpatch_offset += PREFIX_SIZE;
 
 	relative_addr = branch_rel_addr(insn, target_offset);
