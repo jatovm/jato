@@ -59,7 +59,7 @@ struct _MBState;
 static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn);
 static void select_safepoint_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn);
 static void select_exception_test(struct basic_block *bb, struct tree_node *tree);
-void save_invoke_result(struct basic_block *s, struct tree_node *tree, struct vm_method *method, struct statement *stmt);
+static void save_invoke_result(struct basic_block *s, struct tree_node *tree, struct vm_method *method, struct statement *stmt);
 
 static unsigned char size_to_scale(int size)
 {
@@ -3107,8 +3107,10 @@ static void select_trace_return_value(struct basic_block *s,
 	}
 }
 
-void save_invoke_result(struct basic_block *s, struct tree_node *tree,
-			struct vm_method *method, struct statement *stmt)
+static void save_invoke_result(struct basic_block *s,
+			       struct tree_node *tree,
+			       struct vm_method *method,
+			       struct statement *stmt)
 {
 	struct stack_slot *scratch;
 	struct expression *tmp;
