@@ -100,7 +100,6 @@ struct live_interval *alloc_interval(struct var_info *var)
 	if (interval) {
 		interval->var_info = var;
 		interval->reg = MACH_REG_UNASSIGNED;
-		interval->fixed_reg = false;
 		interval->spill_reload_reg.interval = interval;
 		interval->spill_reload_reg.vm_type = var->vm_type;
 		INIT_LIST_HEAD(&interval->interval_node);
@@ -144,9 +143,10 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 		return NULL;
 	}
 
-	new->fixed_reg = interval->fixed_reg;
-	if (new->fixed_reg)
+	if (interval_has_fixed_reg(interval)) {
+		new->flags	|= INTERVAL_FLAG_FIXED_REG;
 		new->reg = interval->reg;
+	}
 
 	list_for_each_entry_safe(this, next, &interval->use_positions, use_pos_list) {
 		unsigned long use_pos[2];

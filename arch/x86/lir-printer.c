@@ -31,6 +31,7 @@
 #include "jit/emit-code.h"
 #include "jit/statement.h"
 #include "jit/compiler.h"
+#include "jit/vars.h"
 
 #include "vm/method.h"
 #include "vm/die.h"
@@ -58,7 +59,7 @@ static inline int print_reg(struct string *str, struct operand *op)
 {
 	struct live_interval *interval = op->reg.interval;
 
-	if (interval->fixed_reg)
+	if (interval_has_fixed_reg(interval))
 		return str_append(str, "r%lu=%s", interval->var_info->vreg,
 				  reg_name(interval->reg));
 	else

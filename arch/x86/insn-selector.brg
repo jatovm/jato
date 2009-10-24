@@ -3421,7 +3421,7 @@ static void emit_code(struct basic_block *bb, MBState *state, int goal)
 	mono_burg_emit(ern, state, state->tree, bb);
 
 	if (state->reg1)
-		assert(!state->reg1->interval->fixed_reg);
+		assert(!interval_has_fixed_reg(state->reg1->interval));
 }
 
 static void free_state(MBState *state)

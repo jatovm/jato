@@ -361,8 +361,8 @@ void trace_regalloc(struct compilation_unit *cu)
 
 			trace_printf("\t%s", reg_name(interval->reg));
 			trace_printf("\t%-11s", get_vm_type_name(var->vm_type));
-			trace_printf("\t%s", interval->fixed_reg ? "fixed\t" : "non-fixed");
-			if (interval->need_spill) {
+			trace_printf("\t%s", interval_has_fixed_reg(interval) ? "fixed\t" : "non-fixed");
+			if (interval_needs_spill(interval)) {
 				unsigned long ndx = -1;
 
 				if (interval->spill_slot)
@@ -372,7 +372,7 @@ void trace_regalloc(struct compilation_unit *cu)
 			} else
 				trace_printf("\tno spill  ");
 
-			if (interval->need_reload) {
+			if (interval_needs_reload(interval)) {
 				unsigned long ndx = -1;
 
 				if (interval->spill_parent && interval->spill_parent->spill_slot)

@@ -131,13 +131,15 @@ static void spill_interval(struct live_interval *it, unsigned long pos,
 		 */
 		struct live_interval *child = new->next_child;
 		while (child) {
-			if (child->need_reload && child->spill_parent == it)
+			if (interval_needs_reload(child) &&
+			    child->spill_parent == it)
 				child->spill_parent = new;
 
 			child = child->next_child;
 		}
 
-		new->need_spill = it->need_spill;
+		if (interval_needs_spill(it))
+			mark_need_spill(new);
 
 		/*
 		 * When next use position is a write then we must not
@@ -150,7 +152,7 @@ static void spill_interval(struct live_interval *it, unsigned long pos,
 		if ((next_pos & 1) == 0)
 			mark_need_reload(new, it);
 
-		it->need_spill = true;
+		mark_need_spill(it);
 		pqueue_insert(unhandled, new);
 	}
 }
@@ -211,7 +213,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 	list_for_each_entry(it, active, interval_node) {
 		unsigned long pos;
 
-		if (it->fixed_reg)
+		if (interval_has_fixed_reg(it))
 			continue;
 
 		pos = next_use_pos(it, interval_start(current));
@@ -221,7 +223,7 @@ static void allocate_blocked_reg(struct live_interval *current,
 	list_for_each_entry(it, inactive, interval_node) {
 		unsigned long pos;
 
-		if (it->fixed_reg)
+		if (interval_has_fixed_reg(it))
 			continue;
 
 		if (!reg_supports_type(it->reg, current->var_info->vm_type))
@@ -234,14 +236,14 @@ static void allocate_blocked_reg(struct live_interval *current,
 	}
 
 	list_for_each_entry(it, active, interval_node) {
-		if (!it->fixed_reg)
+		if (!interval_has_fixed_reg(it))
 			continue;
 
 		set_block_pos(block_pos, use_pos, it->reg, 0);
 	}
 
 	list_for_each_entry(it, inactive, interval_node) {
-		if (!it->fixed_reg)
+		if (!interval_has_fixed_reg(it))
 			continue;
 
 		if (!reg_supports_type(it->reg, current->var_info->vm_type))
@@ -368,7 +370,7 @@ int allocate_registers(struct compilation_unit *cu)
 		if (interval_is_empty(var->interval))
 			continue;
 
-		if (var->interval->fixed_reg) {
+		if (interval_has_fixed_reg(var->interval)) {
 			if (var->interval->reg < NR_REGISTERS)
 				list_add(&var->interval->interval_node, &inactive);
 		} else
@@ -415,7 +417,7 @@ int allocate_registers(struct compilation_unit *cu)
 		/*
 		 * Don't allocate registers for fixed intervals.
 		 */
-		assert(!current->fixed_reg);
+		assert(!interval_has_fixed_reg(current));
 
 		try_to_allocate_free_reg(current, &active, &inactive, unhandled);
 

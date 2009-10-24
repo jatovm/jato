@@ -56,6 +56,15 @@ struct var_info {
 	enum vm_type		vm_type;
 };
 
+enum interval_flag_type {
+	/* Do we need to spill the register of this interval?  */
+	INTERVAL_FLAG_NEED_SPILL		= 1U << 0,
+	/* Do we need to reload the register of this interval?  */
+	INTERVAL_FLAG_NEED_RELOAD		= 1U << 1,
+	/* Is this interval fixed? */
+	INTERVAL_FLAG_FIXED_REG			= 1U << 2,
+};
+
 struct live_interval {
 	/* Parent variable of this interval.  */
 	struct var_info *var_info;
@@ -86,12 +95,6 @@ struct live_interval {
 	   linear scan.  */
 	struct list_head interval_node;
 
-	/* Do we need to spill the register of this interval?  */
-	bool need_spill;
-
-	/* Do we need to reload the register of this interval?  */
-	bool need_reload;
-
 	/* The slot this interval is spilled to. Only set if ->need_spill is
 	   true.  */
 	struct stack_slot *spill_slot;
@@ -103,8 +106,8 @@ struct live_interval {
 	/* The live interval where spill happened.  */
 	struct live_interval *spill_parent;
 
-	/* Is this interval fixed? */
-	bool fixed_reg;
+	/* See enum interval_flag_type for details.  */
+	uint8_t flags;
 };
 
 static inline bool has_use_positions(struct live_interval *it)
@@ -112,11 +115,31 @@ static inline bool has_use_positions(struct live_interval *it)
 	return !list_is_empty(&it->use_positions);
 }
 
+static inline bool interval_needs_reload(struct live_interval *it)
+{
+	return it->flags & INTERVAL_FLAG_NEED_RELOAD;
+}
+
+static inline bool interval_needs_spill(struct live_interval *it)
+{
+	return it->flags & INTERVAL_FLAG_NEED_SPILL;
+}
+
+static inline bool interval_has_fixed_reg(struct live_interval *it)
+{
+	return it->flags & INTERVAL_FLAG_FIXED_REG;
+}
+
 static inline void
 mark_need_reload(struct live_interval *it, struct live_interval *parent)
 {
-	it->need_reload = true;
-	it->spill_parent = parent;
+	it->flags		|= INTERVAL_FLAG_NEED_RELOAD;
+	it->spill_parent	= parent;
+}
+
+static inline void mark_need_spill(struct live_interval *it)
+{
+	it->flags |= INTERVAL_FLAG_NEED_SPILL;
 }
 
 static inline struct live_range *node_to_range(struct list_head *node)

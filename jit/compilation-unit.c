@@ -104,8 +104,8 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 			ret = do_get_var(cu, GPR_VM_TYPE);
 			if (ret) {
-				ret->interval->reg = i;
-				ret->interval->fixed_reg = true;
+				ret->interval->reg	= i;
+				ret->interval->flags	|= INTERVAL_FLAG_FIXED_REG;
 			}
 
 			cu->fixed_var_infos[i] = ret;

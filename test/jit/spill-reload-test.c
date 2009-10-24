@@ -68,7 +68,7 @@ void test_spill_insn_is_inserted_before_last_read_if_necessary(void)
         bb_add_insn(bb, insn_array[0]);
         bb_add_insn(bb, insn_array[1]);
 
-	r1->interval->need_spill = true;
+	mark_need_spill(r1->interval);
 
 	compute_insn_positions(cu);
 	analyze_liveness(cu);
@@ -117,7 +117,7 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
 	r1->interval->spill_reload_reg.interval = r1->interval;
 	r2->interval->spill_reload_reg.interval = r2->interval;
 
-	r2->interval->need_reload = true;
+	r2->interval->flags |= INTERVAL_FLAG_NEED_RELOAD;
 	r2->interval->spill_parent = r1->interval;
 
 	compute_insn_positions(cu);
@@ -155,7 +155,7 @@ void test_empty_interval_is_never_spilled(void)
 	bb = get_basic_block(cu, 0, 2);
 
 	r1 = get_var(cu, J_INT);
-	r1->interval->need_spill = true;
+	mark_need_spill(r1->interval);
 
 	compute_insn_positions(cu);
 	analyze_liveness(cu);

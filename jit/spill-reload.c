@@ -223,7 +223,7 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 	if (interval_is_empty(interval))
 		goto out;
 
-	if (interval->need_reload) {
+	if (interval_needs_reload(interval)) {
 		/*
 		 * Intervals which start with a DEF position (odd
 		 * numbers) should not be reloaded. One reason for
@@ -239,7 +239,7 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 			goto out;
 	}
 
-	if (interval->need_spill) {
+	if (interval_needs_spill(interval)) {
 		err = insert_spill_insn(interval, cu);
 		if (err)
 			goto out;
@@ -271,7 +271,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		if (!from_it)
 			continue;
 
-		if (from_it->need_spill && interval_end(from_it) < from_bb->end_insn) {
+		if (interval_needs_spill(from_it) && interval_end(from_it) < from_bb->end_insn) {
 			slots[i] = from_it->spill_slot;
 		} else {
 			slots[i] = spill_interval(from_it, cu, spill_after, bc_offset);
@@ -282,7 +282,7 @@ static void insert_mov_insns(struct compilation_unit *cu,
 	for (i = 0; i < nr_mapped; i++) {
 		to_it		= mappings[i].to;
 
-		if (to_it->need_reload && interval_start(to_it) >= to_bb->start_insn) {
+		if (interval_needs_reload(to_it) && interval_start(to_it) >= to_bb->start_insn) {
 			insert_copy_slot_insn(slots[i], to_it->spill_parent->spill_slot,
 					      to_it->var_info->vm_type,
 					      push_before, bc_offset);
