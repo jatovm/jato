@@ -196,8 +196,14 @@ enum insn_flag_type {
 };
 
 struct insn {
-	uint8_t		type;		/* see enum insn_type */
-	uint8_t		flags;		/* see enum insn_flag_type */
+	uint8_t			type;		 /* see enum insn_type */
+	uint8_t			flags;		 /* see enum insn_flag_type */
+	uint32_t		bytecode_offset; /* offset in bytecode */
+	uint32_t		mach_offset;	 /* offset in machine code */
+	uint32_t		lir_pos;	 /* offset in LIR */
+	struct list_head	insn_list_node;
+	struct list_head	branch_list_node;
+
 	union {
 		struct operand operands[2];
 		struct {
@@ -206,13 +212,6 @@ struct insn {
 		};
 		struct operand operand;
 	};
-	struct list_head insn_list_node;
-	struct list_head branch_list_node;
-	/* Offset in machine code.  */
-	unsigned long mach_offset;
-	/* Position of this instruction in LIR.  */
-	unsigned long lir_pos;
-	unsigned long bytecode_offset;
 };
 
 /* Each instruction has two operands and each of them can refer to two explicit
