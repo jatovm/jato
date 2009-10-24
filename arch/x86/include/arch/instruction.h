@@ -196,7 +196,8 @@ enum insn_flag_type {
 };
 
 struct insn {
-	enum insn_type type;
+	uint8_t		type;		/* see enum insn_type */
+	uint8_t		flags;		/* see enum insn_flag_type */
 	union {
 		struct operand operands[2];
 		struct {
@@ -211,7 +212,6 @@ struct insn {
 	unsigned long mach_offset;
 	/* Position of this instruction in LIR.  */
 	unsigned long lir_pos;
-	unsigned long flags;		/* See enum insn_flag_type */
 	unsigned long bytecode_offset;
 };
 
