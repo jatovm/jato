@@ -53,8 +53,6 @@ get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interv
 
 	unsigned long start = interval_start(interval);
 
-	ret = radix_tree_lookup(cu->lir_insn_map, start);
-
 	if (start & 1) {
 		/*
 		 * If interval starts at odd position and has a use
@@ -67,7 +65,10 @@ get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interv
 		if (first_use_pos(interval) == interval_start(interval))
 			error("interval begins with a def-use and is marked for reload");
 
+		ret = radix_tree_lookup(cu->lir_insn_map, start - 1);
 		ret = next_insn(ret);
+	} else {
+		ret = radix_tree_lookup(cu->lir_insn_map, start);
 	}
 
 	assert(ret != NULL);
