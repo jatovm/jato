@@ -225,7 +225,7 @@ static int __insert_spill_reload_insn(struct live_interval *interval, struct com
 		 * can't insert a reload instruction in the middle of
 		 * instruction.
 		 */
-		if ((interval_start(interval) & 1) == 0);
+		assert((interval_start(interval) & 1) == 0);
 
 		err = insert_reload_insn(interval, cu,
 				interval->spill_parent->spill_slot,
