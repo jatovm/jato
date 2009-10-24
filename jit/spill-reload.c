@@ -47,7 +47,8 @@ struct live_interval_mapping {
 };
 
 static struct insn *
-get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interval)
+get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interval,
+		       unsigned long *bc_offset)
 {
 	struct insn *ret;
 
@@ -66,9 +67,11 @@ get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interv
 			error("interval begins with a def-use and is marked for reload");
 
 		ret = radix_tree_lookup(cu->lir_insn_map, start - 1);
+		*bc_offset = ret->bytecode_offset;
 		ret = next_insn(ret);
 	} else {
 		ret = radix_tree_lookup(cu->lir_insn_map, start);
+		*bc_offset = ret->bytecode_offset;
 	}
 
 	assert(ret != NULL);
@@ -76,7 +79,9 @@ get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interv
 }
 
 static struct insn *
-get_spill_after_insn(struct compilation_unit *cu, struct live_interval *interval)
+get_spill_after_insn(struct compilation_unit *cu,
+		     struct live_interval *interval,
+		     unsigned long *bc_offset)
 {
 	struct insn *ret;
 
@@ -90,8 +95,10 @@ get_spill_after_insn(struct compilation_unit *cu, struct live_interval *interval
 
 	if (last_pos & 1) {
 		ret = radix_tree_lookup(cu->lir_insn_map, last_pos - 1);
+		*bc_offset = ret->bytecode_offset;
 	} else {
 		ret = radix_tree_lookup(cu->lir_insn_map, last_pos);
+		*bc_offset = ret->bytecode_offset;
 		ret = prev_insn(ret);
 	}
 
@@ -157,11 +164,12 @@ static int
 insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
 	struct insn *spill_after;
+	unsigned long bc_offset;
 
-	spill_after = get_spill_after_insn(cu, interval);
+	spill_after = get_spill_after_insn(cu, interval, &bc_offset);
 	interval->spill_slot = spill_interval(interval, cu,
 					      &spill_after->insn_list_node,
-					      spill_after->bytecode_offset);
+					      bc_offset);
 	if (!interval->spill_slot)
 		return warn("out of memory"), -ENOMEM;
 
@@ -172,6 +180,7 @@ static int
 insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
 	struct insn *reload_before;
+	unsigned long bc_offset;
 	struct insn *reload;
 
 	reload = reload_insn(interval->spill_parent->spill_slot,
@@ -179,8 +188,8 @@ insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 	if (!reload)
 		return warn("out of memory"), -ENOMEM;
 
-	reload_before = get_reload_before_insn(cu, interval);
-	reload->bytecode_offset = reload_before->bytecode_offset;
+	reload_before = get_reload_before_insn(cu, interval, &bc_offset);
+	reload->bytecode_offset = bc_offset;
 	list_add_tail(&reload->insn_list_node, &reload_before->insn_list_node);
 
 	return 0;
