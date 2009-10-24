@@ -46,13 +46,15 @@ struct live_interval_mapping {
 	struct live_interval *from, *to;
 };
 
-static struct insn *
-get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interval,
+static struct list_head *
+get_reload_before_node(struct compilation_unit *cu,
+		       struct live_interval *interval,
 		       unsigned long *bc_offset)
 {
-	struct insn *ret;
+	unsigned long start;
+	struct insn *insn;
 
-	unsigned long start = interval_start(interval);
+	start = interval_start(interval);
 
 	if (start & 1) {
 		/*
@@ -66,24 +68,22 @@ get_reload_before_insn(struct compilation_unit *cu, struct live_interval *interv
 		if (first_use_pos(interval) == interval_start(interval))
 			error("interval begins with a def-use and is marked for reload");
 
-		ret = radix_tree_lookup(cu->lir_insn_map, start - 1);
-		*bc_offset = ret->bytecode_offset;
-		ret = next_insn(ret);
-	} else {
-		ret = radix_tree_lookup(cu->lir_insn_map, start);
-		*bc_offset = ret->bytecode_offset;
+		insn = radix_tree_lookup(cu->lir_insn_map, start - 1);
+		*bc_offset = insn->bytecode_offset;
+		return insn->insn_list_node.next;
 	}
 
-	assert(ret != NULL);
-	return ret;
+	insn = radix_tree_lookup(cu->lir_insn_map, start);
+	*bc_offset = insn->bytecode_offset;
+	return &insn->insn_list_node;
 }
 
-static struct insn *
-get_spill_after_insn(struct compilation_unit *cu,
+static struct list_head *
+get_spill_after_node(struct compilation_unit *cu,
 		     struct live_interval *interval,
 		     unsigned long *bc_offset)
 {
-	struct insn *ret;
+	struct insn *insn;
 
 	/*
 	 * If interval ends at even position then it is not written to
@@ -94,17 +94,14 @@ get_spill_after_insn(struct compilation_unit *cu,
 	unsigned long last_pos = interval_end(interval) - 1;
 
 	if (last_pos & 1) {
-		ret = radix_tree_lookup(cu->lir_insn_map, last_pos - 1);
-		*bc_offset = ret->bytecode_offset;
-	} else {
-		ret = radix_tree_lookup(cu->lir_insn_map, last_pos);
-		*bc_offset = ret->bytecode_offset;
-		ret = prev_insn(ret);
+		insn = radix_tree_lookup(cu->lir_insn_map, last_pos - 1);
+		*bc_offset = insn->bytecode_offset;
+		return &insn->insn_list_node;
 	}
 
-	assert(ret != NULL);
-
-	return ret;
+	insn = radix_tree_lookup(cu->lir_insn_map, last_pos);
+	*bc_offset = insn->bytecode_offset;
+	return insn->insn_list_node.prev;
 }
 
 /**
@@ -163,12 +160,12 @@ spill_interval(struct live_interval *interval,
 static int
 insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
-	struct insn *spill_after;
+	struct list_head *spill_after;
 	unsigned long bc_offset;
 
-	spill_after = get_spill_after_insn(cu, interval, &bc_offset);
+	spill_after = get_spill_after_node(cu, interval, &bc_offset);
 	interval->spill_slot = spill_interval(interval, cu,
-					      &spill_after->insn_list_node,
+					      spill_after,
 					      bc_offset);
 	if (!interval->spill_slot)
 		return warn("out of memory"), -ENOMEM;
@@ -179,7 +176,7 @@ insert_spill_insn(struct live_interval *interval, struct compilation_unit *cu)
 static int
 insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 {
-	struct insn *reload_before;
+	struct list_head *reload_before;
 	unsigned long bc_offset;
 	struct insn *reload;
 
@@ -188,9 +185,9 @@ insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 	if (!reload)
 		return warn("out of memory"), -ENOMEM;
 
-	reload_before = get_reload_before_insn(cu, interval, &bc_offset);
+	reload_before = get_reload_before_node(cu, interval, &bc_offset);
 	reload->bytecode_offset = bc_offset;
-	list_add_tail(&reload->insn_list_node, &reload_before->insn_list_node);
+	list_add_tail(&reload->insn_list_node, reload_before);
 
 	return 0;
 }
