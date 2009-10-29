@@ -534,8 +534,8 @@ int preload_vm_classes(void)
 
 		struct vm_class *class = classloader_load_primitive(pe->name);
 		if (!class) {
-			NOT_IMPLEMENTED;
-			return 1;
+			warn("preload of %s failed", pe->name);
+			return -EINVAL;
 		}
 
 		*pe->class = class;
@@ -548,8 +548,9 @@ int preload_vm_classes(void)
 		struct vm_field *field = vm_class_get_field(*pe->class,
 			pe->name, pe->type);
 		if (!field) {
-			NOT_IMPLEMENTED;
-			return 1;
+			warn("preload of %s.%s%s failed", (*pe->class)->name,
+			     pe->name, pe->type);
+			return -EINVAL;
 		}
 
 		*pe->field = field;
@@ -564,8 +565,7 @@ int preload_vm_classes(void)
 		if (!method) {
 			warn("preload of %s.%s%s failed", (*me->class)->name,
 			     me->name, me->type);
-			NOT_IMPLEMENTED;
-			return 1;
+			return -EINVAL;
 		}
 
 		*me->method = method;
@@ -588,10 +588,8 @@ int preload_vm_classes(void)
 
 		cu->is_compiled = true;
 
-		if (add_cu_mapping((unsigned long)cu->native_ptr, cu)) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (add_cu_mapping((unsigned long)cu->native_ptr, cu))
+			return -EINVAL;
 
 		m_info = (struct cafebabe_method_info *)vmm->method;
 		m_info->access_flags |= CAFEBABE_METHOD_ACC_NATIVE;
