@@ -7,7 +7,7 @@ CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 
-BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/)
+BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
 ARCH		:= $(BUILD_ARCH)
 JAMVM_ARCH	:= $(shell echo "$(ARCH)" | sed -e s/ppc/powerpc/)
 OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
