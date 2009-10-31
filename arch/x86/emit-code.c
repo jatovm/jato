@@ -461,6 +461,15 @@ static void do_fixup_static(void *site_addr, int skip_count, void *new_target)
 #endif
 }
 
+static inline bool is_rex_prefix(unsigned char opc)
+{
+#ifdef CONFIG_X86_64
+	return (opc & 0xf0) == REX;
+#else
+	return false;
+#endif
+}
+
 void fixup_static(struct vm_class *vmc)
 {
 	struct static_fixup_site *this, *next;
@@ -470,24 +479,23 @@ void fixup_static(struct vm_class *vmc)
 	list_for_each_entry_safe(this, next, &vmc->static_fixup_site_list, vmc_node) {
 		struct vm_field *vmf = this->vmf;
 		unsigned char *mach_insn;
+		int skip_count = 0;
 		void *new_target;
-		int skip_count;
 
 		new_target	= vmc->static_values + vmf->offset;
 		mach_insn	= buffer_ptr(this->cu->objcode)
 				  + this->insn->mach_offset;
-#ifdef CONFIG_X86_64
-		skip_count = 2;
+
 		/* Does the instruction begin with a REX prefix? */
-		if ((*mach_insn & 0xf0) == REX)
-			skip_count++;
-#else /* CONFIG_X86_32 */
+		if (is_rex_prefix(mach_insn[0]))
+			skip_count += 1;
+
 		/* Is it an SSE instruction? */
-		if (*mach_insn == 0xf3)
-			skip_count = 4;
+		if (mach_insn[skip_count] == 0xf3)
+			skip_count += 4;
 		else
-			skip_count = 2;
-#endif
+			skip_count += 2;
+
 		do_fixup_static(mach_insn, skip_count, new_target);
 
 		list_del(&this->vmc_node);
