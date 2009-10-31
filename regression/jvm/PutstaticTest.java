@@ -29,63 +29,95 @@ package jvm;
  * @author Pekka Enberg
  */
 public class PutstaticTest extends TestCase {
-    static class I {
+    private static class I {
         static int x, y;
         int z;
     };
 
-    public static void testPutStaticConstInt() {
+    private static void testPutStaticConstInt() {
         I.x = 1;
         assertEquals(1, I.x);
     }
 
-    public static void testPutStaticClassFieldInt() {
+    private static void testPutStaticClassFieldInt() {
         I.x = 1;
         I.y = I.x;
         assertEquals(I.x, I.y);
     }
 
-    public static void testPutStaticInstanceFieldInt() {
+    private static void testPutStaticInstanceFieldInt() {
         I i = new I();
         i.z = 1;
         I.x = i.z;
         assertEquals(i.z, I.x);
     }
 
-    public static void testPutStaticLocalInt() {
+    private static void testPutStaticLocalInt() {
         int i = 1;
         I.x = i;
         assertEquals(i, I.x);
     }
 
-    static class J {
+    private static class J {
         static long x, y;
         long z;
     };
 
-    public static void testPutStaticConstLong() {
+    private static void testPutStaticConstLong() {
         J.x = 4294967300L;
         assertEquals(4294967300L, J.x);
     }
 
-    public static void testPutStaticClassFieldLong() {
+    private static void testPutStaticClassFieldLong() {
         J.x = 4294967300L;
         J.y = J.x;
         assertEquals(J.x, J.y);
     }
 
-    public static void testPutStaticInstanceFieldLong() {
+    private static void testPutStaticInstanceFieldLong() {
         J j = new J();
         j.z = 4294967300L;
         J.x = j.z;
         assertEquals(j.z, J.x);
     }
 
-    public static void testPutStaticLocalLong() {
+    private static void testPutStaticLocalLong() {
         long j = 4294967300L;
         J.x = j;
         assertEquals(j, J.x);
     }
+
+    private static void testPutStaticConstFloat() {
+        FloatClassFields.x = 1.0f;
+        assertEquals(1.0f, FloatClassFields.x);
+    }
+
+    private static void testPutStaticClassFieldFloat() {
+        FloatClassFields.x = 1.0f;
+        FloatClassFields.y = FloatClassFields.x;
+        assertEquals(FloatClassFields.x, FloatClassFields.y);
+    }
+
+    private static void testPutStaticLocalFloat() {
+        float x = 1.0f;
+        FloatClassFields.x = x;
+        assertEquals(x, FloatClassFields.x);
+    }
+
+    private static void testPutStaticInstanceFieldFloat() {
+        FloatInstanceFields fields = new FloatInstanceFields();
+        fields.z = 1.0f;
+        FloatClassFields.x = fields.z;
+        assertEquals(fields.z, FloatClassFields.x);
+    }
+
+    private static class FloatClassFields {
+        public static float x, y;
+    };
+
+    private static class FloatInstanceFields {
+        public float z;
+    };
 
     public static void main(String[] args) {
         testPutStaticConstInt();
@@ -96,5 +128,9 @@ public class PutstaticTest extends TestCase {
         testPutStaticConstLong();
         testPutStaticInstanceFieldLong();
         testPutStaticLocalLong();
+        testPutStaticClassFieldFloat();
+        testPutStaticConstFloat();
+        testPutStaticInstanceFieldFloat();
+        testPutStaticLocalFloat();
     }
 }
