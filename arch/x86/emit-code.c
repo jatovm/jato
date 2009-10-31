@@ -472,7 +472,7 @@ static inline bool is_rex_prefix(unsigned char opc)
 
 static inline bool is_sse_insn(unsigned char *opc)
 {
-	return opc[0] == 0xf3 && opc[1] == 0x0f;
+	return (opc[0] & 0xfe) == 0xf2 && opc[1] == 0x0f;
 }
 
 void fixup_static(struct vm_class *vmc)

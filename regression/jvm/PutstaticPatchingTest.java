@@ -14,7 +14,7 @@ public class PutstaticPatchingTest extends TestCase {
         }
     }
 
-    public static void main(String[] args) {
+    private static void testClassInitOnPutstatic() {
         int i = 0;
 
         assertFalse(clinit_run);
@@ -27,5 +27,39 @@ public class PutstaticPatchingTest extends TestCase {
         X.x = i;
         X.y = i;
         assertFalse(clinit_run);
+    }
+
+    private static class DoubleFieldClass {
+        public static double x;
+    };
+
+    private static void testDoublePutstaticPatching() {
+        DoubleFieldClass.x = 1.0;
+        assertEquals(DoubleFieldClass.x, 1.0);
+    }
+
+    private static class FloatFieldClass {
+        public static float x;
+    };
+
+    private static void testFloatPutstaticPatching() {
+        FloatFieldClass.x = 1.0f;
+        assertEquals(FloatFieldClass.x, 1.0f);
+    }
+
+    private static class IntFieldClass {
+        public static int x;
+    };
+
+    private static void testIntPutstaticPatching() {
+        IntFieldClass.x = 1;
+        assertEquals(IntFieldClass.x, 1);
+    }
+
+    public static void main(String[] args) {
+        testClassInitOnPutstatic();
+        testDoublePutstaticPatching();
+        testFloatPutstaticPatching();
+        testIntPutstaticPatching();
     }
 }
