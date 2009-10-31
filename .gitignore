@@ -16,7 +16,7 @@ include/vm/version.h
 # Generated source files
 #
 arch/*/insn-selector*.c
-monoburg/parser.c
+tools/monoburg/parser.c
 test/arch-x86/x86-test-suite.c
 test/jit/jit-test-suite.c
 test/vm/vm-test-suite.c
