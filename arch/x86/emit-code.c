@@ -449,6 +449,59 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 	pthread_mutex_unlock(&t->mutex);
 }
 
+static void do_fixup_static(void *site_addr, int skip_count, void *new_target)
+{
+	void *p = site_addr + skip_count;
+
+#ifdef CONFIG_X86_64
+	/* We need RIP-relative addressing. */
+	cpu_write_u32(p, new_target - site_addr - (skip_count + 4));
+#else
+	cpu_write_u32(p, (unsigned long) new_target);
+#endif
+}
+
+void fixup_static(struct vm_class *vmc)
+{
+	struct static_fixup_site *this, *next;
+
+	pthread_mutex_lock(&vmc->mutex);
+
+	list_for_each_entry_safe(this, next, &vmc->static_fixup_site_list, vmc_node) {
+		struct vm_field *vmf = this->vmf;
+		unsigned char *mach_insn;
+		void *new_target;
+		int skip_count;
+
+		new_target	= vmc->static_values + vmf->offset;
+		mach_insn	= buffer_ptr(this->cu->objcode)
+				  + this->insn->mach_offset;
+#ifdef CONFIG_X86_64
+		skip_count = 2;
+		/* Does the instruction begin with a REX prefix? */
+		if ((*mach_insn & 0xf0) == REX)
+			skip_count++;
+#else /* CONFIG_X86_32 */
+		/* Is it an SSE instruction? */
+		if (*mach_insn == 0xf3)
+			skip_count = 4;
+		else
+			skip_count = 2;
+#endif
+		do_fixup_static(mach_insn, skip_count, new_target);
+
+		list_del(&this->vmc_node);
+
+		pthread_mutex_lock(&this->cu->mutex);
+		list_del(&this->cu_node);
+		pthread_mutex_unlock(&this->cu->mutex);
+
+		free(this);
+	}
+
+	pthread_mutex_unlock(&vmc->mutex);
+}
+
 int fixup_static_at(unsigned long addr)
 {
 	struct compilation_unit *cu;
@@ -1902,59 +1955,6 @@ static void fixup_branch_target(uint8_t *target_p, void *target)
 	target_p[2] = cur >> 16;
 	target_p[1] = cur >> 8;
 	target_p[0] = cur;
-}
-
-static void do_fixup_static(void *site_addr, int skip_count, void *new_target)
-{
-	void *p = site_addr + skip_count;
-
-#ifdef CONFIG_X86_64
-	/* We need RIP-relative addressing. */
-	cpu_write_u32(p, new_target - site_addr - (skip_count + 4));
-#else
-	cpu_write_u32(p, (unsigned long) new_target);
-#endif
-}
-
-void fixup_static(struct vm_class *vmc)
-{
-	struct static_fixup_site *this, *next;
-
-	pthread_mutex_lock(&vmc->mutex);
-
-	list_for_each_entry_safe(this, next, &vmc->static_fixup_site_list, vmc_node) {
-		struct vm_field *vmf = this->vmf;
-		unsigned char *mach_insn;
-		void *new_target;
-		int skip_count;
-
-		new_target	= vmc->static_values + vmf->offset;
-		mach_insn	= buffer_ptr(this->cu->objcode)
-				  + this->insn->mach_offset;
-#ifdef CONFIG_X86_64
-		skip_count = 2;
-		/* Does the instruction begin with a REX prefix? */
-		if ((*mach_insn & 0xf0) == REX)
-			skip_count++;
-#else /* CONFIG_X86_32 */
-		/* Is it an SSE instruction? */
-		if (*mach_insn == 0xf3)
-			skip_count = 4;
-		else
-			skip_count = 2;
-#endif
-		do_fixup_static(mach_insn, skip_count, new_target);
-
-		list_del(&this->vmc_node);
-
-		pthread_mutex_lock(&this->cu->mutex);
-		list_del(&this->cu_node);
-		pthread_mutex_unlock(&this->cu->mutex);
-
-		free(this);
-	}
-
-	pthread_mutex_unlock(&vmc->mutex);
 }
 
 void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
