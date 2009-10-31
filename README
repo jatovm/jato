@@ -29,6 +29,11 @@ How can I try it out?
     $ su
     $ make install ; exit
 
+    For OpenSolaris 10:
+
+    $ su
+    $ pkg install SUNWgnome-common-devel SUNWgcc SUNWGlib SUNWgmake SUNWbison ; exit
+
   - Compile Jato and run the unit tests:
 
     $ cd <JATO_ROOT> ; make
