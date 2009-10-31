@@ -470,6 +470,11 @@ static inline bool is_rex_prefix(unsigned char opc)
 #endif
 }
 
+static inline bool is_sse_insn(unsigned char *opc)
+{
+	return opc[0] == 0xf3 && opc[1] == 0x0f;
+}
+
 void fixup_static(struct vm_class *vmc)
 {
 	struct static_fixup_site *this, *next;
@@ -487,11 +492,11 @@ void fixup_static(struct vm_class *vmc)
 				  + this->insn->mach_offset;
 
 		/* Does the instruction begin with a REX prefix? */
-		if (is_rex_prefix(mach_insn[0]))
+		if (is_rex_prefix(*mach_insn))
 			skip_count += 1;
 
 		/* Is it an SSE instruction? */
-		if (mach_insn[skip_count] == 0xf3)
+		if (is_sse_insn(mach_insn + skip_count))
 			skip_count += 4;
 		else
 			skip_count += 2;
