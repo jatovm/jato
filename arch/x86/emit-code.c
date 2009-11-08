@@ -60,6 +60,12 @@
 #include <errno.h>
 #include <stdio.h>
 
+#define	REX		0x40
+#define REX_W		(REX | 8)	/* 64-bit operands */
+#define REX_R		(REX | 4)	/* ModRM reg extension */
+#define REX_X		(REX | 2)	/* SIB index extension */
+#define REX_B		(REX | 1)	/* ModRM r/m extension */
+
 /* Aliases and prototypes to make common emitters work as expected. */
 #ifdef CONFIG_X86_64
 # define __emit_add_imm_reg		__emit64_add_imm_reg
@@ -2159,12 +2165,6 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 /*
  * x86-64 code emitters
  */
-
-#define	REX		0x40
-#define REX_W		(REX | 8)	/* 64-bit operands */
-#define REX_R		(REX | 4)	/* ModRM reg extension */
-#define REX_X		(REX | 2)	/* SIB index extension */
-#define REX_B		(REX | 1)	/* ModRM r/m extension */
 
 static inline unsigned char reg_low(unsigned char reg)
 {
