@@ -15,7 +15,10 @@ enum machine_reg {
 	MACH_REG_ESI,
 	MACH_REG_EDI,
 
-	MACH_REG_XMM0,
+	/* Number of general purpose registers.  */
+	NR_GP_REGISTERS,
+
+	MACH_REG_XMM0 = NR_GP_REGISTERS,
 	MACH_REG_XMM1,
 	MACH_REG_XMM2,
 	MACH_REG_XMM3,

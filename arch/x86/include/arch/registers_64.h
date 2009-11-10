@@ -23,6 +23,10 @@ enum machine_reg {
 	MACH_REG_R14,
 	MACH_REG_R15,
 
+	/* Number of general purpose registers.  */
+	NR_GP_REGISTERS,
+
+
 	MACH_REG_XMM0,
 	MACH_REG_XMM1,
 	MACH_REG_XMM2,

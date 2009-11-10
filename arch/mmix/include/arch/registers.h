@@ -11,8 +11,11 @@ enum machine_reg {
 	R1,
 	R2,
 
+	/* Number of general purpose registers.  */
+	NR_GP_REGISTERS,
+
 	/* The above registers are available for register allocator.  */
-	NR_REGISTERS,
+	NR_REGISTERS = NR_GP_REGISTERS,
 
 	/* The above registers are available for get_fixed_var().  */
 	NR_FIXED_REGISTERS = NR_REGISTERS,

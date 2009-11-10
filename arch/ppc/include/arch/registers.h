@@ -42,8 +42,11 @@ enum machine_reg {
 	REG_R30,
 	REG_R31,
 
+	/* Number of general purpose registers.  */
+	NR_GP_REGISTERS,
+
 	/* The above registers are available for register allocation.  */
-	NR_REGISTERS,
+	NR_REGISTERS = NR_GP_REGISTERS,
 
 	/* Stack pointer.  */
 	REG_R1 = NR_REGISTERS,
