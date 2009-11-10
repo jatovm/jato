@@ -12,7 +12,6 @@
 #include "jit/statement.h"
 #include "jit/bc-offset-mapping.h"
 #include "jit/exception.h"
-#include "jit/gc-map.h"
 #include "jit/perf-map.h"
 #include "jit/subroutine.h"
 
@@ -116,10 +115,6 @@ int compile(struct compilation_unit *cu)
 
 	if (opt_trace_machine_code)
 		trace_machine_code(cu);
-
-	err = gc_map_init(cu);
-	if (err)
-		goto out;
 
 	cu->native_ptr = buffer_ptr(cu->objcode);
 	cu->is_compiled = true;

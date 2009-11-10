@@ -71,7 +71,6 @@ JIT_OBJS = \
 	jit/exception.o 	\
 	jit/expression.o	\
 	jit/fixup-site.o	\
-	jit/gc-map.o		\
 	jit/interval.o		\
 	jit/invoke-bc.o		\
 	jit/linear-scan.o	\
