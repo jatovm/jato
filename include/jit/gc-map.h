@@ -1,8 +1,13 @@
 #ifndef JIT_GC_MAP_H
 #define JIT_GC_MAP_H
 
-#include "jit/compilation-unit.h"
+#include <arch/registers.h>
+#include <vm/system.h>
 
-int gc_map_init(struct compilation_unit *cu);
+#define GC_REGISTER_MAP_SIZE	DIV_ROUND_UP(NR_GP_REGISTERS, sizeof(unsigned long))
+
+struct gc_map {
+	unsigned long		register_map[GC_REGISTER_MAP_SIZE];	/* references in registers */
+};
 
 #endif
