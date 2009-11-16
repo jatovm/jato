@@ -88,6 +88,13 @@ static inline void *vm_native_stack_get_frame(void)
 			__builtin_frame_address(0);			\
 	} while (0)
 
+#define init_stack_trace_elem_current(elem) do {			\
+	__lab:								\
+		init_stack_trace_elem(elem,				\
+				      (unsigned long)&&__lab,		\
+				      __builtin_frame_address(0));	\
+	} while (0)
+
 enum stack_trace_elem_type {
 	STACK_TRACE_ELEM_TYPE_JIT,
 	STACK_TRACE_ELEM_TYPE_JNI,
@@ -131,7 +138,6 @@ stack_trace_elem_type_is_java(enum stack_trace_elem_type type)
 void init_stack_trace_printing(void);
 void init_stack_trace_elem(struct stack_trace_elem *elem, unsigned long addr,
 			   void *frame);
-void init_stack_trace_elem_current(struct stack_trace_elem *elem);
 int stack_trace_elem_next(struct stack_trace_elem *elem);
 int stack_trace_elem_next_java(struct stack_trace_elem *elem);
 int skip_frames_from_class(struct stack_trace_elem *elem, struct vm_class *class);

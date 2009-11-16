@@ -310,13 +310,6 @@ void init_stack_trace_elem(struct stack_trace_elem *elem, unsigned long addr,
 	}
 }
 
-void init_stack_trace_elem_current(struct stack_trace_elem *elem)
-{
-	init_stack_trace_elem(elem,
-			      (unsigned long)&init_stack_trace_elem_current,
-			      __builtin_frame_address(0));
-}
-
 struct compilation_unit *stack_trace_elem_get_cu(struct stack_trace_elem *elem)
 {
 	if (elem->type == STACK_TRACE_ELEM_TYPE_OTHER)

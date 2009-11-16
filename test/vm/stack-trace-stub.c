@@ -44,10 +44,6 @@ void init_stack_trace_elem(struct stack_trace_elem *elem, unsigned long addr,
 {
 }
 
-void init_stack_trace_elem_current(struct stack_trace_elem *elem)
-{
-}
-
 int stack_trace_elem_next(struct stack_trace_elem *elem)
 {
 	return -1;
