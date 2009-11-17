@@ -32,7 +32,3 @@ throw_exception(struct compilation_unit *cu, struct object *exception)
 {
 	return NULL;
 }
-
-void throw_exception_from_signal(void *ctx, struct object *exception)
-{
-}
