@@ -175,7 +175,8 @@ static void vm_thread_detach_thread(struct vm_thread *thread)
 	pthread_mutex_unlock(&threads_mutex);
 }
 
-int init_threading(void) {
+int init_threading(void)
+{
 	INIT_LIST_HEAD(&thread_list);
 	nr_non_daemons = 0;
 
@@ -285,8 +286,7 @@ int vm_thread_start(struct vm_object *vmthread)
 
 	vm_thread_attach_thread(thread);
 
-	if (pthread_create(&thread->posix_id, NULL, &vm_thread_entry, thread))
-	{
+	if (pthread_create(&thread->posix_id, NULL, &vm_thread_entry, thread)) {
 		vm_thread_detach_thread(thread);
 		return -1;
 	}
