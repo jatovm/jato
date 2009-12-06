@@ -100,6 +100,18 @@ How do I launch a simple application?
     $ gdb --args ./jato [...]
 
 
+Debugging deadlocks
+
+  You can debug deadlocks easily with GDB:
+
+    $ gdb --args ./jato [...]
+
+    (gdb) handle SIGSEGV nostop
+    (gdb) r
+    <Ctrl-C when the program deadlocks>
+    (gdb) thread apply all backtrace
+
+
 Copyright and License
 
   Copyright (C) 2005-2009  Pekka Enberg
