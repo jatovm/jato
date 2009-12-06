@@ -33,18 +33,6 @@ void gc_init(void)
 		die("Couldn't allocate GC safepoint guard page");
 }
 
-void *gc_alloc(size_t size)
-{
-	struct register_state regs;
-
-	save_registers(&regs);
-
-	if (gc_enabled)
-		gc_start(&regs);
-
-	return zalloc(size);
-}
-
 void gc_attach_thread(void)
 {
 }
@@ -113,7 +101,7 @@ void gc_safepoint(struct register_state *regs)
 /*
  * This is the main entrypoint to the stop-the-world GC.
  */
-void gc_start(struct register_state *regs)
+static void gc_start(struct register_state *regs)
 {
 	pthread_mutex_lock(&safepoint_mutex);
 
@@ -163,4 +151,16 @@ out_exit_safepoint:
 	gc_safepoint_exit();
 out_unlock:
 	pthread_mutex_unlock(&safepoint_mutex);
+}
+
+void *gc_alloc(size_t size)
+{
+	struct register_state regs;
+
+	save_registers(&regs);
+
+	if (gc_enabled)
+		gc_start(&regs);
+
+	return zalloc(size);
 }
