@@ -218,7 +218,7 @@ struct insn {
 /* Each instruction has two operands and each of them can refer to two explicit
    registers.  An instruction can also clobber EAX/RAX, ECX/RCX, and EDX/RDX
    implicitly.  */
-#define MAX_REG_OPERANDS 4 + 3
+#define MAX_REG_OPERANDS (4 + 3)
 
 void insn_sanity_check(void);
 
