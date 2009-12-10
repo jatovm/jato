@@ -252,52 +252,9 @@ struct insn *membase_insn(enum insn_type, struct var_info *, long);
 int insert_copy_slot_32_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
 int insert_copy_slot_64_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
 
-static inline struct insn *
-spill_insn(struct var_info *var, struct stack_slot *slot)
-{
-	enum insn_type insn_type;
-
-	assert(slot != NULL);
-
-	if (var->vm_type == J_FLOAT) {
-		insn_type = INSN_MOV_XMM_MEMLOCAL;
-	} else if (var->vm_type == J_DOUBLE) {
-		if (cpu_has(X86_FEATURE_SSE2))
-			insn_type = INSN_MOV_64_XMM_MEMLOCAL;
-		else
-			error("not implemented");
-	} else {
-		insn_type = INSN_MOV_REG_MEMLOCAL;
-	}
-
-	return reg_memlocal_insn(insn_type, var, slot);
-}
-
-static inline struct insn *
-reload_insn(struct stack_slot *slot, struct var_info *var)
-{
-	enum insn_type insn_type;
-
-	assert(slot != NULL);
-
-	if (var->vm_type == J_FLOAT) {
-		insn_type = INSN_MOV_MEMLOCAL_XMM;
-	} else if (var->vm_type == J_DOUBLE) {
-		if (cpu_has(X86_FEATURE_SSE2))
-			insn_type = INSN_MOV_64_MEMLOCAL_XMM;
-		else
-			error("not implemented");
-	} else {
-		insn_type = INSN_MOV_MEMLOCAL_REG;
-	}
-
-	return memlocal_reg_insn(insn_type, slot, var);
-}
-
-static inline struct insn *jump_insn(struct basic_block *bb)
-{
-	return branch_insn(INSN_JMP_BRANCH, bb);
-}
+struct insn *spill_insn(struct var_info *var, struct stack_slot *slot);
+struct insn *reload_insn(struct stack_slot *slot, struct var_info *var);
+struct insn *jump_insn(struct basic_block *bb);
 
 bool insn_is_branch(struct insn *insn);
 bool insn_is_call(struct insn *insn);
