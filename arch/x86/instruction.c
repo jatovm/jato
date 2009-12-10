@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2006-2009  Pekka Enberg
- * 
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -28,7 +28,6 @@
 #include "jit/compilation-unit.h"
 #include "jit/instruction.h"
 #include "jit/vars.h"
-
 
 #include <stdlib.h>
 #include <string.h>
@@ -113,7 +112,7 @@ static void init_membase_operand(struct insn *insn, unsigned long idx,
 }
 
 static void init_memdisp_operand(struct insn *insn, unsigned long idx,
-	unsigned long disp)
+				 unsigned long disp)
 {
 	struct operand *operand;
 
@@ -173,6 +172,7 @@ static void init_rel_operand(struct insn *insn, unsigned long idx,
 struct insn *insn(enum insn_type insn_type)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_none_operand(insn, 0);
 		init_none_operand(insn, 1);
@@ -185,6 +185,7 @@ struct insn *memlocal_reg_insn(enum insn_type insn_type,
 			    struct var_info *dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_memlocal_operand(insn, 0, src_slot);
 		init_reg_operand(insn, 1, dest_reg);
@@ -196,6 +197,7 @@ struct insn *membase_reg_insn(enum insn_type insn_type, struct var_info *src_bas
 			      long src_disp, struct var_info *dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_membase_operand(insn, 0, src_base_reg, src_disp);
 		init_reg_operand(insn, 1, dest_reg);
@@ -209,9 +211,10 @@ struct insn *memindex_insn(enum insn_type insn_type,
 			   unsigned char src_shift)
 {
 	struct insn *insn = alloc_insn(insn_type);
-	if (insn) {
+
+	if (insn)
 		init_memindex_operand(insn, 0, src_base_reg, src_index_reg, src_shift);
-	}
+
 	return insn;
 }
 
@@ -220,6 +223,7 @@ struct insn *memindex_reg_insn(enum insn_type insn_type,
 			       unsigned char src_shift, struct var_info *dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_memindex_operand(insn, 0, src_base_reg, src_index_reg, src_shift);
 		init_reg_operand(insn, 1, dest_reg);
@@ -232,6 +236,7 @@ reg_membase_insn(enum insn_type insn_type, struct var_info *src_reg,
 		 struct var_info *dest_base_reg, long dest_disp)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_reg_operand(insn, 0, src_reg);
 		init_membase_operand(insn, 1, dest_base_reg, dest_disp);
@@ -244,6 +249,7 @@ reg_memlocal_insn(enum insn_type insn_type, struct var_info *src_reg,
 		  struct stack_slot *dest_slot)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_reg_operand(insn, 0, src_reg);
 		init_memlocal_operand(insn, 1, dest_slot);
@@ -251,11 +257,14 @@ reg_memlocal_insn(enum insn_type insn_type, struct var_info *src_reg,
 	return insn;
 }
 
-struct insn *reg_memindex_insn(enum insn_type insn_type, struct var_info *src_reg,
-			       struct var_info *dest_base_reg, struct var_info *dest_index_reg,
+struct insn *reg_memindex_insn(enum insn_type insn_type,
+			       struct var_info *src_reg,
+			       struct var_info *dest_base_reg,
+			       struct var_info *dest_index_reg,
 			       unsigned char dest_shift)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_reg_operand(insn, 0, src_reg);
 		init_memindex_operand(insn, 1, dest_base_reg, dest_index_reg, dest_shift);
@@ -267,6 +276,7 @@ struct insn *imm_reg_insn(enum insn_type insn_type, unsigned long imm,
 			  struct var_info *dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_imm_operand(insn, 0, imm);
 		init_reg_operand(insn, 1, dest_reg);
@@ -278,6 +288,7 @@ struct insn *memdisp_reg_insn(enum insn_type insn_type, unsigned long imm,
 			      struct var_info *dest_reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_imm_operand(insn, 0, imm);
 		init_reg_operand(insn, 1, dest_reg);
@@ -289,6 +300,7 @@ struct insn *reg_memdisp_insn(enum insn_type insn_type,
 			      struct var_info *src_reg, unsigned long imm)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_reg_operand(insn, 0, src_reg);
 		init_imm_operand(insn, 1, imm);
@@ -299,6 +311,7 @@ struct insn *reg_memdisp_insn(enum insn_type insn_type,
 struct insn *imm_memdisp_insn(enum insn_type insn_type, long imm, long disp)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_imm_operand(insn, 0, imm);
 		init_memdisp_operand(insn, 1, disp);
@@ -310,6 +323,7 @@ struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 			      struct var_info *base_reg, long disp)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_imm_operand(insn, 0, imm);
 		init_membase_operand(insn, 1, base_reg, disp);
@@ -320,6 +334,7 @@ struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 struct insn *reg_insn(enum insn_type insn_type, struct var_info *reg)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_reg_operand(insn, 0, reg);
 		init_none_operand(insn, 1);
@@ -331,6 +346,7 @@ struct insn *reg_insn(enum insn_type insn_type, struct var_info *reg)
 struct insn *reg_reg_insn(enum insn_type insn_type, struct var_info *src, struct var_info *dest)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_reg_operand(insn, 0, src);
 		init_reg_operand(insn, 1, dest);
@@ -341,6 +357,7 @@ struct insn *reg_reg_insn(enum insn_type insn_type, struct var_info *src, struct
 struct insn *imm_insn(enum insn_type insn_type, unsigned long imm)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_imm_operand(insn, 0, imm);
 		init_none_operand(insn, 1);
@@ -351,6 +368,7 @@ struct insn *imm_insn(enum insn_type insn_type, unsigned long imm)
 struct insn *rel_insn(enum insn_type insn_type, unsigned long rel)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_rel_operand(insn, 0, rel);
 		init_none_operand(insn, 1);
@@ -361,6 +379,7 @@ struct insn *rel_insn(enum insn_type insn_type, unsigned long rel)
 struct insn *branch_insn(enum insn_type insn_type, struct basic_block *if_true)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_branch_operand(insn, 0, if_true);
 		init_none_operand(insn, 1);
@@ -371,6 +390,7 @@ struct insn *branch_insn(enum insn_type insn_type, struct basic_block *if_true)
 struct insn *memlocal_insn(enum insn_type insn_type, struct stack_slot *slot)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn)
 		init_memlocal_operand(insn, 0, slot);
 
@@ -381,9 +401,10 @@ struct insn *membase_insn(enum insn_type insn_type, struct var_info *src_base_re
 			      long src_disp)
 {
 	struct insn *insn = alloc_insn(insn_type);
-	if (insn) {
+
+	if (insn)
 		init_membase_operand(insn, 0, src_base_reg, src_disp);
-	}
+
 	return insn;
 }
 
@@ -392,6 +413,7 @@ struct insn *imm_memlocal_insn(enum insn_type insn_type,
 			       struct stack_slot *dst_slot)
 {
 	struct insn *insn = alloc_insn(insn_type);
+
 	if (insn) {
 		init_imm_operand(insn, 0, imm);
 		init_memlocal_operand(insn, 1, dst_slot);
@@ -462,6 +484,7 @@ int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
 	list_add(&push_hi->insn_list_node, &push_lo->insn_list_node);
 	list_add(&pop_hi->insn_list_node, &push_hi->insn_list_node);
 	list_add(&pop_lo->insn_list_node, &pop_hi->insn_list_node);
+
 	return 0;
 
  fail_pop_lo:
@@ -484,6 +507,9 @@ int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
 
 #endif  /* CONFIG_X86_32 */
 
+/*
+ *	Instruction flags
+ */
 enum {
 	DEF_DST			= (1U <<  1),
 	DEF_SRC			= (1U <<  2),
