@@ -1,8 +1,27 @@
 /*
- * Copyright (C) 2007  Pekka Enberg
+ * Copyright (c) 2007, 2009 Pekka Enberg
  *
- * This file is released under the GPL version 2. Please refer to the file
- * LICENSE for details.
+ * This file is released under the GPL version 2 with the following
+ * clarification and special exception:
+ *
+ *     Linking this library statically or dynamically with other modules is
+ *     making a combined work based on this library. Thus, the terms and
+ *     conditions of the GNU General Public License cover the whole
+ *     combination.
+ *
+ *     As a special exception, the copyright holders of this library give you
+ *     permission to link this library with independent modules to produce an
+ *     executable, regardless of the license terms of these independent
+ *     modules, and to copy and distribute the resulting executable under terms
+ *     of your choice, provided that you also meet, for each linked independent
+ *     module, the terms and conditions of the license of that module. An
+ *     independent module is a module which is not derived from or based on
+ *     this library. If you modify this library, you may extend this exception
+ *     to your version of the library, but you are not obligated to do so. If
+ *     you do not wish to do so, delete this exception statement from your
+ *     version.
+ *
+ * Please refer to the file LICENSE for details.
  */
 
 #include "jit/compilation-unit.h"
@@ -10,27 +29,27 @@
 #include "jit/vars.h"
 
 enum {
-	DEF_DST			= 1,
-	DEF_SRC			= 2,
-	DEF_NONE		= 4,
-	DEF_xAX			= 8,
-	DEF_xCX			= 16,
-	DEF_xDX			= 32,
-	USE_DST			= 64,
-	USE_IDX_DST		= 128,	/* destination operand is memindex */
-	USE_IDX_SRC		= 256,	/* source operand is memindex */
-	USE_NONE		= 512,
-	USE_SRC			= 1024,
-	USE_FP			= 2048,	/* frame pointer */
+	DEF_DST			= (1U <<  1),
+	DEF_SRC			= (1U <<  2),
+	DEF_NONE		= (1U <<  3),
+	DEF_xAX			= (1U <<  4),
+	DEF_xCX			= (1U <<  5),
+	DEF_xDX			= (1U <<  6),
+	USE_DST			= (1U <<  7),
+	USE_IDX_DST		= (1U <<  8), 	/* destination operand is memindex */
+	USE_IDX_SRC		= (1U <<  9), 	/* source operand is memindex */
+	USE_NONE		= (1U << 10),
+	USE_SRC			= (1U << 11),
+	USE_FP			= (1U << 12), 	/* frame pointer */
 
 #ifdef CONFIG_X86_32
-	DEF_EAX		= DEF_xAX,
-	DEF_ECX		= DEF_xCX,
-	DEF_EDX		= DEF_xDX,
+	DEF_EAX			= DEF_xAX,
+	DEF_ECX			= DEF_xCX,
+	DEF_EDX			= DEF_xDX,
 #else
-	DEF_RAX		= DEF_xAX,
-	DEF_RCX		= DEF_xCX,
-	DEF_RDX		= DEF_xDX,
+	DEF_RAX			= DEF_xAX,
+	DEF_RCX			= DEF_xCX,
+	DEF_RDX			= DEF_xDX,
 #endif
 };
 
