@@ -497,6 +497,8 @@ enum {
 	USE_NONE		= (1U << 10),
 	USE_SRC			= (1U << 11),
 	USE_FP			= (1U << 12), 	/* frame pointer */
+	TYPE_BRANCH		= (1U << 13),
+	TYPE_CALL		= (1U << 14),
 
 #ifdef CONFIG_X86_32
 	DEF_EAX			= DEF_xAX,
@@ -518,8 +520,8 @@ static unsigned long insn_flags[] = {
 	[INSN_ADD_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_AND_MEMBASE_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_AND_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
-	[INSN_CALL_REG]				= USE_SRC | DEF_NONE,
-	[INSN_CALL_REL]				= USE_NONE | DEF_NONE,
+	[INSN_CALL_REG]				= USE_SRC | DEF_NONE | TYPE_CALL,
+	[INSN_CALL_REL]				= USE_NONE | DEF_NONE | TYPE_CALL,
 	[INSN_CLTD_REG_REG]			= USE_SRC | DEF_SRC | DEF_DST,
 	[INSN_CMP_IMM_REG]			= USE_DST,
 	[INSN_CMP_MEMBASE_REG]			= USE_SRC | USE_DST,
@@ -554,15 +556,15 @@ static unsigned long insn_flags[] = {
 	[INSN_FSTP_MEMLOCAL]			= USE_FP | DEF_NONE,
 	[INSN_FSUB_64_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_FSUB_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
-	[INSN_JE_BRANCH]			= USE_NONE | DEF_NONE,
-	[INSN_JGE_BRANCH]			= USE_NONE | DEF_NONE,
-	[INSN_JG_BRANCH]			= USE_NONE | DEF_NONE,
-	[INSN_JLE_BRANCH]			= USE_NONE | DEF_NONE,
-	[INSN_JL_BRANCH]			= USE_NONE | DEF_NONE,
-	[INSN_JMP_BRANCH]			= USE_NONE | DEF_NONE,
-	[INSN_JMP_MEMBASE]			= USE_SRC | DEF_NONE,
-	[INSN_JMP_MEMINDEX]			= USE_IDX_SRC | USE_SRC | DEF_NONE,
-	[INSN_JNE_BRANCH]			= USE_NONE | DEF_NONE,
+	[INSN_JE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
+	[INSN_JGE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
+	[INSN_JG_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
+	[INSN_JLE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
+	[INSN_JL_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
+	[INSN_JMP_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
+	[INSN_JMP_MEMBASE]			= USE_SRC | DEF_NONE | TYPE_BRANCH,
+	[INSN_JMP_MEMINDEX]			= USE_IDX_SRC | USE_SRC | DEF_NONE | TYPE_BRANCH,
+	[INSN_JNE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_MOVSX_16_MEMBASE_REG]		= USE_SRC | DEF_DST,
 	[INSN_MOVSX_16_REG_REG]			= USE_SRC | DEF_DST,
 	[INSN_MOVSX_8_MEMBASE_REG]		= USE_SRC | DEF_DST,
@@ -617,7 +619,7 @@ static unsigned long insn_flags[] = {
 	[INSN_PUSH_MEMBASE]			= USE_SRC | DEF_NONE,
 	[INSN_PUSH_MEMLOCAL]			= USE_SRC | DEF_NONE,
 	[INSN_PUSH_REG]				= USE_SRC | DEF_NONE,
-	[INSN_RET]				= USE_NONE | DEF_NONE,
+	[INSN_RET]				= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_SAR_IMM_REG]			= USE_DST | DEF_DST,
 	[INSN_SAR_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_SBB_IMM_REG]			= USE_DST | DEF_DST,
@@ -726,4 +728,18 @@ int insn_operand_use_kind(struct insn *insn, int idx)
 		kind_mask |= USE_KIND_OUTPUT;
 
 	return kind_mask;
+}
+
+bool insn_is_branch(struct insn *insn)
+{
+	unsigned long flags = insn_flags[insn->type];
+
+	return flags & TYPE_BRANCH;
+}
+
+bool insn_is_call(struct insn *insn)
+{
+	unsigned long flags = insn_flags[insn->type];
+
+	return flags & TYPE_CALL;
 }
