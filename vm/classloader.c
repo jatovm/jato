@@ -466,10 +466,8 @@ load_array_class(struct vm_object *loader, const char *class_name)
 	assert(class_name[0] == '[');
 
 	array_class = malloc(sizeof *array_class);
-	if (!array_class) {
-		NOT_IMPLEMENTED;
+	if (!array_class)
 		return NULL;
-	}
 
 	elem_class_name =
 		vm_class_get_array_element_class_name(class_name);
@@ -482,6 +480,11 @@ load_array_class(struct vm_object *loader, const char *class_name)
 		elem_class = classloader_load_primitive(elem_class_name);
 	else
 		elem_class = classloader_load(loader, elem_class_name);
+
+	if (!elem_class) {
+		free(array_class);
+		return NULL;
+	}
 
 	array_class->classloader = elem_class->classloader;
 

@@ -35,9 +35,14 @@
 
 #include "jit/cu-mapping.h"
 
+enum {
+	PRELOAD_OPTIONAL,
+};
+
 struct preload_entry {
 	const char *name;
 	struct vm_class **class;
+	int optional;
 };
 
 struct vm_class *vm_java_lang_Object;
@@ -134,13 +139,19 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/VMThread",	&vm_java_lang_VMThread },
 	{ "java/lang/IllegalMonitorStateException", &vm_java_lang_IllegalMonitorStateException },
 	{ "java/lang/System",	&vm_java_lang_System },
-	{ "java/lang/reflect/Field", &vm_java_lang_reflect_Field },
-	{ "java/lang/reflect/Constructor", &vm_java_lang_reflect_Constructor },
-	{ "java/lang/reflect/Method", &vm_java_lang_reflect_Method },
+	{ "java/lang/reflect/Field", &vm_java_lang_reflect_Field, PRELOAD_OPTIONAL },
+	{ "java/lang/reflect/VMField", &vm_java_lang_reflect_Field, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
+	{ "java/lang/reflect/Constructor", &vm_java_lang_reflect_Constructor, PRELOAD_OPTIONAL },
+	{ "java/lang/reflect/VMConstructor", &vm_java_lang_reflect_Constructor, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
+	{ "java/lang/reflect/Method", &vm_java_lang_reflect_Method, PRELOAD_OPTIONAL },
+	{ "java/lang/reflect/VMMethod", &vm_java_lang_reflect_Method, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
 	{ "[java/lang/Class",		&vm_array_of_java_lang_Class },
-	{ "[java/lang/reflect/Constructor", &vm_array_of_java_lang_reflect_Constructor },
-	{ "[java/lang/reflect/Field", &vm_array_of_java_lang_reflect_Field },
-	{ "[java/lang/reflect/Method", &vm_array_of_java_lang_reflect_Method },
+	{ "[java/lang/reflect/Constructor", &vm_array_of_java_lang_reflect_Constructor, PRELOAD_OPTIONAL },
+	{ "[java/lang/reflect/VMConstructor", &vm_array_of_java_lang_reflect_Constructor, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
+	{ "[java/lang/reflect/Field", &vm_array_of_java_lang_reflect_Field, PRELOAD_OPTIONAL },
+	{ "[java/lang/reflect/VMField", &vm_array_of_java_lang_reflect_Field, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
+	{ "[java/lang/reflect/Method", &vm_array_of_java_lang_reflect_Method, PRELOAD_OPTIONAL },
+	{ "[java/lang/reflect/VMMethod", &vm_array_of_java_lang_reflect_Method, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
 	{ "java/lang/IllegalArgumentException", &vm_java_lang_IllegalArgumentException },
 	{ "java/lang/InterruptedException", &vm_java_lang_InterruptedException },
 	{ "java/lang/ClassFormatError", &vm_java_lang_ClassFormatError },
@@ -174,6 +185,7 @@ struct field_preload_entry {
 	const char *name;
 	const char *type;
 	struct vm_field **field;
+	int optional;
 };
 
 struct vm_field *vm_java_lang_Class_vmdata;
@@ -218,10 +230,12 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_VMThread, "vmdata", "Ljava/lang/Object;", &vm_java_lang_VMThread_vmdata },
 	{ &vm_java_lang_reflect_Constructor, "clazz", "Ljava/lang/Class;", &vm_java_lang_reflect_Constructor_clazz },
 	{ &vm_java_lang_reflect_Constructor, "slot", "I", &vm_java_lang_reflect_Constructor_slot },
-	{ &vm_java_lang_reflect_Field, "declaringClass", "Ljava/lang/Class;", &vm_java_lang_reflect_Field_declaringClass },
+	{ &vm_java_lang_reflect_Field, "declaringClass", "Ljava/lang/Class;", &vm_java_lang_reflect_Field_declaringClass, PRELOAD_OPTIONAL },
+	{ &vm_java_lang_reflect_Field, "clazz", "Ljava/lang/Class;", &vm_java_lang_reflect_Field_declaringClass, PRELOAD_OPTIONAL  }, /* Classpath 0.98 */
 	{ &vm_java_lang_reflect_Field, "slot", "I", &vm_java_lang_reflect_Field_slot },
 	{ &vm_java_lang_reflect_Field, "name", "Ljava/lang/String;", &vm_java_lang_reflect_Field_name },
-	{ &vm_java_lang_reflect_Method, "declaringClass", "Ljava/lang/Class;", &vm_java_lang_reflect_Method_declaringClass },
+	{ &vm_java_lang_reflect_Method, "declaringClass", "Ljava/lang/Class;", &vm_java_lang_reflect_Method_declaringClass, PRELOAD_OPTIONAL },
+	{ &vm_java_lang_reflect_Method, "clazz", "Ljava/lang/Class;", &vm_java_lang_reflect_Method_declaringClass, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
 	{ &vm_java_lang_reflect_Method, "slot", "I", &vm_java_lang_reflect_Method_slot },
 	{ &vm_java_lang_reflect_Method, "name", "Ljava/lang/String;", &vm_java_lang_reflect_Method_name },
 };
@@ -520,6 +534,8 @@ int preload_vm_classes(void)
 
 		struct vm_class *class = classloader_load(NULL, pe->name);
 		if (!class) {
+			if (pe->optional == PRELOAD_OPTIONAL)
+				continue;
 			printf("%s\n", pe->name);
 			NOT_IMPLEMENTED;
 			return 1;
@@ -534,6 +550,8 @@ int preload_vm_classes(void)
 
 		struct vm_class *class = classloader_load_primitive(pe->name);
 		if (!class) {
+			if (pe->optional == PRELOAD_OPTIONAL)
+				continue;
 			warn("preload of %s failed", pe->name);
 			return -EINVAL;
 		}
@@ -542,14 +560,13 @@ int preload_vm_classes(void)
 	}
 
 	for (unsigned int i = 0; i < ARRAY_SIZE(field_preload_entries); ++i) {
-		const struct field_preload_entry *pe
-			= &field_preload_entries[i];
+		const struct field_preload_entry *pe = &field_preload_entries[i];
 
-		struct vm_field *field = vm_class_get_field(*pe->class,
-			pe->name, pe->type);
+		struct vm_field *field = vm_class_get_field(*pe->class, pe->name, pe->type);
 		if (!field) {
-			warn("preload of %s.%s%s failed", (*pe->class)->name,
-			     pe->name, pe->type);
+			if (pe->optional == PRELOAD_OPTIONAL)
+				continue;
+			warn("preload of %s.%s%s failed", (*pe->class)->name, pe->name, pe->type);
 			return -EINVAL;
 		}
 
