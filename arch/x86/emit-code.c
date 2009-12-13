@@ -848,16 +848,6 @@ static void emit_mov_imm_thread_local_membase(struct buffer *buf,
 	emit_mov_imm_membase(buf, src, dest);
 }
 
-static void emit_mov_ip_thread_local_membase(struct buffer *buf,
-					     struct operand *dest)
-{
-	unsigned long addr
-		= (unsigned long)buffer_current(buf);
-
-	emit(buf, 0x65); /* GS segment override prefix */
-	__emit_mov_imm_membase(buf, addr, mach_reg(&dest->base_reg), dest->disp);
-}
-
 static void emit_mov_memdisp_reg(struct buffer *buf,
 				 struct operand *src,
 				 struct operand *dest)
@@ -1801,7 +1791,6 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_IMM_MEMLOCAL, emit_mov_imm_memlocal, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase, TWO_OPERANDS),
-	DECL_EMITTER(INSN_MOV_IP_THREAD_LOCAL_MEMBASE, emit_mov_ip_thread_local_membase, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_MEMLOCAL_XMM, emit_mov_memlocal_xmm, TWO_OPERANDS),
 	DECL_EMITTER(INSN_MOV_64_MEMLOCAL_XMM, emit_mov_64_memlocal_xmm, TWO_OPERANDS),

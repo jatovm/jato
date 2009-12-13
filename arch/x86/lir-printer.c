@@ -674,12 +674,6 @@ static int print_mov_imm_tlmembase(struct string *str, struct insn *insn)
 	return print_imm_tlmembase(str, insn);
 }
 
-static int print_mov_ip_tlmembase(struct string *str, struct insn *insn)
-{
-	print_func_name(str);
-	return print_tlmembase(str, &insn->operands[0]);
-}
-
 static int print_mov_reg_tlmembase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -1034,7 +1028,6 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_IMM_MEMLOCAL] = print_mov_imm_memlocal,
 	[INSN_MOV_IMM_REG] = print_mov_imm_reg,
 	[INSN_MOV_IMM_THREAD_LOCAL_MEMBASE] = print_mov_imm_tlmembase,
-	[INSN_MOV_IP_THREAD_LOCAL_MEMBASE] = print_mov_ip_tlmembase,
 	[INSN_MOV_MEMLOCAL_REG] = print_mov_memlocal_reg,
 	[INSN_MOV_MEMLOCAL_XMM] = print_mov_memlocal_xmm,
 	[INSN_MOV_64_MEMLOCAL_XMM] = print_mov_64_memlocal_xmm,
