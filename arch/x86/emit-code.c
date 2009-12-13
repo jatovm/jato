@@ -916,12 +916,6 @@ emit_mov_reg_membase(struct buffer *buf, struct operand *src,
 			       mach_reg(&dest->base_reg), dest->disp);
 }
 
-static void
-emit_push_membase(struct buffer *buf, struct operand *src)
-{
-	__emit_push_membase(buf, mach_reg(&src->base_reg), src->disp);
-}
-
 static void emit_mov_reg_memlocal(struct buffer *buf, struct operand *src,
 				  struct operand *dest)
 {
@@ -1831,7 +1825,6 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg, SINGLE_OPERAND),
-	DECL_EMITTER(INSN_PUSH_MEMBASE, emit_push_membase, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_PUSH_MEMLOCAL, emit_push_memlocal, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal, SINGLE_OPERAND),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg, SINGLE_OPERAND),
