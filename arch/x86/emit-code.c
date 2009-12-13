@@ -2276,9 +2276,7 @@ static void __emit32_sub_imm_reg(struct buffer *buf,
 	emit_alu_imm_reg(buf, 0, 0x05, imm, reg);
 }
 
-static void emit_sub_imm_reg(struct buffer *buf,
-			     struct operand *src,
-			     struct operand *dest)
+static void emit_sub_imm_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
 	if (is_64bit_reg(dest))
 		__emit64_sub_imm_reg(buf, src->imm, mach_reg(&dest->reg));
@@ -2689,15 +2687,12 @@ static void __emit_test_imm_memdisp(struct buffer *buf,
 	emit_imm(buf, imm);
 }
 
-static void emit_test_imm_memdisp(struct buffer *buf,
-				  struct operand *imm,
-				  struct operand *disp)
+static void emit_test_imm_memdisp(struct buffer *buf, struct operand *imm, struct operand *disp)
 {
 	__emit_test_imm_memdisp(buf, 0, imm->imm, disp->disp);
 }
 
-static void emit_mov_memindex_reg(struct buffer *buf,
-				  struct operand *src, struct operand *dest)
+static void emit_mov_memindex_reg(struct buffer *buf, struct operand *src, struct operand *dest)
 {
 	emit(buf, REX_W);
 	emit(buf, 0x8b);
