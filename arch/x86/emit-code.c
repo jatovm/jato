@@ -1007,9 +1007,9 @@ static void __emit_test_imm_memdisp(struct buffer *buf,
 	emit_imm(buf, imm);
 }
 
-static void emit_test_imm_memdisp(struct buffer *buf, struct operand *imm, struct operand *disp)
+static void emit_test_imm_memdisp(struct buffer *buf, struct operand *src, struct operand *dest)
 {
-	__emit_test_imm_memdisp(buf, imm->imm, disp->disp);
+	__emit_test_imm_memdisp(buf, src->imm, dest->disp);
 }
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
@@ -2687,9 +2687,9 @@ static void __emit_test_imm_memdisp(struct buffer *buf,
 	emit_imm(buf, imm);
 }
 
-static void emit_test_imm_memdisp(struct buffer *buf, struct operand *imm, struct operand *disp)
+static void emit_test_imm_memdisp(struct buffer *buf, struct operand *src, struct operand *dest)
 {
-	__emit_test_imm_memdisp(buf, 0, imm->imm, disp->disp);
+	__emit_test_imm_memdisp(buf, 0, src->imm, dest->disp);
 }
 
 static void emit_mov_memindex_reg(struct buffer *buf, struct operand *src, struct operand *dest)
