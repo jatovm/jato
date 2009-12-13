@@ -265,9 +265,9 @@ static void __emit_call(struct buffer *buf, void *call_target)
 	emit_imm32(buf, disp);
 }
 
-static void emit_call(struct buffer *buf, struct operand *operand)
+static void emit_call(struct insn *insn, struct buffer *buf)
 {
-	__emit_call(buf, (void *)operand->rel);
+	__emit_call(buf, (void *)insn->operand.rel);
 }
 
 static void encode_ret(struct buffer *buf)
@@ -702,9 +702,9 @@ static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 	emit(buf, 0x58 + encode_mach_reg(reg));
 }
 
-static void emit_push_reg(struct buffer *buf, struct operand *operand)
+static void emit_push_reg(struct insn *insn, struct buffer *buf)
 {
-	__emit_push_reg(buf, mach_reg(&operand->reg));
+	__emit_push_reg(buf, mach_reg(&insn->operand.reg));
 }
 
 static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
@@ -1031,23 +1031,23 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), MACH_REG_ESP);
 }
 
-static void emit_pop_memlocal(struct buffer *buf, struct operand *operand)
+static void emit_pop_memlocal(struct insn *insn, struct buffer *buf)
 {
-	unsigned long disp = slot_offset(operand->slot);
+	unsigned long disp = slot_offset(insn->operand.slot);
 
 	__emit_membase(buf, 0x8f, MACH_REG_EBP, disp, 0);
 }
 
-static void emit_push_memlocal(struct buffer *buf, struct operand *operand)
+static void emit_push_memlocal(struct insn *insn, struct buffer *buf)
 {
-	unsigned long disp = slot_offset(operand->slot);
+	unsigned long disp = slot_offset(insn->operand.slot);
 
 	__emit_membase(buf, 0xff, MACH_REG_EBP, disp, 6);
 }
 
-static void emit_pop_reg(struct buffer *buf, struct operand *operand)
+static void emit_pop_reg(struct insn *insn, struct buffer *buf)
 {
-	__emit_pop_reg(buf, mach_reg(&operand->reg));
+	__emit_pop_reg(buf, mach_reg(&insn->operand.reg));
 }
 
 static void __emit_push_imm(struct buffer *buf, long imm)
@@ -1063,9 +1063,9 @@ static void __emit_push_imm(struct buffer *buf, long imm)
 	emit_imm(buf, imm);
 }
 
-static void emit_push_imm(struct buffer *buf, struct operand *operand)
+static void emit_push_imm(struct insn *insn, struct buffer *buf)
 {
-	__emit_push_imm(buf, operand->imm);
+	__emit_push_imm(buf, insn->operand.imm);
 }
 
 static void emit_restore_regs(struct buffer *buf)
@@ -1161,64 +1161,64 @@ static void emit_fdiv_64_reg_reg(struct buffer *buf, struct operand *src, struct
 	emit_reg_reg(buf, 0x5e, dest, src);
 }
 
-static void emit_fld_membase(struct buffer *buf, struct operand *operand)
+static void emit_fld_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xd9, mach_reg(&operand->base_reg), operand->disp, 0);
+	__emit_membase(buf, 0xd9, mach_reg(&insn->operand.base_reg), insn->operand.disp, 0);
 }
 
-static void emit_fld_64_membase(struct buffer *buf, struct operand *operand)
+static void emit_fld_64_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xdd, mach_reg(&operand->base_reg), operand->disp, 0);
+	__emit_membase(buf, 0xdd, mach_reg(&insn->operand.base_reg), insn->operand.disp, 0);
 }
 
-static void emit_fld_memlocal(struct buffer *buf, struct operand *operand)
+static void emit_fld_memlocal(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xd9, MACH_REG_EBP, slot_offset(operand->slot), 0);
+	__emit_membase(buf, 0xd9, MACH_REG_EBP, slot_offset(insn->operand.slot), 0);
 }
 
-static void emit_fld_64_memlocal(struct buffer *buf, struct operand *operand)
+static void emit_fld_64_memlocal(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xdd, MACH_REG_EBP, slot_offset_64(operand->slot), 0);
+	__emit_membase(buf, 0xdd, MACH_REG_EBP, slot_offset_64(insn->operand.slot), 0);
 }
 
-static void emit_fild_64_membase(struct buffer *buf, struct operand *operand)
+static void emit_fild_64_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xdf, mach_reg(&operand->base_reg), operand->disp, 5);
+	__emit_membase(buf, 0xdf, mach_reg(&insn->operand.base_reg), insn->operand.disp, 5);
 }
 
-static void emit_fldcw_membase(struct buffer *buf, struct operand *operand)
+static void emit_fldcw_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xd9, mach_reg(&operand->base_reg), operand->disp, 5);
+	__emit_membase(buf, 0xd9, mach_reg(&insn->operand.base_reg), insn->operand.disp, 5);
 }
 
-static void emit_fnstcw_membase(struct buffer *buf, struct operand *operand)
+static void emit_fnstcw_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xd9, mach_reg(&operand->base_reg), operand->disp, 7);
+	__emit_membase(buf, 0xd9, mach_reg(&insn->operand.base_reg), insn->operand.disp, 7);
 }
 
-static void emit_fistp_64_membase(struct buffer *buf, struct operand *operand)
+static void emit_fistp_64_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xdf, mach_reg(&operand->base_reg), operand->disp, 7);
+	__emit_membase(buf, 0xdf, mach_reg(&insn->operand.base_reg), insn->operand.disp, 7);
 }
 
-static void emit_fstp_membase(struct buffer *buf, struct operand *operand)
+static void emit_fstp_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xd9, mach_reg(&operand->base_reg), operand->disp, 3);
+	__emit_membase(buf, 0xd9, mach_reg(&insn->operand.base_reg), insn->operand.disp, 3);
 }
 
-static void emit_fstp_memlocal(struct buffer *buf, struct operand *operand)
+static void emit_fstp_memlocal(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xd9, MACH_REG_EBP, slot_offset(operand->slot), 3);
+	__emit_membase(buf, 0xd9, MACH_REG_EBP, slot_offset(insn->operand.slot), 3);
 }
 
-static void emit_fstp_64_membase(struct buffer *buf, struct operand *operand)
+static void emit_fstp_64_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xdd, mach_reg(&operand->base_reg), operand->disp, 3);
+	__emit_membase(buf, 0xdd, mach_reg(&insn->operand.base_reg), insn->operand.disp, 3);
 }
 
-static void emit_fstp_64_memlocal(struct buffer *buf, struct operand *operand)
+static void emit_fstp_64_memlocal(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xdd, MACH_REG_EBP, slot_offset_64(operand->slot), 3);
+	__emit_membase(buf, 0xdd, MACH_REG_EBP, slot_offset_64(insn->operand.slot), 3);
 }
 
 static void emit_add_membase_reg(struct buffer *buf, struct operand *src, struct operand *dest)
@@ -1295,10 +1295,10 @@ static void emit_mul_reg_reg(struct buffer *buf, struct operand *src, struct ope
 	__emit_reg_reg(buf, 0xaf, mach_reg(&dest->reg), mach_reg(&src->reg));
 }
 
-static void emit_neg_reg(struct buffer *buf, struct operand *operand)
+static void emit_neg_reg(struct insn *insn, struct buffer *buf)
 {
 	emit(buf, 0xf7);
-	emit(buf, encode_modrm(0x3, 0x3, encode_reg(&operand->reg)));
+	emit(buf, encode_modrm(0x3, 0x3, encode_reg(&insn->operand.reg)));
 }
 
 static void emit_cltd_reg_reg(struct buffer *buf, struct operand *src, struct operand *dest)
@@ -1437,10 +1437,10 @@ static void emit_really_indirect_jump_reg(struct buffer *buf, enum machine_reg r
 	emit(buf, encode_modrm(0x0, 0x04, encode_mach_reg(reg)));
 }
 
-static void emit_indirect_call(struct buffer *buf, struct operand *operand)
+static void emit_indirect_call(struct insn *insn, struct buffer *buf)
 {
 	emit(buf, 0xff);
-	emit(buf, encode_modrm(0x0, 0x2, encode_reg(&operand->reg)));
+	emit(buf, encode_modrm(0x0, 0x2, encode_reg(&insn->operand.reg)));
 }
 
 static void emit_xor_membase_reg(struct buffer *buf, struct operand *src, struct operand *dest)
@@ -1619,17 +1619,17 @@ static void emit_mov_64_xmm_memdisp(struct buffer *buf, struct operand *src, str
 	__emit_reg_memdisp(buf, 0x11, mach_reg(&src->reg), dest->imm);
 }
 
-static void emit_jmp_memindex(struct buffer *buf, struct operand *operand)
+static void emit_jmp_memindex(struct insn *insn, struct buffer *buf)
 {
 	emit(buf, 0xff);
 	emit(buf, encode_modrm(0x00, 0x04, 0x04));
-	emit(buf, encode_sib(operand->shift, encode_reg(&operand->index_reg),
-			     encode_reg(&operand->base_reg)));
+	emit(buf, encode_sib(insn->operand.shift, encode_reg(&insn->operand.index_reg),
+			     encode_reg(&insn->operand.base_reg)));
 }
 
-static void emit_jmp_membase(struct buffer *buf, struct operand *operand)
+static void emit_jmp_membase(struct insn *insn, struct buffer *buf)
 {
-	__emit_membase(buf, 0xff, mach_reg(&operand->base_reg), operand->disp, 0x04);
+	__emit_membase(buf, 0xff, mach_reg(&insn->operand.base_reg), insn->operand.disp, 0x04);
 }
 
 struct emitter emitters[] = {
@@ -2106,7 +2106,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 	__emit_reg(buf, 0, 0x50, reg);
 }
 
-static void emit_push_reg(struct buffer *buf, struct operand *operand)
+static void emit_push_reg(struct insn *insn, struct buffer *buf)
 {
 	__emit_push_reg(buf, mach_reg(&operand->reg));
 }
@@ -2116,7 +2116,7 @@ static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 	__emit_reg(buf, 0, 0x58, reg);
 }
 
-static void emit_pop_reg(struct buffer *buf, struct operand *operand)
+static void emit_pop_reg(struct insn *insn, struct buffer *buf)
 {
 	__emit_pop_reg(buf, mach_reg(&operand->reg));
 }
@@ -2350,7 +2350,7 @@ static void __emit_push_imm(struct buffer *buf, long imm)
 	emit_imm(buf, imm);
 }
 
-static void emit_push_imm(struct buffer *buf, struct operand *operand)
+static void emit_push_imm(struct insn *insn, struct buffer *buf)
 {
 	__emit_push_imm(buf, operand->imm);
 }
@@ -2665,7 +2665,7 @@ static void emit_cmp_reg_reg(struct buffer *buf, struct operand *src, struct ope
 	emit_reg_reg(buf, rex_w, 0x39, src, dest);
 }
 
-static void emit_indirect_call(struct buffer *buf, struct operand *operand)
+static void emit_indirect_call(struct insn *insn, struct buffer *buf)
 {
 	/* Go through __emit_membase() to handle %r13. */
 	__emit_membase(buf, 0, 0xff, mach_reg(&operand->reg), 0, 0x2);
@@ -2952,12 +2952,12 @@ static void emit_no_operands(struct emitter *emitter, struct buffer *buf, struct
 	emit(insn, buf);
 }
 
-typedef void (*emit_single_operand_fn)(struct buffer *, struct operand *);
+typedef void (*emit_single_operand_fn)(struct insn *, struct buffer *);
 
 static void emit_single_operand(struct emitter *emitter, struct buffer *buf, struct insn *insn)
 {
 	emit_single_operand_fn emit = emitter->emit_fn;
-	emit(buf, &insn->operand);
+	emit(insn, buf);
 }
 
 typedef void (*emit_two_operands_fn)(struct buffer *, struct operand *, struct operand *);
