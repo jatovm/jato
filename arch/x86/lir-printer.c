@@ -934,12 +934,6 @@ static int print_xor_membase_reg(struct string *str, struct insn *insn)
 	return print_membase_reg(str, insn);
 }
 
-static int print_xor_imm_reg(struct string *str, struct insn *insn)
-{
-	print_func_name(str);
-	return print_imm_reg(str, insn);
-}
-
 static int print_xor_reg_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -1077,7 +1071,6 @@ static print_insn_fn insn_printers[] = {
 	[INSN_TEST_IMM_MEMDISP] = print_test_imm_memdisp,
 	[INSN_TEST_MEMBASE_REG] = print_test_membase_reg,
 	[INSN_XOR_MEMBASE_REG] = print_xor_membase_reg,
-	[INSN_XOR_IMM_REG] = print_xor_imm_reg,
 	[INSN_XOR_REG_REG] = print_xor_reg_reg,
 	[INSN_XOR_XMM_REG_REG] = print_xor_xmm_reg_reg,
 	[INSN_XOR_64_XMM_REG_REG] = print_xor_64_xmm_reg_reg,

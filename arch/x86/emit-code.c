@@ -1513,17 +1513,6 @@ static void emit_xor_membase_reg(struct buffer *buf,
 	emit_membase_reg(buf, 0x33, src, dest);
 }
 
-static void __emit_xor_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
-{
-	emit_alu_imm_reg(buf, 0x06, imm, reg);
-}
-
-static void emit_xor_imm_reg(struct buffer *buf, struct operand * src,
-			     struct operand *dest)
-{
-	__emit_xor_imm_reg(buf, src->imm, mach_reg(&dest->reg));
-}
-
 static void __emit_test_membase_reg(struct buffer *buf, enum machine_reg src,
 				    unsigned long disp, enum machine_reg dest)
 {
@@ -1841,7 +1830,6 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp, TWO_OPERANDS),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg, TWO_OPERANDS),
-	DECL_EMITTER(INSN_XOR_IMM_REG, emit_xor_imm_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_REG_REG, emit_xor_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_XMM_REG_REG, emit_xor_xmm_reg_reg, TWO_OPERANDS),
 	DECL_EMITTER(INSN_XOR_64_XMM_REG_REG, emit_xor_64_xmm_reg_reg, TWO_OPERANDS),

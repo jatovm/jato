@@ -384,13 +384,6 @@ void test_emit_xor_membase_reg(void)
 	assert_emit_insn_6(0x33, 0x9d, 0xef, 0xbe, 0xad, 0xde, membase_reg_insn(INSN_XOR_MEMBASE_REG, &VAR_EBP, 0xdeadbeef, &VAR_EBX));
 }
 
-void test_emit_xor_imm_reg(void)
-{
-	assert_emit_insn_3(0x83, 0xf0, 0x04, imm_reg_insn(INSN_XOR_IMM_REG, 0x04, &VAR_EAX));
-	assert_emit_insn_3(0x83, 0xf3, 0x08, imm_reg_insn(INSN_XOR_IMM_REG, 0x08, &VAR_EBX));
-	assert_emit_insn_6(0x81, 0xf3, 0xef, 0xbe, 0xad, 0xde, imm_reg_insn(INSN_XOR_IMM_REG, 0xdeadbeef, &VAR_EBX));
-}
-
 void test_emit_cmp_membase_reg(void)
 {
 	assert_emit_insn_3(0x3b, 0x45, 0x08, membase_reg_insn(INSN_CMP_MEMBASE_REG, &VAR_EBP, 0x08, &VAR_EAX));
