@@ -34,6 +34,10 @@ How can I try it out?
     $ su
     $ pkg install SUNWgnome-common-devel SUNWgcc SUNWGlib SUNWgmake SUNWbison ; exit
 
+    For Archlinux:
+
+    $ pacman -S eclipse-ecj classpath libzip libffi
+
   - Compile Jato and run the unit tests:
 
     $ cd <JATO_ROOT> ; make
