@@ -270,14 +270,19 @@ static void emit_call(struct buffer *buf, struct operand *operand)
 	__emit_call(buf, (void *)operand->rel);
 }
 
-static void emit_ret(struct buffer *buf)
+static void encode_ret(struct buffer *buf)
 {
 	emit(buf, 0xc3);
 }
 
-static void emit_leave(struct buffer *buf)
+static void emit_ret(struct insn *insn, struct buffer *buf)
 {
-	emit(buf, 0xc9);
+	encode_ret(buf);
+}
+
+static void emit_leave(struct buffer *b)
+{
+	emit(b, 0xc9);
 }
 
 static void emit_branch_rel(struct buffer *buf, unsigned char prefix,
@@ -387,7 +392,7 @@ void emit_epilog(struct buffer *buf)
 {
 	emit_leave(buf);
 	emit_restore_regs(buf);
-	emit_ret(buf);
+	encode_ret(buf);
 }
 
 static void __emit_jmp(struct buffer *buf, unsigned long addr)
@@ -1898,14 +1903,14 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	__emit_mov_reg_membase(buf, MACH_REG_EAX, MACH_REG_ESP, sizeof(long));
 	__emit_pop_reg(buf, MACH_REG_EAX);
 
-	emit_ret(buf);
+	encode_ret(buf);
 
 	/* We will jump here if StackOverflowError occurred. */
 	fixup_branch_target(jne_target, buffer_current(buf));
 
 	/* cleanup vm_enter_jni() call arguments. */
 	__emit_add_imm_reg(buf, 2 * sizeof(long), MACH_REG_ESP);
-	emit_ret(buf);
+	encode_ret(buf);
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
@@ -2939,12 +2944,12 @@ void emit_jni_trampoline(struct buffer *buf,
 
 #endif /* CONFIG_X86_32 */
 
-typedef void (*emit_no_operands_fn)(struct buffer *);
+typedef void (*emit_no_operands_fn)(struct insn *insn, struct buffer *);
 
-static void emit_no_operands(struct emitter *emitter, struct buffer *buf)
+static void emit_no_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
 {
 	emit_no_operands_fn emit = emitter->emit_fn;
-	emit(buf);
+	emit(insn, buf);
 }
 
 typedef void (*emit_single_operand_fn)(struct buffer *, struct operand *);
@@ -2980,7 +2985,7 @@ static void __emit_insn(struct buffer *buf, struct basic_block *bb,
 	emitter = &emitters[insn->type];
 	switch (emitter->type) {
 	case NO_OPERANDS:
-		emit_no_operands(emitter, buf);
+		emit_no_operands(emitter, buf, insn);
 		break;
 	case SINGLE_OPERAND:
 		emit_single_operand(emitter, buf, insn);
