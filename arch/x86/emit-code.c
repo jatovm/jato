@@ -1227,19 +1227,19 @@ static void emit_fild_64_membase(struct buffer *buf, struct operand *src)
 	__emit_membase(buf, 0xdf, mach_reg(&src->base_reg), src->disp, 5);
 }
 
-static void emit_fldcw_membase(struct buffer *buf, struct operand *src)
+static void emit_fldcw_membase(struct buffer *buf, struct operand *operand)
 {
-	__emit_membase(buf, 0xd9, mach_reg(&src->base_reg), src->disp, 5);
+	__emit_membase(buf, 0xd9, mach_reg(&operand->base_reg), operand->disp, 5);
 }
 
-static void emit_fnstcw_membase(struct buffer *buf, struct operand *dest)
+static void emit_fnstcw_membase(struct buffer *buf, struct operand *operand)
 {
-	__emit_membase(buf, 0xd9, mach_reg(&dest->base_reg), dest->disp, 7);
+	__emit_membase(buf, 0xd9, mach_reg(&operand->base_reg), operand->disp, 7);
 }
 
-static void emit_fistp_64_membase(struct buffer *buf, struct operand *dest)
+static void emit_fistp_64_membase(struct buffer *buf, struct operand *operand)
 {
-	__emit_membase(buf, 0xdf, mach_reg(&dest->base_reg), dest->disp, 7);
+	__emit_membase(buf, 0xdf, mach_reg(&operand->base_reg), operand->disp, 7);
 }
 
 static void emit_fstp_membase(struct buffer *buf, struct operand *dest)
@@ -1705,18 +1705,17 @@ static void emit_mov_64_xmm_memdisp(struct buffer *buf, struct operand *src,
 	__emit_reg_memdisp(buf, 0x11, mach_reg(&src->reg), dest->imm);
 }
 
-static void emit_jmp_memindex(struct buffer *buf, struct operand *target)
+static void emit_jmp_memindex(struct buffer *buf, struct operand *operand)
 {
 	emit(buf, 0xff);
 	emit(buf, encode_modrm(0x00, 0x04, 0x04));
-	emit(buf, encode_sib(target->shift, encode_reg(&target->index_reg),
-			     encode_reg(&target->base_reg)));
+	emit(buf, encode_sib(operand->shift, encode_reg(&operand->index_reg),
+			     encode_reg(&operand->base_reg)));
 }
 
-static void emit_jmp_membase(struct buffer *buf, struct operand *target)
+static void emit_jmp_membase(struct buffer *buf, struct operand *operand)
 {
-	__emit_membase(buf, 0xff, mach_reg(&target->base_reg), target->disp,
-		       0x04);
+	__emit_membase(buf, 0xff, mach_reg(&operand->base_reg), operand->disp, 0x04);
 }
 
 struct emitter emitters[] = {
