@@ -2938,28 +2938,13 @@ void emit_jni_trampoline(struct buffer *buf,
 
 #endif /* CONFIG_X86_32 */
 
-typedef void (*emit_no_operands_fn)(struct insn *insn, struct buffer *);
+typedef void (*emit_fn)(struct insn *insn, struct buffer *);
 
-static void emit_no_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
+static void do_emit_insn(struct emitter *emitter, struct buffer *buf, struct insn *insn)
 {
-	emit_no_operands_fn emit = emitter->emit_fn;
-	emit(insn, buf);
-}
+	emit_fn fn = emitter->emit_fn;
 
-typedef void (*emit_single_operand_fn)(struct insn *, struct buffer *);
-
-static void emit_single_operand(struct emitter *emitter, struct buffer *buf, struct insn *insn)
-{
-	emit_single_operand_fn emit = emitter->emit_fn;
-	emit(insn, buf);
-}
-
-typedef void (*emit_two_operands_fn)(struct insn *, struct buffer *);
-
-static void emit_two_operands(struct emitter *emitter, struct buffer *buf, struct insn *insn)
-{
-	emit_two_operands_fn emit = emitter->emit_fn;
-	emit(insn, buf);
+	fn(insn, buf);
 }
 
 typedef void (*emit_branch_fn)(struct buffer *, struct basic_block *, struct insn *);
@@ -2979,13 +2964,9 @@ static void __emit_insn(struct buffer *buf, struct basic_block *bb,
 	emitter = &emitters[insn->type];
 	switch (emitter->type) {
 	case NO_OPERANDS:
-		emit_no_operands(emitter, buf, insn);
-		break;
 	case SINGLE_OPERAND:
-		emit_single_operand(emitter, buf, insn);
-		break;
 	case TWO_OPERANDS:
-		emit_two_operands(emitter, buf, insn);
+		do_emit_insn(emitter, buf, insn);
 		break;
 	case BRANCH:
 		emit_branch(emitter, buf, bb, insn);
