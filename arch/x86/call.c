@@ -211,6 +211,7 @@ static unsigned long native_call_gp(struct vm_method *method,
 
 	__asm__ volatile (
 		/* Copy stack arguments onto the stack. */
+		"movq %2, %%rsi \n"
 		"movq %%rbx, %%rcx \n"
 		"shl $3, %%rbx \n"
 		"subq %%rbx, %%rsp \n"
@@ -229,9 +230,9 @@ static unsigned long native_call_gp(struct vm_method *method,
 		"call *%3 \n"
 		"addq %%rbx, %%rsp \n"
 		: "=a" (result)
-		: "b" (get_stack_args_count(method)), "S" (stack),
+		: "b" (get_stack_args_count(method)), "r" (stack),
 		  "m" (target), "a" (regs)
-		: "%rcx", "%rdi", "%r8", "%r9", "cc"
+		: "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11", "cc"
 	);
 
 	free(stack);
