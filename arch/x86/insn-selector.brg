@@ -916,7 +916,7 @@ reg:	EXPR_CLASS_FIELD 1
 
 	if (running_on_valgrind) {
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
-		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
+		select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
 		method_args_cleanup(s, tree, 1);
 
 		mov_insn = memdisp_reg_insn(INSN_MOV_MEMDISP_REG,
@@ -1011,7 +1011,7 @@ freg:	EXPR_FLOAT_CLASS_FIELD 1
 
 	if (running_on_valgrind) {
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
-		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
+		select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
 		method_args_cleanup(s, tree, 1);
 
 		if (expr->vm_type == J_FLOAT)
@@ -2734,7 +2734,7 @@ stmt:	STMT_MONITOR_ENTER(reg)
 	ref = state->left->reg1;
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_lock));
 
 	method_args_cleanup(s, tree, 1);
@@ -2747,7 +2747,7 @@ stmt:	STMT_MONITOR_EXIT(reg)
 	ref = state->left->reg1;
 
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL,
 		(unsigned long) vm_object_unlock));
 
 	method_args_cleanup(s, tree, 1);
@@ -2809,11 +2809,21 @@ select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn)
 	bb_add_insn(bb, insn);
 }
 
+static void select_poll_safepoint(struct basic_block *s, struct tree_node *tree)
+{
+	struct insn *insn;
+
+	assert(gc_safepoint_page);
+	insn = imm_memdisp_insn(INSN_TEST_IMM_MEMDISP, 0, (unsigned long) gc_safepoint_page);
+	select_insn(s, tree, insn);
+}
+
 static void
 select_safepoint_insn(struct basic_block *bb, struct tree_node *tree,
 		      struct insn *insn)
 {
 	insn->flags |= INSN_FLAG_SAFEPOINT;
+	select_poll_safepoint(bb, tree);
 	select_insn(bb, tree, insn);
 }
 
@@ -3230,7 +3240,7 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 	field = tr_addr + offsetof(struct vm_native_stack_entry, target);
 	select_set_target(s, tree, target, offset_reg, field);
 
-	select_insn(s, tree, call_insn);
+	select_safepoint_insn(s, tree, call_insn);
 
 	save_invoke_result(s, tree, method, stmt);
 
@@ -3240,15 +3250,6 @@ static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
 	select_insn(s, tree,
 		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
 				     offset_reg, offset_tls));
-}
-
-static void select_poll_safepoint(struct basic_block *s, struct tree_node *tree)
-{
-	struct insn *insn;
-
-	assert(gc_safepoint_page);
-	insn = imm_memdisp_insn(INSN_TEST_IMM_MEMDISP, 0, (unsigned long) gc_safepoint_page);
-	select_safepoint_insn(s, tree, insn);
 }
 
 static void invoke(struct basic_block *s, struct tree_node *tree)
@@ -3285,14 +3286,12 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 		pthread_mutex_unlock(&cu->mutex);
 	}
 
-	select_poll_safepoint(s, tree);
-
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
 	if (vm_method_is_vm_native(method))
 		select_vm_native_call(s, tree, method, stmt, call_insn, vm_method_native_ptr(method));
 	else {
-		select_insn(s, tree, call_insn);
+		select_safepoint_insn(s, tree, call_insn);
 		save_invoke_result(s, tree, method, stmt);
 	}
 
@@ -3342,12 +3341,10 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	/* native ptr */
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
 
-	select_poll_safepoint(s, tree);
-
 	/* invoke method */
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
 
-	select_insn(s, tree, call_insn);
+	select_safepoint_insn(s, tree, call_insn);
 	save_invoke_result(s, tree, method, stmt);
 
 	nr_stack_args = get_stack_args_count(method);
@@ -3396,7 +3393,7 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 	/* invoke method */
 	call_insn = reg_insn(INSN_CALL_REG, call_target);
 
-	select_insn(s, tree, call_insn);
+	select_safepoint_insn(s, tree, call_insn);
 	save_invoke_result(s, tree, method, stmt);
 
 	nr_stack_args = get_stack_args_count(method);
