@@ -36,7 +36,7 @@ struct vm_exec_env {
 	struct vm_thread *thread;
 };
 
-unsigned int vm_nr_threads_running(void);
+unsigned int vm_nr_threads(void);
 
 extern __thread struct vm_exec_env current_exec_env;
 
@@ -59,5 +59,12 @@ char *vm_thread_get_name(struct vm_thread *thread);
 bool vm_thread_is_interrupted(struct vm_thread *thread);
 bool vm_thread_interrupted(struct vm_thread *thread);
 void vm_thread_interrupt(struct vm_thread *thread);
+void vm_lock_thread_count(void);
+void vm_unlock_thread_count(void);
+
+extern struct list_head thread_list;
+extern pthread_mutex_t threads_mutex;
+
+#define vm_thread_for_each(this) list_for_each_entry(this, &thread_list, list_node)
 
 #endif

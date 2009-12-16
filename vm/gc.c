@@ -1,45 +1,37 @@
 #include <assert.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <pthread.h>
 
+#include "arch/memory.h"
 #include "arch/registers.h"
+#include "arch/signal.h"
 #include "lib/guard-page.h"
 #include "vm/thread.h"
 #include "vm/stdlib.h"
 #include "vm/die.h"
 #include "vm/gc.h"
+#include "vm/trace.h"
 
 void *gc_safepoint_page;
 
-static pthread_mutex_t safepoint_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t gc_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t gc_cond = PTHREAD_COND_INITIALIZER;
 
-/* Protected by safepoint_mutex */
-static pthread_cond_t everyone_in_cond = PTHREAD_COND_INITIALIZER;
-static pthread_cond_t everyone_out_cond = PTHREAD_COND_INITIALIZER;
-static unsigned int nr_exiting_safepoint;
-static unsigned int nr_in_safepoint;
+/* Protected by gc_mutex */
+static unsigned int nr_threads;
+static bool gc_started;
 
-static pthread_cond_t can_continue_cond = PTHREAD_COND_INITIALIZER;
-static bool can_continue = true;
+static sem_t safepoint_sem;
+
+static sig_atomic_t can_continue;
+static __thread sig_atomic_t in_safepoint;
+
+static pthread_t gc_thread_id;
 
 bool verbose_gc;
 bool gc_enabled;
-
-void gc_init(void)
-{
-	gc_safepoint_page = alloc_guard_page(false);
-	if (!gc_safepoint_page)
-		die("Couldn't allocate GC safepoint guard page");
-}
-
-void gc_attach_thread(void)
-{
-}
-
-void gc_detach_thread(void)
-{
-}
 
 static void hide_safepoint_guard_page(void)
 {
@@ -59,98 +51,150 @@ static void do_gc_reclaim(void)
 	/* TODO: Do main GC work here. */
 }
 
-/* Callers must hold safepoint_mutex */
-static void gc_safepoint_exit(void)
-{
-	assert(nr_exiting_safepoint > 0);
-
-	/*
-	 * Don't let threads stop the world until everyone is out of their
-	 * safepoint.
-	 */
-	if (--nr_exiting_safepoint == 0)
-		pthread_cond_broadcast(&everyone_out_cond);
-}
-
-/* Callers must hold safepoint_mutex */
-static void do_gc_safepoint(void)
-{
-	/* Only the GC thread will be waiting for this. */
-	if (++nr_in_safepoint == vm_nr_threads_running())
-		pthread_cond_signal(&everyone_in_cond);
-
-	/* Block until GC has finished */
-	while (!can_continue)
-		pthread_cond_wait(&can_continue_cond, &safepoint_mutex);
-
-	assert(nr_in_safepoint > 0);
-	--nr_in_safepoint;
-}
-
 void gc_safepoint(struct register_state *regs)
 {
-	pthread_mutex_lock(&safepoint_mutex);
+	sigset_t mask;
+	int sig;
 
-	do_gc_safepoint();
+	in_safepoint = true;
+	sem_post(&safepoint_sem);
 
-	gc_safepoint_exit();
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGUSR2);
 
-	pthread_mutex_unlock(&safepoint_mutex);
-}
-
-/*
- * This is the main entrypoint to the stop-the-world GC.
- */
-static void gc_start(struct register_state *regs)
-{
-	pthread_mutex_lock(&safepoint_mutex);
-
-	/* Don't deadlock during early boostrap. */
-	if (vm_nr_threads_running() == 0)
-		goto out_unlock;
-
-	/*
-	 * Wait until all threads have exited their safepoint before stopping
-	 * the world again.
-	 */
-	while (nr_exiting_safepoint > 0)
-		pthread_cond_wait(&everyone_out_cond, &safepoint_mutex);
-
-	/*
-	 * If someone stopped the world before us, put the current thread in a
-	 * safepoint.
-	 */
-	if (nr_in_safepoint != 0) {
-		do_gc_safepoint();
-		goto out_exit_safepoint;
+	rmb();
+	while (!can_continue) {
+		sigwait(&mask, &sig);
+		rmb();
 	}
 
-	/* Only one thread can stop the world at a time. */
-	assert(can_continue);
+	in_safepoint = false;
+	sem_post(&safepoint_sem);
+}
 
-	++nr_in_safepoint;
+void suspend_handler(int sig, siginfo_t *si, void *ctx)
+{
+	/*
+	 * Ignore this signal if we are already in safepoint. This
+	 * happens when a thread executes a safepoint poll in JIT
+	 * before the GC thread sends suspend signals.
+	 */
+	if (in_safepoint)
+		return;
+
+	/*
+	 * Force native code to enter a safepoint and restart non-native
+	 * threads. The latter will suspend themselves once they reach a GC
+	 * point.
+	 */
+
+	if (signal_from_native(ctx)) {
+		struct register_state thread_register_state;
+		ucontext_t *uc = ctx;
+
+		save_signal_registers(&thread_register_state, uc->uc_mcontext.gregs);
+		gc_safepoint(&thread_register_state);
+	}
+}
+
+static void gc_suspend_rest(void)
+{
+	struct vm_thread *thread;
+
+	sem_init(&safepoint_sem, true, 1 - nr_threads);
 	can_continue = false;
+	wmb();
+
+	vm_thread_for_each(thread) {
+		if (pthread_kill(thread->posix_id, SIGUSR2) != 0)
+			die("pthread_kill");
+	}
+
+	/* Wait for all threads to enter a safepoint. */
+	sem_wait(&safepoint_sem);
+}
+
+static void gc_resume_rest(void)
+{
+	struct vm_thread *thread;
+
+	sem_init(&safepoint_sem, true, 1 - nr_threads);
+
+	can_continue = true;
+	wmb();
+
+	vm_thread_for_each(thread) {
+		if (pthread_kill(thread->posix_id, SIGUSR2) != 0)
+			die("pthread_kill");
+	}
+
+	/* Wait for all threads to leave a safepoint. */
+	sem_wait(&safepoint_sem);
+}
+
+static void do_gc(void)
+{
+	vm_lock_thread_count();
+
+	nr_threads = vm_nr_threads();
+
+	/* Don't deadlock during early boostrap. */
+	if (nr_threads == 0)
+		goto out;
+
 	hide_safepoint_guard_page();
-
-	/* Wait for all other threads to enter a safepoint. */
-	while (nr_in_safepoint != vm_nr_threads_running())
-		pthread_cond_wait(&everyone_in_cond, &safepoint_mutex);
-
-	/* At this point, we know that everyone is in the safepoint. */
+	gc_suspend_rest();
 	unhide_safepoint_guard_page();
 
 	do_gc_reclaim();
+	gc_resume_rest();
 
-	/* Resume other threads */
-	assert(nr_in_safepoint > 0);
-	nr_exiting_safepoint = nr_in_safepoint--;
-	can_continue = true;
-	pthread_cond_broadcast(&can_continue_cond);
+out:
+	vm_unlock_thread_count();
+}
 
-out_exit_safepoint:
-	gc_safepoint_exit();
-out_unlock:
-	pthread_mutex_unlock(&safepoint_mutex);
+static void *gc_thread(void *arg)
+{
+	pthread_mutex_lock(&gc_mutex);
+
+	for (;;) {
+		while (!gc_started)
+			pthread_cond_wait(&gc_cond, &gc_mutex);
+
+		do_gc();
+
+		gc_started = false;
+		pthread_cond_broadcast(&gc_cond);
+	}
+
+	pthread_mutex_unlock(&gc_mutex);
+	return NULL;
+}
+
+/*
+ * This wakes up the GC thread and suspends until garbage collection is done.
+ */
+static void gc_start(struct register_state *regs)
+{
+	pthread_mutex_lock(&gc_mutex);
+
+	gc_started = true;
+	pthread_cond_broadcast(&gc_cond);
+
+	while (gc_started)
+		pthread_cond_wait(&gc_cond, &gc_mutex);
+
+	pthread_mutex_unlock(&gc_mutex);
+}
+
+void gc_init(void)
+{
+	gc_safepoint_page = alloc_guard_page(false);
+	if (!gc_safepoint_page)
+		die("Couldn't allocate GC safepoint guard page");
+
+	if (pthread_create(&gc_thread_id, NULL, &gc_thread, NULL))
+		die("Couldn't create GC thread");
 }
 
 void *gc_alloc(size_t size)

@@ -13,9 +13,7 @@ void gc_init(void);
 
 void *gc_alloc(size_t size);
 
-void gc_attach_thread(void);
-void gc_detach_thread(void);
-
 void gc_safepoint(struct register_state *);
+void suspend_handler(int, siginfo_t *, void *);
 
 #endif

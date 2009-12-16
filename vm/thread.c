@@ -45,18 +45,18 @@ __thread struct vm_exec_env current_exec_env;
 static struct vm_object *main_thread_group;
 
 /* This mutex protects global operations on thread structures. */
-static pthread_mutex_t threads_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t threads_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* Condition variable used for waiting on any thread's death. */
 static pthread_cond_t thread_terminate_cond = PTHREAD_COND_INITIALIZER;
 
+static unsigned int nr_threads;
 static int nr_non_daemons;
 
-static unsigned int nr_threads_running;
+struct list_head thread_list;
 
-static struct list_head thread_list;
-
-#define thread_for_each(this) list_for_each_entry(this, &thread_list, list_node)
+static bool thread_count_locked;
+static pthread_cond_t thread_count_lock_cond = PTHREAD_COND_INITIALIZER;
 
 static void vm_thread_free(struct vm_thread *thread)
 {
@@ -107,36 +107,10 @@ static bool vm_thread_is_daemon(struct vm_thread *thread)
 	return field_get_int(jthread, vm_java_lang_Thread_daemon) != 0;
 }
 
-unsigned int vm_nr_threads_running(void)
+/* Must hold threads_mutex */
+unsigned int vm_nr_threads(void)
 {
-	unsigned int nr;
-
-	pthread_mutex_lock(&threads_mutex);
-	nr = nr_threads_running;
-	pthread_mutex_unlock(&threads_mutex);
-
-	return nr;
-}
-
-static void update_thread_count(enum vm_thread_state state)
-{
-	pthread_mutex_lock(&threads_mutex);
-
-	switch (state) {
-	case VM_THREAD_STATE_NEW:
-		break;
-	case VM_THREAD_STATE_RUNNABLE:
-		nr_threads_running++;
-		break;
-	case VM_THREAD_STATE_BLOCKED:
-	case VM_THREAD_STATE_TERMINATED:
-	case VM_THREAD_STATE_TIMED_WAITING:
-	case VM_THREAD_STATE_WAITING:
-		nr_threads_running--;
-		break;
-	}
-
-	pthread_mutex_unlock(&threads_mutex);
+	return nr_threads;
 }
 
 void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state)
@@ -144,41 +118,34 @@ void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state)
 	pthread_mutex_lock(&thread->mutex);
 	thread->state = state;
 	pthread_mutex_unlock(&thread->mutex);
-
-	update_thread_count(state);
 }
 
 static void vm_thread_attach_thread(struct vm_thread *thread)
 {
-	pthread_mutex_lock(&threads_mutex);
 	list_add(&thread->list_node, &thread_list);
-	nr_threads_running++;
-	pthread_mutex_unlock(&threads_mutex);
-
-	gc_attach_thread();
+	nr_threads++;
 }
 
+/* The caller must hold threads_mutex */
 static void vm_thread_detach_thread(struct vm_thread *thread)
 {
 	vm_thread_set_state(thread, VM_THREAD_STATE_TERMINATED);
-
-	gc_detach_thread();
-
-	pthread_mutex_lock(&threads_mutex);
 
 	list_del(&thread->list_node);
 
 	if (!vm_thread_is_daemon(thread))
 		nr_non_daemons--;
 
+	nr_threads--;
+
 	pthread_cond_broadcast(&thread_terminate_cond);
-	pthread_mutex_unlock(&threads_mutex);
 }
 
 int init_threading(void)
 {
 	INIT_LIST_HEAD(&thread_list);
 	nr_non_daemons = 0;
+	nr_threads = 0;
 
 	main_thread_group = vm_object_alloc(vm_java_lang_ThreadGroup);
 	if (!main_thread_group)
@@ -254,7 +221,12 @@ static void *vm_thread_entry(void *arg)
 	if (exception_occurred())
 		vm_print_exception(exception_occurred());
 
+	pthread_mutex_lock(&threads_mutex);
+	while (thread_count_locked)
+		pthread_cond_wait(&thread_count_lock_cond, &threads_mutex);
+
 	vm_thread_detach_thread(vm_thread_self());
+	pthread_mutex_unlock(&threads_mutex);
 
 	return NULL;
 }
@@ -284,13 +256,19 @@ int vm_thread_start(struct vm_object *vmthread)
 		pthread_mutex_unlock(&threads_mutex);
 	}
 
+	pthread_mutex_lock(&threads_mutex);
+	while (thread_count_locked)
+		pthread_cond_wait(&thread_count_lock_cond, &threads_mutex);
+
 	vm_thread_attach_thread(thread);
 
 	if (pthread_create(&thread->posix_id, NULL, &vm_thread_entry, thread)) {
 		vm_thread_detach_thread(thread);
+		pthread_mutex_unlock(&threads_mutex);
 		return -1;
 	}
 
+	pthread_mutex_unlock(&threads_mutex);
 	return 0;
 }
 
@@ -358,4 +336,19 @@ void vm_thread_interrupt(struct vm_thread *thread)
 		sched_yield();
 	pthread_cond_broadcast(&mon->cond);
 	pthread_mutex_unlock(&mon->mutex);
+}
+
+void vm_lock_thread_count(void)
+{
+	pthread_mutex_lock(&threads_mutex);
+	thread_count_locked = true;
+	pthread_mutex_unlock(&threads_mutex);
+}
+
+void vm_unlock_thread_count(void)
+{
+	pthread_mutex_lock(&threads_mutex);
+	thread_count_locked = false;
+	pthread_cond_broadcast(&thread_count_lock_cond);
+	pthread_mutex_unlock(&threads_mutex);
 }

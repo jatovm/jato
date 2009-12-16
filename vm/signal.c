@@ -166,11 +166,6 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	print_backtrace_and_die(sig, si, ctx);
 }
 
-static void signal_handler(int sig, siginfo_t *si, void *ctx)
-{
-	print_backtrace_and_die(sig, si, ctx);
-}
-
 void setup_signal_handlers(void)
 {
 	struct sigaction sa;
@@ -184,6 +179,6 @@ void setup_signal_handlers(void)
 	sa.sa_sigaction	= sigfpe_handler;
 	sigaction(SIGFPE, &sa, NULL);
 
-	sa.sa_sigaction	= signal_handler;
-	sigaction(SIGUSR1, &sa, NULL);
+	sa.sa_sigaction	= suspend_handler;
+	sigaction(SIGUSR2, &sa, NULL);
 }
