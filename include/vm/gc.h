@@ -2,6 +2,7 @@
 #define VM_GC_H
 
 #include <stdbool.h>
+#include <signal.h>
 
 struct register_state;
 
