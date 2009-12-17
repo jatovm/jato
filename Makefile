@@ -209,9 +209,6 @@ DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG)
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
-DEFINES = -DINSTALL_DIR=\"$(JAMVM_INSTALL_DIR)\" -DCLASSPATH_INSTALL_DIR=\"$(CLASSPATH_INSTALL_DIR)\"
-DEFAULT_CFLAGS	+= $(DEFINES)
-
 DEFAULT_LIBS	= -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty $(ARCH_LIBS)
 
 all: $(PROGRAM) $(TEST)
