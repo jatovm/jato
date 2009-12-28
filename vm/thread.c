@@ -80,6 +80,7 @@ static struct vm_thread *vm_thread_alloc(void)
 	thread->posix_id = -1;
 	thread->interrupted = false;
 	thread->wait_mon = NULL;
+	thread->thread_state = THREAD_STATE_CONSISTENT;
 
 	return thread;
 }

@@ -14,7 +14,8 @@ void gc_init(void);
 
 void *gc_alloc(size_t size);
 
-void gc_safepoint(struct register_state *);
+void gc_jit_safepoint(struct register_state *);
 void suspend_handler(int, siginfo_t *, void *);
+void wakeup_handler(int, siginfo_t *, void *);
 
 #endif

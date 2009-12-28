@@ -19,6 +19,11 @@ enum vm_thread_state {
 	VM_THREAD_STATE_WAITING,
 };
 
+enum thread_state {
+	THREAD_STATE_CONSISTENT,
+	THREAD_STATE_INCONSISTENT,
+};
+
 struct vm_thread {
 	pthread_mutex_t mutex;
 
@@ -30,6 +35,7 @@ struct vm_thread {
 	struct list_head list_node;
 	bool interrupted;
 	struct vm_monitor *wait_mon;
+	enum thread_state thread_state;
 };
 
 struct vm_exec_env {
