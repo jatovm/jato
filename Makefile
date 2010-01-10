@@ -369,7 +369,7 @@ clean:
 	$(Q) - find runtime/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
-	$(Q) - make -C monoburg/ clean
+	$(Q) - make -C tools/monoburg/ clean
 	$(Q) - make -C test/vm/ clean
 	$(Q) - make -C test/jit/ clean
 	$(Q) - make -C test/arch-$(ARCH)/ clean
