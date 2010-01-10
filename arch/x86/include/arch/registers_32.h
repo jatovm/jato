@@ -59,6 +59,7 @@ const char *reg_name(enum machine_reg reg);
 bool reg_supports_type(enum machine_reg reg, enum vm_type type);
 
 struct register_state {
+	uint64_t			ip;
 	union {
 		unsigned long		regs[6];
 		struct {
@@ -72,28 +73,16 @@ struct register_state {
 	};
 };
 
-#define SAVE_REG(reg, dst)  \
-	__asm__ volatile ("movl %%" reg ", %0\n\t" : "=m"(dst))
-
-static inline void save_registers(struct register_state *regs)
-{
-	SAVE_REG("eax", regs->eax);
-	SAVE_REG("ebx", regs->ebx);
-	SAVE_REG("ecx", regs->ecx);
-	SAVE_REG("edx", regs->edx);
-	SAVE_REG("edi", regs->edi);
-	SAVE_REG("esi", regs->esi);
-}
-
 static inline void
 save_signal_registers(struct register_state *regs, gregset_t gregs)
 {
-        regs->eax = gregs[REG_EAX];
-        regs->ebx = gregs[REG_EBX];
-        regs->ecx = gregs[REG_ECX];
-        regs->edx = gregs[REG_EDX];
-        regs->esi = gregs[REG_ESI];
-        regs->edi = gregs[REG_EDI];
+	regs->ip	= (uint32_t) gregs[REG_EIP];
+	regs->eax	= gregs[REG_EAX];
+	regs->ebx	= gregs[REG_EBX];
+	regs->ecx	= gregs[REG_ECX];
+	regs->edx	= gregs[REG_EDX];
+	regs->esi	= gregs[REG_ESI];
+	regs->edi	= gregs[REG_EDI];
 }
 
 #endif /* X86_REGISTERS_32_H */

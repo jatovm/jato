@@ -1,25 +1,31 @@
-#include <assert.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <stdbool.h>
-#include <stdio.h>
-
-#include "arch/memory.h"
 #include "arch/registers.h"
+#include "arch/memory.h"
 #include "arch/signal.h"
+
+#include "jit/compilation-unit.h"
+#include "jit/cu-mapping.h"
+
 #include "lib/guard-page.h"
-#include "vm/thread.h"
+
 #include "vm/stdlib.h"
+#include "vm/thread.h"
+#include "vm/method.h"
+#include "vm/class.h"
+#include "vm/trace.h"
 #include "vm/die.h"
 #include "vm/gc.h"
-#include "vm/trace.h"
+
+#include <inttypes.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <assert.h>
+#include <stdio.h>
 
 void *gc_safepoint_page;
 
 static pthread_mutex_t	gc_reclaim_mutex	= PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t	gc_reclaim_cond		= PTHREAD_COND_INITIALIZER;
 static bool		gc_reclaim_in_progress;
-
 
 pthread_spinlock_t gc_spinlock;
 
@@ -126,6 +132,15 @@ static void do_gc_reclaim(void)
 
 static void gc_scan_rootset(struct register_state *regs)
 {
+	struct compilation_unit *cu;
+
+	cu = jit_lookup_cu(regs->ip);
+	if (!cu)
+		warn("safepoint at unknown IP %" PRIx64, regs->ip);
+
+	if (cu && verbose_gc)
+		fprintf(stderr, "[GC at %s.%s]\n", cu->method->class->name, cu->method->name);
+
 	/* TODO: get live references from this thread. */
 }
 

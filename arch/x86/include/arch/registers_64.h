@@ -76,6 +76,7 @@ enum machine_reg_type reg_type(enum machine_reg reg);
 bool reg_supports_type(enum machine_reg reg, enum vm_type type);
 
 struct register_state {
+	uint64_t			ip;
 	union {
 		unsigned long		regs[14];
 		struct {
@@ -97,30 +98,10 @@ struct register_state {
 	};
 };
 
-#define SAVE_REG(reg, dst)  \
-	__asm__ volatile ("movq %%" reg ", %0\n\t" : "=m"(dst))
-
-static inline void save_registers(struct register_state *regs)
-{
-	SAVE_REG("rax", regs->rax);
-	SAVE_REG("rbx", regs->rbx);
-	SAVE_REG("rcx", regs->rcx);
-	SAVE_REG("rdx", regs->rdx);
-	SAVE_REG("rsi", regs->rsi);
-	SAVE_REG("rdi", regs->rdi);
-	SAVE_REG("r8",  regs->r8);
-	SAVE_REG("r9",  regs->r9);
-	SAVE_REG("r10", regs->r10);
-	SAVE_REG("r11", regs->r11);
-	SAVE_REG("r12", regs->r12);
-	SAVE_REG("r13", regs->r13);
-	SAVE_REG("r14", regs->r14);
-	SAVE_REG("r15", regs->r15);
-}
-
 static inline void
 save_signal_registers(struct register_state *regs, gregset_t gregs)
 {
+	regs->ip	= gregs[REG_RIP];
         regs->rax	= gregs[REG_RAX];
         regs->rbx	= gregs[REG_RBX];
         regs->rcx	= gregs[REG_RCX];
