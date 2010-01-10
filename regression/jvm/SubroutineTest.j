@@ -15,9 +15,12 @@ sub1:
 .end method
 
 .method public static testSingleSubroutine()V
+    .limit stack 64
+
     invokestatic jvm/SubroutineTest/singleSubroutine()I
     iconst_1
     invokestatic jvm/TestCase/assertEquals(II)V
+    return
 .end method
 
 .method public static testWideInstructions()V
@@ -38,6 +41,7 @@ subroutine:
 ; thrown from S could be incorrectly caught by handler protecting
 ; the JSR instruction.
 .method public static testExceptionRangeSplit()V
+    .limit stack 64
     .limit locals 2
     .catch java/lang/RuntimeException from c_start to c_end using handler
     .catch java/lang/Exception from sub_start to sub_end using sub_handler
@@ -56,7 +60,7 @@ subroutine:
 sub_start:
     new java/lang/RuntimeException
     dup
-    invokevirtual java/lang/RuntimeException/<init>()V
+    invokespecial java/lang/RuntimeException/<init>()V
     athrow
 sub_end:
     goto sub_out
