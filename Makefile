@@ -251,7 +251,7 @@ compile: $(OBJS)
 test: monoburg
 	make -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	make -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-	make -C test/arch-$(ARCH)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	make -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: test
 
 REGRESSION_TEST_SUITE_CLASSES = \
@@ -372,7 +372,7 @@ clean:
 	$(Q) - make -C tools/monoburg/ clean
 	$(Q) - make -C test/vm/ clean
 	$(Q) - make -C test/jit/ clean
-	$(Q) - make -C test/arch-$(ARCH)/ clean
+	$(Q) - make -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ clean
 .PHONY: clean
 
 INSTALL_PREFIX	?= $(HOME)

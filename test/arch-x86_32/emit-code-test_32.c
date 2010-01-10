@@ -46,7 +46,7 @@ static void assert_emit_insn(unsigned char *expected,
 	emit_body(bb, buf);
 	assert_int_equals(expected_size, buffer_offset(buf));
 	assert_mem_equals(expected, buffer_ptr(buf), expected_size);
-	
+
 	free_basic_block(bb);
 	free_buffer(buf);
 }
@@ -161,7 +161,7 @@ static void assert_emit_call(long target_offset)
 	struct buffer *buf;
 	void *call_target;
 	long disp;
-       
+
 	buf = alloc_buffer();
 	call_target = buffer_ptr(buf) + target_offset;
 	disp = call_target - buffer_ptr(buf) - 5;
@@ -422,7 +422,7 @@ static void assert_forward_branch(unsigned char expected_prefix,
 				  enum insn_type insn_type)
 {
 	struct basic_block *bb;
-	
+
 	bb = alloc_basic_block(NULL, 0, 1);
 
 	assert_emit_prefixed_insn_5(expected_prefix, expected_opc, 0x00, 0x00, 0x00, 0x00, branch_insn(insn_type, bb));
@@ -489,7 +489,7 @@ assert_emit_target_for_backward_branches(unsigned char expected_prefix,
 	cu = compilation_unit_alloc(&method);
 	eax = get_fixed_var(cu, MACH_REG_EAX);
 	ebx = get_fixed_var(cu, MACH_REG_EBX);
-	
+
 	target_bb = get_basic_block(cu, 0, 1);
 
 	bb_add_insn(target_bb, imm_reg_insn(INSN_ADD_IMM_REG, 0x01, eax));

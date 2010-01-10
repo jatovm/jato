@@ -2,7 +2,7 @@ MB_DEFINES	:= -DCONFIG_$(shell echo $(ARCH) | tr "[:lower:]" "[:upper:]")$(ARCH_
 
 ARCH_CONFIG	:= ../../arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 DEFAULT_CFLAGS	:= -rdynamic -g -Wall -Wundef -Wsign-compare -Os -std=gnu99 -D_GNU_SOURCE
-INCLUDE		:= -I. -I../../arch/$(ARCH)/include -I../libharness -I../jit -I../../include -I../../cafebabe/include -I../include -I../../jit/glib -include $(ARCH_CONFIG) 
+INCLUDE		:= -I. -I../../arch/$(ARCH)/include -I../libharness -I../jit -I../../include -I../../cafebabe/include -I../include -I../../jit/glib -include $(ARCH_CONFIG)
 MONOBURG	:= ../../tools/monoburg/monoburg
 
 RUNNER=x86-test-runner
