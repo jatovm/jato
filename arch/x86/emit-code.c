@@ -92,9 +92,11 @@ static void __emit_add_imm_reg(struct buffer *buf,
 			       enum machine_reg reg);
 static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg);
 static void __emit_push_imm(struct buffer *buf, long imm);
+#ifdef CONFIG_X86_32
 static void __emit_push_membase(struct buffer *buf,
 				enum machine_reg src_reg,
 				unsigned long disp);
+#endif
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg);
 static void __emit_mov_reg_reg(struct buffer *buf,
 			       enum machine_reg src,
@@ -2301,12 +2303,14 @@ static void __emit64_add_imm_reg(struct buffer *buf,
 	emit_alu_imm_reg(buf, 1, 0x00, imm, reg);
 }
 
+#ifdef CONFIG_X86_32
 static void __emit32_add_imm_reg(struct buffer *buf,
 				 long imm,
 				 enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0, 0x00, imm, reg);
 }
+#endif
 
 static void emit_add_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
@@ -2334,6 +2338,7 @@ static void emit_imm64(struct buffer *buf, unsigned long imm)
 	emit(buf, imm_buf.b[7]);
 }
 
+#ifdef CONFIG_X86_32
 static void emit64_imm(struct buffer *buf, long imm)
 {
 	if (is_imm_8(imm))
@@ -2341,6 +2346,7 @@ static void emit64_imm(struct buffer *buf, long imm)
 	else
 		emit_imm64(buf, imm);
 }
+#endif
 
 static void __emit_push_imm(struct buffer *buf, long imm)
 {
@@ -2444,6 +2450,7 @@ static void emit_membase_reg(struct buffer *buf,
 	__emit_membase_reg(buf, rex_w, opc, base_reg, disp, dest_reg);
 }
 
+#ifdef CONFIG_X86_32
 static void emit_reg_membase(struct buffer *buf,
 			     int rex_w,
 			     unsigned char opc,
@@ -2466,6 +2473,7 @@ static void __emit64_push_membase(struct buffer *buf,
 {
 	__emit_membase(buf, 0, 0xff, src_reg, disp, 6);
 }
+#endif
 
 static void __emit_mov_reg_membase(struct buffer *buf,
 				   int rex_w,
@@ -2569,6 +2577,7 @@ static void __emit64_test_membase_reg(struct buffer *buf,
 	__emit_membase_reg(buf, 1, 0x85, src, disp, dest);
 }
 
+#ifdef CONFIG_X86_32
 static void __emit32_test_membase_reg(struct buffer *buf,
 				      enum machine_reg src,
 				      unsigned long disp,
@@ -2576,6 +2585,7 @@ static void __emit32_test_membase_reg(struct buffer *buf,
 {
 	__emit_membase_reg(buf, 0, 0x85, src, disp, dest);
 }
+#endif
 
 static void emit_test_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
