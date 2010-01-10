@@ -31,7 +31,7 @@ static void assert_defines(struct basic_block *bb, struct var_info *var)
 	assert_false(test_bit(bb->use_set->bits, var->vreg));
 }
 
-static void assert_insn_at_equals(struct insn *insn, struct compilation_unit *cu, struct live_interval *interval, unsigned int offset)
+static void assert_insn_at_equals(struct insn *insn, struct compilation_unit *cu, struct live_interval *interval, int offset)
 {
 	struct insn *insn2;
 
