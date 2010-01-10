@@ -4,6 +4,7 @@
 .field public static counter I
 
 .method public static advanceCounter()I
+    .limit stack 128
     getstatic jvm/InvokeTest/counter I
     iconst_1
     iadd
