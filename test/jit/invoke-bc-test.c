@@ -2,14 +2,17 @@
  * Copyright (C) 2005-2006  Pekka Enberg
  */
 
-#include "jit/basic-block.h"
-#include <bc-test-utils.h>
 #include "jit/compilation-unit.h"
-#include "jit/compiler.h"
+#include "jit/basic-block.h"
 #include "jit/statement.h"
+#include "jit/compiler.h"
+#include "jit/args.h"
+
 #include "lib/stack.h"
 #include "lib/string.h"
 #include "vm/method.h"
+
+#include <bc-test-utils.h>
 #include <args-test-utils.h>
 
 #include <libharness.h>
@@ -107,12 +110,19 @@ build_invoke_bb(unsigned char invoke_opc,
 	unsigned char code[] = {
 		invoke_opc, (method_index >> 8) & 0xff, method_index & 0xff,
 	};
+	const struct cafebabe_method_info method_info = {
+		.access_flags = 0,
+	};
 	struct vm_method method = {
+		.method = &method_info,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
 	struct expression *objectref_expr;
 	struct basic_block *bb;
+
+	args_map_init(&target_method);
+	args_map_init(&method);
 
 	assert_int_equals(0, parse_method_type(&target_method));
 
@@ -146,6 +156,7 @@ static void assert_invoke_passes_objectref(unsigned char invoke_opc,
 	else
 		assert_value_expr(J_REFERENCE, 0xdeadbeef,
 				  arg_expr->arg_expression);
+
 	__free_simple_bb(bb);
 }
 
@@ -208,7 +219,11 @@ static void assert_converts_to_invoke_stmt(enum vm_type expected_result_type, un
 	unsigned char code[] = {
 		opc, 0x00, 0x00
 	};
+	const struct cafebabe_method_info method_info = {
+		.access_flags = CAFEBABE_METHOD_ACC_STATIC,
+	};
 	struct vm_method method = {
+		.method = &method_info,
 		.code_attribute.code = code,
 		.code_attribute.code_length = ARRAY_SIZE(code),
 	};
@@ -216,6 +231,9 @@ static void assert_converts_to_invoke_stmt(enum vm_type expected_result_type, un
 	struct expression *actual_args;
 	struct basic_block *bb;
 	struct statement *stmt;
+
+	args_map_init(&method);
+	args_map_init(&target_method);
 
 	bb = __alloc_simple_bb(&method);
 	assert_int_equals(0, parse_method_type(&target_method));

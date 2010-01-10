@@ -29,6 +29,8 @@ static inline int get_stack_args_count(struct vm_method *method)
 	return method->args_count;
 }
 #else
+extern int args_map_init(struct vm_method *method);
+
 static inline int get_stack_args_count(struct vm_method *method)
 {
 	return method->args_count - method->reg_args_count;
