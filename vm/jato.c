@@ -87,6 +87,7 @@
 
 #include "arch/init.h"
 
+static bool dump_maps;
 static bool perf_enabled;
 static char *exe_name;
 
@@ -654,6 +655,11 @@ static void handle_gc(void)
 	gc_enabled = true;
 }
 
+static void handle_maps(void)
+{
+	dump_maps = true;
+}
+
 static void handle_perf(void)
 {
 	perf_enabled = true;
@@ -811,6 +817,7 @@ const struct option options[] = {
 	DEFINE_OPTION("verbose:gc",	handle_verbose_gc),
 
 	DEFINE_OPTION("Xgc",			handle_gc),
+	DEFINE_OPTION("Xmaps",			handle_maps),
 	DEFINE_OPTION("Xperf",			handle_perf),
 
 	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),
@@ -986,6 +993,19 @@ static void gnu_classpath_autodiscovery(void)
 	}
 }
 
+static void print_proc_maps(void)
+{
+	char cmd[32];
+	pid_t self;
+
+	self = getpid();
+
+	snprintf(cmd, sizeof(cmd), "cat /proc/%d/maps", self);
+
+	if (system(cmd) != 0)
+		die("system");
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1009,6 +1029,9 @@ main(int argc, char *argv[])
 	init_system_properties();
 
 	parse_options(argc, argv);
+
+	if (dump_maps)
+		print_proc_maps();
 
 	classloader_init();
 
