@@ -1,8 +1,6 @@
 #ifndef __ARGS_H
 #define __ARGS_H
 
-#include "arch/args.h"
-
 #include "jit/expression.h"
 
 #include "vm/method.h"

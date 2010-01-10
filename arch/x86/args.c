@@ -28,8 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "arch/args.h"
-
 #include "jit/args.h"
 
 #include "vm/method.h"

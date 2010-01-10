@@ -17,7 +17,6 @@
 #include <jit/bc-offset-mapping.h>
 #include <jit/exception.h>
 
-#include <arch/args.h>
 #include <arch/instruction.h>
 #include <arch/stack-frame.h>
 #include <arch/thread.h>
