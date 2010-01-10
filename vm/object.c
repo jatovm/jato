@@ -382,9 +382,9 @@ void vm_object_check_null(struct vm_object *obj)
 	NOT_IMPLEMENTED;
 }
 
-void vm_object_check_array(struct vm_object *obj, unsigned int index)
+void vm_object_check_array(struct vm_object *obj, jsize index)
 {
-	unsigned int array_len;
+	jsize array_len;
 	struct vm_class *cb;
 	char index_str[32];
 

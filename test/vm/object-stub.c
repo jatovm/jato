@@ -33,14 +33,14 @@ bool vm_object_is_instance_of(const struct vm_object *obj,
 	return obj->class == type;
 }
 
-void vm_object_check_array(struct vm_object *obj, unsigned int index)
+void vm_object_check_array(struct vm_object *obj, jsize index)
 {
 	struct vm_class *cb = obj->class;
 
-	if (!IS_ARRAY(cb))
+	if (!vm_class_is_array_class(cb))
 		abort();
 
-	if (index >= ARRAY_LEN(obj))
+	if (index >= obj->array_length)
 		abort();
 }
 
