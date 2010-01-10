@@ -76,6 +76,23 @@
 # define __emit_mov_reg_reg		__emit64_mov_reg_reg
 #endif
 
+enum emitter_type {
+	NO_OPERANDS = 1,
+	SINGLE_OPERAND,
+	TWO_OPERANDS,
+	BRANCH,
+};
+
+struct emitter {
+	void *emit_fn;
+	enum emitter_type type;
+};
+
+extern struct emitter emitters[];
+
+#define DECL_EMITTER(_insn_type, _fn, _emitter_type) \
+	[_insn_type] = { .emit_fn = _fn, .type = _emitter_type }
+
 static void __emit_add_imm_reg(struct buffer *buf,
 			       long imm,
 			       enum machine_reg reg);

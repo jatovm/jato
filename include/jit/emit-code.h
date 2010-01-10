@@ -10,23 +10,6 @@ struct vm_object;
 struct vm_jni_env;
 struct vm_method;
 
-enum emitter_type {
-	NO_OPERANDS = 1,
-	SINGLE_OPERAND,
-	TWO_OPERANDS,
-	BRANCH,
-};
-
-struct emitter {
-	void *emit_fn;
-	enum emitter_type type;
-};
-
-extern struct emitter emitters[];
-
-#define DECL_EMITTER(_insn_type, _fn, _emitter_type) \
-	[_insn_type] = { .emit_fn = _fn, .type = _emitter_type }
-
 extern void emit_prolog(struct buffer *, unsigned long);
 extern void emit_trace_invoke(struct buffer *, struct compilation_unit *);
 extern void emit_epilog(struct buffer *);
