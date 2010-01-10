@@ -14,6 +14,7 @@ function run_java {
   if [ "$ACTUAL" != "$EXPECTED" ]; then
     HAS_FAILURES=1
     echo "$JAVA_CLASS FAILED. Expected $EXPECTED, but was: $ACTUAL."
+    exit 1
   fi
 }
 
@@ -44,10 +45,16 @@ while [ "$#" -ge 1 ]; do
 done
 
 if [ -z "$CLASS_LIST" ]; then
+    # First test for VM features that are needed to bootstrap more complex tests.
+    run_java jvm.EntryTest 0
+    run_java jvm.ExitStatusIsOneTest 1
+    run_java jvm.ExitStatusIsZeroTest 0
+    run_java jvm.ArgsTest 0
+
+    # OK, now test rest of the VM features.
     run_java java.lang.VMClassTest 0
     run_java java.lang.reflect.ClassTest 0
     run_java java.lang.reflect.MethodTest 0
-    run_java jvm.ArgsTest 0
     run_java jvm.ArrayExceptionsTest 0
     run_java jvm.ArrayMemberTest 0
     run_java jvm.ArrayTest 0
@@ -62,8 +69,6 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.DoubleConversionTest 0
     run_java jvm.DupTest 0
     run_java jvm.ExceptionsTest 0
-    run_java jvm.ExitStatusIsOneTest 1
-    run_java jvm.ExitStatusIsZeroTest 0
     run_java jvm.FibonacciTest 0
     run_java jvm.FinallyTest 0
     run_java jvm.FloatArithmeticTest 0
@@ -106,7 +111,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.WideTest 0
     run_java jvm.lang.reflect.FieldTest 0
     run_java sun.misc.UnsafeTest 0
-else 
+else
     for i in $CLASS_LIST; do
 	run_java $i 0
     done
