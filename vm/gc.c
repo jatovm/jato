@@ -337,7 +337,7 @@ static void *gc_thread(void *arg)
 /*
  * This wakes up the GC thread and suspends until garbage collection is done.
  */
-static void gc_start(struct register_state *regs)
+static void gc_start(void)
 {
 	if (pthread_mutex_lock(&gc_reclaim_mutex) != 0)
 		die("pthread_mutex_lock");
@@ -380,12 +380,8 @@ void gc_init(void)
 
 void *gc_alloc(size_t size)
 {
-	struct register_state regs;
-
-	save_registers(&regs);
-
 	if (gc_enabled)
-		gc_start(&regs);
+		gc_start();
 
 	return zalloc(size);
 }
