@@ -4,6 +4,8 @@
 .field public static counter I
 
 .method public static advanceCounter()I
+    .limit stack 128
+
     getstatic jvm/DupTest/counter I
     iconst_1
     iadd
@@ -17,6 +19,7 @@
 
 ; Test 'dup' instruction
 .method public static testDup()V
+    .limit stack 128
     .limit locals 3
 
     iconst_0
@@ -40,10 +43,13 @@
     iload_2
     iconst_3
     invokestatic jvm/TestCase/assertEquals(II)V
+
+    return
 .end method
 
 ; Test 'dup_x1' instruction
 .method public static testDup_x1()V
+    .limit stack 128
     .limit locals 4
 
     iconst_0
@@ -76,10 +82,13 @@
     iload_3
     iconst_2
     invokestatic jvm/TestCase/assertEquals(II)V
+
+    return
 .end method
 
 ; Test 'dup_x2' instruction
 .method public static testDup_x2()V
+    .limit stack 128
     .limit locals 5
 
     iconst_0
@@ -121,10 +130,13 @@
     iload 4
     iconst_5
     invokestatic jvm/TestCase/assertEquals(II)V
+
+    return
 .end method
 
 ; Test 'dup_x2' instruction when value2 has computational type of category 2
 .method public static testDup_x2_long()V
+    .limit stack 128
     .limit locals 5
 
     iconst_0
@@ -157,10 +169,13 @@
     bipush 4
     iload 4
     invokestatic jvm/TestCase/assertEquals(II)V
+
+    return
 .end method
 
 ; Test 'dup2' instruction
 .method public static testDup2()V
+    .limit stack 128
     .limit locals 5
 
     iconst_0
@@ -202,10 +217,12 @@
     bipush 6
     invokestatic jvm/TestCase/assertEquals(II)V
 
+    return
 .end method
 
 ; Test 'dup2_x1' instruction
 .method public static testDup2_x1()V
+    .limit stack 128
     .limit locals 6
 
     iconst_0
@@ -255,10 +272,13 @@
     iload 5
     bipush 7
     invokestatic jvm/TestCase/assertEquals(II)V
+
+    return
 .end method
 
 ; Test 'dup2_x2' instruction
 .method public static testDup2_x2()V
+    .limit stack 128
     .limit locals 7
 
     iconst_0
@@ -317,6 +337,8 @@
     iload 6
     bipush 8
     invokestatic jvm/TestCase/assertEquals(II)V
+
+    return
 .end method
 
 .method public static main([Ljava/lang/String;)V
