@@ -716,7 +716,7 @@ static const char *stack_trace_elem_type_names[] = {
 
 const char *stack_trace_elem_type_name(enum stack_trace_elem_type type)
 {
-	assert(type >= 0 && type < ARRAY_LEN(stack_trace_elem_type_names));
+	assert(type >= 0 && type < ARRAY_SIZE(stack_trace_elem_type_names));
 
 	return stack_trace_elem_type_names[type];
 }
