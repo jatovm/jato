@@ -167,10 +167,12 @@ static void gc_scan_rootset(struct register_state *regs)
 	struct compilation_unit *cu;
 
 	cu = jit_lookup_cu(regs->ip);
-	if (!cu)
+	if (!cu) {
 		warn("safepoint at unknown IP %" PRIx64, regs->ip);
+		return;
+	}
 
-	if (cu && verbose_gc)
+	if (verbose_gc)
 		fprintf(stderr, "[GC at %s.%s]\n", cu->method->class->name, cu->method->name);
 
 	/* TODO: get live references from this thread. */
