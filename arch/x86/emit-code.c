@@ -2113,7 +2113,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 
 static void emit_push_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	__emit_push_reg(buf, mach_reg(&operand->reg));
+	__emit_push_reg(buf, mach_reg(&insn->operand.reg));
 }
 
 static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
@@ -2123,7 +2123,7 @@ static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 
 static void emit_pop_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	__emit_pop_reg(buf, mach_reg(&operand->reg));
+	__emit_pop_reg(buf, mach_reg(&insn->operand.reg));
 }
 
 static void __emit_lopc_reg_reg(struct buffer *buf,
@@ -2195,7 +2195,7 @@ static void emit_mov_xmm_xmm(struct insn *insn, struct buffer *buf, struct basic
 {
 	unsigned char opc[3];
 
-	if (src->reg.interval->var_info->vm_type == J_FLOAT)
+	if (insn->src.reg.interval->var_info->vm_type == J_FLOAT)
 		/* MOVSS */
 		opc[0] = 0xF3;
 	else
@@ -2205,44 +2205,44 @@ static void emit_mov_xmm_xmm(struct insn *insn, struct buffer *buf, struct basic
 	opc[2] = 0x10;
 
 	__emit_lopc_reg_reg(buf, 0, opc, 3,
-			    mach_reg(&src->reg), mach_reg(&insn->dest.reg));
+			    mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
 }
 
 static void emit_mov_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	int fp;
 
-	fp = is_xmm_reg(src);
-	if (fp != is_xmm_reg(dest))
+	fp = is_xmm_reg(&insn->src);
+	if (fp != is_xmm_reg(&insn->dest))
 		assert(!"Can't do 'mov' between XMM and GPR!");
 
 	if (fp) {
-		emit_mov_xmm_xmm(buf, src, dest);
+		emit_mov_xmm_xmm(insn, buf, bb);
 		return;
 	}
 
-	if (is_64bit_bin_reg_op(src, dest))
+	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
 		__emit64_mov_reg_reg(buf,
-				     mach_reg(&src->reg), mach_reg(&insn->dest.reg));
+				     mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
 	else
 		__emit32_mov_reg_reg(buf,
-				     mach_reg(&src->reg), mach_reg(&insn->dest.reg));
+				     mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
 }
 
 static void emit_add_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	if (is_64bit_bin_reg_op(src, dest))
-		emit_reg_reg(buf, 1, 0x03, dest, src);
+	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
+		emit_reg_reg(buf, 1, 0x03, &insn->dest, &insn->src);
 	else
-		emit_reg_reg(buf, 0, 0x03, dest, src);
+		emit_reg_reg(buf, 0, 0x03, &insn->dest, &insn->src);
 }
 
 static void emit_sub_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	if (is_64bit_bin_reg_op(src, dest))
-		emit_reg_reg(buf, 1, 0x29, src, dest);
+	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
+		emit_reg_reg(buf, 1, 0x29, &insn->src, &insn->dest);
 	else
-		emit_reg_reg(buf, 0, 0x29, src, dest);
+		emit_reg_reg(buf, 0, 0x29, &insn->src, &insn->dest);
 }
 
 static void emit_alu_imm_reg(struct buffer *buf,
@@ -2288,7 +2288,7 @@ static void __emit32_sub_imm_reg(struct buffer *buf,
 
 static void emit_sub_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	if (is_64bit_reg(dest))
+	if (is_64bit_reg(&insn->dest))
 		__emit64_sub_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 	else
 		__emit32_sub_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
@@ -2310,7 +2310,7 @@ static void __emit32_add_imm_reg(struct buffer *buf,
 
 static void emit_add_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	if (is_64bit_reg(dest))
+	if (is_64bit_reg(&insn->dest))
 		__emit64_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 	else
 		__emit64_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
@@ -2357,7 +2357,7 @@ static void __emit_push_imm(struct buffer *buf, long imm)
 
 static void emit_push_imm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	__emit_push_imm(buf, operand->imm);
+	__emit_push_imm(buf, insn->operand.imm);
 }
 
 static void __emit_membase(struct buffer *buf,
@@ -2439,7 +2439,7 @@ static void emit_membase_reg(struct buffer *buf,
 
 	base_reg = mach_reg(&src->base_reg);
 	disp = src->disp;
-	dest_reg = mach_reg(&insn->dest.reg);
+	dest_reg = mach_reg(&dest->reg);
 
 	__emit_membase_reg(buf, rex_w, opc, base_reg, disp, dest_reg);
 }
@@ -2453,8 +2453,8 @@ static void emit_reg_membase(struct buffer *buf,
 	enum machine_reg src_reg, base_reg;
 	unsigned long disp;
 
-	base_reg = mach_reg(&insn->dest.base_reg);
-	disp = insn->dest.disp;
+	base_reg = mach_reg(&dest->base_reg);
+	disp = dest->disp;
 	src_reg = mach_reg(&src->reg);
 
 	__emit_reg_membase(buf, rex_w, opc, src_reg, base_reg, disp);
@@ -2477,12 +2477,11 @@ static void __emit_mov_reg_membase(struct buffer *buf,
 }
 
 static void
-emit_mov_reg_membase(struct buffer *buf, struct operand *src,
-		     struct operand *dest)
+emit_mov_reg_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_reg(src);
+	int rex_w = is_64bit_reg(&insn->src);
 
-	__emit_mov_reg_membase(buf, rex_w, mach_reg(&src->reg),
+	__emit_mov_reg_membase(buf, rex_w, mach_reg(&insn->src.reg),
 			       mach_reg(&insn->dest.base_reg), insn->dest.disp);
 }
 
@@ -2528,21 +2527,21 @@ static void __emit_reg_memdisp(struct buffer *buf,
 
 static void emit_mov_reg_memdisp(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_reg(src);
+	int rex_w = is_64bit_reg(&insn->src);
 
-	__emit_reg_memdisp(buf, rex_w, 0x89, mach_reg(&src->reg), dest->imm);
+	__emit_reg_memdisp(buf, rex_w, 0x89, mach_reg(&insn->src.reg), insn->dest.imm);
 }
 
 static void emit_mov_memdisp_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_reg(dest);
+	int rex_w = is_64bit_reg(&insn->dest);
 
 	__emit_memdisp_reg(buf, rex_w, 0x8b, insn->src.imm, mach_reg(&insn->dest.reg));
 }
 
 static void emit_mov_thread_local_memdisp_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_reg(dest);
+	int rex_w = is_64bit_reg(&insn->dest);
 
 	emit(buf, 0x64); /* FS segment override prefix */
 	__emit_memdisp_reg(buf, rex_w, 0x8b, insn->src.imm, mach_reg(&insn->dest.reg));
@@ -2550,16 +2549,16 @@ static void emit_mov_thread_local_memdisp_reg(struct insn *insn, struct buffer *
 
 static void emit_mov_reg_thread_local_memdisp(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_reg(src);
+	int rex_w = is_64bit_reg(&insn->src);
 
 	emit(buf, 0x64); /* FS segment override prefix */
-	__emit_reg_memdisp(buf, rex_w, 0x89, mach_reg(&src->reg), dest->imm);
+	__emit_reg_memdisp(buf, rex_w, 0x89, mach_reg(&insn->src.reg), insn->dest.imm);
 }
 
 static void emit_mov_reg_thread_local_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0x64); /* FS segment override prefix */
-	emit_mov_reg_membase(buf, src, dest);
+	emit_mov_reg_membase(insn, buf, bb);
 }
 
 static void __emit64_test_membase_reg(struct buffer *buf,
@@ -2580,7 +2579,7 @@ static void __emit32_test_membase_reg(struct buffer *buf,
 
 static void emit_test_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	emit_membase_reg(buf, is_64bit_bin_reg_op(src, dest), 0x85, src, dest);
+	emit_membase_reg(buf, is_64bit_bin_reg_op(&insn->src, &insn->dest), 0x85, &insn->src, &insn->dest);
 }
 
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
@@ -2616,7 +2615,7 @@ static void __emit64_mov_membase_reg(struct buffer *buf,
 
 static void emit_mov_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	emit_membase_reg(buf, 1, 0x8b, src, dest);
+	emit_membase_reg(buf, 1, 0x8b, &insn->src, &insn->dest);
 }
 
 static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -2625,7 +2624,7 @@ static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct 
 	unsigned long disp;
 
 	dest_reg = mach_reg(&insn->dest.reg);
-	disp = slot_offset(src->slot);
+	disp = slot_offset(insn->src.slot);
 
 	__emit_membase_reg(buf, 1, 0x8b, MACH_REG_RBP, disp, dest_reg);
 }
@@ -2635,8 +2634,8 @@ static void emit_mov_reg_memlocal(struct insn *insn, struct buffer *buf, struct 
 	enum machine_reg src_reg;
 	unsigned long disp;
 
-	src_reg = mach_reg(&src->reg);
-	disp = slot_offset(dest->slot);
+	src_reg = mach_reg(&insn->src.reg);
+	disp = slot_offset(insn->dest.slot);
 
 	__emit_reg_membase(buf, 1, 0x89, src_reg, MACH_REG_RBP, disp);
 }
@@ -2651,29 +2650,29 @@ static void __emit_cmp_imm_reg(struct buffer *buf,
 
 static void emit_cmp_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_reg(dest);
+	int rex_w = is_64bit_reg(&insn->dest);
 
 	__emit_cmp_imm_reg(buf, rex_w, insn->src.imm, mach_reg(&insn->dest.reg));
 }
 
 static void emit_cmp_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_reg(dest);
+	int rex_w = is_64bit_reg(&insn->dest);
 
-	emit_membase_reg(buf, rex_w, 0x3b, src, dest);
+	emit_membase_reg(buf, rex_w, 0x3b, &insn->src, &insn->dest);
 }
 
 static void emit_cmp_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int rex_w = is_64bit_bin_reg_op(src, dest);
+	int rex_w = is_64bit_bin_reg_op(&insn->src, &insn->dest);
 
-	emit_reg_reg(buf, rex_w, 0x39, src, dest);
+	emit_reg_reg(buf, rex_w, 0x39, &insn->src, &insn->dest);
 }
 
 static void emit_indirect_call(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	/* Go through __emit_membase() to handle %r13. */
-	__emit_membase(buf, 0, 0xff, mach_reg(&operand->reg), 0, 0x2);
+	__emit_membase(buf, 0, 0xff, mach_reg(&insn->operand.reg), 0, 0x2);
 }
 
 static void __emit_test_imm_memdisp(struct buffer *buf,
