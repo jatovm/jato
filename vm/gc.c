@@ -124,25 +124,14 @@ static void do_gc_reclaim(void)
 	/* TODO: Do main GC work here. */
 }
 
-static void gc_safepoint(struct register_state *regs)
+static void gc_scan_rootset(struct register_state *regs)
 {
 	/* TODO: get live references from this thread. */
 }
 
-static void gc_signal_safepoint(struct register_state *regs)
+void gc_safepoint(struct register_state *regs)
 {
-	gc_safepoint(regs);
-
-	enter_safepoint();
-
-	suspend_self();
-
-	exit_safepoint();
-}
-
-void gc_jit_safepoint(struct register_state *regs)
-{
-	gc_safepoint(regs);
+	gc_scan_rootset(regs);
 
 	enter_safepoint();
 
@@ -166,7 +155,7 @@ void suspend_handler(int sig, siginfo_t *si, void *ctx)
 			self->thread_state = THREAD_STATE_CONSISTENT;
 
 		save_signal_registers(&thread_register_state, uc->uc_mcontext.gregs);
-		gc_signal_safepoint(&thread_register_state);
+		gc_safepoint(&thread_register_state);
 	} else {
 		self->thread_state = THREAD_STATE_INCONSISTENT;
 

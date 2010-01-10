@@ -117,7 +117,7 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 		ucontext_t *uc = ctx;
 
 		save_signal_registers(&thread_register_state, uc->uc_mcontext.gregs);
-		gc_jit_safepoint(&thread_register_state);
+		gc_safepoint(&thread_register_state);
 		return;
 	}
 
