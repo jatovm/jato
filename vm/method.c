@@ -1,7 +1,3 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
 #include "cafebabe/line_number_table_attribute.h"
@@ -15,8 +11,13 @@
 #include "vm/method.h"
 #include "vm/natives.h"
 
-#include "jit/args.h"
+#include "jit/compilation-unit.h"
 #include "jit/cu-mapping.h"
+#include "jit/args.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 static void init_abstract_method(struct vm_method *vmm)
 {
@@ -40,36 +41,24 @@ int vm_method_init(struct vm_method *vmm,
 	vmm->method = method;
 
 	const struct cafebabe_constant_info_utf8 *name;
-	if (cafebabe_class_constant_get_utf8(class, method->name_index,
-		&name))
-	{
-		NOT_IMPLEMENTED;
+	if (cafebabe_class_constant_get_utf8(class, method->name_index, &name))
 		return -1;
-	}
 
 	vmm->name = strndup((char *) name->bytes, name->length);
-	if (!vmm->name) {
-		NOT_IMPLEMENTED;
+	if (!vmm->name)
 		return -1;
-	}
 
 	const struct cafebabe_constant_info_utf8 *type;
-	if (cafebabe_class_constant_get_utf8(class, method->descriptor_index,
-		&type))
-	{
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (cafebabe_class_constant_get_utf8(class, method->descriptor_index, &type))
+		goto error_free_name;
 
 	vmm->type = strndup((char *) type->bytes, type->length);
-	if (!vmm->type) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (!vmm->type)
+		goto error_free_name;
 
 	if (parse_method_type(vmm)) {
 		warn("method type parsing failed for: %s", vmm->type);
-		return -1;
+		goto error_free_type;
 	}
 
 	/*
@@ -78,10 +67,8 @@ int vm_method_init(struct vm_method *vmm,
 	 * on x86_64?
 	 */
 	vmm->args_count = count_arguments(vmm);
-	if (vmm->args_count < 0) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (vmm->args_count < 0)
+		goto error_free_type;
 
 	if (!vm_method_is_static(vmm))
 		++vmm->args_count;
@@ -93,10 +80,8 @@ int vm_method_init(struct vm_method *vmm,
 			vm_lookup_native(vmm->class->name, vmm->name);
 	}
 
-	if (args_map_init(vmm)) {
-		abort();
-		return -1;
-	}
+	if (args_map_init(vmm))
+		goto error_free_type;
 
 	/*
 	 * Note: We can return here because the rest of the function deals
@@ -108,23 +93,13 @@ int vm_method_init(struct vm_method *vmm,
 	}
 
 	unsigned int code_index = 0;
-	if (cafebabe_attribute_array_get(&method->attributes,
-		"Code", class, &code_index))
-	{
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (cafebabe_attribute_array_get(&method->attributes, "Code", class, &code_index))
+		goto error_free_type;
 
-	{
-		/* There must be only one "Code" attribute for the method! */
-		unsigned int code_index2 = code_index + 1;
-		if (!cafebabe_attribute_array_get(&method->attributes,
-			"Code", class, &code_index2))
-		{
-			NOT_IMPLEMENTED;
-			return -1;
-		}
-	}
+	/* There must be only one "Code" attribute for the method! */
+	unsigned int code_index2 = code_index + 1;
+	if (!cafebabe_attribute_array_get(&method->attributes, "Code", class, &code_index2))
+		goto error_free_type;
 
 	const struct cafebabe_attribute_info *attribute
 		= &method->attributes.array[code_index];
@@ -133,22 +108,22 @@ int vm_method_init(struct vm_method *vmm,
 	cafebabe_stream_open_buffer(&stream,
 		attribute->info, attribute->attribute_length);
 
-	if (cafebabe_code_attribute_init(&vmm->code_attribute, &stream)) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (cafebabe_code_attribute_init(&vmm->code_attribute, &stream))
+		goto error_free_type;
 
 	cafebabe_stream_close_buffer(&stream);
 
-	if (cafebabe_read_line_number_table_attribute(class,
-		&vmm->code_attribute.attributes,
-		&vmm->line_number_table_attribute))
-	{
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (cafebabe_read_line_number_table_attribute(class, &vmm->code_attribute.attributes, &vmm->line_number_table_attribute))
+		goto error_free_type;
 
 	return 0;
+
+error_free_type:
+	free(vmm->type);
+error_free_name:
+	free(vmm->name);
+
+	return -1;
 }
 
 int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
@@ -184,10 +159,8 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 	struct compilation_unit *cu;
 
 	cu = compilation_unit_alloc(vmm);
-	if (!cu) {
-		NOT_IMPLEMENTED;
+	if (!cu)
 		return -1;
-	}
 
 	vmm->compilation_unit = cu;
 
@@ -198,17 +171,18 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 		cu->native_ptr = vm_lookup_native(vmm->class->name, vmm->name);
 		cu->is_compiled = true;
 
-		if (add_cu_mapping((unsigned long)cu->native_ptr, cu)) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (add_cu_mapping((unsigned long)cu->native_ptr, cu))
+			goto error_free_cu;
 	}
 
 	vmm->trampoline = build_jit_trampoline(cu);
-	if (!vmm->trampoline) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (!vmm->trampoline)
+		goto error_free_cu;
 
 	return 0;
+
+error_free_cu:
+	free_compilation_unit(cu);
+
+	return -1;
 }
