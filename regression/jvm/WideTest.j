@@ -2,6 +2,7 @@
 .super jvm/TestCase
 
 .method public static testIstoreIload()V
+    .limit stack 512
     .limit locals 257
 
     iconst_0
@@ -17,6 +18,7 @@
 .end method
 
 .method public static testIinc()V
+    .limit stack 512
     .limit locals 257
 
     iconst_0
@@ -34,18 +36,21 @@
 .end method
 
 .method public static testGoto()V
+    .limit stack 128
     goto_w lab1
 lab1:
     return
 .end method
 
 .method public static testLdc()V
+    .limit stack 128
     ldc_w 1
     pop
     return
 .end method
 
 .method public static testLdc2()V
+    .limit stack 128
     ldc2_w 1
     pop2
     return
