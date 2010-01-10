@@ -868,7 +868,7 @@ static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
 #else
 	int count;
 
-	count = count_java_arguments(vmm->type);
+	count = count_java_arguments(vmm);
 	memcpy(packed_args, args, sizeof(uint64_t) * count);
 #endif
 }
