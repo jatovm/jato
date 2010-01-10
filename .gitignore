@@ -17,7 +17,7 @@ include/vm/version.h
 #
 arch/*/insn-selector*.c
 tools/monoburg/parser.c
-test/arch-x86/x86-test-suite.c
+test/arch-*/*-test-suite.c
 test/jit/jit-test-suite.c
 test/vm/vm-test-suite.c
 
@@ -28,7 +28,7 @@ jato
 lib/classes.zip
 lib/inst_classes.zip
 tools/monoburg/monoburg
-test/arch-x86/x86-test-runner
+test/arch-*/*-test-runner
 test/jit/jit-test-runner
 test/vm/vm-test-runner
 tools/classpath-config
