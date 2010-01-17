@@ -1260,7 +1260,7 @@ int inline_subroutines(struct vm_method *method)
 		goto out;
 
 	if (list_is_empty(&ctx->subroutine_list))
-		return 0;
+		goto out;
 
 	if (opt_trace_bytecode) {
 		printf("Code before subroutine inlining:\n");
