@@ -72,11 +72,10 @@ static void free_insn_list(struct list_head *head)
 		free_insn(insn);
 }
 
-void free_basic_block(struct basic_block *bb)
+void shrink_basic_block(struct basic_block *bb)
 {
 	free_stack(bb->mimic_stack);
 	free_stmt_list(&bb->stmt_list);
-	free_insn_list(&bb->insn_list);
 	free(bb->successors);
 	free(bb->predecessors);
 	free(bb->mimic_stack_expr);
@@ -84,6 +83,11 @@ void free_basic_block(struct basic_block *bb)
 	free(bb->def_set);
 	free(bb->live_in_set);
 	free(bb->live_out_set);
+}
+
+void free_basic_block(struct basic_block *bb)
+{
+	free_insn_list(&bb->insn_list);
 
 	if (bb->resolution_blocks)
 		free(bb->resolution_blocks);

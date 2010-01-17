@@ -187,6 +187,11 @@ static void free_lir_insn_map(struct compilation_unit *cu)
 /* Free everything that is not required at run-time.  */
 void shrink_compilation_unit(struct compilation_unit *cu)
 {
+	struct basic_block *bb, *tmp_bb;
+
+	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
+		shrink_basic_block(bb);
+
 	free_var_infos(cu->var_infos);
 	cu->var_infos = NULL;
 }

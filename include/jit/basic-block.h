@@ -85,6 +85,7 @@ static inline bool bb_mimic_stack_is_resolved(struct basic_block *bb)
 
 struct basic_block *alloc_basic_block(struct compilation_unit *, unsigned long, unsigned long);
 struct basic_block *get_basic_block(struct compilation_unit *, unsigned long, unsigned long);
+void shrink_basic_block(struct basic_block *);
 void free_basic_block(struct basic_block *);
 struct basic_block *bb_split(struct basic_block *, unsigned long);
 void bb_add_stmt(struct basic_block *, struct statement *);
