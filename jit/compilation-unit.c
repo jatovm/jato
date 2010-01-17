@@ -291,6 +291,31 @@ void compute_insn_positions(struct compilation_unit *cu)
 	cu->last_insn = pos;
 }
 
+static void resolve_static_fixup_offsets(struct compilation_unit *cu)
+{
+	struct static_fixup_site *this;
+
+	list_for_each_entry(this, &cu->static_fixup_site_list, cu_node) {
+		this->mach_offset = this->insn->mach_offset;
+	}
+}
+
+static void resolve_call_fixup_offsets(struct compilation_unit *cu)
+{
+	struct fixup_site *this;
+
+	list_for_each_entry(this, &cu->call_fixup_site_list, cu_node) {
+		this->mach_offset = this->relcall_insn->mach_offset;
+	}
+}
+
+void resolve_fixup_offsets(struct compilation_unit *cu)
+{
+	resolve_call_fixup_offsets(cu);
+
+	resolve_static_fixup_offsets(cu);
+}
+
 struct stack_slot *get_scratch_slot(struct compilation_unit *cu)
 {
 	if (!cu->scratch_slot)

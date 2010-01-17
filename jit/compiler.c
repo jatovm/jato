@@ -116,6 +116,8 @@ int compile(struct compilation_unit *cu)
 	if (opt_trace_machine_code)
 		trace_machine_code(cu);
 
+	resolve_fixup_offsets(cu);
+
 	cu->native_ptr = buffer_ptr(cu->objcode);
 	cu->is_compiled = true;
 

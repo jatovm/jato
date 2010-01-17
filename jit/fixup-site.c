@@ -65,7 +65,7 @@ void trampoline_add_fixup_site(struct jit_trampoline *trampoline,
 
 unsigned char *fixup_site_addr(struct fixup_site *site)
 {
-	return buffer_ptr(site->cu->objcode) + site->relcall_insn->mach_offset;
+	return buffer_ptr(site->cu->objcode) + site->mach_offset;
 }
 
 bool fixup_site_is_ready(struct fixup_site *site)

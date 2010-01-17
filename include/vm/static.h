@@ -19,6 +19,7 @@ struct static_fixup_site {
 
 	enum static_fixup_type type;
 	struct insn *insn;
+	uint32_t mach_offset;
 	struct vm_field *vmf;
 	struct compilation_unit *cu;
 };

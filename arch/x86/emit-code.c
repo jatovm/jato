@@ -512,8 +512,7 @@ void fixup_static(struct vm_class *vmc)
 		void *new_target;
 
 		new_target	= vmc->static_values + vmf->offset;
-		mach_insn	= buffer_ptr(this->cu->objcode)
-				  + this->insn->mach_offset;
+		mach_insn	= buffer_ptr(this->cu->objcode) + this->mach_offset;
 
 		/* Does the instruction begin with a REX prefix? */
 		if (is_rex_prefix(*mach_insn))
@@ -552,7 +551,7 @@ int fixup_static_at(unsigned long addr)
 	list_for_each_entry_safe(this, t, &cu->static_fixup_site_list, cu_node) {
 		void *site_addr;
 
-		site_addr = buffer_ptr(cu->objcode) + this->insn->mach_offset;
+		site_addr = buffer_ptr(cu->objcode) + this->mach_offset;
 
 		if ((unsigned long) site_addr == addr) {
 			struct vm_class *vmc = this->vmf->class;

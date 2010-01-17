@@ -28,6 +28,7 @@ struct fixup_site {
 	/* We need this, because we don't have native pointer at
 	   instruction selection */
 	struct insn *relcall_insn;
+	uint32_t mach_offset;
 	struct list_head trampoline_node;
 	struct list_head cu_node;
 };
