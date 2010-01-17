@@ -42,6 +42,7 @@ struct pqueue *pqueue_alloc(pqueue_compare_fn compare)
 
 void pqueue_free(struct pqueue *pq)
 {
+	free(pq->data);
 	free(pq);
 }
 
