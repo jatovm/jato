@@ -114,20 +114,14 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING: {
 		const struct cafebabe_constant_info_utf8 *utf8;
-		if (cafebabe_class_constant_get_utf8(vmc->class,
-			cp->string.string_index, &utf8))
-		{
-			NOT_IMPLEMENTED;
-			break;
-		}
+		struct vm_object *string;
 
-		struct vm_object *string
-			= vm_object_alloc_string_from_utf8(utf8->bytes,
-				utf8->length);
-		if (!string) {
-			NOT_IMPLEMENTED;
-			break;
-		}
+		if (cafebabe_class_constant_get_utf8(vmc->class, cp->string.string_index, &utf8))
+			return warn("unable to lookup class constant"), -EINVAL;
+
+		string = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);
+		if (!string)
+			return warn("out of memory"), -ENOMEM;
 
 		expr = value_expr(J_REFERENCE, (unsigned long) string);
 		break;
@@ -144,10 +138,9 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 	case CAFEBABE_CONSTANT_TAG_CLASS: {
 		/* Added for JDK 1.5 */
 		struct vm_class *ret = vm_class_resolve_class(vmc, cp_idx);
-		if (!ret) {
-			NOT_IMPLEMENTED;
-			break;
-		}
+
+		if (!ret)
+			return warn("unable to lookup class"), -EINVAL;
 
 		if (vm_class_ensure_object(ret))
 			return -1;
