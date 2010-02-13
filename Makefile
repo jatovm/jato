@@ -226,7 +226,7 @@ $(CLASSPATH_CONFIG):
 	$(Q) $(LINK) -Wall $(CLASSPATH_CONFIG).c -o $(CLASSPATH_CONFIG)
 
 monoburg:
-	$(Q) make -C tools/monoburg/
+	+$(Q) $(MAKE) -C tools/monoburg/
 .PHONY: monoburg
 
 %.o: %.c
@@ -249,9 +249,9 @@ $(PROGRAM): monoburg $(VERSION_HEADER) $(CLASSPATH_CONFIG) compile $(RUNTIME_CLA
 compile: $(OBJS)
 
 test: monoburg
-	make -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-	make -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-	make -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	+$(MAKE) -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	+$(MAKE) -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	+$(MAKE) -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: test
 
 REGRESSION_TEST_SUITE_CLASSES = \
@@ -339,7 +339,7 @@ $(RUNTIME_CLASSES): %.class: %.java
 	$(Q) $(JAVAC) -cp $(GLIBJ) $(JAVAC_OPTS) -d runtime/classpath $<
 
 lib: $(CLASSPATH_CONFIG)
-	make -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
+	+$(MAKE) -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
 regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-regression jasmin-regression
@@ -369,10 +369,10 @@ clean:
 	$(Q) - find runtime/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
-	$(Q) - make -C tools/monoburg/ clean
-	$(Q) - make -C test/vm/ clean
-	$(Q) - make -C test/jit/ clean
-	$(Q) - make -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ clean
+	+$(Q) - $(MAKE) -C tools/monoburg/ clean
+	+$(Q) - $(MAKE) -C test/vm/ clean
+	+$(Q) - $(MAKE) -C test/jit/ clean
+	+$(Q) - $(MAKE) -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ clean
 .PHONY: clean
 
 INSTALL_PREFIX	?= $(HOME)
