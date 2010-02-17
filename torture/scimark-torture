@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+java="jato"
+program="scimark"
+version="2.0"
+full_name="#{program}-#{version}"
+program_url="http://math.nist.gov/scimark2/scimark2lib.jar"
+
+print "#{full_name}\t\t\t"
+
+`wget -q -nc #{program_url}`
+result = `#{java} -cp scimark2lib.jar jnt.scimark2.commandline`
+
+if result.include? "Composite Score:"
+  puts "OK"
+else
+  puts "FAIL"
+end
