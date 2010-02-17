@@ -221,29 +221,33 @@ static int compare_method_signatures(const void *a, const void *b)
 	return 0;
 }
 
+static void free_buckets(int rows, int cols, struct field_bucket field_buckets[rows][cols])
+{
+	for (int i = 0; i < cols; ++i) {
+		for (int j = 0; j < rows; ++j) {
+			struct field_bucket *bucket = &field_buckets[j][i];
+
+			free(bucket->fields);
+		}
+	}
+}
+
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
+	const struct cafebabe_constant_info_class *constant_class;
+	const struct cafebabe_constant_info_utf8 *name;
+
 	vmc->class = class;
 	vmc->kind = VM_CLASS_KIND_REGULAR;
 
 	if (vm_class_link_common(vmc))
 		return -1;
 
-	const struct cafebabe_constant_info_class *constant_class;
-	if (cafebabe_class_constant_get_class(class,
-		class->this_class, &constant_class))
-	{
-		NOT_IMPLEMENTED;
+	if (cafebabe_class_constant_get_class(class, class->this_class, &constant_class))
 		return -1;
-	}
 
-	const struct cafebabe_constant_info_utf8 *name;
-	if (cafebabe_class_constant_get_utf8(class,
-		constant_class->name_index, &name))
-	{
-		NOT_IMPLEMENTED;
+	if (cafebabe_class_constant_get_utf8(class, constant_class->name_index, &name))
 		return -1;
-	}
 
 	vmc->name = strndup((char *) name->bytes, name->length);
 
@@ -253,93 +257,66 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	if (class->super_class) {
 		const struct cafebabe_constant_info_class *constant_super;
-		if (cafebabe_class_constant_get_class(class,
-			class->super_class, &constant_super))
-		{
-			NOT_IMPLEMENTED;
-			return -1;
-		}
-
 		const struct cafebabe_constant_info_utf8 *super_name;
-		if (cafebabe_class_constant_get_utf8(class,
-			constant_super->name_index, &super_name))
-		{
-			NOT_IMPLEMENTED;
-			return -1;
-		}
 
-		char *super_name_str = strndup((char *) super_name->bytes,
-			super_name->length);
+		if (cafebabe_class_constant_get_class(class, class->super_class, &constant_super))
+			goto error_free_name;
+
+		if (cafebabe_class_constant_get_utf8(class, constant_super->name_index, &super_name))
+			goto error_free_name;
+
+		char *super_name_str = strndup((char *) super_name->bytes, super_name->length);
 
 		/* XXX: Circularity check */
 		vmc->super = classloader_load(NULL, super_name_str);
-		if (!vmc->super) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
-
 		free(super_name_str);
+
+		if (!vmc->super)
+			goto error_free_name;
 	} else {
-		if (!strcmp(vmc->name, "java.lang.Object")) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (!strcmp(vmc->name, "java.lang.Object"))
+			goto error_free_name;
 
 		vmc->super = NULL;
 	}
 
 	vmc->nr_interfaces = class->interfaces_count;
-	vmc->interfaces
-		= malloc(sizeof(*vmc->interfaces) * vmc->nr_interfaces);
-	if (!vmc->interfaces) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	vmc->interfaces = malloc(sizeof(*vmc->interfaces) * vmc->nr_interfaces);
+	if (!vmc->interfaces)
+		goto error_free_name;
 
 	for (unsigned int i = 0; i < class->interfaces_count; ++i) {
+		const struct cafebabe_constant_info_class *interface;
+		const struct cafebabe_constant_info_utf8 *name;
 		uint16_t idx = class->interfaces[i];
 
-		const struct cafebabe_constant_info_class *interface;
-		if (cafebabe_class_constant_get_class(class, idx, &interface)) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (cafebabe_class_constant_get_class(class, idx, &interface))
+			goto error_free_interfaces;
 
-		const struct cafebabe_constant_info_utf8 *name;
-		if (cafebabe_class_constant_get_utf8(class,
-			interface->name_index, &name))
-		{
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (cafebabe_class_constant_get_utf8(class, interface->name_index, &name))
+			goto error_free_interfaces;
 
 		char *c_name = strndup((char *) name->bytes, name->length);
-		if (!c_name) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (!c_name)
+			goto error_free_interfaces;
 
 		struct vm_class *vmi = classloader_load(NULL, c_name);
 		free(c_name);
 		if (!vmi)
-			return -1;
+			goto error_free_interfaces;
 
 		vmc->interfaces[i] = vmi;
 	}
 
 	vmc->fields = malloc(sizeof(*vmc->fields) * class->fields_count);
-	if (!vmc->fields) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (!vmc->fields)
+		goto error_free_interfaces;
 
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 
-		if (vm_field_init(vmf, vmc, i)) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (vm_field_init(vmf, vmc, i))
+			goto error_free_fields;
 	}
 
 	if (vmc->super) {
@@ -392,15 +369,15 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	/* XXX: only static fields, right size, etc. */
 	vmc->static_values = zalloc(vmc->static_size);
+	if (!vmc->static_values)
+		goto error_free_buckets;
 
 	for (uint16_t i = 0; i < class->fields_count; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 
 		if (vm_field_is_static(vmf)) {
-			if (vm_field_init_static(vmf)) {
-				NOT_IMPLEMENTED;
-				return -1;
-			}
+			if (vm_field_init_static(vmf))
+				goto error_free_static_values;
 		} else {
 			vm_field_init_nonstatic(vmf);
 		}
@@ -423,13 +400,11 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 		for (unsigned int j = 0; j < vmi->nr_methods; ++j) {
 			struct vm_method *vmm = &vmi->methods[j];
+			int err;
 
-			int err = insert_interface_method(vmc,
-				&extra_methods, vmm);
-			if (err) {
-				NOT_IMPLEMENTED;
-				return -1;
-			}
+			err = insert_interface_method(vmc, &extra_methods, vmm);
+			if (err)
+				goto error_free_static_values;
 		}
 	}
 
@@ -443,29 +418,21 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	vmc->nr_methods = class->methods_count + extra_methods.size;
 
 	vmc->methods = malloc(sizeof(*vmc->methods) * vmc->nr_methods);
-	if (!vmc->methods) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
+	if (!vmc->methods)
+		goto error_free_static_values;
 
 	for (uint16_t i = 0; i < class->methods_count; ++i) {
 		struct vm_method *vmm = &vmc->methods[i];
 
-		if (vm_method_init(vmm, vmc, i)) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (vm_method_init(vmm, vmc, i))
+			goto error_free_methods;
 	}
 
 	for (unsigned int i = 0; i < extra_methods.size; ++i) {
 		struct vm_method *vmm = &vmc->methods[class->methods_count + i];
 
-		if (vm_method_init_from_interface(vmm, vmc,
-			class->methods_count + i, extra_methods.ptr[i]))
-		{
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (vm_method_init_from_interface(vmm, vmc, class->methods_count + i, extra_methods.ptr[i]))
+			goto error_free_methods;
 	}
 
 	for (uint16_t i = 0; i < vmc->nr_methods; ++i) {
@@ -473,10 +440,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 		vmm->itable_index = itable_hash(vmm);
 
-		if (vm_method_prepare_jit(vmm)) {
-			NOT_IMPLEMENTED;
-			return -1;
-		}
+		if (vm_method_prepare_jit(vmm))
+			goto error_free_methods;
 	}
 
 	array_destroy(&extra_methods);
@@ -492,6 +457,21 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	vmc->state = VM_CLASS_LINKED;
 	return 0;
+
+error_free_methods:
+	free(vmc->methods);
+error_free_static_values:
+	free(vmc->static_values);
+error_free_buckets:
+	free_buckets(2, VM_TYPE_MAX, field_buckets);
+error_free_fields:
+	free(vmc->fields);
+error_free_interfaces:
+	free(vmc->interfaces);
+error_free_name:
+	free(vmc->name);
+
+	return -1;
 }
 
 int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name)
