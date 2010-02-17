@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+
+java="jato"
+program="junit"
+version="4.8.1"
+full_name="#{program}-#{version}"
+jar_file="#{full_name}.jar"
+program_url="http://downloads.sourceforge.net/project/junit/junit/4.8.1/junit-4.8.1.jar?use_mirror=ignum"
+
+print "#{full_name}\t\t\t"
+
+test_name="SimpleTest"
+test_java="#{test_name}.java"
+
+File.open(test_java, 'w') {|f| f.write("
+import junit.framework.TestCase;
+
+public class SimpleTest extends TestCase {
+  public void testHello() {
+  }
+}
+") }
+
+`wget -q -nc #{program_url}`
+`javac -cp #{jar_file} #{test_java}`
+result = `#{java} -cp #{jar_file}:. junit.textui.TestRunner #{test_name}`
+
+if result.include? "OK (1 test)"
+  puts "OK"
+else
+  puts "FAIL"
+end

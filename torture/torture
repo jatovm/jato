@@ -3,4 +3,5 @@
 BASEDIR=$(dirname $0)
 
 $BASEDIR/clojure-torture
+$BASEDIR/junit-torture
 $BASEDIR/scimark-torture
