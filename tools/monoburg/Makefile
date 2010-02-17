@@ -6,7 +6,8 @@ OBJS = \
 	monoburg.o	\
 	parser.o
 
-CC = gcc
+CC	?= gcc
+LINK	?= $(CC)
 
 DEFAULT_CFLAGS	+= -Wall -g -rdynamic -std=gnu99
 
@@ -29,7 +30,7 @@ ifeq ($(strip $(V)),)
 	E = @echo
 	Q = @
 else
-	E = @\# 
+	E = @\#
 	Q =
 endif
 export E Q
@@ -38,11 +39,17 @@ all: $(PROGRAM)
 .PHONY: all
 .DEFAULT: all
 
+%.o: %.c
+	$(E) "  CC      " $@
+	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
+	$(Q) $(CC) -MM $(DEFAULT_CFLAGS) $(CFLAGS) -MT $@ $*.c -o $*.d
+
 $(OBJS):
 
 $(PROGRAM): $(OBJS)
-	$(E) "  CC      " $@
-	$(Q) $(CC) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $@ $(LIBS) $(DEFAULT_LIBS)
+	$(E) "  LINK    " $@
+	$(Q) $(LINK) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+
 
 %.o: %.c
 	$(E) "  CC      " $@
