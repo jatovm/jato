@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+java="jato"
+program="clojure"
+version="1.1.0"
+full_name="#{program}-#{version}"
+program_url="http://clojure.googlecode.com/files/#{full_name}.zip"
+
+print "#{full_name}\t\t\t"
+
+test_pass="PASS"
+torture_script="torture.clj"
+
+`echo '(println \"#{test_pass}\")' > #{torture_script}`
+`wget -q -nc #{program_url}`
+`unzip -n #{full_name}.zip`
+result = `#{java} -cp #{full_name}/clojure.jar clojure.main #{torture_script}`
+
+result.strip!
+if result == test_pass
+  puts "OK"
+else
+  puts "FAIL"
+end
