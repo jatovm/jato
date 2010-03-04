@@ -2237,7 +2237,7 @@ static void emit_mov_xmm_xmm(struct insn *insn, struct buffer *buf, struct basic
 	opc[2] = 0x10;
 
 	__emit_lopc_reg_reg(buf, 0, opc, 3,
-			    mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
+			    mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
 }
 
 static void emit_mov_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
