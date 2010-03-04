@@ -2859,20 +2859,76 @@ static void emit_test_imm_memdisp(struct insn *insn, struct buffer *buf, struct 
 	__emit_test_imm_memdisp(buf, 0, insn->src.imm, insn->dest.disp);
 }
 
+static void __emit_lopc_memindex(struct buffer *buf,
+				 int rex_w,
+				 unsigned char *lopc,
+				 size_t lopc_size,
+				 unsigned char shift,
+				 enum machine_reg index_reg,
+				 enum machine_reg base_reg,
+				 unsigned char reg_opcode)
+{
+	unsigned char rex_pfx = 0, mod_rm, sib;
+	unsigned char __index_reg = encode_mach_reg(index_reg);
+	unsigned char __base_reg = encode_mach_reg(base_reg);
+
+	mod_rm = encode_modrm(0x00, reg_opcode, 0x04);
+	sib = encode_sib(shift, __index_reg, __base_reg);
+
+	if (rex_w)
+		rex_pfx |= REX_W;
+	if (reg_high(reg_opcode))
+		rex_pfx |= REX_R;
+	if (reg_high(__index_reg))
+		rex_pfx |= REX_X;
+	if (reg_high(__base_reg))
+		rex_pfx |= REX_B;
+
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+
+	emit_str(buf, lopc, lopc_size);
+	emit(buf, mod_rm);
+	emit(buf, sib);
+}
+
+static void __emit_memindex_reg(struct buffer *buf,
+				int rex_w,
+				unsigned char opc,
+				unsigned char shift,
+				enum machine_reg index_reg,
+				enum machine_reg base_reg,
+				enum machine_reg dest_reg)
+{
+	__emit_lopc_memindex(buf, rex_w, &opc, 1, shift,
+			     index_reg, base_reg, encode_mach_reg(dest_reg));
+}
+
+static void __emit_reg_memindex(struct buffer *buf,
+				int rex_w,
+				unsigned char opc,
+				enum machine_reg src_reg,
+				unsigned char shift,
+				enum machine_reg index_reg,
+				enum machine_reg base_reg)
+{
+	__emit_lopc_memindex(buf, rex_w, &opc, 1, shift,
+			     index_reg, base_reg, encode_mach_reg(src_reg));
+}
+
 static void emit_mov_memindex_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	emit(buf, REX_W);
-	emit(buf, 0x8b);
-	emit(buf, encode_modrm(0x00, encode_reg(&insn->dest.reg), 0x04));
-	emit(buf, encode_sib(insn->src.shift, encode_reg(&insn->src.index_reg), encode_reg(&insn->src.base_reg)));
+	__emit_memindex_reg(buf, is_64bit_reg(&insn->dest), 0x8b,
+			    insn->src.shift, mach_reg(&insn->src.index_reg),
+			    mach_reg(&insn->src.base_reg), mach_reg(&insn->dest.reg));
 }
 
 static void emit_mov_reg_memindex(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	emit(buf, REX_W);
-	emit(buf, 0x89);
-	emit(buf, encode_modrm(0x00, encode_reg(&insn->src.reg), 0x04));
-	emit(buf, encode_sib(insn->dest.shift, encode_reg(&insn->dest.index_reg), encode_reg(&insn->dest.base_reg)));
+	__emit_reg_memindex(buf, is_64bit_reg(&insn->src), 0x89,
+			    mach_reg(&insn->src.reg), insn->dest.shift,
+			    mach_reg(&insn->dest.index_reg),
+			    mach_reg(&insn->dest.base_reg));
 }
 
 static void emit_conv_fpu_to_gpr(struct insn *insn, struct buffer *buf, struct basic_block *bb)
