@@ -401,13 +401,6 @@ void backpatch_branch_target(struct buffer *buf,
 	write_imm32(buf, backpatch_offset, relative_addr);
 }
 
-void emit_epilog(struct buffer *buf)
-{
-	emit_leave(buf);
-	emit_restore_regs(buf);
-	encode_ret(buf);
-}
-
 static void __emit_jmp(struct buffer *buf, unsigned long addr)
 {
 	unsigned long current = (unsigned long)buffer_current(buf);
@@ -1036,6 +1029,13 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 
 	if (nr_locals)
 		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), MACH_REG_ESP);
+}
+
+void emit_epilog(struct buffer *buf)
+{
+	emit_leave(buf);
+	emit_restore_regs(buf);
+	encode_ret(buf);
 }
 
 static void emit_pop_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -3028,6 +3028,20 @@ struct emitter emitters[] = {
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
+	__emit_push_reg(buf, MACH_REG_RBP);
+	__emit64_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
+
+	/*
+	 * The ABI requires us to clear DF, but we
+	 * don't need to. Though keep this in mind:
+	 * emit(buf, 0xFC);
+	 */
+
+	if (nr_locals)
+		__emit64_sub_imm_reg(buf,
+				     nr_locals * sizeof(unsigned long),
+				     MACH_REG_RSP);
+
 	__emit_push_reg(buf, MACH_REG_RBX);
 	__emit_push_reg(buf, MACH_REG_R12);
 	__emit_push_reg(buf, MACH_REG_R13);
@@ -3036,20 +3050,13 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 
 	/* Save *this. */
 	__emit_push_reg(buf, MACH_REG_RDI);
+}
 
-	/*
-	 * The ABI requires us to clear DF, but we
-	 * don't need to. Though keep this in mind:
-	 * emit(buf, 0xFC);
-	 */
-
-	__emit_push_reg(buf, MACH_REG_RBP);
-	__emit64_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
-
-	if (nr_locals)
-		__emit64_sub_imm_reg(buf,
-				     nr_locals * sizeof(unsigned long),
-				     MACH_REG_RSP);
+void emit_epilog(struct buffer *buf)
+{
+	emit_restore_regs(buf);
+	emit_leave(buf);
+	encode_ret(buf);
 }
 
 static void emit_restore_regs(struct buffer *buf)
@@ -3172,11 +3179,9 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 
 void emit_lock_this(struct buffer *buf)
 {
+	__emit64_mov_membase_reg(buf, MACH_REG_RSP, 0x00, MACH_REG_RDI);
 	emit_save_regparm(buf);
-
-	__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x08, MACH_REG_RDI);
 	__emit_call(buf, vm_object_lock);
-
 	emit_restore_regparm(buf);
 
 	__emit_push_reg(buf, MACH_REG_RAX);
@@ -3186,10 +3191,9 @@ void emit_lock_this(struct buffer *buf)
 
 void emit_unlock_this(struct buffer *buf)
 {
+	__emit64_mov_membase_reg(buf, MACH_REG_RSP, 0x00, MACH_REG_RDI);
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_save_regparm(buf);
-
-	__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x08, MACH_REG_RDI);
 	__emit_call(buf, vm_object_unlock);
 
 	emit_exception_test(buf, MACH_REG_RAX);
