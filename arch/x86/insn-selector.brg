@@ -49,9 +49,11 @@
 #define MONOBURG_LOG 1
 #define HAVE_ARRAY_ELEM_INIT 1
 
+#ifdef CONFIG_X86_32
 /* Constants used in l2d and d2l conversions. */
 static double xmm_double_constant_0 = 0x100000000;
 static double xmm_double_constant_1 = 0x080000000;
+#endif
 
 struct _MBState;
 
