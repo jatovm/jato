@@ -81,6 +81,21 @@ static enum machine_reg args_map_alloc_xmm(int xmm)
 	}
 }
 
+static void args_map_dup_slot(struct vm_args_map *orig, int *st)
+{
+
+	struct vm_args_map *new = &orig[1];
+
+	new->reg = orig->reg;
+	new->type = orig->type;
+	if (orig->stack_index == -1)
+		new->stack_index = -1;
+	else
+		new->stack_index = (*st)++;
+
+	(*st)++;
+}
+
 int args_map_init(struct vm_method *method)
 {
 	struct vm_method_arg *arg;
@@ -106,6 +121,8 @@ int args_map_init(struct vm_method *method)
 		idx = 1;
 	} else
 		idx = 0;
+
+	method->reg_args_count = 0;
 
 	/* Scan the real parameters and assign registers and stack slots. */
 	list_for_each_entry(arg, &method->args, list_node) {
@@ -146,10 +163,15 @@ int args_map_init(struct vm_method *method)
 
 		map->type = vm_type;
 
-		idx++;
+		if (vm_type == J_LONG || vm_type == J_DOUBLE) {
+			args_map_dup_slot(map, &stack_count);
+			method->reg_args_count++;
+			idx += 2;
+		} else
+			idx++;
 	}
 
-	method->reg_args_count = gpr_count + xmm_count;
+	method->reg_args_count += gpr_count + xmm_count;
 
 	return 0;
 }
