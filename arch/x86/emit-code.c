@@ -2074,8 +2074,14 @@ static inline unsigned long rip_relative(struct buffer *buf,
 
 static inline int is_64bit_reg(struct operand *reg)
 {
-	return (reg->reg.interval->var_info->vm_type == J_LONG ||
-		reg->reg.interval->var_info->vm_type == J_REFERENCE);
+	switch (reg->reg.interval->var_info->vm_type) {
+		case J_LONG:
+		case J_REFERENCE:
+		case J_DOUBLE:
+			return 1;
+		default:
+			return 0;
+	}
 }
 
 static int is_64bit_bin_reg_op(struct operand *a, struct operand *b)
@@ -2196,7 +2202,7 @@ static void emit_mov_xmm_xmm(struct insn *insn, struct buffer *buf, struct basic
 {
 	unsigned char opc[3];
 
-	if (insn->src.reg.interval->var_info->vm_type == J_FLOAT)
+	if (!is_64bit_reg(&insn->src))
 		/* MOVSS */
 		opc[0] = 0xF3;
 	else
@@ -2670,7 +2676,7 @@ static void emit_mov_memlocal_xmm(struct insn *insn, struct buffer *buf, struct 
 	dest_reg = mach_reg(&insn->dest.reg);
 	disp = slot_offset(insn->src.slot);
 
-	if (insn->dest.reg.interval->var_info->vm_type == J_FLOAT)
+	if (!is_64bit_reg(&insn->dest))
 		/* MOVSS */
 		opc[0] = 0xF3;
 	else
