@@ -185,11 +185,12 @@ static unsigned char encode_mach_reg(enum machine_reg reg)
 	return register_numbers[reg];
 }
 
-
+#ifdef CONFIG_X86_32
 static unsigned char encode_reg(struct use_position *reg)
 {
 	return encode_mach_reg(mach_reg(reg));
 }
+#endif
 
 static inline bool is_imm_8(long imm)
 {
