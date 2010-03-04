@@ -1867,7 +1867,7 @@ arg:	EXPR_ARG(freg)
 arg:	EXPR_ARG(EXPR_VALUE) 1
 {
 	struct expression *expr, *arg_expr;
-	struct var_info *dst;
+	struct var_info *dst, *temp;
 	unsigned long imm;
 
 	expr = to_expr(tree);
@@ -1877,8 +1877,11 @@ arg:	EXPR_ARG(EXPR_VALUE) 1
 	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
 		dst = get_fixed_var(s->b_parent, expr->arg_reg);
 		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, dst));
-	} else
-		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm));
+	} else {
+		temp = get_var(s->b_parent, arg_expr->vm_type);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, temp));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, temp));
+	}
 
 	state->reg1 = NULL;
 }
