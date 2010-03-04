@@ -2286,6 +2286,7 @@ stmt:	STMT_STORE(inst_field, reg)
 	}
 }
 
+%ifdef  CONFIG_X86_32
 stmt:	STMT_STORE(float_inst_field, freg)
 {
 	struct var_info *src, *base;
@@ -2307,6 +2308,24 @@ stmt:	STMT_STORE(float_inst_field, freg)
 		select_insn(s, tree,
 		    reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, src, base, offset));
 }
+%else
+stmt:	STMT_STORE(float_inst_field, freg)
+{
+	struct var_info *src, *base;
+	struct expression *store_src;
+	struct statement *stmt;
+	unsigned long offset;
+
+	stmt = to_stmt(tree);
+	store_src = to_expr(stmt->store_src);
+	src = state->right->reg1;
+
+	base = state->left->reg1;
+	offset = (unsigned long)state->left->reg2;
+
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset));
+}
+%endif
 
 %ifdef	CONFIG_X86_32
 stmt:	STMT_STORE(EXPR_LOCAL, reg)
