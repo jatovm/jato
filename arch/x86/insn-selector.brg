@@ -731,6 +731,7 @@ reg:	OP_XOR(reg, reg) 1
 	binop_reg_reg_high(state, s, tree, INSN_XOR_REG_REG);
 }
 
+%ifdef  CONFIG_X86_32
 reg:	OP_CMPL(freg, freg) 1
 {
 	struct var_info *esp, *eax;
@@ -794,6 +795,57 @@ reg:	OP_CMPG(freg, freg) 1
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 }
+%else
+reg:	OP_CMPL(freg, freg) 1
+{
+	struct var_info *rax, *arg1, *arg2;
+	enum vm_type type;
+
+	assert(state->left->reg1->vm_type == state->right->reg1->vm_type);
+
+	type = state->left->reg1->vm_type;
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	arg1 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
+	arg2 = get_fixed_var(s->b_parent, MACH_REG_XMM1);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, arg1));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, arg2));
+
+	if (type == J_FLOAT)
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpl));
+	else
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpl));
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+}
+
+reg:	OP_CMPG(freg, freg) 1
+{
+	struct var_info *rax, *arg1, *arg2;
+	enum vm_type type;
+
+	assert(state->left->reg1->vm_type == state->right->reg1->vm_type);
+
+	type = state->left->reg1->vm_type;
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	arg1 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
+	arg2 = get_fixed_var(s->b_parent, MACH_REG_XMM1);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, arg1));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, arg2));
+
+	if (type == J_FLOAT)
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpg));
+	else
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpg));
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+}
+%endif
 
 reg:	OP_CMP(reg, reg) 1
 {
