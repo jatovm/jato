@@ -29,10 +29,18 @@ struct jit_stack_frame {
 
 #else
 
-#define NR_TRAMPOLINE_LOCALS	6
+#define NR_TRAMPOLINE_LOCALS	14
 
 struct jit_stack_frame {
 	void *prev; /* previous stack frame link */
+	unsigned long old_xmm15;
+	unsigned long old_xmm14;
+	unsigned long old_xmm13;
+	unsigned long old_xmm12;
+	unsigned long old_xmm11;
+	unsigned long old_xmm10;
+	unsigned long old_xmm9;
+	unsigned long old_xmm8;
 	unsigned long old_r15;
 	unsigned long old_r14;
 	unsigned long old_r13;

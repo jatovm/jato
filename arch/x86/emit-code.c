@@ -3026,6 +3026,22 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp),
 };
 
+static void __emit64_push_xmm(struct buffer *buf, enum machine_reg reg)
+{
+	unsigned char opc[3] = { 0xF2, 0x0F, 0x11 };	/* MOVSD */
+
+	__emit64_sub_imm_reg(buf, 0x08, MACH_REG_RSP);
+	__emit_lopc_reg_membase(buf, 0, opc, 3, reg, MACH_REG_RSP, 0);
+}
+
+static void __emit64_pop_xmm(struct buffer *buf, enum machine_reg reg)
+{
+	unsigned char opc[3] = { 0xF2, 0x0F, 0x10 };	/* MOVSD */
+
+	__emit_lopc_membase_reg(buf, 0, opc, 3, MACH_REG_RSP, 0, reg);
+	__emit64_add_imm_reg(buf, 0x08, MACH_REG_RSP);
+}
+
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
 	__emit_push_reg(buf, MACH_REG_RBP);
@@ -3048,6 +3064,15 @@ void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 	__emit_push_reg(buf, MACH_REG_R14);
 	__emit_push_reg(buf, MACH_REG_R15);
 
+	__emit64_push_xmm(buf, MACH_REG_XMM8);
+	__emit64_push_xmm(buf, MACH_REG_XMM9);
+	__emit64_push_xmm(buf, MACH_REG_XMM10);
+	__emit64_push_xmm(buf, MACH_REG_XMM11);
+	__emit64_push_xmm(buf, MACH_REG_XMM12);
+	__emit64_push_xmm(buf, MACH_REG_XMM13);
+	__emit64_push_xmm(buf, MACH_REG_XMM14);
+	__emit64_push_xmm(buf, MACH_REG_XMM15);
+
 	/* Save *this. */
 	__emit_push_reg(buf, MACH_REG_RDI);
 }
@@ -3064,6 +3089,15 @@ static void emit_restore_regs(struct buffer *buf)
 	/* Clear *this from stack. */
 	__emit64_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 
+	__emit64_pop_xmm(buf, MACH_REG_XMM15);
+	__emit64_pop_xmm(buf, MACH_REG_XMM14);
+	__emit64_pop_xmm(buf, MACH_REG_XMM13);
+	__emit64_pop_xmm(buf, MACH_REG_XMM12);
+	__emit64_pop_xmm(buf, MACH_REG_XMM11);
+	__emit64_pop_xmm(buf, MACH_REG_XMM10);
+	__emit64_pop_xmm(buf, MACH_REG_XMM9);
+	__emit64_pop_xmm(buf, MACH_REG_XMM8);
+
 	__emit_pop_reg(buf, MACH_REG_R15);
 	__emit_pop_reg(buf, MACH_REG_R14);
 	__emit_pop_reg(buf, MACH_REG_R13);
@@ -3079,10 +3113,28 @@ static void emit_save_regparm(struct buffer *buf)
 	__emit64_push_reg(buf, MACH_REG_RCX);
 	__emit64_push_reg(buf, MACH_REG_R8);
 	__emit64_push_reg(buf, MACH_REG_R9);
+
+	__emit64_push_xmm(buf, MACH_REG_XMM0);
+	__emit64_push_xmm(buf, MACH_REG_XMM1);
+	__emit64_push_xmm(buf, MACH_REG_XMM2);
+	__emit64_push_xmm(buf, MACH_REG_XMM3);
+	__emit64_push_xmm(buf, MACH_REG_XMM4);
+	__emit64_push_xmm(buf, MACH_REG_XMM5);
+	__emit64_push_xmm(buf, MACH_REG_XMM6);
+	__emit64_push_xmm(buf, MACH_REG_XMM7);
 }
 
 static void emit_restore_regparm(struct buffer *buf)
 {
+	__emit64_pop_xmm(buf, MACH_REG_XMM7);
+	__emit64_pop_xmm(buf, MACH_REG_XMM6);
+	__emit64_pop_xmm(buf, MACH_REG_XMM5);
+	__emit64_pop_xmm(buf, MACH_REG_XMM4);
+	__emit64_pop_xmm(buf, MACH_REG_XMM3);
+	__emit64_pop_xmm(buf, MACH_REG_XMM2);
+	__emit64_pop_xmm(buf, MACH_REG_XMM1);
+	__emit64_pop_xmm(buf, MACH_REG_XMM0);
+
 	__emit64_pop_reg(buf, MACH_REG_R9);
 	__emit64_pop_reg(buf, MACH_REG_R8);
 	__emit64_pop_reg(buf, MACH_REG_RCX);
