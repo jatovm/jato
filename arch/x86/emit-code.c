@@ -2365,12 +2365,13 @@ static void emit_push_imm(struct insn *insn, struct buffer *buf, struct basic_bl
 	__emit_push_imm(buf, insn->operand.imm);
 }
 
-static void __emit_membase(struct buffer *buf,
-			   int rex_w,
-			   unsigned char opc,
-			   enum machine_reg base_reg,
-			   unsigned long disp,
-			   unsigned char reg_opcode)
+static void __emit_lopc_membase(struct buffer *buf,
+				int rex_w,
+				unsigned char *lopc,
+				size_t lopc_size,
+				enum machine_reg base_reg,
+				unsigned long disp,
+				unsigned char reg_opcode)
 {
 	unsigned char rex_pfx = 0, mod, rm, mod_rm;
 	unsigned char __base_reg = encode_mach_reg(base_reg);
@@ -2401,7 +2402,7 @@ static void __emit_membase(struct buffer *buf,
 	if (rex_pfx)
 		emit(buf, rex_pfx);
 
-	emit(buf, opc);
+	emit_str(buf, lopc, lopc_size);
 
 	mod_rm = encode_modrm(mod, reg_opcode, rm);
 	emit(buf, mod_rm);
@@ -2411,6 +2412,28 @@ static void __emit_membase(struct buffer *buf,
 
 	if (needs_disp)
 		emit_imm(buf, disp);
+}
+
+static void __emit_membase(struct buffer *buf,
+			   int rex_w,
+			   unsigned char opc,
+			   enum machine_reg base_reg,
+			   unsigned long disp,
+			   unsigned char reg_opcode)
+{
+	__emit_lopc_membase(buf, rex_w, &opc, 1, base_reg, disp, reg_opcode);
+}
+
+static void __emit_lopc_membase_reg(struct buffer *buf,
+				    int rex_w,
+				    unsigned char *lopc,
+				    size_t lopc_size,
+				    enum machine_reg base_reg,
+				    unsigned long disp,
+				    enum machine_reg dest_reg)
+{
+	__emit_lopc_membase(buf, rex_w, lopc, lopc_size,
+			    base_reg, disp, encode_mach_reg(dest_reg));
 }
 
 static void __emit_membase_reg(struct buffer *buf,
