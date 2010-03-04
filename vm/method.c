@@ -14,6 +14,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/cu-mapping.h"
 #include "jit/args.h"
+#include "jit/gdb.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -178,6 +179,8 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 	vmm->trampoline = build_jit_trampoline(cu);
 	if (!vmm->trampoline)
 		goto error_free_cu;
+
+	gdb_register_trampoline(vmm);
 
 	return 0;
 

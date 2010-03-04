@@ -57,6 +57,7 @@
 
 #include "jit/compiler.h"
 #include "jit/cu-mapping.h"
+#include "jit/gdb.h"
 #include "jit/exception.h"
 #include "jit/perf-map.h"
 #include "jit/text.h"
@@ -1039,6 +1040,8 @@ main(int argc, char *argv[])
 	init_vm_monitors();
 
 	jit_text_init();
+
+	gdb_init();
 
 	if (perf_enabled)
 		perf_map_open();

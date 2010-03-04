@@ -65,12 +65,14 @@ JIT_OBJS = \
 	jit/compiler.o		\
 	jit/cu-mapping.o	\
 	jit/disass-common.o	\
+	jit/elf.o		\
 	jit/emit.o		\
 	jit/emulate.o		\
 	jit/exception-bc.o	\
 	jit/exception.o 	\
 	jit/expression.o	\
 	jit/fixup-site.o	\
+	jit/gdb.o		\
 	jit/interval.o		\
 	jit/invoke-bc.o		\
 	jit/linear-scan.o	\

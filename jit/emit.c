@@ -19,6 +19,7 @@
 #include "jit/compiler.h"
 #include "jit/emit-code.h"
 #include "jit/exception.h"
+#include "jit/gdb.h"
 #include "jit/instruction.h"
 #include "jit/statement.h"
 #include "jit/text.h"
@@ -216,7 +217,10 @@ int emit_machine_code(struct compilation_unit *cu)
 	cu->unwind_bb_ptr = bb_native_ptr(cu->unwind_bb);
 
 	jit_text_reserve(buffer_offset(cu->objcode));
+
 	jit_text_unlock();
+
+	gdb_register_method(cu->method);
 
 	return err;
 }
