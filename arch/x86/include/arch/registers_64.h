@@ -44,8 +44,10 @@ enum machine_reg {
 	MACH_REG_XMM14,
 	MACH_REG_XMM15,
 
+	NR_FP_REGISTERS,
+
 	/* The above registers are available for register allocator.  */
-	NR_REGISTERS,
+	NR_REGISTERS = NR_FP_REGISTERS,
 
 	MACH_REG_RSP = NR_REGISTERS, /* R4 */
 	MACH_REG_RBP, /* R5 */
@@ -67,6 +69,7 @@ enum machine_reg {
 };
 
 #define GPR_VM_TYPE	J_LONG
+#define FPU_VM_TYPE	J_DOUBLE
 
 #define NR_CALLER_SAVE_REGS 25
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
@@ -116,6 +119,16 @@ save_signal_registers(struct register_state *regs, gregset_t gregs)
         regs->r13	= gregs[REG_R13];
         regs->r14	= gregs[REG_R14];
         regs->r15	= gregs[REG_R15];
+}
+
+static inline enum vm_type reg_default_type(enum machine_reg reg)
+{
+	if (reg < NR_GP_REGISTERS)
+		return GPR_VM_TYPE;
+	else if (reg < NR_FP_REGISTERS)
+		return FPU_VM_TYPE;
+	else
+		return GPR_VM_TYPE;
 }
 
 #endif /* X86_REGISTERS_64_H */

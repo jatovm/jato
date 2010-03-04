@@ -85,4 +85,9 @@ save_signal_registers(struct register_state *regs, gregset_t gregs)
 	regs->edi	= gregs[REG_EDI];
 }
 
+static inline enum vm_type reg_default_type(enum machine_reg reg)
+{
+	return GPR_VM_TYPE;
+}
+
 #endif /* X86_REGISTERS_32_H */

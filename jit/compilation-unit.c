@@ -101,8 +101,10 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 		for (unsigned int i = 0; i < NR_FIXED_REGISTERS; ++i) {
 			struct var_info *ret;
+			enum vm_type type;
 
-			ret = do_get_var(cu, GPR_VM_TYPE);
+			type = reg_default_type(i);
+			ret = do_get_var(cu, type);
 			if (ret) {
 				ret->interval->reg	= i;
 				ret->interval->flags	|= INTERVAL_FLAG_FIXED_REG;

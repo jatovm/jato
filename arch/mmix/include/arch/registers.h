@@ -33,4 +33,9 @@ static inline bool reg_supports_type(enum machine_reg reg, enum vm_type type)
 
 #define GPR_VM_TYPE J_LONG
 
+static inline enum vm_type reg_default_type(enum machine_reg reg)
+{
+	return GPR_VM_TYPE;
+}
+
 #endif /* __JIT_REGISTERS_H */
