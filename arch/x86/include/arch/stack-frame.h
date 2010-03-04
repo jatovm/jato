@@ -31,6 +31,11 @@ struct jit_stack_frame {
 
 #define NR_TRAMPOLINE_LOCALS	14
 
+/*
+ * FIXME: This no longer reflects the structure
+ * of the stack frame and should be fixed, although
+ * it provides the correct answer in most cases. It is a bug!
+ */
 struct jit_stack_frame {
 	void *prev; /* previous stack frame link */
 	unsigned long old_xmm15;
