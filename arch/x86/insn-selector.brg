@@ -2595,7 +2595,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 	state->reg2 = state->right->reg1;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(struct vm_object), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, offsetof(struct vm_object, fields), base));
 }
 
 stmt:	STMT_STORE(array_deref, reg)
