@@ -21,7 +21,6 @@
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/object.h"
-#include "vm/resolve.h"
 #include "lib/stack.h"
 #include "vm/die.h"
 

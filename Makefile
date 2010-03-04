@@ -125,7 +125,6 @@ VM_OBJS = \
 	vm/natives.o		\
 	vm/object.o		\
 	vm/preload.o		\
-	vm/resolve.o		\
 	vm/signal.o		\
 	vm/stack-trace.o	\
 	vm/static.o		\
