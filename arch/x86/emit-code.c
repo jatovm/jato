@@ -2452,6 +2452,18 @@ static void __emit_membase_reg(struct buffer *buf,
 	__emit_membase(buf, rex_w, opc, base_reg, disp, encode_mach_reg(dest_reg));
 }
 
+static void __emit_lopc_reg_membase(struct buffer *buf,
+				    int rex_w,
+				    unsigned char *lopc,
+				    size_t lopc_size,
+				    enum machine_reg src_reg,
+				    enum machine_reg base_reg,
+				    unsigned long disp)
+{
+	__emit_lopc_membase(buf, rex_w, lopc, lopc_size,
+			    base_reg, disp, encode_mach_reg(src_reg));
+}
+
 static void __emit_reg_membase(struct buffer *buf,
 			       int rex_w,
 			       unsigned char opc,
@@ -2459,7 +2471,7 @@ static void __emit_reg_membase(struct buffer *buf,
 			       enum machine_reg base_reg,
 			       unsigned long disp)
 {
-	__emit_membase(buf, rex_w, opc, base_reg, disp, encode_mach_reg(src_reg));
+	__emit_lopc_reg_membase(buf, rex_w, &opc, 1, src_reg, base_reg, disp);
 }
 
 static void emit_membase_reg(struct buffer *buf,
@@ -2512,13 +2524,48 @@ static void __emit_mov_reg_membase(struct buffer *buf,
 	__emit_membase(buf, rex_w, 0x89, base, disp, encode_mach_reg(src));
 }
 
-static void
-emit_mov_reg_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+static void emit_mov_gpr_membase(struct insn *insn,
+				 struct buffer *buf,
+				 struct basic_block *bb)
 {
 	int rex_w = is_64bit_reg(&insn->src);
 
 	__emit_mov_reg_membase(buf, rex_w, mach_reg(&insn->src.reg),
 			       mach_reg(&insn->dest.base_reg), insn->dest.disp);
+}
+
+static void emit_mov_xmm_membase(struct insn *insn,
+				 struct buffer *buf,
+				 struct basic_block *bb)
+{
+	unsigned char opc[3];
+	enum machine_reg src, base;
+	unsigned long disp;
+
+	if (!is_64bit_reg(&insn->src))
+		/* MOVSS */
+		opc[0] = 0xF3;
+	else
+		/* MOVSD */
+		opc[0] = 0xF2;
+	opc[1] = 0x0F;
+	opc[2] = 0x11;
+
+	src = mach_reg(&insn->src.reg);
+	base = mach_reg(&insn->dest.base_reg);
+	disp = insn->dest.disp;
+
+	__emit_lopc_reg_membase(buf, 0, opc, 3, src, base, disp);
+}
+
+static void emit_mov_reg_membase(struct insn *insn,
+				 struct buffer *buf,
+				 struct basic_block *bb)
+{
+	if (is_xmm_reg(&insn->src))
+		emit_mov_xmm_membase(insn, buf, bb);
+	else
+		emit_mov_gpr_membase(insn, buf, bb);
 }
 
 static void __emit_memdisp(struct buffer *buf,
