@@ -2831,6 +2831,66 @@ static void emit_mov_reg_memindex(struct insn *insn, struct buffer *buf, struct 
 	emit(buf, encode_sib(insn->dest.shift, encode_reg(&insn->dest.index_reg), encode_reg(&insn->dest.base_reg)));
 }
 
+static void emit_conv_fpu_to_gpr(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	enum machine_reg src, dest;
+	unsigned char opc[3];
+	int rex_w;
+
+	src = mach_reg(&insn->src.reg);
+	dest = mach_reg(&insn->dest.reg);
+
+	if (!is_64bit_reg(&insn->src))
+		opc[0] = 0xF3;
+	else
+		opc[0] = 0xF2;
+	opc[1] = 0x0F;
+	opc[2] = 0x2D;
+
+	rex_w = is_64bit_reg(&insn->dest);
+
+	__emit_lopc_reg_reg(buf, rex_w, opc, 3, src, dest);
+}
+
+static void emit_conv_gpr_to_fpu(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	enum machine_reg src, dest;
+	unsigned char opc[3];
+	int rex_w;
+
+	src = mach_reg(&insn->src.reg);
+	dest = mach_reg(&insn->dest.reg);
+
+	if (!is_64bit_reg(&insn->dest))
+		opc[0] = 0xF3;
+	else
+		opc[0] = 0xF2;
+	opc[1] = 0x0F;
+	opc[2] = 0x2A;
+
+	rex_w = is_64bit_reg(&insn->src);
+
+	__emit_lopc_reg_reg(buf, rex_w, opc, 3, src, dest);
+}
+
+static void emit_conv_fpu_to_fpu(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	enum machine_reg src, dest;
+	unsigned char opc[3];
+
+	src = mach_reg(&insn->src.reg);
+	dest = mach_reg(&insn->dest.reg);
+
+	if (!is_64bit_reg(&insn->src))
+		opc[0] = 0xF3;
+	else
+		opc[0] = 0xF2;
+	opc[1] = 0x0F;
+	opc[2] = 0x5A;
+
+	__emit_lopc_reg_reg(buf, 0, opc, 3, src, dest);
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg),
@@ -2839,6 +2899,10 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg),
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg),
+	DECL_EMITTER(INSN_CONV_FPU_TO_GPR, emit_conv_fpu_to_gpr),
+	DECL_EMITTER(INSN_CONV_GPR_TO_FPU, emit_conv_gpr_to_fpu),
+	DECL_EMITTER(INSN_CONV_XMM_TO_XMM64, emit_conv_fpu_to_fpu),
+	DECL_EMITTER(INSN_CONV_XMM64_TO_XMM, emit_conv_fpu_to_fpu),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg),
