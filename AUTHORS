@@ -24,3 +24,7 @@ L: Oslo, Norway
 N: Saeed Siam <saeed.siam@gmail.com>
 D: Array handling, VMT
 L: Dhaka, Bangladesh
+
+N: Eduard - Gabriel Munteanu <eduard.munteanu@linux360.ro>
+D: x86-64 (GSoC 2009), GDB support
+L: Bucharest, Romania
