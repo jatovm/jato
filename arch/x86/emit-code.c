@@ -231,6 +231,33 @@ static inline void emit_str(struct buffer *buf, unsigned char *str, size_t len)
 	assert(!err);
 }
 
+static int has_legacy_prefix(unsigned char *str, size_t len)
+{
+	if (len <= 1)
+		return 0;
+
+	switch (str[0]) {
+		case 0xF2:
+		case 0xF3:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+static void emit_lopc(struct buffer *buf, int rex, unsigned char *str, size_t len)
+{
+	if (rex && has_legacy_prefix(str, len)) {
+		emit(buf, str[0]);
+		emit(buf, rex);
+		emit_str(buf, str + 1, len - 1);
+	} else {
+		if (rex)
+			emit(buf, rex);
+		emit_str(buf, str, len);
+	}
+}
+
 static void write_imm32(struct buffer *buf, unsigned long offset, long imm32)
 {
 	unsigned char *buffer;
@@ -2155,9 +2182,7 @@ static void __emit_lopc_reg_reg(struct buffer *buf,
 
 	mod_rm = encode_modrm(0x03, direct, rm);
 
-	if (rex_pfx)
-		emit(buf, rex_pfx);
-	emit_str(buf, lopc, lopc_size);
+	emit_lopc(buf, rex_pfx, lopc, lopc_size);
 	emit(buf, mod_rm);
 }
 
@@ -2449,10 +2474,7 @@ static void __emit_lopc_membase(struct buffer *buf,
 	if (reg_high(__base_reg))
 		rex_pfx |= REX_B;
 
-	if (rex_pfx)
-		emit(buf, rex_pfx);
-
-	emit_str(buf, lopc, lopc_size);
+	emit_lopc(buf, rex_pfx, lopc, lopc_size);
 
 	mod_rm = encode_modrm(mod, reg_opcode, rm);
 	emit(buf, mod_rm);
@@ -2884,10 +2906,7 @@ static void __emit_lopc_memindex(struct buffer *buf,
 	if (reg_high(__base_reg))
 		rex_pfx |= REX_B;
 
-	if (rex_pfx)
-		emit(buf, rex_pfx);
-
-	emit_str(buf, lopc, lopc_size);
+	emit_lopc(buf, rex_pfx, lopc, lopc_size);
 	emit(buf, mod_rm);
 	emit(buf, sib);
 }
