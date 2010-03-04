@@ -536,9 +536,8 @@ int preload_vm_classes(void)
 		if (!class) {
 			if (pe->optional == PRELOAD_OPTIONAL)
 				continue;
-			printf("%s\n", pe->name);
-			NOT_IMPLEMENTED;
-			return 1;
+			warn("preload of %s failed", pe->name);
+			return -EINVAL;
 		}
 
 		*pe->class = class;
