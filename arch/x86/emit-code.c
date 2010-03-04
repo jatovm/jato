@@ -2650,7 +2650,7 @@ static void emit_mov_membase_reg(struct insn *insn, struct buffer *buf, struct b
 	emit_membase_reg(buf, 1, 0x8b, &insn->src, &insn->dest);
 }
 
-static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+static void emit_mov_memlocal_gpr(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	enum machine_reg dest_reg;
 	unsigned long disp;
@@ -2659,6 +2659,35 @@ static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct 
 	disp = slot_offset(insn->src.slot);
 
 	__emit_membase_reg(buf, 1, 0x8b, MACH_REG_RBP, disp, dest_reg);
+}
+
+static void emit_mov_memlocal_xmm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	enum machine_reg dest_reg;
+	unsigned long disp;
+	unsigned char opc[3];
+
+	dest_reg = mach_reg(&insn->dest.reg);
+	disp = slot_offset(insn->src.slot);
+
+	if (insn->dest.reg.interval->var_info->vm_type == J_FLOAT)
+		/* MOVSS */
+		opc[0] = 0xF3;
+	else
+		/* MOVSD */
+		opc[0] = 0xF2;
+	opc[1] = 0x0F;
+	opc[2] = 0x10;
+
+	__emit_lopc_membase_reg(buf, 0, opc, 3, MACH_REG_RBP, disp, dest_reg);
+}
+
+static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	if (is_xmm_reg(&insn->dest))
+		emit_mov_memlocal_xmm(insn, buf, bb);
+	else
+		emit_mov_memlocal_gpr(insn, buf, bb);
 }
 
 static void emit_mov_reg_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
