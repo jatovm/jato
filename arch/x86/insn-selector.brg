@@ -2476,22 +2476,23 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
 
 	dest = exprdest->tmp_low;
 
-	reg = method->args_map[exprsrc->local_index].reg;
-	if (reg == MACH_REG_UNASSIGNED) {
-		index = method->args_map[exprsrc->local_index].stack_index;
-		slot = get_local_slot(s->b_parent->stack_frame, index);
+	if (exprsrc->local_index < (unsigned long) method->args_count) {
+		reg = method->args_map[exprsrc->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			index = method->args_map[exprsrc->local_index].stack_index;
+			slot = get_local_slot(s->b_parent->stack_frame, index);
 
-		if (exprsrc->vm_type == J_FLOAT)
-			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, slot, dest));
-		else
-			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, slot, dest));
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, dest));
+		} else {
+			src = get_fixed_var(s->b_parent, reg);
+
+			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+		}
 	} else {
-		src = get_fixed_var(s->b_parent, reg);
-
-		if (exprsrc->vm_type == J_FLOAT)
-			select_insn(s, tree, reg_reg_insn(INSN_MOV_XMM_XMM, src, dest));
-		else
-			select_insn(s, tree, reg_reg_insn(INSN_MOV_64_XMM_XMM, src, dest));
+		index = exprsrc->local_index - method->reg_args_count;
+		slot = get_local_slot(s->b_parent->stack_frame, index);
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+						       slot, dest));
 	}
 }
 %endif
