@@ -8,6 +8,9 @@
  *             caller's stack frame
  *          2) Rethrows the exception in caller's context
  */
+.type unwind, @function
+.func unwind
+/* FIXME: Provide proper prolog and epilog for annotations to work. */
 unwind:
 	popl	%edx	# return address of the method
 	decl	%edx
@@ -40,12 +43,16 @@ unwind:
 
 	pushl %eax
 	ret
+.endfunc
 
 /*
  * exception_check - is a part of valgrind workaround for exception guards.
  * it checks whether exception has occurred and if it has control
  * is transfered directly to exception handler (possibly unwind block).
  */
+.type exception_check, @function
+.func exception_check
+/* FIXME: Provide proper prolog and epilog for annotations to work. */
 exception_check:
 	/* push return address - 1 */
 	pushl	(%esp)
@@ -66,3 +73,4 @@ exception_check:
 	ret
 1:
 	ret
+.endfunc

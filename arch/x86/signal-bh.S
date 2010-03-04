@@ -9,6 +9,8 @@
  * signal_bh_trampoline - saves the caller saved registers and calls
  *                        signal bottom half hanlder.
  */
+.type signal_bh_trampoline, @function
+.func signal_bh_trampoline
 signal_bh_trampoline:
 	push %ebp
 	movl %esp, %ebp
@@ -26,6 +28,7 @@ signal_bh_trampoline:
 	push $.bh_return
 	push 0x08(%ebp)
 	ret
+.endfunc
 
 .bh_return:
 	/* cleanup call arguments */
@@ -55,6 +58,8 @@ signal_bh_trampoline:
  * signal_bh_trampoline - saves the caller saved registers and calls
  *                        signal bottom half hanlder.
  */
+.type signal_bh_trampoline, @function
+.func signal_bh_trampoline
 signal_bh_trampoline:
 	push %rbp
 	movq %rsp, %rbp
@@ -76,6 +81,7 @@ signal_bh_trampoline:
 	push $.bh_return
 	push 0x10(%rbp)
 	ret
+.endfunc
 
 .bh_return:
 	/* overwrite return address */
@@ -101,3 +107,5 @@ signal_bh_trampoline:
 	ret
 
 #endif /* CONFIG_X86_32 */
+
+

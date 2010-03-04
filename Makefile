@@ -236,9 +236,10 @@ monoburg:
 	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 	$(Q) $(CC) -MM $(DEFAULT_CFLAGS) $(CFLAGS) -MT $@ $*.c -o $*.d
 
+# -gstabs is needed for correct backtraces.
 %.o: %.S
 	$(E) "  AS      " $@
-	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
+	$(Q) $(CC) -c -gstabs $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
 arch/$(ARCH)/insn-selector.c: monoburg FORCE
 	$(E) "  MONOBURG" $@
