@@ -1293,8 +1293,8 @@ reg:	EXPR_NEWARRAY(reg)
 	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
 	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
 
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rdi));
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->array_type, rsi));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rsi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->array_type, rdi));
 	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_primitive_array));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 
