@@ -16,6 +16,8 @@ struct native_stack_frame {
 
 #ifdef CONFIG_X86_32
 
+#define NR_TRAMPOLINE_LOCALS	0
+
 struct jit_stack_frame {
 	void *prev; /* previous stack frame link */
 	unsigned long old_ebx;
@@ -26,6 +28,8 @@ struct jit_stack_frame {
 } __attribute__((packed));
 
 #else
+
+#define NR_TRAMPOLINE_LOCALS	6
 
 struct jit_stack_frame {
 	void *prev; /* previous stack frame link */

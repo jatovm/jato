@@ -59,7 +59,7 @@ void throw_from_trampoline(void *ctx, struct vm_object *exception)
 	uc = ctx;
 
 	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
-	return_address = stack[1];
+	return_address = stack[NR_TRAMPOLINE_LOCALS + 1];
 
 	signal_exception(exception);
 
@@ -70,8 +70,9 @@ void throw_from_trampoline(void *ctx, struct vm_object *exception)
 		/* Unwind to previous jit method. */
 		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)unwind;
 
-	/* pop EBP from stack */
-	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
-	uc->uc_mcontext.gregs[REG_BP] = *stack;
-	uc->uc_mcontext.gregs[REG_SP] += sizeof(unsigned long);
+	/* Cleanup trampoline stack and restore BP. */
+	stack += NR_TRAMPOLINE_LOCALS;
+	uc->uc_mcontext.gregs[REG_BP] = *stack++;
+	uc->uc_mcontext.gregs[REG_SP] = (unsigned long) stack;
 }
+
