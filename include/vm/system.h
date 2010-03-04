@@ -54,7 +54,18 @@ static inline int float_to_uint32(float value)
 	return a.iv;
 }
 
-static inline void double_to_uint64(double value, uint32_t *low, uint32_t *high)
+static inline uint64_t double_to_uint64(double value)
+{
+	union {
+		uint64_t iv;
+		double val;
+	} a;
+
+	a.val = value;
+	return a.iv;
+}
+
+static inline void double_to_split_uint64(double value, uint32_t *low, uint32_t *high)
 {
 	union {
 		struct {

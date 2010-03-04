@@ -163,7 +163,7 @@ freg:	EXPR_FVALUE	0
 		scratch = get_scratch_slot(s->b_parent);
 		offset  = slot_offset_64(scratch);
 
-		double_to_uint64(expr->fvalue, &low_byte, &high_byte);
+		double_to_split_uint64(expr->fvalue, &low_byte, &high_byte);
 		select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, high_byte, ebp, offset + 4));
 		select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, low_byte, ebp, offset));
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, result));
@@ -1685,7 +1685,7 @@ arg:	EXPR_ARG(EXPR_FVALUE) 2
 	} else {
 		uint32_t high_byte, low_byte;
 
-		double_to_uint64(expr->fvalue, &low_byte, &high_byte);
+		double_to_split_uint64(expr->fvalue, &low_byte, &high_byte);
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, low_byte));
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, high_byte));
 	}
