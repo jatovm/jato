@@ -169,6 +169,33 @@ freg:	EXPR_FVALUE	0
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, result));
 	}
 }
+%else
+freg:	EXPR_FVALUE	0
+{
+	struct expression *expr;
+	struct var_info *result, *temp;
+	struct stack_slot *scratch;
+	unsigned long ivalue;
+
+	expr = to_expr(tree);
+
+	result = get_var(s->b_parent, expr->vm_type);
+	state->reg1 = result;
+
+	scratch = get_scratch_slot(s->b_parent);
+
+	if (expr->vm_type == J_FLOAT) {
+		temp = get_var(s->b_parent, J_INT);
+		ivalue = float_to_uint32(expr->fvalue);
+	} else {
+		temp = get_var(s->b_parent, J_LONG);
+		ivalue = double_to_uint64(expr->fvalue);
+	}
+
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, ivalue, temp));
+	select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, temp, scratch));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, scratch, result));
+}
 %endif
 
 reg:	EXPR_VALUE	0
