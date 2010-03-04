@@ -68,10 +68,8 @@ static char *vm_jni_get_mangled_name(const char *name)
 	int i;
 
 	str = alloc_str();
-	if (!str) {
-		NOT_IMPLEMENTED;
+	if (!str)
 		return NULL;
-	}
 
 	result = NULL;
 
@@ -85,9 +83,10 @@ static char *vm_jni_get_mangled_name(const char *name)
 		else if (name[i] == '/')
 			err = str_append(str, "_");
 		else if (name[i] & 0x80) {
-			/* Unicode characters should be transformed to
-			   "_0xxxx" */
-			NOT_IMPLEMENTED;
+			/*
+			 * FIXME: Unicode characters should be transformed to "_0xxxx"
+			 */
+			die("unicode characters are not supported");
 		} else
 			err = str_append(str, "%c", (char)name[i]);
 
