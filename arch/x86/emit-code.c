@@ -2252,6 +2252,50 @@ static void emit_sub_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 		emit_reg_reg(buf, 0, 0x29, &insn->src, &insn->dest);
 }
 
+static void emit_mul_gpr_gpr(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	unsigned char opc[2];
+	int rex_w = is_64bit_bin_reg_op(&insn->src, &insn->dest);
+
+	opc[0] = 0x0F;
+	opc[1] = 0xAF;
+	__emit_lopc_reg_reg(buf, rex_w, opc, 2, mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
+}
+
+static void emit_mul_xmm_xmm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	unsigned char opc[3];
+	enum machine_reg src, dest;
+
+	if (!is_64bit_reg(&insn->src))
+		/* MULSS */
+		opc[0] = 0xF3;
+	else
+		/* MULSD */
+		opc[0] = 0xF2;
+	opc[1] = 0x0F;
+	opc[2] = 0x59;
+
+	src = mach_reg(&insn->src.reg);
+	dest = mach_reg(&insn->dest.reg);
+
+	__emit_lopc_reg_reg(buf, 0, opc, 3, dest, src);
+}
+
+static void emit_mul_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	int fp;
+
+	fp = is_xmm_reg(&insn->src);
+	if (fp != is_xmm_reg(&insn->dest))
+		assert(!"Can't do 'mul' between XMM and GPR!");
+
+	if (fp)
+		emit_mul_xmm_xmm(insn, buf, bb);
+	else
+		emit_mul_gpr_gpr(insn, buf, bb);
+}
+
 static void emit_alu_imm_reg(struct buffer *buf,
 			     int rex_w,
 			     unsigned char opc_ext,
@@ -2916,6 +2960,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
+	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg),

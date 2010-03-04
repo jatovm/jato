@@ -403,6 +403,7 @@ reg:	OP_MUL(reg, reg) 1
 	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
 }
 
+%ifdef  CONFIG_X86_32
 freg:	OP_DMUL(freg, freg) 1
 {
 	state->reg1 = state->left->reg1;
@@ -441,6 +442,29 @@ reg: 	OP_MUL_64(reg, reg) 1
 
 	select_insn(s, tree, reg_reg_insn(INSN_ADD_REG_REG, edx, state->reg2));
 }
+%else
+freg:	OP_DMUL(freg, freg) 1
+{
+	state->reg1 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
+}
+
+freg:	OP_FMUL(freg, freg) 1
+{
+	state->reg1 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
+}
+
+
+reg: 	OP_MUL_64(reg, reg) 1
+{
+	state->reg1 = state->reg2 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
+}
+%endif
 
 reg:	OP_DIV(reg, EXPR_LOCAL) 1
 {
