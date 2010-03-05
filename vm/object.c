@@ -34,8 +34,7 @@ int init_vm_objects(void)
 	if (err)
 		return -err;
 
-	err = pthread_mutexattr_settype(&obj_mutexattr,
-		PTHREAD_MUTEX_RECURSIVE);
+	err = pthread_mutexattr_settype(&obj_mutexattr, PTHREAD_MUTEX_RECURSIVE);
 	if (err)
 		return -err;
 
@@ -116,8 +115,8 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	return res;
 }
 
-struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
-	int nr_dimensions, int *counts)
+struct vm_object *
+vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *counts)
 {
 	struct vm_class *elem_class;
 	struct vm_object *res;
@@ -146,10 +145,8 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 
 	struct vm_object **elems = (struct vm_object **) (res + 1);
 
-	for (int i = 0; i < counts[0]; ++i) {
-		elems[i] = vm_object_alloc_multi_array(elem_class,
-						nr_dimensions - 1, counts + 1);
-	}
+	for (int i = 0; i < counts[0]; ++i)
+		elems[i] = vm_object_alloc_multi_array(elem_class, nr_dimensions - 1, counts + 1);
 
 	return res;
 }
@@ -165,10 +162,8 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	if (!res)
 		return throw_oom_error();
 
-	if (vm_monitor_init(&res->monitor)) {
-		signal_new_exception(vm_java_lang_InternalError, NULL);
-		return NULL;
-	}
+	if (vm_monitor_init(&res->monitor))
+		return throw_internal_error();
 
 	res->array_length = count;
 
@@ -210,20 +205,16 @@ static struct vm_object *clone_array(struct vm_object *obj)
 		/* XXX: This could be optimized by not doing the memset() in
 		 * object_alloc_primitive_array. */
 		new = vm_object_alloc_primitive_array(type, count);
-		if (new) {
-			memcpy(new + 1, obj + 1,
-				get_vmtype_size(vmtype) * count);
-		}
+		if (new)
+			memcpy(new + 1, obj + 1, get_vmtype_size(vmtype) * count);
 
 		return new;
 	} else {
 		struct vm_object *new;
 
 		new = vm_object_alloc_array(vmc, count);
-		if (new) {
-			memcpy(new + 1, obj + 1,
-				sizeof(struct vm_object *) * count);
-		}
+		if (new)
+			memcpy(new + 1, obj + 1, sizeof(struct vm_object *) * count);
 
 		return new;
 	}
@@ -293,8 +284,7 @@ vm_object_alloc_string_from_c(const char *bytes)
 		return rethrow_exception();
 
 	unsigned int n = strlen(bytes);
-	struct vm_object *array
-		= vm_object_alloc_primitive_array(T_CHAR, n);
+	struct vm_object *array = vm_object_alloc_primitive_array(T_CHAR, n);
 	if (!array)
 		return rethrow_exception();
 
@@ -303,9 +293,8 @@ vm_object_alloc_string_from_c(const char *bytes)
 	NOT_IMPLEMENTED;
 #endif
 
-	for (unsigned int i = 0; i < n; ++i) {
+	for (unsigned int i = 0; i < n; ++i)
 		array_set_field_char(array, i, bytes[i]);
-	}
 
 	field_set_int(string, vm_java_lang_String_offset, 0);
 	field_set_int(string, vm_java_lang_String_count, array->array_length);
