@@ -54,7 +54,7 @@ struct vm_object *native_vmruntime_maplibraryname(struct vm_object *name)
 
 	str = vm_string_to_cstr(name);
 	if (!str) {
-		NOT_IMPLEMENTED;
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
 		return NULL;
 	}
 
@@ -66,7 +66,7 @@ struct vm_object *native_vmruntime_maplibraryname(struct vm_object *name)
 	free(str);
 
 	if (!result_str) {
-		NOT_IMPLEMENTED;
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
 		return NULL;
 	}
 
@@ -89,7 +89,7 @@ int native_vmruntime_native_load(struct vm_object *name,
 
 	name_str = vm_string_to_cstr(name);
 	if (!name_str) {
-		NOT_IMPLEMENTED;
+		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
 		return 0;
 	}
 
