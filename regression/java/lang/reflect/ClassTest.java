@@ -33,7 +33,7 @@ import jvm.TestCase;
  */
 public class ClassTest extends TestCase {
     public static void testPrimitiveClassModifiers() {
-        Class primitive = Integer.TYPE;
+        Class<?> primitive = Integer.TYPE;
         int modifiers = primitive.getModifiers();
 
         assertEquals(Modifier.PUBLIC

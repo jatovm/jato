@@ -57,7 +57,7 @@ public class MethodTest extends TestCase {
       }
     }
 
-    public static Object invoke(String name, Class arg_class, Object arg) {
+    public static Object invoke(String name, Class<?> arg_class, Object arg) {
         try {
             return Klass.class.getMethod(name, new Class[] { arg_class }).invoke(null, new Object[] { arg });
         } catch (Exception e) {
