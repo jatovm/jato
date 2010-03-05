@@ -25,37 +25,39 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <stdio.h>
-#include <ctype.h>
-
-#include "cafebabe/class.h"
-#include "cafebabe/constant_pool.h"
-#include "cafebabe/field_info.h"
-#include "cafebabe/method_info.h"
-#include "cafebabe/stream.h"
-
-#include "lib/array.h"
-#include "lib/string.h"
-
 #include "vm/class.h"
-#include "vm/classloader.h"
-#include "vm/die.h"
+
+#include "cafebabe/constant_pool.h"
+#include "cafebabe/method_info.h"
+#include "cafebabe/field_info.h"
+#include "cafebabe/stream.h"
+#include "cafebabe/class.h"
+
+#include "jit/exception.h"
+#include "jit/compiler.h"
+#include "jit/vtable.h"
+
 #include "vm/fault-inject.h"
-#include "vm/field.h"
+#include "vm/classloader.h"
 #include "vm/preload.h"
+#include "vm/errors.h"
 #include "vm/itable.h"
 #include "vm/method.h"
 #include "vm/object.h"
 #include "vm/stdlib.h"
 #include "vm/thread.h"
+#include "vm/field.h"
+#include "vm/die.h"
 #include "vm/vm.h"
 
-#include "jit/exception.h"
-#include "jit/compiler.h"
-#include "jit/vtable.h"
+#include "lib/string.h"
+#include "lib/array.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <stdio.h>
+#include <ctype.h>
 
 static void
 setup_vtable(struct vm_class *vmc)
@@ -1142,10 +1144,8 @@ struct vm_class *vm_class_get_array_class(struct vm_class *element_class)
 	struct vm_class *result;
 	char *name;
 
-	if (!asprintf(&name, "[%s", element_class->name)) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!asprintf(&name, "[%s", element_class->name))
+		return throw_oom_error();
 
 	result = classloader_load(element_class->classloader, name);
 	free(name);
@@ -1170,10 +1170,8 @@ vm_class_define(const char *name, uint8_t *data, unsigned long len)
 	cafebabe_stream_close_buffer(&stream);
 
 	result = malloc(sizeof *result);
-	if (!result) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!result)
+		return throw_oom_error();
 
 	if (vm_class_link(result, class))
 		return NULL;
