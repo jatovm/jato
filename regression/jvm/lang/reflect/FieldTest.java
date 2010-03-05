@@ -117,25 +117,25 @@ public class FieldTest extends TestCase {
     }
 
     private static class Fields {
-        public static Object	staticObject    = new Long(Long.MAX_VALUE);
-        public static boolean	staticBoolean	= true;
-        public static byte	staticByte	= Byte.MAX_VALUE;
-        public static char	staticChar	= Character.MAX_VALUE;
-        public static double	staticDouble	= Long.MAX_VALUE;
-        public static float	staticFloat	= Integer.MAX_VALUE;
-        public static int	staticInteger	= Integer.MAX_VALUE;
-        public static long	staticLong	= Long.MAX_VALUE;
-        public static short	staticShort	= Short.MAX_VALUE;
+        @SuppressWarnings("unused") public static Object  staticObject	= new Long(Long.MAX_VALUE);
+        @SuppressWarnings("unused") public static boolean staticBoolean	= true;
+        @SuppressWarnings("unused") public static byte    staticByte	= Byte.MAX_VALUE;
+        @SuppressWarnings("unused") public static char    staticChar	= Character.MAX_VALUE;
+        @SuppressWarnings("unused") public static double  staticDouble	= Long.MAX_VALUE;
+        @SuppressWarnings("unused") public static float   staticFloat	= Integer.MAX_VALUE;
+        @SuppressWarnings("unused") public static int     staticInteger	= Integer.MAX_VALUE;
+        @SuppressWarnings("unused") public static long    staticLong	= Long.MAX_VALUE;
+        @SuppressWarnings("unused") public static short   staticShort	= Short.MAX_VALUE;
 
-        public Object		instanceObject  = new Long(Long.MAX_VALUE);
-        public boolean		instanceBoolean	= true;
-        public byte		instanceByte	= Byte.MAX_VALUE;
-        public char		instanceChar	= Character.MAX_VALUE;
-        public double		instanceDouble	= Long.MAX_VALUE;
-        public float		instanceFloat	= Integer.MAX_VALUE;
-        public int		instanceInteger	= Integer.MAX_VALUE;
-        public long		instanceLong	= Long.MAX_VALUE;
-        public short		instanceShort	= Short.MAX_VALUE;
+        @SuppressWarnings("unused") public Object  instanceObject	= new Long(Long.MAX_VALUE);
+        @SuppressWarnings("unused") public boolean instanceBoolean	= true;
+        @SuppressWarnings("unused") public byte    instanceByte		= Byte.MAX_VALUE;
+        @SuppressWarnings("unused") public char    instanceChar		= Character.MAX_VALUE;
+        @SuppressWarnings("unused") public double  instanceDouble	= Long.MAX_VALUE;
+        @SuppressWarnings("unused") public float   instanceFloat	= Integer.MAX_VALUE;
+        @SuppressWarnings("unused") public int     instanceInteger	= Integer.MAX_VALUE;
+        @SuppressWarnings("unused") public long    instanceLong		= Long.MAX_VALUE;
+        @SuppressWarnings("unused") public short   instanceShort	= Short.MAX_VALUE;
     };
 
     public static void main(String[] args) throws Exception {

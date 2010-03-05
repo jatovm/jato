@@ -328,7 +328,7 @@ JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 
 java-regression: FORCE
 	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)
-	$(Q) $(JAVAC) -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $(REGRESSION_TEST_SUITE_CLASSES)
+	$(Q) $(JAVAC) -source 1.5 -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $(REGRESSION_TEST_SUITE_CLASSES)
 .PHONY: java-regression
 
 jasmin-regression: FORCE
