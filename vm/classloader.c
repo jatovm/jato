@@ -1,27 +1,28 @@
-#include <assert.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <zip.h>
-
-#include "cafebabe/class.h"
-#include "cafebabe/stream.h"
-
-#include "vm/call.h"
 #include "vm/classloader.h"
-#include "vm/preload.h"
-#include "vm/reflection.h"
-#include "vm/class.h"
-#include "vm/die.h"
-#include "vm/backtrace.h"
-#include "vm/thread.h"
-#include "vm/trace.h"
 
-#include "lib/string.h"
-#include "lib/hash-map.h"
+#include "cafebabe/stream.h"
+#include "cafebabe/class.h"
 
 #include "jit/exception.h"
+
+#include "vm/reflection.h"
+#include "vm/backtrace.h"
+#include "vm/preload.h"
+#include "vm/errors.h"
+#include "vm/thread.h"
+#include "vm/class.h"
+#include "vm/trace.h"
+#include "vm/call.h"
+#include "vm/die.h"
+
+#include "lib/hash-map.h"
+#include "lib/string.h"
+
+#include <assert.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <stdio.h>
+#include <zip.h>
 
 bool opt_trace_classloader;
 static __thread int trace_classloader_level = 0;
@@ -471,10 +472,8 @@ load_array_class(struct vm_object *loader, const char *class_name)
 
 	elem_class_name =
 		vm_class_get_array_element_class_name(class_name);
-	if (!elem_class_name) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!elem_class_name)
+		return throw_oom_error();
 
 	if (str_to_type(class_name + 1) != J_REFERENCE)
 		elem_class = classloader_load_primitive(elem_class_name);
@@ -488,10 +487,8 @@ load_array_class(struct vm_object *loader, const char *class_name)
 
 	array_class->classloader = elem_class->classloader;
 
-	if (vm_class_link_array_class(array_class, elem_class, class_name)) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (vm_class_link_array_class(array_class, elem_class, class_name))
+		return throw_oom_error();
 
 	free(elem_class_name);
 	return array_class;
@@ -505,10 +502,8 @@ load_class_with(struct vm_object *loader, const char *name)
 	struct vm_class *vmc;
 
 	name_string = vm_object_alloc_string_from_c(name);
-	if (!name_string) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!name_string)
+		return rethrow_exception();
 
 	clazz = vm_call_method_this_object(vm_java_lang_ClassLoader_loadClass,
 					   loader, name_string);
