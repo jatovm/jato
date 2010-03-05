@@ -24,16 +24,18 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "vm/call.h"
-#include "vm/class.h"
-#include "vm/classloader.h"
-#include "vm/die.h"
-#include "vm/preload.h"
 #include "vm/reflection.h"
-#include "vm/types.h"
 
-#include "jit/args.h"
 #include "jit/exception.h"
+#include "jit/args.h"
+
+#include "vm/classloader.h"
+#include "vm/preload.h"
+#include "vm/errors.h"
+#include "vm/class.h"
+#include "vm/types.h"
+#include "vm/call.h"
+#include "vm/die.h"
 
 static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 				   struct vm_object *args_array);
@@ -127,10 +129,8 @@ native_vmclass_get_declared_fields(struct vm_object *clazz,
 	struct vm_object *array
 		= vm_object_alloc_array(vm_array_of_java_lang_reflect_Field,
 					count);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!array)
+		return rethrow_exception();
 
 	int index = 0;
 
@@ -143,18 +143,14 @@ native_vmclass_get_declared_fields(struct vm_object *clazz,
 		struct vm_object *field
 			= vm_object_alloc(vm_java_lang_reflect_Field);
 
-		if (!field) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (!field)
+			return rethrow_exception();
 
 		struct vm_object *name_object
 			= vm_object_alloc_string_from_c(vmf->name);
 
-		if (!name_object) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (!name_object)
+			return rethrow_exception();
 
 		field_set_object(field, vm_java_lang_reflect_Field_declaringClass,
 				 clazz);
@@ -197,10 +193,8 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 
 	struct vm_object *array
 		= vm_object_alloc_array(vm_array_of_java_lang_reflect_Method, count);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!array)
+		return rethrow_exception();
 
 	int index = 0;
 
@@ -216,18 +210,14 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 		struct vm_object *method
 			= vm_object_alloc(vm_java_lang_reflect_Method);
 
-		if (!method) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (!method)
+			return rethrow_exception();
 
 		struct vm_object *name_object
 			= vm_object_alloc_string_from_c(vmm->name);
 
-		if (!name_object) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (!name_object)
+			return rethrow_exception();
 
 		field_set_object(method, vm_java_lang_reflect_Method_declaringClass,
 				 clazz);
@@ -268,10 +258,8 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 
 	array = vm_object_alloc_array(vm_array_of_java_lang_reflect_Constructor,
 				      count);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!array)
+		return rethrow_exception();
 
 	int index = 0;
 
@@ -285,10 +273,8 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 		struct vm_object *ctor
 			= vm_object_alloc(vm_java_lang_reflect_Constructor);
 
-		if (!ctor) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (!ctor)
+			return rethrow_exception();
 
 		field_set_object(ctor, vm_java_lang_reflect_Constructor_clazz,
 				 clazz);
@@ -342,10 +328,8 @@ static struct vm_object *get_method_parameter_types(struct vm_method *vmm)
 
 	count = count_java_arguments(vmm);
 	array = vm_object_alloc_array(vm_array_of_java_lang_Class, count);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!array)
+		return rethrow_exception();
 
 	i = 0;
 	list_for_each_entry(arg, &vmm->args, list_node) {
@@ -441,10 +425,8 @@ native_constructor_construct_native(struct vm_object *this,
 	vmm = &class->methods[slot];
 
 	result = vm_object_alloc(class);
-	if (!result) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!result)
+		return rethrow_exception();
 
 	unsigned long args[vmm->args_count];
 
@@ -467,10 +449,8 @@ struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz)
 	struct vm_object *array
 		= vm_object_alloc_array(vm_array_of_java_lang_Class,
 					vmc->nr_interfaces);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!array)
+		return rethrow_exception();
 
 	for (unsigned int i = 0; i < vmc->nr_interfaces; i++) {
 		vm_class_ensure_init(vmc->interfaces[i]);
