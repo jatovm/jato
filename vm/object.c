@@ -1,26 +1,28 @@
-#include <assert.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <time.h>
+#include "vm/object.h"
 
 #include "jit/exception.h"
 
-#include "vm/call.h"
-#include "vm/class.h"
 #include "vm/classloader.h"
-#include "vm/die.h"
 #include "vm/preload.h"
-#include "vm/object.h"
+#include "vm/errors.h"
 #include "vm/stdlib.h"
 #include "vm/string.h"
+#include "vm/class.h"
 #include "vm/types.h"
+#include "vm/call.h"
 #include "vm/utf8.h"
+#include "vm/die.h"
 #include "vm/gc.h"
 
 #include "lib/string.h"
+
+#include <stdbool.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <errno.h>
+#include <stdio.h>
+#include <time.h>
 
 static pthread_mutexattr_t obj_mutexattr;
 
@@ -45,20 +47,16 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 	struct vm_object *res;
 
 	if (vm_class_ensure_init(class))
-		return NULL;
+		return rethrow_exception();
 
 	res = gc_alloc(sizeof(*res) + class->object_size);
-	if (!res) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!res)
+		return throw_oom_error();
 
 	res->class = class;
 
-	if (vm_monitor_init(&res->monitor)) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (vm_monitor_init(&res->monitor))
+		return throw_internal_error();
 
 	return res;
 }
@@ -72,10 +70,8 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	assert(vm_type != J_VOID);
 
 	res = gc_alloc(sizeof(*res) + get_vmtype_size(vm_type) * count);
-	if (!res) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!res)
+		return throw_oom_error();
 
 	switch (type) {
 	case T_BOOLEAN:
@@ -103,23 +99,19 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 		res->class = classloader_load(NULL, "[J");
 		break;
 	default:
-		NOT_IMPLEMENTED;
+		return throw_internal_error();
 	}
 
-	if (!res->class) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!res->class)
+		return throw_internal_error();
 
 	if (vm_class_ensure_init(res->class))
-		return NULL;
+		return throw_internal_error();
 
 	res->array_length = count;
 
-	if (vm_monitor_init(&res->monitor)) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (vm_monitor_init(&res->monitor))
+		return throw_internal_error();
 
 	return res;
 }
@@ -134,21 +126,17 @@ struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	assert(nr_dimensions > 0);
 
 	if (vm_class_ensure_init(class))
-		return NULL;
+		return rethrow_exception();
 
 	elem_class = vm_class_get_array_element_class(class);
 	elem_size  = get_vmtype_size(vm_class_get_storage_vmtype(elem_class));
 
 	res = gc_alloc(sizeof(*res) + elem_size * counts[0]);
-	if (!res) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!res)
+		return throw_oom_error();
 
-	if (vm_monitor_init(&res->monitor)) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (vm_monitor_init(&res->monitor))
+		return throw_internal_error();
 
 	res->array_length = counts[0];
 	res->class = class;
@@ -171,16 +159,14 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	struct vm_object *res;
 
 	if (vm_class_ensure_init(class))
-		return NULL;
+		return rethrow_exception();
 
 	res = gc_alloc(sizeof(*res) + sizeof(struct vm_object *) * count);
-	if (!res) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!res)
+		return throw_oom_error();
 
 	if (vm_monitor_init(&res->monitor)) {
-		NOT_IMPLEMENTED;
+		signal_new_exception(vm_java_lang_InternalError, NULL);
 		return NULL;
 	}
 
@@ -285,16 +271,12 @@ struct vm_object *
 vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length)
 {
 	struct vm_object *array = utf8_to_char_array(bytes, length);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!array)
+		return rethrow_exception();
 
 	struct vm_object *string = vm_object_alloc(vm_java_lang_String);
-	if (!string) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!string)
+		return rethrow_exception();
 
 	field_set_int(string, vm_java_lang_String_offset, 0);
 	field_set_int(string, vm_java_lang_String_count, array->array_length);
@@ -307,18 +289,14 @@ struct vm_object *
 vm_object_alloc_string_from_c(const char *bytes)
 {
 	struct vm_object *string = vm_object_alloc(vm_java_lang_String);
-	if (!string) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!string)
+		return rethrow_exception();
 
 	unsigned int n = strlen(bytes);
 	struct vm_object *array
 		= vm_object_alloc_primitive_array(T_CHAR, n);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!array)
+		return rethrow_exception();
 
 #if 0
 	/* XXX: Need to handle code points >= 0x80 */
@@ -345,19 +323,15 @@ struct vm_object *new_exception(struct vm_class *vmc, const char *message)
 	struct vm_object *obj;
 
 	obj = vm_object_alloc(vmc);
-	if (!obj) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!obj)
+		return rethrow_exception();
 
 	if (message == NULL)
 		message_str = NULL;
 	else {
 		message_str = vm_object_alloc_string_from_c(message);
-		if (!message_str) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (!message_str)
+			return rethrow_exception();
 	}
 
 	mb = vm_class_get_method(vmc, "<init>", "(Ljava/lang/String;)V");

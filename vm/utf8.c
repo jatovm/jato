@@ -1,10 +1,12 @@
+#include "vm/utf8.h"
+
+#include "vm/errors.h"
+#include "vm/object.h"
+#include "vm/types.h"
+
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-
-#include "vm/object.h"
-#include "vm/types.h"
-#include "vm/utf8.h"
 
 int utf8_char_count(const uint8_t *bytes, unsigned int n, unsigned int *res)
 {
@@ -54,10 +56,8 @@ struct vm_object *utf8_to_char_array(const uint8_t *bytes, unsigned int n)
 
 	struct vm_object *array
 		= vm_object_alloc_primitive_array(T_CHAR, utf16_count);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return array;
-	}
+	if (!array)
+		return rethrow_exception();
 
 	for (unsigned int i = 0, j = 0; i < n; ++i) {
 		if (!(bytes[i] & 0x80)) {

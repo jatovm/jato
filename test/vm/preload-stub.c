@@ -52,6 +52,7 @@ struct vm_class *vm_java_lang_Thread;
 struct vm_class *vm_java_lang_ThreadGroup;
 struct vm_class *vm_java_lang_VMThread;
 struct vm_class *vm_java_lang_IllegalMonitorStateException;
+struct vm_class *vm_java_lang_InternalError;
 struct vm_class *vm_java_lang_OutOfMemoryError;
 struct vm_class *vm_java_lang_InterruptedException;
 struct vm_class *vm_java_lang_ClassFormatError;

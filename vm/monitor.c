@@ -52,20 +52,14 @@ int init_vm_monitors(void)
 
 int vm_monitor_init(struct vm_monitor *mon)
 {
-	if (pthread_mutex_init(&mon->owner_mutex, NULL)) {
-		NOT_IMPLEMENTED;
+	if (pthread_mutex_init(&mon->owner_mutex, NULL))
 		return -1;
-	}
 
-	if (pthread_mutex_init(&mon->mutex, &monitor_mutexattr)) {
-		NOT_IMPLEMENTED;
+	if (pthread_mutex_init(&mon->mutex, &monitor_mutexattr))
 		return -1;
-	}
 
-	if (pthread_cond_init(&mon->cond, NULL)) {
-		NOT_IMPLEMENTED;
+	if (pthread_cond_init(&mon->cond, NULL))
 		return -1;
-	}
 
 	mon->owner = NULL;
 	mon->lock_count = 0;
