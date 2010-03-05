@@ -24,12 +24,14 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "vm/die.h"
-#include "vm/object.h"
-#include "vm/preload.h"
 #include "vm/string.h"
 
 #include "jit/exception.h"
+
+#include "vm/preload.h"
+#include "vm/errors.h"
+#include "vm/object.h"
+#include "vm/die.h"
 
 #include "lib/hash-map.h"
 
@@ -110,10 +112,8 @@ struct vm_object *vm_string_intern(struct vm_object *string)
 	 * marked as a weak reference.
 	 */
 	intern = string;
-	if (hash_map_put(literals, string, intern)) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		intern = NULL;
-	}
+	if (hash_map_put(literals, string, intern))
+		intern = throw_oom_error();
 
 	pthread_rwlock_unlock(&literals_rwlock);
 
