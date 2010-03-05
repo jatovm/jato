@@ -30,8 +30,9 @@
 #ifndef CAFEBABE__STREAM_H
 #define CAFEBABE__STREAM_H
 
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <stdint.h>
 
 #include "cafebabe/error.h"
 
