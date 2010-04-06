@@ -192,7 +192,7 @@ static unsigned long native_call_gp(struct vm_method *method,
 
 	free(stack);
 
-	return 0;
+	return result;
 }
 
 static unsigned long vm_native_call_gp(struct vm_method *method,
