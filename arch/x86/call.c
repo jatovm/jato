@@ -80,7 +80,7 @@ static void native_call_eax(struct vm_method *method, void *target,
 	   "m" (target),
 	   "m" (result),
 	   "r" (vm_method_is_vm_native(method))
-	 : "%ecx", "%edi", "cc", "memory");
+	 : "%ecx", "%edx", "%edi", "cc", "memory");
 }
 
 static void native_call_long(struct vm_method *method, void *target,
@@ -128,7 +128,7 @@ static void native_call_long(struct vm_method *method, void *target,
 	   "m" (target),
 	   "m" (result),
 	   "r" (vm_method_is_vm_native(method))
-	 : "%ecx", "%edi", "cc", "memory");
+	 : "%ecx", "%edx", "%edi", "cc", "memory");
 }
 
 /**
