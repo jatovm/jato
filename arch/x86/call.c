@@ -59,22 +59,12 @@ static void do_native_call(struct vm_method *method, void *target,
 	 "addl $8, %%esp \n"
 	 "test %%eax, %%eax \n"
 	 "jnz 2f \n"
-
-	 "call *%2 \n"
-	 "movl %3, %%edi \n"
-	 "movl %%eax, (%%edi) \n"
-	 "movl %%edx, 4(%%edi) \n"
-
-	 "call vm_leave_vm_native \n"
-	 "jmp 2f \n"
 "1: \n"
 	 "call *%2 \n"
 	 "movl %3, %%edi \n"
 	 "movl %%eax, (%%edi) \n"
 	 "movl %%edx, 4(%%edi) \n"
-
 "2: \n"
-
 	 "addl %%esi, %%esp \n"
 	 :
 	 : "b" (method->args_count),
@@ -83,6 +73,9 @@ static void do_native_call(struct vm_method *method, void *target,
 	   "m" (result),
 	   "r" (vm_method_is_vm_native(method))
 	 : "%ecx", "%edx", "%edi", "cc", "memory");
+
+	if (vm_method_is_vm_native(method))
+		vm_leave_vm_native();
 }
 
 /**
