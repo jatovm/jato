@@ -53,6 +53,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "../boehmgc/include/gc.h"
+
 void *gc_safepoint_page;
 
 static pthread_mutex_t	gc_reclaim_mutex	= PTHREAD_MUTEX_INITIALIZER;
@@ -403,8 +405,39 @@ wait_for_reclaim:
 		die("pthread_mutex_unlock");
 }
 
+static void *gc_out_of_memory(size_t nr)
+{
+	if (verbose_gc)
+		fprintf(stderr, "[GC]\n");
+
+	GC_gcollect();
+
+	return NULL;	/* is this ok? */
+}
+
+static void gc_ignore_warnings(char *msg, GC_word arg)
+{
+}
+
+static void setup_boehm_gc(void)
+{
+	GC_set_warn_proc(gc_ignore_warnings);
+
+	GC_oom_fn	= gc_out_of_memory;
+
+	GC_quiet	= 1;
+
+	GC_dont_gc	= 1;
+
+	GC_INIT();
+
+        GC_set_max_heap_size(512 * 1024 * 1024);
+}
+
 void gc_init(void)
 {
+	setup_boehm_gc();
+
 	gc_safepoint_page = alloc_guard_page(false);
 	if (!gc_safepoint_page)
 		die("Couldn't allocate GC safepoint guard page");
@@ -418,8 +451,5 @@ void gc_init(void)
 
 void *gc_alloc(size_t size)
 {
-	if (gc_enabled)
-		gc_start();
-
-	return zalloc(size);
+	return GC_MALLOC(size);
 }
