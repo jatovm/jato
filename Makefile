@@ -163,35 +163,10 @@ CAFEBABE_OBJS := \
 	cafebabe/source_file_attribute.o	\
 	cafebabe/stream.o
 
-#
-# Set Boehm GC configuration variables.
-#
-CFLAGS		+= -DSILENT=1 -DGC_LINUX_THREADS=1
-
-BOEHMGC_OBJS	+= boehmgc/allchblk.o
-BOEHMGC_OBJS	+= boehmgc/alloc.o
-BOEHMGC_OBJS	+= boehmgc/blacklst.o
-BOEHMGC_OBJS	+= boehmgc/dyn_load.o
-BOEHMGC_OBJS	+= boehmgc/finalize.o
-BOEHMGC_OBJS	+= boehmgc/headers.o
-BOEHMGC_OBJS	+= boehmgc/mach_dep.o
-BOEHMGC_OBJS	+= boehmgc/malloc.o
-BOEHMGC_OBJS	+= boehmgc/mallocx.o
-BOEHMGC_OBJS	+= boehmgc/mark.o
-BOEHMGC_OBJS	+= boehmgc/mark_rts.o
-BOEHMGC_OBJS	+= boehmgc/misc.o
-BOEHMGC_OBJS	+= boehmgc/new_hblk.o
-BOEHMGC_OBJS	+= boehmgc/obj_map.o
-BOEHMGC_OBJS	+= boehmgc/os_dep.o
-BOEHMGC_OBJS	+= boehmgc/pthread_stop_world.o
-BOEHMGC_OBJS	+= boehmgc/pthread_support.o
-BOEHMGC_OBJS	+= boehmgc/reclaim.o
-BOEHMGC_OBJS	+= boehmgc/stubborn.o
-
 LIBHARNESS_OBJS = \
 	test/libharness/libharness.o
 
-JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(LIB_OBJS) $(CAFEBABE_OBJS) $(BOEHMGC_OBJS)
+JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(LIB_OBJS) $(CAFEBABE_OBJS)
 
 OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
 
@@ -235,7 +210,7 @@ DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
-DEFAULT_LIBS	= -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty $(ARCH_LIBS)
+DEFAULT_LIBS	= -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
 
 all: $(PROGRAM) $(TEST)
 .PHONY: all
@@ -255,6 +230,10 @@ monoburg:
 	+$(Q) $(MAKE) -C tools/monoburg/
 .PHONY: monoburg
 
+boehmgc:
+	+$(Q) $(MAKE) -C boehmgc/
+.PHONY: boehmgc
+
 %.o: %.c
 	$(E) "  CC      " $@
 	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
@@ -269,7 +248,7 @@ arch/$(ARCH)/insn-selector.c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
-$(PROGRAM): monoburg $(VERSION_HEADER) $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
+$(PROGRAM): monoburg boehmgc $(VERSION_HEADER) $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
 	$(E) "  LINK    " $@
 	$(Q) $(LINK) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
@@ -397,6 +376,7 @@ clean:
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
 	+$(Q) - $(MAKE) -C tools/monoburg/ clean
+	+$(Q) - $(MAKE) -C boehmgc/ clean
 	+$(Q) - $(MAKE) -C test/vm/ clean
 	+$(Q) - $(MAKE) -C test/jit/ clean
 	+$(Q) - $(MAKE) -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ clean
