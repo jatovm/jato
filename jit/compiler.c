@@ -29,8 +29,8 @@ static void compile_error(struct compilation_unit *cu, int err)
 	struct vm_method *method = cu->method;
 	struct vm_class *class = method->class;
 
-	error("Failed to compile method `%s' in class `%s', error: %i",
-		method->name, class->name, err);
+	error("Failed to compile method `%s' in class `%s', error: %i ('%s')",
+		method->name, class->name, err, strerror(abs(err)));
 }
 
 #define SYMBOL_LEN 128
