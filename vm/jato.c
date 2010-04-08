@@ -548,6 +548,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMObject", "notifyAll", native_vmobject_notify_all),
 	DEFINE_NATIVE("java/lang/VMObject", "wait", native_vmobject_wait),
 	DEFINE_NATIVE("java/lang/VMRuntime", "exit", native_vmruntime_exit),
+	DEFINE_NATIVE("java/lang/VMRuntime", "gc", native_vmruntime_gc),
 	DEFINE_NATIVE("java/lang/VMRuntime", "mapLibraryName", native_vmruntime_maplibraryname),
 	DEFINE_NATIVE("java/lang/VMRuntime", "nativeLoad", native_vmruntime_native_load),
 	DEFINE_NATIVE("java/lang/VMRuntime", "runFinalizationForExit", native_vmruntime_run_finalization_for_exit),

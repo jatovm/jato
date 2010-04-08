@@ -32,6 +32,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+void native_vmruntime_gc(void)
+{
+	/* Nothing to do */
+}
+
 void native_vmruntime_exit(int status)
 {
 	/* XXX: exit gracefully */

@@ -3,6 +3,7 @@
 
 struct vm_object;
 
+void native_vmruntime_gc(void);
 void native_vmruntime_exit(int status);
 void native_vmruntime_run_finalization_for_exit(void);
 struct vm_object *native_vmruntime_maplibraryname(struct vm_object *name);
