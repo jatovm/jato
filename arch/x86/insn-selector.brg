@@ -2670,7 +2670,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 
 	state_base = state->left->reg1;
 
-	base = get_var(s->b_parent, J_INT);
+	base = get_var(s->b_parent, GPR_VM_TYPE);
 	state->reg1 = base;
 
 	state->reg2 = state->right->reg1;
@@ -2679,6 +2679,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, offsetof(struct vm_object, fields), base));
 }
 
+%ifdef CONFIG_X86_32
 stmt:	STMT_STORE(array_deref, reg)
 {
 	struct var_info *src, *base, *index;
@@ -2784,6 +2785,89 @@ stmt:	STMT_STORE(freg, array_deref)
 	else
 		select_insn(s, tree, memindex_reg_insn(INSN_MOV_64_MEMINDEX_XMM, base, index, scale, dest));
 }
+%else
+stmt:	STMT_STORE(array_deref, reg)
+{
+	struct var_info *src, *base, *index;
+	struct expression *dest_expr;
+	struct expression *src_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	dest_expr = to_expr(stmt->store_dest);
+	src_expr = to_expr(stmt->store_src);
+
+	scale = type_to_scale(dest_expr->vm_type);
+
+	base = state->left->reg1;
+	index = state->left->reg2;
+	src = state->right->reg1;
+
+	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+}
+
+stmt:	STMT_STORE(array_deref, freg)
+{
+	struct var_info *src, *base, *index;
+	struct expression *dest_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	dest_expr = to_expr(stmt->store_dest);
+
+	scale = type_to_scale(dest_expr->vm_type);
+
+	base = state->left->reg1;
+	index = state->left->reg2;
+	src = state->right->reg1;
+
+	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+}
+
+stmt:	STMT_STORE(reg, array_deref)
+{
+	struct var_info *dest, *base, *index;
+	struct expression *src_expr;
+	struct expression *dest_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_src);
+	dest_expr = to_expr(stmt->store_dest);
+
+	scale = type_to_scale(src_expr->vm_type);
+
+	base = state->right->reg1;
+	index = state->right->reg2;
+	dest = state->left->reg1;
+
+	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+}
+
+stmt:	STMT_STORE(freg, array_deref)
+{
+	struct var_info *dest, *base, *index;
+	struct expression *src_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_src);
+
+	scale = type_to_scale(src_expr->vm_type);
+
+	base = state->right->reg1;
+	index = state->right->reg2;
+	dest = state->left->reg1;
+
+	state->reg1 = dest;
+
+	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+}
+%endif
 
 %ifdef	CONFIG_X86_32
 stmt:	STMT_ARRAY_STORE_CHECK(reg, reg) 1
