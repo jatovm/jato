@@ -1465,26 +1465,51 @@ reg:    EXPR_ARRAYLENGTH(reg)
 		offsetof(struct vm_object, array_length), arraylength));
 }
 
+%ifdef	CONFIG_X86_32
 reg:	EXPR_INSTANCEOF(reg)
 {
-	struct var_info *ref, *xax;
+	struct var_info *ref, *eax;
 	struct expression *expr;
 
 	expr = to_expr(tree);
 
 	ref = state->left->reg1;
 
-	xax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
 	state->reg1 = get_var(s->b_parent, J_INT);
 
 	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->instanceof_class));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xax, state->reg1));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 
 	method_args_cleanup(s, tree, 2);
 	select_exception_test(s, tree);
 }
+%else
+reg:	EXPR_INSTANCEOF(reg)
+{
+	struct var_info *ref, *rax, *rdi, *rsi;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	ref = state->left->reg1;
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->instanceof_class, rsi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+
+	select_exception_test(s, tree);
+}
+%endif
 
 reg:	EXPR_TRUNCATION(reg)
 {
