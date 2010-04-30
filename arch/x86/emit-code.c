@@ -2975,7 +2975,7 @@ static void emit_conv_fpu_to_gpr(struct insn *insn, struct buffer *buf, struct b
 
 	rex_w = is_64bit_reg(&insn->dest);
 
-	__emit_lopc_reg_reg(buf, rex_w, opc, 3, src, dest);
+	__emit_lopc_reg_reg(buf, rex_w, opc, 3, dest, src);
 }
 
 static void emit_conv_gpr_to_fpu(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -2996,7 +2996,7 @@ static void emit_conv_gpr_to_fpu(struct insn *insn, struct buffer *buf, struct b
 
 	rex_w = is_64bit_reg(&insn->src);
 
-	__emit_lopc_reg_reg(buf, rex_w, opc, 3, src, dest);
+	__emit_lopc_reg_reg(buf, rex_w, opc, 3, dest, src);
 }
 
 static void emit_conv_fpu_to_fpu(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -3014,7 +3014,7 @@ static void emit_conv_fpu_to_fpu(struct insn *insn, struct buffer *buf, struct b
 	opc[1] = 0x0F;
 	opc[2] = 0x5A;
 
-	__emit_lopc_reg_reg(buf, 0, opc, 3, src, dest);
+	__emit_lopc_reg_reg(buf, 0, opc, 3, dest, src);
 }
 
 static void emit_cltd_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
