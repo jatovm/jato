@@ -2589,6 +2589,7 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
 }
 %endif
 
+%ifdef CONFIG_X86_32
 stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
 {
 	struct expression *temp;
@@ -2628,6 +2629,37 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
 	else
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_64_XMM_XMM, src, dest));
 }
+%else
+stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
+{
+	struct expression *temp;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->tmp_low;
+	src = state->right->reg1;
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+}
+
+stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
+{
+	struct expression *temp;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->tmp_low;
+	src = state->right->reg1;
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+}
+%endif
 
 array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 {
