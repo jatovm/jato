@@ -2889,11 +2889,17 @@ static void __emit_lopc_memindex(struct buffer *buf,
 				 enum machine_reg base_reg,
 				 unsigned char reg_opcode)
 {
+	int needs_disp;
 	unsigned char rex_pfx = 0, mod_rm, sib;
 	unsigned char __index_reg = encode_mach_reg(index_reg);
 	unsigned char __base_reg = encode_mach_reg(base_reg);
 
-	mod_rm = encode_modrm(0x00, reg_opcode, 0x04);
+	needs_disp = (base_reg == MACH_REG_R13);
+
+	if (needs_disp)
+		mod_rm = encode_modrm(0x01, reg_opcode, 0x04);
+	else
+		mod_rm = encode_modrm(0x00, reg_opcode, 0x04);
 	sib = encode_sib(shift, __index_reg, __base_reg);
 
 	if (rex_w)
@@ -2908,6 +2914,8 @@ static void __emit_lopc_memindex(struct buffer *buf,
 	emit_lopc(buf, rex_pfx, lopc, lopc_size);
 	emit(buf, mod_rm);
 	emit(buf, sib);
+	if (needs_disp)
+		emit(buf, 0);
 }
 
 static void __emit_memindex_reg(struct buffer *buf,
