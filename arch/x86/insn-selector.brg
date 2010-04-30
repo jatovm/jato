@@ -2382,18 +2382,35 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 stmt:	STMT_STORE(EXPR_LOCAL, reg)
 {
 	struct compilation_unit *cu = s->b_parent;
+	struct vm_method *method = cu->method;
 	struct expression *local;
 	struct stack_slot *slot;
 	struct statement *stmt;
-	struct var_info *src;
+	struct var_info *src, *dest;
+	enum machine_reg reg;
+	int index;
 
 	src = state->right->reg1;
 
 	stmt = to_stmt(tree);
 	local = to_expr(stmt->store_dest);
-	slot = get_local_slot(cu->stack_frame, local->local_index);
 
-	select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+	if (local->local_index < (unsigned long) method->args_count) {
+		reg = method->args_map[local->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			index = method->args_map[local->local_index].stack_index;
+			slot = get_local_slot(cu->stack_frame, index);
+			select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL,
+							       src, slot));
+		} else {
+			dest = cu->non_fixed_args[local->local_index];
+			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+		}
+	} else {
+		index = local->local_index - method->reg_args_count;
+		slot = get_local_slot(cu->stack_frame, index);
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+	}
 }
 %endif
 
