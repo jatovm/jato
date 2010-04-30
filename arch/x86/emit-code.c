@@ -3046,6 +3046,23 @@ static void emit_div_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_div_mul_reg_rax(buf, &insn->src, &insn->dest, 0x07);
 }
 
+static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	unsigned char rex_pfx = 0, rm;
+
+	rm = encode_reg(&insn->operand.reg);
+
+	if (is_64bit_reg(&insn->operand))
+		rex_pfx |= REX_W;
+	if (reg_high(rm))
+		rex_pfx |= REX_B;
+
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+	emit(buf, 0xf7);
+	emit(buf, encode_modrm(0x3, 0x3, rm));
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg),
@@ -3074,6 +3091,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
+	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg),
