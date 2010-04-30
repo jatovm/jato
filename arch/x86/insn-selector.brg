@@ -1151,6 +1151,7 @@ freg:	EXPR_FLOAT_CLASS_FIELD 1
 	select_insn(s, tree, mov_insn);
 }
 
+%ifdef	CONFIG_X86_32
 reg:	EXPR_INSTANCE_FIELD(reg) 1
 {
 	struct var_info *base;
@@ -1189,6 +1190,37 @@ freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 	else
 		select_insn(s, tree, membase_reg_insn(INSN_MOV_64_MEMBASE_XMM, base, offset, state->reg1));
 }
+%else
+reg:	EXPR_INSTANCE_FIELD(reg) 1
+{
+	struct var_info *base;
+	struct expression *expr;
+	unsigned long offset;
+
+	expr = to_expr(tree);
+
+	base = state->left->reg1;
+	state->reg1 = get_var(s->b_parent, expr->vm_type);
+
+	offset = offsetof(struct vm_object, fields) + expr->instance_field->offset;
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
+}
+
+freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
+{
+	struct var_info *base;
+	struct expression *expr;
+	unsigned long offset;
+
+	expr = to_expr(tree);
+
+	base = state->left->reg1;
+	state->reg1 = get_var(s->b_parent, expr->vm_type);
+
+	offset = offsetof(struct vm_object, fields) + expr->instance_field->offset;
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
+}
+%endif
 
 %ifdef	CONFIG_X86_32
 reg:	EXPR_NEW
