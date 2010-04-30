@@ -25,6 +25,7 @@
  */
 #include "arch/registers.h"
 
+#include "jit/args.h"
 #include "jit/basic-block.h"
 #include "jit/compilation-unit.h"
 #include "jit/instruction.h"
@@ -85,7 +86,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		pthread_mutex_init(&cu->mutex, NULL);
 
 		cu->stack_frame = alloc_stack_frame(
-			method->args_count,
+			get_stack_args_count(method),
 			method->code_attribute.max_locals);
 		if (!cu->stack_frame)
 			goto out_of_memory;
