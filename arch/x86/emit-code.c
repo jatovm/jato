@@ -185,12 +185,10 @@ static unsigned char encode_mach_reg(enum machine_reg reg)
 	return register_numbers[reg];
 }
 
-#ifdef CONFIG_X86_32
 static unsigned char encode_reg(struct use_position *reg)
 {
 	return encode_mach_reg(mach_reg(reg));
 }
-#endif
 
 static inline bool is_imm_8(long imm)
 {
@@ -3011,11 +3009,49 @@ static void emit_conv_fpu_to_fpu(struct insn *insn, struct buffer *buf, struct b
 	__emit_lopc_reg_reg(buf, 0, opc, 3, src, dest);
 }
 
+static void emit_cltd_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	assert(mach_reg(&insn->src.reg) == MACH_REG_RAX);
+	assert(mach_reg(&insn->dest.reg) == MACH_REG_RDX);
+
+	if (is_64bit_reg(&insn->dest))
+		emit(buf, REX_W);
+	emit(buf, 0x99);
+}
+
+static void __emit_div_mul_reg_rax(struct buffer *buf,
+				   struct operand *src,
+				   struct operand *dest,
+				   unsigned char opc_ext)
+{
+	unsigned char rex_pfx = 0, rm;
+
+	assert(mach_reg(&dest->reg) == MACH_REG_RAX);
+
+	rm = encode_reg(&src->reg);
+
+	if (is_64bit_reg(src))
+		rex_pfx |= REX_W;
+	if (reg_high(rm))
+		rex_pfx |= REX_B;
+
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+	emit(buf, 0xF7);
+	emit(buf, encode_modrm(0x03, opc_ext, rm));
+}
+
+static void emit_div_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	__emit_div_mul_reg_rax(buf, &insn->src, &insn->dest, 0x07);
+}
+
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg),
 	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
+	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg),
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg),
@@ -3023,6 +3059,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU, emit_conv_gpr_to_fpu),
 	DECL_EMITTER(INSN_CONV_XMM_TO_XMM64, emit_conv_fpu_to_fpu),
 	DECL_EMITTER(INSN_CONV_XMM64_TO_XMM, emit_conv_fpu_to_fpu),
+	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg),
