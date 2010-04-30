@@ -3,7 +3,7 @@ AR		:= ar
 #
 # Set Boehm GC configuration variables.
 #
-CFLAGS		+= -DSILENT=1 -DGC_LINUX_THREADS=1 -lpthreads -Iinclude
+DEFAULT_CFLAGS		+= -DSILENT=1 -DGC_LINUX_THREADS=1 -lpthreads -Iinclude
 
 BOEHMGC_OBJS	+= allchblk.o
 BOEHMGC_OBJS	+= alloc.o
@@ -29,7 +29,7 @@ BOEHMGC_LIB	= libboehmgc.a
 
 %.o: %.c
 	$(E) "  CC      " $@
-	$(Q) $(CC) -c $(CFLAGS) $< -o $@
+	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
 $(BOEHMGC_LIB): $(BOEHMGC_OBJS)
 	$(E) "  AR      " $@
