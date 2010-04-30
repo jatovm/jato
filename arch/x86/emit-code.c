@@ -2260,6 +2260,16 @@ static void emit_mov_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 				     mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
 }
 
+static void emit_movzx_16_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	unsigned char opc[2];
+
+	opc[0] = 0x0F;
+	opc[1] = 0xB7;
+	__emit_lopc_reg_reg(buf, is_64bit_reg(&insn->dest), opc, 2,
+			    mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
+}
+
 static void emit_add_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
@@ -3098,6 +3108,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
+	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
