@@ -59,6 +59,21 @@ static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
 	return NULL;
 }
 
+static bool show_backtrace_function(void *addr, struct string *str) {
+	void * buf[] = { addr };
+	char **symbols;
+
+	symbols = backtrace_symbols(buf, 1);
+	if (symbols == NULL) {
+		return false;
+	}
+
+	str_append(str, "%s\n", symbols[0]);
+
+	free(symbols);
+	return true;
+}
+
 bool show_exe_function(void *addr, struct string *str)
 {
 	bool ret;
@@ -126,7 +141,11 @@ out:
 	return ret;
 
 failed:
-	ret = false;
+	/*
+	 * If above steps failed then try to obtain the symbol description with
+	 * backtrace_symbols().
+	 */
+	ret = show_backtrace_function(addr, str);
 	goto out;
 }
 
