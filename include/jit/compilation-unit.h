@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#include "vm/gc.h"
+
 struct buffer;
 struct vm_method;
 struct insn;

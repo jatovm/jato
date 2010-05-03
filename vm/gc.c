@@ -46,6 +46,7 @@
 #include "vm/trace.h"
 #include "vm/die.h"
 #include "vm/gc.h"
+#include "lib/string.h"
 
 #include <inttypes.h>
 #include <pthread.h>
@@ -427,7 +428,7 @@ static void setup_boehm_gc(void)
 
 	GC_quiet	= 1;
 
-	GC_dont_gc	= 1;
+	GC_dont_gc	= 0;
 
 	GC_INIT();
 
@@ -452,4 +453,30 @@ void gc_init(void)
 void *gc_alloc(size_t size)
 {
 	return GC_MALLOC(size);
+}
+
+void *vm_alloc(size_t size)
+{
+	return GC_malloc_uncollectable(size);
+}
+
+void *vm_zalloc(size_t size)
+{
+	void *result;
+
+	result = vm_alloc(size);
+	memset(result, 0, size);
+	return result;
+}
+
+void vm_free(void *ptr)
+{
+	GC_free(ptr);
+}
+
+void gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer,
+			   void *param)
+{
+	GC_register_finalizer(object, (GC_finalization_proc) finalizer,
+			      param, NULL, NULL);
 }

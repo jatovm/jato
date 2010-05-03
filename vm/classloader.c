@@ -307,7 +307,7 @@ static struct vm_class *load_class_from_file(const char *filename)
 
 	cafebabe_stream_close(&stream);
 
-	result = malloc(sizeof *result);
+	result = vm_alloc(sizeof *result);
 	if (result) {
 		if (vm_class_link(result, class)) {
 			NOT_IMPLEMENTED;
@@ -398,7 +398,7 @@ static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 
 	cafebabe_stream_close_buffer(&stream);
 
-	result = malloc(sizeof *result);
+	result = vm_alloc(sizeof *result);
 	if (result) {
 		if (vm_class_link(result, class)) {
 			NOT_IMPLEMENTED;
@@ -438,7 +438,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	if (primitive_class_cache[cache_index])
 		return primitive_class_cache[cache_index];
 
-	class = malloc(sizeof *class);
+	class = vm_alloc(sizeof *class);
 	if (!class) {
 		NOT_IMPLEMENTED;
 		return NULL;
@@ -466,7 +466,7 @@ load_array_class(struct vm_object *loader, const char *class_name)
 
 	assert(class_name[0] == '[');
 
-	array_class = malloc(sizeof *array_class);
+	array_class = vm_alloc(sizeof *array_class);
 	if (!array_class)
 		return NULL;
 
@@ -481,7 +481,7 @@ load_array_class(struct vm_object *loader, const char *class_name)
 		elem_class = classloader_load(loader, elem_class_name);
 
 	if (!elem_class) {
-		free(array_class);
+		vm_free(array_class);
 		return NULL;
 	}
 
@@ -585,7 +585,7 @@ find_class(struct vm_object *loader, const char *name)
 
 		if (class->status == CLASS_NOT_FOUND && !class->nr_waiting) {
 			remove_class(loader, name);
-			free(class);
+			vm_free(class);
 			class = NULL;
 		}
 	}
@@ -633,7 +633,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		goto out_unlock;
 	}
 
-	class = malloc(sizeof(*class));
+	class = vm_alloc(sizeof(*class));
 	class->status = CLASS_LOADING;
 	class->nr_waiting = 0;
 	class->loading_thread = vm_thread_self();
@@ -663,7 +663,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		 */
 		if (class->nr_waiting == 0) {
 			remove_class(loader, slash_class_name);
-			free(class);
+			vm_free(class);
 		} else {
 			class->status = CLASS_NOT_FOUND;
 			pthread_cond_broadcast(&classloader_cond);
@@ -724,7 +724,7 @@ int classloader_add_to_cache(struct vm_object *loader, struct vm_class *vmc)
 {
 	struct classloader_class *class;
 
-	class = malloc(sizeof(*class));
+	class = vm_alloc(sizeof(*class));
 	if (!class)
 		return -ENOMEM;
 
@@ -740,7 +740,7 @@ int classloader_add_to_cache(struct vm_object *loader, struct vm_class *vmc)
 	if (hash_map_put(classes, &class->key, class)) {
 		pthread_mutex_unlock(&classloader_mutex);
 		free(class->key.class_name);
-		free(class);
+		vm_free(class);
 		return -ENOMEM;
 	}
 

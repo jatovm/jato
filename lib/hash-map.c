@@ -30,6 +30,8 @@
 #include <malloc.h>
 #include <errno.h>
 
+#include "vm/gc.h"
+
 struct hash_map *alloc_hash_map(unsigned long size, hash_fn *hash, compare_fn *compare)
 {
 	struct hash_map *map;
@@ -56,6 +58,15 @@ struct hash_map *alloc_hash_map(unsigned long size, hash_fn *hash, compare_fn *c
 
 void free_hash_map(struct hash_map *map)
 {
+	for (unsigned int i = 0; i < map->size; i++) {
+		struct list_head *bucket = &map->table[i];
+		struct hash_map_entry *ent;
+
+		list_for_each_entry(ent, bucket, list_node) {
+			vm_free(ent);
+		}
+	}
+
 	free(map->table);
 	free(map);
 }
@@ -68,9 +79,10 @@ hash_map_lookup_entry(struct hash_map *map, const void *key)
 
 	bucket = &map->table[map->hash(key, map->size)];
 
-	list_for_each_entry(ent, bucket, list_node)
+	list_for_each_entry(ent, bucket, list_node) {
 		if (map->compare(ent->key, key) == 0)
 			return ent;
+	}
 
 	return NULL;
 }
@@ -86,7 +98,7 @@ int hash_map_put(struct hash_map *map, const void *key, void *value)
 		return 0;
 	}
 
-	ent = malloc(sizeof(struct hash_map_entry));
+	ent = vm_alloc(sizeof(struct hash_map_entry));
 	if (!ent)
 		return -ENOMEM;
 
@@ -120,6 +132,7 @@ int hash_map_remove(struct hash_map *map, const void *key)
 		return -1;
 
 	list_del(&ent->list_node);
+	vm_free(ent);
 	return 0;
 }
 

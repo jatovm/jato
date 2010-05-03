@@ -3,7 +3,7 @@ AR		:= ar
 #
 # Set Boehm GC configuration variables.
 #
-DEFAULT_CFLAGS		+= -DSILENT=1 -DGC_LINUX_THREADS=1 -lpthreads -Iinclude
+DEFAULT_CFLAGS		+= -DSILENT=1 -DGC_USE_LD_WRAP -D_REENTRANT -DGC_LINUX_THREADS -lpthreads -Iinclude
 
 BOEHMGC_OBJS	+= allchblk.o
 BOEHMGC_OBJS	+= alloc.o

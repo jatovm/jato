@@ -34,6 +34,7 @@
 #include "vm/classloader.h"
 #include "vm/backtrace.h"
 #include "vm/class.h"
+#include "vm/gc.h"
 #include "vm/object.h"
 #include "vm/itable.h"
 #include "vm/method.h"

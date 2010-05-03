@@ -162,41 +162,13 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 void setup_signal_handlers(void)
 {
 	struct sigaction sa;
-	sigset_t sigusr_mask;
-	sigset_t sigset;
-
-	sigemptyset(&sigusr_mask);
-	sigaddset(&sigusr_mask, SIGUSR1);
-	sigaddset(&sigusr_mask, SIGUSR2);
 
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags	= SA_RESTART | SA_SIGINFO;
 
-	/*
-	 * Block SIGUSR1 during SIGSEGV to prevent suspension when
-	 * entering safepoint through a SIGSEGV. Calls to sigwait() in
-	 * gc_jit_safepoint() assume that SIGUSR1 and SIGUSR2 are
-	 * blocked.
-	 */
 	sa.sa_sigaction	= sigsegv_handler;
-	sa.sa_mask	= sigusr_mask;
 	sigaction(SIGSEGV, &sa, NULL);
-	sigemptyset(&sa.sa_mask);
 
 	sa.sa_sigaction	= sigfpe_handler;
 	sigaction(SIGFPE, &sa, NULL);
-
-	sa.sa_sigaction	= suspend_handler;
-	sigaction(SIGUSR1, &sa, NULL);
-
-	sa.sa_sigaction	= wakeup_handler;
-	sigaction(SIGUSR2, &sa, NULL);
-
-	/*
-	 * SIGUSR2 is used to resume threads. Make sure the signal is blocked
-	 * by default to avoid races with sigwait().
-	 */
-	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGUSR2);
-	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 }

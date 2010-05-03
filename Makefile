@@ -182,6 +182,13 @@ INSTALL		:= install
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
 
+# boehmgc integration (see boehmgc/doc/README.linux)
+DEFAULT_CFLAGS  += -D_REENTRANT -DGC_LINUX_THREADS -DGC_USE_LD_WRAP
+
+JATO_CFLAGS  += -Wl,--wrap -Wl,pthread_create -Wl,--wrap -Wl,pthread_join \
+	     -Wl,--wrap -Wl,pthread_detach -Wl,--wrap -Wl,pthread_sigmask \
+             -Wl,--wrap -Wl,sleep
+
 # XXX: Temporary hack -Vegard
 DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
 
@@ -250,7 +257,7 @@ arch/$(ARCH)/insn-selector.c: monoburg FORCE
 
 $(PROGRAM): monoburg boehmgc $(VERSION_HEADER) $(CLASSPATH_CONFIG) compile $(RUNTIME_CLASSES)
 	$(E) "  LINK    " $@
-	$(Q) $(LINK) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+	$(Q) $(LINK) $(JATO_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
 compile: $(OBJS)
 

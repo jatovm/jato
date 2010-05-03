@@ -36,6 +36,7 @@
 #include "vm/die.h"
 #include "vm/jni.h"
 #include "vm/stack-trace.h"
+#include "vm/gc.h"
 
 #include "lib/hash-map.h"
 #include "lib/string.h"

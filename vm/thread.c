@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <pthread.h>
 
 __thread struct vm_exec_env current_exec_env;
 
@@ -60,12 +61,12 @@ static pthread_cond_t thread_count_lock_cond = PTHREAD_COND_INITIALIZER;
 
 static void vm_thread_free(struct vm_thread *thread)
 {
-	free(thread);
+	vm_free(thread);
 }
 
 static struct vm_thread *vm_thread_alloc(void)
 {
-	struct vm_thread *thread = malloc(sizeof(struct vm_thread));
+	struct vm_thread *thread = vm_alloc(sizeof(struct vm_thread));
 	if (!thread)
 		return NULL;
 

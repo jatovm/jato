@@ -41,6 +41,11 @@ int init_vm_objects(void)
 	return 0;
 }
 
+static void vm_object_finalizer(struct vm_object *obj, void *param)
+{
+	// TODO: implement
+}
+
 struct vm_object *vm_object_alloc(struct vm_class *class)
 {
 	struct vm_object *res;
@@ -51,6 +56,8 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 	res = gc_alloc(sizeof(*res) + class->object_size);
 	if (!res)
 		return throw_oom_error();
+
+	gc_register_finalizer(res, vm_object_finalizer, NULL);
 
 	res->class = class;
 
@@ -71,6 +78,8 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	res = gc_alloc(sizeof(*res) + get_vmtype_size(vm_type) * count);
 	if (!res)
 		return throw_oom_error();
+
+	gc_register_finalizer(res, vm_object_finalizer, NULL);
 
 	switch (type) {
 	case T_BOOLEAN:
@@ -134,6 +143,8 @@ vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *coun
 	if (!res)
 		return throw_oom_error();
 
+	gc_register_finalizer(res, vm_object_finalizer, NULL);
+
 	if (vm_monitor_init(&res->monitor))
 		return throw_internal_error();
 
@@ -161,6 +172,8 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	res = gc_alloc(sizeof(*res) + sizeof(struct vm_object *) * count);
 	if (!res)
 		return throw_oom_error();
+
+	gc_register_finalizer(res, vm_object_finalizer, NULL);
 
 	if (vm_monitor_init(&res->monitor))
 		return throw_internal_error();

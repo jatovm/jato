@@ -39,6 +39,7 @@
 
 #include "vm/fault-inject.h"
 #include "vm/classloader.h"
+#include "vm/gc.h"
 #include "vm/preload.h"
 #include "vm/errors.h"
 #include "vm/itable.h"
@@ -310,7 +311,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		vmc->interfaces[i] = vmi;
 	}
 
-	vmc->fields = malloc(sizeof(*vmc->fields) * class->fields_count);
+	vmc->fields = vm_alloc(sizeof(*vmc->fields) * class->fields_count);
 	if (!vmc->fields)
 		goto error_free_interfaces;
 
@@ -350,7 +351,9 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		for (unsigned int j = 0; j < 2; ++j) {
 			struct field_bucket *bucket = &field_buckets[j][i];
 
-			bucket->fields = malloc(bucket->nr * sizeof(*bucket->fields));
+			// TODO: free fields explicitly after they are no longer
+			// used.
+			bucket->fields = vm_alloc(bucket->nr * sizeof(*bucket->fields));
 			bucket->nr = 0;
 		}
 	}
@@ -370,7 +373,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	buckets_order_fields(field_buckets[1], &tmp, &vmc->object_size);
 
 	/* XXX: only static fields, right size, etc. */
-	vmc->static_values = zalloc(vmc->static_size);
+	vmc->static_values = vm_zalloc(vmc->static_size);
 	if (!vmc->static_values)
 		goto error_free_buckets;
 
@@ -419,7 +422,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	vmc->nr_methods = class->methods_count + extra_methods.size;
 
-	vmc->methods = malloc(sizeof(*vmc->methods) * vmc->nr_methods);
+	vmc->methods = vm_alloc(sizeof(*vmc->methods) * vmc->nr_methods);
 	if (!vmc->methods)
 		goto error_free_static_values;
 
@@ -1169,7 +1172,7 @@ vm_class_define(const char *name, uint8_t *data, unsigned long len)
 
 	cafebabe_stream_close_buffer(&stream);
 
-	result = malloc(sizeof *result);
+	result = vm_alloc(sizeof *result);
 	if (!result)
 		return throw_oom_error();
 
