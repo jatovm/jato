@@ -8,7 +8,7 @@ public class ObjectArrayTest extends TestCase {
         public static class Y {
         }
 
-        Y[] y;
+        @SuppressWarnings("unused") Y[] y;
     }
 
     private static void testObjectArrayCreation() {

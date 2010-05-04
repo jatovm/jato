@@ -4,8 +4,8 @@ public class PutstaticPatchingTest extends TestCase {
     static boolean clinit_run = false;
 
     private static class X {
-        static int x;
-        static int y;
+        @SuppressWarnings("unused") static int x;
+        @SuppressWarnings("unused") static int y;
 
         static {
             x = 1;
