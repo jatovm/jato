@@ -219,7 +219,7 @@ DEFAULT_CFLAGS	+= $(INCLUDES)
 
 DEFAULT_LIBS	= -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
 
-all: $(PROGRAM) $(TEST)
+all: $(PROGRAM)
 .PHONY: all
 .DEFAULT: all
 
