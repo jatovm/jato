@@ -72,6 +72,7 @@ static __thread sig_atomic_t in_safepoint;
 
 static pthread_t gc_thread_id;
 
+unsigned long max_heap_size	= 64 * 1024 * 1024;	/* 64 MB */
 bool verbose_gc;
 bool gc_enabled;
 
@@ -432,7 +433,7 @@ static void setup_boehm_gc(void)
 
 	GC_INIT();
 
-        GC_set_max_heap_size(512 * 1024 * 1024);
+        GC_set_max_heap_size(max_heap_size);
 }
 
 void gc_init(void)

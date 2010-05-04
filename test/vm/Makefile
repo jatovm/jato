@@ -6,21 +6,22 @@ TOPLEVEL_OBJS :=			\
 	lib/bitset.o			\
 	lib/buffer.o			\
 	lib/list.o			\
+	lib/parse.o			\
 	lib/pqueue.o			\
 	lib/radix-tree.o		\
 	lib/stack.o			\
 	lib/string.o			\
+	test/jit/trace-stub.o		\
+	test/libharness/libharness.o	\
+	test/vm/class-stub.o		\
+	test/vm/stack-trace-stub.o	\
 	vm/bytecode.o			\
 	vm/bytecodes.o			\
 	vm/die.o			\
 	vm/natives.o			\
-	vm/trace.o 			\
+	vm/trace.o			\
 	vm/types.o			\
 	vm/zalloc.o			\
-	test/libharness/libharness.o	\
-	test/jit/trace-stub.o		\
-	test/vm/class-stub.o		\
-	test/vm/stack-trace-stub.o	\
 	test/vm/thread-stub.o
 
 TEST_OBJS :=				\
@@ -29,6 +30,7 @@ TEST_OBJS :=				\
 	bytecodes-test.o		\
 	list-test.o			\
 	natives-test.o			\
+	parse-test.o			\
 	pqueue-test.o			\
 	radix-tree-test.o		\
 	stack-test.o			\

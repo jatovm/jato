@@ -142,6 +142,7 @@ LIB_OBJS = \
 	lib/guard-page.o	\
 	lib/hash-map.o		\
 	lib/list.o		\
+	lib/parse.o		\
 	lib/pqueue.o		\
 	lib/radix-tree.o	\
 	lib/stack.o		\

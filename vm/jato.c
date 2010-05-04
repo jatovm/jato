@@ -62,6 +62,7 @@
 #include "jit/perf-map.h"
 #include "jit/text.h"
 
+#include "lib/parse.h"
 #include "lib/list.h"
 
 #include "vm/fault-inject.h"
@@ -785,6 +786,16 @@ static void handle_verbose_gc(void)
 	verbose_gc = true;
 }
 
+static void handle_max_heap_size(const char *arg)
+{
+	max_heap_size = parse_long(arg);
+
+	if (!max_heap_size) {
+		fprintf(stderr, "%s: unparseable heap size '%s'\n", exe_name, arg);
+		usage(stderr, EXIT_FAILURE);
+	}
+}
+
 struct option {
 	const char *name;
 
@@ -812,6 +823,7 @@ const struct option options[] = {
 	DEFINE_OPTION("help",		handle_help),
 
 	DEFINE_OPTION_ADJACENT_ARG("D",	handle_define),
+	DEFINE_OPTION_ADJACENT_ARG("Xmx", handle_max_heap_size),
 
 	DEFINE_OPTION_ARG("classpath",	handle_classpath),
 	DEFINE_OPTION_ARG("cp",		handle_classpath),

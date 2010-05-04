@@ -8,6 +8,7 @@
 
 struct register_state;
 
+extern unsigned long max_heap_size;
 extern void *gc_safepoint_page;
 extern bool verbose_gc;
 extern bool gc_enabled;
