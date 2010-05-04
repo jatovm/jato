@@ -862,8 +862,10 @@ static void parse_options(int argc, char *argv[])
 			break;
 
 		const struct option *opt = get_option(argv[optind] + 1);
-		if (!opt)
+		if (!opt) {
+			fprintf(stderr, "%s: unrecognized option '%s'\n", exe_name, argv[optind]);
 			usage(stderr, EXIT_FAILURE);
+		}
 
 		if (!opt->arg) {
 			opt->handler.func();
