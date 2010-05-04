@@ -57,7 +57,7 @@ public class TestCase {
     }
 
     protected static void assertEquals(Object expected, Object actual) {
-        if (expected != actual) {
+        if (!expected.equals(actual)) {
             fail("Expected '" + expected + "', but was '" + actual + "'.");
         }
     }

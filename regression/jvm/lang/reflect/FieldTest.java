@@ -32,6 +32,25 @@ import jvm.TestCase;
  * @author Pekka Enberg
  */
 public class FieldTest extends TestCase {
+    private static void testStaticGetObject() throws Exception {
+       assertEquals(Fields.staticObject , field("staticObject").get(null));
+       assertEquals(Fields.staticByte   , field("staticByte").get(null));
+       assertEquals(Fields.staticChar   , field("staticChar").get(null));
+       assertEquals(Fields.staticInteger, field("staticInteger").get(null));
+       assertEquals(Fields.staticLong   , field("staticLong").get(null));
+       assertEquals(Fields.staticShort  , field("staticShort").get(null));
+    }
+
+    private static void testInstanceGetObject() throws Exception {
+       Fields fields = new Fields();
+       assertEquals(fields.instanceObject , field("instanceObject").get(fields));
+       assertEquals(fields.instanceByte   , field("instanceByte").get(fields));
+       assertEquals(fields.instanceChar   , field("instanceChar").get(fields));
+       assertEquals(fields.instanceInteger, field("instanceInteger").get(fields));
+       assertEquals(fields.instanceLong   , field("instanceLong").get(fields));
+       assertEquals(fields.instanceShort  , field("instanceShort").get(fields));
+    }
+
     private static void testStaticGetLong() throws Exception {
        assertEquals(Byte.MAX_VALUE, field("staticByte").getLong(null));
        assertEquals(Character.MAX_VALUE, field("staticChar").getLong(null));
@@ -73,16 +92,16 @@ public class FieldTest extends TestCase {
     }
 
     private static void testInstanceGetLong() throws Exception {
-       assertEquals(Byte.MAX_VALUE, field("staticByte").getLong(new Fields()));
-       assertEquals(Character.MAX_VALUE, field("staticChar").getLong(new Fields()));
-       assertEquals(Integer.MAX_VALUE, field("staticInteger").getLong(new Fields()));
-       assertEquals(Long.MAX_VALUE, field("staticLong").getLong(new Fields()));
-       assertEquals(Short.MAX_VALUE, field("staticShort").getLong(new Fields()));
+       assertEquals(Byte.MAX_VALUE, field("instanceByte").getLong(new Fields()));
+       assertEquals(Character.MAX_VALUE, field("instanceChar").getLong(new Fields()));
+       assertEquals(Integer.MAX_VALUE, field("instanceInteger").getLong(new Fields()));
+       assertEquals(Long.MAX_VALUE, field("instanceLong").getLong(new Fields()));
+       assertEquals(Short.MAX_VALUE, field("instanceShort").getLong(new Fields()));
     }
 
     private static void testInstanceGetLongFromBoolean() throws Exception {
       try {
-        field("staticBoolean").getLong(new Fields());
+        field("instanceBoolean").getLong(new Fields());
         fail("exception not thrown");
       } catch (IllegalArgumentException e) {
       }
@@ -90,7 +109,7 @@ public class FieldTest extends TestCase {
 
     private static void testInstanceGetLongFromDouble() throws Exception {
       try {
-        field("staticDouble").getLong(new Fields());
+        field("instanceDouble").getLong(new Fields());
         fail("exception not thrown");
       } catch (IllegalArgumentException e) {
       }
@@ -98,7 +117,7 @@ public class FieldTest extends TestCase {
 
     private static void testInstanceGetLongFromFloat() throws Exception {
       try {
-        field("staticFloat").getLong(new Fields());
+        field("instanceFloat").getLong(new Fields());
         fail("exception not thrown");
       } catch (IllegalArgumentException e) {
       }
@@ -106,7 +125,7 @@ public class FieldTest extends TestCase {
 
     private static void testInstanceGetLongFromObject() throws Exception {
       try {
-        field("staticObject").getLong(new Fields());
+        field("instanceObject").getLong(new Fields());
         fail("exception not thrown");
       } catch (IllegalArgumentException e) {
       }
@@ -139,6 +158,8 @@ public class FieldTest extends TestCase {
     };
 
     public static void main(String[] args) throws Exception {
+      testStaticGetObject();
+      testInstanceGetObject();
       testStaticGetLong();
       testStaticGetLongFromBoolean();
       testStaticGetLongFromDouble();

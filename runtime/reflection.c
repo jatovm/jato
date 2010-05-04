@@ -603,7 +603,9 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 		return NULL;
 
 	type	= vm_field_type(vmf);
-	value_p	= field_get_value(vmf, NULL);
+	value_p	= field_get_value(vmf, o);
+	if (!value_p)
+		return NULL;
 
 	return wrap((union jvalue *) value_p, type);
 }
@@ -647,7 +649,9 @@ jlong native_field_get_long(struct vm_object *this, struct vm_object *o)
 		return 0;
 
 	type	= vm_field_type(vmf);
-	value	= field_get_value(vmf, NULL);
+	value	= field_get_value(vmf, o);
+	if (!value)
+		return 0;
 
 	return to_jlong_value(value, type);
 }
