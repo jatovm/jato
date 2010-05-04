@@ -57,9 +57,13 @@ public class TestCase {
     }
 
     protected static void assertEquals(Object expected, Object actual) {
-        if (!expected.equals(actual)) {
-            fail("Expected '" + expected + "', but was '" + actual + "'.");
-        }
+        if (expected == null && actual == null)
+            return;
+
+        if (expected != null && expected.equals(actual))
+            return;
+
+        fail("Expected '" + expected + "', but was '" + actual + "'.");
     }
 
     protected static void assertNull(Object actual) {
@@ -90,21 +94,11 @@ public class TestCase {
         assertTrue(o.getClass().getName().equals(className));
     }
 
-    protected static void assertObjectEquals(Object a, Object b) {
-        if (a == null && b == null)
-            return;
-
-        assertTrue(a.equals(b));
-    }
-
-    protected static void assertStackTraceElement(StackTraceElement e,
-        int lineNumber, String fileName, String className,
-        String methodName, boolean isNative)
-    {
+    protected static void assertStackTraceElement(StackTraceElement e, int lineNumber, String fileName, String className, String methodName, boolean isNative) {
         assertEquals(lineNumber, e.getLineNumber());
-        assertObjectEquals(fileName, e.getFileName());
-        assertObjectEquals(className, e.getClassName());
-        assertObjectEquals(methodName, e.getMethodName());
+        assertEquals(fileName, e.getFileName());
+        assertEquals(className, e.getClassName());
+        assertEquals(methodName, e.getMethodName());
 
         if (isNative)
             assertTrue(e.isNativeMethod());

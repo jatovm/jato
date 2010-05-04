@@ -21,7 +21,7 @@ public class StringTest extends TestCase {
         String a = "123";
         String b = "abcd";
 
-        assertObjectEquals("123abcd", a + b);
+        assertEquals("123abcd", a + b);
     }
 
     public static String test_literal = "Test";

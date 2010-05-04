@@ -67,8 +67,8 @@ public class MethodTest extends TestCase {
     }
 
     public static void testMethodReflectionInvoke() {
-        assertObjectEquals(Integer.valueOf(2), invoke("intIncrement", int.class, Integer.valueOf(1)));
-        assertObjectEquals(Long.valueOf(0xdeadbeefcafebabfl), invoke("longIncrement", long.class, Long.valueOf(0xdeadbeefcafebabel)));
+        assertEquals(Integer.valueOf(2), invoke("intIncrement", int.class, Integer.valueOf(1)));
+        assertEquals(Long.valueOf(0xdeadbeefcafebabfl), invoke("longIncrement", long.class, Long.valueOf(0xdeadbeefcafebabel)));
     }
 
     public static void main(String[] args) throws Exception {

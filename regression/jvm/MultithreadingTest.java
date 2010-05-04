@@ -32,7 +32,7 @@ public class MultithreadingTest extends TestCase {
     public static void testMainThread() {
         Thread main = Thread.currentThread();
 
-        assertObjectEquals("main", main.getName());
+        assertEquals("main", main.getName());
     }
 
     static class TestThread extends Thread {
