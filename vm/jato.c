@@ -927,6 +927,10 @@ do_main_class(void)
 	if (!loader)
 		return -1;
 
+	if (exception_occurred()) {
+		return -1;
+	}
+
 	struct vm_class *vmc = classloader_load(loader, classname);
 	if (!vmc) {
 		fprintf(stderr, "error: %s: could not load\n", classname);
