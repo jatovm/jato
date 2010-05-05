@@ -53,6 +53,34 @@
 	if (!vm_object_is_instance_of((x), vm_java_lang_Class))		\
 		return NULL;
 
+static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
+			     uint64_t *args)
+{
+#ifdef CONFIG_32_BIT
+	struct vm_method_arg *arg;
+	int packed_idx;
+	int idx;
+
+	packed_idx = 0;
+	idx = 0;
+
+	list_for_each_entry(arg, &vmm->args, list_node) {
+		if (arg->type_info.vm_type == J_LONG ||
+		    arg->type_info.vm_type == J_DOUBLE) {
+			packed_args[packed_idx++] = low_64(args[idx]);
+			packed_args[packed_idx++] = high_64(args[idx++]);
+		} else {
+			packed_args[packed_idx++] = low_64(args[idx++]);
+		}
+	}
+#else
+	int count;
+
+	count = count_java_arguments(vmm);
+	memcpy(packed_args, args, sizeof(uint64_t) * count);
+#endif
+}
+
 static jfieldID
 vm_jni_common_get_field_id(jclass clazz, const char *name, const char *sig)
 {
@@ -661,6 +689,25 @@ static void vm_jni_call_void_method(struct vm_jni_env *env, jobject this,
  * constructors, the method ID must be derived from the real class of
  * obj, not from one of its superclasses.
  */
+static void vm_jni_call_void_method_a(struct vm_jni_env *env, jobject this,
+				    jmethodID methodID, uint64_t *args)
+{
+	enter_vm_from_jni();
+
+	unsigned long packed_args[methodID->args_count];
+
+	packed_args[0] = (unsigned long) this;
+	pack_args(methodID, packed_args + 1, args);
+
+	vm_call_method_this_a(methodID, this, packed_args, NULL);
+}
+
+
+/*
+ * TODO: When these functions are used to call private methods and
+ * constructors, the method ID must be derived from the real class of
+ * obj, not from one of its superclasses.
+ */
 #define DECLARE_CALL_XXX_METHOD(type, symbol)				\
 	static j ## type vm_jni_call_ ## type ## _method		\
 	(struct vm_jni_env *env, jobject this, jmethodID methodID, ...)	\
@@ -845,34 +892,6 @@ DECLARE_NEW_XXX_ARRAY(long, T_LONG);
 DECLARE_NEW_XXX_ARRAY(int, T_INT);
 DECLARE_NEW_XXX_ARRAY(short, T_SHORT);
 
-static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
-			     uint64_t *args)
-{
-#ifdef CONFIG_32_BIT
-	struct vm_method_arg *arg;
-	int packed_idx;
-	int idx;
-
-	packed_idx = 0;
-	idx = 0;
-
-	list_for_each_entry(arg, &vmm->args, list_node) {
-		if (arg->type_info.vm_type == J_LONG ||
-		    arg->type_info.vm_type == J_DOUBLE) {
-			packed_args[packed_idx++] = low_64(args[idx]);
-			packed_args[packed_idx++] = high_64(args[idx++]);
-		} else {
-			packed_args[packed_idx++] = low_64(args[idx++]);
-		}
-	}
-#else
-	int count;
-
-	count = count_java_arguments(vmm);
-	memcpy(packed_args, args, sizeof(uint64_t) * count);
-#endif
-}
-
 static jobject
 vm_jni_new_object_a(struct vm_jni_env *env, jclass clazz, jmethodID method,
 		    uint64_t *args)
@@ -1056,7 +1075,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* CallDoubleMethodA */
 	vm_jni_call_void_method,
 	NULL, /* CallVoidMethodV */
-	NULL, /* CallVoidMethodA */
+	vm_jni_call_void_method_a,
 	NULL, /* CallNonvirtualObjectMethod */
 
 	/* 65 */
