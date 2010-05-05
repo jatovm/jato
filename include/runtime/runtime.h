@@ -3,6 +3,7 @@
 
 struct vm_object;
 
+int native_vmruntime_available_processors(void);
 void native_vmruntime_gc(void);
 void native_vmruntime_exit(int status);
 void native_vmruntime_run_finalization_for_exit(void);

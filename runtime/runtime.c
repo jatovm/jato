@@ -32,6 +32,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+int native_vmruntime_available_processors(void)
+{
+	return 1;
+}
+
 void native_vmruntime_gc(void)
 {
 	/* Nothing to do */
