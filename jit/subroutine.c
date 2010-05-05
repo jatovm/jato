@@ -45,6 +45,7 @@
 #include "vm/stdlib.h"
 #include "vm/stream.h"
 #include "vm/die.h"
+#include "vm/trace.h"
 
 #include "lib/list.h"
 
@@ -566,6 +567,98 @@ static void subroutine_sort_call_sites(struct subroutine *sub)
 	      call_site_compare);
 }
 
+static long get_new_branch_offset(struct pc_map *pc_map, unsigned long new_pc,
+				  unsigned long target, long target_offset)
+{
+	unsigned long new_target;
+	int err;
+
+	if (target_offset >= 0)
+		err = pc_map_get_min_greater_than(pc_map,
+						  target, new_pc, &new_target);
+	else
+		err = pc_map_get_max_lesser_than(pc_map,
+						 target, new_pc, &new_target);
+
+	assert(!err);
+
+	return (long) (new_target - new_pc);
+}
+
+static void update_switch_target(struct pc_map *pc_map,
+				 unsigned char *code,
+				 unsigned long switch_pc,
+				 unsigned long offset_pc,
+				 unsigned char *new_code)
+{
+	long target_offset = read_s32(&code[offset_pc]);
+	int old_pad = get_tableswitch_padding(switch_pc);
+
+	unsigned long *new_pc;
+	pc_map_for_each_value(pc_map, switch_pc, new_pc) {
+		int new_pad = get_tableswitch_padding(*new_pc);
+		long new_offset = get_new_branch_offset(pc_map, *new_pc,
+				switch_pc + target_offset, target_offset);
+
+		unsigned long new_offset_pc = offset_pc - switch_pc + *new_pc
+			- old_pad + new_pad;
+		write_s32(&new_code[new_offset_pc], new_offset);
+	}
+}
+
+static void update_tableswitch_targets(struct pc_map *pc_map,
+				       unsigned char *code,
+				       unsigned long pc,
+				       unsigned char *new_code)
+{
+	unsigned long switch_pc;
+
+	switch_pc = pc;
+
+	pc += 1 + get_tableswitch_padding(pc);
+
+	/* update default target */
+	update_switch_target(pc_map, code, switch_pc, pc, new_code);
+	pc += 4;
+
+	int low = read_u32(&code[pc]);
+	pc += 4;
+
+	int high = read_u32(&code[pc]);
+	pc += 4;
+
+	int count = high - low + 1;
+
+	for (int i = 0; i < count; i++) {
+		update_switch_target(pc_map, code, switch_pc, pc, new_code);
+		pc += 4;
+	}
+}
+
+static void update_lookupswitch_targets(struct pc_map *pc_map,
+					unsigned char *code,
+					unsigned long pc,
+					unsigned char *new_code)
+{
+	unsigned long switch_pc;
+
+	switch_pc = pc;
+
+	pc += 1 + get_tableswitch_padding(pc);
+
+	/* update default target */
+	update_switch_target(pc_map, code, switch_pc, pc, new_code);
+	pc += 4;
+
+	int count = read_u32(&code[pc]);
+	pc += 4;
+
+	for (int i = 0; i < count; i++) {
+		update_switch_target(pc_map, code, switch_pc, pc + 4, new_code);
+		pc += 8;
+	}
+}
+
 static int update_branch_targets(struct inlining_context *ctx)
 {
 	unsigned long code_length;
@@ -576,6 +669,18 @@ static int update_branch_targets(struct inlining_context *ctx)
 
 	unsigned long pc;
 	bytecode_for_each_insn(code, code_length, pc) {
+		if (code[pc] == OPC_TABLESWITCH) {
+			update_tableswitch_targets(&ctx->pc_map, code, pc,
+						   ctx->code.code);
+			continue;
+		}
+
+		if (code[pc] == OPC_LOOKUPSWITCH) {
+			update_lookupswitch_targets(&ctx->pc_map, code, pc,
+						    ctx->code.code);
+			continue;
+		}
+
 		if (!bc_is_branch(code[pc]) || bc_is_jsr(code[pc]))
 			continue;
 
@@ -590,21 +695,8 @@ static int update_branch_targets(struct inlining_context *ctx)
 
 		unsigned long *new_pc;
 		pc_map_for_each_value(&ctx->pc_map, pc, new_pc) {
-			unsigned long new_target;
-			int err;
-
-			if (target_offset >= 0)
-				err = pc_map_get_min_greater_than(&ctx->pc_map,
-					target, *new_pc, &new_target);
-			else
-				err = pc_map_get_max_lesser_than(&ctx->pc_map,
-					target, *new_pc, &new_target);
-
-			if (err)
-				return warn("branch target not mapped"),
-					-EINVAL;
-
-			long new_offset = (long) (new_target - *new_pc);
+			long new_offset = get_new_branch_offset(&ctx->pc_map,
+						*new_pc, target, target_offset);
 			bc_set_target_off(&ctx->code.code[*new_pc], new_offset);
 		}
 	}
@@ -634,15 +726,50 @@ static int update_bytecode_offsets(struct inlining_context *ctx,
 	return 0;
 }
 
-static int do_bytecode_copy(struct code_state *dest, unsigned long dest_pc,
+/*
+ * Rewrites count bytes from src:src_pc to dest:dest_pc. Note that
+ * the number of bytes writen to the destination may be different than
+ * count because of padding change in tableswitch and lookupswitch
+ * instructions.
+ */
+static int do_bytecode_copy(struct code_state *dest, unsigned long *dest_pc,
 			    struct code_state *src, unsigned long src_pc,
 			    unsigned long count, struct pc_map *map)
 {
-	for (unsigned long i = 0; i < count; i++)
-		if (pc_map_add(map, src_pc + i, dest_pc + i))
-			return warn("out of memory"), -ENOMEM;
+	unsigned int n = src_pc + count;
+	while (src_pc < n) {
+		int src_insn_size = bc_insn_size(src->code, src_pc);
 
-	memcpy(dest->code + dest_pc, src->code + src_pc, count);
+		if (pc_map_add(map, src_pc, *dest_pc))
+				return warn("out of memory"), -ENOMEM;
+
+		unsigned char opcode = src->code[src_pc];
+		if (opcode == OPC_TABLESWITCH || opcode == OPC_LOOKUPSWITCH) {
+			/* The copy operation might change the padding */
+			dest->code[*dest_pc] = opcode;
+
+			int old_pad = get_tableswitch_padding(src_pc);
+			int new_pad = get_tableswitch_padding(*dest_pc);
+
+			memset(dest->code + *dest_pc + 1, 0, new_pad);
+			memcpy(dest->code + *dest_pc + 1 + new_pad,
+			       src->code + src_pc + 1 + old_pad,
+			       src_insn_size - 1 - old_pad);
+
+			src_pc += src_insn_size;
+			*dest_pc += src_insn_size - old_pad + new_pad;
+		} else {
+			memcpy(dest->code + *dest_pc,
+			       src->code + src_pc,
+			       src_insn_size);
+
+			src_pc  += src_insn_size;
+			*dest_pc += src_insn_size;
+		}
+	}
+
+	assert (src_pc == n);
+
 	return 0;
 }
 
@@ -662,27 +789,23 @@ static int bytecode_copy(struct code_state *dest, unsigned long *dest_pc,
 		 * must not be copied.
 		 */
 		count_1 = sub->start_pc - src_pc;
-		err = do_bytecode_copy(dest, *dest_pc, src, src_pc, count_1,
+		err = do_bytecode_copy(dest, dest_pc, src, src_pc, count_1,
 				       pc_map);
 		if (err)
 			return err;
 
-		*dest_pc += count_1;
 		src_pc += count_1;
-
 		src_pc += sub->end_pc + sub->epilog_size - sub->start_pc;
 
 		count_2 = upto - (sub->end_pc + sub->epilog_size);
-		err = do_bytecode_copy(dest, *dest_pc, src, src_pc, count_2,
+		err = do_bytecode_copy(dest, dest_pc, src, src_pc, count_2,
 				       pc_map);
-		*dest_pc += count_2;
 
 		/* TODO: verify that immediately before subroutine
 		   start there is either goto, athrow or return. */
 	} else {
-		err = do_bytecode_copy(dest, *dest_pc, src, src_pc, count,
+		err = do_bytecode_copy(dest, dest_pc, src, src_pc, count,
 				       pc_map);
-		*dest_pc += count;
 	}
 
 	return err;
@@ -729,6 +852,11 @@ static int build_line_number_table(struct inlining_context *ctx)
 
 			struct cafebabe_line_number_table_entry *ent
 				= &new_table[index++];
+
+			for (unsigned long i = 0; i < index - 1; i++) {
+				if (new_table[i].start_pc == *new_pc)
+					error("already mapped");
+			}
 
 			ent->start_pc = *new_pc;
 			ent->line_number = line_no;
@@ -1001,19 +1129,16 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 
 	unsigned long body_size = subroutine_get_body_size(sub);
 	unsigned long sub_size = subroutine_get_size(sub);
-	unsigned long new_code_length = ctx->code.code_length - sub_size +
+
+	unsigned long approx_new_code_length = ctx->code.code_length - sub_size +
 		sub->nr_call_sites * body_size -
 		sub->call_sites_total_size;
 
-	if (code_state_init_empty(&new_code, new_code_length))
+	/* We do not know the final size of rewriten code */
+	if (code_state_init_empty(&new_code, approx_new_code_length * 2))
 		goto error_update_bytecode_offsets;
 
 	subroutine_sort_call_sites(sub);
-
-	/* Add mapping for end of bytecode pc. */
-	err = pc_map_add(&pc_map, ctx->code.code_length, new_code.code_length);
-	if (err)
-		goto error;
 
 	new_code_pc = 0;
 	code_pc = 0;
@@ -1030,24 +1155,29 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 		   will be inlined */
 		pc_map_add(&pc_map, sub->call_sites[i], new_code_pc);
 
-		/* Map address of ret S to the address of first
-		   instruction after inlined subroutine. */
-		pc_map_add(&pc_map, sub->end_pc, new_code_pc + body_size);
-
 		/* Inline subroutine */
-		err = do_bytecode_copy(&new_code, new_code_pc, &ctx->code,
+		err = do_bytecode_copy(&new_code, &new_code_pc, &ctx->code,
 				       sub->prolog_size + sub->start_pc,
 				       body_size, &pc_map);
 		if (err)
 			goto error;
 
-		new_code_pc += body_size;
+		/* Map address of ret S to the address of first
+		   instruction after inlined subroutine. */
+		pc_map_add(&pc_map, sub->end_pc, new_code_pc);
 
 		code_pc = next_pc(ctx->code.code, sub->call_sites[i]);
 	}
 
 	err = bytecode_copy(&new_code, &new_code_pc, &ctx->code, code_pc, sub,
 			    &pc_map, ctx->code.code_length - code_pc);
+	if (err)
+		goto error;
+
+	new_code.code_length = new_code_pc;
+
+	/* Add mapping for end of bytecode pc. */
+	err = pc_map_add(&pc_map, ctx->code.code_length, new_code.code_length);
 	if (err)
 		goto error;
 
@@ -1263,7 +1393,7 @@ int inline_subroutines(struct vm_method *method)
 		goto out;
 
 	if (opt_trace_bytecode) {
-		printf("Code before subroutine inlining:\n");
+		trace_printf("Code before subroutine inlining:\n");
 		trace_bytecode(method);
 	}
 

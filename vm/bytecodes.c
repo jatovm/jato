@@ -54,7 +54,7 @@ void get_tableswitch_info(const unsigned char *code, unsigned long pc,
 
 	assert(code[pc] == OPC_TABLESWITCH);
 
-	pad = 3 - (pc % 4);
+	pad = get_tableswitch_padding(pc);
 	pc += pad + 1;
 
 	info->default_target = read_u32(&code[pc]);
@@ -73,7 +73,7 @@ void get_lookupswitch_info(const unsigned char *code, unsigned long pc,
 
 	assert(code[pc] == OPC_LOOKUPSWITCH);
 
-	pad = 3 - (pc % 4);
+	pad = get_tableswitch_padding(pc);
 	pc += pad + 1;
 
 	info->default_target = read_u32(&code[pc]);

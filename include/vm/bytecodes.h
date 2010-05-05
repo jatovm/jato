@@ -50,6 +50,11 @@ struct lookupswitch_info {
 	unsigned long insn_size;
 };
 
+static inline int get_tableswitch_padding(unsigned long pc)
+{
+	return 3 - (pc % 4);
+}
+
 void get_tableswitch_info(const unsigned char *code, unsigned long pc,
 			  struct tableswitch_info *info);
 

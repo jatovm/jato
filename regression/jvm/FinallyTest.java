@@ -121,10 +121,44 @@ public class FinallyTest extends TestCase {
         assertTrue(caught);
     }
 
+    public static void testTableswitchInlining() {
+        int x = 0;
+
+        try {
+            x = 1;
+        } finally {
+            switch (x) {
+            case 0:  x = 2; break;
+            case 1:  x = 3; break;
+            default: x = 4; break;
+            }
+        }
+
+        assertEquals(3, x);
+    }
+
+    public static void testLookupswitchInlining() {
+        int x = 0;
+
+        try {
+            x = 1000;
+        } finally {
+            switch (x) {
+            case -100: x = 2; break;
+            case 1000: x = 3; break;
+            default:   x = 4; break;
+            }
+        }
+
+        assertEquals(3, x);
+    }
+
     public static void main(String args[]) {
         testSingleFinallyBlock();
         testNestedFinallyBlocks();
         testLineNumberTableAfterInlining();
         testExceptionTableAfterInlining();
+        testTableswitchInlining();
+        testLookupswitchInlining();
     }
 }
