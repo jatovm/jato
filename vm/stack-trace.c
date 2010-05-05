@@ -732,6 +732,9 @@ static void show_mixed_stack_trace(struct stack_trace_elem *elem)
 			print_java_stack_trace_elem(elem);
 			trace_printf("\n");
 
+			if (elem->type != STACK_TRACE_ELEM_TYPE_VM_NATIVE)
+				continue;
+
 			struct string *str;
 
 			str = alloc_str();
