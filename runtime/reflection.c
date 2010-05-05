@@ -176,7 +176,7 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 		return NULL;
 
 	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
-		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Field, 0);
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Method, 0);
 
 	count = 0;
 	for (int i = 0; i < vmc->class->methods_count; i++) {
