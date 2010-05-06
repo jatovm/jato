@@ -654,9 +654,9 @@ static void handle_jar(const char *arg)
 	classloader_add_to_classpath(arg);
 }
 
-static void handle_gc(void)
+static void handle_nogc(void)
 {
-	gc_enabled = true;
+	gc_enabled = false;
 }
 
 static void handle_maps(void)
@@ -831,7 +831,7 @@ const struct option options[] = {
 	DEFINE_OPTION_ARG("jar",	handle_jar),
 	DEFINE_OPTION("verbose:gc",	handle_verbose_gc),
 
-	DEFINE_OPTION("Xgc",			handle_gc),
+	DEFINE_OPTION("Xnogc",			handle_nogc),
 	DEFINE_OPTION("Xmaps",			handle_maps),
 	DEFINE_OPTION("Xperf",			handle_perf),
 

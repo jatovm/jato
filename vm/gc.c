@@ -429,7 +429,7 @@ static void setup_boehm_gc(void)
 
 	GC_quiet	= 1;
 
-	GC_dont_gc	= 0;
+	GC_dont_gc	= !gc_enabled;
 
 	GC_INIT();
 
