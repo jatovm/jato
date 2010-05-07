@@ -76,6 +76,11 @@ int convert_getstatic(struct parse_context *ctx)
 	if (!value)
 		return warn("out of memory"), -ENOMEM;
 
+	/*
+	 * We need to put a STORE statement here to assure
+	 * that field's value will be retrieved now and not later
+	 * in a statement which pops the expression from mimic stack.
+	 */
 	value_dup = dup_expr(ctx, value);
 	if (!value_dup)
 		return warn("out of memory"), -ENOMEM;
@@ -128,6 +133,11 @@ int convert_getfield(struct parse_context *ctx)
 	if (!value)
 		return warn("out of memory"), -ENOMEM;
 
+	/*
+	 * We need to put a STORE statement here to assure
+	 * that field's value will be retrieved now and not later
+	 * in a statement which pops the expression from mimic stack.
+	 */
 	value_dup = dup_expr(ctx, value);
 	if (!value_dup)
 		return warn("out of memory"), -ENOMEM;

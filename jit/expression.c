@@ -116,6 +116,8 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_MULTIARRAY_SIZE_CHECK:
 	case EXPR_NULL_CHECK:
 	case EXPR_LOOKUPSWITCH_BSEARCH:
+	case EXPR_INSTANCE_FIELD:
+	case EXPR_FLOAT_INSTANCE_FIELD:
 
 		/* These expression types should be always assumed to
 		   have side-effects. */
@@ -137,8 +139,6 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_FLOAT_CLASS_FIELD:
 	case EXPR_NO_ARGS:
 	case EXPR_EXCEPTION_REF:
-	case EXPR_INSTANCE_FIELD:
-	case EXPR_FLOAT_INSTANCE_FIELD:
 	case EXPR_MIMIC_STACK_SLOT:
 		return true;
 
