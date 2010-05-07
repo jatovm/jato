@@ -72,7 +72,7 @@ static __thread sig_atomic_t in_safepoint;
 
 static pthread_t gc_thread_id;
 
-unsigned long max_heap_size	= 64 * 1024 * 1024;	/* 64 MB */
+unsigned long max_heap_size	= 128 * 1024 * 1024;	/* 128 MB */
 bool verbose_gc;
 bool gc_enabled;
 
