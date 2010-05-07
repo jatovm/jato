@@ -446,6 +446,11 @@ static void native_vmthread_start(struct vm_object *vmthread, jlong stacksize)
 	vm_thread_start(vmthread);
 }
 
+static void native_vmthread_yield(void)
+{
+	vm_thread_yield();
+}
+
 static jint native_vmthread_interrupted(void)
 {
 	return vm_thread_interrupted(vm_thread_self());
@@ -563,6 +568,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMThread", "interrupted", native_vmthread_interrupted),
 	DEFINE_NATIVE("java/lang/VMThread", "isInterrupted", native_vmthread_isinterrupted),
 	DEFINE_NATIVE("java/lang/VMThread", "start", native_vmthread_start),
+	DEFINE_NATIVE("java/lang/VMThread", "yield", native_vmthread_yield),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", native_vmthrowable_fill_in_stack_trace),
 	DEFINE_NATIVE("java/lang/VMThrowable", "getStackTrace", native_vmthrowable_get_stack_trace),
 	DEFINE_NATIVE("java/lang/reflect/Constructor", "constructNative", native_constructor_construct_native),

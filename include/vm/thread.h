@@ -65,6 +65,7 @@ char *vm_thread_get_name(struct vm_thread *thread);
 bool vm_thread_is_interrupted(struct vm_thread *thread);
 bool vm_thread_interrupted(struct vm_thread *thread);
 void vm_thread_interrupt(struct vm_thread *thread);
+void vm_thread_yield(void);
 void vm_lock_thread_count(void);
 void vm_unlock_thread_count(void);
 

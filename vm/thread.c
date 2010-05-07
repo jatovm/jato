@@ -362,3 +362,8 @@ void vm_unlock_thread_count(void)
 	pthread_cond_broadcast(&thread_count_lock_cond);
 	pthread_mutex_unlock(&threads_mutex);
 }
+
+void vm_thread_yield(void)
+{
+	sched_yield();
+}
