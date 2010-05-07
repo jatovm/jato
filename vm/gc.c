@@ -74,7 +74,7 @@ static pthread_t gc_thread_id;
 
 unsigned long max_heap_size	= 128 * 1024 * 1024;	/* 128 MB */
 bool verbose_gc;
-bool gc_enabled;
+int dont_gc;
 
 static void hide_safepoint_guard_page(void)
 {
@@ -433,7 +433,7 @@ static void setup_boehm_gc(void)
 
 	GC_quiet	= 1;
 
-	GC_dont_gc	= !gc_enabled;
+	GC_dont_gc	= dont_gc;
 
 	GC_INIT();
 

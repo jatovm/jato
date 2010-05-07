@@ -662,7 +662,7 @@ static void handle_jar(const char *arg)
 
 static void handle_nogc(void)
 {
-	gc_enabled = false;
+	dont_gc		= 1;
 }
 
 static void handle_maps(void)
