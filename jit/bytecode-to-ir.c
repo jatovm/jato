@@ -162,7 +162,12 @@ int convert_instruction(struct parse_context *ctx)
 	if (!convert)
 		return warn("no converter for %d found", ctx->opc), -EINVAL;
 
-	return convert(ctx);
+	int err = convert(ctx);
+
+	if (err)
+		warn("conversion error at PC=%lu", ctx->offset);
+
+	return err;
 }
 
 static int do_convert_bb_to_ir(struct basic_block *bb)
