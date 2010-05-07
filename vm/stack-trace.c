@@ -644,6 +644,7 @@ void vm_print_exception(struct vm_object *exception)
 
 		name = vm_call_method_object(vm_java_lang_Thread_getName,
 					     jthread);
+
 		char *name_s = vm_string_to_cstr(name);
 		if (!name_s)
 			goto error;

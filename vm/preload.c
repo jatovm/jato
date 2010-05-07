@@ -74,6 +74,7 @@ struct vm_class *vm_java_lang_NoSuchMethodError;
 struct vm_class *vm_java_lang_StackOverflowError;
 struct vm_class *vm_java_lang_Thread;
 struct vm_class *vm_java_lang_ThreadGroup;
+struct vm_class *vm_java_lang_InheritableThreadLocal;
 struct vm_class *vm_java_lang_VMThread;
 struct vm_class *vm_java_lang_IllegalMonitorStateException;
 struct vm_class *vm_java_lang_System;
@@ -139,6 +140,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Thread", &vm_java_lang_Thread },
 	{ "java/lang/ThreadGroup", &vm_java_lang_ThreadGroup },
 	{ "java/lang/VMThread",	&vm_java_lang_VMThread },
+	{ "java/lang/InheritableThreadLocal", &vm_java_lang_InheritableThreadLocal },
 	{ "java/lang/IllegalMonitorStateException", &vm_java_lang_IllegalMonitorStateException },
 	{ "java/lang/System",	&vm_java_lang_System },
 	{ "java/lang/reflect/Field", &vm_java_lang_reflect_Field, PRELOAD_OPTIONAL },
@@ -274,6 +276,7 @@ struct vm_method *vm_java_lang_Double_init;
 struct vm_method *vm_java_lang_Double_valueOf;
 struct vm_method *vm_java_lang_Float_init;
 struct vm_method *vm_java_lang_Float_valueOf;
+struct vm_method *vm_java_lang_InheritableThreadLocal_newChildThread;
 struct vm_method *vm_java_lang_Integer_init;
 struct vm_method *vm_java_lang_Integer_valueOf;
 struct vm_method *vm_java_lang_Long_init;
@@ -308,6 +311,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		&vm_java_lang_Throwable_getCause,
 	},
 	{
+		&vm_java_lang_InheritableThreadLocal,
+		"newChildThread",
+		"(Ljava/lang/Thread;)V",
+		&vm_java_lang_InheritableThreadLocal_newChildThread,
+	},
+	{
 		&vm_java_lang_Throwable,
 		"getStackTrace",
 		"()[Ljava/lang/StackTraceElement;",
@@ -334,7 +343,7 @@ static const struct method_preload_entry method_preload_entries[] = {
 	{
 		&vm_java_lang_Thread,
 		"<init>",
-		"(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V",
+		"(Ljava/lang/VMThread;Ljava/lang/String;IZ)V",
 		&vm_java_lang_Thread_init,
 	},
 	{

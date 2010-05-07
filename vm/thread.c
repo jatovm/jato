@@ -182,26 +182,29 @@ int init_threading(void)
 
 	vm_get_exec_env()->thread = main_thread;
 
-	field_set_int(thread, vm_java_lang_Thread_priority, 5);
-	field_set_int(thread, vm_java_lang_Thread_daemon, 0);
-	field_set_object(thread, vm_java_lang_Thread_name, thread_name);
-	field_set_object(thread, vm_java_lang_Thread_group, main_thread_group);
-	field_set_object(thread, vm_java_lang_Thread_vmThread, vmthread);
-
-	field_set_object(thread,
-		vm_java_lang_Thread_contextClassLoader, NULL);
-	field_set_int(thread,
-		vm_java_lang_Thread_contextClassLoaderIsSystemClassLoader, 1);
-
-	field_set_object(vmthread,
-		vm_java_lang_VMThread_thread, thread);
-
-	vm_call_method(vm_java_lang_ThreadGroup_addThread, main_thread_group,
-		       thread);
+	vm_call_method_object(vm_java_lang_Thread_init, thread,
+			      vmthread, thread_name,
+			      5 /* priority */,
+			      0 /* daemon */);
 	if (exception_occurred())
 		return -1;
 
+	field_set_object(vmthread, vm_java_lang_VMThread_thread, thread);
+
+	/* we must manually attach the main thread to the main ThreadGroup */
+	vm_call_method(vm_java_lang_ThreadGroup_addThread, main_thread_group, thread);
+	if (exception_occurred())
+		return -1;
+
+	field_set_object(thread, vm_java_lang_Thread_group, main_thread_group);
+
 	vm_thread_attach_thread(main_thread);
+
+	/* We must manually add main thread to InheritableThreadLocal. */
+	/* It must be called after all threading structures are set.   */
+	vm_call_method(vm_java_lang_InheritableThreadLocal_newChildThread, thread);
+	if (exception_occurred())
+		return -1;
 
 	return 0;
 }
@@ -290,7 +293,12 @@ char *vm_thread_get_name(struct vm_thread *thread)
 	struct vm_object *name;
 
 	jthread = vm_thread_get_java_thread(thread);
+	if (!jthread)
+		return NULL;
+
 	name = field_get_object(jthread, vm_java_lang_Thread_name);
+	if (!name)
+		return NULL;
 
 	return vm_string_to_cstr(name);
 }

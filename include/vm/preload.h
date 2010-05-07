@@ -112,6 +112,7 @@ extern struct vm_method *vm_java_lang_Double_init;
 extern struct vm_method *vm_java_lang_Double_valueOf;
 extern struct vm_method *vm_java_lang_Float_init;
 extern struct vm_method *vm_java_lang_Float_valueOf;
+extern struct vm_method *vm_java_lang_InheritableThreadLocal_newChildThread;
 extern struct vm_method *vm_java_lang_Integer_init;
 extern struct vm_method *vm_java_lang_Integer_valueOf;
 extern struct vm_method *vm_java_lang_Long_init;
