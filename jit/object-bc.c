@@ -204,13 +204,7 @@ static int convert_array_load(struct parse_context *ctx, enum vm_type type)
 	index_pure = get_pure_expr(ctx, index);
 	src_expr = array_deref_expr(type, arrayref_pure, index_pure);
 
-	/*
-	 * baload, caload and saload should push int value on stack.
-	 */
-	if (type == J_BYTE || type == J_CHAR || type == J_SHORT)
-		dest_expr = temporary_expr(J_INT, ctx->cu);
-	else
-		dest_expr = temporary_expr(type, ctx->cu);
+	dest_expr = temporary_expr(type, ctx->cu);
 
 	store_stmt->store_src = &src_expr->node;
 	store_stmt->store_dest = &dest_expr->node;
