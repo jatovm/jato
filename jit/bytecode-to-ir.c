@@ -59,6 +59,10 @@ static convert_fn_t converters[] = {
 void convert_expression(struct parse_context *ctx, struct expression *expr)
 {
 	tree_patch_bc_offset(&expr->node, ctx->offset);
+
+	/* byte, char and short are always pushed as ints */
+	expr->vm_type = mimic_stack_type(expr->vm_type);
+
 	stack_push(ctx->bb->mimic_stack, expr);
 }
 
