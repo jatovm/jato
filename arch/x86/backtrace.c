@@ -255,6 +255,9 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 		trace_printf("SIGSEGV at %s %08lx while accessing memory address %08lx.\n",
 			IP_REG_NAME, eip, addr);
 		break;
+	case SIGILL:
+		trace_printf("SIGILL at %s %08lx\n", sig, IP_REG_NAME, eip);
+		break;
 	default:
 		trace_printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, eip);
 		break;

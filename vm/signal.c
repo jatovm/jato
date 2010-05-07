@@ -92,6 +92,11 @@ static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 	print_backtrace_and_die(sig, si, ctx);
 }
 
+static void sigill_handler(int sig, siginfo_t *si, void *ctx)
+{
+	print_backtrace_and_die(sig, si, ctx);
+}
+
 static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 {
 	if (signal_from_native(ctx))
@@ -168,6 +173,9 @@ void setup_signal_handlers(void)
 
 	sa.sa_sigaction	= sigsegv_handler;
 	sigaction(SIGSEGV, &sa, NULL);
+
+	sa.sa_sigaction	= sigill_handler;
+	sigaction(SIGILL, &sa, NULL);
 
 	sa.sa_sigaction	= sigfpe_handler;
 	sigaction(SIGFPE, &sa, NULL);
