@@ -176,6 +176,7 @@ RUNTIME_CLASSES =
 CC		?= gcc
 LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
+JAVA		?= $(shell pwd)/jato
 JAVAC		?= ecj
 JASMIN		:= java -jar tools/jasmin/jasmin.jar
 JAVAC_OPTS	:= -encoding utf-8
@@ -363,6 +364,11 @@ regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-regression jasmin-regre
 
 check: test regression
 .PHONY: check
+
+torture:
+	$(E) "  MAKE"
+	$(Q) $(MAKE) -C torture JAVA=$(JAVA)
+.PHONY: torture
 
 clean:
 	$(E) "  CLEAN"

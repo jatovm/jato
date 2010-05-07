@@ -1,5 +1,0 @@
-To run torture tests:
-
-  $ mkdir $HOME/torture
-  $ cd $HOME/torture
-  $ <jato>/torture/torture
