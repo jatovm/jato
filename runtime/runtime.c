@@ -30,11 +30,20 @@
 #include "vm/object.h"
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 
 int native_vmruntime_available_processors(void)
 {
-	return 1;
+	long ret;
+
+	ret = sysconf(_SC_NPROCESSORS_ONLN);
+	if (ret < 0) {
+		warn("_SC_NPROCESSORS_ONLN sysconf failed");
+		ret = 1;
+	}
+
+	return ret;
 }
 
 void native_vmruntime_gc(void)
