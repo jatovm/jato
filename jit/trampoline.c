@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2005-2008  Pekka Enberg
- * 
+ * Copyright (c) 2005-2010  Pekka Enberg
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -24,83 +24,82 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "jit/compiler.h"
+
 #include "jit/cu-mapping.h"
 #include "jit/emit-code.h"
 #include "jit/exception.h"
-#include "jit/compiler.h"
 
-#include "vm/preload.h"
-#include "lib/buffer.h"
-#include "vm/class.h"
-#include "vm/method.h"
-#include "vm/natives.h"
-#include "lib/string.h"
-#include "vm/method.h"
-#include "vm/die.h"
-#include "vm/vm.h"
-#include "vm/jni.h"
 #include "vm/stack-trace.h"
+#include "vm/natives.h"
+#include "vm/preload.h"
+#include "vm/method.h"
+#include "vm/method.h"
+#include "vm/class.h"
+#include "vm/die.h"
+#include "vm/jni.h"
+#include "vm/vm.h"
+
+#include "lib/buffer.h"
+#include "lib/string.h"
 
 #include <stdio.h>
 
 static void *jit_jni_trampoline(struct compilation_unit *cu)
 {
-	const char *method_name, *class_name, *method_type;
-	struct vm_method *method;
-	void *ret;
+	struct vm_method *method = cu->method;
+	struct buffer *buf;
+	struct string *msg;
+	void *target;
 
-	method = cu->method;
+	target = vm_jni_lookup_method(method->class->name, method->name, method->type);
+	if (!target)
+		goto error;
 
-	class_name  = method->class->name;
-	method_name = method->name;
-	method_type = method->type;
+	if (add_cu_mapping((unsigned long)target, cu))
+		return NULL;
 
-	ret = vm_jni_lookup_method(class_name, method_name, method_type);
-	if (ret) {
-		struct buffer *buf;
+	buf = alloc_exec_buffer();
+	if (!buf)
+		return NULL;
 
-		if (add_cu_mapping((unsigned long)ret, cu))
-			return NULL;
+	emit_jni_trampoline(buf, method, target);
 
-		buf = alloc_exec_buffer();
-		if (!buf)
-			return NULL;
+	cu->native_ptr = buffer_ptr(buf);
+	cu->is_compiled = true;
 
-		emit_jni_trampoline(buf, method, ret);
+	return cu->native_ptr;
 
-		cu->native_ptr = buffer_ptr(buf);
-		cu->is_compiled = true;
-
-		return cu->native_ptr;
-	}
-
-	struct string *msg = alloc_str();
+error:
+	msg = alloc_str();
 	if (!msg) {
 		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		goto out;
+		return NULL;
 	}
 
-	str_printf(msg, "%s.%s%s", method->class->name, method->name,
-		   method->type);
+	str_printf(msg, "%s.%s%s", method->class->name, method->name, method->type);
 
-	if (strcmp(class_name, "VMThrowable") == 0)
+	if (strcmp(method->class->name, "VMThrowable") == 0)
 		die("no native function found for %s", msg->value);
 
 	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, msg->value);
 	free_str(msg);
-out:
+
 	return NULL;
 }
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
 {
-	if (compile(cu)) {
-		assert(exception_occurred() != NULL);
+	int err;
 
+	err = compile(cu);
+	if (err) {
+		assert(exception_occurred() != NULL);
 		return NULL;
 	}
 
-	if (add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu) != 0) {
+	err = add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu);
+	if (err) {
 		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
 		return NULL;
 	}
@@ -178,14 +177,14 @@ out_fixup:
 
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 {
-	struct jit_trampoline *trampoline;
+	struct jit_trampoline *ret;
 
-	trampoline = alloc_jit_trampoline();
-	if (!trampoline)
+	ret = alloc_jit_trampoline();
+	if (!ret)
 		return NULL;
 
-	emit_trampoline(cu, jit_magic_trampoline, trampoline);
-	add_cu_mapping((unsigned long) buffer_ptr(trampoline->objcode), cu);
+	emit_trampoline(cu, jit_magic_trampoline, ret);
+	add_cu_mapping((unsigned long) buffer_ptr(ret->objcode), cu);
 
-	return trampoline;
+	return ret;
 }
