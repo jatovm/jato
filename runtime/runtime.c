@@ -25,13 +25,26 @@
  */
 
 #include "runtime/runtime.h"
+
 #include "jit/exception.h"
 #include "vm/preload.h"
 #include "vm/object.h"
 
+#include "../boehmgc/include/gc.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+
+jlong native_vmruntime_free_memory(void)
+{
+	return GC_get_free_bytes();
+}
+
+jlong native_vmruntime_total_memory(void)
+{
+	return GC_get_heap_size();
+}
 
 int native_vmruntime_available_processors(void)
 {

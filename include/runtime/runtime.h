@@ -1,8 +1,10 @@
 #ifndef RUNTIME_RUNTIME_H
 #define RUNTIME_RUNTIME_H
 
-struct vm_object;
+#include "vm/jni.h"
 
+jlong native_vmruntime_free_memory(void);
+jlong native_vmruntime_total_memory(void);
 int native_vmruntime_available_processors(void);
 void native_vmruntime_gc(void);
 void native_vmruntime_exit(int status);
