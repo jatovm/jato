@@ -19,18 +19,20 @@ struct statement;
 struct buffer;
 
 struct fixup_site {
-	pthread_mutex_t mutex;
-	bool ready;
-
 	struct jit_trampoline *target;
+
 	/* Compilation unit to which relcall_insn belongs */
 	struct compilation_unit *cu;
-	/* We need this, because we don't have native pointer at
-	   instruction selection */
+
+	/*
+	 * We need insn pointer because we don't have native pointer at
+	 * instruction selection. mach_offset is filled in after compilation
+	 * is done.
+	 */
 	struct insn *relcall_insn;
 	uint32_t mach_offset;
-	struct list_head trampoline_node;
-	struct list_head cu_node;
+
+	struct list_head list_node;
 };
 
 struct jit_trampoline {

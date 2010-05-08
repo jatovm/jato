@@ -432,25 +432,15 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 
 	pthread_mutex_lock(&t->mutex);
 
-	list_for_each_entry_safe(this, next, &t->fixup_site_list, trampoline_node) {
+	list_for_each_entry_safe(this, next, &t->fixup_site_list, list_node) {
 		unsigned char *site_addr;
 		uint32_t new_target;
-
-		/*
-		 * It is possible that we're fixing calls to method X() and
-		 * another thread is compiling method Y() which calls X(). Call
-		 * sites from Y might be added to X's trampoline but Y's
-		 * ->objcode might not be set yet. We should skip fixing
-		 *  callsites coming from not yet compiled methods.
-		 */
-		if (!fixup_site_is_ready(this))
-			continue;
 
 		site_addr = fixup_site_addr(this);
 		new_target = target - ((unsigned long) site_addr + CALL_INSN_SIZE);
 		cpu_write_u32(site_addr+1, new_target);
 
-		list_del(&this->trampoline_node);
+		list_del(&this->list_node);
 		free_fixup_site(this);
 	}
 

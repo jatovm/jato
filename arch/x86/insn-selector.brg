@@ -3726,7 +3726,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 		if (!fixup)
 			error("out of memory");
 
-		trampoline_add_fixup_site(method->trampoline, fixup);
+		fixup->target = method->trampoline;
 	}
 
 	nr_stack_args = get_stack_args_count(method);

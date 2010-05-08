@@ -153,14 +153,16 @@ static void emit_resolution_blocks(struct basic_block *bb, struct buffer *buf)
 	}
 }
 
-void prepare_call_fixup_sites(struct compilation_unit *cu)
+static void process_call_fixup_sites(struct compilation_unit *cu)
 {
-	struct fixup_site *site;
+	struct fixup_site *site, *next;
 
-	list_for_each_entry(site, &cu->call_fixup_site_list, cu_node) {
-		pthread_mutex_lock(&site->mutex);
-		site->ready = true;
-		pthread_mutex_unlock(&site->mutex);
+	list_for_each_entry_safe(site, next, &cu->call_fixup_site_list, list_node) {
+		site->mach_offset = site->relcall_insn->mach_offset;
+
+		pthread_mutex_lock(&site->target->mutex);
+		list_move(&site->list_node, &site->target->fixup_site_list);
+		pthread_mutex_unlock(&site->target->mutex);
 	}
 }
 
@@ -208,7 +210,7 @@ int emit_machine_code(struct compilation_unit *cu)
 		emit_resolution_blocks(bb, cu->objcode);
 	}
 
-	prepare_call_fixup_sites(cu);
+	process_call_fixup_sites(cu);
 	backpatch_tableswitch_targets(cu);
 	backpatch_lookupswitch_targets(cu);
 	build_exception_handlers_table(cu);
