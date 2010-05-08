@@ -121,27 +121,6 @@ int vmtype_to_bytecode_type(enum vm_type type)
 	return vmtype_to_bytecode_type_map[type];
 }
 
-int get_vmtype_size(enum vm_type type)
-{
-	/* Currently we can load/store only multiples of machine word
-	   at once. */
-	switch (type) {
-	case J_BOOLEAN:
-	case J_BYTE:
-	case J_CHAR:
-	case J_SHORT:
-	case J_FLOAT:
-	case J_INT:
-	case J_REFERENCE:
-		return sizeof(unsigned long);
-	case J_DOUBLE:
-	case J_LONG:
-		return 8;
-	default:
-		error("type has no size");
-	}
-}
-
 static const char *vm_type_names[] = {
 	[J_VOID] = "J_VOID",
 	[J_REFERENCE] = "J_REFERENCE",

@@ -81,7 +81,7 @@ static unsigned char size_to_scale(int size)
 static unsigned char type_to_scale(enum vm_type vm_type)
 {
 	/* Currently we can store not less than machine word at once */
-	return size_to_scale(get_vmtype_size(vm_type));
+	return size_to_scale(vmtype_get_size(vm_type));
 }
 
 static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
@@ -1932,7 +1932,7 @@ arg:	EXPR_ARG(freg)
 	src = state->left->reg1;
 	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 
-	size = get_vmtype_size(arg_expr->vm_type);
+	size = vmtype_get_size(arg_expr->vm_type);
 
 	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, size, esp));
 
@@ -2032,7 +2032,7 @@ arg:	EXPR_ARG(freg)
 	src = state->left->reg1;
 	rsp = get_fixed_var(s->b_parent, MACH_REG_RSP);
 
-	size = get_vmtype_size(arg_expr->vm_type);
+	size = vmtype_get_size(arg_expr->vm_type);
 
 	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
 		dst = get_fixed_var(s->b_parent, expr->arg_reg);

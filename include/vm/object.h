@@ -163,38 +163,38 @@ static inline void							\
 array_set_field_ ## type(struct vm_object *obj, int index,		\
 			 j ## type value)				\
 {									\
-	*(j ## type *) &obj->fields[index * get_vmtype_size(vmtype)] = value; \
+	*(j ## type *) &obj->fields[index * vmtype_get_size(vmtype)] = value; \
 }
 
 #define DECLARE_ARRAY_FIELD_GETTER(type, vmtype)			\
 static inline j ## type							\
 array_get_field_ ## type(const struct vm_object *obj, int index)	\
 {									\
-	return *(j ## type *) &obj->fields[index * get_vmtype_size(vmtype)]; \
+	return *(j ## type *) &obj->fields[index * vmtype_get_size(vmtype)]; \
 }
 
 static inline void
 array_set_field_byte(struct vm_object *obj, int index, jbyte value)
 {
-	*(long *) &obj->fields[index * get_vmtype_size(J_BYTE)] = value;
+	*(long *) &obj->fields[index * vmtype_get_size(J_BYTE)] = value;
 }
 
 static inline void
 array_set_field_short(struct vm_object *obj, int index, jshort value)
 {
-	*(long *) &obj->fields[index * get_vmtype_size(J_SHORT)] = value;
+	*(long *) &obj->fields[index * vmtype_get_size(J_SHORT)] = value;
 }
 
 static inline void
 array_set_field_boolean(struct vm_object *obj, int index, jboolean value)
 {
-	*(unsigned long *) &obj->fields[index * get_vmtype_size(J_BOOLEAN)] = value;
+	*(unsigned long *) &obj->fields[index * vmtype_get_size(J_BOOLEAN)] = value;
 }
 
 static inline void
 array_set_field_char(struct vm_object *obj, int index, jchar value)
 {
-	*(unsigned long *) &obj->fields[index * get_vmtype_size(J_CHAR)] = value;
+	*(unsigned long *) &obj->fields[index * vmtype_get_size(J_CHAR)] = value;
 }
 
 DECLARE_ARRAY_FIELD_SETTER(double, J_DOUBLE);
@@ -216,13 +216,13 @@ DECLARE_ARRAY_FIELD_GETTER(short, J_SHORT);
 static inline void
 array_set_field_ptr(struct vm_object *obj, int index, void *value)
 {
-	*(void **) &obj->fields[index * get_vmtype_size(J_NATIVE_PTR)] = value;
+	*(void **) &obj->fields[index * vmtype_get_size(J_NATIVE_PTR)] = value;
 }
 
 static inline void *
 array_get_field_ptr(struct vm_object *obj, int index)
 {
-	return *(void **) &obj->fields[index * get_vmtype_size(J_NATIVE_PTR)];
+	return *(void **) &obj->fields[index * vmtype_get_size(J_NATIVE_PTR)];
 }
 
 #endif

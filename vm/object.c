@@ -75,7 +75,7 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	vm_type = bytecode_type_to_vmtype(type);
 	assert(vm_type != J_VOID);
 
-	res = gc_alloc(sizeof(*res) + get_vmtype_size(vm_type) * count);
+	res = gc_alloc(sizeof(*res) + vmtype_get_size(vm_type) * count);
 	if (!res)
 		return throw_oom_error();
 
@@ -137,7 +137,7 @@ vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *coun
 		return rethrow_exception();
 
 	elem_class = vm_class_get_array_element_class(class);
-	elem_size  = get_vmtype_size(vm_class_get_storage_vmtype(elem_class));
+	elem_size  = vmtype_get_size(vm_class_get_storage_vmtype(elem_class));
 
 	res = gc_alloc(sizeof(*res) + elem_size * counts[0]);
 	if (!res)
@@ -219,7 +219,7 @@ static struct vm_object *clone_array(struct vm_object *obj)
 		 * object_alloc_primitive_array. */
 		new = vm_object_alloc_primitive_array(type, count);
 		if (new)
-			memcpy(new + 1, obj + 1, get_vmtype_size(vmtype) * count);
+			memcpy(new + 1, obj + 1, vmtype_get_size(vmtype) * count);
 
 		return new;
 	} else {

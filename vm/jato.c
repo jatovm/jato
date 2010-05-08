@@ -349,7 +349,7 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 		return;
 	}
 
-	elem_size = get_vmtype_size(elem_type);
+	elem_size = vmtype_get_size(elem_type);
 	memmove(dest->fields + dest_start * elem_size,
 		src->fields + src_start * elem_size,
 		len * elem_size);

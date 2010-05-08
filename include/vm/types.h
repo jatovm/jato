@@ -44,7 +44,6 @@ int skip_type(const char **type);
 int count_arguments(const struct vm_method *);
 enum vm_type bytecode_type_to_vmtype(int);
 int vmtype_to_bytecode_type(enum vm_type);
-int get_vmtype_size(enum vm_type);
 const char *get_vm_type_name(enum vm_type);
 int parse_type(char **, struct vm_type_info *);
 unsigned int count_java_arguments(const struct vm_method *);
@@ -61,6 +60,16 @@ static inline int vm_type_slot_size(enum vm_type type)
 	if (type == J_DOUBLE || type == J_LONG)
 		return 2;
 	return 1;
+}
+
+static inline int vmtype_get_size(enum vm_type type)
+{
+	/* Currently we can load/store only multiples of machine word at once. */
+
+	if (type == J_DOUBLE || type == J_LONG)
+		return 8;
+
+	return sizeof(unsigned long);
 }
 
 static inline bool is_primitive_array(const char *name)
@@ -83,7 +92,7 @@ static inline enum vm_type mimic_stack_type(enum vm_type type)
 
 static inline int get_arg_size(enum vm_type type)
 {
-	return get_vmtype_size(type) / sizeof(unsigned long);
+	return vmtype_get_size(type) / sizeof(unsigned long);
 }
 
 #endif

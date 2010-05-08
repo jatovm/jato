@@ -59,7 +59,7 @@ static int string_obj_comparator(const void *key1, const void *key2)
 	array1 = field_get_object(key1, vm_java_lang_String_value);
 	array2 = field_get_object(key2, vm_java_lang_String_value);
 
-	int fsize = get_vmtype_size(J_CHAR);
+	int fsize = vmtype_get_size(J_CHAR);
 
 	return memcmp(array1->fields + offset1 * fsize,
 		      array2->fields + offset2 * fsize,
