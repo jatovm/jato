@@ -160,10 +160,8 @@ static void enter_safepoint(void)
 
 static void do_gc_reclaim(void)
 {
-	if (verbose_gc) {
+	if (verbose_gc)
 		fprintf(stderr, "[GC]\n");
-		fflush(stderr);
-	}
 
 	/* TODO: Do main GC work here. */
 }
@@ -411,10 +409,8 @@ wait_for_reclaim:
 
 static void *gc_out_of_memory(size_t nr)
 {
-	if (verbose_gc) {
+	if (verbose_gc)
 		fprintf(stderr, "[GC]\n");
-		fflush(stderr);
-	}
 
 	GC_gcollect();
 
