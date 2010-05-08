@@ -122,6 +122,14 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
+	/*
+	 * Check if compilation unit is already compiled without locking.
+	 */
+	if (cu->is_compiled) {
+		ret = cu->native_ptr;
+		goto out_fixup;
+	}
+
 	pthread_mutex_lock(&cu->mutex);
 
 	if (cu->is_compiled)
@@ -152,6 +160,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 	pthread_mutex_unlock(&cu->mutex);
 
+out_fixup:
 	/*
 	 * XXX: this must be done with cu->mutex unlocked because both
 	 * fixup_static() and fixup_direct_calls() might need to lock
