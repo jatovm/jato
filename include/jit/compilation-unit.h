@@ -33,7 +33,7 @@ struct compilation_unit {
 	bool is_reg_alloc_done;
 	struct buffer *objcode;
 	bool is_compiled;
-	pthread_mutex_t mutex;
+	pthread_spinlock_t spinlock;
 
 	/* The frame pointer for this method.  */
 	struct var_info *frame_ptr;

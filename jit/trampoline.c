@@ -122,7 +122,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
-	pthread_mutex_lock(&cu->mutex);
+	pthread_spin_lock(&cu->spinlock);
 
 	if (cu->is_compiled)
 		/* XXX: even if method is compiled we still might need
@@ -150,7 +150,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (ret && method_is_virtual(method))
 		fixup_vtable(cu, ret);
 
-	pthread_mutex_unlock(&cu->mutex);
+	pthread_spin_unlock(&cu->spinlock);
 
 	/*
 	 * XXX: this must be done with cu->mutex unlocked because both
