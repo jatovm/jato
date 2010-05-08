@@ -265,7 +265,6 @@ compile: $(OBJS)
 test: monoburg
 	+$(MAKE) -C test/vm/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	+$(MAKE) -C test/jit/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-	+$(MAKE) -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: test
 
 REGRESSION_TEST_SUITE_CLASSES = \
@@ -392,7 +391,6 @@ clean:
 	+$(Q) - $(MAKE) -C boehmgc/ clean
 	+$(Q) - $(MAKE) -C test/vm/ clean
 	+$(Q) - $(MAKE) -C test/jit/ clean
-	+$(Q) - $(MAKE) -C test/arch-$(ARCH)$(ARCH_POSTFIX)/ clean
 .PHONY: clean
 
 INSTALL_PREFIX	?= $(HOME)
