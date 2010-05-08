@@ -24,18 +24,19 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <errno.h>
-
 #include "jit/bytecode-to-ir.h"
-#include "jit/compiler.h"
+
 #include "jit/compilation-unit.h"
 #include "jit/basic-block.h"
 #include "jit/statement.h"
+#include "jit/compiler.h"
 
 #include "vm/bytecode.h"
-#include "vm/bytecodes.h"
-#include "lib/stack.h"
 #include "vm/die.h"
+
+#include "lib/stack.h"
+
+#include <errno.h>
 
 static struct statement *branch_if_lesser_stmt(struct basic_block *target,
 					       struct expression *left,

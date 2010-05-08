@@ -106,13 +106,12 @@ VM_OBJS = \
 	runtime/stack-walker.o	\
 	runtime/unsafe.o	\
 	vm/bytecode.o		\
-	vm/bytecodes.o		\
 	vm/call.o		\
 	vm/class.o		\
 	vm/classloader.o	\
 	vm/debug-dump.o		\
 	vm/die.o		\
-	vm/fault-inject.o 	\
+	vm/fault-inject.o	\
 	vm/field.o		\
 	vm/gc.o			\
 	vm/itable.o		\

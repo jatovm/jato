@@ -39,7 +39,6 @@
 #include "jit/exception.h"
 #include "jit/pc-map.h"
 
-#include "vm/bytecodes.h"
 #include "vm/bytecode.h"
 #include "vm/method.h"
 #include "vm/stdlib.h"

@@ -21,7 +21,7 @@
 #include "lib/buffer.h"
 #include "lib/bitset.h"
 #include "lib/string.h"
-#include "vm/bytecodes.h"
+#include "vm/bytecode.h"
 #include "vm/class.h"
 #include "vm/jni.h"
 #include "vm/method.h"

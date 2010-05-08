@@ -9,12 +9,14 @@
  */
 
 #include "jit/bytecode-to-ir.h"
+
 #include "jit/statement.h"
 #include "jit/compiler.h"
 
-#include "vm/bytecodes.h"
-#include "lib/stack.h"
+#include "vm/bytecode.h"
 #include "vm/die.h"
+
+#include "lib/stack.h"
 
 #include <errno.h>
 

@@ -2,7 +2,7 @@
  * Convert bytecode to register-based immediate representation.
  *
  * Copyright (c) 2005, 2006, 2009  Pekka Enberg
- * 
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -25,19 +25,21 @@
  *
  * Please refer to the file LICENSE for details.
  */
+
 #include "jit/bc-offset-mapping.h"
+
 #include "jit/bytecode-to-ir.h"
 #include "jit/expression.h"
+#include "jit/subroutine.h"
 #include "jit/statement.h"
 #include "jit/tree-node.h"
 #include "jit/compiler.h"
-#include "jit/subroutine.h"
 
 #include "vm/bytecode.h"
-#include "vm/bytecodes.h"
 #include "vm/method.h"
-#include "lib/stack.h"
 #include "vm/die.h"
+
+#include "lib/stack.h"
 
 #include <stdlib.h>
 #include <string.h>

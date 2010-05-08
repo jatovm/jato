@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-#include "vm/bytecodes.h"
+#include "vm/bytecode.h"
 #include "vm/system.h"
 #include "vm/vm.h"
 

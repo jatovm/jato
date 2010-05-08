@@ -16,7 +16,6 @@ TOPLEVEL_OBJS :=			\
 	test/vm/class-stub.o		\
 	test/vm/stack-trace-stub.o	\
 	vm/bytecode.o			\
-	vm/bytecodes.o			\
 	vm/die.o			\
 	vm/natives.o			\
 	vm/trace.o			\

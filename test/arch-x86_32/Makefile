@@ -60,7 +60,6 @@ TOPLEVEL_OBJS := \
 	lib/stack.o \
 	lib/string.o \
 	vm/bytecode.o \
-	vm/bytecodes.o \
 	vm/call.o \
 	vm/class.o \
 	vm/die.o \

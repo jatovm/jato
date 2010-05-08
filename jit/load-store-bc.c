@@ -8,21 +8,22 @@
  * instructions to immediate representation of the JIT compiler.
  */
 
+#include "jit/bytecode-to-ir.h"
+
 #include "cafebabe/constant_pool.h"
 
-#include "jit/bytecode-to-ir.h"
 #include "jit/exception.h"
 #include "jit/expression.h"
 #include "jit/statement.h"
 #include "jit/compiler.h"
 
-#include "vm/bytecode.h"
-#include "vm/bytecodes.h"
-#include "vm/class.h"
 #include "vm/classloader.h"
+#include "vm/bytecode.h"
 #include "vm/object.h"
-#include "lib/stack.h"
+#include "vm/class.h"
 #include "vm/die.h"
+
+#include "lib/stack.h"
 
 #include <stdint.h>
 #include <errno.h>

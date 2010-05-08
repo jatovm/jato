@@ -9,17 +9,18 @@
  */
 
 #include "jit/bytecode-to-ir.h"
-#include "jit/compiler.h"
+
 #include "jit/statement.h"
+#include "jit/compiler.h"
 #include "jit/args.h"
 
 #include "vm/bytecode.h"
-#include "vm/bytecodes.h"
-#include "vm/class.h"
 #include "vm/method.h"
-#include "lib/stack.h"
+#include "vm/class.h"
 #include "vm/die.h"
 #include "vm/jni.h"
+
+#include "lib/stack.h"
 
 #include <string.h>
 #include <errno.h>

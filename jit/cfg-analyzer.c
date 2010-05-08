@@ -11,7 +11,6 @@
 
 #include "lib/bitset.h"
 #include "vm/bytecode.h"
-#include "vm/bytecodes.h"
 #include "vm/method.h"
 #include "vm/stream.h"
 #include "vm/vm.h"

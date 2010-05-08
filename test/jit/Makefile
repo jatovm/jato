@@ -55,7 +55,6 @@ TOPLEVEL_OBJS := \
 	lib/string.o \
 	vm/call.o \
 	vm/bytecode.o \
-	vm/bytecodes.o \
 	vm/die.o \
 	vm/trace.o \
 	vm/types.o \
