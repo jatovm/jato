@@ -230,7 +230,7 @@ static void free_buckets(int rows, int cols, struct field_bucket field_buckets[r
 		for (int j = 0; j < rows; ++j) {
 			struct field_bucket *bucket = &field_buckets[j][i];
 
-			free(bucket->fields);
+			vm_free(bucket->fields);
 		}
 	}
 }
