@@ -125,7 +125,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	pthread_mutex_lock(&cu->mutex);
 
 	if (cu->is_compiled)
-		/* XXX: even if method is compiled we steel might need
+		/* XXX: even if method is compiled we still might need
 		 * to fixup some call sites. */
 		ret = cu->native_ptr;
 	else {
