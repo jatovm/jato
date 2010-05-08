@@ -3696,18 +3696,18 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	/*
 	 * Look out for an ABBA deadlock during compilation if a method
 	 * A invokes method B and the same method B invokes method A as
-	 * well. Therefore, if cu->spinlock is under contention, treat the
+	 * well. Therefore, if cu->mutex is under contention, treat the
 	 * target method as not compiled and let trampoline
 	 * backpatching deal with it later.
 	 */
-	if (pthread_spin_trylock(&cu->spinlock) == 0) {
+	if (pthread_mutex_trylock(&cu->mutex) == 0) {
 		is_compiled = cu->is_compiled;
 		if (is_compiled)
 			target = vm_method_native_ptr(method);
 		else
 			target = vm_method_trampoline_ptr(method);
 
-		pthread_spin_unlock(&cu->spinlock);
+		pthread_mutex_unlock(&cu->mutex);
 	}
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);

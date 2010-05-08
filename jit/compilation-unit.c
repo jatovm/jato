@@ -83,7 +83,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		if (!cu->unwind_bb)
 			goto out_of_memory;
 
-		pthread_spin_init(&cu->spinlock, 0);
+		pthread_mutex_init(&cu->mutex, NULL);
 
 		cu->stack_frame = alloc_stack_frame(
 			get_stack_args_count(method),
@@ -204,7 +204,7 @@ void free_compilation_unit(struct compilation_unit *cu)
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
 		free_basic_block(bb);
 
-	pthread_spin_destroy(&cu->spinlock);
+	pthread_mutex_destroy(&cu->mutex);
 	free_basic_block(cu->exit_bb);
 	free_basic_block(cu->unwind_bb);
 	free_buffer(cu->objcode);

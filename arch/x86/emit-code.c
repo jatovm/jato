@@ -502,9 +502,9 @@ void fixup_static(struct vm_class *vmc)
 
 		list_del(&this->vmc_node);
 
-		pthread_spin_lock(&this->cu->spinlock);
+		pthread_mutex_lock(&this->cu->mutex);
 		list_del(&this->cu_node);
-		pthread_spin_unlock(&this->cu->spinlock);
+		pthread_mutex_unlock(&this->cu->mutex);
 
 		free(this);
 	}
@@ -520,7 +520,7 @@ int fixup_static_at(unsigned long addr)
 	cu = jit_lookup_cu(addr);
 	assert(cu);
 
-	pthread_spin_lock(&cu->spinlock);
+	pthread_mutex_lock(&cu->mutex);
 
 	list_for_each_entry_safe(this, t, &cu->static_fixup_site_list, cu_node) {
 		void *site_addr;
@@ -531,7 +531,7 @@ int fixup_static_at(unsigned long addr)
 			struct vm_class *vmc = this->vmf->class;
 			int ret;
 
-			pthread_spin_unlock(&cu->spinlock);
+			pthread_mutex_unlock(&cu->mutex);
 
 			/*
 			 * Note: After this call, we can no longer access
@@ -548,7 +548,7 @@ int fixup_static_at(unsigned long addr)
 		}
 	}
 
-	pthread_spin_unlock(&cu->spinlock);
+	pthread_mutex_unlock(&cu->mutex);
 
 	return 0;
 }

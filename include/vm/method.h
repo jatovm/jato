@@ -151,14 +151,14 @@ static inline void *vm_method_call_ptr(struct vm_method *vmm)
 {
 	void *result;
 
-	pthread_spin_lock(&vmm->compilation_unit->spinlock);
+	pthread_mutex_lock(&vmm->compilation_unit->mutex);
 
 	if (vmm->compilation_unit->is_compiled)
 		result = vm_method_native_ptr(vmm);
 	else
 		result = vm_method_trampoline_ptr(vmm);
 
-	pthread_spin_unlock(&vmm->compilation_unit->spinlock);
+	pthread_mutex_unlock(&vmm->compilation_unit->mutex);
 
 	return result;
 }
