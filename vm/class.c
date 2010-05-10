@@ -351,8 +351,6 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		for (unsigned int j = 0; j < 2; ++j) {
 			struct field_bucket *bucket = &field_buckets[j][i];
 
-			// TODO: free fields explicitly after they are no longer
-			// used.
 			bucket->fields = vm_alloc(bucket->nr * sizeof(*bucket->fields));
 			bucket->nr = 0;
 		}
@@ -464,13 +462,13 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	return 0;
 
 error_free_methods:
-	free(vmc->methods);
+	vm_free(vmc->methods);
 error_free_static_values:
-	free(vmc->static_values);
+	vm_free(vmc->static_values);
 error_free_buckets:
 	free_buckets(2, VM_TYPE_MAX, field_buckets);
 error_free_fields:
-	free(vmc->fields);
+	vm_free(vmc->fields);
 error_free_interfaces:
 	free(vmc->interfaces);
 error_free_name:
