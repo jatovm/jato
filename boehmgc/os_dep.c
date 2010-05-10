@@ -917,6 +917,28 @@ ptr_t GC_get_stack_base()
     }
 # endif
 
+# ifdef GC_LINUX_THREADS
+  static ptr_t GC_valgrind_get_stack_base(void) {
+    size_t size;
+    void *sstart;
+    pthread_attr_t attr;
+
+    if(pthread_getattr_np(pthread_self(), &attr) != 0) {
+      ABORT("pthread_getattr_np failed");
+    }
+
+    if(pthread_attr_getstack(&attr, &sstart, &size)  != 0) {
+      ABORT("pthread_attr_getstack failed");
+    }
+
+    if(pthread_attr_destroy(&attr) != 0) {
+      WARN("pthread_attr_destroy failed\n", 0);
+    }
+
+    return (ptr_t) sstart + size;
+  }
+#endif
+
   ptr_t GC_linux_stack_base(void)
   {
     /* We read the stack base value from /proc/self/stat.  We do this	*/
@@ -930,6 +952,19 @@ ptr_t GC_get_stack_base()
     char c;
     word result = 0;
     size_t i, buf_offset = 0;
+    char valgrindp = 0;
+
+    /* Valgrind modifies the address space of the host process. Thus, the
+       address given by glibc and the kernel is not valid when running under
+       valgrind. This alternative function uses pthread attributes to find the
+       stack base. */
+#   ifdef GC_LINUX_THREADS
+      valgrindp = getenv("GC_VALGRIND") != 0;
+
+      if(valgrindp) {
+        return GC_valgrind_get_stack_base();
+      }
+#   endif /* GC_LINUX_THREADS */
 
     /* First try the easy way.  This should work for glibc 2.2	*/
     /* This fails in a prelinked ("prelink" command) executable */
