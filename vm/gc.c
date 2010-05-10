@@ -478,6 +478,6 @@ void vm_free(void *ptr)
 void gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer,
 			   void *param)
 {
-	GC_register_finalizer(object, (GC_finalization_proc) finalizer,
-			      param, NULL, NULL);
+	/* GC_register_finalizer(object, (GC_finalization_proc) finalizer,
+	   param, NULL, NULL); */
 }
