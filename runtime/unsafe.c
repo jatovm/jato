@@ -59,7 +59,7 @@ jint native_unsafe_compare_and_swap_object(struct vm_object *this,
 {
 	void *p = &obj->fields[offset];
 
-	return atomic_cmpxchg_ptr(p, expect, update) == expect;
+	return do_atomic_cmpxchg_ptr(p, expect, update) == expect;
 }
 
 jlong native_unsafe_object_field_offset(struct vm_object *this,

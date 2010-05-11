@@ -16,6 +16,12 @@
 #define wmb()	asm volatile("sfence" ::: "memory")
 #endif
 
+#define smp_mb() mb();
+#define smp_rmb() rmb();
+#define smp_wmb() wmb();
+
+#define barrier() __asm__ __volatile__("": : :"memory")
+
 static inline void cpu_write_u32(unsigned char *p, uint32_t val)
 {
 	*((uint32_t*)p) = val;

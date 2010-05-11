@@ -3,6 +3,13 @@
 
 #include <stdint.h>
 
+typedef uint64_t atomic_t;
+
+static inline atomic_t atomic_cmpxchg(atomic_t *p, atomic_t old, atomic_t new)
+{
+	return atomic_cmpxchg_64(p, old, new);
+}
+
 static inline uint64_t atomic_cmpxchg_64(uint64_t *p, uint64_t old, uint64_t new)
 {
 	uint64_t prev;
