@@ -8,12 +8,11 @@ all: test
 
 test: $(JAR)
 	$(JAVA) -Xmx1g -jar $(JAR) antlr
+	$(JAVA) -Xmx1g -jar $(JAR) bloat
+	$(JAVA) -Xmx1g -jar $(JAR) chart
 	$(JAVA) -Xmx1g -jar $(JAR) fop
 	$(JAVA) -Xmx1g -jar $(JAR) hsqldb
-# SLOW:
-#	$(JAVA) -Xmx1g -jar $(JAR) bloat
-#	$(JAVA) -Xmx1g -jar $(JAR) chart
-#	$(JAVA) -Xmx1g -jar $(JAR) pmd
+	$(JAVA) -Xmx1g -jar $(JAR) pmd
 # BROKEN:
 #	$(JAVA) -Xmx1g -jar $(JAR) eclipse
 #	$(JAVA) -Xmx1g -jar $(JAR) jython
