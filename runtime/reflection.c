@@ -479,6 +479,7 @@ struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz)
 	    vmc == vm_java_lang_Object)
 		return NULL;
 
+	vm_class_ensure_object(vmc->super);
 	return vmc->super->object;
 }
 
