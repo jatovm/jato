@@ -474,7 +474,7 @@ static void native_vmthread_interrupt(struct vm_object *vmthread)
 
 static void native_vmobject_notify(struct vm_object *obj)
 {
-	vm_monitor_notify(&obj->monitor);
+	vm_object_notify(obj);
 
 	if (exception_occurred())
 		return;
@@ -482,7 +482,7 @@ static void native_vmobject_notify(struct vm_object *obj)
 
 static void native_vmobject_notify_all(struct vm_object *obj)
 {
-	vm_monitor_notify_all(&obj->monitor);
+	vm_object_notify_all(obj);
 
 	if (exception_occurred())
 		return;
@@ -503,9 +503,9 @@ static jlong native_vmsystem_nano_time(void)
 static void native_vmobject_wait(struct vm_object *object, jlong ms, jint ns)
 {
 	if (ms == 0 && ns == 0)
-		vm_monitor_wait(&object->monitor);
+		vm_object_wait(object);
 	else
-		vm_monitor_timed_wait(&object->monitor, ms, ns);
+		vm_object_timed_wait(object, ms, ns);
 }
 
 static struct vm_object *native_vmstring_intern(struct vm_object *str)
@@ -1054,6 +1054,7 @@ main(int argc, char *argv[])
 	}
 
 	arch_init();
+	init_exec_env();
 	init_literals_hash_map();
 	init_system_properties();
 
@@ -1065,7 +1066,6 @@ main(int argc, char *argv[])
 	classloader_init();
 
 	init_vm_objects();
-	init_vm_monitors();
 
 	jit_text_init();
 

@@ -24,6 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "arch/memory.h"
+
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/die.h"
@@ -59,31 +61,27 @@ struct list_head thread_list;
 static bool thread_count_locked;
 static pthread_cond_t thread_count_lock_cond = PTHREAD_COND_INITIALIZER;
 
-static void vm_thread_free(struct vm_thread *thread)
-{
-	vm_free(thread);
-}
-
 static struct vm_thread *vm_thread_alloc(void)
 {
 	struct vm_thread *thread = vm_alloc(sizeof(struct vm_thread));
 	if (!thread)
 		return NULL;
 
-	if (pthread_mutex_init(&thread->mutex, NULL)) {
-		warn("pthread_mutex_init() failed");
-		vm_thread_free(thread);
-		return NULL;
-	}
+	if (pthread_mutex_init(&thread->mutex, NULL))
+		goto error_mutex;
 
-	thread->state = VM_THREAD_STATE_NEW;
+	atomic_set(&thread->state, VM_THREAD_STATE_NEW);
 	thread->vmthread = NULL;
 	thread->posix_id = -1;
 	thread->interrupted = false;
-	thread->wait_mon = NULL;
+	thread->waiting_mon = NULL;
 	thread->thread_state = THREAD_STATE_CONSISTENT;
 
 	return thread;
+
+ error_mutex:
+	vm_free(thread);
+	return NULL;
 }
 
 /**
@@ -117,9 +115,18 @@ unsigned int vm_nr_threads(void)
 
 void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state)
 {
-	pthread_mutex_lock(&thread->mutex);
-	thread->state = state;
-	pthread_mutex_unlock(&thread->mutex);
+	atomic_set(&thread->state, state);
+
+	/* make state visible to vm_thread_get_state() */
+	smp_mb();
+}
+
+enum vm_thread_state vm_thread_get_state(struct vm_thread *thread)
+{
+	/* see changes made in vm_thread_set_state() */
+	mb();
+
+	return atomic_read(&thread->state);
 }
 
 static void vm_thread_attach_thread(struct vm_thread *thread)
@@ -176,7 +183,7 @@ int init_threading(void)
 	if (!main_thread)
 		return -ENOMEM;
 
-	main_thread->state = VM_THREAD_STATE_RUNNABLE;
+	atomic_set(&main_thread->state, VM_THREAD_STATE_RUNNABLE);
 	main_thread->vmthread = vmthread;
 	main_thread->posix_id = pthread_self();
 
@@ -209,6 +216,12 @@ int init_threading(void)
 	return 0;
 }
 
+void init_exec_env(void)
+{
+	struct vm_exec_env *ee = vm_get_exec_env();
+	INIT_LIST_HEAD(&ee->free_monitor_recs);
+}
+
 /**
  * This is the entry point for all java threads.
  */
@@ -217,6 +230,7 @@ static void *vm_thread_entry(void *arg)
 	struct vm_thread *thread = arg;
 
 	vm_get_exec_env()->thread = thread;
+	init_exec_env();
 
 	setup_signal_handlers();
 	thread_init_exceptions();
@@ -250,7 +264,7 @@ int vm_thread_start(struct vm_object *vmthread)
 	/* XXX: no need to lock because @thread is not yet visible to
 	 * other threads. */
 	thread->vmthread = vmthread;
-	thread->state = VM_THREAD_STATE_RUNNABLE;
+	atomic_set(&thread->state, VM_THREAD_STATE_RUNNABLE);
 
 	field_set_object(vmthread, vm_java_lang_VMThread_vmdata,
 			 (struct vm_object *) thread);
@@ -326,14 +340,14 @@ bool vm_thread_interrupted(struct vm_thread *thread)
 
 void vm_thread_interrupt(struct vm_thread *thread)
 {
-	struct vm_monitor *mon;
+	struct vm_object *obj;
 
 	pthread_mutex_lock(&thread->mutex);
 	thread->interrupted = true;
-	mon = thread->wait_mon;
+	obj = thread->waiting_mon;
 	pthread_mutex_unlock(&thread->mutex);
 
-	if (!mon)
+	if (!obj)
 		return;
 
 	/*
@@ -342,10 +356,10 @@ void vm_thread_interrupt(struct vm_thread *thread)
 	 * spuriously wake threads after @thread has left the wait()
 	 * operation but it is fine with the JVM spec.
 	 */
-	while (pthread_mutex_trylock(&mon->mutex))
+	while (pthread_mutex_trylock(&obj->notify_mutex))
 		sched_yield();
-	pthread_cond_broadcast(&mon->cond);
-	pthread_mutex_unlock(&mon->mutex);
+	pthread_cond_broadcast(&obj->notify_cond);
+	pthread_mutex_unlock(&obj->notify_mutex);
 }
 
 void vm_lock_thread_count(void)

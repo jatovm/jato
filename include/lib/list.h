@@ -106,6 +106,22 @@ static inline bool list_is_empty(struct list_head *head)
 	return head->next == head;
 }
 
+static inline size_t list_size(struct list_head *head)
+{
+	size_t size;
+	struct list_head *node;
+
+	size = 0;
+	node = head;
+
+	while (node->next != head) {
+		size++;
+		node = node->next;
+	}
+
+	return size;
+}
+
 /**
  * list_entry - get the struct for this entry
  * @ptr:        the &struct list_head pointer.

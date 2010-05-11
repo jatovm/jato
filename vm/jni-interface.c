@@ -516,7 +516,7 @@ static jint vm_jni_monitor_enter(struct vm_jni_env *env, jobject obj)
 {
 	enter_vm_from_jni();
 
-	int err = vm_monitor_lock(&obj->monitor);
+	int err = vm_object_lock(obj);
 
 	if (exception_occurred())
 		clear_exception();
@@ -528,7 +528,7 @@ static jint vm_jni_monitor_exit(struct vm_jni_env *env, jobject obj)
 {
 	enter_vm_from_jni();
 
-	int err = vm_monitor_unlock(&obj->monitor);
+	int err = vm_object_unlock(obj);
 
 	if (exception_occurred())
 		clear_exception();

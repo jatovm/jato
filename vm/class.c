@@ -122,12 +122,14 @@ static int vm_class_link_common(struct vm_class *vmc)
 	if (err)
 		return -err;
 
-	err = vm_monitor_init(&vmc->monitor);
-	if (err)
-		return -err;
-
-	vmc->object = NULL;
 	vmc->classloader = NULL;
+
+	/* allocate a dummy object for class synchronization to work */
+	vmc->object = zalloc(sizeof(struct vm_object));
+	if (!vmc->object) {
+		throw_oom_error();
+		return -1;
+	}
 
 	return 0;
 }
@@ -564,10 +566,14 @@ static bool vm_class_check_class_init_fault(struct vm_class *vmc,
 
 int vm_class_ensure_object(struct vm_class *vmc)
 {
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 
-	if (vmc->object)
-		goto out;
+	struct vm_object *old_object = vmc->object;
+
+	if (old_object->class != NULL) {
+		vm_object_unlock(vmc->object);
+		return 0;
+	}
 
 	/*
 	 * Set the .object member of struct vm_class to point to
@@ -575,16 +581,18 @@ int vm_class_ensure_object(struct vm_class *vmc)
 	 */
 	vmc->object = vm_object_alloc(vm_java_lang_Class);
 	if (!vmc->object) {
-		NOT_IMPLEMENTED;
-		vm_monitor_unlock(&vmc->monitor);
+		vm_object_unlock(old_object);
+		throw_oom_error();
 		return -1;
 	}
 
-	field_set_object(vmc->object, vm_java_lang_Class_vmdata,
-		(struct vm_object *)vmc);
+	vmc->object->monitor_record = old_object->monitor_record;
+	free(old_object);
 
- out:
-	vm_monitor_unlock(&vmc->monitor);
+	field_set_object(vmc->object, vm_java_lang_Class_vmdata,
+			 (struct vm_object *)vmc);
+
+	vm_object_unlock(vmc->object);
 	return 0;
 }
 
@@ -592,7 +600,7 @@ int vm_class_init(struct vm_class *vmc)
 {
 	struct vm_object *exception;
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 
 	if (vmc->state == VM_CLASS_INITIALIZING) {
 		/* XXX: we need to break recursion. */
@@ -600,7 +608,7 @@ int vm_class_init(struct vm_class *vmc)
 			goto out_unlock;
 
 		while (vmc->state == VM_CLASS_INITIALIZING)
-			vm_monitor_wait(&vmc->monitor);
+			vm_object_wait(vmc->object);
 	}
 
 	if (vmc->state == VM_CLASS_INITIALIZED)
@@ -609,7 +617,7 @@ int vm_class_init(struct vm_class *vmc)
 	if (vmc->state == VM_CLASS_ERRONEOUS) {
 		signal_new_exception(vm_java_lang_NoClassDefFoundError,
 				     vmc->name);
-		vm_monitor_unlock(&vmc->monitor);
+		vm_object_unlock(vmc->object);
 		return -1;
 	}
 
@@ -618,7 +626,7 @@ int vm_class_init(struct vm_class *vmc)
 	vmc->state = VM_CLASS_INITIALIZING;
 	vmc->initializing_thread = vm_thread_self();
 
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 
 	/* Fault injection, for testing purposes */
 	if (vm_fault_enabled(VM_FAULT_CLASS_INIT)) {
@@ -659,15 +667,15 @@ int vm_class_init(struct vm_class *vmc)
 		}
 	}
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc->state = VM_CLASS_INITIALIZED;
-	vm_monitor_notify_all(&vmc->monitor);
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_notify_all(vmc->object);
+	vm_object_unlock(vmc->object);
 
 	return 0;
 
  out_unlock:
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 	return 0;
 
  error:
@@ -680,10 +688,10 @@ int vm_class_init(struct vm_class *vmc)
 			vmc->name);
 	}
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc->state = VM_CLASS_ERRONEOUS;
-	vm_monitor_notify_all(&vmc->monitor);
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_notify_all(vmc->object);
+	vm_object_unlock(vmc->object);
 
 	return -1;
 }

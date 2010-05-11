@@ -43,7 +43,15 @@ int init_vm_objects(void)
 
 static void vm_object_finalizer(struct vm_object *obj, void *param)
 {
-	// TODO: implement
+	/* TODO: implement */
+}
+
+static void vm_object_init_common(struct vm_object *object)
+{
+	pthread_mutex_init(&object->notify_mutex, NULL);
+	pthread_cond_init(&object->notify_cond, NULL);
+
+	gc_register_finalizer(object, vm_object_finalizer, NULL);
 }
 
 struct vm_object *vm_object_alloc(struct vm_class *class)
@@ -57,13 +65,9 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 	if (!res)
 		return throw_oom_error();
 
-	gc_register_finalizer(res, vm_object_finalizer, NULL);
+	vm_object_init_common(res);
 
 	res->class = class;
-
-	if (vm_monitor_init(&res->monitor))
-		return throw_internal_error();
-
 	return res;
 }
 
@@ -79,7 +83,7 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	if (!res)
 		return throw_oom_error();
 
-	gc_register_finalizer(res, vm_object_finalizer, NULL);
+	vm_object_init_common(res);
 
 	switch (type) {
 	case T_BOOLEAN:
@@ -117,10 +121,6 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 		return throw_internal_error();
 
 	res->array_length = count;
-
-	if (vm_monitor_init(&res->monitor))
-		return throw_internal_error();
-
 	return res;
 }
 
@@ -143,10 +143,7 @@ vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *coun
 	if (!res)
 		return throw_oom_error();
 
-	gc_register_finalizer(res, vm_object_finalizer, NULL);
-
-	if (vm_monitor_init(&res->monitor))
-		return throw_internal_error();
+	vm_object_init_common(res);
 
 	res->array_length = counts[0];
 	res->class = class;
@@ -173,10 +170,7 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	if (!res)
 		return throw_oom_error();
 
-	gc_register_finalizer(res, vm_object_finalizer, NULL);
-
-	if (vm_monitor_init(&res->monitor))
-		return throw_internal_error();
+	vm_object_init_common(res);
 
 	res->array_length = count;
 
@@ -185,7 +179,6 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 		elems[i] = NULL;
 
 	res->class = class;
-
 	return res;
 }
 
@@ -259,16 +252,6 @@ struct vm_object *vm_object_clone(struct vm_object *obj)
 	/* Shouldn't happen. */
 	assert(0);
 	return NULL;
-}
-
-void vm_object_lock(struct vm_object *obj)
-{
-	vm_monitor_lock(&obj->monitor);
-}
-
-void vm_object_unlock(struct vm_object *obj)
-{
-	vm_monitor_unlock(&obj->monitor);
 }
 
 struct vm_object *

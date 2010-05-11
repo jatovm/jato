@@ -1014,9 +1014,9 @@ reg:	EXPR_CLASS_FIELD 1
 	vmf = expr->class_field;
 	vmc = vmf->class;
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc_state = vmc->state;
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 
 	if (running_on_valgrind) {
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
@@ -1069,9 +1069,9 @@ reg:	EXPR_CLASS_FIELD 1
 	vmf = expr->class_field;
 	vmc = vmf->class;
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc_state = vmc->state;
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 
 	if (vmc_state >= VM_CLASS_INITIALIZING) {
 		/* Class is already initialized; no need for fix-up. We also
@@ -1109,9 +1109,9 @@ freg:	EXPR_FLOAT_CLASS_FIELD 1
 	vmf = expr->class_field;
 	vmc = vmf->class;
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc_state = vmc->state;
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 
 	if (running_on_valgrind) {
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
@@ -2182,9 +2182,9 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 	vmf = store_dest->class_field;
 	vmc = vmf->class;
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc_state = vmc->state;
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 
 	if (running_on_valgrind) {
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
@@ -2240,9 +2240,9 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 	vmf = store_dest->class_field;
 	vmc = vmf->class;
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc_state = vmc->state;
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 
 	if (vmc_state >= VM_CLASS_INITIALIZING) {
 		/* Class is already initialized; no need for fix-up. We also
@@ -2283,9 +2283,9 @@ stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 	vmf = store_dest->class_field;
 	vmc = vmf->class;
 
-	vm_monitor_lock(&vmc->monitor);
+	vm_object_lock(vmc->object);
 	vmc_state = vmc->state;
-	vm_monitor_unlock(&vmc->monitor);
+	vm_object_unlock(vmc->object);
 
 	if (running_on_valgrind) {
 		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));

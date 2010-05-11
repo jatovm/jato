@@ -205,12 +205,12 @@ void suspend_handler(int sig, siginfo_t *si, void *ctx)
 		 * Fresh threads might return NULL from vm_thread_self().
 		 */
 		if (self)
-			self->thread_state = THREAD_STATE_CONSISTENT;
+			vm_thread_set_state(self, THREAD_STATE_CONSISTENT);
 
 		save_signal_registers(&thread_register_state, uc->uc_mcontext.gregs);
 		gc_safepoint(&thread_register_state);
 	} else {
-		self->thread_state = THREAD_STATE_INCONSISTENT;
+		vm_thread_set_state(self, THREAD_STATE_CONSISTENT);
 
 		enter_safepoint();
 
@@ -286,7 +286,7 @@ static void gc_suspend_rest(void)
 	vm_thread_for_each(thread) {
 		assert(thread->posix_id != pthread_self());
 
-		if (thread->thread_state == THREAD_STATE_INCONSISTENT) {
+		if (vm_thread_get_state(thread) == THREAD_STATE_INCONSISTENT) {
 			resume_thread(thread->posix_id);
 			nr_restarted++;
 		}

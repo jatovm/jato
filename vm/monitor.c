@@ -27,161 +27,328 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "arch/memory.h"
+#include "arch/atomic.h"
+
 #include "jit/exception.h"
 
 #include "vm/object.h"
 #include "vm/preload.h"
+#include "vm/thread.h"
+#include "vm/errors.h"
 
-static pthread_mutexattr_t monitor_mutexattr;
-
-int init_vm_monitors(void)
+/*
+ * Get new monitor record with .owner set to the current execution
+ * environment and .lock_count set to 1.
+ */
+static struct vm_monitor_record *get_monitor_record(void)
 {
-	int err;
+	struct vm_monitor_record *record;
+	struct vm_exec_env *ee;
 
-	err = pthread_mutexattr_init(&monitor_mutexattr);
-	if (err)
-		return -err;
+	ee = vm_get_exec_env();
 
-	err = pthread_mutexattr_settype(&monitor_mutexattr,
-		PTHREAD_MUTEX_RECURSIVE);
-	if (err)
-		return -err;
+	if (!list_is_empty(&ee->free_monitor_recs)) {
+		record = list_first_entry(&ee->free_monitor_recs,
+				       struct vm_monitor_record,
+				       ee_free_list_node);
+		list_del(&record->ee_free_list_node);
+		return record;
+	}
 
+	record = malloc(sizeof *record);
+	if (!record)
+		return NULL;
+
+	atomic_set_ptr(&record->owner, ee);
+	atomic_set(&record->nr_blocked, 0);
+	record->lock_count = 1;
+	INIT_LIST_HEAD(&record->ee_free_list_node);
+	sem_init(&record->sem, 0, 0);
+	atomic_set(&record->candidate, 0);
+	return record;
+}
+
+/*
+ * Puts monitor record back to the pool
+ */
+static void put_monitor_record(struct vm_monitor_record *record)
+{
+	struct vm_exec_env *ee = vm_get_exec_env();
+	list_add(&record->ee_free_list_node, &ee->free_monitor_recs);
+}
+
+/*
+ * Wakes one thread waiting on monitor
+ */
+static inline void wake_one(struct vm_monitor_record *record)
+{
+	if (atomic_cmpxchg(&record->candidate, 1, 0) == 1) {
+		sem_post(&record->sem);
+	}
+}
+
+/*
+ * Block current thread on monitor
+ */
+static inline void wait(struct vm_monitor_record *record)
+{
+	struct vm_thread *self = vm_thread_self();
+	vm_thread_set_state(self, VM_THREAD_STATE_BLOCKED);
+	sem_wait(&record->sem);
+	vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
+}
+
+static inline
+int owner_check(struct vm_object *object, struct vm_monitor_record **record_p)
+{
+	struct vm_monitor_record *record;
+
+	/*
+	 * Both atomic_read() calls do not need a memory barrier.
+	 * If current thread owns the monitor then the first read will return
+	 * non-null value and the second read will return current exec env because
+	 * those values were set by this thread.
+	 */
+
+	record = atomic_read_ptr(&object->monitor_record);
+	if (record && atomic_read_ptr(&record->owner) == vm_get_exec_env()) {
+		*record_p = record;
+		return 0;
+	}
+
+	signal_new_exception(vm_java_lang_IllegalMonitorStateException, NULL);
+	return -1;
+}
+
+/*
+ * Acquire the lock on object's monitor. This implementation uses the
+ * relaxed-lock protocol based on David Dice's work: "Implementing
+ * Fast Java Monitors with Relaxed-Locks".
+ *
+ */
+int vm_object_lock(struct vm_object *self)
+{
+	struct vm_monitor_record *old_record;
+	struct vm_exec_env *ee;
+
+	ee = vm_get_exec_env();
+
+	while (true) {
+		/* Memory barrier omited to speed execution in the
+		 * uncontended path. If the value fetched is out-dated
+		 * then we will simply enter the slow path. */
+		old_record = atomic_read_ptr(&self->monitor_record);
+
+		if (!old_record) {
+			struct vm_monitor_record *record = get_monitor_record();
+			if (!record) {
+				throw_oom_error();
+				return -1;
+			}
+
+			if (!atomic_cmpxchg_ptr(&self->monitor_record, NULL, record)) {
+				return 0;
+			}
+
+			put_monitor_record(record);
+			continue;
+		}
+
+		/* Check if recursive lock. No need for memory barrier
+		 * here because if current thread unlocked the monitor
+		 * and is no longer its owner then atomic_read() will
+		 * not return current exec environment. */
+		if (atomic_read_ptr(&old_record->owner) == vm_get_exec_env()) {
+			old_record->lock_count++;
+			return 0;
+		}
+
+		/* Slowpath... */
+
+		atomic_inc(&old_record->nr_blocked);
+
+		/* This barrier is paired with the barrier in
+		 * unlocking thread after deflation. */
+		smp_mb__after_atomic_inc();
+
+		while (atomic_read_ptr(&self->monitor_record) == old_record) {
+
+			/*
+			 * The unlocking thread checks for it in
+			 * wake_one() and if it is not set then it
+			 * does not do sem_post(). At the time
+			 * unlocking thread executes wake_one() the
+			 * .owner field is already cleared so the
+			 * atomic_cmpxchg_ptr() will succeed and this
+			 * thread will not block.
+			 *
+			 * We don't need a memory barrier after the write
+			 * because following atomic_cmpxchg_ptr() implies one.
+			 */
+			atomic_set(&old_record->candidate, 1);
+
+			if (!atomic_cmpxchg_ptr(&old_record->owner, NULL, ee)) {
+				atomic_dec(&old_record->nr_blocked);
+				old_record->lock_count = 1;
+				return 0;
+			}
+
+			wait(old_record);
+
+			/* We want to see that deflation happen before
+			 * unlocking thread wakes us up. Otherwise we
+			 * will block again and unlocking thread will
+			 * deadlock. */
+			smp_rmb();
+		}
+
+		atomic_dec(&old_record->nr_blocked);
+
+		/* Paired with smp_rmb() in unlocking thread's flushing loop */
+		smp_mb__after_atomic_dec();
+	}
+}
+
+/*
+ * Release the lock on object's monitor.
+ */
+int vm_object_unlock(struct vm_object *self)
+{
+	struct vm_monitor_record *record;
+
+	if (owner_check(self, &record))
+		return -1;
+
+	if (record->lock_count > 1) {
+		record->lock_count--;
+		smp_mb(); /* Required by java memory model */
+		return 0;
+	}
+
+	/* Memory barrier needed to read the most recent value of .nr_blocked
+	 * as possible. If we don't then we will have to "flush" the record
+	 * later which is quite expensive. */
+	smp_mb();
+
+	if (atomic_read(&record->nr_blocked) > 0) {
+		atomic_set_ptr(&record->owner, NULL);
+
+		/* Order above write and read in a locking thread's
+		 * while header so that it won't block after it's
+		 * woken up. */
+		smp_mb();
+
+		wake_one(record);
+		return 0;
+	}
+
+	/* Defalte monitor. */
+	atomic_set_ptr(&self->monitor_record, NULL);
+
+	/*
+	 * It's a write barrier for above and read barrier for below.
+	 *
+	 * Enforce order between defaltion and the check in locking
+	 * thread's while header so that when flushing occurs the
+	 * woken threads will not fall asleep again but will ack the
+	 * flush. It is also needed to ensure that threads trying to
+	 * lock with atomic_cmpxchg_ptr() will see it's unlocked and
+	 * will not block.
+	 */
+	smp_mb();
+
+	int nr_to_wake = atomic_read(&record->nr_blocked);
+
+	/*
+	 * If it shows up that some threads entered a slowpath
+	 * between the last check and deflation then we must
+	 * notify those threads that the record has been "flushed"
+	 * and they must try again.
+	 *
+	 * Note that after .monitor_record has been set to null
+	 * no new threads will block on semaphore.
+	 */
+	if (nr_to_wake > 0) {
+		/* Flush. It is possible that locking thread which
+		 * incremented .nr_blocked will escape without
+		 * blocking itself on the semaphore because it will
+		 * detect deflation. In this case the semaphore will
+		 * be incremented more times than needed to wake
+		 * threads up. This is not harmful because locking
+		 * threads call wait() in a loop trying to acquire the
+		 * lock, and the semaphore will be quickly decremented. */
+		for (int i = 0; i < nr_to_wake; i++)
+			sem_post(&record->sem);
+
+		/* We must wait for blocked threads to ACK the flush
+		 * before this record can be put back to the pool and
+		 * reused. */
+		while (atomic_read(&record->nr_blocked) > 0)
+			smp_rmb();
+	}
+
+	put_monitor_record(record);
 	return 0;
 }
 
-int vm_monitor_init(struct vm_monitor *mon)
+static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 {
-	if (pthread_mutex_init(&mon->owner_mutex, NULL))
-		return -1;
-
-	if (pthread_mutex_init(&mon->mutex, &monitor_mutexattr))
-		return -1;
-
-	if (pthread_cond_init(&mon->cond, NULL))
-		return -1;
-
-	mon->owner = NULL;
-	mon->lock_count = 0;
-
-	return 0;
-}
-
-struct vm_thread *vm_monitor_get_owner(struct vm_monitor *mon)
-{
-	struct vm_thread *owner;
-
-	pthread_mutex_lock(&mon->owner_mutex);
-	owner = mon->owner;
-	pthread_mutex_unlock(&mon->owner_mutex);
-
-	return owner;
-}
-
-void vm_monitor_set_owner(struct vm_monitor *mon, struct vm_thread *owner)
-{
-	pthread_mutex_lock(&mon->owner_mutex);
-	mon->owner = owner;
-	pthread_mutex_unlock(&mon->owner_mutex);
-}
-
-int vm_monitor_lock(struct vm_monitor *mon)
-{
-	struct vm_thread *self;
-	int err;
-
-	self = vm_thread_self();
-	err = 0;
-
-	if (pthread_mutex_trylock(&mon->mutex)) {
-		/*
-		 * XXX: according to Thread.getState() documentation thread
-		 * state does not have to be precise, it's used rather
-		 * for monitoring.
-		 */
-		vm_thread_set_state(self, VM_THREAD_STATE_BLOCKED);
-		err = pthread_mutex_lock(&mon->mutex);
-		vm_thread_set_state(self, VM_THREAD_STATE_RUNNABLE);
-	}
-
-	/* If err is non zero the lock has not been acquired. */
-	if (!err) {
-		vm_monitor_set_owner(mon, self);
-		mon->lock_count++;
-	}
-
-	return err;
-}
-
-int vm_monitor_unlock(struct vm_monitor *mon)
-{
-	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
-		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
-				     NULL);
-		return -1;
-	}
-
-	if (--mon->lock_count == 0)
-		vm_monitor_set_owner(mon, NULL);
-
-	int err = pthread_mutex_unlock(&mon->mutex);
-
-	/* If err is non zero the lock has not been released. */
-	if (err) {
-		++mon->lock_count;
-		vm_monitor_set_owner(mon, vm_thread_self());
-	}
-
-	return err;
-}
-
-static int vm_monitor_do_wait(struct vm_monitor *mon, struct timespec *timespec)
-{
-	struct vm_thread *self;
-	int old_lock_count;
+	struct vm_monitor_record *record;
+	struct vm_thread *thread_self;
 	bool interrupted;
+	int old_lock_count;
 	int err;
 
-	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
-		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
-				     NULL);
+	if (owner_check(self, &record))
 		return -1;
-	}
 
-	old_lock_count = mon->lock_count;
-	mon->lock_count = 0;
-	vm_monitor_set_owner(mon, NULL);
+	thread_self = vm_thread_self();
 
-	self = vm_thread_self();
+	pthread_mutex_lock(&thread_self->mutex);
+	interrupted = thread_self->interrupted;
+	thread_self->waiting_mon = self;
+	pthread_mutex_unlock(&thread_self->mutex);
 
-	pthread_mutex_lock(&self->mutex);
-	if (timespec != NULL)
-		self->state = VM_THREAD_STATE_TIMED_WAITING;
-	else
-		self->state = VM_THREAD_STATE_WAITING;
+	enum vm_thread_state new_state =
+		timespec ? VM_THREAD_STATE_TIMED_WAITING : VM_THREAD_STATE_WAITING;
 
-	self->wait_mon = mon;
-	interrupted = self->interrupted;
-	pthread_mutex_unlock(&self->mutex);
+	vm_thread_set_state(thread_self, new_state);
 
-	if (interrupted)
+	pthread_mutex_lock(&self->notify_mutex);
+
+	/*
+	 * We must unlock monitor after the lock on notify_mutex is acquired
+	 * to avoid missed notify.
+	 */
+	old_lock_count = record->lock_count;
+	record->lock_count = 1;
+	vm_object_unlock(self);
+
+	if (interrupted) {
 		err = 0;
-	else if (timespec) {
-		err = pthread_cond_timedwait(&mon->cond, &mon->mutex, timespec);
+	} else if (timespec) {
+		err = pthread_cond_timedwait(&self->notify_cond, &self->notify_mutex, timespec);
 		if (err == ETIMEDOUT)
 			err = 0;
-	} else
-		err = pthread_cond_wait(&mon->cond, &mon->mutex);
+	} else {
+		err = pthread_cond_wait(&self->notify_cond, &self->notify_mutex);
+	}
 
-	pthread_mutex_lock(&self->mutex);
-	self->state = VM_THREAD_STATE_RUNNABLE;
-	self->wait_mon = NULL;
-	pthread_mutex_unlock(&self->mutex);
+	pthread_mutex_unlock(&self->notify_mutex);
 
-	vm_monitor_set_owner(mon, self);
-	mon->lock_count = old_lock_count;
+	pthread_mutex_lock(&thread_self->mutex);
+	thread_self->waiting_mon = NULL;
+	pthread_mutex_unlock(&thread_self->mutex);
 
-	if (vm_thread_interrupted(self)) {
+	vm_thread_set_state(thread_self, VM_THREAD_STATE_RUNNABLE);
+
+	vm_object_lock(self);
+
+	record = atomic_read_ptr(&self->monitor_record);
+	record->lock_count = old_lock_count;
+
+	if (vm_thread_interrupted(thread_self)) {
 		signal_new_exception(vm_java_lang_InterruptedException, NULL);
 		return -1;
 	}
@@ -189,7 +356,7 @@ static int vm_monitor_do_wait(struct vm_monitor *mon, struct timespec *timespec)
 	return err;
 }
 
-int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
+int vm_object_timed_wait(struct vm_object *self, uint64_t ms, int ns)
 {
 	struct timespec timespec;
 
@@ -207,32 +374,38 @@ int vm_monitor_timed_wait(struct vm_monitor *mon, long long ms, int ns)
 		timespec.tv_nsec -= 1000000000l;
 	}
 
-	return vm_monitor_do_wait(mon, &timespec);
+	return vm_object_do_wait(self, &timespec);
 }
 
-int vm_monitor_wait(struct vm_monitor *mon)
+int vm_object_wait(struct vm_object *self)
 {
-	return vm_monitor_do_wait(mon, NULL);
+	return vm_object_do_wait(self, NULL);
 }
 
-int vm_monitor_notify(struct vm_monitor *mon)
+int vm_object_notify(struct vm_object *self)
 {
-	if (vm_monitor_get_owner(mon) != vm_thread_self()) {
-		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
-				     NULL);
+	struct vm_monitor_record *record;
+
+	if (owner_check(self, &record))
+		return -1;
+
+	pthread_mutex_lock(&self->notify_mutex);
+	pthread_cond_signal(&self->notify_cond);
+	pthread_mutex_unlock(&self->notify_mutex);
+	return 0;
+}
+
+int vm_object_notify_all(struct vm_object *self)
+{
+	struct vm_monitor_record *record;
+
+	if (owner_check(self, &record)) {
+		signal_new_exception(vm_java_lang_IllegalMonitorStateException, NULL);
 		return -1;
 	}
 
-	return pthread_cond_signal(&mon->cond);
-}
-
-int vm_monitor_notify_all(struct vm_monitor *mon)
-{
-	if (vm_monitor_get_owner(mon) != vm_get_exec_env()->thread) {
-		signal_new_exception(vm_java_lang_IllegalMonitorStateException,
-				     NULL);
-		return -1;
-	}
-
-	return pthread_cond_broadcast(&mon->cond);
+	pthread_mutex_lock(&self->notify_mutex);
+	pthread_cond_broadcast(&self->notify_cond);
+	pthread_mutex_unlock(&self->notify_mutex);
+	return 0;
 }

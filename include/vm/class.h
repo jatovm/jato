@@ -15,7 +15,6 @@
 #include "jit/vtable.h"
 
 struct vm_object;
-struct vm_monitor;
 struct vm_thread;
 
 enum vm_class_state {
@@ -41,11 +40,6 @@ struct vm_class {
 
 	pthread_mutex_t mutex;
 
-	/*
-	 * This monitor is used during class initialization because the one
-	 * in ->object is not yet created.
-	 */
-	struct vm_monitor monitor;
 	struct vm_thread *initializing_thread;
 
 	struct vm_class *super;

@@ -5,8 +5,11 @@
 
 #include "vm/object.h"
 
+#include "arch/atomic.h"
+
 #include <stdio.h> /* for NOT_IMPLEMENTED */
 #include <pthread.h>
+#include <semaphore.h>
 
 struct vm_object;
 
@@ -31,15 +34,20 @@ struct vm_thread {
 	struct vm_object *vmthread;
 
 	pthread_t posix_id;
-	enum vm_thread_state state;
+	atomic_t state;
 	struct list_head list_node;
 	bool interrupted;
-	struct vm_monitor *wait_mon;
+
+	/* points to object on which thread is waiting or NULL */
+	struct vm_object *waiting_mon;
+
+	/* should be accessed only with vm_thread_(set|get)_state() */
 	enum thread_state thread_state;
 };
 
 struct vm_exec_env {
 	struct vm_thread *thread;
+	struct list_head free_monitor_recs;
 };
 
 unsigned int vm_nr_threads(void);
@@ -56,10 +64,12 @@ static inline struct vm_thread *vm_thread_self(void)
 	return vm_get_exec_env()->thread;
 }
 
+void init_exec_env(void);
 int init_threading(void);
 int vm_thread_start(struct vm_object *vmthread);
 void vm_thread_wait_for_non_daemons(void);
 void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state);
+enum vm_thread_state vm_thread_get_state(struct vm_thread *thread);
 struct vm_object *vm_thread_get_java_thread(struct vm_thread *thread);
 char *vm_thread_get_name(struct vm_thread *thread);
 bool vm_thread_is_interrupted(struct vm_thread *thread);
