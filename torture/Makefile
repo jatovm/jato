@@ -11,6 +11,10 @@ dacapo:
 	make -C dacapo JAVA=$(JAVA)
 .PHONY: dacapo
 
+jruby:
+	make -C jruby JAVA=$(JAVA)
+.PHONY: jruby
+
 junit:
 	make -C junit JAVA=$(JAVA)
 .PHONY: junit
