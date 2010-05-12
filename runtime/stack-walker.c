@@ -50,8 +50,7 @@ struct vm_object *native_vmstackwalker_getclasscontext(void)
 	depth = get_java_stack_trace_depth(&st_elem);
 
 	/* Skip call to VMStackWalker.getClassContext() */
-	depth -= 2;
-	stack_trace_elem_next_java(&st_elem);
+	depth -= 1;
 	stack_trace_elem_next_java(&st_elem);
 
 	res = vm_object_alloc_array(vm_array_of_java_lang_Class, depth);
