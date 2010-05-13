@@ -1,0 +1,27 @@
+#!/bin/bash
+
+JAR=dacapo-2006-10-MR2.jar
+
+function bench {
+  echo $1
+
+  java -version
+  java -Xmx1024m -jar $JAR $1 2>&1  | grep "^====="
+
+  cacao -version
+  cacao -Xmx1024m -jar $JAR $1 2>&1 | grep "^====="
+
+  jamvm -version
+  jamvm -Xmx1024m -cp dacapo-2006-10-MR2.jar Harness $1 2>&1 | grep "^====="
+
+  jato -version
+  jato -Xmx1024m -jar $JAR $1 2>&1 | grep "^====="
+}
+
+bench "antlr"
+bench "bloat"
+bench "chart"
+bench "fop"
+bench "hsqldb"
+bench "luindex"
+bench "pmd"
