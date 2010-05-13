@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 
+struct basic_block;
+struct buffer;
+struct insn;
+
 uint8_t x86_encode_reg(enum machine_reg reg);
 
 static inline uint8_t x86_encode_mod_rm(uint8_t mod, uint8_t reg_opcode, uint8_t rm)
@@ -17,5 +21,6 @@ static inline uint8_t x86_encode_sib(uint8_t scale, uint8_t index, uint8_t base)
 	return ((scale & 0x3) << 6) | ((index & 0x7) << 3) | (base & 0x7);
 }
 
+void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *bb);
 
 #endif /* X86_ENCODE_H */

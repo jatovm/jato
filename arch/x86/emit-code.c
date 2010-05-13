@@ -34,6 +34,7 @@
 #include "arch/itable.h"
 #include "arch/memory.h"
 #include "arch/thread.h"
+#include "arch/encode.h"
 #include "arch/init.h"
 
 #include "cafebabe/method_info.h"
@@ -716,11 +717,6 @@ static void emit_mov_64_memlocal_xmm(struct insn *insn, struct buffer *buf, stru
 	__emit_membase_reg(buf, 0x10, MACH_REG_EBP, disp, dest_reg);
 }
 
-static void emit_mov_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x8b, &insn->src, &insn->dest);
-}
-
 static void emit_mov_thread_local_memdisp_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0x65); /* GS segment override prefix */
@@ -993,11 +989,6 @@ static void emit_adc_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	emit_reg_reg(buf, 0x13, &insn->dest, &insn->src);
 }
 
-static void emit_adc_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x13, &insn->src, &insn->dest);
-}
-
 static void emit_add_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit_reg_reg(buf, 0x03, &insn->dest, &insn->src);
@@ -1133,29 +1124,9 @@ static void emit_fstp_64_memlocal(struct insn *insn, struct buffer *buf, struct 
 	__emit_membase(buf, 0xdd, MACH_REG_EBP, slot_offset_64(insn->operand.slot), 3);
 }
 
-static void emit_add_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x03, &insn->src, &insn->dest);
-}
-
 static void emit_and_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit_reg_reg(buf, 0x23, &insn->dest, &insn->src);
-}
-
-static void emit_and_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x23, &insn->src, &insn->dest);
-}
-
-static void emit_sbb_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x1b, &insn->src, &insn->dest);
-}
-
-static void emit_sub_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x2b, &insn->src, &insn->dest);
 }
 
 static void __emit_div_mul_membase_eax(struct buffer *buf,
@@ -1263,11 +1234,6 @@ static void emit_shr_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_shift_reg_reg(buf, &insn->src, &insn->dest, 0x05);
 }
 
-static void emit_or_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x0b, &insn->src, &insn->dest);
-}
-
 static void emit_or_imm_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_membase(buf, 0x81, mach_reg(&insn->dest.base_reg), insn->dest.disp, 1);
@@ -1327,11 +1293,6 @@ static void emit_cmp_imm_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_cmp_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 }
 
-static void emit_cmp_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x3b, &insn->src, &insn->dest);
-}
-
 static void emit_cmp_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit_reg_reg(buf, 0x39, &insn->src, &insn->dest);
@@ -1355,20 +1316,10 @@ static void emit_indirect_call(struct insn *insn, struct buffer *buf, struct bas
 	emit(buf, x86_encode_mod_rm(0x0, 0x2, encode_reg(&insn->operand.reg)));
 }
 
-static void emit_xor_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x33, &insn->src, &insn->dest);
-}
-
 static void __emit_test_membase_reg(struct buffer *buf, enum machine_reg src,
 				    unsigned long disp, enum machine_reg dest)
 {
 	__emit_membase_reg(buf, 0x85, src, disp, dest);
-}
-
-static void emit_test_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit_membase_reg(buf, 0x85, &insn->src, &insn->dest);
 }
 
 /* Emits exception test using given register. */
@@ -1547,117 +1498,117 @@ static void emit_jmp_membase(struct insn *insn, struct buffer *buf, struct basic
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg),
+	DECL_EMITTER(INSN_ADC_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_REG_REG, emit_adc_reg_reg),
-	DECL_EMITTER(INSN_ADC_MEMBASE_REG, emit_adc_membase_reg),
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg),
-	DECL_EMITTER(INSN_ADD_MEMBASE_REG, emit_add_membase_reg),
+	DECL_EMITTER(INSN_ADD_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg),
-	DECL_EMITTER(INSN_AND_MEMBASE_REG, emit_and_membase_reg),
+	DECL_EMITTER(INSN_AND_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_REG_REG, emit_and_reg_reg),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
-	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg),
+	DECL_EMITTER(INSN_CMP_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_REG_REG, emit_cmp_reg_reg),
-	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg),
-	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg),
-	DECL_EMITTER(INSN_FADD_REG_REG, emit_fadd_reg_reg),
-	DECL_EMITTER(INSN_FADD_64_REG_REG, emit_fadd_64_reg_reg),
-	DECL_EMITTER(INSN_FADD_64_MEMDISP_REG, emit_fadd_64_memdisp_reg),
-	DECL_EMITTER(INSN_FSUB_REG_REG, emit_fsub_reg_reg),
-	DECL_EMITTER(INSN_FSUB_64_REG_REG, emit_fsub_64_reg_reg),
-	DECL_EMITTER(INSN_FMUL_REG_REG, emit_fmul_reg_reg),
-	DECL_EMITTER(INSN_FMUL_64_REG_REG, emit_fmul_64_reg_reg),
-	DECL_EMITTER(INSN_FMUL_64_MEMDISP_REG, emit_fmul_64_memdisp_reg),
-	DECL_EMITTER(INSN_FDIV_REG_REG, emit_fdiv_reg_reg),
-	DECL_EMITTER(INSN_FDIV_64_REG_REG, emit_fdiv_64_reg_reg),
-	DECL_EMITTER(INSN_FLD_MEMBASE, emit_fld_membase),
-	DECL_EMITTER(INSN_FLD_MEMLOCAL, emit_fld_memlocal),
-	DECL_EMITTER(INSN_FLD_64_MEMBASE, emit_fld_64_membase),
-	DECL_EMITTER(INSN_FLD_64_MEMLOCAL, emit_fld_64_memlocal),
-	DECL_EMITTER(INSN_FLDCW_MEMBASE, emit_fldcw_membase),
-	DECL_EMITTER(INSN_FILD_64_MEMBASE, emit_fild_64_membase),
-	DECL_EMITTER(INSN_FISTP_64_MEMBASE, emit_fistp_64_membase),
-	DECL_EMITTER(INSN_FNSTCW_MEMBASE, emit_fnstcw_membase),
-	DECL_EMITTER(INSN_FSTP_MEMBASE, emit_fstp_membase),
-	DECL_EMITTER(INSN_FSTP_MEMLOCAL, emit_fstp_memlocal),
-	DECL_EMITTER(INSN_FSTP_64_MEMBASE, emit_fstp_64_membase),
-	DECL_EMITTER(INSN_FSTP_64_MEMLOCAL, emit_fstp_64_memlocal),
+	DECL_EMITTER(INSN_CONV_FPU64_TO_GPR, emit_conv_fpu64_to_gpr),
+	DECL_EMITTER(INSN_CONV_FPU_TO_GPR, emit_conv_fpu_to_gpr),
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU, emit_conv_gpr_to_fpu),
 	DECL_EMITTER(INSN_CONV_GPR_TO_FPU64, emit_conv_gpr_to_fpu64),
-	DECL_EMITTER(INSN_CONV_FPU_TO_GPR, emit_conv_fpu_to_gpr),
-	DECL_EMITTER(INSN_CONV_FPU64_TO_GPR, emit_conv_fpu64_to_gpr),
-	DECL_EMITTER(INSN_CONV_XMM_TO_XMM64, emit_conv_xmm_to_xmm64),
 	DECL_EMITTER(INSN_CONV_XMM64_TO_XMM, emit_conv_xmm64_to_xmm),
+	DECL_EMITTER(INSN_CONV_XMM_TO_XMM64, emit_conv_xmm_to_xmm64),
+	DECL_EMITTER(INSN_DIV_MEMBASE_REG, emit_div_membase_reg),
+	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg),
+	DECL_EMITTER(INSN_FADD_64_MEMDISP_REG, emit_fadd_64_memdisp_reg),
+	DECL_EMITTER(INSN_FADD_64_REG_REG, emit_fadd_64_reg_reg),
+	DECL_EMITTER(INSN_FADD_REG_REG, emit_fadd_reg_reg),
+	DECL_EMITTER(INSN_FDIV_64_REG_REG, emit_fdiv_64_reg_reg),
+	DECL_EMITTER(INSN_FDIV_REG_REG, emit_fdiv_reg_reg),
+	DECL_EMITTER(INSN_FILD_64_MEMBASE, emit_fild_64_membase),
+	DECL_EMITTER(INSN_FISTP_64_MEMBASE, emit_fistp_64_membase),
+	DECL_EMITTER(INSN_FLDCW_MEMBASE, emit_fldcw_membase),
+	DECL_EMITTER(INSN_FLD_64_MEMBASE, emit_fld_64_membase),
+	DECL_EMITTER(INSN_FLD_64_MEMLOCAL, emit_fld_64_memlocal),
+	DECL_EMITTER(INSN_FLD_MEMBASE, emit_fld_membase),
+	DECL_EMITTER(INSN_FLD_MEMLOCAL, emit_fld_memlocal),
+	DECL_EMITTER(INSN_FMUL_64_MEMDISP_REG, emit_fmul_64_memdisp_reg),
+	DECL_EMITTER(INSN_FMUL_64_REG_REG, emit_fmul_64_reg_reg),
+	DECL_EMITTER(INSN_FMUL_REG_REG, emit_fmul_reg_reg),
+	DECL_EMITTER(INSN_FNSTCW_MEMBASE, emit_fnstcw_membase),
+	DECL_EMITTER(INSN_FSTP_64_MEMBASE, emit_fstp_64_membase),
+	DECL_EMITTER(INSN_FSTP_64_MEMLOCAL, emit_fstp_64_memlocal),
+	DECL_EMITTER(INSN_FSTP_MEMBASE, emit_fstp_membase),
+	DECL_EMITTER(INSN_FSTP_MEMLOCAL, emit_fstp_memlocal),
+	DECL_EMITTER(INSN_FSUB_64_REG_REG, emit_fsub_64_reg_reg),
+	DECL_EMITTER(INSN_FSUB_REG_REG, emit_fsub_reg_reg),
 	DECL_EMITTER(INSN_JMP_MEMBASE, emit_jmp_membase),
 	DECL_EMITTER(INSN_JMP_MEMINDEX, emit_jmp_memindex),
-	DECL_EMITTER(INSN_MOV_MEMBASE_XMM, emit_mov_membase_xmm),
+	DECL_EMITTER(INSN_MOVSX_16_MEMBASE_REG, emit_movsx_16_membase_reg),
+	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg),
+	DECL_EMITTER(INSN_MOVSX_8_MEMBASE_REG, emit_movsx_8_membase_reg),
+	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg),
+	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg),
 	DECL_EMITTER(INSN_MOV_64_MEMBASE_XMM, emit_mov_64_membase_xmm),
-	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, emit_mov_xmm_membase),
+	DECL_EMITTER(INSN_MOV_64_MEMDISP_XMM, emit_mov_64_memdisp_xmm),
+	DECL_EMITTER(INSN_MOV_64_MEMINDEX_XMM, emit_mov_64_memindex_xmm),
+	DECL_EMITTER(INSN_MOV_64_MEMLOCAL_XMM, emit_mov_64_memlocal_xmm),
 	DECL_EMITTER(INSN_MOV_64_XMM_MEMBASE, emit_mov_64_xmm_membase),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMDISP, emit_mov_64_xmm_memdisp),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMINDEX, emit_mov_64_xmm_memindex),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMLOCAL, emit_mov_64_xmm_memlocal),
+	DECL_EMITTER(INSN_MOV_64_XMM_XMM, emit_mov_64_xmm_xmm),
 	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase),
 	DECL_EMITTER(INSN_MOV_IMM_MEMLOCAL, emit_mov_imm_memlocal),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg),
 	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase),
-	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg),
-	DECL_EMITTER(INSN_MOV_MEMLOCAL_XMM, emit_mov_memlocal_xmm),
-	DECL_EMITTER(INSN_MOV_64_MEMLOCAL_XMM, emit_mov_64_memlocal_xmm),
-	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg),
+	DECL_EMITTER(INSN_MOV_MEMBASE_REG, insn_encode),
+	DECL_EMITTER(INSN_MOV_MEMBASE_XMM, emit_mov_membase_xmm),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg),
 	DECL_EMITTER(INSN_MOV_MEMDISP_XMM, emit_mov_memdisp_xmm),
-	DECL_EMITTER(INSN_MOV_64_MEMDISP_XMM, emit_mov_64_memdisp_xmm),
-	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp),
-	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_XMM, emit_mov_memindex_xmm),
-	DECL_EMITTER(INSN_MOV_64_MEMINDEX_XMM, emit_mov_64_memindex_xmm),
-	DECL_EMITTER(INSN_MOV_REG_MEMBASE, emit_mov_reg_membase),
+	DECL_EMITTER(INSN_MOV_MEMLOCAL_REG, emit_mov_memlocal_reg),
+	DECL_EMITTER(INSN_MOV_MEMLOCAL_XMM, emit_mov_memlocal_xmm),
+	DECL_EMITTER(INSN_MOV_REG_MEMBASE, insn_encode),
+	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal),
+	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp),
-	DECL_EMITTER(INSN_MOV_XMM_MEMLOCAL, emit_mov_xmm_memlocal),
-	DECL_EMITTER(INSN_MOV_64_XMM_MEMLOCAL, emit_mov_64_xmm_memlocal),
-	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg),
+	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
+	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, emit_mov_xmm_membase),
 	DECL_EMITTER(INSN_MOV_XMM_MEMDISP, emit_mov_xmm_memdisp),
-	DECL_EMITTER(INSN_MOV_64_XMM_MEMDISP, emit_mov_64_xmm_memdisp),
 	DECL_EMITTER(INSN_MOV_XMM_MEMINDEX, emit_mov_xmm_memindex),
-	DECL_EMITTER(INSN_MOV_64_XMM_MEMINDEX, emit_mov_64_xmm_memindex),
+	DECL_EMITTER(INSN_MOV_XMM_MEMLOCAL, emit_mov_xmm_memlocal),
 	DECL_EMITTER(INSN_MOV_XMM_XMM, emit_mov_xmm_xmm),
-	DECL_EMITTER(INSN_MOV_64_XMM_XMM, emit_mov_64_xmm_xmm),
-	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg),
-	DECL_EMITTER(INSN_MOVSX_8_MEMBASE_REG, emit_movsx_8_membase_reg),
-	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg),
-	DECL_EMITTER(INSN_MOVSX_16_MEMBASE_REG, emit_movsx_16_membase_reg),
-	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg),
 	DECL_EMITTER(INSN_MUL_MEMBASE_EAX, emit_mul_membase_eax),
 	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg),
 	DECL_EMITTER(INSN_OR_IMM_MEMBASE, emit_or_imm_membase),
-	DECL_EMITTER(INSN_OR_MEMBASE_REG, emit_or_membase_reg),
+	DECL_EMITTER(INSN_OR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_OR_REG_REG, emit_or_reg_reg),
-	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
-	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg),
-	DECL_EMITTER(INSN_PUSH_MEMLOCAL, emit_push_memlocal),
 	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal),
 	DECL_EMITTER(INSN_POP_REG, emit_pop_reg),
+	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
+	DECL_EMITTER(INSN_PUSH_MEMLOCAL, emit_push_memlocal),
+	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg),
 	DECL_EMITTER(INSN_SBB_IMM_REG, emit_sbb_imm_reg),
-	DECL_EMITTER(INSN_SBB_MEMBASE_REG, emit_sbb_membase_reg),
+	DECL_EMITTER(INSN_SBB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_REG_REG, emit_sbb_reg_reg),
 	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg),
 	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg),
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg),
-	DECL_EMITTER(INSN_SUB_MEMBASE_REG, emit_sub_membase_reg),
+	DECL_EMITTER(INSN_SUB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg),
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp),
-	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg),
-	DECL_EMITTER(INSN_XOR_MEMBASE_REG, emit_xor_membase_reg),
+	DECL_EMITTER(INSN_TEST_MEMBASE_REG, insn_encode),
+	DECL_EMITTER(INSN_XOR_64_XMM_REG_REG, emit_xor_64_xmm_reg_reg),
+	DECL_EMITTER(INSN_XOR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_XOR_REG_REG, emit_xor_reg_reg),
 	DECL_EMITTER(INSN_XOR_XMM_REG_REG, emit_xor_xmm_reg_reg),
-	DECL_EMITTER(INSN_XOR_64_XMM_REG_REG, emit_xor_64_xmm_reg_reg),
 };
 
 void emit_trampoline(struct compilation_unit *cu,

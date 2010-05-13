@@ -30,7 +30,13 @@
 
 #include "arch/encode.h"
 
+#include "arch/instruction.h"
+
+#include "lib/buffer.h"
+
 #include "vm/die.h"
+
+#include <stdint.h>
 
 static uint8_t x86_register_numbers[] = {
 	[MACH_REG_xAX]		= 0x00,
@@ -88,4 +94,264 @@ uint8_t x86_encode_reg(enum machine_reg reg)
 		die("unknown register %d", reg);
 
 	return x86_register_numbers[reg];
+}
+
+enum x86_insn_flags {
+	MOD_RM			= (1U << 8),
+	DIR_REVERSED		= (1U << 9),
+
+	/* Operand sizes */
+	WIDTH_BYTE		= (1U << 10),	/* 8 bits */
+	WIDTH_FULL		= (1U << 11),	/* 16 bits or 32 bits */
+	WIDTH_MASK		= WIDTH_BYTE|WIDTH_FULL,
+
+	/* Source operand */
+	SRC_NONE		= (1U << 12),
+
+	SRC_IMM			= (1U << 13),
+	SRC_IMM8		= (1U << 14),
+	IMM_MASK		= SRC_IMM|SRC_IMM8,
+
+	SRC_REL			= (1U << 15),
+	REL_MASK		= SRC_REL,
+
+	SRC_REG			= (1U << 16),
+	SRC_ACC			= (1U << 17),
+	SRC_MEM			= (1U << 18),
+	SRC_MEM_DISP_BYTE	= (1U << 19),
+	SRC_MEM_DISP_FULL	= (1U << 20),
+	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL,
+
+	/* Destination operand */
+	DST_NONE		= (1U << 21),
+	DST_REG			= (1U << 22),
+	DST_ACC			= (1U << 23),	/* AL/AX */
+	DST_MEM			= (1U << 24),
+	DST_MEM_DISP_BYTE	= (1U << 25),	/* 8 bits */
+	DST_MEM_DISP_FULL	= (1U << 26),	/* 16 bits or 32 bits */
+	DST_MASK		= DST_NONE|DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
+
+	MEM_DISP_MASK		= SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
+
+	GROUP_2			= (1U << 27),
+
+	GROUP_MASK		= GROUP_2,
+};
+
+/*
+ *	Addressing modes
+ */
+enum x86_addmode {
+	ADDMODE_ACC_MEM		= SRC_ACC|DST_MEM|DIR_REVERSED,	/* AL/AX -> memory */
+	ADDMODE_ACC_REG		= SRC_ACC|DST_REG,		/* AL/AX -> reg */
+	ADDMODE_IMM		= SRC_IMM|DST_NONE,		/* immediate operand */
+	ADDMODE_IMM8_RM		= SRC_IMM8|MOD_RM|DIR_REVERSED,	/* immediate -> register/memory */
+	ADDMODE_IMM_ACC		= SRC_IMM|DST_ACC,		/* immediate -> AL/AX */
+	ADDMODE_IMM_REG		= SRC_IMM|DST_REG,		/* immediate -> register */
+	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,		/* no operands */
+	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,		/* memory -> AL/AX */
+	ADDMODE_REG		= SRC_REG|DST_NONE,		/* register */
+	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,	/* register -> register/memory */
+	ADDMODE_REL		= SRC_REL|DST_NONE,		/* relative */
+	ADDMODE_RM_REG		= DST_REG|MOD_RM,		/* register/memory -> register */
+};
+
+#define OPCODE(opc)		opc
+#define OPCODE_MASK		0x000000ffUL
+#define FLAGS_MASK		0xffffff00UL
+
+static uint32_t encode_table[NR_INSN_TYPES] = {
+	[INSN_ADC_MEMBASE_REG]	= OPCODE(0x13) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_ADD_MEMBASE_REG]	= OPCODE(0x03) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_AND_MEMBASE_REG]	= OPCODE(0x23) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_CMP_MEMBASE_REG]	= OPCODE(0x3b) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_MOV_MEMBASE_REG]	= OPCODE(0x8b) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_MOV_REG_MEMBASE]	= OPCODE(0x89) | ADDMODE_REG_RM | WIDTH_FULL,
+	[INSN_OR_MEMBASE_REG]	= OPCODE(0x0b) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_SBB_MEMBASE_REG]	= OPCODE(0x1b) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_SUB_MEMBASE_REG]	= OPCODE(0x2b) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_TEST_MEMBASE_REG]	= OPCODE(0x85) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_XOR_MEMBASE_REG]	= OPCODE(0x33) | ADDMODE_RM_REG | WIDTH_FULL,
+};
+
+static inline bool is_imm_8(long imm)
+{
+	return (imm >= -128) && (imm <= 127);
+}
+
+static inline void emit(struct buffer *buf, unsigned char c)
+{
+	int err;
+
+	err = append_buffer(buf, c);
+
+	if (err)
+		die("out of buffer space");
+}
+
+static void emit_imm32(struct buffer *buf, int imm)
+{
+	union {
+		int val;
+		unsigned char b[4];
+	} imm_buf;
+
+	imm_buf.val = imm;
+	emit(buf, imm_buf.b[0]);
+	emit(buf, imm_buf.b[1]);
+	emit(buf, imm_buf.b[2]);
+	emit(buf, imm_buf.b[3]);
+}
+
+static void emit_imm(struct buffer *buf, long imm)
+{
+	if (is_imm_8(imm))
+		emit(buf, imm);
+	else
+		emit_imm32(buf, imm);
+}
+
+static unsigned char encode_reg(struct use_position *reg)
+{
+	return x86_encode_reg(mach_reg(reg));
+}
+
+static inline uint32_t mod_src_encode(uint32_t flags)
+{
+	switch (flags & SRC_MASK) {
+	case SRC_MEM:
+		return 0x00;
+	case SRC_MEM_DISP_BYTE:
+		return 0x01;
+	case SRC_MEM_DISP_FULL:
+		return 0x02;
+	case SRC_REG:
+		return 0x03;
+	default:
+		break;
+	}
+
+	die("unrecognized flags %x", flags);
+}
+
+static inline uint32_t mod_dest_encode(uint32_t flags)
+{
+	switch (flags & DST_MASK) {
+	case DST_MEM:
+		return 0x00;
+	case DST_MEM_DISP_BYTE:
+		return 0x01;
+	case DST_MEM_DISP_FULL:
+		return 0x02;
+	case DST_REG:
+		return 0x03;
+	default:
+		break;
+	}
+
+	die("unrecognized flags %x", flags);
+}
+
+static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t flags)
+{
+	uint8_t sib;
+
+	sib		= x86_encode_sib(0x00, 0x04, encode_reg(&self->src.base_reg));
+
+	emit(buffer, sib);
+}
+
+static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint32_t flags)
+{
+	uint8_t mod_rm, mod, reg_opcode, rm;
+	bool need_sib;
+
+	need_sib	= mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+
+	if (flags & DIR_REVERSED)
+		mod		= mod_dest_encode(flags);
+	else
+		mod		= mod_src_encode(flags);
+
+	if (flags & DIR_REVERSED)
+		reg_opcode	= encode_reg(&self->src.reg);
+	else
+		reg_opcode	= encode_reg(&self->dest.reg);
+
+	if (need_sib)
+		rm		= 0x04;
+	else {
+		if (flags & DIR_REVERSED)
+			rm		= encode_reg(&self->dest.reg);
+		else
+			rm		= encode_reg(&self->src.reg);
+	}
+
+	mod_rm		= x86_encode_mod_rm(mod, reg_opcode, rm);
+
+	emit(buffer, mod_rm);
+}
+
+static uint32_t insn_flags(struct insn *self, uint32_t encode)
+{
+	uint32_t flags;
+
+	flags	= encode & FLAGS_MASK;
+
+	if (flags & DIR_REVERSED)
+		if (self->dest.disp == 0)
+			flags	|= DST_MEM;
+		else if (is_imm_8(self->dest.disp))
+			flags	|= DST_MEM_DISP_BYTE;
+		else
+			flags	|= DST_MEM_DISP_FULL;
+	else {
+		if (self->src.disp == 0)
+			flags	|= SRC_MEM;
+		else if (is_imm_8(self->src.disp))
+			flags	|= SRC_MEM_DISP_BYTE;
+		else
+			flags	|= SRC_MEM_DISP_FULL;
+	}
+
+	return flags;
+}
+
+static uint8_t insn_opcode(struct insn *self, uint32_t encode)
+{
+	return encode & OPCODE_MASK;
+}
+
+void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *bb)
+{
+	uint32_t encode;
+	uint32_t flags;
+	uint8_t opcode;
+	bool need_sib;
+
+	need_sib	= mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+
+	encode		= encode_table[self->type];
+
+	if (encode == 0)
+		die("unrecognized instruction type %d", self->type);
+
+	opcode		= insn_opcode(self, encode);
+
+	flags		= insn_flags(self, encode);
+
+	emit(buffer, opcode);
+
+	if (flags & MOD_RM)
+		insn_encode_mod_rm(self, buffer, flags);
+
+	if (need_sib)
+		insn_encode_sib(self, buffer, flags);
+
+	if (flags & MEM_DISP_MASK) {
+		if (flags & DIR_REVERSED)
+			emit_imm(buffer, self->dest.disp);
+		else
+			emit_imm(buffer, self->src.disp);
+	}
 }
