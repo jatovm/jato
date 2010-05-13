@@ -25,8 +25,6 @@
  * Please refer to the file LICENSE for details.
  */
 
-#pragma once
-
 #ifndef CAFEBABE__CODE_ATTRIBUTE_H
 #define CAFEBABE__CODE_ATTRIBUTE_H
 

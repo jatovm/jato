@@ -25,8 +25,6 @@
  * Please refer to the file LICENSE for details.
  */
 
-#pragma once
-
 #ifndef CAFEBABE__LINE_NUMBER_TABLE_ATTRIBUTE_H
 #define CAFEBABE__LINE_NUMBER_TABLE_ATTRIBUTE_H
 

@@ -25,8 +25,6 @@
  * Please refer to the file LICENSE for details.
  */
 
-#pragma once
-
 #ifndef CAFEBABE__ATTRIBUTE_ARRAY_H
 #define CAFEBABE__ATTRIBUTE_ARRAY_H
 
