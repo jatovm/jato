@@ -460,7 +460,7 @@ static jint native_vmthread_isinterrupted(struct vm_object *vmthread)
 {
 	struct vm_thread *thread;
 
-	thread = (struct vm_thread *)field_get_object(vmthread, vm_java_lang_VMThread_vmdata);
+	thread = vm_thread_from_vmthread(vmthread);
 	return vm_thread_is_interrupted(thread);
 }
 
@@ -591,6 +591,8 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapObject", native_unsafe_compare_and_swap_object),
 	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", native_unsafe_object_field_offset),
 	DEFINE_NATIVE("sun/misc/Unsafe", "putObject", native_unsafe_put_object),
+	DEFINE_NATIVE("sun/misc/Unsafe", "park", native_unsafe_park),
+	DEFINE_NATIVE("sun/misc/Unsafe", "unpark", native_unsafe_unpark),
 };
 
 static void jit_init_natives(void)

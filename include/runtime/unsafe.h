@@ -20,5 +20,8 @@ jlong native_unsafe_object_field_offset(struct vm_object *this,
 					struct vm_object *field);
 void native_unsafe_put_object(struct vm_object *this, struct vm_object *obj,
 			      jlong offset, struct vm_object *value);
+void native_unsafe_unpark(struct vm_object *this, struct vm_object *vmthread);
+void native_unsafe_park(struct vm_object *this, jboolean isAbsolute,
+			jlong timeout);
 
 #endif /* RUNTIME_UNSAFE_H */

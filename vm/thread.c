@@ -76,6 +76,9 @@ static struct vm_thread *vm_thread_alloc(void)
 	thread->interrupted = false;
 	thread->waiting_mon = NULL;
 	thread->thread_state = THREAD_STATE_CONSISTENT;
+	pthread_cond_init(&thread->park_cond, NULL);
+	pthread_mutex_init(&thread->park_mutex, NULL);
+	thread->unpark_called = false;
 
 	return thread;
 
@@ -380,4 +383,20 @@ void vm_unlock_thread_count(void)
 void vm_thread_yield(void)
 {
 	sched_yield();
+}
+
+struct vm_thread *vm_thread_from_vmthread(struct vm_object *vmthread)
+{
+	struct vm_thread *thread;
+
+	return (struct vm_thread *)field_get_object(vmthread, vm_java_lang_VMThread_vmdata);
+}
+
+struct vm_thread *vm_thread_from_java_thread(struct vm_object *jthread)
+{
+	struct vm_thread *thread;
+	struct vm_object *vmthread;
+
+	vmthread = field_get_object(jthread, vm_java_lang_Thread_vmThread);
+	return vm_thread_from_vmthread(vmthread);
 }

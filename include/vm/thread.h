@@ -43,6 +43,11 @@ struct vm_thread {
 
 	/* should be accessed only with vm_thread_(set|get)_state() */
 	enum thread_state thread_state;
+
+	/* Needed by sun.misc.Unsafe.park() */
+	pthread_mutex_t park_mutex;
+	pthread_cond_t park_cond;
+	bool unpark_called;
 };
 
 struct vm_exec_env {
@@ -76,6 +81,8 @@ bool vm_thread_is_interrupted(struct vm_thread *thread);
 bool vm_thread_interrupted(struct vm_thread *thread);
 void vm_thread_interrupt(struct vm_thread *thread);
 void vm_thread_yield(void);
+struct vm_thread *vm_thread_from_vmthread(struct vm_object *vmthread);
+struct vm_thread *vm_thread_from_java_thread(struct vm_object *jthread);
 void vm_lock_thread_count(void);
 void vm_unlock_thread_count(void);
 

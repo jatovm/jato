@@ -80,3 +80,53 @@ void native_unsafe_put_object(struct vm_object *this, struct vm_object *obj,
 	struct vm_object **value_p = (void*)&obj->fields[offset];
 	*value_p = value;
 }
+
+void native_unsafe_park(struct vm_object *this, jboolean isAbsolute,
+			jlong timeout)
+{
+	struct vm_thread *self = vm_thread_self();
+	struct timespec timespec;
+
+
+	pthread_mutex_lock(&self->park_mutex);
+
+	if (self->unpark_called) {
+		pthread_mutex_unlock(&self->park_mutex);
+		return;
+	}
+
+	if (timeout == 0) {
+		pthread_cond_wait(&self->park_cond, &self->park_mutex);
+	} else {
+		/* If isAbsolute == true then timeout is in
+		 * miliseconds otherwise in nanoseconds. */
+		if (isAbsolute) {
+			timespec.tv_sec  = timeout / 1000l;
+			timespec.tv_nsec = timeout % 1000l;
+		} else {
+			clock_gettime(CLOCK_REALTIME, &timespec);
+			timespec.tv_sec  += timeout / 1000000000l;
+			timespec.tv_nsec += timeout % 1000000000l;
+		}
+
+		pthread_cond_timedwait(&self->park_cond, &self->park_mutex, &timespec);
+	}
+
+	if (self->unpark_called) {
+		self->unpark_called = false;
+	}
+
+	pthread_mutex_unlock(&self->park_mutex);
+}
+
+void native_unsafe_unpark(struct vm_object *this, struct vm_object *vmthread)
+{
+	struct vm_thread *thread;
+
+	thread = vm_thread_from_java_thread(vmthread);
+
+	pthread_mutex_lock(&thread->park_mutex);
+	thread->unpark_called = true;
+	pthread_cond_signal(&thread->park_cond);
+	pthread_mutex_unlock(&thread->park_mutex);
+}
