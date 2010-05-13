@@ -30,6 +30,7 @@
 
 #include "arch/instruction.h"
 #include "arch/stack-frame.h"
+#include "arch/encode.h"
 #include "arch/itable.h"
 #include "arch/memory.h"
 #include "arch/thread.h"
@@ -128,66 +129,9 @@ static void emit_restore_regs(struct buffer *buf);
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch),		\
 	DECL_EMITTER(INSN_RET, emit_ret)
 
-/*
- *	encode_mach_reg: Encode register to be used in x86 instruction.
- *	@reg: Register to encode.
- *
- *	Returns register in r/m or reg/opcode field format of the ModR/M byte.
- */
-static unsigned char encode_mach_reg(enum machine_reg reg)
-{
-	static unsigned char register_numbers[] = {
-		[MACH_REG_xAX]		= 0x00,
-		[MACH_REG_xCX]		= 0x01,
-		[MACH_REG_xDX]		= 0x02,
-		[MACH_REG_xBX]		= 0x03,
-		[MACH_REG_xSP]		= 0x04,
-		[MACH_REG_xBP]		= 0x05,
-		[MACH_REG_xSI]		= 0x06,
-		[MACH_REG_xDI]		= 0x07,
-#ifdef CONFIG_X86_64
-		[MACH_REG_R8]		= 0x08,
-		[MACH_REG_R9]		= 0x09,
-		[MACH_REG_R10]		= 0x0A,
-		[MACH_REG_R11]		= 0x0B,
-		[MACH_REG_R12]		= 0x0C,
-		[MACH_REG_R13]		= 0x0D,
-		[MACH_REG_R14]		= 0x0E,
-		[MACH_REG_R15]		= 0x0F,
-#endif
-		/* XMM registers */
-		[MACH_REG_XMM0] 	= 0x00,
-		[MACH_REG_XMM1] 	= 0x01,
-		[MACH_REG_XMM2] 	= 0x02,
-		[MACH_REG_XMM3] 	= 0x03,
-		[MACH_REG_XMM4] 	= 0x04,
-		[MACH_REG_XMM5] 	= 0x05,
-		[MACH_REG_XMM6] 	= 0x06,
-		[MACH_REG_XMM7] 	= 0x07,
-#ifdef CONFIG_X86_64
-		[MACH_REG_XMM8] 	= 0x08,
-		[MACH_REG_XMM9] 	= 0x09,
-		[MACH_REG_XMM10] 	= 0x0A,
-		[MACH_REG_XMM11] 	= 0x0B,
-		[MACH_REG_XMM12]	= 0x0C,
-		[MACH_REG_XMM13] 	= 0x0D,
-		[MACH_REG_XMM14]	= 0x0E,
-		[MACH_REG_XMM15] 	= 0x0F,
-#endif
-	};
-
-	if (reg == MACH_REG_UNASSIGNED)
-		die("unassigned register during code emission");
-
-	if (reg < 0 || reg >= ARRAY_SIZE(register_numbers))
-		die("unknown register %d", reg);
-
-	return register_numbers[reg];
-}
-
 static unsigned char encode_reg(struct use_position *reg)
 {
-	return encode_mach_reg(mach_reg(reg));
+	return x86_encode_reg(mach_reg(reg));
 }
 
 static inline bool is_imm_8(long imm)
@@ -571,7 +515,7 @@ __emit_reg_reg(struct buffer *buf, unsigned char opc,
 {
 	unsigned char mod_rm;
 
-	mod_rm = encode_modrm(0x03, encode_mach_reg(direct_reg), encode_mach_reg(rm_reg));
+	mod_rm = encode_modrm(0x03, x86_encode_reg(direct_reg), x86_encode_reg(rm_reg));
 
 	emit(buf, opc);
 	emit(buf, mod_rm);
@@ -606,14 +550,14 @@ static void
 __emit_memdisp_reg(struct buffer *buf, unsigned char opc, unsigned long disp,
 		   enum machine_reg reg)
 {
-	__emit_memdisp(buf, opc, disp, encode_mach_reg(reg));
+	__emit_memdisp(buf, opc, disp, x86_encode_reg(reg));
 }
 
 static void
 __emit_reg_memdisp(struct buffer *buf, unsigned char opc, enum machine_reg reg,
 		   unsigned long disp)
 {
-	__emit_memdisp(buf, opc, disp, encode_mach_reg(reg));
+	__emit_memdisp(buf, opc, disp, x86_encode_reg(reg));
 }
 
 static void
@@ -631,7 +575,7 @@ __emit_membase(struct buffer *buf, unsigned char opc,
 	if (needs_sib)
 		rm = 0x04;
 	else
-		rm = encode_mach_reg(base_reg);
+		rm = x86_encode_reg(base_reg);
 
 	if (disp == 0 && base_reg != MACH_REG_EBP)
 		mod = 0x00;
@@ -644,7 +588,7 @@ __emit_membase(struct buffer *buf, unsigned char opc,
 	emit(buf, mod_rm);
 
 	if (needs_sib)
-		emit(buf, encode_sib(0x00, 0x04, encode_mach_reg(base_reg)));
+		emit(buf, encode_sib(0x00, 0x04, x86_encode_reg(base_reg)));
 
 	if (disp)
 		emit_imm(buf, disp);
@@ -655,7 +599,7 @@ __emit_membase_reg(struct buffer *buf, unsigned char opc,
 		   enum machine_reg base_reg, unsigned long disp,
 		   enum machine_reg dest_reg)
 {
-	__emit_membase(buf, opc, base_reg, disp, encode_mach_reg(dest_reg));
+	__emit_membase(buf, opc, base_reg, disp, x86_encode_reg(dest_reg));
 }
 
 static void
@@ -674,7 +618,7 @@ emit_membase_reg(struct buffer *buf, unsigned char opc, struct operand *src,
 
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 {
-	emit(buf, 0x50 + encode_mach_reg(reg));
+	emit(buf, 0x50 + x86_encode_reg(reg));
 }
 
 static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg,
@@ -685,7 +629,7 @@ static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg,
 
 static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 {
-	emit(buf, 0x58 + encode_mach_reg(reg));
+	emit(buf, 0x58 + x86_encode_reg(reg));
 }
 
 static void emit_push_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -726,7 +670,7 @@ static void emit_movsx_8_membase_reg(struct insn *insn, struct buffer *buf, stru
 	dest_reg = mach_reg(&insn->dest.reg);
 
 	emit(buf, 0x0f);
-	__emit_membase_reg(buf, 0xbe, base_reg, disp, encode_mach_reg(dest_reg));
+	__emit_membase_reg(buf, 0xbe, base_reg, disp, x86_encode_reg(dest_reg));
 }
 
 static void emit_movsx_16_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -839,7 +783,7 @@ static void emit_mov_memindex_reg(struct insn *insn, struct buffer *buf, struct 
 
 static void __emit_mov_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
-	emit(buf, 0xb8 + encode_mach_reg(reg));
+	emit(buf, 0xb8 + x86_encode_reg(reg));
 	emit_imm32(buf, imm);
 }
 
@@ -868,7 +812,7 @@ static void emit_mov_imm_memlocal(struct insn *insn, struct buffer *buf, struct 
 static void __emit_mov_reg_membase(struct buffer *buf, enum machine_reg src,
 				   enum machine_reg base, unsigned long disp)
 {
-	__emit_membase(buf, 0x89, base, disp, encode_mach_reg(src));
+	__emit_membase(buf, 0x89, base, disp, x86_encode_reg(src));
 }
 
 static void emit_mov_reg_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -897,7 +841,7 @@ static void emit_mov_xmm_memlocal(struct insn *insn, struct buffer *buf, struct 
 	emit(buf, 0x0f);
 	emit(buf, 0x11);
 	emit(buf, encode_modrm(mod, encode_reg(&insn->src.reg),
-			       encode_mach_reg(MACH_REG_EBP)));
+			       x86_encode_reg(MACH_REG_EBP)));
 
 	emit_imm(buf, disp);
 }
@@ -918,7 +862,7 @@ static void emit_mov_64_xmm_memlocal(struct insn *insn, struct buffer *buf, stru
 	emit(buf, 0x0f);
 	emit(buf, 0x11);
 	emit(buf, encode_modrm(mod, encode_reg(&insn->src.reg),
-			       encode_mach_reg(MACH_REG_EBP)));
+			       x86_encode_reg(MACH_REG_EBP)));
 
 	emit_imm(buf, disp);
 }
@@ -941,7 +885,7 @@ static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
 		opc = 0x81;
 
 	emit(buf, opc);
-	emit(buf, encode_modrm(0x3, opc_ext, encode_mach_reg(reg)));
+	emit(buf, encode_modrm(0x3, opc_ext, x86_encode_reg(reg)));
 	emit_imm(buf, imm);
 }
 
@@ -1415,13 +1359,13 @@ static void emit_cmp_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0xff);
-	emit(buf, encode_modrm(0x3, 0x04, encode_mach_reg(reg)));
+	emit(buf, encode_modrm(0x3, 0x04, x86_encode_reg(reg)));
 }
 
 static void emit_really_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0xff);
-	emit(buf, encode_modrm(0x0, 0x04, encode_mach_reg(reg)));
+	emit(buf, encode_modrm(0x0, 0x04, x86_encode_reg(reg)));
 }
 
 static void emit_indirect_call(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -2116,7 +2060,7 @@ static void __emit_reg(struct buffer *buf,
 		       unsigned char opc,
 		       enum machine_reg reg)
 {
-	unsigned char reg_num = encode_mach_reg(reg);
+	unsigned char reg_num = x86_encode_reg(reg);
 	unsigned char rex_pfx = 0;
 
 	if (rex_w)
@@ -2159,8 +2103,8 @@ static void __emit_lopc_reg_reg(struct buffer *buf,
 	unsigned char rex_pfx = 0, mod_rm;
 	unsigned char direct, rm;
 
-	direct = encode_mach_reg(direct_reg);
-	rm = encode_mach_reg(rm_reg);
+	direct = x86_encode_reg(direct_reg);
+	rm = x86_encode_reg(rm_reg);
 
 	if (rex_w)
 		rex_pfx |= REX_W;
@@ -2328,7 +2272,7 @@ static void emit_alu_imm_reg(struct buffer *buf,
 {
 	unsigned char rex_pfx = 0, opc, reg_num;
 
-	reg_num = encode_mach_reg(reg);
+	reg_num = x86_encode_reg(reg);
 
 	if (rex_w)
 		rex_pfx |= REX_W;
@@ -2448,7 +2392,7 @@ static void __emit_lopc_membase(struct buffer *buf,
 				unsigned char reg_opcode)
 {
 	unsigned char rex_pfx = 0, mod, rm, mod_rm;
-	unsigned char __base_reg = encode_mach_reg(base_reg);
+	unsigned char __base_reg = x86_encode_reg(base_reg);
 	int needs_sib, needs_disp;
 
 	needs_sib = (base_reg == MACH_REG_RSP || base_reg == MACH_REG_R12);
@@ -2504,7 +2448,7 @@ static void __emit_lopc_membase_reg(struct buffer *buf,
 				    enum machine_reg dest_reg)
 {
 	__emit_lopc_membase(buf, rex_w, lopc, lopc_size,
-			    base_reg, disp, encode_mach_reg(dest_reg));
+			    base_reg, disp, x86_encode_reg(dest_reg));
 }
 
 static void __emit_membase_reg(struct buffer *buf,
@@ -2514,7 +2458,7 @@ static void __emit_membase_reg(struct buffer *buf,
 			       unsigned long disp,
 			       enum machine_reg dest_reg)
 {
-	__emit_membase(buf, rex_w, opc, base_reg, disp, encode_mach_reg(dest_reg));
+	__emit_membase(buf, rex_w, opc, base_reg, disp, x86_encode_reg(dest_reg));
 }
 
 static void __emit_lopc_reg_membase(struct buffer *buf,
@@ -2526,7 +2470,7 @@ static void __emit_lopc_reg_membase(struct buffer *buf,
 				    unsigned long disp)
 {
 	__emit_lopc_membase(buf, rex_w, lopc, lopc_size,
-			    base_reg, disp, encode_mach_reg(src_reg));
+			    base_reg, disp, x86_encode_reg(src_reg));
 }
 
 static void __emit_reg_membase(struct buffer *buf,
@@ -2586,7 +2530,7 @@ static void __emit_mov_reg_membase(struct buffer *buf,
 				   enum machine_reg base,
 				   unsigned long disp)
 {
-	__emit_membase(buf, rex_w, 0x89, base, disp, encode_mach_reg(src));
+	__emit_membase(buf, rex_w, 0x89, base, disp, x86_encode_reg(src));
 }
 
 static void emit_mov_gpr_membase(struct insn *insn,
@@ -2661,7 +2605,7 @@ static void __emit_memdisp_reg(struct buffer *buf,
 			       unsigned long disp,
 			       enum machine_reg reg)
 {
-	__emit_memdisp(buf, rex_w, opc, disp, encode_mach_reg(reg));
+	__emit_memdisp(buf, rex_w, opc, disp, x86_encode_reg(reg));
 }
 
 static void __emit_reg_memdisp(struct buffer *buf,
@@ -2670,7 +2614,7 @@ static void __emit_reg_memdisp(struct buffer *buf,
 			       enum machine_reg reg,
 			       unsigned long disp)
 {
-	__emit_memdisp(buf, rex_w, opc, disp, encode_mach_reg(reg));
+	__emit_memdisp(buf, rex_w, opc, disp, x86_encode_reg(reg));
 }
 
 static void emit_mov_reg_memdisp(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -2734,7 +2678,7 @@ static void emit_test_membase_reg(struct insn *insn, struct buffer *buf, struct 
 
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 {
-	unsigned char reg_num = encode_mach_reg(reg);
+	unsigned char reg_num = x86_encode_reg(reg);
 
 	emit(buf, 0xff);
 	if (reg_high(reg_num))
@@ -2891,8 +2835,8 @@ static void __emit_lopc_memindex(struct buffer *buf,
 {
 	int needs_disp;
 	unsigned char rex_pfx = 0, mod_rm, sib;
-	unsigned char __index_reg = encode_mach_reg(index_reg);
-	unsigned char __base_reg = encode_mach_reg(base_reg);
+	unsigned char __index_reg = x86_encode_reg(index_reg);
+	unsigned char __base_reg = x86_encode_reg(base_reg);
 
 	needs_disp = (base_reg == MACH_REG_R13);
 
@@ -2927,7 +2871,7 @@ static void __emit_memindex_reg(struct buffer *buf,
 				enum machine_reg dest_reg)
 {
 	__emit_lopc_memindex(buf, rex_w, &opc, 1, shift,
-			     index_reg, base_reg, encode_mach_reg(dest_reg));
+			     index_reg, base_reg, x86_encode_reg(dest_reg));
 }
 
 static void __emit_reg_memindex(struct buffer *buf,
@@ -2939,7 +2883,7 @@ static void __emit_reg_memindex(struct buffer *buf,
 				enum machine_reg base_reg)
 {
 	__emit_lopc_memindex(buf, rex_w, &opc, 1, shift,
-			     index_reg, base_reg, encode_mach_reg(src_reg));
+			     index_reg, base_reg, x86_encode_reg(src_reg));
 }
 
 static void emit_mov_memindex_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
