@@ -590,6 +590,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapLong", native_unsafe_compare_and_swap_long),
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapObject", native_unsafe_compare_and_swap_object),
 	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", native_unsafe_object_field_offset),
+	DEFINE_NATIVE("sun/misc/Unsafe", "putObject", native_unsafe_put_object),
 };
 
 static void jit_init_natives(void)

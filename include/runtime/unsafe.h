@@ -18,5 +18,7 @@ jint native_unsafe_compare_and_swap_object(struct vm_object *this,
 					   struct vm_object *update);
 jlong native_unsafe_object_field_offset(struct vm_object *this,
 					struct vm_object *field);
+void native_unsafe_put_object(struct vm_object *this, struct vm_object *obj,
+			      jlong offset, struct vm_object *value);
 
 #endif /* RUNTIME_UNSAFE_H */

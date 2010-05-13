@@ -73,3 +73,10 @@ jlong native_unsafe_object_field_offset(struct vm_object *this,
 
 	return vmf->offset;
 }
+
+void native_unsafe_put_object(struct vm_object *this, struct vm_object *obj,
+			      jlong offset, struct vm_object *value)
+{
+	struct vm_object **value_p = (void*)&obj->fields[offset];
+	*value_p = value;
+}
