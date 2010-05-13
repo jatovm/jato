@@ -27,6 +27,34 @@ static inline uint32_t atomic_cmpxchg_32(uint32_t *p, uint32_t old, uint32_t new
 #  include "arch/atomic_64.h"
 #endif
 
+static inline int atomic_read(const atomic_t *v)
+{
+	return v->counter;
+}
+
+static inline void atomic_set(atomic_t *v, int i)
+{
+	v->counter = i;
+}
+
+static inline void atomic_inc(atomic_t *v)
+{
+	asm volatile("lock; incl %0"
+		     : "+m" (v->counter));
+}
+
+static inline void atomic_dec(atomic_t *v)
+{
+	asm volatile("lock; decl %0"
+		     : "+m" (v->counter));
+}
+
+/* atomic_inc() and atomic_dec() imply a full barrier on x86 */
+#define smp_mb__after_atomic_inc() barrier()
+#define smp_mb__after_atomic_dec() barrier()
+#define smp_mb__before_atomic_inc() barrier()
+#define smp_mb__before_atomic_dec() barrier()
+
 static inline void *atomic_read_ptr(atomic_t *v)
 {
 	return (void *)atomic_read(v);
