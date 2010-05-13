@@ -22,15 +22,12 @@ struct vm_object {
 	 * on this being the first field in the struct, because this way we
 	 * don't need a null-pointer check for accessing this object whenever
 	 * we access ->class first. */
-	struct vm_class *class;
-
-	atomic_t monitor_record;
-
-	pthread_mutex_t notify_mutex;
-	pthread_cond_t notify_cond;
-
-	jsize array_length;
-	uint8_t fields[];
+	struct vm_class		*class;
+	void			*monitor_record;
+	pthread_mutex_t		notify_mutex;
+	pthread_cond_t		notify_cond;
+	jsize			array_length;
+	uint8_t			fields[];
 };
 
 /* XXX: BUILD_BUG_ON(offsetof(vm_object, class) != 0); */

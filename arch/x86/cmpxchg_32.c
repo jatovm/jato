@@ -24,11 +24,11 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "arch/atomic.h"
+#include "arch/cmpxchg.h"
 
 #include <stdint.h>
 
-uint64_t atomic_cmpxchg_64(uint64_t *p, uint64_t old, uint64_t new)
+uint64_t cmpxchg_64(uint64_t *p, uint64_t old, uint64_t new)
 {
 	uint32_t low = new;
 	uint32_t high = new >> 32;

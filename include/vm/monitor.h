@@ -26,15 +26,12 @@ struct vm_exec_env;
  */
 struct vm_monitor_record {
 	/* Holds pointer to struct vm_exec_env */
-	atomic_t owner;
-
-	atomic_t nr_blocked;
-	atomic_t candidate;
-	int lock_count;
-
-	struct list_head ee_free_list_node;
-
-	sem_t sem;
+	void			*owner;
+	atomic_t		nr_blocked;
+	atomic_t		candidate;
+	int			lock_count;
+	struct list_head	ee_free_list_node;
+	sem_t			sem;
 };
 
 int vm_object_lock(struct vm_object *self);

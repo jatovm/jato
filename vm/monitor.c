@@ -60,12 +60,14 @@ static struct vm_monitor_record *get_monitor_record(void)
 	if (!record)
 		return NULL;
 
-	atomic_set_ptr(&record->owner, ee);
+	record->owner		= ee;
+	record->lock_count	= 1;
+
 	atomic_set(&record->nr_blocked, 0);
-	record->lock_count = 1;
 	INIT_LIST_HEAD(&record->ee_free_list_node);
 	sem_init(&record->sem, 0, 0);
 	atomic_set(&record->candidate, 0);
+
 	return record;
 }
 
@@ -111,8 +113,8 @@ int owner_check(struct vm_object *object, struct vm_monitor_record **record_p)
 	 * those values were set by this thread.
 	 */
 
-	record = atomic_read_ptr(&object->monitor_record);
-	if (record && atomic_read_ptr(&record->owner) == vm_get_exec_env()) {
+	record	= object->monitor_record;
+	if (record && record->owner == vm_get_exec_env()) {
 		*record_p = record;
 		return 0;
 	}
@@ -138,7 +140,7 @@ int vm_object_lock(struct vm_object *self)
 		/* Memory barrier omited to speed execution in the
 		 * uncontended path. If the value fetched is out-dated
 		 * then we will simply enter the slow path. */
-		old_record = atomic_read_ptr(&self->monitor_record);
+		old_record	= self->monitor_record;
 
 		if (!old_record) {
 			struct vm_monitor_record *record = get_monitor_record();
@@ -147,7 +149,7 @@ int vm_object_lock(struct vm_object *self)
 				return -1;
 			}
 
-			if (!atomic_cmpxchg_ptr(&self->monitor_record, NULL, record)) {
+			if (!cmpxchg_ptr(&self->monitor_record, NULL, record)) {
 				return 0;
 			}
 
@@ -159,7 +161,7 @@ int vm_object_lock(struct vm_object *self)
 		 * here because if current thread unlocked the monitor
 		 * and is no longer its owner then atomic_read() will
 		 * not return current exec environment. */
-		if (atomic_read_ptr(&old_record->owner) == vm_get_exec_env()) {
+		if (old_record->owner == vm_get_exec_env()) {
 			old_record->lock_count++;
 			return 0;
 		}
@@ -172,7 +174,7 @@ int vm_object_lock(struct vm_object *self)
 		 * unlocking thread after deflation. */
 		smp_mb__after_atomic_inc();
 
-		while (atomic_read_ptr(&self->monitor_record) == old_record) {
+		while (self->monitor_record == old_record) {
 
 			/*
 			 * The unlocking thread checks for it in
@@ -180,15 +182,15 @@ int vm_object_lock(struct vm_object *self)
 			 * does not do sem_post(). At the time
 			 * unlocking thread executes wake_one() the
 			 * .owner field is already cleared so the
-			 * atomic_cmpxchg_ptr() will succeed and this
+			 * cmpxchg_ptr() will succeed and this
 			 * thread will not block.
 			 *
 			 * We don't need a memory barrier after the write
-			 * because following atomic_cmpxchg_ptr() implies one.
+			 * because following cmpxchg_ptr() implies one.
 			 */
 			atomic_set(&old_record->candidate, 1);
 
-			if (!atomic_cmpxchg_ptr(&old_record->owner, NULL, ee)) {
+			if (!cmpxchg_ptr(&old_record->owner, NULL, ee)) {
 				atomic_dec(&old_record->nr_blocked);
 				old_record->lock_count = 1;
 				return 0;
@@ -232,7 +234,7 @@ int vm_object_unlock(struct vm_object *self)
 	smp_mb();
 
 	if (atomic_read(&record->nr_blocked) > 0) {
-		atomic_set_ptr(&record->owner, NULL);
+		record->owner	= NULL;
 
 		/* Order above write and read in a locking thread's
 		 * while header so that it won't block after it's
@@ -244,7 +246,7 @@ int vm_object_unlock(struct vm_object *self)
 	}
 
 	/* Defalte monitor. */
-	atomic_set_ptr(&self->monitor_record, NULL);
+	self->monitor_record	= NULL;
 
 	/*
 	 * It's a write barrier for above and read barrier for below.
@@ -253,7 +255,7 @@ int vm_object_unlock(struct vm_object *self)
 	 * thread's while header so that when flushing occurs the
 	 * woken threads will not fall asleep again but will ack the
 	 * flush. It is also needed to ensure that threads trying to
-	 * lock with atomic_cmpxchg_ptr() will see it's unlocked and
+	 * lock with cmpxchg_ptr() will see it's unlocked and
 	 * will not block.
 	 */
 	smp_mb();
@@ -345,8 +347,8 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 
 	vm_object_lock(self);
 
-	record = atomic_read_ptr(&self->monitor_record);
-	record->lock_count = old_lock_count;
+	record			= self->monitor_record;
+	record->lock_count	= old_lock_count;
 
 	if (vm_thread_interrupted(thread_self)) {
 		signal_new_exception(vm_java_lang_InterruptedException, NULL);
