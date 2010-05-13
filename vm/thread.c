@@ -387,16 +387,14 @@ void vm_thread_yield(void)
 
 struct vm_thread *vm_thread_from_vmthread(struct vm_object *vmthread)
 {
-	struct vm_thread *thread;
-
 	return (struct vm_thread *)field_get_object(vmthread, vm_java_lang_VMThread_vmdata);
 }
 
 struct vm_thread *vm_thread_from_java_thread(struct vm_object *jthread)
 {
-	struct vm_thread *thread;
 	struct vm_object *vmthread;
 
 	vmthread = field_get_object(jthread, vm_java_lang_Thread_vmThread);
+
 	return vm_thread_from_vmthread(vmthread);
 }
