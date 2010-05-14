@@ -36,7 +36,8 @@
 #include "jit/cu-mapping.h"
 
 enum {
-	PRELOAD_OPTIONAL,
+	PRELOAD_MANDATORY	= 0x00,
+	PRELOAD_OPTIONAL	= 0x01,
 };
 
 struct preload_entry {
