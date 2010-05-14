@@ -95,6 +95,7 @@ void native_unsafe_park(struct vm_object *this, jboolean isAbsolute,
 	pthread_mutex_lock(&self->park_mutex);
 
 	if (self->unpark_called) {
+		self->unpark_called = false;
 		pthread_mutex_unlock(&self->park_mutex);
 		return;
 	}
