@@ -137,9 +137,6 @@ int vm_object_lock(struct vm_object *self)
 	ee = vm_get_exec_env();
 
 	while (true) {
-		/* Memory barrier omited to speed execution in the
-		 * uncontended path. If the value fetched is out-dated
-		 * then we will simply enter the slow path. */
 		old_record	= self->monitor_record;
 
 		if (!old_record) {
@@ -161,7 +158,7 @@ int vm_object_lock(struct vm_object *self)
 		 * here because if current thread unlocked the monitor
 		 * and is no longer its owner then atomic_read() will
 		 * not return current exec environment. */
-		if (old_record->owner == vm_get_exec_env()) {
+		if (old_record->owner == ee) {
 			old_record->lock_count++;
 			return 0;
 		}
@@ -228,11 +225,6 @@ int vm_object_unlock(struct vm_object *self)
 		return 0;
 	}
 
-	/* Memory barrier needed to read the most recent value of .nr_blocked
-	 * as possible. If we don't then we will have to "flush" the record
-	 * later which is quite expensive. */
-	smp_mb();
-
 	if (atomic_read(&record->nr_blocked) > 0) {
 		record->owner	= NULL;
 
@@ -248,22 +240,15 @@ int vm_object_unlock(struct vm_object *self)
 	/* Defalte monitor. */
 	self->monitor_record	= NULL;
 
-	/*
-	 * It's a write barrier for above and read barrier for below.
-	 *
-	 * Enforce order between defaltion and the check in locking
-	 * thread's while header so that when flushing occurs the
-	 * woken threads will not fall asleep again but will ack the
-	 * flush. It is also needed to ensure that threads trying to
-	 * lock with cmpxchg_ptr() will see it's unlocked and
-	 * will not block.
-	 */
+	/* We must ensure that when locking thread will read
+	 * .monitor_record == NULL in the while header this thread
+	 * sees the effect of incrementation of .nr_blocked. */
 	smp_mb();
 
 	int nr_to_wake = atomic_read(&record->nr_blocked);
 
 	/*
-	 * If it shows up that some threads entered a slowpath
+	 * If it shows up that some thread entered a slowpath
 	 * between the last check and deflation then we must
 	 * notify those threads that the record has been "flushed"
 	 * and they must try again.
@@ -286,8 +271,7 @@ int vm_object_unlock(struct vm_object *self)
 		/* We must wait for blocked threads to ACK the flush
 		 * before this record can be put back to the pool and
 		 * reused. */
-		while (atomic_read(&record->nr_blocked) > 0)
-			smp_rmb();
+		while (atomic_read(&record->nr_blocked) > 0) ;
 	}
 
 	put_monitor_record(record);
