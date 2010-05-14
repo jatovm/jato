@@ -164,6 +164,8 @@
 # include "mm/PCR_MM.h"
 #endif
 
+#include <valgrind/valgrind.h>
+
 #if !defined(NO_EXECUTE_PERMISSION)
 # define OPT_PROT_EXEC PROT_EXEC
 #else
@@ -952,16 +954,13 @@ ptr_t GC_get_stack_base()
     char c;
     word result = 0;
     size_t i, buf_offset = 0;
-    char valgrindp = 0;
 
     /* Valgrind modifies the address space of the host process. Thus, the
        address given by glibc and the kernel is not valid when running under
        valgrind. This alternative function uses pthread attributes to find the
        stack base. */
 #   ifdef GC_LINUX_THREADS
-      valgrindp = getenv("GC_VALGRIND") != 0;
-
-      if(valgrindp) {
+      if (RUNNING_ON_VALGRIND) {
         return GC_valgrind_get_stack_base();
       }
 #   endif /* GC_LINUX_THREADS */
