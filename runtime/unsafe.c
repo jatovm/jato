@@ -67,6 +67,10 @@ jlong native_unsafe_object_field_offset(struct vm_object *this,
 {
 	struct vm_field *vmf;
 
+	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+		field	= field_get_object(field, vm_java_lang_reflect_Field_f);
+	}
+
 	vmf = vm_object_to_vm_field(field);
 	if (!vmf)
 		return 0;

@@ -66,8 +66,13 @@ struct vm_field *vm_object_to_vm_field(struct vm_object *field)
 	if (!field)
 		goto throw;
 
-	class = field_get_object(field, vm_java_lang_reflect_Field_declaringClass);
-	slot = field_get_int(field, vm_java_lang_reflect_Field_slot);
+	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+		class	= field_get_object(field, vm_java_lang_reflect_VMField_clazz);
+		slot	= field_get_int(field, vm_java_lang_reflect_VMField_slot);
+	} else {
+		class	= field_get_object(field, vm_java_lang_reflect_Field_declaringClass);
+		slot	= field_get_int(field, vm_java_lang_reflect_Field_slot);
+	}
 
 	vmc = vm_class_get_class_from_class_object(class);
 	if (!vmc)
@@ -89,12 +94,20 @@ static struct vm_method *vm_object_to_vm_method(struct vm_object *method)
 	struct vm_class *vmc;
 	int slot;
 
-	clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
+	if (vm_java_lang_reflect_VMMethod != NULL)	/* Classpath 0.98 */
+		clazz = field_get_object(method, vm_java_lang_reflect_VMMethod_clazz);
+	else
+		clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
+
 	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
 
-	slot  = field_get_int(method, vm_java_lang_reflect_Method_slot);
+	if (vm_java_lang_reflect_VMMethod != NULL)	/* Classpath 0.98 */
+		slot  = field_get_int(method, vm_java_lang_reflect_VMMethod_slot);
+	else
+		slot  = field_get_int(method, vm_java_lang_reflect_Method_slot);
+
 	return &vmc->methods[slot];
 }
 
@@ -152,11 +165,23 @@ native_vmclass_get_declared_fields(struct vm_object *clazz,
 		if (!name_object)
 			return rethrow_exception();
 
-		field_set_object(field, vm_java_lang_reflect_Field_declaringClass,
-				 clazz);
-		field_set_object(field, vm_java_lang_reflect_Field_name,
-				 name_object);
-		field_set_int(field, vm_java_lang_reflect_Field_slot, i);
+		if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+			struct vm_object *vm_field;
+
+			vm_field = vm_object_alloc(vm_java_lang_reflect_VMField);
+			if (!vm_field)
+				return rethrow_exception();
+
+			field_set_object(vm_field, vm_java_lang_reflect_VMField_clazz, clazz);
+			field_set_object(vm_field, vm_java_lang_reflect_VMField_name, name_object);
+			field_set_int(vm_field, vm_java_lang_reflect_VMField_slot, i);
+
+			field_set_object(field, vm_java_lang_reflect_Field_f, vm_field);
+		} else {
+			field_set_object(field, vm_java_lang_reflect_Field_declaringClass, clazz);
+			field_set_object(field, vm_java_lang_reflect_Field_name, name_object);
+			field_set_int(field, vm_java_lang_reflect_Field_slot, i);
+		}
 
 		array_set_field_ptr(array, index++, field);
 	}
@@ -219,11 +244,25 @@ native_vmclass_get_declared_methods(struct vm_object *clazz,
 		if (!name_object)
 			return rethrow_exception();
 
-		field_set_object(method, vm_java_lang_reflect_Method_declaringClass,
-				 clazz);
-		field_set_object(method, vm_java_lang_reflect_Method_name,
-				 name_object);
-		field_set_int(method, vm_java_lang_reflect_Method_slot, i);
+		if (vm_java_lang_reflect_VMMethod != NULL) {	/* Classpath 0.98 */
+			struct vm_object *vm_method;
+
+			vm_method = vm_object_alloc(vm_java_lang_reflect_VMMethod);
+			if (!vm_method)
+				return rethrow_exception();
+
+			field_set_object(vm_method, vm_java_lang_reflect_VMMethod_clazz, clazz);
+			field_set_object(vm_method, vm_java_lang_reflect_VMMethod_name, name_object);
+			field_set_object(vm_method, vm_java_lang_reflect_VMMethod_m, method);
+			field_set_int(vm_method, vm_java_lang_reflect_VMMethod_slot, i);
+
+			assert(vm_java_lang_reflect_Method_m != NULL);
+			field_set_object(method, vm_java_lang_reflect_Method_m, vm_method);
+		} else {
+			field_set_object(method, vm_java_lang_reflect_Method_declaringClass, clazz);
+			field_set_object(method, vm_java_lang_reflect_Method_name, name_object);
+			field_set_int(method, vm_java_lang_reflect_Method_slot, i);
+		}
 
 		array_set_field_ptr(array, index++, method);
 	}
@@ -278,10 +317,21 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 		if (!ctor)
 			return rethrow_exception();
 
-		field_set_object(ctor, vm_java_lang_reflect_Constructor_clazz,
-				 clazz);
-		field_set_int(ctor, vm_java_lang_reflect_Constructor_slot, i);
+		if (vm_java_lang_reflect_VMConstructor != NULL) { /* Classpath 0.98 */
+			struct vm_object *vm_ctor;
 
+			vm_ctor = vm_object_alloc(vm_java_lang_reflect_VMConstructor);
+			if (!vm_ctor)
+				return rethrow_exception();
+
+			field_set_object(vm_ctor, vm_java_lang_reflect_VMConstructor_clazz, clazz);
+			field_set_int(vm_ctor, vm_java_lang_reflect_VMConstructor_slot, i);
+
+			field_set_object(ctor, vm_java_lang_reflect_Constructor_cons, vm_ctor);
+		} else {
+			field_set_object(ctor, vm_java_lang_reflect_Constructor_clazz, clazz);
+			field_set_int(ctor, vm_java_lang_reflect_Constructor_slot, i);
+		}
 		array_set_field_ptr(array, index++, ctor);
 	}
 
@@ -380,11 +430,16 @@ native_constructor_get_parameter_types(struct vm_object *ctor)
 		return NULL;
 	}
 
-	clazz = field_get_object(ctor, vm_java_lang_reflect_Constructor_clazz);
-	slot = field_get_int(ctor, vm_java_lang_reflect_Constructor_slot);
+	if (vm_java_lang_reflect_VMConstructor != NULL) {	/* Classpath 0.98 */
+		clazz	= field_get_object(ctor, vm_java_lang_reflect_VMConstructor_clazz);
+		slot	= field_get_int(ctor, vm_java_lang_reflect_VMConstructor_slot);
+	} else {
+		clazz	= field_get_object(ctor, vm_java_lang_reflect_Constructor_clazz);
+		slot	= field_get_int(ctor, vm_java_lang_reflect_Constructor_slot);
+	}
 
-	class = vm_class_get_class_from_class_object(clazz);
-	vmm = &class->methods[slot];
+	class	= vm_class_get_class_from_class_object(clazz);
+	vmm	= &class->methods[slot];
 
 	return get_method_parameter_types(vmm);
 }
@@ -438,6 +493,17 @@ native_constructor_construct_native(struct vm_object *this,
 
 	vm_call_method_a(vmm, args, NULL);
 	return result;
+}
+
+struct vm_object *native_vmconstructor_construct(struct vm_object *this, struct vm_object *args)
+{
+	struct vm_object *clazz;
+	jint slot;
+
+	clazz	= field_get_object(this, vm_java_lang_reflect_VMConstructor_clazz);
+	slot	= field_get_int(this, vm_java_lang_reflect_VMConstructor_slot);
+
+	return native_constructor_construct_native(this, args, clazz, slot);
 }
 
 struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz)
@@ -817,6 +883,19 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
  throw_illegal:
 	signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 	return NULL;
+}
+
+struct vm_object *native_vmmethod_invoke(struct vm_object *vm_method, struct vm_object *o, struct vm_object *args)
+{
+	struct vm_object *method;
+	struct vm_object *clazz;
+	jint slot;
+
+	method	= field_get_object(vm_method, vm_java_lang_reflect_VMMethod_m);
+	clazz	= field_get_object(vm_method, vm_java_lang_reflect_VMMethod_clazz);
+	slot	= field_get_int(vm_method, vm_java_lang_reflect_VMMethod_slot);
+
+	return native_method_invokenative(method, o, args, clazz, slot);
 }
 
 struct vm_object *native_field_gettype(struct vm_object *this)

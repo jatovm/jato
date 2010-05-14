@@ -27,6 +27,7 @@ native_constructor_construct_native(struct vm_object *this,
 				    struct vm_object *args,
 				    struct vm_object *declaring_class,
 				    int slot);
+struct vm_object *native_vmconstructor_construct(struct vm_object *this, struct vm_object *args);
 struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz);
 struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz);
 struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
@@ -40,6 +41,7 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
 			   struct vm_object *args,
 			   struct vm_object *declaringClass,
 			   jint slot);
+struct vm_object *native_vmmethod_invoke(struct vm_object *vm_method, struct vm_object *o, struct vm_object *args);
 void native_field_set(struct vm_object *this, struct vm_object *o, struct vm_object *value_obj);
 struct vm_object *native_method_getreturntype(struct vm_object *method);
 
