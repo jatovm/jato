@@ -680,6 +680,11 @@ static void handle_nogc(void)
 	dont_gc		= 1;
 }
 
+static void handle_newgc(void)
+{
+	newgc_enabled	= true;
+}
+
 static void handle_maps(void)
 {
 	dump_maps = true;
@@ -852,8 +857,9 @@ const struct option options[] = {
 	DEFINE_OPTION_ARG("jar",	handle_jar),
 	DEFINE_OPTION("verbose:gc",	handle_verbose_gc),
 
-	DEFINE_OPTION("Xnogc",			handle_nogc),
 	DEFINE_OPTION("Xmaps",			handle_maps),
+	DEFINE_OPTION("Xnewgc",			handle_newgc),
+	DEFINE_OPTION("Xnogc",			handle_nogc),
 	DEFINE_OPTION("Xperf",			handle_perf),
 
 	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),

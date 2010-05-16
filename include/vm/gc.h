@@ -8,14 +8,28 @@
 
 struct register_state;
 
-extern unsigned long max_heap_size;
-extern void *gc_safepoint_page;
-extern bool verbose_gc;
-extern int dont_gc;
+extern unsigned long		max_heap_size;
+extern void			*gc_safepoint_page;
+extern bool			newgc_enabled;
+extern bool			verbose_gc;
+extern int			dont_gc;
+
+struct gc_operations {
+	void *(*gc_alloc)(size_t size);
+	void *(*vm_alloc)(size_t size);
+	void (*vm_free)(void *p);
+};
+
+void gc_setup_boehm(void);
 
 void gc_init(void);
 
-void *gc_alloc(size_t size);
+extern struct gc_operations gc_ops;
+
+static inline void *gc_alloc(size_t size)
+{
+	return gc_ops.gc_alloc(size);
+}
 
 /*
  * Always use this function to allocate memory region which directly
@@ -23,13 +37,20 @@ void *gc_alloc(size_t size);
  * might be prematurely collected if the only reference to the object
  * is inside this region.
  */
-void *vm_alloc(size_t size);
+static inline void *vm_alloc(size_t size)
+{
+	return gc_ops.vm_alloc(size);
+}
+
 void *vm_zalloc(size_t size);
 
 /*
  * Use this function to free memory allocated with vm_alloc()
  */
-void vm_free(void *ptr);
+static inline void vm_free(void *ptr)
+{
+	gc_ops.vm_free(ptr);
+}
 
 void gc_safepoint(struct register_state *);
 void suspend_handler(int, siginfo_t *, void *);

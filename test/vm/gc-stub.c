@@ -5,7 +5,7 @@
 
 void *gc_safepoint_page;
 
-void *gc_alloc(size_t size)
+void *do_gc_alloc(size_t size)
 {
 	return zalloc(size);
 }
@@ -18,7 +18,7 @@ void gc_detach_thread(void)
 {
 }
 
-void *vm_alloc(size_t size)
+void *do_vm_alloc(size_t size)
 {
 	return malloc(size);
 }
@@ -32,10 +32,16 @@ void *vm_zalloc(size_t size)
 	return result;
 }
 
-void vm_free(void *ptr)
+void do_vm_free(void *ptr)
 {
 	free(ptr);
 }
+
+struct gc_operations gc_ops = {
+	.gc_alloc		= do_gc_alloc,
+	.vm_alloc		= do_vm_alloc,
+	.vm_free		= do_vm_free,
+};
 
 void gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer, void *param)
 {

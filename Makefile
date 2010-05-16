@@ -105,6 +105,7 @@ VM_OBJS = \
 	runtime/runtime.o	\
 	runtime/stack-walker.o	\
 	runtime/unsafe.o	\
+	vm/boehm-gc.o		\
 	vm/bytecode.o		\
 	vm/call.o		\
 	vm/class.o		\

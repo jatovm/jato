@@ -54,8 +54,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "../boehmgc/include/gc.h"
-
 void *gc_safepoint_page;
 
 static pthread_mutex_t	gc_reclaim_mutex	= PTHREAD_MUTEX_INITIALIZER;
@@ -73,8 +71,12 @@ static __thread sig_atomic_t in_safepoint;
 static pthread_t gc_thread_id;
 
 unsigned long max_heap_size	= 128 * 1024 * 1024;	/* 128 MB */
-bool verbose_gc;
-int dont_gc;
+
+bool				newgc_enabled;
+bool				verbose_gc;
+int				dont_gc;
+
+struct gc_operations		gc_ops;
 
 static void hide_safepoint_guard_page(void)
 {
@@ -407,42 +409,55 @@ wait_for_reclaim:
 		die("pthread_mutex_unlock");
 }
 
-static void *gc_out_of_memory(size_t nr)
+static void gc_out_of_memory(void)
 {
 	if (verbose_gc)
 		fprintf(stderr, "[GC]\n");
 
-	GC_gcollect();
-
-	return NULL;	/* is this ok? */
+	gc_start();
 }
 
-static void gc_ignore_warnings(char *msg, GC_word arg)
+static void *do_gc_alloc(size_t size)
 {
+	void *p;
+
+	p	= malloc(size);
+
+	gc_out_of_memory();
+
+	return p;
 }
 
-static void setup_boehm_gc(void)
+static void *do_vm_alloc(size_t size)
 {
-	GC_set_warn_proc(gc_ignore_warnings);
-
-	GC_oom_fn	= gc_out_of_memory;
-
-	GC_quiet	= 1;
-
-	GC_dont_gc	= dont_gc;
-
-	GC_INIT();
-
-        GC_set_max_heap_size(max_heap_size);
+	return malloc(size);
 }
 
-void gc_init(void)
+void *vm_zalloc(size_t size)
 {
-	setup_boehm_gc();
+	void *ret;
 
-	gc_safepoint_page = alloc_guard_page(false);
-	if (!gc_safepoint_page)
-		die("Couldn't allocate GC safepoint guard page");
+	ret = vm_alloc(size);
+	if (!ret)
+		return NULL;
+
+	memset(ret, 0, size);
+
+	return ret;
+}
+
+static void do_vm_free(void *p)
+{
+	free(p);
+}
+
+static void gc_setup(void)
+{
+	gc_ops		= (struct gc_operations) {
+		.gc_alloc	= do_gc_alloc,
+		.vm_alloc	= do_vm_alloc,
+		.vm_free	= do_vm_free,
+	};
 
 	if (pthread_spin_init(&gc_spinlock, PTHREAD_PROCESS_SHARED) != 0)
 		die("pthread_spin_init");
@@ -451,28 +466,16 @@ void gc_init(void)
 		die("Couldn't create GC thread");
 }
 
-void *gc_alloc(size_t size)
+void gc_init(void)
 {
-	return GC_MALLOC(size);
-}
+	gc_safepoint_page = alloc_guard_page(false);
+	if (!gc_safepoint_page)
+		die("Couldn't allocate GC safepoint guard page");
 
-void *vm_alloc(size_t size)
-{
-	return GC_malloc_uncollectable(size);
-}
-
-void *vm_zalloc(size_t size)
-{
-	void *result;
-
-	result = vm_alloc(size);
-	memset(result, 0, size);
-	return result;
-}
-
-void vm_free(void *ptr)
-{
-	GC_free(ptr);
+	if (newgc_enabled)
+		gc_setup();
+	else
+		gc_setup_boehm();
 }
 
 void gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer,
