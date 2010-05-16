@@ -356,6 +356,9 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 {
 	struct fixup_site *this, *next;
 
+	if (list_is_empty(&t->fixup_site_list))
+		return;
+
 	pthread_mutex_lock(&t->mutex);
 
 	list_for_each_entry_safe(this, next, &t->fixup_site_list, list_node) {
