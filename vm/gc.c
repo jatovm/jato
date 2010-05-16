@@ -409,21 +409,13 @@ wait_for_reclaim:
 		die("pthread_mutex_unlock");
 }
 
-static void gc_out_of_memory(void)
-{
-	if (verbose_gc)
-		fprintf(stderr, "[GC]\n");
-
-	gc_start();
-}
-
 static void *do_gc_alloc(size_t size)
 {
 	void *p;
 
-	p	= malloc(size);
+	gc_start();
 
-	gc_out_of_memory();
+	p	= malloc(size);
 
 	return p;
 }
