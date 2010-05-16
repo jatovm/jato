@@ -144,16 +144,23 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 		shrink_compilation_unit(cu);
 	}
 
-	pthread_mutex_unlock(&cu->mutex);
-
-out_fixup:
 	/*
 	 * A method can be invoked by invokevirtual and invokespecial. For
 	 * example, a public method p() in class A is normally invoked with
 	 * invokevirtual but if a class B that extends A calls that
 	 * method by "super.p()" we use invokespecial instead.
-	 * Therefore, do fixup for direct call sites unconditionally.
 	 *
+	 * Therefore, do fixup for direct call sites unconditionally and fixup
+	 * vtables if method can be invoked via invokevirtual.
+	 */
+
+	if (ret && method_is_virtual(method))
+		fixup_vtable(cu, ret);
+
+	pthread_mutex_unlock(&cu->mutex);
+
+out_fixup:
+	/*
 	 * XXX: this must be done with cu->mutex unlocked because both
 	 * fixup_static() and fixup_direct_calls() might need to lock
 	 * on this compilation unit.

@@ -26,10 +26,7 @@
 
 #include "jit/vtable.h"
 #include "jit/compilation-unit.h"
-
 #include "vm/class.h"
-#include "vm/object.h"
-
 #include <stdlib.h>
 
 void vtable_init(struct vtable *vtable, unsigned int nr_methods)
@@ -51,10 +48,9 @@ void vtable_setup_method(struct vtable *vtable, unsigned long idx, void *native_
  * This function replaces pointers in vtable so that they point
  * directly to compiled code instead of trampoline code.
  */
-void fixup_vtable(struct compilation_unit *cu, struct vm_object *this,
-		  void *target)
+void fixup_vtable(struct compilation_unit *cu, void *target)
 {
-       struct vm_class *vmc = this->class;
+	struct vm_class *vmc = cu->method->class;
 
-       vmc->vtable.native_ptr[cu->method->virtual_index] = target;
+	vmc->vtable.native_ptr[cu->method->virtual_index] = target;
 }
