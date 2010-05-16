@@ -128,7 +128,7 @@ static void emit_restore_regs(struct buffer *buf);
 	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch),		\
 	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch),		\
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch),		\
-	DECL_EMITTER(INSN_RET, emit_ret)
+	DECL_EMITTER(INSN_RET, insn_encode)
 
 static unsigned char encode_reg(struct use_position *reg)
 {
@@ -200,14 +200,9 @@ static void emit_call(struct insn *insn, struct buffer *buf, struct basic_block 
 	__emit_call(buf, (void *)insn->operand.rel);
 }
 
-static void encode_ret(struct buffer *buf)
+static void emit_ret(struct buffer *buf)
 {
 	emit(buf, 0xc3);
-}
-
-static void emit_ret(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	encode_ret(buf);
 }
 
 static void emit_leave(struct buffer *b)
@@ -940,7 +935,7 @@ void emit_epilog(struct buffer *buf)
 {
 	emit_leave(buf);
 	emit_restore_regs(buf);
-	encode_ret(buf);
+	emit_ret(buf);
 }
 
 static void emit_pop_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -1769,14 +1764,14 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	__emit_mov_reg_membase(buf, MACH_REG_EAX, MACH_REG_ESP, sizeof(long));
 	__emit_pop_reg(buf, MACH_REG_EAX);
 
-	encode_ret(buf);
+	emit_ret(buf);
 
 	/* We will jump here if StackOverflowError occurred. */
 	fixup_branch_target(jne_target, buffer_current(buf));
 
 	/* cleanup vm_enter_jni() call arguments. */
 	__emit_add_imm_reg(buf, 2 * sizeof(long), MACH_REG_ESP);
-	encode_ret(buf);
+	emit_ret(buf);
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
@@ -3044,7 +3039,7 @@ void emit_epilog(struct buffer *buf)
 {
 	emit_restore_regs(buf);
 	emit_leave(buf);
-	encode_ret(buf);
+	emit_ret(buf);
 }
 
 static void emit_restore_regs(struct buffer *buf)

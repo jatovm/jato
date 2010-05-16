@@ -161,6 +161,7 @@ enum x86_addmode {
 #define FLAGS_MASK		0xffffff00UL
 
 static uint32_t encode_table[NR_INSN_TYPES] = {
+	[INSN_RET]		= OPCODE(0xc3) | ADDMODE_IMPLIED,
 	[INSN_ADC_MEMBASE_REG]	= OPCODE(0x13) | ADDMODE_RM_REG | WIDTH_FULL,
 	[INSN_ADD_MEMBASE_REG]	= OPCODE(0x03) | ADDMODE_RM_REG | WIDTH_FULL,
 	[INSN_AND_MEMBASE_REG]	= OPCODE(0x23) | ADDMODE_RM_REG | WIDTH_FULL,
@@ -327,9 +328,6 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 	uint32_t encode;
 	uint32_t flags;
 	uint8_t opcode;
-	bool need_sib;
-
-	need_sib	= mach_reg(&self->src.base_reg) == MACH_REG_xSP;
 
 	encode		= encode_table[self->type];
 
@@ -342,11 +340,16 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 
 	emit(buffer, opcode);
 
-	if (flags & MOD_RM)
+	if (flags & MOD_RM) {
+		bool need_sib;
+
+		need_sib	= mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+
 		insn_encode_mod_rm(self, buffer, flags);
 
-	if (need_sib)
-		insn_encode_sib(self, buffer, flags);
+		if (need_sib)
+			insn_encode_sib(self, buffer, flags);
+	}
 
 	if (flags & MEM_DISP_MASK) {
 		if (flags & DIR_REVERSED)

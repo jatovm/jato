@@ -29,6 +29,24 @@ static void teardown(void)
 	free_buffer(buffer);
 }
 
+void test_encoding_one_byte(void)
+{
+	uint8_t encoding[] = { 0xc3 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    (%eax),%ebx */
+	insn.type			= INSN_RET;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
 void test_encoding_mem_reg(void)
 {
 	uint8_t encoding[] = { 0x8b, 0x18 };
