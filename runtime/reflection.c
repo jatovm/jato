@@ -936,3 +936,22 @@ struct vm_object *native_method_getreturntype(struct vm_object *method)
 
 	return vmc->object;
 }
+
+jobject native_vmarray_createobjectarray(jobject type, int dim)
+{
+	struct vm_object *array;
+	struct vm_class *vmc;
+
+	if (!type)
+		return throw_npe();
+
+	vmc = vm_class_get_class_from_class_object(type);
+	if (!vmc)
+		return throw_chained_internal_error();
+
+	array = vm_object_alloc_array_of(vmc, dim);
+	if (!array)
+		return rethrow_exception();
+
+	return array;
+}
