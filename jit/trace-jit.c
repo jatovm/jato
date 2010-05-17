@@ -671,9 +671,6 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	struct vm_object *msg;
 	int dummy;
 
-	if (!cu_matches_regex(cu))
-		return;
-
 	vmm = cu->method;
 	vmc = vmm->class;
 
@@ -701,9 +698,6 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 void trace_exception_handler(struct compilation_unit *cu,
 			     unsigned char *ptr)
 {
-	if (!cu_matches_regex(cu))
-		return;
-
 	trace_printf("\taction\t: jump to handler at %p\n", ptr);
 	trace_printf("\t\t  (");
 	print_source_and_line(cu, ptr);
