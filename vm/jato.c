@@ -923,6 +923,11 @@ static void parse_options(int argc, char *argv[])
 			usage(stderr, EXIT_FAILURE);
 
 		opt->handler.func_arg(argv[++optind]);
+
+		if (strcmp(argv[optind - 1], "-jar") == 0) {
+			optind++;
+			break;
+		}
 	}
 
 	if (operation == OPERATION_MAIN_CLASS) {
