@@ -407,11 +407,11 @@ install: $(PROGRAM)
 tags: FORCE
 	$(E) "  TAGS"
 	$(Q) rm -f tags
-	$(Q) ctags-exuberant -R arch/
-	$(Q) ctags-exuberant -R include
-	$(Q) ctags-exuberant -R jit/
-	$(Q) ctags-exuberant -R lib/
-	$(Q) ctags-exuberant -R vm/
+	$(Q) ctags-exuberant -a -R arch/
+	$(Q) ctags-exuberant -a -R include
+	$(Q) ctags-exuberant -a -R jit/
+	$(Q) ctags-exuberant -a -R lib/
+	$(Q) ctags-exuberant -a -R vm/
 
 PHONY += FORCE
 FORCE:
