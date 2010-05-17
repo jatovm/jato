@@ -179,7 +179,7 @@ struct vm_class *vm_class_get_array_element_class(const struct vm_class *array_c
 enum vm_type vm_class_get_storage_vmtype(const struct vm_class *class);
 struct vm_class *vm_class_get_class_from_class_object(struct vm_object *clazz);
 struct vm_class *vm_class_get_array_class(struct vm_class *element_class);
-struct vm_class *vm_class_define(const char *name, uint8_t *data, unsigned long len);
+struct vm_class *vm_class_define(struct vm_object *classloader, const char *name, uint8_t *data, unsigned long len);
 
 #define DECLARE_STATIC_FIELD_GETTER(type)				\
 static inline j ## type							\

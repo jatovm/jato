@@ -122,8 +122,6 @@ static int vm_class_link_common(struct vm_class *vmc)
 	if (err)
 		return -err;
 
-	vmc->classloader = NULL;
-
 	/* allocate a dummy object for class synchronization to work */
 	vmc->object = zalloc(sizeof(struct vm_object));
 	if (!vmc->object) {
@@ -273,7 +271,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		char *super_name_str = strndup((char *) super_name->bytes, super_name->length);
 
 		/* XXX: Circularity check */
-		vmc->super = classloader_load(NULL, super_name_str);
+		vmc->super = classloader_load(vmc->classloader, super_name_str);
 		free(super_name_str);
 
 		if (!vmc->super)
@@ -305,7 +303,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		if (!c_name)
 			goto error_free_interfaces;
 
-		struct vm_class *vmi = classloader_load(NULL, c_name);
+		struct vm_class *vmi = classloader_load(vmc->classloader, c_name);
 		free(c_name);
 		if (!vmi)
 			goto error_free_interfaces;
@@ -1162,7 +1160,8 @@ struct vm_class *vm_class_get_array_class(struct vm_class *element_class)
 }
 
 struct vm_class *
-vm_class_define(const char *name, uint8_t *data, unsigned long len)
+vm_class_define(struct vm_object *classloader, const char *name,
+		uint8_t *data, unsigned long len)
 {
 	struct cafebabe_stream stream;
 	struct cafebabe_class *class;
@@ -1181,6 +1180,8 @@ vm_class_define(const char *name, uint8_t *data, unsigned long len)
 	result = vm_alloc(sizeof *result);
 	if (!result)
 		return throw_oom_error();
+
+	result->classloader = classloader;
 
 	if (vm_class_link(result, class))
 		return NULL;

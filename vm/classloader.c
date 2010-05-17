@@ -30,12 +30,12 @@ static __thread int trace_classloader_level = 0;
 static pthread_mutex_t classloader_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t classloader_cond = PTHREAD_COND_INITIALIZER;
 
-static inline void trace_push(const char *class_name)
+static inline void trace_push(struct vm_object *loader, const char *class_name)
 {
 	assert(trace_classloader_level >= 0);
 
 	if (opt_trace_classloader) {
-		trace_printf("classloader: %*s%s\n",
+		trace_printf("classloader: %p %*s%s\n", loader,
 			     trace_classloader_level, "", class_name);
 		trace_flush();
 	}
@@ -606,7 +606,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	struct vm_class *vmc;
 	struct classloader_class *class;
 
-	trace_push(class_name);
+	trace_push(loader, class_name);
 
 	char *slash_class_name = dots_to_slash(class_name);
 	if (!slash_class_name) {

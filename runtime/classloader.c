@@ -115,13 +115,12 @@ jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
 	else
 		c_name = strdup("unknown");
 
-	class = vm_class_define(c_name, buf, len);
+	class = vm_class_define(classloader, c_name, buf, len);
 	free(buf);
 
 	if (!class)
 		return NULL;
 
-	class->classloader = classloader;
 	if (classloader_add_to_cache(classloader, class)) {
 		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
 		return NULL;
