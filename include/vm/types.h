@@ -74,7 +74,13 @@ static inline int vmtype_get_size(enum vm_type type)
 
 static inline bool is_primitive_array(const char *name)
 {
-	return name[0] == '[' && name[strlen(name) - 1] != ';';
+	if (*name != '[')
+		return false;
+
+	while (*name == '[')
+		name++;
+
+	return *name != 'L';
 }
 
 static inline enum vm_type mimic_stack_type(enum vm_type type)

@@ -1151,7 +1151,7 @@ struct vm_class *vm_class_get_array_class(struct vm_class *element_class)
 	struct vm_class *result;
 	char *name;
 
-	if (!asprintf(&name, "[%s", element_class->name))
+	if (!asprintf(&name, "[L%s;", element_class->name))
 		return throw_oom_error();
 
 	result = classloader_load(element_class->classloader, name);
