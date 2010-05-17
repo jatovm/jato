@@ -82,4 +82,13 @@ static inline struct vm_object *exception_occurred(void)
 	return exception_holder;
 }
 
+static inline void
+signal_new_chained_exception(struct vm_class *vmc, const char *msg)
+{
+	if (exception_occurred())
+		signal_new_exception_with_cause(vmc, exception_occurred(), msg);
+	else
+		signal_new_exception(vmc, msg);
+}
+
 #endif /* JATO_JIT_EXCEPTION_H */

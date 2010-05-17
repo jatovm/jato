@@ -18,9 +18,23 @@ static inline void *throw_internal_error(void)
 	return NULL;
 }
 
+static inline void *throw_chained_internal_error(void)
+{
+	signal_new_chained_exception(vm_java_lang_InternalError, NULL);
+
+	return NULL;
+}
+
 static inline void *throw_oom_error(void)
 {
 	signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+
+	return NULL;
+}
+
+static inline void *throw_npe(void)
+{
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);
 
 	return NULL;
 }
