@@ -464,6 +464,11 @@ static jint native_vmthread_isinterrupted(struct vm_object *vmthread)
 	return vm_thread_is_interrupted(thread);
 }
 
+static void native_vmthread_setpriority(struct vm_object *vmthread, jint ptiority)
+{
+	/* TODO: implement */
+}
+
 static void native_vmthread_interrupt(struct vm_object *vmthread)
 {
 	struct vm_thread *thread;
@@ -569,6 +574,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMThread", "interrupt", native_vmthread_interrupt),
 	DEFINE_NATIVE("java/lang/VMThread", "interrupted", native_vmthread_interrupted),
 	DEFINE_NATIVE("java/lang/VMThread", "isInterrupted", native_vmthread_isinterrupted),
+	DEFINE_NATIVE("java/lang/VMThread", "nativeSetPriority", native_vmthread_setpriority),
 	DEFINE_NATIVE("java/lang/VMThread", "start", native_vmthread_start),
 	DEFINE_NATIVE("java/lang/VMThread", "yield", native_vmthread_yield),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", native_vmthrowable_fill_in_stack_trace),
