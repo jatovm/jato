@@ -165,6 +165,8 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 
 	vmm->compilation_unit = cu;
 
+	vmm->trace = method_matches_regex(vmm);
+
 	/*
 	 * VM native methods are linked on initialization.
 	 */

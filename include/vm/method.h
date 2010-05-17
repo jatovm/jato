@@ -56,6 +56,8 @@ struct vm_method {
 	struct jit_trampoline *trampoline;
 
 	bool is_vm_native;
+
+	bool trace;
 };
 
 int vm_method_init(struct vm_method *vmm,

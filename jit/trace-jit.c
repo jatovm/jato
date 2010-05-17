@@ -82,7 +82,7 @@ void trace_method(struct compilation_unit *cu)
 	unsigned char *p;
 	unsigned int i, j;
 
-	if (!method_matches_regex(method))
+	if (!method->trace)
 		return;
 
 	trace_printf("\nTRACE: %s.%s%s\n",
@@ -641,7 +641,7 @@ static void trace_return_address(struct jit_stack_frame *frame)
 void trace_invoke(struct compilation_unit *cu)
 {
 	struct vm_method *vmm = cu->method;
-	if (!method_matches_regex(vmm))
+	if (!vmm->trace)
 		return;
 
 	struct vm_class *vmc = vmm->class;
@@ -742,7 +742,7 @@ void trace_exception_unwind_to_native(struct jit_stack_frame *frame)
 
 void trace_bytecode(struct vm_method *method)
 {
-	if (!method_matches_regex(method))
+	if (!method->trace)
 		return;
 
 	trace_printf("Code:\n");
@@ -761,7 +761,7 @@ void trace_return_value(struct vm_method *vmm, unsigned long long value)
 	enum vm_type type;
 	int dummy;
 
-	if (!method_matches_regex(vmm))
+	if (!vmm->trace)
 		return;
 
 	dummy = 0;
