@@ -24,8 +24,6 @@ struct vm_object {
 	 * we access ->class first. */
 	struct vm_class		*class;
 	void			*monitor_record;
-	pthread_mutex_t		notify_mutex;
-	pthread_cond_t		notify_cond;
 	jsize			array_length;
 	uint8_t			fields[];
 };

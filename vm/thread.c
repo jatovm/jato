@@ -344,17 +344,23 @@ bool vm_thread_interrupted(struct vm_thread *thread)
 void vm_thread_interrupt(struct vm_thread *thread)
 {
 	struct vm_object *obj;
+	int err;
 
 	pthread_mutex_lock(&thread->mutex);
 	thread->interrupted = true;
 	obj = thread->waiting_mon;
 	pthread_mutex_unlock(&thread->mutex);
 
-	if (obj) {
-		pthread_mutex_lock(&obj->notify_mutex);
-		pthread_cond_broadcast(&obj->notify_cond);
-		pthread_mutex_unlock(&obj->notify_mutex);
-	}
+	if (!obj)
+		return;
+
+	err = vm_object_lock(obj);
+	if (err)
+		return;
+
+	vm_object_notify_all(obj);
+
+	vm_object_unlock(obj);
 }
 
 void vm_lock_thread_count(void)

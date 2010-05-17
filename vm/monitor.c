@@ -64,9 +64,12 @@ static struct vm_monitor_record *get_monitor_record(void)
 	record->lock_count	= 1;
 
 	atomic_set(&record->nr_blocked, 0);
+	atomic_set(&record->nr_waiting, 0);
 	INIT_LIST_HEAD(&record->ee_free_list_node);
 	sem_init(&record->sem, 0, 0);
 	atomic_set(&record->candidate, 0);
+	pthread_mutex_init(&record->notify_mutex, NULL);
+	pthread_cond_init(&record->notify_cond, NULL);
 
 	return record;
 }
@@ -237,7 +240,18 @@ int vm_object_unlock(struct vm_object *self)
 		return 0;
 	}
 
-	/* Defalte monitor. */
+	/*
+	 * If a thread is waiting on us, don't deflate. We want the same
+	 * monitor record to be attached to the object while waiting so other
+	 * threads can do notify on it.
+	 */
+	if (atomic_read(&record->nr_waiting) > 0) {
+		record->owner	= NULL;
+
+		return 0;
+	}
+
+	/* Deflate monitor. */
 	self->monitor_record	= NULL;
 
 	/* We must ensure that when locking thread will read
@@ -291,7 +305,7 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 
 	thread_self = vm_thread_self();
 
-	pthread_mutex_lock(&self->notify_mutex);
+	pthread_mutex_lock(&record->notify_mutex);
 
 	pthread_mutex_lock(&thread_self->mutex);
 	interrupted = thread_self->interrupted;
@@ -307,21 +321,23 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 	 * We must unlock monitor after the lock on notify_mutex is acquired
 	 * to avoid missed notify.
 	 */
-	old_lock_count = record->lock_count;
-	record->lock_count = 1;
+	old_lock_count		= record->lock_count;
+	record->lock_count	= 1;
+	atomic_inc(&record->nr_waiting);
+
 	vm_object_unlock(self);
 
 	if (interrupted) {
 		err = 0;
 	} else if (timespec) {
-		err = pthread_cond_timedwait(&self->notify_cond, &self->notify_mutex, timespec);
+		err = pthread_cond_timedwait(&record->notify_cond, &record->notify_mutex, timespec);
 		if (err == ETIMEDOUT)
 			err = 0;
 	} else {
-		err = pthread_cond_wait(&self->notify_cond, &self->notify_mutex);
+		err = pthread_cond_wait(&record->notify_cond, &record->notify_mutex);
 	}
 
-	pthread_mutex_unlock(&self->notify_mutex);
+	pthread_mutex_unlock(&record->notify_mutex);
 
 	pthread_mutex_lock(&thread_self->mutex);
 	thread_self->waiting_mon = NULL;
@@ -331,8 +347,11 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 
 	vm_object_lock(self);
 
+	assert(record == self->monitor_record);
+
 	record			= self->monitor_record;
 	record->lock_count	= old_lock_count;
+	atomic_dec(&record->nr_waiting);
 
 	if (vm_thread_interrupted(thread_self)) {
 		signal_new_exception(vm_java_lang_InterruptedException, NULL);
@@ -375,9 +394,10 @@ int vm_object_notify(struct vm_object *self)
 	if (owner_check(self, &record))
 		return -1;
 
-	pthread_mutex_lock(&self->notify_mutex);
-	pthread_cond_signal(&self->notify_cond);
-	pthread_mutex_unlock(&self->notify_mutex);
+	pthread_mutex_lock(&record->notify_mutex);
+	pthread_cond_signal(&record->notify_cond);
+	pthread_mutex_unlock(&record->notify_mutex);
+
 	return 0;
 }
 
@@ -390,8 +410,9 @@ int vm_object_notify_all(struct vm_object *self)
 		return -1;
 	}
 
-	pthread_mutex_lock(&self->notify_mutex);
-	pthread_cond_broadcast(&self->notify_cond);
-	pthread_mutex_unlock(&self->notify_mutex);
+	pthread_mutex_lock(&record->notify_mutex);
+	pthread_cond_broadcast(&record->notify_cond);
+	pthread_mutex_unlock(&record->notify_mutex);
+
 	return 0;
 }

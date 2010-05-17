@@ -48,9 +48,6 @@ static void vm_object_finalizer(struct vm_object *obj, void *param)
 
 static void vm_object_init_common(struct vm_object *object)
 {
-	pthread_mutex_init(&object->notify_mutex, NULL);
-	pthread_cond_init(&object->notify_cond, NULL);
-
 	gc_register_finalizer(object, vm_object_finalizer, NULL);
 }
 
