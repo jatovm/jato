@@ -64,7 +64,6 @@ void init_exceptions(void)
 	if (!exceptions_guard_page || !trampoline_exceptions_guard_page)
 		die("failed to allocate exceptions guard page");
 
-	/* TODO: Should be called from thread initialization code. */
 	thread_init_exceptions();
 }
 
