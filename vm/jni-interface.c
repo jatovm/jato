@@ -806,15 +806,9 @@ vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
 	if (!vmc)
 		return NULL;
 
-	vmc = vm_class_get_array_class(vmc);
-	if (!vmc)
+	array = vm_object_alloc_array_of(vmc, size);
+	if (!array)
 		return NULL;
-
-	array = vm_object_alloc_array(vmc, size);
-	if (!array) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
 
 	while (size)
 		array_set_field_object(array, --size, initial_element);

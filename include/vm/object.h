@@ -39,6 +39,7 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count);
 struct vm_object *vm_object_alloc_multi_array(struct vm_class *class,
 	int nr_dimensions, int *count);
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count);
+struct vm_object *vm_object_alloc_array_of(struct vm_class *elem_class, int count);
 
 struct vm_object *vm_object_clone(struct vm_object *obj);
 

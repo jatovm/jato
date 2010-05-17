@@ -182,6 +182,18 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	return res;
 }
 
+struct vm_object *
+vm_object_alloc_array_of(struct vm_class *elem_class, int count)
+{
+	struct vm_class *vmc;
+
+	vmc = vm_class_get_array_class(elem_class);
+	if (!vmc)
+		return throw_internal_error();
+
+	return vm_object_alloc_array(vmc, count);
+}
+
 static struct vm_object *clone_regular(struct vm_object *obj)
 {
 	struct vm_class *vmc = obj->class;
