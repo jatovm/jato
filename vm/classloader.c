@@ -278,6 +278,18 @@ static char *dots_to_slash(const char *name)
 	return result;
 }
 
+static char *slash_to_dots(const char *name)
+{
+	char *result = strdup(name);
+
+	for (unsigned int i = 0, n = strlen(name); i < n; ++i) {
+		if (result[i] == '/')
+			result[i] = '.';
+	}
+
+	return result;
+}
+
 static char *class_name_to_file_name(const char *class_name)
 {
 	char *filename;
@@ -501,7 +513,10 @@ load_class_with(struct vm_object *loader, const char *name)
 	struct vm_object *clazz;
 	struct vm_class *vmc;
 
-	name_string = vm_object_alloc_string_from_c(name);
+	char *dots_name = slash_to_dots(name);
+
+	name_string = vm_object_alloc_string_from_c(dots_name);
+	free(dots_name);
 	if (!name_string)
 		return rethrow_exception();
 
