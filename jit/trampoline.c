@@ -112,12 +112,6 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	struct vm_method *method = cu->method;
 	void *ret;
 
-	if (vm_method_is_static(method)) {
-		/* This is for "invokestatic"... */
-		if (vm_class_ensure_init(method->class))
-			return NULL;
-	}
-
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
@@ -127,6 +121,12 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (cu->is_compiled) {
 		ret = cu->native_ptr;
 		goto out_fixup;
+	}
+
+	if (vm_method_is_static(method)) {
+		/* This is for "invokestatic"... */
+		if (vm_class_ensure_init(method->class))
+			return NULL;
 	}
 
 	pthread_mutex_lock(&cu->mutex);
