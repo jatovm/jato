@@ -291,6 +291,8 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 
 	thread_self = vm_thread_self();
 
+	pthread_mutex_lock(&self->notify_mutex);
+
 	pthread_mutex_lock(&thread_self->mutex);
 	interrupted = thread_self->interrupted;
 	thread_self->waiting_mon = self;
@@ -300,8 +302,6 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 		timespec ? VM_THREAD_STATE_TIMED_WAITING : VM_THREAD_STATE_WAITING;
 
 	vm_thread_set_state(thread_self, new_state);
-
-	pthread_mutex_lock(&self->notify_mutex);
 
 	/*
 	 * We must unlock monitor after the lock on notify_mutex is acquired
