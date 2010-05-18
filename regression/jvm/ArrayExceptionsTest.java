@@ -176,6 +176,29 @@ public class ArrayExceptionsTest extends TestCase {
         takeObject(array);
     }
 
+    public static void testArrayBoundsCheck() {
+        boolean caught = false;
+        int array[] = { 0, 1, 2 };
+
+        try {
+            takeInt(array[-1]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+
+        caught = false;
+
+        try {
+            takeInt(array[3]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            caught = true;
+        }
+
+        assertTrue(caught);
+    }
+
     public static void main(String args[]) {
         testArrayLoad();
         testArrayStore();
@@ -183,5 +206,6 @@ public class ArrayExceptionsTest extends TestCase {
         testAnewarrayThrowsNegativeArraySizeException();
         testNewarrayThrowsNegativeArraySizeException();
         testMultianewarrayThrowsNegativeArraySizeException();
+        testArrayBoundsCheck();
     }
 }

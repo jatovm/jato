@@ -369,7 +369,14 @@ void vm_object_check_array(struct vm_object *obj, jsize index)
 
 	array_len = obj->array_length;
 
-	if (index < array_len)
+	/*
+	 * We return if index >= 0 and index < array_len. This can be
+	 * expressed by only one comparison because we are sure that
+	 * array_len is not negative. When index is less than 0 then
+	 * its unsigned representation is greater than any positive
+	 * jint value. Therefore we can skip the explicit check if index >= 0.
+	 */
+	if ((uint32_t)index < (uint32_t)array_len)
 		return;
 
 	sprintf(index_str, "%d > %d", index, array_len - 1);
