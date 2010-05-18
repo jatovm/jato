@@ -5,6 +5,7 @@
 
 jlong native_vmruntime_free_memory(void);
 jlong native_vmruntime_total_memory(void);
+jlong native_vmruntime_max_memory(void);
 int native_vmruntime_available_processors(void);
 void native_vmruntime_gc(void);
 void native_vmruntime_exit(int status);

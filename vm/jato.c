@@ -561,6 +561,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMObject", "wait", native_vmobject_wait),
 	DEFINE_NATIVE("java/lang/VMRuntime", "freeMemory", native_vmruntime_free_memory),
 	DEFINE_NATIVE("java/lang/VMRuntime", "totalMemory", native_vmruntime_total_memory),
+	DEFINE_NATIVE("java/lang/VMRuntime", "maxMemory", native_vmruntime_max_memory),
 	DEFINE_NATIVE("java/lang/VMRuntime", "availableProcessors", native_vmruntime_available_processors),
 	DEFINE_NATIVE("java/lang/VMRuntime", "exit", native_vmruntime_exit),
 	DEFINE_NATIVE("java/lang/VMRuntime", "gc", native_vmruntime_gc),

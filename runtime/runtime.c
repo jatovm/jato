@@ -29,6 +29,7 @@
 #include "jit/exception.h"
 #include "vm/preload.h"
 #include "vm/object.h"
+#include "vm/gc.h"
 
 #include "../boehmgc/include/gc.h"
 
@@ -44,6 +45,11 @@ jlong native_vmruntime_free_memory(void)
 jlong native_vmruntime_total_memory(void)
 {
 	return GC_get_heap_size();
+}
+
+jlong native_vmruntime_max_memory(void)
+{
+	return max_heap_size;
 }
 
 int native_vmruntime_available_processors(void)
