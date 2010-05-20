@@ -39,6 +39,7 @@
 #include "vm/die.h"
 #include "vm/jni.h"
 #include "vm/vm.h"
+#include "vm/errors.h"
 
 #include "lib/buffer.h"
 #include "lib/string.h"
@@ -49,7 +50,6 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 {
 	struct vm_method *method = cu->method;
 	struct buffer *buf;
-	struct string *msg;
 	void *target;
 
 	target = vm_jni_lookup_method(method->class->name, method->name, method->type);
@@ -71,20 +71,8 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 	return cu->native_ptr;
 
 error:
-	msg = alloc_str();
-	if (!msg) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
-
-	str_printf(msg, "%s.%s%s", method->class->name, method->name, method->type);
-
-	if (strcmp(method->class->name, "VMThrowable") == 0)
-		die("no native function found for %s", msg->value);
-
-	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, msg->value);
-	free_str(msg);
-
+	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, "%s.%s%s",
+			     method->class->name, method->name, method->type);
 	return NULL;
 }
 
@@ -99,10 +87,8 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 	}
 
 	err = add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu);
-	if (err) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (err)
+		return throw_oom_error();
 
 	return buffer_ptr(cu->objcode);
 }

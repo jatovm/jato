@@ -30,6 +30,7 @@
 #include "vm/preload.h"
 #include "vm/object.h"
 #include "vm/gc.h"
+#include "vm/errors.h"
 
 #include "../boehmgc/include/gc.h"
 
@@ -85,16 +86,12 @@ struct vm_object *native_vmruntime_maplibraryname(struct vm_object *name)
 	struct vm_object *result;
 	char *str;
 
-	if (!name) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return NULL;
-	}
+	if (!name)
+		return throw_npe();
 
 	str = vm_string_to_cstr(name);
-	if (!str) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!str)
+		return throw_oom_error();
 
 	char *result_str = NULL;
 
@@ -103,10 +100,8 @@ struct vm_object *native_vmruntime_maplibraryname(struct vm_object *name)
 
 	free(str);
 
-	if (!result_str) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!result_str)
+		return throw_oom_error();
 
 	result = vm_object_alloc_string_from_c(result_str);
 	free(result_str);
@@ -121,13 +116,13 @@ int native_vmruntime_native_load(struct vm_object *name,
 	int result;
 
 	if (!name) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		throw_npe();
 		return 0;
 	}
 
 	name_str = vm_string_to_cstr(name);
 	if (!name_str) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
+		throw_oom_error();
 		return 0;
 	}
 

@@ -45,16 +45,13 @@ struct vm_class *vm_object_to_vm_class(struct vm_object *object)
 	struct vm_class *vmc;
 
 	if (!object)
-		goto throw;
+		return throw_npe();
 
 	vmc = vm_class_get_class_from_class_object(object);
 	if (!vmc)
-		goto throw;
+		return throw_npe();
 
 	return vmc;
-throw:
-	signal_new_exception(vm_java_lang_NullPointerException, NULL);
-	return NULL;
 }
 
 struct vm_field *vm_object_to_vm_field(struct vm_object *field)
@@ -64,7 +61,7 @@ struct vm_field *vm_object_to_vm_field(struct vm_object *field)
 	int slot;
 
 	if (!field)
-		goto throw;
+		return throw_npe();
 
 	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
 		class	= field_get_object(field, vm_java_lang_reflect_VMField_clazz);
@@ -76,16 +73,13 @@ struct vm_field *vm_object_to_vm_field(struct vm_object *field)
 
 	vmc = vm_class_get_class_from_class_object(class);
 	if (!vmc)
-		goto throw;
+		return throw_npe();
 
 	vm_class_ensure_init(vmc);
 	if (exception_occurred())
 		return NULL;
 
 	return &vmc->fields[slot];
-throw:
-	signal_new_exception(vm_java_lang_NullPointerException, NULL);
-	return NULL;
 }
 
 static struct vm_method *vm_object_to_vm_method(struct vm_object *method)
