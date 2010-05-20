@@ -93,23 +93,48 @@ void signal_exception(struct vm_object *exception)
 	exception_holder = exception;
 }
 
-void signal_new_exception(struct vm_class *vmc, const char *msg)
+void signal_new_exception_v(struct vm_class *vmc, const char *template, va_list args)
 {
 	struct vm_object *exception;
+	char *msg = NULL;
+
+	if (template) {
+		if (vasprintf(&msg, template, args) < 0)
+			error("asprintf");
+	}
 
 	exception = new_exception(vmc, msg);
+	free(msg);
 	if (!exception)
 		die("out of memory");
 
 	signal_exception(exception);
 }
 
+void signal_new_exception(struct vm_class *vmc, const char *template, ...)
+{
+	va_list args;
+
+	va_start(args, template);
+	signal_new_exception_v(vmc, template, args);
+	va_end(args);
+}
+
 void signal_new_exception_with_cause(struct vm_class *vmc,
 				     struct vm_object *cause,
-				     const char *msg)
+				     const char *template, ...)
 {
 	struct vm_object *exception;
-	struct vm_method *init;
+	char *msg = NULL;
+
+	if (template) {
+		va_list args;
+
+		va_start(args, template);
+		if (vasprintf(&msg, template, args) < 0)
+			error("vasprintf");
+		va_end(args);
+	}
 
 	/*
 	 * Some exception classes have dedicated constructors for
@@ -117,25 +142,37 @@ void signal_new_exception_with_cause(struct vm_class *vmc,
 	 * set the cause with initCause(). See for example
 	 * java/lang/ExceptionInInitializerError class.
 	 */
-	init = vm_class_get_method(vmc, "<init>", "(Ljava/lang/Throwable;)V");
+	struct vm_method *init =
+		vm_class_get_method(vmc, "<init>", "(Ljava/lang/String;Ljava/lang/Throwable;)V");
 	if (init) {
+		struct vm_object *msg_obj = NULL;
+
+		if (msg) {
+			msg_obj = vm_object_alloc_string_from_c(msg);
+			free(msg);
+			if (!msg_obj)
+				return; /* rethrow */
+		}
+
 		exception = vm_object_alloc(vmc);
 		if (!exception)
-			die("out of memory");
+			return; /* rethrow */
 
 		clear_exception();
 
-		vm_call_method(init, exception, cause);
+		vm_call_method(init, exception, msg_obj, cause);
 
 		if (exception_occurred())
 			return;
 
 		signal_exception(exception);
+		return;
 	}
 
 	exception = new_exception(vmc, msg);
+	free(msg);
 	if (!exception)
-		die("out of memory");
+		return; /* rethrow */
 
 	clear_exception();
 
