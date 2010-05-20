@@ -703,22 +703,32 @@ static void handle_perf(void)
 	perf_enabled = true;
 }
 
-/* @arg must be in the format package/name/Class.method(Lsignature;)V */
-static void handle_trace_method(const char *arg)
+static void regex_compile(regex_t *regex, const char *arg)
 {
-	opt_trace_method = true;
-
-	int err = regcomp(&method_trace_regex, arg, REG_EXTENDED | REG_NOSUB);
+	int err = regcomp(regex, arg, REG_EXTENDED | REG_NOSUB);
 	if (err) {
-		unsigned int size = regerror(err, &method_trace_regex, NULL, 0);
+		unsigned int size = regerror(err, regex, NULL, 0);
 		char *errbuf = malloc(size);
-		regerror(err, &method_trace_regex, errbuf, size);
+		regerror(err, regex, errbuf, size);
 
 		fprintf(stderr, "error: regcomp: %s\n", errbuf);
 		free(errbuf);
 
 		exit(EXIT_FAILURE);
 	}
+}
+
+/* @arg must be in the format package/name/Class.method(Lsignature;)V */
+static void handle_trace_method(const char *arg)
+{
+	opt_trace_method = true;
+	regex_compile(&method_trace_regex, arg);
+}
+
+static void handle_trace_gate(const char *arg)
+{
+	opt_trace_gate = true;
+	regex_compile(&method_trace_gate_regex, arg);
 }
 
 static void handle_trace_asm(void)
@@ -871,6 +881,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xperf",			handle_perf),
 
 	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),
+	DEFINE_OPTION_ARG("Xtrace:gate",	handle_trace_gate),
 
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),

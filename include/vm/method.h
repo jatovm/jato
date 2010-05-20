@@ -55,10 +55,12 @@ struct vm_method {
 	struct compilation_unit *compilation_unit;
 	struct jit_trampoline *trampoline;
 
-	bool is_vm_native;
-
-	bool trace;
+	char flags;
 };
+
+#define VM_METHOD_FLAG_VM_NATIVE	(1 << 1)
+#define VM_METHOD_FLAG_TRACE		(1 << 2)
+#define VM_METHOD_FLAG_TRACE_GATE	(1 << 3)
 
 int vm_method_init(struct vm_method *vmm,
 	struct vm_class *vmc, unsigned int method_index);
@@ -113,13 +115,23 @@ static inline bool method_is_virtual(struct vm_method *vmm)
 static inline bool vm_method_is_jni(struct vm_method *vmm)
 {
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_NATIVE
-		&& !vmm->is_vm_native;
+		&& !(vmm->flags & VM_METHOD_FLAG_VM_NATIVE);
 }
 
 static inline bool vm_method_is_vm_native(struct vm_method *vmm)
 {
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_NATIVE
-		&& vmm->is_vm_native;
+		&& (vmm->flags & VM_METHOD_FLAG_VM_NATIVE);
+}
+
+static inline bool vm_method_is_traceable(struct vm_method *vmm)
+{
+	return vmm->flags & VM_METHOD_FLAG_TRACE;
+}
+
+static inline bool vm_method_is_trace_gate(struct vm_method *vmm)
+{
+	return vmm->flags & VM_METHOD_FLAG_TRACE_GATE;
 }
 
 static inline bool vm_method_is_special(struct vm_method *vmm)

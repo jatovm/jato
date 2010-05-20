@@ -645,7 +645,7 @@ int preload_vm_classes(void)
 		struct vm_method *vmm;
 
 		vmm = *native_override_entries[i];
-		vmm->is_vm_native = true;
+		vmm->flags |= VM_METHOD_FLAG_VM_NATIVE;
 
 		cu = vmm->compilation_unit;
 

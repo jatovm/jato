@@ -105,6 +105,9 @@ void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target)
 extern bool opt_trace_method;
 extern regex_t method_trace_regex;
 
+extern bool opt_trace_gate;
+extern regex_t method_trace_gate_regex;
+
 extern bool opt_trace_cfg;
 extern bool opt_trace_tree_ir;
 extern bool opt_trace_lir;
@@ -122,6 +125,7 @@ extern bool opt_trace_compile;
 extern bool running_on_valgrind;
 
 bool method_matches_regex(struct vm_method *vmm);
+bool method_matches_gate_regex(struct vm_method *vmm);
 
 static inline bool cu_matches_regex(struct compilation_unit *cu)
 {

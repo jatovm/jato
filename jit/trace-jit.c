@@ -43,6 +43,9 @@
 bool opt_trace_method;
 regex_t method_trace_regex;
 
+bool opt_trace_gate;
+regex_t method_trace_gate_regex;
+
 bool opt_trace_cfg;
 bool opt_trace_tree_ir;
 bool opt_trace_lir;
@@ -56,6 +59,13 @@ bool opt_trace_invoke_verbose;
 bool opt_trace_exceptions;
 bool opt_trace_bytecode;
 bool opt_trace_compile;
+
+int gate_level;
+
+static inline bool in_gate(void)
+{
+	return gate_level > 0 || !opt_trace_gate;
+}
 
 bool method_matches_regex(struct vm_method *vmm)
 {
@@ -76,13 +86,32 @@ bool method_matches_regex(struct vm_method *vmm)
 	return err == 0;
 }
 
+bool method_matches_gate_regex(struct vm_method *vmm)
+{
+	if (!opt_trace_gate)
+		return false;
+
+	int err;
+
+	char *signature;
+	err = asprintf(&signature, "%s.%s%s",
+		vmm->class->name, vmm->name, vmm->type);
+	if (err == -1)
+		die("asprintf");
+
+	err = regexec(&method_trace_gate_regex, signature, 0, NULL, 0);
+	free(signature);
+
+	return err == 0;
+}
+
 void trace_method(struct compilation_unit *cu)
 {
 	struct vm_method *method = cu->method;
 	unsigned char *p;
 	unsigned int i, j;
 
-	if (!method->trace)
+	if (!vm_method_is_traceable(method) || !in_gate())
 		return;
 
 	trace_printf("\nTRACE: %s.%s%s\n",
@@ -641,7 +670,14 @@ static void trace_return_address(struct jit_stack_frame *frame)
 void trace_invoke(struct compilation_unit *cu)
 {
 	struct vm_method *vmm = cu->method;
-	if (!vmm->trace)
+
+	if (!vm_method_is_traceable(vmm))
+		return;
+
+	if (vm_method_is_trace_gate(vmm))
+		gate_level++;
+
+	if (!in_gate())
 		return;
 
 	struct vm_class *vmc = vmm->class;
@@ -736,7 +772,7 @@ void trace_exception_unwind_to_native(struct jit_stack_frame *frame)
 
 void trace_bytecode(struct vm_method *method)
 {
-	if (!method->trace)
+	if (!vm_method_is_traceable(method))
 		return;
 
 	trace_printf("Code:\n");
@@ -755,8 +791,14 @@ void trace_return_value(struct vm_method *vmm, unsigned long long value)
 	enum vm_type type;
 	int dummy;
 
-	if (!vmm->trace)
+	if (!vm_method_is_traceable(vmm))
 		return;
+
+	if (!in_gate())
+		return;
+
+	if (vm_method_is_trace_gate(vmm))
+		gate_level--;
 
 	dummy = 0;
 	type = method_return_type(vmm);

@@ -40,6 +40,7 @@ int vm_method_init(struct vm_method *vmm,
 	vmm->class = vmc;
 	vmm->method_index = method_index;
 	vmm->method = method;
+	vmm->flags = 0;
 
 	const struct cafebabe_constant_info_utf8 *name;
 	if (cafebabe_class_constant_get_utf8(class, method->name_index, &name))
@@ -74,11 +75,8 @@ int vm_method_init(struct vm_method *vmm,
 	if (!vm_method_is_static(vmm))
 		++vmm->args_count;
 
-	vmm->is_vm_native = false;
-
-	if (vm_method_is_native(vmm)) {
-		vmm->is_vm_native =
-			vm_lookup_native(vmm->class->name, vmm->name);
+	if (vm_method_is_native(vmm) && vm_lookup_native(vmm->class->name, vmm->name)) {
+		vmm->flags |= VM_METHOD_FLAG_VM_NATIVE;
 	}
 
 	if (args_map_init(vmm))
@@ -143,7 +141,7 @@ int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
 	vmm->type = interface_method->type;
 
 	vmm->args_count = interface_method->args_count;
-	vmm->is_vm_native = false;
+	vmm->flags = 0;
 
 	if (parse_method_type(vmm)) {
 		warn("method type parsing failed for: %s", vmm->type);
@@ -165,7 +163,11 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 
 	vmm->compilation_unit = cu;
 
-	vmm->trace = method_matches_regex(vmm);
+	if (method_matches_regex(vmm))
+		vmm->flags |= VM_METHOD_FLAG_TRACE;
+
+	if (method_matches_gate_regex(vmm))
+		vmm->flags |= VM_METHOD_FLAG_TRACE_GATE;
 
 	/*
 	 * VM native methods are linked on initialization.
