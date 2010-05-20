@@ -324,6 +324,12 @@ throw_from_jit(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	exception = exception_occurred();
 	assert(exception != NULL);
 
+	if (!vm_class_is_assignable_from(vm_java_lang_Throwable, exception->class)) {
+		signal_new_exception(vm_java_lang_Error, "Object %p (%s) not throwable",
+				     exception, exception->class->name);
+		return throw_from_jit(cu, frame, native_ptr);
+	}
+
 	if (opt_trace_exceptions)
 		trace_exception(cu, frame, native_ptr);
 
