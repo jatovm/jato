@@ -3868,13 +3868,16 @@ static void select_eh_prologue(struct basic_block *bb)
 
 	reg_eax = get_fixed_var(bb->b_parent, MACH_REG_xAX);
 
-	/* Save exception from exception_holder to exception stack slot */
+	/* Save exception from current_exec_env.exception to exception
+	 * stack slot */
 	eh_add_insn(bb, imm_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
-		get_thread_local_offset(&exception_holder), reg_eax));
+		get_thread_local_offset(&current_exec_env), reg_eax));
+	eh_add_insn(bb, membase_reg_insn(INSN_MOV_MEMBASE_REG, reg_eax,
+			 offsetof(struct vm_exec_env, exception), reg_eax));
 	eh_add_insn(bb,	reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, reg_eax,
 		bb->b_parent->exception_spill_slot));
 
-	/* Clear exception */
+	/* Clear exception. TODO: inline this. */
 	eh_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long)clear_exception));
 }
 
@@ -3921,7 +3924,7 @@ static void setup_caller_saved_regs(struct compilation_unit *cu)
 	for (i = 0, count = 0; i < cu->method->args_count; i++) {
 		if (count >= max_count)
 			break;
-	
+
 		mach_reg = cu->method->args_map[i].reg;
 		if (mach_reg == MACH_REG_UNASSIGNED)
 			continue;

@@ -14,6 +14,7 @@
 #include "vm/method.h"
 #include "vm/stack-trace.h"
 #include "vm/vm.h"
+#include "vm/thread.h"
 
 struct cafebabe_code_attribute_exception;
 struct compilation_unit;
@@ -36,13 +37,6 @@ extern __thread void *trampoline_exception_guard;
 
 extern void *exceptions_guard_page;
 extern void *trampoline_exceptions_guard_page;
-
-/*
- * Holds a reference to exception that has been signalled.  This
- * pointer is cleared when handler is executed or
- * clear_exception() is called.
- */
-extern __thread struct vm_object *exception_holder;
 
 struct cafebabe_code_attribute_exception *
 lookup_eh_entry(struct vm_method *method, unsigned long target);
@@ -80,7 +74,7 @@ exception_covers(struct cafebabe_code_attribute_exception *eh, unsigned long off
 
 static inline struct vm_object *exception_occurred(void)
 {
-	return exception_holder;
+	return vm_get_exec_env()->exception;
 }
 
 static inline void

@@ -43,7 +43,7 @@
 #include <errno.h>
 #include <pthread.h>
 
-__thread struct vm_exec_env current_exec_env;
+__thread struct vm_exec_env *current_exec_env;
 
 static struct vm_object *main_thread_group;
 
@@ -221,8 +221,17 @@ int init_threading(void)
 
 void init_exec_env(void)
 {
-	struct vm_exec_env *ee = vm_get_exec_env();
+	struct vm_exec_env *ee = vm_alloc(sizeof(struct vm_exec_env));
+	if (!ee)
+		error("failed to alloc struct vm_exec_env");
+
+	current_exec_env = ee;
 	INIT_LIST_HEAD(&ee->free_monitor_recs);
+}
+
+static void finalize_exec_env(void)
+{
+	vm_free(current_exec_env);
 }
 
 /**
@@ -232,8 +241,8 @@ static void *vm_thread_entry(void *arg)
 {
 	struct vm_thread *thread = arg;
 
-	vm_get_exec_env()->thread = thread;
 	init_exec_env();
+	vm_get_exec_env()->thread = thread;
 
 	setup_signal_handlers();
 	thread_init_exceptions();
@@ -249,6 +258,8 @@ static void *vm_thread_entry(void *arg)
 
 	vm_thread_detach_thread(vm_thread_self());
 	pthread_mutex_unlock(&threads_mutex);
+
+	finalize_exec_env();
 
 	return NULL;
 }

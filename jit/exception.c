@@ -49,7 +49,6 @@
 #include "arch/instruction.h"
 #include <errno.h>
 
-__thread struct vm_object *exception_holder = NULL;
 __thread void *exception_guard = NULL;
 __thread void *trampoline_exception_guard = NULL;
 
@@ -75,6 +74,7 @@ void thread_init_exceptions(void)
 	/* Assign safe pointers. */
 	exception_guard = &exception_guard;
 	trampoline_exception_guard = &trampoline_exception_guard;
+	vm_get_exec_env()->exception = NULL;
 }
 
 /**
@@ -90,7 +90,7 @@ void signal_exception(struct vm_object *exception)
 
 	trampoline_exception_guard = trampoline_exceptions_guard_page;
 	exception_guard  = exceptions_guard_page;
-	exception_holder = exception;
+	vm_get_exec_env()->exception = exception;
 }
 
 void signal_new_exception_v(struct vm_class *vmc, const char *template, va_list args)
@@ -188,7 +188,7 @@ void clear_exception(void)
 {
 	trampoline_exception_guard = &trampoline_exception_guard;
 	exception_guard  = &exception_guard;
-	exception_holder = NULL;
+	vm_get_exec_env()->exception = NULL;
 }
 
 struct cafebabe_code_attribute_exception *

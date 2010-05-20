@@ -3,8 +3,6 @@
 
 #include "lib/list.h"
 
-#include "vm/object.h"
-
 #include "arch/atomic.h"
 
 #include <stdio.h> /* for NOT_IMPLEMENTED */
@@ -53,20 +51,30 @@ struct vm_thread {
 struct vm_exec_env {
 	struct vm_thread *thread;
 	struct list_head free_monitor_recs;
+
+	/*
+	 * Holds a reference to exception that has been signalled.  This
+	 * pointer is cleared when handler is executed or
+	 * clear_exception() is called.
+	 */
+	struct vm_object *exception;
 };
 
 unsigned int vm_nr_threads(void);
 
-extern __thread struct vm_exec_env current_exec_env;
+extern __thread struct vm_exec_env *current_exec_env;
 
 static inline struct vm_exec_env *vm_get_exec_env(void)
 {
-	return &current_exec_env;
+	return current_exec_env;
 }
 
 static inline struct vm_thread *vm_thread_self(void)
 {
-	return vm_get_exec_env()->thread;
+	if (current_exec_env == NULL)
+		return NULL;
+
+	return current_exec_env->thread;
 }
 
 void init_exec_env(void);

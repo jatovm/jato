@@ -1097,7 +1097,6 @@ main(int argc, char *argv[])
 	}
 
 	arch_init();
-	init_exec_env();
 	init_literals_hash_map();
 	init_system_properties();
 
@@ -1105,6 +1104,9 @@ main(int argc, char *argv[])
 
 	if (dump_maps)
 		print_proc_maps();
+
+	gc_init();
+	init_exec_env();
 
 	classloader_init();
 
@@ -1123,7 +1125,6 @@ main(int argc, char *argv[])
 
 	jit_init_natives();
 
-	gc_init();
 	static_fixup_init();
 	vm_jni_init();
 
