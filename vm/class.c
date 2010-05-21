@@ -114,6 +114,23 @@ setup_vtable(struct vm_class *vmc)
 	}
 }
 
+/*
+ * Set the .object member of struct vm_class to point to the object
+ * of type java.lang.Class for this class.
+ */
+int vm_class_setup_object(struct vm_class *vmc)
+{
+	vmc->object = vm_object_alloc(vm_java_lang_Class);
+	if (!vmc->object) {
+		throw_oom_error();
+		return -1;
+	}
+
+	field_set_object(vmc->object, vm_java_lang_Class_vmdata,
+			 (struct vm_object *)vmc);
+	return 0;
+}
+
 static int vm_class_link_common(struct vm_class *vmc)
 {
 	int err;
@@ -122,14 +139,17 @@ static int vm_class_link_common(struct vm_class *vmc)
 	if (err)
 		return -err;
 
-	/* allocate a dummy object for class synchronization to work */
-	vmc->object = zalloc(sizeof(struct vm_object));
-	if (!vmc->object) {
-		throw_oom_error();
-		return -1;
-	}
+	if (preload_finished)
+		return vm_class_setup_object(vmc);
 
-	return 0;
+	/* If classes and fields were not preloaded yet then we can't
+	 * allocate object for this class. Set .object to a dummy object
+	 * for class synchronization to work. This will be replaced
+	 * after preloading is finished. */
+	static struct vm_object dummy_object;
+	vmc->object = &dummy_object;
+
+	return vm_preload_add_class_fixup(vmc);
 }
 
 /*
@@ -564,33 +584,9 @@ static bool vm_class_check_class_init_fault(struct vm_class *vmc,
 
 int vm_class_ensure_object(struct vm_class *vmc)
 {
-	vm_object_lock(vmc->object);
-
-	struct vm_object *old_object = vmc->object;
-
-	if (old_object->class != NULL) {
-		vm_object_unlock(vmc->object);
-		return 0;
-	}
-
-	/*
-	 * Set the .object member of struct vm_class to point to
-	 * the object (of type java.lang.Class) for this class.
-	 */
-	vmc->object = vm_object_alloc(vm_java_lang_Class);
-	if (!vmc->object) {
-		vm_object_unlock(old_object);
-		throw_oom_error();
-		return -1;
-	}
-
-	vmc->object->monitor_record = old_object->monitor_record;
-	free(old_object);
-
-	field_set_object(vmc->object, vm_java_lang_Class_vmdata,
-			 (struct vm_object *)vmc);
-
-	vm_object_unlock(vmc->object);
+	/* Before preload is finished .object points to a common
+	 * dummy object. */
+	assert(preload_finished);
 	return 0;
 }
 

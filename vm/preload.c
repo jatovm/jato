@@ -574,6 +574,24 @@ static struct vm_method **native_override_entries[] = {
 	&vm_java_lang_VMString_intern,
 };
 
+bool preload_finished;
+
+int nr_class_fixups;
+struct vm_class **class_fixups;
+
+int vm_preload_add_class_fixup(struct vm_class *vmc)
+{
+	int new_size = sizeof(struct vm_class *) * (nr_class_fixups + 1);
+	struct vm_class **new_array = realloc(class_fixups, new_size);
+
+	if (!new_array)
+		return -ENOMEM;
+
+	class_fixups = new_array;
+	class_fixups[nr_class_fixups++] = vmc;
+	return 0;
+}
+
 int preload_vm_classes(void)
 {
 	unsigned int array_size;
@@ -662,6 +680,19 @@ int preload_vm_classes(void)
 		m_info = (struct cafebabe_method_info *)vmm->method;
 		m_info->access_flags |= CAFEBABE_METHOD_ACC_NATIVE;
 	}
+
+	preload_finished = true;
+
+	for (unsigned int i = 0; i < nr_class_fixups; ++i) {
+		struct vm_class *vmc = class_fixups[i];
+
+		if (vm_class_setup_object(vmc)) {
+			warn("fixup failed for %s", vmc->name);
+			return -EINVAL;
+		}
+	}
+
+	free(class_fixups);
 
 	return 0;
 }

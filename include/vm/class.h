@@ -87,6 +87,7 @@ int vm_class_link_primitive_class(struct vm_class *vmc, const char *class_name);
 int vm_class_link_array_class(struct vm_class *vmc, struct vm_class *elem_class, const char *class_name);
 int vm_class_init(struct vm_class *vmc);
 int vm_class_ensure_object(struct vm_class *vmc);
+int vm_class_setup_object(struct vm_class *vmc);
 
 static inline int vm_class_ensure_init(struct vm_class *vmc)
 {

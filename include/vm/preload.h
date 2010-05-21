@@ -141,6 +141,9 @@ extern struct vm_method *vm_java_lang_Number_floatValue;
 extern struct vm_method *vm_java_lang_Number_longValue;
 extern struct vm_method *vm_java_lang_Number_doubleValue;
 
+extern bool preload_finished;
+
+int vm_preload_add_class_fixup(struct vm_class *vmc);
 int preload_vm_classes(void);
 
 #endif
