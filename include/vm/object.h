@@ -44,7 +44,6 @@ struct vm_object *vm_object_clone(struct vm_object *obj);
 struct vm_object *
 vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length);
 struct vm_object *vm_object_alloc_string_from_c(const char *bytes);
-struct vm_object *new_exception(struct vm_class *vmc, const char *message);
 bool vm_object_is_instance_of(const struct vm_object *obj, const struct vm_class *class);
 void vm_object_check_null(struct vm_object *obj);
 void vm_object_check_array(struct vm_object *obj, jsize index);

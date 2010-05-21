@@ -44,6 +44,7 @@
 #include "vm/trace.h"
 #include "vm/call.h"
 #include "vm/die.h"
+#include "vm/errors.h"
 
 #include "arch/stack-frame.h"
 #include "arch/instruction.h"
@@ -75,6 +76,33 @@ void thread_init_exceptions(void)
 	exception_guard = &exception_guard;
 	trampoline_exception_guard = &trampoline_exception_guard;
 	vm_get_exec_env()->exception = NULL;
+}
+
+static struct vm_object *
+new_exception(struct vm_class *vmc, const char *message)
+{
+	struct vm_object *message_str;
+	struct vm_method *mb;
+	struct vm_object *obj;
+
+	obj = vm_object_alloc(vmc);
+	if (!obj)
+		return rethrow_exception();
+
+	if (message == NULL)
+		message_str = NULL;
+	else {
+		message_str = vm_object_alloc_string_from_c(message);
+		if (!message_str)
+			return rethrow_exception();
+	}
+
+	mb = vm_class_get_method(vmc, "<init>", "(Ljava/lang/String;)V");
+	if (!mb)
+		error("constructor not found");
+
+	vm_call_method(mb, obj, message_str);
+	return obj;
 }
 
 /**
