@@ -119,16 +119,10 @@ unsigned int vm_nr_threads(void)
 void vm_thread_set_state(struct vm_thread *thread, enum vm_thread_state state)
 {
 	atomic_set(&thread->state, state);
-
-	/* make state visible to vm_thread_get_state() */
-	smp_mb();
 }
 
 enum vm_thread_state vm_thread_get_state(struct vm_thread *thread)
 {
-	/* see changes made in vm_thread_set_state() */
-	mb();
-
 	return atomic_read(&thread->state);
 }
 
