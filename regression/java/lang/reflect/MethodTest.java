@@ -55,6 +55,15 @@ public class MethodTest extends TestCase {
       public static long longIncrement(long x) {
           return x + 1;
       }
+
+        public static char charMirror(char x) {
+            return x;
+        }
+
+        public static boolean boolMirror(boolean x) {
+            return x;
+        }
+
     }
 
     public static Object invoke(String name, Class<?> arg_class, Object arg) {
@@ -69,6 +78,9 @@ public class MethodTest extends TestCase {
     public static void testMethodReflectionInvoke() {
         assertEquals(Integer.valueOf(2), invoke("intIncrement", int.class, Integer.valueOf(1)));
         assertEquals(Long.valueOf(0xdeadbeefcafebabfl), invoke("longIncrement", long.class, Long.valueOf(0xdeadbeefcafebabel)));
+        assertEquals(Boolean.FALSE, invoke("boolMirror", boolean.class, Boolean.FALSE));
+        assertEquals(Boolean.TRUE, invoke("boolMirror", boolean.class, Boolean.TRUE));
+        assertEquals(Character.valueOf('x'), invoke("charMirror", char.class, Character.valueOf('x')));
     }
 
     public static void main(String[] args) throws Exception {

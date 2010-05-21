@@ -304,10 +304,12 @@ struct vm_method *vm_java_lang_ThreadGroup_addThread;
 struct vm_method *vm_java_lang_VMThread_init;
 struct vm_method *vm_java_lang_VMThread_run;
 struct vm_method *vm_java_lang_System_exit;
+struct vm_method *vm_java_lang_Boolean_booleanValue;
 struct vm_method *vm_java_lang_Boolean_init;
 struct vm_method *vm_java_lang_Boolean_valueOf;
 struct vm_method *vm_java_lang_Byte_init;
 struct vm_method *vm_java_lang_Byte_valueOf;
+struct vm_method *vm_java_lang_Character_charValue;
 struct vm_method *vm_java_lang_Character_init;
 struct vm_method *vm_java_lang_Character_valueOf;
 struct vm_method *vm_java_lang_Double_init;
@@ -428,6 +430,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 	},
 	{
 		&vm_java_lang_Boolean,
+		"booleanValue",
+		"()Z",
+		&vm_java_lang_Boolean_booleanValue,
+	},
+	{
+		&vm_java_lang_Boolean,
 		"<init>",
 		"(Z)V",
 		&vm_java_lang_Boolean_init,
@@ -449,6 +457,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"valueOf",
 		"(B)Ljava/lang/Byte;",
 		&vm_java_lang_Byte_valueOf,
+	},
+	{
+		&vm_java_lang_Character,
+		"charValue",
+		"()C",
+		&vm_java_lang_Character_charValue,
 	},
 	{
 		&vm_java_lang_Character,

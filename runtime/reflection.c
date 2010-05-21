@@ -555,10 +555,16 @@ static int unwrap(void *field_ptr, enum vm_type type,
 	case J_REFERENCE:
 		*(jobject *) field_ptr = value;
 		return 0;
-	case J_BYTE:
 	case J_BOOLEAN:
-	case J_SHORT:
+		vm_call_method_this_a(vm_java_lang_Boolean_booleanValue, value, args, &result);
+		*(long *) field_ptr = (long) result.z;
+		return 0;
 	case J_CHAR:
+		vm_call_method_this_a(vm_java_lang_Character_charValue, value, args, &result);
+		*(long *) field_ptr = (long) result.c;
+		return 0;
+	case J_BYTE:
+	case J_SHORT:
 	case J_INT:
 		/*
 		 * We can handle those as int because these values are
