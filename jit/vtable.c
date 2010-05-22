@@ -48,9 +48,25 @@ void vtable_setup_method(struct vtable *vtable, unsigned long idx, void *native_
  * This function replaces pointers in vtable so that they point
  * directly to compiled code instead of trampoline code.
  */
-void fixup_vtable(struct compilation_unit *cu, void *target)
+void fixup_vtable(struct compilation_unit *cu, struct vm_object *this,
+		  void *target)
 {
-	struct vm_class *vmc = cu->method->class;
+	struct vm_class *vmc = this->class;
+	struct vm_method *vmm = cu->method;
+	int index = vmm->virtual_index;
 
-	vmc->vtable.native_ptr[cu->method->virtual_index] = target;
+	/*
+	 * A method can be invoked by invokevirtual and invokespecial. For
+	 * example, a public method p() in class A is normally invoked with
+	 * invokevirtual but if a class B that extends A calls that
+	 * method by "super.p()" we use invokespecial instead.
+	 *
+	 * We must not fixup vtable entry in the class of this when this method
+	 * was invoked by invokespecial.
+	 */
+        if (vmc->vtable.native_ptr[index] == vm_method_trampoline_ptr(vmm))
+		vmc->vtable.native_ptr[index] = target;
+
+	/* Fixup the vtable entry in declaring class */
+	vmm->class->vtable.native_ptr[index] = target;
 }

@@ -125,19 +125,6 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 	shrink_compilation_unit(cu);
 
-	/*
-	 * A method can be invoked by invokevirtual and invokespecial. For
-	 * example, a public method p() in class A is normally invoked with
-	 * invokevirtual but if a class B that extends A calls that
-	 * method by "super.p()" we use invokespecial instead.
-	 *
-	 * Therefore, do fixup for direct call sites unconditionally and fixup
-	 * vtables if method can be invoked via invokevirtual.
-	 */
-
-	if (ret && method_is_virtual(method))
-		fixup_vtable(cu, ret);
-
 	status = ret ? STATUS_COMPILED_OK : STATUS_COMPILED_ERRONOUS;
 	compile_lock_leave(&cu->compile_lock, status);
 
