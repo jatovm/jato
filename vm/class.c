@@ -135,6 +135,8 @@ static int vm_class_link_common(struct vm_class *vmc)
 {
 	int err;
 
+	compile_lock_init(&vmc->cl, true);
+
 	err = pthread_mutex_init(&vmc->mutex, NULL);
 	if (err)
 		return -err;
@@ -593,33 +595,21 @@ int vm_class_ensure_object(struct vm_class *vmc)
 int vm_class_init(struct vm_class *vmc)
 {
 	struct vm_object *exception;
+	enum compile_lock_status status;
 
-	vm_object_lock(vmc->object);
+	status = compile_lock_enter(&vmc->cl);
+	if (status == STATUS_COMPILED_OK || status == STATUS_REENTER)
+		return 0;
 
-	if (vmc->state == VM_CLASS_INITIALIZING) {
-		/* XXX: we need to break recursion. */
-		if (vmc->initializing_thread == vm_thread_self())
-			goto out_unlock;
-
-		while (vmc->state == VM_CLASS_INITIALIZING)
-			vm_object_wait(vmc->object);
-	}
-
-	if (vmc->state == VM_CLASS_INITIALIZED)
-		goto out_unlock;
-
-	if (vmc->state == VM_CLASS_ERRONEOUS) {
+	if (status == STATUS_COMPILED_ERRONOUS) {
 		signal_new_exception(vm_java_lang_NoClassDefFoundError,
 				     vmc->name);
-		vm_object_unlock(vmc->object);
 		return -1;
 	}
 
+	vm_object_lock(vmc->object);
 	assert(vmc->state == VM_CLASS_LINKED);
-
 	vmc->state = VM_CLASS_INITIALIZING;
-	vmc->initializing_thread = vm_thread_self();
-
 	vm_object_unlock(vmc->object);
 
 	/* Fault injection, for testing purposes */
@@ -666,13 +656,11 @@ int vm_class_init(struct vm_class *vmc)
 	vm_object_notify_all(vmc->object);
 	vm_object_unlock(vmc->object);
 
-	return 0;
-
- out_unlock:
-	vm_object_unlock(vmc->object);
+	compile_lock_leave(&vmc->cl, STATUS_COMPILED_OK);
 	return 0;
 
  error:
+	compile_lock_leave(&vmc->cl, STATUS_COMPILED_ERRONOUS);
 	exception = exception_occurred();
 
 	if (!vm_object_is_instance_of(exception, vm_java_lang_Error)) {

@@ -4,6 +4,8 @@
 #include "arch/memory.h"
 #include "arch/atomic.h"
 
+#include "vm/thread.h"
+
 #include <semaphore.h>
 
 /*
@@ -16,7 +18,10 @@ enum compile_lock_status {
 
 	/* below are result states. */
 	STATUS_COMPILED_OK,
-	STATUS_COMPILED_ERRONOUS
+	STATUS_COMPILED_ERRONOUS,
+
+	/* Pseudo state returned by compile_lock_enter() */
+	STATUS_REENTER
 };
 
 struct compile_lock {
@@ -28,15 +33,24 @@ struct compile_lock {
 
 	/* semaphore for threads waiting for status update. */
 	sem_t wait_sem;
+
+	/* True if lock is reentrant */
+	bool reentrant;
+
+	/* Compiling thread. Relevant only when reentrant. */
+	struct vm_exec_env *compiling_ee;
 };
 
-int compile_lock_init(struct compile_lock *cl);
+int compile_lock_init(struct compile_lock *cl, bool reentrant);
 
 /*
  * Enter compilation lock. Only one thread will be allowed.
  * If this method returns STATUS_COMPILING then this thread
  * is eligible for compilation and this thread only must
  * call compile_lock_leave() when compilation is done.
+ *
+ * If lock is reentrant and compilation is reentered then
+ * returns STATUS_REENTER.
  */
 enum compile_lock_status compile_lock_enter(struct compile_lock *cl);
 

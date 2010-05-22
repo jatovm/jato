@@ -12,6 +12,8 @@
 #include "vm/types.h"
 #include "vm/vm.h"
 
+#include "lib/compile-lock.h"
+
 #include "jit/vtable.h"
 
 struct vm_object;
@@ -32,6 +34,9 @@ enum vm_class_kind {
 };
 
 struct vm_class {
+	/* Compile lock for fast class initialization */
+	struct compile_lock cl;
+
 	enum vm_class_kind kind;
 	const struct cafebabe_class *class;
 	enum vm_class_state state;
@@ -39,8 +44,6 @@ struct vm_class {
 	char *name;
 
 	pthread_mutex_t mutex;
-
-	struct vm_thread *initializing_thread;
 
 	struct vm_class *super;
 	unsigned int nr_interfaces;

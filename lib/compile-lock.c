@@ -28,8 +28,9 @@
 
 #include <malloc.h>
 
-int compile_lock_init(struct compile_lock *cl)
+int compile_lock_init(struct compile_lock *cl, bool reentrant)
 {
+	cl->reentrant = reentrant;
 	atomic_set(&cl->status, STATUS_INITIAL);
 	atomic_set(&cl->nr_waiting, 0);
 	return sem_init(&cl->wait_sem, 0, 0);
@@ -49,8 +50,12 @@ enum compile_lock_status compile_lock_enter(struct compile_lock *cl)
 		return status;
 	}
 
-	if (atomic_cmpxchg(&cl->status, 0, STATUS_COMPILING) == 0)
+	if (atomic_cmpxchg(&cl->status, 0, STATUS_COMPILING) == 0) {
+		if (cl->reentrant)
+			cl->compiling_ee = vm_get_exec_env();
+
 		return STATUS_COMPILING;
+	}
 
 	atomic_inc(&cl->nr_waiting);
 
@@ -58,6 +63,11 @@ enum compile_lock_status compile_lock_enter(struct compile_lock *cl)
 
 	/* Other thread is doing compilation... */
 	while (atomic_read(&cl->status) == STATUS_COMPILING) {
+		if (cl->reentrant && cl->compiling_ee == vm_get_exec_env()) {
+			atomic_dec(&cl->nr_waiting);
+			return STATUS_COMPILED_OK;
+		}
+
 		sem_wait(&cl->wait_sem);
 
 		/* The read of .status should happen after wakeup. */
