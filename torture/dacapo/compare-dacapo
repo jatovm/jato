@@ -1,22 +1,29 @@
 #!/bin/bash
 
+JAVA_VMS="java cacao jato jamvm"
 JAR=dacapo-2006-10-MR2.jar
 
 function bench {
-  echo $1
+  echo -e "$1\c"
 
-  java -version
-  java -Xmx1024m -jar $JAR $1 2>&1  | grep "^====="
+  for java in $JAVA_VMS; do
+    time=$($java -Xmx1024m -cp $JAR Harness $1 2>&1 | grep "===== DaCapo.*PASSED in.*msec =====" | sed -e "s/.*PASSED in \(.*\) msec.*/\1/g")
 
-  cacao -version
-  cacao -Xmx1024m -jar $JAR $1 2>&1 | grep "^====="
+    echo -e "\t$time\c"
+  done
 
-  jamvm -version
-  jamvm -Xmx1024m -cp dacapo-2006-10-MR2.jar Harness $1 2>&1 | grep "^====="
-
-  jato -version
-  jato -Xmx1024m -jar $JAR $1 2>&1 | grep "^====="
+  echo ""
 }
+
+for java in $JAVA_VMS; do
+  $java -version
+done
+
+echo -e "#\c"
+for java in $JAVA_VMS; do
+  echo -e "\t$java\c"
+done
+echo ""
 
 bench "antlr"
 bench "bloat"
@@ -24,4 +31,6 @@ bench "chart"
 bench "fop"
 bench "hsqldb"
 bench "luindex"
+bench "lusearch"
 bench "pmd"
+bench "xalan"
