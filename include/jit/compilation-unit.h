@@ -2,19 +2,22 @@
 #define __JIT_COMPILATION_UNIT_H
 
 #include "arch/registers.h"
+#include "arch/stack-frame.h"
+
 #include "jit/basic-block.h"
+
 #include "lib/list.h"
 #include "lib/radix-tree.h"
 #include "lib/stack.h"
+#include "lib/compile-lock.h"
+
 #include "vm/static.h"
 #include "vm/types.h"
-
-#include "arch/stack-frame.h"
+#include "vm/gc.h"
 
 #include <stdbool.h>
 #include <pthread.h>
-
-#include "vm/gc.h"
+#include <semaphore.h>
 
 struct buffer;
 struct vm_method;
@@ -32,7 +35,9 @@ struct compilation_unit {
 	struct var_info *fixed_var_infos[NR_FIXED_REGISTERS];
 	bool is_reg_alloc_done;
 	struct buffer *objcode;
-	bool is_compiled;
+
+	struct compile_lock compile_lock;
+
 	pthread_mutex_t mutex;
 
 	/* The frame pointer for this method.  */

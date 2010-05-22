@@ -174,7 +174,7 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 	 */
 	if (vm_method_is_vm_native(vmm)) {
 		cu->native_ptr = vm_lookup_native(vmm->class->name, vmm->name);
-		cu->is_compiled = true;
+		compile_lock_set_status(&cu->compile_lock, STATUS_COMPILED_OK);
 
 		if (add_cu_mapping((unsigned long)cu->native_ptr, cu))
 			goto error_free_cu;

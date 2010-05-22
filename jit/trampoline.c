@@ -24,8 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "jit/compiler.h"
+#include "arch/memory.h"
 
+#include "jit/compiler.h"
 #include "jit/cu-mapping.h"
 #include "jit/emit-code.h"
 #include "jit/exception.h"
@@ -53,8 +54,11 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 	void *target;
 
 	target = vm_jni_lookup_method(method->class->name, method->name, method->type);
-	if (!target)
-		goto error;
+	if (!target) {
+		signal_new_exception(vm_java_lang_UnsatisfiedLinkError, "%s.%s%s",
+				     method->class->name, method->name, method->type);
+		return rethrow_exception();
+	}
 
 	if (add_cu_mapping((unsigned long)target, cu))
 		return NULL;
@@ -66,14 +70,8 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 	emit_jni_trampoline(buf, method, target);
 
 	cu->native_ptr = buffer_ptr(buf);
-	cu->is_compiled = true;
 
 	return cu->native_ptr;
-
-error:
-	signal_new_exception(vm_java_lang_UnsatisfiedLinkError, "%s.%s%s",
-			     method->class->name, method->name, method->type);
-	return NULL;
 }
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
@@ -101,34 +99,31 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
 
-	/*
-	 * Check if compilation unit is already compiled without locking.
-	 */
-	if (cu->is_compiled) {
-		ret = cu->native_ptr;
-		goto out_fixup;
-	}
-
 	if (vm_method_is_static(method)) {
 		/* This is for "invokestatic"... */
 		if (vm_class_ensure_init(method->class))
-			return NULL;
+			return rethrow_exception();
 	}
 
-	pthread_mutex_lock(&cu->mutex);
+	enum compile_lock_status status;
 
-	if (cu->is_compiled)
-		/* XXX: even if method is compiled we still might need
-		 * to fixup some call sites. */
+	status = compile_lock_enter(&cu->compile_lock);
+
+	if (status == STATUS_COMPILED_OK) {
 		ret = cu->native_ptr;
-	else {
-		if (vm_method_is_native(cu->method))
-			ret = jit_jni_trampoline(cu);
-		else
-			ret = jit_java_trampoline(cu);
-
-		shrink_compilation_unit(cu);
+		goto out_fixup;
+	} else if (status == STATUS_COMPILED_ERRONOUS) {
+		return rethrow_exception();
 	}
+
+	assert(status == STATUS_COMPILING);
+
+	if (vm_method_is_native(cu->method))
+		ret = jit_jni_trampoline(cu);
+	else
+		ret = jit_java_trampoline(cu);
+
+	shrink_compilation_unit(cu);
 
 	/*
 	 * A method can be invoked by invokevirtual and invokespecial. For
@@ -143,17 +138,16 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	if (ret && method_is_virtual(method))
 		fixup_vtable(cu, ret);
 
-	pthread_mutex_unlock(&cu->mutex);
+	status = ret ? STATUS_COMPILED_OK : STATUS_COMPILED_ERRONOUS;
+	compile_lock_leave(&cu->compile_lock, status);
 
 out_fixup:
-	/*
-	 * XXX: this must be done with cu->mutex unlocked because
-	 * fixup_direct_calls() might need to lock on this compilation unit.
-	 */
-	if (ret)
+	if (ret) {
 		fixup_direct_calls(method->trampoline, (unsigned long) ret);
+		return ret;
+	}
 
-	return ret;
+	return rethrow_exception();
 }
 
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)

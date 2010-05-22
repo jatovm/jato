@@ -139,6 +139,7 @@ LIB_OBJS = \
 	lib/array.o		\
 	lib/bitset.o		\
 	lib/buffer.o		\
+	lib/compile-lock.o	\
 	lib/guard-page.o	\
 	lib/hash-map.o		\
 	lib/list.o		\

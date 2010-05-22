@@ -73,7 +73,8 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 		INIT_LIST_HEAD(&cu->bb_list);
 		cu->method = method;
-		cu->is_compiled = false;
+
+		compile_lock_init(&cu->compile_lock);
 
 		cu->exit_bb = alloc_basic_block(cu, 0, 0);
 		if (!cu->exit_bb)

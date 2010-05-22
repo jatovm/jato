@@ -119,7 +119,6 @@ int compile(struct compilation_unit *cu)
 	resolve_fixup_offsets(cu);
 
 	cu->native_ptr = buffer_ptr(cu->objcode);
-	cu->is_compiled = true;
 
 	perf_append_cu(cu);
   out:

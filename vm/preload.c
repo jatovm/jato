@@ -686,7 +686,7 @@ int preload_vm_classes(void)
 			error("no VM native for overriden method: %s.%s%s",
 			      vmm->class->name, vmm->name, vmm->type);
 
-		cu->is_compiled = true;
+		compile_lock_set_status(&cu->compile_lock, STATUS_COMPILED_OK);
 
 		if (add_cu_mapping((unsigned long)cu->native_ptr, cu))
 			return -EINVAL;

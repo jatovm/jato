@@ -157,22 +157,14 @@ static inline void *vm_method_trampoline_ptr(struct vm_method *vmm)
 	return buffer_ptr(vmm->trampoline->objcode);
 }
 
-/*
- * XXX: It is not safe to use this function during compilation unless
- * we are sure that @vmm is not currently being compiled.
- */
 static inline void *vm_method_call_ptr(struct vm_method *vmm)
 {
 	void *result;
 
-	pthread_mutex_lock(&vmm->compilation_unit->mutex);
-
-	if (vmm->compilation_unit->is_compiled)
+	if (compile_lock_get_status(&vmm->compilation_unit->compile_lock) == STATUS_COMPILED_OK)
 		result = vm_method_native_ptr(vmm);
 	else
 		result = vm_method_trampoline_ptr(vmm);
-
-	pthread_mutex_unlock(&vmm->compilation_unit->mutex);
 
 	return result;
 }
