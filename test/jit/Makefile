@@ -47,6 +47,7 @@ TOPLEVEL_OBJS := \
 	jit/wide-bc.o \
 	lib/bitset.o \
 	lib/buffer.o \
+	lib/compile-lock.o \
 	lib/guard-page.o \
 	lib/list.o \
 	lib/pqueue.o \
