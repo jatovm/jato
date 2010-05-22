@@ -26,12 +26,8 @@ for java in $JAVA_VMS; do
 done
 echo ""
 
-bench "antlr"
-bench "bloat"
-bench "chart"
-bench "fop"
-bench "hsqldb"
-bench "luindex"
-bench "lusearch"
-bench "pmd"
-bench "xalan"
+TESTS="antlr bloat chart fop hsqldb luindex lusearch pmd xalan"
+
+for test in $TESTS; do
+  bench $test
+done
