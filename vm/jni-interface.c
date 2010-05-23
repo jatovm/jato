@@ -36,6 +36,7 @@
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/die.h"
+#include "vm/errors.h"
 #include "vm/jni.h"
 #include "vm/method.h"
 #include "vm/object.h"
@@ -641,10 +642,10 @@ vm_jni_release_ ## type ## _array_elements(struct vm_jni_env *env,	\
 									\
 	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */		\
 		for (long i = 0; i < array->array_length; i++)		\
-			array_set_field_ ## type(array, i, elems[i]); \
+			array_set_field_ ## type(array, i, elems[i]);	\
 	}								\
 									\
-	if (mode == 0 || mode == JNI_ABORT) /* free buffer */		\
+	if (mode == JNI_ABORT) /* free buffer */			\
 		free(elems);						\
 }
 
@@ -656,6 +657,141 @@ DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(int);
 DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(long);
 DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(short);
 DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(boolean);
+
+#define DECLARE_GET_XXX_ARRAY_CRITICAL(type)				\
+static void *							\
+get_ ## type ## _array_critical (jobject array, jboolean *is_copy)	\
+{									\
+	j ## type *result;						\
+									\
+	result = malloc(sizeof(j ## type) * array->array_length);	\
+	if (!result)							\
+		return NULL;						\
+									\
+	for (long i = 0; i < array->array_length; i++)			\
+		result[i] = array_get_field_##type(array, i);		\
+									\
+	if (is_copy)							\
+		*is_copy = JNI_TRUE;					\
+									\
+	return result;							\
+}
+
+#define DECLARE_RELEASE_XXX_ARRAY_CRITICAL(type)			\
+static void								\
+release_ ## type ## _array_critical (jobject array, j ## type *elems, jint mode) \
+{									\
+	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */		\
+		for (long i = 0; i < array->array_length; i++)		\
+			array_set_field_ ## type(array, i, elems[i]);	\
+	}								\
+									\
+	if (mode == JNI_ABORT) /* free buffer */			\
+		free(elems);						\
+}
+
+DECLARE_GET_XXX_ARRAY_CRITICAL(byte);
+DECLARE_GET_XXX_ARRAY_CRITICAL(char);
+DECLARE_GET_XXX_ARRAY_CRITICAL(double);
+DECLARE_GET_XXX_ARRAY_CRITICAL(float);
+DECLARE_GET_XXX_ARRAY_CRITICAL(int);
+DECLARE_GET_XXX_ARRAY_CRITICAL(long);
+DECLARE_GET_XXX_ARRAY_CRITICAL(short);
+DECLARE_GET_XXX_ARRAY_CRITICAL(boolean);
+
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(byte);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(char);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(double);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(float);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(int);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(long);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(short);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(boolean);
+
+typedef void *get_array_critical_fn(jobject array, jboolean *is_copy);
+typedef void release_array_critical_fn(jobject array, void *carray, jint mode);
+
+get_array_critical_fn *get_array_critical_fns[] = {
+	[J_BYTE]	= get_byte_array_critical,
+	[J_CHAR]	= get_char_array_critical,
+	[J_DOUBLE]	= get_double_array_critical,
+	[J_FLOAT]	= get_float_array_critical,
+	[J_INT]		= get_int_array_critical,
+	[J_LONG]	= get_long_array_critical,
+	[J_SHORT]	= get_short_array_critical,
+	[J_BOOLEAN]	= get_boolean_array_critical
+};
+
+release_array_critical_fn *release_array_critical_fns[] = {
+	[J_BYTE]	= (release_array_critical_fn*) release_byte_array_critical,
+	[J_CHAR]	= (release_array_critical_fn*) release_char_array_critical,
+	[J_DOUBLE]	= (release_array_critical_fn*) release_double_array_critical,
+	[J_FLOAT]	= (release_array_critical_fn*) release_float_array_critical,
+	[J_INT]		= (release_array_critical_fn*) release_int_array_critical,
+	[J_LONG]	= (release_array_critical_fn*) release_long_array_critical,
+	[J_SHORT]	= (release_array_critical_fn*) release_short_array_critical,
+	[J_BOOLEAN]	= (release_array_critical_fn*) release_boolean_array_critical
+};
+
+static void *
+vm_jni_get_primitive_array_critical(struct vm_jni_env *env,
+				    jobject array,
+				    jboolean *is_copy)
+{
+	enter_vm_from_jni();
+
+	if (!vm_class_is_array_class(array->class))
+		return NULL;
+
+	struct vm_class *elem_class
+		= vm_class_get_array_element_class(array->class);
+
+	if (!elem_class)
+		return rethrow_exception();
+
+	if (!vm_class_is_primitive_class(elem_class))
+		return NULL;
+
+	enum vm_type elem_type
+		= vm_class_get_storage_vmtype(elem_class);
+
+	get_array_critical_fn *get_array_critical
+		= get_array_critical_fns[elem_type];
+
+	assert(get_array_critical);
+	return get_array_critical(array, is_copy);
+}
+
+
+static void
+vm_jni_release_primitive_array_critical(struct vm_jni_env *env,
+					jobject array,
+					void *carray,
+					jint mode)
+{
+	enter_vm_from_jni();
+
+	if (!vm_class_is_array_class(array->class))
+		return;
+
+	struct vm_class *elem_class
+		= vm_class_get_array_element_class(array->class);
+
+	if (!elem_class)
+		return;
+
+	if (!vm_class_is_primitive_class(elem_class))
+		return;
+
+	enum vm_type elem_type
+		= vm_class_get_storage_vmtype(elem_class);
+
+	release_array_critical_fn *release_array_critical
+		= release_array_critical_fns[elem_type];
+
+	assert(release_array_critical);
+	release_array_critical(array, carray, mode);
+}
 
 static void *
 vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
@@ -1294,8 +1430,8 @@ void *vm_jni_native_interface[] = {
 	/* 220 */
 	NULL, /* GetStringRegion */
 	NULL, /* GetStringUTFRegion */
-	NULL, /* GetPrimitiveArrayCritical */
-	NULL, /* ReleasePrimitiveArrayCritical */
+	vm_jni_get_primitive_array_critical,
+	vm_jni_release_primitive_array_critical,
 	NULL, /* GetStringCritical */
 
 	/* 225 */
