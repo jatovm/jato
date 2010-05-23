@@ -10,10 +10,10 @@ function bench {
     time=$($java -Xmx1024m -cp $JAR Harness $1 2>&1 | grep "===== DaCapo.*PASSED in.*msec =====" | sed -e "s/.*PASSED in \(.*\) msec.*/\1/g")
 
     echo -e "\t$time\c"
+    rm -rf scratch > /dev/null
   done
 
   echo ""
-  rm -rf scratch > /dev/null
 }
 
 for java in $JAVA_VMS; do
