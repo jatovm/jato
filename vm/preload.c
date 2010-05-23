@@ -697,7 +697,7 @@ int preload_vm_classes(void)
 
 	preload_finished = true;
 
-	for (unsigned int i = 0; i < nr_class_fixups; ++i) {
+	for (int i = 0; i < nr_class_fixups; ++i) {
 		struct vm_class *vmc = class_fixups[i];
 
 		if (vm_class_setup_object(vmc)) {
