@@ -202,6 +202,17 @@ static void system_property_append_path(const char *key, const char *path)
 		error("out of memory");
 }
 
+static char *system_property_get(const char *key)
+{
+	struct system_properties_entry *ent;
+
+	ent = find_system_property(key);
+	if (!ent)
+		return NULL;
+
+	return ent->value;
+}
+
 struct system_property {
 	const char *key;
 	const char *value;
@@ -273,7 +284,6 @@ static void init_configurable_system_properties(void)
 	/* XXX: currently user defined -Djava.class.path=value is overriden. */
 	char *cp = get_classpath();
 	add_system_property_const("java.class.path", cp);
-	add_system_property_const("java.boot.class.path", cp);
 	free(cp);
 }
 
@@ -644,6 +654,21 @@ static void handle_classpath(const char *arg)
 	classloader_add_to_classpath(arg);
 }
 
+static void handle_bootclasspath(const char *arg)
+{
+	static const char delim[] = ":;";
+
+	add_system_property_const("java.boot.class.path", arg);
+
+	char *cp = strdup(arg);
+
+	char *path = strtok(cp, delim);
+	while (path) {
+		classloader_add_to_classpath(path);
+		path = strtok(NULL, delim);
+	}
+}
+
 enum operation {
 	OPERATION_MAIN_CLASS,
 	OPERATION_JAR_FILE,
@@ -864,17 +889,18 @@ struct option {
 	{ .name = _name, .arg = true, .arg_is_adjacent = true, .handler.func_arg = _handler }
 
 const struct option options[] = {
-	DEFINE_OPTION("version",	handle_version),
-	DEFINE_OPTION("h",		handle_help),
-	DEFINE_OPTION("help",		handle_help),
+	DEFINE_OPTION("version",		handle_version),
+	DEFINE_OPTION("h",			handle_help),
+	DEFINE_OPTION("help",			handle_help),
 
-	DEFINE_OPTION_ADJACENT_ARG("D",	handle_define),
-	DEFINE_OPTION_ADJACENT_ARG("Xmx", handle_max_heap_size),
+	DEFINE_OPTION_ADJACENT_ARG("D",		handle_define),
+	DEFINE_OPTION_ADJACENT_ARG("Xmx",	handle_max_heap_size),
 
-	DEFINE_OPTION_ARG("classpath",	handle_classpath),
-	DEFINE_OPTION_ARG("cp",		handle_classpath),
-	DEFINE_OPTION_ARG("jar",	handle_jar),
-	DEFINE_OPTION("verbose:gc",	handle_verbose_gc),
+	DEFINE_OPTION_ARG("classpath",		handle_classpath),
+	DEFINE_OPTION_ARG("bootclasspath",	handle_bootclasspath),
+	DEFINE_OPTION_ARG("cp",			handle_classpath),
+	DEFINE_OPTION_ARG("jar",		handle_jar),
+	DEFINE_OPTION("verbose:gc",		handle_verbose_gc),
 
 	DEFINE_OPTION("Xmaps",			handle_maps),
 	DEFINE_OPTION("Xnewgc",			handle_newgc),
@@ -1061,9 +1087,18 @@ static void gnu_classpath_autodiscovery(void)
 		if (try_to_add_zip_to_classpath(config->glibj) < 0)
 			continue;
 
+		system_property_append_path("java.boot.class.path", config->glibj);
 		system_property_append_path("java.library.path", config->lib);
 		break;
 	}
+}
+
+static void init_boot_classpath(void)
+{
+	if (system_property_get("java.boot.class.path"))
+		return; /* boot classpath already set */
+
+	gnu_classpath_autodiscovery();
 }
 
 static void print_proc_maps(void)
@@ -1129,7 +1164,7 @@ main(int argc, char *argv[])
 	static_fixup_init();
 	vm_jni_init();
 
-	gnu_classpath_autodiscovery();
+	init_boot_classpath();
 
 	/* Search $CLASSPATH last. */
 	char *classpath = getenv("CLASSPATH");
