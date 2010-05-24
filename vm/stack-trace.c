@@ -378,7 +378,6 @@ int get_java_stack_trace_depth(struct stack_trace_elem *elem)
 static struct vm_object *get_intermediate_stack_trace(void)
 {
 	struct stack_trace_elem st_elem;
-	struct compilation_unit *cu;
 	struct vm_object *array;
 	int depth;
 	int i;
@@ -404,24 +403,13 @@ static struct vm_object *get_intermediate_stack_trace(void)
 
 	i = 0;
 	do {
-		unsigned long bc_offset;
-
-		cu = stack_trace_elem_get_cu(&st_elem);
-		if (!cu) {
-			fprintf(stderr,
-				"%s: no compilation unit mapping for %p\n",
-				__func__, (void*)st_elem.addr);
-			return NULL;
+		if (st_elem.type == STACK_TRACE_ELEM_TYPE_JNI) {
+			array_set_field_ptr(array, i++, (void*) st_elem.type);
+			array_set_field_ptr(array, i++, st_elem.cu);
+		} else {
+			array_set_field_ptr(array, i++, (void*) st_elem.type);
+			array_set_field_ptr(array, i++, (void*) st_elem.addr);
 		}
-
-		if (vm_method_is_native(cu->method))
-			bc_offset = BC_OFFSET_UNKNOWN;
-		else
-			bc_offset = jit_lookup_bc_offset(cu,
-						(unsigned char*)st_elem.addr);
-
-		array_set_field_ptr(array, i++, cu->method);
-		array_set_field_ptr(array, i++, (void*)bc_offset);
 	} while (stack_trace_elem_next_java(&st_elem) == 0);
 
 	return array;
@@ -534,14 +522,26 @@ convert_intermediate_stack_trace(struct vm_object *array)
 		return NULL;
 
 	for(i = 0, j = 0; i < depth; j++) {
-		struct vm_method *mb;
+		enum stack_trace_elem_type type;
+		struct compilation_unit *cu;
 		unsigned long bc_offset;
-		struct vm_object *ste;
 
-		mb = array_get_field_ptr(array, i++);
-		bc_offset = (unsigned long)array_get_field_ptr(array, i++);
+		type = (enum stack_trace_elem_type) array_get_field_ptr(array, i++);
+		if (type == STACK_TRACE_ELEM_TYPE_JNI) {
+			cu = array_get_field_ptr(array, i++);
+			bc_offset = BC_OFFSET_UNKNOWN;
+		} else {
+			void *addr = array_get_field_ptr(array, i++);
+			cu = jit_lookup_cu((unsigned long) addr);
+			if (!cu)
+				error("no compilation_unit mapping for %p", addr);
 
-		ste = new_stack_trace_element(mb, bc_offset);
+			bc_offset = jit_lookup_bc_offset(cu, addr);
+		}
+
+		struct vm_object *ste
+			= new_stack_trace_element(cu->method, bc_offset);
+
 		if(ste == NULL || exception_occurred())
 			return NULL;
 
