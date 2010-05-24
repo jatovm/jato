@@ -457,7 +457,7 @@ static void print_array(struct vm_object *obj)
 
 	trace_printf("= {");
 
-	for (int i = 0; i < obj->array_length && i < max_elems; i++) {
+	for (int i = 0; i < vm_array_length(obj) && i < max_elems; i++) {
 		if (i > 0)
 			trace_printf(" ,");
 
@@ -503,8 +503,8 @@ static void print_array(struct vm_object *obj)
 		}
 	}
 
-	if (obj->array_length > max_elems)
-		trace_printf(", ...%d more", obj->array_length - max_elems);
+	if (vm_array_length(obj) > max_elems)
+		trace_printf(", ...%d more", vm_array_length(obj) - max_elems);
 
 	trace_printf("}");
 }

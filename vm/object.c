@@ -70,7 +70,7 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 
 struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 {
-	struct vm_object *res;
+	struct vm_array *res;
 	int vm_type;
 
 	vm_type = bytecode_type_to_vmtype(type);
@@ -80,52 +80,53 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	if (!res)
 		return throw_oom_error();
 
-	vm_object_init_common(res);
+	vm_object_init_common(&res->object);
 
 	switch (type) {
 	case T_BOOLEAN:
-		res->class = classloader_load(NULL, "[Z");
+		res->object.class = classloader_load(NULL, "[Z");
 		break;
 	case T_CHAR:
-		res->class = classloader_load(NULL, "[C");
+		res->object.class = classloader_load(NULL, "[C");
 		break;
 	case T_FLOAT:
-		res->class = classloader_load(NULL, "[F");
+		res->object.class = classloader_load(NULL, "[F");
 		break;
 	case T_DOUBLE:
-		res->class = classloader_load(NULL, "[D");
+		res->object.class = classloader_load(NULL, "[D");
 		break;
 	case T_BYTE:
-		res->class = classloader_load(NULL, "[B");
+		res->object.class = classloader_load(NULL, "[B");
 		break;
 	case T_SHORT:
-		res->class = classloader_load(NULL, "[S");
+		res->object.class = classloader_load(NULL, "[S");
 		break;
 	case T_INT:
-		res->class = classloader_load(NULL, "[I");
+		res->object.class = classloader_load(NULL, "[I");
 		break;
 	case T_LONG:
-		res->class = classloader_load(NULL, "[J");
+		res->object.class = classloader_load(NULL, "[J");
 		break;
 	default:
 		return throw_internal_error();
 	}
 
-	if (!res->class)
+	if (!res->object.class)
 		return throw_internal_error();
 
-	if (vm_class_ensure_init(res->class))
+	if (vm_class_ensure_init(res->object.class))
 		return throw_internal_error();
 
 	res->array_length = count;
-	return res;
+
+	return &res->object;
 }
 
 struct vm_object *
 vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *counts)
 {
 	struct vm_class *elem_class;
-	struct vm_object *res;
+	struct vm_array *res;
 	int elem_size;
 
 	assert(nr_dimensions > 0);
@@ -140,25 +141,24 @@ vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *coun
 	if (!res)
 		return throw_oom_error();
 
-	vm_object_init_common(res);
+	vm_object_init_common(&res->object);
 
 	res->array_length = counts[0];
-	res->class = class;
+	res->object.class = class;
 
 	if (nr_dimensions == 1)
-		return res;
+		return &res->object;
 
-	struct vm_object **elems = (struct vm_object **) (res + 1);
-
+	struct vm_object **elems = vm_array_elems(&res->object);
 	for (int i = 0; i < counts[0]; ++i)
 		elems[i] = vm_object_alloc_multi_array(elem_class, nr_dimensions - 1, counts + 1);
 
-	return res;
+	return &res->object;
 }
 
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 {
-	struct vm_object *res;
+	struct vm_array *res;
 
 	if (vm_class_ensure_init(class))
 		return rethrow_exception();
@@ -167,16 +167,17 @@ struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
 	if (!res)
 		return throw_oom_error();
 
-	vm_object_init_common(res);
+	vm_object_init_common(&res->object);
 
 	res->array_length = count;
 
-	struct vm_object **elems = (struct vm_object **) (res + 1);
+	struct vm_object **elems = vm_array_elems(&res->object);
 	for (int i = 0; i < count; ++i)
 		elems[i] = NULL;
 
-	res->class = class;
-	return res;
+	res->object.class = class;
+
+	return &res->object;
 }
 
 struct vm_object *
@@ -207,7 +208,7 @@ static struct vm_object *clone_array(struct vm_object *obj)
 {
 	struct vm_class *vmc = obj->class;
 	struct vm_class *e_vmc = vmc->array_element_class;
-	int count = obj->array_length;
+	int count = vm_array_length(obj);
 
 	if (e_vmc->kind == VM_CLASS_KIND_PRIMITIVE) {
 		enum vm_type vmtype;
@@ -221,7 +222,7 @@ static struct vm_object *clone_array(struct vm_object *obj)
 		 * object_alloc_primitive_array. */
 		new = vm_object_alloc_primitive_array(type, count);
 		if (new)
-			memcpy(new + 1, obj + 1, vmtype_get_size(vmtype) * count);
+			memcpy(vm_array_elems(new), vm_array_elems(obj), vmtype_get_size(vmtype) * count);
 
 		return new;
 	} else {
@@ -229,7 +230,7 @@ static struct vm_object *clone_array(struct vm_object *obj)
 
 		new = vm_object_alloc_array(vmc, count);
 		if (new)
-			memcpy(new + 1, obj + 1, sizeof(struct vm_object *) * count);
+			memcpy(vm_array_elems(new), vm_array_elems(obj), sizeof(struct vm_object *) * count);
 
 		return new;
 	}
@@ -275,7 +276,7 @@ vm_object_alloc_string_from_utf8(const uint8_t bytes[], unsigned int length)
 		return rethrow_exception();
 
 	field_set_int(string, vm_java_lang_String_offset, 0);
-	field_set_int(string, vm_java_lang_String_count, array->array_length);
+	field_set_int(string, vm_java_lang_String_count, vm_array_length(array));
 	field_set_object(string, vm_java_lang_String_value, array);
 
 	return vm_string_intern(string);
@@ -302,7 +303,7 @@ vm_object_alloc_string_from_c(const char *bytes)
 		array_set_field_char(array, i, bytes[i]);
 
 	field_set_int(string, vm_java_lang_String_offset, 0);
-	field_set_int(string, vm_java_lang_String_count, array->array_length);
+	field_set_int(string, vm_java_lang_String_count, vm_array_length(array));
 	field_set_object(string, vm_java_lang_String_value, array);
 
 	return vm_string_intern(string);
@@ -336,7 +337,7 @@ void vm_object_check_array(struct vm_object *obj, jsize index)
 		return;
 	}
 
-	array_len = obj->array_length;
+	array_len = vm_array_length(obj);
 
 	/*
 	 * We return if index >= 0 and index < array_len. This can be

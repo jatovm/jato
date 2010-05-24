@@ -605,11 +605,11 @@ vm_jni_get_ ## type ## _array_elements(struct vm_jni_env *env,		\
 	    != vm_ ## type ## _class)					\
 		return NULL;						\
 									\
-	result = malloc(sizeof(j ## type) * array->array_length);	\
+	result = malloc(sizeof(j ## type) * vm_array_length(array));	\
 	if (!result)							\
 		return NULL;						\
 									\
-	for (long i = 0; i < array->array_length; i++)			\
+	for (long i = 0; i < vm_array_length(array); i++)		\
 		result[i] = array_get_field_##type(array, i);		\
 									\
 	if (is_copy)							\
@@ -641,7 +641,7 @@ vm_jni_release_ ## type ## _array_elements(struct vm_jni_env *env,	\
 		return;							\
 									\
 	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */		\
-		for (long i = 0; i < array->array_length; i++)		\
+		for (long i = 0; i < vm_array_length(array); i++)	\
 			array_set_field_ ## type(array, i, elems[i]);	\
 	}								\
 									\
@@ -659,16 +659,16 @@ DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(short);
 DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(boolean);
 
 #define DECLARE_GET_XXX_ARRAY_CRITICAL(type)				\
-static void *							\
+static void *								\
 get_ ## type ## _array_critical (jobject array, jboolean *is_copy)	\
 {									\
 	j ## type *result;						\
 									\
-	result = malloc(sizeof(j ## type) * array->array_length);	\
+	result = malloc(sizeof(j ## type) * vm_array_length(array));	\
 	if (!result)							\
 		return NULL;						\
 									\
-	for (long i = 0; i < array->array_length; i++)			\
+	for (long i = 0; i < vm_array_length(array); i++)		\
 		result[i] = array_get_field_##type(array, i);		\
 									\
 	if (is_copy)							\
@@ -682,7 +682,7 @@ static void								\
 release_ ## type ## _array_critical (jobject array, j ## type *elems, jint mode) \
 {									\
 	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */		\
-		for (long i = 0; i < array->array_length; i++)		\
+		for (long i = 0; i < vm_array_length(array); i++)	\
 			array_set_field_ ## type(array, i, elems[i]);	\
 	}								\
 									\
@@ -962,7 +962,7 @@ static jobject vm_jni_get_object_array_element(struct vm_jni_env *env,
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		return NULL;
 	}
-	if (index >= array->array_length) {
+	if (index >= vm_array_length(array)) {
 		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
 		return NULL;
 	}
@@ -981,7 +981,7 @@ static void vm_jni_set_object_array_element(struct vm_jni_env *env,
 		signal_new_exception(vm_java_lang_NullPointerException, NULL);
 		return;
 	}
-	if (index >= array->array_length) {
+	if (index >= vm_array_length(array)) {
 		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
 		return;
 	}
@@ -998,7 +998,7 @@ static jsize vm_jni_get_array_length(struct vm_jni_env *env, jarray array)
 		return 0;
 	}
 
-	return array->array_length;
+	return vm_array_length(array);
 }
 
 #define DECLARE_NEW_XXX_ARRAY(type, arr_type)				\
@@ -1059,7 +1059,7 @@ static void								\
 	    != vm_ ## type ## _class)					\
 		return;							\
 									\
-	if (start < 0 || len < 0 || start + len > array->array_length) { \
+	if (start < 0 || len < 0 || start + len > vm_array_length(array)) { \
 		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
 				     NULL);				\
 		return;							\
@@ -1093,7 +1093,7 @@ static void								\
 	    != vm_ ## type ## _class)					\
 		return;							\
 									\
-	if (start < 0 || len < 0 || start + len > array->array_length) { \
+	if (start < 0 || len < 0 || start + len > vm_array_length(array)) { \
 		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
 				     NULL);				\
 		return;							\

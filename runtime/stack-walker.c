@@ -40,6 +40,7 @@ struct vm_object *native_vmstackwalker_getclasscontext(void)
 {
 	struct stack_trace_elem st_elem;
 	struct compilation_unit *cu;
+	struct vm_array *array;
 	struct vm_object *res;
 	int nr_to_skip;
 	int depth;
@@ -86,7 +87,9 @@ struct vm_object *native_vmstackwalker_getclasscontext(void)
 		array_set_field_object(res, idx++, vmc->object);
 	}
 
-	res->array_length -= nr_to_skip;
+	array	= vm_object_to_array(res);
+
+	array->array_length -= nr_to_skip;
 
 	return res;
 }

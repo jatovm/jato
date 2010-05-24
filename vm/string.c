@@ -61,8 +61,8 @@ static int string_obj_comparator(const void *key1, const void *key2)
 
 	int fsize = vmtype_get_size(J_CHAR);
 
-	return memcmp(array1->fields + offset1 * fsize,
-		      array2->fields + offset2 * fsize,
+	return memcmp(vm_array_elems(array1) + offset1 * fsize,
+		      vm_array_elems(array2) + offset2 * fsize,
 		      count1 * fsize);
 }
 

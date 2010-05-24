@@ -9,6 +9,7 @@
 #include <pthread.h>
 
 struct vm_exec_env;
+struct vm_object;
 
 /*
  * Structure used in relaxed-lock protocol for monitor locking.

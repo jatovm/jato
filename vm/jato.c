@@ -352,16 +352,16 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 	}
 
 	if (len < 0 ||
-	    src_start < 0 || src_start + len > src->array_length ||
-	    dest_start < 0 || dest_start + len > dest->array_length) {
+	    src_start < 0 || src_start + len > vm_array_length(src) ||
+	    dest_start < 0 || dest_start + len > vm_array_length(dest)) {
 		signal_new_exception(
 			vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
 		return;
 	}
 
 	elem_size = vmtype_get_size(elem_type);
-	memmove(dest->fields + dest_start * elem_size,
-		src->fields + src_start * elem_size,
+	memmove(vm_array_elems(dest) + dest_start * elem_size,
+		vm_array_elems(src) + src_start * elem_size,
 		len * elem_size);
 
 	return;

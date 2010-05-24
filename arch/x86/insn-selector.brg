@@ -1462,7 +1462,7 @@ reg:    EXPR_ARRAYLENGTH(reg)
 	state->reg1 = arraylength;
 
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref,
-		offsetof(struct vm_object, array_length), arraylength));
+		offsetof(struct vm_array, array_length), arraylength));
 }
 
 %ifdef	CONFIG_X86_32
@@ -2701,7 +2701,7 @@ array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 	state->reg2 = state->right->reg1;
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, offsetof(struct vm_object, fields), base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, offsetof(struct vm_array, elems), base));
 }
 
 %ifdef CONFIG_X86_32

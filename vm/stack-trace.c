@@ -514,7 +514,7 @@ convert_intermediate_stack_trace(struct vm_object *array)
 	int i;
 	int j;
 
-	depth = array->array_length;
+	depth = vm_array_length(array);
 
 	ste_array = vm_object_alloc_array(
 		vm_array_of_java_lang_StackTraceElement, depth / 2);
