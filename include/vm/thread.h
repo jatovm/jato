@@ -28,7 +28,8 @@ enum thread_state {
 struct vm_thread {
 	pthread_mutex_t mutex;
 
-	/* instance of java.lang.VMThread associated with current thread */
+	/* Instance of java.lang.VMThread associated with current
+	 * thread. This reference must not prevent garbage collection. */
 	struct vm_object *vmthread;
 
 	pthread_t posix_id;
@@ -36,16 +37,18 @@ struct vm_thread {
 	struct list_head list_node;
 	bool interrupted;
 
-	/* points to object on which thread is waiting or NULL */
+	/* Points to object on which thread is waiting or NULL */
 	struct vm_object *waiting_mon;
 
-	/* should be accessed only with vm_thread_(set|get)_state() */
+	/* Should be accessed only with vm_thread_(set|get)_state() */
 	enum thread_state thread_state;
 
 	/* Needed by sun.misc.Unsafe.park() */
 	pthread_mutex_t park_mutex;
 	pthread_cond_t park_cond;
 	bool unpark_called;
+
+	struct vm_exec_env *ee;
 };
 
 struct vm_exec_env {
@@ -93,6 +96,7 @@ struct vm_thread *vm_thread_from_vmthread(struct vm_object *vmthread);
 struct vm_thread *vm_thread_from_java_thread(struct vm_object *jthread);
 void vm_lock_thread_count(void);
 void vm_unlock_thread_count(void);
+void vm_thread_collect_vmthread(struct vm_object *object);
 
 extern struct list_head thread_list;
 extern pthread_mutex_t threads_mutex;

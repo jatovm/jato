@@ -36,6 +36,7 @@
 #include "vm/preload.h"
 #include "vm/thread.h"
 #include "vm/errors.h"
+#include "vm/class.h"
 
 /*
  * Get new monitor record with .owner set to the current execution
@@ -72,6 +73,14 @@ static struct vm_monitor_record *get_monitor_record(void)
 	pthread_cond_init(&record->notify_cond, NULL);
 
 	return record;
+}
+
+void vm_monitor_record_free(struct vm_monitor_record *vmr)
+{
+	sem_destroy(&vmr->sem);
+	pthread_mutex_destroy(&vmr->notify_mutex);
+	pthread_cond_destroy(&vmr->notify_cond);
+	free(vmr);
 }
 
 /*

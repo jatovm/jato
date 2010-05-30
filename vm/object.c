@@ -48,6 +48,9 @@ void vm_object_finalizer(struct vm_object *obj)
 
 	if (vm_object_is_instance_of(obj, vm_java_lang_ref_Reference))
 		vm_reference_collect(obj);
+
+	if (obj->class == vm_java_lang_VMThread)
+		vm_thread_collect_vmthread(obj);
 }
 
 static void vm_object_init_common(struct vm_object *object)

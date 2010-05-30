@@ -44,5 +44,6 @@ int vm_object_wait(struct vm_object *self);
 int vm_object_timed_wait(struct vm_object *self, uint64_t ms, int ns);
 int vm_object_notify(struct vm_object *self);
 int vm_object_notify_all(struct vm_object *self);
+void vm_monitor_record_free(struct vm_monitor_record *vmr);
 
 #endif

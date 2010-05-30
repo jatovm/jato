@@ -29,9 +29,11 @@
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/die.h"
+#include "vm/errors.h"
 #include "vm/gc.h"
 #include "vm/object.h"
 #include "vm/preload.h"
+#include "vm/reference.h"
 #include "vm/signal.h"
 #include "vm/stdlib.h"
 #include "vm/thread.h"
@@ -42,6 +44,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <pthread.h>
+#include <malloc.h>
 
 __thread struct vm_exec_env *current_exec_env;
 
@@ -63,7 +66,7 @@ static pthread_cond_t thread_count_lock_cond = PTHREAD_COND_INITIALIZER;
 
 static struct vm_thread *vm_thread_alloc(void)
 {
-	struct vm_thread *thread = vm_alloc(sizeof(struct vm_thread));
+	struct vm_thread *thread = malloc(sizeof(struct vm_thread));
 	if (!thread)
 		return NULL;
 
@@ -84,8 +87,31 @@ static struct vm_thread *vm_thread_alloc(void)
 	return thread;
 
  error_mutex:
-	vm_free(thread);
+	free(thread);
 	return NULL;
+}
+
+static void vm_thread_free(struct vm_thread *thread)
+{
+	pthread_mutex_destroy(&thread->mutex);
+	pthread_mutex_destroy(&thread->park_mutex);
+	pthread_cond_destroy(&thread->park_cond);
+	free(thread);
+}
+
+/*
+ * Called when java.lang.VMThread is being collected.
+ */
+void vm_thread_collect_vmthread(struct vm_object *object)
+{
+	struct vm_thread *thread = vm_thread_from_vmthread(object);
+
+	if (!thread)
+		return;
+
+	assert(thread->ee == NULL);
+
+	vm_thread_free(thread);
 }
 
 /**
@@ -185,6 +211,7 @@ int init_threading(void)
 	main_thread->vmthread = vmthread;
 	main_thread->posix_id = pthread_self();
 
+	main_thread->ee = vm_get_exec_env();
 	vm_get_exec_env()->thread = main_thread;
 
 	vm_call_method_object(vm_java_lang_Thread_init, thread,
@@ -214,19 +241,34 @@ int init_threading(void)
 	return 0;
 }
 
-void init_exec_env(void)
+static struct vm_exec_env *alloc_exec_env(void)
 {
 	struct vm_exec_env *ee = vm_alloc(sizeof(struct vm_exec_env));
 	if (!ee)
-		error("failed to alloc struct vm_exec_env");
+		return NULL;
 
-	current_exec_env = ee;
+	ee->thread = NULL;
 	INIT_LIST_HEAD(&ee->free_monitor_recs);
+	return ee;
 }
 
-static void finalize_exec_env(void)
+static void free_exec_env(struct vm_exec_env *env)
 {
-	vm_free(current_exec_env);
+	struct vm_monitor_record *this, *next;
+
+	struct list_head *list = &env->free_monitor_recs;
+	list_for_each_entry_safe(this, next, list, ee_free_list_node) {
+		vm_monitor_record_free(this);
+	}
+
+	vm_free(env);
+}
+
+void init_exec_env(void)
+{
+	current_exec_env = alloc_exec_env();
+	if (!current_exec_env)
+		error("failed to alloc main execution environment");
 }
 
 /**
@@ -234,13 +276,21 @@ static void finalize_exec_env(void)
  */
 static void *vm_thread_entry(void *arg)
 {
-	struct vm_thread *thread = arg;
+	struct vm_exec_env *ee = arg;
+	struct vm_thread *thread = ee->thread;
 
-	init_exec_env();
-	vm_get_exec_env()->thread = thread;
+	current_exec_env = ee;
 
 	setup_signal_handlers();
 	thread_init_exceptions();
+
+	/* XXX: Prevent collection of associated VMThread until
+	 * this method returns. */
+	struct vm_reference *vmthread_ref
+		= vm_reference_alloc_strong(thread->vmthread);
+
+	if (!vmthread_ref)
+		return throw_oom_error();
 
 	vm_call_method(vm_java_lang_VMThread_run, thread->vmthread);
 
@@ -254,7 +304,9 @@ static void *vm_thread_entry(void *arg)
 	vm_thread_detach_thread(vm_thread_self());
 	pthread_mutex_unlock(&threads_mutex);
 
-	finalize_exec_env();
+	thread->ee = NULL;
+	vm_reference_free(vmthread_ref);
+	free_exec_env(ee);
 
 	return NULL;
 }
@@ -264,15 +316,28 @@ static void *vm_thread_entry(void *arg)
  */
 int vm_thread_start(struct vm_object *vmthread)
 {
+	/* Force object finalizer execution for vmthread */
+	if (gc_register_finalizer(vmthread, vm_object_finalizer)) {
+		throw_internal_error();
+		return -1;
+	}
+
 	struct vm_thread *thread = vm_thread_alloc();
 	if (!thread) {
-		NOT_IMPLEMENTED;
+		throw_oom_error();
 		return -1;
+	}
+
+	struct vm_exec_env *ee = alloc_exec_env();
+	if (!ee) {
+		throw_oom_error();
+		goto out_free_thread;
 	}
 
 	/* XXX: no need to lock because @thread is not yet visible to
 	 * other threads. */
 	thread->vmthread = vmthread;
+
 	atomic_set(&thread->state, VM_THREAD_STATE_RUNNABLE);
 
 	field_set_object(vmthread, vm_java_lang_VMThread_vmdata,
@@ -290,14 +355,23 @@ int vm_thread_start(struct vm_object *vmthread)
 
 	vm_thread_attach_thread(thread);
 
+	thread->ee = ee;
+	thread->ee->thread = thread;
+
 	if (pthread_create(&thread->posix_id, NULL, &vm_thread_entry, thread)) {
 		vm_thread_detach_thread(thread);
+		thread->ee = NULL;
+		free_exec_env(ee);
 		pthread_mutex_unlock(&threads_mutex);
 		return -1;
 	}
 
 	pthread_mutex_unlock(&threads_mutex);
 	return 0;
+
+ out_free_thread:
+	vm_thread_free(thread);
+	return -1;
 }
 
 void vm_thread_wait_for_non_daemons(void)
