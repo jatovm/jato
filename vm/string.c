@@ -32,6 +32,7 @@
 #include "vm/errors.h"
 #include "vm/object.h"
 #include "vm/die.h"
+#include "vm/reference.h"
 
 #include "lib/hash-map.h"
 
@@ -39,8 +40,11 @@
 #include <memory.h>
 
 static struct hash_map *literals;
-static pthread_rwlock_t literals_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+static pthread_mutex_t literals_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+/*
+ * Compare key1 string and key2 weak reference to string.
+ */
 static int string_obj_comparator(const void *key1, const void *key2)
 {
 	struct vm_object *array1, *array2;
@@ -94,28 +98,28 @@ void init_literals_hash_map(void)
 
 struct vm_object *vm_string_intern(struct vm_object *string)
 {
-	struct vm_object *intern;
+	struct vm_reference *intern;
+	struct vm_object *result;
 
-	pthread_rwlock_rdlock(&literals_rwlock);
+	pthread_mutex_lock(&literals_mutex);
 
 	if (hash_map_get(literals, string, (void **) &intern) == 0) {
-		pthread_rwlock_unlock(&literals_rwlock);
-		return intern;
+		pthread_mutex_unlock(&literals_mutex);
+		result = vm_reference_get(intern);
+		return result;
 	}
 
-	pthread_rwlock_unlock(&literals_rwlock);
-	pthread_rwlock_wrlock(&literals_rwlock);
+	result = string;
+	intern = vm_reference_alloc(result, VM_REFERENCE_STRONG);
+	if (!intern) {
+		result = throw_oom_error();
+		goto out;
+	}
 
-	/*
-	 * XXX: we should notify GC that we store a reference to
-	 * string here (both as a key and a value). It should be
-	 * marked as a weak reference.
-	 */
-	intern = string;
 	if (hash_map_put(literals, string, intern))
-		intern = throw_oom_error();
+		result = throw_oom_error();
 
-	pthread_rwlock_unlock(&literals_rwlock);
-
-	return intern;
+ out:
+	pthread_mutex_unlock(&literals_mutex);
+	return result;
 }

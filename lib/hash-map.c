@@ -98,7 +98,7 @@ int hash_map_put(struct hash_map *map, const void *key, void *value)
 		return 0;
 	}
 
-	ent = vm_alloc(sizeof(struct hash_map_entry));
+	ent = malloc(sizeof(struct hash_map_entry));
 	if (!ent)
 		return -ENOMEM;
 
@@ -133,7 +133,7 @@ int hash_map_remove(struct hash_map *map, const void *key)
 		return -1;
 
 	list_del(&ent->list_node);
-	vm_free(ent);
+	free(ent);
 	return 0;
 }
 
