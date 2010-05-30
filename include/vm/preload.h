@@ -1,6 +1,8 @@
 #ifndef _VM_JAVA_LANG_H
 #define _VM_JAVA_LANG_H
 
+#include <stdbool.h>
+
 extern struct vm_class *vm_array_of_java_lang_Class;
 extern struct vm_class *vm_array_of_java_lang_StackTraceElement;
 extern struct vm_class *vm_array_of_java_lang_String;
