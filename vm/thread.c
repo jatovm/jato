@@ -334,6 +334,18 @@ int vm_thread_start(struct vm_object *vmthread)
 		goto out_free_thread;
 	}
 
+	pthread_attr_t attr;
+
+	if (pthread_attr_init(&attr)) {
+		throw_internal_error();
+		goto out_free_thread;
+	}
+
+	if (pthread_attr_setdetachstate(&attr, true)) {
+		throw_internal_error();
+		goto out_free_thread;
+	}
+
 	/* XXX: no need to lock because @thread is not yet visible to
 	 * other threads. */
 	thread->vmthread = vmthread;
@@ -358,7 +370,7 @@ int vm_thread_start(struct vm_object *vmthread)
 	thread->ee = ee;
 	thread->ee->thread = thread;
 
-	if (pthread_create(&thread->posix_id, NULL, &vm_thread_entry, thread)) {
+	if (pthread_create(&thread->posix_id, &attr, &vm_thread_entry, thread->ee)) {
 		vm_thread_detach_thread(thread);
 		thread->ee = NULL;
 		free_exec_env(ee);
@@ -367,6 +379,8 @@ int vm_thread_start(struct vm_object *vmthread)
 	}
 
 	pthread_mutex_unlock(&threads_mutex);
+
+	pthread_attr_destroy(&attr);
 	return 0;
 
  out_free_thread:
