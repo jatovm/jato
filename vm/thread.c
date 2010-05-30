@@ -375,6 +375,8 @@ int vm_thread_start(struct vm_object *vmthread)
 		thread->ee = NULL;
 		free_exec_env(ee);
 		pthread_mutex_unlock(&threads_mutex);
+
+		signal_new_exception(vm_java_lang_Error, "Unable to create native thread");
 		return -1;
 	}
 
