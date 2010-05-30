@@ -79,6 +79,7 @@ static struct vm_thread *vm_thread_alloc(void)
 	pthread_cond_init(&thread->park_cond, NULL);
 	pthread_mutex_init(&thread->park_mutex, NULL);
 	thread->unpark_called = false;
+	INIT_LIST_HEAD(&thread->list_node);
 
 	return thread;
 

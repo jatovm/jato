@@ -104,6 +104,7 @@ int hash_map_put(struct hash_map *map, const void *key, void *value)
 
 	ent->key   = key;
 	ent->value = value;
+	INIT_LIST_HEAD(&ent->list_node);
 
 	bucket = &map->table[map->hash(key, map->size)];
 	list_add(&ent->list_node, bucket);
