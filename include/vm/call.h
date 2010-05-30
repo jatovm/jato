@@ -61,6 +61,17 @@ static inline void vm_call_method(struct vm_method *method, ...)
 	va_end(args);
 }
 
+static inline void
+vm_call_method_this(struct vm_method *method, struct vm_object *this, ...)
+{
+	union jvalue result;
+	va_list args;
+
+	va_start(args, this);
+	vm_call_method_this_v(method, this, args, &result);
+	va_end(args);
+}
+
 DECLARE_VM_CALL_METHOD(byte, b);
 DECLARE_VM_CALL_METHOD(boolean, z);
 DECLARE_VM_CALL_METHOD(double, d);
