@@ -86,4 +86,13 @@ signal_new_chained_exception(struct vm_class *vmc, const char *msg)
 		signal_new_exception(vmc, msg);
 }
 
+static inline void exception_print_and_clear(void)
+{
+	if (!exception_occurred())
+		return;
+
+	vm_print_exception(exception_occurred());
+	clear_exception();
+}
+
 #endif /* JATO_JIT_EXCEPTION_H */

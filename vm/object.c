@@ -13,6 +13,7 @@
 #include "vm/utf8.h"
 #include "vm/die.h"
 #include "vm/gc.h"
+#include "vm/reference.h"
 
 #include "lib/string.h"
 
@@ -41,14 +42,16 @@ int init_vm_objects(void)
 	return 0;
 }
 
-static void vm_object_finalizer(struct vm_object *obj, void *param)
+void vm_object_finalizer(struct vm_object *obj)
 {
-	/* TODO: implement */
+	vm_reference_collect_for_object(obj);
+
+	if (vm_object_is_instance_of(obj, vm_java_lang_ref_Reference))
+		vm_reference_collect(obj);
 }
 
 static void vm_object_init_common(struct vm_object *object)
 {
-	gc_register_finalizer(object, vm_object_finalizer, NULL);
 }
 
 struct vm_object *vm_object_alloc(struct vm_class *class)

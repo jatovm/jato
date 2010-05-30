@@ -14,10 +14,14 @@ extern bool			newgc_enabled;
 extern bool			verbose_gc;
 extern int			dont_gc;
 
+typedef void (*finalizer_fn)(struct vm_object *object);
+
 struct gc_operations {
 	void *(*gc_alloc)(size_t size);
 	void *(*vm_alloc)(size_t size);
 	void (*vm_free)(void *p);
+	int (*gc_register_finalizer)(struct vm_object *object,
+				     finalizer_fn finalizer);
 };
 
 void gc_setup_boehm(void);
@@ -52,12 +56,14 @@ static inline void vm_free(void *ptr)
 	gc_ops.vm_free(ptr);
 }
 
+static inline int
+gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer)
+{
+	return gc_ops.gc_register_finalizer(object, finalizer);
+}
+
 void gc_safepoint(struct register_state *);
 void suspend_handler(int, siginfo_t *, void *);
 void wakeup_handler(int, siginfo_t *, void *);
-
-typedef void (*finalizer_fn)(struct vm_object *object, void *param);
-
-void gc_register_finalizer(struct vm_object *obj, finalizer_fn finalizer, void *param);
 
 #endif

@@ -75,6 +75,7 @@
 #include "vm/itable.h"
 #include "vm/method.h"
 #include "vm/object.h"
+#include "vm/reference.h"
 #include "vm/signal.h"
 #include "vm/static.h"
 #include "vm/string.h"
@@ -1144,6 +1145,7 @@ main(int argc, char *argv[])
 
 	gc_init();
 	init_exec_env();
+	vm_reference_init();
 
 	classloader_init();
 

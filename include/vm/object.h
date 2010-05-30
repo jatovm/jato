@@ -76,6 +76,7 @@ bool vm_object_is_instance_of(const struct vm_object *obj, const struct vm_class
 void vm_object_check_null(struct vm_object *obj);
 void vm_object_check_array(struct vm_object *obj, jsize index);
 void vm_object_check_cast(struct vm_object *obj, struct vm_class *class);
+void vm_object_finalizer(struct vm_object *object);
 
 void array_store_check(struct vm_object *arrayref, struct vm_object *obj);
 void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type);

@@ -38,6 +38,7 @@
 #include "jit/cu-mapping.h"
 
 #include "lib/guard-page.h"
+#include "lib/string.h"
 
 #include "vm/stdlib.h"
 #include "vm/thread.h"
@@ -46,7 +47,6 @@
 #include "vm/trace.h"
 #include "vm/die.h"
 #include "vm/gc.h"
-#include "lib/string.h"
 
 #include <inttypes.h>
 #include <pthread.h>
@@ -443,12 +443,20 @@ static void do_vm_free(void *p)
 	free(p);
 }
 
+static int do_gc_register_finalizer(struct vm_object *object,
+				    finalizer_fn finalizer)
+{
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 static void gc_setup(void)
 {
 	gc_ops		= (struct gc_operations) {
-		.gc_alloc	= do_gc_alloc,
-		.vm_alloc	= do_vm_alloc,
-		.vm_free	= do_vm_free,
+		.gc_alloc		= do_gc_alloc,
+		.vm_alloc		= do_vm_alloc,
+		.vm_free		= do_vm_free,
+		.gc_register_finalizer	= do_gc_register_finalizer
 	};
 
 	if (pthread_spin_init(&gc_spinlock, PTHREAD_PROCESS_SHARED) != 0)
@@ -468,11 +476,4 @@ void gc_init(void)
 		gc_setup();
 	else
 		gc_setup_boehm();
-}
-
-void gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer,
-			   void *param)
-{
-	/* GC_register_finalizer(object, (GC_finalization_proc) finalizer,
-	   param, NULL, NULL); */
 }

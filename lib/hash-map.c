@@ -161,6 +161,11 @@ unsigned long ptr_hash(const void *key, unsigned long size)
 	return ((unsigned long) key) % size;
 }
 
+int ptr_compare(const void *p1, const void *p2)
+{
+	return !(p1 == p2);
+}
+
 int string_compare(const void *key1, const void *key2)
 {
 	return strcmp(key1, key2);

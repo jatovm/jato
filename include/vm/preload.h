@@ -57,6 +57,10 @@ extern struct vm_class *vm_java_lang_ClassLoader;
 extern struct vm_class *vm_java_lang_Number;
 extern struct vm_class *vm_java_lang_InterruptedException;
 extern struct vm_class *vm_java_lang_ClassFormatError;
+extern struct vm_class *vm_java_lang_ref_Reference;
+extern struct vm_class *vm_java_lang_ref_WeakReference;
+extern struct vm_class *vm_java_lang_ref_SoftReference;
+extern struct vm_class *vm_java_lang_ref_PhantomReference;
 extern struct vm_class *vm_boolean_class;
 extern struct vm_class *vm_char_class;
 extern struct vm_class *vm_float_class;
@@ -103,6 +107,8 @@ extern struct vm_field *vm_java_lang_reflect_VMMethod_name;
 extern struct vm_field *vm_java_lang_reflect_VMMethod_slot;
 extern struct vm_field *vm_java_lang_reflect_VMMethod_m;
 extern struct vm_field *vm_java_lang_ClassLoader_systemClassLoader;
+extern struct vm_field *vm_java_lang_ref_Reference_referent;
+extern struct vm_field *vm_java_lang_ref_Reference_lock;
 
 extern struct vm_method *vm_java_util_Properties_setProperty;
 extern struct vm_method *vm_java_lang_Throwable_initCause;
@@ -144,6 +150,8 @@ extern struct vm_method *vm_java_lang_Number_intValue;
 extern struct vm_method *vm_java_lang_Number_floatValue;
 extern struct vm_method *vm_java_lang_Number_longValue;
 extern struct vm_method *vm_java_lang_Number_doubleValue;
+extern struct vm_method *vm_java_lang_ref_Reference_clear;
+extern struct vm_method *vm_java_lang_ref_Reference_enqueue;
 
 extern bool preload_finished;
 

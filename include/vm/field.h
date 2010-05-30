@@ -50,4 +50,10 @@ static inline enum vm_type vm_field_type(const struct vm_field *vmf)
 	return vmf->type_info.vm_type;
 }
 
+static inline bool
+vm_field_equals(const struct vm_field *f1, const struct vm_field *f2)
+{
+	return f1->class == f2->class && f1->field_index == f2->field_index;
+}
+
 #endif

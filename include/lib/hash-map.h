@@ -34,5 +34,6 @@ bool hash_map_contains(struct hash_map *map, const void *key);
 hash_fn string_hash;
 hash_fn ptr_hash;
 compare_fn string_compare;
+compare_fn ptr_compare;
 
 #endif

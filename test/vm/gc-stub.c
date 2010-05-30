@@ -42,7 +42,3 @@ struct gc_operations gc_ops = {
 	.vm_alloc		= do_vm_alloc,
 	.vm_free		= do_vm_free,
 };
-
-void gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer, void *param)
-{
-}

@@ -103,6 +103,10 @@ struct vm_class *vm_java_lang_VMString;
 struct vm_class *vm_java_lang_Number;
 struct vm_class *vm_java_lang_InterruptedException;
 struct vm_class *vm_java_lang_ClassFormatError;
+struct vm_class *vm_java_lang_ref_Reference;
+struct vm_class *vm_java_lang_ref_WeakReference;
+struct vm_class *vm_java_lang_ref_SoftReference;
+struct vm_class *vm_java_lang_ref_PhantomReference;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -171,6 +175,10 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ClassLoader", &vm_java_lang_ClassLoader},
 	{ "java/lang/VMString", &vm_java_lang_VMString},
 	{ "java/lang/Number", &vm_java_lang_Number },
+	{ "java/lang/ref/Reference", &vm_java_lang_ref_Reference },
+	{ "java/lang/ref/WeakReference", &vm_java_lang_ref_WeakReference },
+	{ "java/lang/ref/SoftReference", &vm_java_lang_ref_SoftReference },
+	{ "java/lang/ref/PhantomReference", &vm_java_lang_ref_PhantomReference },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -228,6 +236,8 @@ struct vm_field *vm_java_lang_reflect_VMMethod_clazz;
 struct vm_field *vm_java_lang_reflect_VMMethod_name;
 struct vm_field *vm_java_lang_reflect_VMMethod_slot;
 struct vm_field *vm_java_lang_reflect_VMMethod_m;
+struct vm_field *vm_java_lang_ref_Reference_referent;
+struct vm_field *vm_java_lang_ref_Reference_lock;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
@@ -280,6 +290,8 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_reflect_VMMethod, "m", "Ljava/lang/reflect/Method;", &vm_java_lang_reflect_VMMethod_m, PRELOAD_OPTIONAL },
 	{ &vm_java_lang_reflect_VMMethod, "name", "Ljava/lang/String;", &vm_java_lang_reflect_VMMethod_name, PRELOAD_OPTIONAL },
 	{ &vm_java_lang_reflect_VMMethod, "slot", "I", &vm_java_lang_reflect_VMMethod_slot, PRELOAD_OPTIONAL },
+	{ &vm_java_lang_ref_Reference, "referent", "Ljava/lang/Object;", &vm_java_lang_ref_Reference_referent},
+	{ &vm_java_lang_ref_Reference, "lock", "Ljava/lang/Object;", &vm_java_lang_ref_Reference_lock},
 };
 
 struct method_preload_entry {
@@ -330,6 +342,8 @@ struct vm_method *vm_java_lang_Number_intValue;
 struct vm_method *vm_java_lang_Number_floatValue;
 struct vm_method *vm_java_lang_Number_longValue;
 struct vm_method *vm_java_lang_Number_doubleValue;
+struct vm_method *vm_java_lang_ref_Reference_clear;
+struct vm_method *vm_java_lang_ref_Reference_enqueue;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -577,6 +591,18 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"doubleValue",
 		"()D",
 		&vm_java_lang_Number_doubleValue,
+	},
+	{
+		&vm_java_lang_ref_Reference,
+		"clear",
+		"()V",
+		&vm_java_lang_ref_Reference_clear,
+	},
+	{
+		&vm_java_lang_ref_Reference,
+		"enqueue",
+		"()Z",
+		&vm_java_lang_ref_Reference_enqueue,
 	},
 };
 
