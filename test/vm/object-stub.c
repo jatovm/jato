@@ -40,7 +40,7 @@ void vm_object_check_array(struct vm_object *obj, jsize index)
 	if (!vm_class_is_array_class(cb))
 		abort();
 
-	if (index >= obj->array_length)
+	if (index >= vm_array_length(obj))
 		abort();
 }
 
