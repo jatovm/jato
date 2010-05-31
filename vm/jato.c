@@ -219,6 +219,8 @@ struct system_property {
 	const char *value;
 };
 
+#define JAVA_VERSION		"1.5.0"
+
 static struct system_property system_properties[] = {
 	{ "java.vm.name",			"jato"				},
 	{ "java.vm.vendor",			"Pekka Enberg"			},
@@ -227,13 +229,13 @@ static struct system_property system_properties[] = {
 	{ "file.separator",			"/"				},
 	{ "path.separator",			":"				},
 	{ "line.separator",			"\n"				},
-	{ "java.version",			"1.6"				},
+	{ "java.version",			JAVA_VERSION			},
 	{ "java.vendor",			"GNU Classpath"			},
 	{ "java.vendor.url",			"http://www.classpath.org"	},
 	{ "java.vm.specification.version",	"1.0"				},
 	{ "java.vm.specification.vendor",	"Sun Microsystems, Inc."	},
 	{ "java.vm.specification.name",		"Java Virtual Machine Specification"},
-	{ "java.specification.version",		"1.6"				},
+	{ "java.specification.version",		"1.5"				},
 	{ "java.specification.vendor",		"Sun Microsystems, Inc."	},
 	{ "java.specification.name",		"Java Platform API Specification"},
 	{ "java.class.version",			"48.0"				},
@@ -642,6 +644,7 @@ static void usage(FILE *f, int retval)
 
 static void handle_version(void)
 {
+	fprintf(stdout, "java version \"%s\"\n", JAVA_VERSION);
 	fprintf(stdout, "Jato VM version %s\n", JATO_VERSION);
 	exit(EXIT_SUCCESS);
 }
