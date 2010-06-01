@@ -2,14 +2,12 @@ VERSION = 0.0.2
 
 CLASSPATH_CONFIG = tools/classpath-config
 
-JAMVM_INSTALL_DIR	:= /usr/local
 CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 
 BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
 ARCH		:= $(BUILD_ARCH)
-JAMVM_ARCH	:= $(shell echo "$(ARCH)" | sed -e s/ppc/powerpc/)
 OS		:= $(shell uname -s | tr "[:upper:]" "[:lower:]")
 
 ifneq ($(ARCH),$(BUILD_ARCH))
@@ -150,8 +148,6 @@ LIB_OBJS = \
 	lib/stack.o		\
 	lib/string.o
 
-JAMVM_OBJS =
-
 CAFEBABE_OBJS := \
 	cafebabe/attribute_array.o		\
 	cafebabe/attribute_info.o		\
@@ -171,7 +167,7 @@ LIBHARNESS_OBJS = \
 
 JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(LIB_OBJS) $(CAFEBABE_OBJS)
 
-OBJS = $(JAMVM_OBJS) $(JATO_OBJS)
+OBJS = $(JATO_OBJS)
 
 RUNTIME_CLASSES =
 
