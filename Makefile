@@ -237,7 +237,7 @@ monoburg:
 .PHONY: monoburg
 
 boehmgc:
-	+$(Q) $(MAKE) -C boehmgc/
+	+$(Q) ARCH=$(ARCH) $(MAKE) -C boehmgc/
 .PHONY: boehmgc
 
 %.o: %.c

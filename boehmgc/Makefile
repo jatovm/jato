@@ -1,5 +1,14 @@
 AR		:= ar
 
+uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
+ARCH		?= $(uname_M)
+
+ifeq ($(ARCH),i386)
+  ifeq ($(uname_M),x86_64)
+   DEFAULT_CFLAGS	+= -m32
+  endif
+endif
+
 #
 # Set Boehm GC configuration variables.
 #
