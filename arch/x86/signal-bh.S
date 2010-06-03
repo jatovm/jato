@@ -20,6 +20,17 @@ signal_bh_trampoline:
 	push %ecx
 	push %edx
 
+	/* save FPU registers */
+	sub $64, %esp
+	movsd %xmm0, (%esp)
+	movsd %xmm1, 8(%esp)
+	movsd %xmm2, 16(%esp)
+	movsd %xmm3, 24(%esp)
+	movsd %xmm4, 32(%esp)
+	movsd %xmm5, 40(%esp)
+	movsd %xmm6, 48(%esp)
+	movsd %xmm7, 56(%esp)
+
 	/* push signal bottom half handler's argument - address of
 	   faulting instruction. */
 	push 0x04(%ebp)
@@ -36,6 +47,17 @@ signal_bh_trampoline:
 
 	/* overwrite return address */
 	movl %eax, 0x08(%ebp)
+
+	/* restore FPU registers */
+	movsd (%esp), %xmm0
+	movsd 8(%esp), %xmm1
+	movsd 16(%esp), %xmm2
+	movsd 24(%esp), %xmm3
+	movsd 32(%esp), %xmm4
+	movsd 40(%esp), %xmm5
+	movsd 48(%esp), %xmm6
+	movsd 56(%esp), %xmm7
+	add $64, %esp
 
 	/* restore caller saved registers */
 	pop %edx
