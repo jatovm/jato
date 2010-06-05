@@ -157,10 +157,10 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/reflect/VMConstructor", &vm_java_lang_reflect_VMConstructor, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
 	{ "java/lang/reflect/Method", &vm_java_lang_reflect_Method },
 	{ "java/lang/reflect/VMMethod", &vm_java_lang_reflect_VMMethod, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
-	{ "[java/lang/Class",		&vm_array_of_java_lang_Class },
-	{ "[java/lang/reflect/Constructor", &vm_array_of_java_lang_reflect_Constructor },
-	{ "[java/lang/reflect/Field", &vm_array_of_java_lang_reflect_Field },
-	{ "[java/lang/reflect/Method", &vm_array_of_java_lang_reflect_Method },
+	{ "[Ljava/lang/Class;",		&vm_array_of_java_lang_Class },
+	{ "[Ljava/lang/reflect/Constructor;", &vm_array_of_java_lang_reflect_Constructor },
+	{ "[Ljava/lang/reflect/Field;", &vm_array_of_java_lang_reflect_Field },
+	{ "[Ljava/lang/reflect/Method;", &vm_array_of_java_lang_reflect_Method },
 	{ "java/lang/IllegalArgumentException", &vm_java_lang_IllegalArgumentException },
 	{ "java/lang/InterruptedException", &vm_java_lang_InterruptedException },
 	{ "java/lang/ClassFormatError", &vm_java_lang_ClassFormatError },
