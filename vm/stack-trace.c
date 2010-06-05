@@ -40,6 +40,7 @@
 #include "vm/system.h"
 #include "vm/thread.h"
 #include "vm/trace.h"
+#include "vm/utf8.h"
 
 #include "jit/bc-offset-mapping.h"
 #include "jit/cu-mapping.h"
@@ -483,7 +484,7 @@ new_stack_trace_element(struct vm_method *mb, unsigned long bc_offset)
 	else
 		file_name = NULL;
 
-	class_dot_name = slash2dots(cb->name);
+	class_dot_name = slash_to_dots(cb->name);
 	class_name = vm_object_alloc_string_from_c(class_dot_name);
 	method_name = vm_object_alloc_string_from_c(mb->name);
 	free(class_dot_name);

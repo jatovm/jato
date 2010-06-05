@@ -388,7 +388,7 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 		goto error;
 	}
 
-	err = str_append(str, slash2dots(obj->class->name));
+	err = str_append(str, slash_to_dots(obj->class->name));
 	if (err)
 		goto error;
 
@@ -429,7 +429,7 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 		goto error;
 	}
 
-	err = str_append(str, slash2dots(obj->class->name));
+	err = str_append(str, slash_to_dots(obj->class->name));
 	if (err)
 		goto error;
 
@@ -437,7 +437,7 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 	if (err)
 		goto error;
 
-	err = str_append(str, slash2dots(class->name));
+	err = str_append(str, slash_to_dots(class->name));
 	if (err)
 		goto error;
 

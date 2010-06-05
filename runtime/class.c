@@ -32,6 +32,7 @@
 #include "vm/preload.h"
 #include "vm/object.h"
 #include "vm/class.h"
+#include "vm/utf8.h"
 #include "vm/vm.h"
 
 #include <stddef.h>
@@ -91,7 +92,7 @@ struct vm_object *native_vmclass_getname(struct vm_object *object)
 	struct vm_object *obj;
 	char *dot_name;
 
-	dot_name = slash2dots(class->name);
+	dot_name = slash_to_dots(class->name);
 	obj =  vm_object_alloc_string_from_c(dot_name);
 	free(dot_name);
 

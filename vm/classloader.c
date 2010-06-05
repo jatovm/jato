@@ -12,6 +12,7 @@
 #include "vm/thread.h"
 #include "vm/class.h"
 #include "vm/trace.h"
+#include "vm/utf8.h"
 #include "vm/call.h"
 #include "vm/die.h"
 
@@ -264,30 +265,6 @@ static void remove_class(struct vm_object *loader, const char *class_name)
 	key.classloader = loader;
 
 	hash_map_remove(classes, &key);
-}
-
-static char *dots_to_slash(const char *name)
-{
-	char *result = strdup(name);
-
-	for (unsigned int i = 0, n = strlen(name); i < n; ++i) {
-		if (result[i] == '.')
-			result[i] = '/';
-	}
-
-	return result;
-}
-
-static char *slash_to_dots(const char *name)
-{
-	char *result = strdup(name);
-
-	for (unsigned int i = 0, n = strlen(name); i < n; ++i) {
-		if (result[i] == '/')
-			result[i] = '.';
-	}
-
-	return result;
 }
 
 static char *class_name_to_file_name(const char *class_name)

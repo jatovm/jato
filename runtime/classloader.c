@@ -32,6 +32,7 @@
 #include "vm/classloader.h"
 #include "vm/object.h"
 #include "vm/preload.h"
+#include "vm/utf8.h"
 
 #include <stdlib.h>
 #include <stdio.h>
