@@ -164,6 +164,27 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	print_backtrace_and_die(sig, si, ctx);
 }
 
+static int main_called;
+
+static void sigquit_handler(int sig, siginfo_t *si, void *ctx)
+{
+	struct vm_thread *this;
+
+	print_trace();
+
+	if (main_called)
+		return;
+
+	main_called = true;
+
+	list_for_each_entry(this, &thread_list, list_node) {
+		if (this == vm_thread_self())
+			continue;
+
+		pthread_kill(this->posix_id, SIGQUIT);
+	}
+}
+
 void setup_signal_handlers(void)
 {
 	struct sigaction sa;
@@ -179,4 +200,7 @@ void setup_signal_handlers(void)
 
 	sa.sa_sigaction	= sigfpe_handler;
 	sigaction(SIGFPE, &sa, NULL);
+
+	sa.sa_sigaction	= sigquit_handler;
+	sigaction(SIGQUIT, &sa, NULL);
 }
