@@ -255,6 +255,7 @@ int vm_object_unlock(struct vm_object *self)
 	 * threads can do notify on it.
 	 */
 	if (atomic_read(&record->nr_waiting) > 0) {
+		smp_wmb();
 		record->owner	= NULL;
 
 		return 0;
