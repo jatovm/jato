@@ -48,7 +48,7 @@ static inline jsize vm_array_length(struct vm_object *self)
 
 static inline void *vm_array_elems(const struct vm_object *obj)
 {
-	return (void *) obj + sizeof(struct vm_array);
+	return (void *) obj + offsetof(struct vm_array, elems);
 }
 
 static inline uint8_t *vm_array_fields(const struct vm_object *obj)
