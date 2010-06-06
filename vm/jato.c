@@ -495,18 +495,6 @@ static void native_vmobject_notify_all(struct vm_object *obj)
 		return;
 }
 
-static jlong native_vmsystem_nano_time(void)
-{
-	struct timespec time;
-	if (clock_gettime(CLOCK_MONOTONIC, &time)) {
-		NOT_IMPLEMENTED;
-		return 0;
-	}
-
-	return (unsigned long long)time.tv_sec * 1000000000ull +
-		(unsigned long long)time.tv_nsec;
-}
-
 static void native_vmobject_wait(struct vm_object *object, jlong ms, jint ns)
 {
 	if (ms == 0 && ns == 0)
@@ -573,7 +561,6 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMString", "intern", native_vmstring_intern),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", native_vmsystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", native_vmsystem_identityhashcode),
-	DEFINE_NATIVE("java/lang/VMSystem", "nanoTime", native_vmsystem_nano_time),
 	DEFINE_NATIVE("java/lang/VMThread", "currentThread", native_vmthread_current_thread),
 	DEFINE_NATIVE("java/lang/VMThread", "interrupt", native_vmthread_interrupt),
 	DEFINE_NATIVE("java/lang/VMThread", "interrupted", native_vmthread_interrupted),
