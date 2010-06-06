@@ -182,15 +182,15 @@ static const struct preload_entry preload_entries[] = {
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
-	{"Z", &vm_boolean_class},
-	{"C", &vm_char_class},
-	{"F", &vm_float_class},
-	{"D", &vm_double_class},
-	{"B", &vm_byte_class},
-	{"S", &vm_short_class},
-	{"I", &vm_int_class},
-	{"J", &vm_long_class},
-	{"V", &vm_void_class},
+	{"boolean", &vm_boolean_class},
+	{"char", &vm_char_class},
+	{"float", &vm_float_class},
+	{"double", &vm_double_class},
+	{"byte", &vm_byte_class},
+	{"short", &vm_short_class},
+	{"int", &vm_int_class},
+	{"long", &vm_long_class},
+	{"void", &vm_void_class},
 };
 
 struct field_preload_entry {

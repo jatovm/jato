@@ -414,34 +414,63 @@ static struct vm_class *load_class_from_classpath_file(const struct classpath *c
 
 static struct vm_class *primitive_class_cache[VM_TYPE_MAX];
 
+static enum vm_type vm_type_for_primitive_class_name(const char *name)
+{
+	if (!strcmp(name,"boolean"))
+		return J_BOOLEAN;
+
+	if (!strcmp(name,"byte"))
+		return J_BYTE;
+
+	if (!strcmp(name,"short"))
+		return J_SHORT;
+
+	if (!strcmp(name,"char"))
+		return J_CHAR;
+
+	if (!strcmp(name,"int"))
+		return J_INT;
+
+	if (!strcmp(name,"long"))
+		return J_LONG;
+
+	if (!strcmp(name,"float"))
+		return J_FLOAT;
+
+	if (!strcmp(name,"double"))
+		return J_DOUBLE;
+
+	if (!strcmp(name,"void"))
+		return J_VOID;
+
+	return VM_TYPE_MAX;
+}
+
 struct vm_class *classloader_load_primitive(const char *class_name)
 {
 	struct vm_class *class;
-	int cache_index;
+	enum vm_type type;
 
-	cache_index = str_to_type(class_name);
+	type = vm_type_for_primitive_class_name(class_name);
+	if (type == VM_TYPE_MAX)
+		error("invlaid primitive class name: %s", class_name);
 
-	if (cache_index == J_REFERENCE)
-		return NULL;
-
-	if (primitive_class_cache[cache_index])
-		return primitive_class_cache[cache_index];
+	if (primitive_class_cache[type])
+		return primitive_class_cache[type];
 
 	class = vm_alloc(sizeof *class);
-	if (!class) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!class)
+		return throw_oom_error();
 
 	class->classloader = NULL;
-	class->primitive_vm_type = str_to_type(class_name);
+	class->primitive_vm_type = type;
 
 	if (vm_class_link_primitive_class(class, class_name)) {
 		NOT_IMPLEMENTED;
 		return NULL;
 	}
 
-	primitive_class_cache[cache_index] = class;
+	primitive_class_cache[type] = class;
 
 	return class;
 }
@@ -464,8 +493,10 @@ load_array_class(struct vm_object *loader, const char *class_name)
 	if (!elem_class_name)
 		return throw_oom_error();
 
-	if (str_to_type(class_name + 1) != J_REFERENCE)
-		elem_class = classloader_load_primitive(elem_class_name);
+	enum vm_type type = str_to_type(class_name + 1);
+
+	if (type != J_REFERENCE)
+		elem_class = primitive_class_cache[type];
 	else
 		elem_class = classloader_load(loader, elem_class_name);
 
@@ -585,8 +616,10 @@ load_last_array_elem_class(struct vm_object *loader, const char *class_name)
 
 	struct vm_class *result;
 
-	if (str_to_type(elem_name) != J_REFERENCE)
-		result = classloader_load_primitive(elem_name);
+	enum vm_type type = str_to_type(class_name + 1);
+
+	if (type != J_REFERENCE)
+		result = primitive_class_cache[type];
 	else
 		result = classloader_load(loader, elem_name);
 

@@ -40,12 +40,25 @@
 
 jobject native_vmclassloader_getprimitiveclass(jint type)
 {
-	char primitive_class_name[] = { "X" };
-	struct vm_class *class;
+	const char *primitive_class_names[] = {
+		['Z'] = "boolean",
+		['B'] = "byte",
+		['C'] = "char",
+		['D'] = "double",
+		['F'] = "float",
+		['I'] = "int",
+		['J'] = "long",
+		['S'] = "short",
+		['V'] = "void",
+	};
 
-	primitive_class_name[0] = (char)type;
+	const char *class_name = primitive_class_names[type];
+	if (!class_name)
+		return throw_npe();
 
-	class = classloader_load_primitive(primitive_class_name);
+	struct vm_class *class
+		= classloader_load_primitive(class_name);
+
 	if (!class)
 		return NULL;
 
