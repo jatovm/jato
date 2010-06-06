@@ -28,6 +28,7 @@
 
 #include "runtime/classloader.h"
 
+#include "vm/errors.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/object.h"
@@ -70,7 +71,9 @@ jobject native_vmclassloader_findloadedclass(jobject classloader, jobject name)
 	if (!vmc)
 		return NULL;
 
-	vm_class_ensure_init(vmc);
+	if (vm_class_ensure_object(vmc))
+		return rethrow_exception();
+
 	return vmc->object;
 }
 
@@ -120,13 +123,13 @@ jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
 	free(buf);
 
 	if (!class)
-		return NULL;
+		return rethrow_exception();
 
-	if (classloader_add_to_cache(classloader, class)) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (classloader_add_to_cache(classloader, class))
+		return throw_oom_error();
 
-	vm_class_ensure_object(class);
+	if (vm_class_ensure_object(class))
+		return rethrow_exception();
+
 	return class->object;
 }

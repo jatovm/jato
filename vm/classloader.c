@@ -506,22 +506,16 @@ load_class_with(struct vm_object *loader, const char *name)
 	if (!vmc)
 		return NULL;
 
-	vmc->classloader = loader;
-
 	return vmc;
 }
 
-static struct vm_class *load_class(struct vm_object *loader,
-				   const char *class_name)
+/*
+ * Load non-array class with bootstrap classloader
+ */
+static struct vm_class *load_class(const char *class_name)
 {
 	struct vm_class *result;
 	char *filename;
-
-	if (class_name[0] == '[')
-		return load_array_class(loader, class_name);
-
-	if (loader)
-		return load_class_with(loader, class_name);
 
 	filename = class_name_to_file_name(class_name);
 	if (!filename) {
@@ -580,6 +574,26 @@ find_class(struct vm_object *loader, const char *name)
 	return class;
 }
 
+static struct vm_class *
+load_last_array_elem_class(struct vm_object *loader, const char *class_name)
+{
+	while (class_name[1] == '[')
+		class_name++;
+
+	char *elem_name =
+		vm_class_get_array_element_class_name(class_name);
+
+	struct vm_class *result;
+
+	if (str_to_type(elem_name) != J_REFERENCE)
+		result = classloader_load_primitive(elem_name);
+	else
+		result = classloader_load(loader, elem_name);
+
+	free(elem_name);
+	return result;
+}
+
 /**
  * Loads a class of given name. if @loader is not NULL then
  * loading of a class will be delegated to @loader.
@@ -604,11 +618,37 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	vmc = NULL;
 
 	/*
-	 * Array classes have classloader set to the classloader of its elements.
-	 * Primitive types are always loaded with bootstrap classloader.
+	 * Array classes have classloader set to the classloader of
+	 * its elements. Primitive types are always loaded with
+	 * bootstrap classloader.
 	 */
 	if (is_primitive_array(class_name))
 		loader = NULL;
+
+	if (loader) {
+		if (!is_array(class_name)) {
+			vmc = load_class_with(loader, class_name);
+			trace_pop();
+			return vmc;
+		}
+
+		/*
+		 * Array classes are created by VM but the defining
+		 * classloader for them is set to the class loader of
+		 * array element. We must determine it before calling
+		 * find_class() because we do not know yet what will
+		 * be a defining classloader of array element class.
+		 */
+		struct vm_class *elem_class =
+			load_last_array_elem_class(loader, class_name);
+
+		if (!elem_class) {
+			trace_pop();
+			return rethrow_exception();
+		}
+
+		loader = elem_class->classloader;
+	}
 
 	pthread_mutex_lock(&classloader_mutex);
 
@@ -632,17 +672,21 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		goto out_unlock;
 	}
 
-	pthread_mutex_unlock(&classloader_mutex);
-
 	/*
 	 * XXX: We cannot hold classloader_mutex lock when calling
 	 * load_class() because for example vm_class_init() might call
 	 * classloader_load() for superclasses.
 	 */
-	vmc = load_class(loader, slash_class_name);
-	if (!vmc) {
-		pthread_mutex_lock(&classloader_mutex);
+	pthread_mutex_unlock(&classloader_mutex);
 
+	if (is_array(slash_class_name))
+		vmc = load_array_class(loader, slash_class_name);
+	else
+		vmc = load_class(slash_class_name);
+
+	pthread_mutex_lock(&classloader_mutex);
+
+	if (!vmc) {
 		/*
 		 * If there are other threads waiting for class to be
 		 * loaded then do not remove the entry. Last thread
@@ -653,20 +697,12 @@ classloader_load(struct vm_object *loader, const char *class_name)
 			vm_free(class);
 		} else {
 			class->status = CLASS_NOT_FOUND;
-			pthread_cond_broadcast(&classloader_cond);
 		}
-
-		vmc = NULL;
-		goto out_unlock;
+	} else {
+		class->class = vmc;
+		class->status = CLASS_LOADED;
 	}
 
-	pthread_mutex_lock(&classloader_mutex);
-
-	class->class = vmc;
-	class->status = CLASS_LOADED;
-
-	/* Tell other threads that the class has been loaded. Would it
-	 * be worth to use a per-class condition variable for that? */
 	pthread_cond_broadcast(&classloader_cond);
 
  out_unlock:

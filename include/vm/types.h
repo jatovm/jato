@@ -83,6 +83,11 @@ static inline bool is_primitive_array(const char *name)
 	return *name != 'L';
 }
 
+static inline bool is_array(const char *name)
+{
+	return *name == '[';
+}
+
 static inline enum vm_type mimic_stack_type(enum vm_type type)
 {
 	switch (type) {
