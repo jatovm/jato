@@ -226,6 +226,7 @@ static struct system_property system_properties[] = {
 	{ "java.vm.vendor",			"Pekka Enberg"			},
 	{ "java.vm.vendor.url",			"http://jatovm.sourceforge.net/"},
 	{ "java.io.tmpdir",			"/tmp"				},
+	{ "java.home",				"/usr"				},
 	{ "file.separator",			"/"				},
 	{ "path.separator",			":"				},
 	{ "line.separator",			"\n"				},
