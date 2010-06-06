@@ -163,6 +163,14 @@ struct java_vm *vm_jni_get_current_java_vm(void)
 	return &vm_jni_default_java_vm;
 }
 
+static jobject vm_alloc_object(struct vm_jni_env *env, jclass clazz)
+{
+	struct vm_class *class = vm_class_get_class_from_class_object(clazz);
+	check_null(class);
+
+	return vm_object_alloc(class);
+}
+
 static jclass
 vm_jni_find_class(struct vm_jni_env *env, const char *name)
 {
@@ -1155,7 +1163,7 @@ void *vm_jni_native_interface[] = {
 	/* 25 */
 	NULL,
 	NULL,
-	NULL, /* AllocObject */
+	vm_alloc_object,
 	vm_jni_new_object,
 	NULL, /* NewObjectV */
 
