@@ -41,6 +41,7 @@
 #include "vm/method.h"
 #include "vm/object.h"
 #include "vm/preload.h"
+#include "vm/reflection.h"
 #include "vm/stack-trace.h"
 
 #define check_null(x)							\
@@ -1111,6 +1112,12 @@ static void								\
 		array_set_field_##type(array, start + i, buf[i]);	\
 }
 
+static jmethodID vm_jni_from_reflected_method(struct vm_exec_env *env,
+					      jobject method)
+{
+	return vm_object_to_vm_method(method);
+}
+
 DECLARE_SET_XXX_ARRAY_REGION(byte);
 DECLARE_SET_XXX_ARRAY_REGION(char);
 DECLARE_SET_XXX_ARRAY_REGION(double);
@@ -1135,7 +1142,7 @@ void *vm_jni_native_interface[] = {
 	/* 5 */
 	NULL, /* DefineClass */
 	vm_jni_find_class,
-	NULL,
+	vm_jni_from_reflected_method,
 	NULL,
 	NULL,
 

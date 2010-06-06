@@ -82,7 +82,7 @@ struct vm_field *vm_object_to_vm_field(struct vm_object *field)
 	return &vmc->fields[slot];
 }
 
-static struct vm_method *vm_object_to_vm_method(struct vm_object *method)
+struct vm_method *vm_object_to_vm_method(struct vm_object *method)
 {
 	struct vm_object *clazz;
 	struct vm_class *vmc;

@@ -35,6 +35,7 @@ jlong native_field_get_long(struct vm_object *this, struct vm_object *o);
 jint native_field_get_modifiers_internal(struct vm_object *this);
 struct vm_object *native_field_gettype(struct vm_object *this);
 
+struct vm_method *vm_object_to_vm_method(struct vm_object *method);
 jint native_method_get_modifiers_internal(struct vm_object *this);
 struct vm_object *
 native_method_invokenative(struct vm_object *method, struct vm_object *o,
