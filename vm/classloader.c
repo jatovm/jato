@@ -529,10 +529,6 @@ static struct vm_class *load_class(struct vm_object *loader,
 		return NULL;
 	}
 
-	result = load_class_from_file(filename);
-	if (result)
-		goto out_filename;
-
 	struct classpath *cp;
 	list_for_each_entry(cp, &classpaths, node) {
 		result = load_class_from_classpath_file(cp, filename);
@@ -540,7 +536,6 @@ static struct vm_class *load_class(struct vm_object *loader,
 			break;
 	}
 
-out_filename:
 	if (result)
 		result->classloader = NULL;
 

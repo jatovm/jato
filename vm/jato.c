@@ -279,18 +279,6 @@ static void init_system_properties(void)
 	add_system_property_const("gnu.cpu.endian", "little");
 }
 
-
-/**
- * This should be called after parsing of call arguments.
- */
-static void init_configurable_system_properties(void)
-{
-	/* XXX: currently user defined -Djava.class.path=value is overriden. */
-	char *cp = get_classpath();
-	add_system_property_const("java.class.path", cp);
-	free(cp);
-}
-
 static void native_vmsystemproperties_preinit(struct vm_object *p)
 {
 	struct system_properties_entry *this, *t;
@@ -657,7 +645,7 @@ static void handle_help(void)
 
 static void handle_classpath(const char *arg)
 {
-	classloader_add_to_classpath(arg);
+	system_property_append_path("java.class.path", arg);
 }
 
 static void handle_bootclasspath(const char *arg)
@@ -712,7 +700,7 @@ static void handle_jar(const char *arg)
 	/* XXX: Cheap solution. This can give funny results depending on where
 	 * you put the -jar relative to the -classpath(s). Besides, we should
 	 * save some memory and only open the zip file once. */
-	classloader_add_to_classpath(arg);
+	system_property_append_path("java.class.path", arg);
 }
 
 static void handle_nogc(void)
@@ -1099,12 +1087,23 @@ static void gnu_classpath_autodiscovery(void)
 	}
 }
 
-static void init_boot_classpath(void)
+static void init_classpath(void)
 {
-	if (system_property_get("java.boot.class.path"))
-		return; /* boot classpath already set */
+	if (!system_property_get("java.boot.class.path"))
+		gnu_classpath_autodiscovery();
 
-	gnu_classpath_autodiscovery();
+	const char *boot_cp = system_property_get("java.boot.class.path");
+	add_system_property_const("sun.boot.class.path", boot_cp);
+
+	/* Search $CLASSPATH last. */
+	char *classpath = getenv("CLASSPATH");
+	if (classpath)
+		system_property_append_path("java.class.path", classpath);
+
+	if (!find_system_property("java.class.path")) {
+		const char *cwd = system_property_get("user.dir");
+		system_property_append_path("java.class.path", cwd);
+	}
 }
 
 static void print_proc_maps(void)
@@ -1171,14 +1170,7 @@ main(int argc, char *argv[])
 	static_fixup_init();
 	vm_jni_init();
 
-	init_boot_classpath();
-
-	/* Search $CLASSPATH last. */
-	char *classpath = getenv("CLASSPATH");
-	if (classpath)
-		classloader_add_to_classpath(classpath);
-
-	init_configurable_system_properties();
+	init_classpath();
 
 	if (preload_vm_classes()) {
 		NOT_IMPLEMENTED;
