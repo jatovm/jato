@@ -1260,7 +1260,7 @@ void *vm_jni_native_interface[] = {
 
 	/* 90 */
 	NULL, /* CallNonvirtualDoubleMethodA */
-	NULL, /* CallNonvirtualVoidMethod */
+	vm_jni_call_nonvirtual_void_method,
 	NULL, /* CallNonvirtualVoidMethodV */
 	NULL, /* CallNonvirtualVoidMethodA */
 	vm_jni_get_field_id,
