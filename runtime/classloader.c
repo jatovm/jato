@@ -38,21 +38,34 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+static const char *get_primitive_class_name(jint type)
+{
+	switch (type) {
+	case 'Z':
+		return "boolean";
+	case 'B':
+		return "byte";
+	case 'C':
+		return "char";
+	case 'D':
+		return "double";
+	case 'F':
+		return "float";
+	case 'I':
+		return "int";
+	case 'J':
+		return "long";
+	case 'S':
+		return "short";
+	case 'V':
+		return "void";
+	}
+	die("unknown type: %d\n", type);
+}
+
 jobject native_vmclassloader_getprimitiveclass(jint type)
 {
-	const char *primitive_class_names[] = {
-		['Z'] = "boolean",
-		['B'] = "byte",
-		['C'] = "char",
-		['D'] = "double",
-		['F'] = "float",
-		['I'] = "int",
-		['J'] = "long",
-		['S'] = "short",
-		['V'] = "void",
-	};
-
-	const char *class_name = primitive_class_names[type];
+	const char *class_name = get_primitive_class_name(type);
 	if (!class_name)
 		return throw_npe();
 
