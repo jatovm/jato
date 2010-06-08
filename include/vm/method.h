@@ -73,6 +73,11 @@ static inline bool vm_method_is_public(struct vm_method *vmm)
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_PUBLIC;
 }
 
+static inline bool vm_method_is_private(struct vm_method *vmm)
+{
+	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_PRIVATE;
+}
+
 static inline bool vm_method_is_static(struct vm_method *vmm)
 {
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_STATIC;

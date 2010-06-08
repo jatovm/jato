@@ -812,11 +812,44 @@ vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
 	return NULL;
 }
 
-/*
- * TODO: When these functions are used to call private methods and
- * constructors, the method ID must be derived from the real class of
- * obj, not from one of its superclasses.
+/**
+ * When given method is a private methods or constructor, the method
+ * must be derived from the real class of object, not from one of its
+ * superclasses. It's used by CallXXXMethod() function family.
  */
+static int transform_method_for_call(jobject object, jmethodID *method_p)
+{
+	struct vm_method *vmm = *method_p;
+
+	if (!vm_method_is_private(vmm) && !vm_method_is_constructor(vmm))
+		return 0;
+
+	if (!object) {
+		throw_npe();
+		return -1;
+	}
+
+	struct vm_class *actual_class = object->class;
+
+	if (!vm_class_is_assignable_from(vmm->class, actual_class)) {
+		signal_new_exception(vm_java_lang_Error,
+				     "Object not assignable to %s",
+				     vmm->class->name);
+		return -1;
+	}
+
+	vmm = vm_class_get_method_recursive(actual_class, vmm->name, vmm->type);
+	if (!vmm) {
+		signal_new_exception(vm_java_lang_NoSuchMethodError, "%s%s in %s",
+				     (*method_p)->name, (*method_p)->type,
+				     actual_class->name);
+		return -1;
+	}
+
+	*method_p = vmm;
+	return 0;
+}
+
 static void vm_jni_call_void_method(struct vm_jni_env *env, jobject this,
 				    jmethodID methodID, ...)
 {
@@ -824,20 +857,21 @@ static void vm_jni_call_void_method(struct vm_jni_env *env, jobject this,
 
 	enter_vm_from_jni();
 
+	if (transform_method_for_call(this, &methodID))
+		return;
+
 	va_start(args, methodID);
 	vm_call_method_this_v(methodID, this, args, NULL);
 	va_end(args);
 }
 
-/*
- * TODO: When these functions are used to call private methods and
- * constructors, the method ID must be derived from the real class of
- * obj, not from one of its superclasses.
- */
 static void vm_jni_call_void_method_a(struct vm_jni_env *env, jobject this,
 				    jmethodID methodID, uint64_t *args)
 {
 	enter_vm_from_jni();
+
+	if (transform_method_for_call(this, &methodID))
+		return;
 
 	unsigned long packed_args[methodID->args_count];
 
@@ -847,12 +881,6 @@ static void vm_jni_call_void_method_a(struct vm_jni_env *env, jobject this,
 	vm_call_method_this_a(methodID, this, packed_args, NULL);
 }
 
-
-/*
- * TODO: When these functions are used to call private methods and
- * constructors, the method ID must be derived from the real class of
- * obj, not from one of its superclasses.
- */
 #define DECLARE_CALL_XXX_METHOD(type, symbol)				\
 	static j ## type vm_jni_call_ ## type ## _method		\
 	(struct vm_jni_env *env, jobject this, jmethodID methodID, ...)	\
@@ -861,6 +889,9 @@ static void vm_jni_call_void_method_a(struct vm_jni_env *env, jobject this,
 		union jvalue result;					\
 									\
 		enter_vm_from_jni();					\
+									\
+		if (transform_method_for_call(this, &methodID))		\
+			return 0;					\
 									\
 		va_start(args, methodID);				\
 		vm_call_method_this_v(methodID, this, args, &result);	\
