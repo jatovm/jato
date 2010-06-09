@@ -821,7 +821,7 @@ static int transform_method_for_call(jobject object, jmethodID *method_p)
 {
 	struct vm_method *vmm = *method_p;
 
-	if (!vm_method_is_private(vmm) && !vm_method_is_constructor(vmm))
+	if (vm_method_is_private(vmm) || vm_method_is_constructor(vmm))
 		return 0;
 
 	if (!object) {
