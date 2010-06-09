@@ -936,28 +936,20 @@ copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 		       int *eh_index, struct pc_map *pc_map)
 {
 	struct cafebabe_code_attribute_exception *eh;
-	unsigned long eh_start_pc_offset;
-	unsigned long eh_end_pc_offset;
+	unsigned long eh_start_pc;
+	unsigned long eh_end_pc;
 	unsigned long eh_handler_pc;
 	unsigned long body_start_pc;
 	unsigned long body_size;
 
-	eh = &ctx->exception_table[*eh_index];
+	eh		= &ctx->exception_table[*eh_index];
 
-	eh_handler_pc = eh->handler_pc;
+	body_start_pc	= s->start_pc + s->prolog_size;
+	body_size	= subroutine_get_body_size(s);
 
-	body_start_pc = s->start_pc + s->prolog_size;
-	body_size = subroutine_get_body_size(s);
-
-	if (eh->start_pc < body_start_pc)
-		eh_start_pc_offset = 0;
-	else
-		eh_start_pc_offset = eh->start_pc - body_start_pc;
-
-	if (eh->end_pc > body_start_pc + body_size)
-		eh_end_pc_offset = body_size;
-	else
-		eh_end_pc_offset = eh->end_pc - body_start_pc;
+	eh_handler_pc	= (unsigned long) eh->handler_pc;
+	eh_start_pc	= max((unsigned long) eh->start_pc, body_start_pc);
+	eh_end_pc	= min((unsigned long) eh->end_pc,   body_start_pc + body_size);
 
 	for (int i = 0; i < s->nr_call_sites; i++) {
 		struct cafebabe_code_attribute_exception *new_eh;
@@ -971,12 +963,25 @@ copy_exception_handler(struct inlining_context *ctx, struct subroutine *s,
 		if (!new_eh)
 			return warn("out of memory"), -ENOMEM;
 
-		new_eh->start_pc = sub_start + eh_start_pc_offset;
-		new_eh->end_pc = sub_start + eh_end_pc_offset;
+		unsigned long new_start_pc;
+		if (pc_map_get_min_greater_than(pc_map, eh_start_pc, sub_start, &new_start_pc))
+			error("pc_map_get_min_greater_than");
+
+		new_eh->start_pc = new_start_pc;
+
+		unsigned long new_end_pc;
+		if (pc_map_get_min_greater_than(pc_map, eh_end_pc, sub_start, &new_end_pc))
+			error("pc_map_get_min_greater_than");
+
+		new_eh->end_pc = new_end_pc;
+
 		new_eh->catch_type = ctx->exception_table[*eh_index].catch_type;
 
 		if (eh_target_inside_subroutine(eh, s)) {
-			new_eh->handler_pc = sub_start + eh_handler_pc - body_start_pc;
+			unsigned long new_handler_pc;
+			if (pc_map_get_min_greater_than(pc_map, eh_handler_pc, sub_start, &new_handler_pc))
+				error("pc_map_get_min_greater_than");
+			new_eh->handler_pc = new_handler_pc;
 		} else {
 			unsigned long pc = eh_handler_pc;
 			if (pc_map_get_unique(pc_map, &pc))
