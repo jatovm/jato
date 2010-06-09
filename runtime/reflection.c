@@ -88,30 +88,19 @@ struct vm_method *vm_object_to_vm_method(struct vm_object *method)
 	struct vm_class *vmc;
 	int slot;
 
-	if (vm_object_is_instance_of(method, vm_java_lang_reflect_Constructor)) {
-		if (vm_java_lang_reflect_VMConstructor != NULL) {	/* Classpath 0.98 */
-			clazz	= field_get_object(method, vm_java_lang_reflect_VMConstructor_clazz);
-			slot	= field_get_int(method, vm_java_lang_reflect_VMConstructor_slot);
-		} else {
-			clazz	= field_get_object(method, vm_java_lang_reflect_Constructor_clazz);
-			slot	= field_get_int(method, vm_java_lang_reflect_Constructor_slot);
-		}
-	} else 	if (vm_object_is_instance_of(method, vm_java_lang_reflect_Method)) {
-		if (vm_java_lang_reflect_VMMethod != NULL) {	/* Classpath 0.98 */
-			clazz = field_get_object(method, vm_java_lang_reflect_VMMethod_clazz);
-			slot  = field_get_int(method, vm_java_lang_reflect_VMMethod_slot);
-		} else {
-			clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
-			slot  = field_get_int(method, vm_java_lang_reflect_Method_slot);
-		}
-	} else {
-		signal_new_exception(vm_java_lang_Error, "Not a method object");
-		return rethrow_exception();
-	}
+	if (vm_java_lang_reflect_VMMethod != NULL)	/* Classpath 0.98 */
+		clazz = field_get_object(method, vm_java_lang_reflect_VMMethod_clazz);
+	else
+		clazz = field_get_object(method, vm_java_lang_reflect_Method_declaringClass);
 
 	vmc = vm_object_to_vm_class(clazz);
 	if (!vmc)
 		return NULL;
+
+	if (vm_java_lang_reflect_VMMethod != NULL)	/* Classpath 0.98 */
+		slot  = field_get_int(method, vm_java_lang_reflect_VMMethod_slot);
+	else
+		slot  = field_get_int(method, vm_java_lang_reflect_Method_slot);
 
 	return &vmc->methods[slot];
 }
