@@ -10,6 +10,7 @@ test: $(JAR)
 	$(JAVA) -Xmx1g -jar $(JAR) antlr
 	$(JAVA) -Xmx1g -jar $(JAR) bloat
 	$(JAVA) -Xmx1g -jar $(JAR) chart
+	$(JAVA) -Xmx1g -jar $(JAR) eclipse
 	$(JAVA) -Xmx1g -jar $(JAR) fop
 	$(JAVA) -Xmx1g -jar $(JAR) hsqldb
 	$(JAVA) -Xmx1g -jar $(JAR) luindex
@@ -17,7 +18,6 @@ test: $(JAR)
 	$(JAVA) -Xmx1g -jar $(JAR) pmd
 	$(JAVA) -Xmx1g -jar $(JAR) xalan
 # BROKEN:
-#	$(JAVA) -Xmx1g -jar $(JAR) eclipse
 #	$(JAVA) -Xmx1g -jar $(JAR) jython
 
 .PHONY: test
