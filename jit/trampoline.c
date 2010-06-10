@@ -113,6 +113,10 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 		ret = cu->native_ptr;
 		goto out_fixup;
 	} else if (status == STATUS_COMPILED_ERRONOUS) {
+		signal_new_exception(vm_java_lang_Error, "%s.%s%s is erronous",
+				     cu->method->class->name,
+				     cu->method->name,
+				     cu->method->type);
 		return rethrow_exception();
 	}
 
