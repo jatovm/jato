@@ -9,14 +9,19 @@
 #include <semaphore.h>
 
 /*
- * Compilation lock status. It can only change to higher states and
- * when result state is established it can not change.
+ * Compilation lock status. The state graph for compilation lock
+ * is as follows:
+ *
+ * (INITIAL) ---> (COMPILING) -----> (COMPILED_OK)
+ *     ^             |        |
+ *     |_____________|        \----> (COMPILED_ERRONOUS)
+ *
  */
 enum compile_lock_status {
 	STATUS_INITIAL = 0,
 	STATUS_COMPILING,
 
-	/* below are result states. */
+	/* below are final states. */
 	STATUS_COMPILED_OK,
 	STATUS_COMPILED_ERRONOUS,
 

@@ -129,7 +129,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 	shrink_compilation_unit(cu);
 
-	status = ret ? STATUS_COMPILED_OK : STATUS_COMPILED_ERRONOUS;
+	status = ret ? STATUS_COMPILED_OK : STATUS_INITIAL;
 	compile_lock_leave(&cu->compile_lock, status);
 
 out_fixup:
