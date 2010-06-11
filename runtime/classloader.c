@@ -29,6 +29,7 @@
 #include "runtime/classloader.h"
 
 #include "vm/errors.h"
+#include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
 #include "vm/object.h"
@@ -155,6 +156,10 @@ jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
 		return throw_oom_error();
 
 	if (vm_class_ensure_object(class))
+		return rethrow_exception();
+
+	vm_call_method(vm_java_lang_Class_init, class->object, class, pd);
+	if (exception_occurred())
 		return rethrow_exception();
 
 	return class->object;

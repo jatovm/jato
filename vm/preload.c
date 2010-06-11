@@ -324,6 +324,7 @@ struct vm_method *vm_java_lang_Byte_valueOf;
 struct vm_method *vm_java_lang_Character_charValue;
 struct vm_method *vm_java_lang_Character_init;
 struct vm_method *vm_java_lang_Character_valueOf;
+struct vm_method *vm_java_lang_Class_init;
 struct vm_method *vm_java_lang_Double_init;
 struct vm_method *vm_java_lang_Double_valueOf;
 struct vm_method *vm_java_lang_Float_init;
@@ -603,6 +604,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"enqueue",
 		"()Z",
 		&vm_java_lang_ref_Reference_enqueue,
+	},
+	{
+		&vm_java_lang_Class,
+		"<init>",
+		"(Ljava/lang/Object;Ljava/security/ProtectionDomain;)V",
+		&vm_java_lang_Class_init,
 	},
 };
 

@@ -133,6 +133,7 @@ extern struct vm_method *vm_java_lang_Byte_valueOf;
 extern struct vm_method *vm_java_lang_Character_charValue;
 extern struct vm_method *vm_java_lang_Character_init;
 extern struct vm_method *vm_java_lang_Character_valueOf;
+extern struct vm_method *vm_java_lang_Class_init;
 extern struct vm_method *vm_java_lang_Double_init;
 extern struct vm_method *vm_java_lang_Double_valueOf;
 extern struct vm_method *vm_java_lang_Float_init;
