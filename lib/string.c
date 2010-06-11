@@ -55,9 +55,9 @@ int str_resize(struct string *str, unsigned long capacity)
 	return 0;
 }
 
-static unsigned long str_remaining(struct string *str)
+static unsigned long str_remaining(struct string *str, int offset)
 {
-	return str->capacity - str->length;
+	return str->capacity - offset;
 }
 
 static int str_vprintf(struct string *str, unsigned long offset,
@@ -68,7 +68,7 @@ static int str_vprintf(struct string *str, unsigned long offset,
 	int nr, err = 0;
 
   retry:
-	size = str_remaining(str);
+	size = str_remaining(str, offset);
 	va_copy(tmp_args, args);
 	nr = vsnprintf(str->value + offset, size, fmt, tmp_args);
 	va_end(tmp_args);
@@ -78,10 +78,9 @@ static int str_vprintf(struct string *str, unsigned long offset,
 		if (err)
 			goto out;
 	
-		str->length = offset;
 		goto retry;
 	}
-	str->length += nr;
+	str->length = offset + nr;
 
   out:
 	return err;
