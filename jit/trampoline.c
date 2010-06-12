@@ -133,12 +133,11 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	compile_lock_leave(&cu->compile_lock, status);
 
 out_fixup:
-	if (ret) {
-		fixup_direct_calls(method->trampoline, (unsigned long) ret);
-		return ret;
-	}
+	if (!ret)
+		return rethrow_exception();
 
-	return rethrow_exception();
+	fixup_direct_calls(method->trampoline, (unsigned long) ret);
+	return ret;
 }
 
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
