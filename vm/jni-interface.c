@@ -99,7 +99,7 @@ vm_jni_common_get_field_id(jclass clazz, const char *name, const char *sig)
 	if (exception_occurred())
 		return NULL;
 
-	fb = vm_class_get_field(class, name, sig);
+	fb = vm_class_get_field_recursive(class, name, sig);
 	if (!fb) {
 		signal_new_exception(vm_java_lang_NoSuchFieldError, NULL);
 		return NULL;
