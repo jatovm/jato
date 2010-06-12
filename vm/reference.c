@@ -172,6 +172,12 @@ void vm_reference_collect(struct vm_object *object)
 	}
 
 	vm_reference_free(ref);
+
+	/* We clear the .referent field because even if @object
+	 * is beeing finalized now, it may have been resurected
+	 * in vm_reference_collect_for_object(). */
+	field_set_object(object, vm_java_lang_ref_Reference_referent, NULL);
+
 	vm_reference_unlock();
 }
 
@@ -203,6 +209,9 @@ void vm_reference_collect_for_object(struct vm_object *object)
 
 		vm_call_method_this(vm_java_lang_ref_Reference_clear, this->object);
 		exception_print_and_clear();
+
+		/* This may resurect this->object is it was collected
+		 * in this cycle. */
 		vm_call_method_this(vm_java_lang_ref_Reference_enqueue, this->object);
 		exception_print_and_clear();
 	}
