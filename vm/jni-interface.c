@@ -865,8 +865,19 @@ static void vm_jni_call_void_method(struct vm_jni_env *env, jobject this,
 	va_end(args);
 }
 
+static void vm_jni_call_void_method_v(struct vm_jni_env *env, jobject this,
+				      jmethodID methodID, va_list args)
+{
+	enter_vm_from_jni();
+
+	if (transform_method_for_call(this, &methodID))
+		return;
+
+	vm_call_method_this_v(methodID, this, args, NULL);
+}
+
 static void vm_jni_call_void_method_a(struct vm_jni_env *env, jobject this,
-				    jmethodID methodID, uint64_t *args)
+				      jmethodID methodID, uint64_t *args)
 {
 	enter_vm_from_jni();
 
@@ -900,6 +911,22 @@ static void vm_jni_call_void_method_a(struct vm_jni_env *env, jobject this,
 		return result.symbol;					\
 	}
 
+#define DECLARE_CALL_XXX_METHOD_V(type, symbol)				\
+        static j ## type vm_jni_call_ ## type ## _method_v		\
+        (struct vm_jni_env *env, jobject this, jmethodID methodID, va_list args) \
+	{								\
+		union jvalue result;                                    \
+									\
+		enter_vm_from_jni();                                    \
+									\
+		if (transform_method_for_call(this, &methodID))         \
+			return 0;                                       \
+									\
+		vm_call_method_this_v(methodID, this, args, &result);   \
+									\
+		return result.symbol;                                   \
+	}
+
 DECLARE_CALL_XXX_METHOD(boolean, z);
 DECLARE_CALL_XXX_METHOD(byte, b);
 DECLARE_CALL_XXX_METHOD(char, c);
@@ -909,6 +936,16 @@ DECLARE_CALL_XXX_METHOD(long, j);
 DECLARE_CALL_XXX_METHOD(float, f);
 DECLARE_CALL_XXX_METHOD(double, d);
 DECLARE_CALL_XXX_METHOD(object, l);
+
+DECLARE_CALL_XXX_METHOD_V(boolean, z);
+DECLARE_CALL_XXX_METHOD_V(byte, b);
+DECLARE_CALL_XXX_METHOD_V(char, c);
+DECLARE_CALL_XXX_METHOD_V(short, s);
+DECLARE_CALL_XXX_METHOD_V(int, i);
+DECLARE_CALL_XXX_METHOD_V(long, j);
+DECLARE_CALL_XXX_METHOD_V(float, f);
+DECLARE_CALL_XXX_METHOD_V(double, d);
+DECLARE_CALL_XXX_METHOD_V(object, l);
 
 static int transform_method_for_nonvirtual_call(jobject this, jclass clazz,
 						jmethodID *method_p)
@@ -1311,44 +1348,44 @@ void *vm_jni_native_interface[] = {
 	vm_jni_call_object_method,
 
 	/* 35 */
-	NULL, /* CallObjectMethodV */
+	vm_jni_call_object_method_v,
 	NULL, /* CallObjectMethodA */
 	vm_jni_call_boolean_method,
-	NULL, /* CallBooleanMethodV */
+	vm_jni_call_boolean_method_v,
 	NULL, /* CallBooleanMethodA */
 
 	/* 40 */
 	vm_jni_call_byte_method,
-	NULL, /* CallByteMethodV */
+	vm_jni_call_byte_method_v,
 	NULL, /* CallByteMethodA */
 	vm_jni_call_char_method,
-	NULL, /* CallCharMethodV */
+	vm_jni_call_char_method_v,
 
 	/* 45 */
 	NULL, /* CallCharMethodA */
 	vm_jni_call_short_method,
-	NULL, /* CallShortMethodV */
+	vm_jni_call_short_method_v,
 	NULL, /* CallShortMethodA */
 	vm_jni_call_int_method,
 
 	/* 50 */
-	NULL, /* CallIntMethodV */
+	vm_jni_call_int_method_v,
 	NULL, /* CallIntMethodA */
 	vm_jni_call_long_method,
-	NULL, /* CallLongMethodV */
+	vm_jni_call_long_method_v,
 	NULL, /* CallLongMethodA */
 
 	/* 55 */
 	vm_jni_call_float_method,
-	NULL, /* CallFloatMethodV */
+	vm_jni_call_float_method_v,
 	NULL, /* CallFloatMethodA */
 	vm_jni_call_double_method,
-	NULL, /* CallDoubleMethodV */
+	vm_jni_call_double_method_v,
 
 	/* 60 */
 	NULL, /* CallDoubleMethodA */
 	vm_jni_call_void_method,
-	NULL, /* CallVoidMethodV */
+	vm_jni_call_void_method_v,
 	vm_jni_call_void_method_a,
 	vm_jni_call_nonvirtual_object_method,
 
