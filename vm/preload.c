@@ -336,6 +336,7 @@ struct vm_method *vm_java_lang_Long_init;
 struct vm_method *vm_java_lang_Long_valueOf;
 struct vm_method *vm_java_lang_Short_init;
 struct vm_method *vm_java_lang_Short_valueOf;
+struct vm_method *vm_java_lang_String_length;
 struct vm_method *vm_java_lang_ClassLoader_loadClass;
 struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
 struct vm_method *vm_java_lang_VMString_intern;
@@ -610,6 +611,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"<init>",
 		"(Ljava/lang/Object;Ljava/security/ProtectionDomain;)V",
 		&vm_java_lang_Class_init,
+	},
+	{
+		&vm_java_lang_String,
+		"length",
+		"()I",
+		&vm_java_lang_String_length,
 	},
 };
 

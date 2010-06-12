@@ -145,6 +145,7 @@ extern struct vm_method *vm_java_lang_Long_init;
 extern struct vm_method *vm_java_lang_Long_valueOf;
 extern struct vm_method *vm_java_lang_Short_init;
 extern struct vm_method *vm_java_lang_Short_valueOf;
+extern struct vm_method *vm_java_lang_String_length;
 extern struct vm_method *vm_java_lang_ClassLoader_loadClass;
 extern struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
 extern struct vm_method *vm_java_lang_Number_intValue;

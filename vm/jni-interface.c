@@ -1304,6 +1304,22 @@ vm_jni_is_same_object(struct vm_exec_env *env, jobject o1, jobject o2)
 	return JNI_FALSE;
 }
 
+static jint vm_jni_get_string_length(struct vm_exec_env *env, jobject string)
+{
+	union jvalue result;
+
+	enter_vm_from_jni();
+
+	if (string->class != vm_java_lang_String) { /* String is a final */
+		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+		return 0; /* rethrow */
+	}
+
+	vm_call_method(vm_java_lang_String_length, string, &result);
+
+	return result.i;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -1538,7 +1554,7 @@ void *vm_jni_native_interface[] = {
 	vm_jni_set_static_float_field,
 	vm_jni_set_static_double_field,
 	NULL, /* NewString */
-	NULL, /* GetStringLength */
+	vm_jni_get_string_length,
 
 	/* 165 */
 	NULL, /* GetStringChars */
