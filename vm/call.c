@@ -62,6 +62,8 @@ void vm_call_method_v(struct vm_method *method, va_list args,
 {
 	unsigned long args_array[method->args_count];
 
+	assert(!vm_class_is_interface(method->class));
+
 	for (int i = 0; i < method->args_count; i++)
 		args_array[i] = va_arg(args, unsigned long);
 
@@ -76,8 +78,15 @@ void vm_call_method_this_a(struct vm_method *method,
 {
 	void *target;
 
-	target = this->class->vtable.native_ptr[method->virtual_index];
 	assert(args[0] == (unsigned long) this);
+
+	if (vm_class_is_interface(method->class)) {
+		struct vm_method *vmm
+			= vm_class_get_method_recursive(this->class, method->name, method->type);
+		target = vm_method_call_ptr(vmm);
+	} else {
+		target = this->class->vtable.native_ptr[method->virtual_index];
+	}
 
 	call_method_a(method, target, args, result);
 }
@@ -85,6 +94,7 @@ void vm_call_method_this_a(struct vm_method *method,
 void vm_call_method_a(struct vm_method *method, unsigned long *args,
 		      union jvalue *result)
 {
+	assert(!vm_class_is_interface(method->class));
 	call_method_a(method, vm_method_call_ptr(method), args, result);
 }
 

@@ -32,6 +32,20 @@ import jvm.TestCase;
  * @author Pekka Enberg
  */
 public class MethodTest extends TestCase {
+    private static interface I {
+        int x();
+    }
+
+    private static class A implements I {
+        public int y() {
+            return 0;
+        }
+
+        public int x() {
+            return 1;
+        }
+    }
+
     private static void testMethodModifiers() throws Exception {
         assertEquals(Modifier.FINAL | Modifier.PUBLIC, modifiers("publicFinalInstanceMethod"));
         assertEquals(Modifier.STATIC | Modifier.PUBLIC, modifiers("publicClassMethod"));
@@ -83,8 +97,23 @@ public class MethodTest extends TestCase {
         assertEquals(Character.valueOf('x'), invoke("charMirror", char.class, Character.valueOf('x')));
     }
 
+    public static void testInvokeOnInterfaceMethod() {
+        A a = new A();
+        Object result = null;
+
+        try {
+            Method xMethod = I.class.getMethod("x", new Class[0]);
+            result = xMethod.invoke(a, new Object[0]);
+        } catch (Exception e) {
+            fail();
+        }
+
+        assertEquals(Integer.valueOf(1), result);
+    }
+
     public static void main(String[] args) throws Exception {
         testMethodModifiers();
         testMethodReflectionInvoke();
+        testInvokeOnInterfaceMethod();
     }
 }
