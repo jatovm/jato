@@ -1293,6 +1293,17 @@ DECLARE_SET_XXX_ARRAY_REGION(long);
 DECLARE_SET_XXX_ARRAY_REGION(short);
 DECLARE_SET_XXX_ARRAY_REGION(boolean);
 
+static jboolean
+vm_jni_is_same_object(struct vm_exec_env *env, jobject o1, jobject o2)
+{
+	enter_vm_from_jni();
+
+	if (o1 == o2)
+		return JNI_TRUE;
+
+	return JNI_FALSE;
+}
+
 /*
  * The JNI native interface table.
  * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
@@ -1331,7 +1342,7 @@ void *vm_jni_native_interface[] = {
 	vm_jni_new_global_ref,
 	vm_jni_delete_global_ref,
 	vm_jni_delete_local_ref,
-	NULL, /* IsSameObject */
+	vm_jni_is_same_object,
 
 	/* 25 */
 	NULL,
