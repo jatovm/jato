@@ -125,7 +125,7 @@ int compile(struct compilation_unit *cu)
 	if (opt_trace_compile)
 		trace_flush();
 
-	if (err)
+	if (err && !exception_occurred())
 		compile_error(cu, err);
 
 	return err;
