@@ -1,5 +1,5 @@
 /*
- * x86 instrunction encoding
+ * x86 instruction encoding
  *
  * Copyright (C) 2006-2010 Pekka Enberg
  * Copyright (C) 2008-2009 Arthur Huillet
