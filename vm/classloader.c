@@ -661,8 +661,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	if (loader) {
 		if (!is_array(class_name)) {
 			vmc = load_class_with(loader, class_name);
-			trace_pop();
-			return vmc;
+			goto out_free_slash_class_name;
 		}
 
 		/*
@@ -675,10 +674,8 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		struct vm_class *elem_class =
 			load_last_array_elem_class(loader, class_name);
 
-		if (!elem_class) {
-			trace_pop();
-			return rethrow_exception();
-		}
+		if (!elem_class)
+			goto out_free_slash_class_name;
 
 		loader = elem_class->classloader;
 	}
@@ -740,6 +737,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 
  out_unlock:
 	pthread_mutex_unlock(&classloader_mutex);
+ out_free_slash_class_name:
 	free(slash_class_name);
 	trace_pop();
 	return vmc;
