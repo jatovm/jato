@@ -69,3 +69,9 @@ struct vm_method *vm_class_get_method(const struct vm_class *vmc,
 {
 	return NULL;
 }
+
+struct vm_method *vm_class_get_method_recursive(const struct vm_class *vmc,
+	const char *name, const char *type)
+{
+	return NULL;
+}
