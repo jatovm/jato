@@ -16,6 +16,7 @@ static DEFINE_REG(MACH_REG_EAX, reg_eax);
 static DEFINE_REG(MACH_REG_EBX, reg_ebx);
 static DEFINE_REG(MACH_REG_EDI, reg_edi);
 static DEFINE_REG(MACH_REG_ESP, reg_esp);
+static DEFINE_REG(MACH_REG_XMM7, reg_xmm7);
 
 static struct buffer		*buffer;
 
@@ -227,6 +228,27 @@ void test_encoding_reg_membase_32(void)
 	insn.src.reg.interval		= &reg_eax;
 	insn.dest.base_reg.interval	= &reg_ebx;
 	insn.dest.disp			= 0x12345678;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
+void test_encoding_reg_membase_xmm(void)
+{
+	uint8_t encoding[] = { 0xf3, 0x0f, 0x11, 0x3c, 0x24 };
+	struct insn insn = { };
+
+	setup();
+
+	/* movss  %xmm7,(%esp) */
+	insn.type			= INSN_MOV_XMM_MEMBASE;
+	insn.src.reg.interval		= &reg_xmm7;
+	insn.dest.base_reg.interval	= &reg_esp;
+	insn.dest.disp			= 0x0;
 
 	insn_encode(&insn, buffer, NULL);
 

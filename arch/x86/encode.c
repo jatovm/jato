@@ -166,9 +166,11 @@ static uint32_t encode_table[NR_INSN_TYPES] = {
 	[INSN_AND_MEMBASE_REG]		= OPCODE(0x23) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_CMP_MEMBASE_REG]		= OPCODE(0x3b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_MOV_64_MEMBASE_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_FULL,
+	[INSN_MOV_64_XMM_MEMBASE]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_FULL,
 	[INSN_MOV_MEMBASE_REG]		= OPCODE(0x8b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_MOV_MEMBASE_XMM]		= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_FULL,
 	[INSN_MOV_REG_MEMBASE]		= OPCODE(0x89) | ADDMODE_REG_RM  | WIDTH_FULL,
+	[INSN_MOV_XMM_MEMBASE]		= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_FULL,
 	[INSN_OR_MEMBASE_REG]		= OPCODE(0x0b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_RET]			= OPCODE(0xc3) | ADDMODE_IMPLIED,
 	[INSN_SBB_MEMBASE_REG]		= OPCODE(0x1b) | ADDMODE_RM_REG  | WIDTH_FULL,
@@ -257,11 +259,25 @@ static inline uint32_t mod_dest_encode(uint32_t flags)
 
 static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t flags)
 {
+	uint8_t base;
 	uint8_t sib;
 
-	sib		= x86_encode_sib(0x00, 0x04, encode_reg(&self->src.base_reg));
+	if (flags & DIR_REVERSED)
+		base	= encode_reg(&self->dest.base_reg);
+	else
+		base	= encode_reg(&self->src.base_reg);
+
+	sib		= x86_encode_sib(0x00, 0x04, base);
 
 	emit(buffer, sib);
+}
+
+static bool insn_need_sib(struct insn *self, uint32_t flags)
+{
+	if (flags & DIR_REVERSED)
+		return mach_reg(&self->dest.base_reg) == MACH_REG_xSP;
+
+	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
 }
 
 static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint32_t flags)
@@ -269,7 +285,7 @@ static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint32_
 	uint8_t mod_rm, mod, reg_opcode, rm;
 	bool need_sib;
 
-	need_sib	= mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+	need_sib	= insn_need_sib(self, flags);
 
 	if (flags & DIR_REVERSED)
 		mod		= mod_dest_encode(flags);
@@ -354,7 +370,7 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 	if (flags & MOD_RM) {
 		bool need_sib;
 
-		need_sib	= mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+		need_sib	= insn_need_sib(self, flags);
 
 		insn_encode_mod_rm(self, buffer, flags);
 

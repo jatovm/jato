@@ -582,20 +582,6 @@ __emit_membase_reg(struct buffer *buf, unsigned char opc,
 	__emit_membase(buf, opc, base_reg, disp, x86_encode_reg(dest_reg));
 }
 
-static void
-emit_membase_reg(struct buffer *buf, unsigned char opc, struct operand *src,
-		 struct operand *dest)
-{
-	enum machine_reg base_reg, dest_reg;
-	unsigned long disp;
-
-	base_reg = mach_reg(&src->base_reg);
-	disp = src->disp;
-	dest_reg = mach_reg(&dest->reg);
-
-	__emit_membase_reg(buf, opc, base_reg, disp, dest_reg);
-}
-
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 {
 	emit(buf, 0x50 + x86_encode_reg(reg));
@@ -1420,20 +1406,6 @@ static void emit_mov_64_memindex_xmm(struct insn *insn, struct buffer *buf, stru
 	emit(buf, x86_encode_sib(insn->src.shift, encode_reg(&insn->src.index_reg), encode_reg(&insn->src.base_reg)));
 }
 
-static void emit_mov_xmm_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xf3);
-	emit(buf, 0x0f);
-	emit_membase_reg(buf, 0x11, &insn->dest, &insn->src);
-}
-
-static void emit_mov_64_xmm_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xf2);
-	emit(buf, 0x0f);
-	emit_membase_reg(buf, 0x11, &insn->dest, &insn->src);
-}
-
 static void emit_mov_xmm_memindex(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0xf3);
@@ -1535,7 +1507,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_64_MEMDISP_XMM, emit_mov_64_memdisp_xmm),
 	DECL_EMITTER(INSN_MOV_64_MEMINDEX_XMM, emit_mov_64_memindex_xmm),
 	DECL_EMITTER(INSN_MOV_64_MEMLOCAL_XMM, emit_mov_64_memlocal_xmm),
-	DECL_EMITTER(INSN_MOV_64_XMM_MEMBASE, emit_mov_64_xmm_membase),
+	DECL_EMITTER(INSN_MOV_64_XMM_MEMBASE, insn_encode),
 	DECL_EMITTER(INSN_MOV_64_XMM_MEMDISP, emit_mov_64_xmm_memdisp),
 	DECL_EMITTER(INSN_MOV_64_XMM_MEMINDEX, emit_mov_64_xmm_memindex),
 	DECL_EMITTER(INSN_MOV_64_XMM_MEMLOCAL, emit_mov_64_xmm_memlocal),
@@ -1560,7 +1532,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
-	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, emit_mov_xmm_membase),
+	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, insn_encode),
 	DECL_EMITTER(INSN_MOV_XMM_MEMDISP, emit_mov_xmm_memdisp),
 	DECL_EMITTER(INSN_MOV_XMM_MEMINDEX, emit_mov_xmm_memindex),
 	DECL_EMITTER(INSN_MOV_XMM_MEMLOCAL, emit_mov_xmm_memlocal),
