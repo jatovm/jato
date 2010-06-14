@@ -333,6 +333,7 @@ JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/EntryTest.j \
 	regression/jvm/InvokeResultTest.j \
 	regression/jvm/InvokeTest.j \
+	regression/jvm/NoSuchMethodErrorTest.j\
 	regression/jvm/PopTest.j \
 	regression/jvm/SubroutineTest.j \
 	regression/jvm/WideTest.j

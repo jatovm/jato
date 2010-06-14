@@ -30,6 +30,35 @@ static void init_abstract_method(struct vm_method *vmm)
 	vmm->line_number_table_attribute.line_number_table = NULL;
 }
 
+int vm_method_do_init(struct vm_method *vmm)
+{
+	if (parse_method_type(vmm)) {
+		warn("method type parsing failed for: %s", vmm->type);
+		return -1;
+	}
+
+	/*
+	 * XXX: Jam VM legacy? It seems that JamVM counts the number of
+	 * _32-bit_ arguments. This probably needs some fixing. What do we do
+	 * on x86_64?
+	 */
+	vmm->args_count = count_arguments(vmm);
+	if (vmm->args_count < 0)
+		return -1;
+
+	if (!vm_method_is_static(vmm))
+		++vmm->args_count;
+
+	if (vm_method_is_native(vmm) && vm_lookup_native(vmm->class->name, vmm->name)) {
+		vmm->flags |= VM_METHOD_FLAG_VM_NATIVE;
+	}
+
+	if (args_map_init(vmm))
+		return -1;
+
+	return 0;
+}
+
 int vm_method_init(struct vm_method *vmm,
 	struct vm_class *vmc, unsigned int method_index)
 {
@@ -58,28 +87,7 @@ int vm_method_init(struct vm_method *vmm,
 	if (!vmm->type)
 		goto error_free_name;
 
-	if (parse_method_type(vmm)) {
-		warn("method type parsing failed for: %s", vmm->type);
-		goto error_free_type;
-	}
-
-	/*
-	 * XXX: Jam VM legacy? It seems that JamVM counts the number of
-	 * _32-bit_ arguments. This probably needs some fixing. What do we do
-	 * on x86_64?
-	 */
-	vmm->args_count = count_arguments(vmm);
-	if (vmm->args_count < 0)
-		goto error_free_type;
-
-	if (!vm_method_is_static(vmm))
-		++vmm->args_count;
-
-	if (vm_method_is_native(vmm) && vm_lookup_native(vmm->class->name, vmm->name)) {
-		vmm->flags |= VM_METHOD_FLAG_VM_NATIVE;
-	}
-
-	if (args_map_init(vmm))
+	if (vm_method_do_init(vmm))
 		goto error_free_type;
 
 	/*

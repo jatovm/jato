@@ -90,6 +90,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.MethodInvocationAndReturnTest 0
     run_java jvm.MethodInvocationExceptionsTest 0
     run_java jvm.MultithreadingTest 0
+    run_java jvm.NoSuchMethodErrorTest 0
     run_java jvm.ObjectArrayTest 0
     run_java jvm.ObjectCreationAndManipulationExceptionsTest 0
     run_java jvm.ObjectCreationAndManipulationTest 0

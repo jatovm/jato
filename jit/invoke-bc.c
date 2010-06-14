@@ -133,13 +133,13 @@ static void insert_invoke_stmt(struct parse_context *ctx, struct statement *stmt
 	}
 }
 
-static struct vm_method *resolve_invoke_target(struct parse_context *ctx)
+static struct vm_method *resolve_invoke_target(struct parse_context *ctx, uint16_t access_flags)
 {
 	unsigned long idx;
 
 	idx = bytecode_read_u16(ctx->buffer);
 
-	return vm_class_resolve_method_recursive(ctx->cu->method->class, idx);
+	return vm_class_resolve_method_recursive(ctx->cu->method->class, idx, access_flags);
 }
 
 static struct vm_method *resolve_invokeinterface_target(struct parse_context *ctx)
@@ -225,7 +225,7 @@ int convert_invokevirtual(struct parse_context *ctx)
 	struct statement *stmt;
 	int err = -ENOMEM;
 
-	invoke_target = resolve_invoke_target(ctx);
+	invoke_target = resolve_invoke_target(ctx, 0);
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
@@ -250,7 +250,7 @@ int convert_invokespecial(struct parse_context *ctx)
 	struct statement *stmt;
 	int err;
 
-	invoke_target = resolve_invoke_target(ctx);
+	invoke_target = resolve_invoke_target(ctx, CAFEBABE_CLASS_ACC_STATIC);
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 
@@ -277,7 +277,7 @@ int convert_invokestatic(struct parse_context *ctx)
 	struct statement *stmt;
 	int err;
 
-	invoke_target = resolve_invoke_target(ctx);
+	invoke_target = resolve_invoke_target(ctx, CAFEBABE_CLASS_ACC_STATIC);
 	if (!invoke_target)
 		return warn("unable to resolve invocation target"), -EINVAL;
 

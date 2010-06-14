@@ -169,7 +169,7 @@ struct vm_method *vm_class_get_method_recursive(const struct vm_class *vmc,
 int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type);
 struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
-	uint16_t i);
+	uint16_t i, uint16_t access_flags);
 
 int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
 	struct vm_class **r_vmc, char **r_name, char **r_type);

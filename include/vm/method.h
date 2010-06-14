@@ -62,6 +62,8 @@ struct vm_method {
 #define VM_METHOD_FLAG_TRACE		(1 << 2)
 #define VM_METHOD_FLAG_TRACE_GATE	(1 << 3)
 
+int vm_method_do_init(struct vm_method *vmm);
+
 int vm_method_init(struct vm_method *vmm,
 	struct vm_class *vmc, unsigned int method_index);
 

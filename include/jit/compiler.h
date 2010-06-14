@@ -69,6 +69,7 @@ int allocate_registers(struct compilation_unit *cu);
 int insert_spill_reload_insns(struct compilation_unit *cu);
 int emit_machine_code(struct compilation_unit *);
 void *jit_magic_trampoline(struct compilation_unit *);
+void jit_no_such_method_stub(void);
 
 struct jit_trampoline *alloc_jit_trampoline(void);
 struct jit_trampoline *build_jit_trampoline(struct compilation_unit *);

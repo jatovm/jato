@@ -3720,12 +3720,15 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	method	= stmt->target_method;
 	cu	= method->compilation_unit;
 
-	if (compile_lock_get_status(&cu->compile_lock) == STATUS_COMPILED_OK) {
-		target = vm_method_native_ptr(method);
-		is_compiled = true;
+	if (cu == NULL) {
+		target		= jit_no_such_method_stub;
+		is_compiled	= true;
+	} else if (compile_lock_get_status(&cu->compile_lock) == STATUS_COMPILED_OK) {
+		target		= vm_method_native_ptr(method);
+		is_compiled	= true;
 	} else {
-		target = vm_method_trampoline_ptr(method);
-		is_compiled = false;
+		target		= vm_method_trampoline_ptr(method);
+		is_compiled	= false;
 	}
 
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
@@ -3751,7 +3754,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (vm_method_is_native(method))
+	if (cu == NULL || vm_method_is_native(method))
 		select_exception_test(s, tree);
 }
 

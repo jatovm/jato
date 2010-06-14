@@ -153,3 +153,8 @@ struct jit_trampoline *build_jit_trampoline(struct compilation_unit *cu)
 
 	return ret;
 }
+
+void jit_no_such_method_stub(void)
+{
+	signal_new_exception(vm_java_lang_NoSuchMethodError, NULL);
+}

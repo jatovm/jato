@@ -991,13 +991,56 @@ int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
 	return 0;
 }
 
-struct vm_method *
-vm_class_resolve_method_recursive(const struct vm_class *vmc, uint16_t i)
+static struct vm_method *
+missing_method(const struct vm_class *vmc, char *name, char *type, uint16_t access_flags)
 {
+	struct cafebabe_method_info *method;
+	struct vm_method *vmm;
+
+	method		= vm_alloc(sizeof *method);
+	if (!method)
+		return NULL;
+
+	method->access_flags	= access_flags;
+
+	vmm		= vm_alloc(sizeof *vmm);
+	if (!vmm)
+		goto error_free_method;
+
+	vmm->name	= strdup(name);
+	if (!vmm->name)
+		goto error_free_vmm;
+
+	vmm->type	= strdup(type);
+	if (!vmm->type)
+		goto error_free_name;
+
+	vmm->method	= method;
+
+	if (vm_method_do_init(vmm))
+		goto error_free_type;
+
+	return vmm;
+
+error_free_type:
+	free(vmm->type);
+error_free_name:
+	free(vmm->name);
+error_free_vmm:
+	free(vmm);
+error_free_method:
+	free(method);
+
+	return NULL;
+}
+
+struct vm_method *
+vm_class_resolve_method_recursive(const struct vm_class *vmc, uint16_t i, uint16_t access_flags)
+{
+	struct vm_method *result;
 	struct vm_class *class;
 	char *name;
 	char *type;
-	struct vm_method *result;
 
 	if (vm_class_resolve_method(vmc, i, &class, &name, &type)) {
 		NOT_IMPLEMENTED;
@@ -1005,9 +1048,12 @@ vm_class_resolve_method_recursive(const struct vm_class *vmc, uint16_t i)
 	}
 
 	result = vm_class_get_method_recursive(class, name, type);
+	if (!result)
+		result = missing_method(class, name, type, access_flags);
 
 	free(name);
 	free(type);
+
 	return result;
 }
 
