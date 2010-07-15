@@ -30,6 +30,7 @@
 #include "vm/classloader.h"
 #include "vm/reflection.h"
 #include "vm/preload.h"
+#include "vm/errors.h"
 #include "vm/object.h"
 #include "vm/class.h"
 #include "vm/utf8.h"
@@ -61,10 +62,8 @@ struct vm_object *native_vmclass_forname(struct vm_object *name,
 	}
 
 	class_name = vm_string_to_cstr(name);
-	if (!class_name) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!class_name)
+		return throw_oom_error();
 
 	class = classloader_load(loader, class_name);
 	if (!class)

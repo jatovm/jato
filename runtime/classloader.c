@@ -133,10 +133,8 @@ jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
 	uint8_t *buf;
 
 	buf = malloc(len);
-	if (!buf) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!buf)
+		return throw_oom_error();
 
 	for (jint i = 0; i < len; i++)
 		buf[i] = array_get_field_byte(data, offset + i);

@@ -31,6 +31,7 @@
 
 #include "vm/stack-trace.h"
 #include "vm/preload.h"
+#include "vm/errors.h"
 #include "vm/object.h"
 #include "vm/class.h"
 
@@ -55,10 +56,8 @@ struct vm_object *native_vmstackwalker_getclasscontext(void)
 	stack_trace_elem_next_java(&st_elem);
 
 	res = vm_object_alloc_array(vm_array_of_java_lang_Class, depth);
-	if (!res) {
-		signal_new_exception(vm_java_lang_OutOfMemoryError, NULL);
-		return NULL;
-	}
+	if (!res)
+		return throw_oom_error();
 
 	nr_to_skip = 0;
 	idx = 0;
