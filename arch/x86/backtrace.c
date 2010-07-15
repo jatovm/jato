@@ -233,7 +233,7 @@ static void show_registers(gregset_t gregs)
 
 	trace_printf("Registers:\n");
 	trace_printf(" rsp: %016lx\n", rsp);
-	trace_printf(" rax: %016lx   ebx: %016lx   ecx: %016lx\n", rax, rbx, rcx);
+	trace_printf(" rax: %016lx   rbx: %016lx   rcx: %016lx\n", rax, rbx, rcx);
 	trace_printf(" rdx: %016lx   rsi: %016lx   rdi: %016lx\n", rdx, rsi, rdi);
 	trace_printf(" rbp: %016lx   r8:  %016lx   r9:  %016lx\n", rbp, r8,  r9);
 	trace_printf(" r10: %016lx   r11: %016lx   r12: %016lx\n", r10, r11, r12);
