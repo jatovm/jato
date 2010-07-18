@@ -73,23 +73,21 @@ extern struct emitter emitters[];
 #define DECL_EMITTER(_insn_type, _fn) \
 	[_insn_type] = { .emit_fn = _fn }
 
-static void __emit_add_imm_reg(struct buffer *buf,
-			       long imm,
-			       enum machine_reg reg);
+static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg);
 static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg);
 static void __emit_push_imm(struct buffer *buf, long imm);
-#ifdef CONFIG_X86_32
-static void __emit_push_membase(struct buffer *buf,
-				enum machine_reg src_reg,
-				unsigned long disp);
-#endif
 static void __emit_push_reg(struct buffer *buf, enum machine_reg reg);
-static void __emit_mov_reg_reg(struct buffer *buf,
-			       enum machine_reg src,
-			       enum machine_reg dst);
+static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src, enum machine_reg dst);
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg);
 static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
 static void emit_restore_regs(struct buffer *buf);
+
+#ifdef CONFIG_X86_32
+static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg, unsigned long disp);
+#else
+static void emit_save_regparm(struct buffer *buf);
+static void emit_restore_regparm(struct buffer *buf);
+#endif
 
 /*
  * Common code emitters
@@ -325,10 +323,12 @@ void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 #else /* CONFIG_X86_64 */
 void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 {
-	__emit_push_reg(buf, MACH_REG_RDI);
+	emit_save_regparm(buf);
+
 	__emit_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 	__emit_call(buf, &trace_invoke);
-	__emit_pop_reg(buf, MACH_REG_RDI);
+
+	emit_restore_regparm(buf);
 }
 #endif
 
