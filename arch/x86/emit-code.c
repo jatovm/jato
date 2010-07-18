@@ -3124,7 +3124,7 @@ void emit_trampoline(struct compilation_unit *cu,
 
 		__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 
-		__emit64_mov_membase_reg(buf, MACH_REG_RBP, 0x10, MACH_REG_RSI);
+		__emit64_mov_membase_reg(buf, MACH_REG_RBP, -0x08, MACH_REG_RSI);
 		__emit64_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
 		__emit_call(buf, fixup_vtable);
 
