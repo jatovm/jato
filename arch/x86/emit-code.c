@@ -68,16 +68,6 @@
 #define REX_X		(REX | 2)	/* SIB index extension */
 #define REX_B		(REX | 1)	/* ModRM r/m extension */
 
-/* Aliases and prototypes to make common emitters work as expected. */
-#ifdef CONFIG_X86_64
-# define __emit_add_imm_reg		__emit64_add_imm_reg
-# define __emit_pop_reg			__emit64_pop_reg
-# define __emit_push_imm		__emit64_push_imm
-# define __emit_push_membase		__emit64_push_membase
-# define __emit_push_reg		__emit64_push_reg
-# define __emit_mov_reg_reg		__emit64_mov_reg_reg
-#endif
-
 typedef void (*emit_fn_t)(struct insn *insn, struct buffer *, struct basic_block *bb);
 
 struct emitter {
@@ -2052,7 +2042,7 @@ static void emit_reg_reg(struct buffer *buf,
 	__emit_reg_reg(buf, rex_w, opc, direct_reg, rm_reg);
 }
 
-static void __emit64_mov_reg_reg(struct buffer *buf,
+static void __emit_mov_reg_reg(struct buffer *buf,
 				 enum machine_reg src,
 				 enum machine_reg dst)
 {
@@ -2097,7 +2087,7 @@ static void emit_mov_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	}
 
 	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
-		__emit64_mov_reg_reg(buf,
+		__emit_mov_reg_reg(buf,
 				     mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
 	else
 		__emit32_mov_reg_reg(buf,
@@ -2223,7 +2213,7 @@ static void emit_sub_imm_reg(struct insn *insn, struct buffer *buf, struct basic
 		__emit32_sub_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 }
 
-static void __emit64_add_imm_reg(struct buffer *buf,
+static void __emit_add_imm_reg(struct buffer *buf,
 				 long imm,
 				 enum machine_reg reg)
 {
@@ -2242,9 +2232,9 @@ static void __emit32_add_imm_reg(struct buffer *buf,
 static void emit_add_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	if (is_64bit_reg(&insn->dest))
-		__emit64_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
+		__emit_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 	else
-		__emit64_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
+		__emit_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 }
 
 static void emit_imm64(struct buffer *buf, unsigned long imm)
@@ -2426,7 +2416,7 @@ static void emit_reg_membase(struct buffer *buf,
 	__emit_reg_membase(buf, rex_w, opc, src_reg, base_reg, disp);
 }
 
-static void __emit64_push_membase(struct buffer *buf,
+static void __emit_push_membase(struct buffer *buf,
 				  enum machine_reg src_reg,
 				  unsigned long disp)
 {
@@ -2977,13 +2967,13 @@ static void __emit64_pop_xmm(struct buffer *buf, enum machine_reg reg)
 	unsigned char opc[3] = { 0xF2, 0x0F, 0x10 };	/* MOVSD */
 
 	__emit_lopc_membase_reg(buf, 0, opc, 3, MACH_REG_RSP, 0, reg);
-	__emit64_add_imm_reg(buf, 0x08, MACH_REG_RSP);
+	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 }
 
 void emit_prolog(struct buffer *buf, unsigned long nr_locals)
 {
 	__emit_push_reg(buf, MACH_REG_RBP);
-	__emit64_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
+	__emit_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
 
 	/*
 	 * The ABI requires us to clear DF, but we
@@ -3025,7 +3015,7 @@ void emit_epilog(struct buffer *buf)
 static void emit_restore_regs(struct buffer *buf)
 {
 	/* Clear *this from stack. */
-	__emit64_add_imm_reg(buf, 0x08, MACH_REG_RSP);
+	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 
 	__emit64_pop_xmm(buf, MACH_REG_XMM15);
 	__emit64_pop_xmm(buf, MACH_REG_XMM14);
@@ -3045,12 +3035,12 @@ static void emit_restore_regs(struct buffer *buf)
 
 static void emit_save_regparm(struct buffer *buf)
 {
-	__emit64_push_reg(buf, MACH_REG_RDI);
-	__emit64_push_reg(buf, MACH_REG_RSI);
-	__emit64_push_reg(buf, MACH_REG_RDX);
-	__emit64_push_reg(buf, MACH_REG_RCX);
-	__emit64_push_reg(buf, MACH_REG_R8);
-	__emit64_push_reg(buf, MACH_REG_R9);
+	__emit_push_reg(buf, MACH_REG_RDI);
+	__emit_push_reg(buf, MACH_REG_RSI);
+	__emit_push_reg(buf, MACH_REG_RDX);
+	__emit_push_reg(buf, MACH_REG_RCX);
+	__emit_push_reg(buf, MACH_REG_R8);
+	__emit_push_reg(buf, MACH_REG_R9);
 
 	__emit64_push_xmm(buf, MACH_REG_XMM0);
 	__emit64_push_xmm(buf, MACH_REG_XMM1);
@@ -3073,12 +3063,12 @@ static void emit_restore_regparm(struct buffer *buf)
 	__emit64_pop_xmm(buf, MACH_REG_XMM1);
 	__emit64_pop_xmm(buf, MACH_REG_XMM0);
 
-	__emit64_pop_reg(buf, MACH_REG_R9);
-	__emit64_pop_reg(buf, MACH_REG_R8);
-	__emit64_pop_reg(buf, MACH_REG_RCX);
-	__emit64_pop_reg(buf, MACH_REG_RDX);
-	__emit64_pop_reg(buf, MACH_REG_RSI);
-	__emit64_pop_reg(buf, MACH_REG_RDI);
+	__emit_pop_reg(buf, MACH_REG_R9);
+	__emit_pop_reg(buf, MACH_REG_R8);
+	__emit_pop_reg(buf, MACH_REG_RCX);
+	__emit_pop_reg(buf, MACH_REG_RDX);
+	__emit_pop_reg(buf, MACH_REG_RSI);
+	__emit_pop_reg(buf, MACH_REG_RDI);
 }
 
 void emit_trampoline(struct compilation_unit *cu,
@@ -3093,8 +3083,8 @@ void emit_trampoline(struct compilation_unit *cu,
 
 	/* This is for __builtin_return_address() to work and to access
 	   call arguments in correct manner. */
-	__emit64_push_reg(buf, MACH_REG_RBP);
-	__emit64_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
+	__emit_push_reg(buf, MACH_REG_RBP);
+	__emit_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
 
 	/*
 	 * %rdi, %rsi, %rdx, %rcx, %r8 and %r9 are used
@@ -3120,20 +3110,20 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit64_test_membase_reg(buf, MACH_REG_RCX, 0, MACH_REG_RCX);
 
 	if (method_is_virtual(cu->method)) {
-		__emit64_push_reg(buf, MACH_REG_RAX);
+		__emit_push_reg(buf, MACH_REG_RAX);
 
 		__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 
 		__emit64_mov_membase_reg(buf, MACH_REG_RBP, -0x08, MACH_REG_RSI);
-		__emit64_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
+		__emit_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
 		__emit_call(buf, fixup_vtable);
 
-		__emit64_pop_reg(buf, MACH_REG_RAX);
+		__emit_pop_reg(buf, MACH_REG_RAX);
 	}
 
 	emit_restore_regparm(buf);
 
-	__emit64_pop_reg(buf, MACH_REG_RBP);
+	__emit_pop_reg(buf, MACH_REG_RBP);
 	emit_indirect_jump_reg(buf, MACH_REG_RAX);
 
 	jit_text_reserve(buffer_offset(buf));
@@ -3160,14 +3150,14 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 
 	emit_restore_regparm(buf);
 
-	__emit64_push_reg(buf, MACH_REG_RAX);
+	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_exception_test(buf, MACH_REG_RAX);
-	__emit64_pop_reg(buf, MACH_REG_RAX);
+	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
 void emit_unlock(struct buffer *buf, struct vm_object *obj)
 {
-	__emit64_push_reg(buf, MACH_REG_RAX);
+	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_save_regparm(buf);
 
 	__emit64_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
@@ -3176,7 +3166,7 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 	emit_exception_test(buf, MACH_REG_RAX);
 
 	emit_restore_regparm(buf);
-	__emit64_pop_reg(buf, MACH_REG_RAX);
+	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
 void emit_lock_this(struct buffer *buf)
