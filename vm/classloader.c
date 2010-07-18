@@ -545,7 +545,7 @@ load_class_with(struct vm_object *loader, const char *name)
  */
 static struct vm_class *load_class(const char *class_name)
 {
-	struct vm_class *result;
+	struct vm_class *result = NULL;
 	char *filename;
 
 	filename = class_name_to_file_name(class_name);
