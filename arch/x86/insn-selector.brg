@@ -3828,7 +3828,7 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 
 	/* itable entry */
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
-		offsetof(struct vm_class, itable) + method->itable_index * 4,
+		offsetof(struct vm_class, itable) + method->itable_index * sizeof(void *),
 		call_target));
 
 	/* hidden parameter to the conflict resolution stub */

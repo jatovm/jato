@@ -332,6 +332,22 @@ void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 }
 #endif
 
+static void fixup_branch_target(uint8_t *target_p, void *target)
+{
+	long cur = (long) (target - (void *) target_p) - 4;
+	target_p[3] = cur >> 24;
+	target_p[2] = cur >> 16;
+	target_p[1] = cur >> 8;
+	target_p[0] = cur;
+}
+
+static void emit_really_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
+{
+	emit(buf, 0xff);
+	emit(buf, x86_encode_mod_rm(0x0, 0x04, x86_encode_reg(reg)));
+}
+
+
 #ifdef CONFIG_X86_32
 
 /*
@@ -1137,12 +1153,6 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 	emit(buf, x86_encode_mod_rm(0x3, 0x04, x86_encode_reg(reg)));
 }
 
-static void emit_really_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
-{
-	emit(buf, 0xff);
-	emit(buf, x86_encode_mod_rm(0x0, 0x04, x86_encode_reg(reg)));
-}
-
 static void emit_indirect_call(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0xff);
@@ -1530,15 +1540,6 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_EAX);
 }
 
-static void fixup_branch_target(uint8_t *target_p, void *target)
-{
-	long cur = (long) (target - (void *) target_p) - 4;
-	target_p[3] = cur >> 24;
-	target_p[2] = cur >> 16;
-	target_p[1] = cur >> 8;
-	target_p[0] = cur;
-}
-
 void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 			 void *target)
 {
@@ -1594,133 +1595,6 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
-}
-
-/* The regparm(1) makes GCC get the first argument from %ecx and the rest
- * from the stack. This is convenient, because we use %ecx for passing the
- * hidden "method" parameter. Interfaces are invoked on objects, so we also
- * always get the object in the first stack parameter. */
-void __attribute__((regparm(1)))
-itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
-{
-	fprintf(stderr, "itable resolver stub error!\n");
-	fprintf(stderr, "invokeinterface called on method %s.%s%s "
-		"(itable index %d)\n",
-		method->class->name, method->name, method->type,
-		method->itable_index);
-	fprintf(stderr, "object class %s\n", obj->class->name);
-
-	print_trace();
-	abort();
-}
-
-/* Note: a < b, always */
-static void emit_itable_bsearch(struct buffer *buf,
-	struct itable_entry **table, unsigned int a, unsigned int b)
-{
-	uint8_t *jb_addr = NULL;
-	uint8_t *ja_addr = NULL;
-	unsigned int m;
-
-	/* Find middle (safe from overflows) */
-	m = a + (b - a) / 2;
-
-	/* No point in emitting the "cmp" if we're not going to test
-	 * anything */
-	if (b - a >= 1) {
-		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
-
-		if (m - a > 0) {
-			/* open-coded "jb" */
-			emit(buf, 0x0f);
-			emit(buf, 0x82);
-
-			/* placeholder address */
-			jb_addr = buffer_current(buf);
-			emit_imm32(buf, 0);
-		}
-
-		if (b - m > 0) {
-			/* open-coded "ja" */
-			emit(buf, 0x0f);
-			emit(buf, 0x87);
-
-			/* placeholder address */
-			ja_addr = buffer_current(buf);
-			emit_imm32(buf, 0);
-		}
-	}
-
-#ifndef NDEBUG
-	/* Make sure what we wanted is what we got;
-	 *
-	 *     cmp i_method, %eax
-	 *     je .okay
-	 *     jmp itable_resolver_stub_error
-	 * .okay:
-	 *
-	 */
-	__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
-
-	/* open-coded "je" */
-	emit(buf, 0x0f);
-	emit(buf, 0x84);
-
-	uint8_t *je_addr = buffer_current(buf);
-	emit_imm32(buf, 0);
-
-	__emit_jmp(buf, (unsigned long) &itable_resolver_stub_error);
-
-	fixup_branch_target(je_addr, buffer_current(buf));
-#endif
-
-	__emit_add_imm_reg(buf, 4 * table[m]->c_method->virtual_index, MACH_REG_ECX);
-	emit_really_indirect_jump_reg(buf, MACH_REG_ECX);
-
-	/* This emits the code for checking the interval [a, m> */
-	if (jb_addr) {
-		fixup_branch_target(jb_addr, buffer_current(buf));
-		emit_itable_bsearch(buf, table, a, m - 1);
-	}
-
-	/* This emits the code for checking the interval <m, b] */
-	if (ja_addr) {
-		fixup_branch_target(ja_addr, buffer_current(buf));
-		emit_itable_bsearch(buf, table, m + 1, b);
-	}
-}
-
-/* Note: table is always sorted on entry->method address */
-/* Note: nr_entries is always >= 2 */
-void *emit_itable_resolver_stub(struct vm_class *vmc,
-	struct itable_entry **table, unsigned int nr_entries)
-{
-	static struct buffer_operations exec_buf_ops = {
-		.expand = NULL,
-		.free   = NULL,
-	};
-
-	struct buffer *buf = __alloc_buffer(&exec_buf_ops);
-
-	jit_text_lock();
-
-	buf->buf = jit_text_ptr();
-
-	/* Note: When the stub is called, %eax contains the signature hash that
-	 * we look up in the stub. 0(%esp) contains the object reference. %ecx
-	 * and %edx are available here because they are already saved by the
-	 * caller (guaranteed by ABI). */
-
-	/* Load the start of the vtable into %ecx. Later we just add the
-	 * right offset to %ecx and jump to *(%ecx). */
-	__emit_mov_imm_reg(buf, (long) vmc->vtable.native_ptr, MACH_REG_ECX);
-
-	emit_itable_bsearch(buf, table, 0, nr_entries - 1);
-
-	jit_text_reserve(buffer_offset(buf));
-	jit_text_unlock();
-
-	return buffer_ptr(buf);
 }
 
 #else /* CONFIG_X86_32 */
@@ -2512,10 +2386,7 @@ static void emit_mov_reg_memlocal(struct insn *insn, struct buffer *buf, struct 
 	__emit_reg_membase(buf, 1, 0x89, src_reg, MACH_REG_RBP, disp);
 }
 
-static void __emit_cmp_imm_reg(struct buffer *buf,
-			       int rex_w,
-			       long imm,
-			       enum machine_reg reg)
+static void __emit_cmp_imm_reg(struct buffer *buf, int rex_w, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, rex_w, 0x07, imm, reg);
 }
@@ -3043,14 +2914,21 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
-void *emit_itable_resolver_stub(struct vm_class *vmc,
-				struct itable_entry **table,
-				unsigned int nr_entries)
+void emit_jni_trampoline(struct buffer *buf,
+			 struct vm_method *vmm,
+			 void *target)
 {
-	return NULL;
+	abort();
 }
 
-void itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
+#endif /* CONFIG_X86_32 */
+
+/* The regparm(1) makes GCC get the first argument from %ecx and the rest
+ * from the stack. This is convenient, because we use %ecx for passing the
+ * hidden "method" parameter. Interfaces are invoked on objects, so we also
+ * always get the object in the first stack parameter. */
+void __attribute__((regparm(1)))
+itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
 {
 	fprintf(stderr, "itable resolver stub error!\n");
 	fprintf(stderr, "invokeinterface called on method %s.%s%s "
@@ -3063,14 +2941,123 @@ void itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
 	abort();
 }
 
-void emit_jni_trampoline(struct buffer *buf,
-			 struct vm_method *vmm,
-			 void *target)
+/* Note: a < b, always */
+static void emit_itable_bsearch(struct buffer *buf,
+	struct itable_entry **table, unsigned int a, unsigned int b)
 {
-	abort();
+	uint8_t *jb_addr = NULL;
+	uint8_t *ja_addr = NULL;
+	unsigned int m;
+
+	/* Find middle (safe from overflows) */
+	m = a + (b - a) / 2;
+
+	/* No point in emitting the "cmp" if we're not going to test
+	 * anything */
+	if (b - a >= 1) {
+#ifdef CONFIG_X86_32
+		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
+#else
+		__emit_cmp_imm_reg(buf, 1, (long) table[m]->i_method, MACH_REG_RAX);
+#endif
+
+		if (m - a > 0) {
+			/* open-coded "jb" */
+			emit(buf, 0x0f);
+			emit(buf, 0x82);
+
+			/* placeholder address */
+			jb_addr = buffer_current(buf);
+			emit_imm32(buf, 0);
+		}
+
+		if (b - m > 0) {
+			/* open-coded "ja" */
+			emit(buf, 0x0f);
+			emit(buf, 0x87);
+
+			/* placeholder address */
+			ja_addr = buffer_current(buf);
+			emit_imm32(buf, 0);
+		}
+	}
+
+#ifndef NDEBUG
+	/* Make sure what we wanted is what we got;
+	 *
+	 *     cmp i_method, %eax
+	 *     je .okay
+	 *     jmp itable_resolver_stub_error
+	 * .okay:
+	 *
+	 */
+#ifdef CONFIG_X86_32
+	__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
+#else
+	__emit_cmp_imm_reg(buf, 1, (long) table[m]->i_method, MACH_REG_RAX);
+#endif
+
+	/* open-coded "je" */
+	emit(buf, 0x0f);
+	emit(buf, 0x84);
+
+	uint8_t *je_addr = buffer_current(buf);
+	emit_imm32(buf, 0);
+
+	__emit_jmp(buf, (unsigned long) &itable_resolver_stub_error);
+
+	fixup_branch_target(je_addr, buffer_current(buf));
+#endif
+
+	__emit_add_imm_reg(buf, sizeof(void *) * table[m]->c_method->virtual_index, MACH_REG_xCX);
+	emit_really_indirect_jump_reg(buf, MACH_REG_xCX);
+
+	/* This emits the code for checking the interval [a, m> */
+	if (jb_addr) {
+		fixup_branch_target(jb_addr, buffer_current(buf));
+		emit_itable_bsearch(buf, table, a, m - 1);
+	}
+
+	/* This emits the code for checking the interval <m, b] */
+	if (ja_addr) {
+		fixup_branch_target(ja_addr, buffer_current(buf));
+		emit_itable_bsearch(buf, table, m + 1, b);
+	}
 }
 
-#endif /* CONFIG_X86_32 */
+/* Note: table is always sorted on entry->method address */
+/* Note: nr_entries is always >= 2 */
+void *emit_itable_resolver_stub(struct vm_class *vmc,
+	struct itable_entry **table, unsigned int nr_entries)
+{
+	static struct buffer_operations exec_buf_ops = {
+		.expand = NULL,
+		.free   = NULL,
+	};
+
+	struct buffer *buf = __alloc_buffer(&exec_buf_ops);
+
+	jit_text_lock();
+
+	buf->buf = jit_text_ptr();
+
+	/* Note: When the stub is called, %eax contains the signature hash that
+	 * we look up in the stub. 0(%esp) contains the object reference. %ecx
+	 * and %edx are available here because they are already saved by the
+	 * caller (guaranteed by ABI). */
+
+	/* Load the start of the vtable into %ecx. Later we just add the
+	 * right offset to %ecx and jump to *(%ecx). */
+	__emit_mov_imm_reg(buf, (long) vmc->vtable.native_ptr, MACH_REG_xCX);
+
+	emit_itable_bsearch(buf, table, 0, nr_entries - 1);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
+
+	return buffer_ptr(buf);
+}
+
 
 static void do_emit_insn(struct emitter *emitter, struct buffer *buf, struct insn *insn, struct basic_block *bb)
 {
