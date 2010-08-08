@@ -268,5 +268,5 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 
 	trace_flush();
 
-	exit(1);
+	abort();
 }
