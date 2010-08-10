@@ -480,11 +480,6 @@ static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
 	__emit_reg_reg(buf, 0x89, src_reg, dest_reg);
 }
 
-static void emit_mov_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_mov_reg_reg(buf, mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
-}
-
 static void emit_movsx_8_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	enum machine_reg src_reg = mach_reg(&insn->src.reg);
@@ -1387,7 +1382,7 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_REG_MEMDISP, emit_mov_reg_memdisp),
 	DECL_EMITTER(INSN_MOV_REG_MEMINDEX, emit_mov_reg_memindex),
 	DECL_EMITTER(INSN_MOV_REG_MEMLOCAL, emit_mov_reg_memlocal),
-	DECL_EMITTER(INSN_MOV_REG_REG, emit_mov_reg_reg),
+	DECL_EMITTER(INSN_MOV_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMBASE, emit_mov_reg_thread_local_membase),
 	DECL_EMITTER(INSN_MOV_REG_THREAD_LOCAL_MEMDISP, emit_mov_reg_thread_local_memdisp),
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),

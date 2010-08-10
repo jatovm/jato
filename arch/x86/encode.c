@@ -151,6 +151,7 @@ enum x86_addmode {
 	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,		/* no operands */
 	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,		/* memory -> AL/AX */
 	ADDMODE_REG		= SRC_REG|DST_NONE,		/* register */
+	ADDMODE_REG_REG		= SRC_REG|DST_REG|MOD_RM|DIR_REVERSED,	/* register -> register */
 	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,	/* register -> register/memory */
 	ADDMODE_REL		= SRC_REL|DST_NONE,		/* relative */
 	ADDMODE_RM_REG		= DST_REG|MOD_RM,		/* register/memory -> register */
@@ -170,6 +171,7 @@ static uint32_t encode_table[NR_INSN_TYPES] = {
 	[INSN_MOV_MEMBASE_REG]		= OPCODE(0x8b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_MOV_MEMBASE_XMM]		= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_FULL,
 	[INSN_MOV_REG_MEMBASE]		= OPCODE(0x89) | ADDMODE_REG_RM  | WIDTH_FULL,
+	[INSN_MOV_REG_REG]		= OPCODE(0x89) | ADDMODE_REG_REG | WIDTH_FULL,
 	[INSN_MOV_XMM_MEMBASE]		= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_FULL,
 	[INSN_OR_MEMBASE_REG]		= OPCODE(0x0b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_RET]			= OPCODE(0xc3) | ADDMODE_IMPLIED,
@@ -254,7 +256,7 @@ static inline uint32_t mod_dest_encode(uint32_t flags)
 		break;
 	}
 
-	die("unrecognized flags %x", flags);
+	die("unrecognized flags %x", flags & DST_MASK);
 }
 
 static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t flags)
@@ -317,14 +319,20 @@ static uint32_t insn_flags(struct insn *self, uint32_t encode)
 
 	flags	= encode & FLAGS_MASK;
 
-	if (flags & DIR_REVERSED)
+	if (flags & DIR_REVERSED) {
+		if (flags & DST_REG)
+			return flags;
+
 		if (self->dest.disp == 0)
 			flags	|= DST_MEM;
 		else if (is_imm_8(self->dest.disp))
 			flags	|= DST_MEM_DISP_BYTE;
 		else
 			flags	|= DST_MEM_DISP_FULL;
-	else {
+	} else {
+		if (flags & SRC_REG)
+			return flags;
+
 		if (self->src.disp == 0)
 			flags	|= SRC_MEM;
 		else if (is_imm_8(self->src.disp))
