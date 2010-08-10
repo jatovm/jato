@@ -1082,16 +1082,6 @@ static void emit_add_imm_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 }
 
-static void __emit_adc_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
-{
-	emit_alu_imm_reg(buf, 0x02, imm, reg);
-}
-
-static void emit_adc_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_adc_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-}
-
 static void __emit_cmp_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x07, imm, reg);
@@ -1267,7 +1257,7 @@ static void emit_jmp_membase(struct insn *insn, struct buffer *buf, struct basic
 
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
-	DECL_EMITTER(INSN_ADC_IMM_REG, emit_adc_imm_reg),
+	DECL_EMITTER(INSN_ADC_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg),
