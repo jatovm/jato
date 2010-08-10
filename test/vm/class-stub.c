@@ -31,7 +31,7 @@ struct vm_field *vm_class_resolve_field_recursive(const struct vm_class *vmc,
 }
 
 struct vm_method *vm_class_resolve_method_recursive(const struct vm_class *vmc,
-	uint16_t i)
+	uint16_t i, uint16_t access_flags)
 {
 	/* NOTE: For the tests, instead of going through the constant pool,
 	 * we assume that "methodref" is actually an index into the class'
