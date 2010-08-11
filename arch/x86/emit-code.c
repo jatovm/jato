@@ -716,22 +716,6 @@ static void __emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
 	emit_alu_imm_reg(buf, 0x05, imm, reg);
 }
 
-static void emit_sub_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_sub_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-}
-
-static void __emit_sbb_imm_reg(struct buffer *buf, unsigned long imm,
-			       enum machine_reg reg)
-{
-	emit_alu_imm_reg(buf, 0x03, imm, reg);
-}
-
-static void emit_sbb_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_sbb_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-}
-
 static void __emit_test_imm_memdisp(struct buffer *buf,
 	long imm, long disp)
 {
@@ -1077,19 +1061,9 @@ static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg re
 	emit_alu_imm_reg(buf, 0x00, imm, reg);
 }
 
-static void emit_add_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-}
-
 static void __emit_cmp_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x07, imm, reg);
-}
-
-static void emit_cmp_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_cmp_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
 }
 
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
@@ -1260,14 +1234,14 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADC_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_REG_REG, insn_encode),
-	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg),
+	DECL_EMITTER(INSN_ADD_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg),
-	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
+	DECL_EMITTER(INSN_CMP_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_CONV_FPU64_TO_GPR, emit_conv_fpu64_to_gpr),
@@ -1355,12 +1329,12 @@ struct emitter emitters[] = {
 	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg),
-	DECL_EMITTER(INSN_SBB_IMM_REG, emit_sbb_imm_reg),
+	DECL_EMITTER(INSN_SBB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg),
 	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg),
-	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg),
+	DECL_EMITTER(INSN_SUB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp),

@@ -55,10 +55,30 @@ void test_encoding_imm_reg(void)
 
 	setup();
 
-	/* mov    %eax,%ebx */
+	/* mov    $0x12345678,%ebx */
 	insn.type			= INSN_ADC_IMM_REG;
 	insn.src.imm			= 0x12345678;
 	insn.dest.reg.interval		= &reg_ebx;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
+void test_encoding_imm_reg_esp(void)
+{
+	uint8_t encoding[] = { 0x81, 0xd4, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    $0x12345678,%esp */
+	insn.type			= INSN_ADC_IMM_REG;
+	insn.src.imm			= 0x12345678;
+	insn.dest.reg.interval		= &reg_esp;
 
 	insn_encode(&insn, buffer, NULL);
 
