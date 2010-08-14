@@ -12,10 +12,10 @@
 
 #define DEFINE_REG(m, n)	struct live_interval n = { .reg = m }
 
-static DEFINE_REG(MACH_REG_EAX, reg_eax);
-static DEFINE_REG(MACH_REG_EBX, reg_ebx);
-static DEFINE_REG(MACH_REG_EDI, reg_edi);
-static DEFINE_REG(MACH_REG_ESP, reg_esp);
+static DEFINE_REG(MACH_REG_xAX, reg_eax);
+static DEFINE_REG(MACH_REG_xBX, reg_ebx);
+static DEFINE_REG(MACH_REG_xDI, reg_edi);
+static DEFINE_REG(MACH_REG_xSP, reg_esp);
 static DEFINE_REG(MACH_REG_XMM7, reg_xmm7);
 
 static struct buffer		*buffer;
