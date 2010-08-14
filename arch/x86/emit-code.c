@@ -97,17 +97,6 @@ static void emit_restore_regparm(struct buffer *buf);
 
 #define PTR_SIZE	sizeof(long)
 
-#define GENERIC_X86_EMITTERS \
-	DECL_EMITTER(INSN_CALL_REL, emit_call),		\
-	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch),		\
-	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch),		\
-	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch),		\
-	DECL_EMITTER(INSN_JG_BRANCH, emit_jg_branch),		\
-	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch),		\
-	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch),		\
-	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch),		\
-	DECL_EMITTER(INSN_RET, insn_encode)
-
 static unsigned char encode_reg(struct use_position *reg)
 {
 	return x86_encode_reg(mach_reg(reg));
@@ -2821,8 +2810,16 @@ static void do_emit_insn(struct emitter *emitter, struct buffer *buf, struct ins
 }
 
 static struct emitter emitters[] = {
+	DECL_EMITTER(INSN_CALL_REL, emit_call),
+	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch),
+	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch),
+	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch),
+	DECL_EMITTER(INSN_JG_BRANCH, emit_jg_branch),
+	DECL_EMITTER(INSN_JLE_BRANCH, emit_jle_branch),
+	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch),
+	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch),
+	DECL_EMITTER(INSN_RET, insn_encode),
 #ifdef CONFIG_X86_32
-	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADC_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_REG_REG, insn_encode),
@@ -2936,7 +2933,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_XOR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_XOR_XMM_REG_REG, emit_xor_xmm_reg_reg),
 #else /* CONFIG_X86_64 */
-	GENERIC_X86_EMITTERS,
 	DECL_EMITTER(INSN_ADD_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
