@@ -18,6 +18,11 @@ static DEFINE_REG(MACH_REG_xDI, reg_edi);
 static DEFINE_REG(MACH_REG_xSP, reg_esp);
 static DEFINE_REG(MACH_REG_XMM7, reg_xmm7);
 
+#ifdef CONFIG_X86_64
+static DEFINE_REG(MACH_REG_RBX, reg_rbx);
+static DEFINE_REG(MACH_REG_R15, reg_r15);
+#endif
+
 static struct buffer		*buffer;
 
 static void setup(void)
@@ -316,4 +321,50 @@ void test_encoding_reg_membase_xmm(void)
 	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
 
 	teardown();
+}
+
+void test_encoding_rex_w_prefix(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0x48, 0x81, 0xd3, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    $0x12345678,%ebx */
+	insn.type			= INSN_ADC_IMM_REG;
+	insn.src.imm			= 0x12345678;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_rbx;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
+void test_encoding_rex_r_prefix(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0x49, 0x81, 0xd7, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    $0x12345678,%r15 */
+	insn.type			= INSN_ADC_IMM_REG;
+	insn.src.imm			= 0x12345678;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_r15;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
 }

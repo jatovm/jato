@@ -1871,14 +1871,6 @@ static void __emit32_add_imm_reg(struct buffer *buf,
 }
 #endif
 
-static void emit_add_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	if (is_64bit_reg(&insn->dest))
-		__emit_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-	else
-		__emit_add_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-}
-
 static void emit_imm64(struct buffer *buf, unsigned long imm)
 {
 	union {
@@ -2556,7 +2548,7 @@ static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_blo
 
 struct emitter emitters[] = {
 	GENERIC_X86_EMITTERS,
-	DECL_EMITTER(INSN_ADD_IMM_REG, emit_add_imm_reg),
+	DECL_EMITTER(INSN_ADD_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg),

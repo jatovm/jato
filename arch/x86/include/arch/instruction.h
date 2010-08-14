@@ -55,6 +55,27 @@ struct operand {
 	};
 };
 
+static inline bool operand_is_reg(struct operand *operand)
+{
+	switch (operand->type) {
+	case OPERAND_MEMBASE:
+	case OPERAND_MEMDISP:
+	case OPERAND_MEMINDEX:
+	case OPERAND_MEMLOCAL:
+	case OPERAND_REG:
+		return true;
+	case OPERAND_NONE:
+	case OPERAND_BRANCH:
+	case OPERAND_IMM:
+	case OPERAND_REL:
+		return false;
+	default:
+		assert(!"invalid operand type");
+	};
+
+	return false;
+}
+
 /*
  *	Instruction type identifies the opcode, number of operands, and
  * 	operand types.

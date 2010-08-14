@@ -340,6 +340,46 @@ static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint32_
 	emit(buffer, mod_rm);
 }
 
+#ifdef CONFIG_X86_64
+static inline bool operand_is_reg_high(struct operand *operand)
+{
+	enum machine_reg reg;
+
+	if (!operand_is_reg(operand))
+		return false;
+
+	reg		=  mach_reg(&operand->reg);
+
+	return reg & 0x8;
+}
+
+static inline bool operand_is_reg_64(struct operand *operand)
+{
+	if (!operand_is_reg(operand))
+		return false;
+
+	return true;
+}
+
+static uint8_t insn_rex_prefix(struct insn *self)
+{
+	uint8_t ret = 0;
+
+	if (operand_is_reg_64(&self->src) || operand_is_reg_64(&self->dest))
+		ret	|= REX_W;
+
+	if (operand_is_reg_high(&self->src) || operand_is_reg_high(&self->dest))
+		ret	|= REX_B;
+
+	return ret;
+}
+#else
+static uint8_t insn_rex_prefix(struct insn *self)
+{
+	return 0;
+}
+#endif
+
 static uint32_t insn_flags(struct insn *self, uint32_t encode)
 {
 	uint32_t flags;
@@ -383,6 +423,7 @@ static uint8_t insn_opcode(struct insn *self, uint32_t encode)
 
 void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *bb)
 {
+	uint8_t rex_prefix;
 	uint32_t encode;
 	uint8_t opc_ext;
 	uint32_t flags;
@@ -407,6 +448,10 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 
 	if (flags & ESCAPE_OPC_BYTE)
 		emit(buffer, 0x0f);
+
+	rex_prefix	= insn_rex_prefix(self);
+	if (rex_prefix)
+		emit(buffer, rex_prefix);
 
 	emit(buffer, opcode);
 
