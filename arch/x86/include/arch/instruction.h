@@ -78,7 +78,7 @@ static inline bool operand_is_reg(struct operand *operand)
 
 /*
  *	Instruction type identifies the opcode, number of operands, and
- * 	operand types.
+ *	operand types.
  */
 enum insn_type {
 	INSN_ADC_IMM_REG,
@@ -223,7 +223,6 @@ struct insn {
 	struct list_head	branch_list_node;
 
 	union {
-		struct operand operands[2];
 		struct {
 			struct operand src;
 			struct operand dest;

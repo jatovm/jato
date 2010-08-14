@@ -119,9 +119,9 @@ static int print_imm_memlocal(struct string *str, struct insn *insn)
 
 static int print_imm_memdisp(struct string *str, struct insn *insn)
 {
-	print_imm(str, &insn->operands[0]);
+	print_imm(str, &insn->src);
 	str_append(str, ", ");
-	return print_memdisp(str, &insn->operands[1]);
+	return print_memdisp(str, &insn->dest);
 }
 
 static int print_membase_reg(struct string *str, struct insn *insn)

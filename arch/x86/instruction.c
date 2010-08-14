@@ -67,43 +67,15 @@ static void release_operand(struct operand *operand)
 
 void free_insn(struct insn *insn)
 {
-	release_operand(&insn->operands[0]);
-	release_operand(&insn->operands[1]);
+	release_operand(&insn->src);
+	release_operand(&insn->dest);
 
 	free(insn);
 }
 
-static void init_none_operand(struct insn *insn, unsigned long idx)
-{
-	struct operand *operand = &insn->operands[idx];
-
-	operand->type = OPERAND_NONE;
-}
-
-static void init_branch_operand(struct insn *insn, unsigned long idx,
-				struct basic_block *if_true)
-{
-	struct operand *operand = &insn->operands[idx];
-
-	operand->type = OPERAND_BRANCH;
-	operand->branch_target = if_true;
-}
-
-static void init_imm_operand(struct insn *insn, unsigned long idx,
-			     unsigned long imm)
-{
-	struct operand *operand = &insn->operands[idx];
-
-	operand->type = OPERAND_IMM;
-	operand->imm = imm;
-}
-
-static void init_membase_operand(struct insn *insn, unsigned long idx,
+static void init_membase_operand(struct insn *insn, struct operand *operand,
 				 struct var_info *base_reg, unsigned long disp)
 {
-	struct operand *operand;
-
-	operand = &insn->operands[idx];
 	operand->type = OPERAND_MEMBASE;
 	operand->disp = disp;
 
@@ -111,23 +83,10 @@ static void init_membase_operand(struct insn *insn, unsigned long idx,
 	operand->base_reg.kind = USE_KIND_INPUT;
 }
 
-static void init_memdisp_operand(struct insn *insn, unsigned long idx,
-				 unsigned long disp)
-{
-	struct operand *operand;
-
-	operand = &insn->operands[idx];
-	operand->type = OPERAND_MEMDISP;
-	operand->disp = disp;
-}
-
-static void init_memindex_operand(struct insn *insn, unsigned long idx,
+static void init_memindex_operand(struct insn *insn, struct operand *operand,
 				  struct var_info *base_reg,
 				  struct var_info *index_reg, unsigned long shift)
 {
-	struct operand *operand;
-
-	operand = &insn->operands[idx];
 	operand->type = OPERAND_MEMINDEX;
 	operand->shift = shift;
 
@@ -138,35 +97,12 @@ static void init_memindex_operand(struct insn *insn, unsigned long idx,
 	operand->index_reg.kind = USE_KIND_INPUT;
 }
 
-static void init_memlocal_operand(struct insn *insn, unsigned long idx,
-				  struct stack_slot *slot)
+static void init_reg_operand(struct insn *insn, struct operand *operand, struct var_info *reg)
 {
-	struct operand *operand;
-
-	operand = &insn->operands[idx];
-	operand->type = OPERAND_MEMLOCAL;
-	operand->slot = slot;
-}
-
-static void init_reg_operand(struct insn *insn, unsigned long idx,
-			     struct var_info *reg)
-{
-	struct operand *operand;
-
-	operand = &insn->operands[idx];
 	operand->type = OPERAND_REG;
 
 	init_register(&operand->reg, insn, reg->interval);
-	operand->reg.kind = insn_operand_use_kind(insn, idx);
-}
-
-static void init_rel_operand(struct insn *insn, unsigned long idx,
-			     unsigned long rel)
-{
-	struct operand *operand = &insn->operands[idx];
-
-	operand->type = OPERAND_REL;
-	operand->rel = rel;
+	operand->reg.kind = insn_operand_use_kind(insn, operand);
 }
 
 struct insn *insn(enum insn_type insn_type)
@@ -174,8 +110,12 @@ struct insn *insn(enum insn_type insn_type)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_none_operand(insn, 0);
-		init_none_operand(insn, 1);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_NONE,
+		};
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_NONE,
+		};
 	}
 	return insn;
 }
@@ -187,8 +127,13 @@ struct insn *memlocal_reg_insn(enum insn_type insn_type,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_memlocal_operand(insn, 0, src_slot);
-		init_reg_operand(insn, 1, dest_reg);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_MEMLOCAL,
+			{
+				.slot		= src_slot,
+			}
+		};
+		init_reg_operand(insn, &insn->dest, dest_reg);
 	}
 	return insn;
 }
@@ -199,8 +144,8 @@ struct insn *membase_reg_insn(enum insn_type insn_type, struct var_info *src_bas
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_membase_operand(insn, 0, src_base_reg, src_disp);
-		init_reg_operand(insn, 1, dest_reg);
+		init_membase_operand(insn, &insn->src, src_base_reg, src_disp);
+		init_reg_operand(insn, &insn->dest, dest_reg);
 	}
 	return insn;
 }
@@ -213,7 +158,7 @@ struct insn *memindex_insn(enum insn_type insn_type,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn)
-		init_memindex_operand(insn, 0, src_base_reg, src_index_reg, src_shift);
+		init_memindex_operand(insn, &insn->src, src_base_reg, src_index_reg, src_shift);
 
 	return insn;
 }
@@ -225,8 +170,8 @@ struct insn *memindex_reg_insn(enum insn_type insn_type,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_memindex_operand(insn, 0, src_base_reg, src_index_reg, src_shift);
-		init_reg_operand(insn, 1, dest_reg);
+		init_memindex_operand(insn, &insn->src, src_base_reg, src_index_reg, src_shift);
+		init_reg_operand(insn, &insn->dest, dest_reg);
 	}
 	return insn;
 }
@@ -238,8 +183,8 @@ reg_membase_insn(enum insn_type insn_type, struct var_info *src_reg,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_reg_operand(insn, 0, src_reg);
-		init_membase_operand(insn, 1, dest_base_reg, dest_disp);
+		init_reg_operand(insn, &insn->src, src_reg);
+		init_membase_operand(insn, &insn->dest, dest_base_reg, dest_disp);
 	}
 	return insn;
 }
@@ -251,8 +196,13 @@ reg_memlocal_insn(enum insn_type insn_type, struct var_info *src_reg,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_reg_operand(insn, 0, src_reg);
-		init_memlocal_operand(insn, 1, dest_slot);
+		init_reg_operand(insn, &insn->src, src_reg);
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_MEMLOCAL,
+			{
+				.slot		= dest_slot,
+			}
+		};
 	}
 	return insn;
 }
@@ -266,8 +216,8 @@ struct insn *reg_memindex_insn(enum insn_type insn_type,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_reg_operand(insn, 0, src_reg);
-		init_memindex_operand(insn, 1, dest_base_reg, dest_index_reg, dest_shift);
+		init_reg_operand(insn, &insn->src, src_reg);
+		init_memindex_operand(insn, &insn->dest, dest_base_reg, dest_index_reg, dest_shift);
 	}
 	return insn;
 }
@@ -278,8 +228,13 @@ struct insn *imm_reg_insn(enum insn_type insn_type, unsigned long imm,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_imm_operand(insn, 0, imm);
-		init_reg_operand(insn, 1, dest_reg);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+		init_reg_operand(insn, &insn->dest, dest_reg);
 	}
 	return insn;
 }
@@ -290,8 +245,13 @@ struct insn *memdisp_reg_insn(enum insn_type insn_type, unsigned long imm,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_imm_operand(insn, 0, imm);
-		init_reg_operand(insn, 1, dest_reg);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+		init_reg_operand(insn, &insn->dest, dest_reg);
 	}
 	return insn;
 }
@@ -302,8 +262,13 @@ struct insn *reg_memdisp_insn(enum insn_type insn_type,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_reg_operand(insn, 0, src_reg);
-		init_imm_operand(insn, 1, imm);
+		init_reg_operand(insn, &insn->src, src_reg);
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
 	}
 	return insn;
 }
@@ -313,8 +278,16 @@ struct insn *imm_memdisp_insn(enum insn_type insn_type, long imm, long disp)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_imm_operand(insn, 0, imm);
-		init_memdisp_operand(insn, 1, disp);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_MEMDISP,
+		};
+		insn->dest.disp		= disp;
 	}
 	return insn;
 }
@@ -325,8 +298,13 @@ struct insn *imm_membase_insn(enum insn_type insn_type, unsigned long imm,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_imm_operand(insn, 0, imm);
-		init_membase_operand(insn, 1, base_reg, disp);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+		init_membase_operand(insn, &insn->dest, base_reg, disp);
 	}
 	return insn;
 }
@@ -336,8 +314,10 @@ struct insn *reg_insn(enum insn_type insn_type, struct var_info *reg)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_reg_operand(insn, 0, reg);
-		init_none_operand(insn, 1);
+		init_reg_operand(insn, &insn->src, reg);
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_NONE,
+		};
 	}
 
 	return insn;
@@ -348,8 +328,8 @@ struct insn *reg_reg_insn(enum insn_type insn_type, struct var_info *src, struct
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_reg_operand(insn, 0, src);
-		init_reg_operand(insn, 1, dest);
+		init_reg_operand(insn, &insn->src, src);
+		init_reg_operand(insn, &insn->dest, dest);
 	}
 	return insn;
 }
@@ -359,8 +339,15 @@ struct insn *imm_insn(enum insn_type insn_type, unsigned long imm)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_imm_operand(insn, 0, imm);
-		init_none_operand(insn, 1);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_NONE,
+		};
 	}
 	return insn;
 }
@@ -370,8 +357,15 @@ struct insn *rel_insn(enum insn_type insn_type, unsigned long rel)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_rel_operand(insn, 0, rel);
-		init_none_operand(insn, 1);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_REL,
+			{
+				.rel		= rel,
+			}
+		};
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_NONE,
+		};
 	}
 	return insn;
 }
@@ -381,8 +375,15 @@ struct insn *branch_insn(enum insn_type insn_type, struct basic_block *if_true)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_branch_operand(insn, 0, if_true);
-		init_none_operand(insn, 1);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_BRANCH,
+			{
+				.branch_target	= if_true,
+			}
+		};
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_NONE,
+		};
 	}
 	return insn;
 }
@@ -392,7 +393,12 @@ struct insn *memlocal_insn(enum insn_type insn_type, struct stack_slot *slot)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn)
-		init_memlocal_operand(insn, 0, slot);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_MEMLOCAL,
+			{
+				.slot		= slot,
+			}
+		};
 
 	return insn;
 }
@@ -403,7 +409,7 @@ struct insn *membase_insn(enum insn_type insn_type, struct var_info *src_base_re
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn)
-		init_membase_operand(insn, 0, src_base_reg, src_disp);
+		init_membase_operand(insn, &insn->src, src_base_reg, src_disp);
 
 	return insn;
 }
@@ -415,8 +421,18 @@ struct insn *imm_memlocal_insn(enum insn_type insn_type,
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		init_imm_operand(insn, 0, imm);
-		init_memlocal_operand(insn, 1, dst_slot);
+		insn->src	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_MEMLOCAL,
+			{
+				.slot		= dst_slot,
+			}
+		};
 	}
 	return insn;
 }
@@ -769,7 +785,7 @@ int insn_uses(struct insn *insn, struct var_info **uses)
 	return nr;
 }
 
-int insn_operand_use_kind(struct insn *insn, int idx)
+int insn_operand_use_kind(struct insn *insn, struct operand *operand)
 {
 	unsigned long flags;
 	int kind_mask;
@@ -778,11 +794,11 @@ int insn_operand_use_kind(struct insn *insn, int idx)
 
 	flags = insn_flags[insn->type];
 
-	if (idx == 0) {
+	if (operand == &insn->src) {
 		use_mask = USE_SRC;
 		def_mask = DEF_SRC;
 	} else {
-		assert(idx == 1);
+		assert(operand == &insn->dest);
 		use_mask = USE_DST;
 		def_mask = DEF_DST;
 	}

@@ -19,7 +19,7 @@ void free_insn(struct insn *);
 
 int insn_defs(struct compilation_unit *, struct insn *, struct var_info **);
 int insn_uses(struct insn *, struct var_info **);
-int insn_operand_use_kind(struct insn *, int);
+int insn_operand_use_kind(struct insn *, struct operand *operand);
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
 
