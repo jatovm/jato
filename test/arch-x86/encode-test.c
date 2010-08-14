@@ -55,6 +55,26 @@ void test_encoding_one_byte(void)
 	teardown();
 }
 
+void test_encoding_call_reg(void)
+{
+	uint8_t encoding[] = { 0xff, 0x13 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    *(%ebx) */
+	insn.type			= INSN_CALL_REG;
+	insn.operand.type		= OPERAND_REG;
+	insn.operand.reg.interval	= &reg_ebx;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
 void test_encoding_imm_reg(void)
 {
 	uint8_t encoding[] = { 0x81, 0xd3, 0x78, 0x56, 0x34, 0x12 };

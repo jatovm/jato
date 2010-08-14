@@ -1059,12 +1059,6 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 	emit(buf, x86_encode_mod_rm(0x3, 0x04, x86_encode_reg(reg)));
 }
 
-static void emit_indirect_call(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xff);
-	emit(buf, x86_encode_mod_rm(0x0, 0x2, encode_reg(&insn->operand.reg)));
-}
-
 static void __emit_test_membase_reg(struct buffer *buf, enum machine_reg src,
 				    unsigned long disp, enum machine_reg dest)
 {
@@ -2820,7 +2814,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_REG_REG, insn_encode),
-	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
+	DECL_EMITTER(INSN_CALL_REG, insn_encode),
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg),
 	DECL_EMITTER(INSN_CMP_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, insn_encode),

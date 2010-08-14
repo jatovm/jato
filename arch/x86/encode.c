@@ -124,21 +124,20 @@ enum x86_insn_flags {
 	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL,
 
 	/* Destination operand */
-#define DST_NONE			0UL
-
-	DST_REG			= (1U << 19),
-	DST_ACC			= (1U << 20),	/* AL/AX */
-	DST_MEM			= (1U << 21),
-	DST_MEM_DISP_BYTE	= (1U << 22),	/* 8 bits */
-	DST_MEM_DISP_FULL	= (1U << 23),	/* 16 bits or 32 bits */
+	DST_NONE		= (1U << 19),
+	DST_REG			= (1U << 20),
+	DST_ACC			= (1U << 21),	/* AL/AX */
+	DST_MEM			= (1U << 22),
+	DST_MEM_DISP_BYTE	= (1U << 23),	/* 8 bits */
+	DST_MEM_DISP_FULL	= (1U << 24),	/* 16 bits or 32 bits */
 	DST_MASK		= DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
 
 	MEM_DISP_MASK		= SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
 
-	ESCAPE_OPC_BYTE		= (1U << 24),	/* Escape opcode byte */
-	REPNE_PREFIX		= (1U << 25),	/* REPNE/REPNZ or SSE prefix */
-	REPE_PREFIX		= (1U << 26),	/* REP/REPE/REPZ or SSE prefix */
-	OPC_EXT			= (1U << 27),	/* The reg field of ModR/M byte provides opcode extension */
+	ESCAPE_OPC_BYTE		= (1U << 25),	/* Escape opcode byte */
+	REPNE_PREFIX		= (1U << 26),	/* REPNE/REPNZ or SSE prefix */
+	REPE_PREFIX		= (1U << 27),	/* REP/REPE/REPZ or SSE prefix */
+	OPC_EXT			= (1U << 28),	/* The reg field of ModR/M byte provides opcode extension */
 };
 
 /*
@@ -156,6 +155,7 @@ enum x86_addmode {
 	ADDMODE_REG		= SRC_REG|DST_NONE,		/* register */
 	ADDMODE_REG_REG		= SRC_REG|DST_REG|MOD_RM|DIR_REVERSED,	/* register -> register */
 	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,	/* register -> register/memory */
+	ADDMODE_RM		= SRC_REG|MOD_RM|DST_NONE|DIR_REVERSED,	/* register -> register/memory */
 	ADDMODE_REL		= SRC_REL|DST_NONE,		/* relative */
 	ADDMODE_RM_REG		= DST_REG|MOD_RM,		/* register/memory -> register */
 };
@@ -177,6 +177,7 @@ static uint32_t encode_table[NR_INSN_TYPES] = {
 	[INSN_ADD_REG_REG]		= OPCODE(0x01) | ADDMODE_REG_REG | WIDTH_FULL,
 	[INSN_AND_MEMBASE_REG]		= OPCODE(0x23) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_AND_REG_REG]		= OPCODE(0x21) | ADDMODE_REG_REG | WIDTH_FULL,
+	[INSN_CALL_REG]			= OPCODE(0xFF) | OPCODE_EXT(2)   | ADDMODE_RM | WIDTH_FULL,
 	[INSN_CMP_IMM_REG]		= OPCODE(0x81) | OPCODE_EXT(7)   | ADDMODE_IMM_REG | WIDTH_FULL,
 	[INSN_CMP_MEMBASE_REG]		= OPCODE(0x3b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_CMP_REG_REG]		= OPCODE(0x39) | ADDMODE_REG_REG | WIDTH_FULL,
@@ -329,7 +330,9 @@ static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint32_
 	if (need_sib)
 		rm		= 0x04;
 	else {
-		if (flags & DIR_REVERSED)
+		if (flags & DST_NONE)
+			rm		= encode_reg(&self->operand.reg);
+		else if (flags & DIR_REVERSED)
 			rm		= encode_reg(&self->dest.reg);
 		else
 			rm		= encode_reg(&self->src.reg);
