@@ -297,7 +297,7 @@ static inline bool insn_uses_reg(struct insn *self, enum machine_reg reg)
 
 static inline bool insn_need_disp(struct insn *self, uint32_t flags)
 {
-#if CONFIG_X86_64
+#ifdef CONFIG_X86_64
 	if (insn_uses_reg(self, MACH_REG_R13) || insn_uses_reg(self, MACH_REG_RBP))
 		return true;
 #endif
