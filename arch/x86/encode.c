@@ -361,15 +361,24 @@ static inline bool operand_is_reg_64(struct operand *operand)
 	return true;
 }
 
-static uint8_t insn_rex_prefix(struct insn *self)
+static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
 {
 	uint8_t ret = 0;
 
 	if (operand_is_reg_64(&self->src) || operand_is_reg_64(&self->dest))
 		ret	|= REX_W;
 
-	if (operand_is_reg_high(&self->src) || operand_is_reg_high(&self->dest))
-		ret	|= REX_B;
+	if (flags & DIR_REVERSED) {
+		if (operand_is_reg_high(&self->src))
+			ret	|= REX_R;
+		if (operand_is_reg_high(&self->dest))
+			ret	|= REX_B;
+	} else {
+		if (operand_is_reg_high(&self->src))
+			ret	|= REX_B;
+		if (operand_is_reg_high(&self->dest))
+			ret	|= REX_R;
+	}
 
 	return ret;
 }
@@ -449,7 +458,7 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 	if (flags & ESCAPE_OPC_BYTE)
 		emit(buffer, 0x0f);
 
-	rex_prefix	= insn_rex_prefix(self);
+	rex_prefix	= insn_rex_prefix(self, flags);
 	if (rex_prefix)
 		emit(buffer, rex_prefix);
 

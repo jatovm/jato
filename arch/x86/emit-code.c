@@ -1617,14 +1617,6 @@ static void emit_movzx_16_reg_reg(struct insn *insn, struct buffer *buf, struct 
 			    mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
 }
 
-static void emit_add_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
-		emit_reg_reg(buf, 1, 0x03, &insn->dest, &insn->src);
-	else
-		emit_reg_reg(buf, 0, 0x03, &insn->dest, &insn->src);
-}
-
 static void emit_sub_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
@@ -2811,6 +2803,7 @@ static void do_emit_insn(struct emitter *emitter, struct buffer *buf, struct ins
 
 static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADD_IMM_REG, insn_encode),
+	DECL_EMITTER(INSN_ADD_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_CALL_REL, emit_call),
 	DECL_EMITTER(INSN_JE_BRANCH, emit_je_branch),
 	DECL_EMITTER(INSN_JGE_BRANCH, emit_jge_branch),
@@ -2825,7 +2818,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, insn_encode),
-	DECL_EMITTER(INSN_ADD_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
@@ -2933,7 +2925,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_XOR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_XOR_XMM_REG_REG, emit_xor_xmm_reg_reg),
 #else /* CONFIG_X86_64 */
-	DECL_EMITTER(INSN_ADD_REG_REG, emit_add_reg_reg),
 	DECL_EMITTER(INSN_CALL_REG, emit_indirect_call),
 	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg),
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
