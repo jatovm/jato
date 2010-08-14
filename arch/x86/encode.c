@@ -280,12 +280,38 @@ static inline uint32_t mod_dest_encode(uint32_t flags)
 	die("unrecognized flags %x", flags & DST_MASK);
 }
 
+#ifdef CONFIG_X86_64
+static inline bool operand_uses_reg(struct operand *operand, enum machine_reg reg)
+{
+	if (!operand_is_reg(operand))
+		return false;
+
+	return mach_reg(&operand->reg) == reg;
+}
+
+static inline bool insn_uses_reg(struct insn *self, enum machine_reg reg)
+{
+	return operand_uses_reg(&self->src, reg) || operand_uses_reg(&self->dest, reg);
+}
+#endif
+
+static inline bool insn_need_disp(struct insn *self, uint32_t flags)
+{
+#if CONFIG_X86_64
+	if (insn_uses_reg(self, MACH_REG_R13) || insn_uses_reg(self, MACH_REG_RBP))
+		return true;
+#endif
+	return false;
+}
+
 static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t flags)
 {
 	uint8_t base;
 	uint8_t sib;
 
-	if (flags & DIR_REVERSED)
+	if (flags & DST_NONE)
+		base	= encode_reg(&self->src.base_reg);
+	else if (flags & DIR_REVERSED)
 		base	= encode_reg(&self->dest.base_reg);
 	else
 		base	= encode_reg(&self->src.base_reg);
@@ -297,6 +323,10 @@ static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t f
 
 static bool insn_need_sib(struct insn *self, uint32_t flags)
 {
+#ifdef CONFIG_X86_64
+	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12))
+		return true;
+#endif
 	if (flags & OPC_EXT)
 		return false;
 
@@ -364,14 +394,27 @@ static inline bool operand_is_reg_64(struct operand *operand)
 	return true;
 }
 
-static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
+static uint8_t insn_rex_operand_64(struct insn *self)
 {
-	uint8_t ret = 0;
+	if (insn_is_call(self) || insn_is_branch(self))
+		return 0;
 
 	if (operand_is_reg_64(&self->src) || operand_is_reg_64(&self->dest))
-		ret	|= REX_W;
+		return REX_W;
 
-	if (flags & DIR_REVERSED) {
+	return 0;
+}
+
+static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
+{
+	uint8_t ret;
+
+	ret	= insn_rex_operand_64(self);
+
+	if (flags & DST_NONE) {
+		if (operand_is_reg_high(&self->operand))
+			ret	|= REX_B;
+	} else if (flags & DIR_REVERSED) {
 		if (operand_is_reg_high(&self->src))
 			ret	|= REX_R;
 		if (operand_is_reg_high(&self->dest))
@@ -402,7 +445,7 @@ static uint32_t insn_flags(struct insn *self, uint32_t encode)
 		if (flags & DST_REG)
 			return flags;
 
-		if (self->dest.disp == 0)
+		if (self->dest.disp == 0 && !insn_need_disp(self, flags))
 			flags	|= DST_MEM;
 		else if (is_imm_8(self->dest.disp))
 			flags	|= DST_MEM_DISP_BYTE;
@@ -412,7 +455,7 @@ static uint32_t insn_flags(struct insn *self, uint32_t encode)
 		if (flags & SRC_REG)
 			return flags;
 
-		if (self->src.disp == 0)
+		if (self->src.disp == 0 && !insn_need_disp(self, flags))
 			flags	|= SRC_MEM;
 		else if (is_imm_8(self->src.disp))
 			flags	|= SRC_MEM_DISP_BYTE;

@@ -21,6 +21,9 @@ static DEFINE_REG(MACH_REG_XMM7, reg_xmm7);
 #ifdef CONFIG_X86_64
 static DEFINE_REG(MACH_REG_RAX, reg_rax);
 static DEFINE_REG(MACH_REG_RBX, reg_rbx);
+static DEFINE_REG(MACH_REG_RBP, reg_rbp);
+static DEFINE_REG(MACH_REG_R12, reg_r12);
+static DEFINE_REG(MACH_REG_R13, reg_r13);
 static DEFINE_REG(MACH_REG_R14, reg_r14);
 static DEFINE_REG(MACH_REG_R15, reg_r15);
 #endif
@@ -75,6 +78,97 @@ void test_encoding_call_reg(void)
 	teardown();
 }
 
+void test_encoding_call_reg_high(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0x41, 0xff, 0x17 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    *(%r15) */
+	insn.type			= INSN_CALL_REG;
+	insn.operand.type		= OPERAND_REG;
+	insn.operand.reg.interval	= &reg_r15;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
+void test_encoding_call_reg_rbp(void)
+{
+#ifdef CONFIG_X86_64
+	/* rbp is special and needs a forced displacement */
+	uint8_t encoding[] = { 0xff, 0x55, 0x00 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    *(%rbp) */
+	insn.type			= INSN_CALL_REG;
+	insn.operand.type		= OPERAND_REG;
+	insn.operand.reg.interval	= &reg_rbp;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
+void test_encoding_call_reg_r12(void)
+{
+#ifdef CONFIG_X86_64
+	/* rbp is special and needs a forced SIB */
+	uint8_t encoding[] = { 0x41, 0xff, 0x14, 0x24 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    *(%rbp) */
+	insn.type			= INSN_CALL_REG;
+	insn.operand.type		= OPERAND_REG;
+	insn.operand.reg.interval	= &reg_r12;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
+void test_encoding_call_reg_r13(void)
+{
+#ifdef CONFIG_X86_64
+	/* r13 is special and needs a forced displacement */
+	uint8_t encoding[] = { 0x41, 0xff, 0x55, 0x00 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    *(%r13) */
+	insn.type			= INSN_CALL_REG;
+	insn.operand.type		= OPERAND_REG;
+	insn.operand.reg.interval	= &reg_r13;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
 void test_encoding_imm_reg(void)
 {
 	uint8_t encoding[] = { 0x81, 0xd3, 0x78, 0x56, 0x34, 0x12 };
@@ -93,6 +187,29 @@ void test_encoding_imm_reg(void)
 	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
 
 	teardown();
+}
+
+void test_encoding_imm_reg_r12(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0x49, 0x81, 0xd4, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* mov    $0x12345678,%ebx */
+	insn.type			= INSN_ADC_IMM_REG;
+	insn.src.imm			= 0x12345678;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_r12;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
 }
 
 void test_encoding_imm_reg_esp(void)

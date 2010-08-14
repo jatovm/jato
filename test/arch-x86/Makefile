@@ -3,6 +3,8 @@ SUITE	= x86-test-suite.c
 
 TOPLEVEL_OBJS	+= arch/x86/backtrace.o
 TOPLEVEL_OBJS	+= arch/x86/encode.o
+TOPLEVEL_OBJS	+= arch/x86/init.o
+TOPLEVEL_OBJS	+= arch/x86/instruction.o
 TOPLEVEL_OBJS	+= lib/buffer.o
 TOPLEVEL_OBJS	+= lib/string.o
 TOPLEVEL_OBJS	+= test/libharness/libharness.o
