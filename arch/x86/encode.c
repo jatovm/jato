@@ -383,7 +383,7 @@ static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
 	return ret;
 }
 #else
-static uint8_t insn_rex_prefix(struct insn *self)
+static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
 {
 	return 0;
 }
