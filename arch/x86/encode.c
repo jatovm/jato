@@ -36,6 +36,7 @@
 
 #include "vm/die.h"
 
+#include <inttypes.h>
 #include <stdint.h>
 
 static uint8_t x86_register_numbers[] = {
@@ -97,47 +98,47 @@ uint8_t x86_encode_reg(enum machine_reg reg)
 }
 
 enum x86_insn_flags {
-	MOD_RM			= (1U << 8),
-	DIR_REVERSED		= (1U << 9),
+	MOD_RM			= (1ULL << 8),
+	DIR_REVERSED		= (1ULL << 9),
 
 	/* Operand sizes */
 #define WIDTH_BYTE			0UL
 
-	WIDTH_FULL		= (1U << 10),	/* 16 bits or 32 bits */
+	WIDTH_FULL		= (1ULL << 10),	/* 16 bits or 32 bits */
 	WIDTH_MASK		= WIDTH_BYTE|WIDTH_FULL,
 
 	/* Source operand */
-	SRC_NONE		= (1U << 11),
+	SRC_NONE		= (1ULL << 11),
 
-	SRC_IMM			= (1U << 12),
-	SRC_IMM8		= (1U << 13),
+	SRC_IMM			= (1ULL << 12),
+	SRC_IMM8		= (1ULL << 13),
 	IMM_MASK		= SRC_IMM|SRC_IMM8,
 
 #define SRC_REL			SRC_IMM
 	REL_MASK		= SRC_IMM,
 
-	SRC_REG			= (1U << 14),
-	SRC_ACC			= (1U << 15),
-	SRC_MEM			= (1U << 16),
-	SRC_MEM_DISP_BYTE	= (1U << 17),
-	SRC_MEM_DISP_FULL	= (1U << 18),
+	SRC_REG			= (1ULL << 14),
+	SRC_ACC			= (1ULL << 15),
+	SRC_MEM			= (1ULL << 16),
+	SRC_MEM_DISP_BYTE	= (1ULL << 17),
+	SRC_MEM_DISP_FULL	= (1ULL << 18),
 	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL,
 
 	/* Destination operand */
-	DST_NONE		= (1U << 19),
-	DST_REG			= (1U << 20),
-	DST_ACC			= (1U << 21),	/* AL/AX */
-	DST_MEM			= (1U << 22),
-	DST_MEM_DISP_BYTE	= (1U << 23),	/* 8 bits */
-	DST_MEM_DISP_FULL	= (1U << 24),	/* 16 bits or 32 bits */
+	DST_NONE		= (1ULL << 19),
+	DST_REG			= (1ULL << 20),
+	DST_ACC			= (1ULL << 21),	/* AL/AX */
+	DST_MEM			= (1ULL << 22),
+	DST_MEM_DISP_BYTE	= (1ULL << 23),	/* 8 bits */
+	DST_MEM_DISP_FULL	= (1ULL << 24),	/* 16 bits or 32 bits */
 	DST_MASK		= DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
 
 	MEM_DISP_MASK		= SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
 
-	ESCAPE_OPC_BYTE		= (1U << 25),	/* Escape opcode byte */
-	REPNE_PREFIX		= (1U << 26),	/* REPNE/REPNZ or SSE prefix */
-	REPE_PREFIX		= (1U << 27),	/* REP/REPE/REPZ or SSE prefix */
-	OPC_EXT			= (1U << 28),	/* The reg field of ModR/M byte provides opcode extension */
+	ESCAPE_OPC_BYTE		= (1ULL << 25),	/* Escape opcode byte */
+	REPNE_PREFIX		= (1ULL << 26),	/* REPNE/REPNZ or SSE prefix */
+	REPE_PREFIX		= (1ULL << 27),	/* REP/REPE/REPZ or SSE prefix */
+	OPC_EXT			= (1ULL << 28),	/* The reg field of ModR/M byte provides opcode extension */
 };
 
 /*
@@ -161,14 +162,14 @@ enum x86_addmode {
 };
 
 #define OPCODE(opc)		opc
-#define OPCODE_MASK		0x000000ffUL
-#define FLAGS_MASK		0x1fffff00UL
+#define OPCODE_MASK		0x00000000000000ffULL
+#define FLAGS_MASK		0x1fffffffffffff00ULL
 
-#define OPCODE_EXT_SHIFT	29
-#define OPCODE_EXT(opc_ext)	((opc_ext << OPCODE_EXT_SHIFT) | OPC_EXT | MOD_RM)
-#define OPCODE_EXT_MASK		(0xe0000000)
+#define OPCODE_EXT_SHIFT	61
+#define OPCODE_EXT(opc_ext)	(((uint64_t)opc_ext << OPCODE_EXT_SHIFT) | OPC_EXT | MOD_RM)
+#define OPCODE_EXT_MASK		(0xe000000000000000ULL)
 
-static uint32_t encode_table[NR_INSN_TYPES] = {
+static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_ADC_IMM_REG]		= OPCODE(0x81) | OPCODE_EXT(2)   | ADDMODE_IMM_REG | WIDTH_FULL,
 	[INSN_ADC_MEMBASE_REG]		= OPCODE(0x13) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_ADC_REG_REG]		= OPCODE(0x11) | ADDMODE_REG_REG | WIDTH_FULL,
@@ -244,7 +245,7 @@ static unsigned char encode_reg(struct use_position *reg)
 	return x86_encode_reg(mach_reg(reg));
 }
 
-static inline uint32_t mod_src_encode(uint32_t flags)
+static inline uint32_t mod_src_encode(uint64_t flags)
 {
 	switch (flags & SRC_MASK) {
 	case SRC_MEM:
@@ -259,10 +260,10 @@ static inline uint32_t mod_src_encode(uint32_t flags)
 		break;
 	}
 
-	die("unrecognized flags %x", flags);
+	die("unrecognized flags %" PRIx64, flags);
 }
 
-static inline uint32_t mod_dest_encode(uint32_t flags)
+static inline uint32_t mod_dest_encode(uint64_t flags)
 {
 	switch (flags & DST_MASK) {
 	case DST_MEM:
@@ -277,7 +278,7 @@ static inline uint32_t mod_dest_encode(uint32_t flags)
 		break;
 	}
 
-	die("unrecognized flags %x", flags & DST_MASK);
+	die("unrecognized flags %" PRIx64, flags & DST_MASK);
 }
 
 #ifdef CONFIG_X86_64
@@ -295,7 +296,7 @@ static inline bool insn_uses_reg(struct insn *self, enum machine_reg reg)
 }
 #endif
 
-static inline bool insn_need_disp(struct insn *self, uint32_t flags)
+static inline bool insn_need_disp(struct insn *self, uint64_t flags)
 {
 #ifdef CONFIG_X86_64
 	if (insn_uses_reg(self, MACH_REG_R13) || insn_uses_reg(self, MACH_REG_RBP))
@@ -304,7 +305,7 @@ static inline bool insn_need_disp(struct insn *self, uint32_t flags)
 	return false;
 }
 
-static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t flags)
+static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint64_t flags)
 {
 	uint8_t base;
 	uint8_t sib;
@@ -319,7 +320,7 @@ static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t f
 	emit(buffer, sib);
 }
 
-static bool insn_need_sib(struct insn *self, uint32_t flags)
+static bool insn_need_sib(struct insn *self, uint64_t flags)
 {
 #ifdef CONFIG_X86_64
 	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12)) /* DST_NONE? */
@@ -334,7 +335,7 @@ static bool insn_need_sib(struct insn *self, uint32_t flags)
 	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
 }
 
-static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint32_t flags, uint8_t opc_ext)
+static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint64_t flags, uint8_t opc_ext)
 {
 	uint8_t mod_rm, mod, reg_opcode, rm;
 	bool need_sib;
@@ -401,7 +402,7 @@ static uint8_t insn_rex_operand_64(struct insn *self)
 	return 0;
 }
 
-static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
+static uint8_t insn_rex_prefix(struct insn *self, uint64_t flags)
 {
 	uint8_t ret;
 
@@ -422,15 +423,15 @@ static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
 	return ret;
 }
 #else
-static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
+static uint8_t insn_rex_prefix(struct insn *self, uint64_t flags)
 {
 	return 0;
 }
 #endif
 
-static uint32_t insn_flags(struct insn *self, uint32_t encode)
+static uint64_t insn_flags(struct insn *self, uint64_t encode)
 {
-	uint32_t flags;
+	uint64_t flags;
 
 	flags	= encode & FLAGS_MASK;
 
@@ -459,12 +460,12 @@ static uint32_t insn_flags(struct insn *self, uint32_t encode)
 	return flags;
 }
 
-static uint8_t insn_opc_ext(struct insn *self, uint32_t encode)
+static uint8_t insn_opc_ext(struct insn *self, uint64_t encode)
 {
 	return (encode & OPCODE_EXT_MASK) >> OPCODE_EXT_SHIFT;
 }
 
-static uint8_t insn_opcode(struct insn *self, uint32_t encode)
+static uint8_t insn_opcode(struct insn *self, uint64_t encode)
 {
 	return encode & OPCODE_MASK;
 }
@@ -472,9 +473,9 @@ static uint8_t insn_opcode(struct insn *self, uint32_t encode)
 void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *bb)
 {
 	uint8_t rex_prefix;
-	uint32_t encode;
+	uint64_t encode;
 	uint8_t opc_ext;
-	uint32_t flags;
+	uint64_t flags;
 	uint8_t opcode;
 
 	encode		= encode_table[self->type];
