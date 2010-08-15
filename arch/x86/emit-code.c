@@ -1475,19 +1475,9 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 	__emit_reg(buf, 0, 0x50, reg);
 }
 
-static void emit_push_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_push_reg(buf, mach_reg(&insn->operand.reg));
-}
-
 static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 {
 	__emit_reg(buf, 0, 0x58, reg);
-}
-
-static void emit_pop_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_pop_reg(buf, mach_reg(&insn->operand.reg));
 }
 
 static void __emit_lopc_reg_reg(struct buffer *buf,
@@ -2791,6 +2781,8 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch),
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch),
 	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch),
+	DECL_EMITTER(INSN_POP_REG, insn_encode),
+	DECL_EMITTER(INSN_PUSH_REG, insn_encode),
 	DECL_EMITTER(INSN_RET, insn_encode),
 #ifdef CONFIG_X86_32
 	DECL_EMITTER(INSN_ADC_IMM_REG, insn_encode),
@@ -2882,10 +2874,8 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_OR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal),
-	DECL_EMITTER(INSN_POP_REG, insn_encode),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
 	DECL_EMITTER(INSN_PUSH_MEMLOCAL, emit_push_memlocal),
-	DECL_EMITTER(INSN_PUSH_REG, insn_encode),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg),
 	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg),
 	DECL_EMITTER(INSN_SBB_IMM_REG, insn_encode),
@@ -2929,8 +2919,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
 	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
-	DECL_EMITTER(INSN_PUSH_REG, emit_push_reg),
-	DECL_EMITTER(INSN_POP_REG, emit_pop_reg),
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg),
