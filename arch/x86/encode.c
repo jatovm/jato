@@ -139,6 +139,7 @@ enum x86_insn_flags {
 	REPNE_PREFIX		= (1ULL << 26),	/* REPNE/REPNZ or SSE prefix */
 	REPE_PREFIX		= (1ULL << 27),	/* REP/REPE/REPZ or SSE prefix */
 	OPC_EXT			= (1ULL << 28),	/* The reg field of ModR/M byte provides opcode extension */
+	OPC_REG			= (1ULL << 29), /* The opcode byte also provides operand register */
 };
 
 /*
@@ -191,6 +192,8 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_MOV_XMM_MEMBASE]		= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_FULL,
 	[INSN_OR_MEMBASE_REG]		= OPCODE(0x0b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_OR_REG_REG]		= OPCODE(0x09) | ADDMODE_REG_REG | WIDTH_FULL,
+	[INSN_POP_REG]			= OPCODE(0x58) | OPC_REG         | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL,
+	[INSN_PUSH_REG]			= OPCODE(0x50) | OPC_REG         | ADDMODE_REG     | WIDTH_FULL,
 	[INSN_RET]			= OPCODE(0xc3) | ADDMODE_IMPLIED,
 	[INSN_SBB_IMM_REG]		= OPCODE(0x81) | OPCODE_EXT(3)   | ADDMODE_IMM_REG | WIDTH_FULL,
 	[INSN_SBB_MEMBASE_REG]		= OPCODE(0x1b) | ADDMODE_RM_REG  | WIDTH_FULL,
@@ -501,6 +504,13 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 	rex_prefix	= insn_rex_prefix(self, flags);
 	if (rex_prefix)
 		emit(buffer, rex_prefix);
+
+	if (flags & OPC_REG) {
+		if (flags & DIR_REVERSED)
+			opcode		+= encode_reg(&self->dest.reg);
+		else
+			opcode		+= encode_reg(&self->src.reg);
+	}
 
 	emit(buffer, opcode);
 

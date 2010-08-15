@@ -3564,10 +3564,10 @@ static void select_trace_return_value(struct basic_block *s,
 		select_insn(s, tree, membase_insn(INSN_FLD_64_MEMBASE, esp, 0));
 		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 8, esp));
 	} else if (ret_vm_type == J_LONG) {
-		select_insn(s, tree, reg_insn(INSN_POP_REG, eax));
-		select_insn(s, tree, reg_insn(INSN_POP_REG, edx));
+		select_insn(s, tree, reverse_reg_insn(INSN_POP_REG, eax));
+		select_insn(s, tree, reverse_reg_insn(INSN_POP_REG, edx));
 	} else {
-		select_insn(s, tree, reg_insn(INSN_POP_REG, eax));
+		select_insn(s, tree, reverse_reg_insn(INSN_POP_REG, eax));
 	}
 }
 
