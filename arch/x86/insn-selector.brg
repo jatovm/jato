@@ -3787,7 +3787,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
 
 	/* invoke method */
-	call_insn = reg_insn(INSN_CALL_REG, call_target);
+	call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
 
 	select_safepoint_insn(s, tree, call_insn);
 	save_invoke_result(s, tree, method, stmt);
@@ -3836,7 +3836,7 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 		(unsigned long) method, eax));
 
 	/* invoke method */
-	call_insn = reg_insn(INSN_CALL_REG, call_target);
+	call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
 
 	select_safepoint_insn(s, tree, call_insn);
 	save_invoke_result(s, tree, method, stmt);

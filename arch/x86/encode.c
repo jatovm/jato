@@ -309,9 +309,7 @@ static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t f
 	uint8_t base;
 	uint8_t sib;
 
-	if (flags & DST_NONE)
-		base	= encode_reg(&self->src.base_reg);
-	else if (flags & DIR_REVERSED)
+	if (flags & DIR_REVERSED)
 		base	= encode_reg(&self->dest.base_reg);
 	else
 		base	= encode_reg(&self->src.base_reg);
@@ -324,7 +322,7 @@ static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint32_t f
 static bool insn_need_sib(struct insn *self, uint32_t flags)
 {
 #ifdef CONFIG_X86_64
-	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12))
+	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12)) /* DST_NONE? */
 		return true;
 #endif
 	if (flags & OPC_EXT)
@@ -360,9 +358,7 @@ static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint32_
 	if (need_sib)
 		rm		= 0x04;
 	else {
-		if (flags & DST_NONE)
-			rm		= encode_reg(&self->operand.reg);
-		else if (flags & DIR_REVERSED)
+		if (flags & DIR_REVERSED)
 			rm		= encode_reg(&self->dest.reg);
 		else
 			rm		= encode_reg(&self->src.reg);
@@ -411,10 +407,7 @@ static uint8_t insn_rex_prefix(struct insn *self, uint32_t flags)
 
 	ret	= insn_rex_operand_64(self);
 
-	if (flags & DST_NONE) {
-		if (operand_is_reg_high(&self->operand))
-			ret	|= REX_B;
-	} else if (flags & DIR_REVERSED) {
+	if (flags & DIR_REVERSED) {
 		if (operand_is_reg_high(&self->src))
 			ret	|= REX_R;
 		if (operand_is_reg_high(&self->dest))

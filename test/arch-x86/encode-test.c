@@ -67,8 +67,8 @@ void test_encoding_call_reg(void)
 
 	/* mov    *(%ebx) */
 	insn.type			= INSN_CALL_REG;
-	insn.operand.type		= OPERAND_REG;
-	insn.operand.reg.interval	= &reg_ebx;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_ebx;
 
 	insn_encode(&insn, buffer, NULL);
 
@@ -88,8 +88,8 @@ void test_encoding_call_reg_high(void)
 
 	/* mov    *(%r15) */
 	insn.type			= INSN_CALL_REG;
-	insn.operand.type		= OPERAND_REG;
-	insn.operand.reg.interval	= &reg_r15;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_r15;
 
 	insn_encode(&insn, buffer, NULL);
 
@@ -111,8 +111,8 @@ void test_encoding_call_reg_rbp(void)
 
 	/* mov    *(%rbp) */
 	insn.type			= INSN_CALL_REG;
-	insn.operand.type		= OPERAND_REG;
-	insn.operand.reg.interval	= &reg_rbp;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_rbp;
 
 	insn_encode(&insn, buffer, NULL);
 
@@ -134,8 +134,8 @@ void test_encoding_call_reg_r12(void)
 
 	/* mov    *(%rbp) */
 	insn.type			= INSN_CALL_REG;
-	insn.operand.type		= OPERAND_REG;
-	insn.operand.reg.interval	= &reg_r12;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_r12;
 
 	insn_encode(&insn, buffer, NULL);
 
@@ -157,8 +157,8 @@ void test_encoding_call_reg_r13(void)
 
 	/* mov    *(%r13) */
 	insn.type			= INSN_CALL_REG;
-	insn.operand.type		= OPERAND_REG;
-	insn.operand.reg.interval	= &reg_r13;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_r13;
 
 	insn_encode(&insn, buffer, NULL);
 

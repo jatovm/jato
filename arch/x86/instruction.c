@@ -304,7 +304,17 @@ struct insn *reg_insn(enum insn_type insn_type, struct var_info *reg)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn)
-		init_reg_operand(insn, &insn->operand, reg);
+		init_reg_operand(insn, &insn->src, reg);
+
+	return insn;
+}
+
+struct insn *reverse_reg_insn(enum insn_type insn_type, struct var_info *reg)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn)
+		init_reg_operand(insn, &insn->dest, reg);
 
 	return insn;
 }
@@ -584,7 +594,7 @@ static unsigned long insn_flags[] = {
 	[INSN_ADD_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_AND_MEMBASE_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_AND_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
-	[INSN_CALL_REG]				= USE_SRC | DEF_NONE | TYPE_CALL,
+	[INSN_CALL_REG]				= USE_DST | DEF_NONE | TYPE_CALL,
 	[INSN_CALL_REL]				= USE_NONE | DEF_NONE | TYPE_CALL,
 	[INSN_CLTD_REG_REG]			= USE_SRC | DEF_SRC | DEF_DST,
 	[INSN_CMP_IMM_REG]			= USE_DST,
