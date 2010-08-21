@@ -603,3 +603,22 @@ void test_encoding_rex_reg_reg_high_high(void)
 	teardown();
 #endif
 }
+
+void test_encoding_reg(void)
+{
+	uint8_t encoding[] = { 0xf7, 0xdb };
+	struct insn insn = { };
+
+	setup();
+
+	/* neg	%ebx */
+	insn.type			= INSN_NEG_REG;
+	insn.dest.reg.interval		= &reg_ebx;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}

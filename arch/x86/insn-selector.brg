@@ -608,14 +608,14 @@ reg:	OP_NEG(reg) 1
 	result = state->left->reg1;
 	state->reg1 = result;
 
-	select_insn(s, tree, reg_insn(INSN_NEG_REG, result));
+	select_insn(s, tree, reverse_reg_insn(INSN_NEG_REG, result));
 
 	if (expr->vm_type == J_LONG) {
 		result = state->left->reg2;
 		state->reg2 = result;
 
 		select_insn(s, tree, imm_reg_insn(INSN_ADC_IMM_REG, 0, result));
-		select_insn(s, tree, reg_insn(INSN_NEG_REG, result));
+		select_insn(s, tree, reverse_reg_insn(INSN_NEG_REG, result));
 	}
 }
 

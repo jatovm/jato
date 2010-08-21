@@ -961,7 +961,7 @@ static void emit_mul_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0xf7);
-	emit(buf, x86_encode_mod_rm(0x3, 0x3, encode_reg(&insn->operand.reg)));
+	emit(buf, x86_encode_mod_rm(0x3, 0x3, encode_reg(&insn->dest.reg)));
 }
 
 static void emit_div_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -2356,9 +2356,9 @@ static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_blo
 {
 	unsigned char rex_pfx = 0, rm;
 
-	rm = encode_reg(&insn->operand.reg);
+	rm = encode_reg(&insn->dest.reg);
 
-	if (is_64bit_reg(&insn->operand))
+	if (is_64bit_reg(&insn->dest))
 		rex_pfx |= REX_W;
 	if (reg_high(rm))
 		rex_pfx |= REX_B;
@@ -2861,7 +2861,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MUL_MEMBASE_EAX, emit_mul_membase_eax),
 	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
-	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg),
+	DECL_EMITTER(INSN_NEG_REG, insn_encode),
 	DECL_EMITTER(INSN_OR_IMM_MEMBASE, emit_or_imm_membase),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_OR_REG_REG, insn_encode),
