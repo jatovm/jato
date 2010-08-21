@@ -964,14 +964,6 @@ static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_blo
 	emit(buf, x86_encode_mod_rm(0x3, 0x3, encode_reg(&insn->operand.reg)));
 }
 
-static void emit_cltd_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	assert(mach_reg(&insn->src.reg) == MACH_REG_EAX);
-	assert(mach_reg(&insn->dest.reg) == MACH_REG_EDX);
-
-	emit(buf, 0x99);
-}
-
 static void emit_div_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_div_mul_membase_eax(buf, &insn->src, &insn->dest, 0x07);
@@ -2791,7 +2783,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_REG_REG, insn_encode),
-	DECL_EMITTER(INSN_CLTD_REG_REG, emit_cltd_reg_reg),
+	DECL_EMITTER(INSN_CLTD_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_REG_REG, insn_encode),
