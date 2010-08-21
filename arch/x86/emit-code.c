@@ -958,12 +958,6 @@ static void emit_mul_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_reg_reg(buf, 0xaf, mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
 }
 
-static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xf7);
-	emit(buf, x86_encode_mod_rm(0x3, 0x3, encode_reg(&insn->dest.reg)));
-}
-
 static void emit_div_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_div_mul_membase_eax(buf, &insn->src, &insn->dest, 0x07);
@@ -2342,23 +2336,6 @@ static void emit_div_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_div_mul_reg_rax(buf, &insn->src, &insn->dest, 0x07);
 }
 
-static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	unsigned char rex_pfx = 0, rm;
-
-	rm = encode_reg(&insn->dest.reg);
-
-	if (is_64bit_reg(&insn->dest))
-		rex_pfx |= REX_W;
-	if (reg_high(rm))
-		rex_pfx |= REX_B;
-
-	if (rex_pfx)
-		emit(buf, rex_pfx);
-	emit(buf, 0xf7);
-	emit(buf, x86_encode_mod_rm(0x3, 0x3, rm));
-}
-
 static void __emit64_push_xmm(struct buffer *buf, enum machine_reg reg)
 {
 	unsigned char opc[3] = { 0xF2, 0x0F, 0x11 };	/* MOVSD */
@@ -2764,6 +2741,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch),
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch),
 	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch),
+	DECL_EMITTER(INSN_NEG_REG, insn_encode),
 	DECL_EMITTER(INSN_POP_REG, insn_encode),
 	DECL_EMITTER(INSN_PUSH_REG, insn_encode),
 	DECL_EMITTER(INSN_RET, insn_encode),
@@ -2851,7 +2829,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MUL_MEMBASE_EAX, emit_mul_membase_eax),
 	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
-	DECL_EMITTER(INSN_NEG_REG, insn_encode),
 	DECL_EMITTER(INSN_OR_IMM_MEMBASE, emit_or_imm_membase),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_OR_REG_REG, insn_encode),
@@ -2898,7 +2875,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
 	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
-	DECL_EMITTER(INSN_NEG_REG, emit_neg_reg),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
 	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg),
