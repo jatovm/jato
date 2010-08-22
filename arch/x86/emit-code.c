@@ -958,12 +958,6 @@ static void emit_mul_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_reg_reg(buf, 0xaf, mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
 }
 
-static void emit_neg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xf7);
-	emit(buf, x86_encode_mod_rm(0x3, 0x3, encode_reg(&insn->dest.reg)));
-}
-
 static void emit_div_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_div_mul_membase_eax(buf, &insn->src, &insn->dest, 0x07);
@@ -974,36 +968,11 @@ static void emit_div_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_div_mul_reg_eax(buf, &insn->src, &insn->dest, 0x07);
 }
 
-static void __emit_shift_reg_reg(struct buffer *buf,
-				 struct operand *src,
-				 struct operand *dest, unsigned char opc_ext)
-{
-	assert(mach_reg(&src->reg) == MACH_REG_ECX);
-
-	emit(buf, 0xd3);
-	emit(buf, x86_encode_mod_rm(0x03, opc_ext, encode_reg(&dest->reg)));
-}
-
-static void emit_shl_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_shift_reg_reg(buf, &insn->src, &insn->dest, 0x04);
-}
-
 static void emit_sar_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0xc1);
 	emit(buf, x86_encode_mod_rm(0x03, 0x07, encode_reg(&insn->dest.reg)));
 	emit(buf, insn->src.imm);
-}
-
-static void emit_sar_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_shift_reg_reg(buf, &insn->src, &insn->dest, 0x07);
-}
-
-static void emit_shr_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_shift_reg_reg(buf, &insn->src, &insn->dest, 0x05);
 }
 
 static void emit_or_imm_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -2869,12 +2838,12 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
 	DECL_EMITTER(INSN_PUSH_MEMLOCAL, emit_push_memlocal),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg),
-	DECL_EMITTER(INSN_SAR_REG_REG, emit_sar_reg_reg),
+	DECL_EMITTER(INSN_SAR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_REG_REG, insn_encode),
-	DECL_EMITTER(INSN_SHL_REG_REG, emit_shl_reg_reg),
-	DECL_EMITTER(INSN_SHR_REG_REG, emit_shr_reg_reg),
+	DECL_EMITTER(INSN_SHL_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_SHR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_REG_REG, insn_encode),
