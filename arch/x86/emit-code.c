@@ -2889,6 +2889,9 @@ static void __emit_insn(struct buffer *buf, struct basic_block *bb, struct insn 
 
 	emitter = &emitters[insn->type];
 
+	if (!emitter->emit_fn)
+		die("no emitter for instruction type %d", insn->type);
+
 	do_emit_insn(emitter, buf, insn, bb);
 }
 
