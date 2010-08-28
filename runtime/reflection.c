@@ -710,7 +710,7 @@ static void *field_get_value(struct vm_field *vmf, struct vm_object *o)
 			return NULL;
 		}
 
-		value_p = &o->fields[vmf->offset];
+		value_p = field_get_object_ptr(o, vmf->offset);
 	}
 
 	return value_p;
@@ -879,7 +879,7 @@ void native_field_set(struct vm_object *this, struct vm_object *o,
 			return;
 		}
 
-		unwrap(&o->fields[vmf->offset], type, value_obj);
+		unwrap(field_get_object_ptr(o, vmf->offset), type, value_obj);
 	}
 }
 

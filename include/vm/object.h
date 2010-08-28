@@ -25,7 +25,6 @@ struct vm_object {
 	 * we access ->class first. */
 	struct vm_class		*class;
 	void			*monitor_record;
-	uint8_t			fields[];
 };
 
 struct vm_array {
@@ -46,7 +45,15 @@ static inline jsize vm_array_length(struct vm_object *self)
 	return array->array_length;
 }
 
+#define VM_OBJECT_FIELDS_OFFSET sizeof(struct vm_object)
+
+static inline uint8_t *vm_object_fields(const struct vm_object *obj)
+{
+	return (uint8_t *) obj + VM_OBJECT_FIELDS_OFFSET;
+}
+
 #define VM_ARRAY_ELEMS_OFFSET	sizeof(struct vm_array)
+
 static inline void *vm_array_elems(const struct vm_object *obj)
 {
 	return (void *) obj + VM_ARRAY_ELEMS_OFFSET;
@@ -85,14 +92,18 @@ static inline void							\
 field_set_ ## type (struct vm_object *obj, const struct vm_field *field,\
 		    j ## type value)					\
 {									\
-	*(j ## type *) &obj->fields[field->offset] = value;		\
+	uint8_t *fields = vm_object_fields(obj);			\
+									\
+	*(j ## type *) &fields[field->offset] = value;			\
 }
 
 #define DECLARE_FIELD_GETTER(type)					\
 static inline j ## type							\
 field_get_ ## type (const struct vm_object *obj, const struct vm_field *field)\
 {									\
-	return *(j ## type *) &obj->fields[field->offset];		\
+	uint8_t *fields = vm_object_fields(obj);			\
+									\
+	return *(j ## type *) &fields[field->offset];			\
 }
 
 /*
@@ -108,27 +119,43 @@ field_get_ ## type (const struct vm_object *obj, const struct vm_field *field)\
 static inline void
 field_set_byte(struct vm_object *obj, const struct vm_field *field, jbyte value)
 {
-	*(long *) &obj->fields[field->offset] = value;
+	uint8_t *fields = vm_object_fields(obj);
+
+	*(long *) &fields[field->offset] = value;
 }
 
 static inline void
 field_set_short(struct vm_object *obj, const struct vm_field *field,
 		jshort value)
 {
-	*(long *) &obj->fields[field->offset] = value;
+	uint8_t *fields = vm_object_fields(obj);
+
+	*(long *) &fields[field->offset] = value;
 }
 
 static inline void
 field_set_boolean(struct vm_object *obj, const struct vm_field *field,
 		  jboolean value)
 {
-	*(unsigned long *) &obj->fields[field->offset] = value;
+	uint8_t *fields = vm_object_fields(obj);
+
+	*(unsigned long *) &fields[field->offset] = value;
 }
 
 static inline void
 field_set_char(struct vm_object *obj, const struct vm_field *field, jchar value)
 {
-	*(unsigned long *) &obj->fields[field->offset] = value;
+	uint8_t *fields = vm_object_fields(obj);
+
+	*(unsigned long *) &fields[field->offset] = value;
+}
+
+static inline void*
+field_get_object_ptr(struct vm_object *obj, jlong offset)
+{
+	uint8_t *fields = vm_object_fields(obj);
+
+	return &fields[offset];
 }
 
 DECLARE_FIELD_SETTER(double);

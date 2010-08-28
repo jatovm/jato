@@ -1175,7 +1175,7 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 		return;
 	}
 
-	offset = offsetof(struct vm_object, fields) + expr->instance_field->offset;
+	offset = VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset;
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
 
 	if (expr->vm_type == J_LONG) {
@@ -1214,7 +1214,7 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	base = state->left->reg1;
 	state->reg1 = get_var(s->b_parent, expr->vm_type);
 
-	offset = offsetof(struct vm_object, fields) + expr->instance_field->offset;
+	offset = VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset;
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
 
 	if (vm_field_equals(expr->instance_field, vm_java_lang_ref_Reference_referent)) {
@@ -1238,7 +1238,7 @@ freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 	base = state->left->reg1;
 	state->reg1 = get_var(s->b_parent, expr->vm_type);
 
-	offset = offsetof(struct vm_object, fields) + expr->instance_field->offset;
+	offset = VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset;
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
 }
 %endif
@@ -2353,8 +2353,7 @@ inst_field: EXPR_INSTANCE_FIELD(reg) 1
 	expr = to_expr(tree);
 
 	state->reg1 = state->left->reg1;
-	state->reg2 = (void *) (offsetof(struct vm_object, fields) +
-				expr->instance_field->offset);
+	state->reg2 = (void *) (VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset);
 }
 
 float_inst_field: EXPR_FLOAT_INSTANCE_FIELD(reg) 1
@@ -2364,8 +2363,7 @@ float_inst_field: EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 	expr = to_expr(tree);
 
 	state->reg1 = state->left->reg1;
-	state->reg2 = (void *) (offsetof(struct vm_object, fields) +
-				expr->instance_field->offset);
+	state->reg2 = (void *) (VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset);
 }
 
 stmt:	STMT_STORE(inst_field, reg)
