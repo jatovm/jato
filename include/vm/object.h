@@ -51,11 +51,6 @@ static inline void *vm_array_elems(const struct vm_object *obj)
 	return (void *) obj + offsetof(struct vm_array, elems);
 }
 
-static inline uint8_t *vm_array_fields(const struct vm_object *obj)
-{
-	return vm_array_elems(obj);
-}
-
 /* XXX: BUILD_BUG_ON(offsetof(vm_object, class) != 0); */
 
 int init_vm_objects(void);
@@ -156,7 +151,7 @@ static inline void							\
 array_set_field_ ## type(struct vm_object *obj, int index,		\
 			 j ## type value)				\
 {									\
-	uint8_t *fields = vm_array_fields(obj);				\
+	uint8_t *fields = vm_array_elems(obj);				\
 									\
 	*(j ## type *) &fields[index * vmtype_get_size(vmtype)] = value; \
 }
@@ -165,7 +160,7 @@ array_set_field_ ## type(struct vm_object *obj, int index,		\
 static inline j ## type							\
 array_get_field_ ## type(const struct vm_object *obj, int index)	\
 {									\
-	uint8_t *fields = vm_array_fields(obj);				\
+	uint8_t *fields = vm_array_elems(obj);				\
 									\
 	return *(j ## type *) &fields[index * vmtype_get_size(vmtype)]; \
 }
@@ -173,7 +168,7 @@ array_get_field_ ## type(const struct vm_object *obj, int index)	\
 static inline void
 array_set_field_byte(struct vm_object *obj, int index, jbyte value)
 {
-	uint8_t *fields = vm_array_fields(obj);
+	uint8_t *fields = vm_array_elems(obj);
 
 	*(long *) &fields[index * vmtype_get_size(J_BYTE)] = value;
 }
@@ -181,7 +176,7 @@ array_set_field_byte(struct vm_object *obj, int index, jbyte value)
 static inline void
 array_set_field_short(struct vm_object *obj, int index, jshort value)
 {
-	uint8_t *fields = vm_array_fields(obj);
+	uint8_t *fields = vm_array_elems(obj);
 
 	*(long *) &fields[index * vmtype_get_size(J_SHORT)] = value;
 }
@@ -189,7 +184,7 @@ array_set_field_short(struct vm_object *obj, int index, jshort value)
 static inline void
 array_set_field_boolean(struct vm_object *obj, int index, jboolean value)
 {
-	uint8_t *fields = vm_array_fields(obj);
+	uint8_t *fields = vm_array_elems(obj);
 
 	*(unsigned long *) &fields[index * vmtype_get_size(J_BOOLEAN)] = value;
 }
@@ -197,7 +192,7 @@ array_set_field_boolean(struct vm_object *obj, int index, jboolean value)
 static inline void
 array_set_field_char(struct vm_object *obj, int index, jchar value)
 {
-	uint8_t *fields = vm_array_fields(obj);
+	uint8_t *fields = vm_array_elems(obj);
 
 	*(unsigned long *) &fields[index * vmtype_get_size(J_CHAR)] = value;
 }
@@ -221,7 +216,7 @@ DECLARE_ARRAY_FIELD_GETTER(short, J_SHORT);
 static inline void
 array_set_field_ptr(struct vm_object *obj, int index, void *value)
 {
-	uint8_t *fields = vm_array_fields(obj);
+	uint8_t *fields = vm_array_elems(obj);
 
 	*(void **) &fields[index * vmtype_get_size(J_NATIVE_PTR)] = value;
 }
@@ -229,7 +224,7 @@ array_set_field_ptr(struct vm_object *obj, int index, void *value)
 static inline void *
 array_get_field_ptr(struct vm_object *obj, int index)
 {
-	uint8_t *fields = vm_array_fields(obj);
+	uint8_t *fields = vm_array_elems(obj);
 
 	return *(void **) &fields[index * vmtype_get_size(J_NATIVE_PTR)];
 }
