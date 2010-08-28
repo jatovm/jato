@@ -36,16 +36,16 @@ struct operand {
 
 		struct {
 			struct use_position base_reg;
-			long disp;	/* displacement */
+			union {
+				long disp;	/* displacement */
+				struct {
+					struct use_position index_reg;
+					unsigned char shift;
+				};
+			};
 		};
 
 		struct stack_slot *slot; /* EBP + displacement */
-
-		struct {
-			struct use_position base_reg;
-			struct use_position index_reg;
-			unsigned char shift;
-		};
 
 		unsigned long imm;
 
