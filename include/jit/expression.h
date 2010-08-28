@@ -166,8 +166,11 @@ struct expression {
 		/*  EXPR_CONVERSION represents a type conversion (see JLS
 		    5.1.).  This expression type can be used as an rvalue
 		    only.  */
+		/* EXPR_TRUNCATION represents conversion from J_INT to
+		   J_CHAR, J_BYTE or J_SHORT. */
 		struct {
 			struct tree_node *from_expression;
+			enum vm_type to_type;			/* EXPR_TRUNCATION only */
 		};
 
 		/*  EXPR_CLASS_FIELD represents class field access expression
@@ -265,13 +268,6 @@ struct expression {
 		struct  {
 			struct tree_node *key;
 			struct lookupswitch *lookupswitch_table;
-		};
-
-		/* EXPR_TRUNCATION represents conversion from J_INT to
-		 * J_CHAR, J_BYTE or J_SHORT. */
-		struct {
-			struct tree_node *from_expression;
-			enum vm_type to_type;
 		};
 	};
 };
