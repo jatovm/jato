@@ -31,7 +31,7 @@ struct vm_object {
 struct vm_array {
 	struct vm_object	object;
 	jsize			array_length;
-	uint8_t			elems[];
+	/* Array elements start here. */
 };
 
 static inline struct vm_array *vm_object_to_array(struct vm_object *self)
@@ -46,9 +46,10 @@ static inline jsize vm_array_length(struct vm_object *self)
 	return array->array_length;
 }
 
+#define VM_ARRAY_ELEMS_OFFSET	sizeof(struct vm_array)
 static inline void *vm_array_elems(const struct vm_object *obj)
 {
-	return (void *) obj + offsetof(struct vm_array, elems);
+	return (void *) obj + VM_ARRAY_ELEMS_OFFSET;
 }
 
 /* XXX: BUILD_BUG_ON(offsetof(vm_object, class) != 0); */
