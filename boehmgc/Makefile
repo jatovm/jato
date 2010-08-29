@@ -1,5 +1,6 @@
 AR		:= ar
 
+uname_S		:= $(shell sh -c 'uname -s 2>/dev/null || echo not')
 uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
 ARCH		?= $(uname_M)
 
@@ -12,7 +13,17 @@ endif
 #
 # Set Boehm GC configuration variables.
 #
-DEFAULT_CFLAGS		+= -DSILENT=1 -DGC_USE_LD_WRAP -D_REENTRANT -DGC_LINUX_THREADS -lpthreads -Iinclude
+ifeq ($(uname_S),Linux)
+  DEFAULT_CFLAGS	+= -DSILENT=1 -DGC_USE_LD_WRAP -D_REENTRANT -DGC_LINUX_THREADS -lpthreads -Iinclude
+endif
+
+ifeq ($(uname_S),Darwin)
+  DEFAULT_CFLAGS	+= -DSILENT=1 -DGC_USE_LD_WRAP -D_REENTRANT -DGC_DARWIN_THREADS -Iinclude
+
+  ifeq ($(uname_M),i386)
+    DEFAULT_CFLAGS	+= -D__i386__
+  endif
+endif
 
 BOEHMGC_OBJS	+= allchblk.o
 BOEHMGC_OBJS	+= alloc.o
