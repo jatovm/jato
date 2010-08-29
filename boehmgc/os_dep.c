@@ -164,7 +164,7 @@
 # include "mm/PCR_MM.h"
 #endif
 
-#include <valgrind/valgrind.h>
+#include "valgrind.h"
 
 #if !defined(NO_EXECUTE_PERMISSION)
 # define OPT_PROT_EXEC PROT_EXEC
