@@ -1,14 +1,15 @@
 package jvm;
 
 class BranchTest extends TestCase {
-    static boolean t;
-    static boolean f;
+    static boolean t,  f;
+    static boolean t1, t2;
+    static boolean f1, f2;
 
     private static void ok() {
     }
 
     private static void testAndBranch() {
-        if (t && t)
+        if (t1 && t2)
             ok();
         else
             fail();
@@ -23,14 +24,14 @@ class BranchTest extends TestCase {
         else
             ok();
 
-        if (f && f)
+        if (f1 && f2)
             fail();
         else
             ok();
     }
 
     private static void testOrBranch() {
-        if (t || t)
+        if (t1 || t2)
             ok();
         else
             fail();
@@ -45,7 +46,7 @@ class BranchTest extends TestCase {
         else
             fail();
 
-        if (f || f)
+        if (f1 || f2)
             fail();
         else
             ok();
@@ -53,8 +54,8 @@ class BranchTest extends TestCase {
 
     public static void main(String[] args) {
         /* Try to work around the optimizing compiler */
-        t = true;
-        f = false;
+        t = t1 = t2 = true;
+        f = f1 = f2 = false;
 
         testAndBranch();
         testOrBranch();
