@@ -445,6 +445,9 @@ static uint8_t insn_rex_prefix(struct insn *self, uint64_t flags)
 {
 	uint8_t ret;
 
+	if (flags & (SRC_MEMLOCAL|DST_MEMLOCAL))
+		return 0;
+
 	ret	= insn_rex_operand_64(self);
 
 	if (flags & DIR_REVERSED) {
