@@ -32,11 +32,11 @@ import jvm.TestCase;
  * @author Pekka Enberg
  */
 public class MethodTest extends TestCase {
-    private static interface I {
+    public static interface I {
         int x();
     }
 
-    private static class A implements I {
+    public static class A implements I {
         public int y() {
             return 0;
         }
