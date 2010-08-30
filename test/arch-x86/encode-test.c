@@ -625,7 +625,11 @@ void test_encoding_reg(void)
 
 void test_encoding_memlocal(void)
 {
+#ifdef CONFIG_32_BIT
 	uint8_t encoding[] = { 0xff, 0xb5, 0x14, 0x00, 0x00, 0x00 };
+#else
+	uint8_t encoding[] = { 0xff, 0xb5, 0x10, 0x00, 0x00, 0x00 };
+#endif
 	struct stack_frame stack_frame;
 	struct stack_slot local_slot;
 	struct insn insn = { };
