@@ -622,3 +622,32 @@ void test_encoding_reg(void)
 
 	teardown();
 }
+
+void test_encoding_memlocal(void)
+{
+	uint8_t encoding[] = { 0xff, 0xb5, 0x14, 0x00, 0x00, 0x00 };
+	struct stack_frame stack_frame;
+	struct stack_slot local_slot;
+	struct insn insn = { };
+
+	stack_frame	= (struct stack_frame) {
+		.nr_args		= 1,
+	};
+	local_slot	= (struct stack_slot) {
+		.parent			= &stack_frame,
+		.index			= 0x0,
+	};
+
+	setup();
+
+	/* pushl  0x12345678(%ebp) */
+	insn.type			= INSN_PUSH_MEMLOCAL;
+	insn.src.slot			= &local_slot;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}

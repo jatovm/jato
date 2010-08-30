@@ -380,7 +380,7 @@ struct insn *memlocal_insn(enum insn_type insn_type, struct stack_slot *slot)
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn) {
-		insn->operand	= (struct operand) {
+		insn->src	= (struct operand) {
 			.type		= OPERAND_MEMLOCAL,
 			{
 				.slot		= slot,

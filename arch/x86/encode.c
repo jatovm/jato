@@ -31,6 +31,7 @@
 #include "arch/encode.h"
 
 #include "arch/instruction.h"
+#include "arch/stack-frame.h"
 
 #include "lib/buffer.h"
 
@@ -122,24 +123,26 @@ enum x86_insn_flags {
 	SRC_MEM			= (1ULL << 16),
 	SRC_MEM_DISP_BYTE	= (1ULL << 17),
 	SRC_MEM_DISP_FULL	= (1ULL << 18),
-	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL,
+	SRC_MEMLOCAL		= (1ULL << 19),
+	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|SRC_MEMLOCAL,
 
 	/* Destination operand */
-	DST_NONE		= (1ULL << 19),
-	DST_REG			= (1ULL << 20),
-	DST_ACC			= (1ULL << 21),	/* AL/AX */
-	DST_MEM			= (1ULL << 22),
-	DST_MEM_DISP_BYTE	= (1ULL << 23),	/* 8 bits */
-	DST_MEM_DISP_FULL	= (1ULL << 24),	/* 16 bits or 32 bits */
-	DST_MASK		= DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
+	DST_NONE		= (1ULL << 20),
+	DST_REG			= (1ULL << 21),
+	DST_ACC			= (1ULL << 22),	/* AL/AX */
+	DST_MEM			= (1ULL << 23),
+	DST_MEM_DISP_BYTE	= (1ULL << 24),	/* 8 bits */
+	DST_MEM_DISP_FULL	= (1ULL << 25),	/* 16 bits or 32 bits */
+	DST_MEMLOCAL		= (1ULL << 26),
+	DST_MASK		= DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL|DST_MEMLOCAL,
 
 	MEM_DISP_MASK		= SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
 
-	ESCAPE_OPC_BYTE		= (1ULL << 25),	/* Escape opcode byte */
-	REPNE_PREFIX		= (1ULL << 26),	/* REPNE/REPNZ or SSE prefix */
-	REPE_PREFIX		= (1ULL << 27),	/* REP/REPE/REPZ or SSE prefix */
-	OPC_EXT			= (1ULL << 28),	/* The reg field of ModR/M byte provides opcode extension */
-	OPC_REG			= (1ULL << 29), /* The opcode byte also provides operand register */
+	ESCAPE_OPC_BYTE		= (1ULL << 27),	/* Escape opcode byte */
+	REPNE_PREFIX		= (1ULL << 28),	/* REPNE/REPNZ or SSE prefix */
+	REPE_PREFIX		= (1ULL << 29),	/* REP/REPE/REPZ or SSE prefix */
+	OPC_EXT			= (1ULL << 30),	/* The reg field of ModR/M byte provides opcode extension */
+	OPC_REG			= (1ULL << 31), /* The opcode byte also provides operand register */
 };
 
 /*
@@ -155,6 +158,7 @@ enum x86_addmode {
 	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,		/* no operands */
 	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,		/* memory -> AL/AX */
 	ADDMODE_REG		= SRC_REG|DST_REG,		/* register */
+	ADDMODE_MEMLOCAL	= SRC_MEMLOCAL|DST_MEMLOCAL|MOD_RM,	/* memlocal */
 	ADDMODE_REG_REG		= SRC_REG|DST_REG|MOD_RM|DIR_REVERSED,	/* register -> register */
 	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,	/* register -> register/memory */
 	ADDMODE_RM		= SRC_REG|MOD_RM|DST_NONE|DIR_REVERSED,	/* register -> register/memory */
@@ -195,6 +199,7 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_OR_MEMBASE_REG]		= OPCODE(0x0b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_OR_REG_REG]		= OPCODE(0x09) | ADDMODE_REG_REG | WIDTH_FULL,
 	[INSN_POP_REG]			= OPCODE(0x58) | OPC_REG         | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL,
+	[INSN_PUSH_MEMLOCAL]		= OPCODE(0xff) | OPCODE_EXT(6)   | ADDMODE_MEMLOCAL| WIDTH_FULL,
 	[INSN_PUSH_REG]			= OPCODE(0x50) | OPC_REG         | ADDMODE_REG     | WIDTH_FULL,
 	[INSN_RET]			= OPCODE(0xc3) | ADDMODE_IMPLIED,
 	[INSN_SAR_REG_REG]		= OPCODE(0xd3) | OPCODE_EXT(7)   | ADDMODE_REG_REG | WIDTH_FULL,
@@ -261,6 +266,7 @@ static inline uint32_t mod_src_encode(uint64_t flags)
 	case SRC_MEM_DISP_BYTE:
 		return 0x01;
 	case SRC_MEM_DISP_FULL:
+	case SRC_MEMLOCAL:
 		return 0x02;
 	case SRC_REG:
 		return 0x03;
@@ -279,6 +285,7 @@ static inline uint32_t mod_dest_encode(uint64_t flags)
 	case DST_MEM_DISP_BYTE:
 		return 0x01;
 	case DST_MEM_DISP_FULL:
+	case DST_MEMLOCAL:
 		return 0x02;
 	case DST_REG:
 		return 0x03;
@@ -343,6 +350,36 @@ static bool insn_need_sib(struct insn *self, uint64_t flags)
 	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
 }
 
+static uint8_t insn_encode_rm(struct insn *self, uint64_t flags)
+{
+	uint8_t rm;
+
+	if (flags & DIR_REVERSED) {
+		if (flags & DST_MEMLOCAL)
+			rm		= x86_encode_reg(MACH_REG_xBP);
+		else
+			rm		= encode_reg(&self->dest.reg);
+	} else {
+		if (flags & SRC_MEMLOCAL)
+			rm		= x86_encode_reg(MACH_REG_xBP);
+		else
+			rm		= encode_reg(&self->src.reg);
+	}
+	return rm;
+}
+
+static uint8_t insn_encode_reg(struct insn *self, uint64_t flags)
+{
+	uint8_t reg_opcode;
+
+	if (flags & DIR_REVERSED)
+		reg_opcode	= encode_reg(&self->src.reg);
+	else
+		reg_opcode	= encode_reg(&self->dest.reg);
+
+	return reg_opcode;
+}
+
 static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint64_t flags, uint8_t opc_ext)
 {
 	uint8_t mod_rm, mod, reg_opcode, rm;
@@ -358,19 +395,13 @@ static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint64_
 	if (flags & OPC_EXT) {
 		reg_opcode		= opc_ext;
 	} else {
-		if (flags & DIR_REVERSED)
-			reg_opcode	= encode_reg(&self->src.reg);
-		else
-			reg_opcode	= encode_reg(&self->dest.reg);
+		reg_opcode		= insn_encode_reg(self, flags);
 	}
 
 	if (need_sib)
 		rm		= 0x04;
 	else {
-		if (flags & DIR_REVERSED)
-			rm		= encode_reg(&self->dest.reg);
-		else
-			rm		= encode_reg(&self->src.reg);
+		rm		= insn_encode_rm(self, flags);
 	}
 
 	mod_rm		= x86_encode_mod_rm(mod, reg_opcode, rm);
@@ -444,7 +475,7 @@ static uint64_t insn_flags(struct insn *self, uint64_t encode)
 	flags	= encode & FLAGS_MASK;
 
 	if (flags & DIR_REVERSED) {
-		if (flags & DST_REG)
+		if (flags & (DST_REG|DST_MEMLOCAL))
 			return flags;
 
 		if (self->dest.disp == 0 && !insn_need_disp(self, flags))
@@ -454,7 +485,7 @@ static uint64_t insn_flags(struct insn *self, uint64_t encode)
 		else
 			flags	|= DST_MEM_DISP_FULL;
 	} else {
-		if (flags & SRC_REG)
+		if (flags & (SRC_REG|SRC_MEMLOCAL))
 			return flags;
 
 		if (self->src.disp == 0 && !insn_need_disp(self, flags))
@@ -542,5 +573,12 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 			emit_imm(buffer, self->dest.disp);
 		else
 			emit_imm(buffer, self->src.disp);
+	}
+
+	if (flags & (SRC_MEMLOCAL|DST_MEMLOCAL)) {
+		if (flags & DIR_REVERSED)
+			emit_imm32(buffer, slot_offset(self->dest.slot));
+		else
+			emit_imm32(buffer, slot_offset(self->src.slot));
 	}
 }

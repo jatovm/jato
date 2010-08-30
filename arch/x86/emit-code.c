@@ -747,13 +747,6 @@ static void emit_pop_memlocal(struct insn *insn, struct buffer *buf, struct basi
 	__emit_membase(buf, 0x8f, MACH_REG_EBP, disp, 0);
 }
 
-static void emit_push_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	unsigned long disp = slot_offset(insn->operand.slot);
-
-	__emit_membase(buf, 0xff, MACH_REG_EBP, disp, 6);
-}
-
 static void __emit_push_imm(struct buffer *buf, long imm)
 {
 	unsigned char opc;
@@ -2812,7 +2805,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
-	DECL_EMITTER(INSN_PUSH_MEMLOCAL, emit_push_memlocal),
+	DECL_EMITTER(INSN_PUSH_MEMLOCAL, insn_encode),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg),
 	DECL_EMITTER(INSN_SBB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, insn_encode),
