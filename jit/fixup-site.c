@@ -29,7 +29,7 @@
 #include "vm/stdlib.h"
 
 #include <memory.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 struct fixup_site *
 alloc_fixup_site(struct compilation_unit *cu, struct insn *call_insn)

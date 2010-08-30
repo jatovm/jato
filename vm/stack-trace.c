@@ -47,7 +47,7 @@
 #include "jit/exception.h"
 #include "jit/compiler.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 void *vm_native_stack_offset_guard;

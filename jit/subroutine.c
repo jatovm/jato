@@ -49,7 +49,6 @@
 #include "lib/list.h"
 
 #include <limits.h>
-#include <malloc.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <errno.h>

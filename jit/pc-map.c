@@ -24,13 +24,12 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <malloc.h>
+#include "jit/pc-map.h"
+
 #include <stdlib.h>
 #include <errno.h>
 #include <assert.h>
 #include <stdio.h>
-
-#include "jit/pc-map.h"
 
 #include "vm/stdlib.h"
 #include "vm/die.h"

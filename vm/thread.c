@@ -40,11 +40,10 @@
 
 #include "jit/exception.h"
 
-#include <stdio.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <pthread.h>
-#include <malloc.h>
+#include <stdio.h>
 
 __thread struct vm_exec_env *current_exec_env;
 

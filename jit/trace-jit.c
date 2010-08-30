@@ -33,7 +33,7 @@
 #include "arch/stack-frame.h"
 
 #include <ctype.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <regex.h>
 #include <stdlib.h>

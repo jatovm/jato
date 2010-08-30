@@ -38,7 +38,7 @@
 #include "vm/die.h"
 #include "vm/trace.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>

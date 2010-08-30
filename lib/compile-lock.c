@@ -26,7 +26,7 @@
 
 #include "lib/compile-lock.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 int compile_lock_init(struct compile_lock *cl, bool reentrant)
 {

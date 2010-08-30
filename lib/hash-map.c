@@ -26,8 +26,8 @@
 
 #include "lib/hash-map.h"
 
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <errno.h>
 
 #include "vm/gc.h"

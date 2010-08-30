@@ -24,13 +24,14 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "jit/bc-offset-mapping.h"
+
+#include <stdlib.h>
 #include <errno.h>
-#include <malloc.h>
 #include <stdio.h>
 
 #include "arch/instruction.h"
 
-#include "jit/bc-offset-mapping.h"
 #include "jit/statement.h"
 #include "jit/expression.h"
 #include "jit/instruction.h"
