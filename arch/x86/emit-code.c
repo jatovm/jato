@@ -2804,7 +2804,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_IMM_MEMBASE, emit_or_imm_membase),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_OR_REG_REG, insn_encode),
-	DECL_EMITTER(INSN_POP_MEMLOCAL, emit_pop_memlocal),
+	DECL_EMITTER(INSN_POP_MEMLOCAL, insn_encode),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
 	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg),
 	DECL_EMITTER(INSN_SBB_IMM_REG, insn_encode),
