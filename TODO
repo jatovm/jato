@@ -1,0 +1,312 @@
+Jato ToDo
+=========
+Pekka Enberg <penberg@kernel.org>
+
+Introduction
+------------
+This document is intended to be a starting point for people interested in
+hacking on Jato. It includes a list of open projects with a brief description
+on each of them to help a new contributor get started.
+
+Performance
+-----------
+[quote, Michael A. Jackson]
+____
+``The First Rule of Program Optimization: Don't do it. The Second Rule of
+Program Optimization (for experts only!): Don't do it yet.''
+____
+
+Startup Time
+~~~~~~~~~~~~
+The purpose of this project is to improve VM startup time. There are two
+different classes of applications to optimize: command line applications such
+as Ant and Maven and graphical user interface applications such as Eclipse.
+Both classes might require different kinds of hacks to speed up the start up
+time. You might need to optimize GNU Classpath and external libraries Jato uses
+during VM startup.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
+
+Inline Caching
+~~~~~~~~~~~~~~
+Inline caching is an optimization technique that is able to improve method
+invocation performance for virtual and interface methods by turning an indirect
+call into a cheap comparison instruction and a direct call for the common case.
+For background material, please check out a blog post by
+http://www.azulsystems.com/blog/cliff-click/2010-04-08-inline-caches-and-call-site-optimization[Cliff
+Click] ("Inline Caches and Call Site Optimization").
+
+Required skills::
+    C, x86
+Difficulty::
+    Medium
+
+Method Inlining
+~~~~~~~~~~~~~~~
+Method inlining is an optimization where a method invocation is replaced with
+an inline copy of the invoked method body. As shown by <<Suganuma02>>, static
+inlining decisions only make sense for tiny methods where the body of the
+method is smaller than the invocation site footprint. The purpose of this
+project is to implement method inlining for tiny static methods and optionally,
+if inline cache support is added to the VM, inlining of tiny virtual and
+interface methods to the inline cache.
+
+Required skills::
+    C, x86
+Difficulty::
+    Medium
+
+Static Single Assignment Form (SSA)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The SSA form is a type of intermediate representation in which every variable
+is assigned exactly once which simplifies many optimization algorithms. The
+purpose of this project is to implement algorithms for converting LIR to SSA
+form and back to normal form for code emission stage. You are encouraged to
+implement the iterative version of dominance-frontier calculation <<Cooper01>>
+as it's simpler and easier to understand.
+
+You are also encouraged to implement a simple SSA-based compiler optimization,
+such as dead code elimination, as a proof-of-concept that the SSA form works as
+expected.
+
+Required skills::
+    C
+Difficulty::
+    Hard
+
+Array Bounds Check Elimination
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Out-of-bounds array stores and loads are required to throw the
++IndexOutOfBoundsException+. Currently the JIT compiler generates a bounds
+check for every array access which is slow as seen in the SciMark2 benchmark,
+for example. Fortunately, much of the array bounds checks can be eliminated
+which speeds up SciMark by 40% and SPECjvm98 2% on average <<Wuerthinger07>>.
+
+Required skills::
+    C
+Difficulty::
+    Medium
+
+Tail Call Optimizations
+~~~~~~~~~~~~~~~~~~~~~~~
+Functional languages such as Scala and Clojure make heavy use of tail-calls.
+The purpose of this project is to implement tail call optimizations to speed up
+functional languages on JVM. For background material, check out HotSpot
+http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4726340[Request for
+Enhancement] on tail-call optimizations and a related blog post by
+http://blogs.sun.com/jrose/entry/tail_calls_in_the_vm[John Rose] ("Tail calls
+in the VM").
+
+Required skills::
+    C, x86
+Difficulty::
+    Hard
+
+Garbage Collector
+-----------------
+[quote, Robert Sewell]
+____
+``If Java had true garbage collection, most programs would delete themselves upon execution.''
+____
+
+Exact GC
+~~~~~~~~
+Jato uses Boehm GC as its garbage collector. While Boehm GC is stable and
+reliable, it's unnecessarily slow because it's based on a conservative GC
+algorithm. The first step for a fully integrated and fast garbage collector is
+to implement an exact GC that uses safepoints (also known as GC points) to
+stop-the-world and GC maps to enumerate the GC root set. There's a broken
+implementation of safepoints in 'vm/gc.c' that serves as a starting point for
+the project.
+
+Required skills::
+    C, x86
+Difficulty::
+    Medium
+
+Compacting GC
+~~~~~~~~~~~~~
+This project is for implementing a compacting GC on top of the core GC to
+reduce memory fragmentation and speed up object allocation in the GC.  Please
+note that this requires support from the VM and the JIT compiler because you
+need to be able to move objects during compacting phase.
+
+Required skills::
+    C, x86
+Difficulty::
+    Hard
+
+Low Latency GC
+~~~~~~~~~~~~~~
+The stop-the-world part of a GC can cause latencies in the order of many
+milliseconds in Java applications. While there are pauseless GCs for special
+purpose hardware, the purpose of this project is to implement GC latency
+monitoring tools for the VM and investigate and implement practical solutions
+for reducing GC latency on commodity hardware.
+
+Required skills::
+    C, x86
+Difficulty::
+    Hard
+
+x86
+---
+Legacy floating point support (x87)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Add instruction selection and code emission for floating point arithmetic using
+the x87 FPU instruction such as +fadd+ and +fdiv+. The main difference to the
+project idea above is that the x87 instructions do not operate on regular
+registers but use a stack-based approach which makes instruction selection
+harder. As the SSE2 approach is more performant, the x87 support is only for
+compatilibity with older x86 CPUs that do not support SSE.
+
+Required skills::
+    C, x86
+Difficulty::
+    Medium
+
+Portability
+-----------
+[quote, Jim McCarthy]
+____
+``Portability is for canoes.''
+____
+
+Machine Architectures
+~~~~~~~~~~~~~~~~~~~~~
+Jato currently runs on IA-32 and AMD64 machine architectures but there are
+other important architectures out there (e.g. ARM and PowerPC) that we want to
+support. To port the VM to a new architecture, you need to introduce a new
+'arch/<target>' directory that implements the following machine architecture
+specific parts:
+
+- Instruction encoding (see 'arch/x86/emit.c' and 'arch/x86/encoding.c')
+- Instruction selection (see 'arch/x86/insn-selector.brg')
+- Exception handling (see 'arch/x86/unwind_{32,64}.S')
+- Signal bottom halves (see 'arch/x86/signal.c' and 'arch/x86/signal-bh.sh')
+- +sun/misc/Unsafe+ locking primitives (see 'arch/x86/include/arch/cmpxchg*.h')
+
+You also need to make sure the core code in 'vm', 'jit', and 'runtime'
+directories works on your architecture. Special attention needs to be paid when
+porting to big endian CPUs because of our x86 centric heritage.
+
+Required skills::
+    C, target machine architecture
+Difficulty::
+    Hard
+
+Operating Systems
+~~~~~~~~~~~~~~~~~
+Linux is the only operating system currently supported by Jato. If you're
+interested in adding support for other operating systems, you probably need to
+hack on the following things:
+
+- ABI issues (e.g. Microsoft x64 calling conventions)
+- Thread-local storage (TLS)
+- Signal handling
+
+Porting to operating systems such as Darwin and BSDs that support recent
+versions of GCC and that support POSIX is easier than porting to non-POSIX
+operating systems such as Windows.
+
+Required skills::
+    C, target operating system
+Difficulty::
+    Medium to Hard
+
+Clang
+~~~~~
+Clang is an interesting new compiler built on top of LLVM that claims faster
+compilation times and better code generation. The purpose of this project is to
+fix blatant GCC-ism in Jato to make it compile with Clang. Please note that you
+might need to dive into LLVM and Clang sources if you run into Clang crashes
+while compiling the VM.
+
+Required skills::
+    C, possibly LLVM
+Difficulty::
+    Medium to Hard
+
+JVM
+---
+
+Support for OpenJDK
+~~~~~~~~~~~~~~~~~~~
+Jato uses GNU Classpath to provide essential Java APIs. Unfortunately the
+development of GNU Classpath seems to have slowed after OpenJDK was released.
+The purpose of this project is to OpenJDK as an alternative for providing
+essential APIs for better Java compatibility. One possible way to do that is to
+use The OpenJDK Common Virtual Machine Interface
+http://fuseyism.com/openjdk/cvmi/[CVMI] as a starting point.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
+
+Java Native Interface (JNI) support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The VM has partial support for Java Native Interface (JNI) API. The goal of
+this project is to finish the API.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
+
+JSR 292: invokedynamic
+~~~~~~~~~~~~~~~~~~~~~~
+The goal of this project is to add support for the new +invokedynamic+ bytecode
+instruction specified in JSR 292 that's designed to improve execution
+performance of dynamic languages such as JRuby.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
+
+JVM Tool Interface (JVM TI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The JVM Tool Inteface is a native programming interface that's used by
+development tool such as commercial YourKit Java Profiler.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
+
+Tools Support
+-------------
+
+Valgrind
+~~~~~~~~
+You can run Jato under Valgrind to detect bugs in the VM. However, to
+accomplish that, Jato generates slightly different code because using signals
+for lazy class initialization interracts badly with Valgrind. Furthermore,
+throwing a +NullPointerException+ through +SIGSEGV+ also upsets Valgrind.
+
+The goal of this project is to fix up Jato and Valgrind interractions. This
+might require changes possibly in both projects.
+
+Required skills::
+    C, x86
+Difficulty::
+    Medium
+
+
+[bibliography]
+References
+----------
+
+[bibliography]
+
+- [[[Cooper01]]] Keith Cooper et al. A Simple, Fast Dominance Algorithm. 2001.
+  http://www.cs.rice.edu/~keith/EMBED/dom.pdf[URL]
+- [[[Suganuma02]]] Toshio Suganuma et al. An Empirical Study of Method Inlining
+  for a Java Just-In-Time Compiler. http://www.usenix.org/events/javavm02/suganuma/suganuma_html/[URL]
+- [[[Wuerthinger07]]] Thomas Würthinger and Christian Wimmer. Array Bounds
+  Check Elimination for the Java HotSpot™ Client Compiler. 2007.
+  http://www.ssw.uni-linz.ac.at/Research/Papers/Wuerthinger07/[URL]
