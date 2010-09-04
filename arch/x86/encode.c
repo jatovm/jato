@@ -543,12 +543,12 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 	if (flags & REPE_PREFIX)
 		emit(buffer, 0xf3);
 
-	if (flags & ESCAPE_OPC_BYTE)
-		emit(buffer, 0x0f);
-
 	rex_prefix	= insn_rex_prefix(self, flags);
 	if (rex_prefix)
 		emit(buffer, rex_prefix);
+
+	if (flags & ESCAPE_OPC_BYTE)
+		emit(buffer, 0x0f);
 
 	if (flags & OPC_REG) {
 		if (flags & DIR_REVERSED)
