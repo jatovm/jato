@@ -690,13 +690,6 @@ void emit_epilog(struct buffer *buf)
 	emit_ret(buf);
 }
 
-static void emit_pop_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	unsigned long disp = slot_offset(insn->operand.slot);
-
-	__emit_membase(buf, 0x8f, MACH_REG_EBP, disp, 0);
-}
-
 static void __emit_push_imm(struct buffer *buf, long imm)
 {
 	unsigned char opc;
