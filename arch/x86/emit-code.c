@@ -462,56 +462,6 @@ static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
 	__emit_reg_reg(buf, 0x89, src_reg, dest_reg);
 }
 
-static void emit_movsx_8_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	enum machine_reg src_reg = mach_reg(&insn->src.reg);
-
-	emit(buf, 0x0f);
-
-	/* We probably don't want %dh and %bh here. */
-	assert(src_reg != MACH_REG_ESI && src_reg != MACH_REG_EDI);
-
-	__emit_reg_reg(buf, 0xbe, mach_reg(&insn->dest.reg), src_reg);
-}
-
-static void emit_movsx_8_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	enum machine_reg base_reg, dest_reg;
-	unsigned long disp;
-
-	base_reg = mach_reg(&insn->src.reg);
-	disp = insn->src.disp;
-	dest_reg = mach_reg(&insn->dest.reg);
-
-	emit(buf, 0x0f);
-	__emit_membase_reg(buf, 0xbe, base_reg, disp, x86_encode_reg(dest_reg));
-}
-
-static void emit_movsx_16_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0x0f);
-	__emit_reg_reg(buf, 0xbf, mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
-}
-
-static void emit_movsx_16_membase_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	enum machine_reg base_reg, dest_reg;
-	unsigned long disp;
-
-	base_reg = mach_reg(&insn->src.reg);
-	disp = insn->src.disp;
-	dest_reg = mach_reg(&insn->dest.reg);
-
-	emit(buf, 0x0f);
-	__emit_membase_reg(buf, 0xbf, base_reg, disp, dest_reg);
-}
-
-static void emit_movzx_16_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0x0f);
-	__emit_reg_reg(buf, 0xb7, mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
-}
-
 static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	enum machine_reg dest_reg;
@@ -2760,11 +2710,11 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_FSUB_REG_REG, emit_fsub_reg_reg),
 	DECL_EMITTER(INSN_JMP_MEMBASE, emit_jmp_membase),
 	DECL_EMITTER(INSN_JMP_MEMINDEX, emit_jmp_memindex),
-	DECL_EMITTER(INSN_MOVSX_16_MEMBASE_REG, emit_movsx_16_membase_reg),
-	DECL_EMITTER(INSN_MOVSX_16_REG_REG, emit_movsx_16_reg_reg),
-	DECL_EMITTER(INSN_MOVSX_8_MEMBASE_REG, emit_movsx_8_membase_reg),
-	DECL_EMITTER(INSN_MOVSX_8_REG_REG, emit_movsx_8_reg_reg),
-	DECL_EMITTER(INSN_MOVZX_16_REG_REG, emit_movzx_16_reg_reg),
+	DECL_EMITTER(INSN_MOVSX_16_MEMBASE_REG, insn_encode),
+	DECL_EMITTER(INSN_MOVSX_16_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_MOVSX_8_MEMBASE_REG, insn_encode),
+	DECL_EMITTER(INSN_MOVSX_8_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_MOVZX_16_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_MOV_64_MEMBASE_XMM, insn_encode),
 	DECL_EMITTER(INSN_MOV_64_MEMDISP_XMM, emit_mov_64_memdisp_xmm),
 	DECL_EMITTER(INSN_MOV_64_MEMINDEX_XMM, emit_mov_64_memindex_xmm),
