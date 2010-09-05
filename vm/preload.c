@@ -107,6 +107,8 @@ struct vm_class *vm_java_lang_ref_Reference;
 struct vm_class *vm_java_lang_ref_WeakReference;
 struct vm_class *vm_java_lang_ref_SoftReference;
 struct vm_class *vm_java_lang_ref_PhantomReference;
+struct vm_class *vm_java_nio_Buffer;
+struct vm_class *vm_gnu_classpath_PointerNN;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -179,6 +181,12 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ref/WeakReference", &vm_java_lang_ref_WeakReference },
 	{ "java/lang/ref/SoftReference", &vm_java_lang_ref_SoftReference },
 	{ "java/lang/ref/PhantomReference", &vm_java_lang_ref_PhantomReference },
+	{ "java/nio/Buffer", &vm_java_nio_Buffer },
+#ifdef CONFIG_32_BIT
+	{ "gnu/classpath/Pointer32", &vm_gnu_classpath_PointerNN },
+#else
+	{ "gnu/classpath/Pointer64", &vm_gnu_classpath_PointerNN },
+#endif
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -238,6 +246,8 @@ struct vm_field *vm_java_lang_reflect_VMMethod_slot;
 struct vm_field *vm_java_lang_reflect_VMMethod_m;
 struct vm_field *vm_java_lang_ref_Reference_referent;
 struct vm_field *vm_java_lang_ref_Reference_lock;
+struct vm_field *vm_java_nio_Buffer_address;
+struct vm_field *vm_gnu_classpath_PointerNN_data;
 
 static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_Class, "vmdata", "Ljava/lang/Object;", &vm_java_lang_Class_vmdata },
@@ -292,6 +302,20 @@ static const struct field_preload_entry field_preload_entries[] = {
 	{ &vm_java_lang_reflect_VMMethod, "slot", "I", &vm_java_lang_reflect_VMMethod_slot, PRELOAD_OPTIONAL },
 	{ &vm_java_lang_ref_Reference, "referent", "Ljava/lang/Object;", &vm_java_lang_ref_Reference_referent},
 	{ &vm_java_lang_ref_Reference, "lock", "Ljava/lang/Object;", &vm_java_lang_ref_Reference_lock},
+
+	/*
+	 * java/nio/Buffer
+	 */
+	{ &vm_java_nio_Buffer, "address", "Lgnu/classpath/Pointer;", &vm_java_nio_Buffer_address },
+
+	/*
+	 * gnu/classpath/Pointer{32,64}
+	 */
+#ifdef CONFIG_32_BIT
+	{ &vm_gnu_classpath_PointerNN, "data", "I", &vm_gnu_classpath_PointerNN_data },
+#else
+	{ &vm_gnu_classpath_PointerNN, "data", "J", &vm_gnu_classpath_PointerNN_data },
+#endif
 };
 
 struct method_preload_entry {
@@ -689,7 +713,7 @@ int preload_vm_classes(void)
 		if (!field) {
 			if (pe->optional == PRELOAD_OPTIONAL)
 				continue;
-			warn("preload of %s.%s%s failed", (*pe->class)->name, pe->name, pe->type);
+			warn("preload of %s.%s %s failed", (*pe->class)->name, pe->name, pe->type);
 			return -EINVAL;
 		}
 

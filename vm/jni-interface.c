@@ -802,14 +802,45 @@ vm_jni_release_primitive_array_critical(struct vm_jni_env *env,
 	release_array_critical(array, carray, mode);
 }
 
-static void *
-vm_jni_get_direct_buffer_address(struct vm_jni_env *env, jobject buf)
+static jobject JNI_NewDirectByteBuffer(struct vm_jni_env *env, void *address, jlong capacity)
 {
 	enter_vm_from_jni();
 
-	/* We can't return direct buffer because we use machine word size
-	   elements for arrays. */
+	error("%s is not supported", __func__);
+
 	return NULL;
+}
+
+static void *JNI_GetDirectBufferAddress(struct vm_jni_env *env, jobject buf)
+{
+	struct vm_object *address;
+	void *data;
+
+	enter_vm_from_jni();
+
+	if (buf == NULL)
+		return NULL;
+
+	address		= field_get_object(buf, vm_java_nio_Buffer_address);
+	if (!address)
+		return NULL;
+
+#ifdef CONFIG_32_BIT
+	data		= (void *) field_get_int(buf, vm_gnu_classpath_PointerNN_data);
+#else
+	data		= (void *) field_get_long(buf, vm_gnu_classpath_PointerNN_data);
+#endif
+
+	return data;
+}
+
+static jlong JNI_GetDirectBufferCapacity(struct vm_jni_env *env, jobject buf)
+{
+	enter_vm_from_jni();
+
+	error("%s is not supported", __func__);
+
+	return 0;
 }
 
 /**
@@ -1650,11 +1681,11 @@ void *vm_jni_native_interface[] = {
 
 	/* JNI 1.4 functions */
 
-	NULL, /* NewDirectByteBuffer */
+	JNI_NewDirectByteBuffer,
 
 	/* 230 */
-	vm_jni_get_direct_buffer_address,
-	NULL, /* GetDirectBufferCapacity */
+	JNI_GetDirectBufferAddress,
+	JNI_GetDirectBufferCapacity,
 	NULL,
 	NULL,
 	NULL,
