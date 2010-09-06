@@ -418,7 +418,7 @@ static int print_call_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	str_append(str, "(");
-	print_reg(str, &insn->operand);
+	print_reg(str, &insn->dest);
 	return str_append(str, ")");
 }
 
