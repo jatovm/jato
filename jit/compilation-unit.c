@@ -76,11 +76,11 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 		compile_lock_init(&cu->compile_lock, false);
 
-		cu->exit_bb = alloc_basic_block(cu, 0, 0);
+		cu->exit_bb = do_alloc_basic_block(cu, 0, 0);
 		if (!cu->exit_bb)
 			goto out_of_memory;
 
-		cu->unwind_bb = alloc_basic_block(cu, 0, 0);
+		cu->unwind_bb = do_alloc_basic_block(cu, 0, 0);
 		if (!cu->unwind_bb)
 			goto out_of_memory;
 
@@ -248,18 +248,6 @@ struct basic_block *find_bb(struct compilation_unit *cu, unsigned long offset)
 			return bb;
 	}
 	return NULL;
-}
-
-unsigned long nr_bblocks(struct compilation_unit *cu)
-{
-	struct basic_block *bb;
-	unsigned long nr = 0;
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		nr++;
-	}
-
-	return nr;
 }
 
 void compute_insn_positions(struct compilation_unit *cu)

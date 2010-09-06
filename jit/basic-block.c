@@ -20,7 +20,7 @@
 
 #include "lib/buffer.h"
 
-struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
+struct basic_block *do_alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
 {
 	struct basic_block *bb;
 
@@ -44,6 +44,17 @@ struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigne
 	bb->entry_mimic_stack_size = -1;
 
 	return bb;
+}
+
+struct basic_block *alloc_basic_block(struct compilation_unit *b_parent, unsigned long start, unsigned long end)
+{
+	struct basic_block *ret;
+
+	ret	= do_alloc_basic_block(b_parent, start, end);
+	if (ret) {
+		b_parent->nr_bb++;
+	}
+	return ret;
 }
 
 struct basic_block *get_basic_block(struct compilation_unit *cu, unsigned long start, unsigned long end)
