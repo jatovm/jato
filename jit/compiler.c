@@ -70,6 +70,12 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	if (opt_ssa_enable) {
+		err = compute_dfns(cu);
+		if (err)
+			goto out;
+	}
+
 	if (opt_trace_cfg)
 		trace_cfg(cu);
 
@@ -84,6 +90,16 @@ int compile(struct compilation_unit *cu)
 
 	if (opt_trace_lir)
 		trace_lir(cu);
+
+	if (opt_ssa_enable) {
+		err = compute_dom(cu);
+		if (err)
+			goto out;
+
+		err = compute_dom_frontier(cu);
+		if (err)
+			goto out;
+	}
 
 	err = analyze_liveness(cu);
 	if (err)

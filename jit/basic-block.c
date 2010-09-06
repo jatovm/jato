@@ -91,6 +91,7 @@ void shrink_basic_block(struct basic_block *bb)
 	free(bb->successors);
 	free(bb->predecessors);
 	free(bb->mimic_stack_expr);
+	free(bb->dom_frontier);
 	free(bb->use_set);
 	free(bb->def_set);
 	free(bb->live_in_set);

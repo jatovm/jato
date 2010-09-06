@@ -99,6 +99,11 @@ static unsigned int nr_java_args;
 static char **java_args;
 
 /*
+ * Enable SSA optimizations.
+ */
+bool opt_ssa_enable;
+
+/*
  * Enable JIT workarounds for valgrind.
  */
 bool running_on_valgrind;
@@ -712,6 +717,11 @@ static void handle_perf(void)
 	perf_enabled = true;
 }
 
+static void handle_ssa(void)
+{
+	opt_ssa_enable = true;
+}
+
 static void regex_compile(regex_t *regex, const char *arg)
 {
 	int err = regcomp(regex, arg, REG_EXTENDED | REG_NOSUB);
@@ -889,6 +899,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xnewgc",			handle_newgc),
 	DEFINE_OPTION("Xnogc",			handle_nogc),
 	DEFINE_OPTION("Xperf",			handle_perf),
+	DEFINE_OPTION("Xssa",			handle_ssa),
 
 	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),
 	DEFINE_OPTION_ARG("Xtrace:gate",	handle_trace_gate),

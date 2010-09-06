@@ -154,12 +154,12 @@ void trace_cfg(struct compilation_unit *cu)
 		return;
 
 	trace_printf("Control Flow Graph:\n\n");
-	trace_printf("  #:\t\tRange\t\tSuccessors\t\tPredecessors\n");
+	trace_printf("  #:\t\tDFN\tRange\t\tSuccessors\t\tPredecessors\n");
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		unsigned long i;
 
-		trace_printf("  %p\t%lu..%lu\t", bb, bb->start, bb->end);
+		trace_printf("  %p\t%lu\t%lu..%lu\t", bb, bb->dfn, bb->start, bb->end);
 		if (bb->is_eh)
 			trace_printf(" (eh)");
 

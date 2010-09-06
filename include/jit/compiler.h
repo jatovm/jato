@@ -65,6 +65,9 @@ int analyze_control_flow(struct compilation_unit *);
 int convert_to_ir(struct compilation_unit *);
 int analyze_liveness(struct compilation_unit *);
 int select_instructions(struct compilation_unit *cu);
+int compute_dfns(struct compilation_unit *cu);
+int compute_dom(struct compilation_unit *cu);
+int compute_dom_frontier(struct compilation_unit *cu);
 int allocate_registers(struct compilation_unit *cu);
 int insert_spill_reload_insns(struct compilation_unit *cu);
 int emit_machine_code(struct compilation_unit *);
@@ -123,6 +126,7 @@ extern bool opt_trace_exceptions;
 extern bool opt_trace_bytecode;
 extern bool opt_trace_compile;
 
+extern bool opt_ssa_enable;
 extern bool running_on_valgrind;
 
 bool method_matches_regex(struct vm_method *vmm);

@@ -31,6 +31,8 @@ struct compilation_unit {
 	struct basic_block *entry_bb;
 	struct basic_block *exit_bb;
 	struct basic_block *unwind_bb;
+	struct basic_block **bb_df_array;	/* depth-first postorder */
+	struct basic_block **doms;
 	struct var_info *var_infos;
 	unsigned long nr_vregs;
 	struct var_info *fixed_var_infos[NR_FIXED_REGISTERS];

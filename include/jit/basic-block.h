@@ -36,6 +36,7 @@ struct basic_block {
 	unsigned long nr_mimic_stack_expr;
 	struct expression **mimic_stack_expr;
 	unsigned long mach_offset;
+	int dfn;
 
 	/* Contains data flow resultion blocks for each outgoing CFG edge. */
 	struct resolution_block *resolution_blocks;
@@ -52,6 +53,13 @@ struct basic_block {
 
 	/* Is this basic block an exception handler? */
 	bool is_eh;
+
+	/*
+	 * These are computed by SSA.
+	 */
+	struct {
+		struct bitset *dom_frontier;
+	};
 
 	/*
 	 * These are computed by liveness analysis.

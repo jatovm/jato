@@ -193,6 +193,12 @@ void shrink_compilation_unit(struct compilation_unit *cu)
 
 	free_var_infos(cu->var_infos);
 	cu->var_infos = NULL;
+
+	free(cu->bb_df_array);
+	cu->bb_df_array = NULL;
+
+	free(cu->doms);
+	cu->doms = NULL;
 }
 
 void free_compilation_unit(struct compilation_unit *cu)

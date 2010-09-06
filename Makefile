@@ -64,6 +64,7 @@ JIT_OBJS = \
 	jit/compiler.o		\
 	jit/cu-mapping.o	\
 	jit/disass-common.o	\
+	jit/dominance.o		\
 	jit/elf.o		\
 	jit/emit.o		\
 	jit/emulate.o		\
