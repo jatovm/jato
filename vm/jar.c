@@ -19,7 +19,7 @@ struct parse_buffer {
 };
 
 /* The following is an implementation of the Jar file format as specified in:
- * http://java.sun.com/j2se/1.3/docs/guide/jar/jar.html */
+ * http://download.oracle.com/javase/1.3/docs/guide/jar/jar.html */
 
 static struct jar_header *jar_header_alloc(void)
 {

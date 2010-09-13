@@ -1108,7 +1108,7 @@ bool vm_class_is_anonymous(struct vm_class *vmc)
 	return is_numeric(separator + 1);
 }
 
-/* Reference: http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
+/* Reference: http://download.oracle.com/javase/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
 bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from)
 {
 	if (vmc == from)

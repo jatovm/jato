@@ -1353,7 +1353,7 @@ static jint vm_jni_get_string_length(struct vm_exec_env *env, jobject string)
 
 /*
  * The JNI native interface table.
- * See: http://java.sun.com/j2se/1.4.2/docs/guide/jni/spec/functions.html
+ * See: http://download.oracle.com/javase/1.4.2/docs/guide/jni/spec/functions.html
  */
 void *vm_jni_native_interface[] = {
 	/* 0 */
