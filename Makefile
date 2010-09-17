@@ -52,124 +52,112 @@ PROGRAM		:= jato
 
 include arch/$(ARCH)/Makefile$(ARCH_POSTFIX)
 
-JIT_OBJS = \
-	jit/args.o		\
-	jit/arithmetic-bc.o	\
-	jit/basic-block.o	\
-	jit/bc-offset-mapping.o \
-	jit/branch-bc.o		\
-	jit/bytecode-to-ir.o	\
-	jit/cfg-analyzer.o	\
-	jit/compilation-unit.o	\
-	jit/compiler.o		\
-	jit/cu-mapping.o	\
-	jit/disass-common.o	\
-	jit/dominance.o		\
-	jit/elf.o		\
-	jit/emit.o		\
-	jit/emulate.o		\
-	jit/exception-bc.o	\
-	jit/exception.o 	\
-	jit/expression.o	\
-	jit/fixup-site.o	\
-	jit/gdb.o		\
-	jit/interval.o		\
-	jit/invoke-bc.o		\
-	jit/linear-scan.o	\
-	jit/liveness.o		\
-	jit/load-store-bc.o	\
-	jit/method.o		\
-	jit/nop-bc.o		\
-	jit/object-bc.o		\
-	jit/ostack-bc.o		\
-	jit/perf-map.o		\
-	jit/spill-reload.o	\
-	jit/stack-slot.o	\
-	jit/statement.o		\
-	jit/switch-bc.o		\
-	jit/text.o		\
-	jit/trace-jit.o		\
-	jit/trampoline.o	\
-	jit/tree-node.o		\
-	jit/tree-printer.o	\
-	jit/typeconv-bc.o	\
-	jit/vtable.o		\
-	jit/subroutine.o	\
-	jit/pc-map.o		\
-	jit/wide-bc.o
+OBJS += $(ARCH_OBJS)
 
-VM_OBJS = \
-	runtime/class.o		\
-	runtime/classloader.o	\
-	runtime/reflection.o	\
-	runtime/runtime.o	\
-	runtime/stack-walker.o	\
-	runtime/unsafe.o	\
-	vm/boehm-gc.o		\
-	vm/bytecode.o		\
-	vm/call.o		\
-	vm/class.o		\
-	vm/classloader.o	\
-	vm/debug-dump.o		\
-	vm/die.o		\
-	vm/fault-inject.o	\
-	vm/field.o		\
-	vm/gc.o			\
-	vm/itable.o		\
-	vm/jar.o		\
-	vm/jato.o		\
-	vm/jni-interface.o	\
-	vm/jni.o		\
-	vm/method.o		\
-	vm/monitor.o		\
-	vm/natives.o		\
-	vm/object.o		\
-	vm/preload.o		\
-	vm/reference.o		\
-	vm/signal.o		\
-	vm/stack-trace.o	\
-	vm/static.o		\
-	vm/string.o		\
-	vm/thread.o		\
-	vm/trace.o		\
-	vm/types.o		\
-	vm/utf8.o		\
-	vm/zalloc.o
-
-LIB_OBJS = \
-	lib/array.o		\
-	lib/bitset.o		\
-	lib/buffer.o		\
-	lib/compile-lock.o	\
-	lib/guard-page.o	\
-	lib/hash-map.o		\
-	lib/list.o		\
-	lib/parse.o		\
-	lib/pqueue.o		\
-	lib/radix-tree.o	\
-	lib/stack.o		\
-	lib/string.o
-
-CAFEBABE_OBJS := \
-	cafebabe/attribute_array.o		\
-	cafebabe/attribute_info.o		\
-	cafebabe/class.o			\
-	cafebabe/code_attribute.o		\
-	cafebabe/constant_value_attribute.o	\
-	cafebabe/constant_pool.o		\
-	cafebabe/error.o			\
-	cafebabe/field_info.o			\
-	cafebabe/line_number_table_attribute.o	\
-	cafebabe/method_info.o			\
-	cafebabe/source_file_attribute.o	\
-	cafebabe/stream.o
-
-LIBHARNESS_OBJS = \
-	test/libharness/libharness.o
-
-JATO_OBJS = $(ARCH_OBJS) $(JIT_OBJS) $(VM_OBJS) $(LIB_OBJS) $(CAFEBABE_OBJS)
-
-OBJS = $(JATO_OBJS)
+OBJS += cafebabe/attribute_array.o
+OBJS += cafebabe/attribute_info.o
+OBJS += cafebabe/class.o
+OBJS += cafebabe/code_attribute.o
+OBJS += cafebabe/constant_pool.o
+OBJS += cafebabe/constant_value_attribute.o
+OBJS += cafebabe/error.o
+OBJS += cafebabe/field_info.o
+OBJS += cafebabe/line_number_table_attribute.o
+OBJS += cafebabe/method_info.o
+OBJS += cafebabe/source_file_attribute.o
+OBJS += cafebabe/stream.o
+OBJS += jit/args.o
+OBJS += jit/arithmetic-bc.o
+OBJS += jit/basic-block.o
+OBJS += jit/bc-offset-mapping.o
+OBJS += jit/branch-bc.o
+OBJS += jit/bytecode-to-ir.o
+OBJS += jit/cfg-analyzer.o
+OBJS += jit/compilation-unit.o
+OBJS += jit/compiler.o
+OBJS += jit/cu-mapping.o
+OBJS += jit/disass-common.o
+OBJS += jit/dominance.o
+OBJS += jit/elf.o
+OBJS += jit/emit.o
+OBJS += jit/emulate.o
+OBJS += jit/exception-bc.o
+OBJS += jit/exception.o
+OBJS += jit/expression.o
+OBJS += jit/fixup-site.o
+OBJS += jit/gdb.o
+OBJS += jit/interval.o
+OBJS += jit/invoke-bc.o
+OBJS += jit/linear-scan.o
+OBJS += jit/liveness.o
+OBJS += jit/load-store-bc.o
+OBJS += jit/method.o
+OBJS += jit/nop-bc.o
+OBJS += jit/object-bc.o
+OBJS += jit/ostack-bc.o
+OBJS += jit/pc-map.o
+OBJS += jit/perf-map.o
+OBJS += jit/spill-reload.o
+OBJS += jit/stack-slot.o
+OBJS += jit/statement.o
+OBJS += jit/subroutine.o
+OBJS += jit/switch-bc.o
+OBJS += jit/text.o
+OBJS += jit/trace-jit.o
+OBJS += jit/trampoline.o
+OBJS += jit/tree-node.o
+OBJS += jit/tree-printer.o
+OBJS += jit/typeconv-bc.o
+OBJS += jit/vtable.o
+OBJS += jit/wide-bc.o
+OBJS += lib/array.o
+OBJS += lib/bitset.o
+OBJS += lib/buffer.o
+OBJS += lib/compile-lock.o
+OBJS += lib/guard-page.o
+OBJS += lib/hash-map.o
+OBJS += lib/list.o
+OBJS += lib/parse.o
+OBJS += lib/pqueue.o
+OBJS += lib/radix-tree.o
+OBJS += lib/stack.o
+OBJS += lib/string.o
+OBJS += runtime/class.o
+OBJS += runtime/classloader.o
+OBJS += runtime/reflection.o
+OBJS += runtime/runtime.o
+OBJS += runtime/stack-walker.o
+OBJS += runtime/unsafe.o
+OBJS += vm/boehm-gc.o
+OBJS += vm/bytecode.o
+OBJS += vm/call.o
+OBJS += vm/class.o
+OBJS += vm/classloader.o
+OBJS += vm/debug-dump.o
+OBJS += vm/die.o
+OBJS += vm/fault-inject.o
+OBJS += vm/field.o
+OBJS += vm/gc.o
+OBJS += vm/itable.o
+OBJS += vm/jar.o
+OBJS += vm/jato.o
+OBJS += vm/jni-interface.o
+OBJS += vm/jni.o
+OBJS += vm/method.o
+OBJS += vm/monitor.o
+OBJS += vm/natives.o
+OBJS += vm/object.o
+OBJS += vm/preload.o
+OBJS += vm/reference.o
+OBJS += vm/signal.o
+OBJS += vm/stack-trace.o
+OBJS += vm/static.o
+OBJS += vm/string.o
+OBJS += vm/thread.o
+OBJS += vm/trace.o
+OBJS += vm/types.o
+OBJS += vm/utf8.o
+OBJS += vm/zalloc.o
 
 RUNTIME_CLASSES =
 
@@ -378,7 +366,6 @@ clean:
 	$(Q) - rm -f $(CLASSPATH_CONFIG)
 	$(Q) - rm -f $(OBJS)
 	$(Q) - rm -f $(OBJS:.o=.d)
-	$(Q) - rm -f $(LIBHARNESS_OBJS)
 	$(Q) - rm -f $(ARCH_TEST_OBJS)
 	$(Q) - rm -f arch/$(ARCH)/insn-selector.c
 	$(Q) - rm -f $(PROGRAM)
