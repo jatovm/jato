@@ -40,32 +40,27 @@
 static void do_native_call(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
-	__asm__ volatile
-		(
-	 "movl %%ebx, %%ecx \n"
-	 "shl $2, %%ebx \n"
-	 "subl %%ebx, %%esp \n"
-	 "movl %%esp, %%edi \n"
-	 "cld \n"
-	 "rep movsd \n"
-	 "mov %%ebx, %%esi \n"
-
-	 "test %4, %4 \n"
-	 "jz 1f \n"
-
-	 "pushl %%esp \n"
-	 "pushl %2 \n"
-	 "call vm_enter_vm_native \n"
-	 "addl $8, %%esp \n"
-	 "test %%eax, %%eax \n"
-	 "jnz 2f \n"
-"1: \n"
-	 "call *%2 \n"
-	 "movl %3, %%edi \n"
-	 "movl %%eax, (%%edi) \n"
-	 "movl %%edx, 4(%%edi) \n"
-"2: \n"
-	 "addl %%esi, %%esp \n"
+	__asm__ __volatile__ (
+		"	movl %%ebx, %%ecx	\n"
+		"	shl $2, %%ebx		\n"
+		"	subl %%ebx, %%esp	\n"
+		"	movl %%esp, %%edi	\n"
+		"	cld			\n"
+		"	rep movsd		\n"
+		"	mov %%ebx, %%esi	\n"
+		"	test %4, %4		\n"
+		"	jz 1f			\n"
+		"	pushl %%esp		\n"
+		"	pushl %2		\n"
+		"	call vm_enter_vm_native \n"
+		"	addl $8, %%esp		\n"
+		"	test %%eax, %%eax	\n"
+		"	jnz 2f			\n"
+		"1:	call *%2		\n"
+		"	movl %3, %%edi		\n"
+		"	movl %%eax, (%%edi)	\n"
+		"	movl %%edx, 4(%%edi)	\n"
+		"2:	addl %%esi, %%esp	\n"
 	 :
 	 : "b" (method->args_count),
 	   "S" (args),
