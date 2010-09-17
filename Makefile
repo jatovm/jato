@@ -242,8 +242,7 @@ boehmgc:
 
 %.o: %.c
 	$(E) "  CC      " $@
-	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
-	$(Q) $(CC) -MM $(DEFAULT_CFLAGS) $(CFLAGS) -MT $@ $*.c -o $*.d
+	$(Q) $(CC) -MD -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
 # -gstabs is needed for correct backtraces.
 %.o: %.S
