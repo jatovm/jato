@@ -389,11 +389,11 @@ clean:
 	$(Q) - find runtime/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
-	+$(Q) - $(MAKE) -C tools/monoburg/ clean
-	+$(Q) - $(MAKE) -C boehmgc/ clean
-	+$(Q) - $(MAKE) -C test/vm/ clean
-	+$(Q) - $(MAKE) -C test/jit/ clean
-	+$(Q) - $(MAKE) -C test/arch-$(ARCH)/ clean
+	+$(Q) - $(MAKE) -C tools/monoburg/ clean >/dev/null
+	+$(Q) - $(MAKE) -C boehmgc/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/vm/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/jit/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/arch-$(ARCH)/ clean >/dev/null
 .PHONY: clean
 
 INSTALL_PREFIX	?= $(HOME)
