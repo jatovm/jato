@@ -40,6 +40,8 @@
 static void do_native_call(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
+	unsigned long stack_size;
+
 	__asm__ __volatile__ (
 		"	movl %[args_count], %%ecx	\n"
 		"	shl $2, %[args_count]		\n"
@@ -47,7 +49,13 @@ static void do_native_call(struct vm_method *method, void *target,
 		"	movl %%esp, %%edi		\n"
 		"	cld				\n"
 		"	rep movsd			\n"
-		"	mov %[args_count], %%esi	\n"
+		"	mov %[args_count], %[stack_size]\n"
+		: [stack_size] "=r" (stack_size)
+		: [args_count] "b" (method->args_count),
+		  "S" (args)
+		: "%ecx", "%edi", "cc", "memory");
+
+	__asm__ volatile (
 		"	test %[native], %[native]	\n"
 		"	jz 1f				\n"
 		"	pushl %%esp			\n"
@@ -60,14 +68,13 @@ static void do_native_call(struct vm_method *method, void *target,
 		"	movl %[result], %%edi		\n"
 		"	movl %%eax, (%%edi)		\n"
 		"	movl %%edx, 4(%%edi)		\n"
-		"2:	addl %%esi, %%esp		\n"
-	 :
-	 : [args_count] "b" (method->args_count),
-	   "S" (args),
-	   [target] "m" (target),
-	   [result] "m" (result),
-	   [native] "r" (vm_method_is_vm_native(method))
-	 : "%ecx", "%edx", "%edi", "cc", "memory");
+		"2:	addl %[stack_size], %%esp	\n"
+		:
+		: [target] "m" (target),
+		  [result] "m" (result),
+		  [native] "r" (vm_method_is_vm_native(method)),
+		  [stack_size] "r" (stack_size)
+		: "%edx", "%edi", "cc", "memory");
 
 	if (vm_method_is_vm_native(method))
 		vm_leave_vm_native();
