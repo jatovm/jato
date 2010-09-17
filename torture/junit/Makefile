@@ -1,7 +1,7 @@
 JAVA		?= ../../jato
 JAVAC		?= javac
 
-JAR_URL		= http://downloads.sourceforge.net/project/junit/junit/4.8.1/junit-4.8.1.jar?use_mirror=ignum
+JAR_URL		= http://downloads.sourceforge.net/project/junit/junit/4.8.1/junit-4.8.1.jar
 JAR		= junit-4.8.1.jar
 
 TEST_CLASSES	= SimpleTest.class
