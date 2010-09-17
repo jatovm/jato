@@ -88,6 +88,33 @@ exit:
 	restore_stack(stack_size);
 }
 
+static void do_native_call_xmm(struct vm_method *method, void *target,
+			     unsigned long *args, union jvalue *result)
+{
+	unsigned long stack_size;
+
+	push_args_on_stack(method, args, stack_size);
+
+	if (vm_method_is_vm_native(method)) {
+		if (vm_enter_vm_native(target, (void *) esp) < 0)
+			goto exit;
+	}
+	__asm__ volatile (
+		"	call *%[target]			\n"
+		"	movl %[result], %%edi		\n"
+		"	movss %%xmm0, (%%edi)		\n"
+		:
+		: [target] "m" (target),
+		  [result] "m" (result)
+		: "%edx", "%edi", "cc", "memory");
+
+exit:
+	if (vm_method_is_vm_native(method))
+		vm_leave_vm_native();
+
+	restore_stack(stack_size);
+}
+
 /**
  * This calls a function with call arguments copied from @args
  * array. The array contains @args_count elements of machine word
@@ -129,8 +156,10 @@ void native_call(struct vm_method *method, void *target,
 		do_native_call(method, target, args, result);
 		break;
 	case J_DOUBLE:
+		do_native_call_xmm(method, target, args, result);
+		break;
 	case J_FLOAT:
-		error("not implemented");
+		do_native_call_xmm(method, target, args, result);
 		break;
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
