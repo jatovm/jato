@@ -1074,7 +1074,7 @@ struct gnu_classpath_config gnu_classpath_configs[] = {
 	},
 };
 
-static void gnu_classpath_autodiscovery(void)
+static bool gnu_classpath_autodiscovery(void)
 {
 	for (unsigned int i = 0; i < ARRAY_SIZE(gnu_classpath_configs); i++) {
 		struct gnu_classpath_config *config = &gnu_classpath_configs[i];
@@ -1084,14 +1084,19 @@ static void gnu_classpath_autodiscovery(void)
 
 		system_property_append_path("java.boot.class.path", config->glibj);
 		system_property_append_path("java.library.path", config->lib);
-		break;
+
+		return true;
 	}
+
+	return false;
 }
 
-static void init_classpath(void)
+static bool init_classpath(void)
 {
-	if (!system_property_get("java.boot.class.path"))
-		gnu_classpath_autodiscovery();
+	if (!system_property_get("java.boot.class.path")) {
+		if (!gnu_classpath_autodiscovery())
+			return false;
+	}
 
 	const char *boot_cp = system_property_get("java.boot.class.path");
 	add_system_property_const("sun.boot.class.path", boot_cp);
@@ -1105,6 +1110,8 @@ static void init_classpath(void)
 		const char *cwd = system_property_get("user.dir");
 		system_property_append_path("java.class.path", cwd);
 	}
+
+	return true;
 }
 
 static void print_proc_maps(void)
@@ -1171,7 +1178,10 @@ main(int argc, char *argv[])
 	static_fixup_init();
 	vm_jni_init();
 
-	init_classpath();
+	if (!init_classpath()) {
+		fprintf(stderr, "Unable to locate GNU Classpath. Please specify 'java.boot.class.path' and 'java.library.path' manually.\n");
+		exit(EXIT_FAILURE);
+	}
 
 	if (preload_vm_classes()) {
 		NOT_IMPLEMENTED;
