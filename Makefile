@@ -9,6 +9,8 @@ GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
 ARCH		:= $(BUILD_ARCH)
 
+MAKEFLAGS += --no-print-directory
+
 ifneq ($(ARCH),$(BUILD_ARCH))
 TEST		=
 else
