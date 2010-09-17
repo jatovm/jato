@@ -1,0 +1,19 @@
+Jato supports the following command line options:
+
+    -Xtrace:invoke
+      Trace method invocations.
+
+    -Xtrace:invoke-verbose
+      Trace method invocations (verbose mode).
+
+    -Xtrace:jit
+      Trace all compilation phases for each method.
+
+    -Xtrace:asm
+      Trace the emitted machine code for each method.
+
+    -Xtrace:classloader
+      Trace class loading and initialization.
+
+    -Xtrace:trampoline
+      Trace executed trampolines.

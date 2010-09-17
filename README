@@ -1,153 +1,118 @@
-What is it?
+1. What is Jato
+===============
 
-  Jato is a Java virtual machine implementation with a Just-in-time (JIT)
-  compiler. It can currently run some simple Java programs on Linux/i386.
+Jato is an implementation of the Java virtual machine. It includes a VM and a
+JIT compiler for the x86 machine architecture and supports the JNI API. Jato
+uses Boehm GC as its garbage collector and relies on GNU Classpath to provide
+essential Java APIs.
 
-How can I try it out?
+2. Compilation and Installation
+===============================
 
-  - Download development tree:
+2.1. Getting the Sources
+------------------------
 
-    $ git clone git://git.kernel.org/pub/scm/java/jato/jato.git
+Fetch the latest sources with:
 
-  - Make sure you have necessary dependencies installed to compile the program.
+  git clone git://git.kernel.org/pub/scm/java/jato/jato.git
 
-    For Ubuntu:
+2.2. Build Requirements
+-----------------------
 
-    $ sudo apt-get install ecj classpath libffi-dev binutils-dev libzip-dev libglib2.0-dev
+Before installing Jato ensure you have the following software installed on your
+system:
 
-    For Fedora:
+  - GNU Classpath 0.97 or higher
 
-    $ su
-    $ yum install eclipse-ecj ; exit
+  - Eclipse Java Compiler
 
-    and
+Ubuntu:
 
-    $ wget ftp://ftp.gnu.org/gnu/classpath/classpath-0.97.2.tar.gz
-    $ tar xzvf classpath-0.97.2.tar.gz
-    $ cd classpath-0.97.2
-    $ ./configure ; make
-    $ su
-    $ make install ; exit
+  sudo apt-get install ecj classpath libffi-dev binutils-dev libzip-dev libglib2.0-dev
 
-    For OpenSolaris 10:
+Archlinux:
 
-    $ su
-    $ pkg install SUNWgnome-common-devel SUNWgcc SUNWGlib SUNWgmake SUNWbison ; exit
+  pacman -S eclipse-ecj classpath libzip libffi
 
-    For Archlinux:
+2.3. Building the Software
+--------------------------
 
-    $ pacman -S eclipse-ecj classpath libzip libffi
+- Compile the VM:
 
-  - Compile Jato and run the unit tests:
+  make
 
-    $ cd <JATO_ROOT> ; make
+2.4. Testing and Installation
+-----------------------------
 
+You can run all Jato unit and regression tests with the command:
 
-Running Jato
+  make check
 
-  Command line options:
+All tests should pass.
 
-    -Xtrace:invoke
-      Trace method invocations.
+In addition, you can download and run bunch of real-world tests with the
+command:
 
-    -Xtrace:invoke-verbose
-      Trace method invocations (verbose mode).
+  make torture
 
-    -Xtrace:jit
-      Trace all compilation phases for each method.
+Note! This step is optional and can take a long time.
 
-    -Xtrace:asm
-      Trace the emitted machine code for each method.
+You can now install Jato with:
 
-    -Xtrace:classloader
-      Trace class loading and initialization.
+  make install
 
-    -Xtrace:trampoline
-      Trace executed trampolines.
+3. Using Jato
+=============
 
+Jato uses the same command line options as 'java'. You can execute a single
+class with:
 
-Development
+  jato <class name>
 
-  If you use git for development, please remember to add your committer name
-  and email to .git/config file.  You can do that by running the following
-  commands:
+To specify classpath use:
 
-    $ git config user.name "Pekka Enberg"
-    $ git config user.email penberg@cs.helsinki.fi
+  jato -cp <jar files or directories> <class name>
 
+You can also execute a Jar file with:
 
-How to run the regression test suite?
+  jato -jar <jar file>
 
-  Installation prerequisites:
+Jato also supports variety of command line options for debugging and tracing
+purposes. See the file Documentation/options.txt for details.
 
-    - Eclipse Compiler for Java (ECJ)
-    - GNU classpath installed in '/usr/local/classpath/'
+4. Copyright and License
+========================
 
-  To run the test suite, execute the following commands:
+Copyright (C) 2005-2010  Pekka Enberg and contributors
 
-    $ make check
+Jato is available under the GNU General Public License (GPL) version 2 with the
+following clarification and special exception:
 
+  Linking this library statically or dynamically with other modules is making a
+  combined work based on this library. Thus, the terms and conditions of the
+  GNU General Public License cover the whole combination.
 
-How do I launch a simple application?
+  As a special exception, the copyright holders of this library give you
+  permission to link this library with independent modules to produce an
+  executable, regardless of the license terms of these independent modules, and
+  to copy and distribute the resulting executable under terms of your choice,
+  provided that you also meet, for each linked independent module, the terms
+  and conditions of the license of that module. An independent module is a
+  module which is not derived from or based on this library. If you modify this
+  library, you may extend this exception to your version of the library, but
+  you are not obligated to do so. If you do not wish to do so, delete this
+  exception statement from your version.
 
-  To run a simple Java application, you can download Christian Schneider's Java
-  tetris at:
+6.Thanks and Acknowledgements
+=============================
 
-    http://www.liquidreality.de/display/liquid/Java+Tris
+I would like to thank the following people and organizations for supporting
+Jato development:
 
-  and launch it with the following command:
+- Google for including Jato in Summer of Code 2008 and 2009.
 
-    $ jato -jar tetris.jar
+- Kernel.org for providing git hosting for Jato.
 
-  To launch the application under gdb, use the following command:
+- Reaktor Innovations Oy for sponsoring initial Jato development back in 2005.
 
-    $ gdb --args ./jato [...]
-
-
-Debugging deadlocks
-
-  You can debug deadlocks easily with GDB:
-
-    $ gdb --args ./jato [...]
-
-    (gdb) handle SIGSEGV nostop
-    (gdb) r
-    <Ctrl-C when the program deadlocks>
-    (gdb) thread apply all backtrace
-
-
-Copyright and License
-
-  Copyright (C) 2005-2009  Pekka Enberg
-
-  Jato is available under the GNU General Public License (GPL) version 2 with
-  the following clarification and special exception:
-
-    Linking this library statically or dynamically with other modules is making
-    a combined work based on this library. Thus, the terms and conditions of the
-    GNU General Public License cover the whole combination.
-
-    As a special exception, the copyright holders of this library give you
-    permission to link this library with independent modules to produce an
-    executable, regardless of the license terms of these independent modules,
-    and to copy and distribute the resulting executable under terms of your
-    choice, provided that you also meet, for each linked independent module,
-    the terms and conditions of the license of that module. An independent
-    module is a module which is not derived from or based on this library. If
-    you modify this library, you may extend this exception to your version of
-    the library, but you are not obligated to do so. If you do not wish to do
-    so, delete this exception statement from your version.
-
-Acknowledgements
-
-  I would like to thank the following people and organizations for supporting
-  Jato development:
-
-    Reaktor Innovations Oy for sponsoring initial Jato development back in
-    2005.
-
-    Kernel.org for providing git hosting for Jato.
-
-    Google for including Jato in Summer of Code 2008 and 2009.
-
-  Thank you!
+Thank you!

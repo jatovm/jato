@@ -1,0 +1,11 @@
+Debugging deadlocks
+
+You can debug deadlocks easily with GDB:
+
+  gdb --args ./jato [...]
+
+    (gdb) handle SIGSEGV nostop
+    (gdb) r
+    <Ctrl-C when the program deadlocks>
+    (gdb) thread apply all backtrace
+
