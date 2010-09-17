@@ -1,6 +1,6 @@
 JAVA	?= ../../jato
 
-JAR_URL	= http://downloads.sourceforge.net/project/dacapobench/archive/2006-10-MR2/dacapo-2006-10-MR2.jar?use_mirror=switch
+JAR_URL	= http://downloads.sourceforge.net/project/dacapobench/archive/2006-10-MR2/dacapo-2006-10-MR2.jar
 JAR	= dacapo-2006-10-MR2.jar
 
 all: test
