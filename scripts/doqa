@@ -1,3 +1,0 @@
-#!/bin/sh
-
-git clean -x -d -f && make test && git clean -x -f && make regression
