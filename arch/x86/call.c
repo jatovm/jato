@@ -37,6 +37,8 @@
 
 #ifdef CONFIG_X86_32
 
+static unsigned long esp __asm__("esp");
+
 static void do_native_call(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
@@ -55,29 +57,29 @@ static void do_native_call(struct vm_method *method, void *target,
 		  "S" (args)
 		: "%ecx", "%edi", "cc", "memory");
 
+	if (vm_method_is_vm_native(method)) {
+		if (vm_enter_vm_native(target, (void *) esp) < 0)
+			goto exit;
+	}
 	__asm__ volatile (
-		"	test %[native], %[native]	\n"
-		"	jz 1f				\n"
-		"	pushl %%esp			\n"
-		"	pushl %[target]			\n"
-		"	call vm_enter_vm_native		\n"
-		"	addl $8, %%esp			\n"
-		"	test %%eax, %%eax		\n"
-		"	jnz 2f				\n"
-		"1:	call *%[target]			\n"
+		"	call *%[target]			\n"
 		"	movl %[result], %%edi		\n"
 		"	movl %%eax, (%%edi)		\n"
 		"	movl %%edx, 4(%%edi)		\n"
-		"2:	addl %[stack_size], %%esp	\n"
 		:
 		: [target] "m" (target),
-		  [result] "m" (result),
-		  [native] "r" (vm_method_is_vm_native(method)),
-		  [stack_size] "r" (stack_size)
+		  [result] "m" (result)
 		: "%edx", "%edi", "cc", "memory");
 
+exit:
 	if (vm_method_is_vm_native(method))
 		vm_leave_vm_native();
+
+	__asm__ __volatile__ (
+		"2:	addl %[stack_size], %%esp	\n"
+		:
+		: [stack_size] "r" (stack_size)
+		: "memory");
 }
 
 /**
