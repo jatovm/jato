@@ -25,7 +25,6 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <valgrind/valgrind.h>
 #include <sys/utsname.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -39,6 +38,8 @@
 #include <regex.h>
 #include <stdio.h>
 #include <time.h>
+
+#include "valgrind/valgrind.h"
 
 #include "cafebabe/access.h"
 #include "cafebabe/attribute_info.h"
