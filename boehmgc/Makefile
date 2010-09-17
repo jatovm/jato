@@ -4,7 +4,7 @@ uname_S		:= $(shell sh -c 'uname -s 2>/dev/null || echo not')
 uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
 ARCH		?= $(uname_M)
 
-DEFAULT_CFLAGS	+= -I../include/valgrind
+DEFAULT_CFLAGS	+= -I../include/valgrind -g -Os
 
 ifeq ($(ARCH),i386)
   ifeq ($(uname_M),x86_64)
