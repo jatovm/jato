@@ -41,32 +41,32 @@ static void do_native_call(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
 	__asm__ __volatile__ (
-		"	movl %%ebx, %%ecx	\n"
-		"	shl $2, %%ebx		\n"
-		"	subl %%ebx, %%esp	\n"
-		"	movl %%esp, %%edi	\n"
-		"	cld			\n"
-		"	rep movsd		\n"
-		"	mov %%ebx, %%esi	\n"
-		"	test %4, %4		\n"
-		"	jz 1f			\n"
-		"	pushl %%esp		\n"
-		"	pushl %2		\n"
-		"	call vm_enter_vm_native \n"
-		"	addl $8, %%esp		\n"
-		"	test %%eax, %%eax	\n"
-		"	jnz 2f			\n"
-		"1:	call *%2		\n"
-		"	movl %3, %%edi		\n"
-		"	movl %%eax, (%%edi)	\n"
-		"	movl %%edx, 4(%%edi)	\n"
-		"2:	addl %%esi, %%esp	\n"
+		"	movl %[args_count], %%ecx	\n"
+		"	shl $2, %[args_count]		\n"
+		"	subl %[args_count], %%esp	\n"
+		"	movl %%esp, %%edi		\n"
+		"	cld				\n"
+		"	rep movsd			\n"
+		"	mov %[args_count], %%esi	\n"
+		"	test %[native], %[native]	\n"
+		"	jz 1f				\n"
+		"	pushl %%esp			\n"
+		"	pushl %[target]			\n"
+		"	call vm_enter_vm_native		\n"
+		"	addl $8, %%esp			\n"
+		"	test %%eax, %%eax		\n"
+		"	jnz 2f				\n"
+		"1:	call *%[target]			\n"
+		"	movl %[result], %%edi		\n"
+		"	movl %%eax, (%%edi)		\n"
+		"	movl %%edx, 4(%%edi)		\n"
+		"2:	addl %%esi, %%esp		\n"
 	 :
-	 : "b" (method->args_count),
+	 : [args_count] "b" (method->args_count),
 	   "S" (args),
-	   "m" (target),
-	   "m" (result),
-	   "r" (vm_method_is_vm_native(method))
+	   [target] "m" (target),
+	   [result] "m" (result),
+	   [native] "r" (vm_method_is_vm_native(method))
 	 : "%ecx", "%edx", "%edi", "cc", "memory");
 
 	if (vm_method_is_vm_native(method))
