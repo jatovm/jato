@@ -166,9 +166,9 @@ LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
 JAVA		?= $(shell pwd)/jato
 JAVAC		?= ecj
-JASMIN		:= java -jar tools/jasmin/jasmin.jar
-JAVAC_OPTS	:= -encoding utf-8
-INSTALL		:= install
+JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
+JAVAC_OPTS	?= -encoding utf-8
+INSTALL		?= install
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
 
