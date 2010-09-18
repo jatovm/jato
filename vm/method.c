@@ -120,6 +120,9 @@ int vm_method_init(struct vm_method *vmm,
 
 	cafebabe_stream_close_buffer(&stream);
 
+	if (cafebabe_read_exceptions_attribute(class, &method->attributes, &vmm->exceptions_attribute))
+		goto error_free_type;
+
 	if (cafebabe_read_line_number_table_attribute(class, &vmm->code_attribute.attributes, &vmm->line_number_table_attribute))
 		goto error_free_type;
 

@@ -61,6 +61,7 @@ OBJS += cafebabe/code_attribute.o
 OBJS += cafebabe/constant_pool.o
 OBJS += cafebabe/constant_value_attribute.o
 OBJS += cafebabe/error.o
+OBJS += cafebabe/exceptions_attribute.o
 OBJS += cafebabe/field_info.o
 OBJS += cafebabe/inner_classes_attribute.o
 OBJS += cafebabe/line_number_table_attribute.o
