@@ -13,12 +13,11 @@ test: $(JAR)
 	$(JAVA) -Xmx1g -jar $(JAR) eclipse
 	$(JAVA) -Xmx1g -jar $(JAR) fop
 	$(JAVA) -Xmx1g -jar $(JAR) hsqldb
+	$(JAVA) -Xmx1g -jar $(JAR) jython
 	$(JAVA) -Xmx1g -jar $(JAR) luindex
 	$(JAVA) -Xmx1g -jar $(JAR) lusearch
 	$(JAVA) -Xmx1g -jar $(JAR) pmd
 	$(JAVA) -Xmx1g -jar $(JAR) xalan
-# BROKEN:
-#	$(JAVA) -Xmx1g -jar $(JAR) jython
 
 .PHONY: test
 
