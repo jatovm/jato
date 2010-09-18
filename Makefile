@@ -6,12 +6,12 @@ CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 
-BUILD_ARCH	:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
-ARCH		:= $(BUILD_ARCH)
+uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
+ARCH		:= $(uname_M)
 
 MAKEFLAGS += --no-print-directory
 
-ifneq ($(ARCH),$(BUILD_ARCH))
+ifneq ($(ARCH),$(uname_M))
 TEST		=
 else
 TEST		= test
@@ -22,7 +22,7 @@ override ARCH	= x86
 ARCH_POSTFIX	= _32
 #WARNINGS	+= -Werror
 MB_DEFINES	+= -DCONFIG_X86_32
-ifeq ($(BUILD_ARCH),x86_64)
+ifeq ($(uname_M),x86_64)
 ARCH_CFLAGS	+= -m32
 TEST		= test
 endif
@@ -168,9 +168,14 @@ LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
 JAVA		?= $(shell pwd)/jato
 JAVAC		?= ecj
-JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
 JAVAC_OPTS	?= -encoding utf-8
 INSTALL		?= install
+
+ifeq ($(uname_M),x86_64)
+JASMIN		?= java -jar tools/jasmin/jasmin.jar
+else
+JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
+endif
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
 
