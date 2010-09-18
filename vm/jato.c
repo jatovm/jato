@@ -536,6 +536,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredConstructors", native_vmclass_get_declared_constructors),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredFields", native_vmclass_get_declared_fields),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredMethods", native_vmclass_get_declared_methods),
+	DEFINE_NATIVE("java/lang/VMClass", "getDeclaringClass", native_vmclass_get_declaring_class),
 	DEFINE_NATIVE("java/lang/VMClass", "getInterfaces", native_vmclass_get_interfaces),
 	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", native_vmclass_getmodifiers),
 	DEFINE_NATIVE("java/lang/VMClass", "getName", native_vmclass_getname),
@@ -550,6 +551,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClassLoader", "findLoadedClass", native_vmclassloader_findloadedclass),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", native_vmclassloader_getprimitiveclass),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "loadClass", native_vmclassloader_loadclass),
+	DEFINE_NATIVE("java/lang/VMClassLoader", "resolveClass", native_vmclassloader_resolveclass),
 	DEFINE_NATIVE("java/lang/VMObject", "clone", native_vmobject_clone),
 	DEFINE_NATIVE("java/lang/VMObject", "getClass", native_vmobject_getclass),
 	DEFINE_NATIVE("java/lang/VMObject", "notify", native_vmobject_notify),
@@ -579,9 +581,11 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/Constructor", "constructNative", native_constructor_construct_native),
 	DEFINE_NATIVE("java/lang/reflect/Constructor", "getModifiersInternal", native_constructor_get_modifiers_internal),
 	DEFINE_NATIVE("java/lang/reflect/Constructor", "getParameterTypes", native_constructor_get_parameter_types),
+	DEFINE_NATIVE("java/lang/reflect/Constructor", "getExceptionTypes", native_vmconstructor_get_exception_types),
 	DEFINE_NATIVE("java/lang/reflect/VMConstructor", "construct", native_vmconstructor_construct),
 	DEFINE_NATIVE("java/lang/reflect/VMConstructor", "getParameterTypes", native_constructor_get_parameter_types),
 	DEFINE_NATIVE("java/lang/reflect/VMConstructor", "getModifiersInternal", native_constructor_get_modifiers_internal),
+	DEFINE_NATIVE("java/lang/reflect/VMConstructor", "getExceptionTypes", native_vmconstructor_get_exception_types),
 	DEFINE_NATIVE("java/lang/reflect/Field", "get", native_field_get),
 	DEFINE_NATIVE("java/lang/reflect/Field", "getInt", native_field_get_int),
 	DEFINE_NATIVE("java/lang/reflect/Field", "getLong", native_field_get_long),
@@ -598,10 +602,12 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/Method", "getParameterTypes", native_method_get_parameter_types),
 	DEFINE_NATIVE("java/lang/reflect/Method", "getReturnType", native_method_getreturntype),
 	DEFINE_NATIVE("java/lang/reflect/Method", "invokeNative", native_method_invokenative),
+	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getExceptionTypes", native_method_get_exception_types),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getModifiersInternal", native_method_get_modifiers_internal),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getParameterTypes", native_method_get_parameter_types),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "invoke", native_vmmethod_invoke),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getReturnType", native_method_getreturntype),
+	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getExceptionTypes", native_method_get_exception_types),
 	DEFINE_NATIVE("java/util/concurrent/atomic/AtomicLong", "VMSupportsCS8", native_atomiclong_vm_supports_cs8),
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapInt", native_unsafe_compare_and_swap_int),
 	DEFINE_NATIVE("sun/misc/Unsafe", "compareAndSwapLong", native_unsafe_compare_and_swap_long),
@@ -1074,7 +1080,7 @@ struct gnu_classpath_config gnu_classpath_configs[] = {
 	},
 };
 
-static void gnu_classpath_autodiscovery(void)
+static bool gnu_classpath_autodiscovery(void)
 {
 	for (unsigned int i = 0; i < ARRAY_SIZE(gnu_classpath_configs); i++) {
 		struct gnu_classpath_config *config = &gnu_classpath_configs[i];
@@ -1084,14 +1090,19 @@ static void gnu_classpath_autodiscovery(void)
 
 		system_property_append_path("java.boot.class.path", config->glibj);
 		system_property_append_path("java.library.path", config->lib);
-		break;
+
+		return true;
 	}
+
+	return false;
 }
 
-static void init_classpath(void)
+static bool init_classpath(void)
 {
-	if (!system_property_get("java.boot.class.path"))
-		gnu_classpath_autodiscovery();
+	if (!system_property_get("java.boot.class.path")) {
+		if (!gnu_classpath_autodiscovery())
+			return false;
+	}
 
 	const char *boot_cp = system_property_get("java.boot.class.path");
 	add_system_property_const("sun.boot.class.path", boot_cp);
@@ -1105,6 +1116,8 @@ static void init_classpath(void)
 		const char *cwd = system_property_get("user.dir");
 		system_property_append_path("java.class.path", cwd);
 	}
+
+	return true;
 }
 
 static void print_proc_maps(void)
@@ -1171,7 +1184,10 @@ main(int argc, char *argv[])
 	static_fixup_init();
 	vm_jni_init();
 
-	init_classpath();
+	if (!init_classpath()) {
+		fprintf(stderr, "Unable to locate GNU Classpath. Please specify 'java.boot.class.path' and 'java.library.path' manually.\n");
+		exit(EXIT_FAILURE);
+	}
 
 	if (preload_vm_classes()) {
 		NOT_IMPLEMENTED;

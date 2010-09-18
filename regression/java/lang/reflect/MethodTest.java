@@ -26,6 +26,7 @@
 package java.lang.reflect;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import jvm.TestCase;
 
 /**
@@ -58,17 +59,17 @@ public class MethodTest extends TestCase {
     }
 
     public static class Klass {
-      public final void publicFinalInstanceMethod() { }
-      public static void publicClassMethod() { }
-      public void publicInstanceMethod() { }
+        public final void publicFinalInstanceMethod() { }
+        public static void publicClassMethod() { }
+        public void publicInstanceMethod() { }
 
-      public static int intIncrement(int x) {
-          return x + 1;
-      }
+        public static int intIncrement(int x) {
+            return x + 1;
+        }
 
-      public static long longIncrement(long x) {
-          return x + 1;
-      }
+        public static long longIncrement(long x) {
+            return x + 1;
+        }
 
         public static char charMirror(char x) {
             return x;
@@ -78,6 +79,8 @@ public class MethodTest extends TestCase {
             return x;
         }
 
+        public static void throwsMethod() throws Exception {
+        }
     }
 
     public static Object invoke(String name, Class<?> arg_class, Object arg) {
@@ -111,9 +114,15 @@ public class MethodTest extends TestCase {
         assertEquals(Integer.valueOf(1), result);
     }
 
+    public static void testMethodGetExceptionTypes() throws Exception {
+        Method m = Klass.class.getMethod("throwsMethod", new Class[] { });
+        assertEquals(Arrays.asList(Exception.class), Arrays.asList(m.getExceptionTypes()));
+    }
+
     public static void main(String[] args) throws Exception {
         testMethodModifiers();
         testMethodReflectionInvoke();
         testInvokeOnInterfaceMethod();
+        testMethodGetExceptionTypes();
     }
 }

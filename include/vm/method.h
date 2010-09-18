@@ -7,10 +7,11 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "cafebabe/code_attribute.h"
-#include "cafebabe/class.h"
 #include "cafebabe/line_number_table_attribute.h"
+#include "cafebabe/exceptions_attribute.h"
+#include "cafebabe/code_attribute.h"
 #include "cafebabe/method_info.h"
+#include "cafebabe/class.h"
 
 #include "jit/compilation-unit.h"
 #include "jit/compiler.h"
@@ -51,6 +52,7 @@ struct vm_method {
 
 	struct cafebabe_code_attribute code_attribute;
 	struct cafebabe_line_number_table_attribute line_number_table_attribute;
+	struct cafebabe_exceptions_attribute exceptions_attribute;
 
 	struct compilation_unit *compilation_unit;
 	struct jit_trampoline *trampoline;

@@ -382,6 +382,22 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 	return array;
 }
 
+struct vm_object *native_vmclass_get_declaring_class(struct vm_object *class)
+{
+	struct vm_class *declaring_class;
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(class);
+	if (!vmc)
+		return NULL;
+
+	declaring_class	= vmc->declaring_class;
+	if (!declaring_class)
+		return NULL;
+
+	return declaring_class->object;
+}
+
 static struct vm_class *
 vm_type_to_class(struct vm_object *classloader, struct vm_type_info *type_info)
 {
@@ -412,6 +428,29 @@ vm_type_to_class(struct vm_object *classloader, struct vm_type_info *type_info)
 	}
 
 	return NULL;
+}
+
+static struct vm_object *vm_method_get_exception_types(struct vm_method *vmm)
+{
+	struct vm_object *array;
+	uint16_t count;
+	int i;
+
+	count	= vmm->exceptions_attribute.number_of_exceptions;
+
+	array	= vm_object_alloc_array_of(vm_java_lang_Class, count);
+	if (!array)
+		return rethrow_exception();
+
+	for (i = 0; i < count; i++) {
+		struct vm_class *class = vm_class_resolve_class(vmm->class, vmm->exceptions_attribute.exceptions[i]);
+
+		assert(class);
+
+		array_set_field_object(array, i, class->object);
+	}
+
+	return array;
 }
 
 static struct vm_object *get_method_parameter_types(struct vm_method *vmm)
@@ -461,12 +500,10 @@ native_method_get_parameter_types(struct vm_object *method)
 	return get_method_parameter_types(vmm);
 }
 
-struct vm_object *
-native_constructor_get_parameter_types(struct vm_object *ctor)
+static struct vm_method *ctor_to_method(struct vm_object *ctor)
 {
 	struct vm_object *clazz;
 	struct vm_class *class;
-	struct vm_method *vmm;
 	int slot;
 
 	if (!ctor) {
@@ -483,7 +520,18 @@ native_constructor_get_parameter_types(struct vm_object *ctor)
 	}
 
 	class	= vm_class_get_class_from_class_object(clazz);
-	vmm	= &class->methods[slot];
+
+	return &class->methods[slot];
+}
+
+struct vm_object *
+native_constructor_get_parameter_types(struct vm_object *ctor)
+{
+	struct vm_method *vmm;
+
+	vmm	= ctor_to_method(ctor);
+	if (!vmm)
+		return NULL;
 
 	return get_method_parameter_types(vmm);
 }
@@ -512,6 +560,17 @@ jint native_constructor_get_modifiers_internal(struct vm_object *ctor)
 	vmm = &class->methods[slot];
 
 	return vmm->method->access_flags;
+}
+
+struct vm_object *native_vmconstructor_get_exception_types(struct vm_object *ctor)
+{
+	struct vm_method *vmm;
+
+	vmm	= ctor_to_method(ctor);
+	if (!vmm)
+		return NULL;
+
+	return vm_method_get_exception_types(vmm);
 }
 
 struct vm_object *
@@ -1035,6 +1094,17 @@ struct vm_object *native_method_getreturntype(struct vm_object *method)
 		return NULL;
 
 	return vmc->object;
+}
+
+struct vm_object *native_method_get_exception_types(struct vm_object *method)
+{
+	struct vm_method *vmm;
+
+	vmm	= vm_object_to_vm_method(method);
+	if (!vmm)
+		return NULL;
+
+	return vm_method_get_exception_types(vmm);
 }
 
 jobject native_vmarray_createobjectarray(jobject type, int dim)

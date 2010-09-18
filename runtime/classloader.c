@@ -104,7 +104,6 @@ jobject native_vmclassloader_findloadedclass(jobject classloader, jobject name)
 	return vmc->object;
 }
 
-/* TODO: respect the @resolve parameter. */
 jobject native_vmclassloader_loadclass(jobject name, jboolean resolve)
 {
 	struct vm_class *vmc;
@@ -121,6 +120,9 @@ jobject native_vmclassloader_loadclass(jobject name, jboolean resolve)
 
 	if (vm_class_ensure_object(vmc))
 		return NULL;
+
+	if (resolve)
+		native_vmclassloader_resolveclass(NULL, vmc->object);
 
 	return vmc->object;
 }
@@ -161,4 +163,9 @@ jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
 		return rethrow_exception();
 
 	return class->object;
+}
+
+void native_vmclassloader_resolveclass(jobject classloader, jobject clazz)
+{
+	/* FIXME */
 }

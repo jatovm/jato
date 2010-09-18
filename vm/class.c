@@ -27,6 +27,7 @@
 
 #include "vm/class.h"
 
+#include "cafebabe/inner_classes_attribute.h"
 #include "cafebabe/constant_pool.h"
 #include "cafebabe/method_info.h"
 #include "cafebabe/field_info.h"
@@ -257,6 +258,35 @@ static void free_buckets(int rows, int cols, struct field_bucket field_buckets[r
 	}
 }
 
+static int vm_class_parse_inner_classes(struct vm_class *vmc, const struct cafebabe_class *class)
+{
+	const struct cafebabe_attribute_info *attribute;
+	unsigned int inner_classes_index = 0;
+	struct cafebabe_stream stream;
+	int i;
+
+	if (cafebabe_attribute_array_get(&class->attributes, "InnerClasses", class, &inner_classes_index))
+		return 0;
+
+	attribute = &class->attributes.array[inner_classes_index];
+
+	cafebabe_stream_open_buffer(&stream, attribute->info, attribute->attribute_length);
+
+	if (cafebabe_inner_classes_attribute_init(&vmc->inner_classes_attribute, &stream))
+		return -1;	/* XXX */
+
+	for (i = 0; i < vmc->inner_classes_attribute.number_of_classes; i++) {
+		struct cafebabe_inner_class *inner = &vmc->inner_classes_attribute.inner_classes[i];
+
+		if (class->this_class == inner->inner_class_info_index) {
+			vmc->declaring_class	= vm_class_resolve_class(vmc, inner->outer_class_info_index);
+		}
+	}
+	cafebabe_stream_close_buffer(&stream);
+
+	return 0;
+}
+
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
 	const struct cafebabe_constant_info_class *constant_class;
@@ -480,6 +510,9 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	INIT_LIST_HEAD(&vmc->static_fixup_site_list);
 
+	if (vm_class_parse_inner_classes(vmc, class))
+		return -1;
+
 	vmc->state = VM_CLASS_LINKED;
 	return 0;
 
@@ -681,12 +714,9 @@ int vm_class_init(struct vm_class *vmc)
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 {
 	const struct cafebabe_constant_info_class *constant_class;
-	if (cafebabe_class_constant_get_class(vmc->class,
-		i, &constant_class))
-	{
-		NOT_IMPLEMENTED;
+
+	if (cafebabe_class_constant_get_class(vmc->class, i, &constant_class))
 		return NULL;
-	}
 
 	const struct cafebabe_constant_info_utf8 *class_name;
 	if (cafebabe_class_constant_get_utf8(vmc->class,

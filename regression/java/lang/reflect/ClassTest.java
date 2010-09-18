@@ -67,9 +67,15 @@ public class ClassTest extends TestCase {
         assertEquals(Modifier.PUBLIC, ClassTest.class.getModifiers());
     }
 
+    public static void testGetDeclaringClass() {
+        assertNull(Object.class.getDeclaringClass());
+        assertEquals(ClassTest.class, X.class.getDeclaringClass());
+    }
+
     public static void main(String []args) {
         testPrimitiveClassModifiers();
         testArrayClassModifiers();
         testRegularClassModifiers();
+        testGetDeclaringClass();
     }
 }
