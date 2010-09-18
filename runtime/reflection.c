@@ -382,6 +382,22 @@ native_vmclass_get_declared_constructors(struct vm_object *clazz,
 	return array;
 }
 
+struct vm_object *native_vmclass_get_declaring_class(struct vm_object *class)
+{
+	struct vm_class *declaring_class;
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(class);
+	if (!vmc)
+		return NULL;
+
+	declaring_class	= vmc->declaring_class;
+	if (!declaring_class)
+		return NULL;
+
+	return declaring_class->object;
+}
+
 static struct vm_class *
 vm_type_to_class(struct vm_object *classloader, struct vm_type_info *type_info)
 {
