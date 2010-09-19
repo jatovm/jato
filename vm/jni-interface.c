@@ -43,6 +43,7 @@
 #include "vm/preload.h"
 #include "vm/reflection.h"
 #include "vm/stack-trace.h"
+#include "vm/reference.h"
 
 #define check_null(x)							\
 	if ((x) == NULL) {						\
@@ -800,6 +801,25 @@ vm_jni_release_primitive_array_critical(struct vm_jni_env *env,
 
 	assert(release_array_critical);
 	release_array_critical(array, carray, mode);
+}
+
+static jweak JNI_NewWeakGlobalRef(struct vm_jni_env *env, jobject obj)
+{
+	struct vm_reference *ref;
+
+	if (!obj)
+		return NULL;
+
+	ref	= vm_reference_alloc_weak(obj);
+	if (!ref)
+		return throw_oom_error();
+
+	return ref->object;
+}
+
+static void JNI_DeleteWeakGlobalRef(struct vm_jni_env *env, jweak obj)
+{
+	vm_reference_collect_for_object(obj);
 }
 
 static jobject JNI_NewDirectByteBuffer(struct vm_jni_env *env, void *address, jlong capacity)
@@ -1675,8 +1695,8 @@ void *vm_jni_native_interface[] = {
 
 	/* 225 */
 	NULL, /* ReleaseStringCritical */
-	NULL, /* NewWeakGlobalRef */
-	NULL, /* DeleteWeakGlobalRef */
+	JNI_NewWeakGlobalRef,
+	JNI_DeleteWeakGlobalRef,
 	NULL, /* ExceptionCheck */
 
 	/* JNI 1.4 functions */

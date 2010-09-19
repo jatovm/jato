@@ -48,6 +48,8 @@ typedef jobject jthrowable;
 typedef struct vm_field *jfieldID;
 typedef struct vm_method *jmethodID;
 
+typedef jobject jweak;
+
 union jvalue {
 	jboolean z;
 	jbyte    b;
