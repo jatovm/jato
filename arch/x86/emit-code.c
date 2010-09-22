@@ -1227,6 +1227,9 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	/* If this returns non-zero then StackOverflowError occurred. */
 	__emit_call(buf, vm_enter_jni);
 
+	/* cleanup vm_enter_jni() call arguments. */
+	__emit_add_imm_reg(buf, 2 * sizeof(long), MACH_REG_ESP);
+
 	/* test %eax, %eax */
 	__emit_reg_reg(buf, 0x33, MACH_REG_EAX, MACH_REG_EAX);
 
@@ -1236,8 +1239,8 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	jne_target = buffer_current(buf);
 	emit_imm32(buf, 0);
 
-	/* Cleanup call arguments and return address. */
-	__emit_add_imm_reg(buf, 3 * sizeof(long), MACH_REG_ESP);
+	/* Cleanup return address. */
+	__emit_add_imm_reg(buf, 1 * sizeof(long), MACH_REG_ESP);
 
 	if (vm_method_is_static(vmm))
 		__emit_push_imm(buf, (unsigned long) vmm->class->object);
@@ -1260,8 +1263,6 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	/* We will jump here if StackOverflowError occurred. */
 	fixup_branch_target(jne_target, buffer_current(buf));
 
-	/* cleanup vm_enter_jni() call arguments. */
-	__emit_add_imm_reg(buf, 2 * sizeof(long), MACH_REG_ESP);
 	emit_ret(buf);
 
 	jit_text_reserve(buffer_offset(buf));
