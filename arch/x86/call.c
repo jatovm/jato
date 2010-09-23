@@ -79,7 +79,7 @@ static void do_native_call(struct vm_method *method, void *target,
 		:
 		: [target] "m" (target),
 		  [result] "m" (result)
-		: "%edx", "%ebx", "%esi", "%edi", "cc", "memory");
+		: "%eax", "%ecx", "%edx", "cc", "memory");
 
 exit:
 	if (vm_method_is_vm_native(method))
