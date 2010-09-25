@@ -52,5 +52,8 @@ struct cafebabe_inner_classes_attribute {
 
 int cafebabe_inner_classes_attribute_init(struct cafebabe_inner_classes_attribute *a, struct cafebabe_stream *s);
 void cafebabe_inner_classes_attribute_deinit(struct cafebabe_inner_classes_attribute *a);
+int cafebabe_read_inner_classes_attribute(const struct cafebabe_class *class,
+					     const struct cafebabe_attribute_array *attributes,
+					     struct cafebabe_inner_classes_attribute *inner_classes_attrib);
 
 #endif
