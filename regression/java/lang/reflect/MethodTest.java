@@ -116,7 +116,7 @@ public class MethodTest extends TestCase {
 
     public static void testMethodGetExceptionTypes() throws Exception {
         Method m = Klass.class.getMethod("throwsMethod", new Class[] { });
-        assertEquals(Arrays.asList(Exception.class), Arrays.asList(m.getExceptionTypes()));
+        assertEquals(Arrays.<Class<?>>asList(Exception.class), Arrays.asList(m.getExceptionTypes()));
     }
 
     public static void main(String[] args) throws Exception {
