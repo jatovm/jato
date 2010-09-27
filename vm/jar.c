@@ -411,11 +411,9 @@ static struct jar_manifest *read_manifest(struct zip *zip)
 	struct zip_file *zip_file;
 	uint8_t *zip_file_buf;
 
-	zip_file_index = zip_name_locate(zip, "META-INF/MANIFEST.MF", 0);
-	if (zip_file_index == -1) {
-		NOT_IMPLEMENTED;
+	zip_file_index = zip_name_locate(zip, "META-INF/MANIFEST.MF", ZIP_FL_NOCASE);
+	if (zip_file_index == -1)
 		return NULL;
-	}
 
 	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1) {
 		NOT_IMPLEMENTED;
