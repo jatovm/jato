@@ -412,10 +412,8 @@ static struct jar_manifest *read_manifest(struct zip *zip)
 	uint8_t *zip_file_buf;
 
 	zip_file_index = zip_name_locate(zip, "META-INF/MANIFEST.MF", 0);
-	if (zip_file_index == -1) {
-		NOT_IMPLEMENTED;
+	if (zip_file_index == -1)
 		return NULL;
-	}
 
 	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1) {
 		NOT_IMPLEMENTED;
@@ -493,9 +491,14 @@ error_out:
 
 const char *vm_jar_get_main_class(const struct vm_jar *jar)
 {
-	assert(jar);
-	assert(jar->manifest);
-	assert(jar->manifest->main_section);
+	if (!jar)
+		return NULL;
+
+	if (!jar->manifest)
+		return NULL;
+
+	if (!jar->manifest->main_section)
+		return NULL;
 
 	struct jar_main_section *section = jar->manifest->main_section;
 
