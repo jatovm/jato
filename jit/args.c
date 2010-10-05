@@ -47,16 +47,24 @@ static void set_expr_arg_reg(struct expression *expr,
 }
 #endif /* CONFIG_ARGS_MAP */
 
+static bool is_this_arg(struct vm_method *method, int index)
+{
+	if (vm_method_is_static(method))
+		return false;
+
+	if (vm_method_is_jni(method))
+		return index == 1;
+
+	return index == 0;
+}
+
 struct expression *
-insert_arg(struct expression *root,
-	   struct expression *expr,
-	   struct vm_method *method,
-	   int index)
+insert_arg(struct expression *root, struct expression *expr, struct vm_method *method, int index)
 {
 	struct expression *_expr;
 
 	/* Check if we should put @expr in EXPR_ARG_THIS. */
-	if (!vm_method_is_static(method) && index == 0)
+	if (is_this_arg(method, index))
 		_expr = arg_this_expr(expr);
 	else
 		_expr = arg_expr(expr);
@@ -70,30 +78,59 @@ insert_arg(struct expression *root,
 	return args_list_expr(root, _expr);
 }
 
-struct expression *convert_args(struct stack *mimic_stack,
-				unsigned long nr_args,
-				struct vm_method *method)
+struct expression *
+convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method *method)
 {
 	struct expression *args_list = NULL;
+	unsigned long nr_total_args;
 	unsigned long i;
 
-	if (nr_args == 0) {
+	nr_total_args = nr_args;
+
+	if (vm_method_is_jni(method)) {
+		if (vm_method_is_static(method))
+			nr_total_args++;
+
+		nr_total_args++;
+	}
+
+	if (nr_total_args == 0) {
 		args_list = no_args_expr();
 		goto out;
 	}
 
 	/*
-	 * We scan the args map in reverse order,
-	 * since the order of arguments is already reversed.
+	 * We scan the args map in reverse order, since the order of arguments
+	 * is already reversed.
 	 */
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
-		args_list = insert_arg(args_list, expr,
-				       method, nr_args - i - 1);
+
+		args_list = insert_arg(args_list, expr, method, nr_total_args - i - 1);
 	}
 
+	if (vm_method_is_jni(method)) {
+		struct expression *expr;
+
+		if (vm_method_is_static(method)) {
+			expr = value_expr(J_REFERENCE, (unsigned long) method->class->object);
+			if (!expr)
+				goto error;
+
+			args_list = insert_arg(args_list, expr, method, 1);
+		}
+
+		expr = value_expr(J_REFERENCE, (unsigned long) vm_jni_get_jni_env());
+		if (!expr)
+			goto error;
+
+		args_list = insert_arg(args_list, expr, method, 0);
+	}
   out:
 	return args_list;
+  error:
+	expr_put(args_list);
+	return NULL;
 }
 
 static struct expression *

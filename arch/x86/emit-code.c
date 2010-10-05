@@ -1242,16 +1242,10 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	/* Cleanup return address. */
 	__emit_add_imm_reg(buf, 1 * sizeof(long), MACH_REG_ESP);
 
-	if (vm_method_is_static(vmm))
-		__emit_push_imm(buf, (unsigned long) vmm->class->object);
-
-	__emit_push_imm(buf, (unsigned long) vm_jni_get_jni_env());
-
 	__emit_call(buf, target);
 
-	/* Cleanup args. Leave one slot for return address. */
-	if (vm_method_is_static(vmm))
-		__emit_add_imm_reg(buf, sizeof(long), MACH_REG_ESP);
+	/* Leave one slot for return address. */
+	__emit_sub_imm_reg(buf, 1 * sizeof(long), MACH_REG_ESP);
 
 	__emit_push_reg(buf, MACH_REG_EAX);
 	__emit_call(buf, vm_leave_jni);
