@@ -1211,53 +1211,23 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_EAX);
 }
 
+extern void jni_trampoline(void);
+
 void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 			 void *target)
 {
-	uint8_t *jne_target;
-
 	jit_text_lock();
 
 	buf->buf = jit_text_ptr();
 
-	/* return address is passed implicitly as last argument */
-	__emit_push_imm(buf, (unsigned long) vmm);
-	__emit_push_reg(buf, MACH_REG_EBP);
-
-	/* If this returns non-zero then StackOverflowError occurred. */
-	__emit_call(buf, vm_enter_jni);
-
-	/* cleanup vm_enter_jni() call arguments. */
-	__emit_add_imm_reg(buf, 2 * sizeof(long), MACH_REG_ESP);
-
-	/* test %eax, %eax */
-	__emit_reg_reg(buf, 0x33, MACH_REG_EAX, MACH_REG_EAX);
-
-	/* jne */
-	emit(buf, 0x0f);
-	emit(buf, 0x85);
-	jne_target = buffer_current(buf);
-	emit_imm32(buf, 0);
-
-	/* Cleanup return address. */
-	__emit_add_imm_reg(buf, 1 * sizeof(long), MACH_REG_ESP);
-
-	__emit_call(buf, target);
-
-	/* Leave one slot for return address. */
-	__emit_sub_imm_reg(buf, 1 * sizeof(long), MACH_REG_ESP);
+	__emit_pop_reg(buf, MACH_REG_EAX);	/* return address */
 
 	__emit_push_reg(buf, MACH_REG_EAX);
-	__emit_call(buf, vm_leave_jni);
-	__emit_mov_reg_membase(buf, MACH_REG_EAX, MACH_REG_ESP, sizeof(long));
-	__emit_pop_reg(buf, MACH_REG_EAX);
-
-	emit_ret(buf);
-
-	/* We will jump here if StackOverflowError occurred. */
-	fixup_branch_target(jne_target, buffer_current(buf));
-
-	emit_ret(buf);
+	__emit_push_imm(buf, (unsigned long) target);
+	__emit_push_reg(buf, MACH_REG_EAX);
+	__emit_push_imm(buf, (unsigned long) vmm);
+	__emit_push_reg(buf, MACH_REG_EBP);
+	__emit_jmp(buf, (unsigned long) jni_trampoline);
 
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
