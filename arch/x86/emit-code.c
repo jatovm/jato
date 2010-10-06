@@ -1237,28 +1237,6 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_EAX);
 }
 
-extern void jni_trampoline(void);
-
-void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
-			 void *target)
-{
-	jit_text_lock();
-
-	buf->buf = jit_text_ptr();
-
-	__emit_pop_reg(buf, MACH_REG_EAX);	/* return address */
-
-	__emit_push_reg(buf, MACH_REG_EAX);
-	__emit_push_imm(buf, (unsigned long) target);
-	__emit_push_reg(buf, MACH_REG_EAX);
-	__emit_push_imm(buf, (unsigned long) vmm);
-	__emit_push_reg(buf, MACH_REG_EBP);
-	__emit_jmp(buf, (unsigned long) jni_trampoline);
-
-	jit_text_reserve(buffer_offset(buf));
-	jit_text_unlock();
-}
-
 #else /* CONFIG_X86_32 */
 
 /*
@@ -2468,14 +2446,40 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
-void emit_jni_trampoline(struct buffer *buf,
-			 struct vm_method *vmm,
+#endif /* CONFIG_X86_32 */
+
+extern void jni_trampoline(void);
+
+void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 			 void *target)
 {
-	abort();
-}
+	jit_text_lock();
 
-#endif /* CONFIG_X86_32 */
+	buf->buf = jit_text_ptr();
+
+	__emit_pop_reg(buf, MACH_REG_xAX);	/* return address */
+
+	__emit_push_reg(buf, MACH_REG_xAX);
+	__emit_push_imm(buf, (unsigned long) target);	/* XXX: 64-bit? */
+#ifdef CONFIG_X86_64
+	/* Save arguments */
+	__emit_push_reg(buf, MACH_REG_RCX);
+	__emit_push_reg(buf, MACH_REG_RDX);
+	__emit_push_reg(buf, MACH_REG_RSI);
+	__emit_push_reg(buf, MACH_REG_RDI);
+	__emit_push_reg(buf, MACH_REG_R8);
+	__emit_push_reg(buf, MACH_REG_R9);
+	__emit_push_reg(buf, MACH_REG_R10);
+	__emit_push_reg(buf, MACH_REG_R11);
+#endif
+	__emit_push_reg(buf, MACH_REG_xAX);
+	__emit_push_imm(buf, (unsigned long) vmm);	/* XXX: 64-bit? */
+	__emit_push_reg(buf, MACH_REG_xBP);
+	__emit_jmp(buf, (unsigned long) jni_trampoline);
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
+}
 
 /* The regparm(1) makes GCC get the first argument from %ecx and the rest
  * from the stack. This is convenient, because we use %ecx for passing the
