@@ -96,6 +96,17 @@ static void args_map_dup_slot(struct vm_args_map *orig, int *st)
 	(*st)++;
 }
 
+static void args_map_assign(struct vm_args_map *map, int *gpr_count, int *stack_count)
+{
+	if (*gpr_count < 6) {
+		map->reg = args_map_alloc_gpr((*gpr_count)++);
+		map->stack_index = -1;
+	} else {
+		map->reg = MACH_REG_UNASSIGNED;
+		map->stack_index = (*stack_count)++;
+	}
+}
+
 int args_map_init(struct vm_method *method)
 {
 	struct vm_method_arg *arg;
@@ -107,6 +118,13 @@ int args_map_init(struct vm_method *method)
 
 	/* If the method isn't static, we have a *this. */
 	size = method->args_count + !vm_method_is_static(method);
+
+	if (vm_method_is_jni(method)) {
+		if (vm_method_is_static(method))
+			size++;
+
+		size++;
+	}
 
 	method->args_map = malloc(sizeof(*map) * size);
 	if (!method->args_map)
@@ -137,13 +155,7 @@ int args_map_init(struct vm_method *method)
 		case J_SHORT:
 		case J_BOOLEAN:
 		case J_REFERENCE:
-			if (gpr_count < 6) {
-				map->reg = args_map_alloc_gpr(gpr_count++);
-				map->stack_index = -1;
-			} else {
-				map->reg = MACH_REG_UNASSIGNED;
-				map->stack_index = stack_count++;
-			}
+			args_map_assign(map, &gpr_count, &stack_count);
 			break;
 		case J_FLOAT:
 		case J_DOUBLE:
@@ -169,6 +181,15 @@ int args_map_init(struct vm_method *method)
 			idx += 2;
 		} else
 			idx++;
+	}
+
+	if (vm_method_is_jni(method)) {
+		if (vm_method_is_static(method)) {
+			map = &method->args_map[idx++];
+			args_map_assign(map, &gpr_count, &stack_count);
+		}
+		map = &method->args_map[idx++];
+		args_map_assign(map, &gpr_count, &stack_count);
 	}
 
 	method->reg_args_count += gpr_count + xmm_count;
