@@ -234,15 +234,6 @@ static unsigned long native_call_gp(struct vm_method *method,
 	return result;
 }
 
-static unsigned long vm_native_call_gp(struct vm_method *method,
-				       const void *target,
-				       unsigned long *args)
-{
-	abort();
-
-	return 0;
-}
-
 /**
  * This calls a function with call arguments copied from @args
  * array. The array contains @args_count elements of machine word
@@ -289,53 +280,4 @@ void native_call(struct vm_method *method,
 	}
 }
 
-/**
- * This calls a VM native function with call arguments copied from
- * @args array. The array contains @args_count elements of machine
- * word size. The @target must be a pointer to a VM function. Call
- * result will be stored in @result.
- */
-void vm_native_call(struct vm_method *method,
-		    const void *target,
-		    unsigned long *args,
-		    union jvalue *result)
-{
-	switch (method->return_type.vm_type) {
-	case J_VOID:
-		vm_native_call_gp(method, target, args);
-		break;
-	case J_REFERENCE:
-		result->l = (jobject) vm_native_call_gp(method, target, args);
-		break;
-	case J_INT:
-		result->i = (jint) vm_native_call_gp(method, target, args);
-		break;
-	case J_CHAR:
-		result->c = (jchar) vm_native_call_gp(method, target, args);
-		break;
-	case J_BYTE:
-		result->b = (jbyte) vm_native_call_gp(method, target, args);
-		break;
-	case J_SHORT:
-		result->s = (jshort) vm_native_call_gp(method, target, args);
-		break;
-	case J_BOOLEAN:
-		result->z = (jboolean) vm_native_call_gp(method, target, args);
-		break;
-	case J_LONG:
-		result->j = (jlong) vm_native_call_gp(method, target, args);
-		break;
-	case J_DOUBLE:
-	case J_FLOAT:
-		error("not implemented");
-		break;
-	case J_RETURN_ADDRESS:
-	case VM_TYPE_MAX:
-		die("unexpected type");
-	}
-}
-
-#warning NOT IMPLEMENTED
-
 #endif /* CONFIG_X86_32 */
-
