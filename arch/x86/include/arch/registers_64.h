@@ -3,7 +3,6 @@
 
 #include "vm/types.h"
 
-#include <ucontext.h>  /* for gregset_t */
 #include <stdbool.h>
 #include <limits.h>
 
@@ -100,28 +99,6 @@ struct register_state {
 		};
 	};
 };
-
-static inline void
-save_signal_registers(struct register_state *regs, mcontext_t *mcontext)
-{
-	greg_t *gregs = mcontext->gregs;
-
-	regs->ip	= gregs[REG_RIP];
-        regs->rax	= gregs[REG_RAX];
-        regs->rbx	= gregs[REG_RBX];
-        regs->rcx	= gregs[REG_RCX];
-        regs->rdx	= gregs[REG_RDX];
-        regs->rsi	= gregs[REG_RSI];
-        regs->rdi	= gregs[REG_RDI];
-        regs->r8	= gregs[REG_R8];
-        regs->r9	= gregs[REG_R9];
-        regs->r10	= gregs[REG_R10];
-        regs->r11	= gregs[REG_R11];
-        regs->r12	= gregs[REG_R12];
-        regs->r13	= gregs[REG_R13];
-        regs->r14	= gregs[REG_R14];
-        regs->r15	= gregs[REG_R15];
-}
 
 static inline enum vm_type reg_default_type(enum machine_reg reg)
 {
