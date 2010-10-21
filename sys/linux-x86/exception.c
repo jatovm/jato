@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Tomasz Grabiec
+ * Copyright (c) 2009 Tomasz Grabiec
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -24,62 +24,56 @@
  * Please refer to the file LICENSE for details.
  */
 
+#include "sys/signal.h"
+
+#include "jit/compilation-unit.h"
+#include "jit/basic-block.h"
 #include "jit/cu-mapping.h"
+#include "jit/exception.h"
 #include "jit/compiler.h"
 
+#include "vm/object.h"
+
 #include "arch/stack-frame.h"
-#include "arch/signal.h"
+#include "arch/memory.h"
 
-#include "vm/signal.h"
-
-extern void signal_bh_trampoline(void *bh);
-
-bool signal_from_native(void *ctx)
+unsigned char *
+throw_exception(struct compilation_unit *cu, struct vm_object *exception)
 {
-	ucontext_t *uc;
+	unsigned char *native_ptr;
+	struct jit_stack_frame *frame;
 
-	uc = ctx;
+	native_ptr = __builtin_return_address(0) - 1;
+	frame      = __builtin_frame_address(1);
 
-	return is_native(uc->uc_mcontext.gregs[REG_IP]);
+	signal_exception(exception);
+
+	return throw_from_jit(cu, frame, native_ptr);
 }
 
-struct compilation_unit *get_signal_source_cu(void *ctx)
+void throw_from_trampoline(void *ctx, struct vm_object *exception)
 {
-	ucontext_t *uc;
-
-	uc = ctx;
-	return jit_lookup_cu(uc->uc_mcontext.gregs[REG_IP]);
-}
-
-/**
- * install_signal_bh - installs signal's bottom half function by
- *     modifying user context so that control will be returned to @bh
- *     when signal handler returns. When @bh function returns, the
- *     control should be returned to the source of the signal.
- *
- * @ctx: pointer to struct ucontext_t
- * @bh: bottom half function to install
- */
-int install_signal_bh(void *ctx, signal_bh_fn bh)
-{
+	unsigned long return_address;
 	unsigned long *stack;
 	ucontext_t *uc;
 
 	uc = ctx;
 
 	stack = (unsigned long*)uc->uc_mcontext.gregs[REG_SP];
+	return_address = stack[NR_TRAMPOLINE_LOCALS + 1];
 
-	/* push bottom-half handler address on stack */
-	stack--;
-	*stack = (unsigned long)bh;
+	signal_exception(exception);
 
-	/* push return address on stack */
-	stack--;
-	*stack = uc->uc_mcontext.gregs[REG_IP];
+	if (is_native(return_address))
+		/* Return to caller. */
+		uc->uc_mcontext.gregs[REG_IP] = return_address;
+	else
+		/* Unwind to previous jit method. */
+		uc->uc_mcontext.gregs[REG_IP] = (unsigned long)unwind;
 
-	uc->uc_mcontext.gregs[REG_SP] -= 2 * sizeof(unsigned long);
-
-	uc->uc_mcontext.gregs[REG_IP] = (unsigned long)signal_bh_trampoline;
-
-	return 0;
+	/* Cleanup trampoline stack and restore BP. */
+	stack += NR_TRAMPOLINE_LOCALS;
+	uc->uc_mcontext.gregs[REG_BP] = *stack++;
+	uc->uc_mcontext.gregs[REG_SP] = (unsigned long) stack;
 }
+

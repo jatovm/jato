@@ -8,6 +8,7 @@ GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 
 uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
 ARCH		:= $(uname_M)
+SYS		:= $(shell uname -s | tr A-Z a-z)
 
 MAKEFLAGS += --no-print-directory
 
@@ -51,8 +52,10 @@ V =
 PROGRAM		:= jato
 
 include arch/$(ARCH)/Makefile$(ARCH_POSTFIX)
+include sys/$(SYS)-$(ARCH)/Makefile
 
 OBJS += $(ARCH_OBJS)
+OBJS += $(SYS_OBJS)
 
 OBJS += cafebabe/attribute_array.o
 OBJS += cafebabe/attribute_info.o
@@ -211,7 +214,7 @@ DEFAULT_CFLAGS	+= $(WARNINGS)
 OPTIMIZATIONS	+= -Os -fno-delete-null-pointer-checks
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
+INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
 DEFAULT_LIBS	= -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)

@@ -32,7 +32,8 @@
 
 #include "arch/registers.h"
 #include "arch/memory.h"
-#include "arch/signal.h"
+
+#include "sys/signal.h"
 
 #include "jit/compilation-unit.h"
 #include "jit/cu-mapping.h"

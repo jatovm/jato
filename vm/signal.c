@@ -36,7 +36,7 @@
 #include "vm/signal.h"
 #include "vm/stack-trace.h"
 
-#include "arch/signal.h"
+#include "sys/signal.h"
 
 #include <ucontext.h>
 #include <stddef.h>
