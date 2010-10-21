@@ -42,6 +42,9 @@ ARCH_POSTFIX	= _32
 MB_DEFINES	+= -DCONFIG_PPC
 endif
 
+ifeq ($(SYS),darwin)
+DEFAULT_CFLAGS += -D_XOPEN_SOURCE=1
+endif
 export ARCH_CFLAGS
 
 ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
