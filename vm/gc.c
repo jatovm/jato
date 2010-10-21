@@ -209,7 +209,7 @@ void suspend_handler(int sig, siginfo_t *si, void *ctx)
 		if (self)
 			vm_thread_set_state(self, THREAD_STATE_CONSISTENT);
 
-		save_signal_registers(&thread_register_state, uc->uc_mcontext.gregs);
+		save_signal_registers(&thread_register_state, &uc->uc_mcontext);
 		gc_safepoint(&thread_register_state);
 	} else {
 		vm_thread_set_state(self, THREAD_STATE_CONSISTENT);

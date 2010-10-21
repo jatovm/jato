@@ -121,7 +121,7 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	if (si->si_addr == gc_safepoint_page) {
 		ucontext_t *uc = ctx;
 
-		save_signal_registers(&thread_register_state, uc->uc_mcontext.gregs);
+		save_signal_registers(&thread_register_state, &uc->uc_mcontext);
 		gc_safepoint(&thread_register_state);
 		return;
 	}

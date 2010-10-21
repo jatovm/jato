@@ -102,8 +102,10 @@ struct register_state {
 };
 
 static inline void
-save_signal_registers(struct register_state *regs, gregset_t gregs)
+save_signal_registers(struct register_state *regs, mcontext_t *mcontext)
 {
+	greg_t *gregs = mcontext->gregs;
+
 	regs->ip	= gregs[REG_RIP];
         regs->rax	= gregs[REG_RAX];
         regs->rbx	= gregs[REG_RBX];
