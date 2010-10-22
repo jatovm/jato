@@ -1,6 +1,8 @@
 #ifndef X86_SIGNAL_64_H
 #define X86_SIGNAL_64_H
 
+#include "arch/registers.h"
+
 #include <ucontext.h>	/* for gregset_t */
 
 #define REG_IP REG_RIP
