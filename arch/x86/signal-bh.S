@@ -109,7 +109,7 @@ signal_bh_trampoline:
 	movsd %xmm9,   72(%rsp)
 	movsd %xmm10,  80(%rsp)
 	movsd %xmm11,  88(%rsp)
-	movsd %xmm12,  98(%rsp)
+	movsd %xmm12,  96(%rsp)
 	movsd %xmm13, 104(%rsp)
 	movsd %xmm14, 112(%rsp)
 	movsd %xmm15, 120(%rsp)
