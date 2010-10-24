@@ -72,7 +72,6 @@ struct emitter {
 	[_insn_type] = { .emit_fn = _fn }
 
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg);
-static void __emit_push_imm(struct buffer *buf, long imm);
 static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src, enum machine_reg dst);
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg);
 static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
@@ -219,6 +218,19 @@ static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 		emit(buf, rex_pfx);
 
 	emit(buf, 0x58 + reg_low(rm));
+}
+
+static void __emit_push_imm(struct buffer *buf, long imm)
+{
+	unsigned char opc;
+
+	if (is_imm_8(imm))
+		opc = 0x6a;
+	else
+		opc = 0x68;
+
+	emit(buf, opc);
+	emit_imm(buf, imm);
 }
 
 static void emit_branch_rel(struct buffer *buf, unsigned char prefix,
@@ -722,19 +734,6 @@ void emit_epilog(struct buffer *buf)
 	emit_leave(buf);
 	emit_restore_regs(buf);
 	emit_ret(buf);
-}
-
-static void __emit_push_imm(struct buffer *buf, long imm)
-{
-	unsigned char opc;
-
-	if (is_imm_8(imm))
-		opc = 0x6a;
-	else
-		opc = 0x68;
-
-	emit(buf, opc);
-	emit_imm(buf, imm);
 }
 
 static void emit_push_imm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -1579,19 +1578,6 @@ static void emit64_imm(struct buffer *buf, long imm)
 		emit_imm64(buf, imm);
 }
 #endif
-
-static void __emit_push_imm(struct buffer *buf, long imm)
-{
-	unsigned char opc;
-
-	if (is_imm_8(imm))
-		opc = 0x6a;
-	else
-		opc = 0x68;
-
-	emit(buf, opc);
-	emit_imm(buf, imm);
-}
 
 static void emit_push_imm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
