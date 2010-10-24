@@ -102,6 +102,16 @@ static unsigned char encode_reg(struct use_position *reg)
 	return x86_encode_reg(mach_reg(reg));
 }
 
+static inline unsigned char reg_low(unsigned char reg)
+{
+	return reg & 0x7;
+}
+
+static inline unsigned char reg_high(unsigned char reg)
+{
+	return reg & 0x8;
+}
+
 static inline bool is_imm_8(long imm)
 {
 	return (imm >= -128) && (imm <= 127);
@@ -455,7 +465,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 	if (rex_pfx)
 		emit(buf, rex_pfx);
 
-	emit(buf, 0x50 + rm);
+	emit(buf, 0x50 + reg_low(rm));
 }
 
 static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg,
@@ -479,7 +489,7 @@ static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 	if (rex_pfx)
 		emit(buf, rex_pfx);
 
-	emit(buf, 0x58 + rm);
+	emit(buf, 0x58 + reg_low(rm));
 }
 
 static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
@@ -1276,16 +1286,6 @@ static void emit_lopc(struct buffer *buf, int rex, unsigned char *str, size_t le
 			emit(buf, rex);
 		emit_str(buf, str, len);
 	}
-}
-
-static inline unsigned char reg_low(unsigned char reg)
-{
-	return reg & 0x7;
-}
-
-static inline unsigned char reg_high(unsigned char reg)
-{
-	return reg & 0x8;
 }
 
 static inline unsigned long rip_relative(struct buffer *buf,
