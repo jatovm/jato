@@ -58,9 +58,9 @@ jni_trampoline:
 	movq	%rsp, %rbp
 
 	SAVE_ARGS
-	movq	0x10(%rsp), %rdx
+	movq	0x10(%rbp), %rdx
 	xorq	%rsi, %rsi
-	movl	0x0c(%rsp), %esi
+	movl	0x0c(%rbp), %esi
 	movq	0x08(%rbp), %rdi
 	call	vm_enter_jni
 	RESTORE_ARGS
@@ -69,7 +69,7 @@ jni_trampoline:
 	jne	error
 
 	SAVE_ARGS
-	movq	0x14(%rsp), %rax
+	movq	0x14(%rbp), %rax
 	call	*%rax
 	RESTORE_ARGS
 
@@ -77,7 +77,7 @@ jni_trampoline:
 	pushq	%rax			# save return value
 	call	vm_leave_jni
 	RESTORE_ARGS
-	movq	%rax, 0x8(%rsp)		# override return address
+	movq	%rax, 0x8(%rbp)		# override return address
 	popq	%rax			# restore return value
 
 error:
