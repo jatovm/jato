@@ -444,7 +444,7 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 {
 	unsigned char rex_pfx = 0, rm;
 
-	rm = encode_reg(reg);
+	rm = x86_encode_reg(reg);
 
 #ifdef CONFIG_X86_64
 	rex_pfx |= REX_W;
@@ -468,7 +468,7 @@ static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 {
 	unsigned char rex_pfx = 0, rm;
 
-	rm = encode_reg(reg);
+	rm = x86_encode_reg(reg);
 
 #ifdef CONFIG_X86_64
 	rex_pfx |= REX_W;
