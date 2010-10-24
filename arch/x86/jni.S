@@ -58,9 +58,9 @@ jni_trampoline:
 	movq	%rsp, %rbp
 
 	SAVE_ARGS
-	movq	0x10(%rbp), %rdx
+	movq	0x18(%rbp), %rdx
 	xorq	%rsi, %rsi
-	movl	0x0c(%rbp), %esi
+	movl	0x10(%rbp), %esi
 	movq	0x08(%rbp), %rdi
 	call	vm_enter_jni
 	RESTORE_ARGS
@@ -69,7 +69,7 @@ jni_trampoline:
 	jne	error
 
 	SAVE_ARGS
-	movq	0x14(%rbp), %rax
+	movq	0x20(%rbp), %rax
 	call	*%rax
 	RESTORE_ARGS
 
@@ -82,6 +82,6 @@ jni_trampoline:
 
 error:
 	leaveq
-	addq	$0x18, %rsp
+	addq	$0x20, %rsp
 	ret
 #endif
