@@ -2093,6 +2093,12 @@ static void emit_mov_reg_memindex(struct insn *insn, struct buffer *buf, struct 
 			    mach_reg(&insn->dest.base_reg));
 }
 
+static void __emit_mov_imm_membase(struct buffer *buf, long imm, enum machine_reg base, long disp)
+{
+	__emit_membase(buf, 0, 0xc7, base, disp, 0);
+	emit_imm32(buf, imm);
+}
+
 static void emit_conv_fpu_to_gpr(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	enum machine_reg src, dest;
@@ -2434,7 +2440,13 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	__emit_pop_reg(buf, MACH_REG_xAX);	/* return address */
 
 	__emit_push_reg(buf, MACH_REG_xAX);
+#ifdef CONFIG_X86_32
 	__emit_push_imm(buf, (unsigned long) target);
+#else
+	__emit64_sub_imm_reg(buf, sizeof(unsigned long), MACH_REG_RSP);
+	__emit_mov_imm_membase(buf, (((unsigned long) target) >> 32) & 0xFFFFFFFFUL, MACH_REG_RSP, 0x04);
+	__emit_mov_imm_membase(buf, (((unsigned long) target) >>  0) & 0xFFFFFFFFUL, MACH_REG_RSP, 0x00);
+#endif
 	__emit_push_reg(buf, MACH_REG_xAX);
 	__emit_push_imm(buf, (unsigned long) vmm);
 	__emit_push_reg(buf, MACH_REG_xBP);

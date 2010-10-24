@@ -77,7 +77,7 @@ jni_trampoline:
 	pushq	%rax			# save return value
 	call	vm_leave_jni
 	RESTORE_ARGS
-	movq	%rax, 0x8(%rbp)		# override return address
+	movq	%rax, -0x08(%rbp)	# override return address
 	popq	%rax			# restore return value
 
 error:
