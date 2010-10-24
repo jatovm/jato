@@ -54,18 +54,22 @@ error:
 .type jni_trampoline, @function
 .func jni_trampoline
 jni_trampoline:
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	push	%rbp
+	movq	%rsp, %rbp
+
+	SAVE_ARGS
+	movq	0x10(%rsp), %rdx
+	xorq	%rsi, %rsi
+	movl	0x0c(%rsp), %esi
+	movq	0x08(%rbp), %rdi
 	call	vm_enter_jni
 	RESTORE_ARGS
 
 	test	%eax, %eax
 	jne	error
 
-	popq	%rax			# target
-
 	SAVE_ARGS
+	movq	0x14(%rsp), %rax
 	call	*%rax
 	RESTORE_ARGS
 
@@ -76,8 +80,8 @@ jni_trampoline:
 	movq	%rax, 0x8(%rsp)		# override return address
 	popq	%rax			# restore return value
 
-	ret
 error:
-	addq	$0x8, %rsp		# target
+	leaveq
+	addq	$0x18, %rsp
 	ret
 #endif

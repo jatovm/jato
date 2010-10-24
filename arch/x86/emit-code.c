@@ -2460,20 +2460,9 @@ void emit_jni_trampoline(struct buffer *buf, struct vm_method *vmm,
 	__emit_pop_reg(buf, MACH_REG_xAX);	/* return address */
 
 	__emit_push_reg(buf, MACH_REG_xAX);
-	__emit_push_imm(buf, (unsigned long) target);	/* XXX: 64-bit? */
-#ifdef CONFIG_X86_64
-	/* Save arguments */
-	__emit_push_reg(buf, MACH_REG_RCX);
-	__emit_push_reg(buf, MACH_REG_RDX);
-	__emit_push_reg(buf, MACH_REG_RSI);
-	__emit_push_reg(buf, MACH_REG_RDI);
-	__emit_push_reg(buf, MACH_REG_R8);
-	__emit_push_reg(buf, MACH_REG_R9);
-	__emit_push_reg(buf, MACH_REG_R10);
-	__emit_push_reg(buf, MACH_REG_R11);
-#endif
+	__emit_push_imm(buf, (unsigned long) target);
 	__emit_push_reg(buf, MACH_REG_xAX);
-	__emit_push_imm(buf, (unsigned long) vmm);	/* XXX: 64-bit? */
+	__emit_push_imm(buf, (unsigned long) vmm);
 	__emit_push_reg(buf, MACH_REG_xBP);
 	__emit_jmp(buf, (unsigned long) jni_trampoline);
 
