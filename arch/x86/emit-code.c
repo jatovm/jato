@@ -72,9 +72,7 @@ struct emitter {
 	[_insn_type] = { .emit_fn = _fn }
 
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg);
-static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg);
 static void __emit_push_imm(struct buffer *buf, long imm);
-static void __emit_push_reg(struct buffer *buf, enum machine_reg reg);
 static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src, enum machine_reg dst);
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg);
 static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
@@ -185,6 +183,42 @@ static void emit_ret(struct buffer *buf)
 static void emit_leave(struct buffer *b)
 {
 	emit(b, 0xc9);
+}
+
+static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
+{
+	unsigned char rex_pfx = 0, rm;
+
+	rm = x86_encode_reg(reg);
+
+#ifdef CONFIG_X86_64
+	rex_pfx |= REX_W;
+
+	if (reg_high(rm))
+		rex_pfx |= REX_B;
+#endif
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+
+	emit(buf, 0x50 + reg_low(rm));
+}
+
+static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
+{
+	unsigned char rex_pfx = 0, rm;
+
+	rm = x86_encode_reg(reg);
+
+#ifdef CONFIG_X86_64
+	rex_pfx |= REX_W;
+
+	if (reg_high(rm))
+		rex_pfx |= REX_B;
+#endif
+	if (rex_pfx)
+		emit(buf, rex_pfx);
+
+	emit(buf, 0x58 + reg_low(rm));
 }
 
 static void emit_branch_rel(struct buffer *buf, unsigned char prefix,
@@ -450,46 +484,10 @@ __emit_membase_reg(struct buffer *buf, unsigned char opc,
 	__emit_membase(buf, opc, base_reg, disp, x86_encode_reg(dest_reg));
 }
 
-static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
-{
-	unsigned char rex_pfx = 0, rm;
-
-	rm = x86_encode_reg(reg);
-
-#ifdef CONFIG_X86_64
-	rex_pfx |= REX_W;
-
-	if (reg_high(rm))
-		rex_pfx |= REX_B;
-#endif
-	if (rex_pfx)
-		emit(buf, rex_pfx);
-
-	emit(buf, 0x50 + reg_low(rm));
-}
-
 static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg,
 				unsigned long disp)
 {
 	__emit_membase(buf, 0xff, src_reg, disp, 6);
-}
-
-static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
-{
-	unsigned char rex_pfx = 0, rm;
-
-	rm = x86_encode_reg(reg);
-
-#ifdef CONFIG_X86_64
-	rex_pfx |= REX_W;
-
-	if (reg_high(rm))
-		rex_pfx |= REX_B;
-#endif
-	if (rex_pfx)
-		emit(buf, rex_pfx);
-
-	emit(buf, 0x58 + reg_low(rm));
 }
 
 static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src_reg,
@@ -1334,16 +1332,6 @@ static void __emit_reg(struct buffer *buf,
 	if (rex_pfx)
 		emit(buf, rex_pfx);
 	emit(buf, opc + reg_low(reg_num));
-}
-
-static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
-{
-	__emit_reg(buf, 0, 0x50, reg);
-}
-
-static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
-{
-	__emit_reg(buf, 0, 0x58, reg);
 }
 
 static void __emit_lopc_reg_reg(struct buffer *buf,
