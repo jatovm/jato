@@ -2602,6 +2602,7 @@ static void do_emit_insn(struct emitter *emitter, struct buffer *buf, struct ins
 static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADD_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_AND_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_CALL_REG, insn_encode),
 	DECL_EMITTER(INSN_CALL_REL, emit_call),
 	DECL_EMITTER(INSN_CLTD_REG_REG, insn_encode),
@@ -2632,7 +2633,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_ADC_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_ADD_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_AND_MEMBASE_REG, insn_encode),
-	DECL_EMITTER(INSN_AND_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_CMP_REG_REG, insn_encode),
