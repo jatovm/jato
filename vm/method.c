@@ -159,6 +159,9 @@ int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
 		return -1;
 	}
 
+	if (vm_method_do_init(vmm))
+		return -1;
+
 	init_abstract_method(vmm);
 
 	return 0;
