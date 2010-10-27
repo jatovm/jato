@@ -28,7 +28,7 @@ system:
 
 Ubuntu:
 
-  sudo apt-get install ecj classpath libffi-dev binutils-dev libzip-dev libglib2.0-dev
+  sudo apt-get install ecj classpath libffi-dev binutils-dev libzip-dev libglib2.0-dev bison
 
 Archlinux:
 
