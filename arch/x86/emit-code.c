@@ -937,13 +937,6 @@ static void emit_div_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 	__emit_div_mul_reg_eax(buf, &insn->src, &insn->dest, 0x07);
 }
 
-static void emit_sar_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xc1);
-	emit(buf, x86_encode_mod_rm(0x03, 0x07, encode_reg(&insn->dest.reg)));
-	emit(buf, insn->src.imm);
-}
-
 static void emit_or_imm_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_membase(buf, 0x81, mach_reg(&insn->dest.base_reg), insn->dest.disp, 1);
@@ -2709,7 +2702,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_OR_IMM_MEMBASE, emit_or_imm_membase),
 	DECL_EMITTER(INSN_OR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
-	DECL_EMITTER(INSN_SAR_IMM_REG, emit_sar_imm_reg),
+	DECL_EMITTER(INSN_SAR_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_REG_REG, insn_encode),

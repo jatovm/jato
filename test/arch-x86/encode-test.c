@@ -189,6 +189,26 @@ void test_encoding_imm_reg(void)
 	teardown();
 }
 
+void test_encoding_imm8_reg(void)
+{
+	uint8_t encoding[] = { 0xc1, 0xfb, 0x1f };
+	struct insn insn = { };
+
+	setup();
+
+	/* sar    $0x1f,%ebx */
+	insn.type			= INSN_SAR_IMM_REG;
+	insn.src.imm			= 0x1f;
+	insn.dest.reg.interval		= &reg_ebx;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
 void test_encoding_imm_reg_r12(void)
 {
 #ifdef CONFIG_X86_64

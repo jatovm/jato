@@ -113,7 +113,8 @@ enum x86_insn_flags {
 
 	SRC_IMM			= (1ULL << 12),
 	SRC_IMM8		= (1ULL << 13),
-	IMM_MASK		= SRC_IMM|SRC_IMM8,
+	IMM_MASK		= SRC_IMM,
+	IMM8_MASK		= SRC_IMM8,
 
 #define SRC_REL			SRC_IMM
 	REL_MASK		= SRC_IMM,
@@ -149,21 +150,22 @@ enum x86_insn_flags {
  *	Addressing modes
  */
 enum x86_addmode {
-	ADDMODE_ACC_MEM		= SRC_ACC|DST_MEM|DIR_REVERSED,	/* AL/AX -> memory */
-	ADDMODE_ACC_REG		= SRC_ACC|DST_REG,		/* AL/AX -> reg */
-	ADDMODE_IMM		= SRC_IMM,			/* immediate operand */
-	ADDMODE_IMM8_RM		= SRC_IMM8|MOD_RM|DIR_REVERSED,	/* immediate -> register/memory */
-	ADDMODE_IMM_ACC		= SRC_IMM|DST_ACC,		/* immediate -> AL/AX */
-	ADDMODE_IMM_REG		= SRC_IMM|DST_REG|DIR_REVERSED,	/* immediate -> register */
-	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,		/* no operands */
-	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,		/* memory -> AL/AX */
-	ADDMODE_REG		= SRC_REG|DST_REG,		/* register */
+	ADDMODE_ACC_MEM		= SRC_ACC|DST_MEM|DIR_REVERSED,		/* AL/AX -> memory */
+	ADDMODE_ACC_REG		= SRC_ACC|DST_REG,			/* AL/AX -> reg */
+	ADDMODE_IMM		= SRC_IMM,				/* immediate operand */
+	ADDMODE_IMM8_RM		= SRC_IMM8|MOD_RM|DIR_REVERSED,		/* immediate -> register/memory */
+	ADDMODE_IMM_ACC		= SRC_IMM|DST_ACC,			/* immediate -> AL/AX */
+	ADDMODE_IMM8_REG	= SRC_IMM8|DST_REG|DIR_REVERSED,	/* immediate8 -> register */
+	ADDMODE_IMM_REG		= SRC_IMM|DST_REG|DIR_REVERSED,		/* immediate -> register */
+	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,			/* no operands */
+	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,			/* memory -> AL/AX */
+	ADDMODE_REG		= SRC_REG|DST_REG,			/* register */
 	ADDMODE_MEMLOCAL	= SRC_MEMLOCAL|DST_MEMLOCAL|MOD_RM,	/* memlocal */
-	ADDMODE_REG_REG		= SRC_REG|DST_REG|MOD_RM,	/* register -> register */
-	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,	/* register -> register/memory */
+	ADDMODE_REG_REG		= SRC_REG|DST_REG|MOD_RM,		/* register -> register */
+	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,		/* register -> register/memory */
 	ADDMODE_RM		= SRC_REG|MOD_RM|DST_NONE|DIR_REVERSED,	/* register -> register/memory */
-	ADDMODE_REL		= SRC_REL|DST_NONE,		/* relative */
-	ADDMODE_RM_REG		= DST_REG|MOD_RM,		/* register/memory -> register */
+	ADDMODE_REL		= SRC_REL|DST_NONE,			/* relative */
+	ADDMODE_RM_REG		= DST_REG|MOD_RM,			/* register/memory -> register */
 };
 
 #define OPCODE(opc)		opc
@@ -208,7 +210,8 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_PUSH_MEMLOCAL]		= OPCODE(0xff) | OPCODE_EXT(6)   | ADDMODE_MEMLOCAL| WIDTH_FULL,
 	[INSN_PUSH_REG]			= OPCODE(0x50) | OPC_REG         | ADDMODE_REG     | WIDTH_FULL,
 	[INSN_RET]			= OPCODE(0xc3) | ADDMODE_IMPLIED,
-	[INSN_SAR_REG_REG]		= OPCODE(0xd3) | OPCODE_EXT(7)   | ADDMODE_REG_REG|DIR_REVERSED | WIDTH_FULL,
+	[INSN_SAR_IMM_REG]		= OPCODE(0xc1) | OPCODE_EXT(7)   | ADDMODE_IMM8_REG | DIR_REVERSED | WIDTH_FULL,
+	[INSN_SAR_REG_REG]		= OPCODE(0xd3) | OPCODE_EXT(7)   | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
 	[INSN_SBB_IMM_REG]		= OPCODE(0x81) | OPCODE_EXT(3)   | ADDMODE_IMM_REG | WIDTH_FULL,
 	[INSN_SBB_MEMBASE_REG]		= OPCODE(0x1b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_SBB_REG_REG]		= OPCODE(0x19) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
@@ -575,6 +578,13 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 			emit_imm32(buffer, self->src.imm);
 		else
 			emit_imm32(buffer, self->dest.imm);
+	}
+
+	if (flags & IMM8_MASK) {
+		if (flags & DIR_REVERSED)
+			emit(buffer, self->src.imm);
+		else
+			emit(buffer, self->dest.imm);
 	}
 
 	if (flags & MEM_DISP_MASK) {
