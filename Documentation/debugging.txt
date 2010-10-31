@@ -1,11 +1,120 @@
-Debugging deadlocks
+		Debugging Jato
 
-You can debug deadlocks easily with GDB:
+This document is intended to help you to debug and fix bugs in Jato. You are
+expected to have basic understanding of how the Java virtual machine works. You
+are also expected to have working knowledge of C and Java.
+
+
+		Part 1: Preliminaries
+
+To make your life easier, you should do the following steps before you start
+debugging:
+
+  a) Install valgrind
+
+  b) Install JamVM or GNU Classpath version of CACAO
+
+  c) Download GNU Classpath sources for the version you have installed on your
+     system.
+
+Jato relies on GNU Classpath to provide core Java runtime libraries (e.g.
+java.lang package) so it essential to consider GNU Classpath as part of the
+system when debugging a bug. JamVM or CACAO is useful to have around to verify
+that a particular bug only exists in Jato and that its not a generic problem
+with GNU Classpath.
+
+
+		Part 2: Minimal test case
+
+The first step to debugging a problem is to create a minimal test case that
+triggers the bug. If you're seeing a native backtrace or a Java stack trace,
+it's usually easy to work out where the problem happened and use that
+information to create a test case. You can also use the "-Xtrace:invoke"
+command line option to see what methods were invoked before the crash.
+
+
+		Part 3: Finding the root cause
+
+Once you have a minimal test case that triggers the problem, you should first
+run the test case with valgrind:
+
+  valgrind jato -Xnogc <test case>
+
+The "-Xnogc" disables Boehm GC which triggers valgrind errors. If valgrind
+reports problems when the GC is disabled, they're almost certainly related to
+your bug.
+
+If your crash happens in native code:
+
+  [main] SIGSEGV at EIP b775212b while accessing memory address 00000000.
+  [main] Registers:
+  [main]  eax: 00000000   ebx: b775bff4   ecx: bf988804   edx: b775bff4
+  [main]  esi: 00000000   edi: 080a3d7c   ebp: bf98886c   esp: bf988804
+  [main] Native and Java stack trace:
+  [main]  [<b775212b>] native     : exception_check+af6e9e3a (arch/x86/unwind_32.S:75)
+  [main]  [<a74ed214>] jit        : gnu/classpath/Pointer.<init>(Pointer.java)
+  [main]  [<a74ebe2e>] jit        : gnu/java/net/PlainSocketImpl.bind(PlainSocketImpl.java:307)
+  [main]  [<a74eb885>] jit        : java/net/ServerSocket.bind(ServerSocket.java:250)
+  [main]  [<a74c47f6>] jit        : java/net/ServerSocket.<init>(ServerSocket.java:181)
+  [main]  [<a74c4539>] jit        : java/net/ServerSocket.<init>(ServerSocket.java:155)
+  [main]  [<a74c44f5>] jit        : java/net/ServerSocket.<init>(ServerSocket.java:137)
+  [main]  [<a74c44a5>] jit        : ServerSocketTest.main(ServerSocketTest.java:6)
+  [main]  [<0807bc65>] native     : do_main_class+141 (/home/penberg/src/jato/vm/jato.c:1036)
+  [main]  [<0807c1f7>] native     : ./jato(main+0x582) [0x807c1f7]
+  [main]  [<b7442bd5>] native     : exception_check+af3da8e4 (arch/x86/unwind_32.S:75)
+  [main]  [<0805cb40>] native     : ./jato() [0x805cb40]
+  Aborted
+
+You can use the "addr2line" command to display better information on where the
+crash happens:
+
+  addr2line -e jato
+  <EIP>
+
+If the crash happens in JIT code:
+
+  [main] SIGSEGV at RIP 00000000 while accessing memory address 00000000.
+  [main] Registers:
+  [main]  rsp: 00007ffffab5e848
+  [main]  rax: 0000000001eaf240   rbx: 0000000002778e70   rcx: 0000000000000017
+  [main]  rdx: 0000000002767540   rsi: 000000000277adc0   rdi: 000000000277adc0
+  [main]  rbp: 00007ffffab5eb00   r8:  000000000000000b   r9:  00007ffffab5eb00
+  [main]  r10: 3b70614d2f6c6974   r11: 0000000000000246   r12: 00007f40c73c86f0
+  [main]  r13: 0000000002767540   r14: 0000000001d33e38   r15: 000000000277ab40
+  [main] Native and Java stack trace:
+  [main]  [<00000000>] native     : [(nil)]
+  [main]  [<41b547c7>] jit        : java/util/Hashtable.clone(Hashtable.java:558)
+  [main]  [<41b4f386>] jit        : gnu/classpath/SystemProperties.<clinit>(SystemProperties.java:125)
+  [main]  [<00435677>] native     : vm_class_init+131 (/home/penberg/jato/vm/class.c:648)
+  [main]  [<0042e8e8>] native     : vm_class_ensure_init+10c68 (/home/penberg/jato/include/vm/class.h:97)
+  [main]  [<41b3a5b2>] jit        : gnu/classpath/SystemProperties.getProperty(SystemProperties.java)
+  [main]  [<41b4de2e>] jit        : java/lang/VMClassLoader.getResources(VMClassLoader.java:184)
+  [main]  [<41b49294>] jit        : java/lang/VMClassLoader.getResource(VMClassLoader.java:170)
+  [main]  [<41b48b35>] jit        : java/lang/VMClassLoader.getBootPackages(VMClassLoader.java:252)
+  [main]  [<41b3eed5>] jit        : java/lang/VMClassLoader.<clinit>(VMClassLoader.java:89)
+  [main]  [<00435677>] native     : vm_class_init+131 (/home/penberg/jato/vm/class.c:648)
+  [main]  [<0042e8e8>] native     : vm_class_ensure_init+10c68 (/home/penberg/jato/include/vm/class.h:97)
+  [main]  [<41b3a0d2>] jit        : java/lang/VMClassLoader.getSystemClassLoader(VMClassLoader.java)
+  [main]  [<41b3c23b>] jit        : java/lang/ClassLoader$StaticData.<clinit>(ClassLoader.java:154)
+  [main]  [<00435677>] native     : vm_class_init+131 (/home/penberg/jato/vm/class.c:648)
+  [main]  [<0041b95e>] native     : vm_class_ensure_init+ffffffffffffdcde (/home/penberg/jato/include/vm/class.h:97)
+  [main]  [<00443326>] native     : static_field_signal_bh+e (/home/penberg/jato/vm/static.c:66)
+
+You can use the "-Xtrace:jit" command line option to trace the generated code:
+
+  jato -Xtrace:jit <test case> &> trace
+
+and look up machine code where EIP resides in.
+
+
+		Part 4: Debugging deadlocks
+
+If a program seems to deadlock under Jato, you can use GDB to capture a
+backtrace of all the threads while the program is stuck:
 
   gdb --args ./jato [...]
 
-    (gdb) handle SIGSEGV nostop
-    (gdb) r
-    <Ctrl-C when the program deadlocks>
-    (gdb) thread apply all backtrace
-
+  (gdb) handle SIGSEGV nostop
+  (gdb) r
+  <Ctrl-C when the program deadlocks>
+  (gdb) thread apply all backtrace
