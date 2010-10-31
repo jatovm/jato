@@ -108,6 +108,7 @@ struct vm_class *vm_java_lang_ref_WeakReference;
 struct vm_class *vm_java_lang_ref_SoftReference;
 struct vm_class *vm_java_lang_ref_PhantomReference;
 struct vm_class *vm_java_nio_Buffer;
+struct vm_class *vm_java_nio_DirectByteBufferImpl_ReadWrite;
 struct vm_class *vm_gnu_classpath_PointerNN;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
@@ -182,6 +183,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ref/SoftReference", &vm_java_lang_ref_SoftReference },
 	{ "java/lang/ref/PhantomReference", &vm_java_lang_ref_PhantomReference },
 	{ "java/nio/Buffer", &vm_java_nio_Buffer },
+	{ "java/nio/DirectByteBufferImpl$ReadWrite", &vm_java_nio_DirectByteBufferImpl_ReadWrite },
 #ifdef CONFIG_32_BIT
 	{ "gnu/classpath/Pointer32", &vm_gnu_classpath_PointerNN },
 #else
@@ -370,6 +372,7 @@ struct vm_method *vm_java_lang_Number_longValue;
 struct vm_method *vm_java_lang_Number_doubleValue;
 struct vm_method *vm_java_lang_ref_Reference_clear;
 struct vm_method *vm_java_lang_ref_Reference_enqueue;
+struct vm_method *vm_java_nio_DirectByteBufferImpl_ReadWrite_init;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -641,6 +644,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"length",
 		"()I",
 		&vm_java_lang_String_length,
+	},
+	{
+		&vm_java_nio_DirectByteBufferImpl_ReadWrite,
+		"<init>",
+		"(Ljava/lang/Object;Lgnu/classpath/Pointer;III)V",
+		&vm_java_nio_DirectByteBufferImpl_ReadWrite_init,
 	},
 };
 

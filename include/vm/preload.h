@@ -62,6 +62,7 @@ extern struct vm_class *vm_java_lang_ref_WeakReference;
 extern struct vm_class *vm_java_lang_ref_SoftReference;
 extern struct vm_class *vm_java_lang_ref_PhantomReference;
 extern struct vm_class *vm_java_nio_Buffer;
+extern struct vm_class *vm_java_nio_DirectByteBufferImpl_ReadWrite;
 extern struct vm_class *vm_gnu_classpath_PointerNN;	/* gnu/classpath/Pointer{32,64} */
 extern struct vm_class *vm_boolean_class;
 extern struct vm_class *vm_char_class;
@@ -158,6 +159,7 @@ extern struct vm_method *vm_java_lang_Number_longValue;
 extern struct vm_method *vm_java_lang_Number_doubleValue;
 extern struct vm_method *vm_java_lang_ref_Reference_clear;
 extern struct vm_method *vm_java_lang_ref_Reference_enqueue;
+extern struct vm_method *vm_java_nio_DirectByteBufferImpl_ReadWrite_init;
 
 extern bool preload_finished;
 

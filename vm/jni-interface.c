@@ -824,11 +824,27 @@ static void JNI_DeleteWeakGlobalRef(struct vm_jni_env *env, jweak obj)
 
 static jobject JNI_NewDirectByteBuffer(struct vm_jni_env *env, void *address, jlong capacity)
 {
+	struct vm_object *ret, *data;
+
 	enter_vm_from_jni();
 
-	error("%s is not supported", __func__);
+	ret = vm_object_alloc(vm_java_nio_DirectByteBufferImpl_ReadWrite);
+	if (!ret)
+		return NULL;
 
-	return NULL;
+	data = vm_object_alloc(vm_gnu_classpath_PointerNN);
+	if (!data)
+		return NULL;
+
+#ifdef CONFIG_32_BIT
+	field_set_int(ret, vm_gnu_classpath_PointerNN_data, (jint) data);
+#else
+	field_set_long(ret, vm_gnu_classpath_PointerNN_data, (jlong) data);
+#endif
+
+	vm_call_method(vm_java_nio_DirectByteBufferImpl_ReadWrite_init, ret, NULL, data, capacity, capacity, 0);
+
+	return ret;
 }
 
 static void *JNI_GetDirectBufferAddress(struct vm_jni_env *env, jobject buf)
