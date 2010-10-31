@@ -92,6 +92,7 @@
 #include "arch/init.h"
 
 #include "runtime/java_lang_VMSystem.h"
+#include "runtime/java_lang_VMThread.h"
 
 static bool dump_maps;
 static bool perf_enabled;
@@ -373,48 +374,6 @@ native_vm_throw_null_pointer_exception(void)
 	signal_new_exception(vm_java_lang_NullPointerException, NULL);
 }
 
-static struct vm_object *native_vmthread_current_thread(void)
-{
-	return field_get_object(vm_get_exec_env()->thread->vmthread,
-				vm_java_lang_VMThread_thread);
-}
-
-static void native_vmthread_start(struct vm_object *vmthread, jlong stacksize)
-{
-	vm_thread_start(vmthread);
-}
-
-static void native_vmthread_yield(void)
-{
-	vm_thread_yield();
-}
-
-static jint native_vmthread_interrupted(void)
-{
-	return vm_thread_interrupted(vm_thread_self());
-}
-
-static jint native_vmthread_isinterrupted(struct vm_object *vmthread)
-{
-	struct vm_thread *thread;
-
-	thread = vm_thread_from_vmthread(vmthread);
-	return vm_thread_is_interrupted(thread);
-}
-
-static void native_vmthread_setpriority(struct vm_object *vmthread, jint ptiority)
-{
-	/* TODO: implement */
-}
-
-static void native_vmthread_interrupt(struct vm_object *vmthread)
-{
-	struct vm_thread *thread;
-
-	thread = (struct vm_thread *)field_get_object(vmthread, vm_java_lang_VMThread_vmdata);
-	vm_thread_interrupt(thread);
-}
-
 static void native_vmobject_notify(struct vm_object *obj)
 {
 	vm_object_notify(obj);
@@ -500,13 +459,13 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMString", "intern", native_vmstring_intern),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", java_lang_VMSystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", java_lang_VMSystem_identityHashCode),
-	DEFINE_NATIVE("java/lang/VMThread", "currentThread", native_vmthread_current_thread),
-	DEFINE_NATIVE("java/lang/VMThread", "interrupt", native_vmthread_interrupt),
-	DEFINE_NATIVE("java/lang/VMThread", "interrupted", native_vmthread_interrupted),
-	DEFINE_NATIVE("java/lang/VMThread", "isInterrupted", native_vmthread_isinterrupted),
-	DEFINE_NATIVE("java/lang/VMThread", "nativeSetPriority", native_vmthread_setpriority),
-	DEFINE_NATIVE("java/lang/VMThread", "start", native_vmthread_start),
-	DEFINE_NATIVE("java/lang/VMThread", "yield", native_vmthread_yield),
+	DEFINE_NATIVE("java/lang/VMThread", "currentThread", java_lang_VMThread_currentThread),
+	DEFINE_NATIVE("java/lang/VMThread", "interrupt", java_lang_VMThread_interrupt),
+	DEFINE_NATIVE("java/lang/VMThread", "interrupted", java_lang_VMThread_interrupted),
+	DEFINE_NATIVE("java/lang/VMThread", "isInterrupted", java_lang_VMThread_isInterrupted),
+	DEFINE_NATIVE("java/lang/VMThread", "nativeSetPriority", java_lang_VMThread_setPriority),
+	DEFINE_NATIVE("java/lang/VMThread", "start", java_lang_VMThread_start),
+	DEFINE_NATIVE("java/lang/VMThread", "yield", java_lang_VMThread_yield),
 	DEFINE_NATIVE("java/lang/VMThrowable", "fillInStackTrace", native_vmthrowable_fill_in_stack_trace),
 	DEFINE_NATIVE("java/lang/VMThrowable", "getStackTrace", native_vmthrowable_get_stack_trace),
 	DEFINE_NATIVE("java/lang/reflect/Constructor", "constructNative", native_constructor_construct_native),
