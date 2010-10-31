@@ -822,6 +822,11 @@ static void JNI_DeleteWeakGlobalRef(struct vm_jni_env *env, jweak obj)
 	vm_reference_collect_for_object(obj);
 }
 
+static jboolean JNI_ExceptionCheck(struct vm_jni_env *env)
+{
+	return exception_occurred() != NULL;
+}
+
 static jobject JNI_NewDirectByteBuffer(struct vm_jni_env *env, void *address, jlong capacity)
 {
 	struct vm_object *ret, *data;
@@ -1713,7 +1718,7 @@ void *vm_jni_native_interface[] = {
 	NULL, /* ReleaseStringCritical */
 	JNI_NewWeakGlobalRef,
 	JNI_DeleteWeakGlobalRef,
-	NULL, /* ExceptionCheck */
+	JNI_ExceptionCheck,
 
 	/* JNI 1.4 functions */
 
