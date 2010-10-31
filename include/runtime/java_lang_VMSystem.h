@@ -1,11 +1,9 @@
 #ifndef JATO__JAVA_LANG_VMSYSTEM_H
 #define JATO__JAVA_LANG_VMSYSTEM_H
 
-#include <stdint.h>
+#include "vm/jni.h"
 
-struct vm_object;
-
-void native_vmsystem_arraycopy(struct vm_object *src, int src_start, struct vm_object *dest, int dest_start, int len);
-int32_t native_vmsystem_identityhashcode(struct vm_object *obj);
+void native_vmsystem_arraycopy(jobject src, jint src_start, jobject dest, jint dest_start, jint len);
+jint native_vmsystem_identityhashcode(jobject object);
 
 #endif /* JATO__JAVA_LANG_VMSYSTEM_H */
