@@ -345,7 +345,7 @@ native_vmsystem_arraycopy(struct vm_object *src, int src_start,
 
 	elem_type = vm_class_get_storage_vmtype(src_elem_class);
 	if (elem_type != vm_class_get_storage_vmtype(dest_elem_class)) {
-		NOT_IMPLEMENTED;
+		signal_new_exception(vm_java_lang_ArrayStoreException, NULL);
 		return;
 	}
 
