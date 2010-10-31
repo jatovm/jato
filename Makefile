@@ -132,6 +132,7 @@ OBJS += lib/stack.o
 OBJS += lib/string.o
 OBJS += runtime/class.o
 OBJS += runtime/classloader.o
+OBJS += runtime/java_lang_VMSystem.o
 OBJS += runtime/reflection.o
 OBJS += runtime/runtime.o
 OBJS += runtime/stack-walker.o
