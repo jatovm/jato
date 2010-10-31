@@ -131,3 +131,7 @@ int native_vmruntime_native_load(struct vm_object *name,
 
 	return result == 0;
 }
+
+void native_vmruntime_trace_instructions(jboolean on)
+{
+}
