@@ -191,8 +191,6 @@ static void __emit_push_reg(struct buffer *buf, enum machine_reg reg)
 	rm = x86_encode_reg(reg);
 
 #ifdef CONFIG_X86_64
-	rex_pfx |= REX_W;
-
 	if (reg_high(rm))
 		rex_pfx |= REX_B;
 #endif
@@ -209,8 +207,6 @@ static void __emit_pop_reg(struct buffer *buf, enum machine_reg reg)
 	rm = x86_encode_reg(reg);
 
 #ifdef CONFIG_X86_64
-	rex_pfx |= REX_W;
-
 	if (reg_high(rm))
 		rex_pfx |= REX_B;
 #endif
