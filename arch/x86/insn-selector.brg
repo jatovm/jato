@@ -1187,9 +1187,12 @@ reg:	EXPR_INSTANCE_FIELD(reg) 1
 	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
 
 	if (vm_field_equals(expr->instance_field, vm_java_lang_ref_Reference_referent)) {
-		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->reg1));
+		struct var_info *rdi;
+
+		rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->reg1, rdi));
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &get_referent));
-		method_args_cleanup(s, tree, 1);
 
 		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
