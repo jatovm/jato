@@ -1009,11 +1009,7 @@ reg:	EXPR_CLASS_FIELD 1
 
 	expr   = to_expr(tree);
 
-%ifdef CONFIG_X86_32
-	out = get_var(s->b_parent, J_INT);
-%else
-	out = get_var(s->b_parent, J_LONG);
-%endif
+	out = get_var(s->b_parent, J_NATIVE_PTR);
 	state->reg1 = out;
 
 	vmf = expr->class_field;
