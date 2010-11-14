@@ -144,6 +144,8 @@ enum x86_insn_flags {
 	REPE_PREFIX		= (1ULL << 29),	/* REP/REPE/REPZ or SSE prefix */
 	OPC_EXT			= (1ULL << 30),	/* The reg field of ModR/M byte provides opcode extension */
 	OPC_REG			= (1ULL << 31), /* The opcode byte also provides operand register */
+
+	NO_REX_W		= (1ULL << 32), /* No REX W prefix needed */
 };
 
 /*
@@ -205,10 +207,10 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_NEG_REG]			= OPCODE(0xf7) | OPCODE_EXT(3)   | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL,
 	[INSN_OR_MEMBASE_REG]		= OPCODE(0x0b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_OR_REG_REG]		= OPCODE(0x09) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
-	[INSN_POP_MEMLOCAL]		= OPCODE(0x8f) | OPCODE_EXT(0)   | ADDMODE_MEMLOCAL| WIDTH_FULL,
-	[INSN_POP_REG]			= OPCODE(0x58) | OPC_REG         | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL,
-	[INSN_PUSH_MEMLOCAL]		= OPCODE(0xff) | OPCODE_EXT(6)   | ADDMODE_MEMLOCAL| WIDTH_FULL,
-	[INSN_PUSH_REG]			= OPCODE(0x50) | OPC_REG         | ADDMODE_REG     | WIDTH_FULL,
+	[INSN_POP_MEMLOCAL]		= OPCODE(0x8f) | OPCODE_EXT(0)   | ADDMODE_MEMLOCAL| WIDTH_FULL | NO_REX_W,
+	[INSN_POP_REG]			= OPCODE(0x58) | OPC_REG         | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL | NO_REX_W,
+	[INSN_PUSH_MEMLOCAL]		= OPCODE(0xff) | OPCODE_EXT(6)   | ADDMODE_MEMLOCAL| WIDTH_FULL | NO_REX_W,
+	[INSN_PUSH_REG]			= OPCODE(0x50) | OPC_REG         | ADDMODE_REG     | WIDTH_FULL | NO_REX_W,
 	[INSN_RET]			= OPCODE(0xc3) | ADDMODE_IMPLIED,
 	[INSN_SAR_IMM_REG]		= OPCODE(0xc1) | OPCODE_EXT(7)   | ADDMODE_IMM8_REG | DIR_REVERSED | WIDTH_FULL,
 	[INSN_SAR_REG_REG]		= OPCODE(0xd3) | OPCODE_EXT(7)   | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
@@ -439,9 +441,12 @@ static inline bool operand_is_reg_64(struct operand *operand)
 	return true;
 }
 
-static uint8_t insn_rex_operand_64(struct insn *self)
+static uint8_t insn_rex_operand_64(struct insn *self, uint64_t flags)
 {
 	if (insn_is_call(self) || insn_is_branch(self))
+		return 0;
+
+	if (flags & NO_REX_W)
 		return 0;
 
 	if (operand_is_reg_64(&self->src) || operand_is_reg_64(&self->dest))
@@ -457,7 +462,7 @@ static uint8_t insn_rex_prefix(struct insn *self, uint64_t flags)
 	if (flags & (SRC_MEMLOCAL|DST_MEMLOCAL))
 		return 0;
 
-	ret	= insn_rex_operand_64(self);
+	ret	= insn_rex_operand_64(self, flags);
 
 	if (flags & DIR_REVERSED) {
 		if (operand_is_reg_high(&self->src))
