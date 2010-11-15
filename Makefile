@@ -7,7 +7,7 @@ CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 
 uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
-ARCH		:= $(uname_M)
+ARCH		:= $(shell sh scripts/gcc-arch.sh $(CC))
 SYS		:= $(shell uname -s | tr A-Z a-z)
 
 MAKEFLAGS += --no-print-directory
