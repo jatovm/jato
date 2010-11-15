@@ -179,7 +179,8 @@ static unsigned long native_call_gp(struct vm_method *method,
 				    unsigned long *args)
 {
 	int i;
-	size_t sp = 0, r = 0;
+	size_t reg_count = 0;
+	size_t stack_count = 0;
 	struct vm_args_map *map = method->args_map;
 	unsigned long *stack, regs[6];
 	unsigned long result;
@@ -190,22 +191,22 @@ static unsigned long native_call_gp(struct vm_method *method,
 
 	for (i = 0; i < method->args_count; i++) {
 		if (map[i].reg == MACH_REG_UNASSIGNED)
-			stack[sp++] = args[i];
+			stack[stack_count++] = args[i];
 		else
-			regs[r++] = args[i];
+			regs[reg_count++] = args[i];
 
 		/* Skip duplicate slots. */
 		if (map[i].type == J_LONG || map[i].type == J_DOUBLE)
 			i++;
 	}
 
-	while (r < 6)
-		regs[r++] = 0;
+	while (reg_count < 6)
+		regs[reg_count++] = 0;
 
 	__asm__ volatile (
 		/* Copy stack arguments onto the stack. */
-		"	movq %1, %%rsi			\n"
-		"	movq %2, %%rcx			\n"
+		"	movq %[stack], %%rsi		\n"
+		"	movq %[stack_count], %%rcx	\n"
 		"	shl $3, %%rcx			\n"
 		"	subq %%rcx, %%rsp		\n"
 		"	movq %%rsp, %%rdi		\n"
@@ -215,17 +216,20 @@ static unsigned long native_call_gp(struct vm_method *method,
 		"	movq %%rcx, %%r12		\n"
 
 		/* Assign registers to register arguments. */
-		"	movq 0x00(%4), %%rdi		\n"
-		"	movq 0x08(%4), %%rsi		\n"
-		"	movq 0x10(%4), %%rdx		\n"
-		"	movq 0x18(%4), %%rcx		\n"
-		"	movq 0x20(%4), %%r8		\n"
-		"	movq 0x28(%4), %%r9		\n"
+		"	movq 0x00(%[regs]), %%rdi	\n"
+		"	movq 0x08(%[regs]), %%rsi	\n"
+		"	movq 0x10(%[regs]), %%rdx	\n"
+		"	movq 0x18(%[regs]), %%rcx	\n"
+		"	movq 0x20(%[regs]), %%r8	\n"
+		"	movq 0x28(%[regs]), %%r9	\n"
 
-		"	call *%3			\n"
+		"	call *%[target]			\n"
 		"	addq %%r12, %%rsp		\n"
 		: "=a" (result)
-		: "r" (stack), "r" (sp), "m" (target), "r" (regs)
+		: [target] "m" (target),
+		  [regs] "r" (regs),
+		  [stack] "r" (stack),
+		  [stack_count] "r" (stack_count)
 		: "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11", "r12", "cc", "memory"
 	);
 
