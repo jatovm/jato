@@ -204,26 +204,26 @@ static unsigned long native_call_gp(struct vm_method *method,
 
 	__asm__ volatile (
 		/* Copy stack arguments onto the stack. */
-		"movq %1, %%rsi \n"
-		"movq %2, %%rcx \n"
-		"shl $3, %%rcx \n"
-		"subq %%rcx, %%rsp \n"
-		"movq %%rsp, %%rdi \n"
-		"cld \n"
-		"rep movsq \n"
+		"	movq %1, %%rsi			\n"
+		"	movq %2, %%rcx			\n"
+		"	shl $3, %%rcx			\n"
+		"	subq %%rcx, %%rsp		\n"
+		"	movq %%rsp, %%rdi		\n"
+		"	cld				\n"
+		"	rep movsq			\n"
 
-		"movq %%rcx, %%r12 \n"
+		"	movq %%rcx, %%r12		\n"
 
 		/* Assign registers to register arguments. */
-		"movq 0x00(%4), %%rdi \n"
-		"movq 0x08(%4), %%rsi \n"
-		"movq 0x10(%4), %%rdx \n"
-		"movq 0x18(%4), %%rcx \n"
-		"movq 0x20(%4), %%r8 \n"
-		"movq 0x28(%4), %%r9 \n"
+		"	movq 0x00(%4), %%rdi		\n"
+		"	movq 0x08(%4), %%rsi		\n"
+		"	movq 0x10(%4), %%rdx		\n"
+		"	movq 0x18(%4), %%rcx		\n"
+		"	movq 0x20(%4), %%r8		\n"
+		"	movq 0x28(%4), %%r9		\n"
 
-		"call *%3 \n"
-		"addq %%r12, %%rsp \n"
+		"	call *%3			\n"
+		"	addq %%r12, %%rsp		\n"
 		: "=a" (result)
 		: "r" (stack), "r" (sp), "m" (target), "r" (regs)
 		: "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11", "r12", "cc", "memory"
