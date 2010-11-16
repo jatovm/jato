@@ -265,9 +265,14 @@ static void free_exec_env(struct vm_exec_env *env)
 
 void init_exec_env(void)
 {
-	current_exec_env = alloc_exec_env();
-	if (!current_exec_env)
-		error("failed to alloc main execution environment");
+	if (pthread_key_create(&current_exec_env_key, NULL) != 0)
+		error("pthread_key_create");
+
+	struct vm_exec_env *vm_exec_env = alloc_exec_env();
+	if (!vm_exec_env)
+		error("out of memory");
+
+	pthread_setspecific(current_exec_env_key, vm_exec_env);
 }
 
 /**
@@ -278,7 +283,7 @@ static void *vm_thread_entry(void *arg)
 	struct vm_exec_env *ee = arg;
 	struct vm_thread *thread = ee->thread;
 
-	current_exec_env = ee;
+	pthread_setspecific(current_exec_env_key, ee);
 
 	setup_signal_handlers();
 	thread_init_exceptions();

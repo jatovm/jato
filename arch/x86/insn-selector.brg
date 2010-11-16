@@ -3860,12 +3860,9 @@ static void select_eh_prologue(struct basic_block *bb)
 
 	/* Save exception from current_exec_env.exception to exception
 	 * stack slot */
-	eh_add_insn(bb, imm_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
-		get_thread_local_offset(&current_exec_env), reg_eax));
-	eh_add_insn(bb, membase_reg_insn(INSN_MOV_MEMBASE_REG, reg_eax,
-			 offsetof(struct vm_exec_env, exception), reg_eax));
-	eh_add_insn(bb,	reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, reg_eax,
-		bb->b_parent->exception_spill_slot));
+	eh_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long)vm_get_exec_env));
+	eh_add_insn(bb, membase_reg_insn(INSN_MOV_MEMBASE_REG, reg_eax, offsetof(struct vm_exec_env, exception), reg_eax));
+	eh_add_insn(bb, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, reg_eax, bb->b_parent->exception_spill_slot));
 
 	/* Clear exception. TODO: inline this. */
 	eh_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long)clear_exception));
