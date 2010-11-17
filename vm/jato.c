@@ -102,6 +102,8 @@ static char *exe_name;
 static unsigned int nr_java_args;
 static char **java_args;
 
+static bool use_system_classloader = true;
+
 /*
  * Enable SSA optimizations.
  */
@@ -599,6 +601,11 @@ static void handle_nogc(void)
 	dont_gc		= 1;
 }
 
+static void handle_no_system_classloader(void)
+{
+	use_system_classloader = false;
+}
+
 static void handle_newgc(void)
 {
 	newgc_enabled	= true;
@@ -795,6 +802,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xmaps",			handle_maps),
 	DEFINE_OPTION("Xnewgc",			handle_newgc),
 	DEFINE_OPTION("Xnogc",			handle_nogc),
+	DEFINE_OPTION("Xnosystemclassloader",	handle_no_system_classloader),
 	DEFINE_OPTION("Xperf",			handle_perf),
 	DEFINE_OPTION("Xssa",			handle_ssa),
 
@@ -891,11 +899,13 @@ static struct vm_object *get_system_class_loader(void)
 static int
 do_main_class(void)
 {
-	struct vm_object *loader;
+	struct vm_object *loader = NULL;
 
-	loader = get_system_class_loader();
-	if (!loader)
-		return -1;
+	if (use_system_classloader) {
+		loader = get_system_class_loader();
+		if (!loader)
+			return -1;
+	}
 
 	if (exception_occurred()) {
 		return -1;
