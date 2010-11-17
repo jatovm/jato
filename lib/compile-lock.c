@@ -25,6 +25,7 @@
  */
 
 #include "lib/compile-lock.h"
+#include "vm/thread.h"
 
 #include <stdlib.h>
 

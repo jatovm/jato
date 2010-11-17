@@ -4,9 +4,10 @@
 #include "arch/memory.h"
 #include "arch/atomic.h"
 
-#include "vm/thread.h"
-
 #include <semaphore.h>
+#include <stdbool.h>
+
+struct vm_exec_env;
 
 /*
  * Compilation lock status. The state graph for compilation lock

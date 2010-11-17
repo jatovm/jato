@@ -7,7 +7,6 @@
 
 #include "vm/monitor.h"
 #include "vm/system.h"
-#include "vm/thread.h"
 #include "vm/field.h"
 #include "vm/jni.h"
 #include "vm/vm.h"

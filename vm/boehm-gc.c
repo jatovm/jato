@@ -2,6 +2,8 @@
 
 #include "../boehmgc/include/gc.h"
 
+#include <stdio.h>
+
 static void *gc_out_of_memory(size_t nr)
 {
 	if (verbose_gc)

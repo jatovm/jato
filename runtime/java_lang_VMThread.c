@@ -2,6 +2,7 @@
 
 #include "vm/preload.h"
 #include "vm/object.h"
+#include "vm/thread.h"
 
 jobject java_lang_VMThread_currentThread(void)
 {
