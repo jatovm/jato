@@ -2,7 +2,7 @@ RUNNER=jit-test-runner
 SUITE=jit-test-suite.c
 
 TOPLEVEL_OBJS := \
-	arch/$(ARCH)/backtrace.o \
+	sys/$(SYS)-$(ARCH)/backtrace.o \
 	cafebabe/attribute_array.o \
 	cafebabe/attribute_info.o \
 	cafebabe/class.o \

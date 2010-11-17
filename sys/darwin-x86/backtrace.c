@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2006-2008  Pekka Enberg
- * 
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -26,8 +26,6 @@
 
 #include "vm/backtrace.h"
 
-#include <bfd.h>
-#include <execinfo.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -45,21 +43,13 @@
 /* get REG_EIP from ucontext.h */
 #include <ucontext.h>
 
-static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
-			      const char *symbol_name)
+static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols, const char *symbol_name)
 {
-	int i;
-
-	for (i = 0; i < nr_symbols; i++) {
-		asymbol *symbol = symbols[i];
-
-		if (!strcmp(bfd_asymbol_name(symbol), symbol_name))
-			return symbol;
-	}
 	return NULL;
 }
 
-static bool show_backtrace_function(void *addr, struct string *str) {
+static bool show_backtrace_function(void *addr, struct string *str)
+{
 	void * buf[] = { addr };
 	char **symbols;
 
@@ -76,77 +66,7 @@ static bool show_backtrace_function(void *addr, struct string *str) {
 
 bool show_exe_function(void *addr, struct string *str)
 {
-	bool ret;
-	const char *function_name;
-	bfd_vma symbol_offset;
-	bfd_vma symbol_start;
-	const char *filename;
-	asection *sections;
-	unsigned int line;
-	asymbol **symbols;
-	asymbol *symbol;
-	int nr_symbols;
-	bfd *abfd;
-	int size;
-
-	symbols = NULL;
-
-	bfd_init();
-
-	abfd = bfd_openr("/proc/self/exe", NULL);
-	if (!abfd)
-		goto failed;
-
-	if (!bfd_check_format(abfd, bfd_object))
-		goto failed;
-
-	size = bfd_get_symtab_upper_bound(abfd);
-	if (!size)
-		goto failed;
-
-	symbols = malloc(size);
-	if (!symbols)
-		goto failed;
-
-	nr_symbols = bfd_canonicalize_symtab(abfd, symbols);
-
-	sections = bfd_get_section_by_name(abfd, ".debug_info");
-	if (!sections)
-		goto failed;
-
-	if (!bfd_find_nearest_line
-	    (abfd, sections, symbols, (unsigned long) addr, &filename,
-	     &function_name, &line))
-		goto failed;
-
-	if (!function_name)
-		goto failed;
-
-	symbol = lookup_symbol(symbols, nr_symbols, function_name);
-	if (!symbol)
-		goto failed;
-
-	symbol_start = bfd_asymbol_value(symbol);
-	symbol_offset = (unsigned long) addr - symbol_start;
-
-	str_append(str, "%s+%llx (%s:%i)\n",
-		   function_name, (long long) symbol_offset, filename, line);
-	ret = true;
-
-out:
-	free(symbols);
-
-	if (abfd)
-		bfd_close(abfd);
-	return ret;
-
-failed:
-	/*
-	 * If above steps failed then try to obtain the symbol description with
-	 * backtrace_symbols().
-	 */
-	ret = show_backtrace_function(addr, str);
-	goto out;
+	return false;
 }
 
 void show_function(void *addr)

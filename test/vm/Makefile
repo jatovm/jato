@@ -2,7 +2,7 @@ RUNNER=vm-test-runner
 SUITE=vm-test-suite.c
 
 TOPLEVEL_OBJS :=			\
-	arch/$(ARCH)/backtrace.o	\
+	sys/$(SYS)-$(ARCH)/backtrace.o	\
 	lib/bitset.o			\
 	lib/buffer.o			\
 	lib/list.o			\

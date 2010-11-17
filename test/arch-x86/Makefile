@@ -1,7 +1,7 @@
 RUNNER	= x86-test-runner
 SUITE	= x86-test-suite.c
 
-TOPLEVEL_OBJS	+= arch/x86/backtrace.o
+TOPLEVEL_OBJS	+= sys/$(SYS)-$(ARCH)/backtrace.o
 TOPLEVEL_OBJS	+= arch/x86/encode.o
 TOPLEVEL_OBJS	+= arch/x86/init.o
 TOPLEVEL_OBJS	+= arch/x86/instruction.o
