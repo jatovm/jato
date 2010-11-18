@@ -450,7 +450,7 @@ static inline bool operand_is_reg_high(struct operand *operand)
 	if (!operand_is_reg(operand))
 		return false;
 
-	reg		=  mach_reg(&operand->reg);
+	reg		=  x86_encode_reg(mach_reg(&operand->reg));
 
 	return reg & 0x8;
 }

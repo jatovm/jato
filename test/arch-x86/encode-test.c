@@ -23,6 +23,7 @@ static DEFINE_REG(MACH_REG_XMM7, reg_xmm7);
 static DEFINE_REG(MACH_REG_RAX, reg_rax);
 static DEFINE_REG(MACH_REG_RBX, reg_rbx);
 static DEFINE_REG(MACH_REG_RBP, reg_rbp);
+static DEFINE_REG(MACH_REG_RSP, reg_rsp);
 static DEFINE_REG(MACH_REG_R12, reg_r12);
 static DEFINE_REG(MACH_REG_R13, reg_r13);
 static DEFINE_REG(MACH_REG_R14, reg_r14);
@@ -223,6 +224,29 @@ void test_encoding_imm_reg_r12(void)
 	insn.src.imm			= 0x12345678;
 	insn.dest.type			= OPERAND_REG;
 	insn.dest.reg.interval		= &reg_r12;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
+void test_encoding_imm_reg_rsp(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0x48, 0x81, 0xc4, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* add    $0x12345678,%rsp */
+	insn.type			= INSN_ADD_IMM_REG;
+	insn.src.imm			= 0x12345678;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_rsp;
 
 	insn_encode(&insn, buffer, NULL);
 
