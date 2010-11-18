@@ -1106,14 +1106,6 @@ static void emit_mov_64_xmm_memdisp(struct insn *insn, struct buffer *buf, struc
 	__emit_reg_memdisp(buf, 0x11, mach_reg(&insn->src.reg), insn->dest.imm);
 }
 
-static void emit_jmp_memindex(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xff);
-	emit(buf, x86_encode_mod_rm(0x00, 0x04, 0x04));
-	emit(buf, x86_encode_sib(insn->operand.shift, encode_reg(&insn->operand.index_reg),
-			     encode_reg(&insn->operand.base_reg)));
-}
-
 void emit_trampoline(struct compilation_unit *cu,
 		     void *call_target,
 		     struct jit_trampoline *trampoline)
@@ -2597,6 +2589,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_JL_BRANCH, emit_jl_branch),
 	DECL_EMITTER(INSN_JMP_BRANCH, emit_jmp_branch),
 	DECL_EMITTER(INSN_JMP_MEMBASE, insn_encode),
+	DECL_EMITTER(INSN_JMP_MEMINDEX, insn_encode),
 	DECL_EMITTER(INSN_JNE_BRANCH, emit_jne_branch),
 	DECL_EMITTER(INSN_MOVSX_16_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_MOVSX_16_REG_REG, insn_encode),
@@ -2653,7 +2646,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_FSTP_MEMLOCAL, emit_fstp_memlocal),
 	DECL_EMITTER(INSN_FSUB_64_REG_REG, emit_fsub_64_reg_reg),
 	DECL_EMITTER(INSN_FSUB_REG_REG, emit_fsub_reg_reg),
-	DECL_EMITTER(INSN_JMP_MEMINDEX, emit_jmp_memindex),
 	DECL_EMITTER(INSN_MOV_64_MEMBASE_XMM, insn_encode),
 	DECL_EMITTER(INSN_MOV_64_MEMDISP_XMM, emit_mov_64_memdisp_xmm),
 	DECL_EMITTER(INSN_MOV_64_MEMINDEX_XMM, emit_mov_64_memindex_xmm),

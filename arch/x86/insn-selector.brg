@@ -3089,8 +3089,7 @@ stmt:	STMT_TABLESWITCH(reg)
 			(unsigned long) stmt->table->lookup_table, base));
 
 	scale = size_to_scale(sizeof(void *));
-	select_insn(s, tree, memindex_insn(INSN_JMP_MEMINDEX,
-					   base, state->left->reg1, scale));
+	select_insn(s, tree, reverse_memindex_insn(INSN_JMP_MEMINDEX, base, state->left->reg1, scale));
 }
 
 stmt:	STMT_LOOKUPSWITCH_JUMP(reg)

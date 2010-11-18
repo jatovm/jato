@@ -140,15 +140,22 @@ struct insn *membase_reg_insn(enum insn_type insn_type, struct var_info *src_bas
 	return insn;
 }
 
-struct insn *memindex_insn(enum insn_type insn_type,
-			   struct var_info *src_base_reg,
-			   struct var_info *src_index_reg,
-			   unsigned char src_shift)
+struct insn *memindex_insn(enum insn_type insn_type, struct var_info *src_base_reg, struct var_info *src_index_reg, unsigned char src_shift)
 {
 	struct insn *insn = alloc_insn(insn_type);
 
 	if (insn)
 		init_memindex_operand(insn, &insn->operand, src_base_reg, src_index_reg, src_shift);
+
+	return insn;
+}
+
+struct insn *reverse_memindex_insn(enum insn_type insn_type, struct var_info *dst_base_reg, struct var_info *dst_index_reg, unsigned char dst_shift)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn)
+		init_memindex_operand(insn, &insn->dest, dst_base_reg, dst_index_reg, dst_shift);
 
 	return insn;
 }
@@ -647,7 +654,7 @@ static unsigned long insn_flags[] = {
 	[INSN_JL_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_JMP_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_JMP_MEMBASE]			= USE_DST | DEF_NONE | TYPE_BRANCH,
-	[INSN_JMP_MEMINDEX]			= USE_IDX_SRC | USE_SRC | DEF_NONE | TYPE_BRANCH,
+	[INSN_JMP_MEMINDEX]			= USE_IDX_DST | USE_DST | DEF_NONE | TYPE_BRANCH,
 	[INSN_JNE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_MOVSX_16_MEMBASE_REG]		= USE_SRC | DEF_DST,
 	[INSN_MOVSX_16_REG_REG]			= USE_SRC | DEF_DST,

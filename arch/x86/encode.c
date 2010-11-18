@@ -146,6 +146,7 @@ enum x86_insn_flags {
 	OPC_REG			= (1ULL << 31), /* The opcode byte also provides operand register */
 
 	NO_REX_W		= (1ULL << 32), /* No REX W prefix needed */
+	INDEX			= (1ULL << 33),
 };
 
 /*
@@ -193,6 +194,7 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_CMP_MEMBASE_REG]		= OPCODE(0x3b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_CMP_REG_REG]		= OPCODE(0x39) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
 	[INSN_JMP_MEMBASE]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | WIDTH_FULL,
+	[INSN_JMP_MEMINDEX]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | INDEX | WIDTH_FULL,
 	[INSN_MOVSX_16_MEMBASE_REG]	= OPCODE(0xbf) | ESCAPE_OPC_BYTE | ADDMODE_REG_REG | WIDTH_FULL,
 	[INSN_MOVSX_16_REG_REG]		= OPCODE(0xbf) | ESCAPE_OPC_BYTE | ADDMODE_REG_REG | WIDTH_FULL,
 	[INSN_MOVSX_8_MEMBASE_REG]	= OPCODE(0xbe) | ESCAPE_OPC_BYTE | ADDMODE_REG_REG | WIDTH_FULL,
@@ -334,21 +336,36 @@ static inline bool insn_need_disp(struct insn *self, uint64_t flags)
 
 static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint64_t flags)
 {
-	uint8_t base;
+	uint8_t shift, index, base;
 	uint8_t sib;
+
+	if (flags & INDEX) {
+		if (flags & DIR_REVERSED) {
+			shift	= self->dest.shift;
+			index	= encode_reg(&self->dest.index_reg);
+		} else {
+			shift	= self->src.shift;
+			index	= encode_reg(&self->src.index_reg);
+		}
+	} else {
+		shift	= 0x00;
+		index	= 0x04;
+	}
 
 	if (flags & DIR_REVERSED)
 		base	= encode_reg(&self->dest.base_reg);
 	else
 		base	= encode_reg(&self->src.base_reg);
 
-	sib		= x86_encode_sib(0x00, 0x04, base);
+	sib		= x86_encode_sib(shift, index, base);
 
 	emit(buffer, sib);
 }
 
 static bool insn_need_sib(struct insn *self, uint64_t flags)
 {
+	if (flags & INDEX)
+		return true;
 #ifdef CONFIG_X86_64
 	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12)) /* DST_NONE? */
 		return true;
@@ -399,10 +416,14 @@ static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint64_
 
 	need_sib	= insn_need_sib(self, flags);
 
-	if (flags & DIR_REVERSED)
-		mod		= mod_dest_encode(flags);
-	else
-		mod		= mod_src_encode(flags);
+	if (flags & INDEX) {
+		mod	= 0x00;
+	} else {
+		if (flags & DIR_REVERSED)
+			mod		= mod_dest_encode(flags);
+		else
+			mod		= mod_src_encode(flags);
+	}
 
 	if (flags & OPC_EXT) {
 		reg_opcode		= opc_ext;

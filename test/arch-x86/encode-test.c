@@ -14,6 +14,7 @@
 
 static DEFINE_REG(MACH_REG_xAX, reg_eax);
 static DEFINE_REG(MACH_REG_xBX, reg_ebx);
+static DEFINE_REG(MACH_REG_xSI, reg_esi);
 static DEFINE_REG(MACH_REG_xDI, reg_edi);
 static DEFINE_REG(MACH_REG_xSP, reg_esp);
 static DEFINE_REG(MACH_REG_XMM7, reg_xmm7);
@@ -346,6 +347,27 @@ void test_encoding_jmp_membase(void)
 	insn.type			= INSN_JMP_MEMBASE;
 	insn.dest.base_reg.interval	= &reg_eax;
 	insn.dest.disp			= 0x12345678;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
+void test_encoding_jmp_memindex(void)
+{
+	uint8_t encoding[] = { 0xff, 0x24, 0xbe };
+	struct insn insn = { };
+
+	setup();
+
+	/* jmp    *0xdeadbeef(%eax) */
+	insn.type			= INSN_JMP_MEMINDEX;
+	insn.dest.base_reg.interval	= &reg_esi;
+	insn.dest.index_reg.interval	= &reg_edi;
+	insn.dest.shift			= 2;
 
 	insn_encode(&insn, buffer, NULL);
 

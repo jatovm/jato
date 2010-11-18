@@ -242,6 +242,7 @@ struct insn *insn(enum insn_type);
 struct insn *memlocal_reg_insn(enum insn_type, struct stack_slot *, struct var_info *);
 struct insn *membase_reg_insn(enum insn_type, struct var_info *, long, struct var_info *);
 struct insn *memindex_insn(enum insn_type, struct var_info *, struct var_info *, unsigned char);
+struct insn *reverse_memindex_insn(enum insn_type, struct var_info *, struct var_info *, unsigned char);
 struct insn *memindex_reg_insn(enum insn_type, struct var_info *, struct var_info *, unsigned char, struct var_info *);
 struct insn *reg_memindex_insn(enum insn_type, struct var_info *, struct var_info *, struct var_info *, unsigned char);
 struct insn *reg_membase_insn(enum insn_type, struct var_info *, struct var_info *, long);
