@@ -609,6 +609,7 @@ reg:	OP_NEG(reg) 1
 
 	select_insn(s, tree, reverse_reg_insn(INSN_NEG_REG, result));
 
+%ifdef CONFIG_X86_32
 	if (expr->vm_type == J_LONG) {
 		result = state->left->reg2;
 		state->reg2 = result;
@@ -616,6 +617,7 @@ reg:	OP_NEG(reg) 1
 		select_insn(s, tree, imm_reg_insn(INSN_ADC_IMM_REG, 0, result));
 		select_insn(s, tree, reverse_reg_insn(INSN_NEG_REG, result));
 	}
+%endif
 }
 
 %ifdef	CONFIG_X86_32
@@ -3436,10 +3438,14 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	      enum vm_type return_type)
 {
 	struct var_info *eax, *edx = NULL;
+#ifdef CONFIG_X86_64
+	struct var_info *rdi, *rsi;
+#endif
 
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 	state->reg1 = get_var(s->b_parent, J_INT);
 
+#ifdef CONFIG_X86_32
 	if (return_type == J_LONG) {
 		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
 		state->reg2 = get_var(s->b_parent, J_INT);
@@ -3448,17 +3454,26 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	if (arg2_type == J_LONG)
 		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg2));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
+#else
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, rsi));
+#endif
 
+#ifdef CONFIG_X86_32
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg2));
 	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
-
+#else
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, rdi));
+#endif
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) func));
 
+#ifdef CONFIG_X86_32
 	if (arg2_type == J_LONG)
 		method_args_cleanup(s, tree, 4);
 	else
 		method_args_cleanup(s, tree, 3);
-
+#endif
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	if (edx)
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
