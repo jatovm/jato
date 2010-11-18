@@ -31,7 +31,13 @@ extern int args_map_init(struct vm_method *method);
 
 static inline int get_stack_args_count(struct vm_method *method)
 {
-	return method->args_count - method->reg_args_count;
+	long size;
+
+	size = method->args_count + !vm_method_is_static(method);
+
+	assert(size >= method->reg_args_count);
+
+	return size - method->reg_args_count;
 }
 #endif /* CONFIG_ARGS_MAP */
 
