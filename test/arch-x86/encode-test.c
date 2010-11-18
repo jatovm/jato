@@ -685,6 +685,28 @@ void test_encoding_reg(void)
 	teardown();
 }
 
+void test_encoding_reg_high(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0x41, 0x57 };
+	struct insn insn = { };
+
+	setup();
+
+	/* push	%r15 */
+	insn.type			= INSN_PUSH_REG;
+	insn.src.type			= OPERAND_REG;
+	insn.src.reg.interval		= &reg_r15;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
 void test_encoding_memlocal(void)
 {
 #ifdef CONFIG_32_BIT

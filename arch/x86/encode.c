@@ -269,7 +269,7 @@ static void emit_imm(struct buffer *buf, long imm)
 
 static unsigned char encode_reg(struct use_position *reg)
 {
-	return x86_encode_reg(mach_reg(reg));
+	return x86_encode_reg(mach_reg(reg)) & 0x7;
 }
 
 static inline uint32_t mod_src_encode(uint64_t flags)
