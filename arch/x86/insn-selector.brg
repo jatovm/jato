@@ -3095,8 +3095,7 @@ stmt:	STMT_TABLESWITCH(reg)
 
 stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
 {
-	select_insn(s, tree, membase_insn(INSN_JMP_MEMBASE, state->left->reg1,
-				offsetof(struct lookupswitch_pair, target)));
+	select_insn(s, tree, reverse_membase_insn(INSN_JMP_MEMBASE, state->left->reg1, offsetof(struct lookupswitch_pair, target)));
 }
 
 %ifdef	CONFIG_X86_32

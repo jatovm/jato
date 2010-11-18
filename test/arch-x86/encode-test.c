@@ -335,6 +335,26 @@ void test_encoding_membase_32_reg(void)
 	teardown();
 }
 
+void test_encoding_jmp_membase(void)
+{
+	uint8_t encoding[] = { 0xff, 0xa0, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* jmp    *0xdeadbeef(%eax) */
+	insn.type			= INSN_JMP_MEMBASE;
+	insn.dest.base_reg.interval	= &reg_eax;
+	insn.dest.disp			= 0x12345678;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
 void test_encoding_mem_reg_sib(void)
 {
 	uint8_t encoding[] = { 0x8b, 0x3c, 0x24 };

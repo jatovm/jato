@@ -401,6 +401,16 @@ struct insn *membase_insn(enum insn_type insn_type, struct var_info *src_base_re
 	return insn;
 }
 
+struct insn *reverse_membase_insn(enum insn_type insn_type, struct var_info *dst_base_reg, long dst_disp)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn)
+		init_membase_operand(insn, &insn->dest, dst_base_reg, dst_disp);
+
+	return insn;
+}
+
 struct insn *imm_memlocal_insn(enum insn_type insn_type,
 			       unsigned long imm,
 			       struct stack_slot *dst_slot)
@@ -636,7 +646,7 @@ static unsigned long insn_flags[] = {
 	[INSN_JLE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_JL_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_JMP_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
-	[INSN_JMP_MEMBASE]			= USE_SRC | DEF_NONE | TYPE_BRANCH,
+	[INSN_JMP_MEMBASE]			= USE_DST | DEF_NONE | TYPE_BRANCH,
 	[INSN_JMP_MEMINDEX]			= USE_IDX_SRC | USE_SRC | DEF_NONE | TYPE_BRANCH,
 	[INSN_JNE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_MOVSX_16_MEMBASE_REG]		= USE_SRC | DEF_DST,

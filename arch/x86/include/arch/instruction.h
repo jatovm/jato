@@ -259,6 +259,7 @@ struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *memlocal_insn(enum insn_type, struct stack_slot *);
+struct insn *reverse_membase_insn(enum insn_type, struct var_info *, long);
 struct insn *membase_insn(enum insn_type, struct var_info *, long);
 
 /*
