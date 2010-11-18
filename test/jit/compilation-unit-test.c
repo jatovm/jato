@@ -8,7 +8,8 @@
 #include "vm/method.h"
 #include "vm/vm.h"
 
-static struct vm_method method = { };
+static struct cafebabe_method_info method_info;
+static struct vm_method method = { .method = &method_info };
 
 void test_find_basic_block(void)
 {

@@ -11,7 +11,8 @@
 #include "arch/instruction.h"
 #include <libharness.h>
 
-struct vm_method method;
+static struct cafebabe_method_info method_info;
+static struct vm_method method = { .method = &method_info };
 
 static void assert_live_range(struct live_interval *interval, unsigned long expected_start, unsigned long expected_end)
 {

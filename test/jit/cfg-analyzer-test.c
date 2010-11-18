@@ -25,9 +25,11 @@ void test_branch_opcode_ends_basic_block(void)
 {
 	struct basic_block *bb1, *bb2, *bb3;
 	struct compilation_unit *cu;
+	struct cafebabe_method_info method_info;
 	struct vm_method method = {
 		.code_attribute.code = default_string,
-		.code_attribute.code_length = ARRAY_SIZE(default_string)
+		.code_attribute.code_length = ARRAY_SIZE(default_string),
+		.method = &method_info,
 	};
 	
 	cu = compilation_unit_alloc(&method);
@@ -69,9 +71,11 @@ void test_multiple_branches(void)
 	struct basic_block *bb1, *bb2, *bb3, *bb4;
 	struct compilation_unit *cu;
 
+	struct cafebabe_method_info method_info;
 	struct vm_method method = {
 		.code_attribute.code = greater_than_zero,
-		.code_attribute.code_length = ARRAY_SIZE(greater_than_zero) 
+		.code_attribute.code_length = ARRAY_SIZE(greater_than_zero),
+		.method = &method_info,
 	};
 
 	cu = compilation_unit_alloc(&method);
@@ -130,9 +134,11 @@ void test_multiple_branch_with_target_instruction_splitting(void)
 {
 	struct basic_block *bb1, *bb2, *bb3, *bb4, *bb5;
 	struct compilation_unit *cu;
+	struct cafebabe_method_info method_info;
 	struct vm_method method = {
 		.code_attribute.code = set_value,
-		.code_attribute.code_length = ARRAY_SIZE(set_value)
+		.code_attribute.code_length = ARRAY_SIZE(set_value),
+		.method = &method_info,
 	};
 
 	cu = compilation_unit_alloc(&method);

@@ -32,7 +32,8 @@
 #include "vm/vm.h"
 #include <libharness.h>
 
-struct vm_method method;
+struct cafebabe_method_info method_info;
+struct vm_method method = { .method = &method_info, };
 
 static void assert_st_insn(enum insn_type type, struct stack_slot *slot, enum machine_reg reg, struct insn *insn)
 {

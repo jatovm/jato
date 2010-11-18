@@ -13,7 +13,8 @@
 #include <libharness.h>
 #include <stddef.h>
 
-static struct vm_method method = { };
+static struct cafebabe_method_info method_info;
+static struct vm_method method = { .method = &method_info, };
 
 void test_split_with_out_of_range_offset(void)
 {

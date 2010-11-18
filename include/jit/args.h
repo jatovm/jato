@@ -44,8 +44,6 @@ static inline int get_stack_args_count(struct vm_method *method)
 		size++;
 	}
 
-	assert(size >= method->reg_args_count);
-
 	return size - method->reg_args_count;
 }
 #endif /* CONFIG_ARGS_MAP */

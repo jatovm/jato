@@ -9,7 +9,8 @@
 #include "vm/method.h"
 #include "vm/vm.h"
 
-struct vm_method method;
+static struct cafebabe_method_info method_info;
+static struct vm_method method = { .method = &method_info };
 
 void test_allocates_different_registers_for_overlapping_intervals(void)
 {

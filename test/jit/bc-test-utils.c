@@ -3,6 +3,7 @@
  */
 
 #include "cafebabe/constant_pool.h"
+#include "cafebabe/method_info.h"
 #include "cafebabe/class.h"
 
 #include "jit/compilation-unit.h"
@@ -22,8 +23,11 @@
 struct compilation_unit *
 alloc_simple_compilation_unit(struct vm_method *method)
 {
+	static struct cafebabe_method_info method_info;
 	struct compilation_unit *cu;
 	struct basic_block *bb;
+
+	method->method = &method_info;
 
 	cu = compilation_unit_alloc(method);
 	bb = get_basic_block(cu, 0, method->code_attribute.code_length);
@@ -34,8 +38,11 @@ alloc_simple_compilation_unit(struct vm_method *method)
 
 struct basic_block *__alloc_simple_bb(struct vm_method *method)
 {
+	static struct cafebabe_method_info method_info;
 	struct compilation_unit *cu;
 	struct basic_block *bb;
+
+	method->method = &method_info;
 
 	cu = compilation_unit_alloc(method);
 	bb = get_basic_block(cu, 0, method->code_attribute.code_length);
