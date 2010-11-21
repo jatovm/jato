@@ -313,9 +313,11 @@ reg:   EXPR_TEMPORARY 0
 
 	state->reg1 = expr->tmp_low;
 
+%ifdef CONFIG_X86_32
 	if (expr->vm_type == J_LONG) {
 		state->reg2 = expr->tmp_high;
 	}
+%endif
 }
 
 freg:   EXPR_FLOAT_TEMPORARY 0
@@ -2364,10 +2366,12 @@ stmt:	STMT_STORE(inst_field, reg)
 
 	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset));
 
+%ifdef CONFIG_32_BIT
 	if (store_src->vm_type == J_LONG) {
 		src = state->right->reg2;
 		select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset + 4));
 	}
+%endif
 }
 
 %ifdef  CONFIG_X86_32
@@ -3561,8 +3565,6 @@ static void save_invoke_result(struct basic_block *s,
 	struct stack_slot *scratch;
 	struct expression *tmp;
 	struct var_info *esp;
-	struct var_info *eax;
-	struct var_info *edx;
 
 	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);
@@ -3584,14 +3586,17 @@ static void save_invoke_result(struct basic_block *s,
 		select_insn(s, tree, memlocal_insn(INSN_FSTP_64_MEMLOCAL, scratch));
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, tmp->tmp_low));
 		break;
-	case J_LONG:
-		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+	case J_LONG: {
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
+#ifdef CONFIG_X86_32
+		struct var_info *edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, tmp->tmp_high));
+#endif
 		break;
-	case J_INT:
-		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	}
+	case J_INT: {
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
 		if (vm_method_is_native(method)) {
 			/*
@@ -3623,10 +3628,12 @@ static void save_invoke_result(struct basic_block *s,
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
 		break;
-	case J_REFERENCE:
-		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	}
+	case J_REFERENCE: {
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
 		break;
+	}
 	default:
 		error("invalid result type");
 	}

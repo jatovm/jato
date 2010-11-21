@@ -473,11 +473,13 @@ static int print_temporary_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
+#ifdef CONFIG_32_BIT
 	if (expr->tmp_high) {
 		err = str_append(str, "0x%lx (high), ", expr->tmp_high);
 		if (err)
 			goto out;
 	}
+#endif
 
 	err = str_append(str, "0x%lx (low)]", expr->tmp_low);
 	if (err)
@@ -497,11 +499,13 @@ static int print_float_temporary_expr(int lvl, struct string *str,
 	if (err)
 		goto out;
 
+#ifdef CONFIG_32_BIT
 	if (expr->tmp_high) {
 		err = str_append(str, "0x%lx (high), ", expr->tmp_high);
 		if (err)
 			goto out;
 	}
+#endif
 
 	err = str_append(str, "0x%lx (low)]", expr->tmp_low);
 	if (err)

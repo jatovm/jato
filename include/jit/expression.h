@@ -136,7 +136,9 @@ struct expression {
 		    expression. This expression type can be used as both
 		    lvalue and rvalue. */
 		struct {
+#ifdef CONFIG_32_BIT
 			struct var_info *tmp_high;
+#endif
 			struct var_info *tmp_low;
 		};
 

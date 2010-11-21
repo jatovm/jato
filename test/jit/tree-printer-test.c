@@ -273,7 +273,9 @@ void assert_printed_temporary_expr(struct string *expected, enum vm_type type, s
 		expr = alloc_expression(EXPR_TEMPORARY, type);
 
 	expr->tmp_low = var2;
+#ifdef CONFIG_32_BIT
 	expr->tmp_high = var;
+#endif
 
 	assert_print_expr(expected, expr);
 }
@@ -283,10 +285,17 @@ void test_should_print_temporary_expression(void)
 	assert_printed_temporary_expr(str_aprintf(
 		"[temporary int 0x12345678 (low)]"),
 		J_INT, NULL, (struct var_info *)0x12345678);
+#ifdef CONFIG_32_BIT
 	assert_printed_temporary_expr(str_aprintf(
 		"[temporary boolean 0x85215975 (high), 0x87654321 (low)]"),
 		J_BOOLEAN,
 		(struct var_info *)0x85215975, (struct var_info *)0x87654321);
+#else
+	assert_printed_temporary_expr(str_aprintf(
+		"[temporary boolean 0x87654321 (low)]"),
+		J_BOOLEAN,
+		(struct var_info *)0x85215975, (struct var_info *)0x87654321);
+#endif
 }
 
 void assert_printed_array_deref_expr(struct string *expected, enum vm_type type,

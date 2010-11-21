@@ -253,11 +253,17 @@ struct expression *temporary_expr(enum vm_type vm_type, struct compilation_unit 
 		return NULL;
 
 	if (expr->vm_type == J_LONG) {
+#ifdef CONFIG_32_BIT
 		expr->tmp_low = get_var(cu, J_INT);
 		expr->tmp_high = get_var(cu, J_INT);
+#else
+		expr->tmp_low = get_var(cu, J_LONG);
+#endif
 	} else {
 		expr->tmp_low = get_var(cu, expr->vm_type);
+#ifdef CONFIG_32_BIT
 		expr->tmp_high = NULL;
+#endif
 	}
 
 	return expr;
