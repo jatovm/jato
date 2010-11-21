@@ -1112,6 +1112,7 @@ main(int argc, char *argv[])
 out_check_exception:
 	if (exception_occurred()) {
 		vm_print_exception(exception_occurred());
+		status = EXIT_FAILURE;
 		goto out;
 	}
 
