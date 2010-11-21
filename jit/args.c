@@ -58,7 +58,7 @@ static bool is_this_arg(struct vm_method *method, int index)
 	return index == 0;
 }
 
-struct expression *
+static struct expression *
 insert_arg(struct expression *root, struct expression *expr, struct vm_method *method, int index)
 {
 	struct expression *_expr;
