@@ -1102,10 +1102,10 @@ main(int argc, char *argv[])
 
 	switch (operation) {
 	case OPERATION_MAIN_CLASS:
-		do_main_class();
+		status = do_main_class();
 		break;
 	case OPERATION_JAR_FILE:
-		do_jar_file();
+		status = do_jar_file();
 		break;
 	}
 
@@ -1114,7 +1114,6 @@ out_check_exception:
 		vm_print_exception(exception_occurred());
 		goto out;
 	}
-	status = EXIT_SUCCESS;
 
 	vm_thread_wait_for_non_daemons();
 out:
