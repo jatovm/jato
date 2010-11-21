@@ -106,6 +106,12 @@ convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method 
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
 
+		if (vm_type_is_pair(expr->vm_type))
+			i++;
+
+		if (i >= nr_args)
+			break;
+
 		args_list = insert_arg(args_list, expr, method, nr_total_args - i - 1);
 	}
 

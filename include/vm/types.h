@@ -25,6 +25,13 @@ enum vm_type {
 	VM_TYPE_MAX,
 };
 
+/* Long and double types require a pair of local variables as per Section 3.6.1
+   ("Local Variables").  */
+static inline bool vm_type_is_pair(enum vm_type type)
+{
+	return type == J_LONG || type == J_DOUBLE;
+}
+
 #ifdef CONFIG_32_BIT
 #  define J_NATIVE_PTR J_INT
 #else
@@ -47,6 +54,7 @@ int vmtype_to_bytecode_type(enum vm_type);
 const char *get_vm_type_name(enum vm_type);
 int parse_type(char **, struct vm_type_info *);
 unsigned int count_java_arguments(const struct vm_method *);
+unsigned int vm_method_arg_slots(const struct vm_method *);
 int parse_method_type(struct vm_method *);
 int parse_field_type(struct vm_field *);
 

@@ -57,7 +57,7 @@ static unsigned int method_real_argument_count(struct vm_method *invoke_target)
 {
 	int argc;
 
-	argc = count_java_arguments(invoke_target);
+	argc = vm_method_arg_slots(invoke_target);
 	if (!vm_method_is_static(invoke_target))
 		argc++;
 

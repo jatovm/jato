@@ -275,6 +275,22 @@ int parse_field_type(struct vm_field *vmf)
 	return parse_type(&type_str, &vmf->type_info);
 }
 
+unsigned int vm_method_arg_slots(const struct vm_method *vmm)
+{
+	struct vm_method_arg *arg;
+	unsigned int count;
+
+	count = 0;
+	list_for_each_entry(arg, &vmm->args, list_node) {
+		count++;
+
+		if (vm_type_is_pair(arg->type_info.vm_type))
+			count++;
+	}
+
+	return count;
+}
+
 unsigned int count_java_arguments(const struct vm_method *vmm)
 {
 	struct vm_method_arg *arg;
@@ -282,7 +298,7 @@ unsigned int count_java_arguments(const struct vm_method *vmm)
 
 	count = 0;
 	list_for_each_entry(arg, &vmm->args, list_node) {
-		count ++;
+		count++;
 	}
 
 	return count;
