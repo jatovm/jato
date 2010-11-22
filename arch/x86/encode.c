@@ -243,12 +243,12 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_XOR_REG_REG]		= OPCODE(0x31) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
 };
 
-static inline bool is_imm_8(long imm)
+static inline bool is_imm_8(int32_t imm)
 {
 	return (imm >= -128) && (imm <= 127);
 }
 
-static inline void emit(struct buffer *buf, unsigned char c)
+static inline void emit(struct buffer *buf, uint8_t c)
 {
 	int err;
 
@@ -258,7 +258,7 @@ static inline void emit(struct buffer *buf, unsigned char c)
 		die("out of buffer space");
 }
 
-static void emit_imm32(struct buffer *buf, int imm)
+static void emit_imm32(struct buffer *buf, int32_t imm)
 {
 	union {
 		int val;
@@ -272,7 +272,7 @@ static void emit_imm32(struct buffer *buf, int imm)
 	emit(buf, imm_buf.b[3]);
 }
 
-static void emit_imm(struct buffer *buf, long imm)
+static void emit_imm(struct buffer *buf, int32_t imm)
 {
 	if (is_imm_8(imm))
 		emit(buf, imm);
