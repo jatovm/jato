@@ -40,6 +40,17 @@
 #include <inttypes.h>
 #include <stdint.h>
 
+struct x86_insn {
+	uint64_t		flags;
+	uint8_t			rex_prefix;
+	uint8_t			opcode;
+	uint8_t			opc_ext;
+	uint8_t			mod_rm;
+	uint8_t			sib;
+	int			imm;
+	long			disp;
+};
+
 static uint8_t x86_register_numbers[] = {
 	[MACH_REG_xAX]		= 0x00,
 	[MACH_REG_xCX]		= 0x01,
@@ -336,10 +347,35 @@ static inline bool insn_need_disp(struct insn *self, uint64_t flags)
 	return false;
 }
 
-static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint64_t flags)
+static bool insn_need_sib(struct insn *self, uint64_t flags)
+{
+	if (flags & INDEX)
+		return true;
+#ifdef CONFIG_X86_64
+	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12)) /* DST_NONE? */
+		return true;
+#endif
+	if (flags & OPC_EXT)
+		return false;
+
+	if (flags & DIR_REVERSED) {
+		if (flags & DST_MEMLOCAL)
+			return false;
+		return mach_reg(&self->dest.base_reg) == MACH_REG_xSP;
+	}
+
+	if (flags & SRC_MEMLOCAL)
+		return false;
+	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+}
+
+static uint8_t insn_encode_sib(struct insn *self, uint64_t flags)
 {
 	uint8_t shift, index, base;
 	uint8_t sib;
+
+	if (!insn_need_sib(self, flags))
+		return 0;
 
 	if (flags & INDEX) {
 		if (flags & DIR_REVERSED) {
@@ -361,29 +397,7 @@ static void insn_encode_sib(struct insn *self, struct buffer *buffer, uint64_t f
 
 	sib		= x86_encode_sib(shift, index, base);
 
-	emit(buffer, sib);
-}
-
-static bool insn_need_sib(struct insn *self, uint64_t flags)
-{
-	if (flags & INDEX)
-		return true;
-#ifdef CONFIG_X86_64
-	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12)) /* DST_NONE? */
-		return true;
-#endif
-	if (flags & OPC_EXT)
-		return false;
-
-	if (flags & DIR_REVERSED) {
-		if (flags & DST_MEMLOCAL)
-			return false;
-		return mach_reg(&self->dest.base_reg) == MACH_REG_xSP;
-	}
-
-	if (flags & SRC_MEMLOCAL)
-		return false;
-	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+	return sib;
 }
 
 static uint8_t insn_encode_rm(struct insn *self, uint64_t flags)
@@ -416,7 +430,7 @@ static uint8_t insn_encode_reg(struct insn *self, uint64_t flags)
 	return reg_opcode;
 }
 
-static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint64_t flags, uint8_t opc_ext)
+static uint8_t insn_encode_mod_rm(struct insn *self, uint64_t flags, uint8_t opc_ext)
 {
 	uint8_t mod_rm, mod, reg_opcode, rm;
 	bool need_sib;
@@ -446,7 +460,7 @@ static void insn_encode_mod_rm(struct insn *self, struct buffer *buffer, uint64_
 
 	mod_rm		= x86_encode_mod_rm(mod, reg_opcode, rm);
 
-	emit(buffer, mod_rm);
+	return mod_rm;
 }
 
 #ifdef CONFIG_X86_64
@@ -555,83 +569,100 @@ static uint8_t insn_opcode(struct insn *self, uint64_t encode)
 	return encode & OPCODE_MASK;
 }
 
+static void x86_insn_encode(struct x86_insn *insn, struct buffer *buffer)
+{
+	if (insn->flags & REPNE_PREFIX)
+		emit(buffer, 0xf2);
+
+	if (insn->flags & REPE_PREFIX)
+		emit(buffer, 0xf3);
+
+	if (insn->rex_prefix)
+		emit(buffer, insn->rex_prefix);
+
+	if (insn->flags & ESCAPE_OPC_BYTE)
+		emit(buffer, 0x0f);
+
+	emit(buffer, insn->opcode);
+
+	if (insn->flags & MOD_RM)
+		emit(buffer, insn->mod_rm);
+
+	if (insn->sib)
+		emit(buffer, insn->sib);
+
+	if (insn->flags & IMM8_MASK)
+		emit(buffer, insn->imm);
+
+	if (insn->flags & IMM_MASK)
+		emit_imm32(buffer, insn->imm);
+
+	if (insn->flags & MEM_DISP_MASK)
+		emit_imm(buffer, insn->disp);
+
+	if (insn->flags & (SRC_MEMLOCAL|DST_MEMLOCAL))
+		emit_imm32(buffer, insn->disp);
+}
+
 void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *bb)
 {
-	uint8_t rex_prefix;
+	struct x86_insn insn;
 	uint64_t encode;
-	uint8_t opc_ext;
-	uint64_t flags;
-	uint8_t opcode;
 
 	encode		= encode_table[self->type];
 
 	if (encode == 0)
 		die("unrecognized instruction type %d", self->type);
 
-	opcode		= insn_opcode(self, encode);
+	insn.opcode	= insn_opcode(self, encode);
 
-	opc_ext		= insn_opc_ext(self, encode);
+	insn.opc_ext	= insn_opc_ext(self, encode);
 
-	flags		= insn_flags(self, encode);
+	insn.flags	= insn_flags(self, encode);
 
-	if (flags & REPNE_PREFIX)
-		emit(buffer, 0xf2);
+	insn.mod_rm	= 0;
 
-	if (flags & REPE_PREFIX)
-		emit(buffer, 0xf3);
+	insn.sib	= 0;
 
-	rex_prefix	= insn_rex_prefix(self, flags);
-	if (rex_prefix)
-		emit(buffer, rex_prefix);
+	insn.imm	= 0;
 
-	if (flags & ESCAPE_OPC_BYTE)
-		emit(buffer, 0x0f);
+	insn.disp	= 0;
 
-	if (flags & OPC_REG) {
-		if (flags & DIR_REVERSED)
-			opcode		+= encode_reg(&self->dest.reg);
+	insn.rex_prefix	= insn_rex_prefix(self, insn.flags);
+
+	if (insn.flags & OPC_REG) {
+		if (insn.flags & DIR_REVERSED)
+			insn.opcode	+= encode_reg(&self->dest.reg);
 		else
-			opcode		+= encode_reg(&self->src.reg);
+			insn.opcode	+= encode_reg(&self->src.reg);
 	}
 
-	emit(buffer, opcode);
+	if (insn.flags & MOD_RM) {
+		insn.mod_rm	= insn_encode_mod_rm(self, insn.flags, insn.opc_ext);
 
-	if (flags & MOD_RM) {
-		bool need_sib;
-
-		need_sib	= insn_need_sib(self, flags);
-
-		insn_encode_mod_rm(self, buffer, flags, opc_ext);
-
-		if (need_sib)
-			insn_encode_sib(self, buffer, flags);
+		insn.sib	= insn_encode_sib(self, insn.flags);
 	}
 
-	if (flags & IMM_MASK) {
-		if (flags & DIR_REVERSED)
-			emit_imm32(buffer, self->src.imm);
+	if (insn.flags & (IMM8_MASK|IMM_MASK)) {
+		if (insn.flags & DIR_REVERSED)
+			insn.imm	= self->src.imm;
 		else
-			emit_imm32(buffer, self->dest.imm);
+			insn.imm	= self->dest.imm;
 	}
 
-	if (flags & IMM8_MASK) {
-		if (flags & DIR_REVERSED)
-			emit(buffer, self->src.imm);
+	if (insn.flags & MEM_DISP_MASK) {
+		if (insn.flags & DIR_REVERSED)
+			insn.disp	= self->dest.disp;
 		else
-			emit(buffer, self->dest.imm);
+			insn.disp	= self->src.disp;
 	}
 
-	if (flags & MEM_DISP_MASK) {
-		if (flags & DIR_REVERSED)
-			emit_imm(buffer, self->dest.disp);
+	if (insn.flags & (SRC_MEMLOCAL|DST_MEMLOCAL)) {
+		if (insn.flags & DIR_REVERSED)
+			insn.disp	= slot_offset(self->dest.slot);
 		else
-			emit_imm(buffer, self->src.disp);
+			insn.disp	= slot_offset(self->src.slot);
 	}
 
-	if (flags & (SRC_MEMLOCAL|DST_MEMLOCAL)) {
-		if (flags & DIR_REVERSED)
-			emit_imm32(buffer, slot_offset(self->dest.slot));
-		else
-			emit_imm32(buffer, slot_offset(self->src.slot));
-	}
+	x86_insn_encode(&insn, buffer);
 }
