@@ -614,19 +614,11 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 	if (encode == 0)
 		die("unrecognized instruction type %d", self->type);
 
-	insn.opcode	= insn_opcode(self, encode);
-
-	insn.opc_ext	= insn_opc_ext(self, encode);
-
-	insn.flags	= insn_flags(self, encode);
-
-	insn.mod_rm	= 0;
-
-	insn.sib	= 0;
-
-	insn.imm	= 0;
-
-	insn.disp	= 0;
+	insn	= (struct x86_insn) {
+		.opcode		= insn_opcode(self, encode),
+		.opc_ext	= insn_opc_ext(self, encode),
+		.flags		= insn_flags(self, encode),
+	};
 
 	insn.rex_prefix	= insn_rex_prefix(self, insn.flags);
 
