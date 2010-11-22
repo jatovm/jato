@@ -1496,21 +1496,6 @@ static void __emit64_sub_imm_reg(struct buffer *buf,
 	emit_alu_imm_reg(buf, 1, 0x05, imm, reg);
 }
 
-static void __emit32_sub_imm_reg(struct buffer *buf,
-				 unsigned long imm,
-				 enum machine_reg reg)
-{
-	emit_alu_imm_reg(buf, 0, 0x05, imm, reg);
-}
-
-static void emit_sub_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	if (is_64bit_reg(&insn->dest))
-		__emit64_sub_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-	else
-		__emit32_sub_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
-}
-
 static void __emit_add_imm_reg(struct buffer *buf,
 				 long imm,
 				 enum machine_reg reg)
@@ -2607,6 +2592,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SAR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_SHL_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_SHR_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_SUB_IMM_REG, insn_encode),
 #ifdef CONFIG_X86_32
 	DECL_EMITTER(INSN_ADC_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, insn_encode),
@@ -2689,7 +2675,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SBB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SBB_REG_REG, insn_encode),
-	DECL_EMITTER(INSN_SUB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp),
@@ -2722,7 +2707,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, emit_mov_thread_local_memdisp_reg),
 	DECL_EMITTER(INSN_MUL_REG_REG, emit_mul_reg_reg),
 	DECL_EMITTER(INSN_PUSH_IMM, emit_push_imm),
-	DECL_EMITTER(INSN_SUB_IMM_REG, emit_sub_imm_reg),
 	DECL_EMITTER(INSN_SUB_REG_REG, emit_sub_reg_reg),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, emit_test_membase_reg),
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp),
