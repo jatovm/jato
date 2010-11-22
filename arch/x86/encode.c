@@ -47,8 +47,8 @@ struct x86_insn {
 	uint8_t			opc_ext;
 	uint8_t			mod_rm;
 	uint8_t			sib;
-	int			imm;
-	long			disp;
+	int32_t			imm;
+	int32_t			disp;
 };
 
 static uint8_t x86_register_numbers[] = {
