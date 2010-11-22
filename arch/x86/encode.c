@@ -156,18 +156,19 @@ enum x86_addmode {
 	ADDMODE_ACC_MEM		= SRC_ACC|DST_MEM|DIR_REVERSED,		/* AL/AX -> memory */
 	ADDMODE_ACC_REG		= SRC_ACC|DST_REG,			/* AL/AX -> reg */
 	ADDMODE_IMM		= SRC_IMM,				/* immediate operand */
+	ADDMODE_IMM8_REG	= SRC_IMM8|DST_REG|DIR_REVERSED,	/* immediate8 -> register */
 	ADDMODE_IMM8_RM		= SRC_IMM8|MOD_RM|DIR_REVERSED,		/* immediate -> register/memory */
 	ADDMODE_IMM_ACC		= SRC_IMM|DST_ACC,			/* immediate -> AL/AX */
-	ADDMODE_IMM8_REG	= SRC_IMM8|DST_REG|DIR_REVERSED,	/* immediate8 -> register */
 	ADDMODE_IMM_REG		= SRC_IMM|DST_REG|DIR_REVERSED,		/* immediate -> register */
 	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,			/* no operands */
+	ADDMODE_MEMLOCAL	= SRC_MEMLOCAL|DST_MEMLOCAL|MOD_RM,	/* memlocal */
 	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,			/* memory -> AL/AX */
 	ADDMODE_REG		= SRC_REG|DST_REG,			/* register */
-	ADDMODE_MEMLOCAL	= SRC_MEMLOCAL|DST_MEMLOCAL|MOD_RM,	/* memlocal */
+	ADDMODE_REG_MEMLOCAL	= SRC_REG|DST_MEMLOCAL|MOD_RM|DIR_REVERSED,	/* register -> register/memory */
 	ADDMODE_REG_REG		= SRC_REG|DST_REG|MOD_RM,		/* register -> register */
 	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,		/* register -> register/memory */
-	ADDMODE_RM		= SRC_REG|MOD_RM|DST_NONE|DIR_REVERSED,	/* register -> register/memory */
 	ADDMODE_REL		= SRC_REL|DST_NONE,			/* relative */
+	ADDMODE_RM		= SRC_REG|MOD_RM|DST_NONE|DIR_REVERSED,	/* register -> register/memory */
 	ADDMODE_RM_REG		= DST_REG|MOD_RM,			/* register/memory -> register */
 };
 
@@ -207,6 +208,7 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_MOV_REG_MEMBASE]		= OPCODE(0x89) | ADDMODE_REG_RM  | WIDTH_FULL,
 	[INSN_MOV_REG_REG]		= OPCODE(0x89) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
 	[INSN_MOV_XMM_MEMBASE]		= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_FULL,
+	[INSN_MOV_XMM_MEMLOCAL]		= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_MEMLOCAL | WIDTH_FULL,
 	[INSN_NEG_REG]			= OPCODE(0xf7) | OPCODE_EXT(3)   | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL,
 	[INSN_OR_MEMBASE_REG]		= OPCODE(0x0b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_OR_REG_REG]		= OPCODE(0x09) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
@@ -373,9 +375,14 @@ static bool insn_need_sib(struct insn *self, uint64_t flags)
 	if (flags & OPC_EXT)
 		return false;
 
-	if (flags & DIR_REVERSED)
+	if (flags & DIR_REVERSED) {
+		if (flags & DST_MEMLOCAL)
+			return false;
 		return mach_reg(&self->dest.base_reg) == MACH_REG_xSP;
+	}
 
+	if (flags & SRC_MEMLOCAL)
+		return false;
 	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
 }
 

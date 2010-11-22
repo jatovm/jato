@@ -620,27 +620,6 @@ static void emit_mov_reg_memlocal(struct insn *insn, struct buffer *buf, struct 
 	__emit_mov_reg_membase(buf, mach_reg(&insn->src.reg), MACH_REG_EBP, slot_offset(insn->dest.slot));
 }
 
-static void emit_mov_xmm_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	unsigned long disp;
-	int mod;
-
-	disp = slot_offset(insn->dest.slot);
-
-	if (is_imm_8(disp))
-		mod = 0x01;
-	else
-		mod = 0x02;
-
-	emit(buf, 0xf3);
-	emit(buf, 0x0f);
-	emit(buf, 0x11);
-	emit(buf, x86_encode_mod_rm(mod, encode_reg(&insn->src.reg),
-			       x86_encode_reg(MACH_REG_EBP)));
-
-	emit_imm(buf, disp);
-}
-
 static void emit_mov_64_xmm_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	unsigned long disp;
@@ -2657,7 +2636,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOV_XMM_MEMBASE, insn_encode),
 	DECL_EMITTER(INSN_MOV_XMM_MEMDISP, emit_mov_xmm_memdisp),
 	DECL_EMITTER(INSN_MOV_XMM_MEMINDEX, emit_mov_xmm_memindex),
-	DECL_EMITTER(INSN_MOV_XMM_MEMLOCAL, emit_mov_xmm_memlocal),
+	DECL_EMITTER(INSN_MOV_XMM_MEMLOCAL, insn_encode),
 	DECL_EMITTER(INSN_MOV_XMM_XMM, emit_mov_xmm_xmm),
 	DECL_EMITTER(INSN_MUL_MEMBASE_EAX, emit_mul_membase_eax),
 	DECL_EMITTER(INSN_MUL_REG_EAX, emit_mul_reg_eax),
