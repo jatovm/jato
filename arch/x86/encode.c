@@ -591,17 +591,17 @@ static void x86_insn_encode(struct x86_insn *insn, struct buffer *buffer)
 	if (insn->sib)
 		emit(buffer, insn->sib);
 
-	if (insn->flags & IMM8_MASK)
-		emit(buffer, insn->imm);
-
-	if (insn->flags & IMM_MASK)
-		emit_imm32(buffer, insn->imm);
-
 	if (insn->flags & MEM_DISP_MASK)
 		emit_imm(buffer, insn->disp);
 
 	if (insn->flags & (SRC_MEMLOCAL|DST_MEMLOCAL))
 		emit_imm32(buffer, insn->disp);
+
+	if (insn->flags & IMM8_MASK)
+		emit(buffer, insn->imm);
+
+	if (insn->flags & IMM_MASK)
+		emit_imm32(buffer, insn->imm);
 }
 
 void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *bb)
