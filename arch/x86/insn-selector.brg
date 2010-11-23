@@ -155,7 +155,7 @@ freg:	EXPR_FVALUE	0
 	if (expr->vm_type == J_FLOAT) {
 		scratch = get_scratch_slot(s->b_parent);
 		select_insn(s, tree, imm_memlocal_insn(INSN_MOV_IMM_MEMLOCAL, float_to_uint32(expr->fvalue), scratch));
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, scratch, result));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, result));
 	} else {
 		uint32_t high_byte, low_byte;
 		unsigned long offset;
@@ -169,7 +169,7 @@ freg:	EXPR_FVALUE	0
 		double_to_split_uint64(expr->fvalue, &low_byte, &high_byte);
 		select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, high_byte, ebp, offset + 4));
 		select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, low_byte, ebp, offset));
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, result));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, result));
 	}
 }
 %else
@@ -300,9 +300,9 @@ freg:	EXPR_FLOAT_LOCAL 0
 	slot = get_local_slot(cu->stack_frame, expr->local_index);
 
 	if (expr->vm_type == J_FLOAT)
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, slot, result));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, result));
 	else
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, slot, result));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, result));
 }
 
 reg:   EXPR_TEMPORARY 0
@@ -558,15 +558,15 @@ freg:	OP_DREM(freg, freg) 1
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
 	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
-	select_insn(s, tree, reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, state->left->reg1, esp, 0));
-	select_insn(s, tree, reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, state->right->reg1, esp, 8));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->right->reg1, esp, 8));
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)fmod));
 	method_args_cleanup(s, tree, 4);
 
 	scratch = get_scratch_slot(s->b_parent);
 	select_insn(s, tree, memlocal_insn(INSN_FSTP_64_MEMLOCAL, scratch));
-	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, state->reg1));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, state->reg1));
 }
 
 freg:	OP_FREM(freg, freg) 1
@@ -580,15 +580,15 @@ freg:	OP_FREM(freg, freg) 1
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
 	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
-	select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->left->reg1, esp, 0));
-	select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->right->reg1, esp, 4));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->right->reg1, esp, 4));
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)fmodf));
 	method_args_cleanup(s, tree, 2);
 
 	scratch = get_scratch_slot(s->b_parent);
 	select_insn(s, tree, memlocal_insn(INSN_FSTP_MEMLOCAL, scratch));
-	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, scratch, state->reg1));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, state->reg1));
 }
 
 reg:	OP_REM_64(reg, reg) 1
@@ -636,7 +636,7 @@ freg:	OP_DNEG(freg) 1
 
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0x80000000, ebp, offset + 4));
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0x00000000, ebp, offset));
-	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, result));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, result));
 	select_insn(s, tree, reg_reg_insn(INSN_XOR_64_XMM_REG_REG, state->left->reg1, result));
 
 	state->reg1 = result;
@@ -652,7 +652,7 @@ freg:	OP_FNEG(freg) 1
 	scratch = get_scratch_slot(s->b_parent);
 
 	select_insn(s, tree, imm_memlocal_insn(INSN_MOV_IMM_MEMLOCAL, 0x80000000, scratch));
-	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, scratch, result));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, result));
 	select_insn(s, tree, reg_reg_insn(INSN_XOR_XMM_REG_REG, state->left->reg1, result));
 
 	state->reg1 = result;
@@ -776,15 +776,15 @@ reg:	OP_CMPL(freg, freg) 1
 
 	if (type == J_FLOAT) {
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->left->reg1, esp, 0));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->right->reg1, esp, 4));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->right->reg1, esp, 4));
 
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpl));
 		method_args_cleanup(s, tree, 2);
 	} else {
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, state->left->reg1, esp, 0));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, state->right->reg1, esp, 8));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->right->reg1, esp, 8));
 
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpl));
 		method_args_cleanup(s, tree, 4);
@@ -808,15 +808,15 @@ reg:	OP_CMPG(freg, freg) 1
 
 	if (type == J_FLOAT) {
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->left->reg1, esp, 0));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->right->reg1, esp, 4));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->right->reg1, esp, 4));
 
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpg));
 		method_args_cleanup(s, tree, 2);
 	} else {
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, state->left->reg1, esp, 0));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, state->right->reg1, esp, 8));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->right->reg1, esp, 8));
 
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpg));
 		method_args_cleanup(s, tree, 4);
@@ -1091,10 +1091,10 @@ freg:	EXPR_FLOAT_CLASS_FIELD 1
 		method_args_cleanup(s, tree, 1);
 
 		if (expr->vm_type == J_FLOAT)
-			mov_insn = memdisp_reg_insn(INSN_MOV_MEMDISP_XMM,
+			mov_insn = memdisp_reg_insn(INSN_MOVSS_MEMDISP_XMM,
 				(unsigned long) vmc->static_values + vmf->offset, out);
 		else
-			mov_insn = memdisp_reg_insn(INSN_MOV_64_MEMDISP_XMM,
+			mov_insn = memdisp_reg_insn(INSN_MOVSD_MEMDISP_XMM,
 				(unsigned long) vmc->static_values + vmf->offset, out);
 	} else {
 		if (vmc_state >= VM_CLASS_INITIALIZING) {
@@ -1102,17 +1102,17 @@ freg:	EXPR_FLOAT_CLASS_FIELD 1
 			 * don't want the fixup if we're already inside the
 			 * initializer. */
 			if (expr->vm_type == J_FLOAT)
-				mov_insn = memdisp_reg_insn(INSN_MOV_MEMDISP_XMM,
+				mov_insn = memdisp_reg_insn(INSN_MOVSS_MEMDISP_XMM,
 					(unsigned long) vmc->static_values + vmf->offset, out);
 			else
-				mov_insn = memdisp_reg_insn(INSN_MOV_64_MEMDISP_XMM,
+				mov_insn = memdisp_reg_insn(INSN_MOVSD_MEMDISP_XMM,
 					(unsigned long) vmc->static_values + vmf->offset, out);
 		} else {
 			if (expr->vm_type == J_FLOAT)
-				mov_insn = memdisp_reg_insn(INSN_MOV_MEMDISP_XMM,
+				mov_insn = memdisp_reg_insn(INSN_MOVSS_MEMDISP_XMM,
 						(unsigned long) static_guard_page, out);
 			else
-				mov_insn = memdisp_reg_insn(INSN_MOV_64_MEMDISP_XMM,
+				mov_insn = memdisp_reg_insn(INSN_MOVSD_MEMDISP_XMM,
 						(unsigned long) static_guard_page, out);
 
 			/* XXX: Check return value */
@@ -1168,9 +1168,9 @@ freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 	offset = sizeof(struct vm_object) + expr->instance_field->offset;
 
 	if (expr->vm_type == J_FLOAT)
-		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_XMM, base, offset, state->reg1));
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSS_MEMBASE_XMM, base, offset, state->reg1));
 	else
-		select_insn(s, tree, membase_reg_insn(INSN_MOV_64_MEMBASE_XMM, base, offset, state->reg1));
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSD_MEMBASE_XMM, base, offset, state->reg1));
 }
 %else
 reg:	EXPR_INSTANCE_FIELD(reg) 1
@@ -1605,7 +1605,7 @@ freg:	EXPR_CONVERSION_TO_FLOAT(reg)
 
 		/* Lets reuse the stack slots for the 64-bit -> 32-bit conversion.  */
 		select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, 0));
-		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_XMM, esp, 0, state->reg1));
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSS_MEMBASE_XMM, esp, 0, state->reg1));
 
 		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 8, esp));
 	} else {
@@ -1682,7 +1682,7 @@ reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
 		state->reg2 = get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, esp));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_f2l));
 		method_args_cleanup(s, tree, 1);
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
@@ -1723,7 +1723,7 @@ reg:	EXPR_CONVERSION_FROM_DOUBLE(freg)
 		select_insn(s, tree, membase_insn(INSN_FNSTCW_MEMBASE, esp, 8));
 		select_insn(s, tree, membase_insn(INSN_FNSTCW_MEMBASE, esp, 12));
 
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
 		select_insn(s, tree, membase_insn(INSN_FLD_64_MEMBASE, esp, 0));
 
 		select_insn(s, tree, imm_membase_insn(INSN_OR_IMM_MEMBASE, 0xc0, esp, 12));
@@ -1932,10 +1932,10 @@ arg:	EXPR_ARG(freg)
 
 	if (arg_expr->vm_type == J_FLOAT) {
 		select_insn(s, tree,
-		    reg_membase_insn(INSN_MOV_XMM_MEMBASE, src, esp, 0));
+		    reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, src, esp, 0));
 	} else {
 		select_insn(s, tree,
-		    reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, src, esp, 0));
+		    reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, src, esp, 0));
 	}
 
 	state->reg1 = NULL;
@@ -2130,11 +2130,11 @@ stmt:	STMT_RETURN(freg) 1
 
 	if (expr->vm_type == J_FLOAT) {
 		scratch = get_scratch_slot(s->b_parent);
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_XMM_MEMLOCAL, src, scratch));
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, scratch));
 		select_insn(s, tree, memlocal_insn(INSN_FLD_MEMLOCAL, scratch));
 	} else {
 		scratch = get_scratch_slot(s->b_parent);
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_64_XMM_MEMLOCAL, src, scratch));
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, scratch));
 		select_insn(s, tree, memlocal_insn(INSN_FLD_64_MEMLOCAL, scratch));
 	}
 
@@ -2287,10 +2287,10 @@ stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 		method_args_cleanup(s, tree, 1);
 
 		if (store_dest->vm_type == J_FLOAT)
-			mov_insn = reg_memdisp_insn(INSN_MOV_XMM_MEMDISP,
+			mov_insn = reg_memdisp_insn(INSN_MOVSS_XMM_MEMDISP,
 				src, (unsigned long) vmc->static_values + vmf->offset);
 		else
-			mov_insn = reg_memdisp_insn(INSN_MOV_64_XMM_MEMDISP,
+			mov_insn = reg_memdisp_insn(INSN_MOVSD_XMM_MEMDISP,
 				src, (unsigned long) vmc->static_values + vmf->offset);
 	} else {
 		if (vmc_state >= VM_CLASS_INITIALIZING) {
@@ -2298,17 +2298,17 @@ stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 			 * don't want the fixup if we're already inside the
 			 * initializer. */
 			if (store_dest->vm_type == J_FLOAT)
-				mov_insn = reg_memdisp_insn(INSN_MOV_XMM_MEMDISP,
+				mov_insn = reg_memdisp_insn(INSN_MOVSS_XMM_MEMDISP,
 					src, (unsigned long) vmc->static_values + vmf->offset);
 			else
-				mov_insn = reg_memdisp_insn(INSN_MOV_64_XMM_MEMDISP,
+				mov_insn = reg_memdisp_insn(INSN_MOVSD_XMM_MEMDISP,
 					src, (unsigned long) vmc->static_values + vmf->offset);
 		} else {
 			if (store_dest->vm_type == J_FLOAT)
-				mov_insn = reg_memdisp_insn(INSN_MOV_XMM_MEMDISP,
+				mov_insn = reg_memdisp_insn(INSN_MOVSS_XMM_MEMDISP,
 					src, (unsigned long) static_guard_page);
 			else
-				mov_insn = reg_memdisp_insn(INSN_MOV_64_XMM_MEMDISP,
+				mov_insn = reg_memdisp_insn(INSN_MOVSD_XMM_MEMDISP,
 					src, (unsigned long) static_guard_page);
 
 			/* XXX: Check return value */
@@ -2387,10 +2387,10 @@ stmt:	STMT_STORE(float_inst_field, freg)
 
 	if (store_src->vm_type == J_FLOAT)
 		select_insn(s, tree,
-		    reg_membase_insn(INSN_MOV_XMM_MEMBASE, src, base, offset));
+		    reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, src, base, offset));
 	else
 		select_insn(s, tree,
-		    reg_membase_insn(INSN_MOV_64_XMM_MEMBASE, src, base, offset));
+		    reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, src, base, offset));
 }
 %else
 stmt:	STMT_STORE(float_inst_field, freg)
@@ -2488,9 +2488,9 @@ stmt:	STMT_STORE(EXPR_FLOAT_LOCAL, freg)
 	slot = get_local_slot(cu->stack_frame, local->local_index);
 
 	if (local->vm_type == J_FLOAT)
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_XMM_MEMLOCAL, src, slot));
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, slot));
 	else
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_64_XMM_MEMLOCAL, src, slot));
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, slot));
 }
 
 %ifdef CONFIG_X86_32
@@ -2534,9 +2534,9 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
 	slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index);
 
 	if (exprsrc->vm_type == J_FLOAT)
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, slot, dest));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
 	else
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, slot, dest));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, dest));
 }
 %else
 stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
@@ -2651,9 +2651,9 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
 	src = state->right->reg1;
 
 	if (temp->vm_type == J_FLOAT)
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_XMM_XMM, src, dest));
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest));
 	else
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_64_XMM_XMM, src, dest));
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest));
 }
 %else
 stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
@@ -2753,9 +2753,9 @@ stmt:	STMT_STORE(array_deref, freg)
 	src = state->right->reg1;
 
 	if (src->vm_type == J_FLOAT)
-		select_insn(s, tree, reg_memindex_insn(INSN_MOV_XMM_MEMINDEX, src, base, index, scale));
+		select_insn(s, tree, reg_memindex_insn(INSN_MOVSS_XMM_MEMINDEX, src, base, index, scale));
 	else
-		select_insn(s, tree, reg_memindex_insn(INSN_MOV_64_XMM_MEMINDEX, src, base, index, scale));
+		select_insn(s, tree, reg_memindex_insn(INSN_MOVSD_XMM_MEMINDEX, src, base, index, scale));
 }
 
 stmt:	STMT_STORE(reg, array_deref)
@@ -2807,9 +2807,9 @@ stmt:	STMT_STORE(freg, array_deref)
 	state->reg1 = dest;
 
 	if (dest->vm_type == J_FLOAT)
-		select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_XMM, base, index, scale, dest));
+		select_insn(s, tree, memindex_reg_insn(INSN_MOVSS_MEMINDEX_XMM, base, index, scale, dest));
 	else
-		select_insn(s, tree, memindex_reg_insn(INSN_MOV_64_MEMINDEX_XMM, base, index, scale, dest));
+		select_insn(s, tree, memindex_reg_insn(INSN_MOVSD_MEMINDEX_XMM, base, index, scale, dest));
 }
 %else
 stmt:	STMT_STORE(array_deref, reg)
@@ -3576,13 +3576,13 @@ static void save_invoke_result(struct basic_block *s,
 		scratch = get_scratch_slot(s->b_parent);
 		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 		select_insn(s, tree, memlocal_insn(INSN_FSTP_MEMLOCAL, scratch));
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_XMM, scratch, tmp->tmp_low));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, tmp->tmp_low));
 		break;
 	case J_DOUBLE:
 		scratch = get_scratch_slot(s->b_parent);
 		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 		select_insn(s, tree, memlocal_insn(INSN_FSTP_64_MEMLOCAL, scratch));
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_64_MEMLOCAL_XMM, scratch, tmp->tmp_low));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, tmp->tmp_low));
 		break;
 	case J_LONG:
 		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);

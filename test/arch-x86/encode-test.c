@@ -535,7 +535,7 @@ void test_encoding_reg_membase_xmm(void)
 	setup();
 
 	/* movss  %xmm7,(%esp) */
-	insn.type			= INSN_MOV_XMM_MEMBASE;
+	insn.type			= INSN_MOVSS_XMM_MEMBASE;
 	insn.src.reg.interval		= &reg_xmm7;
 	insn.dest.base_reg.interval	= &reg_esp;
 	insn.dest.disp			= 0x0;

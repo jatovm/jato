@@ -464,25 +464,25 @@ static int print_div_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
-static int print_mov_membase_xmm(struct string *str, struct insn *insn)
+static int print_movss_membase_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_membase_reg(str, insn);
 }
 
-static int print_mov_64_membase_xmm(struct string *str, struct insn *insn)
+static int print_movsd_membase_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_membase_reg(str, insn);
 }
 
-static int print_mov_xmm_membase(struct string *str, struct insn *insn)
+static int print_movss_xmm_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_membase(str, insn);
 }
 
-static int print_mov_64_xmm_membase(struct string *str, struct insn *insn)
+static int print_movsd_xmm_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_membase(str, insn);
@@ -602,13 +602,13 @@ static int print_mov_memlocal_reg(struct string *str, struct insn *insn)
 	return print_memlocal_reg(str, insn);
 }
 
-static int print_mov_memlocal_xmm(struct string *str, struct insn *insn)
+static int print_movss_memlocal_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_memlocal_reg(str, insn);
 }
 
-static int print_mov_64_memlocal_xmm(struct string *str, struct insn *insn)
+static int print_movsd_memlocal_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_memlocal_reg(str, insn);
@@ -626,13 +626,13 @@ static int print_mov_memdisp_reg(struct string *str, struct insn *insn)
 	return print_memdisp_reg(str, insn);
 }
 
-static int print_mov_memdisp_xmm(struct string *str, struct insn *insn)
+static int print_movss_memdisp_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_memdisp_reg(str, insn);
 }
 
-static int print_mov_64_memdisp_xmm(struct string *str, struct insn *insn)
+static int print_movsd_memdisp_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_memdisp_reg(str, insn);
@@ -644,13 +644,13 @@ static int print_mov_reg_memdisp(struct string *str, struct insn *insn)
 	return print_reg_memdisp(str, insn);
 }
 
-static int print_mov_xmm_memdisp(struct string *str, struct insn *insn)
+static int print_movss_xmm_memdisp(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memdisp(str, insn);
 }
 
-static int print_mov_64_xmm_memdisp(struct string *str, struct insn *insn)
+static int print_movsd_xmm_memdisp(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memdisp(str, insn);
@@ -686,13 +686,13 @@ static int print_mov_memindex_reg(struct string *str, struct insn *insn)
 	return print_memindex_reg(str, insn);
 }
 
-static int print_mov_memindex_xmm(struct string *str, struct insn *insn)
+static int print_movss_memindex_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_memindex_reg(str, insn);
 }
 
-static int print_mov_64_memindex_xmm(struct string *str, struct insn *insn)
+static int print_movsd_memindex_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_memindex_reg(str, insn);
@@ -710,13 +710,13 @@ static int print_mov_reg_memindex(struct string *str, struct insn *insn)
 	return print_reg_memindex(str, insn);
 }
 
-static int print_mov_xmm_memindex(struct string *str, struct insn *insn)
+static int print_movss_xmm_memindex(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memindex(str, insn);
 }
 
-static int print_mov_64_xmm_memindex(struct string *str, struct insn *insn)
+static int print_movsd_xmm_memindex(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memindex(str, insn);
@@ -728,13 +728,13 @@ static int print_mov_reg_memlocal(struct string *str, struct insn *insn)
 	return print_reg_memlocal(str, insn);
 }
 
-static int print_mov_xmm_memlocal(struct string *str, struct insn *insn)
+static int print_movss_xmm_memlocal(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memlocal(str, insn);
 }
 
-static int print_mov_64_xmm_memlocal(struct string *str, struct insn *insn)
+static int print_movsd_xmm_memlocal(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_memlocal(str, insn);
@@ -746,13 +746,13 @@ static int print_mov_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
-static int print_mov_xmm_xmm(struct string *str, struct insn *insn)
+static int print_movss_xmm_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
 }
 
-static int print_mov_64_xmm_xmm(struct string *str, struct insn *insn)
+static int print_movsd_xmm_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
 	return print_reg_reg(str, insn);
@@ -993,10 +993,10 @@ static print_insn_fn insn_printers[] = {
 	[INSN_FSTP_MEMLOCAL] = print_fstp_memlocal,
 	[INSN_FSTP_64_MEMBASE] = print_fstp_64_membase,
 	[INSN_FSTP_64_MEMLOCAL] = print_fstp_64_memlocal,
-	[INSN_MOV_MEMBASE_XMM] = print_mov_membase_xmm,
-	[INSN_MOV_64_MEMBASE_XMM] = print_mov_64_membase_xmm,
-	[INSN_MOV_XMM_MEMBASE] = print_mov_xmm_membase,
-	[INSN_MOV_64_XMM_MEMBASE] = print_mov_64_xmm_membase,
+	[INSN_MOVSS_MEMBASE_XMM] = print_movss_membase_xmm,
+	[INSN_MOVSD_MEMBASE_XMM] = print_movsd_membase_xmm,
+	[INSN_MOVSS_XMM_MEMBASE] = print_movss_xmm_membase,
+	[INSN_MOVSD_XMM_MEMBASE] = print_movsd_xmm_membase,
 	[INSN_CONV_FPU_TO_GPR] = print_conv_fpu_to_gpr,
 	[INSN_CONV_FPU64_TO_GPR] = print_conv_fpu64_to_gpr,
 	[INSN_CONV_GPR_TO_FPU] = print_conv_gpr_to_fpu,
@@ -1017,14 +1017,14 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_IMM_REG] = print_mov_imm_reg,
 	[INSN_MOV_IMM_THREAD_LOCAL_MEMBASE] = print_mov_imm_tlmembase,
 	[INSN_MOV_MEMLOCAL_REG] = print_mov_memlocal_reg,
-	[INSN_MOV_MEMLOCAL_XMM] = print_mov_memlocal_xmm,
-	[INSN_MOV_64_MEMLOCAL_XMM] = print_mov_64_memlocal_xmm,
+	[INSN_MOVSS_MEMLOCAL_XMM] = print_movss_memlocal_xmm,
+	[INSN_MOVSD_MEMLOCAL_XMM] = print_movsd_memlocal_xmm,
 	[INSN_MOV_MEMBASE_REG] = print_mov_membase_reg,
 	[INSN_MOV_MEMDISP_REG] = print_mov_memdisp_reg,
-	[INSN_MOV_MEMDISP_XMM] = print_mov_memdisp_xmm,
-	[INSN_MOV_64_MEMDISP_XMM] = print_mov_64_memdisp_xmm,
-	[INSN_MOV_MEMINDEX_XMM] = print_mov_memindex_xmm,
-	[INSN_MOV_64_MEMINDEX_XMM] = print_mov_64_memindex_xmm,
+	[INSN_MOVSS_MEMDISP_XMM] = print_movss_memdisp_xmm,
+	[INSN_MOVSD_MEMDISP_XMM] = print_movsd_memdisp_xmm,
+	[INSN_MOVSS_MEMINDEX_XMM] = print_movss_memindex_xmm,
+	[INSN_MOVSD_MEMINDEX_XMM] = print_movsd_memindex_xmm,
 	[INSN_MOV_REG_MEMDISP] = print_mov_reg_memdisp,
 	[INSN_MOV_THREAD_LOCAL_MEMDISP_REG] = print_mov_tlmemdisp_reg,
 	[INSN_MOV_MEMINDEX_REG] = print_mov_memindex_reg,
@@ -1033,15 +1033,15 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MOV_REG_MEMLOCAL] = print_mov_reg_memlocal,
 	[INSN_MOV_REG_THREAD_LOCAL_MEMBASE] = print_mov_reg_tlmembase,
 	[INSN_MOV_REG_THREAD_LOCAL_MEMDISP] = print_mov_reg_tlmemdisp,
-	[INSN_MOV_XMM_MEMLOCAL] = print_mov_xmm_memlocal,
-	[INSN_MOV_64_XMM_MEMLOCAL] = print_mov_64_xmm_memlocal,
+	[INSN_MOVSS_XMM_MEMLOCAL] = print_movss_xmm_memlocal,
+	[INSN_MOVSD_XMM_MEMLOCAL] = print_movsd_xmm_memlocal,
 	[INSN_MOV_REG_REG] = print_mov_reg_reg,
-	[INSN_MOV_XMM_MEMDISP] = print_mov_xmm_memdisp,
-	[INSN_MOV_64_XMM_MEMDISP] = print_mov_64_xmm_memdisp,
-	[INSN_MOV_XMM_MEMINDEX] = print_mov_xmm_memindex,
-	[INSN_MOV_64_XMM_MEMINDEX] = print_mov_64_xmm_memindex,
-	[INSN_MOV_XMM_XMM] = print_mov_xmm_xmm,
-	[INSN_MOV_64_XMM_XMM] = print_mov_64_xmm_xmm,
+	[INSN_MOVSS_XMM_MEMDISP] = print_movss_xmm_memdisp,
+	[INSN_MOVSD_XMM_MEMDISP] = print_movsd_xmm_memdisp,
+	[INSN_MOVSS_XMM_MEMINDEX] = print_movss_xmm_memindex,
+	[INSN_MOVSD_XMM_MEMINDEX] = print_movsd_xmm_memindex,
+	[INSN_MOVSS_XMM_XMM] = print_movss_xmm_xmm,
+	[INSN_MOVSD_XMM_XMM] = print_movsd_xmm_xmm,
 	[INSN_MOVSX_8_REG_REG] = print_movsx_8_reg_reg,
 	[INSN_MOVSX_16_REG_REG] = print_movsx_16_reg_reg,
 	[INSN_MOVZX_16_REG_REG] = print_movzx_16_reg_reg,
