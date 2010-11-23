@@ -338,7 +338,7 @@ static inline bool insn_uses_reg(struct insn *self, enum machine_reg reg)
 }
 #endif
 
-static inline bool insn_need_disp(struct insn *self, uint64_t flags)
+static inline bool insn_need_disp(struct insn *self)
 {
 #ifdef CONFIG_X86_64
 	if (insn_uses_reg(self, MACH_REG_R13) || insn_uses_reg(self, MACH_REG_RBP))
@@ -538,7 +538,7 @@ static uint64_t insn_flags(struct insn *self, uint64_t encode)
 		if (flags & (DST_REG|DST_MEMLOCAL))
 			return flags;
 
-		if (self->dest.disp == 0 && !insn_need_disp(self, flags))
+		if (self->dest.disp == 0 && !insn_need_disp(self))
 			flags	|= DST_MEM;
 		else if (is_imm_8(self->dest.disp))
 			flags	|= DST_MEM_DISP_BYTE;
@@ -548,7 +548,7 @@ static uint64_t insn_flags(struct insn *self, uint64_t encode)
 		if (flags & (SRC_REG|SRC_MEMLOCAL))
 			return flags;
 
-		if (self->src.disp == 0 && !insn_need_disp(self, flags))
+		if (self->src.disp == 0 && !insn_need_disp(self))
 			flags	|= SRC_MEM;
 		else if (is_imm_8(self->src.disp))
 			flags	|= SRC_MEM_DISP_BYTE;
