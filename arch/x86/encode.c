@@ -528,35 +528,47 @@ static uint8_t insn_rex_prefix(struct insn *self, uint64_t flags)
 }
 #endif
 
-static uint64_t insn_flags(struct insn *self, uint64_t encode)
+static void insn_disp(struct insn *self, struct x86_insn *insn)
 {
-	uint64_t flags;
-
-	flags	= encode & FLAGS_MASK;
-
-	if (flags & DIR_REVERSED) {
-		if (flags & (DST_REG|DST_MEMLOCAL))
-			return flags;
-
-		if (self->dest.disp == 0 && !insn_need_disp(self))
-			flags	|= DST_MEM;
-		else if (is_imm_8(self->dest.disp))
-			flags	|= DST_MEM_DISP_BYTE;
+	if (insn->flags & (SRC_MEMLOCAL|DST_MEMLOCAL)) {
+		if (insn->flags & DIR_REVERSED)
+			insn->disp	= slot_offset(self->dest.slot);
 		else
-			flags	|= DST_MEM_DISP_FULL;
-	} else {
-		if (flags & (SRC_REG|SRC_MEMLOCAL))
-			return flags;
+			insn->disp	= slot_offset(self->src.slot);
 
-		if (self->src.disp == 0 && !insn_need_disp(self))
-			flags	|= SRC_MEM;
-		else if (is_imm_8(self->src.disp))
-			flags	|= SRC_MEM_DISP_BYTE;
-		else
-			flags	|= SRC_MEM_DISP_FULL;
+		return;
 	}
 
-	return flags;
+	if (insn->flags & DIR_REVERSED) {
+		if (insn->flags & DST_REG)
+			return;
+
+		insn->disp	= self->dest.disp;
+
+		if (insn->disp == 0 && !insn_need_disp(self))
+			insn->flags	|= DST_MEM;
+		else if (is_imm_8(insn->disp))
+			insn->flags	|= DST_MEM_DISP_BYTE;
+		else
+			insn->flags	|= DST_MEM_DISP_FULL;
+	} else {
+		if (insn->flags & SRC_REG)
+			return;
+
+		insn->disp	= self->src.disp;
+
+		if (insn->disp == 0 && !insn_need_disp(self))
+			insn->flags	|= SRC_MEM;
+		else if (is_imm_8(insn->disp))
+			insn->flags	|= SRC_MEM_DISP_BYTE;
+		else
+			insn->flags	|= SRC_MEM_DISP_FULL;
+	}
+}
+
+static uint64_t insn_flags(struct insn *self, uint64_t encode)
+{
+	return encode & FLAGS_MASK;
 }
 
 static uint8_t insn_opc_ext(struct insn *self, uint64_t encode)
@@ -620,6 +632,8 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 		.flags		= insn_flags(self, encode),
 	};
 
+	insn_disp(self, &insn);
+
 	insn.rex_prefix	= insn_rex_prefix(self, insn.flags);
 
 	if (insn.flags & OPC_REG) {
@@ -640,20 +654,6 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 			insn.imm	= self->src.imm;
 		else
 			insn.imm	= self->dest.imm;
-	}
-
-	if (insn.flags & MEM_DISP_MASK) {
-		if (insn.flags & DIR_REVERSED)
-			insn.disp	= self->dest.disp;
-		else
-			insn.disp	= self->src.disp;
-	}
-
-	if (insn.flags & (SRC_MEMLOCAL|DST_MEMLOCAL)) {
-		if (insn.flags & DIR_REVERSED)
-			insn.disp	= slot_offset(self->dest.slot);
-		else
-			insn.disp	= slot_offset(self->src.slot);
 	}
 
 	x86_insn_encode(&insn, buffer);
