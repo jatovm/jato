@@ -34,6 +34,27 @@ Archlinux:
 
   pacman -S eclipse-ecj classpath libzip libffi
 
+2.2.1. Building GNU Classpath
+-----------------------------
+
+GNU Classpath is no longer packaged with Ubuntu 10.10 and later versions so you
+need to build and install it yourself to run Jato. First download the sources from:
+
+  http://www.gnu.org/software/classpath/downloads/downloads.html
+
+and then install the following dependencies that are required to build GNU
+Classpath:
+
+  sudo apt-get install libgconf2-dev libgtk2.0-dev ecj fastjar
+
+You can then compile GNU Classpath:
+
+  ./configure --disable-Werror --disable-plugin ; make
+
+and install it to /usr/local:
+
+  sudo make install
+
 2.3. Building the Software
 --------------------------
 
