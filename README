@@ -45,7 +45,7 @@ need to build and install it yourself to run Jato. First download the sources fr
 and then install the following dependencies that are required to build GNU
 Classpath:
 
-  sudo apt-get install libgconf2-dev libgtk2.0-dev ecj fastjar
+  sudo apt-get install libgconf2-dev libgtk2.0-dev ecj fastjar pccts
 
 You can then compile GNU Classpath:
 
