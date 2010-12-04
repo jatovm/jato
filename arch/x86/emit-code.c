@@ -918,12 +918,6 @@ static void emit_or_imm_membase(struct insn *insn, struct buffer *buf, struct ba
 	emit_imm32(buf, insn->src.disp);
 }
 
-static void emit_xor_xmm_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0x0f);
-	emit_reg_reg(buf, 0x57, &insn->dest, &insn->src);
-}
-
 static void emit_xor_64_xmm_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0x66);
@@ -2653,7 +2647,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_XOR_64_XMM_REG_REG, emit_xor_64_xmm_reg_reg),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_XOR_REG_REG, insn_encode),
-	DECL_EMITTER(INSN_XOR_XMM_REG_REG, emit_xor_xmm_reg_reg),
+	DECL_EMITTER(INSN_XOR_XMM_REG_REG, insn_encode),
 #else /* CONFIG_X86_64 */
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg),
