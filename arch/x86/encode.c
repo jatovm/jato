@@ -158,6 +158,7 @@ enum x86_insn_flags {
 
 	NO_REX_W		= (1ULL << 32), /* No REX W prefix needed */
 	INDEX			= (1ULL << 33),
+	OPERAND_SIZE_PREFIX	= (1ULL << 34), /* Operand-size override prefix */
 };
 
 /*
@@ -239,6 +240,7 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_SUB_MEMBASE_REG]		= OPCODE(0x2b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_SUB_REG_REG]		= OPCODE(0x29) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
 	[INSN_TEST_MEMBASE_REG]		= OPCODE(0x85) | ADDMODE_RM_REG  | WIDTH_FULL,
+	[INSN_XOR_64_XMM_REG_REG]	= OPERAND_SIZE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x57) | ADDMODE_REG_REG | WIDTH_FULL,
 	[INSN_XOR_MEMBASE_REG]		= OPCODE(0x33) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_XOR_REG_REG]		= OPCODE(0x31) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
 	[INSN_XOR_XMM_REG_REG]		= ESCAPE_OPC_BYTE | OPCODE(0x57) | ADDMODE_REG_REG | WIDTH_FULL,
@@ -589,6 +591,9 @@ static void x86_insn_encode(struct x86_insn *insn, struct buffer *buffer)
 
 	if (insn->flags & REPE_PREFIX)
 		emit(buffer, 0xf3);
+
+	if (insn->flags & OPERAND_SIZE_PREFIX)
+		emit(buffer, 0x66);
 
 	if (insn->rex_prefix)
 		emit(buffer, insn->rex_prefix);
