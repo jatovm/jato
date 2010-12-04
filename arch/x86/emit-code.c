@@ -994,13 +994,6 @@ static void emit_conv_fpu64_to_gpr(struct insn *insn, struct buffer *buf, struct
 	emit_reg_reg(buf, 0x2d, &insn->dest, &insn->src);
 }
 
-static void emit_mov_xmm_xmm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	emit(buf, 0xf3);
-	emit(buf, 0x0f);
-	emit_reg_reg(buf, 0x10, &insn->dest, &insn->src);
-}
-
 static void emit_mov_memdisp_xmm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0xf3);
