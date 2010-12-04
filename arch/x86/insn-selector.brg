@@ -637,7 +637,7 @@ freg:	OP_DNEG(freg) 1
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0x80000000, ebp, offset + 4));
 	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0x00000000, ebp, offset));
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, result));
-	select_insn(s, tree, reg_reg_insn(INSN_XOR_64_XMM_REG_REG, state->left->reg1, result));
+	select_insn(s, tree, reg_reg_insn(INSN_XORPD_XMM_XMM, state->left->reg1, result));
 
 	state->reg1 = result;
 }
@@ -653,7 +653,7 @@ freg:	OP_FNEG(freg) 1
 
 	select_insn(s, tree, imm_memlocal_insn(INSN_MOV_IMM_MEMLOCAL, 0x80000000, scratch));
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, result));
-	select_insn(s, tree, reg_reg_insn(INSN_XOR_XMM_REG_REG, state->left->reg1, result));
+	select_insn(s, tree, reg_reg_insn(INSN_XORPS_XMM_XMM, state->left->reg1, result));
 
 	state->reg1 = result;
 }

@@ -1072,8 +1072,8 @@ static print_insn_fn insn_printers[] = {
 	[INSN_TEST_MEMBASE_REG] = print_test_membase_reg,
 	[INSN_XOR_MEMBASE_REG] = print_xor_membase_reg,
 	[INSN_XOR_REG_REG] = print_xor_reg_reg,
-	[INSN_XOR_XMM_REG_REG] = print_xor_xmm_reg_reg,
-	[INSN_XOR_64_XMM_REG_REG] = print_xor_64_xmm_reg_reg,
+	[INSN_XORPS_XMM_XMM] = print_xor_xmm_reg_reg,
+	[INSN_XORPD_XMM_XMM] = print_xor_64_xmm_reg_reg,
 };
 
 int lir_print(struct insn *insn, struct string *str)
