@@ -923,7 +923,7 @@ static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg re
 	emit_alu_imm_reg(buf, 0x00, imm, reg);
 }
 
-static void __emit_cmp_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+static void __emit_cmp_imm_reg(struct buffer *buf, int rex_w, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x07, imm, reg);
 }
@@ -2393,11 +2393,7 @@ static void emit_itable_bsearch(struct buffer *buf,
 	/* No point in emitting the "cmp" if we're not going to test
 	 * anything */
 	if (b - a >= 1) {
-#ifdef CONFIG_X86_32
-		__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
-#else
-		__emit_cmp_imm_reg(buf, 1, (long) table[m]->i_method, MACH_REG_RAX);
-#endif
+		__emit_cmp_imm_reg(buf, 1, (long) table[m]->i_method, MACH_REG_xAX);
 
 		if (m - a > 0) {
 			/* open-coded "jb" */
@@ -2429,11 +2425,7 @@ static void emit_itable_bsearch(struct buffer *buf,
 	 * .okay:
 	 *
 	 */
-#ifdef CONFIG_X86_32
-	__emit_cmp_imm_reg(buf, (long) table[m]->i_method, MACH_REG_EAX);
-#else
-	__emit_cmp_imm_reg(buf, 1, (long) table[m]->i_method, MACH_REG_RAX);
-#endif
+	__emit_cmp_imm_reg(buf, 1, (long) table[m]->i_method, MACH_REG_xAX);
 
 	/* open-coded "je" */
 	emit(buf, 0x0f);
