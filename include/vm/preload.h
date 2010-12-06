@@ -6,6 +6,7 @@
 extern struct vm_class *vm_array_of_java_lang_Class;
 extern struct vm_class *vm_array_of_java_lang_StackTraceElement;
 extern struct vm_class *vm_array_of_java_lang_String;
+extern struct vm_class *vm_array_of_java_lang_annotation_Annotation;
 extern struct vm_class *vm_array_of_java_lang_reflect_Constructor;
 extern struct vm_class *vm_array_of_java_lang_reflect_Field;
 extern struct vm_class *vm_array_of_java_lang_reflect_Method;
@@ -160,6 +161,7 @@ extern struct vm_method *vm_java_lang_Number_doubleValue;
 extern struct vm_method *vm_java_lang_ref_Reference_clear;
 extern struct vm_method *vm_java_lang_ref_Reference_enqueue;
 extern struct vm_method *vm_java_nio_DirectByteBufferImpl_ReadWrite_init;
+extern struct vm_method *vm_sun_reflect_annotation_AnnotationInvocationHandler_create;
 
 extern bool preload_finished;
 

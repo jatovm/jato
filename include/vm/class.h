@@ -18,6 +18,7 @@
 
 struct vm_object;
 struct vm_thread;
+struct vm_annotation;
 
 enum vm_class_state {
 	VM_CLASS_LOADED,
@@ -51,6 +52,8 @@ struct vm_class {
 	struct vm_field *fields;
 	unsigned int nr_methods;
 	struct vm_method *methods;
+	unsigned int nr_annotations;
+	struct vm_annotation **annotations;
 
 	unsigned int object_size;
 	unsigned int static_size;

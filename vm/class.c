@@ -28,6 +28,7 @@
 #include "vm/class.h"
 
 #include "cafebabe/inner_classes_attribute.h"
+#include "cafebabe/annotations_attribute.h"
 #include "cafebabe/constant_pool.h"
 #include "cafebabe/method_info.h"
 #include "cafebabe/field_info.h"
@@ -40,6 +41,7 @@
 
 #include "vm/fault-inject.h"
 #include "vm/classloader.h"
+#include "vm/annotation.h"
 #include "vm/gc.h"
 #include "vm/preload.h"
 #include "vm/errors.h"
@@ -495,9 +497,38 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		}
 	}
 
+	struct cafebabe_annotations_attribute annotations_attribute;
+
+	if (cafebabe_read_annotations_attribute(class, &class->attributes, &annotations_attribute))
+		goto error_free_methods;
+
+	vmc->annotations = vm_alloc(sizeof(struct vm_annotation *) * annotations_attribute.num_annotations);
+	if (!vmc->annotations)
+		goto error_free_methods;
+
+	for (unsigned int i = 0; i < annotations_attribute.num_annotations; i++) {
+		struct cafebabe_annotation *annotation = &annotations_attribute.annotations[i];
+		struct vm_annotation *vma;
+
+		vma = vm_annotation_parse(class, annotation);
+		if (!vma)
+			goto error_free_annotations;
+
+		vmc->annotations[vmc->nr_annotations++] = vma;
+	}
+
+	cafebabe_annotations_attribute_deinit(&annotations_attribute);
+
 	vmc->state = VM_CLASS_LINKED;
 	return 0;
 
+error_free_annotations:
+	for (unsigned int i = 0; i < vmc->nr_annotations; i++) {
+		struct vm_annotation *vma = vmc->annotations[i];
+
+		vm_annotation_free(vma);
+	}
+	free(vmc->annotations);
 error_free_methods:
 	vm_free(vmc->methods);
 error_free_static_values:

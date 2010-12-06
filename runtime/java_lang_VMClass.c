@@ -29,11 +29,13 @@
 #include "jit/exception.h"
 
 #include "vm/classloader.h"
+#include "vm/annotation.h"
 #include "vm/reflection.h"
 #include "vm/preload.h"
 #include "vm/errors.h"
 #include "vm/object.h"
 #include "vm/class.h"
+#include "vm/call.h"
 #include "vm/utf8.h"
 #include "vm/vm.h"
 
@@ -93,6 +95,52 @@ struct vm_object *java_lang_VMClass_getComponentType(struct vm_object *object)
 	}
 
 	return vm_class_get_array_element_class(class)->object;
+}
+
+/* XXX */
+static struct vm_object *get_system_class_loader(void)
+{
+	if (vm_class_ensure_init(vm_java_lang_ClassLoader))
+		return NULL;
+
+	return vm_call_method_object(vm_java_lang_ClassLoader_getSystemClassLoader);
+}
+
+jobject java_lang_VMClass_getDeclaredAnnotations(jobject klass)
+{
+	struct vm_object *result;
+	struct vm_class *vmc;
+	unsigned int i;
+
+	vmc = vm_object_to_vm_class(klass);
+	if (!vmc)
+		return rethrow_exception();
+
+	result = vm_object_alloc_array(vm_array_of_java_lang_annotation_Annotation, vmc->nr_annotations);
+	if (!result)
+		return rethrow_exception();
+
+	for (i = 0; i < vmc->nr_annotations; i++) {
+		struct vm_annotation *vma = vmc->annotations[i];
+		struct vm_object *annotation;
+		struct vm_type_info type;
+		struct vm_class *klass;
+
+		if (parse_type(&vma->type, &type))
+			return NULL;
+
+		klass = classloader_load(get_system_class_loader(), type.class_name);
+		if (!klass)
+			return rethrow_exception();
+
+		annotation = vm_call_method_object(vm_sun_reflect_annotation_AnnotationInvocationHandler_create, klass->object, NULL);
+		if (!annotation)
+			return rethrow_exception(); /* XXX */
+
+		array_set_field_object(result, i, annotation);
+	}
+
+	return result;
 }
 
 jobject java_lang_VMClass_getDeclaredConstructors(jobject clazz, jboolean public_only)

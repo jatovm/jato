@@ -60,6 +60,7 @@ include sys/$(SYS)-$(ARCH)/Makefile
 OBJS += $(ARCH_OBJS)
 OBJS += $(SYS_OBJS)
 
+OBJS += cafebabe/annotations_attribute.o
 OBJS += cafebabe/attribute_array.o
 OBJS += cafebabe/attribute_info.o
 OBJS += cafebabe/class.o
@@ -138,6 +139,7 @@ OBJS += runtime/reflection.o
 OBJS += runtime/runtime.o
 OBJS += runtime/stack-walker.o
 OBJS += runtime/unsafe.o
+OBJS += vm/annotation.o
 OBJS += vm/boehm-gc.o
 OBJS += vm/bytecode.o
 OBJS += vm/call.o

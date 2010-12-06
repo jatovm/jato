@@ -79,6 +79,7 @@ struct vm_class *vm_java_lang_InheritableThreadLocal;
 struct vm_class *vm_java_lang_VMThread;
 struct vm_class *vm_java_lang_IllegalMonitorStateException;
 struct vm_class *vm_java_lang_System;
+struct vm_class *vm_array_of_java_lang_annotation_Annotation;
 struct vm_class *vm_java_lang_reflect_Constructor;
 struct vm_class *vm_java_lang_reflect_Field;
 struct vm_class *vm_java_lang_reflect_Method;
@@ -110,6 +111,7 @@ struct vm_class *vm_java_lang_ref_PhantomReference;
 struct vm_class *vm_java_nio_Buffer;
 struct vm_class *vm_java_nio_DirectByteBufferImpl_ReadWrite;
 struct vm_class *vm_gnu_classpath_PointerNN;
+struct vm_class *vm_sun_reflect_annotation_AnnotationInvocationHandler;
 struct vm_class *vm_boolean_class;
 struct vm_class *vm_char_class;
 struct vm_class *vm_float_class;
@@ -154,6 +156,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/InheritableThreadLocal", &vm_java_lang_InheritableThreadLocal },
 	{ "java/lang/IllegalMonitorStateException", &vm_java_lang_IllegalMonitorStateException },
 	{ "java/lang/System",	&vm_java_lang_System },
+	{ "[Ljava/lang/annotation/Annotation;", &vm_array_of_java_lang_annotation_Annotation },
 	{ "java/lang/reflect/Field", &vm_java_lang_reflect_Field },
 	{ "java/lang/reflect/VMField", &vm_java_lang_reflect_VMField, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
 	{ "java/lang/reflect/Constructor", &vm_java_lang_reflect_Constructor },
@@ -189,6 +192,7 @@ static const struct preload_entry preload_entries[] = {
 #else
 	{ "gnu/classpath/Pointer64", &vm_gnu_classpath_PointerNN },
 #endif
+	{ "sun/reflect/annotation/AnnotationInvocationHandler", &vm_sun_reflect_annotation_AnnotationInvocationHandler },
 };
 
 static const struct preload_entry primitive_preload_entries[] = {
@@ -373,6 +377,7 @@ struct vm_method *vm_java_lang_Number_doubleValue;
 struct vm_method *vm_java_lang_ref_Reference_clear;
 struct vm_method *vm_java_lang_ref_Reference_enqueue;
 struct vm_method *vm_java_nio_DirectByteBufferImpl_ReadWrite_init;
+struct vm_method *vm_sun_reflect_annotation_AnnotationInvocationHandler_create;
 
 static const struct method_preload_entry method_preload_entries[] = {
 	{
@@ -650,6 +655,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"<init>",
 		"(Ljava/lang/Object;Lgnu/classpath/Pointer;III)V",
 		&vm_java_nio_DirectByteBufferImpl_ReadWrite_init,
+	},
+	{
+		&vm_sun_reflect_annotation_AnnotationInvocationHandler,
+		"create",
+		"(Ljava/lang/Class;Ljava/util/Map;)Ljava/lang/annotation/Annotation;",
+		&vm_sun_reflect_annotation_AnnotationInvocationHandler_create,
 	},
 };
 

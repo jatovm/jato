@@ -31,6 +31,10 @@ import jvm.TestCase;
  * @author Pekka Enberg
  */
 public class VMClassTest extends TestCase {
+    public static void testGetDeclaredAnnotations() {
+        assertEquals(0, VMClass.getDeclaredAnnotations(Object.class).length);
+    }
+
     public static void testIsAnonymousClass() {
         assertFalse(VMClass.isAnonymousClass(int.class));
         assertFalse(VMClass.isAnonymousClass(int[].class));
@@ -56,6 +60,7 @@ public class VMClassTest extends TestCase {
     }
 
     public static void main(String[] args) {
+        testGetDeclaredAnnotations();
         testIsAnonymousClass();
         testIsArray();
         testIsPrimitive();

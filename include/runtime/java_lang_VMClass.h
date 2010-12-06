@@ -6,6 +6,7 @@
 jobject		java_lang_VMClass_forName(jobject name, jboolean initialize, jobject loader);
 jobject		java_lang_VMClass_getClassLoader(jobject object);
 jobject		java_lang_VMClass_getComponentType(jobject object);
+jobject		java_lang_VMClass_getDeclaredAnnotations(jobject klass);
 jobject		java_lang_VMClass_getDeclaredConstructors(jobject class_object, jboolean public_only);
 jobject		java_lang_VMClass_getDeclaredFields(jobject class_object, jboolean public_only);
 jobject		java_lang_VMClass_getDeclaredMethods(jobject class_object, jboolean public_only);
