@@ -9,17 +9,6 @@ struct vm_class *vm_object_to_vm_class(struct vm_object *object);
 struct vm_field *vm_object_to_vm_field(struct vm_object *field);
 
 struct vm_object *
-native_vmclass_get_declared_fields(struct vm_object *class_object,
-				   jboolean public_only);
-struct vm_object *
-native_vmclass_get_declared_methods(struct vm_object *class_object,
-				    jboolean public_only);
-struct vm_object *
-native_vmclass_get_declared_constructors(struct vm_object *class_object,
-					 jboolean public_only);
-struct vm_object *native_vmclass_get_declaring_class(struct vm_object *class);
-
-struct vm_object *
 native_constructor_get_parameter_types(struct vm_object *ctor);
 struct vm_object *
 native_method_get_parameter_types(struct vm_object *ctor);
@@ -31,8 +20,6 @@ native_constructor_construct_native(struct vm_object *this,
 				    int slot);
 struct vm_object *native_vmconstructor_construct(struct vm_object *this, struct vm_object *args);
 struct vm_object *native_vmconstructor_get_exception_types(struct vm_object *method);
-struct vm_object *native_vmclass_get_interfaces(struct vm_object *clazz);
-struct vm_object *native_vmclass_get_superclass(struct vm_object *clazz);
 struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
 jlong native_field_get_long(struct vm_object *this, struct vm_object *o);
 jint native_field_get_int(struct vm_object *this, struct vm_object *o);

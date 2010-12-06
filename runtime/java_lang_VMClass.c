@@ -39,17 +39,6 @@
 
 #include <stddef.h>
 
-struct vm_object *java_lang_VMClass_getClassLoader(struct vm_object *object)
-{
-	struct vm_class *vmc;
-
-	vmc = vm_object_to_vm_class(object);
-	if (!vmc)
-		return NULL;
-
-	return vmc->classloader;
-}
-
 struct vm_object *java_lang_VMClass_forName(struct vm_object *name, jboolean initialize, struct vm_object *loader)
 {
 	struct vm_class *class;
@@ -80,6 +69,303 @@ struct vm_object *java_lang_VMClass_forName(struct vm_object *name, jboolean ini
 	return NULL;
 }
 
+struct vm_object *java_lang_VMClass_getClassLoader(struct vm_object *object)
+{
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(object);
+	if (!vmc)
+		return NULL;
+
+	return vmc->classloader;
+}
+
+struct vm_object *java_lang_VMClass_getComponentType(struct vm_object *object)
+{
+	struct vm_class *class = vm_object_to_vm_class(object);
+
+	if (!class)
+		return NULL;
+
+	if (!vm_class_is_array_class(class)) {
+		warn("%s", class->name);
+		return NULL;
+	}
+
+	return vm_class_get_array_element_class(class)->object;
+}
+
+jobject java_lang_VMClass_getDeclaredConstructors(jobject clazz, jboolean public_only)
+{
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Constructor, 0);
+
+	int count = 0;
+
+	for (int i = 0; i < vmc->class->methods_count; i++) {
+		struct vm_method *vmm = &vmc->methods[i];
+
+		if (!vm_method_is_constructor(vmm) ||
+		    (!vm_method_is_public(vmm) && public_only))
+			continue;
+
+		count++;
+	}
+
+	struct vm_object *array;
+
+	array = vm_object_alloc_array(vm_array_of_java_lang_reflect_Constructor,
+				      count);
+	if (!array)
+		return rethrow_exception();
+
+	int index = 0;
+
+	for (int i = 0; i < vmc->class->methods_count; i++) {
+		struct vm_method *vmm = &vmc->methods[i];
+
+		if (!vm_method_is_constructor(vmm) ||
+		    (!vm_method_is_public(vmm) && public_only))
+			continue;
+
+		struct vm_object *ctor
+			= vm_object_alloc(vm_java_lang_reflect_Constructor);
+
+		if (!ctor)
+			return rethrow_exception();
+
+		if (vm_java_lang_reflect_VMConstructor != NULL) { /* Classpath 0.98 */
+			struct vm_object *vm_ctor;
+
+			vm_ctor = vm_object_alloc(vm_java_lang_reflect_VMConstructor);
+			if (!vm_ctor)
+				return rethrow_exception();
+
+			field_set_object(vm_ctor, vm_java_lang_reflect_VMConstructor_clazz, clazz);
+			field_set_int(vm_ctor, vm_java_lang_reflect_VMConstructor_slot, i);
+
+			field_set_object(ctor, vm_java_lang_reflect_Constructor_cons, vm_ctor);
+		} else {
+			field_set_object(ctor, vm_java_lang_reflect_Constructor_clazz, clazz);
+			field_set_int(ctor, vm_java_lang_reflect_Constructor_slot, i);
+		}
+		array_set_field_ptr(array, index++, ctor);
+	}
+
+	return array;
+}
+
+jobject java_lang_VMClass_getDeclaredFields(jobject clazz, jboolean public_only)
+{
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Field, 0);
+
+	int count;
+
+	if (public_only) {
+		count = 0;
+
+		for (int i = 0; i < vmc->class->fields_count; i++) {
+			struct vm_field *vmf = &vmc->fields[i];
+
+			if (vm_field_is_public(vmf))
+				count ++;
+		}
+	} else {
+		count = vmc->class->fields_count;
+	}
+
+	struct vm_object *array
+		= vm_object_alloc_array(vm_array_of_java_lang_reflect_Field,
+					count);
+	if (!array)
+		return rethrow_exception();
+
+	int index = 0;
+
+	for (int i = 0; i < vmc->class->fields_count; i++) {
+		struct vm_field *vmf = &vmc->fields[i];
+
+		if (public_only && !vm_field_is_public(vmf))
+			continue;
+
+		struct vm_object *field
+			= vm_object_alloc(vm_java_lang_reflect_Field);
+
+		if (!field)
+			return rethrow_exception();
+
+		struct vm_object *name_object
+			= vm_object_alloc_string_from_c(vmf->name);
+
+		if (!name_object)
+			return rethrow_exception();
+
+		if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+			struct vm_object *vm_field;
+
+			vm_field = vm_object_alloc(vm_java_lang_reflect_VMField);
+			if (!vm_field)
+				return rethrow_exception();
+
+			field_set_object(vm_field, vm_java_lang_reflect_VMField_clazz, clazz);
+			field_set_object(vm_field, vm_java_lang_reflect_VMField_name, name_object);
+			field_set_int(vm_field, vm_java_lang_reflect_VMField_slot, i);
+
+			field_set_object(field, vm_java_lang_reflect_Field_f, vm_field);
+		} else {
+			field_set_object(field, vm_java_lang_reflect_Field_declaringClass, clazz);
+			field_set_object(field, vm_java_lang_reflect_Field_name, name_object);
+			field_set_int(field, vm_java_lang_reflect_Field_slot, i);
+		}
+
+		array_set_field_ptr(array, index++, field);
+	}
+
+	return array;
+}
+
+jobject java_lang_VMClass_getDeclaredMethods(jobject clazz, jboolean public_only)
+{
+	struct vm_class *vmc;
+	int count;
+
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Method, 0);
+
+	count = 0;
+	for (int i = 0; i < vmc->class->methods_count; i++) {
+		struct vm_method *vmm = &vmc->methods[i];
+
+		if (public_only && !vm_method_is_public(vmm))
+			continue;
+
+		if (vm_method_is_special(vmm))
+			continue;
+
+		count ++;
+	}
+
+	struct vm_object *array
+		= vm_object_alloc_array(vm_array_of_java_lang_reflect_Method, count);
+	if (!array)
+		return rethrow_exception();
+
+	int index = 0;
+
+	for (int i = 0; i < vmc->class->methods_count; i++) {
+		struct vm_method *vmm = &vmc->methods[i];
+
+		if (public_only && !vm_method_is_public(vmm))
+			continue;
+
+		if (vm_method_is_special(vmm))
+			continue;
+
+		struct vm_object *method
+			= vm_object_alloc(vm_java_lang_reflect_Method);
+
+		if (!method)
+			return rethrow_exception();
+
+		struct vm_object *name_object
+			= vm_object_alloc_string_from_c(vmm->name);
+
+		if (!name_object)
+			return rethrow_exception();
+
+		if (vm_java_lang_reflect_VMMethod != NULL) {	/* Classpath 0.98 */
+			struct vm_object *vm_method;
+
+			vm_method = vm_object_alloc(vm_java_lang_reflect_VMMethod);
+			if (!vm_method)
+				return rethrow_exception();
+
+			field_set_object(vm_method, vm_java_lang_reflect_VMMethod_clazz, clazz);
+			field_set_object(vm_method, vm_java_lang_reflect_VMMethod_name, name_object);
+			field_set_object(vm_method, vm_java_lang_reflect_VMMethod_m, method);
+			field_set_int(vm_method, vm_java_lang_reflect_VMMethod_slot, i);
+
+			assert(vm_java_lang_reflect_Method_m != NULL);
+			field_set_object(method, vm_java_lang_reflect_Method_m, vm_method);
+		} else {
+			field_set_object(method, vm_java_lang_reflect_Method_declaringClass, clazz);
+			field_set_object(method, vm_java_lang_reflect_Method_name, name_object);
+			field_set_int(method, vm_java_lang_reflect_Method_slot, i);
+		}
+
+		array_set_field_ptr(array, index++, method);
+	}
+
+	return array;
+}
+
+jobject java_lang_VMClass_getDeclaringClass(jobject class)
+{
+	struct vm_class *declaring_class;
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(class);
+	if (!vmc)
+		return NULL;
+
+	declaring_class	= vmc->declaring_class;
+	if (!declaring_class)
+		return NULL;
+
+	return declaring_class->object;
+}
+
+jobject java_lang_VMClass_getInterfaces(jobject clazz)
+{
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	struct vm_object *array
+		= vm_object_alloc_array(vm_array_of_java_lang_Class,
+					vmc->nr_interfaces);
+	if (!array)
+		return rethrow_exception();
+
+	for (unsigned int i = 0; i < vmc->nr_interfaces; i++) {
+		vm_class_ensure_init(vmc->interfaces[i]);
+		if (exception_occurred())
+			return NULL;
+
+		array_set_field_ptr(array, i, vmc->interfaces[i]->object);
+	}
+
+	return array;
+}
+
+jint java_lang_VMClass_getModifiers(struct vm_object *clazz)
+{
+	struct vm_class *class = vm_object_to_vm_class(clazz);
+	if (!class)
+		return 0;
+
+	return class->access_flags;
+}
+
 struct vm_object *java_lang_VMClass_getName(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);
@@ -97,6 +383,26 @@ struct vm_object *java_lang_VMClass_getName(struct vm_object *object)
 	return obj;
 }
 
+jobject java_lang_VMClass_getSuperclass(jobject clazz)
+{
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	if (vm_class_is_array_class(vmc))
+		return vm_java_lang_Object->object;
+
+	if (vm_class_is_interface(vmc) ||
+	    vm_class_is_primitive_class(vmc) ||
+	    vmc == vm_java_lang_Object)
+		return NULL;
+
+	vm_class_ensure_object(vmc->super);
+	return vmc->super->object;
+}
+
 jboolean java_lang_VMClass_isAnonymousClass(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);
@@ -105,17 +411,6 @@ jboolean java_lang_VMClass_isAnonymousClass(struct vm_object *object)
 		return false;
 
 	return vm_class_is_anonymous(class);
-}
-
-jboolean java_lang_VMClass_isAssignableFrom(struct vm_object *clazz_1, struct vm_object *clazz_2)
-{
-	struct vm_class *vmc_1 = vm_object_to_vm_class(clazz_1);
-	struct vm_class *vmc_2 = vm_object_to_vm_class(clazz_2);
-
-	if (!vmc_1 || !vmc_2)
-		return false;
-
-	return vm_class_is_assignable_from(vmc_1, vmc_2);
 }
 
 jboolean java_lang_VMClass_isArray(struct vm_object *object)
@@ -128,38 +423,15 @@ jboolean java_lang_VMClass_isArray(struct vm_object *object)
 	return vm_class_is_array_class(class);
 }
 
-jboolean java_lang_VMClass_isPrimitive(struct vm_object *object)
+jboolean java_lang_VMClass_isAssignableFrom(struct vm_object *clazz_1, struct vm_object *clazz_2)
 {
-	struct vm_class *class = vm_object_to_vm_class(object);
+	struct vm_class *vmc_1 = vm_object_to_vm_class(clazz_1);
+	struct vm_class *vmc_2 = vm_object_to_vm_class(clazz_2);
 
-	if (!class)
+	if (!vmc_1 || !vmc_2)
 		return false;
 
-	return vm_class_is_primitive_class(class);
-}
-
-jint java_lang_VMClass_getModifiers(struct vm_object *clazz)
-{
-	struct vm_class *class = vm_object_to_vm_class(clazz);
-	if (!class)
-		return 0;
-
-	return class->access_flags;
-}
-
-struct vm_object *java_lang_VMClass_getComponentType(struct vm_object *object)
-{
-	struct vm_class *class = vm_object_to_vm_class(object);
-
-	if (!class)
-		return NULL;
-
-	if (!vm_class_is_array_class(class)) {
-		warn("%s", class->name);
-		return NULL;
-	}
-
-	return vm_class_get_array_element_class(class)->object;
+	return vm_class_is_assignable_from(vmc_1, vmc_2);
 }
 
 jboolean java_lang_VMClass_isInstance(struct vm_object *clazz, struct vm_object *object)
@@ -179,4 +451,14 @@ jboolean java_lang_VMClass_isInterface(struct vm_object *clazz)
 		return false;
 
 	return vm_class_is_interface(class);
+}
+
+jboolean java_lang_VMClass_isPrimitive(struct vm_object *object)
+{
+	struct vm_class *class = vm_object_to_vm_class(object);
+
+	if (!class)
+		return false;
+
+	return vm_class_is_primitive_class(class);
 }
