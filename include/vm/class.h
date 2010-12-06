@@ -4,8 +4,6 @@
 #include <assert.h>
 #include <pthread.h>
 
-#include "cafebabe/inner_classes_attribute.h"
-
 #include "vm/field.h"
 #include "vm/itable.h"
 #include "vm/method.h"
@@ -87,8 +85,6 @@ struct vm_class {
 	void *itable[VM_ITABLE_SIZE];
 
 	struct vm_class *declaring_class;
-
-	struct cafebabe_inner_classes_attribute inner_classes_attribute;
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);

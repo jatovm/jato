@@ -481,11 +481,14 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	INIT_LIST_HEAD(&vmc->static_fixup_site_list);
 
-	if (cafebabe_read_inner_classes_attribute(class, &class->attributes, &vmc->inner_classes_attribute))
+	struct cafebabe_inner_classes_attribute inner_classes_attribute;
+
+	memset(&inner_classes_attribute, 0, sizeof(inner_classes_attribute));
+	if (cafebabe_read_inner_classes_attribute(class, &class->attributes, &inner_classes_attribute))
 		return -1;
 
-	for (unsigned int i = 0; i < vmc->inner_classes_attribute.number_of_classes; i++) {
-		struct cafebabe_inner_class *inner = &vmc->inner_classes_attribute.inner_classes[i];
+	for (unsigned int i = 0; i < inner_classes_attribute.number_of_classes; i++) {
+		struct cafebabe_inner_class *inner = &inner_classes_attribute.inner_classes[i];
 
 		if (class->this_class == inner->inner_class_info_index) {
 			vmc->declaring_class	= vm_class_resolve_class(vmc, inner->outer_class_info_index);
