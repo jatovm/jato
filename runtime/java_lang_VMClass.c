@@ -24,7 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "runtime/class.h"
+#include "runtime/java_lang_VMClass.h"
+
 #include "jit/exception.h"
 
 #include "vm/classloader.h"
@@ -38,7 +39,7 @@
 
 #include <stddef.h>
 
-struct vm_object *native_vmclass_getclassloader(struct vm_object *object)
+struct vm_object *java_lang_VMClass_getClassLoader(struct vm_object *object)
 {
 	struct vm_class *vmc;
 
@@ -49,9 +50,7 @@ struct vm_object *native_vmclass_getclassloader(struct vm_object *object)
 	return vmc->classloader;
 }
 
-struct vm_object *native_vmclass_forname(struct vm_object *name,
-					 jboolean initialize,
-					 struct vm_object *loader)
+struct vm_object *java_lang_VMClass_forName(struct vm_object *name, jboolean initialize, struct vm_object *loader)
 {
 	struct vm_class *class;
 	char *class_name;
@@ -81,7 +80,7 @@ struct vm_object *native_vmclass_forname(struct vm_object *name,
 	return NULL;
 }
 
-struct vm_object *native_vmclass_getname(struct vm_object *object)
+struct vm_object *java_lang_VMClass_getName(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);
 
@@ -98,7 +97,7 @@ struct vm_object *native_vmclass_getname(struct vm_object *object)
 	return obj;
 }
 
-int32_t native_vmclass_is_anonymous_class(struct vm_object *object)
+jboolean java_lang_VMClass_isAnonymousClass(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);
 
@@ -108,8 +107,7 @@ int32_t native_vmclass_is_anonymous_class(struct vm_object *object)
 	return vm_class_is_anonymous(class);
 }
 
-jint native_vmclass_is_assignable_from(struct vm_object *clazz_1,
-					   struct vm_object *clazz_2)
+jboolean java_lang_VMClass_isAssignableFrom(struct vm_object *clazz_1, struct vm_object *clazz_2)
 {
 	struct vm_class *vmc_1 = vm_object_to_vm_class(clazz_1);
 	struct vm_class *vmc_2 = vm_object_to_vm_class(clazz_2);
@@ -120,7 +118,7 @@ jint native_vmclass_is_assignable_from(struct vm_object *clazz_1,
 	return vm_class_is_assignable_from(vmc_1, vmc_2);
 }
 
-int32_t native_vmclass_isarray(struct vm_object *object)
+jboolean java_lang_VMClass_isArray(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);
 
@@ -130,7 +128,7 @@ int32_t native_vmclass_isarray(struct vm_object *object)
 	return vm_class_is_array_class(class);
 }
 
-int32_t native_vmclass_isprimitive(struct vm_object *object)
+jboolean java_lang_VMClass_isPrimitive(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);
 
@@ -140,7 +138,7 @@ int32_t native_vmclass_isprimitive(struct vm_object *object)
 	return vm_class_is_primitive_class(class);
 }
 
-jint native_vmclass_getmodifiers(struct vm_object *clazz)
+jint java_lang_VMClass_getModifiers(struct vm_object *clazz)
 {
 	struct vm_class *class = vm_object_to_vm_class(clazz);
 	if (!class)
@@ -149,7 +147,7 @@ jint native_vmclass_getmodifiers(struct vm_object *clazz)
 	return class->access_flags;
 }
 
-struct vm_object *native_vmclass_getcomponenttype(struct vm_object *object)
+struct vm_object *java_lang_VMClass_getComponentType(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);
 
@@ -164,8 +162,7 @@ struct vm_object *native_vmclass_getcomponenttype(struct vm_object *object)
 	return vm_class_get_array_element_class(class)->object;
 }
 
-jint native_vmclass_isinstance(struct vm_object *clazz,
-				   struct vm_object *object)
+jboolean java_lang_VMClass_isInstance(struct vm_object *clazz, struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(clazz);
 
@@ -175,7 +172,7 @@ jint native_vmclass_isinstance(struct vm_object *clazz,
 	return vm_class_is_assignable_from(class, object->class);
 }
 
-jint native_vmclass_isinterface(struct vm_object *clazz)
+jboolean java_lang_VMClass_isInterface(struct vm_object *clazz)
 {
 	struct vm_class *class = vm_object_to_vm_class(clazz);
 	if (!class)

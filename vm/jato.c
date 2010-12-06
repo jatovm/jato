@@ -53,7 +53,6 @@
 #include "runtime/stack-walker.h"
 #include "runtime/runtime.h"
 #include "runtime/unsafe.h"
-#include "runtime/class.h"
 #include "runtime/classloader.h"
 
 #include "jit/compiler.h"
@@ -93,6 +92,7 @@
 
 #include "runtime/java_lang_VMSystem.h"
 #include "runtime/java_lang_VMThread.h"
+#include "runtime/java_lang_VMClass.h"
 
 static bool dump_maps;
 static bool perf_enabled;
@@ -412,7 +412,7 @@ static jint native_atomiclong_vm_supports_cs8(void)
 
 static struct vm_native natives[] = {
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", native_vmstackwalker_getclasscontext),
-	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassLoader", native_vmclass_getclassloader),
+	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassLoader", java_lang_VMClass_getClassLoader),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", native_vmsystemproperties_preinit),
 	DEFINE_NATIVE("jato/internal/VM", "disableFault", native_vm_disable_fault),
 	DEFINE_NATIVE("jato/internal/VM", "enableFault", native_vm_enable_fault),
@@ -421,23 +421,23 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("jato/internal/VM", "throwNullPointerException", native_vm_throw_null_pointer_exception),
 	DEFINE_NATIVE("java/lang/reflect/VMArray", "createObjectArray", native_vmarray_createobjectarray),
 	DEFINE_NATIVE("java/io/VMFile", "isDirectory", native_vmfile_is_directory),
-	DEFINE_NATIVE("java/lang/VMClass", "forName", native_vmclass_forname),
-	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", native_vmclass_getclassloader),
-	DEFINE_NATIVE("java/lang/VMClass", "getComponentType", native_vmclass_getcomponenttype),
+	DEFINE_NATIVE("java/lang/VMClass", "forName", java_lang_VMClass_forName),
+	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", java_lang_VMClass_getClassLoader),
+	DEFINE_NATIVE("java/lang/VMClass", "getComponentType", java_lang_VMClass_getComponentType),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredConstructors", native_vmclass_get_declared_constructors),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredFields", native_vmclass_get_declared_fields),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredMethods", native_vmclass_get_declared_methods),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaringClass", native_vmclass_get_declaring_class),
 	DEFINE_NATIVE("java/lang/VMClass", "getInterfaces", native_vmclass_get_interfaces),
-	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", native_vmclass_getmodifiers),
-	DEFINE_NATIVE("java/lang/VMClass", "getName", native_vmclass_getname),
+	DEFINE_NATIVE("java/lang/VMClass", "getModifiers", java_lang_VMClass_getModifiers),
+	DEFINE_NATIVE("java/lang/VMClass", "getName", java_lang_VMClass_getName),
 	DEFINE_NATIVE("java/lang/VMClass", "getSuperclass", native_vmclass_get_superclass),
-	DEFINE_NATIVE("java/lang/VMClass", "isAnonymousClass", native_vmclass_is_anonymous_class),
-	DEFINE_NATIVE("java/lang/VMClass", "isArray", native_vmclass_isarray),
-	DEFINE_NATIVE("java/lang/VMClass", "isAssignableFrom", native_vmclass_is_assignable_from),
-	DEFINE_NATIVE("java/lang/VMClass", "isInstance", native_vmclass_isinstance),
-	DEFINE_NATIVE("java/lang/VMClass", "isInterface", native_vmclass_isinterface),
-	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", native_vmclass_isprimitive),
+	DEFINE_NATIVE("java/lang/VMClass", "isAnonymousClass", java_lang_VMClass_isAnonymousClass),
+	DEFINE_NATIVE("java/lang/VMClass", "isArray", java_lang_VMClass_isArray),
+	DEFINE_NATIVE("java/lang/VMClass", "isAssignableFrom", java_lang_VMClass_isAssignableFrom),
+	DEFINE_NATIVE("java/lang/VMClass", "isInstance", java_lang_VMClass_isInstance),
+	DEFINE_NATIVE("java/lang/VMClass", "isInterface", java_lang_VMClass_isInterface),
+	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", java_lang_VMClass_isPrimitive),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "defineClass", native_vmclassloader_defineclass),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "findLoadedClass", native_vmclassloader_findloadedclass),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "getPrimitiveClass", native_vmclassloader_getprimitiveclass),
