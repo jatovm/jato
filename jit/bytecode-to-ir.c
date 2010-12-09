@@ -192,8 +192,7 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 	buffer.buffer = cu->method->code_attribute.code;
 	buffer.pos = bb->start;
 
-	if (bb->is_eh) {
-		assert(!bb_mimic_stack_is_resolved(bb));
+	if (bb->is_eh && !bb_mimic_stack_is_resolved(bb)) {
 		stack_push(bb->mimic_stack, exception_ref_expr());
 		bb->entry_mimic_stack_size = 1;
 	}

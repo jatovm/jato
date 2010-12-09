@@ -338,6 +338,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	regression/jvm/DupTest.j \
 	regression/jvm/EntryTest.j \
+	regression/jvm/ExceptionHandlerTest.j \
 	regression/jvm/InvokeResultTest.j \
 	regression/jvm/InvokeTest.j \
 	regression/jvm/NoSuchMethodErrorTest.j\

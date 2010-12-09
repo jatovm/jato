@@ -34,6 +34,44 @@ static void detect_exception_handlers(struct compilation_unit *cu)
 		bb->is_eh = is_exception_handler(bb);
 }
 
+static int split_at_exception_handlers(struct compilation_unit *cu)
+{
+	struct vm_method *method = cu->method;
+	int i, err = 0;
+
+	for (i = 0; i < method->code_attribute.exception_table_length; i++) {
+		struct cafebabe_code_attribute_exception *eh;
+		struct basic_block *bb;
+
+		eh = &method->code_attribute.exception_table[i];
+
+		bb = find_bb(cu, eh->handler_pc);
+		if (!bb) {
+			err = -1;
+			break;
+		}
+
+		assert(bb->is_eh);
+
+		if (bb->start != eh->handler_pc) {
+			struct basic_block *new_bb;
+
+			new_bb = bb_split(bb, eh->handler_pc);
+			if (!new_bb) {
+				err = -1;
+				break;
+			}
+			new_bb->is_eh = true;
+
+			err = bb_add_successor(bb, new_bb);
+			if (err)
+				break;
+		}
+	}
+
+	return err;
+}
+
 static int update_branch_successors(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
@@ -56,15 +94,12 @@ static int update_branch_successors(struct compilation_unit *cu)
 	return err;
 }
 
-static int split_at_branch_targets(struct compilation_unit *cu,
-				    struct bitset *branch_targets)
+static int split_at_branch_targets(struct compilation_unit *cu, struct bitset *branch_targets)
 {
 	unsigned long offset;
 	int err = 0;
 
-	for (offset = 0; offset < cu->method->code_attribute.code_length;
-		offset++)
-	{
+	for (offset = 0; offset < cu->method->code_attribute.code_length; offset++) {
 		struct basic_block *bb;
 
 		if (!test_bit(branch_targets->bits, offset))
@@ -187,7 +222,7 @@ static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
 		eh = &method->code_attribute.exception_table[i];
 		bb = find_bb(cu, eh->handler_pc);
 
-		if (bb == NULL || bb->start != eh->handler_pc)
+		if (bb == NULL || bb->start != eh->handler_pc || !bb->is_eh)
 			return false;
 	}
 
@@ -224,6 +259,10 @@ int analyze_control_flow(struct compilation_unit *cu)
 		goto out;
 
 	detect_exception_handlers(cu);
+
+	err = split_at_exception_handlers(cu);
+	if (err)
+		goto out;
 
 	/*
 	 * This checks whether every exception handler has its own

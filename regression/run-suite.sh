@@ -25,7 +25,7 @@ if test x"$GNU_CLASSPATH_ROOT" = x -o ! -d "$GNU_CLASSPATH_ROOT"; then
 fi
 
 while [ "$#" -ge 1 ]; do
-    case "$1" in 
+    case "$1" in
 	-t)
 	echo 'Tracing execution.'
 	JAVA_OPTS="$JAVA_OPTS -Xtrace:jit"
@@ -70,6 +70,7 @@ if [ -z "$CLASS_LIST" ]; then
     run_java jvm.DoubleConversionTest 0
     run_java jvm.DupTest 0
     run_java jvm.ExceptionsTest 0
+    run_java jvm.ExceptionHandlerTest 0
     run_java jvm.FibonacciTest 0
     run_java jvm.FinallyTest 0
     run_java jvm.FloatArithmeticTest 0

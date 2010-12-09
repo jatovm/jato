@@ -132,6 +132,8 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 
 	orig_bb->end = offset;
 
+	new_bb->entry_mimic_stack_size = -1;
+
 	new_bb->successors = orig_bb->successors;
 	orig_bb->successors = NULL;
 
