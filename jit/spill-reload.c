@@ -134,6 +134,24 @@ static struct list_head *bb_last_spill_node(struct basic_block *bb)
 	return &last->insn_list_node;
 }
 
+static int alloc_spill_reload_reg(struct live_interval *interval)
+{
+	struct var_info *reg;
+
+	reg		= malloc(sizeof *reg);
+	if (!reg)
+		return -ENOMEM;
+
+	memset(reg, 0, sizeof *reg);
+
+	reg->interval	= interval;
+	reg->vm_type	= interval->var_info->vm_type;
+
+	interval->spill_reload_reg	= reg;
+
+	return 0;
+}
+
 static struct stack_slot *
 spill_interval(struct live_interval *interval,
 	       struct compilation_unit *cu,
@@ -143,12 +161,16 @@ spill_interval(struct live_interval *interval,
 	struct stack_slot *slot;
 	struct insn *spill;
 
-	slot = get_spill_slot(cu->stack_frame, interval->spill_reload_reg.vm_type);
+	slot = get_spill_slot(cu->stack_frame, interval->var_info->vm_type);
 	if (!slot)
 		return NULL;
 
-	assert(interval->spill_reload_reg.vm_type == interval->var_info->vm_type);
-	spill = spill_insn(&interval->spill_reload_reg, slot);
+	if (!interval->spill_reload_reg) {
+		if (alloc_spill_reload_reg(interval))
+			return NULL;
+	}
+
+	spill = spill_insn(interval->spill_reload_reg, slot);
 	if (!spill)
 		return NULL;
 
@@ -181,8 +203,15 @@ insert_reload_insn(struct live_interval *interval, struct compilation_unit *cu)
 	unsigned long bc_offset;
 	struct insn *reload;
 
-	reload = reload_insn(interval->spill_parent->spill_slot,
-			     &interval->spill_reload_reg);
+	if (!interval->spill_reload_reg) {
+		int err;
+
+		err = alloc_spill_reload_reg(interval);
+		if (err)
+			return err;
+	}
+
+	reload = reload_insn(interval->spill_parent->spill_slot, interval->spill_reload_reg);
 	if (!reload)
 		return warn("out of memory"), -ENOMEM;
 
@@ -248,18 +277,18 @@ out:
 	return err;
 }
 
-static void insert_mov_insns(struct compilation_unit *cu,
-			     struct live_interval_mapping *mappings,
-			     int nr_mapped,
-			     struct basic_block *from_bb,
-			     struct basic_block *to_bb)
+static int insert_mov_insns(struct compilation_unit *cu,
+			    struct live_interval_mapping *mappings,
+			    int nr_mapped,
+			    struct basic_block *from_bb,
+			    struct basic_block *to_bb)
 {
 	struct live_interval *from_it, *to_it;
 	struct stack_slot *slots[nr_mapped];
 	struct list_head *spill_after;
 	struct list_head *push_before;
 	unsigned long bc_offset;
-	int i;
+	int i, err = 0;
 
 	spill_after = bb_last_spill_node(from_bb);
 	push_before = spill_after->next;
@@ -301,10 +330,18 @@ static void insert_mov_insns(struct compilation_unit *cu,
 		int idx;
 
 		idx = bb_lookup_successor_index(from_bb, to_bb);
-		reload = reload_insn(slots[i], &to_it->spill_reload_reg);
+
+		if (!to_it->spill_reload_reg) {
+			err = alloc_spill_reload_reg(to_it);
+			if (err)
+				break;
+		}
+		reload = reload_insn(slots[i], to_it->spill_reload_reg);
 		list_add_tail(&reload->insn_list_node,
 			      &from_bb->resolution_blocks[idx].insns);
 	}
+
+	return err;
 }
 
 static void maybe_add_mapping(struct live_interval_mapping *mappings,
@@ -367,6 +404,7 @@ static int resolve_data_flow(struct compilation_unit *cu)
 {
 	struct basic_block *from;
 	unsigned long vreg;
+	int err = 0;
 
 	/*
 	 * This implements the data flow resolution algorithm described in
@@ -401,11 +439,13 @@ static int resolve_data_flow(struct compilation_unit *cu)
 				}
 			}
 
-			insert_mov_insns(cu, mappings, nr_mapped, from, to);
+			err = insert_mov_insns(cu, mappings, nr_mapped, from, to);
+			if (err)
+				break;
 		}
 	}
 
-	return 0;
+	return err;
 }
 
 int insert_spill_reload_insns(struct compilation_unit *cu)

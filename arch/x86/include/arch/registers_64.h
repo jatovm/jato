@@ -64,7 +64,7 @@ enum machine_reg {
 	MACH_REG_xBP = MACH_REG_RBP,
 	MACH_REG_xSP = MACH_REG_RSP,
 
-	MACH_REG_UNASSIGNED = INT_MAX,
+	MACH_REG_UNASSIGNED		/* Keep this last */
 };
 
 #define GPR_VM_TYPE	J_LONG

@@ -20,7 +20,7 @@ enum machine_reg {
 	/* The above registers are available for get_fixed_var().  */
 	NR_FIXED_REGISTERS = NR_REGISTERS,
 
-	MACH_REG_UNASSIGNED = INT_MAX,
+	MACH_REG_UNASSIGNED		/* Keep this last */
 };
 
 #define NR_CALLER_SAVE_REGS 0
