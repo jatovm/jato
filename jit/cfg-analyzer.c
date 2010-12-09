@@ -187,7 +187,7 @@ static bool all_exception_handlers_have_bb(struct compilation_unit *cu)
 		eh = &method->code_attribute.exception_table[i];
 		bb = find_bb(cu, eh->handler_pc);
 
-		if (bb == NULL || bb->start > eh->handler_pc || bb->end < eh->handler_pc)
+		if (bb == NULL || bb->start != eh->handler_pc)
 			return false;
 	}
 
