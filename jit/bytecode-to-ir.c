@@ -310,9 +310,8 @@ assign_temporary(struct basic_block *bb, int entry, int slot_ndx,
 
 #ifdef CONFIG_32_BIT
 		expr->tmp_high = tmp_high;
-#else
-		expr->tmp_low = tmp_low;
 #endif
+		expr->tmp_low = tmp_low;
 	}
 }
 
