@@ -82,7 +82,7 @@ static struct vm_object *
 new_exception(struct vm_class *vmc, const char *message)
 {
 	struct vm_object *message_str;
-	struct vm_method *mb;
+	struct vm_method *vmm;
 	struct vm_object *obj;
 
 	obj = vm_object_alloc(vmc);
@@ -97,11 +97,19 @@ new_exception(struct vm_class *vmc, const char *message)
 			return rethrow_exception();
 	}
 
-	mb = vm_class_get_method(vmc, "<init>", "(Ljava/lang/String;)V");
-	if (!mb)
-		error("constructor not found");
+	vmm = vm_class_get_method(vmc, "<init>", "(Ljava/lang/String;)V");
+	if (vmm) {
+		vm_call_method(vmm, obj, message_str);
 
-	vm_call_method(mb, obj, message_str);
+		return obj;
+	}
+
+	vmm = vm_class_get_method(vmc, "<init>", "()V");
+	if (!vmm)
+		error("constructor not found for %s", vmc->name);
+
+	vm_call_method(vmm, obj);
+
 	return obj;
 }
 
