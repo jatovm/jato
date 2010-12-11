@@ -16,7 +16,10 @@ jni_trampoline:
 	popl	%eax			# target
 	addl	$0x4, %esp		# return address
 
+	pushl	$vm_jni_default_env
+
 	call	*%eax
+	addl	$0x4, %esp
 	subl	$0x4, %esp		# new return address
 
 	pushl	%eax			# save return value
@@ -70,6 +73,7 @@ jni_trampoline:
 
 	SAVE_ARGS
 	movq	0x20(%rbp), %rax
+	movq	$vm_jni_default_env, %rdi
 	call	*%rax
 	RESTORE_ARGS
 

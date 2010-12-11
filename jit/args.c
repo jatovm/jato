@@ -126,11 +126,11 @@ convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method 
 			args_list = insert_arg(args_list, expr, method, 1);
 		}
 
-		expr = value_expr(J_REFERENCE, (unsigned long) vm_jni_get_jni_env());
-		if (!expr)
-			goto error;
-
-		args_list = insert_arg(args_list, expr, method, 0);
+		/*
+		 * JNI methods also need a pointer to JNI environment. That's
+		 * done in jni_trampoline automagically which is why we never
+		 * use method index zero here for JNI methods.
+		 */
 	}
   out:
 	return args_list;
