@@ -2366,7 +2366,7 @@ stmt:	STMT_STORE(inst_field, reg)
 
 	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset));
 
-%ifdef CONFIG_32_BIT
+%ifdef CONFIG_X86_32
 	if (store_src->vm_type == J_LONG) {
 		src = state->right->reg2;
 		select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset + 4));
