@@ -86,8 +86,6 @@ unsigned int itable_hash(struct vm_method *vmm)
 
 static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 {
-	const struct cafebabe_class *class = vmc->class;
-
 	/* Note about error handling: We don't actually clean up on error,
 	 * but assume that the caller will free the entries that have been
 	 * added to the itable so far. That really simplifies this whole
@@ -109,7 +107,7 @@ static int itable_add_entries(struct vm_class *vmc, struct list_head *itable)
 		}
 	}
 
-	for (unsigned int i = 0; i < class->interfaces_count; ++i) {
+	for (unsigned int i = 0; i < vmc->nr_interfaces; ++i) {
 		int ret = itable_add_entries(vmc->interfaces[i], itable);
 		if (ret)
 			return ret;
