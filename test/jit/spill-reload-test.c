@@ -115,6 +115,9 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
         bb_add_insn(bb, insn_array[0]);
         bb_add_insn(bb, insn_array[1]);
 
+	r1->interval->spill_reload_reg.interval = r1->interval;
+	r2->interval->spill_reload_reg.interval = r2->interval;
+
 	r2->interval->flags |= INTERVAL_FLAG_NEED_RELOAD;
 	r2->interval->spill_parent = r1->interval;
 
@@ -135,7 +138,7 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
 	assert_ptr_equals(insn_array[0], insn);
 
 	/*
-	 * Last instruction stays the same.
+	 * Last instruction stays the same. 
 	 */
 	insn = list_next_entry(&insn->insn_list_node, struct insn, insn_list_node);
 	assert_ptr_equals(insn_array[1], insn);

@@ -85,6 +85,9 @@ struct live_interval {
 	/* Linked list of child intervals.  */
 	struct live_interval *next_child, *prev_child;
 
+	/* Machine register of this interval.  */
+	enum machine_reg reg;
+
 	/* List of register use positions in this interval.  */
 	struct list_head use_positions;
 
@@ -98,13 +101,10 @@ struct live_interval {
 
 	/* This struct var_info is used during spill/reload stage to point to
 	   the allocated machine register for this interval.  */
-	struct var_info *spill_reload_reg;
+	struct var_info spill_reload_reg;
 
 	/* The live interval where spill happened.  */
 	struct live_interval *spill_parent;
-
-	/* Machine register of this interval. See enum machine_reg for details.  */
-	uint8_t reg;
 
 	/* See enum interval_flag_type for details.  */
 	uint8_t flags;
