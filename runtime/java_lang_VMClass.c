@@ -405,11 +405,14 @@ jobject java_lang_VMClass_getInterfaces(jobject clazz)
 	return array;
 }
 
-jint java_lang_VMClass_getModifiers(struct vm_object *clazz)
+jint java_lang_VMClass_getModifiers(struct vm_object *clazz, jboolean ignore_inner_classes_attrib)
 {
 	struct vm_class *class = vm_object_to_vm_class(clazz);
 	if (!class)
 		return 0;
+
+	if (vm_class_is_member(class) && !ignore_inner_classes_attrib)
+		return class->inner_class_access_flags;
 
 	return class->access_flags;
 }

@@ -46,21 +46,9 @@ public class ClassTest extends TestCase {
     };
 
     public static void testArrayClassModifiers() {
+        assertEquals(Modifier.PRIVATE | Modifier.STATIC, X.class.getModifiers());
         X[] array = new X[1];
-
-        int modifiers = array.getClass().getModifiers();
-
-        /*
-         * FIXME: hotspot sets ACC_PRIVATE and ACC_STATIC for X while
-         * jato does not.
-         */
-        assertEquals(0 /* Modifier.PRIVATE | Modifier.STATIC */,
-                     X.class.getModifiers());
-
-        assertEquals(0 /* Modifier.PRIVATE | Modifier.STATIC */
-                     | Modifier.FINAL
-                     | Modifier.ABSTRACT,
-                     modifiers);
+        assertEquals(Modifier.FINAL | Modifier.ABSTRACT, array.getClass().getModifiers());
     }
 
     public static void testRegularClassModifiers() {

@@ -494,7 +494,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		struct cafebabe_inner_class *inner = &inner_classes_attribute.inner_classes[i];
 
 		if (class->this_class == inner->inner_class_info_index) {
-			vmc->declaring_class	= vm_class_resolve_class(vmc, inner->outer_class_info_index);
+			vmc->declaring_class		= vm_class_resolve_class(vmc, inner->outer_class_info_index);
+			vmc->inner_class_access_flags	= inner->inner_class_access_flags;
 		}
 	}
 

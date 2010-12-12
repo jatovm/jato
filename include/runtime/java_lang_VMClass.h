@@ -12,7 +12,7 @@ jobject		java_lang_VMClass_getDeclaredFields(jobject class_object, jboolean publ
 jobject		java_lang_VMClass_getDeclaredMethods(jobject class_object, jboolean public_only);
 jobject		java_lang_VMClass_getDeclaringClass(jobject clazz);
 jobject		java_lang_VMClass_getInterfaces(jobject clazz);
-jint		java_lang_VMClass_getModifiers(jobject clazz);
+jint		java_lang_VMClass_getModifiers(jobject clazz, jboolean ignore_inner_class_attrib);
 jobject		java_lang_VMClass_getName(jobject object);
 jobject		java_lang_VMClass_getSuperclass(jobject clazz);
 jboolean	java_lang_VMClass_isAnonymousClass(jobject object);

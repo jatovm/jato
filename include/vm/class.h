@@ -44,6 +44,7 @@ struct vm_class {
 	const struct cafebabe_class *class;
 	enum vm_class_state state;
 	uint16_t access_flags;
+	uint16_t inner_class_access_flags;
 	char *name;
 
 	pthread_mutex_t mutex;
