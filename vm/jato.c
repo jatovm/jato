@@ -461,6 +461,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMRuntime", "nativeLoad", native_vmruntime_native_load),
 	DEFINE_NATIVE("java/lang/VMRuntime", "runFinalizationForExit", native_vmruntime_run_finalization_for_exit),
 	DEFINE_NATIVE("java/lang/VMRuntime", "traceInstructions", native_vmruntime_trace_instructions),
+	DEFINE_NATIVE("java/lang/VMRuntime", "traceMethodCalls", native_vmruntime_trace_method_calls),
 	DEFINE_NATIVE("java/lang/VMString", "intern", native_vmstring_intern),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", java_lang_VMSystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", java_lang_VMSystem_identityHashCode),

@@ -13,5 +13,6 @@ void native_vmruntime_run_finalization_for_exit(void);
 struct vm_object *native_vmruntime_maplibraryname(struct vm_object *name);
 int native_vmruntime_native_load(struct vm_object *name, struct vm_object *classloader);
 void native_vmruntime_trace_instructions(jboolean on);
+void native_vmruntime_trace_method_calls(jboolean on);
 
 #endif /* RUNTIME_RUNTIME_H */
