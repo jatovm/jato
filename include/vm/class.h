@@ -16,6 +16,8 @@
 
 #include "jit/vtable.h"
 
+#include "cafebabe/enclosing_method_attribute.h"
+
 struct vm_object;
 struct vm_thread;
 struct vm_annotation;
@@ -88,6 +90,8 @@ struct vm_class {
 	void *itable[VM_ITABLE_SIZE];
 
 	struct vm_class *declaring_class;
+
+	struct cafebabe_enclosing_method_attribute enclosing_method_attribute;
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
@@ -152,7 +156,14 @@ static inline bool vm_class_is_regular_class(const struct vm_class *vmc)
 	return vmc->kind == VM_CLASS_KIND_REGULAR;
 }
 
-bool vm_class_is_anonymous(struct vm_class *vmc);
+bool vm_class_is_anonymous(const struct vm_class *vmc);
+
+struct vm_method *vm_class_get_enclosing_method(const struct vm_class *vmc);
+
+static inline bool vm_class_is_local(const struct vm_class *vmc)
+{
+	return !vm_class_is_anonymous(vmc) && vm_class_get_enclosing_method(vmc);
+}
 
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i);
 

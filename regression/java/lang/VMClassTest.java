@@ -51,6 +51,16 @@ public class VMClassTest extends TestCase {
         assertFalse(VMClass.isArray(new Object() { }.getClass()));
     }
 
+    public static void testIsLocalClass() {
+        assertFalse(VMClass.isLocalClass(int.class));
+        assertFalse(VMClass.isLocalClass(int[].class));
+        assertFalse(VMClass.isLocalClass(Object.class));
+        assertFalse(VMClass.isLocalClass(Object[].class));
+        assertFalse(VMClass.isLocalClass(new Object() { }.getClass()));
+        class LocalClass { }
+        assertTrue(VMClass.isLocalClass(LocalClass.class));
+    }
+
     public static void testIsPrimitive() {
         assertTrue(VMClass.isPrimitive(int.class));
         assertFalse(VMClass.isPrimitive(int[].class));
@@ -64,5 +74,6 @@ public class VMClassTest extends TestCase {
         testIsAnonymousClass();
         testIsArray();
         testIsPrimitive();
+        testIsLocalClass();
     }
 }

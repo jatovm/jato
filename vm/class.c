@@ -27,6 +27,7 @@
 
 #include "vm/class.h"
 
+#include "cafebabe/enclosing_method_attribute.h"
 #include "cafebabe/inner_classes_attribute.h"
 #include "cafebabe/annotations_attribute.h"
 #include "cafebabe/constant_pool.h"
@@ -519,6 +520,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	cafebabe_annotations_attribute_deinit(&annotations_attribute);
 
+	cafebabe_read_enclosing_method_attribute(class, &class->attributes, &vmc->enclosing_method_attribute);
+
 	vmc->state = VM_CLASS_LINKED;
 	return 0;
 
@@ -869,33 +872,17 @@ vm_class_resolve_field_recursive(const struct vm_class *vmc, uint16_t i)
 	return result;
 }
 
-int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
-	struct vm_class **r_vmc, char **r_name, char **r_type)
+static int vm_class_resolve_name_and_type(const struct vm_class *vmc, uint16_t index, char **r_name, char **r_type)
 {
-	const struct cafebabe_constant_info_method_ref *method;
-	if (cafebabe_class_constant_get_method_ref(vmc->class, i, &method)) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
-
-	struct vm_class *class = vm_class_resolve_class(vmc,
-		method->class_index);
-	if (!class) {
-		NOT_IMPLEMENTED;
-		return -1;
-	}
-
 	const struct cafebabe_constant_info_name_and_type *name_and_type;
-	if (cafebabe_class_constant_get_name_and_type(vmc->class,
-		method->name_and_type_index, &name_and_type))
-	{
+
+	if (cafebabe_class_constant_get_name_and_type(vmc->class, index, &name_and_type)) {
 		NOT_IMPLEMENTED;
 		return -1;
 	}
 
 	const struct cafebabe_constant_info_utf8 *name;
-	if (cafebabe_class_constant_get_utf8(vmc->class,
-		name_and_type->name_index, &name))
+	if (cafebabe_class_constant_get_utf8(vmc->class, name_and_type->name_index, &name))
 	{
 		NOT_IMPLEMENTED;
 		return -1;
@@ -921,9 +908,32 @@ int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
 		return -1;
 	}
 
-	*r_vmc = class;
 	*r_name = name_str;
 	*r_type = type_str;
+
+	return 0;
+}
+
+int vm_class_resolve_method(const struct vm_class *vmc, uint16_t i,
+	struct vm_class **r_vmc, char **r_name, char **r_type)
+{
+	const struct cafebabe_constant_info_method_ref *method;
+	if (cafebabe_class_constant_get_method_ref(vmc->class, i, &method)) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	struct vm_class *class = vm_class_resolve_class(vmc, method->class_index);
+	if (!class) {
+		NOT_IMPLEMENTED;
+		return -1;
+	}
+
+	if (vm_class_resolve_name_and_type(vmc, method->name_and_type_index, r_name, r_type))
+		return -1;
+
+	*r_vmc = class;
+
 	return 0;
 }
 
@@ -1131,8 +1141,30 @@ static bool is_numeric(const char *s)
 	return true;
 }
 
+struct vm_method *vm_class_get_enclosing_method(const struct vm_class *vmc)
+{
+	struct vm_class *enclosing_class;
+	struct vm_method *result;
+	char *name;
+	char *type;
+
+	enclosing_class = vm_class_resolve_class(vmc, vmc->enclosing_method_attribute.class_index);
+	if (!enclosing_class)
+		return NULL;
+
+	if (vm_class_resolve_name_and_type(vmc, vmc->enclosing_method_attribute.method_index, &name, &type))
+		return NULL;
+
+	result = vm_class_get_method_recursive(enclosing_class, name, type);
+
+	free(name);
+	free(type);
+
+	return result;
+}
+
 /* See Section 15.9.5 ("Anonymous Class Declarations") of the JLS for details.  */
-bool vm_class_is_anonymous(struct vm_class *vmc)
+bool vm_class_is_anonymous(const struct vm_class *vmc)
 {
 	if (!vm_class_is_regular_class(vmc))
 		return false;
