@@ -97,15 +97,6 @@ struct vm_object *java_lang_VMClass_getComponentType(struct vm_object *object)
 	return vm_class_get_array_element_class(class)->object;
 }
 
-/* XXX */
-static struct vm_object *get_system_class_loader(void)
-{
-	if (vm_class_ensure_init(vm_java_lang_ClassLoader))
-		return NULL;
-
-	return vm_call_method_object(vm_java_lang_ClassLoader_getSystemClassLoader);
-}
-
 jobject java_lang_VMClass_getDeclaredAnnotations(jobject klass)
 {
 	struct vm_object *result;

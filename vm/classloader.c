@@ -801,3 +801,11 @@ int classloader_add_to_cache(struct vm_object *loader, struct vm_class *vmc)
 	pthread_mutex_unlock(&classloader_mutex);
 	return 0;
 }
+
+struct vm_object *get_system_class_loader(void)
+{
+	if (vm_class_ensure_init(vm_java_lang_ClassLoader))
+		return NULL;
+
+	return vm_call_method_object(vm_java_lang_ClassLoader_getSystemClassLoader);
+}
