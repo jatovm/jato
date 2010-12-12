@@ -165,6 +165,11 @@ static inline bool vm_class_is_local(const struct vm_class *vmc)
 	return !vm_class_is_anonymous(vmc) && vm_class_get_enclosing_method(vmc);
 }
 
+static inline bool vm_class_is_member(const struct vm_class *vmc)
+{
+	return vmc->declaring_class;
+}
+
 struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i);
 
 struct vm_field *vm_class_get_field(const struct vm_class *vmc,

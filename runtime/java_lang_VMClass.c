@@ -511,6 +511,16 @@ jboolean java_lang_VMClass_isLocalClass(struct vm_object *object)
 	return vm_class_is_local(class);
 }
 
+jboolean java_lang_VMClass_isMemberClass(struct vm_object *object)
+{
+	struct vm_class *class = vm_object_to_vm_class(object);
+
+	if (!class)
+		return false;
+
+	return vm_class_is_member(class);
+}
+
 jboolean java_lang_VMClass_isPrimitive(struct vm_object *object)
 {
 	struct vm_class *class = vm_object_to_vm_class(object);

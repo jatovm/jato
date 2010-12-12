@@ -439,6 +439,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "isInstance", java_lang_VMClass_isInstance),
 	DEFINE_NATIVE("java/lang/VMClass", "isInterface", java_lang_VMClass_isInterface),
 	DEFINE_NATIVE("java/lang/VMClass", "isLocalClass", java_lang_VMClass_isLocalClass),
+	DEFINE_NATIVE("java/lang/VMClass", "isMemberClass", java_lang_VMClass_isMemberClass),
 	DEFINE_NATIVE("java/lang/VMClass", "isPrimitive", java_lang_VMClass_isPrimitive),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "defineClass", native_vmclassloader_defineclass),
 	DEFINE_NATIVE("java/lang/VMClassLoader", "findLoadedClass", native_vmclassloader_findloadedclass),

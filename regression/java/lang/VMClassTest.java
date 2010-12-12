@@ -61,6 +61,12 @@ public class VMClassTest extends TestCase {
         assertTrue(VMClass.isLocalClass(LocalClass.class));
     }
 
+    public static void testIsMemberClass() {
+        assertFalse(VMClass.isMemberClass(Object.class));
+        assertTrue(VMClass.isMemberClass(MemberClass.class));
+    }
+    class MemberClass { }
+
     public static void testIsPrimitive() {
         assertTrue(VMClass.isPrimitive(int.class));
         assertFalse(VMClass.isPrimitive(int[].class));
@@ -73,7 +79,8 @@ public class VMClassTest extends TestCase {
         testGetDeclaredAnnotations();
         testIsAnonymousClass();
         testIsArray();
-        testIsPrimitive();
         testIsLocalClass();
+        testIsMemberClass();
+        testIsPrimitive();
     }
 }
