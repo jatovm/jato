@@ -418,6 +418,7 @@ tags: FORCE
 	$(Q) ctags-exuberant -a -R jit/
 	$(Q) ctags-exuberant -a -R lib/
 	$(Q) ctags-exuberant -a -R runtime/
+	$(Q) ctags-exuberant -a -R cafebabe/
 	$(Q) ctags-exuberant -a -R vm/
 
 PHONY += FORCE
