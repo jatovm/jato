@@ -1,19 +1,28 @@
 #!/usr/bin/env python
 
-TEST_DIR = "regression"
-
-TESTS = [
-  ( "jvm/EntryTest"           , 0, [ "i386" ] )
-, ( "jvm/ExitStatusIsZeroTest", 0, [ "i386" ] )
-, ( "jvm/ExitStatusIsOneTest" , 1, [ "i386" ] )
-, ( "jvm/ArgsTest"            , 0, [ "i386" ] )
-]
-
 import subprocess
 import platform
 import time
 import sys
 import os
+
+TEST_DIR = "regression"
+
+CLASSPATH_DIR = os.popen('tools/classpath-config').read().strip()
+
+NO_SYSTEM_CLASSLOADER = [ "-bootclasspath", "regression:" + CLASSPATH_DIR + "/share/classpath/glibj.zip", "-Djava.library.path=" + CLASSPATH_DIR + "/lib/classpath/", "-Xnosystemclassloader" ]
+
+TESTS = [
+  #                            Exit
+  #  Test                      Code  Extra VM arguments       Architectures
+  # ========================== ====  =======================  =============
+  ( "jvm/EntryTest"           , 0  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
+, ( "jvm/ExitStatusIsZeroTest", 0  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
+, ( "jvm/ExitStatusIsOneTest" , 1  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
+, ( "jvm/ArgsTest"            , 0  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
+]
+
+verbose = False
 
 def guess_arch():
   arch = platform.machine()
@@ -24,7 +33,7 @@ def guess_arch():
 ARCH = guess_arch()
 
 def is_test_supported(t):
-  klass, expected_retval, archs = t
+  klass, expected_retval, extra_args, archs = t
   return ARCH in archs
 
 def success(s):
@@ -43,9 +52,12 @@ def main():
   retval = passed = failed = 0
   start = time.time()
   for t in TESTS:
-    klass, expected_retval, archs = t
+    klass, expected_retval, extra_args, archs = t
     if is_test_supported(t):
-      retval = subprocess.call(["./jato", "-cp", TEST_DIR, klass])
+      command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
+      if verbose:
+        print command
+      retval = subprocess.call(command)
       if retval != expected_retval:
         print klass + ": Test FAILED"
         failed += 1
