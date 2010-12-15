@@ -16,11 +16,14 @@ fi
 
 X86_32=$(echo __i386__ | $compiler -E -xc - | tail -n 1)
 X86_64=$(echo __x86_64__ | $compiler -E -xc - | tail -n 1)
+ARM=$(echo __arm__ | $compiler -E -xc - | tail -n 1)
 
 if [ "$X86_32" = "1" ]; then
   echo "i386"
 elif [ "$X86_64" = 1 ]; then
   echo "x86_64"
+elif [ "$ARM" = 1 ]; then
+  echo "arm"
 else
   echo "unknown"
 fi
