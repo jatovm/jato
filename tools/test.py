@@ -16,10 +16,10 @@ TESTS = [
   #                            Exit
   #  Test                      Code  Extra VM arguments       Architectures
   # ========================== ====  =======================  =============
-  ( "jvm/EntryTest"           , 0  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
-, ( "jvm/ExitStatusIsZeroTest", 0  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
-, ( "jvm/ExitStatusIsOneTest" , 1  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
-, ( "jvm/ArgsTest"            , 0  , NO_SYSTEM_CLASSLOADER, [ "i386"    ] )
+  ( "jvm/EntryTest"           , 0  , NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
+, ( "jvm/ExitStatusIsZeroTest", 0  , NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
+, ( "jvm/ExitStatusIsOneTest" , 1  , NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
+, ( "jvm/ArgsTest"            , 0  , NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 ]
 
 verbose = False
@@ -28,7 +28,7 @@ def guess_arch():
   arch = platform.machine()
   if arch == "i686":
     return "i386"
-  return "unknown"
+  return arch
 
 ARCH = guess_arch()
 
