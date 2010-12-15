@@ -34,38 +34,8 @@
 #ifndef _DISASS_H
 #define _DISASS_H
 
-#include "jit/compilation-unit.h"
-#include <dis-asm.h>
-#include <stdbool.h>
-
-/* some macros ****************************************************************/
-
-#define DISASSINSTR(code) \
-    (code) = disassinstr((code))
-
-#define DISASSEMBLE(start,end) \
-    disassemble((start), (end))
-
-
-/* export global variables ****************************************************/
-
-extern disassemble_info info;
-extern bool disass_initialized;
-
-extern char disass_buf[512];
-extern unsigned long disass_len;
-
-
-/* function prototypes *******************************************************/
+struct compilation_unit;
 
 void disassemble(struct compilation_unit *cu, void *start, void *end);
-
-void disass_printf(PTR p, const char *fmt, ...);
-
-int disass_buffer_read_memory(bfd_vma memaddr, bfd_byte *myaddr, unsigned int length, struct disassemble_info *info);
-
-/* machine dependent functions */
-
-unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code);
 
 #endif /* _DISASS_H */

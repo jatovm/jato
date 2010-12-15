@@ -86,7 +86,6 @@ OBJS += jit/cfg-analyzer.o
 OBJS += jit/compilation-unit.o
 OBJS += jit/compiler.o
 OBJS += jit/cu-mapping.o
-OBJS += jit/disass-common.o
 OBJS += jit/dominance.o
 OBJS += jit/elf.o
 OBJS += jit/emit.o

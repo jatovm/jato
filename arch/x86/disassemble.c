@@ -41,6 +41,30 @@
 #include <assert.h>
 #include <dis-asm.h>
 #include <stdarg.h>
+#include <dis-asm.h>
+
+/* some macros ****************************************************************/
+
+#define DISASSINSTR(code) \
+    (code) = disassinstr((code))
+
+#define DISASSEMBLE(start,end) \
+    disassemble((start), (end))
+
+
+/* global variables ***********************************************************/
+
+disassemble_info info;
+bool disass_initialized = false;
+
+
+/* We need this on i386 and x86_64 since we don't know the byte length
+   of currently printed instructions.  512 bytes should be enough. */
+
+char disass_buf[512];
+unsigned long disass_len;
+
+/* machine dependent functions */
 
 #ifdef CONFIG_X86_32
 
@@ -52,6 +76,39 @@
 
 #endif /* CONFIG_X86_32 */
 
+
+/* disass_printf ***************************************************************
+
+   Required by binutils disassembler.  This just prints the
+   disassembled instructions to stdout.
+
+*******************************************************************************/
+
+static void disass_printf(PTR p, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	disass_len += vsprintf(disass_buf + disass_len, fmt, ap);
+
+	va_end(ap);
+}
+
+
+/* buffer_read_memory **********************************************************
+
+   We need to replace the buffer_read_memory from binutils.
+
+*******************************************************************************/
+
+static int disass_buffer_read_memory(bfd_vma memaddr, bfd_byte *myaddr, unsigned int length, struct disassemble_info *info)
+{
+	memcpy(myaddr, (void *) (unsigned long) memaddr, length);
+
+	return 0;
+}
+
 /* disassinstr *****************************************************************
 
    Outputs a disassembler listing of one machine code instruction on
@@ -61,7 +118,7 @@
 
 *******************************************************************************/
 
-unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
+static unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 {
 	unsigned long seqlen;
 	unsigned long i;
@@ -105,4 +162,20 @@ unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
 	trace_printf("   %s\n", disass_buf);
 
 	return code;
+}
+
+
+/* disassemble *****************************************************************
+
+   Outputs a disassembler listing of some machine code on `stdout'.
+
+   start: pointer to first machine instruction
+   end:   pointer after last machine instruction
+
+*******************************************************************************/
+
+void disassemble(struct compilation_unit *cu, void *start, void *end)
+{
+	for (; start < end; )
+		start = disassinstr(cu, start);
 }
