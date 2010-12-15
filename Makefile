@@ -366,7 +366,7 @@ lib: $(CLASSPATH_CONFIG)
 
 regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-regression jasmin-regression
 	$(E) "  REGRESSION"
-	$(Q) cd regression && /bin/bash run-suite.sh $(JAVA_OPTS)
+	$(Q) ./tools/test.py
 .PHONY: regression
 
 check: test regression
