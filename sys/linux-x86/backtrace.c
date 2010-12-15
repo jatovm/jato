@@ -45,6 +45,26 @@
 /* get REG_EIP from ucontext.h */
 #include <ucontext.h>
 
+static unsigned long code_bytes = 64;
+
+static void show_code(void *eip)
+{
+	unsigned long code_prologue = code_bytes * 43 / 64;
+	unsigned char *code;
+	unsigned int i;
+
+	code	= eip - code_prologue;
+
+	trace_printf("Code: ");
+	for (i = 0; i < code_bytes; i++) {
+		if (code+i == eip)
+			trace_printf("<%02x> ", code[i]);
+		else
+			trace_printf("%02x ", code[i]);
+	}
+	trace_printf("\n");
+}
+
 static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
 			      const char *symbol_name)
 {
@@ -263,6 +283,8 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 		break;
 	};
 	show_registers(uc->uc_mcontext.gregs);
+
+	show_code((void *) eip);
 
 	print_trace_from(eip, (void *) ebp);
 
