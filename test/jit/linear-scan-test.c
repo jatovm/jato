@@ -59,7 +59,7 @@ void test_honors_fixed_interval_register_constraint_for_overlapping_intervals(vo
 
 	cu = compilation_unit_alloc(&method);
 
-	v1 = get_fixed_var(cu, R0);
+	v1 = get_fixed_var(cu, MACH_REG_R0);
 	interval_add_range(v1->interval, 0, 2);
 
 	v2 = get_var(cu, J_INT);

@@ -7,9 +7,9 @@
 #include "vm/types.h"
 
 enum machine_reg {
-	R0,
-	R1,
-	R2,
+	MACH_REG_R0,
+	MACH_REG_R1,
+	MACH_REG_R2,
 
 	/* Number of general purpose registers.  */
 	NR_GP_REGISTERS,
