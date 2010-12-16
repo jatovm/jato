@@ -113,12 +113,6 @@ enum x86_insn_flags {
 	MOD_RM			= (1ULL << 8),
 	DIR_REVERSED		= (1ULL << 9),
 
-	/* Operand sizes */
-#define WIDTH_BYTE			0UL
-
-	WIDTH_FULL		= (1ULL << 10),	/* 16 bits or 32 bits */
-	WIDTH_MASK		= WIDTH_BYTE|WIDTH_FULL,
-
 	/* Source operand */
 	SRC_NONE		= (1ULL << 11),
 
@@ -159,6 +153,13 @@ enum x86_insn_flags {
 	NO_REX_W		= (1ULL << 32), /* No REX W prefix needed */
 	INDEX			= (1ULL << 33),
 	OPERAND_SIZE_PREFIX	= (1ULL << 34), /* Operand-size override prefix */
+
+	/* Operand sizes */
+#define WIDTH_BYTE			0UL
+
+	WIDTH_FULL		= (1ULL << 35),	/* 16 bits or 32 bits */
+	WIDTH_64		= (1ULL << 36),
+	WIDTH_MASK		= WIDTH_BYTE|WIDTH_FULL|WIDTH_64,
 };
 
 /*
@@ -209,9 +210,11 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_CMP_REG_REG]		= OPCODE(0x39) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
 	[INSN_JMP_MEMBASE]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | WIDTH_FULL,
 	[INSN_JMP_MEMINDEX]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | INDEX | WIDTH_FULL,
-	[INSN_MOVSD_MEMBASE_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_FULL,
-	[INSN_MOVSD_XMM_MEMBASE]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_FULL,
-	[INSN_MOVSD_XMM_XMM]		= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_REG_REG | WIDTH_FULL,
+	[INSN_MOVSD_MEMBASE_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_64,
+	[INSN_MOVSD_MEMLOCAL_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMLOCAL_REG | WIDTH_64,
+	[INSN_MOVSD_XMM_MEMBASE]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_64,
+	[INSN_MOVSD_XMM_MEMLOCAL]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_REG_MEMLOCAL | WIDTH_64,
+	[INSN_MOVSD_XMM_XMM]		= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_REG_REG | WIDTH_64,
 	[INSN_MOVSS_MEMBASE_XMM]	= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_FULL,
 	[INSN_MOVSS_MEMLOCAL_XMM]	= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMLOCAL_REG | WIDTH_FULL,
 	[INSN_MOVSS_XMM_MEMBASE]	= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_FULL,
@@ -535,13 +538,21 @@ static uint8_t insn_rex_prefix(struct insn *self, uint64_t flags)
 }
 #endif
 
+static int32_t insn_slot_offset(struct x86_insn *insn, struct stack_slot *slot)
+{
+	if (insn->flags & WIDTH_64)
+		return slot_offset_64(slot);
+
+	return slot_offset(slot);
+}
+
 static void insn_disp(struct insn *self, struct x86_insn *insn)
 {
 	if (insn->flags & (SRC_MEMLOCAL|DST_MEMLOCAL)) {
 		if (insn->flags & DIR_REVERSED)
-			insn->disp	= slot_offset(self->dest.slot);
+			insn->disp	= insn_slot_offset(insn, self->dest.slot);
 		else
-			insn->disp	= slot_offset(self->src.slot);
+			insn->disp	= insn_slot_offset(insn, self->src.slot);
 
 		return;
 	}
