@@ -515,19 +515,6 @@ static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct 
 	__emit_membase_reg(buf, 0x8b, MACH_REG_EBP, disp, dest_reg);
 }
 
-static void emit_mov_64_memlocal_xmm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	enum machine_reg dest_reg;
-	unsigned long disp;
-
-	dest_reg = mach_reg(&insn->dest.reg);
-	disp = slot_offset_64(insn->src.slot);
-
-	emit(buf, 0xf2);
-	emit(buf, 0x0f);
-	__emit_membase_reg(buf, 0x10, MACH_REG_EBP, disp, dest_reg);
-}
-
 static void emit_mov_thread_local_memdisp_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	emit(buf, 0x65); /* GS segment override prefix */
@@ -605,27 +592,6 @@ static void emit_mov_reg_membase(struct insn *insn, struct buffer *buf, struct b
 static void emit_mov_reg_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_mov_reg_membase(buf, mach_reg(&insn->src.reg), MACH_REG_EBP, slot_offset(insn->dest.slot));
-}
-
-static void emit_mov_64_xmm_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	unsigned long disp;
-	int mod;
-
-	disp = slot_offset_64(insn->dest.slot);
-
-	if (is_imm_8(disp))
-		mod = 0x01;
-	else
-		mod = 0x02;
-
-	emit(buf, 0xf2);
-	emit(buf, 0x0f);
-	emit(buf, 0x11);
-	emit(buf, x86_encode_mod_rm(mod, encode_reg(&insn->src.reg),
-			       x86_encode_reg(MACH_REG_EBP)));
-
-	emit_imm(buf, disp);
 }
 
 static void emit_mov_reg_memindex(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -2564,7 +2530,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOVSD_XMM_MEMBASE, insn_encode),
 	DECL_EMITTER(INSN_MOVSD_XMM_MEMDISP, emit_mov_64_xmm_memdisp),
 	DECL_EMITTER(INSN_MOVSD_XMM_MEMINDEX, emit_mov_64_xmm_memindex),
-	DECL_EMITTER(INSN_MOVSD_XMM_MEMLOCAL, emit_mov_64_xmm_memlocal),
+	DECL_EMITTER(INSN_MOVSD_XMM_MEMLOCAL, insn_encode),
 	DECL_EMITTER(INSN_MOVSD_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_MOVSS_MEMBASE_XMM, insn_encode),
 	DECL_EMITTER(INSN_MOVSS_MEMDISP_XMM, emit_mov_memdisp_xmm),
