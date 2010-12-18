@@ -26,6 +26,19 @@ public class MethodInvokeVirtualTest extends TestCase {
     assertEquals("Orange", appleWrapper(new Orange()));
   }
 
+  public static void testCallSiteWithNull() {
+    try {
+      appleWrapper(null);
+      fail();
+    } catch (NullPointerException e) {
+    }
+    try {
+      orangeWrapper(null);
+      fail();
+    } catch (NullPointerException e) {
+    }
+  }
+
   public static String appleWrapper(Fruit f) {
     return f.name();
   }
@@ -38,6 +51,7 @@ public class MethodInvokeVirtualTest extends TestCase {
     setup();
     testCallSiteWithCacheHitType();
     testCallSiteWithCacheMissType();
+    testCallSiteWithNull();
   }
 
   public interface IFruit {
