@@ -540,6 +540,11 @@ static void handle_help(void)
 	usage(stdout, EXIT_SUCCESS);
 }
 
+static void handle_client(void)
+{
+	/* Ignore */
+}
+
 static void handle_classpath(const char *arg)
 {
 	system_property_append_path("java.class.path", arg);
@@ -768,6 +773,11 @@ static void handle_max_heap_size(const char *arg)
 	}
 }
 
+static void handle_thread_stack_size(const char *arg)
+{
+	/* Ignore */
+}
+
 struct option {
 	const char *name;
 
@@ -794,8 +804,11 @@ const struct option options[] = {
 	DEFINE_OPTION("h",			handle_help),
 	DEFINE_OPTION("help",			handle_help),
 
+	DEFINE_OPTION("client",			handle_client),
+
 	DEFINE_OPTION_ADJACENT_ARG("D",		handle_define),
 	DEFINE_OPTION_ADJACENT_ARG("Xmx",	handle_max_heap_size),
+	DEFINE_OPTION_ADJACENT_ARG("Xss",	handle_thread_stack_size),
 
 	DEFINE_OPTION_ARG("classpath",		handle_classpath),
 	DEFINE_OPTION_ARG("bootclasspath",	handle_bootclasspath),
