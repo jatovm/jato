@@ -60,6 +60,7 @@ TESTS = [
 , ( "jvm.LongArithmeticExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.LongArithmeticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.MethodInvocationAndReturnTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
+, ( "jvm.MethodInvokeVirtualTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.MethodInvocationExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.MethodInvocationExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.MultithreadingTest", 0, [ ], [ "i386" ] )
