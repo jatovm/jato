@@ -94,6 +94,8 @@
 #include "runtime/java_lang_VMThread.h"
 #include "runtime/java_lang_VMClass.h"
 
+static const char *bootclasspath_append;
+
 static bool dump_maps;
 static bool perf_enabled;
 static char *exe_name;
@@ -550,19 +552,28 @@ static void handle_classpath(const char *arg)
 	system_property_append_path("java.class.path", arg);
 }
 
-static void handle_bootclasspath(const char *arg)
+static void bootclasspath_parse_and_append(const void *arg)
 {
 	static const char delim[] = ":;";
-
-	add_system_property_const("java.boot.class.path", arg);
 
 	char *cp = strdup(arg);
 
 	char *path = strtok(cp, delim);
 	while (path) {
 		classloader_add_to_classpath(path);
+		system_property_append_path("java.boot.class.path", path);
 		path = strtok(NULL, delim);
 	}
+}
+
+static void handle_bootclasspath(const char *arg)
+{
+	bootclasspath_parse_and_append(arg);
+}
+
+static void handle_bootclasspath_append(const char *arg)
+{
+	bootclasspath_append = arg;
 }
 
 enum operation {
@@ -812,6 +823,7 @@ const struct option options[] = {
 
 	DEFINE_OPTION_ARG("classpath",		handle_classpath),
 	DEFINE_OPTION_ARG("bootclasspath",	handle_bootclasspath),
+	DEFINE_OPTION_ADJACENT_ARG("Xbootclasspath/a:",	handle_bootclasspath_append),
 	DEFINE_OPTION_ARG("cp",			handle_classpath),
 	DEFINE_OPTION_ARG("jar",		handle_jar),
 	DEFINE_OPTION("verbose:gc",		handle_verbose_gc),
@@ -1015,6 +1027,9 @@ static bool init_classpath(void)
 
 	const char *boot_cp = system_property_get("java.boot.class.path");
 	add_system_property_const("sun.boot.class.path", boot_cp);
+
+	if (bootclasspath_append)
+		bootclasspath_parse_and_append(bootclasspath_append);
 
 	/* Search $CLASSPATH last. */
 	char *classpath = getenv("CLASSPATH");
