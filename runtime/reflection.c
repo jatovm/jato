@@ -849,6 +849,11 @@ struct vm_object *native_method_getreturntype(struct vm_object *method)
 	return vmc->object;
 }
 
+struct vm_object *native_method_get_default_value(struct vm_object *method)
+{
+	return NULL;
+}
+
 struct vm_object *native_method_get_exception_types(struct vm_object *method)
 {
 	struct vm_method *vmm;

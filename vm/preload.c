@@ -52,6 +52,7 @@ struct vm_class *vm_java_lang_Cloneable;
 struct vm_class *vm_java_lang_String;
 struct vm_class *vm_array_of_java_lang_String;
 struct vm_class *vm_java_lang_Throwable;
+struct vm_class *vm_java_util_HashMap;
 struct vm_class *vm_java_util_Properties;
 struct vm_class *vm_java_lang_VMThrowable;
 struct vm_class *vm_java_lang_StackTraceElement;
@@ -129,6 +130,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/String",		&vm_java_lang_String },
 	{ "[Ljava/lang/String;",	&vm_array_of_java_lang_String },
 	{ "java/lang/Throwable",	&vm_java_lang_Throwable },
+	{ "java/util/HashMap",		&vm_java_util_HashMap },
 	{ "java/util/Properties",	&vm_java_util_Properties },
 	{ "java/lang/StackTraceElement", &vm_java_lang_StackTraceElement },
 	{ "[Ljava/lang/StackTraceElement;", &vm_array_of_java_lang_StackTraceElement },
@@ -331,6 +333,8 @@ struct method_preload_entry {
 	struct vm_method **method;
 };
 
+struct vm_method *vm_java_util_HashMap_init;
+struct vm_method *vm_java_util_HashMap_put;
 struct vm_method *vm_java_util_Properties_setProperty;
 struct vm_method *vm_java_lang_Throwable_initCause;
 struct vm_method *vm_java_lang_Throwable_getCause;
@@ -380,6 +384,18 @@ struct vm_method *vm_java_nio_DirectByteBufferImpl_ReadWrite_init;
 struct vm_method *vm_sun_reflect_annotation_AnnotationInvocationHandler_create;
 
 static const struct method_preload_entry method_preload_entries[] = {
+	{
+		&vm_java_util_HashMap,
+		"<init>",
+		"()V",
+		&vm_java_util_HashMap_init,
+	},
+	{
+		&vm_java_util_HashMap,
+		"put",
+		"(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+		&vm_java_util_HashMap_put,
+	},
 	{
 		&vm_java_util_Properties,
 		"setProperty",

@@ -107,10 +107,10 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 
 	switch (cp->tag) {
 	case CAFEBABE_CONSTANT_TAG_INTEGER:
-		expr = value_expr(J_INT, cp->integer_.bytes);
+		expr = value_expr(J_INT, cafebabe_constant_pool_get_integer(cp));
 		break;
 	case CAFEBABE_CONSTANT_TAG_FLOAT:
-		expr = fvalue_expr(J_FLOAT, uint32_to_float(cp->float_.bytes));
+		expr = fvalue_expr(J_FLOAT, cafebabe_constant_pool_get_float(cp));
 		break;
 	case CAFEBABE_CONSTANT_TAG_STRING: {
 		const struct cafebabe_constant_info_utf8 *utf8;
@@ -127,13 +127,10 @@ static int __convert_ldc(struct parse_context *ctx, unsigned long cp_idx)
 		break;
 	}
 	case CAFEBABE_CONSTANT_TAG_LONG:
-		expr = value_expr(J_LONG,
-			((uint64_t) cp->long_.high_bytes << 32)
-			+ (uint64_t) cp->long_.low_bytes);
+		expr = value_expr(J_LONG, cafebabe_constant_pool_get_long(cp));
 		break;
 	case CAFEBABE_CONSTANT_TAG_DOUBLE:
-		expr = fvalue_expr(J_DOUBLE, uint64_to_double(
-				cp->double_.low_bytes, cp->double_.high_bytes));
+		expr = fvalue_expr(J_DOUBLE, cafebabe_constant_pool_get_double(cp));
 		break;
 	case CAFEBABE_CONSTANT_TAG_CLASS: {
 		/* Added for JDK 1.5 */

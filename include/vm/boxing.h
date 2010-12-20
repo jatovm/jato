@@ -1,6 +1,7 @@
 #ifndef JATO__VM_BOXING_H
 #define JATO__VM_BOXING_H
 
+#include "vm/types.h"
 #include "vm/jni.h"
 
 struct vm_object;

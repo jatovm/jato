@@ -532,7 +532,7 @@ error_free_annotations:
 
 		vm_annotation_free(vma);
 	}
-	free(vmc->annotations);
+	vm_free(vmc->annotations);
 error_free_methods:
 	vm_free(vmc->methods);
 error_free_static_values:

@@ -221,6 +221,62 @@ cafebabe_class_constant_index_invalid(const struct cafebabe_class *c,
 }
 
 int
+cafebabe_class_constant_get_integer(const struct cafebabe_class *c, uint16_t i, jint *value)
+{
+	if (cafebabe_class_constant_index_invalid(c, i))
+		return 1;
+
+	const struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	if (pool->tag != CAFEBABE_CONSTANT_TAG_INTEGER)
+		return 1;
+
+	*value = cafebabe_constant_pool_get_integer(pool);
+	return 0;
+}
+
+int
+cafebabe_class_constant_get_long(const struct cafebabe_class *c, uint16_t i, jlong *value)
+{
+	if (cafebabe_class_constant_index_invalid(c, i))
+		return 1;
+
+	const struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	if (pool->tag != CAFEBABE_CONSTANT_TAG_LONG)
+		return 1;
+
+	*value = cafebabe_constant_pool_get_long(pool);
+	return 0;
+}
+
+int
+cafebabe_class_constant_get_float(const struct cafebabe_class *c, uint16_t i, jfloat *value)
+{
+	if (cafebabe_class_constant_index_invalid(c, i))
+		return 1;
+
+	const struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	if (pool->tag != CAFEBABE_CONSTANT_TAG_FLOAT)
+		return 1;
+
+	*value = cafebabe_constant_pool_get_float(pool);
+	return 0;
+}
+
+int
+cafebabe_class_constant_get_double(const struct cafebabe_class *c, uint16_t i, jdouble *value)
+{
+	if (cafebabe_class_constant_index_invalid(c, i))
+		return 1;
+
+	const struct cafebabe_constant_pool *pool = &c->constant_pool[i];
+	if (pool->tag != CAFEBABE_CONSTANT_TAG_DOUBLE)
+		return 1;
+
+	*value = cafebabe_constant_pool_get_double(pool);
+	return 0;
+}
+
+int
 cafebabe_class_constant_get_utf8(const struct cafebabe_class *c, uint16_t i,
 	const struct cafebabe_constant_info_utf8 **r)
 {

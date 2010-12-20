@@ -114,19 +114,10 @@ jobject java_lang_VMClass_getDeclaredAnnotations(jobject klass)
 	for (i = 0; i < vmc->nr_annotations; i++) {
 		struct vm_annotation *vma = vmc->annotations[i];
 		struct vm_object *annotation;
-		struct vm_type_info type;
-		struct vm_class *klass;
 
-		if (parse_type(&vma->type, &type))
-			return NULL;
-
-		klass = classloader_load(get_system_class_loader(), type.class_name);
-		if (!klass)
-			return rethrow_exception();
-
-		annotation = vm_call_method_object(vm_sun_reflect_annotation_AnnotationInvocationHandler_create, klass->object, NULL);
+		annotation = vm_annotation_to_object(vma);
 		if (!annotation)
-			return rethrow_exception(); /* XXX */
+			return rethrow_exception();
 
 		array_set_field_object(result, i, annotation);
 	}

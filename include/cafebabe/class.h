@@ -28,9 +28,11 @@
 #ifndef CAFEBABE__CLASS_H
 #define CAFEBABE__CLASS_H
 
-#include <stdint.h>
+#include "vm/jni.h"
 
 #include "cafebabe/attribute_array.h"
+
+#include <stdint.h>
 
 struct cafebabe_attribute_info;
 struct cafebabe_constant_info_utf8;
@@ -83,6 +85,10 @@ void cafebabe_class_deinit(struct cafebabe_class *c);
 
 int cafebabe_class_constant_index_invalid(const struct cafebabe_class *c,
 	uint16_t i);
+int cafebabe_class_constant_get_integer(const struct cafebabe_class *c, uint16_t i, jint *value);
+int cafebabe_class_constant_get_long(const struct cafebabe_class *c, uint16_t i, jlong *value);
+int cafebabe_class_constant_get_float(const struct cafebabe_class *c, uint16_t i, jfloat *value);
+int cafebabe_class_constant_get_double(const struct cafebabe_class *c, uint16_t i, jdouble *value);
 int cafebabe_class_constant_get_utf8(const struct cafebabe_class *c,
 	uint16_t i, const struct cafebabe_constant_info_utf8 **r);
 int cafebabe_class_constant_get_class(const struct cafebabe_class *c,

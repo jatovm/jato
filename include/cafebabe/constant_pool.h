@@ -28,6 +28,8 @@
 #ifndef CAFEBABE__CONSTANT_POOL_H
 #define CAFEBABE__CONSTANT_POOL_H
 
+#include "vm/system.h"
+
 #include <stdint.h>
 
 struct cafebabe_stream;
@@ -126,4 +128,23 @@ void cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp);
 int cafebabe_constant_info_utf8_compare(
 	const struct cafebabe_constant_info_utf8 *s1, const char *s2);
 
+static inline int32_t cafebabe_constant_pool_get_integer(const struct cafebabe_constant_pool *cp)
+{
+	return cp->integer_.bytes;
+}
+
+static inline int64_t cafebabe_constant_pool_get_long(const struct cafebabe_constant_pool *cp)
+{
+	return ((uint64_t) cp->long_.high_bytes << 32) + (uint64_t) cp->long_.low_bytes;
+}
+
+static inline float cafebabe_constant_pool_get_float(const struct cafebabe_constant_pool *cp)
+{
+	return uint32_to_float(cp->float_.bytes);
+}
+
+static inline double cafebabe_constant_pool_get_double(const struct cafebabe_constant_pool *cp)
+{
+	return uint64_to_double(cp->double_.low_bytes, cp->double_.high_bytes);
+}
 #endif

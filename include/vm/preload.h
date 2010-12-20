@@ -15,6 +15,7 @@ extern struct vm_class *vm_java_lang_Class;
 extern struct vm_class *vm_java_lang_Cloneable;
 extern struct vm_class *vm_java_lang_String;
 extern struct vm_class *vm_java_lang_Throwable;
+extern struct vm_class *vm_java_util_HashMap;
 extern struct vm_class *vm_java_util_Properties;
 extern struct vm_class *vm_java_lang_VMThrowable;
 extern struct vm_class *vm_java_lang_StackTraceElement;
@@ -117,6 +118,8 @@ extern struct vm_field *vm_java_nio_Buffer_address;
 extern struct vm_field *vm_gnu_classpath_PointerNN_data;
 
 extern struct vm_method *vm_java_util_Properties_setProperty;
+extern struct vm_method *vm_java_util_HashMap_init;
+extern struct vm_method *vm_java_util_HashMap_put;
 extern struct vm_method *vm_java_lang_Throwable_initCause;
 extern struct vm_method *vm_java_lang_Throwable_getCause;
 extern struct vm_method *vm_java_lang_Throwable_stackTraceString;

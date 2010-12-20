@@ -36,20 +36,6 @@
 
 #include "vm/die.h"
 
-#define ELEMENT_TYPE_BYTE			'B'
-#define ELEMENT_TYPE_CHAR			'C'
-#define ELEMENT_TYPE_DOUBLE			'D'
-#define ELEMENT_TYPE_FLOAT			'F'
-#define ELEMENT_TYPE_INTEGER			'I'
-#define ELEMENT_TYPE_LONG			'J'
-#define ELEMENT_TYPE_SHORT			'S'
-#define ELEMENT_TYPE_BOOLEAN			'Z'
-#define ELEMENT_TYPE_STRING			's'
-#define ELEMENT_TYPE_ENUM_CONSTANT		'e'
-#define ELEMENT_TYPE_CLASS			'c'
-#define ELEMENT_TYPE_ANNOTATION_TYPE		'@'
-#define ELEMENT_TYPE_ARRAY			'['
-
 static int cafebabe_annotation_parse(struct cafebabe_annotation *a, struct cafebabe_stream *s);
 
 static int
@@ -71,7 +57,7 @@ cafebabe_element_value_parse(struct cafebabe_element_value *v, struct cafebabe_s
 	case ELEMENT_TYPE_SHORT:
 	case ELEMENT_TYPE_BOOLEAN:
 	case ELEMENT_TYPE_STRING: {
-		err = cafebabe_stream_read_uint16(s, &v->value.const_value);
+		err = cafebabe_stream_read_uint16(s, &v->value.const_value_index);
 		if (err)
 			goto out;
 		break;
