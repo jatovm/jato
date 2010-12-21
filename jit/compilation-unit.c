@@ -101,20 +101,6 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		INIT_LIST_HEAD(&cu->tableswitch_list);
 		INIT_LIST_HEAD(&cu->lookupswitch_list);
 
-		for (unsigned int i = 0; i < NR_FIXED_REGISTERS; ++i) {
-			struct var_info *ret;
-			enum vm_type type;
-
-			type = reg_default_type(i);
-			ret = do_get_var(cu, type);
-			if (ret) {
-				ret->interval->reg	= i;
-				ret->interval->flags	|= INTERVAL_FLAG_FIXED_REG;
-			}
-
-			cu->fixed_var_infos[i] = ret;
-		}
-
 		cu->lir_insn_map = NULL;
 	}
 
@@ -233,6 +219,20 @@ struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
 {
 	assert(reg < NR_FIXED_REGISTERS);
+
+	if (cu->fixed_var_infos[reg] == NULL) {
+		struct var_info *ret;
+		enum vm_type type;
+
+		type = reg_default_type(reg);
+		ret = do_get_var(cu, type);
+		if (ret) {
+			ret->interval->reg	= reg;
+			ret->interval->flags	|= INTERVAL_FLAG_FIXED_REG;
+		}
+
+		cu->fixed_var_infos[reg] = ret;
+	}
 
 	return cu->fixed_var_infos[reg];
 }
