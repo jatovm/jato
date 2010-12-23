@@ -65,15 +65,13 @@ static void __update_live_ranges(struct compilation_unit *cu, struct basic_block
 
 		if (insn_is_call(insn)) {
 			for (i = 0; i < NR_CALLER_SAVE_REGS; i++) {
-				struct live_interval *reg;
 				struct var_info *var;
 
-				var = cu->fixed_var_infos[caller_save_regs[i]];
+				var = get_fixed_var(cu, caller_save_regs[i]);
 				if (!var)
 					continue;
 
-				reg = var->interval;
-				interval_add_range(reg, insn->lir_pos + 1, insn->lir_pos + 2);
+				interval_add_range(var->interval, insn->lir_pos + 1, insn->lir_pos + 2);
 			}
 		}
 	}
