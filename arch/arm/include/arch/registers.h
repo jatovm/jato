@@ -31,7 +31,7 @@ enum machine_reg {
 
 	MACH_REG_SP = MACH_REG_R13,
 
-	MACH_REG_UNASSIGNED = INT_MAX,
+	MACH_REG_UNASSIGNED = CHAR_MAX,
 };
 
 #define GPR_VM_TYPE	J_INT

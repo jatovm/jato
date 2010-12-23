@@ -164,7 +164,7 @@ static void __spill_interval_intersecting(struct live_interval *current,
 {
 	unsigned long start;
 
-	if (it->reg != reg)
+	if (it->reg != (int8_t) reg)
 		return;
 
 	if (!intervals_intersect(it, current))

@@ -85,9 +85,6 @@ struct live_interval {
 	/* Linked list of child intervals.  */
 	struct live_interval *next_child, *prev_child;
 
-	/* Machine register of this interval.  */
-	enum machine_reg reg;
-
 	/* List of register use positions in this interval.  */
 	struct list_head use_positions;
 
@@ -108,6 +105,9 @@ struct live_interval {
 
 	/* See enum interval_flag_type for details.  */
 	uint8_t flags;
+
+	/* Machine register of this interval.  See enum machine_reg for details.  */
+	int8_t reg;
 };
 
 static inline bool has_use_positions(struct live_interval *it)
