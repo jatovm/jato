@@ -30,6 +30,6 @@ package jvm;
  */
 public class PrintTest extends TestCase {
     public static void main(String[] args) {
-        System.out.println("PrintTest OK.");
+        System.out.print("hello, world");
     }
 }

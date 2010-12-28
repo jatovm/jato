@@ -89,8 +89,6 @@ TESTS = [
 , ( "sun.misc.UnsafeTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 ]
 
-verbose = False
-
 def guess_arch():
   arch = platform.machine()
   if arch == "i686":
@@ -115,21 +113,30 @@ def run(program, *args):
     os.execvp(program, (program,) +  args)
   return os.wait()[0]
 
+def progress(index, total, t):
+  percentage = index*100/total
+  s = "%#3d%% [%#d/%d]  %-60s" % (percentage, index, total, t)
+  sys.stdout.write(s + '\r')
+  sys.stdout.flush()
+
 def main():
   retval = passed = failed = 0
   start = time.time()
+  index = 1
   for t in TESTS:
     klass, expected_retval, extra_args, archs = t
     if is_test_supported(t):
+      progress(index, len(TESTS), klass)
       command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
-      if verbose:
-        print command
       retval = subprocess.call(command)
       if retval != expected_retval:
         print klass + ": Test FAILED"
         failed += 1
       else:
         passed += 1
+    index += 1
+
+  print
 
   end = time.time()
 
