@@ -17,20 +17,18 @@ include/vm/version.h
 #
 arch/*/insn-selector*.c
 tools/monoburg/parser.c
-test/arch-*/*-test-suite.c
-test/jit/jit-test-suite.c
-test/vm/vm-test-suite.c
+test/unit/arch-*/*-test-suite.c
+test/unit/jit/jit-test-suite.c
+test/unit/vm/vm-test-suite.c
 
 #
 # Generated binaries
 #
 jato
-lib/classes.zip
-lib/inst_classes.zip
 tools/monoburg/monoburg
-test/arch-*/*-test-runner
-test/jit/jit-test-runner
-test/vm/vm-test-runner
+test/unit/arch-*/*-test-runner
+test/unit/jit/jit-test-runner
+test/unit/vm/vm-test-runner
 tools/classpath-config
 
 #
