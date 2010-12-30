@@ -348,15 +348,15 @@ JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/SubroutineTest.j \
 	test/functional/jvm/WideTest.j
 
-java-test/functional: FORCE
+compile-java-tests: $(PROGRAM) FORCE
 	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):test/functional $(JAVAC_OPTS) -d test/functional $(REGRESSION_TEST_SUITE_CLASSES)
-.PHONY: java-test/functional
+.PHONY: compile-java-tests
 
-jasmin-test/functional: $(PROGRAM) FORCE
+compile-jasmin-tests: $(PROGRAM) FORCE
 	$(E) "  JASMIN  " $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) $(JASMIN) $(JASMIN_OPTS) -d test/functional $(JASMIN_REGRESSION_TEST_SUITE_CLASSES) > /dev/null
-.PHONY: jasmin-test/functional
+.PHONY: compile-jasmin-tests
 
 $(RUNTIME_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
@@ -366,7 +366,7 @@ lib: $(CLASSPATH_CONFIG)
 	+$(MAKE) -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-test/functional jasmin-test/functional
+check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-java-tests compile-jasmin-tests
 	$(E) "  REGRESSION"
 	$(Q) ./tools/test.py
 .PHONY: check-functional
