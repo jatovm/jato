@@ -352,7 +352,7 @@ java-regression: FORCE
 	$(Q) $(JAVAC) -source 1.5 -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $(REGRESSION_TEST_SUITE_CLASSES)
 .PHONY: java-regression
 
-jasmin-regression: FORCE
+jasmin-regression: $(PROGRAM) FORCE
 	$(E) "  JASMIN  " $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) $(JASMIN) $(JASMIN_OPTS) -d regression $(JASMIN_REGRESSION_TEST_SUITE_CLASSES) > /dev/null
 .PHONY: jasmin-regression
