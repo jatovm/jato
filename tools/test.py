@@ -9,11 +9,11 @@ import time
 import sys
 import os
 
-TEST_DIR = "regression"
+TEST_DIR = "test/functional"
 
 CLASSPATH_DIR = os.popen('tools/classpath-config').read().strip()
 
-NO_SYSTEM_CLASSLOADER = [ "-bootclasspath", "regression:" + CLASSPATH_DIR + "/share/classpath/glibj.zip", "-Djava.library.path=" + CLASSPATH_DIR + "/lib/classpath/", "-Xnosystemclassloader" ]
+NO_SYSTEM_CLASSLOADER = [ "-bootclasspath", TEST_DIR + ":" + CLASSPATH_DIR + "/share/classpath/glibj.zip", "-Djava.library.path=" + CLASSPATH_DIR + "/lib/classpath/", "-Xnosystemclassloader" ]
 
 TESTS = [
   #                            Exit

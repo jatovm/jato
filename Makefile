@@ -268,95 +268,95 @@ $(PROGRAM): monoburg boehmgc $(VERSION_HEADER) $(CLASSPATH_CONFIG) compile $(RUN
 
 compile: $(OBJS)
 
-test: monoburg
+check-unit: monoburg
 	+$(MAKE) -C test/vm/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	+$(MAKE) -C test/jit/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	+$(MAKE) -C test/arch-$(ARCH)/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-.PHONY: test
+.PHONY: check-unit
 
 REGRESSION_TEST_SUITE_CLASSES = \
-	regression/jato/internal/VM.java \
-	regression/java/lang/VMClassTest.java \
-	regression/java/lang/reflect/ClassTest.java \
-	regression/java/lang/reflect/MethodTest.java \
-	regression/jvm/ArgsTest.java \
-	regression/jvm/ArrayExceptionsTest.java \
-	regression/jvm/ArrayMemberTest.java \
-	regression/jvm/ArrayTest.java \
-	regression/jvm/BranchTest.java \
-	regression/jvm/CFGCrashTest.java \
-	regression/jvm/ClassExceptionsTest.java \
-	regression/jvm/ClassLoaderTest.java \
-	regression/jvm/ClinitFloatTest.java \
-	regression/jvm/CloneTest.java \
-	regression/jvm/ControlTransferTest.java \
-	regression/jvm/ConversionTest.java \
-	regression/jvm/DoubleArithmeticTest.java \
-	regression/jvm/DoubleConversionTest.java \
-	regression/jvm/ExceptionsTest.java \
-	regression/jvm/ExitStatusIsOneTest.java \
-	regression/jvm/ExitStatusIsZeroTest.java \
-	regression/jvm/FibonacciTest.java \
-	regression/jvm/FinallyTest.java \
-	regression/jvm/FloatArithmeticTest.java \
-	regression/jvm/FloatConversionTest.java \
-	regression/jvm/GcTortureTest.java \
-	regression/jvm/GetstaticPatchingTest.java \
-	regression/jvm/IntegerArithmeticExceptionsTest.java \
-	regression/jvm/IntegerArithmeticTest.java \
-	regression/jvm/InterfaceFieldInheritanceTest.java \
-	regression/jvm/InterfaceInheritanceTest.java \
-	regression/jvm/InvokeinterfaceTest.java \
-	regression/jvm/InvokestaticPatchingTest.java \
-	regression/jvm/LoadConstantsTest.java \
-	regression/jvm/LongArithmeticExceptionsTest.java \
-	regression/jvm/LongArithmeticTest.java \
-	regression/jvm/MethodInvocationAndReturnTest.java \
-	regression/jvm/MethodInvocationExceptionsTest.java \
-	regression/jvm/MethodInvokeVirtualTest.java \
-	regression/jvm/MonitorTest.java \
-	regression/jvm/MultithreadingTest.java \
-	regression/jvm/ObjectArrayTest.java \
-	regression/jvm/ObjectCreationAndManipulationExceptionsTest.java \
-	regression/jvm/ObjectCreationAndManipulationTest.java \
-	regression/jvm/ObjectStackTest.java \
-	regression/jvm/ParameterPassingTest.java \
-	regression/jvm/PrintTest.java \
-	regression/jvm/PutfieldTest.java \
-	regression/jvm/PutstaticPatchingTest.java \
-	regression/jvm/PutstaticTest.java \
-	regression/jvm/RegisterAllocatorTortureTest.java \
-	regression/jvm/StackTraceTest.java \
-	regression/jvm/StringTest.java \
-	regression/jvm/SwitchTest.java \
-	regression/jvm/SynchronizationExceptionsTest.java \
-	regression/jvm/SynchronizationTest.java \
-	regression/jvm/TestCase.java \
-	regression/jvm/TrampolineBackpatchingTest.java \
-	regression/jvm/VirtualAbstractInterfaceMethodTest.java \
-	regression/jvm/lang/reflect/FieldTest.java \
-	regression/sun/misc/UnsafeTest.java
+	test/functional/jato/internal/VM.java \
+	test/functional/java/lang/VMClassTest.java \
+	test/functional/java/lang/reflect/ClassTest.java \
+	test/functional/java/lang/reflect/MethodTest.java \
+	test/functional/jvm/ArgsTest.java \
+	test/functional/jvm/ArrayExceptionsTest.java \
+	test/functional/jvm/ArrayMemberTest.java \
+	test/functional/jvm/ArrayTest.java \
+	test/functional/jvm/BranchTest.java \
+	test/functional/jvm/CFGCrashTest.java \
+	test/functional/jvm/ClassExceptionsTest.java \
+	test/functional/jvm/ClassLoaderTest.java \
+	test/functional/jvm/ClinitFloatTest.java \
+	test/functional/jvm/CloneTest.java \
+	test/functional/jvm/ControlTransferTest.java \
+	test/functional/jvm/ConversionTest.java \
+	test/functional/jvm/DoubleArithmeticTest.java \
+	test/functional/jvm/DoubleConversionTest.java \
+	test/functional/jvm/ExceptionsTest.java \
+	test/functional/jvm/ExitStatusIsOneTest.java \
+	test/functional/jvm/ExitStatusIsZeroTest.java \
+	test/functional/jvm/FibonacciTest.java \
+	test/functional/jvm/FinallyTest.java \
+	test/functional/jvm/FloatArithmeticTest.java \
+	test/functional/jvm/FloatConversionTest.java \
+	test/functional/jvm/GcTortureTest.java \
+	test/functional/jvm/GetstaticPatchingTest.java \
+	test/functional/jvm/IntegerArithmeticExceptionsTest.java \
+	test/functional/jvm/IntegerArithmeticTest.java \
+	test/functional/jvm/InterfaceFieldInheritanceTest.java \
+	test/functional/jvm/InterfaceInheritanceTest.java \
+	test/functional/jvm/InvokeinterfaceTest.java \
+	test/functional/jvm/InvokestaticPatchingTest.java \
+	test/functional/jvm/LoadConstantsTest.java \
+	test/functional/jvm/LongArithmeticExceptionsTest.java \
+	test/functional/jvm/LongArithmeticTest.java \
+	test/functional/jvm/MethodInvocationAndReturnTest.java \
+	test/functional/jvm/MethodInvocationExceptionsTest.java \
+	test/functional/jvm/MethodInvokeVirtualTest.java \
+	test/functional/jvm/MonitorTest.java \
+	test/functional/jvm/MultithreadingTest.java \
+	test/functional/jvm/ObjectArrayTest.java \
+	test/functional/jvm/ObjectCreationAndManipulationExceptionsTest.java \
+	test/functional/jvm/ObjectCreationAndManipulationTest.java \
+	test/functional/jvm/ObjectStackTest.java \
+	test/functional/jvm/ParameterPassingTest.java \
+	test/functional/jvm/PrintTest.java \
+	test/functional/jvm/PutfieldTest.java \
+	test/functional/jvm/PutstaticPatchingTest.java \
+	test/functional/jvm/PutstaticTest.java \
+	test/functional/jvm/RegisterAllocatorTortureTest.java \
+	test/functional/jvm/StackTraceTest.java \
+	test/functional/jvm/StringTest.java \
+	test/functional/jvm/SwitchTest.java \
+	test/functional/jvm/SynchronizationExceptionsTest.java \
+	test/functional/jvm/SynchronizationTest.java \
+	test/functional/jvm/TestCase.java \
+	test/functional/jvm/TrampolineBackpatchingTest.java \
+	test/functional/jvm/VirtualAbstractInterfaceMethodTest.java \
+	test/functional/jvm/lang/reflect/FieldTest.java \
+	test/functional/sun/misc/UnsafeTest.java
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
-	regression/jvm/DupTest.j \
-	regression/jvm/EntryTest.j \
-	regression/jvm/ExceptionHandlerTest.j \
-	regression/jvm/InvokeResultTest.j \
-	regression/jvm/InvokeTest.j \
-	regression/jvm/NoSuchMethodErrorTest.j\
-	regression/jvm/PopTest.j \
-	regression/jvm/SubroutineTest.j \
-	regression/jvm/WideTest.j
+	test/functional/jvm/DupTest.j \
+	test/functional/jvm/EntryTest.j \
+	test/functional/jvm/ExceptionHandlerTest.j \
+	test/functional/jvm/InvokeResultTest.j \
+	test/functional/jvm/InvokeTest.j \
+	test/functional/jvm/NoSuchMethodErrorTest.j\
+	test/functional/jvm/PopTest.j \
+	test/functional/jvm/SubroutineTest.j \
+	test/functional/jvm/WideTest.j
 
-java-regression: FORCE
+java-test/functional: FORCE
 	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)
-	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $(REGRESSION_TEST_SUITE_CLASSES)
-.PHONY: java-regression
+	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):test/functional $(JAVAC_OPTS) -d test/functional $(REGRESSION_TEST_SUITE_CLASSES)
+.PHONY: java-test/functional
 
-jasmin-regression: $(PROGRAM) FORCE
+jasmin-test/functional: $(PROGRAM) FORCE
 	$(E) "  JASMIN  " $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
-	$(Q) $(JASMIN) $(JASMIN_OPTS) -d regression $(JASMIN_REGRESSION_TEST_SUITE_CLASSES) > /dev/null
-.PHONY: jasmin-regression
+	$(Q) $(JASMIN) $(JASMIN_OPTS) -d test/functional $(JASMIN_REGRESSION_TEST_SUITE_CLASSES) > /dev/null
+.PHONY: jasmin-test/functional
 
 $(RUNTIME_CLASSES): %.class: %.java
 	$(E) "  JAVAC   " $@
@@ -366,12 +366,12 @@ lib: $(CLASSPATH_CONFIG)
 	+$(MAKE) -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-regression: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-regression jasmin-regression
+check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) java-test/functional jasmin-test/functional
 	$(E) "  REGRESSION"
 	$(Q) ./tools/test.py
-.PHONY: regression
+.PHONY: check-functional
 
-check: test regression
+check: check-unit check-functional
 .PHONY: check
 
 torture:
@@ -393,7 +393,7 @@ clean:
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
 	$(Q) - rm -f $(RUNTIME_CLASSES)
-	$(Q) - find regression/ -name "*.class" | xargs rm -f
+	$(Q) - find test/functional/ -name "*.class" | xargs rm -f
 	$(Q) - find runtime/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch
