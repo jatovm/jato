@@ -54,7 +54,6 @@ do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
 	if (!ret)
 		goto out;
 
-	ret->vreg = cu->nr_vregs++;
 	ret->next = cu->var_infos;
 	ret->vm_type = vm_type;
 
@@ -102,6 +101,8 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		INIT_LIST_HEAD(&cu->lookupswitch_list);
 
 		cu->lir_insn_map = NULL;
+
+		cu->nr_vregs	= NR_CALLER_SAVE_REGS;
 	}
 
 	return cu;
@@ -213,7 +214,14 @@ void free_compilation_unit(struct compilation_unit *cu)
 
 struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
-	return do_get_var(cu, vm_type);
+	struct var_info *ret = do_get_var(cu, vm_type);
+
+	if (!ret)
+		return NULL;
+
+	ret->vreg = cu->nr_vregs++;
+
+	return ret;
 }
 
 struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
@@ -229,6 +237,7 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 		if (ret) {
 			ret->interval->reg	= reg;
 			ret->interval->flags	|= INTERVAL_FLAG_FIXED_REG;
+			ret->vreg		= reg;
 		}
 
 		cu->fixed_var_infos[reg] = ret;
