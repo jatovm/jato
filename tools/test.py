@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from threading import Thread
+from Queue import Queue
+import multiprocessing
 import subprocess
 import platform
 import time
@@ -120,23 +123,47 @@ def progress(index, total, t):
   sys.stdout.flush()
 
 def main():
-  retval = passed = failed = 0
-  start = time.time()
-  index = 1
-  for t in TESTS:
+  results = Queue()
+
+  def do_work(t):
     klass, expected_retval, extra_args, archs = t
     if is_test_supported(t):
-      progress(index, len(TESTS), klass)
+      progress(len(TESTS) - q.qsize(), len(TESTS), klass)
       command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
       retval = subprocess.call(command)
       if retval != expected_retval:
         print klass + ": Test FAILED"
-        failed += 1
+        results.put(False)
       else:
-        passed += 1
-    index += 1
+        results.put(True)
+
+  def worker():
+    while True:
+      item = q.get()
+      do_work(item)
+      q.task_done()
+
+  q = Queue()
+  for i in range(multiprocessing.cpu_count()):
+    t = Thread(target=worker)
+    t.daemon = True
+    t.start()
+
+  start = time.time()
+  for t in TESTS:
+    q.put(t)
+
+  q.join()
 
   print
+
+  passed = failed = 0
+  while results.qsize() > 0:
+    result = results.get()
+    if result:
+      passed += 1
+    else:
+      failed += 1
 
   end = time.time()
 
@@ -164,7 +191,7 @@ def main():
     status = success(status)
 
   print "%s (%.2f s) " % (status, elapsed)
-  sys.exit(retval)
+  sys.exit(failed)
 
 if __name__ == '__main__':
-  sys.exit(main())
+  main()
