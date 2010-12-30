@@ -66,16 +66,16 @@ TOPLEVEL_OBJS := \
 	arch/mmix/register.o \
 	arch/mmix/stack-frame.o \
 	arch/mmix/use-def.o \
-	test/libharness/libharness.o \
-	test/vm/class-stub.o \
-	test/vm/classloader-stub.o \
-	test/vm/gc-stub.o \
-	test/vm/object-stub.o \
-	test/vm/preload-stub.o \
-	test/vm/jni-stub.o \
-	test/vm/stack-trace-stub.o \
-	test/vm/thread-stub.o \
-	test/jit/trace-stub.o
+	test/unit/libharness/libharness.o \
+	test/unit/vm/class-stub.o \
+	test/unit/vm/classloader-stub.o \
+	test/unit/vm/gc-stub.o \
+	test/unit/vm/object-stub.o \
+	test/unit/vm/preload-stub.o \
+	test/unit/vm/jni-stub.o \
+	test/unit/vm/stack-trace-stub.o \
+	test/unit/vm/thread-stub.o \
+	test/unit/jit/trace-stub.o
 
 TEST_OBJS := \
 	args-test-utils.o \
@@ -99,6 +99,6 @@ TEST_OBJS := \
 	tree-printer-test.o \
 	typeconv-bc-test.o
 
-include ../../scripts/build/test.mk
+include ../../../scripts/build/test.mk
 
-DEFAULT_CFLAGS += -I../../arch/mmix/include -std=gnu99
+DEFAULT_CFLAGS += -I../../../arch/mmix/include -std=gnu99

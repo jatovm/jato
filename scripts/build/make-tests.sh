@@ -6,7 +6,7 @@
 # Author: Asim Jalis
 # Date: 01/08/2003
 
-if test $# -eq 0 ; then FILES="test/*/*.c" ; else FILES=$* ; fi
+if test $# -eq 0 ; then FILES="test/unit/*/*.c" ; else FILES=$* ; fi
 
 echo '
 

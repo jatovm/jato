@@ -11,17 +11,17 @@ TOPLEVEL_OBJS :=			\
 	lib/radix-tree.o		\
 	lib/stack.o			\
 	lib/string.o			\
-	test/jit/trace-stub.o		\
-	test/libharness/libharness.o	\
-	test/vm/class-stub.o		\
-	test/vm/stack-trace-stub.o	\
+	test/unit/jit/trace-stub.o	\
+	test/unit/libharness/libharness.o\
+	test/unit/vm/class-stub.o	\
+	test/unit/vm/stack-trace-stub.o	\
 	vm/bytecode.o			\
 	vm/die.o			\
 	vm/natives.o			\
 	vm/trace.o			\
 	vm/types.o			\
 	vm/zalloc.o			\
-	test/vm/thread-stub.o
+	test/unit/vm/thread-stub.o
 
 TEST_OBJS :=				\
 	bitset-test.o			\
@@ -36,6 +36,6 @@ TEST_OBJS :=				\
 	string-test.o			\
 	types-test.o
 
-CFLAGS += -I ../../arch/mmix/include
+CFLAGS += -I ../../../arch/mmix/include
 
-include ../../scripts/build/test.mk
+include ../../../scripts/build/test.mk

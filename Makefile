@@ -269,9 +269,9 @@ $(PROGRAM): monoburg boehmgc $(VERSION_HEADER) $(CLASSPATH_CONFIG) compile $(RUN
 compile: $(OBJS)
 
 check-unit: monoburg
-	+$(MAKE) -C test/vm/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-	+$(MAKE) -C test/jit/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-	+$(MAKE) -C test/arch-$(ARCH)/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	+$(MAKE) -C test/unit/vm/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	+$(MAKE) -C test/unit/jit/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
+	+$(MAKE) -C test/unit/arch-$(ARCH)/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: check-unit
 
 REGRESSION_TEST_SUITE_CLASSES = \
@@ -399,9 +399,9 @@ clean:
 	$(Q) - rm -f include/arch
 	+$(Q) - $(MAKE) -C tools/monoburg/ clean >/dev/null
 	+$(Q) - $(MAKE) -C boehmgc/ clean >/dev/null
-	+$(Q) - $(MAKE) -C test/vm/ clean >/dev/null
-	+$(Q) - $(MAKE) -C test/jit/ clean >/dev/null
-	+$(Q) - $(MAKE) -C test/arch-$(ARCH)/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/unit/vm/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/unit/jit/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/unit/arch-$(ARCH)/ clean >/dev/null
 .PHONY: clean
 
 INSTALL_PREFIX	?= $(HOME)

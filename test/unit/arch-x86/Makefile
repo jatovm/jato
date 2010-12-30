@@ -10,12 +10,12 @@ TOPLEVEL_OBJS	+= jit/stack-slot.o
 TOPLEVEL_OBJS	+= jit/text.o
 TOPLEVEL_OBJS	+= lib/buffer.o
 TOPLEVEL_OBJS	+= lib/string.o
-TOPLEVEL_OBJS	+= test/libharness/libharness.o
-TOPLEVEL_OBJS	+= test/vm/stack-trace-stub.o
-TOPLEVEL_OBJS	+= test/vm/trace-stub.o
+TOPLEVEL_OBJS	+= test/unit/libharness/libharness.o
+TOPLEVEL_OBJS	+= test/unit/vm/stack-trace-stub.o
+TOPLEVEL_OBJS	+= test/unit/vm/trace-stub.o
 TOPLEVEL_OBJS	+= vm/die.o
 TOPLEVEL_OBJS	+= vm/zalloc.o
 
 TEST_OBJS	+= encode-test.o trampoline-stub.o
 
-include ../../scripts/build/test.mk
+include ../../../scripts/build/test.mk
