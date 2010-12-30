@@ -177,14 +177,15 @@ CC		?= gcc
 LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
 JAVA		?= $(shell pwd)/jato
-JAVAC		?= ecj
 JAVAC_OPTS	?= -encoding utf-8
 INSTALL		?= install
 
 ifeq ($(uname_M),x86_64)
 JASMIN		?= java -jar tools/jasmin/jasmin.jar
+JAVAC		?= java ./tools/ecj
 else
 JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
+JAVAC		?= JAVA=$(JAVA) ./tools/ecj
 endif
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
@@ -349,7 +350,7 @@ JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 
 java-regression: FORCE
 	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)
-	$(Q) $(JAVAC) -source 1.5 -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $(REGRESSION_TEST_SUITE_CLASSES)
+	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):regression $(JAVAC_OPTS) -d regression $(REGRESSION_TEST_SUITE_CLASSES)
 .PHONY: java-regression
 
 jasmin-regression: $(PROGRAM) FORCE
