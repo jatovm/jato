@@ -31,6 +31,7 @@
 
 #include "vm/classloader.h"
 #include "vm/preload.h"
+#include "vm/boxing.h"
 #include "vm/errors.h"
 #include "vm/class.h"
 #include "vm/types.h"
@@ -371,7 +372,7 @@ struct vm_object *native_vmconstructor_construct(struct vm_object *this, struct 
 	return native_constructor_construct_native(this, args, clazz, slot);
 }
 
-static int unwrap(void *field_ptr, enum vm_type type,
+static int object_to_jvalue(void *field_ptr, enum vm_type type,
 		  struct vm_object *value)
 {
 	unsigned long args[] = { (unsigned long) value };
@@ -420,7 +421,47 @@ static int unwrap(void *field_ptr, enum vm_type type,
 	return 0;
 }
 
-static struct vm_object *wrap(union jvalue *value, enum vm_type vm_type)
+struct vm_object *boolean_to_object(jboolean value)
+{
+	return vm_call_method_object(vm_java_lang_Boolean_valueOf, value);
+}
+
+struct vm_object *byte_to_object(jbyte value)
+{
+	return vm_call_method_object(vm_java_lang_Byte_valueOf, value);
+}
+
+struct vm_object *char_to_object(jchar value)
+{
+	return vm_call_method_object(vm_java_lang_Character_valueOf, value);
+}
+
+struct vm_object *short_to_object(jshort value)
+{
+	return vm_call_method_object(vm_java_lang_Short_valueOf, value);
+}
+
+struct vm_object *int_to_object(jint value)
+{
+	return vm_call_method_object(vm_java_lang_Integer_valueOf, value);
+}
+
+struct vm_object *long_to_object(jlong value)
+{
+	return vm_call_method_object(vm_java_lang_Long_valueOf, value);
+}
+
+struct vm_object *float_to_object(jfloat value)
+{
+	return vm_call_method_object(vm_java_lang_Float_valueOf, value);
+}
+
+struct vm_object *double_to_object(jdouble value)
+{
+	return vm_call_method_object(vm_java_lang_Double_valueOf, value);
+}
+
+struct vm_object *jvalue_to_object(union jvalue *value, enum vm_type vm_type)
 {
 	switch (vm_type) {
 	case J_VOID:
@@ -428,21 +469,21 @@ static struct vm_object *wrap(union jvalue *value, enum vm_type vm_type)
 	case J_REFERENCE:
 		return value->l;
 	case J_BOOLEAN:
-		return vm_call_method_object(vm_java_lang_Boolean_valueOf, value->z);
+		return boolean_to_object(value->z);
 	case J_BYTE:
-		return vm_call_method_object(vm_java_lang_Byte_valueOf, value->b);
+		return byte_to_object(value->b);
 	case J_CHAR:
-		return vm_call_method_object(vm_java_lang_Character_valueOf, value->c);
+		return char_to_object(value->c);
 	case J_SHORT:
-		return vm_call_method_object(vm_java_lang_Short_valueOf, value->s);
+		return short_to_object(value->s);
 	case J_LONG:
-		return vm_call_method_object(vm_java_lang_Long_valueOf, value->j);
+		return long_to_object(value->j);
 	case J_INT:
-		return vm_call_method_object(vm_java_lang_Integer_valueOf, value->i);
+		return int_to_object(value->i);
 	case J_FLOAT:
-		return vm_call_method_object(vm_java_lang_Float_valueOf, value->f);
+		return float_to_object(value->f);
 	case J_DOUBLE:
-		return vm_call_method_object(vm_java_lang_Double_valueOf, value->d);
+		return double_to_object(value->d);
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
 		die("unexpected type");
@@ -502,7 +543,7 @@ struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
 	if (!value_p)
 		return NULL;
 
-	return wrap((union jvalue *) value_p, type);
+	return jvalue_to_object((union jvalue *) value_p, type);
 }
 
 static jlong to_jlong_value(union jvalue *value, enum vm_type vm_type)
@@ -631,7 +672,7 @@ void native_field_set(struct vm_object *this, struct vm_object *o,
 	enum vm_type type = vm_field_type(vmf);
 
 	if (vm_field_is_static(vmf)) {
-		unwrap(vmf->class->static_values + vmf->offset,
+		object_to_jvalue(vmf->class->static_values + vmf->offset,
 				     type, value_obj);
 	} else {
 		/*
@@ -650,7 +691,7 @@ void native_field_set(struct vm_object *this, struct vm_object *o,
 			return;
 		}
 
-		unwrap(field_get_object_ptr(o, vmf->offset), type, value_obj);
+		object_to_jvalue(field_get_object_ptr(o, vmf->offset), type, value_obj);
 	}
 }
 
@@ -671,7 +712,7 @@ static int marshall_call_arguments(struct vm_method *vmm, unsigned long *args,
 		struct vm_object *arg_obj;
 
 		arg_obj = array_get_field_ptr(args_array, args_array_idx++);
-		if (unwrap(&args[idx], arg->type_info.vm_type, arg_obj))
+		if (object_to_jvalue(&args[idx], arg->type_info.vm_type, arg_obj))
 			return -1;
 
 		idx += get_arg_size(arg->type_info.vm_type);
@@ -692,7 +733,7 @@ call_virtual_method(struct vm_method *vmm, struct vm_object *o,
 		return NULL;
 
 	vm_call_method_this_a(vmm, o, args, &result);
-	return wrap(&result, vmm->return_type.vm_type);
+	return jvalue_to_object(&result, vmm->return_type.vm_type);
 }
 
 static struct vm_object *
@@ -705,7 +746,7 @@ call_static_method(struct vm_method *vmm, struct vm_object *args_array)
 		return NULL;
 
 	vm_call_method_a(vmm, args, &result);
-	return wrap(&result, vmm->return_type.vm_type);
+	return jvalue_to_object(&result, vmm->return_type.vm_type);
 }
 
 jint native_method_get_modifiers_internal(struct vm_object *this)
