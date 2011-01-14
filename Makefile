@@ -277,6 +277,7 @@ check-unit: monoburg
 REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jato/internal/VM.java \
 	test/functional/java/lang/VMClassTest.java \
+	test/functional/java/lang/JNITest.java \
 	test/functional/java/lang/reflect/ClassTest.java \
 	test/functional/java/lang/reflect/MethodTest.java \
 	test/functional/jvm/ArgsTest.java \
@@ -366,7 +367,11 @@ lib: $(CLASSPATH_CONFIG)
 	+$(MAKE) -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-java-tests compile-jasmin-tests
+compile-jni-test-lib:
+	+$(MAKE) -C test/functional/jni CC='$(CC)'
+.PHONY: compile-jni-test-lib
+
+check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-java-tests compile-jasmin-tests compile-jni-test-lib
 	$(E) "  REGRESSION"
 	$(Q) ./tools/test.py
 .PHONY: check-functional
@@ -399,6 +404,7 @@ clean:
 	$(Q) - rm -f include/arch
 	+$(Q) - $(MAKE) -C tools/monoburg/ clean >/dev/null
 	+$(Q) - $(MAKE) -C boehmgc/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/functional/jni/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/unit/vm/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/unit/jit/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/unit/arch-$(ARCH)/ clean >/dev/null

@@ -23,6 +23,9 @@
 #define JNI_FALSE  0
 #define JNI_TRUE   1
 
+#define JNIEXPORT
+#define JNICALL
+
 struct vm_object;
 struct vm_class;
 struct vm_method;
@@ -40,6 +43,7 @@ typedef jint jsize;
 
 typedef struct vm_object *jobject;
 
+typedef jobject jstring;
 typedef jobject jarray;
 typedef jobject jclass;
 typedef jobject jobjectArray;
@@ -61,6 +65,8 @@ union jvalue {
 	jdouble  d;
 	jobject  l;
 };
+
+typedef struct vm_jni_env JNIEnv;
 
 struct vm_jni_env {
 	void **jni_table;

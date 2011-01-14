@@ -30,6 +30,7 @@ test/unit/arch-*/*-test-runner
 test/unit/jit/jit-test-runner
 test/unit/vm/vm-test-runner
 tools/classpath-config
+test/functional/jni/libjnitest.so
 
 #
 # ctags generated files

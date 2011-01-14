@@ -24,6 +24,7 @@ TESTS = [
 , ( "jvm/ExitStatusIsOneTest", 1, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm/ArgsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "java.lang.VMClassTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
+, ( "java.lang.JNITest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "java.lang.reflect.ClassTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "java.lang.reflect.MethodTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.ArrayExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
