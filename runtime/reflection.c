@@ -451,14 +451,42 @@ struct vm_object *long_to_object(jlong value)
 	return vm_call_method_object(vm_java_lang_Long_valueOf, value);
 }
 
+static uint32_t jfloat_to_u32(jfloat value)
+{
+	union {
+		float		f;
+		uint32_t	i;
+	} v;
+
+	v.f		= value;
+
+	return v.i;
+}
+
 struct vm_object *float_to_object(jfloat value)
 {
-	return vm_call_method_object(vm_java_lang_Float_valueOf, value);
+	uint32_t v = jfloat_to_u32(value);
+
+	return vm_call_method_object(vm_java_lang_Float_valueOf, v);
+}
+
+static uint64_t jdouble_to_u64(jdouble value)
+{
+	union {
+		double		d;
+		uint64_t	l;
+	} v;
+
+	v.d		= value;
+
+	return v.l;
 }
 
 struct vm_object *double_to_object(jdouble value)
 {
-	return vm_call_method_object(vm_java_lang_Double_valueOf, value);
+	uint64_t v = jdouble_to_u64(value);
+
+	return vm_call_method_object(vm_java_lang_Double_valueOf, v);
 }
 
 struct vm_object *jvalue_to_object(union jvalue *value, enum vm_type vm_type)

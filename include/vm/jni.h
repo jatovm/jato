@@ -36,8 +36,8 @@ typedef uint16_t jchar;
 typedef int16_t jshort;
 typedef int32_t jint;
 typedef int64_t jlong;
-typedef uint32_t jfloat;
-typedef uint64_t jdouble;
+typedef float jfloat;
+typedef double jdouble;
 
 typedef jint jsize;
 

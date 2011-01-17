@@ -91,21 +91,7 @@ public class JNITest extends TestCase {
         testReturnPassedShort();
         testReturnPassedByte();
         testReturnPassedChar();
-/*
-Exception in thread "main" java.lang.AssertionError: Expected '42.0', but was 'NaN'.
-at jvm.TestCase.fail(TestCase.java:110)
-at jvm.TestCase.assertEquals(TestCase.java:43)
-at java.lang.JNITest.testReturnPassedFloat(JNITest.java:79)
-
         testReturnPassedFloat();
-*/
-/*
-Exception in thread "main" java.lang.AssertionError: Expected '42.0', but was 'NaN'.
-at jvm.TestCase.fail(TestCase.java:110)
-at jvm.TestCase.assertEquals(TestCase.java:49)
-at java.lang.JNITest.testReturnPassedDouble(JNITest.java:83)
-
         testReturnPassedDouble();
-*/
     }
 }
