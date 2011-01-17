@@ -35,13 +35,77 @@ public class JNITest extends TestCase {
         System.load("./test/functional/jni/libjnitest.so");
     }
 
-    native static public String returnPassed(String str);
+    native static public String returnPassedString(String str);
+    native static public int returnPassedInt(int i);
+    native static public long returnPassedLong(long l);
+    native static public boolean returnPassedBoolean(boolean b);
+    native static public short returnPassedShort(short s);
+    native static public byte returnPassedByte(byte b);
+    native static public char returnPassedChar(char c);
+    native static public float returnPassedFloat(float f);
+    native static public double returnPassedDouble(double d);
 
     public static void testReturnPassedString() {
-        assertEquals("testString", returnPassed("testString"));
+        assertEquals("testString", returnPassedString("testString"));
+    }
+
+    public static void testReturnPassedInt() {
+        assertEquals(42, returnPassedInt(42));
+    }
+
+    public static void testReturnPassedLong() {
+        assertEquals(42l, returnPassedLong(42l));
+    }
+
+    public static void testReturnPassedBoolean() {
+        assertEquals(true, returnPassedBoolean(true));
+    }
+
+    public static void testReturnPassedShort() {
+        short s = 42;
+        assertEquals(42, returnPassedShort(s));
+    }
+
+    public static void testReturnPassedByte() {
+        byte b = 42;
+        assertEquals(42, returnPassedByte(b));
+    }
+
+    public static void testReturnPassedChar() {
+        assertEquals('a', returnPassedChar('a'));
+    }
+
+    public static void testReturnPassedFloat() {
+        assertEquals(42.0f, returnPassedFloat(42.0f));
+    }
+
+    public static void testReturnPassedDouble() {
+        assertEquals(42.0, returnPassedDouble(42.0));
     }
 
     public static void main(String[] args) {
         testReturnPassedString();
+        testReturnPassedInt();
+        testReturnPassedLong();
+        testReturnPassedBoolean();
+        testReturnPassedShort();
+        testReturnPassedByte();
+        testReturnPassedChar();
+/*
+Exception in thread "main" java.lang.AssertionError: Expected '42.0', but was 'NaN'.
+at jvm.TestCase.fail(TestCase.java:110)
+at jvm.TestCase.assertEquals(TestCase.java:43)
+at java.lang.JNITest.testReturnPassedFloat(JNITest.java:79)
+
+        testReturnPassedFloat();
+*/
+/*
+Exception in thread "main" java.lang.AssertionError: Expected '42.0', but was 'NaN'.
+at jvm.TestCase.fail(TestCase.java:110)
+at jvm.TestCase.assertEquals(TestCase.java:49)
+at java.lang.JNITest.testReturnPassedDouble(JNITest.java:83)
+
+        testReturnPassedDouble();
+*/
     }
 }
