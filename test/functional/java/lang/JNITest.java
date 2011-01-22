@@ -35,52 +35,74 @@ public class JNITest extends TestCase {
         System.load("./test/functional/jni/libjnitest.so");
     }
 
-    native static public String returnPassedString(String str);
-    native static public int returnPassedInt(int i);
-    native static public long returnPassedLong(long l);
-    native static public boolean returnPassedBoolean(boolean b);
-    native static public short returnPassedShort(short s);
-    native static public byte returnPassedByte(byte b);
-    native static public char returnPassedChar(char c);
-    native static public float returnPassedFloat(float f);
-    native static public double returnPassedDouble(double d);
+    native static public String staticReturnPassedString(String str);
+    native static public int staticReturnPassedInt(int i);
+    native static public long staticReturnPassedLong(long l);
+    native static public boolean staticReturnPassedBoolean(boolean b);
+    native static public short staticReturnPassedShort(short s);
+    native static public byte staticReturnPassedByte(byte b);
+    native static public char staticReturnPassedChar(char c);
+    native static public float staticReturnPassedFloat(float f);
+    native static public double staticReturnPassedDouble(double d);
+
+    native public String returnPassedString(String str);
+    native public int returnPassedInt(int i);
+    native public long returnPassedLong(long l);
+    native public boolean returnPassedBoolean(boolean b);
+    native public short returnPassedShort(short s);
+    native public byte returnPassedByte(byte b);
+    native public char returnPassedChar(char c);
+    native public float returnPassedFloat(float f);
+    native public double returnPassedDouble(double d);
+
+    private static JNITest jniTest = new JNITest();
 
     public static void testReturnPassedString() {
-        assertEquals("testString", returnPassedString("testString"));
+        assertEquals("testString", staticReturnPassedString("testString"));
+        assertEquals("testString", jniTest.returnPassedString("testString"));
+
     }
 
     public static void testReturnPassedInt() {
-        assertEquals(42, returnPassedInt(42));
+        assertEquals(42, staticReturnPassedInt(42));
+        assertEquals(42, jniTest.returnPassedInt(42));
     }
 
     public static void testReturnPassedLong() {
-        assertEquals(42l, returnPassedLong(42l));
+        assertEquals(42l, staticReturnPassedLong(42l));
+        assertEquals(42l, jniTest.returnPassedLong(42l));
     }
 
     public static void testReturnPassedBoolean() {
-        assertEquals(true, returnPassedBoolean(true));
+        assertEquals(true, staticReturnPassedBoolean(true));
+        assertEquals(true, jniTest.returnPassedBoolean(true));
     }
 
     public static void testReturnPassedShort() {
         short s = 42;
-        assertEquals(42, returnPassedShort(s));
+        assertEquals(42, staticReturnPassedShort(s));
+        assertEquals(42, jniTest.returnPassedShort(s));
     }
 
     public static void testReturnPassedByte() {
         byte b = 42;
-        assertEquals(42, returnPassedByte(b));
+        assertEquals(42, staticReturnPassedByte(b));
+        assertEquals(42, jniTest.returnPassedByte(b));
     }
 
     public static void testReturnPassedChar() {
-        assertEquals('a', returnPassedChar('a'));
+        assertEquals('a', staticReturnPassedChar('a'));
+        assertEquals('a', jniTest.returnPassedChar('a'));
     }
 
     public static void testReturnPassedFloat() {
-        assertEquals(42.0f, returnPassedFloat(42.0f));
+        assertEquals(42.0f, staticReturnPassedFloat(42.0f));
+        assertEquals(42.0f, jniTest.returnPassedFloat(42.0f));
     }
 
     public static void testReturnPassedDouble() {
-        assertEquals(42.0, returnPassedDouble(42.0));
+        assertEquals(42.0, staticReturnPassedDouble(42.0));
+        assertEquals(42.0, jniTest.returnPassedDouble(42.0));
     }
 
     public static void main(String[] args) {
