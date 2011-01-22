@@ -49,6 +49,15 @@ typedef jobject jclass;
 typedef jobject jobjectArray;
 typedef jobject jthrowable;
 
+typedef jarray jbooleanArray;
+typedef jarray jbyteArray;
+typedef jarray jcharArray;
+typedef jarray jshortArray;
+typedef jarray jintArray;
+typedef jarray jlongArray;
+typedef jarray jfloatArray;
+typedef jarray jdoubleArray;
+
 typedef struct vm_field *jfieldID;
 typedef struct vm_method *jmethodID;
 

@@ -92,6 +92,105 @@ JNIEXPORT jdouble JNICALL Java_java_lang_JNITest_returnPassedDouble(JNIEnv *env,
 
 /*
  * Class:     java_lang_JNITest
+ * Method:    returnPassedStringArray
+ * Signature: ([Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_java_lang_JNITest_returnPassedStringArray(JNIEnv *env, jobject jobj, jobjectArray objectArrayValue)
+{
+	return objectArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedIntArray
+ * Signature: ([I)[I
+ */
+JNIEXPORT jintArray JNICALL Java_java_lang_JNITest_returnPassedIntArray(JNIEnv *env, jobject jobj, jintArray intArrayValue)
+{
+	return intArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedLongArray
+ * Signature: ([J)[J
+ */
+JNIEXPORT jlongArray JNICALL Java_java_lang_JNITest_returnPassedLongArray(JNIEnv *env, jobject jobj, jlongArray longArrayValue)
+{
+	return longArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedBooleanArray
+ * Signature: ([Z)[Z
+ */
+JNIEXPORT jbooleanArray JNICALL Java_java_lang_JNITest_returnPassedBooleanArray(JNIEnv *env, jobject jobj, jbooleanArray booleanArrayValue)
+{
+	return booleanArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedShortArray
+ * Signature: ([S)[S
+ */
+JNIEXPORT jshortArray JNICALL Java_java_lang_JNITest_returnPassedShortArray(JNIEnv *env, jobject jobj, jshortArray shortArrayValue)
+{
+	return shortArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedByteArray
+ * Signature: ([B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_java_lang_JNITest_returnPassedByteArray(JNIEnv *env, jobject jobj, jbyteArray byteArrayValue)
+{
+	return byteArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedCharArray
+ * Signature: ([C)[C
+ */
+JNIEXPORT jcharArray JNICALL Java_java_lang_JNITest_returnPassedCharArray(JNIEnv *env, jobject jobj, jcharArray charArrayValue)
+{
+	return charArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedFloatArray
+ * Signature: ([F)[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_java_lang_JNITest_returnPassedFloatArray(JNIEnv *env, jobject jobj, jfloatArray floatArrayValue)
+{
+	return floatArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    returnPassedDoubleArray
+ * Signature: ([D)[D
+ */
+JNIEXPORT jdoubleArray JNICALL Java_java_lang_JNITest_returnPassedDoubleArray(JNIEnv *env, jobject jobj, jdoubleArray doubleArrayValue)
+{
+	return doubleArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
  * Method:    staticReturnPassedString
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
@@ -179,4 +278,101 @@ JNIEXPORT jfloat JNICALL Java_java_lang_JNITest_staticReturnPassedFloat(JNIEnv *
 JNIEXPORT jdouble JNICALL Java_java_lang_JNITest_staticReturnPassedDouble(JNIEnv *env, jclass clazz, jdouble doubleValue)
 {
 	return doubleValue;
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedStringArray
+ * Signature: ([Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_java_lang_JNITest_staticReturnPassedStringArray(JNIEnv *env, jclass clazz, jobjectArray stringArrayValue)
+{
+	return stringArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedIntArray
+ * Signature: ([I)[I
+ */
+JNIEXPORT jintArray JNICALL Java_java_lang_JNITest_staticReturnPassedIntArray(JNIEnv *env, jclass clazz, jintArray intArrayValue)
+{
+	return intArrayValue;
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedLongArray
+ * Signature: ([J)[J
+ */
+JNIEXPORT jlongArray JNICALL Java_java_lang_JNITest_staticReturnPassedLongArray(JNIEnv *env, jclass clazz, jlongArray longArrayValue)
+{
+	return longArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedBooleanArray
+ * Signature: ([Z)[Z
+ */
+JNIEXPORT jbooleanArray JNICALL Java_java_lang_JNITest_staticReturnPassedBooleanArray(JNIEnv *env, jclass clazz, jbooleanArray booleanArrayValue)
+{
+	return booleanArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedShortArray
+ * Signature: ([S)[S
+ */
+JNIEXPORT jshortArray JNICALL Java_java_lang_JNITest_staticReturnPassedShortArray(JNIEnv *env, jclass clazz, jshortArray shortArrayValue)
+{
+	return shortArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedByteArray
+ * Signature: ([B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_java_lang_JNITest_staticReturnPassedByteArray(JNIEnv *env, jclass clazz, jbyteArray byteArrayValue)
+{
+	return byteArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedCharArray
+ * Signature: ([C)[C
+ */
+JNIEXPORT jcharArray JNICALL Java_java_lang_JNITest_staticReturnPassedCharArray(JNIEnv *env, jclass clazz, jcharArray charArrayValue)
+{
+	return charArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedFloatArray
+ * Signature: ([F)[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_java_lang_JNITest_staticReturnPassedFloatArray(JNIEnv *env, jclass clazz, jfloatArray floatArrayValue)
+{
+	return floatArrayValue;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticReturnPassedDoubleArray
+ * Signature: ([D)[D
+ */
+JNIEXPORT jdoubleArray JNICALL Java_java_lang_JNITest_staticReturnPassedDoubleArray(JNIEnv *env, jclass clazz, jdoubleArray doubleArrayValue)
+{
+	return doubleArrayValue;
 }

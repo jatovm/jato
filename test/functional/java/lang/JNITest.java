@@ -45,6 +45,16 @@ public class JNITest extends TestCase {
     native static public float staticReturnPassedFloat(float f);
     native static public double staticReturnPassedDouble(double d);
 
+    native static public String[] staticReturnPassedStringArray(String[] str);
+    native static public int[] staticReturnPassedIntArray(int[] i);
+    native static public long[] staticReturnPassedLongArray(long[] l);
+    native static public boolean[] staticReturnPassedBooleanArray(boolean[] b);
+    native static public short[] staticReturnPassedShortArray(short[] s);
+    native static public byte[] staticReturnPassedByteArray(byte[] b);
+    native static public char[] staticReturnPassedCharArray(char[] c);
+    native static public float[] staticReturnPassedFloatArray(float[] f);
+    native static public double[] staticReturnPassedDoubleArray(double[] d);
+
     native public String returnPassedString(String str);
     native public int returnPassedInt(int i);
     native public long returnPassedLong(long l);
@@ -55,54 +65,81 @@ public class JNITest extends TestCase {
     native public float returnPassedFloat(float f);
     native public double returnPassedDouble(double d);
 
+    native public String[] returnPassedStringArray(String[] str);
+    native public int[] returnPassedIntArray(int[] i);
+    native public long[] returnPassedLongArray(long[] l);
+    native public boolean[] returnPassedBooleanArray(boolean[] b);
+    native public short[] returnPassedShortArray(short[] s);
+    native public byte[] returnPassedByteArray(byte[] b);
+    native public char[] returnPassedCharArray(char[] c);
+    native public float[] returnPassedFloatArray(float[] f);
+    native public double[] returnPassedDoubleArray(double[] d);
+
     private static JNITest jniTest = new JNITest();
 
     public static void testReturnPassedString() {
         assertEquals("testString", staticReturnPassedString("testString"));
         assertEquals("testString", jniTest.returnPassedString("testString"));
-
+        assertEquals("testString", staticReturnPassedStringArray(new String[]{"testString"})[0]);
+        assertEquals("testString", jniTest.returnPassedStringArray(new String[]{"testString"})[0]);
     }
 
     public static void testReturnPassedInt() {
         assertEquals(42, staticReturnPassedInt(42));
         assertEquals(42, jniTest.returnPassedInt(42));
+        assertEquals(42, staticReturnPassedIntArray(new int[]{42})[0]);
+        assertEquals(42, jniTest.returnPassedIntArray(new int[]{42})[0]);
     }
 
     public static void testReturnPassedLong() {
         assertEquals(42l, staticReturnPassedLong(42l));
         assertEquals(42l, jniTest.returnPassedLong(42l));
+        assertEquals(42l, staticReturnPassedLongArray(new long[]{42l})[0]);
+        assertEquals(42l, jniTest.returnPassedLongArray(new long[]{42l})[0]);
     }
 
     public static void testReturnPassedBoolean() {
         assertEquals(true, staticReturnPassedBoolean(true));
         assertEquals(true, jniTest.returnPassedBoolean(true));
+        assertEquals(true, staticReturnPassedBooleanArray(new boolean[]{true})[0]);
+        assertEquals(true, jniTest.returnPassedBooleanArray(new boolean[]{true})[0]);
     }
 
     public static void testReturnPassedShort() {
         short s = 42;
         assertEquals(42, staticReturnPassedShort(s));
         assertEquals(42, jniTest.returnPassedShort(s));
+        assertEquals(42, staticReturnPassedShortArray(new short[]{s})[0]);
+        assertEquals(42, jniTest.returnPassedShortArray(new short[]{s})[0]);
     }
 
     public static void testReturnPassedByte() {
         byte b = 42;
         assertEquals(42, staticReturnPassedByte(b));
         assertEquals(42, jniTest.returnPassedByte(b));
+        assertEquals(42, staticReturnPassedByteArray(new byte[]{b})[0]);
+        assertEquals(42, jniTest.returnPassedByteArray(new byte[]{b})[0]);
     }
 
     public static void testReturnPassedChar() {
         assertEquals('a', staticReturnPassedChar('a'));
         assertEquals('a', jniTest.returnPassedChar('a'));
+        assertEquals('a', staticReturnPassedCharArray(new char[]{'a'})[0]);
+        assertEquals('a', jniTest.returnPassedCharArray(new char[]{'a'})[0]);
     }
 
     public static void testReturnPassedFloat() {
         assertEquals(42.0f, staticReturnPassedFloat(42.0f));
         assertEquals(42.0f, jniTest.returnPassedFloat(42.0f));
+        assertEquals(42.0f, staticReturnPassedFloatArray(new float[]{42.0f})[0]);
+        assertEquals(42.0f, jniTest.returnPassedFloatArray(new float[]{42.0f})[0]);
     }
 
     public static void testReturnPassedDouble() {
         assertEquals(42.0, staticReturnPassedDouble(42.0));
         assertEquals(42.0, jniTest.returnPassedDouble(42.0));
+        assertEquals(42.0, staticReturnPassedDoubleArray(new double[]{42.0})[0]);
+        assertEquals(42.0, jniTest.returnPassedDoubleArray(new double[]{42.0})[0]);
     }
 
     public static void main(String[] args) {
