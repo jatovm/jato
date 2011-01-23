@@ -91,10 +91,11 @@ cafebabe_element_value_parse(struct cafebabe_element_value *v, struct cafebabe_s
 		if (err)
 			goto out;
 
+		v->value.array_value.values = calloc(v->value.array_value.num_values, sizeof(struct cafebabe_element_value));
 		for (unsigned int i = 0; i < v->value.array_value.num_values; i++) {
-			struct cafebabe_element_value unused; /* XXX */
+			struct cafebabe_element_value *array_value = &v->value.array_value.values[i];
 
-			err = cafebabe_element_value_parse(&unused, s);
+			err = cafebabe_element_value_parse(array_value, s);
 			if (err)
 				goto out;
 		}

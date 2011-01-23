@@ -90,6 +90,7 @@ struct vm_class *vm_java_lang_reflect_VMMethod;
 struct vm_class *vm_array_of_java_lang_reflect_Constructor;
 struct vm_class *vm_array_of_java_lang_reflect_Field;
 struct vm_class *vm_array_of_java_lang_reflect_Method;
+struct vm_class *vm_array_of_java_lang_Object;
 struct vm_class *vm_array_of_java_lang_Class;
 struct vm_class *vm_java_lang_IllegalArgumentException;
 struct vm_class *vm_java_lang_ClassLoader;
@@ -165,6 +166,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/reflect/VMConstructor", &vm_java_lang_reflect_VMConstructor, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
 	{ "java/lang/reflect/Method", &vm_java_lang_reflect_Method },
 	{ "java/lang/reflect/VMMethod", &vm_java_lang_reflect_VMMethod, PRELOAD_OPTIONAL }, /* Classpath 0.98 */
+	{ "[Ljava/lang/Object;",		&vm_array_of_java_lang_Object },
 	{ "[Ljava/lang/Class;",		&vm_array_of_java_lang_Class },
 	{ "[Ljava/lang/reflect/Constructor;", &vm_array_of_java_lang_reflect_Constructor },
 	{ "[Ljava/lang/reflect/Field;", &vm_array_of_java_lang_reflect_Field },

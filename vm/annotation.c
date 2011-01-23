@@ -85,6 +85,142 @@ struct vm_object *vm_annotation_to_object(struct vm_annotation *vma)
 	return annotation;
 }
 
+static struct vm_object *parse_element_value(const struct cafebabe_class *klass, struct cafebabe_element_value *e_value)
+{
+	struct vm_object *ret;
+
+	switch (e_value->tag) {
+	case ELEMENT_TYPE_BYTE: {
+		jint value;
+
+		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= byte_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_CHAR: {
+		jint value;
+
+		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= char_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_DOUBLE: {
+		jdouble value;
+
+		if (cafebabe_class_constant_get_double(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= double_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_FLOAT: {
+		jfloat value;
+
+		if (cafebabe_class_constant_get_float(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= float_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_INTEGER: {
+		jint value;
+
+		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= int_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_LONG: {
+		jlong value;
+
+		if (cafebabe_class_constant_get_long(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= long_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_SHORT: {
+		jint value;
+
+		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= short_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_BOOLEAN: {
+		jint value;
+
+		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+			goto error_out;
+
+		ret		= boolean_to_object(value);
+		break;
+	}
+	case ELEMENT_TYPE_STRING: {
+		const struct cafebabe_constant_info_utf8 *utf8;
+		struct vm_object *string;
+
+		if (cafebabe_class_constant_get_utf8(klass, e_value->value.const_value_index, &utf8))
+			goto error_out;
+
+		string = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);
+		if (!string)
+			goto error_out;
+
+		ret		= string;
+		break;
+	}
+	case ELEMENT_TYPE_ENUM_CONSTANT:
+		ret		= NULL; /* TODO */
+		break;
+	case ELEMENT_TYPE_CLASS:
+		ret		= NULL; /* TODO */
+		break;
+	case ELEMENT_TYPE_ANNOTATION_TYPE: {
+		struct vm_annotation *child_vma;
+
+		child_vma	= vm_annotation_parse(klass, e_value->value.annotation_value);
+		if (!child_vma)
+			goto error_out;
+
+		ret	= vm_annotation_to_object(child_vma);
+		if (!ret)
+			goto error_out;
+		break;
+	}
+	case ELEMENT_TYPE_ARRAY: {
+		ret		= vm_object_alloc_array(vm_array_of_java_lang_Object, e_value->value.array_value.num_values);
+		if (!ret)
+			goto error_out;
+
+		for (unsigned int i = 0; i < e_value->value.array_value.num_values; i++) {
+			struct cafebabe_element_value *child_e_value = &e_value->value.array_value.values[i];
+			struct vm_object *obj;
+
+			obj		= parse_element_value(klass, child_e_value);
+
+			array_set_field_object(ret, i, obj);
+		}
+
+		break;
+	}
+	default:
+		warn("'%c' is an unknown element value pair tag", e_value->tag);
+		goto error_out;
+	}
+
+	return ret;
+
+error_out:
+	return NULL;
+}
+
 struct vm_annotation *vm_annotation_parse(const struct cafebabe_class *klass, struct cafebabe_annotation *annotation)
 {
 	const struct cafebabe_constant_info_utf8 *type;
@@ -115,122 +251,11 @@ struct vm_annotation *vm_annotation_parse(const struct cafebabe_class *klass, st
 
 		vme		= &vma->elements[vma->nr_elements++];
 
-		vme->name = strndup((char *) name->bytes, name->length);
+		vme->name	= strndup((char *) name->bytes, name->length);
 		if (!vme->name)
 			goto out_free;
 
-		switch (ev_pair->value.tag) {
-		case ELEMENT_TYPE_BYTE: {
-			jint value;
-
-			if (cafebabe_class_constant_get_integer(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= byte_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_CHAR: {
-			jint value;
-
-			if (cafebabe_class_constant_get_integer(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= char_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_DOUBLE: {
-			jdouble value;
-
-			if (cafebabe_class_constant_get_double(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= double_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_FLOAT: {
-			jfloat value;
-
-			if (cafebabe_class_constant_get_float(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= float_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_INTEGER: {
-			jint value;
-
-			if (cafebabe_class_constant_get_integer(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= int_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_LONG: {
-			jlong value;
-
-			if (cafebabe_class_constant_get_long(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= long_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_SHORT: {
-			jint value;
-
-			if (cafebabe_class_constant_get_integer(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= short_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_BOOLEAN: {
-			jint value;
-
-			if (cafebabe_class_constant_get_integer(klass, ev_pair->value.value.const_value_index, &value))
-				goto out_free;
-
-			vme->value		= boolean_to_object(value);
-			break;
-		}
-		case ELEMENT_TYPE_STRING: {
-			const struct cafebabe_constant_info_utf8 *utf8;
-			struct vm_object *string;
-
-			if (cafebabe_class_constant_get_utf8(klass, ev_pair->value.value.const_value_index, &utf8))
-				goto out_free;
-
-			string = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);
-			if (!string)
-				goto out_free;
-
-			vme->value		= string;
-			break;
-		}
-		case ELEMENT_TYPE_ENUM_CONSTANT:
-			vme->value		= NULL; /* TODO */
-			break;
-		case ELEMENT_TYPE_CLASS:
-			vme->value		= NULL; /* TODO */
-			break;
-		case ELEMENT_TYPE_ANNOTATION_TYPE: {
-			struct vm_annotation *child_vma;
-
-			child_vma	= vm_annotation_parse(klass, ev_pair->value.value.annotation_value);
-			if (!child_vma)
-				goto out_free;
-
-			vme->value	= vm_annotation_to_object(child_vma);
-			if (!vme->value)
-				goto out_free;
-			break;
-		}
-		case ELEMENT_TYPE_ARRAY:
-			vme->value		= NULL; /* TODO */
-			break;
-		default:
-			warn("'%c' is an unknown element value pair tag", ev_pair->value.tag);
-			goto out_free;
-		}
+		vme->value	= parse_element_value(klass, &ev_pair->value);
 	}
 
 	return vma;
