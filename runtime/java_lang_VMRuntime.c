@@ -81,6 +81,10 @@ void native_vmruntime_run_finalization_for_exit(void)
 {
 }
 
+void java_lang_VMRuntime_runFinalization(void)
+{
+}
+
 struct vm_object *native_vmruntime_maplibraryname(struct vm_object *name)
 {
 	struct vm_object *result;
