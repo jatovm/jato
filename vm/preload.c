@@ -123,6 +123,14 @@ struct vm_class *vm_short_class;
 struct vm_class *vm_int_class;
 struct vm_class *vm_long_class;
 struct vm_class *vm_void_class;
+struct vm_class *vm_array_of_boolean;
+struct vm_class *vm_array_of_byte;
+struct vm_class *vm_array_of_char;
+struct vm_class *vm_array_of_double;
+struct vm_class *vm_array_of_float;
+struct vm_class *vm_array_of_int;
+struct vm_class *vm_array_of_long;
+struct vm_class *vm_array_of_short;
 
 static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Object",		&vm_java_lang_Object },
@@ -209,6 +217,17 @@ static const struct preload_entry primitive_preload_entries[] = {
 	{"int", &vm_int_class},
 	{"long", &vm_long_class},
 	{"void", &vm_void_class},
+};
+
+static const struct preload_entry primitive_array_preload_entries[] = {
+	{"[Z", &vm_array_of_boolean},
+	{"[C", &vm_array_of_char},
+	{"[F", &vm_array_of_float},
+	{"[D", &vm_array_of_double},
+	{"[B", &vm_array_of_byte},
+	{"[S", &vm_array_of_short},
+	{"[I", &vm_array_of_int},
+	{"[J", &vm_array_of_long},
 };
 
 struct field_preload_entry {
@@ -710,8 +729,6 @@ int vm_preload_add_class_fixup(struct vm_class *vmc)
 
 int preload_vm_classes(void)
 {
-	unsigned int array_size;
-
 	for (unsigned int i = 0; i < ARRAY_SIZE(preload_entries); ++i) {
 		const struct preload_entry *pe = &preload_entries[i];
 
@@ -726,11 +743,24 @@ int preload_vm_classes(void)
 		*pe->class = class;
 	}
 
-	array_size = ARRAY_SIZE(primitive_preload_entries);
-	for (unsigned int i = 0; i < array_size; ++i) {
+	for (unsigned int i = 0; i < ARRAY_SIZE(primitive_preload_entries); ++i) {
 		const struct preload_entry *pe = &primitive_preload_entries[i];
 
 		struct vm_class *class = classloader_load_primitive(pe->name);
+		if (!class) {
+			if (pe->optional == PRELOAD_OPTIONAL)
+				continue;
+			warn("preload of %s failed", pe->name);
+			return -EINVAL;
+		}
+
+		*pe->class = class;
+	}
+
+	for (unsigned int i = 0; i < ARRAY_SIZE(primitive_array_preload_entries); ++i) {
+		const struct preload_entry *pe = &primitive_array_preload_entries[i];
+
+		struct vm_class *class = classloader_load(NULL, pe->name);
 		if (!class) {
 			if (pe->optional == PRELOAD_OPTIONAL)
 				continue;

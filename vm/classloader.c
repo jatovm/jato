@@ -453,7 +453,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 
 	type = vm_type_for_primitive_class_name(class_name);
 	if (type == VM_TYPE_MAX)
-		error("invlaid primitive class name: %s", class_name);
+		error("invalid primitive class name: %s", class_name);
 
 	if (primitive_class_cache[type])
 		return primitive_class_cache[type];
