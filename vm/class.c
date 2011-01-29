@@ -494,7 +494,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		struct cafebabe_inner_class *inner = &inner_classes_attribute.inner_classes[i];
 
 		if (class->this_class == inner->inner_class_info_index) {
-			vmc->declaring_class		= vm_class_resolve_class(vmc, inner->outer_class_info_index);
+			vmc->declaring_class = vmc->enclosing_class = vm_class_resolve_class(vmc, inner->outer_class_info_index);
+
 			vmc->inner_class_access_flags	= inner->inner_class_access_flags;
 		}
 	}
@@ -521,7 +522,8 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 
 	cafebabe_annotations_attribute_deinit(&annotations_attribute);
 
-	cafebabe_read_enclosing_method_attribute(class, &class->attributes, &vmc->enclosing_method_attribute);
+	if (!cafebabe_read_enclosing_method_attribute(class, &class->attributes, &vmc->enclosing_method_attribute))
+		vmc->enclosing_class = vm_class_resolve_class(vmc, vmc->enclosing_method_attribute.class_index);
 
 	vmc->state = VM_CLASS_LINKED;
 	return 0;
@@ -1144,19 +1146,17 @@ static bool is_numeric(const char *s)
 
 struct vm_method *vm_class_get_enclosing_method(const struct vm_class *vmc)
 {
-	struct vm_class *enclosing_class;
 	struct vm_method *result;
 	char *name;
 	char *type;
 
-	enclosing_class = vm_class_resolve_class(vmc, vmc->enclosing_method_attribute.class_index);
-	if (!enclosing_class)
+	if (!vmc->enclosing_class)
 		return NULL;
 
 	if (vm_class_resolve_name_and_type(vmc, vmc->enclosing_method_attribute.method_index, &name, &type))
 		return NULL;
 
-	result = vm_class_get_method_recursive(enclosing_class, name, type);
+	result = vm_class_get_method_recursive(vmc->enclosing_class, name, type);
 
 	free(name);
 	free(type);

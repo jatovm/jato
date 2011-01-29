@@ -11,6 +11,7 @@ jobject		java_lang_VMClass_getDeclaredConstructors(jobject class_object, jboolea
 jobject		java_lang_VMClass_getDeclaredFields(jobject class_object, jboolean public_only);
 jobject		java_lang_VMClass_getDeclaredMethods(jobject class_object, jboolean public_only);
 jobject		java_lang_VMClass_getDeclaringClass(jobject clazz);
+jobject		java_lang_VMClass_getEnclosingClass(jobject clazz);
 jobject		java_lang_VMClass_getInterfaces(jobject clazz);
 jint		java_lang_VMClass_getModifiers(jobject clazz, jboolean ignore_inner_class_attrib);
 jobject		java_lang_VMClass_getName(jobject object);

@@ -35,6 +35,12 @@ public class VMClassTest extends TestCase {
         assertEquals(0, VMClass.getDeclaredAnnotations(Object.class).length);
     }
 
+    public static void testGetEnclosingClass() {
+        assertNull(Object.class.getEnclosingClass());
+        class LocalClass { }
+        assertEquals(VMClassTest.class, LocalClass.class.getEnclosingClass());
+    }
+
     public static void testIsAnonymousClass() {
         assertFalse(VMClass.isAnonymousClass(int.class));
         assertFalse(VMClass.isAnonymousClass(int[].class));

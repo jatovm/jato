@@ -91,6 +91,7 @@ struct vm_class {
 	void *itable[VM_ITABLE_SIZE];
 
 	struct vm_class *declaring_class;
+	struct vm_class *enclosing_class;
 
 	struct cafebabe_enclosing_method_attribute enclosing_method_attribute;
 };

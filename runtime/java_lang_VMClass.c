@@ -362,6 +362,22 @@ jobject java_lang_VMClass_getDeclaringClass(jobject class)
 	return declaring_class->object;
 }
 
+jobject java_lang_VMClass_getEnclosingClass(jobject class)
+{
+	struct vm_class *enclosing_class;
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(class);
+	if (!vmc)
+		return NULL;
+
+	enclosing_class	= vmc->enclosing_class;
+	if (!enclosing_class)
+		return NULL;
+
+	return enclosing_class->object;
+}
+
 jobject java_lang_VMClass_getInterfaces(jobject clazz)
 {
 	struct vm_class *vmc;
