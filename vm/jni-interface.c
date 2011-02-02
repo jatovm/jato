@@ -56,6 +56,8 @@
 	if (!vm_object_is_instance_of((x), vm_java_lang_Class))		\
 		return NULL;
 
+#define JNI_NOT_IMPLEMENTED die("not implemented")
+
 static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
 			     uint64_t *args)
 {
@@ -173,8 +175,19 @@ static jobject vm_alloc_object(struct vm_jni_env *env, jclass clazz)
 	return vm_object_alloc(class);
 }
 
-static jclass
-vm_jni_find_class(struct vm_jni_env *env, const char *name)
+static jint JNI_GetVersion(JNIEnv *env)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jclass JNI_DefineClass(JNIEnv *env, const char *name, jobject loader,const jbyte *buf, jsize bufLen)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jclass JNI_FindClass(JNIEnv *env, const char *name)
 {
 	struct vm_class *class;
 
@@ -193,6 +206,155 @@ vm_jni_find_class(struct vm_jni_env *env, const char *name)
 		return NULL;
 
 	return class->object;
+}
+
+static jmethodID JNI_FromReflectedMethod(JNIEnv *env, jobject method)
+{
+	return vm_object_to_vm_method(method);
+}
+
+static jfieldID JNI_FromReflectedField(JNIEnv *env, jobject field)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jobject JNI_ToReflectedMethod(JNIEnv *env, jclass cls,jmethodID methodID)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jclass JNI_GetSuperclass(JNIEnv *env, jclass clazz)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jboolean JNI_IsAssignableFrom(JNIEnv *env, jclass clazz1, jclass clazz2)
+{
+	struct vm_class *class1, *class2;
+
+	enter_vm_from_jni();
+
+	if (!vm_object_is_instance_of(clazz1, vm_java_lang_Class) ||
+	    !vm_object_is_instance_of(clazz2, vm_java_lang_Class))
+		return JNI_FALSE;
+
+	class1 = vm_class_get_class_from_class_object(clazz1);
+	class2 = vm_class_get_class_from_class_object(clazz2);
+
+	return vm_class_is_assignable_from(class2, class1);
+}
+
+static jobject JNI_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jint JNI_Throw(JNIEnv *env, jthrowable exception)
+{
+	enter_vm_from_jni();
+
+	if (!vm_object_is_instance_of(exception, vm_java_lang_Throwable))
+		return -1;
+
+	signal_exception(exception);
+	return 0;
+}
+
+static jint JNI_ThrowNew(struct vm_jni_env *env, jclass clazz, const char *message)
+{
+	struct vm_class *class;
+
+	enter_vm_from_jni();
+
+	if (!clazz)
+		return -1;
+
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+		return -1;
+
+	class = vm_class_get_class_from_class_object(clazz);
+
+	signal_new_exception(class, message);
+
+	return 0;
+}
+
+static jthrowable JNI_ExceptionOccurred(JNIEnv *env)
+{
+	enter_vm_from_jni();
+
+	return exception_occurred();
+}
+
+static void JNI_ExceptionDescribe(JNIEnv *env)
+{
+	enter_vm_from_jni();
+
+	if (exception_occurred())
+		vm_print_exception(exception_occurred());
+}
+
+static void JNI_ExceptionClear(JNIEnv *env)
+{
+	enter_vm_from_jni();
+
+	clear_exception();
+}
+
+static void JNI_FatalError(JNIEnv *env, const char *msg)
+{
+	enter_vm_from_jni();
+
+	die("%s", msg);
+}
+
+static jint JNI_PushLocalFrame(JNIEnv *env, jint capacity)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jobject JNI_PopLocalFrame(JNIEnv *env, jobject result)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jobject JNI_NewGlobalRef(JNIEnv *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	/* TODO: fix this when GC is implemented. */
+
+	return obj;
+}
+
+static void JNI_DeleteGlobalRef(JNIEnv *env, jobject globalRef)
+{
+	enter_vm_from_jni();
+
+	/* TODO: fix this when GC is implemented. */
+}
+
+static void JNI_DeleteLocalRef(JNIEnv *env, jobject localRef)
+{
+	enter_vm_from_jni();
+
+	/* TODO: fix this when GC is implemented. */
+}
+
+static jboolean JNI_IsSameObject(JNIEnv *env, jobject ref1, jobject ref2)
+{
+	enter_vm_from_jni();
+
+	if (ref1 == ref2)
+		return JNI_TRUE;
+
+	return JNI_FALSE;
 }
 
 static jmethodID
@@ -307,68 +469,6 @@ vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
 	free((char *)utf);
 }
 
-static jint
-vm_jni_throw(struct vm_jni_env *env, jthrowable exception)
-{
-	enter_vm_from_jni();
-
-	if (!vm_object_is_instance_of(exception, vm_java_lang_Throwable))
-		return -1;
-
-	signal_exception(exception);
-	return 0;
-}
-
-static jint
-vm_jni_throw_new(struct vm_jni_env *env, jclass clazz, const char *message)
-{
-	struct vm_class *class;
-
-	enter_vm_from_jni();
-
-	if (!clazz)
-		return -1;
-
-	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
-		return -1;
-
-	class = vm_class_get_class_from_class_object(clazz);
-
-	signal_new_exception(class, message);
-
-	return 0;
-}
-
-static jthrowable vm_jni_exception_occurred(struct vm_jni_env *env)
-{
-	enter_vm_from_jni();
-
-	return exception_occurred();
-}
-
-static void vm_jni_exception_describe(struct vm_jni_env *env)
-{
-	enter_vm_from_jni();
-
-	if (exception_occurred())
-		vm_print_exception(exception_occurred());
-}
-
-static void vm_jni_exception_clear(struct vm_jni_env *env)
-{
-	enter_vm_from_jni();
-
-	clear_exception();
-}
-
-static void
-vm_jni_fatal_error(struct vm_jni_env *env, const char *msg)
-{
-	enter_vm_from_jni();
-
-	die("%s", msg);
-}
-
 static void
 vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
 			       jmethodID methodID, ...)
@@ -467,22 +567,6 @@ DECLARE_SET_XXX_FIELD(long, J_LONG);
 DECLARE_SET_XXX_FIELD(object, J_REFERENCE);
 DECLARE_SET_XXX_FIELD(short, J_SHORT);
 
-static jobject vm_jni_new_global_ref(struct vm_jni_env *env, jobject obj)
-{
-	enter_vm_from_jni();
-
-	/* TODO: fix this when GC is implemented. */
-
-	return obj;
-}
-
-static void vm_jni_delete_global_ref(struct vm_jni_env *env, jobject obj)
-{
-	enter_vm_from_jni();
-
-	/* TODO: fix this when GC is implemented. */
-}
-
 static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
 {
 	enter_vm_from_jni();
@@ -496,31 +580,6 @@ static jobject vm_jni_get_object_class(struct vm_jni_env *env, jobject obj)
 	enter_vm_from_jni();
 
 	return obj->class->object;
-}
-
-static jboolean
-vm_jni_is_assignable_from(struct vm_jni_env *env, jobject clazz1,
-			  jobject clazz2)
-{
-	struct vm_class *class1, *class2;
-
-	enter_vm_from_jni();
-
-	if (!vm_object_is_instance_of(clazz1, vm_java_lang_Class) ||
-	    !vm_object_is_instance_of(clazz2, vm_java_lang_Class))
-		return JNI_FALSE;
-
-	class1 = vm_class_get_class_from_class_object(clazz1);
-	class2 = vm_class_get_class_from_class_object(clazz2);
-
-	return vm_class_is_assignable_from(class2, class1);
-}
-
-static void vm_jni_delete_local_ref(struct vm_jni_env *env, jobject ref)
-{
-	enter_vm_from_jni();
-
-	/* TODO: fix this when GC is implemented. */
 }
 
 static jint vm_jni_monitor_enter(struct vm_jni_env *env, jobject obj)
@@ -1350,12 +1409,6 @@ static void								\
 		array_set_field_##type(array, start + i, buf[i]);	\
 }
 
-static jmethodID vm_jni_from_reflected_method(struct vm_exec_env *env,
-					      jobject method)
-{
-	return vm_object_to_vm_method(method);
-}
-
 DECLARE_SET_XXX_ARRAY_REGION(byte);
 DECLARE_SET_XXX_ARRAY_REGION(char);
 DECLARE_SET_XXX_ARRAY_REGION(double);
@@ -1364,17 +1417,6 @@ DECLARE_SET_XXX_ARRAY_REGION(int);
 DECLARE_SET_XXX_ARRAY_REGION(long);
 DECLARE_SET_XXX_ARRAY_REGION(short);
 DECLARE_SET_XXX_ARRAY_REGION(boolean);
-
-static jboolean
-vm_jni_is_same_object(struct vm_exec_env *env, jobject o1, jobject o2)
-{
-	enter_vm_from_jni();
-
-	if (o1 == o2)
-		return JNI_TRUE;
-
-	return JNI_FALSE;
-}
 
 static jint vm_jni_get_string_length(struct vm_exec_env *env, jobject string)
 {
@@ -1402,35 +1444,35 @@ void *vm_jni_native_interface[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL, /* GetVersion */
+	JNI_GetVersion,
 
 	/* 5 */
-	NULL, /* DefineClass */
-	vm_jni_find_class,
-	vm_jni_from_reflected_method,
-	NULL,
-	NULL,
+	JNI_DefineClass,
+	JNI_FindClass,
+	JNI_FromReflectedMethod,
+	JNI_FromReflectedField,
+	JNI_ToReflectedMethod,
 
 	/* 10 */
-	NULL, /* GetSuperclass */
-	vm_jni_is_assignable_from,
-	NULL,
-	vm_jni_throw,
-	vm_jni_throw_new,
+	JNI_GetSuperclass,
+	JNI_IsAssignableFrom,
+	JNI_ToReflectedField,
+	JNI_Throw,
+	JNI_ThrowNew,
 
 	/* 15 */
-	vm_jni_exception_occurred,
-	vm_jni_exception_describe,
-	vm_jni_exception_clear,
-	vm_jni_fatal_error,
-	NULL,
+	JNI_ExceptionOccurred,
+	JNI_ExceptionDescribe,
+	JNI_ExceptionClear,
+	JNI_FatalError,
+	JNI_PushLocalFrame,
 
 	/* 20 */
-	NULL,
-	vm_jni_new_global_ref,
-	vm_jni_delete_global_ref,
-	vm_jni_delete_local_ref,
-	vm_jni_is_same_object,
+	JNI_PopLocalFrame,
+	JNI_NewGlobalRef,
+	JNI_DeleteGlobalRef,
+	JNI_DeleteLocalRef,
+	JNI_IsSameObject,
 
 	/* 25 */
 	NULL,

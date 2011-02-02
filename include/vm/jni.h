@@ -75,7 +75,7 @@ union jvalue {
 	jobject  l;
 };
 
-typedef struct vm_jni_env JNIEnv;
+typedef const struct vm_jni_env *JNIEnv;
 
 struct vm_jni_env {
 	void **jni_table;
