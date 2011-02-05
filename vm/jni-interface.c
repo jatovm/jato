@@ -167,14 +167,6 @@ struct java_vm *vm_jni_get_current_java_vm(void)
 	return &vm_jni_default_java_vm;
 }
 
-static jobject vm_alloc_object(struct vm_jni_env *env, jclass clazz)
-{
-	struct vm_class *class = vm_class_get_class_from_class_object(clazz);
-	check_null(class);
-
-	return vm_object_alloc(class);
-}
-
 static jint JNI_GetVersion(JNIEnv *env)
 {
 	JNI_NOT_IMPLEMENTED;
@@ -357,9 +349,77 @@ static jboolean JNI_IsSameObject(JNIEnv *env, jobject ref1, jobject ref2)
 	return JNI_FALSE;
 }
 
-static jmethodID
-vm_jni_get_method_id(struct vm_jni_env *env, jclass clazz, const char *name,
-		     const char *sig)
+static jobject JNI_AllocObject(JNIEnv *env, jclass clazz)
+{
+	struct vm_class *class = vm_class_get_class_from_class_object(clazz);
+	check_null(class);
+
+	return vm_object_alloc(class);
+}
+
+static jobject JNI_NewObject(JNIEnv *env, jclass clazz, jmethodID methodID, ...)
+{
+	va_list args;
+
+	enter_vm_from_jni();
+
+	struct vm_object *obj;
+	struct vm_class *class;
+
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+		return NULL;
+
+	class = vm_class_get_class_from_class_object(clazz);
+	obj = vm_object_alloc(class);
+
+	va_start(args, methodID);
+	vm_call_method_this_v(methodID, obj, args, NULL);
+	va_end(args);
+
+	return obj;
+}
+
+static jobject JNI_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, va_list args)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+/* FIXME: @args type should be jvalue, not uint64_t */
+static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, uint64_t *args)
+{
+	struct vm_class *vmc;
+	struct vm_object *result;
+
+	enter_vm_from_jni();
+
+	vmc = vm_class_get_class_from_class_object(clazz);
+	result = vm_object_alloc(vmc);
+
+	unsigned long packed_args[methodID->args_count];
+
+	packed_args[0] = (unsigned long) result;
+	pack_args(methodID, packed_args + 1, args);
+
+	vm_call_method_this_a(methodID, result, packed_args, NULL);
+
+	return result;
+}
+
+static jclass JNI_GetObjectClass(JNIEnv *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	return obj->class->object;
+}
+
+static jboolean JNI_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jmethodID JNI_GetMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
 	struct vm_method *mb;
 	struct vm_class *class;
@@ -575,13 +635,6 @@ static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
 	return 0;
 }
 
-static jobject vm_jni_get_object_class(struct vm_jni_env *env, jobject obj)
-{
-	enter_vm_from_jni();
-
-	return obj->class->object;
-}
-
 static jint vm_jni_monitor_enter(struct vm_jni_env *env, jobject obj)
 {
 	enter_vm_from_jni();
@@ -604,29 +657,6 @@ static jint vm_jni_monitor_exit(struct vm_jni_env *env, jobject obj)
 		clear_exception();
 
 	return err;
-}
-
-static jobject vm_jni_new_object(struct vm_jni_env *env, jobject clazz,
-				 jmethodID method, ...)
-{
-	va_list args;
-
-	enter_vm_from_jni();
-
-	struct vm_object *obj;
-	struct vm_class *class;
-
-	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
-		return NULL;
-
-	class = vm_class_get_class_from_class_object(clazz);
-	obj = vm_object_alloc(class);
-
-	va_start(args, method);
-	vm_call_method_this_v(method, obj, args, NULL);
-	va_end(args);
-
-	return obj;
 }
 
 #define DECLARE_GET_XXX_FIELD(type, vmtype)				\
@@ -1328,28 +1358,6 @@ DECLARE_NEW_XXX_ARRAY(long, T_LONG);
 DECLARE_NEW_XXX_ARRAY(int, T_INT);
 DECLARE_NEW_XXX_ARRAY(short, T_SHORT);
 
-static jobject
-vm_jni_new_object_a(struct vm_jni_env *env, jclass clazz, jmethodID method,
-		    uint64_t *args)
-{
-	struct vm_class *vmc;
-	struct vm_object *result;
-
-	enter_vm_from_jni();
-
-	vmc = vm_class_get_class_from_class_object(clazz);
-	result = vm_object_alloc(vmc);
-
-	unsigned long packed_args[method->args_count];
-
-	packed_args[0] = (unsigned long) result;
-	pack_args(method, packed_args + 1, args);
-
-	vm_call_method_this_a(method, result, packed_args, NULL);
-
-	return result;
-}
-
 #define DECLARE_GET_XXX_ARRAY_REGION(type)				\
 static void								\
  vm_jni_get_ ## type ## _array_region(struct vm_jni_env *env,		\
@@ -1477,15 +1485,15 @@ void *vm_jni_native_interface[] = {
 	/* 25 */
 	NULL,
 	NULL,
-	vm_alloc_object,
-	vm_jni_new_object,
-	NULL, /* NewObjectV */
+	JNI_AllocObject,
+	JNI_NewObject,
+	JNI_NewObjectV,
 
 	/* 30 */
-	vm_jni_new_object_a,
-	vm_jni_get_object_class,
-	NULL, /* IsInstanceOf */
-	vm_jni_get_method_id,
+	JNI_NewObjectA,
+	JNI_GetObjectClass,
+	JNI_IsInstanceOf,
+	JNI_GetMethodID,
 	vm_jni_call_object_method,
 
 	/* 35 */

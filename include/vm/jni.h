@@ -63,7 +63,7 @@ typedef struct vm_method *jmethodID;
 
 typedef jobject jweak;
 
-union jvalue {
+typedef union jvalue {
 	jboolean z;
 	jbyte    b;
 	jchar    c;
@@ -73,7 +73,7 @@ union jvalue {
 	jfloat   f;
 	jdouble  d;
 	jobject  l;
-};
+} jvalue;
 
 typedef const struct vm_jni_env *JNIEnv;
 
