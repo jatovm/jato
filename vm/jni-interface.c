@@ -124,6 +124,42 @@ static int transform_method_for_call(jobject object, jmethodID *method_p)
 	return 0;
 }
 
+static int transform_method_for_nonvirtual_call(jobject this, jclass clazz,
+						jmethodID *method_p)
+{
+	struct vm_method *vmm = *method_p;
+
+	if (!this || !clazz || !vmm) {
+		throw_npe();
+		return -1;
+	}
+
+	struct vm_class *vmc =
+		vm_class_get_class_from_class_object(clazz);
+
+	if (!vmc) {
+		throw_npe();
+		return -1;
+	}
+
+	if (!vm_class_is_assignable_from(vmm->class, this->class)) {
+		signal_new_exception(vm_java_lang_Error,
+				     "Object is not assignable to %s",
+				     vmm->class->name);
+		return -1; /* rethrow */
+	}
+
+	vmm = vm_class_get_method_recursive(vmc, vmm->name, vmm->type);
+	if (!vmm) {
+		signal_new_exception(vm_java_lang_NoSuchMethodError, "%s%s",
+				     (*method_p)->name, (*method_p)->type);
+		return -1; /* rethrow */
+	}
+
+	*method_p = vmm;
+	return 0;
+}
+
 static jfieldID
 vm_jni_common_get_field_id(jclass clazz, const char *name, const char *sig)
 {
@@ -543,8 +579,8 @@ DECLARE_CALL_XXX_METHOD_V(object, Object, l);
         static j ## type JNI_Call ## typename ## MethodA		\
         (JNIEnv *env, jobject this, jmethodID methodID, jvalue *args) \
 	{								\
-	JNI_NOT_IMPLEMENTED; 		\
-	return 0; \
+	  JNI_NOT_IMPLEMENTED; 		\
+	  return 0; \
 	}
 
 DECLARE_CALL_XXX_METHOD_A(boolean, Boolean, z);
@@ -595,6 +631,109 @@ static void JNI_CallVoidMethodA(JNIEnv *env, jobject this, jmethodID methodID, u
 	pack_args(methodID, packed_args + 1, args);
 
 	vm_call_method_this_a(methodID, this, packed_args, NULL);
+}
+
+#define DECLARE_CALL_NONVIRTUAL_XXX_METHOD(type, typename, symbol)		\
+	static j ## type JNI_CallNonvirtual ## typename ## Method	\
+	(JNIEnv *env, jobject this, jclass clazz, jmethodID methodID, ...)					\
+	{								\
+		va_list args;						\
+		union jvalue result;					\
+									\
+		enter_vm_from_jni();					\
+									\
+		if (transform_method_for_nonvirtual_call(this, clazz,	\
+							 &methodID))	\
+			return 0; /* rethrow */				\
+									\
+									\
+		va_start(args, methodID);				\
+		vm_call_method_this_v(methodID, this, args, &result);	\
+		va_end(args);						\
+									\
+		return result.symbol;					\
+	}
+
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(boolean, Boolean, z);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(byte, Byte, b);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(char, Char, c);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(short, Short, s);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(int, Int, i);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(long, Long, j);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(float, Float, f);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(double, Double, d);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD(object, Object, l);
+
+static void JNI_CallNonvirtualVoidMethod(JNIEnv *env, jobject this, jclass clazz, jmethodID methodID, ...)
+{
+	va_list args;
+
+	enter_vm_from_jni();
+
+	if (transform_method_for_nonvirtual_call(this, clazz, &methodID))
+		return; /* rethrow */
+
+	va_start(args, methodID);
+	vm_call_method_this_v(methodID, this, args, NULL);
+	va_end(args);
+}
+
+#define DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(type, typename, symbol)		\
+	static j ## type JNI_CallNonvirtual ## typename ## MethodA	\
+	(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, jvalue *args)					\
+	{								\
+	  JNI_NOT_IMPLEMENTED; 		\
+	  return 0; \
+	}
+
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(boolean, Boolean, z);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(byte, Byte, b);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(char, Char, c);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(short, Short, s);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(int, Int, i);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(long, Long, j);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(float, Float, f);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(double, Double, d);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(object, Object, l);
+
+// FIXME: static void JNI_CallNonvirtualVoidMethodA(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, jvalue *args)
+static void JNI_CallNonvirtualVoidMethodA(JNIEnv *env, jobject this, jclass clazz, jmethodID methodID, uint64_t *args)
+{
+	enter_vm_from_jni();
+
+	if (transform_method_for_nonvirtual_call(this, clazz, &methodID))
+		return; /* rethrow */
+
+	unsigned long packed_args[methodID->args_count];
+
+	packed_args[0] = (unsigned long) this;
+	pack_args(methodID, packed_args + 1, args);
+
+	vm_call_method_this_a(methodID, this, packed_args, NULL);
+}
+
+#define DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(type, typename, symbol)		\
+	static j ## type JNI_CallNonvirtual ## typename ## MethodV	\
+	(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, va_list args)					\
+	{								\
+	  JNI_NOT_IMPLEMENTED; 		\
+	  return 0; \
+	}
+
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(boolean, Boolean, z);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(byte, Byte, b);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(char, Char, c);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(short, Short, s);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(int, Int, i);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(long, Long, j);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(float, Float, f);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(double, Double, d);
+DECLARE_CALL_NONVIRTUAL_XXX_METHOD_V(object, Object, l);
+
+static void JNI_CallNonvirtualVoidMethodV(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, va_list args)
+{
+  JNI_NOT_IMPLEMENTED;
+  return;
 }
 
 static jfieldID
@@ -1124,104 +1263,6 @@ static jlong JNI_GetDirectBufferCapacity(struct vm_jni_env *env, jobject buf)
 	return 0;
 }
 
-static int transform_method_for_nonvirtual_call(jobject this, jclass clazz,
-						jmethodID *method_p)
-{
-	struct vm_method *vmm = *method_p;
-
-	if (!this || !clazz || !vmm) {
-		throw_npe();
-		return -1;
-	}
-
-	struct vm_class *vmc =
-		vm_class_get_class_from_class_object(clazz);
-
-	if (!vmc) {
-		throw_npe();
-		return -1;
-	}
-
-	if (!vm_class_is_assignable_from(vmm->class, this->class)) {
-		signal_new_exception(vm_java_lang_Error,
-				     "Object is not assignable to %s",
-				     vmm->class->name);
-		return -1; /* rethrow */
-	}
-
-	vmm = vm_class_get_method_recursive(vmc, vmm->name, vmm->type);
-	if (!vmm) {
-		signal_new_exception(vm_java_lang_NoSuchMethodError, "%s%s",
-				     (*method_p)->name, (*method_p)->type);
-		return -1; /* rethrow */
-	}
-
-	*method_p = vmm;
-	return 0;
-}
-
-static void vm_jni_call_nonvirtual_void_method(struct vm_jni_env *env,
-	jobject this, jclass clazz, jmethodID methodID, ...)
-{
-	va_list args;
-
-	enter_vm_from_jni();
-
-	if (transform_method_for_nonvirtual_call(this, clazz, &methodID))
-		return; /* rethrow */
-
-	va_start(args, methodID);
-	vm_call_method_this_v(methodID, this, args, NULL);
-	va_end(args);
-}
-
-static void vm_jni_call_nonvirtual_void_method_a(struct vm_jni_env *env,
-	jobject this, jclass clazz, jmethodID methodID, uint64_t *args)
-{
-	enter_vm_from_jni();
-
-	if (transform_method_for_nonvirtual_call(this, clazz, &methodID))
-		return; /* rethrow */
-
-	unsigned long packed_args[methodID->args_count];
-
-	packed_args[0] = (unsigned long) this;
-	pack_args(methodID, packed_args + 1, args);
-
-	vm_call_method_this_a(methodID, this, packed_args, NULL);
-}
-
-#define DECLARE_CALL_NONVIRTUAL_XXX_METHOD(type, symbol)		\
-	static j ## type vm_jni_call_nonvirtual_ ## type ## _method	\
-	(struct vm_jni_env *env, jobject this, jclass clazz,		\
-	 jmethodID methodID, ...)					\
-	{								\
-		va_list args;						\
-		union jvalue result;					\
-									\
-		enter_vm_from_jni();					\
-									\
-		if (transform_method_for_nonvirtual_call(this, clazz,	\
-							 &methodID))	\
-			return 0; /* rethrow */				\
-									\
-									\
-		va_start(args, methodID);				\
-		vm_call_method_this_v(methodID, this, args, &result);	\
-		va_end(args);						\
-									\
-		return result.symbol;					\
-	}
-
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(boolean, z);
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(byte, b);
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(char, c);
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(int, i);
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(long, j);
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(float, f);
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(double, d);
-DECLARE_CALL_NONVIRTUAL_XXX_METHOD(object, l);
-
 static jfieldID
 vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
 			   const char *name, const char *sig)
@@ -1552,48 +1593,48 @@ void *vm_jni_native_interface[] = {
 	JNI_CallVoidMethod,
 	JNI_CallVoidMethodV,
 	JNI_CallVoidMethodA,
-	vm_jni_call_nonvirtual_object_method,
+	JNI_CallNonvirtualObjectMethod,
 
 	/* 65 */
-	NULL, /* CallNonvirtualObjectMethodV */
-	NULL, /* CallNonvirtualObjectMethodA */
-	vm_jni_call_nonvirtual_boolean_method,
-	NULL, /* CallNonvirtualBooleanMethodV */
-	NULL, /* CallNonvirtualBooleanMethodA */
+	JNI_CallNonvirtualObjectMethodV,
+	JNI_CallNonvirtualObjectMethodA,
+	JNI_CallNonvirtualBooleanMethod,
+	JNI_CallNonvirtualBooleanMethodV,
+	JNI_CallNonvirtualBooleanMethodA,
 
 	/* 70 */
-	vm_jni_call_nonvirtual_byte_method,
-	NULL, /* CallNonvirtualByteMethodV */
-	NULL, /* CallNonvirtualByteMethodA */
-	vm_jni_call_nonvirtual_char_method,
-	NULL, /* CallNonvirtualCharMethodV */
+	JNI_CallNonvirtualByteMethod,
+	JNI_CallNonvirtualByteMethodV,
+	JNI_CallNonvirtualByteMethodA,
+	JNI_CallNonvirtualCharMethod,
+	JNI_CallNonvirtualCharMethodV,
 
 	/* 75 */
-	NULL, /* CallNonvirtualCharMethodA */
-	NULL, /* CallNonvirtualShortMethod */
-	NULL, /* CallNonvirtualShortMethodV */
-	NULL, /* CallNonvirtualShortMethodA */
-	vm_jni_call_nonvirtual_int_method,
+	JNI_CallNonvirtualCharMethodA,
+	JNI_CallNonvirtualShortMethod,
+	JNI_CallNonvirtualShortMethodV,
+	JNI_CallNonvirtualShortMethodA,
+	JNI_CallNonvirtualIntMethod,
 
 	/* 80 */
-	NULL, /* CallNonvirtualIntMethodV */
-	NULL, /* CallNonvirtualIntMethodA */
-	vm_jni_call_nonvirtual_long_method,
-	NULL, /* CallNonvirtualLongMethodV */
-	NULL, /* CallNonvirtualLongMethodA */
+	JNI_CallNonvirtualIntMethodV,
+	JNI_CallNonvirtualIntMethodA,
+	JNI_CallNonvirtualLongMethod,
+	JNI_CallNonvirtualLongMethodV,
+	JNI_CallNonvirtualLongMethodA,
 
 	/* 85 */
-	vm_jni_call_nonvirtual_float_method,
-	NULL, /* CallNonvirtualFloatMethodV */
-	NULL, /* CallNonvirtualFloatMethodA */
-	vm_jni_call_nonvirtual_double_method,
-	NULL, /* CallNonvirtualDoubleMethodV */
+	JNI_CallNonvirtualFloatMethod,
+	JNI_CallNonvirtualFloatMethodV,
+	JNI_CallNonvirtualFloatMethodA,
+	JNI_CallNonvirtualDoubleMethod,
+	JNI_CallNonvirtualDoubleMethodV,
 
 	/* 90 */
-	NULL, /* CallNonvirtualDoubleMethodA */
-	vm_jni_call_nonvirtual_void_method,
-	NULL, /* CallNonvirtualVoidMethodV */
-	vm_jni_call_nonvirtual_void_method_a,
+	JNI_CallNonvirtualDoubleMethodA,
+	JNI_CallNonvirtualVoidMethod,
+	JNI_CallNonvirtualVoidMethodV,
+	JNI_CallNonvirtualVoidMethodA,
 	vm_jni_get_field_id,
 
 	/* 95 */
