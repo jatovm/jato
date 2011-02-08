@@ -736,9 +736,7 @@ static void JNI_CallNonvirtualVoidMethodV(JNIEnv *env, jobject obj, jclass clazz
   return;
 }
 
-static jfieldID
-vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz, const char *name,
-		    const char *sig)
+static jfieldID JNI_GetFieldID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
 	struct vm_field *fb;
 
@@ -753,6 +751,62 @@ vm_jni_get_field_id(struct vm_jni_env *env, jclass clazz, const char *name,
 
 	return fb;
 }
+
+#define DECLARE_GET_XXX_FIELD(type, typename, vmtype)				\
+static j ## type							\
+JNI_Get ## typename ## Field(JNIEnv *env, jobject object,	jfieldID field)				\
+	{								\
+	enter_vm_from_jni();						\
+									\
+	if (!object) {							\
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);	\
+	return 0;							\
+	}								\
+									\
+	if (vm_field_type(field) != vmtype) {				\
+	NOT_IMPLEMENTED;						\
+	return 0;							\
+	}								\
+									\
+	return field_get_ ## type (object, field);			\
+}
+
+DECLARE_GET_XXX_FIELD(object, Object, J_REFERENCE);
+DECLARE_GET_XXX_FIELD(boolean, Boolean, J_BOOLEAN);
+DECLARE_GET_XXX_FIELD(byte, Byte, J_BYTE);
+DECLARE_GET_XXX_FIELD(char, Char, J_CHAR);
+DECLARE_GET_XXX_FIELD(short, Short, J_SHORT);
+DECLARE_GET_XXX_FIELD(int, Int, J_INT);
+DECLARE_GET_XXX_FIELD(long, Long, J_LONG);
+DECLARE_GET_XXX_FIELD(float, Float, J_FLOAT);
+DECLARE_GET_XXX_FIELD(double, Double, J_DOUBLE);
+
+#define DECLARE_SET_XXX_FIELD(type, typename, vmtype)				\
+static void								\
+JNI_Set ## typename ## Field(JNIEnv *env, jobject object,	jfieldID field, j ## type value)		\
+	{								\
+	enter_vm_from_jni();						\
+									\
+	if (!object) {							\
+	signal_new_exception(vm_java_lang_NullPointerException, NULL);	\
+	return;								\
+	}								\
+									\
+	if (vm_field_type(field) != vmtype)				\
+		return;							\
+									\
+	field_set_ ## type (object, field, value);			\
+}
+
+DECLARE_SET_XXX_FIELD(object, Object, J_REFERENCE);
+DECLARE_SET_XXX_FIELD(boolean, Boolean, J_BOOLEAN);
+DECLARE_SET_XXX_FIELD(byte, Byte, J_BYTE);
+DECLARE_SET_XXX_FIELD(char, Char, J_CHAR);
+DECLARE_SET_XXX_FIELD(short, Short, J_SHORT);
+DECLARE_SET_XXX_FIELD(int, Int, J_INT);
+DECLARE_SET_XXX_FIELD(long, Long, J_LONG);
+DECLARE_SET_XXX_FIELD(float, Float, J_FLOAT);
+DECLARE_SET_XXX_FIELD(double, Double, J_DOUBLE);
 
 static jmethodID
 vm_jni_get_static_method_id(struct vm_jni_env *env, jclass clazz,
@@ -889,34 +943,6 @@ DECLARE_CALL_STATIC_XXX_METHOD_V(float, f);
 DECLARE_CALL_STATIC_XXX_METHOD_V(double, d);
 DECLARE_CALL_STATIC_XXX_METHOD_V(object, l);
 
-#define DECLARE_SET_XXX_FIELD(type, vmtype)				\
-static void								\
-vm_jni_set_ ## type ## _field(struct vm_jni_env *env, jobject object,	\
-			      jfieldID field, j ## type value)		\
-	{								\
-	enter_vm_from_jni();						\
-									\
-	if (!object) {							\
-	signal_new_exception(vm_java_lang_NullPointerException, NULL);	\
-	return;								\
-	}								\
-									\
-	if (vm_field_type(field) != vmtype)				\
-		return;							\
-									\
-	field_set_ ## type (object, field, value);			\
-}
-
-DECLARE_SET_XXX_FIELD(boolean, J_BOOLEAN);
-DECLARE_SET_XXX_FIELD(byte, J_BYTE);
-DECLARE_SET_XXX_FIELD(char, J_CHAR);
-DECLARE_SET_XXX_FIELD(double, J_DOUBLE);
-DECLARE_SET_XXX_FIELD(float, J_FLOAT);
-DECLARE_SET_XXX_FIELD(int, J_INT);
-DECLARE_SET_XXX_FIELD(long, J_LONG);
-DECLARE_SET_XXX_FIELD(object, J_REFERENCE);
-DECLARE_SET_XXX_FIELD(short, J_SHORT);
-
 static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
 {
 	enter_vm_from_jni();
@@ -948,36 +974,6 @@ static jint vm_jni_monitor_exit(struct vm_jni_env *env, jobject obj)
 
 	return err;
 }
-
-#define DECLARE_GET_XXX_FIELD(type, vmtype)				\
-static j ## type							\
-vm_jni_get_ ## type ## _field(struct vm_jni_env *env, jobject object,	\
-			      jfieldID field)				\
-	{								\
-	enter_vm_from_jni();						\
-									\
-	if (!object) {							\
-	signal_new_exception(vm_java_lang_NullPointerException, NULL);	\
-	return 0;							\
-	}								\
-									\
-	if (vm_field_type(field) != vmtype) {				\
-	NOT_IMPLEMENTED;						\
-	return 0;							\
-	}								\
-									\
-	return field_get_ ## type (object, field);			\
-}
-
-DECLARE_GET_XXX_FIELD(boolean, J_BOOLEAN);
-DECLARE_GET_XXX_FIELD(byte, J_BYTE);
-DECLARE_GET_XXX_FIELD(char, J_CHAR);
-DECLARE_GET_XXX_FIELD(double, J_DOUBLE);
-DECLARE_GET_XXX_FIELD(float, J_FLOAT);
-DECLARE_GET_XXX_FIELD(int, J_INT);
-DECLARE_GET_XXX_FIELD(long, J_LONG);
-DECLARE_GET_XXX_FIELD(object, J_REFERENCE);
-DECLARE_GET_XXX_FIELD(short, J_SHORT);
 
 #define DECLARE_GET_XXX_ARRAY_ELEMENTS(type)				\
 static j ## type *							\
@@ -1635,33 +1631,33 @@ void *vm_jni_native_interface[] = {
 	JNI_CallNonvirtualVoidMethod,
 	JNI_CallNonvirtualVoidMethodV,
 	JNI_CallNonvirtualVoidMethodA,
-	vm_jni_get_field_id,
+	JNI_GetFieldID,
 
 	/* 95 */
-	vm_jni_get_object_field,
-	vm_jni_get_boolean_field,
-	vm_jni_get_byte_field,
-	vm_jni_get_char_field,
-	vm_jni_get_short_field,
+	JNI_GetObjectField,
+	JNI_GetBooleanField,
+	JNI_GetByteField,
+	JNI_GetCharField,
+	JNI_GetShortField,
 
 	/* 100 */
-	vm_jni_get_int_field,
-	vm_jni_get_long_field,
-	vm_jni_get_float_field,
-	vm_jni_get_double_field,
-	vm_jni_set_object_field,
+	JNI_GetIntField,
+	JNI_GetLongField,
+	JNI_GetFloatField,
+	JNI_GetDoubleField,
+	JNI_SetObjectField,
 
 	/* 105 */
-	vm_jni_set_boolean_field,
-	vm_jni_set_byte_field,
-	vm_jni_set_char_field,
-	vm_jni_set_short_field,
-	vm_jni_set_int_field,
+	JNI_SetBooleanField,
+	JNI_SetByteField,
+	JNI_SetCharField,
+	JNI_SetShortField,
+	JNI_SetIntField,
 
 	/* 110 */
-	vm_jni_set_long_field,
-	vm_jni_set_float_field,
-	vm_jni_set_double_field,
+	JNI_SetLongField,
+	JNI_SetFloatField,
+	JNI_SetDoubleField,
 	vm_jni_get_static_method_id,
 	vm_jni_call_static_object_method,
 
