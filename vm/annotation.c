@@ -85,6 +85,151 @@ struct vm_object *vm_annotation_to_object(struct vm_annotation *vma)
 	return annotation;
 }
 
+static uint8_t parse_array_element_tag(struct cafebabe_element_value *e_value)
+{
+	struct cafebabe_element_value *child_e_value	= &e_value->value.array_value.values[0];
+
+	return child_e_value->tag;
+}
+
+static struct vm_class *parse_array_element_type(uint8_t array_tag)
+{
+	struct vm_class *array_class;
+
+	switch (array_tag) {
+	case ELEMENT_TYPE_BYTE:
+		array_class		= vm_array_of_byte;
+		break;
+	case ELEMENT_TYPE_CHAR:
+		array_class		= vm_array_of_char;
+		break;
+	case ELEMENT_TYPE_DOUBLE:
+		array_class		= vm_array_of_double;
+		break;
+	case ELEMENT_TYPE_FLOAT:
+		array_class		= vm_array_of_float;
+		break;
+	case ELEMENT_TYPE_INTEGER:
+		array_class		= vm_array_of_int;
+		break;
+	case ELEMENT_TYPE_LONG:
+		array_class		= vm_array_of_long;
+		break;
+	case ELEMENT_TYPE_SHORT:
+		array_class		= vm_array_of_short;
+		break;
+	case ELEMENT_TYPE_BOOLEAN:
+		array_class		= vm_array_of_boolean;
+		break;
+	default:
+		array_class = NULL;
+		break;
+	}
+
+	return array_class;
+}
+
+static struct vm_object *parse_array_element(const struct cafebabe_class *klass, struct cafebabe_element_value *e_value)
+{
+	struct vm_class *array_class;
+	struct vm_object *ret;
+	uint8_t array_tag;
+
+	if (!e_value->value.array_value.num_values)
+		return NULL;
+
+	array_tag	= parse_array_element_tag(e_value);
+
+	array_class	= parse_array_element_type(array_tag);
+	if (!array_class)
+		return NULL;
+
+	ret		= vm_object_alloc_array(array_class, e_value->value.array_value.num_values);
+	if (!ret)
+		return NULL;
+
+	for (unsigned int i = 0; i < e_value->value.array_value.num_values; i++) {
+		struct cafebabe_element_value *child_e_value = &e_value->value.array_value.values[i];
+
+		switch (array_tag) {
+		case ELEMENT_TYPE_BYTE: {
+			jint value;
+
+			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_byte(ret, i, value);
+			break;
+		}
+		case ELEMENT_TYPE_CHAR: {
+			jint value;
+
+			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_char(ret, i, value);
+			break;
+		}
+		case ELEMENT_TYPE_DOUBLE: {
+			jdouble value;
+
+			if (cafebabe_class_constant_get_double(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_double(ret, i, value);
+		}
+		case ELEMENT_TYPE_FLOAT: {
+			jfloat value;
+
+			if (cafebabe_class_constant_get_float(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_float(ret, i, value);
+			break;
+		}
+		case ELEMENT_TYPE_INTEGER: {
+			jint value;
+
+			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_int(ret, i, value);
+			break;
+		}
+		case ELEMENT_TYPE_LONG: {
+			jlong value;
+
+			if (cafebabe_class_constant_get_long(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_long(ret, i, value);
+		}
+		case ELEMENT_TYPE_SHORT: {
+			jint value;
+
+			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_short(ret, i, value);
+			break;
+		}
+		case ELEMENT_TYPE_BOOLEAN: {
+			jint value;
+
+			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+				return NULL;
+
+			array_set_field_boolean(ret, i, value);
+			break;
+		}
+		default:
+			return NULL;
+		}
+	}
+
+	return ret;
+}
+
 static struct vm_object *parse_element_value(const struct cafebabe_class *klass, struct cafebabe_element_value *e_value)
 {
 	struct vm_object *ret;
@@ -195,19 +340,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 		break;
 	}
 	case ELEMENT_TYPE_ARRAY: {
-		ret		= vm_object_alloc_array(vm_array_of_java_lang_Object, e_value->value.array_value.num_values);
-		if (!ret)
-			goto error_out;
-
-		for (unsigned int i = 0; i < e_value->value.array_value.num_values; i++) {
-			struct cafebabe_element_value *child_e_value = &e_value->value.array_value.values[i];
-			struct vm_object *obj;
-
-			obj		= parse_element_value(klass, child_e_value);
-
-			array_set_field_object(ret, i, obj);
-		}
-
+		ret		= parse_array_element(klass, e_value);
 		break;
 	}
 	default:
