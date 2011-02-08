@@ -808,9 +808,7 @@ DECLARE_SET_XXX_FIELD(long, Long, J_LONG);
 DECLARE_SET_XXX_FIELD(float, Float, J_FLOAT);
 DECLARE_SET_XXX_FIELD(double, Double, J_DOUBLE);
 
-static jmethodID
-vm_jni_get_static_method_id(struct vm_jni_env *env, jclass clazz,
-			    const char *name, const char *sig)
+static jmethodID JNI_GetStaticMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
 	struct vm_method *mb;
 	struct vm_class *class;
@@ -835,6 +833,95 @@ vm_jni_get_static_method_id(struct vm_jni_env *env, jclass clazz,
 
 	return mb;
 }
+
+static void JNI_CallStaticVoidMethod(JNIEnv *env, jclass clazz, jmethodID methodID, ...)
+{
+	va_list args;
+
+	enter_vm_from_jni();
+
+	va_start(args, methodID);
+	vm_call_method_v(methodID, args, NULL);
+	va_end(args);
+}
+
+static void JNI_CallStaticVoidMethodV(JNIEnv *env, jclass clazz, jmethodID methodID, va_list args)
+{
+	enter_vm_from_jni();
+	vm_call_method_v(methodID, args, NULL);
+}
+
+#define DECLARE_CALL_STATIC_XXX_METHOD(name, typename, symbol)			\
+	static j ## name JNI_CallStatic ## typename ## Method		\
+	(JNIEnv *env, jclass clazz,jmethodID methodID, ...)  \
+	{								\
+		union jvalue result;					\
+		va_list args;						\
+									\
+		enter_vm_from_jni();					\
+									\
+		va_start(args, methodID);				\
+		vm_call_method_v(methodID, args, &result);		\
+		va_end(args);						\
+									\
+		return result.symbol;					\
+	}
+
+DECLARE_CALL_STATIC_XXX_METHOD(object, Object, l);
+DECLARE_CALL_STATIC_XXX_METHOD(boolean, Boolean, z);
+DECLARE_CALL_STATIC_XXX_METHOD(byte, Byte, b);
+DECLARE_CALL_STATIC_XXX_METHOD(char, Char, c);
+DECLARE_CALL_STATIC_XXX_METHOD(short, Short, s);
+DECLARE_CALL_STATIC_XXX_METHOD(int, Int, i);
+DECLARE_CALL_STATIC_XXX_METHOD(long, Long, j);
+DECLARE_CALL_STATIC_XXX_METHOD(float, Float, f);
+DECLARE_CALL_STATIC_XXX_METHOD(double, Double, d);
+
+static void JNI_CallStaticVoidMethodA(JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args)
+{
+	JNI_NOT_IMPLEMENTED;
+	return;
+}
+
+#define DECLARE_CALL_STATIC_XXX_METHOD_A(name, typename, symbol)			\
+	static j ## name JNI_CallStatic ## typename ## MethodA	\
+	(JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args)				\
+	{								\
+	  JNI_NOT_IMPLEMENTED; 		\
+	  return 0; \
+	}
+
+DECLARE_CALL_STATIC_XXX_METHOD_A(object, Object, l);
+DECLARE_CALL_STATIC_XXX_METHOD_A(boolean, Boolean, z);
+DECLARE_CALL_STATIC_XXX_METHOD_A(byte, Byte, b);
+DECLARE_CALL_STATIC_XXX_METHOD_A(char, Char, c);
+DECLARE_CALL_STATIC_XXX_METHOD_A(short, Short, s);
+DECLARE_CALL_STATIC_XXX_METHOD_A(int, Int, i);
+DECLARE_CALL_STATIC_XXX_METHOD_A(long, Long, j);
+DECLARE_CALL_STATIC_XXX_METHOD_A(float, Float, f);
+DECLARE_CALL_STATIC_XXX_METHOD_A(double, Double, d);
+
+#define DECLARE_CALL_STATIC_XXX_METHOD_V(name, typename, symbol)			\
+	static j ## name JNI_CallStatic ## typename ## MethodV	\
+	(JNIEnv *env, jclass clazz, jmethodID methodID, va_list args)				\
+	{								\
+		union jvalue result;					\
+									\
+		enter_vm_from_jni();					\
+									\
+		vm_call_method_v(methodID, args, &result);		\
+		return result.symbol;					\
+	}
+
+DECLARE_CALL_STATIC_XXX_METHOD_V(object, Object, l);
+DECLARE_CALL_STATIC_XXX_METHOD_V(boolean, Boolean, z);
+DECLARE_CALL_STATIC_XXX_METHOD_V(byte, Byte, b);
+DECLARE_CALL_STATIC_XXX_METHOD_V(char, Char, c);
+DECLARE_CALL_STATIC_XXX_METHOD_V(short, Short, s);
+DECLARE_CALL_STATIC_XXX_METHOD_V(int, Int, i);
+DECLARE_CALL_STATIC_XXX_METHOD_V(long, Long, j);
+DECLARE_CALL_STATIC_XXX_METHOD_V(float, Float, f);
+DECLARE_CALL_STATIC_XXX_METHOD_V(double, Double, d);
 
 static jobject vm_jni_new_string_utf(struct vm_jni_env *env, const char *bytes)
 {
@@ -872,76 +959,6 @@ vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
 
 	free((char *)utf);
 }
-
-static void
-vm_jni_call_static_void_method(struct vm_jni_env *env, jclass clazz,
-			       jmethodID methodID, ...)
-{
-	va_list args;
-
-	enter_vm_from_jni();
-
-	va_start(args, methodID);
-	vm_call_method_v(methodID, args, NULL);
-	va_end(args);
-}
-
-static void
-vm_jni_call_static_void_method_v(struct vm_jni_env *env, jclass clazz,
-				 jmethodID methodID, va_list args)
-{
-	enter_vm_from_jni();
-	vm_call_method_v(methodID, args, NULL);
-}
-
-#define DECLARE_CALL_STATIC_XXX_METHOD(name, symbol)			\
-	static j ## name vm_jni_call_static_ ## name ## _method		\
-	(struct vm_jni_env *env, jclass clazz, jmethodID methodID, ...) \
-	{								\
-		union jvalue result;					\
-		va_list args;						\
-									\
-		enter_vm_from_jni();					\
-									\
-		va_start(args, methodID);				\
-		vm_call_method_v(methodID, args, &result);		\
-		va_end(args);						\
-									\
-		return result.symbol;					\
-	}
-
-DECLARE_CALL_STATIC_XXX_METHOD(boolean, z);
-DECLARE_CALL_STATIC_XXX_METHOD(byte, b);
-DECLARE_CALL_STATIC_XXX_METHOD(char, c);
-DECLARE_CALL_STATIC_XXX_METHOD(short, s);
-DECLARE_CALL_STATIC_XXX_METHOD(int, i);
-DECLARE_CALL_STATIC_XXX_METHOD(long, j);
-DECLARE_CALL_STATIC_XXX_METHOD(float, f);
-DECLARE_CALL_STATIC_XXX_METHOD(double, d);
-DECLARE_CALL_STATIC_XXX_METHOD(object, l);
-
-#define DECLARE_CALL_STATIC_XXX_METHOD_V(name, symbol)			\
-	static j ## name vm_jni_call_static_ ## name ## _method_v	\
-	(struct vm_jni_env *env, jclass clazz,				\
-	 jmethodID methodID, va_list args)				\
-	{								\
-		union jvalue result;					\
-									\
-		enter_vm_from_jni();					\
-									\
-		vm_call_method_v(methodID, args, &result);		\
-		return result.symbol;					\
-	}
-
-DECLARE_CALL_STATIC_XXX_METHOD_V(boolean, z);
-DECLARE_CALL_STATIC_XXX_METHOD_V(byte, b);
-DECLARE_CALL_STATIC_XXX_METHOD_V(char, c);
-DECLARE_CALL_STATIC_XXX_METHOD_V(short, s);
-DECLARE_CALL_STATIC_XXX_METHOD_V(int, i);
-DECLARE_CALL_STATIC_XXX_METHOD_V(long, j);
-DECLARE_CALL_STATIC_XXX_METHOD_V(float, f);
-DECLARE_CALL_STATIC_XXX_METHOD_V(double, d);
-DECLARE_CALL_STATIC_XXX_METHOD_V(object, l);
 
 static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
 {
@@ -1658,49 +1675,49 @@ void *vm_jni_native_interface[] = {
 	JNI_SetLongField,
 	JNI_SetFloatField,
 	JNI_SetDoubleField,
-	vm_jni_get_static_method_id,
-	vm_jni_call_static_object_method,
+	JNI_GetStaticMethodID,
+	JNI_CallStaticObjectMethod,
 
 	/* 115 */
-	vm_jni_call_static_object_method_v,
-	NULL, /* CallStaticObjectMethodA */
-	vm_jni_call_static_boolean_method,
-	vm_jni_call_static_boolean_method_v,
-	NULL, /* CallStaticBooleanMethodA */
+	JNI_CallStaticObjectMethodV,
+	JNI_CallStaticObjectMethodA,
+	JNI_CallStaticBooleanMethod,
+	JNI_CallStaticBooleanMethodV,
+	JNI_CallStaticBooleanMethodA,
 
 	/* 120 */
-	vm_jni_call_static_byte_method,
-	vm_jni_call_static_byte_method_v,
-	NULL, /* CallStaticByteMethodA */
-	vm_jni_call_static_char_method,
-	vm_jni_call_static_char_method_v,
+	JNI_CallStaticByteMethod,
+	JNI_CallStaticByteMethodV,
+	JNI_CallStaticByteMethodA,
+	JNI_CallStaticCharMethod,
+	JNI_CallStaticCharMethodV,
 
 	/* 125 */
-	NULL, /* CallStaticCharMethodA */
-	vm_jni_call_static_short_method,
-	vm_jni_call_static_short_method_v,
-	NULL, /* CallStaticShortMethodA */
-	vm_jni_call_static_int_method,
+	JNI_CallStaticCharMethodA,
+	JNI_CallStaticShortMethod,
+	JNI_CallStaticShortMethodV,
+	JNI_CallStaticShortMethodA,
+	JNI_CallStaticIntMethod,
 
 	/* 130 */
-	vm_jni_call_static_int_method_v,
-	NULL, /* CallStaticIntMethodA */
-	vm_jni_call_static_long_method,
-	vm_jni_call_static_long_method_v,
-	NULL, /* CallStaticLongMethodA */
+	JNI_CallStaticIntMethodV,
+	JNI_CallStaticIntMethodA,
+	JNI_CallStaticLongMethod,
+	JNI_CallStaticLongMethodV,
+	JNI_CallStaticLongMethodA,
 
 	/* 135 */
-	vm_jni_call_static_float_method,
-	vm_jni_call_static_float_method_v,
-	NULL, /* CallStaticFloatMethodA */
-	vm_jni_call_static_double_method,
-	vm_jni_call_static_double_method_v,
+	JNI_CallStaticFloatMethod,
+	JNI_CallStaticFloatMethodV,
+	JNI_CallStaticFloatMethodA,
+	JNI_CallStaticDoubleMethod,
+	JNI_CallStaticDoubleMethodV,
 
 	/* 140 */
-	NULL, /* CallStaticDoubleMethodA */
-	vm_jni_call_static_void_method,
-	vm_jni_call_static_void_method_v,
-	NULL, /* CallStaticVoidMethodA */
+	JNI_CallStaticDoubleMethodA,
+	JNI_CallStaticVoidMethod,
+	JNI_CallStaticVoidMethodV,
+	JNI_CallStaticVoidMethodA,
 	vm_jni_get_static_field_id,
 
 	/* 145 */
