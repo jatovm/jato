@@ -101,7 +101,7 @@ static int add_dir_to_classpath(const char *dir)
 	cp->type = CLASSPATH_DIR;
 	cp->path = strdup(dir);
 	if (!cp->path) {
-		NOT_IMPLEMENTED;
+		free(cp);
 		return -ENOMEM;
 	}
 
@@ -112,6 +112,7 @@ static int add_dir_to_classpath(const char *dir)
 static int add_zip_to_classpath(const char *zip)
 {
 	int zip_error;
+	int err;
 
 	struct classpath *cp = malloc(sizeof *cp);
 	if (!cp)
@@ -120,18 +121,25 @@ static int add_zip_to_classpath(const char *zip)
 	cp->type = CLASSPATH_ZIP;
 	cp->path = strdup(zip);
 	if (!cp->path) {
-		NOT_IMPLEMENTED;
-		return -ENOMEM;
+		err = -ENOMEM;
+		goto error_free_cp;
 	}
 
 	cp->zip = zip_open(zip, 0, &zip_error);
 	if (!cp->zip) {
-		NOT_IMPLEMENTED;
-		return -1;
+		err = -1;
+		goto error_free_path;
 	}
 
 	list_add_tail(&cp->node, &classpaths);
 	return 0;
+
+error_free_path:
+	free((void *) cp->path);
+error_free_cp:
+	free(cp);
+
+	return err;
 }
 
 int try_to_add_zip_to_classpath(const char *zip)
@@ -166,10 +174,8 @@ int classloader_add_to_classpath(const char *classpath)
 			continue;
 
 		classpath_element = strndup(classpath + i, n);
-		if (!classpath_element) {
-			NOT_IMPLEMENTED;
+		if (!classpath_element)
 			break;
-		}
 
 		i += n;
 
@@ -271,10 +277,8 @@ static char *class_name_to_file_name(const char *class_name)
 {
 	char *filename;
 
-	if (asprintf(&filename, "%s.class", class_name) == -1) {
-		NOT_IMPLEMENTED;
+	if (asprintf(&filename, "%s.class", class_name) == -1)
 		return NULL;
-	}
 
 	return filename;
 }
@@ -289,24 +293,26 @@ static struct vm_class *load_class_from_file(const char *filename)
 		goto out;
 
 	class = malloc(sizeof *class);
-	if (cafebabe_class_init(class, &stream)) {
-		NOT_IMPLEMENTED;
-		goto out_stream;
-	}
+	if (!class)
+		goto error_close_stream;
+
+	if (cafebabe_class_init(class, &stream))
+		goto error_free_class;
 
 	cafebabe_stream_close(&stream);
 
 	result = vm_alloc(sizeof *result);
-	if (result) {
-		if (vm_class_link(result, class)) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
-	}
+	if (!result)
+		goto error_free_class;
+
+	if (vm_class_link(result, class))
+		goto error_free_class;
 
 	return result;
 
-out_stream:
+error_free_class:
+	free(class);
+error_close_stream:
 	cafebabe_stream_close(&stream);
 out:
 	return NULL;
@@ -317,10 +323,8 @@ static struct vm_class *load_class_from_dir(const char *dir, const char *file)
 	struct vm_class *vmc;
 	char *full_filename;
 
-	if (asprintf(&full_filename, "%s/%s", dir, file) == -1) {
-		NOT_IMPLEMENTED;
+	if (asprintf(&full_filename, "%s/%s", dir, file) == -1)
 		return NULL;
-	}
 
 	vmc = load_class_from_file(full_filename);
 	free(full_filename);
@@ -342,22 +346,16 @@ static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 	if (zip_file_index == -1)
 		return NULL;
 
-	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1) {
-		NOT_IMPLEMENTED;
+	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1)
 		return NULL;
-	}
 
 	zip_file_buf = malloc(zip_stat.size);
-	if (!zip_file_buf) {
-		NOT_IMPLEMENTED;
+	if (!zip_file_buf)
 		return NULL;
-	}
 
 	zip_file = zip_fopen_index(zip, zip_file_index, 0);
-	if (!zip_file) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (!zip_file)
+		goto error_free_buf;
 
 	/* Read the zipped class file */
 	for (int offset = 0; offset != zip_stat.size;) {
@@ -365,10 +363,8 @@ static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 
 		ret = zip_fread(zip_file,
 			zip_file_buf + offset, zip_stat.size - offset);
-		if (ret == -1) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (ret == -1)
+			goto error_free_buf;
 
 		offset += ret;
 	}
@@ -380,22 +376,25 @@ static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 	cafebabe_stream_open_buffer(&stream, zip_file_buf, zip_stat.size);
 
 	class = malloc(sizeof *class);
-	if (cafebabe_class_init(class, &stream)) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
+	if (cafebabe_class_init(class, &stream))
+		goto error_free_buf;
 
 	cafebabe_stream_close_buffer(&stream);
 
 	result = vm_alloc(sizeof *result);
 	if (result) {
-		if (vm_class_link(result, class)) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
+		if (vm_class_link(result, class))
+			goto error_free_class;
 	}
 
 	return result;
+
+error_free_class:
+	free(class);
+error_free_buf:
+	free(zip_file_buf);
+
+	return NULL;
 }
 
 static struct vm_class *load_class_from_classpath_file(const struct classpath *cp,
@@ -465,10 +464,8 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	class->classloader = NULL;
 	class->primitive_vm_type = type;
 
-	if (vm_class_link_primitive_class(class, class_name)) {
-		NOT_IMPLEMENTED;
+	if (vm_class_link_primitive_class(class, class_name))
 		return NULL;
-	}
 
 	primitive_class_cache[type] = class;
 
@@ -549,10 +546,8 @@ static struct vm_class *load_class(const char *class_name)
 	char *filename;
 
 	filename = class_name_to_file_name(class_name);
-	if (!filename) {
-		NOT_IMPLEMENTED;
+	if (!filename)
 		return NULL;
-	}
 
 	struct classpath *cp;
 	list_for_each_entry(cp, &classpaths, node) {
@@ -755,10 +750,8 @@ classloader_find_class(struct vm_object *loader, const char *name)
 	struct classloader_class *class;
 
 	slash_class_name = dots_to_slash(name);
-	if (!slash_class_name) {
-		NOT_IMPLEMENTED;
+	if (!slash_class_name)
 		return NULL;
-	}
 
 	vmc = NULL;
 
