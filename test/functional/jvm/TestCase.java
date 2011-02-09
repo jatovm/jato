@@ -26,6 +26,94 @@
 package jvm;
 
 public class TestCase {
+    protected static void assertArrayEquals(byte[] expected, byte[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
+    protected static void assertArrayEquals(char[] expected, char[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
+    protected static void assertArrayEquals(short[] expected, short[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
+    protected static void assertArrayEquals(int[] expected, int[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
+    protected static void assertArrayEquals(long[] expected, long[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
+    protected static void assertArrayEquals(float[] expected, float[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
+    protected static void assertArrayEquals(double[] expected, double[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
+    protected static void assertArrayEquals(Object[] expected, Object[] actual) {
+        if (expected == null && actual == null)
+            return;
+
+        assertNotNull(expected);
+        assertNotNull(actual);
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++)
+            assertEquals(expected[i], actual[i]);
+    }
+
     protected static void assertEquals(int expected, int actual) {
         if (expected != actual) {
             fail("Expected '" + expected + "', but was '" + actual + "'.");
