@@ -1276,9 +1276,7 @@ static jlong JNI_GetDirectBufferCapacity(struct vm_jni_env *env, jobject buf)
 	return 0;
 }
 
-static jfieldID
-vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
-			   const char *name, const char *sig)
+static jfieldID JNI_GetStaticFieldId(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
 	struct vm_field *fb;
 
@@ -1296,42 +1294,41 @@ vm_jni_get_static_field_id(struct vm_jni_env *env, jclass clazz,
 
 #define DEFINE_GET_STATIC_FIELD(func, type, get)			\
 	static type							\
-	func(struct vm_jni_env *env, jobject object, jfieldID field)	\
+	func(JNIEnv *env, jclass clazz, jfieldID fieldID)	\
 	{								\
 		enter_vm_from_jni();					\
 									\
-		return get(field);					\
+		return get(fieldID);					\
 	}								\
 
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_object_field, jobject, static_field_get_object);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_boolean_field, jboolean, static_field_get_boolean);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_byte_field, jbyte, static_field_get_byte);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_char_field, jchar, static_field_get_char);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_short_field, jshort, static_field_get_short);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_int_field, jint, static_field_get_int);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_long_field, jlong, static_field_get_long);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_float_field, jfloat, static_field_get_float);
-DEFINE_GET_STATIC_FIELD(vm_jni_get_static_double_field, jdouble, static_field_get_double);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticObjectField, jobject, static_field_get_object);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticBooleanField, jboolean, static_field_get_boolean);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticByteField, jbyte, static_field_get_byte);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticCharField, jchar, static_field_get_char);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticShortField, jshort, static_field_get_short);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticIntField, jint, static_field_get_int);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticLongField, jlong, static_field_get_long);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticFloatField, jfloat, static_field_get_float);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticDoubleField, jdouble, static_field_get_double);
 
 #define DEFINE_SET_STATIC_FIELD(func, type, set)			\
 	static void							\
-	func(struct vm_jni_env *env, jobject object,			\
-		 jfieldID field, type value)				\
+	func(JNIEnv *env, jclass clazz, jfieldID fieldID, type value)				\
 	{								\
 		enter_vm_from_jni();					\
 									\
-		set(field, value);					\
+		set(fieldID, value);					\
 	}								\
 
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_object_field, jobject, static_field_set_object);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_boolean_field, jboolean, static_field_set_boolean);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_byte_field, jbyte, static_field_set_byte);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_char_field, jchar, static_field_set_char);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_short_field, jshort, static_field_set_short);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_int_field, jint, static_field_set_int);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_long_field, jlong, static_field_set_long);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_float_field, jfloat, static_field_set_float);
-DEFINE_SET_STATIC_FIELD(vm_jni_set_static_double_field, jdouble, static_field_set_double);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticObjectField, jobject, static_field_set_object);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticBooleanField, jboolean, static_field_set_boolean);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticByteField, jbyte, static_field_set_byte);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticCharField, jchar, static_field_set_char);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticShortField, jshort, static_field_set_short);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticIntField, jint, static_field_set_int);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticLongField, jlong, static_field_set_long);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticFloatField, jfloat, static_field_set_float);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticDoubleField, jdouble, static_field_set_double);
 
 static jobject
 vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
@@ -1718,33 +1715,33 @@ void *vm_jni_native_interface[] = {
 	JNI_CallStaticVoidMethod,
 	JNI_CallStaticVoidMethodV,
 	JNI_CallStaticVoidMethodA,
-	vm_jni_get_static_field_id,
+	JNI_GetStaticFieldId,
 
 	/* 145 */
-	vm_jni_get_static_object_field,
-	vm_jni_get_static_boolean_field,
-	vm_jni_get_static_byte_field,
-	vm_jni_get_static_char_field,
-	vm_jni_get_static_short_field,
+	JNI_GetStaticObjectField,
+	JNI_GetStaticBooleanField,
+	JNI_GetStaticByteField,
+	JNI_GetStaticCharField,
+	JNI_GetStaticShortField,
 
 	/* 150 */
-	vm_jni_get_static_int_field,
-	vm_jni_get_static_long_field,
-	vm_jni_get_static_float_field,
-	vm_jni_get_static_double_field,
-	vm_jni_set_static_object_field,
+	JNI_GetStaticIntField,
+	JNI_GetStaticLongField,
+	JNI_GetStaticFloatField,
+	JNI_GetStaticDoubleField,
+	JNI_SetStaticObjectField,
 
 	/* 155 */
-	vm_jni_set_static_boolean_field,
-	vm_jni_set_static_byte_field,
-	vm_jni_set_static_char_field,
-	vm_jni_set_static_short_field,
-	vm_jni_set_static_int_field,
+	JNI_SetStaticBooleanField,
+	JNI_SetStaticByteField,
+	JNI_SetStaticCharField,
+	JNI_SetStaticShortField,
+	JNI_SetStaticIntField,
 
 	/* 160 */
-	vm_jni_set_static_long_field,
-	vm_jni_set_static_float_field,
-	vm_jni_set_static_double_field,
+	JNI_SetStaticLongField,
+	JNI_SetStaticFloatField,
+	JNI_SetStaticDoubleField,
 	NULL, /* NewString */
 	vm_jni_get_string_length,
 
