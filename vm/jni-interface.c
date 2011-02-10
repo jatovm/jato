@@ -923,16 +923,54 @@ DECLARE_CALL_STATIC_XXX_METHOD_V(long, Long, j);
 DECLARE_CALL_STATIC_XXX_METHOD_V(float, Float, f);
 DECLARE_CALL_STATIC_XXX_METHOD_V(double, Double, d);
 
-static jobject vm_jni_new_string_utf(struct vm_jni_env *env, const char *bytes)
+static jstring JNI_NewString(JNIEnv *env, const jchar *unicodeChars, jsize len)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jsize JNI_GetStringLength(JNIEnv *env, jstring string)
+{
+	union jvalue result;
+
+	enter_vm_from_jni();
+
+	if (string->class != vm_java_lang_String) { /* String is a final */
+		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+		return 0; /* rethrow */
+	}
+
+	vm_call_method(vm_java_lang_String_length, string, &result);
+
+	return result.i;
+}
+
+static jchar* JNI_GetStringChars(JNIEnv *env, jstring string, jboolean *isCopy)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static void JNI_ReleaseStringChars(JNIEnv *env, jstring string, const jchar *chars)
+{
+	JNI_NOT_IMPLEMENTED;
+	return;
+}
+
+static jstring JNI_NewStringUTF(JNIEnv *env, const char *bytes)
 {
 	enter_vm_from_jni();
 
 	return vm_object_alloc_string_from_c(bytes);
 }
 
-static const jbyte*
-vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
-			    jboolean *is_copy)
+static jsize JNI_GetStringUTFLength(JNIEnv *env, jstring string)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static const jbyte* JNI_GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy)
 {
 	jbyte *array;
 
@@ -945,19 +983,85 @@ vm_jni_get_string_utf_chars(struct vm_jni_env *env, jobject string,
 	if (!array)
 		return NULL;
 
-	if (is_copy)
-		*is_copy = true;
+	if (isCopy)
+		*isCopy = true;
 
 	return array;
 }
 
-static void
-vm_release_string_utf_chars(struct vm_jni_env *env, jobject string,
-			    const char *utf)
+static void JNI_ReleaseStringUTFChars(JNIEnv *env, jstring string, const char *utf)
 {
 	enter_vm_from_jni();
 
 	free((char *)utf);
+}
+
+static jsize JNI_GetArrayLength(JNIEnv *env, jarray array)
+
+{
+	enter_vm_from_jni();
+
+	if (!vm_class_is_array_class(array->class)) {
+		warn("argument is not an array");
+		return 0;
+	}
+
+	return vm_array_length(array);
+}
+
+static jobjectArray JNI_NewObjectArray(JNIEnv *env, jsize length, jclass elementClass, jobject initialElement)
+{
+	struct vm_object *array;
+	struct vm_class *vmc;
+
+	enter_vm_from_jni();
+
+	check_null(elementClass);
+
+	vmc = vm_class_get_class_from_class_object(elementClass);
+	if (!vmc)
+		return NULL;
+
+	array = vm_object_alloc_array_of(vmc, length);
+	if (!array)
+		return NULL;
+
+	while (length)
+		array_set_field_object(array, --length, initialElement);
+
+	return array;
+}
+
+static jobject JNI_GetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index)
+{
+	enter_vm_from_jni();
+
+	if (array == NULL) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return NULL;
+	}
+	if (index >= vm_array_length(array)) {
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
+		return NULL;
+	}
+
+	return array_get_field_object(array, index);
+}
+
+static void JNI_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index, jobject value)
+{
+	enter_vm_from_jni();
+
+	if (array == NULL) {
+		signal_new_exception(vm_java_lang_NullPointerException, NULL);
+		return;
+	}
+	if (index >= vm_array_length(array)) {
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
+		return;
+	}
+
+	return array_set_field_object(array, index, value);
 }
 
 static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
@@ -1330,80 +1434,6 @@ DEFINE_SET_STATIC_FIELD(JNI_SetStaticLongField, jlong, static_field_set_long);
 DEFINE_SET_STATIC_FIELD(JNI_SetStaticFloatField, jfloat, static_field_set_float);
 DEFINE_SET_STATIC_FIELD(JNI_SetStaticDoubleField, jdouble, static_field_set_double);
 
-static jobject
-vm_jni_new_object_array(struct vm_jni_env *env, jsize size,
-			jclass element_class, jobject initial_element)
-{
-	struct vm_object *array;
-	struct vm_class *vmc;
-
-	enter_vm_from_jni();
-
-	check_null(element_class);
-
-	vmc = vm_class_get_class_from_class_object(element_class);
-	if (!vmc)
-		return NULL;
-
-	array = vm_object_alloc_array_of(vmc, size);
-	if (!array)
-		return NULL;
-
-	while (size)
-		array_set_field_object(array, --size, initial_element);
-
-	return array;
-}
-
-static jobject vm_jni_get_object_array_element(struct vm_jni_env *env,
-					       jobjectArray array,
-					       jsize index)
-{
-	enter_vm_from_jni();
-
-	if (array == NULL) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return NULL;
-	}
-	if (index >= vm_array_length(array)) {
-		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
-		return NULL;
-	}
-
-	return array_get_field_object(array, index);
-}
-
-static void vm_jni_set_object_array_element(struct vm_jni_env *env,
-					    jobjectArray array,
-					    jsize index,
-					    jobject value)
-{
-	enter_vm_from_jni();
-
-	if (array == NULL) {
-		signal_new_exception(vm_java_lang_NullPointerException, NULL);
-		return;
-	}
-	if (index >= vm_array_length(array)) {
-		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, NULL);
-		return;
-	}
-
-	return array_set_field_object(array, index, value);
-}
-
-static jsize vm_jni_get_array_length(struct vm_jni_env *env, jarray array)
-{
-	enter_vm_from_jni();
-
-	if (!vm_class_is_array_class(array->class)) {
-		warn("argument is not an array");
-		return 0;
-	}
-
-	return vm_array_length(array);
-}
-
 #define DECLARE_NEW_XXX_ARRAY(type, arr_type)				\
 static jobject								\
 vm_jni_new_ ## type ## _array(struct vm_jni_env *env, jsize size)	\
@@ -1492,22 +1522,6 @@ DECLARE_SET_XXX_ARRAY_REGION(int);
 DECLARE_SET_XXX_ARRAY_REGION(long);
 DECLARE_SET_XXX_ARRAY_REGION(short);
 DECLARE_SET_XXX_ARRAY_REGION(boolean);
-
-static jint vm_jni_get_string_length(struct vm_exec_env *env, jobject string)
-{
-	union jvalue result;
-
-	enter_vm_from_jni();
-
-	if (string->class != vm_java_lang_String) { /* String is a final */
-		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
-		return 0; /* rethrow */
-	}
-
-	vm_call_method(vm_java_lang_String_length, string, &result);
-
-	return result.i;
-}
 
 /*
  * The JNI native interface table.
@@ -1742,22 +1756,22 @@ void *vm_jni_native_interface[] = {
 	JNI_SetStaticLongField,
 	JNI_SetStaticFloatField,
 	JNI_SetStaticDoubleField,
-	NULL, /* NewString */
-	vm_jni_get_string_length,
+	JNI_NewString,
+	JNI_GetStringLength,
 
 	/* 165 */
-	NULL, /* GetStringChars */
-	NULL, /* ReleaseStringChars */
-	vm_jni_new_string_utf,
-	NULL, /* GetStringUTFLength */
-	vm_jni_get_string_utf_chars,
+	JNI_GetStringChars,
+	JNI_ReleaseStringChars,
+	JNI_NewStringUTF,
+	JNI_GetStringUTFLength,
+	JNI_GetStringUTFChars,
 
 	/* 170 */
-	vm_release_string_utf_chars,
-	vm_jni_get_array_length,
-	vm_jni_new_object_array,
-	vm_jni_get_object_array_element,
-	vm_jni_set_object_array_element,
+	JNI_ReleaseStringUTFChars,
+	JNI_GetArrayLength,
+	JNI_NewObjectArray,
+	JNI_GetObjectArrayElement,
+	JNI_SetObjectArrayElement,
 
 	/* 175 */
 	vm_jni_new_boolean_array,
