@@ -121,6 +121,9 @@ static struct vm_class *parse_array_element_type(uint8_t array_tag)
 	case ELEMENT_TYPE_BOOLEAN:
 		array_class		= vm_array_of_boolean;
 		break;
+	case ELEMENT_TYPE_STRING:
+		array_class		= vm_array_of_java_lang_String;
+		break;
 	default:
 		array_class = NULL;
 		break;
@@ -220,6 +223,20 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 				return NULL;
 
 			array_set_field_boolean(ret, i, value);
+			break;
+		}
+		case ELEMENT_TYPE_STRING: {
+			const struct cafebabe_constant_info_utf8 *utf8;
+			struct vm_object *string;
+
+			if (cafebabe_class_constant_get_utf8(klass, e_value->value.const_value_index, &utf8))
+				return NULL;
+
+			string = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);
+			if (!string)
+				return NULL;
+
+			array_set_field_object(ret, i, string);
 			break;
 		}
 		default:
