@@ -1064,43 +1064,31 @@ static void JNI_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize ind
 	return array_set_field_object(array, index, value);
 }
 
-static jint vm_jni_get_java_vm(struct vm_jni_env *env, struct java_vm **vm)
-{
-	enter_vm_from_jni();
-
-	*vm = vm_jni_get_current_java_vm();
-	return 0;
+#define DECLARE_NEW_XXX_ARRAY(type, typename, arr_type)				\
+static j ## type ##Array JNI_New ## typename ## Array(JNIEnv *env, jsize length)	\
+{									\
+	jobject result;							\
+									\
+	enter_vm_from_jni();						\
+									\
+	result = vm_object_alloc_primitive_array(arr_type, length);	\
+	return result;							\
 }
 
-static jint vm_jni_monitor_enter(struct vm_jni_env *env, jobject obj)
-{
-	enter_vm_from_jni();
+DECLARE_NEW_XXX_ARRAY(boolean, Boolean, T_BOOLEAN);
+DECLARE_NEW_XXX_ARRAY(byte, Byte, T_BYTE);
+DECLARE_NEW_XXX_ARRAY(char, Char, T_CHAR);
+DECLARE_NEW_XXX_ARRAY(short, Short, T_SHORT);
+DECLARE_NEW_XXX_ARRAY(int, Int, T_INT);
+DECLARE_NEW_XXX_ARRAY(long, Long, T_LONG);
+DECLARE_NEW_XXX_ARRAY(float, Float, T_FLOAT);
+DECLARE_NEW_XXX_ARRAY(double, Double, T_DOUBLE);
 
-	int err = vm_object_lock(obj);
-
-	if (exception_occurred())
-		clear_exception();
-
-	return err;
-}
-
-static jint vm_jni_monitor_exit(struct vm_jni_env *env, jobject obj)
-{
-	enter_vm_from_jni();
-
-	int err = vm_object_unlock(obj);
-
-	if (exception_occurred())
-		clear_exception();
-
-	return err;
-}
-
-#define DECLARE_GET_XXX_ARRAY_ELEMENTS(type)				\
-static j ## type *							\
-vm_jni_get_ ## type ## _array_elements(struct vm_jni_env *env,		\
+// FIXME: the jobject array type should be j<primitive type>Array
+#define DECLARE_GET_XXX_ARRAY_ELEMENTS(type, typename)				\
+static j ## type * JNI_Get ## typename ## ArrayElements(JNIEnv *env,		\
 				       jobject array,			\
-				       jboolean *is_copy)		\
+				       jboolean *isCopy)		\
 {									\
 	j ## type *result;						\
 									\
@@ -1118,24 +1106,24 @@ vm_jni_get_ ## type ## _array_elements(struct vm_jni_env *env,		\
 	for (long i = 0; i < vm_array_length(array); i++)		\
 		result[i] = array_get_field_##type(array, i);		\
 									\
-	if (is_copy)							\
-		*is_copy = JNI_TRUE;					\
+	if (isCopy)							\
+		*isCopy = JNI_TRUE;					\
 									\
 	return result;							\
 }
 
-DECLARE_GET_XXX_ARRAY_ELEMENTS(byte);
-DECLARE_GET_XXX_ARRAY_ELEMENTS(char);
-DECLARE_GET_XXX_ARRAY_ELEMENTS(double);
-DECLARE_GET_XXX_ARRAY_ELEMENTS(float);
-DECLARE_GET_XXX_ARRAY_ELEMENTS(int);
-DECLARE_GET_XXX_ARRAY_ELEMENTS(long);
-DECLARE_GET_XXX_ARRAY_ELEMENTS(short);
-DECLARE_GET_XXX_ARRAY_ELEMENTS(boolean);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(boolean, Boolean);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(byte, Byte);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(char, Char);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(short, Short);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(int, Int);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(long, Long);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(double, Double);
+DECLARE_GET_XXX_ARRAY_ELEMENTS(float, Float);
 
-#define DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(type)			\
-static void								\
-vm_jni_release_ ## type ## _array_elements(struct vm_jni_env *env,	\
+// FIXME: the jobject array type should be j<primitive type>Array
+#define DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(type, typename)			\
+static void JNI_Release ## typename ## ArrayElements(JNIEnv *env,	\
 					   jobject array,		\
 					   j ## type *elems, jint mode)	\
 {									\
@@ -1155,14 +1143,126 @@ vm_jni_release_ ## type ## _array_elements(struct vm_jni_env *env,	\
 		free(elems);						\
 }
 
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(byte);
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(char);
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(double);
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(float);
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(int);
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(long);
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(short);
-DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(boolean);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(boolean, Boolean);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(byte, Byte);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(char, Char);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(short, Short);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(int, Int);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(long, Long);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(float, Float);
+DECLARE_RELEASE_XXX_ARRAY_ELEMENTS(double, Double);
+
+// FIXME: the jobject array type should be j<primitive type>Array
+#define DECLARE_GET_XXX_ARRAY_REGION(type, typename)				\
+static void	JNI_Get ## typename ## ArrayRegion(JNIEnv *env,		\
+				      jobject array,			\
+				      jsize start,			\
+				      jsize len,			\
+				      j ## type *buf)			\
+{									\
+	enter_vm_from_jni();						\
+									\
+	if (!vm_class_is_array_class(array->class) ||			\
+	    vm_class_get_array_element_class(array->class)		\
+	    != vm_ ## type ## _class)					\
+		return;							\
+									\
+	if (start < 0 || len < 0 || start + len > vm_array_length(array)) { \
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
+				     NULL);				\
+		return;							\
+	}								\
+									\
+	for (long i = 0; i < len; i++)					\
+		buf[i] = array_get_field_##type(array, start + i);	\
+}
+
+DECLARE_GET_XXX_ARRAY_REGION(boolean, Boolean);
+DECLARE_GET_XXX_ARRAY_REGION(byte, Byte);
+DECLARE_GET_XXX_ARRAY_REGION(char, Char);
+DECLARE_GET_XXX_ARRAY_REGION(short, Short);
+DECLARE_GET_XXX_ARRAY_REGION(int, Int);
+DECLARE_GET_XXX_ARRAY_REGION(long, Long);
+DECLARE_GET_XXX_ARRAY_REGION(float, Float);
+DECLARE_GET_XXX_ARRAY_REGION(double, Double);
+
+// FIXME: the jobject array type should be j<primitive type>Array
+#define DECLARE_SET_XXX_ARRAY_REGION(type, typename)				\
+static void JNI_Set ## typename ## ArrayRegion(JNIEnv *env,		\
+				      jobject array,			\
+				      jsize start,			\
+				      jsize len,			\
+				      j ## type *buf)			\
+{									\
+	enter_vm_from_jni();						\
+									\
+	if (!vm_class_is_array_class(array->class) ||			\
+	    vm_class_get_array_element_class(array->class)		\
+	    != vm_ ## type ## _class)					\
+		return;							\
+									\
+	if (start < 0 || len < 0 || start + len > vm_array_length(array)) { \
+		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
+				     NULL);				\
+		return;							\
+	}								\
+									\
+	for (long i = 0; i < len; i++)					\
+		array_set_field_##type(array, start + i, buf[i]);	\
+}
+
+DECLARE_SET_XXX_ARRAY_REGION(boolean, Boolean);
+DECLARE_SET_XXX_ARRAY_REGION(byte, Byte);
+DECLARE_SET_XXX_ARRAY_REGION(char, Char);
+DECLARE_SET_XXX_ARRAY_REGION(short, Short);
+DECLARE_SET_XXX_ARRAY_REGION(int, Int);
+DECLARE_SET_XXX_ARRAY_REGION(long, Long);
+DECLARE_SET_XXX_ARRAY_REGION(float, Float);
+DECLARE_SET_XXX_ARRAY_REGION(double, Double);
+
+static jint JNI_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jint JNI_UnregisterNatives(JNIEnv *env, jclass clazz)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jint JNI_MonitorEnter(JNIEnv *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	int err = vm_object_lock(obj);
+
+	if (exception_occurred())
+		clear_exception();
+
+	return err;
+}
+
+static jint JNI_MonitorExit(JNIEnv *env, jobject obj)
+{
+	enter_vm_from_jni();
+
+	int err = vm_object_unlock(obj);
+
+	if (exception_occurred())
+		clear_exception();
+
+	return err;
+}
+
+static jint JNI_GetJavaVM(JNIEnv *env, JavaVM **vm)
+{
+	enter_vm_from_jni();
+
+	*vm = vm_jni_get_current_java_vm();
+	return 0;
+}
 
 #define DECLARE_GET_XXX_ARRAY_CRITICAL(type)				\
 static void *								\
@@ -1434,95 +1534,6 @@ DEFINE_SET_STATIC_FIELD(JNI_SetStaticLongField, jlong, static_field_set_long);
 DEFINE_SET_STATIC_FIELD(JNI_SetStaticFloatField, jfloat, static_field_set_float);
 DEFINE_SET_STATIC_FIELD(JNI_SetStaticDoubleField, jdouble, static_field_set_double);
 
-#define DECLARE_NEW_XXX_ARRAY(type, arr_type)				\
-static jobject								\
-vm_jni_new_ ## type ## _array(struct vm_jni_env *env, jsize size)	\
-{									\
-	jobject result;							\
-									\
-	enter_vm_from_jni();						\
-									\
-	result = vm_object_alloc_primitive_array(arr_type, size);	\
-	return result;							\
-}
-
-DECLARE_NEW_XXX_ARRAY(boolean, T_BOOLEAN);
-DECLARE_NEW_XXX_ARRAY(byte, T_BYTE);
-DECLARE_NEW_XXX_ARRAY(char, T_CHAR);
-DECLARE_NEW_XXX_ARRAY(double, T_DOUBLE);
-DECLARE_NEW_XXX_ARRAY(float, T_FLOAT);
-DECLARE_NEW_XXX_ARRAY(long, T_LONG);
-DECLARE_NEW_XXX_ARRAY(int, T_INT);
-DECLARE_NEW_XXX_ARRAY(short, T_SHORT);
-
-#define DECLARE_GET_XXX_ARRAY_REGION(type)				\
-static void								\
- vm_jni_get_ ## type ## _array_region(struct vm_jni_env *env,		\
-				      jobject array,			\
-				      jsize start,			\
-				      jsize len,			\
-				      j ## type *buf)			\
-{									\
-	enter_vm_from_jni();						\
-									\
-	if (!vm_class_is_array_class(array->class) ||			\
-	    vm_class_get_array_element_class(array->class)		\
-	    != vm_ ## type ## _class)					\
-		return;							\
-									\
-	if (start < 0 || len < 0 || start + len > vm_array_length(array)) { \
-		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
-				     NULL);				\
-		return;							\
-	}								\
-									\
-	for (long i = 0; i < len; i++)					\
-		buf[i] = array_get_field_##type(array, start + i);	\
-}
-
-DECLARE_GET_XXX_ARRAY_REGION(byte);
-DECLARE_GET_XXX_ARRAY_REGION(char);
-DECLARE_GET_XXX_ARRAY_REGION(double);
-DECLARE_GET_XXX_ARRAY_REGION(float);
-DECLARE_GET_XXX_ARRAY_REGION(int);
-DECLARE_GET_XXX_ARRAY_REGION(long);
-DECLARE_GET_XXX_ARRAY_REGION(short);
-DECLARE_GET_XXX_ARRAY_REGION(boolean);
-
-#define DECLARE_SET_XXX_ARRAY_REGION(type)				\
-static void								\
- vm_jni_set_ ## type ## _array_region(struct vm_jni_env *env,		\
-				      jobject array,			\
-				      jsize start,			\
-				      jsize len,			\
-				      j ## type *buf)			\
-{									\
-	enter_vm_from_jni();						\
-									\
-	if (!vm_class_is_array_class(array->class) ||			\
-	    vm_class_get_array_element_class(array->class)		\
-	    != vm_ ## type ## _class)					\
-		return;							\
-									\
-	if (start < 0 || len < 0 || start + len > vm_array_length(array)) { \
-		signal_new_exception(vm_java_lang_ArrayIndexOutOfBoundsException, \
-				     NULL);				\
-		return;							\
-	}								\
-									\
-	for (long i = 0; i < len; i++)					\
-		array_set_field_##type(array, start + i, buf[i]);	\
-}
-
-DECLARE_SET_XXX_ARRAY_REGION(byte);
-DECLARE_SET_XXX_ARRAY_REGION(char);
-DECLARE_SET_XXX_ARRAY_REGION(double);
-DECLARE_SET_XXX_ARRAY_REGION(float);
-DECLARE_SET_XXX_ARRAY_REGION(int);
-DECLARE_SET_XXX_ARRAY_REGION(long);
-DECLARE_SET_XXX_ARRAY_REGION(short);
-DECLARE_SET_XXX_ARRAY_REGION(boolean);
-
 /*
  * The JNI native interface table.
  * See: http://download.oracle.com/javase/1.4.2/docs/guide/jni/spec/functions.html
@@ -1774,67 +1785,67 @@ void *vm_jni_native_interface[] = {
 	JNI_SetObjectArrayElement,
 
 	/* 175 */
-	vm_jni_new_boolean_array,
-	vm_jni_new_byte_array,
-	vm_jni_new_char_array,
-	vm_jni_new_short_array,
-	vm_jni_new_int_array,
+	JNI_NewBooleanArray,
+	JNI_NewByteArray,
+	JNI_NewCharArray,
+	JNI_NewShortArray,
+	JNI_NewIntArray,
 
 	/* 180 */
-	vm_jni_new_long_array,
-	vm_jni_new_float_array,
-	vm_jni_new_double_array,
-	vm_jni_get_boolean_array_elements,
-	vm_jni_get_byte_array_elements,
+	JNI_NewLongArray,
+	JNI_NewFloatArray,
+	JNI_NewDoubleArray,
+	JNI_GetBooleanArrayElements,
+	JNI_GetByteArrayElements,
 
 	/* 185 */
-	vm_jni_get_char_array_elements,
-	vm_jni_get_short_array_elements,
-	vm_jni_get_int_array_elements,
-	vm_jni_get_long_array_elements,
-	vm_jni_get_float_array_elements,
+	JNI_GetCharArrayElements,
+	JNI_GetShortArrayElements,
+	JNI_GetIntArrayElements,
+	JNI_GetLongArrayElements,
+	JNI_GetFloatArrayElements,
 
 	/* 190 */
-	vm_jni_get_double_array_elements,
-	vm_jni_release_boolean_array_elements,
-	vm_jni_release_byte_array_elements,
-	vm_jni_release_char_array_elements,
-	vm_jni_release_short_array_elements,
+	JNI_GetDoubleArrayElements,
+	JNI_ReleaseBooleanArrayElements,
+	JNI_ReleaseByteArrayElements,
+	JNI_ReleaseCharArrayElements,
+	JNI_ReleaseShortArrayElements,
 
 	/* 195 */
-	vm_jni_release_int_array_elements,
-	vm_jni_release_long_array_elements,
-	vm_jni_release_float_array_elements,
-	vm_jni_release_double_array_elements,
-	vm_jni_get_boolean_array_region,
+	JNI_ReleaseIntArrayElements,
+	JNI_ReleaseLongArrayElements,
+	JNI_ReleaseFloatArrayElements,
+	JNI_ReleaseDoubleArrayElements,
+	JNI_GetBooleanArrayRegion,
 
 	/* 200 */
-	vm_jni_get_byte_array_region,
-	vm_jni_get_char_array_region,
-	vm_jni_get_short_array_region,
-	vm_jni_get_int_array_region,
-	vm_jni_get_long_array_region,
+	JNI_GetByteArrayRegion,
+	JNI_GetCharArrayRegion,
+	JNI_GetShortArrayRegion,
+	JNI_GetIntArrayRegion,
+	JNI_GetLongArrayRegion,
 
 	/* 205 */
-	vm_jni_get_float_array_region,
-	vm_jni_get_double_array_region,
-	vm_jni_set_boolean_array_region,
-	vm_jni_set_byte_array_region,
-	vm_jni_set_char_array_region,
+	JNI_GetFloatArrayRegion,
+	JNI_GetDoubleArrayRegion,
+	JNI_SetBooleanArrayRegion,
+	JNI_SetByteArrayRegion,
+	JNI_SetCharArrayRegion,
 
 	/* 210 */
-	vm_jni_set_short_array_region,
-	vm_jni_set_int_array_region,
-	vm_jni_set_long_array_region,
-	vm_jni_set_float_array_region,
-	vm_jni_set_double_array_region,
+	JNI_SetShortArrayRegion,
+	JNI_SetIntArrayRegion,
+	JNI_SetLongArrayRegion,
+	JNI_SetFloatArrayRegion,
+	JNI_SetDoubleArrayRegion,
 
 	/* 215 */
-	NULL, /* RegisterNatives */
-	NULL, /* UnregisterNatives */
-	vm_jni_monitor_enter,
-	vm_jni_monitor_exit,
-	vm_jni_get_java_vm,
+	JNI_RegisterNatives,
+	JNI_UnregisterNatives,
+	JNI_MonitorEnter,
+	JNI_MonitorExit,
+	JNI_GetJavaVM,
 
 	/* JNI 1.2 functions */
 

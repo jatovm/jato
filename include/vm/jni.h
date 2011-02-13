@@ -75,6 +75,12 @@ typedef union jvalue {
 	jobject  l;
 } jvalue;
 
+typedef struct {
+    char *name;
+    char *signature;
+    void *fnPtr;
+} JNINativeMethod;
+
 typedef const struct vm_jni_env *JNIEnv;
 
 struct vm_jni_env {
