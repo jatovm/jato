@@ -923,6 +923,60 @@ DECLARE_CALL_STATIC_XXX_METHOD_V(long, Long, j);
 DECLARE_CALL_STATIC_XXX_METHOD_V(float, Float, f);
 DECLARE_CALL_STATIC_XXX_METHOD_V(double, Double, d);
 
+static jfieldID JNI_GetStaticFieldId(JNIEnv *env, jclass clazz, const char *name, const char *sig)
+{
+	struct vm_field *fb;
+
+	enter_vm_from_jni();
+
+	fb = vm_jni_common_get_field_id(clazz, name, sig);
+	if (!fb)
+		return NULL;
+
+	if (!vm_field_is_static(fb))
+		return NULL;
+
+	return fb;
+}
+
+#define DEFINE_GET_STATIC_FIELD(func, type, get)			\
+	static type							\
+	func(JNIEnv *env, jclass clazz, jfieldID fieldID)	\
+	{								\
+		enter_vm_from_jni();					\
+									\
+		return get(fieldID);					\
+	}								\
+
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticObjectField, jobject, static_field_get_object);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticBooleanField, jboolean, static_field_get_boolean);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticByteField, jbyte, static_field_get_byte);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticCharField, jchar, static_field_get_char);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticShortField, jshort, static_field_get_short);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticIntField, jint, static_field_get_int);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticLongField, jlong, static_field_get_long);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticFloatField, jfloat, static_field_get_float);
+DEFINE_GET_STATIC_FIELD(JNI_GetStaticDoubleField, jdouble, static_field_get_double);
+
+#define DEFINE_SET_STATIC_FIELD(func, type, set)			\
+	static void							\
+	func(JNIEnv *env, jclass clazz, jfieldID fieldID, type value)				\
+	{								\
+		enter_vm_from_jni();					\
+									\
+		set(fieldID, value);					\
+	}								\
+
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticObjectField, jobject, static_field_set_object);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticBooleanField, jboolean, static_field_set_boolean);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticByteField, jbyte, static_field_set_byte);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticCharField, jchar, static_field_set_char);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticShortField, jshort, static_field_set_short);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticIntField, jint, static_field_set_int);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticLongField, jlong, static_field_set_long);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticFloatField, jfloat, static_field_set_float);
+DEFINE_SET_STATIC_FIELD(JNI_SetStaticDoubleField, jdouble, static_field_set_double);
+
 static jstring JNI_NewString(JNIEnv *env, const jchar *unicodeChars, jsize len)
 {
 	JNI_NOT_IMPLEMENTED;
@@ -1264,6 +1318,18 @@ static jint JNI_GetJavaVM(JNIEnv *env, JavaVM **vm)
 	return 0;
 }
 
+static void JNI_GetStringRegion(JNIEnv *env, jstring str, jsize start, jsize len, jchar *buf)
+{
+	JNI_NOT_IMPLEMENTED;
+	return;
+}
+
+static void JNI_GetStringUTFRegion(JNIEnv *env, jstring str, jsize start, jsize len, char *buf)
+{
+	JNI_NOT_IMPLEMENTED;
+	return;
+}
+
 #define DECLARE_GET_XXX_ARRAY_CRITICAL(type)				\
 static void *								\
 get_ ## type ## _array_critical (jobject array, jboolean *is_copy)	\
@@ -1283,19 +1349,6 @@ get_ ## type ## _array_critical (jobject array, jboolean *is_copy)	\
 	return result;							\
 }
 
-#define DECLARE_RELEASE_XXX_ARRAY_CRITICAL(type)			\
-static void								\
-release_ ## type ## _array_critical (jobject array, j ## type *elems, jint mode) \
-{									\
-	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */		\
-		for (long i = 0; i < vm_array_length(array); i++)	\
-			array_set_field_ ## type(array, i, elems[i]);	\
-	}								\
-									\
-	if (mode == JNI_ABORT) /* free buffer */			\
-		free(elems);						\
-}
-
 DECLARE_GET_XXX_ARRAY_CRITICAL(byte);
 DECLARE_GET_XXX_ARRAY_CRITICAL(char);
 DECLARE_GET_XXX_ARRAY_CRITICAL(double);
@@ -1305,17 +1358,7 @@ DECLARE_GET_XXX_ARRAY_CRITICAL(long);
 DECLARE_GET_XXX_ARRAY_CRITICAL(short);
 DECLARE_GET_XXX_ARRAY_CRITICAL(boolean);
 
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(byte);
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(char);
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(double);
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(float);
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(int);
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(long);
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(short);
-DECLARE_RELEASE_XXX_ARRAY_CRITICAL(boolean);
-
 typedef void *get_array_critical_fn(jobject array, jboolean *is_copy);
-typedef void release_array_critical_fn(jobject array, void *carray, jint mode);
 
 get_array_critical_fn *get_array_critical_fns[] = {
 	[J_BYTE]	= get_byte_array_critical,
@@ -1328,21 +1371,7 @@ get_array_critical_fn *get_array_critical_fns[] = {
 	[J_BOOLEAN]	= get_boolean_array_critical
 };
 
-release_array_critical_fn *release_array_critical_fns[] = {
-	[J_BYTE]	= (release_array_critical_fn*) release_byte_array_critical,
-	[J_CHAR]	= (release_array_critical_fn*) release_char_array_critical,
-	[J_DOUBLE]	= (release_array_critical_fn*) release_double_array_critical,
-	[J_FLOAT]	= (release_array_critical_fn*) release_float_array_critical,
-	[J_INT]		= (release_array_critical_fn*) release_int_array_critical,
-	[J_LONG]	= (release_array_critical_fn*) release_long_array_critical,
-	[J_SHORT]	= (release_array_critical_fn*) release_short_array_critical,
-	[J_BOOLEAN]	= (release_array_critical_fn*) release_boolean_array_critical
-};
-
-static void *
-vm_jni_get_primitive_array_critical(struct vm_jni_env *env,
-				    jobject array,
-				    jboolean *is_copy)
+static void * JNI_GetPrimitiveArrayCritical(JNIEnv *env, jarray array, jboolean *isCopy)
 {
 	enter_vm_from_jni();
 
@@ -1365,15 +1394,46 @@ vm_jni_get_primitive_array_critical(struct vm_jni_env *env,
 		= get_array_critical_fns[elem_type];
 
 	assert(get_array_critical);
-	return get_array_critical(array, is_copy);
+	return get_array_critical(array, isCopy);
 }
 
+#define DECLARE_RELEASE_XXX_ARRAY_CRITICAL(type)			\
+static void								\
+release_ ## type ## _array_critical (jobject array, j ## type *elems, jint mode) \
+{									\
+	if (mode == 0 || mode == JNI_COMMIT) { /* copy back */		\
+		for (long i = 0; i < vm_array_length(array); i++)	\
+			array_set_field_ ## type(array, i, elems[i]);	\
+	}								\
+									\
+	if (mode == JNI_ABORT) /* free buffer */			\
+		free(elems);						\
+}
 
-static void
-vm_jni_release_primitive_array_critical(struct vm_jni_env *env,
-					jobject array,
-					void *carray,
-					jint mode)
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(byte);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(char);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(double);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(float);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(int);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(long);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(short);
+DECLARE_RELEASE_XXX_ARRAY_CRITICAL(boolean);
+
+typedef void release_array_critical_fn(jobject array, void *carray, jint mode);
+
+release_array_critical_fn *release_array_critical_fns[] = {
+	[J_BYTE]	= (release_array_critical_fn*) release_byte_array_critical,
+	[J_CHAR]	= (release_array_critical_fn*) release_char_array_critical,
+	[J_DOUBLE]	= (release_array_critical_fn*) release_double_array_critical,
+	[J_FLOAT]	= (release_array_critical_fn*) release_float_array_critical,
+	[J_INT]		= (release_array_critical_fn*) release_int_array_critical,
+	[J_LONG]	= (release_array_critical_fn*) release_long_array_critical,
+	[J_SHORT]	= (release_array_critical_fn*) release_short_array_critical,
+	[J_BOOLEAN]	= (release_array_critical_fn*) release_boolean_array_critical
+};
+
+// FIXME: the jobject array should be jarray array
+static void JNI_ReleasePrimitiveArrayCritical(JNIEnv *env, jobject array, void *carray, jint mode)
 {
 	enter_vm_from_jni();
 
@@ -1399,7 +1459,19 @@ vm_jni_release_primitive_array_critical(struct vm_jni_env *env,
 	release_array_critical(array, carray, mode);
 }
 
-static jweak JNI_NewWeakGlobalRef(struct vm_jni_env *env, jobject obj)
+static const jchar * JNI_GetStringCritical(JNIEnv *env, jstring string, jboolean *isCopy)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static void JNI_ReleaseStringCritical(JNIEnv *env, jstring string, const jchar *carray)
+{
+	JNI_NOT_IMPLEMENTED;
+	return;
+}
+
+static jweak JNI_NewWeakGlobalRef(JNIEnv *env, jobject obj)
 {
 	struct vm_reference *ref;
 
@@ -1413,17 +1485,17 @@ static jweak JNI_NewWeakGlobalRef(struct vm_jni_env *env, jobject obj)
 	return ref->object;
 }
 
-static void JNI_DeleteWeakGlobalRef(struct vm_jni_env *env, jweak obj)
+static void JNI_DeleteWeakGlobalRef(JNIEnv *env, jweak obj)
 {
 	vm_reference_collect_for_object(obj);
 }
 
-static jboolean JNI_ExceptionCheck(struct vm_jni_env *env)
+static jboolean JNI_ExceptionCheck(JNIEnv *env)
 {
 	return exception_occurred() != NULL;
 }
 
-static jobject JNI_NewDirectByteBuffer(struct vm_jni_env *env, void *address, jlong capacity)
+static jobject JNI_NewDirectByteBuffer(JNIEnv *env, void *address, jlong capacity)
 {
 	struct vm_object *ret, *data;
 
@@ -1448,7 +1520,7 @@ static jobject JNI_NewDirectByteBuffer(struct vm_jni_env *env, void *address, jl
 	return ret;
 }
 
-static void *JNI_GetDirectBufferAddress(struct vm_jni_env *env, jobject buf)
+static void *JNI_GetDirectBufferAddress(JNIEnv *env, jobject buf)
 {
 	struct vm_object *address;
 	void *data;
@@ -1471,7 +1543,7 @@ static void *JNI_GetDirectBufferAddress(struct vm_jni_env *env, jobject buf)
 	return data;
 }
 
-static jlong JNI_GetDirectBufferCapacity(struct vm_jni_env *env, jobject buf)
+static jlong JNI_GetDirectBufferCapacity(JNIEnv *env, jobject buf)
 {
 	enter_vm_from_jni();
 
@@ -1480,63 +1552,15 @@ static jlong JNI_GetDirectBufferCapacity(struct vm_jni_env *env, jobject buf)
 	return 0;
 }
 
-static jfieldID JNI_GetStaticFieldId(JNIEnv *env, jclass clazz, const char *name, const char *sig)
+static jobjectRefType JNI_GetObjectRefType(JNIEnv* env, jobject obj)
 {
-	struct vm_field *fb;
-
-	enter_vm_from_jni();
-
-	fb = vm_jni_common_get_field_id(clazz, name, sig);
-	if (!fb)
-		return NULL;
-
-	if (!vm_field_is_static(fb))
-		return NULL;
-
-	return fb;
+	JNI_NOT_IMPLEMENTED;
+	return 0;
 }
-
-#define DEFINE_GET_STATIC_FIELD(func, type, get)			\
-	static type							\
-	func(JNIEnv *env, jclass clazz, jfieldID fieldID)	\
-	{								\
-		enter_vm_from_jni();					\
-									\
-		return get(fieldID);					\
-	}								\
-
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticObjectField, jobject, static_field_get_object);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticBooleanField, jboolean, static_field_get_boolean);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticByteField, jbyte, static_field_get_byte);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticCharField, jchar, static_field_get_char);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticShortField, jshort, static_field_get_short);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticIntField, jint, static_field_get_int);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticLongField, jlong, static_field_get_long);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticFloatField, jfloat, static_field_get_float);
-DEFINE_GET_STATIC_FIELD(JNI_GetStaticDoubleField, jdouble, static_field_get_double);
-
-#define DEFINE_SET_STATIC_FIELD(func, type, set)			\
-	static void							\
-	func(JNIEnv *env, jclass clazz, jfieldID fieldID, type value)				\
-	{								\
-		enter_vm_from_jni();					\
-									\
-		set(fieldID, value);					\
-	}								\
-
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticObjectField, jobject, static_field_set_object);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticBooleanField, jboolean, static_field_set_boolean);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticByteField, jbyte, static_field_set_byte);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticCharField, jchar, static_field_set_char);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticShortField, jshort, static_field_set_short);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticIntField, jint, static_field_set_int);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticLongField, jlong, static_field_set_long);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticFloatField, jfloat, static_field_set_float);
-DEFINE_SET_STATIC_FIELD(JNI_SetStaticDoubleField, jdouble, static_field_set_double);
 
 /*
  * The JNI native interface table.
- * See: http://download.oracle.com/javase/1.4.2/docs/guide/jni/spec/functions.html
+ * http://download.oracle.com/javase/6/docs/technotes/guides/jni/spec/jniTOC.html
  */
 void *vm_jni_native_interface[] = {
 	/* 0 */
@@ -1850,14 +1874,14 @@ void *vm_jni_native_interface[] = {
 	/* JNI 1.2 functions */
 
 	/* 220 */
-	NULL, /* GetStringRegion */
-	NULL, /* GetStringUTFRegion */
-	vm_jni_get_primitive_array_critical,
-	vm_jni_release_primitive_array_critical,
-	NULL, /* GetStringCritical */
+	JNI_GetStringRegion,
+	JNI_GetStringUTFRegion,
+	JNI_GetPrimitiveArrayCritical,
+	JNI_ReleasePrimitiveArrayCritical,
+	JNI_GetStringCritical,
 
 	/* 225 */
-	NULL, /* ReleaseStringCritical */
+	JNI_ReleaseStringCritical,
 	JNI_NewWeakGlobalRef,
 	JNI_DeleteWeakGlobalRef,
 	JNI_ExceptionCheck,
@@ -1869,9 +1893,9 @@ void *vm_jni_native_interface[] = {
 	/* 230 */
 	JNI_GetDirectBufferAddress,
 	JNI_GetDirectBufferCapacity,
-	NULL,
-	NULL,
-	NULL,
+
+	/* JNI 1.5 functions */
+	JNI_GetObjectRefType,
 };
 
 struct vm_jni_env vm_jni_default_env = {

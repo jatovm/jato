@@ -81,6 +81,13 @@ typedef struct {
     void *fnPtr;
 } JNINativeMethod;
 
+typedef enum _jobjectType {
+     JNIInvalidRefType    = 0,
+     JNILocalRefType      = 1,
+     JNIGlobalRefType     = 2,
+     JNIWeakGlobalRefType = 3
+} jobjectRefType;
+
 typedef const struct vm_jni_env *JNIEnv;
 
 struct vm_jni_env {
