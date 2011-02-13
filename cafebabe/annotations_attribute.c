@@ -144,7 +144,7 @@ cafebabe_annotation_parse(struct cafebabe_annotation *a, struct cafebabe_stream 
 	}
 	for (unsigned int i = 0; i < a->num_element_value_pairs; i++) {
 		err = cafebabe_element_value_pair_parse(&a->element_value_pairs[i], s);
-		if (!err)
+		if (err)
 			goto out;
 	}
 out:
