@@ -59,7 +59,7 @@
 #define JNI_NOT_IMPLEMENTED die("not implemented")
 
 static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
-			     uint64_t *args)
+			     jvalue *args)
 {
 #ifdef CONFIG_32_BIT
 	struct vm_method_arg *arg;
@@ -70,12 +70,39 @@ static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
 	idx = 0;
 
 	list_for_each_entry(arg, &vmm->args, list_node) {
-		if (arg->type_info.vm_type == J_LONG ||
-		    arg->type_info.vm_type == J_DOUBLE) {
-			packed_args[packed_idx++] = low_64(args[idx]);
-			packed_args[packed_idx++] = high_64(args[idx++]);
-		} else {
-			packed_args[packed_idx++] = low_64(args[idx++]);
+		switch (arg->type_info.vm_type) {
+		case J_BOOLEAN:
+			packed_args[packed_idx++] = args[idx++].z;
+			break;
+		case J_BYTE:
+			packed_args[packed_idx++] = args[idx++].b;
+			break;
+		case J_CHAR:
+			packed_args[packed_idx++] = args[idx++].c;
+			break;
+		case J_SHORT:
+			packed_args[packed_idx++] = args[idx++].s;
+			break;
+		case J_INT:
+			packed_args[packed_idx++] = args[idx++].i;
+			break;
+		case J_LONG:
+			packed_args[packed_idx++] = low_64(args[idx].j);
+			packed_args[packed_idx++] = high_64(args[idx++].j);
+			break;
+		case J_FLOAT:
+			packed_args[packed_idx++] = low_64(*((uint64_t *) &args[idx++]));
+			break;
+		case J_DOUBLE:
+			packed_args[packed_idx++] = low_64(*((uint64_t *) &args[idx]));
+			packed_args[packed_idx++] = high_64(*((uint64_t *) &args[idx++]));
+			break;
+		case J_REFERENCE:
+			packed_args[packed_idx++] = (unsigned long) args[idx++].l;
+			break;
+		default:
+			assert(!"unsupported type");
+			break;
 		}
 	}
 #else
@@ -459,8 +486,7 @@ static jobject JNI_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, va_
 	return 0;
 }
 
-/* FIXME: @args type should be jvalue, not uint64_t */
-static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, uint64_t *args)
+static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args)
 {
 	struct vm_class *vmc;
 	struct vm_object *result;
@@ -617,8 +643,7 @@ static void JNI_CallVoidMethodV(JNIEnv *env, jobject this, jmethodID methodID, v
 	vm_call_method_this_v(methodID, this, args, NULL);
 }
 
-// FIXME: static void JNI_CallVoidMethodA(JNIEnv *env, jobject this, jmethodID methodID, jvalue *args)
-static void JNI_CallVoidMethodA(JNIEnv *env, jobject this, jmethodID methodID, uint64_t *args)
+static void JNI_CallVoidMethodA(JNIEnv *env, jobject this, jmethodID methodID, jvalue *args)
 {
 	enter_vm_from_jni();
 
@@ -696,8 +721,7 @@ DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(float, Float, f);
 DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(double, Double, d);
 DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(object, Object, l);
 
-// FIXME: static void JNI_CallNonvirtualVoidMethodA(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, jvalue *args)
-static void JNI_CallNonvirtualVoidMethodA(JNIEnv *env, jobject this, jclass clazz, jmethodID methodID, uint64_t *args)
+static void JNI_CallNonvirtualVoidMethodA(JNIEnv *env, jobject this, jclass clazz, jmethodID methodID, jvalue *args)
 {
 	enter_vm_from_jni();
 
