@@ -75,6 +75,8 @@ public class JNITest extends TestCase {
     native public float[] returnPassedFloatArray(float[] f);
     native public double[] returnPassedDoubleArray(double[] d);
 
+    native static public String staticToUpper(String str);
+
     private static JNITest jniTest = new JNITest();
 
     public static void testReturnPassedString() {
@@ -142,6 +144,10 @@ public class JNITest extends TestCase {
         assertEquals(42.0, jniTest.returnPassedDoubleArray(new double[]{42.0})[0]);
     }
 
+    public static void testStringManipulation() {
+        assertEquals("TESTSTRING", staticToUpper("testString"));
+    }
+
     public static void main(String[] args) {
         testReturnPassedString();
         testReturnPassedInt();
@@ -152,5 +158,6 @@ public class JNITest extends TestCase {
         testReturnPassedChar();
         testReturnPassedFloat();
         testReturnPassedDouble();
+        testStringManipulation();
     }
 }

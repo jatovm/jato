@@ -59,7 +59,7 @@
 #define JNI_NOT_IMPLEMENTED die("not implemented")
 
 static inline void pack_args(struct vm_method *vmm, unsigned long *packed_args,
-			     jvalue *args)
+			     const jvalue *args)
 {
 #ifdef CONFIG_32_BIT
 	struct vm_method_arg *arg;
@@ -227,6 +227,7 @@ static void vm_jni_detach_current_thread(void)
 	NOT_IMPLEMENTED;
 }
 
+// FIXME: implicit version dependant env setting seems dangerous
 static jint vm_jni_get_env(JavaVM *vm, void **env, jint version)
 {
 	enter_vm_from_jni();
@@ -312,7 +313,7 @@ static jfieldID JNI_FromReflectedField(JNIEnv *env, jobject field)
 	return 0;
 }
 
-static jobject JNI_ToReflectedMethod(JNIEnv *env, jclass cls,jmethodID methodID)
+static jobject JNI_ToReflectedMethod(JNIEnv *env, jclass cls,jmethodID methodID, jboolean isStatic)
 {
 	JNI_NOT_IMPLEMENTED;
 	return 0;
@@ -340,7 +341,7 @@ static jboolean JNI_IsAssignableFrom(JNIEnv *env, jclass clazz1, jclass clazz2)
 	return vm_class_is_assignable_from(class2, class1);
 }
 
-static jobject JNI_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID)
+static jobject JNI_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID, jboolean isStatic)
 {
 	JNI_NOT_IMPLEMENTED;
 	return 0;
@@ -357,7 +358,7 @@ static jint JNI_Throw(JNIEnv *env, jthrowable exception)
 	return 0;
 }
 
-static jint JNI_ThrowNew(struct vm_jni_env *env, jclass clazz, const char *message)
+static jint JNI_ThrowNew(JNIEnv *env, jclass clazz, const char *message)
 {
 	struct vm_class *class;
 
@@ -458,6 +459,18 @@ static jobject JNI_AllocObject(JNIEnv *env, jclass clazz)
 	return vm_object_alloc(class);
 }
 
+static jobject JNI_NewLocalRef(JNIEnv *env, jobject ref)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
+static jint JNI_EnsureLocalCapacity(JNIEnv *env, jint capacity)
+{
+	JNI_NOT_IMPLEMENTED;
+	return 0;
+}
+
 static jobject JNI_NewObject(JNIEnv *env, jclass clazz, jmethodID methodID, ...)
 {
 	va_list args;
@@ -486,7 +499,7 @@ static jobject JNI_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, va_
 	return 0;
 }
 
-static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args)
+static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)
 {
 	struct vm_class *vmc;
 	struct vm_object *result;
@@ -603,7 +616,7 @@ DECLARE_CALL_XXX_METHOD_V(object, Object, l);
 
 #define DECLARE_CALL_XXX_METHOD_A(type, typename, symbol)				\
         static j ## type JNI_Call ## typename ## MethodA		\
-        (JNIEnv *env, jobject this, jmethodID methodID, jvalue *args) \
+        (JNIEnv *env, jobject this, jmethodID methodID, const jvalue *args) \
 	{								\
 	  JNI_NOT_IMPLEMENTED; 		\
 	  return 0; \
@@ -643,7 +656,7 @@ static void JNI_CallVoidMethodV(JNIEnv *env, jobject this, jmethodID methodID, v
 	vm_call_method_this_v(methodID, this, args, NULL);
 }
 
-static void JNI_CallVoidMethodA(JNIEnv *env, jobject this, jmethodID methodID, jvalue *args)
+static void JNI_CallVoidMethodA(JNIEnv *env, jobject this, jmethodID methodID, const jvalue *args)
 {
 	enter_vm_from_jni();
 
@@ -705,7 +718,7 @@ static void JNI_CallNonvirtualVoidMethod(JNIEnv *env, jobject this, jclass clazz
 
 #define DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(type, typename, symbol)		\
 	static j ## type JNI_CallNonvirtual ## typename ## MethodA	\
-	(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, jvalue *args)					\
+	(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, const jvalue *args)					\
 	{								\
 	  JNI_NOT_IMPLEMENTED; 		\
 	  return 0; \
@@ -721,7 +734,7 @@ DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(float, Float, f);
 DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(double, Double, d);
 DECLARE_CALL_NONVIRTUAL_XXX_METHOD_A(object, Object, l);
 
-static void JNI_CallNonvirtualVoidMethodA(JNIEnv *env, jobject this, jclass clazz, jmethodID methodID, jvalue *args)
+static void JNI_CallNonvirtualVoidMethodA(JNIEnv *env, jobject this, jclass clazz, jmethodID methodID, const jvalue *args)
 {
 	enter_vm_from_jni();
 
@@ -901,7 +914,7 @@ DECLARE_CALL_STATIC_XXX_METHOD(long, Long, j);
 DECLARE_CALL_STATIC_XXX_METHOD(float, Float, f);
 DECLARE_CALL_STATIC_XXX_METHOD(double, Double, d);
 
-static void JNI_CallStaticVoidMethodA(JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args)
+static void JNI_CallStaticVoidMethodA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)
 {
 	JNI_NOT_IMPLEMENTED;
 	return;
@@ -909,7 +922,7 @@ static void JNI_CallStaticVoidMethodA(JNIEnv *env, jclass clazz, jmethodID metho
 
 #define DECLARE_CALL_STATIC_XXX_METHOD_A(name, typename, symbol)			\
 	static j ## name JNI_CallStatic ## typename ## MethodA	\
-	(JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args)				\
+	(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)				\
 	{								\
 	  JNI_NOT_IMPLEMENTED; 		\
 	  return 0; \
@@ -947,7 +960,7 @@ DECLARE_CALL_STATIC_XXX_METHOD_V(long, Long, j);
 DECLARE_CALL_STATIC_XXX_METHOD_V(float, Float, f);
 DECLARE_CALL_STATIC_XXX_METHOD_V(double, Double, d);
 
-static jfieldID JNI_GetStaticFieldId(JNIEnv *env, jclass clazz, const char *name, const char *sig)
+static jfieldID JNI_GetStaticFieldID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
 	struct vm_field *fb;
 
@@ -1023,7 +1036,7 @@ static jsize JNI_GetStringLength(JNIEnv *env, jstring string)
 	return result.i;
 }
 
-static jchar* JNI_GetStringChars(JNIEnv *env, jstring string, jboolean *isCopy)
+static const jchar * JNI_GetStringChars(JNIEnv *env, jstring string, jboolean *isCopy)
 {
 	JNI_NOT_IMPLEMENTED;
 	return 0;
@@ -1048,7 +1061,7 @@ static jsize JNI_GetStringUTFLength(JNIEnv *env, jstring string)
 	return 0;
 }
 
-static const jbyte* JNI_GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy)
+static const char* JNI_GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy)
 {
 	jbyte *array;
 
@@ -1064,7 +1077,8 @@ static const jbyte* JNI_GetStringUTFChars(JNIEnv *env, jstring string, jboolean 
 	if (isCopy)
 		*isCopy = true;
 
-	return array;
+	// Fixme: should return char*, not jbyte*
+	return (char*) array;
 }
 
 static void JNI_ReleaseStringUTFChars(JNIEnv *env, jstring string, const char *utf)
@@ -1270,7 +1284,7 @@ static void JNI_Set ## typename ## ArrayRegion(JNIEnv *env,		\
 				      jobject array,			\
 				      jsize start,			\
 				      jsize len,			\
-				      j ## type *buf)			\
+				      const j ## type *buf)			\
 {									\
 	enter_vm_from_jni();						\
 									\
@@ -1788,7 +1802,7 @@ void *vm_jni_native_interface[] = {
 	JNI_CallStaticVoidMethod,
 	JNI_CallStaticVoidMethodV,
 	JNI_CallStaticVoidMethodA,
-	JNI_GetStaticFieldId,
+	JNI_GetStaticFieldID,
 
 	/* 145 */
 	JNI_GetStaticObjectField,
@@ -1922,15 +1936,249 @@ void *vm_jni_native_interface[] = {
 	JNI_GetObjectRefType,
 };
 
-struct vm_jni_env vm_jni_default_env = {
-	.jni_table = vm_jni_native_interface,
+const struct JNINativeInterface_ defaultJNIEnv =
+{
+	.reserved0 = NULL,
+	.reserved1 = NULL,
+	.reserved2 = NULL,
+	.reserved3 = NULL,
+	.GetVersion = JNI_GetVersion,
+	.DefineClass = JNI_DefineClass,
+	.FindClass = JNI_FindClass,
+	.FromReflectedMethod = JNI_FromReflectedMethod,
+	.FromReflectedField = JNI_FromReflectedField,
+	.ToReflectedMethod = JNI_ToReflectedMethod,
+	.GetSuperclass = JNI_GetSuperclass,
+	.IsAssignableFrom = JNI_IsAssignableFrom,
+	.ToReflectedField = JNI_ToReflectedField,
+	.Throw = JNI_Throw,
+	.ThrowNew = JNI_ThrowNew,
+	.ExceptionOccurred = JNI_ExceptionOccurred,
+	.ExceptionDescribe = JNI_ExceptionDescribe,
+	.ExceptionClear = JNI_ExceptionClear,
+	.FatalError = JNI_FatalError,
+	.PushLocalFrame = JNI_PushLocalFrame,
+	.PopLocalFrame = JNI_PopLocalFrame,
+	.NewGlobalRef = JNI_NewGlobalRef,
+	.DeleteGlobalRef = JNI_DeleteGlobalRef,
+	.DeleteLocalRef = JNI_DeleteLocalRef,
+	.IsSameObject = JNI_IsSameObject,
+	.NewLocalRef = JNI_NewLocalRef,
+	.EnsureLocalCapacity = JNI_EnsureLocalCapacity,
+	.AllocObject = JNI_AllocObject,
+	.NewObject = JNI_NewObject,
+	.NewObjectV = JNI_NewObjectV,
+	.NewObjectA = JNI_NewObjectA,
+	.GetObjectClass = JNI_GetObjectClass,
+	.IsInstanceOf = JNI_IsInstanceOf,
+	.GetMethodID = JNI_GetMethodID,
+	.CallObjectMethod = JNI_CallObjectMethod,
+	.CallObjectMethodV = JNI_CallObjectMethodV,
+	.CallObjectMethodA = JNI_CallObjectMethodA,
+	.CallBooleanMethod = JNI_CallBooleanMethod,
+	.CallBooleanMethodV = JNI_CallBooleanMethodV,
+	.CallBooleanMethodA = JNI_CallBooleanMethodA,
+	.CallByteMethod = JNI_CallByteMethod,
+	.CallByteMethodV = JNI_CallByteMethodV,
+	.CallByteMethodA = JNI_CallByteMethodA,
+	.CallCharMethod = JNI_CallCharMethod,
+	.CallCharMethodV = JNI_CallCharMethodV,
+	.CallCharMethodA = JNI_CallCharMethodA,
+	.CallShortMethod = JNI_CallShortMethod,
+	.CallShortMethodV = JNI_CallShortMethodV,
+	.CallShortMethodA = JNI_CallShortMethodA,
+	.CallIntMethod = JNI_CallIntMethod,
+	.CallIntMethodV = JNI_CallIntMethodV,
+	.CallIntMethodA = JNI_CallIntMethodA,
+	.CallLongMethod = JNI_CallLongMethod,
+	.CallLongMethodV = JNI_CallLongMethodV,
+	.CallLongMethodA = JNI_CallLongMethodA,
+	.CallFloatMethod = JNI_CallFloatMethod,
+	.CallFloatMethodV = JNI_CallFloatMethodV,
+	.CallFloatMethodA = JNI_CallFloatMethodA,
+	.CallDoubleMethod = JNI_CallDoubleMethod,
+	.CallDoubleMethodV = JNI_CallDoubleMethodV,
+	.CallDoubleMethodA = JNI_CallDoubleMethodA,
+	.CallVoidMethod = JNI_CallVoidMethod,
+	.CallVoidMethodV = JNI_CallVoidMethodV,
+	.CallVoidMethodA = JNI_CallVoidMethodA,
+	.CallNonvirtualObjectMethod = JNI_CallNonvirtualObjectMethod,
+	.CallNonvirtualObjectMethodV = JNI_CallNonvirtualObjectMethodV,
+	.CallNonvirtualObjectMethodA = JNI_CallNonvirtualObjectMethodA,
+	.CallNonvirtualBooleanMethod = JNI_CallNonvirtualBooleanMethod,
+	.CallNonvirtualBooleanMethodV = JNI_CallNonvirtualBooleanMethodV,
+	.CallNonvirtualBooleanMethodA = JNI_CallNonvirtualBooleanMethodA,
+	.CallNonvirtualByteMethod = JNI_CallNonvirtualByteMethod,
+	.CallNonvirtualByteMethodV = JNI_CallNonvirtualByteMethodV,
+	.CallNonvirtualByteMethodA = JNI_CallNonvirtualByteMethodA,
+	.CallNonvirtualCharMethod = JNI_CallNonvirtualCharMethod,
+	.CallNonvirtualCharMethodV = JNI_CallNonvirtualCharMethodV,
+	.CallNonvirtualCharMethodA = JNI_CallNonvirtualCharMethodA,
+	.CallNonvirtualShortMethod = JNI_CallNonvirtualShortMethod,
+	.CallNonvirtualShortMethodV = JNI_CallNonvirtualShortMethodV,
+	.CallNonvirtualShortMethodA = JNI_CallNonvirtualShortMethodA,
+	.CallNonvirtualIntMethod = JNI_CallNonvirtualIntMethod,
+	.CallNonvirtualIntMethodV = JNI_CallNonvirtualIntMethodV,
+	.CallNonvirtualIntMethodA = JNI_CallNonvirtualIntMethodA,
+	.CallNonvirtualLongMethod = JNI_CallNonvirtualLongMethod,
+	.CallNonvirtualLongMethodV = JNI_CallNonvirtualLongMethodV,
+	.CallNonvirtualLongMethodA = JNI_CallNonvirtualLongMethodA,
+	.CallNonvirtualFloatMethod = JNI_CallNonvirtualFloatMethod,
+	.CallNonvirtualFloatMethodV = JNI_CallNonvirtualFloatMethodV,
+	.CallNonvirtualFloatMethodA = JNI_CallNonvirtualFloatMethodA,
+	.CallNonvirtualDoubleMethod = JNI_CallNonvirtualDoubleMethod,
+	.CallNonvirtualDoubleMethodV = JNI_CallNonvirtualDoubleMethodV,
+	.CallNonvirtualDoubleMethodA = JNI_CallNonvirtualDoubleMethodA,
+	.CallNonvirtualVoidMethod = JNI_CallNonvirtualVoidMethod,
+	.CallNonvirtualVoidMethodV = JNI_CallNonvirtualVoidMethodV,
+	.CallNonvirtualVoidMethodA = JNI_CallNonvirtualVoidMethodA,
+	.GetFieldID = JNI_GetFieldID,
+	.GetObjectField = JNI_GetObjectField,
+	.GetBooleanField = JNI_GetBooleanField,
+	.GetByteField = JNI_GetByteField,
+	.GetCharField = JNI_GetCharField,
+	.GetShortField = JNI_GetShortField,
+	.GetIntField = JNI_GetIntField,
+	.GetLongField = JNI_GetLongField,
+	.GetFloatField = JNI_GetFloatField,
+	.GetDoubleField = JNI_GetDoubleField,
+	.SetObjectField = JNI_SetObjectField,
+	.SetBooleanField = JNI_SetBooleanField,
+	.SetByteField = JNI_SetByteField,
+	.SetCharField = JNI_SetCharField,
+	.SetShortField = JNI_SetShortField,
+	.SetIntField = JNI_SetIntField,
+	.SetLongField = JNI_SetLongField,
+	.SetFloatField = JNI_SetFloatField,
+	.SetDoubleField = JNI_SetDoubleField,
+	.GetStaticMethodID = JNI_GetStaticMethodID,
+	.CallStaticObjectMethod = JNI_CallStaticObjectMethod,
+	.CallStaticObjectMethodV = JNI_CallStaticObjectMethodV,
+	.CallStaticObjectMethodA = JNI_CallStaticObjectMethodA,
+	.CallStaticBooleanMethod = JNI_CallStaticBooleanMethod,
+	.CallStaticBooleanMethodV = JNI_CallStaticBooleanMethodV,
+	.CallStaticBooleanMethodA = JNI_CallStaticBooleanMethodA,
+	.CallStaticByteMethod = JNI_CallStaticByteMethod,
+	.CallStaticByteMethodV = JNI_CallStaticByteMethodV,
+	.CallStaticByteMethodA = JNI_CallStaticByteMethodA,
+	.CallStaticCharMethod = JNI_CallStaticCharMethod,
+	.CallStaticCharMethodV = JNI_CallStaticCharMethodV,
+	.CallStaticCharMethodA = JNI_CallStaticCharMethodA,
+	.CallStaticShortMethod = JNI_CallStaticShortMethod,
+	.CallStaticShortMethodV = JNI_CallStaticShortMethodV,
+	.CallStaticShortMethodA = JNI_CallStaticShortMethodA,
+	.CallStaticIntMethod = JNI_CallStaticIntMethod,
+	.CallStaticIntMethodV = JNI_CallStaticIntMethodV,
+	.CallStaticIntMethodA = JNI_CallStaticIntMethodA,
+	.CallStaticLongMethod = JNI_CallStaticLongMethod,
+	.CallStaticLongMethodV = JNI_CallStaticLongMethodV,
+	.CallStaticLongMethodA = JNI_CallStaticLongMethodA,
+	.CallStaticFloatMethod = JNI_CallStaticFloatMethod,
+	.CallStaticFloatMethodV = JNI_CallStaticFloatMethodV,
+	.CallStaticFloatMethodA = JNI_CallStaticFloatMethodA,
+	.CallStaticDoubleMethod = JNI_CallStaticDoubleMethod,
+	.CallStaticDoubleMethodV = JNI_CallStaticDoubleMethodV,
+	.CallStaticDoubleMethodA = JNI_CallStaticDoubleMethodA,
+	.CallStaticVoidMethod = JNI_CallStaticVoidMethod,
+	.CallStaticVoidMethodV = JNI_CallStaticVoidMethodV,
+	.CallStaticVoidMethodA = JNI_CallStaticVoidMethodA,
+	.GetStaticFieldID = JNI_GetStaticFieldID,
+	.GetStaticObjectField = JNI_GetStaticObjectField,
+	.GetStaticBooleanField = JNI_GetStaticBooleanField,
+	.GetStaticByteField = JNI_GetStaticByteField,
+	.GetStaticCharField = JNI_GetStaticCharField,
+	.GetStaticShortField = JNI_GetStaticShortField,
+	.GetStaticIntField = JNI_GetStaticIntField,
+	.GetStaticLongField = JNI_GetStaticLongField,
+	.GetStaticFloatField = JNI_GetStaticFloatField,
+	.GetStaticDoubleField = JNI_GetStaticDoubleField,
+	.SetStaticObjectField = JNI_SetStaticObjectField,
+	.SetStaticBooleanField = JNI_SetStaticBooleanField,
+	.SetStaticByteField = JNI_SetStaticByteField,
+	.SetStaticCharField = JNI_SetStaticCharField,
+	.SetStaticShortField = JNI_SetStaticShortField,
+	.SetStaticIntField = JNI_SetStaticIntField,
+	.SetStaticLongField = JNI_SetStaticLongField,
+	.SetStaticFloatField = JNI_SetStaticFloatField,
+	.SetStaticDoubleField = JNI_SetStaticDoubleField,
+	.NewString = JNI_NewString,
+	.GetStringLength = JNI_GetStringLength,
+	.GetStringChars = JNI_GetStringChars,
+	.ReleaseStringChars = JNI_ReleaseStringChars,
+	.NewStringUTF = JNI_NewStringUTF,
+	.GetStringUTFLength = JNI_GetStringUTFLength,
+	.GetStringUTFChars = JNI_GetStringUTFChars,
+	.ReleaseStringUTFChars = JNI_ReleaseStringUTFChars,
+	.GetArrayLength = JNI_GetArrayLength,
+	.NewObjectArray = JNI_NewObjectArray,
+	.GetObjectArrayElement = JNI_GetObjectArrayElement,
+	.SetObjectArrayElement = JNI_SetObjectArrayElement,
+	.NewBooleanArray = JNI_NewBooleanArray,
+	.NewByteArray = JNI_NewByteArray,
+	.NewCharArray = JNI_NewCharArray,
+	.NewShortArray = JNI_NewShortArray,
+	.NewIntArray = JNI_NewIntArray,
+	.NewLongArray = JNI_NewLongArray,
+	.NewFloatArray = JNI_NewFloatArray,
+	.NewDoubleArray = JNI_NewDoubleArray,
+	.GetBooleanArrayElements = JNI_GetBooleanArrayElements,
+	.GetByteArrayElements = JNI_GetByteArrayElements,
+	.GetCharArrayElements = JNI_GetCharArrayElements,
+	.GetShortArrayElements = JNI_GetShortArrayElements,
+	.GetIntArrayElements = JNI_GetIntArrayElements,
+	.GetLongArrayElements = JNI_GetLongArrayElements,
+	.GetFloatArrayElements = JNI_GetFloatArrayElements,
+	.GetDoubleArrayElements = JNI_GetDoubleArrayElements,
+	.ReleaseBooleanArrayElements = JNI_ReleaseBooleanArrayElements,
+	.ReleaseByteArrayElements = JNI_ReleaseByteArrayElements,
+	.ReleaseCharArrayElements = JNI_ReleaseCharArrayElements,
+	.ReleaseShortArrayElements = JNI_ReleaseShortArrayElements,
+	.ReleaseIntArrayElements = JNI_ReleaseIntArrayElements,
+	.ReleaseLongArrayElements = JNI_ReleaseLongArrayElements,
+	.ReleaseFloatArrayElements = JNI_ReleaseFloatArrayElements,
+	.ReleaseDoubleArrayElements = JNI_ReleaseDoubleArrayElements,
+	.GetBooleanArrayRegion = JNI_GetBooleanArrayRegion,
+	.GetByteArrayRegion = JNI_GetByteArrayRegion,
+	.GetCharArrayRegion = JNI_GetCharArrayRegion,
+	.GetShortArrayRegion = JNI_GetShortArrayRegion,
+	.GetIntArrayRegion =   JNI_GetIntArrayRegion,
+	.GetLongArrayRegion = JNI_GetLongArrayRegion,
+	.GetFloatArrayRegion = JNI_GetFloatArrayRegion,
+	.GetDoubleArrayRegion = JNI_GetDoubleArrayRegion,
+	.SetBooleanArrayRegion = JNI_SetBooleanArrayRegion,
+	.SetByteArrayRegion = JNI_SetByteArrayRegion,
+	.SetCharArrayRegion = JNI_SetCharArrayRegion,
+	.SetShortArrayRegion = JNI_SetShortArrayRegion,
+	.SetIntArrayRegion = JNI_SetIntArrayRegion,
+	.SetLongArrayRegion = JNI_SetLongArrayRegion,
+	.SetFloatArrayRegion = JNI_SetFloatArrayRegion,
+	.SetDoubleArrayRegion = JNI_SetDoubleArrayRegion,
+	.RegisterNatives = JNI_RegisterNatives,
+	.UnregisterNatives = JNI_UnregisterNatives,
+	.MonitorEnter = JNI_MonitorEnter,
+	.MonitorExit = JNI_MonitorExit,
+	.GetJavaVM = JNI_GetJavaVM,
+	.GetStringRegion = JNI_GetStringRegion,
+	.GetStringUTFRegion = JNI_GetStringUTFRegion,
+	.GetPrimitiveArrayCritical = JNI_GetPrimitiveArrayCritical,
+	.ReleasePrimitiveArrayCritical = JNI_ReleasePrimitiveArrayCritical,
+	.GetStringCritical = JNI_GetStringCritical,
+	.ReleaseStringCritical = JNI_ReleaseStringCritical,
+	.NewWeakGlobalRef = JNI_NewWeakGlobalRef,
+	.DeleteWeakGlobalRef = JNI_DeleteWeakGlobalRef,
+	.ExceptionCheck = JNI_ExceptionCheck,
+	.NewDirectByteBuffer = JNI_NewDirectByteBuffer,
+	.GetDirectBufferAddress = JNI_GetDirectBufferAddress,
+	.GetDirectBufferCapacity = JNI_GetDirectBufferCapacity,
+	.GetObjectRefType = JNI_GetObjectRefType,
 };
 
-struct vm_jni_env *vm_jni_default_env_ptr = &vm_jni_default_env;
+const struct JNINativeInterface_* vm_jni_default_env = &defaultJNIEnv;
+const struct JNINativeInterface_** vm_jni_default_env_ptr = &vm_jni_default_env;
 
-struct vm_jni_env *vm_jni_get_jni_env(void)
+JNIEnv *vm_jni_get_jni_env(void)
 {
-	return &vm_jni_default_env;
+	return (JNIEnv *) vm_jni_default_env_ptr;
 }
 
 static void *jni_not_implemented_trap;

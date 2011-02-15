@@ -1,4 +1,6 @@
-#include <jni.h>
+#include <string.h>
+#include <stdio.h>
+#include <vm/jni.h>
 
 /*
  * Class:     java_lang_JNITest
@@ -375,4 +377,32 @@ JNIEXPORT jfloatArray JNICALL Java_java_lang_JNITest_staticReturnPassedFloatArra
 JNIEXPORT jdoubleArray JNICALL Java_java_lang_JNITest_staticReturnPassedDoubleArray(JNIEnv *env, jclass clazz, jdoubleArray doubleArrayValue)
 {
 	return doubleArrayValue;
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticToUpper
+ * Signature: (Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_java_lang_JNITest_staticToUpper(JNIEnv *env, jclass clazz, jstring stringValue)
+{
+	char upperStr[128];
+	const jbyte *str;
+	jboolean iscopy;
+
+	str = (*env)->GetStringUTFChars(env, stringValue, &iscopy);
+	if (str == NULL) {
+		return NULL; /* OutOfMemoryError */
+	}
+
+	memset(upperStr, '\0', 128);
+
+	int i;
+
+	for(i=0; str[i] || i >= 128; i++)
+		upperStr[i] = toupper(str[i]);
+
+	(*env)->ReleaseStringUTFChars(env, stringValue, str);
+
+	return (*env)->NewStringUTF(env, upperStr);
 }
