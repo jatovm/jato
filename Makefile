@@ -136,6 +136,7 @@ OBJS += runtime/java_lang_VMClass.o
 OBJS += runtime/java_lang_VMRuntime.o
 OBJS += runtime/java_lang_VMSystem.o
 OBJS += runtime/java_lang_VMThread.o
+OBJS += runtime/java_lang_reflect_VMMethod.o
 OBJS += runtime/reflection.o
 OBJS += runtime/stack-walker.o
 OBJS += runtime/unsafe.o
