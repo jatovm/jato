@@ -212,23 +212,26 @@ vm_jni_common_get_field_id(jclass clazz, const char *name, const char *sig)
 	return fb;
 }
 
-static void vm_jni_destroy_java_vm(void)
+static jint JNI_DestroyJavaVM(JavaVM *vm)
 {
 	NOT_IMPLEMENTED;
+	return 0;
 }
 
-static void vm_jni_attach_current_thread(void)
+static jint JNI_AttachCurrentThread(JavaVM *vm, void **penv, void *args)
 {
 	NOT_IMPLEMENTED;
+	return 0;
 }
 
-static void vm_jni_detach_current_thread(void)
+static jint JNI_DetachCurrentThread(JavaVM *vm)
 {
 	NOT_IMPLEMENTED;
+	return 0;
 }
 
 // FIXME: implicit version dependant env setting seems dangerous
-static jint vm_jni_get_env(JavaVM *vm, void **env, jint version)
+static jint JNI_GetEnv(JavaVM *vm, void **env, jint version)
 {
 	enter_vm_from_jni();
 
@@ -241,32 +244,30 @@ static jint vm_jni_get_env(JavaVM *vm, void **env, jint version)
 	return JNI_OK;
 }
 
-static void vm_jni_attach_current_thread_as_daemon(void)
+static jint JNI_AttachCurrentThreadAsDaemon(JavaVM *vm, void **penv, void *args)
 {
 	NOT_IMPLEMENTED;
+	return 0;
 }
 
-static void *vm_jni_invoke_interface[] = {
-	NULL,
-	NULL,
-	NULL,
-
-	vm_jni_destroy_java_vm,
-	vm_jni_attach_current_thread,
-	vm_jni_detach_current_thread,
-
-	/* JNI_VERSION_1_2 */
-	vm_jni_get_env,
-	vm_jni_attach_current_thread_as_daemon,
-};
-
-static struct java_vm vm_jni_default_java_vm = {
-	.jni_invoke_interface_table = vm_jni_invoke_interface,
-};
-
-struct java_vm *vm_jni_get_current_java_vm(void)
+const struct JNIInvokeInterface_ defaultJNIInvokeInterface =
 {
-	return &vm_jni_default_java_vm;
+    .reserved0 = NULL,
+    .reserved1 = NULL,
+    .reserved2 = NULL,
+    .DestroyJavaVM = JNI_DestroyJavaVM,
+    .AttachCurrentThread = JNI_AttachCurrentThread,
+    .DetachCurrentThread = JNI_DetachCurrentThread,
+    .GetEnv = JNI_GetEnv,
+    .AttachCurrentThreadAsDaemon = JNI_AttachCurrentThreadAsDaemon,
+};
+
+const struct JNIInvokeInterface_* vm_jni_default_invoke_interface = &defaultJNIInvokeInterface;
+const struct JNIInvokeInterface_** vm_jni_default_invoke_interface_ptr = &vm_jni_default_invoke_interface;
+
+JavaVM *vm_jni_get_current_java_vm(void)
+{
+	return (JavaVM *) vm_jni_default_invoke_interface_ptr;
 }
 
 static jint JNI_GetVersion(JNIEnv *env)

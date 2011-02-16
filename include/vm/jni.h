@@ -89,11 +89,29 @@ typedef enum _jobjectType {
      JNIWeakGlobalRefType = 3
 } jobjectRefType;
 
-struct java_vm {
-	void **jni_invoke_interface_table;
+struct JNIInvokeInterface_;
+struct JavaVM_;
+typedef const struct JNIInvokeInterface_ *JavaVM;
+
+struct JNIInvokeInterface_ {
+    void *reserved0;
+    void *reserved1;
+    void *reserved2;
+
+    jint (JNICALL *DestroyJavaVM)(JavaVM *vm);
+
+    jint (JNICALL *AttachCurrentThread)(JavaVM *vm, void **penv, void *args);
+
+    jint (JNICALL *DetachCurrentThread)(JavaVM *vm);
+
+    jint (JNICALL *GetEnv)(JavaVM *vm, void **penv, jint version);
+
+    jint (JNICALL *AttachCurrentThreadAsDaemon)(JavaVM *vm, void **penv, void *args);
 };
 
-typedef struct java_vm JavaVM;
+struct JavaVM_ {
+    const struct JNIInvokeInterface_ *functions;
+};
 
 typedef struct JNINativeInterface_ *JNIEnv;
 
@@ -342,7 +360,7 @@ struct JNINativeInterface_ {
 void vm_jni_init(void);
 void vm_jni_init_interface(void);
 JNIEnv *vm_jni_get_jni_env(void);
-struct java_vm *vm_jni_get_current_java_vm(void);
+JavaVM *vm_jni_get_current_java_vm(void);
 int vm_jni_load_object(const char *name, struct vm_object *classloader);
 void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 			   const char *method_type);
