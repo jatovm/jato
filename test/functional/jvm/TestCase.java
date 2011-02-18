@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2006-2007, 2009 Pekka Enberg
- * 
+ * Copyright (C) 2006-2011 Pekka Enberg
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -61,6 +61,13 @@ public class TestCase {
             return;
 
         if (expected != null && expected.equals(actual))
+            return;
+
+        fail("Expected '" + expected + "', but was '" + actual + "'.");
+    }
+
+    protected static void assertSame(Object expected, Object actual) {
+        if (expected == actual)
             return;
 
         fail("Expected '" + expected + "', but was '" + actual + "'.");

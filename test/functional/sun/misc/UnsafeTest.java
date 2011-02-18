@@ -34,6 +34,111 @@ import jvm.TestCase;
 public class UnsafeTest extends TestCase {
     private static final Unsafe unsafe = Unsafe.getUnsafe();
 
+    public static void testArrayGetIntVolatile() {
+        int[] array = new int[] { 1, Integer.MAX_VALUE, 3 };
+        assertEquals(Integer.MAX_VALUE, unsafe.getIntVolatile(array, arrayOffset(array, 1)));
+    }
+
+    public static void testArrayGetLongVolatile() {
+        long[] array = new long[] { 1, Long.MAX_VALUE, 3 };
+        assertEquals(Long.MAX_VALUE, unsafe.getLongVolatile(array, arrayOffset(array, 1)));
+    }
+
+    public static void testArrayGetObjectVolatile() {
+        Integer[] array = new Integer[] { new Integer(1), new Integer(2), new Integer(3) };
+        assertEquals(new Integer(2), unsafe.getObjectVolatile(array, arrayOffset(array, 1)));
+    }
+
+    public static void testArrayPutIntVolatile() {
+        int[] array = new int[] { 1, 2, 3 };
+        unsafe.putIntVolatile(array, arrayOffset(array, 1), Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, array[1]);
+    }
+
+    public static void testArrayPutLong() {
+        long[] array = new long[] { 1, 2, 3 };
+        unsafe.putLong(array, arrayOffset(array, 1), Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, array[1]);
+    }
+
+    public static void testArrayPutLongVolatile() {
+        long[] array = new long[] { 1, 2, 3 };
+        unsafe.putLongVolatile(array, arrayOffset(array, 1), Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, array[1]);
+    }
+
+    public static void testArrayPutObject() {
+        Integer[] array = new Integer[] { new Integer(1), new Integer(2), new Integer(3) };
+        unsafe.putObject(array, arrayOffset(array, 1), Integer.MAX_VALUE);
+        assertEquals(new Integer(Integer.MAX_VALUE), array[1]);
+    }
+
+    public static void testArrayPutObjectVolatile() {
+        Integer[] array = new Integer[] { new Integer(1), new Integer(2), new Integer(3) };
+        unsafe.putObjectVolatile(array, arrayOffset(array, 1), Integer.MAX_VALUE);
+        assertEquals(new Integer(Integer.MAX_VALUE), array[1]);
+    }
+
+    public static void testFieldGetLongVolatile() throws Exception {
+        UnsafeLongObject obj = new UnsafeLongObject();
+        obj.value = Long.MAX_VALUE;
+        assertEquals(Long.MAX_VALUE, unsafe.getLongVolatile(obj, fieldOffset(obj, "value")));
+    }
+
+    public static void testFieldGetObjectVolatile() throws Exception {
+        final String s = "hello, world";
+        UnsafeObjectObject obj = new UnsafeObjectObject();
+        obj.value = s;
+        assertSame(s, unsafe.getObjectVolatile(obj, fieldOffset(obj, "value")));
+    }
+
+    public static void testFieldPutIntVolatile() throws Exception {
+        UnsafeIntObject obj = new UnsafeIntObject();
+        obj.value = Integer.MAX_VALUE;
+        unsafe.putIntVolatile(obj, fieldOffset(obj, "value"), Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, obj.value);
+    }
+
+    public static void testFieldPutLong() throws Exception {
+        UnsafeLongObject obj = new UnsafeLongObject();
+        obj.value = Long.MAX_VALUE;
+        unsafe.putLong(obj, fieldOffset(obj, "value"), Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, obj.value);
+    }
+
+    public static void testFieldPutLongVolatile() throws Exception {
+        UnsafeLongObject obj = new UnsafeLongObject();
+        obj.value = Long.MAX_VALUE;
+        unsafe.putLongVolatile(obj, fieldOffset(obj, "value"), Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, obj.value);
+    }
+
+    public static void testFieldPutObject() throws Exception {
+        UnsafeObjectObject obj = new UnsafeObjectObject();
+        obj.value = Integer.MAX_VALUE;
+        unsafe.putObject(obj, fieldOffset(obj, "value"), Integer.MAX_VALUE);
+        assertEquals(new Integer(Integer.MAX_VALUE), obj.value);
+    }
+
+    public static void testFieldPutObjectVolatile() throws Exception {
+        final String s = "hello, world";
+        UnsafeObjectObject obj = new UnsafeObjectObject();
+        obj.value = s;
+        unsafe.putObjectVolatile(obj, fieldOffset(obj, "value"), s);
+        assertEquals(s, obj.value);
+    }
+
+    public static long arrayOffset(Object object, int index) {
+        int base = unsafe.arrayBaseOffset(object.getClass());
+        int indexScale = unsafe.arrayIndexScale(object.getClass());
+        return base + (index * indexScale);
+    }
+
+    public static long fieldOffset(Object object, String name) throws Exception {
+        Field field = UnsafeObjectObject.class.getDeclaredField(name);
+        return unsafe.objectFieldOffset(field);
+    }
+
     public static void testCompareAndSwapInt() throws Exception {
         assertSwapsInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
         assertSwapsInt(Integer.MAX_VALUE, Integer.MIN_VALUE);
@@ -128,6 +233,21 @@ public class UnsafeTest extends TestCase {
     }
 
     public static void main(String[] args) throws Exception {
+        testArrayGetIntVolatile();
+        testArrayGetLongVolatile();
+        testArrayGetObjectVolatile();
+        testArrayPutIntVolatile();
+        testArrayPutLong();
+        testArrayPutLongVolatile();
+        testArrayPutObject();
+        testArrayPutObjectVolatile();
+        testFieldGetLongVolatile();
+        testFieldGetObjectVolatile();
+        testFieldPutIntVolatile();
+        testFieldPutLong();
+        testFieldPutLongVolatile();
+        testFieldPutObject();
+        testFieldPutObjectVolatile();
         testCompareAndSwapInt();
         testCompareAndSwapLong();
         testCompareAndSwapObject();

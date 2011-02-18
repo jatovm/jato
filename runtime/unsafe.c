@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Pekka Enberg
+ * Copyright (c) 2009, 2011 Pekka Enberg
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -31,13 +31,111 @@
 #include "vm/reflection.h"
 #include "vm/preload.h"
 #include "vm/object.h"
+#include "vm/class.h"
 #include "vm/jni.h"
+
+jint sun_misc_Unsafe_arrayBaseOffset(jobject this, jobject class)
+{
+	return VM_ARRAY_ELEMS_OFFSET;
+}
+
+jint sun_misc_Unsafe_arrayIndexScale(jobject this, jobject class)
+{
+	struct vm_class *array_class;
+	struct vm_class *elem_class;
+	int elem_type;
+
+	array_class	= vm_class_get_class_from_class_object(class);
+
+	elem_class	= vm_class_get_array_element_class(array_class);
+
+	elem_type	= vm_class_get_storage_vmtype(elem_class);
+
+	return vmtype_get_size(elem_type);
+}
+
+jint sun_misc_Unsafe_getIntVolatile(jobject this, jobject obj, jlong offset)
+{
+	jint *value_p = (void *) obj + offset;
+	jint ret;
+
+	ret		= *value_p;
+
+	mb();
+
+	return ret;
+}
+
+jlong sun_misc_Unsafe_getLongVolatile(jobject this, jobject obj, jlong offset)
+{
+	jlong *value_p = (void *) obj + offset;
+	jlong ret;
+
+	ret		= *value_p;
+
+	mb();
+
+	return ret;
+}
+
+jobject sun_misc_Unsafe_getObjectVolatile(jobject this, jobject obj, jlong offset)
+{
+	struct vm_object **value_p = (void *) obj + offset;
+	jobject ret;
+
+	ret		= *value_p;
+
+	mb();
+
+	return ret;
+}
+
+void sun_misc_Unsafe_putIntVolatile(jobject this, jobject obj, jlong offset, jint value)
+{
+	jint *value_p = (void *) obj + offset;
+
+	mb();
+
+	*value_p	= value;
+}
+
+void sun_misc_Unsafe_putLong(jobject this, jobject obj, jlong offset, jlong value)
+{
+	jlong *value_p = (void *) obj + offset;
+
+	*value_p	= value;
+}
+
+void sun_misc_Unsafe_putLongVolatile(jobject this, jobject obj, jlong offset, jlong value)
+{
+	jlong *value_p = (void *) obj + offset;
+
+	mb();
+
+	*value_p	= value;
+}
+
+void sun_misc_Unsafe_putObject(jobject this, jobject obj, jlong offset, jobject value)
+{
+	struct vm_object **value_p = (void *) obj + offset;
+
+	*value_p	= value;
+}
+
+void sun_misc_Unsafe_putObjectVolatile(jobject this, jobject obj, jlong offset, jobject value)
+{
+	struct vm_object **value_p = (void *) obj + offset;
+
+	mb();
+
+	*value_p	= value;
+}
 
 jint native_unsafe_compare_and_swap_int(struct vm_object *this,
 					struct vm_object *obj, jlong offset,
 					jint expect, jint update)
 {
-	void *p = field_get_object_ptr(obj, offset);
+	void *p = (void *) obj + offset;
 
 	return cmpxchg_32(p, (uint32_t)expect, (uint32_t)update) == (uint32_t)expect;
 }
@@ -46,7 +144,7 @@ jint native_unsafe_compare_and_swap_long(struct vm_object *this,
 					 struct vm_object *obj, jlong offset,
 					 jlong expect, jlong update)
 {
-	void *p = field_get_object_ptr(obj, offset);
+	void *p = (void *) obj + offset;
 
 	return cmpxchg_64(p, (uint64_t)expect, (uint64_t)update) == (uint64_t)expect;
 }
@@ -57,7 +155,7 @@ jint native_unsafe_compare_and_swap_object(struct vm_object *this,
 					   struct vm_object *expect,
 					    struct vm_object *update)
 {
-	void *p = field_get_object_ptr(obj, offset);
+	void *p = (void *) obj + offset;
 
 	return cmpxchg_ptr(p, expect, update) == expect;
 }
@@ -75,15 +173,7 @@ jlong native_unsafe_object_field_offset(struct vm_object *this,
 	if (!vmf)
 		return 0;
 
-	return vmf->offset;
-}
-
-void native_unsafe_put_object(struct vm_object *this, struct vm_object *obj,
-			      jlong offset, struct vm_object *value)
-{
-	struct vm_object **value_p = field_get_object_ptr(obj, offset);
-
-	*value_p = value;
+	return VM_OBJECT_FIELDS_OFFSET + vmf->offset;
 }
 
 void native_unsafe_park(struct vm_object *this, jboolean isAbsolute,
