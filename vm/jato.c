@@ -52,7 +52,6 @@
 
 #include "runtime/stack-walker.h"
 #include "runtime/runtime.h"
-#include "runtime/unsafe.h"
 #include "runtime/classloader.h"
 
 #include "jit/compiler.h"
@@ -94,6 +93,7 @@
 #include "runtime/java_lang_VMSystem.h"
 #include "runtime/java_lang_VMThread.h"
 #include "runtime/java_lang_VMClass.h"
+#include "runtime/sun_misc_Unsafe.h"
 
 static const char *bootclasspath_append;
 

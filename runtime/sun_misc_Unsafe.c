@@ -24,7 +24,8 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "runtime/unsafe.h"
+#include "runtime/sun_misc_Unsafe.h"
+
 #include "jit/exception.h"
 #include "arch/atomic.h"
 
