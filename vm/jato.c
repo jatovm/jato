@@ -521,7 +521,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("sun/misc/Unsafe", "getIntVolatile", sun_misc_Unsafe_getIntVolatile),
 	DEFINE_NATIVE("sun/misc/Unsafe", "getLongVolatile", sun_misc_Unsafe_getLongVolatile),
 	DEFINE_NATIVE("sun/misc/Unsafe", "getObjectVolatile", sun_misc_Unsafe_getObjectVolatile),
-	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", native_unsafe_object_field_offset),
+	DEFINE_NATIVE("sun/misc/Unsafe", "objectFieldOffset", sun_misc_Unsafe_objectFieldOffset),
 	DEFINE_NATIVE("sun/misc/Unsafe", "park", native_unsafe_park),
 	DEFINE_NATIVE("sun/misc/Unsafe", "putIntVolatile", sun_misc_Unsafe_putIntVolatile),
 	DEFINE_NATIVE("sun/misc/Unsafe", "putLong", sun_misc_Unsafe_putLong),

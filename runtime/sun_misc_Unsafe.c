@@ -91,6 +91,21 @@ jobject sun_misc_Unsafe_getObjectVolatile(jobject this, jobject obj, jlong offse
 	return ret;
 }
 
+jlong sun_misc_Unsafe_objectFieldOffset(jobject this, jobject field)
+{
+	struct vm_field *vmf;
+
+	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+		field	= field_get_object(field, vm_java_lang_reflect_Field_f);
+	}
+
+	vmf = vm_object_to_vm_field(field);
+	if (!vmf)
+		return 0;
+
+	return VM_OBJECT_FIELDS_OFFSET + vmf->offset;
+}
+
 void sun_misc_Unsafe_putIntVolatile(jobject this, jobject obj, jlong offset, jint value)
 {
 	jint *value_p = (void *) obj + offset;
@@ -159,22 +174,6 @@ jint native_unsafe_compare_and_swap_object(struct vm_object *this,
 	void *p = (void *) obj + offset;
 
 	return cmpxchg_ptr(p, expect, update) == expect;
-}
-
-jlong native_unsafe_object_field_offset(struct vm_object *this,
-					struct vm_object *field)
-{
-	struct vm_field *vmf;
-
-	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
-		field	= field_get_object(field, vm_java_lang_reflect_Field_f);
-	}
-
-	vmf = vm_object_to_vm_field(field);
-	if (!vmf)
-		return 0;
-
-	return VM_OBJECT_FIELDS_OFFSET + vmf->offset;
 }
 
 void native_unsafe_park(struct vm_object *this, jboolean isAbsolute,
