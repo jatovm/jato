@@ -10,11 +10,12 @@ public class ClassTest extends TestCase {
     Tag tag = TaggedClass.class.getAnnotation(Tag.class);
 
     assertEquals(Byte.MAX_VALUE, tag.byteValue());
-//  assertEquals(Character.MAX_VALUE, tag.charValue());
+    assertEquals(Character.MAX_VALUE, tag.charValue());
     assertEquals(Short.MAX_VALUE, tag.shortValue());
     assertEquals(Integer.MAX_VALUE, tag.intValue());
-//  assertEquals(Float.MAX_VALUE, tag.longValue());
-//  assertEquals(Double.MAX_VALUE, tag.doubleValue());
+    assertEquals(Long.MAX_VALUE, tag.longValue());
+    assertEquals(Float.MAX_VALUE, tag.floatValue());
+    assertEquals(Double.MAX_VALUE, tag.doubleValue());
     assertEquals("hello, world", tag.stringValue());
 //  assertEquals(Required.YES, tag.enumValue());
 //  assertEquals(Object.class, tag.classValue());
@@ -41,18 +42,18 @@ public class ClassTest extends TestCase {
     doubleValue      = Double.MAX_VALUE,
     stringValue      = "hello, world",
     enumValue        = Required.YES,
-//  classValue       = Object.class,
+    classValue       = Object.class,
 
     byteArrayValue   = { Byte.MIN_VALUE,      Byte.MAX_VALUE      },
     charArrayValue   = { Character.MIN_VALUE, Character.MAX_VALUE },
     shortArrayValue  = { Short.MIN_VALUE,     Short.MAX_VALUE     },
     intArrayValue    = { Integer.MIN_VALUE,   Integer.MAX_VALUE   },
-//  longArrayValue   = { Long.MIN_VALUE,      Long.MAX_VALUE      },
+    longArrayValue   = { Long.MIN_VALUE,      Long.MAX_VALUE      },
     floatArrayValue  = { Float.MIN_VALUE,     Float.MAX_VALUE     },
-//  doubleArrayValue = { Double.MIN_VALUE,    Double.MAX_VALUE    },
+    doubleArrayValue = { Double.MIN_VALUE,    Double.MAX_VALUE    },
     stringArrayValue = { "hello, world",      "Hello, World!"     },
-    enumArrayValue   = { Required.YES,        Required.NO         }
-//  classArrayValue  = { Integer.class,       Long.class          }
+    enumArrayValue   = { Required.YES,        Required.NO         },
+    classArrayValue  = { Integer.class,       Long.class          }
   )
   public static class TaggedClass {
   }
@@ -68,18 +69,18 @@ public class ClassTest extends TestCase {
     double     doubleValue();
     String     stringValue();
     Required   enumValue();
-//  Class<?>   classValue();
+    Class<?>   classValue();
 
     byte[]     byteArrayValue();
     char[]     charArrayValue();
     short[]    shortArrayValue();
     int[]      intArrayValue();
-//  long[]     longArrayValue();
+    long[]     longArrayValue();
     float[]    floatArrayValue();
-//  double[]   doubleArrayValue();
+    double[]   doubleArrayValue();
     String[]   stringArrayValue();
     Required[] enumArrayValue();
-//  Class<?>[] classArrayValue();
+    Class<?>[] classArrayValue();
   }
 
   public static enum Required { YES, NO }
