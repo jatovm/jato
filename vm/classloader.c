@@ -299,14 +299,14 @@ static struct vm_class *load_class_from_file(const char *filename)
 	if (cafebabe_class_init(class, &stream))
 		goto error_free_class;
 
-	cafebabe_stream_close(&stream);
-
 	result = vm_alloc(sizeof *result);
 	if (!result)
 		goto error_free_class;
 
 	if (vm_class_link(result, class))
 		goto error_free_class;
+
+	cafebabe_stream_close(&stream);
 
 	return result;
 
