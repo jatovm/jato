@@ -127,17 +127,18 @@ def progress(index, total, t):
 def main():
   results = Queue()
 
+  tests = filter(is_test_supported, TESTS)
+
   def do_work(t):
     klass, expected_retval, extra_args, archs = t
-    if is_test_supported(t):
-      progress(len(TESTS) - q.qsize(), len(TESTS), klass)
-      command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
-      retval = subprocess.call(command)
-      if retval != expected_retval:
-        print klass + ": Test FAILED"
-        results.put(False)
-      else:
-        results.put(True)
+    progress(len(tests) - q.qsize(), len(tests), klass)
+    command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
+    retval = subprocess.call(command)
+    if retval != expected_retval:
+      print klass + ": Test FAILED"
+      results.put(False)
+    else:
+      results.put(True)
 
   def worker():
     while True:
@@ -152,7 +153,7 @@ def main():
     t.start()
 
   start = time.time()
-  for t in TESTS:
+  for t in tests:
     q.put(t)
 
   q.join()
