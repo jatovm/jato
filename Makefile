@@ -259,7 +259,7 @@ boehmgc:
 	$(E) "  AS      " $@
 	$(Q) $(CC) -c -gstabs $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
-arch/$(ARCH)/insn-selector.c: monoburg FORCE
+arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 

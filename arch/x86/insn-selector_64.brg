@@ -1,0 +1,3976 @@
+/*
+ * Instruction selector Monoburg specification for IA-32.
+ *
+ * Copyright (C) 2006  Pekka Enberg
+ *
+ * This file is released under the GPL version 2. Please refer to the file
+ * LICENSE for details.
+ */
+
+#include <jit/args.h>
+#include <jit/basic-block.h>
+#include <jit/compilation-unit.h>
+#include <jit/compiler.h>
+#include <jit/emulate.h>
+#include <jit/expression.h>
+#include <jit/statement.h>
+#include <jit/bc-offset-mapping.h>
+#include <jit/exception.h>
+
+#include <arch/instruction.h>
+#include <arch/stack-frame.h>
+#include <arch/thread.h>
+
+#include <assert.h>
+#include <errno.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <vm/class.h>
+#include <vm/field.h>
+#include <vm/gc.h>
+#include <vm/method.h>
+#include <vm/object.h>
+#include <vm/stack-trace.h>
+#include <vm/trace.h>
+#include <vm/preload.h>
+#include <vm/reference.h>
+
+#define MBCGEN_TYPE struct basic_block
+#define MBCOST_DATA struct basic_block
+#define MBTREE_TYPE struct tree_node
+#define MBTREE_OP(t) tree_op(t)
+#define MBTREE_LEFT(t) tree->kids[0]
+#define MBTREE_RIGHT(t) tree->kids[1]
+#define MBREG_TYPE struct var_info *
+
+#define MBMAX_OPCODES STMT_LAST
+
+#define MONOBURG_LOG 1
+#define HAVE_ARRAY_ELEM_INIT 1
+
+#ifdef CONFIG_X86_32
+/* Constants used in l2d and d2l conversions. */
+static double xmm_double_constant_0 = 0x100000000;
+static double xmm_double_constant_1 = 0x080000000;
+#endif
+
+struct _MBState;
+
+static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn);
+static void select_safepoint_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn);
+static void select_exception_test(struct basic_block *bb, struct tree_node *tree);
+static void save_invoke_result(struct basic_block *s, struct tree_node *tree, struct vm_method *method, struct statement *stmt);
+
+static unsigned char size_to_scale(int size)
+{
+	switch (size) {
+	case 1:
+	     return 0;
+	case 2:
+	     return 1;
+	case 4:
+	     return 2;
+	case 8:
+	     return 3;
+	default:
+		error("Invalid size");
+	}
+}
+
+static unsigned char type_to_scale(enum vm_type vm_type)
+{
+	/* Currently we can store not less than machine word at once */
+	return size_to_scale(vmtype_get_size(vm_type));
+}
+
+static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
+				unsigned long args_count)
+{
+	struct var_info *stack_ptr;
+	unsigned long args_size;
+
+	stack_ptr = bb->b_parent->stack_ptr;
+	args_size = args_count * sizeof(long);
+
+	select_insn(bb, tree, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
+}
+
+static void __binop_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type, struct var_info *, long);
+static void binop_reg_local_high(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
+static void binop_reg_local_low(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
+static void binop_reg_value_high(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
+static void binop_reg_value_low(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
+static void shift_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
+
+static enum insn_type br_binop_to_insn_type(enum binary_operator binop)
+{
+	enum insn_type ret;
+
+	switch (binop) {
+	case OP_EQ:
+		ret = INSN_JE_BRANCH;
+		break;
+	case OP_NE:
+		ret = INSN_JNE_BRANCH;
+		break;
+	case OP_LT:
+		ret = INSN_JL_BRANCH;
+		break;
+	case OP_GE:
+		ret = INSN_JGE_BRANCH;
+		break;
+	case OP_GT:
+		ret = INSN_JG_BRANCH;
+		break;
+	case OP_LE:
+		ret = INSN_JLE_BRANCH;
+		break;
+	default:
+		assert(!"not a branch operator");
+	};
+	return ret;
+}
+
+%%
+
+%termprefix EXPR_ OP_ STMT_
+
+%start stmt
+
+%ifdef	CONFIG_X86_32
+freg:	EXPR_FVALUE	0
+{
+	struct stack_slot *scratch;
+	struct expression *expr;
+	struct var_info *result;
+
+	expr = to_expr(tree);
+
+	result = get_var(s->b_parent, expr->vm_type);
+	state->reg1 = result;
+
+	if (expr->vm_type == J_FLOAT) {
+		scratch = get_scratch_slot(s->b_parent);
+		select_insn(s, tree, imm_memlocal_insn(INSN_MOV_IMM_MEMLOCAL, float_to_uint32(expr->fvalue), scratch));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, result));
+	} else {
+		uint32_t high_byte, low_byte;
+		unsigned long offset;
+		struct var_info *ebp;
+
+		ebp = get_fixed_var(s->b_parent, MACH_REG_EBP);
+
+		scratch = get_scratch_slot(s->b_parent);
+		offset  = slot_offset_64(scratch);
+
+		double_to_split_uint64(expr->fvalue, &low_byte, &high_byte);
+		select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, high_byte, ebp, offset + 4));
+		select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, low_byte, ebp, offset));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, result));
+	}
+}
+%else
+freg:	EXPR_FVALUE	0
+{
+	struct expression *expr;
+	struct var_info *result, *temp;
+	struct stack_slot *scratch;
+	unsigned long ivalue;
+
+	expr = to_expr(tree);
+
+	result = get_var(s->b_parent, expr->vm_type);
+	state->reg1 = result;
+
+	scratch = get_scratch_slot(s->b_parent);
+
+	if (expr->vm_type == J_FLOAT) {
+		temp = get_var(s->b_parent, J_INT);
+		ivalue = float_to_uint32(expr->fvalue);
+	} else {
+		temp = get_var(s->b_parent, J_LONG);
+		ivalue = double_to_uint64(expr->fvalue);
+	}
+
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, ivalue, temp));
+	select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, temp, scratch));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, scratch, result));
+}
+%endif
+
+reg:	EXPR_VALUE	0
+{
+	struct expression *expr;
+	struct var_info *result;
+
+	expr = to_expr(tree);
+
+	result = get_var(s->b_parent, J_INT);
+	state->reg1 = result;
+
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value & ~0UL, result));
+
+	if (expr->vm_type == J_LONG) {
+		result = get_var(s->b_parent, J_INT);
+		state->reg2 = result;
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value >> 32, state->reg2));
+	}
+}
+
+%ifdef CONFIG_X86_32
+reg:	EXPR_LOCAL	1
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *expr;
+	struct stack_slot *slot;
+	struct var_info *result;
+
+	expr = to_expr(tree);
+	slot = get_local_slot(cu->stack_frame, expr->local_index);
+
+	result = get_var(s->b_parent, J_INT);
+	state->reg1 = result;
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
+
+	if (expr->vm_type == J_LONG) {
+		slot = get_local_slot(cu->stack_frame, expr->local_index + 1);
+
+		result = get_var(s->b_parent, J_INT);
+		state->reg2 = result;
+
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
+	}
+}
+%else
+reg:	EXPR_LOCAL	1
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *expr;
+	struct stack_slot *slot;
+	struct var_info *src, *result;
+	struct vm_method *method;
+	enum machine_reg reg;
+	int index;
+
+	expr = to_expr(tree);
+
+	method = cu->method;
+
+	result = get_var(s->b_parent, expr->vm_type);
+
+	if (expr->local_index < (unsigned long) method->args_count) {
+		reg = method->args_map[expr->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			index = method->args_map[expr->local_index].stack_index;
+			slot = get_local_slot(s->b_parent->stack_frame, index);
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+							       slot, result));
+		} else {
+			src = s->b_parent->non_fixed_args[expr->local_index];
+			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG,
+							  src, result));
+		}
+	} else {
+		index = expr->local_index - method->reg_args_count;
+		slot = get_local_slot(s->b_parent->stack_frame, index);
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+						       slot, result));
+	}
+
+	state->reg1 = result;
+}
+%endif
+
+freg:	EXPR_FLOAT_LOCAL 0
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *expr;
+	struct stack_slot *slot;
+	struct var_info *result;
+
+	expr = to_expr(tree);
+
+	result = get_var(s->b_parent, expr->vm_type);
+	state->reg1 = result;
+
+	slot = get_local_slot(cu->stack_frame, expr->local_index);
+
+	if (expr->vm_type == J_FLOAT)
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, result));
+	else
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, result));
+}
+
+reg:   EXPR_TEMPORARY 0
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = expr->tmp_low;
+
+%ifdef CONFIG_X86_32
+	if (expr->vm_type == J_LONG) {
+		state->reg2 = expr->tmp_high;
+	}
+%endif
+}
+
+freg:   EXPR_FLOAT_TEMPORARY 0
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = expr->tmp_low;
+}
+
+reg:	OP_ADD(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_ADD_MEMBASE_REG);
+	binop_reg_local_high(state, s, tree, INSN_ADC_MEMBASE_REG);
+}
+
+reg:	OP_ADD(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_ADD_IMM_REG);
+	binop_reg_value_high(state, s, tree, INSN_ADC_IMM_REG);
+}
+
+reg:	OP_ADD(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_ADD_REG_REG);
+	binop_reg_reg_high(state, s, tree, INSN_ADC_REG_REG);
+}
+
+freg:	OP_DADD(freg, freg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_FADD_64_REG_REG);
+}
+
+freg:	OP_FADD(freg, freg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_FADD_REG_REG);
+}
+
+reg:	OP_SUB(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_SUB_MEMBASE_REG);
+	binop_reg_local_high(state, s, tree, INSN_SBB_MEMBASE_REG);
+}
+
+reg:	OP_SUB(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_SUB_IMM_REG);
+	binop_reg_value_high(state, s, tree, INSN_SBB_IMM_REG);
+}
+
+reg:	OP_SUB(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_SUB_REG_REG);
+	binop_reg_reg_high(state, s, tree, INSN_SBB_REG_REG);
+}
+
+freg:	OP_DSUB(freg, freg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_FSUB_64_REG_REG);
+}
+
+freg:	OP_FSUB(freg, freg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_FSUB_REG_REG);
+}
+
+reg:	OP_MUL(reg, EXPR_LOCAL) 1
+{
+	struct var_info *eax, *result;
+
+	result = get_var(s->b_parent, J_INT);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	state->reg1 = result;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
+	__binop_reg_local(state, s, tree, INSN_MUL_MEMBASE_EAX, eax, 0);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, result));
+}
+
+reg:	OP_MUL(reg, reg) 1
+{
+	state->reg1 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
+}
+
+%ifdef  CONFIG_X86_32
+freg:	OP_DMUL(freg, freg) 1
+{
+	state->reg1 = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_FMUL_64_REG_REG, state->right->reg1, state->left->reg1));
+}
+
+freg:	OP_FMUL(freg, freg) 1
+{
+	state->reg1 = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_FMUL_REG_REG, state->right->reg1, state->left->reg1));
+}
+
+
+reg: 	OP_MUL_64(reg, reg) 1
+{
+	struct var_info *eax, *edx, *tmp1;
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+
+	state->reg1 = get_var(s->b_parent, J_INT);
+	state->reg2 = get_var(s->b_parent, J_INT);
+
+	tmp1 = get_var(s->b_parent, J_INT);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg2, tmp1));
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, tmp1));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg2, state->reg2));
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->right->reg1, state->reg2));
+	select_insn(s, tree, reg_reg_insn(INSN_ADD_REG_REG, tmp1, state->reg2));
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_EAX, state->left->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+
+	select_insn(s, tree, reg_reg_insn(INSN_ADD_REG_REG, edx, state->reg2));
+}
+%else
+freg:	OP_DMUL(freg, freg) 1
+{
+	state->reg1 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
+}
+
+freg:	OP_FMUL(freg, freg) 1
+{
+	state->reg1 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
+}
+
+
+reg: 	OP_MUL_64(reg, reg) 1
+{
+	state->reg1 = state->reg2 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
+}
+%endif
+
+reg:	OP_DIV(reg, EXPR_LOCAL) 1
+{
+	struct var_info *eax;
+
+	div_reg_local(state, s, tree);
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+}
+
+reg:	OP_DIV(reg, reg) 1
+{
+	struct var_info *eax;
+	struct var_info *edx;
+	struct var_info *result;
+
+	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	result = get_var(s->b_parent, J_INT);
+	state->reg1 = result;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
+	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, result));
+}
+
+freg:	OP_DDIV(freg, freg) 1
+{
+	state->reg1 = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_FDIV_64_REG_REG, state->right->reg1, state->left->reg1));
+}
+
+freg:	OP_FDIV(freg, freg) 1
+{
+	state->reg1 = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_FDIV_REG_REG, state->right->reg1, state->left->reg1));
+}
+
+reg:	OP_DIV_64(reg, reg) 1
+{
+	emulate_op_64(state, s, tree, emulate_ldiv, J_LONG, J_LONG);
+	select_exception_test(s, tree);
+}
+
+reg:	OP_REM(reg, EXPR_LOCAL) 1
+{
+	struct var_info *edx;
+
+	div_reg_local(state, s, tree);
+
+	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg1));
+}
+
+reg:	OP_REM(reg, reg) 1
+{
+	struct var_info *eax;
+	struct var_info *edx;
+	struct var_info *result;
+
+	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	result = get_var(s->b_parent, J_INT);
+	state->reg1 = result;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
+	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, result));
+}
+
+freg:	OP_DREM(freg, freg) 1
+{
+	struct var_info *esp, *eax;
+	struct stack_slot *scratch;
+
+	state->reg1 = get_var(s->b_parent, J_DOUBLE);
+
+	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->right->reg1, esp, 8));
+
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)fmod));
+	method_args_cleanup(s, tree, 4);
+
+	scratch = get_scratch_slot(s->b_parent);
+	select_insn(s, tree, memlocal_insn(INSN_FSTP_64_MEMLOCAL, scratch));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, state->reg1));
+}
+
+freg:	OP_FREM(freg, freg) 1
+{
+	struct var_info *esp, *eax;
+	struct stack_slot *scratch;
+
+	state->reg1 = get_var(s->b_parent, J_FLOAT);
+
+	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+	select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->right->reg1, esp, 4));
+
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)fmodf));
+	method_args_cleanup(s, tree, 2);
+
+	scratch = get_scratch_slot(s->b_parent);
+	select_insn(s, tree, memlocal_insn(INSN_FSTP_MEMLOCAL, scratch));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, state->reg1));
+}
+
+reg:	OP_REM_64(reg, reg) 1
+{
+	emulate_op_64(state, s, tree, emulate_lrem, J_LONG, J_LONG);
+	select_exception_test(s, tree);
+}
+
+reg:	OP_NEG(reg) 1
+{
+	struct expression *expr;
+	struct var_info *result;
+
+	expr = to_expr(tree);
+
+	result = state->left->reg1;
+	state->reg1 = result;
+
+	select_insn(s, tree, reverse_reg_insn(INSN_NEG_REG, result));
+
+%ifdef CONFIG_X86_32
+	if (expr->vm_type == J_LONG) {
+		result = state->left->reg2;
+		state->reg2 = result;
+
+		select_insn(s, tree, imm_reg_insn(INSN_ADC_IMM_REG, 0, result));
+		select_insn(s, tree, reverse_reg_insn(INSN_NEG_REG, result));
+	}
+%endif
+}
+
+%ifdef	CONFIG_X86_32
+freg:	OP_DNEG(freg) 1
+{
+	struct var_info *result, *ebp;
+	struct stack_slot *scratch;
+	unsigned long offset;
+
+	ebp = get_fixed_var(s->b_parent, MACH_REG_EBP);
+
+	result = get_var(s->b_parent, J_DOUBLE);
+
+	scratch = get_scratch_slot(s->b_parent);
+	offset  = slot_offset_64(scratch);
+
+	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0x80000000, ebp, offset + 4));
+	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_MEMBASE, 0x00000000, ebp, offset));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, result));
+	select_insn(s, tree, reg_reg_insn(INSN_XORPD_XMM_XMM, state->left->reg1, result));
+
+	state->reg1 = result;
+}
+%endif
+
+freg:	OP_FNEG(freg) 1
+{
+	struct var_info *result;
+	struct stack_slot *scratch;
+
+	result = get_var(s->b_parent, J_FLOAT);
+	scratch = get_scratch_slot(s->b_parent);
+
+	select_insn(s, tree, imm_memlocal_insn(INSN_MOV_IMM_MEMLOCAL, 0x80000000, scratch));
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, result));
+	select_insn(s, tree, reg_reg_insn(INSN_XORPS_XMM_XMM, state->left->reg1, result));
+
+	state->reg1 = result;
+}
+
+reg:	OP_SHL(reg, reg) 1
+{
+	struct var_info *ecx;
+
+	ecx = get_fixed_var(s->b_parent, MACH_REG_xCX);
+
+	state->reg1 = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, ecx));
+	select_insn(s, tree, reg_reg_insn(INSN_SHL_REG_REG, ecx, state->left->reg1));
+}
+
+reg:	OP_SHL(reg, EXPR_LOCAL) 1
+{
+	shift_reg_local(state, s, tree, INSN_SHL_REG_REG);
+}
+
+reg:	OP_SHL_64(reg, reg) 1
+{
+	emulate_op_64(state, s, tree, emulate_lshl, J_INT, J_LONG);
+}
+
+reg:	OP_SHR(reg, EXPR_LOCAL) 1
+{
+	shift_reg_local(state, s, tree, INSN_SAR_REG_REG);
+}
+
+reg:	OP_SHR(reg, reg) 1
+{
+	struct var_info *ecx;
+
+	ecx = get_fixed_var(s->b_parent, MACH_REG_xCX);
+
+	state->reg1 = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, ecx));
+	select_insn(s, tree, reg_reg_insn(INSN_SAR_REG_REG, ecx, state->left->reg1));
+}
+
+reg:	OP_SHR_64(reg, reg) 1
+{
+	emulate_op_64(state, s, tree, emulate_lshr, J_INT, J_LONG);
+}
+
+reg:	OP_USHR(reg, EXPR_LOCAL) 1
+{
+	shift_reg_local(state, s, tree, INSN_SHR_REG_REG);
+}
+
+reg:	OP_USHR(reg, reg) 1
+{
+	struct var_info *ecx;
+
+	ecx = get_fixed_var(s->b_parent, MACH_REG_xCX);
+
+	state->reg1 = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, ecx));
+	select_insn(s, tree, reg_reg_insn(INSN_SHR_REG_REG, ecx, state->left->reg1));
+}
+
+reg:	OP_USHR_64(reg, reg) 1
+{
+	emulate_op_64(state, s, tree, emulate_lushr, J_INT, J_LONG);
+}
+
+reg:	OP_OR(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_OR_MEMBASE_REG);
+	binop_reg_local_high(state, s, tree, INSN_OR_MEMBASE_REG);
+}
+
+reg:	OP_OR(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_OR_REG_REG);
+	binop_reg_reg_high(state, s, tree, INSN_OR_REG_REG);
+}
+
+reg:	OP_AND(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_AND_MEMBASE_REG);
+	binop_reg_local_high(state, s, tree, INSN_AND_MEMBASE_REG);
+}
+
+reg:	OP_AND(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_AND_REG_REG);
+	binop_reg_reg_high(state, s, tree, INSN_AND_REG_REG);
+}
+
+reg:	OP_XOR(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_XOR_MEMBASE_REG);
+	binop_reg_local_high(state, s, tree, INSN_XOR_MEMBASE_REG);
+}
+
+reg:	OP_XOR(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_XOR_REG_REG);
+	binop_reg_reg_high(state, s, tree, INSN_XOR_REG_REG);
+}
+
+%ifdef  CONFIG_X86_32
+reg:	OP_CMPL(freg, freg) 1
+{
+	struct var_info *esp, *eax;
+	enum vm_type type;
+
+	assert(state->left->reg1->vm_type == state->right->reg1->vm_type);
+
+	type = state->left->reg1->vm_type;
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	if (type == J_FLOAT) {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->right->reg1, esp, 4));
+
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpl));
+		method_args_cleanup(s, tree, 2);
+	} else {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->right->reg1, esp, 8));
+
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpl));
+		method_args_cleanup(s, tree, 4);
+	}
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+}
+
+reg:	OP_CMPG(freg, freg) 1
+{
+	struct var_info *esp, *eax;
+	enum vm_type type;
+
+	assert(state->left->reg1->vm_type == state->right->reg1->vm_type);
+
+	type = state->left->reg1->vm_type;
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	if (type == J_FLOAT) {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->right->reg1, esp, 4));
+
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpg));
+		method_args_cleanup(s, tree, 2);
+	} else {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->right->reg1, esp, 8));
+
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpg));
+		method_args_cleanup(s, tree, 4);
+	}
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+}
+%else
+reg:	OP_CMPL(freg, freg) 1
+{
+	struct var_info *rax, *arg1, *arg2;
+	enum vm_type type;
+
+	assert(state->left->reg1->vm_type == state->right->reg1->vm_type);
+
+	type = state->left->reg1->vm_type;
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	arg1 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
+	arg2 = get_fixed_var(s->b_parent, MACH_REG_XMM1);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, arg1));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, arg2));
+
+	if (type == J_FLOAT)
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpl));
+	else
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpl));
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+}
+
+reg:	OP_CMPG(freg, freg) 1
+{
+	struct var_info *rax, *arg1, *arg2;
+	enum vm_type type;
+
+	assert(state->left->reg1->vm_type == state->right->reg1->vm_type);
+
+	type = state->left->reg1->vm_type;
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	arg1 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
+	arg2 = get_fixed_var(s->b_parent, MACH_REG_XMM1);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, arg1));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, arg2));
+
+	if (type == J_FLOAT)
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpg));
+	else
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_dcmpg));
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+}
+%endif
+
+reg:	OP_CMP(reg, reg) 1
+{
+	emulate_op_64(state, s, tree, emulate_lcmp, J_LONG, J_INT);
+}
+
+reg:	OP_CMP(reg, EXPR_VALUE) 1
+{
+	struct expression *expr, *right;
+	struct var_info *eax;
+
+	expr = to_expr(tree);
+	right = to_expr(expr->binary_right);
+
+	state->reg1 = get_var(s->b_parent, J_INT);
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	if (right->vm_type != J_LONG) {
+		assert(!"OP_CMP implemented for J_LONG only");
+	}
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) (right->value >> 32)));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) (right->value & ~0UL)));
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg2));
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_lcmp));
+	method_args_cleanup(s, tree, 4);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+}
+
+reg:	OP_EQ(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_EQ(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_EQ(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_NE(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_NE(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_NE(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_LT(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_LT(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_LT(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_GT(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_GT(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_GT(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_GE(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_GE(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_GE(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	OP_LE(reg, EXPR_LOCAL) 1
+{
+	binop_reg_local_low(state, s, tree, INSN_CMP_MEMBASE_REG);
+}
+
+reg:	OP_LE(reg, EXPR_VALUE) 1
+{
+	binop_reg_value_low(state, s, tree, INSN_CMP_IMM_REG);
+}
+
+reg:	OP_LE(reg, reg) 2
+{
+	binop_reg_reg_low(state, s, tree, INSN_CMP_REG_REG);
+}
+
+reg:	EXPR_CLASS_FIELD 1
+{
+	struct expression *expr;
+	struct var_info *out;
+	struct insn *mov_insn;
+
+	struct vm_field *vmf;
+	struct vm_class *vmc;
+	enum vm_class_state vmc_state;
+
+	expr   = to_expr(tree);
+
+	out = get_var(s->b_parent, J_NATIVE_PTR);
+	state->reg1 = out;
+
+	vmf = expr->class_field;
+	vmc = vmf->class;
+
+	vm_object_lock(vmc->object);
+	vmc_state = vmc->state;
+	vm_object_unlock(vmc->object);
+
+	if (running_on_valgrind) {
+%ifdef CONFIG_X86_32
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
+%else
+		struct var_info *rdi;
+
+		rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) vmc, rdi));
+%endif
+		select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
+%ifdef CONFIG_X86_32
+		method_args_cleanup(s, tree, 1);
+%endif
+
+		mov_insn = memdisp_reg_insn(INSN_MOV_MEMDISP_REG, (unsigned long) vmc->static_values + vmf->offset, out);
+	} else {
+		if (vmc_state >= VM_CLASS_INITIALIZING) {
+			/* Class is already initialized; no need for fix-up. We also
+			 * don't want the fixup if we're already inside the
+			 * initializer. */
+			mov_insn = memdisp_reg_insn(INSN_MOV_MEMDISP_REG,
+				(unsigned long) vmc->static_values + vmf->offset, out);
+		} else {
+			mov_insn = memdisp_reg_insn(INSN_MOV_MEMDISP_REG,
+				(unsigned long) static_guard_page, out);
+
+			/* XXX: Check return value */
+			add_getstatic_fixup_site(mov_insn, vmf, s->b_parent);
+		}
+	}
+
+	select_insn(s, tree, mov_insn);
+
+%ifdef	CONFIG_X86_32
+	if (expr->vm_type == J_LONG) {
+		state->reg2 = get_var(s->b_parent, J_INT);
+		select_insn(s, tree, memdisp_reg_insn(INSN_MOV_MEMDISP_REG,
+			(unsigned long) vmc->static_values + vmf->offset + 4,
+			state->reg2));
+	}
+%endif
+}
+
+freg:	EXPR_FLOAT_CLASS_FIELD 1
+{
+	struct expression *expr;
+	struct var_info *out;
+	struct insn *mov_insn;
+
+	struct vm_field *vmf;
+	struct vm_class *vmc;
+	enum vm_class_state vmc_state;
+
+	expr   = to_expr(tree);
+
+	out = get_var(s->b_parent, expr->vm_type);
+	state->reg1 = out;
+
+	vmf = expr->class_field;
+	vmc = vmf->class;
+
+	vm_object_lock(vmc->object);
+	vmc_state = vmc->state;
+	vm_object_unlock(vmc->object);
+
+	if (running_on_valgrind) {
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
+		select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
+		method_args_cleanup(s, tree, 1);
+
+		if (expr->vm_type == J_FLOAT)
+			mov_insn = memdisp_reg_insn(INSN_MOVSS_MEMDISP_XMM,
+				(unsigned long) vmc->static_values + vmf->offset, out);
+		else
+			mov_insn = memdisp_reg_insn(INSN_MOVSD_MEMDISP_XMM,
+				(unsigned long) vmc->static_values + vmf->offset, out);
+	} else {
+		if (vmc_state >= VM_CLASS_INITIALIZING) {
+			/* Class is already initialized; no need for fix-up. We also
+			 * don't want the fixup if we're already inside the
+			 * initializer. */
+			if (expr->vm_type == J_FLOAT)
+				mov_insn = memdisp_reg_insn(INSN_MOVSS_MEMDISP_XMM,
+					(unsigned long) vmc->static_values + vmf->offset, out);
+			else
+				mov_insn = memdisp_reg_insn(INSN_MOVSD_MEMDISP_XMM,
+					(unsigned long) vmc->static_values + vmf->offset, out);
+		} else {
+			if (expr->vm_type == J_FLOAT)
+				mov_insn = memdisp_reg_insn(INSN_MOVSS_MEMDISP_XMM,
+						(unsigned long) static_guard_page, out);
+			else
+				mov_insn = memdisp_reg_insn(INSN_MOVSD_MEMDISP_XMM,
+						(unsigned long) static_guard_page, out);
+
+			/* XXX: Check return value */
+			add_getstatic_fixup_site(mov_insn, vmf, s->b_parent);
+		}
+	}
+
+	select_insn(s, tree, mov_insn);
+}
+
+%ifdef	CONFIG_X86_32
+reg:	EXPR_INSTANCE_FIELD(reg) 1
+{
+	struct var_info *base;
+	struct expression *expr;
+	unsigned long offset;
+
+	expr = to_expr(tree);
+
+	base = state->left->reg1;
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	if (vm_field_equals(expr->instance_field, vm_java_lang_ref_Reference_referent)) {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, base));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &get_referent));
+		method_args_cleanup(s, tree, 1);
+
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+		return;
+	}
+
+	offset = VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset;
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
+
+	if (expr->vm_type == J_LONG) {
+		state->reg2 = get_var(s->b_parent, J_INT);
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset + 4, state->reg2));
+	}
+}
+
+freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
+{
+	struct var_info *base;
+	struct expression *expr;
+	unsigned long offset;
+
+	expr = to_expr(tree);
+
+	base = state->left->reg1;
+	state->reg1 = get_var(s->b_parent, expr->vm_type);
+
+	offset = sizeof(struct vm_object) + expr->instance_field->offset;
+
+	if (expr->vm_type == J_FLOAT)
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSS_MEMBASE_XMM, base, offset, state->reg1));
+	else
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSD_MEMBASE_XMM, base, offset, state->reg1));
+}
+%else
+reg:	EXPR_INSTANCE_FIELD(reg) 1
+{
+	struct var_info *base;
+	struct expression *expr;
+	unsigned long offset;
+
+	expr = to_expr(tree);
+
+	base = state->left->reg1;
+	state->reg1 = get_var(s->b_parent, expr->vm_type);
+
+	offset = VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset;
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
+
+	if (vm_field_equals(expr->instance_field, vm_java_lang_ref_Reference_referent)) {
+		struct var_info *rdi;
+
+		rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->reg1, rdi));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &get_referent));
+
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+	}
+}
+
+freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
+{
+	struct var_info *base;
+	struct expression *expr;
+	unsigned long offset;
+
+	expr = to_expr(tree);
+
+	base = state->left->reg1;
+	state->reg1 = get_var(s->b_parent, expr->vm_type);
+
+	offset = VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset;
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
+}
+%endif
+
+%ifdef	CONFIG_X86_32
+reg:	EXPR_NEW
+{
+	struct expression *expr;
+	struct var_info *eax;
+
+	expr = to_expr(tree);
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->class));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
+}
+%else
+reg:	EXPR_NEW
+{
+	struct expression *expr;
+	struct var_info *rax, *rdi;
+
+	expr = to_expr(tree);
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->class, rdi));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+	select_exception_test(s, tree);
+}
+%endif
+
+%ifdef	CONFIG_X86_32
+reg:	EXPR_ARRAY_SIZE_CHECK(reg)
+{
+	struct var_info *size;
+
+	size = state->left->reg1;
+	state->reg1 = size;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
+	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
+}
+%else
+reg:	EXPR_ARRAY_SIZE_CHECK(reg)
+{
+	struct var_info *size, *rdi;
+
+	size = state->left->reg1;
+	state->reg1 = size;
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rdi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_size_check));
+	select_exception_test(s, tree);
+}
+%endif
+
+%ifdef	CONFIG_X86_32
+reg:	EXPR_NEWARRAY(reg)
+{
+	struct var_info *eax, *size;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
+
+	size = state->left->reg1;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, expr->array_type));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_primitive_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+
+	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
+}
+%else
+reg:	EXPR_NEWARRAY(reg)
+{
+	struct var_info *rax, *size, *rdi, *rsi;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
+
+	size = state->left->reg1;
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rsi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->array_type, rdi));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_primitive_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+
+	select_exception_test(s, tree);
+}
+%endif
+
+reg:	EXPR_NULL_CHECK(reg)
+{
+	struct var_info *ref;
+
+	ref = state->left->reg1;
+	state->reg1 = ref;
+
+	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, ref, 0, ref));
+}
+
+reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
+{
+	struct var_info *reg;
+	struct stack_slot *slot;
+	struct expression *expr;
+	struct expression *local;
+
+	reg = get_var(s->b_parent, GPR_VM_TYPE);
+	state->reg1 = reg;
+
+	expr = to_expr(tree);
+	local = to_expr(expr->null_check_ref);
+
+	slot = get_local_slot(s->b_parent->stack_frame, local->local_index);
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, reg));
+	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
+}
+
+arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
+{
+	struct expression *expr;
+	int dimensions;
+
+	expr = to_expr(tree);
+	dimensions = nr_args(to_expr(expr->size_expr));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimensions));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) multiarray_size_check));
+	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
+}
+
+reg:	EXPR_MULTIANEWARRAY(arg)
+{
+	struct var_info *xax;
+	struct var_info *stack_ptr;
+	unsigned int dimension;
+	struct expression *expr;
+	struct expression *size_check;
+
+	expr = to_expr(tree);
+
+	xax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	state->reg1 = get_var(s->b_parent, J_REFERENCE);
+
+	stack_ptr = get_fixed_var(s->b_parent, MACH_REG_xSP);
+
+	size_check = to_expr(expr->multianewarray_dimensions);
+	dimension = nr_args(to_expr(size_check->size_expr));
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, stack_ptr));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimension));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->multianewarray_ref_type));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_multi_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xax, state->reg1));
+
+	method_args_cleanup(s, tree, dimension + 3);
+	select_exception_test(s, tree);
+}
+
+%ifdef	CONFIG_X86_32
+reg:    EXPR_ANEWARRAY(reg)
+{
+        struct var_info *eax, *size;
+        struct expression *expr;
+
+        expr = to_expr(tree);
+
+        eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+        state->reg1 = get_var(s->b_parent, J_REFERENCE);
+
+        size = state->left->reg1;
+
+        select_insn(s, tree, reg_insn(INSN_PUSH_REG, size));
+        select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->anewarray_ref_type));
+        select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+
+        method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
+}
+%else
+reg:    EXPR_ANEWARRAY(reg)
+{
+        struct var_info *rax, *size, *rdi, *rsi;
+        struct expression *expr;
+
+        expr = to_expr(tree);
+
+        rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+        state->reg1 = get_var(s->b_parent, J_REFERENCE);
+
+        size = state->left->reg1;
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->anewarray_ref_type, rdi));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, size, rsi));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_array));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+
+	select_exception_test(s, tree);
+}
+%endif
+
+reg:    EXPR_ARRAYLENGTH(reg)
+{
+	struct var_info *arrayref, *arraylength;
+
+	arrayref = state->left->reg1;
+
+	arraylength = get_var(s->b_parent, J_INT);
+	state->reg1 = arraylength;
+
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, arrayref,
+		offsetof(struct vm_array, array_length), arraylength));
+}
+
+%ifdef	CONFIG_X86_32
+reg:	EXPR_INSTANCEOF(reg)
+{
+	struct var_info *ref, *eax;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	ref = state->left->reg1;
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->instanceof_class));
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+
+	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
+}
+%else
+reg:	EXPR_INSTANCEOF(reg)
+{
+	struct var_info *ref, *rax, *rdi, *rsi;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	ref = state->left->reg1;
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->instanceof_class, rsi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_is_instance_of));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
+
+	select_exception_test(s, tree);
+}
+%endif
+
+reg:	EXPR_TRUNCATION(reg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src  = to_expr(expr->from_expression);
+
+	if (expr->to_type == J_BYTE) {
+		struct var_info *tmp;
+
+		/*
+		 * We cannot use non-fixed register here because we cannot
+		 * address lowest byte of %esi and %edi in r/m8 addressing.
+		 */
+		tmp = get_fixed_var(s->b_parent, MACH_REG_xCX);
+		state->reg1 = state->left->reg1;
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, tmp));
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSX_8_REG_REG, tmp, state->left->reg1));
+
+	} else if (expr->to_type == J_CHAR) {
+		state->reg1 = get_var(s->b_parent, J_INT);
+		select_insn(s, tree, reg_reg_insn(INSN_MOVZX_16_REG_REG, state->left->reg1, state->reg1));
+
+	} else if (expr->to_type == J_SHORT) {
+		state->reg1 = get_var(s->b_parent, J_INT);
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSX_16_REG_REG, state->left->reg1, state->reg1));
+
+	} else {
+		die("EXPR_TRUNCATION: invalid conversion from int to %d", expr->to_type);
+	}
+}
+
+reg:	EXPR_CONVERSION(reg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	if (src->vm_type == J_INT && expr->vm_type == J_LONG) {
+		state->reg1 = get_var(s->b_parent, J_INT);
+		state->reg2 = get_var(s->b_parent, J_INT);
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, state->reg2));
+		select_insn(s, tree, imm_reg_insn(INSN_SAR_IMM_REG, 0x1f, state->reg2));
+	} else if (src->vm_type == J_LONG && expr->vm_type == J_INT) {
+		state->reg1 = state->left->reg1;
+	} else if (src->vm_type == J_BYTE && expr->vm_type == J_CHAR) {
+		state->reg1 = state->left->reg1;
+	} else {
+		error("EXPR_CONVERSION: no conversion from %d to %d", src->vm_type, expr->vm_type);
+	}
+}
+
+freg:	EXPR_CONVERSION_FLOAT_TO_DOUBLE(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	state->reg1 = get_var(s->b_parent, J_DOUBLE);
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM_TO_XMM64, state->left->reg1, state->reg1));
+}
+
+freg:	EXPR_CONVERSION_DOUBLE_TO_FLOAT(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	state->reg1 = get_var(s->b_parent, J_FLOAT);
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM64_TO_XMM, state->left->reg1, state->reg1));
+}
+
+%ifdef  CONFIG_X86_32
+freg:	EXPR_CONVERSION_TO_FLOAT(reg)
+{
+	struct expression *expr, *src;
+	struct var_info *esp;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(expr->vm_type == J_FLOAT);
+
+	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+	state->reg1 = get_var(s->b_parent, J_FLOAT);
+
+	if (src->vm_type == J_INT) {
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU, state->left->reg1, state->reg1));
+	} else if (src->vm_type == J_LONG) {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg2));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+		select_insn(s, tree, membase_insn(INSN_FILD_64_MEMBASE, esp, 0));
+
+		/* Lets reuse the stack slots for the 64-bit -> 32-bit conversion.  */
+		select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, 0));
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSS_MEMBASE_XMM, esp, 0, state->reg1));
+
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 8, esp));
+	} else {
+		die("EXPR_CONVERSION_TO_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+	}
+}
+
+freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(expr->vm_type == J_DOUBLE);
+
+	state->reg1 = get_var(s->b_parent, J_DOUBLE);
+	if (src->vm_type == J_INT) {
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, state->left->reg1, state->reg1));
+	} else if (src->vm_type == J_LONG) {
+		struct var_info *ftmp, *tmp;
+
+		ftmp = get_var(s->b_parent, J_DOUBLE);
+		tmp  = get_var(s->b_parent, J_INT);
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, tmp));
+
+		/*
+		 * We need to subtract 0x80000000 from lower 32-bits because
+		 * conversion works on signed integers and we don't want
+		 * lower part to be converted as negative number.
+		 */
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 0x80000000, tmp));
+
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, state->left->reg2, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, tmp, ftmp));
+
+		/* Multiply higher word value by pow(2, 32) */
+		select_insn(s, tree, memdisp_reg_insn(INSN_FMUL_64_MEMDISP_REG, (unsigned long) &xmm_double_constant_0, state->reg1));
+
+		/*
+		 * Add 0x80000000 to the lower word value to fix the correction
+		 * introduced at the beginning.
+		 */
+		select_insn(s, tree, memdisp_reg_insn(INSN_FADD_64_MEMDISP_REG, (unsigned long) &xmm_double_constant_1, ftmp));
+
+		select_insn(s, tree, reg_reg_insn(INSN_FADD_64_REG_REG, ftmp, state->reg1));
+	} else {
+		die("EXPR_CONVERSION_TO_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
+	}
+}
+
+reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(src->vm_type == J_FLOAT);
+
+	if (expr->vm_type == J_INT) {
+		state->reg1 = get_var(s->b_parent, J_INT);
+
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
+	} else if (expr->vm_type == J_LONG) {
+		struct var_info *esp, *eax, *edx;
+
+		esp = get_fixed_var(s->b_parent, MACH_REG_ESP);
+		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+
+		state->reg1 = get_var(s->b_parent, J_INT);
+		state->reg2 = get_var(s->b_parent, J_INT);
+
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_f2l));
+		method_args_cleanup(s, tree, 1);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
+	} else {
+		die("EXPR_CONVERSION_FROM_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+	}
+}
+
+reg:	EXPR_CONVERSION_FROM_DOUBLE(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(src->vm_type == J_DOUBLE);
+
+	if (expr->vm_type == J_INT) {
+		state->reg1 = get_var(s->b_parent, J_INT);
+
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU64_TO_GPR, state->left->reg1, state->reg1));
+	} else if (expr->vm_type == J_LONG) {
+		struct var_info *esp = get_fixed_var(s->b_parent, MACH_REG_ESP);
+
+		state->reg1 = get_var(s->b_parent, J_INT);
+		state->reg2 = get_var(s->b_parent, J_INT);
+
+		/* Reserve space for temporaries. */
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
+
+		/*
+		 *    (%esp) contains double value to be converted
+		 *  $8(%esp) contains saved FPU control word
+		 * $12(%esp) contains modified FPU control word (RC flag set)
+		 */
+
+		select_insn(s, tree, membase_insn(INSN_FNSTCW_MEMBASE, esp, 8));
+		select_insn(s, tree, membase_insn(INSN_FNSTCW_MEMBASE, esp, 12));
+
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, membase_insn(INSN_FLD_64_MEMBASE, esp, 0));
+
+		select_insn(s, tree, imm_membase_insn(INSN_OR_IMM_MEMBASE, 0xc0, esp, 12));
+		select_insn(s, tree, membase_insn(INSN_FLDCW_MEMBASE, esp, 12));
+		select_insn(s, tree, membase_insn(INSN_FISTP_64_MEMBASE, esp, 0));
+		select_insn(s, tree, membase_insn(INSN_FLDCW_MEMBASE, esp, 8));
+
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, esp, 0, state->reg1));
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, esp, 4, state->reg2));
+
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 16, esp));
+	} else {
+		die("EXPR_CONVERSION_FROM_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
+	}
+}
+%else
+freg:	EXPR_CONVERSION_TO_FLOAT(reg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(expr->vm_type == J_FLOAT);
+
+	state->reg1 = get_var(s->b_parent, J_FLOAT);
+
+	if (src->vm_type != J_INT && src->vm_type != J_LONG)
+		die("EXPR_CONVERSION_TO_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU, state->left->reg1, state->reg1));
+}
+
+freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(expr->vm_type == J_DOUBLE);
+
+	state->reg1 = get_var(s->b_parent, J_DOUBLE);
+
+	if (src->vm_type != J_INT && src->vm_type != J_LONG)
+		die("EXPR_CONVERSION_TO_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
+
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU, state->left->reg1, state->reg1));
+}
+
+reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(src->vm_type == J_FLOAT);
+
+	if (expr->vm_type != J_INT && expr->vm_type != J_LONG)
+		die("EXPR_CONVERSION_FROM_FLOAT: no conversion from %d to %d", src->vm_type, expr->vm_type);
+
+	state->reg1 = get_var(s->b_parent, expr->vm_type);
+
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
+}
+
+reg:	EXPR_CONVERSION_FROM_DOUBLE(freg)
+{
+	struct expression *expr, *src;
+
+	expr = to_expr(tree);
+	src = to_expr(expr->from_expression);
+
+	assert(src->vm_type == J_DOUBLE);
+
+	if (expr->vm_type != J_INT && expr->vm_type != J_LONG)
+		die("EXPR_CONVERSION_FROM_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
+
+	state->reg1 = get_var(s->b_parent, expr->vm_type);
+
+	select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
+}
+%endif
+
+arg:	EXPR_NO_ARGS
+{
+	state->reg1 = NULL;
+}
+
+%ifdef CONFIG_X86_32
+arg:	EXPR_ARG_THIS(reg) 1
+{
+	struct var_info *src;
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	assert(arg_expr->vm_type == J_REFERENCE);
+
+	src = state->left->reg1;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+	state->reg1 = src;
+}
+%else
+arg:	EXPR_ARG_THIS(reg) 1
+{
+	struct var_info *src, *dst;
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	assert(arg_expr->vm_type == J_REFERENCE);
+
+	src = state->left->reg1;
+
+	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
+	} else
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+
+	state->reg1 = src;
+}
+%endif
+
+%ifdef CONFIG_X86_32
+arg:	EXPR_ARG(EXPR_VALUE) 1
+{
+	struct expression *expr, *arg_expr;
+	unsigned long long imm;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+	imm  = arg_expr->value;
+
+	if (arg_expr->vm_type == J_LONG) {
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm >> 32));
+	}
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
+
+	state->reg1 = NULL;
+}
+
+arg:	EXPR_ARG(EXPR_FVALUE) 2
+{
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	if (arg_expr->vm_type == J_FLOAT) {
+		uint32_t imm;
+
+		imm  = float_to_uint32(arg_expr->fvalue);
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, imm & ~0UL));
+	} else {
+		uint32_t high_byte, low_byte;
+
+		double_to_split_uint64(expr->fvalue, &low_byte, &high_byte);
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, low_byte));
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, high_byte));
+	}
+
+	state->reg1 = NULL;
+}
+
+arg:	EXPR_ARG(reg)
+{
+	struct var_info *src;
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	if (arg_expr->vm_type == J_LONG) {
+		src = state->left->reg2;
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+	}
+
+	src = state->left->reg1;
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+
+	state->reg1 = NULL;
+}
+
+arg:	EXPR_ARG(freg)
+{
+	struct var_info *src, *esp;
+	struct expression *expr, *arg_expr;
+	int size;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	src = state->left->reg1;
+	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+
+	size = vmtype_get_size(arg_expr->vm_type);
+
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, size, esp));
+
+	if (arg_expr->vm_type == J_FLOAT) {
+		select_insn(s, tree,
+		    reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, src, esp, 0));
+	} else {
+		select_insn(s, tree,
+		    reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, src, esp, 0));
+	}
+
+	state->reg1 = NULL;
+}
+%else
+arg:	EXPR_ARG(EXPR_VALUE) 1
+{
+	struct expression *expr, *arg_expr;
+	struct var_info *dst, *temp;
+	unsigned long imm;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+	imm  = arg_expr->value;
+
+	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, dst));
+	} else {
+		temp = get_var(s->b_parent, arg_expr->vm_type);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, temp));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, temp));
+	}
+
+	state->reg1 = NULL;
+}
+
+arg:	EXPR_ARG(EXPR_FVALUE) 2
+{
+	struct expression *expr, *arg_expr;
+	struct stack_slot *scratch;
+	struct var_info *temp, *dst;
+	unsigned long ivalue;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	if (arg_expr->vm_type == J_FLOAT) {
+		temp = get_var(s->b_parent, J_INT);
+		ivalue = float_to_uint32(expr->fvalue);
+	} else {
+		temp = get_var(s->b_parent, J_LONG);
+		ivalue = double_to_uint64(expr->fvalue);
+	}
+
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, ivalue, temp));
+
+	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
+		scratch = get_scratch_slot(s->b_parent);
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, temp, scratch));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, scratch, dst));
+	} else
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, temp));
+
+	state->reg1 = NULL;
+}
+
+arg:	EXPR_ARG(reg) 1
+{
+	struct var_info *src, *dst;
+	struct expression *expr, *arg_expr;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	src = state->left->reg1;
+
+	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
+	} else {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+	}
+
+	state->reg1 = NULL;
+}
+
+arg:	EXPR_ARG(freg)
+{
+	struct var_info *src, *dst, *rsp;
+	struct expression *expr, *arg_expr;
+	int size;
+
+	expr = to_expr(tree);
+	arg_expr = to_expr(expr->arg_expression);
+
+	src = state->left->reg1;
+	rsp = get_fixed_var(s->b_parent, MACH_REG_RSP);
+
+	size = vmtype_get_size(arg_expr->vm_type);
+
+	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
+		dst = get_fixed_var(s->b_parent, expr->arg_reg);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
+	} else {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, size, rsp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, rsp, 0));
+	}
+
+	state->reg1 = NULL;
+}
+%endif
+
+arg:	EXPR_ARGS_LIST(arg, arg)
+{
+	/* We propagate the value from EXPR_ARG_THIS. EXPR_ARG should set
+	   state->reg1 to NULL. */
+	if (state->left->reg1)
+		state->reg1 = state->left->reg1;
+	else
+		state->reg1 = state->right->reg1;
+}
+
+reg:	EXPR_EXCEPTION_REF
+{
+	struct var_info *result;
+	struct stack_slot *slot = s->b_parent->exception_spill_slot;
+
+	result = get_var(s->b_parent, J_INT);
+	state->reg1 = result;
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
+}
+
+stmt:	STMT_INVOKE(arg) 1
+{
+	invoke(s, tree);
+}
+
+stmt:	STMT_INVOKEINTERFACE(arg) 1
+{
+	invokeinterface(state, s, tree);
+}
+
+stmt:	STMT_INVOKEVIRTUAL(arg) 1
+{
+	invokevirtual(state, s, tree);
+}
+
+%ifdef	CONFIG_X86_32
+stmt:	STMT_RETURN(reg) 1
+{
+	struct expression *expr;
+	struct var_info *src, *eax, *edx;
+
+	expr = to_expr(tree);
+	expr = to_expr(expr->unary_expression);
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	src = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, eax));
+
+	if (expr->vm_type == J_LONG) {
+		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+		src = state->left->reg2;
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, edx));
+	}
+
+	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
+}
+%else
+stmt:	STMT_RETURN(reg) 1
+{
+	struct expression *expr;
+	struct var_info *src, *eax;
+
+	expr = to_expr(tree);
+	expr = to_expr(expr->unary_expression);
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	src = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, eax));
+
+	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
+}
+%endif
+
+stmt:	STMT_RETURN(freg) 1
+{
+	struct expression *expr;
+	struct var_info *src;
+	struct stack_slot *scratch;
+
+	expr = to_expr(tree);
+	expr = to_expr(expr->unary_expression);
+
+	src = state->left->reg1;
+
+	if (expr->vm_type == J_FLOAT) {
+		scratch = get_scratch_slot(s->b_parent);
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, scratch));
+		select_insn(s, tree, memlocal_insn(INSN_FLD_MEMLOCAL, scratch));
+	} else {
+		scratch = get_scratch_slot(s->b_parent);
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, scratch));
+		select_insn(s, tree, memlocal_insn(INSN_FLD_64_MEMLOCAL, scratch));
+	}
+
+	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
+}
+
+stmt:	STMT_VOID_RETURN
+{
+	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
+}
+
+stmt:	STMT_EXPRESSION(reg)
+{
+}
+
+stmt:	STMT_EXPRESSION(freg)
+{
+}
+
+%ifdef CONFIG_X86_32
+stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
+{
+	struct expression *store_dest;
+	struct expression *store_src;
+	struct statement *stmt;
+	struct var_info *src;
+	struct insn *mov_insn;
+
+	struct vm_field *vmf;
+	struct vm_class *vmc;
+	enum vm_class_state vmc_state;
+
+	stmt = to_stmt(tree);
+	store_dest = to_expr(stmt->store_dest);
+	store_src  = to_expr(stmt->store_src);
+
+	src = state->right->reg1;
+
+	vmf = store_dest->class_field;
+	vmc = vmf->class;
+
+	vm_object_lock(vmc->object);
+	vmc_state = vmc->state;
+	vm_object_unlock(vmc->object);
+
+	if (running_on_valgrind) {
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
+		method_args_cleanup(s, tree, 1);
+
+		mov_insn = reg_memdisp_insn(INSN_MOV_REG_MEMDISP,
+					    src, (unsigned long) vmc->static_values + vmf->offset);
+	} else {
+		if (vmc_state >= VM_CLASS_INITIALIZING) {
+			/* Class is already initialized; no need for fix-up. We also
+			 * don't want the fixup if we're already inside the
+			 * initializer. */
+			mov_insn = reg_memdisp_insn(INSN_MOV_REG_MEMDISP,
+				src, (unsigned long) vmc->static_values + vmf->offset);
+		} else {
+			mov_insn = reg_memdisp_insn(INSN_MOV_REG_MEMDISP,
+				src, (unsigned long) static_guard_page);
+
+			/* XXX: Check return value */
+			add_putstatic_fixup_site(mov_insn, vmf, s->b_parent);
+		}
+	}
+
+	select_insn(s, tree, mov_insn);
+
+	if (store_src->vm_type == J_LONG) {
+		src = state->right->reg2;
+		select_insn(s, tree, reg_memdisp_insn(INSN_MOV_REG_MEMDISP,
+			src,
+			(unsigned long) vmc->static_values + vmf->offset + 4));
+	}
+}
+%else
+stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
+{
+	struct expression *store_dest;
+	struct expression *store_src;
+	struct statement *stmt;
+	struct var_info *src;
+	struct insn *mov_insn;
+
+	struct vm_field *vmf;
+	struct vm_class *vmc;
+	enum vm_class_state vmc_state;
+
+	stmt = to_stmt(tree);
+	store_dest = to_expr(stmt->store_dest);
+	store_src  = to_expr(stmt->store_src);
+
+	src = state->right->reg1;
+
+	vmf = store_dest->class_field;
+	vmc = vmf->class;
+
+	vm_object_lock(vmc->object);
+	vmc_state = vmc->state;
+	vm_object_unlock(vmc->object);
+
+	if (vmc_state >= VM_CLASS_INITIALIZING) {
+		/* Class is already initialized; no need for fix-up. We also
+		 * don't want the fixup if we're already inside the
+		 * initializer. */
+		mov_insn = reg_memdisp_insn(INSN_MOV_REG_MEMDISP,
+			src, (unsigned long) vmc->static_values + vmf->offset);
+	} else {
+		mov_insn = reg_memdisp_insn(INSN_MOV_REG_MEMDISP,
+			src, (unsigned long) static_guard_page);
+
+		/* XXX: Check return value */
+		add_putstatic_fixup_site(mov_insn, vmf, s->b_parent);
+	}
+
+	select_insn(s, tree, mov_insn);
+}
+%endif
+
+stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
+{
+	struct expression *store_dest;
+	struct expression *store_src;
+	struct statement *stmt;
+	struct var_info *src;
+	struct insn *mov_insn;
+
+	struct vm_field *vmf;
+	struct vm_class *vmc;
+	enum vm_class_state vmc_state;
+
+	stmt = to_stmt(tree);
+	store_dest = to_expr(stmt->store_dest);
+	store_src  = to_expr(stmt->store_src);
+
+	src = state->right->reg1;
+
+	vmf = store_dest->class_field;
+	vmc = vmf->class;
+
+	vm_object_lock(vmc->object);
+	vmc_state = vmc->state;
+	vm_object_unlock(vmc->object);
+
+	if (running_on_valgrind) {
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
+		method_args_cleanup(s, tree, 1);
+
+		if (store_dest->vm_type == J_FLOAT)
+			mov_insn = reg_memdisp_insn(INSN_MOVSS_XMM_MEMDISP,
+				src, (unsigned long) vmc->static_values + vmf->offset);
+		else
+			mov_insn = reg_memdisp_insn(INSN_MOVSD_XMM_MEMDISP,
+				src, (unsigned long) vmc->static_values + vmf->offset);
+	} else {
+		if (vmc_state >= VM_CLASS_INITIALIZING) {
+			/* Class is already initialized; no need for fix-up. We also
+			 * don't want the fixup if we're already inside the
+			 * initializer. */
+			if (store_dest->vm_type == J_FLOAT)
+				mov_insn = reg_memdisp_insn(INSN_MOVSS_XMM_MEMDISP,
+					src, (unsigned long) vmc->static_values + vmf->offset);
+			else
+				mov_insn = reg_memdisp_insn(INSN_MOVSD_XMM_MEMDISP,
+					src, (unsigned long) vmc->static_values + vmf->offset);
+		} else {
+			if (store_dest->vm_type == J_FLOAT)
+				mov_insn = reg_memdisp_insn(INSN_MOVSS_XMM_MEMDISP,
+					src, (unsigned long) static_guard_page);
+			else
+				mov_insn = reg_memdisp_insn(INSN_MOVSD_XMM_MEMDISP,
+					src, (unsigned long) static_guard_page);
+
+			/* XXX: Check return value */
+			add_putstatic_fixup_site(mov_insn, vmf, s->b_parent);
+		}
+	}
+
+	select_insn(s, tree, mov_insn);
+}
+
+inst_field: EXPR_INSTANCE_FIELD(reg) 1
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = state->left->reg1;
+	state->reg2 = (void *) (VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset);
+}
+
+float_inst_field: EXPR_FLOAT_INSTANCE_FIELD(reg) 1
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = state->left->reg1;
+	state->reg2 = (void *) (VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset);
+}
+
+stmt:	STMT_STORE(inst_field, reg)
+{
+	struct var_info *src, *base;
+	struct expression *store_src, *store_dest;
+	struct statement *stmt;
+	unsigned long offset;
+
+	stmt = to_stmt(tree);
+	store_src = to_expr(stmt->store_src);
+	store_dest = to_expr(stmt->store_dest);
+	src = state->right->reg1;
+
+	base = state->left->reg1;
+	offset = (unsigned long)state->left->reg2;
+
+	if (vm_field_equals(store_dest->instance_field, vm_java_lang_ref_Reference_referent)) {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, base));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &put_referent));
+		method_args_cleanup(s, tree, 2);
+		return;
+	}
+
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset));
+
+%ifdef CONFIG_X86_32
+	if (store_src->vm_type == J_LONG) {
+		src = state->right->reg2;
+		select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset + 4));
+	}
+%endif
+}
+
+%ifdef  CONFIG_X86_32
+stmt:	STMT_STORE(float_inst_field, freg)
+{
+	struct var_info *src, *base;
+	struct expression *store_src;
+	struct statement *stmt;
+	unsigned long offset;
+
+	stmt = to_stmt(tree);
+	store_src = to_expr(stmt->store_src);
+	src = state->right->reg1;
+
+	base = state->left->reg1;
+	offset = (unsigned long)state->left->reg2;
+
+	if (store_src->vm_type == J_FLOAT)
+		select_insn(s, tree,
+		    reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, src, base, offset));
+	else
+		select_insn(s, tree,
+		    reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, src, base, offset));
+}
+%else
+stmt:	STMT_STORE(float_inst_field, freg)
+{
+	struct var_info *src, *base;
+	struct expression *store_src;
+	struct statement *stmt;
+	unsigned long offset;
+
+	stmt = to_stmt(tree);
+	store_src = to_expr(stmt->store_src);
+	src = state->right->reg1;
+
+	base = state->left->reg1;
+	offset = (unsigned long)state->left->reg2;
+
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, base, offset));
+}
+%endif
+
+%ifdef	CONFIG_X86_32
+stmt:	STMT_STORE(EXPR_LOCAL, reg)
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *local;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *src;
+
+	src = state->right->reg1;
+
+	stmt = to_stmt(tree);
+	local = to_expr(stmt->store_dest);
+	slot = get_local_slot(cu->stack_frame, local->local_index);
+
+	select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+
+	if (local->vm_type == J_LONG) {
+		src = state->right->reg2;
+
+		slot = get_local_slot(cu->stack_frame, local->local_index+1);
+
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+	}
+}
+%else
+stmt:	STMT_STORE(EXPR_LOCAL, reg)
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct vm_method *method = cu->method;
+	struct expression *local;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *src, *dest;
+	enum machine_reg reg;
+	int index;
+
+	src = state->right->reg1;
+
+	stmt = to_stmt(tree);
+	local = to_expr(stmt->store_dest);
+
+	if (local->local_index < (unsigned long) method->args_count) {
+		reg = method->args_map[local->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			index = method->args_map[local->local_index].stack_index;
+			slot = get_local_slot(cu->stack_frame, index);
+			select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL,
+							       src, slot));
+		} else {
+			dest = cu->non_fixed_args[local->local_index];
+			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+		}
+	} else {
+		index = local->local_index - method->reg_args_count;
+		slot = get_local_slot(cu->stack_frame, index);
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, src, slot));
+	}
+}
+%endif
+
+stmt:	STMT_STORE(EXPR_FLOAT_LOCAL, freg)
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *local;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *src;
+
+	src = state->right->reg1;
+
+	stmt = to_stmt(tree);
+	local = to_expr(stmt->store_dest);
+
+	slot = get_local_slot(cu->stack_frame, local->local_index);
+
+	if (local->vm_type == J_FLOAT)
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, slot));
+	else
+		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, slot));
+}
+
+%ifdef CONFIG_X86_32
+stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
+{
+	struct expression *exprdest, *exprsrc;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *dest;
+
+	stmt = to_stmt(tree);
+
+	exprsrc = to_expr(stmt->store_src);
+	exprdest = to_expr(stmt->store_dest);
+
+	slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index);
+
+	dest = exprdest->tmp_low;
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, dest));
+	if (exprsrc->vm_type == J_LONG) {
+		slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index + 1);
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, exprdest->tmp_high));
+	}
+
+}
+
+stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
+{
+	struct expression *exprdest, *exprsrc;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *dest;
+
+	stmt = to_stmt(tree);
+
+	exprsrc = to_expr(stmt->store_src);
+	exprdest = to_expr(stmt->store_dest);
+
+	dest = exprdest->tmp_low;
+	slot = get_local_slot(s->b_parent->stack_frame, exprsrc->local_index);
+
+	if (exprsrc->vm_type == J_FLOAT)
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
+	else
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, dest));
+}
+%else
+stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
+{
+	struct expression *exprdest, *exprsrc;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *src, *dest;
+	struct vm_method *method;
+	enum machine_reg reg;
+	int index;
+
+	stmt = to_stmt(tree);
+
+	exprsrc = to_expr(stmt->store_src);
+	exprdest = to_expr(stmt->store_dest);
+
+	dest = exprdest->tmp_low;
+
+	method = s->b_parent->method;
+
+	if (exprsrc->local_index < (unsigned long) method->args_count) {
+		reg = method->args_map[exprsrc->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			index = method->args_map[exprsrc->local_index].stack_index;
+			slot = get_local_slot(s->b_parent->stack_frame, index);
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+							       slot, dest));
+		} else {
+			src = s->b_parent->non_fixed_args[exprsrc->local_index];
+			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+		}
+	} else {
+		index = exprsrc->local_index - method->reg_args_count;
+		slot = get_local_slot(s->b_parent->stack_frame, index);
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+						       slot, dest));
+	}
+}
+
+stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
+{
+	struct expression *exprdest, *exprsrc;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *src, *dest;
+	struct vm_method *method = s->b_parent->method;
+	enum machine_reg reg;
+	int index;
+
+	stmt = to_stmt(tree);
+
+	exprsrc = to_expr(stmt->store_src);
+	exprdest = to_expr(stmt->store_dest);
+
+	dest = exprdest->tmp_low;
+
+	if (exprsrc->local_index < (unsigned long) method->args_count) {
+		reg = method->args_map[exprsrc->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			index = method->args_map[exprsrc->local_index].stack_index;
+			slot = get_local_slot(s->b_parent->stack_frame, index);
+
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, dest));
+		} else {
+			src = get_fixed_var(s->b_parent, reg);
+
+			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+		}
+	} else {
+		index = exprsrc->local_index - method->reg_args_count;
+		slot = get_local_slot(s->b_parent->stack_frame, index);
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
+						       slot, dest));
+	}
+}
+%endif
+
+%ifdef CONFIG_X86_32
+stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
+{
+	struct expression *temp;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->tmp_low;
+	src = state->right->reg1;
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+
+	if (temp->vm_type == J_LONG) {
+		dest = temp->tmp_high;
+		src = state->right->reg2;
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+	}
+}
+
+stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
+{
+	struct expression *temp;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->tmp_low;
+	src = state->right->reg1;
+
+	if (temp->vm_type == J_FLOAT)
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest));
+	else
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest));
+}
+%else
+stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
+{
+	struct expression *temp;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->tmp_low;
+	src = state->right->reg1;
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+}
+
+stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
+{
+	struct expression *temp;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->tmp_low;
+	src = state->right->reg1;
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+}
+%endif
+
+array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
+{
+	struct var_info *base, *state_base;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state_base = state->left->reg1;
+
+	base = get_var(s->b_parent, GPR_VM_TYPE);
+	state->reg1 = base;
+
+	state->reg2 = state->right->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, VM_ARRAY_ELEMS_OFFSET, base));
+}
+
+%ifdef CONFIG_X86_32
+stmt:	STMT_STORE(array_deref, reg)
+{
+	struct var_info *src, *base, *index;
+	struct expression *dest_expr;
+	struct expression *src_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	dest_expr = to_expr(stmt->store_dest);
+	src_expr = to_expr(stmt->store_src);
+
+	scale = type_to_scale(dest_expr->vm_type);
+
+	base = state->left->reg1;
+	index = state->left->reg2;
+	src = state->right->reg1;
+
+	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+
+	if (src_expr->vm_type == J_LONG) {
+		src = state->right->reg2;
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, base));
+		select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+		/* We should not modify base permanently here because
+		   this expression might be reused. */
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, base));
+	}
+}
+
+stmt:	STMT_STORE(array_deref, freg)
+{
+	struct var_info *src, *base, *index;
+	struct expression *dest_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	dest_expr = to_expr(stmt->store_dest);
+
+	scale = type_to_scale(dest_expr->vm_type);
+
+	base = state->left->reg1;
+	index = state->left->reg2;
+	src = state->right->reg1;
+
+	if (src->vm_type == J_FLOAT)
+		select_insn(s, tree, reg_memindex_insn(INSN_MOVSS_XMM_MEMINDEX, src, base, index, scale));
+	else
+		select_insn(s, tree, reg_memindex_insn(INSN_MOVSD_XMM_MEMINDEX, src, base, index, scale));
+}
+
+stmt:	STMT_STORE(reg, array_deref)
+{
+	struct var_info *dest, *base, *index;
+	struct expression *src_expr;
+	struct expression *dest_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_src);
+	dest_expr = to_expr(stmt->store_dest);
+
+	scale = type_to_scale(src_expr->vm_type);
+
+	base = state->right->reg1;
+	index = state->right->reg2;
+	dest = state->left->reg1;
+
+	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+
+	if (dest_expr->vm_type == J_LONG) {
+		dest = state->left->reg2;
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, base));
+		select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+		/* We should not modify base permanently here because
+		   this expression might be reused. */
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, base));
+	}
+}
+
+stmt:	STMT_STORE(freg, array_deref)
+{
+	struct var_info *dest, *base, *index;
+	struct expression *src_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_src);
+
+	scale = type_to_scale(src_expr->vm_type);
+
+	base = state->right->reg1;
+	index = state->right->reg2;
+	dest = state->left->reg1;
+
+	state->reg1 = dest;
+
+	if (dest->vm_type == J_FLOAT)
+		select_insn(s, tree, memindex_reg_insn(INSN_MOVSS_MEMINDEX_XMM, base, index, scale, dest));
+	else
+		select_insn(s, tree, memindex_reg_insn(INSN_MOVSD_MEMINDEX_XMM, base, index, scale, dest));
+}
+%else
+stmt:	STMT_STORE(array_deref, reg)
+{
+	struct var_info *src, *base, *index;
+	struct expression *dest_expr;
+	struct expression *src_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	dest_expr = to_expr(stmt->store_dest);
+	src_expr = to_expr(stmt->store_src);
+
+	scale = type_to_scale(dest_expr->vm_type);
+
+	base = state->left->reg1;
+	index = state->left->reg2;
+	src = state->right->reg1;
+
+	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+}
+
+stmt:	STMT_STORE(array_deref, freg)
+{
+	struct var_info *src, *base, *index;
+	struct expression *dest_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	dest_expr = to_expr(stmt->store_dest);
+
+	scale = type_to_scale(dest_expr->vm_type);
+
+	base = state->left->reg1;
+	index = state->left->reg2;
+	src = state->right->reg1;
+
+	select_insn(s, tree, reg_memindex_insn(INSN_MOV_REG_MEMINDEX, src, base, index, scale));
+}
+
+stmt:	STMT_STORE(reg, array_deref)
+{
+	struct var_info *dest, *base, *index;
+	struct expression *src_expr;
+	struct expression *dest_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_src);
+	dest_expr = to_expr(stmt->store_dest);
+
+	scale = type_to_scale(src_expr->vm_type);
+
+	base = state->right->reg1;
+	index = state->right->reg2;
+	dest = state->left->reg1;
+
+	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+}
+
+stmt:	STMT_STORE(freg, array_deref)
+{
+	struct var_info *dest, *base, *index;
+	struct expression *src_expr;
+	struct statement *stmt;
+	unsigned char scale;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_src);
+
+	scale = type_to_scale(src_expr->vm_type);
+
+	base = state->right->reg1;
+	index = state->right->reg2;
+	dest = state->left->reg1;
+
+	state->reg1 = dest;
+
+	select_insn(s, tree, memindex_reg_insn(INSN_MOV_MEMINDEX_REG, base, index, scale, dest));
+}
+%endif
+
+%ifdef	CONFIG_X86_32
+stmt:	STMT_ARRAY_STORE_CHECK(reg, reg) 1
+{
+	struct expression *src_expr;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_check_src);
+
+	if (src_expr->vm_type == J_REFERENCE) {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check));
+	} else {
+		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, src_expr->vm_type));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check_vmtype));
+	}
+
+	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
+}
+%else
+stmt:	STMT_ARRAY_STORE_CHECK(reg, reg) 1
+{
+	struct expression *src_expr;
+	struct statement *stmt;
+	struct var_info *rdi, *rsi;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_check_src);
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	if (src_expr->vm_type == J_REFERENCE) {
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG,
+						  state->right->reg1, rdi));
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG,
+						  state->left->reg1, rsi));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check));
+	} else {
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG,
+						  state->right->reg1, rdi));
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
+						  src_expr->vm_type, rsi));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check_vmtype));
+	}
+
+	select_exception_test(s, tree);
+}
+%endif
+
+stmt:	STMT_ARRAY_STORE_CHECK(freg, reg) 1
+{
+	struct expression *src_expr;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+	src_expr = to_expr(stmt->store_check_src);
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, src_expr->vm_type));
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) array_store_check_vmtype));
+	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
+}
+
+%ifdef	CONFIG_X86_32
+stmt:	STMT_ATHROW(reg)
+{
+	struct var_info *reg_eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)s->b_parent));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)throw_exception));
+	method_args_cleanup(s, tree, 2);
+
+	/* Jump where throw_exception() told us to jump */
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, reg_eax));
+	select_insn(s, tree, insn(INSN_RET));
+}
+%else
+stmt:	STMT_ATHROW(reg)
+{
+	struct var_info *rax, *rdi, *rsi;
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	select_insn(s, tree,
+		    imm_reg_insn(INSN_MOV_IMM_REG,
+				 (unsigned long) s->b_parent, rdi));
+	select_insn(s, tree,
+		    reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, rsi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+				      (unsigned long) throw_exception));
+
+	/* Jump where throw_exception() told us to jump */
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, rax));
+	select_insn(s, tree, insn(INSN_RET));
+}
+%endif
+
+array_check:	EXPR_ARRAY_DEREF(reg, reg) 2
+{
+	struct var_info *base, *index, *state_base, *state_index;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state_base = state->left->reg1;
+	state_index = state->right->reg1;
+
+	base = get_var(s->b_parent, J_INT);
+	state->reg1 = base;
+
+	index = get_var(s->b_parent, J_INT);
+	state->reg2 = index;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_base, base));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state_index, index));
+}
+
+%ifdef	CONFIG_X86_32
+stmt:	STMT_ARRAY_CHECK(array_check)
+{
+	struct var_info *ref, *index;
+
+	ref = state->left->reg1;
+	index = state->left->reg2;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, index));
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array));
+	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
+}
+%else
+stmt:	STMT_ARRAY_CHECK(array_check)
+{
+	struct var_info *ref, *index, *rdi, *rsi;
+
+	ref = state->left->reg1;
+	index = state->left->reg2;
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, index, rsi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_array));
+
+	select_exception_test(s, tree);
+}
+%endif
+
+stmt:	STMT_IF(reg)
+{
+	struct expression *if_conditional;
+	enum insn_type insn_type;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+	if_conditional = to_expr(stmt->if_conditional);
+	insn_type = br_binop_to_insn_type(expr_bin_op(if_conditional));
+
+	select_insn(s, tree, branch_insn(insn_type, stmt->if_true));
+}
+
+stmt:	STMT_GOTO
+{
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, stmt->goto_target));
+}
+
+stmt:	STMT_TABLESWITCH(reg)
+{
+	struct statement *stmt;
+	struct var_info *base;
+	int scale;
+
+	stmt = to_stmt(tree);
+
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG,
+			(unsigned long) stmt->table->low, state->left->reg1));
+
+	base = get_var(s->b_parent, J_NATIVE_PTR);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
+			(unsigned long) stmt->table->lookup_table, base));
+
+	scale = size_to_scale(sizeof(void *));
+	select_insn(s, tree, reverse_memindex_insn(INSN_JMP_MEMINDEX, base, state->left->reg1, scale));
+}
+
+stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
+{
+	select_insn(s, tree, reverse_membase_insn(INSN_JMP_MEMBASE, state->left->reg1, offsetof(struct lookupswitch_pair, target)));
+}
+
+%ifdef	CONFIG_X86_32
+reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
+{
+	struct expression *expr;
+	struct var_info *eax;
+
+	expr = to_expr(tree);
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+				      (unsigned long) &lookupswitch_pair_comp));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+				      sizeof(struct lookupswitch_pair)));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+				      expr->lookupswitch_table->count));
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM,
+			(unsigned long) expr->lookupswitch_table->pairs));
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_EAX);
+	state->reg1 = get_var(s->b_parent, J_NATIVE_PTR);
+
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &bsearch));
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+}
+%endif
+
+%ifdef CONFIG_X86_32
+stmt:	STMT_MONITOR_ENTER(reg)
+{
+	struct var_info *ref;
+	ref = state->left->reg1;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_lock));
+
+	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
+}
+
+stmt:	STMT_MONITOR_EXIT(reg)
+{
+	struct var_info *ref;
+	ref = state->left->reg1;
+
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
+	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL,
+		(unsigned long) vm_object_unlock));
+
+	method_args_cleanup(s, tree, 1);
+	select_exception_test(s, tree);
+}
+%else
+stmt:	STMT_MONITOR_ENTER(reg)
+{
+	struct var_info *ref, *rdi;
+
+	ref = state->left->reg1;
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+				      (unsigned long) vm_object_lock));
+
+	select_exception_test(s, tree);
+}
+
+stmt:	STMT_MONITOR_EXIT(reg)
+{
+	struct var_info *ref, *rdi;
+
+	ref = state->left->reg1;
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+				      (unsigned long) vm_object_unlock));
+
+	select_exception_test(s, tree);
+}
+%endif
+
+%ifdef	CONFIG_X86_32
+stmt:	STMT_CHECKCAST(reg)
+{
+	struct statement *stmt;
+	struct var_info *ref;
+
+	ref = state->left->reg1;
+
+	stmt = to_stmt(tree);
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) stmt->checkcast_class));
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, ref));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_cast));
+
+	method_args_cleanup(s, tree, 2);
+	select_exception_test(s, tree);
+}
+%else
+stmt:	STMT_CHECKCAST(reg)
+{
+	struct statement *stmt;
+	struct var_info *ref, *rdi, *rsi;
+
+	ref = state->left->reg1;
+
+	stmt = to_stmt(tree);
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, ref, rdi));
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) stmt->checkcast_class, rsi));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_check_cast));
+
+	select_exception_test(s, tree);
+}
+%endif
+
+%%
+
+static void
+select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn)
+{
+	insn_set_bc_offset(insn, tree->bytecode_offset);
+	bb_add_insn(bb, insn);
+}
+
+static void select_poll_safepoint(struct basic_block *s, struct tree_node *tree)
+{
+	struct insn *insn;
+
+	assert(gc_safepoint_page);
+	insn = imm_memdisp_insn(INSN_TEST_IMM_MEMDISP, 0, (unsigned long) gc_safepoint_page);
+	select_insn(s, tree, insn);
+}
+
+static void
+select_safepoint_insn(struct basic_block *bb, struct tree_node *tree,
+		      struct insn *insn)
+{
+	insn->flags |= INSN_FLAG_SAFEPOINT;
+	select_poll_safepoint(bb, tree);
+	select_insn(bb, tree, insn);
+}
+
+/*
+ * Selects code checking whether exception occured. When this is the case
+ * exception will be thrown.
+ *
+ * NOTICE: exception test should be always selected _after_
+ * method args cleanup or stack overflow may occure if exceptions
+ * are thrown locally in a loop.
+ */
+static void select_exception_test(struct basic_block *bb,
+				  struct tree_node *tree)
+{
+	unsigned long exception_guard_offset;
+	struct var_info *reg;
+
+	if (running_on_valgrind) {
+		select_insn(bb, tree, rel_insn(INSN_CALL_REL, (unsigned long) exception_check));
+		return;
+	}
+
+	reg = get_var(bb->b_parent, GPR_VM_TYPE);
+
+	exception_guard_offset = get_thread_local_offset(&exception_guard);
+
+	select_insn(bb, tree, imm_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG, exception_guard_offset, reg));
+	select_insn(bb, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
+}
+
+static void __binop_reg_local(struct _MBState *state, struct basic_block *bb,
+			      struct tree_node *tree, enum insn_type insn_type,
+			      struct var_info *result, long disp_offset)
+{
+	struct var_info *frame_ptr;
+	struct expression *expr;
+	long disp;
+
+	expr = to_expr(tree);
+	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
+	disp += disp_offset;
+
+	frame_ptr = bb->b_parent->frame_ptr;
+
+	select_insn(bb, tree, membase_reg_insn(insn_type, frame_ptr, disp, result));
+}
+
+static void binop_reg_local_low(struct _MBState *state, struct basic_block *bb,
+			    struct tree_node *tree, enum insn_type insn_type)
+{
+	state->reg1 = state->left->reg1;
+
+	__binop_reg_local(state, bb, tree, insn_type, state->left->reg1, 0);
+}
+
+static void binop_reg_value_low(struct _MBState *state, struct basic_block *bb,
+				struct tree_node *tree, enum insn_type insn_type)
+{
+	struct expression *expr, *right;
+
+	state->reg1 = state->left->reg1;
+
+	expr = to_expr(tree);
+	right = to_expr(expr->binary_right);
+
+	select_insn(bb, tree, imm_reg_insn(insn_type, right->value & ~0UL, state->reg1));
+}
+
+static void binop_reg_reg_low(struct _MBState *state, struct basic_block *bb,
+			  struct tree_node *tree, enum insn_type insn_type)
+{
+	struct var_info *src, *dst;
+
+	src = state->right->reg1;
+	dst = state->left->reg1;
+
+	state->reg1 = dst;
+
+	select_insn(bb, tree, reg_reg_insn(insn_type, src, dst));
+}
+
+#ifdef CONFIG_X86_32
+static void binop_reg_local_high(struct _MBState *state, struct basic_block *bb,
+			    struct tree_node *tree, enum insn_type insn_type)
+{
+	struct expression *expr = to_expr(tree);
+
+	if (expr->vm_type != J_LONG)
+		return;
+
+	state->reg2 = state->left->reg2;
+
+	__binop_reg_local(state, bb, tree, insn_type, state->left->reg2, 4);
+}
+
+static void binop_reg_value_high(struct _MBState *state, struct basic_block *bb,
+				struct tree_node *tree, enum insn_type insn_type)
+{
+	struct expression *expr, *right;
+
+	expr = to_expr(tree);
+
+	if (expr->vm_type != J_LONG)
+		return;
+
+	state->reg2 = state->left->reg2;
+
+	right = to_expr(expr->binary_right);
+
+	select_insn(bb, tree, imm_reg_insn(insn_type, right->value >> 32, state->reg2));
+}
+
+static void binop_reg_reg_high(struct _MBState *state, struct basic_block *bb,
+			  struct tree_node *tree, enum insn_type insn_type)
+{
+	struct var_info *src, *dst;
+	struct expression *expr = to_expr(tree);
+
+	if (expr->vm_type != J_LONG)
+		return;
+
+	src = state->right->reg2;
+	dst = state->left->reg2;
+
+	state->reg2 = dst;
+
+	select_insn(bb, tree, reg_reg_insn(insn_type, src, dst));
+}
+#else /* CONFIG_X86_32 */
+static void binop_reg_local_high(struct _MBState *state, struct basic_block *bb,
+			    struct tree_node *tree, enum insn_type insn_type)
+{
+}
+
+static void binop_reg_value_high(struct _MBState *state, struct basic_block *bb,
+				struct tree_node *tree, enum insn_type insn_type)
+{
+}
+
+static void binop_reg_reg_high(struct _MBState *state, struct basic_block *bb,
+			  struct tree_node *tree, enum insn_type insn_type)
+{
+}
+#endif /* CONFIG_X86_32 */
+
+static void shift_reg_local(struct _MBState *state, struct basic_block *bb,
+			    struct tree_node *tree, enum insn_type insn_type)
+{
+	struct var_info *result, *frame_ptr, *shift_count;
+	struct expression *expr;
+	unsigned long disp;
+
+	result = state->left->reg1;
+	state->reg1 = result;
+
+	expr = to_expr(tree);
+	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
+
+	frame_ptr = bb->b_parent->frame_ptr;
+	shift_count = get_fixed_var(bb->b_parent, MACH_REG_xCX);
+
+	select_insn(bb, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, frame_ptr, disp, shift_count));
+	select_insn(bb, tree, reg_reg_insn(insn_type, shift_count, result));
+}
+
+static void div_reg_local(struct _MBState *state, struct basic_block *bb,
+			  struct tree_node *tree)
+{
+	struct var_info *eax, *edx, *frame_ptr;
+	struct expression *expr;
+	unsigned long disp;
+
+	expr = to_expr(tree);
+	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
+
+	edx = get_fixed_var(bb->b_parent, MACH_REG_xDX);
+	eax = get_fixed_var(bb->b_parent, MACH_REG_xAX);
+
+	frame_ptr = bb->b_parent->frame_ptr;
+
+	select_insn(bb, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
+	select_insn(bb, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
+	select_insn(bb, tree, membase_reg_insn(INSN_DIV_MEMBASE_REG, frame_ptr, disp, eax));
+}
+
+static void
+emulate_op_64(struct _MBState *state, struct basic_block *s,
+	      struct tree_node *tree, void *func, enum vm_type arg2_type,
+	      enum vm_type return_type)
+{
+	struct var_info *eax, *edx = NULL;
+#ifdef CONFIG_X86_64
+	struct var_info *rdi, *rsi;
+#endif
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	state->reg1 = get_var(s->b_parent, J_INT);
+
+#ifdef CONFIG_X86_32
+	if (return_type == J_LONG) {
+		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+		state->reg2 = get_var(s->b_parent, J_INT);
+	}
+
+	if (arg2_type == J_LONG)
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg2));
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->right->reg1));
+#else
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, rsi));
+#endif
+
+#ifdef CONFIG_X86_32
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg2));
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
+#else
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, rdi));
+#endif
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) func));
+
+#ifdef CONFIG_X86_32
+	if (arg2_type == J_LONG)
+		method_args_cleanup(s, tree, 4);
+	else
+		method_args_cleanup(s, tree, 3);
+#endif
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+	if (edx)
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
+
+	select_exception_test(s, tree);
+}
+
+#ifdef CONFIG_X86_32
+static void select_set_target(struct basic_block *s,
+			      struct tree_node *tree,
+			      void *target,
+			      struct var_info *offset_reg,
+			      unsigned long field)
+{
+	select_insn(s, tree, imm_membase_insn(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE,
+				(unsigned long) target, offset_reg, field));
+}
+#else
+static void select_set_target(struct basic_block *s,
+			      struct tree_node *tree,
+			      void *target,
+			      struct var_info *offset_reg,
+			      unsigned long field)
+{
+	struct var_info *target_reg;
+
+	target_reg = get_var(s->b_parent, J_LONG);
+
+	select_insn(s, tree,
+		    imm_reg_insn(INSN_MOV_IMM_REG,
+				 (unsigned long) target, target_reg));
+	select_insn(s, tree,
+		    reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
+				     target_reg, offset_reg, field));
+}
+#endif
+
+static void select_trace_return_value(struct basic_block *s,
+				      struct tree_node *tree,
+				      struct vm_method *vmm)
+{
+	struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+	struct var_info *edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+	struct var_info *esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+
+	enum vm_type ret_vm_type = method_return_type(vmm);
+
+	if (ret_vm_type == J_FLOAT) {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, esp));
+		select_insn(s, tree, membase_insn(INSN_FSTP_MEMBASE, esp, 0));
+	} else if (ret_vm_type == J_DOUBLE) {
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+		select_insn(s, tree, membase_insn(INSN_FSTP_64_MEMBASE, esp, 0));
+	} else if (ret_vm_type == J_LONG) {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, edx));
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, eax));
+	} else {
+		select_insn(s, tree, reg_insn(INSN_PUSH_REG, eax));
+	}
+
+	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) vmm));
+	select_insn(s, tree, rel_insn(INSN_CALL_REL,
+				      (unsigned long) trace_return_value));
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, sizeof(void *), esp));
+
+	if (ret_vm_type == J_FLOAT) {
+		select_insn(s, tree, membase_insn(INSN_FLD_MEMBASE, esp, 0));
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 4, esp));
+	} else if (ret_vm_type == J_DOUBLE) {
+		select_insn(s, tree, membase_insn(INSN_FLD_64_MEMBASE, esp, 0));
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 8, esp));
+	} else if (ret_vm_type == J_LONG) {
+		select_insn(s, tree, reverse_reg_insn(INSN_POP_REG, eax));
+		select_insn(s, tree, reverse_reg_insn(INSN_POP_REG, edx));
+	} else {
+		select_insn(s, tree, reverse_reg_insn(INSN_POP_REG, eax));
+	}
+}
+
+static void save_invoke_result(struct basic_block *s,
+			       struct tree_node *tree,
+			       struct vm_method *method,
+			       struct statement *stmt)
+{
+	struct stack_slot *scratch;
+	struct expression *tmp;
+	struct var_info *esp;
+
+	if (opt_trace_invoke_verbose)
+		select_trace_return_value(s, tree, method);
+
+	tmp = stmt->invoke_result;
+	if (!tmp)
+		return;
+
+	switch (tmp->vm_type) {
+	case J_FLOAT:
+		scratch = get_scratch_slot(s->b_parent);
+		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+		select_insn(s, tree, memlocal_insn(INSN_FSTP_MEMLOCAL, scratch));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, tmp->tmp_low));
+		break;
+	case J_DOUBLE:
+		scratch = get_scratch_slot(s->b_parent);
+		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
+		select_insn(s, tree, memlocal_insn(INSN_FSTP_64_MEMLOCAL, scratch));
+		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, tmp->tmp_low));
+		break;
+	case J_LONG: {
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
+#ifdef CONFIG_X86_32
+		struct var_info *edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, tmp->tmp_high));
+#endif
+		break;
+	}
+	case J_INT: {
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+		if (vm_method_is_native(method)) {
+			/*
+			 * Native methods (especially JNI methods) might
+			 * not cast return value to int for byte, boolean,
+			 * char and short so we must do this here.
+			 */
+			switch (method->return_type.vm_type) {
+			case J_BYTE:
+				/* Fall through */
+			case J_BOOLEAN:
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSX_8_REG_REG, eax, tmp->tmp_low));
+				break;
+			case J_CHAR:
+				select_insn(s, tree, reg_reg_insn(INSN_MOVZX_16_REG_REG, eax, tmp->tmp_low));
+				break;
+			case J_SHORT:
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSX_16_REG_REG, eax, tmp->tmp_low));
+				break;
+			case J_INT:
+				select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
+				break;
+			default:
+				error("unexpected return type");
+			}
+
+			break;
+		}
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
+		break;
+	}
+	case J_REFERENCE: {
+		struct var_info *eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, tmp->tmp_low));
+		break;
+	}
+	default:
+		error("invalid result type");
+	}
+}
+
+static void select_vm_native_call(struct basic_block *s, struct tree_node *tree,
+				  struct vm_method *method, struct statement *stmt,
+				  struct insn *call_insn, void *target)
+{
+	struct var_info *offset_reg;
+	struct var_info *sp_reg;
+	unsigned long offset_tls;
+	unsigned long tr_addr;
+	unsigned long guard;
+	unsigned long field;
+
+	sp_reg = get_fixed_var(s->b_parent, MACH_REG_xSP);
+	offset_reg = get_var(s->b_parent, J_NATIVE_PTR);
+
+	offset_tls = get_thread_local_offset(&vm_native_stack_offset);
+	select_insn(s, tree,
+		    memdisp_reg_insn(INSN_MOV_THREAD_LOCAL_MEMDISP_REG,
+				     offset_tls, offset_reg));
+
+	tr_addr = get_thread_local_offset(&vm_native_stack);
+
+	/* Check for stack overflow */
+	guard = (unsigned long) vm_native_stack_offset_guard;
+	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG,
+					      offset_reg, guard, offset_reg));
+
+	/* Advance vm_native_stack_offset */
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
+			sizeof(struct vm_native_stack_entry), offset_reg));
+	select_insn(s, tree,
+		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
+				     offset_reg, offset_tls));
+
+	tr_addr -= sizeof(struct vm_native_stack_entry);
+
+	/* Set ->stack_ptr */
+	field = tr_addr + offsetof(struct vm_native_stack_entry, stack_ptr);
+	select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_THREAD_LOCAL_MEMBASE,
+					      sp_reg, offset_reg, field));
+
+	/* Set ->target */
+	field = tr_addr + offsetof(struct vm_native_stack_entry, target);
+	select_set_target(s, tree, target, offset_reg, field);
+
+	select_safepoint_insn(s, tree, call_insn);
+
+	save_invoke_result(s, tree, method, stmt);
+
+	/* Restore vm_native_stack_offset (pop) */
+	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG,
+			sizeof(struct vm_native_stack_entry), offset_reg));
+	select_insn(s, tree,
+		    reg_memdisp_insn(INSN_MOV_REG_THREAD_LOCAL_MEMDISP,
+				     offset_reg, offset_tls));
+}
+
+static void invoke(struct basic_block *s, struct tree_node *tree)
+{
+	struct compilation_unit *cu;
+	struct vm_method *method;
+	struct statement *stmt;
+	struct insn *call_insn;
+	int nr_stack_args;
+	bool is_compiled;
+	void *target;
+
+	stmt	= to_stmt(tree);
+	method	= stmt->target_method;
+	cu	= method->compilation_unit;
+
+	if (cu == NULL) {
+		target		= jit_no_such_method_stub;
+		is_compiled	= true;
+	} else if (compile_lock_get_status(&cu->compile_lock) == STATUS_COMPILED_OK) {
+		target		= vm_method_native_ptr(method);
+		is_compiled	= true;
+	} else {
+		target		= vm_method_trampoline_ptr(method);
+		is_compiled	= false;
+	}
+
+	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
+
+	if (vm_method_is_vm_native(method))
+		select_vm_native_call(s, tree, method, stmt, call_insn, vm_method_native_ptr(method));
+	else {
+		select_safepoint_insn(s, tree, call_insn);
+		save_invoke_result(s, tree, method, stmt);
+	}
+
+	if (!is_compiled) {
+		struct fixup_site *fixup;
+
+		fixup = alloc_fixup_site(s->b_parent, call_insn);
+		if (!fixup)
+			error("out of memory");
+
+		fixup->target = method->trampoline;
+	}
+
+	nr_stack_args = get_stack_args_count(method);
+	if (nr_stack_args)
+		method_args_cleanup(s, tree, nr_stack_args);
+
+	if (cu == NULL || vm_method_is_native(method))
+		select_exception_test(s, tree);
+}
+
+
+static void invokevirtual(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
+{
+	struct statement *stmt;
+	struct var_info *call_target;
+	unsigned long method_offset;
+	struct vm_method *method;
+	struct insn *call_insn;
+	int nr_stack_args;
+
+	stmt	= to_stmt(tree);
+	method_offset = stmt_method_index(stmt) * sizeof(void *);
+
+	method	= stmt->target_method;
+
+	/* object reference */
+	call_target = state->left->reg1;
+
+	/* object class */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
+
+	/* vtable */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
+
+	/* native ptr */
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
+
+	/* invoke method */
+	call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
+
+	select_safepoint_insn(s, tree, call_insn);
+	save_invoke_result(s, tree, method, stmt);
+
+	nr_stack_args = get_stack_args_count(method);
+	if (nr_stack_args)
+		method_args_cleanup(s, tree, nr_stack_args);
+
+	if (vm_method_is_native(method))
+		select_exception_test(s, tree);
+}
+
+static void invokeinterface(struct _MBState *state, struct basic_block *s, struct tree_node *tree)
+{
+	struct var_info *eax;
+	struct var_info *call_target;
+	struct compilation_unit *cu;
+	unsigned long method_offset;
+	struct vm_method *method;
+	struct statement *stmt;
+	struct insn *call_insn;
+	int nr_stack_args;
+
+	stmt	= to_stmt(tree);
+	method	= stmt->target_method;
+	cu	= method->compilation_unit;
+
+	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
+	method_offset = stmt_method_index(stmt) * sizeof(void *);
+
+	/* object reference */
+	call_target = state->left->reg1;
+
+	/* object class */
+	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG,
+		call_target, offsetof(struct vm_object, class), call_target));
+
+	/* itable entry */
+	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
+		offsetof(struct vm_class, itable) + method->itable_index * sizeof(void *),
+		call_target));
+
+	/* hidden parameter to the conflict resolution stub */
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
+		(unsigned long) method, eax));
+
+	/* invoke method */
+	call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
+
+	select_safepoint_insn(s, tree, call_insn);
+	save_invoke_result(s, tree, method, stmt);
+
+	nr_stack_args = get_stack_args_count(method);
+	if (nr_stack_args)
+		method_args_cleanup(s, tree, nr_stack_args);
+}
+
+static void emit_code(struct basic_block *bb, MBState *state, int goal)
+{
+	MBState *kids[2];
+	int ern;
+	const guint16 *nts;
+	int i;
+
+	ern = mono_burg_rule(state, goal);
+	nts = mono_burg_nts_data + mono_burg_nts[ern];
+	mono_burg_kids(state, ern, kids);
+
+	for (i = 0; nts[i]; i++)
+		emit_code(bb, kids[i], nts[i]);
+
+	mono_burg_emit(ern, state, state->tree, bb);
+
+	if (state->reg1)
+		assert(!interval_has_fixed_reg(state->reg1->interval));
+}
+
+static void free_state(MBState *state)
+{
+	if (!state)
+		return;
+
+	free_state(state->left);
+	free_state(state->right);
+
+	g_free(state);
+}
+
+static void eh_add_insn(struct basic_block *bb, struct insn *insn)
+{
+	insn_set_bc_offset(insn, bb->start);
+	bb_add_insn(bb, insn);
+}
+
+static void select_eh_prologue(struct basic_block *bb)
+{
+	struct var_info *reg_eax;
+
+	reg_eax = get_fixed_var(bb->b_parent, MACH_REG_xAX);
+
+	/* Save exception from current_exec_env.exception to exception
+	 * stack slot */
+	eh_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long)vm_get_exec_env));
+	eh_add_insn(bb, membase_reg_insn(INSN_MOV_MEMBASE_REG, reg_eax, offsetof(struct vm_exec_env, exception), reg_eax));
+	eh_add_insn(bb, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, reg_eax, bb->b_parent->exception_spill_slot));
+
+	/* Clear exception. TODO: inline this. */
+	eh_add_insn(bb, rel_insn(INSN_CALL_REL, (unsigned long)clear_exception));
+}
+
+static void insn_select(struct basic_block *bb)
+{
+	struct statement *stmt;
+	MBState *state;
+
+	mono_burg_init();
+
+	if (bb->is_eh)
+		select_eh_prologue(bb);
+
+	for_each_stmt(stmt, &bb->stmt_list) {
+		state = mono_burg_label(&stmt->node, bb);
+		emit_code(bb, state, MB_NTERM_stmt);
+		free_state(state);
+	}
+}
+
+#ifdef CONFIG_X86_32
+static void setup_caller_saved_regs(struct compilation_unit *cu)
+{
+	get_fixed_var(cu, MACH_REG_EAX);
+	get_fixed_var(cu, MACH_REG_ECX);
+	get_fixed_var(cu, MACH_REG_EDX);
+}
+#else /* CONFIG_X86_32 */
+static void setup_caller_saved_regs(struct compilation_unit *cu)
+{
+	struct var_info **map, *fixed, *non_fixed;
+	enum machine_reg mach_reg;
+	int i, count, max_count = cu->method->reg_args_count;
+
+	get_fixed_var(cu, MACH_REG_RAX);
+	get_fixed_var(cu, MACH_REG_R10);
+	get_fixed_var(cu, MACH_REG_R11);
+
+	cu->non_fixed_args = malloc(max_count * sizeof(struct var_info *));
+	if (!cu->non_fixed_args)
+		abort();
+	map = cu->non_fixed_args;
+
+	for (i = 0, count = 0; i < cu->method->args_count; i++) {
+		if (count >= max_count)
+			break;
+
+		mach_reg = cu->method->args_map[i].reg;
+		if (mach_reg == MACH_REG_UNASSIGNED)
+			continue;
+
+		fixed = get_fixed_var(cu, mach_reg);
+		non_fixed = get_var(cu, cu->method->args_map[i].type);
+		eh_add_insn(cu->entry_bb,
+			    reg_reg_insn(INSN_MOV_REG_REG, fixed, non_fixed));
+
+		map[count++] = non_fixed;
+	}
+}
+#endif /* CONFIG_X86_32 */
+
+int select_instructions(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	int err = 0;
+
+	cu->frame_ptr = get_fixed_var(cu, MACH_REG_xBP);
+	if (!cu->frame_ptr) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	cu->stack_ptr = get_fixed_var(cu, MACH_REG_xSP);
+	if (!cu->stack_ptr) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	/*
+	 * Let the liveness analysis pass know about caller saved registers.
+	 */
+	setup_caller_saved_regs(cu);
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		insn_select(bb);
+	}
+
+  out:
+	return err;
+}
