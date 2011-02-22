@@ -180,6 +180,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 				return NULL;
 
 			array_set_field_double(ret, i, value);
+			break;
 		}
 		case ELEMENT_TYPE_FLOAT: {
 			jfloat value;
@@ -206,6 +207,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 				return NULL;
 
 			array_set_field_long(ret, i, value);
+			break;
 		}
 		case ELEMENT_TYPE_SHORT: {
 			jint value;
