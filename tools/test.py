@@ -90,7 +90,7 @@ TESTS = [
 , ( "jvm.VirtualAbstractInterfaceMethodTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.WideTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.lang.reflect.FieldTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
-, ( "sun.misc.UnsafeTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
+, ( "sun.misc.UnsafeTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "test.java.lang.ClassTest", 0, [ ], [ "i386" ] )
 ]
 
