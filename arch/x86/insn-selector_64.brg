@@ -186,16 +186,10 @@ reg:	EXPR_VALUE	0
 
 	expr = to_expr(tree);
 
-	result = get_var(s->b_parent, J_INT);
+	result = get_var(s->b_parent, J_INT); /* FIXME: 64-bit */
 	state->reg1 = result;
 
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value & ~0UL, result));
-
-	if (expr->vm_type == J_LONG) {
-		result = get_var(s->b_parent, J_INT);
-		state->reg2 = result;
-		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value >> 32, state->reg2));
-	}
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value & ~0ULL, result));
 }
 
 reg:	EXPR_LOCAL	1
