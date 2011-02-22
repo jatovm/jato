@@ -229,7 +229,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 			const struct cafebabe_constant_info_utf8 *utf8;
 			struct vm_object *string;
 
-			if (cafebabe_class_constant_get_utf8(klass, e_value->value.const_value_index, &utf8))
+			if (cafebabe_class_constant_get_utf8(klass, child_e_value->value.const_value_index, &utf8))
 				return NULL;
 
 			string = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);

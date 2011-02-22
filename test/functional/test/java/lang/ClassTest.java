@@ -27,7 +27,7 @@ public class ClassTest extends TestCase {
 //  assertArrayEquals(new long[]     { Long.MIN_VALUE,      Long.MAX_VALUE      }, tag.longArrayValue());
     assertArrayEquals(new float[]    { Float.MIN_VALUE,     Float.MAX_VALUE     }, tag.floatArrayValue());
 //  assertArrayEquals(new double[]   { Double.MIN_VALUE,    Double.MAX_VALUE    }, tag.doubleArrayValue());
-//  assertArrayEquals(new String[]   { "hello, world",      "Hello, World!"     }, tag.stringArrayValue());
+    assertArrayEquals(new String[]   { "hello, world",      "Hello, World!"     }, tag.stringArrayValue());
 //  assertArrayEquals(new Required[] { Required.YES,        Required.NO         }, tag.enumArrayValue());
 //  assertArrayEquals(new Class<?>[] { Integer.class,       Long.class          }, tag.classArrayValue());
   }
