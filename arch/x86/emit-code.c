@@ -1183,12 +1183,6 @@ static int is_64bit_bin_reg_op(struct operand *a, struct operand *b)
 	return is_64bit_reg(a) || is_64bit_reg(b);
 }
 
-static inline int is_xmm_reg(struct operand *reg)
-{
-	return (reg->reg.interval->var_info->vm_type == J_FLOAT ||
-		reg->reg.interval->var_info->vm_type == J_DOUBLE);
-}
-
 static void __emit_reg(struct buffer *buf,
 		       int rex_w,
 		       unsigned char opc,
@@ -1291,8 +1285,8 @@ static void emit_mov_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 {
 	int fp;
 
-	fp = is_xmm_reg(&insn->src);
-	if (fp != is_xmm_reg(&insn->dest))
+	fp = operand_is_xmm_reg(&insn->src);
+	if (fp != operand_is_xmm_reg(&insn->dest))
 		assert(!"Can't do 'mov' between XMM and GPR!");
 
 	if (fp) {
@@ -1342,8 +1336,8 @@ static void emit_mul_reg_reg(struct insn *insn, struct buffer *buf, struct basic
 {
 	int fp;
 
-	fp = is_xmm_reg(&insn->src);
-	if (fp != is_xmm_reg(&insn->dest))
+	fp = operand_is_xmm_reg(&insn->src);
+	if (fp != operand_is_xmm_reg(&insn->dest))
 		assert(!"Can't do 'mul' between XMM and GPR!");
 
 	if (fp)
@@ -1623,7 +1617,7 @@ static void emit_mov_reg_membase(struct insn *insn,
 				 struct buffer *buf,
 				 struct basic_block *bb)
 {
-	if (is_xmm_reg(&insn->src))
+	if (operand_is_xmm_reg(&insn->src))
 		emit_mov_xmm_membase(insn, buf, bb);
 	else
 		emit_mov_gpr_membase(insn, buf, bb);
@@ -1798,7 +1792,7 @@ static void emit_mov_memlocal_xmm(struct insn *insn, struct buffer *buf, struct 
 
 static void emit_mov_memlocal_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	if (is_xmm_reg(&insn->dest))
+	if (operand_is_xmm_reg(&insn->dest))
 		emit_mov_memlocal_xmm(insn, buf, bb);
 	else
 		emit_mov_memlocal_gpr(insn, buf, bb);

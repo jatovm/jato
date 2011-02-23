@@ -484,13 +484,16 @@ static uint8_t insn_encode_mod_rm(struct insn *self, uint64_t flags, uint8_t opc
 static inline bool operand_is_reg_high(struct operand *operand)
 {
 	enum machine_reg reg;
+	uint8_t reg_num;
 
 	if (!operand_is_reg(operand))
 		return false;
 
-	reg		=  x86_encode_reg(mach_reg(&operand->reg));
+	reg		= mach_reg(&operand->reg);
 
-	return reg & 0x8;
+	reg_num		= x86_encode_reg(reg);
+
+	return reg_num & 0x8;
 }
 
 static inline bool operand_is_reg_64(struct operand *operand)
@@ -498,7 +501,7 @@ static inline bool operand_is_reg_64(struct operand *operand)
 	if (!operand_is_reg(operand))
 		return false;
 
-	return true;
+	return !operand_is_xmm_reg(operand);
 }
 
 static uint8_t insn_rex_operand_64(struct insn *self, uint64_t flags)

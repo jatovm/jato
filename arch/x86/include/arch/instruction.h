@@ -59,11 +59,11 @@ static inline bool operand_is_reg(struct operand *operand)
 {
 	switch (operand->type) {
 	case OPERAND_MEMBASE:
-	case OPERAND_MEMDISP:
 	case OPERAND_MEMINDEX:
 	case OPERAND_MEMLOCAL:
 	case OPERAND_REG:
 		return true;
+	case OPERAND_MEMDISP:
 	case OPERAND_NONE:
 	case OPERAND_BRANCH:
 	case OPERAND_IMM:
@@ -74,6 +74,11 @@ static inline bool operand_is_reg(struct operand *operand)
 	};
 
 	return false;
+}
+
+static inline bool operand_is_xmm_reg(struct operand *operand)
+{
+	return is_xmm_reg(mach_reg(&operand->reg));
 }
 
 /*

@@ -26,8 +26,10 @@ enum machine_reg {
 	MACH_REG_XMM6,
 	MACH_REG_XMM7,
 
+	NR_FP_REGISTERS,
+
 	/* The above registers are available for register allocator.  */
-	NR_REGISTERS,
+	NR_REGISTERS = NR_FP_REGISTERS,
 
 	MACH_REG_EBP = NR_REGISTERS,
 	MACH_REG_ESP,
@@ -75,6 +77,11 @@ struct register_state {
 static inline enum vm_type reg_default_type(enum machine_reg reg)
 {
 	return GPR_VM_TYPE;
+}
+
+static inline bool is_xmm_reg(enum machine_reg reg)
+{
+	return reg >= NR_GP_REGISTERS && reg < NR_FP_REGISTERS;
 }
 
 #endif /* X86_REGISTERS_32_H */

@@ -25,7 +25,6 @@ enum machine_reg {
 	/* Number of general purpose registers.  */
 	NR_GP_REGISTERS,
 
-
 	MACH_REG_XMM0,
 	MACH_REG_XMM1,
 	MACH_REG_XMM2,
@@ -108,6 +107,11 @@ static inline enum vm_type reg_default_type(enum machine_reg reg)
 		return FPU_VM_TYPE;
 	else
 		return GPR_VM_TYPE;
+}
+
+static inline bool is_xmm_reg(enum machine_reg reg)
+{
+	return reg >= NR_GP_REGISTERS && reg < NR_FP_REGISTERS;
 }
 
 #endif /* X86_REGISTERS_64_H */
