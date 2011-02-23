@@ -2,6 +2,7 @@
 #define JATO__ARM_CMPXCHG_H
 
 #include <stdint.h>
+#include <assert.h>
 
 static inline uint32_t cmpxchg_32(uint32_t *p, uint32_t old, uint32_t new)
 {
