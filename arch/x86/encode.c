@@ -140,26 +140,27 @@ enum x86_insn_flags {
 	DST_MEM			= (1ULL << 24),
 	DST_MEM_DISP_BYTE	= (1ULL << 25),	/* 8 bits */
 	DST_MEM_DISP_FULL	= (1ULL << 26),	/* 16 bits or 32 bits */
-	DST_MEMLOCAL		= (1ULL << 27),
-	DST_MASK		= DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL|DST_MEMLOCAL,
+	DST_MEMDISP		= (1ULL << 27),
+	DST_MEMLOCAL		= (1ULL << 28),
+	DST_MASK		= DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL|DST_MEMDISP|DST_MEMLOCAL,
 
 	MEM_DISP_MASK		= SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
 
-	ESCAPE_OPC_BYTE		= (1ULL << 28),	/* Escape opcode byte */
-	REPNE_PREFIX		= (1ULL << 29),	/* REPNE/REPNZ or SSE prefix */
-	REPE_PREFIX		= (1ULL << 30),	/* REP/REPE/REPZ or SSE prefix */
-	OPC_EXT			= (1ULL << 31),	/* The reg field of ModR/M byte provides opcode extension */
-	OPC_REG			= (1ULL << 32), /* The opcode byte also provides operand register */
+	ESCAPE_OPC_BYTE		= (1ULL << 29),	/* Escape opcode byte */
+	REPNE_PREFIX		= (1ULL << 30),	/* REPNE/REPNZ or SSE prefix */
+	REPE_PREFIX		= (1ULL << 31),	/* REP/REPE/REPZ or SSE prefix */
+	OPC_EXT			= (1ULL << 32),	/* The reg field of ModR/M byte provides opcode extension */
+	OPC_REG			= (1ULL << 33), /* The opcode byte also provides operand register */
 
-	NO_REX_W		= (1ULL << 33), /* No REX W prefix needed */
-	INDEX			= (1ULL << 34),
-	OPERAND_SIZE_PREFIX	= (1ULL << 35), /* Operand-size override prefix */
+	NO_REX_W		= (1ULL << 34), /* No REX W prefix needed */
+	INDEX			= (1ULL << 35),
+	OPERAND_SIZE_PREFIX	= (1ULL << 36), /* Operand-size override prefix */
 
 	/* Operand sizes */
 #define WIDTH_BYTE			0UL
 
-	WIDTH_FULL		= (1ULL << 36),	/* 16 bits or 32 bits */
-	WIDTH_64		= (1ULL << 37),
+	WIDTH_FULL		= (1ULL << 37),	/* 16 bits or 32 bits */
+	WIDTH_64		= (1ULL << 38),
 	WIDTH_MASK		= WIDTH_BYTE|WIDTH_FULL|WIDTH_64,
 };
 
@@ -180,6 +181,7 @@ enum x86_addmode {
 	ADDMODE_MEMLOCAL_REG	= SRC_MEMLOCAL|DST_REG|MOD_RM,		/* memlocal -> register */
 	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,			/* memory -> AL/AX */
 	ADDMODE_REG		= SRC_REG|DST_REG,			/* register */
+	ADDMODE_REG_MEMDISP	= SRC_REG|DST_MEMDISP|MOD_RM|DIR_REVERSED,	/* memdisp -> register */
 	ADDMODE_REG_MEMLOCAL	= SRC_REG|DST_MEMLOCAL|MOD_RM|DIR_REVERSED,	/* register -> register/memory */
 	ADDMODE_REG_REG		= SRC_REG|DST_REG|MOD_RM,		/* register -> register */
 	ADDMODE_REG_RM		= SRC_REG|MOD_RM|DIR_REVERSED,		/* register -> register/memory */
@@ -216,6 +218,7 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_MOVSD_MEMDISP_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMDISP_REG | WIDTH_64,
 	[INSN_MOVSD_MEMLOCAL_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMLOCAL_REG | WIDTH_64,
 	[INSN_MOVSD_XMM_MEMBASE]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_64,
+	[INSN_MOVSD_XMM_MEMDISP]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_MEMDISP | WIDTH_64,
 	[INSN_MOVSD_XMM_MEMLOCAL]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_MEMLOCAL | WIDTH_64,
 	[INSN_MOVSD_XMM_XMM]		= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_REG_REG | WIDTH_64,
 	[INSN_MOVSS_MEMBASE_XMM]	= REPE_PREFIX  | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_FULL,
@@ -321,6 +324,7 @@ static inline uint32_t mod_src_encode(uint64_t flags)
 static inline uint32_t mod_dest_encode(uint64_t flags)
 {
 	switch (flags & DST_MASK) {
+	case DST_MEMDISP:
 	case DST_MEM:
 		return 0x00;
 	case DST_MEM_DISP_BYTE:
@@ -373,7 +377,7 @@ static bool insn_need_sib(struct insn *self, uint64_t flags)
 		return false;
 
 	if (flags & DIR_REVERSED) {
-		if (flags & DST_MEMLOCAL)
+		if (flags & (DST_MEMDISP|DST_MEMLOCAL))
 			return false;
 		return mach_reg(&self->dest.base_reg) == MACH_REG_xSP;
 	}
@@ -418,16 +422,17 @@ static uint8_t insn_encode_rm(struct insn *self, uint64_t flags)
 {
 	uint8_t rm;
 
-	if (flags & SRC_MEMDISP)
-		return 0x05;
-
 	if (flags & DIR_REVERSED) {
-		if (flags & DST_MEMLOCAL)
+		if (flags & DST_MEMDISP)
+			rm		= 0x05;
+		else if (flags & DST_MEMLOCAL)
 			rm		= x86_encode_reg(MACH_REG_xBP);
 		else
 			rm		= encode_reg(&self->dest.reg);
 	} else {
-		if (flags & SRC_MEMLOCAL)
+		if (flags & SRC_MEMDISP)
+			rm		= 0x05;
+		else if (flags & SRC_MEMLOCAL)
 			rm		= x86_encode_reg(MACH_REG_xBP);
 		else
 			rm		= encode_reg(&self->src.reg);
@@ -567,9 +572,12 @@ static void insn_disp(struct insn *self, struct x86_insn *insn)
 		return;
 	}
 
-	if (insn->flags & SRC_MEMDISP) {
+	if (insn->flags & (SRC_MEMDISP|DST_MEMDISP)) {
 		/* Callers pass the displacement in ->imm rather than ->disp. */
-		insn->disp	= self->src.imm;
+		if (insn->flags & DIR_REVERSED)
+			insn->disp	= self->dest.imm;
+		else
+			insn->disp	= self->src.imm;
 		return;
 	}
 
@@ -643,7 +651,7 @@ static void x86_insn_encode(struct x86_insn *insn, struct buffer *buffer)
 	if (insn->flags & MEM_DISP_MASK)
 		emit_imm(buffer, insn->disp);
 
-	if (insn->flags & (SRC_MEMDISP|SRC_MEMLOCAL|DST_MEMLOCAL))
+	if (insn->flags & (SRC_MEMDISP|DST_MEMDISP|SRC_MEMLOCAL|DST_MEMLOCAL))
 		emit_imm32(buffer, insn->disp);
 
 	if (insn->flags & IMM8_MASK)

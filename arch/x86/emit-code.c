@@ -2573,6 +2573,7 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CONV_XMM_TO_XMM64, emit_conv_fpu_to_fpu),
 	DECL_EMITTER(INSN_CONV_XMM64_TO_XMM, emit_conv_fpu_to_fpu),
 	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg),
+	DECL_EMITTER(INSN_MOVSD_XMM_MEMDISP, insn_encode),
 	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg),
