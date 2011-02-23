@@ -731,6 +731,27 @@ void test_encoding_reg_high(void)
 #endif
 }
 
+void test_encoding_memdisp_reg(void)
+{
+	uint8_t encoding[] = { 0xf2, 0x0f, 0x10, 0x3d, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* movsd  0x12345678,%xmm7 */
+	insn.type			= INSN_MOVSD_MEMDISP_XMM;
+	insn.src.imm			= 0x12345678;
+	insn.dest.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_xmm7;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
 void test_encoding_memlocal(void)
 {
 #ifdef CONFIG_32_BIT

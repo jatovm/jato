@@ -131,7 +131,7 @@ enum x86_insn_flags {
 	SRC_MEM_DISP_FULL	= (1ULL << 18),
 	SRC_MEMDISP		= (1ULL << 19),
 	SRC_MEMLOCAL		= (1ULL << 20),
-	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|SRC_MEMLOCAL,
+	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|SRC_MEMDISP|SRC_MEMLOCAL,
 
 	/* Destination operand */
 	DST_NONE		= (1ULL << 21),
@@ -175,7 +175,7 @@ enum x86_addmode {
 	ADDMODE_IMM_ACC		= SRC_IMM|DST_ACC,			/* immediate -> AL/AX */
 	ADDMODE_IMM_REG		= SRC_IMM|DST_REG|DIR_REVERSED,		/* immediate -> register */
 	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,			/* no operands */
-	ADDMODE_MEMDISP_REG	= SRC_MEMDISP|DST_REG|DIR_REVERSED,	/* memdisp -> register */
+	ADDMODE_MEMDISP_REG	= SRC_MEMDISP|DST_REG|MOD_RM,		/* memdisp -> register */
 	ADDMODE_MEMLOCAL	= SRC_MEMLOCAL|DST_MEMLOCAL|MOD_RM,	/* memlocal */
 	ADDMODE_MEMLOCAL_REG	= SRC_MEMLOCAL|DST_REG|MOD_RM,		/* memlocal -> register */
 	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,			/* memory -> AL/AX */
@@ -301,12 +301,12 @@ static unsigned char encode_reg(struct use_position *reg)
 static inline uint32_t mod_src_encode(uint64_t flags)
 {
 	switch (flags & SRC_MASK) {
+	case SRC_MEMDISP:
 	case SRC_MEM:
 		return 0x00;
 	case SRC_MEM_DISP_BYTE:
 		return 0x01;
 	case SRC_MEM_DISP_FULL:
-	case SRC_MEMDISP:
 	case SRC_MEMLOCAL:
 		return 0x02;
 	case SRC_REG:
@@ -315,7 +315,7 @@ static inline uint32_t mod_src_encode(uint64_t flags)
 		break;
 	}
 
-	die("unrecognized flags %" PRIx64, flags);
+	die("unrecognized flags %" PRIx64, flags & SRC_MASK);
 }
 
 static inline uint32_t mod_dest_encode(uint64_t flags)
@@ -417,6 +417,9 @@ static uint8_t insn_encode_sib(struct insn *self, uint64_t flags)
 static uint8_t insn_encode_rm(struct insn *self, uint64_t flags)
 {
 	uint8_t rm;
+
+	if (flags & SRC_MEMDISP)
+		return 0x05;
 
 	if (flags & DIR_REVERSED) {
 		if (flags & DST_MEMLOCAL)
@@ -561,6 +564,12 @@ static void insn_disp(struct insn *self, struct x86_insn *insn)
 		return;
 	}
 
+	if (insn->flags & SRC_MEMDISP) {
+		/* Callers pass the displacement in ->imm rather than ->disp. */
+		insn->disp	= self->src.imm;
+		return;
+	}
+
 	if (insn->flags & DIR_REVERSED) {
 		if (insn->flags & DST_REG)
 			return;
@@ -631,7 +640,7 @@ static void x86_insn_encode(struct x86_insn *insn, struct buffer *buffer)
 	if (insn->flags & MEM_DISP_MASK)
 		emit_imm(buffer, insn->disp);
 
-	if (insn->flags & (SRC_MEMLOCAL|DST_MEMLOCAL))
+	if (insn->flags & (SRC_MEMDISP|SRC_MEMLOCAL|DST_MEMLOCAL))
 		emit_imm32(buffer, insn->disp);
 
 	if (insn->flags & IMM8_MASK)
