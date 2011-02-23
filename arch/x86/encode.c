@@ -129,36 +129,37 @@ enum x86_insn_flags {
 	SRC_MEM			= (1ULL << 16),
 	SRC_MEM_DISP_BYTE	= (1ULL << 17),
 	SRC_MEM_DISP_FULL	= (1ULL << 18),
-	SRC_MEMLOCAL		= (1ULL << 19),
+	SRC_MEMDISP		= (1ULL << 19),
+	SRC_MEMLOCAL		= (1ULL << 20),
 	SRC_MASK		= SRC_NONE|IMM_MASK|REL_MASK|SRC_REG|SRC_ACC|SRC_MEM|SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|SRC_MEMLOCAL,
 
 	/* Destination operand */
-	DST_NONE		= (1ULL << 20),
-	DST_REG			= (1ULL << 21),
-	DST_ACC			= (1ULL << 22),	/* AL/AX */
-	DST_MEM			= (1ULL << 23),
-	DST_MEM_DISP_BYTE	= (1ULL << 24),	/* 8 bits */
-	DST_MEM_DISP_FULL	= (1ULL << 25),	/* 16 bits or 32 bits */
-	DST_MEMLOCAL		= (1ULL << 26),
+	DST_NONE		= (1ULL << 21),
+	DST_REG			= (1ULL << 22),
+	DST_ACC			= (1ULL << 23),	/* AL/AX */
+	DST_MEM			= (1ULL << 24),
+	DST_MEM_DISP_BYTE	= (1ULL << 25),	/* 8 bits */
+	DST_MEM_DISP_FULL	= (1ULL << 26),	/* 16 bits or 32 bits */
+	DST_MEMLOCAL		= (1ULL << 27),
 	DST_MASK		= DST_REG|DST_ACC|DST_MEM|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL|DST_MEMLOCAL,
 
 	MEM_DISP_MASK		= SRC_MEM_DISP_BYTE|SRC_MEM_DISP_FULL|DST_MEM_DISP_BYTE|DST_MEM_DISP_FULL,
 
-	ESCAPE_OPC_BYTE		= (1ULL << 27),	/* Escape opcode byte */
-	REPNE_PREFIX		= (1ULL << 28),	/* REPNE/REPNZ or SSE prefix */
-	REPE_PREFIX		= (1ULL << 29),	/* REP/REPE/REPZ or SSE prefix */
-	OPC_EXT			= (1ULL << 30),	/* The reg field of ModR/M byte provides opcode extension */
-	OPC_REG			= (1ULL << 31), /* The opcode byte also provides operand register */
+	ESCAPE_OPC_BYTE		= (1ULL << 28),	/* Escape opcode byte */
+	REPNE_PREFIX		= (1ULL << 29),	/* REPNE/REPNZ or SSE prefix */
+	REPE_PREFIX		= (1ULL << 30),	/* REP/REPE/REPZ or SSE prefix */
+	OPC_EXT			= (1ULL << 31),	/* The reg field of ModR/M byte provides opcode extension */
+	OPC_REG			= (1ULL << 32), /* The opcode byte also provides operand register */
 
-	NO_REX_W		= (1ULL << 32), /* No REX W prefix needed */
-	INDEX			= (1ULL << 33),
-	OPERAND_SIZE_PREFIX	= (1ULL << 34), /* Operand-size override prefix */
+	NO_REX_W		= (1ULL << 33), /* No REX W prefix needed */
+	INDEX			= (1ULL << 34),
+	OPERAND_SIZE_PREFIX	= (1ULL << 35), /* Operand-size override prefix */
 
 	/* Operand sizes */
 #define WIDTH_BYTE			0UL
 
-	WIDTH_FULL		= (1ULL << 35),	/* 16 bits or 32 bits */
-	WIDTH_64		= (1ULL << 36),
+	WIDTH_FULL		= (1ULL << 36),	/* 16 bits or 32 bits */
+	WIDTH_64		= (1ULL << 37),
 	WIDTH_MASK		= WIDTH_BYTE|WIDTH_FULL|WIDTH_64,
 };
 
@@ -174,6 +175,7 @@ enum x86_addmode {
 	ADDMODE_IMM_ACC		= SRC_IMM|DST_ACC,			/* immediate -> AL/AX */
 	ADDMODE_IMM_REG		= SRC_IMM|DST_REG|DIR_REVERSED,		/* immediate -> register */
 	ADDMODE_IMPLIED		= SRC_NONE|DST_NONE,			/* no operands */
+	ADDMODE_MEMDISP_REG	= SRC_MEMDISP|DST_REG|DIR_REVERSED,	/* memdisp -> register */
 	ADDMODE_MEMLOCAL	= SRC_MEMLOCAL|DST_MEMLOCAL|MOD_RM,	/* memlocal */
 	ADDMODE_MEMLOCAL_REG	= SRC_MEMLOCAL|DST_REG|MOD_RM,		/* memlocal -> register */
 	ADDMODE_MEM_ACC		= SRC_ACC|DST_MEM,			/* memory -> AL/AX */
@@ -211,6 +213,7 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_JMP_MEMBASE]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | WIDTH_FULL,
 	[INSN_JMP_MEMINDEX]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | INDEX | WIDTH_FULL,
 	[INSN_MOVSD_MEMBASE_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_64,
+	[INSN_MOVSD_MEMDISP_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMDISP_REG | WIDTH_64,
 	[INSN_MOVSD_MEMLOCAL_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMLOCAL_REG | WIDTH_64,
 	[INSN_MOVSD_XMM_MEMBASE]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_RM | WIDTH_64,
 	[INSN_MOVSD_XMM_MEMLOCAL]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x11) | ADDMODE_REG_MEMLOCAL | WIDTH_64,
@@ -303,6 +306,7 @@ static inline uint32_t mod_src_encode(uint64_t flags)
 	case SRC_MEM_DISP_BYTE:
 		return 0x01;
 	case SRC_MEM_DISP_FULL:
+	case SRC_MEMDISP:
 	case SRC_MEMLOCAL:
 		return 0x02;
 	case SRC_REG:
@@ -374,7 +378,7 @@ static bool insn_need_sib(struct insn *self, uint64_t flags)
 		return mach_reg(&self->dest.base_reg) == MACH_REG_xSP;
 	}
 
-	if (flags & SRC_MEMLOCAL)
+	if (flags & (SRC_MEMDISP|SRC_MEMLOCAL))
 		return false;
 	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
 }

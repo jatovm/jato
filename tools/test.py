@@ -32,7 +32,7 @@ TESTS = [
 , ( "jvm.ArrayTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.BranchTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.CFGCrashTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "jvm.ClinitFloatTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.ClinitFloatTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ClassExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ClassLoaderTest", 0, [ ], [ "i386" ] )
 , ( "jvm.CloneTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
