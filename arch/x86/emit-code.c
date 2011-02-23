@@ -2187,11 +2187,16 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit64_test_membase_reg(buf, MACH_REG_RCX, 0, MACH_REG_RCX);
 
 	if (method_is_virtual(cu->method)) {
+		unsigned long this_disp;
+
+		if (vm_method_is_jni(cu->method))
+			this_disp	= -0x10;
+		else
+			this_disp	= -0x08;
+
 		__emit_push_reg(buf, MACH_REG_RAX);
-
 		__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
-
-		__emit64_mov_membase_reg(buf, MACH_REG_RBP, -0x08, MACH_REG_RSI);
+		__emit64_mov_membase_reg(buf, MACH_REG_RBP, this_disp, MACH_REG_RSI);
 		__emit_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
 		__emit_call(buf, fixup_vtable);
 
