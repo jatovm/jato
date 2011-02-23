@@ -104,7 +104,7 @@ purposes. See the file Documentation/options.txt for details.
 4. Copyright and License
 ========================
 
-Copyright (C) 2005-2010  Pekka Enberg and contributors
+Copyright (C) 2005-2011  Pekka Enberg and contributors
 
 Jato is available under the GNU General Public License (GPL) version 2 with the
 following clarification and special exception:
@@ -124,8 +124,8 @@ following clarification and special exception:
   you are not obligated to do so. If you do not wish to do so, delete this
   exception statement from your version.
 
-6.Thanks and Acknowledgements
-=============================
+5. Thanks and Acknowledgements
+==============================
 
 I would like to thank the following people and organizations for supporting
 Jato development:
