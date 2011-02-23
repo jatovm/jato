@@ -61,7 +61,7 @@ TESTS = [
 , ( "jvm.InvokeinterfaceTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.InvokestaticPatchingTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.LoadConstantsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "jvm.LongArithmeticExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.LongArithmeticExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.LongArithmeticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.MethodInvocationAndReturnTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.MethodInvokeVirtualTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
