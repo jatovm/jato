@@ -367,6 +367,8 @@ static inline bool insn_need_disp(struct insn *self)
 
 static bool insn_need_sib(struct insn *self, uint64_t flags)
 {
+	enum machine_reg reg;
+
 	if (flags & INDEX)
 		return true;
 #ifdef CONFIG_X86_64
@@ -379,12 +381,15 @@ static bool insn_need_sib(struct insn *self, uint64_t flags)
 	if (flags & DIR_REVERSED) {
 		if (flags & (DST_MEMDISP|DST_MEMLOCAL))
 			return false;
-		return mach_reg(&self->dest.base_reg) == MACH_REG_xSP;
-	}
 
-	if (flags & (SRC_MEMDISP|SRC_MEMLOCAL))
-		return false;
-	return mach_reg(&self->src.base_reg) == MACH_REG_xSP;
+		reg	= mach_reg(&self->dest.base_reg);
+	} else {
+		if (flags & (SRC_MEMDISP|SRC_MEMLOCAL))
+			return false;
+
+		reg	= mach_reg(&self->src.base_reg);
+	}
+	return reg == MACH_REG_xSP;
 }
 
 static uint8_t insn_encode_sib(struct insn *self, uint64_t flags)
