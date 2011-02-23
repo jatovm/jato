@@ -53,6 +53,9 @@ static void show_code(void *eip)
 	unsigned char *code;
 	unsigned int i;
 
+	if (!eip)
+		return;
+
 	code	= eip - code_prologue;
 
 	trace_printf("Code: ");
