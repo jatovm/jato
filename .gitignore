@@ -25,6 +25,7 @@ test/unit/vm/vm-test-suite.c
 # Generated binaries
 #
 jato
+libjvm.a
 tools/monoburg/monoburg
 test/unit/arch-*/*-test-runner
 test/unit/jit/jit-test-runner

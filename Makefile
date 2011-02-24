@@ -54,6 +54,8 @@ V =
 
 PROGRAM		:= jato
 
+LIB_FILE	:= libjvm.a
+
 include arch/$(ARCH)/Makefile$(ARCH_POSTFIX)
 include sys/$(SYS)-$(ARCH)/Makefile
 
@@ -227,7 +229,7 @@ DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
-DEFAULT_LIBS	= -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
+DEFAULT_LIBS	= -L. -ljvm -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
 
 all: $(PROGRAM)
 .PHONY: all
@@ -264,9 +266,13 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
-$(PROGRAM): monoburg boehmgc $(VERSION_HEADER) $(CLASSPATH_CONFIG) $(OBJS) $(LIB_OBJS) $(RUNTIME_CLASSES)
+$(PROGRAM): $(LIB_FILE) $(OBJS) $(RUNTIME_CLASSES)
 	$(E) "  LINK    " $@
-	$(Q) $(LINK) $(JATO_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) $(LIB_OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+	$(Q) $(LINK) $(JATO_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+
+$(LIB_FILE): monoburg boehmgc $(VERSION_HEADER) $(CLASSPATH_CONFIG) $(LIB_OBJS)
+	$(E) "  AR      " $@
+	$(Q) rm -f $@ && $(AR) rcs $@ $(LIB_OBJS)
 
 check-unit: monoburg
 	+$(MAKE) -C test/unit/vm/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
@@ -388,6 +394,7 @@ torture:
 clean:
 	$(E) "  CLEAN"
 	$(Q) - rm -f $(PROGRAM)
+	$(Q) - rm -f $(LIB_FILE)
 	$(Q) - rm -f $(VERSION_HEADER)
 	$(Q) - rm -f $(CLASSPATH_CONFIG)
 	$(Q) - rm -f $(OBJS)
