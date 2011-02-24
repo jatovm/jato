@@ -122,6 +122,76 @@ static void test_goto(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+static void test_ior(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IOR, OPC_IRETURN };
+
+	assert_int_equals(3, execute(bytecode));
+}
+
+static void test_iand(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IAND, OPC_IRETURN };
+
+	assert_int_equals(0, execute(bytecode));
+}
+
+static void test_ishr(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_4, OPC_ICONST_2, OPC_ISHR, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_ishl(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_2, OPC_ICONST_2, OPC_ISHL, OPC_IRETURN };
+
+	assert_int_equals(8, execute(bytecode));
+}
+
+static void test_ineg(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_2, OPC_INEG, OPC_IRETURN };
+
+	assert_int_equals(-2, execute(bytecode));
+}
+
+static void test_irem(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_4, OPC_ICONST_3, OPC_IREM, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_idiv(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_4, OPC_ICONST_2, OPC_IDIV, OPC_IRETURN };
+
+	assert_int_equals(2, execute(bytecode));
+}
+
+static void test_imul(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_2, OPC_ICONST_3, OPC_IMUL, OPC_IRETURN };
+
+	assert_int_equals(6, execute(bytecode));
+}
+
+static void test_isub(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_3, OPC_ICONST_2, OPC_ISUB, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_iadd(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IADD, OPC_IRETURN };
+
+	assert_int_equals(3, execute(bytecode));
+}
+
 static void test_pop2(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_3, OPC_ICONST_2, OPC_ICONST_1, OPC_POP2, OPC_IRETURN };
@@ -283,39 +353,39 @@ static void run_tests(void)
 	/* test_dup2_x1(); */
 	/* test_dup2_x2(); */
 	/* test_swap(); */
-	/* test_iadd(); */
+	test_iadd();
 	/* test_ladd(); */
 	/* test_fadd(); */
 	/* test_dadd(); */
-	/* test_isub(); */
+	test_isub();
 	/* test_lsub(); */
 	/* test_fsub(); */
 	/* test_dsub(); */
-	/* test_imul(); */
+	test_imul();
 	/* test_lmul(); */
 	/* test_fmul(); */
 	/* test_dmul(); */
-	/* test_idiv(); */
+	test_idiv();
 	/* test_ldiv(); */
 	/* test_fdiv(); */
 	/* test_ddiv(); */
-	/* test_irem(); */
+	test_irem();
 	/* test_lrem(); */
 	/* test_frem(); */
 	/* test_drem(); */
-	/* test_ineg(); */
+	test_ineg();
 	/* test_lneg(); */
 	/* test_fneg(); */
 	/* test_dneg(); */
-	/* test_ishl(); */
+	test_ishl();
 	/* test_lshl(); */
-	/* test_ishr(); */
+	test_ishr();
 	/* test_lshr(); */
 	/* test_iushr(); */
 	/* test_lushr(); */
-	/* test_iand(); */
+	test_iand();
 	/* test_land(); */
-	/* test_ior(); */
+	test_ior();
 	/* test_lor(); */
 	/* test_ixor(); */
 	/* test_lxor(); */
