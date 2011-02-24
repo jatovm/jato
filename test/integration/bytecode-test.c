@@ -115,6 +115,13 @@ static void do_assert_int_equals(const char *function, const char *file, int lin
 
 #define assert_int_equals(expected, actual) do_assert_int_equals(__func__, __FILE__, __LINE__, expected, actual)
 
+static void test_pop(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_2, OPC_ICONST_1, OPC_POP, OPC_IRETURN };
+
+	assert_int_equals(2, execute(bytecode));
+}
+
 static void test_iconst_5(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_5, OPC_IRETURN };
@@ -253,7 +260,7 @@ static void run_tests(void)
 	/* test_bastore(); */
 	/* test_castore(); */
 	/* test_sastore(); */
-	/* test_pop(); */
+	test_pop();
 	/* test_pop2(); */
 	/* test_dup(); */
 	/* test_dup_x1(); */
