@@ -6,46 +6,8 @@ CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 
-uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
-ARCH		:= $(shell sh scripts/gcc-arch.sh $(CC))
-SYS		:= $(shell uname -s | tr A-Z a-z)
-
 MAKEFLAGS += --no-print-directory
-
-ifneq ($(ARCH),$(uname_M))
-TEST		=
-else
-TEST		= test
-endif
-
-ifeq ($(ARCH),i386)
-override ARCH	= x86
-ARCH_POSTFIX	= _32
-#WARNINGS	+= -Werror
-MB_DEFINES	+= -DCONFIG_X86_32
-ifeq ($(uname_M),x86_64)
-ARCH_CFLAGS	+= -m32
-TEST		= test
-endif
-endif
-
-ifeq ($(ARCH),x86_64)
-override ARCH	= x86
-ARCH_POSTFIX	= _64
-ARCH_CFLAGS	+= -fno-omit-frame-pointer
-MB_DEFINES	+= -DCONFIG_X86_64
-endif
-
-ifeq ($(ARCH),ppc)
-override ARCH	= ppc
-ARCH_POSTFIX	= _32
-MB_DEFINES	+= -DCONFIG_PPC
-endif
-
-ifeq ($(SYS),darwin)
-DEFAULT_CFLAGS += -D_XOPEN_SOURCE=1
-endif
-export ARCH_CFLAGS
+include scripts/build/arch.mk
 
 ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 
