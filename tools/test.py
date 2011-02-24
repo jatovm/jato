@@ -42,7 +42,7 @@ TESTS = [
 , ( "jvm.DoubleConversionTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.DupTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.ExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
-, ( "jvm.ExceptionHandlerTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.ExceptionHandlerTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.FibonacciTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.FinallyTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.FloatArithmeticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
