@@ -115,6 +115,13 @@ static void do_assert_int_equals(const char *function, const char *file, int lin
 
 #define assert_int_equals(expected, actual) do_assert_int_equals(__func__, __FILE__, __LINE__, expected, actual)
 
+static void test_goto(void)
+{
+	uint8_t bytecode[] = { OPC_GOTO, 0x00, 0x04, OPC_POP, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
 static void test_pop2(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_3, OPC_ICONST_2, OPC_ICONST_1, OPC_POP2, OPC_IRETURN };
@@ -347,7 +354,7 @@ static void run_tests(void)
 	/* test_if_icmple(); */
 	/* test_if_acmpeq(); */
 	/* test_if_acmpne(); */
-	/* test_goto(); */
+	test_goto();
 	/* test_jsr(); */
 	/* test_ret(); */
 	/* test_tableswitch(); */
