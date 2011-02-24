@@ -296,12 +296,12 @@ reg:	OP_ADD(reg, reg) 1
 
 freg:	OP_DADD(freg, freg) 1
 {
-	binop_reg_reg_low(state, s, tree, INSN_FADD_64_REG_REG);
+	binop_reg_reg_low(state, s, tree, INSN_ADDSD_XMM_XMM);
 }
 
 freg:	OP_FADD(freg, freg) 1
 {
-	binop_reg_reg_low(state, s, tree, INSN_FADD_REG_REG);
+	binop_reg_reg_low(state, s, tree, INSN_ADDSS_XMM_XMM);
 }
 
 reg:	OP_SUB(reg, EXPR_LOCAL) 1
@@ -324,12 +324,12 @@ reg:	OP_SUB(reg, reg) 1
 
 freg:	OP_DSUB(freg, freg) 1
 {
-	binop_reg_reg_low(state, s, tree, INSN_FSUB_64_REG_REG);
+	binop_reg_reg_low(state, s, tree, INSN_SUBSD_XMM_XMM);
 }
 
 freg:	OP_FSUB(freg, freg) 1
 {
-	binop_reg_reg_low(state, s, tree, INSN_FSUB_REG_REG);
+	binop_reg_reg_low(state, s, tree, INSN_SUBSS_XMM_XMM);
 }
 
 reg:	OP_MUL(reg, EXPR_LOCAL) 1
@@ -357,14 +357,14 @@ freg:	OP_DMUL(freg, freg) 1
 {
 	state->reg1 = state->left->reg1;
 
-	select_insn(s, tree, reg_reg_insn(INSN_FMUL_64_REG_REG, state->right->reg1, state->left->reg1));
+	select_insn(s, tree, reg_reg_insn(INSN_MULSD_XMM_XMM, state->right->reg1, state->left->reg1));
 }
 
 freg:	OP_FMUL(freg, freg) 1
 {
 	state->reg1 = state->left->reg1;
 
-	select_insn(s, tree, reg_reg_insn(INSN_FMUL_REG_REG, state->right->reg1, state->left->reg1));
+	select_insn(s, tree, reg_reg_insn(INSN_MULSS_XMM_XMM, state->right->reg1, state->left->reg1));
 }
 
 
@@ -426,14 +426,14 @@ freg:	OP_DDIV(freg, freg) 1
 {
 	state->reg1 = state->left->reg1;
 
-	select_insn(s, tree, reg_reg_insn(INSN_FDIV_64_REG_REG, state->right->reg1, state->left->reg1));
+	select_insn(s, tree, reg_reg_insn(INSN_DIVSD_XMM_XMM, state->right->reg1, state->left->reg1));
 }
 
 freg:	OP_FDIV(freg, freg) 1
 {
 	state->reg1 = state->left->reg1;
 
-	select_insn(s, tree, reg_reg_insn(INSN_FDIV_REG_REG, state->right->reg1, state->left->reg1));
+	select_insn(s, tree, reg_reg_insn(INSN_DIVSS_XMM_XMM, state->right->reg1, state->left->reg1));
 }
 
 reg:	OP_DIV_64(reg, reg) 1
@@ -1346,15 +1346,15 @@ freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, tmp, ftmp));
 
 		/* Multiply higher word value by pow(2, 32) */
-		select_insn(s, tree, memdisp_reg_insn(INSN_FMUL_64_MEMDISP_REG, (unsigned long) &xmm_double_constant_0, state->reg1));
+		select_insn(s, tree, memdisp_reg_insn(INSN_MULSD_MEMDISP_XMM, (unsigned long) &xmm_double_constant_0, state->reg1));
 
 		/*
 		 * Add 0x80000000 to the lower word value to fix the correction
 		 * introduced at the beginning.
 		 */
-		select_insn(s, tree, memdisp_reg_insn(INSN_FADD_64_MEMDISP_REG, (unsigned long) &xmm_double_constant_1, ftmp));
+		select_insn(s, tree, memdisp_reg_insn(INSN_ADDSD_MEMDISP_XMM, (unsigned long) &xmm_double_constant_1, ftmp));
 
-		select_insn(s, tree, reg_reg_insn(INSN_FADD_64_REG_REG, ftmp, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_ADDSD_XMM_XMM, ftmp, state->reg1));
 	} else {
 		die("EXPR_CONVERSION_TO_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
