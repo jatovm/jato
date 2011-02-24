@@ -10,28 +10,6 @@
 
 #include "bc-test-utils.h"
 
-static void assert_pop_stack(unsigned char opc)
-{
-	struct expression *expr;
-	struct basic_block *bb;
-
-	expr = value_expr(J_INT, 1);
-	bb = alloc_simple_bb(&opc, 1);
-	stack_push(bb->mimic_stack, expr_get(expr));
-
-	convert_to_ir(bb->b_parent);
-	assert_true(stack_is_empty(bb->mimic_stack));
-
-	free_simple_bb(bb);
-	expr_put(expr);
-}
-
-void test_convert_pop(void)
-{
-	assert_pop_stack(OPC_POP);
-	assert_pop_stack(OPC_POP2);
-}
-
 /* The returned pointer could be stale because of expr_put() so only use the
    return value for pointer comparison.  */
 static struct expression *pop_and_put_expr(struct stack *stack)

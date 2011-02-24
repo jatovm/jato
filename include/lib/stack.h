@@ -22,6 +22,13 @@ static inline void *stack_pop(struct stack *stack)
 	return stack->elements[--stack->nr_elements];
 }
 
+static inline void *stack_peek(struct stack *stack)
+{
+	assert(stack->nr_elements > 0);
+
+	return stack->elements[stack->nr_elements - 1];
+}
+
 static inline void stack_push(struct stack *stack, void *entry)
 {
 	void *p;

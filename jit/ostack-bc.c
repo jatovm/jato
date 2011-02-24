@@ -23,6 +23,29 @@
 int convert_pop(struct parse_context *ctx)
 {
 	expr_put(stack_pop(ctx->bb->mimic_stack));
+
+	return 0;
+}
+
+int convert_pop2(struct parse_context *ctx)
+{
+	struct expression *another_expr;
+	struct expression *expr;
+
+	expr = stack_pop(ctx->bb->mimic_stack);
+
+	if (vm_type_is_pair(expr->vm_type))
+		goto out;
+
+	another_expr = stack_peek(ctx->bb->mimic_stack);
+
+	if (vm_type_is_pair(another_expr->vm_type))
+		goto out;
+
+	expr_put(stack_pop(ctx->bb->mimic_stack));
+out:
+	expr_put(expr);
+
 	return 0;
 }
 
