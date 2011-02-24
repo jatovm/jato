@@ -7,6 +7,11 @@ CLASSPATH_INSTALL_DIR	?= $(shell ./tools/classpath-config)
 GLIBJ		= $(CLASSPATH_INSTALL_DIR)/share/classpath/glibj.zip
 
 MAKEFLAGS += --no-print-directory
+
+uname_M		:= $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/i86pc/i386/)
+ARCH		:= $(shell sh scripts/gcc-arch.sh $(CC))
+SYS		:= $(shell uname -s | tr A-Z a-z)
+
 include scripts/build/arch.mk
 
 ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
@@ -242,6 +247,10 @@ check-unit: monoburg
 	+$(MAKE) -C test/unit/arch-$(ARCH)/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: check-unit
 
+check-integration: $(LIB_FILE)
+	+$(MAKE) -C test/integration check
+.PHONY: check-integration
+
 REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jato/internal/VM.java \
 	test/functional/java/lang/VMClassTest.java \
@@ -345,7 +354,7 @@ check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-java-tests com
 	$(Q) ./tools/test.py
 .PHONY: check-functional
 
-check: check-unit check-functional
+check: check-unit check-integration check-functional
 .PHONY: check
 
 torture:
@@ -380,6 +389,7 @@ clean:
 	+$(Q) - $(MAKE) -C test/unit/vm/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/unit/jit/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/unit/arch-$(ARCH)/ clean >/dev/null
+	+$(Q) - $(MAKE) -C test/integration/ clean >/dev/null
 .PHONY: clean
 
 INSTALL_PREFIX	?= $(HOME)
