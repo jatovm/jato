@@ -22,6 +22,7 @@
 
 #include "arch/init.h"
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -72,6 +73,7 @@ static jint do_execute(uint8_t *code, unsigned long code_length)
 }
 
 #define execute(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
+#define jlong_run(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
 
 static void init(void)
 {
@@ -114,6 +116,16 @@ static void do_assert_int_equals(const char *function, const char *file, int lin
 }
 
 #define assert_int_equals(expected, actual) do_assert_int_equals(__func__, __FILE__, __LINE__, expected, actual)
+
+static void do_assert_long_equals(const char *function, const char *file, int line, jlong expected, jlong actual)
+{
+	if (expected != actual)
+		die("%s:%d::%s: Expected %" PRId64 ", but was: %" PRId64, file, line, function, expected, actual);
+
+	nr_assertions++;
+}
+
+#define assert_long_equals(expected, actual) do_assert_long_equals(__func__, __FILE__, __LINE__, expected, actual)
 
 static void test_goto(void)
 {
@@ -206,6 +218,20 @@ static void test_pop(void)
 	assert_int_equals(2, execute(bytecode));
 }
 
+static void test_lconst_1(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LRETURN };
+
+	assert_long_equals(1, jlong_run(bytecode));
+}
+
+static void test_lconst_0(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_0, OPC_LRETURN };
+
+	assert_long_equals(0, jlong_run(bytecode));
+}
+
 static void test_iconst_5(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_5, OPC_IRETURN };
@@ -266,8 +292,8 @@ static void run_tests(void)
 	test_iconst_3();
 	test_iconst_4();
 	test_iconst_5();
-	/* test_lconst_0(); */
-	/* test_lconst_1(); */
+	test_lconst_0();
+	test_lconst_1();
 	/* test_fconst_0(); */
 	/* test_fconst_1(); */
 	/* test_fconst_2(); */
