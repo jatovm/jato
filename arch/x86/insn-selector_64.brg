@@ -510,6 +510,11 @@ reg:	OP_NEG(reg) 1
 	select_insn(s, tree, reverse_reg_insn(INSN_NEG_REG, result));
 }
 
+freg:	OP_DNEG(freg) 1
+{
+	assert(!"OP_FNEG");
+}
+
 freg:	OP_FNEG(freg) 1
 {
 	struct var_info *result;
@@ -2068,6 +2073,11 @@ stmt:	STMT_TABLESWITCH(reg)
 stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
 {
 	select_insn(s, tree, reverse_membase_insn(INSN_JMP_MEMBASE, state->left->reg1, offsetof(struct lookupswitch_pair, target)));
+}
+
+reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
+{
+	assert(!"EXPR_LOOKUPSWITCH_BSEARCH");
 }
 
 stmt:	STMT_MONITOR_ENTER(reg)
