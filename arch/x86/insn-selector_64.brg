@@ -2077,7 +2077,31 @@ stmt:	STMT_LOOKUPSWITCH_JUMP(reg)
 
 reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
 {
-	assert(!"EXPR_LOOKUPSWITCH_BSEARCH");
+	struct var_info *rax, *rdi, *rsi, *rdx, *rcx, *r8;
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	r8 = get_fixed_var(s->b_parent, MACH_REG_R8);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) &lookupswitch_pair_comp, r8));
+
+	rcx = get_fixed_var(s->b_parent, MACH_REG_RCX);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, sizeof(struct lookupswitch_pair), rcx));
+
+	rdx = get_fixed_var(s->b_parent, MACH_REG_RDX);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->lookupswitch_table->count, rdx));
+
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->lookupswitch_table->pairs, rsi));
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, rdi));
+
+	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &bsearch));
+
+	state->reg1 = get_var(s->b_parent, J_NATIVE_PTR);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, state->reg1));
 }
 
 stmt:	STMT_MONITOR_ENTER(reg)
