@@ -90,6 +90,9 @@ struct vm_class {
 
 	void *itable[VM_ITABLE_SIZE];
 
+	unsigned int nr_inner_classes;
+	uint16_t *inner_classes; /* class indices */
+
 	struct vm_class *declaring_class;
 	struct vm_class *enclosing_class;
 

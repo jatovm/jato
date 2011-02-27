@@ -428,6 +428,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMClass", "getClassLoader", java_lang_VMClass_getClassLoader),
 	DEFINE_NATIVE("java/lang/VMClass", "getComponentType", java_lang_VMClass_getComponentType),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredAnnotations", java_lang_VMClass_getDeclaredAnnotations),
+	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredClasses", java_lang_VMClass_getDeclaredClasses),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredConstructors", java_lang_VMClass_getDeclaredConstructors),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredFields", java_lang_VMClass_getDeclaredFields),
 	DEFINE_NATIVE("java/lang/VMClass", "getDeclaredMethods", java_lang_VMClass_getDeclaredMethods),

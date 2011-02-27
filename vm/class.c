@@ -265,6 +265,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 {
 	const struct cafebabe_constant_info_class *constant_class;
 	const struct cafebabe_constant_info_utf8 *name;
+	unsigned int nr_inner_classes;
 
 	vmc->class = class;
 	vmc->kind = VM_CLASS_KIND_REGULAR;
@@ -490,6 +491,18 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	if (cafebabe_read_inner_classes_attribute(class, &class->attributes, &inner_classes_attribute))
 		return -1;
 
+	nr_inner_classes = 0;
+	for (unsigned int i = 0; i < inner_classes_attribute.number_of_classes; i++) {
+		struct cafebabe_inner_class *inner = &inner_classes_attribute.inner_classes[i];
+
+		if (class->this_class == inner->outer_class_info_index)
+			nr_inner_classes++;
+	}
+
+	vmc->inner_classes = vm_alloc(sizeof(*vmc->inner_classes) * nr_inner_classes);
+	if (!vmc->inner_classes)
+		goto error_free_methods;
+
 	for (unsigned int i = 0; i < inner_classes_attribute.number_of_classes; i++) {
 		struct cafebabe_inner_class *inner = &inner_classes_attribute.inner_classes[i];
 
@@ -497,17 +510,19 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 			vmc->declaring_class = vmc->enclosing_class = vm_class_resolve_class(vmc, inner->outer_class_info_index);
 
 			vmc->inner_class_access_flags	= inner->inner_class_access_flags;
+		} else if (class->this_class == inner->outer_class_info_index) {
+			vmc->inner_classes[vmc->nr_inner_classes++] = inner->inner_class_info_index;
 		}
 	}
 
 	struct cafebabe_annotations_attribute annotations_attribute;
 
 	if (cafebabe_read_annotations_attribute(class, &class->attributes, &annotations_attribute))
-		goto error_free_methods;
+		goto error_free_inner_classes;
 
 	vmc->annotations = vm_alloc(sizeof(struct vm_annotation *) * annotations_attribute.num_annotations);
 	if (!vmc->annotations)
-		goto error_free_methods;
+		goto error_free_inner_classes;
 
 	for (unsigned int i = 0; i < annotations_attribute.num_annotations; i++) {
 		struct cafebabe_annotation *annotation = &annotations_attribute.annotations[i];
@@ -537,6 +552,8 @@ error_free_annotations:
 	vm_free(vmc->annotations);
 error_free_methods:
 	vm_free(vmc->methods);
+error_free_inner_classes:
+	vm_free(vmc->inner_classes);
 error_free_static_values:
 	vm_free(vmc->static_values);
 error_free_buckets:

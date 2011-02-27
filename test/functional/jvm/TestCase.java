@@ -25,6 +25,10 @@
  */
 package jvm;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class TestCase {
     protected static void assertArrayEquals(byte[] expected, byte[] actual) {
         if (expected == null && actual == null)
@@ -212,4 +216,23 @@ public class TestCase {
     public static void takeInt(int val) {}
     public static void takeLong(long val) {}
     public static void takeObject(Object obj) {}
+
+    public static <T extends Comparable<? super T>> List<T> sort(List<T> values) {
+        List<T> result = new ArrayList<T>(values);
+        Collections.sort(result);
+        return result;
+    }
+
+    public static <T, V> List<V> map(List<T> values, Function<T, V> f) {
+        List<V> result = new ArrayList<V>();
+
+        for (T value : values)
+            result.add(f.apply(value));
+
+        return result;
+    }
+
+    public interface Function<T, V> {
+        V apply(T value);
+    }
 }

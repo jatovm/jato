@@ -4,6 +4,8 @@ import jvm.TestCase;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
+import java.util.List;
 
 public class ClassTest extends TestCase {
   public static void testGetAnnotation() {
@@ -85,7 +87,33 @@ public class ClassTest extends TestCase {
 
   public static enum Required { YES, NO }
 
+  public static void testGetClasses() {
+     List<String> classNames = sort(map(Arrays.asList(Type.class.getClasses()), new Function<Class<?>, String>() {
+     public String apply(Class<?> klass) {
+       return klass.getName();
+      }
+    }));
+    assertEquals(Arrays.asList("test.java.lang.ClassTest$Type$InnerInstance", "test.java.lang.ClassTest$Type$InnerStatic"), classNames);
+  }
+
+  public static void testGetDeclaredClasses() {
+     List<String> classNames = sort(map(Arrays.asList(Type.class.getDeclaredClasses()), new Function<Class<?>, String>() {
+     public String apply(Class<?> klass) {
+       return klass.getName();
+      }
+    }));
+    assertEquals(Arrays.asList("test.java.lang.ClassTest$Type$InnerInstance", "test.java.lang.ClassTest$Type$InnerInstancePrivate", "test.java.lang.ClassTest$Type$InnerStatic"), classNames);
+  }
+
+  public static class Type {
+    public class InnerInstance { }
+    public static class InnerStatic { }
+    @SuppressWarnings("unused") private class InnerInstancePrivate { }
+  }
+
   public static void main(String[] args) {
     testGetAnnotation();
+    testGetClasses();
+    testGetDeclaredClasses();
   }
 }
