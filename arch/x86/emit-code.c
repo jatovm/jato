@@ -2403,6 +2403,8 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SUBSS_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_SUB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_XOR_MEMBASE_REG, insn_encode),
+	DECL_EMITTER(INSN_XOR_REG_REG, insn_encode),
 #ifdef CONFIG_X86_32
 	DECL_EMITTER(INSN_ADC_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_ADC_MEMBASE_REG, insn_encode),
@@ -2471,8 +2473,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_XORPD_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_XORPS_XMM_XMM, insn_encode),
-	DECL_EMITTER(INSN_XOR_MEMBASE_REG, insn_encode),
-	DECL_EMITTER(INSN_XOR_REG_REG, insn_encode),
 #else /* CONFIG_X86_64 */
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg),
