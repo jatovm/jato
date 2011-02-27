@@ -129,7 +129,7 @@ static void do_assert_long_equals(const char *function, const char *file, int li
 
 static void test_goto(void)
 {
-	uint8_t bytecode[] = { OPC_GOTO, 0x00, 0x04, OPC_POP, OPC_ICONST_1, OPC_IRETURN };
+	uint8_t bytecode[] = { OPC_GOTO, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
 	assert_int_equals(1, execute(bytecode));
 }
