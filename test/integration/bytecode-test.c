@@ -127,6 +127,56 @@ static void do_assert_long_equals(const char *function, const char *file, int li
 
 #define assert_long_equals(expected, actual) do_assert_long_equals(__func__, __FILE__, __LINE__, expected, actual)
 
+static void test_ifle(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_M1, OPC_IFLE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_0 , OPC_IFLE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(1, execute(bytecode_2));
+}
+
+static void test_ifgt(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_IFGT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_0, OPC_IFGT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(2, execute(bytecode_2));
+}
+
+static void test_ifge(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_IFGE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_0, OPC_IFGE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(1, execute(bytecode_2));
+}
+
+static void test_iflt(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_M1, OPC_IFLT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_0 , OPC_IFLT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(2, execute(bytecode_2));
+}
+
+static void test_ifne(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_IFNE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_ifeq(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_0, OPC_IFEQ, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
 static void test_goto(void)
 {
 	uint8_t bytecode[] = { OPC_GOTO, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
@@ -534,12 +584,12 @@ static void run_tests(void)
 	/* test_fcmpg(); */
 	/* test_dcmpl(); */
 	/* test_dcmpg(); */
-	/* test_ifeq(); */
-	/* test_ifne(); */
-	/* test_iflt(); */
-	/* test_ifge(); */
-	/* test_ifgt(); */
-	/* test_ifle(); */
+	test_ifeq();
+	test_ifne();
+	test_iflt();
+	test_ifge();
+	test_ifgt();
+	test_ifle();
 	/* test_if_icmpeq(); */
 	/* test_if_icmpne(); */
 	/* test_if_icmplt(); */
