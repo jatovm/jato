@@ -74,6 +74,22 @@ struct vm_object *vm_object_alloc(struct vm_class *class)
 	return res;
 }
 
+struct vm_object *vm_object_alloc_array_raw(struct vm_class *class, size_t elem_size, int count)
+{
+	struct vm_array *ret;
+
+	ret = gc_alloc(sizeof(*ret) + elem_size * count);
+	if (!ret)
+		return throw_oom_error();
+
+	vm_object_init_common(&ret->object);
+
+	ret->object.class	= class;
+	ret->array_length	= count;
+
+	return ret;
+}
+
 struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 {
 	struct vm_array *res;

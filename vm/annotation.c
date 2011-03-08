@@ -132,6 +132,18 @@ static struct vm_class *parse_array_element_type(uint8_t array_tag)
 	return array_class;
 }
 
+static struct vm_object *alloc_array_element(uint8_t tag, struct vm_class *class, int count)
+{
+	int elem_size;
+
+	if (tag == ELEMENT_TYPE_LONG || tag == ELEMENT_TYPE_DOUBLE)
+		elem_size	= 8;
+	else
+		elem_size	= sizeof(unsigned long);
+
+	return vm_object_alloc_array_raw(class, elem_size, count);
+}
+
 static struct vm_object *parse_array_element(const struct cafebabe_class *klass, struct cafebabe_element_value *e_value)
 {
 	struct vm_class *array_class;
@@ -147,7 +159,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 	if (!array_class)
 		return NULL;
 
-	ret		= vm_object_alloc_array(array_class, e_value->value.array_value.num_values);
+	ret		= alloc_array_element(array_tag, array_class, e_value->value.array_value.num_values);
 	if (!ret)
 		return NULL;
 
