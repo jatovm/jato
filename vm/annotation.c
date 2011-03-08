@@ -261,7 +261,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 	return ret;
 }
 
-static struct vm_object *parse_element_value(const struct cafebabe_class *klass, struct cafebabe_element_value *e_value)
+static struct vm_object *parse_element_value(struct vm_class *vmc, struct cafebabe_element_value *e_value)
 {
 	struct vm_object *ret;
 
@@ -269,7 +269,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_BYTE: {
 		jint value;
 
-		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_integer(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= byte_to_object(value);
@@ -278,7 +278,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_CHAR: {
 		jint value;
 
-		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_integer(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= char_to_object(value);
@@ -287,7 +287,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_DOUBLE: {
 		jdouble value;
 
-		if (cafebabe_class_constant_get_double(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_double(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= double_to_object(value);
@@ -296,7 +296,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_FLOAT: {
 		jfloat value;
 
-		if (cafebabe_class_constant_get_float(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_float(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= float_to_object(value);
@@ -305,7 +305,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_INTEGER: {
 		jint value;
 
-		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_integer(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= int_to_object(value);
@@ -314,7 +314,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_LONG: {
 		jlong value;
 
-		if (cafebabe_class_constant_get_long(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_long(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= long_to_object(value);
@@ -323,7 +323,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_SHORT: {
 		jint value;
 
-		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_integer(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= short_to_object(value);
@@ -332,7 +332,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_BOOLEAN: {
 		jint value;
 
-		if (cafebabe_class_constant_get_integer(klass, e_value->value.const_value_index, &value))
+		if (cafebabe_class_constant_get_integer(vmc->class, e_value->value.const_value_index, &value))
 			goto error_out;
 
 		ret		= boolean_to_object(value);
@@ -342,7 +342,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 		const struct cafebabe_constant_info_utf8 *utf8;
 		struct vm_object *string;
 
-		if (cafebabe_class_constant_get_utf8(klass, e_value->value.const_value_index, &utf8))
+		if (cafebabe_class_constant_get_utf8(vmc->class, e_value->value.const_value_index, &utf8))
 			goto error_out;
 
 		string = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);
@@ -355,13 +355,33 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	case ELEMENT_TYPE_ENUM_CONSTANT:
 		ret		= NULL; /* TODO */
 		break;
-	case ELEMENT_TYPE_CLASS:
-		ret		= NULL; /* TODO */
+	case ELEMENT_TYPE_CLASS: {
+		const struct cafebabe_constant_info_utf8 *utf8;
+		struct vm_type_info type;
+		struct vm_class *class;
+		char *class_name, *p;
+
+		if (cafebabe_class_constant_get_utf8(vmc->class, e_value->value.class_info_index, &utf8))
+			goto error_out;
+
+		p = class_name	= strndup((char *) utf8->bytes, utf8->length);
+
+		if (parse_type(&class_name, &type))
+			goto error_out;
+
+		class = classloader_load(get_system_class_loader(), type.class_name);
+		if (!class)
+			goto error_out;
+
+		ret		= class->object;
+
+		free(p);
 		break;
+	}
 	case ELEMENT_TYPE_ANNOTATION_TYPE: {
 		struct vm_annotation *child_vma;
 
-		child_vma	= vm_annotation_parse(klass, e_value->value.annotation_value);
+		child_vma	= vm_annotation_parse(vmc, e_value->value.annotation_value);
 		if (!child_vma)
 			goto error_out;
 
@@ -371,7 +391,7 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 		break;
 	}
 	case ELEMENT_TYPE_ARRAY: {
-		ret		= parse_array_element(klass, e_value);
+		ret		= parse_array_element(vmc->class, e_value);
 		break;
 	}
 	default:
@@ -382,15 +402,18 @@ static struct vm_object *parse_element_value(const struct cafebabe_class *klass,
 	return ret;
 
 error_out:
+	if (exception_occurred())
+		return rethrow_exception();
+
 	return NULL;
 }
 
-struct vm_annotation *vm_annotation_parse(const struct cafebabe_class *klass, struct cafebabe_annotation *annotation)
+struct vm_annotation *vm_annotation_parse(struct vm_class *vmc, struct cafebabe_annotation *annotation)
 {
 	const struct cafebabe_constant_info_utf8 *type;
 	struct vm_annotation *vma;
 
-        if (cafebabe_class_constant_get_utf8(klass, annotation->type_index, &type))
+        if (cafebabe_class_constant_get_utf8(vmc->class, annotation->type_index, &type))
                 return NULL;
 
 	vma = calloc(1, sizeof *vma);
@@ -410,7 +433,7 @@ struct vm_annotation *vm_annotation_parse(const struct cafebabe_class *klass, st
 		const struct cafebabe_constant_info_utf8 *name;
 		struct vm_element_value_pair *vme;
 
-		if (cafebabe_class_constant_get_utf8(klass, ev_pair->element_name_index, &name))
+		if (cafebabe_class_constant_get_utf8(vmc->class, ev_pair->element_name_index, &name))
 			goto out_free;
 
 		vme		= &vma->elements[vma->nr_elements++];
@@ -419,7 +442,7 @@ struct vm_annotation *vm_annotation_parse(const struct cafebabe_class *klass, st
 		if (!vme->name)
 			goto out_free;
 
-		vme->value	= parse_element_value(klass, &ev_pair->value);
+		vme->value	= parse_element_value(vmc, &ev_pair->value);
 	}
 
 	return vma;

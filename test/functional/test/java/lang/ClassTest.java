@@ -20,7 +20,7 @@ public class ClassTest extends TestCase {
     assertEquals(Double.MAX_VALUE, tag.doubleValue());
     assertEquals("hello, world", tag.stringValue());
 //  assertEquals(Required.YES, tag.enumValue());
-//  assertEquals(Object.class, tag.classValue());
+    assertEquals(Object.class, tag.classValue());
 
     assertArrayEquals(new byte[]     { Byte.MIN_VALUE,      Byte.MAX_VALUE      }, tag.byteArrayValue());
     assertArrayEquals(new char[]     { Character.MIN_VALUE, Character.MAX_VALUE }, tag.charArrayValue());

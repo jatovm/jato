@@ -528,7 +528,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		struct cafebabe_annotation *annotation = &annotations_attribute.annotations[i];
 		struct vm_annotation *vma;
 
-		vma = vm_annotation_parse(class, annotation);
+		vma = vm_annotation_parse(vmc, annotation);
 		if (!vma)
 			goto error_free_annotations;
 
