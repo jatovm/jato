@@ -6,6 +6,7 @@
 
 struct vm_object;
 
+struct vm_object *enum_to_object(struct vm_object *enum_type, struct vm_object *name);
 struct vm_object *boolean_to_object(jboolean value);
 struct vm_object *byte_to_object(jbyte value);
 struct vm_object *char_to_object(jchar value);

@@ -421,6 +421,11 @@ static int object_to_jvalue(void *field_ptr, enum vm_type type,
 	return 0;
 }
 
+struct vm_object *enum_to_object(struct vm_object *enum_type, struct vm_object *name)
+{
+	return vm_call_method_object(vm_java_lang_Enum_valueOf, enum_type, name);
+}
+
 struct vm_object *boolean_to_object(jboolean value)
 {
 	return vm_call_method_object(vm_java_lang_Boolean_valueOf, value);

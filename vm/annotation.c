@@ -85,6 +85,42 @@ struct vm_object *vm_annotation_to_object(struct vm_annotation *vma)
 	return annotation;
 }
 
+static struct vm_object *parse_enum_element_value(struct vm_class *vmc, struct cafebabe_element_value *e_value)
+{
+	const struct cafebabe_constant_info_utf8 *utf8;
+	struct vm_object *ret = NULL;
+	struct vm_type_info type;
+	struct vm_class *class;
+	struct vm_object *name;
+	char *class_name, *p;
+
+	if (cafebabe_class_constant_get_utf8(vmc->class, e_value->value.enum_const_value.type_name_index, &utf8))
+		return NULL;
+
+	p = class_name = strndup((char *) utf8->bytes, utf8->length);
+
+	if (parse_type(&class_name, &type))
+		goto error_out;
+
+	class = classloader_load(get_system_class_loader(), type.class_name);
+	if (!class)
+		goto error_out;
+
+	if (cafebabe_class_constant_get_utf8(vmc->class, e_value->value.enum_const_value.const_name_index, &utf8))
+		goto error_out;
+
+	name = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);
+	if (!name)
+		goto error_out;
+
+	ret		= enum_to_object(class->object, name);
+
+error_out:
+	free(p);
+
+	return ret;
+}
+
 static uint8_t parse_array_element_tag(struct cafebabe_element_value *e_value)
 {
 	struct cafebabe_element_value *child_e_value	= &e_value->value.array_value.values[0];
@@ -123,6 +159,9 @@ static struct vm_class *parse_array_element_type(uint8_t array_tag)
 		break;
 	case ELEMENT_TYPE_STRING:
 		array_class		= vm_array_of_java_lang_String;
+		break;
+	case ELEMENT_TYPE_ENUM_CONSTANT:
+		array_class		= vm_array_of_java_lang_Enum;
 		break;
 	case ELEMENT_TYPE_CLASS:
 		array_class		= vm_array_of_java_lang_Class;
@@ -256,6 +295,16 @@ static struct vm_object *parse_array_element(struct vm_class *vmc, struct cafeba
 			array_set_field_object(ret, i, string);
 			break;
 		}
+		case ELEMENT_TYPE_ENUM_CONSTANT: {
+			struct vm_object *obj;
+
+			obj		= parse_enum_element_value(vmc, child_e_value);
+			if (!obj)
+				return NULL;
+
+			array_set_field_object(ret, i, obj);
+			break;
+		}
 		case ELEMENT_TYPE_CLASS: {
 			const struct cafebabe_constant_info_utf8 *utf8;
 			struct vm_type_info type;
@@ -378,9 +427,10 @@ static struct vm_object *parse_element_value(struct vm_class *vmc, struct cafeba
 		ret		= string;
 		break;
 	}
-	case ELEMENT_TYPE_ENUM_CONSTANT:
-		ret		= NULL; /* TODO */
+	case ELEMENT_TYPE_ENUM_CONSTANT: {
+		ret		= parse_enum_element_value(vmc, e_value);
 		break;
+	}
 	case ELEMENT_TYPE_CLASS: {
 		const struct cafebabe_constant_info_utf8 *utf8;
 		struct vm_type_info type;
