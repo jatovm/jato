@@ -57,6 +57,8 @@ struct vm_class *vm_java_util_Properties;
 struct vm_class *vm_java_lang_VMThrowable;
 struct vm_class *vm_java_lang_StackTraceElement;
 struct vm_class *vm_array_of_java_lang_StackTraceElement;
+struct vm_class *vm_java_lang_Enum;
+struct vm_class *vm_array_of_java_lang_Enum;
 struct vm_class *vm_java_lang_Error;
 struct vm_class *vm_java_lang_InternalError;
 struct vm_class *vm_java_lang_OutOfMemoryError;
@@ -138,6 +140,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/Cloneable",	&vm_java_lang_Cloneable },
 	{ "java/lang/String",		&vm_java_lang_String },
 	{ "[Ljava/lang/String;",	&vm_array_of_java_lang_String },
+	{ "[Ljava/lang/Enum;",		&vm_array_of_java_lang_Enum },
 	{ "java/lang/Throwable",	&vm_java_lang_Throwable },
 	{ "java/util/HashMap",		&vm_java_util_HashMap },
 	{ "java/util/Properties",	&vm_java_util_Properties },
@@ -150,6 +153,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ClassCastException", &vm_java_lang_ClassCastException },
 	{ "java/lang/ClassNotFoundException", &vm_java_lang_ClassNotFoundException },
 	{ "java/lang/Error",		&vm_java_lang_Error },
+	{ "java/lang/Enum",		&vm_java_lang_Enum },
 	{ "java/lang/InternalError",	 &vm_java_lang_InternalError },
 	{ "java/lang/OutOfMemoryError",	 &vm_java_lang_OutOfMemoryError },
 	{ "java/lang/ExceptionInInitializerError", &vm_java_lang_ExceptionInInitializerError },
@@ -382,6 +386,7 @@ struct vm_method *vm_java_lang_Character_valueOf;
 struct vm_method *vm_java_lang_Class_init;
 struct vm_method *vm_java_lang_Double_init;
 struct vm_method *vm_java_lang_Double_valueOf;
+struct vm_method *vm_java_lang_Enum_valueOf;
 struct vm_method *vm_java_lang_Float_init;
 struct vm_method *vm_java_lang_Float_valueOf;
 struct vm_method *vm_java_lang_InheritableThreadLocal_newChildThread;
@@ -572,6 +577,12 @@ static const struct method_preload_entry method_preload_entries[] = {
 		"valueOf",
 		"(D)Ljava/lang/Double;",
 		&vm_java_lang_Double_valueOf,
+	},
+	{
+		&vm_java_lang_Enum,
+		"valueOf",
+		"(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;",
+		&vm_java_lang_Enum_valueOf,
 	},
 	{
 		&vm_java_lang_Long,
