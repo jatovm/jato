@@ -31,7 +31,7 @@ public class ClassTest extends TestCase {
     assertArrayEquals(new double[]   { Double.MIN_VALUE,    Double.MAX_VALUE    }, tag.doubleArrayValue());
     assertArrayEquals(new String[]   { "hello, world",      "Hello, World!"     }, tag.stringArrayValue());
 //  assertArrayEquals(new Required[] { Required.YES,        Required.NO         }, tag.enumArrayValue());
-//  assertArrayEquals(new Class<?>[] { Integer.class,       Long.class          }, tag.classArrayValue());
+    assertArrayEquals(new Class<?>[] { Integer.class,       Long.class          }, tag.classArrayValue());
   }
 
   @Tag(

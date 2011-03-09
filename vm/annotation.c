@@ -124,6 +124,9 @@ static struct vm_class *parse_array_element_type(uint8_t array_tag)
 	case ELEMENT_TYPE_STRING:
 		array_class		= vm_array_of_java_lang_String;
 		break;
+	case ELEMENT_TYPE_CLASS:
+		array_class		= vm_array_of_java_lang_Class;
+		break;
 	default:
 		array_class = NULL;
 		break;
@@ -144,7 +147,7 @@ static struct vm_object *alloc_array_element(uint8_t tag, struct vm_class *class
 	return vm_object_alloc_array_raw(class, elem_size, count);
 }
 
-static struct vm_object *parse_array_element(const struct cafebabe_class *klass, struct cafebabe_element_value *e_value)
+static struct vm_object *parse_array_element(struct vm_class *vmc, struct cafebabe_element_value *e_value)
 {
 	struct vm_class *array_class;
 	struct vm_object *ret;
@@ -170,7 +173,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_BYTE: {
 			jint value;
 
-			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_integer(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_byte(ret, i, value);
@@ -179,7 +182,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_CHAR: {
 			jint value;
 
-			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_integer(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_char(ret, i, value);
@@ -188,7 +191,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_DOUBLE: {
 			jdouble value;
 
-			if (cafebabe_class_constant_get_double(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_double(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_double(ret, i, value);
@@ -197,7 +200,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_FLOAT: {
 			jfloat value;
 
-			if (cafebabe_class_constant_get_float(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_float(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_float(ret, i, value);
@@ -206,7 +209,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_INTEGER: {
 			jint value;
 
-			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_integer(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_int(ret, i, value);
@@ -215,7 +218,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_LONG: {
 			jlong value;
 
-			if (cafebabe_class_constant_get_long(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_long(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_long(ret, i, value);
@@ -224,7 +227,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_SHORT: {
 			jint value;
 
-			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_integer(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_short(ret, i, value);
@@ -233,7 +236,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 		case ELEMENT_TYPE_BOOLEAN: {
 			jint value;
 
-			if (cafebabe_class_constant_get_integer(klass, child_e_value->value.const_value_index, &value))
+			if (cafebabe_class_constant_get_integer(vmc->class, child_e_value->value.const_value_index, &value))
 				return NULL;
 
 			array_set_field_boolean(ret, i, value);
@@ -243,7 +246,7 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 			const struct cafebabe_constant_info_utf8 *utf8;
 			struct vm_object *string;
 
-			if (cafebabe_class_constant_get_utf8(klass, child_e_value->value.const_value_index, &utf8))
+			if (cafebabe_class_constant_get_utf8(vmc->class, child_e_value->value.const_value_index, &utf8))
 				return NULL;
 
 			string = vm_object_alloc_string_from_utf8(utf8->bytes, utf8->length);
@@ -251,6 +254,29 @@ static struct vm_object *parse_array_element(const struct cafebabe_class *klass,
 				return NULL;
 
 			array_set_field_object(ret, i, string);
+			break;
+		}
+		case ELEMENT_TYPE_CLASS: {
+			const struct cafebabe_constant_info_utf8 *utf8;
+			struct vm_type_info type;
+			struct vm_class *class;
+			char *class_name, *p;
+
+			if (cafebabe_class_constant_get_utf8(vmc->class, child_e_value->value.class_info_index, &utf8))
+				return NULL;
+
+			p = class_name	= strndup((char *) utf8->bytes, utf8->length);
+
+			if (parse_type(&class_name, &type))
+				return NULL;
+
+			class = classloader_load(get_system_class_loader(), type.class_name);
+			if (!class)
+				return NULL;
+
+			array_set_field_object(ret, i, class->object);
+
+			free(p);
 			break;
 		}
 		default:
@@ -391,7 +417,7 @@ static struct vm_object *parse_element_value(struct vm_class *vmc, struct cafeba
 		break;
 	}
 	case ELEMENT_TYPE_ARRAY: {
-		ret		= parse_array_element(vmc->class, e_value);
+		ret		= parse_array_element(vmc, e_value);
 		break;
 	}
 	default:
