@@ -45,6 +45,7 @@ public class ClassTest extends TestCase {
     stringValue      = "hello, world",
     enumValue        = Required.YES,
     classValue       = Object.class,
+    annotationValue  = @Tag2,
 
     byteArrayValue   = { Byte.MIN_VALUE,      Byte.MAX_VALUE      },
     charArrayValue   = { Character.MIN_VALUE, Character.MAX_VALUE },
@@ -72,6 +73,7 @@ public class ClassTest extends TestCase {
     String     stringValue();
     Required   enumValue();
     Class<?>   classValue();
+    Tag2       annotationValue();
 
     byte[]     byteArrayValue();
     char[]     charArrayValue();
@@ -86,6 +88,8 @@ public class ClassTest extends TestCase {
   }
 
   public static enum Required { YES, NO }
+
+  public @interface Tag2 { }
 
   public static void testGetClasses() {
      List<String> classNames = sort(map(Arrays.asList(Type.class.getClasses()), new Function<Class<?>, String>() {

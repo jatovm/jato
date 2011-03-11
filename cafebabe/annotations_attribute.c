@@ -79,9 +79,11 @@ cafebabe_element_value_parse(struct cafebabe_element_value *v, struct cafebabe_s
 		break;
 	}
 	case ELEMENT_TYPE_ANNOTATION_TYPE: {
-		struct cafebabe_annotation unused; /* XXX */
+		v->value.annotation_value = malloc(sizeof(struct cafebabe_annotation));
+		if (!v->value.annotation_value)
+			goto out;
 
-		err = cafebabe_annotation_parse(&unused, s);
+		err = cafebabe_annotation_parse(v->value.annotation_value, s);
 		if (err)
 			goto out;
 		break;
@@ -177,6 +179,15 @@ out:
 static void
 cafebabe_annotation_free(struct cafebabe_annotation *a)
 {
+	for (unsigned int i = 0; i < a->num_element_value_pairs; i++) {
+		struct cafebabe_element_value_pair *ev = &a->element_value_pairs[i];
+
+		switch (ev->value.tag) {
+		case ELEMENT_TYPE_ANNOTATION_TYPE:
+			free(ev->value.value.annotation_value);
+			break;
+		}
+	}
 	free(a->element_value_pairs);
 }
 
