@@ -21,6 +21,7 @@ public class ClassTest extends TestCase {
     assertEquals("hello, world", tag.stringValue());
     assertEquals(Required.YES, tag.enumValue());
     assertEquals(Object.class, tag.classValue());
+    assertNotNull(tag.annotationValue());
 
     assertArrayEquals(new byte[]     { Byte.MIN_VALUE,      Byte.MAX_VALUE      }, tag.byteArrayValue());
     assertArrayEquals(new char[]     { Character.MIN_VALUE, Character.MAX_VALUE }, tag.charArrayValue());
@@ -32,6 +33,7 @@ public class ClassTest extends TestCase {
     assertArrayEquals(new String[]   { "hello, world",      "Hello, World!"     }, tag.stringArrayValue());
     assertArrayEquals(new Required[] { Required.YES,        Required.NO         }, tag.enumArrayValue());
     assertArrayEquals(new Class<?>[] { Integer.class,       Long.class          }, tag.classArrayValue());
+    assertNotNull(tag.annotationArrayValue());
   }
 
   @Tag(
@@ -56,7 +58,8 @@ public class ClassTest extends TestCase {
     doubleArrayValue = { Double.MIN_VALUE,    Double.MAX_VALUE    },
     stringArrayValue = { "hello, world",      "Hello, World!"     },
     enumArrayValue   = { Required.YES,        Required.NO         },
-    classArrayValue  = { Integer.class,       Long.class          }
+    classArrayValue  = { Integer.class,       Long.class          },
+    annotationArrayValue = { @Tag2, @Tag2 }
   )
   public static class TaggedClass {
   }
@@ -85,6 +88,7 @@ public class ClassTest extends TestCase {
     String[]   stringArrayValue();
     Required[] enumArrayValue();
     Class<?>[] classArrayValue();
+    Tag2[]     annotationArrayValue();
   }
 
   public static enum Required { YES, NO }

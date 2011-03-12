@@ -166,6 +166,9 @@ static struct vm_class *parse_array_element_type(uint8_t array_tag)
 	case ELEMENT_TYPE_CLASS:
 		array_class		= vm_array_of_java_lang_Class;
 		break;
+	case ELEMENT_TYPE_ANNOTATION_TYPE:
+		array_class		= vm_array_of_java_lang_annotation_Annotation;
+		break;
 	default:
 		array_class = NULL;
 		break;
@@ -326,6 +329,21 @@ static struct vm_object *parse_array_element(struct vm_class *vmc, struct cafeba
 			array_set_field_object(ret, i, class->object);
 
 			free(p);
+			break;
+		}
+		case ELEMENT_TYPE_ANNOTATION_TYPE: {
+			struct vm_annotation *child_vma;
+			struct vm_object *obj;
+
+			child_vma	= vm_annotation_parse(vmc, child_e_value->value.annotation_value);
+			if (!child_vma)
+				return NULL;
+
+			obj	= vm_annotation_to_object(child_vma);
+			if (!obj)
+				return NULL;
+
+			array_set_field_object(ret, i, obj);
 			break;
 		}
 		default:
