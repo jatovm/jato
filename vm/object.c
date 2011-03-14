@@ -87,7 +87,7 @@ struct vm_object *vm_object_alloc_array_raw(struct vm_class *class, size_t elem_
 	ret->object.class	= class;
 	ret->array_length	= count;
 
-	return &res->object;
+	return &ret->object;
 }
 
 struct vm_object *vm_object_alloc_primitive_array(int type, int count)
