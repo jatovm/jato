@@ -406,3 +406,13 @@ JNIEXPORT jstring JNICALL Java_java_lang_JNITest_staticToUpper(JNIEnv *env, jcla
 
 	return (*env)->NewStringUTF(env, upperStr);
 }
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticGetVersion
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_java_lang_JNITest_staticGetVersion(JNIEnv *env, jclass clazz)
+{
+	return (*env)->GetVersion(env);
+}

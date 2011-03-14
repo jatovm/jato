@@ -272,8 +272,7 @@ JavaVM *vm_jni_get_current_java_vm(void)
 
 static jint JNI_GetVersion(JNIEnv *env)
 {
-	JNI_NOT_IMPLEMENTED;
-	return 0;
+	return JNI_VERSION_1_6;
 }
 
 static jclass JNI_DefineClass(JNIEnv *env, const char *name, jobject loader,const jbyte *buf, jsize bufLen)

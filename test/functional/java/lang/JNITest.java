@@ -77,6 +77,9 @@ public class JNITest extends TestCase {
 
     native static public String staticToUpper(String str);
 
+    // JNI 1.6 native test functions
+    native static public int staticGetVersion();
+
     private static JNITest jniTest = new JNITest();
 
     public static void testReturnPassedString() {
@@ -148,6 +151,11 @@ public class JNITest extends TestCase {
         assertEquals("TESTSTRING", staticToUpper("testString"));
     }
 
+    // JNI 1.6 function tests
+    public static void testGetVersion() {
+        assertEquals(0x00010006, staticGetVersion());
+    }
+
     public static void main(String[] args) {
         testReturnPassedString();
         testReturnPassedInt();
@@ -159,5 +167,6 @@ public class JNITest extends TestCase {
         testReturnPassedFloat();
         testReturnPassedDouble();
         testStringManipulation();
+        testGetVersion();
     }
 }
