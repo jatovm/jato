@@ -3,7 +3,7 @@
 
 #include "vm/jni.h"
 
-#define JAVA_VERSION "1.5.0"
-#define JNI_VERSION JNI_VERSION_1_6
+#define JAVA_VERSION		"1.6.0"
+#define JNI_VERSION		JNI_VERSION_1_6
 
 #endif
