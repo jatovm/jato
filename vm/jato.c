@@ -86,6 +86,7 @@
 #include "vm/jni.h"
 #include "vm/gc.h"
 #include "vm/vm.h"
+#include "vm/java-version.h"
 
 #include "arch/init.h"
 
@@ -232,8 +233,6 @@ struct system_property {
 	const char *key;
 	const char *value;
 };
-
-#define JAVA_VERSION		"1.5.0"
 
 static struct system_property system_properties[] = {
 	{ "java.vm.name",			"jato"				},

@@ -44,6 +44,7 @@
 #include "vm/reflection.h"
 #include "vm/stack-trace.h"
 #include "vm/reference.h"
+#include "vm/java-version.h"
 
 #define check_null(x)							\
 	if ((x) == NULL) {						\
@@ -272,7 +273,7 @@ JavaVM *vm_jni_get_current_java_vm(void)
 
 static jint JNI_GetVersion(JNIEnv *env)
 {
-	return JNI_VERSION_1_6;
+	return JNI_VERSION;
 }
 
 static jclass JNI_DefineClass(JNIEnv *env, const char *name, jobject loader,const jbyte *buf, jsize bufLen)
