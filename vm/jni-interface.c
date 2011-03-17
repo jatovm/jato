@@ -1584,7 +1584,7 @@ static jlong JNI_GetDirectBufferCapacity(JNIEnv *env, jobject buf)
 {
 	enter_vm_from_jni();
 
-	error("%s is not supported", __func__);
+	JNI_NOT_IMPLEMENTED;
 
 	return 0;
 }
