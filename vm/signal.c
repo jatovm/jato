@@ -159,8 +159,6 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	}
 
  exit:
-	vm_jni_check_trap(si->si_addr);
-
 	print_backtrace_and_die(sig, si, ctx);
 }
 

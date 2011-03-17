@@ -129,8 +129,6 @@ void vm_jni_init(void)
 	jni_objects = alloc_hash_map(100, jni_object_hash, jni_object_compare);
 	if (!jni_objects)
 		error("failed to create jni_objects hash map");
-
-	vm_jni_init_interface();
 }
 
 typedef jint onload_fn(JavaVM *, void *);

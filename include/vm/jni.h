@@ -358,12 +358,10 @@ struct JNINativeInterface_ {
 };
 
 void vm_jni_init(void);
-void vm_jni_init_interface(void);
 JNIEnv *vm_jni_get_jni_env(void);
 JavaVM *vm_jni_get_current_java_vm(void);
 int vm_jni_load_object(const char *name, struct vm_object *classloader);
 void *vm_jni_lookup_method(const char *class_name, const char *method_name,
 			   const char *method_type);
-bool vm_jni_check_trap(void *ptr);
 
 #endif
