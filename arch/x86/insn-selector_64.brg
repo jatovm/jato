@@ -1042,6 +1042,7 @@ arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
 
 reg:	EXPR_MULTIANEWARRAY(arg)
 {
+	struct var_info *rsi, *rdi, *rdx;
 	struct var_info *xax;
 	struct var_info *stack_ptr;
 	unsigned int dimension;
@@ -1058,9 +1059,15 @@ reg:	EXPR_MULTIANEWARRAY(arg)
 	size_check = to_expr(expr->multianewarray_dimensions);
 	dimension = nr_args(to_expr(size_check->size_expr));
 
-	select_insn(s, tree, reg_insn(INSN_PUSH_REG, stack_ptr));
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimension));
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) expr->multianewarray_ref_type));
+	rdx = get_fixed_var(s->b_parent, MACH_REG_RDX);
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, stack_ptr, rdx));
+
+	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, dimension, rsi));
+
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) expr->multianewarray_ref_type, rdi));
+
 	select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) vm_object_alloc_multi_array));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xax, state->reg1));
 
