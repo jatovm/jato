@@ -253,7 +253,7 @@ static jint JNI_AttachCurrentThreadAsDaemon(JavaVM *vm, void **penv, void *args)
 	return 0;
 }
 
-const struct JNIInvokeInterface_ defaultJNIInvokeInterface = {
+const struct JNIInvokeInterface_ default_jni_invoke_interface = {
     DEFINE_JNI_FUNCTION(DestroyJavaVM),
     DEFINE_JNI_FUNCTION(AttachCurrentThread),
     DEFINE_JNI_FUNCTION(DetachCurrentThread),
@@ -261,7 +261,7 @@ const struct JNIInvokeInterface_ defaultJNIInvokeInterface = {
     DEFINE_JNI_FUNCTION(AttachCurrentThreadAsDaemon),
 };
 
-const struct JNIInvokeInterface_* vm_jni_default_invoke_interface = &defaultJNIInvokeInterface;
+const struct JNIInvokeInterface_* vm_jni_default_invoke_interface = &default_jni_invoke_interface;
 const struct JNIInvokeInterface_** vm_jni_default_invoke_interface_ptr = &vm_jni_default_invoke_interface;
 
 JavaVM *vm_jni_get_current_java_vm(void)
