@@ -253,7 +253,6 @@ check-integration: $(LIB_FILE)
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jato/internal/VM.java \
-	test/functional/java/lang/VMClassTest.java \
 	test/functional/java/lang/JNITest.java \
 	test/functional/java/lang/reflect/ClassTest.java \
 	test/functional/java/lang/reflect/MethodTest.java \

@@ -119,9 +119,60 @@ public class ClassTest extends TestCase {
     @SuppressWarnings("unused") private class InnerInstancePrivate { }
   }
 
+  public static void testGetEnclosingClass() {
+    assertNull(Object.class.getEnclosingClass());
+    class LocalClass { }
+    assertEquals(ClassTest.class, LocalClass.class.getEnclosingClass());
+  }
+
+  public static void testIsAnonymousClass() {
+    assertFalse(int.class.isAnonymousClass());
+    assertFalse(int[].class.isAnonymousClass());
+    assertFalse(Object.class.isAnonymousClass());
+    assertFalse(Object[].class.isAnonymousClass());
+    assertTrue(new Object() { }.getClass().isAnonymousClass());
+  }
+
+  public static void testIsArray() {
+    assertFalse(int.class.isArray());
+    assertTrue(int[].class.isArray());
+    assertFalse(Object.class.isArray());
+    assertTrue(Object[].class.isArray());
+    assertFalse(new Object() { }.getClass().isArray());
+  }
+
+  public static void testIsLocalClass() {
+    assertFalse(int.class.isLocalClass());
+    assertFalse(int[].class.isLocalClass());
+    assertFalse(Object.class.isLocalClass());
+    assertFalse(Object[].class.isLocalClass());
+    assertFalse(new Object() { }.getClass().isLocalClass());
+    class LocalClass { }
+    assertTrue(LocalClass.class.isLocalClass());
+  }
+
+  public static void testIsMemberClass() {
+    assertFalse(Object.class.isMemberClass());
+    assertTrue(MemberClass.class.isMemberClass());
+  }
+  class MemberClass { }
+
+  public static void testIsPrimitive() {
+    assertTrue(int.class.isPrimitive());
+    assertFalse(int[].class.isPrimitive());
+    assertFalse(Object.class.isPrimitive());
+    assertFalse(Object[].class.isPrimitive());
+    assertFalse(new Object() { }.getClass().isPrimitive());
+  }
+
   public static void main(String[] args) {
     testGetAnnotation();
     testGetClasses();
     testGetDeclaredClasses();
+    testIsAnonymousClass();
+    testIsArray();
+    testIsLocalClass();
+    testIsMemberClass();
+    testIsPrimitive();
   }
 }
