@@ -22,7 +22,8 @@ Fetch the latest sources with:
 Before installing Jato ensure you have the following software installed on your
 system:
 
-  - GNU Classpath 0.97 or higher
+  - GNU Classpath 0.97 or higher. You're encouraged to use the latest CVS
+    HEAD when possible.
 
   - Eclipse Java Compiler
 
