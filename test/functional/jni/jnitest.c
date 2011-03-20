@@ -409,6 +409,20 @@ JNIEXPORT jstring JNICALL Java_java_lang_JNITest_staticToUpper(JNIEnv *env, jcla
 
 /*
  * Class:     java_lang_JNITest
+ * Method:    staticTestJNIEnvPassing
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_staticTestJNIEnvIsInitializedCorrectly(JNIEnv *env, jclass clazz)
+{
+	return	((*env)->reserved0 == NULL) &&
+			((*env)->reserved1 == NULL) &&
+			((*env)->reserved2 == NULL) &&
+			((*env)->reserved3 == NULL) &&
+			((*env)->GetVersion != NULL);
+}
+
+/*
+ * Class:     java_lang_JNITest
  * Method:    staticGetVersion
  * Signature: ()I
  */
