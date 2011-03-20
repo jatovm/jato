@@ -805,3 +805,69 @@ void test_encoding_memlocal(void)
 
 	teardown();
 }
+
+void test_encoding_fstp_memlocal(void)
+{
+#ifdef CONFIG_32_BIT
+	uint8_t encoding[] = { 0xd9, 0x9d, 0x14, 0x00, 0x00, 0x00 };
+#else
+	uint8_t encoding[] = { 0xd9, 0x9d, 0x10, 0x00, 0x00, 0x00 };
+#endif
+	struct stack_frame stack_frame;
+	struct stack_slot local_slot;
+	struct insn insn = { };
+
+	stack_frame	= (struct stack_frame) {
+		.nr_args		= 1,
+	};
+	local_slot	= (struct stack_slot) {
+		.parent			= &stack_frame,
+		.index			= 0x0,
+	};
+
+	setup();
+
+	/* fstps	$0x14(%ebp)|$0x10(%rbp) */
+	insn.type			= INSN_FSTP_MEMLOCAL;
+	insn.src.slot			= &local_slot;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
+void test_encoding_fstp_64_memlocal(void)
+{
+#ifdef CONFIG_32_BIT
+	uint8_t encoding[] = { 0xdd, 0x9d, 0x14, 0x00, 0x00, 0x00 };
+#else
+	uint8_t encoding[] = { 0xdd, 0x9d, 0x10, 0x00, 0x00, 0x00 };
+#endif
+	struct stack_frame stack_frame;
+	struct stack_slot local_slot;
+	struct insn insn = { };
+
+	stack_frame	= (struct stack_frame) {
+		.nr_args		= 1,
+	};
+	local_slot	= (struct stack_slot) {
+		.parent			= &stack_frame,
+		.index			= 0x0,
+	};
+
+	setup();
+
+	/* fstpl	$0x12345678(%ebp) */
+	insn.type			= INSN_FSTP_64_MEMLOCAL;
+	insn.src.slot			= &local_slot;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
