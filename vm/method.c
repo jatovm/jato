@@ -1,6 +1,7 @@
 #include "cafebabe/attribute_array.h"
 #include "cafebabe/attribute_info.h"
 #include "cafebabe/line_number_table_attribute.h"
+#include "cafebabe/annotations_attribute.h"
 #include "cafebabe/class.h"
 #include "cafebabe/code_attribute.h"
 #include "cafebabe/constant_pool.h"
@@ -10,6 +11,7 @@
 #include "vm/class.h"
 #include "vm/method.h"
 #include "vm/natives.h"
+#include "vm/annotation.h"
 
 #include "jit/compilation-unit.h"
 #include "jit/cu-mapping.h"
@@ -126,8 +128,41 @@ int vm_method_init(struct vm_method *vmm,
 	if (cafebabe_read_line_number_table_attribute(class, &vmm->code_attribute.attributes, &vmm->line_number_table_attribute))
 		goto error_free_type;
 
+	struct cafebabe_annotations_attribute annotations_attribute;
+
+	if (cafebabe_read_annotations_attribute(class, &method->attributes, &annotations_attribute))
+		goto out;
+
+	if (!annotations_attribute.num_annotations)
+		goto out_denit_annotations;
+
+	vmm->annotations = vm_alloc(sizeof(struct vm_annotation *) * annotations_attribute.num_annotations);
+	if (!vmm->annotations)
+		goto out_denit_annotations;
+
+	for (unsigned int i = 0; i < annotations_attribute.num_annotations; i++) {
+		struct cafebabe_annotation *annotation = &annotations_attribute.annotations[i];
+		struct vm_annotation *vma;
+
+		vma = vm_annotation_parse(vmc, annotation);
+		if (!vma)
+			goto error_free_annotations;
+
+		vmm->annotations[vmm->nr_annotations++] = vma;
+	}
+
+out_denit_annotations:
+	cafebabe_annotations_attribute_deinit(&annotations_attribute);
+out:
 	return 0;
 
+error_free_annotations:
+	for (unsigned int i = 0; i < vmm->nr_annotations; i++) {
+		struct vm_annotation *vma = vmm->annotations[i];
+
+		vm_annotation_free(vma);
+	}
+	vm_free(vmm->annotations);
 error_free_type:
 	free(vmm->type);
 error_free_name:

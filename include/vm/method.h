@@ -58,6 +58,9 @@ struct vm_method {
 	struct jit_trampoline *trampoline;
 
 	char flags;
+
+	unsigned int nr_annotations;
+	struct vm_annotation **annotations;
 };
 
 #define VM_METHOD_FLAG_VM_NATIVE	(1 << 1)

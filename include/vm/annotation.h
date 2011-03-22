@@ -15,6 +15,7 @@ struct vm_annotation {
 	struct vm_element_value_pair	*elements;
 };
 
+struct vm_class *vm_annotation_get_type(struct vm_annotation *vma);
 struct vm_object *vm_annotation_to_object(struct vm_annotation *vma);
 struct vm_annotation *vm_annotation_parse(struct vm_class *vmc, struct cafebabe_annotation *annotation);
 void vm_annotation_free(struct vm_annotation *vma);

@@ -215,7 +215,7 @@ cafebabe_read_annotations_attribute(const struct cafebabe_class *class,
 	if (cafebabe_attribute_array_get(attributes, "RuntimeVisibleAnnotations", class, &annotations_index))
 		return 0;
 
-	attribute = &class->attributes.array[annotations_index];
+	attribute = &attributes->array[annotations_index];
 
 	cafebabe_stream_open_buffer(&stream, attribute->info, attribute->attribute_length);
 
