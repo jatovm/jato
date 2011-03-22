@@ -319,8 +319,8 @@ void *radix_tree_lookup(struct radix_tree *tree, unsigned long key)
 
 /**
  * radix_tree_lookup_prev - get the value associated with @key or
- *                          the value associated with the preceeding key.
- *                          Returns NULL when no preceeding key exists.
+ *                          the value associated with the preceding key.
+ *                          Returns NULL when no preceding key exists.
  *
  * @tree: a radix tree to lookup in.
  * @key: a key which value should be returned.

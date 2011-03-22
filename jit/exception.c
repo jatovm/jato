@@ -115,7 +115,7 @@ new_exception(struct vm_class *vmc, const char *message)
 
 /**
  * signal_exception - used for signaling that exception has occurred
- *         in jato functions. Exception will be thrown when controll
+ *         in jato functions. Exception will be thrown when control
  *         is returned to JIT code.
  *
  * @exception: exception object to be thrown.
@@ -335,7 +335,7 @@ is_inside_unwind_unlock(struct compilation_unit *cu, unsigned char *ptr)
 
 /**
  * throw_from_jit - returns native pointer inside jitted method
- *                  that sould be executed to handle exception.
+ *                  that should be executed to handle exception.
  *                  This can be one of the following:
  *                        1) registered exception handler (catch/finally block)
  *                        2) method's unwind block (when no handler is found)

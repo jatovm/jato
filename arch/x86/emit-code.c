@@ -923,7 +923,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_add_imm_reg(buf, 0x04, MACH_REG_ESP);
 
 	/*
-	 * Test for exeption occurance.
+	 * Test for exeption occurrence.
 	 * We do this by polling a dedicated thread-specific pointer,
 	 * which triggers SIGSEGV when exception is set.
 	 *
@@ -2072,7 +2072,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	__emit_call(buf, call_target);
 
 	/*
-	 * Test for exception occurance.
+	 * Test for exception occurrence.
 	 * We do this by polling a dedicated thread-specific pointer,
 	 * which triggers SIGSEGV when exception is set.
 	 *

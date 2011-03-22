@@ -271,7 +271,7 @@ struct vm_object *vm_object_clone(struct vm_object *obj)
 {
 	assert(obj);
 
-	/* (In order of likelyhood:) */
+	/* (In order of likelihood:) */
 	switch (obj->class->kind) {
 	case VM_CLASS_KIND_REGULAR:
 		return clone_regular(obj);

@@ -4,7 +4,7 @@
 /*
  * Signal bottom half handler is called with the address of faulting
  * instruction as argument. The address that handler returns is the
- * address to which controll will be transfered when it returns.
+ * address to which controll will be transferred when it returns.
  */
 typedef unsigned long (*signal_bh_fn)(unsigned long);
 

@@ -25,7 +25,7 @@ struct vm_method;
 /*
  * This is a per-thread pointer to a memory location which should be
  * polled by JIT code to check for asynchronous exception
- * occurrance. When exception is set this pointer will point to a
+ * occurrence. When exception is set this pointer will point to a
  * hidden guard page which will trigger SIGSEGV on access. The signal
  * handler will throw the exception then.
  */

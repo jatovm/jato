@@ -228,7 +228,7 @@ int stack_trace_elem_next(struct stack_trace_elem *elem)
 	/*
 	 * We know only return addresses and we don't know the size of
 	 * call instruction that was used. Therefore we don't know
-	 * address of the call site beggining. We store address of the
+	 * address of the call site beginning. We store address of the
 	 * last byte of the call site instead which is enough
 	 * information to obtain bytecode offset.
 	 */

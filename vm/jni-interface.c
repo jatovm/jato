@@ -233,7 +233,7 @@ static jint JNI_DetachCurrentThread(JavaVM *vm)
 	return 0;
 }
 
-// FIXME: implicit version dependant env setting seems dangerous
+// FIXME: implicit version dependent env setting seems dangerous
 static jint JNI_GetEnv(JavaVM *vm, void **env, jint version)
 {
 	enter_vm_from_jni();

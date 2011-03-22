@@ -726,7 +726,7 @@ static int update_bytecode_offsets(struct inlining_context *ctx,
 
 /*
  * Rewrites count bytes from src:src_pc to dest:dest_pc. Note that
- * the number of bytes writen to the destination may be different than
+ * the number of bytes written to the destination may be different than
  * count because of padding change in tableswitch and lookupswitch
  * instructions.
  */
