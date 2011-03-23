@@ -274,10 +274,25 @@ static jint JNI_GetVersion(JNIEnv *env)
 	return JNI_VERSION;
 }
 
-static jclass JNI_DefineClass(JNIEnv *env, const char *name, jobject loader,const jbyte *buf, jsize bufLen)
+static jclass JNI_DefineClass(JNIEnv *env, const char *name, jobject classloader, const jbyte *buf, jsize buf_len)
 {
-	JNI_NOT_IMPLEMENTED;
-	return 0;
+	struct vm_class *class;
+
+	class = vm_class_define(classloader, name, (uint8_t *)buf, buf_len);
+	if (!class)
+		return rethrow_exception();
+
+	if (classloader_add_to_cache(classloader, class))
+		return throw_oom_error();
+
+	if (vm_class_ensure_object(class))
+		return rethrow_exception();
+
+	vm_call_method(vm_java_lang_Class_init, class->object, class);
+	if (exception_occurred())
+		return rethrow_exception();
+
+	return class->object;
 }
 
 static jclass JNI_FindClass(JNIEnv *env, const char *name)

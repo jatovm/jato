@@ -81,6 +81,7 @@ public class JNITest extends TestCase {
 
     // JNI 1.6 native test functions
     native static public int staticGetVersion();
+    native static public Class<Object> staticDefineClass(String name, ClassLoader classloader);
 
     private static JNITest jniTest = new JNITest();
 
@@ -157,9 +158,23 @@ public class JNITest extends TestCase {
         assertTrue(staticTestJNIEnvIsInitializedCorrectly());
     }
 
-    // JNI 1.6 function tests
+    // JNI 1.6 API function tests
     public static void testGetVersion() {
         assertEquals(0x00010006, staticGetVersion());
+    }
+
+    public static void testDefineClass() {
+        Class<Object> jniTestFixtureClass = staticDefineClass("test/functional/jni/JNITestFixture.class", ClassLoader.getSystemClassLoader());
+        assertNotNull(jniTestFixtureClass);
+        assertEquals("class jni.JNITestFixture", jniTestFixtureClass.toString());
+
+        try {
+            Object jniTestFixtureInstance = jniTestFixtureClass.newInstance();
+            assertEquals("jni.JNITestFixture@", jniTestFixtureInstance.toString().substring(0, "jni.JNITestFixture@".length()));
+            assertEquals("TESTSTRING", jniTestFixtureInstance.getClass().getMethod("toUpper", new Class[]{String.class}).invoke(null, "testString"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void main(String[] args) {
@@ -175,5 +190,6 @@ public class JNITest extends TestCase {
         testStringManipulation();
         testJNIEnvIsInitializedCorrectly();
         testGetVersion();
+        testDefineClass();
     }
 }

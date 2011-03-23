@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <vm/jni.h>
 
 /*
@@ -429,4 +430,62 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_staticTestJNIEnvIsInitializedC
 JNIEXPORT jint JNICALL Java_java_lang_JNITest_staticGetVersion(JNIEnv *env, jclass clazz)
 {
 	return (*env)->GetVersion(env);
+}
+
+static int readFile(const char *fileName, char **fileBytes)
+{
+	FILE *file;
+	int fileSize;
+
+	file = fopen(fileName, "rb");
+	if (!file)
+	{
+		fprintf(stderr, "can't open file %s\n", fileName);
+		return(-1);
+	}
+
+	fseek(file, 0, SEEK_END);
+	fileSize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	*fileBytes = (char *) malloc(fileSize);
+
+	if (!*fileBytes)
+	{
+		fprintf(stderr, "jnitest.c: Out of memory error!\n");
+		fclose(file);
+		return(-1);
+	}
+
+	fread(*fileBytes, fileSize, 1, file);
+	fclose(file);
+
+	return fileSize;
+}
+
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticDefineClass
+ * Signature: (Ljava/lang/String;Ljava/lang/Object;
+ */
+JNIEXPORT jclass JNICALL Java_java_lang_JNITest_staticDefineClass(JNIEnv *env, jclass clazz, jstring name, jobject classloader)
+{
+	char *nameStr;
+	jboolean iscopy;
+
+	nameStr = (char *) (*env)->GetStringUTFChars(env, name, &iscopy);
+	if (nameStr == NULL) {
+		return NULL; /* OutOfMemoryError */
+	}
+
+	char *classBytes;
+
+	int fileSize = readFile(nameStr, &classBytes);
+
+	jclass definedClass = (*env)->DefineClass(env, nameStr, classloader, classBytes, fileSize);
+
+	free(classBytes);
+
+	return definedClass;
 }

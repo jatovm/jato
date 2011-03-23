@@ -156,7 +156,7 @@ JASMIN		?= java -jar tools/jasmin/jasmin.jar
 JAVAC		?= JAVA=java ./tools/ecj
 else
 JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
-JAVAC		?= JAVA=$(JAVA) ./tools/ecj
+JAVAC		?= JAVA=$(JAVA) $(shell pwd)/tools/ecj
 endif
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
@@ -346,7 +346,7 @@ lib: $(CLASSPATH_CONFIG)
 .PHONY: lib
 
 compile-jni-test-lib:
-	+$(MAKE) -C test/functional/jni CC='$(CC)'
+	+$(MAKE) -C test/functional/jni CC='$(CC)' JAVA='$(JAVA)' JAVAC='$(JAVAC)'
 .PHONY: compile-jni-test-lib
 
 check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-java-tests compile-jasmin-tests compile-jni-test-lib
