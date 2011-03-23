@@ -4,6 +4,8 @@
 #include "arch/instruction.h"
 #include "vm/die.h"
 
+#include <fpu_control.h>
+
 unsigned long x86_cpu_features;
 
 static inline void cpuid(unsigned int *eax, unsigned int *ebx,
@@ -30,9 +32,21 @@ static void init_cpu_features(void)
 
 }
 
+static void setup_fpu(void)
+{
+	fpu_control_t cw;
+
+	_FPU_GETCW(cw);
+	cw		&= ~_FPU_EXTENDED;
+	cw		|= _FPU_DOUBLE;
+	_FPU_SETCW(cw);
+}
+
 void arch_init(void)
 {
 	insn_sanity_check();
+
+	setup_fpu();
 
 	init_cpu_features();
 

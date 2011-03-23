@@ -87,6 +87,7 @@ TESTS = [
 , ( "jvm.lang.reflect.FieldTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "sun.misc.UnsafeTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "test.java.lang.ClassTest", 0, [ ], [ "i386" ] )
+, ( "test.java.lang.DoubleTest", 0, [ ], [ "i386" ] )
 ]
 
 def guess_arch():
