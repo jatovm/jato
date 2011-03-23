@@ -345,7 +345,7 @@ lib: $(CLASSPATH_CONFIG)
 	+$(MAKE) -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-compile-jni-test-lib:
+compile-jni-test-lib: $(PROGRAM)
 	+$(MAKE) -C test/functional/jni CC='$(CC)' JAVA='$(JAVA)' JAVAC='$(JAVAC)'
 .PHONY: compile-jni-test-lib
 
