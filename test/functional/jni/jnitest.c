@@ -485,7 +485,33 @@ JNIEXPORT jclass JNICALL Java_java_lang_JNITest_staticDefineClass(JNIEnv *env, j
 
 	jclass definedClass = (*env)->DefineClass(env, nameStr, classloader, classBytes, fileSize);
 
+	// Make sure that the buffer we passed is not in use (as specified in JNI 1.6 DefineClass specification)
+	memset(classBytes, 0, fileSize);
 	free(classBytes);
 
+	(*env)->ReleaseStringUTFChars(env, name, nameStr);
+
 	return definedClass;
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    staticFindClass
+ * Signature: (Ljava/lang/String;)Ljava/lang/Class;
+ */
+JNIEXPORT jclass JNICALL Java_java_lang_JNITest_staticFindClass(JNIEnv *env, jclass clazz, jstring name)
+{
+	char *nameStr;
+	jboolean iscopy;
+
+	nameStr = (char *) (*env)->GetStringUTFChars(env, name, &iscopy);
+	if (nameStr == NULL) {
+		return NULL; /* OutOfMemoryError */
+	}
+
+	jclass foundClass = (*env)->FindClass(env, nameStr);
+
+	(*env)->ReleaseStringUTFChars(env, name, nameStr);
+
+	return foundClass;
 }

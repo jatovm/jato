@@ -82,6 +82,7 @@ public class JNITest extends TestCase {
   // JNI 1.6 native test functions
   native static public int staticGetVersion();
   native static public Class<Object> staticDefineClass(String name, ClassLoader classloader);
+  native static public Class<Object> staticFindClass(String name);
 
   private static JNITest jniTest = new JNITest();
 
@@ -177,6 +178,22 @@ public class JNITest extends TestCase {
     }
   }
 
+  public static void testFindClass() {
+    Class<Object> foundStringClass = staticFindClass("java/lang/String");
+    assertNotNull(foundStringClass);
+    assertTrue(foundStringClass.isInstance(new String()));
+
+    Class<Object> foundObjectArrayClass = staticFindClass("[Ljava/lang/Object;");
+    assertNotNull(foundObjectArrayClass);
+    assertTrue(foundObjectArrayClass.isInstance(new Object[0]));
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        staticFindClass("does/not/Exist");
+      }
+    }, java.lang.NoClassDefFoundError.class);
+  }
+
   public static void main(String[] args) {
     testReturnPassedString();
     testReturnPassedInt();
@@ -191,5 +208,6 @@ public class JNITest extends TestCase {
     testJNIEnvIsInitializedCorrectly();
     testGetVersion();
     testDefineClass();
+    testFindClass();
   }
 }

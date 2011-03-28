@@ -205,6 +205,20 @@ public class TestCase {
             assertFalse(e.isNativeMethod());
     }
 
+    protected interface Block {
+        void run() throws Throwable;
+    }
+
+    protected static void assertThrows(Block block, Class<? extends Throwable> type) {
+        try {
+            block.run();
+        } catch (Throwable t) {
+            assertEquals(type, t.getClass());
+            return;
+        }
+        fail("Expected " + type.toString() + " to be thrown");
+    }
+
     protected static void fail(String s) {
         throw new AssertionError(s);
     }
