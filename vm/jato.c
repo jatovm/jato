@@ -829,18 +829,7 @@ const struct option options[] = {
 	DEFINE_OPTION("version",		handle_version),
 	DEFINE_OPTION("h",			handle_help),
 	DEFINE_OPTION("help",			handle_help),
-
 	DEFINE_OPTION("client",			handle_client),
-
-	DEFINE_OPTION_ADJACENT_ARG("D",		handle_define),
-	DEFINE_OPTION_ADJACENT_ARG("Xmx",	handle_max_heap_size),
-	DEFINE_OPTION_ADJACENT_ARG("Xss",	handle_thread_stack_size),
-
-	DEFINE_OPTION_ARG("classpath",		handle_classpath),
-	DEFINE_OPTION_ARG("bootclasspath",	handle_bootclasspath),
-	DEFINE_OPTION_ADJACENT_ARG("Xbootclasspath/a:",	handle_bootclasspath_append),
-	DEFINE_OPTION_ARG("cp",			handle_classpath),
-	DEFINE_OPTION_ARG("jar",		handle_jar),
 	DEFINE_OPTION("verbose:gc",		handle_verbose_gc),
 
 	DEFINE_OPTION("Xmaps",			handle_maps),
@@ -849,9 +838,6 @@ const struct option options[] = {
 	DEFINE_OPTION("Xnosystemclassloader",	handle_no_system_classloader),
 	DEFINE_OPTION("Xperf",			handle_perf),
 	DEFINE_OPTION("Xssa",			handle_ssa),
-
-	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),
-	DEFINE_OPTION_ARG("Xtrace:gate",	handle_trace_gate),
 
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
@@ -864,6 +850,19 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),
 	DEFINE_OPTION("Xtrace:jit",		handle_trace_jit),
 	DEFINE_OPTION("Xtrace:trampoline",	handle_trace_trampoline),
+
+	DEFINE_OPTION_ARG("classpath",		handle_classpath),
+	DEFINE_OPTION_ARG("bootclasspath",	handle_bootclasspath),
+	DEFINE_OPTION_ARG("cp",			handle_classpath),
+	DEFINE_OPTION_ARG("jar",		handle_jar),
+	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),
+	DEFINE_OPTION_ARG("Xtrace:gate",	handle_trace_gate),
+
+	DEFINE_OPTION_ADJACENT_ARG("Xbootclasspath/a:",	handle_bootclasspath_append),	
+	DEFINE_OPTION_ADJACENT_ARG("D",		handle_define),
+	DEFINE_OPTION_ADJACENT_ARG("Xmx",	handle_max_heap_size),
+	DEFINE_OPTION_ADJACENT_ARG("Xss",	handle_thread_stack_size)
+
 };
 
 static const struct option *get_option(const char *name)
