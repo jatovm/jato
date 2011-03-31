@@ -118,3 +118,79 @@ backtrace of all the threads while the program is stuck:
   (gdb) r
   <Ctrl-C when the program deadlocks>
   (gdb) thread apply all backtrace
+
+
+		Part 5: Using GDB with JITed code (only x86-64 currently)
+
+Jato offers special GDB support. Otherwise you wouldn't be able to break into
+JITed code and get meaningful backtraces. However, you'll need to rebuild
+Jato like this:
+
+  make clean
+  make DEBUG=1
+
+Let's see what we can do now:
+
+  gdb --args ./jato [...]
+  (gdb) handle SIGSEGV nostop
+  (gdb) break java_io_File_checkRead
+  Function "java_io_File_checkRead" not defined.
+  Make breakpoint pending on future shared library load? (y or [n]) y
+  Breakpoint 1 (java_io_File_checkRead) pending.
+  (gdb) r
+  [...]
+  (gdb) bt
+  #0  0x00000000400fe374 in java_io_File_checkRead ()
+  #1  0x00000000400fe22e in java_io_File_isDirectory ()
+  #2  0x00000000400e7f7d in java_lang_VMClassLoader_getResources ()
+  #3  0x00000000400e338b in java_lang_VMClassLoader_getResource ()
+  #4  0x00000000400e2cdc in java_lang_VMClassLoader_getBootPackages ()
+  #5  0x00000000400d41dc in java_lang_VMClassLoader__clinit_ ()
+  #6  0x0000000000432848 in vm_class_init (vmc=0xbf1e58) at vm/class.c:717
+  #7  0x000000000045c593 in vm_class_ensure_init (vmc=0xbf1e58) at include/vm/class.h:111
+  #8  0x000000000045c857 in jit_magic_trampoline (cu=0xd5ac60) at jit/trampoline.c:104
+  #9  0x00000000400d0a53 in java_lang_VMClassLoader_getSystemClassLoader_TP ()
+  #10 0x00000000400d2b12 in java_lang_ClassLoader_StaticData__clinit_ ()
+  #11 0x0000000000432848 in vm_class_init (vmc=0xbe7660) at vm/class.c:717
+  #12 0x000000000044c051 in vm_class_ensure_init (vmc=0xbe7660) at include/vm/class.h:111
+  #13 0x000000000044c544 in fixup_static_at (addr=1074593198) at arch/x86/fixup.c:137
+  #14 0x0000000000441dc5 in static_field_signal_bh (ret=1074593198) at vm/static.c:66
+  #15 0x000000000046b3b0 in signal_bh_trampoline () at arch/x86/signal-bh.S:124
+  #16 0x00000000400cfdae in java_lang_ClassLoader_getSystemClassLoader ()
+  #17 0x00000000004455d1 in native_call_gp (method=0xac01e0, target=0x400b6400, args=0x7fffffffd800) at arch/x86/call.c:206
+  #18 0x0000000000445689 in native_call (method=0xac01e0, target=0x400b6400, args=0x7fffffffd800, result=0x7fffffffd890)
+      at arch/x86/call.c:257
+  #19 0x000000000042fd52 in call_method_a (method=0xac01e0, target=0x400b6400, args=0x7fffffffd800, result=0x7fffffffd890) at vm/call.c:54
+  #20 0x000000000042febc in vm_call_method_v (method=0xac01e0, args=0x7fffffffd8a0, result=0x7fffffffd890) at vm/call.c:71
+  #21 0x00000000004345a5 in vm_call_method_object (method=0xac01e0) at include/vm/call.h:81
+  #22 0x0000000000435f43 in get_system_class_loader () at vm/classloader.c:803
+  #23 0x000000000041c649 in do_main_class () at vm/jato.c:941
+  #24 0x000000000041cc77 in main (argc=7, argv=0x7fffffffdb48) at vm/jato.c:1144
+  (gdb)
+
+As you can see, you must mangle method names before passing them to GDB:
+
+  - Use the fully qualified name of the method.
+
+  - Replace non-alphanumeric characters such as '/' and '.' with '_'.
+
+  - This is true even for stuff like 'java/lang/VMClassLoader.<clinit>', which
+    becomes 'java_lang_VMClassLoader__clinit_'.
+
+  - To refer to a method's trampoline, you append '_TP' at the end.
+
+There are a few caveats:
+
+  - GDB issues those "not defined" warnings if the method hasn't been compiled
+    and registered yet. It's safe to ignore them.
+
+  - If you set breakpoints they might stop working once you rerun Jato (by
+    using 'r' again).
+
+  - Optimization CFLAGS may easily break GDB support. They are disabled by
+    DEBUG=1 itself, but adding your own CFLAGS might cause breakage.
+
+  - Method arguments and line numbers aren't displayed.
+
+It may be useful to turn on "-Xtrace:jit" here as well, to get extra
+information about what's going on while you're debugging.
