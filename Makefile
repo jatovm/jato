@@ -196,6 +196,13 @@ DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
+# Disable optimizations and turn on extra debugging information, if needed.
+DEBUG =
+ifeq ($(strip $(DEBUG)),1)
+	# This overrides DEFAULT_CFLAGS, but not user-supplied CFLAGS.
+	DEFAULT_CFLAGS += -O0 -ggdb
+endif
+
 DEFAULT_LIBS	= -L. -ljvm -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
 
 all: $(PROGRAM)
