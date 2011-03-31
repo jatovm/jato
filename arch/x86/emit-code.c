@@ -339,12 +339,25 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
 }
 
+/*
+ * FIXME: We use different stack layout on 32-bit and 64-bit so prolog, epilog,
+ * and unwind sequences are slightly different.
+ */
+#ifdef CONFIG_X86_32
+void emit_unwind(struct buffer *buf)
+{
+	emit_leave(buf);
+	emit_restore_regs(buf);
+	__emit_jmp(buf, (unsigned long)&unwind);
+}
+#else
 void emit_unwind(struct buffer *buf)
 {
 	emit_restore_regs(buf);
 	emit_leave(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
 }
+#endif
 
 static void __emit_mov_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
