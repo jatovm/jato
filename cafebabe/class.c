@@ -181,8 +181,20 @@ out_fields_init:
 out_interfaces_alloc:
 	free(c->interfaces);
 out_constant_pool_init:
-	for (uint16_t i = 1; i < constant_pool_i; ++i)
-		cafebabe_constant_pool_deinit(&c->constant_pool[i]);
+	for (uint16_t i = 1; i < constant_pool_i; i++) {
+		struct cafebabe_constant_pool *constant_pool = &c->constant_pool[i];
+
+		switch (constant_pool->tag) {
+		case CAFEBABE_CONSTANT_TAG_LONG:
+		case CAFEBABE_CONSTANT_TAG_DOUBLE:
+			++i;
+			break;
+		default:
+			break;
+		}
+
+		cafebabe_constant_pool_deinit(constant_pool);
+	}
 	free(c->constant_pool);
 out:
 	return 1;
