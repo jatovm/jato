@@ -37,14 +37,14 @@
 
 #include "vm/stdlib.h"
 
-static void do_compute_dfns(struct basic_block *bb, struct basic_block **df_array, int *dfn)
+static void do_compute_dfns(struct basic_block *bb, struct basic_block **df_array, int *dfn, struct basic_block *entry_bb)
 {
 	unsigned int i;
 
 	for (i = 0; i < bb->nr_successors; i++) {
 		struct basic_block *succ = bb->successors[i];
 
-		if (succ->dfn)
+		if (succ->dfn || succ == entry_bb)
 			continue;
 
 		(*dfn)++;
@@ -53,7 +53,7 @@ static void do_compute_dfns(struct basic_block *bb, struct basic_block **df_arra
 
 		df_array[succ->dfn]	= succ;
 
-		do_compute_dfns(succ, df_array, dfn);
+		do_compute_dfns(succ, df_array, dfn, entry_bb);
 	}
 }
 
@@ -65,7 +65,7 @@ int compute_dfns(struct compilation_unit *cu)
 	if (!cu->bb_df_array)
 		return -ENOMEM;
 
-	do_compute_dfns(cu->entry_bb, cu->bb_df_array, &dfn);
+	do_compute_dfns(cu->entry_bb, cu->bb_df_array, &dfn, cu->entry_bb);
 
 	return 0;
 }
