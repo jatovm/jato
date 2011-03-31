@@ -9,6 +9,7 @@
 static const char *install_dirs[] = {
 	"/usr",
 	"/usr/local/classpath",
+	"/usr/gnu-classpath-0.98",	/* Gentoo */
 };
 
 static bool is_file(const char *path)
