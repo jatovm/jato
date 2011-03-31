@@ -153,7 +153,7 @@ INSTALL		?= install
 
 ifeq ($(uname_M),x86_64)
 JASMIN		?= java -jar tools/jasmin/jasmin.jar
-JAVAC		?= JAVA=java ./tools/ecj
+JAVAC		?= JAVA=java $(shell pwd)/tools/ecj
 else
 JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
 JAVAC		?= JAVA=$(JAVA) $(shell pwd)/tools/ecj
