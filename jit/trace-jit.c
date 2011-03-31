@@ -589,8 +589,6 @@ static void print_arg(struct vm_method *vmm, enum vm_type arg_type,
 			free(str);
 		}
 
-		fprintf(stderr, "class %p\n", obj->class);
-
 		if (vm_class_is_array_class(obj->class))
 			print_array(obj);
 
