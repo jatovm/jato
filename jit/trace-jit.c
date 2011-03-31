@@ -509,10 +509,19 @@ static void print_array(struct vm_object *obj)
 	trace_printf("}");
 }
 
-static void print_arg(enum vm_type arg_type, const unsigned long *args,
-		      int *arg_index)
+static void print_arg(struct vm_method *vmm, enum vm_type arg_type,
+		      const unsigned long *args, int *arg_index)
 {
 	const int MAX_STRING_LENGTH = 50;
+
+	/*
+	 * We are passing pointer to struct vm_class as vmdata in
+	 * java.lang.Class(Object vmdata, ProtectionDomain pd)
+	 */
+	if (vmm == vm_java_lang_Class_init && *arg_index == 1) {
+		trace_printf("%p  (struct vm_class *)\n", args[(*arg_index)++]);
+		return;
+	}
 
 	if (arg_type == J_LONG || arg_type == J_DOUBLE) {
 		union {
@@ -580,6 +589,8 @@ static void print_arg(enum vm_type arg_type, const unsigned long *args,
 			free(str);
 		}
 
+		fprintf(stderr, "class %p\n", obj->class);
+
 		if (vm_class_is_array_class(obj->class))
 			print_array(obj);
 
@@ -604,7 +615,7 @@ static void trace_invoke_args(struct vm_method *vmm,
 
 	if (!vm_method_is_static(vmm)) {
 		trace_printf("\tthis\t: ");
-		print_arg(J_REFERENCE, frame->args, &arg_index);
+		print_arg(vmm, J_REFERENCE, frame->args, &arg_index);
 	}
 
 	if (list_is_empty(&vmm->args)) {
@@ -617,7 +628,7 @@ static void trace_invoke_args(struct vm_method *vmm,
 	list_for_each_entry(arg, &vmm->args, list_node) {
 		trace_printf("\t   %-12s: ",
 			     get_vm_type_name(arg->type_info.vm_type));
-		print_arg(arg->type_info.vm_type, frame->args, &arg_index);
+		print_arg(vmm, arg->type_info.vm_type, frame->args, &arg_index);
 	}
 }
 
@@ -720,7 +731,7 @@ void trace_exception(struct compilation_unit *cu, struct jit_stack_frame *frame,
 	msg = field_get_object(exception, vm_java_lang_Throwable_detailMessage);
 
 	trace_printf("\tmessage\t: ");
-	print_arg(J_REFERENCE, (unsigned long *)  &msg, &dummy);
+	print_arg(vmm, J_REFERENCE, (unsigned long *)  &msg, &dummy);
 
 	trace_printf("\tfrom\t: %p: %s.%s%s\n", native_ptr, vmc->name, vmm->name,
 	       vmm->type);
@@ -811,6 +822,6 @@ void trace_return_value(struct vm_method *vmm, unsigned long long value)
 	}
 
 	trace_printf("%12s: ", get_vm_type_name(type));
-	print_arg(type,(unsigned long *)  &value, &dummy);
+	print_arg(vmm, type,(unsigned long *)  &value, &dummy);
 	trace_flush();
 }
