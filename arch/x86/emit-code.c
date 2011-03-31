@@ -341,8 +341,8 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 
 void emit_unwind(struct buffer *buf)
 {
-	emit_leave(buf);
 	emit_restore_regs(buf);
+	emit_leave(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
