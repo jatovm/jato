@@ -1370,9 +1370,18 @@ reg:	EXPR_CONVERSION_FROM_FLOAT(freg)
 	assert(src->vm_type == J_FLOAT);
 
 	if (expr->vm_type == J_INT) {
+		struct var_info *esp, *eax;
+
+		esp = get_fixed_var(s->b_parent, MACH_REG_ESP);
+		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
 		state->reg1 = get_var(s->b_parent, J_INT);
 
-		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU_TO_GPR, state->left->reg1, state->reg1));
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_f2i));
+		method_args_cleanup(s, tree, 1);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	} else if (expr->vm_type == J_LONG) {
 		struct var_info *esp, *eax, *edx;
 
@@ -1404,39 +1413,34 @@ reg:	EXPR_CONVERSION_FROM_DOUBLE(freg)
 	assert(src->vm_type == J_DOUBLE);
 
 	if (expr->vm_type == J_INT) {
+		struct var_info *esp, *eax;
+
+		esp = get_fixed_var(s->b_parent, MACH_REG_ESP);
+		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+
 		state->reg1 = get_var(s->b_parent, J_INT);
 
-		select_insn(s, tree, reg_reg_insn(INSN_CONV_FPU64_TO_GPR, state->left->reg1, state->reg1));
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
+		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_d2i));
+		method_args_cleanup(s, tree, 2);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
 	} else if (expr->vm_type == J_LONG) {
-		struct var_info *esp = get_fixed_var(s->b_parent, MACH_REG_ESP);
+		struct var_info *esp, *eax, *edx;
+
+		esp = get_fixed_var(s->b_parent, MACH_REG_ESP);
+		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
+		edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
 
 		state->reg1 = get_var(s->b_parent, J_INT);
 		state->reg2 = get_var(s->b_parent, J_INT);
 
-		/* Reserve space for temporaries. */
-		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
-
-		/*
-		 *    (%esp) contains double value to be converted
-		 *  $8(%esp) contains saved FPU control word
-		 * $12(%esp) contains modified FPU control word (RC flag set)
-		 */
-
-		select_insn(s, tree, membase_insn(INSN_FNSTCW_MEMBASE, esp, 8));
-		select_insn(s, tree, membase_insn(INSN_FNSTCW_MEMBASE, esp, 12));
-
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
 		select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
-		select_insn(s, tree, membase_insn(INSN_FLD_64_MEMBASE, esp, 0));
-
-		select_insn(s, tree, imm_membase_insn(INSN_OR_IMM_MEMBASE, 0xc0, esp, 12));
-		select_insn(s, tree, membase_insn(INSN_FLDCW_MEMBASE, esp, 12));
-		select_insn(s, tree, membase_insn(INSN_FISTP_64_MEMBASE, esp, 0));
-		select_insn(s, tree, membase_insn(INSN_FLDCW_MEMBASE, esp, 8));
-
-		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, esp, 0, state->reg1));
-		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, esp, 4, state->reg2));
-
-		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, 16, esp));
+		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_d2l));
+		method_args_cleanup(s, tree, 2);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 	} else {
 		die("EXPR_CONVERSION_FROM_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}

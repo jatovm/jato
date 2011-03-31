@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008  Pekka Enberg
+ * Copyright (c) 2008, 2011  Pekka Enberg
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -24,11 +24,14 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include <math.h>
-#include "jit/exception.h"
 #include "jit/emulate.h"
-#include "vm/class.h"
+
+#include "jit/exception.h"
 #include "vm/preload.h"
+#include "vm/limits.h"
+#include "vm/class.h"
+
+#include <math.h>
 
 int emulate_lcmp(long long value1, long long value2)
 {
@@ -136,7 +139,82 @@ int64_t emulate_lushr(int64_t value1, int32_t value2)
 	return (uint64_t) value1 >> (value2 & 0x3f);
 }
 
+int32_t emulate_f2i(float value)
+{
+	if (finitef(value)) {
+		if (value >= J_INT_MAX)
+			return J_INT_MAX;
+		if (value <= J_INT_MIN)
+			return J_INT_MIN;
+
+		return value;
+	}
+
+	if (isnanf(value))
+		return 0;
+
+	if (copysignf(1.0, value) > 0)
+		return J_INT_MAX;
+
+	return J_INT_MIN;
+}
+
 int64_t emulate_f2l(float value)
 {
-	return value;
+	if (finitef(value)) {
+		if (value >= J_LONG_MAX)
+			return J_LONG_MAX;
+		if (value <= J_LONG_MIN)
+			return J_LONG_MIN;
+
+		return value;
+	}
+
+	if (isnanf(value))
+		return 0;
+
+	if (copysignf(1.0, value) > 0)
+		return J_LONG_MAX;
+
+	return J_LONG_MIN;
+}
+
+int32_t emulate_d2i(double value)
+{
+	if (finite(value)) {
+		if (value >= J_INT_MAX)
+			return J_INT_MAX;
+		if (value <= J_INT_MIN)
+			return J_INT_MIN;
+
+		return value;
+	}
+
+	if (isnan(value))
+		return 0;
+
+	if (copysign(1.0, value) > 0)
+		return J_INT_MAX;
+
+	return J_INT_MIN;
+}
+
+int64_t emulate_d2l(double value)
+{
+	if (finite(value)) {
+		if (value >= J_LONG_MAX)
+			return J_LONG_MAX;
+		if (value <= J_LONG_MIN)
+			return J_LONG_MIN;
+
+		return value;
+	}
+
+	if (isnan(value))
+		return 0;
+
+	if (copysign(1.0, value) > 0)
+		return J_LONG_MAX;
+
+	return J_LONG_MIN;
 }

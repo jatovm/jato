@@ -45,11 +45,13 @@ public class FloatConversionTest extends TestCase {
     }
 
     public static void testFloatToIntConversion() {
+        assertEquals(0, f2i(Float.NaN));
+        assertEquals(Integer.MIN_VALUE, f2i(Float.NEGATIVE_INFINITY));
+        assertEquals(Integer.MAX_VALUE, f2i(Float.POSITIVE_INFINITY));
         assertEquals(2, f2i(2.5f));
         assertEquals(-1000, f2i(-1000.0101f));
         assertEquals(-2147483648, f2i(-2147483648.0f));
-//      FIXME:
-//      assertEquals(2147483647, f2i(2147483647.0f));
+        assertEquals(2147483647, f2i(2147483647.0f));
     }
 
     public static float l2f(long val) {
@@ -70,13 +72,15 @@ public class FloatConversionTest extends TestCase {
     }
 
     public static void testFloatToLongConversion() {
+        assertEquals(0, f2l(Float.NaN));
+        assertEquals(Long.MIN_VALUE, f2l(Float.NEGATIVE_INFINITY));
+        assertEquals(Long.MAX_VALUE, f2l(Float.POSITIVE_INFINITY));
         assertEquals(2L, f2l(2.5f));
         assertEquals(-1000L, f2l(-1000.0101f));
         assertEquals(-2147483648L, f2l(-2147483648.0f));
         assertEquals(2147483648L, f2l(2147483647.0f));
         assertEquals(-9223372036854775808L, f2l(-9223372036854775808.0f));
-//      FIXME:
-//      assertEquals(9223372036854775807L, f2l(9223372036854775807.0f));
+        assertEquals(9223372036854775807L, f2l(9223372036854775807.0f));
     }
 
     public static void main(String[] args) {
