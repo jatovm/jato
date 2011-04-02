@@ -410,7 +410,7 @@ JNIEXPORT jstring JNICALL Java_java_lang_JNITest_staticToUpper(JNIEnv *env, jcla
 
 /*
  * Class:     java_lang_JNITest
- * Method:    staticTestJNIEnvPassing
+ * Method:    staticTestJNIEnvIsInitializedCorrectly
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_staticTestJNIEnvIsInitializedCorrectly(JNIEnv *env, jclass clazz)
@@ -424,10 +424,10 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_staticTestJNIEnvIsInitializedC
 
 /*
  * Class:     java_lang_JNITest
- * Method:    staticGetVersion
+ * Method:    getVersion
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_java_lang_JNITest_staticGetVersion(JNIEnv *env, jclass clazz)
+JNIEXPORT jint JNICALL Java_java_lang_JNITest_getVersion(JNIEnv *env, jclass clazz)
 {
 	return (*env)->GetVersion(env);
 }
@@ -466,10 +466,10 @@ static int readFile(const char *fileName, char **fileBytes)
 
 /*
  * Class:     java_lang_JNITest
- * Method:    staticDefineClass
+ * Method:    defineClass
  * Signature: (Ljava/lang/String;Ljava/lang/Object;
  */
-JNIEXPORT jclass JNICALL Java_java_lang_JNITest_staticDefineClass(JNIEnv *env, jclass clazz, jstring name, jobject classloader)
+JNIEXPORT jclass JNICALL Java_java_lang_JNITest_defineClass(JNIEnv *env, jclass clazz, jstring name, jobject classloader)
 {
 	char *nameStr;
 	jboolean iscopy;
@@ -496,10 +496,24 @@ JNIEXPORT jclass JNICALL Java_java_lang_JNITest_staticDefineClass(JNIEnv *env, j
 
 /*
  * Class:     java_lang_JNITest
- * Method:    staticFindClass
+ * Method:    testDefineClassThrowsExceptionWithBrokenClass
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testDefineClassThrowsExceptionWithBrokenClass(JNIEnv *env, jclass clazz)
+{
+	const char *classBytes = "This represents a broken class";
+
+	jclass definedClass = (*env)->DefineClass(env, "Foo", NULL, classBytes, sizeof(classBytes));
+
+	return 0;
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    findClass
  * Signature: (Ljava/lang/String;)Ljava/lang/Class;
  */
-JNIEXPORT jclass JNICALL Java_java_lang_JNITest_staticFindClass(JNIEnv *env, jclass clazz, jstring name)
+JNIEXPORT jclass JNICALL Java_java_lang_JNITest_findClass(JNIEnv *env, jclass clazz, jstring name)
 {
 	char *nameStr;
 	jboolean iscopy;

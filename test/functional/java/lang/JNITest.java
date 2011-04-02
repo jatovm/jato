@@ -80,9 +80,10 @@ public class JNITest extends TestCase {
   native static public boolean staticTestJNIEnvIsInitializedCorrectly();
 
   // JNI 1.6 native test functions
-  native static public int staticGetVersion();
-  native static public Class<Object> staticDefineClass(String name, ClassLoader classloader);
-  native static public Class<Object> staticFindClass(String name);
+  native static public int getVersion();
+  native static public Class<Object> defineClass(String name, ClassLoader classloader);
+  native static public boolean testDefineClassThrowsExceptionWithBrokenClass();
+  native static public Class<Object> findClass(String name);
 
   private static JNITest jniTest = new JNITest();
 
@@ -161,11 +162,11 @@ public class JNITest extends TestCase {
 
   // JNI 1.6 API function tests
   public static void testGetVersion() {
-    assertEquals(0x00010006, staticGetVersion());
+    assertEquals(0x00010006, getVersion());
   }
 
   public static void testDefineClass() {
-    Class<Object> jniTestFixtureClass = staticDefineClass("test/functional/jni/JNITestFixture.class", ClassLoader.getSystemClassLoader());
+    Class<Object> jniTestFixtureClass = defineClass("test/functional/jni/JNITestFixture.class", ClassLoader.getSystemClassLoader());
     assertNotNull(jniTestFixtureClass);
     assertEquals("class jni.JNITestFixture", jniTestFixtureClass.toString());
 
@@ -176,20 +177,26 @@ public class JNITest extends TestCase {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    assertThrows(new Block(){
+      public void run() throws Throwable {
+        testDefineClassThrowsExceptionWithBrokenClass();
+      }
+    }, java.lang.ClassFormatError.class);
   }
 
   public static void testFindClass() {
-    Class<Object> foundStringClass = staticFindClass("java/lang/String");
+    Class<Object> foundStringClass = findClass("java/lang/String");
     assertNotNull(foundStringClass);
     assertTrue(foundStringClass.isInstance(new String()));
 
-    Class<Object> foundObjectArrayClass = staticFindClass("[Ljava/lang/Object;");
+    Class<Object> foundObjectArrayClass = findClass("[Ljava/lang/Object;");
     assertNotNull(foundObjectArrayClass);
     assertTrue(foundObjectArrayClass.isInstance(new Object[0]));
 
     assertThrows(new Block() {
       public void run() throws Throwable {
-        staticFindClass("does/not/Exist");
+        findClass("does/not/Exist");
       }
     }, java.lang.NoClassDefFoundError.class);
   }
