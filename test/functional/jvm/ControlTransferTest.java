@@ -199,7 +199,10 @@ public class ControlTransferTest extends TestCase {
 
     public static void testIfLcmpEq() {
         assertFalse(if_lcmpeq(0, 1));
+        assertFalse(if_lcmpeq(Long.MIN_VALUE, 1));
         assertTrue(if_lcmpeq(0, 0));
+        assertTrue(if_lcmpeq(Long.MIN_VALUE, Long.MIN_VALUE));
+        assertTrue(if_lcmpeq(Long.MAX_VALUE, Long.MAX_VALUE));
     }
 
     public static boolean if_lcmpgt(long x, long y) {
@@ -208,15 +211,18 @@ public class ControlTransferTest extends TestCase {
 
     public static void testIfLcmpGt() {
         assertTrue(if_lcmpgt(1, 0));
+        assertTrue(if_lcmpgt(Long.MAX_VALUE, 1));
+        assertTrue(if_lcmpgt(Long.MAX_VALUE, Long.MIN_VALUE));
         assertFalse(if_lcmpgt(1, 1));
+        assertFalse(if_lcmpgt(1, Long.MAX_VALUE));
     }
 
-    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */
     public static boolean lessThan100(float f) {
         if (f < 100.0f) {
             return true;
         } else {
-            return false;			
+            return false;
         }
     }
 
@@ -226,12 +232,12 @@ public class ControlTransferTest extends TestCase {
         assertTrue(lessThan100(99.0f));
     }
 
-    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */
     public static boolean greaterThan100(float f) {
         if (f > 100.0f) {
             return true;
         } else {
-            return false;			
+            return false;
         }
     }
 
@@ -241,12 +247,12 @@ public class ControlTransferTest extends TestCase {
         assertFalse(greaterThan100(99.0f));
     }
 
-    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */
     public static boolean lessThan100(double d) {
         if (d < 100.0) {
             return true;
         } else {
-            return false;			
+            return false;
         }
     }
 
@@ -256,12 +262,12 @@ public class ControlTransferTest extends TestCase {
         assertTrue(lessThan100(99.0));
     }
 
-    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */ 
+    /* See Section 7.5 "More Control Examples" of the JVM spec for details.  */
     public static boolean greaterThan100(double d) {
         if (d > 100.0) {
             return true;
         } else {
-            return false;			
+            return false;
         }
     }
 
