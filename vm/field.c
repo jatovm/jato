@@ -162,8 +162,8 @@ int vm_field_init_static(struct vm_field *vmf)
 			return -1;
 		}
 
-		static_field_set_double(vmf, ((uint64_t) cp->long_.high_bytes << 32)
-			+ (uint64_t) cp->long_.low_bytes);
+		static_field_set_double(vmf,
+			uint64_to_double(cp->double_.low_bytes, cp->double_.high_bytes));
 		break;
 	default:
 		return -1;
