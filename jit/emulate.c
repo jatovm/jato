@@ -35,11 +35,9 @@
 
 int emulate_lcmp(long long value1, long long value2)
 {
-	long long tmp = value1 - value2;
-
-	if (tmp < 0)
+	if (value1 < value2)
 		return -1;
-	if (tmp > 0)
+	if (value2 < value1)
 		return 1;
 	return 0;
 }
