@@ -221,6 +221,8 @@ int init_threading(void)
 		return -1;
 
 	field_set_object(vmthread, vm_java_lang_VMThread_thread, thread);
+	field_set_object(vmthread, vm_java_lang_VMThread_vmdata,
+			 (struct vm_object *) main_thread);
 
 	/* we must manually attach the main thread to the main ThreadGroup */
 	vm_call_method(vm_java_lang_ThreadGroup_addThread, main_thread_group, thread);
