@@ -64,10 +64,11 @@ static void do_native_call(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
 	unsigned long stack_size;
+	bool is_native = vm_method_is_vm_native(method);
 
 	push_args_on_stack(method, args, stack_size);
 
-	if (vm_method_is_vm_native(method)) {
+	if (is_native) {
 		if (vm_enter_vm_native(target, (void *) esp) < 0)
 			goto exit;
 	}
@@ -82,7 +83,7 @@ static void do_native_call(struct vm_method *method, void *target,
 		: "%eax", "%ecx", "%edx", "cc", "memory");
 
 exit:
-	if (vm_method_is_vm_native(method))
+	if (is_native)
 		vm_leave_vm_native();
 
 	restore_stack(stack_size);
@@ -92,10 +93,11 @@ static void do_native_call_xmm(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
 	unsigned long stack_size;
+	bool is_native = vm_method_is_vm_native(method);
 
 	push_args_on_stack(method, args, stack_size);
 
-	if (vm_method_is_vm_native(method)) {
+	if (is_native) {
 		if (vm_enter_vm_native(target, (void *) esp) < 0)
 			goto exit;
 	}
@@ -109,7 +111,7 @@ static void do_native_call_xmm(struct vm_method *method, void *target,
 		: "%edx", "%edi", "cc", "memory");
 
 exit:
-	if (vm_method_is_vm_native(method))
+	if (is_native)
 		vm_leave_vm_native();
 
 	restore_stack(stack_size);
