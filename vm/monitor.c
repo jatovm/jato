@@ -136,9 +136,10 @@ int owner_check(struct vm_object *object, struct vm_monitor_record **record_p)
 }
 
 /*
- * Acquire the lock on object's monitor. This implementation uses the
- * relaxed-lock protocol based on David Dice's work: "Implementing
- * Fast Java Monitors with Relaxed-Locks".
+ * Acquire the lock on object's monitor. This implementation uses
+ * relaxed-locking protocol based on David Dice's work: "Implementing
+ * Fast Java Monitors with Relaxed-Locks". The implementation does
+ * not contain some optimizations metioned in te work.
  *
  */
 int vm_object_lock(struct vm_object *self)
@@ -237,7 +238,18 @@ int vm_object_unlock(struct vm_object *self)
 		return 0;
 	}
 
-	if (atomic_read(&record->nr_blocked) > 0) {
+	/*
+	 * When some thread is blocked on this record release it and notify
+	 * blocked thread. The locking thread might have detected that record
+	 * is unlocked after we nullify .owener field escape without blocking
+	 * but an extra sem_post() is not harmful.
+	 *
+	 * Also if some thread is waiting on us we must not deflate.
+	 * We want the same monitor record to be attached to the object
+	 * while waiting so that other threads can do notify on it.
+	 */
+	if (atomic_read(&record->nr_blocked) > 0 ||
+	    atomic_read(&record->nr_waiting) > 0) {
 		record->owner	= NULL;
 
 		/* Order above write and read in a locking thread's
@@ -250,38 +262,23 @@ int vm_object_unlock(struct vm_object *self)
 	}
 
 	/*
-	 * If a thread is waiting on us, don't deflate. We want the same
-	 * monitor record to be attached to the object while waiting so other
-	 * threads can do notify on it.
+	 * We noticed that no treads are blocked nor waiting so we enter
+	 * speculative deflation. It may happen that locking thread
+	 * increased will enter slowpath after we checked .nr_blocked
+	 * so we must check for that after deflation again and flush
+	 * blocked threads in such a case.
 	 */
-	if (atomic_read(&record->nr_waiting) > 0) {
-		smp_wmb();
-		record->owner	= NULL;
+	self->monitor_record = NULL;
 
-		return 0;
-	}
-
-	/* Deflate monitor. */
-	self->monitor_record	= NULL;
-
-	/* We must ensure that when locking thread will read
+	/* Ensure that when locking thread will read
 	 * .monitor_record == NULL in the while header this thread
 	 * sees the effect of incrementation of .nr_blocked. */
 	smp_mb();
 
-	int nr_to_wake = atomic_read(&record->nr_blocked);
-
-	/*
-	 * If it shows up that some thread entered a slowpath
-	 * between the last check and deflation then we must
-	 * notify those threads that the record has been "flushed"
-	 * and they must try again.
-	 *
-	 * Note that after .monitor_record has been set to null
-	 * no new threads will block on semaphore.
-	 */
-	if (nr_to_wake > 0) {
-		/* Flush. It is possible that locking thread which
+	int nr_blocked = atomic_read(&record->nr_blocked);
+	if (nr_blocked > 0) {
+		/* We misspeculated that there are no blocked threads and
+		 * we must flush them. It is possible that locking thread which
 		 * incremented .nr_blocked will escape without
 		 * blocking itself on the semaphore because it will
 		 * detect deflation. In this case the semaphore will
@@ -289,13 +286,14 @@ int vm_object_unlock(struct vm_object *self)
 		 * threads up. This is not harmful because locking
 		 * threads call wait() in a loop trying to acquire the
 		 * lock, and the semaphore will be quickly decremented. */
-		for (int i = 0; i < nr_to_wake; i++)
+		for (int i = 0; i < nr_blocked; i++)
 			sem_post(&record->sem);
 
 		/* We must wait for blocked threads to ACK the flush
 		 * before this record can be put back to the pool and
 		 * reused. */
 		while (atomic_read(&record->nr_blocked) > 0) ;
+		atomic_set(&record->candidate, 0);
 	}
 
 	put_monitor_record(record);
@@ -333,6 +331,7 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 	 */
 	old_lock_count		= record->lock_count;
 	record->lock_count	= 1;
+
 	atomic_inc(&record->nr_waiting);
 
 	vm_object_unlock(self);
@@ -357,11 +356,10 @@ static int vm_object_do_wait(struct vm_object *self, struct timespec *timespec)
 
 	vm_object_lock(self);
 
-	assert(record == self->monitor_record);
-
-	record			= self->monitor_record;
-	record->lock_count	= old_lock_count;
 	atomic_dec(&record->nr_waiting);
+
+	assert(record == self->monitor_record);
+	record->lock_count = old_lock_count;
 
 	if (vm_thread_interrupted(thread_self)) {
 		signal_new_exception(vm_java_lang_InterruptedException, NULL);
