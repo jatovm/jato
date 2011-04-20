@@ -112,6 +112,7 @@ extern regex_t method_trace_regex;
 extern bool opt_trace_gate;
 extern regex_t method_trace_gate_regex;
 
+extern bool opt_trace_ssa;
 extern bool opt_trace_cfg;
 extern bool opt_trace_tree_ir;
 extern bool opt_trace_lir;
@@ -137,6 +138,7 @@ static inline bool cu_matches_regex(struct compilation_unit *cu)
 	return method_matches_regex(cu->method);
 }
 
+void trace_ssa(struct compilation_unit *);
 void trace_magic_trampoline(struct compilation_unit *);
 void trace_method(struct compilation_unit *);
 void trace_cfg(struct compilation_unit *);

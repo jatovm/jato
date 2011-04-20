@@ -99,6 +99,9 @@ int compile(struct compilation_unit *cu)
 		err = compute_dom_frontier(cu);
 		if (err)
 			goto out;
+
+		if (opt_trace_ssa)
+			trace_ssa(cu);
 	}
 
 	err = analyze_liveness(cu);

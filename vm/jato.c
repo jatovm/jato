@@ -733,6 +733,7 @@ static void handle_trace_itable(void)
 
 static void handle_trace_jit(void)
 {
+	opt_trace_ssa = true;
 	opt_trace_cfg = true;
 	opt_trace_tree_ir = true;
 	opt_trace_lir = true;

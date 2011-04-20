@@ -46,6 +46,7 @@ regex_t method_trace_regex;
 bool opt_trace_gate;
 regex_t method_trace_gate_regex;
 
+bool opt_trace_ssa;
 bool opt_trace_cfg;
 bool opt_trace_tree_ir;
 bool opt_trace_lir;
@@ -144,6 +145,49 @@ void trace_method(struct compilation_unit *cu)
 	}
 
 	trace_printf("\n\n");
+}
+
+static void print_bitset_frontier(struct bitset *bitset, struct compilation_unit *cu)
+{
+	bool exists = false;
+
+	for (unsigned int i = 0; i < bitset->nr_bits; ++i) {
+		if (test_bit(bitset->bits, i)){
+			if (!exists){
+				trace_printf("%d", i);
+				exists = true;
+			}else{
+				trace_printf(", %d", i);
+			}
+		}
+	}
+
+	if (!exists)
+		trace_printf("none    ");
+}
+
+void trace_ssa(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+
+	if (!cu_matches_regex(cu))
+		return;
+
+	trace_printf("SSA\n");
+	trace_printf("  #:\t\tDFN\tDominance frontier sets\n");
+
+	for_each_basic_block(bb, &cu->bb_list){
+		trace_printf("  %p\t%lu", bb, bb->dfn);
+		if (bb->is_eh)
+			trace_printf(" (eh)");
+
+		trace_printf("\t");
+		print_bitset_frontier(bb->dom_frontier, cu);
+		trace_printf("\n");
+	}
+
+	trace_printf("\n");
+
 }
 
 void trace_cfg(struct compilation_unit *cu)
