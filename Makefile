@@ -118,6 +118,7 @@ LIB_OBJS += vm/call.o
 LIB_OBJS += vm/class.o
 LIB_OBJS += vm/classloader.o
 LIB_OBJS += vm/debug-dump.o
+LIB_OBJS += vm/debug.o
 LIB_OBJS += vm/die.o
 LIB_OBJS += vm/fault-inject.o
 LIB_OBJS += vm/field.o
