@@ -529,3 +529,14 @@ JNIEXPORT jclass JNICALL Java_java_lang_JNITest_findClass(JNIEnv *env, jclass cl
 
 	return foundClass;
 }
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    passThroughFromAndToReflectedMethod
+ * Signature: (Ljava/lang/reflect/Method;)Ljava/lang/reflect/Method;
+ */
+JNIEXPORT jobject JNICALL Java_java_lang_JNITest_passThroughFromAndToReflectedMethod(JNIEnv *env, jclass clazz, jobject javaMethod)
+{
+	jmethodID methodID = (*env)->FromReflectedMethod(env, javaMethod);
+	return (*env)->ToReflectedMethod(env, clazz, methodID, true);
+}

@@ -26,6 +26,7 @@
 package java.lang;
 
 import jvm.TestCase;
+import java.lang.reflect.Method;
 
 /**
 * @author Joonas Reynders
@@ -84,7 +85,7 @@ public class JNITest extends TestCase {
   native static public Class<Object> defineClass(String name, ClassLoader classloader);
   native static public boolean testDefineClassThrowsExceptionWithBrokenClass();
   native static public Class<Object> findClass(String name);
-
+  native static public java.lang.reflect.Method passThroughFromAndToReflectedMethod(java.lang.reflect.Method plusOneMethod);
   private static JNITest jniTest = new JNITest();
 
   public static void testReturnPassedString() {
@@ -201,6 +202,24 @@ public class JNITest extends TestCase {
     }, java.lang.NoClassDefFoundError.class);
   }
 
+  static int plusOne(int i) {
+    return i + 1;
+  }
+
+  public static void testFromAndToReflectedMethod() {
+    Method plusOneMethod = null;
+
+    try {
+      plusOneMethod = JNITest.class.getDeclaredMethod("plusOne", int.class);
+      assertEquals(1, plusOneMethod.invoke(null, 0));
+      Method jniCycledPlusOneMethod = (Method) passThroughFromAndToReflectedMethod(plusOneMethod);
+      assertEquals(plusOneMethod, jniCycledPlusOneMethod);
+      assertEquals(1, jniCycledPlusOneMethod.invoke(null, 0));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public static void main(String[] args) {
     testReturnPassedString();
     testReturnPassedInt();
@@ -216,5 +235,6 @@ public class JNITest extends TestCase {
     testGetVersion();
     testDefineClass();
     testFindClass();
+    testFromAndToReflectedMethod();
   }
 }

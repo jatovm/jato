@@ -134,6 +134,7 @@ static struct vm_field *method_slot_field(void)
 struct vm_method *vm_object_to_vm_method(struct vm_object *method)
 {
 	struct vm_object *clazz;
+	struct vm_object *vm_method_object;
 	struct vm_class *vmc;
 	int slot;
 
@@ -143,7 +144,11 @@ struct vm_method *vm_object_to_vm_method(struct vm_object *method)
 	} else if (vm_object_is_instance_of(method, method_class())) {
 		clazz	= field_get_object(method, method_clazz_field());
 		slot	= field_get_int(method, method_slot_field());
-	} else {
+	} else if (vm_object_is_instance_of(method, vm_java_lang_reflect_Method)) {
+		vm_method_object = field_get_object(method, vm_java_lang_reflect_Method_m);
+		clazz	= field_get_object(vm_method_object, method_clazz_field());
+		slot	= field_get_int(vm_method_object, method_slot_field());
+	}  else {
 		signal_new_exception(vm_java_lang_Error, "Not a method object: %s",
 				     method->class->name);
 		return rethrow_exception();

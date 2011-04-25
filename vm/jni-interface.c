@@ -278,6 +278,8 @@ static jclass JNI_DefineClass(JNIEnv *env, const char *name, jobject classloader
 {
 	struct vm_class *class;
 
+	enter_vm_from_jni();
+
 	class = vm_class_define(classloader, name, (uint8_t *)buf, buf_len);
 	if (!class)
 		return rethrow_exception();
@@ -318,7 +320,11 @@ static jclass JNI_FindClass(JNIEnv *env, const char *name)
 
 static jmethodID JNI_FromReflectedMethod(JNIEnv *env, jobject method)
 {
-	return vm_object_to_vm_method(method);
+	enter_vm_from_jni();
+
+	jmethodID methodID = vm_object_to_vm_method(method);
+
+	return methodID;
 }
 
 static jfieldID JNI_FromReflectedField(JNIEnv *env, jobject field)
@@ -327,10 +333,49 @@ static jfieldID JNI_FromReflectedField(JNIEnv *env, jobject field)
 	return 0;
 }
 
-static jobject JNI_ToReflectedMethod(JNIEnv *env, jclass cls,jmethodID methodID, jboolean isStatic)
+static jobject JNI_ToReflectedMethod(JNIEnv *env, jclass clazz, jmethodID methodID, jboolean isStatic)
 {
-	JNI_NOT_IMPLEMENTED;
-	return 0;
+	enter_vm_from_jni();
+
+	struct vm_class *vmc;
+
+	vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	if (vm_class_is_primitive_class(vmc) || vm_class_is_array_class(vmc))
+		return vm_object_alloc_array(vm_array_of_java_lang_reflect_Method, 0);
+
+	struct vm_method *vmm = methodID;
+
+	struct vm_object *method = vm_object_alloc(vm_java_lang_reflect_Method);
+	if (!method)
+		return rethrow_exception();
+
+	struct vm_object *name_object = vm_object_alloc_string_from_c(vmm->name);
+	if (!name_object)
+		return rethrow_exception();
+
+	if (vm_java_lang_reflect_VMMethod != NULL) {	/* Classpath 0.98 */
+		struct vm_object *vm_method;
+
+		vm_method = vm_object_alloc(vm_java_lang_reflect_VMMethod);
+		if (!vm_method)
+			return rethrow_exception();
+
+		field_set_object(vm_method, vm_java_lang_reflect_VMMethod_clazz, clazz);
+		field_set_object(vm_method, vm_java_lang_reflect_VMMethod_name, name_object);
+		field_set_object(vm_method, vm_java_lang_reflect_VMMethod_m, method);
+		field_set_int(vm_method, vm_java_lang_reflect_VMMethod_slot, methodID->method_index);
+		assert(vm_java_lang_reflect_Method_m != NULL);
+		field_set_object(method, vm_java_lang_reflect_Method_m, vm_method);
+	} else {
+		field_set_object(method, vm_java_lang_reflect_Method_declaringClass, clazz);
+		field_set_object(method, vm_java_lang_reflect_Method_name, name_object);
+		field_set_int(method, vm_java_lang_reflect_Method_slot, 0);
+	}
+
+	return (jobject) method;
 }
 
 static jclass JNI_GetSuperclass(JNIEnv *env, jclass clazz)
