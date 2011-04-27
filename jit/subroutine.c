@@ -47,6 +47,7 @@
 #include "vm/trace.h"
 
 #include "lib/list.h"
+#include "lib/hash-map.h"
 
 #include <limits.h>
 #include <stdint.h>
@@ -100,6 +101,20 @@ struct subroutine_scan_context {
 	struct subroutine *sub;
 	bool *visited_code;
 };
+
+static unsigned long subs_key_hash(const void *key, unsigned long size)
+{
+        return (unsigned long)key;
+}
+
+static int subs_key_compare(const void *key1, const void *key2)
+{
+        if((unsigned long)key1 == (unsigned long)key2)
+		return 0;
+        return -1;
+}
+
+struct hash_map *subroutines;
 
 static unsigned long next_pc(const unsigned char *code, unsigned long current)
 {
@@ -266,19 +281,22 @@ static struct subroutine *lookup_subroutine(struct inlining_context *ctx,
 					    unsigned long target)
 {
 	struct subroutine *this;
+	void *that;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
-		if (this->start_pc == target)
-			return this;
-	}
-
+	if(hash_map_get(subroutines, (void *)target, &that))
+		return NULL;
+	
+	this = (struct subroutine *)that;
+	if (this->start_pc == target)
+		return this;
+	
 	return NULL;
 }
 
 static void add_subroutine(struct inlining_context *ctx, struct subroutine *sub)
 {
-	/* TODO: use hash table to speedup lookup. */
 	list_add_tail(&sub->subroutine_list_node, &ctx->subroutine_list);
+	hash_map_put(subroutines, (void *)sub->start_pc, sub);
 }
 
 static int subroutine_add_call_site(struct subroutine *sub,
@@ -493,7 +511,7 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 
 static int scan_subroutines(struct inlining_context *ctx)
 {
-	struct subroutine *this;
+	struct subroutine* this;
 	int err;
 
 	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
@@ -1218,6 +1236,7 @@ remove_subroutine(struct inlining_context *ctx, struct subroutine *sub)
 				  &ctx->subroutine_list);
 		}
 	}
+	hash_map_remove(subroutines, (void *)sub->start_pc);
 
 	list_del(&sub->subroutine_list_node);
 	free_subroutine(sub);
@@ -1383,6 +1402,9 @@ int inline_subroutines(struct vm_method *method)
 {
 	struct inlining_context *ctx;
 	int err;
+
+	if(subroutines == NULL)
+		subroutines = alloc_hash_map(10000, subs_key_hash, subs_key_compare);
 
 	ctx = alloc_inlining_context(method);
 	if (!ctx)
