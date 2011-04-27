@@ -27,6 +27,7 @@ package java.lang;
 
 import jvm.TestCase;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 
 /**
 * @author Joonas Reynders
@@ -86,6 +87,8 @@ public class JNITest extends TestCase {
   native static public boolean testDefineClassThrowsExceptionWithBrokenClass();
   native static public Class<Object> findClass(String name);
   native static public java.lang.reflect.Method passThroughFromAndToReflectedMethod(java.lang.reflect.Method plusOneMethod);
+  native static public java.lang.reflect.Field passThroughFromAndToReflectedField(java.lang.reflect.Field intField);
+
   private static JNITest jniTest = new JNITest();
 
   public static void testReturnPassedString() {
@@ -220,6 +223,22 @@ public class JNITest extends TestCase {
     }
   }
 
+  static int intValue = 1;
+
+  public static void testFromAndToReflectedField() {
+    Field intField = null;
+
+    try {
+      intField = JNITest.class.getDeclaredField("intValue");
+      assertEquals(1, intField.getInt(jniTest));
+      Field jniCycledIntField = (Field) passThroughFromAndToReflectedField(intField);
+      assertEquals(intField, jniCycledIntField);
+      assertEquals(1, jniCycledIntField.getInt(jniTest));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public static void main(String[] args) {
     testReturnPassedString();
     testReturnPassedInt();
@@ -236,5 +255,6 @@ public class JNITest extends TestCase {
     testDefineClass();
     testFindClass();
     testFromAndToReflectedMethod();
+    testFromAndToReflectedField();
   }
 }

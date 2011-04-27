@@ -329,8 +329,11 @@ static jmethodID JNI_FromReflectedMethod(JNIEnv *env, jobject method)
 
 static jfieldID JNI_FromReflectedField(JNIEnv *env, jobject field)
 {
-	JNI_NOT_IMPLEMENTED;
-	return 0;
+	enter_vm_from_jni();
+
+	jfieldID fieldID = vm_object_to_vm_field(field);
+
+	return fieldID;
 }
 
 static jobject JNI_ToReflectedMethod(JNIEnv *env, jclass clazz, jmethodID methodID, jboolean isStatic)
@@ -400,10 +403,43 @@ static jboolean JNI_IsAssignableFrom(JNIEnv *env, jclass clazz1, jclass clazz2)
 	return vm_class_is_assignable_from(class2, class1);
 }
 
-static jobject JNI_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID, jboolean isStatic)
+static jobject JNI_ToReflectedField(JNIEnv *env, jclass clazz, jfieldID fieldID, jboolean isStatic)
 {
-	JNI_NOT_IMPLEMENTED;
-	return 0;
+	enter_vm_from_jni();
+
+	struct vm_class *vmc = vm_object_to_vm_class(clazz);
+	if (!vmc)
+		return NULL;
+
+	struct vm_field *vmf = fieldID;
+
+	struct vm_object *field = vm_object_alloc(vm_java_lang_reflect_Field);
+	if (!field)
+		return rethrow_exception();
+
+	struct vm_object *name_object = vm_object_alloc_string_from_c(vmf->name);
+	if (!name_object)
+		return rethrow_exception();
+
+	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+		struct vm_object *vm_field;
+
+		vm_field = vm_object_alloc(vm_java_lang_reflect_VMField);
+		if (!vm_field)
+			return rethrow_exception();
+
+		field_set_object(vm_field, vm_java_lang_reflect_VMField_clazz, clazz);
+		field_set_object(vm_field, vm_java_lang_reflect_VMField_name, name_object);
+		field_set_int(vm_field, vm_java_lang_reflect_VMField_slot, vmf->field_index);
+
+		field_set_object(field, vm_java_lang_reflect_Field_f, vm_field);
+	} else {
+		field_set_object(field, vm_java_lang_reflect_Field_declaringClass, clazz);
+		field_set_object(field, vm_java_lang_reflect_Field_name, name_object);
+		field_set_int(field, vm_java_lang_reflect_Field_slot, vmf->field_index);
+	}
+
+	return field;
 }
 
 static jint JNI_Throw(JNIEnv *env, jthrowable exception)

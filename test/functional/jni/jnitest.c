@@ -540,3 +540,14 @@ JNIEXPORT jobject JNICALL Java_java_lang_JNITest_passThroughFromAndToReflectedMe
 	jmethodID methodID = (*env)->FromReflectedMethod(env, javaMethod);
 	return (*env)->ToReflectedMethod(env, clazz, methodID, true);
 }
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    passThroughFromAndToReflectedField
+ * Signature: (Ljava/lang/reflect/Field;)Ljava/lang/reflect/Field;
+ */
+JNIEXPORT jobject JNICALL Java_java_lang_JNITest_passThroughFromAndToReflectedField(JNIEnv *env, jclass clazz, jobject javaField)
+{
+	jfieldID fieldID = (*env)->FromReflectedField(env, javaField);
+	return (*env)->ToReflectedField(env, clazz, fieldID, true);
+}
