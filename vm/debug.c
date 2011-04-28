@@ -23,7 +23,7 @@ void debug_print_vm_class(struct vm_class *class)
 	if (class) {
 		printf("vm_class address : %p\n", class);
 		if (class->name) printf("class->name : %s\n", class->name);
-		printf("class->super->name : %s\n", class->super->name);
+		if (class->super) printf("class->super->name : %s\n", class->super->name);
 		printf("class->kind : %d\n", class->kind);
 		printf("class->state : %d\n", class->state);
 		if (class->declaring_class) printf("class->declaring_class->name : %s\n", class->declaring_class->name);
