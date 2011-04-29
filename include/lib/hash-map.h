@@ -26,6 +26,7 @@ int hash_map_put(struct hash_map *map, const void *key, void *value);
 int hash_map_get(struct hash_map *map, const void *key, void **value_p);
 int hash_map_remove(struct hash_map *map, const void *key);
 bool hash_map_contains(struct hash_map *map, const void *key);
+bool hash_map_is_empty(struct hash_map *map);
 
 #define hash_map_for_each_entry(this, hashmap)				\
 	for (unsigned long __i = 0; __i < (hashmap)->size; __i++)	\

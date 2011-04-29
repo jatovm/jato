@@ -40,6 +40,7 @@
 #include "jit/pc-map.h"
 
 #include "vm/bytecode.h"
+#include "vm/gc.h"
 #include "vm/method.h"
 #include "vm/stdlib.h"
 #include "vm/stream.h"
@@ -47,6 +48,7 @@
 #include "vm/trace.h"
 
 #include "lib/list.h"
+#include "lib/hash-map.h"
 
 #include <limits.h>
 #include <stdint.h>
@@ -82,7 +84,6 @@ struct subroutine {
 };
 
 struct inlining_context {
-	struct list_head subroutine_list;
 	struct code_state code;
 	struct pc_map pc_map;
 
@@ -93,6 +94,7 @@ struct inlining_context {
 	struct cafebabe_line_number_table_entry *line_number_table;
 
 	struct vm_method *method;
+	struct hash_map *subroutines;
 };
 
 struct subroutine_scan_context {
@@ -100,6 +102,20 @@ struct subroutine_scan_context {
 	struct subroutine *sub;
 	bool *visited_code;
 };
+
+static unsigned long subs_key_hash(const void *key, unsigned long size)
+{
+	if ((unsigned long)key >= size)
+		return (unsigned long)key % size;
+	return (unsigned long)key;
+}
+
+static int subs_key_compare(const void *key1, const void *key2)
+{
+        if ((unsigned long)key1 == (unsigned long)key2)
+		return 0;
+        return -1;
+}
 
 static unsigned long next_pc(const unsigned char *code, unsigned long current)
 {
@@ -174,8 +190,6 @@ static struct inlining_context *alloc_inlining_context(struct vm_method *method)
 
 	ctx->method = method;
 
-	INIT_LIST_HEAD(&ctx->subroutine_list);
-
 	if (code_state_init(&ctx->code, method->code_attribute.code,
 			    method->code_attribute.code_length))
 		goto error_code;
@@ -194,13 +208,16 @@ static struct inlining_context *alloc_inlining_context(struct vm_method *method)
 	/*
 	 * The size of the map is code_length + 1 because we need a
 	 * mapping for the address that is equal to code_length. This
-	 * address can occure in exception handlers' range addresses.
+	 * address can occur in exception handlers' range addresses.
 	 */
 	if (pc_map_init_identity(&ctx->pc_map, ctx->code.code_length + 1))
 		goto error_pc_map;
 
-	return ctx;
+	ctx->subroutines = alloc_hash_map(10000, subs_key_hash, subs_key_compare);
+	if (!ctx->subroutines)
+		goto error_pc_map;
 
+	return ctx;
  error_pc_map:
 	free(ctx->exception_table);
  error_exception_table:
@@ -213,12 +230,7 @@ static struct inlining_context *alloc_inlining_context(struct vm_method *method)
 
 static void free_inlining_context(struct inlining_context *ctx)
 {
-	struct subroutine *this;
-
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
-		free_subroutine(this);
-	}
-
+	free_hash_map(ctx->subroutines);
 	pc_map_deinit(&ctx->pc_map);
 	free(ctx);
 }
@@ -267,18 +279,15 @@ static struct subroutine *lookup_subroutine(struct inlining_context *ctx,
 {
 	struct subroutine *this;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
-		if (this->start_pc == target)
-			return this;
-	}
+	if (hash_map_get(ctx->subroutines, (void *)target, (void **)(&this)))
+		return NULL;
 
-	return NULL;
+	return this;
 }
 
 static void add_subroutine(struct inlining_context *ctx, struct subroutine *sub)
 {
-	/* TODO: use hash table to speedup lookup. */
-	list_add_tail(&sub->subroutine_list_node, &ctx->subroutine_list);
+	hash_map_put(ctx->subroutines, (void *)sub->start_pc, sub);
 }
 
 static int subroutine_add_call_site(struct subroutine *sub,
@@ -493,15 +502,17 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 
 static int scan_subroutines(struct inlining_context *ctx)
 {
-	struct subroutine *this;
+	struct hash_map_entry *ent;
+	struct subroutine* this;
 	int err;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
+	hash_map_for_each_entry(ent, ctx->subroutines) {
+		this = ent->value;
 		err = subroutine_scan(ctx, this);
 		if (err)
 			return err;
 	}
-
+	
 	return 0;
 }
 
@@ -702,17 +713,29 @@ static int update_branch_targets(struct inlining_context *ctx)
 	return 0;
 }
 
+/*
+ * The bytecode offsets of the bytecode subroutines are updated here.
+ * Since we use the start offset as a key for our subroutine  hash map, we
+ * need to ensure that there is no mismatch between the hash map entry key
+ * and the actual offset value.
+ */
 static int update_bytecode_offsets(struct inlining_context *ctx,
 				   struct subroutine *sub)
 {
 	int err;
 
+	if (hash_map_remove(ctx->subroutines, (void *)sub->start_pc))
+		return warn("the subroutine lookup table is corrupted"), -EINVAL;
+
 	err = pc_map_get_unique(&ctx->pc_map, &sub->start_pc);
 	if (err)
 		return warn("no or ambiguous mapping"), -EINVAL;
 
+	if (hash_map_put(ctx->subroutines, (void *)sub->start_pc, sub))
+		return warn("the subroutine lookup table is corrupted"), -EINVAL;
+
 	err = pc_map_get_unique(&ctx->pc_map, &sub->end_pc);
-	if (err)
+	if (err) 
 		return warn("no or ambiguous mapping"), -EINVAL;
 
 	for (int i = 0; i < sub->nr_call_sites; i++) {
@@ -1171,7 +1194,6 @@ static int do_inline_subroutine(struct inlining_context *ctx,
 
 		code_pc = next_pc(ctx->code.code, sub->call_sites[i]);
 	}
-
 	err = bytecode_copy(&new_code, &new_code_pc, &ctx->code, code_pc, sub,
 			    &pc_map, ctx->code.code_length - code_pc);
 	if (err)
@@ -1214,12 +1236,12 @@ remove_subroutine(struct inlining_context *ctx, struct subroutine *sub)
 		if (--sub->dependants[i]->nr_dependencies == 0) {
 			/* This will speedup the lookup of independent
 			 * subroutines. */
-			list_move(&sub->dependants[i]->subroutine_list_node,
-				  &ctx->subroutine_list);
+			hash_map_put(ctx->subroutines, (void *)sub->dependants[i]->start_pc,
+				     sub->dependants[i]); 
 		}
 	}
 
-	list_del(&sub->subroutine_list_node);
+	hash_map_remove(ctx->subroutines, (void *)sub->start_pc);
 	free_subroutine(sub);
 }
 
@@ -1227,10 +1249,13 @@ static struct subroutine *
 find_independent_subroutine(struct inlining_context *ctx)
 {
 	struct subroutine *this;
+	struct hash_map_entry *ent;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node)
+	hash_map_for_each_entry(ent, ctx->subroutines) {
+		this = ent->value;
 		if (this->nr_dependencies == 0)
 			return this;
+	}
 
 	return NULL;
 }
@@ -1330,14 +1355,16 @@ do_split_exception_handlers(struct inlining_context *ctx,
  */
 static int split_exception_handlers(struct inlining_context *ctx)
 {
+	struct hash_map_entry *ent;
 	struct subroutine *this;
 	int err;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
+	hash_map_for_each_entry(ent, ctx->subroutines) {
+		this = ent->value;
 		for (int i = 0; i < this->nr_call_sites; i++) {
 			err = do_split_exception_handlers(ctx,
-					this->call_sites[i], this->start_pc,
-					this->end_pc + this->epilog_size);
+							  this->call_sites[i], this->start_pc,
+							  this->end_pc + this->epilog_size);
 			if (err)
 				return err;
 		}
@@ -1352,6 +1379,7 @@ static int split_exception_handlers(struct inlining_context *ctx)
  */
 static int verify_correct_nesting(struct inlining_context *ctx)
 {
+	struct hash_map_entry *ent;
 	struct subroutine *this;
 	int *coverage;
 
@@ -1359,13 +1387,14 @@ static int verify_correct_nesting(struct inlining_context *ctx)
 	if (!coverage)
 		return warn("out of memory"), -ENOMEM;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
+	hash_map_for_each_entry(ent, ctx->subroutines) {
+		this = ent->value;
 		int color = coverage[this->start_pc];
 
 		for (unsigned long i = this->start_pc; i < this->end_pc; i++) {
 			if (coverage[i] != color) {
 				free(coverage);
-				return warn("overlaping subroutines"), -EINVAL;
+				return warn("overlapping subroutines"), -EINVAL;
 			}
 
 			coverage[i]++;
@@ -1392,7 +1421,7 @@ int inline_subroutines(struct vm_method *method)
 	if (err)
 		goto out;
 
-	if (list_is_empty(&ctx->subroutine_list))
+	if (hash_map_is_empty(ctx->subroutines))
 		goto out;
 
 	if (opt_trace_bytecode) {
@@ -1412,7 +1441,7 @@ int inline_subroutines(struct vm_method *method)
 	if (err)
 		goto out;
 
-	while (!list_is_empty(&ctx->subroutine_list)) {
+	while (!hash_map_is_empty(ctx->subroutines)) {
 		struct subroutine *sub;
 
 		sub = find_independent_subroutine(ctx);
@@ -1439,7 +1468,7 @@ int inline_subroutines(struct vm_method *method)
 
 	inlining_context_commit(ctx);
 
- out:
+ out:	
 	free_inlining_context(ctx);
 	return err;
 }

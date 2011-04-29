@@ -170,3 +170,12 @@ int string_compare(const void *key1, const void *key2)
 {
 	return strcmp(key1, key2);
 }
+
+bool hash_map_is_empty(struct hash_map *map)
+{
+	for (unsigned long __i = 0; __i < (map)->size; __i++)
+		if (!list_is_empty(&map->table[__i]))
+			return false;
+
+	return true;
+}

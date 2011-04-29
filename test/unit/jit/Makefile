@@ -49,6 +49,7 @@ TOPLEVEL_OBJS := \
 	lib/buffer.o \
 	lib/compile-lock.o \
 	lib/guard-page.o \
+	lib/hash-map.o \
 	lib/list.o \
 	lib/pqueue.o \
 	lib/radix-tree.o \
