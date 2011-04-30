@@ -30,8 +30,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "vm/gc.h"
-
 struct hash_map *alloc_hash_map(unsigned long size, hash_fn *hash, compare_fn *compare)
 {
 	struct hash_map *map;
@@ -63,7 +61,7 @@ void free_hash_map(struct hash_map *map)
 		struct hash_map_entry *ent, *next;
 
 		list_for_each_entry_safe(ent, next, bucket, list_node) {
-			vm_free(ent);
+			free(ent);
 		}
 	}
 
