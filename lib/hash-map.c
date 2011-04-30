@@ -60,9 +60,9 @@ void free_hash_map(struct hash_map *map)
 {
 	for (unsigned int i = 0; i < map->size; i++) {
 		struct list_head *bucket = &map->table[i];
-		struct hash_map_entry *ent;
+		struct hash_map_entry *ent, *next;
 
-		list_for_each_entry(ent, bucket, list_node) {
+		list_for_each_entry_safe(ent, next, bucket, list_node) {
 			vm_free(ent);
 		}
 	}
