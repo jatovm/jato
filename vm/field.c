@@ -5,12 +5,14 @@
 #include "cafebabe/constant_pool.h"
 #include "cafebabe/field_info.h"
 #include "cafebabe/stream.h"
+#include "cafebabe/annotations_attribute.h"
 
 #include "vm/class.h"
 #include "vm/field.h"
 #include "vm/method.h"
 #include "vm/object.h"
 #include "vm/stdlib.h"
+#include "vm/annotation.h"
 
 int vm_field_init(struct vm_field *vmf,
 	struct vm_class *vmc, unsigned int field_index)
@@ -54,7 +56,42 @@ int vm_field_init(struct vm_field *vmf,
 		return -1;
 	}
 
+	struct cafebabe_annotations_attribute annotations_attribute;
+
+	if (cafebabe_read_annotations_attribute(class, &field->attributes, &annotations_attribute))
+		goto out;
+
+	if (!annotations_attribute.num_annotations)
+		goto out_deinit_annotations;
+
+	vmf->annotations = vm_alloc(sizeof(struct vm_annotation *) * annotations_attribute.num_annotations);
+	if (!vmf->annotations)
+		goto out_deinit_annotations;
+
+	for (unsigned int i = 0; i < annotations_attribute.num_annotations; i++) {
+		struct cafebabe_annotation *annotation = &annotations_attribute.annotations[i];
+		struct vm_annotation *vma;
+
+		vma = vm_annotation_parse(vmc, annotation);
+		if (!vma)
+			goto error_free_annotations;
+		vmf->annotations[vmf->nr_annotations++] = vma;
+	}
+
+ out_deinit_annotations:
+	cafebabe_annotations_attribute_deinit(&annotations_attribute);
+ out:
 	return 0;
+
+ error_free_annotations:
+	for (unsigned int i = 0; i < vmf->nr_annotations; i++) {
+		struct vm_annotation *vma = vmf->annotations[i];
+
+		vm_annotation_free(vma);
+	}
+	vm_free(vmf->annotations);
+
+	return -1;
 }
 
 void vm_field_init_nonstatic(struct vm_field *vmf)

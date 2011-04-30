@@ -108,6 +108,7 @@ LIB_OBJS += runtime/java_lang_VMRuntime.o
 LIB_OBJS += runtime/java_lang_VMSystem.o
 LIB_OBJS += runtime/java_lang_VMThread.o
 LIB_OBJS += runtime/java_lang_reflect_VMMethod.o
+LIB_OBJS += runtime/java_lang_reflect_VMField.o
 LIB_OBJS += runtime/reflection.o
 LIB_OBJS += runtime/stack-walker.o
 LIB_OBJS += runtime/sun_misc_Unsafe.o

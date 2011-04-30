@@ -23,6 +23,9 @@ struct vm_field {
 	struct vm_type_info type_info;
 
 	unsigned int offset;
+
+	unsigned int nr_annotations;
+	struct vm_annotation **annotations;
 };
 
 int vm_field_init(struct vm_field *vmf,
