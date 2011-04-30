@@ -45,7 +45,7 @@ static pthread_mutex_t literals_mutex = PTHREAD_MUTEX_INITIALIZER;
 /*
  * Compare key1 string and key2 weak reference to string.
  */
-static int string_obj_comparator(const void *key1, const void *key2)
+static bool string_obj_equals(const void *key1, const void *key2)
 {
 	struct vm_object *array1, *array2;
 	jint offset1, offset2;
@@ -55,7 +55,7 @@ static int string_obj_comparator(const void *key1, const void *key2)
 	count2 = field_get_int(key2, vm_java_lang_String_count);
 
 	if (count1 != count2)
-		return -1;
+		return false;
 
 	offset1 = field_get_int(key1, vm_java_lang_String_offset);
 	offset2 = field_get_int(key2, vm_java_lang_String_offset);
@@ -67,10 +67,10 @@ static int string_obj_comparator(const void *key1, const void *key2)
 
 	return memcmp(vm_array_elems(array1) + offset1 * fsize,
 		      vm_array_elems(array2) + offset2 * fsize,
-		      count1 * fsize);
+		      count1 * fsize) == 0;
 }
 
-static unsigned long string_obj_hash(const void *key, unsigned long size)
+static unsigned long string_obj_hash(const void *key)
 {
 	struct vm_object *array;
 	unsigned long hash;
@@ -86,12 +86,17 @@ static unsigned long string_obj_hash(const void *key, unsigned long size)
 	for (jint i = 0; i < count; i++)
 		hash += 31 * hash + array_get_field_char(array, i + offset);
 
-	return hash % size;
+	return hash;
 }
+
+static struct key_operations string_obj_key_ops = {
+	.hash	= string_obj_hash,
+	.equals	= string_obj_equals
+};
 
 void init_literals_hash_map(void)
 {
-	literals = alloc_hash_map(1000, string_obj_hash, string_obj_comparator);
+	literals = alloc_hash_map(1000, &string_obj_key_ops);
 	if (!literals)
 		error("failed to initialize literals hash map");
 }

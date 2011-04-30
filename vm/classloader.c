@@ -221,29 +221,34 @@ struct classloader_class {
 
 static struct hash_map *classes;
 
-static unsigned long classes_key_hash(const void *key, unsigned long size)
+static unsigned long classes_key_hash(const void *key)
 {
 	const struct classes_key *classes_key = key;
 
-	return (string_hash(classes_key->class_name, size) ^
-		ptr_hash(classes_key->classloader, size)) % size;
+	return string_key.hash(classes_key->class_name) +
+		31 * pointer_key.hash(classes_key->classloader);
 }
 
-static int classes_key_compare(const void *key1, const void *key2)
+static bool classes_key_equals(const void *key1, const void *key2)
 {
 	const struct classes_key *classes_key1 = key1;
 	const struct classes_key *classes_key2 = key2;
 
 	if (!strcmp(classes_key1->class_name, classes_key2->class_name) &&
 	    classes_key1->classloader == classes_key2->classloader)
-		return 0;
+		return true;
 
-	return -1;
+	return false;
 }
+
+static struct key_operations classes_key_ops = {
+	.hash	= &classes_key_hash,
+	.equals	= &classes_key_equals
+};
 
 void classloader_init(void)
 {
-	classes = alloc_hash_map(10000, classes_key_hash, classes_key_compare);
+	classes = alloc_hash_map(10000, &classes_key_ops);
 	if (!classes)
 		error("failed to initialize class loader");
 }

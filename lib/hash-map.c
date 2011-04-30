@@ -30,7 +30,7 @@
 #include <string.h>
 #include <errno.h>
 
-struct hash_map *alloc_hash_map(unsigned long size, hash_fn *hash, compare_fn *compare)
+struct hash_map *alloc_hash_map(unsigned long size, struct key_operations *key_ops)
 {
 	struct hash_map *map;
 
@@ -47,9 +47,8 @@ struct hash_map *alloc_hash_map(unsigned long size, hash_fn *hash, compare_fn *c
 	for (unsigned int i = 0; i < size; i++)
 		INIT_LIST_HEAD(&map->table[i]);
 
-	map->hash    = hash;
-	map->compare = compare;
-	map->size    = size;
+	map->key_ops	= *key_ops;
+	map->size	= size;
 
 	return map;
 }
@@ -69,16 +68,21 @@ void free_hash_map(struct hash_map *map)
 	free(map);
 }
 
+static unsigned long hash(const struct hash_map *map, const void *key)
+{
+	return map->key_ops.hash(key) % map->size;
+}
+
 static inline struct hash_map_entry *
 hash_map_lookup_entry(struct hash_map *map, const void *key)
 {
 	struct hash_map_entry *ent;
 	struct list_head *bucket;
 
-	bucket = &map->table[map->hash(key, map->size)];
+	bucket = &map->table[hash(map, key)];
 
 	list_for_each_entry(ent, bucket, list_node) {
-		if (map->compare(ent->key, key) == 0)
+		if (map->key_ops.equals(ent->key, key))
 			return ent;
 	}
 
@@ -104,7 +108,7 @@ int hash_map_put(struct hash_map *map, const void *key, void *value)
 	ent->value = value;
 	INIT_LIST_HEAD(&ent->list_node);
 
-	bucket = &map->table[map->hash(key, map->size)];
+	bucket = &map->table[hash(map, key)];
 	list_add(&ent->list_node, bucket);
 
 	return 0;
@@ -140,7 +144,7 @@ bool hash_map_contains(struct hash_map *map, const void *key)
 	return hash_map_lookup_entry(map, key) != NULL;
 }
 
-unsigned long string_hash(const void *key, unsigned long size)
+static unsigned long string_hash(const void *key)
 {
 	unsigned long hash;
 	const char *str;
@@ -151,20 +155,30 @@ unsigned long string_hash(const void *key, unsigned long size)
 	while (*str)
 		hash += 31 * hash + *str++;
 
-	return hash % size;
+	return hash;
 }
 
-unsigned long ptr_hash(const void *key, unsigned long size)
+static unsigned long ptr_hash(const void *key)
 {
-	return ((unsigned long) key) % size;
+	return (unsigned long) key;
 }
 
-int ptr_compare(const void *p1, const void *p2)
+static bool ptr_equals(const void *p1, const void *p2)
 {
-	return !(p1 == p2);
+	return p1 == p2;
 }
 
-int string_compare(const void *key1, const void *key2)
+static bool string_equals(const void *key1, const void *key2)
 {
-	return strcmp(key1, key2);
+	return strcmp(key1, key2) == 0;
 }
+
+struct key_operations pointer_key = {
+	.hash	= ptr_hash,
+	.equals	= ptr_equals
+};
+
+struct key_operations string_key = {
+	.hash	= string_hash,
+	.equals	= string_equals
+};

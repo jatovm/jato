@@ -45,18 +45,23 @@ struct jni_object {
 	struct vm_object *classloader;
 };
 
-static unsigned long jni_object_hash(const void *key, unsigned long size)
+static unsigned long jni_object_hash(const void *key)
 {
 	unsigned long a;
 
 	a = (unsigned long) key;
-	return ((a >> 24) ^ (a >> 16) ^ (a >> 8) ^ a) % size;
+	return (a >> 24) ^ (a >> 16) ^ (a >> 8) ^ a;
 }
 
-static int jni_object_compare(const void *key1, const void *key2)
+static bool jni_object_equals(const void *key1, const void *key2)
 {
-	return (long) key1 - (long) key2;
+	return key1 == key2;
 }
+
+static struct key_operations jni_object_key_ops = {
+	.hash	= jni_object_hash,
+	.equals	= jni_object_equals
+};
 
 struct hash_map *jni_objects;
 
@@ -126,7 +131,7 @@ static int vm_jni_add_object(void *handle, struct vm_object *classloader)
 
 void vm_jni_init(void)
 {
-	jni_objects = alloc_hash_map(100, jni_object_hash, jni_object_compare);
+	jni_objects = alloc_hash_map(100, &jni_object_key_ops);
 	if (!jni_objects)
 		error("failed to create jni_objects hash map");
 }

@@ -9,18 +9,24 @@ struct hash_map_entry {
 	struct list_head list_node;
 };
 
-typedef unsigned long hash_fn(const void *, unsigned long);
-typedef int compare_fn(const void *, const void *);
+typedef unsigned long hash_fn(const void *);
+typedef bool equals_fn(const void *, const void *);
+
+struct key_operations {
+	hash_fn *hash;
+	equals_fn *equals;
+};
+
+struct key_operations pointer_key;
+struct key_operations string_key;
 
 struct hash_map {
-	hash_fn *hash;
-	compare_fn *compare;
-
+	struct key_operations key_ops;
 	unsigned long size;
 	struct list_head *table;
 };
 
-struct hash_map *alloc_hash_map(unsigned long size, hash_fn *hash, compare_fn *compare);
+struct hash_map *alloc_hash_map(unsigned long size, struct key_operations *key_ops);
 void free_hash_map(struct hash_map *map);
 int hash_map_put(struct hash_map *map, const void *key, void *value);
 int hash_map_get(struct hash_map *map, const void *key, void **value_p);
@@ -30,10 +36,5 @@ bool hash_map_contains(struct hash_map *map, const void *key);
 #define hash_map_for_each_entry(this, hashmap)				\
 	for (unsigned long __i = 0; __i < (hashmap)->size; __i++)	\
 		list_for_each_entry(this, &(hashmap)->table[__i], list_node)
-
-hash_fn string_hash;
-hash_fn ptr_hash;
-compare_fn string_compare;
-compare_fn ptr_compare;
 
 #endif
