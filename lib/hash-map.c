@@ -30,7 +30,14 @@
 #include <string.h>
 #include <errno.h>
 
-struct hash_map *alloc_hash_map(unsigned long size, struct key_operations *key_ops)
+#include "vm/die.h"
+
+struct hash_map *alloc_hash_map(struct key_operations *key_ops)
+{
+	return alloc_hash_map_with_size(10, key_ops);
+}
+
+struct hash_map *alloc_hash_map_with_size(unsigned long initial_size, struct key_operations *key_ops)
 {
 	struct hash_map *map;
 
@@ -38,24 +45,27 @@ struct hash_map *alloc_hash_map(unsigned long size, struct key_operations *key_o
 	if (!map)
 		return NULL;
 
-	map->table = malloc(sizeof(struct list_head) * size);
+	map->table = malloc(sizeof(struct list_head) * initial_size);
 	if (!map->table) {
 		free(map);
 		return NULL;
 	}
 
-	for (unsigned int i = 0; i < size; i++)
+	for (unsigned int i = 0; i < initial_size; i++)
 		INIT_LIST_HEAD(&map->table[i]);
 
-	map->key_ops	= *key_ops;
-	map->size	= size;
+	map->key_ops		= *key_ops;
+	map->table_size		= initial_size;
+	map->size		= 0;
+	map->fill_factor	= 0.75;
+	map->resize_at		= initial_size * map->fill_factor;
 
 	return map;
 }
 
 void free_hash_map(struct hash_map *map)
 {
-	for (unsigned int i = 0; i < map->size; i++) {
+	for (unsigned int i = 0; i < map->table_size; i++) {
 		struct list_head *bucket = &map->table[i];
 		struct hash_map_entry *ent, *next;
 
@@ -70,7 +80,8 @@ void free_hash_map(struct hash_map *map)
 
 static unsigned long hash(const struct hash_map *map, const void *key)
 {
-	return map->key_ops.hash(key) % map->size;
+	unsigned long a = map->key_ops.hash(key);
+	return ((a >> 24) ^ (a >> 16) ^ (a >> 8) ^ a) % map->table_size;
 }
 
 static inline struct hash_map_entry *
@@ -89,6 +100,37 @@ hash_map_lookup_entry(struct hash_map *map, const void *key)
 	return NULL;
 }
 
+static void try_to_expand(struct hash_map *map)
+{
+	struct list_head *old_table = map->table;
+	unsigned int old_table_size = map->table_size;
+	unsigned int new_table_size = old_table_size + max(1ul, (unsigned long) old_table_size / 2);
+
+	struct list_head *new_table = malloc(sizeof(struct list_head) * new_table_size);
+	if (!new_table) {
+		free(new_table);
+		warn("Failed to expand hash map");
+		return;
+	}
+
+	for (unsigned int i = 0; i < new_table_size; i++)
+		INIT_LIST_HEAD(&new_table[i]);
+
+	map->table_size	= new_table_size;
+	map->resize_at	= map->fill_factor * new_table_size;
+	map->table	= new_table;
+
+	for (unsigned int i = 0; i < old_table_size; i++) {
+		struct hash_map_entry *ent, *next;
+		list_for_each_entry_safe(ent, next, &old_table[i], list_node) {
+			list_del(&ent->list_node);
+			list_add(&ent->list_node, &new_table[hash(map, ent->key)]);
+		}
+	}
+
+	free(old_table);
+}
+
 int hash_map_put(struct hash_map *map, const void *key, void *value)
 {
 	struct hash_map_entry *ent;
@@ -100,6 +142,9 @@ int hash_map_put(struct hash_map *map, const void *key, void *value)
 		return 0;
 	}
 
+	if (map->size + 1 >= map->resize_at)
+		try_to_expand(map);
+
 	ent = malloc(sizeof(struct hash_map_entry));
 	if (!ent)
 		return -ENOMEM;
@@ -110,7 +155,7 @@ int hash_map_put(struct hash_map *map, const void *key, void *value)
 
 	bucket = &map->table[hash(map, key)];
 	list_add(&ent->list_node, bucket);
-
+	map->size++;
 	return 0;
 }
 
@@ -136,6 +181,7 @@ int hash_map_remove(struct hash_map *map, const void *key)
 
 	list_del(&ent->list_node);
 	free(ent);
+	map->size--;
 	return 0;
 }
 
@@ -143,6 +189,17 @@ bool hash_map_contains(struct hash_map *map, const void *key)
 {
 	return hash_map_lookup_entry(map, key) != NULL;
 }
+
+int hash_map_size(struct hash_map *map)
+{
+	return map->size;
+}
+
+bool hash_map_is_empty(struct hash_map *map)
+{
+	return map->size == 0;
+}
+
 
 static unsigned long string_hash(const void *key)
 {

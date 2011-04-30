@@ -96,7 +96,7 @@ static struct key_operations string_obj_key_ops = {
 
 void init_literals_hash_map(void)
 {
-	literals = alloc_hash_map(1000, &string_obj_key_ops);
+	literals = alloc_hash_map(&string_obj_key_ops);
 	if (!literals)
 		error("failed to initialize literals hash map");
 }

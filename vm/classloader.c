@@ -248,7 +248,7 @@ static struct key_operations classes_key_ops = {
 
 void classloader_init(void)
 {
-	classes = alloc_hash_map(10000, &classes_key_ops);
+	classes = alloc_hash_map(&classes_key_ops);
 	if (!classes)
 		error("failed to initialize class loader");
 }

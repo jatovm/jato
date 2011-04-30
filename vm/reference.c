@@ -55,7 +55,7 @@ static inline void vm_reference_unlock(void)
 
 void vm_reference_init(void)
 {
-	reference_map = alloc_hash_map(100, &pointer_key);
+	reference_map = alloc_hash_map(&pointer_key);
 }
 
 static void vm_reference_clear(struct vm_reference *ref)
