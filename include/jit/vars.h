@@ -159,13 +159,11 @@ next_range(struct list_head *list, struct live_range *range)
 
 static inline unsigned long interval_start(struct live_interval *it)
 {
-	assert(!list_is_empty(&it->range_list));
 	return node_to_range(it->range_list.next)->start;
 }
 
 static inline unsigned long interval_end(struct live_interval *it)
 {
-	assert(!list_is_empty(&it->range_list));
 	return node_to_range(it->range_list.prev)->end;
 }
 
