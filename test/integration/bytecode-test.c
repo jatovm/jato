@@ -72,8 +72,50 @@ static jint do_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
+static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
+{
+	struct cafebabe_method_info method_info;
+	struct vm_object class_object;
+	struct vm_method vmm;
+	struct vm_class vmc;
+	jdouble (*method)(void);
+
+	class_object	= (struct vm_object) {
+	};
+
+	vmc		= (struct vm_class) {
+		.object		= &class_object,
+		.name		= "Foo",
+		.state		= VM_CLASS_LINKED,
+	};
+
+	vm_class_init(&vmc);
+
+	method_info	= (struct cafebabe_method_info) {
+		.access_flags	= CAFEBABE_METHOD_ACC_STATIC,
+	};
+
+	vmm		= (struct vm_method) {
+		.method		= &method_info,
+		.name		= "foo",
+		.class		= &vmc,
+		.code_attribute = (struct cafebabe_code_attribute) {
+			.code		= code,
+			.code_length	= code_length,
+		},
+	};
+
+	if (vm_method_prepare_jit(&vmm))
+		die("unable to prepare method");
+
+	method = vm_method_trampoline_ptr(&vmm);
+
+	return method();
+}
+
 #define execute(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jlong_run(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
+#define jdouble_run(bytecode) do_jdouble_execute(bytecode, ARRAY_SIZE(bytecode))
 
 static void init(void)
 {
@@ -126,6 +168,16 @@ static void do_assert_long_equals(const char *function, const char *file, int li
 }
 
 #define assert_long_equals(expected, actual) do_assert_long_equals(__func__, __FILE__, __LINE__, expected, actual)
+
+static void do_assert_double_equals(const char *function, const char *file, int line, jdouble expected, jdouble actual)
+{
+	if (expected != actual)
+		die("%s:%d::%s: Expected %f, but was: %f", file, line, function, expected, actual);
+
+	nr_assertions++;
+}
+
+#define assert_double_equals(expected, actual) do_assert_double_equals(__func__, __FILE__, __LINE__, expected, actual)
 
 static void test_ifle(void)
 {
@@ -338,6 +390,13 @@ static void test_isub(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+static void test_dadd(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DADD, OPC_DRETURN };
+
+	assert_double_equals(2.0, jdouble_run(bytecode));
+}
+
 static void test_ladd(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LADD, OPC_LRETURN };
@@ -530,7 +589,7 @@ static void run_tests(void)
 	test_iadd();
 	test_ladd();
 	/* test_fadd(); */
-	/* test_dadd(); */
+	test_dadd();
 	test_isub();
 	test_lsub();
 	/* test_fsub(); */
