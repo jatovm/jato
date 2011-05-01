@@ -9,8 +9,9 @@
 #include <assert.h>
 
 struct live_range {
-	unsigned long start, end;	/* end is exclusive */
-	struct list_head range_list_node;
+	unsigned int			start;
+	unsigned int			end;	/* end is exclusive */
+	struct list_head		range_list_node;
 };
 
 static inline bool in_range(struct live_range *range, unsigned long offset)
