@@ -655,7 +655,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	 * its elements. Primitive types are always loaded with
 	 * bootstrap classloader.
 	 */
-	if (is_primitive_array(class_name))
+	if (loader && is_primitive_array(class_name))
 		loader = NULL;
 
 	if (loader) {
