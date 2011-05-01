@@ -158,7 +158,7 @@ JASMIN		?= java -jar tools/jasmin/jasmin.jar
 JAVAC		?= JAVA=java $(shell pwd)/tools/ecj
 else
 JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
-JAVAC		?= JAVA=$(JAVA) $(shell pwd)/tools/ecj
+JAVAC		?= JAVA=java $(shell pwd)/tools/ecj
 endif
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
