@@ -157,9 +157,16 @@ next_range(struct list_head *list, struct live_range *range)
 			  range_list_node);
 }
 
+static inline struct live_range *interval_first_range(struct live_interval *it)
+{
+	return list_first_entry(&it->range_list, struct live_range, range_list_node);
+}
+
 static inline unsigned long interval_start(struct live_interval *it)
 {
-	return node_to_range(it->range_list.next)->start;
+	struct live_range *first = interval_first_range(it);
+
+	return first->start;
 }
 
 static inline unsigned long interval_end(struct live_interval *it)
@@ -170,13 +177,6 @@ static inline unsigned long interval_end(struct live_interval *it)
 static inline bool interval_is_empty(struct live_interval *it)
 {
 	return list_is_empty(&it->range_list);
-}
-
-static inline struct live_range *interval_first_range(struct live_interval *it)
-{
-	assert(!interval_is_empty(it));
-	return list_first_entry(&it->range_list, struct live_range,
-				range_list_node);
 }
 
 struct live_interval *alloc_interval(struct var_info *);
