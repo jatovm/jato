@@ -57,7 +57,12 @@ extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
 const char *reg_name(enum machine_reg reg);
 
-bool reg_supports_type(enum machine_reg reg, enum vm_type type);
+const uint32_t reg_type_table[NR_REGISTERS];
+
+static inline bool reg_supports_type(enum machine_reg reg, enum vm_type type)
+{
+	return reg_type_table[reg] & (1UL << type);
+}
 
 struct register_state {
 	uint64_t			ip;
