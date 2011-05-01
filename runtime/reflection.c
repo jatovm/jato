@@ -64,11 +64,10 @@ struct vm_field *vm_object_to_vm_field(struct vm_object *field)
 	if (!field)
 		return throw_npe();
 
-	if (vm_object_is_instance_of(field, vm_java_lang_reflect_Field)) {
-		field	= field_get_object(field, vm_java_lang_reflect_Field_f);
-	}
-
 	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+		if (vm_object_is_instance_of(field, vm_java_lang_reflect_Field))
+			field	= field_get_object(field, vm_java_lang_reflect_Field_f);
+
 		class	= field_get_object(field, vm_java_lang_reflect_VMField_clazz);
 		slot	= field_get_int(field, vm_java_lang_reflect_VMField_slot);
 	} else {
