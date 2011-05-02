@@ -79,6 +79,7 @@ setup_vtable(struct vm_class *vmc)
 		super_vtable = &super->vtable;
 	} else {
 		super_vtable_size = 0;
+		super_vtable = NULL;
 	}
 
 	vtable_size = 0;
