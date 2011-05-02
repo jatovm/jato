@@ -234,9 +234,9 @@ static struct inlining_context *alloc_inlining_context(struct vm_method *method)
 
 static void free_inlining_context(struct inlining_context *ctx)
 {
-	struct subroutine *this;
+	struct subroutine *this, *next;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
+	list_for_each_entry_safe(this, next, &ctx->subroutine_list, subroutine_list_node) {
 		hash_map_remove(ctx->subroutines, (void *)this->start_pc);
 		free_subroutine(this);
 	}
