@@ -2,7 +2,21 @@
 #include "vm/class.h"
 #include "vm/object.h"
 #include "vm/method.h"
+#include "vm/field.h"
 #include "vm/debug.h"
+
+void debug_print_vm_field(struct vm_field *field)
+{
+	if (field) {
+		printf(" field : %s %s\n", field->type, field->name);
+		if (field->class->name) {
+			printf("class->name : %s\n", field->class->name);
+		}
+		printf("\n");
+	} else {
+		printf("Unable to print null vm_field!\n");
+	}
+}
 
 void debug_print_vm_method(struct vm_method *method)
 {
@@ -34,6 +48,10 @@ void debug_print_vm_class(struct vm_class *class)
 
 		for (uint i = 0; i < class->nr_methods; i++) {
 			debug_print_vm_method(&class->methods[i]);
+		}
+
+		for (uint i = 0; i < class->nr_fields; i++) {
+			debug_print_vm_field(&class->fields[i]);
 		}
 	} else {
 		printf("Unable to print null vm_class!\n");

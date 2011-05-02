@@ -1,6 +1,8 @@
 #ifndef __DEBUG_H_
 #define __DEBUG_H_
 
+void debug_print_vm_field(struct vm_field *method);
+
 void debug_print_vm_method(struct vm_method *method);
 
 void debug_print_vm_class(struct vm_class *class);

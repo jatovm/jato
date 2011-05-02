@@ -52,6 +52,7 @@ struct vm_class {
 	struct vm_class *super;
 	unsigned int nr_interfaces;
 	struct vm_class **interfaces;
+	unsigned int nr_fields;
 	struct vm_field *fields;
 	unsigned int nr_methods;
 	struct vm_method *methods;

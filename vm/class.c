@@ -338,11 +338,12 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 		vmc->interfaces[i] = vmi;
 	}
 
+	vmc->nr_fields = class->fields_count;
 	vmc->fields = vm_alloc(sizeof(*vmc->fields) * class->fields_count);
 	if (!vmc->fields)
 		goto error_free_interfaces;
 
-	for (uint16_t i = 0; i < class->fields_count; ++i) {
+	for (uint16_t i = 0; i < vmc->nr_fields; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 
 		if (vm_field_init(vmf, vmc, i))
@@ -402,7 +403,7 @@ int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class)
 	if (!vmc->static_values)
 		goto error_free_buckets;
 
-	for (uint16_t i = 0; i < class->fields_count; ++i) {
+	for (uint16_t i = 0; i < vmc->nr_fields; ++i) {
 		struct vm_field *vmf = &vmc->fields[i];
 
 		if (vm_field_is_static(vmf)) {
