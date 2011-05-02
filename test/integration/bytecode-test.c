@@ -154,10 +154,52 @@ static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
+static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
+{
+	struct cafebabe_method_info method_info;
+	struct vm_object class_object;
+	struct vm_method vmm;
+	struct vm_class vmc;
+	jobject (*method)(void);
+
+	class_object	= (struct vm_object) {
+	};
+
+	vmc		= (struct vm_class) {
+		.object		= &class_object,
+		.name		= "Foo",
+		.state		= VM_CLASS_LINKED,
+	};
+
+	vm_class_init(&vmc);
+
+	method_info	= (struct cafebabe_method_info) {
+		.access_flags	= CAFEBABE_METHOD_ACC_STATIC,
+	};
+
+	vmm		= (struct vm_method) {
+		.method		= &method_info,
+		.name		= "foo",
+		.class		= &vmc,
+		.code_attribute = (struct cafebabe_code_attribute) {
+			.code		= code,
+			.code_length	= code_length,
+		},
+	};
+
+	if (vm_method_prepare_jit(&vmm))
+		die("unable to prepare method");
+
+	method = vm_method_trampoline_ptr(&vmm);
+
+	return method();
+}
+
 #define execute(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jlong_run(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jdouble_run(bytecode) do_jdouble_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jfloat_run(bytecode) do_jfloat_execute(bytecode, ARRAY_SIZE(bytecode))
+#define jobject_run(bytecode) do_jobject_execute(bytecode, ARRAY_SIZE(bytecode))
 
 static void init(void)
 {
@@ -230,6 +272,30 @@ static void do_assert_float_equals(const char *function, const char *file, int l
 }
 
 #define assert_float_equals(expected, actual) do_assert_float_equals(__func__, __FILE__, __LINE__, expected, actual)
+
+static void do_assert_object_equals(const char *function, const char *file, int line, jobject expected, jobject actual)
+{
+	if (expected != actual)
+		die("%s:%d::%s: Expected %d, but was: %d", file, line, function, expected, actual);
+
+	nr_assertions++;
+}
+
+#define assert_object_equals(expected, actual) do_assert_object_equals(__func__, __FILE__, __LINE__, expected, actual)
+
+static void test_bipush(void)
+{
+	uint8_t bytecode[] = { OPC_BIPUSH, 0x10, OPC_IRETURN };
+
+	assert_int_equals(16, execute(bytecode));
+}
+
+static void test_sipush(void)
+{
+	uint8_t bytecode[] = { OPC_SIPUSH, 0x01, 0x00, OPC_IRETURN };
+
+	assert_int_equals(256, execute(bytecode));
+}
 
 static void test_ifle(void)
 {
@@ -610,6 +676,13 @@ static void test_iconst_0(void)
 	assert_int_equals(0, execute(bytecode));
 }
 
+static void test_aconst_null(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IRETURN };
+
+	assert_object_equals(NULL, jobject_run(bytecode));
+}
+
 static void test_iconst_m1(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_M1, OPC_IRETURN };
@@ -620,7 +693,7 @@ static void test_iconst_m1(void)
 static void run_tests(void)
 {
 	/* test_nop(); */
-	/* test_aconst_null(); */
+	test_aconst_null();
 	test_iconst_m1();
 	test_iconst_0();
 	test_iconst_1();
@@ -635,8 +708,8 @@ static void run_tests(void)
 	/* test_fconst_2(); */
 	/* test_dconst_0(); */
 	/* test_dconst_1(); */
-	/* test_bipush(); */
-	/* test_sipush(); */
+	test_bipush();
+	test_sipush();
 	/* test_ldc(); */
 	/* test_ldc_w(); */
 	/* test_ldc2_w(); */
