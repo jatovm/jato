@@ -334,6 +334,20 @@ static void test_ineg(void)
 	assert_int_equals(-2, execute(bytecode));
 }
 
+static void test_dneg(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DNEG, OPC_DRETURN };
+
+	assert_double_equals(-1.0, jdouble_run(bytecode));
+}
+
+static void test_fneg(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_2, OPC_FNEG, OPC_FRETURN };
+
+	assert_int_equals(-2.0, jfloat_run(bytecode));
+}
+
 static void test_lrem(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LREM, OPC_LRETURN };
@@ -346,6 +360,20 @@ static void test_irem(void)
 	uint8_t bytecode[] = { OPC_ICONST_4, OPC_ICONST_3, OPC_IREM, OPC_IRETURN };
 
 	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_drem(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DREM, OPC_DRETURN };
+
+	assert_long_equals(0.0, jdouble_run(bytecode));
+}
+
+static void test_frem(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_2, OPC_FCONST_1, OPC_FREM, OPC_FRETURN };
+
+	assert_float_equals(0.0, jfloat_run(bytecode));
 }
 
 static void test_ldiv(void)
@@ -625,12 +653,12 @@ static void run_tests(void)
 	test_ddiv();
 	test_irem();
 	test_lrem();
-	/* test_frem(); */
-	/* test_drem(); */
+	test_frem();
+	test_drem();
 	test_ineg();
 	test_lneg();
-	/* test_fneg(); */
-	/* test_dneg(); */
+	test_fneg();
+	test_dneg();
 	test_ishl();
 	test_lshl();
 	test_ishr();
