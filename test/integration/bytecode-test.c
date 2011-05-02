@@ -397,6 +397,27 @@ static void test_dadd(void)
 	assert_double_equals(2.0, jdouble_run(bytecode));
 }
 
+static void test_dsub(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DSUB, OPC_DRETURN };
+
+	assert_double_equals(0.0, jdouble_run(bytecode));
+}
+
+static void test_dmul(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DMUL, OPC_DRETURN };
+
+	assert_double_equals(1.0, jdouble_run(bytecode));
+}
+
+static void test_ddiv(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DDIV, OPC_DRETURN };
+
+	assert_double_equals(1.0, jdouble_run(bytecode));
+}
+
 static void test_ladd(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LADD, OPC_LRETURN };
@@ -593,15 +614,15 @@ static void run_tests(void)
 	test_isub();
 	test_lsub();
 	/* test_fsub(); */
-	/* test_dsub(); */
+	test_dsub();
 	test_imul();
 	test_lmul();
 	/* test_fmul(); */
-	/* test_dmul(); */
+	test_dmul();
 	test_idiv();
 	test_ldiv();
 	/* test_fdiv(); */
-	/* test_ddiv(); */
+	test_ddiv();
 	test_irem();
 	test_lrem();
 	/* test_frem(); */
