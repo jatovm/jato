@@ -699,16 +699,6 @@ static void emit_fld_64_membase(struct insn *insn, struct buffer *buf, struct ba
 	__emit_membase(buf, 0xdd, mach_reg(&insn->operand.base_reg), insn->operand.disp, 0);
 }
 
-static void emit_fld_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_membase(buf, 0xd9, MACH_REG_EBP, slot_offset(insn->operand.slot), 0);
-}
-
-static void emit_fld_64_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	__emit_membase(buf, 0xdd, MACH_REG_EBP, slot_offset_64(insn->operand.slot), 0);
-}
-
 static void emit_fild_64_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_membase(buf, 0xdf, mach_reg(&insn->operand.base_reg), insn->operand.disp, 5);
@@ -2431,9 +2421,9 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_FISTP_64_MEMBASE, emit_fistp_64_membase),
 	DECL_EMITTER(INSN_FLDCW_MEMBASE, emit_fldcw_membase),
 	DECL_EMITTER(INSN_FLD_64_MEMBASE, emit_fld_64_membase),
-	DECL_EMITTER(INSN_FLD_64_MEMLOCAL, emit_fld_64_memlocal),
+	DECL_EMITTER(INSN_FLD_64_MEMLOCAL, insn_encode),
 	DECL_EMITTER(INSN_FLD_MEMBASE, emit_fld_membase),
-	DECL_EMITTER(INSN_FLD_MEMLOCAL, emit_fld_memlocal),
+	DECL_EMITTER(INSN_FLD_MEMLOCAL, insn_encode),
 	DECL_EMITTER(INSN_FNSTCW_MEMBASE, emit_fnstcw_membase),
 	DECL_EMITTER(INSN_FSTP_64_MEMBASE, emit_fstp_64_membase),
 	DECL_EMITTER(INSN_FSTP_MEMBASE, emit_fstp_membase),
