@@ -1458,23 +1458,15 @@ stmt:	STMT_RETURN(reg) 1
 stmt:	STMT_RETURN(freg) 1
 {
 	struct expression *expr;
-	struct var_info *src;
-	struct stack_slot *scratch;
+	struct var_info *src, *xmm0;
 
 	expr = to_expr(tree);
 	expr = to_expr(expr->unary_expression);
 
+	xmm0 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
 	src = state->left->reg1;
 
-	if (expr->vm_type == J_FLOAT) {
-		scratch = get_scratch_slot(s->b_parent);
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, scratch));
-		select_insn(s, tree, memlocal_insn(INSN_FLD_MEMLOCAL, scratch));
-	} else {
-		scratch = get_scratch_slot(s->b_parent);
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, scratch));
-		select_insn(s, tree, memlocal_insn(INSN_FLD_64_MEMLOCAL, scratch));
-	}
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, xmm0));
 
 	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
 }
