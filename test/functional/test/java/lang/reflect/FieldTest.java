@@ -2,14 +2,14 @@ package test.java.lang.reflect;
 
 import jvm.TestCase;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class MethodTest extends TestCase {
+public class FieldTest extends TestCase {
   public static void testGetAnnotation() throws Exception {
-    Method m = TaggedClass.class.getMethod("foo");
-    Tag tag = m.getAnnotation(Tag.class);
+    Field f = TaggedClass.class.getField("myField");
+    Tag tag = f.getAnnotation(Tag.class);
     assertNotNull(tag);
 
     assertEquals(Byte.MAX_VALUE, tag.byteValue());
@@ -63,8 +63,7 @@ public class MethodTest extends TestCase {
       classArrayValue  = { Integer.class,       Long.class          },
       annotationArrayValue = { @Tag2, @Tag2 }
     )
-    public void foo() { }
-
+    public String myField = null;
   }
 
   @Retention(RetentionPolicy.RUNTIME)

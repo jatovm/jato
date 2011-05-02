@@ -89,6 +89,7 @@ TESTS = [
 , ( "test.java.lang.ClassTest", 0, [ ], [ "i386" ] )
 , ( "test.java.lang.DoubleTest", 0, [ ], [ "i386" ] )
 , ( "test.java.lang.reflect.MethodTest", 0, [ ], [ "i386" ] )
+, ( "test.java.lang.reflect.FieldTest", 0, [ ], [ "i386" ] )
 ]
 
 def guess_arch():
