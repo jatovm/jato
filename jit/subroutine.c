@@ -47,6 +47,7 @@
 #include "vm/trace.h"
 
 #include "lib/list.h"
+#include "lib/hash-map.h"
 
 #include <limits.h>
 #include <stdint.h>
@@ -93,12 +94,28 @@ struct inlining_context {
 	struct cafebabe_line_number_table_entry *line_number_table;
 
 	struct vm_method *method;
+	struct hash_map *subroutines;
 };
 
 struct subroutine_scan_context {
 	struct inlining_context *i_ctx;
 	struct subroutine *sub;
 	bool *visited_code;
+};
+
+static unsigned long subs_key_hash(const void *key)
+{
+	return (unsigned long)key;
+}
+
+static bool subs_key_compare(const void *key1, const void *key2)
+{
+	return ((unsigned long)key1 == (unsigned long)key2);
+}
+
+static struct key_operations sub_lookup_ops = {
+	.hash   = &subs_key_hash,
+	.equals = & subs_key_compare
 };
 
 static unsigned long next_pc(const unsigned char *code, unsigned long current)
@@ -176,6 +193,10 @@ static struct inlining_context *alloc_inlining_context(struct vm_method *method)
 
 	INIT_LIST_HEAD(&ctx->subroutine_list);
 
+	ctx->subroutines = alloc_hash_map(&sub_lookup_ops);
+	if (!ctx->subroutines)
+		goto error_code;
+
 	if (code_state_init(&ctx->code, method->code_attribute.code,
 			    method->code_attribute.code_length))
 		goto error_code;
@@ -194,7 +215,7 @@ static struct inlining_context *alloc_inlining_context(struct vm_method *method)
 	/*
 	 * The size of the map is code_length + 1 because we need a
 	 * mapping for the address that is equal to code_length. This
-	 * address can occure in exception handlers' range addresses.
+	 * address can occur in exception handlers' range addresses.
 	 */
 	if (pc_map_init_identity(&ctx->pc_map, ctx->code.code_length + 1))
 		goto error_pc_map;
@@ -216,9 +237,10 @@ static void free_inlining_context(struct inlining_context *ctx)
 	struct subroutine *this;
 
 	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
+		hash_map_remove(ctx->subroutines, (void *)this->start_pc);
 		free_subroutine(this);
 	}
-
+	free_hash_map(ctx->subroutines);
 	pc_map_deinit(&ctx->pc_map);
 	free(ctx);
 }
@@ -267,17 +289,15 @@ static struct subroutine *lookup_subroutine(struct inlining_context *ctx,
 {
 	struct subroutine *this;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
-		if (this->start_pc == target)
-			return this;
-	}
+	if (hash_map_get(ctx->subroutines, (void *)target, (void **)(&this)))
+		return NULL;
 
-	return NULL;
+	return this;
 }
 
 static void add_subroutine(struct inlining_context *ctx, struct subroutine *sub)
 {
-	/* TODO: use hash table to speedup lookup. */
+	hash_map_put(ctx->subroutines, (void *)sub->start_pc, sub);
 	list_add_tail(&sub->subroutine_list_node, &ctx->subroutine_list);
 }
 
@@ -494,9 +514,11 @@ static int subroutine_scan(struct inlining_context *ctx, struct subroutine *sub)
 static int scan_subroutines(struct inlining_context *ctx)
 {
 	struct subroutine *this;
+	struct hash_map_entry *ent;
 	int err;
 
-	list_for_each_entry(this, &ctx->subroutine_list, subroutine_list_node) {
+	hash_map_for_each_entry(ent, ctx->subroutines) {
+		this = ent->value;
 		err = subroutine_scan(ctx, this);
 		if (err)
 			return err;
@@ -709,19 +731,22 @@ static int update_bytecode_offsets(struct inlining_context *ctx,
 
 	err = pc_map_get_unique(&ctx->pc_map, &sub->start_pc);
 	if (err)
-		return warn("no or ambiguous mapping"), -EINVAL;
+		goto ambiguous_mapping;
 
 	err = pc_map_get_unique(&ctx->pc_map, &sub->end_pc);
 	if (err)
-		return warn("no or ambiguous mapping"), -EINVAL;
+		goto ambiguous_mapping;
 
 	for (int i = 0; i < sub->nr_call_sites; i++) {
 		err = pc_map_get_unique(&ctx->pc_map, &sub->call_sites[i]);
 		if (err)
-			return warn("no or ambiguous mapping"), -EINVAL;
+			goto ambiguous_mapping;
 	}
 
 	return 0;
+
+ ambiguous_mapping:
+	return warn("no or ambiguous mapping"), -EINVAL;
 }
 
 /*
@@ -1218,7 +1243,7 @@ remove_subroutine(struct inlining_context *ctx, struct subroutine *sub)
 				  &ctx->subroutine_list);
 		}
 	}
-
+	hash_map_remove(ctx->subroutines, (void *)sub->start_pc);
 	list_del(&sub->subroutine_list_node);
 	free_subroutine(sub);
 }
