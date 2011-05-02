@@ -115,7 +115,7 @@ int args_map_init(struct vm_method *method)
 {
 	struct vm_method_arg *arg;
 	enum vm_type vm_type;
-	int idx;
+	int idx = 0;
 	int gpr_count = 0, xmm_count = 0, stack_count = 0;
 	struct vm_args_map *map;
 	size_t size;
@@ -134,15 +134,20 @@ int args_map_init(struct vm_method *method)
 	if (!method->args_map)
 		return -1;
 
+	if (vm_method_is_jni(method)) {
+		if (vm_method_is_static(method)) {
+			map = &method->args_map[idx++];
+			args_map_assign(map, J_REFERENCE, &gpr_count, &stack_count);
+		}
+		map = &method->args_map[idx++];
+		args_map_assign(map, J_REFERENCE, &gpr_count, &stack_count);
+	}
+
 	/* We know *this is a J_REFERENCE, so allocate a GPR. */
 	if (!vm_method_is_static(method)) {
-		map = &method->args_map[0];
-		map->reg = args_map_alloc_gpr(gpr_count++);
-		map->stack_index = -1;
-		map->type = J_REFERENCE;
-		idx = 1;
-	} else
-		idx = 0;
+		map = &method->args_map[idx++];
+		args_map_assign(map, J_REFERENCE, &gpr_count, &stack_count);
+	}
 
 	method->reg_args_count = 0;
 
@@ -185,15 +190,6 @@ int args_map_init(struct vm_method *method)
 			idx += 2;
 		} else
 			idx++;
-	}
-
-	if (vm_method_is_jni(method)) {
-		if (vm_method_is_static(method)) {
-			map = &method->args_map[idx++];
-			args_map_assign(map, J_REFERENCE, &gpr_count, &stack_count);
-		}
-		map = &method->args_map[idx++];
-		args_map_assign(map, J_REFERENCE, &gpr_count, &stack_count);
 	}
 
 	method->reg_args_count += gpr_count + xmm_count;
