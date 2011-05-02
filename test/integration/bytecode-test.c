@@ -113,9 +113,51 @@ static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
+static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
+{
+	struct cafebabe_method_info method_info;
+	struct vm_object class_object;
+	struct vm_method vmm;
+	struct vm_class vmc;
+	jfloat (*method)(void);
+
+	class_object	= (struct vm_object) {
+	};
+
+	vmc		= (struct vm_class) {
+		.object		= &class_object,
+		.name		= "Foo",
+		.state		= VM_CLASS_LINKED,
+	};
+
+	vm_class_init(&vmc);
+
+	method_info	= (struct cafebabe_method_info) {
+		.access_flags	= CAFEBABE_METHOD_ACC_STATIC,
+	};
+
+	vmm		= (struct vm_method) {
+		.method		= &method_info,
+		.name		= "foo",
+		.class		= &vmc,
+		.code_attribute = (struct cafebabe_code_attribute) {
+			.code		= code,
+			.code_length	= code_length,
+		},
+	};
+
+	if (vm_method_prepare_jit(&vmm))
+		die("unable to prepare method");
+
+	method = vm_method_trampoline_ptr(&vmm);
+
+	return method();
+}
+
 #define execute(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jlong_run(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jdouble_run(bytecode) do_jdouble_execute(bytecode, ARRAY_SIZE(bytecode))
+#define jfloat_run(bytecode) do_jfloat_execute(bytecode, ARRAY_SIZE(bytecode))
 
 static void init(void)
 {
@@ -178,6 +220,16 @@ static void do_assert_double_equals(const char *function, const char *file, int 
 }
 
 #define assert_double_equals(expected, actual) do_assert_double_equals(__func__, __FILE__, __LINE__, expected, actual)
+
+static void do_assert_float_equals(const char *function, const char *file, int line, jfloat expected, jfloat actual)
+{
+	if (expected != actual)
+		die("%s:%d::%s: Expected %f, but was: %f", file, line, function, expected, actual);
+
+	nr_assertions++;
+}
+
+#define assert_float_equals(expected, actual) do_assert_float_equals(__func__, __FILE__, __LINE__, expected, actual)
 
 static void test_ifle(void)
 {
@@ -446,6 +498,34 @@ static void test_ddiv(void)
 	assert_double_equals(1.0, jdouble_run(bytecode));
 }
 
+static void test_fadd(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_1, OPC_FCONST_2, OPC_FADD, OPC_FRETURN };
+
+	assert_float_equals(3.0, jfloat_run(bytecode));
+}
+
+static void test_fsub(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_2, OPC_FCONST_1, OPC_FSUB, OPC_FRETURN };
+
+	assert_float_equals(1.0, jfloat_run(bytecode));
+}
+
+static void test_fmul(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_2, OPC_FCONST_2, OPC_FMUL, OPC_FRETURN };
+
+	assert_float_equals(4.0, jfloat_run(bytecode));
+}
+
+static void test_fdiv(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_2, OPC_FCONST_1, OPC_FDIV, OPC_FRETURN };
+
+	assert_float_equals(2.0, jfloat_run(bytecode));
+}
+
 static void test_ladd(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LADD, OPC_LRETURN };
@@ -637,19 +717,19 @@ static void run_tests(void)
 	/* test_swap(); */
 	test_iadd();
 	test_ladd();
-	/* test_fadd(); */
+	test_fadd();
 	test_dadd();
 	test_isub();
 	test_lsub();
-	/* test_fsub(); */
+	test_fsub();
 	test_dsub();
 	test_imul();
 	test_lmul();
-	/* test_fmul(); */
+	test_fmul();
 	test_dmul();
 	test_idiv();
 	test_ldiv();
-	/* test_fdiv(); */
+	test_fdiv();
 	test_ddiv();
 	test_irem();
 	test_lrem();
