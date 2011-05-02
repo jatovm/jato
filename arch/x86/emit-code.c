@@ -1644,7 +1644,13 @@ static void __emit64_mov_imm_reg(struct buffer *buf,
 
 static void emit_mov_imm_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	__emit64_mov_imm_reg(buf, insn->src.imm, mach_reg(&insn->dest.reg));
+	int rex_w = is_64bit_reg(&insn->dest);
+
+	__emit_reg(buf, rex_w, 0xb8, mach_reg(&insn->dest.reg));
+	if (!rex_w)
+		emit_imm32(buf, insn->src.imm);
+	else
+		emit_imm64(buf, insn->src.imm);
 }
 
 static void __emit64_mov_membase_reg(struct buffer *buf,
