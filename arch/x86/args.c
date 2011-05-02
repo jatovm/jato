@@ -96,8 +96,12 @@ static void args_map_dup_slot(struct vm_args_map *orig, int *st)
 	(*st)++;
 }
 
-static void args_map_assign(struct vm_args_map *map, int *gpr_count, int *stack_count)
+static void args_map_assign(struct vm_args_map *map,
+			    enum vm_type vm_type,
+			    int *gpr_count,
+			    int *stack_count)
 {
+	map->type = vm_type;
 	if (*gpr_count < 6) {
 		map->reg = args_map_alloc_gpr((*gpr_count)++);
 		map->stack_index = -1;
@@ -155,7 +159,7 @@ int args_map_init(struct vm_method *method)
 		case J_SHORT:
 		case J_BOOLEAN:
 		case J_REFERENCE:
-			args_map_assign(map, &gpr_count, &stack_count);
+			args_map_assign(map, vm_type, &gpr_count, &stack_count);
 			break;
 		case J_FLOAT:
 		case J_DOUBLE:
@@ -186,10 +190,10 @@ int args_map_init(struct vm_method *method)
 	if (vm_method_is_jni(method)) {
 		if (vm_method_is_static(method)) {
 			map = &method->args_map[idx++];
-			args_map_assign(map, &gpr_count, &stack_count);
+			args_map_assign(map, J_REFERENCE, &gpr_count, &stack_count);
 		}
 		map = &method->args_map[idx++];
-		args_map_assign(map, &gpr_count, &stack_count);
+		args_map_assign(map, J_REFERENCE, &gpr_count, &stack_count);
 	}
 
 	method->reg_args_count += gpr_count + xmm_count;
