@@ -23,6 +23,7 @@ struct vm_object *native_vmconstructor_get_exception_types(struct vm_object *met
 struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
 jlong native_field_get_long(struct vm_object *this, struct vm_object *o);
 jint native_field_get_int(struct vm_object *this, struct vm_object *o);
+jshort native_field_get_short(struct vm_object *this, struct vm_object *o);
 jint native_field_get_modifiers_internal(struct vm_object *this);
 struct vm_object *native_field_gettype(struct vm_object *this);
 

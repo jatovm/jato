@@ -138,6 +138,128 @@ public class FieldTest extends TestCase {
       }
     }
 
+    private static void testStaticGetShort() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("staticByte").getShort(null));
+       assertEquals(Short.MAX_VALUE, field("staticShort").getShort(null));
+    }
+
+    private static void testStaticGetShortFromBoolean() throws Exception {
+      try {
+        field("staticBoolean").getShort(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetShortFromDouble() throws Exception {
+      try {
+        field("staticDouble").getShort(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetShortFromFloat() throws Exception {
+      try {
+        field("staticFloat").getShort(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetShortFromInteger() throws Exception {
+      try {
+        field("staticInteger").getShort(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetShortFromChar() throws Exception {
+      try {
+        field("staticChar").getShort(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetShortFromLong() throws Exception {
+      try {
+        field("staticLong").getShort(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetShortFromObject() throws Exception {
+      try {
+        field("staticObject").getShort(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetShort() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("instanceByte").getShort(new Fields()));
+       assertEquals(Short.MAX_VALUE, field("instanceShort").getShort(new Fields()));
+    }
+
+    private static void testInstanceGetShortFromBoolean() throws Exception {
+      try {
+        field("instanceBoolean").getShort(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetShortFromDouble() throws Exception {
+      try {
+        field("instanceDouble").getShort(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetShortFromFloat() throws Exception {
+      try {
+        field("instanceFloat").getShort(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetShortFromInteger() throws Exception {
+      try {
+        field("staticInteger").getShort(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetShortFromLong() throws Exception {
+      try {
+        field("staticLong").getShort(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetShortFromChar() throws Exception {
+      try {
+        field("staticChar").getShort(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetShortFromObject() throws Exception {
+      try {
+        field("instanceObject").getShort(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
     private static Field field(String name) throws Exception {
         return Fields.class.getField(name);
     }
@@ -167,6 +289,7 @@ public class FieldTest extends TestCase {
     public static void main(String[] args) throws Exception {
       testStaticGetObject();
       testInstanceGetObject();
+
       testStaticGetLong();
       testStaticGetLongFromBoolean();
       testStaticGetLongFromDouble();
@@ -177,5 +300,23 @@ public class FieldTest extends TestCase {
       testInstanceGetLongFromDouble();
       testInstanceGetLongFromFloat();
       testInstanceGetLongFromObject();
+
+      testStaticGetShort();
+      testStaticGetShortFromBoolean();
+      testStaticGetShortFromDouble();
+      testStaticGetShortFromFloat();
+      testStaticGetShortFromInteger();
+      testStaticGetShortFromLong();
+      testStaticGetShortFromChar();
+      testStaticGetShortFromObject();
+      testInstanceGetShort();
+      testInstanceGetShortFromBoolean();
+      testInstanceGetShortFromDouble();
+      testInstanceGetShortFromInteger();
+      testInstanceGetShortFromLong();
+      testInstanceGetShortFromChar();
+      testInstanceGetShortFromFloat();
+      testInstanceGetShortFromObject();
+
     }
 }
