@@ -186,7 +186,7 @@ reg:	EXPR_VALUE	0
 
 	expr = to_expr(tree);
 
-	result = get_var(s->b_parent, J_INT); /* FIXME: 64-bit */
+	result = get_var(s->b_parent, expr->vm_type == J_LONG ? J_LONG : J_INT);
 	state->reg1 = result;
 
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, expr->value & ~0ULL, result));
