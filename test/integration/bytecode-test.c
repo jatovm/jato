@@ -354,6 +354,41 @@ static void test_goto(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+static void test_ireturn(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_lreturn(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LRETURN };
+
+	assert_long_equals(1, execute(bytecode));
+}
+
+static void test_freturn(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_1, OPC_FRETURN };
+
+	assert_float_equals(1.0, jfloat_run(bytecode));
+}
+
+static void test_dreturn(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DRETURN };
+
+	assert_double_equals(1.0, jdouble_run(bytecode));
+}
+
+static void test_areturn(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_ARETURN };
+
+	assert_object_equals(NULL, jobject_run(bytecode));
+}
+
 static void test_lxor(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LXOR, OPC_LRETURN };
@@ -864,11 +899,11 @@ static void run_tests(void)
 	/* test_ret(); */
 	/* test_tableswitch(); */
 	/* test_lookupswitch(); */
-	/* test_ireturn(); */
-	/* test_lreturn(); */
-	/* test_freturn(); */
-	/* test_dreturn(); */
-	/* test_areturn(); */
+	test_ireturn();
+	test_lreturn();
+	test_freturn();
+	test_dreturn();
+	test_areturn();
 	/* test_return(); */
 	/* test_getstatic(); */
 	/* test_putstatic(); */
