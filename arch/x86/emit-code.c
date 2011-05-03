@@ -1852,6 +1852,16 @@ static void __emit_mov_imm_membase(struct buffer *buf, long imm, enum machine_re
 	emit_imm32(buf, imm);
 }
 
+static void emit_mov_imm_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	__emit_mov_imm_membase(buf, insn->src.imm, mach_reg(&insn->dest.base_reg), insn->dest.disp);
+}
+
+static void emit_mov_imm_memlocal(struct insn *insn, struct buffer *buf, struct basic_block *bb)
+{
+	__emit_mov_imm_membase(buf, insn->src.imm, MACH_REG_RBP, slot_offset(insn->dest.slot));
+}
+
 static void emit_conv_fpu_to_gpr(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	enum machine_reg src, dest;
@@ -2393,6 +2403,9 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOVSX_8_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_MOVSX_8_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_MOVZX_16_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase),
+	DECL_EMITTER(INSN_MOV_IMM_MEMLOCAL, emit_mov_imm_memlocal),
+	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg),
 	DECL_EMITTER(INSN_MULSD_MEMDISP_XMM, insn_encode),
 	DECL_EMITTER(INSN_MULSD_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_MULSS_XMM_XMM, insn_encode),
@@ -2411,6 +2424,8 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SUBSS_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_SUB_IMM_REG, insn_encode),
 	DECL_EMITTER(INSN_SUB_REG_REG, insn_encode),
+	DECL_EMITTER(INSN_XORPD_XMM_XMM, insn_encode),
+	DECL_EMITTER(INSN_XORPS_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_XOR_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_XOR_REG_REG, insn_encode),
 #ifdef CONFIG_X86_32
@@ -2442,9 +2457,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_MOVSD_XMM_MEMINDEX, emit_mov_64_xmm_memindex),
 	DECL_EMITTER(INSN_MOVSS_MEMINDEX_XMM, emit_mov_memindex_xmm),
 	DECL_EMITTER(INSN_MOVSS_XMM_MEMINDEX, emit_mov_xmm_memindex),
-	DECL_EMITTER(INSN_MOV_IMM_MEMBASE, emit_mov_imm_membase),
-	DECL_EMITTER(INSN_MOV_IMM_MEMLOCAL, emit_mov_imm_memlocal),
-	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg),
 	DECL_EMITTER(INSN_MOV_IMM_THREAD_LOCAL_MEMBASE, emit_mov_imm_thread_local_membase),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg),
@@ -2470,8 +2482,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, insn_encode),
-	DECL_EMITTER(INSN_XORPD_XMM_XMM, insn_encode),
-	DECL_EMITTER(INSN_XORPS_XMM_XMM, insn_encode),
 #else /* CONFIG_X86_64 */
 	DECL_EMITTER(INSN_CMP_IMM_REG, emit_cmp_imm_reg),
 	DECL_EMITTER(INSN_CMP_MEMBASE_REG, emit_cmp_membase_reg),
@@ -2481,7 +2491,6 @@ static struct emitter emitters[] = {
 	DECL_EMITTER(INSN_CONV_XMM_TO_XMM64, emit_conv_fpu_to_fpu),
 	DECL_EMITTER(INSN_CONV_XMM64_TO_XMM, emit_conv_fpu_to_fpu),
 	DECL_EMITTER(INSN_DIV_REG_REG, emit_div_reg_reg),
-	DECL_EMITTER(INSN_MOV_IMM_REG, emit_mov_imm_reg),
 	DECL_EMITTER(INSN_MOV_MEMBASE_REG, emit_mov_membase_reg),
 	DECL_EMITTER(INSN_MOV_MEMDISP_REG, emit_mov_memdisp_reg),
 	DECL_EMITTER(INSN_MOV_MEMINDEX_REG, emit_mov_memindex_reg),

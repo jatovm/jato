@@ -498,7 +498,7 @@ reg:	OP_NEG(reg) 1
 
 freg:	OP_DNEG(freg) 1
 {
-	assert(!"OP_FNEG");
+	assert(!"OP_DNEG");
 }
 
 freg:	OP_FNEG(freg) 1
