@@ -354,6 +354,13 @@ static void test_goto(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+static void test_goto_w(void)
+{
+	uint8_t bytecode[] = { OPC_GOTO_W, 0x00, 0x00, 0x00, 0x07, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
 static void test_ireturn(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_IRETURN };
@@ -926,7 +933,7 @@ static void run_tests(void)
 	/* test_multianewarray(); */
 	/* test_ifnull(); */
 	/* test_ifnonnull(); */
-	/* test_goto_w(); */
+	test_goto_w();
 	/* test_jsr_w(); */
 }
 
