@@ -1044,15 +1044,17 @@ reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
 arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
 {
 	struct expression *expr;
+	struct var_info *rdi;
 	int dimensions;
 
 	expr = to_expr(tree);
 	dimensions = nr_args(to_expr(expr->size_expr));
 
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, dimensions));
-	select_insn(s, tree, rel_insn(INSN_CALL_REL,
-		(unsigned long) multiarray_size_check));
-	method_args_cleanup(s, tree, 1);
+	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) dimensions, rdi));
+
+	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) multiarray_size_check));
+
 	select_exception_test(s, tree);
 }
 
