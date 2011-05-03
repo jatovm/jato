@@ -1643,10 +1643,15 @@ stmt:	STMT_STORE(inst_field, reg)
 	offset = (unsigned long)state->left->reg2;
 
 	if (vm_field_equals(store_dest->instance_field, vm_java_lang_ref_Reference_referent)) {
-		select_insn(s, tree, reg_insn(INSN_PUSH_REG, src));
-		select_insn(s, tree, reg_insn(INSN_PUSH_REG, base));
+		struct var_info *rdi, *rsi;
+
+		rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, rsi));
+
+		rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, base, rdi));
+
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &put_referent));
-		method_args_cleanup(s, tree, 2);
 		return;
 	}
 
