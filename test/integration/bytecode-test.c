@@ -361,6 +361,20 @@ static void test_goto_w(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+static void test_ifnull(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IFNULL, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_ifnonnull(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IFNONNULL, 0x00, 0x00, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+
+	assert_int_equals(2, execute(bytecode));
+}
+
 static void test_ireturn(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_IRETURN };
@@ -931,8 +945,8 @@ static void run_tests(void)
 	/* test_monitorexit(); */
 	/* test_wide(); */
 	/* test_multianewarray(); */
-	/* test_ifnull(); */
-	/* test_ifnonnull(); */
+	test_ifnull();
+	test_ifnonnull();
 	test_goto_w();
 	/* test_jsr_w(); */
 }
