@@ -321,6 +321,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/TrampolineBackpatchingTest.java \
 	test/functional/jvm/VirtualAbstractInterfaceMethodTest.java \
 	test/functional/jvm/lang/reflect/FieldTest.java \
+	test/functional/jvm/lang/ReferenceTest.java \
 	test/functional/sun/misc/UnsafeTest.java \
 	test/functional/test/java/lang/ClassTest.java \
 	test/functional/test/java/lang/DoubleTest.java \
