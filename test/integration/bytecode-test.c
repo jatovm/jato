@@ -340,6 +340,17 @@ static void test_ifne(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+static void test_lcmp(void)
+{
+	uint8_t bytecode_l[] = { OPC_LCONST_0, OPC_LCONST_1, OPC_LCMP, OPC_LRETURN };
+	uint8_t bytecode_g[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_LCMP, OPC_LRETURN };
+	uint8_t bytecode_e[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LCMP, OPC_LRETURN };
+
+	assert_long_equals(-1, execute(bytecode_l));
+	assert_long_equals(1, execute(bytecode_g));
+	assert_long_equals(0, execute(bytecode_e));
+}
+
 static void test_ifeq(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_0, OPC_IFEQ, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
@@ -931,7 +942,7 @@ static void run_tests(void)
 	/* test_i2b(); */
 	/* test_i2c(); */
 	/* test_i2s(); */
-	/* test_lcmp(); */
+	test_lcmp();
 	/* test_fcmpl(); */
 	/* test_fcmpg(); */
 	/* test_dcmpl(); */
