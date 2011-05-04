@@ -297,6 +297,64 @@ static void test_sipush(void)
 	assert_int_equals(256, execute(bytecode));
 }
 
+static void test_if_icmpeq(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPEQ, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPEQ, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(0, execute(bytecode_1));
+	assert_int_equals(1, execute(bytecode_2));
+}
+
+static void test_if_icmpne(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPNE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPNE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(0, execute(bytecode_2));
+}
+
+static void test_if_icmplt(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IF_ICMPLT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPLT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(0, execute(bytecode_2));
+}
+
+static void test_if_icmpgt(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(0, execute(bytecode_1));
+	assert_int_equals(1, execute(bytecode_2));
+}
+
+static void test_if_icmple(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IF_ICMPLE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPLE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_3[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPLE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(0, execute(bytecode_2));
+	assert_int_equals(0, execute(bytecode_3));
+}
+
+static void test_if_icmpge(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+	uint8_t bytecode_3[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(0, execute(bytecode_1));
+	assert_int_equals(1, execute(bytecode_2));
+	assert_int_equals(1, execute(bytecode_3));
+}
+
 static void test_ifle(void)
 {
 	uint8_t bytecode_1[] = { OPC_ICONST_M1, OPC_IFLE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
@@ -997,12 +1055,12 @@ static void run_tests(void)
 	test_ifge();
 	test_ifgt();
 	test_ifle();
-	/* test_if_icmpeq(); */
-	/* test_if_icmpne(); */
-	/* test_if_icmplt(); */
-	/* test_if_icmpge(); */
-	/* test_if_icmpgt(); */
-	/* test_if_icmple(); */
+	test_if_icmpeq();
+	test_if_icmpne();
+	test_if_icmplt();
+	test_if_icmpge();
+	test_if_icmpgt();
+	test_if_icmple();
 	/* test_if_acmpeq(); */
 	/* test_if_acmpne(); */
 	test_goto();
