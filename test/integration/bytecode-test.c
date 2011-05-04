@@ -351,6 +351,50 @@ static void test_lcmp(void)
 	assert_long_equals(0, execute(bytecode_e));
 }
 
+static void test_fcmpl(void)
+{
+	uint8_t bytecode_l[] = { OPC_FCONST_0, OPC_FCONST_1, OPC_FCMPL, OPC_IRETURN };
+	uint8_t bytecode_g[] = { OPC_FCONST_1, OPC_FCONST_0, OPC_FCMPL, OPC_IRETURN };
+	uint8_t bytecode_e[] = { OPC_FCONST_2, OPC_FCONST_2, OPC_FCMPL, OPC_IRETURN };
+
+	assert_int_equals(-1, execute(bytecode_l));
+	assert_int_equals(1, execute(bytecode_g));
+	assert_int_equals(0, execute(bytecode_e));
+}
+
+static void test_fcmpg(void)
+{
+	uint8_t bytecode_l[] = { OPC_FCONST_0, OPC_FCONST_1, OPC_FCMPG, OPC_IRETURN };
+	uint8_t bytecode_g[] = { OPC_FCONST_1, OPC_FCONST_0, OPC_FCMPG, OPC_IRETURN };
+	uint8_t bytecode_e[] = { OPC_FCONST_2, OPC_FCONST_2, OPC_FCMPG, OPC_IRETURN };
+
+	assert_int_equals(-1, execute(bytecode_l));
+	assert_int_equals(1, execute(bytecode_g));
+	assert_int_equals(0, execute(bytecode_e));
+}
+
+static void test_dcmpl(void)
+{
+	uint8_t bytecode_l[] = { OPC_DCONST_0, OPC_DCONST_1, OPC_DCMPL, OPC_IRETURN };
+	uint8_t bytecode_g[] = { OPC_DCONST_1, OPC_DCONST_0, OPC_DCMPL, OPC_IRETURN };
+	uint8_t bytecode_e[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DCMPL, OPC_IRETURN };
+
+	assert_int_equals(-1, execute(bytecode_l));
+	assert_int_equals(1, execute(bytecode_g));
+	assert_int_equals(0, execute(bytecode_e));
+}
+
+static void test_dcmpg(void)
+{
+	uint8_t bytecode_l[] = { OPC_DCONST_0, OPC_DCONST_1, OPC_DCMPG, OPC_IRETURN };
+	uint8_t bytecode_g[] = { OPC_DCONST_1, OPC_DCONST_0, OPC_DCMPG, OPC_IRETURN };
+	uint8_t bytecode_e[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DCMPG, OPC_IRETURN };
+
+	assert_int_equals(-1, execute(bytecode_l));
+	assert_int_equals(1, execute(bytecode_g));
+	assert_int_equals(0, execute(bytecode_e));
+}
+
 static void test_ifeq(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_0, OPC_IFEQ, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
@@ -943,10 +987,10 @@ static void run_tests(void)
 	/* test_i2c(); */
 	/* test_i2s(); */
 	test_lcmp();
-	/* test_fcmpl(); */
-	/* test_fcmpg(); */
-	/* test_dcmpl(); */
-	/* test_dcmpg(); */
+	test_fcmpl();
+	test_fcmpg();
+	test_dcmpl();
+	test_dcmpg();
 	test_ifeq();
 	test_ifne();
 	test_iflt();
