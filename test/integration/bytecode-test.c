@@ -775,6 +775,19 @@ static void test_iadd(void)
 	assert_int_equals(3, execute(bytecode));
 }
 
+static void test_swap(void)
+{
+	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_SWAP, OPC_IRETURN };
+	uint8_t bytecode_2[] = { OPC_DCONST_1, OPC_DCONST_0, OPC_SWAP, OPC_DRETURN };
+	uint8_t bytecode_3[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_SWAP, OPC_LRETURN };
+	uint8_t bytecode_4[] = { OPC_FCONST_1, OPC_FCONST_0, OPC_SWAP, OPC_FRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+	assert_double_equals(1.0, jdouble_run(bytecode_2));
+	assert_long_equals(1, execute(bytecode_3));
+	assert_float_equals(1.0, jfloat_run(bytecode_4));
+}
+
 static void test_pop2(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_3, OPC_ICONST_2, OPC_ICONST_1, OPC_POP2, OPC_IRETURN };
@@ -991,7 +1004,7 @@ static void run_tests(void)
 	/* test_dup2(); */
 	/* test_dup2_x1(); */
 	/* test_dup2_x2(); */
-	/* test_swap(); */
+	test_swap();
 	test_iadd();
 	test_ladd();
 	test_fadd();
