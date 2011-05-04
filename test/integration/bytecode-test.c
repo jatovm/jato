@@ -907,6 +907,97 @@ static void test_iconst_m1(void)
 	assert_int_equals(-1, execute(bytecode));
 }
 
+static void test_i2f(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_I2F, OPC_FRETURN };
+
+	assert_float_equals(1.0, jfloat_run(bytecode));
+}
+
+static void test_i2d(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_3, OPC_I2D, OPC_DRETURN };
+
+	assert_double_equals(3.0 ,jdouble_run(bytecode));
+}
+
+static void test_l2i(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_1, OPC_L2I, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_l2f(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_1, OPC_L2F, OPC_FRETURN };
+
+	assert_float_equals(1, jfloat_run(bytecode));
+}
+
+static void test_l2d(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_1, OPC_L2D, OPC_DRETURN };
+
+	assert_double_equals(1.0, jdouble_run(bytecode));
+}
+
+static void test_f2i(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_1, OPC_F2I, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_f2l(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_1, OPC_F2L, OPC_LRETURN };
+
+	assert_long_equals(1, execute(bytecode));
+}
+
+static void test_f2d(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_2, OPC_F2D, OPC_DRETURN };
+
+	assert_double_equals(2.0, jdouble_run(bytecode));
+}
+
+static void test_d2i(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_D2I, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_d2l(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_D2L, OPC_LRETURN };
+
+	assert_long_equals(1, execute(bytecode));
+}
+
+static void test_d2f(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_D2F, OPC_FRETURN };
+
+	assert_float_equals(1, jfloat_run(bytecode));
+}
+
+static void test_i2s(void)
+{
+	uint8_t bytecode[] = { OPC_SIPUSH, 0xFF, 0xFF, OPC_I2S, OPC_IRETURN };
+
+	assert_int_equals(-1, execute(bytecode));
+}
+
+static void test_i2l(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_I2L, OPC_LRETURN };
+
+	assert_long_equals(1, execute(bytecode));
+}
+
 static void run_tests(void)
 {
 	/* test_nop(); */
@@ -1042,21 +1133,21 @@ static void run_tests(void)
 	test_ixor();
 	test_lxor();
 	/* test_iinc(); */
-	/* test_i2l(); */
-	/* test_i2f(); */
-	/* test_i2d(); */
-	/* test_l2i(); */
-	/* test_l2f(); */
-	/* test_l2d(); */
-	/* test_f2i(); */
-	/* test_f2l(); */
-	/* test_f2d(); */
-	/* test_d2i(); */
-	/* test_d2l(); */
-	/* test_d2f(); */
+	test_i2l();
+	test_i2f();
+	test_i2d();
+	test_l2i();
+	test_l2f();
+	test_l2d();
+	test_f2i();
+	test_f2l();
+	test_f2d();
+	test_d2i();
+	test_d2l();
+	test_d2f();
 	/* test_i2b(); */
 	/* test_i2c(); */
-	/* test_i2s(); */
+	test_i2s();
 	test_lcmp();
 	test_fcmpl();
 	test_fcmpg();
