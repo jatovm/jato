@@ -86,6 +86,41 @@ struct vm_field *vm_object_to_vm_field(struct vm_object *field)
 	return &vmc->fields[slot];
 }
 
+struct vm_object *vm_method_to_java_lang_reflect_method(struct vm_method *vmm, jobject clazz, int method_index)
+{
+	struct vm_object *method = vm_object_alloc(vm_java_lang_reflect_Method);
+
+	if (!method)
+		return rethrow_exception();
+
+	struct vm_object *name_object = vm_object_alloc_string_from_c(vmm->name);
+
+	if (!name_object)
+		return rethrow_exception();
+
+	if (vm_java_lang_reflect_VMMethod != NULL) {	/* Classpath 0.98 */
+		struct vm_object *vm_method;
+
+		vm_method = vm_object_alloc(vm_java_lang_reflect_VMMethod);
+		if (!vm_method)
+			return rethrow_exception();
+
+		field_set_object(vm_method, vm_java_lang_reflect_VMMethod_clazz, clazz);
+		field_set_object(vm_method, vm_java_lang_reflect_VMMethod_name, name_object);
+		field_set_object(vm_method, vm_java_lang_reflect_VMMethod_m, method);
+		field_set_int(vm_method, vm_java_lang_reflect_VMMethod_slot, method_index);
+
+		assert(vm_java_lang_reflect_Method_m != NULL);
+		field_set_object(method, vm_java_lang_reflect_Method_m, vm_method);
+	} else {
+		field_set_object(method, vm_java_lang_reflect_Method_declaringClass, clazz);
+		field_set_object(method, vm_java_lang_reflect_Method_name, name_object);
+		field_set_int(method, vm_java_lang_reflect_Method_slot, method_index);
+	}
+
+	return method;
+}
+
 static struct vm_class *constructor_class(void)
 {
 	if (vm_java_lang_reflect_VMConstructor != NULL)

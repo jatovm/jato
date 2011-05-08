@@ -7,6 +7,7 @@ struct vm_object;
 
 struct vm_class *vm_object_to_vm_class(struct vm_object *object);
 struct vm_field *vm_object_to_vm_field(struct vm_object *field);
+struct vm_object *vm_method_to_java_lang_reflect_method(struct vm_method *vmm, jobject clazz, int method_index);
 
 struct vm_object *
 native_constructor_get_parameter_types(struct vm_object *ctor);
