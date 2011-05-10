@@ -4,6 +4,8 @@
 #include "lib/list.h"
 #include "vm/class.h"
 
+#include "valgrind/valgrind.h"
+
 #include <pthread.h>
 
 static inline bool is_rex_prefix(unsigned char opc)
@@ -50,6 +52,8 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 		new_target = target - ((unsigned long) site_addr + X86_CALL_INSN_SIZE);
 		cpu_write_u32(site_addr+1, new_target);
 
+		VALGRIND_DISCARD_TRANSLATIONS(site_addr, X86_CALL_INSN_SIZE);
+
 		list_del(&this->list_node);
 		free_fixup_site(this);
 	}
@@ -67,6 +71,8 @@ static void do_fixup_static(void *site_addr, int skip_count, void *new_target)
 #else
 	cpu_write_u32(p, (unsigned long) new_target);
 #endif
+
+	VALGRIND_DISCARD_TRANSLATIONS(site_addr, skip_count + 4);
 }
 
 void fixup_static(struct vm_class *vmc)
