@@ -260,6 +260,411 @@ public class FieldTest extends TestCase {
       }
     }
 
+    private static void testStaticGetFloat() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("staticByte").getFloat(null));
+       assertEquals(Short.MAX_VALUE, field("staticShort").getFloat(null));
+       //assertEquals(Float.MAX_VALUE, field("staticFloat").getFloat(null));
+       assertEquals(Character.MAX_VALUE, field("staticChar").getFloat(null));
+    }
+
+    private static void testStaticGetFloatFromBoolean() throws Exception {
+      try {
+        field("staticBoolean").getFloat(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetFloatFromDouble() throws Exception {
+      try {
+        field("staticDouble").getFloat(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetFloatFromInteger() throws Exception {
+      try {
+        field("staticInteger").getFloat(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetFloatFromLong() throws Exception {
+      try {
+        field("staticLong").getFloat(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetFloatFromObject() throws Exception {
+      try {
+        field("staticObject").getFloat(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetFloat() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("instanceByte").getFloat(new Fields()));
+       assertEquals(Short.MAX_VALUE, field("instanceShort").getFloat(new Fields()));
+       //assertEquals(Float.MAX_VALUE, field("instanceFloat").getFloat(new Fields()));
+       assertEquals(Character.MAX_VALUE, field("instanceChar").getFloat(new Fields()));
+    }
+
+    private static void testInstanceGetFloatFromBoolean() throws Exception {
+      try {
+        field("instanceBoolean").getFloat(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetFloatFromDouble() throws Exception {
+      try {
+        field("instanceDouble").getFloat(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetFloatFromInteger() throws Exception {
+      try {
+        field("staticInteger").getFloat(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetFloatFromLong() throws Exception {
+      try {
+        field("staticLong").getFloat(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetFloatFromObject() throws Exception {
+      try {
+        field("instanceObject").getFloat(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetDouble() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("staticByte").getDouble(null));
+       assertEquals(Short.MAX_VALUE, field("staticShort").getDouble(null));
+       assertEquals(Character.MAX_VALUE, field("staticChar").getDouble(null));
+       //assertEquals(Float.MAX_VALUE, field("staticFloat").getDouble(null));
+       //assertEquals(Double.MAX_VALUE, field("staticDouble").getDouble(null));
+       assertEquals(Integer.MAX_VALUE, field("staticInteger").getDouble(null));
+
+    }
+
+    private static void testStaticGetDoubleFromBoolean() throws Exception {
+      try {
+        field("staticBoolean").getDouble(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetDoubleFromLong() throws Exception {
+      try {
+        field("staticLong").getDouble(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetDoubleFromObject() throws Exception {
+      try {
+        field("staticObject").getDouble(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetDouble() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("instanceByte").getShort(new Fields()));
+       //assertEquals(Float.MAX_VALUE, field("instanceFloat").getDouble(new Fields()));
+       //assertEquals(Double.MAX_VALUE, field("instanceDouble").getDouble(new Fields()));
+       assertEquals(Character.MAX_VALUE, field("instanceChar").getDouble(new Fields()));
+       assertEquals(Integer.MAX_VALUE, field("instanceInteger").getDouble(new Fields()));
+       assertEquals(Short.MAX_VALUE, field("instanceShort").getDouble(new Fields()));
+    }
+
+    private static void testInstanceGetDoubleFromBoolean() throws Exception {
+      try {
+        field("instanceBoolean").getDouble(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetDoubleFromLong() throws Exception {
+      try {
+        field("staticLong").getDouble(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetDoubleFromObject() throws Exception {
+      try {
+        field("instanceObject").getDouble(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetChar() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("staticByte").getChar(null));
+       assertEquals(Short.MAX_VALUE, field("staticShort").getChar(null));
+       assertEquals(Character.MAX_VALUE, field("staticChar").getChar(null));
+    }
+
+    private static void testStaticGetCharFromBoolean() throws Exception {
+      try {
+        field("staticBoolean").getChar(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetCharFromDouble() throws Exception {
+      try {
+        field("staticDouble").getChar(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetCharFromFloat() throws Exception {
+      try {
+        field("staticFloat").getChar(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetCharFromInteger() throws Exception {
+      try {
+        field("staticInteger").getChar(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetCharFromLong() throws Exception {
+      try {
+        field("staticLong").getChar(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetCharFromObject() throws Exception {
+      try {
+        field("staticObject").getChar(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetChar() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("instanceByte").getChar(new Fields()));
+       assertEquals(Short.MAX_VALUE, field("instanceShort").getChar(new Fields()));
+       assertEquals(Character.MAX_VALUE, field("instanceChar").getChar(new Fields()));
+    }
+
+    private static void testInstanceGetCharFromBoolean() throws Exception {
+      try {
+        field("instanceBoolean").getChar(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetCharFromDouble() throws Exception {
+      try {
+        field("instanceDouble").getChar(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetCharFromFloat() throws Exception {
+      try {
+        field("instanceFloat").getChar(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetCharFromInteger() throws Exception {
+      try {
+        field("staticInteger").getChar(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetCharFromLong() throws Exception {
+      try {
+        field("staticLong").getChar(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetCharFromObject() throws Exception {
+      try {
+        field("instanceObject").getChar(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByte() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("staticByte").getByte(null));
+    }
+
+    private static void testStaticGetByteFromBoolean() throws Exception {
+      try {
+        field("staticBoolean").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByteFromDouble() throws Exception {
+      try {
+        field("staticDouble").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByteFromFloat() throws Exception {
+      try {
+        field("staticFloat").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByteFromInteger() throws Exception {
+      try {
+        field("staticInteger").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByteFromLong() throws Exception {
+      try {
+        field("staticLong").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByteFromChar() throws Exception {
+      try {
+        field("staticChar").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByteFromShort() throws Exception {
+      try {
+        field("staticShort").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetByteFromObject() throws Exception {
+      try {
+        field("staticObject").getByte(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByte() throws Exception {
+       assertEquals(Byte.MAX_VALUE, field("instanceByte").getByte(new Fields()));
+    }
+
+    private static void testInstanceGetByteFromBoolean() throws Exception {
+      try {
+        field("instanceBoolean").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByteFromDouble() throws Exception {
+      try {
+        field("instanceDouble").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByteFromFloat() throws Exception {
+      try {
+        field("instanceFloat").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByteFromInteger() throws Exception {
+      try {
+        field("instanceInteger").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByteFromLong() throws Exception {
+      try {
+        field("instanceLong").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByteFromShort() throws Exception {
+      try {
+        field("instanceShort").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByteFromChar() throws Exception {
+      try {
+        field("instanceChar").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetByteFromObject() throws Exception {
+      try {
+        field("instanceObject").getByte(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
     private static Field field(String name) throws Exception {
         return Fields.class.getField(name);
     }
@@ -318,5 +723,60 @@ public class FieldTest extends TestCase {
       testInstanceGetShortFromFloat();
       testInstanceGetShortFromObject();
 
+      testStaticGetFloat();
+      testStaticGetFloatFromBoolean();
+      testStaticGetFloatFromDouble();
+      testStaticGetFloatFromInteger();
+      testStaticGetFloatFromLong();
+      testStaticGetFloatFromObject();
+      testInstanceGetFloat();
+      testInstanceGetFloatFromBoolean();
+      testInstanceGetFloatFromInteger();
+      testInstanceGetFloatFromDouble();
+      testInstanceGetFloatFromLong();
+      testInstanceGetFloatFromObject();
+
+      testStaticGetDouble();
+      testStaticGetDoubleFromBoolean();
+      testStaticGetDoubleFromLong();
+      testStaticGetDoubleFromObject();
+      testInstanceGetDouble();
+      testInstanceGetDoubleFromBoolean();
+      testInstanceGetDoubleFromLong();
+      testInstanceGetDoubleFromObject();
+
+      testStaticGetChar();
+      testStaticGetCharFromBoolean();
+      testStaticGetCharFromDouble();
+      testStaticGetCharFromFloat();
+      testStaticGetCharFromInteger();
+      testStaticGetCharFromLong();
+      testStaticGetCharFromObject();
+      testInstanceGetChar();
+      testInstanceGetCharFromBoolean();
+      testInstanceGetCharFromDouble();
+      testInstanceGetCharFromFloat();
+      testInstanceGetCharFromInteger();
+      testInstanceGetCharFromLong();
+      testInstanceGetCharFromObject();
+
+      testStaticGetByte();
+      testStaticGetByteFromShort();
+      testStaticGetByteFromBoolean();
+      testStaticGetByteFromDouble();
+      testStaticGetByteFromFloat();
+      testStaticGetByteFromInteger();
+      testStaticGetByteFromLong();
+      testStaticGetByteFromChar();
+      testStaticGetByteFromObject();
+      testInstanceGetByte();
+      testInstanceGetByteFromShort();
+      testInstanceGetByteFromBoolean();
+      testInstanceGetByteFromDouble();
+      testInstanceGetByteFromFloat();
+      testInstanceGetByteFromInteger();
+      testInstanceGetByteFromLong();
+      testInstanceGetByteFromChar();
+      testInstanceGetByteFromObject();
     }
 }

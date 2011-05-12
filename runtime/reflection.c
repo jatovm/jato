@@ -650,7 +650,7 @@ static jlong to_jlong_value(union jvalue *value, enum vm_type vm_type)
 	die("unexpected type %d", vm_type);
 }
 
-static jlong to_jint_value(union jvalue *value, enum vm_type vm_type)
+static jint to_jint_value(union jvalue *value, enum vm_type vm_type)
 {
 	switch (vm_type) {
 	case J_BYTE:
@@ -677,7 +677,7 @@ static jlong to_jint_value(union jvalue *value, enum vm_type vm_type)
 	die("unexpected type %d", vm_type);
 }
 
-static jlong to_jshort_value(union jvalue *value, enum vm_type vm_type)
+static jshort to_jshort_value(union jvalue *value, enum vm_type vm_type)
 {
 	switch (vm_type) {
 	case J_BYTE:
@@ -701,6 +701,113 @@ static jlong to_jshort_value(union jvalue *value, enum vm_type vm_type)
 	}
 	die("unexpected type %d", vm_type);
 }
+
+static jdouble to_jdouble_value(union jvalue *value, enum vm_type vm_type)
+{
+	switch (vm_type) {
+	case J_BYTE:
+		return value->b;
+	case J_SHORT:
+		return value->s;
+	case J_CHAR:
+		return value->c;
+	case J_INT:
+		return value->i;
+	case J_DOUBLE:
+		return value->d;
+	case J_FLOAT:
+		return value->f;
+	case J_LONG:
+	case J_BOOLEAN:
+	case J_REFERENCE: {
+		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+		return 0;
+	}
+	case J_RETURN_ADDRESS:
+	case J_VOID:
+	case VM_TYPE_MAX:
+		break;
+	}
+	die("unexpected type %d", vm_type);
+}
+
+static jfloat to_jfloat_value(union jvalue *value, enum vm_type vm_type)
+{
+	switch (vm_type) {
+	case J_BYTE:
+		return value->b;
+	case J_SHORT:
+		return value->s;
+	case J_CHAR:
+		return value->c;
+	case J_FLOAT:
+		return value->f;
+	case J_INT:
+	case J_LONG:
+	case J_BOOLEAN:
+	case J_DOUBLE:
+	case J_REFERENCE: {
+		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+		return 0;
+	}
+	case J_RETURN_ADDRESS:
+	case J_VOID:
+	case VM_TYPE_MAX:
+		break;
+	}
+	die("unexpected type %d", vm_type);
+}
+
+static jchar to_jchar_value(union jvalue *value, enum vm_type vm_type)
+{
+	switch (vm_type) {
+	case J_BYTE:
+		return value->b;
+	case J_SHORT:
+		return value->s;
+	case J_CHAR:
+		return value->c;
+	case J_INT:
+	case J_LONG:
+	case J_BOOLEAN:
+	case J_DOUBLE:
+	case J_FLOAT:
+	case J_REFERENCE: {
+		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+		return 0;
+	}
+	case J_RETURN_ADDRESS:
+	case J_VOID:
+	case VM_TYPE_MAX:
+		break;
+	}
+	die("unexpected type %d", vm_type);
+}
+
+static jbyte to_jbyte_value(union jvalue *value, enum vm_type vm_type)
+{
+	switch (vm_type) {
+	case J_BYTE:
+		return value->b;
+	case J_SHORT:
+	case J_CHAR:
+	case J_INT:
+	case J_LONG:
+	case J_BOOLEAN:
+	case J_DOUBLE:
+	case J_FLOAT:
+	case J_REFERENCE: {
+		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
+		return 0;
+	}
+	case J_RETURN_ADDRESS:
+	case J_VOID:
+	case VM_TYPE_MAX:
+		break;
+	}
+	die("unexpected type %d", vm_type);
+}
+
 
 jlong native_field_get_long(struct vm_object *this, struct vm_object *o)
 {
@@ -755,6 +862,79 @@ jshort native_field_get_short(struct vm_object *this, struct vm_object *o)
 
 	return to_jshort_value(value, type);
 }
+
+jfloat native_field_get_float(struct vm_object *this, struct vm_object *o)
+{
+	struct vm_field *vmf;
+	union jvalue *value;
+	enum vm_type type;
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return 0;
+
+	type	= vm_field_type(vmf);
+	value	= field_get_value(vmf, o);
+	if (!value)
+		return 0;
+
+	return to_jfloat_value(value, type);
+}
+
+jdouble native_field_get_double(struct vm_object *this, struct vm_object *o)
+{
+	struct vm_field *vmf;
+	union jvalue *value;
+	enum vm_type type;
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return 0;
+
+	type	= vm_field_type(vmf);
+	value	= field_get_value(vmf, o);
+	if (!value)
+		return 0;
+
+	return to_jdouble_value(value, type);
+}
+
+jbyte native_field_get_byte(struct vm_object *this, struct vm_object *o)
+{
+	struct vm_field *vmf;
+	union jvalue *value;
+	enum vm_type type;
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return 0;
+
+	type	= vm_field_type(vmf);
+	value	= field_get_value(vmf, o);
+	if (!value)
+		return 0;
+
+	return to_jbyte_value(value, type);
+}
+
+jchar native_field_get_char(struct vm_object *this, struct vm_object *o)
+{
+	struct vm_field *vmf;
+	union jvalue *value;
+	enum vm_type type;
+
+	vmf = vm_object_to_vm_field(this);
+	if (!vmf)
+		return 0;
+
+	type	= vm_field_type(vmf);
+	value	= field_get_value(vmf, o);
+	if (!value)
+		return 0;
+
+	return to_jchar_value(value, type);
+}
+
 
 jint native_field_get_modifiers_internal(struct vm_object *this)
 {
