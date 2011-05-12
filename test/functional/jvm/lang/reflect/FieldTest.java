@@ -665,6 +665,142 @@ public class FieldTest extends TestCase {
       }
     }
 
+    private static void testStaticGetBoolean() throws Exception {
+       assertEquals(true, field("staticBoolean").getBoolean(null));
+    }
+
+    private static void testStaticGetBooleanFromByte() throws Exception {
+      try {
+        field("staticByte").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetBooleanFromDouble() throws Exception {
+      try {
+        field("staticDouble").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetBooleanFromFloat() throws Exception {
+      try {
+        field("staticFloat").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetBooleanFromInteger() throws Exception {
+      try {
+        field("staticInteger").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetBooleanFromLong() throws Exception {
+      try {
+        field("staticLong").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetBooleanFromChar() throws Exception {
+      try {
+        field("staticChar").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetBooleanFromShort() throws Exception {
+      try {
+        field("staticShort").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testStaticGetBooleanFromObject() throws Exception {
+      try {
+        field("staticObject").getBoolean(null);
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBoolean() throws Exception {
+       assertEquals(true, field("instanceBoolean").getBoolean(new Fields()));
+    }
+
+    private static void testInstanceGetBooleanFromByte() throws Exception {
+      try {
+        field("instanceByte").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBooleanFromDouble() throws Exception {
+      try {
+        field("instanceDouble").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBooleanFromFloat() throws Exception {
+      try {
+        field("instanceFloat").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBooleanFromInteger() throws Exception {
+      try {
+        field("instanceInteger").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBooleanFromLong() throws Exception {
+      try {
+        field("instanceLong").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBooleanFromShort() throws Exception {
+      try {
+        field("instanceShort").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBooleanFromChar() throws Exception {
+      try {
+        field("instanceChar").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
+    private static void testInstanceGetBooleanFromObject() throws Exception {
+      try {
+        field("instanceObject").getBoolean(new Fields());
+        fail("exception not thrown");
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
     private static Field field(String name) throws Exception {
         return Fields.class.getField(name);
     }
@@ -778,5 +914,25 @@ public class FieldTest extends TestCase {
       testInstanceGetByteFromLong();
       testInstanceGetByteFromChar();
       testInstanceGetByteFromObject();
+
+      testStaticGetBoolean();
+      testStaticGetBooleanFromShort();
+      testStaticGetBooleanFromByte();
+      testStaticGetBooleanFromDouble();
+      testStaticGetBooleanFromFloat();
+      testStaticGetBooleanFromInteger();
+      testStaticGetBooleanFromLong();
+      testStaticGetBooleanFromChar();
+      testStaticGetBooleanFromObject();
+      testInstanceGetBoolean();
+      testInstanceGetBooleanFromShort();
+      testInstanceGetBooleanFromByte();
+      testInstanceGetBooleanFromDouble();
+      testInstanceGetBooleanFromFloat();
+      testInstanceGetBooleanFromInteger();
+      testInstanceGetBooleanFromLong();
+      testInstanceGetBooleanFromChar();
+      testInstanceGetBooleanFromObject();
+
     }
 }

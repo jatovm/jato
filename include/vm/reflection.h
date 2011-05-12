@@ -30,6 +30,7 @@ jdouble native_field_get_double(struct vm_object *this, struct vm_object *o);
 jfloat native_field_get_float(struct vm_object *this, struct vm_object *o);
 jbyte native_field_get_byte(struct vm_object *this, struct vm_object *o);
 jchar native_field_get_char(struct vm_object *this, struct vm_object *o);
+jboolean native_field_get_boolean(struct vm_object *this, struct vm_object *o);
 
 jint native_field_get_modifiers_internal(struct vm_object *this);
 struct vm_object *native_field_gettype(struct vm_object *this);
