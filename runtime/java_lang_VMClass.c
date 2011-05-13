@@ -277,37 +277,7 @@ jobject java_lang_VMClass_getDeclaredFields(jobject clazz, jboolean public_only)
 		if (public_only && !vm_field_is_public(vmf))
 			continue;
 
-		struct vm_object *field
-			= vm_object_alloc(vm_java_lang_reflect_Field);
-
-		if (!field)
-			return rethrow_exception();
-
-		struct vm_object *name_object
-			= vm_object_alloc_string_from_c(vmf->name);
-
-		if (!name_object)
-			return rethrow_exception();
-
-		if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
-			struct vm_object *vm_field;
-
-			vm_field = vm_object_alloc(vm_java_lang_reflect_VMField);
-			if (!vm_field)
-				return rethrow_exception();
-
-			field_set_object(vm_field, vm_java_lang_reflect_VMField_clazz, clazz);
-			field_set_object(vm_field, vm_java_lang_reflect_VMField_name, name_object);
-			field_set_int(vm_field, vm_java_lang_reflect_VMField_slot, i);
-
-			field_set_object(field, vm_java_lang_reflect_Field_f, vm_field);
-		} else {
-			field_set_object(field, vm_java_lang_reflect_Field_declaringClass, clazz);
-			field_set_object(field, vm_java_lang_reflect_Field_name, name_object);
-			field_set_int(field, vm_java_lang_reflect_Field_slot, i);
-		}
-
-		array_set_field_ptr(array, index++, field);
+		array_set_field_ptr(array, index++, vm_field_to_java_lang_reflect_field(vmf, clazz, i));
 	}
 
 	return array;

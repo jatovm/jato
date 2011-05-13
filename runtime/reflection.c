@@ -121,6 +121,39 @@ struct vm_object *vm_method_to_java_lang_reflect_method(struct vm_method *vmm, j
 	return method;
 }
 
+struct vm_object *vm_field_to_java_lang_reflect_field(struct vm_field *vmf, jobject clazz, int field_index)
+{
+	struct vm_object *field = vm_object_alloc(vm_java_lang_reflect_Field);
+
+	if (!field)
+		return rethrow_exception();
+
+	struct vm_object *name_object = vm_object_alloc_string_from_c(vmf->name);
+
+	if (!name_object)
+		return rethrow_exception();
+
+	if (vm_java_lang_reflect_VMField != NULL) {	/* Classpath 0.98 */
+		struct vm_object *vm_field;
+
+		vm_field = vm_object_alloc(vm_java_lang_reflect_VMField);
+		if (!vm_field)
+			return rethrow_exception();
+
+		field_set_object(vm_field, vm_java_lang_reflect_VMField_clazz, clazz);
+		field_set_object(vm_field, vm_java_lang_reflect_VMField_name, name_object);
+		field_set_int(vm_field, vm_java_lang_reflect_VMField_slot, field_index);
+
+		field_set_object(field, vm_java_lang_reflect_Field_f, vm_field);
+	} else {
+		field_set_object(field, vm_java_lang_reflect_Field_declaringClass, clazz);
+		field_set_object(field, vm_java_lang_reflect_Field_name, name_object);
+		field_set_int(field, vm_java_lang_reflect_Field_slot, field_index);
+	}
+
+	return field;
+}
+
 static struct vm_class *constructor_class(void)
 {
 	if (vm_java_lang_reflect_VMConstructor != NULL)
