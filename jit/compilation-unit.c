@@ -102,7 +102,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 
 		cu->lir_insn_map = NULL;
 
-		cu->nr_vregs	= NR_CALLER_SAVE_REGS;
+		cu->nr_vregs	= NR_FIXED_REGISTERS;
 	}
 
 	return cu;
