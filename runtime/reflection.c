@@ -1256,3 +1256,51 @@ jobject native_vmarray_createobjectarray(jobject type, int dim)
 
 	return array;
 }
+
+jobject java_lang_reflect_VMMethod_getParameterAnnotations(jobject klass)
+{
+	struct vm_object *result;
+	struct vm_method *vmm;
+	struct vm_method_arg *arg;
+	unsigned int i,j,count;
+
+	vmm = vm_object_to_vm_method(klass);
+	if (!vmm)
+		return rethrow_exception();
+
+	count = count_java_arguments(vmm);
+	result = vm_object_alloc_array(vm_array_of_java_lang_Object, count);
+	if (!result)
+		return rethrow_exception();
+
+	i = 0;
+	list_for_each_entry(arg, &vmm->args, list_node) {
+		struct vm_class *class;
+		struct vm_object *sub_result;
+
+		class = vm_type_to_class(vmm->class->classloader, &arg->type_info);
+		if (class)
+			vm_class_ensure_init(class);
+
+		if (!class)
+			return NULL;
+
+		sub_result = vm_object_alloc_array(vm_array_of_java_lang_annotation_Annotation, class->nr_annotations);
+		if (!sub_result)
+			rethrow_exception();
+
+		for (j = 0; j < class->nr_annotations; j++) {
+			struct vm_annotation *vma = class->annotations[i];
+			struct vm_object *annotation;
+
+			annotation = vm_annotation_to_object(vma);
+			if (!annotation)
+				return rethrow_exception();
+
+			array_set_field_object(sub_result, j, annotation);
+		}
+
+		array_set_field_object(result, i, sub_result);
+	}
+	return result;
+}

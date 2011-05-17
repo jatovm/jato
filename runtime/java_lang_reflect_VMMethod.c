@@ -4,6 +4,7 @@
 #include "vm/reflection.h"
 #include "vm/errors.h"
 #include "vm/class.h"
+#include "vm/types.h"
 
 #include <stddef.h>
 

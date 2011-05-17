@@ -32,7 +32,7 @@ jfloat native_field_get_float(struct vm_object *this, struct vm_object *o);
 jbyte native_field_get_byte(struct vm_object *this, struct vm_object *o);
 jchar native_field_get_char(struct vm_object *this, struct vm_object *o);
 jboolean native_field_get_boolean(struct vm_object *this, struct vm_object *o);
-
+jobject java_lang_reflect_VMMethod_getParameterAnnotations(jobject klass);
 jint native_field_get_modifiers_internal(struct vm_object *this);
 struct vm_object *native_field_gettype(struct vm_object *this);
 
@@ -48,7 +48,6 @@ void native_field_set(struct vm_object *this, struct vm_object *o, struct vm_obj
 struct vm_object *native_method_getreturntype(struct vm_object *method);
 struct vm_object *native_method_get_exception_types(struct vm_object *method);
 struct vm_object *native_method_get_default_value(struct vm_object *method);
-
 jobject native_vmarray_createobjectarray(jobject type, int dim);
 
 #endif /* __JATO_VM_REFLECTION_H */

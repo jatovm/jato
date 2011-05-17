@@ -521,6 +521,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/Method", "getExceptionTypes", native_method_get_exception_types),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getAnnotation", java_lang_reflect_VMMethod_getAnnotation),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getDeclaredAnnotations", java_lang_reflect_VMMethod_getDeclaredAnnotations),
+	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getParameterAnnotations", java_lang_reflect_VMMethod_getParameterAnnotations),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getDefaultValue", native_method_get_default_value),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getExceptionTypes", native_method_get_exception_types),
 	DEFINE_NATIVE("java/lang/reflect/VMMethod", "getModifiersInternal", native_method_get_modifiers_internal),
