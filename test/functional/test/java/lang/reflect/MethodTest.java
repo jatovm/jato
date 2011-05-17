@@ -3,6 +3,7 @@ package test.java.lang.reflect;
 import jvm.TestCase;
 
 import java.lang.reflect.Method;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -10,6 +11,15 @@ public class MethodTest extends TestCase {
   public static void testGetAnnotation() throws Exception {
     Method m = TaggedClass.class.getMethod("foo");
     Tag tag = m.getAnnotation(Tag.class);
+    testTag(tag);
+
+    Annotation[] allAnnotations = m.getDeclaredAnnotations();
+    assertNotNull(allAnnotations);
+    tag = (Tag)allAnnotations[0];
+    testTag(tag);
+  }
+
+  public static void testTag(Tag tag) throws Exception {
     assertNotNull(tag);
 
     assertEquals(Byte.MAX_VALUE, tag.byteValue());
