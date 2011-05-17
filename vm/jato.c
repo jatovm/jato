@@ -512,6 +512,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/reflect/VMField", "getModifiersInternal", native_field_get_modifiers_internal),
 	DEFINE_NATIVE("java/lang/reflect/VMField", "getType", native_field_gettype),
 	DEFINE_NATIVE("java/lang/reflect/VMField", "getAnnotation", java_lang_reflect_VMField_getAnnotation),
+	DEFINE_NATIVE("java/lang/reflect/VMField", "getDeclaredAnnotations", java_lang_reflect_VMField_getDeclaredAnnotations),
 	DEFINE_NATIVE("java/lang/reflect/VMField", "set", native_field_set),
 	DEFINE_NATIVE("java/lang/reflect/Method", "getModifiersInternal", native_method_get_modifiers_internal),
 	DEFINE_NATIVE("java/lang/reflect/Method", "getParameterTypes", native_method_get_parameter_types),

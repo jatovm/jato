@@ -36,3 +36,31 @@ jobject java_lang_reflect_VMField_getAnnotation(jobject this, jobject annotation
 
 	return NULL;
 }
+
+jobject java_lang_reflect_VMField_getDeclaredAnnotations(jobject klass)
+{
+	struct vm_object *result;
+	struct vm_field *vmf;
+	unsigned int i;
+
+	vmf = vm_object_to_vm_field(klass);
+	if (!vmf)
+		return rethrow_exception();
+
+	result = vm_object_alloc_array(vm_array_of_java_lang_annotation_Annotation, vmf->nr_annotations);
+	if (!result)
+		return rethrow_exception();
+
+	for (i = 0; i < vmf->nr_annotations; i++) {
+		struct vm_annotation *vma = vmf->annotations[i];
+		struct vm_object *annotation;
+
+		annotation = vm_annotation_to_object(vma);
+		if (!annotation)
+			return rethrow_exception();
+
+		array_set_field_object(result, i, annotation);
+	}
+
+	return result;
+}
