@@ -30,6 +30,7 @@
 #include "jit/args.h"
 
 #include "vm/classloader.h"
+#include "vm/annotation.h"
 #include "vm/preload.h"
 #include "vm/boxing.h"
 #include "vm/errors.h"
