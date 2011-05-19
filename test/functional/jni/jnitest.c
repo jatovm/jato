@@ -551,3 +551,13 @@ JNIEXPORT jobject JNICALL Java_java_lang_JNITest_passThroughFromAndToReflectedFi
 	jfieldID fieldID = (*env)->FromReflectedField(env, javaField);
 	return (*env)->ToReflectedField(env, clazz, fieldID, true);
 }
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    getSuperclass
+ * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_java_lang_JNITest_getSuperclass(JNIEnv *env, jclass clazz, jclass childClazz)
+{
+	return (*env)->GetSuperclass(env, childClazz);
+}

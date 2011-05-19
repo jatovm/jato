@@ -88,6 +88,7 @@ public class JNITest extends TestCase {
   native static public Class<Object> findClass(String name);
   native static public java.lang.reflect.Method passThroughFromAndToReflectedMethod(java.lang.reflect.Method plusOneMethod);
   native static public java.lang.reflect.Field passThroughFromAndToReflectedField(java.lang.reflect.Field intField);
+  native static public Object getSuperclass(Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
 
@@ -239,6 +240,12 @@ public class JNITest extends TestCase {
     }
   }
 
+  public static void testGetSuperclass() {
+    assertNull(getSuperclass(java.lang.Object.class));
+    assertEquals(jvm.TestCase.class, getSuperclass(JNITest.class));
+    assertNull(getSuperclass(java.lang.Runnable.class));
+  }
+
   public static void main(String[] args) {
     testReturnPassedString();
     testReturnPassedInt();
@@ -256,5 +263,6 @@ public class JNITest extends TestCase {
     testFindClass();
     testFromAndToReflectedMethod();
     testFromAndToReflectedField();
+    testGetSuperclass();
   }
 }

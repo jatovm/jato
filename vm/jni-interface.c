@@ -32,6 +32,7 @@
 
 #include "lib/guard-page.h"
 
+#include "runtime/java_lang_VMClass.h"
 #include "vm/call.h"
 #include "vm/class.h"
 #include "vm/classloader.h"
@@ -354,8 +355,7 @@ static jobject JNI_ToReflectedMethod(JNIEnv *env, jclass clazz, jmethodID method
 
 static jclass JNI_GetSuperclass(JNIEnv *env, jclass clazz)
 {
-	JNI_NOT_IMPLEMENTED;
-	return 0;
+	return (jclass) java_lang_VMClass_getSuperclass(clazz);
 }
 
 static jboolean JNI_IsAssignableFrom(JNIEnv *env, jclass clazz1, jclass clazz2)
