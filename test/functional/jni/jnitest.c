@@ -561,3 +561,13 @@ JNIEXPORT jobject JNICALL Java_java_lang_JNITest_getSuperclass(JNIEnv *env, jcla
 {
 	return (*env)->GetSuperclass(env, childClazz);
 }
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    isInstanceOf
+ * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_isInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
+{
+	return (*env)->IsInstanceOf(env, obj, clazz);
+}

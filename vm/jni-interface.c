@@ -566,8 +566,9 @@ static jclass JNI_GetObjectClass(JNIEnv *env, jobject obj)
 
 static jboolean JNI_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
 {
-	JNI_NOT_IMPLEMENTED;
-	return 0;
+	enter_vm_from_jni();
+
+	return java_lang_VMClass_isInstance((jobject) clazz, obj);
 }
 
 static jmethodID JNI_GetMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
