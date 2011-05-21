@@ -24,9 +24,9 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "jit/exception.h"
+#include "runtime/java_lang_VMClassLoader.h"
 
-#include "runtime/classloader.h"
+#include "jit/exception.h"
 
 #include "vm/errors.h"
 #include "vm/call.h"

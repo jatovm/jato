@@ -52,7 +52,6 @@
 
 #include "runtime/stack-walker.h"
 #include "runtime/runtime.h"
-#include "runtime/classloader.h"
 
 #include "jit/compiler.h"
 #include "jit/cu-mapping.h"
@@ -90,8 +89,9 @@
 
 #include "arch/init.h"
 
-#include "runtime/java_lang_reflect_VMField.h"
 #include "runtime/java_lang_reflect_VMMethod.h"
+#include "runtime/java_lang_reflect_VMField.h"
+#include "runtime/java_lang_VMClassLoader.h"
 #include "runtime/java_lang_VMSystem.h"
 #include "runtime/java_lang_VMThread.h"
 #include "runtime/java_lang_VMClass.h"
