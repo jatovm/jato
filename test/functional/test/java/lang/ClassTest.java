@@ -169,6 +169,7 @@ public class ClassTest extends TestCase {
     testGetAnnotation();
     testGetClasses();
     testGetDeclaredClasses();
+    testGetEnclosingClass();
     testIsAnonymousClass();
     testIsArray();
     testIsLocalClass();
