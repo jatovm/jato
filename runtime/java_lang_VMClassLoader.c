@@ -64,7 +64,7 @@ static const char *get_primitive_class_name(jint type)
 	die("unknown type: %d\n", type);
 }
 
-jobject native_vmclassloader_getprimitiveclass(jint type)
+jobject java_lang_VMClassLoader_getPrimitiveClass(jint type)
 {
 	const char *class_name = get_primitive_class_name(type);
 	if (!class_name)
@@ -83,7 +83,7 @@ jobject native_vmclassloader_getprimitiveclass(jint type)
 	return class->object;
 }
 
-jobject native_vmclassloader_findloadedclass(jobject classloader, jobject name)
+jobject java_lang_VMClassLoader_findLoadedClass(jobject classloader, jobject name)
 {
 	struct vm_class *vmc;
 	char *c_name;
@@ -104,7 +104,7 @@ jobject native_vmclassloader_findloadedclass(jobject classloader, jobject name)
 	return vmc->object;
 }
 
-jobject native_vmclassloader_loadclass(jobject name, jboolean resolve)
+jobject java_lang_VMClassLoader_loadClass(jobject name, jboolean resolve)
 {
 	struct vm_class *vmc;
 	char *c_name;
@@ -122,12 +122,12 @@ jobject native_vmclassloader_loadclass(jobject name, jboolean resolve)
 		return NULL;
 
 	if (resolve)
-		native_vmclassloader_resolveclass(NULL, vmc->object);
+		java_lang_VMClassLoader_resolveClass(NULL, vmc->object);
 
 	return vmc->object;
 }
 
-jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
+jobject java_lang_VMClassLoader_defineClass(jobject classloader, jobject name,
 	jobject data, jint offset, jint len, jobject pd)
 {
 	struct vm_class *class;
@@ -165,7 +165,7 @@ jobject native_vmclassloader_defineclass(jobject classloader, jobject name,
 	return class->object;
 }
 
-void native_vmclassloader_resolveclass(jobject classloader, jobject clazz)
+void java_lang_VMClassLoader_resolveClass(jobject classloader, jobject clazz)
 {
 	/* FIXME */
 }
