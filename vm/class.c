@@ -39,6 +39,7 @@
 #include "jit/exception.h"
 #include "jit/compiler.h"
 #include "jit/vtable.h"
+#include "jit/cu-mapping.h"
 
 #include "vm/fault-inject.h"
 #include "vm/classloader.h"
@@ -54,6 +55,7 @@
 #include "vm/field.h"
 #include "vm/die.h"
 #include "vm/vm.h"
+#include "vm/trace.h"
 
 #include "lib/string.h"
 #include "lib/array.h"
@@ -63,6 +65,30 @@
 #include <errno.h>
 #include <stdio.h>
 #include <ctype.h>
+
+bool opt_trace_vtable;
+
+static void
+trace_vtable(struct vm_class *vmc)
+{
+	struct vtable *vtable = &(vmc->vtable);
+	struct compilation_unit *cu;
+	struct vm_method *vmm;
+
+	trace_printf("trace vtable: %s\n", vmc->name);
+
+	for (uint16_t i = 0; i < vmc->vtable_size; ++i) {
+		cu = jit_lookup_cu((long unsigned int)vtable->native_ptr[i]);
+		if (cu) {
+			vmm = cu->method;
+			trace_printf("  vtable[%d] = %s.%s%s\n", i, vmm->class->name,
+				     vmm->name, vmm->type);
+		}
+	}
+
+	trace_flush();
+}
+
 
 static void
 setup_vtable(struct vm_class *vmc)
@@ -117,6 +143,9 @@ setup_vtable(struct vm_class *vmc)
 				    vmm->virtual_index,
 				    vm_method_call_ptr(vmm));
 	}
+
+	if (opt_trace_vtable)
+		trace_vtable(vmc);
 }
 
 /*

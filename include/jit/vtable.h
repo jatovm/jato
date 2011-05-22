@@ -1,6 +1,10 @@
 #ifndef __JIT_VTABLE_H
 #define __JIT_VTABLE_H
 
+#include <stdbool.h>
+
+extern bool opt_trace_vtable;
+
 struct compilation_unit;
 struct vm_object;
 

@@ -773,6 +773,11 @@ static void handle_trace_trampoline(void)
 	opt_trace_magic_trampoline = true;
 }
 
+static void handle_trace_vtable(void)
+{
+	opt_trace_vtable = true;
+}
+
 static void handle_define(const char *arg)
 {
 	char *str, *ptr, *key, *value;
@@ -868,6 +873,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),
 	DEFINE_OPTION("Xtrace:jit",		handle_trace_jit),
 	DEFINE_OPTION("Xtrace:trampoline",	handle_trace_trampoline),
+	DEFINE_OPTION("Xtrace:vtable",		handle_trace_vtable),
 
 	DEFINE_OPTION_ARG("classpath",		handle_classpath),
 	DEFINE_OPTION_ARG("bootclasspath",	handle_bootclasspath),
