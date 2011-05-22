@@ -564,6 +564,16 @@ JNIEXPORT jobject JNICALL Java_java_lang_JNITest_getSuperclass(JNIEnv *env, jcla
 
 /*
  * Class:     java_lang_JNITest
+ * Method:    isAssignableFrom
+ * Signature: (Ljava/lang/Class;Ljava/lang/Class;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_isAssignableFrom(JNIEnv *env, jclass clazz, jclass clazz1, jclass clazz2)
+{
+	return (*env)->IsAssignableFrom(env, clazz1, clazz2);
+}
+
+/*
+ * Class:     java_lang_JNITest
  * Method:    isInstanceOf
  * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
  */
