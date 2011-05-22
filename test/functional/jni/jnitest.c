@@ -574,6 +574,17 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_isAssignableFrom(JNIEnv *env, 
 
 /*
  * Class:     java_lang_JNITest
+ * Method:    jniThrow
+ * Signature: ()I;Ljava/lang/Throwable;
+ */
+JNIEXPORT jint JNICALL Java_java_lang_JNITest_jniThrow(JNIEnv *env, jclass clazz, jthrowable throwable)
+{
+	return (*env)->Throw(env, throwable);
+}
+
+
+/*
+ * Class:     java_lang_JNITest
  * Method:    isInstanceOf
  * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
  */

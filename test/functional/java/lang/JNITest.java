@@ -89,6 +89,7 @@ public class JNITest extends TestCase {
   native static public java.lang.reflect.Method passThroughFromAndToReflectedMethod(java.lang.reflect.Method plusOneMethod);
   native static public java.lang.reflect.Field passThroughFromAndToReflectedField(java.lang.reflect.Field intField);
   native static public Object getSuperclass(Class<?> clazz);
+  native static public int jniThrow(Throwable throwable);
   native static public boolean isAssignableFrom(Class<?> clazz1, Class<?> clazz2);
   native static public boolean isInstanceOf(java.lang.Object obj, Class<?> clazz);
 
@@ -254,6 +255,14 @@ public class JNITest extends TestCase {
     assertFalse(isAssignableFrom(jniTest.getClass().getSuperclass(), jniTest.getClass()));
   }
 
+  public static void testThrow() {
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        jniThrow(new NullPointerException("Test"));
+      }
+    }, NullPointerException.class);  
+  }
+  
   public static void testIsInstanceOf() {
     assert(isInstanceOf(jniTest, JNITest.class));
   }
@@ -278,5 +287,6 @@ public class JNITest extends TestCase {
     testGetSuperclass();
     testIsAssignableFrom();
     testIsInstanceOf();
+    testThrow();
   }
 }
