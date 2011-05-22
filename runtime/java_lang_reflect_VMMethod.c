@@ -20,6 +20,10 @@ jobject java_lang_reflect_VMMethod_getAnnotation(jobject this, jobject annotatio
 	if (!vmm)
 		return rethrow_exception();
 
+	if (!vmm->annotation_initialized)
+		if (vm_method_init_annotation(vmm))
+			return rethrow_exception();
+
 	for (i = 0; i < vmm->nr_annotations; i++) {
 		struct vm_annotation *vma = vmm->annotations[i];
 		struct vm_object *annotation;
@@ -46,6 +50,10 @@ jobject java_lang_reflect_VMMethod_getDeclaredAnnotations(jobject klass)
 	vmm = vm_object_to_vm_method(klass);
 	if (!vmm)
 		return rethrow_exception();
+
+	if (!vmm->annotation_initialized)
+		if (vm_method_init_annotation(vmm))
+			return rethrow_exception();
 
 	result = vm_object_alloc_array(vm_array_of_java_lang_annotation_Annotation, vmm->nr_annotations);
 	if (!result)

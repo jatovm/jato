@@ -72,6 +72,7 @@ int vm_method_init(struct vm_method *vmm,
 	vmm->method_index = method_index;
 	vmm->method = method;
 	vmm->flags = 0;
+	vmm->annotation_initialized = false;
 
 	const struct cafebabe_constant_info_utf8 *name;
 	if (cafebabe_class_constant_get_utf8(class, method->name_index, &name))
@@ -128,7 +129,22 @@ int vm_method_init(struct vm_method *vmm,
 	if (cafebabe_read_line_number_table_attribute(class, &vmm->code_attribute.attributes, &vmm->line_number_table_attribute))
 		goto error_free_type;
 
+	return 0;
+
+error_free_type:
+	free(vmm->type);
+error_free_name:
+	free(vmm->name);
+
+	return -1;
+}
+
+int vm_method_init_annotation(struct vm_method *vmm)
+{
 	struct cafebabe_annotations_attribute annotations_attribute;
+	const struct cafebabe_class *class = vmm->class->class;
+	const struct cafebabe_method_info *method
+		= &class->methods[vmm->method_index];
 
 	if (cafebabe_read_annotations_attribute(class, &method->attributes, &annotations_attribute))
 		goto out;
@@ -144,7 +160,7 @@ int vm_method_init(struct vm_method *vmm,
 		struct cafebabe_annotation *annotation = &annotations_attribute.annotations[i];
 		struct vm_annotation *vma;
 
-		vma = vm_annotation_parse(vmc, annotation);
+		vma = vm_annotation_parse(vmm->class, annotation);
 		if (!vma)
 			goto error_free_annotations;
 
@@ -154,6 +170,7 @@ int vm_method_init(struct vm_method *vmm,
 out_denit_annotations:
 	cafebabe_annotations_attribute_deinit(&annotations_attribute);
 out:
+	vmm->annotation_initialized = true;
 	return 0;
 
 error_free_annotations:
@@ -163,11 +180,6 @@ error_free_annotations:
 		vm_annotation_free(vma);
 	}
 	vm_free(vmm->annotations);
-error_free_type:
-	free(vmm->type);
-error_free_name:
-	free(vmm->name);
-
 	return -1;
 }
 

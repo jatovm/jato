@@ -61,6 +61,7 @@ struct vm_method {
 
 	unsigned int nr_annotations;
 	struct vm_annotation **annotations;
+	bool annotation_initialized;
 };
 
 #define VM_METHOD_FLAG_VM_NATIVE	(1 << 1)
@@ -74,6 +75,8 @@ int vm_method_init(struct vm_method *vmm,
 
 int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
 	unsigned int method_index, struct vm_method *interface_method);
+
+int vm_method_init_annotation(struct vm_method *vmm);
 
 static inline bool vm_method_is_public(struct vm_method *vmm)
 {
