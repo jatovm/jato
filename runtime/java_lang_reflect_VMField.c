@@ -20,6 +20,10 @@ jobject java_lang_reflect_VMField_getAnnotation(jobject this, jobject annotation
 	if (!vmf)
 		return rethrow_exception();
 
+	if (!vmf->annotation_initialized)
+		if (vm_field_init_annotation(vmf))
+			return rethrow_exception();
+
 	for (i = 0; i < vmf->nr_annotations; i++) {
 		struct vm_annotation *vma = vmf->annotations[i];
 		struct vm_object *annotation;
@@ -46,6 +50,10 @@ jobject java_lang_reflect_VMField_getDeclaredAnnotations(jobject klass)
 	vmf = vm_object_to_vm_field(klass);
 	if (!vmf)
 		return rethrow_exception();
+
+	if (!vmf->annotation_initialized)
+		if (vm_field_init_annotation(vmf))
+			return rethrow_exception();
 
 	result = vm_object_alloc_array(vm_array_of_java_lang_annotation_Annotation, vmf->nr_annotations);
 	if (!result)

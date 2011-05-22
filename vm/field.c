@@ -24,6 +24,7 @@ int vm_field_init(struct vm_field *vmf,
 	vmf->class = vmc;
 	vmf->field_index = field_index;
 	vmf->field = field;
+	vmf->annotation_initialized = false;
 
 	const struct cafebabe_constant_info_utf8 *name;
 	if (cafebabe_class_constant_get_utf8(class, field->name_index,
@@ -56,6 +57,15 @@ int vm_field_init(struct vm_field *vmf,
 		return -1;
 	}
 
+	return 0;
+}
+
+int vm_field_init_annotation(struct vm_field *vmf)
+{
+	const struct cafebabe_class *class = vmf->class->class;
+	const struct cafebabe_field_info *field
+		= &class->fields[vmf->field_index];
+
 	struct cafebabe_annotations_attribute annotations_attribute;
 
 	if (cafebabe_read_annotations_attribute(class, &field->attributes, &annotations_attribute))
@@ -72,7 +82,7 @@ int vm_field_init(struct vm_field *vmf,
 		struct cafebabe_annotation *annotation = &annotations_attribute.annotations[i];
 		struct vm_annotation *vma;
 
-		vma = vm_annotation_parse(vmc, annotation);
+		vma = vm_annotation_parse(vmf->class, annotation);
 		if (!vma)
 			goto error_free_annotations;
 		vmf->annotations[vmf->nr_annotations++] = vma;
@@ -81,6 +91,7 @@ int vm_field_init(struct vm_field *vmf,
  out_deinit_annotations:
 	cafebabe_annotations_attribute_deinit(&annotations_attribute);
  out:
+	vmf->annotation_initialized = true;
 	return 0;
 
  error_free_annotations:
