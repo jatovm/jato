@@ -21,6 +21,7 @@ TOPLEVEL_OBJS := \
 	jit/cfg-analyzer.o \
 	jit/compilation-unit.o \
 	jit/cu-mapping.o \
+	jit/dominance.o \
 	jit/exception-bc.o \
 	jit/exception.o \
 	jit/expression.o \
@@ -87,6 +88,7 @@ TEST_OBJS := \
 	bytecode-to-ir-test.o \
 	cfg-analyzer-test.o \
 	compilation-unit-test.o \
+	dominance-test.o \
 	expression-test.o \
 	invoke-bc-test.o \
 	linear-scan-test.o \

@@ -15,6 +15,7 @@ TOPLEVEL_OBJS	+= test/unit/vm/stack-trace-stub.o
 TOPLEVEL_OBJS	+= test/unit/vm/trace-stub.o
 TOPLEVEL_OBJS	+= vm/die.o
 TOPLEVEL_OBJS	+= vm/zalloc.o
+TOPLEVEL_OBJS	+= lib/bitset.o
 
 TEST_OBJS	+= encode-test.o trampoline-stub.o
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2006,2009  Pekka Enberg
- * 
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -136,4 +136,12 @@ void __assert_str_equals(const char *file, int line, const char *expected,
 	nr_asserts++;
 	if (strcmp(expected, actual))
 		fail(file, line, "Expected '%s' (length %lu), but was '%s' (length %lu)\n", expected, strlen(expected), actual, strlen(actual));
+}
+
+void __assert_bitset_equals(const char *file, int line, struct bitset *expected,
+			struct bitset *actual, int bb_dfn_no)
+{
+	nr_asserts++;
+	if (!bitset_equal(expected, actual))
+		fail(file, line, "BB with dfn %d has the dominance frontier set incorrect.\n", bb_dfn_no);
 }

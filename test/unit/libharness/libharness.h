@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include "lib/bitset.h"
 
 void print_test_suite_results(void);
 
@@ -29,6 +30,9 @@ void print_test_suite_results(void);
 #define assert_str_equals(expected, actual) \
 	__assert_str_equals(__FILE__, __LINE__, (expected), (actual))
 
+#define assert_bitset_equals(expected, actual, bb_dfn_no) \
+	__assert_bitset_equals(__FILE__, __LINE__, (expected), (actual), (bb_dfn_no))
+
 void fail(const char *, int, const char *, ...);
 void __assert_true(const char *, int, bool);
 void __assert_false(const char *, int, bool);
@@ -38,6 +42,7 @@ void __assert_float_equals(const char *, int, long double, long double, long dou
 void __assert_ptr_equals(const char *, int, void *, void *);
 void __assert_mem_equals(const char *, int, const void *, const void *, unsigned long);
 void __assert_str_equals(const char *, int, const char *, const char *);
+void __assert_bitset_equals(const char *, int, struct bitset *, struct bitset *, int);
 
 #define __ignore
 
