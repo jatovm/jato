@@ -582,6 +582,23 @@ JNIEXPORT jint JNICALL Java_java_lang_JNITest_jniThrow(JNIEnv *env, jclass clazz
 	return (*env)->Throw(env, throwable);
 }
 
+/*
+ * Class:     java_lang_JNITest
+ * Method:    jniThrowNew
+ * Signature: (Ljava/lang/Class;Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_java_lang_JNITest_jniThrowNew(JNIEnv *env, jclass clazz, jclass throwable, jstring str)
+{
+	char *messageStr;
+	jboolean iscopy;
+
+	messageStr = (char *) (*env)->GetStringUTFChars(env, str, &iscopy);
+	if (messageStr == NULL) {
+		return -1; /* OutOfMemoryError */
+	}
+
+	return (*env)->ThrowNew(env, throwable, messageStr);
+}
 
 /*
  * Class:     java_lang_JNITest
