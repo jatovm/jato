@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vm/jni.h>
+#include <vm/preload.h>
 
 /*
  * Class:     java_lang_JNITest
@@ -598,6 +599,29 @@ JNIEXPORT jint JNICALL Java_java_lang_JNITest_jniThrowNew(JNIEnv *env, jclass cl
 	}
 
 	return (*env)->ThrowNew(env, throwable, messageStr);
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    testJniExceptionOccurredAndExceptionClear
+ * Signature: (Ljava/lang/Throwable;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testJniExceptionOccurredAndExceptionClear(JNIEnv *env, jclass clazz, jclass throwable)
+{
+	if ((*env)->ExceptionOccurred(env))
+		return false;
+
+	(*env)->Throw(env, throwable);
+
+	if (!(*env)->ExceptionOccurred(env))
+		return false;
+
+	(*env)->ExceptionClear(env);
+
+	if ((*env)->ExceptionOccurred(env))
+		return false;
+
+	return true;
 }
 
 /*

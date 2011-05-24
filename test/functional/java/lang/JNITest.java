@@ -92,6 +92,7 @@ public class JNITest extends TestCase {
   native static public boolean isAssignableFrom(Class<?> clazz1, Class<?> clazz2);
   native static public int jniThrow(Throwable throwable);
   native static public int jniThrowNew(Class<?> clazz, String message);
+  native static public boolean testJniExceptionOccurredAndExceptionClear(Throwable throwable);
   native static public boolean isInstanceOf(java.lang.Object obj, Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
@@ -278,6 +279,10 @@ public class JNITest extends TestCase {
     }
   }
 
+  public static void testExceptionOccurredAndExceptionClear() {
+    assert(testJniExceptionOccurredAndExceptionClear(new NullPointerException()));
+  }
+
   public static void testIsInstanceOf() {
     assert(isInstanceOf(jniTest, JNITest.class));
   }
@@ -303,6 +308,7 @@ public class JNITest extends TestCase {
     testIsAssignableFrom();
     testThrow();
     testThrowNew();
+    testExceptionOccurredAndExceptionClear();
     testIsInstanceOf();
   }
 }
