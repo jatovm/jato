@@ -563,7 +563,7 @@ static int print_jmp_branch(struct string *str, struct insn *insn)
 static int print_jmp_memindex(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
-	return print_memindex(str, &insn->operand);
+	return print_memindex(str, &insn->dest);
 }
 
 static int print_jmp_membase(struct string *str, struct insn *insn)
