@@ -84,6 +84,7 @@ int convert_tableswitch(struct parse_context *ctx)
 	struct basic_block *default_bb;
 	struct basic_block *b1;
 	struct basic_block *b2;
+	struct basic_block *next_bb;
 
 	get_tableswitch_info(ctx->code, ctx->offset, &info);
 	ctx->buffer->pos += info.insn_size;
@@ -109,6 +110,8 @@ int convert_tableswitch(struct parse_context *ctx)
 	bb_add_successor(b1, default_bb );
 	bb_add_successor(b1, b2);
 
+	next_bb = bb_entry(b2->bb_list_node.next);
+
 	for (unsigned int i = 0; i < info.count; i++) {
 		struct basic_block *target_bb;
 		int32_t target;
@@ -116,7 +119,8 @@ int convert_tableswitch(struct parse_context *ctx)
 		target = read_s32(info.targets + i * 4);
 		target_bb = find_bb(ctx->cu, ctx->offset + target);
 
-		bb_add_successor(b2, target_bb);
+		if (next_bb && next_bb != target_bb)
+			bb_add_successor(b2, target_bb);
 	}
 
 	table = alloc_tableswitch(&info, ctx->cu, b2, ctx->offset);
@@ -171,6 +175,7 @@ int convert_lookupswitch(struct parse_context *ctx)
 	struct basic_block *master_bb;
 	struct basic_block *default_bb;
 	struct basic_block *b1;
+	struct basic_block *next_bb;
 
 	get_lookupswitch_info(ctx->code, ctx->offset, &info);
 	ctx->buffer->pos += info.insn_size;
@@ -190,6 +195,8 @@ int convert_lookupswitch(struct parse_context *ctx)
 	bb_add_successor(master_bb, default_bb );
 	bb_add_successor(master_bb, b1);
 
+	next_bb = bb_entry(b1->bb_list_node.next);
+
 	for (unsigned int i = 0; i < info.count; i++) {
 		struct basic_block *target_bb;
 		int32_t target;
@@ -197,7 +204,8 @@ int convert_lookupswitch(struct parse_context *ctx)
 		target = read_lookupswitch_target(&info, i);
 		target_bb = find_bb(ctx->cu, ctx->offset + target);
 
-		bb_add_successor(b1, target_bb);
+		if (next_bb && next_bb != target_bb)
+			bb_add_successor(b1, target_bb);
 	}
 
 	table = alloc_lookupswitch(&info, ctx->cu, b1, ctx->offset);
