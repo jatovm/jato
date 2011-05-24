@@ -31,6 +31,7 @@
 #include "vm/vm.h"
 
 #include "arch/stack-frame.h"
+#include "arch/registers.h"
 
 #include <ctype.h>
 #include <stdlib.h>
