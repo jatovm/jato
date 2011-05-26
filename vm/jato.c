@@ -101,7 +101,7 @@ static const char *bootclasspath_append;
 
 static bool dump_maps;
 static bool perf_enabled;
-static char *exe_name;
+static char *program_name;
 
 /* Arguments passed to the main class.  */
 static unsigned int nr_java_args;
@@ -556,9 +556,27 @@ static void jit_init_natives(void)
 		vm_register_native(&natives[i]);
 }
 
+#define USAGE_TEXT									\
+	"Usage: %s [-options] class [arg1 arg2 ...]\n"					\
+	"                 (to run a class file)\n"					\
+	"   or  %s [-options] -jar jarfile [arg1 arg2 ...]\n"				\
+	"                 (to run a standalone jar file)\n"				\
+	"where options include:\n"							\
+	"  -client	   compatibility (ignored)\n"					\
+	"  -server	   compatibility (ignored)\n"					\
+	"\n"										\
+	"  -cp		   <jar/zip files and directories separated by :>\n"		\
+	"  -classpath	   <jar/zip files and directories separated by :>\n"		\
+	"		   locations where to find application classes\n"		\
+	"  -D<name>=<value> set a system property\n"					\
+	"  -verbose[:gc]\n"								\
+	"		   :gc print out results of garbage collection\n"		\
+	"  -version	   print out version number and copyright information\n"
+
+
 static void usage(FILE *f, int retval)
 {
-	fprintf(f, "usage: %s [options] class\n", exe_name);
+	fprintf(f, USAGE_TEXT, program_name, program_name);
 	exit(retval);
 }
 
@@ -575,6 +593,11 @@ static void handle_help(void)
 }
 
 static void handle_client(void)
+{
+	/* Ignore */
+}
+
+static void handle_server(void)
 {
 	/* Ignore */
 }
@@ -817,7 +840,7 @@ static void handle_max_heap_size(const char *arg)
 	max_heap_size = parse_long(arg);
 
 	if (!max_heap_size) {
-		fprintf(stderr, "%s: unparseable heap size '%s'\n", exe_name, arg);
+		fprintf(stderr, "%s: unparseable heap size '%s'\n", program_name, arg);
 		usage(stderr, EXIT_FAILURE);
 	}
 }
@@ -853,6 +876,7 @@ const struct option options[] = {
 	DEFINE_OPTION("h",			handle_help),
 	DEFINE_OPTION("help",			handle_help),
 	DEFINE_OPTION("client",			handle_client),
+	DEFINE_OPTION("server",			handle_server),
 	DEFINE_OPTION("verbose:gc",		handle_verbose_gc),
 
 	DEFINE_OPTION("Xmaps",			handle_maps),
@@ -915,7 +939,7 @@ static void parse_options(int argc, char *argv[])
 
 		const struct option *opt = get_option(argv[optind] + 1);
 		if (!opt) {
-			fprintf(stderr, "%s: unrecognized option '%s'\n", exe_name, argv[optind]);
+			fprintf(stderr, "%s: unrecognized option '%s'\n", program_name, argv[optind]);
 			usage(stderr, EXIT_FAILURE);
 		}
 
@@ -1100,7 +1124,7 @@ main(int argc, char *argv[])
 {
 	int status = EXIT_FAILURE;
 
-	exe_name = argv[0];
+	program_name = argv[0];
 
 #ifndef NDEBUG
 	/* Make stdout/stderr unbuffered; it really helps debugging! */
