@@ -65,6 +65,8 @@ int compute_dfns(struct compilation_unit *cu)
 	if (!cu->bb_df_array)
 		return -ENOMEM;
 
+	cu->bb_df_array[0] = cu->entry_bb;
+
 	do_compute_dfns(cu->entry_bb, cu->bb_df_array, &dfn, cu->entry_bb);
 
 	return 0;
