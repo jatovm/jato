@@ -99,6 +99,7 @@ TEST_OBJS := \
 	ostack-bc-test.o \
 	spill-reload-test.o \
 	stack-slot-test.o \
+	switch-bc-test.o \
 	tree-printer-test.o \
 	typeconv-bc-test.o
 
