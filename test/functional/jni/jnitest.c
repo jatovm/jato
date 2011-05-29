@@ -629,7 +629,7 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testJniExceptionOccurredAndExc
  * Method:    isInstanceOf
  * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
  */
-JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_isInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_isInstanceOf(JNIEnv *env, jclass klass, jobject obj, jclass clazz)
 {
 	return (*env)->IsInstanceOf(env, obj, clazz);
 }

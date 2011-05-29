@@ -93,7 +93,7 @@ public class JNITest extends TestCase {
   native static public int jniThrow(Throwable throwable);
   native static public int jniThrowNew(Class<?> clazz, String message);
   native static public boolean testJniExceptionOccurredAndExceptionClear(Throwable throwable);
-  native static public boolean isInstanceOf(java.lang.Object obj, Class<?> clazz);
+  native static public boolean isInstanceOf(Object obj, Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
 
@@ -262,9 +262,9 @@ public class JNITest extends TestCase {
       public void run() throws Throwable {
         jniThrow(new NullPointerException("Test"));
       }
-    }, NullPointerException.class);  
+    }, NullPointerException.class);
   }
-  
+
   public static void testThrowNew() {
     assertThrows(new Block() {
       public void run() throws Throwable {
@@ -280,11 +280,11 @@ public class JNITest extends TestCase {
   }
 
   public static void testExceptionOccurredAndExceptionClear() {
-    assert(testJniExceptionOccurredAndExceptionClear(new NullPointerException()));
+    assertTrue(testJniExceptionOccurredAndExceptionClear(new NullPointerException()));
   }
 
   public static void testIsInstanceOf() {
-    assert(isInstanceOf(jniTest, JNITest.class));
+    assertTrue(isInstanceOf(jniTest, JNITest.class));
   }
 
   public static void main(String[] args) {
