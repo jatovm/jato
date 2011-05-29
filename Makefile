@@ -416,11 +416,12 @@ tags: FORCE
 	$(E) "  TAGS"
 	$(Q) rm -f tags
 	$(Q) ctags-exuberant -a -R arch/
+	$(Q) ctags-exuberant -a -R cafebabe/
 	$(Q) ctags-exuberant -a -R include
 	$(Q) ctags-exuberant -a -R jit/
 	$(Q) ctags-exuberant -a -R lib/
 	$(Q) ctags-exuberant -a -R runtime/
-	$(Q) ctags-exuberant -a -R cafebabe/
+	$(Q) ctags-exuberant -a -R sys/
 	$(Q) ctags-exuberant -a -R vm/
 
 PHONY += FORCE
