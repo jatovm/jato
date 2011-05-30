@@ -169,7 +169,7 @@ void test_convert_xor(void)
 }
 
 static void assert_iinc_stmt(unsigned char expected_index,
-			     char expected_value)
+			     int8_t expected_value)
 {
 	unsigned char code[] = { OPC_IINC, expected_index, expected_value };
 	struct statement *store_stmt;
