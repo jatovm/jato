@@ -80,7 +80,31 @@ public class MethodTest extends TestCase {
       classArrayValue  = { Integer.class,       Long.class          },
       annotationArrayValue = { @Tag2, @Tag2 }
     )
-    public void foo(ParameterTagClass t) { }
+    public void foo(@Tag(
+			 byteValue        = Byte.MAX_VALUE,
+			 charValue        = Character.MAX_VALUE,
+			 shortValue       = Short.MAX_VALUE,
+			 intValue         = Integer.MAX_VALUE,
+			 longValue        = Long.MAX_VALUE,
+			 floatValue       = Float.MAX_VALUE,
+			 doubleValue      = Double.MAX_VALUE,
+			 stringValue      = "hello, world",
+			 enumValue        = Required.YES,
+			 classValue       = Object.class,
+			 annotationValue  = @Tag2,
+
+			 byteArrayValue   = { Byte.MIN_VALUE,      Byte.MAX_VALUE      },
+			 charArrayValue   = { Character.MIN_VALUE, Character.MAX_VALUE },
+			 shortArrayValue  = { Short.MIN_VALUE,     Short.MAX_VALUE     },
+			 intArrayValue    = { Integer.MIN_VALUE,   Integer.MAX_VALUE   },
+			 longArrayValue   = { Long.MIN_VALUE,      Long.MAX_VALUE      },
+			 floatArrayValue  = { Float.MIN_VALUE,     Float.MAX_VALUE     },
+			 doubleArrayValue = { Double.MIN_VALUE,    Double.MAX_VALUE    },
+			 stringArrayValue = { "hello, world",      "Hello, World!"     },
+			 enumArrayValue   = { Required.YES,        Required.NO         },
+			 classArrayValue  = { Integer.class,       Long.class          },
+			 annotationArrayValue = { @Tag2, @Tag2 }
+			 ) ParameterTagClass t) { }
 
   }
 
