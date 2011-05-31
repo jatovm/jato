@@ -848,7 +848,7 @@ static int print_pop_memlocal(struct string *str, struct insn *insn)
 static int print_pop_reg(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
-	return print_reg(str, &insn->operand);
+	return print_reg(str, &insn->dest);
 }
 
 static int print_ret(struct string *str, struct insn *insn)
