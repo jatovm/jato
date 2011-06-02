@@ -276,7 +276,7 @@ static void do_assert_float_equals(const char *function, const char *file, int l
 static void do_assert_object_equals(const char *function, const char *file, int line, jobject expected, jobject actual)
 {
 	if (expected != actual)
-		die("%s:%d::%s: Expected %d, but was: %d", file, line, function, expected, actual);
+		die("%s:%d::%s: Expected %p, but was: %p", file, line, function, expected, actual);
 
 	nr_assertions++;
 }
