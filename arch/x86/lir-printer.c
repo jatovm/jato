@@ -232,6 +232,15 @@ static int print_reg_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->dest);
 }
 
+static int print_reg_regs(struct string *str, struct insn *insn)
+{
+	for (unsigned long ndx = 0; ndx < insn->nr_srcs; ndx++) {
+		print_reg(str, &insn->ssa_srcs[ndx]);
+		str_append(str, ", ");
+	}
+	return print_reg(str, &insn->ssa_dest);
+}
+
 #define print_func_name(str) str_append(str, "%-20s ", __func__ + 6)
 
 static int print_adc_imm_reg(struct string *str, struct insn *insn)
@@ -821,6 +830,12 @@ static int print_or_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_phi(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	return print_reg_regs(str, insn);
+}
+
 static int print_push_imm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -1050,6 +1065,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_OR_IMM_MEMBASE] = print_or_imm_membase,
 	[INSN_OR_MEMBASE_REG] = print_or_membase_reg,
 	[INSN_OR_REG_REG] = print_or_reg_reg,
+	[INSN_PHI] = print_phi,
 	[INSN_POP_MEMLOCAL] = print_pop_memlocal,
 	[INSN_POP_REG] = print_pop_reg,
 	[INSN_PUSH_IMM] = print_push_imm,

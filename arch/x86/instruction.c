@@ -73,6 +73,17 @@ void free_insn(struct insn *insn)
 	free(insn);
 }
 
+void free_ssa_insn(struct insn *insn)
+{
+	unsigned long ndx;
+	release_operand(&insn->ssa_dest);
+
+	for (ndx = 0; ndx < insn->nr_srcs; ndx++)
+		release_operand(&insn->ssa_srcs[ndx]);
+
+	free(insn);
+}
+
 static void init_membase_operand(struct insn *insn, struct operand *operand,
 				 struct var_info *base_reg, unsigned long disp)
 {
@@ -103,6 +114,16 @@ static void init_reg_operand(struct insn *insn, struct operand *operand, struct 
 
 	init_register(&operand->reg, insn, reg->interval);
 	operand->reg.kind = insn_operand_use_kind(insn, operand);
+}
+
+static void init_phi_reg_operand(struct insn *insn, struct operand *operand, struct var_info *reg)
+{
+	operand->type = OPERAND_REG;
+
+	init_register(&operand->reg, insn, reg->interval);
+	if (operand == &insn->ssa_dest)
+		operand->reg.kind = USE_KIND_OUTPUT;
+	else operand->reg.kind = USE_KIND_INPUT;
 }
 
 struct insn *insn(enum insn_type insn_type)
@@ -363,6 +384,23 @@ struct insn *rel_insn(enum insn_type insn_type, unsigned long rel)
 				.rel		= rel,
 			}
 		};
+	}
+	return insn;
+}
+
+struct insn *phi_insn(enum insn_type insn_type, struct var_info *var, unsigned long nr_srcs)
+{
+	struct insn *insn = alloc_insn(insn_type);
+	unsigned long ndx;
+
+	if (insn) {
+		init_phi_reg_operand(insn, &insn->ssa_dest, var);
+
+		insn->ssa_srcs = malloc(nr_srcs * sizeof(struct operand));
+		for (ndx = 0; ndx < nr_srcs; ndx++)
+			init_phi_reg_operand(insn, &insn->ssa_srcs[ndx], var);
+
+		insn->nr_srcs = nr_srcs;
 	}
 	return insn;
 }
@@ -700,6 +738,7 @@ static unsigned long insn_flags[] = {
 	[INSN_OR_IMM_MEMBASE]			= USE_DST | DEF_NONE,
 	[INSN_OR_MEMBASE_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_OR_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
+	[INSN_PHI]				= USE_SRC | DEF_DST,
 	[INSN_POP_MEMLOCAL]			= USE_SRC | DEF_NONE,
 	[INSN_POP_REG]				= USE_NONE | DEF_DST,
 	[INSN_PUSH_IMM]				= USE_NONE | DEF_NONE,

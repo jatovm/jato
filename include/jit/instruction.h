@@ -16,6 +16,7 @@ static inline struct insn *prev_insn(struct insn *insn)
 
 struct insn *alloc_insn(enum insn_type);
 void free_insn(struct insn *);
+void free_ssa_insn(struct insn *);
 
 int insn_defs(struct compilation_unit *, struct insn *, struct var_info **);
 int insn_uses(struct insn *, struct var_info **);

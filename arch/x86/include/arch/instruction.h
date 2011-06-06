@@ -183,6 +183,7 @@ enum insn_type {
 	INSN_OR_IMM_MEMBASE,
 	INSN_OR_MEMBASE_REG,
 	INSN_OR_REG_REG,
+	INSN_PHI,
 	INSN_POP_MEMLOCAL,
 	INSN_POP_REG,
 	INSN_PUSH_IMM,
@@ -232,6 +233,11 @@ struct insn {
 			struct operand src;
 			struct operand dest;
 		};
+		struct {
+			struct operand *ssa_srcs;
+			struct operand ssa_dest;
+			unsigned long nr_srcs;
+		};
 		struct operand operand;
 	};
 };
@@ -263,6 +269,7 @@ struct insn *imm_membase_insn(enum insn_type, unsigned long, struct var_info *, 
 struct insn *imm_memlocal_insn(enum insn_type, unsigned long, struct stack_slot *);
 struct insn *imm_insn(enum insn_type, unsigned long);
 struct insn *rel_insn(enum insn_type, unsigned long);
+struct insn *phi_insn(enum insn_type, struct var_info *, unsigned long);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *memlocal_insn(enum insn_type, struct stack_slot *);
 struct insn *reverse_membase_insn(enum insn_type, struct var_info *, long);

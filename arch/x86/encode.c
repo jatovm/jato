@@ -40,6 +40,8 @@
 #include <inttypes.h>
 #include <stdint.h>
 
+#define INVALID_INSN		0
+
 struct x86_insn {
 	uint64_t		flags;
 	uint8_t			rex_prefix;
@@ -251,6 +253,7 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_NEG_REG]			= OPCODE(0xf7) | OPCODE_EXT(3)   | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL,
 	[INSN_OR_MEMBASE_REG]		= OPCODE(0x0b) | ADDMODE_RM_REG  | WIDTH_FULL,
 	[INSN_OR_REG_REG]		= OPCODE(0x09) | ADDMODE_REG_REG | DIR_REVERSED | WIDTH_FULL,
+	[INSN_PHI]			= INVALID_INSN,
 	[INSN_POP_MEMLOCAL]		= OPCODE(0x8f) | OPCODE_EXT(0)   | ADDMODE_MEMLOCAL| WIDTH_FULL | NO_REX_W,
 	[INSN_POP_REG]			= OPCODE(0x58) | OPC_REG         | ADDMODE_REG     | DIR_REVERSED | WIDTH_FULL | NO_REX_W,
 	[INSN_PUSH_MEMLOCAL]		= OPCODE(0xff) | OPCODE_EXT(6)   | ADDMODE_MEMLOCAL| WIDTH_FULL | NO_REX_W,
@@ -689,8 +692,8 @@ void insn_encode(struct insn *self, struct buffer *buffer, struct basic_block *b
 
 	encode		= encode_table[self->type];
 
-	if (encode == 0)
-		die("unrecognized instruction type %d", self->type);
+	if (encode == INVALID_INSN)
+		die("phi instruction in code emission stage");
 
 	insn	= (struct x86_insn) {
 		.opcode		= insn_opcode(self, encode),
