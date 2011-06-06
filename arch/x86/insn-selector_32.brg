@@ -2734,7 +2734,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 		target		= jit_no_such_method_stub;
 		is_compiled	= true;
 	} else if (compile_lock_get_status(&cu->compile_lock) == STATUS_COMPILED_OK) {
-		target		= vm_method_native_ptr(method);
+		target		= vm_method_entry_point(method);
 		is_compiled	= true;
 	} else {
 		target		= vm_method_trampoline_ptr(method);
@@ -2744,7 +2744,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	call_insn = rel_insn(INSN_CALL_REL, (unsigned long) target);
 
 	if (vm_method_is_vm_native(method))
-		select_vm_native_call(s, tree, method, stmt, call_insn, vm_method_native_ptr(method));
+		select_vm_native_call(s, tree, method, stmt, call_insn, vm_method_entry_point(method));
 	else {
 		select_safepoint_insn(s, tree, call_insn);
 		save_invoke_result(s, tree, method, stmt);

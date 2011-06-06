@@ -162,9 +162,13 @@ static inline enum vm_type method_return_type(struct vm_method *method)
 
 int vm_method_prepare_jit(struct vm_method *vmm);
 
-static inline void *vm_method_native_ptr(struct vm_method *vmm)
+static inline void *vm_method_entry_point(struct vm_method *vmm)
 {
-	return vmm->compilation_unit->native_ptr;
+	return cu_entry_point(vmm->compilation_unit);
+}
+static inline void *vm_method_ic_entry_point(struct vm_method *vmm)
+{
+	return cu_ic_entry_point(vmm->compilation_unit);
 }
 
 static inline void *vm_method_trampoline_ptr(struct vm_method *vmm)
@@ -177,7 +181,7 @@ static inline void *vm_method_call_ptr(struct vm_method *vmm)
 	void *result;
 
 	if (compile_lock_get_status(&vmm->compilation_unit->compile_lock) == STATUS_COMPILED_OK)
-		result = vm_method_native_ptr(vmm);
+		result = vm_method_entry_point(vmm);
 	else
 		result = vm_method_trampoline_ptr(vmm);
 

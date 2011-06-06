@@ -184,6 +184,10 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	frame_size = frame_locals_size(cu->stack_frame);
 
+	cu->ic_entry_point = NULL;
+
+	cu->entry_point = buffer_current(buf);
+
 	emit_prolog(cu->objcode, frame_size);
 	if (method_is_synchronized(cu->method))
 		emit_monitorenter(cu);

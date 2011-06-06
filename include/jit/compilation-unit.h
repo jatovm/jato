@@ -77,13 +77,17 @@ struct compilation_unit {
 	struct list_head lookupswitch_list;
 
 	/*
-	 * This holds a pointer to the method's code. It's value is
+	 * Entry points to the method's code. These values are
 	 * valid only when ->is_compiled is true.
-	 * For non-native methods it's set to buffer_ptr(objcode). For
-	 * native functions it points to the actuall native function's
-	 * code (not trampoline).
+	 * entry_point
+	 * 	points to method's objcode.
+	 * ic_entry_point
+	 * 	points to inline_cache_check for this method.
+	 * 	To be used only when calling from a call-site
+	 *	with an inline cache.
 	 */
-	void *native_ptr;
+	void *entry_point;
+	void *ic_entry_point;
 
 	/*
 	 * This maps bytecode offset to every native address
@@ -119,6 +123,16 @@ struct compilation_unit {
 static inline unsigned long nr_bblocks(struct compilation_unit *cu)
 {
 	return cu->nr_bb;
+}
+
+static inline void *cu_entry_point(struct compilation_unit *cu)
+{
+	return cu->entry_point;
+}
+
+static inline void *cu_ic_entry_point(struct compilation_unit *cu)
+{
+	return cu->ic_entry_point;
 }
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

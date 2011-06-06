@@ -137,8 +137,6 @@ int compile(struct compilation_unit *cu)
 
 	resolve_fixup_offsets(cu);
 
-	cu->native_ptr = buffer_ptr(cu->objcode);
-
 	perf_append_cu(cu);
   out:
 	if (opt_trace_compile)

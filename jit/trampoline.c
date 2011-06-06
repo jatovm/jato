@@ -69,9 +69,9 @@ static void *jit_jni_trampoline(struct compilation_unit *cu)
 
 	emit_jni_trampoline(buf, method, target);
 
-	cu->native_ptr = buffer_ptr(buf);
+	cu->entry_point = buffer_ptr(buf);
 
-	return cu->native_ptr;
+	return cu->entry_point;
 }
 
 static void *jit_java_trampoline(struct compilation_unit *cu)
@@ -84,11 +84,11 @@ static void *jit_java_trampoline(struct compilation_unit *cu)
 		return NULL;
 	}
 
-	err = add_cu_mapping((unsigned long)buffer_ptr(cu->objcode), cu);
+	err = add_cu_mapping((unsigned long)cu_entry_point(cu), cu);
 	if (err)
 		return throw_oom_error();
 
-	return buffer_ptr(cu->objcode);
+	return cu_entry_point(cu);
 }
 
 void *jit_magic_trampoline(struct compilation_unit *cu)
@@ -110,7 +110,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	status = compile_lock_enter(&cu->compile_lock);
 
 	if (status == STATUS_COMPILED_OK) {
-		ret = cu->native_ptr;
+		ret = cu_entry_point(cu);
 		goto out_fixup;
 	} else if (status == STATUS_COMPILED_ERRONOUS) {
 		signal_new_exception(vm_java_lang_Error, "%s.%s%s is erronous",

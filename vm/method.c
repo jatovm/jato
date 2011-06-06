@@ -234,10 +234,10 @@ int vm_method_prepare_jit(struct vm_method *vmm)
 	 * VM native methods are linked on initialization.
 	 */
 	if (vm_method_is_vm_native(vmm)) {
-		cu->native_ptr = vm_lookup_native(vmm->class->name, vmm->name);
+		cu->entry_point = vm_lookup_native(vmm->class->name, vmm->name);
 		compile_lock_set_status(&cu->compile_lock, STATUS_COMPILED_OK);
 
-		if (add_cu_mapping((unsigned long)cu->native_ptr, cu))
+		if (add_cu_mapping((unsigned long)cu->entry_point, cu))
 			goto error_free_cu;
 	}
 
