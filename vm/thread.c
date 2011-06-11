@@ -45,6 +45,8 @@
 #include <errno.h>
 #include <stdio.h>
 
+pthread_key_t current_exec_env_key;
+
 __thread struct vm_exec_env *current_exec_env;
 
 static struct vm_object *main_thread_group;

@@ -65,7 +65,7 @@ struct vm_exec_env {
 
 unsigned int vm_nr_threads(void);
 
-static pthread_key_t current_exec_env_key;
+extern pthread_key_t current_exec_env_key;
 
 static inline struct vm_exec_env *vm_get_exec_env(void)
 {
