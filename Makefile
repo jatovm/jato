@@ -90,6 +90,7 @@ LIB_OBJS += jit/tree-printer.o
 LIB_OBJS += jit/typeconv-bc.o
 LIB_OBJS += jit/vtable.o
 LIB_OBJS += jit/wide-bc.o
+LIB_OBJS += lib/arena.o
 LIB_OBJS += lib/array.o
 LIB_OBJS += lib/bitset.o
 LIB_OBJS += lib/buffer.o
