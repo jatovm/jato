@@ -46,6 +46,7 @@ TOPLEVEL_OBJS := \
 	jit/subroutine.o \
 	jit/pc-map.o \
 	jit/wide-bc.o \
+	lib/arena.o \
 	lib/bitset.o \
 	lib/buffer.o \
 	lib/compile-lock.o \

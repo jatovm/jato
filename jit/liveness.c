@@ -49,7 +49,7 @@ static void __update_live_ranges(struct compilation_unit *cu, struct basic_block
 		nr_defs = insn_defs(bb->b_parent, insn, defs);
 		for (i = 0; i < nr_defs; i++) {
 			if (interval_is_empty(defs[i]->interval)) {
-				interval_add_range(defs[i]->interval, insn->lir_pos + 1, bb->end_insn);
+				interval_add_range(cu, defs[i]->interval, insn->lir_pos + 1, bb->end_insn);
 				continue;
 			}
 
@@ -61,7 +61,7 @@ static void __update_live_ranges(struct compilation_unit *cu, struct basic_block
 
 		nr_uses = insn_uses(insn, uses);
 		for (i = 0; i < nr_uses; i++)
-			interval_add_range(uses[i]->interval, bb->start_insn, insn->lir_pos + 1);
+			interval_add_range(cu, uses[i]->interval, bb->start_insn, insn->lir_pos + 1);
 
 		if (insn_is_call(insn)) {
 			for (i = 0; i < NR_CALLER_SAVE_REGS; i++) {
@@ -71,7 +71,7 @@ static void __update_live_ranges(struct compilation_unit *cu, struct basic_block
 				if (!var)
 					continue;
 
-				interval_add_range(var->interval, insn->lir_pos + 1, insn->lir_pos + 2);
+				interval_add_range(cu, var->interval, insn->lir_pos + 1, insn->lir_pos + 2);
 			}
 		}
 	}
@@ -86,7 +86,7 @@ static void update_live_ranges(struct compilation_unit *cu)
 
 		for_each_variable(var, cu->var_infos) {
 			if (test_bit(this->live_out_set->bits, var->vreg))
-				interval_add_range(var->interval, this->start_insn, this->end_insn);
+				interval_add_range(cu, var->interval, this->start_insn, this->end_insn);
 		}
 
 		__update_live_ranges(cu, this);

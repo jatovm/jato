@@ -35,11 +35,11 @@
 #include <string.h>
 #include <errno.h>
 
-static struct live_range *alloc_live_range(unsigned long start, unsigned long end)
+static struct live_range *alloc_live_range(struct arena *arena, unsigned long start, unsigned long end)
 {
 	struct live_range *range;
 
-	range = malloc(sizeof *range);
+	range = arena_alloc(arena, sizeof *range);
 	if (!range)
 		return NULL;
 
@@ -49,8 +49,7 @@ static struct live_range *alloc_live_range(unsigned long start, unsigned long en
 	return range;
 }
 
-static int split_ranges(struct live_interval *new, struct live_interval *it,
-			unsigned long pos)
+static int split_ranges(struct compilation_unit *cu, struct live_interval *new, struct live_interval *it, unsigned long pos)
 {
 	struct live_range *this;
 
@@ -67,7 +66,7 @@ static int split_ranges(struct live_interval *new, struct live_interval *it,
 		} else {
 			struct live_range *range;
 
-			range = alloc_live_range(pos, this->end);
+			range = alloc_live_range(cu->arena, pos, this->end);
 			if (!range)
 				return -ENOMEM;
 
@@ -94,9 +93,9 @@ static int split_ranges(struct live_interval *new, struct live_interval *it,
 	error("pos is not within an interval live ranges");
 }
 
-struct live_interval *alloc_interval(struct var_info *var)
+struct live_interval *alloc_interval(struct compilation_unit *cu, struct var_info *var)
 {
-	struct live_interval *interval = malloc(sizeof *interval);
+	struct live_interval *interval = arena_alloc(cu->arena, sizeof *interval);
 
 	if (interval) {
 		interval->var_info = var;
@@ -116,21 +115,7 @@ struct live_interval *alloc_interval(struct var_info *var)
 	return interval;
 }
 
-void free_interval(struct live_interval *interval)
-{
-	if (interval->next_child)
-		free_interval(interval->next_child);
-
-	struct live_range *this, *next;
-	list_for_each_entry_safe(this, next, &interval->range_list, range_list_node) {
-		free(this);
-	}
-
-	free(interval);
-}
-
-struct live_interval *split_interval_at(struct live_interval *interval,
-					unsigned long pos)
+struct live_interval *split_interval_at(struct compilation_unit *cu, struct live_interval *interval, unsigned long pos)
 {
 	struct use_position *this, *next;
 	struct live_interval *new;
@@ -138,13 +123,13 @@ struct live_interval *split_interval_at(struct live_interval *interval,
 	assert(pos > interval_start(interval));
 	assert(pos < interval_end(interval));
 
-	new = alloc_interval(interval->var_info);
+	new = alloc_interval(cu, interval->var_info);
 	if (!new)
 		return NULL;
 
 	new->reg = MACH_REG_UNASSIGNED;
 
-	if (split_ranges(new, interval, pos)) {
+	if (split_ranges(cu, new, interval, pos)) {
 		free(new);
 		return NULL;
 	}
@@ -348,12 +333,11 @@ bool interval_covers(struct live_interval *it, unsigned long pos)
 	return interval_range_at(it, pos) != NULL;
 }
 
-int interval_add_range(struct live_interval *it, unsigned long start,
-		       unsigned long end)
+int interval_add_range(struct compilation_unit *cu, struct live_interval *it, unsigned long start, unsigned long end)
 {
 	struct live_range *range, *next, *new;
 
-	new = alloc_live_range(start, end);
+	new = alloc_live_range(cu->arena, start, end);
 	if (!new)
 		return -ENOMEM;
 
@@ -365,7 +349,6 @@ int interval_add_range(struct live_interval *it, unsigned long start,
 			new->start = min(new->start, range->start);
 			new->end = max(new->end, range->end);
 			list_del(&range->range_list_node);
-			free(range);
 		}
 	}
 

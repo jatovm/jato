@@ -46,18 +46,17 @@ do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
 	struct var_info *ret;
 
-	if (cu->is_reg_alloc_done) {
+	if (cu->is_reg_alloc_done)
 		die("cannot allocate temporaries after register allocation");
-	}
 
-	ret = malloc(sizeof *ret);
+	ret = arena_alloc(cu->arena, sizeof *ret);
 	if (!ret)
 		goto out;
 
 	ret->next = cu->var_infos;
 	ret->vm_type = vm_type;
 
-	ret->interval = alloc_interval(ret);
+	ret->interval = alloc_interval(cu, ret);
 
 	cu->var_infos = ret;
   out:
@@ -103,6 +102,10 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		cu->lir_insn_map = NULL;
 
 		cu->nr_vregs	= NR_FIXED_REGISTERS;
+
+		cu->arena	= arena_new();
+		if (!cu->arena)
+			goto out_of_memory;
 	}
 
 	return cu;
@@ -110,22 +113,6 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 out_of_memory:
 	free_compilation_unit(cu);
 	return NULL;
-}
-
-static void free_var_info(struct var_info *var)
-{
-	free_interval(var->interval);
-	free(var);
-}
-
-static void free_var_infos(struct var_info *var_infos)
-{
-	struct var_info *this, *next;
-
-	for (this = var_infos; this != NULL; this = next) {
-		next = this->next;
-		free_var_info(this);
-	}
 }
 
 static void free_bc_offset_map(unsigned long *map)
@@ -178,7 +165,6 @@ void shrink_compilation_unit(struct compilation_unit *cu)
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
 		shrink_basic_block(bb);
 
-	free_var_infos(cu->var_infos);
 	cu->var_infos = NULL;
 
 	free(cu->bb_df_array);
@@ -186,6 +172,10 @@ void shrink_compilation_unit(struct compilation_unit *cu)
 
 	free(cu->doms);
 	cu->doms = NULL;
+
+	if (cu->arena)
+		arena_delete(cu->arena);
+	cu->arena = NULL;
 }
 
 void free_compilation_unit(struct compilation_unit *cu)

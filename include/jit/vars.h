@@ -180,16 +180,15 @@ static inline bool interval_is_empty(struct live_interval *it)
 	return list_is_empty(&it->range_list);
 }
 
-struct live_interval *alloc_interval(struct var_info *);
-void free_interval(struct live_interval *);
-struct live_interval *split_interval_at(struct live_interval *, unsigned long pos);
+struct live_interval *alloc_interval(struct compilation_unit *cu, struct var_info *);
+struct live_interval *split_interval_at(struct compilation_unit *, struct live_interval *, unsigned long pos);
 unsigned long next_use_pos(struct live_interval *, unsigned long);
 struct live_interval *vreg_start_interval(struct compilation_unit *, unsigned long);
 struct live_interval *interval_child_at(struct live_interval *, unsigned long);
 bool intervals_intersect(struct live_interval *, struct live_interval *);
 unsigned long interval_intersection_start(struct live_interval *, struct live_interval *);
 bool interval_covers(struct live_interval *, unsigned long);
-int interval_add_range(struct live_interval *, unsigned long, unsigned long);
+int interval_add_range(struct compilation_unit *, struct live_interval *, unsigned long, unsigned long);
 struct live_range *interval_range_at(struct live_interval *, unsigned long);
 void interval_expire_ranges_before(struct live_interval *, unsigned long);
 void interval_restore_expired_ranges(struct live_interval *);

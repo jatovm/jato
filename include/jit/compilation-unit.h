@@ -6,6 +6,7 @@
 
 #include "jit/basic-block.h"
 
+#include "lib/arena.h"
 #include "lib/list.h"
 #include "lib/radix-tree.h"
 #include "lib/stack.h"
@@ -118,6 +119,8 @@ struct compilation_unit {
 #ifdef CONFIG_ARGS_MAP
 	struct var_info **non_fixed_args;
 #endif
+
+	struct arena *arena;
 };
 
 static inline unsigned long nr_bblocks(struct compilation_unit *cu)
