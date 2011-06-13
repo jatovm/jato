@@ -194,6 +194,9 @@ WARNINGS	+=				\
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
 OPTIMIZATIONS	+= -O3 -fno-delete-null-pointer-checks
+ifeq ($(uname_M),x86_64)
+OPTIMIZATIONS	+= -fno-tree-vectorize
+endif
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
