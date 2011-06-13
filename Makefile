@@ -193,7 +193,7 @@ WARNINGS	+=				\
 
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
-OPTIMIZATIONS	+= -Os -fno-delete-null-pointer-checks
+OPTIMIZATIONS	+= -O3 -fno-delete-null-pointer-checks
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
 INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
