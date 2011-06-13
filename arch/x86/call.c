@@ -39,82 +39,73 @@
 
 static unsigned long esp __asm__("esp");
 
-#define restore_stack(stack_size)					\
-	__asm__ __volatile__ (						\
-		"2:	addl %[stack_size], %%esp	\n"		\
-		:							\
-		: [stack_size] "r" (stack_size)				\
-		: "memory")
-
-#define push_args_on_stack(method, args, stack_size)			\
-	__asm__ __volatile__ (						\
-		"	movl %[args_count], %%ecx	\n"		\
-		"	shl $2, %[args_count]		\n"		\
-		"	subl %[args_count], %%esp	\n"		\
-		"	movl %%esp, %%edi		\n"		\
-		"	cld				\n"		\
-		"	rep movsd			\n"		\
-		"	mov %[args_count], %[stack_size]\n"		\
-		: [stack_size] "=r" (stack_size)			\
-		: [args_count] "b" (method->args_count),		\
-		  "S" (args)						\
-		: "%ecx", "%edi", "cc", "memory")
-
 static void do_native_call(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
-	unsigned long stack_size;
 	bool is_native = vm_method_is_vm_native(method);
-
-	push_args_on_stack(method, args, stack_size);
+	unsigned long stack_size;
 
 	if (is_native) {
 		if (vm_enter_vm_native(target, (void *) esp) < 0)
 			goto exit;
 	}
+
 	__asm__ volatile (
+		"	movl %[args_count], %%ecx	\n"
+		"	shl $2, %[args_count]		\n"
+		"	subl %[args_count], %%esp	\n"
+		"	movl %%esp, %%edi		\n"
+		"	cld				\n"
+		"	rep movsd			\n"
+		"	mov %[args_count], %[stack_size]\n"
 		"	call *%[target]			\n"
 		"	movl %[result], %%edi		\n"
 		"	movl %%eax, (%%edi)		\n"
 		"	movl %%edx, 4(%%edi)		\n"
-		:
+		"	addl %[stack_size], %%esp	\n"
+		: [stack_size] "=r" (stack_size)
 		: [target] "m" (target),
-		  [result] "m" (result)
-		: "%eax", "%ecx", "%edx", "cc", "memory");
-
+		  [result] "m" (result),
+		  [args_count] "b" (method->args_count),
+		  "S" (args)
+		: "%eax", "%ecx", "%edx", "%edi", "cc", "memory");
 exit:
 	if (is_native)
 		vm_leave_vm_native();
-
-	restore_stack(stack_size);
 }
 
 static void do_native_call_xmm(struct vm_method *method, void *target,
 			     unsigned long *args, union jvalue *result)
 {
-	unsigned long stack_size;
 	bool is_native = vm_method_is_vm_native(method);
-
-	push_args_on_stack(method, args, stack_size);
+	unsigned long stack_size;
 
 	if (is_native) {
 		if (vm_enter_vm_native(target, (void *) esp) < 0)
 			goto exit;
 	}
+
 	__asm__ volatile (
+		"	movl %[args_count], %%ecx	\n"
+		"	shl $2, %[args_count]		\n"
+		"	subl %[args_count], %%esp	\n"
+		"	movl %%esp, %%edi		\n"
+		"	cld				\n"
+		"	rep movsd			\n"
+		"	mov %[args_count], %[stack_size]\n"
 		"	call *%[target]			\n"
 		"	movl %[result], %%edi		\n"
 		"	movss %%xmm0, (%%edi)		\n"
-		:
+		"	addl %[stack_size], %%esp	\n"
+		: [stack_size] "=r" (stack_size)
 		: [target] "m" (target),
-		  [result] "m" (result)
-		: "%edx", "%edi", "cc", "memory");
-
+		  [result] "m" (result),
+		  [args_count] "b" (method->args_count),
+		  "S" (args)
+		: "%eax", "%ecx", "%edx", "%edi", "cc", "memory");
 exit:
 	if (is_native)
 		vm_leave_vm_native();
-
-	restore_stack(stack_size);
 }
 
 /**
