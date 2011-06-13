@@ -204,10 +204,10 @@ void interval_expire_ranges_before(struct live_interval *it, unsigned long pos)
 {
 	struct live_range *range;
 
-	if (pos < interval_start(it) || pos >= interval_end(it))
-		return;
-
 	range = interval_first_range(it);
+
+	if (pos < range->start || pos >= interval_end(it))
+		return;
 
 	while (!in_range(range, pos)) {
 		struct live_range *next;
@@ -234,10 +234,10 @@ struct live_range *interval_range_at(struct live_interval *it, unsigned long pos
 {
 	struct live_range *range;
 
-	if (pos < interval_start(it) || pos >= interval_end(it))
-		return NULL;
-
 	range = interval_first_range(it);
+
+	if (pos < range->start || pos >= interval_end(it))
+		return NULL;
 
 	while (range && pos >= range->start) {
 		if (in_range(range, pos))
