@@ -125,6 +125,7 @@ enum insn_type {
 	INSN_FSTP_64_MEMLOCAL,
 	INSN_FSTP_MEMBASE,
 	INSN_FSTP_MEMLOCAL,
+	INSN_IC_CALL,
 	INSN_JE_BRANCH,
 	INSN_JGE_BRANCH,
 	INSN_JG_BRANCH,
@@ -276,6 +277,7 @@ struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *memlocal_insn(enum insn_type, struct stack_slot *);
 struct insn *reverse_membase_insn(enum insn_type, struct var_info *, long);
 struct insn *membase_insn(enum insn_type, struct var_info *, long);
+struct insn *ic_call_insn(struct var_info *, unsigned long);
 
 struct insn *ssa_reg_reg_insn(struct var_info *, struct var_info *);
 struct insn *ssa_imm_reg_insn(unsigned long, struct var_info *);

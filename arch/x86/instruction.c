@@ -31,6 +31,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 struct insn *alloc_insn(enum insn_type type)
 {
@@ -479,6 +480,24 @@ struct insn *imm_memlocal_insn(enum insn_type insn_type,
 	return insn;
 }
 
+struct insn *ic_call_insn(struct var_info *this, unsigned long imm)
+{
+	struct insn *insn = alloc_insn(INSN_IC_CALL);
+
+	if (insn) {
+		init_reg_operand(insn, &insn->src, this);
+		assert(insn_operand_use_kind(insn, &insn->src) == USE_KIND_INPUT);
+		insn->dest	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+	}
+
+	return insn;
+}
+
 int insert_copy_slot_32_insns(struct stack_slot *from, struct stack_slot *to,
 			      struct list_head *add_before, unsigned long bc_offset)
 {
@@ -695,6 +714,7 @@ static unsigned long insn_flags[] = {
 	[INSN_FSTP_64_MEMLOCAL]			= USE_FP | DEF_NONE,
 	[INSN_FSTP_MEMBASE]			= USE_SRC | DEF_NONE,
 	[INSN_FSTP_MEMLOCAL]			= USE_FP | DEF_NONE,
+	[INSN_IC_CALL]				= USE_SRC | DEF_xAX | DEF_xCX | TYPE_CALL,
 	[INSN_JE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_JGE_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 	[INSN_JG_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,

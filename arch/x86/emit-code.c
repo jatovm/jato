@@ -36,6 +36,7 @@
 #include "arch/thread.h"
 #include "arch/encode.h"
 #include "arch/init.h"
+#include "arch/inline-cache.h"
 
 #include "cafebabe/method_info.h"
 
@@ -422,6 +423,13 @@ __emit_reg_reg(struct buffer *buf, unsigned char opc,
 
 	emit(buf, opc);
 	emit(buf, mod_rm);
+}
+
+static void
+__emit_cmp_reg_reg(struct buffer *buf,
+		enum machine_reg reg1, enum machine_reg reg2)
+{
+	__emit_reg_reg(buf, 0x39, reg1, reg2);
 }
 
 static void
@@ -1019,6 +1027,36 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_EDX);
 	__emit_pop_reg(buf, MACH_REG_EAX);
 }
+
+void *emit_ic_check(struct buffer *buf)
+{
+	void *jne_addr;
+
+	__emit_cmp_reg_reg(buf, MACH_REG_EAX, MACH_REG_ECX);
+
+	/* open-coded "jne" */
+	emit(buf, 0x0f);
+	emit(buf, 0x85);
+
+	jne_addr = buffer_current(buf);
+
+	emit_imm32(buf, 0);
+
+	return jne_addr;
+}
+
+void emit_ic_miss_handler(struct buffer *buf, void *ic_check, struct vm_method *vmm)
+{
+	fixup_branch_target(ic_check, buffer_current(buf));
+
+	__emit_push_membase(buf, MACH_REG_ESP, 0);
+	__emit_push_imm(buf, (long)vmm);
+	__emit_push_reg(buf, MACH_REG_ECX);
+	__emit_call(buf, (void *)resolve_ic_miss);
+	__emit_add_imm_reg(buf, 12, MACH_REG_ESP);
+	emit_indirect_jump_reg(buf, MACH_REG_EAX);
+}
+
 
 #else /* CONFIG_X86_32 */
 

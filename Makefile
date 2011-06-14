@@ -66,6 +66,7 @@ LIB_OBJS += jit/exception.o
 LIB_OBJS += jit/expression.o
 LIB_OBJS += jit/fixup-site.o
 LIB_OBJS += jit/gdb.o
+LIB_OBJS += jit/inline-cache.o
 LIB_OBJS += jit/interval.o
 LIB_OBJS += jit/invoke-bc.o
 LIB_OBJS += jit/linear-scan.o

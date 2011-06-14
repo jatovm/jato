@@ -387,6 +387,15 @@ static int print_fstp_memlocal(struct string *str, struct insn *insn)
 	return print_memlocal(str, &insn->operand);
 }
 
+static int print_ic_call(struct string *str, struct insn *insn)
+{
+	print_func_name(str);
+	print_reg(str, &insn->src);
+	str_append(str, ", ");
+	print_imm(str, &insn->dest);
+	return str_append(str, "<%s>", ((struct vm_method *)insn->dest.imm)->name);
+}
+
 static int print_fstp_64_memlocal(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -1009,6 +1018,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_FSTP_64_MEMLOCAL] = print_fstp_64_memlocal,
 	[INSN_FSTP_MEMBASE] = print_fstp_membase,
 	[INSN_FSTP_MEMLOCAL] = print_fstp_memlocal,
+	[INSN_IC_CALL] = print_ic_call,
 	[INSN_JE_BRANCH] = print_je_branch,
 	[INSN_JGE_BRANCH] = print_jge_branch,
 	[INSN_JG_BRANCH] = print_jg_branch,

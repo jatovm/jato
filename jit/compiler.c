@@ -6,6 +6,7 @@
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
  */
+#include "arch/inline-cache.h"
 
 #include "jit/compilation-unit.h"
 #include "jit/compiler.h"
@@ -122,6 +123,10 @@ int compile(struct compilation_unit *cu)
 
 	if (opt_trace_regalloc)
 		trace_regalloc(cu);
+
+	err = convert_ic_calls(cu);
+	if (err)
+		goto out;
 
 	assert(all_insn_have_bytecode_offset(cu));
 

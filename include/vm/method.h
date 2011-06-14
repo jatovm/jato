@@ -154,6 +154,12 @@ static inline bool vm_method_is_special(struct vm_method *vmm)
 	return vmm->name[0] == '<';
 }
 
+static inline bool vm_method_is_compiled(struct vm_method *vmm)
+{
+	return 	compile_lock_get_status(&vmm->compilation_unit->compile_lock)
+		== STATUS_COMPILED_OK;
+}
+
 static inline enum vm_type method_return_type(struct vm_method *method)
 {
 	char *return_type = index(method->type, ')') + 1;

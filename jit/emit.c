@@ -7,6 +7,8 @@
  * LICENSE for details.
  */
 
+#include "arch/inline-cache.h"
+
 #include "lib/buffer.h"
 #include "vm/class.h"
 #include "vm/method.h"
@@ -172,6 +174,7 @@ int emit_machine_code(struct compilation_unit *cu)
 	struct basic_block *bb;
 	struct buffer *buf;
 	int err = 0;
+	void *ic_check = NULL;
 
 	buf = alloc_exec_buffer();
 	if (!buf)
@@ -185,6 +188,11 @@ int emit_machine_code(struct compilation_unit *cu)
 	frame_size = frame_locals_size(cu->stack_frame);
 
 	cu->ic_entry_point = NULL;
+
+	if (ic_supports_method(cu->method)) {
+		cu->ic_entry_point = buffer_current(buf);
+		ic_check = emit_ic_check(buf);
+	}
 
 	cu->entry_point = buffer_current(buf);
 
@@ -221,6 +229,10 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	cu->exit_bb_ptr = bb_native_ptr(cu->exit_bb);
 	cu->unwind_bb_ptr = bb_native_ptr(cu->unwind_bb);
+
+	if (ic_check) {
+		emit_ic_miss_handler(buf, ic_check, cu->method);
+	}
 
 	jit_text_reserve(buffer_offset(cu->objcode));
 

@@ -91,6 +91,7 @@ struct compilation_unit {
 	struct list_head call_fixup_site_list;
 	struct list_head tableswitch_list;
 	struct list_head lookupswitch_list;
+	struct list_head ic_call_list;
 
 	/*
 	 * Entry points to the method's code. These values are

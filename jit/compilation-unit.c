@@ -122,6 +122,7 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		INIT_LIST_HEAD(&cu->call_fixup_site_list);
 		INIT_LIST_HEAD(&cu->tableswitch_list);
 		INIT_LIST_HEAD(&cu->lookupswitch_list);
+		INIT_LIST_HEAD(&cu->ic_call_list);
 
 		cu->lir_insn_map = NULL;
 

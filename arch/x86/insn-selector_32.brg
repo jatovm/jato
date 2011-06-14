@@ -34,7 +34,9 @@
 #include <jit/statement.h>
 #include <jit/bc-offset-mapping.h>
 #include <jit/exception.h>
+#include <jit/inline-cache.h>
 
+#include <arch/inline-cache.h>
 #include <arch/instruction.h>
 #include <arch/stack-frame.h>
 #include <arch/thread.h>
@@ -2786,19 +2788,25 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	/* object reference */
 	call_target = state->left->reg1;
 
-	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
+	if (ic_supports_method(method)) {
+		call_insn = ic_call_insn(call_target, (unsigned long)method);
+		select_safepoint_insn(s, tree, call_insn);
+		add_ic_call(s->b_parent, call_insn);
+	} else {
+		/* object class */
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
 
-	/* vtable */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
+		/* vtable */
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
 
-	/* native ptr */
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
+		/* native ptr */
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
 
-	/* invoke method */
-	call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
+		/* invoke method */
+		call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
 
-	select_safepoint_insn(s, tree, call_insn);
+		select_safepoint_insn(s, tree, call_insn);
+	}
 	save_invoke_result(s, tree, method, stmt);
 
 	nr_stack_args = get_stack_args_count(method);
