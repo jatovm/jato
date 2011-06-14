@@ -78,6 +78,7 @@ LIB_OBJS += jit/ostack-bc.o
 LIB_OBJS += jit/pc-map.o
 LIB_OBJS += jit/perf-map.o
 LIB_OBJS += jit/spill-reload.o
+LIB_OBJS += jit/ssa.o
 LIB_OBJS += jit/stack-slot.o
 LIB_OBJS += jit/statement.o
 LIB_OBJS += jit/subroutine.o

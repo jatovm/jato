@@ -58,7 +58,27 @@ struct basic_block {
 	 * These are computed by SSA.
 	 */
 	struct {
+		/* Dominance frontier set of the basic block. */
 		struct bitset *dom_frontier;
+
+		/* Number of predecessors excluding exception handler blocks. */
+		unsigned long nr_predecessors_no_eh;
+
+		/*
+		 * Position of the current basic block in the predecessors
+		 * list of every successor of the basic block.
+		 */
+		unsigned long *positions_as_predecessor;
+
+		/* Succesors of the basic block along the dominator tree. */
+		struct basic_block **dom_successors;
+		unsigned long nr_dom_successors;
+
+		/*
+		 * List containing the third operand of an instruction
+		 * or NULL if the instruction does not have more than 2 operands.
+		 */
+		struct list_head insn_add_ons_list;
 	};
 
 	/*
@@ -99,8 +119,12 @@ void free_basic_block(struct basic_block *);
 struct basic_block *bb_split(struct basic_block *, unsigned long);
 void bb_add_stmt(struct basic_block *, struct statement *);
 void bb_add_insn(struct basic_block *, struct insn *);
+void bb_add_first_insn(struct basic_block *, struct insn *);
 struct insn *bb_first_insn(struct basic_block *);
+struct insn *bb_last_insn(struct basic_block *);
 int bb_add_successor(struct basic_block *, struct basic_block *);
+struct basic_block *insert_empty_bb(struct compilation_unit *, struct basic_block *,
+				struct basic_block *, unsigned int);
 int bb_add_mimic_stack_expr(struct basic_block *, struct expression *);
 struct statement *bb_remove_last_stmt(struct basic_block *bb);
 unsigned char *bb_native_ptr(struct basic_block *bb);

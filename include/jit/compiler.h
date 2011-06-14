@@ -68,6 +68,7 @@ int select_instructions(struct compilation_unit *cu);
 int compute_dfns(struct compilation_unit *cu);
 int compute_dom(struct compilation_unit *cu);
 int compute_dom_frontier(struct compilation_unit *cu);
+int compute_ssa(struct compilation_unit *cu);
 int allocate_registers(struct compilation_unit *cu);
 int insert_spill_reload_insns(struct compilation_unit *cu);
 int emit_machine_code(struct compilation_unit *);

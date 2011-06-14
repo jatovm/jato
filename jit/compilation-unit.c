@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2006-2008  Pekka Enberg
- * 
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -59,6 +59,30 @@ do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
 	ret->interval = alloc_interval(cu, ret);
 
 	cu->var_infos = ret;
+  out:
+	return ret;
+}
+
+static struct var_info *
+ssa_do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
+{
+	struct var_info *ret;
+
+	if (cu->is_reg_alloc_done) {
+		die("cannot allocate temporaries after register allocation");
+	}
+
+	ret = arena_alloc(cu->arena, sizeof *ret);
+	if (!ret)
+		goto out;
+
+	ret->next = cu->ssa_var_infos;
+	ret->vm_type = vm_type;
+
+	ret->interval = alloc_interval(cu, ret);
+
+	cu->ssa_var_infos = ret;
+
   out:
 	return ret;
 }
@@ -214,6 +238,18 @@ struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)
 	return ret;
 }
 
+struct var_info *ssa_get_var(struct compilation_unit *cu, enum vm_type vm_type)
+{
+	struct var_info *ret = ssa_do_get_var(cu, vm_type);
+
+	if (!ret)
+		return NULL;
+
+	ret->vreg = cu->ssa_nr_vregs++;
+
+	return ret;
+}
+
 struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
 {
 	assert(reg < NR_FIXED_REGISTERS);
@@ -236,11 +272,29 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 	return cu->fixed_var_infos[reg];
 }
 
+struct var_info *ssa_get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
+{
+	assert(reg < NR_FIXED_REGISTERS);
+
+	struct var_info *ret;
+	enum vm_type type;
+
+	type = reg_default_type(reg);
+	ret = ssa_do_get_var(cu, type);
+	if (ret) {
+		ret->interval->reg	= reg;
+		ret->interval->flags	|= INTERVAL_FLAG_FIXED_REG;
+		ret->vreg		= cu->ssa_nr_vregs++;
+	}
+
+	return ret;
+}
+
 /**
  * 	bb_find - Find basic block containing @offset.
  * 	@bb_list: First basic block in list.
  * 	@offset: Offset to find.
- * 
+ *
  * 	Find the basic block that contains the given offset and returns a
  * 	pointer to it.
  */

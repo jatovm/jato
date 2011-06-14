@@ -217,6 +217,8 @@ enum insn_flag_type {
 	INSN_FLAG_ESCAPED		= 1U << 0,
 	INSN_FLAG_SAFEPOINT		= 1U << 1,
 	INSN_FLAG_KNOWN_BC_OFFSET	= 1U << 2,
+	INSN_FLAG_RENAMED		= 1U << 3, /* instruction with renamed virtual registers */
+	INSN_FLAG_SSA_ADDED		= 1U << 4, /* instruction added during SSA deconstruction */
 };
 
 struct insn {
@@ -274,6 +276,10 @@ struct insn *branch_insn(enum insn_type, struct basic_block *);
 struct insn *memlocal_insn(enum insn_type, struct stack_slot *);
 struct insn *reverse_membase_insn(enum insn_type, struct var_info *, long);
 struct insn *membase_insn(enum insn_type, struct var_info *, long);
+
+struct insn *ssa_reg_reg_insn(struct var_info *, struct var_info *);
+struct insn *ssa_imm_reg_insn(unsigned long, struct var_info *);
+struct insn *ssa_phi_insn(struct var_info *, unsigned long);
 
 /*
  * These functions are used by generic code to insert spill/reload

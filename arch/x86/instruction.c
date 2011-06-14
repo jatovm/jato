@@ -565,6 +565,21 @@ int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
 
 #endif  /* CONFIG_X86_32 */
 
+struct insn *ssa_reg_reg_insn(struct var_info *src, struct var_info *dest)
+{
+	return reg_reg_insn(INSN_MOV_REG_REG, src, dest);
+}
+
+struct insn *ssa_imm_reg_insn(unsigned long imm, struct var_info *dest_reg)
+{
+	return imm_reg_insn(INSN_MOV_IMM_REG, imm, dest_reg);
+}
+
+struct insn *ssa_phi_insn(struct var_info *var, unsigned long nr_srcs)
+{
+	return phi_insn(INSN_PHI, var, nr_srcs);
+}
+
 struct insn *spill_insn(struct var_info *var, struct stack_slot *slot)
 {
 	enum insn_type insn_type;
@@ -786,6 +801,41 @@ static struct mach_reg_def checkregs[] = {
 	{ MACH_REG_xDX, DEF_xDX },
 };
 
+int insn_use_def(struct insn *insn)
+{
+	if (insn_use_def_dst(insn))
+		return 1;
+
+	if (insn_use_def_src(insn))
+		return 1;
+
+	return 0;
+}
+
+int insn_use_def_dst(struct insn *insn)
+{
+	unsigned long flags;
+
+	flags = insn_flags[insn->type];
+
+	if ((flags & DEF_DST) && (flags & USE_DST))
+		return 1;
+
+	return 0;
+}
+
+int insn_use_def_src(struct insn *insn)
+{
+	unsigned long flags;
+
+	flags = insn_flags[insn->type];
+
+	if ((flags & DEF_SRC) && (flags & USE_SRC))
+		return 1;
+
+	return 0;
+}
+
 int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **defs)
 {
 	unsigned long flags;
@@ -803,6 +853,25 @@ int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **
 		if (flags & checkregs[i].def)
 			defs[nr++] = cu->fixed_var_infos[checkregs[i].reg];
 	}
+	return nr;
+}
+
+int insn_defs_reg(struct insn *insn, struct use_position **regs)
+{
+	unsigned long flags;
+	int nr = 0;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & DEF_SRC)
+		regs[nr++] = &insn->src.reg;
+
+	if (flags & DEF_DST) {
+		if (insn->type != INSN_PHI)
+			regs[nr++] = &insn->dest.reg;
+		else regs[nr++] = &insn->ssa_dest.reg;
+	}
+
 	return nr;
 }
 
@@ -824,6 +893,28 @@ int insn_uses(struct insn *insn, struct var_info **uses)
 
 	if (flags & USE_IDX_DST)
 		uses[nr++] = insn->dest.index_reg.interval->var_info;
+
+	return nr;
+}
+
+int insn_uses_reg(struct insn *insn, struct use_position **regs)
+{
+	unsigned long flags;
+	int nr = 0;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & USE_SRC)
+		regs[nr++] = &insn->src.reg;
+
+	if (flags & USE_DST)
+		regs[nr++] = &insn->dest.reg;
+
+	if (flags & USE_IDX_SRC)
+		regs[nr++] = &insn->src.index_reg;
+
+	if (flags & USE_IDX_DST)
+		regs[nr++] = &insn->dest.index_reg;
 
 	return nr;
 }

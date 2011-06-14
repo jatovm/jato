@@ -3,7 +3,7 @@
  *
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
- * 
+ *
  * This file contains functions for basic block operations.
  */
 
@@ -186,9 +186,19 @@ void bb_add_insn(struct basic_block *bb, struct insn *insn)
 	list_add_tail(&insn->insn_list_node, &bb->insn_list);
 }
 
+void bb_add_first_insn(struct basic_block *bb, struct insn *insn)
+{
+	list_add(&insn->insn_list_node, &bb->insn_list);
+}
+
 struct insn *bb_first_insn(struct basic_block *bb)
 {
 	return list_entry(bb->insn_list.next, struct insn, insn_list_node);
+}
+
+struct insn *bb_last_insn(struct basic_block *bb)
+{
+	return list_entry(bb->insn_list.prev, struct insn, insn_list_node);
 }
 
 static int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
@@ -222,6 +232,59 @@ int bb_add_predecessor(struct basic_block *bb, struct basic_block *predecessor)
 	return __bb_add_neighbor(predecessor, (void **)&bb->predecessors, &bb->nr_predecessors);
 }
 #endif
+
+/*
+ * This function inserts an empty basic block between
+ * pred_bb and bb, where pred_bb is a predecessor basic block
+ * of bb.
+ */
+struct basic_block *insert_empty_bb(struct compilation_unit *cu,
+				struct basic_block *pred_bb,
+				struct basic_block *bb,
+				unsigned int bc_offset)
+{
+	struct basic_block *new_bb;
+	struct insn *last_insn;
+
+	new_bb = alloc_basic_block(cu, bc_offset, bc_offset);
+	if (!new_bb)
+		return NULL;
+
+	list_add(&new_bb->bb_list_node, &pred_bb->bb_list_node);
+
+	for (unsigned long i = 0; i < pred_bb->nr_successors; i++) {
+		if (pred_bb->successors[i] == bb) {
+			pred_bb->successors[i] = new_bb;
+			break;
+		}
+	}
+
+	new_bb->nr_predecessors = 1;
+	new_bb->predecessors = malloc(sizeof(struct basic_block *));
+	if (!new_bb->predecessors)
+		return NULL;
+	new_bb->predecessors[0] = pred_bb;
+
+	for (unsigned long i = 0; i < bb->nr_predecessors; i++) {
+		if (bb->predecessors[i] == pred_bb) {
+			bb->predecessors[i] = new_bb;
+			break;
+		}
+	}
+
+	new_bb->nr_successors = 1;
+	new_bb->successors = malloc(sizeof(struct basic_block *));
+	if (!new_bb->successors)
+		return NULL;
+	new_bb->successors[0] = bb;
+
+	last_insn = bb_last_insn(pred_bb);
+	if (last_insn && insn_is_branch(last_insn))
+		if (last_insn->operand.branch_target == bb)
+			last_insn->operand.branch_target = new_bb;
+
+	return new_bb;
+}
 
 int bb_add_mimic_stack_expr(struct basic_block *bb, struct expression *expr)
 {

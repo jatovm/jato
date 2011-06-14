@@ -72,6 +72,21 @@ struct compilation_unit {
 	unsigned char *exit_bb_ptr;
 	unsigned char *unwind_bb_ptr;
 
+	/*
+	 * These are used by the SSA part.
+	 */
+	struct {
+		/*
+		 * ssa_var_infos represent renamed virtual registers.
+		 * We need separate sets for this virtual registers to model
+		 * the SSA renaming scheme.
+		 * They will replace the virtual registers in var_infos
+		 * after SSA deconstruction.
+		 */
+		struct var_info *ssa_var_infos;
+		unsigned long ssa_nr_vregs;
+	};
+
 	struct list_head static_fixup_site_list;
 	struct list_head call_fixup_site_list;
 	struct list_head tableswitch_list;
@@ -145,6 +160,8 @@ void shrink_compilation_unit(struct compilation_unit *);
 void resolve_fixup_offsets(struct compilation_unit *);
 struct var_info *get_var(struct compilation_unit *, enum vm_type);
 struct var_info *get_fixed_var(struct compilation_unit *, enum machine_reg);
+struct var_info *ssa_get_var(struct compilation_unit *, enum vm_type);
+struct var_info *ssa_get_fixed_var(struct compilation_unit *, enum machine_reg);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 void compute_insn_positions(struct compilation_unit *);
 struct stack_slot *get_scratch_slot(struct compilation_unit *);

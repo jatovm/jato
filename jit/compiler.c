@@ -100,8 +100,9 @@ int compile(struct compilation_unit *cu)
 		if (err)
 			goto out;
 
-		if (opt_trace_ssa)
-			trace_ssa(cu);
+		err = compute_ssa(cu);
+		if (err)
+			goto out;
 	}
 
 	err = analyze_liveness(cu);
