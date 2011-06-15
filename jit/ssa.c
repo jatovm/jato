@@ -361,15 +361,8 @@ static int replace_var_info(struct compilation_unit *cu,
 
 	if (!insn_use_def(insn))
 		change_operand_var(reg, new_var);
-	else {
-		struct use_position *r;
-
-		r = &insn_add_ons->reg;
-
-		init_register(r, insn, new_var->interval);
-
-		r->kind = USE_KIND_INPUT;
-	}
+	else
+		insn_add_ons->var = new_var;
 
 	return 0;
 }
@@ -648,9 +641,10 @@ static void __insert_instruction_pass(struct basic_block *bb)
 		} else continue;
 
 		insn_add_ons = list_entry(insn_add_ons_list, struct insn_add_ons, insn_list_node);
-		var2 = insn_add_ons->reg.interval->var_info;
+		var2 = insn_add_ons->var;
 
-		if (interval_has_fixed_reg(var2->interval))
+		if (interval_has_fixed_reg(var2->interval)
+				&& interval_has_fixed_reg(var1->interval))
 			continue;
 
 		new_insn = ssa_reg_reg_insn(var2, var1);
@@ -679,6 +673,9 @@ static void insert_instruction_pass(struct compilation_unit *cu)
 	struct basic_block *bb;
 
 	for_each_basic_block(bb, &cu->bb_list) {
+		if (bb_is_eh(cu, bb))
+			continue;
+
 		__insert_instruction_pass(bb);
 	}
 }
@@ -703,9 +700,8 @@ static struct basic_block *det_insertion_bb(struct compilation_unit *cu,
 	r_bb = pred_bb;
 
 	if (pred_bb->nr_successors > 1
-		|| (last_insn && insn_is_branch(last_insn))) {
+		|| (last_insn && insn_is_branch(last_insn)))
 		r_bb = insert_empty_bb(cu, pred_bb, bb, bc_offset);
-	}
 
 	return r_bb;
 }
@@ -716,6 +712,10 @@ static void insert_insn(struct basic_block *bb,
 			unsigned int bc_offset)
 {
 	struct insn *new_insn;
+
+	if (interval_has_fixed_reg(dest->interval)
+			&& interval_has_fixed_reg(src->interval))
+		return;
 
 	new_insn = ssa_reg_reg_insn(src, dest);
 	insn_set_bc_offset(new_insn, bc_offset);
@@ -741,6 +741,14 @@ static int insert_copy_insns(struct compilation_unit *cu,
 
 		insert_insn(insertion_bb, insn->ssa_srcs[phi_arg].reg.interval->var_info,
 				insn->ssa_dest.reg.interval->var_info, bc_offset);
+	}
+
+	if (insertion_bb != bb) {
+		struct insn *jump;
+
+		jump = jump_insn(bb);
+		insn_set_bc_offset(jump, bc_offset);
+		list_add_tail(&jump->insn_list_node, &insertion_bb->insn_list);
 	}
 
 	return 0;
@@ -832,7 +840,7 @@ static int create_insn_add_ons_list(struct basic_block *bb)
 
 		insn_add_ons = malloc(sizeof(struct insn_add_ons));
 		INIT_LIST_HEAD(&insn_add_ons->insn_list_node);
-		memset(&insn_add_ons->reg, 0, sizeof(struct use_position));
+		insn_add_ons->var = NULL;
 
 		list_add_tail(&insn_add_ons->insn_list_node, &bb->insn_add_ons_list);
 	}
@@ -919,6 +927,20 @@ static int ssa_to_lir(struct compilation_unit *cu)
 	return 0;
 }
 
+/*
+ * This function creates the compilation unit's fixed_var_infos
+ * array with empty intervals because after the register allocation
+ * phase (that does not permit any more var_info allocations) there can
+ * still be requests for fixed var_infos (for example, convert_ic_calls
+ * function).
+ */
+static void create_fixed_var_infos(struct compilation_unit *cu)
+{
+	for (int ndx = 0; ndx < NR_FIXED_REGISTERS; ndx++) {
+		get_fixed_var(cu, ndx);
+	}
+}
+
 int compute_ssa(struct compilation_unit *cu)
 {
 	int err;
@@ -941,6 +963,8 @@ int compute_ssa(struct compilation_unit *cu)
 	replace_var_infos(cu);
 
 	free_ssa(cu);
+
+	create_fixed_var_infos(cu);
 
 	return 0;
 

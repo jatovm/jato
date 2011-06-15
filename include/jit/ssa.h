@@ -9,7 +9,7 @@
 #define SSA_INIT_BLOCK -1
 
 struct insn_add_ons {
-	struct use_position reg;
+	struct var_info *var;
 	struct list_head insn_list_node;
 };
 
