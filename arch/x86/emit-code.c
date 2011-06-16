@@ -2232,6 +2232,15 @@ void emit_unlock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
+
+void *emit_ic_check(struct buffer *buf)
+{
+	return NULL;
+}
+
+void emit_ic_miss_handler(struct buffer *buf, void *ic_check, struct vm_method *vmm)
+{
+}
 #endif /* CONFIG_X86_32 */
 
 extern void jni_trampoline(void);
