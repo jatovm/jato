@@ -159,10 +159,14 @@ int convert_ic_calls(struct compilation_unit *cu)
 	struct insn *class_insn, *imm_insn, *call_insn;
 	struct list_head *ic_call;
 	unsigned long bc_offset;
-	struct var_info *eax, *ecx;
+	struct var_info *imm_reg, *class_reg;
 
-	eax = get_fixed_var(cu, MACH_REG_xAX);
-	ecx = get_fixed_var(cu, MACH_REG_xCX);
+	imm_reg = class_reg = NULL;
+
+	if (!list_is_empty(&cu->ic_call_list)) {
+		imm_reg = get_fixed_var(cu, IC_IMM_REG);
+		class_reg = get_fixed_var(cu, IC_CLASS_REG);
+	}
 
 	list_for_each_entry_safe(ic, tmp, &cu->ic_call_list, list_node) {
 
@@ -172,7 +176,7 @@ int convert_ic_calls(struct compilation_unit *cu)
 		class_insn = 	membase_reg_insn(INSN_MOV_MEMBASE_REG,
 					      insn->src.reg.interval->var_info,
 					      offsetof(struct vm_object, class),
-					      ecx);
+					      class_reg);
 
 		if (!class_insn)
 			return -ENOMEM;
@@ -181,7 +185,7 @@ int convert_ic_calls(struct compilation_unit *cu)
 
 		imm_insn = 	imm_reg_insn(INSN_MOV_IMM_REG,
 					insn->dest.imm,
-					eax);
+					imm_reg);
 
 		if (!imm_insn)
 			return -ENOMEM;

@@ -1,7 +1,12 @@
 #ifndef INLINE_CACHE_H
 #define INLINE_CACHE_H
 
+#include "arch/registers.h"
+
 #include <stdbool.h>
+
+#define IC_IMM_REG	MACH_REG_xAX
+#define IC_CLASS_REG	MACH_REG_xCX
 
 struct vm_class;
 struct vm_method;
