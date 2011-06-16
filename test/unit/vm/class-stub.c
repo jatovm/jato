@@ -58,7 +58,7 @@ struct vm_method *vm_class_resolve_interface_method_recursive(
 	return &vmc->methods[i];
 }
 
-bool vm_class_is_assignable_from_slow(const struct vm_class *vmc, const struct vm_class *from)
+bool vm_class_is_assignable_from_slow(struct vm_class *vmc, const struct vm_class *from)
 {
 	return false;
 }
