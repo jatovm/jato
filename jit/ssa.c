@@ -384,7 +384,12 @@ static int replace_var_info(struct compilation_unit *cu,
 
 	new_var = stack_peek(name_stack[var->vreg]);
 
-	if (!insn_use_def(insn))
+	/*
+	 * If the instruction uses and defines the same register, then we
+	 * keep track of the used register in insn_add_ons.
+	 */
+	if (!((insn_use_def_src(insn) && &insn->src.reg == reg )
+                        || (insn_use_def_dst(insn) && &insn->dest.reg == reg)))
 		change_operand_var(reg, new_var);
 	else
 		insn_add_ons->var = new_var;
