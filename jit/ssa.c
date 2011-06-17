@@ -341,6 +341,31 @@ static void replace_parameter_var_info(struct use_position *reg,
 	change_operand_var(reg, new_var);
 }
 
+static void eh_replace_var_info(struct compilation_unit *cu,
+			struct use_position *reg,
+			struct stack **name_stack,
+			struct insn *insn)
+{
+	struct live_interval *it;
+	struct var_info *var, *new_var;
+
+	it = reg->interval;
+	var = it->var_info;
+
+	if (stack_is_empty(name_stack[var->vreg])){
+		if (interval_has_fixed_reg(it))
+			new_var = ssa_get_fixed_var(cu, var->interval->reg);
+		else
+			new_var = ssa_get_var(cu, var->vm_type);
+
+		stack_push(name_stack[var->vreg], new_var);
+	}
+	else
+		new_var = stack_peek(name_stack[var->vreg]);
+
+	change_operand_var(reg, new_var);
+}
+
 static int replace_var_info(struct compilation_unit *cu,
 			struct use_position *reg,
 			struct list_head *list_changed_stacks,
@@ -505,6 +530,45 @@ static int __rename_variables(struct compilation_unit *cu,
 	return 0;
 }
 
+static void eh_rename_variables(struct compilation_unit *cu,
+				struct basic_block *bb,
+				struct stack **name_stack)
+{
+	struct insn *insn;
+	struct use_position *reg;
+	struct use_position *regs_uses[MAX_REG_OPERANDS],
+			*regs_defs[MAX_REG_OPERANDS + 1];
+	int nr_defs, nr_uses, i;
+
+
+	for_each_insn(insn, &bb->insn_list) {
+		nr_uses = insn_uses_reg(insn, regs_uses);
+		for (i = 0; i < nr_uses; i++) {
+			reg = regs_uses[i];
+
+			if (insn_use_def_src(insn) && &insn->src.reg == reg)
+				continue;
+
+			if (insn_use_def_dst(insn) && &insn->dest.reg == reg)
+				continue;
+
+			eh_replace_var_info(cu, reg, name_stack, insn);
+		}
+
+		nr_defs = insn_defs_reg(insn, regs_defs);
+		for (i = 0; i < nr_defs; i++) {
+			reg = regs_defs[i];
+
+			eh_replace_var_info(cu, reg, name_stack, insn);
+		}
+	}
+
+	for (unsigned int i = 0; i < bb->nr_successors; i++)
+		if (bb_is_eh(cu, bb->successors[i])) {
+			eh_rename_variables(cu, bb->successors[i], name_stack);
+		}
+}
+
 /*
  * See section 4.2 "Renaming of variables" of
  * "Optimizations in Static Single Assignment Form, Sassa Laboratory"
@@ -513,6 +577,7 @@ static int __rename_variables(struct compilation_unit *cu,
 static int rename_variables(struct compilation_unit *cu)
 {
 	struct stack *name_stack[cu->nr_vregs];
+	struct basic_block *bb;
 	int err;
 
 	for (unsigned long i = 0; i < cu->nr_vregs; i++)
@@ -521,6 +586,19 @@ static int rename_variables(struct compilation_unit *cu)
 	err = __rename_variables(cu, cu->entry_bb, name_stack);
 	if (err)
 		return err;
+
+	/*
+	 * Virtual registers need to be renamed even in exception
+	 * handler basic blocks because, otherwise, there would
+	 * be different virtual registers with the same vreg value
+	 * and the register allocator would issue incorrect results.
+	 * Exception handler basic blocks are still in non-SSA
+	 * form because we just rename the variables.
+	 */
+	for_each_basic_block(bb, &cu->bb_list) {
+		if (bb->is_eh)
+			eh_rename_variables(cu, bb, name_stack);
+	}
 
 	for (unsigned long i = 0; i < cu->nr_vregs; i++)
 		free_stack(name_stack[i]);
