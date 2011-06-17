@@ -331,7 +331,8 @@ vm_object_alloc_string_from_c(const char *bytes)
 	return vm_string_intern(string);
 }
 
-bool vm_object_is_instance_of(const struct vm_object *obj, struct vm_class *class)
+bool vm_object_is_instance_of(const struct vm_object *obj,
+	const struct vm_class *class)
 {
 	if (!obj)
 		return false;

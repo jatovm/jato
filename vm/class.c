@@ -1232,13 +1232,6 @@ bool vm_class_is_anonymous(const struct vm_class *vmc)
 	return is_numeric(separator + 1);
 }
 
-static void supertype_cache_update(struct vm_class *vmc, const struct vm_class *super)
-{
-	unsigned int ndx = vmc->supertype_cache_ndx++ % SUPERTYPE_CACHE_SIZE;
-
-	vmc->supertype_cache[ndx]	= super;
-}
-
 static bool vm_class_is_subclass_of(const struct vm_class *vmc, const struct vm_class *from)
 {
 	struct vm_class *super = from->super;
@@ -1253,26 +1246,23 @@ static bool vm_class_is_subclass_of(const struct vm_class *vmc, const struct vm_
 	return false;
 }
 
-static bool vm_class_is_assignable_from_nocache(const struct vm_class *vmc, const struct vm_class *from);
-
 static bool vm_class_is_instance_of_array(const struct vm_class *vmc, const struct vm_class *from)
 {
 	if (!vm_class_is_array_class(from))
 		return false;
 
-	struct vm_class *vmc_el = vm_class_get_array_element_class(vmc);
+	const struct vm_class *vmc_el = vm_class_get_array_element_class(vmc);
 
-	struct vm_class *from_el = vm_class_get_array_element_class(vmc);
+	const struct vm_class *from_el = vm_class_get_array_element_class(vmc);
 
-	return vm_class_is_assignable_from_nocache(vmc_el, from_el);
+	return vm_class_is_assignable_from(vmc_el, from_el);
 }
 
 static bool vm_class_implements(const struct vm_class *vmc, const struct vm_class *from)
 {
 	for (unsigned int i = 0; i < from->nr_interfaces; ++i) {
-		if (vmc == from->interfaces[i] || vm_class_implements(vmc, from->interfaces[i])) {
+		if (vmc == from->interfaces[i] || vm_class_implements(vmc, from->interfaces[i]))
 			return true;
-		}
 	}
 
 	if (from->super)
@@ -1281,7 +1271,8 @@ static bool vm_class_implements(const struct vm_class *vmc, const struct vm_clas
 	return false;
 }
 
-static bool vm_class_is_assignable_from_nocache(const struct vm_class *vmc, const struct vm_class *from)
+/* Reference: http://download.oracle.com/javase/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
+bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from)
 {
 	if (vmc == from)
 		return true;
@@ -1293,19 +1284,6 @@ static bool vm_class_is_assignable_from_nocache(const struct vm_class *vmc, cons
 		return vm_class_is_instance_of_array(vmc, from);
 
 	return vm_class_is_subclass_of(vmc, from);
-}
-
-/* Reference: http://download.oracle.com/javase/1.5.0/docs/api/java/lang/Class.html#isAssignableFrom(java.lang.Class) */
-bool vm_class_is_assignable_from_slow(struct vm_class *vmc, const struct vm_class *from)
-{
-	bool ret;
-
-	ret = vm_class_is_assignable_from_nocache(vmc, from);
-
-	if (ret)
-		supertype_cache_update(vmc, from);
-
-	return ret;
 }
 
 char *vm_class_get_array_element_class_name(const char *class_name)

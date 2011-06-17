@@ -24,7 +24,8 @@ struct vm_object *new_exception(struct vm_class *class, const char *message)
 	return NULL;
 }
 
-bool vm_object_is_instance_of(const struct vm_object *obj, struct vm_class *type)
+bool vm_object_is_instance_of(const struct vm_object *obj,
+	const struct vm_class *type)
 {
 	if (!obj)
 		return 0;
