@@ -2,6 +2,8 @@ package jvm;
 
 public class MethodInvokeVirtualTest extends TestCase {
   private static final int NUM_CALLS = 1000;
+  private static final int NUM_HITS = 1000;
+  private static final int NUM_MISSES = 1000;
 
   public static void setup() {
     Orange orange = new Orange();
@@ -17,13 +19,17 @@ public class MethodInvokeVirtualTest extends TestCase {
   }
 
   public static void testCallSiteWithCacheHitType() {
-    assertEquals("Apple", appleWrapper(new Apple()));
-    assertEquals("Orange", orangeWrapper(new Orange()));
+    for (int i = 0; i < NUM_HITS; i++) {
+      assertEquals("Apple", appleWrapper(new Apple()));
+      assertEquals("Orange", orangeWrapper(new Orange()));
+    }
   }
 
   public static void testCallSiteWithCacheMissType() {
-    assertEquals("Apple", orangeWrapper(new Apple()));
-    assertEquals("Orange", appleWrapper(new Orange()));
+    for (int i = 0; i < NUM_MISSES; i++) {
+      assertEquals("Apple", orangeWrapper(new Apple()));
+      assertEquals("Orange", appleWrapper(new Orange()));
+    }
   }
 
   public static void testCallSiteWithNull() {
