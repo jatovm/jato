@@ -21,5 +21,6 @@ int convert_ic_calls(struct compilation_unit *cu);
 void *resolve_ic_miss(struct vm_class *vmc, struct vm_method *vmm, void *callsite);
 
 void ic_start(void);
+void ic_vcall_stub(void);
 
 #endif /* INLINE_CACHE_H */

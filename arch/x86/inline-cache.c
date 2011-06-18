@@ -119,6 +119,20 @@ void ic_set_to_monomorphic(struct vm_class *vmc, struct vm_method *vmm, void *ca
 
 void ic_set_to_megamorphic(struct vm_method *vmm, void *callsite)
 {
+	struct x86_ic ic;
+
+	assert(vmm);
+	assert(callsite);
+
+	ic_from_callsite(&ic, (unsigned long)callsite);
+	assert(is_valid_ic(&ic));
+
+	if (pthread_mutex_lock(&ic_patch_lock) != 0)
+		die("Failed to lock ic_patch_lock\n");
+	cpu_write_u32(ic.fn, x86_call_disp(callsite, ic_vcall_stub));
+	cpu_write_u32(ic.imm, (uint32_t)(vmm->virtual_index * sizeof(void *)));
+	if (pthread_mutex_unlock(&ic_patch_lock) != 0)
+		die("Failed to unlock ic_patch_lock\n");
 }
 
 void *do_ic_setup(struct vm_class *vmc, struct vm_method *i_vmm, void *callsite)
