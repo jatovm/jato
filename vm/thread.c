@@ -79,7 +79,7 @@ static struct vm_thread *vm_thread_alloc(void)
 	thread->posix_id = -1;
 	thread->interrupted = false;
 	thread->waiting_mon = NULL;
-	thread->thread_state = THREAD_STATE_CONSISTENT;
+	thread->thread_state = VM_THREAD_STATE_CONSISTENT;
 	pthread_cond_init(&thread->park_cond, NULL);
 	pthread_mutex_init(&thread->park_mutex, NULL);
 	thread->unpark_called = false;

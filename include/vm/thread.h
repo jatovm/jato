@@ -18,11 +18,8 @@ enum vm_thread_state {
 	VM_THREAD_STATE_TERMINATED,
 	VM_THREAD_STATE_TIMED_WAITING,
 	VM_THREAD_STATE_WAITING,
-};
-
-enum thread_state {
-	THREAD_STATE_CONSISTENT,
-	THREAD_STATE_INCONSISTENT,
+	VM_THREAD_STATE_CONSISTENT,
+	VM_THREAD_STATE_INCONSISTENT,
 };
 
 struct vm_thread {
@@ -41,7 +38,7 @@ struct vm_thread {
 	struct vm_object *waiting_mon;
 
 	/* Should be accessed only with vm_thread_(set|get)_state() */
-	enum thread_state thread_state;
+	enum vm_thread_state thread_state;
 
 	/* Needed by sun.misc.Unsafe.park() */
 	pthread_mutex_t park_mutex;
