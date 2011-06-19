@@ -275,10 +275,10 @@ struct var_info *get_fixed_var(struct compilation_unit *cu, enum machine_reg reg
 
 struct var_info *ssa_get_fixed_var(struct compilation_unit *cu, enum machine_reg reg)
 {
-	assert(reg < NR_FIXED_REGISTERS);
-
 	struct var_info *ret;
 	enum vm_type type;
+
+	assert(reg < NR_FIXED_REGISTERS);
 
 	type = reg_default_type(reg);
 	ret = ssa_do_get_var(cu, type);
@@ -292,12 +292,12 @@ struct var_info *ssa_get_fixed_var(struct compilation_unit *cu, enum machine_reg
 }
 
 /**
- * 	bb_find - Find basic block containing @offset.
- * 	@bb_list: First basic block in list.
- * 	@offset: Offset to find.
+ *	bb_find - Find basic block containing @offset.
+ *	@bb_list: First basic block in list.
+ *	@offset: Offset to find.
  *
- * 	Find the basic block that contains the given offset and returns a
- * 	pointer to it.
+ *	Find the basic block that contains the given offset and returns a
+ *	pointer to it.
  */
 struct basic_block *find_bb(struct compilation_unit *cu, unsigned long offset)
 {
