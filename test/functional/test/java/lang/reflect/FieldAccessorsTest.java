@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Pekka Enberg
+ * Copyright (C) 2009, 2011 Pekka Enberg
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -264,7 +264,7 @@ public class FieldAccessorsTest extends TestCase {
   private static void testStaticGetFloat() throws Exception {
     assertEquals(Byte.MAX_VALUE, field("staticByte").getFloat(null));
     assertEquals(Short.MAX_VALUE, field("staticShort").getFloat(null));
-    //assertEquals(Float.MAX_VALUE, field("staticFloat").getFloat(null));
+    assertEquals(Float.MAX_VALUE, field("staticFloat").getFloat(null));
     assertEquals(Character.MAX_VALUE, field("staticChar").getFloat(null));
   }
 
@@ -303,7 +303,7 @@ public class FieldAccessorsTest extends TestCase {
   private static void testInstanceGetFloat() throws Exception {
     assertEquals(Byte.MAX_VALUE, field("instanceByte").getFloat(new Fields()));
     assertEquals(Short.MAX_VALUE, field("instanceShort").getFloat(new Fields()));
-    //assertEquals(Float.MAX_VALUE, field("instanceFloat").getFloat(new Fields()));
+    assertEquals(Float.MAX_VALUE, field("instanceFloat").getFloat(new Fields()));
     assertEquals(Character.MAX_VALUE, field("instanceChar").getFloat(new Fields()));
   }
 
@@ -343,8 +343,8 @@ public class FieldAccessorsTest extends TestCase {
     assertEquals(Byte.MAX_VALUE, field("staticByte").getDouble(null));
     assertEquals(Short.MAX_VALUE, field("staticShort").getDouble(null));
     assertEquals(Character.MAX_VALUE, field("staticChar").getDouble(null));
-    //assertEquals(Float.MAX_VALUE, field("staticFloat").getDouble(null));
-    //assertEquals(Double.MAX_VALUE, field("staticDouble").getDouble(null));
+    assertEquals(Float.MAX_VALUE, field("staticFloat").getDouble(null));
+    assertEquals(Double.MAX_VALUE, field("staticDouble").getDouble(null));
     assertEquals(Integer.MAX_VALUE, field("staticInteger").getDouble(null));
   }
 
@@ -370,8 +370,8 @@ public class FieldAccessorsTest extends TestCase {
 
   private static void testInstanceGetDouble() throws Exception {
     assertEquals(Byte.MAX_VALUE, field("instanceByte").getShort(new Fields()));
-    //assertEquals(Float.MAX_VALUE, field("instanceFloat").getDouble(new Fields()));
-    //assertEquals(Double.MAX_VALUE, field("instanceDouble").getDouble(new Fields()));
+    assertEquals(Float.MAX_VALUE, field("instanceFloat").getDouble(new Fields()));
+    assertEquals(Double.MAX_VALUE, field("instanceDouble").getDouble(new Fields()));
     assertEquals(Character.MAX_VALUE, field("instanceChar").getDouble(new Fields()));
     assertEquals(Integer.MAX_VALUE, field("instanceInteger").getDouble(new Fields()));
     assertEquals(Short.MAX_VALUE, field("instanceShort").getDouble(new Fields()));
@@ -802,8 +802,8 @@ public class FieldAccessorsTest extends TestCase {
     public static boolean staticBoolean = true;
     public static byte    staticByte    = Byte.MAX_VALUE;
     public static char    staticChar    = Character.MAX_VALUE;
-    public static double  staticDouble  = Long.MAX_VALUE;
-    public static float   staticFloat   = Integer.MAX_VALUE;
+    public static double  staticDouble  = Double.MAX_VALUE;
+    public static float   staticFloat   = Float.MAX_VALUE;
     public static int     staticInteger	= Integer.MAX_VALUE;
     public static long    staticLong	= Long.MAX_VALUE;
     public static short   staticShort	= Short.MAX_VALUE;
@@ -812,8 +812,8 @@ public class FieldAccessorsTest extends TestCase {
     public boolean instanceBoolean      = true;
     public byte    instanceByte         = Byte.MAX_VALUE;
     public char    instanceChar         = Character.MAX_VALUE;
-    public double  instanceDouble       = Long.MAX_VALUE;
-    public float   instanceFloat        = Integer.MAX_VALUE;
+    public double  instanceDouble       = Double.MAX_VALUE;
+    public float   instanceFloat        = Float.MAX_VALUE;
     public int     instanceInteger      = Integer.MAX_VALUE;
     public long    instanceLong         = Long.MAX_VALUE;
     public short   instanceShort        = Short.MAX_VALUE;
