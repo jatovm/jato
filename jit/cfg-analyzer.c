@@ -133,16 +133,16 @@ static int split_after_branches(const unsigned char *code,
 				struct bitset *branch_targets)
 {
 	struct basic_block *bb;
+	unsigned long offset;
 	int err = 0;
 
 	bb = entry_bb;
 
-	unsigned long offset;
 	bytecode_for_each_insn(code, code_length, offset) {
+		struct basic_block *new_bb = NULL;
 		unsigned long next_insn_off;
-		long br_target_off;
-		struct basic_block *new_bb;
 		unsigned char opcode;
+		long br_target_off;
 
 		opcode = code[offset];
 
@@ -204,7 +204,8 @@ static int split_after_branches(const unsigned char *code,
 			set_bit(branch_targets->bits, br_target_off);
 		}
 
-		bb = new_bb;
+		if (new_bb)
+			bb = new_bb;
 	}
 
 	return err;
