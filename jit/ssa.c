@@ -853,7 +853,7 @@ static int __ssa_deconstruction(struct compilation_unit *cu,
 			if (bb_is_eh(cu, pred_bb))
 				continue;
 
-			bc_offset = pred_bb->end;
+			bc_offset = bb->start;
 
 			err = insert_copy_insns(cu, pred_bb, bb, bc_offset, phi_arg);
 

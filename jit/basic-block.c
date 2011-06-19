@@ -250,7 +250,7 @@ struct basic_block *insert_empty_bb(struct compilation_unit *cu,
 	if (!new_bb)
 		return NULL;
 
-	list_add(&new_bb->bb_list_node, &pred_bb->bb_list_node);
+	list_add(&new_bb->bb_list_node, bb->bb_list_node.prev);
 
 	for (unsigned long i = 0; i < pred_bb->nr_successors; i++) {
 		if (pred_bb->successors[i] == bb) {
