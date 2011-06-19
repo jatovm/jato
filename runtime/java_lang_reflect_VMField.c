@@ -29,12 +29,11 @@ static void *field_get_value(struct vm_field *vmf, struct vm_object *o)
 		 * the field, you get an IllegalArgumentException.
 		 */
 		if (!o) {
-			signal_new_exception(vm_java_lang_NullPointerException,
-					     NULL);
+			signal_new_exception(vm_java_lang_NullPointerException, NULL);
 			return NULL;
 		}
 
-		if (o->class != vmf->class) {
+		if (!vm_object_is_instance_of(o, vmf->class)) {
 			signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 			return NULL;
 		}

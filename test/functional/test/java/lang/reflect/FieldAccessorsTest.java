@@ -33,6 +33,14 @@ import jvm.TestCase;
  * @author Pekka Enberg
  */
 public class FieldAccessorsTest extends TestCase {
+  private static void testStaticGetNoSuchField() throws Exception {
+    try {
+      field("noSuchField").get(null);
+      fail("exception not thrown");
+    } catch (NoSuchFieldException e) {
+    }
+  }
+
   private static void testStaticGetObject() throws Exception {
     assertEquals(Fields.staticBoolean, field("staticBoolean").get(null));
     assertEquals(Fields.staticByte   , field("staticByte").get(null));
@@ -44,6 +52,14 @@ public class FieldAccessorsTest extends TestCase {
     assertEquals(Fields.staticObject , field("staticObject").get(null));
     assertEquals(Fields.staticShort  , field("staticShort").get(null));
     assertEquals(Fields.staticShort  , field("staticShort").get(null));
+  }
+
+  private static void testInstanceGetNoSuchField() throws Exception {
+    try {
+      field("noSuchField").get(new Fields());
+      fail("exception not thrown");
+    } catch (NoSuchFieldException e) {
+    }
   }
 
   private static void testInstanceGetObject() throws Exception {
@@ -793,6 +809,24 @@ public class FieldAccessorsTest extends TestCase {
     }
   }
 
+  private static void testInstanceGetFromSuperClass() throws Exception {
+    Fields fields = new SuperFields();
+    assertEquals(fields.instanceBoolean, field("instanceBoolean").get(fields));
+    assertEquals(fields.instanceByte   , field("instanceByte").get(fields));
+    assertEquals(fields.instanceChar   , field("instanceChar").get(fields));
+    assertEquals(fields.instanceDouble , field("instanceDouble").get(fields));
+    assertEquals(fields.instanceFloat  , field("instanceFloat").get(fields));
+    assertEquals(fields.instanceInteger, field("instanceInteger").get(fields));
+    assertEquals(fields.instanceLong   , field("instanceLong").get(fields));
+    assertEquals(fields.instanceObject , field("instanceObject").get(fields));
+    assertEquals(fields.instanceShort  , field("instanceShort").get(fields));
+    try {
+      field("instanceObject").get(new String());
+      fail("exception not thrown");
+    } catch (IllegalArgumentException e) {
+    }
+  }
+
   private static Field field(String name) throws Exception {
     return Fields.class.getField(name);
   }
@@ -819,8 +853,13 @@ public class FieldAccessorsTest extends TestCase {
     public short   instanceShort        = Short.MAX_VALUE;
   };
 
+  private static class SuperFields extends Fields {
+  }
+
   public static void main(String[] args) throws Exception {
+    testStaticGetNoSuchField();
     testStaticGetObject();
+    testInstanceGetNoSuchField();
     testInstanceGetObject();
 
     testStaticGetLong();
@@ -925,5 +964,7 @@ public class FieldAccessorsTest extends TestCase {
     testInstanceGetBooleanFromLong();
     testInstanceGetBooleanFromChar();
     testInstanceGetBooleanFromObject();
+
+    testInstanceGetFromSuperClass();
   }
 }
