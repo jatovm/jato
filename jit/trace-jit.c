@@ -61,6 +61,7 @@ bool opt_trace_invoke_verbose;
 bool opt_trace_exceptions;
 bool opt_trace_bytecode;
 bool opt_trace_compile;
+bool opt_print_compilation;
 
 int gate_level;
 
@@ -146,6 +147,25 @@ void trace_method(struct compilation_unit *cu)
 	}
 
 	trace_printf("\n\n");
+}
+
+void print_compilation(struct vm_method *vmm)
+{
+	char comp_char;
+	char sync_char;
+
+	if (vm_method_is_native(vmm))
+		comp_char = 'n';
+	else
+		comp_char = ' ';
+
+	if (method_is_synchronized(vmm))
+		sync_char = 's';
+	else
+		sync_char = ' ';
+
+	trace_printf("%c%c %s.%s (%d bytes)\n", comp_char, sync_char, vmm->class->name, vmm->name, vmm->code_attribute.code_length);
+	trace_flush();
 }
 
 static void print_bitset_frontier(struct bitset *bitset, struct compilation_unit *cu)

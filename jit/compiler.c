@@ -53,6 +53,9 @@ int compile(struct compilation_unit *cu)
 {
 	int err;
 
+	if (opt_print_compilation)
+		print_compilation(cu->method);
+
 	if (opt_trace_compile)
 		trace_method(cu);
 

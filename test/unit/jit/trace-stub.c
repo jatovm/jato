@@ -5,10 +5,10 @@
 struct vm_method;
 struct compilation_unit;
 
-bool opt_trace_invoke = false;
-bool opt_trace_exceptions = false;
-bool opt_trace_bytecode = false;
-bool opt_trace_invoke_verbose = false;
+bool opt_trace_invoke;
+bool opt_trace_exceptions;
+bool opt_trace_bytecode;
+bool opt_trace_invoke_verbose;
 
 void trace_invoke(struct compilation_unit *cu)
 {

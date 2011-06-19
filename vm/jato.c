@@ -571,8 +571,9 @@ static void jit_init_natives(void)
 	"  -D<name>=<value> set a system property\n"					\
 	"  -verbose[:gc]\n"								\
 	"		   :gc print out results of garbage collection\n"		\
-	"  -version	   print out version number and copyright information\n"
-
+	"  -version	   print out version number and copyright information\n"	\
+	"\n"										\
+	"  -XX:+PrintCompilation Print a message when a method is compiled\n"
 
 static void usage(FILE *f, int retval)
 {
@@ -850,6 +851,11 @@ static void handle_thread_stack_size(const char *arg)
 	/* Ignore */
 }
 
+static void handle_print_compilation(void)
+{
+	opt_print_compilation = true;
+}
+
 struct option {
 	const char *name;
 
@@ -906,11 +912,12 @@ const struct option options[] = {
 	DEFINE_OPTION_ARG("Xtrace:method",	handle_trace_method),
 	DEFINE_OPTION_ARG("Xtrace:gate",	handle_trace_gate),
 
-	DEFINE_OPTION_ADJACENT_ARG("Xbootclasspath/a:",	handle_bootclasspath_append),	
+	DEFINE_OPTION_ADJACENT_ARG("Xbootclasspath/a:",	handle_bootclasspath_append),
 	DEFINE_OPTION_ADJACENT_ARG("D",		handle_define),
 	DEFINE_OPTION_ADJACENT_ARG("Xmx",	handle_max_heap_size),
-	DEFINE_OPTION_ADJACENT_ARG("Xss",	handle_thread_stack_size)
+	DEFINE_OPTION_ADJACENT_ARG("Xss",	handle_thread_stack_size),
 
+	DEFINE_OPTION("XX:+PrintCompilation",	handle_print_compilation),
 };
 
 static const struct option *get_option(const char *name)
