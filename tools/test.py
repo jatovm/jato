@@ -84,12 +84,12 @@ TESTS = [
 , ( "jvm.TrampolineBackpatchingTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.VirtualAbstractInterfaceMethodTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.WideTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "jvm.lang.reflect.FieldTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.lang.ReferenceTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "sun.misc.UnsafeTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "test.java.lang.ClassTest", 0, [ ], [ "i386" ] )
 , ( "test.java.lang.DoubleTest", 0, [ ], [ "i386" ] )
 , ( "test.java.lang.reflect.MethodTest", 0, [ ], [ "i386" ] )
+, ( "test.java.lang.reflect.FieldAccessorsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "test.java.lang.reflect.FieldTest", 0, [ ], [ "i386" ] )
 ]
 
