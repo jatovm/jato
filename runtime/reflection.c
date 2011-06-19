@@ -752,6 +752,7 @@ static jdouble to_jdouble_value(union jvalue *value, enum vm_type vm_type)
 	case J_FLOAT:
 		return value->f;
 	case J_LONG:
+		return value->j;
 	case J_BOOLEAN:
 	case J_REFERENCE: {
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
@@ -777,7 +778,9 @@ static jfloat to_jfloat_value(union jvalue *value, enum vm_type vm_type)
 	case J_FLOAT:
 		return value->f;
 	case J_INT:
+		return value->i;
 	case J_LONG:
+		return value->j;
 	case J_BOOLEAN:
 	case J_DOUBLE:
 	case J_REFERENCE: {
@@ -795,12 +798,10 @@ static jfloat to_jfloat_value(union jvalue *value, enum vm_type vm_type)
 static jchar to_jchar_value(union jvalue *value, enum vm_type vm_type)
 {
 	switch (vm_type) {
-	case J_BYTE:
-		return value->b;
-	case J_SHORT:
-		return value->s;
 	case J_CHAR:
 		return value->c;
+	case J_BYTE:
+	case J_SHORT:
 	case J_INT:
 	case J_LONG:
 	case J_BOOLEAN:

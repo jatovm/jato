@@ -285,19 +285,11 @@ public class FieldAccessorsTest extends TestCase {
   }
 
   private static void testStaticGetFloatFromInteger() throws Exception {
-    try {
-      field("staticInteger").getFloat(null);
-      fail("exception not thrown");
-    } catch (IllegalArgumentException e) {
-    }
+    assertEquals((float) Integer.MAX_VALUE, field("staticInteger").getFloat(null));
   }
 
   private static void testStaticGetFloatFromLong() throws Exception {
-    try {
-      field("staticLong").getFloat(null);
-      fail("exception not thrown");
-    } catch (IllegalArgumentException e) {
-    }
+    assertEquals((float) Long.MAX_VALUE, field("staticLong").getFloat(null));
   }
 
   private static void testStaticGetFloatFromObject() throws Exception {
@@ -332,19 +324,11 @@ public class FieldAccessorsTest extends TestCase {
   }
 
   private static void testInstanceGetFloatFromInteger() throws Exception {
-    try {
-      field("staticInteger").getFloat(new Fields());
-      fail("exception not thrown");
-    } catch (IllegalArgumentException e) {
-    }
+    assertEquals((float) Integer.MAX_VALUE, field("instanceInteger").getFloat(new Fields()));
   }
 
   private static void testInstanceGetFloatFromLong() throws Exception {
-    try {
-      field("staticLong").getFloat(new Fields());
-      fail("exception not thrown");
-    } catch (IllegalArgumentException e) {
-    }
+    assertEquals((float) Long.MAX_VALUE, field("instanceLong").getFloat(new Fields()));
   }
 
   private static void testInstanceGetFloatFromObject() throws Exception {
@@ -373,11 +357,7 @@ public class FieldAccessorsTest extends TestCase {
   }
 
   private static void testStaticGetDoubleFromLong() throws Exception {
-    try {
-      field("staticLong").getDouble(null);
-      fail("exception not thrown");
-    } catch (IllegalArgumentException e) {
-    }
+    assertEquals((double) Long.MAX_VALUE, field("staticLong").getDouble(null));
   }
 
   private static void testStaticGetDoubleFromObject() throws Exception {
@@ -406,11 +386,7 @@ public class FieldAccessorsTest extends TestCase {
   }
 
   private static void testInstanceGetDoubleFromLong() throws Exception {
-    try {
-      field("staticLong").getDouble(new Fields());
-      fail("exception not thrown");
-    } catch (IllegalArgumentException e) {
-    }
+    assertEquals((double) Long.MAX_VALUE, field("instanceLong").getDouble(new Fields()));
   }
 
   private static void testInstanceGetDoubleFromObject() throws Exception {
@@ -422,9 +398,17 @@ public class FieldAccessorsTest extends TestCase {
   }
 
   private static void testStaticGetChar() throws Exception {
-     assertEquals(Byte.MAX_VALUE, field("staticByte").getChar(null));
-     assertEquals(Short.MAX_VALUE, field("staticShort").getChar(null));
-     assertEquals(Character.MAX_VALUE, field("staticChar").getChar(null));
+    try {
+      field("staticByte").getChar(null);
+      fail("exception not thrown");
+    } catch (IllegalArgumentException e) {
+    }
+    try {
+      field("staticShort").getChar(null);
+      fail("exception not thrown");
+    } catch (IllegalArgumentException e) {
+    }
+    assertEquals(Character.MAX_VALUE, field("staticChar").getChar(null));
   }
 
   private static void testStaticGetCharFromBoolean() throws Exception {
@@ -476,8 +460,16 @@ public class FieldAccessorsTest extends TestCase {
   }
 
   private static void testInstanceGetChar() throws Exception {
-    assertEquals(Byte.MAX_VALUE, field("instanceByte").getChar(new Fields()));
-    assertEquals(Short.MAX_VALUE, field("instanceShort").getChar(new Fields()));
+    try {
+      field("instanceByte").getChar(new Fields());
+      fail("exception not thrown");
+    } catch (IllegalArgumentException e) {
+    }
+    try {
+      field("instanceShort").getChar(new Fields());
+      fail("exception not thrown");
+    } catch (IllegalArgumentException e) {
+    }
     assertEquals(Character.MAX_VALUE, field("instanceChar").getChar(new Fields()));
   }
 
