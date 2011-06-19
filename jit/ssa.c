@@ -402,20 +402,33 @@ static int replace_var_info(struct compilation_unit *cu,
  * in the entry basic block of the CFG. That is why we add
  * initialization instructions for each non-fixed virtual register.
  */
-static int insert_init_insn(struct compilation_unit *cu,
-			struct list_head *list_changed_stacks,
-			struct stack **name_stack)
+static void insert_init_insn(struct compilation_unit *cu)
 {
-	struct var_info *var, *new_var;
+	struct var_info *var;
 	struct basic_block *bb;
 	struct insn *insn;
-	int err;
 
 	bb = cu->entry_bb;
 
 	/*
 	 * Values are initialized to 0.
 	 */
+	for_each_variable(var, cu->var_infos) {
+		if (!interval_has_fixed_reg(var->interval)) {
+			insn = ssa_imm_reg_insn(0, var);
+			insn_set_bc_offset(insn, 0);
+			bb_add_first_insn(bb, insn);
+		}
+	}
+}
+
+static int insert_stack_fixed_var(struct compilation_unit *cu,
+				struct stack **name_stack,
+				struct list_head *list_changed_stacks)
+{
+	struct var_info *var, *new_var;
+	int err;
+
 	for_each_variable(var, cu->var_infos) {
 		if (interval_has_fixed_reg(var->interval)) {
 			new_var = ssa_get_fixed_var(cu, var->interval->reg);
@@ -425,19 +438,6 @@ static int insert_init_insn(struct compilation_unit *cu,
 			err = list_changed_stacks_add(list_changed_stacks, var->vreg);
 			if (err)
 				return err;
-		} else {
-			new_var = ssa_get_var(cu, var->vm_type);
-
-			stack_push(name_stack[var->vreg], new_var);
-
-			err = list_changed_stacks_add(list_changed_stacks, var->vreg);
-			if (err)
-				return err;
-
-			insn = ssa_imm_reg_insn(0, new_var);
-			insn_set_bc_offset(insn, 0);
-			insn->flags |= INSN_FLAG_RENAMED;
-			bb_add_first_insn(bb, insn);
 		}
 	}
 
@@ -464,15 +464,15 @@ static int __rename_variables(struct compilation_unit *cu,
 
 	INIT_LIST_HEAD(list_changed_stacks);
 
-	if (bb == cu->entry_bb)
-		insert_init_insn(cu, list_changed_stacks, name_stack);
+	if (bb == cu->entry_bb) {
+		err = insert_stack_fixed_var(cu, name_stack, list_changed_stacks);
+		if (err)
+			return err;
+	}
 
 	insn_add_ons_list = &bb->insn_add_ons_list;
 
 	for_each_insn(insn, &bb->insn_list) {
-		if (insn->flags & INSN_FLAG_RENAMED)
-			continue;
-
 		insn_add_ons_list = insn_add_ons_list->next;
 		if (insn->type != INSN_PHI) {
 			nr_uses = insn_uses_reg(insn, regs_uses);
@@ -489,6 +489,7 @@ static int __rename_variables(struct compilation_unit *cu,
 		nr_defs = insn_defs_reg(insn, regs_defs);
 		for (i = 0; i < nr_defs; i++) {
 			reg = regs_defs[i];
+
 			err = add_var_info(cu, reg, list_changed_stacks, name_stack);
 			if (err)
 				return err;
@@ -712,8 +713,7 @@ static void __insert_instruction_pass(struct basic_block *bb)
 	insn_add_ons_list = &bb->insn_add_ons_list;
 
 	for_each_insn(insn, &bb->insn_list) {
-		if (!(insn->flags & INSN_FLAG_RENAMED)
-			&& !(insn->flags & INSN_FLAG_SSA_ADDED)) {
+		if (!(insn->flags & INSN_FLAG_SSA_ADDED)) {
 			insn_add_ons_list = insn_add_ons_list->next;
 		}
 
@@ -942,14 +942,7 @@ static int init_ssa(struct compilation_unit *cu)
 	if (err)
 		goto error_dom;
 
-	err = analyze_def(cu);
-	if (err)
-		goto error_def;
-
 	return 0;
-
-error_def:
-	free_dom_successors(cu);
 
 error_dom:
 	free_positions_as_predecessor(cu);
@@ -963,9 +956,15 @@ static int lir_to_ssa(struct compilation_unit *cu)
 	int err;
 	struct basic_block *bb;
 
-	err = insert_phi_insns(cu);
+	insert_init_insn(cu);
+
+	err = analyze_def(cu);
 	if (err)
 		goto error;
+
+	err = insert_phi_insns(cu);
+	if (err)
+		goto error_def;;
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		if (bb_is_eh(cu, bb))
@@ -984,6 +983,8 @@ static int lir_to_ssa(struct compilation_unit *cu)
 
 	return 0;
 
+error_def:
+	free_def_set(cu);
 error_rename_vars:
 	free_insn_add_ons(cu);
 
