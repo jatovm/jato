@@ -813,6 +813,7 @@ static int insert_copy_insns(struct compilation_unit *cu,
 {
 	struct insn *insn;
 	struct basic_block *insertion_bb;
+	struct insn *jump;
 
 	insertion_bb = det_insertion_bb(cu, pred_bb, bb, bc_offset);
 	if (!insertion_bb)
@@ -826,13 +827,9 @@ static int insert_copy_insns(struct compilation_unit *cu,
 				insn->ssa_dest.reg.interval->var_info, bc_offset);
 	}
 
-	if (insertion_bb != bb) {
-		struct insn *jump;
-
-		jump = jump_insn(bb);
-		insn_set_bc_offset(jump, bc_offset);
-		list_add_tail(&jump->insn_list_node, &insertion_bb->insn_list);
-	}
+	jump = jump_insn(bb);
+	insn_set_bc_offset(jump, bc_offset);
+	list_add_tail(&jump->insn_list_node, &insertion_bb->insn_list);
 
 	return 0;
 }
