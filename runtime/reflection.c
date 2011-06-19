@@ -638,7 +638,7 @@ static void *field_get_value(struct vm_field *vmf, struct vm_object *o)
 	return value_p;
 }
 
-struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o)
+struct vm_object *java_lang_reflect_VMField_get(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	enum vm_type type;
@@ -868,7 +868,7 @@ static jboolean to_jboolean_value(union jvalue *value, enum vm_type vm_type)
 }
 
 
-jlong native_field_get_long(struct vm_object *this, struct vm_object *o)
+jlong java_lang_reflect_VMField_getLong(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -886,7 +886,7 @@ jlong native_field_get_long(struct vm_object *this, struct vm_object *o)
 	return to_jlong_value(value, type);
 }
 
-jint native_field_get_int(struct vm_object *this, struct vm_object *o)
+jint java_lang_reflect_VMField_getInt(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -904,7 +904,7 @@ jint native_field_get_int(struct vm_object *this, struct vm_object *o)
 	return to_jint_value(value, type);
 }
 
-jshort native_field_get_short(struct vm_object *this, struct vm_object *o)
+jshort java_lang_reflect_VMField_getShort(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -922,7 +922,7 @@ jshort native_field_get_short(struct vm_object *this, struct vm_object *o)
 	return to_jshort_value(value, type);
 }
 
-jfloat native_field_get_float(struct vm_object *this, struct vm_object *o)
+jfloat java_lang_reflect_VMField_getFloat(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -940,7 +940,7 @@ jfloat native_field_get_float(struct vm_object *this, struct vm_object *o)
 	return to_jfloat_value(value, type);
 }
 
-jdouble native_field_get_double(struct vm_object *this, struct vm_object *o)
+jdouble java_lang_reflect_VMField_getDouble(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -958,7 +958,7 @@ jdouble native_field_get_double(struct vm_object *this, struct vm_object *o)
 	return to_jdouble_value(value, type);
 }
 
-jbyte native_field_get_byte(struct vm_object *this, struct vm_object *o)
+jbyte java_lang_reflect_VMField_getByte(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -976,7 +976,7 @@ jbyte native_field_get_byte(struct vm_object *this, struct vm_object *o)
 	return to_jbyte_value(value, type);
 }
 
-jchar native_field_get_char(struct vm_object *this, struct vm_object *o)
+jchar java_lang_reflect_VMField_getChar(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -994,7 +994,7 @@ jchar native_field_get_char(struct vm_object *this, struct vm_object *o)
 	return to_jchar_value(value, type);
 }
 
-jboolean native_field_get_boolean(struct vm_object *this, struct vm_object *o)
+jboolean java_lang_reflect_VMField_getBoolean(struct vm_object *this, struct vm_object *o)
 {
 	struct vm_field *vmf;
 	union jvalue *value;
@@ -1012,7 +1012,7 @@ jboolean native_field_get_boolean(struct vm_object *this, struct vm_object *o)
 	return to_jboolean_value(value, type);
 }
 
-jint native_field_get_modifiers_internal(struct vm_object *this)
+jint java_lang_reflect_VMField_getModifiersInternal(struct vm_object *this)
 {
 	struct vm_field *vmf;
 
@@ -1023,7 +1023,7 @@ jint native_field_get_modifiers_internal(struct vm_object *this)
 	return vmf->field->access_flags;
 }
 
-void native_field_set(struct vm_object *this, struct vm_object *o,
+void java_lang_reflect_VMField_set(struct vm_object *this, struct vm_object *o,
 		      struct vm_object *value_obj)
 {
 	struct vm_field *vmf;
@@ -1185,7 +1185,7 @@ struct vm_object *native_vmmethod_invoke(struct vm_object *vm_method, struct vm_
 	return native_method_invokenative(method, o, args, clazz, slot);
 }
 
-struct vm_object *native_field_gettype(struct vm_object *this)
+struct vm_object *java_lang_reflect_VMField_getType(struct vm_object *this)
 {
 	struct vm_field *vmf;
 

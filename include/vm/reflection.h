@@ -22,19 +22,19 @@ native_constructor_construct_native(struct vm_object *this,
 				    int slot);
 struct vm_object *native_vmconstructor_construct(struct vm_object *this, struct vm_object *args);
 struct vm_object *native_vmconstructor_get_exception_types(struct vm_object *method);
-struct vm_object *native_field_get(struct vm_object *this, struct vm_object *o);
+struct vm_object *java_lang_reflect_VMField_get(struct vm_object *this, struct vm_object *o);
 
-jlong native_field_get_long(struct vm_object *this, struct vm_object *o);
-jint native_field_get_int(struct vm_object *this, struct vm_object *o);
-jshort native_field_get_short(struct vm_object *this, struct vm_object *o);
-jdouble native_field_get_double(struct vm_object *this, struct vm_object *o);
-jfloat native_field_get_float(struct vm_object *this, struct vm_object *o);
-jbyte native_field_get_byte(struct vm_object *this, struct vm_object *o);
-jchar native_field_get_char(struct vm_object *this, struct vm_object *o);
-jboolean native_field_get_boolean(struct vm_object *this, struct vm_object *o);
+jlong java_lang_reflect_VMField_getLong(struct vm_object *this, struct vm_object *o);
+jint java_lang_reflect_VMField_getInt(struct vm_object *this, struct vm_object *o);
+jshort java_lang_reflect_VMField_getShort(struct vm_object *this, struct vm_object *o);
+jdouble java_lang_reflect_VMField_getDouble(struct vm_object *this, struct vm_object *o);
+jfloat java_lang_reflect_VMField_getFloat(struct vm_object *this, struct vm_object *o);
+jbyte java_lang_reflect_VMField_getByte(struct vm_object *this, struct vm_object *o);
+jchar java_lang_reflect_VMField_getChar(struct vm_object *this, struct vm_object *o);
+jboolean java_lang_reflect_VMField_getBoolean(struct vm_object *this, struct vm_object *o);
 jobject java_lang_reflect_VMMethod_getParameterAnnotations(jobject klass);
-jint native_field_get_modifiers_internal(struct vm_object *this);
-struct vm_object *native_field_gettype(struct vm_object *this);
+jint java_lang_reflect_VMField_getModifiersInternal(struct vm_object *this);
+struct vm_object *java_lang_reflect_VMField_getType(struct vm_object *this);
 
 struct vm_method *vm_object_to_vm_method(struct vm_object *method);
 jint native_method_get_modifiers_internal(struct vm_object *this);
@@ -44,7 +44,7 @@ native_method_invokenative(struct vm_object *method, struct vm_object *o,
 			   struct vm_object *declaringClass,
 			   jint slot);
 struct vm_object *native_vmmethod_invoke(struct vm_object *vm_method, struct vm_object *o, struct vm_object *args);
-void native_field_set(struct vm_object *this, struct vm_object *o, struct vm_object *value_obj);
+void java_lang_reflect_VMField_set(struct vm_object *this, struct vm_object *o, struct vm_object *value_obj);
 struct vm_object *native_method_getreturntype(struct vm_object *method);
 struct vm_object *native_method_get_exception_types(struct vm_object *method);
 struct vm_object *native_method_get_default_value(struct vm_object *method);
