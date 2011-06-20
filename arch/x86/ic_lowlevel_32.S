@@ -1,4 +1,4 @@
-#define VTABLE_OFFSET	0x7c
+#include "arch/asm-offsets.h"
 
 .global ic_start
 .global ic_vcall_stub

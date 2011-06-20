@@ -11,6 +11,7 @@
 #
 include/vm/arch.h
 include/vm/version.h
+arch/x86/include/arch/asm-offsets.h
 
 #
 # Generated source files
@@ -24,6 +25,7 @@ test/unit/vm/vm-test-suite.c
 #
 # Generated binaries
 #
+arch/x86/asm-offsets
 jato
 libjvm.a
 tools/monoburg/monoburg
