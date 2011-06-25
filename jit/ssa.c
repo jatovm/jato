@@ -1032,6 +1032,40 @@ static void create_fixed_var_infos(struct compilation_unit *cu)
 	}
 }
 
+static void cumulate_fixed_var_infos(struct compilation_unit *cu)
+{
+	struct var_info *var, *prev;
+	struct live_interval *it;
+	struct use_position *this, *next;
+
+	prev = NULL;
+	var = cu->var_infos;
+
+	while (var != NULL) {
+		it = var->interval;
+
+		if (interval_has_fixed_reg(it)
+				&& cu->fixed_var_infos[it->reg] != var) {
+			struct var_info *fixed_var = cu->fixed_var_infos[it->reg];
+			struct live_interval *fixed_it = fixed_var->interval;
+
+			list_for_each_entry_safe(this, next, &it->use_positions, use_pos_list) {
+				list_add_tail(&this->use_pos_list, &fixed_it->use_positions);
+				this->interval = fixed_var->interval;
+			}
+
+			if (prev == NULL) {
+				cu->var_infos = cu->var_infos->next;
+			} else {
+				prev->next = var->next;
+			}
+		} else
+			prev = var;
+
+		var = var->next;
+	}
+}
+
 int compute_ssa(struct compilation_unit *cu)
 {
 	int err;
@@ -1056,6 +1090,7 @@ int compute_ssa(struct compilation_unit *cu)
 	free_ssa(cu);
 
 	create_fixed_var_infos(cu);
+	cumulate_fixed_var_infos(cu);
 
 	return 0;
 
