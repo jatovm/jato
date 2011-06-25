@@ -404,20 +404,30 @@ static int replace_var_info(struct compilation_unit *cu,
  */
 static void insert_init_insn(struct compilation_unit *cu)
 {
-	struct var_info *var;
+	struct var_info *var, *gpr;
 	struct basic_block *bb;
-	struct insn *insn;
+	struct insn *insn, *conv_insn;
 
 	bb = cu->entry_bb;
+	gpr = get_var(cu, J_INT);
 
 	/*
 	 * Values are initialized to 0.
 	 */
 	for_each_variable(var, cu->var_infos) {
 		if (!interval_has_fixed_reg(var->interval)) {
-			insn = ssa_imm_reg_insn(0, var);
-			insn_set_bc_offset(insn, 0);
-			bb_add_first_insn(bb, insn);
+			insn = ssa_imm_reg_insn(INIT_VAL, var, gpr, &conv_insn);
+			if (!conv_insn) {
+                                insn_set_bc_offset(insn, INIT_BC_OFFSET);
+
+                                bb_add_first_insn(bb, insn);
+                        } else {
+                                insn_set_bc_offset(insn, INIT_BC_OFFSET);
+                                insn_set_bc_offset(conv_insn, INIT_BC_OFFSET);
+
+                                bb_add_first_insn(bb, insn);
+                                list_add(&conv_insn->insn_list_node, &insn->insn_list_node);
+                        }
 		}
 	}
 }

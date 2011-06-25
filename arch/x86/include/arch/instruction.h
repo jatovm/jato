@@ -280,7 +280,8 @@ struct insn *membase_insn(enum insn_type, struct var_info *, long);
 struct insn *ic_call_insn(struct var_info *, unsigned long);
 
 struct insn *ssa_reg_reg_insn(struct var_info *, struct var_info *);
-struct insn *ssa_imm_reg_insn(unsigned long, struct var_info *);
+struct insn *ssa_imm_reg_insn(unsigned long, struct var_info *,
+			struct var_info *, struct insn **);
 struct insn *ssa_phi_insn(struct var_info *, unsigned long);
 
 /*

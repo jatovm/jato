@@ -7,6 +7,8 @@
  * We mark this special block as SSA_INIT_BLOCK.
  */
 #define SSA_INIT_BLOCK -1
+#define INIT_VAL	0
+#define INIT_BC_OFFSET	0
 
 struct insn_add_ons {
 	struct var_info *var;

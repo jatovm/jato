@@ -586,12 +586,43 @@ int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
 
 struct insn *ssa_reg_reg_insn(struct var_info *src, struct var_info *dest)
 {
-	return reg_reg_insn(INSN_MOV_REG_REG, src, dest);
+	struct insn *insn;
+
+	if (src->vm_type == J_FLOAT) {
+		insn = reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest);
+	} else if (src->vm_type == J_DOUBLE) {
+		if (!cpu_has(X86_FEATURE_SSE2))
+			die("not implemented");
+
+		insn = reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest);
+	} else
+		insn = reg_reg_insn(INSN_MOV_REG_REG, src, dest);
+
+	return insn;
 }
 
-struct insn *ssa_imm_reg_insn(unsigned long imm, struct var_info *dest_reg)
+struct insn *ssa_imm_reg_insn(unsigned long imm,
+			struct var_info *dest_reg,
+			struct var_info *gpr,
+			struct insn **insn_conv)
 {
-	return imm_reg_insn(INSN_MOV_IMM_REG, imm, dest_reg);
+	struct insn *insn;
+
+	if (dest_reg->vm_type == J_FLOAT) {
+		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
+		*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU, gpr, dest_reg);
+	} else if (dest_reg->vm_type == J_DOUBLE) {
+		if (!cpu_has(X86_FEATURE_SSE2))
+			die("not implemented");
+
+		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
+		*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU64, gpr, dest_reg);
+	} else {
+		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, dest_reg);
+		*insn_conv = NULL;
+	}
+
+	return insn;
 }
 
 struct insn *ssa_phi_insn(struct var_info *var, unsigned long nr_srcs)
