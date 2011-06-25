@@ -675,6 +675,53 @@ struct insn *jump_insn(struct basic_block *bb)
 	return branch_insn(INSN_JMP_BRANCH, bb);
 }
 
+void ssa_chg_jmp_direction(struct insn *insn, struct basic_block *after_bb,
+		struct basic_block *new_bb, struct basic_block *bb)
+{
+	switch(insn->type) {
+		case INSN_JE_BRANCH:
+			if (insn->operand.branch_target == bb) {
+				insn->operand.branch_target = after_bb;
+				insn->type = INSN_JNE_BRANCH;
+			}
+			break;
+		case INSN_JNE_BRANCH:
+			if (insn->operand.branch_target == bb) {
+				insn->operand.branch_target = after_bb;
+				insn->type = INSN_JE_BRANCH;
+			}
+			break;
+		case INSN_JGE_BRANCH:
+			if (insn->operand.branch_target == bb) {
+				insn->operand.branch_target = after_bb;
+				insn->type = INSN_JL_BRANCH;
+			}
+			break;
+		case INSN_JL_BRANCH:
+			if (insn->operand.branch_target == bb) {
+				insn->operand.branch_target = after_bb;
+				insn->type = INSN_JGE_BRANCH;
+			}
+			break;
+		case INSN_JG_BRANCH:
+			if (insn->operand.branch_target == bb) {
+				insn->operand.branch_target = after_bb;
+				insn->type = INSN_JLE_BRANCH;
+			}
+			break;
+		case INSN_JLE_BRANCH:
+			if (insn->operand.branch_target == bb) {
+				insn->operand.branch_target = after_bb;
+				insn->type = INSN_JG_BRANCH;
+			}
+			break;
+		case INSN_JMP_BRANCH:
+			if (insn->operand.branch_target == bb)
+				insn->operand.branch_target = new_bb;
+			break;
+	}
+}
+
 /*
  *	Instruction flags
  */
@@ -1003,6 +1050,17 @@ bool insn_is_branch(struct insn *insn)
 	unsigned long flags = insn_flags[insn->type];
 
 	return flags & TYPE_BRANCH;
+}
+
+bool insn_is_jmp_mem(struct insn *insn)
+{
+	if (!insn)
+		return false;
+
+	if (insn->type == INSN_JMP_MEMINDEX || insn->type == INSN_JMP_MEMBASE)
+		return true;
+
+	return false;
 }
 
 bool insn_is_call(struct insn *insn)

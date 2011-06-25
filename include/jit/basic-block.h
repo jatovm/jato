@@ -123,7 +123,9 @@ void bb_add_first_insn(struct basic_block *, struct insn *);
 struct insn *bb_first_insn(struct basic_block *);
 struct insn *bb_last_insn(struct basic_block *);
 int bb_add_successor(struct basic_block *, struct basic_block *);
-struct basic_block *insert_empty_bb(struct compilation_unit *, struct basic_block *,
+struct basic_block *ssa_insert_chg_bb(struct compilation_unit *, struct basic_block *,
+				struct basic_block *, unsigned int);
+struct basic_block *ssa_insert_empty_bb(struct compilation_unit *, struct basic_block *,
 				struct basic_block *, unsigned int);
 bool bb_successors_contains(struct basic_block *, struct basic_block *);
 int bb_add_mimic_stack_expr(struct basic_block *, struct expression *);

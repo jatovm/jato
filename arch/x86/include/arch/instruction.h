@@ -283,6 +283,8 @@ struct insn *ssa_reg_reg_insn(struct var_info *, struct var_info *);
 struct insn *ssa_imm_reg_insn(unsigned long, struct var_info *,
 			struct var_info *, struct insn **);
 struct insn *ssa_phi_insn(struct var_info *, unsigned long);
+void ssa_chg_jmp_direction(struct insn *, struct basic_block *,
+			struct basic_block *, struct basic_block *);
 
 /*
  * These functions are used by generic code to insert spill/reload
@@ -297,6 +299,7 @@ struct insn *reload_insn(struct stack_slot *slot, struct var_info *var);
 struct insn *jump_insn(struct basic_block *bb);
 
 bool insn_is_branch(struct insn *insn);
+bool insn_is_jmp_mem(struct insn *insn);
 bool insn_is_call(struct insn *insn);
 
 #endif

@@ -793,8 +793,29 @@ static struct basic_block *det_insertion_bb(struct compilation_unit *cu,
 	r_bb = pred_bb;
 
 	if (pred_bb->nr_successors > 1
-		|| (last_insn && insn_is_branch(last_insn)))
-		r_bb = insert_empty_bb(cu, pred_bb, bb, bc_offset);
+			|| (last_insn && insn_is_branch(last_insn))) {
+		if (insn_is_jmp_mem(last_insn))
+			/*
+			 * In case we have a predecessor basic block ending in
+			 * in an INSN_JMP_MEMBASE or INSN_JMP_MEMINDEX instruction,
+			 * then we add the mov_reg_reg instructions in bb and move
+			 * bb contents into the newly created basic block (that
+			 * is bb's successor) because the instruction jumps to bb.
+			 */
+			r_bb = ssa_insert_chg_bb(cu, pred_bb, bb, bc_offset);
+		else {
+			struct basic_block *after_bb;
+			struct list_head *after_bb_node;
+
+			after_bb_node = pred_bb->bb_list_node.next;
+			after_bb = container_of(after_bb_node, struct basic_block, bb_list_node);
+
+			r_bb = ssa_insert_empty_bb(cu, pred_bb, bb, bc_offset);
+
+			if (last_insn)
+				ssa_chg_jmp_direction(last_insn, after_bb, r_bb, bb);
+		}
+	}
 
 	return r_bb;
 }
@@ -817,28 +838,35 @@ static void insert_insn(struct basic_block *bb,
 
 static int insert_copy_insns(struct compilation_unit *cu,
 				struct basic_block *pred_bb,
-				struct basic_block *bb,
+				struct basic_block **bb,
 				unsigned int bc_offset,
 				int phi_arg)
 {
-	struct insn *insn;
-	struct basic_block *insertion_bb;
+	struct insn *insn, *last_insn;
+	struct basic_block *insertion_bb, *aux_bb;
 	struct insn *jump;
 
-	insertion_bb = det_insertion_bb(cu, pred_bb, bb, bc_offset);
+	insertion_bb = det_insertion_bb(cu, pred_bb, *bb, bc_offset);
 	if (!insertion_bb)
 		return warn("Out of memory"), -ENOMEM;
 
-	for_each_insn(insn, &bb->insn_list) {
+	last_insn = bb_last_insn(pred_bb);
+	if (insn_is_jmp_mem(last_insn)) {
+		aux_bb = *bb;
+		*bb = insertion_bb;
+		insertion_bb = aux_bb;
+	}
+
+	for_each_insn(insn, &(*bb)->insn_list) {
 		if (insn->type != INSN_PHI)
 			break;
 
 		insert_insn(insertion_bb, insn->ssa_srcs[phi_arg].reg.interval->var_info,
-				insn->ssa_dest.reg.interval->var_info, bc_offset);
+				insn->ssa_dest.reg.interval->var_info, insertion_bb->end);
 	}
 
-	jump = jump_insn(bb);
-	insn_set_bc_offset(jump, bc_offset);
+	jump = jump_insn(*bb);
+	insn_set_bc_offset(jump, insertion_bb->end);
 	list_add_tail(&jump->insn_list_node, &insertion_bb->insn_list);
 
 	return 0;
@@ -865,7 +893,7 @@ static int __ssa_deconstruction(struct compilation_unit *cu,
 
 			bc_offset = bb->start;
 
-			err = insert_copy_insns(cu, pred_bb, bb, bc_offset, phi_arg);
+			err = insert_copy_insns(cu, pred_bb, &bb, bc_offset, phi_arg);
 
 			if (err)
 				return err;

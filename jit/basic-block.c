@@ -11,6 +11,7 @@
 #include "jit/basic-block.h"
 #include "jit/instruction.h"
 #include "jit/statement.h"
+#include "jit/ssa.h"
 
 #include "vm/die.h"
 
@@ -201,6 +202,47 @@ struct insn *bb_last_insn(struct basic_block *bb)
 	return list_entry(bb->insn_list.prev, struct insn, insn_list_node);
 }
 
+/*
+ * Move part of the contents from one basic block (from basic_block)
+ * to another (to basic block).
+ */
+static void ssa_bb_move(struct basic_block *from, struct basic_block *to)
+{
+	struct insn *this, *next;
+	struct insn_add_ons *this_add, *next_add;
+
+	list_for_each_entry_safe(this, next, &from->insn_list, insn_list_node) {
+		list_move(&this->insn_list_node, to->insn_list.prev);
+	}
+
+	to->b_parent = from->b_parent;
+	to->start = from->start;
+	to->end = from->end;
+
+	to->nr_successors = from->nr_successors;
+	to->successors = from->successors;
+
+	to->nr_predecessors = from->nr_predecessors;
+	to->predecessors = from->predecessors;
+
+	to->dom_frontier = from->dom_frontier;
+	from->dom_frontier = NULL;
+	to->nr_predecessors_no_eh = from->nr_predecessors_no_eh;
+	to->positions_as_predecessor = from->positions_as_predecessor;
+	from->positions_as_predecessor = NULL;
+	to->dom_successors = from->dom_successors;
+	from->dom_successors = NULL;
+	to->nr_dom_successors = from->nr_dom_successors;
+
+	INIT_LIST_HEAD(&to->insn_add_ons_list);
+	list_for_each_entry_safe(this_add, next_add, &from->insn_add_ons_list, insn_list_node) {
+		list_move(&this_add->insn_list_node, to->insn_add_ons_list.prev);
+	}
+
+	to->dfn = from->dfn;
+	from->dfn = 0;
+}
+
 static int __bb_add_neighbor(void *new, void **array, unsigned long *nb)
 {
 	unsigned long new_size;
@@ -234,23 +276,98 @@ int bb_add_predecessor(struct basic_block *bb, struct basic_block *predecessor)
 #endif
 
 /*
- * This function inserts an empty basic block between
- * pred_bb and bb, where pred_bb is a predecessor basic block
- * of bb.
+ * This function inserts a new basic block after bb and moves
+ * the contents of bb into the new basic block.
  */
-struct basic_block *insert_empty_bb(struct compilation_unit *cu,
-				struct basic_block *pred_bb,
-				struct basic_block *bb,
-				unsigned int bc_offset)
+struct basic_block *ssa_insert_chg_bb(struct compilation_unit *cu,
+		struct basic_block *pred_bb,
+		struct basic_block *bb,
+		unsigned int bc_offset)
 {
 	struct basic_block *new_bb;
-	struct insn *last_insn;
 
 	new_bb = alloc_basic_block(cu, bc_offset, bc_offset);
 	if (!new_bb)
 		return NULL;
 
-	list_add(&new_bb->bb_list_node, bb->bb_list_node.prev);
+	ssa_bb_move(bb, new_bb);
+
+	bb->end = bb->start;
+
+	list_add(&new_bb->bb_list_node, &bb->bb_list_node);
+
+	bb->nr_predecessors = 1;
+	bb->predecessors = malloc(sizeof(struct basic_block *));
+	if (!bb->predecessors)
+		return NULL;
+	bb->predecessors[0] = pred_bb;
+
+	bb->nr_successors = 1;
+	bb->successors = malloc(sizeof(struct basic_block *));
+	if (!bb->successors)
+		return NULL;
+	bb->successors[0] = new_bb;
+
+	for(unsigned long i = 0; i < new_bb->nr_predecessors; i++)
+		if (new_bb->predecessors[i] == pred_bb) {
+			new_bb->predecessors[i] = bb;
+			break;
+		}
+
+	/*
+	 * All references to bb have to be modified so that they point to new_bb
+	 * (this includes successors basic block list, predecessors basic block
+	 * list and branch targets in instructions).
+	 */
+	for (unsigned long i = 0; i < new_bb->nr_predecessors; i++) {
+		struct basic_block *bb_pred = new_bb->predecessors[i];
+		struct insn *last;
+
+		for (unsigned long j = 0; j < bb_pred->nr_successors; j++)
+			if (bb_pred->successors[j] == bb) {
+				bb_pred->successors[j] = new_bb;
+				break;
+			}
+
+		last = bb_last_insn(bb_pred);
+		if (last && insn_is_branch(last))
+			if (last->operand.branch_target && last->operand.branch_target == bb)
+				last->operand.branch_target = new_bb;
+
+	}
+
+	for (unsigned long i = 0; i < new_bb->nr_successors; i++) {
+		struct basic_block *bb_succ = new_bb->successors[i];
+
+		for(unsigned long j = 0; j < bb_succ->nr_predecessors; j++)
+			if (bb_succ->predecessors[j] == bb) {
+				bb_succ->predecessors[j] = new_bb;
+
+				break;
+			}
+	}
+
+	return new_bb;
+
+}
+
+/*
+ * This function inserts an empty basic block between
+ * pred_bb and bb, where pred_bb is a predecessor basic block
+ * of bb.
+ */
+struct basic_block *ssa_insert_empty_bb(struct compilation_unit *cu,
+				struct basic_block *pred_bb,
+				struct basic_block *bb,
+				unsigned int bc_offset)
+{
+	struct basic_block *new_bb;
+
+	new_bb = alloc_basic_block(cu, bc_offset, bc_offset);
+	if (!new_bb)
+		return NULL;
+
+	list_add(&new_bb->bb_list_node, &pred_bb->bb_list_node);
 
 	for (unsigned long i = 0; i < pred_bb->nr_successors; i++) {
 		if (pred_bb->successors[i] == bb) {
@@ -277,11 +394,6 @@ struct basic_block *insert_empty_bb(struct compilation_unit *cu,
 	if (!new_bb->successors)
 		return NULL;
 	new_bb->successors[0] = bb;
-
-	last_insn = bb_last_insn(pred_bb);
-	if (last_insn && insn_is_branch(last_insn))
-		if (last_insn->operand.branch_target == bb)
-			last_insn->operand.branch_target = new_bb;
 
 	return new_bb;
 }
