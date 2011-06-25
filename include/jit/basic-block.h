@@ -125,6 +125,7 @@ struct insn *bb_last_insn(struct basic_block *);
 int bb_add_successor(struct basic_block *, struct basic_block *);
 struct basic_block *insert_empty_bb(struct compilation_unit *, struct basic_block *,
 				struct basic_block *, unsigned int);
+bool bb_successors_contains(struct basic_block *, struct basic_block *);
 int bb_add_mimic_stack_expr(struct basic_block *, struct expression *);
 struct statement *bb_remove_last_stmt(struct basic_block *bb);
 unsigned char *bb_native_ptr(struct basic_block *bb);

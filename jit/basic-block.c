@@ -286,6 +286,15 @@ struct basic_block *insert_empty_bb(struct compilation_unit *cu,
 	return new_bb;
 }
 
+bool bb_successors_contains(struct basic_block *bb, struct basic_block *lookup_bb)
+{
+	for (unsigned long i = 0; i < bb->nr_successors; i++)
+		if (bb->successors[i] == lookup_bb)
+			return true;
+
+	return false;
+}
+
 int bb_add_mimic_stack_expr(struct basic_block *bb, struct expression *expr)
 {
 	return __bb_add_neighbor(expr, (void **)&bb->mimic_stack_expr, &bb->nr_mimic_stack_expr);
