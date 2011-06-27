@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008  Pekka Enberg
- * 
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -341,19 +341,31 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 	 * In that case, we need to find what the *real* destination interval
 	 * is.
 	 */
-	while (to_it->reg == MACH_REG_UNASSIGNED) {
+	while (to_it && to_it->reg == MACH_REG_UNASSIGNED) {
 		to_it = to_it->next_child;
-		assert(to_it);
 	}
+
+	/*
+	 * If there is no *real* destination interval, it means that resolving
+	 * is not necessary.
+	 */
+	if (!to_it)
+		return;
 
 	/*
 	 * Same goes for the source interval, but we do not have a prev_child
 	 * field, so we need to cheat a bit.
 	 */
-	while (from_it->reg == MACH_REG_UNASSIGNED) {
+	while (from_it && from_it->reg == MACH_REG_UNASSIGNED) {
 		from_it = from_it->prev_child;
-		assert(from_it);
 	}
+
+	/*
+	 * If there is no *real* source interval, it means that resolving
+	 * is not necessary.
+	 */
+	if (!from_it)
+		return;
 
 	assert(to_it);
 	assert(from_it);
