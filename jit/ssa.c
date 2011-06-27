@@ -46,6 +46,12 @@
 #include "vm/stdlib.h"
 #include <stdio.h>
 
+static void recompute_insn_positions(struct compilation_unit *cu)
+{
+	free_radix_tree(cu->lir_insn_map);
+	compute_insn_positions(cu);
+}
+
 static struct changed_var_stack *alloc_changed_var_stack(unsigned long vreg)
 {
 	struct changed_var_stack *changed;
@@ -397,37 +403,43 @@ static int replace_var_info(struct compilation_unit *cu,
 	return 0;
 }
 
+static void insert_def_insn(struct compilation_unit *cu,
+			struct var_info *var,
+			struct var_info *gpr,
+			struct insn **conv_insn)
+{
+	struct insn *insn;
+
+	insn = ssa_imm_reg_insn(INIT_VAL, var, gpr, conv_insn);
+	if (!*conv_insn) {
+		insn_set_bc_offset(insn, INIT_BC_OFFSET);
+
+		bb_add_first_insn(cu->entry_bb, insn);
+	} else {
+		insn_set_bc_offset(insn, INIT_BC_OFFSET);
+		insn_set_bc_offset(*conv_insn, INIT_BC_OFFSET);
+
+		bb_add_first_insn(cu->entry_bb, insn);
+		list_add(&(*conv_insn)->insn_list_node, &insn->insn_list_node);
+	}
+}
+
 /*
  * The SSA form assumes that all variables have been initialized in
  * in the entry basic block of the CFG. That is why we add
  * initialization instructions for each non-fixed virtual register.
  */
-static void insert_init_insn(struct compilation_unit *cu)
+static void insert_init_insn(struct compilation_unit *cu, struct var_info *gpr)
 {
-	struct var_info *var, *gpr;
-	struct basic_block *bb;
-	struct insn *insn, *conv_insn;
-
-	bb = cu->entry_bb;
-	gpr = get_var(cu, J_INT);
+	struct var_info *var;
+	struct insn *conv_insn;
 
 	/*
 	 * Values are initialized to 0.
 	 */
 	for_each_variable(var, cu->var_infos) {
 		if (!interval_has_fixed_reg(var->interval)) {
-			insn = ssa_imm_reg_insn(INIT_VAL, var, gpr, &conv_insn);
-			if (!conv_insn) {
-                                insn_set_bc_offset(insn, INIT_BC_OFFSET);
-
-                                bb_add_first_insn(bb, insn);
-                        } else {
-                                insn_set_bc_offset(insn, INIT_BC_OFFSET);
-                                insn_set_bc_offset(conv_insn, INIT_BC_OFFSET);
-
-                                bb_add_first_insn(bb, insn);
-                                list_add(&conv_insn->insn_list_node, &insn->insn_list_node);
-                        }
+			insert_def_insn(cu, var, gpr, &conv_insn);
 		}
 	}
 }
@@ -989,12 +1001,12 @@ error_positions:
 	return err;
 }
 
-static int lir_to_ssa(struct compilation_unit *cu)
+static int lir_to_ssa(struct compilation_unit *cu, struct var_info *gpr)
 {
 	int err;
 	struct basic_block *bb;
 
-	insert_init_insn(cu);
+	insert_init_insn(cu, gpr);
 
 	err = analyze_def(cu);
 	if (err)
@@ -1040,8 +1052,7 @@ static int ssa_to_lir(struct compilation_unit *cu)
 	if (err)
 		return err;
 
-	free_radix_tree(cu->lir_insn_map);
-	compute_insn_positions(cu);
+	recompute_insn_positions(cu);
 
 	return 0;
 }
@@ -1094,15 +1105,57 @@ static void cumulate_fixed_var_infos(struct compilation_unit *cu)
 	}
 }
 
+/*
+ * We add instructions in the entry basic block defining those non-fixed virtual registers
+ * that are used before are defined. We do this because, otherwise, the register allocator
+ * would not work correctly.
+ */
+static void repair_use_before_def(struct compilation_unit *cu, struct var_info *gpr)
+{
+	struct var_info *var;
+	struct use_position *this;
+	unsigned int min_def, min_use;
+	struct live_interval *it;
+	struct insn *conv_insn;
+
+	for_each_variable(var, cu->var_infos) {
+		it = var->interval;
+
+		if (!interval_has_fixed_reg(it)) {
+			min_use = INT_MAX;
+			min_def = INT_MAX;
+
+			list_for_each_entry(this, &it->use_positions, use_pos_list) {
+				if (insn_vreg_use(this->insn, var)) {
+					if (this->insn->lir_pos < min_use)
+						min_use = this->insn->lir_pos;
+				}
+				if (insn_vreg_def(this->insn, var)) {
+					if (this->insn->lir_pos < min_def)
+						min_def = this->insn->lir_pos;
+				}
+			}
+
+			if (min_use < min_def)
+				insert_def_insn(cu, var, gpr, &conv_insn);
+		}
+	}
+
+	recompute_insn_positions(cu);
+}
+
 int compute_ssa(struct compilation_unit *cu)
 {
 	int err;
+	struct var_info *gpr;
+
+	gpr = get_var(cu, J_INT);
 
 	err = init_ssa(cu);
 	if (err)
 		goto error_init_ssa;
 
-	err = lir_to_ssa(cu);
+	err = lir_to_ssa(cu, gpr);
 	if (err)
 		goto error_lir_ssa;
 
@@ -1119,6 +1172,8 @@ int compute_ssa(struct compilation_unit *cu)
 
 	create_fixed_var_infos(cu);
 	cumulate_fixed_var_infos(cu);
+
+	repair_use_before_def(cu, gpr);
 
 	return 0;
 

@@ -954,6 +954,23 @@ int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **
 	return nr;
 }
 
+bool insn_vreg_def(struct insn *insn, struct var_info *var)
+{
+	unsigned long flags;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & DEF_SRC)
+		if (insn->src.reg.interval->var_info == var)
+			return true;
+
+	if (flags & DEF_DST)
+		if (insn->dest.reg.interval->var_info == var)
+			return true;
+
+	return false;
+}
+
 int insn_defs_reg(struct insn *insn, struct use_position **regs)
 {
 	unsigned long flags;
@@ -993,6 +1010,32 @@ int insn_uses(struct insn *insn, struct var_info **uses)
 		uses[nr++] = insn->dest.index_reg.interval->var_info;
 
 	return nr;
+}
+
+bool insn_vreg_use(struct insn *insn, struct var_info *var)
+{
+	unsigned long flags;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & USE_SRC)
+		if (insn->src.reg.interval->var_info == var)
+			return true;
+
+	if (flags & USE_DST)
+		if (insn->dest.reg.interval->var_info == var)
+			return true;
+
+	if (flags & USE_IDX_SRC)
+		if (insn->src.index_reg.interval->var_info == var)
+			return true;
+
+	if (flags & USE_IDX_DST)
+		if (insn->dest.index_reg.interval->var_info == var)
+			return true;
+
+	return false;
+
 }
 
 int insn_uses_reg(struct insn *insn, struct use_position **regs)
