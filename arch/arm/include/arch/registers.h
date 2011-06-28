@@ -7,7 +7,11 @@
 #include <limits.h>
 
 enum machine_reg {
-	/* The unbanked registers, R0-R7 */
+	/*
+	 *The unbanked registers R0 - R12 except R11 which will
+	 *be used as Frame pointer
+	 */
+
 	MACH_REG_R0,
 	MACH_REG_R1,
 	MACH_REG_R2,
@@ -16,20 +20,22 @@ enum machine_reg {
 	MACH_REG_R5,
 	MACH_REG_R6,
 	MACH_REG_R7,
+	MACH_REG_R8,
+	MACH_REG_R9,
+	MACH_REG_R10,
+	MACH_REG_R12,
 
 	/* Number of general purpose registers.  */
 	NR_GP_REGISTERS,
 
 	/* The above registers are available for register allocator.  */
-	NR_REGISTERS,
+	NR_REGISTERS = NR_GP_REGISTERS,
 
-	/* The Stack Pointer */
-	MACH_REG_R13 = NR_REGISTERS,
+	MACH_REG_FP = NR_REGISTERS,
+	MACH_REG_SP,
 
 	/* The above registers are available for get_fixed_var().  */
 	NR_FIXED_REGISTERS,
-
-	MACH_REG_SP = MACH_REG_R13,
 
 	MACH_REG_UNASSIGNED = CHAR_MAX,
 };
@@ -45,6 +51,25 @@ bool reg_supports_type(enum machine_reg reg, enum vm_type type);
 
 struct register_state {
 	uint64_t			ip;
+	union {
+		unsigned long		regs[12];
+		struct {
+			unsigned long	r0;
+			unsigned long	r1;
+			unsigned long	r2;
+			unsigned long	r3;
+			unsigned long	r4;
+			unsigned long	r5;
+			unsigned long	r6;
+			unsigned long	r7;
+			unsigned long	r8;
+			unsigned long	r9;
+			unsigned long	r10;
+			unsigned long	fp;
+			unsigned long	r12;
+			unsigned long	sp;
+		};
+	};
 };
 
 static inline enum vm_type reg_default_type(enum machine_reg reg)

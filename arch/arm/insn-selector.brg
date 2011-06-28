@@ -1,0 +1,136 @@
+#include <jit/args.h>
+#include <jit/basic-block.h>
+#include <jit/compilation-unit.h>
+#include <jit/compiler.h>
+#include <jit/emulate.h>
+#include <jit/expression.h>
+#include <jit/statement.h>
+#include <jit/bc-offset-mapping.h>
+#include <jit/exception.h>
+
+#include <arch/instruction.h>
+#include <arch/stack-frame.h>
+#include <arch/thread.h>
+
+#include <assert.h>
+#include <errno.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <vm/class.h>
+#include <vm/field.h>
+#include <vm/gc.h>
+#include <vm/method.h>
+#include <vm/object.h>
+#include <vm/stack-trace.h>
+#include <vm/trace.h>
+#include <vm/preload.h>
+#include <vm/reference.h>
+
+#define MBCGEN_TYPE struct basic_block
+#define MBCOST_DATA struct basic_block
+#define MBTREE_TYPE struct tree_node
+#define MBTREE_OP(t) tree_op(t)
+#define MBTREE_LEFT(t) tree->kids[0]
+#define MBTREE_RIGHT(t) tree->kids[1]
+#define MBREG_TYPE struct var_info *
+
+#define MBMAX_OPCODES STMT_LAST
+
+#define MONOBURG_LOG 1
+#define HAVE_ARRAY_ELEM_INIT 1
+
+struct _MBState;
+
+%%
+
+%termprefix EXPR_ OP_ STMT_
+
+%start stmt
+
+
+%%
+
+static void select_insn(struct basic_block *, struct tree_node *, struct insn *);
+static void emit_code(struct basic_block *, MBState *, int);
+void insn_select(struct basic_block *);
+static void free_state(MBState *);
+
+
+int select_instructions(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	int err = 0;
+
+	cu->frame_ptr = get_fixed_var(cu, MACH_REG_FP);
+	if (!cu->frame_ptr) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	cu->stack_ptr = get_fixed_var(cu, MACH_REG_SP);
+	if (!cu->stack_ptr) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		insn_select(bb);
+	}
+
+  out:
+	return err;
+}
+
+void insn_select(struct basic_block *bb)
+{
+	struct statement *stmt;
+	MBState *state;
+
+	mono_burg_init();
+
+	for_each_stmt(stmt, &bb->stmt_list) {
+		state = mono_burg_label(&stmt->node, bb);
+		emit_code(bb, state, MB_NTERM_stmt);
+		free_state(state);
+	}
+}
+
+static void emit_code(struct basic_block *bb, MBState *state, int goal)
+{
+	MBState *kids[2];
+	int ern;
+	const guint16 *nts;
+	int i;
+
+	ern = mono_burg_rule(state, goal);
+	nts = mono_burg_nts_data + mono_burg_nts[ern];
+	mono_burg_kids(state, ern, kids);
+
+	for (i = 0; nts[i]; i++)
+		emit_code(bb, kids[i], nts[i]);
+
+	mono_burg_emit(ern, state, state->tree, bb);
+
+	if (state->reg1)
+		assert(!interval_has_fixed_reg(state->reg1->interval));
+}
+
+static void free_state(MBState *state)
+{
+	if (!state)
+		return;
+
+	free_state(state->left);
+	free_state(state->right);
+
+	g_free(state);
+}
+
+static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn)
+{
+	insn_set_bc_offset(insn, tree->bytecode_offset);
+	bb_add_insn(bb, insn);
+}

@@ -7,10 +7,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-void free_insn(struct insn *insn)
-{
-	assert(!"not implemented");
-}
+enum {
+	DEF_DST			= (1U << 1),
+	DEF_SRC			= (1U << 2),
+	DEF_NONE		= (1U << 3),
+	USE_DST			= (1U << 4),
+	USE_NONE		= (1U << 5),
+	USE_SRC			= (1U << 6),
+	USE_FP			= (1U << 7),	/* frame pointer */
+
+};
+
+static unsigned long insn_flags[] = {
+
+};
 
 int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **defs)
 {
@@ -18,11 +28,6 @@ int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **
 }
 
 int insn_uses(struct insn *insn, struct var_info **uses)
-{
-	assert(!"not implemented");
-}
-
-int insn_operand_use_kind(struct insn *insn, struct operand *operand)
 {
 	assert(!"not implemented");
 }
@@ -80,4 +85,64 @@ const char *reg_name(enum machine_reg reg)
 bool reg_supports_type(enum machine_reg reg, enum vm_type type)
 {
 	assert(!"not implemented");
+}
+
+struct insn *alloc_insn(enum insn_type type)
+{
+	struct insn *insn = malloc(sizeof *insn);
+	if (insn) {
+		memset(insn, 0, sizeof *insn);
+		INIT_LIST_HEAD(&insn->insn_list_node);
+		INIT_LIST_HEAD(&insn->branch_list_node);
+		insn->type = type;
+	}
+	return insn;
+}
+
+int insn_operand_use_kind(struct insn *insn, struct operand *operand)
+{
+	unsigned long flags;
+	int kind_mask;
+	int use_mask;
+	int def_mask;
+
+	flags = insn_flags[insn->type];
+
+	if (operand == &insn->src) {
+		use_mask = USE_SRC;
+		def_mask = DEF_SRC;
+	} else {
+		assert(operand == &insn->dest);
+		use_mask = USE_DST;
+		def_mask = DEF_DST;
+	}
+
+	kind_mask = 0;
+	if (flags & use_mask)
+		kind_mask |= USE_KIND_INPUT;
+
+	if (flags & def_mask)
+		kind_mask |= USE_KIND_OUTPUT;
+
+	return kind_mask;
+}
+
+static bool operand_uses_reg(struct operand *operand)
+{
+	return false;
+}
+
+static void release_operand(struct operand *operand)
+{
+	if (operand_uses_reg(operand))
+		list_del(&operand->reg.use_pos_list);
+
+}
+
+void free_insn(struct insn *insn)
+{
+	release_operand(&insn->src);
+	release_operand(&insn->dest);
+
+	free(insn);
 }

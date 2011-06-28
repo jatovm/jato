@@ -53,6 +53,7 @@ static inline bool operand_is_reg(struct operand *operand)
  */
 enum insn_type {
 	INSN_PHI,
+
 	/* Must be last */
 	NR_INSN_TYPES,
 };

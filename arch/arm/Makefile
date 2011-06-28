@@ -4,3 +4,4 @@ ARCH_OBJS += arch/arm/init.o
 ARCH_OBJS += arch/arm/instruction.o
 ARCH_OBJS += arch/arm/stack-frame.o
 ARCH_OBJS += arch/arm/stubs_to_compile.o
+ARCH_OBJS += arch/arm/insn-selector.o
