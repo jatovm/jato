@@ -22,6 +22,24 @@ enum operand_type {
 
 struct operand {
 	enum operand_type type;
+	union {
+		struct use_position reg;
+
+		struct {
+			struct use_position base_reg;
+			union {
+				long disp;	/* displacement */
+				struct {
+					struct use_position index_reg;
+					unsigned char shift;
+				};
+			};
+		};
+
+		struct stack_slot *slot; /* FP + displacement */
+
+		struct basic_block *branch_target;
+	};
 };
 
 static inline bool operand_is_reg(struct operand *operand)
@@ -34,6 +52,7 @@ static inline bool operand_is_reg(struct operand *operand)
  *	operand types.
  */
 enum insn_type {
+	INSN_PHI,
 	/* Must be last */
 	NR_INSN_TYPES,
 };
@@ -42,6 +61,8 @@ enum insn_flag_type {
 	INSN_FLAG_ESCAPED		= 1U << 0,
 	INSN_FLAG_SAFEPOINT		= 1U << 1,
 	INSN_FLAG_KNOWN_BC_OFFSET	= 1U << 2,
+	INSN_FLAG_RENAMED		= 1U << 3, /* instruction with renamed virtual registers */
+	INSN_FLAG_SSA_ADDED		= 1U << 4, /* instruction added during SSA deconstruction */
 };
 
 struct insn {
@@ -52,6 +73,20 @@ struct insn {
 	uint32_t		lir_pos;	 /* offset in LIR */
 	struct list_head	insn_list_node;
 	struct list_head	branch_list_node;
+
+	union {
+		struct {
+			struct operand src;
+			struct operand dest;
+		};
+		struct {
+			struct operand *ssa_srcs;
+			struct operand ssa_dest;
+			unsigned long nr_srcs;
+		};
+
+		struct operand operand;
+	};
 };
 
 #define MAX_REG_OPERANDS 0
@@ -65,8 +100,10 @@ struct insn *insn(enum insn_type);
  * instructions.
  */
 
-int insert_copy_slot_32_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
-int insert_copy_slot_64_insns(struct stack_slot *, struct stack_slot *, struct list_head *, unsigned long);
+int insert_copy_slot_32_insns(struct stack_slot *, struct stack_slot *,
+					struct list_head *, unsigned long);
+int insert_copy_slot_64_insns(struct stack_slot *, struct stack_slot *,
+					struct list_head *, unsigned long);
 
 struct insn *spill_insn(struct var_info *var, struct stack_slot *slot);
 struct insn *reload_insn(struct stack_slot *slot, struct var_info *var);

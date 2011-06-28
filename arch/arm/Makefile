@@ -3,3 +3,4 @@ ARCH_OBJS += arch/arm/emit-code.o
 ARCH_OBJS += arch/arm/init.o
 ARCH_OBJS += arch/arm/instruction.o
 ARCH_OBJS += arch/arm/stack-frame.o
+ARCH_OBJS += arch/arm/stubs_to_compile.o

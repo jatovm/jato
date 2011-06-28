@@ -49,11 +49,6 @@ bool show_exe_function(void *addr, struct string *str)
 	assert(!"not implemented");
 }
 
-void show_function(void *addr)
-{
-	assert(!"not implemented");
-}
-
 int fixup_static_at(unsigned long addr)
 {
 	assert(!"not implemented");
