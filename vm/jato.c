@@ -70,6 +70,7 @@
 #include "vm/natives.h"
 #include "vm/preload.h"
 #include "vm/version.h"
+#include "vm/interp.h"
 #include "vm/itable.h"
 #include "vm/method.h"
 #include "vm/object.h"
@@ -113,6 +114,8 @@ static bool use_system_classloader = true;
  * Enable SSA optimizations.
  */
 bool opt_ssa_enable;
+
+static bool opt_interp_only;
 
 /*
  * Enable JIT workarounds for valgrind.
@@ -573,6 +576,7 @@ static void jit_init_natives(void)
 	"		   :gc print out results of garbage collection\n"		\
 	"  -version	   print out version number and copyright information\n"	\
 	"\n"										\
+	"  -Xint           operate in interpreter-only mode\n"				\
 	"  -XX:+PrintCompilation Print a message when a method is compiled\n"
 
 static void usage(FILE *f, int retval)
@@ -700,6 +704,11 @@ static void handle_perf(void)
 static void handle_ssa(void)
 {
 	opt_ssa_enable = true;
+}
+
+static void handle_int(void)
+{
+	opt_interp_only  = true;
 }
 
 static void regex_compile(regex_t *regex, const char *arg)
@@ -891,6 +900,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xnosystemclassloader",	handle_no_system_classloader),
 	DEFINE_OPTION("Xperf",			handle_perf),
 	DEFINE_OPTION("Xssa",			handle_ssa),
+	DEFINE_OPTION("Xint",			handle_int),
 
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
@@ -1039,9 +1049,14 @@ do_main_class(void)
 		array_set_field_object(args, i, arg);
 	}
 
-	void (*main_method_trampoline)(void *)
-		= vm_method_trampoline_ptr(vmm);
-	main_method_trampoline(args);
+	if (opt_interp_only) {
+		vm_interp_method(vmm, args);
+	} else {
+		void (*java_main)(void *);
+
+		java_main = vm_method_trampoline_ptr(vmm);
+		java_main(args);
+	}
 
 	return 0;
 }

@@ -127,6 +127,7 @@ LIB_OBJS += vm/die.o
 LIB_OBJS += vm/fault-inject.o
 LIB_OBJS += vm/field.o
 LIB_OBJS += vm/gc.o
+LIB_OBJS += vm/interp.o
 LIB_OBJS += vm/itable.o
 LIB_OBJS += vm/jar.o
 LIB_OBJS += vm/jni-interface.o
