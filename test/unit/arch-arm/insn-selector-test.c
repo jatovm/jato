@@ -77,3 +77,39 @@ void test_expr_value_imm(void)
 
 	free_basic_block(bb);
 }
+
+void test_expr_local(void)
+{
+	struct compilation_unit *cu = stub_compilation_unit_alloc();
+	struct stack_frame *frame = alloc_stack_frame(0, 2);
+	cu->stack_frame = frame;
+
+	struct basic_block *bb = alloc_basic_block(cu, 1, 20);
+	struct statement *stmt1 = alloc_statement(STMT_EXPRESSION);
+	struct statement *stmt2 = alloc_statement(STMT_EXPRESSION);
+
+	struct expression *expr1 = local_expr(J_INT, 0);
+	struct expression *expr2 = local_expr(J_LONG, 0);
+	struct insn *insn;
+
+	unsigned long index[3];
+	short i = 0;
+
+	stmt1->expression = &expr1->node;
+	stmt2->expression = &expr2->node;
+
+	bb_add_stmt(bb, stmt1);
+	bb_add_stmt(bb, stmt2);
+
+	insn_select(bb);
+	for_each_insn(insn, &bb->insn_list) {
+		index[i] = insn->src.slot->index;
+		i++;
+	}
+
+	assert_int_equals(0, index[0]);
+	assert_int_equals(0, index[1]);
+	assert_int_equals(1, index[2]);
+
+	free_basic_block(bb);
+}

@@ -19,6 +19,7 @@ enum {
 };
 
 static unsigned long insn_flags[] = {
+	[INSN_LOAD_REG_MEMLOCAL]                = DEF_DST | USE_FP,
 	[INSN_MOV_REG_IMM]			= DEF_DST,
 	[INSN_LOAD_REG_POOL_IMM]		= DEF_DST
 };
@@ -168,6 +169,23 @@ struct insn *reg_pool_insn(enum insn_type insn_type,
 		};
 		init_reg_operand(insn, &insn->dest, dest_reg);
 	}
+	return insn;
+}
+
+struct insn *reg_memlocal_insn(enum insn_type insn_type,
+	struct stack_slot *slot, struct var_info *dest_reg)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn) {
+		insn->src       = (struct operand) {
+			.type           = OPERAND_MEMLOCAL,
+			{
+				.slot           = slot,
+			}
+		};
+		init_reg_operand(insn, &insn->dest, dest_reg);
+		}
 	return insn;
 }
 

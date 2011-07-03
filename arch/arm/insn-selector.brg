@@ -88,6 +88,31 @@ reg:	EXPR_VALUE	0
 	}
 }
 
+reg:	EXPR_LOCAL	1
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *expr;
+	struct stack_slot *slot;
+	struct var_info *result;
+
+	expr = to_expr(tree);
+	slot = get_local_slot(cu->stack_frame, expr->local_index);
+
+	result = get_var(s->b_parent, J_INT);
+	state->reg1 = result;
+
+	select_insn(s, tree, reg_memlocal_insn(INSN_LOAD_REG_MEMLOCAL, slot, result));
+
+	if (expr->vm_type == J_LONG) {
+		slot = get_local_slot(cu->stack_frame, expr->local_index + 1);
+
+		result = get_var(s->b_parent, J_INT);
+		state->reg2 = result;
+
+		select_insn(s, tree, reg_memlocal_insn(INSN_LOAD_REG_MEMLOCAL, slot, result));
+	}
+}
+
 stmt:	STMT_EXPRESSION(reg)
 {
 }

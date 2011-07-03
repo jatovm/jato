@@ -19,9 +19,10 @@ struct bitset;
 
 enum operand_type {
 	OPERAND_IMM,
-	OPERAND_REG,
+	OPERAND_MEMLOCAL,
 	/* This operand is required by constant pool implementation */
 	OPERAND_LITERAL_POOL,
+	OPERAND_REG,
 	/* This must be last */
 	LAST_OPERAND
 };
@@ -56,6 +57,7 @@ static inline bool operand_is_reg(struct operand *operand)
 {
 	switch (operand->type) {
 	case OPERAND_IMM:
+	case OPERAND_MEMLOCAL:
 		return false;
 	case OPERAND_REG:
 	case OPERAND_LITERAL_POOL:
@@ -71,15 +73,14 @@ static inline bool operand_is_reg(struct operand *operand)
  *	operand types.
  */
 enum insn_type {
+	INSN_LOAD_REG_MEMLOCAL,
 	INSN_MOV_REG_IMM,
 	/*
 	 * This instruction is not an actual instruction, it is
 	 * required by constant literal pool implementation
 	 */
 	INSN_LOAD_REG_POOL_IMM,
-
 	INSN_PHI,
-
 	/* Must be last */
 	NR_INSN_TYPES,
 };
@@ -123,6 +124,8 @@ void insn_sanity_check(void);
 struct insn *insn(enum insn_type);
 struct insn *reg_imm_insn(enum insn_type, unsigned long, struct var_info *);
 struct insn *reg_pool_insn(enum insn_type, struct lp_entry *, struct var_info *);
+struct insn *reg_memlocal_insn(enum insn_type, struct stack_slot *, struct var_info *);
+
 
 /*
  * These functions are used by generic code to insert spill/reload
