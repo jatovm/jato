@@ -76,3 +76,24 @@ struct insn *ssa_phi_insn(struct var_info *var, unsigned long nr_srcs)
 {
 	assert(!"not implemented");
 }
+
+bool insn_is_jmp_mem(struct insn *insn)
+{
+	assert(!"not implemented");
+}
+
+void ssa_chg_jmp_direction(struct insn *insn, struct basic_block *after_bb,
+		struct basic_block *new_bb, struct basic_block *bb)
+{
+	assert(!"not implemented");
+}
+
+bool insn_vreg_use(struct insn *insn, struct var_info *var)
+{
+	assert(!"not implemented");
+}
+
+bool insn_vreg_def(struct insn *insn, struct var_info *var)
+{
+	assert(!"not implemented");
+}
