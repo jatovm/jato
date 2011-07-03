@@ -1545,9 +1545,11 @@ stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 	vm_object_unlock(vmc->object);
 
 	if (running_on_valgrind) {
-		select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long)vmc));
-		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
-		method_args_cleanup(s, tree, 1);
+		struct var_info *rdi;
+
+		rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) vmc, rdi));
+		select_safepoint_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long)vm_class_ensure_init));
 
 		if (store_dest->vm_type == J_FLOAT)
 			mov_insn = reg_memdisp_insn(INSN_MOVSS_XMM_MEMDISP,
