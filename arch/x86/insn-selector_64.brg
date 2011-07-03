@@ -689,33 +689,6 @@ reg:	OP_CMP(reg, reg) 1
 	emulate_op_64(state, s, tree, emulate_lcmp, J_LONG, J_INT);
 }
 
-reg:	OP_CMP(reg, EXPR_VALUE) 1
-{
-	struct expression *expr, *right;
-	struct var_info *eax;
-
-	expr = to_expr(tree);
-	right = to_expr(expr->binary_right);
-
-	state->reg1 = get_var(s->b_parent, J_INT);
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-
-	if (right->vm_type != J_LONG) {
-		assert(!"OP_CMP implemented for J_LONG only");
-	}
-
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) (right->value >> 32)));
-	select_insn(s, tree, imm_insn(INSN_PUSH_IMM, (unsigned long) (right->value & ~0UL)));
-
-	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg2));
-	select_insn(s, tree, reg_insn(INSN_PUSH_REG, state->left->reg1));
-
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_lcmp));
-	method_args_cleanup(s, tree, 4);
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
-}
-
 reg:	OP_EQ(reg, EXPR_LOCAL) 1
 {
 	binop_reg_local_low(state, s, tree, INSN_CMP_MEMBASE_REG);
