@@ -3,6 +3,6 @@
 
 int main(void)
 {
-	printf("#define VTABLE_OFFSET \t%#x\n", offsetof(struct vm_class, vtable) + offsetof(struct vtable, native_ptr));
+	printf("#define VTABLE_OFFSET \t%#lx\n", offsetof(struct vm_class, vtable) + offsetof(struct vtable, native_ptr));
 	return 0;
 }
