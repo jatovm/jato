@@ -8,7 +8,7 @@
 
 enum machine_reg {
 	/*
-	 *The unbanked registers R0 - R12 except R11 which will
+	 *The unbanked registers R0-R8 and R10-R11 except R which will
 	 *be used as Frame pointer
 	 */
 
@@ -21,9 +21,8 @@ enum machine_reg {
 	MACH_REG_R6,
 	MACH_REG_R7,
 	MACH_REG_R8,
-	MACH_REG_R9,
 	MACH_REG_R10,
-	MACH_REG_R12,
+	MACH_REG_R11,
 
 	/* Number of general purpose registers.  */
 	NR_GP_REGISTERS,
@@ -36,6 +35,10 @@ enum machine_reg {
 
 	/* The above registers are available for get_fixed_var().  */
 	NR_FIXED_REGISTERS,
+	/*These registers are special purpose registers*/
+	MACH_REG_IP,
+	MACH_REG_LR,
+	MACH_REG_PC,
 
 	MACH_REG_UNASSIGNED = CHAR_MAX,
 };

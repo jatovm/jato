@@ -69,6 +69,7 @@ TOPLEVEL_OBJS := \
 	arch/mmix/register.o \
 	arch/mmix/stack-frame.o \
 	arch/mmix/use-def.o \
+	arch/arm/constant_pool.o\
 	test/unit/libharness/libharness.o \
 	test/unit/vm/class-stub.o \
 	test/unit/vm/classloader-stub.o \

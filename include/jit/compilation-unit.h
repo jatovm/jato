@@ -137,6 +137,15 @@ struct compilation_unit {
 #endif
 
 	struct arena *arena;
+
+#ifdef CONFIG_ARM
+	/*
+	 * This is used for ARM where we have an immediate of less than 8 bit
+	 * so, to store the larger immediate we use a constant literal pool
+	 */
+	struct lp_entry *pool_head;
+	unsigned int nr_entries_in_pool;
+#endif
 };
 
 static inline unsigned long nr_bblocks(struct compilation_unit *cu)

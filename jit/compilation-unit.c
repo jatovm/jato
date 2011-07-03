@@ -25,6 +25,10 @@
  */
 #include "arch/registers.h"
 
+#ifdef CONFIG_ARM
+#include "arch/constant-pool.h"
+#endif
+
 #include "jit/args.h"
 #include "jit/basic-block.h"
 #include "jit/compilation-unit.h"
@@ -131,6 +135,13 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		cu->arena	= arena_new();
 		if (!cu->arena)
 			goto out_of_memory;
+	#ifdef CONFIG_ARM
+		/*
+		 * Initialisation of the constant pool linked list
+		 */
+		cu->pool_head = NULL;
+		cu->nr_entries_in_pool = 0;
+	#endif
 	}
 
 	return cu;
@@ -223,7 +234,9 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free_tableswitch_list(cu);
 	free_lir_insn_map(cu);
 	free(cu->exception_handlers);
-
+#ifdef CONFIG_ARM
+	free_constant_pool(cu->pool_head);
+#endif
 	free(cu);
 }
 

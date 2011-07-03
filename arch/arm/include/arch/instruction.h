@@ -6,6 +6,7 @@
 #include "arch/stack-frame.h"
 #include "arch/registers.h"
 #include "arch/init.h"
+#include "arch/constant-pool.h"
 
 #include "lib/list.h"
 #include "vm/die.h"
@@ -17,6 +18,11 @@ struct basic_block;
 struct bitset;
 
 enum operand_type {
+	OPERAND_IMM,
+	OPERAND_REG,
+	/* This operand is required by constant pool implementation */
+	OPERAND_LITERAL_POOL,
+	/* This must be last */
 	LAST_OPERAND
 };
 
@@ -38,12 +44,25 @@ struct operand {
 
 		struct stack_slot *slot; /* FP + displacement */
 
+		struct lp_entry *pool; /* PC + displacement */
+
+		uint8_t imm;	/* In arm we have 8-bit immediate only */
+
 		struct basic_block *branch_target;
 	};
 };
 
 static inline bool operand_is_reg(struct operand *operand)
 {
+	switch (operand->type) {
+	case OPERAND_IMM:
+		return false;
+	case OPERAND_REG:
+	case OPERAND_LITERAL_POOL:
+		return true;
+	default:
+		assert(!"invalid operand type");
+	}
 	return false;
 }
 
@@ -52,6 +71,13 @@ static inline bool operand_is_reg(struct operand *operand)
  *	operand types.
  */
 enum insn_type {
+	INSN_MOV_REG_IMM,
+	/*
+	 * This instruction is not an actual instruction, it is
+	 * required by constant literal pool implementation
+	 */
+	INSN_LOAD_REG_POOL_IMM,
+
 	INSN_PHI,
 
 	/* Must be last */
@@ -95,6 +121,8 @@ struct insn {
 void insn_sanity_check(void);
 
 struct insn *insn(enum insn_type);
+struct insn *reg_imm_insn(enum insn_type, unsigned long, struct var_info *);
+struct insn *reg_pool_insn(enum insn_type, struct lp_entry *, struct var_info *);
 
 /*
  * These functions are used by generic code to insert spill/reload

@@ -11,6 +11,7 @@
 #include <arch/instruction.h>
 #include <arch/stack-frame.h>
 #include <arch/thread.h>
+#include <arch/constant-pool.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -41,6 +42,7 @@
 
 #define MONOBURG_LOG 1
 #define HAVE_ARRAY_ELEM_INIT 1
+#define MAX_IMM		255
 
 struct _MBState;
 
@@ -50,6 +52,45 @@ struct _MBState;
 
 %start stmt
 
+reg:	EXPR_VALUE	0
+{
+	struct expression *expr;
+	struct var_info *result;
+	struct compilation_unit *cu = s->b_parent;
+	struct lp_entry *pool;
+	unsigned long value_low;
+	unsigned long value_high;
+
+	expr = to_expr(tree);
+
+	result = get_var(cu, J_INT);
+	state->reg1 = result;
+	value_low = expr->value & ~0UL;
+
+	if (value_low <= MAX_IMM)
+		select_insn(s, tree, reg_imm_insn(INSN_MOV_REG_IMM, value_low & 0xff, result));
+	else {
+		pool = alloc_literal_pool_entry(cu, value_low);
+		select_insn(s, tree, reg_pool_insn(INSN_LOAD_REG_POOL_IMM, pool, result));
+	}
+
+	if (expr->vm_type == J_LONG) {
+		result = get_var(s->b_parent, J_INT);
+		state->reg2 = result;
+		value_high = expr->value >> 32;
+
+		if (value_high <= MAX_IMM)
+			select_insn(s, tree, reg_imm_insn(INSN_MOV_REG_IMM, value_high & 0xff, result));
+		else {
+			pool = alloc_literal_pool_entry(cu, value_high);
+			select_insn(s, tree, reg_pool_insn(INSN_LOAD_REG_POOL_IMM, pool, result));
+		}
+	}
+}
+
+stmt:	STMT_EXPRESSION(reg)
+{
+}
 
 %%
 

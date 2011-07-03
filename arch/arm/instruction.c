@@ -4,7 +4,7 @@
 #include "jit/lir-printer.h"
 #include "arch/registers.h"
 
-#include <stdlib.h>
+
 #include <string.h>
 
 enum {
@@ -19,8 +19,10 @@ enum {
 };
 
 static unsigned long insn_flags[] = {
-
+	[INSN_MOV_REG_IMM]			= DEF_DST,
+	[INSN_LOAD_REG_POOL_IMM]		= DEF_DST
 };
+
 
 int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **defs)
 {
@@ -127,9 +129,51 @@ int insn_operand_use_kind(struct insn *insn, struct operand *operand)
 	return kind_mask;
 }
 
+static void init_reg_operand(struct insn *insn, struct operand *operand,
+						struct var_info *reg)
+{
+	operand->type = OPERAND_REG;
+
+	init_register(&operand->reg, insn, reg->interval);
+	operand->reg.kind = insn_operand_use_kind(insn, operand);
+}
+
+struct insn *reg_imm_insn(enum insn_type insn_type, unsigned long imm,
+					struct var_info *dest_reg)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn) {
+		insn->src	= (struct operand) {
+			.type		= OPERAND_IMM,
+			{
+				.imm		= imm,
+			}
+		};
+		init_reg_operand(insn, &insn->dest, dest_reg);
+	}
+	return insn;
+}
+struct insn *reg_pool_insn(enum insn_type insn_type,
+	struct lp_entry *src_pool, struct var_info *dest_reg)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn) {
+		insn->src	= (struct operand) {
+			.type		= OPERAND_LITERAL_POOL,
+			{
+				.pool		= src_pool,
+			}
+		};
+		init_reg_operand(insn, &insn->dest, dest_reg);
+	}
+	return insn;
+}
+
 static bool operand_uses_reg(struct operand *operand)
 {
-	return false;
+	return operand->type == OPERAND_REG;
 }
 
 static void release_operand(struct operand *operand)
