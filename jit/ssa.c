@@ -568,7 +568,6 @@ static void eh_rename_variables(struct compilation_unit *cu,
 			*regs_defs[MAX_REG_OPERANDS + 1];
 	int nr_defs, nr_uses, i;
 
-
 	for_each_insn(insn, &bb->insn_list) {
 		nr_uses = insn_uses_reg(insn, regs_uses);
 		for (i = 0; i < nr_uses; i++) {
