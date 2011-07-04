@@ -362,10 +362,18 @@ JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/SubroutineTest.j \
 	test/functional/jvm/WideTest.j
 
+MBENCH_TEST_SUITE_CLASSES = test/perf/ICTime.java
+
+
 compile-java-tests: $(PROGRAM) FORCE
 	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):test/functional $(JAVAC_OPTS) -d test/functional $(REGRESSION_TEST_SUITE_CLASSES)
 .PHONY: compile-java-tests
+
+compile-mbench-tests: $(PROGRAM) FORCE
+	$(E) "  JAVAC   " $(MBENCH_TEST_SUITE_CLASSES)
+	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):test/perf $(JAVAC_OPTS) -d test/perf $(MBENCH_TEST_SUITE_CLASSES)
+.PHONY: compile-mbench-tests
 
 compile-jasmin-tests: $(PROGRAM) FORCE
 	$(E) "  JASMIN  " $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
@@ -388,6 +396,14 @@ check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-java-tests com
 	$(E) "  REGRESSION"
 	$(Q) ./tools/test.py
 .PHONY: check-functional
+
+check-mbench: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-mbench-tests
+	$(E) "  MICROBENCHMARKS"
+	$(Q) for i in $(patsubst %.java,%,$(MBENCH_TEST_SUITE_CLASSES))\
+	;do \
+		echo "MBENCH "$$i; $(JAVA) -classpath test/perf: $$i \
+	;done
+.PHONY: check-mbench
 
 check: check-unit check-integration check-functional
 .PHONY: check
