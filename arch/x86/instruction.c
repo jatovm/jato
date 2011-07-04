@@ -588,15 +588,16 @@ struct insn *ssa_reg_reg_insn(struct var_info *src, struct var_info *dest)
 {
 	struct insn *insn;
 
-	if (src->vm_type == J_FLOAT) {
-		insn = reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest);
-	} else if (src->vm_type == J_DOUBLE) {
-		if (!cpu_has(X86_FEATURE_SSE2))
-			die("not implemented");
-
-		insn = reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest);
-	} else
-		insn = reg_reg_insn(INSN_MOV_REG_REG, src, dest);
+	switch(src->vm_type) {
+		case J_FLOAT:
+			insn = reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest);
+			break;
+		case J_DOUBLE:
+			insn = reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest);
+			break;
+		default:
+			insn = reg_reg_insn(INSN_MOV_REG_REG, src, dest);
+	}
 
 	return insn;
 }
@@ -608,18 +609,18 @@ struct insn *ssa_imm_reg_insn(unsigned long imm,
 {
 	struct insn *insn;
 
-	if (dest_reg->vm_type == J_FLOAT) {
-		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
-		*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU, gpr, dest_reg);
-	} else if (dest_reg->vm_type == J_DOUBLE) {
-		if (!cpu_has(X86_FEATURE_SSE2))
-			die("not implemented");
-
-		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
-		*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU64, gpr, dest_reg);
-	} else {
-		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, dest_reg);
-		*insn_conv = NULL;
+	switch(dest_reg->vm_type) {
+		case J_FLOAT:
+			insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
+			*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU, gpr, dest_reg);
+			break;
+		case J_DOUBLE:
+			insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
+			*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU64, gpr, dest_reg);
+			break;
+		default:
+			insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, dest_reg);
+			*insn_conv = NULL;
 	}
 
 	return insn;
