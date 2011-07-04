@@ -79,6 +79,12 @@ struct basic_block {
 		 * or NULL if the instruction does not have more than 2 operands.
 		 */
 		struct list_head insn_add_ons_list;
+
+		/*
+		 * Flag used for exception handler basic blocks, to mark
+		 * the fact that they have been renamed or not
+		 */
+		bool is_renamed;
 	};
 
 	/*

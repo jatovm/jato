@@ -591,8 +591,10 @@ static void eh_rename_variables(struct compilation_unit *cu,
 		}
 	}
 
+	bb->is_renamed = true;
+
 	for (unsigned int i = 0; i < bb->nr_successors; i++)
-		if (bb_is_eh(cu, bb->successors[i])) {
+		if (bb_is_eh(cu, bb->successors[i]) && !bb->successors[i]->is_renamed) {
 			eh_rename_variables(cu, bb->successors[i], name_stack);
 		}
 }
@@ -624,7 +626,7 @@ static int rename_variables(struct compilation_unit *cu)
 	 * form because we just rename the variables.
 	 */
 	for_each_basic_block(bb, &cu->bb_list) {
-		if (bb->is_eh)
+		if (bb->is_eh && !bb->is_renamed)
 			eh_rename_variables(cu, bb, name_stack);
 	}
 
