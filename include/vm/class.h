@@ -36,6 +36,12 @@ enum vm_class_kind {
 	VM_CLASS_KIND_REGULAR
 };
 
+/*
+ * NOTE NOTE NOTE! You must update supertype_cache_test() if you change this
+ * constant.
+ */
+#define SUPERTYPE_CACHE_SIZE           2
+
 struct vm_class {
 	/* Compile lock for fast class initialization */
 	struct compile_lock cl;
@@ -98,6 +104,14 @@ struct vm_class {
 	struct vm_class *enclosing_class;
 
 	struct cafebabe_enclosing_method_attribute enclosing_method_attribute;
+
+	/*
+	 * The supertype cache contains pointers to 'struct vm_class' of
+	 * recently accessed supertypes of this class. The purpose of this
+	 * cache is to speed up subtype checks.
+	 */
+	const struct vm_class			*supertype_cache[SUPERTYPE_CACHE_SIZE];
+	unsigned int				supertype_cache_ndx;
 };
 
 int vm_class_link(struct vm_class *vmc, const struct cafebabe_class *class);
@@ -203,7 +217,18 @@ int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
 struct vm_method *vm_class_resolve_interface_method_recursive(
 	const struct vm_class *vmc, uint16_t i);
 
-bool vm_class_is_assignable_from(const struct vm_class *vmc, const struct vm_class *from);
+bool vm_class_is_assignable_from_slow(struct vm_class *vmc, const struct vm_class *from);
+
+static inline bool supertype_cache_test(const struct vm_class *vmc, const struct vm_class *super)
+{
+	return vmc->supertype_cache[0] == super || vmc->supertype_cache[1] == super;
+}
+
+static inline bool vm_class_is_assignable_from(struct vm_class *vmc, const struct vm_class *from)
+{
+	return supertype_cache_test(vmc, from) || vm_class_is_assignable_from_slow(vmc, from);
+}
+
 bool vm_class_is_primitive_type_name(const char *class_name);
 char *vm_class_get_array_element_class_name(const char *class_name);
 struct vm_class *vm_class_get_array_element_class(const struct vm_class *array_class);
