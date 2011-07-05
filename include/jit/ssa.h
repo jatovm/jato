@@ -17,4 +17,12 @@ struct changed_var_stack {
 	unsigned long vreg;
 };
 
+struct dce {
+	struct var_info *var;
+	struct list_head dce_node;
+};
+
+int dce(struct compilation_unit *, struct hash_map *);
+void recompute_insn_positions(struct compilation_unit *);
+
 #endif

@@ -57,6 +57,7 @@ LIB_OBJS += jit/cfg-analyzer.o
 LIB_OBJS += jit/compilation-unit.o
 LIB_OBJS += jit/compiler.o
 LIB_OBJS += jit/cu-mapping.o
+LIB_OBJS += jit/dce.o
 LIB_OBJS += jit/dominance.o
 LIB_OBJS += jit/elf.o
 LIB_OBJS += jit/emit.o

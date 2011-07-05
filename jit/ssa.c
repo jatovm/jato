@@ -81,7 +81,7 @@ static struct use_position *init_insn_add_ons_reg(struct insn *insn,
 	return reg;
 }
 
-static void recompute_insn_positions(struct compilation_unit *cu)
+void recompute_insn_positions(struct compilation_unit *cu)
 {
 	free_radix_tree(cu->lir_insn_map);
 	compute_insn_positions(cu);
@@ -1137,6 +1137,22 @@ static void repair_use_before_def(struct compilation_unit *cu, struct var_info *
 	recompute_insn_positions(cu);
 }
 
+/*
+ * This function contains all the opmtimizations
+ * done on the SSA form.
+ */
+static int optimizations(struct compilation_unit *cu,
+			struct hash_map *insn_add_ons)
+{
+	int err;
+
+	err = dce(cu, insn_add_ons);
+	if (err)
+		return err;
+
+	return 0;
+}
+
 int compute_ssa(struct compilation_unit *cu)
 {
 	int err;
@@ -1155,6 +1171,10 @@ int compute_ssa(struct compilation_unit *cu)
 
 	if (opt_trace_ssa)
 		trace_ssa(cu);
+
+	err = optimizations(cu, insn_add_ons);
+	if (err)
+		return err;
 
 	err = ssa_to_lir(cu, insn_add_ons);
 	if (err)

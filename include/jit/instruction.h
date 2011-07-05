@@ -21,7 +21,7 @@ void free_ssa_insn(struct insn *);
 int insn_defs(struct compilation_unit *, struct insn *, struct var_info **);
 int insn_uses(struct insn *, struct var_info **);
 int insn_defs_reg(struct insn *, struct use_position **);
-int insn_uses_reg(struct insn *, struct use_position **);
+unsigned long insn_uses_reg(struct insn *, struct use_position **);
 int insn_use_def(struct insn *);
 int insn_use_def_dst(struct insn *);
 int insn_use_def_src(struct insn *);
