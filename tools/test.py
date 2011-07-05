@@ -72,7 +72,7 @@ TESTS = [
 , ( "jvm.ParameterPassingTest", 100, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.PopTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.PrintTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
-, ( "jvm.PutfieldTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.PutfieldTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.PutstaticPatchingTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.PutstaticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.RegisterAllocatorTortureTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
