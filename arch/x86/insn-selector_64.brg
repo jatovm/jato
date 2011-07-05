@@ -367,34 +367,10 @@ reg: 	OP_MUL_64(reg, reg) 1
 	select_insn(s, tree, reg_reg_insn(INSN_MUL_REG_REG, state->left->reg1, state->right->reg1));
 }
 
-reg:	OP_DIV(reg, EXPR_LOCAL) 1
-{
-	struct var_info *eax;
-
-	div_reg_local(state, s, tree);
-
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-	state->reg1 = get_var(s->b_parent, J_INT);
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
-}
-
 reg:	OP_DIV(reg, reg) 1
 {
-	struct var_info *eax;
-	struct var_info *edx;
-	struct var_info *result;
-
-	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-
-	result = get_var(s->b_parent, J_INT);
-	state->reg1 = result;
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
-	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
-	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, result));
+	emulate_op_64(state, s, tree, emulate_idiv, J_INT, J_INT);
+	select_exception_test(s, tree);
 }
 
 freg:	OP_DDIV(freg, freg) 1
@@ -431,20 +407,8 @@ reg:	OP_REM(reg, EXPR_LOCAL) 1
 
 reg:	OP_REM(reg, reg) 1
 {
-	struct var_info *eax;
-	struct var_info *edx;
-	struct var_info *result;
-
-	edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-
-	result = get_var(s->b_parent, J_INT);
-	state->reg1 = result;
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, eax));
-	select_insn(s, tree, reg_reg_insn(INSN_CLTD_REG_REG, eax, edx));
-	select_insn(s, tree, reg_reg_insn(INSN_DIV_REG_REG, state->right->reg1, eax));
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, result));
+	emulate_op_64(state, s, tree, emulate_irem, J_INT, J_INT);
+	select_exception_test(s, tree);
 }
 
 freg:	OP_DREM(freg, freg) 1
@@ -534,19 +498,7 @@ freg:	OP_FNEG(freg) 1
 
 reg:	OP_SHL(reg, reg) 1
 {
-	struct var_info *ecx;
-
-	ecx = get_fixed_var(s->b_parent, MACH_REG_xCX);
-
-	state->reg1 = state->left->reg1;
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, ecx));
-	select_insn(s, tree, reg_reg_insn(INSN_SHL_REG_REG, ecx, state->left->reg1));
-}
-
-reg:	OP_SHL(reg, EXPR_LOCAL) 1
-{
-	shift_reg_local(state, s, tree, INSN_SHL_REG_REG);
+	emulate_op_64(state, s, tree, emulate_ishl, J_INT, J_INT);
 }
 
 reg:	OP_SHL_64(reg, reg) 1
@@ -554,21 +506,9 @@ reg:	OP_SHL_64(reg, reg) 1
 	emulate_op_64(state, s, tree, emulate_lshl, J_INT, J_LONG);
 }
 
-reg:	OP_SHR(reg, EXPR_LOCAL) 1
-{
-	shift_reg_local(state, s, tree, INSN_SAR_REG_REG);
-}
-
 reg:	OP_SHR(reg, reg) 1
 {
-	struct var_info *ecx;
-
-	ecx = get_fixed_var(s->b_parent, MACH_REG_xCX);
-
-	state->reg1 = state->left->reg1;
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, ecx));
-	select_insn(s, tree, reg_reg_insn(INSN_SAR_REG_REG, ecx, state->left->reg1));
+	emulate_op_64(state, s, tree, emulate_ishr, J_INT, J_INT);
 }
 
 reg:	OP_SHR_64(reg, reg) 1
@@ -576,21 +516,9 @@ reg:	OP_SHR_64(reg, reg) 1
 	emulate_op_64(state, s, tree, emulate_lshr, J_INT, J_LONG);
 }
 
-reg:	OP_USHR(reg, EXPR_LOCAL) 1
-{
-	shift_reg_local(state, s, tree, INSN_SHR_REG_REG);
-}
-
 reg:	OP_USHR(reg, reg) 1
 {
-	struct var_info *ecx;
-
-	ecx = get_fixed_var(s->b_parent, MACH_REG_xCX);
-
-	state->reg1 = state->left->reg1;
-
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, ecx));
-	select_insn(s, tree, reg_reg_insn(INSN_SHR_REG_REG, ecx, state->left->reg1));
+	emulate_op_64(state, s, tree, emulate_iushr, J_INT, J_INT);
 }
 
 reg:	OP_USHR_64(reg, reg) 1

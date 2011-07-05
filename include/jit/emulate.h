@@ -4,8 +4,13 @@
 #include <stdint.h>
 
 int emulate_lcmp(long long value1, long long value2);
+int32_t emulate_idiv(int32_t value1, int32_t value2);
+int32_t emulate_irem(int32_t value1, int32_t value2);
 long long emulate_ldiv(long long value1, long long value2);
 long long emulate_lrem(long long value1, long long value2);
+int32_t emulate_ishl(int32_t value1, int32_t value2);
+int32_t emulate_ishr(int32_t value1, int32_t value2);
+int32_t emulate_iushr(int32_t value1, int32_t value2);
 int64_t emulate_lshl(int64_t value1, int32_t value2);
 int64_t emulate_lshr(int64_t value1, int32_t value2);
 int64_t emulate_lushr(int64_t value1, int32_t value2);

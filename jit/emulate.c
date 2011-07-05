@@ -100,6 +100,26 @@ int emulate_dcmpg(double value1, double value2)
 	return __emulate_dcmpx(value1, value2);
 }
 
+int32_t emulate_idiv(int32_t value1, int32_t value2)
+{
+	if (value2 == 0) {
+		signal_new_exception(vm_java_lang_ArithmeticException, "division by zero");
+		return 0;
+	}
+
+	return value1 / value2;
+}
+
+int32_t emulate_irem(int32_t value1, int32_t value2)
+{
+	if (value2 == 0) {
+		signal_new_exception(vm_java_lang_ArithmeticException, "division by zero");
+		return 0;
+	}
+
+	return value1 % value2;
+}
+
 long long emulate_ldiv(long long value1, long long value2)
 {
 	if (value2 == 0) {
@@ -120,6 +140,21 @@ long long emulate_lrem(long long value1, long long value2)
 	}
 
 	return value1 % value2;
+}
+
+int32_t emulate_ishl(int32_t value1, int32_t value2)
+{
+	return value1 << (value2 & 0x3f);
+}
+
+int32_t emulate_ishr(int32_t value1, int32_t value2)
+{
+	return value1 >> (value2 & 0x3f);
+}
+
+int32_t emulate_iushr(int32_t value1, int32_t value2)
+{
+	return (uint32_t) value1 >> (value2 & 0x3f);
 }
 
 int64_t emulate_lshl(int64_t value1, int32_t value2)
