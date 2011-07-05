@@ -46,6 +46,41 @@
 #include "vm/stdlib.h"
 #include <stdio.h>
 
+static void reg_final_process(const void *);
+
+struct key_operations insn_add_ons_key = {
+        .hash           = ptr_hash,
+        .equals         = ptr_equals,
+        .final_process  = reg_final_process
+};
+
+
+static void reg_final_process(const void *value)
+{
+	struct use_position *reg;
+
+	reg = (struct use_position *)value;
+	list_del(&reg->use_pos_list);
+	free(reg);
+}
+
+static struct use_position *init_insn_add_ons_reg(struct insn *insn,
+						struct var_info *var)
+{
+	struct use_position *reg;
+
+	reg = malloc(sizeof(struct use_position));
+
+	INIT_LIST_HEAD(&reg->use_pos_list);
+	reg->insn = insn;
+	reg->interval = var->interval;
+	reg->kind = USE_KIND_INVALID;
+
+	list_add(&reg->use_pos_list, &var->interval->use_positions);
+
+	return reg;
+}
+
 static void recompute_insn_positions(struct compilation_unit *cu)
 {
 	free_radix_tree(cu->lir_insn_map);
@@ -116,7 +151,7 @@ static int analyze_def(struct compilation_unit *cu)
  * This function returns true if the basic block is part of
  * the exception handler control flow.
  */
-bool bb_is_eh(struct compilation_unit *cu, struct basic_block *bb)
+static bool bb_is_eh(struct compilation_unit *cu, struct basic_block *bb)
 {
 	return !bb->dfn && cu->entry_bb != bb;
 }
@@ -130,19 +165,9 @@ static void free_def_set(struct compilation_unit *cu)
 	}
 }
 
-static void free_insn_add_ons(struct compilation_unit *cu)
+static void free_insn_add_ons(struct hash_map *insn_add_ons)
 {
-	struct insn_add_ons *insn_add_ons, *tmp;
-	struct basic_block *bb;
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		if (bb_is_eh(cu, bb))
-			continue;
-
-		list_for_each_entry_safe(insn_add_ons, tmp,
-				&bb->insn_add_ons_list, insn_list_node)
-			free(insn_add_ons);
-	}
+	free_hash_map(insn_add_ons);
 }
 
 static void free_positions_as_predecessor(struct compilation_unit *cu)
@@ -169,10 +194,9 @@ static void free_dom_successors(struct compilation_unit *cu)
 	}
 }
 
-static void free_ssa(struct compilation_unit *cu)
+static void free_ssa(struct compilation_unit *cu, struct hash_map *insn_add_ons)
 {
 	struct basic_block *bb;
-	struct insn_add_ons *insn_add_ons, *tmp;
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		free(bb->def_set);
@@ -180,14 +204,12 @@ static void free_ssa(struct compilation_unit *cu)
 		if (bb_is_eh(cu, bb))
 			continue;
 
-		list_for_each_entry_safe(insn_add_ons, tmp,
-				&bb->insn_add_ons_list, insn_list_node)
-			free(insn_add_ons);
-
 		free(bb->positions_as_predecessor);
 
 		free(bb->dom_successors);
 	}
+
+	free_insn_add_ons(insn_add_ons);
 }
 
 static int compute_dom_successors(struct compilation_unit *cu)
@@ -377,7 +399,7 @@ static int replace_var_info(struct compilation_unit *cu,
 			struct list_head *list_changed_stacks,
 			struct stack **name_stack,
 			struct insn *insn,
-			struct insn_add_ons *insn_add_ons)
+			struct hash_map *insn_add_ons)
 {
 	struct live_interval *it;
 	struct var_info *var, *new_var;
@@ -397,8 +419,12 @@ static int replace_var_info(struct compilation_unit *cu,
 	if (!((insn_use_def_src(insn) && &insn->src.reg == reg )
                         || (insn_use_def_dst(insn) && &insn->dest.reg == reg)))
 		change_operand_var(reg, new_var);
-	else
-		insn_add_ons->var = new_var;
+	else {
+		struct use_position *new_reg;
+
+		new_reg = init_insn_add_ons_reg(insn, new_var);
+		hash_map_put(insn_add_ons, insn, new_reg);
+	}
 
 	return 0;
 }
@@ -468,14 +494,13 @@ static int insert_stack_fixed_var(struct compilation_unit *cu,
 
 static int __rename_variables(struct compilation_unit *cu,
 			struct basic_block *bb,
-			struct stack **name_stack)
+			struct stack **name_stack,
+			struct hash_map *insn_add_ons)
 {
 	struct insn *insn;
 	struct use_position *regs_uses[MAX_REG_OPERANDS],
 				*regs_defs[MAX_REG_OPERANDS + 1];
 	struct use_position *reg;
-	struct insn_add_ons *insn_add_ons;
-	struct list_head *insn_add_ons_list;
 	struct list_head *list_changed_stacks;
 	struct changed_var_stack *changed, *this, *next;
 	int nr_defs, nr_uses, i, err;
@@ -492,16 +517,12 @@ static int __rename_variables(struct compilation_unit *cu,
 			return err;
 	}
 
-	insn_add_ons_list = &bb->insn_add_ons_list;
-
 	for_each_insn(insn, &bb->insn_list) {
-		insn_add_ons_list = insn_add_ons_list->next;
-		if (insn->type != INSN_PHI) {
+		if (!insn_is_phi(insn)) {
 			nr_uses = insn_uses_reg(insn, regs_uses);
 			for (i = 0; i < nr_uses; i++) {
 				reg = regs_uses[i];
 
-				insn_add_ons = list_entry(insn_add_ons_list, struct insn_add_ons, insn_list_node);
 				err = replace_var_info(cu, reg, list_changed_stacks, name_stack, insn, insn_add_ons);
 				if (err)
 					return err;
@@ -525,7 +546,7 @@ static int __rename_variables(struct compilation_unit *cu,
 		struct basic_block *succ = bb->successors[i];
 
 		for_each_insn(insn, &succ->insn_list){
-			if (insn->type != INSN_PHI)
+			if (!insn_is_phi(insn))
 				break;
 
 			reg = &insn->ssa_srcs[bb->positions_as_predecessor[i]].reg;
@@ -540,7 +561,7 @@ static int __rename_variables(struct compilation_unit *cu,
 	for (unsigned long i = 0; i < bb->nr_dom_successors; i++) {
 		struct basic_block *dom_succ = bb->dom_successors[i];
 
-		__rename_variables(cu, dom_succ, name_stack);
+		__rename_variables(cu, dom_succ, name_stack, insn_add_ons);
 	}
 
 	/*
@@ -603,7 +624,8 @@ static void eh_rename_variables(struct compilation_unit *cu,
  * "Optimizations in Static Single Assignment Form, Sassa Laboratory"
  * for details of the implementation.
  */
-static int rename_variables(struct compilation_unit *cu)
+static int rename_variables(struct compilation_unit *cu,
+			struct hash_map *insn_add_ons)
 {
 	struct stack *name_stack[cu->nr_vregs];
 	struct basic_block *bb;
@@ -612,7 +634,7 @@ static int rename_variables(struct compilation_unit *cu)
 	for (unsigned long i = 0; i < cu->nr_vregs; i++)
 		name_stack[i] = alloc_stack();
 
-	err = __rename_variables(cu, cu->entry_bb, name_stack);
+	err = __rename_variables(cu, cu->entry_bb, name_stack, insn_add_ons);
 	if (err)
 		return err;
 
@@ -726,28 +748,25 @@ static int insert_phi_insns(struct compilation_unit *cu)
 	return 0;
 }
 
-static void __insert_instruction_pass(struct basic_block *bb)
+static int __insert_instruction_pass(struct basic_block *bb,
+				struct hash_map *insn_add_ons)
 {
 	struct insn *insn, *new_insn;
 	struct var_info *var1, *var2;
-	struct list_head *insn_add_ons_list;
-	struct insn_add_ons *insn_add_ons;
-
-	insn_add_ons_list = &bb->insn_add_ons_list;
+	struct use_position *reg;
 
 	for_each_insn(insn, &bb->insn_list) {
-		if (!(insn->flags & INSN_FLAG_SSA_ADDED)) {
-			insn_add_ons_list = insn_add_ons_list->next;
-		}
-
 		if (insn_use_def_src(insn)) {
 			var1 = insn->src.reg.interval->var_info;
 		} else if (insn_use_def_dst(insn)) {
 			var1 = insn->dest.reg.interval->var_info;
 		} else continue;
 
-		insn_add_ons = list_entry(insn_add_ons_list, struct insn_add_ons, insn_list_node);
-		var2 = insn_add_ons->var;
+		hash_map_get(insn_add_ons, insn, (void **) &reg);
+		if (!reg)
+			return warn("no entry in hashtable for insn %d\n", insn->type), -EINVAL;
+
+		var2 = reg->interval->var_info;
 
 		if (interval_has_fixed_reg(var2->interval)
 				&& interval_has_fixed_reg(var1->interval))
@@ -758,6 +777,8 @@ static void __insert_instruction_pass(struct basic_block *bb)
 		list_add(&new_insn->insn_list_node, insn->insn_list_node.prev);
 		new_insn->flags |= INSN_FLAG_SSA_ADDED;
 	}
+
+	return 0;
 }
 /*
  * This function adds mov_reg_reg instructions before instructions
@@ -774,7 +795,8 @@ static void __insert_instruction_pass(struct basic_block *bb)
  *	We don't insert mov_reg_reg instructions for fixed virtual
  *	registers because, for example, "mov %ebx, %ebx" is redundant.
  */
-static void insert_instruction_pass(struct compilation_unit *cu)
+static void insert_instruction_pass(struct compilation_unit *cu,
+				struct hash_map *insn_add_ons)
 {
 	struct basic_block *bb;
 
@@ -782,7 +804,7 @@ static void insert_instruction_pass(struct compilation_unit *cu)
 		if (bb_is_eh(cu, bb))
 			continue;
 
-		__insert_instruction_pass(bb);
+		__insert_instruction_pass(bb, insn_add_ons);
 	}
 }
 
@@ -871,7 +893,7 @@ static int insert_copy_insns(struct compilation_unit *cu,
 	}
 
 	for_each_insn(insn, &(*bb)->insn_list) {
-		if (insn->type != INSN_PHI)
+		if (!insn_is_phi(insn))
 			break;
 
 		insert_insn(insertion_bb, insn->ssa_srcs[phi_arg].reg.interval->var_info,
@@ -894,7 +916,7 @@ static int __ssa_deconstruction(struct compilation_unit *cu,
 
 	insn = bb_first_insn(bb);
 
-	if (insn && insn->type == INSN_PHI) {
+	if (insn && insn_is_phi(insn)) {
 		phi_arg = 0;
 
 		for (unsigned long i = 0; i < bb->nr_predecessors; i++) {
@@ -916,7 +938,7 @@ static int __ssa_deconstruction(struct compilation_unit *cu,
 	}
 
 	list_for_each_entry_safe(insn, tmp, &bb->insn_list, insn_list_node) {
-		if (insn->type != INSN_PHI)
+		if (!insn_is_phi(insn))
 			break;
 
 		list_del(&insn->insn_list_node);
@@ -956,30 +978,7 @@ static void replace_var_infos(struct compilation_unit *cu)
 		cu->fixed_var_infos[i] = NULL;
 }
 
-/*
- * insn_add_ons contain the third operand for those
- * instructions that require three operands.
-*/
-static int create_insn_add_ons_list(struct basic_block *bb)
-{
-	struct insn *insn;
-
-	INIT_LIST_HEAD(&bb->insn_add_ons_list);
-
-	for_each_insn(insn, &bb->insn_list) {
-		struct insn_add_ons *insn_add_ons;
-
-		insn_add_ons = malloc(sizeof(struct insn_add_ons));
-		INIT_LIST_HEAD(&insn_add_ons->insn_list_node);
-		insn_add_ons->var = NULL;
-
-		list_add_tail(&insn_add_ons->insn_list_node, &bb->insn_add_ons_list);
-	}
-
-	return 0;
-}
-
-static int init_ssa(struct compilation_unit *cu)
+static int init_ssa(struct compilation_unit *cu, struct hash_map **insn_add_ons)
 {
 	int err;
 
@@ -993,6 +992,8 @@ static int init_ssa(struct compilation_unit *cu)
 	if (err)
 		goto error_dom;
 
+	*insn_add_ons = alloc_hash_map_with_size(32, &insn_add_ons_key);
+
 	return 0;
 
 error_dom:
@@ -1002,10 +1003,11 @@ error_positions:
 	return err;
 }
 
-static int lir_to_ssa(struct compilation_unit *cu, struct var_info *gpr)
+static int lir_to_ssa(struct compilation_unit *cu,
+		struct var_info *gpr,
+		struct hash_map *insn_add_ons)
 {
 	int err;
-	struct basic_block *bb;
 
 	insert_init_insn(cu, gpr);
 
@@ -1017,37 +1019,27 @@ static int lir_to_ssa(struct compilation_unit *cu, struct var_info *gpr)
 	if (err)
 		goto error_def;;
 
-	for_each_basic_block(bb, &cu->bb_list) {
-		if (bb_is_eh(cu, bb))
-			continue;
-
-		err = create_insn_add_ons_list(bb);
-		if (err)
-			goto error;
-	}
-
 	cu->ssa_nr_vregs = NR_FIXED_REGISTERS;
 
-	err = rename_variables(cu);
+	err = rename_variables(cu, insn_add_ons);
 	if (err)
-		goto error_rename_vars;
+		goto error_def;
+
+	recompute_insn_positions(cu);
 
 	return 0;
 
 error_def:
 	free_def_set(cu);
-error_rename_vars:
-	free_insn_add_ons(cu);
-
 error:
 	return err;
 }
 
-static int ssa_to_lir(struct compilation_unit *cu)
+static int ssa_to_lir(struct compilation_unit *cu, struct hash_map *insn_add_ons)
 {
 	int err;
 
-	insert_instruction_pass(cu);
+	insert_instruction_pass(cu, insn_add_ons);
 
 	err = ssa_deconstruction(cu);
 	if (err)
@@ -1127,11 +1119,11 @@ static void repair_use_before_def(struct compilation_unit *cu, struct var_info *
 			min_def = INT_MAX;
 
 			list_for_each_entry(this, &it->use_positions, use_pos_list) {
-				if (insn_vreg_use(this->insn, var)) {
+				if (insn_vreg_use(this, var)) {
 					if (this->insn->lir_pos < min_use)
 						min_use = this->insn->lir_pos;
 				}
-				if (insn_vreg_def(this->insn, var)) {
+				if (insn_vreg_def(this, var)) {
 					if (this->insn->lir_pos < min_def)
 						min_def = this->insn->lir_pos;
 				}
@@ -1149,27 +1141,27 @@ int compute_ssa(struct compilation_unit *cu)
 {
 	int err;
 	struct var_info *gpr;
+	struct hash_map *insn_add_ons = NULL;
 
 	gpr = get_var(cu, J_INT);
 
-	err = init_ssa(cu);
+	err = init_ssa(cu, &insn_add_ons);
+	if (err)
+		goto error;
+
+	err = lir_to_ssa(cu, gpr, insn_add_ons);
 	if (err)
 		goto error_init_ssa;
-
-	err = lir_to_ssa(cu, gpr);
-	if (err)
-		goto error_lir_ssa;
 
 	if (opt_trace_ssa)
 		trace_ssa(cu);
 
-	err = ssa_to_lir(cu);
+	err = ssa_to_lir(cu, insn_add_ons);
 	if (err)
-		goto error;
+		goto error_lir_to_ssa;
 
 	replace_var_infos(cu);
-
-	free_ssa(cu);
+	free_ssa(cu, insn_add_ons);
 
 	create_fixed_var_infos(cu);
 	cumulate_fixed_var_infos(cu);
@@ -1179,12 +1171,12 @@ int compute_ssa(struct compilation_unit *cu)
 	return 0;
 
 error_init_ssa:
-	free_def_set(cu);
 	free_positions_as_predecessor(cu);
 	free_dom_successors(cu);
 
-error_lir_ssa:
-	free_insn_add_ons(cu);
+	free_insn_add_ons(insn_add_ons);
+error_lir_to_ssa:
+	free_def_set(cu);
 
 error:
 	return err;

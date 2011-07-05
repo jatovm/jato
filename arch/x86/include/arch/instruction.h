@@ -300,6 +300,7 @@ struct insn *jump_insn(struct basic_block *bb);
 
 bool insn_is_branch(struct insn *insn);
 bool insn_is_jmp_mem(struct insn *insn);
+bool insn_is_phi(struct insn *insn);
 bool insn_is_call(struct insn *insn);
 
 #endif

@@ -1,6 +1,8 @@
 #ifndef JATO__JIT_SSA_H
 #define JATO__JIT_SSA_H
 
+#include "lib/hash-map.h"
+
 /*
  * The work and inserted arrays from the LIR
  * to SSA algorithm initially contain no block.
@@ -10,17 +12,9 @@
 #define INIT_VAL	0
 #define INIT_BC_OFFSET	0
 
-struct insn_add_ons {
-	struct var_info *var;
-	struct list_head insn_list_node;
-};
-
 struct changed_var_stack {
 	struct list_head changed_var_stack_node;
 	unsigned long vreg;
 };
-
-struct use_position *get_reg_from_insn(struct insn* insn);
-bool bb_is_eh(struct compilation_unit *, struct basic_block *);
 
 #endif

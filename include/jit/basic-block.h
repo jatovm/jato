@@ -75,12 +75,6 @@ struct basic_block {
 		unsigned long nr_dom_successors;
 
 		/*
-		 * List containing the third operand of an instruction
-		 * or NULL if the instruction does not have more than 2 operands.
-		 */
-		struct list_head insn_add_ons_list;
-
-		/*
 		 * Flag used for exception handler basic blocks, to mark
 		 * the fact that they have been renamed or not
 		 */

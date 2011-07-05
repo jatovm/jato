@@ -209,7 +209,6 @@ struct insn *bb_last_insn(struct basic_block *bb)
 static void ssa_bb_move(struct basic_block *from, struct basic_block *to)
 {
 	struct insn *this, *next;
-	struct insn_add_ons *this_add, *next_add;
 
 	list_for_each_entry_safe(this, next, &from->insn_list, insn_list_node) {
 		list_move(&this->insn_list_node, to->insn_list.prev);
@@ -233,11 +232,6 @@ static void ssa_bb_move(struct basic_block *from, struct basic_block *to)
 	to->dom_successors = from->dom_successors;
 	from->dom_successors = NULL;
 	to->nr_dom_successors = from->nr_dom_successors;
-
-	INIT_LIST_HEAD(&to->insn_add_ons_list);
-	list_for_each_entry_safe(this_add, next_add, &from->insn_add_ons_list, insn_list_node) {
-		list_move(&this_add->insn_list_node, to->insn_add_ons_list.prev);
-	}
 
 	to->dfn = from->dfn;
 	from->dfn = 0;

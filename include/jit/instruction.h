@@ -25,8 +25,8 @@ int insn_uses_reg(struct insn *, struct use_position **);
 int insn_use_def(struct insn *);
 int insn_use_def_dst(struct insn *);
 int insn_use_def_src(struct insn *);
-bool insn_vreg_use(struct insn *, struct var_info *);
-bool insn_vreg_def(struct insn *, struct var_info *);
+bool insn_vreg_use(struct use_position *, struct var_info *);
+bool insn_vreg_def(struct use_position *, struct var_info *);
 int insn_operand_use_kind(struct insn *, struct operand *operand);
 
 #define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)

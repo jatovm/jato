@@ -8,6 +8,7 @@ struct insn;
 
 #define USE_KIND_INPUT		0x1
 #define USE_KIND_OUTPUT		0x2
+#define USE_KIND_INVALID	0x3
 
 /**
  * struct use_position - register use position

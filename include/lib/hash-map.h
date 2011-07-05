@@ -11,10 +11,12 @@ struct hash_map_entry {
 
 typedef unsigned long hash_fn(const void *);
 typedef bool equals_fn(const void *, const void *);
+typedef void final_process_fn(const void *);
 
 struct key_operations {
 	hash_fn *hash;
 	equals_fn *equals;
+	final_process_fn *final_process;
 };
 
 struct key_operations pointer_key;
@@ -40,6 +42,9 @@ int hash_map_remove(struct hash_map *map, const void *key);
 bool hash_map_contains(struct hash_map *map, const void *key);
 int hash_map_size(struct hash_map *map);
 bool hash_map_is_empty(struct hash_map *map);
+
+unsigned long ptr_hash(const void *);
+bool ptr_equals(const void *, const void *);
 
 #define hash_map_for_each_entry(this, hashmap)				\
 	for (unsigned long i__ = 0; i__ < (hashmap)->table_size; i__++)	\

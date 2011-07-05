@@ -955,19 +955,27 @@ int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **
 	return nr;
 }
 
-bool insn_vreg_def(struct insn *insn, struct var_info *var)
+bool insn_vreg_def(struct use_position *use, struct var_info *var)
 {
 	unsigned long flags;
+	struct insn *insn;
 
+	insn = use->insn;
 	flags = insn_flags[insn->type];
 
 	if (flags & DEF_SRC)
 		if (insn->src.reg.interval->var_info == var)
 			return true;
 
-	if (flags & DEF_DST)
-		if (insn->dest.reg.interval->var_info == var)
-			return true;
+	if (flags & DEF_DST) {
+		if (insn->type != INSN_PHI) {
+			if (insn->dest.reg.interval->var_info == var)
+				return true;
+		} else {
+			if (insn->ssa_dest.reg.interval->var_info == var)
+				return true;
+		}
+	}
 
 	return false;
 }
@@ -1013,12 +1021,26 @@ int insn_uses(struct insn *insn, struct var_info **uses)
 	return nr;
 }
 
-bool insn_vreg_use(struct insn *insn, struct var_info *var)
+bool insn_vreg_use(struct use_position *use, struct var_info *var)
 {
 	unsigned long flags;
+	struct insn *insn;
 
+	insn = use->insn;
 	flags = insn_flags[insn->type];
 
+	if (use->kind == USE_KIND_INVALID)
+		return true;
+
+	if (insn_is_phi(insn)) {
+		if (flags & USE_SRC) {
+			for (unsigned long i = 0; i < insn->nr_srcs; i++)
+				if (insn->ssa_srcs[i].reg.interval->var_info == var)
+					return true;
+		}
+
+		return false;
+	}
 	if (flags & USE_SRC)
 		if (insn->src.reg.interval->var_info == var)
 			return true;
@@ -1112,4 +1134,12 @@ bool insn_is_call(struct insn *insn)
 	unsigned long flags = insn_flags[insn->type];
 
 	return flags & TYPE_CALL;
+}
+
+bool insn_is_phi(struct insn *insn)
+{
+	if (insn->type == INSN_PHI)
+		return true;
+
+	return false;
 }

@@ -70,6 +70,8 @@ void free_hash_map(struct hash_map *map)
 		struct hash_map_entry *ent, *next;
 
 		list_for_each_entry_safe(ent, next, bucket, list_node) {
+			if (map->key_ops.final_process)
+				map->key_ops.final_process(ent->value);
 			free(ent);
 		}
 	}
@@ -180,6 +182,8 @@ int hash_map_remove(struct hash_map *map, const void *key)
 		return -1;
 
 	list_del(&ent->list_node);
+	if (map->key_ops.final_process)
+		map->key_ops.final_process(ent->value);
 	free(ent);
 	map->size--;
 	return 0;
@@ -215,12 +219,12 @@ static unsigned long string_hash(const void *key)
 	return hash;
 }
 
-static unsigned long ptr_hash(const void *key)
+unsigned long ptr_hash(const void *key)
 {
 	return (unsigned long) key;
 }
 
-static bool ptr_equals(const void *p1, const void *p2)
+bool ptr_equals(const void *p1, const void *p2)
 {
 	return p1 == p2;
 }
