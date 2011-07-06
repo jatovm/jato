@@ -860,13 +860,13 @@ static int print_push_reg(struct string *str, struct insn *insn)
 static int print_push_memlocal(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
-	return print_memlocal(str, &insn->operand);
+	return print_memlocal(str, &insn->src);
 }
 
 static int print_pop_memlocal(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
-	return print_memlocal(str, &insn->operand);
+	return print_memlocal(str, &insn->src);
 }
 
 static int print_pop_reg(struct string *str, struct insn *insn)
