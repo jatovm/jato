@@ -540,7 +540,7 @@ int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
 	if (!push_hi)
 		goto fail_push_hi;
 
-	push_lo = memlocal_insn(INSN_PUSH_MEMLOCAL, get_next_slot(from));
+	push_lo = memlocal_insn(INSN_PUSH_MEMLOCAL, from->next);
 	if (!push_lo)
 		goto fail_push_lo;
 
@@ -548,7 +548,7 @@ int insert_copy_slot_64_insns(struct stack_slot *from, struct stack_slot *to,
 	if (!pop_hi)
 		goto fail_pop_hi;
 
-	pop_lo = memlocal_insn(INSN_POP_MEMLOCAL, get_next_slot(to));
+	pop_lo = memlocal_insn(INSN_POP_MEMLOCAL, to->next);
 	if (!pop_lo)
 		goto fail_pop_lo;
 
