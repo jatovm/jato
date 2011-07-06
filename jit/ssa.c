@@ -910,7 +910,7 @@ static int insert_copy_insns(struct compilation_unit *cu,
 static int __ssa_deconstruction(struct compilation_unit *cu,
 				struct basic_block *bb)
 {
-	struct insn *insn, *tmp;
+	struct insn *insn, *tmp, *last_insn;
 	int phi_arg, err;
 	unsigned int bc_offset;
 
@@ -926,7 +926,11 @@ static int __ssa_deconstruction(struct compilation_unit *cu,
 			if (bb_is_eh(cu, pred_bb))
 				continue;
 
-			bc_offset = bb->start;
+			last_insn = bb_last_insn(pred_bb);
+			if (last_insn)
+				bc_offset = last_insn->bc_offset;
+			else
+				bc_offset = 0;
 
 			err = insert_copy_insns(cu, pred_bb, &bb, bc_offset, phi_arg);
 
