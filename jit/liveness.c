@@ -1,7 +1,7 @@
 /*
  * Liveness analysis
  * Copyright (c) 2007,2009  Pekka Enberg
- * 
+ *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
  *
@@ -28,6 +28,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/compiler.h"
 #include "jit/instruction.h"
+#include "jit/ssa.h"
 #include "jit/vars.h"
 
 #include "lib/bitset.h"
@@ -93,7 +94,7 @@ static void update_live_ranges(struct compilation_unit *cu)
 	}
 }
 
-static int analyze_live_sets(struct compilation_unit *cu)
+int analyze_live_sets(struct compilation_unit *cu)
 {
 	struct bitset *old_live_out_set = NULL;
 	struct bitset *old_live_in_set = NULL;
@@ -181,7 +182,7 @@ static void __analyze_use_def(struct basic_block *bb, struct insn *insn)
 	}
 }
 
-static void analyze_use_def(struct compilation_unit *cu)
+void analyze_use_def(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
 
@@ -215,7 +216,7 @@ static int __init_sets(struct basic_block *bb, unsigned long nr_vregs)
 	return 0;
 }
 
-static int init_sets(struct compilation_unit *cu)
+int init_sets(struct compilation_unit *cu)
 {
 	struct basic_block *this;
 	int err = 0;

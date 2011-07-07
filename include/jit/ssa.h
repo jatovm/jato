@@ -22,7 +22,22 @@ struct dce {
 	struct list_head dce_node;
 };
 
+/*
+ * Functions defined in jit/dce.c.
+ */
 int dce(struct compilation_unit *, struct hash_map *);
+
+/*
+ * Functions defined in jit/ssa.c
+ */
 void recompute_insn_positions(struct compilation_unit *);
+
+/*
+ * Functions defined in jit/liveness.c
+ */
+
+int init_sets(struct compilation_unit *);
+void analyze_use_def(struct compilation_unit *);
+int analyze_live_sets(struct compilation_unit *);
 
 #endif

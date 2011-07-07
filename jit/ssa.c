@@ -87,6 +87,21 @@ void recompute_insn_positions(struct compilation_unit *cu)
 	compute_insn_positions(cu);
 }
 
+static int ssa_analyze_liveness(struct compilation_unit *cu)
+{
+	int err = 0;
+
+	err = init_sets(cu);
+	if (err)
+		goto out;
+
+	analyze_use_def(cu);
+
+	err = analyze_live_sets(cu);
+out:
+	return err;
+}
+
 static struct changed_var_stack *alloc_changed_var_stack(unsigned long vreg)
 {
 	struct changed_var_stack *changed;
@@ -114,39 +129,6 @@ static int list_changed_stacks_add(struct list_head *list_changed_stacks,
 	return 0;
 }
 
-static void analyze_bb_def(struct basic_block *bb, struct insn *insn)
-{
-	struct var_info *defs[MAX_REG_OPERANDS];
-	int nr_defs;
-	int i;
-
-	nr_defs = insn_defs(bb->b_parent, insn, defs);
-	for (i = 0; i < nr_defs; i++) {
-		struct var_info *var = defs[i];
-
-		set_bit(bb->def_set->bits, var->vreg);
-	}
-}
-
-static int analyze_def(struct compilation_unit *cu)
-{
-	struct basic_block *bb;
-
-	for_each_basic_block(bb, &cu->bb_list) {
-		struct insn *insn;
-
-		bb->def_set = alloc_bitset(cu->nr_vregs);
-		if (!bb->def_set)
-			return warn("out of memory"), -ENOMEM;
-
-		for_each_insn(insn, &bb->insn_list) {
-			analyze_bb_def(bb, insn);
-		}
-	}
-
-	return 0;
-}
-
 /*
  * This function returns true if the basic block is part of
  * the exception handler control flow.
@@ -156,12 +138,15 @@ static bool bb_is_eh(struct compilation_unit *cu, struct basic_block *bb)
 	return !bb->dfn && cu->entry_bb != bb;
 }
 
-static void free_def_set(struct compilation_unit *cu)
+static void free_ssa_liveness(struct compilation_unit *cu)
 {
 	struct basic_block *bb;
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		free(bb->def_set);
+		free(bb->use_set);
+		free(bb->live_in_set);
+		free(bb->live_out_set);
 	}
 }
 
@@ -200,6 +185,9 @@ static void free_ssa(struct compilation_unit *cu, struct hash_map *insn_add_ons)
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		free(bb->def_set);
+                free(bb->use_set);
+                free(bb->live_in_set);
+                free(bb->live_out_set);
 
 		if (bb_is_eh(cu, bb))
 			continue;
@@ -429,47 +417,6 @@ static int replace_var_info(struct compilation_unit *cu,
 	return 0;
 }
 
-static void insert_def_insn(struct compilation_unit *cu,
-			struct var_info *var,
-			struct var_info *gpr,
-			struct insn **conv_insn)
-{
-	struct insn *insn;
-
-	insn = ssa_imm_reg_insn(INIT_VAL, var, gpr, conv_insn);
-	if (!*conv_insn) {
-		insn_set_bc_offset(insn, INIT_BC_OFFSET);
-
-		bb_add_first_insn(cu->entry_bb, insn);
-	} else {
-		insn_set_bc_offset(insn, INIT_BC_OFFSET);
-		insn_set_bc_offset(*conv_insn, INIT_BC_OFFSET);
-
-		bb_add_first_insn(cu->entry_bb, insn);
-		list_add(&(*conv_insn)->insn_list_node, &insn->insn_list_node);
-	}
-}
-
-/*
- * The SSA form assumes that all variables have been initialized in
- * in the entry basic block of the CFG. That is why we add
- * initialization instructions for each non-fixed virtual register.
- */
-static void insert_init_insn(struct compilation_unit *cu, struct var_info *gpr)
-{
-	struct var_info *var;
-	struct insn *conv_insn;
-
-	/*
-	 * Values are initialized to 0.
-	 */
-	for_each_variable(var, cu->var_infos) {
-		if (!interval_has_fixed_reg(var->interval)) {
-			insert_def_insn(cu, var, gpr, &conv_insn);
-		}
-	}
-}
-
 static int insert_stack_fixed_var(struct compilation_unit *cu,
 				struct stack **name_stack,
 				struct list_head *list_changed_stacks)
@@ -665,6 +612,7 @@ static void iterate_dom_frontier_set(struct compilation_unit *cu,
 				unsigned long *work)
 {
 	struct bitset *temp_dom_frontier;
+	struct basic_block *bb_ndx;
 	int ndx;
 
 	temp_dom_frontier = alloc_bitset(nr_bblocks(cu));
@@ -674,9 +622,10 @@ static void iterate_dom_frontier_set(struct compilation_unit *cu,
 	while ((ndx = bitset_ffs(temp_dom_frontier)) != -1) {
 		clear_bit(temp_dom_frontier->bits, ndx);
 
-		if (inserted[ndx] != var->vreg) {
+		bb_ndx = cu->bb_df_array[ndx];
+		if (inserted[ndx] != var->vreg && test_bit(bb_ndx->live_in_set->bits, var->vreg)) {
 			inserted[ndx] = var->vreg;
-			insert_phi(cu->bb_df_array[ndx], var);
+			insert_phi(bb_ndx, var);
 
 			if (work[ndx] != var->vreg) {
 				set_bit(workset->bits, ndx);
@@ -896,6 +845,9 @@ static int insert_copy_insns(struct compilation_unit *cu,
 		if (!insn_is_phi(insn))
 			break;
 
+		if (interval_has_fixed_reg(insn->ssa_dest.reg.interval))
+			continue;
+
 		insert_insn(insertion_bb, insn->ssa_srcs[phi_arg].reg.interval->var_info,
 				insn->ssa_dest.reg.interval->var_info, insertion_bb->end);
 	}
@@ -914,33 +866,44 @@ static int __ssa_deconstruction(struct compilation_unit *cu,
 	int phi_arg, err;
 	unsigned int bc_offset;
 
-	insn = bb_first_insn(bb);
+	/*
+	 * We do not insert copy instructions for fixed virtual registers
+	 * because they would be redundant (Example: mov r10=EAX, r11=EAX). If
+	 * we have a basic block containing only phi instructions for fixed
+	 * virtual registers, then no deconstruction needs to be done.
+	 */
+	for_each_insn(insn, &bb->insn_list) {
+		if (!insn_is_phi(insn))
+			goto out;
 
-	if (insn && insn_is_phi(insn)) {
-		phi_arg = 0;
-
-		for (unsigned long i = 0; i < bb->nr_predecessors; i++) {
-			struct basic_block *pred_bb;
-
-			pred_bb = bb->predecessors[i];
-			if (bb_is_eh(cu, pred_bb))
-				continue;
-
-			last_insn = bb_last_insn(pred_bb);
-			if (last_insn)
-				bc_offset = last_insn->bc_offset;
-			else
-				bc_offset = 0;
-
-			err = insert_copy_insns(cu, pred_bb, &bb, bc_offset, phi_arg);
-
-			if (err)
-				return err;
-
-			phi_arg++;
-		}
+		if (!interval_has_fixed_reg(insn->ssa_dest.reg.interval))
+			break;
 	}
 
+	phi_arg = 0;
+
+	for (unsigned long i = 0; i < bb->nr_predecessors; i++) {
+		struct basic_block *pred_bb;
+
+		pred_bb = bb->predecessors[i];
+		if (bb_is_eh(cu, pred_bb))
+			continue;
+
+		last_insn = bb_last_insn(pred_bb);
+		if (last_insn)
+			bc_offset = last_insn->bc_offset;
+		else
+			bc_offset = 0;
+
+		err = insert_copy_insns(cu, pred_bb, &bb, bc_offset, phi_arg);
+
+		if (err)
+			return err;
+
+		phi_arg++;
+	}
+
+out:
 	list_for_each_entry_safe(insn, tmp, &bb->insn_list, insn_list_node) {
 		if (!insn_is_phi(insn))
 			break;
@@ -1008,14 +971,11 @@ error_positions:
 }
 
 static int lir_to_ssa(struct compilation_unit *cu,
-		struct var_info *gpr,
 		struct hash_map *insn_add_ons)
 {
 	int err;
 
-	insert_init_insn(cu, gpr);
-
-	err = analyze_def(cu);
+	err = ssa_analyze_liveness(cu);
 	if (err)
 		goto error;
 
@@ -1034,7 +994,7 @@ static int lir_to_ssa(struct compilation_unit *cu,
 	return 0;
 
 error_def:
-	free_def_set(cu);
+	free_ssa_liveness(cu);
 error:
 	return err;
 }
@@ -1103,45 +1063,6 @@ static void cumulate_fixed_var_infos(struct compilation_unit *cu)
 }
 
 /*
- * We add instructions in the entry basic block defining those non-fixed virtual registers
- * that are used before are defined. We do this because, otherwise, the register allocator
- * would not work correctly.
- */
-static void repair_use_before_def(struct compilation_unit *cu, struct var_info *gpr)
-{
-	struct var_info *var;
-	struct use_position *this;
-	unsigned int min_def, min_use;
-	struct live_interval *it;
-	struct insn *conv_insn;
-
-	for_each_variable(var, cu->var_infos) {
-		it = var->interval;
-
-		if (!interval_has_fixed_reg(it)) {
-			min_use = INT_MAX;
-			min_def = INT_MAX;
-
-			list_for_each_entry(this, &it->use_positions, use_pos_list) {
-				if (insn_vreg_use(this, var)) {
-					if (this->insn->lir_pos < min_use)
-						min_use = this->insn->lir_pos;
-				}
-				if (insn_vreg_def(this, var)) {
-					if (this->insn->lir_pos < min_def)
-						min_def = this->insn->lir_pos;
-				}
-			}
-
-			if (min_use < min_def)
-				insert_def_insn(cu, var, gpr, &conv_insn);
-		}
-	}
-
-	recompute_insn_positions(cu);
-}
-
-/*
  * This function contains all the opmtimizations
  * done on the SSA form.
  */
@@ -1160,16 +1081,13 @@ static int optimizations(struct compilation_unit *cu,
 int compute_ssa(struct compilation_unit *cu)
 {
 	int err;
-	struct var_info *gpr;
 	struct hash_map *insn_add_ons = NULL;
-
-	gpr = get_var(cu, J_INT);
 
 	err = init_ssa(cu, &insn_add_ons);
 	if (err)
 		goto error;
 
-	err = lir_to_ssa(cu, gpr, insn_add_ons);
+	err = lir_to_ssa(cu, insn_add_ons);
 	if (err)
 		goto error_init_ssa;
 
@@ -1190,8 +1108,6 @@ int compute_ssa(struct compilation_unit *cu)
 	create_fixed_var_infos(cu);
 	cumulate_fixed_var_infos(cu);
 
-	repair_use_before_def(cu, gpr);
-
 	return 0;
 
 error_init_ssa:
@@ -1200,7 +1116,7 @@ error_init_ssa:
 
 	free_insn_add_ons(insn_add_ons);
 error_lir_to_ssa:
-	free_def_set(cu);
+	free_ssa_liveness(cu);
 
 error:
 	return err;
