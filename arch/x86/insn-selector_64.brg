@@ -115,7 +115,6 @@ static void binop_reg_local_high(struct _MBState *, struct basic_block *, struct
 static void binop_reg_local_low(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
 static void binop_reg_value_high(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
 static void binop_reg_value_low(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
-static void shift_reg_local(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
 
 static enum insn_type br_binop_to_insn_type(enum binary_operator binop)
 {
@@ -2185,26 +2184,6 @@ static void binop_reg_value_high(struct _MBState *state, struct basic_block *bb,
 static void binop_reg_reg_high(struct _MBState *state, struct basic_block *bb,
 			  struct tree_node *tree, enum insn_type insn_type)
 {
-}
-
-static void shift_reg_local(struct _MBState *state, struct basic_block *bb,
-			    struct tree_node *tree, enum insn_type insn_type)
-{
-	struct var_info *result, *frame_ptr, *shift_count;
-	struct expression *expr;
-	unsigned long disp;
-
-	result = state->left->reg1;
-	state->reg1 = result;
-
-	expr = to_expr(tree);
-	disp = frame_local_offset(bb->b_parent->method, to_expr(expr->binary_right));
-
-	frame_ptr = bb->b_parent->frame_ptr;
-	shift_count = get_fixed_var(bb->b_parent, MACH_REG_xCX);
-
-	select_insn(bb, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, frame_ptr, disp, shift_count));
-	select_insn(bb, tree, reg_reg_insn(insn_type, shift_count, result));
 }
 
 static void div_reg_local(struct _MBState *state, struct basic_block *bb,
