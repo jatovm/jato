@@ -311,13 +311,11 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 			      struct compilation_unit *cu,
 			      struct basic_block *from,
 			      struct basic_block *to,
-			      unsigned long vreg,
+			      struct live_interval *parent_it,
 			      int *nr_mapped)
 {
-	struct live_interval *parent_it;
 	struct live_interval *from_it, *to_it;
 
-	parent_it	= vreg_start_interval(cu, vreg);
 	from_it		= interval_child_at(parent_it, from->end_insn - 1);
 	to_it		= interval_child_at(parent_it, to->start_insn);
 
@@ -378,7 +376,7 @@ static void maybe_add_mapping(struct live_interval_mapping *mappings,
 static int resolve_data_flow(struct compilation_unit *cu)
 {
 	struct basic_block *from;
-	unsigned long vreg;
+	struct var_info *var;
 
 	/*
 	 * This implements the data flow resolution algorithm described in
@@ -407,9 +405,9 @@ static int resolve_data_flow(struct compilation_unit *cu)
 
 			to = from->successors[i];
 
-			for (vreg = 0; vreg < cu->nr_vregs; vreg++) {
-				if (test_bit(to->live_in_set->bits, vreg)) {
-					maybe_add_mapping(mappings, cu, from, to, vreg, &nr_mapped);
+			for_each_variable(var, cu->var_infos) {
+				if (test_bit(to->live_in_set->bits, var->vreg)) {
+					maybe_add_mapping(mappings, cu, from, to, var->interval, &nr_mapped);
 				}
 			}
 
