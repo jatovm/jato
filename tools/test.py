@@ -45,7 +45,7 @@ TESTS = [
 , ( "jvm.ExceptionHandlerTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.FibonacciTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.FinallyTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "jvm.FloatArithmeticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.FloatArithmeticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.FloatConversionTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.GcTortureTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.GetstaticPatchingTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )

@@ -117,10 +117,10 @@ public class FloatArithmeticTest extends TestCase {
         return -n;
     }
 
-    private static float zero = 0.0f;
-    private static float one = 1.0f;
-
     public static void testFloatComparison() {
+        float zero = 0.0f;
+        float one = 1.0f;
+
         assertTrue(zero < one);
         assertFalse(one < zero);
         assertFalse(one < one);
