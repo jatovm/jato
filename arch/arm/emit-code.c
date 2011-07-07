@@ -1,22 +1,20 @@
 #include "jit/emit-code.h"
-
-#include "arch/instruction.h"
 #include "jit/basic-block.h"
-#include "lib/buffer.h"
-#include "arch/itable.h"
 #include "jit/lir-printer.h"
-#include "vm/backtrace.h"
 #include "jit/exception.h"
+
+#include "vm/backtrace.h"
 #include "vm/call.h"
 #include "vm/itable.h"
 #include "vm/stack-trace.h"
 #include "vm/static.h"
-#include "jit/emit-code.h"
 
-void emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)
-{
-	assert(!"not implemented");
-}
+#include "lib/buffer.h"
+
+#include "arch/itable.h"
+#include "arch/instruction.h"
+#include "arch/constant-pool.h"
+#include "arch/encode.h"
 
 void __attribute__((regparm(1)))
 itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
@@ -65,11 +63,6 @@ void emit_jni_trampoline(struct buffer *b, struct vm_method *vm, void *v)
 }
 
 void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target)
-{
-	assert(!"not implemented");
-}
-
-int select_instructions(struct compilation_unit *cu)
 {
 	assert(!"not implemented");
 }
@@ -123,4 +116,11 @@ void emit_unwind(struct buffer *buf)
 void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 {
 	assert(!"not implemented");
+}
+
+void emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)
+{
+	insn->mach_offset = buffer_offset(buf);
+
+	insn_encode(insn, buf, bb);
 }

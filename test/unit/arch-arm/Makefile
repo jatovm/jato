@@ -19,6 +19,9 @@ TOPLEVEL_OBJS	+= jit/text.o
 TOPLEVEL_OBJS	+= arch/arm/instruction.o
 TOPLEVEL_OBJS	+= arch/arm/insn-selector.o
 TOPLEVEL_OBJS	+= arch/arm/constant_pool.o
+TOPLEVEL_OBJS	+= arch/arm/encode.o
+TOPLEVEL_OBJS	+= arch/arm/emit-code.o
+TOPLEVEL_OBJS	+= arch/arm/stack-frame.o
 TOPLEVEL_OBJS	+= test/unit/libharness/libharness.o
 TOPLEVEL_OBJS	+= test/unit/vm/stack-trace-stub.o
 TOPLEVEL_OBJS	+= test/unit/vm/trace-stub.o
@@ -28,6 +31,6 @@ TOPLEVEL_OBJS	+= vm/bytecode.o
 TOPLEVEL_OBJS	+= vm/zalloc.o
 TOPLEVEL_OBJS	+= lib/bitset.o
 
-TEST_OBJS	+= compilation-unit-stub.o insn-selector-test.o
+TEST_OBJS	+= compilation-unit-stub.o insn-selector-test.o encode-test.o
 
 include ../../../scripts/build/test.mk
