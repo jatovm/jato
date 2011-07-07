@@ -118,10 +118,10 @@ public class DoubleArithmeticTest extends TestCase {
         return -n;
     }
 
-    private static double zero = 0.0;
-    private static double one = 1.0;
-
     public static void testDoubleComparison() {
+        double zero = 0.0;
+        double one = 1.0;
+
         assertTrue(zero < one);
         assertFalse(one < zero);
         assertFalse(one < one);
