@@ -86,6 +86,9 @@ static int update_branch_successors(struct compilation_unit *cu)
 		target_bb = find_bb(cu, bb->br_target_off);
 		assert(target_bb != NULL);
 
+		if (bb_successors_contains(bb, target_bb))
+			continue;
+
 		err = bb_add_successor(bb, target_bb);
 		if (err)
 			break;
