@@ -10,6 +10,7 @@
 
 #include "vm/class.h"
 #include "vm/method.h"
+#include "vm/verifier.h"
 #include "vm/natives.h"
 #include "vm/annotation.h"
 
@@ -117,6 +118,9 @@ int vm_method_init(struct vm_method *vmm,
 	struct cafebabe_stream stream;
 	cafebabe_stream_open_buffer(&stream,
 		attribute->info, attribute->attribute_length);
+
+	if (vm_method_verify(vmm))
+		goto error_free_type;
 
 	if (cafebabe_code_attribute_init(&vmm->code_attribute, &stream))
 		goto error_free_type;

@@ -48,6 +48,17 @@
 
 #define convert_goto_w		convert_goto
 
+#define convert_areturn convert_xreturn
+#define convert_dreturn convert_xreturn
+#define convert_freturn convert_xreturn
+#define convert_ireturn convert_xreturn
+#define convert_lreturn convert_xreturn
+
+#define convert_dcmpg convert_xcmpg
+#define convert_fcmpg convert_xcmpg
+#define convert_dcmpl convert_xcmpl
+#define convert_fcmpl convert_xcmpl
+
 #define BYTECODE(opc, name, size, type) [opc] = convert_ ## name,
 static convert_fn_t converters[] = {
 #  include <vm/bytecode-def.h>

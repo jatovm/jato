@@ -76,6 +76,7 @@ struct vm_class *vm_java_lang_ExceptionInInitializerError;
 struct vm_class *vm_java_lang_NoSuchFieldError;
 struct vm_class *vm_java_lang_NoSuchMethodError;
 struct vm_class *vm_java_lang_StackOverflowError;
+struct vm_class *vm_java_lang_VerifyError;
 struct vm_class *vm_java_lang_Thread;
 struct vm_class *vm_java_lang_ThreadGroup;
 struct vm_class *vm_java_lang_InheritableThreadLocal;
@@ -165,6 +166,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/NoSuchFieldError", &vm_java_lang_NoSuchFieldError },
 	{ "java/lang/NoSuchMethodError", &vm_java_lang_NoSuchMethodError },
 	{ "java/lang/StackOverflowError", &vm_java_lang_StackOverflowError },
+	{ "java/lang/VerifyError", &vm_java_lang_VerifyError},
 	{ "java/lang/Thread", &vm_java_lang_Thread },
 	{ "java/lang/ThreadGroup", &vm_java_lang_ThreadGroup },
 	{ "java/lang/VMThread",	&vm_java_lang_VMThread },

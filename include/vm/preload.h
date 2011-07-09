@@ -47,6 +47,7 @@ extern struct vm_class *vm_java_lang_ExceptionInInitializerError;
 extern struct vm_class *vm_java_lang_NoSuchFieldError;
 extern struct vm_class *vm_java_lang_NoSuchMethodError;
 extern struct vm_class *vm_java_lang_StackOverflowError;
+extern struct vm_class *vm_java_lang_VerifyError;
 extern struct vm_class *vm_java_lang_Thread;
 extern struct vm_class *vm_java_lang_ThreadGroup;
 extern struct vm_class *vm_java_lang_VMThread;
