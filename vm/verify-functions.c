@@ -1,5 +1,6 @@
 #include "vm/verifier.h"
 #include "vm/bytecode.h"
+#include "vm/opcodes.h"
 #include "lib/stack.h"
 
 #include <errno.h>
@@ -23,7 +24,7 @@ static int discard_bc_params(struct verify_context *vrf, unsigned int bytes)
 {
 	unsigned int i;
 
-	/* We need to advance PC but we have no use for the parameters here. */
+	/* We need to advance PC but we have no use for the parameters in the verifier. */
 	for (i = 0; i < bytes; i++) {
 		if (vrf->buffer->pos + 1 < vrf->code_size)
 			return bytecode_read_u8(vrf->buffer);

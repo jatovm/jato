@@ -48,6 +48,7 @@ struct vm_class *vm_java_lang_ClassCastException;
 struct vm_class *vm_java_lang_NoSuchFieldError;
 struct vm_class *vm_java_lang_NoSuchMethodError;
 struct vm_class *vm_java_lang_StackOverflowError;
+struct vm_class *vm_java_lang_VerifyError;
 struct vm_class *vm_java_lang_Thread;
 struct vm_class *vm_java_lang_ThreadGroup;
 struct vm_class *vm_java_lang_VMThread;

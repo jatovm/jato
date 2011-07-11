@@ -12,14 +12,18 @@ TOPLEVEL_OBJS :=			\
 	lib/stack.o			\
 	lib/string.o			\
 	test/unit/jit/trace-stub.o	\
+	test/unit/jit/exception-stub.o	\
 	test/unit/libharness/libharness.o\
 	test/unit/vm/class-stub.o	\
 	test/unit/vm/stack-trace-stub.o	\
+	test/unit/vm/preload-stub.o	\
 	vm/bytecode.o			\
 	vm/die.o			\
 	vm/natives.o			\
 	vm/trace.o			\
 	vm/types.o			\
+	vm/verifier.o			\
+	vm/verify-functions.o		\
 	vm/zalloc.o			\
 	test/unit/vm/thread-stub.o
 
@@ -29,6 +33,7 @@ TEST_OBJS :=				\
 	bytecodes-test.o		\
 	list-test.o			\
 	natives-test.o			\
+	verifier-test.o			\
 	parse-test.o			\
 	pqueue-test.o			\
 	radix-tree-test.o		\

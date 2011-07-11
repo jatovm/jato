@@ -1,17 +1,42 @@
 #ifndef __VM_VERIFIER_H
 #define __VM_VERIFIER_H
 
-#include "jit/compiler.h"
-#include "lib/stack.h"
+#include "vm/types.h"
+#include "lib/list.h"
 
-struct verify_operand {
+struct verifier_operand {
 	enum vm_type			vm_type;
 	bool				is_fragment;		/* If it is not the first slot of a multi-slot op */
 };
 
-struct local_var {
-	bool				is_initialized;
-	struct verify_operand		op;
+struct verifier_stack {
+	struct verifier_operand		op;
+	struct list_head		slots;
+};
+
+enum verifier_local_var_state {
+	DEFINED,
+	UNDEFINED,
+	UNKNOWN,
+};
+
+struct verifier_local_var {
+	enum verifier_local_var_state	state;
+	struct verifier_operand		op;
+};
+
+struct verifier_state {
+	struct verifier_local_var	*vars;			/* Array of local_vars. */
+	unsigned int			nb_vars;
+	struct verifier_stack		*stack;			/* Stack of verifier_operands stored as a list. */
+};
+
+struct verifier_block {
+	uint32_t 			begin_offset;
+	struct 				verifier_state *initial_state;
+	struct 				verifier_state *final_state;
+	uint32_t 			following_offsets;
+	struct 				list_head blocks;
 };
 
 struct verify_context {
@@ -20,15 +45,32 @@ struct verify_context {
 	unsigned long			offset;
 	unsigned long			code_size;
 	unsigned char			opc;
+
+	struct verifier_block		*vb_list;
 	bool				is_wide;
 };
 
-struct verify_operand *alloc_verify_operand(enum vm_type vm_type);
-int verify_op_type(struct verify_operand *op, enum vm_type vm_type);
+struct verifier_local_var *alloc_verifier_local_var(int nb_vars);
+struct verifier_stack *alloc_verifier_stack(enum vm_type vm_type);
+struct verifier_state *alloc_verifier_state(int nb_vars);
+struct verifier_block *alloc_verifier_block(int nb_vars);
 
-int verify_local_var_type(struct verify_context *vrf, enum vm_type vm_type, unsigned int idx);
-void set_local_var_type(struct verify_context *vrf, enum vm_type vm_type, unsigned int idx);
-int store_local_var(struct verify_context *vrf, enum vm_type vm_type, unsigned int idx);
+void free_verifier_local_var(struct verifier_local_var *vars);
+void free_verifier_stack(struct verifier_stack *stack);
+void free_verifier_state(struct verifier_state *state);
+void free_verifier_block(struct verifier_block *block);
+
+int store_verifier_local_var(struct verifier_state *s, enum vm_type vm_type, unsigned int idx);
+int peek_verifier_local_var_type(struct verifier_state *s, enum vm_type vm_type, unsigned int idx);
+int undef_verifier_local_var(struct verifier_state *s, unsigned int idx);
+
+int push_vrf_op(struct verifier_state *s, enum vm_type vm_type);
+int pop_vrf_op(struct verifier_state *s, enum vm_type vm_type);
+int peek_vrf_op(struct verifier_state *s, enum vm_type vm_type);
+
+int transition_verifier_stack(struct verifier_stack *stc, struct verifier_stack *stn);
+int transition_verifier_local_var(struct verifier_local_var *varsc, struct verifier_local_var *varsn, int nb_vars);
+int transition_verifier_state(struct verifier_state *s1, struct verifier_state *s2);
 
 int vm_method_verify(struct vm_method *vmm);
 
@@ -37,8 +79,7 @@ typedef int (*verify_fn_t) (struct verify_context *);
 #define E_NOT_IMPLEMENTED	(-ENOSYS)
 #define E_TYPE_CHECKING		(-1)
 #define E_MALFORMED_BC		(-2)
-
-#define IS_LARGE(vm_type) vm_type_is_pair(vm_type)
+#define E_WRONG_LOCAL_INDEX	(-3)
 
 #define DECLARE_VERIFIER(name) int verify_##name(struct verify_context *)
 
