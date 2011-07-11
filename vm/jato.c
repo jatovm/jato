@@ -57,6 +57,7 @@
 #include "jit/cu-mapping.h"
 #include "jit/gdb.h"
 #include "jit/exception.h"
+#include "jit/inline-cache.h"
 #include "jit/perf-map.h"
 #include "jit/text.h"
 
@@ -706,6 +707,11 @@ static void handle_ssa(void)
 	opt_ssa_enable = true;
 }
 
+static void handle_no_ic(void)
+{
+	opt_ic_enabled  = false;
+}
+
 static void handle_int(void)
 {
 	opt_interp_only  = true;
@@ -900,6 +906,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xnosystemclassloader",	handle_no_system_classloader),
 	DEFINE_OPTION("Xperf",			handle_perf),
 	DEFINE_OPTION("Xssa",			handle_ssa),
+	DEFINE_OPTION("Xnoic",			handle_no_ic),
 	DEFINE_OPTION("Xint",			handle_int),
 
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),

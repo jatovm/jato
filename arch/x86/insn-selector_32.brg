@@ -2788,7 +2788,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	/* object reference */
 	call_target = state->left->reg1;
 
-	if (ic_supports_method(method)) {
+	if (ic_enabled() && ic_supports_method(method)) {
 		(void) get_fixed_var(s->b_parent, IC_CLASS_REG);
 		(void) get_fixed_var(s->b_parent, IC_IMM_REG);
 		call_insn = ic_call_insn(call_target, (unsigned long)method);

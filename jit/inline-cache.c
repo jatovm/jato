@@ -5,6 +5,15 @@
 
 #include "lib/list.h"
 
+#include <stdbool.h>
+
+bool opt_ic_enabled = true;
+
+bool ic_enabled(void)
+{
+	return opt_ic_enabled;
+}
+
 int add_ic_call(struct compilation_unit *cu, struct insn *insn)
 {
 	struct ic_call *ic_call;
