@@ -42,7 +42,7 @@ struct insn *ssa_imm_reg_insn(unsigned long imm, struct var_info *dest_reg)
 	assert(!"not implemented");
 }
 
-int insn_uses_reg(struct insn *insn, struct use_position **reg)
+unsigned long insn_uses_reg(struct insn *insn, struct use_position **regs)
 {
 	assert(!"not implemented");
 }
@@ -88,12 +88,32 @@ void ssa_chg_jmp_direction(struct insn *insn, struct basic_block *after_bb,
 	assert(!"not implemented");
 }
 
-bool insn_vreg_use(struct insn *insn, struct var_info *var)
+bool insn_vreg_use(struct use_position *reg, struct var_info *var)
 {
 	assert(!"not implemented");
 }
 
-bool insn_vreg_def(struct insn *insn, struct var_info *var)
+bool insn_vreg_def(struct use_position *reg, struct var_info *var)
+{
+	assert(!"not implemented");
+}
+
+bool insn_is_phi(struct insn *insn)
+{
+	assert(!"not implemented");
+}
+
+bool insn_is_copy(struct insn *insn)
+{
+	assert(!"not implemented");
+}
+
+unsigned long nr_srcs_phi(struct insn *insn)
+{
+	assert(!"not implemented");
+}
+
+int insn_use_def(struct insn *insn)
 {
 	assert(!"not implemented");
 }
