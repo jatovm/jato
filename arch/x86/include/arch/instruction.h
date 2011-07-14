@@ -302,6 +302,7 @@ bool insn_is_branch(struct insn *insn);
 bool insn_is_jmp_mem(struct insn *insn);
 bool insn_is_phi(struct insn *insn);
 bool insn_is_call(struct insn *insn);
+bool insn_is_copy(struct insn *insn);
 unsigned long nr_srcs_phi(struct insn *insn);
 
 #endif

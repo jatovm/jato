@@ -1145,6 +1145,13 @@ bool insn_is_call(struct insn *insn)
 	return flags & TYPE_CALL;
 }
 
+bool insn_is_copy(struct insn *insn)
+{
+	return insn->type == INSN_MOV_REG_REG ||
+		insn->type == INSN_MOVSD_XMM_XMM ||
+		insn->type == INSN_MOVSS_XMM_XMM;
+}
+
 bool insn_is_phi(struct insn *insn)
 {
 	if (insn->type == INSN_PHI)

@@ -315,6 +315,20 @@ static void insert_phi(struct basic_block *bb, struct var_info *var)
 	bb_add_first_insn(bb, insn);
 }
 
+static int do_insn_is_copy(struct use_position *reg,
+		struct use_position **regs_uses,
+		struct list_head *list_changed_stacks,
+		struct stack **name_stack)
+{
+	struct var_info *var;
+
+	var = reg->interval->var_info;
+
+	stack_push(name_stack[var->vreg], (*regs_uses)->interval->var_info);
+
+	return list_changed_stacks_add(list_changed_stacks, var->vreg);
+}
+
 static int add_var_info(struct compilation_unit *cu,
 	struct use_position *reg,
 	struct list_head *list_changed_stacks,
@@ -444,13 +458,14 @@ static int __rename_variables(struct compilation_unit *cu,
 			struct stack **name_stack,
 			struct hash_map *insn_add_ons)
 {
-	struct insn *insn;
+	struct insn *insn, *insn_next;
 	struct use_position *regs_uses[MAX_REG_OPERANDS],
 				*regs_defs[MAX_REG_OPERANDS + 1];
 	struct use_position *reg;
 	struct list_head *list_changed_stacks;
 	struct changed_var_stack *changed, *this, *next;
 	int nr_defs, nr_uses, i, err;
+	bool delete;
 
 	list_changed_stacks = malloc(sizeof (struct list_head));
 	if (!list_changed_stacks)
@@ -464,7 +479,7 @@ static int __rename_variables(struct compilation_unit *cu,
 			return err;
 	}
 
-	for_each_insn(insn, &bb->insn_list) {
+	list_for_each_entry_safe(insn, insn_next, &bb->insn_list, insn_list_node) {
 		if (!insn_is_phi(insn)) {
 			nr_uses = insn_uses_reg(insn, regs_uses);
 			for (i = 0; i < nr_uses; i++) {
@@ -476,13 +491,34 @@ static int __rename_variables(struct compilation_unit *cu,
 			}
 		}
 
+		delete = false;
 		nr_defs = insn_defs_reg(insn, regs_defs);
 		for (i = 0; i < nr_defs; i++) {
 			reg = regs_defs[i];
 
-			err = add_var_info(cu, reg, list_changed_stacks, name_stack);
-			if (err)
-				return err;
+			/*
+			 * We do copy folding simultaneously with th conversion to SSA form.
+			 * For more details about copy folding during LIR->SSA conversion,
+			 * see section 4.2.2 of "Optimizations in Static Single Assignment Form,
+			 * Sassa Laboratory"
+			 */
+			if (insn_is_copy(insn) && !interval_has_fixed_reg(reg->interval)
+						&& !interval_has_fixed_reg((*regs_uses)->interval)) {
+				delete = true;
+
+				err = do_insn_is_copy(reg, regs_uses, list_changed_stacks, name_stack);
+				if (err)
+					return err;
+			} else {
+				err = add_var_info(cu, reg, list_changed_stacks, name_stack);
+				if (err)
+					return err;
+			}
+		}
+
+		if (delete) {
+			list_del(&insn->insn_list_node);
+			free_insn(insn);
 		}
 	}
 
