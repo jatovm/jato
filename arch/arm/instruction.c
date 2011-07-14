@@ -15,13 +15,16 @@ enum {
 	USE_NONE		= (1U << 5),
 	USE_SRC			= (1U << 6),
 	USE_FP			= (1U << 7),	/* frame pointer */
+	TYPE_BRANCH		= (1u << 8),
 
 };
 
 static unsigned long insn_flags[] = {
 	[INSN_LOAD_REG_MEMLOCAL]                = DEF_DST | USE_FP,
 	[INSN_MOV_REG_IMM]			= DEF_DST,
-	[INSN_LOAD_REG_POOL_IMM]		= DEF_DST
+	[INSN_MOV_REG_REG]			= USE_SRC | DEF_DST,
+	[INSN_LOAD_REG_POOL_IMM]		= DEF_DST,
+	[INSN_UNCOND_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 };
 
 
@@ -155,6 +158,7 @@ struct insn *reg_imm_insn(enum insn_type insn_type, unsigned long imm,
 	}
 	return insn;
 }
+
 struct insn *reg_pool_insn(enum insn_type insn_type,
 	struct lp_entry *src_pool, struct var_info *dest_reg)
 {
@@ -186,6 +190,34 @@ struct insn *reg_memlocal_insn(enum insn_type insn_type,
 		};
 		init_reg_operand(insn, &insn->dest, dest_reg);
 		}
+	return insn;
+}
+
+struct insn *reg_reg_insn(enum insn_type insn_type,
+	struct var_info *src, struct var_info *dest)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn) {
+		init_reg_operand(insn, &insn->src, src);
+		init_reg_operand(insn, &insn->dest, dest);
+	}
+	return insn;
+}
+
+struct insn *branch_insn(enum insn_type insn_type,
+			struct basic_block *target)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn) {
+		insn->operand = (struct operand) {
+			.type = OPERAND_BRANCH_TARGET,
+			{
+				.branch_target = target,
+			}
+		};
+	}
 	return insn;
 }
 

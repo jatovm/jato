@@ -117,6 +117,33 @@ stmt:	STMT_EXPRESSION(reg)
 {
 }
 
+stmt:	STMT_RETURN(reg) 1
+{
+	struct expression *expr;
+	struct var_info *src, *r0, *r1;
+
+	expr = to_expr(tree);
+
+	r0 = get_fixed_var(s->b_parent, MACH_REG_R0);
+	src = state->left->reg1;
+
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, r0));
+
+	if (expr->vm_type == J_LONG) {
+		r1 = get_fixed_var(s->b_parent, MACH_REG_R1);
+		src = state->left->reg2;
+
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, r1));
+	}
+
+	select_insn(s, tree, branch_insn(INSN_UNCOND_BRANCH, s->b_parent->exit_bb));
+}
+
+stmt:	STMT_VOID_RETURN
+{
+	select_insn(s, tree, branch_insn(INSN_UNCOND_BRANCH, s->b_parent->exit_bb));
+}
+
 %%
 
 static void select_insn(struct basic_block *, struct tree_node *, struct insn *);

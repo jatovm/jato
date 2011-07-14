@@ -18,6 +18,7 @@ struct basic_block;
 struct bitset;
 
 enum operand_type {
+	OPERAND_BRANCH_TARGET,
 	OPERAND_IMM,
 	OPERAND_MEMLOCAL,
 	/* This operand is required by constant pool implementation */
@@ -58,6 +59,7 @@ static inline bool operand_is_reg(struct operand *operand)
 	switch (operand->type) {
 	case OPERAND_IMM:
 	case OPERAND_MEMLOCAL:
+	case OPERAND_BRANCH_TARGET:
 		return false;
 	case OPERAND_REG:
 	case OPERAND_LITERAL_POOL:
@@ -75,12 +77,14 @@ static inline bool operand_is_reg(struct operand *operand)
 enum insn_type {
 	INSN_LOAD_REG_MEMLOCAL,
 	INSN_MOV_REG_IMM,
+	INSN_MOV_REG_REG,
 	/*
 	 * This instruction is not an actual instruction, it is
 	 * required by constant literal pool implementation
 	 */
 	INSN_LOAD_REG_POOL_IMM,
 	INSN_PHI,
+	INSN_UNCOND_BRANCH,
 	/* Must be last */
 	NR_INSN_TYPES,
 };
@@ -125,6 +129,8 @@ struct insn *insn(enum insn_type);
 struct insn *reg_imm_insn(enum insn_type, unsigned long, struct var_info *);
 struct insn *reg_pool_insn(enum insn_type, struct lp_entry *, struct var_info *);
 struct insn *reg_memlocal_insn(enum insn_type, struct stack_slot *, struct var_info *);
+struct insn *reg_reg_insn(enum insn_type, struct var_info *, struct var_info *);
+struct insn *branch_insn(enum insn_type, struct basic_block *);
 
 
 /*
