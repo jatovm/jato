@@ -276,7 +276,7 @@ $(LIB_FILE): monoburg boehmgc $(VERSION_HEADER) $(ASM_OFFSETS_HEADER) $(CLASSPAT
 	$(E) "  AR      " $@
 	$(Q) rm -f $@ && $(AR) rcs $@ $(LIB_OBJS)
 
-check-unit: monoburg
+check-unit: arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c
 	+$(MAKE) -C test/unit/vm/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	+$(MAKE) -C test/unit/jit/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	+$(MAKE) -C test/unit/arch-$(ARCH)/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
