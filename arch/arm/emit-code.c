@@ -52,9 +52,17 @@ int fixup_static_at(unsigned long addr)
 	assert(!"not implemented");
 }
 
-void emit_trampoline(struct compilation_unit *cu, void *v, struct jit_trampoline *jt)
+void emit_trampoline(struct compilation_unit *cu,
+		     void *call_target,
+		     struct jit_trampoline *trampoline)
 {
-	assert(!"not implemented");
+	struct buffer *buf = trampoline->objcode;
+
+	jit_text_lock();
+	buf->buf = jit_text_ptr();
+
+	jit_text_reserve(buffer_offset(buf));
+	jit_text_unlock();
 }
 
 void emit_jni_trampoline(struct buffer *b, struct vm_method *vm, void *v)

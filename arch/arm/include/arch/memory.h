@@ -7,13 +7,13 @@
 /*
  * Memory barriers.
  */
-#define mb() assert(!"mb() not implemented")
-#define rmb() assert(!"rmb() not implemented")
-#define wmb() assert(!"wmb() not implemented")
+#define mb() __sync_synchronize()
+#define rmb() __sync_synchronize()
+#define wmb() __sync_synchronize()
 
-#define smp_mb() assert(!"smp_mb() not implemented")
-#define smp_rmb() assert(!"smp_rmb() not implemented")
-#define smp_wmb() assert(!"smp_wmb() not implemented")
+#define smp_mb() mb()
+#define smp_rmb() rmb()
+#define smp_wmb() wmb()
 
 #define barrier() __asm__ __volatile__("": : :"memory")
 

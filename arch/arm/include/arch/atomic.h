@@ -27,17 +27,17 @@ static inline void atomic_set(atomic_t *v, int i)
 
 static inline void atomic_inc(atomic_t *v)
 {
-	assert(!"atomic_inc() not implemented");
+	__sync_add_and_fetch((uint32_t *)&v->counter, 1);
 }
 
 static inline void atomic_dec(atomic_t *v)
 {
-	assert(!"atomic_dec() not implemented");
+	__sync_sub_and_fetch((uint32_t *)&v->counter, 1);
 }
 
-#define smp_mb__after_atomic_inc() assert(!"smp_mb__after_atomic_inc() not implemented")
-#define smp_mb__after_atomic_dec() assert(!"smp_mb__after_atomic_dec() not implemented")
-#define smp_mb__before_atomic_inc() assert(!"smp_mb__before_atomic_inc() not implemented")
-#define smp_mb__before_atomic_dec() assert(!"smp_mb__before_atomic_dec() not implemented")
+#define smp_mb__after_atomic_inc() barrier()
+#define smp_mb__after_atomic_dec() barrier()
+#define smp_mb__before_atomic_inc() barrier()
+#define smp_mb__before_atomic_dec() barrier()
 
 #endif /* JATO__ARM_ATOMIC_H */
