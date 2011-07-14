@@ -26,6 +26,7 @@ TOPLEVEL_OBJS	+= test/unit/libharness/libharness.o
 TOPLEVEL_OBJS	+= test/unit/vm/stack-trace-stub.o
 TOPLEVEL_OBJS	+= test/unit/vm/trace-stub.o
 TOPLEVEL_OBJS	+= test/unit/jit/bytecode-to-ir-stub.o
+TOPLEVEL_OBJS	+= test/unit/vm/thread-stub.o
 TOPLEVEL_OBJS	+= vm/die.o
 TOPLEVEL_OBJS	+= vm/bytecode.o
 TOPLEVEL_OBJS	+= vm/zalloc.o
