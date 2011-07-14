@@ -119,9 +119,9 @@ static void emit_encoded_insn(struct buffer *buf, uint32_t encoded_insn)
 	emit(buf, insn_buf.b[3]);
 }
 
-uint32_t encode_base_reg(struct insn *insn)
+uint32_t encode_base_reg_load(struct insn *insn)
 {
-	switch (insn->src.type || insn->dest.type) {
+	switch (insn->src.type) {
 	case OPERAND_MEMLOCAL:
 		return 0UL | ((arm_encode_reg(MACH_REG_FP) & 0xF) << 16);
 	default:
@@ -129,10 +129,36 @@ uint32_t encode_base_reg(struct insn *insn)
 	}
 }
 
-uint32_t encode_imm_offset(struct insn *insn)
+uint32_t encode_base_reg_store(struct insn *insn)
+{
+	switch (insn->dest.type) {
+	case OPERAND_MEMLOCAL:
+		return 0UL | ((arm_encode_reg(MACH_REG_FP) & 0xF) << 16);
+	default:
+		return 0UL;
+	}
+}
+
+uint32_t encode_imm_offset_load(struct insn *insn)
 {
 	long offset;
-	switch (insn->src.type || insn->dest.type) {
+	switch (insn->src.type) {
+	case OPERAND_MEMLOCAL:
+		offset = slot_offset(insn->src.slot);
+		if (offset < 0) {
+			offset = offset * (-1);
+			return 0UL | IMM_OFFSET_SUB | (offset & 0xFFF);
+		} else
+			return 0UL | IMM_OFFSET_ADD | (offset & 0xFFF);
+	default:
+		return 0UL;
+	}
+}
+
+uint32_t encode_imm_offset_store(struct insn *insn)
+{
+	long offset;
+	switch (insn->dest.type) {
 	case OPERAND_MEMLOCAL:
 		offset = slot_offset(insn->src.slot);
 		if (offset < 0) {
@@ -149,14 +175,15 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 {
 	uint32_t encoded_insn = arm_encode_insn[insn->type];
 	encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 12);
-
 	if (encoded_insn & USE_IMM_OPERAND)
 		encoded_insn = encoded_insn | ((insn->src.imm) & 0xFF);
 
 	if (encoded_insn & LOAD_STORE) {
-		encoded_insn = encoded_insn | encode_base_reg(insn);
-		if (!(encoded_insn & REG_OFFSET))
-			encoded_insn = encoded_insn | encode_imm_offset(insn);
+		if (encoded_insn & LOAD_INSN) {
+			encoded_insn = encoded_insn | encode_base_reg_load(insn);
+			if (!(encoded_insn & REG_OFFSET))
+				encoded_insn = encoded_insn | encode_imm_offset_load(insn);
+		}
 	}
 	emit_encoded_insn(buffer, encoded_insn);
 }
