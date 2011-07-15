@@ -167,3 +167,44 @@ void test_multiple_branch_with_target_instruction_splitting(void)
 
 	free_compilation_unit(cu);
 }
+
+/* public boolean emptyIf() { boolean d = true; if (d){} return d; } */
+static unsigned char empty_if[8] = {
+	/* 0 */ OPC_ICONST_1,
+	/* 1 */ OPC_ISTORE_1,
+
+	/* 3 */ OPC_ILOAD_1,
+	/* 4 */ OPC_IFEQ, 0x00, 0x03,
+
+	/* 6 */ OPC_ILOAD_1,
+	/* 7 */ OPC_IRETURN,
+};
+
+void test_no_duplicate_in_successors_bb_list(void)
+{
+	struct basic_block *bb1, *bb2;
+	struct compilation_unit *cu;
+	struct cafebabe_method_info method_info;
+	struct vm_method method = {
+		.code_attribute.code = empty_if,
+		.code_attribute.code_length = ARRAY_SIZE(empty_if),
+		.method = &method_info,
+	};
+
+	cu = compilation_unit_alloc(&method);
+
+	analyze_control_flow(cu);
+
+	assert_int_equals(2, nr_bblocks(cu));
+
+	bb1 = bb_entry(cu->bb_list.next);
+	bb2 = bb_entry(bb1->bb_list_node.next);
+
+	assert_basic_block(cu, 0, 6, bb1);
+	assert_basic_block(cu, 6, 8, bb2);
+
+	assert_basic_block_successors((struct basic_block*[]){bb2}, 1, bb1);
+	assert_basic_block_successors((struct basic_block*[]){   }, 0, bb2);
+
+	free_compilation_unit(cu);
+}
