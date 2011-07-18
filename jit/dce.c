@@ -52,7 +52,7 @@ static struct dce *alloc_dce_element(struct var_info *var)
  * details on the algorithm used here, check "Modern Compiler
  * Implementation in Java" by Andrew W. Appel, section 19.3.
  */
-int dce(struct compilation_unit *cu, struct hash_map *insn_add_ons)
+int dce(struct compilation_unit *cu)
 {
 	struct live_interval *it;
 	struct var_info *var;
@@ -122,7 +122,7 @@ int dce(struct compilation_unit *cu, struct hash_map *insn_add_ons)
 
 			list_del(&def_insn->insn_list_node);
 			if (insn_use_def(def_insn))
-				hash_map_remove(insn_add_ons, def_insn);
+				hash_map_remove(cu->insn_add_ons, def_insn);
 			if (insn_is_phi(def_insn))
 				free_ssa_insn(def_insn);
 			else free_insn(def_insn);

@@ -21,11 +21,6 @@ struct dce {
 };
 
 /*
- * Functions defined in jit/dce.c.
- */
-int dce(struct compilation_unit *, struct hash_map *);
-
-/*
  * Functions defined in jit/ssa.c
  */
 void recompute_insn_positions(struct compilation_unit *);

@@ -104,7 +104,18 @@ int compile(struct compilation_unit *cu)
 		if (err)
 			goto out;
 
-		err = compute_ssa(cu);
+		err = lir_to_ssa(cu);
+		if (err)
+			goto out;
+
+		if(opt_trace_ssa)
+			trace_ssa(cu);
+
+		err = dce(cu);
+		if (err)
+			goto out;
+
+		err = ssa_to_lir(cu);
 		if (err)
 			goto out;
 	}

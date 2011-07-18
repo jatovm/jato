@@ -85,6 +85,12 @@ struct compilation_unit {
 		 */
 		struct var_info *ssa_var_infos;
 		unsigned long ssa_nr_vregs;
+
+		/*
+		 * Hashmap that keeps the associations between an instruction
+		 * and its third operand.
+		 */
+		struct hash_map *insn_add_ons;
 	};
 
 	struct list_head static_fixup_site_list;
