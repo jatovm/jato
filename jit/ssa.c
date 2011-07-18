@@ -760,7 +760,6 @@ static int __insert_instruction_pass(struct basic_block *bb,
 		new_insn = ssa_reg_reg_insn(var2, var1);
 		insn_set_bc_offset(new_insn, insn->bc_offset);
 		list_add(&new_insn->insn_list_node, insn->insn_list_node.prev);
-		new_insn->flags |= INSN_FLAG_SSA_ADDED;
 	}
 
 	return 0;

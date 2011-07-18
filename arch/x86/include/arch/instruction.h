@@ -218,8 +218,6 @@ enum insn_flag_type {
 	INSN_FLAG_ESCAPED		= 1U << 0,
 	INSN_FLAG_SAFEPOINT		= 1U << 1,
 	INSN_FLAG_KNOWN_BC_OFFSET	= 1U << 2,
-	INSN_FLAG_RENAMED		= 1U << 3, /* instruction with renamed virtual registers */
-	INSN_FLAG_SSA_ADDED		= 1U << 4, /* instruction added during SSA deconstruction */
 };
 
 struct insn {

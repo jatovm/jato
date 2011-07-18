@@ -9,8 +9,6 @@
  * We mark this special block as SSA_INIT_BLOCK.
  */
 #define SSA_INIT_BLOCK -1
-#define INIT_VAL	0
-#define INIT_BC_OFFSET	0
 
 struct changed_var_stack {
 	struct list_head changed_var_stack_node;
