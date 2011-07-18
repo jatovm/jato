@@ -175,8 +175,6 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 {
 	uint32_t encoded_insn = arm_encode_insn[insn->type];
 	encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 12);
-	if (encoded_insn & USE_IMM_OPERAND)
-		encoded_insn = encoded_insn | ((insn->src.imm) & 0xFF);
 
 	if (encoded_insn & LOAD_STORE) {
 		if (encoded_insn & LOAD_INSN) {
@@ -184,6 +182,9 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 			if (!(encoded_insn & REG_OFFSET))
 				encoded_insn = encoded_insn | encode_imm_offset_load(insn);
 		}
+	} else {
+		if (encoded_insn & USE_IMM_OPERAND)
+			encoded_insn = encoded_insn | ((insn->src.imm) & 0xFF);
 	}
 	emit_encoded_insn(buffer, encoded_insn);
 }
