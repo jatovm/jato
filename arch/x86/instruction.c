@@ -1138,6 +1138,14 @@ bool insn_is_jmp_mem(struct insn *insn)
 	return false;
 }
 
+bool insn_is_jmp_branch(struct insn *insn)
+{
+	if (insn->type == INSN_JMP_BRANCH)
+		return true;
+
+	return false;
+}
+
 bool insn_is_call(struct insn *insn)
 {
 	unsigned long flags = insn_flags[insn->type];

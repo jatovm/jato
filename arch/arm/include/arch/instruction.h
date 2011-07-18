@@ -132,7 +132,6 @@ struct insn *reg_memlocal_insn(enum insn_type, struct stack_slot *, struct var_i
 struct insn *reg_reg_insn(enum insn_type, struct var_info *, struct var_info *);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
 
-
 /*
  * These functions are used by generic code to insert spill/reload
  * instructions.
@@ -148,6 +147,7 @@ struct insn *reload_insn(struct stack_slot *slot, struct var_info *var);
 struct insn *jump_insn(struct basic_block *bb);
 
 bool insn_is_branch(struct insn *insn);
+bool insn_is_jmp_branch(struct insn *insn);
 bool insn_is_call(struct insn *insn);
 
 #endif /* JATO__ARM_INSTRUCTION_H */

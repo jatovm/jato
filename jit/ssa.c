@@ -794,8 +794,7 @@ static struct basic_block *det_insertion_bb(struct compilation_unit *cu,
 
 	r_bb = pred_bb;
 
-	if (pred_bb->nr_successors > 1
-			|| (last_insn && insn_is_branch(last_insn))) {
+	if (pred_bb->nr_successors > 1) {
 		if (insn_is_jmp_mem(last_insn))
 			/*
 			 * In case we have a predecessor basic block ending in
@@ -827,7 +826,7 @@ static void insert_insn(struct basic_block *bb,
 			struct var_info *dest,
 			unsigned int bc_offset)
 {
-	struct insn *new_insn;
+	struct insn *new_insn, *last_insn;
 
 	if (interval_has_fixed_reg(dest->interval)
 			&& interval_has_fixed_reg(src->interval))
@@ -835,7 +834,12 @@ static void insert_insn(struct basic_block *bb,
 
 	new_insn = ssa_reg_reg_insn(src, dest);
 	insn_set_bc_offset(new_insn, bc_offset);
-	list_add_tail(&new_insn->insn_list_node, &bb->insn_list);
+
+	last_insn = bb_last_insn(bb);
+	if (insn_is_jmp_branch(last_insn))
+		list_add(&new_insn->insn_list_node, last_insn->insn_list_node.prev);
+	else
+		list_add_tail(&new_insn->insn_list_node, &bb->insn_list);
 }
 
 static int insert_copy_insns(struct compilation_unit *cu,
@@ -870,9 +874,12 @@ static int insert_copy_insns(struct compilation_unit *cu,
 				insn->ssa_dest.reg.interval->var_info, insertion_bb->end);
 	}
 
-	jump = jump_insn(*bb);
-	insn_set_bc_offset(jump, insertion_bb->end);
-	list_add_tail(&jump->insn_list_node, &insertion_bb->insn_list);
+	last_insn = bb_last_insn(insertion_bb);
+	if (!insn_is_jmp_branch(last_insn)) {
+		jump = jump_insn(*bb);
+		insn_set_bc_offset(jump, insertion_bb->end);
+		list_add_tail(&jump->insn_list_node, &insertion_bb->insn_list);
+	}
 
 	return 0;
 }

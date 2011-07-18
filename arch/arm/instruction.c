@@ -43,6 +43,11 @@ bool insn_is_branch(struct insn *insn)
 	assert(!"not implemented");
 }
 
+bool insn_is_jmp_branch(struct insn *insn)
+{
+	assert(!"not implemented");
+}
+
 bool insn_is_call(struct insn *insn)
 {
 	assert(!"not implemented");
