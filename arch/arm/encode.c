@@ -92,6 +92,7 @@ enum arm_addressing_mode {
 
 static uint32_t arm_encode_insn[] = {
 	[INSN_MOV_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0xD),
+	[INSN_MOV_REG_REG]		= AL | DATA_PROCESSING | OPCODE(0xD),
 	[INSN_LOAD_REG_MEMLOCAL]	= AL | LOAD_STORE | LOAD_INSN,
 	[INSN_LOAD_REG_POOL_IMM]	= AL | LOAD_STORE | LOAD_INSN,
 	[INSN_PHI]			= INVALID_INSN,
@@ -185,6 +186,8 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 	} else {
 		if (encoded_insn & USE_IMM_OPERAND)
 			encoded_insn = encoded_insn | ((insn->src.imm) & 0xFF);
+		else
+			encoded_insn = encoded_insn | (arm_encode_reg(mach_reg(&insn->src.reg)) & 0xF);
 	}
 	emit_encoded_insn(buffer, encoded_insn);
 }

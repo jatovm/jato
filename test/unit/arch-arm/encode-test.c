@@ -67,3 +67,27 @@ void test_emit_reg_memlocal_insn(void)
 
 	free_buffer(buffer);
 }
+
+void test_emit_reg_reg_insn(void)
+{	struct buffer *buffer = alloc_buffer();
+	struct insn insn = {};
+	struct live_interval interval1 = {.reg = MACH_REG_R4};
+	struct live_interval interval2 = {.reg = MACH_REG_R7};
+	uint32_t encoded_insn;
+
+	insn.type = INSN_MOV_REG_REG;
+
+	insn.dest.type = OPERAND_REG;
+	insn.dest.reg.interval = &interval1;
+
+	insn.src.type = OPERAND_REG;
+	insn.src.reg.interval = &interval2;
+
+	emit_insn(buffer, NULL, &insn);
+
+	encoded_insn = read_mem32(buffer);
+
+	assert_int_equals(0xE1A04007, encoded_insn);
+
+	free_buffer(buffer);
+}
