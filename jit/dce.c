@@ -129,5 +129,7 @@ int dce(struct compilation_unit *cu, struct hash_map *insn_add_ons)
 		}
 	}
 
+	free(worklist);
+
 	return 0;
 }
