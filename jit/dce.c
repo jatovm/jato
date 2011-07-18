@@ -129,7 +129,5 @@ int dce(struct compilation_unit *cu, struct hash_map *insn_add_ons)
 		}
 	}
 
-	recompute_insn_positions(cu);
-
 	return 0;
 }

@@ -1025,8 +1025,6 @@ static int lir_to_ssa(struct compilation_unit *cu,
 	if (err)
 		goto error_def;
 
-	recompute_insn_positions(cu);
-
 	return 0;
 
 error_def:
