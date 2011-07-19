@@ -21,6 +21,7 @@ TESTS = [
   # ========================== ====  =======================  =============
   ( "jvm/EntryTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm/EntryTest", 0, NO_SYSTEM_CLASSLOADER + [ "-Xint" ], [ "i386", "x86_64" ] )
+, ( "jvm/EntryTest", 0, NO_SYSTEM_CLASSLOADER + [ "-Xssa" ], [ "i386" ] )
 , ( "jvm/ExitStatusIsZeroTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm/ExitStatusIsOneTest", 1, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm/ArgsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
