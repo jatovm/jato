@@ -60,6 +60,7 @@ enum arm_fields {
 	/* F_field denotes the category of the instruction */
 	DATA_PROCESSING			= (0x0UL << 26),
 	LOAD_STORE			= (0x1UL << 26),
+	BRANCH				= (0x2UL << 26),
 
 	/* This field give information about acccessing */
 	LOAD_STORE_UNSIGNED_BYTE	= (1UL << 22), /* Default is word access */
@@ -95,6 +96,7 @@ static uint32_t arm_encode_insn[] = {
 	[INSN_MOV_REG_REG]		= AL | DATA_PROCESSING | OPCODE(0xD),
 	[INSN_LOAD_REG_MEMLOCAL]	= AL | LOAD_STORE | LOAD_INSN,
 	[INSN_LOAD_REG_POOL_IMM]	= AL | LOAD_STORE | LOAD_INSN,
+	[INSN_UNCOND_BRANCH]		= AL | BRANCH | USE_IMM_OPERAND,
 	[INSN_PHI]			= INVALID_INSN,
 };
 
@@ -175,15 +177,18 @@ uint32_t encode_imm_offset_store(struct insn *insn)
 void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *bb)
 {
 	uint32_t encoded_insn = arm_encode_insn[insn->type];
-	encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 12);
 
 	if (encoded_insn & LOAD_STORE) {
+		encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 12);
 		if (encoded_insn & LOAD_INSN) {
 			encoded_insn = encoded_insn | encode_base_reg_load(insn);
 			if (!(encoded_insn & REG_OFFSET))
 				encoded_insn = encoded_insn | encode_imm_offset_load(insn);
 		}
+	} else if (encoded_insn & BRANCH) {
+		encoded_insn = encoded_insn | ((emit_branch(insn, bb) >> 2) & 0xFFFFFF);
 	} else {
+		encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 12);
 		if (encoded_insn & USE_IMM_OPERAND)
 			encoded_insn = encoded_insn | ((insn->src.imm) & 0xFF);
 		else
