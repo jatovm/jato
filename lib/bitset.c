@@ -140,3 +140,24 @@ int bitset_ffs(struct bitset *bitset)
 
 	return -1;
 }
+
+/**
+ *      bitset_ffs_from - find first set bit starting from an index
+ *      ndx - index from which to start looking
+ *      @bitset:        the bitset to search
+ *
+ *      This function returns the index of the first set bit starting
+ *      from a given index. If no bits are set, returns a negative
+ *      integer.
+ */
+int bitset_ffs_from(struct bitset *bitset, int ndx)
+{
+	unsigned long i;
+
+	for (i = ndx; i < bitset->nr_bits; i++) {
+		if (test_bit(bitset->bits, i))
+			return i;
+	}
+
+	return -1;
+}

@@ -630,7 +630,8 @@ static void iterate_dom_frontier_set(struct compilation_unit *cu,
 				struct basic_block *bb,
 				struct bitset *workset,
 				unsigned long *inserted,
-				unsigned long *work)
+				unsigned long *work,
+				int *last_ndx)
 {
 	struct bitset *temp_dom_frontier;
 	struct basic_block *bb_ndx;
@@ -640,7 +641,8 @@ static void iterate_dom_frontier_set(struct compilation_unit *cu,
 
 	bitset_copy_to(bb->dom_frontier, temp_dom_frontier);
 
-	while ((ndx = bitset_ffs(temp_dom_frontier)) != -1) {
+	ndx = 0;
+	while ((ndx = bitset_ffs_from(temp_dom_frontier, ndx)) != -1) {
 		clear_bit(temp_dom_frontier->bits, ndx);
 
 		bb_ndx = cu->bb_df_array[ndx];
@@ -651,6 +653,8 @@ static void iterate_dom_frontier_set(struct compilation_unit *cu,
 			if (work[ndx] != var->vreg) {
 				set_bit(workset->bits, ndx);
 				work[ndx] = var->vreg;
+				if (ndx < *last_ndx)
+					*last_ndx = ndx;
 			}
 		}
 	}
@@ -692,6 +696,7 @@ static int insert_phi_insns(struct compilation_unit *cu)
 	workset = alloc_bitset(nr_bblocks(cu));
 
 	for_each_variable(var, cu->var_infos) {
+		ndx = -1;
 		for_each_basic_block(bb, &cu->bb_list) {
 			if (bb_is_eh(cu, bb))
 				continue;
@@ -699,15 +704,23 @@ static int insert_phi_insns(struct compilation_unit *cu)
 			if (test_bit(bb->def_set->bits, var->vreg)) {
 				set_bit(workset->bits, bb->dfn);
 				work[bb->dfn] = var->vreg;
+
+				if (ndx == -1)
+					ndx = bb->dfn;
+				else if (ndx > bb->dfn)
+					ndx = bb->dfn;
 			}
 		}
 
-		while ((ndx = bitset_ffs(workset)) != -1) {
+		if (ndx == -1)
+			continue;
+
+		while ((ndx = bitset_ffs_from(workset, ndx)) != -1) {
 			clear_bit(workset->bits, ndx);
 
 			bb = cu->bb_df_array[ndx];
 
-			iterate_dom_frontier_set(cu, var, bb, workset, inserted, work);
+			iterate_dom_frontier_set(cu, var, bb, workset, inserted, work, &ndx);
 		}
 	}
 
