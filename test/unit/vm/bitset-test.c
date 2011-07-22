@@ -197,3 +197,28 @@ void test_bitset_ffs_some_set(void)
 
 	free(bitset);
 }
+
+void test_bitset_ffs_from_some_set(void)
+{
+	struct bitset *bitset;
+
+	bitset = alloc_bitset(BITSET_SIZE);
+	set_bit(bitset->bits, 0);
+	set_bit(bitset->bits, 1);
+	set_bit(bitset->bits, 3);
+
+	assert_int_equals(0, bitset_ffs_from(bitset, 0));
+	clear_bit(bitset->bits, 0);
+
+	assert_int_equals(1, bitset_ffs_from(bitset, 0));
+	clear_bit(bitset->bits, 1);
+
+	assert_int_equals(3, bitset_ffs_from(bitset, 1));
+	assert_int_equals(3, bitset_ffs_from(bitset, 3));
+	assert_int_equals(-1, bitset_ffs_from(bitset, 4));
+	clear_bit(bitset->bits, 3);
+
+	assert_true(bitset_ffs_from(bitset, 0) < 0);
+
+	free(bitset);
+}
