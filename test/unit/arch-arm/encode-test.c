@@ -14,11 +14,12 @@
 
 #include <stdint.h>
 
-uint32_t read_mem32(struct buffer *buffer)
+uint32_t read_mem32(struct buffer *buffer, unsigned long offset)
 {
-	return *(buffer->buf) | (*(buffer->buf+1) << 8) |
-			(*(buffer->buf+2) << 16) | (*(buffer->buf+3) << 24);
+	return *(buffer->buf+offset) | (*(buffer->buf+offset+1) << 8) |
+			(*(buffer->buf+offset+2) << 16) | (*(buffer->buf+offset+3) << 24);
 }
+
 void test_emit_reg_imm_insn(void)
 {
 	struct buffer *buffer = alloc_buffer();
@@ -36,7 +37,7 @@ void test_emit_reg_imm_insn(void)
 
 	emit_insn(buffer, NULL, &insn);
 
-	encoded_insn = read_mem32(buffer);
+	encoded_insn = read_mem32(buffer, 0);
 
 	assert_int_equals(0xE3A0402E, encoded_insn);
 
@@ -62,7 +63,7 @@ void test_emit_reg_memlocal_insn(void)
 
 	emit_insn(buffer, NULL, &insn);
 
-	encoded_insn = read_mem32(buffer);
+	encoded_insn = read_mem32(buffer, 0);
 
 	assert_int_equals(0xE51B4038, encoded_insn);
 
@@ -87,7 +88,7 @@ void test_emit_reg_reg_insn(void)
 
 	emit_insn(buffer, NULL, &insn);
 
-	encoded_insn = read_mem32(buffer);
+	encoded_insn = read_mem32(buffer, 0);
 
 	assert_int_equals(0xE1A04007, encoded_insn);
 
@@ -131,7 +132,7 @@ void test_emit_uncond_branch_insn(void)
 	for_each_insn(insn, &bb1->insn_list) {
 		emit_insn(buffer, bb1, insn);
 	}
-	encoded_insn = read_mem32(buffer);
+	encoded_insn = read_mem32(buffer, 0);
 	assert_int_equals(0xEA000000, encoded_insn);
 
 	bb2->mach_offset = buffer_offset(buffer);
@@ -144,10 +145,10 @@ void test_emit_uncond_branch_insn(void)
 		emit_insn(buffer, bb2, insn);
 	}
 
-	encoded_insn = read_mem32(buffer);
+	encoded_insn = read_mem32(buffer, 0);
 	assert_int_equals(0xEAFFFFFF, encoded_insn);
-	encoded_insn = *(buffer->buf+4) | (*(buffer->buf+5) << 8) |
-			(*(buffer->buf+6) << 16) | (*(buffer->buf+7) << 24);
+
+	encoded_insn = read_mem32(buffer, 4);
 	assert_int_equals(0xEAFFFFFD, encoded_insn);
 
 	free_buffer(buffer);
