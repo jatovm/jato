@@ -19,4 +19,7 @@ uint32_t encode_imm_offset_load(struct insn *);
 long emit_branch(struct insn *, struct basic_block *);
 long branch_rel_addr(struct insn *, unsigned long);
 static inline void write_imm24(struct buffer *, struct insn *, unsigned long, unsigned long);
+void encode_stm(struct buffer *, uint16_t);
+void encode_setup_fp(struct buffer *, unsigned long);
+void encode_sub_sp(struct buffer *, unsigned long);
 #endif /* ARM_ENCODE_H */

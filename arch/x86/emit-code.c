@@ -664,7 +664,8 @@ static void emit_test_imm_memdisp(struct insn *insn, struct buffer *buf, struct 
 	__emit_test_imm_memdisp(buf, insn->src.imm, insn->dest.disp);
 }
 
-void emit_prolog(struct buffer *buf, unsigned long nr_locals)
+void emit_prolog(struct buffer *buf, struct stack_frame *frame,
+					unsigned long nr_locals)
 {
 	/* Unconditionally push callee-saved registers */
 	__emit_push_reg(buf, MACH_REG_EDI);
@@ -2003,7 +2004,8 @@ static void __emit64_pop_xmm(struct buffer *buf, enum machine_reg reg)
 	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 }
 
-void emit_prolog(struct buffer *buf, unsigned long nr_locals)
+void emit_prolog(struct buffer *buf, struct stack_frame *frame,
+					unsigned long nr_locals)
 {
 	__emit_push_reg(buf, MACH_REG_RBP);
 	__emit_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);

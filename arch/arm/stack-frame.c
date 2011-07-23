@@ -10,8 +10,8 @@
  *		|    :    |
  *		|    :    |
  *		|  ARG 5  |
- *		| OLD FP  |  -> Current Frame pointer is pointing here
- *		| OLD LR  |
+ *		| OLD LR  |  -> Current Frame pointer is pointing here
+ *		| OLD FP  |
  *		|   R4    |
  *		|    :    |
  *		|    :    |
@@ -68,7 +68,12 @@ unsigned long slot_offset_64(struct stack_slot *slot)
 
 unsigned long frame_locals_size(struct stack_frame *frame)
 {
-	assert(!"not implemented");
+	assert(frame->nr_local_slots >= frame->nr_args);
+
+	if (frame->nr_args > 4)
+		return (frame->nr_local_slots - frame->nr_args + frame->nr_spill_slots + 4) * sizeof(unsigned long);
+	else
+		return (frame->nr_local_slots + frame->nr_spill_slots) * sizeof(unsigned long);
 }
 
 unsigned long cu_frame_locals_offset(struct compilation_unit *cu)

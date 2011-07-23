@@ -123,9 +123,19 @@ void emit_nop(struct buffer *buf)
 	assert(!"not implemented");
 }
 
-void emit_prolog(struct buffer *buf, unsigned long l)
+void emit_prolog(struct buffer *buf, struct stack_frame *frame,
+					unsigned long frame_size)
 {
-	assert(!"not implemented");
+	/* Store FP and LR, LR is stored unconditionally */
+	encode_stm(buf, 0b0100100000000000);
+	/* Setup the frame pointer to point to the current frame */
+	encode_setup_fp(buf, 4);
+	/* Store R4-R10 unconditionally */
+	encode_stm(buf, 0b0000011111110000);
+	/* Make space for current Frame */
+	encode_sub_sp(buf, frame_size);
+	/* Store the arguments passed in R0-R3 */
+	encode_store_args(buf, frame);
 }
 
 void emit_lock(struct buffer *buf, struct vm_object *vo)

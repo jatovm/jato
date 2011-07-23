@@ -1,6 +1,8 @@
 #ifndef JATO_EMIT_CODE_H
 #define JATO_EMIT_CODE_H
 
+#include "jit/stack-slot.h"
+
 struct compilation_unit;
 struct jit_trampoline;
 struct basic_block;
@@ -10,7 +12,7 @@ struct vm_object;
 struct vm_jni_env;
 struct vm_method;
 
-extern void emit_prolog(struct buffer *, unsigned long);
+extern void emit_prolog(struct buffer *, struct stack_frame *, unsigned long);
 extern void emit_trace_invoke(struct buffer *, struct compilation_unit *);
 extern void emit_epilog(struct buffer *);
 extern void emit_trampoline(struct compilation_unit *, void *, struct jit_trampoline *);

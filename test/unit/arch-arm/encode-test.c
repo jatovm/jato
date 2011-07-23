@@ -153,3 +153,23 @@ void test_emit_uncond_branch_insn(void)
 
 	free_buffer(buffer);
 }
+
+void test_emit_prolog(void)
+{
+	struct buffer *buffer = alloc_buffer();
+	struct stack_frame *frame = alloc_stack_frame(3, 82);
+	uint32_t encoded_insn;
+
+	emit_prolog(buffer, frame, frame_locals_size(frame));
+
+	assert_int_equals(32, buffer_offset(buffer));
+
+	assert_int_equals(0xE92D4800, read_mem32(buffer, 0));
+	assert_int_equals(0xE28DB004, read_mem32(buffer, 4));
+	assert_int_equals(0xE92D07F0, read_mem32(buffer, 8));
+	assert_int_equals(0xE24DD0FC, read_mem32(buffer, 12));
+	assert_int_equals(0xE24DD04C, read_mem32(buffer, 16));
+	assert_int_equals(0xE50B0160, read_mem32(buffer, 20));
+	assert_int_equals(0xE50B1164, read_mem32(buffer, 24));
+	assert_int_equals(0xE50B2168, read_mem32(buffer, 28));
+}
