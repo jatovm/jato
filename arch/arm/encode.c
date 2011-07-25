@@ -267,6 +267,26 @@ void encode_store_args(struct buffer *buffer, struct stack_frame *frame)
 	}
 }
 
+void encode_restore_sp(struct buffer *buffer, unsigned long offset)
+{
+	uint32_t encoded_insn;
+	encoded_insn = arm_encode_insn[INSN_ADD_REG_IMM];
+
+	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_FP) & 0xF) << 16) |
+		((arm_encode_reg(MACH_REG_SP) & 0xF) << 12) | (offset & 0xFF);
+
+	emit_encoded_insn(buffer, encoded_insn);
+}
+
+void encode_ldm(struct buffer *buffer, uint16_t register_list)
+{
+	uint32_t encoded_insn;
+	encoded_insn = AL | MULTIPLE_LOAD_STORE | LOAD_INSN | DECREMENT_BEFORE |
+			((arm_encode_reg(MACH_REG_SP) & 0xF) << 16) | register_list;
+
+	emit_encoded_insn(buffer, encoded_insn);
+}
+
 void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *bb)
 {
 	uint32_t encoded_insn = arm_encode_insn[insn->type];

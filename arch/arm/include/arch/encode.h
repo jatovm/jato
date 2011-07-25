@@ -22,4 +22,6 @@ static inline void write_imm24(struct buffer *, struct insn *, unsigned long, un
 void encode_stm(struct buffer *, uint16_t);
 void encode_setup_fp(struct buffer *, unsigned long);
 void encode_sub_sp(struct buffer *, unsigned long);
+void encode_restore_sp(struct buffer *, unsigned long);
+void encode_ldm(struct buffer *, uint16_t);
 #endif /* ARM_ENCODE_H */

@@ -158,7 +158,6 @@ void test_emit_prolog(void)
 {
 	struct buffer *buffer = alloc_buffer();
 	struct stack_frame *frame = alloc_stack_frame(3, 82);
-	uint32_t encoded_insn;
 
 	emit_prolog(buffer, frame, frame_locals_size(frame));
 
@@ -172,4 +171,15 @@ void test_emit_prolog(void)
 	assert_int_equals(0xE50B0160, read_mem32(buffer, 20));
 	assert_int_equals(0xE50B1164, read_mem32(buffer, 24));
 	assert_int_equals(0xE50B2168, read_mem32(buffer, 28));
+}
+
+void test_emit_epilog(void)
+{
+	struct buffer *buffer = alloc_buffer();
+
+	emit_epilog(buffer);
+
+	assert_int_equals(8, buffer_offset(buffer));
+	assert_int_equals(0xE28BD004, read_mem32(buffer, 0));
+	assert_int_equals(0xE91D8FF0, read_mem32(buffer, 4));
 }

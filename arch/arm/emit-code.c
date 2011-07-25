@@ -138,17 +138,27 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 	encode_store_args(buf, frame);
 }
 
+void emit_epilog(struct buffer *buf)
+{
+	/*
+	 * Setup the stack frame to the previous value
+	 * before entering the frame
+	 */
+	encode_restore_sp(buf, 4);
+	/*
+	 * Load all the registers stored on the frame
+	 * It loads the stored LR, to PC directly so that control
+	 * returns to the calling function.
+	 */
+	encode_ldm(buf, 0b1000111111110000);
+}
+
 void emit_lock(struct buffer *buf, struct vm_object *vo)
 {
 	assert(!"not implemented");
 }
 
 void emit_lock_this(struct buffer *buf)
-{
-	assert(!"not implemented");
-}
-
-void emit_epilog(struct buffer *buf)
 {
 	assert(!"not implemented");
 }
