@@ -3,6 +3,8 @@
 
 /* An entry of constant pool */
 
+struct compilation_unit;
+
 struct lp_entry {
 	struct lp_entry	*next;
 	unsigned long	index;	/* Index starting from zero */
@@ -16,4 +18,4 @@ struct lp_entry *alloc_literal_pool_entry(struct compilation_unit *, unsigned lo
 struct lp_entry *search_literal_pool(struct lp_entry *, unsigned long);
 void free_constant_pool(struct lp_entry *);
 
-#endif /* JATO_ARM_CONSTANT_POOL_H */
+#endif /* JATO__ARM_CONSTANT_POOL_H */

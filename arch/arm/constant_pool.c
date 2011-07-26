@@ -1,8 +1,9 @@
 #ifdef CONFIG_ARM
-#include <arch/instruction.h>
-#include <stdlib.h>
-#include <arch/constant-pool.h>
+#include "arch/constant-pool.h"
 
+#include "arch/instruction.h"
+
+#include <stdlib.h>
 
 /*
  * This functions is used by the constant pool implementation.
