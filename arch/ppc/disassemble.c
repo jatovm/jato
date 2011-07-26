@@ -1,6 +1,8 @@
 #include "jit/disassemble.h"
 
-unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
+#include <assert.h>
+
+void disassemble(struct compilation_unit *cu, void *start, void *end)
 {
-	return NULL;
+	assert(!"not implemented");
 }
