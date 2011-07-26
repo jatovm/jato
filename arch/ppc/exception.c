@@ -28,7 +28,7 @@
 #include "vm/vm.h"
 
 unsigned char *
-throw_exception(struct compilation_unit *cu, struct object *exception)
+throw_exception(struct compilation_unit *cu, struct vm_object *exception)
 {
 	return NULL;
 }

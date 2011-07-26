@@ -16,59 +16,73 @@ enum insn_type {
 	INSN_BLR,
 };
 
-struct insn {
-	enum insn_type		type;
-	struct list_head	insn_list_node;
-	unsigned long		lir_pos;
-	unsigned long		bytecode_offset;
-	unsigned long		mach_offset;
+enum operand_type {
+	/* This must be last */
+	LAST_OPERAND
 };
 
-#define for_each_insn(insn, insn_list) list_for_each_entry(insn, insn_list, insn_list_node)
+struct operand {
+	enum operand_type type;
+	union {
+		struct use_position reg;
+		struct basic_block *branch_target;
+	};
+};
 
-void free_insn(struct insn *);
+enum insn_flag_type {
+	INSN_FLAG_ESCAPED		= 1U << 0,
+	INSN_FLAG_SAFEPOINT		= 1U << 1,
+	INSN_FLAG_KNOWN_BC_OFFSET	= 1U << 2,
+	INSN_FLAG_RENAMED		= 1U << 3, /* instruction with renamed virtual registers */
+	INSN_FLAG_SSA_ADDED		= 1U << 4, /* instruction added during SSA deconstruction */
+};
 
-static inline unsigned long lir_position(struct use_position *reg)
-{
-	assert(!"oops");
-}
+struct insn {
+	uint8_t			type;		 /* see enum insn_type */
+	uint8_t			flags;		 /* see enum insn_flag_type */
+	uint16_t		bc_offset;	 /* offset in bytecode */
+	uint32_t		mach_offset;	 /* offset in machine code */
+	uint32_t		lir_pos;	 /* offset in LIR */
+	struct list_head	insn_list_node;
+	struct list_head	branch_list_node;
 
-static inline bool insn_defs(struct insn *insn, struct var_info *var)
-{
-	return false;
-}
+	union {
+		struct {
+			struct operand src;
+			struct operand dest;
+		};
+		struct {
+			struct operand *ssa_srcs;
+			struct operand ssa_dest;
+			unsigned long nr_srcs;
+		};
 
-static inline bool insn_uses(struct insn *insn, struct var_info *var)
-{
-	return false;
-}
+		struct operand operand;
+	};
+};
 
-static inline const char *reg_name(enum machine_reg reg)
-{
-	return "<unknown>";
-}
+#define MAX_REG_OPERANDS 2
+
+void insn_sanity_check(void);
+
+struct insn *insn(enum insn_type);
 
 /*
  * These functions are used by generic code to insert spill/reload
  * instructions.
  */
 
-static inline struct insn *
-spill_insn(struct var_info *var, struct stack_slot *slot)
-{
-	return NULL;
-}
+int insert_copy_slot_32_insns(struct stack_slot *, struct stack_slot *,
+					struct list_head *, unsigned long);
+int insert_copy_slot_64_insns(struct stack_slot *, struct stack_slot *,
+					struct list_head *, unsigned long);
 
-static inline struct insn *
-reload_insn(struct stack_slot *slot, struct var_info *var)
-{
-	return NULL;
-}
+struct insn *spill_insn(struct var_info *var, struct stack_slot *slot);
+struct insn *reload_insn(struct stack_slot *slot, struct var_info *var);
+struct insn *jump_insn(struct basic_block *bb);
 
-static inline struct insn *
-exception_spill_insn(struct stack_slot *slot)
-{
-	return NULL;
-}
+bool insn_is_branch(struct insn *insn);
+bool insn_is_jmp_branch(struct insn *insn);
+bool insn_is_call(struct insn *insn);
 
 #endif /* __PPC_INSTRUCTION_H */

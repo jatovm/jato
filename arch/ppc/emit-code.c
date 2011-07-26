@@ -33,7 +33,7 @@
 
 #define 	NOT_IMPLEMENTED abort();
 
-void emit_prolog(struct buffer *buffer, unsigned long nr_locals)
+void emit_prolog(struct buffer *buffer, struct stack_frame *frame, unsigned long nr_locals)
 {
 		NOT_IMPLEMENTED
 }
@@ -54,7 +54,7 @@ void emit_unwind(struct buffer *buffer)
 	NOT_IMPLEMENTED
 }
 
-void emit_lock(struct buffer *buffer, struct object *object)
+void emit_lock(struct buffer *buffer, struct vm_object *object)
 {
 	NOT_IMPLEMENTED
 }
@@ -64,7 +64,7 @@ void emit_lock_this(struct buffer *buffer)
 	NOT_IMPLEMENTED
 }
 
-void emit_unlock(struct buffer *buffer, struct object *object)
+void emit_unlock(struct buffer *buffer, struct vm_object *object)
 {
 	NOT_IMPLEMENTED
 }

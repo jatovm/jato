@@ -1,6 +1,10 @@
 #ifndef __PPC_REGISTERS_H
 #define __PPC_REGISTERS_H
 
+#include "vm/types.h"
+
+#include <limits.h>
+
 enum machine_reg {
 	/* Volatile registers: */
 
@@ -63,7 +67,14 @@ enum machine_reg {
 	/* The above registers are available for get_fixed_var().  */
 	NR_FIXED_REGISTERS,
 
-	REG_UNASSIGNED = ~0UL,
+	MACH_REG_UNASSIGNED = CHAR_MAX,
 };
+
+#define GPR_VM_TYPE J_INT
+
+static inline enum vm_type reg_default_type(enum machine_reg reg)
+{
+	return GPR_VM_TYPE;
+}
 
 #endif /* __PPC_REGISTERS_H */

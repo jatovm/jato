@@ -3,6 +3,9 @@
 
 #include "jit/stack-slot.h"
 
+struct native_stack_frame {
+} __attribute__((packed));
+
 struct jit_stack_frame {
 	unsigned long	return_address;
 };
