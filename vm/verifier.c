@@ -236,57 +236,61 @@ static int verify_constant_tag(struct verifier_context *vrf, enum cafebabe_const
 	return 0;
 }
 
-int peek_verifier_local_var_type(struct verifier_state *s, enum vm_type vm_type, unsigned int idx)
+static inline void undef_vrf_lvar(struct verifier_state *s, unsigned int idx)
 {
-	if (s->vars[idx].state == UNDEFINED)
-		return E_TYPE_CHECKING;
-
-	/* If the state is unknown we cannot tell if the transition is valid.
-	 * But we can infer the type of the variable for the rest of the block.
-	 */
-	if (s->vars[idx].state == UNKNOWN) {
-		if (vm_type_is_pair(vm_type) && s->vars[idx+1].state != UNKNOWN)
-			return E_TYPE_CHECKING;
-
-		return store_verifier_local_var(s, vm_type, idx);
-	}
-
-	if (s->vars[idx].op.vm_type != vm_type)
-		return E_TYPE_CHECKING;
-
-	if (vm_type_is_pair(vm_type)) {
-		if (s->vars[idx+1].state != DEFINED)
-			return E_TYPE_CHECKING;
-		if (s->vars[idx].op.is_fragment || s->vars[idx+1].op.vm_type != vm_type || !s->vars[idx+1].op.is_fragment)
-			return E_TYPE_CHECKING;
-	}
-
-	return 0;
+	s->vars[idx].state = UNDEFINED;
 }
 
-int store_verifier_local_var(struct verifier_state *s, enum vm_type vm_type, unsigned int idx)
+static inline void def_vrf_lvar(struct verifier_state *s, enum vm_type vm_type, unsigned int idx)
 {
 	s->vars[idx].state = DEFINED;
 	s->vars[idx].op.vm_type = vm_type;
 
 	if (!vm_type_is_pair(vm_type))
-		goto out;
+		return;
 
 	s->vars[idx].op.is_fragment = false;
 	s->vars[idx+1].state = DEFINED;
 	s->vars[idx+1].op.vm_type = vm_type;
 	s->vars[idx+1].op.is_fragment = true;
+}
 
-out:
+int peek_vrf_lvar(struct verifier_block *b, enum vm_type vm_type, unsigned int idx)
+{
+	struct verifier_state *final = b->final_state, *init = b->initial_state;
+
+	/* If the state is unknown we cannot tell if the transition is valid.
+	 * But we can infer the type of the variable for the rest of the block.
+	 */
+	if (final->vars[idx].state == UNKNOWN) {
+		if (vm_type_is_pair(vm_type) && final->vars[idx+1].state != UNKNOWN)
+			return E_TYPE_CHECKING;
+
+		def_vrf_lvar(init, vm_type, idx);
+		return store_vrf_lvar(b, vm_type, idx);
+	}
+
+	if (final->vars[idx].op.vm_type != vm_type)
+		return E_TYPE_CHECKING;
+
+	if (vm_type_is_pair(vm_type)) {
+		if (final->vars[idx+1].state != DEFINED)
+			return E_TYPE_CHECKING;
+		if (final->vars[idx].op.is_fragment || final->vars[idx+1].op.vm_type != vm_type || !final->vars[idx+1].op.is_fragment)
+			return E_TYPE_CHECKING;
+	}
+
 	return 0;
 }
 
-void undef_verifier_local_var(struct verifier_state *s, unsigned int idx)
+int store_vrf_lvar(struct verifier_block *s, enum vm_type vm_type, unsigned int idx)
 {
-	s->vars[idx].state = UNDEFINED;
+	def_vrf_lvar(s->final_state, vm_type, idx);
+
+	return 0;
 }
 
-int push_vrf_op(struct verifier_state *s, enum vm_type vm_type)
+static inline int tail_def_vrf_op(struct verifier_state *s, enum vm_type vm_type)
 {
 	struct verifier_stack *new;
 
@@ -295,7 +299,30 @@ int push_vrf_op(struct verifier_state *s, enum vm_type vm_type)
 		return ENOMEM;
 
 	if (vm_type_is_pair(vm_type)) {
-		list_add(&new->slots, &s->stack->slots);
+		new->op.is_fragment = true;
+
+		list_add_tail(&new->slots, &s->stack->slots);
+
+		new = alloc_verifier_stack(vm_type);
+		if (!new)
+			return ENOMEM;
+	}
+
+	list_add_tail(&new->slots, &s->stack->slots);
+
+	return 0;
+}
+
+int push_vrf_op(struct verifier_block *b, enum vm_type vm_type)
+{
+	struct verifier_stack *new;
+
+	new = alloc_verifier_stack(vm_type);
+	if (!new)
+		return ENOMEM;
+
+	if (vm_type_is_pair(vm_type)) {
+		list_add(&new->slots, &b->final_state->stack->slots);
 
 		new = alloc_verifier_stack(vm_type);
 		if (!new)
@@ -304,22 +331,23 @@ int push_vrf_op(struct verifier_state *s, enum vm_type vm_type)
 		new->op.is_fragment = true;
 	}
 
-	list_add(&new->slots, &s->stack->slots);
+	list_add(&new->slots, &b->final_state->stack->slots);
 
 	return 0;
 }
 
-int pop_vrf_op(struct verifier_state *s, enum vm_type vm_type)
+int pop_vrf_op(struct verifier_block *b, enum vm_type vm_type)
 {
+	struct verifier_state *final = b->final_state, *init = b->initial_state;
 	struct verifier_stack *el;
 
-	el = list_first_entry(&s->stack->slots, struct verifier_stack, slots);
+	el = list_first_entry(&final->stack->slots, struct verifier_stack, slots);
 
 	/* VM_TYPE_MAX marks the bottom of the stack. If we see it we can
 	 * then infer what would have been needed in the the initial stack.
 	 */
 	if (el->op.vm_type == VM_TYPE_MAX)
-		return 0;
+		return tail_def_vrf_op(init, vm_type);
 
 	if (vm_type_is_pair(vm_type)) {
 		if (el->op.vm_type != vm_type || !el->op.is_fragment)
@@ -328,7 +356,7 @@ int pop_vrf_op(struct verifier_state *s, enum vm_type vm_type)
 		list_del(&el->slots);
 		free(el);
 
-		el = list_first_entry(&s->stack->slots, struct verifier_stack, slots);
+		el = list_first_entry(&final->stack->slots, struct verifier_stack, slots);
 	}
 
 	if (el->op.vm_type != vm_type || el->op.is_fragment)
@@ -340,17 +368,18 @@ int pop_vrf_op(struct verifier_state *s, enum vm_type vm_type)
 	return 0;
 }
 
-int peek_vrf_op(struct verifier_state *s, enum vm_type vm_type)
+int peek_vrf_op(struct verifier_block *b, enum vm_type vm_type)
 {
+	struct verifier_state *final = b->final_state, *init = b->initial_state;
 	struct verifier_stack *el;
 
-	el = list_first_entry(&s->stack->slots, struct verifier_stack, slots);
+	el = list_first_entry(&final->stack->slots, struct verifier_stack, slots);
 
 	/* VM_TYPE_MAX marks the bottom of the stack. If we see it we can
 	 * then infer what would have been needed in the the initial stack.
 	 */
 	if (el->op.vm_type == VM_TYPE_MAX)
-		return 0;
+		return tail_def_vrf_op(init, vm_type);
 
 	if (vm_type_is_pair(vm_type)) {
 		if (el->op.vm_type != vm_type || !el->op.is_fragment)
@@ -499,13 +528,36 @@ int add_lookupswitch_destinations(struct verifier_jump_destinations *jd, const u
 	return 0;
 }
 
+static const char *vm_type_to_str(enum vm_type vm_type)
+{
+	switch(vm_type) {
+		case J_VOID: return "J_VOID";
+		case J_REFERENCE: return "J_REFERENCE";
+		case J_BYTE: return "J_BYTE";
+		case J_SHORT: return "J_SHORT";
+		case J_INT: return "J_INT";
+		case J_LONG: return "J_LONG";
+		case J_CHAR: return "J_CHAR";
+		case J_FLOAT: return "J_FLOAT";
+		case J_DOUBLE: return "J_DOUBLE";
+		case J_BOOLEAN: return "J_BOOLEAN";
+		case J_RETURN_ADDRESS: return "J_RETURN_ADDRESS";
+		case VM_TYPE_MAX: return "VM_TYPE_MAX";
+		default: return "Unknown type";
+	}
+}
+
 static int cmp_verifier_op(struct verifier_operand *op1, struct verifier_operand *op2)
 {
-	if (op1->vm_type != op2->vm_type)
+	if (op1->vm_type != op2->vm_type) {
+		printf("Operand comparison: different types: %s and %s.\n", vm_type_to_str(op1->vm_type), vm_type_to_str(op2->vm_type));
 		return E_TYPE_CHECKING;
+	}
 
-	if (op1->is_fragment != op2->is_fragment)
+	if (op1->is_fragment != op2->is_fragment) {
+		printf("Operand comparison: one operand is fragment and the other is not.\n");
 		return E_TYPE_CHECKING;
+	}
 
 	return 0;
 }

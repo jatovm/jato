@@ -75,13 +75,12 @@ void free_verifier_block(struct verifier_block *block);
 void free_verifier_jump_destinations(struct verifier_jump_destinations *jmp_dests);
 void free_verifier_context(struct verifier_context *ctx);
 
-int store_verifier_local_var(struct verifier_state *s, enum vm_type vm_type, unsigned int idx);
-int peek_verifier_local_var_type(struct verifier_state *s, enum vm_type vm_type, unsigned int idx);
-void undef_verifier_local_var(struct verifier_state *s, unsigned int idx);
+int store_vrf_lvar(struct verifier_block *b, enum vm_type vm_type, unsigned int idx);
+int peek_vrf_lvar(struct verifier_block *b, enum vm_type vm_type, unsigned int idx);
 
-int push_vrf_op(struct verifier_state *s, enum vm_type vm_type);
-int pop_vrf_op(struct verifier_state *s, enum vm_type vm_type);
-int peek_vrf_op(struct verifier_state *s, enum vm_type vm_type);
+int push_vrf_op(struct verifier_block *b, enum vm_type vm_type);
+int pop_vrf_op(struct verifier_block *b, enum vm_type vm_type);
+int peek_vrf_op(struct verifier_block *b, enum vm_type vm_type);
 
 int add_jump_destination(struct verifier_jump_destinations *jd, unsigned long dest);
 int add_tableswitch_destinations(struct verifier_jump_destinations *jd, const unsigned char *code, unsigned long pc, unsigned long code_size);
