@@ -11,7 +11,7 @@
 #
 include/vm/arch.h
 include/vm/version.h
-arch/x86/include/arch/asm-offsets.h
+arch/*/include/arch/asm-offsets.h
 
 #
 # Generated source files
