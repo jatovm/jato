@@ -1,5 +1,4 @@
 ARCH_OBJS = \
-	arch/ppc/backtrace.o \
 	arch/ppc/disassemble.o \
 	arch/ppc/emit-code.o \
 	arch/ppc/exception.o \
