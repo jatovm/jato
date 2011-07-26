@@ -27,25 +27,23 @@ static void insert_to_literal_pool(struct compilation_unit *cu, struct lp_entry 
  * to pre existing node otherwise it will make a new node and then return
  * the pointer
  */
-struct lp_entry *alloc_literal_pool_entry(struct compilation_unit *cu,
-						unsigned long value)
+struct lp_entry *alloc_literal_pool_entry(struct compilation_unit *cu, unsigned long value)
 {
 	struct lp_entry *lp;
 
 	lp = search_literal_pool(cu->pool_head, value);
-	if (lp != NULL)
+	if (lp)
 		return lp;
 
 	lp = malloc(sizeof *lp);
 	if (!lp)
-		goto out;
+		return NULL;
 
 	lp->index = cu->nr_entries_in_pool++;
 	lp->value = value;
 
 	insert_to_literal_pool(cu, lp);
 
-out:
 	return lp;
 }
 
@@ -53,17 +51,18 @@ out:
  * This functions searches the constant pool for the presence
  * of a given immediate value
  */
-struct lp_entry *search_literal_pool(struct lp_entry *lp,
-						unsigned long value)
+struct lp_entry *search_literal_pool(struct lp_entry *lp, unsigned long value)
 {
 	struct lp_entry *lp_ptr;
 
 	lp_ptr = lp;
-	while (lp_ptr != NULL) {
+	while (lp_ptr) {
 		if (lp_ptr->value == value)
 			return lp_ptr;
+
 		lp_ptr = lp_ptr->next;
 	}
+
 	return NULL;
 }
 
@@ -73,6 +72,7 @@ struct lp_entry *search_literal_pool(struct lp_entry *lp,
 void free_constant_pool(struct lp_entry *head)
 {
 	struct lp_entry *lp = head;
+
 	while (lp != NULL) {
 		head = head->next;
 		free(lp);
