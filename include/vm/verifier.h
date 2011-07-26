@@ -39,6 +39,11 @@ struct verifier_block {
 	struct verifier_state		*initial_state;
 	struct verifier_state 		*final_state;
 
+	unsigned char			*code;
+	unsigned long			pc;
+	unsigned char			opc;
+	bool				is_wide;
+
 	struct verifier_context		*parent_ctx;
 	struct list_head 		blocks;
 };
@@ -78,6 +83,7 @@ void free_verifier_context(struct verifier_context *ctx);
 int store_vrf_lvar(struct verifier_block *b, enum vm_type vm_type, unsigned int idx);
 int peek_vrf_lvar(struct verifier_block *b, enum vm_type vm_type, unsigned int idx);
 
+int vrf_stack_size(struct verifier_stack *st);
 int push_vrf_op(struct verifier_block *b, enum vm_type vm_type);
 int pop_vrf_op(struct verifier_block *b, enum vm_type vm_type);
 int peek_vrf_op(struct verifier_block *b, enum vm_type vm_type);
@@ -92,7 +98,7 @@ int transition_verifier_state(struct verifier_state *s1, struct verifier_state *
 
 int vm_method_verify(struct vm_method *vmm);
 
-typedef int (*verify_fn_t) (struct verifier_context *);
+typedef int (*verify_fn_t) (struct verifier_block *);
 
 #define E_NOT_IMPLEMENTED		(-ENOSYS)
 #define E_TYPE_CHECKING			(-1)
@@ -105,7 +111,7 @@ typedef int (*verify_fn_t) (struct verifier_context *);
 
 #define INITIAL_FOLLOWERS_SIZE	(8)
 
-#define DECLARE_VERIFIER(name) int verify_##name(struct verifier_context *)
+#define DECLARE_VERIFIER(name) int verify_##name(struct verifier_block *)
 
 DECLARE_VERIFIER(aaload);
 DECLARE_VERIFIER(aastore);

@@ -27,13 +27,11 @@
 #define verify_goto_w		verify_goto
 #define verify_jsr_w		verify_jsr
 
-#if 0
 #define BYTECODE(opc, name, size, type) [opc] = verify_ ## name,
 static verify_fn_t verifiers[] = {
 #  include <vm/bytecode-def.h>
 };
 #undef BYTECODE
-#endif
 
 struct verifier_local_var *alloc_verifier_local_var(int nb_vars)
 {
@@ -94,6 +92,8 @@ struct verifier_block *alloc_verifier_block(struct verifier_context *vrf, uint32
 		return NULL;
 
 	newb->begin_offset = begin_offset;
+	newb->code = vrf->code + begin_offset;
+	newb->pc = 0;
 
 	newb->initial_state = alloc_verifier_state(vrf->max_locals);
 	if (!newb->initial_state)
@@ -311,6 +311,11 @@ static inline int tail_def_vrf_op(struct verifier_state *s, enum vm_type vm_type
 	list_add_tail(&new->slots, &s->stack->slots);
 
 	return 0;
+}
+
+int vrf_stack_size(struct verifier_stack *st)
+{
+	return list_size(&st->slots);
 }
 
 int push_vrf_op(struct verifier_block *b, enum vm_type vm_type)
@@ -745,9 +750,6 @@ static int verifier_first_pass(struct verifier_context *vrf)
 	struct bitset *insn_map;
 	struct verifier_jump_destinations *jd;
 
-	if (vrf->code_size == 0)
-		return 0; /* Nothing to check ! */
-
 	pc = 0;
 	code = vrf->code;
 	insn_map = alloc_bitset(vrf->code_size);
@@ -934,6 +936,9 @@ int vm_method_verify(struct vm_method *vmm)
 {
 	int err;
 	struct verifier_context *vrf;
+
+	if (vmm->code_attribute.code_length == 0)
+		return 0; /* Nothing to check ! */
 
 	vrf = alloc_verifier_context(vmm);
 	if (!vrf)
