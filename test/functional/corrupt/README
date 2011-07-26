@@ -1,0 +1,10 @@
+About viewing/editing those corrupted .class files.  Tools to use :
+
+- javap -c : for viewing the bytecode. Keep in mind that this tool is not
+  resilient to all the malformation tested (e.g. it fails at disassembling
+  CorruptedIncompleteInsn.class).
+- vim -b : for editing it. DO NOT FORGET the -b or the .class file will be
+  rejected with an exception ClassFormatError which is probably not what
+  you want. Additionaly, you will probably want to follow the instructions
+  given at http://vim.wikia.com/wiki/Improved_hex_editing to ease your
+  editing.

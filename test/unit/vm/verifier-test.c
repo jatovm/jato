@@ -168,6 +168,41 @@ void test_verifier_stack_utilities(void)
 	free_verifier_state(s);
 }
 
+void test_jump_destinations_utilities(void)
+{
+	unsigned long prev_dest;
+	struct verifier_jump_destinations *jd, *cur;
+	struct bitset *insn_map;
+
+	jd = alloc_verifier_jump_destinations(0);
+	assert_not_null(jd);
+	INIT_LIST_HEAD(&jd->list);
+
+	insn_map = alloc_bitset(16);
+	assert_not_null(insn_map);
+
+	assert_int_equals(0, add_jump_destination(jd, 2));
+	assert_int_equals(0, add_jump_destination(jd, 15));
+	assert_int_equals(0, add_jump_destination(jd, 1));
+
+	prev_dest = 0;
+	list_for_each_entry(cur, &jd->list, list) {
+		assert_true((prev_dest < cur->dest));
+		prev_dest = cur->dest;
+	}
+
+	set_bit(insn_map->bits, 0);
+	set_bit(insn_map->bits, 1);
+	set_bit(insn_map->bits, 2);
+	set_bit(insn_map->bits, 15);
+
+	list_for_each_entry(cur, &jd->list, list)
+		assert_true(test_bit(insn_map->bits, cur->dest));
+
+	free_verifier_jump_destinations(jd);
+	free(insn_map);
+}
+
 void test_transition_verifier_stack(void)
 {
 	struct verifier_state *stc;

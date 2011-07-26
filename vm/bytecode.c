@@ -28,6 +28,7 @@
 #include "vm/opcodes.h"
 #include "vm/class.h"
 #include "vm/trace.h"
+#include "vm/verifier.h"
 #include "vm/die.h"
 #include "vm/vm.h"
 
@@ -163,6 +164,7 @@ enum bytecode_type {
 	BYTECODE_WIDE		= 0x04,
 	BYTECODE_RETURN		= 0x08,
 	BYTECODE_VARIABLE_LEN	= 0x10,
+	BYTECODE_USES_LOCAL_VAR = 0x20,
 };
 
 struct bytecode_info {
@@ -179,6 +181,46 @@ static struct bytecode_info bytecode_infos[] = {
 };
 
 #undef BYTECODE
+
+unsigned int get_local_var_index(const unsigned char *code, unsigned long pc)
+{
+	uint8_t opc = code[pc];
+
+	/* if the index is contained in the opcode */
+	if (opc >= OPC_ILOAD_0 && opc < OPC_LLOAD_0)
+		return opc - OPC_ILOAD_0;
+
+	else if (opc >= OPC_LLOAD_0 && opc < OPC_FLOAD_0)
+		return opc - OPC_LLOAD_0;
+
+	else if (opc >= OPC_FLOAD_0 && opc < OPC_DLOAD_0)
+		return opc - OPC_FLOAD_0;
+
+	else if (opc >= OPC_DLOAD_0 && opc < OPC_ALOAD_0)
+		return opc - OPC_DLOAD_0;
+
+	else if (opc >= OPC_ALOAD_0 && opc < OPC_IALOAD)
+		return opc - OPC_ALOAD_0;
+
+	else if (opc >= OPC_ISTORE_0 && opc < OPC_LSTORE_0)
+		return opc - OPC_ISTORE_0;
+
+	else if (opc >= OPC_LSTORE_0 && opc < OPC_FSTORE_0)
+		return opc - OPC_LSTORE_0;
+
+	else if (opc >= OPC_FSTORE_0 && opc < OPC_DSTORE_0)
+		return opc - OPC_FSTORE_0;
+
+	else if (opc >= OPC_DSTORE_0 && opc < OPC_ASTORE_0)
+		return opc - OPC_DSTORE_0;
+
+	else if (opc >= OPC_ASTORE_0 && opc < OPC_IASTORE)
+		return opc - OPC_ASTORE_0;
+
+	/* if the index is the operand */
+
+	return read_u8(code + pc + 1);
+}
 
 void get_tableswitch_info(const unsigned char *code, unsigned long pc,
 			  struct tableswitch_info *info)
@@ -249,6 +291,94 @@ unsigned long bc_insn_size(const unsigned char *code, unsigned long pc)
 	return size;
 }
 
+/* Just like the function above but returns E_MALFORMED_BC if the code ends
+ * in the middle of an instruction. */
+
+long bc_insn_size_safe(unsigned char *code, unsigned long pc, unsigned long code_size)
+{
+	uint8_t opc;
+	int high, low, padding, npairs, size;
+	struct bytecode_buffer buf;
+
+	buf.buffer = code;
+	buf.pos = pc;
+
+	if (pc >= code_size)
+		return E_MALFORMED_BC;
+
+	opc = bytecode_read_u8(&buf);
+
+	if (bc_is_invalid(opc))
+		return E_MALFORMED_BC;
+
+	size = bytecode_infos[opc].size;
+	if (size)
+		goto out;
+
+	if (opc == OPC_TABLESWITCH) {
+		padding = get_tableswitch_padding(pc);
+
+		if (buf.pos + padding + 12 >= code_size)
+			return E_MALFORMED_BC;
+
+		buf.pos += padding + 4; /* Ditch both the padding and the default */
+
+		low = bytecode_read_s32(&buf);
+		high = bytecode_read_s32(&buf);
+
+		if (low > high)
+			return E_MALFORMED_BC;
+
+		size = 1 + padding + 12 + (high - low + 1) * 4;
+	}
+	else if (opc == OPC_LOOKUPSWITCH) {
+		padding = get_tableswitch_padding(pc);
+
+		if (buf.pos + padding + 8 >= code_size)
+			return E_MALFORMED_BC;
+
+		buf.pos += padding + 4; /* Ditch both the padding and the default */
+
+		npairs = bytecode_read_s32(&buf);
+		if (npairs < 0)
+			return E_MALFORMED_BC;
+
+		size = 1 + padding + 8 + npairs * 2 * 4;
+	}
+	else if (opc == OPC_WIDE) {
+		if (buf.pos + 1 >= code_size)
+			return E_MALFORMED_BC;
+
+		opc = bytecode_read_u8(&buf);
+		if (opc == OPC_IINC)
+			size = 6;
+		else
+			size = 4;
+	}
+	else
+		return E_MALFORMED_BC; /* unknown bytecode opcode. */
+
+out:
+	if (size < 0)
+		return E_MALFORMED_BC;
+	if ((unsigned long) pc + size > code_size)
+		return E_MALFORMED_BC;
+
+	return size;
+}
+
+bool bc_is_invalid(unsigned char opc)
+{
+	return opc == OPC_BREAKPOINT || opc > OPC_PUTFIELD_QUICK_W;
+}
+
+bool bc_is_ldc(unsigned char opc)
+{
+	return opc == OPC_LDC
+		|| opc == OPC_LDC_W
+		|| opc == OPC_LDC2_W;
+}
+
 bool bc_is_branch(unsigned char opc)
 {
 	return bytecode_infos[opc].type & BYTECODE_BRANCH;
@@ -257,6 +387,11 @@ bool bc_is_branch(unsigned char opc)
 bool bc_is_wide(unsigned char opc)
 {
 	return bytecode_infos[opc].type & BYTECODE_WIDE;
+}
+
+bool bc_uses_local_var(unsigned char opc)
+{
+	return bytecode_infos[opc].type & BYTECODE_USES_LOCAL_VAR;
 }
 
 bool bc_is_goto(unsigned char opc)
@@ -285,6 +420,14 @@ bool bc_is_ret(const unsigned char *code)
 		code++;
 
 	return *code == OPC_RET;
+}
+
+bool bc_is_unconditionnal_branch(const unsigned char *code)
+{
+	return (bc_is_return(*code) || bc_is_goto(*code)
+			|| bc_is_jsr(*code)
+			|| bc_is_ret(code)
+			|| bc_is_athrow(*code));
 }
 
 bool bc_is_astore(const unsigned char *code)

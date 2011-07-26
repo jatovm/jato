@@ -135,7 +135,6 @@ LIB_OBJS += vm/jni-interface.o
 LIB_OBJS += vm/jni.o
 LIB_OBJS += vm/method.o
 LIB_OBJS += vm/verifier.o
-LIB_OBJS += vm/verify-functions.o
 LIB_OBJS += vm/monitor.o
 LIB_OBJS += vm/natives.o
 LIB_OBJS += vm/object.o
@@ -433,7 +432,7 @@ clean:
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
 	$(Q) - rm -f $(RUNTIME_CLASSES)
-	$(Q) - find test/functional/ -name "*.class" | xargs rm -f
+	$(Q) - find test/functional/ -name "*.class" | grep -v corrupt | xargs rm -f
 	$(Q) - find runtime/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
 	$(Q) - rm -f include/arch

@@ -119,10 +119,10 @@ int vm_method_init(struct vm_method *vmm,
 	cafebabe_stream_open_buffer(&stream,
 		attribute->info, attribute->attribute_length);
 
-	if (vm_method_verify(vmm))
+	if (cafebabe_code_attribute_init(&vmm->code_attribute, &stream))
 		goto error_free_type;
 
-	if (cafebabe_code_attribute_init(&vmm->code_attribute, &stream))
+	if (vm_method_verify(vmm))
 		goto error_free_type;
 
 	cafebabe_stream_close_buffer(&stream);

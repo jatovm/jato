@@ -32,7 +32,11 @@ void write_u32(unsigned char *p, uint32_t value);
 struct vm_class;
 
 unsigned long bc_insn_size(const unsigned char *, unsigned long);
+long bc_insn_size_safe(unsigned char *, unsigned long, unsigned long);
+bool bc_is_invalid(unsigned char);
+bool bc_is_ldc(unsigned char);
 bool bc_is_branch(unsigned char);
+bool bc_uses_local_var(unsigned char);
 bool bc_is_goto(unsigned char);
 bool bc_is_wide(unsigned char);
 long bc_target_off(const unsigned char *);
@@ -40,6 +44,7 @@ bool bc_is_athrow(unsigned char);
 bool bc_is_return(unsigned char);
 bool bc_is_jsr(unsigned char);
 bool bc_is_ret(const unsigned char *);
+bool bc_is_unconditionnal_branch(const unsigned char *);
 bool bc_is_astore(const unsigned char *);
 unsigned long bc_get_astore_index(const unsigned char *);
 unsigned long bc_get_ret_index(const unsigned char *);
@@ -72,6 +77,8 @@ struct lookupswitch_info {
 	uint32_t count;
 	unsigned long insn_size;
 };
+
+unsigned int get_local_var_index(const unsigned char *code, unsigned long pc);
 
 static inline int get_tableswitch_padding(unsigned long pc)
 {

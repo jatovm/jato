@@ -33,40 +33,59 @@ struct verifier_state {
 
 struct verifier_block {
 	uint32_t 			begin_offset;
-	struct 				verifier_state *initial_state;
-	struct 				verifier_state *final_state;
-	uint32_t 			following_offsets;
-	struct 				list_head blocks;
+	uint32_t 			*following_offsets;
+	uint32_t 			nb_followers;
+
+	struct verifier_state		*initial_state;
+	struct verifier_state 		*final_state;
+
+	struct verifier_context		*parent_ctx;
+	struct list_head 		blocks;
 };
 
-struct verify_context {
-	struct bytecode_buffer		*buffer;
-	unsigned char			*code;
-	unsigned long			offset;
-	unsigned long			code_size;
-	unsigned char			opc;
+struct verifier_jump_destinations {
+	unsigned long			dest;
+	struct list_head		list;
+};
 
-	struct verifier_block		*vb_list;
-	bool				is_wide;
+struct verifier_context {
+	struct vm_method			*method;
+	unsigned char				*code;
+	unsigned long				code_size;
+
+	unsigned long				max_stack;
+	unsigned long				max_locals;
+
+	struct verifier_jump_destinations	*jmp_dests;
+	struct verifier_block			*vb_list;
+	bool					is_wide;
 };
 
 struct verifier_local_var *alloc_verifier_local_var(int nb_vars);
 struct verifier_stack *alloc_verifier_stack(enum vm_type vm_type);
 struct verifier_state *alloc_verifier_state(int nb_vars);
-struct verifier_block *alloc_verifier_block(int nb_vars);
+struct verifier_block *alloc_verifier_block(struct verifier_context *vrf, uint32_t begin_offset);
+struct verifier_jump_destinations *alloc_verifier_jump_destinations(unsigned long initial_size);
+struct verifier_context *alloc_verifier_context(struct vm_method *vmm);
 
 void free_verifier_local_var(struct verifier_local_var *vars);
 void free_verifier_stack(struct verifier_stack *stack);
 void free_verifier_state(struct verifier_state *state);
 void free_verifier_block(struct verifier_block *block);
+void free_verifier_jump_destinations(struct verifier_jump_destinations *jmp_dests);
+void free_verifier_context(struct verifier_context *ctx);
 
 int store_verifier_local_var(struct verifier_state *s, enum vm_type vm_type, unsigned int idx);
 int peek_verifier_local_var_type(struct verifier_state *s, enum vm_type vm_type, unsigned int idx);
-int undef_verifier_local_var(struct verifier_state *s, unsigned int idx);
+void undef_verifier_local_var(struct verifier_state *s, unsigned int idx);
 
 int push_vrf_op(struct verifier_state *s, enum vm_type vm_type);
 int pop_vrf_op(struct verifier_state *s, enum vm_type vm_type);
 int peek_vrf_op(struct verifier_state *s, enum vm_type vm_type);
+
+int add_jump_destination(struct verifier_jump_destinations *jd, unsigned long dest);
+int add_tableswitch_destinations(struct verifier_jump_destinations *jd, const unsigned char *code, unsigned long pc, unsigned long code_size);
+int add_lookupswitch_destinations(struct verifier_jump_destinations *jd, const unsigned char *code, unsigned long pc, unsigned long code_size);
 
 int transition_verifier_stack(struct verifier_stack *stc, struct verifier_stack *stn);
 int transition_verifier_local_var(struct verifier_local_var *varsc, struct verifier_local_var *varsn, int nb_vars);
@@ -74,14 +93,20 @@ int transition_verifier_state(struct verifier_state *s1, struct verifier_state *
 
 int vm_method_verify(struct vm_method *vmm);
 
-typedef int (*verify_fn_t) (struct verify_context *);
+typedef int (*verify_fn_t) (struct verifier_context *);
 
-#define E_NOT_IMPLEMENTED	(-ENOSYS)
-#define E_TYPE_CHECKING		(-1)
-#define E_MALFORMED_BC		(-2)
-#define E_WRONG_LOCAL_INDEX	(-3)
+#define E_NOT_IMPLEMENTED		(-ENOSYS)
+#define E_TYPE_CHECKING			(-1)
+#define E_MALFORMED_BC			(-2)
+#define E_WRONG_LOCAL_INDEX		(-3)
+#define E_WRONG_CONSTANT_POOL_INDEX	(-4)
+#define E_INVALID_BRANCH		(-5)
+#define E_FALLING_OFF			(-6)
+#define E_INVALID_EXCEPTION_HANDLER	(-7)
 
-#define DECLARE_VERIFIER(name) int verify_##name(struct verify_context *)
+#define INITIAL_FOLLOWERS_SIZE	(8)
+
+#define DECLARE_VERIFIER(name) int verify_##name(struct verifier_context *)
 
 DECLARE_VERIFIER(aaload);
 DECLARE_VERIFIER(aastore);
