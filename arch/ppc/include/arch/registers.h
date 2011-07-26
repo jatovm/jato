@@ -60,6 +60,9 @@ enum machine_reg {
 	/* Used for special exception handling and in glink code.  */
 	REG_R12,
 
+	/* The above registers are available for get_fixed_var().  */
+	NR_FIXED_REGISTERS,
+
 	REG_UNASSIGNED = ~0UL,
 };
 
