@@ -5,6 +5,21 @@
 
 #include <stdlib.h>
 
+static void insert_to_literal_pool(struct compilation_unit *cu, struct lp_entry *lp)
+{
+	if (cu->pool_head == NULL) {
+		cu->pool_head = lp;
+	} else {
+		struct lp_entry *ptr;
+
+		ptr = cu->pool_head;
+		while (ptr->next != NULL)
+			ptr = ptr->next;
+
+		ptr->next = lp;
+	}
+}
+
 /*
  * This functions is used by the constant pool implementation.
  * It returns the pointer to the node of immediate value.
@@ -16,7 +31,6 @@ struct lp_entry *alloc_literal_pool_entry(struct compilation_unit *cu,
 						unsigned long value)
 {
 	struct lp_entry *lp;
-	struct lp_entry *ptr;
 
 	lp = search_literal_pool(cu->pool_head, value);
 	if (lp != NULL)
@@ -29,15 +43,7 @@ struct lp_entry *alloc_literal_pool_entry(struct compilation_unit *cu,
 	lp->index = cu->nr_entries_in_pool++;
 	lp->value = value;
 
-	if (cu->pool_head == NULL)
-		cu->pool_head = lp;
-	else {
-		ptr = cu->pool_head;
-		while (ptr->next != NULL)
-			ptr = ptr->next;
-
-		ptr->next = lp;
-	}
+	insert_to_literal_pool(cu, lp);
 
 out:
 	return lp;
