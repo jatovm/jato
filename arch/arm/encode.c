@@ -11,33 +11,32 @@
 #include <stdint.h>
 
 #define INVALID_INSN			0
+
 /*
- * Max value of frame size that can be subtracted from sp
- * in one instruction.
+ * Max value of frame size that can be subtracted from sp in one instruction.
  */
 #define MAX_FRAME_SIZE_SUBTRACTED	252
 
 static uint8_t arm_register_numbers[] = {
-	[MACH_REG_R0] = 0x00,
-	[MACH_REG_R1] = 0x01,
-	[MACH_REG_R2] = 0x02,
-	[MACH_REG_R3] = 0x03,
-	[MACH_REG_R4] = 0x04,
-	[MACH_REG_R5] = 0x05,
-	[MACH_REG_R6] = 0x06,
-	[MACH_REG_R7] = 0x07,
-	[MACH_REG_R8] = 0x08,
-	[MACH_REG_R9] = 0x09,
-	[MACH_REG_R10] = 0x0A,
-	[MACH_REG_FP] = 0x0B,
-	[MACH_REG_IP] = 0x0C,
-	[MACH_REG_SP] = 0x0D,
-	[MACH_REG_LR] = 0x0E,
-	[MACH_REG_PC] = 0x0F,
+	[MACH_REG_R0]		= 0x00,
+	[MACH_REG_R1]		= 0x01,
+	[MACH_REG_R2]		= 0x02,
+	[MACH_REG_R3]		= 0x03,
+	[MACH_REG_R4]		= 0x04,
+	[MACH_REG_R5]		= 0x05,
+	[MACH_REG_R6]		= 0x06,
+	[MACH_REG_R7]		= 0x07,
+	[MACH_REG_R8]		= 0x08,
+	[MACH_REG_R9]		= 0x09,
+	[MACH_REG_R10]		= 0x0A,
+	[MACH_REG_FP]		= 0x0B,
+	[MACH_REG_IP]		= 0x0C,
+	[MACH_REG_SP]		= 0x0D,
+	[MACH_REG_LR]		= 0x0E,
+	[MACH_REG_PC]		= 0x0F,
 };
 
- /* arm_encode_reg : Encodes the register for arm instructions */
-
+/* Encodes the register for arm instructions */
 uint8_t arm_encode_reg(enum machine_reg reg)
 {
 	if (reg == MACH_REG_UNASSIGNED)
@@ -53,40 +52,39 @@ uint8_t arm_encode_reg(enum machine_reg reg)
  * All ARM instructions are conditionally executed
  * so all of them have a 4bit condition field at start
  */
-
 enum arm_conditions {
 	AL	= (0xEUL << 28),	/* Always execute the instruction */
 };
 
 /* Encodings for different fields of ARM */
-
 enum arm_fields {
-
 	/* F_field denotes the category of the instruction */
 	DATA_PROCESSING			= (0x0UL << 26),
 	LOAD_STORE			= (0x1UL << 26),
 	BRANCH				= (0x2UL << 26),
-	MULTIPLE_LOAD_STORE		= (0x2UL << 26), /* Load and Store mulatiple registers */
+	MULTIPLE_LOAD_STORE		= (0x2UL << 26),	/* Load and Store multiple registers */
 
 	/* This field give information about acccessing */
-	LOAD_STORE_UNSIGNED_BYTE	= (1UL << 22), /* Default is word access */
+	LOAD_STORE_UNSIGNED_BYTE	= (1UL << 22),		/* Default is word access */
 
 	/* This fiels gives info about either loading the data or storing it */
-	LOAD_INSN			= (1UL << 20), /* Default is store insn */
+	LOAD_INSN			= (1UL << 20),		/* Default is store insn */
 
 	/* This field gives info about either this insn should update the CSPR or not */
 	S_BIT_HIGH			= (1UL << 20),
 
 	/*
-	 * This field gives info about the second operand involved
-	 * in the data processing instructions
+	 * This field gives info about the second operand involved in the data
+	 * processing instructions
 	 */
-	USE_IMM_OPERAND			= (1UL << 25), /* Default is register operand */
+	USE_IMM_OPERAND			= (1UL << 25),		/* Default is register operand */
+
 	/* OFFSET for load and store insns */
-	REG_OFFSET			= (1UL << 25), /* Default is immediate offset */
+	REG_OFFSET			= (1UL << 25),		/* Default is immediate offset */
+
 	/*
-	 * Write the modified address to base register
-	 * for Load and store instructions
+	 * Write the modified address to base register for load and store
+	 * instructions
 	 */
 	WRITE_BASE_REG			= (1UL << 21),
 };
@@ -220,6 +218,7 @@ void encode_setup_fp(struct buffer *buffer, unsigned long offset)
 void encode_sub_sp(struct buffer *buffer, unsigned long frame_size)
 {
 	uint32_t encoded_insn;
+
 	/*
 	 * The max immediate value which can be added or subtracted from
 	 * a register is 255 so to make large frame we have to emit
