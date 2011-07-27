@@ -1,12 +1,12 @@
 #include "arch/encode.h"
 
 #include "arch/instruction.h"
-#include "arch/constant-pool.h"
 
+#include "jit/constant-pool.h"
 #include "jit/use-position.h"
+#include "jit/instruction.h"
 #include "jit/emit-code.h"
 #include "jit/vars.h"
-#include "jit/instruction.h"
 
 #include "lib/buffer.h"
 

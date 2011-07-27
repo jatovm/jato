@@ -1,7 +1,6 @@
-#ifdef CONFIG_ARM
-#include "arch/constant-pool.h"
+#include "jit/constant-pool.h"
 
-#include "arch/instruction.h"
+#include "jit/compilation-unit.h"
 
 #include <stdlib.h>
 
@@ -79,4 +78,3 @@ void free_constant_pool(struct lp_entry *head)
 		lp = head;
 	}
 }
-#endif

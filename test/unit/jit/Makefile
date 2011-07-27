@@ -20,6 +20,7 @@ TOPLEVEL_OBJS := \
 	jit/bytecode-to-ir.o \
 	jit/cfg-analyzer.o \
 	jit/compilation-unit.o \
+	jit/constant-pool.o \
 	jit/cu-mapping.o \
 	jit/dominance.o \
 	jit/exception-bc.o \
@@ -46,6 +47,7 @@ TOPLEVEL_OBJS := \
 	jit/subroutine.o \
 	jit/pc-map.o \
 	jit/wide-bc.o \
+	jit/constant_pool.o \
 	lib/arena.o \
 	lib/bitset.o \
 	lib/buffer.o \
@@ -69,7 +71,6 @@ TOPLEVEL_OBJS := \
 	arch/mmix/register.o \
 	arch/mmix/stack-frame.o \
 	arch/mmix/use-def.o \
-	arch/arm/constant_pool.o\
 	test/unit/libharness/libharness.o \
 	test/unit/vm/class-stub.o \
 	test/unit/vm/classloader-stub.o \

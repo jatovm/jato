@@ -1,12 +1,12 @@
 #ifndef JATO__ARM_INSTRUCTION_H
 #define JATO__ARM_INSTRUCTION_H
 
+#include "jit/constant-pool.h"
 #include "jit/use-position.h"
 
 #include "arch/stack-frame.h"
 #include "arch/registers.h"
 #include "arch/init.h"
-#include "arch/constant-pool.h"
 
 #include "lib/list.h"
 #include "vm/die.h"

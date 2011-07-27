@@ -1,4 +1,6 @@
 #include "jit/emit-code.h"
+
+#include "jit/constant-pool.h"
 #include "jit/basic-block.h"
 #include "jit/lir-printer.h"
 #include "jit/exception.h"
@@ -13,7 +15,6 @@
 
 #include "arch/itable.h"
 #include "arch/instruction.h"
-#include "arch/constant-pool.h"
 #include "arch/encode.h"
 
 void __attribute__((regparm(1)))

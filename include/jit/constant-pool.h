@@ -1,5 +1,5 @@
-#ifndef JATO__ARM_CONSTANT_POOL_H
-#define JATO__ARM_CONSTANT_POOL_H
+#ifndef JATO__JIT_CONSTANT_POOL_H
+#define JATO__JIT_CONSTANT_POOL_H
 
 /* An entry of constant pool */
 
@@ -18,4 +18,4 @@ struct lp_entry *alloc_literal_pool_entry(struct compilation_unit *, unsigned lo
 struct lp_entry *search_literal_pool(struct lp_entry *, unsigned long);
 void free_constant_pool(struct lp_entry *);
 
-#endif /* JATO__ARM_CONSTANT_POOL_H */
+#endif /* JATO__JIT_CONSTANT_POOL_H */
