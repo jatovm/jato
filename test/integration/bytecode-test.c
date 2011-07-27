@@ -483,7 +483,7 @@ static void test_ifnull(void)
 
 static void test_ifnonnull(void)
 {
-	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IFNONNULL, 0x00, 0x00, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IFNONNULL, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
 	assert_int_equals(2, execute(bytecode));
 }
