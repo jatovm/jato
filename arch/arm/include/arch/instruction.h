@@ -124,7 +124,7 @@ struct insn {
 	};
 };
 
-#define MAX_REG_OPERANDS 0
+#define MAX_REG_OPERANDS 4
 
 void insn_sanity_check(void);
 

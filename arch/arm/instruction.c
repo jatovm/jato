@@ -16,6 +16,7 @@ enum {
 	USE_SRC			= (1U << 6),
 	USE_FP			= (1U << 7),	/* frame pointer */
 	TYPE_BRANCH		= (1u << 8),
+	TYPE_CALL		= (1u << 9),
 
 };
 
@@ -30,12 +31,34 @@ static unsigned long insn_flags[] = {
 
 int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **defs)
 {
-	assert(!"not implemented");
+	unsigned long flags;
+	int nr = 0;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & DEF_SRC)
+		defs[nr++] = insn->src.reg.interval->var_info;
+
+	if (flags & DEF_DST)
+		defs[nr++] = insn->dest.reg.interval->var_info;
+
+	return nr;
 }
 
 int insn_uses(struct insn *insn, struct var_info **uses)
 {
-	assert(!"not implemented");
+	unsigned long flags;
+	int nr = 0;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & USE_SRC)
+		uses[nr++] = insn->src.reg.interval->var_info;
+
+	if (flags & USE_DST)
+		uses[nr++] = insn->dest.reg.interval->var_info;
+
+	return nr;
 }
 
 bool insn_is_branch(struct insn *insn)
@@ -50,7 +73,9 @@ bool insn_is_jmp_branch(struct insn *insn)
 
 bool insn_is_call(struct insn *insn)
 {
-	assert(!"not implemented");
+	unsigned long flags = insn_flags[insn->type];
+
+	return flags & TYPE_CALL;
 }
 
 void insn_sanity_check(void)
