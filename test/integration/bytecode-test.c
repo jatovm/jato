@@ -1006,6 +1006,20 @@ static void test_d2f(void)
 	assert_float_equals(1, jfloat_run(bytecode));
 }
 
+static void test_i2b(void)
+{
+	uint8_t bytecode[] = { OPC_BIPUSH, 0xFF, OPC_I2B, OPC_IRETURN };
+
+	assert_int_equals(-1, execute(bytecode));
+}
+
+static void test_i2c(void)
+{
+	uint8_t bytecode[] = { OPC_SIPUSH, 0xFF, 0xFF, OPC_I2C, OPC_IRETURN };
+
+	assert_int_equals(0xffff, execute(bytecode));
+}
+
 static void test_i2s(void)
 {
 	uint8_t bytecode[] = { OPC_SIPUSH, 0xFF, 0xFF, OPC_I2S, OPC_IRETURN };
@@ -1167,8 +1181,8 @@ static void run_tests(void)
 	test_d2i();
 	test_d2l();
 	test_d2f();
-	/* test_i2b(); */
-	/* test_i2c(); */
+	test_i2b();
+	test_i2c();
 	test_i2s();
 	test_lcmp();
 	test_fcmpl();
