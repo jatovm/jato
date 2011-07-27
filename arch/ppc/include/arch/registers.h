@@ -80,5 +80,6 @@ static inline enum vm_type reg_default_type(enum machine_reg reg)
 {
 	return GPR_VM_TYPE;
 }
+const char *reg_name(enum machine_reg reg);
 
 #endif /* __PPC_REGISTERS_H */
