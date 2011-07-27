@@ -2,6 +2,7 @@ ARCH_OBJS = \
 	arch/ppc/disassemble.o \
 	arch/ppc/emit-code.o \
 	arch/ppc/exception.o \
+	arch/ppc/init.o \
 	arch/ppc/insn-selector_32.o \
 	arch/ppc/instruction.o \
 	arch/ppc/lir-printer.o \
