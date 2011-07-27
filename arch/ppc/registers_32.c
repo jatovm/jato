@@ -56,3 +56,8 @@ const char *reg_name(enum machine_reg reg)
 
 	return register_names[reg];
 }
+
+bool reg_supports_type(enum machine_reg reg, enum vm_type type)
+{
+	assert(!"not implemented");
+}

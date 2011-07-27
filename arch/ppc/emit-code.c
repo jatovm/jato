@@ -31,45 +31,121 @@
 
 #include <stdlib.h>
 
-#define 	NOT_IMPLEMENTED abort();
-
-void emit_prolog(struct buffer *buffer, struct stack_frame *frame, unsigned long nr_locals)
+void itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
 {
-		NOT_IMPLEMENTED
+	assert(!"not implemented");
 }
 
-void emit_epilog(struct buffer *buffer)
+int lir_print(struct insn *insn, struct string *s)
 {
-	NOT_IMPLEMENTED
+	assert(!"not implemented");
 }
 
-void emit_trampoline(struct compilation_unit *cu, void *call_target,
+void native_call(struct vm_method *method, void *target, unsigned long *args, union jvalue *result)
+{
+	assert(!"not implemented");
+}
+
+void *emit_itable_resolver_stub(struct vm_class *vmc, struct itable_entry **sorted_table, unsigned int nr_entries)
+{
+	assert(!"not implemented");
+}
+
+bool called_from_jit_trampoline(struct native_stack_frame *frame)
+{
+	assert(!"not implemented");
+}
+
+bool show_exe_function(void *addr, struct string *str)
+{
+	assert(!"not implemented");
+}
+
+int fixup_static_at(unsigned long addr)
+{
+	assert(!"not implemented");
+}
+
+void emit_trampoline(struct compilation_unit *cu,
+		     void *call_target,
 		     struct jit_trampoline *trampoline)
 {
-	NOT_IMPLEMENTED
+	assert(!"not implemented");
 }
 
-void emit_unwind(struct buffer *buffer)
+void emit_jni_trampoline(struct buffer *b, struct vm_method *vm, void *v)
 {
-	NOT_IMPLEMENTED
+	assert(!"not implemented");
 }
 
-void emit_lock(struct buffer *buffer, struct vm_object *object)
+void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target)
 {
-	NOT_IMPLEMENTED
+	assert(!"not implemented");
 }
 
-void emit_lock_this(struct buffer *buffer)
+void emit_unlock(struct buffer *buffer, struct vm_object *vo)
 {
-	NOT_IMPLEMENTED
-}
-
-void emit_unlock(struct buffer *buffer, struct vm_object *object)
-{
-	NOT_IMPLEMENTED
+	assert(!"not implemented");
 }
 
 void emit_unlock_this(struct buffer *buffer)
 {
-	NOT_IMPLEMENTED
+	assert(!"not implemented");
+}
+
+void backpatch_branch_target(struct buffer *buf, struct insn *insn,
+				    unsigned long target_offset)
+{
+	assert(!"not implemented");
+}
+
+void emit_nop(struct buffer *buf)
+{
+	assert(!"not implemented");
+}
+
+void emit_prolog(struct buffer *buf, struct stack_frame *frame,
+					unsigned long frame_size)
+{
+	assert(!"not implemented");
+}
+
+void emit_epilog(struct buffer *buf)
+{
+	assert(!"not implemented");
+}
+
+void emit_lock(struct buffer *buf, struct vm_object *vo)
+{
+	assert(!"not implemented");
+}
+
+void emit_lock_this(struct buffer *buf)
+{
+	assert(!"not implemented");
+}
+
+void emit_unwind(struct buffer *buf)
+{
+	assert(!"not implemented");
+}
+
+void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
+{
+	assert(!"not implemented");
+}
+
+long branch_rel_addr(struct insn *insn, unsigned long target_offset)
+{
+	assert(!"not implemented");
+}
+
+long emit_branch(struct insn *insn, struct basic_block *bb)
+{
+	assert(!"not implemented");
+}
+
+void emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)
+{
+	assert(!"not implemented");
 }

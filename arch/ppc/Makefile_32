@@ -6,3 +6,4 @@ ARCH_OBJS += arch/ppc/insn-selector_32.o
 ARCH_OBJS += arch/ppc/instruction.o
 ARCH_OBJS += arch/ppc/lir-printer.o
 ARCH_OBJS += arch/ppc/registers_32.o
+ARCH_OBJS += arch/ppc/stubs_to_compile.o
