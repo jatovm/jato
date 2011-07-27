@@ -4,6 +4,9 @@
 #include "jit/stack-slot.h"
 
 struct native_stack_frame {
+	void			*prev;		/* previous stack frame link */
+	unsigned long 		return_address;
+	unsigned long		args[0];
 } __attribute__((packed));
 
 struct jit_stack_frame {
