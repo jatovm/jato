@@ -206,7 +206,7 @@ OPTIMIZATIONS	+= -fno-tree-vectorize
 endif
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
-INCLUDES	= -Iinclude -Iarch/$(ARCH)/include -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
+INCLUDES	= -Iarch/$(ARCH)/include -Iinclude -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
 # Disable optimizations and turn on extra debugging information, if needed.
