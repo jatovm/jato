@@ -8,11 +8,12 @@
 #include "cafebabe/method_info.h"
 #include "cafebabe/stream.h"
 
-#include "vm/class.h"
-#include "vm/method.h"
+#include "vm/annotation.h"
 #include "vm/verifier.h"
 #include "vm/natives.h"
-#include "vm/annotation.h"
+#include "vm/method.h"
+#include "vm/class.h"
+#include "vm/die.h"
 
 #include "jit/compilation-unit.h"
 #include "jit/cu-mapping.h"
