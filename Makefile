@@ -436,7 +436,6 @@ clean:
 	$(Q) - find test/functional/ -name "*.class" | grep -v corrupt | xargs rm -f
 	$(Q) - find runtime/ -name "*.class" | xargs rm -f
 	$(Q) - rm -f tags
-	$(Q) - rm -f include/arch
 	+$(Q) - $(MAKE) -C tools/monoburg/ clean >/dev/null
 	+$(Q) - $(MAKE) -C boehmgc/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/functional/jni/ clean >/dev/null

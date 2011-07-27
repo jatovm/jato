@@ -1,7 +1,6 @@
 ARCH_OBJS = \
 	arch/x86/args.o			\
 	arch/x86/call.o			\
-	arch/x86/cmpxchg_32.o		\
 	arch/x86/disassemble.o		\
 	arch/x86/emit-code.o		\
 	arch/x86/encode.o		\
