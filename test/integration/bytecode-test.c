@@ -355,6 +355,20 @@ static void test_if_icmpge(void)
 	assert_int_equals(1, execute(bytecode_3));
 }
 
+static void test_if_acmpeq(void)
+{
+	uint8_t bytecode_1[] = { OPC_ACONST_NULL, OPC_ACONST_NULL, OPC_IF_ACMPEQ, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(0, execute(bytecode_1));
+}
+
+static void test_if_acmpne(void)
+{
+	uint8_t bytecode_1[] = { OPC_ACONST_NULL, OPC_ACONST_NULL, OPC_IF_ACMPNE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
+
+	assert_int_equals(1, execute(bytecode_1));
+}
+
 static void test_ifle(void)
 {
 	uint8_t bytecode_1[] = { OPC_ICONST_M1, OPC_IFLE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
@@ -521,6 +535,14 @@ static void test_areturn(void)
 	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_ARETURN };
 
 	assert_object_equals(NULL, jobject_run(bytecode));
+}
+
+static void test_return(void)
+{
+	uint8_t bytecode[] = { OPC_RETURN };
+
+	/* OPC_RETURN doesn't have a return value */
+	jobject_run(bytecode);
 }
 
 static void test_lxor(void)
@@ -1165,8 +1187,8 @@ static void run_tests(void)
 	test_if_icmpge();
 	test_if_icmpgt();
 	test_if_icmple();
-	/* test_if_acmpeq(); */
-	/* test_if_acmpne(); */
+	test_if_acmpeq();
+	test_if_acmpne();
 	test_goto();
 	/* test_jsr(); */
 	/* test_ret(); */
@@ -1177,7 +1199,7 @@ static void run_tests(void)
 	test_freturn();
 	test_dreturn();
 	test_areturn();
-	/* test_return(); */
+	test_return();
 	/* test_getstatic(); */
 	/* test_putstatic(); */
 	/* test_getfield(); */
