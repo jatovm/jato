@@ -57,7 +57,7 @@ extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
 const char *reg_name(enum machine_reg reg);
 
-const uint32_t reg_type_table[NR_REGISTERS];
+extern uint32_t reg_type_table[NR_REGISTERS];
 
 static inline bool reg_supports_type(enum machine_reg reg, enum vm_type type)
 {

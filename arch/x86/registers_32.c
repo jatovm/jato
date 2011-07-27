@@ -78,7 +78,7 @@ const char *reg_name(enum machine_reg reg)
 #define GPR_8 (1UL << J_BYTE) | (1UL << J_BOOLEAN)
 #define FPU (1UL << J_FLOAT) | (1UL << J_DOUBLE)
 
-const uint32_t reg_type_table[NR_REGISTERS] = {
+uint32_t reg_type_table[NR_REGISTERS] = {
 	[MACH_REG_EAX] = GPR_32 | GPR_16 | GPR_8,
 	[MACH_REG_ECX] = GPR_32 | GPR_16 | GPR_8,
 	[MACH_REG_EDX] = GPR_32 | GPR_16 | GPR_8,
