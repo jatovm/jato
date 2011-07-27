@@ -61,6 +61,15 @@ void emit_trampoline(struct compilation_unit *cu,
 	jit_text_lock();
 	buf->buf = jit_text_ptr();
 
+	/* Store FP and LR */
+	encode_stm(buf, 0b0100100000000000);
+
+	/* Setup the frame pointer to point to the current frame */
+	encode_setup_fp(buf, 4);
+
+	/* Pass the address of cu to magic_trampoline in R0 and call it */
+	encode_setup_trampoline(buf, (unsigned long)cu, (unsigned long)call_target);
+
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
 }

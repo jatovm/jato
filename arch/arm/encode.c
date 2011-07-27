@@ -286,6 +286,54 @@ void encode_ldm(struct buffer *buffer, uint16_t register_list)
 	emit_encoded_insn(buffer, encoded_insn);
 }
 
+/*
+ * We have to pass the address of cu so that we can call magic_trampoline
+ * But addr of cu is of 32 bit and we can use only 8-bit imm so
+ * we need to have addr of cu in our constant pool which will be emitted
+ * at the starting.
+ */
+void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t target_addr)
+{
+	uint32_t encoded_insn;
+	/*
+	 * Branch to the call instruction directly
+	 * This branch is added becaouse just after this insn addresses
+	 * of cu and jit_magic_trampoline are emitted
+	 * which are not instructions
+	 */
+	encoded_insn = arm_encode_insn[INSN_UNCOND_BRANCH];
+	encoded_insn = encoded_insn | ((0x000004) >> 2 & 0xFFFFFF);
+
+	emit_encoded_insn(buffer, encoded_insn);
+
+	/* Emit the address of cu */
+	emit_encoded_insn(buffer, cu_addr);
+
+	/* Emit the address of magic_tampoline */
+	emit_encoded_insn(buffer, target_addr);
+
+	/* Load the addr of cu in R0 */
+	encoded_insn = arm_encode_insn[INSN_LOAD_REG_MEMLOCAL];
+	encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_R0) & 0xF) << 12) |
+			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x010);
+
+	emit_encoded_insn(buffer, encoded_insn);
+
+	/* Call jit_magic_trampoline. First store the value of PC in LR
+	   and then Load the address of magic_trampoline form constant pool */
+	encoded_insn = arm_encode_insn[INSN_SUB_REG_IMM];
+	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_LR) & 0xF) << 12) |
+			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x004);
+
+	emit_encoded_insn(buffer, encoded_insn);
+
+	encoded_insn = arm_encode_insn[INSN_LOAD_REG_MEMLOCAL];
+	encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_PC) & 0xF) << 12) |
+			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x014);
+
+	emit_encoded_insn(buffer, encoded_insn);
+}
+
 void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *bb)
 {
 	uint32_t encoded_insn = arm_encode_insn[insn->type];

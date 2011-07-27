@@ -24,4 +24,5 @@ void encode_setup_fp(struct buffer *, unsigned long);
 void encode_sub_sp(struct buffer *, unsigned long);
 void encode_restore_sp(struct buffer *, unsigned long);
 void encode_ldm(struct buffer *, uint16_t);
+void encode_setup_trampoline(struct buffer *, uint32_t, uint32_t);
 #endif /* ARM_ENCODE_H */
