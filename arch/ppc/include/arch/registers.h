@@ -8,43 +8,43 @@
 enum machine_reg {
 	/* Volatile registers: */
 
-	REG_R0,
+	MACH_REG_R0,
 
 	/* First argument word; first word of function return value.  */
-	REG_R3,
+	MACH_REG_R3,
 
 	/* Second argument word; second word function return value.  */
-	REG_R4,
+	MACH_REG_R4,
 
 	/* 3rd - 8th argument words.  */
-	REG_R5,
-	REG_R6,
-	REG_R7,
-	REG_R8,
-	REG_R9,
-	REG_R10,
+	MACH_REG_R5,
+	MACH_REG_R6,
+	MACH_REG_R7,
+	MACH_REG_R8,
+	MACH_REG_R9,
+	MACH_REG_R10,
 
 	/* Non-volatile registers (values are preserved across procedure
 	   calls):  */
-	REG_R13,
-	REG_R14,
-	REG_R15,
-	REG_R16,
-	REG_R17,
-	REG_R18,
-	REG_R19,
-	REG_R20,
-	REG_R21,
-	REG_R22,
-	REG_R23,
-	REG_R24,
-	REG_R25,
-	REG_R26,
-	REG_R27,
-	REG_R28,
-	REG_R29,
-	REG_R30,
-	REG_R31,
+	MACH_REG_R13,
+	MACH_REG_R14,
+	MACH_REG_R15,
+	MACH_REG_R16,
+	MACH_REG_R17,
+	MACH_REG_R18,
+	MACH_REG_R19,
+	MACH_REG_R20,
+	MACH_REG_R21,
+	MACH_REG_R22,
+	MACH_REG_R23,
+	MACH_REG_R24,
+	MACH_REG_R25,
+	MACH_REG_R26,
+	MACH_REG_R27,
+	MACH_REG_R28,
+	MACH_REG_R29,
+	MACH_REG_R30,
+	MACH_REG_R31,
 
 	/* Number of general purpose registers.  */
 	NR_GP_REGISTERS,
@@ -53,22 +53,26 @@ enum machine_reg {
 	NR_REGISTERS = NR_GP_REGISTERS,
 
 	/* Stack pointer.  */
-	REG_R1 = NR_REGISTERS,
+	MACH_REG_R1 = NR_REGISTERS,
 
 	/* Table of Contents (TOC) pointer.  */
-	REG_R2,
+	MACH_REG_R2,
 
 	/* Used in calls by pointer and as an environment pointer.   */
-	REG_R11,
+	MACH_REG_R11,
 
 	/* Used for special exception handling and in glink code.  */
-	REG_R12,
+	MACH_REG_R12,
 
 	/* The above registers are available for get_fixed_var().  */
 	NR_FIXED_REGISTERS,
 
 	MACH_REG_UNASSIGNED = CHAR_MAX,
 };
+
+#define NR_CALLER_SAVE_REGS 11
+
+extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
 #define GPR_VM_TYPE J_INT
 
