@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009  Pekka Enberg
+ * Copyright (c) 2011  Pekka Enberg
  *
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -24,12 +24,130 @@
  * Please refer to the file LICENSE for details.
  */
 
-#include "arch/instruction.h"
-#include "jit/basic-block.h"
 #include "jit/emit-code.h"
+
+#include "jit/basic-block.h"
+#include "jit/compiler.h"
+
+#include "arch/instruction.h"
+
 #include "lib/buffer.h"
 
 #include <stdlib.h>
+
+#define OPCD(x)         (x << 26)
+#define LI(x)           (x <<  2)
+#define AA(x)           (x <<  1)
+#define LK(x)           (x <<  0)
+
+#define BO(x)           (x << 21)
+#define BI(x)           (x << 16)
+
+#define S(x)		(x << 21)
+#define CRM(x)		(x << 12)
+
+#define SPR(x)		(x << 16)
+
+#define D(x)		(x << 21)
+#define A(x)		(x << 16)
+
+#define SIMM(x)		(x <<  0)
+#define UIMM(x)		(x <<  0)
+
+enum {
+	BO_BR_ALWAYS	= 20,	/* branch always */
+};
+
+enum {
+	SPR_XER		= 1,
+	SPR_LR		= 8,
+	SPR_CTR		= 9,
+};
+
+static unsigned long bl(unsigned long li)
+{
+        return OPCD(18) | LI(li) | AA(0) | LK(1);
+}
+
+/* Branch Conditional To Count Register */
+static unsigned long bcctr(unsigned char bo, unsigned char bi, unsigned char lk)
+{
+	return OPCD(19) | BO(bo) | BI(bi) | (528 << 1) | LK(lk);
+}
+
+static unsigned long bctr(void)
+{
+	return bcctr(BO_BR_ALWAYS, 0, 0);
+}
+
+static unsigned long bctrl(void)
+{
+	return bcctr(BO_BR_ALWAYS, 0, 1);
+}
+
+/* Move to Special-Purpose Register */
+static unsigned long mtspr(unsigned char spr, unsigned char rs)
+{
+	return OPCD(31) | S(rs) | SPR(spr) | (467 << 1);
+}
+
+static unsigned long mtctr(unsigned long rs)
+{
+	return mtspr(SPR_CTR, rs);
+}
+
+/* Add Immediate Shifted */
+static unsigned long addis(unsigned char rd, unsigned char ra, unsigned short simm)
+{
+	return OPCD(15) | D(rd) | A(ra) | SIMM(simm);
+}
+
+static unsigned long lis(unsigned char rd, unsigned short value)
+{
+	return addis(rd, 0, value);
+}
+
+/* OR Immediate */
+static unsigned long ori(unsigned char ra, unsigned char rs, unsigned short uimm)
+{
+	return OPCD(24) | S(rs) | A(ra) | UIMM(uimm);
+}
+
+static unsigned short ptr_high(void *p)
+{
+	unsigned long x = (unsigned long) p;
+
+	return x >> 16;
+}
+
+static unsigned short ptr_low(void *p)
+{
+	unsigned long x = (unsigned long) p;
+
+	return x & 0xffff;
+}
+
+static inline void emit(struct buffer *buf, unsigned char c)
+{
+	int err;
+
+	err = append_buffer(buf, c);
+	assert(!err);
+}
+
+static void emit32(struct buffer *b, unsigned long insn)
+{
+	union {
+		unsigned long	val;
+		unsigned char	b[4];
+	} imm_buf;
+
+	imm_buf.val = insn;
+	emit(b, imm_buf.b[0]);
+	emit(b, imm_buf.b[1]);
+	emit(b, imm_buf.b[2]);
+	emit(b, imm_buf.b[3]);
+}
 
 void itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
 {
@@ -66,11 +184,32 @@ int fixup_static_at(unsigned long addr)
 	assert(!"not implemented");
 }
 
-void emit_trampoline(struct compilation_unit *cu,
-		     void *call_target,
-		     struct jit_trampoline *trampoline)
+void
+emit_trampoline(struct compilation_unit *cu, void *target_addr, struct jit_trampoline *t)
 {
-	assert(!"not implemented");
+	struct buffer *b = t->objcode;
+
+	jit_text_lock();
+
+	b->buf = jit_text_ptr();
+
+	/* Pass pointer to 'struct compilation_unit' as first argument */
+	emit32(b, lis(3, ptr_high(cu)));
+	emit32(b, ori(3, 3, ptr_low(cu)));
+
+	/* Then call 'target_addr' */
+	emit32(b, lis(0, ptr_high(target_addr)));
+	emit32(b, ori(0, 0, ptr_low(target_addr)));
+	emit32(b, mtctr(0));
+	emit32(b, bctrl());
+
+	/* Finally jump to the compiled method */
+	emit32(b, mtctr(3));
+	emit32(b, bctr());
+
+	jit_text_reserve(buffer_offset(b));
+
+	jit_text_unlock();
 }
 
 void emit_jni_trampoline(struct buffer *b, struct vm_method *vm, void *v)
