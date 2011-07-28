@@ -127,26 +127,27 @@ static unsigned short ptr_low(void *p)
 	return x & 0xffff;
 }
 
-static inline void emit(struct buffer *buf, unsigned char c)
+static inline void emit8(struct buffer *buf, unsigned char c)
 {
 	int err;
 
 	err = append_buffer(buf, c);
+
 	assert(!err);
 }
 
-static void emit32(struct buffer *b, unsigned long insn)
+static void emit(struct buffer *b, unsigned long insn)
 {
 	union {
 		unsigned long	val;
 		unsigned char	b[4];
-	} imm_buf;
+	} buf;
 
-	imm_buf.val = insn;
-	emit(b, imm_buf.b[0]);
-	emit(b, imm_buf.b[1]);
-	emit(b, imm_buf.b[2]);
-	emit(b, imm_buf.b[3]);
+	buf.val = insn;
+	emit8(b, buf.b[0]);
+	emit8(b, buf.b[1]);
+	emit8(b, buf.b[2]);
+	emit8(b, buf.b[3]);
 }
 
 void itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
@@ -194,18 +195,18 @@ emit_trampoline(struct compilation_unit *cu, void *target_addr, struct jit_tramp
 	b->buf = jit_text_ptr();
 
 	/* Pass pointer to 'struct compilation_unit' as first argument */
-	emit32(b, lis(3, ptr_high(cu)));
-	emit32(b, ori(3, 3, ptr_low(cu)));
+	emit(b, lis(3, ptr_high(cu)));
+	emit(b, ori(3, 3, ptr_low(cu)));
 
 	/* Then call 'target_addr' */
-	emit32(b, lis(0, ptr_high(target_addr)));
-	emit32(b, ori(0, 0, ptr_low(target_addr)));
-	emit32(b, mtctr(0));
-	emit32(b, bctrl());
+	emit(b, lis(0, ptr_high(target_addr)));
+	emit(b, ori(0, 0, ptr_low(target_addr)));
+	emit(b, mtctr(0));
+	emit(b, bctrl());
 
 	/* Finally jump to the compiled method */
-	emit32(b, mtctr(3));
-	emit32(b, bctr());
+	emit(b, mtctr(3));
+	emit(b, bctr());
 
 	jit_text_reserve(buffer_offset(b));
 
