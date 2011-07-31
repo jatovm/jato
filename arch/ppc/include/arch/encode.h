@@ -39,6 +39,17 @@ static inline unsigned long bl(unsigned long li)
         return OPCD(18) | LI(li) | AA(0) | LK(1);
 }
 
+/* Branch Conditional to Link Register */
+static inline unsigned long bclr(unsigned char bo, unsigned char bi, unsigned char lk)
+{
+	return OPCD(19) | BO(bo) | BI(bi) | 16 << 1 | LK(lk);
+}
+
+static inline unsigned long blr(void)
+{
+	return bclr(BO_BR_ALWAYS, 0, 0);
+}
+
 /* Branch Conditional To Count Register */
 static inline unsigned long bcctr(unsigned char bo, unsigned char bi, unsigned char lk)
 {

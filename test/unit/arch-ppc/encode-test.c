@@ -33,6 +33,25 @@ static void teardown(void)
 	free_buffer(buffer);
 }
 
+void test_encode_blr(void)
+{
+	uint32_t encoding = 0x4e800020;
+	struct insn insn = { };
+
+	setup();
+
+	/* blr */
+	insn.type			= INSN_BLR;
+
+	insn_encode(&insn, buffer, NULL);
+
+	buffer_flip(buffer);
+
+	assert_int_equals(encoding, buffer_read_be32(buffer));
+
+	teardown();
+}
+
 void test_encode_lis(void)
 {
 	uint32_t encoding = 0x3c60dead;

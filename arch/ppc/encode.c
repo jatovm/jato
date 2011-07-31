@@ -68,6 +68,9 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 	uint32_t encoding;
 
 	switch (insn->type) {
+	case INSN_BLR:
+		encoding = blr();
+		break;
 	case INSN_LIS:
 		encoding = lis(encode_reg(&insn->operands[0]), insn->operands[1].imm);
 		break;
