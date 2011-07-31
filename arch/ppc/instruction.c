@@ -84,17 +84,17 @@ int insn_uses(struct insn *insn, struct var_info **uses)
 
 bool insn_is_branch(struct insn *insn)
 {
-	assert(!"not implemented");
+	return false;
 }
 
 bool insn_is_jmp_branch(struct insn *insn)
 {
-	assert(!"not implemented");
+	return false;
 }
 
 bool insn_is_call(struct insn *insn)
 {
-	assert(!"not implemented");
+	return false;
 }
 
 void insn_sanity_check(void)
