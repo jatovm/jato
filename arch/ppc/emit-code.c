@@ -111,7 +111,6 @@ void emit_jni_trampoline(struct buffer *b, struct vm_method *vm, void *v)
 
 void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target)
 {
-	assert(!"not implemented");
 }
 
 void emit_unlock(struct buffer *buffer, struct vm_object *vo)
@@ -135,15 +134,12 @@ void emit_nop(struct buffer *buf)
 	assert(!"not implemented");
 }
 
-void emit_prolog(struct buffer *buf, struct stack_frame *frame,
-					unsigned long frame_size)
+void emit_prolog(struct buffer *buf, struct stack_frame *frame, unsigned long frame_size)
 {
-	assert(!"not implemented");
 }
 
 void emit_epilog(struct buffer *buf)
 {
-	assert(!"not implemented");
 }
 
 void emit_lock(struct buffer *buf, struct vm_object *vo)
@@ -158,7 +154,6 @@ void emit_lock_this(struct buffer *buf)
 
 void emit_unwind(struct buffer *buf)
 {
-	assert(!"not implemented");
 }
 
 void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
@@ -178,5 +173,5 @@ long emit_branch(struct insn *insn, struct basic_block *bb)
 
 void emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	assert(!"not implemented");
+	insn_encode(insn, buf, bb);
 }
