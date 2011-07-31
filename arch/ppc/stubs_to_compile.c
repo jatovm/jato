@@ -18,7 +18,7 @@
 
 bool ic_supports_method(struct vm_method *vmm)
 {
-	assert(!"not implemented");
+	return false;
 }
 
 void *emit_ic_check(struct buffer *buf)
@@ -34,7 +34,7 @@ void emit_ic_miss_handler(struct buffer *buf, void *ic_check,
 
 int convert_ic_calls(struct compilation_unit *cu)
 {
-	assert(!"not implemented");
+	return 0;
 }
 
 struct insn *ssa_imm_reg_insn(unsigned long imm, struct var_info *dest_reg)
