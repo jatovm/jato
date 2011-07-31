@@ -1249,12 +1249,6 @@ int main(int argc, char *argv[])
 {
 	dont_gc = true;
 
-#ifdef CONFIG_ARM
-	opt_trace_machine_code = false;
-#else
-	opt_trace_machine_code = true;
-#endif
-
 	preload_finished = true;
 
 	init();
