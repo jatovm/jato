@@ -283,6 +283,7 @@ static void do_assert_object_equals(const char *function, const char *file, int 
 
 #define assert_object_equals(expected, actual) do_assert_object_equals(__func__, __FILE__, __LINE__, expected, actual)
 
+#ifndef CONFIG_ARM
 static void test_bipush(void)
 {
 	uint8_t bytecode[] = { OPC_BIPUSH, 0x10, OPC_IRETURN };
@@ -872,6 +873,7 @@ static void test_lconst_0(void)
 
 	assert_long_equals(0, jlong_run(bytecode));
 }
+#endif
 
 static void test_iconst_5(void)
 {
@@ -922,6 +924,7 @@ static void test_aconst_null(void)
 	assert_object_equals(NULL, jobject_run(bytecode));
 }
 
+#ifndef CONFIG_ARM
 static void test_iconst_m1(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_M1, OPC_IRETURN };
@@ -1033,18 +1036,20 @@ static void test_i2l(void)
 
 	assert_long_equals(1, execute(bytecode));
 }
+#endif
 
 static void run_tests(void)
 {
 	/* test_nop(); */
 	test_aconst_null();
-	test_iconst_m1();
 	test_iconst_0();
 	test_iconst_1();
 	test_iconst_2();
 	test_iconst_3();
 	test_iconst_4();
 	test_iconst_5();
+#ifndef CONFIG_ARM
+	test_iconst_m1();
 	test_lconst_0();
 	test_lconst_1();
 	test_fconst_0();
@@ -1237,13 +1242,18 @@ static void run_tests(void)
 	test_ifnonnull();
 	test_goto_w();
 	/* test_jsr_w(); */
+#endif
 }
 
 int main(int argc, char *argv[])
 {
 	dont_gc = true;
 
+#ifdef CONFIG_ARM
+	opt_trace_machine_code = false;
+#else
 	opt_trace_machine_code = true;
+#endif
 
 	preload_finished = true;
 

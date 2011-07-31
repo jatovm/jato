@@ -91,7 +91,6 @@ void emit_jni_trampoline(struct buffer *b, struct vm_method *vm, void *v)
 
 void fixup_direct_calls(struct jit_trampoline *trampoline, unsigned long target)
 {
-	assert(!"not implemented");
 }
 
 void emit_unlock(struct buffer *buffer, struct vm_object *vo)
@@ -184,7 +183,6 @@ void emit_lock_this(struct buffer *buf)
 
 void emit_unwind(struct buffer *buf)
 {
-	assert(!"not implemented");
 }
 
 void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
