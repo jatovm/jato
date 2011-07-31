@@ -25,7 +25,25 @@
  */
 
 #include "arch/instruction.h"
+
 #include <stdlib.h>
+
+enum {
+	USE_NONE	= 0,
+	DEF_NONE	= 0,
+
+	USE_RS		= (1UL << 0),
+	USE_RA		= (1UL << 1),
+
+	DEF_RD		= (1UL << 2),
+	DEF_RA		= (1UL << 3),
+};
+
+static unsigned long insn_flags[] = {
+	[INSN_BLR]	= DEF_NONE | USE_NONE,
+	[INSN_LIS]	= DEF_RD   | USE_RA,
+	[INSN_ORI]	= DEF_RA   | USE_RS,
+};
 
 void free_insn(struct insn *insn)
 {
@@ -34,12 +52,34 @@ void free_insn(struct insn *insn)
 
 int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **defs)
 {
-	assert(!"not implemented");
+	unsigned long flags;
+	int nr = 0;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & DEF_RD)
+		defs[nr++] = insn->operands[0].reg.interval->var_info;
+
+	if (flags & DEF_RA)
+		defs[nr++] = insn->operands[1].reg.interval->var_info;
+
+	return nr;
 }
 
 int insn_uses(struct insn *insn, struct var_info **uses)
 {
-	assert(!"not implemented");
+	unsigned long flags;
+	int nr = 0;
+
+	flags = insn_flags[insn->type];
+
+	if (flags & USE_RA)
+		uses[nr++] = insn->operands[0].reg.interval->var_info;
+
+	if (flags & USE_RS)
+		uses[nr++] = insn->operands[1].reg.interval->var_info;
+
+	return nr;
 }
 
 bool insn_is_branch(struct insn *insn)
