@@ -33,7 +33,7 @@ static void teardown(void)
 	free_buffer(buffer);
 }
 
-void test_encoding_call_reg_high(void)
+void test_encode_lis(void)
 {
 	uint32_t encoding = 0x3c60dead;
 	struct insn insn = { };
@@ -42,10 +42,35 @@ void test_encoding_call_reg_high(void)
 
 	/* lis     r3,0xdead */
 	insn.type			= INSN_LIS;
-	insn.src.type			= OPERAND_IMM;
-	insn.src.imm			= 0xdead;
-	insn.dest.type			= OPERAND_REG;
-	insn.dest.reg.interval		= &reg_r3;
+	insn.operands[0].type		= OPERAND_REG;
+	insn.operands[0].reg.interval	= &reg_r3;
+	insn.operands[1].type		= OPERAND_IMM;
+	insn.operands[1].imm		= 0xdead;
+
+	insn_encode(&insn, buffer, NULL);
+
+	buffer_flip(buffer);
+
+	assert_int_equals(encoding, buffer_read_be32(buffer));
+
+	teardown();
+}
+
+void test_encode_ori(void)
+{
+	uint32_t encoding = 0x6063beef;
+	struct insn insn = { };
+
+	setup();
+
+	/* ori     r3,r3,48879 */
+	insn.type			= INSN_ORI;
+	insn.operands[0].type		= OPERAND_REG;
+	insn.operands[0].reg.interval	= &reg_r3;
+	insn.operands[1].type		= OPERAND_REG;
+	insn.operands[1].reg.interval	= &reg_r3;
+	insn.operands[2].type		= OPERAND_IMM;
+	insn.operands[2].imm		= 0xbeef;
 
 	insn_encode(&insn, buffer, NULL);
 

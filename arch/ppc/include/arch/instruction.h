@@ -13,8 +13,9 @@ struct var_info;
  * 	operand types.
  */
 enum insn_type {
-	INSN_LIS,
 	INSN_BLR,
+	INSN_LIS,
+	INSN_ORI,
 };
 
 enum operand_type {
@@ -52,6 +53,7 @@ struct insn {
 	struct list_head	branch_list_node;
 
 	union {
+		struct operand operands[3];
 		struct {
 			struct operand src;
 			struct operand dest;
@@ -61,7 +63,6 @@ struct insn {
 			struct operand ssa_dest;
 			unsigned long nr_srcs;
 		};
-
 		struct operand operand;
 	};
 };

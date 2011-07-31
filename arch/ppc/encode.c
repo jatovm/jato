@@ -69,7 +69,10 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 
 	switch (insn->type) {
 	case INSN_LIS:
-		encoding = lis(encode_reg(&insn->dest), insn->src.imm);
+		encoding = lis(encode_reg(&insn->operands[0]), insn->operands[1].imm);
+		break;
+	case INSN_ORI:
+		encoding = ori(encode_reg(&insn->operands[0]), encode_reg(&insn->operands[1]), insn->operands[2].imm);
 		break;
 	default:
 		die("Unknown instruction type: %d\n", insn->type);
