@@ -2,6 +2,7 @@
 #define __BUFFER_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 struct buffer;
 
@@ -29,6 +30,24 @@ struct buffer *alloc_buffer(void);
 void free_buffer(struct buffer *);
 int append_buffer_str(struct buffer *buf, unsigned char *str, size_t len);
 
+static inline int append_buffer(struct buffer *buf, unsigned char c)
+{
+	return append_buffer_str(buf, &c, 1);
+}
+
+static inline void buffer_write8(struct buffer *b, uint8_t x)
+{
+	append_buffer(b, x);
+}
+
+static inline void buffer_write_be32(struct buffer *b, uint32_t x)
+{
+	buffer_write8(b, (x >> 24) & 0xff);
+	buffer_write8(b, (x >> 16) & 0xff);
+	buffer_write8(b, (x >>  8) & 0xff);
+	buffer_write8(b, (x      ) & 0xff);
+}
+
 static inline void *buffer_ptr(struct buffer *buf)
 {
 	return buf->buf;
@@ -42,11 +61,6 @@ static inline void *buffer_current(struct buffer *buf)
 static inline size_t buffer_offset(struct buffer *buf)
 {
 	return buf->offset;
-}
-
-static inline int append_buffer(struct buffer *buf, unsigned char c)
-{
-	return append_buffer_str(buf, &c, 1);
 }
 
 void generic_buffer_free(struct buffer *);

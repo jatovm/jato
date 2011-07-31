@@ -127,27 +127,9 @@ static unsigned short ptr_low(void *p)
 	return x & 0xffff;
 }
 
-static inline void emit8(struct buffer *buf, unsigned char c)
-{
-	int err;
-
-	err = append_buffer(buf, c);
-
-	assert(!err);
-}
-
 static void emit(struct buffer *b, unsigned long insn)
 {
-	union {
-		unsigned long	val;
-		unsigned char	b[4];
-	} buf;
-
-	buf.val = insn;
-	emit8(b, buf.b[0]);
-	emit8(b, buf.b[1]);
-	emit8(b, buf.b[2]);
-	emit8(b, buf.b[3]);
+	buffer_write_be32(b, insn);
 }
 
 void itable_resolver_stub_error(struct vm_method *method, struct vm_object *obj)
