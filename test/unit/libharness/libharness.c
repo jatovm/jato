@@ -84,8 +84,7 @@ void __assert_int_equals(const char *file, int line, long long expected,
 {
 	nr_asserts++;
 	if (expected != actual)
-		fail(file, line, "Expected %lld, but was %lld\n", expected,
-		     actual);
+		fail(file, line, "Expected %lld (0x%llx), but was %lld (0x%llx)\n", expected, expected, actual, actual);
 }
 
 void __assert_float_equals(const char *file, int line, long double expected,
