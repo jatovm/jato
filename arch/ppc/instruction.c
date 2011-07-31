@@ -62,9 +62,23 @@ void insn_sanity_check(void)
 	assert(!"not implemented");
 }
 
+struct insn *insn_new(enum insn_type type)
+{
+	struct insn *insn;
+
+	insn = calloc(1, sizeof *insn);
+	if (insn) {
+		memset(insn, 0, sizeof *insn);
+		INIT_LIST_HEAD(&insn->insn_list_node);
+		INIT_LIST_HEAD(&insn->branch_list_node);
+		insn->type = type;
+	}
+	return insn;
+}
+
 struct insn *insn(enum insn_type insn_type)
 {
-	assert(!"not implemented");
+	return insn_new(insn_type);
 }
 
 int insert_copy_slot_32_insns(struct stack_slot *stack_slot1, struct stack_slot *stack_slot2, struct list_head *list_head, unsigned long a)
