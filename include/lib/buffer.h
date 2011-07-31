@@ -48,6 +48,17 @@ static inline void buffer_write_be32(struct buffer *b, uint32_t x)
 	buffer_write8(b, (x      ) & 0xff);
 }
 
+static inline uint8_t buffer_read8(struct buffer *b)
+{
+	return b->buf[b->offset++];
+}
+
+static inline uint32_t buffer_read_be32(struct buffer *b)
+{
+	return buffer_read8(b) << 24 | buffer_read8(b) << 16
+			| buffer_read8(b) << 8 | buffer_read8(b);
+}
+
 static inline void *buffer_ptr(struct buffer *buf)
 {
 	return buf->buf;
@@ -61,6 +72,11 @@ static inline void *buffer_current(struct buffer *buf)
 static inline size_t buffer_offset(struct buffer *buf)
 {
 	return buf->offset;
+}
+
+static inline void buffer_flip(struct buffer *buf)
+{
+	buf->offset = 0;
 }
 
 void generic_buffer_free(struct buffer *);

@@ -13,19 +13,24 @@ struct var_info;
  * 	operand types.
  */
 enum insn_type {
+	INSN_LIS,
 	INSN_BLR,
 };
 
 enum operand_type {
+	OPERAND_REG,
+	OPERAND_IMM,
+
 	/* This must be last */
 	LAST_OPERAND
 };
 
 struct operand {
-	enum operand_type type;
+	enum operand_type		type;
 	union {
-		struct use_position reg;
-		struct basic_block *branch_target;
+		struct use_position	reg;
+		struct basic_block	*branch_target;
+		uint16_t		imm;
 	};
 };
 
