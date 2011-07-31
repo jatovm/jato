@@ -71,6 +71,15 @@ void emit_trampoline(struct compilation_unit *cu,
 	/* Pass the address of cu to magic_trampoline in R0 and call it */
 	encode_setup_trampoline(buf, (unsigned long)cu, (unsigned long)call_target);
 
+	/* Call the function whose address is is returned by magic trampoline */
+	encode_emit_branch_link(buf);
+	/*
+	 * Setup the stack frame to the previous value
+	 * before entering the frame
+	 */
+	encode_restore_sp(buf, 4);
+	encode_ldm(buf, 0b1000100000000000);
+
 	jit_text_reserve(buffer_offset(buf));
 	jit_text_unlock();
 }

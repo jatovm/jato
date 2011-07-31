@@ -334,6 +334,21 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 	emit_encoded_insn(buffer, encoded_insn);
 }
 
+void encode_emit_branch_link(struct buffer *buffer)
+{
+	uint32_t encoded_insn = arm_encode_insn[INSN_SUB_REG_IMM];
+	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_LR) & 0xF) << 12) |
+			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x000);
+
+	emit_encoded_insn(buffer, encoded_insn);
+
+	encoded_insn = arm_encode_insn[INSN_MOV_REG_REG];
+	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_PC) & 0xF) << 12) |
+			(arm_encode_reg(MACH_REG_R0) & 0xF);
+
+	emit_encoded_insn(buffer, encoded_insn);
+}
+
 void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *bb)
 {
 	uint32_t encoded_insn = arm_encode_insn[insn->type];
