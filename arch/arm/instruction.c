@@ -113,16 +113,6 @@ struct insn *jump_insn(struct basic_block *bb)
 	assert(!"not implemented");
 }
 
-const char *reg_name(enum machine_reg reg)
-{
-	assert(!"not implemented");
-}
-
-bool reg_supports_type(enum machine_reg reg, enum vm_type type)
-{
-	assert(!"not implemented");
-}
-
 struct insn *alloc_insn(enum insn_type type)
 {
 	struct insn *insn = malloc(sizeof *insn);

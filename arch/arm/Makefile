@@ -6,3 +6,4 @@ ARCH_OBJS += arch/arm/stack-frame.o
 ARCH_OBJS += arch/arm/stubs_to_compile.o
 ARCH_OBJS += arch/arm/insn-selector.o
 ARCH_OBJS += arch/arm/encode.o
+ARCH_OBJS += arch/arm/registers.o

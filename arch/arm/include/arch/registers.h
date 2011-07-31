@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <limits.h>
+#include <assert.h>
 
 enum machine_reg {
 	/*
@@ -46,10 +47,11 @@ enum machine_reg {
 #define GPR_VM_TYPE	J_INT
 
 #define NR_CALLER_SAVE_REGS 0
+
+const uint32_t reg_type_table[NR_REGISTERS];
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
 const char *reg_name(enum machine_reg reg);
-
 bool reg_supports_type(enum machine_reg reg, enum vm_type type);
 
 struct register_state {
