@@ -27,6 +27,7 @@
 
 #include "jit/compiler.h"
 
+#include "jit/bc-offset-mapping.h"
 #include "jit/compilation-unit.h"
 #include "jit/basic-block.h"
 #include "jit/expression.h"
@@ -54,6 +55,8 @@
 #define MONOBURG_LOG		1
 #define HAVE_ARRAY_ELEM_INIT	1
 
+static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn);
+
 %%
 
 %termprefix EXPR_ OP_ STMT_
@@ -67,7 +70,7 @@ freg:	EXPR_FVALUE
 
 reg:	EXPR_VALUE
 {
-	assert(!"not implemented");
+	/* TODO */
 }
 
 reg:	EXPR_LOCAL
@@ -437,7 +440,7 @@ stmt:	STMT_INVOKEVIRTUAL(arg)
 
 stmt:	STMT_RETURN(reg)
 {
-	assert(!"not implemented");
+	select_insn(s, tree, insn(INSN_BLR));
 }
 
 stmt:	STMT_RETURN(freg)
@@ -611,6 +614,12 @@ stmt:	STMT_CHECKCAST(reg)
 }
 
 %%
+
+static void select_insn(struct basic_block *bb, struct tree_node *tree, struct insn *insn)
+{
+	insn_set_bc_offset(insn, tree->bytecode_offset);
+	bb_add_insn(bb, insn);
+}
 
 static void statement_select(struct basic_block *bb, MBState *state, int goal)
 {
