@@ -323,7 +323,7 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 	   and then Load the address of magic_trampoline form constant pool */
 	encoded_insn = arm_encode_insn[INSN_SUB_REG_IMM];
 	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_LR) & 0xF) << 12) |
-			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x004);
+			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x000);
 
 	emit_encoded_insn(buffer, encoded_insn);
 
