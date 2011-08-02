@@ -171,6 +171,17 @@ endif
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
 
+HAS_TCMALLOC_MINIMAL:=$(shell scripts/gcc-has-lib.sh gcc tcmalloc_minimal)
+ifeq ($(HAS_TCMALLOC_MINIMAL),y)
+	TCMALLOC_CFLAGS += -ltcmalloc_minimal -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+endif
+
+HAS_TCMALLOC:=$(shell scripts/gcc-has-lib.sh gcc tcmalloc)
+ifeq ($(HAS_TCMALLOC),y)
+	TCMALLOC_CFLAGS += -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+endif
+
+DEFAULT_CFLAGS	+= $(TCMALLOC_CFLAGS)
 # boehmgc integration (see boehmgc/doc/README.linux)
 DEFAULT_CFLAGS  += -D_REENTRANT -DGC_LINUX_THREADS -DGC_USE_LD_WRAP
 
