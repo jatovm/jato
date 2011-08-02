@@ -51,10 +51,10 @@ static inline bool range_is_empty(struct live_range *range)
 struct live_interval;
 
 struct var_info {
-	unsigned long		vreg;
-	struct var_info		*next;
-	struct live_interval	*interval;
-	enum vm_type		vm_type;
+	struct var_info			*next;
+	struct live_interval		*interval;
+	uint32_t			vreg;
+	uint8_t				vm_type;
 };
 
 enum interval_flag_type {
