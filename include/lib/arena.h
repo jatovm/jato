@@ -6,8 +6,8 @@
 struct arena_block {
 	void				*free;
 	void				*end;
-	void				*data;
 	struct arena_block		*next;
+	char				data[];
 };
 
 struct arena {
