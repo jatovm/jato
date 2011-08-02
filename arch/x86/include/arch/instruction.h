@@ -224,8 +224,12 @@ struct insn {
 	uint8_t			type;		 /* see enum insn_type */
 	uint8_t			flags;		 /* see enum insn_flag_type */
 	uint16_t		bc_offset;	 /* offset in bytecode */
-	uint32_t		mach_offset;	 /* offset in machine code */
-	uint32_t		lir_pos;	 /* offset in LIR */
+
+	union {
+		uint32_t	mach_offset;	 /* offset in machine code */
+		uint32_t	lir_pos;	 /* offset in LIR */
+	};
+
 	struct list_head	insn_list_node;
 	struct list_head	branch_list_node;
 
