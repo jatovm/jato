@@ -591,14 +591,14 @@ struct insn *ssa_reg_reg_insn(struct var_info *src, struct var_info *dest)
 	struct insn *insn;
 
 	switch(src->vm_type) {
-		case J_FLOAT:
-			insn = reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest);
-			break;
-		case J_DOUBLE:
-			insn = reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest);
-			break;
-		default:
-			insn = reg_reg_insn(INSN_MOV_REG_REG, src, dest);
+	case J_FLOAT:
+		insn = reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest);
+		break;
+	case J_DOUBLE:
+		insn = reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest);
+		break;
+	default:
+		insn = reg_reg_insn(INSN_MOV_REG_REG, src, dest);
 	}
 
 	return insn;
@@ -612,17 +612,17 @@ struct insn *ssa_imm_reg_insn(unsigned long imm,
 	struct insn *insn;
 
 	switch(dest_reg->vm_type) {
-		case J_FLOAT:
-			insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
-			*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU, gpr, dest_reg);
-			break;
-		case J_DOUBLE:
-			insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
-			*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU64, gpr, dest_reg);
-			break;
-		default:
-			insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, dest_reg);
-			*insn_conv = NULL;
+	case J_FLOAT:
+		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
+		*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU, gpr, dest_reg);
+		break;
+	case J_DOUBLE:
+		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, gpr);
+		*insn_conv = reg_reg_insn(INSN_CONV_GPR_TO_FPU64, gpr, dest_reg);
+		break;
+	default:
+		insn = imm_reg_insn(INSN_MOV_IMM_REG, imm, dest_reg);
+		*insn_conv = NULL;
 	}
 
 	return insn;
@@ -681,71 +681,71 @@ struct insn *jump_insn(struct basic_block *bb)
 void ssa_chg_jmp_direction(struct insn *insn, struct basic_block *after_bb,
 		struct basic_block *new_bb, struct basic_block *bb)
 {
-	switch(insn->type) {
-		case INSN_JE_BRANCH:
-			if (insn->operand.branch_target == bb) {
-				insn->operand.branch_target = after_bb;
-				insn->type = INSN_JNE_BRANCH;
-			}
-			break;
-		case INSN_JNE_BRANCH:
-			if (insn->operand.branch_target == bb) {
-				insn->operand.branch_target = after_bb;
-				insn->type = INSN_JE_BRANCH;
-			}
-			break;
-		case INSN_JGE_BRANCH:
-			if (insn->operand.branch_target == bb) {
-				insn->operand.branch_target = after_bb;
-				insn->type = INSN_JL_BRANCH;
-			}
-			break;
-		case INSN_JL_BRANCH:
-			if (insn->operand.branch_target == bb) {
-				insn->operand.branch_target = after_bb;
-				insn->type = INSN_JGE_BRANCH;
-			}
-			break;
-		case INSN_JG_BRANCH:
-			if (insn->operand.branch_target == bb) {
-				insn->operand.branch_target = after_bb;
-				insn->type = INSN_JLE_BRANCH;
-			}
-			break;
-		case INSN_JLE_BRANCH:
-			if (insn->operand.branch_target == bb) {
-				insn->operand.branch_target = after_bb;
-				insn->type = INSN_JG_BRANCH;
-			}
-			break;
-		case INSN_JMP_BRANCH:
-			if (insn->operand.branch_target == bb)
-				insn->operand.branch_target = new_bb;
-			break;
+	switch (insn->type) {
+	case INSN_JE_BRANCH:
+		if (insn->operand.branch_target == bb) {
+			insn->operand.branch_target = after_bb;
+			insn->type = INSN_JNE_BRANCH;
+		}
+		break;
+	case INSN_JNE_BRANCH:
+		if (insn->operand.branch_target == bb) {
+			insn->operand.branch_target = after_bb;
+			insn->type = INSN_JE_BRANCH;
+		}
+		break;
+	case INSN_JGE_BRANCH:
+		if (insn->operand.branch_target == bb) {
+			insn->operand.branch_target = after_bb;
+			insn->type = INSN_JL_BRANCH;
+		}
+		break;
+	case INSN_JL_BRANCH:
+		if (insn->operand.branch_target == bb) {
+			insn->operand.branch_target = after_bb;
+			insn->type = INSN_JGE_BRANCH;
+		}
+		break;
+	case INSN_JG_BRANCH:
+		if (insn->operand.branch_target == bb) {
+			insn->operand.branch_target = after_bb;
+			insn->type = INSN_JLE_BRANCH;
+		}
+		break;
+	case INSN_JLE_BRANCH:
+		if (insn->operand.branch_target == bb) {
+			insn->operand.branch_target = after_bb;
+			insn->type = INSN_JG_BRANCH;
+		}
+		break;
+	case INSN_JMP_BRANCH:
+		if (insn->operand.branch_target == bb)
+			insn->operand.branch_target = new_bb;
+		break;
 	}
 }
 
 int ssa_modify_insn_type(struct insn *insn)
 {
 	switch(insn->type) {
-		case INSN_MOV_REG_MEMBASE:
-			insn->type = INSN_MOV_IMM_MEMBASE;
-			break;
+	case INSN_MOV_REG_MEMBASE:
+		insn->type = INSN_MOV_IMM_MEMBASE;
+		break;
 
-		case INSN_MOV_REG_REG:
-			insn->type = INSN_MOV_IMM_REG;
-			break;
+	case INSN_MOV_REG_REG:
+		insn->type = INSN_MOV_IMM_REG;
+		break;
 
-		case INSN_MOV_REG_THREAD_LOCAL_MEMBASE:
-			insn->type = INSN_MOV_IMM_THREAD_LOCAL_MEMBASE;
-			break;
+	case INSN_MOV_REG_THREAD_LOCAL_MEMBASE:
+		insn->type = INSN_MOV_IMM_THREAD_LOCAL_MEMBASE;
+		break;
 
-		case INSN_MOV_REG_MEMLOCAL:
-			insn->type = INSN_MOV_IMM_MEMLOCAL;
-			break;
+	case INSN_MOV_REG_MEMLOCAL:
+		insn->type = INSN_MOV_IMM_MEMLOCAL;
+		break;
 
-		default:
-			return -1;
+	default:
+		return -1;
 	}
 
 	return 0;
