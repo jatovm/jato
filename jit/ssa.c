@@ -1038,36 +1038,37 @@ void imm_copy_propagation(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		list_for_each_entry_safe(insn, tmp, &bb->insn_list, insn_list_node) {
-			if (insn_is_mov_imm_reg(insn)) {
-				struct operand *operand = &insn->dest;
+			if (!insn_is_mov_imm_reg(insn))
+				continue;
 
-				struct use_position *reg = &operand->reg;
+			struct operand *operand = &insn->dest;
 
-				if (!interval_has_fixed_reg(reg->interval)) {
-					struct insn *rep_insn = NULL;
-					struct use_position *use;
-					int cnt = 0;
+			struct use_position *reg = &operand->reg;
 
-					list_for_each_entry(use, &reg->interval->use_positions, use_pos_list) {
-						cnt++;
-						if (cnt == 3)
-							break;
+			if (!interval_has_fixed_reg(reg->interval)) {
+				struct insn *rep_insn = NULL;
+				struct use_position *use;
+				int cnt = 0;
 
-						if (!insn_is_mov_imm_reg(use->insn))
-							rep_insn = use->insn;
-					}
+				list_for_each_entry(use, &reg->interval->use_positions, use_pos_list) {
+					cnt++;
+					if (cnt == 3)
+						break;
 
-					if (cnt == 2) {
-						if (ssa_modify_insn_type(rep_insn))
-							continue;
+					if (!insn_is_mov_imm_reg(use->insn))
+						rep_insn = use->insn;
+				}
 
-						list_del(&rep_insn->src.reg.use_pos_list);
+				if (cnt == 2) {
+					if (ssa_modify_insn_type(rep_insn))
+						continue;
 
-						imm_operand(&rep_insn->src, insn->src.imm);
+					list_del(&rep_insn->src.reg.use_pos_list);
 
-						list_del(&insn->insn_list_node);
-						free_insn(insn);
-					}
+					imm_operand(&rep_insn->src, insn->src.imm);
+
+					list_del(&insn->insn_list_node);
+					free_insn(insn);
 				}
 			}
 		}
