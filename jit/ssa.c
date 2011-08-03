@@ -1008,6 +1008,72 @@ error_positions:
 	return err;
 }
 
+/*
+ * This function eliminates an instruction in the following
+ * 4 situations:
+ *
+ ********
+ * mov_imm_reg			x, r10
+ *					=> mov_imm_membase		x, y
+ * mov_reg_membase		r10, y
+ ********
+ * mov_imm_reg			x, r10
+ *					=> mov_imm_reg			x, r11
+ * mov_reg_reg			r10, r11
+ ********
+ * mov_imm_reg			x, r10
+ *					=> mov_imm_memlocal		x, y
+ * mov_reg_memlocal		r10, y
+ ********
+ * mov_imm_reg			x, r10
+ *					=> mov_imm_thread_local_membase	x, y
+ * mov_reg_therad_local_membase	r10, y
+ ********
+ *
+ */
+void imm_copy_propagation(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	struct insn *insn, *tmp;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		list_for_each_entry_safe(insn, tmp, &bb->insn_list, insn_list_node) {
+			if (insn_is_mov_imm_reg(insn)) {
+				struct operand *operand = &insn->dest;
+
+				struct use_position *reg = &operand->reg;
+
+				if (!interval_has_fixed_reg(reg->interval)) {
+					struct insn *rep_insn = NULL;
+					struct use_position *use;
+					int cnt = 0;
+
+					list_for_each_entry(use, &reg->interval->use_positions, use_pos_list) {
+						cnt++;
+						if (cnt == 3)
+							break;
+
+						if (!insn_is_mov_imm_reg(use->insn))
+							rep_insn = use->insn;
+					}
+
+					if (cnt == 2) {
+						if (ssa_modify_insn_type(rep_insn))
+							continue;
+
+						list_del(&rep_insn->src.reg.use_pos_list);
+
+						imm_operand(&rep_insn->src, insn->src.imm);
+
+						list_del(&insn->insn_list_node);
+						free_insn(insn);
+					}
+				}
+			}
+		}
+	}
+}
+
 int lir_to_ssa(struct compilation_unit *cu)
 {
 	int err;

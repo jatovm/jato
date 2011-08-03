@@ -260,3 +260,22 @@ void free_insn(struct insn *insn)
 
 	free(insn);
 }
+
+int ssa_modify_insn_type(struct insn *insn)
+{
+	assert(!"not implemented");
+
+	return 0;
+}
+
+void imm_operand(struct operand *operand, unsigned long imm)
+{
+	assert(!"not implemented");
+}
+
+bool insn_is_mov_imm_reg(struct insn *insn)
+{
+	assert(!"not implemented");
+
+	return false;
+}

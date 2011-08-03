@@ -111,6 +111,8 @@ int compile(struct compilation_unit *cu)
 		if(opt_trace_ssa)
 			trace_ssa(cu);
 
+		imm_copy_propagation(cu);
+
 		err = dce(cu);
 		if (err)
 			goto out;

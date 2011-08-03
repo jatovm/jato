@@ -29,6 +29,8 @@
 #include "jit/instruction.h"
 #include "jit/vars.h"
 
+#include "lib/arena.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -723,6 +725,42 @@ void ssa_chg_jmp_direction(struct insn *insn, struct basic_block *after_bb,
 	}
 }
 
+int ssa_modify_insn_type(struct insn *insn)
+{
+	switch(insn->type) {
+		case INSN_MOV_REG_MEMBASE:
+			insn->type = INSN_MOV_IMM_MEMBASE;
+			break;
+
+		case INSN_MOV_REG_REG:
+			insn->type = INSN_MOV_IMM_REG;
+			break;
+
+		case INSN_MOV_REG_THREAD_LOCAL_MEMBASE:
+			insn->type = INSN_MOV_IMM_THREAD_LOCAL_MEMBASE;
+			break;
+
+		case INSN_MOV_REG_MEMLOCAL:
+			insn->type = INSN_MOV_IMM_MEMLOCAL;
+			break;
+
+		default:
+			return -1;
+	}
+
+	return 0;
+}
+
+void imm_operand(struct operand *operand, unsigned long imm)
+{
+	*operand = (struct operand) {
+		.type = OPERAND_IMM,
+			{
+				.imm = imm,
+			}
+	};
+}
+
 /*
  *	Instruction flags
  */
@@ -1118,6 +1156,11 @@ int insn_operand_use_kind(struct insn *insn, struct operand *operand)
 		kind_mask |= USE_KIND_OUTPUT;
 
 	return kind_mask;
+}
+
+bool insn_is_mov_imm_reg(struct insn *insn)
+{
+	return insn->type == INSN_MOV_IMM_REG;
 }
 
 bool insn_is_branch(struct insn *insn)
