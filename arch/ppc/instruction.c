@@ -110,7 +110,6 @@ struct insn *insn_new(enum insn_type type)
 	if (insn) {
 		memset(insn, 0, sizeof *insn);
 		INIT_LIST_HEAD(&insn->insn_list_node);
-		INIT_LIST_HEAD(&insn->branch_list_node);
 		insn->type = type;
 	}
 	return insn;
