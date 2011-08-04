@@ -283,7 +283,6 @@ static void do_assert_object_equals(const char *function, const char *file, int 
 
 #define assert_object_equals(expected, actual) do_assert_object_equals(__func__, __FILE__, __LINE__, expected, actual)
 
-#ifndef CONFIG_ARM
 static void test_bipush(void)
 {
 	uint8_t bytecode[] = { OPC_BIPUSH, 0x10, OPC_IRETURN };
@@ -291,6 +290,7 @@ static void test_bipush(void)
 	assert_int_equals(16, execute(bytecode));
 }
 
+#ifndef CONFIG_ARM
 static void test_sipush(void)
 {
 	uint8_t bytecode[] = { OPC_SIPUSH, 0x01, 0x00, OPC_IRETURN };
@@ -859,6 +859,7 @@ static void test_fconst_0(void)
 
 	assert_float_equals(0.0, jfloat_run(bytecode));
 }
+#endif
 
 static void test_lconst_1(void)
 {
@@ -873,7 +874,6 @@ static void test_lconst_0(void)
 
 	assert_long_equals(0, jlong_run(bytecode));
 }
-#endif
 
 static void test_iconst_5(void)
 {
@@ -923,8 +923,8 @@ static void test_aconst_null(void)
 
 	assert_object_equals(NULL, jobject_run(bytecode));
 }
-
 #ifndef CONFIG_ARM
+
 static void test_iconst_m1(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_M1, OPC_IRETURN };
@@ -1048,16 +1048,16 @@ static void run_tests(void)
 	test_iconst_3();
 	test_iconst_4();
 	test_iconst_5();
-#ifndef CONFIG_ARM
-	test_iconst_m1();
 	test_lconst_0();
 	test_lconst_1();
+	test_bipush();
+#ifndef CONFIG_ARM
+	test_iconst_m1();
 	test_fconst_0();
 	test_fconst_1();
 	test_fconst_2();
 	test_dconst_0();
 	test_dconst_1();
-	test_bipush();
 	test_sipush();
 	/* test_ldc(); */
 	/* test_ldc_w(); */
