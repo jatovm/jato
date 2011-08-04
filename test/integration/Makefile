@@ -88,6 +88,8 @@ OBJS += bytecode-test.o
 
 OBJS += $(COMPAT_OBJS)
 
+LIB_FILE := ../../libjvm.a
+
 LIBS := -L../../ -ljvm -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -L../../boehmgc -lboehmgc
 
 CFLAGS += $(DEFINES)
