@@ -144,6 +144,31 @@ stmt:	STMT_VOID_RETURN
 	select_insn(s, tree, branch_insn(INSN_UNCOND_BRANCH, s->b_parent->exit_bb));
 }
 
+stmt:	STMT_STORE(EXPR_LOCAL, reg)
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct expression *local;
+	struct stack_slot *slot;
+	struct statement *stmt;
+	struct var_info *src;
+
+	src = state->right->reg1;
+
+	stmt = to_stmt(tree);
+	local = to_expr(stmt->store_dest);
+	slot = get_local_slot(cu->stack_frame, local->local_index);
+
+	select_insn(s, tree, memlocal_reg_insn(INSN_STORE_MEMLOCAL_REG, src, slot));
+
+	if (local->vm_type == J_LONG) {
+		src = state->right->reg2;
+
+		slot = get_local_slot(cu->stack_frame, local->local_index+1);
+
+		select_insn(s, tree, memlocal_reg_insn(INSN_STORE_MEMLOCAL_REG, src, slot));
+	}
+}
+
 %%
 
 static void select_insn(struct basic_block *, struct tree_node *, struct insn *);

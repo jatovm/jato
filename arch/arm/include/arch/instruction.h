@@ -136,6 +136,7 @@ struct insn *insn(enum insn_type);
 struct insn *reg_imm_insn(enum insn_type, unsigned long, struct var_info *);
 struct insn *reg_pool_insn(enum insn_type, struct lp_entry *, struct var_info *);
 struct insn *reg_memlocal_insn(enum insn_type, struct stack_slot *, struct var_info *);
+struct insn *memlocal_reg_insn(enum insn_type, struct var_info *, struct stack_slot *);
 struct insn *reg_reg_insn(enum insn_type, struct var_info *, struct var_info *);
 struct insn *branch_insn(enum insn_type, struct basic_block *);
 

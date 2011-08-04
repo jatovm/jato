@@ -25,6 +25,7 @@ static unsigned long insn_flags[] = {
 	[INSN_MOV_REG_IMM]			= DEF_DST,
 	[INSN_MOV_REG_REG]			= USE_SRC | DEF_DST,
 	[INSN_LOAD_REG_POOL_IMM]		= DEF_DST,
+	[INSN_STORE_MEMLOCAL_REG]		= USE_SRC | USE_FP,
 	[INSN_UNCOND_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 };
 
@@ -210,6 +211,24 @@ struct insn *reg_memlocal_insn(enum insn_type insn_type,
 		};
 		init_reg_operand(insn, &insn->dest, dest_reg);
 		}
+	return insn;
+}
+
+struct insn *memlocal_reg_insn(enum insn_type insn_type,
+	struct var_info *src_reg, struct stack_slot *slot)
+{
+	struct insn *insn = alloc_insn(insn_type);
+
+	if (insn) {
+		init_reg_operand(insn, &insn->src, src_reg);
+
+		insn->dest       = (struct operand) {
+			.type           = OPERAND_MEMLOCAL,
+			{
+				.slot           = slot,
+			}
+		};
+	}
 	return insn;
 }
 

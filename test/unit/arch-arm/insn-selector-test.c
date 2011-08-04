@@ -6,6 +6,8 @@
 #include "jit/vars.h"
 #include "arch/instruction.h"
 #include "lib/list.h"
+#include "jit/emit-code.h"
+#include "lib/buffer.h"
 
 #include <libharness.h>
 #include <stdlib.h>
@@ -110,6 +112,53 @@ void test_expr_local(void)
 	assert_int_equals(0, index[0]);
 	assert_int_equals(0, index[1]);
 	assert_int_equals(1, index[2]);
+
+	free_basic_block(bb);
+}
+
+void test_stmt_store(void)
+{
+	struct compilation_unit *cu = stub_compilation_unit_alloc();
+	struct stack_frame *frame = alloc_stack_frame(3, 5);
+	cu->stack_frame = frame;
+
+	struct basic_block *bb = alloc_basic_block(cu, 1, 20);
+	struct statement *stmt1 = alloc_statement(STMT_STORE);
+	struct statement *stmt2 = alloc_statement(STMT_STORE);
+
+	struct expression *expr1 = local_expr(J_INT, 3);
+	struct expression *expr2 = local_expr(J_LONG, 3);
+	struct expression *expr3 = value_expr(J_INT, 100);
+	struct expression *expr4 = value_expr(J_LONG, 0x0000003400000016);
+	struct insn *insn;
+
+	stmt1->store_dest = &expr1->node;
+	stmt1->store_src = &expr3->node;
+	stmt2->store_dest = &expr2->node;
+	stmt2->store_src = &expr4->node;
+
+	bb_add_stmt(bb, stmt1);
+	bb_add_stmt(bb, stmt2);
+
+	int index[6];
+	int i = 0;
+
+	insn_select(bb);
+	for_each_insn(insn, &bb->insn_list) {
+		if (insn->type == INSN_STORE_MEMLOCAL_REG)
+			index[i] = insn->dest.slot->index;
+		else
+			index[i] = insn->src.imm;
+
+		i++;
+	}
+
+	assert_int_equals(100, index[0]);
+	assert_int_equals(3, index[1]);
+	assert_int_equals(22, index[2]);
+	assert_int_equals(52, index[3]);
+	assert_int_equals(3, index[4]);
+	assert_int_equals(4, index[5]);
 
 	free_basic_block(bb);
 }
