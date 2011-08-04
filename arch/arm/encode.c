@@ -184,7 +184,7 @@ uint32_t encode_imm_offset_store(struct insn *insn)
 	long offset;
 	switch (insn->dest.type) {
 	case OPERAND_MEMLOCAL:
-		offset = slot_offset(insn->src.slot);
+		offset = slot_offset(insn->dest.slot);
 		if (offset < 0) {
 			offset = offset * (-1);
 			return 0UL | IMM_OFFSET_SUB | (offset & 0xFFF);
@@ -354,11 +354,16 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 	uint32_t encoded_insn = arm_encode_insn[insn->type];
 
 	if (encoded_insn & LOAD_STORE) {
-		encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 12);
 		if (encoded_insn & LOAD_INSN) {
+			encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 12);
 			encoded_insn = encoded_insn | encode_base_reg_load(insn);
 			if (!(encoded_insn & REG_OFFSET))
 				encoded_insn = encoded_insn | encode_imm_offset_load(insn);
+		} else {
+			encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->src.reg)) & 0xF) << 12);
+			encoded_insn = encoded_insn | encode_base_reg_store(insn);
+			if (!(encoded_insn & REG_OFFSET))
+				encoded_insn = encoded_insn | encode_imm_offset_store(insn);
 		}
 	} else if (encoded_insn & BRANCH) {
 		encoded_insn = encoded_insn | ((emit_branch(insn, bb) >> 2) & 0xFFFFFF);

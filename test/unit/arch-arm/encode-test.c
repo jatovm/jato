@@ -194,3 +194,29 @@ void test_emit_epilog(void)
 	assert_int_equals(0xE28BD004, read_mem32(buffer, 0));
 	assert_int_equals(0xE91D8FF0, read_mem32(buffer, 4));
 }
+
+void test_emit_memlocal_reg_insn(void)
+{
+	struct stack_frame *frame = alloc_stack_frame(3, 6);
+	struct buffer *buffer = alloc_buffer();
+	struct insn insn = {};
+	struct live_interval interval = {.reg = MACH_REG_R4};
+	struct stack_slot *slot = get_local_slot(frame, 2);
+	uint32_t encoded_insn;
+
+	insn.type = INSN_STORE_MEMLOCAL_REG;
+
+	insn.dest.type = OPERAND_MEMLOCAL;
+	insn.dest.slot = slot;
+
+	insn.src.type = OPERAND_REG;
+	insn.src.reg.interval = &interval;
+
+	emit_insn(buffer, NULL, &insn);
+
+	encoded_insn = read_mem32(buffer, 0);
+
+	assert_int_equals(0xE50B4038, encoded_insn);
+
+	free_buffer(buffer);
+}
