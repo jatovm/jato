@@ -14,6 +14,7 @@
 #include <stdbool.h>
 
 struct compilation_unit;
+struct resolution_block;
 struct basic_block;
 struct bitset;
 
@@ -51,6 +52,8 @@ struct operand {
 		uint8_t imm;	/* In arm we have 8-bit immediate only */
 
 		struct basic_block *branch_target;
+
+		struct resolution_block *resolution_block;
 	};
 };
 
@@ -98,6 +101,8 @@ enum insn_flag_type {
 	INSN_FLAG_KNOWN_BC_OFFSET	= 1U << 2,
 	INSN_FLAG_RENAMED		= 1U << 3, /* instruction with renamed virtual registers */
 	INSN_FLAG_SSA_ADDED		= 1U << 4, /* instruction added during SSA deconstruction */
+	INSN_FLAG_BACKPATCH_BRANCH	= 1U << 5,
+	INSN_FLAG_BACKPATCH_RESOLUTION	= 1U << 6,
 };
 
 struct insn {
@@ -107,7 +112,6 @@ struct insn {
 	uint32_t		mach_offset;	 /* offset in machine code */
 	uint32_t		lir_pos;	 /* offset in LIR */
 	struct list_head	insn_list_node;
-	struct list_head	branch_list_node;
 
 	union {
 		struct {

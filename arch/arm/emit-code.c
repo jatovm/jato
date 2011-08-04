@@ -221,12 +221,12 @@ long emit_branch(struct insn *insn, struct basic_block *bb)
 		idx = bb_lookup_successor_index(bb, target_bb);
 
 	if (idx >= 0 && branch_needs_resolution_block(bb, idx)) {
-		list_add(&insn->branch_list_node,
-			 &bb->resolution_blocks[idx].backpatch_insns);
+		insn->flags |= INSN_FLAG_BACKPATCH_RESOLUTION;
+		insn->operand.resolution_block = &bb->resolution_blocks[idx];
 	} else if (target_bb->is_emitted) {
 		addr = branch_rel_addr(insn, target_bb->mach_offset);
 	} else
-		list_add(&insn->branch_list_node, &target_bb->backpatch_insns);
+		insn->flags |= INSN_FLAG_BACKPATCH_BRANCH;
 
 	return addr;
 

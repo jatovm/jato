@@ -37,7 +37,6 @@ struct basic_block *do_alloc_basic_block(struct compilation_unit *b_parent, unsi
 	}
 	INIT_LIST_HEAD(&bb->stmt_list);
 	INIT_LIST_HEAD(&bb->insn_list);
-	INIT_LIST_HEAD(&bb->backpatch_insns);
 	INIT_LIST_HEAD(&bb->bb_list_node);
 	bb->b_parent = b_parent;
 	bb->start = start;
@@ -414,7 +413,6 @@ unsigned char *bb_native_ptr(struct basic_block *bb)
 void resolution_block_init(struct resolution_block *block)
 {
 	INIT_LIST_HEAD(&block->insns);
-	INIT_LIST_HEAD(&block->backpatch_insns);
 }
 
 int bb_lookup_successor_index(struct basic_block *from, struct basic_block *to)

@@ -46,17 +46,6 @@ static void emit_monitorexit(struct compilation_unit *cu)
 	else
 		emit_unlock_this(cu->objcode);
 }
-static void backpatch_branches(struct buffer *buf,
-			       struct list_head *to_backpatch,
-			       unsigned long target_offset)
-{
-	struct insn *this, *next;
-
-	list_for_each_entry_safe(this, next, to_backpatch, branch_list_node) {
-		backpatch_branch_target(buf, this, target_offset);
-		list_del(&this->branch_list_node);
-	}
-}
 
 static void backpatch_tableswitch(struct tableswitch *table)
 {
@@ -114,14 +103,33 @@ static void backpatch_lookupswitch_targets(struct compilation_unit *cu)
 	}
 }
 
+static void backpatch_branches(struct basic_block *bb, struct buffer *buf)
+{
+	struct insn *insn;
+
+	for_each_insn(insn, &bb->insn_list) {
+		if (insn->flags & INSN_FLAG_BACKPATCH_BRANCH) {
+			struct basic_block *target_bb;
+
+			target_bb = insn->operand.branch_target;
+
+			backpatch_branch_target(buf, insn, target_bb->mach_offset);
+		} else if (insn->flags & INSN_FLAG_BACKPATCH_RESOLUTION) {
+			struct resolution_block *rb;
+
+			rb = insn->operand.resolution_block;
+
+			backpatch_branch_target(buf, insn, rb->mach_offset);
+		}
+	}
+}
+
 void emit_body(struct basic_block *bb, struct buffer *buf)
 {
 	struct insn *insn;
 
 	bb->mach_offset = buffer_offset(buf);
 	bb->is_emitted = true;
-
-	backpatch_branches(buf, &bb->backpatch_insns, bb->mach_offset);
 
 	for_each_insn(insn, &bb->insn_list) {
 		emit_insn(buf, bb, insn);
@@ -140,12 +148,11 @@ static void emit_resolution_blocks(struct basic_block *bb, struct buffer *buf)
 
 		mach_offset = buffer_offset(buf);
 		block = &bb->resolution_blocks[i];
+		block->mach_offset = mach_offset;
 		block->addr = (unsigned long) buffer_ptr(buf) + mach_offset;
 
 		if (list_is_empty(&block->insns))
 			continue;
-
-		backpatch_branches(buf, &block->backpatch_insns, mach_offset);
 
 		for_each_insn(insn, &block->insns) {
 			emit_insn(buf, NULL, insn);
@@ -221,6 +228,10 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list) {
 		emit_resolution_blocks(bb, cu->objcode);
+	}
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		backpatch_branches(bb, cu->objcode);
 	}
 
 	process_call_fixup_sites(cu);

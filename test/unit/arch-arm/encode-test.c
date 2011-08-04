@@ -137,12 +137,23 @@ void test_emit_uncond_branch_insn(void)
 
 	bb2->mach_offset = buffer_offset(buffer);
 	bb2->is_emitted = true;
-	list_for_each_entry_safe(insn, next, &bb2->backpatch_insns, branch_list_node) {
-		backpatch_branch_target(buffer, insn, bb2->mach_offset);
-		list_del(&insn->branch_list_node);
-	}
 	for_each_insn(insn, &bb2->insn_list) {
 		emit_insn(buffer, bb2, insn);
+	}
+	for_each_insn(insn, &bb1->insn_list) {
+		if (insn->flags & INSN_FLAG_BACKPATCH_BRANCH) {
+			struct basic_block *target_bb;
+
+			target_bb = insn->operand.branch_target;
+
+			backpatch_branch_target(buffer, insn, target_bb->mach_offset);
+		} else if (insn->flags & INSN_FLAG_BACKPATCH_RESOLUTION) {
+			struct resolution_block *rb;
+
+			rb = insn->operand.resolution_block;
+
+			backpatch_branch_target(buffer, insn, rb->mach_offset);
+		}
 	}
 
 	encoded_insn = read_mem32(buffer, 0);

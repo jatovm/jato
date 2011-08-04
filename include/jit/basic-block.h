@@ -9,10 +9,9 @@ struct insn;
 struct statement;
 
 struct resolution_block {
-	unsigned long addr;
-
-	struct list_head insns;
-	struct list_head backpatch_insns;
+	unsigned long			addr;
+	unsigned long			mach_offset;
+	struct list_head		insns;
 };
 
 struct basic_block {
@@ -23,9 +22,6 @@ struct basic_block {
 	bool is_emitted;
 	struct list_head stmt_list;
 	struct list_head insn_list;
-	/* List of forward branch instructions to this basic block that need
-	   back-patching.  */
-	struct list_head backpatch_insns;
 	struct list_head bb_list_node;
 	bool has_branch;
 	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
