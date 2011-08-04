@@ -76,7 +76,7 @@ int dce(struct compilation_unit *cu)
 		}
 	}
 
-	while(!list_is_empty(worklist)) {
+	while (!list_is_empty(worklist)) {
 		dce_element = list_first_entry(worklist, struct dce, dce_node);
 		list_del(&dce_element->dce_node);
 
@@ -109,12 +109,16 @@ int dce(struct compilation_unit *cu)
 				return warn("out of memory"), -EINVAL;
 
 			nr_uses = insn_uses_reg(def_insn, reg_uses);
-			for(unsigned long i = 0 ; i < nr_uses; i++){
+			for (unsigned long i = 0; i < nr_uses; i++) {
 				struct use_position *this_use = reg_uses[i];
 
 				if (!interval_has_fixed_reg(this_use->interval)) {
-					dce_element = alloc_dce_element(this_use->interval->var_info);
-					list_add_tail(&dce_element->dce_node, worklist);
+					dce_element =
+					    alloc_dce_element(this_use->
+							      interval->
+							      var_info);
+					list_add_tail(&dce_element->dce_node,
+						      worklist);
 				}
 			}
 
@@ -125,7 +129,8 @@ int dce(struct compilation_unit *cu)
 				hash_map_remove(cu->insn_add_ons, def_insn);
 			if (insn_is_phi(def_insn))
 				free_ssa_insn(def_insn);
-			else free_insn(def_insn);
+			else
+				free_insn(def_insn);
 		}
 	}
 
