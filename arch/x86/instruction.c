@@ -994,27 +994,7 @@ int insn_defs(struct compilation_unit *cu, struct insn *insn, struct var_info **
 
 bool insn_vreg_def(struct use_position *use, struct var_info *var)
 {
-	unsigned long flags;
-	struct insn *insn;
-
-	insn = use->insn;
-	flags = insn_flags[insn->type];
-
-	if (flags & DEF_SRC)
-		if (insn->src.reg.interval->var_info == var)
-			return true;
-
-	if (flags & DEF_DST) {
-		if (insn->type != INSN_PHI) {
-			if (insn->dest.reg.interval->var_info == var)
-				return true;
-		} else {
-			if (insn->ssa_dest.reg.interval->var_info == var)
-				return true;
-		}
-	}
-
-	return false;
+	return use->kind == USE_KIND_OUTPUT && use->interval->var_info == var;
 }
 
 int insn_defs_reg(struct insn *insn, struct use_position **regs)
@@ -1060,42 +1040,10 @@ int insn_uses(struct insn *insn, struct var_info **uses)
 
 bool insn_vreg_use(struct use_position *use, struct var_info *var)
 {
-	unsigned long flags;
-	struct insn *insn;
-
-	insn = use->insn;
-	flags = insn_flags[insn->type];
-
 	if (use->kind == USE_KIND_INVALID)
 		return true;
 
-	if (insn_is_phi(insn)) {
-		if (flags & USE_SRC) {
-			for (unsigned long i = 0; i < insn->nr_srcs; i++)
-				if (insn->ssa_srcs[i].reg.interval->var_info == var)
-					return true;
-		}
-
-		return false;
-	}
-	if (flags & USE_SRC)
-		if (insn->src.reg.interval->var_info == var)
-			return true;
-
-	if (flags & USE_DST)
-		if (insn->dest.reg.interval->var_info == var)
-			return true;
-
-	if (flags & USE_IDX_SRC)
-		if (insn->src.index_reg.interval->var_info == var)
-			return true;
-
-	if (flags & USE_IDX_DST)
-		if (insn->dest.index_reg.interval->var_info == var)
-			return true;
-
-	return false;
-
+	return use->kind == USE_KIND_INPUT && use->interval->var_info == var;
 }
 
 unsigned long insn_uses_reg(struct insn *insn, struct use_position **regs)
