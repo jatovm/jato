@@ -172,7 +172,6 @@ int convert_lookupswitch(struct parse_context *ctx)
 	struct basic_block *master_bb;
 	struct basic_block *default_bb;
 	struct basic_block *b1;
-	struct basic_block *next_bb;
 
 	get_lookupswitch_info(ctx->code, ctx->offset, &info);
 	ctx->buffer->pos += info.insn_size;
@@ -192,8 +191,6 @@ int convert_lookupswitch(struct parse_context *ctx)
 	bb_add_successor(master_bb, default_bb );
 	bb_add_successor(master_bb, b1);
 
-	next_bb = bb_entry(b1->bb_list_node.next);
-
 	for (unsigned int i = 0; i < info.count; i++) {
 		struct basic_block *target_bb;
 		int32_t target;
@@ -201,7 +198,7 @@ int convert_lookupswitch(struct parse_context *ctx)
 		target = read_lookupswitch_target(&info, i);
 		target_bb = find_bb(ctx->cu, ctx->offset + target);
 
-		if (next_bb && next_bb != target_bb)
+		if (!bb_successors_contains(b1, target_bb))
 			bb_add_successor(b1, target_bb);
 	}
 
