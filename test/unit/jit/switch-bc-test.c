@@ -26,7 +26,7 @@ static unsigned char tableswitch1[36] = {
 	0x05, 0xac, 0x02, 0xac,
 };
 
-void test1_convert_tableswitch_bbs(void)
+void test_convert_tableswitch_bbs1(void)
 {
 	struct basic_block *bb0, *bb1, *bb2, *bb3, *bb4, *bb5, *bb6;
 	struct compilation_unit *cu;
@@ -83,7 +83,7 @@ static unsigned char tableswitch2[46] = {
 	0x1e, 0x3c, 0x10, 0x28, 0x3c, 0xb1,
 };
 
-void test2_convert_tableswitch_bbs(void)
+void test_convert_tableswitch_bbs2(void)
 {
 	struct basic_block *bb0, *bb1, *bb2, *bb3, *bb4, *bb5;
 	struct compilation_unit *cu;
@@ -109,14 +109,14 @@ void test2_convert_tableswitch_bbs(void)
 	bb5 = bb_entry(bb4->bb_list_node.next);
 
 	assert_basic_block_successors((struct basic_block*[]){bb5, bb1}, 2, bb0);
-	assert_basic_block_successors((struct basic_block*[]){bb2, bb3, bb4, bb0}, 4, bb1);
+	assert_basic_block_successors((struct basic_block*[]){bb2, bb3, bb4}, 3, bb1);
 	assert_basic_block_successors((struct basic_block*[]){bb3}, 1, bb2);
 	assert_basic_block_successors((struct basic_block*[]){bb4}, 1, bb3);
 	assert_basic_block_successors((struct basic_block*[]){bb5}, 1, bb4);
 	assert_basic_block_successors((struct basic_block*[]){ }, 0, bb5);
 }
 
-/* Test for lookupswitch:
+/* Test1 for lookupswitch:
 	public void lookupswitch()
 	{
 		int a = 1;
@@ -133,7 +133,7 @@ void test2_convert_tableswitch_bbs(void)
 
 	}
  */
-static unsigned char lookupswitch[35] = {
+static unsigned char lookupswitch1[35] = {
 	0x04, 0x3c, 0x1b, 0xab, 0x00, 0x00, 0x00, 0x1d,
 	0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x19, 0x00, 0x00, 0x00, 0x01,
@@ -141,15 +141,15 @@ static unsigned char lookupswitch[35] = {
 	0x06, 0x3c, 0xb1,
 };
 
-void test_convert_lookupswitch_bbs()
+void test_convert_lookupswitch_bbs1(void)
 {
 	struct basic_block *bb0, *bb1, *bb2, *bb3, *bb4;
 	struct compilation_unit *cu;
 
 	struct cafebabe_method_info method_info;
 	struct vm_method method = {
-		.code_attribute.code = lookupswitch,
-		.code_attribute.code_length = ARRAY_SIZE(lookupswitch),
+		.code_attribute.code = lookupswitch1,
+		.code_attribute.code_length = ARRAY_SIZE(lookupswitch1),
 		.method = &method_info,
 	};
 
