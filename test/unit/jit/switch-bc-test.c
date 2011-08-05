@@ -171,3 +171,71 @@ void test_convert_lookupswitch_bbs1(void)
 	assert_basic_block_successors((struct basic_block*[]){bb4}, 1, bb3);
 	assert_basic_block_successors((struct basic_block*[]){ }, 0, bb4);
 }
+
+ /* Test2 for lookupswitch:
+	void lookupswitch()
+	{
+		int a = 2;
+
+		switch(a) {
+			case 1:
+				if (a == 2)
+					a = 3;
+			case 6:
+				switch(a) {
+					case 1:
+						if (a == 2)
+							a = 4;
+					case 4:
+				}
+			case 7:
+		}
+	}
+ */
+static unsigned char lookupswitch2[73] = {
+	0x05, 0x3c, 0x1b, 0xab, 0x00, 0x00, 0x00, 0x45,
+	0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01,
+	0x00, 0x00, 0x00, 0x21, 0x00, 0x00, 0x00, 0x06,
+	0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x07,
+	0x00, 0x00, 0x00, 0x45, 0x1b, 0x05, 0xa0, 0x00,
+	0x05, 0x06, 0x3c, 0x1b, 0xab, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x00, 0x02,
+	0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x1c,
+	0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x1c,
+	0xb1,
+};
+
+void test_convert_lookupswitch_bbs2(void)
+{
+	struct basic_block *bb0, *bb1, *bb2, *bb3, *bb4, *bb5, *bb6;
+	struct compilation_unit *cu;
+
+	struct cafebabe_method_info method_info;
+	struct vm_method method = {
+		.code_attribute.code = lookupswitch2,
+		.code_attribute.code_length = ARRAY_SIZE(lookupswitch2),
+		.method = &method_info,
+	};
+
+	cu = compilation_unit_alloc(&method);
+
+	analyze_control_flow(cu);
+	convert_to_ir(cu);
+	assert_int_equals(7, nr_bblocks(cu));
+
+	bb0 = bb_entry(cu->bb_list.next);
+	bb1 = bb_entry(bb0->bb_list_node.next);
+	bb2 = bb_entry(bb1->bb_list_node.next);
+	bb3 = bb_entry(bb2->bb_list_node.next);
+	bb4 = bb_entry(bb3->bb_list_node.next);
+	bb5 = bb_entry(bb4->bb_list_node.next);
+	bb6 = bb_entry(bb5->bb_list_node.next);
+
+	assert_basic_block_successors((struct basic_block*[]){bb6, bb1}, 2, bb0);
+	assert_basic_block_successors((struct basic_block*[]){bb2, bb4, bb6}, 3, bb1);
+	assert_basic_block_successors((struct basic_block*[]){bb3, bb4}, 2, bb2);
+	assert_basic_block_successors((struct basic_block*[]){bb4}, 1, bb3);
+	assert_basic_block_successors((struct basic_block*[]){bb6, bb5}, 2, bb4);
+	assert_basic_block_successors((struct basic_block*[]){bb6}, 1, bb5);
+	assert_basic_block_successors((struct basic_block*[]){ }, 0, bb6);
+}
