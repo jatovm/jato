@@ -407,7 +407,7 @@ static int replace_var_info(struct compilation_unit *cu,
 	var = it->var_info;
 
 	if (stack_is_empty(name_stack[var->vreg]))
-		return warn("Variable %lu not initialized for ssa renaming", var->vreg), -EINVAL;
+		return warn("Variable %d not initialized for ssa renaming", var->vreg), -EINVAL;
 
 	new_var = stack_peek(name_stack[var->vreg]);
 
