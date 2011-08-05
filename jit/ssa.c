@@ -81,6 +81,15 @@ static struct use_position *init_insn_add_ons_reg(struct insn *insn,
 	return reg;
 }
 
+static void insert_list(struct changed_var_stack *changed, struct changed_var_stack *list)
+{
+	if (list != NULL){
+                changed->next = list;
+                list = changed;
+        } else
+                list = changed;
+}
+
 void recompute_insn_positions(struct compilation_unit *cu)
 {
 	free_radix_tree(cu->lir_insn_map);
@@ -111,12 +120,12 @@ static struct changed_var_stack *alloc_changed_var_stack(unsigned long vreg)
 		return NULL;
 
 	changed->vreg = vreg;
-	INIT_LIST_HEAD(&changed->changed_var_stack_node);
+	changed->next = NULL;
 
 	return changed;
 }
 
-static int list_changed_stacks_add(struct list_head *list_changed_stacks,
+static int list_changed_stacks_add(struct changed_var_stack *list_changed_stacks,
 	unsigned long vreg)
 {
 	struct changed_var_stack *changed;
@@ -124,7 +133,8 @@ static int list_changed_stacks_add(struct list_head *list_changed_stacks,
 	changed = alloc_changed_var_stack(vreg);
 	if (!changed)
 		return -ENOMEM;
-	list_add(&changed->changed_var_stack_node, list_changed_stacks);
+
+	insert_list(changed, list_changed_stacks);
 
 	return 0;
 }
@@ -305,7 +315,7 @@ static void insert_phi(struct basic_block *bb, struct var_info *var)
 
 static int do_insn_is_copy(struct use_position *reg,
 		struct use_position **regs_uses,
-		struct list_head *list_changed_stacks,
+		struct changed_var_stack *list_changed_stacks,
 		struct stack **name_stack)
 {
 	struct var_info *var;
@@ -319,7 +329,7 @@ static int do_insn_is_copy(struct use_position *reg,
 
 static int add_var_info(struct compilation_unit *cu,
 	struct use_position *reg,
-	struct list_head *list_changed_stacks,
+	struct changed_var_stack *list_changed_stacks,
 	struct stack **name_stack)
 {
 	struct live_interval *it;
@@ -386,7 +396,7 @@ static void eh_replace_var_info(struct compilation_unit *cu,
 
 static int replace_var_info(struct compilation_unit *cu,
 			struct use_position *reg,
-			struct list_head *list_changed_stacks,
+			struct changed_var_stack *list_changed_stacks,
 			struct stack **name_stack,
 			struct insn *insn)
 {
@@ -420,7 +430,7 @@ static int replace_var_info(struct compilation_unit *cu,
 
 static int insert_stack_fixed_var(struct compilation_unit *cu,
 				struct stack **name_stack,
-				struct list_head *list_changed_stacks)
+				struct changed_var_stack *list_changed_stacks)
 {
 	struct var_info *var, *new_var;
 	int err;
@@ -448,16 +458,11 @@ static int __rename_variables(struct compilation_unit *cu,
 	struct use_position *regs_uses[MAX_REG_OPERANDS],
 				*regs_defs[MAX_REG_OPERANDS + 1];
 	struct use_position *reg;
-	struct list_head *list_changed_stacks;
-	struct changed_var_stack *changed, *this, *next;
+	struct changed_var_stack *changed, *remove, *list_changed_stacks;
 	int nr_defs, nr_uses, i, err;
 	bool delete;
 
-	list_changed_stacks = malloc(sizeof (struct list_head));
-	if (!list_changed_stacks)
-		return warn("out of memory"), -ENOMEM;
-
-	INIT_LIST_HEAD(list_changed_stacks);
+	list_changed_stacks = NULL;
 
 	if (bb == cu->entry_bb) {
 		err = insert_stack_fixed_var(cu, name_stack, list_changed_stacks);
@@ -537,13 +542,21 @@ static int __rename_variables(struct compilation_unit *cu,
 	 * Pop all the variables that have been put onto the stack
 	 * during the processing of block X.
 	 */
-	list_for_each_entry(changed, list_changed_stacks, changed_var_stack_node)
+	changed = list_changed_stacks;
+	while(changed) {
 		stack_pop(name_stack[changed->vreg]);
 
-	list_for_each_entry_safe(this, next, list_changed_stacks, changed_var_stack_node)
-		free(this);
+		changed = changed->next;
+	}
 
-	free(list_changed_stacks);
+	changed = list_changed_stacks;
+	while(changed) {
+		remove = changed;
+
+		changed = changed->next;
+
+		free(remove);
+	}
 
 	return 0;
 }

@@ -11,13 +11,13 @@
 #define SSA_INIT_BLOCK -1
 
 struct changed_var_stack {
-	struct list_head changed_var_stack_node;
 	unsigned long vreg;
+	struct changed_var_stack *next;
 };
 
 struct dce {
 	struct var_info *var;
-	struct list_head dce_node;
+	struct dce *next;
 };
 
 /*

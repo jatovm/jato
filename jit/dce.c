@@ -41,10 +41,19 @@ static struct dce *alloc_dce_element(struct var_info *var)
 	if (!dce_element)
 		return NULL;
 
-	INIT_LIST_HEAD(&dce_element->dce_node);
 	dce_element->var = var;
+	dce_element->next = NULL;
 
 	return dce_element;
+}
+
+static void insert_list(struct dce *dce_element, struct dce *list)
+{
+	if (list != NULL){
+		dce_element->next = list;
+		list = dce_element;
+	} else
+		list = dce_element;
 }
 
 /*
@@ -56,29 +65,24 @@ int dce(struct compilation_unit *cu)
 {
 	struct live_interval *it;
 	struct var_info *var;
-	struct list_head *worklist;
-	struct dce *dce_element;
+	struct dce *dce_element, *list;
 	struct use_position *use;
 	struct insn *def_insn;
 	bool used;
 
-	worklist = malloc(sizeof(struct list_head));
-	if (!worklist)
-		return warn("out of memory"), -ENOMEM;
-	INIT_LIST_HEAD(worklist);
+	list = NULL;
 
 	for_each_variable(var, cu->ssa_var_infos) {
 		it = var->interval;
 
 		if (!interval_has_fixed_reg(it)) {
 			dce_element = alloc_dce_element(var);
-			list_add(&dce_element->dce_node, worklist);
+			insert_list(dce_element, list);
 		}
 	}
 
-	while (!list_is_empty(worklist)) {
-		dce_element = list_first_entry(worklist, struct dce, dce_node);
-		list_del(&dce_element->dce_node);
+	while (list) {
+		dce_element = list;
 
 		it = dce_element->var->interval;
 
@@ -94,6 +98,7 @@ int dce(struct compilation_unit *cu)
 			}
 		}
 
+		list = dce_element->next;
 		free(dce_element);
 
 		if (!used) {
@@ -117,8 +122,8 @@ int dce(struct compilation_unit *cu)
 					    alloc_dce_element(this_use->
 							      interval->
 							      var_info);
-					list_add_tail(&dce_element->dce_node,
-						      worklist);
+
+					insert_list(dce_element, list);
 				}
 			}
 
@@ -133,8 +138,6 @@ int dce(struct compilation_unit *cu)
 				free_insn(def_insn);
 		}
 	}
-
-	free(worklist);
 
 	return 0;
 }
