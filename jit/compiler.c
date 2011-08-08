@@ -6,10 +6,12 @@
  * This file is released under the GPL version 2. Please refer to the file
  * LICENSE for details.
  */
+#include "jit/compiler.h"
+
 #include "arch/inline-cache.h"
+#include "arch/peephole.h"
 
 #include "jit/compilation-unit.h"
-#include "jit/compiler.h"
 #include "jit/statement.h"
 #include "jit/bc-offset-mapping.h"
 #include "jit/exception.h"
@@ -147,6 +149,10 @@ int compile(struct compilation_unit *cu)
 		goto out;
 
 	assert(all_insn_have_bytecode_offset(cu));
+
+	err = peephole_optimize(cu);
+	if (err)
+		goto out;
 
 	err = emit_machine_code(cu);
 	if (err)
