@@ -113,6 +113,8 @@ int compile(struct compilation_unit *cu)
 
 		imm_copy_propagation(cu);
 
+		abc_removal(cu);
+
 		err = dce(cu);
 		if (err)
 			goto out;

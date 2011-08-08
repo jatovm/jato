@@ -20,10 +20,21 @@ struct dce {
 	struct dce *next;
 };
 
+struct array_size_acc {
+	bool active;
+	long size;
+};
+
+struct reg_value_acc {
+	bool active;
+	long val;
+};
+
 /*
  * Functions defined in jit/ssa.c
  */
 void recompute_insn_positions(struct compilation_unit *);
+void remove_insn(struct insn *insn);
 
 /*
  * Functions defined in jit/liveness.c

@@ -96,6 +96,12 @@ void recompute_insn_positions(struct compilation_unit *cu)
 	compute_insn_positions(cu);
 }
 
+void remove_insn(struct insn *insn)
+{
+	list_del(&insn->insn_list_node);
+	free_insn(insn);
+}
+
 static int ssa_analyze_liveness(struct compilation_unit *cu)
 {
 	int err = 0;
@@ -507,10 +513,8 @@ static int __rename_variables(struct compilation_unit *cu,
 			}
 		}
 
-		if (delete) {
-			list_del(&insn->insn_list_node);
-			free_insn(insn);
-		}
+		if (delete)
+			remove_insn(insn);
 	}
 
 	/*
@@ -1080,8 +1084,7 @@ void imm_copy_propagation(struct compilation_unit *cu)
 
 					imm_operand(&rep_insn->src, insn->src.imm);
 
-					list_del(&insn->insn_list_node);
-					free_insn(insn);
+					remove_insn(insn);
 				}
 			}
 		}
