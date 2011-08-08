@@ -5,3 +5,4 @@
 #define ARCH_NAME "x86-64"
 #define CONFIG_GDB
 
+#define CONFIG_SSA_ENABLED_BY_DEFAULT 0
