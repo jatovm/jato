@@ -32,7 +32,12 @@ int append_buffer_str(struct buffer *buf, unsigned char *str, size_t len);
 
 static inline int append_buffer(struct buffer *buf, unsigned char c)
 {
-	return append_buffer_str(buf, &c, 1);
+	if (buf->size - buf->offset < 1)
+		return append_buffer_str(buf, &c, 1);
+
+	buf->buf[buf->offset++] = c;
+
+	return 0;
 }
 
 static inline void buffer_write8(struct buffer *b, uint8_t x)
