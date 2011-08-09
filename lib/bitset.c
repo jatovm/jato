@@ -133,12 +133,41 @@ void bitset_set_all(struct bitset *bitset)
  */
 int bitset_ffs_from(struct bitset *bitset, int ndx)
 {
-	unsigned long i;
+	unsigned long unaligned;
+	unsigned long *bits;
+	unsigned long start;
+	unsigned long mask;
+	unsigned long tmp;
+	unsigned long ret;
 
-	for (i = ndx; i < bitset->nr_bits; i++) {
-		if (test_bit(bitset->bits, i))
-			return i;
+	unaligned	= ndx % BITS_PER_LONG;
+	start		= ndx & ~(BITS_PER_LONG - 1);
+
+	bits = bitset->bits + start / BITS_PER_LONG;
+
+	mask = (1UL << unaligned) - 1;
+
+	tmp = *bits & ~mask;
+	if (tmp)
+		goto found;
+
+	start += BITS_PER_LONG;
+	bits++;
+
+	for (; start < bitset->nr_bits; start += BITS_PER_LONG) {
+		tmp = *bits;
+		if (tmp)
+			goto found;
+
+		bits++;
 	}
+
+	return -1;
+found:
+	ret = ffsl(tmp);
+	ret += start - 1;
+	if (ret < bitset->nr_bits)
+		return ret;
 
 	return -1;
 }
