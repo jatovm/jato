@@ -309,9 +309,6 @@ struct insn *jump_insn(struct basic_block *bb);
 bool insn_is_mov_imm_reg(struct insn *insn);
 bool insn_is_branch(struct insn *insn);
 bool insn_is_jmp_mem(struct insn *insn);
-bool insn_is_jmp_branch(struct insn *insn);
-bool insn_is_phi(struct insn *insn);
-bool insn_is_copy(struct insn *insn);
 unsigned long nr_srcs_phi(struct insn *insn);
 
 static inline bool insn_is_call(struct insn *insn)
@@ -319,4 +316,18 @@ static inline bool insn_is_call(struct insn *insn)
 	return insn->type == INSN_IC_CALL || insn->type == INSN_CALL_REG || insn->type == INSN_CALL_REL;
 }
 
+static inline bool insn_is_jmp_branch(struct insn *insn)
+{
+	return insn->type == INSN_JMP_BRANCH;
+}
+
+static inline bool insn_is_copy(struct insn *insn)
+{
+	return insn->type == INSN_MOV_REG_REG || insn->type == INSN_MOVSD_XMM_XMM || insn->type == INSN_MOVSS_XMM_XMM;
+}
+
+static inline bool insn_is_phi(struct insn *insn)
+{
+	return insn->type == INSN_PHI;
+}
 #endif

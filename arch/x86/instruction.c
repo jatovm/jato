@@ -1128,29 +1128,6 @@ bool insn_is_jmp_mem(struct insn *insn)
 	return false;
 }
 
-bool insn_is_jmp_branch(struct insn *insn)
-{
-	if (insn->type == INSN_JMP_BRANCH)
-		return true;
-
-	return false;
-}
-
-bool insn_is_copy(struct insn *insn)
-{
-	return insn->type == INSN_MOV_REG_REG ||
-		insn->type == INSN_MOVSD_XMM_XMM ||
-		insn->type == INSN_MOVSS_XMM_XMM;
-}
-
-bool insn_is_phi(struct insn *insn)
-{
-	if (insn->type == INSN_PHI)
-		return true;
-
-	return false;
-}
-
 unsigned long nr_srcs_phi(struct insn *insn)
 {
 	if (!insn_is_phi(insn))
