@@ -1,0 +1,111 @@
+Jato Virtual Machine Internals
+==============================
+Pekka Enberg
+2011
+
+Introduction
+------------
+
+This manual documents the internals of the Jato virtual machine.
+
+The reader is expected to have some basic knowledge of the C programming
+language, Java Virtual Machine (JVM) architecture, and machine architecture.
+
+- Java Virtual Machine specification
+
+- Intel Manuals
+
+- The Java Virtual Machine
+
+Structure of the Virtual Machine
+--------------------------------
+
+Classes
+~~~~~~~
+
+Methods
+~~~~~~~
+
+Fields
+~~~~~~
+
+Objects
+~~~~~~~
+
+Exceptions
+~~~~~~~~~~
+
+Java Runtime Interface 
+----------------------
+
+Structure of the Just-in-Time Compiler
+--------------------------------------
+
+Subroutine inlining
+~~~~~~~~~~~~~~~~~~~
+
+Control-Flow Graph Analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+BC2IR
+~~~~~
+
+Instruction Selection
+~~~~~~~~~~~~~~~~~~~~~
+
+The instruction selector takes the HIR as an input and outputs LIR. The actual
+instruction selector is generated from a Monoburg rules file (e.g.
+arch/x86/insn-selector_32.brg).
+
+Static-Single Assignment (SSA) Form
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Liveness analysis
+~~~~~~~~~~~~~~~~~
+
+- Use-def
+
+Register allocation
+~~~~~~~~~~~~~~~~~~~
+
+Resolution Blocks
+^^^^^^^^^^^^^^^^^
+
+Code Generation
+~~~~~~~~~~~~~~~
+
+Intermediate Representations
+----------------------------
+
+
+High-Level Intermediate Representation (HIR)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For the front-end, we use a high-level intermediate representation (HIR) that
+is a forest of expression trees. That is, a compilation unit (a method) is
+divided into basic blocks that contain a list of statements and each statement
+can operate on an expression tree. Examples of statements include STMT_STORE
+that stores an expression to a local variable and STMT_IF that does conditional
+branch. The simplest form of expression is EXPR_VALUE which represents a
+constant value but there are more complex types of expressions including binary
+operations (EXPR_BINOP) and method invocation (EXPR_INVOKE).
+
+- struct statement
+
+- struct expression
+
+Low-Level Intermediate Representation (LIR)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- struct operand
+
+- struct insn
+
+Machine Architecture Support
+----------------------------
+
+Application Binary Interface (ABI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Instruction Encoding
+~~~~~~~~~~~~~~~~~~~~
