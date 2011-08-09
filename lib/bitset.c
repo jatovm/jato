@@ -123,25 +123,6 @@ void bitset_set_all(struct bitset *bitset)
 }
 
 /**
- *	bitset_ffs - find first set bit
- *	@bitset:	the bitset to search
- *
- *	This function returns the index of the first set bit. If no bits
- *	are set, returns a negative integer.
- */
-int bitset_ffs(struct bitset *bitset)
-{
-	unsigned long i;
-
-	for (i = 0; i < bitset->nr_bits; i++) {
-		if (test_bit(bitset->bits, i))
-			return i;
-	}
-
-	return -1;
-}
-
-/**
  *      bitset_ffs_from - find first set bit starting from an index
  *      ndx - index from which to start looking
  *      @bitset:        the bitset to search

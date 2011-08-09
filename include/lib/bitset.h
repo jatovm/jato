@@ -20,8 +20,12 @@ void bitset_copy_to(struct bitset *, struct bitset *);
 bool bitset_equal(struct bitset *, struct bitset *);
 void bitset_clear_all(struct bitset *);
 void bitset_set_all(struct bitset *);
-int bitset_ffs(struct bitset *);
 int bitset_ffs_from(struct bitset *, int ndx);
+
+static inline int bitset_ffs(struct bitset *bitset)
+{
+	return bitset_ffs_from(bitset, 0);
+}
 
 static inline unsigned long bit_mask(unsigned long bit)
 {
