@@ -311,8 +311,12 @@ bool insn_is_branch(struct insn *insn);
 bool insn_is_jmp_mem(struct insn *insn);
 bool insn_is_jmp_branch(struct insn *insn);
 bool insn_is_phi(struct insn *insn);
-bool insn_is_call(struct insn *insn);
 bool insn_is_copy(struct insn *insn);
 unsigned long nr_srcs_phi(struct insn *insn);
+
+static inline bool insn_is_call(struct insn *insn)
+{
+	return insn->type == INSN_IC_CALL || insn->type == INSN_CALL_REG || insn->type == INSN_CALL_REL;
+}
 
 #endif

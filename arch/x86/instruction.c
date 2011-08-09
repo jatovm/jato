@@ -1136,13 +1136,6 @@ bool insn_is_jmp_branch(struct insn *insn)
 	return false;
 }
 
-bool insn_is_call(struct insn *insn)
-{
-	unsigned long flags = insn_flags[insn->type];
-
-	return flags & TYPE_CALL;
-}
-
 bool insn_is_copy(struct insn *insn)
 {
 	return insn->type == INSN_MOV_REG_REG ||
