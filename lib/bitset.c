@@ -40,7 +40,7 @@ struct bitset *alloc_bitset(unsigned long nr_bits)
 void set_bit(unsigned long *bitset, unsigned long bit)
 {
 	unsigned long *addr, mask;
-	
+
 	addr = bitset + (bit / BITS_PER_LONG);
 	mask = bit_mask(bit);
 
@@ -68,19 +68,6 @@ void bitset_union_to(struct bitset *from, struct bitset *to)
 
 	for (i = 0; i < size / BYTES_PER_LONG; i++)
 		dest[i] |= src[i];
-}
-
-void bitset_copy_to(struct bitset *from, struct bitset *to)
-{
-	unsigned long *src, *dest;
-	unsigned long i, size;
-
-	dest = to->bits;
-	src = from->bits;
-	size = max(from->size, to->size);
-
-	for (i = 0; i < size / BYTES_PER_LONG; i++)
-		dest[i] = src[i];
 }
 
 void bitset_sub(struct bitset *from, struct bitset *to)

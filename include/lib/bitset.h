@@ -2,6 +2,7 @@
 #define LIB_BITSET_H
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "vm/system.h"
 
@@ -16,7 +17,6 @@ void set_bit(unsigned long *, unsigned long);
 void clear_bit(unsigned long *, unsigned long);
 void bitset_union_to(struct bitset *, struct bitset *);
 void bitset_sub(struct bitset *, struct bitset *);
-void bitset_copy_to(struct bitset *, struct bitset *);
 bool bitset_equal(struct bitset *, struct bitset *);
 void bitset_clear_all(struct bitset *);
 void bitset_set_all(struct bitset *);
@@ -40,6 +40,15 @@ static inline int test_bit(unsigned long *bitset, unsigned long bit)
 	mask = bit_mask(bit);
 
 	return ((*addr & mask) != 0);
+}
+
+static inline void bitset_copy_to(struct bitset *from, struct bitset *to)
+{
+	unsigned long size;
+
+	size = min(from->size, to->size);
+
+	memcpy(to->bits, from->bits, size);
 }
 
 #endif
