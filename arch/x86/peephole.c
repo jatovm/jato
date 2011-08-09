@@ -7,6 +7,7 @@
 
 int peephole_optimize(struct compilation_unit *cu)
 {
+#ifdef CONFIG_X86_32
 	struct basic_block *bb;
 
 	for_each_basic_block(bb, &cu->bb_list) {
@@ -23,5 +24,7 @@ int peephole_optimize(struct compilation_unit *cu)
 			}
 		}
 	}
+#endif
+
 	return 0;
 }
