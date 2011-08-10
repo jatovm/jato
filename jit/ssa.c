@@ -81,13 +81,13 @@ static struct use_position *init_insn_add_ons_reg(struct insn *insn,
 	return reg;
 }
 
-static void insert_list(struct changed_var_stack *changed, struct changed_var_stack *list)
+static void insert_list(struct changed_var_stack *changed, struct changed_var_stack **list)
 {
-	if (list != NULL){
-                changed->next = list;
-                list = changed;
+	if (*list != NULL){
+                changed->next = *list;
+                *list = changed;
         } else
-                list = changed;
+                *list = changed;
 }
 
 void recompute_insn_positions(struct compilation_unit *cu)
@@ -140,7 +140,7 @@ static int list_changed_stacks_add(struct changed_var_stack *list_changed_stacks
 	if (!changed)
 		return -ENOMEM;
 
-	insert_list(changed, list_changed_stacks);
+	insert_list(changed, &list_changed_stacks);
 
 	return 0;
 }

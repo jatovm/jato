@@ -32,6 +32,7 @@
 #include "jit/vars.h"
 #include "lib/radix-tree.h"
 #include "vm/stdlib.h"
+#include <stdio.h>
 
 static struct dce *alloc_dce_element(struct var_info *var)
 {
@@ -47,13 +48,13 @@ static struct dce *alloc_dce_element(struct var_info *var)
 	return dce_element;
 }
 
-static void insert_list(struct dce *dce_element, struct dce *list)
+static void insert_list(struct dce *dce_element, struct dce **list)
 {
-	if (list != NULL){
-		dce_element->next = list;
-		list = dce_element;
+	if (*list != NULL){
+		dce_element->next = *list;
+		*list = dce_element;
 	} else
-		list = dce_element;
+		*list = dce_element;
 }
 
 /*
@@ -77,7 +78,7 @@ int dce(struct compilation_unit *cu)
 
 		if (!interval_has_fixed_reg(it)) {
 			dce_element = alloc_dce_element(var);
-			insert_list(dce_element, list);
+			insert_list(dce_element, &list);
 		}
 	}
 
@@ -123,7 +124,7 @@ int dce(struct compilation_unit *cu)
 							      interval->
 							      var_info);
 
-					insert_list(dce_element, list);
+					insert_list(dce_element, &list);
 				}
 			}
 
