@@ -66,6 +66,17 @@ static inline unsigned long bctrl(void)
 	return bcctr(BO_BR_ALWAYS, 0, 1);
 }
 
+/* Move from Special-Purpose Register */
+static inline unsigned long mfspr(unsigned char rd, unsigned char spr)
+{
+	return OPCD(31) | D(rd) | SPR(spr) | (339 << 1);
+}
+
+static inline unsigned long mflr(unsigned long rd)
+{
+	return mfspr(rd, SPR_LR);
+}
+
 /* Move to Special-Purpose Register */
 static inline unsigned long mtspr(unsigned char spr, unsigned char rs)
 {
@@ -75,6 +86,17 @@ static inline unsigned long mtspr(unsigned char spr, unsigned char rs)
 static inline unsigned long mtctr(unsigned long rs)
 {
 	return mtspr(SPR_CTR, rs);
+}
+
+static inline unsigned long mtlr(unsigned long rs)
+{
+	return mtspr(SPR_LR, rs);
+}
+
+/* Add Immediate */
+static inline unsigned long addi(unsigned char rd, unsigned char ra, unsigned short simm)
+{
+	return OPCD(14) | D(rd) | A(ra) | SIMM(simm);
 }
 
 /* Add Immediate Shifted */
@@ -88,10 +110,27 @@ static inline unsigned long lis(unsigned char rd, unsigned short value)
 	return addis(rd, 0, value);
 }
 
+static inline unsigned long lwz(unsigned char rd, unsigned short d, unsigned char ra)
+{
+	return OPCD(32) | D(rd) | A(ra) | d;
+}
+
 /* OR Immediate */
 static inline unsigned long ori(unsigned char ra, unsigned char rs, unsigned short uimm)
 {
 	return OPCD(24) | S(rs) | A(ra) | UIMM(uimm);
+}
+
+/* Store Word */
+static inline unsigned long stw(unsigned char rs, unsigned short d, unsigned char ra)
+{
+	return OPCD(37) | S(rs) | A(ra) | d;
+}
+
+/* Store Word with Update */
+static inline unsigned long stwu(unsigned char rs, unsigned short d, unsigned char ra)
+{
+	return OPCD(37) | S(rs) | A(ra) | d;
 }
 
 static inline unsigned short ptr_high(void *p)

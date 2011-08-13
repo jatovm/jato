@@ -85,6 +85,13 @@ emit_trampoline(struct compilation_unit *cu, void *target_addr, struct jit_tramp
 
 	b->buf = jit_text_ptr();
 
+	/* Allocate memory on the stack */
+	emit(b, stwu(1, -16, 1));
+
+	/* Save LR on stack */
+	emit(b, mflr(0));
+	emit(b, stw(0, 0, 1));
+
 	/* Pass pointer to 'struct compilation_unit' as first argument */
 	emit(b, lis(3, ptr_high(cu)));
 	emit(b, ori(3, 3, ptr_low(cu)));
@@ -94,6 +101,13 @@ emit_trampoline(struct compilation_unit *cu, void *target_addr, struct jit_tramp
 	emit(b, ori(0, 0, ptr_low(target_addr)));
 	emit(b, mtctr(0));
 	emit(b, bctrl());
+
+	/* Restore LR from stack */
+	emit(b, lwz(0, 0, 1));
+	emit(b, mtlr(0));
+
+	/* Free memory on stack */
+	emit(b, addi(1, 1, 16));
 
 	/* Finally jump to the compiled method */
 	emit(b, mtctr(3));
