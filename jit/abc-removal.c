@@ -67,8 +67,7 @@ void abc_removal(struct compilation_unit *cu)
 				regs_value[reg].val = insn->src.imm;
 			}
 
-			if (insn_is_call(insn)
-					&& insn->operand.rel == (unsigned long)vm_object_alloc_primitive_array) {
+			if (insn_is_call_to(insn, vm_object_alloc_primitive_array)) {
 				struct insn *insn_push_size, *insn_mov_eax_array;
 				uint32_t size_reg, array_reg;
 
@@ -86,8 +85,7 @@ void abc_removal(struct compilation_unit *cu)
 				}
 			}
 
-			if (insn_is_call(insn)
-					&& insn->operand.rel == (unsigned long)vm_object_check_array) {
+			if (insn_is_call_to(insn, vm_object_check_array)) {
 				struct insn *insn_push_index, *insn_push_array;
 				uint32_t index_reg, array_reg;
 
