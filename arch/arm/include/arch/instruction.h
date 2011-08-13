@@ -158,6 +158,13 @@ bool insn_is_branch(struct insn *insn);
 bool insn_is_jmp_branch(struct insn *insn);
 bool insn_is_call(struct insn *insn);
 
+static inline bool insn_is_call_to(struct insn *insn, void *target)
+{
+	assert(!"not implemented");
+
+	return false;
+}
+
 int ssa_modify_insn_type(struct insn *);
 void imm_operand(struct operand *, unsigned long);
 

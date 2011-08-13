@@ -45,7 +45,7 @@ void abc_removal(struct compilation_unit *cu)
 	struct array_size_acc arrays_value[cu->ssa_nr_vregs];
 	int index = 0, nr_array_check = 0;
 
-	for(unsigned i = 0; i < cu->ssa_nr_vregs; i++) {
+	for (unsigned i = 0; i < cu->ssa_nr_vregs; i++) {
 		regs_value[i].active = false;
 
 		arrays_value[i].active = false;
@@ -53,8 +53,7 @@ void abc_removal(struct compilation_unit *cu)
 
 	for_each_basic_block(bb, &cu->bb_list)
 		list_for_each_entry(insn, &bb->insn_list, insn_list_node)
-			if (insn_is_call(insn)
-					&& insn->operand.rel == (unsigned long)vm_object_alloc_primitive_array)
+			if (insn_is_call_to(insn, vm_object_alloc_primitive_array))
 				nr_array_check++;
 
 	struct insn *delete[nr_array_check];

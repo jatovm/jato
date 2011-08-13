@@ -316,6 +316,14 @@ static inline bool insn_is_call(struct insn *insn)
 	return insn->type == INSN_IC_CALL || insn->type == INSN_CALL_REG || insn->type == INSN_CALL_REL;
 }
 
+static inline bool insn_is_call_to(struct insn *insn, void *target)
+{
+	if (!insn_is_call(insn))
+		return false;
+
+	return insn->operand.rel == (unsigned long) target;
+}
+
 static inline bool insn_is_jmp_branch(struct insn *insn)
 {
 	return insn->type == INSN_JMP_BRANCH;
@@ -330,4 +338,5 @@ static inline bool insn_is_phi(struct insn *insn)
 {
 	return insn->type == INSN_PHI;
 }
+
 #endif
