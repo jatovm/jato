@@ -6,31 +6,36 @@
 #include "vm/bytecode.h"
 #include "vm/die.h"
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 
 static unsigned int read_index(struct verifier_block *bb)
 {
 	if (bb->is_wide) {
-		bb->pc += 2;
-		return read_u16(bb->code);
+		return read_u16(&bb->code[bb->pc+1]);
 	}
 
-	bb->pc++;
-	return read_u8(bb->code);
+	return read_u8(&bb->code[bb->pc+1]);
 }
 
-static inline void discard_bc_params(struct verifier_block *bb, unsigned int bytes)
+static int read_vm_type(struct verifier_block *bb)
 {
-	/* We need to advance PC but we have no use for the parameters here. */
-	bb->pc += bytes;
-}
+	int t_type;
 
-static int verify_stack_max_size(struct verifier_block *bb, unsigned int added_size)
-{
-	if (bb->parent_ctx->max_stack < vrf_stack_size(bb->final_state->stack) + added_size)
-		return E_TYPE_CHECKING;
+	t_type = read_u8(&bb->code[bb->pc+1]);
 
-	return 0;
+	switch (t_type) {
+		case T_BOOLEAN: return J_BOOLEAN;
+		case T_CHAR: return J_CHAR;
+		case T_FLOAT: return J_FLOAT;
+		case T_DOUBLE: return J_DOUBLE;
+		case T_BYTE: return J_BYTE;
+		case T_SHORT: return J_SHORT;
+		case T_INT: return J_INT;
+		case T_LONG: return J_LONG;
+		default: return E_MALFORMED_BC;
+	}
 }
 
 static int __verify_binop(struct verifier_block *bb, enum vm_type vm_type)
@@ -265,8 +270,6 @@ int verify_iinc(struct verifier_block *bb)
 
 	idx = read_index(bb);
 
-	discard_bc_params(bb, 1);
-
 	err = peek_vrf_lvar(bb, J_INT, idx);
 	if (err)
 		return err;
@@ -326,8 +329,6 @@ static int __verify_if_binary(struct verifier_block *bb)
 	if (err)
 		return err;
 
-	discard_bc_params(bb, 2);
-
 	return 0;
 }
 
@@ -372,8 +373,6 @@ static int __verify_if_cmp(struct verifier_block *bb, enum vm_type vm_type)
 	err = pop_vrf_op(bb, vm_type);
 	if (err)
 		return err;
-
-	discard_bc_params(bb, 2);
 
 	return 0;
 }
@@ -420,11 +419,6 @@ int verify_if_acmpne(struct verifier_block *bb)
 
 int verify_goto(struct verifier_block *bb)
 {
-	if (bb->is_wide)
-		discard_bc_params(bb, 4);
-	else
-		discard_bc_params(bb, 2);
-
 	return 0;
 }
 
@@ -432,16 +426,9 @@ int verify_jsr(struct verifier_block *bb)
 {
 	int err;
 
-	verify_stack_max_size(bb, 1);
-
 	err = push_vrf_op(bb, J_RETURN_ADDRESS);
 	if (err)
 		return err;
-
-	if (bb->is_wide)
-		discard_bc_params(bb, 4);
-	else
-		discard_bc_params(bb, 2);
 
 	return 0;
 }
@@ -462,8 +449,6 @@ static int __verify_ifnull(struct verifier_block *bb)
 	err = pop_vrf_op(bb, J_REFERENCE);
 	if (err)
 		return err;
-
-	discard_bc_params(bb, 2);
 
 	return 0;
 }
@@ -542,6 +527,7 @@ int verify_invokevirtual(struct verifier_block *bb)
 
 int verify_invokespecial(struct verifier_block *bb)
 {
+	puts("???");
 	return E_NOT_IMPLEMENTED;
 }
 
@@ -553,10 +539,6 @@ int verify_invokestatic(struct verifier_block *bb)
 static int __verify_const(struct verifier_block *bb, enum vm_type vm_type)
 {
 	int err;
-
-	err = verify_stack_max_size(bb, 1);
-	if (err)
-		return err;
 
 	err = push_vrf_op(bb, vm_type);
 	if (err)
@@ -594,10 +576,6 @@ static int __verify_ipush(struct verifier_block *bb)
 {
 	int err;
 
-	err = verify_stack_max_size(bb, 1);
-	if (err)
-		return err;
-
 	err = push_vrf_op(bb, J_INT);
 	if (err)
 		return err;
@@ -607,13 +585,11 @@ static int __verify_ipush(struct verifier_block *bb)
 
 int verify_bipush(struct verifier_block *bb)
 {
-	discard_bc_params(bb, 1);
 	return __verify_ipush(bb);
 }
 
 int verify_sipush(struct verifier_block *bb)
 {
-	discard_bc_params(bb, 2);
 	return __verify_ipush(bb);
 }
 
@@ -635,10 +611,6 @@ int verify_ldc2_w(struct verifier_block *bb)
 static int __verify_load(struct verifier_block *bb, enum vm_type vm_type, unsigned int idx)
 {
 	int err;
-
-	err = verify_stack_max_size(bb, 1);
-	if (err)
-		return err;
 
 	err = peek_vrf_lvar(bb, vm_type, idx);
 	if (err)
@@ -741,22 +713,22 @@ int verify_istore(struct verifier_block *bb)
 
 int verify_lstore(struct verifier_block *bb)
 {
-	return __verify_store_read_index(bb, J_INT);
+	return __verify_store_read_index(bb, J_LONG);
 }
 
 int verify_fstore(struct verifier_block *bb)
 {
-	return __verify_store_read_index(bb, J_INT);
+	return __verify_store_read_index(bb, J_FLOAT);
 }
 
 int verify_dstore(struct verifier_block *bb)
 {
-	return __verify_store_read_index(bb, J_INT);
+	return __verify_store_read_index(bb, J_DOUBLE);
 }
 
 int verify_astore(struct verifier_block *bb)
 {
-	return __verify_store_read_index(bb, J_INT);
+	return __verify_store_read_index(bb, J_REFERENCE);
 }
 
 int verify_istore_n(struct verifier_block *bb)
@@ -929,12 +901,27 @@ int verify_sastore(struct verifier_block *bb)
 
 int verify_new(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return push_vrf_op(bb, J_REFERENCE);
 }
 
 int verify_newarray(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	int err;
+	int vm_type;
+
+	err = pop_vrf_op(bb, J_INT);
+	if (err)
+		return err;
+
+	vm_type = read_vm_type(bb);
+	if (vm_type < 0)
+		return vm_type;
+
+	err = push_vrf_op(bb, vm_type);
+	if (err)
+		return err;
+
+	return 0;
 }
 
 int verify_anewarray(struct verifier_block *bb)
@@ -949,7 +936,17 @@ int verify_multianewarray(struct verifier_block *bb)
 
 int verify_arraylength(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	int err;
+
+	err = pop_vrf_op(bb, J_REFERENCE);
+	if (err)
+		return err;
+
+	err = push_vrf_op(bb, J_INT);
+	if (err)
+		return err;
+
+	return 0;
 }
 
 int verify_instanceof(struct verifier_block *bb)
@@ -964,12 +961,12 @@ int verify_checkcast(struct verifier_block *bb)
 
 int verify_monitorenter(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return pop_vrf_op(bb, J_REFERENCE);
 }
 
 int verify_monitorexit(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return pop_vrf_op(bb, J_REFERENCE);
 }
 
 int verify_pop(struct verifier_block *bb)
@@ -1027,82 +1024,98 @@ int verify_lookupswitch(struct verifier_block *bb)
 	return E_NOT_IMPLEMENTED;
 }
 
+static int __verify_x2x(struct verifier_block *bb, enum vm_type from, enum vm_type to)
+{
+	int err;
+
+	err = pop_vrf_op(bb, from);
+	if (err)
+		return err;
+
+	err = push_vrf_op(bb, to);
+	if (err)
+		return err;
+
+	return 0;
+}
+
 int verify_i2l(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_INT, J_LONG);
 }
 
 int verify_i2f(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_INT, J_FLOAT);
 }
 
 int verify_i2d(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_INT, J_DOUBLE);
 }
 
 int verify_l2i(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_LONG, J_INT);
 }
 
 int verify_l2f(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_LONG, J_FLOAT);
 }
 
 int verify_l2d(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_LONG, J_DOUBLE);
 }
 
 int verify_f2i(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_FLOAT, J_INT);
 }
 
 int verify_f2l(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_FLOAT, J_LONG);
 }
 
 int verify_f2d(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_FLOAT, J_DOUBLE);
 }
 
 int verify_d2i(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_DOUBLE, J_INT);
 }
 
 int verify_d2l(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_DOUBLE, J_LONG);
 }
 
 int verify_d2f(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_DOUBLE, J_FLOAT);
 }
 
 int verify_i2b(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_INT, J_BYTE);
 }
 
 int verify_i2c(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_INT, J_CHAR);
 }
 
 int verify_i2s(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	return __verify_x2x(bb, J_INT, J_SHORT);
 }
 
 int verify_wide(struct verifier_block *bb)
 {
-	return E_NOT_IMPLEMENTED;
+	/* Should never be reached. */
+	return E_TYPE_CHECKING;
 }

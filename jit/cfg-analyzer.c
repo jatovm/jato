@@ -125,11 +125,6 @@ static int split_at_branch_targets(struct compilation_unit *cu, struct bitset *b
 	return err;
 }
 
-static inline bool bc_ends_basic_block(unsigned char code)
-{
-	return bc_is_branch(code) || bc_is_athrow(code) || bc_is_return(code);
-}
-
 static int split_after_branches(const unsigned char *code,
 				unsigned long code_length,
 				struct basic_block *entry_bb,

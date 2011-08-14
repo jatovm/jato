@@ -13,6 +13,7 @@
 #include "vm/bytecode.h"
 #include "vm/method.h"
 #include "vm/die.h"
+#include "vm/trace.h"
 #include "vm/preload.h"
 #include "vm/verifier.h"
 
@@ -32,6 +33,27 @@ static verify_fn_t verifiers[] = {
 #  include <vm/bytecode-def.h>
 };
 #undef BYTECODE
+
+bool opt_trace_verifier;
+
+static const char *vm_type_to_str(enum vm_type vm_type)
+{
+	switch(vm_type) {
+		case J_VOID: return "J_VOID";
+		case J_REFERENCE: return "J_REFERENCE";
+		case J_BYTE: return "J_BYTE";
+		case J_SHORT: return "J_SHORT";
+		case J_INT: return "J_INT";
+		case J_LONG: return "J_LONG";
+		case J_CHAR: return "J_CHAR";
+		case J_FLOAT: return "J_FLOAT";
+		case J_DOUBLE: return "J_DOUBLE";
+		case J_BOOLEAN: return "J_BOOLEAN";
+		case J_RETURN_ADDRESS: return "J_RETURN_ADDRESS";
+		case VM_TYPE_MAX: return "VM_TYPE_MAX";
+		default: return "Unknown type";
+	}
+}
 
 struct verifier_local_var *alloc_verifier_local_var(int nb_vars)
 {
@@ -140,8 +162,6 @@ struct verifier_context *alloc_verifier_context(struct vm_method *vmm)
 	vrf->max_locals = vmm->code_attribute.max_locals;
 	vrf->max_stack = vmm->code_attribute.max_stack;
 
-	vrf->is_wide = false;
-
 	vrf->jmp_dests = alloc_verifier_jump_destinations(0);
 	if (!vrf->jmp_dests)
 		return NULL;
@@ -225,13 +245,11 @@ static int verify_constant_tag(struct verifier_context *vrf, enum cafebabe_const
 {
 	const struct cafebabe_class *class = vrf->method->class->class;
 
-	if (index >= class->constant_pool_count) {
-		printf("Invalid reference to constant %u.\n", index);
-		return E_WRONG_CONSTANT_POOL_INDEX;
-	}
+	if (index >= class->constant_pool_count)
+		return vrf_err("Invalid reference to constant %u.\n", index), E_WRONG_CONSTANT_POOL_INDEX;
 
-	if (class->constant_pool[index].tag != tag) {
-		return E_TYPE_CHECKING;}
+	if (class->constant_pool[index].tag != tag)
+		return E_TYPE_CHECKING;
 
 	return 0;
 }
@@ -271,7 +289,7 @@ int peek_vrf_lvar(struct verifier_block *b, enum vm_type vm_type, unsigned int i
 	}
 
 	if (final->vars[idx].op.vm_type != vm_type)
-		return E_TYPE_CHECKING;
+		return vrf_err("Local variable %i (out of %d) of wrong type: expected %s, got %s.\n", idx, final->nb_vars, vm_type_to_str(vm_type), vm_type_to_str(final->vars[idx].op.vm_type)), E_TYPE_CHECKING;
 
 	if (vm_type_is_pair(vm_type)) {
 		if (final->vars[idx+1].state != DEFINED)
@@ -349,14 +367,14 @@ int pop_vrf_op(struct verifier_block *b, enum vm_type vm_type)
 	el = list_first_entry(&final->stack->slots, struct verifier_stack, slots);
 
 	/* VM_TYPE_MAX marks the bottom of the stack. If we see it we can
-	 * then infer what would have been needed in the the initial stack.
+	 * infer what would have been needed in the the initial stack.
 	 */
 	if (el->op.vm_type == VM_TYPE_MAX)
 		return tail_def_vrf_op(init, vm_type);
 
 	if (vm_type_is_pair(vm_type)) {
 		if (el->op.vm_type != vm_type || !el->op.is_fragment)
-			return E_TYPE_CHECKING;
+			return vrf_err("Error popping stack element of type %s instead of %s.\n", vm_type_to_str(el->op.vm_type), vm_type_to_str(vm_type)), E_TYPE_CHECKING;
 
 		list_del(&el->slots);
 		free(el);
@@ -365,7 +383,7 @@ int pop_vrf_op(struct verifier_block *b, enum vm_type vm_type)
 	}
 
 	if (el->op.vm_type != vm_type || el->op.is_fragment)
-		return E_TYPE_CHECKING;
+		return vrf_err("Error popping stack element of type %s instead of %s.\n", vm_type_to_str(el->op.vm_type), vm_type_to_str(vm_type)), E_TYPE_CHECKING;
 
 	list_del(&el->slots);
 	free(el);
@@ -388,36 +406,24 @@ int peek_vrf_op(struct verifier_block *b, enum vm_type vm_type)
 
 	if (vm_type_is_pair(vm_type)) {
 		if (el->op.vm_type != vm_type || !el->op.is_fragment)
-			return E_TYPE_CHECKING;
+			return vrf_err("Error peeking stack element of type %s instead of %s.\n", vm_type_to_str(el->op.vm_type), vm_type_to_str(vm_type)), E_TYPE_CHECKING;
 
 		el = list_entry(el->slots.next, struct verifier_stack, slots);
 	}
 
 	if (el->op.vm_type != vm_type || el->op.is_fragment)
-		return E_TYPE_CHECKING;
+		return 	vrf_err("Error peeking stack element of type %s instead of %s.\n", vm_type_to_str(el->op.vm_type), vm_type_to_str(vm_type)), E_TYPE_CHECKING;
 
 	return 0;
 }
 
 static inline int valid_dest(int offset, unsigned long pc, unsigned long code_size)
 {
-	int err = 0;
-
 	if ((long) pc + offset < 0)
-		err = E_INVALID_BRANCH;
-
-	if (err) {
-		printf("Invalid negative jump destination %ld.\n", (long) pc + offset);
-		return err;
-	}
+		return vrf_err("Invalid negative jump destination %ld.\n", (long) pc + offset), E_INVALID_BRANCH;
 
 	if (pc + offset >= code_size)
-		err = E_INVALID_BRANCH;
-
-	if (err) {
-		printf("Invalid jump destination %lu.\n", (unsigned long) pc + offset);
-		return err;
-	}
+		return vrf_err("Invalid jump destination %lu.\n", (unsigned long) pc + offset), E_INVALID_BRANCH;
 
 	return 0;
 }
@@ -533,36 +539,13 @@ int add_lookupswitch_destinations(struct verifier_jump_destinations *jd, const u
 	return 0;
 }
 
-static const char *vm_type_to_str(enum vm_type vm_type)
-{
-	switch(vm_type) {
-		case J_VOID: return "J_VOID";
-		case J_REFERENCE: return "J_REFERENCE";
-		case J_BYTE: return "J_BYTE";
-		case J_SHORT: return "J_SHORT";
-		case J_INT: return "J_INT";
-		case J_LONG: return "J_LONG";
-		case J_CHAR: return "J_CHAR";
-		case J_FLOAT: return "J_FLOAT";
-		case J_DOUBLE: return "J_DOUBLE";
-		case J_BOOLEAN: return "J_BOOLEAN";
-		case J_RETURN_ADDRESS: return "J_RETURN_ADDRESS";
-		case VM_TYPE_MAX: return "VM_TYPE_MAX";
-		default: return "Unknown type";
-	}
-}
-
 static int cmp_verifier_op(struct verifier_operand *op1, struct verifier_operand *op2)
 {
-	if (op1->vm_type != op2->vm_type) {
-		printf("Operand comparison: different types: %s and %s.\n", vm_type_to_str(op1->vm_type), vm_type_to_str(op2->vm_type));
-		return E_TYPE_CHECKING;
-	}
+	if (op1->vm_type != op2->vm_type)
+		return vrf_err("Operand comparison: different types: %s and %s.\n", vm_type_to_str(op1->vm_type), vm_type_to_str(op2->vm_type)), E_TYPE_CHECKING;
 
-	if (op1->is_fragment != op2->is_fragment) {
-		printf("Operand comparison: one operand is fragment and the other is not.\n");
-		return E_TYPE_CHECKING;
-	}
+	if (op1->is_fragment != op2->is_fragment)
+		return vrf_err("Operand comparison: one operand is fragment and the other is not.\n"), E_TYPE_CHECKING;
 
 	return 0;
 }
@@ -651,32 +634,6 @@ int transition_verifier_state(struct verifier_state *sc, struct verifier_state *
 	return 0;
 }
 
-#if 0
-static int verify_instruction(struct verifier_context *vrf)
-{
-	verify_fn_t verify;
-
-	vrf->opc = bytecode_read_u8(vrf->buffer);
-
-	if (vrf->opc >= ARRAY_SIZE(verifiers))
-		return warn("%d out of bounds", vrf->opc), -EINVAL;
-
-	verify = verifiers[vrf->opc];
-	if (!verify)
-		return warn("no verifier function for %d found", vrf->opc), -EINVAL;
-
-	int err = verify(vrf);
-
-	if (err)
-		warn("verifying error at PC=%lu", vrf->offset);
-
-	if (err == E_NOT_IMPLEMENTED)
-		warn("verifying not implemented for instruction at PC=%lu", vrf->offset);
-
-	return err;
-}
-#endif
-
 static int verify_exception_table(struct cafebabe_code_attribute *ca, struct verifier_jump_destinations *jd)
 {
 	int err, i = 1;
@@ -686,15 +643,11 @@ static int verify_exception_table(struct cafebabe_code_attribute *ca, struct ver
 		return 0;
 
 	do {
-		if (ex->start_pc > ex->end_pc) {
-			puts("Exception table: protected code section borns are inversed.");
-			return E_INVALID_EXCEPTION_HANDLER;
-		}
+		if (ex->start_pc > ex->end_pc)
+			return vrf_err("Exception table: protected code section borns are inversed.\n"), E_INVALID_EXCEPTION_HANDLER;
 
-		if (ex->end_pc > ca->code_length) {
-			puts("Exception table: protected code section ends after method code end.");
-			return E_INVALID_EXCEPTION_HANDLER;
-		}
+		if (ex->end_pc > ca->code_length)
+			return vrf_err("Exception table: protected code section ends after method code end.\n"), E_INVALID_EXCEPTION_HANDLER;
 
 		err = add_jump_destination(jd, ex->handler_pc);
 		if (err)
@@ -731,13 +684,15 @@ static void verify_error(int err, unsigned long pos, struct verifier_context *vr
 			str = "VerifyError: falling off method code";
 			break;
 		case E_INVALID_EXCEPTION_HANDLER:
-			printf("VerifyError: error in exception table in method %s of class %s.\n", vrf->method->name, vrf->method->class->name);
+			vrf_err("VerifyError: error in exception table in method %s of class %s.", vrf->method->name, vrf->method->class->name);
+			return;
+		case E_NOT_IMPLEMENTED:
 			return;
 		default:
-			str = "VerifyError: unknown error (%i)", err;
+			str = "VerifyError: unknown error";
 	}
 
-	printf("%s at PC=%lu (code size: %lu) in method %s of class %s.\n", str, pos, vrf->code_size, vrf->method->name, vrf->method->class->name);
+	vrf_err("%s at PC=%lu (code size: %lu) in method %s of class %s.", str, pos, vrf->code_size, vrf->method->name, vrf->method->class->name);
 }
 
 static int verifier_first_pass(struct verifier_context *vrf)
@@ -815,7 +770,7 @@ static int verifier_first_pass(struct verifier_context *vrf)
 			if (index < vrf->max_locals)
 				goto next_iteration;
 
-			printf("Invalid local variable %u referenced.\n", index);
+			vrf_err("Invalid local variable %u referenced.\n", index);
 			err = E_WRONG_LOCAL_INDEX;
 			goto out;
 		}
@@ -846,12 +801,12 @@ static int verifier_first_pass(struct verifier_context *vrf)
 				if (!err)
 					goto next_iteration;
 
-				/* This seems illegal but Class does load a class reference with ldc ... */
+				/* XXX This seems illegal but Class does load a class reference with ldc ... */
 				err = verify_constant_tag(vrf, CAFEBABE_CONSTANT_TAG_CLASS, index);
 			}
 
 			if (err) {
-				printf("Invalid constant type for constant index %u.\n", index);
+				vrf_err("Invalid constant type for constant index %u.\n", index);
 				goto out;
 			}
 		}
@@ -878,7 +833,7 @@ next_iteration:
 		if (test_bit(insn_map->bits, jd->dest))
 			continue;
 
-		printf("Invalid jump destination %lu.\n", jd->dest);
+		vrf_err("Invalid jump destination %lu.\n", jd->dest);
 		err = E_INVALID_BRANCH;
 
 		/* Here we do something that may look strange but
@@ -932,6 +887,76 @@ out:
 	return 0;
 }
 
+int verify_instruction(struct verifier_block *bb)
+{
+	verify_fn_t verify;
+
+	bb->is_wide = false;
+	bb->opc = read_u8(&bb->code[bb->pc]);
+
+	if (bb->opc == OPC_WIDE) {
+		bb->is_wide = true;
+		bb->pc++;
+		bb->opc = read_u8(&bb->code[bb->pc]);
+	}
+
+	if (bb->opc >= ARRAY_SIZE(verifiers))
+		return warn("%d out of bounds", bb->opc), -EINVAL;
+
+	verify = verifiers[bb->opc];
+	if (!verify)
+		return warn("no verify function for %d found", bb->opc), -EINVAL;
+
+	int err = verify(bb);
+
+	if (err)
+		verify_error(err, bb->pc, bb->parent_ctx);
+
+	return err;
+}
+
+static int do_verifier_analyse_control_flow(struct verifier_block *bb)
+{
+	int err;
+	const unsigned char * code = bb->code;
+	const unsigned long code_length = bb->parent_ctx->code_size - bb->begin_offset;
+	unsigned long offset = 0;
+
+	bytecode_for_each_insn(code, code_length, offset) {
+		bb->pc = offset;
+
+		err = verify_instruction(bb);
+		if (err)
+			return err;
+
+		if (bc_ends_basic_block(bb->opc))
+			break;
+	}
+
+	return 0;
+}
+
+static int verifier_analyse_control_flow(struct verifier_context *vrf)
+{
+	int err;
+	struct verifier_block *bb;
+	struct verifier_jump_destinations *jd;
+
+	list_for_each_entry(jd, &vrf->jmp_dests->list, list) {
+		bb = alloc_verifier_block(vrf, jd->dest);
+		if (!bb)
+			return ENOMEM;
+
+		err = do_verifier_analyse_control_flow(bb);
+		if (err)
+			return err;
+
+		list_add(&bb->blocks, &vrf->vb_list->blocks);
+	}
+
+	return 0;
+}
+
 int vm_method_verify(struct vm_method *vmm)
 {
 	int err;
@@ -945,13 +970,30 @@ int vm_method_verify(struct vm_method *vmm)
 		return ENOMEM;
 
 	err = verifier_first_pass(vrf);
+	if (err)
+		goto out;
+
+	/*err = verifier_analyse_control_flow(vrf);
+	if (err)
+		goto out;*/
+
+out:
+	free_verifier_context(vrf);
 
 	if (err == E_NOT_IMPLEMENTED)
 		return 0;
 
-	if (err)
-		puts("Would have raised VerifyError exception.");
-	//signal_new_exception(vm_java_lang_VerifyError, NULL);
+	if (err) {
+		if (opt_trace_verifier) {
+			printf("Method code :\n");
+			print_method(vmm);
+			trace_flush();
+			printf("\n");
+		}
+
+		warn("Would have raised VerifyError exception.");
+		//signal_new_exception(vm_java_lang_VerifyError, NULL);
+	}
 
 	return err;
 }

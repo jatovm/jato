@@ -23,6 +23,7 @@ TOPLEVEL_OBJS :=			\
 	vm/trace.o			\
 	vm/types.o			\
 	vm/verifier.o			\
+	vm/verify-functions.o		\
 	vm/zalloc.o			\
 	test/unit/vm/thread-stub.o
 

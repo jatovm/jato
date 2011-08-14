@@ -160,6 +160,7 @@ void trace_exception_unwind(struct jit_stack_frame *);
 void trace_exception_unwind_to_native(struct jit_stack_frame *);
 void trace_bytecode(struct vm_method *);
 void trace_return_value(struct vm_method *, unsigned long long);
+void print_method(struct vm_method *);
 void print_compilation(struct vm_method *);
 
 #endif

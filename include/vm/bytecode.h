@@ -33,6 +33,7 @@ struct vm_class;
 
 unsigned long bc_insn_size(const unsigned char *, unsigned long);
 long bc_insn_size_safe(unsigned char *, unsigned long, unsigned long);
+bool bc_ends_basic_block(unsigned char);
 bool bc_is_invalid(unsigned char);
 bool bc_is_ldc(unsigned char);
 bool bc_is_branch(unsigned char);

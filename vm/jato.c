@@ -65,6 +65,7 @@
 #include "lib/list.h"
 
 #include "vm/fault-inject.h"
+#include "vm/verifier.h"
 #include "vm/classloader.h"
 #include "vm/stack-trace.h"
 #include "vm/reflection.h"
@@ -761,6 +762,11 @@ static void handle_trace_bytecode_offset(void)
 	opt_trace_bytecode_offset = true;
 }
 
+static void handle_trace_verifier(void)
+{
+	opt_trace_verifier = true;
+}
+
 static void handle_trace_classloader(void)
 {
 	opt_trace_classloader = true;
@@ -918,6 +924,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
 	DEFINE_OPTION("Xtrace:bytecode-offset",	handle_trace_bytecode_offset),
+	DEFINE_OPTION("Xtrace:verifier",	handle_trace_verifier),
 	DEFINE_OPTION("Xtrace:classloader",	handle_trace_classloader),
 	DEFINE_OPTION("Xtrace:compile",		handle_trace_compile),
 	DEFINE_OPTION("Xtrace:exceptions",	handle_trace_exceptions),

@@ -38,3 +38,7 @@ void trace_bytecode(struct vm_method *method)
 void trace_return_value(struct vm_method *vmm, unsigned long value)
 {
 }
+
+void print_method(struct vm_method *vmm)
+{
+}

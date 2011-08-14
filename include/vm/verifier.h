@@ -4,6 +4,10 @@
 #include "vm/types.h"
 #include "lib/list.h"
 
+extern bool opt_trace_verifier;
+
+#define vrf_err(format, args...) opt_trace_verifier ? do_warn("%s: " format, __func__, ## args) : 0
+
 struct verifier_operand {
 	enum vm_type			vm_type;
 	bool				is_fragment;		/* If it is not the first slot of a multi-slot op */
@@ -63,7 +67,6 @@ struct verifier_context {
 
 	struct verifier_jump_destinations	*jmp_dests;
 	struct verifier_block			*vb_list;
-	bool					is_wide;
 };
 
 struct verifier_local_var *alloc_verifier_local_var(int nb_vars);
@@ -91,6 +94,8 @@ int peek_vrf_op(struct verifier_block *b, enum vm_type vm_type);
 int add_jump_destination(struct verifier_jump_destinations *jd, unsigned long dest);
 int add_tableswitch_destinations(struct verifier_jump_destinations *jd, const unsigned char *code, unsigned long pc, unsigned long code_size);
 int add_lookupswitch_destinations(struct verifier_jump_destinations *jd, const unsigned char *code, unsigned long pc, unsigned long code_size);
+
+int verify_instruction(struct verifier_block *bb);
 
 int transition_verifier_stack(struct verifier_stack *stc, struct verifier_stack *stn);
 int transition_verifier_local_var(struct verifier_local_var *varsc, struct verifier_local_var *varsn, int nb_vars);

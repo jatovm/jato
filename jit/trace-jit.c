@@ -111,11 +111,17 @@ bool method_matches_gate_regex(struct vm_method *vmm)
 void trace_method(struct compilation_unit *cu)
 {
 	struct vm_method *method = cu->method;
-	unsigned char *p;
-	unsigned int i, j;
 
 	if (!vm_method_is_traceable(method) || !in_gate())
 		return;
+
+	print_method(method);
+}
+
+void print_method(struct vm_method *method)
+{
+	unsigned char *p;
+	unsigned int i, j;
 
 	trace_printf("\nTRACE: %s.%s%s\n",
 		method->class->name, method->name, method->type);

@@ -367,9 +367,17 @@ out:
 	return size;
 }
 
+bool bc_ends_basic_block(unsigned char code)
+{
+	return bc_is_branch(code) || bc_is_athrow(code) || bc_is_return(code);
+}
+
 bool bc_is_invalid(unsigned char opc)
 {
-	return opc == OPC_BREAKPOINT || opc > OPC_PUTFIELD_QUICK_W;
+	return opc == OPC_BREAKPOINT
+		|| opc == OPC_XXXUNUSEDXXX
+		|| opc == OPC_XXXUNUSEDXXX_
+		|| opc > OPC_PUTFIELD_QUICK_W;
 }
 
 bool bc_is_ldc(unsigned char opc)
