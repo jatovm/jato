@@ -660,39 +660,40 @@ static int verify_exception_table(struct cafebabe_code_attribute *ca, struct ver
 	return 0;
 }
 
+const static char *verify_error_string = "No error";
 
 static void verify_error(int err, unsigned long pos, struct verifier_context *vrf)
 {
-	const char *str;
 	switch (err) {
 		case E_MALFORMED_BC:
-			str = "VerifyError: malformed bytecode";
+			verify_error_string = "Malformed bytecode";
 			break;
 		case E_TYPE_CHECKING:
-			str = "VerifyError: type checking";
+			verify_error_string = "Type checking";
 			break;
 		case E_INVALID_BRANCH:
-			str = "VerifyError: invalid jump";
+			verify_error_string = "Invalid jump";
 			break;
 		case E_WRONG_LOCAL_INDEX:
-			str = "VerifyError: reference to a too high local variable";
+			verify_error_string = "Reference to a too high local variable";
 			break;
 		case E_WRONG_CONSTANT_POOL_INDEX:
-			str = "VerifyError: reference to a too high constant";
+			verify_error_string = "Reference to a too high constant";
 			break;
 		case E_FALLING_OFF:
-			str = "VerifyError: falling off method code";
+			verify_error_string = "Falling off method code";
 			break;
 		case E_INVALID_EXCEPTION_HANDLER:
-			vrf_err("VerifyError: error in exception table in method %s of class %s.", vrf->method->name, vrf->method->class->name);
+			verify_error_string = "Erroneous exception table";
+			vrf_err("Error in exception table in method %s of class %s.", vrf->method->name, vrf->method->class->name);
 			return;
 		case E_NOT_IMPLEMENTED:
 			return;
 		default:
-			str = "VerifyError: unknown error";
+			verify_error_string = "Unknown error";
 	}
 
-	vrf_err("%s at PC=%lu (code size: %lu) in method %s of class %s.", str, pos, vrf->code_size, vrf->method->name, vrf->method->class->name);
+	vrf_err("%s at PC=%lu (code size: %lu) in method %s of class %s.", verify_error_string, pos, vrf->code_size, vrf->method->name, vrf->method->class->name);
 }
 
 static int verifier_first_pass(struct verifier_context *vrf)
@@ -991,8 +992,10 @@ out:
 			printf("\n");
 		}
 
-		warn("Would have raised VerifyError exception.");
-		//signal_new_exception(vm_java_lang_VerifyError, NULL);
+		if (!vm_java_lang_VerifyError)
+			return warn("Would have raised VerifyError exception."), err;
+
+		signal_new_exception(vm_java_lang_VerifyError, verify_error_string);
 	}
 
 	return err;
