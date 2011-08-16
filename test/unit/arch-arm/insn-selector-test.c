@@ -145,7 +145,7 @@ void test_stmt_store(void)
 
 	insn_select(bb);
 	for_each_insn(insn, &bb->insn_list) {
-		if (insn->type == INSN_STORE_MEMLOCAL_REG)
+		if (insn->type == INSN_STR_MEMLOCAL_REG)
 			index[i] = insn->dest.slot->index;
 		else
 			index[i] = insn->src.imm;

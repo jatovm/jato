@@ -79,16 +79,16 @@ static inline bool operand_is_reg(struct operand *operand)
  */
 enum insn_type {
 	INSN_ADD_REG_IMM,
-	INSN_LOAD_REG_MEMLOCAL,
+	INSN_LDR_REG_MEMLOCAL,
 	INSN_MOV_REG_IMM,
 	INSN_MOV_REG_REG,
 	/*
 	 * This instruction is not an actual instruction, it is
 	 * required by constant literal pool implementation
 	 */
-	INSN_LOAD_REG_POOL_IMM,
+	INSN_LDR_REG_POOL_IMM,
 	INSN_PHI,
-	INSN_STORE_MEMLOCAL_REG,
+	INSN_STR_MEMLOCAL_REG,
 	INSN_SUB_REG_IMM,
 	INSN_UNCOND_BRANCH,
 	/* Must be last */

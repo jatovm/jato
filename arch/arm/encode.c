@@ -106,9 +106,9 @@ static uint32_t arm_encode_insn[] = {
 	[INSN_ADD_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0x4),
 	[INSN_MOV_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0xD),
 	[INSN_MOV_REG_REG]		= AL | DATA_PROCESSING | OPCODE(0xD),
-	[INSN_LOAD_REG_MEMLOCAL]	= AL | LOAD_STORE | LOAD_INSN,
-	[INSN_LOAD_REG_POOL_IMM]	= AL | LOAD_STORE | LOAD_INSN,
-	[INSN_STORE_MEMLOCAL_REG]	= AL | LOAD_STORE,
+	[INSN_LDR_REG_MEMLOCAL]		= AL | LOAD_STORE | LOAD_INSN,
+	[INSN_LDR_REG_POOL_IMM]		= AL | LOAD_STORE | LOAD_INSN,
+	[INSN_STR_MEMLOCAL_REG]		= AL | LOAD_STORE,
 	[INSN_SUB_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0x2),
 	[INSN_UNCOND_BRANCH]		= AL | BRANCH | USE_IMM_OPERAND,
 	[INSN_PHI]			= INVALID_INSN,
@@ -258,7 +258,7 @@ void encode_store_args(struct buffer *buffer, struct stack_frame *frame)
 		offset = arg_offset(frame, i);
 		offset = offset * (-1);
 
-		encoded_insn = arm_encode_insn[INSN_STORE_MEMLOCAL_REG];
+		encoded_insn = arm_encode_insn[INSN_STR_MEMLOCAL_REG];
 		encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_FP) & 0xF) << 16) |
 				((arm_encode_reg(arg_regs[i]) & 0xFF) << 12) | (offset & 0xFFF);
 
@@ -313,7 +313,7 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 	emit_encoded_insn(buffer, target_addr);
 
 	/* Load the addr of cu in R0 */
-	encoded_insn = arm_encode_insn[INSN_LOAD_REG_MEMLOCAL];
+	encoded_insn = arm_encode_insn[INSN_LDR_REG_MEMLOCAL];
 	encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_R0) & 0xF) << 12) |
 			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x010);
 
@@ -327,7 +327,7 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 
 	emit_encoded_insn(buffer, encoded_insn);
 
-	encoded_insn = arm_encode_insn[INSN_LOAD_REG_MEMLOCAL];
+	encoded_insn = arm_encode_insn[INSN_LDR_REG_MEMLOCAL];
 	encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_PC) & 0xF) << 12) |
 			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x014);
 

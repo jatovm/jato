@@ -71,7 +71,7 @@ reg:	EXPR_VALUE	0
 		select_insn(s, tree, reg_imm_insn(INSN_MOV_REG_IMM, value_low & 0xff, result));
 	else {
 		pool = alloc_literal_pool_entry(cu, value_low);
-		select_insn(s, tree, reg_pool_insn(INSN_LOAD_REG_POOL_IMM, pool, result));
+		select_insn(s, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, result));
 	}
 
 	if (expr->vm_type == J_LONG) {
@@ -83,7 +83,7 @@ reg:	EXPR_VALUE	0
 			select_insn(s, tree, reg_imm_insn(INSN_MOV_REG_IMM, value_high & 0xff, result));
 		else {
 			pool = alloc_literal_pool_entry(cu, value_high);
-			select_insn(s, tree, reg_pool_insn(INSN_LOAD_REG_POOL_IMM, pool, result));
+			select_insn(s, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, result));
 		}
 	}
 }
@@ -101,7 +101,7 @@ reg:	EXPR_LOCAL	1
 	result = get_var(s->b_parent, J_INT);
 	state->reg1 = result;
 
-	select_insn(s, tree, reg_memlocal_insn(INSN_LOAD_REG_MEMLOCAL, slot, result));
+	select_insn(s, tree, reg_memlocal_insn(INSN_LDR_REG_MEMLOCAL, slot, result));
 
 	if (expr->vm_type == J_LONG) {
 		slot = get_local_slot(cu->stack_frame, expr->local_index + 1);
@@ -109,7 +109,7 @@ reg:	EXPR_LOCAL	1
 		result = get_var(s->b_parent, J_INT);
 		state->reg2 = result;
 
-		select_insn(s, tree, reg_memlocal_insn(INSN_LOAD_REG_MEMLOCAL, slot, result));
+		select_insn(s, tree, reg_memlocal_insn(INSN_LDR_REG_MEMLOCAL, slot, result));
 	}
 }
 
@@ -158,14 +158,14 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 	local = to_expr(stmt->store_dest);
 	slot = get_local_slot(cu->stack_frame, local->local_index);
 
-	select_insn(s, tree, memlocal_reg_insn(INSN_STORE_MEMLOCAL_REG, src, slot));
+	select_insn(s, tree, memlocal_reg_insn(INSN_STR_MEMLOCAL_REG, src, slot));
 
 	if (local->vm_type == J_LONG) {
 		src = state->right->reg2;
 
 		slot = get_local_slot(cu->stack_frame, local->local_index+1);
 
-		select_insn(s, tree, memlocal_reg_insn(INSN_STORE_MEMLOCAL_REG, src, slot));
+		select_insn(s, tree, memlocal_reg_insn(INSN_STR_MEMLOCAL_REG, src, slot));
 	}
 }
 

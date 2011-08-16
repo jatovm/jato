@@ -53,7 +53,7 @@ void test_emit_reg_memlocal_insn(void)
 	struct stack_slot *slot = get_local_slot(frame, 2);
 	uint32_t encoded_insn;
 
-	insn.type = INSN_LOAD_REG_MEMLOCAL;
+	insn.type = INSN_LDR_REG_MEMLOCAL;
 
 	insn.dest.type = OPERAND_REG;
 	insn.dest.reg.interval = &interval;
@@ -204,7 +204,7 @@ void test_emit_memlocal_reg_insn(void)
 	struct stack_slot *slot = get_local_slot(frame, 2);
 	uint32_t encoded_insn;
 
-	insn.type = INSN_STORE_MEMLOCAL_REG;
+	insn.type = INSN_STR_MEMLOCAL_REG;
 
 	insn.dest.type = OPERAND_MEMLOCAL;
 	insn.dest.slot = slot;
