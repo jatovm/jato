@@ -90,6 +90,16 @@ static void insert_list(struct changed_var_stack *changed, struct changed_var_st
                 *list = changed;
 }
 
+static void insert_list_loop(struct  loop_worklist *loop,
+			struct loop_worklist **list)
+{
+	if (*list != NULL){
+		loop->next = *list;
+		*list = loop;
+	} else
+		*list = loop;
+}
+
 void recompute_insn_positions(struct compilation_unit *cu)
 {
 	free_radix_tree(cu->lir_insn_map);
@@ -115,6 +125,20 @@ static int ssa_analyze_liveness(struct compilation_unit *cu)
 	err = analyze_live_sets(cu);
 out:
 	return err;
+}
+
+static struct loop_worklist *alloc_loop_worklist(struct basic_block *bb)
+{
+	struct loop_worklist *element;
+
+	element = malloc(sizeof(struct loop_worklist));
+	if (!element)
+		return NULL;
+
+	element->bb = bb;
+	element->next = NULL;
+
+	return element;
 }
 
 static struct changed_var_stack *alloc_changed_var_stack(unsigned long vreg)
@@ -199,9 +223,34 @@ static void free_ssa(struct compilation_unit *cu)
 		free(bb->positions_as_predecessor);
 
 		free(bb->dom_successors);
+
+		free(bb->dominators);
+
+			free(bb->natural_loop);
 	}
 
 	free_insn_add_ons(cu);
+}
+
+static void compute_dominators(struct compilation_unit *cu)
+{
+	struct basic_block *bb, *bb_it;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		if (bb_is_eh(cu, bb))
+			continue;
+
+		bb->dominators = alloc_bitset(cu->nr_bb);
+
+		bb_it = cu->doms[bb_it->dfn];
+		while (bb_it != cu->entry_bb) {
+			set_bit(bb->dominators->bits, bb_it->dfn);
+			bb_it = cu->doms[bb_it->dfn];
+		}
+
+		if (bb != cu->entry_bb)
+			set_bit(bb->dominators->bits, cu->entry_bb->dfn);
+	}
 }
 
 static int compute_dom_successors(struct compilation_unit *cu)
@@ -303,6 +352,97 @@ static void compute_nr_predecessors_no_eh(struct compilation_unit *cu)
 			else bb->nr_predecessors_no_eh++;
 		}
 	}
+}
+
+static int determine_loop(struct basic_block *header,
+		struct basic_block *bb,
+		struct compilation_unit *cu)
+{
+	struct loop_worklist *worklist, *remove;
+	struct basic_block *work_bb;
+	struct bitset *nloop;
+
+	bb->loop_start = 1;
+
+	if (header->natural_loop &&
+			test_bit(header->natural_loop->bits, bb->dfn))
+		return 0;
+
+	worklist = alloc_loop_worklist(bb);
+	if (!worklist)
+		return -ENOMEM;
+
+	while (worklist) {
+		work_bb = worklist->bb;
+		remove = worklist;
+		worklist = worklist->next;
+		free(remove);
+
+		nloop = header->natural_loop;
+		if (nloop && test_bit(nloop->bits, work_bb->dfn))
+			continue;
+
+		if (!header->natural_loop)
+			header->natural_loop = alloc_bitset(cu->nr_bb);
+
+		set_bit(header->natural_loop->bits, work_bb->dfn);
+
+		work_bb->nesting++;
+
+		for (unsigned j = 0; j < work_bb->nr_predecessors; j++) {
+			struct basic_block *pred;
+			struct loop_worklist *loop;
+			struct bitset *nloop;
+
+			pred = work_bb->predecessors[j];
+
+			if (bb_is_eh(cu, pred))
+				continue;
+
+			nloop = header->natural_loop;
+			if (pred != header &&
+					!test_bit(nloop->bits, pred->dfn)) {
+				loop = alloc_loop_worklist(pred);
+				if (!loop)
+					return -ENOMEM;
+
+				insert_list_loop(loop, &worklist);
+			}
+		}
+	}
+
+	if (!test_bit(header->natural_loop->bits, header->dfn))
+		set_bit(header->natural_loop->bits, header->dfn);
+
+	return 0;
+}
+
+static int compute_natural_loops(struct compilation_unit *cu)
+{
+	struct basic_block *bb;
+	int error;
+
+	for_each_basic_block(bb, &cu->bb_list) {
+		if (bb_is_eh(cu, bb))
+			continue;
+
+		for (unsigned i = 0; i < bb->nr_successors; i++) {
+			struct basic_block *header;
+
+			header = bb->successors[i];
+
+			if (bb_is_eh(cu, header))
+				continue;
+
+			if (test_bit(bb->dominators->bits, header->dfn)) {
+				error = determine_loop(header, bb, cu);
+				if (error)
+					return error;
+			}
+		}
+	}
+
+	return 0;
 }
 
 static void change_operand_var(struct use_position *reg, struct var_info *new_var)
@@ -1015,6 +1155,10 @@ static int init_ssa(struct compilation_unit *cu)
 		goto error_dom;
 
 	cu->insn_add_ons = alloc_hash_map_with_size(32, &insn_add_ons_key);
+
+	compute_dominators(cu);
+
+	compute_natural_loops(cu);
 
 	return 0;
 

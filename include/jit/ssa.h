@@ -15,6 +15,11 @@ struct changed_var_stack {
 	struct changed_var_stack *next;
 };
 
+struct loop_worklist {
+	struct basic_block *bb;
+	struct loop_worklist *next;
+};
+
 struct dce {
 	struct var_info *var;
 	struct dce *next;

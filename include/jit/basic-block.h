@@ -70,6 +70,27 @@ struct basic_block {
 		struct basic_block **dom_successors;
 		unsigned long nr_dom_successors;
 
+		/* Dominator basic blocks of the basic block */
+		struct bitset *dominators;
+
+		/*
+		 * Basic blocks situated in the loop for which
+		 * this basic block represents the header
+		 */
+		struct bitset *natural_loop;
+
+		/*
+		 * Variable that keeps the level of nesting of this basic block
+		 * within natural loops
+		 */
+		int nesting;
+
+		/*
+		 * Variable that indicates whether or not this basic block is
+		 * the starting basic block.
+		 */
+		int loop_start;
+
 		/*
 		 * Flag used for exception handler basic blocks, to mark
 		 * the fact that they have been renamed or not
