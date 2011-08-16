@@ -93,6 +93,19 @@ TESTS = [
 , ( "test.java.lang.reflect.MethodTest", 0, [ ], [ "i386" ] )
 , ( "test.java.lang.reflect.FieldAccessorsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "test.java.lang.reflect.FieldTest", 0, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedExceptionTableEndsAfterCode", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedExceptionTableInvalidHandlerPC", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedExceptionTableInvertedBorns", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedFallingOff", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedIncompleteInsn", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedInvalidBranchNeg", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedInvalidBranchNotOnInsn", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedInvalidBranchOut", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedInvalidOpcode", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedLoadConstantDouble", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedLoadConstantIndex", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedLoadConstantSimple", 1, [ ], [ "i386" ] )
+, ( "corrupt.CorruptedMaxLocalVar", 1, [ ], [ "i386" ] )
 ]
 
 def guess_arch():
@@ -132,9 +145,10 @@ def main():
 
   def do_work(t):
     klass, expected_retval, extra_args, archs = t
+    fnull = open(os.devnull, "w")
     progress(len(tests) - q.qsize(), len(tests), klass)
     command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
-    retval = subprocess.call(command)
+    retval = subprocess.call(command, stderr = fnull)
     if retval != expected_retval:
       print klass + ": Test FAILED"
       results.put(False)
