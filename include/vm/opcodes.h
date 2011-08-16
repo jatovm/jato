@@ -1,6 +1,8 @@
 #ifndef __VM_OPCODES_H
 #define __VM_OPCODES_H
 
+#define NR_OPCS				256
+
 #define OPC_NOP				0x00
 #define OPC_ACONST_NULL			0x01
 #define OPC_ICONST_M1			0x02

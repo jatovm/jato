@@ -51,8 +51,31 @@ static void perf_append_cu(struct compilation_unit *cu)
 	perf_map_append(symbol, addr, size);
 }
 
+static bool uses_array_ops(struct compilation_unit *cu)
+{
+#define ARRAY_STATS(op)					\
+		(cu->bytecode_stats[OPC_A##op]		\
+		|| cu->bytecode_stats[OPC_A##op##_0]	\
+		|| cu->bytecode_stats[OPC_A##op##_1]	\
+		|| cu->bytecode_stats[OPC_A##op##_2]	\
+		|| cu->bytecode_stats[OPC_A##op##_3]	\
+		|| cu->bytecode_stats[OPC_IA##op]	\
+		|| cu->bytecode_stats[OPC_LA##op]	\
+		|| cu->bytecode_stats[OPC_FA##op]	\
+		|| cu->bytecode_stats[OPC_DA##op]	\
+		|| cu->bytecode_stats[OPC_AA##op]	\
+		|| cu->bytecode_stats[OPC_BA##op]	\
+		|| cu->bytecode_stats[OPC_CA##op]	\
+		|| cu->bytecode_stats[OPC_SA##op])
+
+	return ARRAY_STATS(LOAD) || ARRAY_STATS(STORE);
+#undef ARRAY_STATS
+	return false;
+}
+
 int compile(struct compilation_unit *cu)
 {
+	bool ssa_enable;
 	int err;
 
 	if (opt_print_compilation)
@@ -76,7 +99,9 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
-	if (opt_ssa_enable) {
+	ssa_enable = opt_ssa_enable && uses_array_ops(cu);
+
+	if (ssa_enable) {
 		err = compute_dfns(cu);
 		if (err)
 			goto out;
@@ -97,7 +122,7 @@ int compile(struct compilation_unit *cu)
 	if (opt_trace_lir)
 		trace_lir(cu);
 
-	if (opt_ssa_enable) {
+	if (ssa_enable) {
 		err = compute_dom(cu);
 		if (err)
 			goto out;

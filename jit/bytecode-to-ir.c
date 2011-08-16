@@ -169,6 +169,7 @@ error_oom:
 int convert_instruction(struct parse_context *ctx)
 {
 	convert_fn_t convert;
+	int err;
 
 	ctx->opc = bytecode_read_u8(ctx->buffer);
 
@@ -179,7 +180,9 @@ int convert_instruction(struct parse_context *ctx)
 	if (!convert)
 		return warn("no converter for %d found", ctx->opc), -EINVAL;
 
-	int err = convert(ctx);
+	ctx->cu->bytecode_stats[ctx->opc]++;
+
+	err = convert(ctx);
 
 	if (err)
 		warn("conversion error at PC=%lu", ctx->offset);

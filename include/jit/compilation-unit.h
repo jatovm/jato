@@ -40,6 +40,9 @@ struct compilation_unit {
 	bool is_reg_alloc_done;
 	struct buffer *objcode;
 
+	/* Contains the number of uses of any bytecode within the method */
+	uint16_t bytecode_stats[NR_OPCS];
+
 	struct compile_lock compile_lock;
 
 	pthread_mutex_t mutex;
