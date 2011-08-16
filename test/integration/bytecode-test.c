@@ -923,7 +923,6 @@ static void test_aconst_null(void)
 
 	assert_object_equals(NULL, jobject_run(bytecode));
 }
-#ifndef CONFIG_ARM
 
 static void test_iconst_m1(void)
 {
@@ -931,6 +930,7 @@ static void test_iconst_m1(void)
 
 	assert_int_equals(-1, execute(bytecode));
 }
+#ifndef CONFIG_ARM
 
 static void test_i2f(void)
 {
@@ -1051,8 +1051,8 @@ static void run_tests(void)
 	test_lconst_0();
 	test_lconst_1();
 	test_bipush();
-#ifndef CONFIG_ARM
 	test_iconst_m1();
+#ifndef CONFIG_ARM
 	test_fconst_0();
 	test_fconst_1();
 	test_fconst_2();

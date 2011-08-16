@@ -42,7 +42,9 @@
 
 #define MONOBURG_LOG 1
 #define HAVE_ARRAY_ELEM_INIT 1
-#define MAX_IMM		255
+#define MAX_POSITIVE_IMM		255
+#define MAX_NEGATIVE_IMM		0xFFFFFFFF
+#define MIN_NEGATIVE_IMM		0xFFFFFF00
 
 struct _MBState;
 
@@ -67,8 +69,10 @@ reg:	EXPR_VALUE	0
 	state->reg1 = result;
 	value_low = expr->value & ~0UL;
 
-	if (value_low <= MAX_IMM)
+	if (value_low <= MAX_POSITIVE_IMM)
 		select_insn(s, tree, reg_imm_insn(INSN_MOV_REG_IMM, value_low & 0xff, result));
+	else if (MIN_NEGATIVE_IMM <= value_low && value_low <= MAX_NEGATIVE_IMM)
+		select_insn(s,tree, reg_imm_insn(INSN_MVN_REG_IMM, ~(value_low & 0xff), result));
 	else {
 		pool = alloc_literal_pool_entry(cu, value_low);
 		select_insn(s, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, result));
@@ -79,8 +83,10 @@ reg:	EXPR_VALUE	0
 		state->reg2 = result;
 		value_high = expr->value >> 32;
 
-		if (value_high <= MAX_IMM)
+		if (value_high <= MAX_POSITIVE_IMM)
 			select_insn(s, tree, reg_imm_insn(INSN_MOV_REG_IMM, value_high & 0xff, result));
+		else if (MIN_NEGATIVE_IMM <= value_high && value_high <= MAX_NEGATIVE_IMM)
+			select_insn(s,tree, reg_imm_insn(INSN_MVN_REG_IMM, ~(value_high & 0xff), result));
 		else {
 			pool = alloc_literal_pool_entry(cu, value_high);
 			select_insn(s, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, result));

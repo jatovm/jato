@@ -82,7 +82,9 @@ enum insn_type {
 	INSN_LDR_REG_MEMLOCAL,
 	INSN_MOV_REG_IMM,
 	INSN_MOV_REG_REG,
+	INSN_MVN_REG_IMM,
 	/*
+
 	 * This instruction is not an actual instruction, it is
 	 * required by constant literal pool implementation
 	 */
