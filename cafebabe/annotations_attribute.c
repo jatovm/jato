@@ -139,7 +139,10 @@ cafebabe_annotation_parse(struct cafebabe_annotation *a, struct cafebabe_stream 
 	if (err)
 		goto out;
 
-	a->element_value_pairs	= calloc(a->num_element_value_pairs, sizeof(struct cafebabe_element_value_pair));
+	if (!a->num_element_value_pairs)
+		goto out;
+
+	a->element_value_pairs = calloc(a->num_element_value_pairs, sizeof(struct cafebabe_element_value_pair));
 	if (!a->element_value_pairs) {
 		err = -1;
 		goto out;
@@ -162,7 +165,10 @@ cafebabe_annotations_attribute_init(struct cafebabe_annotations_attribute *a, st
 	if (err)
 		goto out;
 
-	a->annotations	= calloc(a->num_annotations, sizeof(struct cafebabe_annotation));
+	if (!a->num_annotations)
+		goto out;
+
+	a->annotations = calloc(a->num_annotations, sizeof(struct cafebabe_annotation));
 	if (!a->annotations) {
 		err = -1;
 		goto out;
