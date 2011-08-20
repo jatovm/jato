@@ -135,6 +135,19 @@ stmt:	STMT_EXPRESSION(reg)
 {
 }
 
+reg:   EXPR_TEMPORARY 0
+{
+	struct expression *expr;
+
+	expr = to_expr(tree);
+
+	state->reg1 = expr->tmp_low;
+
+	if (expr->vm_type == J_LONG) {
+		state->reg2 = expr->tmp_high;
+	}
+}
+
 stmt:	STMT_RETURN(reg) 1
 {
 	struct expression *expr;
@@ -184,6 +197,48 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 		slot = get_local_slot(cu->stack_frame, local->local_index+1);
 
 		select_insn(s, tree, memlocal_reg_insn(INSN_STR_MEMLOCAL_REG, src, slot));
+	}
+}
+
+stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
+{
+	struct expression *dest, *src;
+	struct stack_slot *slot;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	src = to_expr(stmt->store_src);
+	dest = to_expr(stmt->store_dest);
+
+	slot = get_local_slot(s->b_parent->stack_frame, src->local_index);
+
+	select_insn(s, tree, reg_memlocal_insn(INSN_LDR_REG_MEMLOCAL, slot, dest->tmp_low));
+	if (src->vm_type == J_LONG) {
+		slot = get_local_slot(s->b_parent->stack_frame, src->local_index + 1);
+		select_insn(s, tree, reg_memlocal_insn(INSN_LDR_REG_MEMLOCAL, slot, dest->tmp_high));
+	}
+
+}
+
+stmt:  STMT_STORE(EXPR_TEMPORARY, reg) 1
+{
+	struct expression *temp;
+	struct var_info *src, *dest;
+	struct statement *stmt;
+
+	stmt = to_stmt(tree);
+
+	temp = to_expr(stmt->store_dest);
+
+	dest = temp->tmp_low;
+	src = state->right->reg1;
+	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+
+	if (temp->vm_type == J_LONG) {
+		dest = temp->tmp_high;
+		src = state->right->reg2;
+		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
 	}
 }
 
