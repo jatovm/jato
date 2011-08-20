@@ -1042,6 +1042,7 @@ static void run_tests(void)
 {
 	/* test_nop(); */
 	test_aconst_null();
+	test_iconst_m1();
 	test_iconst_0();
 	test_iconst_1();
 	test_iconst_2();
@@ -1051,7 +1052,6 @@ static void run_tests(void)
 	test_lconst_0();
 	test_lconst_1();
 	test_bipush();
-	test_iconst_m1();
 #ifndef CONFIG_ARM
 	test_fconst_0();
 	test_fconst_1();
