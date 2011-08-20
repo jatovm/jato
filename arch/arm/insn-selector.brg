@@ -131,6 +131,18 @@ reg:	OP_ADD(reg, reg) 1
 	binop_reg_reg_high(state, s, tree, INSN_ADC_REG_REG);
 }
 
+reg:	OP_SUB(reg, EXPR_VALUE) 1
+{
+	binop_imm_reg_low(state, s, tree, INSN_SUBS_REG_IMM);
+	binop_imm_reg_high(state, s, tree, INSN_SBC_REG_IMM);
+}
+
+reg:	OP_SUB(reg, reg) 1
+{
+	binop_reg_reg_low(state, s, tree, INSN_SUBS_REG_REG);
+	binop_reg_reg_high(state, s, tree, INSN_SBC_REG_REG);
+}
+
 stmt:	STMT_EXPRESSION(reg)
 {
 }
@@ -273,7 +285,16 @@ static void binop_imm_reg_low(struct _MBState *state, struct basic_block *bb,
 		src = get_var(bb->b_parent, J_INT);
 		pool = alloc_literal_pool_entry(bb->b_parent, value_low);
 		select_insn(bb, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, src));
-		select_insn(bb, tree, reg_reg_insn(INSN_ADDS_REG_REG, src, state->reg1));
+		switch (insn_type) {
+		case INSN_ADDS_REG_IMM:
+			select_insn(bb, tree, reg_reg_insn(INSN_ADDS_REG_REG, src, state->reg1));
+			break;
+		case INSN_SUBS_REG_IMM:
+			select_insn(bb, tree, reg_reg_insn(INSN_SUBS_REG_REG, src, state->reg1));
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -313,7 +334,16 @@ static void binop_imm_reg_high(struct _MBState *state, struct basic_block *bb,
 		src = get_var(bb->b_parent, J_INT);
 		pool = alloc_literal_pool_entry(bb->b_parent, value_high);
 		select_insn(bb, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, src));
-		select_insn(bb, tree, reg_reg_insn(INSN_ADDS_REG_REG, src, state->reg2));
+		switch (insn_type) {
+		case INSN_ADC_REG_IMM:
+			select_insn(bb, tree, reg_reg_insn(INSN_ADC_REG_REG, src, state->reg2));
+			break;
+		case INSN_SBC_REG_IMM:
+			select_insn(bb, tree, reg_reg_insn(INSN_SBC_REG_REG, src, state->reg2));
+			break;
+		default:
+			break;
+		}
 	}
 }
 
