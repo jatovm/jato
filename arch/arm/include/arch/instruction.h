@@ -79,6 +79,10 @@ static inline bool operand_is_reg(struct operand *operand)
  */
 enum insn_type {
 	INSN_ADD_REG_IMM,
+	INSN_ADC_REG_IMM,
+	INSN_ADC_REG_REG,
+	INSN_ADDS_REG_IMM,
+	INSN_ADDS_REG_REG,
 	INSN_LDR_REG_MEMLOCAL,
 	INSN_MOV_REG_IMM,
 	INSN_MOV_REG_REG,

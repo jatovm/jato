@@ -104,6 +104,10 @@ enum arm_addressing_mode {
 
 static uint32_t arm_encode_insn[] = {
 	[INSN_ADD_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0x4),
+	[INSN_ADC_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0x5),
+	[INSN_ADC_REG_REG]		= AL | DATA_PROCESSING | OPCODE(0x5),
+	[INSN_ADDS_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | S_BIT_HIGH | OPCODE(0x4),
+	[INSN_ADDS_REG_REG]		= AL | DATA_PROCESSING | S_BIT_HIGH | OPCODE(0x4),
 	[INSN_MOV_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0xD),
 	[INSN_MOV_REG_REG]		= AL | DATA_PROCESSING | OPCODE(0xD),
 	[INSN_MVN_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0xF),
@@ -374,6 +378,9 @@ void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *b
 			encoded_insn = encoded_insn | ((insn->src.imm) & 0xFF);
 		else
 			encoded_insn = encoded_insn | (arm_encode_reg(mach_reg(&insn->src.reg)) & 0xF);
+
+		if (!(insn->type == INSN_MOV_REG_IMM || insn->type == INSN_MOV_REG_REG || insn->type == INSN_MVN_REG_IMM))
+			encoded_insn = encoded_insn | ((arm_encode_reg(mach_reg(&insn->dest.reg)) & 0xF) << 16);
 	}
 	emit_encoded_insn(buffer, encoded_insn);
 }

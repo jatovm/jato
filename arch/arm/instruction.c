@@ -21,7 +21,11 @@ enum {
 };
 
 static unsigned long insn_flags[] = {
-	[INSN_LDR_REG_MEMLOCAL]                = DEF_DST | USE_FP,
+	[INSN_ADC_REG_IMM]			= USE_DST | DEF_DST,
+	[INSN_ADC_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
+	[INSN_ADDS_REG_IMM]			= USE_DST | DEF_DST,
+	[INSN_ADDS_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
+	[INSN_LDR_REG_MEMLOCAL]			= DEF_DST | USE_FP,
 	[INSN_MOV_REG_IMM]			= DEF_DST,
 	[INSN_MOV_REG_REG]			= USE_SRC | DEF_DST,
 	[INSN_MVN_REG_IMM]			= DEF_DST,
