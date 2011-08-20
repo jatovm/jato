@@ -59,6 +59,7 @@ static jint do_execute(uint8_t *code, unsigned long code_length)
 		.name		= "foo",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
+			.max_locals	= 2,
 			.code		= code,
 			.code_length	= code_length,
 		},
@@ -930,6 +931,21 @@ static void test_iconst_m1(void)
 
 	assert_int_equals(-1, execute(bytecode));
 }
+
+static void test_istore_0(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_0, OPC_ILOAD_0, OPC_IRETURN};
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_istore_1(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_1, OPC_ILOAD_1, OPC_IRETURN};
+
+	assert_int_equals(1, execute(bytecode));
+}
+
 #ifndef CONFIG_ARM
 
 static void test_i2f(void)
@@ -1100,8 +1116,8 @@ static void run_tests(void)
 	/* test_fstore(); */
 	/* test_dstore(); */
 	/* test_astore(); */
-	/* test_istore_0(); */
-	/* test_istore_1(); */
+	test_istore_0();
+	test_istore_1();
 	/* test_istore_2(); */
 	/* test_istore_3(); */
 	/* test_lstore_0(); */
