@@ -503,6 +503,7 @@ static void test_ifnonnull(void)
 
 	assert_int_equals(2, execute(bytecode));
 }
+#endif
 
 static void test_ireturn(void)
 {
@@ -518,6 +519,7 @@ static void test_lreturn(void)
 	assert_long_equals(1, execute(bytecode));
 }
 
+#ifndef CONFIG_ARM
 static void test_freturn(void)
 {
 	uint8_t bytecode[] = { OPC_FCONST_1, OPC_FRETURN };
@@ -538,6 +540,7 @@ static void test_areturn(void)
 
 	assert_object_equals(NULL, jobject_run(bytecode));
 }
+#endif
 
 static void test_return(void)
 {
@@ -547,6 +550,7 @@ static void test_return(void)
 	jobject_run(bytecode);
 }
 
+#ifndef CONFIG_ARM
 static void test_lxor(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LXOR, OPC_LRETURN };
@@ -714,6 +718,7 @@ static void test_imul(void)
 
 	assert_int_equals(6, execute(bytecode));
 }
+#endif
 
 static void test_lsub(void)
 {
@@ -729,6 +734,7 @@ static void test_isub(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+#ifndef CONFIG_ARM
 static void test_dadd(void)
 {
 	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DADD, OPC_DRETURN };
@@ -784,6 +790,7 @@ static void test_fdiv(void)
 
 	assert_float_equals(2.0, jfloat_run(bytecode));
 }
+#endif
 
 static void test_ladd(void)
 {
@@ -799,6 +806,7 @@ static void test_iadd(void)
 	assert_int_equals(3, execute(bytecode));
 }
 
+#ifndef CONFIG_ARM
 static void test_swap(void)
 {
 	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_SWAP, OPC_IRETURN };
@@ -1067,13 +1075,15 @@ static void run_tests(void)
 	test_iconst_5();
 	test_lconst_0();
 	test_lconst_1();
-	test_bipush();
 #ifndef CONFIG_ARM
 	test_fconst_0();
 	test_fconst_1();
 	test_fconst_2();
 	test_dconst_0();
 	test_dconst_1();
+#endif
+	test_bipush();
+#ifndef CONFIG_ARM
 	test_sipush();
 	/* test_ldc(); */
 	/* test_ldc_w(); */
@@ -1116,8 +1126,10 @@ static void run_tests(void)
 	/* test_fstore(); */
 	/* test_dstore(); */
 	/* test_astore(); */
+#endif
 	test_istore_0();
 	test_istore_1();
+#ifndef CONFIG_ARM
 	/* test_istore_2(); */
 	/* test_istore_3(); */
 	/* test_lstore_0(); */
@@ -1153,12 +1165,16 @@ static void run_tests(void)
 	/* test_dup2_x1(); */
 	/* test_dup2_x2(); */
 	test_swap();
+#endif
 	test_iadd();
 	test_ladd();
+#ifndef CONFIG_ARM
 	test_fadd();
 	test_dadd();
+#endif
 	test_isub();
 	test_lsub();
+#ifndef CONFIG_ARM
 	test_fsub();
 	test_dsub();
 	test_imul();
@@ -1229,12 +1245,16 @@ static void run_tests(void)
 	/* test_ret(); */
 	/* test_tableswitch(); */
 	/* test_lookupswitch(); */
+#endif
 	test_ireturn();
 	test_lreturn();
+#ifndef CONFIG_ARM
 	test_freturn();
 	test_dreturn();
 	test_areturn();
+#endif
 	test_return();
+#ifndef CONFIG_ARM
 	/* test_getstatic(); */
 	/* test_putstatic(); */
 	/* test_getfield(); */
