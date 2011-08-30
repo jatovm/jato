@@ -242,7 +242,7 @@ static void compute_dominators(struct compilation_unit *cu)
 
 		bb->dominators = alloc_bitset(cu->nr_bb);
 
-		bb_it = cu->doms[bb_it->dfn];
+		bb_it = cu->doms[bb->dfn];
 		while (bb_it != cu->entry_bb) {
 			set_bit(bb->dominators->bits, bb_it->dfn);
 			bb_it = cu->doms[bb_it->dfn];
