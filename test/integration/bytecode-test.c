@@ -59,7 +59,7 @@ static jint do_execute(uint8_t *code, unsigned long code_length)
 		.name		= "foo",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
-			.max_locals	= 4,
+			.max_locals	= 8,
 			.code		= code,
 			.code_length	= code_length,
 		},
@@ -101,7 +101,7 @@ static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
 		.name		= "foo",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
-			.max_locals	= 2,
+			.max_locals	= 4,
 			.code		= code,
 			.code_length	= code_length,
 		},
@@ -143,7 +143,7 @@ static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
 		.name		= "foo",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
-			.max_locals	= 2,
+			.max_locals	= 4,
 			.code		= code,
 			.code_length	= code_length,
 		},
@@ -185,7 +185,7 @@ static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 		.name		= "foo",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
-			.max_locals	= 2,
+			.max_locals	= 4,
 			.code		= code,
 			.code_length	= code_length,
 		},
@@ -957,6 +957,20 @@ static void test_istore_1(void)
 	assert_int_equals(1, execute(bytecode));
 }
 
+static void test_istore_2(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_2, OPC_ILOAD_2, OPC_IRETURN};
+
+	assert_int_equals(1, execute(bytecode));
+}
+
+static void test_istore_3(void)
+{
+	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_3, OPC_ILOAD_3, OPC_IRETURN};
+
+	assert_int_equals(1, execute(bytecode));
+}
+
 static void test_lstore_0(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LSTORE_0, OPC_LLOAD_0, OPC_LRETURN};
@@ -967,6 +981,20 @@ static void test_lstore_0(void)
 static void test_lstore_1(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LSTORE_1, OPC_LLOAD_1, OPC_LRETURN};
+
+	assert_long_equals(1, jlong_run(bytecode));
+}
+
+static void test_lstore_2(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LSTORE_2, OPC_LLOAD_2, OPC_LRETURN};
+
+	assert_long_equals(1, jlong_run(bytecode));
+}
+
+static void test_lstore_3(void)
+{
+	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LSTORE_3, OPC_LLOAD_3, OPC_LRETURN};
 
 	assert_long_equals(1, jlong_run(bytecode));
 }
@@ -985,6 +1013,20 @@ static void test_fstore_1(void)
 	assert_float_equals(1, jfloat_run(bytecode));
 }
 
+static void test_fstore_2(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_1, OPC_FSTORE_2, OPC_FLOAD_2, OPC_FRETURN};
+
+	assert_float_equals(1, jfloat_run(bytecode));
+}
+
+static void test_fstore_3(void)
+{
+	uint8_t bytecode[] = { OPC_FCONST_1, OPC_FSTORE_3, OPC_FLOAD_3, OPC_FRETURN};
+
+	assert_float_equals(1, jfloat_run(bytecode));
+}
+
 static void test_dstore_0(void)
 {
 	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DSTORE_0, OPC_DLOAD_0, OPC_DRETURN};
@@ -995,6 +1037,20 @@ static void test_dstore_0(void)
 static void test_dstore_1(void)
 {
 	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DSTORE_1, OPC_DLOAD_1, OPC_DRETURN};
+
+	assert_double_equals(1, jdouble_run(bytecode));
+}
+
+static void test_dstore_2(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DSTORE_2, OPC_DLOAD_2, OPC_DRETURN};
+
+	assert_double_equals(1, jdouble_run(bytecode));
+}
+
+static void test_dstore_3(void)
+{
+	uint8_t bytecode[] = { OPC_DCONST_1, OPC_DSTORE_3, OPC_DLOAD_3, OPC_DRETURN};
 
 	assert_double_equals(1, jdouble_run(bytecode));
 }
@@ -1174,21 +1230,21 @@ static void run_tests(void)
 #endif
 	test_istore_0();
 	test_istore_1();
+	test_istore_2();
+	test_istore_3();
 	test_lstore_0();
 	test_lstore_1();
+	test_lstore_2();
+	test_lstore_3();
 	test_fstore_0();
 	test_fstore_1();
+	test_fstore_2();
+	test_fstore_3();
 	test_dstore_0();
 	test_dstore_1();
+	test_dstore_2();
+	test_dstore_3();
 #ifndef CONFIG_ARM
-	/* test_istore_2(); */
-	/* test_istore_3(); */
-	/* test_lstore_2(); */
-	/* test_lstore_3(); */
-	/* test_fstore_2(); */
-	/* test_fstore_3(); */
-	/* test_dstore_2(); */
-	/* test_dstore_3(); */
 	/* test_astore_0(); */
 	/* test_astore_1(); */
 	/* test_astore_2(); */
