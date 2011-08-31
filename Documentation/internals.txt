@@ -98,6 +98,16 @@ Code Generation
 Intermediate Representations
 ----------------------------
 
+The compiler uses two different intermediate representations: high-level
+intermediate representation (HIR) in the frontend and low-level intermediate
+representation (LIR) in the backend. The HIR is an abstract syntax tree (AST)
+of the compiled bytecode whereas LIR is corresponds almost one-to-one to the
+target machine instructions.
+
+Both HIR and LIR are standard intermediate representations that are documented
+in detail in, for example, <<Muchnick97>> and <<Burke99>>. Literature also
+describes a middle-level intermediate representation (MIR) but the compiler
+does not use that.
 
 High-Level Intermediate Representation (HIR)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,3 +140,14 @@ Application Binary Interface (ABI)
 
 Instruction Encoding
 ~~~~~~~~~~~~~~~~~~~~
+
+[bibliography]
+
+Bibliography
+============
+
+- [[Muchnick97]] Steven Muchnick. 'Advanced Compiler Design and
+  Implementation'. Morgan Kaufmann. 1997. ISBN 1558603204.
+
+- [[Burke99]] Michael Burke et al. 'The Jalapeno Dynamic Optimizing Compiler
+  for Java'. 1999.
