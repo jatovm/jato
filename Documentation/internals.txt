@@ -71,6 +71,27 @@ Register allocation
 Resolution Blocks
 ^^^^^^^^^^^^^^^^^
 
+The resolution blocks were introduced to solve the problem with reloading
+registers when jumping from one (source) basic block to another basic block
+(destination).
+
+Typically when you have a virtual register which has live ranges before source
+block and in the destination block, what you must do is put MOV instructions at
+the end of the source basic block which restore register value from a spill
+slot. Actually you must put them before the JMP instruction if there is one at
+the end of source block.
+
+Now, it might be the case that the ending JMP instruction is using a virtual
+register, which is allocated the same machine register as is to one of the
+virtual registers which are reloaded. If movs are before the jump, then the
+register which is used by JMP would by clobbered by those reload instructions
+and we would not jump into the right place. This happens because register
+allocator sees all those virtual registers as not live in the source block. As
+one might think of many different solutions to this problem, introducing
+resolution blocks was one that was probably the simplest one to implement. We
+put reload MOVs into an intermediate block on each (?) edge to avoid the
+problem of clobbering registers allocated to not-yet-dead virtual registers.
+
 Code Generation
 ~~~~~~~~~~~~~~~
 
