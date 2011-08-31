@@ -64,7 +64,13 @@ TODO
 BC2IR
 ~~~~~
 
-TODO
+The JVM has a stack-based architecture which means instructions operate on a
+stack. Modern CPUs, on the other hand, are register-based which means that
+instructions operate on registers. One of the first things the JIT compiler
+needs to do is to convert the stack-based bytecode into a register-based
+intermediate representation. The algorithm that does the conversion is referred
+to as BC2IR in literature. Entry point to the algorithm can be found in
+jit/bytecode-to-ir.c::convert_to_ir().
 
 Instruction Selection
 ~~~~~~~~~~~~~~~~~~~~~
