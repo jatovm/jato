@@ -30,20 +30,6 @@ Required skills::
 Difficulty::
     Medium
 
-Inline Caching
-~~~~~~~~~~~~~~
-Inline caching is an optimization technique that is able to improve method
-invocation performance for virtual and interface methods by turning an indirect
-call into a cheap comparison instruction and a direct call for the common case.
-For background material, please check out a blog post by
-http://www.azulsystems.com/blog/cliff-click/2010-04-08-inline-caches-and-call-site-optimization[Cliff
-Click] ("Inline Caches and Call Site Optimization").
-
-Required skills::
-    C, x86
-Difficulty::
-    Medium
-
 Method Inlining
 ~~~~~~~~~~~~~~~
 Method inlining is an optimization where a method invocation is replaced with
@@ -58,24 +44,6 @@ Required skills::
     C, x86
 Difficulty::
     Medium
-
-Static Single Assignment Form (SSA)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The SSA form is a type of intermediate representation in which every variable
-is assigned exactly once which simplifies many optimization algorithms. The
-purpose of this project is to implement algorithms for converting LIR to SSA
-form and back to normal form for code emission stage. You are encouraged to
-implement the iterative version of dominance-frontier calculation <<Cooper01>>
-as it's simpler and easier to understand.
-
-You are also encouraged to implement a simple SSA-based compiler optimization,
-such as dead code elimination, as a proof-of-concept that the SSA form works as
-expected.
-
-Required skills::
-    C
-Difficulty::
-    Hard
 
 Array Bounds Check Elimination
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
