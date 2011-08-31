@@ -23,19 +23,29 @@ Structure of the Virtual Machine
 Classes
 ~~~~~~~
 
+TODO
+
 Methods
 ~~~~~~~
+
+TODO
 
 Fields
 ~~~~~~
 
+TODO
+
 Objects
 ~~~~~~~
+
+TODO
 
 Exceptions
 ~~~~~~~~~~
 
-Java Runtime Interface 
+TODO
+
+Java Runtime Interface
 ----------------------
 
 Structure of the Just-in-Time Compiler
@@ -44,11 +54,17 @@ Structure of the Just-in-Time Compiler
 Subroutine inlining
 ~~~~~~~~~~~~~~~~~~~
 
+TODO
+
 Control-Flow Graph Analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+TODO
+
 BC2IR
 ~~~~~
+
+TODO
 
 Instruction Selection
 ~~~~~~~~~~~~~~~~~~~~~
@@ -59,6 +75,8 @@ arch/x86/insn-selector_32.brg).
 
 Static-Single Assignment (SSA) Form
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO
 
 Liveness analysis
 ~~~~~~~~~~~~~~~~~
@@ -94,6 +112,8 @@ problem of clobbering registers allocated to not-yet-dead virtual registers.
 
 Code Generation
 ~~~~~~~~~~~~~~~
+
+TODO
 
 Intermediate Representations
 ----------------------------
@@ -135,16 +155,21 @@ Low-Level Intermediate Representation (LIR)
 Machine Architecture Support
 ----------------------------
 
+TODO
+
 Application Binary Interface (ABI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO
 
 Instruction Encoding
 ~~~~~~~~~~~~~~~~~~~~
 
-[bibliography]
+TODO
 
+[bibliography]
 Bibliography
-============
+------------
 
 - [[Muchnick97]] Steven Muchnick. 'Advanced Compiler Design and
   Implementation'. Morgan Kaufmann. 1997. ISBN 1558603204.
