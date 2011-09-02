@@ -9,15 +9,11 @@
 #define GNU_CLASSPATH_PATH_POINTER_NN	"gnu/classpath/Pointer64"
 #endif
 
-extern struct vm_class *vm_array_of_java_lang_Class;
-extern struct vm_class *vm_array_of_java_lang_Object;
-extern struct vm_class *vm_array_of_java_lang_StackTraceElement;
-extern struct vm_class *vm_array_of_java_lang_String;
-extern struct vm_class *vm_array_of_java_lang_Enum;
-extern struct vm_class *vm_array_of_java_lang_annotation_Annotation;
-extern struct vm_class *vm_array_of_java_lang_reflect_Constructor;
-extern struct vm_class *vm_array_of_java_lang_reflect_Field;
-extern struct vm_class *vm_array_of_java_lang_reflect_Method;
+#define PRELOAD_CLASS(class_name, var_name, opt) \
+	extern struct vm_class *var_name;
+#include "vm/preload-classes.h"
+#undef PRELOAD_CLASS
+
 extern struct vm_class *vm_array_of_boolean;
 extern struct vm_class *vm_array_of_byte;
 extern struct vm_class *vm_array_of_char;
@@ -26,64 +22,7 @@ extern struct vm_class *vm_array_of_float;
 extern struct vm_class *vm_array_of_int;
 extern struct vm_class *vm_array_of_long;
 extern struct vm_class *vm_array_of_short;
-extern struct vm_class *vm_java_lang_Object;
-extern struct vm_class *vm_java_lang_Class;
-extern struct vm_class *vm_java_lang_Cloneable;
-extern struct vm_class *vm_java_lang_String;
-extern struct vm_class *vm_java_lang_Throwable;
-extern struct vm_class *vm_java_util_HashMap;
-extern struct vm_class *vm_java_util_Properties;
-extern struct vm_class *vm_java_lang_VMThrowable;
-extern struct vm_class *vm_java_lang_StackTraceElement;
-extern struct vm_class *vm_java_lang_Enum;
-extern struct vm_class *vm_java_lang_Error;
-extern struct vm_class *vm_java_lang_OutOfMemoryError;
-extern struct vm_class *vm_java_lang_InternalError;
-extern struct vm_class *vm_java_lang_ArithmeticException;
-extern struct vm_class *vm_java_lang_NullPointerException;
-extern struct vm_class *vm_java_lang_NegativeArraySizeException;
-extern struct vm_class *vm_java_lang_ClassCastException;
-extern struct vm_class *vm_java_lang_ClassNotFoundException;
-extern struct vm_class *vm_java_lang_NoClassDefFoundError;
-extern struct vm_class *vm_java_lang_UnsatisfiedLinkError;
-extern struct vm_class *vm_java_lang_ArrayIndexOutOfBoundsException;
-extern struct vm_class *vm_java_lang_ArrayStoreException;
-extern struct vm_class *vm_java_lang_RuntimeException;
-extern struct vm_class *vm_java_lang_ExceptionInInitializerError;
-extern struct vm_class *vm_java_lang_NoSuchFieldError;
-extern struct vm_class *vm_java_lang_NoSuchMethodError;
-extern struct vm_class *vm_java_lang_StackOverflowError;
-extern struct vm_class *vm_java_lang_VerifyError;
-extern struct vm_class *vm_java_lang_Thread;
-extern struct vm_class *vm_java_lang_ThreadGroup;
-extern struct vm_class *vm_java_lang_VMThread;
-extern struct vm_class *vm_java_lang_IllegalMonitorStateException;
-extern struct vm_class *vm_java_lang_reflect_Constructor;
-extern struct vm_class *vm_java_lang_reflect_Field;
-extern struct vm_class *vm_java_lang_reflect_Method;
-extern struct vm_class *vm_java_lang_reflect_VMConstructor;
-extern struct vm_class *vm_java_lang_reflect_VMField;
-extern struct vm_class *vm_java_lang_reflect_VMMethod;
-extern struct vm_class *vm_java_lang_Byte;
-extern struct vm_class *vm_java_lang_Boolean;
-extern struct vm_class *vm_java_lang_Character;
-extern struct vm_class *vm_java_lang_Double;
-extern struct vm_class *vm_java_lang_Float;
-extern struct vm_class *vm_java_lang_Integer;
-extern struct vm_class *vm_java_lang_Long;
-extern struct vm_class *vm_java_lang_Short;
-extern struct vm_class *vm_java_lang_IllegalArgumentException;
-extern struct vm_class *vm_java_lang_ClassLoader;
-extern struct vm_class *vm_java_lang_Number;
-extern struct vm_class *vm_java_lang_InterruptedException;
-extern struct vm_class *vm_java_lang_ClassFormatError;
-extern struct vm_class *vm_java_lang_ref_Reference;
-extern struct vm_class *vm_java_lang_ref_WeakReference;
-extern struct vm_class *vm_java_lang_ref_SoftReference;
-extern struct vm_class *vm_java_lang_ref_PhantomReference;
-extern struct vm_class *vm_java_nio_Buffer;
-extern struct vm_class *vm_java_nio_DirectByteBufferImpl_ReadWrite;
-extern struct vm_class *vm_gnu_classpath_PointerNN;	/* gnu/classpath/Pointer{32,64} */
+
 extern struct vm_class *vm_boolean_class;
 extern struct vm_class *vm_char_class;
 extern struct vm_class *vm_float_class;
