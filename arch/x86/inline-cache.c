@@ -83,12 +83,13 @@ void *ic_lookup_vtable(struct vm_class *vmc, struct vm_method *vmm)
 
 bool ic_supports_method(struct vm_method *vmm)
 {
-	assert(vmm);
+	assert(vmm != NULL);
 
-	return	method_is_virtual(vmm) &&
-		!vm_method_is_native(vmm) &&
-		!vm_method_is_special(vmm) &&
-		!vm_class_is_primitive_class(vmm->class);
+	return method_is_virtual(vmm)
+		&& !vm_method_is_native(vmm)
+		&& !vm_method_is_special(vmm)
+		&& vmm->class
+		&& !vm_class_is_primitive_class(vmm->class);
 }
 
 void ic_set_to_monomorphic(struct vm_class *vmc, struct vm_method *vmm, void *callsite)
