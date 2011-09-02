@@ -205,11 +205,7 @@ static const struct preload_entry preload_entries[] = {
 	{ "java/lang/ref/PhantomReference", &vm_java_lang_ref_PhantomReference },
 	{ "java/nio/Buffer", &vm_java_nio_Buffer },
 	{ "java/nio/DirectByteBufferImpl$ReadWrite", &vm_java_nio_DirectByteBufferImpl_ReadWrite },
-#ifdef CONFIG_32_BIT
-	{ "gnu/classpath/Pointer32", &vm_gnu_classpath_PointerNN },
-#else
-	{ "gnu/classpath/Pointer64", &vm_gnu_classpath_PointerNN },
-#endif
+	{ GNU_CLASSPATH_PATH_POINTER_NN, &vm_gnu_classpath_PointerNN },
 	{ "sun/reflect/annotation/AnnotationInvocationHandler", &vm_sun_reflect_annotation_AnnotationInvocationHandler },
 };
 

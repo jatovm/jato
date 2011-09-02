@@ -3,6 +3,12 @@
 
 #include <stdbool.h>
 
+#ifdef CONFIG_32_BIT
+#define GNU_CLASSPATH_PATH_POINTER_NN	"gnu/classpath/Pointer32"
+#else
+#define GNU_CLASSPATH_PATH_POINTER_NN	"gnu/classpath/Pointer64"
+#endif
+
 extern struct vm_class *vm_array_of_java_lang_Class;
 extern struct vm_class *vm_array_of_java_lang_Object;
 extern struct vm_class *vm_array_of_java_lang_StackTraceElement;
