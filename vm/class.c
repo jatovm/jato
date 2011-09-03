@@ -1096,7 +1096,7 @@ int vm_class_resolve_interface_method(const struct vm_class *vmc, uint16_t i,
 }
 
 static struct vm_method *
-missing_method(const struct vm_class *vmc, char *name, char *type, uint16_t access_flags)
+missing_method(struct vm_class *vmc, char *name, char *type, uint16_t access_flags)
 {
 	struct cafebabe_method_info *method;
 	struct vm_method *vmm;
@@ -1110,6 +1110,8 @@ missing_method(const struct vm_class *vmc, char *name, char *type, uint16_t acce
 	vmm		= vm_alloc(sizeof *vmm);
 	if (!vmm)
 		goto error_free_method;
+
+	vmm->class	= vmc;
 
 	vmm->name	= strdup(name);
 	if (!vmm->name)
