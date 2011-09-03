@@ -2766,7 +2766,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (cu == NULL || vm_method_is_native(method))
+	if (vm_method_is_missing(method) || vm_method_is_native(method))
 		select_exception_test(s, tree);
 }
 
@@ -2819,7 +2819,7 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (vm_method_is_native(method))
+	if (vm_method_is_missing(method) || vm_method_is_native(method))
 		select_exception_test(s, tree);
 }
 
@@ -2872,6 +2872,9 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 	nr_stack_args = get_stack_args_count(method);
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
+
+	if (vm_method_is_missing(method) || vm_method_is_native(method))
+		select_exception_test(s, tree);
 }
 
 static void emit_code(struct basic_block *bb, MBState *state, int goal)
