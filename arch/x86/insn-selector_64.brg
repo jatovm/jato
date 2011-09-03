@@ -2426,21 +2426,26 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 
 	method	= stmt->target_method;
 
-	/* object reference */
-	call_target = state->left->reg1;
+	if (vm_method_is_missing(method)) {
+		call_insn = rel_insn(INSN_CALL_REL, (unsigned long) jit_no_such_method_stub);
 
-	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
+		select_safepoint_insn(s, tree, call_insn);
+	} else {
+		/* object reference */
+		call_target = state->left->reg1;
 
-	/* vtable */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
+		/* object class */
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_object, class), call_target));
 
-	/* native ptr */
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
+		/* vtable */
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, call_target, offsetof(struct vm_class, vtable), call_target));
 
-	/* invoke method */
-	call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
+		/* native ptr */
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG, method_offset, call_target));
 
+		/* invoke method */
+		call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
+	}
 	select_safepoint_insn(s, tree, call_insn);
 	save_invoke_result(s, tree, method, stmt);
 
@@ -2471,25 +2476,30 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 
 	method_offset = stmt_method_index(stmt) * sizeof(void *);
 
-	/* object reference */
-	call_target = state->left->reg1;
+	if (vm_method_is_missing(method)) {
+		call_insn = rel_insn(INSN_CALL_REL, (unsigned long) jit_no_such_method_stub);
 
-	/* object class */
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG,
-		call_target, offsetof(struct vm_object, class), call_target));
+		select_safepoint_insn(s, tree, call_insn);
+	} else {
+		/* object reference */
+		call_target = state->left->reg1;
 
-	/* itable entry */
-	select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
-		offsetof(struct vm_class, itable) + method->itable_index * sizeof(void *),
-		call_target));
+		/* object class */
+		select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG,
+			call_target, offsetof(struct vm_object, class), call_target));
 
-	/* hidden parameter to the conflict resolution stub */
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
-		(unsigned long) method, eax));
+		/* itable entry */
+		select_insn(s, tree, imm_reg_insn(INSN_ADD_IMM_REG,
+			offsetof(struct vm_class, itable) + method->itable_index * sizeof(void *),
+			call_target));
 
-	/* invoke method */
-	call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
+		/* hidden parameter to the conflict resolution stub */
+		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG,
+			(unsigned long) method, eax));
 
+		/* invoke method */
+		call_insn = reverse_reg_insn(INSN_CALL_REG, call_target);
+	}
 	select_safepoint_insn(s, tree, call_insn);
 	save_invoke_result(s, tree, method, stmt);
 

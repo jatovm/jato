@@ -194,4 +194,9 @@ static inline void *vm_method_call_ptr(struct vm_method *vmm)
 	return result;
 }
 
+static inline bool vm_method_is_missing(struct vm_method *vmm)
+{
+	return !vmm->compilation_unit;
+}
+
 #endif
