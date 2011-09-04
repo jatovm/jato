@@ -55,6 +55,7 @@ void vm_object_finalizer(struct vm_object *obj)
 
 static void vm_object_init_common(struct vm_object *object)
 {
+	object->monitor_record = NULL;
 }
 
 struct vm_object *vm_object_alloc(struct vm_class *class)
