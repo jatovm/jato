@@ -246,12 +246,16 @@ int init_threading(void)
 
 static struct vm_exec_env *alloc_exec_env(void)
 {
-	struct vm_exec_env *ee = vm_alloc(sizeof(struct vm_exec_env));
+	struct vm_exec_env *ee;
+
+	ee = vm_alloc(sizeof(struct vm_exec_env));
 	if (!ee)
 		return NULL;
 
-	ee->thread = NULL;
+	ee->thread	= NULL;
+	ee->exception	= NULL;
 	INIT_LIST_HEAD(&ee->free_monitor_recs);
+
 	return ee;
 }
 
