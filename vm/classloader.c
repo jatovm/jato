@@ -304,7 +304,7 @@ static struct vm_class *load_class_from_file(const char *filename)
 	if (cafebabe_class_init(class, &stream))
 		goto error_free_class;
 
-	result = vm_alloc(sizeof *result);
+	result = vm_zalloc(sizeof *result);
 	if (!result)
 		goto error_free_class;
 
@@ -386,7 +386,7 @@ static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 
 	cafebabe_stream_close_buffer(&stream);
 
-	result = vm_alloc(sizeof *result);
+	result = vm_zalloc(sizeof *result);
 	if (result) {
 		if (vm_class_link(result, class))
 			goto error_free_class;
@@ -462,7 +462,7 @@ struct vm_class *classloader_load_primitive(const char *class_name)
 	if (primitive_class_cache[type])
 		return primitive_class_cache[type];
 
-	class = vm_alloc(sizeof *class);
+	class = vm_zalloc(sizeof *class);
 	if (!class)
 		return throw_oom_error();
 
@@ -486,7 +486,7 @@ load_array_class(struct vm_object *loader, const char *class_name)
 
 	assert(class_name[0] == '[');
 
-	array_class = vm_alloc(sizeof *array_class);
+	array_class = vm_zalloc(sizeof *array_class);
 	if (!array_class)
 		return NULL;
 
@@ -690,7 +690,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		goto out_unlock;
 	}
 
-	class = vm_alloc(sizeof(*class));
+	class = vm_zalloc(sizeof(*class));
 	class->status = CLASS_LOADING;
 	class->nr_waiting = 0;
 	class->loading_thread = vm_thread_self();
@@ -776,7 +776,7 @@ int classloader_add_to_cache(struct vm_object *loader, struct vm_class *vmc)
 {
 	struct classloader_class *class;
 
-	class = vm_alloc(sizeof(*class));
+	class = vm_zalloc(sizeof(*class));
 	if (!class)
 		return -ENOMEM;
 
