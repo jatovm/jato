@@ -447,10 +447,8 @@ static void do_vm_free(void *p)
 	free(p);
 }
 
-static int do_gc_register_finalizer(struct vm_object *object,
-				    finalizer_fn finalizer)
+static int do_gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer)
 {
-	NOT_IMPLEMENTED;
 	return 0;
 }
 
