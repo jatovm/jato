@@ -20,8 +20,8 @@ struct gc_operations {
 	void *(*gc_alloc)(size_t size);
 	void *(*vm_alloc)(size_t size);
 	void (*vm_free)(void *p);
-	int (*gc_register_finalizer)(struct vm_object *object,
-				     finalizer_fn finalizer);
+	int (*gc_register_finalizer)(struct vm_object *object, finalizer_fn finalizer);
+	void (*gc_setup_signals)(void);
 };
 
 void gc_setup_boehm(void);
@@ -90,6 +90,13 @@ static inline int
 gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer)
 {
 	return gc_ops.gc_register_finalizer(object, finalizer);
+}
+
+static inline void
+gc_setup_signals(void)
+{
+	if (gc_ops.gc_setup_signals)
+		gc_ops.gc_setup_signals();
 }
 
 void gc_safepoint(struct register_state *);

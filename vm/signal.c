@@ -201,4 +201,6 @@ void setup_signal_handlers(void)
 
 	sa.sa_sigaction	= sigquit_handler;
 	sigaction(SIGQUIT, &sa, NULL);
+
+	gc_setup_signals();
 }
