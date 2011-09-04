@@ -418,6 +418,9 @@ static void *do_gc_alloc(size_t size)
 
 	p	= malloc(size);
 
+	if (p)
+		memset(p, 0, size);
+
 	return p;
 }
 
