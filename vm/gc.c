@@ -460,6 +460,9 @@ static void do_gc_setup_signals(void)
 	sigset_t sigusr_mask;
 	sigset_t sigset;
 
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags     = SA_RESTART | SA_SIGINFO;
+
 	sigemptyset(&sigusr_mask);
 	sigaddset(&sigusr_mask, SIGUSR1);
 	sigaddset(&sigusr_mask, SIGUSR2);
