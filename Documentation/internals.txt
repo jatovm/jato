@@ -82,7 +82,22 @@ arch/x86/insn-selector_32.brg).
 Static-Single Assignment (SSA) Form
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+Static-Single Assignment Form is a representation form where every variable is
+defined exactly once and every use of a variable refers at most one definition.
+This intermediate representation form offers an uniform support for a large
+group of data analysis problems, and many optimizations and data flow
+algorithms are more efficient on the SSA form than on the normal Control Flow
+Graph form.
+
+Support for SSA form implies two major steps: translating from LIR form to SSA
+form (lir_to_ssa function in jit/ssa.c) and translating from SSA form to LIR
+form (ssa_to_lir function in jit/ssa.c). The back translation is needed because
+the SSA form introduces virtual phi functions that cannot be processed by the
+code emission stage. Between these two steps some optimizations can be applied.
+Jato offers a simple variant of dead code elimination (jit/dce.c), copy folding
+(__rename_variables in jit/ssa.c) and a simple variant of array bound check
+elimination (jit/abc.c). All these optimizations are applied only if array
+bounds check elimination is required.
 
 Liveness analysis
 ~~~~~~~~~~~~~~~~~
