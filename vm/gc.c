@@ -369,7 +369,10 @@ static void *gc_thread(void *arg)
 	 * by default to avoid races with sigwait().
 	 */
 	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGUSR2);
+
+	if(sigaddset(&sigset, SIGUSR2) != 0)
+		die("sigaddset");
+
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 
 	for (;;) {
@@ -462,8 +465,12 @@ static void do_gc_setup_signals(void)
 	sa.sa_flags     = SA_RESTART | SA_SIGINFO;
 
 	sigemptyset(&sigusr_mask);
-	sigaddset(&sigusr_mask, SIGUSR1);
-	sigaddset(&sigusr_mask, SIGUSR2);
+
+	if (sigaddset(&sigusr_mask, SIGUSR1) != 0)
+		die("sigaddset");
+
+	if (sigaddset(&sigusr_mask, SIGUSR2) != 0)
+		die("siggaddset");
 
 	sigemptyset(&sa.sa_mask);
 
@@ -478,7 +485,10 @@ static void do_gc_setup_signals(void)
 	 * by default to avoid races with sigwait().
 	 */
 	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGUSR2);
+
+	if (sigaddset(&sigset, SIGUSR2) != 0)
+		die("sigaddset");
+
 	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 }
 
