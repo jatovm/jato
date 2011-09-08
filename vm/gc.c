@@ -154,6 +154,8 @@ static void enter_safepoint(void)
 	if (pthread_spin_lock(&gc_spinlock) != 0)
 		die("pthread_spin_lock");
 
+	assert(nr_in_safepoint < nr_threads);
+
 	if (++nr_in_safepoint == nr_threads)
 		resume_thread(gc_thread_id);
 
