@@ -462,21 +462,10 @@ static int do_gc_register_finalizer(struct vm_object *object, finalizer_fn final
 static void do_gc_setup_signals(void)
 {
 	struct sigaction sa;
-	sigset_t sigusr_mask;
 	sigset_t sigset;
 
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags     = SA_RESTART | SA_SIGINFO;
-
-	sigemptyset(&sigusr_mask);
-
-	if (sigaddset(&sigusr_mask, SIGUSR1) != 0)
-		die("sigaddset");
-
-	if (sigaddset(&sigusr_mask, SIGUSR2) != 0)
-		die("siggaddset");
-
-	sigemptyset(&sa.sa_mask);
 
 	sa.sa_sigaction = suspend_handler;
 	sigaction(SIGUSR1, &sa, NULL);
