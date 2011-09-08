@@ -130,6 +130,8 @@ static bool do_exit_safepoint(void)
 	if (pthread_spin_lock(&gc_spinlock) != 0)
 		die("pthread_spin_lock");
 
+	assert(nr_in_safepoint > 0);
+
 	if (--nr_in_safepoint == 0)
 		ret = true;
 
