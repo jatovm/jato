@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "arch/text.h"
 #include "jit/text.h"
@@ -77,6 +78,8 @@ void *jit_text_ptr(void)
 void jit_text_reserve(size_t size)
 {
 	jit_text_offset += ALIGN(size, TEXT_ALIGNMENT);
+
+	assert(jit_text_offset < MAX_TEXT_SIZE);
 }
 
 void *alloc_pages(int n)
