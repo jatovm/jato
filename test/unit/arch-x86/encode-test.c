@@ -17,6 +17,7 @@ static DEFINE_REG(MACH_REG_xBX, reg_ebx);
 static DEFINE_REG(MACH_REG_xSI, reg_esi);
 static DEFINE_REG(MACH_REG_xDI, reg_edi);
 static DEFINE_REG(MACH_REG_xSP, reg_esp);
+static DEFINE_REG(MACH_REG_XMM6, reg_xmm6);
 static DEFINE_REG(MACH_REG_XMM7, reg_xmm7);
 
 #ifdef CONFIG_X86_64
@@ -28,6 +29,8 @@ static DEFINE_REG(MACH_REG_R12, reg_r12);
 static DEFINE_REG(MACH_REG_R13, reg_r13);
 static DEFINE_REG(MACH_REG_R14, reg_r14);
 static DEFINE_REG(MACH_REG_R15, reg_r15);
+static DEFINE_REG(MACH_REG_XMM8, reg_xmm8);
+static DEFINE_REG(MACH_REG_XMM9, reg_xmm9);
 #endif
 
 static struct buffer		*buffer;
@@ -134,7 +137,7 @@ void test_encoding_call_reg_r12(void)
 
 	setup();
 
-	/* mov    *(%rbp) */
+	/* call    *(%r12) */
 	insn.type			= INSN_CALL_REG;
 	insn.dest.type			= OPERAND_REG;
 	insn.dest.reg.interval		= &reg_r12;
@@ -525,6 +528,124 @@ void test_encoding_reg_membase_32(void)
 	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
 
 	teardown();
+}
+
+void test_encoding_membase_xmm_low(void)
+{
+	uint8_t encoding[] = { 0xf3, 0x0f, 0x10, 0xbb, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* movss  0x12345678(%ebx),%xmm7 */
+	insn.type			= INSN_MOVSS_MEMBASE_XMM;
+	insn.src.base_reg.interval	= &reg_ebx;
+	insn.src.disp			= 0x12345678;
+	insn.dest.reg.interval		= &reg_xmm7;
+	insn.dest.type			= OPERAND_REG;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
+void test_encoding_membase_xmm_high(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0xf3, 0x41, 0x0f, 0x10, 0xbc, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* movss  0x12345678(%r12),%xmm7 */
+	insn.type			= INSN_MOVSS_MEMBASE_XMM;
+	insn.src.base_reg.interval	= &reg_r12;
+	insn.src.disp			= 0x12345678;
+	insn.src.type			= OPERAND_MEMBASE;
+	insn.dest.reg.interval		= &reg_xmm7;
+	insn.dest.type			= OPERAND_REG;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
+void test_encoding_membase_xmm_high_disp8(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0xf3, 0x41, 0x0f, 0x10, 0x7c, 0x24, 0x30 };
+	struct insn insn = { };
+
+	setup();
+
+	/* movss  0x30(%r12),%xmm7 */
+	insn.type			= INSN_MOVSS_MEMBASE_XMM;
+	insn.src.base_reg.interval	= &reg_r12;
+	insn.src.disp			= 0x30;
+	insn.src.type			= OPERAND_MEMBASE;
+	insn.dest.reg.interval		= &reg_xmm7;
+	insn.dest.type			= OPERAND_REG;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
+void test_encoding_xmm_xmm_low(void)
+{
+	uint8_t encoding[] = { 0xf3, 0x0f, 0x10, 0xfe };
+	struct insn insn = { };
+
+	setup();
+
+	/* movss  %xmm6,%xmm7 */
+	insn.type			= INSN_MOVSS_XMM_XMM;
+	insn.src.reg.interval		= &reg_xmm6;
+	insn.src.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_xmm7;
+	insn.dest.type			= OPERAND_REG;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+}
+
+void test_encoding_xmm_xmm_high(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0xf3, 0x45, 0x0f, 0x10, 0xc8 };
+	struct insn insn = { };
+
+	setup();
+
+	/* movss  %xmm8,%xmm9 */
+	insn.type			= INSN_MOVSS_XMM_XMM;
+	insn.src.reg.interval		= &reg_xmm8;
+	insn.src.type			= OPERAND_REG;
+	insn.dest.reg.interval		= &reg_xmm9;
+	insn.dest.type			= OPERAND_REG;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
 }
 
 void test_encoding_reg_membase_xmm(void)

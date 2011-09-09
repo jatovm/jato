@@ -391,10 +391,16 @@ static bool insn_need_sib(struct insn *self, uint64_t flags)
 
 	if (flags & INDEX)
 		return true;
+
 #ifdef CONFIG_X86_64
+	/*
+	 * FIXME: This is used to detect register indirect calls that use the
+	 *        r12 register.
+	 */
 	if (flags & DST_NONE && insn_uses_reg(self, MACH_REG_R12)) /* DST_NONE? */
 		return true;
 #endif
+
 	if (flags & OPC_EXT)
 		return false;
 
@@ -403,12 +409,23 @@ static bool insn_need_sib(struct insn *self, uint64_t flags)
 			return false;
 
 		reg	= mach_reg(&self->dest.base_reg);
+
+#ifdef CONFIG_X86_64
+		if (flags & DST_MEM_DISP_BYTE && reg == MACH_REG_R12)
+			return true;
+#endif
 	} else {
 		if (flags & (SRC_MEMDISP|SRC_MEMLOCAL))
 			return false;
 
 		reg	= mach_reg(&self->src.base_reg);
+
+#ifdef CONFIG_X86_64
+		if (flags & SRC_MEM_DISP_BYTE && reg == MACH_REG_R12)
+			return true;
+#endif
 	}
+
 	return reg == MACH_REG_xSP;
 }
 
