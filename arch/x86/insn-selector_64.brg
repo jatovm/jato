@@ -836,7 +836,11 @@ freg:	EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 	state->reg1 = get_var(s->b_parent, expr->vm_type);
 
 	offset = VM_OBJECT_FIELDS_OFFSET + expr->instance_field->offset;
-	select_insn(s, tree, membase_reg_insn(INSN_MOV_MEMBASE_REG, base, offset, state->reg1));
+
+	if (expr->vm_type == J_FLOAT)
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSS_MEMBASE_XMM, base, offset, state->reg1));
+	else
+		select_insn(s, tree, membase_reg_insn(INSN_MOVSD_MEMBASE_XMM, base, offset, state->reg1));
 }
 
 reg:	EXPR_NEW
@@ -1655,17 +1659,26 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, EXPR_FLOAT_LOCAL) 1
 			index = method->args_map[exprsrc->local_index].stack_index;
 			slot = get_local_slot(s->b_parent->stack_frame, index);
 
-			select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, dest));
+			if (exprsrc->vm_type == J_FLOAT)
+				select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
+			else
+				select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, dest));
 		} else {
 			src = get_fixed_var(s->b_parent, reg);
 
-			select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+			if (exprsrc->vm_type == J_FLOAT)
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest));
+			else
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest));
 		}
 	} else {
 		index = exprsrc->local_index - method->reg_args_count;
 		slot = get_local_slot(s->b_parent->stack_frame, index);
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG,
-						       slot, dest));
+
+		if (exprsrc->vm_type == J_FLOAT)
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
+		else
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, dest));
 	}
 }
 
@@ -1696,7 +1709,11 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
 
 	dest = temp->tmp_low;
 	src = state->right->reg1;
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dest));
+
+	if (temp->vm_type == J_FLOAT)
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest));
+	else
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest));
 }
 
 array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
