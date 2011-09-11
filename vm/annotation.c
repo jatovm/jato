@@ -525,7 +525,7 @@ struct vm_annotation *vm_annotation_parse(struct vm_class *vmc, struct cafebabe_
         if (cafebabe_class_constant_get_utf8(vmc->class, annotation->type_index, &type))
                 return NULL;
 
-	vma = calloc(1, sizeof *vma);
+	vma = vm_zalloc(sizeof *vma);
 	if (!vma)
 		return NULL;
 
@@ -533,7 +533,7 @@ struct vm_annotation *vm_annotation_parse(struct vm_class *vmc, struct cafebabe_
 	if (!vma->type)
 		goto out_free;
 
-	vma->elements		= calloc(annotation->num_element_value_pairs, sizeof(struct vm_element_value_pair));
+	vma->elements = vm_zalloc(annotation->num_element_value_pairs * sizeof(struct vm_element_value_pair));
 	if (!vma->elements)
 		goto out_free;
 
