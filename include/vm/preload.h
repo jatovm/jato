@@ -74,55 +74,10 @@ extern struct vm_field *vm_java_lang_ref_Reference_lock;
 extern struct vm_field *vm_java_nio_Buffer_address;
 extern struct vm_field *vm_gnu_classpath_PointerNN_data;
 
-extern struct vm_method *vm_java_util_Properties_setProperty;
-extern struct vm_method *vm_java_util_HashMap_init;
-extern struct vm_method *vm_java_util_HashMap_put;
-extern struct vm_method *vm_java_lang_Throwable_initCause;
-extern struct vm_method *vm_java_lang_Throwable_getCause;
-extern struct vm_method *vm_java_lang_Throwable_stackTraceString;
-extern struct vm_method *vm_java_lang_Throwable_getStackTrace;
-extern struct vm_method *vm_java_lang_Throwable_setStackTrace;
-extern struct vm_method *vm_java_lang_StackTraceElement_init;
-extern struct vm_method *vm_java_lang_Thread_init;
-extern struct vm_method *vm_java_lang_Thread_isDaemon;
-extern struct vm_method *vm_java_lang_Thread_getName;
-extern struct vm_method *vm_java_lang_ThreadGroup_init;
-extern struct vm_method *vm_java_lang_ThreadGroup_addThread;
-extern struct vm_method *vm_java_lang_VMThread_init;
-extern struct vm_method *vm_java_lang_VMThread_run;
-extern struct vm_method *vm_java_lang_System_exit;
-extern struct vm_method *vm_java_lang_Boolean_booleanValue;
-extern struct vm_method *vm_java_lang_Boolean_init;
-extern struct vm_method *vm_java_lang_Boolean_valueOf;
-extern struct vm_method *vm_java_lang_Byte_init;
-extern struct vm_method *vm_java_lang_Byte_valueOf;
-extern struct vm_method *vm_java_lang_Character_charValue;
-extern struct vm_method *vm_java_lang_Character_init;
-extern struct vm_method *vm_java_lang_Character_valueOf;
-extern struct vm_method *vm_java_lang_Class_init;
-extern struct vm_method *vm_java_lang_Double_init;
-extern struct vm_method *vm_java_lang_Double_valueOf;
-extern struct vm_method *vm_java_lang_Enum_valueOf;
-extern struct vm_method *vm_java_lang_Float_init;
-extern struct vm_method *vm_java_lang_Float_valueOf;
-extern struct vm_method *vm_java_lang_InheritableThreadLocal_newChildThread;
-extern struct vm_method *vm_java_lang_Integer_init;
-extern struct vm_method *vm_java_lang_Integer_valueOf;
-extern struct vm_method *vm_java_lang_Long_init;
-extern struct vm_method *vm_java_lang_Long_valueOf;
-extern struct vm_method *vm_java_lang_Short_init;
-extern struct vm_method *vm_java_lang_Short_valueOf;
-extern struct vm_method *vm_java_lang_String_length;
-extern struct vm_method *vm_java_lang_ClassLoader_loadClass;
-extern struct vm_method *vm_java_lang_ClassLoader_getSystemClassLoader;
-extern struct vm_method *vm_java_lang_Number_intValue;
-extern struct vm_method *vm_java_lang_Number_floatValue;
-extern struct vm_method *vm_java_lang_Number_longValue;
-extern struct vm_method *vm_java_lang_Number_doubleValue;
-extern struct vm_method *vm_java_lang_ref_Reference_clear;
-extern struct vm_method *vm_java_lang_ref_Reference_enqueue;
-extern struct vm_method *vm_java_nio_DirectByteBufferImpl_ReadWrite_init;
-extern struct vm_method *vm_sun_reflect_annotation_AnnotationInvocationHandler_create;
+#define PRELOAD_METHOD(class, method_name, method_type, var_name) \
+	extern struct vm_method *var_name;
+#include "vm/preload-methods.h"
+#undef PRELOAD_METHOD
 
 extern bool preload_finished;
 
