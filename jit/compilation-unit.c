@@ -98,8 +98,6 @@ struct compilation_unit *compilation_unit_alloc(struct vm_method *method)
 		INIT_LIST_HEAD(&cu->bb_list);
 		cu->method = method;
 
-		compile_lock_init(&cu->compile_lock, false);
-
 		cu->exit_bb = do_alloc_basic_block(cu, 0, 0);
 		if (!cu->exit_bb)
 			goto out_of_memory;
@@ -233,6 +231,19 @@ void free_compilation_unit(struct compilation_unit *cu)
 	free(cu->exception_handlers);
 	free_constant_pool(cu->pool_head);
 	free(cu);
+}
+
+unsigned long compilation_unit_get_state(struct compilation_unit *cu)
+{
+	unsigned long ret;
+
+	pthread_mutex_lock(&cu->mutex);
+
+	ret = cu->state;
+
+	pthread_mutex_unlock(&cu->mutex);
+
+	return ret;
 }
 
 struct var_info *get_var(struct compilation_unit *cu, enum vm_type vm_type)

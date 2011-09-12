@@ -105,32 +105,42 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 			return rethrow_exception();
 	}
 
-	enum compile_lock_status status;
-
-	status = compile_lock_enter(&cu->compile_lock);
-
-	if (status == STATUS_COMPILED_OK) {
+	if (compilation_unit_is_compiled(cu)) {
 		ret = cu_entry_point(cu);
 		goto out_fixup;
-	} else if (status == STATUS_COMPILED_ERRONOUS) {
+	}
+
+	pthread_mutex_lock(&cu->mutex);
+
+	switch (cu->state) {
+	case COMPILATION_STATE_COMPILED:
+		ret = cu_entry_point(cu);
+		goto out_fixup;
+
+	case COMPILATION_STATE_ERROR:
 		signal_new_exception(vm_java_lang_Error, "%s.%s%s is erronous",
 				     cu->method->class->name,
 				     cu->method->name,
 				     cu->method->type);
 		return rethrow_exception();
+
 	}
 
-	assert(status == STATUS_COMPILING);
+	cu->state = COMPILATION_STATE_COMPILING;
 
 	if (vm_method_is_native(cu->method))
 		ret = jit_jni_trampoline(cu);
 	else
 		ret = jit_java_trampoline(cu);
 
+	if (ret)
+		cu->state = COMPILATION_STATE_COMPILED;
+	else
+		cu->state = COMPILATION_STATE_ERROR;
+
 	shrink_compilation_unit(cu);
 
-	status = ret ? STATUS_COMPILED_OK : STATUS_INITIAL;
-	compile_lock_leave(&cu->compile_lock, status);
+	pthread_mutex_unlock(&cu->mutex);
 
 out_fixup:
 	if (!ret)
