@@ -12,6 +12,8 @@
 #include "vm/types.h"
 #include "vm/vm.h"
 
+#include "lib/compile-lock.h"
+
 #include "jit/vtable.h"
 
 #include "cafebabe/enclosing_method_attribute.h"
@@ -41,6 +43,9 @@ enum vm_class_kind {
 #define SUPERTYPE_CACHE_SIZE           2
 
 struct vm_class {
+	/* Compile lock for fast class initialization */
+	struct compile_lock cl;
+
 	enum vm_class_kind kind;
 	const struct cafebabe_class *class;
 	enum vm_class_state state;

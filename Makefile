@@ -99,6 +99,7 @@ LIB_OBJS += lib/arena.o
 LIB_OBJS += lib/array.o
 LIB_OBJS += lib/bitset.o
 LIB_OBJS += lib/buffer.o
+LIB_OBJS += lib/compile-lock.o
 LIB_OBJS += lib/guard-page.o
 LIB_OBJS += lib/hash-map.o
 LIB_OBJS += lib/list.o

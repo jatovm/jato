@@ -169,6 +169,8 @@ static int vm_class_link_common(struct vm_class *vmc)
 {
 	int err;
 
+	compile_lock_init(&vmc->cl, true);
+
 	err = pthread_mutex_init(&vmc->mutex, NULL);
 	if (err)
 		return -err;
@@ -693,34 +695,21 @@ int vm_class_ensure_object(struct vm_class *vmc)
 int vm_class_init(struct vm_class *vmc)
 {
 	struct vm_object *exception;
+	enum compile_lock_status status;
 
-	if (vmc->state == VM_CLASS_INITIALIZING || vmc->state == VM_CLASS_INITIALIZED)
+	status = compile_lock_enter(&vmc->cl);
+	if (status == STATUS_COMPILED_OK || status == STATUS_REENTER)
 		return 0;
 
-	vm_object_lock(vmc->object);
-
-	switch (vmc->state) {
-	case VM_CLASS_INITIALIZING:
-	case VM_CLASS_INITIALIZED:
-		vm_object_unlock(vmc->object);
-		return 0;
-
-	case VM_CLASS_ERRONEOUS:
-		vm_object_unlock(vmc->object);
-		signal_new_exception(vm_java_lang_NoClassDefFoundError, vmc->name);
+	if (status == STATUS_COMPILED_ERRONOUS) {
+		signal_new_exception(vm_java_lang_NoClassDefFoundError,
+				     vmc->name);
 		return -1;
-
-	case VM_CLASS_LINKED:
-		/* Need to initialize */
-		break;
-
-	default:
-		assert(0);
-		break;
 	}
 
+	vm_object_lock(vmc->object);
+	assert(vmc->state == VM_CLASS_LINKED);
 	vmc->state = VM_CLASS_INITIALIZING;
-
 	vm_object_unlock(vmc->object);
 
 	/* Fault injection, for testing purposes */
@@ -729,7 +718,8 @@ int vm_class_init(struct vm_class *vmc)
 
 		arg = vm_fault_arg(VM_FAULT_CLASS_INIT);
 		if (vm_class_check_class_init_fault(vmc, arg)) {
-			signal_new_exception(vm_java_lang_RuntimeException, NULL);
+			signal_new_exception(vm_java_lang_RuntimeException,
+					     NULL);
 			goto error;
 		}
 	}
@@ -766,9 +756,11 @@ int vm_class_init(struct vm_class *vmc)
 	vm_object_notify_all(vmc->object);
 	vm_object_unlock(vmc->object);
 
+	compile_lock_leave(&vmc->cl, STATUS_COMPILED_OK);
 	return 0;
 
  error:
+	compile_lock_leave(&vmc->cl, STATUS_COMPILED_ERRONOUS);
 	exception = exception_occurred();
 
 	if (!vm_object_is_instance_of(exception, vm_java_lang_Error)) {
