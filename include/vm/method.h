@@ -156,8 +156,7 @@ static inline bool vm_method_is_special(struct vm_method *vmm)
 
 static inline bool vm_method_is_compiled(struct vm_method *vmm)
 {
-	return 	compile_lock_get_status(&vmm->compilation_unit->compile_lock)
-		== STATUS_COMPILED_OK;
+	return compilation_unit_is_compiled(vmm->compilation_unit);
 }
 
 static inline enum vm_type method_return_type(struct vm_method *method)
@@ -186,7 +185,7 @@ static inline void *vm_method_call_ptr(struct vm_method *vmm)
 {
 	void *result;
 
-	if (compile_lock_get_status(&vmm->compilation_unit->compile_lock) == STATUS_COMPILED_OK)
+	if (vm_method_is_compiled(vmm))
 		result = vm_method_entry_point(vmm);
 	else
 		result = vm_method_trampoline_ptr(vmm);

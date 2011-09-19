@@ -10,7 +10,6 @@
 #include "lib/list.h"
 #include "lib/radix-tree.h"
 #include "lib/stack.h"
-#include "lib/compile-lock.h"
 
 #include "vm/static.h"
 #include "vm/types.h"
@@ -24,6 +23,13 @@ struct buffer;
 struct vm_method;
 struct insn;
 enum machine_reg;
+
+enum compilation_state {
+	COMPILATION_STATE_INITIAL,
+	COMPILATION_STATE_COMPILING,
+	COMPILATION_STATE_COMPILED,
+	COMPILATION_STATE_ERROR,
+};
 
 struct compilation_unit {
 	struct vm_method *method;
@@ -43,7 +49,11 @@ struct compilation_unit {
 	/* Contains the number of uses of any bytecode within the method */
 	uint16_t bytecode_stats[NR_OPCS];
 
-	struct compile_lock compile_lock;
+	/* Mutex that protects ->state  */
+	pthread_mutex_t compile_mutex;
+
+	/* See enum compilation_state for values */
+	unsigned long state;
 
 	pthread_mutex_t mutex;
 
@@ -168,6 +178,18 @@ static inline void *cu_entry_point(struct compilation_unit *cu)
 static inline void *cu_ic_entry_point(struct compilation_unit *cu)
 {
 	return cu->ic_entry_point;
+}
+
+unsigned long compilation_unit_get_state(struct compilation_unit *cu);
+
+static inline bool compilation_unit_is_compiled(struct compilation_unit *cu)
+{
+	/* Optimistic unlocked check */
+	if (cu->state == COMPILATION_STATE_COMPILED)
+		return true;
+
+	/* Slowpath */
+	return compilation_unit_get_state(cu) == COMPILATION_STATE_COMPILED;
 }
 
 struct compilation_unit *compilation_unit_alloc(struct vm_method *);

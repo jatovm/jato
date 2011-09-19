@@ -2735,7 +2735,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	if (cu == NULL) {
 		target		= jit_no_such_method_stub;
 		is_compiled	= true;
-	} else if (compile_lock_get_status(&cu->compile_lock) == STATUS_COMPILED_OK) {
+	} else if (compilation_unit_is_compiled(cu)) {
 		target		= vm_method_entry_point(method);
 		is_compiled	= true;
 	} else {
