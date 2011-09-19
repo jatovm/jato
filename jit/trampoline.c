@@ -108,24 +108,14 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 	state = compilation_unit_get_state(cu);
 
-	switch (state) {
-	case COMPILATION_STATE_COMPILED:
+	if (cu->state == COMPILATION_STATE_COMPILED) {
 		ret = cu_entry_point(cu);
 		goto out_fixup;
-
-	case COMPILATION_STATE_ERROR:
-		signal_new_exception(vm_java_lang_Error, "%s.%s%s is erronous",
-				     cu->method->class->name,
-				     cu->method->name,
-				     cu->method->type);
-		return rethrow_exception();
-
 	}
 
 	pthread_mutex_lock(&cu->compile_mutex);
 
-	switch (cu->state) {
-	case COMPILATION_STATE_COMPILED:
+	if (cu->state == COMPILATION_STATE_COMPILED) {
 		ret = cu_entry_point(cu);
 		goto out_unlock_fixup;
 	}
