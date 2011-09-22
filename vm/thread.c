@@ -252,8 +252,9 @@ static struct vm_exec_env *alloc_exec_env(void)
 	if (!ee)
 		return NULL;
 
-	ee->thread	= NULL;
-	ee->exception	= NULL;
+	ee->thread			= NULL;
+	ee->exception			= NULL;
+	ee->trace_classloader_level	= 0;
 	INIT_LIST_HEAD(&ee->free_monitor_recs);
 
 	return ee;

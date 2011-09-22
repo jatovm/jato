@@ -58,6 +58,9 @@ struct vm_exec_env {
 	 * clear_exception() is called.
 	 */
 	struct vm_object *exception;
+
+	/* Used by classloader when tracing with -Xtrace:classloader */
+	int trace_classloader_level;
 };
 
 unsigned int vm_nr_threads(void);

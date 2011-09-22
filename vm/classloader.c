@@ -26,29 +26,27 @@
 #include <zip.h>
 
 bool opt_trace_classloader;
-static __thread int trace_classloader_level = 0;
 
 static pthread_mutex_t classloader_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t classloader_cond = PTHREAD_COND_INITIALIZER;
 
 static inline void trace_push(struct vm_object *loader, const char *class_name)
 {
-	assert(trace_classloader_level >= 0);
+	assert(vm_get_exec_env()->trace_classloader_level >= 0);
 
 	if (opt_trace_classloader) {
 		trace_printf("classloader: %p %*s%s\n", loader,
-			     trace_classloader_level, "", class_name);
+				vm_get_exec_env()->trace_classloader_level, "", class_name);
 		trace_flush();
 	}
 
-	++trace_classloader_level;
+	vm_get_exec_env()->trace_classloader_level += 1;
 }
 
 static inline void trace_pop(void)
 {
-	assert(trace_classloader_level >= 1);
-
-	--trace_classloader_level;
+	assert(vm_get_exec_env()->trace_classloader_level >= 1);
+	vm_get_exec_env()->trace_classloader_level -= 1;
 }
 
 enum classpath_type {
