@@ -67,8 +67,6 @@ pthread_spinlock_t gc_spinlock;
 static int nr_in_safepoint;
 static int nr_threads;
 
-static __thread sig_atomic_t in_safepoint;
-
 static pthread_t gc_thread_id;
 
 unsigned long max_heap_size	= 128 * 1024 * 1024;	/* 128 MB */
@@ -123,9 +121,9 @@ static bool do_exit_safepoint(void)
 {
 	bool ret = false;
 
-	assert(in_safepoint);
+	assert(vm_get_exec_env()->in_safepoint);
 
-	in_safepoint = false;
+	vm_get_exec_env()->in_safepoint = false;
 
 	if (pthread_spin_lock(&gc_spinlock) != 0)
 		die("pthread_spin_lock");
@@ -149,9 +147,9 @@ static void exit_safepoint(void)
 
 static void enter_safepoint(void)
 {
-	assert(!in_safepoint);
+	assert(!vm_get_exec_env()->in_safepoint);
 
-	in_safepoint = true;
+	vm_get_exec_env()->in_safepoint = true;
 
 	if (pthread_spin_lock(&gc_spinlock) != 0)
 		die("pthread_spin_lock");

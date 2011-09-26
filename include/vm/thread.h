@@ -8,6 +8,7 @@
 #include <stdio.h> /* for NOT_IMPLEMENTED */
 #include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 
 struct vm_object;
 
@@ -61,6 +62,9 @@ struct vm_exec_env {
 
 	/* Used by classloader when tracing with -Xtrace:classloader */
 	int trace_classloader_level;
+
+	/* A semaphore flag used by GC */
+	sig_atomic_t in_safepoint;
 };
 
 unsigned int vm_nr_threads(void);

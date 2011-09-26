@@ -256,6 +256,7 @@ static struct vm_exec_env *alloc_exec_env(void)
 	ee->exception			= NULL;
 	ee->trace_classloader_level	= 0;
 	INIT_LIST_HEAD(&ee->free_monitor_recs);
+	ee->in_safepoint	= false;
 
 	return ee;
 }
