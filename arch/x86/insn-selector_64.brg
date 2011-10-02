@@ -1370,7 +1370,10 @@ stmt:	STMT_RETURN(freg) 1
 	xmm0 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
 	src = state->left->reg1;
 
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, xmm0));
+	if (expr->vm_type == J_FLOAT)
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, xmm0));
+	else
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, xmm0));
 
 	select_insn(s, tree, branch_insn(INSN_JMP_BRANCH, s->b_parent->exit_bb));
 }
