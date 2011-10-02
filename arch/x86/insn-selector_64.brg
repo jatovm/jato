@@ -232,21 +232,50 @@ reg:	EXPR_LOCAL	1
 freg:	EXPR_FLOAT_LOCAL 0
 {
 	struct compilation_unit *cu = s->b_parent;
-	struct expression *expr;
+	struct vm_method *method = cu->method;
+	struct expression *exprsrc;
 	struct stack_slot *slot;
-	struct var_info *result;
+	struct var_info *dest;
 
-	expr = to_expr(tree);
+	exprsrc = to_expr(tree);
 
-	result = get_var(s->b_parent, expr->vm_type);
-	state->reg1 = result;
+	state->reg1 = dest = get_var(s->b_parent, exprsrc->vm_type);
 
-	slot = get_local_slot(cu->stack_frame, expr->local_index);
+	if (exprsrc->local_index < (unsigned long) method->args_count) {
+		enum machine_reg reg;
 
-	if (expr->vm_type == J_FLOAT)
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, result));
-	else
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, result));
+		reg = method->args_map[exprsrc->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			int index;
+
+			index = method->args_map[exprsrc->local_index].stack_index;
+			slot = get_local_slot(s->b_parent->stack_frame, index);
+
+			if (exprsrc->vm_type == J_FLOAT)
+				select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
+			else
+				select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, dest));
+		} else {
+			struct var_info *src;
+
+			src = get_fixed_var(s->b_parent, reg);
+
+			if (exprsrc->vm_type == J_FLOAT)
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest));
+			else
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest));
+		}
+	} else {
+		int index;
+
+		index = exprsrc->local_index - method->reg_args_count;
+		slot = get_local_slot(s->b_parent->stack_frame, index);
+
+		if (exprsrc->vm_type == J_FLOAT)
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
+		else
+			select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, slot, dest));
+	}
 }
 
 reg:   EXPR_TEMPORARY 0
@@ -1583,6 +1612,7 @@ stmt:	STMT_STORE(EXPR_LOCAL, reg)
 stmt:	STMT_STORE(EXPR_FLOAT_LOCAL, freg)
 {
 	struct compilation_unit *cu = s->b_parent;
+	struct vm_method *method = cu->method;
 	struct expression *local;
 	struct stack_slot *slot;
 	struct statement *stmt;
@@ -1593,12 +1623,41 @@ stmt:	STMT_STORE(EXPR_FLOAT_LOCAL, freg)
 	stmt = to_stmt(tree);
 	local = to_expr(stmt->store_dest);
 
-	slot = get_local_slot(cu->stack_frame, local->local_index);
+	if (local->local_index < (unsigned long) method->args_count) {
+		enum machine_reg reg;
 
-	if (local->vm_type == J_FLOAT)
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, slot));
-	else
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, slot));
+		reg = method->args_map[local->local_index].reg;
+		if (reg == MACH_REG_UNASSIGNED) {
+			int index;
+
+			index = method->args_map[local->local_index].stack_index;
+			slot = get_local_slot(s->b_parent->stack_frame, index);
+
+			if (local->vm_type == J_FLOAT)
+				select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, slot));
+			else
+				select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, slot));
+		} else {
+			struct var_info *dest;
+
+			dest = get_fixed_var(s->b_parent, reg);
+
+			if (local->vm_type == J_FLOAT)
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, dest, src));
+			else
+				select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, dest, src));
+		}
+	} else {
+		int index;
+
+		index = local->local_index - method->reg_args_count;
+		slot = get_local_slot(s->b_parent->stack_frame, index);
+
+		if (local->vm_type == J_FLOAT)
+			select_insn(s, tree, reg_memlocal_insn(INSN_MOVSS_XMM_MEMLOCAL, src, slot));
+		else
+			select_insn(s, tree, reg_memlocal_insn(INSN_MOVSD_XMM_MEMLOCAL, src, slot));
+	}
 }
 
 stmt:  STMT_STORE(EXPR_TEMPORARY, EXPR_LOCAL) 1
