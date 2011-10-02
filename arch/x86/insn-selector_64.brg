@@ -2266,12 +2266,12 @@ static void save_invoke_result(struct basic_block *s,
 	switch (tmp->vm_type) {
 	case J_FLOAT: {
 		struct var_info *xmm0 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xmm0, tmp->tmp_low));
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, xmm0, tmp->tmp_low));
 		break;
 	}
 	case J_DOUBLE: {
 		struct var_info *xmm0 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, xmm0, tmp->tmp_low));
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, xmm0, tmp->tmp_low));
 		break;
 	}
 	case J_LONG: {
