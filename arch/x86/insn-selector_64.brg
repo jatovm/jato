@@ -2694,17 +2694,30 @@ static void setup_caller_saved_regs(struct compilation_unit *cu)
 	map = cu->non_fixed_args;
 
 	for (i = 0, count = 0; i < cu->method->args_count; i++) {
+		struct vm_args_map *args_map;
+
 		if (count >= max_count)
 			break;
 
-		mach_reg = cu->method->args_map[i].reg;
+		args_map = &cu->method->args_map[i];
+		mach_reg = args_map->reg;
 		if (mach_reg == MACH_REG_UNASSIGNED)
 			continue;
 
 		fixed = get_fixed_var(cu, mach_reg);
-		non_fixed = get_var(cu, cu->method->args_map[i].type);
-		eh_add_insn(cu->entry_bb,
-			    reg_reg_insn(INSN_MOV_REG_REG, fixed, non_fixed));
+		non_fixed = get_var(cu, args_map->type);
+
+		switch (args_map->type) {
+		case J_FLOAT:
+			eh_add_insn(cu->entry_bb, reg_reg_insn(INSN_MOVSS_XMM_XMM, fixed, non_fixed));
+			break;
+		case J_DOUBLE:
+			eh_add_insn(cu->entry_bb, reg_reg_insn(INSN_MOVSD_XMM_XMM, fixed, non_fixed));
+			break;
+		default:
+			eh_add_insn(cu->entry_bb, reg_reg_insn(INSN_MOV_REG_REG, fixed, non_fixed));
+			break;
+		}
 
 		map[count++] = non_fixed;
 	}
