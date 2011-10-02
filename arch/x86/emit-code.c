@@ -1205,36 +1205,8 @@ static void __emit32_mov_reg_reg(struct buffer *buf,
 	__emit_reg_reg(buf, 0, 0x89, src, dst);
 }
 
-static void emit_mov_xmm_xmm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
-{
-	unsigned char opc[3];
-
-	if (!is_64bit_reg(&insn->src))
-		/* MOVSS */
-		opc[0] = 0xF3;
-	else
-		/* MOVSD */
-		opc[0] = 0xF2;
-	opc[1] = 0x0F;
-	opc[2] = 0x10;
-
-	__emit_lopc_reg_reg(buf, 0, opc, 3,
-			    mach_reg(&insn->dest.reg), mach_reg(&insn->src.reg));
-}
-
 static void emit_mov_reg_reg(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
-	int fp;
-
-	fp = operand_is_xmm_reg(&insn->src);
-	if (fp != operand_is_xmm_reg(&insn->dest))
-		assert(!"Can't do 'mov' between XMM and GPR!");
-
-	if (fp) {
-		emit_mov_xmm_xmm(insn, buf, bb);
-		return;
-	}
-
 	if (is_64bit_bin_reg_op(&insn->src, &insn->dest))
 		__emit_mov_reg_reg(buf,
 				     mach_reg(&insn->src.reg), mach_reg(&insn->dest.reg));
