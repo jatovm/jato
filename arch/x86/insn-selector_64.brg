@@ -604,8 +604,15 @@ reg:	OP_CMPL(freg, freg) 1
 	arg1 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
 	arg2 = get_fixed_var(s->b_parent, MACH_REG_XMM1);
 
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, arg1));
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, arg2));
+	if (type == J_FLOAT)
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, state->left->reg1, arg1));
+	else
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, state->left->reg1, arg1));
+
+	if (type == J_FLOAT)
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, state->right->reg1, arg2));
+	else
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, state->right->reg1, arg2));
 
 	if (type == J_FLOAT)
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpl));
@@ -629,8 +636,15 @@ reg:	OP_CMPG(freg, freg) 1
 	arg1 = get_fixed_var(s->b_parent, MACH_REG_XMM0);
 	arg2 = get_fixed_var(s->b_parent, MACH_REG_XMM1);
 
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, arg1));
-	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->right->reg1, arg2));
+	if (type == J_FLOAT)
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, state->left->reg1, arg1));
+	else
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, state->left->reg1, arg1));
+
+	if (type == J_FLOAT)
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, state->right->reg1, arg2));
+	else
+		select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, state->right->reg1, arg2));
 
 	if (type == J_FLOAT)
 		select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) emulate_fcmpg));
@@ -1327,7 +1341,11 @@ arg:	EXPR_ARG(freg)
 
 	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
 		dst = get_fixed_var(s->b_parent, expr->arg_reg);
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, src, dst));
+		if (expr->vm_type == J_FLOAT)
+			select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dst));
+		else
+			select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dst));
+
 	} else {
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, size, rsp));
 		select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, rsp, 0));
