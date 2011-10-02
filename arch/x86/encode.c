@@ -543,12 +543,20 @@ static inline bool operand_is_reg_high(struct operand *operand)
 	return reg_num & 0x8;
 }
 
+static inline int is_64bit_reg(struct operand *reg)
+{
+	return reg->reg.interval->var_info->vm_type == J_LONG;
+}
+
 static inline bool operand_is_reg_64(struct operand *operand)
 {
 	if (!operand_is_reg(operand))
 		return false;
 
-	return !operand_is_xmm_reg(operand);
+	if (operand_is_xmm_reg(operand))
+		return false;
+
+	return is_64bit_reg(operand);
 }
 
 static uint8_t insn_rex_operand_64(struct insn *self, uint64_t flags)

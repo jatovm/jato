@@ -10,7 +10,11 @@
 
 #include <stdint.h>
 
-#define DEFINE_REG(m, n)	struct live_interval n = { .reg = m }
+static struct var_info dummy_var_info = {
+	.vm_type	= J_NATIVE_PTR,
+};
+
+#define DEFINE_REG(m, n)	struct live_interval n = { .reg = m, .var_info = &dummy_var_info }
 
 static DEFINE_REG(MACH_REG_xAX, reg_eax);
 static DEFINE_REG(MACH_REG_xBX, reg_ebx);
