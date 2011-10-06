@@ -140,6 +140,9 @@ static void vm_properties_set_property(struct vm_object *p,
 	struct vm_object *(*trampoline)(struct vm_object *,
 					struct vm_object *, struct vm_object *);
 
+	assert(key != NULL);
+	assert(value != NULL);
+
 	trampoline
 		= vm_method_trampoline_ptr(vm_java_util_Properties_setProperty);
 
