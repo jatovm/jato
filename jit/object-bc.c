@@ -28,16 +28,19 @@
 
 static char *class_name_to_array_name(const char *class_name)
 {
-	char *array_name = malloc(strlen(class_name) + 4);
+	char *array_name;
+	size_t len;
 
-	if (class_name[0] == '[') {
-		strcpy(array_name, "[");
-		strcat(array_name, class_name);
-	} else {
-		strcpy(array_name, "[L");
-		strcat(array_name, class_name);
-		strcat(array_name, ";");
-	}
+	len = strlen(class_name) + 4;
+
+	array_name = malloc(len);
+	if (!array_name)
+		return NULL;
+
+	if (class_name[0] == '[')
+		snprintf(array_name, len, "[%s", class_name);
+	else
+		snprintf(array_name, len, "[L%s;", class_name);
 
 	return array_name;
 }
