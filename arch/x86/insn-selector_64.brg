@@ -2315,11 +2315,20 @@ static void select_trace_return_value(struct basic_block *s,
 
 	ret_vm_type = method_return_type(vmm);
 
+	/* FIXME: floating point return values are not supported */
+
+	switch (ret_vm_type) {
+	case J_FLOAT:
+		assert(0);
+	case J_DOUBLE:
+		assert(0);
+	default:
+		break;
+	}
+
 	rax = get_fixed_var(s->b_parent, MACH_REG_RAX);
 	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
 	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
-
-	/* FIXME: floating point return values are not supported */
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, rsi));
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) vmm, rdi));
