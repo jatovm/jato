@@ -1212,10 +1212,9 @@ reg:	EXPR_INSTANCEOF(reg)
 
 reg:	EXPR_TRUNCATION(reg)
 {
-	struct expression *expr, *src;
+	struct expression *expr;
 
 	expr = to_expr(tree);
-	src  = to_expr(expr->from_expression);
 
 	if (expr->to_type == J_BYTE) {
 		struct var_info *tmp;
@@ -1267,22 +1266,12 @@ reg:	EXPR_CONVERSION(reg)
 
 freg:	EXPR_CONVERSION_FLOAT_TO_DOUBLE(freg)
 {
-	struct expression *expr, *src;
-
-	expr = to_expr(tree);
-	src = to_expr(expr->from_expression);
-
 	state->reg1 = get_var(s->b_parent, J_DOUBLE);
 	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM_TO_XMM64, state->left->reg1, state->reg1));
 }
 
 freg:	EXPR_CONVERSION_DOUBLE_TO_FLOAT(freg)
 {
-	struct expression *expr, *src;
-
-	expr = to_expr(tree);
-	src = to_expr(expr->from_expression);
-
 	state->reg1 = get_var(s->b_parent, J_FLOAT);
 	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM64_TO_XMM, state->left->reg1, state->reg1));
 }
@@ -1713,7 +1702,6 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 {
 	struct expression *store_dest;
-	struct expression *store_src;
 	struct statement *stmt;
 	struct var_info *src;
 	struct insn *mov_insn;
@@ -1724,7 +1712,6 @@ stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 
 	stmt = to_stmt(tree);
 	store_dest = to_expr(stmt->store_dest);
-	store_src  = to_expr(stmt->store_src);
 
 	src = state->right->reg1;
 
@@ -1980,9 +1967,6 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
 array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 {
 	struct var_info *base, *state_base;
-	struct expression *expr;
-
-	expr = to_expr(tree);
 
 	state_base = state->left->reg1;
 
@@ -2155,9 +2139,6 @@ stmt:	STMT_ATHROW(reg)
 array_check:	EXPR_ARRAY_DEREF(reg, reg) 2
 {
 	struct var_info *base, *index, *state_base, *state_index;
-	struct expression *expr;
-
-	expr = to_expr(tree);
 
 	state_base = state->left->reg1;
 	state_index = state->right->reg1;
@@ -2827,8 +2808,6 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 {
 	struct var_info *eax;
 	struct var_info *call_target;
-	struct compilation_unit *cu;
-	unsigned long method_offset;
 	struct vm_method *method;
 	struct statement *stmt;
 	struct insn *call_insn;
@@ -2836,7 +2815,6 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 
 	stmt	= to_stmt(tree);
 	method	= stmt->target_method;
-	cu	= method->compilation_unit;
 
 	if (vm_method_is_missing(method)) {
 		call_insn = rel_insn(INSN_CALL_REL, (unsigned long) jit_no_such_method_stub);
@@ -2844,8 +2822,6 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 		select_safepoint_insn(s, tree, call_insn);
 	} else {
 		eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-
-		method_offset = stmt_method_index(stmt) * sizeof(void *);
 
 		/* object reference */
 		call_target = state->left->reg1;

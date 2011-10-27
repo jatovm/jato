@@ -477,10 +477,7 @@ reg:	OP_REM_64(reg, reg) 1
 
 reg:	OP_NEG(reg) 1
 {
-	struct expression *expr;
 	struct var_info *result;
-
-	expr = to_expr(tree);
 
 	result = state->left->reg1;
 	state->reg1 = result;
@@ -807,7 +804,6 @@ freg:	EXPR_FLOAT_CLASS_FIELD 1
 
 	struct vm_field *vmf;
 	struct vm_class *vmc;
-	enum vm_class_state vmc_state;
 	struct var_info *rdi;
 
 	expr   = to_expr(tree);
@@ -819,10 +815,6 @@ freg:	EXPR_FLOAT_CLASS_FIELD 1
 
 	vmf = expr->class_field;
 	vmc = vmf->class;
-
-	vm_object_lock(vmc->object);
-	vmc_state = vmc->state;
-	vm_object_unlock(vmc->object);
 
 	/* FIXME: Use guard pages to fixup static accesses like on 32-bit. */
 
@@ -1083,10 +1075,9 @@ reg:	EXPR_INSTANCEOF(reg)
 
 reg:	EXPR_TRUNCATION(reg)
 {
-	struct expression *expr, *src;
+	struct expression *expr;
 
 	expr = to_expr(tree);
-	src  = to_expr(expr->from_expression);
 
 	if (expr->to_type == J_BYTE) {
 		struct var_info *tmp;
@@ -1138,22 +1129,12 @@ reg:	EXPR_CONVERSION(reg)
 
 freg:	EXPR_CONVERSION_FLOAT_TO_DOUBLE(freg)
 {
-	struct expression *expr, *src;
-
-	expr = to_expr(tree);
-	src = to_expr(expr->from_expression);
-
 	state->reg1 = get_var(s->b_parent, J_DOUBLE);
 	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM_TO_XMM64, state->left->reg1, state->reg1));
 }
 
 freg:	EXPR_CONVERSION_DOUBLE_TO_FLOAT(freg)
 {
-	struct expression *expr, *src;
-
-	expr = to_expr(tree);
-	src = to_expr(expr->from_expression);
-
 	state->reg1 = get_var(s->b_parent, J_FLOAT);
 	select_insn(s, tree, reg_reg_insn(INSN_CONV_XMM64_TO_XMM, state->left->reg1, state->reg1));
 }
@@ -1308,10 +1289,9 @@ arg:	EXPR_ARG(EXPR_FVALUE) 2
 arg:	EXPR_ARG(reg) 1
 {
 	struct var_info *src, *dst;
-	struct expression *expr, *arg_expr;
+	struct expression *expr;
 
 	expr = to_expr(tree);
-	arg_expr = to_expr(expr->arg_expression);
 
 	src = state->left->reg1;
 
@@ -1441,7 +1421,6 @@ stmt:	STMT_EXPRESSION(freg)
 stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 {
 	struct expression *store_dest;
-	struct expression *store_src;
 	struct statement *stmt;
 	struct var_info *src;
 	struct insn *mov_insn;
@@ -1452,7 +1431,6 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 
 	stmt = to_stmt(tree);
 	store_dest = to_expr(stmt->store_dest);
-	store_src  = to_expr(stmt->store_src);
 
 	src = state->right->reg1;
 
@@ -1483,7 +1461,6 @@ stmt:	STMT_STORE(EXPR_CLASS_FIELD, reg)
 stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 {
 	struct expression *store_dest;
-	struct expression *store_src;
 	struct var_info *offset;
 	struct statement *stmt;
 	struct var_info *src;
@@ -1491,12 +1468,10 @@ stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 
 	struct vm_field *vmf;
 	struct vm_class *vmc;
-	enum vm_class_state vmc_state;
 	struct var_info *rdi;
 
 	stmt = to_stmt(tree);
 	store_dest = to_expr(stmt->store_dest);
-	store_src  = to_expr(stmt->store_src);
 
 	src = state->right->reg1;
 
@@ -1504,10 +1479,6 @@ stmt:	STMT_STORE(EXPR_FLOAT_CLASS_FIELD, freg)
 
 	vmf = store_dest->class_field;
 	vmc = vmf->class;
-
-	vm_object_lock(vmc->object);
-	vmc_state = vmc->state;
-	vm_object_unlock(vmc->object);
 
 	/* FIXME: Use guard pages to fixup static accesses like on 32-bit. */
 
@@ -1548,12 +1519,11 @@ float_inst_field: EXPR_FLOAT_INSTANCE_FIELD(reg) 1
 stmt:	STMT_STORE(inst_field, reg)
 {
 	struct var_info *src, *base;
-	struct expression *store_src, *store_dest;
+	struct expression *store_dest;
 	struct statement *stmt;
 	unsigned long offset;
 
 	stmt = to_stmt(tree);
-	store_src = to_expr(stmt->store_src);
 	store_dest = to_expr(stmt->store_dest);
 	src = state->right->reg1;
 
@@ -1804,9 +1774,6 @@ stmt:  STMT_STORE(EXPR_FLOAT_TEMPORARY, freg) 1
 array_deref:	EXPR_ARRAY_DEREF(reg, reg) 2
 {
 	struct var_info *base, *state_base;
-	struct expression *expr;
-
-	expr = to_expr(tree);
 
 	state_base = state->left->reg1;
 
@@ -1823,13 +1790,11 @@ stmt:	STMT_STORE(array_deref, reg)
 {
 	struct var_info *src, *base, *index;
 	struct expression *dest_expr;
-	struct expression *src_expr;
 	struct statement *stmt;
 	unsigned char scale;
 
 	stmt = to_stmt(tree);
 	dest_expr = to_expr(stmt->store_dest);
-	src_expr = to_expr(stmt->store_src);
 
 	scale = type_to_scale(dest_expr->vm_type);
 
@@ -1863,13 +1828,11 @@ stmt:	STMT_STORE(reg, array_deref)
 {
 	struct var_info *dest, *base, *index;
 	struct expression *src_expr;
-	struct expression *dest_expr;
 	struct statement *stmt;
 	unsigned char scale;
 
 	stmt = to_stmt(tree);
 	src_expr = to_expr(stmt->store_src);
-	dest_expr = to_expr(stmt->store_dest);
 
 	scale = type_to_scale(src_expr->vm_type);
 
@@ -1972,9 +1935,6 @@ stmt:	STMT_ATHROW(reg)
 array_check:	EXPR_ARRAY_DEREF(reg, reg) 2
 {
 	struct var_info *base, *index, *state_base, *state_index;
-	struct expression *expr;
-
-	expr = to_expr(tree);
 
 	state_base = state->left->reg1;
 	state_index = state->right->reg1;
@@ -2572,8 +2532,6 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 {
 	struct var_info *eax;
 	struct var_info *call_target;
-	struct compilation_unit *cu;
-	unsigned long method_offset;
 	struct vm_method *method;
 	struct statement *stmt;
 	struct insn *call_insn;
@@ -2581,11 +2539,8 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 
 	stmt	= to_stmt(tree);
 	method	= stmt->target_method;
-	cu	= method->compilation_unit;
 
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
-
-	method_offset = stmt_method_index(stmt) * sizeof(void *);
 
 	if (vm_method_is_missing(method)) {
 		call_insn = rel_insn(INSN_CALL_REL, (unsigned long) jit_no_such_method_stub);
