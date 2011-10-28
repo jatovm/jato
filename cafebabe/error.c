@@ -36,6 +36,8 @@ static const char *messages[] = {
 		= "Bad magic number",
 	[CAFEBABE_ERROR_BAD_CONSTANT_TAG]
 		= "Bad constant tag",
+	[CAFEBABE_ERROR_INVALID_STACK_FRAME_TAG]
+		= "Invalid stack frame tag",
 };
 
 const char *

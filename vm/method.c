@@ -134,6 +134,9 @@ int vm_method_init(struct vm_method *vmm,
 	if (cafebabe_read_line_number_table_attribute(class, &vmm->code_attribute.attributes, &vmm->line_number_table_attribute))
 		goto error_free_type;
 
+	if (cafebabe_read_stack_map_table_attribute(class, &vmm->code_attribute.attributes, &vmm->stack_map_table_attribute))
+		goto error_free_type;
+
 	return 0;
 
 error_free_type:

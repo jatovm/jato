@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "cafebabe/line_number_table_attribute.h"
+#include "cafebabe/stack_map_table_attribute.h"
 #include "cafebabe/exceptions_attribute.h"
 #include "cafebabe/code_attribute.h"
 #include "cafebabe/method_info.h"
@@ -52,6 +53,7 @@ struct vm_method {
 
 	struct cafebabe_code_attribute code_attribute;
 	struct cafebabe_line_number_table_attribute line_number_table_attribute;
+	struct cafebabe_stack_map_table_attribute stack_map_table_attribute;
 	struct cafebabe_exceptions_attribute exceptions_attribute;
 
 	struct compilation_unit *compilation_unit;

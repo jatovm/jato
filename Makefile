@@ -46,6 +46,7 @@ LIB_OBJS += cafebabe/inner_classes_attribute.o
 LIB_OBJS += cafebabe/line_number_table_attribute.o
 LIB_OBJS += cafebabe/method_info.o
 LIB_OBJS += cafebabe/source_file_attribute.o
+LIB_OBJS += cafebabe/stack_map_table_attribute.o
 LIB_OBJS += cafebabe/stream.o
 LIB_OBJS += jit/abc-removal.o
 LIB_OBJS += jit/args.o
