@@ -35,6 +35,7 @@
 #include "vm/preload.h"
 #include "vm/signal.h"
 #include "vm/stack-trace.h"
+#include "vm/thread.h"
 
 #include "sys/signal.h"
 
@@ -42,8 +43,6 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <stdio.h>
-
-static __thread struct register_state thread_register_state;
 
 static unsigned long throw_arithmetic_exception(unsigned long src_addr)
 {
@@ -121,8 +120,8 @@ static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 	if (si->si_addr == gc_safepoint_page) {
 		ucontext_t *uc = ctx;
 
-		save_signal_registers(&thread_register_state, &uc->uc_mcontext);
-		gc_safepoint(&thread_register_state);
+		save_signal_registers(&(vm_get_exec_env()->thread_register_state), &uc->uc_mcontext);
+		gc_safepoint(&(vm_get_exec_env()->thread_register_state));
 		return;
 	}
 

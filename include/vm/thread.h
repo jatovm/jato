@@ -4,6 +4,7 @@
 #include "lib/list.h"
 
 #include "arch/atomic.h"
+#include "arch/registers.h"
 
 #include <stdio.h> /* for NOT_IMPLEMENTED */
 #include <pthread.h>
@@ -65,6 +66,9 @@ struct vm_exec_env {
 
 	/* A semaphore flag used by GC */
 	sig_atomic_t in_safepoint;
+
+	/* Signal register state */
+	struct register_state thread_register_state;
 
 	struct string *trace_buffer;
 };

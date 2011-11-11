@@ -23,6 +23,9 @@ enum machine_reg {
 	MACH_REG_UNASSIGNED = CHAR_MAX,
 };
 
+struct register_state {
+};
+
 #define NR_CALLER_SAVE_REGS 0
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
