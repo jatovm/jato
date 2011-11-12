@@ -36,15 +36,13 @@
 
 static pthread_mutex_t trace_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static __thread struct string *trace_buffer;
-
 static void setup_trace_buffer(void)
 {
-	if (trace_buffer)
+	if (vm_get_exec_env()->trace_buffer)
 		return;
 
-	trace_buffer = alloc_str();
-	if (!trace_buffer)
+	vm_get_exec_env()->trace_buffer = alloc_str();
+	if (!vm_get_exec_env()->trace_buffer)
 		error("out of memory");
 }
 
@@ -56,7 +54,7 @@ int trace_printf(const char *fmt, ...)
 	setup_trace_buffer();
 
 	va_start(args, fmt);
-	err = str_vappend(trace_buffer, fmt, args);
+	err = str_vappend(vm_get_exec_env()->trace_buffer, fmt, args);
 	va_end(args);
 
 	return err;
@@ -79,7 +77,7 @@ void trace_flush(void)
 
 	pthread_mutex_lock(&trace_mutex);
 
-	line = trace_buffer->value;
+	line = vm_get_exec_env()->trace_buffer->value;
 	next = index(line, '\n');
 	while (next) {
 		*next = 0;
@@ -91,8 +89,8 @@ void trace_flush(void)
 	}
 
 	/* Leave the rest of characters, which are not ended by '\n' */
-	memmove(trace_buffer->value, line, strlen(line) + 1);
-	trace_buffer->length = strlen(line);
+	memmove(vm_get_exec_env()->trace_buffer->value, line, strlen(line) + 1);
+	vm_get_exec_env()->trace_buffer->length = strlen(line);
 
 	pthread_mutex_unlock(&trace_mutex);
 

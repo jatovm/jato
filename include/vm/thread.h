@@ -65,6 +65,8 @@ struct vm_exec_env {
 
 	/* A semaphore flag used by GC */
 	sig_atomic_t in_safepoint;
+
+	struct string *trace_buffer;
 };
 
 unsigned int vm_nr_threads(void);
