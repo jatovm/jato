@@ -113,6 +113,7 @@ typedef int (*verify_fn_t) (struct verifier_block *);
 #define E_INVALID_BRANCH		(-5)
 #define E_FALLING_OFF			(-6)
 #define E_INVALID_EXCEPTION_HANDLER	(-7)
+#define E_OVERRIDES_FINAL		(-8)
 
 #define INITIAL_FOLLOWERS_SIZE	(8)
 

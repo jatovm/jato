@@ -24,6 +24,25 @@
 #include <string.h>
 #include <stdio.h>
 
+/* Returns the method vmm is overriding or NULL. */
+struct vm_method *vm_method_get_overridden(struct vm_method *vmm)
+{
+	unsigned int i;
+	struct vm_class *super;
+
+	super = vmm->class->super;
+	if (!super)
+		return NULL;
+
+	for (i = 0; i < super->nr_methods; i++) {
+		if (!strcmp(super->methods[i].name, vmm->name)
+			&& !strcmp(super->methods[i].type, vmm->type))
+			return &super->methods[i];
+	}
+
+	return NULL;
+}
+
 static void init_abstract_method(struct vm_method *vmm)
 {
 	/* Hm, we're now modifying a cafebabe structure. */

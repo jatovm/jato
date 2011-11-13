@@ -687,6 +687,10 @@ static void verify_error(int err, unsigned long pos, struct verifier_context *vr
 			verify_error_string = "Erroneous exception table";
 			vrf_err("Error in exception table in method %s of class %s.", vrf->method->name, vrf->method->class->name);
 			return;
+		case E_OVERRIDES_FINAL:
+			verify_error_string = "Overriding final method";
+			vrf_err("Method %s of class %s is overriding method %s of class %s which is declared final.", vrf->method->name, vrf->method->class->name, vrf->method->name, vrf->method->class->super->name);
+			return;
 		case E_NOT_IMPLEMENTED:
 			return;
 		default:
@@ -958,17 +962,47 @@ static int verifier_analyse_control_flow(struct verifier_context *vrf)
 	return 0;
 }
 
+static int vm_method_overrides_final(struct verifier_context *vrf)
+{
+	struct vm_method *vmm = vrf->method;
+	struct vm_method *overridden;
+
+	/* XXX Special care taken for some classpath base classes which do
+	 * override final methods of their superclass... Anyway adding a
+	 * user-defined class to the java. package is prohibited so no need to
+	 * worry about malicious users.
+	 */
+	if (!strncmp("java/", vmm->class->name, strlen("java/")))
+		return 0;
+
+	/* If the method does not override anything we're safe. */
+	overridden = vm_method_get_overridden(vmm);
+	if (!overridden)
+		return 0;
+
+	if (vm_method_is_final(overridden)) {
+		verify_error(E_OVERRIDES_FINAL, 0, vrf);
+		return E_OVERRIDES_FINAL;
+	}
+
+	return 0;
+}
+
 int vm_method_verify(struct vm_method *vmm)
 {
 	int err;
 	struct verifier_context *vrf;
 
-	if (vmm->code_attribute.code_length == 0)
+	if (vm_method_is_abstract(vmm) || vm_method_is_native(vmm) || !vmm->code_attribute.code_length)
 		return 0; /* Nothing to check ! */
 
 	vrf = alloc_verifier_context(vmm);
 	if (!vrf)
 		return ENOMEM;
+
+	err = vm_method_overrides_final(vrf);
+	if (err)
+		goto out;
 
 	err = verifier_first_pass(vrf);
 	if (err)

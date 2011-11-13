@@ -1,3 +1,4 @@
+#include "vm/method.h"
 #include "vm/verifier.h"
 #include "lib/list.h"
 

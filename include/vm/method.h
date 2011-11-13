@@ -70,6 +70,8 @@ struct vm_method {
 #define VM_METHOD_FLAG_TRACE		(1 << 2)
 #define VM_METHOD_FLAG_TRACE_GATE	(1 << 3)
 
+struct vm_method *vm_method_get_overridden(struct vm_method *vmm);
+
 int vm_method_do_init(struct vm_method *vmm);
 
 int vm_method_init(struct vm_method *vmm,
@@ -93,6 +95,11 @@ static inline bool vm_method_is_private(struct vm_method *vmm)
 static inline bool vm_method_is_static(struct vm_method *vmm)
 {
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_STATIC;
+}
+
+static inline bool vm_method_is_final(struct vm_method *vmm)
+{
+	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_FINAL;
 }
 
 static inline bool vm_method_is_native(struct vm_method *vmm)

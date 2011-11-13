@@ -15,6 +15,7 @@ TOPLEVEL_OBJS :=			\
 	test/unit/jit/exception-stub.o	\
 	test/unit/libharness/libharness.o\
 	test/unit/vm/class-stub.o	\
+	test/unit/vm/method-stub.o	\
 	test/unit/vm/stack-trace-stub.o	\
 	test/unit/vm/preload-stub.o	\
 	vm/bytecode.o			\

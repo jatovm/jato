@@ -374,6 +374,7 @@ JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/ExceptionHandlerTest.j \
 	test/functional/jvm/InvokeResultTest.j \
 	test/functional/jvm/InvokeTest.j \
+	test/functional/jvm/MethodOverridingFinal.j\
 	test/functional/jvm/NoSuchMethodErrorTest.j\
 	test/functional/jvm/PopTest.j \
 	test/functional/jvm/SubroutineTest.j \
