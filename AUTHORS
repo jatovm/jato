@@ -28,3 +28,7 @@ L: Dhaka, Bangladesh
 N: Eduard - Gabriel Munteanu <eduard.munteanu@linux360.ro>
 D: x86-64 (GSoC 2009), GDB support
 L: Bucharest, Romania
+
+N: Theo Dzierzbicki <theo.dz@gmail.com>
+D: Bytecode verification
+L: Lyon, France
