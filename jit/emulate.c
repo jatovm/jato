@@ -70,7 +70,7 @@ static int __emulate_dcmpx(double value1, double value2)
 
 int emulate_fcmpl(float value1, float value2)
 {
-	if (isnan(value1) || isnan(value2))
+	if (isnanf(value1) || isnanf(value2))
 		return -1;
 
 	return __emulate_fcmpx(value1, value2);
@@ -78,7 +78,7 @@ int emulate_fcmpl(float value1, float value2)
 
 int emulate_fcmpg(float value1, float value2)
 {
-	if (isnan(value1) || isnan(value2))
+	if (isnanf(value1) || isnanf(value2))
 		return 1;
 
 	return __emulate_fcmpx(value1, value2);
