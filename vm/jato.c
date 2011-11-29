@@ -92,6 +92,7 @@
 
 #include "arch/init.h"
 
+#include "runtime/gnu_java_lang_management_VMThreadMXBeanImpl.h"
 #include "runtime/java_lang_reflect_VMMethod.h"
 #include "runtime/java_lang_reflect_VMField.h"
 #include "runtime/java_lang_VMClassLoader.h"
@@ -422,6 +423,7 @@ static jint native_atomiclong_vm_supports_cs8(void)
 }
 
 static struct vm_native natives[] = {
+	DEFINE_NATIVE("gnu/java/lang/management/VMThreadMXBeanImpl", "getThreadInfoForId", gnu_java_lang_management_VMThreadMXBeanImpl_getThreadInfoForId),
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassContext", native_vmstackwalker_getclasscontext),
 	DEFINE_NATIVE("gnu/classpath/VMStackWalker", "getClassLoader", java_lang_VMClass_getClassLoader),
 	DEFINE_NATIVE("gnu/classpath/VMSystemProperties", "preInit", native_vmsystemproperties_preinit),
