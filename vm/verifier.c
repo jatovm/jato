@@ -920,48 +920,6 @@ int verify_instruction(struct verifier_block *bb)
 	return err;
 }
 
-static int do_verifier_analyse_control_flow(struct verifier_block *bb)
-{
-	int err;
-	const unsigned char * code = bb->code;
-	const unsigned long code_length = bb->parent_ctx->code_size - bb->begin_offset;
-	unsigned long offset = 0;
-
-	bytecode_for_each_insn(code, code_length, offset) {
-		bb->pc = offset;
-
-		err = verify_instruction(bb);
-		if (err)
-			return err;
-
-		if (bc_ends_basic_block(bb->opc))
-			break;
-	}
-
-	return 0;
-}
-
-static int verifier_analyse_control_flow(struct verifier_context *vrf)
-{
-	int err;
-	struct verifier_block *bb;
-	struct verifier_jump_destinations *jd;
-
-	list_for_each_entry(jd, &vrf->jmp_dests->list, list) {
-		bb = alloc_verifier_block(vrf, jd->dest);
-		if (!bb)
-			return ENOMEM;
-
-		err = do_verifier_analyse_control_flow(bb);
-		if (err)
-			return err;
-
-		list_add(&bb->blocks, &vrf->vb_list->blocks);
-	}
-
-	return 0;
-}
-
 static int vm_method_overrides_final(struct verifier_context *vrf)
 {
 	struct vm_method *vmm = vrf->method;
@@ -1007,10 +965,6 @@ int vm_method_verify(struct vm_method *vmm)
 	err = verifier_first_pass(vrf);
 	if (err)
 		goto out;
-
-	/*err = verifier_analyse_control_flow(vrf);
-	if (err)
-		goto out;*/
 
 out:
 	free_verifier_context(vrf);
