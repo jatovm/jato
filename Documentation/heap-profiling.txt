@@ -1,0 +1,17 @@
+Heap Profiling
+==============
+
+Ubuntu
+------
+
+Install Google perftools:
+
+  sudo apt-get install google-perftools libgoogle-perftools-dev
+
+Run your test program with heap profiling enabled:
+
+  LD_PRELOAD="/usr/lib/libtcmalloc.so" HEAPPROFILE=heap.hprof ./jato -jar ../jruby/lib/jruby.jar -e "puts 1"
+
+Examine the heap profile:
+
+  google-pprof --gv jato heap.hprof.*
