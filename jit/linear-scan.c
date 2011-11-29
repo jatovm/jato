@@ -442,7 +442,8 @@ int allocate_registers(struct compilation_unit *cu)
 	}
 
 	pqueue_free(unhandled);
-	cu->is_reg_alloc_done = true;
+
+	cu->flags |= CU_FLAG_REGALLOC_DONE;
 
 	return 0;
 }

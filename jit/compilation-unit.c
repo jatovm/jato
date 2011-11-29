@@ -48,7 +48,7 @@ do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
 	struct var_info *ret;
 
-	if (cu->is_reg_alloc_done)
+	if (cu->flags & CU_FLAG_REGALLOC_DONE)
 		die("cannot allocate temporaries after register allocation");
 
 	ret = arena_alloc(cu->arena, sizeof *ret);
@@ -70,7 +70,7 @@ ssa_do_get_var(struct compilation_unit *cu, enum vm_type vm_type)
 {
 	struct var_info *ret;
 
-	if (cu->is_reg_alloc_done) {
+	if (cu->flags & CU_FLAG_REGALLOC_DONE) {
 		die("cannot allocate temporaries after register allocation");
 	}
 

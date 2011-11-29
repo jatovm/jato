@@ -32,6 +32,7 @@ enum compilation_state {
 
 enum {
 	CU_FLAG_ARRAY_OPC,
+	CU_FLAG_REGALLOC_DONE,
 };
 
 struct compilation_unit {
@@ -47,7 +48,6 @@ struct compilation_unit {
 	struct var_info *var_infos;
 	unsigned long nr_vregs;
 	struct var_info *fixed_var_infos[NR_FIXED_REGISTERS];
-	bool is_reg_alloc_done;
 	struct buffer *objcode;
 
 	/* Mutex that protects ->state  */
