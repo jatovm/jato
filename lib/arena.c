@@ -40,15 +40,14 @@ struct arena *arena_new(void)
 		return NULL;
 	}
 
-	self->first	= block;
-	self->last	= block;
+	self->head	= block;
 
 	return self;
 }
 
 void arena_delete(struct arena *self)
 {
-	struct arena_block *block = self->first;
+	struct arena_block *block = self->head;
 
 	while (block) {
 		struct arena_block *next = block->next;
@@ -81,9 +80,9 @@ void *arena_expand(struct arena *arena, size_t size)
 
 	block		= arena_block_new(ARENA_BLOCK_MIN_LEN);
 
-	arena->last->next	= block;
+	arena->head->next	= block;
 
-	arena->last		= block;
+	arena->head		= block;
 
 	return arena_block_alloc(block, size);
 }

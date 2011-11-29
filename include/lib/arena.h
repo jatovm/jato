@@ -11,8 +11,11 @@ struct arena_block {
 };
 
 struct arena {
-	struct arena_block		*last;
-	struct arena_block		*first;
+	/*
+	 * The head block is the only block that might have free space
+	 * available. Rest of the blocks are fully used.
+	 */
+	struct arena_block		*head;
 };
 
 struct arena *arena_new(void);
@@ -21,7 +24,7 @@ void *arena_expand(struct arena *arena, size_t size);
 
 static inline void *arena_alloc(struct arena *arena, size_t size)
 {
-	struct arena_block *block = arena->last;
+	struct arena_block *block = arena->head;
 	void *p = block->free;
 
 	if ((p + size) >= block->end)
