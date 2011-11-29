@@ -53,24 +53,7 @@ static void perf_append_cu(struct compilation_unit *cu)
 
 static bool uses_array_ops(struct compilation_unit *cu)
 {
-#define ARRAY_STATS(op)					\
-		(cu->bytecode_stats[OPC_A##op]		\
-		|| cu->bytecode_stats[OPC_A##op##_0]	\
-		|| cu->bytecode_stats[OPC_A##op##_1]	\
-		|| cu->bytecode_stats[OPC_A##op##_2]	\
-		|| cu->bytecode_stats[OPC_A##op##_3]	\
-		|| cu->bytecode_stats[OPC_IA##op]	\
-		|| cu->bytecode_stats[OPC_LA##op]	\
-		|| cu->bytecode_stats[OPC_FA##op]	\
-		|| cu->bytecode_stats[OPC_DA##op]	\
-		|| cu->bytecode_stats[OPC_AA##op]	\
-		|| cu->bytecode_stats[OPC_BA##op]	\
-		|| cu->bytecode_stats[OPC_CA##op]	\
-		|| cu->bytecode_stats[OPC_SA##op])
-
-	return ARRAY_STATS(LOAD) || ARRAY_STATS(STORE);
-#undef ARRAY_STATS
-	return false;
+	return cu->flags & CU_FLAG_ARRAY_OPC;
 }
 
 int compile(struct compilation_unit *cu)

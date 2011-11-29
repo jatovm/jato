@@ -30,8 +30,13 @@ enum compilation_state {
 	COMPILATION_STATE_COMPILED,
 };
 
+enum {
+	CU_FLAG_ARRAY_OPC,
+};
+
 struct compilation_unit {
 	struct vm_method *method;
+	uint32_t flags;
 	unsigned long nr_bb;
 	struct list_head bb_list;
 	struct basic_block *entry_bb;
@@ -44,9 +49,6 @@ struct compilation_unit {
 	struct var_info *fixed_var_infos[NR_FIXED_REGISTERS];
 	bool is_reg_alloc_done;
 	struct buffer *objcode;
-
-	/* Contains the number of uses of any bytecode within the method */
-	uint16_t bytecode_stats[NR_OPCS];
 
 	/* Mutex that protects ->state  */
 	pthread_mutex_t compile_mutex;

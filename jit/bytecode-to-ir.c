@@ -180,8 +180,9 @@ int convert_instruction(struct parse_context *ctx)
 	if (!convert)
 		return warn("no converter for %d found", ctx->opc), -EINVAL;
 
-	ctx->cu->bytecode_stats[ctx->opc]++;
-
+	if ((ctx->opc >= OPC_IALOAD && ctx->opc <= OPC_SALOAD)
+		|| (ctx->opc >= OPC_IASTORE && ctx->opc <= OPC_SASTORE))
+		ctx->cu->flags |= CU_FLAG_ARRAY_OPC;
 	err = convert(ctx);
 
 	if (err)
