@@ -22,8 +22,9 @@ Fetch the latest sources with:
 Before installing Jato ensure you have the following software installed on your
 system:
 
-  - GNU Classpath 0.97 or higher. You're encouraged to use the latest CVS
-    HEAD when possible.
+  - GNU Classpath CVS HEAD. You can use the git mirror to obtain the sources:
+
+    git://icedtea.classpath.org/mirror/git/classpath/classpath
 
   - Eclipse Java Compiler
 
