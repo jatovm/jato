@@ -927,10 +927,8 @@ static int vm_class_resolve_name_and_type(const struct vm_class *vmc, uint16_t i
 {
 	const struct cafebabe_constant_info_name_and_type *name_and_type;
 
-	if (cafebabe_class_constant_get_name_and_type(vmc->class, index, &name_and_type)) {
-		NOT_IMPLEMENTED;
+	if (cafebabe_class_constant_get_name_and_type(vmc->class, index, &name_and_type))
 		return -1;
-	}
 
 	const struct cafebabe_constant_info_utf8 *name;
 	if (cafebabe_class_constant_get_utf8(vmc->class, name_and_type->name_index, &name))
