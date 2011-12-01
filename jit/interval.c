@@ -115,7 +115,21 @@ struct live_interval *alloc_interval(struct compilation_unit *cu, struct var_inf
 	return interval;
 }
 
-struct live_interval *split_interval_at(struct compilation_unit *cu, struct live_interval *interval, unsigned long pos)
+void free_interval(struct compilation_unit *cu, struct live_interval *interval)
+{
+	if (interval->next_child)
+		free_interval(cu, interval->next_child);
+
+	struct live_range *this, *next;
+	list_for_each_entry_safe(this, next, &interval->range_list, range_list_node) {
+		arena_free(cu->arena, this);
+	}
+
+	arena_free(cu->arena, interval);
+}
+
+struct live_interval *
+split_interval_at(struct compilation_unit *cu, struct live_interval *interval, unsigned long pos)
 {
 	struct use_position *this, *next;
 	struct live_interval *new;
@@ -349,6 +363,7 @@ int interval_add_range(struct compilation_unit *cu, struct live_interval *it, un
 			new->start = min(new->start, range->start);
 			new->end = max(new->end, range->end);
 			list_del(&range->range_list_node);
+			arena_free(cu->arena, range);
 		}
 	}
 

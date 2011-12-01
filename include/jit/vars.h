@@ -181,6 +181,7 @@ static inline bool interval_is_empty(struct live_interval *it)
 }
 
 struct live_interval *alloc_interval(struct compilation_unit *cu, struct var_info *);
+void free_interval(struct compilation_unit *cu, struct live_interval *);
 struct live_interval *split_interval_at(struct compilation_unit *, struct live_interval *, unsigned long pos);
 unsigned long next_use_pos(struct live_interval *, unsigned long);
 struct live_interval *vreg_start_interval(struct compilation_unit *, unsigned long);

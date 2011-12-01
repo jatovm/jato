@@ -148,6 +148,22 @@ out_of_memory:
 	return NULL;
 }
 
+static void free_var_info(struct compilation_unit *cu, struct var_info *var)
+{
+	free_interval(cu, var->interval);
+	arena_free(cu->arena, var);
+}
+
+static void free_var_infos(struct compilation_unit *cu, struct var_info *var_infos)
+{
+	struct var_info *this, *next;
+
+	for (this = var_infos; this != NULL; this = next) {
+		next = this->next;
+		free_var_info(cu, this);
+	}
+}
+
 static void free_bc_offset_map(unsigned long *map)
 {
 	free(map);
@@ -198,6 +214,7 @@ void shrink_compilation_unit(struct compilation_unit *cu)
 	list_for_each_entry_safe(bb, tmp_bb, &cu->bb_list, bb_list_node)
 		shrink_basic_block(bb);
 
+	free_var_infos(cu, cu->var_infos);
 	cu->var_infos = NULL;
 
 	free(cu->bb_df_array);

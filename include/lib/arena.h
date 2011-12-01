@@ -46,4 +46,8 @@ static inline void *arena_alloc(struct arena *arena, size_t size)
 	return arena_alloc_expand(arena, size);
 }
 
+static inline void arena_free(struct arena *arena, void *p)
+{
+}
+
 #endif /* JATO__LIB__ARENA_H */
