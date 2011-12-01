@@ -60,19 +60,7 @@ void arena_delete(struct arena *self)
 	free(self);
 }
 
-static inline void *arena_block_alloc(struct arena_block *self, size_t size)
-{
-	void *p = self->free;
-
-	if (p >= self->end)
-		return NULL;
-
-	self->free	+= size;
-
-	return p;
-}
-
-void *arena_expand(struct arena *arena, size_t size)
+void *arena_alloc_expand(struct arena *arena, size_t size)
 {
 	struct arena_block *block;
 
@@ -84,5 +72,5 @@ void *arena_expand(struct arena *arena, size_t size)
 
 	arena->head		= block;
 
-	return arena_block_alloc(block, size);
+	return arena_alloc_noexpand(arena, size);
 }

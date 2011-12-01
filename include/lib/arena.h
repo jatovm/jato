@@ -20,19 +20,30 @@ struct arena {
 
 struct arena *arena_new(void);
 void arena_delete(struct arena *self);
-void *arena_expand(struct arena *arena, size_t size);
+void *arena_alloc_expand(struct arena *arena, size_t size);
 
-static inline void *arena_alloc(struct arena *arena, size_t size)
+static inline void *arena_alloc_noexpand(struct arena *arena, size_t size)
 {
 	struct arena_block *block = arena->head;
 	void *p = block->free;
 
 	if ((p + size) >= block->end)
-		return arena_expand(arena, size);
+		return NULL;
 
 	block->free	+= size;
 
 	return p;
+}
+
+static inline void *arena_alloc(struct arena *arena, size_t size)
+{
+	void *p;
+
+	p = arena_alloc_noexpand(arena, size);
+	if (p)
+		return p;
+
+	return arena_alloc_expand(arena, size);
 }
 
 #endif /* JATO__LIB__ARENA_H */
