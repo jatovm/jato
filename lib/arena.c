@@ -68,9 +68,9 @@ void *arena_alloc_expand(struct arena *arena, size_t size)
 
 	block		= arena_block_new(ARENA_BLOCK_MIN_LEN);
 
-	arena->head->next	= block;
+	block->next = arena->head;
 
-	arena->head		= block;
+	arena->head = block;
 
 	return arena_alloc_noexpand(arena, size);
 }
