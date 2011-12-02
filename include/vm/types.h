@@ -58,6 +58,15 @@ unsigned int vm_method_arg_slots(const struct vm_method *);
 int parse_method_type(struct vm_method *);
 int parse_field_type(struct vm_field *);
 
+static inline bool vm_type_is_int64(enum vm_type type)
+{
+#ifdef CONFIG_32_BIT
+	return type == J_LONG;
+#else
+	return type == J_LONG || type == J_REFERENCE;
+#endif
+}
+
 static inline bool vm_type_is_float(enum vm_type type)
 {
 	return type == J_FLOAT || type == J_DOUBLE;

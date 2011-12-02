@@ -35,6 +35,7 @@
 
 #include "lib/buffer.h"
 
+#include "vm/types.h"
 #include "vm/die.h"
 
 #include <inttypes.h>
@@ -543,9 +544,11 @@ static inline bool operand_is_reg_high(struct operand *operand)
 	return reg_num & 0x8;
 }
 
-static inline int is_64bit_reg(struct operand *reg)
+static inline int operand_is_int64(struct operand *reg)
 {
-	return reg->reg.interval->var_info->vm_type == J_LONG;
+	enum vm_type vm_type = reg->reg.interval->var_info->vm_type;
+
+	return vm_type_is_int64(vm_type);
 }
 
 static inline bool operand_is_reg_64(struct operand *operand)
@@ -553,10 +556,7 @@ static inline bool operand_is_reg_64(struct operand *operand)
 	if (!operand_is_reg(operand))
 		return false;
 
-	if (operand_is_xmm_reg(operand))
-		return false;
-
-	return is_64bit_reg(operand);
+	return operand_is_int64(operand);
 }
 
 static uint8_t insn_rex_operand_64(struct insn *self, uint64_t flags)
