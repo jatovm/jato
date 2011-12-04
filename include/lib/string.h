@@ -9,7 +9,11 @@ struct string {
 	unsigned long capacity;
 };
 
+void init_string_intern(void);
+
 struct string *string_from_cstr(char *s);
+struct string *string_from_cstr_dup(const char *s);
+struct string *string_intern_cstr(const char *s);
 struct string *alloc_str(void);
 void free_str(struct string *);
 

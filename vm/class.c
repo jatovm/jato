@@ -802,6 +802,7 @@ struct vm_class *vm_class_resolve_class(const struct vm_class *vmc, uint16_t i)
 
 	struct vm_class *class
 		= classloader_load(vmc->classloader, class_name_str);
+	free(class_name_str);
 	if (!class) {
 		warn("failed to load class %s", class_name_str);
 		return NULL;

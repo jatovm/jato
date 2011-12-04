@@ -5,6 +5,7 @@ TOPLEVEL_OBJS :=			\
 	sys/$(SYS)-$(ARCH)/backtrace.o	\
 	lib/bitset.o			\
 	lib/buffer.o			\
+	lib/hash-map.o			\
 	lib/list.o			\
 	lib/parse.o			\
 	lib/pqueue.o			\

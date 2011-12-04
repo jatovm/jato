@@ -109,6 +109,7 @@ LIB_OBJS += lib/pqueue.o
 LIB_OBJS += lib/radix-tree.o
 LIB_OBJS += lib/stack.o
 LIB_OBJS += lib/string.o
+LIB_OBJS += lib/zip.o
 LIB_OBJS += runtime/gnu_java_lang_management_VMThreadMXBeanImpl.o
 LIB_OBJS += runtime/java_lang_VMClass.o
 LIB_OBJS += runtime/java_lang_VMClassLoader.o
@@ -231,7 +232,7 @@ ifeq ($(strip $(DEBUG)),1)
 	DEFAULT_CFLAGS += -O0 -ggdb
 endif
 
-DEFAULT_LIBS	= -L. -ljvm -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
+DEFAULT_LIBS	= -L. -ljvm -lrt -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
 
 all: $(PROGRAM)
 .PHONY: all

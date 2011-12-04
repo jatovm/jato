@@ -1,19 +1,46 @@
 /*
- * Copyright (C) 2006  Pekka Enberg
+ * Copyright (c) 2006, 2011 Pekka Enberg
  *
- * This file is released under the GPL version 2. Please refer to the file
- * LICENSE for details.
+ * This file is released under the GPL version 2 with the following
+ * clarification and special exception:
+ *
+ *     Linking this library statically or dynamically with other modules is
+ *     making a combined work based on this library. Thus, the terms and
+ *     conditions of the GNU General Public License cover the whole
+ *     combination.
+ *
+ *     As a special exception, the copyright holders of this library give you
+ *     permission to link this library with independent modules to produce an
+ *     executable, regardless of the license terms of these independent
+ *     modules, and to copy and distribute the resulting executable under terms
+ *     of your choice, provided that you also meet, for each linked independent
+ *     module, the terms and conditions of the license of that module. An
+ *     independent module is a module which is not derived from or based on
+ *     this library. If you modify this library, you may extend this exception
+ *     to your version of the library, but you are not obligated to do so. If
+ *     you do not wish to do so, delete this exception statement from your
+ *     version.
+ *
+ * Please refer to the file LICENSE for details.
  */
 
 #include "lib/string.h"
 
-#include <errno.h>
+#include "lib/hash-map.h"
+
+#include "vm/die.h"
+
+#include <pthread.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <stdio.h>
 
 #define INITIAL_CAPACITY 100
+
+static struct hash_map		*literals;
+static pthread_mutex_t		literals_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct string *alloc_str(void)
 {
@@ -47,6 +74,46 @@ struct string *string_from_cstr(char *s)
 	str->value = s;
 
 	return str;
+}
+
+struct string *string_from_cstr_dup(const char *s)
+{
+	char *dup = strdup(s);
+
+	if (!dup)
+		return NULL;
+
+	return string_from_cstr(dup);
+}
+
+struct string *string_intern_cstr(const char *s)
+{
+        struct string *result;
+
+        pthread_mutex_lock(&literals_mutex);
+
+        if (!hash_map_get(literals, s, (void **) &result))
+		goto out;
+
+        result = string_from_cstr_dup(s);
+        if (!result)
+                goto out;
+
+        if (hash_map_put(literals, result->value, result)) {
+		free_str(result);
+		result = NULL;
+	}
+ out:
+        pthread_mutex_unlock(&literals_mutex);
+
+        return result;
+}
+
+void init_string_intern(void)
+{
+	literals = alloc_hash_map(&string_key);
+	if (!literals)
+		die("Unable to initialize string literal hash map");
 }
 
 void free_str(struct string *str)

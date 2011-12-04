@@ -61,6 +61,7 @@
 #include "jit/perf-map.h"
 #include "jit/text.h"
 
+#include "lib/string.h"
 #include "lib/parse.h"
 #include "lib/list.h"
 
@@ -1182,6 +1183,7 @@ main(int argc, char *argv[])
 	}
 
 	arch_init();
+	init_string_intern();
 	init_literals_hash_map();
 	init_system_properties();
 

@@ -18,12 +18,12 @@
 
 #include "lib/hash-map.h"
 #include "lib/string.h"
+#include "lib/zip.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
-#include <zip.h>
 
 bool opt_trace_classloader;
 
@@ -85,7 +85,6 @@ static int add_dir_to_classpath(const char *dir)
 
 static int add_zip_to_classpath(const char *zip)
 {
-	int zip_error;
 	int err;
 
 	struct classpath *cp = malloc(sizeof *cp);
@@ -99,7 +98,7 @@ static int add_zip_to_classpath(const char *zip)
 		goto error_free_cp;
 	}
 
-	cp->zip = zip_open(zip, 0, &zip_error);
+	cp->zip = zip_open(zip);
 	if (!cp->zip) {
 		err = -1;
 		goto error_free_path;
@@ -177,8 +176,8 @@ enum class_load_status {
 };
 
 struct classes_key {
-	char *class_name;
-	struct vm_object *classloader;
+	struct string		*class_name;
+	struct vm_object	*classloader;
 };
 
 struct classloader_class {
@@ -199,8 +198,7 @@ static unsigned long classes_key_hash(const void *key)
 {
 	const struct classes_key *classes_key = key;
 
-	return string_key.hash(classes_key->class_name) +
-		31 * pointer_key.hash(classes_key->classloader);
+	return pointer_key.hash(classes_key->class_name) + 31 * pointer_key.hash(classes_key->classloader);
 }
 
 static bool classes_key_equals(const void *key1, const void *key2)
@@ -208,11 +206,10 @@ static bool classes_key_equals(const void *key1, const void *key2)
 	const struct classes_key *classes_key1 = key1;
 	const struct classes_key *classes_key2 = key2;
 
-	if (!strcmp(classes_key1->class_name, classes_key2->class_name) &&
-	    classes_key1->classloader == classes_key2->classloader)
-		return true;
+	if (classes_key1->classloader != classes_key2->classloader)
+		return false;
 
-	return false;
+	return classes_key1->class_name == classes_key2->class_name;
 }
 
 static struct key_operations classes_key_ops = {
@@ -228,12 +225,12 @@ void classloader_init(void)
 }
 
 static struct classloader_class *
-lookup_class(struct vm_object *loader, const char *class_name)
+lookup_class(struct vm_object *loader, struct string *class_name)
 {
 	void *class;
 	struct classes_key key;
 
-	key.class_name  = (char *) class_name;
+	key.class_name  = class_name;
 	key.classloader = loader;
 
 	if (hash_map_get(classes, &key, &class))
@@ -242,11 +239,11 @@ lookup_class(struct vm_object *loader, const char *class_name)
 	return class;
 }
 
-static void remove_class(struct vm_object *loader, const char *class_name)
+static void remove_class(struct vm_object *loader, struct string *class_name)
 {
 	struct classes_key key;
 
-	key.class_name  = (char *) class_name;
+	key.class_name  = class_name;
 	key.classloader = loader;
 
 	hash_map_remove(classes, &key);
@@ -297,62 +294,43 @@ out:
 	return NULL;
 }
 
-static struct vm_class *load_class_from_dir(const char *dir, const char *file)
+static struct vm_class *load_class_from_dir(const char *dir, const char *class_name)
 {
 	struct vm_class *vmc;
 	char *full_filename;
+	char *filename;
 
-	if (asprintf(&full_filename, "%s/%s", dir, file) == -1)
+	filename = class_name_to_file_name(class_name);
+	if (!filename)
 		return NULL;
+
+	if (asprintf(&full_filename, "%s/%s", dir, filename) == -1)
+		return NULL;
+
+	free(filename);
 
 	vmc = load_class_from_file(full_filename);
 	free(full_filename);
 	return vmc;
 }
 
-static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
+static struct vm_class *load_class_from_zip(struct zip *zip, struct string *class_name)
 {
-	int zip_file_index;
-	struct zip_stat zip_stat;
-	struct zip_file *zip_file;
-	uint8_t *zip_file_buf;
-
 	struct cafebabe_stream stream;
 	struct cafebabe_class *class;
 	struct vm_class *result = NULL;
+	struct zip_entry *zip_entry;
+	void *zip_file_buf;
 
-	zip_file_index = zip_name_locate(zip, file, 0);
-	if (zip_file_index == -1)
+	zip_entry = zip_entry_find_class(zip, class_name);
+	if (!zip_entry)
 		return NULL;
 
-	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1)
-		return NULL;
-
-	zip_file_buf = malloc(zip_stat.size);
+	zip_file_buf = zip_entry_data(zip, zip_entry);
 	if (!zip_file_buf)
 		return NULL;
 
-	zip_file = zip_fopen_index(zip, zip_file_index, 0);
-	if (!zip_file)
-		goto error_free_buf;
-
-	/* Read the zipped class file */
-	for (int offset = 0; offset != zip_stat.size;) {
-		int ret;
-
-		ret = zip_fread(zip_file,
-			zip_file_buf + offset, zip_stat.size - offset);
-		if (ret == -1)
-			goto error_free_buf;
-
-		offset += ret;
-	}
-
-	/* If this returns error, what can we do? We've got all the data we
-	 * wanted, so there should be no point in returning the error. */
-	zip_fclose(zip_file);
-
-	cafebabe_stream_open_buffer(&stream, zip_file_buf, zip_stat.size);
+	cafebabe_stream_open_buffer(&stream, zip_file_buf, zip_entry->uncomp_size);
 
 	class = malloc(sizeof *class);
 	if (cafebabe_class_init(class, &stream))
@@ -366,6 +344,7 @@ static struct vm_class *load_class_from_zip(struct zip *zip, const char *file)
 			goto error_free_class;
 	}
 
+	free(zip_file_buf);
 	return result;
 
 error_free_class:
@@ -376,14 +355,14 @@ error_free_buf:
 	return NULL;
 }
 
-static struct vm_class *load_class_from_classpath_file(const struct classpath *cp,
-	const char *file)
+static struct vm_class *
+load_class_from_classpath_file(const struct classpath *cp, struct string *class_name)
 {
 	switch (cp->type) {
 	case CLASSPATH_DIR:
-		return load_class_from_dir(cp->path, file);
+		return load_class_from_dir(cp->path, class_name->value);
 	case CLASSPATH_ZIP:
-		return load_class_from_zip(cp->zip, file);
+		return load_class_from_zip(cp->zip, class_name);
 	}
 
 	/* Should never reach this. */
@@ -519,18 +498,13 @@ load_class_with(struct vm_object *loader, const char *name)
 /*
  * Load non-array class with bootstrap classloader
  */
-static struct vm_class *load_class(const char *class_name)
+static struct vm_class *load_class(struct string *class_name)
 {
 	struct vm_class *result = NULL;
-	char *filename;
-
-	filename = class_name_to_file_name(class_name);
-	if (!filename)
-		return NULL;
-
 	struct classpath *cp;
+
 	list_for_each_entry(cp, &classpaths, node) {
-		result = load_class_from_classpath_file(cp, filename);
+		result = load_class_from_classpath_file(cp, class_name);
 		if (result)
 			break;
 	}
@@ -538,16 +512,15 @@ static struct vm_class *load_class(const char *class_name)
 	if (result)
 		result->classloader = NULL;
 
-	free(filename);
 	return result;
 }
 
 static struct classloader_class *
-find_class(struct vm_object *loader, const char *name)
+find_class(struct vm_object *loader, struct string *class_name)
 {
 	struct classloader_class *class;
 
-	class = lookup_class(loader, name);
+	class = lookup_class(loader, class_name);
 	if (class) {
 		/*
 		 * If class is being loaded by current thread then we
@@ -570,7 +543,7 @@ find_class(struct vm_object *loader, const char *name)
 		--class->nr_waiting;
 
 		if (class->status == CLASS_NOT_FOUND && !class->nr_waiting) {
-			remove_class(loader, name);
+			remove_class(loader, class_name);
 			vm_free(class);
 			class = NULL;
 		}
@@ -612,12 +585,15 @@ load_last_array_elem_class(struct vm_object *loader, const char *class_name)
  * @class_name or ensuring that @class_name is in slash form in some other way.
  */
 struct vm_class *
-classloader_load(struct vm_object *loader, const char *class_name)
+classloader_load(struct vm_object *loader, const char *klass_name)
 {
-	struct vm_class *vmc;
 	struct classloader_class *class;
+	struct string *class_name;
+	struct vm_class *vmc;
 
-	trace_push(loader, class_name);
+	trace_push(loader, klass_name);
+
+	class_name = string_intern_cstr(klass_name);
 
 	vmc = NULL;
 
@@ -626,12 +602,12 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	 * its elements. Primitive types are always loaded with
 	 * bootstrap classloader.
 	 */
-	if (loader && is_primitive_array(class_name))
+	if (loader && is_primitive_array(klass_name))
 		loader = NULL;
 
 	if (loader) {
-		if (!is_array(class_name)) {
-			vmc = load_class_with(loader, class_name);
+		if (!is_array(klass_name)) {
+			vmc = load_class_with(loader, klass_name);
 			goto out;
 		}
 
@@ -643,7 +619,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		 * be a defining classloader of array element class.
 		 */
 		struct vm_class *elem_class =
-			load_last_array_elem_class(loader, class_name);
+			load_last_array_elem_class(loader, klass_name);
 
 		if (!elem_class)
 			goto out;
@@ -666,7 +642,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	class->nr_waiting = 0;
 	class->loading_thread = vm_thread_self();
 	class->key.classloader = loader;
-	class->key.class_name = strdup(class_name);
+	class->key.class_name = class_name;
 
 	if (hash_map_put(classes, &class->key, class)) {
 		vmc = NULL;
@@ -680,8 +656,8 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	 */
 	pthread_mutex_unlock(&classloader_mutex);
 
-	if (is_array(class_name))
-		vmc = load_array_class(loader, class_name);
+	if (is_array(klass_name))
+		vmc = load_array_class(loader, klass_name);
 	else
 		vmc = load_class(class_name);
 
@@ -723,6 +699,7 @@ classloader_find_class(struct vm_object *loader, const char *name)
 	struct vm_class *vmc;
 	char *slash_class_name;
 	struct classloader_class *class;
+	struct string *class_name;
 
 	slash_class_name = dots_to_slash(name);
 	if (!slash_class_name)
@@ -730,9 +707,11 @@ classloader_find_class(struct vm_object *loader, const char *name)
 
 	vmc = NULL;
 
+	class_name = string_intern_cstr(slash_class_name);
+
 	pthread_mutex_lock(&classloader_mutex);
 
-	class = find_class(loader, slash_class_name);
+	class = find_class(loader, class_name);
 	if (class && class->status == CLASS_LOADED)
 		vmc = class->class;
 
@@ -755,13 +734,12 @@ int classloader_add_to_cache(struct vm_object *loader, struct vm_class *vmc)
 	class->nr_waiting = 0;
 	class->loading_thread = vm_thread_self();
 	class->key.classloader = loader;
-	class->key.class_name = strdup(vmc->name);
+	class->key.class_name = string_intern_cstr(vmc->name);
 
 	pthread_mutex_lock(&classloader_mutex);
 
 	if (hash_map_put(classes, &class->key, class)) {
 		pthread_mutex_unlock(&classloader_mutex);
-		free(class->key.class_name);
 		vm_free(class);
 		return -ENOMEM;
 	}

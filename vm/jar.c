@@ -7,10 +7,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <zip.h>
-
-#include "lib/list.h"
 #include "lib/string.h"
+#include "lib/list.h"
+#include "lib/zip.h"
+
 #include "vm/jar.h"
 
 struct parse_buffer {
@@ -406,49 +406,14 @@ out_free_manifest:
 
 static struct jar_manifest *read_manifest(struct zip *zip)
 {
-	int zip_file_index;
-	struct zip_stat zip_stat;
-	struct zip_file *zip_file;
-	uint8_t *zip_file_buf;
-
-	zip_file_index = zip_name_locate(zip, "META-INF/MANIFEST.MF", 0);
-	if (zip_file_index == -1)
-		return NULL;
-
-	if (zip_stat_index(zip, zip_file_index, 0, &zip_stat) == -1) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	zip_file_buf = malloc(zip_stat.size);
-	if (!zip_file_buf) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	zip_file = zip_fopen_index(zip, zip_file_index, 0);
-	if (!zip_file) {
-		NOT_IMPLEMENTED;
-		return NULL;
-	}
-
-	for (int offset = 0; offset != zip_stat.size;) {
-		int ret;
-
-		ret = zip_fread(zip_file,
-				zip_file_buf + offset, zip_stat.size - offset);
-		if (ret == -1) {
-			NOT_IMPLEMENTED;
-			return NULL;
-		}
-
-		offset += ret;
-	}
-
-	zip_fclose(zip_file);
-
+	struct zip_entry *zip_entry;
 	struct parse_buffer pb;
-	pb.data = (char *)zip_file_buf;
+
+	zip_entry = zip_entry_find(zip, "META-INF/MANIFEST.MF");
+	if (!zip_entry)
+		return NULL;
+
+	pb.data = zip_entry_data(zip, zip_entry);
 	pb.i = 0;
 
 	struct jar_manifest *manifest;
@@ -466,9 +431,8 @@ struct vm_jar *vm_jar_open(const char *filename)
 	struct jar_manifest *manifest;
 	struct vm_jar *jar = NULL;
 	struct zip *zip;
-	int zip_error;
 
-	zip = zip_open(filename, 0, &zip_error);
+	zip = zip_open(filename);
 	if (!zip)
 		goto error_out;
 
