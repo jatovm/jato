@@ -18,6 +18,7 @@ typedef void (*finalizer_fn)(struct vm_object *object);
 
 struct gc_operations {
 	void *(*gc_alloc)(size_t size);
+	void *(*gc_alloc_noscan)(size_t size);
 	void *(*vm_alloc)(size_t size);
 	void (*vm_free)(void *p);
 	int (*gc_register_finalizer)(struct vm_object *object, finalizer_fn finalizer);
@@ -67,11 +68,21 @@ extern struct gc_operations gc_ops;
  * gc_alloc()   Allocates collectable memory region. Can not be freed
  *              manually. The content is scanned for object references.
  *              This is used to allocate Java objects.
+ *
+ * gc_alloc_noscan()
+ *		Allocates collectable memory region. Can not be freed
+ *              manually. The content is NOT scanned for object references.
+ *              This is used to allocate memory for primitives.
  */
 
 static inline void *gc_alloc(size_t size)
 {
 	return gc_ops.gc_alloc(size);
+}
+
+static inline void *gc_alloc_noscan(size_t size)
+{
+	return gc_ops.gc_alloc_noscan(size);
 }
 
 static inline void *vm_alloc(size_t size)

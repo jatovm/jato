@@ -28,12 +28,41 @@ do_gc_register_finalizer(struct vm_object *object, finalizer_fn finalizer)
 
 static void *do_gc_malloc(size_t size)
 {
-	return GC_malloc(size);
+	void *p;
+
+	p = GC_malloc(size);
+	if (!p)
+		return NULL;
+
+	memset(p, 0, size);
+
+	return p;
+}
+
+static void *do_gc_malloc_noscan(size_t size)
+{
+	void *p;
+
+	p = GC_malloc_atomic(size);
+	if (!p)
+		return NULL;
+
+	memset(p, 0, size);
+
+	return p;
 }
 
 static void *do_gc_malloc_uncollectable(size_t size)
 {
-	return GC_malloc_uncollectable(size);
+	void *p;
+
+	p = GC_malloc_uncollectable(size);
+	if (!p)
+		return NULL;
+
+	memset(p, 0, size);
+
+	return p;
 }
 
 static void do_gc_free(void *ptr)
@@ -45,6 +74,7 @@ void gc_setup_boehm(void)
 {
 	gc_ops		= (struct gc_operations) {
 		.gc_alloc		= do_gc_malloc,
+		.gc_alloc_noscan	= do_gc_malloc_noscan,
 		.vm_alloc		= do_gc_malloc_uncollectable,
 		.vm_free		= do_gc_free,
 		.gc_register_finalizer	= do_gc_register_finalizer

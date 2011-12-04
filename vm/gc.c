@@ -487,6 +487,7 @@ static void gc_setup(void)
 {
 	gc_ops		= (struct gc_operations) {
 		.gc_alloc		= do_gc_alloc,
+		.gc_alloc_noscan	= do_gc_alloc,
 		.vm_alloc		= do_vm_alloc,
 		.vm_free		= do_vm_free,
 		.gc_register_finalizer	= do_gc_register_finalizer,

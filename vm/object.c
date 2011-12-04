@@ -99,7 +99,7 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	vm_type = bytecode_type_to_vmtype(type);
 	assert(vm_type != J_VOID);
 
-	res = gc_alloc(sizeof(*res) + vmtype_get_size(vm_type) * count);
+	res = gc_alloc_noscan(sizeof(*res) + vmtype_get_size(vm_type) * count);
 	if (!res)
 		return throw_oom_error();
 
