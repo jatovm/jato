@@ -1,5 +1,5 @@
-#ifndef __VM_STRING_H
-#define __VM_STRING_H
+#ifndef JATO__LIB_STRING_H
+#define JATO__LIB_STRING_H
 
 #include <stdarg.h>
 
@@ -17,4 +17,4 @@ int str_printf(struct string *, const char *, ...);
 int str_append(struct string *, const char *, ...);
 int str_vappend(struct string *, const char *, va_list);
 
-#endif
+#endif /* JATO__LIB_STRING_H */
