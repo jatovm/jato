@@ -9,6 +9,7 @@ struct string {
 	unsigned long capacity;
 };
 
+struct string *string_from_cstr(char *s);
 struct string *alloc_str(void);
 void free_str(struct string *);
 

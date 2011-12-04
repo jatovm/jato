@@ -35,6 +35,20 @@ struct string *alloc_str(void)
 	return str;
 }
 
+struct string *string_from_cstr(char *s)
+{
+	struct string *str = malloc(sizeof *str);
+
+	if (!str)
+		return NULL;
+
+	str->length = str->capacity = strlen(s);
+
+	str->value = s;
+
+	return str;
+}
+
 void free_str(struct string *str)
 {
 	free(str->value);

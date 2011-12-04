@@ -398,19 +398,16 @@ void array_store_check(struct vm_object *arrayref, struct vm_object *obj)
 	if (vm_class_is_assignable_from(element_class, obj->class))
 		return;
 
-	str = alloc_str();
+	str = string_from_cstr(slash_to_dots(obj->class->name));
 	if (str == NULL) {
 		err = -ENOMEM;
 		goto error;
 	}
 
-	err = str_append(str, slash_to_dots(obj->class->name));
-	if (err)
-		goto error;
-
 	signal_new_exception(vm_java_lang_ArrayStoreException, str->value);
 	free_str(str);
 	return;
+
  error:
 	if (str)
 		free_str(str);
@@ -439,15 +436,11 @@ void vm_object_check_cast(struct vm_object *obj, struct vm_class *class)
 	if (exception_occurred())
 		return;
 
-	str = alloc_str();
+	str = string_from_cstr(slash_to_dots(obj->class->name));
 	if (str == NULL) {
 		err = -ENOMEM;
 		goto error;
 	}
-
-	err = str_append(str, slash_to_dots(obj->class->name));
-	if (err)
-		goto error;
 
 	err = str_append(str, " cannot be cast to ");
 	if (err)
