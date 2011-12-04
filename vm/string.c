@@ -84,7 +84,7 @@ static unsigned long string_obj_hash(const void *key)
 	hash = 0;
 
 	for (jint i = 0; i < count; i++)
-		hash += 31 * hash + array_get_field_char(array, i + offset);
+		hash = 31 * hash + array_get_field_char(array, i + offset);
 
 	return hash;
 }

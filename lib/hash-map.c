@@ -214,7 +214,7 @@ static unsigned long string_hash(const void *key)
 	str  = key;
 
 	while (*str)
-		hash += 31 * hash + *str++;
+		hash = 31 * hash + *str++;
 
 	return hash;
 }
