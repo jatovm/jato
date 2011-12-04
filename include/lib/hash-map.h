@@ -4,9 +4,10 @@
 #include "lib/list.h"
 
 struct hash_map_entry {
-	const void *key;
-	void *value;
-	struct list_head list_node;
+	unsigned long		hash;
+	const void		*key;
+	void			*value;
+	struct list_head	list_node;
 };
 
 typedef unsigned long hash_fn(const void *);

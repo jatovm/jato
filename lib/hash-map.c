@@ -32,9 +32,11 @@
 
 #include "vm/die.h"
 
+#define DEFAULT_CAPACITY 16
+
 struct hash_map *alloc_hash_map(struct key_operations *key_ops)
 {
-	return alloc_hash_map_with_size(10, key_ops);
+	return alloc_hash_map_with_size(DEFAULT_CAPACITY, key_ops);
 }
 
 struct hash_map *alloc_hash_map_with_size(unsigned long initial_size, struct key_operations *key_ops)
@@ -80,10 +82,14 @@ void free_hash_map(struct hash_map *map)
 	free(map);
 }
 
-static unsigned long hash(const struct hash_map *map, const void *key)
+static inline unsigned long get_hash(const struct hash_map *map, const void *key)
 {
-	unsigned long a = map->key_ops.hash(key);
-	return ((a >> 24) ^ (a >> 16) ^ (a >> 8) ^ a) % map->table_size;
+	return map->key_ops.hash(key);
+}
+
+static inline unsigned long get_index(const struct hash_map *map, unsigned long hash)
+{
+	return hash % map->table_size;
 }
 
 static inline struct hash_map_entry *
@@ -91,11 +97,14 @@ hash_map_lookup_entry(struct hash_map *map, const void *key)
 {
 	struct hash_map_entry *ent;
 	struct list_head *bucket;
+	unsigned long hash;
 
-	bucket = &map->table[hash(map, key)];
+	hash = get_hash(map, key);
+
+	bucket = &map->table[get_index(map, hash)];
 
 	list_for_each_entry(ent, bucket, list_node) {
-		if (map->key_ops.equals(ent->key, key))
+		if (hash == ent->hash && map->key_ops.equals(ent->key, key))
 			return ent;
 	}
 
@@ -106,7 +115,9 @@ static void try_to_expand(struct hash_map *map)
 {
 	struct list_head *old_table = map->table;
 	unsigned int old_table_size = map->table_size;
-	unsigned int new_table_size = old_table_size + max(1ul, (unsigned long) old_table_size / 2);
+	unsigned int new_table_size;
+
+	new_table_size = old_table_size * 2 + 1;
 
 	struct list_head *new_table = malloc(sizeof(struct list_head) * new_table_size);
 	if (!new_table) {
@@ -124,9 +135,12 @@ static void try_to_expand(struct hash_map *map)
 
 	for (unsigned int i = 0; i < old_table_size; i++) {
 		struct hash_map_entry *ent, *next;
+
 		list_for_each_entry_safe(ent, next, &old_table[i], list_node) {
+			ent->hash = get_hash(map, ent->key);
+
 			list_del(&ent->list_node);
-			list_add(&ent->list_node, &new_table[hash(map, ent->key)]);
+			list_add(&ent->list_node, &new_table[get_index(map, ent->hash)]);
 		}
 	}
 
@@ -153,9 +167,10 @@ int hash_map_put(struct hash_map *map, const void *key, void *value)
 
 	ent->key   = key;
 	ent->value = value;
+	ent->hash  = get_hash(map, key);
 	INIT_LIST_HEAD(&ent->list_node);
 
-	bucket = &map->table[hash(map, key)];
+	bucket = &map->table[get_index(map, ent->hash)];
 	list_add(&ent->list_node, bucket);
 	map->size++;
 	return 0;
