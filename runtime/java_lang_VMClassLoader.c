@@ -109,7 +109,7 @@ jobject java_lang_VMClassLoader_loadClass(jobject name, jboolean resolve)
 	struct vm_class *vmc;
 	char *c_name;
 
-	c_name = vm_string_to_cstr(name);
+	c_name = vm_string_classname_to_cstr(name);
 	if (!c_name)
 		return NULL;
 

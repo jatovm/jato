@@ -86,6 +86,7 @@ void array_store_check_vmtype(struct vm_object *arrayref, enum vm_type vm_type);
 void array_size_check(int size);
 void multiarray_size_check(int n, ...);
 char *vm_string_to_cstr(const struct vm_object *string);
+char *vm_string_classname_to_cstr(const struct vm_object *string);
 
 #define DECLARE_FIELD_SETTER(type)					\
 static inline void							\

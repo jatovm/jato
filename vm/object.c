@@ -531,3 +531,19 @@ char *vm_string_to_cstr(const struct vm_object *string_obj)
 	free_str(str);
 	return result;
 }
+
+char *vm_string_classname_to_cstr(const struct vm_object *string_obj)
+{
+	char *result;
+
+	result = vm_string_to_cstr(string_obj);
+	if (!result)
+		return NULL;
+
+	for (unsigned int i = 0, n = strlen(result); i < n; ++i) {
+		if (result[i] == '.')
+			result[i] = '/';
+	}
+
+	return result;
+}

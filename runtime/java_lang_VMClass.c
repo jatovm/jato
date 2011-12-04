@@ -51,7 +51,7 @@ struct vm_object *java_lang_VMClass_forName(struct vm_object *name, jboolean ini
 		return NULL;
 	}
 
-	class_name = vm_string_to_cstr(name);
+	class_name = vm_string_classname_to_cstr(name);
 	if (!class_name)
 		return throw_oom_error();
 

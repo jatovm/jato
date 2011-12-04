@@ -84,6 +84,7 @@
 #include "vm/thread.h"
 #include "vm/class.h"
 #include "vm/call.h"
+#include "vm/utf8.h"
 #include "vm/jar.h"
 #include "vm/jni.h"
 #include "vm/gc.h"
@@ -669,7 +670,7 @@ static void handle_jar(const char *arg)
 		exit(EXIT_FAILURE);
 	}
 
-	classname = strdup(main_class);
+	classname = dots_to_slash(main_class);
 	if (!classname)
 		die("out of memory");
 
@@ -1008,7 +1009,7 @@ static void parse_options(int argc, char *argv[])
 		if (optind >= argc)
 			usage(stderr, EXIT_FAILURE);
 
-		classname = argv[optind++];
+		classname = dots_to_slash(argv[optind++]);
 	}
 
 	if (optind < argc) {

@@ -607,6 +607,9 @@ load_last_array_elem_class(struct vm_object *loader, const char *class_name)
  *
  * If @class_name refers to an array class then @loader
  * will be called only for array element class.
+ *
+ * NOTE NOTE NOTE!!! The caller is expected to have called dots_to_slash() for
+ * @class_name or ensuring that @class_name is in slash form in some other way.
  */
 struct vm_class *
 classloader_load(struct vm_object *loader, const char *class_name)
@@ -615,12 +618,6 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	struct classloader_class *class;
 
 	trace_push(loader, class_name);
-
-	char *slash_class_name = dots_to_slash(class_name);
-	if (!slash_class_name) {
-		trace_pop();
-		return NULL;
-	}
 
 	vmc = NULL;
 
@@ -635,7 +632,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	if (loader) {
 		if (!is_array(class_name)) {
 			vmc = load_class_with(loader, class_name);
-			goto out_free_slash_class_name;
+			goto out;
 		}
 
 		/*
@@ -649,14 +646,14 @@ classloader_load(struct vm_object *loader, const char *class_name)
 			load_last_array_elem_class(loader, class_name);
 
 		if (!elem_class)
-			goto out_free_slash_class_name;
+			goto out;
 
 		loader = elem_class->classloader;
 	}
 
 	pthread_mutex_lock(&classloader_mutex);
 
-	class = find_class(loader, slash_class_name);
+	class = find_class(loader, class_name);
 	if (class) {
 		if (class->status == CLASS_LOADED)
 			vmc = class->class;
@@ -669,7 +666,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	class->nr_waiting = 0;
 	class->loading_thread = vm_thread_self();
 	class->key.classloader = loader;
-	class->key.class_name = strdup(slash_class_name);
+	class->key.class_name = strdup(class_name);
 
 	if (hash_map_put(classes, &class->key, class)) {
 		vmc = NULL;
@@ -683,10 +680,10 @@ classloader_load(struct vm_object *loader, const char *class_name)
 	 */
 	pthread_mutex_unlock(&classloader_mutex);
 
-	if (is_array(slash_class_name))
-		vmc = load_array_class(loader, slash_class_name);
+	if (is_array(class_name))
+		vmc = load_array_class(loader, class_name);
 	else
-		vmc = load_class(slash_class_name);
+		vmc = load_class(class_name);
 
 	pthread_mutex_lock(&classloader_mutex);
 
@@ -697,7 +694,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 		 * removes the entry.
 		 */
 		if (class->nr_waiting == 0) {
-			remove_class(loader, slash_class_name);
+			remove_class(loader, class_name);
 			vm_free(class);
 		} else {
 			class->status = CLASS_NOT_FOUND;
@@ -711,8 +708,7 @@ classloader_load(struct vm_object *loader, const char *class_name)
 
  out_unlock:
 	pthread_mutex_unlock(&classloader_mutex);
- out_free_slash_class_name:
-	free(slash_class_name);
+ out:
 	trace_pop();
 	return vmc;
 }
