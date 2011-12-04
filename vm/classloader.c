@@ -66,30 +66,6 @@ struct classpath {
 /* These are the directories we search for classes */
 struct list_head classpaths = LIST_HEAD_INIT(classpaths);
 
-char *get_classpath(void)
-{
-	struct classpath *cp;
-	struct string *str;
-	char *value;
-	bool first;
-
-	str = alloc_str();
-	first = true;
-
-	list_for_each_entry(cp, &classpaths, node) {
-		if (!first)
-			str_append(str, ":");
-
-		str_append(str, "%s", cp->path);
-		first = false;
-	}
-
-	value = strdup(str->value);
-	free_str(str);
-
-	return value;
-}
-
 static int add_dir_to_classpath(const char *dir)
 {
 	struct classpath *cp = malloc(sizeof *cp);
