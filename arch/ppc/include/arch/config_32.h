@@ -2,5 +2,3 @@
 #define CONFIG_32_BIT 1
 
 #define ARCH_NAME	"ppc32"
-
-#define CONFIG_SSA_ENABLED_BY_DEFAULT 0

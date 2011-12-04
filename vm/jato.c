@@ -119,7 +119,7 @@ static bool use_system_classloader = true;
 /*
  * Enable SSA optimizations.
  */
-bool opt_ssa_enable = CONFIG_SSA_ENABLED_BY_DEFAULT;
+bool opt_ssa_enable;
 
 static bool opt_interp_only;
 
@@ -706,11 +706,6 @@ static void handle_perf(void)
 	perf_enabled = true;
 }
 
-static void handle_nossa(void)
-{
-	opt_ssa_enable = false;
-}
-
 static void handle_ssa(void)
 {
 	opt_ssa_enable = true;
@@ -919,7 +914,6 @@ const struct option options[] = {
 	DEFINE_OPTION("Xnogc",			handle_nogc),
 	DEFINE_OPTION("Xnosystemclassloader",	handle_no_system_classloader),
 	DEFINE_OPTION("Xperf",			handle_perf),
-	DEFINE_OPTION("Xnossa",			handle_nossa),
 	DEFINE_OPTION("Xssa",			handle_ssa),
 	DEFINE_OPTION("Xnoic",			handle_no_ic),
 	DEFINE_OPTION("Xint",			handle_int),

@@ -1,4 +1,3 @@
 #define CONFIG_X86_32 1
 #define CONFIG_32_BIT 1
 #define ARCH_NAME "i386"
-#define CONFIG_SSA_ENABLED_BY_DEFAULT 1
