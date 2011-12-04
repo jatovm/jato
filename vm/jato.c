@@ -96,6 +96,7 @@
 #include "runtime/java_lang_reflect_VMMethod.h"
 #include "runtime/java_lang_reflect_VMField.h"
 #include "runtime/java_lang_VMClassLoader.h"
+#include "runtime/java_lang_VMString.h"
 #include "runtime/java_lang_VMSystem.h"
 #include "runtime/java_lang_VMThread.h"
 #include "runtime/java_lang_VMClass.h"
@@ -412,11 +413,6 @@ static void native_vmobject_wait(struct vm_object *object, jlong ms, jint ns)
 		vm_object_timed_wait(object, ms, ns);
 }
 
-static struct vm_object *native_vmstring_intern(struct vm_object *str)
-{
-	return vm_string_intern(str);
-}
-
 static jint native_atomiclong_vm_supports_cs8(void)
 {
 	return false;
@@ -478,7 +474,7 @@ static struct vm_native natives[] = {
 	DEFINE_NATIVE("java/lang/VMRuntime", "runFinalization", java_lang_VMRuntime_runFinalization),
 	DEFINE_NATIVE("java/lang/VMRuntime", "traceInstructions", native_vmruntime_trace_instructions),
 	DEFINE_NATIVE("java/lang/VMRuntime", "traceMethodCalls", native_vmruntime_trace_method_calls),
-	DEFINE_NATIVE("java/lang/VMString", "intern", native_vmstring_intern),
+	DEFINE_NATIVE("java/lang/VMString", "intern", java_lang_VMString_intern),
 	DEFINE_NATIVE("java/lang/VMSystem", "arraycopy", java_lang_VMSystem_arraycopy),
 	DEFINE_NATIVE("java/lang/VMSystem", "identityHashCode", java_lang_VMSystem_identityHashCode),
 	DEFINE_NATIVE("java/lang/VMThread", "currentThread", java_lang_VMThread_currentThread),

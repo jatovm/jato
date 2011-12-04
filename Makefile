@@ -113,6 +113,7 @@ LIB_OBJS += runtime/gnu_java_lang_management_VMThreadMXBeanImpl.o
 LIB_OBJS += runtime/java_lang_VMClass.o
 LIB_OBJS += runtime/java_lang_VMClassLoader.o
 LIB_OBJS += runtime/java_lang_VMRuntime.o
+LIB_OBJS += runtime/java_lang_VMString.o
 LIB_OBJS += runtime/java_lang_VMSystem.o
 LIB_OBJS += runtime/java_lang_VMThread.o
 LIB_OBJS += runtime/java_lang_reflect_VMField.o
