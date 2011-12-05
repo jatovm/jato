@@ -88,6 +88,7 @@ void shrink_basic_block(struct basic_block *bb)
 	free_stack(bb->mimic_stack);
 	free_stmt_list(&bb->stmt_list);
 	free_insn_list(&bb->insn_list);
+	free(bb->resolution_blocks);
 	free(bb->successors);
 	free(bb->predecessors);
 	free(bb->mimic_stack_expr);
@@ -100,9 +101,6 @@ void shrink_basic_block(struct basic_block *bb)
 
 void free_basic_block(struct basic_block *bb)
 {
-	if (bb->resolution_blocks)
-		free(bb->resolution_blocks);
-
 	free(bb);
 }
 
