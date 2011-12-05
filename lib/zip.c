@@ -211,8 +211,17 @@ static int zip_eocdr_traverse(struct zip *zip, struct zip_eocdr *eocdr)
 
 		if (!strncmp(s + filename_len - strlen(".class"), ".class", strlen(".class"))) {
 			struct string *class_name;
+			char *dup;
 
-			class_name = string_intern_cstr(strndup(s, strlen(s) - strlen(".class")));
+			dup = strndup(s, strlen(s) - strlen(".class"));
+			if (!dup)
+				goto error;
+
+			class_name = string_intern_cstr(dup);
+			if (!class_name)
+				goto error;
+
+			free(dup);
 
 			hash_map_put(zip->class_cache, class_name, entry);
 		}
