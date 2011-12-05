@@ -241,7 +241,9 @@ static void free_inlining_context(struct inlining_context *ctx)
 		free_subroutine(this);
 	}
 	free_hash_map(ctx->subroutines);
+	code_state_deinit(&ctx->code);
 	pc_map_deinit(&ctx->pc_map);
+	free(ctx->exception_table);
 	free(ctx);
 }
 
@@ -1281,6 +1283,9 @@ static void inlining_context_commit(struct inlining_context *ctx)
 		ctx->line_number_table;
 	ctx->method->line_number_table_attribute.line_number_table_length =
 		ctx->line_number_table_length;
+
+	ctx->exception_table = NULL;
+	ctx->code.code = NULL;
 }
 
 static int
