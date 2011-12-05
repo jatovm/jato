@@ -351,21 +351,20 @@ int interval_add_range(struct compilation_unit *cu, struct live_interval *it, un
 {
 	struct live_range *range, *next, *new;
 
-	new = alloc_live_range(cu->arena, start, end);
-	if (!new)
-		return -ENOMEM;
-
 	list_for_each_entry_safe(range, next, &it->range_list, range_list_node) {
 		if (range->start > end)
 			break;
 
-		if (range->start <= new->end && new->start <= range->end) {
-			new->start = min(new->start, range->start);
-			new->end = max(new->end, range->end);
-			list_del(&range->range_list_node);
-			arena_free(cu->arena, range);
+		if (range->start <= end && start <= range->end) {
+			range->start = min((unsigned int) start, range->start);
+			range->end = max((unsigned int) end, range->end);
+			return 0;
 		}
 	}
+
+	new = alloc_live_range(cu->arena, start, end);
+	if (!new)
+		return -ENOMEM;
 
 	list_for_each_entry_safe(range, next, &it->range_list, range_list_node) {
 		if (new->start > range->start)
