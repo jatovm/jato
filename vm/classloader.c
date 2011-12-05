@@ -66,6 +66,20 @@ struct classpath {
 /* These are the directories we search for classes */
 struct list_head classpaths = LIST_HEAD_INIT(classpaths);
 
+void classloader_destroy(void)
+{
+	struct classpath *cp, *next;
+
+	list_for_each_entry_safe(cp, next, &classpaths, node) {
+		if (cp->type == CLASSPATH_ZIP)
+			zip_close(cp->zip);
+
+		list_del(&cp->node);
+		free((void *) cp->path);
+		free(cp);
+	}
+}
+
 static int add_dir_to_classpath(const char *dir)
 {
 	struct classpath *cp = malloc(sizeof *cp);

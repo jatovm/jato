@@ -12,6 +12,8 @@ int classloader_add_to_classpath(const char *classpath);
 int try_to_add_zip_to_classpath(const char *zip);
 
 void classloader_init(void);
+void classloader_destroy(void);
+
 struct vm_class *classloader_load(struct vm_object *loader,
 				  const char *class_name);
 struct vm_class *classloader_load_primitive(const char *class_name);

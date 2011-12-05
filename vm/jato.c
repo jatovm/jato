@@ -128,6 +128,11 @@ static bool opt_interp_only;
  */
 bool running_on_valgrind;
 
+static void vm_atexit(void)
+{
+	classloader_destroy();
+}
+
 static void __attribute__((noreturn)) vm_exit(int status)
 {
 	clear_exception();
@@ -1164,6 +1169,8 @@ main(int argc, char *argv[])
 	int status = EXIT_FAILURE;
 
 	program_name = argv[0];
+
+	atexit(vm_atexit);
 
 #ifndef NDEBUG
 	/* Make stdout/stderr unbuffered; it really helps debugging! */
