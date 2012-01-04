@@ -117,43 +117,35 @@ exit:
 void native_call(struct vm_method *method, void *target,
 		 unsigned long *args, union jvalue *result)
 {
-	switch (method->return_type.vm_type) {
-	case J_VOID: {
+	enum vm_type type = method->return_type.vm_type;
+
+	if (type == J_VOID) {
 		union jvalue unused;
 
 		do_native_call(method, target, args, &unused);
-		break;
+	} else {
+		do_native_call(method, target, args, result);
 	}
-	case J_REFERENCE:
-		do_native_call(method, target, args, result);
-		break;
-	case J_INT:
-		do_native_call(method, target, args, result);
-		break;
+
+	switch (type) {
 	case J_CHAR:
-		do_native_call(method, target, args, result);
 		result->i = (jint) result->c;
 		break;
 	case J_BYTE:
-		do_native_call(method, target, args, result);
 		result->i = (jint) result->b;
 		break;
 	case J_SHORT:
-		do_native_call(method, target, args, result);
 		result->i = (jint) result->s;
 		break;
 	case J_BOOLEAN:
-		do_native_call(method, target, args, result);
 		result->i = (jint) result->z;
 		break;
+	case J_VOID:
+	case J_REFERENCE:
+	case J_INT:
 	case J_LONG:
-		do_native_call(method, target, args, result);
-		break;
 	case J_DOUBLE:
-		do_native_call_xmm(method, target, args, result);
-		break;
 	case J_FLOAT:
-		do_native_call_xmm(method, target, args, result);
 		break;
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
