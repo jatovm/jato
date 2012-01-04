@@ -29,5 +29,6 @@ echo ""
 TESTS="antlr bloat chart eclipse fop hsqldb luindex lusearch pmd xalan"
 
 for test in $TESTS; do
+  sync
   bench $test
 done
