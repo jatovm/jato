@@ -50,25 +50,25 @@ static void do_native_call(struct vm_method *method, void *target,
 			goto exit;
 	}
 
+	stack_size = method->args_count * sizeof(unsigned long);
+
 	__asm__ volatile (
-		"	movl %[args_count], %%ecx	\n"
-		"	shl $2, %[args_count]		\n"
-		"	subl %[args_count], %%esp	\n"
+		"	subl %[stack_size], %%esp	\n"
 		"	movl %%esp, %%edi		\n"
 		"	cld				\n"
 		"	rep movsd			\n"
-		"	mov %[args_count], %[stack_size]\n"
 		"	call *%[target]			\n"
 		"	movl %[result], %%edi		\n"
 		"	movl %%eax, (%%edi)		\n"
 		"	movl %%edx, 4(%%edi)		\n"
 		"	addl %[stack_size], %%esp	\n"
-		: [stack_size] "=r" (stack_size)
-		: [target] "m" (target),
+		:
+		: [target] "a" (target),
 		  [result] "m" (result),
-		  [args_count] "b" (method->args_count),
-		  "S" (args)
-		: "%eax", "%ecx", "%edx", "%edi", "cc", "memory");
+		  [args_count] "c" (method->args_count),
+		  [stack_size] "b" (stack_size),
+		  [args] "S" (args)
+		: "%edx", "%edi", "cc", "memory");
 exit:
 	if (is_native)
 		vm_leave_vm_native();
@@ -85,24 +85,25 @@ static void do_native_call_xmm(struct vm_method *method, void *target,
 			goto exit;
 	}
 
+	stack_size = method->args_count * sizeof(unsigned long);
+
 	__asm__ volatile (
-		"	movl %[args_count], %%ecx	\n"
-		"	shl $2, %[args_count]		\n"
-		"	subl %[args_count], %%esp	\n"
+		"	subl %[stack_size], %%esp	\n"
 		"	movl %%esp, %%edi		\n"
 		"	cld				\n"
 		"	rep movsd			\n"
-		"	mov %[args_count], %[stack_size]\n"
 		"	call *%[target]			\n"
 		"	movl %[result], %%edi		\n"
 		"	movss %%xmm0, (%%edi)		\n"
 		"	addl %[stack_size], %%esp	\n"
-		: [stack_size] "=r" (stack_size)
-		: [target] "m" (target),
+		:
+		: [target] "a" (target),
 		  [result] "m" (result),
-		  [args_count] "b" (method->args_count),
-		  "S" (args)
-		: "%eax", "%ecx", "%edx", "%edi", "cc", "memory");
+		  [args_count] "c" (method->args_count),
+		  [stack_size] "b" (stack_size),
+		  [args] "S" (args)
+		: "%edx", "%edi", "cc", "memory");
+
 exit:
 	if (is_native)
 		vm_leave_vm_native();
