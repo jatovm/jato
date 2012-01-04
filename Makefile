@@ -216,7 +216,9 @@ WARNINGS	+=				\
 
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
-OPTIMIZATIONS	+= -Os -fno-delete-null-pointer-checks
+OPTIMIZATIONS	+= -Os
+OPTIMIZATIONS	+= -fno-delete-null-pointer-checks
+OPTIMIZATIONS	+= -fno-omit-frame-pointer
 ifeq ($(uname_M),x86_64)
 OPTIMIZATIONS	+= -fno-tree-vectorize
 endif
