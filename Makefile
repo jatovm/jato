@@ -216,7 +216,13 @@ WARNINGS	+=				\
 
 DEFAULT_CFLAGS	+= $(WARNINGS)
 
-OPTIMIZATIONS	+= -Os
+ifeq ($(uname_M),i386)
+OPTIMIZATION_LEVEL = -O3
+else
+OPTIMIZATION_LEVEL = -Os
+endif
+
+OPTIMIZATIONS	+= $(OPTIMIZATION_LEVEL)
 OPTIMIZATIONS	+= -fno-delete-null-pointer-checks
 OPTIMIZATIONS	+= -fno-omit-frame-pointer
 ifeq ($(uname_M),x86_64)
