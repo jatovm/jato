@@ -39,7 +39,7 @@ TESTS = [
 , ( "jvm.ClassLoaderTest", 0, [ ], [ "i386" ] )
 , ( "jvm.CloneTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ControlTransferTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "jvm.ConversionTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.ConversionTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.DoubleArithmeticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.DoubleConversionTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.DupTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
