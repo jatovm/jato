@@ -128,6 +128,9 @@ def success(s):
 def failure(s):
   return "\033[31m" + s + "\033[0m"
 
+def skipped_color(s):
+  return "\033[33m" + s + "\033[0m"
+
 def run(program, *args):
   pid = os.fork()
   if not pid:
@@ -209,6 +212,10 @@ def main():
     status = failure(status)
   elif passed > 0:
     status = success(status)
+
+  skipped = len(TESTS) - len(tests)
+  if skipped > 0:
+    status += ", " + skipped_color("%d tests skipped" % skipped)
 
   print "%s (%.2f s) " % (status, elapsed)
   sys.exit(failed)
