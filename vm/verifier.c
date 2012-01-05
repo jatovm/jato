@@ -72,6 +72,11 @@ struct verifier_local_var *alloc_verifier_local_var(int nb_vars)
 	return vars;
 }
 
+void free_verifier_local_var(struct verifier_local_var *vars)
+{
+	free(vars);
+}
+
 struct verifier_stack *alloc_verifier_stack(enum vm_type vm_type)
 {
 	struct verifier_stack *newst;
@@ -84,6 +89,11 @@ struct verifier_stack *alloc_verifier_stack(enum vm_type vm_type)
 	newst->op.is_fragment = false;
 
 	return newst;
+}
+
+void free_verifier_stack(struct verifier_stack *stack)
+{
+	free(stack);
 }
 
 struct verifier_state *alloc_verifier_state(int nb_vars)
@@ -103,6 +113,21 @@ struct verifier_state *alloc_verifier_state(int nb_vars)
 	news->nb_vars = nb_vars;
 
 	return news;
+}
+
+void free_verifier_state(struct verifier_state *state)
+{
+	struct verifier_stack *ptr, *tmp;
+
+	free_verifier_local_var(state->vars);
+
+	list_for_each_entry_safe(state->stack, tmp, &state->stack->slots, slots) {
+		list_del(&ptr->slots);
+		free_verifier_stack(ptr);
+	}
+	free_verifier_stack(state->stack);
+
+	free(state);
 }
 
 struct verifier_block *alloc_verifier_block(struct verifier_context *vrf, uint32_t begin_offset)
@@ -133,6 +158,14 @@ struct verifier_block *alloc_verifier_block(struct verifier_context *vrf, uint32
 	return newb;
 }
 
+void free_verifier_block(struct verifier_block *block)
+{
+	free_verifier_state(block->initial_state);
+	free_verifier_state(block->final_state);
+	free(block->following_offsets);
+	free(block);
+}
+
 struct verifier_jump_destinations *alloc_verifier_jump_destinations(unsigned long dest)
 {
 	struct verifier_jump_destinations *newjd;
@@ -144,6 +177,11 @@ struct verifier_jump_destinations *alloc_verifier_jump_destinations(unsigned lon
 	newjd->dest = dest;
 
 	return newjd;
+}
+
+void free_verifier_jump_destinations(struct verifier_jump_destinations *jmp_dests)
+{
+	free(jmp_dests);
 }
 
 struct verifier_context *alloc_verifier_context(struct vm_method *vmm)
@@ -175,49 +213,22 @@ struct verifier_context *alloc_verifier_context(struct vm_method *vmm)
 	return vrf;
 }
 
-void free_verifier_local_var(struct verifier_local_var *vars)
-{
-	free(vars);
-}
-
-void free_verifier_stack(struct verifier_stack *stack)
-{
-	struct verifier_stack *ptr, *tmp;
-
-	list_for_each_entry_safe(stack, tmp, &stack->slots, slots) {
-		list_del(&ptr->slots);
-		free(ptr);
-	}
-
-	free(stack);
-}
-
-void free_verifier_jump_destinations(struct verifier_jump_destinations *jmp_dests)
-{
-	free(jmp_dests);
-}
-
-void free_verifier_state(struct verifier_state *state)
-{
-	free(state->vars);
-	free_verifier_stack(state->stack);
-	free(state);
-}
-
-void free_verifier_block(struct verifier_block *block)
-{
-	free_verifier_state(block->initial_state);
-	free_verifier_state(block->final_state);
-	free(block);
-}
-
 void free_verifier_context(struct verifier_context *ctx)
 {
-	struct verifier_block *tmp, *ptr;
+	struct verifier_block *vbtmp, *vbptr;
+	struct verifier_jump_destinations *vjdtmp, *vjdptr;
 
-	list_for_each_entry_safe(ptr, tmp, &ctx->vb_list->blocks, blocks) {
-		free_verifier_block(ptr);
+	list_for_each_entry_safe(vbptr, vbtmp, &ctx->vb_list->blocks, blocks) {
+		list_del(&vbptr->blocks);
+		free_verifier_block(vbptr);
 	}
+	free_verifier_block(ctx->vb_list);
+
+	list_for_each_entry_safe(vjdptr, vjdtmp, &ctx->jmp_dests->list, list) {
+		list_del(&vjdptr->list);
+		free_verifier_jump_destinations(vjdptr);
+	}
+	free_verifier_jump_destinations(ctx->jmp_dests);
 
 	free(ctx);
 }
