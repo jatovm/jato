@@ -225,8 +225,8 @@ static uint64_t encode_table[NR_INSN_TYPES] = {
 	[INSN_FSTP_64_MEMLOCAL]		= OPCODE(0xdd) | OPCODE_EXT(3)   | ADDMODE_MEMLOCAL | WIDTH_64,
 	[INSN_FSTP_MEMLOCAL]		= OPCODE(0xd9) | OPCODE_EXT(3)   | ADDMODE_MEMLOCAL | WIDTH_FULL,
 	[INSN_IC_CALL]			= INVALID_INSN,
-	[INSN_JMP_MEMBASE]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | WIDTH_FULL,
-	[INSN_JMP_MEMINDEX]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | INDEX | WIDTH_FULL,
+	[INSN_JMP_MEMBASE]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | WIDTH_FULL | REX_W_PREFIX,
+	[INSN_JMP_MEMINDEX]		= OPCODE(0xff) | OPCODE_EXT(4)   | ADDMODE_RM | DIR_REVERSED | INDEX | WIDTH_FULL,
 	[INSN_MOVSD_MEMBASE_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_RM_REG | WIDTH_64,
 	[INSN_MOVSD_MEMDISP_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMDISP_REG | WIDTH_64,
 	[INSN_MOVSD_MEMLOCAL_XMM]	= REPNE_PREFIX | ESCAPE_OPC_BYTE | OPCODE(0x10) | ADDMODE_MEMLOCAL_REG | WIDTH_64,
@@ -544,6 +544,21 @@ static inline bool operand_is_reg_high(struct operand *operand)
 	return reg_num & 0x8;
 }
 
+static inline bool operand_is_index_reg_high(struct operand *operand)
+{
+	enum machine_reg reg;
+	uint8_t reg_num;
+
+	if (operand->type != OPERAND_MEMINDEX)
+		return false;
+
+	reg		= mach_reg(&operand->index_reg);
+
+	reg_num		= x86_encode_reg(reg);
+
+	return reg_num & 0x8;
+}
+
 static inline int operand_is_int64(struct operand *reg)
 {
 	enum vm_type vm_type = reg->reg.interval->var_info->vm_type;
@@ -584,9 +599,13 @@ static uint8_t insn_rex_prefix(struct insn *self, uint64_t flags)
 			ret	|= REX_R;
 		if (operand_is_reg_high(&self->dest))
 			ret	|= REX_B;
+		if (operand_is_index_reg_high(&self->dest))
+			ret	|= REX_X;
 	} else {
 		if (operand_is_reg_high(&self->src))
 			ret	|= REX_B;
+		if (operand_is_index_reg_high(&self->src))
+			ret	|= REX_X;
 		if (operand_is_reg_high(&self->dest))
 			ret	|= REX_R;
 	}
