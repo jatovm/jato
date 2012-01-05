@@ -387,6 +387,29 @@ void test_encoding_jmp_membase(void)
 	teardown();
 }
 
+void test_encoding_jmp_membase_high(void)
+{
+#ifdef CONFIG_X86_64
+	uint8_t encoding[] = { 0x41, 0xff, 0xa6, 0x78, 0x56, 0x34, 0x12 };
+	struct insn insn = { };
+
+	setup();
+
+	/* jmpq   *0x12345678(%r14) */
+	insn.type			= INSN_JMP_MEMBASE;
+	insn.dest.type			= OPERAND_MEMBASE;
+	insn.dest.base_reg.interval	= &reg_r14;
+	insn.dest.disp			= 0x12345678;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
 void test_encoding_jmp_memindex(void)
 {
 	uint8_t encoding[] = { 0xff, 0x24, 0xbe };
