@@ -178,6 +178,7 @@ static unsigned long native_call_gp(struct vm_method *method,
 	struct vm_args_map *map = method->args_map;
 	unsigned long *stack, regs[6];
 	unsigned long result;
+	unsigned long stack_size;
 
 	stack = malloc(sizeof(unsigned long) * method->args_count);
 	if (!stack)
@@ -197,17 +198,16 @@ static unsigned long native_call_gp(struct vm_method *method,
 	while (reg_count < 6)
 		regs[reg_count++] = 0;
 
+	stack_size = stack_count * sizeof(unsigned long);
+
 	__asm__ volatile (
 		/* Copy stack arguments onto the stack. */
 		"	movq %[stack], %%rsi		\n"
 		"	movq %[stack_count], %%rcx	\n"
-		"	shl $3, %%rcx			\n"
-		"	subq %%rcx, %%rsp		\n"
+		"	subq %[stack_size], %%rsp	\n"
 		"	movq %%rsp, %%rdi		\n"
 		"	cld				\n"
 		"	rep movsq			\n"
-
-		"	movq %%rcx, %%r12		\n"
 
 		/* Assign registers to register arguments. */
 		"	movq 0x00(%[regs]), %%rdi	\n"
@@ -218,13 +218,14 @@ static unsigned long native_call_gp(struct vm_method *method,
 		"	movq 0x28(%[regs]), %%r9	\n"
 
 		"	call *%[target]			\n"
-		"	addq %%r12, %%rsp		\n"
+		"	addq %[stack_size], %%rsp	\n"
 		: "=a" (result)
 		: [target] "m" (target),
 		  [regs] "r" (regs),
 		  [stack] "r" (stack),
-		  [stack_count] "r" (stack_count)
-		: "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11", "r12", "cc", "memory"
+		  [stack_count] "r" (stack_count),
+		  [stack_size] "b" (stack_size)
+		: "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11", "cc", "memory"
 	);
 
 	free(stack);
