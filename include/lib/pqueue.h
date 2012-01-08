@@ -3,18 +3,20 @@
 
 #include <stdbool.h>
 
-typedef int (*pqueue_compare_fn) (void *v1, void *v2);
+struct pqueue_node {
+	unsigned long			key;
+	void				*value;
+};
 
 /* A priority queue */
 struct pqueue {
-	pqueue_compare_fn	compare;
-	unsigned long		size;
-	void **			data;
+	unsigned long			size;
+	struct pqueue_node		*data;
 };
 
-struct pqueue *pqueue_alloc(pqueue_compare_fn compare);
+struct pqueue *pqueue_alloc(void);
 void pqueue_free(struct pqueue *pq);
-int pqueue_insert(struct pqueue *pq, void *e);
+int pqueue_insert(struct pqueue *pq, unsigned long key, void *value);
 void *pqueue_remove_top(struct pqueue *pq);
 
 static inline bool pqueue_is_empty(struct pqueue *pq)

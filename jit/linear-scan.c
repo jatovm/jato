@@ -152,7 +152,7 @@ static void spill_interval(struct compilation_unit *cu, struct live_interval *it
 			mark_need_reload(new, it);
 
 		mark_need_spill(it);
-		pqueue_insert(unhandled, new);
+		pqueue_insert(unhandled, interval_start(new), new);
 	}
 }
 
@@ -335,14 +335,6 @@ static void try_to_allocate_free_reg(struct compilation_unit *cu,
 	}
 }
 
-static int interval_compare(void *a, void *b)
-{
-	struct live_interval *x = a;
-	struct live_interval *y = b;
-
-	return (int)(interval_start(y) - interval_start(x));
-}
-
 int allocate_registers(struct compilation_unit *cu)
 {
 	struct list_head inactive = LIST_HEAD_INIT(inactive);
@@ -358,7 +350,7 @@ int allocate_registers(struct compilation_unit *cu)
 
 	bitset_set_all(registers);
 
-	unhandled = pqueue_alloc(interval_compare);
+	unhandled = pqueue_alloc();
 	if (!unhandled) {
 		free(registers);
 		return warn("out of memory"), -ENOMEM;
@@ -377,7 +369,7 @@ int allocate_registers(struct compilation_unit *cu)
 			if (var->interval->reg < NR_REGISTERS)
 				list_add(&var->interval->interval_node, &inactive);
 		} else
-			pqueue_insert(unhandled, var->interval);
+			pqueue_insert(unhandled, interval_start(var->interval), var->interval);
 	}
 
 	while (!pqueue_is_empty(unhandled)) {
