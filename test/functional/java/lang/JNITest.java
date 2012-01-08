@@ -93,6 +93,7 @@ public class JNITest extends TestCase {
   native static public int jniThrow(Throwable throwable);
   native static public int jniThrowNew(Class<?> clazz, String message);
   native static public boolean testJniExceptionOccurredAndExceptionClear(Throwable throwable);
+  native static public boolean testIsSameObject(Object obj, Object sameObj, Object differentObj);
   native static public boolean isInstanceOf(Object obj, Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
@@ -283,6 +284,14 @@ public class JNITest extends TestCase {
     assertTrue(testJniExceptionOccurredAndExceptionClear(new NullPointerException()));
   }
 
+  public static void testIsSameObject() {
+    String str = "same";
+    String sameStr = str;
+    String differentStr = "different";
+
+    assertTrue(testIsSameObject(str, sameStr, differentStr));
+  }
+
   public static void testIsInstanceOf() {
     assertTrue(isInstanceOf(jniTest, JNITest.class));
   }
@@ -309,6 +318,7 @@ public class JNITest extends TestCase {
     testThrow();
     testThrowNew();
     testExceptionOccurredAndExceptionClear();
+    testIsSameObject();
     testIsInstanceOf();
   }
 }

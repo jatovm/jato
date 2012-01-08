@@ -624,6 +624,20 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testJniExceptionOccurredAndExc
 	return true;
 }
 
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    testIsSameObject
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testIsSameObject(JNIEnv *env, jclass clazz, jobject obj, jobject sameObj, jobject differentObj)
+{
+	if ((*env)->IsSameObject(env, obj, sameObj) && !(*env)->IsSameObject(env, obj, differentObj))
+		return true;
+	else
+		return false;
+}
+
 /*
  * Class:     java_lang_JNITest
  * Method:    isInstanceOf
