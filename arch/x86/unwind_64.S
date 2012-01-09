@@ -29,7 +29,10 @@ unwind:
 	call	cu_frame_locals_offset
 
 	pop	%rdi
+
+	# return address of the method
 	pop	%rdx
+	decq	%rdx
 
 	movq	%rbp, %rsp
 	subq	%rax, %rsp
