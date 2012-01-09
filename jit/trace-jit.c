@@ -666,6 +666,7 @@ static void print_arg(struct vm_method *vmm, enum vm_type arg_type,
 	trace_printf("\n");
 }
 
+#ifndef CONFIG_ARGS_MAP
 static void trace_invoke_args(struct vm_method *vmm,
 			      struct jit_stack_frame *frame)
 {
@@ -695,6 +696,7 @@ static void trace_invoke_args(struct vm_method *vmm,
 		print_arg(vmm, arg->type_info.vm_type, frame->args, &arg_index);
 	}
 }
+#endif
 
 static void print_source_and_line(struct compilation_unit *cu,
 				  unsigned char *ptr)
@@ -767,7 +769,9 @@ void trace_invoke(struct compilation_unit *cu)
 
 		trace_printf("\tentry\t: %p\n", buffer_ptr(cu->objcode));
 		trace_return_address(frame);
+#ifndef CONFIG_ARGS_MAP
 		trace_invoke_args(vmm, frame);
+#endif
 	}
 
 	trace_flush();
