@@ -157,8 +157,6 @@ LIB_OBJS += vm/types.o
 LIB_OBJS += vm/utf8.o
 LIB_OBJS += vm/zalloc.o
 
-RUNTIME_CLASSES =
-
 CC		?= gcc
 LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
@@ -301,7 +299,7 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
-$(PROGRAM): $(LIB_FILE) $(OBJS) $(RUNTIME_CLASSES)
+$(PROGRAM): $(LIB_FILE) $(OBJS)
 	$(E) "  LINK    " $@
 	$(Q) $(LINK) $(JATO_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
@@ -416,10 +414,6 @@ compile-jasmin-tests: $(PROGRAM) FORCE
 	$(E) "  JASMIN  " $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
 	$(Q) $(JASMIN) $(JASMIN_OPTS) -d test/functional $(JASMIN_REGRESSION_TEST_SUITE_CLASSES) > /dev/null
 .PHONY: compile-jasmin-tests
-
-$(RUNTIME_CLASSES): %.class: %.java
-	$(E) "  JAVAC   " $@
-	$(Q) $(JAVAC) -cp $(GLIBJ) $(JAVAC_OPTS) -d runtime/classpath $<
 
 lib: $(CLASSPATH_CONFIG)
 	+$(MAKE) -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
