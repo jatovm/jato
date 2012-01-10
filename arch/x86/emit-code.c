@@ -1982,15 +1982,6 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 	__emit_push_reg(buf, MACH_REG_R14);
 	__emit_push_reg(buf, MACH_REG_R15);
 
-	__emit64_push_xmm(buf, MACH_REG_XMM8);
-	__emit64_push_xmm(buf, MACH_REG_XMM9);
-	__emit64_push_xmm(buf, MACH_REG_XMM10);
-	__emit64_push_xmm(buf, MACH_REG_XMM11);
-	__emit64_push_xmm(buf, MACH_REG_XMM12);
-	__emit64_push_xmm(buf, MACH_REG_XMM13);
-	__emit64_push_xmm(buf, MACH_REG_XMM14);
-	__emit64_push_xmm(buf, MACH_REG_XMM15);
-
 	/* Save *this. */
 	__emit_push_reg(buf, MACH_REG_RDI);
 }
@@ -2006,15 +1997,6 @@ static void emit_restore_regs(struct buffer *buf)
 {
 	/* Clear *this from stack. */
 	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
-
-	__emit64_pop_xmm(buf, MACH_REG_XMM15);
-	__emit64_pop_xmm(buf, MACH_REG_XMM14);
-	__emit64_pop_xmm(buf, MACH_REG_XMM13);
-	__emit64_pop_xmm(buf, MACH_REG_XMM12);
-	__emit64_pop_xmm(buf, MACH_REG_XMM11);
-	__emit64_pop_xmm(buf, MACH_REG_XMM10);
-	__emit64_pop_xmm(buf, MACH_REG_XMM9);
-	__emit64_pop_xmm(buf, MACH_REG_XMM8);
 
 	__emit_pop_reg(buf, MACH_REG_R15);
 	__emit_pop_reg(buf, MACH_REG_R14);
