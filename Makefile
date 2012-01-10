@@ -174,7 +174,15 @@ JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
 JAVAC		?= JAVA=java $(shell pwd)/tools/ecj
 endif
 
-DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE -fstack-protector-all -D_FORTIFY_SOURCE=2
+DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE
+
+ifeq ($(uname_M),x86_64)
+STACK_PROTECTOR = -fno-stack-protector
+else
+STACK_PROTECTOR = -fstack-protector-all -D_FORTIFY_SOURCE=2
+endif
+
+DEFAULT_CFLAGS += $(STACK_PROTECTOR)
 
 HAS_TCMALLOC_MINIMAL:=$(shell scripts/gcc-has-lib.sh gcc tcmalloc_minimal)
 ifeq ($(HAS_TCMALLOC_MINIMAL),y)
