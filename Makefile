@@ -161,7 +161,6 @@ CC		?= gcc
 LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
 JAVA		?= $(shell pwd)/jato
-JAVAC_OPTS	?= -encoding utf-8
 INSTALL		?= install
 
 ifeq ($(uname_M),x86_64)
@@ -171,6 +170,9 @@ else
 JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
 JAVAC		?= JAVA=java $(shell pwd)/tools/ecj
 endif
+
+JAVAC_OPTS	+= -encoding utf-8
+JAVAC_OPTS	+= -source 1.6 -target 1.6
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE
 
@@ -402,12 +404,12 @@ MBENCH_TEST_SUITE_CLASSES = test/perf/ICTime.java
 
 compile-java-tests: $(PROGRAM) FORCE
 	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)
-	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):test/functional $(JAVAC_OPTS) -d test/functional $(REGRESSION_TEST_SUITE_CLASSES)
+	$(Q) JAVA=$(JAVA) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):test/functional -d test/functional $(REGRESSION_TEST_SUITE_CLASSES)
 .PHONY: compile-java-tests
 
 compile-mbench-tests: $(PROGRAM) FORCE
 	$(E) "  JAVAC   " $(MBENCH_TEST_SUITE_CLASSES)
-	$(Q) JAVA=$(JAVA) $(JAVAC) -source 1.5 -cp $(GLIBJ):test/perf $(JAVAC_OPTS) -d test/perf $(MBENCH_TEST_SUITE_CLASSES)
+	$(Q) JAVA=$(JAVA) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):test/perf -d test/perf $(MBENCH_TEST_SUITE_CLASSES)
 .PHONY: compile-mbench-tests
 
 compile-jasmin-tests: $(PROGRAM) FORCE
