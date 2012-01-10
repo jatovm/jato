@@ -2330,9 +2330,11 @@ static void select_trace_return_value(struct basic_block *s,
 	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
 	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
 
+	select_insn(s, tree, reg_insn(INSN_PUSH_REG, rax));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, rax, rsi));
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) vmm, rdi));
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) trace_return_value));
+	select_insn(s, tree, reverse_reg_insn(INSN_POP_REG, rax));
 }
 
 static void save_invoke_result(struct basic_block *s,
