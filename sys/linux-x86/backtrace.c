@@ -187,12 +187,32 @@ void show_function(void *addr)
 	free_str(str);
 }
 
+#define STACK_ENTRIES_PER_LINE		4
+#define STACK_DUMP_DEPTH		(3 * STACK_ENTRIES_PER_LINE)
+
 #ifndef CONFIG_X86_64
 
 #define IP_REG REG_EIP
 #define BP_REG REG_EBP
+#define SP_REG REG_ESP
 
 #define IP_REG_NAME "EIP"
+
+static void show_stack(unsigned long *sp)
+{
+	unsigned int i;
+
+	trace_printf("Stack:\n");
+
+	for (i = 0; i < STACK_DUMP_DEPTH; i++) {
+		if (i && (i % STACK_ENTRIES_PER_LINE) == 0)
+			trace_printf("\n");
+
+		trace_printf("%08lx ", sp[i]);
+	}
+
+	trace_printf("\n");
+}
 
 static void show_registers(gregset_t gregs)
 {
@@ -220,8 +240,25 @@ static void show_registers(gregset_t gregs)
 
 #define IP_REG REG_RIP
 #define BP_REG REG_RBP
+#define SP_REG REG_RSP
 
 #define IP_REG_NAME "RIP"
+
+static void show_stack(unsigned long *sp)
+{
+	unsigned int i;
+
+	trace_printf("Stack:\n");
+
+	for (i = 0; i < STACK_DUMP_DEPTH; i++) {
+		if (i && (i % STACK_ENTRIES_PER_LINE) == 0)
+			trace_printf("\n");
+
+		trace_printf("%016lx ", sp[i]);
+	}
+
+	trace_printf("\n");
+}
 
 static void show_registers(gregset_t gregs)
 {
@@ -267,10 +304,11 @@ static void show_registers(gregset_t gregs)
 void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 {
 	ucontext_t *uc = secret;
-	unsigned long eip, ebp, addr;
+	unsigned long eip, ebp, sp, addr;
 
 	eip	= uc->uc_mcontext.gregs[IP_REG];
 	ebp     = uc->uc_mcontext.gregs[BP_REG];
+	sp     = uc->uc_mcontext.gregs[SP_REG];
 	addr	= (unsigned long) info->si_addr;
 
 	switch (sig) {
@@ -285,7 +323,10 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 		trace_printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, eip);
 		break;
 	};
+
 	show_registers(uc->uc_mcontext.gregs);
+
+	show_stack((void *) sp);
 
 	show_code((void *) eip);
 
