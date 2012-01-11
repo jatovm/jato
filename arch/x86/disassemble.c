@@ -31,11 +31,19 @@
 
 */
 
-#include "jit/bc-offset-mapping.h"
 #include "jit/disassemble.h"
+
+#include "jit/bc-offset-mapping.h"
+#include "jit/cu-mapping.h"
 #include "jit/compiler.h"
+#include "jit/text.h"
 #include "lib/string.h"
 
+#include "arch/decode.h"
+
+#include "vm/backtrace.h"
+#include "vm/method.h"
+#include "vm/class.h"
 #include "vm/trace.h"
 
 #include <assert.h>
@@ -106,17 +114,40 @@ static unsigned char *disassemble_insn(struct compilation_unit *cu, unsigned cha
 
 	seqlen = print_insn_i386((bfd_vma) (unsigned long) code, &info);
 
-	for (i = 0; i < seqlen; i++, code++) {
-		trace_printf("%02x ", *code);
+	for (i = 0; i < seqlen; i++) {
+		trace_printf("%02x ", code[i]);
 	}
 
 	for (; i < 8; i++) {
 		trace_printf("   ");
 	}
 
-	trace_printf("   %s\n", disass_buf);
+	trace_printf("   %s", disass_buf);
 
-	return code;
+	if (x86_is_call(code)) {
+		unsigned long addr = x86_call_target(code);
+
+		trace_printf("%8s ", "#");
+
+		if (is_jit_text((void *) addr)) {
+			struct compilation_unit *target_cu;
+
+			target_cu = jit_lookup_cu(addr);
+			if (target_cu) {
+				struct vm_method *vmm = target_cu->method;
+
+				trace_printf("%s.%s%s", vmm->class->name, vmm->name, vmm->type);
+			} else {
+				trace_printf("<unknown>\n");
+			}
+		} else {
+			show_function((void *) addr);
+		}
+	}
+
+	trace_printf("\n");
+
+	return code + seqlen;
 }
 
 void disassemble(struct vm_method *vmm)

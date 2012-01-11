@@ -2,14 +2,13 @@
 #define X86_ENCODE_H
 
 #include "arch/registers.h"	/* for enum machine_reg */
+#include "arch/isa.h"
 
 #include <stdint.h>
 
 struct basic_block;
 struct buffer;
 struct insn;
-
-#define X86_CALL_INSN_SIZE	5
 
 #define	REX		0x40
 #define REX_W		(REX | 8)	/* 64-bit operands */
