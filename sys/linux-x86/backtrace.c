@@ -304,23 +304,23 @@ static void show_registers(gregset_t gregs)
 void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 {
 	ucontext_t *uc = secret;
-	unsigned long eip, ebp, sp, addr;
+	unsigned long ip, bp, sp, addr;
 
-	eip	= uc->uc_mcontext.gregs[IP_REG];
-	ebp     = uc->uc_mcontext.gregs[BP_REG];
-	sp     = uc->uc_mcontext.gregs[SP_REG];
+	ip	= uc->uc_mcontext.gregs[IP_REG];
+	bp	= uc->uc_mcontext.gregs[BP_REG];
+	sp	= uc->uc_mcontext.gregs[SP_REG];
 	addr	= (unsigned long) info->si_addr;
 
 	switch (sig) {
 	case SIGSEGV:
 		trace_printf("SIGSEGV at %s %08lx while accessing memory address %08lx.\n",
-			IP_REG_NAME, eip, addr);
+			IP_REG_NAME, ip, addr);
 		break;
 	case SIGILL:
-		trace_printf("SIGILL at %s %08lx\n", sig, IP_REG_NAME, eip);
+		trace_printf("SIGILL at %s %08lx\n", sig, IP_REG_NAME, ip);
 		break;
 	default:
-		trace_printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, eip);
+		trace_printf("Signal %d at %s %08lx\n", sig, IP_REG_NAME, ip);
 		break;
 	};
 
@@ -328,9 +328,9 @@ void print_backtrace_and_die(int sig, siginfo_t *info, void *secret)
 
 	show_stack((void *) sp);
 
-	show_code((void *) eip);
+	show_code((void *) ip);
 
-	print_trace_from(eip, (void *) ebp);
+	print_trace_from(ip, (void *) bp);
 
 	trace_flush();
 
