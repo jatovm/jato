@@ -11,6 +11,7 @@ TOPLEVEL_OBJS	+= jit/text.o
 TOPLEVEL_OBJS	+= lib/buffer.o
 TOPLEVEL_OBJS	+= lib/hash-map.o
 TOPLEVEL_OBJS	+= lib/string.o
+TOPLEVEL_OBJS	+= lib/symbol.o
 TOPLEVEL_OBJS	+= test/unit/libharness/libharness.o
 TOPLEVEL_OBJS	+= test/unit/vm/stack-trace-stub.o
 TOPLEVEL_OBJS	+= test/unit/vm/trace-stub.o

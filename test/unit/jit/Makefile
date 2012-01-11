@@ -59,6 +59,7 @@ TOPLEVEL_OBJS := \
 	lib/radix-tree.o \
 	lib/stack.o \
 	lib/string.o \
+	lib/symbol.o \
 	vm/call.o \
 	vm/bytecode.o \
 	vm/die.o \

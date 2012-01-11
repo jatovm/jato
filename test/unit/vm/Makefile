@@ -12,6 +12,7 @@ TOPLEVEL_OBJS :=			\
 	lib/radix-tree.o		\
 	lib/stack.o			\
 	lib/string.o			\
+	lib/symbol.o			\
 	test/unit/jit/trace-stub.o	\
 	test/unit/jit/exception-stub.o	\
 	test/unit/libharness/libharness.o\

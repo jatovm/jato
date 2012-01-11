@@ -41,6 +41,7 @@
 #include "vm/trace.h"
 
 #include "lib/string.h"
+#include "lib/symbol.h"
 
 /* get REG_EIP from ucontext.h */
 #include <ucontext.h>
@@ -68,123 +69,17 @@ static void show_code(void *eip)
 	trace_printf("\n");
 }
 
-static asymbol *lookup_symbol(asymbol ** symbols, int nr_symbols,
-			      const char *symbol_name)
-{
-	int i;
-
-	for (i = 0; i < nr_symbols; i++) {
-		asymbol *symbol = symbols[i];
-
-		if (!strcmp(bfd_asymbol_name(symbol), symbol_name))
-			return symbol;
-	}
-	return NULL;
-}
-
-static bool show_backtrace_function(void *addr, struct string *str) {
-	void * buf[] = { addr };
-	char **symbols;
-
-	symbols = backtrace_symbols(buf, 1);
-	if (symbols == NULL) {
-		return false;
-	}
-
-	str_append(str, "%s\n", symbols[0]);
-
-	free(symbols);
-	return true;
-}
-
-bool show_exe_function(void *addr, struct string *str)
-{
-	bool ret;
-	const char *function_name;
-	bfd_vma symbol_offset;
-	bfd_vma symbol_start;
-	const char *filename;
-	asection *sections;
-	unsigned int line;
-	asymbol **symbols;
-	asymbol *symbol;
-	int nr_symbols;
-	bfd *abfd;
-	int size;
-
-	symbols = NULL;
-
-	bfd_init();
-
-	abfd = bfd_openr("/proc/self/exe", NULL);
-	if (!abfd)
-		goto failed;
-
-	if (!bfd_check_format(abfd, bfd_object))
-		goto failed;
-
-	size = bfd_get_symtab_upper_bound(abfd);
-	if (!size)
-		goto failed;
-
-	symbols = malloc(size);
-	if (!symbols)
-		goto failed;
-
-	nr_symbols = bfd_canonicalize_symtab(abfd, symbols);
-
-	sections = bfd_get_section_by_name(abfd, ".debug_info");
-	if (!sections)
-		goto failed;
-
-	if (!bfd_find_nearest_line
-	    (abfd, sections, symbols, (unsigned long) addr, &filename,
-	     &function_name, &line))
-		goto failed;
-
-	if (!function_name)
-		goto failed;
-
-	symbol = lookup_symbol(symbols, nr_symbols, function_name);
-	if (!symbol)
-		goto failed;
-
-	symbol_start = bfd_asymbol_value(symbol);
-	symbol_offset = (unsigned long) addr - symbol_start;
-
-	str_append(str, "%s+%llx (%s:%i)\n",
-		   function_name, (long long) symbol_offset, filename, line);
-	ret = true;
-
-out:
-	free(symbols);
-
-	if (abfd)
-		bfd_close(abfd);
-	return ret;
-
-failed:
-	/*
-	 * If above steps failed then try to obtain the symbol description with
-	 * backtrace_symbols().
-	 */
-	ret = show_backtrace_function(addr, str);
-	goto out;
-}
-
 void show_function(void *addr)
 {
-	struct string *str;
+	char buf[128];
+	char *sym;
 
-	str = alloc_str();
+	sym = symbol_lookup((unsigned long) addr, buf, ARRAY_SIZE(buf));
 
-	if (show_exe_function(addr, str)) {
-		trace_printf("%s", str->value);
-	} else {
+	if (sym)
+		trace_printf("%s\n", sym);
+	else
 		trace_printf("<unknown>\n");
-	}
-
-	free_str(str);
 }
 
 #define STACK_ENTRIES_PER_LINE		4

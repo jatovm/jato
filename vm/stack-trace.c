@@ -47,6 +47,8 @@
 #include "jit/exception.h"
 #include "jit/compiler.h"
 
+#include "lib/symbol.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -731,20 +733,16 @@ static void show_mixed_stack_trace(struct stack_trace_elem *elem)
 		       stack_trace_elem_type_name(elem->type));
 
 		if (elem->type != STACK_TRACE_ELEM_TYPE_OTHER) {
+			char buf[128];
+
 			print_java_stack_trace_elem(elem);
 			trace_printf("\n");
 
 			if (elem->type != STACK_TRACE_ELEM_TYPE_VM_NATIVE)
 				continue;
 
-			struct string *str;
-
-			str = alloc_str();
-
-			if (show_exe_function((void *) elem->addr, str))
-				trace_printf("%-27s%s", " ", str->value);
-
-			free_str(str);
+			if (symbol_lookup(elem->addr, buf, ARRAY_SIZE(buf)))
+				trace_printf("%-27s%s", " ", buf);
 
 			continue;
 		}

@@ -108,6 +108,7 @@ LIB_OBJS += lib/parse.o
 LIB_OBJS += lib/pqueue.o
 LIB_OBJS += lib/radix-tree.o
 LIB_OBJS += lib/stack.o
+LIB_OBJS += lib/symbol.o
 LIB_OBJS += lib/string.o
 LIB_OBJS += lib/zip.o
 LIB_OBJS += runtime/gnu_java_lang_management_VMThreadMXBeanImpl.o
