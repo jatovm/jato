@@ -801,13 +801,17 @@ static void handle_trace_itable(void)
 	opt_trace_itable = true;
 }
 
+static void handle_trace_liveness(void)
+{
+	opt_trace_liveness = true;
+}
+
 static void handle_trace_jit(void)
 {
 	opt_trace_ssa = true;
 	opt_trace_cfg = true;
 	opt_trace_tree_ir = true;
 	opt_trace_lir = true;
-	opt_trace_liveness = true;
 	opt_trace_regalloc = true;
 	opt_trace_machine_code = true;
 	opt_trace_magic_trampoline = true;
@@ -926,7 +930,6 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
 	DEFINE_OPTION("Xtrace:bytecode-offset",	handle_trace_bytecode_offset),
-	DEFINE_OPTION("Xtrace:verifier",	handle_trace_verifier),
 	DEFINE_OPTION("Xtrace:classloader",	handle_trace_classloader),
 	DEFINE_OPTION("Xtrace:compile",		handle_trace_compile),
 	DEFINE_OPTION("Xtrace:exceptions",	handle_trace_exceptions),
@@ -934,7 +937,9 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:invoke-verbose",	handle_trace_invoke_verbose),
 	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),
 	DEFINE_OPTION("Xtrace:jit",		handle_trace_jit),
+	DEFINE_OPTION("Xtrace:liveness",	handle_trace_liveness),
 	DEFINE_OPTION("Xtrace:trampoline",	handle_trace_trampoline),
+	DEFINE_OPTION("Xtrace:verifier",	handle_trace_verifier),
 	DEFINE_OPTION("Xtrace:vtable",		handle_trace_vtable),
 
 	DEFINE_OPTION_ARG("classpath",		handle_classpath),
