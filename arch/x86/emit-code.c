@@ -948,17 +948,15 @@ void emit_trampoline(struct compilation_unit *cu,
 			   MACH_REG_ECX);
 	__emit_test_membase_reg(buf, MACH_REG_ECX, 0, MACH_REG_ECX);
 
-	__emit_push_reg(buf, MACH_REG_EAX);
-
 	if (method_is_virtual(cu->method)) {
+		__emit_push_reg(buf, MACH_REG_EAX);
 		__emit_push_membase(buf, MACH_REG_EBP, 0x08);
 
 		__emit_push_imm(buf, (unsigned long)cu);
 		__emit_call(buf, fixup_vtable);
 		__emit_add_imm_reg(buf, 0x08, MACH_REG_ESP);
+		__emit_pop_reg(buf, MACH_REG_EAX);
 	}
-
-	__emit_pop_reg(buf, MACH_REG_EAX);
 
 	__emit_pop_reg(buf, MACH_REG_EBP);
 	emit_indirect_jump_reg(buf, MACH_REG_EAX);
