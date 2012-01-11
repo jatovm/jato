@@ -450,7 +450,7 @@ void trace_regalloc(struct compilation_unit *cu)
 		struct live_interval *interval;
 
 		for (interval = var->interval; interval != NULL; interval = interval->next_child) {
-			trace_printf("  %2lu ", var->vreg);
+			trace_printf("  r%2lu ", var->vreg);
 
 			if (interval_is_empty(interval))
 				trace_printf("(empty)       :");
