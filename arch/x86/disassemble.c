@@ -43,15 +43,6 @@
 #include <stdarg.h>
 #include <dis-asm.h>
 
-/* some macros ****************************************************************/
-
-#define DISASSINSTR(code) \
-    (code) = disassinstr((code))
-
-#define DISASSEMBLE(start,end) \
-    disassemble((start), (end))
-
-
 /* global variables ***********************************************************/
 
 disassemble_info info;
@@ -76,14 +67,6 @@ unsigned long disass_len;
 
 #endif /* CONFIG_X86_32 */
 
-
-/* disass_printf ***************************************************************
-
-   Required by binutils disassembler.  This just prints the
-   disassembled instructions to stdout.
-
-*******************************************************************************/
-
 static void disass_printf(PTR p, const char *fmt, ...)
 {
 	va_list ap;
@@ -95,13 +78,6 @@ static void disass_printf(PTR p, const char *fmt, ...)
 	va_end(ap);
 }
 
-
-/* buffer_read_memory **********************************************************
-
-   We need to replace the buffer_read_memory from binutils.
-
-*******************************************************************************/
-
 static int disass_buffer_read_memory(bfd_vma memaddr, bfd_byte *myaddr, unsigned int length, struct disassemble_info *info)
 {
 	memcpy(myaddr, (void *) (unsigned long) memaddr, length);
@@ -109,31 +85,10 @@ static int disass_buffer_read_memory(bfd_vma memaddr, bfd_byte *myaddr, unsigned
 	return 0;
 }
 
-/* disassinstr *****************************************************************
-
-   Outputs a disassembler listing of one machine code instruction on
-   'stdout'.
-
-   code: instructions machine code
-
-*******************************************************************************/
-
-static unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *code)
+static unsigned char *disassemble_insn(struct compilation_unit *cu, unsigned char *code)
 {
 	unsigned long seqlen;
 	unsigned long i;
-
-	if (!disass_initialized) {
-		INIT_DISASSEMBLE_INFO(info, NULL, disass_printf);
-
-		/* setting the struct members must be done after
-		   INIT_DISASSEMBLE_INFO */
-
-		info.mach             = JIT_BFD_MACH;
-		info.read_memory_func = &disass_buffer_read_memory;
-
-		disass_initialized = 1;
-	}
 
 	if (opt_trace_bytecode_offset) {
 		struct string *str = alloc_str();
@@ -164,18 +119,37 @@ static unsigned char *disassinstr(struct compilation_unit *cu, unsigned char *co
 	return code;
 }
 
-
-/* disassemble *****************************************************************
-
-   Outputs a disassembler listing of some machine code on `stdout'.
-
-   start: pointer to first machine instruction
-   end:   pointer after last machine instruction
-
-*******************************************************************************/
-
-void disassemble(struct compilation_unit *cu, void *start, void *end)
+void disassemble(struct vm_method *vmm)
 {
+	struct compilation_unit *cu = vmm->compilation_unit;
+	struct jit_trampoline *trampoline = vmm->trampoline;
+	void *start, *end;
+
+	if (!disass_initialized) {
+		INIT_DISASSEMBLE_INFO(info, NULL, disass_printf);
+
+		/* setting the struct members must be done after
+		   INIT_DISASSEMBLE_INFO */
+
+		info.mach             = JIT_BFD_MACH;
+		info.read_memory_func = &disass_buffer_read_memory;
+
+		disass_initialized = 1;
+	}
+
+	trace_printf("# Trampoline: \n");
+
+	start = buffer_ptr(trampoline->objcode);
+	end = buffer_current(trampoline->objcode);
+
 	for (; start < end; )
-		start = disassinstr(cu, start);
+		start = disassemble_insn(cu, start);
+
+	trace_printf("\n# Method: \n");
+
+	start = buffer_ptr(cu->objcode);
+	end = buffer_current(cu->objcode);
+
+	for (; start < end; )
+		start = disassemble_insn(cu, start);
 }
