@@ -105,11 +105,15 @@ unsigned long slot_offset_64(struct stack_slot *slot)
 unsigned long frame_locals_size(struct stack_frame *frame)
 {
 	unsigned long nr_locals;
+	unsigned long size;
 
 	assert(frame->nr_local_slots >= frame->nr_args);
 
 	nr_locals = frame->nr_local_slots - frame->nr_args;
-	return __index_to_offset(nr_locals + frame->nr_spill_slots);
+
+	size = __index_to_offset(nr_locals + frame->nr_spill_slots);
+
+	return ALIGN(size, X86_STACK_ALIGN);
 }
 
 /*

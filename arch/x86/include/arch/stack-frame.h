@@ -8,6 +8,8 @@ struct vm_method;
 struct expression;
 struct compilation_unit;
 
+#define X86_STACK_ALIGN		16
+
 struct native_stack_frame {
 	void *prev; /* previous stack frame link */
 	unsigned long return_address;
