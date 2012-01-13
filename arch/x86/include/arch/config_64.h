@@ -3,5 +3,8 @@
 #define USE_FFI 1
 #define CONFIG_ARGS_MAP 1
 #define ARCH_NAME "x86-64"
-#define CONFIG_GDB
+
+#ifdef CONFIG_DEBUG
+#define CONFIG_GDB 1
+#endif
 

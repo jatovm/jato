@@ -246,7 +246,7 @@ DEFAULT_CFLAGS	+= $(INCLUDES)
 DEBUG =
 ifeq ($(strip $(DEBUG)),1)
 	# This overrides DEFAULT_CFLAGS, but not user-supplied CFLAGS.
-	DEFAULT_CFLAGS += -O0 -ggdb
+	DEFAULT_CFLAGS += -O0 -ggdb -DCONFIG_DEBUG
 endif
 
 DEFAULT_LIBS	= -L. -ljvm -lrt -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
