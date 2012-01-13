@@ -73,6 +73,7 @@ TESTS = [
 , ( "jvm.ObjectCreationAndManipulationTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.ObjectStackTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ParameterPassingTest", 100, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
+, ( "jvm.ParameterPassingLivenessTest", 1, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.PopTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.PrintTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "jvm.PutfieldTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )

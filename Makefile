@@ -367,6 +367,7 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/ObjectCreationAndManipulationTest.java \
 	test/functional/jvm/ObjectStackTest.java \
 	test/functional/jvm/ParameterPassingTest.java \
+	test/functional/jvm/ParameterPassingLivenessTest.java \
 	test/functional/jvm/PrintTest.java \
 	test/functional/jvm/PutfieldTest.java \
 	test/functional/jvm/PutstaticPatchingTest.java \
