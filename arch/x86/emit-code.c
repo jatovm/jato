@@ -665,7 +665,7 @@ static void emit_test_imm_memdisp(struct insn *insn, struct buffer *buf, struct 
 }
 
 void emit_prolog(struct buffer *buf, struct stack_frame *frame,
-					unsigned long nr_locals)
+					unsigned long frame_size)
 {
 	/* Unconditionally push callee-saved registers */
 	__emit_push_reg(buf, MACH_REG_EDI);
@@ -675,8 +675,8 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 	__emit_push_reg(buf, MACH_REG_EBP);
 	__emit_mov_reg_reg(buf, MACH_REG_ESP, MACH_REG_EBP);
 
-	if (nr_locals)
-		__emit_sub_imm_reg(buf, nr_locals * sizeof(unsigned long), MACH_REG_ESP);
+	if (frame_size)
+		__emit_sub_imm_reg(buf, frame_size, MACH_REG_ESP);
 }
 
 void emit_epilog(struct buffer *buf)
