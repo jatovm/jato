@@ -40,10 +40,7 @@
 #include "arch/stack-frame.h"
 
 /*
- * The three callee-saved registers are unconditionally stored on the stack
- * after EIP and EBP (see emit_prolog() for details). Therefore, there are five
- * 32-bit stack slots before the first argument to a function as illustrated by
- * the following diagram:
+ * The stack frame layout is illustrated by the following diagram:
  *
  *     :              :  ^
  *     :              :  |  Higher memory addresses
@@ -52,9 +49,6 @@
  *     :     ...      :
  *     |    Arg 1     | <-- Start offset of arguments
  *     |   Old EIP    |
- *     |     EDI      |
- *     |     ESI      |
- *     |     EBX      |
  *     |   Old EBP    | <-- New EBP
  *     |   Local 1    |
  *     :     ...      :

@@ -22,9 +22,6 @@ struct native_stack_frame {
 
 struct jit_stack_frame {
 	void *prev; /* previous stack frame link */
-	unsigned long old_ebx;
-	unsigned long old_esi;
-	unsigned long old_edi;
 	unsigned long return_address;
 	unsigned long args[0];
 } __attribute__((packed));

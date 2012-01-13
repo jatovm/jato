@@ -1265,10 +1265,6 @@ void emit_epilog(struct buffer *buf)
 	emit_ret(buf);
 }
 
-/*
- * FIXME: We use different stack layout on 32-bit and 64-bit so prolog, epilog,
- * and unwind sequences are slightly different.
- */
 void emit_unwind(struct buffer *buf)
 {
 	if (opt_debug_stack)

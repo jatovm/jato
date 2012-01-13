@@ -621,13 +621,13 @@ static void emit_restore_callee_save_regs(struct buffer *buf)
 void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 					unsigned long frame_size)
 {
-	emit_save_callee_save_regs(buf);
-
 	__emit_push_reg(buf, MACH_REG_EBP);
 	__emit_mov_reg_reg(buf, MACH_REG_ESP, MACH_REG_EBP);
 
 	if (frame_size)
 		__emit_sub_imm_reg(buf, frame_size, MACH_REG_ESP);
+
+	emit_save_callee_save_regs(buf);
 
 	if (opt_debug_stack)
 		__emit_push_imm(buf, STACK_FRAME_REDZONE_END);
@@ -667,22 +667,18 @@ void emit_epilog(struct buffer *buf)
 	if (opt_debug_stack)
 		emit_stack_redzone_check(buf);
 
-	emit_leave(buf);
 	emit_restore_regs(buf);
+	emit_leave(buf);
 	emit_ret(buf);
 }
 
-/*
- * FIXME: We use different stack layout on 32-bit and 64-bit so prolog, epilog,
- * and unwind sequences are slightly different.
- */
 void emit_unwind(struct buffer *buf)
 {
 	if (opt_debug_stack)
 		emit_stack_redzone_check(buf);
 
-	emit_leave(buf);
 	emit_restore_regs(buf);
+	emit_leave(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
