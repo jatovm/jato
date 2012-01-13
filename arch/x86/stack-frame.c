@@ -30,6 +30,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/expression.h"
 #include "jit/compiler.h"
+#include "jit/args.h"
 #include "jit/text.h"
 
 #include "vm/stack-trace.h"
@@ -83,7 +84,7 @@ unsigned long frame_local_offset(struct vm_method *method,
 	unsigned long idx, nr_args;
 
 	idx = local->local_index;
-	nr_args = method->args_count;
+	nr_args = get_stack_args_count(method);
 
 	return index_to_offset(idx, vm_type_slot_size(local->vm_type), nr_args);
 }
