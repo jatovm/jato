@@ -1958,7 +1958,7 @@ static void __emit64_pop_xmm(struct buffer *buf, enum machine_reg reg)
 }
 
 void emit_prolog(struct buffer *buf, struct stack_frame *frame,
-					unsigned long nr_locals)
+					unsigned long frame_size)
 {
 	__emit_push_reg(buf, MACH_REG_RBP);
 	__emit_mov_reg_reg(buf, MACH_REG_RSP, MACH_REG_RBP);
@@ -1969,10 +1969,8 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 	 * emit(buf, 0xFC);
 	 */
 
-	if (nr_locals)
-		__emit64_sub_imm_reg(buf,
-				     nr_locals * sizeof(unsigned long),
-				     MACH_REG_RSP);
+	if (frame_size)
+		__emit64_sub_imm_reg(buf, frame_size, MACH_REG_RSP);
 
 	__emit_push_reg(buf, MACH_REG_RBX);
 	__emit_push_reg(buf, MACH_REG_R12);
