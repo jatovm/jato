@@ -59,6 +59,7 @@
 #include "jit/exception.h"
 #include "jit/inline-cache.h"
 #include "jit/perf-map.h"
+#include "jit/debug.h"
 #include "jit/text.h"
 
 #include "lib/string.h"
@@ -754,6 +755,11 @@ static void handle_trace_gate(const char *arg)
 	regex_compile(&method_trace_gate_regex, arg);
 }
 
+static void handle_debug_stack(void)
+{
+	opt_debug_stack = true;
+}
+
 static void handle_trace_asm(void)
 {
 	opt_trace_machine_code = true;
@@ -927,6 +933,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xnoic",			handle_no_ic),
 	DEFINE_OPTION("Xint",			handle_int),
 
+	DEFINE_OPTION("Xdebug:stack",		handle_debug_stack),
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
 	DEFINE_OPTION("Xtrace:bytecode",	handle_trace_bytecode),
 	DEFINE_OPTION("Xtrace:bytecode-offset",	handle_trace_bytecode_offset),

@@ -17,3 +17,6 @@ Jato supports the following command line options:
 
     -Xtrace:trampoline
       Trace executed trampolines.
+
+    -Xdebug:stack
+      Enable stack smashing debugging.

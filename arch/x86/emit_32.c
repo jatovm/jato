@@ -47,6 +47,7 @@
 #include "jit/compiler.h"
 #include "jit/exception.h"
 #include "jit/emit-code.h"
+#include "jit/debug.h"
 #include "jit/text.h"
 
 #include "lib/buffer.h"
@@ -567,6 +568,11 @@ static void __emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
 	emit_alu_imm_reg(buf, 0x05, imm, reg);
 }
 
+static void __emit_cmp_imm_reg(struct buffer *buf, int rex_w, long imm, enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0x07, imm, reg);
+}
+
 static void __emit_test_imm_memdisp(struct buffer *buf,
 	long imm, long disp)
 {
@@ -610,6 +616,8 @@ static void emit_restore_callee_save_regs(struct buffer *buf)
 	}
 }
 
+#define STACK_FRAME_REDZONE_END		0xdeadbeef
+
 void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 					unsigned long frame_size)
 {
@@ -620,6 +628,32 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 
 	if (frame_size)
 		__emit_sub_imm_reg(buf, frame_size, MACH_REG_ESP);
+
+	if (opt_debug_stack)
+		__emit_push_imm(buf, STACK_FRAME_REDZONE_END);
+}
+
+/* magic is in ecx */
+static void __attribute__((regparm(1)))
+stack_frame_redzone_fail(void *magic)
+{
+	printf("Redzone overwritten: %p\n", magic);
+	abort();
+}
+
+static void emit_stack_redzone_check(struct buffer *buf)
+{
+	__emit_pop_reg(buf, MACH_REG_ECX);
+
+	__emit_cmp_imm_reg(buf, 1, STACK_FRAME_REDZONE_END, MACH_REG_ECX);
+
+	/* open-coded "jne" */
+	emit(buf, 0x0f);
+	emit(buf, 0x85);
+
+	uint8_t *jne_addr = buffer_current(buf);
+	emit_imm32(buf, 0);
+	fixup_branch_target(jne_addr, stack_frame_redzone_fail);
 }
 
 static void emit_restore_regs(struct buffer *buf)
@@ -629,6 +663,9 @@ static void emit_restore_regs(struct buffer *buf)
 
 void emit_epilog(struct buffer *buf)
 {
+	if (opt_debug_stack)
+		emit_stack_redzone_check(buf);
+
 	emit_leave(buf);
 	emit_restore_regs(buf);
 	emit_ret(buf);
@@ -640,6 +677,9 @@ void emit_epilog(struct buffer *buf)
  */
 void emit_unwind(struct buffer *buf)
 {
+	if (opt_debug_stack)
+		emit_stack_redzone_check(buf);
+
 	emit_leave(buf);
 	emit_restore_regs(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
@@ -758,11 +798,6 @@ static void emit_or_imm_membase(struct insn *insn, struct buffer *buf, struct ba
 static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit_alu_imm_reg(buf, 0x00, imm, reg);
-}
-
-static void __emit_cmp_imm_reg(struct buffer *buf, int rex_w, long imm, enum machine_reg reg)
-{
-	emit_alu_imm_reg(buf, 0x07, imm, reg);
 }
 
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)

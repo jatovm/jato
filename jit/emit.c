@@ -24,12 +24,15 @@
 #include "jit/gdb.h"
 #include "jit/instruction.h"
 #include "jit/statement.h"
+#include "jit/debug.h"
 #include "jit/text.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+
+bool opt_debug_stack;
 
 static void emit_monitorenter(struct compilation_unit *cu)
 {
