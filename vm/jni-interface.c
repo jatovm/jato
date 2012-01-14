@@ -494,7 +494,7 @@ static jobject JNI_AllocObject(JNIEnv *env, jclass clazz)
 	struct vm_class *class = vm_class_get_class_from_class_object(clazz);
 	check_null(class);
 
-	if (vm_class_is_interface(class)) {
+	if (vm_class_is_interface(class) || vm_class_is_abstract(class)) {
 		signal_new_exception(vm_java_lang_InstantiationException, NULL);
 		return NULL;
 	}

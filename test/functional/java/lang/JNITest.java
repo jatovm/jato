@@ -301,6 +301,13 @@ public class JNITest extends TestCase {
         testAllocObject(Runnable.class);
       }
     }, InstantiationException.class);
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        // AllocObject must throw InstantiationException for an abstract class
+        testAllocObject(ClassLoader.class);
+      }
+    }, InstantiationException.class);
   }
 
   public static void testIsInstanceOf() {
