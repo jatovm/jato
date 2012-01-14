@@ -72,13 +72,6 @@ struct emitter {
 #define DECL_EMITTER(_insn_type, _fn) \
 	[_insn_type] = { .emit_fn = _fn }
 
-static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg);
-static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src, enum machine_reg dst);
-static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg);
-static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
-static void emit_restore_regs(struct buffer *buf);
-static void __emit_push_membase(struct buffer *buf, enum machine_reg src_reg, unsigned long disp);
-
 /*
  * Common code emitters
  */
@@ -326,28 +319,10 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
 }
 
-/*
- * FIXME: We use different stack layout on 32-bit and 64-bit so prolog, epilog,
- * and unwind sequences are slightly different.
- */
-void emit_unwind(struct buffer *buf)
-{
-	emit_leave(buf);
-	emit_restore_regs(buf);
-	__emit_jmp(buf, (unsigned long)&unwind);
-}
-
 static void __emit_mov_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit(buf, 0xb8 + x86_encode_reg(reg));
 	emit_imm32(buf, imm);
-}
-
-void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
-{
-	__emit_push_imm(buf, (unsigned long) cu);
-	__emit_call(buf, &trace_invoke);
-	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
 }
 
 static void fixup_branch_target(uint8_t *target_p, void *target)
@@ -656,6 +631,11 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 		__emit_sub_imm_reg(buf, frame_size, MACH_REG_ESP);
 }
 
+static void emit_restore_regs(struct buffer *buf)
+{
+	emit_restore_callee_save_regs(buf);
+}
+
 void emit_epilog(struct buffer *buf)
 {
 	emit_leave(buf);
@@ -663,14 +643,20 @@ void emit_epilog(struct buffer *buf)
 	emit_ret(buf);
 }
 
+/*
+ * FIXME: We use different stack layout on 32-bit and 64-bit so prolog, epilog,
+ * and unwind sequences are slightly different.
+ */
+void emit_unwind(struct buffer *buf)
+{
+	emit_leave(buf);
+	emit_restore_regs(buf);
+	__emit_jmp(buf, (unsigned long)&unwind);
+}
+
 static void emit_push_imm(struct insn *insn, struct buffer *buf, struct basic_block *bb)
 {
 	__emit_push_imm(buf, insn->operand.imm);
-}
-
-static void emit_restore_regs(struct buffer *buf)
-{
-	emit_restore_callee_save_regs(buf);
 }
 
 static void emit_fld_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
@@ -888,6 +874,13 @@ static void emit_mov_64_xmm_memindex(struct insn *insn, struct buffer *buf, stru
 	emit(buf, 0x11);
 	emit(buf, x86_encode_mod_rm(0x00, encode_reg(&insn->src.reg), 0x04));
 	emit(buf, x86_encode_sib(insn->dest.shift, encode_reg(&insn->dest.index_reg), encode_reg(&insn->dest.base_reg)));
+}
+
+void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
+{
+	__emit_push_imm(buf, (unsigned long) cu);
+	__emit_call(buf, &trace_invoke);
+	__emit_add_imm_reg(buf, PTR_SIZE, MACH_REG_xSP);
 }
 
 void emit_trampoline(struct compilation_unit *cu,
