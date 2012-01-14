@@ -72,15 +72,6 @@ struct emitter {
 #define DECL_EMITTER(_insn_type, _fn) \
 	[_insn_type] = { .emit_fn = _fn }
 
-static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg);
-static void __emit_mov_reg_reg(struct buffer *buf, enum machine_reg src, enum machine_reg dst);
-static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg);
-static void emit_exception_test(struct buffer *buf, enum machine_reg reg);
-static void emit_restore_regs(struct buffer *buf);
-
-static void emit_save_regparm(struct buffer *buf);
-static void emit_restore_regparm(struct buffer *buf);
-
 /*
  * Common code emitters
  */
@@ -334,31 +325,10 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
 }
 
-/*
- * FIXME: We use different stack layout on 32-bit and 64-bit so prolog, epilog,
- * and unwind sequences are slightly different.
- */
-void emit_unwind(struct buffer *buf)
-{
-	emit_restore_regs(buf);
-	emit_leave(buf);
-	__emit_jmp(buf, (unsigned long)&unwind);
-}
-
 static void __emit_mov_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
 {
 	emit(buf, 0xb8 + x86_encode_reg(reg));
 	emit_imm32(buf, imm);
-}
-
-void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
-{
-	emit_save_regparm(buf);
-
-	__emit_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
-	__emit_call(buf, &trace_invoke);
-
-	emit_restore_regparm(buf);
 }
 
 static void fixup_branch_target(uint8_t *target_p, void *target)
@@ -1259,6 +1229,14 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 	__emit_push_reg(buf, MACH_REG_RDI);
 }
 
+static void emit_restore_regs(struct buffer *buf)
+{
+	/* Clear *this from stack. */
+	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
+
+	emit_restore_callee_save_regs(buf);
+}
+
 void emit_epilog(struct buffer *buf)
 {
 	emit_restore_regs(buf);
@@ -1266,12 +1244,15 @@ void emit_epilog(struct buffer *buf)
 	emit_ret(buf);
 }
 
-static void emit_restore_regs(struct buffer *buf)
+/*
+ * FIXME: We use different stack layout on 32-bit and 64-bit so prolog, epilog,
+ * and unwind sequences are slightly different.
+ */
+void emit_unwind(struct buffer *buf)
 {
-	/* Clear *this from stack. */
-	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
-
-	emit_restore_callee_save_regs(buf);
+	emit_restore_regs(buf);
+	emit_leave(buf);
+	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
 static void emit_save_regparm(struct buffer *buf)
@@ -1310,6 +1291,16 @@ static void emit_restore_regparm(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_RDX);
 	__emit_pop_reg(buf, MACH_REG_RSI);
 	__emit_pop_reg(buf, MACH_REG_RDI);
+}
+
+void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
+{
+	emit_save_regparm(buf);
+
+	__emit_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
+	__emit_call(buf, &trace_invoke);
+
+	emit_restore_regparm(buf);
 }
 
 void emit_trampoline(struct compilation_unit *cu,
