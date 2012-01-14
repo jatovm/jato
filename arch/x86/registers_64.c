@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008  Pekka Enberg
+ * Copyright (c) 2008, 2012  Pekka Enberg
  * 
  * This file is released under the GPL version 2 with the following
  * clarification and special exception:
@@ -56,6 +56,14 @@ enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS] = {
 	MACH_REG_XMM13,
 	MACH_REG_XMM14,
 	MACH_REG_XMM15,
+};
+
+enum machine_reg callee_save_regs[NR_CALLEE_SAVE_REGS] = {
+	MACH_REG_RBX,
+	MACH_REG_R12,
+	MACH_REG_R13,
+	MACH_REG_R14,
+	MACH_REG_R15,
 };
 
 static const char *register_names[] = {

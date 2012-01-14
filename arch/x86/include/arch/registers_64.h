@@ -72,6 +72,9 @@ enum machine_reg {
 #define NR_CALLER_SAVE_REGS 25
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
+#define NR_CALLEE_SAVE_REGS 5
+extern enum machine_reg callee_save_regs[NR_CALLEE_SAVE_REGS];
+
 const char *reg_name(enum machine_reg reg);
 enum machine_reg_type reg_type(enum machine_reg reg);
 bool reg_supports_type(enum machine_reg reg, enum vm_type type);

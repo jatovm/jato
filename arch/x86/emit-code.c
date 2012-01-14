@@ -1974,6 +1974,28 @@ static void __emit64_pop_xmm(struct buffer *buf, enum machine_reg reg)
 	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 }
 
+static void emit_save_callee_save_regs(struct buffer *buf)
+{
+	int i;
+
+	for (i = 0; i < NR_CALLEE_SAVE_REGS; i++) {
+		enum machine_reg reg = callee_save_regs[i];
+
+		__emit_push_reg(buf, reg);
+	}
+}
+
+static void emit_restore_callee_save_regs(struct buffer *buf)
+{
+	int i;
+
+	for (i = 0; i < NR_CALLEE_SAVE_REGS; i++) {
+		enum machine_reg reg = callee_save_regs[NR_CALLEE_SAVE_REGS - i - 1];
+
+		__emit_pop_reg(buf, reg);
+	}
+}
+
 void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 					unsigned long frame_size)
 {
@@ -1989,11 +2011,7 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 	if (frame_size)
 		__emit64_sub_imm_reg(buf, frame_size, MACH_REG_RSP);
 
-	__emit_push_reg(buf, MACH_REG_RBX);
-	__emit_push_reg(buf, MACH_REG_R12);
-	__emit_push_reg(buf, MACH_REG_R13);
-	__emit_push_reg(buf, MACH_REG_R14);
-	__emit_push_reg(buf, MACH_REG_R15);
+	emit_save_callee_save_regs(buf);
 
 	/* Save *this. */
 	__emit_push_reg(buf, MACH_REG_RDI);
@@ -2011,11 +2029,7 @@ static void emit_restore_regs(struct buffer *buf)
 	/* Clear *this from stack. */
 	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 
-	__emit_pop_reg(buf, MACH_REG_R15);
-	__emit_pop_reg(buf, MACH_REG_R14);
-	__emit_pop_reg(buf, MACH_REG_R13);
-	__emit_pop_reg(buf, MACH_REG_R12);
-	__emit_pop_reg(buf, MACH_REG_RBX);
+	emit_restore_callee_save_regs(buf);
 }
 
 static void emit_save_regparm(struct buffer *buf)
