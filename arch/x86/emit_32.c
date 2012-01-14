@@ -63,15 +63,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-typedef void (*emit_fn_t)(struct insn *insn, struct buffer *, struct basic_block *bb);
-
-struct emitter {
-	emit_fn_t emit_fn;
-};
-
-#define DECL_EMITTER(_insn_type, _fn) \
-	[_insn_type] = { .emit_fn = _fn }
-
 /*
  * Common code emitters
  */
@@ -1174,14 +1165,11 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 }
 
 
-static void do_emit_insn(struct emitter *emitter, struct buffer *buf, struct insn *insn, struct basic_block *bb)
-{
-	emit_fn_t fn = emitter->emit_fn;
+typedef void (*emit_fn_t)(struct insn *insn, struct buffer *, struct basic_block *bb);
 
-	fn(insn, buf, bb);
-}
+#define DECL_EMITTER(_insn_type, _fn) [_insn_type] = _fn
 
-static struct emitter emitters[] = {
+static emit_fn_t emitters[] = {
 	DECL_EMITTER(INSN_ADDSD_MEMDISP_XMM, insn_encode),
 	DECL_EMITTER(INSN_ADDSD_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_ADDSS_XMM_XMM, insn_encode),
@@ -1308,14 +1296,14 @@ static struct emitter emitters[] = {
 
 static void __emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)
 {
-	struct emitter *emitter;
+	emit_fn_t fn;
 
-	emitter = &emitters[insn->type];
+	fn = emitters[insn->type];
 
-	if (!emitter->emit_fn)
+	if (!fn)
 		die("no emitter for instruction type %d", insn->type);
 
-	do_emit_insn(emitter, buf, insn, bb);
+	fn(insn, buf, bb);
 }
 
 void emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)
