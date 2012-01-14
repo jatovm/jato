@@ -55,6 +55,9 @@ enum machine_reg {
 #define NR_CALLER_SAVE_REGS 11
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
+#define NR_CALLEE_SAVE_REGS 3
+extern enum machine_reg callee_save_regs[NR_CALLEE_SAVE_REGS];
+
 const char *reg_name(enum machine_reg reg);
 
 extern uint32_t reg_type_table[NR_REGISTERS];

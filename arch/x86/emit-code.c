@@ -664,13 +664,32 @@ static void emit_test_imm_memdisp(struct insn *insn, struct buffer *buf, struct 
 	__emit_test_imm_memdisp(buf, insn->src.imm, insn->dest.disp);
 }
 
+static void emit_save_callee_save_regs(struct buffer *buf)
+{
+	int i;
+
+	for (i = 0; i < NR_CALLEE_SAVE_REGS; i++) {
+		enum machine_reg reg = callee_save_regs[i];
+
+		__emit_push_reg(buf, reg);
+	}
+}
+
+static void emit_restore_callee_save_regs(struct buffer *buf)
+{
+	int i;
+
+	for (i = 0; i < NR_CALLEE_SAVE_REGS; i++) {
+		enum machine_reg reg = callee_save_regs[NR_CALLEE_SAVE_REGS - i - 1];
+
+		__emit_pop_reg(buf, reg);
+	}
+}
+
 void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 					unsigned long frame_size)
 {
-	/* Unconditionally push callee-saved registers */
-	__emit_push_reg(buf, MACH_REG_EDI);
-	__emit_push_reg(buf, MACH_REG_ESI);
-	__emit_push_reg(buf, MACH_REG_EBX);
+	emit_save_callee_save_regs(buf);
 
 	__emit_push_reg(buf, MACH_REG_EBP);
 	__emit_mov_reg_reg(buf, MACH_REG_ESP, MACH_REG_EBP);
@@ -693,9 +712,7 @@ static void emit_push_imm(struct insn *insn, struct buffer *buf, struct basic_bl
 
 static void emit_restore_regs(struct buffer *buf)
 {
-	__emit_pop_reg(buf, MACH_REG_EBX);
-	__emit_pop_reg(buf, MACH_REG_ESI);
-	__emit_pop_reg(buf, MACH_REG_EDI);
+	emit_restore_callee_save_regs(buf);
 }
 
 static void emit_fld_membase(struct insn *insn, struct buffer *buf, struct basic_block *bb)
