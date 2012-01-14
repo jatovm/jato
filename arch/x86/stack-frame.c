@@ -122,8 +122,7 @@ unsigned long frame_locals_size(struct stack_frame *frame)
  */
 unsigned long cu_frame_locals_offset(struct compilation_unit *cu)
 {
-	unsigned long frame_size = frame_locals_size(cu->stack_frame);
-	return frame_size * sizeof(unsigned long);
+	return frame_locals_size(cu->stack_frame);
 }
 
 /*
