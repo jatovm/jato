@@ -3,7 +3,7 @@ ARCH_OBJS = \
 	arch/x86/call.o			\
 	arch/x86/cmpxchg_32.o		\
 	arch/x86/disassemble.o		\
-	arch/x86/emit-code.o		\
+	arch/x86/emit_32.o		\
 	arch/x86/encode.o		\
 	arch/x86/fixup.o		\
 	arch/x86/ic_lowlevel_32.o	\
