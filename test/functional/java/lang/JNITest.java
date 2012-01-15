@@ -95,6 +95,7 @@ public class JNITest extends TestCase {
   native static public boolean testJniExceptionOccurredAndExceptionClear(Throwable throwable);
   native static public boolean testIsSameObject(Object obj, Object sameObj, Object differentObj);
   native static public boolean testAllocObject(Class<?> clazz);
+  native static public boolean testNewObject(Class<?> clazz);
   native static public boolean isInstanceOf(Object obj, Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
@@ -310,6 +311,23 @@ public class JNITest extends TestCase {
     }, InstantiationException.class);
   }
 
+  public static void testNewObject() {
+    assertTrue(testNewObject(Object.class));
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        // NewObject must throw InstantiationException for an Interface
+        testNewObject(Runnable.class);
+      }
+    }, InstantiationException.class);
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        // NewObject must throw InstantiationException for an abstract class
+        testNewObject(ClassLoader.class);
+      }
+    }, InstantiationException.class);
+  }
+
   public static void testIsInstanceOf() {
     assertTrue(isInstanceOf(jniTest, JNITest.class));
   }
@@ -338,6 +356,7 @@ public class JNITest extends TestCase {
     testExceptionOccurredAndExceptionClear();
     testIsSameObject();
     testAllocObject();
+    testNewObject();
     testIsInstanceOf();
   }
 }

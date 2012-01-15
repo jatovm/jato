@@ -652,6 +652,26 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testAllocObject(JNIEnv *env, j
 
 /*
  * Class:     java_lang_JNITest
+ * Method:    testNewObject
+ * Signature: (Ljava/lang/Class;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testNewObject(JNIEnv *env, jclass clazz, jclass clazzToAlloc)
+{
+	jmethodID methodID = (*env)->GetMethodID(env, clazzToAlloc, "<init>", "()V");
+
+	if (methodID == NULL)
+		return false;
+
+	// TODO: Add check for NewObjectV when it is implemented
+	if (((*env)->NewObject(env, clazzToAlloc, methodID) != NULL) &&
+		((*env)->NewObjectA(env, clazzToAlloc, methodID, NULL) != NULL))
+		return true;
+	else
+		return false;
+}
+
+/*
+ * Class:     java_lang_JNITest
  * Method:    isInstanceOf
  * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
  */

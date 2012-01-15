@@ -527,6 +527,13 @@ static jobject JNI_NewObject(JNIEnv *env, jclass clazz, jmethodID methodID, ...)
 		return NULL;
 
 	class = vm_class_get_class_from_class_object(clazz);
+	check_null(class);
+
+	if (vm_class_is_interface(class) || vm_class_is_abstract(class)) {
+		signal_new_exception(vm_java_lang_InstantiationException, NULL);
+		return NULL;
+	}
+
 	obj = vm_object_alloc(class);
 
 	va_start(args, methodID);
@@ -550,6 +557,13 @@ static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, con
 	enter_vm_from_jni();
 
 	vmc = vm_class_get_class_from_class_object(clazz);
+	check_null(vmc);
+
+	if (vm_class_is_interface(vmc) || vm_class_is_abstract(vmc)) {
+		signal_new_exception(vm_java_lang_InstantiationException, NULL);
+		return NULL;
+	}
+
 	result = vm_object_alloc(vmc);
 
 	unsigned long packed_args[methodID->args_count];
