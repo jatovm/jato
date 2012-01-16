@@ -76,6 +76,10 @@ int vm_method_do_init(struct vm_method *vmm)
 		vmm->flags |= VM_METHOD_FLAG_VM_NATIVE;
 	}
 
+	/* We pass reference to method class for static JNI methods.  */
+	if (vm_method_is_jni(vmm) && vm_method_is_static(vmm))
+		++vmm->args_count;
+
 	if (args_map_init(vmm))
 		return -1;
 

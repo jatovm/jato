@@ -30,12 +30,8 @@ static inline int get_stack_args_count(struct vm_method *method)
 
 	size = method->args_count;
 
-	if (vm_method_is_jni(method)) {
-		if (vm_method_is_static(method))
-			size++;
-
+	if (vm_method_is_jni(method))
 		size++;
-	}
 
 	return size - method->reg_args_count;
 }
