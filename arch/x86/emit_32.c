@@ -633,16 +633,17 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 		__emit_push_imm(buf, STACK_FRAME_REDZONE_END);
 }
 
-/* magic is in ecx */
-static void __attribute__((regparm(1)))
-stack_frame_redzone_fail(void *magic)
+/* call-site in edx, magic is in ecx */
+void __attribute__((regparm(3)))
+stack_frame_redzone_fail(void *eax, void *edx, void *ecx)
 {
-	printf("Redzone overwritten: %p\n", magic);
+	printf("Stack frame redzone overwritten at %p: %p\n", edx, ecx);
 	abort();
 }
 
 static void emit_stack_redzone_check(struct buffer *buf)
 {
+	__emit_mov_imm_reg(buf, (unsigned long) buffer_current(buf), MACH_REG_EDX);
 	__emit_pop_reg(buf, MACH_REG_ECX);
 
 	__emit_cmp_imm_reg(buf, 1, STACK_FRAME_REDZONE_END, MACH_REG_ECX);
