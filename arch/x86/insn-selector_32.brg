@@ -2239,6 +2239,7 @@ reg:	EXPR_LOOKUPSWITCH_BSEARCH(reg)
 
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) &bsearch));
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
+	method_args_cleanup(s, tree, 5);
 }
 
 stmt:	STMT_MONITOR_ENTER(reg)
