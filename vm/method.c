@@ -225,7 +225,6 @@ int vm_method_init_from_interface(struct vm_method *vmm, struct vm_class *vmc,
 	vmm->name = interface_method->name;
 	vmm->type = interface_method->type;
 
-	vmm->args_count = interface_method->args_count;
 	vmm->flags = 0;
 
 	if (parse_method_type(vmm)) {
