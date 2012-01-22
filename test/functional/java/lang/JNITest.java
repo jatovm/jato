@@ -95,7 +95,8 @@ public class JNITest extends TestCase {
   native static public boolean testJniExceptionOccurredAndExceptionClear(Throwable throwable);
   native static public boolean testIsSameObject(Object obj, Object sameObj, Object differentObj);
   native static public boolean testAllocObject(Class<?> clazz);
-  native static public boolean testNewObject(Class<?> clazz);
+  native static public Object testNewObject(Class<?> clazz, String constructorSignature, Object args);
+  native static public Object testNewObjectA(Class<?> clazz, String constructorSignature, Object args);
   native static public boolean isInstanceOf(Object obj, Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
@@ -298,34 +299,50 @@ public class JNITest extends TestCase {
     assertTrue(testAllocObject(Object.class));
     assertThrows(new Block() {
       public void run() throws Throwable {
-        // AllocObject must throw InstantiationException for an Interface
         testAllocObject(Runnable.class);
       }
     }, InstantiationException.class);
 
     assertThrows(new Block() {
       public void run() throws Throwable {
-        // AllocObject must throw InstantiationException for an abstract class
         testAllocObject(ClassLoader.class);
       }
     }, InstantiationException.class);
   }
 
   public static void testNewObject() {
-    assertTrue(testNewObject(Object.class));
+    assertEquals("test", testNewObject(String.class, "(Ljava/lang/String;)V", "test"));
+    assertEquals("test", testNewObject(String.class, "([C)V", "test".toCharArray()));
+
     assertThrows(new Block() {
       public void run() throws Throwable {
-        // NewObject must throw InstantiationException for an Interface
-        testNewObject(Runnable.class);
+        testNewObject(Runnable.class, "()V", null);
       }
     }, InstantiationException.class);
 
     assertThrows(new Block() {
       public void run() throws Throwable {
-        // NewObject must throw InstantiationException for an abstract class
-        testNewObject(ClassLoader.class);
+        testNewObject(ClassLoader.class, "()V", null);
       }
     }, InstantiationException.class);
+  }
+
+  public static void testNewObjectA() {
+    assertEquals("test", testNewObjectA(String.class, "(Ljava/lang/String;)V", "test"));
+    assertEquals("test", testNewObjectA(String.class,  "([C)V", "test".toCharArray()));
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        testNewObjectA(Runnable.class, "()V", null);
+      }
+    }, InstantiationException.class);
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        testNewObjectA(ClassLoader.class, "()V", null);
+      }
+    }, InstantiationException.class);
+
   }
 
   public static void testIsInstanceOf() {
@@ -357,6 +374,7 @@ public class JNITest extends TestCase {
     testIsSameObject();
     testAllocObject();
     testNewObject();
+    testNewObjectA();
     testIsInstanceOf();
   }
 }

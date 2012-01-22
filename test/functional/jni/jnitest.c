@@ -653,21 +653,55 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testAllocObject(JNIEnv *env, j
 /*
  * Class:     java_lang_JNITest
  * Method:    testNewObject
- * Signature: (Ljava/lang/Class;)Z
+ * Signature: ((Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
  */
-JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testNewObject(JNIEnv *env, jclass clazz, jclass clazzToAlloc)
+JNIEXPORT jobject JNICALL Java_java_lang_JNITest_testNewObject(JNIEnv *env, jclass clazz, jclass clazzToAlloc, jstring constructorSig, jobject args)
 {
-	jmethodID methodID = (*env)->GetMethodID(env, clazzToAlloc, "<init>", "()V");
+	char *constructorSigStr;
+	jboolean iscopy;
 
+	constructorSigStr = (char *) (*env)->GetStringUTFChars(env, constructorSig, &iscopy);
+	if (constructorSigStr == NULL) {
+		return NULL; /* OutOfMemoryError */
+	}
+
+	jmethodID methodID = (*env)->GetMethodID(env, clazzToAlloc, "<init>", constructorSigStr);
 	if (methodID == NULL)
-		return false;
+		return NULL;
 
-	// TODO: Add check for NewObjectV when it is implemented
-	if (((*env)->NewObject(env, clazzToAlloc, methodID) != NULL) &&
-		((*env)->NewObjectA(env, clazzToAlloc, methodID, NULL) != NULL))
-		return true;
+	if (args != NULL)
+		return ((*env)->NewObject(env, clazzToAlloc, methodID, args));
 	else
-		return false;
+		return ((*env)->NewObject(env, clazzToAlloc, methodID, NULL));
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    testNewObjectA
+ * Signature: ((Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_java_lang_JNITest_testNewObjectA(JNIEnv *env, jclass clazz, jclass clazzToAlloc, jstring constructorSig, jobject args)
+{
+	jvalue jniArgs[1];
+	char *constructorSigStr;
+	jboolean iscopy;
+
+	constructorSigStr = (char *) (*env)->GetStringUTFChars(env, constructorSig, &iscopy);
+	if (constructorSigStr == NULL) {
+		return NULL; /* OutOfMemoryError */
+	}
+
+	jmethodID methodID = (*env)->GetMethodID(env, clazzToAlloc, "<init>", constructorSigStr);
+	if (methodID == NULL)
+		return NULL;
+
+	if (args != NULL) {
+		jniArgs[0].l = args;
+		return ((*env)->NewObjectA(env, clazzToAlloc, methodID, jniArgs));
+	}
+	else {
+		return ((*env)->NewObjectA(env, clazzToAlloc, methodID, NULL));
+	}
 }
 
 /*
