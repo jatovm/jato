@@ -45,6 +45,7 @@
 #include "jit/stack-slot.h"
 #include "jit/statement.h"
 #include "jit/compiler.h"
+#include "jit/debug.h"
 #include "jit/exception.h"
 #include "jit/emit-code.h"
 #include "jit/text.h"
@@ -1199,6 +1200,8 @@ static void emit_restore_callee_save_regs(struct buffer *buf)
 	}
 }
 
+#define STACK_FRAME_REDZONE_END		0xdeadbeefcafebabe
+
 void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 					unsigned long frame_size)
 {
@@ -1218,6 +1221,11 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 
 	/* Save *this. */
 	__emit_push_reg(buf, MACH_REG_RDI);
+
+	if (opt_debug_stack) {
+		__emit_mov_imm_reg(buf, STACK_FRAME_REDZONE_END, MACH_REG_RAX);
+		__emit_push_reg(buf, MACH_REG_RAX);
+	}
 }
 
 static void emit_restore_regs(struct buffer *buf)
@@ -1228,8 +1236,36 @@ static void emit_restore_regs(struct buffer *buf)
 	emit_restore_callee_save_regs(buf);
 }
 
+static void do_stack_redzone_check(unsigned long magic)
+{
+	unsigned long addr = (unsigned long) __builtin_return_address(0);
+
+	if (magic == STACK_FRAME_REDZONE_END)
+		return;
+
+	printf("Stack frame redzone overwritten at %lx: %lx\n", addr, magic);
+	abort();
+}
+
+static void emit_stack_redzone_check(struct buffer *buf)
+{
+	/* Pass the magic value to do_stack_redzone_check(). */
+	__emit_pop_reg(buf, MACH_REG_RDI);
+
+	__emit_push_reg(buf, MACH_REG_RAX);
+	__emit64_push_xmm(buf, MACH_REG_XMM0);
+
+	__emit_call(buf, do_stack_redzone_check);
+
+	__emit64_pop_xmm(buf, MACH_REG_XMM0);
+	__emit_pop_reg(buf, MACH_REG_RAX);
+}
+
 void emit_epilog(struct buffer *buf)
 {
+	if (opt_debug_stack)
+		emit_stack_redzone_check(buf);
+
 	emit_restore_regs(buf);
 	emit_leave(buf);
 	emit_ret(buf);
@@ -1241,6 +1277,9 @@ void emit_epilog(struct buffer *buf)
  */
 void emit_unwind(struct buffer *buf)
 {
+	if (opt_debug_stack)
+		emit_stack_redzone_check(buf);
+
 	emit_restore_regs(buf);
 	emit_leave(buf);
 	__emit_jmp(buf, (unsigned long)&unwind);
