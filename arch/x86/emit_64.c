@@ -317,12 +317,6 @@ static void __emit_jmp(struct buffer *buf, unsigned long addr)
 	emit_imm32(buf, addr - current - BRANCH_INSN_SIZE);
 }
 
-static void __emit_mov_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
-{
-	emit(buf, 0xb8 + x86_encode_reg(reg));
-	emit_imm32(buf, imm);
-}
-
 static void fixup_branch_target(uint8_t *target_p, void *target)
 {
 	long cur = (long) (target - (void *) target_p) - 4;
@@ -847,9 +841,9 @@ static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
 	emit(buf, x86_encode_mod_rm(0x3, 0x04, reg_num));
 }
 
-static void __emit64_mov_imm_reg(struct buffer *buf,
-				 long imm,
-				 enum machine_reg reg)
+static void __emit_mov_imm_reg(struct buffer *buf,
+			       long imm,
+			       enum machine_reg reg)
 {
 	__emit_reg(buf, 1, 0xb8, reg);
 	emit_imm64(buf, imm);
@@ -1354,7 +1348,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	 */
 	emit_save_regparm(buf);
 
-	__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
+	__emit_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 	__emit_call(buf, call_target);
 
 	/*
@@ -1380,7 +1374,7 @@ void emit_trampoline(struct compilation_unit *cu,
 			this_disp	= -0x08;
 
 		__emit_push_reg(buf, MACH_REG_RAX);
-		__emit64_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
+		__emit_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 		__emit64_mov_membase_reg(buf, MACH_REG_RBP, this_disp, MACH_REG_RSI);
 		__emit_mov_reg_reg(buf, MACH_REG_RAX, MACH_REG_RDX);
 		__emit_call(buf, fixup_vtable);
@@ -1412,7 +1406,7 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 {
 	emit_save_regparm(buf);
 
-	__emit64_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
+	__emit_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
 	__emit_call(buf, vm_object_lock);
 
 	emit_restore_regparm(buf);
@@ -1427,7 +1421,7 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_save_regparm(buf);
 
-	__emit64_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
+	__emit_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
 	__emit_call(buf, vm_object_unlock);
 
 	emit_exception_test(buf, MACH_REG_RAX);
