@@ -34,20 +34,22 @@
 
 bool opt_debug_stack;
 
-static void emit_monitorenter(struct compilation_unit *cu)
+static void emit_monitorenter(struct compilation_unit *cu,
+			      unsigned long frame_size)
 {
 	if (vm_method_is_static(cu->method))
 		emit_lock(cu->objcode, cu->method->class->object);
 	else
-		emit_lock_this(cu->objcode);
+		emit_lock_this(cu->objcode, frame_size);
 }
 
-static void emit_monitorexit(struct compilation_unit *cu)
+static void emit_monitorexit(struct compilation_unit *cu,
+			     unsigned long frame_size)
 {
 	if (vm_method_is_static(cu->method))
 		emit_unlock(cu->objcode, cu->method->class->object);
 	else
-		emit_unlock_this(cu->objcode);
+		emit_unlock_this(cu->objcode, frame_size);
 }
 
 static void backpatch_tableswitch(struct tableswitch *table)
@@ -209,7 +211,7 @@ int emit_machine_code(struct compilation_unit *cu)
 	emit_prolog(cu->objcode, cu->stack_frame, frame_size);
 
 	if (method_is_synchronized(cu->method))
-		emit_monitorenter(cu);
+		emit_monitorenter(cu, frame_size);
 
 	if (opt_trace_invoke)
 		emit_trace_invoke(cu->objcode, cu);
@@ -219,13 +221,13 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	emit_body(cu->exit_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))
-		emit_monitorexit(cu);
+		emit_monitorexit(cu, frame_size);
 	cu->exit_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_epilog(cu->objcode);
 
 	emit_body(cu->unwind_bb, cu->objcode);
 	if (method_is_synchronized(cu->method))
-		emit_monitorexit(cu);
+		emit_monitorexit(cu, frame_size);
 	cu->unwind_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_unwind(cu->objcode);
 

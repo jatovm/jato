@@ -132,7 +132,7 @@ void emit_unlock(struct buffer *buffer, struct vm_object *vo)
 	assert(!"not implemented");
 }
 
-void emit_unlock_this(struct buffer *buffer)
+void emit_unlock_this(struct buffer *buffer, unsigned long frame_size)
 {
 	assert(!"not implemented");
 }
@@ -161,7 +161,7 @@ void emit_lock(struct buffer *buf, struct vm_object *vo)
 	assert(!"not implemented");
 }
 
-void emit_lock_this(struct buffer *buf)
+void emit_lock_this(struct buffer *buf, unsigned long frame_size)
 {
 	assert(!"not implemented");
 }

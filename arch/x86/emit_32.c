@@ -987,7 +987,7 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 	__emit_pop_reg(buf, MACH_REG_EAX);
 }
 
-void emit_lock_this(struct buffer *buf)
+void emit_lock_this(struct buffer *buf, unsigned long frame_size)
 {
 	unsigned long this_arg_offset;
 
@@ -1002,7 +1002,7 @@ void emit_lock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_EAX);
 }
 
-void emit_unlock_this(struct buffer *buf)
+void emit_unlock_this(struct buffer *buf, unsigned long frame_size)
 {
 	unsigned long this_arg_offset;
 

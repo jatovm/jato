@@ -1397,7 +1397,7 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
-void emit_lock_this(struct buffer *buf)
+void emit_lock_this(struct buffer *buf, unsigned long frame_size)
 {
 	__emit64_mov_membase_reg(buf, MACH_REG_RSP, 0x00, MACH_REG_RDI);
 	emit_save_regparm(buf);
@@ -1409,7 +1409,7 @@ void emit_lock_this(struct buffer *buf)
 	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
-void emit_unlock_this(struct buffer *buf)
+void emit_unlock_this(struct buffer *buf, unsigned long frame_size)
 {
 	__emit64_mov_membase_reg(buf, MACH_REG_RSP, 0x00, MACH_REG_RDI);
 	__emit_push_reg(buf, MACH_REG_RAX);
