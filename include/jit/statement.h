@@ -105,7 +105,7 @@ struct statement {
 			struct tree_node *lookupswitch_target;
 		};
 
-		struct /* STMT_LOOKUPSWITCH_JUMP */ {
+		struct /* STMT_INVOKE, STMT_INVOKEVIRTUAL, STMT_INVOKEINTERFACE */ {
 			struct tree_node *args_list;
 			struct vm_method *target_method;
 		};
