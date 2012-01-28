@@ -1399,7 +1399,9 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 
 void emit_lock_this(struct buffer *buf, unsigned long frame_size)
 {
-	__emit64_mov_membase_reg(buf, MACH_REG_RSP, 0x00, MACH_REG_RDI);
+	unsigned long this_offset = frame_size + 8 * NR_CALLEE_SAVE_REGS + 8;
+
+	__emit64_mov_membase_reg(buf, MACH_REG_RBP, - this_offset, MACH_REG_RDI);
 	emit_save_regparm(buf);
 	__emit_call(buf, vm_object_lock);
 	emit_restore_regparm(buf);
@@ -1411,7 +1413,9 @@ void emit_lock_this(struct buffer *buf, unsigned long frame_size)
 
 void emit_unlock_this(struct buffer *buf, unsigned long frame_size)
 {
-	__emit64_mov_membase_reg(buf, MACH_REG_RSP, 0x00, MACH_REG_RDI);
+	unsigned long this_offset = frame_size + 8 * NR_CALLEE_SAVE_REGS + 8;
+
+	__emit64_mov_membase_reg(buf, MACH_REG_RBP, - this_offset, MACH_REG_RDI);
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_save_regparm(buf);
 	__emit_call(buf, vm_object_unlock);
