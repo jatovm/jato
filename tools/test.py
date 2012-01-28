@@ -5,6 +5,7 @@ from Queue import Queue
 import multiprocessing
 import subprocess
 import platform
+import argparse
 import time
 import sys
 import os
@@ -145,9 +146,14 @@ def progress(index, total, t):
   sys.stdout.flush()
 
 def main():
+  optparser = argparse.ArgumentParser("Run Jato functional tests.")
+  optparser.add_argument("-s", dest="skipped", action="store_true",
+                         help="check which skipped tests actually pass")
+  opts = optparser.parse_args()
+
   results = Queue()
 
-  tests = filter(is_test_supported, TESTS)
+  tests = filter(lambda t: is_test_supported(t) != opts.skipped, TESTS)
 
   def do_work(t):
     klass, expected_retval, extra_args, archs = t
@@ -156,9 +162,12 @@ def main():
     command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
     retval = subprocess.call(command, stderr = fnull)
     if retval != expected_retval:
-      print klass + ": Test FAILED"
+      if not opts.skipped:
+        print klass + ": Test FAILED"
       results.put(False)
     else:
+      if opts.skipped:
+        print klass + ": Test SUCCEEDED"
       results.put(True)
 
   def worker():
