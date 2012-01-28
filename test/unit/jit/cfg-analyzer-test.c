@@ -32,6 +32,8 @@ void test_branch_opcode_ends_basic_block(void)
 		.method = &method_info,
 	};
 	
+	memset(&method_info, 0, sizeof(method_info));
+
 	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
@@ -77,6 +79,8 @@ void test_multiple_branches(void)
 		.code_attribute.code_length = ARRAY_SIZE(greater_than_zero),
 		.method = &method_info,
 	};
+
+	memset(&method_info, 0, sizeof(method_info));
 
 	cu = compilation_unit_alloc(&method);
 
@@ -141,6 +145,8 @@ void test_multiple_branch_with_target_instruction_splitting(void)
 		.method = &method_info,
 	};
 
+	memset(&method_info, 0, sizeof(method_info));
+
 	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
@@ -190,6 +196,8 @@ void test_no_duplicate_in_successors_bb_list(void)
 		.code_attribute.code_length = ARRAY_SIZE(empty_if),
 		.method = &method_info,
 	};
+
+	memset(&method_info, 0, sizeof(method_info));
 
 	cu = compilation_unit_alloc(&method);
 

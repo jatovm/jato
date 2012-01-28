@@ -43,6 +43,8 @@ static void assert_convert_if(enum binary_operator expected_operator,
 		.method = &method_info,
 	};
 
+	memset(&method_info, 0, sizeof(method_info));
+
 	cu = compilation_unit_alloc(&method);
 
 	branch_bb = alloc_basic_block(cu, 0, BRANCH_OFFSET + BRANCH_INSN_SIZE);
@@ -100,6 +102,8 @@ static void assert_convert_if_cmp(enum binary_operator expected_operator,
 		.method = &method_info,
 	};
 
+	memset(&method_info, 0, sizeof(method_info));
+
 	cu = compilation_unit_alloc(&method);
 	stmt_bb = alloc_basic_block(cu, 0, 1);
 	true_bb = alloc_basic_block(cu, TARGET_OFFSET, TARGET_OFFSET + 1);
@@ -156,6 +160,8 @@ void test_convert_goto(void)
 		.method = &method_info,
 	};
 
+	memset(&method_info, 0, sizeof(method_info));
+
 	cu = compilation_unit_alloc(&method);
 	goto_bb = alloc_basic_block(cu, 0, 1);
 
@@ -209,6 +215,8 @@ void test_insn_after_branch_are_added_to_another_bb(void)
 		.code_attribute.code_length = ARRAY_SIZE(is_zero_bytecode),
 		.method = &method_info,
 	};
+
+	memset(&method_info, 0, sizeof(method_info));
 
 	cu = compilation_unit_alloc(&method);
 

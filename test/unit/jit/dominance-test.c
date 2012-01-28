@@ -77,6 +77,8 @@ void test_dominance(void)
 			.method = &method_info,
 	};
 
+	memset(&method_info, 0, sizeof(method_info));
+
 	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);

@@ -38,6 +38,8 @@ void test_convert_tableswitch_bbs1(void)
 		.method = &method_info,
 	};
 
+	memset(&method_info, 0, sizeof(method_info));
+
 	cu = compilation_unit_alloc(&method);
 
 	analyze_control_flow(cu);
@@ -94,6 +96,8 @@ void test_convert_tableswitch_bbs2(void)
 		.code_attribute.code_length = ARRAY_SIZE(tableswitch2),
 		.method = &method_info,
 	};
+
+	memset(&method_info, 0, sizeof(method_info));
 
 	cu = compilation_unit_alloc(&method);
 
@@ -152,6 +156,8 @@ void test_convert_lookupswitch_bbs1(void)
 		.code_attribute.code_length = ARRAY_SIZE(lookupswitch1),
 		.method = &method_info,
 	};
+
+	memset(&method_info, 0, sizeof(method_info));
 
 	cu = compilation_unit_alloc(&method);
 
@@ -216,6 +222,8 @@ void test_convert_lookupswitch_bbs2(void)
 		.code_attribute.code_length = ARRAY_SIZE(lookupswitch2),
 		.method = &method_info,
 	};
+
+	memset(&method_info, 0, sizeof(method_info));
 
 	cu = compilation_unit_alloc(&method);
 
