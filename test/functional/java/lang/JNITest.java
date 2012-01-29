@@ -97,6 +97,7 @@ public class JNITest extends TestCase {
   native static public boolean testAllocObject(Class<?> clazz);
   native static public Object testNewObject(Class<?> clazz, String constructorSignature, Object args);
   native static public Object testNewObjectA(Class<?> clazz, String constructorSignature, Object args);
+  native static public Object testNewObjectV(Class<?> clazz, String constructorSignature, Object args);
   native static public boolean isInstanceOf(Object obj, Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
@@ -342,7 +343,23 @@ public class JNITest extends TestCase {
         testNewObjectA(ClassLoader.class, "()V", null);
       }
     }, InstantiationException.class);
+  }
 
+  public static void testNewObjectV() {
+    assertEquals("test", testNewObjectV(String.class, "(Ljava/lang/String;)V", "test"));
+    assertEquals("test", testNewObjectV(String.class,  "([C)V", "test".toCharArray()));
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        testNewObjectV(Runnable.class, "()V", null);
+      }
+    }, InstantiationException.class);
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        testNewObjectV(ClassLoader.class, "()V", null);
+      }
+    }, InstantiationException.class);
   }
 
   public static void testIsInstanceOf() {
@@ -375,6 +392,7 @@ public class JNITest extends TestCase {
     testAllocObject();
     testNewObject();
     testNewObjectA();
+    testNewObjectV();
     testIsInstanceOf();
   }
 }

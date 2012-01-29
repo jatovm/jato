@@ -704,6 +704,43 @@ JNIEXPORT jobject JNICALL Java_java_lang_JNITest_testNewObjectA(JNIEnv *env, jcl
 	}
 }
 
+static jobject callNewObjectV(JNIEnv *env, jclass clazzToAlloc, jmethodID methodID, ...)
+{
+	va_list args;
+	jobject jobj;
+
+	va_start(args, methodID);
+	jobj = ((*env)->NewObjectV(env, clazzToAlloc, methodID, args));
+	va_end(args);
+
+	return jobj;
+}
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    testNewObjectV
+ * Signature: ((Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_java_lang_JNITest_testNewObjectV(JNIEnv *env, jclass clazz, jclass clazzToAlloc, jstring constructorSig, jobject args)
+{
+	char *constructorSigStr;
+	jboolean iscopy;
+
+	constructorSigStr = (char *) (*env)->GetStringUTFChars(env, constructorSig, &iscopy);
+	if (constructorSigStr == NULL) {
+		return NULL; /* OutOfMemoryError */
+	}
+
+	jmethodID methodID = (*env)->GetMethodID(env, clazzToAlloc, "<init>", constructorSigStr);
+	if (methodID == NULL)
+		return NULL;
+
+	if (args != NULL)
+		return callNewObjectV(env, clazzToAlloc, methodID, args);
+	else
+		return ((*env)->NewObjectV(env, clazzToAlloc, methodID, NULL));
+}
+
 /*
  * Class:     java_lang_JNITest
  * Method:    isInstanceOf

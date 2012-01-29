@@ -543,12 +543,6 @@ static jobject JNI_NewObject(JNIEnv *env, jclass clazz, jmethodID methodID, ...)
 	return obj;
 }
 
-static jobject JNI_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, va_list args)
-{
-	JNI_NOT_IMPLEMENTED;
-	return 0;
-}
-
 static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)
 {
 	struct vm_class *vmc;
@@ -574,6 +568,31 @@ static jobject JNI_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, con
 	vm_call_method_this_a(methodID, result, packed_args, NULL);
 
 	return result;
+}
+
+static jobject JNI_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, va_list args)
+{
+	enter_vm_from_jni();
+
+	struct vm_object *obj;
+	struct vm_class *class;
+
+	if (!vm_object_is_instance_of(clazz, vm_java_lang_Class))
+		return NULL;
+
+	class = vm_class_get_class_from_class_object(clazz);
+	check_null(class);
+
+	if (vm_class_is_interface(class) || vm_class_is_abstract(class)) {
+		signal_new_exception(vm_java_lang_InstantiationException, NULL);
+		return NULL;
+	}
+
+	obj = vm_object_alloc(class);
+
+	vm_call_method_this_v(methodID, obj, args, NULL);
+
+	return obj;
 }
 
 static jclass JNI_GetObjectClass(JNIEnv *env, jobject obj)
