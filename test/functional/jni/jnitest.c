@@ -743,6 +743,16 @@ JNIEXPORT jobject JNICALL Java_java_lang_JNITest_testNewObjectV(JNIEnv *env, jcl
 
 /*
  * Class:     java_lang_JNITest
+ * Method:    testGetObjectClass
+ * Signature: (Ljava/lang/Object;)Ljava/lang/Object
+ */
+JNIEXPORT jobject JNICALL Java_java_lang_JNITest_testGetObjectClass(JNIEnv *env, jclass clazz, jobject obj)
+{
+	return (*env)->GetObjectClass(env, obj);
+}
+
+/*
+ * Class:     java_lang_JNITest
  * Method:    isInstanceOf
  * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
  */

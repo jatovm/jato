@@ -98,6 +98,7 @@ public class JNITest extends TestCase {
   native static public Object testNewObject(Class<?> clazz, String constructorSignature, Object args);
   native static public Object testNewObjectA(Class<?> clazz, String constructorSignature, Object args);
   native static public Object testNewObjectV(Class<?> clazz, String constructorSignature, Object args);
+  native static public Class<?> testGetObjectClass(Object obj);
   native static public boolean isInstanceOf(Object obj, Class<?> clazz);
 
   private static JNITest jniTest = new JNITest();
@@ -362,6 +363,10 @@ public class JNITest extends TestCase {
     }, InstantiationException.class);
   }
 
+  public static void testGetObjectClass() {
+    assertEquals(String.class, testGetObjectClass(""));
+  }
+
   public static void testIsInstanceOf() {
     assertTrue(isInstanceOf(jniTest, JNITest.class));
   }
@@ -393,6 +398,7 @@ public class JNITest extends TestCase {
     testNewObject();
     testNewObjectA();
     testNewObjectV();
+    testGetObjectClass();
     testIsInstanceOf();
   }
 }
