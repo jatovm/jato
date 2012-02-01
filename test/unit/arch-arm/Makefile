@@ -19,6 +19,7 @@ TOPLEVEL_OBJS	+= lib/arena.o
 TOPLEVEL_OBJS	+= lib/bitset.o
 TOPLEVEL_OBJS	+= lib/buffer.o
 TOPLEVEL_OBJS	+= lib/compile-lock.o
+TOPLEVEL_OBJS	+= lib/hash-map.o
 TOPLEVEL_OBJS	+= lib/radix-tree.o
 TOPLEVEL_OBJS	+= lib/stack.o
 TOPLEVEL_OBJS	+= lib/string.o
