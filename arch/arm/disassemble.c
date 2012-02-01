@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-void disassemble(struct compilation_unit *cu, void *start, void *end)
+void disassemble(struct vm_method *vmm)
 {
 	assert(!"not implemented");
 }
