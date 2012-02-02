@@ -100,9 +100,10 @@ enum arm_addressing_mode {
 
 #define OPCODE(opc)	(opc << 21)
 
-/* This is the list of ARM instruction field encodings */
-
-static uint32_t arm_encode_insn[] = {
+/*
+ * ARM instruction encoding.
+ */
+static uint32_t arm_encode_table[] = {
 	[INSN_ADD_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0x4),
 	[INSN_ADC_REG_IMM]		= AL | DATA_PROCESSING | USE_IMM_OPERAND | OPCODE(0x5),
 	[INSN_ADC_REG_REG]		= AL | DATA_PROCESSING | OPCODE(0x5),
@@ -219,7 +220,7 @@ void encode_setup_fp(struct buffer *buffer, unsigned long offset)
 {
 	uint32_t encoded_insn;
 
-	encoded_insn = arm_encode_insn[INSN_ADD_REG_IMM];
+	encoded_insn = arm_encode_table[INSN_ADD_REG_IMM];
 	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_SP) & 0xF) << 16) |
 		((arm_encode_reg(MACH_REG_FP) & 0xF) << 12) | (offset & 0xFF);
 
@@ -236,7 +237,7 @@ void encode_sub_sp(struct buffer *buffer, unsigned long frame_size)
 	 * subtract insn more than one time.
 	 */
 	while (frame_size > MAX_FRAME_SIZE_SUBTRACTED) {
-		encoded_insn = arm_encode_insn[INSN_SUB_REG_IMM];
+		encoded_insn = arm_encode_table[INSN_SUB_REG_IMM];
 		encoded_insn = encoded_insn | arm_encode_reg(MACH_REG_SP) << 12 |
 			arm_encode_reg(MACH_REG_SP) << 16 | (0xFC);
 
@@ -245,7 +246,7 @@ void encode_sub_sp(struct buffer *buffer, unsigned long frame_size)
 	}
 
 	if (frame_size > 0) {
-		encoded_insn = arm_encode_insn[INSN_SUB_REG_IMM];
+		encoded_insn = arm_encode_table[INSN_SUB_REG_IMM];
 		encoded_insn = encoded_insn | arm_encode_reg(MACH_REG_SP) << 12 |
 			arm_encode_reg(MACH_REG_SP) << 16 | (frame_size & 0xFF);
 
@@ -269,7 +270,7 @@ void encode_store_args(struct buffer *buffer, struct stack_frame *frame)
 		offset = arg_offset(frame, i);
 		offset = offset * (-1);
 
-		encoded_insn = arm_encode_insn[INSN_STR_MEMLOCAL_REG];
+		encoded_insn = arm_encode_table[INSN_STR_MEMLOCAL_REG];
 		encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_FP) & 0xF) << 16) |
 				((arm_encode_reg(arg_regs[i]) & 0xFF) << 12) | (offset & 0xFFF);
 
@@ -280,7 +281,7 @@ void encode_store_args(struct buffer *buffer, struct stack_frame *frame)
 void encode_restore_sp(struct buffer *buffer, unsigned long offset)
 {
 	uint32_t encoded_insn;
-	encoded_insn = arm_encode_insn[INSN_ADD_REG_IMM];
+	encoded_insn = arm_encode_table[INSN_ADD_REG_IMM];
 
 	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_FP) & 0xF) << 16) |
 		((arm_encode_reg(MACH_REG_SP) & 0xF) << 12) | (offset & 0xFF);
@@ -312,7 +313,7 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 	 * of cu and jit_magic_trampoline are emitted
 	 * which are not instructions
 	 */
-	encoded_insn = arm_encode_insn[INSN_UNCOND_BRANCH];
+	encoded_insn = arm_encode_table[INSN_UNCOND_BRANCH];
 	encoded_insn = encoded_insn | ((0x000004) >> 2 & 0xFFFFFF);
 
 	emit32(buffer, encoded_insn);
@@ -324,7 +325,7 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 	emit32(buffer, target_addr);
 
 	/* Load the addr of cu in R0 */
-	encoded_insn = arm_encode_insn[INSN_LDR_REG_MEMLOCAL];
+	encoded_insn = arm_encode_table[INSN_LDR_REG_MEMLOCAL];
 	encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_R0) & 0xF) << 12) |
 			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x010);
 
@@ -332,13 +333,13 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 
 	/* Call jit_magic_trampoline. First store the value of PC in LR
 	   and then Load the address of magic_trampoline form constant pool */
-	encoded_insn = arm_encode_insn[INSN_SUB_REG_IMM];
+	encoded_insn = arm_encode_table[INSN_SUB_REG_IMM];
 	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_LR) & 0xF) << 12) |
 			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x000);
 
 	emit32(buffer, encoded_insn);
 
-	encoded_insn = arm_encode_insn[INSN_LDR_REG_MEMLOCAL];
+	encoded_insn = arm_encode_table[INSN_LDR_REG_MEMLOCAL];
 	encoded_insn = encoded_insn | IMM_OFFSET_SUB | ((arm_encode_reg(MACH_REG_PC) & 0xF) << 12) |
 			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x014);
 
@@ -347,13 +348,13 @@ void encode_setup_trampoline(struct buffer *buffer, uint32_t cu_addr, uint32_t t
 
 void encode_emit_branch_link(struct buffer *buffer)
 {
-	uint32_t encoded_insn = arm_encode_insn[INSN_SUB_REG_IMM];
+	uint32_t encoded_insn = arm_encode_table[INSN_SUB_REG_IMM];
 	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_LR) & 0xF) << 12) |
 			((arm_encode_reg(MACH_REG_PC) & 0xF) << 16) | (0x000);
 
 	emit32(buffer, encoded_insn);
 
-	encoded_insn = arm_encode_insn[INSN_MOV_REG_REG];
+	encoded_insn = arm_encode_table[INSN_MOV_REG_REG];
 	encoded_insn = encoded_insn | ((arm_encode_reg(MACH_REG_PC) & 0xF) << 12) |
 			(arm_encode_reg(MACH_REG_R0) & 0xF);
 
@@ -362,7 +363,7 @@ void encode_emit_branch_link(struct buffer *buffer)
 
 void insn_encode(struct insn *insn, struct buffer *buffer, struct basic_block *bb)
 {
-	uint32_t encoded_insn = arm_encode_insn[insn->type];
+	uint32_t encoded_insn = arm_encode_table[insn->type];
 
 	if (encoded_insn & LOAD_STORE) {
 		if (encoded_insn & LOAD_INSN) {
