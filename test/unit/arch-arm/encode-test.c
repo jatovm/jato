@@ -109,7 +109,7 @@ void test_emit_uncond_branch_insn(void)
 	struct basic_block *bb2 = alloc_basic_block(cu, 1, 20);
 	struct insn insn1 = {};
 	struct insn insn2 = {};
-	struct insn *insn, *next;
+	struct insn *insn;
 	uint32_t encoded_insn;
 
 	insn1.type = INSN_UNCOND_BRANCH;
