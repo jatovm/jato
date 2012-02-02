@@ -119,22 +119,10 @@ reg:	EXPR_LOCAL	1
 	}
 }
 
-reg:	OP_ADD(reg, EXPR_VALUE) 1
-{
-	binop_imm_reg_low(state, s, tree, INSN_ADDS_REG_IMM);
-	binop_imm_reg_high(state, s, tree, INSN_ADC_REG_IMM);
-}
-
 reg:	OP_ADD(reg, reg) 1
 {
 	binop_reg_reg_low(state, s, tree, INSN_ADDS_REG_REG);
 	binop_reg_reg_high(state, s, tree, INSN_ADC_REG_REG);
-}
-
-reg:	OP_SUB(reg, EXPR_VALUE) 1
-{
-	binop_imm_reg_low(state, s, tree, INSN_SUBS_REG_IMM);
-	binop_imm_reg_high(state, s, tree, INSN_SBC_REG_IMM);
 }
 
 reg:	OP_SUB(reg, reg) 1
@@ -260,43 +248,8 @@ static void select_insn(struct basic_block *, struct tree_node *, struct insn *)
 static void emit_code(struct basic_block *, MBState *, int);
 void insn_select(struct basic_block *);
 static void free_state(MBState *);
-static void binop_imm_reg_low(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
 static void binop_reg_reg_low(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
-static void binop_imm_reg_high(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
 static void binop_reg_reg_high(struct _MBState *, struct basic_block *, struct tree_node *, enum insn_type);
-
-static void binop_imm_reg_low(struct _MBState *state, struct basic_block *bb,
-				struct tree_node *tree, enum insn_type insn_type)
-{
-	struct expression *expr, *right;
-	unsigned long value_low;
-	struct lp_entry *pool;
-	struct var_info *src;
-
-	state->reg1 = state->left->reg1;
-
-	expr = to_expr(tree);
-	right = to_expr(expr->binary_right);
-
-	value_low = right->value & ~0UL;
-	if (value_low <= MAX_POSITIVE_IMM)
-		select_insn(bb, tree, reg_imm_insn(insn_type, (value_low & 0xFF), state->reg1));
-	else {
-		src = get_var(bb->b_parent, J_INT);
-		pool = alloc_literal_pool_entry(bb->b_parent, value_low);
-		select_insn(bb, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, src));
-		switch (insn_type) {
-		case INSN_ADDS_REG_IMM:
-			select_insn(bb, tree, reg_reg_insn(INSN_ADDS_REG_REG, src, state->reg1));
-			break;
-		case INSN_SUBS_REG_IMM:
-			select_insn(bb, tree, reg_reg_insn(INSN_SUBS_REG_REG, src, state->reg1));
-			break;
-		default:
-			break;
-		}
-	}
-}
 
 static void binop_reg_reg_low(struct _MBState *state, struct basic_block *bb,
 			  struct tree_node *tree, enum insn_type insn_type)
@@ -309,42 +262,6 @@ static void binop_reg_reg_low(struct _MBState *state, struct basic_block *bb,
 	state->reg1 = dst;
 
 	select_insn(bb, tree, reg_reg_insn(insn_type, src, dst));
-}
-
-static void binop_imm_reg_high(struct _MBState *state, struct basic_block *bb,
-				struct tree_node *tree, enum insn_type insn_type)
-{
-	struct expression *expr, *right;
-	unsigned long value_high;
-	struct lp_entry *pool;
-	struct var_info *src;
-
-	state->reg2 = state->left->reg2;
-
-	expr = to_expr(tree);
-	right = to_expr(expr->binary_right);
-
-	if (expr->vm_type != J_LONG)
-		return;
-
-	value_high = right->value >> 32;
-	if (value_high <= MAX_POSITIVE_IMM)
-		select_insn(bb, tree, reg_imm_insn(insn_type, (value_high & 0xFF), state->reg2));
-	else {
-		src = get_var(bb->b_parent, J_INT);
-		pool = alloc_literal_pool_entry(bb->b_parent, value_high);
-		select_insn(bb, tree, reg_pool_insn(INSN_LDR_REG_POOL_IMM, pool, src));
-		switch (insn_type) {
-		case INSN_ADC_REG_IMM:
-			select_insn(bb, tree, reg_reg_insn(INSN_ADC_REG_REG, src, state->reg2));
-			break;
-		case INSN_SBC_REG_IMM:
-			select_insn(bb, tree, reg_reg_insn(INSN_SBC_REG_REG, src, state->reg2));
-			break;
-		default:
-			break;
-		}
-	}
 }
 
 static void binop_reg_reg_high(struct _MBState *state, struct basic_block *bb,
