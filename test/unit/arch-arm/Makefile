@@ -23,6 +23,7 @@ TOPLEVEL_OBJS	+= lib/hash-map.o
 TOPLEVEL_OBJS	+= lib/radix-tree.o
 TOPLEVEL_OBJS	+= lib/stack.o
 TOPLEVEL_OBJS	+= lib/string.o
+TOPLEVEL_OBJS	+= lib/symbol.o
 TOPLEVEL_OBJS	+= sys/$(SYS)-$(ARCH)/backtrace.o
 TOPLEVEL_OBJS	+= test/unit/jit/bytecode-to-ir-stub.o
 TOPLEVEL_OBJS	+= test/unit/libharness/libharness.o
