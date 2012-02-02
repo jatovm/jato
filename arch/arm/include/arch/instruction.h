@@ -80,6 +80,7 @@ static inline bool operand_is_reg(struct operand *operand)
 enum insn_type {
 	INSN_ADD_REG_IMM,
 	INSN_ADC_REG_IMM,
+	INSN_ADD_REG_REG,
 	INSN_ADC_REG_REG,
 	INSN_ADDS_REG_IMM,
 	INSN_ADDS_REG_REG,
@@ -99,6 +100,7 @@ enum insn_type {
 	INSN_SBC_REG_IMM,
 	INSN_SBC_REG_REG,
 	INSN_SUBS_REG_IMM,
+	INSN_SUB_REG_REG,
 	INSN_SUBS_REG_REG,
 	INSN_UNCOND_BRANCH,
 	/* Must be last */

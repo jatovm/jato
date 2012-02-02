@@ -121,14 +121,26 @@ reg:	EXPR_LOCAL	1
 
 reg:	OP_ADD(reg, reg) 1
 {
-	binop_reg_reg_low(state, s, tree, INSN_ADDS_REG_REG);
-	binop_reg_reg_high(state, s, tree, INSN_ADC_REG_REG);
+	struct expression *expr = to_expr(tree);
+
+	if (expr->vm_type == J_LONG) {
+		binop_reg_reg_low(state, s, tree, INSN_ADDS_REG_REG);
+		binop_reg_reg_high(state, s, tree, INSN_ADC_REG_REG);
+	} else {
+		binop_reg_reg_low(state, s, tree, INSN_ADD_REG_REG);
+	}
 }
 
 reg:	OP_SUB(reg, reg) 1
 {
-	binop_reg_reg_low(state, s, tree, INSN_SUBS_REG_REG);
-	binop_reg_reg_high(state, s, tree, INSN_SBC_REG_REG);
+	struct expression *expr = to_expr(tree);
+
+	if (expr->vm_type == J_LONG) {
+		binop_reg_reg_low(state, s, tree, INSN_SUBS_REG_REG);
+		binop_reg_reg_high(state, s, tree, INSN_SBC_REG_REG);
+	} else {
+		binop_reg_reg_low(state, s, tree, INSN_SUB_REG_REG);
+	}
 }
 
 stmt:	STMT_EXPRESSION(reg)
@@ -269,9 +281,6 @@ static void binop_reg_reg_high(struct _MBState *state, struct basic_block *bb,
 {
 	struct var_info *src, *dst;
 	struct expression *expr = to_expr(tree);
-
-	if (expr->vm_type != J_LONG)
-		return;
 
 	src = state->right->reg2;
 	dst = state->left->reg2;

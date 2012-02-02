@@ -22,6 +22,7 @@ enum {
 
 static unsigned long insn_flags[] = {
 	[INSN_ADC_REG_IMM]			= USE_DST | DEF_DST,
+	[INSN_ADD_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_ADC_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_ADDS_REG_IMM]			= USE_DST | DEF_DST,
 	[INSN_ADDS_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
@@ -34,6 +35,7 @@ static unsigned long insn_flags[] = {
 	[INSN_SBC_REG_IMM]			= USE_DST | DEF_DST,
 	[INSN_SBC_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_SUBS_REG_IMM]			= USE_DST | DEF_DST,
+	[INSN_SUB_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_SUBS_REG_REG]			= USE_SRC | USE_DST | DEF_DST,
 	[INSN_UNCOND_BRANCH]			= USE_NONE | DEF_NONE | TYPE_BRANCH,
 };
