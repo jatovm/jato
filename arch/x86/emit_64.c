@@ -1674,6 +1674,7 @@ static emit_fn_t emitters[] = {
 	DECL_EMITTER(INSN_MULSD_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_MULSS_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_NEG_REG, insn_encode),
+	DECL_EMITTER(INSN_NOP, insn_encode),
 	DECL_EMITTER(INSN_OR_REG_REG, insn_encode),
 	DECL_EMITTER(INSN_POP_MEMLOCAL, insn_encode),
 	DECL_EMITTER(INSN_POP_REG, insn_encode),

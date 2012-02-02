@@ -999,6 +999,7 @@ static void test_lstore_3(void)
 	assert_long_equals(1, jlong_run(bytecode));
 }
 
+#ifndef CONFIG_ARM
 static void test_fstore_0(void)
 {
 	uint8_t bytecode[] = { OPC_FCONST_1, OPC_FSTORE_0, OPC_FLOAD_0, OPC_FRETURN};
@@ -1054,8 +1055,6 @@ static void test_dstore_3(void)
 
 	assert_double_equals(1, jdouble_run(bytecode));
 }
-
-#ifndef CONFIG_ARM
 
 static void test_i2f(void)
 {
@@ -1236,6 +1235,7 @@ static void run_tests(void)
 	test_lstore_1();
 	test_lstore_2();
 	test_lstore_3();
+#ifndef CONFIG_ARM
 	test_fstore_0();
 	test_fstore_1();
 	test_fstore_2();
@@ -1244,7 +1244,6 @@ static void run_tests(void)
 	test_dstore_1();
 	test_dstore_2();
 	test_dstore_3();
-#ifndef CONFIG_ARM
 	/* test_astore_0(); */
 	/* test_astore_1(); */
 	/* test_astore_2(); */
