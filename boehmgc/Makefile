@@ -27,6 +27,13 @@ ifeq ($(uname_S),Darwin)
   endif
 endif
 
+#
+# Use -marm for arm*
+#
+ifneq ($(findstring arm,$(uname_M)),)
+  DEFAULT_CFLAGS += -marm
+endif
+
 BOEHMGC_OBJS	+= allchblk.o
 BOEHMGC_OBJS	+= alloc.o
 BOEHMGC_OBJS	+= blacklst.o
