@@ -103,10 +103,10 @@ void test_emit_reg_reg_insn(void)
 
 void test_emit_uncond_branch_insn(void)
 {
+	struct compilation_unit cu;
 	struct buffer *buffer = alloc_buffer();
-	struct compilation_unit *cu = stub_compilation_unit_alloc();
-	struct basic_block *bb1 = alloc_basic_block(cu, 1, 20);
-	struct basic_block *bb2 = alloc_basic_block(cu, 1, 20);
+	struct basic_block *bb1 = alloc_basic_block(&cu, 1, 20);
+	struct basic_block *bb2 = alloc_basic_block(&cu, 1, 20);
 	struct insn insn1 = {};
 	struct insn insn2 = {};
 	struct insn *insn;
