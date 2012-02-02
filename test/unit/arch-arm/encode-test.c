@@ -14,6 +14,16 @@
 
 #include <stdint.h>
 
+static struct var_info dummy_var_info = {
+	.vm_type	= J_NATIVE_PTR,
+};
+
+#define DEFINE_REG(m, n)	\
+	struct live_interval n = { .reg = m, .var_info = &dummy_var_info }
+
+static DEFINE_REG(MACH_REG_R4, reg_r4);
+static DEFINE_REG(MACH_REG_R7, reg_r7);
+
 uint32_t read_mem32(struct buffer *buffer, unsigned long offset)
 {
 	return *(buffer->buf+offset) | (*(buffer->buf+offset+1) << 8) |
@@ -24,13 +34,12 @@ void test_emit_reg_imm_insn(void)
 {
 	struct buffer *buffer = alloc_buffer();
 	struct insn insn = {};
-	struct live_interval interval = {.reg = MACH_REG_R4};
 	uint32_t encoded_insn;
 
 	insn.type = INSN_MOV_REG_IMM;
 
 	insn.dest.type = OPERAND_REG;
-	insn.dest.reg.interval = &interval;
+	insn.dest.reg.interval = &reg_r4;
 
 	insn.src.type = OPERAND_IMM;
 	insn.src.imm = 46;
@@ -49,14 +58,13 @@ void test_emit_reg_memlocal_insn(void)
 	struct stack_frame *frame = alloc_stack_frame(3, 6);
 	struct buffer *buffer = alloc_buffer();
 	struct insn insn = {};
-	struct live_interval interval = {.reg = MACH_REG_R4};
 	struct stack_slot *slot = get_local_slot(frame, 2);
 	uint32_t encoded_insn;
 
 	insn.type = INSN_LDR_REG_MEMLOCAL;
 
 	insn.dest.type = OPERAND_REG;
-	insn.dest.reg.interval = &interval;
+	insn.dest.reg.interval = &reg_r4;
 
 	insn.src.type = OPERAND_MEMLOCAL;
 	insn.src.slot = slot;
@@ -74,17 +82,15 @@ void test_emit_reg_reg_insn(void)
 {
 	struct buffer *buffer = alloc_buffer();
 	struct insn insn = {};
-	struct live_interval interval1 = {.reg = MACH_REG_R4};
-	struct live_interval interval2 = {.reg = MACH_REG_R7};
 	uint32_t encoded_insn;
 
 	insn.type = INSN_MOV_REG_REG;
 
 	insn.dest.type = OPERAND_REG;
-	insn.dest.reg.interval = &interval1;
+	insn.dest.reg.interval = &reg_r4;
 
 	insn.src.type = OPERAND_REG;
-	insn.src.reg.interval = &interval2;
+	insn.src.reg.interval = &reg_r7;
 
 	emit_insn(buffer, NULL, &insn);
 
@@ -200,7 +206,6 @@ void test_emit_memlocal_reg_insn(void)
 	struct stack_frame *frame = alloc_stack_frame(3, 6);
 	struct buffer *buffer = alloc_buffer();
 	struct insn insn = {};
-	struct live_interval interval = {.reg = MACH_REG_R4};
 	struct stack_slot *slot = get_local_slot(frame, 2);
 	uint32_t encoded_insn;
 
@@ -210,7 +215,7 @@ void test_emit_memlocal_reg_insn(void)
 	insn.dest.slot = slot;
 
 	insn.src.type = OPERAND_REG;
-	insn.src.reg.interval = &interval;
+	insn.src.reg.interval = &reg_r4;
 
 	emit_insn(buffer, NULL, &insn);
 
