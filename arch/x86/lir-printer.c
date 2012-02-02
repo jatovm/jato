@@ -821,6 +821,11 @@ static int print_neg_reg(struct string *str, struct insn *insn)
 	return print_reg(str, &insn->dest);
 }
 
+static int print_nop(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
+}
+
 static int print_or_imm_membase(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -1072,6 +1077,7 @@ static print_insn_fn insn_printers[] = {
 	[INSN_MUL_REG_EAX] = print_mul_reg_eax,
 	[INSN_MUL_REG_REG] = print_mul_reg_reg,
 	[INSN_NEG_REG] = print_neg_reg,
+	[INSN_NOP] = print_nop,
 	[INSN_OR_IMM_MEMBASE] = print_or_imm_membase,
 	[INSN_OR_MEMBASE_REG] = print_or_membase_reg,
 	[INSN_OR_REG_REG] = print_or_reg_reg,
