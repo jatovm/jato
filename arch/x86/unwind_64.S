@@ -26,7 +26,7 @@ unwind:
 
 	movq 	%rax, %rdi
 	movq	0x08(%rsp), %rsi
-	call	cu_frame_locals_offset
+	call	cu_frame_total_offset
 
 	pop	%rdi
 

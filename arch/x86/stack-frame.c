@@ -32,6 +32,7 @@
 #include "jit/compiler.h"
 #include "jit/args.h"
 #include "jit/text.h"
+#include "jit/debug.h"
 
 #include "vm/stack-trace.h"
 #include "vm/method.h"
@@ -57,6 +58,19 @@
  */
 
 #define ARGS_START_OFFSET offsetof(struct jit_stack_frame, args)
+
+#ifdef CONFIG_X86_32
+static unsigned long cu_frame_misc_size(struct compilation_unit *cu)
+{
+	return (opt_debug_stack ? sizeof(unsigned long) : 0);	/* canary */
+}
+#else
+static unsigned long cu_frame_misc_size(struct compilation_unit *cu)
+{
+	return sizeof(unsigned long) +				/* *this */
+	       (opt_debug_stack ? sizeof(unsigned long) : 0);	/* canary */
+}
+#endif
 
 static unsigned long __index_to_offset(unsigned long index)
 {
@@ -117,6 +131,17 @@ unsigned long frame_locals_size(struct stack_frame *frame)
 unsigned long cu_frame_locals_offset(struct compilation_unit *cu)
 {
 	return frame_locals_size(cu->stack_frame);
+}
+
+/*
+ * Returns offset to subtract from the
+ * stack pointer to reserve space for the entire stack frame.
+ */
+unsigned long cu_frame_total_offset(struct compilation_unit *cu)
+{
+	return cu_frame_locals_offset(cu) +
+	       sizeof(unsigned long) * NR_CALLEE_SAVE_REGS +
+	       cu_frame_misc_size(cu);
 }
 
 /*

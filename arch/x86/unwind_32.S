@@ -28,7 +28,7 @@ unwind:
 	 */
 	push	%edx
 	push	%ecx
-	call	cu_frame_locals_offset
+	call	cu_frame_total_offset
 	pop	%ecx
 	pop	%edx
 
