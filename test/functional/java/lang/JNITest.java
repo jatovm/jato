@@ -100,6 +100,7 @@ public class JNITest extends TestCase {
   native static public Object testNewObjectV(Class<?> clazz, String constructorSignature, Object args);
   native static public Class<?> testGetObjectClass(Object obj);
   native static public boolean isInstanceOf(Object obj, Class<?> clazz);
+  native static public boolean testMethodID(Class<?> clazz, String methodName, String signature);
 
   private static JNITest jniTest = new JNITest();
 
@@ -371,6 +372,23 @@ public class JNITest extends TestCase {
     assertTrue(isInstanceOf(jniTest, JNITest.class));
   }
 
+  public static void testMethodID() {
+
+    assertTrue(testMethodID(JNITest.class, "testMethodID", "()V"));
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        testMethodID(JNITest.class, "testMethodID", "(Ljava/lang/String;)V");
+      }
+    }, NoSuchMethodError.class);
+
+    assertThrows(new Block() {
+      public void run() throws Throwable {
+        testMethodID(JNITest.class, "nosuchmethod", "()V");
+      }
+    }, NoSuchMethodError.class);
+  }
+
   public static void main(String[] args) {
     testReturnPassedString();
     testReturnPassedInt();
@@ -400,5 +418,6 @@ public class JNITest extends TestCase {
     testNewObjectV();
     testGetObjectClass();
     testIsInstanceOf();
+    testMethodID();
   }
 }

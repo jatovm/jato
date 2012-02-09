@@ -760,3 +760,34 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_isInstanceOf(JNIEnv *env, jcla
 {
 	return (*env)->IsInstanceOf(env, obj, clazz);
 }
+
+/*
+ * Class:     java_lang_JNITest
+ * Method:    testMethodID
+ * Signature: (Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testMethodID(JNIEnv *env, jclass clazz, jclass classForMethodID, jstring methodName, jstring signature)
+{
+	char *methodNameStr;
+	char *signatureStr;
+	jboolean iscopy;
+
+	methodNameStr = (char *) (*env)->GetStringUTFChars(env, methodName, &iscopy);
+	if (signatureStr == NULL) {
+		return false; /* OutOfMemoryError */
+	}
+
+	signatureStr = (char *) (*env)->GetStringUTFChars(env, signature, &iscopy);
+	if (signatureStr == NULL) {
+		return false; /* OutOfMemoryError */
+	}
+
+	jmethodID methodID = (*env)->GetMethodID(env, classForMethodID, methodNameStr, signatureStr);
+	if (methodID == NULL)
+		return false;
+
+	(*env)->ReleaseStringUTFChars(env, methodName, methodNameStr);
+	(*env)->ReleaseStringUTFChars(env, signature, signatureStr);
+
+	return true;
+}
