@@ -232,7 +232,7 @@ void encode_sub_sp(struct buffer *buffer, unsigned long frame_size)
 	 * subtract insn more than one time.
 	 */
 	while (frame_size > MAX_FRAME_SIZE_SUBTRACTED) {
-		emit32(buffer, ARM_SUB_IMM8(ARM_SP, ARM_SP, 0xfc));
+		emit32(buffer, ARM_SUB_IMM8(ARM_SP, ARM_SP, MAX_FRAME_SIZE_SUBTRACTED));
 
 		frame_size = frame_size - MAX_FRAME_SIZE_SUBTRACTED;
 	}
