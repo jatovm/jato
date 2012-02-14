@@ -1343,16 +1343,12 @@ arg:	EXPR_ARG(reg) 1
 arg:	EXPR_ARG(freg)
 {
 	struct var_info *src, *dst, *rsp;
-	struct expression *expr, *arg_expr;
-	int size;
+	struct expression *expr;
 
 	expr = to_expr(tree);
-	arg_expr = to_expr(expr->arg_expression);
 
 	src = state->left->reg1;
 	rsp = get_fixed_var(s->b_parent, MACH_REG_RSP);
-
-	size = vmtype_get_size(arg_expr->vm_type);
 
 	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
 		dst = get_fixed_var(s->b_parent, expr->arg_reg);
@@ -1360,10 +1356,13 @@ arg:	EXPR_ARG(freg)
 			select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dst));
 		else
 			select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dst));
-
 	} else {
-		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, size, rsp));
-		select_insn(s, tree, reg_membase_insn(INSN_MOV_REG_MEMBASE, src, rsp, 0));
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, sizeof(unsigned long), rsp));
+		if (expr->vm_type == J_FLOAT) {
+			select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, src, rsp, 0));
+		} else {
+			select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, src, rsp, 0));
+		}
 	}
 
 	state->reg1 = NULL;
