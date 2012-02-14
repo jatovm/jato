@@ -1268,59 +1268,6 @@ arg:	EXPR_ARG_THIS(reg) 1
 	state->reg1 = src;
 }
 
-arg:	EXPR_ARG(EXPR_VALUE) 1
-{
-	struct expression *expr, *arg_expr;
-	struct var_info *dst, *temp;
-	unsigned long imm;
-
-	expr = to_expr(tree);
-	arg_expr = to_expr(expr->arg_expression);
-	imm  = arg_expr->value;
-
-	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
-		dst = get_fixed_var(s->b_parent, expr->arg_reg);
-		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, dst));
-	} else {
-		temp = get_var(s->b_parent, arg_expr->vm_type);
-		select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, imm, temp));
-		select_insn(s, tree, reg_insn(INSN_PUSH_REG, temp));
-	}
-
-	state->reg1 = NULL;
-}
-
-arg:	EXPR_ARG(EXPR_FVALUE) 2
-{
-	struct expression *expr, *arg_expr;
-	struct stack_slot *scratch;
-	struct var_info *temp, *dst;
-	unsigned long ivalue;
-
-	expr = to_expr(tree);
-	arg_expr = to_expr(expr->arg_expression);
-
-	if (arg_expr->vm_type == J_FLOAT) {
-		temp = get_var(s->b_parent, J_INT);
-		ivalue = float_to_uint32(expr->fvalue);
-	} else {
-		temp = get_var(s->b_parent, J_LONG);
-		ivalue = double_to_uint64(expr->fvalue);
-	}
-
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, ivalue, temp));
-
-	if (expr->arg_reg != MACH_REG_UNASSIGNED) {
-		scratch = get_scratch_slot(s->b_parent);
-		dst = get_fixed_var(s->b_parent, expr->arg_reg);
-		select_insn(s, tree, reg_memlocal_insn(INSN_MOV_REG_MEMLOCAL, temp, scratch));
-		select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, scratch, dst));
-	} else
-		select_insn(s, tree, reg_insn(INSN_PUSH_REG, temp));
-
-	state->reg1 = NULL;
-}
-
 arg:	EXPR_ARG(reg) 1
 {
 	struct var_info *src, *dst;
