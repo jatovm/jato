@@ -641,7 +641,7 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 }
 
 /* call-site in edx, magic is in ecx */
-void __attribute__((regparm(3)))
+static void __attribute__((regparm(3)))
 stack_frame_redzone_fail(void *eax, void *edx, void *ecx)
 {
 	printf("Stack frame redzone overwritten at %p: %p\n", edx, ecx);
