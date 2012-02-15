@@ -1219,6 +1219,8 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 	if (opt_debug_stack) {
 		__emit_mov_imm_reg(buf, STACK_FRAME_REDZONE_END, MACH_REG_RAX);
 		__emit_push_reg(buf, MACH_REG_RAX);
+		/* Keep stack pointer aligned to 16 bytes */
+		__emit64_sub_imm_reg(buf, X86_STACK_ALIGN - sizeof(unsigned long), MACH_REG_RSP);
 	}
 }
 
@@ -1243,6 +1245,8 @@ static void do_stack_redzone_check(unsigned long magic)
 
 static void emit_stack_redzone_check(struct buffer *buf)
 {
+	__emit_add_imm_reg(buf, X86_STACK_ALIGN - sizeof(unsigned long), MACH_REG_RSP);
+
 	/* Pass the magic value to do_stack_redzone_check(). */
 	__emit_pop_reg(buf, MACH_REG_RDI);
 
