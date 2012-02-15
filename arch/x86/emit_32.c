@@ -562,11 +562,6 @@ static void emit_alu_imm_reg(struct buffer *buf, unsigned char opc_ext,
 	emit_imm(buf, imm);
 }
 
-static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
-{
-	emit_alu_imm_reg(buf, 0x00, imm, reg);
-}
-
 static void __emit_sub_imm_reg(struct buffer *buf, unsigned long imm,
 			       enum machine_reg reg)
 {
@@ -634,10 +629,8 @@ void emit_prolog(struct buffer *buf, struct stack_frame *frame,
 
 	emit_save_callee_save_regs(buf);
 
-	if (opt_debug_stack) {
+	if (opt_debug_stack)
 		__emit_push_imm(buf, STACK_FRAME_REDZONE_END);
-		__emit_sub_imm_reg(buf, X86_STACK_ALIGN - sizeof(unsigned long), MACH_REG_ESP);
-	}
 }
 
 /* call-site in edx, magic is in ecx */
@@ -650,7 +643,6 @@ stack_frame_redzone_fail(void *eax, void *edx, void *ecx)
 
 static void emit_stack_redzone_check(struct buffer *buf)
 {
-	__emit_add_imm_reg(buf, X86_STACK_ALIGN - sizeof(unsigned long), MACH_REG_ESP);
 	__emit_mov_imm_reg(buf, (unsigned long) buffer_current(buf), MACH_REG_EDX);
 	__emit_pop_reg(buf, MACH_REG_ECX);
 
@@ -798,6 +790,11 @@ static void emit_or_imm_membase(struct insn *insn, struct buffer *buf, struct ba
 {
 	__emit_membase(buf, 0x81, mach_reg(&insn->dest.base_reg), insn->dest.disp, 1);
 	emit_imm32(buf, insn->src.disp);
+}
+
+static void __emit_add_imm_reg(struct buffer *buf, long imm, enum machine_reg reg)
+{
+	emit_alu_imm_reg(buf, 0x00, imm, reg);
 }
 
 static void emit_indirect_jump_reg(struct buffer *buf, enum machine_reg reg)
