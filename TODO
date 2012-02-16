@@ -91,6 +91,8 @@ Required skills::
 Difficulty::
     Hard
 
+Virtual Machine
+---------------
 Interpreter
 ~~~~~~~~~~~
 Jato supports JIT-only execution which is slow for some applications. For
@@ -104,6 +106,25 @@ Required skills::
     C, JVM
 Difficulty::
     Medium
+
+Ahead-of-time Compilation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+The goal of this project is to implement support for ahead-of-time compilation.
+
+Required skills::
+    C, JVM
+Difficulty::
+    Hard
+
+LLVM backend
+~~~~~~~~~~~~
+The goal of this project is to implement a code generator using LLVM C
+bindings.
+
+Required skills::
+    C, LLVM, JVM
+Difficulty::
+    Hard
 
 Garbage Collector
 -----------------
