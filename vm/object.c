@@ -145,12 +145,13 @@ struct vm_object *vm_object_alloc_primitive_array(int type, int count)
 	return &res->object;
 }
 
-struct vm_object *
-vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *counts)
+static struct vm_object *
+do_vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, va_list ap)
 {
 	struct vm_class *elem_class;
 	struct vm_array *res;
 	int elem_size;
+	int len;
 
 	assert(nr_dimensions > 0);
 
@@ -160,23 +161,44 @@ vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, int *coun
 	elem_class = vm_class_get_array_element_class(class);
 	elem_size  = vmtype_get_size(vm_class_get_storage_vmtype(elem_class));
 
-	res = gc_alloc(sizeof(*res) + elem_size * counts[0]);
+	len = va_arg(ap, int);
+
+	res = gc_alloc(sizeof(*res) + elem_size * len);
 	if (!res)
 		return throw_oom_error();
 
 	vm_object_init_common(&res->object);
 
-	res->array_length = counts[0];
+	res->array_length = len;
 	res->object.class = class;
 
 	if (nr_dimensions == 1)
 		return &res->object;
 
 	struct vm_object **elems = vm_array_elems(&res->object);
-	for (int i = 0; i < counts[0]; ++i)
-		elems[i] = vm_object_alloc_multi_array(elem_class, nr_dimensions - 1, counts + 1);
+	for (int i = 0; i < res->array_length; ++i) {
+		va_list dup_ap;
+
+		va_copy(dup_ap, ap);
+
+		elems[i] = do_vm_object_alloc_multi_array(elem_class, nr_dimensions - 1, dup_ap);
+	}
 
 	return &res->object;
+}
+
+struct vm_object *
+vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, ...)
+{
+	va_list ap, dup_ap;
+
+	va_start(ap, nr_dimensions);
+
+	va_copy(dup_ap, ap);
+
+	va_end(ap);
+
+	return do_vm_object_alloc_multi_array(class, nr_dimensions, ap);
 }
 
 struct vm_object *vm_object_alloc_array(struct vm_class *class, int count)
