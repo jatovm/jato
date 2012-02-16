@@ -773,7 +773,7 @@ JNIEXPORT jboolean JNICALL Java_java_lang_JNITest_testMethodID(JNIEnv *env, jcla
 	jboolean iscopy;
 
 	methodNameStr = (char *) (*env)->GetStringUTFChars(env, methodName, &iscopy);
-	if (signatureStr == NULL) {
+	if (methodNameStr == NULL) {
 		return false; /* OutOfMemoryError */
 	}
 
