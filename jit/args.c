@@ -140,12 +140,16 @@ convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method 
 }
 
 static struct expression *
-insert_native_arg(struct expression *root, struct expression *expr)
+insert_native_arg(struct expression *root, struct expression *expr, unsigned long idx)
 {
 	struct expression *_expr;
 
 	_expr = arg_expr(expr);
 	_expr->bytecode_offset = expr->bytecode_offset;
+
+#ifdef CONFIG_ARGS_MAP
+	_expr->arg_reg = args_map_alloc_gpr(idx);
+#endif
 
 	if (!root)
 		return _expr;
@@ -158,7 +162,7 @@ insert_native_arg(struct expression *root, struct expression *expr)
  * with the native VM call. All arguments are passed on stack.
  */
 struct expression *
-convert_native_args(struct stack *mimic_stack, unsigned long nr_args)
+convert_native_args(struct stack *mimic_stack, unsigned long start_arg, unsigned long nr_args)
 {
 	struct expression *args_list = NULL;
 	unsigned long i;
@@ -170,7 +174,11 @@ convert_native_args(struct stack *mimic_stack, unsigned long nr_args)
 
 	for (i = 0; i < nr_args; i++) {
 		struct expression *expr = stack_pop(mimic_stack);
-		args_list = insert_native_arg(args_list, expr);
+
+		assert(expr->vm_type != J_FLOAT);
+		assert(expr->vm_type != J_DOUBLE);
+
+		args_list = insert_native_arg(args_list, expr, nr_args + start_arg - i - 1);
 	}
 
   out:

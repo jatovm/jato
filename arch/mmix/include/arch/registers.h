@@ -41,4 +41,9 @@ static inline enum vm_type reg_default_type(enum machine_reg reg)
 	return GPR_VM_TYPE;
 }
 
+static inline enum machine_reg args_map_alloc_gpr(int gpr)
+{
+	return gpr;
+}
+
 #endif /* __JIT_REGISTERS_H */

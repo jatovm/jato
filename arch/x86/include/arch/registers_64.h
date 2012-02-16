@@ -117,4 +117,6 @@ static inline bool is_xmm_reg(enum machine_reg reg)
 	return reg >= NR_GP_REGISTERS && reg < NR_FP_REGISTERS;
 }
 
+enum machine_reg args_map_alloc_gpr(int gpr);
+
 #endif /* X86_REGISTERS_64_H */

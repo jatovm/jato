@@ -465,7 +465,7 @@ int convert_multianewarray(struct parse_context *ctx)
 	if (!arrayref)
 		return warn("out of memory"), -ENOMEM;
 
-	args_list = convert_native_args(ctx->bb->mimic_stack, dimension);
+	args_list = convert_native_args(ctx->bb->mimic_stack, 2, dimension);
 
 	arrayref->multianewarray_dimensions = &args_list->node;
 

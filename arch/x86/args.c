@@ -35,7 +35,7 @@
 
 #ifdef CONFIG_X86_64
 
-static enum machine_reg args_map_alloc_gpr(int gpr)
+enum machine_reg args_map_alloc_gpr(int gpr)
 {
 	switch (gpr) {
 	case 0:
