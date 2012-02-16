@@ -337,7 +337,7 @@ References
 
 - [[[Cooper01]]] Keith Cooper et al. A Simple, Fast Dominance Algorithm. 2001.
   http://www.cs.rice.edu/~keith/EMBED/dom.pdf[URL]
-- [[Moe02]] Hanspeter Mössenböck and Michael Pfeiffer. Linear Scan Register
+- [[[Moe02]]] Hanspeter Mössenböck and Michael Pfeiffer. Linear Scan Register
   Allocation in the Context of SSA Form and Register Constraints. 2002.
   http://www.ssw.uni-linz.ac.at/Research/Papers/Moe02.html[URL]
 - [[[Suganuma02]]] Toshio Suganuma et al. An Empirical Study of Method Inlining
