@@ -10,12 +10,6 @@ on each of them to help a new contributor get started.
 
 Performance
 -----------
-[quote, Michael A. Jackson]
-____
-``The First Rule of Program Optimization: Don't do it. The Second Rule of
-Program Optimization (for experts only!): Don't do it yet.''
-____
-
 Startup Time
 ~~~~~~~~~~~~
 The purpose of this project is to improve VM startup time. There are two
@@ -75,11 +69,6 @@ Difficulty::
 
 Garbage Collector
 -----------------
-[quote, Robert Sewell]
-____
-``If Java had true garbage collection, most programs would delete themselves upon execution.''
-____
-
 Exact GC
 ~~~~~~~~
 Jato uses Boehm GC as its garbage collector. While Boehm GC is stable and
@@ -160,11 +149,6 @@ Difficulty::
 
 Portability
 -----------
-[quote, Jim McCarthy]
-____
-``Portability is for canoes.''
-____
-
 Machine Architectures
 ~~~~~~~~~~~~~~~~~~~~~
 To port the VM to a new architecture, you need to introduce a new
