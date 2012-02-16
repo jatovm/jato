@@ -136,6 +136,28 @@ Required skills::
 Difficulty::
     Medium
 
+ARM
+---
+ARMv5 support
+~~~~~~~~~~~~~
+The JIT compiler has preliminary support for ARMv5 but there's still more work
+to be done to support the full JVM instruction set.
+
+Required skills::
+    C, ARM
+Difficulty::
+    Hard
+
+Thumb2 support
+~~~~~~~~~~~~~~
+The Thumb2 instruction set on ARM is more compact than the 32-bit ARM
+instruction set which is important for embedded devices.
+
+Required skills::
+    C, ARM
+Difficulty::
+    Hard
+
 Portability
 -----------
 [quote, Jim McCarthy]
@@ -145,9 +167,7 @@ ____
 
 Machine Architectures
 ~~~~~~~~~~~~~~~~~~~~~
-Jato currently runs on IA-32 and AMD64 machine architectures but there are
-other important architectures out there (e.g. ARM and PowerPC) that we want to
-support. To port the VM to a new architecture, you need to introduce a new
+To port the VM to a new architecture, you need to introduce a new
 'arch/<target>' directory that implements the following machine architecture
 specific parts:
 
