@@ -1,28 +1,26 @@
 Jato ToDo
 =========
 Pekka Enberg <penberg@kernel.org>
+2012
 
 Introduction
 ------------
-This document is intended to be a starting point for people interested in
-hacking on Jato. It includes a list of open projects with a brief description
-on each of them to help a new contributor get started.
+This is a list of things to hack on. It's mostly meant for people who are new
+to Jato and want to find something interesting to hack on.
 
 Performance
 -----------
-Startup Time
-~~~~~~~~~~~~
-The purpose of this project is to improve VM startup time. There are two
-different classes of applications to optimize: command line applications such
-as Ant and Maven and graphical user interface applications such as Eclipse.
-Both classes might require different kinds of hacks to speed up the start up
-time. You might need to optimize GNU Classpath and external libraries Jato uses
-during VM startup.
+SSA form
+~~~~~~~~
+The JIT compiler support SSA form but it's currently disabled by default
+because it breaks some DaCapo benchmarks. The goal of this project is to fix
+all the remaining issues in SSA form conversion so that it can be enabled by
+default.
 
 Required skills::
-    C, Java
+    C, x86
 Difficulty::
-    Medium
+    Hard
 
 Method Inlining
 ~~~~~~~~~~~~~~~
@@ -52,6 +50,32 @@ Required skills::
 Difficulty::
     Medium
 
+Register Allocator Improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Linear scan register allocator functions show up high in performance profiles
+for many applications. The goal of this project is to improve both the speed of
+the register allocator and the generated code. One such improvement would be to
+use the SSA form in the register allocator <<Moe02>>.
+
+Required skills::
+    C
+Difficulty::
+    Medium
+
+Startup Time
+~~~~~~~~~~~~
+The purpose of this project is to improve VM startup time. There are two
+different classes of applications to optimize: command line applications such
+as Ant and Maven and graphical user interface applications such as Eclipse.
+Both classes might require different kinds of hacks to speed up the start up
+time. You might need to optimize GNU Classpath and external libraries Jato uses
+during VM startup.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
+
 Tail Call Optimizations
 ~~~~~~~~~~~~~~~~~~~~~~~
 Functional languages such as Scala and Clojure make heavy use of tail-calls.
@@ -66,6 +90,20 @@ Required skills::
     C, x86
 Difficulty::
     Hard
+
+Interpreter
+~~~~~~~~~~~
+Jato supports JIT-only execution which is slow for some applications. For
+example, startup time for short-lived applications can be reduced with a simple
+interpreter. The primary goal of this project is to improve 'vm/interp.c' to
+cover the whole bytecode instruction set. Secondary goal for this project is to
+implement mixed-mode execution where we start out by interpreting bytecode and
+only JIT compile methods that are invoked a lot of times.
+
+Required skills::
+    C, JVM
+Difficulty::
+    Medium
 
 Garbage Collector
 -----------------
@@ -277,6 +315,9 @@ References
 
 - [[[Cooper01]]] Keith Cooper et al. A Simple, Fast Dominance Algorithm. 2001.
   http://www.cs.rice.edu/~keith/EMBED/dom.pdf[URL]
+- [[Moe02]] Hanspeter Mössenböck and Michael Pfeiffer. Linear Scan Register
+  Allocation in the Context of SSA Form and Register Constraints. 2002.
+  http://www.ssw.uni-linz.ac.at/Research/Papers/Moe02.html[URL]
 - [[[Suganuma02]]] Toshio Suganuma et al. An Empirical Study of Method Inlining
   for a Java Just-In-Time Compiler. http://www.usenix.org/events/javavm02/suganuma/suganuma_html/[URL]
 - [[[Wuerthinger07]]] Thomas Würthinger and Christian Wimmer. Array Bounds
