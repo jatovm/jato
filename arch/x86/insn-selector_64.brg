@@ -962,38 +962,21 @@ reg:	EXPR_NULL_CHECK(EXPR_LOCAL)
 	select_insn(s, tree, membase_reg_insn(INSN_TEST_MEMBASE_REG, reg, 0, reg));
 }
 
-arg:	EXPR_MULTIARRAY_SIZE_CHECK(arg)
-{
-	struct expression *expr;
-	struct var_info *rdi;
-	int dimensions;
-
-	expr = to_expr(tree);
-	dimensions = nr_args(to_expr(expr->size_expr));
-
-	rdi = get_fixed_var(s->b_parent, MACH_REG_RDI);
-	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, (unsigned long) dimensions, rdi));
-
-	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) multiarray_size_check));
-
-	select_exception_test(s, tree);
-}
-
 reg:	EXPR_MULTIANEWARRAY(arg)
 {
 	struct var_info *rsi, *rdi;
 	struct var_info *xax;
 	unsigned int dimension;
 	struct expression *expr;
-	struct expression *size_check;
+	struct expression *args_list;
 
 	expr = to_expr(tree);
 
 	xax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 	state->reg1 = get_var(s->b_parent, J_REFERENCE);
 
-	size_check = to_expr(expr->multianewarray_dimensions);
-	dimension = nr_args(to_expr(size_check->size_expr));
+	args_list = to_expr(expr->multianewarray_dimensions);
+	dimension = nr_args(args_list);
 
 	rsi = get_fixed_var(s->b_parent, MACH_REG_RSI);
 	select_insn(s, tree, imm_reg_insn(INSN_MOV_IMM_REG, dimension, rsi));

@@ -49,7 +49,6 @@ enum expression_type {
 	EXPR_EXCEPTION_REF,
 	EXPR_NULL_CHECK,
 	EXPR_ARRAY_SIZE_CHECK,
-	EXPR_MULTIARRAY_SIZE_CHECK,
 	EXPR_MIMIC_STACK_SLOT,
 	EXPR_LOOKUPSWITCH_BSEARCH,
 	EXPR_TRUNCATION,
@@ -257,7 +256,7 @@ struct expression {
 		   will be thrown if reference is null. */
 		struct tree_node *null_check_ref;
 
-		/* EXPR_ARRAY_SIZE_CHECK and EXPR_MULTIARRAY_SIZE_CHECK */
+		/* EXPR_ARRAY_SIZE_CHECK */
 		struct tree_node *size_expr;
 
 		/* EXPR_MIMIC_STACK_SLOT */
@@ -338,7 +337,6 @@ struct expression *instanceof_expr(struct expression *, struct vm_class *);
 struct expression *exception_ref_expr(void);
 struct expression *null_check_expr(struct expression *);
 struct expression *array_size_check_expr(struct expression *);
-struct expression *multiarray_size_check_expr(struct expression *);
 struct expression *dup_expr(struct parse_context *, struct expression *);
 struct expression *get_pure_expr(struct parse_context *, struct expression *);
 struct expression *lookupswitch_bsearch_expr(struct expression *, struct lookupswitch *);

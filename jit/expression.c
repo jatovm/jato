@@ -61,7 +61,6 @@ int expr_nr_kids(struct expression *expr)
 	case EXPR_INSTANCEOF:
 	case EXPR_NULL_CHECK:
 	case EXPR_ARRAY_SIZE_CHECK:
-	case EXPR_MULTIARRAY_SIZE_CHECK:
 	case EXPR_LOOKUPSWITCH_BSEARCH:
 		return 1;
 	case EXPR_VALUE:
@@ -113,7 +112,6 @@ int expr_is_pure(struct expression *expr)
 	case EXPR_ARRAYLENGTH:
 	case EXPR_INSTANCEOF:
 	case EXPR_ARRAY_SIZE_CHECK:
-	case EXPR_MULTIARRAY_SIZE_CHECK:
 	case EXPR_NULL_CHECK:
 	case EXPR_LOOKUPSWITCH_BSEARCH:
 	case EXPR_INSTANCE_FIELD:
@@ -555,19 +553,6 @@ struct expression *array_size_check_expr(struct expression *size)
 		return NULL;
 
 	expr->size_expr = &size->node;
-
-	return expr;
-}
-
-struct expression *multiarray_size_check_expr(struct expression *dimensions)
-{
-	struct expression *expr;
-
-	expr = alloc_expression(EXPR_MULTIARRAY_SIZE_CHECK, J_VOID);
-	if (!expr)
-		return NULL;
-
-	expr->size_expr = &dimensions->node;
 
 	return expr;
 }

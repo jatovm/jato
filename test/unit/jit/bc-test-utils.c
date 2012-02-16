@@ -263,14 +263,6 @@ void assert_array_size_check_expr(struct expression *expected,
 	assert_ptr_equals(&expected->node, actual->size_expr);
 }
 
-void assert_multiarray_size_check_expr(struct expression **expected_args,
-				       int nr_args,
-				       struct expression *actual)
-{
-	assert_int_equals(EXPR_MULTIARRAY_SIZE_CHECK, expr_type(actual));
-	assert_args(expected_args, nr_args, to_expr(actual->size_expr));
-}
-
 void assert_store_stmt(struct statement *stmt)
 {
 	assert_int_equals(STMT_STORE, stmt_type(stmt));

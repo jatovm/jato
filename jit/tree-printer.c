@@ -1021,21 +1021,6 @@ out:
 	return err;
 }
 
-static int print_multiarray_size_check_expr(int lvl, struct string *str,
-					    struct expression *expr)
-{
-	int err;
-
-	err = append_formatted(lvl, str, "MULTIARRAY_SIZE_CHECK:\n");
-	if (err)
-		goto out;
-
-	err = append_tree_attr(lvl + 1, str, "dimension list", expr->size_expr);
-
-out:
-	return err;
-}
-
 static int print_lookupswitch_bsearch_expr(int lvl, struct string *str,
 					   struct expression *expr)
 {
@@ -1096,7 +1081,6 @@ static print_expr_fn expr_printers[] = {
 	[EXPR_EXCEPTION_REF] = print_exception_ref_expr,
 	[EXPR_NULL_CHECK] = print_null_check_expr,
 	[EXPR_ARRAY_SIZE_CHECK] = print_array_size_check_expr,
-	[EXPR_MULTIARRAY_SIZE_CHECK] = print_multiarray_size_check_expr,
 	[EXPR_MIMIC_STACK_SLOT] = print_mimic_stack_slot_expr,
 	[EXPR_LOOKUPSWITCH_BSEARCH] = print_lookupswitch_bsearch_expr,
 };

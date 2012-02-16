@@ -449,9 +449,8 @@ int convert_anewarray(struct parse_context *ctx)
 
 int convert_multianewarray(struct parse_context *ctx)
 {
-	struct expression *size_check;
-	struct expression *arrayref;
 	struct expression *args_list;
+	struct expression *arrayref;
 	unsigned long type_idx;
 	unsigned char dimension;
 	struct vm_class *class;
@@ -468,11 +467,7 @@ int convert_multianewarray(struct parse_context *ctx)
 
 	args_list = convert_native_args(ctx->bb->mimic_stack, dimension);
 
-	size_check = multiarray_size_check_expr(args_list);
-	if (!size_check)
-		return warn("out of memory"), -ENOMEM;
-
-	arrayref->multianewarray_dimensions = &size_check->node;
+	arrayref->multianewarray_dimensions = &args_list->node;
 
 	convert_expression(ctx, arrayref);
 

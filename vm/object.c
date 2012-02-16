@@ -163,6 +163,11 @@ do_vm_object_alloc_multi_array(struct vm_class *class, int nr_dimensions, va_lis
 
 	len = va_arg(ap, int);
 
+	if (len < 0) {
+		signal_new_exception(vm_java_lang_NegativeArraySizeException, NULL);
+		return NULL;
+	}
+
 	res = gc_alloc(sizeof(*res) + elem_size * len);
 	if (!res)
 		return throw_oom_error();
@@ -491,27 +496,6 @@ void array_size_check(int size)
 		return;
 
 	signal_new_exception(vm_java_lang_NegativeArraySizeException, NULL);
-}
-
-void multiarray_size_check(int n, ...)
-{
-	va_list ap;
-	int i;
-
-	va_start(ap, n);
-
-	for (i = 0; i < n; i++) {
-		if (va_arg(ap, int) >= 0)
-			continue;
-
-		signal_new_exception(vm_java_lang_NegativeArraySizeException,
-				     NULL);
-		va_end(ap);
-		return;
-	}
-
-	va_end(ap);
-	return;
 }
 
 char *vm_string_to_cstr(const struct vm_object *string_obj)
