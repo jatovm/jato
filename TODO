@@ -328,6 +328,62 @@ Required skills::
 Difficulty::
     Medium
 
+Other
+-----
+
+fork() support
+~~~~~~~~~~~~~~
+
+The JRuby VM is unable to support fork() because OpenJDK does not support it.
+The goal of this project is to make Java programs running under Jato be able to
+call fork() and still have a working system.
+
+Required skills::
+    C, POSIX
+Difficulty::
+    Medium
+
+POSIX API support
+~~~~~~~~~~~~~~~~~
+
+Projects like JRuby and Cassandra rely heavily on OS specific APIs for
+correctness and performance reasons. The goal of this project is to support
+POSIX APIs in Jato efficiently. Ideally, we should be able to inline the actual
+API calls directly to the JIT'd machine code so that there's zero overhead.
+
+As a starting point, you should look into the JNR POSIX project to see what
+Jato can do to make it work and perform well out-of-the-box.
+
+Required skills::
+    C, POSIX
+Difficulty::
+    Medium
+
+JIT API
+~~~~~~~
+
+VMs that run on the JVM need to transform their internal representation into
+bytecode for the JIT to kick in. This is wasteful because JVMs will immediately
+transform the bytecode to their own intermediate representation.
+
+The goal of this project is to implement a Java API that allows Java programs
+to generate JIT'd code directly and bypass the bytecode conversion layer.
+
+Required skills::
+    C, POSIX
+Difficulty::
+    Medium
+
+Dalvik
+~~~~~~
+
+The Dalvik VM is very similar to the JVM semantically. The goal of this project
+is to implement support for running Dalvik applications under Jato.
+
+Required skills::
+    C, POSIX
+Difficulty::
+    Hard
 
 [bibliography]
 References
