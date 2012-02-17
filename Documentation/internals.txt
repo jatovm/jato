@@ -18,8 +18,8 @@ language, Java Virtual Machine (JVM) architecture, and machine architecture.
 
 - The Java Virtual Machine
 
-Structure of the Virtual Machine
---------------------------------
+The Virtual Machine
+-------------------
 
 Classes
 ~~~~~~~
@@ -46,11 +46,8 @@ Exceptions
 
 TODO
 
-Java Runtime Interface
-----------------------
-
-Structure of the Just-in-Time Compiler
---------------------------------------
+The Just-in-Time Compiler
+-------------------------
 
 Introduction
 ~~~~~~~~~~~~
@@ -68,18 +65,21 @@ Programs are compiled one method at a time.  Invocation of a method is replaced
 with an invocation of a special per-method JIT trampoline that is responsible
 for compiling the actual target method upon first invocation.
 
+Compiler Passes
+~~~~~~~~~~~~~~~
+
 Subroutine Inlining
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 TODO
 
 Control-Flow Graph Analysis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TODO
 
 BC2IR
-~~~~~
+^^^^^
 
 The JVM has a stack-based architecture which means instructions operate on a
 stack. Modern CPUs, on the other hand, are register-based which means that
@@ -90,14 +90,14 @@ to as BC2IR in literature. Entry point to the algorithm can be found in
 jit/bytecode-to-ir.c::convert_to_ir().
 
 Instruction Selection
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 The instruction selector takes the HIR as an input and outputs LIR. The actual
 instruction selector is generated from a Monoburg rules file (e.g.
 arch/x86/insn-selector_32.brg).
 
 Static-Single Assignment (SSA) Form
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Static-Single Assignment Form is a representation form where every variable is
 defined exactly once and every use of a variable refers at most one definition.
@@ -117,12 +117,12 @@ elimination (jit/abc.c). All these optimizations are applied only if array
 bounds check elimination is required.
 
 Liveness analysis
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 - Use-def
 
 Register allocation
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 Resolution Blocks
 ^^^^^^^^^^^^^^^^^
@@ -149,12 +149,12 @@ put reload MOVs into an intermediate block on each (?) edge to avoid the
 problem of clobbering registers allocated to not-yet-dead virtual registers.
 
 Code Generation
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 TODO
 
 Intermediate Representations
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The compiler uses two different intermediate representations: high-level
 intermediate representation (HIR) in the frontend and low-level intermediate
@@ -182,7 +182,7 @@ does not use that.
 
 
 High-Level Intermediate Representation (HIR)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the front-end, we use a high-level intermediate representation (HIR) that
 is a forest of expression trees. That is, a compilation unit (a method) is
@@ -198,7 +198,7 @@ EXPR_BINOP for binary operations and EXPR_INVOKE for method invocation.
 - struct expression
 
 Low-Level Intermediate Representation (LIR)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - struct operand
 
@@ -216,6 +216,11 @@ TODO
 
 Instruction Encoding
 ~~~~~~~~~~~~~~~~~~~~
+
+TODO
+
+Java Runtime Interface
+----------------------
 
 TODO
 
