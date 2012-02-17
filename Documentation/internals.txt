@@ -180,6 +180,7 @@ in detail in, for example, <<Muchnick97>> and <<Burke99>>. Literature also
 describes a middle-level intermediate representation (MIR) but the compiler
 does not use that.
 
+image:intermediate-representation.png[Intermediate Representations]
 
 High-Level Intermediate Representation (HIR)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
