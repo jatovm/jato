@@ -2,6 +2,7 @@ Jato Virtual Machine Internals
 ==============================
 Pekka Enberg
 2012
+:toc:
 
 Introduction
 ------------
@@ -224,12 +225,13 @@ Instruction Encoding
 
 TODO
 
-[bibliography]
-Bibliography
-------------
+References
+----------
 
-- [[Muchnick97]] Steven Muchnick. 'Advanced Compiler Design and
+[bibliography]
+
+- [[[Muchnick97]]] Steven Muchnick. 'Advanced Compiler Design and
   Implementation'. Morgan Kaufmann. 1997. ISBN 1558603204.
 
-- [[Burke99]] Michael Burke et al. 'The Jalapeno Dynamic Optimizing Compiler
+- [[[Burke99]]] Michael Burke et al. 'The Jalapeno Dynamic Optimizing Compiler
   for Java'. 1999.
