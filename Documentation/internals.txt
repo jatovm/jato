@@ -68,26 +68,6 @@ Programs are compiled one method at a time.  Invocation of a method is replaced
 with an invocation of a special per-method JIT trampoline that is responsible
 for compiling the actual target method upon first invocation.
 
-Intermediate Representations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The compiler has two intermediate representations: expression tree and
-three-address code.  The expression tree is constructed from bytecode sequence
-of a method whereas three-address code is the result of instruction selection.
-Three-address code is translated to executable machine code.
-
-The JIT compiler operates on one method at a time called a compilation unit.  A
-compilation unit is made up of one or more basic blocks which represent
-straight-line code.  Each basic block has a list of one or more statements that
-can either be standalone or operate on one or two expression trees.
-
-The instruction selector emits three-address code for a compilation unit from
-the expression tree.  This intermediate representation is essentially a
-sequence of instructions that mimic the native instruction set.  One notable
-exception is branch targets which are represented as pointers to instructions.
-The pointers are converted to real machine code targets with back-patching
-during code emission.
-
 Subroutine Inlining
 ~~~~~~~~~~~~~~~~~~~
 
@@ -182,10 +162,24 @@ representation (LIR) in the backend. The HIR is an abstract syntax tree (AST)
 of the compiled bytecode whereas LIR is corresponds almost one-to-one to the
 target machine instructions.
 
+The JIT compiler operates on one method at a time called a compilation unit. A
+compilation unit is made up of one or more basic blocks which represent
+straight-line code. In HIR, each basic block has a list of one or more
+statements that can either be standalone or operate on one or two expression
+trees.
+
+The instruction selector emits LIR for a compilation unit from HIR expression
+tree. This intermediate representation is essentially a sequence of
+instructions that mimic the native instruction set. One notable exception is
+branch targets which are represented as pointers to instructions. The pointers
+are converted to real machine code targets with back-patching during code
+emission.
+
 Both HIR and LIR are standard intermediate representations that are documented
 in detail in, for example, <<Muchnick97>> and <<Burke99>>. Literature also
 describes a middle-level intermediate representation (MIR) but the compiler
 does not use that.
+
 
 High-Level Intermediate Representation (HIR)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -196,8 +190,8 @@ divided into basic blocks that contain a list of statements and each statement
 can operate on an expression tree. Examples of statements include STMT_STORE
 that stores an expression to a local variable and STMT_IF that does conditional
 branch. The simplest form of expression is EXPR_VALUE which represents a
-constant value but there are more complex types of expressions including binary
-operations (EXPR_BINOP) and method invocation (EXPR_INVOKE).
+constant value but there are more complex types of expressions including
+EXPR_BINOP for binary operations and EXPR_INVOKE for method invocation.
 
 - struct statement
 
