@@ -374,6 +374,17 @@ Required skills::
 Difficulty::
     Medium
 
+JIT preloading
+~~~~~~~~~~~~~~
+
+The goal of this project is to implement support for saving off JITted code and
+preload it to speed up startup time.
+
+Required skills::
+    C
+Difficulty::
+    Medium
+
 Dalvik
 ~~~~~~
 
