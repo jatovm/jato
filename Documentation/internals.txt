@@ -7,16 +7,11 @@ Pekka Enberg
 Introduction
 ------------
 
-This manual documents the internals of the Jato virtual machine.
+This manual describes the internals of the Jato virtual machine.
 
-The reader is expected to have some basic knowledge of the C programming
-language, Java Virtual Machine (JVM) architecture, and machine architecture.
-
-- Java Virtual Machine specification
-
-- Intel Manuals
-
-- The Java Virtual Machine
+The reader is expected to have basic knowledge of the C programming language,
+Java Virtual Machine <<Lindholm99>> <<Sun05>> <<JCP11>>, Java Native Interface
+<<Sun03>>, and machine architecture.
 
 The Virtual Machine
 -------------------
@@ -71,15 +66,19 @@ Compiler Passes
 Subroutine Inlining
 ^^^^^^^^^^^^^^^^^^^^
 
-TODO
+The first compiler pass is inlines all subroutines which are used to represent
++finally+ blocks in bytecode. This effectively eliminates the use of +JSR+,
++JSR_W+ and +RET+ bytecode instruction which simplifies the rest of the JIT
+compiler pipeline.
 
 Control-Flow Graph Analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TODO
+The control-flow graph analysis pass detects basic block boundaries from
+bytecode and constructs a CFG.
 
-BC2IR
-^^^^^
+Bytecode Parsing ("BC2IR")
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The JVM has a stack-based architecture which means instructions operate on a
 stack. Modern CPUs, on the other hand, are register-based which means that
@@ -116,13 +115,18 @@ Jato offers a simple variant of dead code elimination (jit/dce.c), copy folding
 elimination (jit/abc.c). All these optimizations are applied only if array
 bounds check elimination is required.
 
-Liveness analysis
+Liveness Analysis
 ^^^^^^^^^^^^^^^^^
 
-- Use-def
+Liveness analysis is a dataflow analysis that calculates which variables are in
+use at a given program point. The results of liveness analysis are used by the
+register allocator.
 
-Register allocation
+Register Allocation
 ^^^^^^^^^^^^^^^^^^^
+
+The register allocator uses the linear scan register allocation algorithm
+<<Poletto99>> <<Traub98>> with interval splitting optimization <<Wimmer04>> <<Wimmer05>>.
 
 Resolution Blocks
 ^^^^^^^^^^^^^^^^^
@@ -223,15 +227,51 @@ TODO
 Java Runtime Interface
 ----------------------
 
-TODO
+The virtual machine relies on GNU Classpath to provide essential Java libraries
+including +java/lang/Object+ and +java/lang/Class+. GNU Classpath integration
+is documented in more detail here:
+
+http://www.gnu.org/software/classpath/docs/cp-vmintegration.html
 
 References
 ----------
 
 [bibliography]
 
-- [[[Muchnick97]]] Steven Muchnick. 'Advanced Compiler Design and
-  Implementation'. Morgan Kaufmann. 1997. ISBN 1558603204.
+- [[[Lindholm99]]] Tim Lindholm and Frank Yellin. The Java™ Virtual Machine
+  Specification, 2nd Ed. 1999.
+  http://java.sun.com/docs/books/jvms/second_edition/html/VMSpecTOC.doc.html[URL]
 
-- [[[Burke99]]] Michael Burke et al. 'The Jalapeno Dynamic Optimizing Compiler
-  for Java'. 1999.
+- [[[Burke99]]] Michael Burke et al. The Jalapeno Dynamic Optimizing Compiler
+  for Java. 1999.
+  http://suif.stanford.edu/~jwhaley/papers/javagrande99.pdf[URL]
+
+- [[[JCP11]]] JCP. Maintenance Review of JSR 924 (Java™ Virtual Machine
+  Specification) for Java SE 7. 2011.
+  http://jcp.org/aboutJava/communityprocess/maintenance/jsr924/JVMSpec-JavaSE7-ChangeLog.html[URL]
+
+- [[[Muchnick97]]] Steven Muchnick. Advanced Compiler Design and
+  Implementation. Morgan Kaufmann. 1997. ISBN 1558603204.
+
+- [[[Poletto99]]] Massimiliano Poletto and Vivek Sarkar. Linear scan register
+  allocation. 1999.
+  http://www.seas.gwu.edu/~hchoi/teaching/cs160d/linearscan.pdf[URL]
+
+- [[[Sun03]]] Sun Microsystems. Java Native Interface 5.0 Specification. 2003.
+  http://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/jniTOC.html[URL]
+
+- [[[Sun05]]] Sun Microsystems. Clarifications and Amendments to the Java
+  Virtual Machine Specification. 2005.
+  http://java.sun.com/docs/books/jvms/second_edition/jvms-clarify.html[URL]
+
+- [[[Traub98]]] Omri Traub, Glenn Holloway, and Michael D. Smith M. Quality and Speed in
+  Linear-scan Register Allocation. 1998.
+  http://www.eecs.harvard.edu/hube/publications/pldi98-binpack.pdf[URL]
+
+- [[[Wimmer04]]] Christian Wimmer. Linear Scan Register Allocation for the Java
+  HotSpot™ Client Compiler. 2004.
+  http://www.ssw.uni-linz.ac.at/Research/Papers/Wimmer04Master/Wimmer04Master.pdf[URL]
+
+- [[[Wimmer05]]] Christian Wimmer and Hanspeter Mössenböck. Optimized Interval
+  Splitting in a Linear Scan Register Allocator. 2005.
+  http://www.ssw.uni-linz.ac.at/Research/Papers/Wimmer05/[URL]
