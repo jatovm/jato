@@ -467,7 +467,7 @@ void java_lang_reflect_VMField_set(struct vm_object *this, struct vm_object *o,
 			return;
 		}
 
-		if (o->class != vmf->class) {
+		if (!vm_object_is_instance_of(o, vmf->class)) {
 			signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 			return;
 		}
