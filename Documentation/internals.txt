@@ -16,36 +16,42 @@ Java Virtual Machine <<Lindholm99>> <<Sun05>> <<JCP11>>, Java Native Interface
 The Virtual Machine
 -------------------
 
+The virtual machine core manages classes and objects at runtime. It implements
+JVM semantics but at code level is mostly decoupled from classfiles, bytecode
+execution, and the Java runtime.
+
 Classes
 ~~~~~~~
 
-TODO
-
-Methods
-~~~~~~~
-
-TODO
-
-Fields
-~~~~~~
-
-TODO
+Classes are internally represented by +struct vm_class+ and externally by
++java/lang/VMClass+.
 
 Objects
 ~~~~~~~
 
-TODO
+Objects are internally represented by +struct vm_object+ and externally by
++java/lang/VMObject+.
+
+Methods
+~~~~~~~
+
+Methods are internally represented by +struct vm_method+ and externally by
++java/lang/reflect/VMMethod+.
+
+Fields
+~~~~~~
+
+Fields  are internally represented by +struct vm_field+ and externally by
++java/lang/reflect/VMField+.
 
 Exceptions
 ~~~~~~~~~~
 
-TODO
+Exceptions are not handle by the core VM itself. Instead, they are dealt with
+by the JIT runtime support code.
 
 The Just-in-Time Compiler
 -------------------------
-
-Introduction
-~~~~~~~~~~~~
 
 The compiler is divided into the following passes: control-flow graph
 construction, bytecode parsing, instruction selection, and code emission.  The
