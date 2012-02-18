@@ -22,10 +22,16 @@ jni_trampoline:
 	addl	$0x4, %esp
 	subl	$0x4, %esp		# new return address
 
-	pushl	%eax			# save return value
+	# save return value
+	pushl	%eax
+	pushl	%edx
+
 	call	vm_leave_jni
-	movl	%eax, 0x4(%esp)		# override return address
-	popl	%eax			# restore return value
+	movl	%eax, 0x8(%esp)		# override return address
+
+	# restore return value
+	popl	%edx
+	popl	%eax
 
 	ret
 error:

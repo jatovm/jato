@@ -120,7 +120,9 @@ public class JNITest extends TestCase {
 
   public static void testReturnPassedLong() {
     assertEquals(42l, staticReturnPassedLong(42l));
+    assertEquals(0xdeadbeefcafebabeL, staticReturnPassedLong(0xdeadbeefcafebabeL));
     assertEquals(42l, jniTest.returnPassedLong(42l));
+    assertEquals(0xdeadbeefcafebabeL, jniTest.returnPassedLong(0xdeadbeefcafebabeL));
     assertEquals(42l, staticReturnPassedLongArray(new long[]{42l})[0]);
     assertEquals(42l, jniTest.returnPassedLongArray(new long[]{42l})[0]);
   }
