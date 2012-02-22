@@ -328,6 +328,28 @@ Required skills::
 Difficulty::
     Medium
 
+GDB
+~~~
+Jato already hooks into GDB's JIT interface to provide basic debugging
+functionality such as backtraces and breakpoints. This could use a cleanup and
+various improvements, like the ability to display the arguments passed to a
+method. We could implement a better mangling scheme, but it's probably better
+to use the new custom debug info support in GDB 7.4. Check the
+http://sourceware.org/gdb/onlinedocs/gdb/JIT-Interface.html#JIT-Interface[GDB
+documentation] for details.
+
+Another possible improvement could be minimizing the need to disable
+optimizations.
+
+This task should be rather straightforward, but it might require digging
+through GDB to figure out possibly missing details from the documentation. It
+can be scaled according to the features one proposes to implement.
+
+Required skills::
+    C, GDB, x86(-64)
+Difficulty::
+    Medium, depends on the scope of the proposal
+
 Other
 -----
 
