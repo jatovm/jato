@@ -125,6 +125,14 @@ public class JNITest extends TestCase {
     assertEquals(0xdeadbeefcafebabeL, jniTest.returnPassedLong(0xdeadbeefcafebabeL));
     assertEquals(42l, staticReturnPassedLongArray(new long[]{42l})[0]);
     assertEquals(42l, jniTest.returnPassedLongArray(new long[]{42l})[0]);
+
+    // java.lang.Long.MAX_VALUE
+    assertEquals(9223372036854775807l, staticReturnPassedLong(9223372036854775807l));
+    assertEquals(9223372036854775807l, jniTest.returnPassedLong(9223372036854775807l));
+    
+    // java.lang.Long.MIN_VALUE
+    assertEquals(-9223372036854775808l, staticReturnPassedLong(-9223372036854775808l));
+    assertEquals(-9223372036854775808l, jniTest.returnPassedLong(-9223372036854775808l));
   }
 
   public static void testReturnPassedBoolean() {
