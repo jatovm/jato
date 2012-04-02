@@ -8,7 +8,8 @@
 
 #include <assert.h>
 
-struct expression *convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method *method);
+struct expression **pop_args(struct stack *mimic_stack, unsigned long nr_args);
+struct expression *convert_args(struct expression **args_array, unsigned long nr_args, struct vm_method *method);
 struct expression *convert_native_args(struct stack *mimic_stack, unsigned long start_arg, unsigned long nr_args);
 
 #ifndef CONFIG_ARGS_MAP

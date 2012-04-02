@@ -68,15 +68,39 @@ static int convert_and_add_args(struct parse_context *ctx,
 				struct vm_method *invoke_target,
 				struct statement *stmt)
 {
+	struct expression **args_array;
 	struct expression *args_list;
+	unsigned long nr_args, i;
 
-	args_list = convert_args(ctx->bb->mimic_stack,
-				 method_real_argument_count(invoke_target),
-				 invoke_target);
-	if (!args_list)
+	nr_args = method_real_argument_count(invoke_target);
+
+	args_array = pop_args(ctx->bb->mimic_stack, nr_args);
+	if (!args_array)
 		return warn("out of memory"), -EINVAL;
 
+	for (i = 0; i < nr_args; i++) {
+		struct expression *expr = args_array[i];
+
+		if (!expr_is_pure(expr))
+			args_array[i] = get_pure_expr(ctx, expr);
+
+		if (vm_type_is_pair(expr->vm_type))
+			i++;
+
+		if (i >= nr_args)
+			break;
+	}
+
+	args_list = convert_args(args_array, nr_args, invoke_target);
+	if (!args_list) {
+		free(args_array);
+		return warn("out of memory"), -EINVAL;
+	}
+
+	free(args_array);
+
 	stmt->args_list = &args_list->node;
+
 	return 0;
 }
 

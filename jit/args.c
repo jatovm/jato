@@ -78,8 +78,36 @@ insert_arg(struct expression *root, struct expression *expr, struct vm_method *m
 	return args_list_expr(root, _expr);
 }
 
+struct expression **pop_args(struct stack *mimic_stack, unsigned long nr_args)
+{
+	struct expression **args_array;
+	unsigned long i;
+
+	args_array = malloc(nr_args * sizeof(void *));
+	if (!args_array)
+		return NULL;
+
+	/*
+	 * We scan the args map in reverse order, since the order of arguments
+	 * is already reversed.
+	 */
+	for (i = 0; i < nr_args; i++) {
+		struct expression *expr = stack_pop(mimic_stack);
+
+		args_array[i] = expr;
+
+		if (vm_type_is_pair(expr->vm_type))
+			i++;
+
+		if (i >= nr_args)
+			break;
+	}
+
+	return args_array;
+}
+
 struct expression *
-convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method *method)
+convert_args(struct expression **args_array, unsigned long nr_args, struct vm_method *method)
 {
 	struct expression *args_list = NULL;
 	unsigned long nr_total_args;
@@ -99,12 +127,8 @@ convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method 
 		goto out;
 	}
 
-	/*
-	 * We scan the args map in reverse order, since the order of arguments
-	 * is already reversed.
-	 */
 	for (i = 0; i < nr_args; i++) {
-		struct expression *expr = stack_pop(mimic_stack);
+		struct expression *expr = args_array[i];
 
 		if (vm_type_is_pair(expr->vm_type))
 			i++;
@@ -132,6 +156,7 @@ convert_args(struct stack *mimic_stack, unsigned long nr_args, struct vm_method 
 		 * use method index zero here for JNI methods.
 		 */
 	}
+
   out:
 	return args_list;
   error:
