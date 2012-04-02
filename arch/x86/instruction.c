@@ -778,16 +778,6 @@ enum {
 	USE_FP			= (1U << 12),	/* frame pointer */
 	TYPE_BRANCH		= (1U << 13),
 	TYPE_CALL		= (1U << 14),
-
-#ifdef CONFIG_X86_32
-	DEF_EAX			= DEF_xAX,
-	DEF_ECX			= DEF_xCX,
-	DEF_EDX			= DEF_xDX,
-#else
-	DEF_RAX			= DEF_xAX,
-	DEF_RCX			= DEF_xCX,
-	DEF_RDX			= DEF_xDX,
-#endif
 };
 
 static unsigned long insn_flags[] = {
