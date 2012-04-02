@@ -262,6 +262,7 @@ static struct system_property system_properties[] = {
 	{ "file.separator",			"/"				},
 	{ "path.separator",			":"				},
 	{ "line.separator",			"\n"				},
+	{ "java.runtime.name",			"GNU Classpath"			},
 	{ "java.version",			JAVA_VERSION			},
 	{ "java.vendor",			"GNU Classpath"			},
 	{ "java.vendor.url",			"http://www.classpath.org/"	},
