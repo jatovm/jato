@@ -128,8 +128,12 @@ static void zip_delete(struct zip *zip)
 		free(entry->filename);
 	}
 
-	free_hash_map(zip->entry_cache);
-	free_hash_map(zip->class_cache);
+	if (zip->entry_cache)
+		free_hash_map(zip->entry_cache);
+
+	if (zip->class_cache)
+		free_hash_map(zip->class_cache);
+
 	free(zip->entries);
 	free(zip);
 }
