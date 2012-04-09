@@ -428,7 +428,7 @@ struct expression *args_list_expr(struct expression *args_left,
 
 struct expression *arg_expr(struct expression *arg_expression)
 {
-	struct expression *expr = alloc_expression(EXPR_ARG, J_VOID);
+	struct expression *expr = alloc_expression(EXPR_ARG, arg_expression->vm_type);
 	if (expr)
 		expr->arg_expression = &arg_expression->node;
 	return expr;
