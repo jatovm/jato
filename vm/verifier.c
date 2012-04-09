@@ -121,7 +121,7 @@ void free_verifier_state(struct verifier_state *state)
 
 	free_verifier_local_var(state->vars);
 
-	list_for_each_entry_safe(state->stack, tmp, &state->stack->slots, slots) {
+	list_for_each_entry_safe(ptr, tmp, &state->stack->slots, slots) {
 		list_del(&ptr->slots);
 		free_verifier_stack(ptr);
 	}
