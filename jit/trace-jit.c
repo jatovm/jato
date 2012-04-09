@@ -671,12 +671,10 @@ static void trace_invoke_args(struct vm_method *vmm,
 			      struct jit_stack_frame *frame)
 {
 	struct vm_method_arg *arg;
-	int arg_index;
+	int arg_index = 0;
 
 	if (vm_method_is_jni(vmm))
 		arg_index += 2;
-
-	arg_index = 0;
 
 	if (!vm_method_is_static(vmm)) {
 		trace_printf("\tthis\t: ");
