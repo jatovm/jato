@@ -360,7 +360,6 @@ static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
 	struct var_info *tmp_high, *tmp_low;
 	struct expression *expr;
 	unsigned int i;
-	int slot_ndx;
 
 	for (i = 0; i < bb->nr_mimic_stack_expr; i++) {
 		expr = bb->mimic_stack_expr[i];
@@ -381,9 +380,6 @@ static void pick_and_propagate_temporaries(struct basic_block *bb, bool entry)
 			tmp_low = get_var(bb->b_parent, expr->vm_type);
 			tmp_high = NULL;
 		}
-
-		/* Save the slot number */
-		slot_ndx = expr->slot_ndx;
 
 		/* Assign this temporary to same mimic stack expressions in this block and its neighbors */
 		propagate_temporary(bb, entry, expr->slot_ndx, tmp_high, tmp_low, bb);
