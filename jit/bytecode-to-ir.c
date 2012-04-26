@@ -185,8 +185,11 @@ int convert_instruction(struct parse_context *ctx)
 		ctx->cu->flags |= CU_FLAG_ARRAY_OPC;
 	err = convert(ctx);
 
-	if (err)
-		warn("conversion error at PC=%lu", ctx->offset);
+	if (err) {
+		struct vm_method *vmm = ctx->cu->method;
+
+		warn("%s.%s%s: conversion error at PC=%lu", vmm->class->name, vmm->name, vmm->type, ctx->offset);
+	}
 
 	return err;
 }

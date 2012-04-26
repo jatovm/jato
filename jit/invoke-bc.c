@@ -1,20 +1,39 @@
 /*
- * Copyright (C) 2005-2006  Pekka Enberg
+ * Method invocation bytecode parsing
+ * Copyright (c) 2005-2012  Pekka Enberg
  *
- * This file is released under the GPL version 2. Please refer to the file
- * LICENSE for details.
+ * This file is released under the GPL version 2 with the following
+ * clarification and special exception:
  *
- * The file contains functions for converting Java bytecode method invocation
- * and return instructions to immediate representation of the JIT compiler.
+ *     Linking this library statically or dynamically with other modules is
+ *     making a combined work based on this library. Thus, the terms and
+ *     conditions of the GNU General Public License cover the whole
+ *     combination.
+ *
+ *     As a special exception, the copyright holders of this library give you
+ *     permission to link this library with independent modules to produce an
+ *     executable, regardless of the license terms of these independent
+ *     modules, and to copy and distribute the resulting executable under terms
+ *     of your choice, provided that you also meet, for each linked independent
+ *     module, the terms and conditions of the license of that module. An
+ *     independent module is a module which is not derived from or based on
+ *     this library. If you modify this library, you may extend this exception
+ *     to your version of the library, but you are not obligated to do so. If
+ *     you do not wish to do so, delete this exception statement from your
+ *     version.
+ *
+ * Please refer to the file LICENSE for details.
  */
 
 #include "jit/bytecode-to-ir.h"
 
+#include "jit/exception.h"
 #include "jit/statement.h"
 #include "jit/compiler.h"
 #include "jit/args.h"
 
 #include "vm/bytecode.h"
+#include "vm/preload.h"
 #include "vm/method.h"
 #include "vm/class.h"
 #include "vm/die.h"
@@ -53,6 +72,57 @@ int convert_return(struct parse_context *ctx)
 	return 0;
 }
 
+static enum vm_type vm_method_arg_type(struct vm_method_arg *arg)
+{
+	switch (arg->type_info.vm_type) {
+	case J_BOOLEAN:
+	case J_SHORT:
+	case J_BYTE:
+	case J_CHAR:
+		return J_INT;
+	default:
+		break;
+	}
+	return arg->type_info.vm_type;
+}
+
+static bool verify_arg_types(struct vm_method *vmm, struct expression **args_array, unsigned long nr_args)
+{
+	struct vm_method_arg *arg;
+	unsigned long idx = 0;
+
+	list_for_each_entry_reverse(arg, &vmm->args, list_node) {
+		struct expression *expr = args_array[idx];
+		enum vm_type type = vm_method_arg_type(arg);
+
+		if (expr->vm_type != type) {
+			signal_new_exception(vm_java_lang_VerifyError,
+				"(class: %s, method: %s, signature :%s): Expecting to find %d on stack (was %d).",
+				vmm->class->name, vmm->name, vmm->type, idx, type, expr->vm_type);
+			return false;
+		}
+
+		if (vm_type_is_pair(expr->vm_type))
+			idx++;
+
+		if (idx++ >= nr_args)
+			break;
+	}
+
+	return true;
+}
+
+static unsigned int method_real_argument_count(struct vm_method *invoke_target)
+{
+	int argc;
+
+	argc = vm_method_arg_slots(invoke_target);
+	if (!vm_method_is_static(invoke_target))
+		argc++;
+
+	return argc;
+}
+
 static int convert_and_add_args(struct parse_context *ctx,
 				struct vm_method *invoke_target,
 				struct statement *stmt)
@@ -79,6 +149,9 @@ static int convert_and_add_args(struct parse_context *ctx,
 		if (i >= nr_args)
 			break;
 	}
+
+	if (!verify_arg_types(invoke_target, args_array, nr_args))
+		return -EINVAL;
 
 	args_list = convert_args(args_array, nr_args, invoke_target);
 	if (!args_list) {
