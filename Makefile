@@ -162,14 +162,13 @@ CC		?= gcc
 LINK		?= $(CC)
 MONOBURG	:= ./tools/monoburg/monoburg
 JAVA		?= $(shell pwd)/jato
+JAVAC		?= ecj
 INSTALL		?= install
 
 ifeq ($(uname_M),x86_64)
 JASMIN		?= java -jar tools/jasmin/jasmin.jar
-JAVAC		?= JAVA=java $(shell pwd)/tools/ecj
 else
 JASMIN		?= $(JAVA) -jar tools/jasmin/jasmin.jar
-JAVAC		?= JAVA=java $(shell pwd)/tools/ecj
 endif
 
 JAVAC_OPTS	+= -encoding utf-8
@@ -483,6 +482,8 @@ install: $(PROGRAM)
 	$(E) "  INSTALL " $(PROGRAM)
 	$(Q) $(INSTALL) -d -m 755 $(INSTALL_PREFIX)/bin
 	$(Q) $(INSTALL) $(PROGRAM) $(INSTALL_PREFIX)/bin
+	$(Q) $(INSTALL) tools/ecj-jato/ecj-3.7.2.jar $(INSTALL_PREFIX)/bin
+	$(Q) $(INSTALL) tools/ecj-jato/ecj-jato $(INSTALL_PREFIX)/bin
 .PHONY: install
 
 tags: FORCE

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+BASEDIR=$(dirname $0)
+
+$BASEDIR/jato -Xmx768M -cp $BASEDIR/ecj-3.7.2.jar org.eclipse.jdt.internal.compiler.batch.Main "$@"

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-if [ -z "$JAVA" ] ; then
-  JAVA=java
-fi
-
-$JAVA -cp /usr/share/java/eclipse-ecj.jar org.eclipse.jdt.internal.compiler.batch.Main $@
