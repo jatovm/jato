@@ -149,11 +149,10 @@ void test_reload_insn_is_inserted_at_the_beginning_of_the_interval_if_necessary(
 void test_empty_interval_is_never_spilled(void)
 {
 	struct compilation_unit *cu;
-	struct basic_block *bb;
 	struct var_info *r1;
 
 	cu = compilation_unit_alloc(&method);
-	bb = get_basic_block(cu, 0, 2);
+	get_basic_block(cu, 0, 2);
 
 	r1 = get_var(cu, J_INT);
 	mark_need_spill(r1->interval);
