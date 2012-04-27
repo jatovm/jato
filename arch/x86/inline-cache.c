@@ -1,22 +1,22 @@
 #include "arch/inline-cache.h"
-#include "arch/instruction.h"
-#include "arch/isa.h"
+
+#include "jit/bc-offset-mapping.h"
+#include "jit/compilation-unit.h"
+#include "jit/inline-cache.h"
+#include "jit/instruction.h"
+#include "jit/cu-mapping.h"
 
 #include "vm/method.h"
 #include "vm/class.h"
 #include "vm/trace.h"
 #include "vm/die.h"
 
-#include "jit/compilation-unit.h"
-#include "jit/cu-mapping.h"
-#include "jit/instruction.h"
-#include "jit/inline-cache.h"
-#include "jit/bc-offset-mapping.h"
+#include "arch/instruction.h"
+#include "arch/isa.h"
 
-#include <assert.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include <stdint.h>
+#include <assert.h>
 
 #define X86_MOV_IMM_REG_INSN_SIZE 	5
 #define X86_MOV_IMM_REG_IMM_OFFSET 	1
