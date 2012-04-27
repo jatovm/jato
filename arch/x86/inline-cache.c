@@ -90,7 +90,7 @@ bool ic_supports_method(struct vm_method *vmm)
 		&& !vm_class_is_primitive_class(vmm->class);
 }
 
-void ic_set_to_monomorphic(struct vm_class *vmc, struct vm_method *vmm, void *callsite)
+static void ic_set_to_monomorphic(struct vm_class *vmc, struct vm_method *vmm, void *callsite)
 {
 	struct x86_ic ic;
 	void *ic_entry_point;
@@ -116,7 +116,7 @@ void ic_set_to_monomorphic(struct vm_class *vmc, struct vm_method *vmm, void *ca
 		die("Failed to unlock ic_patch_lock\n");
 }
 
-void ic_set_to_megamorphic(struct vm_method *vmm, void *callsite)
+static void ic_set_to_megamorphic(struct vm_method *vmm, void *callsite)
 {
 	struct x86_ic ic;
 
