@@ -17,7 +17,6 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#define X86_CALL_DISP_OFFSET		1
 #define X86_MOV_IMM_REG_INSN_SIZE 	5
 #define X86_MOV_IMM_REG_IMM_OFFSET 	1
 #define X86_MOV_EAX_OPC 		0xb8
