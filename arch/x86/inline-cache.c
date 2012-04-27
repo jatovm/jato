@@ -16,25 +16,25 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <stdint.h>
 
 #define X86_MOV_IMM_REG_INSN_SIZE 	5
 #define X86_MOV_IMM_REG_IMM_OFFSET 	1
 #define X86_MOV_EAX_OPC 		0xb8
 
 struct x86_ic {
-	void *fn;
-	void *imm;
+	uint32_t		fn;
+	uint32_t		imm;
 };
 
 static pthread_mutex_t ic_patch_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
-static void ic_from_callsite(struct x86_ic *ic, unsigned long callsite)
+static void ic_from_callsite(struct x86_ic *ic, uint32_t callsite)
 {
-	ic->fn = (void *) (callsite - X86_CALL_INSN_SIZE + X86_CALL_DISP_OFFSET);
-	ic->imm = (void *) (callsite - X86_CALL_INSN_SIZE -
-			    X86_MOV_IMM_REG_INSN_SIZE +
-			    X86_MOV_IMM_REG_IMM_OFFSET);
+	ic->fn	= callsite - X86_CALL_INSN_SIZE + X86_CALL_DISP_OFFSET;
+
+	ic->imm	= callsite - X86_CALL_INSN_SIZE - X86_MOV_IMM_REG_INSN_SIZE + X86_MOV_IMM_REG_IMM_OFFSET;
 }
 
 static inline unsigned long x86_call_disp(void *callsite, void *target)
@@ -109,8 +109,8 @@ void ic_set_to_monomorphic(struct vm_class *vmc, struct vm_method *vmm, void *ca
 	if (pthread_mutex_lock(&ic_patch_lock) != 0)
 		die("Failed to lock ic_patch_lock\n");
 
-	cpu_write_u32(ic.fn, x86_call_disp(callsite, ic_entry_point));
-	cpu_write_u32(ic.imm, (uint32_t)vmc);
+	cpu_write_u32((void *) ic.fn, x86_call_disp(callsite, ic_entry_point));
+	cpu_write_u32((void *) ic.imm, (uint32_t)vmc);
 
 	if (pthread_mutex_unlock(&ic_patch_lock) != 0)
 		die("Failed to unlock ic_patch_lock\n");
@@ -128,8 +128,8 @@ void ic_set_to_megamorphic(struct vm_method *vmm, void *callsite)
 
 	if (pthread_mutex_lock(&ic_patch_lock) != 0)
 		die("Failed to lock ic_patch_lock\n");
-	cpu_write_u32(ic.fn, x86_call_disp(callsite, ic_vcall_stub));
-	cpu_write_u32(ic.imm, (uint32_t)(vmm->virtual_index * sizeof(void *)));
+	cpu_write_u32((void *) ic.fn, x86_call_disp(callsite, ic_vcall_stub));
+	cpu_write_u32((void *) ic.imm, (uint32_t)(vmm->virtual_index * sizeof(void *)));
 	if (pthread_mutex_unlock(&ic_patch_lock) != 0)
 		die("Failed to unlock ic_patch_lock\n");
 }
