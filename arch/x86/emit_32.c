@@ -1042,7 +1042,7 @@ void emit_ic_miss_handler(struct buffer *buf, void *ic_check, struct vm_method *
 	__emit_push_membase(buf, MACH_REG_ESP, 0);
 	__emit_push_imm(buf, (long)vmm);
 	__emit_push_reg(buf, MACH_REG_ECX);
-	__emit_call(buf, (void *)resolve_ic_miss);
+	__emit_call(buf, resolve_ic_miss);
 	__emit_add_imm_reg(buf, 12, MACH_REG_ESP);
 	emit_indirect_jump_reg(buf, MACH_REG_EAX);
 }
