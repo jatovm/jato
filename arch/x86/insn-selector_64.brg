@@ -237,8 +237,6 @@ freg:	EXPR_FLOAT_LOCAL 0
 
 	exprsrc = to_expr(tree);
 
-	state->reg1 = dest = get_var(s->b_parent, exprsrc->vm_type);
-
 	if (exprsrc->local_index < (unsigned long) method->args_count) {
 		enum machine_reg reg;
 
@@ -249,6 +247,8 @@ freg:	EXPR_FLOAT_LOCAL 0
 			index = method->args_map[exprsrc->local_index].stack_index;
 			slot = get_local_slot(s->b_parent->stack_frame, index);
 
+			state->reg1 = dest = get_var(s->b_parent, exprsrc->vm_type);
+
 			if (exprsrc->vm_type == J_FLOAT)
 				select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
 			else
@@ -258,16 +258,15 @@ freg:	EXPR_FLOAT_LOCAL 0
 
 			src = get_fixed_var(s->b_parent, reg);
 
-			if (exprsrc->vm_type == J_FLOAT)
-				select_insn(s, tree, reg_reg_insn(INSN_MOVSS_XMM_XMM, src, dest));
-			else
-				select_insn(s, tree, reg_reg_insn(INSN_MOVSD_XMM_XMM, src, dest));
+			state->reg1 = dest = src;
 		}
 	} else {
 		int index;
 
 		index = exprsrc->local_index - method->reg_args_count;
 		slot = get_local_slot(s->b_parent->stack_frame, index);
+
+		state->reg1 = dest = get_var(s->b_parent, exprsrc->vm_type);
 
 		if (exprsrc->vm_type == J_FLOAT)
 			select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, slot, dest));
