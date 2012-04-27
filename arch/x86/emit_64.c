@@ -1281,40 +1281,30 @@ void emit_unwind(struct buffer *buf)
 
 static void emit_save_regparm(struct buffer *buf)
 {
-	__emit_push_reg(buf, MACH_REG_RDI);
-	__emit_push_reg(buf, MACH_REG_RSI);
-	__emit_push_reg(buf, MACH_REG_RDX);
-	__emit_push_reg(buf, MACH_REG_RCX);
-	__emit_push_reg(buf, MACH_REG_R8);
-	__emit_push_reg(buf, MACH_REG_R9);
+	unsigned int i;
 
-	__emit64_push_xmm(buf, MACH_REG_XMM0);
-	__emit64_push_xmm(buf, MACH_REG_XMM1);
-	__emit64_push_xmm(buf, MACH_REG_XMM2);
-	__emit64_push_xmm(buf, MACH_REG_XMM3);
-	__emit64_push_xmm(buf, MACH_REG_XMM4);
-	__emit64_push_xmm(buf, MACH_REG_XMM5);
-	__emit64_push_xmm(buf, MACH_REG_XMM6);
-	__emit64_push_xmm(buf, MACH_REG_XMM7);
+	for (i = 0; i < ARRAY_SIZE(arg_gp_regs); i++)
+		__emit_push_reg(buf, arg_gp_regs[i]);
+
+	for (i = 0; i < ARRAY_SIZE(arg_xmm_regs); i++)
+		__emit64_push_xmm(buf, arg_xmm_regs[i]);
 }
 
 static void emit_restore_regparm(struct buffer *buf)
 {
-	__emit64_pop_xmm(buf, MACH_REG_XMM7);
-	__emit64_pop_xmm(buf, MACH_REG_XMM6);
-	__emit64_pop_xmm(buf, MACH_REG_XMM5);
-	__emit64_pop_xmm(buf, MACH_REG_XMM4);
-	__emit64_pop_xmm(buf, MACH_REG_XMM3);
-	__emit64_pop_xmm(buf, MACH_REG_XMM2);
-	__emit64_pop_xmm(buf, MACH_REG_XMM1);
-	__emit64_pop_xmm(buf, MACH_REG_XMM0);
+	unsigned int i;
 
-	__emit_pop_reg(buf, MACH_REG_R9);
-	__emit_pop_reg(buf, MACH_REG_R8);
-	__emit_pop_reg(buf, MACH_REG_RCX);
-	__emit_pop_reg(buf, MACH_REG_RDX);
-	__emit_pop_reg(buf, MACH_REG_RSI);
-	__emit_pop_reg(buf, MACH_REG_RDI);
+	for (i = 0; i < ARRAY_SIZE(arg_xmm_regs); i++) {
+		unsigned long idx = ARRAY_SIZE(arg_xmm_regs) - i - 1;
+
+		__emit64_pop_xmm(buf, arg_xmm_regs[idx]);
+	}
+		
+	for (i = 0; i < ARRAY_SIZE(arg_gp_regs); i++) {
+		unsigned long idx = ARRAY_SIZE(arg_gp_regs) - i - 1;
+
+		__emit_pop_reg(buf, arg_gp_regs[idx]);
+	}
 }
 
 void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)

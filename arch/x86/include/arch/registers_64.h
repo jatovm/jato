@@ -69,11 +69,17 @@ enum machine_reg {
 #define GPR_VM_TYPE	J_LONG
 #define FPU_VM_TYPE	J_DOUBLE
 
-#define NR_CALLER_SAVE_REGS 25
+#define NR_CALLER_SAVE_REGS	25
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 
-#define NR_CALLEE_SAVE_REGS 5
+#define NR_CALLEE_SAVE_REGS	5
 extern enum machine_reg callee_save_regs[NR_CALLEE_SAVE_REGS];
+
+#define NR_ARG_GP_REGS		6
+extern enum machine_reg	arg_gp_regs[NR_ARG_GP_REGS];
+
+#define NR_ARG_XMM_REGS		8
+extern enum machine_reg	arg_xmm_regs[NR_ARG_XMM_REGS];
 
 const char *reg_name(enum machine_reg reg);
 enum machine_reg_type reg_type(enum machine_reg reg);
