@@ -69,8 +69,6 @@ static void __update_live_ranges(struct compilation_unit *cu, struct basic_block
 				struct var_info *var;
 
 				var = get_fixed_var(cu, caller_save_regs[i]);
-				if (!var)
-					continue;
 
 				interval_add_range(cu, var->interval, insn->lir_pos + 1, insn->lir_pos + 2);
 			}
