@@ -45,11 +45,11 @@ void fixup_direct_calls(struct jit_trampoline *t, unsigned long target)
 	pthread_mutex_lock(&t->mutex);
 
 	list_for_each_entry_safe(this, next, &t->fixup_site_list, list_node) {
-		unsigned char *site_addr;
-		uint32_t new_target;
+		unsigned long new_target;
+		void *site_addr;
 
 		site_addr = fixup_site_addr(this);
-		new_target = target - ((unsigned long) site_addr + X86_CALL_INSN_SIZE);
+		new_target = x86_call_disp(site_addr, (void *) target);
 		cpu_write_u32(site_addr+1, new_target);
 
 		VALGRIND_DISCARD_TRANSLATIONS(site_addr, X86_CALL_INSN_SIZE);

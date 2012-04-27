@@ -143,7 +143,7 @@ static void emit_imm(struct buffer *buf, long imm)
 
 static void __emit_call(struct buffer *buf, void *call_target)
 {
-	int disp = call_target - buffer_current(buf) - X86_CALL_INSN_SIZE;
+	int disp = x86_call_disp(buffer_current(buf), call_target);
 
 	emit(buf, 0xe8);
 	emit_imm32(buf, disp);

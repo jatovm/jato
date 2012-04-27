@@ -37,11 +37,6 @@ static void ic_from_callsite(struct x86_ic *ic, unsigned long callsite)
 	ic->imm	= callsite - X86_MOV_IMM_REG_INSN_SIZE + X86_MOV_IMM_REG_IMM_OFFSET;
 }
 
-static inline unsigned long x86_call_disp(void *callsite, void *target)
-{
-	return (unsigned long) target - (unsigned long) callsite - X86_CALL_INSN_SIZE;
-}
-
 static inline bool is_valid_ic(struct x86_ic *ic)
 {
 	if (*(((unsigned char *)ic->fn) - X86_CALL_DISP_OFFSET) != X86_CALL_OPC)
