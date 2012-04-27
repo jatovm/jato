@@ -1279,7 +1279,7 @@ void emit_unwind(struct buffer *buf)
 	__emit_jmp(buf, (unsigned long)&unwind);
 }
 
-static void emit_save_regparm(struct buffer *buf)
+static void emit_save_arg_regs(struct buffer *buf)
 {
 	unsigned int i;
 
@@ -1290,7 +1290,7 @@ static void emit_save_regparm(struct buffer *buf)
 		__emit64_push_xmm(buf, arg_xmm_regs[i]);
 }
 
-static void emit_restore_regparm(struct buffer *buf)
+static void emit_restore_arg_regs(struct buffer *buf)
 {
 	unsigned int i;
 
@@ -1309,12 +1309,12 @@ static void emit_restore_regparm(struct buffer *buf)
 
 void emit_trace_invoke(struct buffer *buf, struct compilation_unit *cu)
 {
-	emit_save_regparm(buf);
+	emit_save_arg_regs(buf);
 
 	__emit_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 	__emit_call(buf, &trace_invoke);
 
-	emit_restore_regparm(buf);
+	emit_restore_arg_regs(buf);
 }
 
 void emit_trampoline(struct compilation_unit *cu,
@@ -1336,7 +1336,7 @@ void emit_trampoline(struct compilation_unit *cu,
 	 * %rdi, %rsi, %rdx, %rcx, %r8 and %r9 are used
 	 * to pass parameters, so save them if they get modified.
 	 */
-	emit_save_regparm(buf);
+	emit_save_arg_regs(buf);
 
 	__emit_mov_imm_reg(buf, (unsigned long) cu, MACH_REG_RDI);
 	__emit_call(buf, call_target);
@@ -1372,7 +1372,7 @@ void emit_trampoline(struct compilation_unit *cu,
 		__emit_pop_reg(buf, MACH_REG_RAX);
 	}
 
-	emit_restore_regparm(buf);
+	emit_restore_arg_regs(buf);
 
 	__emit_pop_reg(buf, MACH_REG_RBP);
 	emit_indirect_jump_reg(buf, MACH_REG_RAX);
@@ -1394,12 +1394,12 @@ static void emit_exception_test(struct buffer *buf, enum machine_reg reg)
 
 void emit_lock(struct buffer *buf, struct vm_object *obj)
 {
-	emit_save_regparm(buf);
+	emit_save_arg_regs(buf);
 
 	__emit_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
 	__emit_call(buf, vm_object_lock);
 
-	emit_restore_regparm(buf);
+	emit_restore_arg_regs(buf);
 
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_exception_test(buf, MACH_REG_RAX);
@@ -1409,14 +1409,14 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 void emit_unlock(struct buffer *buf, struct vm_object *obj)
 {
 	__emit_push_reg(buf, MACH_REG_RAX);
-	emit_save_regparm(buf);
+	emit_save_arg_regs(buf);
 
 	__emit_mov_imm_reg(buf, (unsigned long) obj, MACH_REG_RDI);
 	__emit_call(buf, vm_object_unlock);
 
 	emit_exception_test(buf, MACH_REG_RAX);
 
-	emit_restore_regparm(buf);
+	emit_restore_arg_regs(buf);
 	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
@@ -1425,9 +1425,9 @@ void emit_lock_this(struct buffer *buf, unsigned long frame_size)
 	unsigned long this_offset = frame_size + 8 * NR_CALLEE_SAVE_REGS + 8;
 
 	__emit64_mov_membase_reg(buf, MACH_REG_RBP, - this_offset, MACH_REG_RDI);
-	emit_save_regparm(buf);
+	emit_save_arg_regs(buf);
 	__emit_call(buf, vm_object_lock);
-	emit_restore_regparm(buf);
+	emit_restore_arg_regs(buf);
 
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_exception_test(buf, MACH_REG_RAX);
@@ -1440,12 +1440,12 @@ void emit_unlock_this(struct buffer *buf, unsigned long frame_size)
 
 	__emit64_mov_membase_reg(buf, MACH_REG_RBP, - this_offset, MACH_REG_RDI);
 	__emit_push_reg(buf, MACH_REG_RAX);
-	emit_save_regparm(buf);
+	emit_save_arg_regs(buf);
 	__emit_call(buf, vm_object_unlock);
 
 	emit_exception_test(buf, MACH_REG_RAX);
 
-	emit_restore_regparm(buf);
+	emit_restore_arg_regs(buf);
 	__emit_pop_reg(buf, MACH_REG_RAX);
 }
 
