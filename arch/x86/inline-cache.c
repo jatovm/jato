@@ -23,14 +23,14 @@
 #define X86_MOV_EAX_OPC 		0xb8
 
 struct x86_ic {
-	uint32_t		fn;
-	uint32_t		imm;
+	unsigned long		fn;
+	unsigned long		imm;
 };
 
 static pthread_mutex_t ic_patch_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
-static void ic_from_callsite(struct x86_ic *ic, uint32_t callsite)
+static void ic_from_callsite(struct x86_ic *ic, unsigned long callsite)
 {
 	ic->fn	= callsite - X86_CALL_INSN_SIZE + X86_CALL_DISP_OFFSET;
 
@@ -110,7 +110,7 @@ void ic_set_to_monomorphic(struct vm_class *vmc, struct vm_method *vmm, void *ca
 		die("Failed to lock ic_patch_lock\n");
 
 	cpu_write_u32((void *) ic.fn, x86_call_disp(callsite, ic_entry_point));
-	cpu_write_u32((void *) ic.imm, (uint32_t)vmc);
+	cpu_write_u32((void *) ic.imm, (unsigned long) vmc);
 
 	if (pthread_mutex_unlock(&ic_patch_lock) != 0)
 		die("Failed to unlock ic_patch_lock\n");
