@@ -233,9 +233,7 @@ endif
 OPTIMIZATIONS	+= $(OPTIMIZATION_LEVEL)
 OPTIMIZATIONS	+= -fno-delete-null-pointer-checks
 OPTIMIZATIONS	+= -fno-omit-frame-pointer
-ifeq ($(uname_M),x86_64)
-OPTIMIZATIONS	+= -fno-tree-vectorize
-endif
+
 DEFAULT_CFLAGS	+= $(OPTIMIZATIONS)
 
 INCLUDES	= -Iarch/$(ARCH)/include -Iinclude -Isys/$(SYS)-$(ARCH)/include -Ijit -Ijit/glib -include $(ARCH_CONFIG) -Iboehmgc/include
