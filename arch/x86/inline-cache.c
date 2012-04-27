@@ -32,14 +32,14 @@ static pthread_mutex_t ic_patch_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void ic_from_callsite(struct x86_ic *ic, unsigned long callsite)
 {
-	ic->fn	= callsite - X86_CALL_INSN_SIZE + X86_CALL_DISP_OFFSET;
+	ic->fn	= callsite + X86_CALL_DISP_OFFSET;
 
-	ic->imm	= callsite - X86_CALL_INSN_SIZE - X86_MOV_IMM_REG_INSN_SIZE + X86_MOV_IMM_REG_IMM_OFFSET;
+	ic->imm	= callsite - X86_MOV_IMM_REG_INSN_SIZE + X86_MOV_IMM_REG_IMM_OFFSET;
 }
 
 static inline unsigned long x86_call_disp(void *callsite, void *target)
 {
-	return (unsigned long) target - (unsigned long) callsite;
+	return (unsigned long) target - (unsigned long) callsite - X86_CALL_INSN_SIZE;
 }
 
 static inline bool is_valid_ic(struct x86_ic *ic)
@@ -134,8 +134,9 @@ static void ic_set_to_megamorphic(struct vm_method *vmm, void *callsite)
 		die("Failed to unlock ic_patch_lock\n");
 }
 
-void *do_ic_setup(struct vm_class *vmc, struct vm_method *i_vmm, void *callsite)
+void *do_ic_setup(struct vm_class *vmc, struct vm_method *i_vmm, void *return_addr)
 {
+	void *callsite = return_addr - X86_CALL_INSN_SIZE;
 	struct compilation_unit *cu;
 	struct vm_method *c_vmm;
 	void *entry_point;
@@ -225,8 +226,11 @@ int convert_ic_calls(struct compilation_unit *cu)
 	return 0;
 }
 
-void *resolve_ic_miss(struct vm_class *vmc, struct vm_method *vmm, void *callsite)
+void *resolve_ic_miss(struct vm_class *vmc, struct vm_method *vmm, void *return_addr)
 {
+	void *callsite = return_addr - X86_CALL_INSN_SIZE;
+
 	ic_set_to_megamorphic(vmm, callsite);
+
 	return ic_lookup_vtable(vmc, vmm);
 }
