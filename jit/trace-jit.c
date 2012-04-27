@@ -335,7 +335,7 @@ print_var_liveness(struct compilation_unit *cu, struct var_info *var)
 	struct live_interval *interval;
 	unsigned long offset;
 
-	trace_printf("  %2lu: ", var->vreg);
+	trace_printf("  r%-3lu: ", var->vreg);
 	interval = var->interval;
 	offset = 0;
 
@@ -420,7 +420,7 @@ void trace_liveness(struct compilation_unit *cu)
 	trace_printf("Liveness:\n\n");
 
 	trace_printf("Legend: (U) In use, (-) Fixed register, (*) Non-fixed register\n\n");
-	trace_printf("      ");
+	trace_printf("        ");
 
 	for (offset = 0; offset < cu->last_insn; offset++)
 		trace_printf("%-2lu ", offset);
