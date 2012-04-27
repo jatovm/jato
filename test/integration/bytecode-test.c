@@ -27,17 +27,28 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>		/* isnan et al */
 
 bool running_on_valgrind;
 bool opt_ssa_enable;
 
-static jint do_execute(uint8_t *code, unsigned long code_length)
+static jint do_jint_execute(uint8_t *code, unsigned long code_length)
 {
+	struct cafebabe_constant_pool constant_pool[2];
 	struct cafebabe_method_info method_info;
+	struct cafebabe_class class_info;
 	struct vm_object class_object;
 	struct vm_method vmm;
 	struct vm_class vmc;
 	jint (*method)(void);
+
+	constant_pool[1].tag		= CAFEBABE_CONSTANT_TAG_INTEGER;
+	constant_pool[1].integer_.bytes	= 0xffffffffUL;
+
+	class_info	= (struct cafebabe_class) {
+		.constant_pool		= constant_pool,
+		.constant_pool_count	= ARRAY_SIZE(constant_pool),
+	};
 
 	class_object	= (struct vm_object) {
 	};
@@ -46,6 +57,7 @@ static jint do_execute(uint8_t *code, unsigned long code_length)
 		.object		= &class_object,
 		.name		= "Foo",
 		.state		= VM_CLASS_LINKED,
+		.class		= &class_info,
 	};
 
 	vm_class_init(&vmc);
@@ -73,13 +85,24 @@ static jint do_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
-static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
+static jlong do_jlong_execute(uint8_t *code, unsigned long code_length)
 {
+	struct cafebabe_constant_pool constant_pool[2];
 	struct cafebabe_method_info method_info;
+	struct cafebabe_class class_info;
 	struct vm_object class_object;
 	struct vm_method vmm;
 	struct vm_class vmc;
-	jdouble (*method)(void);
+	jlong (*method)(void);
+
+	constant_pool[1].tag		= CAFEBABE_CONSTANT_TAG_LONG;
+	constant_pool[1].long_.low_bytes	= 0xffffffffUL;
+	constant_pool[1].long_.high_bytes	= 0xffffffffUL;
+
+	class_info	= (struct cafebabe_class) {
+		.constant_pool		= constant_pool,
+		.constant_pool_count	= ARRAY_SIZE(constant_pool),
+	};
 
 	class_object	= (struct vm_object) {
 	};
@@ -88,6 +111,77 @@ static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
 		.object		= &class_object,
 		.name		= "Foo",
 		.state		= VM_CLASS_LINKED,
+		.class		= &class_info,
+	};
+
+	vm_class_init(&vmc);
+
+	method_info	= (struct cafebabe_method_info) {
+		.access_flags	= CAFEBABE_METHOD_ACC_STATIC,
+	};
+
+	vmm		= (struct vm_method) {
+		.method		= &method_info,
+		.name		= "foo",
+		.class		= &vmc,
+		.code_attribute = (struct cafebabe_code_attribute) {
+			.max_locals	= 8,
+			.code		= code,
+			.code_length	= code_length,
+		},
+	};
+
+	if (vm_method_prepare_jit(&vmm))
+		die("unable to prepare method");
+
+	method = vm_method_trampoline_ptr(&vmm);
+
+	return method();
+}
+
+enum {
+	CP_IDX_DOUBLE_NAN	= 1,
+	CP_IDX_DOUBLE_ZERO	= 2,
+	CP_IDX_DOUBLE_POINT_75	= 3,
+
+	CP_DOUBLE_SIZE		/* keep last */
+};
+
+static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
+{
+	struct cafebabe_constant_pool constant_pool[CP_DOUBLE_SIZE];
+	struct cafebabe_method_info method_info;
+	struct cafebabe_class class_info;
+	struct vm_object class_object;
+	struct vm_method vmm;
+	struct vm_class vmc;
+	jdouble (*method)(void);
+
+	constant_pool[CP_IDX_DOUBLE_NAN].tag				= CAFEBABE_CONSTANT_TAG_DOUBLE;
+	constant_pool[CP_IDX_DOUBLE_NAN].double_.low_bytes		= 0xffffffffUL;
+	constant_pool[CP_IDX_DOUBLE_NAN].double_.high_bytes		= 0xffffffffUL;
+
+	constant_pool[CP_IDX_DOUBLE_ZERO].tag				= CAFEBABE_CONSTANT_TAG_DOUBLE;
+	constant_pool[CP_IDX_DOUBLE_ZERO].double_.low_bytes		= 0;
+	constant_pool[CP_IDX_DOUBLE_ZERO].double_.high_bytes		= 0;
+
+	constant_pool[CP_IDX_DOUBLE_POINT_75].tag			= CAFEBABE_CONSTANT_TAG_DOUBLE;
+	constant_pool[CP_IDX_DOUBLE_POINT_75].double_.low_bytes		= 0;
+	constant_pool[CP_IDX_DOUBLE_POINT_75].double_.high_bytes	= 0x3fe80000UL;
+
+	class_info	= (struct cafebabe_class) {
+		.constant_pool		= constant_pool,
+		.constant_pool_count	= ARRAY_SIZE(constant_pool),
+	};
+
+	class_object	= (struct vm_object) {
+	};
+
+	vmc		= (struct vm_class) {
+		.object		= &class_object,
+		.name		= "Foo",
+		.state		= VM_CLASS_LINKED,
+		.class		= &class_info,
 	};
 
 	vm_class_init(&vmc);
@@ -115,13 +209,37 @@ static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
+enum {
+	CP_IDX_FLOAT_ZERO	= 1,
+	CP_IDX_FLOAT_NAN	= 2,
+	CP_IDX_FLOAT_POINT_75	= 3,
+
+	CP_FLOAT_SIZE		/* keep last */
+};
+
 static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
 {
+	struct cafebabe_constant_pool constant_pool[CP_FLOAT_SIZE];
 	struct cafebabe_method_info method_info;
+	struct cafebabe_class class_info;
 	struct vm_object class_object;
 	struct vm_method vmm;
 	struct vm_class vmc;
 	jfloat (*method)(void);
+
+	constant_pool[CP_IDX_FLOAT_ZERO].tag			= CAFEBABE_CONSTANT_TAG_FLOAT;
+	constant_pool[CP_IDX_FLOAT_ZERO].float_.bytes		= 0;
+
+	constant_pool[CP_IDX_FLOAT_NAN].tag			= CAFEBABE_CONSTANT_TAG_FLOAT;
+	constant_pool[CP_IDX_FLOAT_NAN].float_.bytes	=	 0xffffffffUL;
+
+	constant_pool[CP_IDX_FLOAT_POINT_75].tag		= CAFEBABE_CONSTANT_TAG_FLOAT;
+	constant_pool[CP_IDX_FLOAT_POINT_75].float_.bytes	= 0x3f400000UL;
+
+	class_info	= (struct cafebabe_class) {
+		.constant_pool		= constant_pool,
+		.constant_pool_count	= ARRAY_SIZE(constant_pool),
+	};
 
 	class_object	= (struct vm_object) {
 	};
@@ -130,6 +248,7 @@ static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
 		.object		= &class_object,
 		.name		= "Foo",
 		.state		= VM_CLASS_LINKED,
+		.class		= &class_info,
 	};
 
 	vm_class_init(&vmc);
@@ -159,11 +278,18 @@ static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
 
 static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 {
+	struct cafebabe_constant_pool constant_pool[2];
 	struct cafebabe_method_info method_info;
+	struct cafebabe_class class_info;
 	struct vm_object class_object;
 	struct vm_method vmm;
 	struct vm_class vmc;
 	jobject (*method)(void);
+
+	class_info	= (struct cafebabe_class) {
+		.constant_pool		= constant_pool,
+		.constant_pool_count	= ARRAY_SIZE(constant_pool),
+	};
 
 	class_object	= (struct vm_object) {
 	};
@@ -172,6 +298,7 @@ static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 		.object		= &class_object,
 		.name		= "Foo",
 		.state		= VM_CLASS_LINKED,
+		.class		= &class_info,
 	};
 
 	vm_class_init(&vmc);
@@ -199,8 +326,9 @@ static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
-#define execute(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
-#define jlong_run(bytecode) do_execute(bytecode, ARRAY_SIZE(bytecode))
+#define execute(bytecode) do_jint_execute(bytecode, ARRAY_SIZE(bytecode))
+#define jint_run(bytecode) do_jint_execute(bytecode, ARRAY_SIZE(bytecode))
+#define jlong_run(bytecode) do_jlong_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jdouble_run(bytecode) do_jdouble_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jfloat_run(bytecode) do_jfloat_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jobject_run(bytecode) do_jobject_execute(bytecode, ARRAY_SIZE(bytecode))
@@ -236,6 +364,16 @@ static void init(void)
 }
 
 static unsigned long nr_assertions;
+
+static void do_assert_true(const char *function, const char *file, int line, bool condition)
+{
+	if (!condition)
+		die("%s:%d::%s: Expected true, but was false", file, line, function);
+
+	nr_assertions++;
+}
+
+#define assert_true(condition) do_assert_true(__func__, __FILE__, __LINE__, condition)
 
 static void do_assert_int_equals(const char *function, const char *file, int line, jint expected, jint actual)
 {
@@ -300,6 +438,54 @@ static void test_sipush(void)
 	uint8_t bytecode[] = { OPC_SIPUSH, 0x01, 0x00, OPC_IRETURN };
 
 	assert_int_equals(256, execute(bytecode));
+}
+
+static void test_ldc_double(void)
+{
+	uint8_t nan[]  = { OPC_LDC, CP_IDX_DOUBLE_NAN, 0x00, OPC_DRETURN };
+	uint8_t zero[] = { OPC_LDC, CP_IDX_DOUBLE_ZERO, 0x00, OPC_DRETURN };
+	uint8_t _75[]  = { OPC_LDC, CP_IDX_DOUBLE_POINT_75, 0x00, OPC_DRETURN };
+
+	assert_true(isnan(jdouble_run(nan)));
+
+	assert_double_equals(0.0, jdouble_run(zero));
+
+	assert_double_equals(0.75, jdouble_run(_75));
+}
+
+static void test_ldc_float(void)
+{
+	uint8_t nan[]  = { OPC_LDC, CP_IDX_FLOAT_NAN, 0x00, OPC_FRETURN };
+	uint8_t zero[] = { OPC_LDC, CP_IDX_FLOAT_ZERO, 0x00, OPC_FRETURN };
+	uint8_t _75[]  = { OPC_LDC, CP_IDX_FLOAT_POINT_75, 0x00, OPC_FRETURN };
+
+	assert_true(isnan(jfloat_run(nan)));
+
+	assert_float_equals(0.0f, jfloat_run(zero));
+
+	assert_float_equals(0.75f, jfloat_run(_75));
+}
+
+static void test_ldc_long(void)
+{
+	uint8_t bytecode[] = { OPC_LDC, 0x01, 0x00, OPC_LRETURN };
+
+	assert_long_equals(-1, jlong_run(bytecode));
+}
+
+static void test_ldc_int(void)
+{
+	uint8_t bytecode[] = { OPC_LDC, 0x01, 0x00, OPC_IRETURN };
+
+	assert_int_equals(-1, jint_run(bytecode));
+}
+
+static void test_ldc(void)
+{
+	test_ldc_int();
+	test_ldc_long();
+	test_ldc_float();
+	test_ldc_double();
 }
 
 static void test_if_icmpeq(void)
@@ -1185,7 +1371,7 @@ static void run_tests(void)
 	test_bipush();
 #ifndef CONFIG_ARM
 	test_sipush();
-	/* test_ldc(); */
+	test_ldc();
 	/* test_ldc_w(); */
 	/* test_ldc2_w(); */
 	/* test_iload(); */
