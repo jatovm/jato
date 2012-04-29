@@ -4,6 +4,7 @@
 #include "vm/types.h"
 
 struct stack_frame;
+enum machine_reg;
 
 struct stack_slot {
 	struct stack_frame *parent;

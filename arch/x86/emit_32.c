@@ -1196,6 +1196,9 @@ void *emit_itable_resolver_stub(struct vm_class *vmc,
 	return buffer_ptr(buf);
 }
 
+static void emit_pseudo(struct insn *insn, struct buffer *buffer, struct basic_block *bb)
+{
+}
 
 typedef void (*emit_fn_t)(struct insn *insn, struct buffer *, struct basic_block *bb);
 
@@ -1325,6 +1328,12 @@ static emit_fn_t emitters[] = {
 	DECL_EMITTER(INSN_SUB_MEMBASE_REG, insn_encode),
 	DECL_EMITTER(INSN_TEST_IMM_MEMDISP, emit_test_imm_memdisp),
 	DECL_EMITTER(INSN_TEST_MEMBASE_REG, insn_encode),
+	DECL_EMITTER(INSN_SAVE_CALLER_REGS, emit_pseudo),
+	DECL_EMITTER(INSN_RESTORE_CALLER_REGS, emit_pseudo),
+	DECL_EMITTER(INSN_RESTORE_CALLER_REGS_I32, emit_pseudo),
+	DECL_EMITTER(INSN_RESTORE_CALLER_REGS_I64, emit_pseudo),
+	DECL_EMITTER(INSN_RESTORE_CALLER_REGS_F32, emit_pseudo),
+	DECL_EMITTER(INSN_RESTORE_CALLER_REGS_F64, emit_pseudo),
 };
 
 static void __emit_insn(struct buffer *buf, struct basic_block *bb, struct insn *insn)

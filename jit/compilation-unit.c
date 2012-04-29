@@ -398,3 +398,15 @@ struct stack_slot *get_scratch_slot(struct compilation_unit *cu)
 
 	return cu->scratch_slot;
 }
+
+struct stack_slot *get_clobber_slot(struct compilation_unit *cu, enum machine_reg reg)
+{
+	struct stack_slot *slot = cu->clobber_slots[reg];
+
+	if (slot)
+		return slot;
+
+	slot = cu->clobber_slots[reg] = get_spill_slot(cu->stack_frame, J_NATIVE_PTR);
+
+	return slot;
+}

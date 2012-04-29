@@ -59,6 +59,23 @@ extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
 #define NR_CALLEE_SAVE_REGS 3
 extern enum machine_reg callee_save_regs[NR_CALLEE_SAVE_REGS];
 
+static inline bool is_return_reg(enum machine_reg reg, enum vm_type type)
+{
+	switch (type) {
+	case J_INT:
+		return reg == MACH_REG_EAX;
+	case J_LONG:
+		return reg == MACH_REG_EAX || reg == MACH_REG_EDX;
+	case J_FLOAT:
+		return reg == MACH_REG_XMM0;
+	case J_DOUBLE:
+		return reg == MACH_REG_XMM0;
+	default:
+		break;
+	}
+	return false;
+}
+
 const char *reg_name(enum machine_reg reg);
 
 extern uint32_t reg_type_table[NR_REGISTERS];

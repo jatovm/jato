@@ -981,6 +981,36 @@ static int print_xor_64_xmm_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
+static int print_save_caller_regs(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
+}
+
+static int print_restore_caller_regs(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
+}
+
+static int print_restore_caller_regs_i32(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
+}
+
+static int print_restore_caller_regs_i64(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
+}
+
+static int print_restore_caller_regs_f32(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
+}
+
+static int print_restore_caller_regs_f64(struct string *str, struct insn *insn)
+{
+	return print_func_name(str);
+}
+
 typedef int (*print_insn_fn) (struct string *str, struct insn *insn);
 
 static print_insn_fn insn_printers[] = {
@@ -1106,6 +1136,12 @@ static print_insn_fn insn_printers[] = {
 	[INSN_XORPS_XMM_XMM] = print_xor_xmm_reg_reg,
 	[INSN_XOR_MEMBASE_REG] = print_xor_membase_reg,
 	[INSN_XOR_REG_REG] = print_xor_reg_reg,
+	[INSN_SAVE_CALLER_REGS] = print_save_caller_regs,
+	[INSN_RESTORE_CALLER_REGS] = print_restore_caller_regs,
+	[INSN_RESTORE_CALLER_REGS_I32] = print_restore_caller_regs_i32,
+	[INSN_RESTORE_CALLER_REGS_I64] = print_restore_caller_regs_i64,
+	[INSN_RESTORE_CALLER_REGS_F32] = print_restore_caller_regs_f32,
+	[INSN_RESTORE_CALLER_REGS_F64] = print_restore_caller_regs_f64,
 };
 
 int lir_print(struct insn *insn, struct string *str)

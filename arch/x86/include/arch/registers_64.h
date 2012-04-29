@@ -81,6 +81,23 @@ extern enum machine_reg	arg_gp_regs[NR_ARG_GP_REGS];
 #define NR_ARG_XMM_REGS		8
 extern enum machine_reg	arg_xmm_regs[NR_ARG_XMM_REGS];
 
+static inline bool is_return_reg(enum machine_reg reg, enum vm_type type)
+{
+	switch (type) {
+	case J_INT:
+		return reg == MACH_REG_RAX;
+	case J_LONG:
+		return reg == MACH_REG_RAX;
+	case J_FLOAT:
+		return reg == MACH_REG_XMM0;
+	case J_DOUBLE:
+		return reg == MACH_REG_XMM0;
+	default:
+		break;
+	}
+	return false;
+}
+
 const char *reg_name(enum machine_reg reg);
 enum machine_reg_type reg_type(enum machine_reg reg);
 bool reg_supports_type(enum machine_reg reg, enum vm_type type);

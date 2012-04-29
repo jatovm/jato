@@ -145,6 +145,10 @@ int compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	err = mark_clobbers(cu);
+	if (err)
+		goto out;
+
 	err = insert_spill_reload_insns(cu);
 	if (err)
 		goto out;

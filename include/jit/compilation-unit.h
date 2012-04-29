@@ -71,6 +71,10 @@ struct compilation_unit {
 	/* It's needed to spill exception object reference at eh entry */
 	struct stack_slot *exception_spill_slot;
 
+	/* Array of spill slots used for caller-save register saving and
+	   restoring.  */
+	struct stack_slot *clobber_slots[NR_FIXED_REGISTERS];
+
 	/*
 	 * Pointers inside exit block and unwind block after monitor
 	 * unlocking code. The code is only present if method is
@@ -205,6 +209,7 @@ struct var_info *ssa_get_fixed_var(struct compilation_unit *, enum machine_reg);
 struct basic_block *find_bb(struct compilation_unit *, unsigned long);
 void compute_insn_positions(struct compilation_unit *);
 struct stack_slot *get_scratch_slot(struct compilation_unit *);
+struct stack_slot *get_clobber_slot(struct compilation_unit *cu, enum machine_reg reg);
 
 #define for_each_variable(var, var_list) for (var = var_list; var != NULL; var = var->next)
 

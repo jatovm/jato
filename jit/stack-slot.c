@@ -23,8 +23,12 @@
  *
  * Please refer to the file LICENSE for details.
  */
+
 #include "jit/stack-slot.h"
+
+#include "arch/registers.h"
 #include "vm/stdlib.h"
+
 #include <stdlib.h>
 
 struct stack_frame *alloc_stack_frame(unsigned long nr_args,

@@ -74,6 +74,7 @@ int dce(struct compilation_unit *cu);
 void imm_copy_propagation(struct compilation_unit *cu);
 void abc_removal(struct compilation_unit *cu);
 int allocate_registers(struct compilation_unit *cu);
+int mark_clobbers(struct compilation_unit *cu);
 int insert_spill_reload_insns(struct compilation_unit *cu);
 int emit_machine_code(struct compilation_unit *);
 void *jit_magic_trampoline(struct compilation_unit *);
