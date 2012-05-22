@@ -628,6 +628,37 @@ void test_encoding_membase_xmm_high(void)
 #endif
 }
 
+void test_encoding_memlocal_xmm_high(void)
+{
+#ifdef CONFIG_X86_64
+	struct stack_frame frame = {
+		.nr_args	= 0,
+	};
+	struct stack_slot slot = {
+		.parent		= &frame,
+		.index		= 0,
+	};
+	uint8_t encoding[] = { 0xf3, 0x44, 0x0f, 0x10, 0x85, 0xf8, 0xff, 0xff, 0xff };
+	struct insn insn = { };
+
+	setup();
+
+	/* movss  -0x8(%rbp),%xmm8 */
+	insn.type			= INSN_MOVSS_MEMLOCAL_XMM;
+	insn.src.slot			= &slot;
+	insn.src.type			= OPERAND_MEMLOCAL;
+	insn.dest.reg.interval		= &reg_xmm8;
+	insn.dest.type			= OPERAND_REG;
+
+	insn_encode(&insn, buffer, NULL);
+
+	assert_int_equals(ARRAY_SIZE(encoding), buffer_offset(buffer));
+	assert_mem_equals(encoding, buffer_ptr(buffer), ARRAY_SIZE(encoding));
+
+	teardown();
+#endif
+}
+
 void test_encoding_membase_xmm_high_disp8(void)
 {
 #ifdef CONFIG_X86_64
