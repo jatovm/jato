@@ -94,7 +94,6 @@ TEST_OBJS := \
 	compilation-unit-test.o \
 	dominance-test.o \
 	expression-test.o \
-	invoke-bc-test.o \
 	linear-scan-test.o \
 	live-range-test.o \
 	liveness-test.o \
