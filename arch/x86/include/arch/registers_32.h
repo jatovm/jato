@@ -51,6 +51,7 @@ enum machine_reg {
 };
 
 #define GPR_VM_TYPE	J_INT
+#define FPU_VM_TYPE	J_DOUBLE
 
 #define NR_CALLER_SAVE_REGS 11
 extern enum machine_reg caller_save_regs[NR_CALLER_SAVE_REGS];
@@ -84,7 +85,12 @@ struct register_state {
 
 static inline enum vm_type reg_default_type(enum machine_reg reg)
 {
-	return GPR_VM_TYPE;
+	if (reg < NR_GP_REGISTERS)
+		return GPR_VM_TYPE;
+	else if (reg < NR_FP_REGISTERS)
+		return FPU_VM_TYPE;
+	else
+		return GPR_VM_TYPE;
 }
 
 static inline bool is_xmm_reg(enum machine_reg reg)
