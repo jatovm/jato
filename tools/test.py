@@ -97,6 +97,7 @@ TESTS = [
 , ( "test.java.lang.reflect.MethodTest", 0, [ ], [ "i386" ] )
 , ( "test.java.lang.reflect.FieldAccessorsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "test.java.lang.reflect.FieldTest", 0, [ ], [ "i386" ] )
+, ( "test.java.util.HashMapTest", 0, [ ], [ "i386" ] )
 , ( "corrupt.CorruptedExceptionTableEndsAfterCode", 1, [ ], [ "i386", "x86_64" ] )
 , ( "corrupt.CorruptedExceptionTableInvalidHandlerPC", 1, [ ], [ "i386", "x86_64" ] )
 , ( "corrupt.CorruptedExceptionTableInvertedBorns", 1, [ ], [ "i386", "x86_64" ] )

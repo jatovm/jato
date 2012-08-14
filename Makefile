@@ -384,7 +384,8 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/test/java/lang/DoubleTest.java \
 	test/functional/test/java/lang/reflect/MethodTest.java \
 	test/functional/test/java/lang/reflect/FieldAccessorsTest.java \
-	test/functional/test/java/lang/reflect/FieldTest.java
+	test/functional/test/java/lang/reflect/FieldTest.java \
+	test/functional/test/java/util/HashMapTest.java
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/DupTest.j \
