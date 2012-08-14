@@ -23,7 +23,7 @@
  *
  * Please refer to the file LICENSE for details.
  */
-package java.lang;
+package test.java.lang;
 
 import jvm.TestCase;
 import java.lang.reflect.Method;

@@ -319,7 +319,6 @@ check-integration: $(LIB_FILE)
 
 REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jato/internal/VM.java \
-	test/functional/java/lang/JNITest.java \
 	test/functional/jvm/ArgsTest.java \
 	test/functional/jvm/ArrayExceptionsTest.java \
 	test/functional/jvm/ArrayMemberTest.java \
@@ -380,9 +379,10 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/sun/misc/UnsafeTest.java \
 	test/functional/test/java/lang/ClassTest.java \
 	test/functional/test/java/lang/DoubleTest.java \
-	test/functional/test/java/lang/reflect/MethodTest.java \
+	test/functional/test/java/lang/JNITest.java \
 	test/functional/test/java/lang/reflect/FieldAccessorsTest.java \
 	test/functional/test/java/lang/reflect/FieldTest.java \
+	test/functional/test/java/lang/reflect/MethodTest.java \
 	test/functional/test/java/util/HashMapTest.java
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
