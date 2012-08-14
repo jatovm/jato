@@ -317,92 +317,90 @@ check-integration: $(LIB_FILE)
 	+$(MAKE) -C test/integration check
 .PHONY: check-integration
 
-REGRESSION_TEST_SUITE_CLASSES = \
-	test/functional/jato/internal/VM.java \
-	test/functional/jvm/ArgsTest.java \
-	test/functional/jvm/ArrayExceptionsTest.java \
-	test/functional/jvm/ArrayMemberTest.java \
-	test/functional/jvm/ArrayTest.java \
-	test/functional/jvm/BranchTest.java \
-	test/functional/jvm/CFGCrashTest.java \
-	test/functional/jvm/ClassExceptionsTest.java \
-	test/functional/jvm/ClassLoaderTest.java \
-	test/functional/jvm/ClinitFloatTest.java \
-	test/functional/jvm/CloneTest.java \
-	test/functional/jvm/ControlTransferTest.java \
-	test/functional/jvm/ConversionTest.java \
-	test/functional/jvm/DoubleArithmeticTest.java \
-	test/functional/jvm/DoubleConversionTest.java \
-	test/functional/jvm/ExceptionsTest.java \
-	test/functional/jvm/ExitStatusIsOneTest.java \
-	test/functional/jvm/ExitStatusIsZeroTest.java \
-	test/functional/jvm/FibonacciTest.java \
-	test/functional/jvm/FinallyTest.java \
-	test/functional/jvm/FloatArithmeticTest.java \
-	test/functional/jvm/FloatConversionTest.java \
-	test/functional/jvm/GcTortureTest.java \
-	test/functional/jvm/GetstaticPatchingTest.java \
-	test/functional/jvm/IntegerArithmeticExceptionsTest.java \
-	test/functional/jvm/IntegerArithmeticTest.java \
-	test/functional/jvm/InterfaceFieldInheritanceTest.java \
-	test/functional/jvm/InterfaceInheritanceTest.java \
-	test/functional/jvm/InvokeinterfaceTest.java \
-	test/functional/jvm/InvokestaticPatchingTest.java \
-	test/functional/jvm/LoadConstantsTest.java \
-	test/functional/jvm/LongArithmeticExceptionsTest.java \
-	test/functional/jvm/LongArithmeticTest.java \
-	test/functional/jvm/MethodInvocationAndReturnTest.java \
-	test/functional/jvm/MethodInvocationExceptionsTest.java \
-	test/functional/jvm/MethodInvokeVirtualTest.java \
-	test/functional/jvm/MonitorTest.java \
-	test/functional/jvm/MultithreadingTest.java \
-	test/functional/jvm/ObjectArrayTest.java \
-	test/functional/jvm/ObjectCreationAndManipulationExceptionsTest.java \
-	test/functional/jvm/ObjectCreationAndManipulationTest.java \
-	test/functional/jvm/ObjectStackTest.java \
-	test/functional/jvm/ParameterPassingTest.java \
-	test/functional/jvm/ParameterPassingLivenessTest.java \
-	test/functional/jvm/PrintTest.java \
-	test/functional/jvm/PutfieldTest.java \
-	test/functional/jvm/PutstaticPatchingTest.java \
-	test/functional/jvm/PutstaticTest.java \
-	test/functional/jvm/RegisterAllocatorTortureTest.java \
-	test/functional/jvm/StackTraceTest.java \
-	test/functional/jvm/StringTest.java \
-	test/functional/jvm/SwitchTest.java \
-	test/functional/jvm/SynchronizationExceptionsTest.java \
-	test/functional/jvm/SynchronizationTest.java \
-	test/functional/jvm/TestCase.java \
-	test/functional/jvm/TrampolineBackpatchingTest.java \
-	test/functional/jvm/VirtualAbstractInterfaceMethodTest.java \
-	test/functional/test/java/lang/ClassTest.java \
-	test/functional/test/java/lang/DoubleTest.java \
-	test/functional/test/java/lang/JNITest.java \
-	test/functional/test/java/lang/ref/ReferenceTest.java \
-	test/functional/test/java/lang/reflect/FieldAccessorsTest.java \
-	test/functional/test/java/lang/reflect/FieldTest.java \
-	test/functional/test/java/lang/reflect/MethodTest.java \
-	test/functional/test/java/util/HashMapTest.java \
-	test/functional/test/sun/misc/UnsafeTest.java
+JAVA_TESTS += test/functional/jato/internal/VM.java
+JAVA_TESTS += test/functional/jvm/ArgsTest.java
+JAVA_TESTS += test/functional/jvm/ArrayExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/ArrayMemberTest.java
+JAVA_TESTS += test/functional/jvm/ArrayTest.java
+JAVA_TESTS += test/functional/jvm/BranchTest.java
+JAVA_TESTS += test/functional/jvm/CFGCrashTest.java
+JAVA_TESTS += test/functional/jvm/ClassExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/ClassLoaderTest.java
+JAVA_TESTS += test/functional/jvm/ClinitFloatTest.java
+JAVA_TESTS += test/functional/jvm/CloneTest.java
+JAVA_TESTS += test/functional/jvm/ControlTransferTest.java
+JAVA_TESTS += test/functional/jvm/ConversionTest.java
+JAVA_TESTS += test/functional/jvm/DoubleArithmeticTest.java
+JAVA_TESTS += test/functional/jvm/DoubleConversionTest.java
+JAVA_TESTS += test/functional/jvm/ExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/ExitStatusIsOneTest.java
+JAVA_TESTS += test/functional/jvm/ExitStatusIsZeroTest.java
+JAVA_TESTS += test/functional/jvm/FibonacciTest.java
+JAVA_TESTS += test/functional/jvm/FinallyTest.java
+JAVA_TESTS += test/functional/jvm/FloatArithmeticTest.java
+JAVA_TESTS += test/functional/jvm/FloatConversionTest.java
+JAVA_TESTS += test/functional/jvm/GcTortureTest.java
+JAVA_TESTS += test/functional/jvm/GetstaticPatchingTest.java
+JAVA_TESTS += test/functional/jvm/IntegerArithmeticExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/IntegerArithmeticTest.java
+JAVA_TESTS += test/functional/jvm/InterfaceFieldInheritanceTest.java
+JAVA_TESTS += test/functional/jvm/InterfaceInheritanceTest.java
+JAVA_TESTS += test/functional/jvm/InvokeinterfaceTest.java
+JAVA_TESTS += test/functional/jvm/InvokestaticPatchingTest.java
+JAVA_TESTS += test/functional/jvm/LoadConstantsTest.java
+JAVA_TESTS += test/functional/jvm/LongArithmeticExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/LongArithmeticTest.java
+JAVA_TESTS += test/functional/jvm/MethodInvocationAndReturnTest.java
+JAVA_TESTS += test/functional/jvm/MethodInvocationExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/MethodInvokeVirtualTest.java
+JAVA_TESTS += test/functional/jvm/MonitorTest.java
+JAVA_TESTS += test/functional/jvm/MultithreadingTest.java
+JAVA_TESTS += test/functional/jvm/ObjectArrayTest.java
+JAVA_TESTS += test/functional/jvm/ObjectCreationAndManipulationExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/ObjectCreationAndManipulationTest.java
+JAVA_TESTS += test/functional/jvm/ObjectStackTest.java
+JAVA_TESTS += test/functional/jvm/ParameterPassingLivenessTest.java
+JAVA_TESTS += test/functional/jvm/ParameterPassingTest.java
+JAVA_TESTS += test/functional/jvm/PrintTest.java
+JAVA_TESTS += test/functional/jvm/PutfieldTest.java
+JAVA_TESTS += test/functional/jvm/PutstaticPatchingTest.java
+JAVA_TESTS += test/functional/jvm/PutstaticTest.java
+JAVA_TESTS += test/functional/jvm/RegisterAllocatorTortureTest.java
+JAVA_TESTS += test/functional/jvm/StackTraceTest.java
+JAVA_TESTS += test/functional/jvm/StringTest.java
+JAVA_TESTS += test/functional/jvm/SwitchTest.java
+JAVA_TESTS += test/functional/jvm/SynchronizationExceptionsTest.java
+JAVA_TESTS += test/functional/jvm/SynchronizationTest.java
+JAVA_TESTS += test/functional/jvm/TestCase.java
+JAVA_TESTS += test/functional/jvm/TrampolineBackpatchingTest.java
+JAVA_TESTS += test/functional/jvm/VirtualAbstractInterfaceMethodTest.java
+JAVA_TESTS += test/functional/test/java/lang/ClassTest.java
+JAVA_TESTS += test/functional/test/java/lang/DoubleTest.java
+JAVA_TESTS += test/functional/test/java/lang/JNITest.java
+JAVA_TESTS += test/functional/test/java/lang/ref/ReferenceTest.java
+JAVA_TESTS += test/functional/test/java/lang/reflect/FieldAccessorsTest.java
+JAVA_TESTS += test/functional/test/java/lang/reflect/FieldTest.java
+JAVA_TESTS += test/functional/test/java/lang/reflect/MethodTest.java
+JAVA_TESTS += test/functional/test/java/util/HashMapTest.java
+JAVA_TESTS += test/functional/test/sun/misc/UnsafeTest.java
 
-JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
-	test/functional/jvm/DupTest.j \
-	test/functional/jvm/EntryTest.j \
-	test/functional/jvm/ExceptionHandlerTest.j \
-	test/functional/jvm/InvokeResultTest.j \
-	test/functional/jvm/InvokeTest.j \
-	test/functional/jvm/MethodOverridingFinal.j\
-	test/functional/jvm/NoSuchMethodErrorTest.j\
-	test/functional/jvm/PopTest.j \
-	test/functional/jvm/SubroutineTest.j \
-	test/functional/jvm/WideTest.j
+JASMIN_TESTS += test/functional/jvm/DupTest.j
+JASMIN_TESTS += test/functional/jvm/EntryTest.j
+JASMIN_TESTS += test/functional/jvm/ExceptionHandlerTest.j
+JASMIN_TESTS += test/functional/jvm/InvokeResultTest.j
+JASMIN_TESTS += test/functional/jvm/InvokeTest.j
+JASMIN_TESTS += test/functional/jvm/MethodOverridingFinal.j
+JASMIN_TESTS += test/functional/jvm/NoSuchMethodErrorTest.j
+JASMIN_TESTS += test/functional/jvm/PopTest.j
+JASMIN_TESTS += test/functional/jvm/SubroutineTest.j
+JASMIN_TESTS += test/functional/jvm/WideTest.j
 
 MBENCH_TEST_SUITE_CLASSES = test/perf/ICTime.java
 
 
 compile-java-tests: $(PROGRAM) FORCE
-	$(E) "  JAVAC   " $(REGRESSION_TEST_SUITE_CLASSES)
-	$(Q) JAVA=$(JAVA) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):test/functional -d test/functional $(REGRESSION_TEST_SUITE_CLASSES)
+	$(E) "  JAVAC   " $(JAVA_TESTS)
+	$(Q) JAVA=$(JAVA) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):test/functional -d test/functional $(JAVA_TESTS)
 .PHONY: compile-java-tests
 
 compile-mbench-tests: $(PROGRAM) FORCE
@@ -411,8 +409,8 @@ compile-mbench-tests: $(PROGRAM) FORCE
 .PHONY: compile-mbench-tests
 
 compile-jasmin-tests: $(PROGRAM) FORCE
-	$(E) "  JASMIN  " $(JASMIN_REGRESSION_TEST_SUITE_CLASSES)
-	$(Q) $(JASMIN) $(JASMIN_OPTS) -d test/functional $(JASMIN_REGRESSION_TEST_SUITE_CLASSES) > /dev/null
+	$(E) "  JASMIN  " $(JASMIN_TESTS)
+	$(Q) $(JASMIN) $(JASMIN_OPTS) -d test/functional $(JASMIN_TESTS) > /dev/null
 .PHONY: compile-jasmin-tests
 
 lib: $(CLASSPATH_CONFIG)
