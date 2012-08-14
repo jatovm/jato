@@ -164,11 +164,11 @@ def main():
     retval = subprocess.call(command, stderr = fnull)
     if retval != expected_retval:
       if not opts.skipped:
-        print klass + ": Test FAILED"
+        print "%s: Test FAILED%20s" % (klass, "")
       results.put(False)
     else:
       if opts.skipped:
-        print klass + ": Test SUCCEEDED"
+        print "%s: Test SUCCEEDED%20s" % (klass, "")
       results.put(True)
 
   def worker():
