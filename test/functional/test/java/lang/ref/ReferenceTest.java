@@ -1,7 +1,8 @@
-package jvm.lang;
+package test.java.lang.ref;
+
+import java.lang.ref.SoftReference;
 
 import jvm.TestCase;
-import java.lang.ref.SoftReference;
 
 public class ReferenceTest extends TestCase {
   public static void main(String[] args) {
