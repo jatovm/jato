@@ -376,14 +376,14 @@ REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/TrampolineBackpatchingTest.java \
 	test/functional/jvm/VirtualAbstractInterfaceMethodTest.java \
 	test/functional/jvm/lang/ReferenceTest.java \
-	test/functional/sun/misc/UnsafeTest.java \
 	test/functional/test/java/lang/ClassTest.java \
 	test/functional/test/java/lang/DoubleTest.java \
 	test/functional/test/java/lang/JNITest.java \
 	test/functional/test/java/lang/reflect/FieldAccessorsTest.java \
 	test/functional/test/java/lang/reflect/FieldTest.java \
 	test/functional/test/java/lang/reflect/MethodTest.java \
-	test/functional/test/java/util/HashMapTest.java
+	test/functional/test/java/util/HashMapTest.java \
+	test/functional/test/sun/misc/UnsafeTest.java
 
 JASMIN_REGRESSION_TEST_SUITE_CLASSES = \
 	test/functional/jvm/DupTest.j \
