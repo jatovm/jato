@@ -29,7 +29,6 @@ TESTS = [
 , ( "jvm/ArgsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "java.lang.JNITest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
 , ( "java.lang.reflect.ClassTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "java.lang.reflect.MethodTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ArrayExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ArrayMemberTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ArrayTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
