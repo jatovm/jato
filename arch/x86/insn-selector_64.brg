@@ -2187,8 +2187,8 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	      struct tree_node *tree, void *func, enum vm_type arg2_type,
 	      enum vm_type return_type)
 {
-	struct var_info *eax, *edx = NULL;
 	struct var_info *rdi, *rsi;
+	struct var_info *eax;
 
 	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 	state->reg1 = get_var(s->b_parent, J_INT);
@@ -2201,8 +2201,6 @@ emulate_op_64(struct _MBState *state, struct basic_block *s,
 	select_insn(s, tree, rel_insn(INSN_CALL_REL, (unsigned long) func));
 
 	select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, eax, state->reg1));
-	if (edx)
-		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, edx, state->reg2));
 
 	select_exception_test(s, tree);
 }
