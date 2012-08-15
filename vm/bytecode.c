@@ -374,10 +374,9 @@ bool bc_ends_basic_block(unsigned char code)
 
 bool bc_is_invalid(unsigned char opc)
 {
-	return opc == OPC_BREAKPOINT
+	return opc >= OPC_BREAKPOINT
 		|| opc == OPC_XXXUNUSEDXXX
-		|| opc == OPC_XXXUNUSEDXXX_
-		|| opc > OPC_PUTFIELD_QUICK_W;
+		|| opc == OPC_XXXUNUSEDXXX_;
 }
 
 bool bc_is_ldc(unsigned char opc)
