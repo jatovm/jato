@@ -155,7 +155,10 @@ static LLVMValueRef llvm_function(struct llvm_context *ctx)
 
 static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *idx)
 {
-	unsigned char opc = code[*idx++];
+	struct vm_method *vmm = ctx->cu->method;
+	unsigned char opc;
+
+	opc = code[*idx++];
 
 	switch (opc) {
 	case OPC_NOP:			assert(0); break;
@@ -335,7 +338,13 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_FRETURN:		assert(0); break;
 	case OPC_DRETURN:		assert(0); break;
 	case OPC_ARETURN:		assert(0); break;
-	case OPC_RETURN:		assert(0); break;
+	case OPC_RETURN: {
+		/* XXX: Update monitor state properly before exiting. */
+		assert(!method_is_synchronized(vmm));
+
+		LLVMBuildRetVoid(ctx->builder);
+		break;
+	}
 	case OPC_GETSTATIC:		assert(0); break;
 	case OPC_PUTSTATIC:		assert(0); break;
 	case OPC_GETFIELD:		assert(0); break;
@@ -363,6 +372,8 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		fprintf(stderr, "abort: unknown bytecode instruction 0x%02x!\n", opc);
 		assert(0);
 	}
+
+	return 0;
 }
 
 static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
@@ -408,14 +419,6 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 		llvm_bc2ir_bb(ctx, bb);
 	}
-
-#if 0
-	bbr = LLVMAppendBasicBlock(ctx->func, "L");
-
-	LLVMPositionBuilderAtEnd(ctx->builder, bbr);
-#endif
-
-	LLVMBuildRetVoid(ctx->builder);
 
 	return 0;
 }
