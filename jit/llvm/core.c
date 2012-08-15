@@ -45,10 +45,15 @@
  */
 struct llvm_context {
 	struct compilation_unit		*cu;
-	LLVMModuleRef			module;
 	LLVMValueRef			func;
 	LLVMBuilderRef			builder;
 };
+
+/*
+ * Per-process LLVM execution engine and module (is this safe?):
+ */
+static LLVMExecutionEngineRef	engine;
+static LLVMModuleRef		module;
 
 static LLVMTypeRef llvm_type(enum vm_type vm_type)
 {
@@ -128,7 +133,7 @@ static LLVMValueRef llvm_function(struct llvm_context *ctx)
 
 	func_type = llvm_function_type(ctx);
 
-	return LLVMAddFunction(ctx->module, func_name, func_type);
+	return LLVMAddFunction(module, func_name, func_type);
 }
 
 static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *idx)
@@ -400,34 +405,14 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 static int llvm_codegen(struct compilation_unit *cu)
 {
-	LLVMExecutionEngineRef engine = NULL;
 	struct llvm_context ctx = {
 		.cu = cu,
 	};
 
-	ctx.module = LLVMModuleCreateWithName("module");	/* XXX: make it a class */
-	if (!ctx.module)
-		assert(0);
-
 	if (llvm_bc2ir(&ctx) < 0)
 		assert(0);
 
-	LLVMDumpModule(ctx.module);
-
-	if (LLVMCreateJITCompilerForModule(&engine, ctx.module, 2, NULL) < 0)
-		assert(0);
-
 	cu->entry_point = LLVMRecompileAndRelinkFunction(engine, ctx.func);
-
-	/*
-	 * XXX: We cannot dispose the execution engine nor module; otherwise we
-	 * apparently lose generated native code.
-	 */
-#if 0
-	LLVMDisposeExecutionEngine(engine);
-
-	LLVMDisposeModule(ctx.module);
-#endif
 
 	return 0;
 }
@@ -457,4 +442,18 @@ void llvm_init(void)
 	LLVMLinkInJIT();
 
 	LLVMInitializeNativeTarget();
+
+	module = LLVMModuleCreateWithName("JIT");
+	if (!module)
+		assert(0);
+
+	if (LLVMCreateJITCompilerForModule(&engine, module, 2, NULL) < 0)
+		assert(0);
+}
+
+void llvm_exit(void)
+{
+	LLVMDisposeExecutionEngine(engine);
+
+	LLVMDisposeModule(module);
 }
