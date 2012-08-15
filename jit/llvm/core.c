@@ -398,10 +398,6 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 	struct basic_block *bb;
 	LLVMBasicBlockRef bbr;
 
-	ctx->func = llvm_function(ctx);
-	if (!ctx->func)
-		return -1;
-
 	ctx->builder = LLVMCreateBuilder();
 
 	bbr = LLVMAppendBasicBlock(ctx->func, "L");
@@ -428,6 +424,10 @@ static int llvm_codegen(struct compilation_unit *cu)
 	struct llvm_context ctx = {
 		.cu = cu,
 	};
+
+	ctx.func = llvm_function(&ctx);
+	if (!ctx.func)
+		return -1;
 
 	if (llvm_bc2ir(&ctx) < 0)
 		assert(0);
