@@ -63,11 +63,20 @@ static LLVMModuleRef		module;
  */
 static LLVM_DEFINE_FUNCTION(vm_object_alloc);
 
+/*
+ * A helper function that looks like LLVM API for JVM reference types.
+ * We treat them as opaque pointers much like 'void *' in C.
+ */
+static inline LLVMTypeRef LLVMReferenceType(void)
+{
+	return LLVMPointerType(LLVMInt8Type(), 0);
+}
+
 static LLVMTypeRef llvm_type(enum vm_type vm_type)
 {
 	switch (vm_type) {
 	case J_VOID:		return LLVMVoidType();
-	case J_REFERENCE:	return LLVMPointerType(LLVMInt8Type(), 0);
+	case J_REFERENCE:	return LLVMReferenceType();
 	case J_BYTE:		return LLVMInt8Type();
 	case J_SHORT:		return LLVMInt16Type();
 	case J_INT:		return LLVMInt32Type();
@@ -443,11 +452,6 @@ int llvm_compile(struct compilation_unit *cu)
 
 out:
 	return err;
-}
-
-static inline LLVMTypeRef LLVMReferenceType(void)
-{
-	return LLVMPointerType(LLVMInt8Type(), 0);
 }
 
 static LLVMValueRef llvm_setup_func(const char *name, LLVMTypeRef return_type, unsigned args_count, ...)
