@@ -35,6 +35,7 @@
 #include <llvm-c/Core.h>
 
 #include <assert.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -54,6 +55,13 @@ struct llvm_context {
  */
 static LLVMExecutionEngineRef	engine;
 static LLVMModuleRef		module;
+
+#define LLVM_DEFINE_FUNCTION(name) LLVMValueRef	name ## _func
+
+/*
+ * VM internal functions that are called by LLVM generated code:
+ */
+static LLVM_DEFINE_FUNCTION(vm_object_alloc);
 
 static LLVMTypeRef llvm_type(enum vm_type vm_type)
 {
@@ -437,6 +445,36 @@ out:
 	return err;
 }
 
+static inline LLVMTypeRef LLVMReferenceType(void)
+{
+	return LLVMPointerType(LLVMInt8Type(), 0);
+}
+
+static LLVMValueRef llvm_setup_func(const char *name, LLVMTypeRef return_type, unsigned args_count, ...)
+{
+	LLVMTypeRef arg_types[args_count];
+	LLVMTypeRef func_type;
+	LLVMValueRef func;
+	unsigned idx;
+	va_list ap;
+
+	va_start(ap, args_count);
+
+	for (idx = 0; idx < args_count; idx++) {
+		arg_types[idx]	= va_arg(ap, LLVMTypeRef);
+	}
+
+	va_end(ap);
+
+	func_type	= LLVMFunctionType(return_type, arg_types, args_count, 0);
+
+	func		= LLVMAddFunction(module, name, func_type);
+
+	LLVMAddGlobalMapping(engine, vm_object_alloc_func, vm_object_alloc);
+
+	return func;
+}
+
 void llvm_init(void)
 {
 	LLVMLinkInJIT();
@@ -449,6 +487,8 @@ void llvm_init(void)
 
 	if (LLVMCreateJITCompilerForModule(&engine, module, 2, NULL) < 0)
 		assert(0);
+
+	vm_object_alloc_func = llvm_setup_func("vm_object_alloc", LLVMReferenceType(), 1, LLVMReferenceType());
 }
 
 void llvm_exit(void)
