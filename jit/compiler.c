@@ -17,6 +17,7 @@
 #include "jit/exception.h"
 #include "jit/perf-map.h"
 #include "jit/subroutine.h"
+#include "jit/llvm/core.h"
 
 #include "vm/class.h"
 #include "vm/method.h"
@@ -56,7 +57,7 @@ static bool uses_array_ops(struct compilation_unit *cu)
 	return cu->flags & CU_FLAG_ARRAY_OPC;
 }
 
-int compile(struct compilation_unit *cu)
+static int do_compile(struct compilation_unit *cu)
 {
 	bool ssa_enable;
 	int err;
@@ -188,4 +189,12 @@ int compile(struct compilation_unit *cu)
 		compile_error(cu, err);
 
 	return err;
+}
+
+int compile(struct compilation_unit *cu)
+{
+	if (opt_llvm_enable)
+		return llvm_compile(cu);
+
+	return do_compile(cu);
 }

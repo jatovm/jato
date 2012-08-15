@@ -37,13 +37,19 @@ EXTRA_WARNINGS += -Wold-style-definition
 EXTRA_WARNINGS += -Wstrict-prototypes
 EXTRA_WARNINGS += -Wdeclaration-after-statement
 
+LLVM_CFLAGS     := $(shell llvm-config --cflags | sed -e "s/-DNDEBUG//g")
+LLVM_LIBS       := $(shell llvm-config --libs)
+LLVM_LDFLAGS    := $(shell llvm-config --ldflags)
+
 # Compile flags
 CFLAGS		:= -I$(srcdir)/include -I../../include -I../../arch/$(ARCH)/include -Wall $(EXTRA_WARNINGS) -g -O3 -std=gnu99
+CFLAGS		+= $(LLVM_CFLAGS)
 
 # Linker flags
 LDFLAGS		:= -Wl,--wrap -Wl,pthread_create -Wl,--wrap -Wl,pthread_join \
              -Wl,--wrap -Wl,pthread_detach -Wl,--wrap -Wl,pthread_sigmask \
              -Wl,--wrap -Wl,sleep
+LDFLAGS		+= $(LLVM_CFLAGS)
 
 # Output to current directory by default
 O =
@@ -92,6 +98,8 @@ LIB_FILE := ../../libjvm.a
 
 LIBS := -L../../ -ljvm -lrt -lpthread -lm -ldl -lz -lzip -lbfd -lopcodes -liberty -L../../boehmgc -lboehmgc
 
+LIBS += $(LLVM_LIBS)
+
 CFLAGS += $(DEFINES)
 CFLAGS += $(CONFIG_OPTS)
 
@@ -129,7 +137,7 @@ endif
 
 $(PROGRAM): $(DEPS) $(LIB_FILE) $(OBJS)
 	$(E) "  LINK    " $@
-	$(Q) $(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $(PROGRAM)
+	$(Q) $(CXX) $(LDFLAGS) $(OBJS) $(LIBS) -o $(PROGRAM)
 
 check: $(PROGRAM)
 	$(E) "  CHECK"

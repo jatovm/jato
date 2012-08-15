@@ -53,6 +53,7 @@
 #include "runtime/stack-walker.h"
 #include "runtime/runtime.h"
 
+#include "jit/llvm/core.h"
 #include "jit/compiler.h"
 #include "jit/cu-mapping.h"
 #include "jit/gdb.h"
@@ -124,6 +125,11 @@ static bool use_system_classloader = true;
 bool opt_ssa_enable;
 
 static bool opt_interp_only;
+
+/*
+ * Enable LLVM backend:
+ */
+bool opt_llvm_enable;
 
 /*
  * Enable JIT workarounds for valgrind.
@@ -729,6 +735,11 @@ static void handle_int(void)
 	opt_interp_only  = true;
 }
 
+static void handle_llvm(void)
+{
+	opt_llvm_enable = true;
+}
+
 static void regex_compile(regex_t *regex, const char *arg)
 {
 	int err = regcomp(regex, arg, REG_EXTENDED | REG_NOSUB);
@@ -918,6 +929,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xssa",			handle_ssa),
 	DEFINE_OPTION("Xnoic",			handle_no_ic),
 	DEFINE_OPTION("Xint",			handle_int),
+	DEFINE_OPTION("Xllvm",			handle_llvm),
 
 	DEFINE_OPTION("Xdebug:stack",		handle_debug_stack),
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
@@ -1172,6 +1184,9 @@ main(int argc, char *argv[])
 	init_system_properties();
 
 	parse_options(argc, argv);
+
+	if (opt_llvm_enable)
+		llvm_init();
 
 	if (dump_maps)
 		print_proc_maps();

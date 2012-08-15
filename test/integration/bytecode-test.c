@@ -31,6 +31,7 @@
 
 bool running_on_valgrind;
 bool opt_ssa_enable;
+bool opt_llvm_enable = true;
 
 static jint do_jint_execute(uint8_t *code, unsigned long code_length)
 {
