@@ -329,7 +329,11 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_BASTORE:		assert(0); break;
 	case OPC_CASTORE:		assert(0); break;
 	case OPC_SASTORE:		assert(0); break;
-	case OPC_POP:			assert(0); break;
+	case OPC_POP: {
+		stack_pop(ctx->mimic_stack);
+
+		break;
+	}
 	case OPC_POP2:			assert(0); break;
 	case OPC_DUP: {
 		void *value;
