@@ -601,21 +601,172 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		break;
 	}
 	case OPC_IINC:			assert(0); break;
-	case OPC_I2L:			assert(0); break;
-	case OPC_I2F:			assert(0); break;
-	case OPC_I2D:			assert(0); break;
-	case OPC_L2I:			assert(0); break;
-	case OPC_L2F:			assert(0); break;
-	case OPC_L2D:			assert(0); break;
-	case OPC_F2I:			assert(0); break;
-	case OPC_F2L:			assert(0); break;
-	case OPC_F2D:			assert(0); break;
-	case OPC_D2I:			assert(0); break;
-	case OPC_D2L:			assert(0); break;
-	case OPC_D2F:			assert(0); break;
-	case OPC_I2B:			assert(0); break;
-	case OPC_I2C:			assert(0); break;
-	case OPC_I2S:			assert(0); break;
+	case OPC_I2L: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSExt(ctx->builder, value, LLVMInt64Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_I2F: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSIToFP(ctx->builder, value, LLVMFloatType(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_I2D: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSIToFP(ctx->builder, value, LLVMDoubleType(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_L2I: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildTrunc(ctx->builder, value, LLVMInt32Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_L2F: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSIToFP(ctx->builder, value, LLVMFloatType(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_L2D: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSIToFP(ctx->builder, value, LLVMDoubleType(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_F2I: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFPToSI(ctx->builder, value, LLVMInt32Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_F2L: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFPToSI(ctx->builder, value, LLVMInt64Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_F2D: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFPExt(ctx->builder, value, LLVMDoubleType(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_D2I: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFPToSI(ctx->builder, value, LLVMInt32Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_D2L: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFPToSI(ctx->builder, value, LLVMInt64Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_D2F: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFPTrunc(ctx->builder, value, LLVMFloatType(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+		break;
+	}
+	case OPC_I2B: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildTrunc(ctx->builder, value, LLVMInt8Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_I2C: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildTrunc(ctx->builder, value, LLVMInt16Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_I2S: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildTrunc(ctx->builder, value, LLVMInt16Type(), "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
 	case OPC_LCMP:			assert(0); break;
 	case OPC_FCMPL:			assert(0); break;
 	case OPC_FCMPG:			assert(0); break;
