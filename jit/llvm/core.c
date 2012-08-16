@@ -27,6 +27,7 @@
 #include "jit/llvm/core.h"
 
 #include "jit/subroutine.h"
+#include "lib/stack.h"
 #include "vm/method.h"
 #include "vm/class.h"
 
@@ -48,6 +49,7 @@ struct llvm_context {
 	struct compilation_unit		*cu;
 	LLVMValueRef			func;
 	LLVMBuilderRef			builder;
+	struct stack			*mimic_stack;
 };
 
 /*
@@ -153,12 +155,42 @@ static LLVMValueRef llvm_function(struct llvm_context *ctx)
 	return LLVMAddFunction(module, func_name, func_type);
 }
 
-static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *idx)
+static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
+{
+	uint8_t c = code[*pos];
+
+	*pos = *pos + 1;
+
+	return c;
+}
+
+static inline uint16_t read_u16(unsigned char *code, unsigned long *pos)
+{
+	uint16_t c;
+
+	c  = read_u8(code, pos) << 8;
+	c |= read_u8(code, pos);
+
+	return c;
+}
+
+#define BITS_PER_PTR (sizeof(unsigned long) * 8)
+
+static LLVMValueRef llvm_ptr_to_value(void *p)
+{
+	LLVMValueRef value;
+
+	value	= LLVMConstInt(LLVMIntType(BITS_PER_PTR), (unsigned long) p, 0);
+
+	return LLVMConstIntToPtr(value, LLVMReferenceType());
+}
+
+static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *pos)
 {
 	struct vm_method *vmm = ctx->cu->method;
 	unsigned char opc;
 
-	opc = code[*idx++];
+	opc = read_u8(code, pos);
 
 	switch (opc) {
 	case OPC_NOP:			assert(0); break;
@@ -353,7 +385,28 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_INVOKESPECIAL:		assert(0); break;
 	case OPC_INVOKESTATIC:		assert(0); break;
 	case OPC_INVOKEINTERFACE:	assert(0); break;
-	case OPC_NEW:			assert(0); break;
+	case OPC_NEW: {
+		struct vm_class *vmc;
+		LLVMValueRef args[1];
+		LLVMValueRef call;
+		uint16_t idx;
+
+		idx = read_u16(code, pos);
+
+		vmc = vm_class_resolve_class(vmm->class, idx);
+
+		assert(vmc != NULL);
+
+		args[0] = llvm_ptr_to_value(vmc);
+
+		call = LLVMBuildCall(ctx->builder, vm_object_alloc_func, args, 1, "");
+
+		/* XXX: Exception check */
+
+		stack_push(ctx->mimic_stack, call);
+
+		break;
+	}
 	case OPC_NEWARRAY:		assert(0); break;
 	case OPC_ANEWARRAY:		assert(0); break;
 	case OPC_ARRAYLENGTH:		assert(0); break;
@@ -380,14 +433,14 @@ static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
 {
 	struct vm_method *vmm = ctx->cu->method;
 	unsigned char *code;
-	unsigned long idx;
+	unsigned long pos;
 
 	code = vmm->code_attribute.code;
 
-	idx = bb->start;
+	pos = bb->start;
 
-	while (idx < bb->end)
-		llvm_bc2ir_insn(ctx, code, &idx);
+	while (pos < bb->end)
+		llvm_bc2ir_insn(ctx, code, &pos);
 
 	return 0;
 }
@@ -429,10 +482,16 @@ static int llvm_codegen(struct compilation_unit *cu)
 	if (!ctx.func)
 		return -1;
 
+	ctx.mimic_stack = alloc_stack();
+
 	if (llvm_bc2ir(&ctx) < 0)
 		assert(0);
 
 	cu->entry_point = LLVMRecompileAndRelinkFunction(engine, ctx.func);
+
+	assert(stack_is_empty(ctx.mimic_stack));
+
+	free_stack(ctx.mimic_stack);
 
 	return 0;
 }
