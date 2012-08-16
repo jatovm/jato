@@ -826,9 +826,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_INVOKESTATIC:		assert(0); break;
 	case OPC_INVOKEINTERFACE:	assert(0); break;
 	case OPC_NEW: {
+		LLVMValueRef objectref;
 		struct vm_class *vmc;
 		LLVMValueRef args[1];
-		LLVMValueRef call;
 		uint16_t idx;
 
 		idx = read_u16(code, pos);
@@ -839,11 +839,11 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		args[0] = llvm_ptr_to_value(vmc);
 
-		call = LLVMBuildCall(ctx->builder, vm_object_alloc_func, args, 1, "");
+		objectref = LLVMBuildCall(ctx->builder, vm_object_alloc_func, args, 1, "");
 
 		/* XXX: Exception check */
 
-		stack_push(ctx->mimic_stack, call);
+		stack_push(ctx->mimic_stack, objectref);
 
 		break;
 	}
