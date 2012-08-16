@@ -258,8 +258,30 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		break;
 	}
-	case OPC_BIPUSH:		assert(0); break;
-	case OPC_SIPUSH:		assert(0); break;
+	case OPC_BIPUSH: {
+		LLVMValueRef value;
+		uint8_t i;
+
+		i	= read_u8(code, pos);
+
+		value	= LLVMConstInt(LLVMInt32Type(), i, 0);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_SIPUSH: {
+		LLVMValueRef value;
+		uint16_t i;
+
+		i	= read_u8(code, pos);
+
+		value	= LLVMConstInt(LLVMInt32Type(), i, 0);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_LDC:			assert(0); break;
 	case OPC_LDC_W:			assert(0); break;
 	case OPC_LDC2_W:		assert(0); break;
