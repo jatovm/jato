@@ -352,42 +352,254 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DUP2_X1:		assert(0); break;
 	case OPC_DUP2_X2:		assert(0); break;
 	case OPC_SWAP:			assert(0); break;
-	case OPC_IADD:			assert(0); break;
-	case OPC_LADD:			assert(0); break;
-	case OPC_FADD:			assert(0); break;
-	case OPC_DADD:			assert(0); break;
-	case OPC_ISUB:			assert(0); break;
-	case OPC_LSUB:			assert(0); break;
-	case OPC_FSUB:			assert(0); break;
-	case OPC_DSUB:			assert(0); break;
-	case OPC_IMUL:			assert(0); break;
-	case OPC_LMUL:			assert(0); break;
-	case OPC_FMUL:			assert(0); break;
-	case OPC_DMUL:			assert(0); break;
-	case OPC_IDIV:			assert(0); break;
-	case OPC_LDIV:			assert(0); break;
-	case OPC_FDIV:			assert(0); break;
-	case OPC_DDIV:			assert(0); break;
-	case OPC_IREM:			assert(0); break;
-	case OPC_LREM:			assert(0); break;
-	case OPC_FREM:			assert(0); break;
-	case OPC_DREM:			assert(0); break;
-	case OPC_INEG:			assert(0); break;
-	case OPC_LNEG:			assert(0); break;
-	case OPC_FNEG:			assert(0); break;
-	case OPC_DNEG:			assert(0); break;
-	case OPC_ISHL:			assert(0); break;
-	case OPC_LSHL:			assert(0); break;
-	case OPC_ISHR:			assert(0); break;
-	case OPC_LSHR:			assert(0); break;
-	case OPC_IUSHR:			assert(0); break;
-	case OPC_LUSHR:			assert(0); break;
-	case OPC_IAND:			assert(0); break;
-	case OPC_LAND:			assert(0); break;
-	case OPC_IOR:			assert(0); break;
-	case OPC_LOR:			assert(0); break;
-	case OPC_IXOR:			assert(0); break;
-	case OPC_LXOR:			assert(0); break;
+	case OPC_IADD:
+	case OPC_LADD: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildAdd(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_FADD:
+	case OPC_DADD: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFAdd(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_ISUB:
+	case OPC_LSUB: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSub(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_FSUB:
+	case OPC_DSUB: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFSub(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_IMUL:
+	case OPC_LMUL: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildMul(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_FMUL:
+	case OPC_DMUL: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFMul(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_IDIV:
+	case OPC_LDIV: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSDiv(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_FDIV:
+	case OPC_DDIV: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFDiv(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_IREM:
+	case OPC_LREM: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildSRem(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_FREM:
+	case OPC_DREM: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFRem(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_INEG:
+	case OPC_LNEG: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildNeg(ctx->builder, value, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_FNEG:
+	case OPC_DNEG: {
+		LLVMValueRef value, result;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildFNeg(ctx->builder, value, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_ISHL:
+	case OPC_LSHL: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildShl(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_ISHR:
+	case OPC_LSHR: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildLShr(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_IUSHR:
+	case OPC_LUSHR: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildAShr(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_IAND:
+	case OPC_LAND: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildAnd(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_IOR:
+	case OPC_LOR: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildOr(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_IXOR:
+	case OPC_LXOR: {
+		LLVMValueRef value1, value2, result;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildXor(ctx->builder, value1, value2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
 	case OPC_IINC:			assert(0); break;
 	case OPC_I2L:			assert(0); break;
 	case OPC_I2F:			assert(0); break;
