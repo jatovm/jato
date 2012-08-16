@@ -457,7 +457,7 @@ out:
 	return err;
 }
 
-static LLVMValueRef llvm_setup_func(const char *name, LLVMTypeRef return_type, unsigned args_count, ...)
+static LLVMValueRef llvm_setup_func(const char *name, void *func_p, LLVMTypeRef return_type, unsigned args_count, ...)
 {
 	LLVMTypeRef arg_types[args_count];
 	LLVMTypeRef func_type;
@@ -477,7 +477,7 @@ static LLVMValueRef llvm_setup_func(const char *name, LLVMTypeRef return_type, u
 
 	func		= LLVMAddFunction(module, name, func_type);
 
-	LLVMAddGlobalMapping(engine, vm_object_alloc_func, vm_object_alloc);
+	LLVMAddGlobalMapping(engine, func, func_p);
 
 	return func;
 }
@@ -495,7 +495,10 @@ void llvm_init(void)
 	if (LLVMCreateJITCompilerForModule(&engine, module, 2, NULL) < 0)
 		assert(0);
 
-	vm_object_alloc_func = llvm_setup_func("vm_object_alloc", LLVMReferenceType(), 1, LLVMReferenceType());
+	vm_object_alloc_func = llvm_setup_func(
+		"vm_object_alloc",
+		vm_object_alloc,
+		LLVMReferenceType(), 1, LLVMReferenceType());
 }
 
 void llvm_exit(void)
