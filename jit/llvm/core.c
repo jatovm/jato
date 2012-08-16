@@ -196,21 +196,61 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_NOP: {
 		break;
 	}
-	case OPC_ACONST_NULL:		assert(0); break;
-	case OPC_ICONST_M1:		assert(0); break;
-	case OPC_ICONST_0:		assert(0); break;
-	case OPC_ICONST_1:		assert(0); break;
-	case OPC_ICONST_2:		assert(0); break;
-	case OPC_ICONST_3:		assert(0); break;
-	case OPC_ICONST_4:		assert(0); break;
-	case OPC_ICONST_5:		assert(0); break;
-	case OPC_LCONST_0:		assert(0); break;
-	case OPC_LCONST_1:		assert(0); break;
-	case OPC_FCONST_0:		assert(0); break;
-	case OPC_FCONST_1:		assert(0); break;
-	case OPC_FCONST_2:		assert(0); break;
-	case OPC_DCONST_0:		assert(0); break;
-	case OPC_DCONST_1:		assert(0); break;
+	case OPC_ACONST_NULL: {
+		LLVMValueRef value;
+
+		value = LLVMConstNull(LLVMReferenceType());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_ICONST_M1:
+	case OPC_ICONST_0:
+	case OPC_ICONST_1:
+	case OPC_ICONST_2:
+	case OPC_ICONST_3:
+	case OPC_ICONST_4:
+	case OPC_ICONST_5: {
+		LLVMValueRef value;
+
+		value = LLVMConstInt(LLVMInt32Type(), opc - OPC_ICONST_0, 0);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_LCONST_0:
+	case OPC_LCONST_1: {
+		LLVMValueRef value;
+
+		value = LLVMConstInt(LLVMInt64Type(), opc - OPC_LCONST_0, 0);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_FCONST_0:
+	case OPC_FCONST_1:
+	case OPC_FCONST_2: {
+		LLVMValueRef value;
+
+		value = LLVMConstReal(LLVMFloatType(), opc - OPC_FCONST_0);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_DCONST_0:
+	case OPC_DCONST_1: {
+		LLVMValueRef value;
+
+		value = LLVMConstReal(LLVMDoubleType(), opc - OPC_DCONST_0);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_BIPUSH:		assert(0); break;
 	case OPC_SIPUSH:		assert(0); break;
 	case OPC_LDC:			assert(0); break;
