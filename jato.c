@@ -139,7 +139,9 @@ bool running_on_valgrind;
 static void vm_atexit(void)
 {
 	classloader_destroy();
-	llvm_exit();
+
+	if (opt_llvm_enable)
+		llvm_exit();
 }
 
 static void __attribute__((noreturn)) vm_exit(int status)
