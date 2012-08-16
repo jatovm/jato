@@ -428,16 +428,30 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_RET:			assert(0); break;
 	case OPC_TABLESWITCH:		assert(0); break;
 	case OPC_LOOKUPSWITCH:		assert(0); break;
-	case OPC_IRETURN:		assert(0); break;
-	case OPC_LRETURN:		assert(0); break;
-	case OPC_FRETURN:		assert(0); break;
-	case OPC_DRETURN:		assert(0); break;
-	case OPC_ARETURN:		assert(0); break;
+	case OPC_IRETURN:
+	case OPC_LRETURN:
+	case OPC_FRETURN:
+	case OPC_DRETURN:
+	case OPC_ARETURN: {
+		LLVMValueRef value;
+
+		/* XXX: Update monitor state properly before exiting. */
+		assert(!method_is_synchronized(vmm));
+
+		value = stack_pop(ctx->mimic_stack);
+
+		LLVMBuildRet(ctx->builder, value);
+
+		stack_clear(ctx->mimic_stack);
+		break;
+	}
 	case OPC_RETURN: {
 		/* XXX: Update monitor state properly before exiting. */
 		assert(!method_is_synchronized(vmm));
 
 		LLVMBuildRetVoid(ctx->builder);
+
+		stack_clear(ctx->mimic_stack);
 		break;
 	}
 	case OPC_GETSTATIC:		assert(0); break;

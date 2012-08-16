@@ -41,6 +41,11 @@ static inline void stack_push(struct stack *stack, void *entry)
 	stack->elements[stack->nr_elements++] = entry;
 }
 
+static inline void stack_clear(struct stack *stack)
+{
+	stack->nr_elements = 0;
+}
+
 static inline bool stack_is_empty(struct stack *stack)
 {
 	return !stack->nr_elements;
