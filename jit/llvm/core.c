@@ -47,8 +47,15 @@
  */
 struct llvm_context {
 	struct compilation_unit		*cu;
+
 	LLVMValueRef			func;
+
 	LLVMBuilderRef			builder;
+
+	/*
+	 * A stack that 'mimics' the run-time operand stack during JIT
+	 * compilation.
+	 */
 	struct stack			*mimic_stack;
 };
 
