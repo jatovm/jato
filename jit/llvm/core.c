@@ -193,7 +193,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	opc = read_u8(code, pos);
 
 	switch (opc) {
-	case OPC_NOP:			assert(0); break;
+	case OPC_NOP: {
+		break;
+	}
 	case OPC_ACONST_NULL:		assert(0); break;
 	case OPC_ICONST_M1:		assert(0); break;
 	case OPC_ICONST_0:		assert(0); break;
