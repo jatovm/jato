@@ -70,6 +70,8 @@ struct vm_method {
 #define VM_METHOD_FLAG_TRACE		(1 << 2)
 #define VM_METHOD_FLAG_TRACE_GATE	(1 << 3)
 
+unsigned int vm_method_arg_stack_count(struct vm_method *vmm);
+
 struct vm_method *vm_method_get_overridden(struct vm_method *vmm);
 
 int vm_method_do_init(struct vm_method *vmm);

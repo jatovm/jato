@@ -24,6 +24,22 @@
 #include <string.h>
 #include <stdio.h>
 
+/*
+ * Returns the number of arguments on operand stack (and consequently,
+ * on the mimic stack) for a method.
+ */
+unsigned int vm_method_arg_stack_count(struct vm_method *vmm)
+{
+	int argc;
+
+	argc = vm_method_arg_slots(vmm);
+
+	if (!vm_method_is_static(vmm))
+		argc++;
+
+	return argc;
+}
+
 /* Returns the method vmm is overriding or NULL. */
 struct vm_method *vm_method_get_overridden(struct vm_method *vmm)
 {

@@ -53,17 +53,6 @@ int convert_return(struct parse_context *ctx)
 	return 0;
 }
 
-static unsigned int method_real_argument_count(struct vm_method *invoke_target)
-{
-	int argc;
-
-	argc = vm_method_arg_slots(invoke_target);
-	if (!vm_method_is_static(invoke_target))
-		argc++;
-
-	return argc;
-}
-
 static int convert_and_add_args(struct parse_context *ctx,
 				struct vm_method *invoke_target,
 				struct statement *stmt)
@@ -72,7 +61,7 @@ static int convert_and_add_args(struct parse_context *ctx,
 	struct expression *args_list;
 	unsigned long nr_args, i;
 
-	nr_args = method_real_argument_count(invoke_target);
+	nr_args = vm_method_arg_stack_count(invoke_target);
 
 	args_array = pop_args(ctx->bb->mimic_stack, nr_args);
 	if (!args_array)
