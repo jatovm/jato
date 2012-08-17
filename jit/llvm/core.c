@@ -112,9 +112,7 @@ static LLVMTypeRef llvm_function_type(struct llvm_context *ctx)
 	LLVMTypeRef return_type;
 	LLVMTypeRef func_type;
 
-	list_for_each_entry(arg, &vmm->args, list_node) {
-		args_count++;
-	}
+	args_count = vm_method_arg_stack_count(vmm);
 
 	if (!args_count)
 		goto skip_args;
@@ -126,6 +124,8 @@ static LLVMTypeRef llvm_function_type(struct llvm_context *ctx)
 	list_for_each_entry(arg, &vmm->args, list_node) {
 		arg_types[ndx++] = llvm_type(arg->type_info.vm_type);
 	}
+
+	assert(args_count == ndx);
 
 skip_args:
 
