@@ -103,14 +103,15 @@ static LLVMTypeRef llvm_type(enum vm_type vm_type)
 	return NULL;
 }
 
-static LLVMTypeRef llvm_function_type(struct llvm_context *ctx)
+static LLVMTypeRef llvm_function_type(struct vm_method *vmm)
 {
-	struct vm_method *vmm = ctx->cu->method;
 	unsigned long ndx = 0, args_count = 0;
 	LLVMTypeRef *arg_types = NULL;
 	struct vm_method_arg *arg;
 	LLVMTypeRef return_type;
 	LLVMTypeRef func_type;
+
+	assert(!vm_method_is_jni(vmm));
 
 	args_count = vm_method_arg_stack_count(vmm);
 
@@ -120,6 +121,9 @@ static LLVMTypeRef llvm_function_type(struct llvm_context *ctx)
 	arg_types = calloc(1, args_count);
 	if (!arg_types)
 		return NULL;
+
+	if (!vm_method_is_static(vmm))
+		arg_types[ndx++] = LLVMReferenceType();
 
 	list_for_each_entry(arg, &vmm->args, list_node) {
 		arg_types[ndx++] = llvm_type(arg->type_info.vm_type);
@@ -138,9 +142,8 @@ skip_args:
 	return func_type;
 }
 
-static void llvm_function_name(struct llvm_context *ctx, char *name, size_t len)
+static void llvm_function_name(struct vm_method *vmm, char *name, size_t len)
 {
-	struct vm_method *vmm = ctx->cu->method;
 	char *p;
 
 	snprintf(name, len, "%s.%s%s", vmm->class->name, vmm->name, vmm->type);
@@ -152,14 +155,55 @@ static void llvm_function_name(struct llvm_context *ctx, char *name, size_t len)
 
 static LLVMValueRef llvm_function(struct llvm_context *ctx)
 {
+	struct vm_method *vmm = ctx->cu->method;
 	LLVMTypeRef func_type;
 	char func_name[1024];
 
-	llvm_function_name(ctx, func_name, sizeof(func_name));
+	llvm_function_name(vmm, func_name, sizeof(func_name));
 
-	func_type = llvm_function_type(ctx);
+	func_type = llvm_function_type(vmm);
 
 	return LLVMAddFunction(module, func_name, func_type);
+}
+
+static LLVMValueRef *
+llvm_convert_args(struct llvm_context *ctx, struct vm_method *vmm, unsigned long nr_args)
+{
+	LLVMValueRef *args;
+	unsigned long i;
+
+	assert(!vm_method_is_jni(vmm));
+
+	args = calloc(nr_args, sizeof(LLVMValueRef *));
+	if (!args)
+		return NULL;
+
+	for (i = 0; i < nr_args; i++) {
+		args[i++] = stack_pop(ctx->mimic_stack);
+	}
+
+	return args;
+}
+
+static LLVMValueRef llvm_trampoline(struct vm_method *vmm)
+{
+	LLVMTypeRef func_type;
+	char func_name[1024];
+	LLVMValueRef func;
+
+	llvm_function_name(vmm, func_name, sizeof(func_name));
+
+	func = LLVMGetNamedFunction(module, func_name);
+	if (func)
+		return func;
+
+	func_type	= llvm_function_type(vmm);
+
+	func		= LLVMAddFunction(module, func_name, func_type);
+
+	LLVMAddGlobalMapping(engine, func, vm_method_trampoline_ptr(vmm));
+
+	return func;
 }
 
 static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
@@ -844,7 +888,36 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_GETFIELD:		assert(0); break;
 	case OPC_PUTFIELD:		assert(0); break;
 	case OPC_INVOKEVIRTUAL:		assert(0); break;
-	case OPC_INVOKESPECIAL:		assert(0); break;
+	case OPC_INVOKESPECIAL: {
+		struct vm_method *target;
+		unsigned long nr_args;
+		LLVMValueRef value;
+		LLVMValueRef *args;
+		LLVMValueRef func;
+		uint16_t idx;
+
+		idx	= read_u16(code, pos);
+
+		target	= vm_class_resolve_method_recursive(vmm->class, idx, CAFEBABE_CLASS_ACC_STATIC);
+
+		assert(!method_is_synchronized(target));
+
+		nr_args	= vm_method_arg_stack_count(target);
+
+		args	= llvm_convert_args(ctx, target, nr_args);
+
+		func	= llvm_trampoline(target);
+
+		value	= LLVMBuildCall(ctx->builder, func, args, nr_args, "");
+
+		free(args);
+
+		/* XXX: Exception check */
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_INVOKESTATIC:		assert(0); break;
 	case OPC_INVOKEINTERFACE:	assert(0); break;
 	case OPC_NEW: {
