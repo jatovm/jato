@@ -13,40 +13,28 @@ TOPLEVEL_OBJS := \
 	cafebabe/source_file_attribute.o \
 	cafebabe/stream.o \
 	jit/args.o \
-	jit/arithmetic-bc.o \
 	jit/basic-block.o \
 	jit/bc-offset-mapping.o \
-	jit/branch-bc.o \
-	jit/bytecode-to-ir.o \
 	jit/cfg-analyzer.o \
 	jit/compilation-unit.o \
 	jit/constant-pool.o \
 	jit/cu-mapping.o \
 	jit/dominance.o \
-	jit/exception-bc.o \
 	jit/exception.o \
 	jit/expression.o \
 	jit/fixup-site.o \
 	jit/interval.o \
-	jit/invoke-bc.o \
 	jit/linear-scan.o \
 	jit/liveness.o \
-	jit/load-store-bc.o \
 	jit/method.o \
-	jit/nop-bc.o \
-	jit/object-bc.o \
-	jit/ostack-bc.o \
 	jit/spill-reload.o \
 	jit/stack-slot.o \
 	jit/statement.o \
-	jit/switch-bc.o \
 	jit/text.o \
 	jit/tree-node.o \
 	jit/tree-printer.o \
-	jit/typeconv-bc.o \
 	jit/subroutine.o \
 	jit/pc-map.o \
-	jit/wide-bc.o \
 	jit/constant_pool.o \
 	lib/arena.o \
 	lib/bitset.o \
@@ -85,11 +73,8 @@ TOPLEVEL_OBJS := \
 
 TEST_OBJS := \
 	args-test-utils.o \
-	arithmetic-bc-test.o \
 	basic-block-test.o \
 	bc-test-utils.o \
-	branch-bc-test.o \
-	bytecode-to-ir-test.o \
 	cfg-analyzer-test.o \
 	compilation-unit-test.o \
 	dominance-test.o \
@@ -97,14 +82,9 @@ TEST_OBJS := \
 	linear-scan-test.o \
 	live-range-test.o \
 	liveness-test.o \
-	load-store-bc-test.o \
-	object-bc-test.o \
-	ostack-bc-test.o \
 	spill-reload-test.o \
 	stack-slot-test.o \
-	switch-bc-test.o \
-	tree-printer-test.o \
-	typeconv-bc-test.o
+	tree-printer-test.o
 
 include ../../../scripts/build/test.mk
 
