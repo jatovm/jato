@@ -66,6 +66,20 @@ dup_expr(struct parse_context *ctx, struct expression *expr)
 	return dest;
 }
 
+/**
+ * Returns a pure expression for given expression. If @expr is not
+ * pure we need to save it's value to a temporary and return the
+ * temporary.
+ */
+struct expression *
+get_pure_expr(struct parse_context *ctx, struct expression *expr)
+{
+	if (expr_is_pure(expr))
+		return expr;
+
+	return dup_expr(ctx, expr);
+}
+
 static int __convert_dup(struct parse_context *ctx, struct expression *value)
 {
 	struct expression *dup;

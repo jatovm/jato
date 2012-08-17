@@ -19,20 +19,6 @@
 #include <string.h>
 #include <glib.h>
 
-/**
- * Returns a pure expression for given expression. If @expr is not
- * pure we need to save it's value to a temporary and return the
- * temporary.
- */
-struct expression *
-get_pure_expr(struct parse_context *ctx, struct expression *expr)
-{
-	if (expr_is_pure(expr))
-		return expr;
-
-	return dup_expr(ctx, expr);
-}
-
 /* How many child expressions are used by each type of expression. */
 int expr_nr_kids(struct expression *expr)
 {
