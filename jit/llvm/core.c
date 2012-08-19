@@ -974,6 +974,8 @@ int llvm_compile(struct compilation_unit *cu)
 	if (err)
 		goto out;
 
+	LLVMVerifyModule(module, LLVMPrintMessageAction, NULL);
+
 out:
 	return err;
 }
