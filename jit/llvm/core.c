@@ -970,12 +970,17 @@ static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
 	unsigned char *code;
 	unsigned long pos;
 
+	if (bb->is_converted)
+		return 0;
+
 	code = vmm->code_attribute.code;
 
 	pos = bb->start;
 
 	while (pos < bb->end)
 		llvm_bc2ir_insn(ctx, code, &pos);
+
+	bb->is_converted = true;
 
 	return 0;
 }
@@ -995,6 +1000,8 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 	llvm_bc2ir_bb(ctx, cu->entry_bb);
 
 	for_each_basic_block(bb, &cu->bb_list) {
+		assert(!bb->is_eh);
+
 #if 0
 		bbr = LLVMAppendBasicBlock(ctx->func, "L");
 
