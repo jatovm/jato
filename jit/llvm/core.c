@@ -53,6 +53,11 @@ struct llvm_context {
 	LLVMBuilderRef			builder;
 
 	/*
+	 * Method local variables:
+	 */
+	LLVMValueRef			*locals;
+
+	/*
 	 * A stack that 'mimics' the run-time operand stack during JIT
 	 * compilation.
 	 */
@@ -109,6 +114,20 @@ static LLVMTypeRef llvm_type(enum vm_type vm_type)
 	assert(0);
 
 	return NULL;
+}
+
+static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long idx, LLVMTypeRef type)
+{
+	LLVMValueRef local;
+
+	local = ctx->locals[idx];
+
+	if (local)
+		return local;
+
+	local = LLVMBuildAlloca(ctx->builder, type, "");
+
+	return ctx->locals[idx] = local;
 }
 
 static LLVMTypeRef llvm_function_type(struct vm_method *vmm)
@@ -358,10 +377,26 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DLOAD_1:		assert(0); break;
 	case OPC_DLOAD_2:		assert(0); break;
 	case OPC_DLOAD_3:		assert(0); break;
-	case OPC_ALOAD_0:		assert(0); break;
-	case OPC_ALOAD_1:		assert(0); break;
-	case OPC_ALOAD_2:		assert(0); break;
-	case OPC_ALOAD_3:		assert(0); break;
+	case OPC_ALOAD_0:
+	case OPC_ALOAD_1:
+	case OPC_ALOAD_2:
+	case OPC_ALOAD_3: {
+		LLVMValueRef value;
+		uint16_t idx;
+
+		idx = opc - OPC_ALOAD_0;
+
+		if (idx < vmm->args_count)
+			value = LLVMGetParam(ctx->func, idx);
+		else
+			value = llvm_lookup_local(ctx, idx, LLVMReferenceType());
+
+		assert(LLVMTypeOf(value) == LLVMReferenceType());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_IALOAD:		assert(0); break;
 	case OPC_LALOAD:		assert(0); break;
 	case OPC_FALOAD:		assert(0); break;
@@ -1053,9 +1088,14 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 static int llvm_codegen(struct compilation_unit *cu)
 {
+	struct vm_method *vmm = cu->method;
 	struct llvm_context ctx = {
 		.cu = cu,
 	};
+
+	ctx.locals = calloc(vmm->code_attribute.max_locals, sizeof(LLVMValueRef));
+	if (!ctx.locals)
+		return -1;
 
 	ctx.func = llvm_function(&ctx);
 	if (!ctx.func)
@@ -1074,6 +1114,8 @@ static int llvm_codegen(struct compilation_unit *cu)
 	assert(stack_is_empty(ctx.mimic_stack));
 
 	free_stack(ctx.mimic_stack);
+
+	free(ctx.locals);
 
 	return 0;
 }
