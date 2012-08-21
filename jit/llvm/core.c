@@ -77,6 +77,25 @@ static LLVMModuleRef		module;
  */
 static LLVM_DEFINE_FUNCTION(vm_object_alloc);
 
+static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
+{
+	uint8_t c = code[*pos];
+
+	*pos = *pos + 1;
+
+	return c;
+}
+
+static inline uint16_t read_u16(unsigned char *code, unsigned long *pos)
+{
+	uint16_t c;
+
+	c  = read_u8(code, pos) << 8;
+	c |= read_u8(code, pos);
+
+	return c;
+}
+
 /*
  * A helper function that looks like LLVM API for JVM reference types.
  * We treat them as opaque pointers much like 'void *' in C.
@@ -114,6 +133,17 @@ static LLVMTypeRef llvm_type(enum vm_type vm_type)
 	assert(0);
 
 	return NULL;
+}
+
+#define BITS_PER_PTR (sizeof(unsigned long) * 8)
+
+static LLVMValueRef llvm_ptr_to_value(void *p, LLVMTypeRef type)
+{
+	LLVMValueRef value;
+
+	value	= LLVMConstInt(LLVMIntType(BITS_PER_PTR), (unsigned long) p, 0);
+
+	return LLVMConstIntToPtr(value, type);
 }
 
 static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long idx, LLVMTypeRef type)
@@ -231,36 +261,6 @@ static LLVMValueRef llvm_trampoline(struct vm_method *vmm)
 	LLVMAddGlobalMapping(engine, func, vm_method_trampoline_ptr(vmm));
 
 	return func;
-}
-
-static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
-{
-	uint8_t c = code[*pos];
-
-	*pos = *pos + 1;
-
-	return c;
-}
-
-static inline uint16_t read_u16(unsigned char *code, unsigned long *pos)
-{
-	uint16_t c;
-
-	c  = read_u8(code, pos) << 8;
-	c |= read_u8(code, pos);
-
-	return c;
-}
-
-#define BITS_PER_PTR (sizeof(unsigned long) * 8)
-
-static LLVMValueRef llvm_ptr_to_value(void *p, LLVMTypeRef type)
-{
-	LLVMValueRef value;
-
-	value	= LLVMConstInt(LLVMIntType(BITS_PER_PTR), (unsigned long) p, 0);
-
-	return LLVMConstIntToPtr(value, type);
 }
 
 static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *pos)
