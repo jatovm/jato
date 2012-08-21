@@ -345,7 +345,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		LLVMValueRef value;
 		uint16_t i;
 
-		i	= read_u8(code, pos);
+		i	= read_u16(code, pos);
 
 		value	= LLVMConstInt(LLVMInt32Type(), i, 0);
 
