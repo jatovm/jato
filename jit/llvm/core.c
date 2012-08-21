@@ -914,7 +914,8 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		/* XXX: Exception check */
 
-		stack_push(ctx->mimic_stack, value);
+		if (vmm->return_type.vm_type != J_VOID)
+			stack_push(ctx->mimic_stack, value);
 
 		break;
 	}
