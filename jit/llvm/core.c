@@ -148,7 +148,11 @@ static LLVMValueRef llvm_ptr_to_value(void *p, LLVMTypeRef type)
 
 static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long idx, LLVMTypeRef type)
 {
+	struct vm_method *vmm = ctx->cu->method;
 	LLVMValueRef local;
+
+	if (idx < (unsigned long) vmm->args_count)
+		return LLVMGetParam(ctx->func, idx);
 
 	local = ctx->locals[idx];
 
@@ -386,10 +390,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		idx = opc - OPC_ALOAD_0;
 
-		if (idx < vmm->args_count)
-			value = LLVMGetParam(ctx->func, idx);
-		else
-			value = llvm_lookup_local(ctx, idx, LLVMReferenceType());
+		value = llvm_lookup_local(ctx, idx, LLVMReferenceType());
 
 		assert(LLVMTypeOf(value) == LLVMReferenceType());
 
