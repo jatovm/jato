@@ -1066,6 +1066,9 @@ static int llvm_codegen(struct compilation_unit *cu)
 	if (llvm_bc2ir(&ctx) < 0)
 		assert(0);
 
+	if (opt_llvm_verbose)
+		LLVMDumpValue(ctx.func);
+
 	cu->entry_point = LLVMRecompileAndRelinkFunction(engine, ctx.func);
 
 	assert(stack_is_empty(ctx.mimic_stack));
@@ -1077,7 +1080,12 @@ static int llvm_codegen(struct compilation_unit *cu)
 
 int llvm_compile(struct compilation_unit *cu)
 {
+	struct vm_method *vmm = cu->method;
+	struct vm_class *vmc = vmm->class;
 	int err;
+
+	if (opt_llvm_verbose)
+		fprintf(stderr, "Compiling %s.%s%s...\n", vmc->name, vmm->name, vmm->type);
 
 	err = inline_subroutines(cu->method);
 	if (err)

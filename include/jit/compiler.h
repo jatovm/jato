@@ -138,6 +138,7 @@ extern bool opt_ssa_enable;
 extern bool running_on_valgrind;
 
 extern bool opt_llvm_enable;
+extern bool opt_llvm_verbose;
 
 bool method_matches_regex(struct vm_method *vmm);
 bool method_matches_gate_regex(struct vm_method *vmm);
