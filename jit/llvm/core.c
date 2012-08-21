@@ -81,6 +81,14 @@ static inline LLVMTypeRef LLVMReferenceType(void)
 	return LLVMPointerType(LLVMInt8Type(), 0);
 }
 
+/*
+ * A pointer to JVM reference. Used for class and instance field access.
+ */
+static inline LLVMTypeRef LLVMPointerToReference(void)
+{
+	return LLVMPointerType(LLVMReferenceType(), 0);
+}
+
 static LLVMTypeRef llvm_type(enum vm_type vm_type)
 {
 	switch (vm_type) {
@@ -227,13 +235,13 @@ static inline uint16_t read_u16(unsigned char *code, unsigned long *pos)
 
 #define BITS_PER_PTR (sizeof(unsigned long) * 8)
 
-static LLVMValueRef llvm_ptr_to_value(void *p)
+static LLVMValueRef llvm_ptr_to_value(void *p, LLVMTypeRef type)
 {
 	LLVMValueRef value;
 
 	value	= LLVMConstInt(LLVMIntType(BITS_PER_PTR), (unsigned long) p, 0);
 
-	return LLVMConstIntToPtr(value, LLVMReferenceType());
+	return LLVMConstIntToPtr(value, type);
 }
 
 static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *pos)
@@ -884,7 +892,35 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		break;
 	}
 	case OPC_GETSTATIC:		assert(0); break;
-	case OPC_PUTSTATIC:		assert(0); break;
+	case OPC_PUTSTATIC: {
+		struct vm_class *vmc = vmm->class;
+		LLVMValueRef target_in;
+		struct vm_field *vmf;
+		LLVMValueRef value;
+		LLVMValueRef addr;
+		uint16_t idx;
+
+		idx	= read_u16(code, pos);
+
+		vmf	= vm_class_resolve_field_recursive(vmm->class, idx);
+
+		vm_object_lock(vmc->object);
+
+		/* XXX: Use guard page if necessary */
+		assert(vmc->state >= VM_CLASS_INITIALIZING);
+
+		vm_object_unlock(vmc->object);
+
+		target_in = stack_pop(ctx->mimic_stack);
+
+		addr	= llvm_ptr_to_value(vmc->static_values + vmf->offset, LLVMPointerToReference());
+
+		value	= LLVMBuildStore(ctx->builder, target_in, addr);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_GETFIELD:		assert(0); break;
 	case OPC_PUTFIELD:		assert(0); break;
 	case OPC_INVOKEVIRTUAL:		assert(0); break;
@@ -933,7 +969,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		assert(vmc != NULL);
 
-		args[0] = llvm_ptr_to_value(vmc);
+		args[0] = llvm_ptr_to_value(vmc, LLVMReferenceType());
 
 		objectref = LLVMBuildCall(ctx->builder, vm_object_alloc_func, args, 1, "");
 
