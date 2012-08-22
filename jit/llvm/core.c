@@ -27,6 +27,7 @@
 #include "jit/llvm/core.h"
 
 #include "jit/subroutine.h"
+#include "jit/emulate.h"
 #include "lib/stack.h"
 #include "vm/method.h"
 #include "vm/class.h"
@@ -77,6 +78,7 @@ static LLVMModuleRef		module;
  */
 static LLVM_DEFINE_FUNCTION(vm_object_alloc);
 static LLVM_DEFINE_FUNCTION(vm_object_alloc_string_from_utf8);
+static LLVM_DEFINE_FUNCTION(emulate_lcmp);
 
 static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
 {
@@ -969,7 +971,24 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		break;
 	}
-	case OPC_LCMP:			assert(0); break;
+	case OPC_LCMP: {
+		LLVMValueRef value1, value2, result;
+		LLVMValueRef args[2];
+
+		value2	= stack_pop(ctx->mimic_stack);
+
+		value1	= stack_pop(ctx->mimic_stack);
+
+		args[0]	= value1;
+
+		args[1]	= value2;
+
+		result = LLVMBuildCall(ctx->builder, emulate_lcmp_func, args, 2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
 	case OPC_FCMPL:			assert(0); break;
 	case OPC_FCMPG:			assert(0); break;
 	case OPC_DCMPL:			assert(0); break;
@@ -1287,6 +1306,11 @@ void llvm_init(void)
 		"vm_object_alloc_string_from_utf8",
 		vm_object_alloc_string_from_utf8,
 		LLVMReferenceType(), 2, LLVMReferenceType(), LLVMInt32Type());
+
+	emulate_lcmp_func = llvm_setup_func(
+		"emulate_lcmp",
+		emulate_lcmp,
+		LLVMInt32Type(), 2, LLVMInt64Type(), LLVMInt64Type());
 }
 
 void llvm_exit(void)
