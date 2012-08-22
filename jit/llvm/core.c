@@ -670,9 +670,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DUP: {
 		void *value;
 
-		assert(!stack_is_empty(ctx->mimic_stack));
-
 		value = stack_peek(ctx->mimic_stack);
+
+		assert(llvm_is_category_1_type(LLVMTypeOf(value)));
 
 		stack_push(ctx->mimic_stack, value);
 
@@ -681,13 +681,13 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DUP_X1: {
 		void *value1, *value2;
 
-		assert(!stack_is_empty(ctx->mimic_stack));
-
 		value1 = stack_pop(ctx->mimic_stack);
 
-		assert(!stack_is_empty(ctx->mimic_stack));
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		assert(llvm_is_category_1_type(LLVMTypeOf(value1)));
+
+		assert(llvm_is_category_1_type(LLVMTypeOf(value2)));
 
 		stack_push(ctx->mimic_stack, value1);
 
@@ -702,10 +702,15 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		value1 = stack_pop(ctx->mimic_stack);
 
+		assert(llvm_is_category_1_type(LLVMTypeOf(value1)));
+
 		value2 = stack_pop(ctx->mimic_stack);
 
-		if (llvm_is_category_1_type(LLVMTypeOf(value2)))
+		if (llvm_is_category_1_type(LLVMTypeOf(value2))) {
 			value3 = stack_pop(ctx->mimic_stack);
+
+			assert(llvm_is_category_1_type(LLVMTypeOf(value3)));
+		}
 
 		stack_push(ctx->mimic_stack, value1);
 
@@ -723,8 +728,11 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		value1 = stack_pop(ctx->mimic_stack);
 
-		if (llvm_is_category_1_type(LLVMTypeOf(value1)))
+		if (llvm_is_category_1_type(LLVMTypeOf(value1))) {
 			value2 = stack_pop(ctx->mimic_stack);
+
+			assert(llvm_is_category_1_type(LLVMTypeOf(value2)));
+		}
 
 		stack_push(ctx->mimic_stack, value1);
 
