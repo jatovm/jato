@@ -344,7 +344,6 @@ static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
-#define execute(bytecode) do_jint_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jint_run(bytecode) do_jint_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jlong_run(bytecode) do_jlong_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jdouble_run(bytecode) do_jdouble_execute(bytecode, ARRAY_SIZE(bytecode))
@@ -447,7 +446,7 @@ static void test_bipush(void)
 {
 	uint8_t bytecode[] = { OPC_BIPUSH, 0x10, OPC_IRETURN };
 
-	assert_int_equals(16, execute(bytecode));
+	assert_int_equals(16, jint_run(bytecode));
 }
 
 #ifndef CONFIG_ARM
@@ -455,7 +454,7 @@ static void test_sipush(void)
 {
 	uint8_t bytecode[] = { OPC_SIPUSH, 0x01, 0x00, OPC_IRETURN };
 
-	assert_int_equals(256, execute(bytecode));
+	assert_int_equals(256, jint_run(bytecode));
 }
 
 static void test_ldc_double(void)
@@ -511,8 +510,8 @@ static void test_if_icmpeq(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPEQ, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPEQ, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode_1));
-	assert_int_equals(1, execute(bytecode_2));
+	assert_int_equals(0, jint_run(bytecode_1));
+	assert_int_equals(1, jint_run(bytecode_2));
 }
 
 static void test_if_icmpne(void)
@@ -520,8 +519,8 @@ static void test_if_icmpne(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPNE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPNE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
-	assert_int_equals(0, execute(bytecode_2));
+	assert_int_equals(1, jint_run(bytecode_1));
+	assert_int_equals(0, jint_run(bytecode_2));
 }
 
 static void test_if_icmplt(void)
@@ -529,8 +528,8 @@ static void test_if_icmplt(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IF_ICMPLT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPLT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
-	assert_int_equals(0, execute(bytecode_2));
+	assert_int_equals(1, jint_run(bytecode_1));
+	assert_int_equals(0, jint_run(bytecode_2));
 }
 
 static void test_if_icmpgt(void)
@@ -538,8 +537,8 @@ static void test_if_icmpgt(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode_1));
-	assert_int_equals(1, execute(bytecode_2));
+	assert_int_equals(0, jint_run(bytecode_1));
+	assert_int_equals(1, jint_run(bytecode_2));
 }
 
 static void test_if_icmple(void)
@@ -548,9 +547,9 @@ static void test_if_icmple(void)
 	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPLE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 	uint8_t bytecode_3[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPLE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
-	assert_int_equals(0, execute(bytecode_2));
-	assert_int_equals(0, execute(bytecode_3));
+	assert_int_equals(1, jint_run(bytecode_1));
+	assert_int_equals(0, jint_run(bytecode_2));
+	assert_int_equals(0, jint_run(bytecode_3));
 }
 
 static void test_if_icmpge(void)
@@ -559,23 +558,23 @@ static void test_if_icmpge(void)
 	uint8_t bytecode_2[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 	uint8_t bytecode_3[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IF_ICMPGT, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode_1));
-	assert_int_equals(1, execute(bytecode_2));
-	assert_int_equals(1, execute(bytecode_3));
+	assert_int_equals(0, jint_run(bytecode_1));
+	assert_int_equals(1, jint_run(bytecode_2));
+	assert_int_equals(1, jint_run(bytecode_3));
 }
 
 static void test_if_acmpeq(void)
 {
 	uint8_t bytecode_1[] = { OPC_ACONST_NULL, OPC_ACONST_NULL, OPC_IF_ACMPEQ, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode_1));
+	assert_int_equals(0, jint_run(bytecode_1));
 }
 
 static void test_if_acmpne(void)
 {
 	uint8_t bytecode_1[] = { OPC_ACONST_NULL, OPC_ACONST_NULL, OPC_IF_ACMPNE, 0x00, 0x05, OPC_ICONST_1, OPC_IRETURN, OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(1, jint_run(bytecode_1));
 }
 
 static void test_ifle(void)
@@ -583,8 +582,8 @@ static void test_ifle(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_M1, OPC_IFLE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_0 , OPC_IFLE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
-	assert_int_equals(1, execute(bytecode_2));
+	assert_int_equals(1, jint_run(bytecode_1));
+	assert_int_equals(1, jint_run(bytecode_2));
 }
 
 static void test_ifgt(void)
@@ -592,8 +591,8 @@ static void test_ifgt(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_IFGT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_0, OPC_IFGT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
-	assert_int_equals(2, execute(bytecode_2));
+	assert_int_equals(1, jint_run(bytecode_1));
+	assert_int_equals(2, jint_run(bytecode_2));
 }
 
 static void test_ifge(void)
@@ -601,8 +600,8 @@ static void test_ifge(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_1, OPC_IFGE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_0, OPC_IFGE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
-	assert_int_equals(1, execute(bytecode_2));
+	assert_int_equals(1, jint_run(bytecode_1));
+	assert_int_equals(1, jint_run(bytecode_2));
 }
 
 static void test_iflt(void)
@@ -610,15 +609,15 @@ static void test_iflt(void)
 	uint8_t bytecode_1[] = { OPC_ICONST_M1, OPC_IFLT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 	uint8_t bytecode_2[] = { OPC_ICONST_0 , OPC_IFLT, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
-	assert_int_equals(2, execute(bytecode_2));
+	assert_int_equals(1, jint_run(bytecode_1));
+	assert_int_equals(2, jint_run(bytecode_2));
 }
 
 static void test_ifne(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_IFNE, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_lcmp(void)
@@ -627,9 +626,9 @@ static void test_lcmp(void)
 	uint8_t bytecode_g[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_LCMP, OPC_LRETURN };
 	uint8_t bytecode_e[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LCMP, OPC_LRETURN };
 
-	assert_long_equals(-1, execute(bytecode_l));
-	assert_long_equals(1, execute(bytecode_g));
-	assert_long_equals(0, execute(bytecode_e));
+	assert_long_equals(-1, jlong_run(bytecode_l));
+	assert_long_equals(1, jlong_run(bytecode_g));
+	assert_long_equals(0, jlong_run(bytecode_e));
 }
 
 static void test_fcmpl(void)
@@ -638,9 +637,9 @@ static void test_fcmpl(void)
 	uint8_t bytecode_g[] = { OPC_FCONST_1, OPC_FCONST_0, OPC_FCMPL, OPC_IRETURN };
 	uint8_t bytecode_e[] = { OPC_FCONST_2, OPC_FCONST_2, OPC_FCMPL, OPC_IRETURN };
 
-	assert_int_equals(-1, execute(bytecode_l));
-	assert_int_equals(1, execute(bytecode_g));
-	assert_int_equals(0, execute(bytecode_e));
+	assert_int_equals(-1, jint_run(bytecode_l));
+	assert_int_equals(1, jint_run(bytecode_g));
+	assert_int_equals(0, jint_run(bytecode_e));
 }
 
 static void test_fcmpg(void)
@@ -649,9 +648,9 @@ static void test_fcmpg(void)
 	uint8_t bytecode_g[] = { OPC_FCONST_1, OPC_FCONST_0, OPC_FCMPG, OPC_IRETURN };
 	uint8_t bytecode_e[] = { OPC_FCONST_2, OPC_FCONST_2, OPC_FCMPG, OPC_IRETURN };
 
-	assert_int_equals(-1, execute(bytecode_l));
-	assert_int_equals(1, execute(bytecode_g));
-	assert_int_equals(0, execute(bytecode_e));
+	assert_int_equals(-1, jint_run(bytecode_l));
+	assert_int_equals(1, jint_run(bytecode_g));
+	assert_int_equals(0, jint_run(bytecode_e));
 }
 
 static void test_dcmpl(void)
@@ -660,9 +659,9 @@ static void test_dcmpl(void)
 	uint8_t bytecode_g[] = { OPC_DCONST_1, OPC_DCONST_0, OPC_DCMPL, OPC_IRETURN };
 	uint8_t bytecode_e[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DCMPL, OPC_IRETURN };
 
-	assert_int_equals(-1, execute(bytecode_l));
-	assert_int_equals(1, execute(bytecode_g));
-	assert_int_equals(0, execute(bytecode_e));
+	assert_int_equals(-1, jint_run(bytecode_l));
+	assert_int_equals(1, jint_run(bytecode_g));
+	assert_int_equals(0, jint_run(bytecode_e));
 }
 
 static void test_dcmpg(void)
@@ -671,44 +670,44 @@ static void test_dcmpg(void)
 	uint8_t bytecode_g[] = { OPC_DCONST_1, OPC_DCONST_0, OPC_DCMPG, OPC_IRETURN };
 	uint8_t bytecode_e[] = { OPC_DCONST_1, OPC_DCONST_1, OPC_DCMPG, OPC_IRETURN };
 
-	assert_int_equals(-1, execute(bytecode_l));
-	assert_int_equals(1, execute(bytecode_g));
-	assert_int_equals(0, execute(bytecode_e));
+	assert_int_equals(-1, jint_run(bytecode_l));
+	assert_int_equals(1, jint_run(bytecode_g));
+	assert_int_equals(0, jint_run(bytecode_e));
 }
 
 static void test_ifeq(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_0, OPC_IFEQ, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_goto(void)
 {
 	uint8_t bytecode[] = { OPC_GOTO, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_goto_w(void)
 {
 	uint8_t bytecode[] = { OPC_GOTO_W, 0x00, 0x00, 0x00, 0x07, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_ifnull(void)
 {
 	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IFNULL, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_ifnonnull(void)
 {
 	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IFNONNULL, 0x00, 0x05, OPC_ICONST_2, OPC_IRETURN, OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(2, execute(bytecode));
+	assert_int_equals(2, jint_run(bytecode));
 }
 #endif
 
@@ -716,14 +715,14 @@ static void test_ireturn(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_lreturn(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LRETURN };
 
-	assert_long_equals(1, execute(bytecode));
+	assert_long_equals(1, jlong_run(bytecode));
 }
 
 #ifndef CONFIG_ARM
@@ -762,98 +761,98 @@ static void test_lxor(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LXOR, OPC_LRETURN };
 
-	assert_long_equals(0, execute(bytecode));
+	assert_long_equals(0, jlong_run(bytecode));
 }
 
 static void test_ixor(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_IXOR, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode));
+	assert_int_equals(0, jint_run(bytecode));
 }
 
 static void test_lor(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_LOR, OPC_LRETURN };
 
-	assert_long_equals(1, execute(bytecode));
+	assert_long_equals(1, jlong_run(bytecode));
 }
 
 static void test_ior(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IOR, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_land(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_LAND, OPC_LRETURN };
 
-	assert_long_equals(0, execute(bytecode));
+	assert_long_equals(0, jlong_run(bytecode));
 }
 
 static void test_iand(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_0, OPC_IAND, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode));
+	assert_int_equals(0, jint_run(bytecode));
 }
 
 static void test_lushr(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_0, OPC_LCONST_1, OPC_LUSHR, OPC_LRETURN };
 
-	assert_long_equals(0, execute(bytecode));
+	assert_long_equals(0, jlong_run(bytecode));
 }
 
 static void test_iushr(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_0, OPC_ICONST_1, OPC_IUSHR, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode));
+	assert_int_equals(0, jint_run(bytecode));
 }
 
 static void test_lshr(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LSHR, OPC_LRETURN };
 
-	assert_long_equals(0, execute(bytecode));
+	assert_long_equals(0, jlong_run(bytecode));
 }
 
 static void test_ishr(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_ISHR, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode));
+	assert_int_equals(0, jint_run(bytecode));
 }
 
 static void test_lshl(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LSHL, OPC_LRETURN };
 
-	assert_long_equals(2, execute(bytecode));
+	assert_long_equals(2, jlong_run(bytecode));
 }
 
 static void test_ishl(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_1, OPC_ISHL, OPC_IRETURN };
 
-	assert_int_equals(2, execute(bytecode));
+	assert_int_equals(2, jint_run(bytecode));
 }
 
 static void test_lneg(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LNEG, OPC_LRETURN };
 
-	assert_long_equals(-1, execute(bytecode));
+	assert_long_equals(-1, jlong_run(bytecode));
 }
 
 static void test_ineg(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_2, OPC_INEG, OPC_IRETURN };
 
-	assert_int_equals(-2, execute(bytecode));
+	assert_int_equals(-2, jint_run(bytecode));
 }
 
 static void test_dneg(void)
@@ -874,14 +873,14 @@ static void test_lrem(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LREM, OPC_LRETURN };
 
-	assert_long_equals(0, execute(bytecode));
+	assert_long_equals(0, jlong_run(bytecode));
 }
 
 static void test_irem(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_4, OPC_ICONST_3, OPC_IREM, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_drem(void)
@@ -902,28 +901,28 @@ static void test_ldiv(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LDIV, OPC_LRETURN };
 
-	assert_long_equals(1, execute(bytecode));
+	assert_long_equals(1, jlong_run(bytecode));
 }
 
 static void test_idiv(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_4, OPC_ICONST_2, OPC_IDIV, OPC_IRETURN };
 
-	assert_int_equals(2, execute(bytecode));
+	assert_int_equals(2, jint_run(bytecode));
 }
 
 static void test_lmul(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_IMUL, OPC_LRETURN };
 
-	assert_long_equals(1, execute(bytecode));
+	assert_long_equals(1, jlong_run(bytecode));
 }
 
 static void test_imul(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_2, OPC_ICONST_3, OPC_IMUL, OPC_IRETURN };
 
-	assert_int_equals(6, execute(bytecode));
+	assert_int_equals(6, jint_run(bytecode));
 }
 #endif
 
@@ -931,14 +930,14 @@ static void test_lsub(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LSUB, OPC_LRETURN };
 
-	assert_long_equals(0, execute(bytecode));
+	assert_long_equals(0, jlong_run(bytecode));
 }
 
 static void test_isub(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_3, OPC_ICONST_2, OPC_ISUB, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 #ifndef CONFIG_ARM
@@ -1003,14 +1002,14 @@ static void test_ladd(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LADD, OPC_LRETURN };
 
-	assert_long_equals(2, execute(bytecode));
+	assert_long_equals(2, jlong_run(bytecode));
 }
 
 static void test_iadd(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ICONST_2, OPC_IADD, OPC_IRETURN };
 
-	assert_int_equals(3, execute(bytecode));
+	assert_int_equals(3, jint_run(bytecode));
 }
 
 #ifndef CONFIG_ARM
@@ -1021,9 +1020,9 @@ static void test_swap(void)
 	uint8_t bytecode_3[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_SWAP, OPC_LRETURN };
 	uint8_t bytecode_4[] = { OPC_FCONST_1, OPC_FCONST_0, OPC_SWAP, OPC_FRETURN };
 
-	assert_int_equals(1, execute(bytecode_1));
+	assert_int_equals(1, jint_run(bytecode_1));
 	assert_double_equals(1.0, jdouble_run(bytecode_2));
-	assert_long_equals(1, execute(bytecode_3));
+	assert_long_equals(1, jlong_run(bytecode_3));
 	assert_float_equals(1.0, jfloat_run(bytecode_4));
 }
 
@@ -1031,14 +1030,14 @@ static void test_pop2(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_3, OPC_ICONST_2, OPC_ICONST_1, OPC_POP2, OPC_IRETURN };
 
-	assert_int_equals(3, execute(bytecode));
+	assert_int_equals(3, jint_run(bytecode));
 }
 
 static void test_pop(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_2, OPC_ICONST_1, OPC_POP, OPC_IRETURN };
 
-	assert_int_equals(2, execute(bytecode));
+	assert_int_equals(2, jint_run(bytecode));
 }
 
 static void test_dconst_1(void)
@@ -1095,42 +1094,42 @@ static void test_iconst_5(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_5, OPC_IRETURN };
 
-	assert_int_equals(5, execute(bytecode));
+	assert_int_equals(5, jint_run(bytecode));
 }
 
 static void test_iconst_4(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_4, OPC_IRETURN };
 
-	assert_int_equals(4, execute(bytecode));
+	assert_int_equals(4, jint_run(bytecode));
 }
 
 static void test_iconst_3(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_3, OPC_IRETURN };
 
-	assert_int_equals(3, execute(bytecode));
+	assert_int_equals(3, jint_run(bytecode));
 }
 
 static void test_iconst_2(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_2, OPC_IRETURN };
 
-	assert_int_equals(2, execute(bytecode));
+	assert_int_equals(2, jint_run(bytecode));
 }
 
 static void test_iconst_1(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_iconst_0(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_0, OPC_IRETURN };
 
-	assert_int_equals(0, execute(bytecode));
+	assert_int_equals(0, jint_run(bytecode));
 }
 
 static void test_aconst_null(void)
@@ -1144,35 +1143,35 @@ static void test_iconst_m1(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_M1, OPC_IRETURN };
 
-	assert_int_equals(-1, execute(bytecode));
+	assert_int_equals(-1, jint_run(bytecode));
 }
 
 static void test_istore_0(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_0, OPC_ILOAD_0, OPC_IRETURN};
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_istore_1(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_1, OPC_ILOAD_1, OPC_IRETURN};
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_istore_2(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_2, OPC_ILOAD_2, OPC_IRETURN};
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_istore_3(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_ISTORE_3, OPC_ILOAD_3, OPC_IRETURN};
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_lstore_0(void)
@@ -1278,7 +1277,7 @@ static void test_l2i(void)
 {
 	uint8_t bytecode[] = { OPC_LCONST_1, OPC_L2I, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_l2f(void)
@@ -1299,14 +1298,14 @@ static void test_f2i(void)
 {
 	uint8_t bytecode[] = { OPC_FCONST_1, OPC_F2I, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_f2l(void)
 {
 	uint8_t bytecode[] = { OPC_FCONST_1, OPC_F2L, OPC_LRETURN };
 
-	assert_long_equals(1, execute(bytecode));
+	assert_long_equals(1, jlong_run(bytecode));
 }
 
 static void test_f2d(void)
@@ -1320,14 +1319,14 @@ static void test_d2i(void)
 {
 	uint8_t bytecode[] = { OPC_DCONST_1, OPC_D2I, OPC_IRETURN };
 
-	assert_int_equals(1, execute(bytecode));
+	assert_int_equals(1, jint_run(bytecode));
 }
 
 static void test_d2l(void)
 {
 	uint8_t bytecode[] = { OPC_DCONST_1, OPC_D2L, OPC_LRETURN };
 
-	assert_long_equals(1, execute(bytecode));
+	assert_long_equals(1, jlong_run(bytecode));
 }
 
 static void test_d2f(void)
@@ -1341,28 +1340,28 @@ static void test_i2b(void)
 {
 	uint8_t bytecode[] = { OPC_BIPUSH, 0xFF, OPC_I2B, OPC_IRETURN };
 
-	assert_int_equals(-1, execute(bytecode));
+	assert_int_equals(-1, jint_run(bytecode));
 }
 
 static void test_i2c(void)
 {
 	uint8_t bytecode[] = { OPC_SIPUSH, 0xFF, 0xFF, OPC_I2C, OPC_IRETURN };
 
-	assert_int_equals(0xffff, execute(bytecode));
+	assert_int_equals(0xffff, jint_run(bytecode));
 }
 
 static void test_i2s(void)
 {
 	uint8_t bytecode[] = { OPC_SIPUSH, 0xFF, 0xFF, OPC_I2S, OPC_IRETURN };
 
-	assert_int_equals(-1, execute(bytecode));
+	assert_int_equals(-1, jint_run(bytecode));
 }
 
 static void test_i2l(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_I2L, OPC_LRETURN };
 
-	assert_long_equals(1, execute(bytecode));
+	assert_long_equals(1, jlong_run(bytecode));
 }
 #endif
 
