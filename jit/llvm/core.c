@@ -475,10 +475,25 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		break;
 	}
-	case OPC_LLOAD_0:		assert(0); break;
-	case OPC_LLOAD_1:		assert(0); break;
-	case OPC_LLOAD_2:		assert(0); break;
-	case OPC_LLOAD_3:		assert(0); break;
+	case OPC_LLOAD_0:
+	case OPC_LLOAD_1:
+	case OPC_LLOAD_2:
+	case OPC_LLOAD_3: {
+		LLVMValueRef value, local;
+		uint16_t idx;
+
+		idx = opc - OPC_LLOAD_0;
+
+		local = llvm_lookup_local(ctx, idx, LLVMInt64Type());
+
+		value = LLVMBuildLoad(ctx->builder, local, "");
+
+		assert(LLVMTypeOf(value) == LLVMInt64Type());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_FLOAD_0:		assert(0); break;
 	case OPC_FLOAD_1:		assert(0); break;
 	case OPC_FLOAD_2:		assert(0); break;
