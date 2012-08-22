@@ -682,17 +682,13 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		void *value1, *value2;
 
 		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
 
 		assert(llvm_is_category_1_type(LLVMTypeOf(value1)));
-
 		assert(llvm_is_category_1_type(LLVMTypeOf(value2)));
 
 		stack_push(ctx->mimic_stack, value1);
-
 		stack_push(ctx->mimic_stack, value2);
-
 		stack_push(ctx->mimic_stack, value1);
 
 		break;
@@ -707,6 +703,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		value2 = stack_pop(ctx->mimic_stack);
 
 		if (llvm_is_category_1_type(LLVMTypeOf(value2))) {
+			/* Form 1 */
 			void *value3;
 
 			value3 = stack_pop(ctx->mimic_stack);
@@ -716,11 +713,11 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 			stack_push(ctx->mimic_stack, value1);
 			stack_push(ctx->mimic_stack, value3);
 		} else {
+			/* Form 2 */
 			stack_push(ctx->mimic_stack, value1);
 		}
 
 		stack_push(ctx->mimic_stack, value2);
-
 		stack_push(ctx->mimic_stack, value1);
 
 		break;
@@ -731,6 +728,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		value1 = stack_pop(ctx->mimic_stack);
 
 		if (llvm_is_category_1_type(LLVMTypeOf(value1))) {
+			/* Form 1 */
 			void *value2;
 
 			value2 = stack_pop(ctx->mimic_stack);
@@ -740,6 +738,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 			stack_push(ctx->mimic_stack, value1);
 			stack_push(ctx->mimic_stack, value2);
 		} else {
+			/* Form 2 */
 			stack_push(ctx->mimic_stack, value1);
 		}
 
@@ -751,12 +750,12 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		void *value1, *value2;
 
 		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
 
 		assert(llvm_is_category_1_type(LLVMTypeOf(value2)));
 
 		if (llvm_is_category_1_type(LLVMTypeOf(value1))) {
+			/* Form 1 */
 			void *value3;
 
 			value3 = stack_pop(ctx->mimic_stack);
@@ -764,16 +763,14 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 			assert(llvm_is_category_1_type(LLVMTypeOf(value3)));
 
 			stack_push(ctx->mimic_stack, value2);
-
 			stack_push(ctx->mimic_stack, value1);
-
 			stack_push(ctx->mimic_stack, value3);
 		} else {
+			/* Form 2 */
 			stack_push(ctx->mimic_stack, value1);
 		}
 
 		stack_push(ctx->mimic_stack, value2);
-
 		stack_push(ctx->mimic_stack, value1);
 
 		break;
@@ -782,7 +779,6 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		void *value1, *value2;
 
 		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
 
 		if (llvm_is_category_1_type(LLVMTypeOf(value1))) {
