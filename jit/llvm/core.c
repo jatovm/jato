@@ -934,11 +934,13 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		break;
 	}
 	case OPC_I2B: {
-		LLVMValueRef value, result;
+		LLVMValueRef value, result, tmp;
 
-		value = stack_pop(ctx->mimic_stack);
+		value	= stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildTrunc(ctx->builder, value, LLVMInt8Type(), "");
+		tmp	= LLVMBuildShl(ctx->builder, value, LLVMConstInt(LLVMInt32Type(), 24, 0), "");
+
+		result	= LLVMBuildAShr(ctx->builder, tmp, LLVMConstInt(LLVMInt32Type(), 24, 0), "");
 
 		stack_push(ctx->mimic_stack, result);
 
@@ -947,20 +949,22 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_I2C: {
 		LLVMValueRef value, result;
 
-		value = stack_pop(ctx->mimic_stack);
+		value	= stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildTrunc(ctx->builder, value, LLVMInt16Type(), "");
+		result	= LLVMBuildAnd(ctx->builder, value, LLVMConstInt(LLVMInt32Type(), 65535, 0), "");
 
 		stack_push(ctx->mimic_stack, result);
 
 		break;
 	}
 	case OPC_I2S: {
-		LLVMValueRef value, result;
+		LLVMValueRef value, result, tmp;
 
-		value = stack_pop(ctx->mimic_stack);
+		value	= stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildTrunc(ctx->builder, value, LLVMInt16Type(), "");
+		tmp	= LLVMBuildShl(ctx->builder, value, LLVMConstInt(LLVMInt32Type(), 16, 0), "");
+
+		result	= LLVMBuildAShr(ctx->builder, tmp, LLVMConstInt(LLVMInt32Type(), 16, 0), "");
 
 		stack_push(ctx->mimic_stack, result);
 
