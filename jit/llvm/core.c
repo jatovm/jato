@@ -491,12 +491,14 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_ALOAD_1:
 	case OPC_ALOAD_2:
 	case OPC_ALOAD_3: {
-		LLVMValueRef value;
+		LLVMValueRef value, local;
 		uint16_t idx;
 
 		idx = opc - OPC_ALOAD_0;
 
-		value = llvm_lookup_local(ctx, idx, LLVMReferenceType());
+		local = llvm_lookup_local(ctx, idx, LLVMReferenceType());
+
+		value = LLVMBuildLoad(ctx->builder, local, "");
 
 		assert(LLVMTypeOf(value) == LLVMReferenceType());
 
