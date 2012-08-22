@@ -660,10 +660,74 @@ restart:
 	case OPC_BALOAD:		assert(0); break;
 	case OPC_CALOAD:		assert(0); break;
 	case OPC_SALOAD:		assert(0); break;
-	case OPC_ISTORE:		assert(0); break;
-	case OPC_LSTORE:		assert(0); break;
-	case OPC_FSTORE:		assert(0); break;
-	case OPC_DSTORE:		assert(0); break;
+	case OPC_ISTORE: {
+		LLVMValueRef value, addr;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		addr	= llvm_lookup_local(ctx, idx, LLVMInt32Type());
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		LLVMBuildStore(ctx->builder, value, addr);
+
+		break;
+	}
+	case OPC_LSTORE: {
+		LLVMValueRef value, addr;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		addr	= llvm_lookup_local(ctx, idx, LLVMInt64Type());
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		LLVMBuildStore(ctx->builder, value, addr);
+
+		break;
+	}
+	case OPC_FSTORE: {
+		LLVMValueRef value, addr;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		addr	= llvm_lookup_local(ctx, idx, LLVMFloatType());
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		LLVMBuildStore(ctx->builder, value, addr);
+
+		break;
+	}
+	case OPC_DSTORE: {
+		LLVMValueRef value, addr;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		addr	= llvm_lookup_local(ctx, idx, LLVMDoubleType());
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		LLVMBuildStore(ctx->builder, value, addr);
+
+		break;
+	}
 	case OPC_ASTORE:		assert(0); break;
 	case OPC_ISTORE_0:
 	case OPC_ISTORE_1:
