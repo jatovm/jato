@@ -303,7 +303,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 {
 	struct vm_method *vmm = ctx->cu->method;
 	unsigned char opc;
+	bool wide = false;
 
+restart:
 	opc = read_u8(code, pos);
 
 	switch (opc) {
@@ -480,11 +482,91 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	}
 	case OPC_LDC_W:			assert(0); break;
 	case OPC_LDC2_W:		assert(0); break;
-	case OPC_ILOAD:			assert(0); break;
-	case OPC_LLOAD:			assert(0); break;
-	case OPC_FLOAD:			assert(0); break;
-	case OPC_DLOAD:			assert(0); break;
-	case OPC_ALOAD:			assert(0); break;
+	case OPC_ILOAD: {
+		LLVMValueRef value;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		value = llvm_load_local(ctx, idx, LLVMInt32Type());
+
+		assert(LLVMTypeOf(value) == LLVMInt32Type());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_LLOAD: {
+		LLVMValueRef value;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		value = llvm_load_local(ctx, idx, LLVMInt64Type());
+
+		assert(LLVMTypeOf(value) == LLVMInt64Type());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_FLOAD: {
+		LLVMValueRef value;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		value = llvm_load_local(ctx, idx, LLVMFloatType());
+
+		assert(LLVMTypeOf(value) == LLVMFloatType());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_DLOAD: {
+		LLVMValueRef value;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		value = llvm_load_local(ctx, idx, LLVMDoubleType());
+
+		assert(LLVMTypeOf(value) == LLVMDoubleType());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_ALOAD: {
+		LLVMValueRef value;
+		uint16_t idx;
+
+		if (wide)
+			idx = read_u16(code, pos);
+		else
+			idx = read_u8(code, pos);
+
+		value = llvm_load_local(ctx, idx, LLVMReferenceType());
+
+		assert(LLVMTypeOf(value) == LLVMReferenceType());
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_ILOAD_0:
 	case OPC_ILOAD_1:
 	case OPC_ILOAD_2:
@@ -1433,7 +1515,11 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_INSTANCEOF:		assert(0); break;
 	case OPC_MONITORENTER:		assert(0); break;
 	case OPC_MONITOREXIT:		assert(0); break;
-	case OPC_WIDE:			assert(0); break;
+	case OPC_WIDE: {
+		wide = true;
+
+		goto restart;
+	}
 	case OPC_MULTIANEWARRAY:	assert(0); break;
 	case OPC_IFNULL:		assert(0); break;
 	case OPC_IFNONNULL:		assert(0); break;
