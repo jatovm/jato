@@ -167,6 +167,19 @@ static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long id
 	return ctx->locals[idx] = local;
 }
 
+static LLVMValueRef llvm_load_local(struct llvm_context *ctx, unsigned long idx, LLVMTypeRef type)
+{
+	struct vm_method *vmm = ctx->cu->method;
+
+	if (idx < (unsigned long) vmm->args_count)
+		return LLVMGetParam(ctx->func, idx);
+
+	if (!ctx->locals[idx])
+		ctx->locals[idx] = LLVMBuildAlloca(ctx->builder, type, "");
+
+	return LLVMBuildLoad(ctx->builder, ctx->locals[idx], "");
+}
+
 static LLVMTypeRef llvm_function_type(struct vm_method *vmm)
 {
 	unsigned long ndx = 0, args_count = 0;
@@ -460,14 +473,12 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_ILOAD_1:
 	case OPC_ILOAD_2:
 	case OPC_ILOAD_3: {
-		LLVMValueRef value, local;
+		LLVMValueRef value;
 		uint16_t idx;
 
 		idx = opc - OPC_ILOAD_0;
 
-		local = llvm_lookup_local(ctx, idx, LLVMInt32Type());
-
-		value = LLVMBuildLoad(ctx->builder, local, "");
+		value = llvm_load_local(ctx, idx, LLVMInt32Type());
 
 		assert(LLVMTypeOf(value) == LLVMInt32Type());
 
@@ -479,14 +490,12 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LLOAD_1:
 	case OPC_LLOAD_2:
 	case OPC_LLOAD_3: {
-		LLVMValueRef value, local;
+		LLVMValueRef value;
 		uint16_t idx;
 
 		idx = opc - OPC_LLOAD_0;
 
-		local = llvm_lookup_local(ctx, idx, LLVMInt64Type());
-
-		value = LLVMBuildLoad(ctx->builder, local, "");
+		value = llvm_load_local(ctx, idx, LLVMInt64Type());
 
 		assert(LLVMTypeOf(value) == LLVMInt64Type());
 
@@ -498,14 +507,12 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_FLOAD_1:
 	case OPC_FLOAD_2:
 	case OPC_FLOAD_3: {
-		LLVMValueRef value, local;
+		LLVMValueRef value;
 		uint16_t idx;
 
 		idx = opc - OPC_FLOAD_0;
 
-		local = llvm_lookup_local(ctx, idx, LLVMFloatType());
-
-		value = LLVMBuildLoad(ctx->builder, local, "");
+		value = llvm_load_local(ctx, idx, LLVMFloatType());
 
 		assert(LLVMTypeOf(value) == LLVMFloatType());
 
@@ -517,14 +524,12 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DLOAD_1:
 	case OPC_DLOAD_2:
 	case OPC_DLOAD_3: {
-		LLVMValueRef value, local;
+		LLVMValueRef value;
 		uint16_t idx;
 
 		idx = opc - OPC_DLOAD_0;
 
-		local = llvm_lookup_local(ctx, idx, LLVMDoubleType());
-
-		value = LLVMBuildLoad(ctx->builder, local, "");
+		value = llvm_load_local(ctx, idx, LLVMDoubleType());
 
 		assert(LLVMTypeOf(value) == LLVMDoubleType());
 
@@ -536,14 +541,12 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_ALOAD_1:
 	case OPC_ALOAD_2:
 	case OPC_ALOAD_3: {
-		LLVMValueRef value, local;
+		LLVMValueRef value;
 		uint16_t idx;
 
 		idx = opc - OPC_ALOAD_0;
 
-		local = llvm_lookup_local(ctx, idx, LLVMReferenceType());
-
-		value = LLVMBuildLoad(ctx->builder, local, "");
+		value = llvm_load_local(ctx, idx, LLVMReferenceType());
 
 		assert(LLVMTypeOf(value) == LLVMReferenceType());
 
