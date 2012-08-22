@@ -774,7 +774,60 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		break;
 	}
-	case OPC_DUP2_X2:		assert(0); break;
+	case OPC_DUP2_X2: {
+		void *value1, *value2;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		if (llvm_is_category_1_type(LLVMTypeOf(value1))) {
+			void *value3;
+
+			assert(llvm_is_category_1_type(LLVMTypeOf(value2)));
+
+			value3 = stack_pop(ctx->mimic_stack);
+
+			if (llvm_is_category_1_type(LLVMTypeOf(value3))) {
+				/* Form 1 */
+				void *value4;
+
+				value4 = stack_pop(ctx->mimic_stack);
+
+				assert(llvm_is_category_1_type(LLVMTypeOf(value4)));
+
+				stack_push(ctx->mimic_stack, value2);
+				stack_push(ctx->mimic_stack, value1);
+				stack_push(ctx->mimic_stack, value4);
+				stack_push(ctx->mimic_stack, value3);
+			} else {
+				/* Form 3 */
+				stack_push(ctx->mimic_stack, value2);
+				stack_push(ctx->mimic_stack, value1);
+				stack_push(ctx->mimic_stack, value3);
+			}
+		} else {
+			if (llvm_is_category_1_type(LLVMTypeOf(value2))) {
+				/* Form 2 */
+				void *value3;
+
+				value3 = stack_pop(ctx->mimic_stack);
+
+				assert(llvm_is_category_1_type(LLVMTypeOf(value3)));
+
+				stack_push(ctx->mimic_stack, value1);
+				stack_push(ctx->mimic_stack, value3);
+			} else {
+				/* Form 4 */
+				stack_push(ctx->mimic_stack, value1);
+			}
+		}
+
+		stack_push(ctx->mimic_stack, value2);
+		stack_push(ctx->mimic_stack, value1);
+
+		break;
+	}
 	case OPC_SWAP: {
 		LLVMValueRef value1, value2;
 
