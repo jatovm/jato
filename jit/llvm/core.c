@@ -666,7 +666,19 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DUP2:			assert(0); break;
 	case OPC_DUP2_X1:		assert(0); break;
 	case OPC_DUP2_X2:		assert(0); break;
-	case OPC_SWAP:			assert(0); break;
+	case OPC_SWAP: {
+		LLVMValueRef value1, value2;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		stack_push(ctx->mimic_stack, value1);
+
+		stack_push(ctx->mimic_stack, value2);
+
+		break;
+	}
 	case OPC_IADD:
 	case OPC_LADD: {
 		LLVMValueRef value1, value2, result;
