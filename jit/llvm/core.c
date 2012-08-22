@@ -555,9 +555,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LADD: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildAdd(ctx->builder, value1, value2, "");
 
@@ -569,9 +569,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DADD: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildFAdd(ctx->builder, value1, value2, "");
 
@@ -583,9 +583,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LSUB: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildSub(ctx->builder, value1, value2, "");
 
@@ -597,9 +597,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DSUB: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildFSub(ctx->builder, value1, value2, "");
 
@@ -611,9 +611,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LMUL: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildMul(ctx->builder, value1, value2, "");
 
@@ -625,9 +625,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DMUL: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildFMul(ctx->builder, value1, value2, "");
 
@@ -639,9 +639,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LDIV: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildSDiv(ctx->builder, value1, value2, "");
 
@@ -653,9 +653,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DDIV: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildFDiv(ctx->builder, value1, value2, "");
 
@@ -667,9 +667,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LREM: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildSRem(ctx->builder, value1, value2, "");
 
@@ -681,9 +681,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_DREM: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildFRem(ctx->builder, value1, value2, "");
 
@@ -719,9 +719,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LSHL: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildShl(ctx->builder, value1, value2, "");
 
@@ -733,9 +733,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LSHR: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildLShr(ctx->builder, value1, value2, "");
 
@@ -747,9 +747,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LUSHR: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildAShr(ctx->builder, value1, value2, "");
 
@@ -761,9 +761,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LAND: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildAnd(ctx->builder, value1, value2, "");
 
@@ -775,9 +775,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LOR: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildOr(ctx->builder, value1, value2, "");
 
@@ -789,9 +789,9 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 	case OPC_LXOR: {
 		LLVMValueRef value1, value2, result;
 
-		value1 = stack_pop(ctx->mimic_stack);
-
 		value2 = stack_pop(ctx->mimic_stack);
+
+		value1 = stack_pop(ctx->mimic_stack);
 
 		result = LLVMBuildXor(ctx->builder, value1, value2, "");
 
