@@ -551,10 +551,23 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		break;
 	}
-	case OPC_LSTORE_0:		assert(0); break;
-	case OPC_LSTORE_1:		assert(0); break;
-	case OPC_LSTORE_2:		assert(0); break;
-	case OPC_LSTORE_3:		assert(0); break;
+	case OPC_LSTORE_0:
+	case OPC_LSTORE_1:
+	case OPC_LSTORE_2:
+	case OPC_LSTORE_3: {
+		LLVMValueRef value, addr;
+		uint16_t idx;
+
+		idx	= opc - OPC_LSTORE_0;
+
+		addr	= llvm_lookup_local(ctx, idx, LLVMInt64Type());
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		LLVMBuildStore(ctx->builder, value, addr);
+
+		break;
+	}
 	case OPC_FSTORE_0:		assert(0); break;
 	case OPC_FSTORE_1:		assert(0); break;
 	case OPC_FSTORE_2:		assert(0); break;
