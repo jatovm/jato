@@ -931,7 +931,6 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		stack_push(ctx->mimic_stack, result);
 
 		break;
-		break;
 	}
 	case OPC_I2B: {
 		LLVMValueRef value, result, tmp;
