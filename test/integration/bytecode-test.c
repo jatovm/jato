@@ -622,13 +622,13 @@ static void test_ifne(void)
 
 static void test_lcmp(void)
 {
-	uint8_t bytecode_l[] = { OPC_LCONST_0, OPC_LCONST_1, OPC_LCMP, OPC_LRETURN };
-	uint8_t bytecode_g[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_LCMP, OPC_LRETURN };
-	uint8_t bytecode_e[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LCMP, OPC_LRETURN };
+	uint8_t bytecode_l[] = { OPC_LCONST_0, OPC_LCONST_1, OPC_LCMP, OPC_IRETURN };
+	uint8_t bytecode_g[] = { OPC_LCONST_1, OPC_LCONST_0, OPC_LCMP, OPC_IRETURN };
+	uint8_t bytecode_e[] = { OPC_LCONST_1, OPC_LCONST_1, OPC_LCMP, OPC_IRETURN };
 
-	assert_long_equals(-1, jlong_run(bytecode_l));
-	assert_long_equals(1, jlong_run(bytecode_g));
-	assert_long_equals(0, jlong_run(bytecode_e));
+	assert_int_equals(-1, jint_run(bytecode_l));
+	assert_int_equals(1, jint_run(bytecode_g));
+	assert_int_equals(0, jint_run(bytecode_e));
 }
 
 static void test_fcmpl(void)
