@@ -71,6 +71,7 @@ static jint do_jint_execute(uint8_t *code, unsigned long code_length)
 	vmm		= (struct vm_method) {
 		.method		= &method_info,
 		.name		= "foo",
+		.type		= "()I",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
 			.max_locals	= 8,
@@ -78,6 +79,8 @@ static jint do_jint_execute(uint8_t *code, unsigned long code_length)
 			.code_length	= code_length,
 		},
 	};
+
+	parse_method_type(&vmm);
 
 	if (vm_method_prepare_jit(&vmm))
 		die("unable to prepare method");
@@ -125,6 +128,7 @@ static jlong do_jlong_execute(uint8_t *code, unsigned long code_length)
 	vmm		= (struct vm_method) {
 		.method		= &method_info,
 		.name		= "foo",
+		.type		= "()J",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
 			.max_locals	= 8,
@@ -132,6 +136,8 @@ static jlong do_jlong_execute(uint8_t *code, unsigned long code_length)
 			.code_length	= code_length,
 		},
 	};
+
+	parse_method_type(&vmm);
 
 	if (vm_method_prepare_jit(&vmm))
 		die("unable to prepare method");
@@ -195,6 +201,7 @@ static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
 	vmm		= (struct vm_method) {
 		.method		= &method_info,
 		.name		= "foo",
+		.type		= "()D",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
 			.max_locals	= 4,
@@ -202,6 +209,8 @@ static jdouble do_jdouble_execute(uint8_t *code, unsigned long code_length)
 			.code_length	= code_length,
 		},
 	};
+
+	parse_method_type(&vmm);
 
 	if (vm_method_prepare_jit(&vmm))
 		die("unable to prepare method");
@@ -262,6 +271,7 @@ static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
 	vmm		= (struct vm_method) {
 		.method		= &method_info,
 		.name		= "foo",
+		.type		= "()F",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
 			.max_locals	= 4,
@@ -269,6 +279,8 @@ static jfloat do_jfloat_execute(uint8_t *code, unsigned long code_length)
 			.code_length	= code_length,
 		},
 	};
+
+	parse_method_type(&vmm);
 
 	if (vm_method_prepare_jit(&vmm))
 		die("unable to prepare method");
@@ -312,6 +324,7 @@ static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 	vmm		= (struct vm_method) {
 		.method		= &method_info,
 		.name		= "foo",
+		.type		= "()Ljava/lang/Object;",
 		.class		= &vmc,
 		.code_attribute = (struct cafebabe_code_attribute) {
 			.max_locals	= 4,
@@ -319,6 +332,8 @@ static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 			.code_length	= code_length,
 		},
 	};
+
+	parse_method_type(&vmm);
 
 	if (vm_method_prepare_jit(&vmm))
 		die("unable to prepare method");
