@@ -652,7 +652,16 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		break;
 	}
-	case OPC_POP2:			assert(0); break;
+	case OPC_POP2: {
+		LLVMValueRef value;
+
+		value = stack_pop(ctx->mimic_stack);
+
+		if (LLVMTypeOf(value) != LLVMInt64Type() && LLVMTypeOf(value) != LLVMDoubleType())
+			stack_pop(ctx->mimic_stack);
+
+		break;
+	}
 	case OPC_DUP: {
 		void *value;
 
