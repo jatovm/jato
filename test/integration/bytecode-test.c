@@ -1,6 +1,7 @@
 #include "jit/compilation-unit.h"
 #include "jit/cu-mapping.h"
 #include "jit/exception.h"
+#include "jit/llvm/core.h"
 #include "jit/compiler.h"
 #include "jit/text.h"
 #include "jit/gdb.h"
@@ -1586,6 +1587,19 @@ static void run_tests(void)
 
 int main(int argc, char *argv[])
 {
+	if (argc > 1) {
+		if (!strcmp(argv[1], "-Xllvm")) {
+			opt_llvm_enable		= true;
+
+		} else if (!strcmp(argv[1], "-Xllvm:verbose")) {
+			opt_llvm_enable		= true;
+			opt_llvm_verbose	= true;
+		}
+	}
+
+	if (opt_llvm_enable)
+		llvm_init();
+
 	dont_gc = true;
 
 	preload_finished = true;
