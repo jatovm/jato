@@ -698,7 +698,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		break;
 	}
 	case OPC_DUP_X2: {
-		void *value1, *value2, *value3 = NULL;
+		void *value1, *value2;
 
 		value1 = stack_pop(ctx->mimic_stack);
 
@@ -707,15 +707,17 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 		value2 = stack_pop(ctx->mimic_stack);
 
 		if (llvm_is_category_1_type(LLVMTypeOf(value2))) {
+			void *value3;
+
 			value3 = stack_pop(ctx->mimic_stack);
 
 			assert(llvm_is_category_1_type(LLVMTypeOf(value3)));
-		}
 
-		stack_push(ctx->mimic_stack, value1);
-
-		if (value3)
+			stack_push(ctx->mimic_stack, value1);
 			stack_push(ctx->mimic_stack, value3);
+		} else {
+			stack_push(ctx->mimic_stack, value1);
+		}
 
 		stack_push(ctx->mimic_stack, value2);
 
