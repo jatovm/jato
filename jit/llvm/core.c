@@ -138,6 +138,11 @@ static LLVMTypeRef llvm_type(enum vm_type vm_type)
 	return NULL;
 }
 
+static bool llvm_is_category_1_type(LLVMTypeRef type)
+{
+	return type != LLVMInt64Type() && type != LLVMDoubleType();
+}
+
 #define BITS_PER_PTR (sizeof(unsigned long) * 8)
 
 static LLVMValueRef llvm_ptr_to_value(void *p, LLVMTypeRef type)
@@ -657,7 +662,7 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		value = stack_pop(ctx->mimic_stack);
 
-		if (LLVMTypeOf(value) != LLVMInt64Type() && LLVMTypeOf(value) != LLVMDoubleType())
+		if (llvm_is_category_1_type(LLVMTypeOf(value)))
 			stack_pop(ctx->mimic_stack);
 
 		break;
@@ -692,7 +697,27 @@ static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsign
 
 		break;
 	}
-	case OPC_DUP_X2:		assert(0); break;
+	case OPC_DUP_X2: {
+		void *value1, *value2, *value3 = NULL;
+
+		value1 = stack_pop(ctx->mimic_stack);
+
+		value2 = stack_pop(ctx->mimic_stack);
+
+		if (llvm_is_category_1_type(LLVMTypeOf(value2)))
+			value3 = stack_pop(ctx->mimic_stack);
+
+		stack_push(ctx->mimic_stack, value1);
+
+		if (value3)
+			stack_push(ctx->mimic_stack, value3);
+
+		stack_push(ctx->mimic_stack, value2);
+
+		stack_push(ctx->mimic_stack, value1);
+
+		break;
+	}
 	case OPC_DUP2:			assert(0); break;
 	case OPC_DUP2_X1:		assert(0); break;
 	case OPC_DUP2_X2:		assert(0); break;
