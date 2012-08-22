@@ -1547,7 +1547,7 @@ out:
 	return err;
 }
 
-static LLVMValueRef llvm_setup_func(const char *name, void *func_p, LLVMTypeRef return_type, unsigned args_count, ...)
+static LLVMValueRef llvm_setup_func(const char *name, void *func_p, enum vm_type return_type, unsigned args_count, ...)
 {
 	LLVMTypeRef arg_types[args_count];
 	LLVMTypeRef func_type;
@@ -1558,12 +1558,12 @@ static LLVMValueRef llvm_setup_func(const char *name, void *func_p, LLVMTypeRef 
 	va_start(ap, args_count);
 
 	for (idx = 0; idx < args_count; idx++) {
-		arg_types[idx]	= va_arg(ap, LLVMTypeRef);
+		arg_types[idx]	= llvm_type(va_arg(ap, enum vm_type));
 	}
 
 	va_end(ap);
 
-	func_type	= LLVMFunctionType(return_type, arg_types, args_count, 0);
+	func_type	= LLVMFunctionType(llvm_type(return_type), arg_types, args_count, 0);
 
 	func		= LLVMAddFunction(module, name, func_type);
 
@@ -1588,17 +1588,17 @@ void llvm_init(void)
 	vm_object_alloc_func = llvm_setup_func(
 		"vm_object_alloc",
 		vm_object_alloc,
-		LLVMReferenceType(), 1, LLVMReferenceType());
+		J_REFERENCE, 1, J_REFERENCE);
 
 	vm_object_alloc_string_from_utf8_func = llvm_setup_func(
 		"vm_object_alloc_string_from_utf8",
 		vm_object_alloc_string_from_utf8,
-		LLVMReferenceType(), 2, LLVMReferenceType(), LLVMInt32Type());
+		J_REFERENCE, 2, J_REFERENCE, J_INT);
 
 	emulate_lcmp_func = llvm_setup_func(
 		"emulate_lcmp",
 		emulate_lcmp,
-		LLVMInt32Type(), 2, LLVMInt64Type(), LLVMInt64Type());
+		J_INT, 2, J_LONG, J_LONG);
 }
 
 void llvm_exit(void)
