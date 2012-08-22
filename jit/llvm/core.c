@@ -71,14 +71,25 @@ struct llvm_context {
 static LLVMExecutionEngineRef	engine;
 static LLVMModuleRef		module;
 
-#define LLVM_DEFINE_FUNCTION(name) LLVMValueRef	name ## _func
-
 /*
- * VM internal functions that are called by LLVM generated code:
+ * VM internal functions that are called by LLVM generated code (remember to
+ * update `llvm_setup_builtins` if you add new ones):
  */
-static LLVM_DEFINE_FUNCTION(vm_object_alloc);
-static LLVM_DEFINE_FUNCTION(vm_object_alloc_string_from_utf8);
-static LLVM_DEFINE_FUNCTION(emulate_lcmp);
+
+#define LLVM_DECLARE_BUILTIN(name) LLVMValueRef name ## _func
+
+#define LLVM_DEFINE_BUILTIN(name, return_type, nr_args, ...) 		\
+	do {								\
+		name ## _func = llvm_setup_func(#name,			\
+						name,			\
+						return_type,		\
+						nr_args,		\
+						__VA_ARGS__);		\
+	} while (0);
+
+static LLVM_DECLARE_BUILTIN(vm_object_alloc);
+static LLVM_DECLARE_BUILTIN(vm_object_alloc_string_from_utf8);
+static LLVM_DECLARE_BUILTIN(emulate_lcmp);
 
 static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
 {
@@ -1572,6 +1583,13 @@ static LLVMValueRef llvm_setup_func(const char *name, void *func_p, enum vm_type
 	return func;
 }
 
+static void llvm_setup_builtins(void)
+{
+	LLVM_DEFINE_BUILTIN(vm_object_alloc, J_REFERENCE, 1, J_REFERENCE);
+	LLVM_DEFINE_BUILTIN(vm_object_alloc_string_from_utf8, J_REFERENCE, 2, J_REFERENCE, J_INT);
+	LLVM_DEFINE_BUILTIN(emulate_lcmp, J_INT, 2, J_LONG, J_LONG);
+}
+
 void llvm_init(void)
 {
 	LLVMLinkInJIT();
@@ -1585,20 +1603,7 @@ void llvm_init(void)
 	if (LLVMCreateJITCompilerForModule(&engine, module, 2, NULL) < 0)
 		assert(0);
 
-	vm_object_alloc_func = llvm_setup_func(
-		"vm_object_alloc",
-		vm_object_alloc,
-		J_REFERENCE, 1, J_REFERENCE);
-
-	vm_object_alloc_string_from_utf8_func = llvm_setup_func(
-		"vm_object_alloc_string_from_utf8",
-		vm_object_alloc_string_from_utf8,
-		J_REFERENCE, 2, J_REFERENCE, J_INT);
-
-	emulate_lcmp_func = llvm_setup_func(
-		"emulate_lcmp",
-		emulate_lcmp,
-		J_INT, 2, J_LONG, J_LONG);
+	llvm_setup_builtins();
 }
 
 void llvm_exit(void)
