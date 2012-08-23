@@ -89,6 +89,10 @@ static LLVMModuleRef		module;
 
 static LLVM_DECLARE_BUILTIN(vm_object_alloc);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_string_from_utf8);
+static LLVM_DECLARE_BUILTIN(emulate_dcmpg);
+static LLVM_DECLARE_BUILTIN(emulate_dcmpl);
+static LLVM_DECLARE_BUILTIN(emulate_fcmpg);
+static LLVM_DECLARE_BUILTIN(emulate_fcmpl);
 static LLVM_DECLARE_BUILTIN(emulate_lcmp);
 
 static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
@@ -1445,27 +1449,70 @@ restart:
 		break;
 	}
 	case OPC_LCMP: {
-		LLVMValueRef value1, value2, result;
-		LLVMValueRef args[2];
+		LLVMValueRef values[2];
+		LLVMValueRef result;
 
-		value2	= stack_pop(ctx->mimic_stack);
+		values[1] = stack_pop(ctx->mimic_stack);
+		values[0] = stack_pop(ctx->mimic_stack);
 
-		value1	= stack_pop(ctx->mimic_stack);
-
-		args[0]	= value1;
-
-		args[1]	= value2;
-
-		result = LLVMBuildCall(ctx->builder, emulate_lcmp_func, args, 2, "");
+		result = LLVMBuildCall(ctx->builder, emulate_lcmp_func, values, 2, "");
 
 		stack_push(ctx->mimic_stack, result);
 
 		break;
 	}
-	case OPC_FCMPL:			assert(0); break;
-	case OPC_FCMPG:			assert(0); break;
-	case OPC_DCMPL:			assert(0); break;
-	case OPC_DCMPG:			assert(0); break;
+	case OPC_FCMPL: {
+		LLVMValueRef values[2];
+		LLVMValueRef result;
+
+		values[1] = stack_pop(ctx->mimic_stack);
+		values[0] = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildCall(ctx->builder, emulate_fcmpl_func, values, 2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_FCMPG: {
+		LLVMValueRef values[2];
+		LLVMValueRef result;
+
+		values[1] = stack_pop(ctx->mimic_stack);
+		values[0] = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildCall(ctx->builder, emulate_fcmpg_func, values, 2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_DCMPL: {
+		LLVMValueRef values[2];
+		LLVMValueRef result;
+
+		values[1] = stack_pop(ctx->mimic_stack);
+		values[0] = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildCall(ctx->builder, emulate_dcmpl_func, values, 2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
+	case OPC_DCMPG: {
+		LLVMValueRef values[2];
+		LLVMValueRef result;
+
+		values[1] = stack_pop(ctx->mimic_stack);
+		values[0] = stack_pop(ctx->mimic_stack);
+
+		result = LLVMBuildCall(ctx->builder, emulate_dcmpg_func, values, 2, "");
+
+		stack_push(ctx->mimic_stack, result);
+
+		break;
+	}
 	case OPC_IFEQ:			assert(0); break;
 	case OPC_IFNE:			assert(0); break;
 	case OPC_IFLT:			assert(0); break;
@@ -1790,6 +1837,10 @@ static void llvm_setup_builtins(void)
 {
 	LLVM_DEFINE_BUILTIN(vm_object_alloc, J_REFERENCE, 1, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_string_from_utf8, J_REFERENCE, 2, J_REFERENCE, J_INT);
+	LLVM_DEFINE_BUILTIN(emulate_dcmpg, J_INT, 2, J_DOUBLE, J_DOUBLE);
+	LLVM_DEFINE_BUILTIN(emulate_dcmpl, J_INT, 2, J_DOUBLE, J_DOUBLE);
+	LLVM_DEFINE_BUILTIN(emulate_fcmpg, J_INT, 2, J_FLOAT, J_FLOAT);
+	LLVM_DEFINE_BUILTIN(emulate_fcmpl, J_INT, 2, J_FLOAT, J_FLOAT);
 	LLVM_DEFINE_BUILTIN(emulate_lcmp, J_INT, 2, J_LONG, J_LONG);
 }
 
