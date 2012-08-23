@@ -272,7 +272,7 @@ llvm_convert_args(struct llvm_context *ctx, struct vm_method *vmm, unsigned long
 		return NULL;
 
 	for (i = 0; i < nr_args; i++)
-		args[i] = stack_pop(ctx->mimic_stack);
+		args[nr_args - i - 1] = stack_pop(ctx->mimic_stack);
 
 	return args;
 }
