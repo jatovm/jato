@@ -114,6 +114,11 @@ static inline uint16_t read_u16(unsigned char *code, unsigned long *pos)
 	return c;
 }
 
+static inline int16_t read_s16(unsigned char *code, unsigned long *pos)
+{
+	return read_u16(code, pos);
+}
+
 /*
  * A helper function that looks like LLVM API for JVM reference types.
  * We treat them as opaque pointers much like 'void *' in C.
@@ -300,6 +305,32 @@ static LLVMValueRef llvm_trampoline(struct vm_method *vmm)
 	LLVMAddGlobalMapping(engine, func, vm_method_trampoline_ptr(vmm));
 
 	return func;
+}
+
+static void llvm_build_if(struct llvm_context *ctx,
+			  unsigned char *code,
+			  unsigned long *pos,
+			  LLVMIntPredicate op,
+			  LLVMValueRef rhs,
+			  LLVMValueRef lhs)
+{
+	struct basic_block *then_bb;
+	struct basic_block *else_bb;
+	unsigned long insn_pos;
+	LLVMValueRef cmp;
+	int16_t offset;
+
+	insn_pos = *pos;
+
+	offset = read_s16(code, pos);
+
+	then_bb	= find_bb(ctx->cu, insn_pos + offset);
+
+	else_bb	= find_bb(ctx->cu, *pos);
+
+	cmp	= LLVMBuildICmp(ctx->builder, op, rhs, lhs, "");
+
+	LLVMBuildCondBr(ctx->builder, cmp, then_bb->priv, else_bb->priv);
 }
 
 static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *pos)
@@ -1513,12 +1544,72 @@ restart:
 
 		break;
 	}
-	case OPC_IFEQ:			assert(0); break;
-	case OPC_IFNE:			assert(0); break;
-	case OPC_IFLT:			assert(0); break;
-	case OPC_IFGE:			assert(0); break;
-	case OPC_IFGT:			assert(0); break;
-	case OPC_IFLE:			assert(0); break;
+	case OPC_IFEQ: {
+		LLVMValueRef value, zero;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
+
+		llvm_build_if(ctx, code, pos, LLVMIntEQ, value, zero);
+
+		break;
+	}
+	case OPC_IFNE: {
+		LLVMValueRef value, zero;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
+
+		llvm_build_if(ctx, code, pos, LLVMIntNE, value, zero);
+
+		break;
+	}
+	case OPC_IFLT: {
+		LLVMValueRef value, zero;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSLT, value, zero);
+
+		break;
+	}
+	case OPC_IFGE: {
+		LLVMValueRef value, zero;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSGE, value, zero);
+
+		break;
+	}
+	case OPC_IFGT: {
+		LLVMValueRef value, zero;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSGT, value, zero);
+
+		break;
+	}
+	case OPC_IFLE: {
+		LLVMValueRef value, zero;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSLE, value, zero);
+
+		break;
+	}
 	case OPC_IF_ICMPEQ:		assert(0); break;
 	case OPC_IF_ICMPNE:		assert(0); break;
 	case OPC_IF_ICMPLT:		assert(0); break;
@@ -1726,7 +1817,16 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 	ctx->builder = LLVMCreateBuilder();
 
-	bbr = LLVMAppendBasicBlock(ctx->func, "L");
+	for_each_basic_block(bb, &cu->bb_list) {
+
+		assert(!bb->is_eh);
+
+		bbr = LLVMAppendBasicBlock(ctx->func, "L");
+
+		bb->priv = bbr;
+	}
+
+	bbr = cu->entry_bb->priv;
 
 	LLVMPositionBuilderAtEnd(ctx->builder, bbr);
 
@@ -1735,11 +1835,9 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 	for_each_basic_block(bb, &cu->bb_list) {
 		assert(!bb->is_eh);
 
-#if 0
-		bbr = LLVMAppendBasicBlock(ctx->func, "L");
+		bbr = bb->priv;
 
 		LLVMPositionBuilderAtEnd(ctx->builder, bbr);
-#endif
 
 		llvm_bc2ir_bb(ctx, bb);
 	}

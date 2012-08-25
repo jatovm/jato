@@ -34,6 +34,9 @@ struct basic_block {
 	unsigned long mach_offset;
 	int dfn;
 
+	/* Backend specific private data. */
+	void *priv;
+
 	/* Contains data flow resultion blocks for each outgoing CFG edge. */
 	struct resolution_block *resolution_blocks;
 
