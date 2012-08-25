@@ -1789,7 +1789,36 @@ restart:
 
 		break;
 	}
-	case OPC_GETFIELD:		assert(0); break;
+	case OPC_GETFIELD: {
+		LLVMValueRef value, objectref, addr, gep;
+		struct vm_class *vmc = vmm->class;
+		LLVMValueRef indices[1];
+		struct vm_field *vmf;
+		LLVMTypeRef type;
+		uint16_t idx;
+
+		idx = read_u16(code, pos);
+
+		vmf = vm_class_resolve_field_recursive(vmc, idx);
+
+		type = llvm_type(vmf->type_info.vm_type);
+
+		assert(vmf != NULL);
+
+		objectref	= stack_pop(ctx->mimic_stack);
+
+		indices[0] = LLVMConstInt(LLVMInt32Type(), VM_OBJECT_FIELDS_OFFSET + vmf->offset, 0);
+
+		gep 	= LLVMBuildGEP(ctx->builder, objectref, indices, 1, "");
+
+		addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(type, 0), "");
+
+		value	= LLVMBuildLoad(ctx->builder, addr, "");
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_PUTFIELD: {
 		LLVMValueRef value, objectref, addr, gep;
 		struct vm_class *vmc = vmm->class;
