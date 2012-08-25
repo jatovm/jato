@@ -1690,7 +1690,21 @@ restart:
 
 		break;
 	}
-	case OPC_GOTO:			assert(0); break;
+	case OPC_GOTO: {
+		struct basic_block *goto_bb;
+		unsigned long insn_pos;
+		int16_t offset;
+
+		insn_pos = *pos;
+
+		offset = read_s16(code, pos);
+
+		goto_bb	= find_bb(ctx->cu, insn_pos + offset);
+
+		LLVMBuildBr(ctx->builder, goto_bb->priv);
+
+		break;
+	}
 	case OPC_JSR:			assert(0); break;
 	case OPC_RET:			assert(0); break;
 	case OPC_TABLESWITCH:		assert(0); break;
