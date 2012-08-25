@@ -1610,12 +1610,66 @@ restart:
 
 		break;
 	}
-	case OPC_IF_ICMPEQ:		assert(0); break;
-	case OPC_IF_ICMPNE:		assert(0); break;
-	case OPC_IF_ICMPLT:		assert(0); break;
-	case OPC_IF_ICMPGE:		assert(0); break;
-	case OPC_IF_ICMPGT:		assert(0); break;
-	case OPC_IF_ICMPLE:		assert(0); break;
+	case OPC_IF_ICMPEQ: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntEQ, value1, value2);
+
+		break;
+	}
+	case OPC_IF_ICMPNE: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntNE, value1, value2);
+
+		break;
+	}
+	case OPC_IF_ICMPLT: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSLT, value1, value2);
+
+		break;
+	}
+	case OPC_IF_ICMPGE: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSGE, value1, value2);
+
+		break;
+	}
+	case OPC_IF_ICMPGT: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSGT, value1, value2);
+
+		break;
+	}
+	case OPC_IF_ICMPLE: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntSLE, value1, value2);
+
+		break;
+	}
 	case OPC_IF_ACMPEQ:		assert(0); break;
 	case OPC_IF_ACMPNE:		assert(0); break;
 	case OPC_GOTO:			assert(0); break;
