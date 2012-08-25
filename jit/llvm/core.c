@@ -1670,8 +1670,26 @@ restart:
 
 		break;
 	}
-	case OPC_IF_ACMPEQ:		assert(0); break;
-	case OPC_IF_ACMPNE:		assert(0); break;
+	case OPC_IF_ACMPEQ: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntEQ, value1, value2);
+
+		break;
+	}
+	case OPC_IF_ACMPNE: {
+		LLVMValueRef value1, value2;
+
+		value2	= stack_pop(ctx->mimic_stack);
+		value1	= stack_pop(ctx->mimic_stack);
+
+		llvm_build_if(ctx, code, pos, LLVMIntNE, value1, value2);
+
+		break;
+	}
 	case OPC_GOTO:			assert(0); break;
 	case OPC_JSR:			assert(0); break;
 	case OPC_RET:			assert(0); break;
