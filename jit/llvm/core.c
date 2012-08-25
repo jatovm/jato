@@ -119,6 +119,23 @@ static inline int16_t read_s16(unsigned char *code, unsigned long *pos)
 	return read_u16(code, pos);
 }
 
+static inline uint32_t read_u32(unsigned char *code, unsigned long *pos)
+{
+	uint32_t c;
+
+	c  = read_u8(code, pos) << 24;
+	c |= read_u8(code, pos) << 16;
+	c |= read_u8(code, pos) << 8;
+	c |= read_u8(code, pos);
+
+	return c;
+}
+
+static inline int32_t read_s32(unsigned char *code, unsigned long *pos)
+{
+	return read_u32(code, pos);
+}
+
 /*
  * A helper function that looks like LLVM API for JVM reference types.
  * We treat them as opaque pointers much like 'void *' in C.
@@ -1884,7 +1901,21 @@ restart:
 
 		break;
 	}
-	case OPC_GOTO_W:		assert(0); break;
+	case OPC_GOTO_W: {
+		struct basic_block *goto_bb;
+		unsigned long insn_pos;
+		int32_t offset;
+
+		insn_pos = *pos;
+
+		offset = read_s32(code, pos);
+
+		goto_bb	= find_bb(ctx->cu, insn_pos + offset);
+
+		LLVMBuildBr(ctx->builder, goto_bb->priv);
+
+		break;
+	}
 	case OPC_JSR_W:			assert(0); break;
 	default:
 		fprintf(stderr, "abort: unknown bytecode instruction 0x%02x!\n", opc);
