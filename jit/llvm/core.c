@@ -1843,12 +1843,42 @@ restart:
 
 		/* XXX: Exception check */
 
-		if (vmm->return_type.vm_type != J_VOID)
+		if (target->return_type.vm_type != J_VOID)
 			stack_push(ctx->mimic_stack, value);
 
 		break;
 	}
-	case OPC_INVOKESTATIC:		assert(0); break;
+	case OPC_INVOKESTATIC: {
+		struct vm_method *target;
+		unsigned long nr_args;
+		LLVMValueRef value;
+		LLVMValueRef *args;
+		LLVMValueRef func;
+		uint16_t idx;
+
+		idx	= read_u16(code, pos);
+
+		target	= vm_class_resolve_method_recursive(vmm->class, idx, CAFEBABE_CLASS_ACC_STATIC);
+
+		assert(!method_is_synchronized(target));
+
+		nr_args	= vm_method_arg_stack_count(target);
+
+		args	= llvm_convert_args(ctx, target, nr_args);
+
+		func	= llvm_trampoline(target);
+
+		value	= LLVMBuildCall(ctx->builder, func, args, nr_args, "");
+
+		free(args);
+
+		/* XXX: Exception check */
+
+		if (target->return_type.vm_type != J_VOID)
+			stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_INVOKEINTERFACE:	assert(0); break;
 	case OPC_NEW: {
 		LLVMValueRef objectref;
