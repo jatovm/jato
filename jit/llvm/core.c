@@ -71,6 +71,11 @@ struct llvm_context {
 static LLVMExecutionEngineRef	engine;
 static LLVMModuleRef		module;
 
+static void llvm_throw_stub(struct vm_object *exception)
+{
+	assert(0);
+}
+
 /*
  * VM internal functions that are called by LLVM generated code (remember to
  * update `llvm_setup_builtins` if you add new ones):
@@ -94,6 +99,7 @@ static LLVM_DECLARE_BUILTIN(emulate_dcmpl);
 static LLVM_DECLARE_BUILTIN(emulate_fcmpg);
 static LLVM_DECLARE_BUILTIN(emulate_fcmpl);
 static LLVM_DECLARE_BUILTIN(emulate_lcmp);
+static LLVM_DECLARE_BUILTIN(llvm_throw_stub);
 
 static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
 {
@@ -1868,7 +1874,25 @@ restart:
 	case OPC_NEWARRAY:		assert(0); break;
 	case OPC_ANEWARRAY:		assert(0); break;
 	case OPC_ARRAYLENGTH:		assert(0); break;
-	case OPC_ATHROW:		assert(0); break;
+	case OPC_ATHROW: {
+		LLVMValueRef objectref;
+		LLVMValueRef args[1];
+		LLVMValueRef call;
+
+		objectref = stack_pop(ctx->mimic_stack);
+
+		stack_clear(ctx->mimic_stack);
+
+		args[0]	= objectref;
+
+		call	= LLVMBuildCall(ctx->builder, llvm_throw_stub_func, args, 1, "");
+
+		LLVMSetTailCall(call, 1);
+
+		LLVMBuildUnreachable(ctx->builder);
+
+		break;
+	}
 	case OPC_CHECKCAST:		assert(0); break;
 	case OPC_INSTANCEOF:		assert(0); break;
 	case OPC_MONITORENTER:		assert(0); break;
@@ -2077,6 +2101,7 @@ static void llvm_setup_builtins(void)
 	LLVM_DEFINE_BUILTIN(emulate_fcmpg, J_INT, 2, J_FLOAT, J_FLOAT);
 	LLVM_DEFINE_BUILTIN(emulate_fcmpl, J_INT, 2, J_FLOAT, J_FLOAT);
 	LLVM_DEFINE_BUILTIN(emulate_lcmp, J_INT, 2, J_LONG, J_LONG);
+	LLVM_DEFINE_BUILTIN(llvm_throw_stub, J_VOID, 1, J_REFERENCE);
 }
 
 void llvm_init(void)
