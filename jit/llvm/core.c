@@ -1862,8 +1862,28 @@ restart:
 		goto restart;
 	}
 	case OPC_MULTIANEWARRAY:	assert(0); break;
-	case OPC_IFNULL:		assert(0); break;
-	case OPC_IFNONNULL:		assert(0); break;
+	case OPC_IFNULL: {
+		LLVMValueRef value, null;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		null	= LLVMConstNull(LLVMTypeOf(value));
+
+		llvm_build_if(ctx, code, pos, LLVMIntEQ, value, null);
+
+		break;
+	}
+	case OPC_IFNONNULL: {
+		LLVMValueRef value, null;
+
+		value	= stack_pop(ctx->mimic_stack);
+
+		null	= LLVMConstNull(LLVMTypeOf(value));
+
+		llvm_build_if(ctx, code, pos, LLVMIntNE, value, null);
+
+		break;
+	}
 	case OPC_GOTO_W:		assert(0); break;
 	case OPC_JSR_W:			assert(0); break;
 	default:
