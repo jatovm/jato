@@ -344,11 +344,65 @@ static jobject do_jobject_execute(uint8_t *code, unsigned long code_length)
 	return method();
 }
 
+static void do_jvoid_execute(uint8_t *code, unsigned long code_length)
+{
+	struct cafebabe_constant_pool constant_pool[2];
+	struct cafebabe_method_info method_info;
+	struct cafebabe_class class_info;
+	struct vm_object class_object;
+	struct vm_method vmm;
+	struct vm_class vmc;
+	jobject (*method)(void);
+
+	class_info	= (struct cafebabe_class) {
+		.constant_pool		= constant_pool,
+		.constant_pool_count	= ARRAY_SIZE(constant_pool),
+	};
+
+	class_object	= (struct vm_object) {
+	};
+
+	vmc		= (struct vm_class) {
+		.object		= &class_object,
+		.name		= "Foo",
+		.state		= VM_CLASS_LINKED,
+		.class		= &class_info,
+	};
+
+	vm_class_init(&vmc);
+
+	method_info	= (struct cafebabe_method_info) {
+		.access_flags	= CAFEBABE_METHOD_ACC_STATIC,
+	};
+
+	vmm		= (struct vm_method) {
+		.method		= &method_info,
+		.name		= "foo",
+		.type		= "()V",
+		.class		= &vmc,
+		.code_attribute = (struct cafebabe_code_attribute) {
+			.max_locals	= 4,
+			.code		= code,
+			.code_length	= code_length,
+		},
+	};
+
+	parse_method_type(&vmm);
+
+	if (vm_method_prepare_jit(&vmm))
+		die("unable to prepare method");
+
+	method = vm_method_trampoline_ptr(&vmm);
+
+	method();
+}
+
 #define jint_run(bytecode) do_jint_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jlong_run(bytecode) do_jlong_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jdouble_run(bytecode) do_jdouble_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jfloat_run(bytecode) do_jfloat_execute(bytecode, ARRAY_SIZE(bytecode))
 #define jobject_run(bytecode) do_jobject_execute(bytecode, ARRAY_SIZE(bytecode))
+#define jvoid_run(bytecode) do_jvoid_execute(bytecode, ARRAY_SIZE(bytecode))
 
 static void init(void)
 {
@@ -753,7 +807,7 @@ static void test_return(void)
 	uint8_t bytecode[] = { OPC_RETURN };
 
 	/* OPC_RETURN doesn't have a return value */
-	jobject_run(bytecode);
+	jvoid_run(bytecode);
 }
 
 #ifndef CONFIG_ARM
