@@ -419,8 +419,11 @@ static void llvm_build_if(struct llvm_context *ctx,
 static int llvm_bc2ir_insn(struct llvm_context *ctx, unsigned char *code, unsigned long *pos)
 {
 	struct vm_method *vmm = ctx->cu->method;
+	unsigned long insn_start;
 	unsigned char opc;
 	bool wide = false;
+
+	insn_start = *pos;
 
 restart:
 	opc = read_u8(code, pos);
@@ -1775,14 +1778,11 @@ restart:
 	}
 	case OPC_GOTO: {
 		struct basic_block *goto_bb;
-		unsigned long insn_pos;
 		int16_t offset;
-
-		insn_pos = *pos;
 
 		offset = read_s16(code, pos);
 
-		goto_bb	= find_bb(ctx->cu, insn_pos + offset);
+		goto_bb	= find_bb(ctx->cu, insn_start + offset);
 
 		LLVMBuildBr(ctx->builder, goto_bb->priv);
 
@@ -2159,14 +2159,11 @@ restart:
 	}
 	case OPC_GOTO_W: {
 		struct basic_block *goto_bb;
-		unsigned long insn_pos;
 		int32_t offset;
-
-		insn_pos = *pos;
 
 		offset = read_s32(code, pos);
 
-		goto_bb	= find_bb(ctx->cu, insn_pos + offset);
+		goto_bb	= find_bb(ctx->cu, insn_start + offset);
 
 		LLVMBuildBr(ctx->builder, goto_bb->priv);
 
