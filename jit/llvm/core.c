@@ -2087,8 +2087,6 @@ restart:
 
 		LLVMSetTailCall(call, 1);
 
-		LLVMBuildUnreachable(ctx->builder);
-
 		break;
 	}
 	case OPC_CHECKCAST:		assert(0); break;
@@ -2171,7 +2169,7 @@ static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
 static int llvm_bc2ir(struct llvm_context *ctx)
 {
 	struct compilation_unit *cu = ctx->cu;
-	struct basic_block *bb;
+	struct basic_block *bb, *prev;
 	LLVMBasicBlockRef bbr;
 
 	ctx->builder = LLVMCreateBuilder();
@@ -2191,14 +2189,24 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 	llvm_bc2ir_bb(ctx, cu->entry_bb);
 
+	prev = cu->entry_bb;
+
 	for_each_basic_block(bb, &cu->bb_list) {
 		assert(!bb->is_eh);
 
 		bbr = bb->priv;
 
+		if (bb->is_converted)
+			continue;
+
+		if (!prev->has_branch && !prev->has_return)
+			LLVMBuildBr(ctx->builder, bbr);
+
 		LLVMPositionBuilderAtEnd(ctx->builder, bbr);
 
 		llvm_bc2ir_bb(ctx, bb);
+
+		prev = bb;
 	}
 
 	return 0;
