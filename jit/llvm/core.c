@@ -96,6 +96,8 @@ static LLVM_DECLARE_BUILTIN(vm_object_alloc);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_array);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_primitive_array);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_string_from_utf8);
+static LLVM_DECLARE_BUILTIN(vm_object_lock);
+static LLVM_DECLARE_BUILTIN(vm_object_unlock);
 static LLVM_DECLARE_BUILTIN(emulate_dcmpg);
 static LLVM_DECLARE_BUILTIN(emulate_dcmpl);
 static LLVM_DECLARE_BUILTIN(emulate_fcmpg);
@@ -358,6 +360,34 @@ static LLVMValueRef llvm_trampoline(struct vm_method *vmm)
 	LLVMAddGlobalMapping(engine, func, vm_method_trampoline_ptr(vmm));
 
 	return func;
+}
+
+static void llvm_build_monitorexit(struct llvm_context *ctx, LLVMValueRef objectref)
+{
+	struct vm_method *vmm;
+	LLVMValueRef args[1];
+
+	vmm = ctx->cu->method;
+
+	assert(!vm_method_is_jni(vmm));
+
+	args[0] = objectref;
+
+	LLVMBuildCall(ctx->builder, vm_object_unlock_func, args, 1, "");
+}
+
+static void llvm_build_monitorenter(struct llvm_context *ctx, LLVMValueRef objectref)
+{
+	struct vm_method *vmm;
+	LLVMValueRef args[1];
+
+	vmm = ctx->cu->method;
+
+	assert(!vm_method_is_jni(vmm));
+
+	args[0] = objectref;
+
+	LLVMBuildCall(ctx->builder, vm_object_lock_func, args, 1, "");
 }
 
 static void llvm_build_if(struct llvm_context *ctx,
@@ -1769,9 +1799,6 @@ restart:
 	case OPC_ARETURN: {
 		LLVMValueRef value;
 
-		/* XXX: Update monitor state properly before exiting. */
-		assert(!method_is_synchronized(vmm));
-
 		value = stack_pop(ctx->mimic_stack);
 
 		LLVMBuildRet(ctx->builder, value);
@@ -1780,9 +1807,6 @@ restart:
 		break;
 	}
 	case OPC_RETURN: {
-		/* XXX: Update monitor state properly before exiting. */
-		assert(!method_is_synchronized(vmm));
-
 		LLVMBuildRetVoid(ctx->builder);
 
 		stack_clear(ctx->mimic_stack);
@@ -1932,8 +1956,6 @@ restart:
 
 		target	= vm_class_resolve_method_recursive(vmm->class, idx, CAFEBABE_CLASS_ACC_STATIC);
 
-		assert(!method_is_synchronized(target));
-
 		nr_args	= vm_method_arg_stack_count(target);
 
 		args	= llvm_convert_args(ctx, target, nr_args);
@@ -1962,8 +1984,6 @@ restart:
 		idx	= read_u16(code, pos);
 
 		target	= vm_class_resolve_method_recursive(vmm->class, idx, CAFEBABE_CLASS_ACC_STATIC);
-
-		assert(!method_is_synchronized(target));
 
 		nr_args	= vm_method_arg_stack_count(target);
 
@@ -2091,8 +2111,24 @@ restart:
 	}
 	case OPC_CHECKCAST:		assert(0); break;
 	case OPC_INSTANCEOF:		assert(0); break;
-	case OPC_MONITORENTER:		assert(0); break;
-	case OPC_MONITOREXIT:		assert(0); break;
+	case OPC_MONITORENTER: {
+		LLVMValueRef objectref;
+
+		objectref = stack_pop(ctx->mimic_stack);
+
+		llvm_build_monitorenter(ctx, objectref);
+
+		break;
+	}
+	case OPC_MONITOREXIT: {
+		LLVMValueRef objectref;
+
+		objectref = stack_pop(ctx->mimic_stack);
+
+		llvm_build_monitorexit(ctx, objectref);
+
+		break;
+	}
 	case OPC_WIDE: {
 		wide = true;
 
@@ -2169,6 +2205,7 @@ static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
 static int llvm_bc2ir(struct llvm_context *ctx)
 {
 	struct compilation_unit *cu = ctx->cu;
+	struct vm_method *vmm = cu->method;
 	struct basic_block *bb, *prev;
 	LLVMBasicBlockRef bbr;
 
@@ -2186,6 +2223,17 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 	bbr = cu->entry_bb->priv;
 
 	LLVMPositionBuilderAtEnd(ctx->builder, bbr);
+
+	if (method_is_synchronized(vmm)) {
+		LLVMValueRef objectref;
+
+		if (vm_method_is_static(vmm))
+			objectref = llvm_ptr_to_value(vmm->class->object, LLVMReferenceType());
+		else
+			objectref = LLVMGetParam(ctx->func, 0);
+
+		llvm_build_monitorenter(ctx, objectref);
+	}
 
 	llvm_bc2ir_bb(ctx, cu->entry_bb);
 
@@ -2207,6 +2255,19 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 		llvm_bc2ir_bb(ctx, bb);
 
 		prev = bb;
+	}
+
+	LLVMPositionBuilderAtEnd(ctx->builder, cu->exit_bb->priv);
+
+	if (method_is_synchronized(vmm)) {
+		LLVMValueRef objectref;
+
+		if (vm_method_is_static(vmm))
+			objectref = llvm_ptr_to_value(vmm->class->object, LLVMReferenceType());
+		else
+			objectref = LLVMGetParam(ctx->func, 0);
+
+		llvm_build_monitorexit(ctx, objectref);
 	}
 
 	return 0;
@@ -2304,6 +2365,8 @@ static void llvm_setup_builtins(void)
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_array, J_REFERENCE, 2, J_REFERENCE, J_INT);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_primitive_array, J_REFERENCE, 2, J_INT, J_INT);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_string_from_utf8, J_REFERENCE, 2, J_REFERENCE, J_INT);
+	LLVM_DEFINE_BUILTIN(vm_object_lock, J_INT, 1, J_REFERENCE);
+	LLVM_DEFINE_BUILTIN(vm_object_unlock, J_INT, 1, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(emulate_dcmpg, J_INT, 2, J_DOUBLE, J_DOUBLE);
 	LLVM_DEFINE_BUILTIN(emulate_dcmpl, J_INT, 2, J_DOUBLE, J_DOUBLE);
 	LLVM_DEFINE_BUILTIN(emulate_fcmpg, J_INT, 2, J_FLOAT, J_FLOAT);
