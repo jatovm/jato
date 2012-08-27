@@ -94,6 +94,7 @@ static void llvm_throw_stub(struct vm_object *exception)
 
 static LLVM_DECLARE_BUILTIN(vm_object_alloc);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_array);
+static LLVM_DECLARE_BUILTIN(vm_object_alloc_primitive_array);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_string_from_utf8);
 static LLVM_DECLARE_BUILTIN(emulate_dcmpg);
 static LLVM_DECLARE_BUILTIN(emulate_dcmpl);
@@ -1931,7 +1932,28 @@ restart:
 
 		break;
 	}
-	case OPC_NEWARRAY:		assert(0); break;
+	case OPC_NEWARRAY: {
+		LLVMValueRef arrayref;
+		LLVMValueRef args[2];
+		LLVMValueRef count;
+		uint8_t atype;
+
+		atype = read_u8(code, pos);
+
+		count = stack_pop(ctx->mimic_stack);
+
+		args[0] = LLVMConstInt(LLVMInt32Type(), atype, 0);
+
+		args[1] = count;
+
+		arrayref = LLVMBuildCall(ctx->builder, vm_object_alloc_primitive_array_func, args, 2, "");
+
+		/* XXX: Exception check */
+
+		stack_push(ctx->mimic_stack, arrayref);
+
+		break;
+	}
 	case OPC_ANEWARRAY: {
 		LLVMValueRef arrayref;
 		struct vm_class *vmc;
@@ -2199,6 +2221,7 @@ static void llvm_setup_builtins(void)
 {
 	LLVM_DEFINE_BUILTIN(vm_object_alloc, J_REFERENCE, 1, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_array, J_REFERENCE, 2, J_REFERENCE, J_INT);
+	LLVM_DEFINE_BUILTIN(vm_object_alloc_primitive_array, J_REFERENCE, 2, J_INT, J_INT);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_string_from_utf8, J_REFERENCE, 2, J_REFERENCE, J_INT);
 	LLVM_DEFINE_BUILTIN(emulate_dcmpg, J_INT, 2, J_DOUBLE, J_DOUBLE);
 	LLVM_DEFINE_BUILTIN(emulate_dcmpl, J_INT, 2, J_DOUBLE, J_DOUBLE);
