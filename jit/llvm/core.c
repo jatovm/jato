@@ -245,7 +245,7 @@ static LLVMTypeRef llvm_function_type(struct vm_method *vmm)
 	if (!args_count)
 		goto skip_args;
 
-	arg_types = calloc(1, args_count);
+	arg_types = calloc(args_count, sizeof(LLVMTypeRef));
 	if (!arg_types)
 		return NULL;
 
