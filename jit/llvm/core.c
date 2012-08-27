@@ -202,11 +202,8 @@ static LLVMValueRef llvm_ptr_to_value(void *p, LLVMTypeRef type)
 static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long idx, LLVMTypeRef type)
 {
 	LLVMBasicBlockRef entry_bbr, current_bbr;
-	struct vm_method *vmm = ctx->cu->method;
+	LLVMValueRef begin;
 	LLVMValueRef local;
-
-	if (idx < (unsigned long) vmm->args_count)
-		return LLVMGetParam(ctx->func, idx);
 
 	local = ctx->locals[idx];
 
@@ -217,7 +214,12 @@ static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long id
 
 	current_bbr = LLVMGetInsertBlock(ctx->builder);
 
-	LLVMPositionBuilderBefore(ctx->builder, LLVMGetFirstInstruction(entry_bbr));
+	begin = LLVMGetFirstInstruction(entry_bbr);
+
+	if (begin)
+		LLVMPositionBuilderBefore(ctx->builder, begin);
+	else
+		LLVMPositionBuilderAtEnd(ctx->builder, entry_bbr);
 
 	local = LLVMBuildAlloca(ctx->builder, type, "");
 
@@ -235,12 +237,18 @@ static LLVMValueRef llvm_load_local(struct llvm_context *ctx, unsigned long idx,
 
 	if (!ctx->locals[idx]) {
 		LLVMBasicBlockRef entry_bbr, current_bbr;
+		LLVMValueRef begin;
 
 		entry_bbr = ctx->cu->entry_bb->priv;
 
 		current_bbr = LLVMGetInsertBlock(ctx->builder);
 
-		LLVMPositionBuilderBefore(ctx->builder, LLVMGetFirstInstruction(entry_bbr));
+		begin = LLVMGetFirstInstruction(entry_bbr);
+
+		if (begin)
+			LLVMPositionBuilderBefore(ctx->builder, begin);
+		else
+			LLVMPositionBuilderAtEnd(ctx->builder, entry_bbr);
 
 		ctx->locals[idx] = LLVMBuildAlloca(ctx->builder, type, "");
 
