@@ -1760,7 +1760,43 @@ restart:
 		stack_clear(ctx->mimic_stack);
 		break;
 	}
-	case OPC_GETSTATIC:		assert(0); break;
+	case OPC_GETSTATIC: {
+		LLVMValueRef value, objectref, addr, gep;
+		struct vm_class *vmc = vmm->class;
+		LLVMValueRef indices[1];
+		struct vm_field *vmf;
+		LLVMTypeRef type;
+		uint16_t idx;
+
+		idx = read_u16(code, pos);
+
+		vmf = vm_class_resolve_field_recursive(vmc, idx);
+
+		vm_object_lock(vmc->object);
+
+		/* XXX: Use guard page if necessary */
+		assert(vmc->state >= VM_CLASS_INITIALIZING);
+
+		vm_object_unlock(vmc->object);
+
+		type = llvm_type(vmf->type_info.vm_type);
+
+		assert(vmf != NULL);
+
+		objectref	= llvm_ptr_to_value(vmc->static_values, LLVMReferenceType());
+
+		indices[0] = LLVMConstInt(LLVMInt32Type(), vmf->offset, 0);
+
+		gep 	= LLVMBuildGEP(ctx->builder, objectref, indices, 1, "");
+
+		addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(type, 0), "");
+
+		value	= LLVMBuildLoad(ctx->builder, addr, "");
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_PUTSTATIC: {
 		struct vm_class *vmc = vmm->class;
 		LLVMValueRef target_in;
