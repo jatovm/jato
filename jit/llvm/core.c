@@ -1959,7 +1959,24 @@ restart:
 
 		break;
 	}
-	case OPC_ARRAYLENGTH:		assert(0); break;
+	case OPC_ARRAYLENGTH: {
+		LLVMValueRef arrayref, length, addr, gep;
+		LLVMValueRef indices[1];
+
+		arrayref = stack_pop(ctx->mimic_stack);
+
+		indices[0] = LLVMConstInt(LLVMInt32Type(), offsetof(struct vm_array, array_length), 0);
+
+		gep 	= LLVMBuildGEP(ctx->builder, arrayref, indices, 1, "");
+
+		addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMInt32Type(), 0), "");
+
+		length	= LLVMBuildLoad(ctx->builder, addr, "");
+
+		stack_push(ctx->mimic_stack, length);
+
+		break;
+	}
 	case OPC_ATHROW: {
 		LLVMValueRef objectref;
 		LLVMValueRef args[1];
