@@ -2154,6 +2154,8 @@ static int llvm_codegen(struct compilation_unit *cu)
 	if (opt_llvm_verbose)
 		LLVMDumpValue(ctx.func);
 
+	LLVMVerifyModule(module, LLVMPrintMessageAction, NULL);
+
 	cu->entry_point = LLVMRecompileAndRelinkFunction(engine, ctx.func);
 
 	assert(stack_is_empty(ctx.mimic_stack));
@@ -2185,8 +2187,6 @@ int llvm_compile(struct compilation_unit *cu)
 	err = llvm_codegen(cu);
 	if (err)
 		goto out;
-
-	LLVMVerifyModule(module, LLVMPrintMessageAction, NULL);
 
 out:
 	return err;
