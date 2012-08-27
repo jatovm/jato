@@ -2154,7 +2154,7 @@ static int llvm_codegen(struct compilation_unit *cu)
 	if (opt_llvm_verbose)
 		LLVMDumpValue(ctx.func);
 
-	LLVMVerifyModule(module, LLVMPrintMessageAction, NULL);
+	LLVMVerifyModule(module, LLVMAbortProcessAction, NULL);
 
 	cu->entry_point = LLVMRecompileAndRelinkFunction(engine, ctx.func);
 
