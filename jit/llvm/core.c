@@ -166,14 +166,14 @@ static LLVMTypeRef llvm_type(enum vm_type vm_type)
 	switch (vm_type) {
 	case J_VOID:		return LLVMVoidType();
 	case J_REFERENCE:	return LLVMReferenceType();
-	case J_BYTE:		return LLVMInt8Type();
-	case J_SHORT:		return LLVMInt16Type();
+	case J_BYTE:		return LLVMInt32Type();
+	case J_SHORT:		return LLVMInt32Type();
 	case J_INT:		return LLVMInt32Type();
 	case J_LONG:		return LLVMInt64Type();
-	case J_CHAR:		return LLVMInt16Type();
+	case J_CHAR:		return LLVMInt32Type();
 	case J_FLOAT:		return LLVMFloatType();
 	case J_DOUBLE:		return LLVMDoubleType();
-	case J_BOOLEAN:		return LLVMInt8Type();
+	case J_BOOLEAN:		return LLVMInt32Type();
 	default:
 		break;
 	}
