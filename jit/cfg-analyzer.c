@@ -200,6 +200,8 @@ static int split_after_branches(const unsigned char *code,
 			bb->has_branch = true;
 
 			set_bit(branch_targets->bits, br_target_off);
+		} else if (bc_is_return(opcode)) {
+			bb->has_return = true;
 		}
 
 		if (new_bb)

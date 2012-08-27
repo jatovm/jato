@@ -162,6 +162,9 @@ struct basic_block *bb_split(struct basic_block *orig_bb, unsigned long offset)
 		orig_bb->br_target_off = 0;
 	}
 
+	new_bb->has_return	= orig_bb->has_return;
+	orig_bb->has_return	= false;
+
 	return new_bb;
 }
 
