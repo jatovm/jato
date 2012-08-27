@@ -2212,9 +2212,6 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 	ctx->builder = LLVMCreateBuilder();
 
 	for_each_basic_block(bb, &cu->bb_list) {
-
-		assert(!bb->is_eh);
-
 		bbr = LLVMAppendBasicBlock(ctx->func, "L");
 
 		bb->priv = bbr;
@@ -2240,8 +2237,6 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 	prev = cu->entry_bb;
 
 	for_each_basic_block(bb, &cu->bb_list) {
-		assert(!bb->is_eh);
-
 		bbr = bb->priv;
 
 		if (bb->is_converted)
@@ -2249,6 +2244,9 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 		if (!prev->has_branch && !prev->has_return)
 			LLVMBuildBr(ctx->builder, bbr);
+
+		if (bb->is_eh)
+			stack_push(ctx->mimic_stack, LLVMConstNull(LLVMReferenceType()));
 
 		LLVMPositionBuilderAtEnd(ctx->builder, bbr);
 
