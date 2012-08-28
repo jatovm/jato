@@ -362,6 +362,47 @@ static LLVMValueRef llvm_trampoline(struct vm_method *vmm)
 	return func;
 }
 
+static LLVMValueRef llvm_vtable_trampoline(struct llvm_context *ctx, struct vm_method *vmm, LLVMValueRef objectref)
+{
+	LLVMValueRef indices[1];
+	LLVMTypeRef func_type;
+	LLVMValueRef vtable;
+	LLVMValueRef klass;
+	LLVMValueRef func;
+	LLVMValueRef addr;
+	LLVMValueRef gep;
+
+	assert(LLVMTypeOf(objectref) == LLVMReferenceType());
+
+	func_type	= llvm_function_type(vmm);
+
+	indices[0] = LLVMConstInt(LLVMInt32Type(), offsetof(struct vm_object, class), 0);
+
+	gep 	= LLVMBuildGEP(ctx->builder, objectref, indices, 1, "");
+
+	addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMReferenceType(), 0), "");
+
+	klass	= LLVMBuildLoad(ctx->builder, addr, "");
+
+	indices[0] = LLVMConstInt(LLVMInt32Type(), offsetof(struct vm_class, vtable), 0);
+
+	gep 	= LLVMBuildGEP(ctx->builder, klass, indices, 1, "");
+
+	addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMPointerType(LLVMReferenceType(), 0), 0), "");
+
+	vtable	= LLVMBuildLoad(ctx->builder, addr, "");
+
+	indices[0] = LLVMConstInt(LLVMInt32Type(), vmm->virtual_index, 0);
+
+	gep 	= LLVMBuildGEP(ctx->builder, vtable, indices, 1, "");
+
+	addr	= LLVMBuildLoad(ctx->builder, gep, "");
+
+	func	= LLVMBuildBitCast(ctx->builder, addr, LLVMPointerType(func_type, 0), "");
+
+	return func;
+}
+
 static void llvm_build_monitorexit(struct llvm_context *ctx, LLVMValueRef objectref)
 {
 	struct vm_method *vmm;
@@ -1943,7 +1984,35 @@ restart:
 
 		break;
 	}
-	case OPC_INVOKEVIRTUAL:		assert(0); break;
+	case OPC_INVOKEVIRTUAL: {
+		struct vm_method *target;
+		unsigned long nr_args;
+		LLVMValueRef value;
+		LLVMValueRef *args;
+		LLVMValueRef func;
+		uint16_t idx;
+
+		idx	= read_u16(code, pos);
+
+		target	= vm_class_resolve_method_recursive(vmm->class, idx, 0);
+
+		nr_args	= vm_method_arg_stack_count(target);
+
+		args	= llvm_convert_args(ctx, target, nr_args);
+
+		func	= llvm_vtable_trampoline(ctx, target, args[0]);
+
+		value	= LLVMBuildCall(ctx->builder, func, args, nr_args, "");
+
+		free(args);
+
+		/* XXX: Exception check */
+
+		if (target->return_type.vm_type != J_VOID)
+			stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_INVOKESPECIAL: {
 		struct vm_method *target;
 		unsigned long nr_args;
