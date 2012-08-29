@@ -994,14 +994,36 @@ restart:
 
 		break;
 	}
-	case OPC_IASTORE:		assert(0); break;
-	case OPC_LASTORE:		assert(0); break;
-	case OPC_FASTORE:		assert(0); break;
-	case OPC_DASTORE:		assert(0); break;
-	case OPC_AASTORE:		assert(0); break;
-	case OPC_BASTORE:		assert(0); break;
-	case OPC_CASTORE:		assert(0); break;
-	case OPC_SASTORE:		assert(0); break;
+	case OPC_IASTORE:
+	case OPC_LASTORE:
+	case OPC_FASTORE:
+	case OPC_DASTORE:
+	case OPC_AASTORE:
+	case OPC_BASTORE:
+	case OPC_CASTORE:
+	case OPC_SASTORE: {
+		LLVMValueRef arrayref, index, value;
+		LLVMValueRef gep, elems, addr;
+		LLVMValueRef indices[1];
+
+		value		= stack_pop(ctx->mimic_stack);
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		indices[0] = LLVMConstInt(LLVMInt32Type(), VM_ARRAY_ELEMS_OFFSET, 0);
+
+		gep 	= LLVMBuildGEP(ctx->builder, arrayref, indices, 1, "");
+
+		elems	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMTypeOf(value), 0), "");
+
+		indices[0] = index;
+
+		addr	= LLVMBuildGEP(ctx->builder, elems, indices, 1, "");
+
+		LLVMBuildStore(ctx->builder, value, addr);
+
+		break;
+	}
 	case OPC_POP: {
 		stack_pop(ctx->mimic_stack);
 
