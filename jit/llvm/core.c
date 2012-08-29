@@ -2009,7 +2009,7 @@ restart:
 
 		assert(vmf != NULL);
 
-		objectref	= llvm_ptr_to_value(vmc->static_values, LLVMReferenceType());
+		objectref	= llvm_ptr_to_value(vmf->class->static_values, LLVMReferenceType());
 
 		indices[0] = LLVMConstInt(LLVMInt32Type(), vmf->offset, 0);
 
@@ -2049,7 +2049,7 @@ restart:
 
 		assert(vmf != NULL);
 
-		objectref	= llvm_ptr_to_value(vmc->static_values, LLVMReferenceType());
+		objectref	= llvm_ptr_to_value(vmf->class->static_values, LLVMReferenceType());
 
 		indices[0] = LLVMConstInt(LLVMInt32Type(), vmf->offset, 0);
 
