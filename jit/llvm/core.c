@@ -97,6 +97,7 @@ static LLVM_DECLARE_BUILTIN(vm_object_alloc_array);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_primitive_array);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_string_from_utf8);
 static LLVM_DECLARE_BUILTIN(vm_object_check_cast);
+static LLVM_DECLARE_BUILTIN(vm_object_is_instance_of);
 static LLVM_DECLARE_BUILTIN(vm_object_lock);
 static LLVM_DECLARE_BUILTIN(vm_object_unlock);
 static LLVM_DECLARE_BUILTIN(emulate_dcmpg);
@@ -2343,7 +2344,31 @@ restart:
 
 		break;
 	}
-	case OPC_INSTANCEOF:		assert(0); break;
+	case OPC_INSTANCEOF: {
+		LLVMValueRef objectref;
+		struct vm_class *vmc;
+		LLVMValueRef args[2];
+		LLVMValueRef value;
+		uint16_t idx;
+
+		idx = read_u16(code, pos);
+
+		vmc = vm_class_resolve_class(vmm->class, idx);
+
+		assert(vmc != NULL);
+
+		objectref = stack_peek(ctx->mimic_stack);
+
+		args[0] = objectref;
+
+		args[1] = llvm_ptr_to_value(vmc, LLVMReferenceType());
+
+		value = LLVMBuildCall(ctx->builder, vm_object_is_instance_of_func, args, 2, "");
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_MONITORENTER: {
 		LLVMValueRef objectref;
 
@@ -2594,6 +2619,7 @@ static void llvm_setup_builtins(void)
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_primitive_array, J_REFERENCE, 2, J_INT, J_INT);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_string_from_utf8, J_REFERENCE, 2, J_REFERENCE, J_INT);
 	LLVM_DEFINE_BUILTIN(vm_object_check_cast, J_VOID, 2, J_REFERENCE, J_REFERENCE);
+	LLVM_DEFINE_BUILTIN(vm_object_is_instance_of, J_INT, 2, J_REFERENCE, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(vm_object_lock, J_INT, 1, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(vm_object_unlock, J_INT, 1, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(emulate_dcmpg, J_INT, 2, J_DOUBLE, J_DOUBLE);
