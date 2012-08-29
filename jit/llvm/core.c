@@ -270,7 +270,10 @@ static LLVMTypeRef llvm_function_type(struct vm_method *vmm)
 
 	assert(!vm_method_is_jni(vmm));
 
-	args_count = vm_method_arg_stack_count(vmm);
+	args_count = count_java_arguments(vmm);
+
+	if (!vm_method_is_static(vmm))
+		args_count++;
 
 	if (!args_count)
 		goto skip_args;
@@ -1996,7 +1999,10 @@ restart:
 
 		target	= vm_class_resolve_method_recursive(vmm->class, idx, 0);
 
-		nr_args	= vm_method_arg_stack_count(target);
+		nr_args	= count_java_arguments(target);
+
+		if (!vm_method_is_static(target))
+			nr_args++;
 
 		args	= llvm_convert_args(ctx, target, nr_args);
 
@@ -2025,11 +2031,16 @@ restart:
 
 		target	= vm_class_resolve_method_recursive(vmm->class, idx, CAFEBABE_CLASS_ACC_STATIC);
 
-		nr_args	= vm_method_arg_stack_count(target);
+		nr_args	= count_java_arguments(target);
+
+		if (!vm_method_is_static(target))
+			nr_args++;
 
 		args	= llvm_convert_args(ctx, target, nr_args);
 
 		func	= llvm_trampoline(target);
+
+		LLVMDumpValue(func);
 
 		value	= LLVMBuildCall(ctx->builder, func, args, nr_args, "");
 
@@ -2054,7 +2065,10 @@ restart:
 
 		target	= vm_class_resolve_method_recursive(vmm->class, idx, CAFEBABE_CLASS_ACC_STATIC);
 
-		nr_args	= vm_method_arg_stack_count(target);
+		nr_args	= count_java_arguments(target);
+
+		if (!vm_method_is_static(target))
+			nr_args++;
 
 		args	= llvm_convert_args(ctx, target, nr_args);
 
