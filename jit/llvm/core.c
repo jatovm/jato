@@ -406,6 +406,24 @@ static LLVMValueRef llvm_vtable_trampoline(struct llvm_context *ctx, struct vm_m
 	return func;
 }
 
+static LLVMValueRef llvm_build_array_load(struct llvm_context *ctx, LLVMValueRef arrayref, LLVMValueRef index, LLVMTypeRef type)
+{
+	LLVMValueRef gep, elems, addr;
+	LLVMValueRef indices[1];
+
+	indices[0] = LLVMConstInt(LLVMInt32Type(), VM_ARRAY_ELEMS_OFFSET, 0);
+
+	gep 	= LLVMBuildGEP(ctx->builder, arrayref, indices, 1, "");
+
+	elems	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(type, 0), "");
+
+	indices[0] = index;
+
+	addr	= LLVMBuildGEP(ctx->builder, elems, indices, 1, "");
+
+	return LLVMBuildLoad(ctx->builder, addr, "");
+}
+
 static void llvm_build_monitorexit(struct llvm_context *ctx, LLVMValueRef objectref)
 {
 	struct vm_method *vmm;
@@ -816,14 +834,102 @@ restart:
 
 		break;
 	}
-	case OPC_IALOAD:		assert(0); break;
-	case OPC_LALOAD:		assert(0); break;
-	case OPC_FALOAD:		assert(0); break;
-	case OPC_DALOAD:		assert(0); break;
-	case OPC_AALOAD:		assert(0); break;
-	case OPC_BALOAD:		assert(0); break;
-	case OPC_CALOAD:		assert(0); break;
-	case OPC_SALOAD:		assert(0); break;
+	case OPC_IALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_INT));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_LALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_LONG));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_FALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_FLOAT));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_DALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_DOUBLE));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_AALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_REFERENCE));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_BALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_BYTE));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_CALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_CHAR));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
+	case OPC_SALOAD: {
+		LLVMValueRef arrayref, index, value;
+
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_SHORT));
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_ISTORE: {
 		LLVMValueRef value, addr;
 		uint16_t idx;
