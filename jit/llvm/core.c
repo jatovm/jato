@@ -368,6 +368,47 @@ static LLVMValueRef llvm_trampoline(struct vm_method *vmm)
 	return func;
 }
 
+static LLVMValueRef llvm_itable_trampoline(struct llvm_context *ctx, struct vm_method *vmm, LLVMValueRef objectref, unsigned long idx)
+{
+	LLVMValueRef indices[1];
+	LLVMTypeRef func_type;
+	LLVMValueRef vtable;
+	LLVMValueRef klass;
+	LLVMValueRef func;
+	LLVMValueRef addr;
+	LLVMValueRef gep;
+
+	assert(LLVMTypeOf(objectref) == LLVMReferenceType());
+
+	func_type	= llvm_function_type(vmm);
+
+	indices[0] = LLVMConstInt(LLVMInt32Type(), offsetof(struct vm_object, class), 0);
+
+	gep 	= LLVMBuildGEP(ctx->builder, objectref, indices, 1, "");
+
+	addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMReferenceType(), 0), "");
+
+	klass	= LLVMBuildLoad(ctx->builder, addr, "");
+
+	indices[0] = LLVMConstInt(LLVMInt32Type(), offsetof(struct vm_class, itable), 0);
+
+	gep 	= LLVMBuildGEP(ctx->builder, klass, indices, 1, "");
+
+	addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMPointerType(LLVMReferenceType(), 0), 0), "");
+
+	vtable	= LLVMBuildLoad(ctx->builder, addr, "");
+
+	indices[0] = LLVMConstInt(LLVMInt32Type(), idx, 0);
+
+	gep 	= LLVMBuildGEP(ctx->builder, vtable, indices, 1, "");
+
+	addr	= LLVMBuildLoad(ctx->builder, gep, "");
+
+	func	= LLVMBuildBitCast(ctx->builder, addr, LLVMPointerType(func_type, 0), "");
+
+	return func;
+}
+
 static LLVMValueRef llvm_vtable_trampoline(struct llvm_context *ctx, struct vm_method *vmm, LLVMValueRef objectref)
 {
 	LLVMValueRef indices[1];
@@ -2249,7 +2290,46 @@ restart:
 
 		break;
 	}
-	case OPC_INVOKEINTERFACE:	assert(0); break;
+	case OPC_INVOKEINTERFACE: {
+		struct vm_method *target_vmm;
+		unsigned long nr_args;
+		LLVMValueRef value;
+		LLVMValueRef *args;
+		LLVMValueRef func;
+		uint16_t idx;
+
+		idx = read_u16(code, pos);
+
+		/* Skip count. */		
+		read_u8(code, pos);
+
+		/* Skip zero. */
+		read_u8(code, pos);
+
+		target_vmm = vm_class_resolve_interface_method_recursive(vmm->class, idx);
+
+		assert(target_vmm != NULL);
+
+		nr_args	= count_java_arguments(target_vmm);
+
+		if (!vm_method_is_static(target_vmm))
+			nr_args++;
+
+		args	= llvm_convert_args(ctx, target_vmm, nr_args);
+
+		func	= llvm_itable_trampoline(ctx, target_vmm, args[0], idx);
+
+		value	= LLVMBuildCall(ctx->builder, func, args, nr_args, "");
+
+		free(args);
+
+		/* XXX: Exception check */
+
+		if (target_vmm->return_type.vm_type != J_VOID)
+			stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_NEW: {
 		LLVMValueRef objectref;
 		struct vm_class *vmc;
