@@ -27,10 +27,12 @@
 #include "jit/llvm/core.h"
 
 #include "jit/subroutine.h"
+#include "jit/compiler.h"	/* for bytecode tracing */
 #include "jit/emulate.h"
 #include "lib/stack.h"
 #include "vm/method.h"
 #include "vm/class.h"
+#include "vm/trace.h"
 
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm-c/Analysis.h>
@@ -2682,8 +2684,11 @@ int llvm_compile(struct compilation_unit *cu)
 	struct vm_class *vmc = vmm->class;
 	int err;
 
-	if (opt_llvm_verbose)
-		fprintf(stderr, "Compiling %s.%s%s...\n", vmc->name, vmm->name, vmm->type);
+	if (opt_llvm_verbose) {
+		trace_printf("Compiling %s.%s%s...\n", vmc->name, vmm->name, vmm->type);
+		trace_bytecode(vmm);
+		trace_flush();
+	}
 
 	err = inline_subroutines(cu->method);
 	if (err)
