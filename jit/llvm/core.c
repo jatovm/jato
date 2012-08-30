@@ -2012,7 +2012,7 @@ restart:
 	}
 	case OPC_GETSTATIC: {
 		LLVMValueRef value, objectref, addr, gep;
-		struct vm_class *vmc = vmm->class;
+		struct vm_class *source_vmc;
 		LLVMValueRef indices[1];
 		struct vm_field *vmf;
 		LLVMTypeRef type;
@@ -2020,20 +2020,22 @@ restart:
 
 		idx = read_u16(code, pos);
 
-		vmf = vm_class_resolve_field_recursive(vmc, idx);
-
-		vm_object_lock(vmc->object);
-
-		/* XXX: Use guard page if necessary */
-		assert(vmc->state >= VM_CLASS_INITIALIZING);
-
-		vm_object_unlock(vmc->object);
-
-		type = llvm_type(vmf->type_info.vm_type);
+		vmf = vm_class_resolve_field_recursive(vmm->class, idx);
 
 		assert(vmf != NULL);
 
-		objectref	= llvm_ptr_to_value(vmc->static_values, LLVMReferenceType());
+		source_vmc = vmf->class;
+
+		vm_object_lock(source_vmc->object);
+
+		/* XXX: Use guard page if necessary */
+		assert(source_vmc->state >= VM_CLASS_INITIALIZING);
+
+		vm_object_unlock(source_vmc->object);
+
+		type = llvm_type(vmf->type_info.vm_type);
+
+		objectref	= llvm_ptr_to_value(source_vmc->static_values, LLVMReferenceType());
 
 		indices[0] = LLVMConstInt(LLVMInt32Type(), vmf->offset, 0);
 
@@ -2049,7 +2051,7 @@ restart:
 	}
 	case OPC_PUTSTATIC: {
 		LLVMValueRef objectref, addr, gep;
-		struct vm_class *vmc = vmm->class;
+		struct vm_class *target_vmc;
 		LLVMValueRef indices[1];
 		LLVMValueRef target_in;
 		struct vm_field *vmf;
@@ -2060,20 +2062,24 @@ restart:
 
 		idx = read_u16(code, pos);
 
-		vmf = vm_class_resolve_field_recursive(vmc, idx);
+		vmf = vm_class_resolve_field_recursive(vmm->class, idx);
 
-		vm_object_lock(vmc->object);
+		assert(vmf != NULL);
+
+		target_vmc = vmf->class;
+
+		vm_object_lock(target_vmc->object);
 
 		/* XXX: Use guard page if necessary */
-		assert(vmc->state >= VM_CLASS_INITIALIZING);
+		assert(target_vmc->state >= VM_CLASS_INITIALIZING);
 
-		vm_object_unlock(vmc->object);
+		vm_object_unlock(target_vmc->object);
 
 		type = llvm_type(vmf->type_info.vm_type);
 
 		assert(vmf != NULL);
 
-		objectref	= llvm_ptr_to_value(vmc->static_values, LLVMReferenceType());
+		objectref	= llvm_ptr_to_value(vmf->class->static_values, LLVMReferenceType());
 
 		indices[0] = LLVMConstInt(LLVMInt32Type(), vmf->offset, 0);
 
