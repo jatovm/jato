@@ -1569,7 +1569,31 @@ restart:
 
 		break;
 	}
-	case OPC_IINC:			assert(0); break;
+	case OPC_IINC: {
+		LLVMValueRef local, addr, value, result;
+		uint16_t idx;
+		int16_t i;
+
+		if (wide) {
+			idx	= read_u16(code, pos);
+			i	= read_u16(code, pos);
+		} else {
+			idx	= read_u8(code, pos);
+			i	= read_u8(code, pos);
+		}
+
+		local	= llvm_load_local(ctx, idx, LLVMInt32Type());
+
+		addr	= llvm_lookup_local(ctx, idx, LLVMInt32Type());
+
+		value	= LLVMConstInt(LLVMInt32Type(), i, 0);
+
+		result	= LLVMBuildAdd(ctx->builder, local, value, "");
+
+		LLVMBuildStore(ctx->builder, result, addr);
+
+		break;
+	}
 	case OPC_I2L: {
 		LLVMValueRef value, result;
 
