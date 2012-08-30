@@ -508,6 +508,7 @@ static void llvm_build_ensure_class_init(struct llvm_context *ctx, struct vm_cla
 }
 
 static void llvm_build_if(struct llvm_context *ctx,
+			  unsigned long insn_start,
 			  unsigned char *code,
 			  unsigned long *pos,
 			  LLVMIntPredicate op,
@@ -516,15 +517,12 @@ static void llvm_build_if(struct llvm_context *ctx,
 {
 	struct basic_block *then_bb;
 	struct basic_block *else_bb;
-	unsigned long insn_pos;
 	LLVMValueRef cmp;
 	int16_t offset;
 
-	insn_pos = *pos;
-
 	offset = read_s16(code, pos);
 
-	then_bb	= find_bb(ctx->cu, insn_pos + offset);
+	then_bb	= find_bb(ctx->cu, insn_start + offset);
 
 	else_bb	= find_bb(ctx->cu, *pos);
 
@@ -1888,7 +1886,7 @@ restart:
 
 		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
 
-		llvm_build_if(ctx, code, pos, LLVMIntEQ, value, zero);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntEQ, value, zero);
 
 		break;
 	}
@@ -1899,7 +1897,7 @@ restart:
 
 		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
 
-		llvm_build_if(ctx, code, pos, LLVMIntNE, value, zero);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntNE, value, zero);
 
 		break;
 	}
@@ -1910,7 +1908,7 @@ restart:
 
 		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSLT, value, zero);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSLT, value, zero);
 
 		break;
 	}
@@ -1921,7 +1919,7 @@ restart:
 
 		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSGE, value, zero);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSGE, value, zero);
 
 		break;
 	}
@@ -1932,7 +1930,7 @@ restart:
 
 		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSGT, value, zero);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSGT, value, zero);
 
 		break;
 	}
@@ -1943,7 +1941,7 @@ restart:
 
 		zero	= LLVMConstInt(LLVMTypeOf(value), 0, 0);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSLE, value, zero);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSLE, value, zero);
 
 		break;
 	}
@@ -1953,7 +1951,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntEQ, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntEQ, value1, value2);
 
 		break;
 	}
@@ -1963,7 +1961,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntNE, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntNE, value1, value2);
 
 		break;
 	}
@@ -1973,7 +1971,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSLT, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSLT, value1, value2);
 
 		break;
 	}
@@ -1983,7 +1981,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSGE, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSGE, value1, value2);
 
 		break;
 	}
@@ -1993,7 +1991,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSGT, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSGT, value1, value2);
 
 		break;
 	}
@@ -2003,7 +2001,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntSLE, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntSLE, value1, value2);
 
 		break;
 	}
@@ -2013,7 +2011,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntEQ, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntEQ, value1, value2);
 
 		break;
 	}
@@ -2023,7 +2021,7 @@ restart:
 		value2	= stack_pop(ctx->mimic_stack);
 		value1	= stack_pop(ctx->mimic_stack);
 
-		llvm_build_if(ctx, code, pos, LLVMIntNE, value1, value2);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntNE, value1, value2);
 
 		break;
 	}
@@ -2516,7 +2514,7 @@ restart:
 
 		null	= LLVMConstNull(LLVMTypeOf(value));
 
-		llvm_build_if(ctx, code, pos, LLVMIntEQ, value, null);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntEQ, value, null);
 
 		break;
 	}
@@ -2527,7 +2525,7 @@ restart:
 
 		null	= LLVMConstNull(LLVMTypeOf(value));
 
-		llvm_build_if(ctx, code, pos, LLVMIntNE, value, null);
+		llvm_build_if(ctx, insn_start, code, pos, LLVMIntNE, value, null);
 
 		break;
 	}
