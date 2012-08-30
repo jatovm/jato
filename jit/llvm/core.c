@@ -2206,8 +2206,6 @@ restart:
 
 		func	= llvm_trampoline(target);
 
-		LLVMDumpValue(func);
-
 		value	= LLVMBuildCall(ctx->builder, func, args, nr_args, "");
 
 		free(args);
