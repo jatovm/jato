@@ -92,6 +92,7 @@ static void llvm_throw_stub(struct vm_object *exception)
 						__VA_ARGS__);		\
 	} while (0);
 
+static LLVM_DECLARE_BUILTIN(vm_class_ensure_init);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_array);
 static LLVM_DECLARE_BUILTIN(vm_object_alloc_primitive_array);
@@ -452,6 +453,15 @@ static void llvm_build_monitorenter(struct llvm_context *ctx, LLVMValueRef objec
 	args[0] = objectref;
 
 	LLVMBuildCall(ctx->builder, vm_object_lock_func, args, 1, "");
+}
+
+static void llvm_build_ensure_class_init(struct llvm_context *ctx, struct vm_class *vmc)
+{
+	LLVMValueRef args[1];
+
+	args[0] = llvm_ptr_to_value(vmc, LLVMReferenceType());
+
+	LLVMBuildCall(ctx->builder, vm_class_ensure_init_func, args, 1, "");
 }
 
 static void llvm_build_if(struct llvm_context *ctx,
@@ -2026,12 +2036,11 @@ restart:
 
 		source_vmc = vmf->class;
 
-		vm_object_lock(source_vmc->object);
-
-		/* XXX: Use guard page if necessary */
-		assert(source_vmc->state >= VM_CLASS_INITIALIZING);
-
-		vm_object_unlock(source_vmc->object);
+		/*
+		 * XXX: Use guard pages to eliminate the extra call on every
+		 * field access.
+		 */
+		llvm_build_ensure_class_init(ctx, source_vmc);
 
 		type = llvm_type(vmf->type_info.vm_type);
 
@@ -2068,16 +2077,13 @@ restart:
 
 		target_vmc = vmf->class;
 
-		vm_object_lock(target_vmc->object);
-
-		/* XXX: Use guard page if necessary */
-		assert(target_vmc->state >= VM_CLASS_INITIALIZING);
-
-		vm_object_unlock(target_vmc->object);
+		/*
+		 * XXX: Use guard pages to eliminate the extra call on every
+		 * field access.
+		 */
+		llvm_build_ensure_class_init(ctx, target_vmc);
 
 		type = llvm_type(vmf->type_info.vm_type);
-
-		assert(vmf != NULL);
 
 		objectref	= llvm_ptr_to_value(vmf->class->static_values, LLVMReferenceType());
 
@@ -2644,6 +2650,7 @@ static LLVMValueRef llvm_setup_func(const char *name, void *func_p, enum vm_type
 
 static void llvm_setup_builtins(void)
 {
+	LLVM_DEFINE_BUILTIN(vm_class_ensure_init, J_INT, 1, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc, J_REFERENCE, 1, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_array, J_REFERENCE, 2, J_REFERENCE, J_INT);
 	LLVM_DEFINE_BUILTIN(vm_object_alloc_primitive_array, J_REFERENCE, 2, J_INT, J_INT);
