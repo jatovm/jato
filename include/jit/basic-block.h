@@ -54,6 +54,9 @@ struct basic_block {
 	/* Is this basic block an exception handler? */
 	bool is_eh;
 
+	/* Has PHI nodes been added to this basic block? */
+	bool has_phi;
+
 	/*
 	 * These are computed by SSA.
 	 */

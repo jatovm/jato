@@ -58,4 +58,6 @@ static inline unsigned long stack_size(struct stack *stack)
 
 void stack_copy(struct stack *src, struct stack *dst);
 
+void stack_reverse(struct stack *stack);
+
 #endif

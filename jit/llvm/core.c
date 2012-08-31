@@ -206,6 +206,18 @@ static LLVMValueRef llvm_ptr_to_value(void *p, LLVMTypeRef type)
 	return LLVMConstIntToPtr(value, type);
 }
 
+static void llvm_position_at_begin(struct llvm_context *ctx, LLVMBasicBlockRef bbr)
+{
+	LLVMValueRef begin;
+
+	begin = LLVMGetFirstInstruction(bbr);
+
+	if (begin)
+		LLVMPositionBuilderBefore(ctx->builder, begin);
+	else
+		LLVMPositionBuilderAtEnd(ctx->builder, bbr);
+}
+
 static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long idx, LLVMTypeRef type)
 {
 	LLVMBasicBlockRef entry_bbr, current_bbr;
@@ -2550,14 +2562,30 @@ restart:
 	return 0;
 }
 
+static LLVMValueRef llvm_bc2ir_build_phi(struct llvm_context *ctx, struct basic_block *bb, unsigned int depth)
+{
+	LLVMValueRef value;
+
+	assert(stack_size(bb->mimic_stack) >= depth);
+
+	value = bb->mimic_stack->elements[depth - 1];
+
+	return LLVMBuildPhi(ctx->builder, LLVMTypeOf(value), "");
+}
+
 static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
 {
 	struct vm_method *vmm = ctx->cu->method;
 	unsigned char *code;
 	unsigned long pos;
+	unsigned int i;
 
 	if (bb->is_converted)
 		return 0;
+
+	bb->is_converted = true;
+
+	ctx->mimic_stack = bb->mimic_stack;
 
 	code = vmm->code_attribute.code;
 
@@ -2566,7 +2594,35 @@ static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
 	while (pos < bb->end)
 		llvm_bc2ir_insn(ctx, code, &pos);
 
-	bb->is_converted = true;
+	/*
+	 * Build PHI nodes.
+	 */
+
+	for (i = 0; i < bb->nr_successors; i++) {
+		struct basic_block *succ = bb->successors[i];
+		unsigned long stack_depth = 0;
+
+		if (succ->has_phi)
+			continue;
+
+		succ->has_phi = true;
+
+		llvm_position_at_begin(ctx, succ->priv);
+
+		stack_depth = stack_size(bb->mimic_stack);
+
+		succ->entry_mimic_stack_size = stack_depth;
+
+		while (stack_depth) {
+			LLVMValueRef phi;
+
+			phi = llvm_bc2ir_build_phi(ctx, bb, stack_depth--);
+
+			stack_push(succ->mimic_stack, phi);
+		}
+
+		stack_reverse(succ->mimic_stack);
+	}
 
 	return 0;
 }
@@ -2611,17 +2667,60 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 		if (bb->is_converted)
 			continue;
 
+		LLVMPositionBuilderAtEnd(ctx->builder, prev->priv);
+
 		if (!prev->has_branch && !prev->has_return)
 			LLVMBuildBr(ctx->builder, bbr);
 
 		if (bb->is_eh)
-			stack_push(ctx->mimic_stack, LLVMConstNull(LLVMReferenceType()));
+			stack_push(bb->mimic_stack, LLVMConstNull(LLVMReferenceType()));
 
 		LLVMPositionBuilderAtEnd(ctx->builder, bbr);
 
 		llvm_bc2ir_bb(ctx, bb);
 
 		prev = bb;
+	}
+
+	/*
+	 * Add incoming values and blocks to PHI nodes.
+	 */
+	for_each_basic_block(bb, &cu->bb_list) {
+		long stack_depth = bb->entry_mimic_stack_size;
+		LLVMValueRef phi;
+
+		if (stack_depth <= 0)
+			continue;
+
+		bbr = bb->priv;
+
+		assert(bb->is_converted);
+
+		phi = LLVMGetFirstInstruction(bbr);
+
+		while (stack_depth) {
+			LLVMBasicBlockRef incoming_blocks[bb->nr_predecessors];
+			LLVMValueRef incoming_values[bb->nr_predecessors];
+			unsigned int i;
+
+			for (i = 0; i < bb->nr_predecessors; i++) {
+				struct basic_block *pred = bb->predecessors[i];
+				LLVMValueRef value;
+
+				assert(stack_depth <= bb->entry_mimic_stack_size);
+
+				value = pred->mimic_stack->elements[stack_depth - 1];
+
+				incoming_values[i] = value;
+				incoming_blocks[i] = pred->priv;
+			}
+
+			LLVMAddIncoming(phi, incoming_values, incoming_blocks, bb->nr_predecessors);
+
+			phi = LLVMGetNextInstruction(phi);
+
+			stack_depth--;
+		}
 	}
 
 	LLVMPositionBuilderAtEnd(ctx->builder, cu->exit_bb->priv);
@@ -2655,8 +2754,6 @@ static int llvm_codegen(struct compilation_unit *cu)
 	if (!ctx.func)
 		return -1;
 
-	ctx.mimic_stack = alloc_stack();
-
 	if (llvm_bc2ir(&ctx) < 0)
 		assert(0);
 
@@ -2666,10 +2763,6 @@ static int llvm_codegen(struct compilation_unit *cu)
 	LLVMVerifyModule(module, LLVMAbortProcessAction, NULL);
 
 	cu->entry_point = LLVMRecompileAndRelinkFunction(engine, ctx.func);
-
-	assert(stack_is_empty(ctx.mimic_stack));
-
-	free_stack(ctx.mimic_stack);
 
 	free(ctx.locals);
 

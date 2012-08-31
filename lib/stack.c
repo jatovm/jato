@@ -59,3 +59,19 @@ void stack_copy(struct stack *src, struct stack *dst)
 	dst->nr_elements = src->nr_elements;
 	memcpy(new_elements, src->elements, size);
 }
+
+void stack_reverse(struct stack *stack)
+{
+	unsigned int i;
+
+	for (i = 0; i < stack->nr_elements / 2; i++) {
+		unsigned int end = stack->nr_elements - i - 1;
+		void *tmp;
+
+		tmp			= stack->elements[i];
+
+		stack->elements[i]	= stack->elements[end];
+
+		stack->elements[end]	= tmp;
+	}
+}
