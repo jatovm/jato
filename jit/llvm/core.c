@@ -616,7 +616,7 @@ restart:
 	}
 	case OPC_BIPUSH: {
 		LLVMValueRef value;
-		uint8_t i;
+		int8_t i;
 
 		i	= read_u8(code, pos);
 
@@ -628,7 +628,7 @@ restart:
 	}
 	case OPC_SIPUSH: {
 		LLVMValueRef value;
-		uint16_t i;
+		int16_t i;
 
 		i	= read_u16(code, pos);
 
