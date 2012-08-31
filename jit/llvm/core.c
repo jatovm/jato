@@ -510,6 +510,92 @@ static void llvm_build_monitorenter(struct llvm_context *ctx, LLVMValueRef objec
 	LLVMBuildCall(ctx->builder, vm_object_lock_func, args, 1, "");
 }
 
+static LLVMValueRef llvm_build_ldc(struct llvm_context *ctx, uint16_t cp_idx)
+{
+	struct vm_method *vmm = ctx->cu->method;
+	struct vm_class *vmc = vmm->class;
+	struct cafebabe_constant_pool *cp;
+	LLVMValueRef value;
+
+	if (cafebabe_class_constant_index_invalid(vmc->class, cp_idx)) {
+		fprintf(stderr, "abort: OPC_LDC: invalid constant index '%d'!\n", cp_idx);
+		assert(0);
+	}
+
+	cp = &vmc->class->constant_pool[cp_idx];
+
+	switch (cp->tag) {
+	case CAFEBABE_CONSTANT_TAG_INTEGER: {
+		int32_t ivalue;
+
+		ivalue	= cafebabe_constant_pool_get_integer(cp);
+
+		value	= LLVMConstInt(LLVMInt32Type(), ivalue, 0);
+
+		break;
+	}
+	case CAFEBABE_CONSTANT_TAG_LONG: {
+		int64_t jvalue;
+
+		jvalue	= cafebabe_constant_pool_get_long(cp);
+
+		value	= LLVMConstInt(LLVMInt64Type(), jvalue, 0);
+
+		break;
+	}
+	case CAFEBABE_CONSTANT_TAG_FLOAT: {
+		float fvalue;
+
+		fvalue	= cafebabe_constant_pool_get_float(cp);
+
+		value	= LLVMConstReal(LLVMFloatType(), fvalue);
+
+		break;
+	}
+	case CAFEBABE_CONSTANT_TAG_DOUBLE: {
+		double dvalue;
+
+		dvalue	= cafebabe_constant_pool_get_double(cp);
+
+		value	= LLVMConstReal(LLVMDoubleType(), dvalue);
+
+		break;
+		}
+	case CAFEBABE_CONSTANT_TAG_STRING: {
+		const struct cafebabe_constant_info_utf8 *utf8;
+		LLVMValueRef args[2];
+
+		if (cafebabe_class_constant_get_utf8(vmc->class, cp->string.string_index, &utf8))
+			assert(0);
+
+		args[0] = llvm_ptr_to_value(utf8->bytes, LLVMReferenceType());
+
+		args[1] = LLVMConstInt(LLVMInt32Type(), utf8->length, 0);
+
+		value = LLVMBuildCall(ctx->builder, vm_object_alloc_string_from_utf8_func, args, 2, "");
+
+		break;
+	}
+	case CAFEBABE_CONSTANT_TAG_CLASS: {
+		struct vm_class *klass = vm_class_resolve_class(vmc, cp_idx);
+
+		assert(klass != NULL);
+
+		if (vm_class_ensure_object(klass))
+			assert(0);
+
+		value = llvm_ptr_to_value(klass->object, LLVMReferenceType());
+
+		break;
+	}
+	default:
+		fprintf(stderr, "abort: OPC_LDC: unknown tag '%d'!\n", cp->tag);
+		assert(0);
+	}
+
+	return value;
+}
+
 static void llvm_build_ensure_class_init(struct llvm_context *ctx, struct vm_class *vmc)
 {
 	LLVMValueRef args[1];
@@ -639,96 +725,30 @@ restart:
 		break;
 	}
 	case OPC_LDC: {
-		struct vm_method *vmm = ctx->cu->method;
-		struct vm_class *vmc = vmm->class;
-		struct cafebabe_constant_pool *cp;
 		LLVMValueRef value;
 		uint8_t cp_idx;
 
 		cp_idx	= read_u8(code, pos);
 
-		if (cafebabe_class_constant_index_invalid(vmc->class, cp_idx)) {
-			fprintf(stderr, "abort: OPC_LDC: invalid constant index '%d'!\n", cp_idx);
-			assert(0);
-		}
-
-		cp = &vmc->class->constant_pool[cp_idx];
-
-		switch (cp->tag) {
-		case CAFEBABE_CONSTANT_TAG_INTEGER: {
-			int32_t ivalue;
-
-			ivalue	= cafebabe_constant_pool_get_integer(cp);
-
-			value	= LLVMConstInt(LLVMInt32Type(), ivalue, 0);
-
-			break;
-		}
-		case CAFEBABE_CONSTANT_TAG_LONG: {
-			int64_t jvalue;
-
-			jvalue	= cafebabe_constant_pool_get_long(cp);
-
-			value	= LLVMConstInt(LLVMInt64Type(), jvalue, 0);
-
-			break;
-		}
-		case CAFEBABE_CONSTANT_TAG_FLOAT: {
-			float fvalue;
-
-			fvalue	= cafebabe_constant_pool_get_float(cp);
-
-			value	= LLVMConstReal(LLVMFloatType(), fvalue);
-
-			break;
-		}
-		case CAFEBABE_CONSTANT_TAG_DOUBLE: {
-			double dvalue;
-
-			dvalue	= cafebabe_constant_pool_get_double(cp);
-
-			value	= LLVMConstReal(LLVMDoubleType(), dvalue);
-
-			break;
-		}
-		case CAFEBABE_CONSTANT_TAG_STRING: {
-			const struct cafebabe_constant_info_utf8 *utf8;
-			LLVMValueRef args[2];
-
-			if (cafebabe_class_constant_get_utf8(vmc->class, cp->string.string_index, &utf8))
-				assert(0);
-
-			args[0] = llvm_ptr_to_value(utf8->bytes, LLVMReferenceType());
-
-			args[1] = LLVMConstInt(LLVMInt32Type(), utf8->length, 0);
-
-			value = LLVMBuildCall(ctx->builder, vm_object_alloc_string_from_utf8_func, args, 2, "");
-
-			break;
-		}
-		case CAFEBABE_CONSTANT_TAG_CLASS: {
-			struct vm_class *klass = vm_class_resolve_class(vmc, cp_idx);
-
-			assert(klass != NULL);
-
-			if (vm_class_ensure_object(klass))
-				assert(0);
-
-			value = llvm_ptr_to_value(klass->object, LLVMReferenceType());
-
-			break;
-		}
-		default:
-			fprintf(stderr, "abort: OPC_LDC: unknown tag '%d'!\n", cp->tag);
-			assert(0);
-		}
+		value	= llvm_build_ldc(ctx, cp_idx);
 
 		stack_push(ctx->mimic_stack, value);
 
 		break;
 	}
-	case OPC_LDC_W:			assert(0); break;
-	case OPC_LDC2_W:		assert(0); break;
+	case OPC_LDC_W:
+	case OPC_LDC2_W: {
+		LLVMValueRef value;
+		uint16_t cp_idx;
+
+		cp_idx	= read_u16(code, pos);
+
+		value	= llvm_build_ldc(ctx, cp_idx);
+
+		stack_push(ctx->mimic_stack, value);
+
+		break;
+	}
 	case OPC_ILOAD: {
 		LLVMValueRef value;
 		uint16_t idx;
