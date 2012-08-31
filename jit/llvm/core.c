@@ -700,7 +700,7 @@ restart:
 			assert(klass != NULL);
 
 			if (vm_class_ensure_object(klass))
-				return -1;
+				assert(0);
 
 			value = llvm_ptr_to_value(klass->object, LLVMReferenceType());
 
