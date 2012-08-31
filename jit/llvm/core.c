@@ -2766,7 +2766,10 @@ void llvm_init(void)
 
 void llvm_exit(void)
 {
+#if 0
 	LLVMDisposeExecutionEngine(engine);
 
 	LLVMDisposeModule(module);
+#endif
+
 }
