@@ -250,8 +250,16 @@ static LLVMValueRef llvm_lookup_local(struct llvm_context *ctx, unsigned long id
 static LLVMValueRef llvm_load_local(struct llvm_context *ctx, unsigned long idx, LLVMTypeRef type)
 {
 	struct vm_method *vmm = ctx->cu->method;
+	unsigned long args_count = 0;
 
-	if (idx < (unsigned long) vmm->args_count)
+	assert(!vm_method_is_jni(vmm));
+
+	args_count = count_java_arguments(vmm);
+
+	if (!vm_method_is_static(vmm))
+		args_count++;
+
+	if (idx < args_count)
 		return LLVMGetParam(ctx->func, idx);
 
 	if (!ctx->locals[idx]) {
