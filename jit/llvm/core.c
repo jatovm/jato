@@ -351,7 +351,7 @@ llvm_convert_args(struct llvm_context *ctx, struct vm_method *vmm, unsigned long
 
 	assert(!vm_method_is_jni(vmm));
 
-	args = calloc(nr_args, sizeof(LLVMValueRef *));
+	args = calloc(nr_args, sizeof(LLVMValueRef));
 	if (!args)
 		return NULL;
 
