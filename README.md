@@ -128,7 +128,7 @@ following clarification and special exception:
 I would like to thank the following people and organizations for supporting
 Jato development:
 
-- Google for including Jato in Summer of Code 2008 and 2009.
+- Google for including Jato in Summer of Code 2008, 2009, and 2011.
 
 - Kernel.org for providing git hosting for Jato.
 
