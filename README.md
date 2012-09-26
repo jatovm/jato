@@ -1,19 +1,21 @@
-# What is Jato
+# Jato VM
+
+## About
 
 Jato is an implementation of the Java virtual machine. It includes a VM and a
 JIT compiler for the x86 machine architecture and supports the JNI API. Jato
 uses Boehm GC as its garbage collector and relies on GNU Classpath to provide
 essential Java APIs.
 
-# Compilation and Installation
+## Compilation and Installation
 
-## Getting the Sources
+### Getting the Sources
 
 Fetch the latest sources with:
 
     git clone git://git.kernel.org/pub/scm/java/jato/jato.git
 
-## Build Requirements
+### Build Requirements
 
 Before installing Jato ensure you have the following software installed on your
 system:
@@ -36,7 +38,7 @@ Archlinux:
 
     pacman -S eclipse-ecj classpath libzip libffi
 
-## Building GNU Classpath
+### Building GNU Classpath
 
 GNU Classpath is no longer packaged with Ubuntu 10.10 and later versions so you
 need to build and install it yourself to run Jato. First download the sources from:
@@ -56,13 +58,13 @@ and install it to /usr/local:
 
     sudo make install
 
-## Building the Software
+### Building the Software
 
 Compile the VM:
 
     make
 
-## Testing and Installation
+### Testing and Installation
 
 You can run all Jato unit and regression tests with the command:
 
@@ -81,7 +83,7 @@ You can now install Jato with:
 
     make install
 
-# Using Jato
+## Using Jato
 
 Jato uses the same command line options as 'java'. You can execute a single
 class with:
@@ -99,7 +101,7 @@ You can also execute a Jar file with:
 Jato also supports variety of command line options for debugging and tracing
 purposes. See the file Documentation/options.txt for details.
 
-# Copyright and License
+## Copyright and License
 
 Copyright (C) 2005-2012  Pekka Enberg and contributors
 
@@ -121,7 +123,7 @@ following clarification and special exception:
     you are not obligated to do so. If you do not wish to do so, delete this
     exception statement from your version.
 
-# Thanks and Acknowledgements
+## Thanks and Acknowledgements
 
 I would like to thank the following people and organizations for supporting
 Jato development:
