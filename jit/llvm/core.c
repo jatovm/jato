@@ -27,6 +27,7 @@
 #include "jit/llvm/core.h"
 
 #include "jit/subroutine.h"
+#include "vm/classloader.h"
 #include "jit/compiler.h"	/* for bytecode tracing */
 #include "jit/emulate.h"
 #include "lib/stack.h"
@@ -218,6 +219,37 @@ static LLVMTypeRef llvm_type(enum vm_type vm_type)
 	assert(0);
 
 	return NULL;
+}
+
+static char *llvm_class_name_to_array_name(const char *class_name)
+{
+	char *array_name;
+	size_t len;
+
+	len = strlen(class_name) + 4;
+
+	array_name = malloc(len);
+	if (!array_name)
+		return NULL;
+
+	if (class_name[0] == '[')
+		snprintf(array_name, len, "[%s", class_name);
+	else
+		snprintf(array_name, len, "[L%s;", class_name);
+
+	return array_name;
+}
+
+static struct vm_class *llvm_class_to_array_class(struct vm_class *class)
+{
+	struct vm_class *array_class;
+	char *array_class_name;
+
+	array_class_name = llvm_class_name_to_array_name(class->name);
+	array_class = classloader_load(class->classloader, array_class_name);
+	free(array_class_name);
+
+	return array_class;
 }
 
 static bool llvm_is_category_1_type(LLVMTypeRef type)
@@ -2515,6 +2547,7 @@ restart:
 		break;
 	}
 	case OPC_ANEWARRAY: {
+		struct vm_class *array_vmc;
 		LLVMValueRef arrayref;
 		struct vm_class *vmc;
 		LLVMValueRef args[2];
@@ -2529,7 +2562,11 @@ restart:
 
 		assert(vmc != NULL);
 
-		args[0] = llvm_ptr_to_value(vmc, LLVMReferenceType());
+		array_vmc = llvm_class_to_array_class(vmc);
+
+		assert(array_vmc != NULL);
+
+		args[0] = llvm_ptr_to_value(array_vmc, LLVMReferenceType());
 
 		args[1] = count;
 
