@@ -269,8 +269,11 @@ static LLVMValueRef llvm_load_local(struct llvm_context *ctx, unsigned long idx,
 	if (!vm_method_is_static(vmm))
 		args_count++;
 
-	if (idx < args_count)
-		return LLVMGetParam(ctx->func, idx);
+	if (idx < args_count) {
+		assert(ctx->locals[idx] != NULL);
+
+		return LLVMBuildLoad(ctx->builder, ctx->locals[idx], "");
+	}
 
 	if (!ctx->locals[idx]) {
 		LLVMBasicBlockRef entry_bbr, current_bbr;
@@ -2663,6 +2666,34 @@ static int llvm_bc2ir_bb(struct llvm_context *ctx, struct basic_block *bb)
 	return 0;
 }
 
+static void llvm_setup_locals(struct llvm_context *ctx, LLVMBasicBlockRef bbr)
+{
+	struct vm_method *vmm = ctx->cu->method;
+	unsigned long args_count, idx;
+
+	LLVMPositionBuilderAtEnd(ctx->builder, bbr);
+
+	assert(!vm_method_is_jni(vmm));
+
+	args_count = count_java_arguments(vmm);
+
+	if (!vm_method_is_static(vmm))
+		args_count++;
+
+	for (idx = 0; idx < args_count; idx++) {
+		LLVMValueRef param;
+		char name[32];
+
+		snprintf(name, sizeof(name), "arg%lu", idx);
+
+		param = LLVMGetParam(ctx->func, idx);
+
+		ctx->locals[idx] = LLVMBuildAlloca(ctx->builder, LLVMTypeOf(param), name);
+
+		LLVMBuildStore(ctx->builder, param, ctx->locals[idx]);
+	}
+}
+
 static int llvm_bc2ir(struct llvm_context *ctx)
 {
 	struct compilation_unit *cu = ctx->cu;
@@ -2679,6 +2710,8 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 	}
 
 	bbr = cu->entry_bb->priv;
+
+	llvm_setup_locals(ctx, bbr);
 
 	LLVMPositionBuilderAtEnd(ctx->builder, bbr);
 
