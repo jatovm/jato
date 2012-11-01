@@ -25,6 +25,7 @@ struct basic_block {
 	struct list_head bb_list_node;
 	bool has_branch;
 	bool has_return;
+	bool has_athrow;
 	unsigned long br_target_off;	/* Branch target offset in bytecode insns. */
 	unsigned long nr_successors;
 	struct basic_block **successors;

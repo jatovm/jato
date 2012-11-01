@@ -2611,6 +2611,8 @@ restart:
 
 		LLVMSetTailCall(call, 1);
 
+		LLVMBuildUnreachable(ctx->builder);
+
 		break;
 	}
 	case OPC_CHECKCAST: {
@@ -2864,7 +2866,7 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 		LLVMPositionBuilderAtEnd(ctx->builder, prev->priv);
 
-		if (!prev->has_branch && !prev->has_return)
+		if (!prev->has_branch && !prev->has_return && !prev->has_athrow)
 			LLVMBuildBr(ctx->builder, bbr);
 
 		if (bb->is_eh)

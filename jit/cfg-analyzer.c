@@ -202,6 +202,8 @@ static int split_after_branches(const unsigned char *code,
 			set_bit(branch_targets->bits, br_target_off);
 		} else if (bc_is_return(opcode)) {
 			bb->has_return = true;
+		} else if (bc_is_athrow(opcode)) {
+			bb->has_athrow = true;
 		}
 
 		if (new_bb)
