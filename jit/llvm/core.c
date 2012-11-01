@@ -465,11 +465,12 @@ static LLVMValueRef llvm_trampoline(struct vm_method *vmm)
 	return func;
 }
 
-static LLVMValueRef llvm_itable_trampoline(struct llvm_context *ctx, struct vm_method *vmm, LLVMValueRef objectref, unsigned long idx)
+static LLVMValueRef
+llvm_itable_trampoline(struct llvm_context *ctx,struct vm_method *vmm, LLVMValueRef objectref)
 {
 	LLVMValueRef indices[1];
 	LLVMTypeRef func_type;
-	LLVMValueRef vtable;
+	LLVMValueRef itable;
 	LLVMValueRef klass;
 	LLVMValueRef func;
 	LLVMValueRef addr;
@@ -493,11 +494,11 @@ static LLVMValueRef llvm_itable_trampoline(struct llvm_context *ctx, struct vm_m
 
 	addr	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMPointerType(LLVMReferenceType(), 0), 0), "");
 
-	vtable	= LLVMBuildLoad(ctx->builder, addr, "");
+	itable	= addr;
 
-	indices[0] = LLVMConstInt(LLVMInt32Type(), idx, 0);
+	indices[0] = LLVMConstInt(LLVMInt32Type(), vmm->itable_index, 0);
 
-	gep 	= LLVMBuildGEP(ctx->builder, vtable, indices, 1, "");
+	gep 	= LLVMBuildGEP(ctx->builder, itable, indices, 1, "");
 
 	addr	= LLVMBuildLoad(ctx->builder, gep, "");
 
@@ -2489,7 +2490,7 @@ restart:
 
 		args	= llvm_convert_args(ctx, target_vmm, nr_args);
 
-		func	= llvm_itable_trampoline(ctx, target_vmm, args[0], idx);
+		func	= llvm_itable_trampoline(ctx, target_vmm, args[0]);
 
 		value	= LLVMBuildCall(ctx->builder, func, args, nr_args, "");
 
