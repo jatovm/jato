@@ -1781,10 +1781,10 @@ restart:
 
 		if (wide) {
 			idx	= read_u16(code, pos);
-			i	= read_u16(code, pos);
+			i	= (int16_t) read_u16(code, pos);
 		} else {
 			idx	= read_u8(code, pos);
-			i	= read_u8(code, pos);
+			i	= (int8_t) read_u8(code, pos);
 		}
 
 		local	= llvm_load_local(ctx, idx, LLVMInt32Type());
