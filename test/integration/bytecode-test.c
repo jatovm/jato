@@ -1188,7 +1188,7 @@ static void test_iconst_0(void)
 
 static void test_aconst_null(void)
 {
-	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_IRETURN };
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_ARETURN };
 
 	assert_object_equals(NULL, jobject_run(bytecode));
 }
