@@ -2379,6 +2379,8 @@ restart:
 
 		target	= vm_class_resolve_method_recursive(vmm->class, idx, 0);
 
+		assert(!vm_method_is_missing(target));
+
 		nr_args	= count_java_arguments(target);
 
 		if (!vm_method_is_static(target))
@@ -2482,6 +2484,8 @@ restart:
 		target_vmm = vm_class_resolve_interface_method_recursive(vmm->class, idx);
 
 		assert(target_vmm != NULL);
+
+		assert(!vm_method_is_missing(target_vmm));
 
 		nr_args	= count_java_arguments(target_vmm);
 
