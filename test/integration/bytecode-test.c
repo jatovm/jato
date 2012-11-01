@@ -1313,6 +1313,34 @@ static void test_dstore_3(void)
 	assert_double_equals(1, jdouble_run(bytecode));
 }
 
+static void test_astore_0(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_ASTORE_0, OPC_ALOAD_0, OPC_ARETURN};
+
+	assert_object_equals(NULL, jobject_run(bytecode));
+}
+
+static void test_astore_1(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_ASTORE_1, OPC_ALOAD_1, OPC_ARETURN};
+
+	assert_object_equals(NULL, jobject_run(bytecode));
+}
+
+static void test_astore_2(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_ASTORE_2, OPC_ALOAD_2, OPC_ARETURN};
+
+	assert_object_equals(NULL, jobject_run(bytecode));
+}
+
+static void test_astore_3(void)
+{
+	uint8_t bytecode[] = { OPC_ACONST_NULL, OPC_ASTORE_3, OPC_ALOAD_3, OPC_ARETURN};
+
+	assert_object_equals(NULL, jobject_run(bytecode));
+}
+
 static void test_i2f(void)
 {
 	uint8_t bytecode[] = { OPC_ICONST_1, OPC_I2F, OPC_FRETURN };
@@ -1508,10 +1536,10 @@ static void run_tests(void)
 	test_dstore_1();
 	test_dstore_2();
 	test_dstore_3();
-	/* test_astore_0(); */
-	/* test_astore_1(); */
-	/* test_astore_2(); */
-	/* test_astore_3(); */
+	test_astore_0();
+	test_astore_1();
+	test_astore_2();
+	test_astore_3();
 	/* test_iastore(); */
 	/* test_lastore(); */
 	/* test_fastore(); */
