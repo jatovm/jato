@@ -1419,9 +1419,16 @@ static void test_i2l(void)
 }
 #endif
 
+static void test_nop(void)
+{
+	uint8_t bytecode[] = { OPC_NOP, OPC_RETURN };
+
+	jvoid_run(bytecode);
+}
+
 static void run_tests(void)
 {
-	/* test_nop(); */
+	test_nop();
 	test_aconst_null();
 	test_iconst_m1();
 	test_iconst_0();
