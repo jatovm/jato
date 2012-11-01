@@ -2810,6 +2810,11 @@ static int llvm_codegen(struct compilation_unit *cu)
 
 	cu->entry_point = LLVMRecompileAndRelinkFunction(engine, ctx.func);
 
+	if (opt_llvm_verbose) {
+		trace_printf("LLVM: Entry point: %s.%s%s => %p\n", vmm->class->name, vmm->name, vmm->type, cu->entry_point);
+		trace_flush();
+	}
+
 	free(ctx.locals);
 
 	return 0;
@@ -2822,7 +2827,7 @@ int llvm_compile(struct compilation_unit *cu)
 	int err;
 
 	if (opt_llvm_verbose) {
-		trace_printf("Compiling %s.%s%s...\n", vmc->name, vmm->name, vmm->type);
+		trace_printf("LLVM: Compiling %s.%s%s...\n", vmc->name, vmm->name, vmm->type);
 		trace_bytecode(vmm);
 		trace_flush();
 	}
