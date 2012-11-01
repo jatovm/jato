@@ -73,6 +73,34 @@ struct llvm_context {
 static LLVMExecutionEngineRef	engine;
 static LLVMModuleRef		module;
 
+static void llvm_array_check(struct vm_object *arrayref, jint index)
+{
+	struct vm_class *vmc = arrayref->class;
+
+	assert(vm_class_is_array_class(vmc));
+
+	assert(index >= 0);
+
+	assert(index < vm_array_length(arrayref));
+}
+
+static void llvm_array_store_check(struct vm_object *arrayref,
+					jint index, struct vm_object *obj)
+{
+	struct vm_class *vmc = arrayref->class;
+	struct vm_class *elem_vmc;
+
+	assert(vm_class_is_array_class(vmc));
+
+	assert(index >= 0);
+
+	assert(index < vm_array_length(arrayref));
+
+	elem_vmc = vm_class_get_array_element_class(vmc);
+
+	assert(vm_class_is_assignable_from(elem_vmc, obj->class));
+}
+
 static void llvm_throw_stub(struct vm_object *exception)
 {
 	assert(0);
@@ -108,6 +136,8 @@ static LLVM_DECLARE_BUILTIN(emulate_dcmpl);
 static LLVM_DECLARE_BUILTIN(emulate_fcmpg);
 static LLVM_DECLARE_BUILTIN(emulate_fcmpl);
 static LLVM_DECLARE_BUILTIN(emulate_lcmp);
+static LLVM_DECLARE_BUILTIN(llvm_array_check);
+static LLVM_DECLARE_BUILTIN(llvm_array_store_check);
 static LLVM_DECLARE_BUILTIN(llvm_throw_stub);
 
 static inline uint8_t read_u8(unsigned char *code, unsigned long *pos)
@@ -990,9 +1020,15 @@ restart:
 	}
 	case OPC_AALOAD: {
 		LLVMValueRef arrayref, index, value;
+		LLVMValueRef args[2];
 
 		index		= stack_pop(ctx->mimic_stack);
 		arrayref	= stack_pop(ctx->mimic_stack);
+
+		args[0]		= arrayref;
+		args[1]		= index;
+
+		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_REFERENCE));
 
@@ -1002,9 +1038,15 @@ restart:
 	}
 	case OPC_BALOAD: {
 		LLVMValueRef arrayref, index, value;
+		LLVMValueRef args[2];
 
 		index		= stack_pop(ctx->mimic_stack);
 		arrayref	= stack_pop(ctx->mimic_stack);
+
+		args[0]		= arrayref;
+		args[1]		= index;
+
+		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_BYTE));
 
@@ -1014,9 +1056,15 @@ restart:
 	}
 	case OPC_CALOAD: {
 		LLVMValueRef arrayref, index, value;
+		LLVMValueRef args[2];
 
 		index		= stack_pop(ctx->mimic_stack);
 		arrayref	= stack_pop(ctx->mimic_stack);
+
+		args[0]		= arrayref;
+		args[1]		= index;
+
+		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_CHAR));
 
@@ -1026,9 +1074,15 @@ restart:
 	}
 	case OPC_SALOAD: {
 		LLVMValueRef arrayref, index, value;
+		LLVMValueRef args[2];
 
 		index		= stack_pop(ctx->mimic_stack);
 		arrayref	= stack_pop(ctx->mimic_stack);
+
+		args[0]		= arrayref;
+		args[1]		= index;
+
+		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_SHORT));
 
@@ -1190,17 +1244,52 @@ restart:
 	case OPC_LASTORE:
 	case OPC_FASTORE:
 	case OPC_DASTORE:
-	case OPC_AASTORE:
 	case OPC_BASTORE:
 	case OPC_CASTORE:
 	case OPC_SASTORE: {
 		LLVMValueRef arrayref, index, value;
 		LLVMValueRef gep, elems, addr;
 		LLVMValueRef indices[1];
+		LLVMValueRef args[2];
 
 		value		= stack_pop(ctx->mimic_stack);
 		index		= stack_pop(ctx->mimic_stack);
 		arrayref	= stack_pop(ctx->mimic_stack);
+
+		args[0]		= arrayref;
+		args[1]		= index;
+
+		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
+
+		indices[0] = LLVMConstInt(LLVMInt32Type(), VM_ARRAY_ELEMS_OFFSET, 0);
+
+		gep 	= LLVMBuildGEP(ctx->builder, arrayref, indices, 1, "");
+
+		elems	= LLVMBuildBitCast(ctx->builder, gep, LLVMPointerType(LLVMTypeOf(value), 0), "");
+
+		indices[0] = index;
+
+		addr	= LLVMBuildGEP(ctx->builder, elems, indices, 1, "");
+
+		LLVMBuildStore(ctx->builder, value, addr);
+
+		break;
+	}
+	case OPC_AASTORE: {
+		LLVMValueRef arrayref, index, value;
+		LLVMValueRef gep, elems, addr;
+		LLVMValueRef indices[1];
+		LLVMValueRef args[3];
+
+		value		= stack_pop(ctx->mimic_stack);
+		index		= stack_pop(ctx->mimic_stack);
+		arrayref	= stack_pop(ctx->mimic_stack);
+
+		args[0]		= arrayref;
+		args[1]		= index;
+		args[2]		= value;
+
+		LLVMBuildCall(ctx->builder, llvm_array_store_check_func, args, 3, "");
 
 		indices[0] = LLVMConstInt(LLVMInt32Type(), VM_ARRAY_ELEMS_OFFSET, 0);
 
@@ -2912,6 +3001,8 @@ static void llvm_setup_builtins(void)
 	LLVM_DEFINE_BUILTIN(emulate_fcmpg, J_INT, 2, J_FLOAT, J_FLOAT);
 	LLVM_DEFINE_BUILTIN(emulate_fcmpl, J_INT, 2, J_FLOAT, J_FLOAT);
 	LLVM_DEFINE_BUILTIN(emulate_lcmp, J_INT, 2, J_LONG, J_LONG);
+	LLVM_DEFINE_BUILTIN(llvm_array_check, J_VOID, 2, J_REFERENCE, J_INT);
+	LLVM_DEFINE_BUILTIN(llvm_array_store_check, J_VOID, 3, J_REFERENCE, J_INT, J_REFERENCE);
 	LLVM_DEFINE_BUILTIN(llvm_throw_stub, J_VOID, 1, J_REFERENCE);
 }
 
