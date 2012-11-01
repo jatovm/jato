@@ -2181,6 +2181,7 @@ restart:
 	case OPC_GETFIELD: {
 		LLVMValueRef value, objectref, addr, gep;
 		struct vm_class *vmc = vmm->class;
+		struct vm_class *source_vmc;
 		LLVMValueRef indices[1];
 		struct vm_field *vmf;
 		LLVMTypeRef type;
@@ -2193,6 +2194,14 @@ restart:
 		type = llvm_type(vmf->type_info.vm_type);
 
 		assert(vmf != NULL);
+
+		source_vmc = vmf->class;
+
+		/*
+		 * XXX: Use guard pages to eliminate the extra call on every
+		 * field access.
+		 */
+		llvm_build_ensure_class_init(ctx, source_vmc);
 
 		objectref	= stack_pop(ctx->mimic_stack);
 
@@ -2211,6 +2220,7 @@ restart:
 	case OPC_PUTFIELD: {
 		LLVMValueRef value, objectref, addr, gep;
 		struct vm_class *vmc = vmm->class;
+		struct vm_class *target_vmc;
 		LLVMValueRef indices[1];
 		struct vm_field *vmf;
 		uint16_t idx;
@@ -2220,6 +2230,14 @@ restart:
 		vmf = vm_class_resolve_field_recursive(vmc, idx);
 
 		assert(vmf != NULL);
+
+		target_vmc = vmf->class;
+
+		/*
+		 * XXX: Use guard pages to eliminate the extra call on every
+		 * field access.
+		 */
+		llvm_build_ensure_class_init(ctx, target_vmc);
 
 		value		= stack_pop(ctx->mimic_stack);
 		objectref	= stack_pop(ctx->mimic_stack);
