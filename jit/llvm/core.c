@@ -112,11 +112,13 @@ static void llvm_throw_stub(struct vm_object *exception)
  * update `llvm_setup_builtins` if you add new ones):
  */
 
-#define LLVM_DECLARE_BUILTIN(name) LLVMValueRef name ## _func
+#define LLVM_BUILTIN(name) name ## _func
+
+#define LLVM_DECLARE_BUILTIN(name) LLVMValueRef LLVM_BUILTIN(name)
 
 #define LLVM_DEFINE_BUILTIN(name, return_type, nr_args, ...) 		\
 	do {								\
-		name ## _func = llvm_setup_func(#name,			\
+		LLVM_BUILTIN(name) = llvm_setup_func(#name,		\
 						name,			\
 						return_type,		\
 						nr_args,		\
@@ -577,7 +579,7 @@ static void llvm_build_monitorexit(struct llvm_context *ctx, LLVMValueRef object
 
 	args[0] = objectref;
 
-	LLVMBuildCall(ctx->builder, vm_object_unlock_func, args, 1, "");
+	LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_unlock), args, 1, "");
 }
 
 static void llvm_build_monitorenter(struct llvm_context *ctx, LLVMValueRef objectref)
@@ -591,7 +593,7 @@ static void llvm_build_monitorenter(struct llvm_context *ctx, LLVMValueRef objec
 
 	args[0] = objectref;
 
-	LLVMBuildCall(ctx->builder, vm_object_lock_func, args, 1, "");
+	LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_lock), args, 1, "");
 }
 
 static LLVMValueRef llvm_build_ldc(struct llvm_context *ctx, uint16_t cp_idx)
@@ -656,7 +658,7 @@ static LLVMValueRef llvm_build_ldc(struct llvm_context *ctx, uint16_t cp_idx)
 
 		args[1] = LLVMConstInt(LLVMInt32Type(), utf8->length, 0);
 
-		value = LLVMBuildCall(ctx->builder, vm_object_alloc_string_from_utf8_func, args, 2, "");
+		value = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_alloc_string_from_utf8), args, 2, "");
 
 		break;
 	}
@@ -686,7 +688,7 @@ static void llvm_build_ensure_class_init(struct llvm_context *ctx, struct vm_cla
 
 	args[0] = llvm_ptr_to_value(vmc, LLVMReferenceType());
 
-	LLVMBuildCall(ctx->builder, vm_class_ensure_init_func, args, 1, "");
+	LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_class_ensure_init), args, 1, "");
 }
 
 static void llvm_build_if(struct llvm_context *ctx,
@@ -1061,7 +1063,7 @@ restart:
 		args[0]		= arrayref;
 		args[1]		= index;
 
-		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
+		LLVMBuildCall(ctx->builder, LLVM_BUILTIN(llvm_array_check), args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_REFERENCE));
 
@@ -1079,7 +1081,7 @@ restart:
 		args[0]		= arrayref;
 		args[1]		= index;
 
-		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
+		LLVMBuildCall(ctx->builder, LLVM_BUILTIN(llvm_array_check), args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_BYTE));
 
@@ -1097,7 +1099,7 @@ restart:
 		args[0]		= arrayref;
 		args[1]		= index;
 
-		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
+		LLVMBuildCall(ctx->builder, LLVM_BUILTIN(llvm_array_check), args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_CHAR));
 
@@ -1115,7 +1117,7 @@ restart:
 		args[0]		= arrayref;
 		args[1]		= index;
 
-		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
+		LLVMBuildCall(ctx->builder, LLVM_BUILTIN(llvm_array_check), args, 2, "");
 
 		value = llvm_build_array_load(ctx, arrayref, index, llvm_type(J_SHORT));
 
@@ -1292,7 +1294,7 @@ restart:
 		args[0]		= arrayref;
 		args[1]		= index;
 
-		LLVMBuildCall(ctx->builder, llvm_array_check_func, args, 2, "");
+		LLVMBuildCall(ctx->builder, LLVM_BUILTIN(llvm_array_check), args, 2, "");
 
 		indices[0] = LLVMConstInt(LLVMInt32Type(), VM_ARRAY_ELEMS_OFFSET, 0);
 
@@ -1322,7 +1324,7 @@ restart:
 		args[1]		= index;
 		args[2]		= value;
 
-		LLVMBuildCall(ctx->builder, llvm_array_store_check_func, args, 3, "");
+		LLVMBuildCall(ctx->builder, LLVM_BUILTIN(llvm_array_store_check), args, 3, "");
 
 		indices[0] = LLVMConstInt(LLVMInt32Type(), VM_ARRAY_ELEMS_OFFSET, 0);
 
@@ -1976,7 +1978,7 @@ restart:
 		values[1] = stack_pop(ctx->mimic_stack);
 		values[0] = stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildCall(ctx->builder, emulate_lcmp_func, values, 2, "");
+		result = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(emulate_lcmp), values, 2, "");
 
 		stack_push(ctx->mimic_stack, result);
 
@@ -1989,7 +1991,7 @@ restart:
 		values[1] = stack_pop(ctx->mimic_stack);
 		values[0] = stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildCall(ctx->builder, emulate_fcmpl_func, values, 2, "");
+		result = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(emulate_fcmpl), values, 2, "");
 
 		stack_push(ctx->mimic_stack, result);
 
@@ -2002,7 +2004,7 @@ restart:
 		values[1] = stack_pop(ctx->mimic_stack);
 		values[0] = stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildCall(ctx->builder, emulate_fcmpg_func, values, 2, "");
+		result = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(emulate_fcmpg), values, 2, "");
 
 		stack_push(ctx->mimic_stack, result);
 
@@ -2015,7 +2017,7 @@ restart:
 		values[1] = stack_pop(ctx->mimic_stack);
 		values[0] = stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildCall(ctx->builder, emulate_dcmpl_func, values, 2, "");
+		result = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(emulate_dcmpl), values, 2, "");
 
 		stack_push(ctx->mimic_stack, result);
 
@@ -2028,7 +2030,7 @@ restart:
 		values[1] = stack_pop(ctx->mimic_stack);
 		values[0] = stack_pop(ctx->mimic_stack);
 
-		result = LLVMBuildCall(ctx->builder, emulate_dcmpg_func, values, 2, "");
+		result = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(emulate_dcmpg), values, 2, "");
 
 		stack_push(ctx->mimic_stack, result);
 
@@ -2521,7 +2523,7 @@ restart:
 
 		args[0] = llvm_ptr_to_value(vmc, LLVMReferenceType());
 
-		objectref = LLVMBuildCall(ctx->builder, vm_object_alloc_func, args, 1, "");
+		objectref = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_alloc), args, 1, "");
 
 		/* XXX: Exception check */
 
@@ -2543,7 +2545,7 @@ restart:
 
 		args[1] = count;
 
-		arrayref = LLVMBuildCall(ctx->builder, vm_object_alloc_primitive_array_func, args, 2, "");
+		arrayref = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_alloc_primitive_array), args, 2, "");
 
 		/* XXX: Exception check */
 
@@ -2575,7 +2577,7 @@ restart:
 
 		args[1] = count;
 
-		arrayref = LLVMBuildCall(ctx->builder, vm_object_alloc_array_func, args, 2, "");
+		arrayref = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_alloc_array), args, 2, "");
 
 		/* XXX: Exception check */
 
@@ -2612,7 +2614,7 @@ restart:
 
 		args[0]	= objectref;
 
-		call	= LLVMBuildCall(ctx->builder, llvm_throw_stub_func, args, 1, "");
+		call	= LLVMBuildCall(ctx->builder, LLVM_BUILTIN(llvm_throw_stub), args, 1, "");
 
 		LLVMSetTailCall(call, 1);
 
@@ -2638,7 +2640,7 @@ restart:
 
 		args[1] = llvm_ptr_to_value(vmc, LLVMReferenceType());
 
-		LLVMBuildCall(ctx->builder, vm_object_check_cast_func, args, 2, "");
+		LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_check_cast), args, 2, "");
 
 		break;
 	}
@@ -2661,7 +2663,7 @@ restart:
 
 		args[1] = llvm_ptr_to_value(vmc, LLVMReferenceType());
 
-		value = LLVMBuildCall(ctx->builder, vm_object_is_instance_of_func, args, 2, "");
+		value = LLVMBuildCall(ctx->builder, LLVM_BUILTIN(vm_object_is_instance_of), args, 2, "");
 
 		stack_push(ctx->mimic_stack, value);
 
