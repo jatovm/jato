@@ -23,6 +23,18 @@ DEFAULT_CFLAGS	+= $(DEFINES)
 INCLUDES	= -I. -I..
 DEFAULT_CFLAGS	+= $(INCLUDES)
 
+HAVE_BISON:=$(shell bison --version >/dev/null 2>&1 && echo 'yes')
+
+ifneq ($(HAVE_BISON),yes)
+$(error No bison found, please install bison package.)
+endif
+
+HAVE_GLIB2:=$(shell pkg-config --exists glib-2.0 2>/dev/null && echo 'yes')
+
+ifneq ($(HAVE_GLIB2),yes)
+$(error No glib found, please install glib2-devel or glib2-dev package.)
+endif
+
 DEFAULT_CFLAGS	+= $(shell pkg-config --cflags glib-2.0)
 DEFAULT_LIBS	+= $(shell pkg-config --libs glib-2.0)
 

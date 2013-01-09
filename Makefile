@@ -195,6 +195,21 @@ ifeq ($(HAS_TCMALLOC),y)
 	TCMALLOC_CFLAGS += -ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
 endif
 
+HAS_LIBBFD:=$(shell scripts/gcc-has-lib.sh gcc bfd)
+ifneq ($(HAS_LIBBFD),y)
+    $(error No libbfd found, please install binutils-devel or binutils-dev package.)
+endif
+
+HAS_LIBFFI:=$(shell scripts/gcc-has-lib.sh gcc ffi)
+ifneq ($(HAS_LIBFFI),y)
+    $(error No libffi found, please install libffi-devel or libffi-dev package.)
+endif
+
+HAS_LIBZIP:=$(shell scripts/gcc-has-lib.sh gcc zip)
+ifneq ($(HAS_LIBZIP),y)
+    $(error No libzip found, please install libzip-devel or libzip-dev package.)
+endif
+
 DEFAULT_CFLAGS	+= $(TCMALLOC_CFLAGS)
 # boehmgc integration (see boehmgc/doc/README.linux)
 DEFAULT_CFLAGS  += -D_REENTRANT -DGC_LINUX_THREADS -DGC_USE_LD_WRAP
