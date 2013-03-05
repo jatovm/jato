@@ -1,13 +1,81 @@
 Jato ToDo
 =========
 Pekka Enberg <penberg@kernel.org>
-2012
+2012-2013
 :toc:
 
 Introduction
 ------------
 This is a list of things to hack on. It's mostly meant for people who are new
 to Jato and want to find something interesting to hack on.
+
+Priority
+--------
+This section contains projects that are considered to be most important to
+make Jato a top notch alternative JVM for contemporary applications that are
+dominated by alternative languages such as Scala, Clojure, and JRuby.
+
+LLVM backend
+~~~~~~~~~~~~
+Implemeting a production quality JIT compiler for a new architecture is
+time-consuming and hard.  The goal of this project is to simplify Jato porting
+by implementing a code generator using LLVM C bindings.  The work has already
+been started and it is visible in the ++llvm/core++ branch.
+
+Required skills::
+    C, LLVM, JVM
+Difficulty::
+    Medium to Hard
+
+Darwin Port
+~~~~~~~~~~~
+
+- Thread-local storage (TLS)
+- Signal handling
+
+Required skills::
+    C, target operating system
+Difficulty::
+    Medium to Hard
+
+Interpreter
+~~~~~~~~~~~
+Jato supports JIT-only execution which is slow for some applications. For
+example, startup time for short-lived applications can be reduced with a simple
+interpreter. The primary goal of this project is to improve 'vm/interp.c' to
+cover the whole bytecode instruction set. Secondary goal for this project is to
+implement mixed-mode execution where we start out by interpreting bytecode and
+only JIT compile methods that are invoked a lot of times.
+
+Required skills::
+    C, JVM
+Difficulty::
+    Medium
+
+JSR 292: invokedynamic
+~~~~~~~~~~~~~~~~~~~~~~
+The goal of this project is to add support for the new +invokedynamic+ bytecode
+instruction specified in JSR 292 that's designed to improve execution
+performance of dynamic languages such as JRuby and Redline Smalltalk.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
+
+Support for OpenJDK
+~~~~~~~~~~~~~~~~~~~
+Jato uses GNU Classpath to provide essential Java APIs. Unfortunately the
+development of GNU Classpath seems to have slowed after OpenJDK was released.
+The purpose of this project is to OpenJDK as an alternative for providing
+essential APIs for better Java compatibility. One possible way to do that is to
+use The OpenJDK Common Virtual Machine Interface
+http://fuseyism.com/openjdk/cvmi/[CVMI] as a starting point.
+
+Required skills::
+    C, Java
+Difficulty::
+    Medium
 
 Performance
 -----------
@@ -94,36 +162,12 @@ Difficulty::
 
 Virtual Machine
 ---------------
-Interpreter
-~~~~~~~~~~~
-Jato supports JIT-only execution which is slow for some applications. For
-example, startup time for short-lived applications can be reduced with a simple
-interpreter. The primary goal of this project is to improve 'vm/interp.c' to
-cover the whole bytecode instruction set. Secondary goal for this project is to
-implement mixed-mode execution where we start out by interpreting bytecode and
-only JIT compile methods that are invoked a lot of times.
-
-Required skills::
-    C, JVM
-Difficulty::
-    Medium
-
 Ahead-of-time Compilation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 The goal of this project is to implement support for ahead-of-time compilation.
 
 Required skills::
     C, JVM
-Difficulty::
-    Hard
-
-LLVM backend
-~~~~~~~~~~~~
-The goal of this project is to implement a code generator using LLVM C
-bindings.
-
-Required skills::
-    C, LLVM, JVM
 Difficulty::
     Hard
 
@@ -230,19 +274,13 @@ Required skills::
 Difficulty::
     Hard
 
-Operating Systems
-~~~~~~~~~~~~~~~~~
-Linux is the only operating system currently supported by Jato. If you're
-interested in adding support for other operating systems, you probably need to
-hack on the following things:
+Windows Port
+~~~~~~~~~~~~
 
 - ABI issues (e.g. Microsoft x64 calling conventions)
 - Thread-local storage (TLS)
 - Signal handling
-
-Porting to operating systems such as Darwin and BSDs that support recent
-versions of GCC and that support POSIX is easier than porting to non-POSIX
-operating systems such as Windows.
+- POSIXism
 
 Required skills::
     C, target operating system
@@ -265,35 +303,10 @@ Difficulty::
 JVM
 ---
 
-Support for OpenJDK
-~~~~~~~~~~~~~~~~~~~
-Jato uses GNU Classpath to provide essential Java APIs. Unfortunately the
-development of GNU Classpath seems to have slowed after OpenJDK was released.
-The purpose of this project is to OpenJDK as an alternative for providing
-essential APIs for better Java compatibility. One possible way to do that is to
-use The OpenJDK Common Virtual Machine Interface
-http://fuseyism.com/openjdk/cvmi/[CVMI] as a starting point.
-
-Required skills::
-    C, Java
-Difficulty::
-    Medium
-
 Java Native Interface (JNI) support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The VM has partial support for Java Native Interface (JNI) API. The goal of
 this project is to finish the API.
-
-Required skills::
-    C, Java
-Difficulty::
-    Medium
-
-JSR 292: invokedynamic
-~~~~~~~~~~~~~~~~~~~~~~
-The goal of this project is to add support for the new +invokedynamic+ bytecode
-instruction specified in JSR 292 that's designed to improve execution
-performance of dynamic languages such as JRuby.
 
 Required skills::
     C, Java
