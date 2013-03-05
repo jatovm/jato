@@ -29,12 +29,16 @@ Difficulty::
 
 Darwin Port
 ~~~~~~~~~~~
+Darwin (a.k.a. Mac OS X) is a popular platform among software developers. The
+goal of this project is to get rid of Linuxism such as:
 
 - Thread-local storage (TLS)
 - Signal handling
 
+and be able to run Jato under Darwin.
+
 Required skills::
-    C, target operating system
+    C, Darwin
 Difficulty::
     Medium to Hard
 
@@ -54,14 +58,16 @@ Difficulty::
 
 JSR 292: invokedynamic
 ~~~~~~~~~~~~~~~~~~~~~~
-The goal of this project is to add support for the new +invokedynamic+ bytecode
-instruction specified in JSR 292 that's designed to improve execution
-performance of dynamic languages such as JRuby and Redline Smalltalk.
+The goal of this project is to add support for the new +invokedynamic+
+bytecode instruction specified in JSR 292 that's designed to improve execution
+performance of dynamic languages such as JRuby and Redline Smalltalk. Please
+note that you also need to do some work in GNU Classpath to be able to run
+full invokedynamic applications.
 
 Required skills::
     C, Java
 Difficulty::
-    Medium
+    Medium to Hard
 
 Support for OpenJDK
 ~~~~~~~~~~~~~~~~~~~
@@ -276,6 +282,9 @@ Difficulty::
 
 Windows Port
 ~~~~~~~~~~~~
+The goal of this project is to port Jato to Windows.  Please note that the
+codebase currently is very GCC and Linux specific which are likely to bite you
+when porting to native Windows toolchain:
 
 - ABI issues (e.g. Microsoft x64 calling conventions)
 - Thread-local storage (TLS)
@@ -283,7 +292,7 @@ Windows Port
 - POSIXism
 
 Required skills::
-    C, target operating system
+    C, Windows
 Difficulty::
     Medium to Hard
 
