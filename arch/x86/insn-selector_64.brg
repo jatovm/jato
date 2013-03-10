@@ -2538,7 +2538,7 @@ static void invoke(struct basic_block *s, struct tree_node *tree)
 	if (nr_stack_args)
 		method_args_cleanup(s, tree, nr_stack_args);
 
-	if (vm_method_is_native(method))
+	if (vm_method_is_missing(method) || vm_method_is_native(method))
 		select_exception_test(s, tree);
 }
 
