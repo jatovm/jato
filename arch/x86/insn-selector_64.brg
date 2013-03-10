@@ -2559,8 +2559,6 @@ static void invokevirtual(struct _MBState *state, struct basic_block *s, struct 
 
 	if (vm_method_is_missing(method)) {
 		call_insn = rel_insn(INSN_CALL_REL, (unsigned long) jit_no_such_method_stub);
-
-		select_safepoint_insn(s, tree, call_insn);
 	} else {
 		/* object reference */
 		call_target = state->left->reg1;
@@ -2604,8 +2602,6 @@ static void invokeinterface(struct _MBState *state, struct basic_block *s, struc
 
 	if (vm_method_is_missing(method)) {
 		call_insn = rel_insn(INSN_CALL_REL, (unsigned long) jit_no_such_method_stub);
-
-		select_safepoint_insn(s, tree, call_insn);
 	} else {
 		/* object reference */
 		call_target = state->left->reg1;

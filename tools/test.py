@@ -65,7 +65,7 @@ TESTS = [
 , ( "jvm.MethodInvocationExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.MultithreadingTest", 0, [ ], [ "i386", "x86_64" ] )
 , ( "jvm.MethodOverridingFinal", 1, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "jvm.NoSuchMethodErrorTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.NoSuchMethodErrorTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ObjectArrayTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ObjectCreationAndManipulationExceptionsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.ObjectCreationAndManipulationTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
