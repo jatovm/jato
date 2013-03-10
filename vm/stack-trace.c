@@ -742,7 +742,7 @@ static void show_mixed_stack_trace(struct stack_trace_elem *elem)
 				continue;
 
 			if (symbol_lookup(elem->addr, buf, ARRAY_SIZE(buf)))
-				trace_printf("%-27s%s", " ", buf);
+				trace_printf("%-27s%s\n", " ", buf);
 
 			continue;
 		}
