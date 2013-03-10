@@ -99,9 +99,9 @@ enum stack_trace_elem_type {
 	STACK_TRACE_ELEM_TYPE_JIT,
 	STACK_TRACE_ELEM_TYPE_JNI,
 	STACK_TRACE_ELEM_TYPE_VM_NATIVE,
+	STACK_TRACE_ELEM_TYPE_TRAMPOLINE,
 
 	STACK_TRACE_ELEM_TYPE_OTHER, /* All values below this are java */
-	STACK_TRACE_ELEM_TYPE_TRAMPOLINE,
 };
 
 struct stack_trace_elem {

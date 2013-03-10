@@ -95,9 +95,14 @@ public class StackTraceTest extends TestCase {
         }
 
         assertNotNull(st);
-        assertEquals(2, st.length);
+        assertEquals(3, st.length);
 
-        assertStackTraceElement(st[0], 92, "StackTraceTest.java",
+        assertStackTraceElement(st[0], -1, null,
+                "jvm.StackTraceTest",
+                "nativeMethod",
+                true);
+
+        assertStackTraceElement(st[1], 92, "StackTraceTest.java",
                 "jvm.StackTraceTest",
                 "testJNIUnsatisfiedLinkErrorStackTrace",
                 false);
