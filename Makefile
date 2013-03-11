@@ -205,11 +205,6 @@ ifneq ($(HAS_LIBFFI),y)
     $(error No libffi found, please install libffi-devel or libffi-dev package.)
 endif
 
-HAS_LIBZIP:=$(shell scripts/gcc-has-lib.sh gcc zip)
-ifneq ($(HAS_LIBZIP),y)
-    $(error No libzip found, please install libzip-devel or libzip-dev package.)
-endif
-
 DEFAULT_CFLAGS	+= $(TCMALLOC_CFLAGS)
 # boehmgc integration (see boehmgc/doc/README.linux)
 DEFAULT_CFLAGS  += -D_REENTRANT -DGC_LINUX_THREADS -DGC_USE_LD_WRAP
