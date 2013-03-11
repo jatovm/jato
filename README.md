@@ -28,15 +28,15 @@ system:
 
 Fedora 15:
 
-    sudo yum install binutils-devel bison glib2-devel libffi-devel libzip-devel
+    sudo yum install binutils-devel bison glib2-devel libffi-devel
 
 Ubuntu 10.10:
 
-    sudo apt-get install ecj libffi-dev binutils-dev libzip-dev libglib2.0-dev bison
+    sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison
 
 Archlinux:
 
-    pacman -S eclipse-ecj classpath libzip libffi
+    pacman -S eclipse-ecj classpath libffi
 
 ### Building GNU Classpath
 
