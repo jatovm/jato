@@ -20,9 +20,15 @@ Fetch the latest sources with:
 Before installing Jato ensure you have the following software installed on your
 system:
 
-  - GNU Classpath CVS HEAD. You can use the git mirror to obtain the sources:
+  - GNU Classpath 0.99 or later:
 
-    git://icedtea.classpath.org/mirror/git/classpath/classpath
+    Release tarball:
+
+    ftp://ftp.gnu.org/pub/gnu/classpath/classpath-0.99.tar.gz
+
+    Git repository:
+
+    git://git.savannah.gnu.org/classpath.git
 
   - Eclipse Java Compiler
 
@@ -40,19 +46,21 @@ Archlinux:
 
 ### Building GNU Classpath
 
-GNU Classpath is no longer packaged with Ubuntu 10.10 and later versions so you
-need to build and install it yourself to run Jato. First download the sources from:
+GNU Classpath is not present in most Linux distributions so you need to
+build and install it yourself to run Jato. First download the sources
+from:
 
-  http://www.gnu.org/software/classpath/downloads/downloads.html
+  ftp://ftp.gnu.org/pub/gnu/classpath/classpath-0.99.tar.gz
 
-and then install the following dependencies that are required to build GNU
+Then install the following dependencies that are required to build GNU
 Classpath:
 
     sudo apt-get install openjdk-6-jdk antlr libgconf2-dev libgtk2.0-dev ecj fastjar pccts
 
 You can then compile GNU Classpath:
 
-    ./configure --disable-Werror --disable-plugin ; make
+    ./configure --disable-Werror --disable-plugin
+    make
 
 and install it to /usr/local:
 
