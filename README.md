@@ -52,8 +52,13 @@ from:
 
   ftp://ftp.gnu.org/pub/gnu/classpath/classpath-0.99.tar.gz
 
-Then install the following dependencies that are required to build GNU
-Classpath:
+Then install the dependencies that are required to build GNU Classpath.
+
+Fedora 17:
+
+    sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel
+
+Ubuntu:
 
     sudo apt-get install openjdk-6-jdk antlr libgconf2-dev libgtk2.0-dev ecj fastjar pccts
 
