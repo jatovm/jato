@@ -78,7 +78,7 @@ TESTS = [
 , ( "jvm.PutstaticPatchingTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.PutstaticTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.RegisterAllocatorTortureTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "jvm.StackTraceTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386" ] )
+, ( "jvm.StackTraceTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.StringTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.SubroutineTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "jvm.SwitchTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
