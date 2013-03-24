@@ -19,14 +19,12 @@ ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 # Make the build silent by default
 V =
 
-PROGRAM		:= jato
+PROGRAMS = jato
 
 LIB_FILE	:= libjvm.a
 
 include arch/$(ARCH)/Makefile$(ARCH_POSTFIX)
 include sys/$(SYS)-$(ARCH)/Makefile
-
-OBJS += vm/jato.o
 
 LIB_OBJS += $(ARCH_OBJS)
 LIB_OBJS += $(SYS_OBJS)
@@ -259,7 +257,7 @@ endif
 
 DEFAULT_LIBS	= -L. -ljvm -lrt -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
 
-all: $(PROGRAM)
+all: $(PROGRAMS)
 .PHONY: all
 .DEFAULT: all
 
@@ -310,9 +308,13 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 	$(E) "  MONOBURG" $@
 	$(Q) $(MONOBURG) -p -e $(MB_DEFINES) $(@:.c=.brg) > $@
 
-$(PROGRAM): $(LIB_FILE) $(OBJS)
+
+jato.o: $(VERSION_HEADER)
+
+$(foreach p,$(PROGRAMS),$(eval $(p): $(LIB_FILE)))
+$(PROGRAMS): % : %.o
 	$(E) "  LINK    " $@
-	$(Q) $(LINK) $(JATO_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+	$(Q) $(LINK) $(JATO_CFLAGS) -o $@ $^ $(DEFAULT_LIBS)
 
 $(LIB_FILE): monoburg boehmgc $(VERSION_HEADER) $(ASM_OFFSETS_HEADER) $(CLASSPATH_CONFIG) $(LIB_OBJS)
 	$(E) "  AR      " $@
