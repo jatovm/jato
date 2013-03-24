@@ -103,6 +103,7 @@ LIB_OBJS += lib/compile-lock.o
 LIB_OBJS += lib/guard-page.o
 LIB_OBJS += lib/hash-map.o
 LIB_OBJS += lib/list.o
+LIB_OBJS += lib/options.o
 LIB_OBJS += lib/parse.o
 LIB_OBJS += lib/pqueue.o
 LIB_OBJS += lib/radix-tree.o

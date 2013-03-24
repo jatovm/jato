@@ -62,6 +62,7 @@
 #include "jit/debug.h"
 #include "jit/text.h"
 
+#include "lib/options.h"
 #include "lib/string.h"
 #include "lib/parse.h"
 #include "lib/list.h"
@@ -896,27 +897,6 @@ static void handle_print_compilation(void)
 	opt_print_compilation = true;
 }
 
-struct option {
-	const char *name;
-
-	bool arg;
-	bool arg_is_adjacent;
-
-	union {
-		void (*func)(void);
-		void (*func_arg)(const char *arg);
-	} handler;
-};
-
-#define DEFINE_OPTION(_name, _handler) \
-	{ .name = _name, .arg = false, .handler.func = _handler }
-
-#define DEFINE_OPTION_ARG(_name, _handler) \
-	{ .name = _name, .arg = true, .arg_is_adjacent = false, .handler.func_arg = _handler }
-
-#define DEFINE_OPTION_ADJACENT_ARG(_name, _handler) \
-	{ .name = _name, .arg = true, .arg_is_adjacent = true, .handler.func_arg = _handler }
-
 const struct option options[] = {
 	DEFINE_OPTION("version",		handle_version),
 	DEFINE_OPTION("h",			handle_help),
@@ -965,22 +945,6 @@ const struct option options[] = {
 	DEFINE_OPTION("XX:+PrintCompilation",	handle_print_compilation),
 };
 
-static const struct option *get_option(const char *name)
-{
-	for (unsigned int i = 0; i < ARRAY_SIZE(options); ++i) {
-		const struct option *opt = &options[i];
-
-		if (opt->arg && opt->arg_is_adjacent &&
-		    !strncmp(name, opt->name, strlen(opt->name)))
-			return opt;
-
-		if (!strcmp(name, opt->name))
-			return opt;
-	}
-
-	return NULL;
-}
-
 static void parse_options(int argc, char *argv[])
 {
 	int optind;
@@ -989,7 +953,7 @@ static void parse_options(int argc, char *argv[])
 		if (argv[optind][0] != '-')
 			break;
 
-		const struct option *opt = get_option(argv[optind] + 1);
+		const struct option *opt = get_option(options, ARRAY_SIZE(options), argv[optind] + 1);
 		if (!opt) {
 			fprintf(stderr, "%s: unrecognized option '%s'\n", program_name, argv[optind]);
 			usage(stderr, EXIT_FAILURE);
