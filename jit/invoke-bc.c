@@ -112,17 +112,6 @@ static bool verify_arg_types(struct vm_method *vmm, struct expression **args_arr
 	return true;
 }
 
-static unsigned int method_real_argument_count(struct vm_method *invoke_target)
-{
-	int argc;
-
-	argc = vm_method_arg_slots(invoke_target);
-	if (!vm_method_is_static(invoke_target))
-		argc++;
-
-	return argc;
-}
-
 static int convert_and_add_args(struct parse_context *ctx,
 				struct vm_method *invoke_target,
 				struct statement *stmt)
