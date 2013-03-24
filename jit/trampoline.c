@@ -108,7 +108,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 
 	state = compilation_unit_get_state(cu);
 
-	if (cu->state == COMPILATION_STATE_COMPILED) {
+	if (state == COMPILATION_STATE_COMPILED) {
 		ret = cu_entry_point(cu);
 		goto out_fixup;
 	}
