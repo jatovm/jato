@@ -78,7 +78,7 @@ bool ic_supports_method(struct vm_method *vmm)
 {
 	assert(vmm != NULL);
 
-	return method_is_virtual(vmm)
+	return vm_method_is_virtual(vmm)
 		&& !vm_method_is_native(vmm)
 		&& !vm_method_is_special(vmm)
 		&& vmm->class

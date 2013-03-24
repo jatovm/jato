@@ -114,14 +114,9 @@ static inline bool vm_method_is_abstract(struct vm_method *vmm)
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_ABSTRACT;
 }
 
-static inline bool method_is_synchronized(struct vm_method *vmm)
+static inline bool vm_method_is_synchronized(struct vm_method *vmm)
 {
 	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_SYNCHRONIZED;
-}
-
-static inline bool method_is_private(struct vm_method *vmm)
-{
-	return vmm->method->access_flags & CAFEBABE_METHOD_ACC_PRIVATE;
 }
 
 static inline bool vm_method_is_constructor(struct vm_method *vmm)
@@ -129,7 +124,7 @@ static inline bool vm_method_is_constructor(struct vm_method *vmm)
 	return strcmp(vmm->name, "<init>") == 0;
 }
 
-static inline bool method_is_virtual(struct vm_method *vmm)
+static inline bool vm_method_is_virtual(struct vm_method *vmm)
 {
 	if (vm_method_is_constructor(vmm))
 		return false;
@@ -170,7 +165,7 @@ static inline bool vm_method_is_compiled(struct vm_method *vmm)
 	return compilation_unit_is_compiled(vmm->compilation_unit);
 }
 
-static inline enum vm_type method_return_type(struct vm_method *method)
+static inline enum vm_type vm_method_return_type(struct vm_method *method)
 {
 	char *return_type = index(method->type, ')') + 1;
 	return str_to_type(return_type);

@@ -2306,7 +2306,7 @@ static void select_trace_return_value(struct basic_block *s,
 	struct var_info *rax, *rdi, *rsi;
 	enum vm_type ret_vm_type;
 
-	ret_vm_type = method_return_type(vmm);
+	ret_vm_type = vm_method_return_type(vmm);
 
 	/* FIXME: floating point return values are not supported */
 

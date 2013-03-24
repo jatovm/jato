@@ -210,7 +210,7 @@ int emit_machine_code(struct compilation_unit *cu)
 
 	emit_prolog(cu->objcode, cu->stack_frame, frame_size);
 
-	if (method_is_synchronized(cu->method))
+	if (vm_method_is_synchronized(cu->method))
 		emit_monitorenter(cu, frame_size);
 
 	if (opt_trace_invoke)
@@ -220,13 +220,13 @@ int emit_machine_code(struct compilation_unit *cu)
 		emit_body(bb, cu->objcode);
 
 	emit_body(cu->exit_bb, cu->objcode);
-	if (method_is_synchronized(cu->method))
+	if (vm_method_is_synchronized(cu->method))
 		emit_monitorexit(cu, frame_size);
 	cu->exit_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_epilog(cu->objcode);
 
 	emit_body(cu->unwind_bb, cu->objcode);
-	if (method_is_synchronized(cu->method))
+	if (vm_method_is_synchronized(cu->method))
 		emit_monitorexit(cu, frame_size);
 	cu->unwind_past_unlock_ptr = buffer_current(cu->objcode);
 	emit_unwind(cu->objcode);

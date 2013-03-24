@@ -1355,7 +1355,7 @@ void emit_trampoline(struct compilation_unit *cu,
 			   MACH_REG_RCX);
 	__emit64_test_membase_reg(buf, MACH_REG_RCX, 0, MACH_REG_RCX);
 
-	if (method_is_virtual(cu->method)) {
+	if (vm_method_is_virtual(cu->method)) {
 		unsigned long this_disp;
 
 		if (vm_method_is_jni(cu->method))

@@ -165,7 +165,7 @@ void print_compilation(struct vm_method *vmm)
 	else
 		comp_char = ' ';
 
-	if (method_is_synchronized(vmm))
+	if (vm_method_is_synchronized(vmm))
 		sync_char = 's';
 	else
 		sync_char = ' ';
@@ -878,7 +878,7 @@ void trace_return_value(struct vm_method *vmm, unsigned long long value)
 		gate_level--;
 
 	dummy = 0;
-	type = method_return_type(vmm);
+	type = vm_method_return_type(vmm);
 
 	trace_printf("trace return: %s.%s%s\n", vmm->class->name, vmm->name,
 		     vmm->type);

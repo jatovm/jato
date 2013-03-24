@@ -171,7 +171,7 @@ static struct statement * invoke_stmt(struct parse_context *ctx,
 
 	stmt->target_method = target;
 
-	return_type = method_return_type(target);
+	return_type = vm_method_return_type(target);
 	switch (return_type) {
 	case J_VOID:
 		stmt->invoke_result = NULL;

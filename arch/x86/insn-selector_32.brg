@@ -2511,7 +2511,7 @@ static void select_trace_return_value(struct basic_block *s,
 	struct var_info *edx = get_fixed_var(s->b_parent, MACH_REG_xDX);
 	struct var_info *esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 
-	enum vm_type ret_vm_type = method_return_type(vmm);
+	enum vm_type ret_vm_type = vm_method_return_type(vmm);
 
 	if (ret_vm_type == J_FLOAT) {
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 4, esp));
