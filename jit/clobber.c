@@ -103,6 +103,9 @@ int mark_clobbers(struct compilation_unit *cu)
 			case INSN_SAVE_CALLER_REGS:
 				insert_spill_before_insn(cu, insn);
 				break;
+			case INSN_RESTORE_CALLER_REGS:
+				insert_reload_after_insn(cu, insn, J_VOID);
+				break;
 			case INSN_RESTORE_CALLER_REGS_I32:
 				insert_reload_after_insn(cu, insn, J_INT);
 				break;
