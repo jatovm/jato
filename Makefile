@@ -411,18 +411,17 @@ JASMIN_TESTS += test/functional/jvm/WideTest.j
 
 MBENCH_TEST_SUITE_CLASSES = test/perf/ICTime.java
 
-
-compile-java-tests: $(PROGRAM) FORCE
+compile-java-tests: $(PROGRAMS) FORCE
 	$(E) "  JAVAC   " $(JAVA_TESTS)
 	$(Q) JAVA=$(JAVA) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):test/functional -d test/functional $(JAVA_TESTS)
 .PHONY: compile-java-tests
 
-compile-mbench-tests: $(PROGRAM) FORCE
+compile-mbench-tests: $(PROGRAMS) FORCE
 	$(E) "  JAVAC   " $(MBENCH_TEST_SUITE_CLASSES)
 	$(Q) JAVA=$(JAVA) $(JAVAC) $(JAVAC_OPTS) -cp $(GLIBJ):test/perf -d test/perf $(MBENCH_TEST_SUITE_CLASSES)
 .PHONY: compile-mbench-tests
 
-compile-jasmin-tests: $(PROGRAM) FORCE
+compile-jasmin-tests: $(PROGRAMS) FORCE
 	$(E) "  JASMIN  " $(JASMIN_TESTS)
 	$(Q) $(JASMIN) $(JASMIN_OPTS) -d test/functional $(JASMIN_TESTS) > /dev/null
 .PHONY: compile-jasmin-tests
@@ -431,16 +430,16 @@ lib: $(CLASSPATH_CONFIG)
 	+$(MAKE) -C lib/ JAVAC=$(JAVAC) GLIBJ=$(GLIBJ)
 .PHONY: lib
 
-compile-jni-test-lib: $(PROGRAM)
+compile-jni-test-lib: $(PROGRAMS)
 	+$(MAKE) -C test/functional/jni CC='$(CC)' JAVA='$(JAVA)' JAVAC='$(JAVAC)'
 .PHONY: compile-jni-test-lib
 
-check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-java-tests compile-jasmin-tests compile-jni-test-lib
+check-functional: monoburg $(CLASSPATH_CONFIG) $(PROGRAMS) compile-java-tests compile-jasmin-tests compile-jni-test-lib
 	$(E) "  REGRESSION"
 	$(Q) ./tools/test.py
 .PHONY: check-functional
 
-check-mbench: monoburg $(CLASSPATH_CONFIG) $(PROGRAM) compile-mbench-tests
+check-mbench: monoburg $(CLASSPATH_CONFIG) $(PROGRAMS) compile-mbench-tests
 	$(E) "  MICROBENCHMARKS"
 	$(Q) for i in $(patsubst %.java,%,$(MBENCH_TEST_SUITE_CLASSES))\
 	;do \
@@ -458,7 +457,7 @@ torture:
 
 clean:
 	$(E) "  CLEAN"
-	$(Q) - rm -f $(PROGRAM)
+	$(Q) - rm -f $(PROGRAMS)
 	$(Q) - rm -f $(LIB_FILE)
 	$(Q) - rm -f $(VERSION_HEADER)
 	$(Q) - rm -f $(CLASSPATH_CONFIG)
@@ -468,7 +467,6 @@ clean:
 	$(Q) - rm -f $(LIB_OBJS:.o=.d)
 	$(Q) - rm -f $(ARCH_TEST_OBJS)
 	$(Q) - rm -f arch/$(ARCH)/insn-selector.c
-	$(Q) - rm -f $(PROGRAM)
 	$(Q) - rm -f $(ARCH_TEST_SUITE)
 	$(Q) - rm -f test-suite.o
 	$(Q) - rm -f $(ARCH_TESTRUNNER)
@@ -487,10 +485,10 @@ clean:
 
 INSTALL_PREFIX	?= $(HOME)
 
-install: $(PROGRAM)
-	$(E) "  INSTALL " $(PROGRAM)
+install: jato
+	$(E) "  INSTALL " jato
 	$(Q) $(INSTALL) -d -m 755 $(INSTALL_PREFIX)/bin
-	$(Q) $(INSTALL) $(PROGRAM) $(INSTALL_PREFIX)/bin
+	$(Q) $(INSTALL) jato $(INSTALL_PREFIX)/bin
 	$(Q) $(INSTALL) tools/ecj-jato/ecj-3.7.2.jar $(INSTALL_PREFIX)/bin
 	$(Q) $(INSTALL) tools/ecj-jato/ecj-jato $(INSTALL_PREFIX)/bin
 .PHONY: install
