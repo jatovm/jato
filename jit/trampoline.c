@@ -25,11 +25,13 @@
  */
 
 #include "arch/memory.h"
+#include "arch/debug.h"
 
 #include "jit/compiler.h"
 #include "jit/cu-mapping.h"
 #include "jit/emit-code.h"
 #include "jit/exception.h"
+#include "jit/debug.h"
 
 #include "vm/stack-trace.h"
 #include "vm/natives.h"
@@ -96,6 +98,9 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	struct vm_method *method = cu->method;
 	unsigned long state;
 	void *ret;
+
+	if (opt_debug_stack)
+		check_stack_align();
 
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
