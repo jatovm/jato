@@ -1547,6 +1547,10 @@ reg:	EXPR_EXCEPTION_REF
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
 }
 
+stmt: STMT_BEFORE_ARGS 1
+{
+}
+
 stmt:	STMT_INVOKE(arg) 1
 {
 	invoke(s, tree);

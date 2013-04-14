@@ -38,6 +38,7 @@ int stmt_nr_kids(struct statement *stmt)
 	case STMT_INVOKEINTERFACE:
 	case STMT_INVOKEVIRTUAL:
 		return 1;
+	case STMT_BEFORE_ARGS:
 	case STMT_GOTO:
 	case STMT_VOID_RETURN:
 		return 0;

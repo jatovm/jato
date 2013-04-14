@@ -198,6 +198,21 @@ static struct statement * invoke_stmt(struct parse_context *ctx,
 	return stmt;
 }
 
+static int insert_before_args_stmt(struct parse_context *ctx, struct vm_method *target)
+{
+	struct statement *stmt;
+
+	stmt = alloc_statement(STMT_BEFORE_ARGS);
+	if (!stmt)
+		return warn("out of memory"), -ENOMEM;
+
+	stmt->target_method = target;
+
+	convert_statement(ctx, stmt);
+
+	return 0;
+}
+
 static void insert_invoke_stmt(struct parse_context *ctx, struct statement *stmt)
 {
 	convert_statement(ctx, stmt);
@@ -286,6 +301,10 @@ int convert_invokeinterface(struct parse_context *ctx)
 	if (err)
 		goto failed;
 
+	err = insert_before_args_stmt(ctx, invoke_target);
+	if (err)
+		goto failed;
+
 	insert_invoke_stmt(ctx, stmt);
 	return 0;
 
@@ -309,6 +328,10 @@ int convert_invokevirtual(struct parse_context *ctx)
 		return warn("out of memory"), -ENOMEM;
 
 	err = convert_and_add_args(ctx, invoke_target, stmt);
+	if (err)
+		goto failed;
+
+	err = insert_before_args_stmt(ctx, invoke_target);
 	if (err)
 		goto failed;
 
@@ -339,6 +362,10 @@ int convert_invokespecial(struct parse_context *ctx)
 
 	null_check_this_arg(to_expr(stmt->args_list));
 
+	err = insert_before_args_stmt(ctx, invoke_target);
+	if (err)
+		goto failed;
+
 	insert_invoke_stmt(ctx, stmt);
 	return 0;
       failed:
@@ -361,6 +388,10 @@ int convert_invokestatic(struct parse_context *ctx)
 		return warn("out of memory"), -ENOMEM;
 
 	err = convert_and_add_args(ctx, invoke_target, stmt);
+	if (err)
+		goto failed;
+
+	err = insert_before_args_stmt(ctx, invoke_target);
 	if (err)
 		goto failed;
 

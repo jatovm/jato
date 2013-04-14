@@ -24,6 +24,7 @@ enum statement_type {
 	STMT_ARRAY_STORE_CHECK,
 	STMT_TABLESWITCH,
 	STMT_LOOKUPSWITCH_JUMP,
+	STMT_BEFORE_ARGS,
 	STMT_INVOKE,
 	STMT_INVOKEINTERFACE,
 	STMT_INVOKEVIRTUAL,
@@ -105,7 +106,7 @@ struct statement {
 			struct tree_node *lookupswitch_target;
 		};
 
-		struct /* STMT_INVOKE, STMT_INVOKEVIRTUAL, STMT_INVOKEINTERFACE */ {
+		struct /* STMT_BEFORE_ARGS, STMT_INVOKE, STMT_INVOKEVIRTUAL, STMT_INVOKEINTERFACE */ {
 			struct tree_node *args_list;
 			struct vm_method *target_method;
 		};

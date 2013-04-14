@@ -103,9 +103,15 @@ static void method_args_cleanup(struct basic_block *bb, struct tree_node *tree,
 {
 	struct var_info *stack_ptr;
 	unsigned long args_size;
+	unsigned long unaligned;
 
 	stack_ptr = bb->b_parent->stack_ptr;
 	args_size = args_count * sizeof(long);
+
+	unaligned = args_size % X86_STACK_ALIGN;
+
+	if (unaligned)
+		args_size += X86_STACK_ALIGN - unaligned;
 
 	select_insn(bb, tree, imm_reg_insn(INSN_ADD_IMM_REG, args_size, stack_ptr));
 }
@@ -1326,6 +1332,29 @@ reg:	EXPR_EXCEPTION_REF
 	state->reg1 = result;
 
 	select_insn(s, tree, memlocal_reg_insn(INSN_MOV_MEMLOCAL_REG, slot, result));
+}
+
+stmt:	STMT_BEFORE_ARGS 1
+{
+	struct compilation_unit *cu = s->b_parent;
+	struct var_info *stack_ptr;
+	struct vm_method *method;
+	unsigned long args_size;
+	unsigned long unaligned;
+	struct statement *stmt;
+	int nr_stack_args;
+
+	stmt		= to_stmt(tree);
+	method		= stmt->target_method;
+
+	nr_stack_args	= get_stack_args_count(method);
+
+	stack_ptr	= cu->stack_ptr;
+	args_size	= nr_stack_args * sizeof(long);
+	unaligned	= args_size % X86_STACK_ALIGN;
+
+	if (unaligned)
+		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, X86_STACK_ALIGN - unaligned, stack_ptr));
 }
 
 stmt:	STMT_INVOKE(arg) 1

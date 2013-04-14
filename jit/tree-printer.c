@@ -372,6 +372,23 @@ out:
 	return err;
 }
 
+static int print_before_args_stmt(int lvl, struct string *str, struct statement *stmt)
+{
+	struct vm_method *method;
+	int err;
+
+	err = append_formatted(lvl, str, "BEFORE_ARGS:\n");
+	if (err)
+		goto out;
+
+	method = stmt->target_method;
+
+	err = append_simple_attr(lvl + 1, str, "target_method", "%p '%s.%s%s' (%lu)",
+			method, method->class->name, method->name, method->type, stmt_method_index(stmt));
+out:
+	return err;
+}
+
 static int print_invoke_stmt(int lvl, struct string *str,
 				    struct statement *stmt)
 {
@@ -407,6 +424,7 @@ static print_stmt_fn stmt_printers[] = {
 	[STMT_ARRAY_STORE_CHECK] = print_array_store_check_stmt,
 	[STMT_TABLESWITCH] = print_tableswitch_stmt,
 	[STMT_LOOKUPSWITCH_JUMP] = print_lookupswitch_jump_stmt,
+	[STMT_BEFORE_ARGS] = print_before_args_stmt,
 	[STMT_INVOKE] = print_invoke_stmt,
 	[STMT_INVOKEINTERFACE] = print_invokeinterface_stmt,
 	[STMT_INVOKEVIRTUAL] = print_invokevirtual_stmt,
