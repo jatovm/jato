@@ -100,7 +100,7 @@ void *jit_magic_trampoline(struct compilation_unit *cu)
 	void *ret;
 
 	if (opt_debug_stack)
-		check_stack_align();
+		check_stack_align(method);
 
 	if (opt_trace_magic_trampoline)
 		trace_magic_trampoline(cu);
