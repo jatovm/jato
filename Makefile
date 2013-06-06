@@ -324,7 +324,6 @@ $(LIB_FILE): monoburg boehmgc $(VERSION_HEADER) $(ASM_OFFSETS_HEADER) $(CLASSPAT
 
 check-unit: arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c
 	+$(MAKE) -C test/unit/vm/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
-	+$(MAKE) -C test/unit/jit/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 	+$(MAKE) -C test/unit/arch-$(ARCH)/ SYS=$(SYS) ARCH=$(ARCH) ARCH_POSTFIX=$(ARCH_POSTFIX) $(TEST)
 .PHONY: check-unit
 
@@ -479,7 +478,6 @@ clean:
 	+$(Q) - $(MAKE) -C boehmgc/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/functional/jni/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/unit/vm/ clean >/dev/null
-	+$(Q) - $(MAKE) -C test/unit/jit/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/unit/arch-$(ARCH)/ clean >/dev/null
 	+$(Q) - $(MAKE) -C test/integration/ clean >/dev/null
 .PHONY: clean

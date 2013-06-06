@@ -44,6 +44,4 @@ TEST_OBJS :=				\
 	string-test.o			\
 	types-test.o
 
-CFLAGS += -I ../../../arch/mmix/include
-
 include ../../../scripts/build/test.mk
