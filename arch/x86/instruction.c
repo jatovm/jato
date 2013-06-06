@@ -721,6 +721,8 @@ void ssa_chg_jmp_direction(struct insn *insn, struct basic_block *after_bb,
 		if (insn->operand.branch_target == bb)
 			insn->operand.branch_target = new_bb;
 		break;
+	default:
+		break;
 	}
 }
 
