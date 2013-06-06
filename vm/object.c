@@ -307,10 +307,12 @@ struct vm_object *vm_object_clone(struct vm_object *obj)
 		return clone_array(obj);
 	case VM_CLASS_KIND_PRIMITIVE:
 		return clone_primitive(obj);
+	default:
+		/* Shouldn't happen. */
+		assert(0);
+		break;
 	}
 
-	/* Shouldn't happen. */
-	assert(0);
 	return NULL;
 }
 
