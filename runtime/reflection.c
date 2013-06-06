@@ -256,8 +256,7 @@ struct vm_class *vm_type_to_class(struct vm_object *classloader, struct vm_type_
 		return vm_void_class;
 	case J_REFERENCE:
 		return classloader_load(classloader, type_info->class_name);
-	case J_RETURN_ADDRESS:
-	case VM_TYPE_MAX:
+	default:
 		error("invalid type");
 	}
 
@@ -487,9 +486,7 @@ int object_to_jvalue(void *field_ptr, enum vm_type type, struct vm_object *value
 		vm_call_method_this_a(vm_java_lang_Number_doubleValue, value, args, &result);
 		*(jdouble *) field_ptr = result.d;
 		return 0;
-	case J_VOID:
-	case J_RETURN_ADDRESS:
-	case VM_TYPE_MAX:
+	default:
 		error("unexpected type");
 	}
 
@@ -592,8 +589,7 @@ struct vm_object *jvalue_to_object(union jvalue *value, enum vm_type vm_type)
 		return float_to_object(value->f);
 	case J_DOUBLE:
 		return double_to_object(value->d);
-	case J_RETURN_ADDRESS:
-	case VM_TYPE_MAX:
+	default:
 		die("unexpected type");
 	}
 
