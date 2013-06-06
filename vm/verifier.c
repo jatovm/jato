@@ -671,7 +671,7 @@ static int verify_exception_table(struct cafebabe_code_attribute *ca, struct ver
 	return 0;
 }
 
-const static char *verify_error_string = "No error";
+static const char *verify_error_string = "No error";
 
 static void verify_error(int err, unsigned long pos, struct verifier_context *vrf)
 {

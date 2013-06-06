@@ -1673,7 +1673,7 @@ static jobjectRefType JNI_GetObjectRefType(JNIEnv* env, jobject obj)
 	return 0;
 }
 
-const static struct JNINativeInterface_ defaultJNIEnv = {
+static const struct JNINativeInterface_ defaultJNIEnv = {
 	DEFINE_JNI_FUNCTION(GetVersion),
 	DEFINE_JNI_FUNCTION(DefineClass),
 	DEFINE_JNI_FUNCTION(FindClass),
