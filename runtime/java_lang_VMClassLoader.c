@@ -60,8 +60,9 @@ static const char *get_primitive_class_name(jint type)
 		return "short";
 	case 'V':
 		return "void";
+	default:
+		die("unknown type: %d\n", type);
 	}
-	die("unknown type: %d\n", type);
 }
 
 jobject java_lang_VMClassLoader_getPrimitiveClass(jint type)
