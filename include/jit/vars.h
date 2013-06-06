@@ -42,7 +42,7 @@ static inline unsigned long range_len(struct live_range *range)
 
 static inline bool range_is_empty(struct live_range *range)
 {
-	if (range->start == ~0UL && range->end == 0)
+	if (range->start == ~0U && range->end == 0)
 		return true;
 
 	return range_len(range) == 0;
