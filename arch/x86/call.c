@@ -275,7 +275,9 @@ void native_call(struct vm_method *method,
 		break;
 	case J_RETURN_ADDRESS:
 	case VM_TYPE_MAX:
+	default:
 		die("unexpected type");
+		break;
 	}
 }
 
