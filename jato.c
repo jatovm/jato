@@ -1217,6 +1217,8 @@ main(int argc, char *argv[])
 	case OPERATION_JAR_FILE:
 		status = do_jar_file();
 		break;
+	default:
+		break;
 	}
 
 out_check_exception:
