@@ -36,7 +36,7 @@ static struct vm_fault_entry vm_fault_entries[VM_FAULT_MAX];
 
 bool vm_fault_enabled(enum vm_fault fault)
 {
-	if (fault < 0 || fault >= VM_FAULT_MAX)
+	if (fault >= VM_FAULT_MAX)
 		return false;
 
 	return vm_fault_entries[fault].enabled;
@@ -44,7 +44,7 @@ bool vm_fault_enabled(enum vm_fault fault)
 
 struct vm_object *vm_fault_arg(enum vm_fault fault)
 {
-	if (fault < 0 || fault >= VM_FAULT_MAX)
+	if (fault >= VM_FAULT_MAX)
 		return NULL;
 
 	return vm_fault_entries[fault].arg;
@@ -53,7 +53,7 @@ struct vm_object *vm_fault_arg(enum vm_fault fault)
 void native_vm_enable_fault(enum vm_fault fault,
 					struct vm_object *arg)
 {
-	if (fault < 0 || fault >= VM_FAULT_MAX)
+	if (fault >= VM_FAULT_MAX)
 		return;
 
 	vm_fault_entries[fault].enabled = true;
@@ -62,7 +62,7 @@ void native_vm_enable_fault(enum vm_fault fault,
 
 void native_vm_disable_fault(enum vm_fault fault)
 {
-	if (fault < 0 || fault >= VM_FAULT_MAX)
+	if (fault >= VM_FAULT_MAX)
 		return;
 
 	vm_fault_entries[fault].enabled = false;
