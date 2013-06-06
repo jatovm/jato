@@ -197,7 +197,7 @@ int convert_instruction(struct parse_context *ctx)
 static int do_convert_bb_to_ir(struct basic_block *bb)
 {
 	struct compilation_unit *cu = bb->b_parent;
-	struct bytecode_buffer buffer = { };
+	struct bytecode_buffer buffer;
 	struct parse_context ctx = {
 		.buffer = &buffer,
 		.cu = cu,
@@ -207,8 +207,10 @@ static int do_convert_bb_to_ir(struct basic_block *bb)
 	};
 	int err = 0;
 
-	buffer.buffer = cu->method->code_attribute.code;
-	buffer.pos = bb->start;
+	buffer = (struct bytecode_buffer) {
+		.buffer		= cu->method->code_attribute.code,
+		.pos		= bb->start,
+	};
 
 	if (bb->is_eh && !bb_mimic_stack_is_resolved(bb)) {
 		stack_push(bb->mimic_stack, exception_ref_expr());
