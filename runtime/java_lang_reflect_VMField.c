@@ -82,9 +82,7 @@ static jlong to_jlong_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
@@ -109,9 +107,7 @@ static jint to_jint_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
@@ -134,9 +130,7 @@ static jshort to_jshort_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
@@ -164,9 +158,7 @@ static jdouble to_jdouble_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
@@ -193,9 +185,7 @@ static jfloat to_jfloat_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
@@ -217,9 +207,7 @@ static jchar to_jchar_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
@@ -241,9 +229,7 @@ static jbyte to_jbyte_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
@@ -265,9 +251,7 @@ static jboolean to_jboolean_value(union jvalue *value, enum vm_type vm_type)
 		signal_new_exception(vm_java_lang_IllegalArgumentException, NULL);
 		return 0;
 	}
-	case J_RETURN_ADDRESS:
-	case J_VOID:
-	case VM_TYPE_MAX:
+	default:
 		break;
 	}
 	die("unexpected type %d", vm_type);
