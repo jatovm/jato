@@ -200,6 +200,8 @@ static unsigned long native_call_gp(struct vm_method *method,
 
 	stack_size = stack_count * sizeof(unsigned long);
 
+	assert((stack_size % X86_STACK_ALIGN) == 0);
+
 	__asm__ volatile (
 		/* Copy stack arguments onto the stack. */
 		"	movq %[stack], %%rsi		\n"
