@@ -116,7 +116,7 @@ static int vmtype_to_bytecode_type_map[] = {
 
 int vmtype_to_bytecode_type(enum vm_type type)
 {
-	assert(type >= 0 && type < ARRAY_SIZE(vmtype_to_bytecode_type_map));
+	assert(type < ARRAY_SIZE(vmtype_to_bytecode_type_map));
 
 	return vmtype_to_bytecode_type_map[type];
 }
@@ -137,7 +137,7 @@ static const char *vm_type_names[] = {
 
 const char *get_vm_type_name(enum vm_type type)
 {
-	if (type < 0 || type >= ARRAY_SIZE(vm_type_names))
+	if (type >= ARRAY_SIZE(vm_type_names))
 		return NULL;
 
 	return vm_type_names[type];
