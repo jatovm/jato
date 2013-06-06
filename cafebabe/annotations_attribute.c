@@ -192,6 +192,8 @@ cafebabe_annotation_free(struct cafebabe_annotation *a)
 		case ELEMENT_TYPE_ANNOTATION_TYPE:
 			free(ev->value.value.annotation_value);
 			break;
+		default:
+			break;
 		}
 	}
 	free(a->element_value_pairs);
