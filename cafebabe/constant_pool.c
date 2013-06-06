@@ -351,6 +351,8 @@ cafebabe_constant_pool_deinit(struct cafebabe_constant_pool *cp)
 		cafebabe_constant_info_name_and_type_deinit(
 			&cp->name_and_type);
 		break;
+	default:
+		break;
 	}
 }
 
