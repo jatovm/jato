@@ -377,10 +377,10 @@ load_class_from_classpath_file(const struct classpath *cp, struct string *class_
 		return load_class_from_dir(cp->path, class_name->value);
 	case CLASSPATH_ZIP:
 		return load_class_from_zip(cp->zip, class_name);
+	default:
+		/* Should never reach this. */
+		return NULL;
 	}
-
-	/* Should never reach this. */
-	return NULL;
 }
 
 static struct vm_class *primitive_class_cache[VM_TYPE_MAX];
