@@ -215,24 +215,25 @@ JATO_CFLAGS  += -Wl,--wrap -Wl,pthread_create -Wl,--wrap -Wl,pthread_join \
 # XXX: Temporary hack -Vegard
 DEFAULT_CFLAGS	+= -DNOT_IMPLEMENTED='fprintf(stderr, "%s:%d: warning: %s not implemented\n", __FILE__, __LINE__, __func__)'
 
-WARNINGS	+=				\
-		-Wall				\
-		-Wcast-align			\
-		-Wformat=2			\
-		-Winit-self			\
-		-Wmissing-declarations		\
-		-Wmissing-prototypes		\
-		-Wnested-externs		\
-		-Wno-system-headers		\
-		-Wold-style-definition		\
-		-Wredundant-decls		\
-		-Wsign-compare			\
-		-Wstrict-prototypes		\
-		-Wundef				\
-		-Wvolatile-register-var		\
-		-Wwrite-strings
+EXTRA_WARNINGS =
+EXTRA_WARNINGS += -Wformat
+EXTRA_WARNINGS += -Wformat-security
+EXTRA_WARNINGS += -Wformat-y2k
+EXTRA_WARNINGS += -Winit-self
+EXTRA_WARNINGS += -Wmissing-declarations
+EXTRA_WARNINGS += -Wmissing-prototypes
+EXTRA_WARNINGS += -Wnested-externs
+EXTRA_WARNINGS += -Wno-system-headers
+EXTRA_WARNINGS += -Wno-unused-parameter
+EXTRA_WARNINGS += -Wold-style-definition
+EXTRA_WARNINGS += -Wredundant-decls
+EXTRA_WARNINGS += -Wstrict-prototypes
+EXTRA_WARNINGS += -Wswitch-default
+EXTRA_WARNINGS += -Wundef
+EXTRA_WARNINGS += -Wwrite-strings
+EXTRA_WARNINGS += -Wcast-align
 
-DEFAULT_CFLAGS	+= $(WARNINGS)
+DEFAULT_CFLAGS += -Wall -Wextra $(EXTRA_WARNINGS)
 
 ifeq ($(uname_M),i386)
 OPTIMIZATION_LEVEL = -O3
