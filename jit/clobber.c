@@ -118,6 +118,9 @@ int mark_clobbers(struct compilation_unit *cu)
 			case INSN_RESTORE_CALLER_REGS_F64:
 				insert_reload_after_insn(cu, insn, J_DOUBLE);
 				break;
+			default:
+				/* Nothing clobbered */
+				break;
 			}
 		}
 	}
