@@ -106,7 +106,7 @@ uint8_t x86_encode_reg(enum machine_reg reg)
 	if (reg == MACH_REG_UNASSIGNED)
 		die("unassigned register during code emission");
 
-	if (reg < 0 || reg >= ARRAY_SIZE(x86_register_numbers))
+	if (reg >= ARRAY_SIZE(x86_register_numbers))
 		die("unknown register %d", reg);
 
 	return x86_register_numbers[reg];
