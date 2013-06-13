@@ -505,7 +505,14 @@ static uint8_t insn_encode_mod_rm(struct insn *self, uint64_t flags, uint8_t opc
 	need_sib	= insn_need_sib(self, flags);
 
 	if (flags & INDEX) {
-		mod	= 0x00;
+#ifdef CONFIG_X86_64
+		if (insn_uses_reg(self, MACH_REG_R13) || insn_uses_reg(self, MACH_REG_RBP))
+			mod = 0x01;
+		else
+			mod = 0x00;
+#else
+		mod = 0x00;
+#endif
 	} else {
 		if (flags & DIR_REVERSED)
 			mod		= mod_dest_encode(flags);
@@ -650,7 +657,10 @@ static void insn_disp(struct insn *self, struct x86_insn *insn)
 		if (insn->flags & DST_REG)
 			return;
 
-		insn->disp	= self->dest.disp;
+		if (insn->flags & INDEX)
+			insn->disp	= 0;
+		else
+			insn->disp	= self->dest.disp;
 
 		if (insn->disp == 0 && !insn_need_disp(self))
 			insn->flags	|= DST_MEM;
@@ -662,7 +672,10 @@ static void insn_disp(struct insn *self, struct x86_insn *insn)
 		if (insn->flags & SRC_REG)
 			return;
 
-		insn->disp	= self->src.disp;
+		if (insn->flags & INDEX)
+			insn->disp	= 0;
+		else
+			insn->disp	= self->src.disp;
 
 		if (insn->disp == 0 && !insn_need_disp(self))
 			insn->flags	|= SRC_MEM;
