@@ -44,6 +44,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
+bool opt_trace_signals;
+
 static unsigned long throw_arithmetic_exception(unsigned long src_addr)
 {
 	signal_new_exception(vm_java_lang_ArithmeticException,
@@ -77,6 +79,9 @@ static unsigned long rethrow_bh(unsigned long src_addr)
 
 static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 {
+	if (opt_trace_signals)
+		trace_signal(sig, si, ctx);
+
 	if (signal_from_native(ctx))
 		goto exit;
 
@@ -93,11 +98,17 @@ static void sigfpe_handler(int sig, siginfo_t *si, void *ctx)
 
 static void sigill_handler(int sig, siginfo_t *si, void *ctx)
 {
+	if (opt_trace_signals)
+		trace_signal(sig, si, ctx);
+
 	print_backtrace_and_die(sig, si, ctx);
 }
 
 static void sigsegv_handler(int sig, siginfo_t *si, void *ctx)
 {
+	if (opt_trace_signals)
+		trace_signal(sig, si, ctx);
+
 	if (signal_from_native(ctx))
 		goto exit;
 
@@ -166,6 +177,9 @@ static int main_called;
 static void sigquit_handler(int sig, siginfo_t *si, void *ctx)
 {
 	struct vm_thread *this;
+
+	if (opt_trace_signals)
+		trace_signal(sig, si, ctx);
 
 	print_trace();
 

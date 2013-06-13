@@ -15,5 +15,6 @@ struct compilation_unit;
 
 bool signal_from_native(void *ctx);
 struct compilation_unit *get_signal_source_cu(void *ctx);
+void trace_signal(int sig, siginfo_t *si, void *ctx);
 
 #endif

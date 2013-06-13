@@ -1,6 +1,8 @@
 #ifndef VM_SIGNAL_H
 #define VM_SIGNAL_H
 
+#include <stdbool.h>
+
 /*
  * Signal bottom half handler is called with the address of faulting
  * instruction as argument. The address that handler returns is the
@@ -27,5 +29,7 @@ unsigned long throw_from_signal_bh(unsigned long jit_addr);
 	(unsigned long) throw_from_jit(jit_lookup_cu(jit_addr),		\
 				       __builtin_frame_address(2),	\
 				       (unsigned char *)jit_addr)
+
+extern bool opt_trace_signals;
 
 #endif /* VM_SIGNAL_H */

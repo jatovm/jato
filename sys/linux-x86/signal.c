@@ -32,6 +32,9 @@
 #include "arch/stack-frame.h"
 
 #include "vm/signal.h"
+#include "vm/trace.h"
+
+#include <string.h>
 
 extern void signal_bh_trampoline(void *bh);
 
@@ -80,4 +83,12 @@ int install_signal_bh(void *ctx, signal_bh_fn bh)
 	uc->uc_mcontext.gregs[REG_IP] = (unsigned long) signal_bh_trampoline;
 
 	return 0;
+}
+
+void trace_signal(int sig, siginfo_t *si, void *ctx)
+{
+	ucontext_t *uc = ctx;
+
+	trace_printf("signal %2d: ip=0x%016x: %s\n", sig, (unsigned long) uc->uc_mcontext.gregs[REG_IP], strsignal(sig));
+	trace_flush();
 }

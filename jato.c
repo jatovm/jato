@@ -833,6 +833,11 @@ static void handle_trace_bytecode(void)
 	opt_trace_compile = true;
 }
 
+static void handle_trace_signals(void)
+{
+	opt_trace_signals = true;
+}
+
 static void handle_trace_trampoline(void)
 {
 	opt_trace_magic_trampoline = true;
@@ -926,6 +931,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xtrace:itable",		handle_trace_itable),
 	DEFINE_OPTION("Xtrace:jit",		handle_trace_jit),
 	DEFINE_OPTION("Xtrace:liveness",	handle_trace_liveness),
+	DEFINE_OPTION("Xtrace:signals",		handle_trace_signals),
 	DEFINE_OPTION("Xtrace:trampoline",	handle_trace_trampoline),
 	DEFINE_OPTION("Xtrace:verifier",	handle_trace_verifier),
 	DEFINE_OPTION("Xtrace:vtable",		handle_trace_vtable),
