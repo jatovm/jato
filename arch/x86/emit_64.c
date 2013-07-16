@@ -1619,7 +1619,6 @@ typedef void (*emit_fn_t)(struct insn *insn, struct buffer *, struct basic_block
 #define DECL_EMITTER(_insn_type, _fn) [_insn_type] = _fn
 
 static emit_fn_t emitters[] = {
-	DECL_EMITTER(INSN_ADDSD_MEMDISP_XMM, insn_encode),
 	DECL_EMITTER(INSN_ADDSD_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_ADDSS_XMM_XMM, insn_encode),
 	DECL_EMITTER(INSN_ADD_IMM_REG, insn_encode),

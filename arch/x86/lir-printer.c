@@ -291,12 +291,6 @@ static int print_add_reg_reg(struct string *str, struct insn *insn)
 	return print_reg_reg(str, insn);
 }
 
-static int print_addsd_memdisp_reg(struct string *str, struct insn *insn)
-{
-	print_func_name(str);
-	return print_memdisp_reg(str, insn);
-}
-
 static int print_subss_xmm_xmm(struct string *str, struct insn *insn)
 {
 	print_func_name(str);
@@ -1017,7 +1011,6 @@ static print_insn_fn insn_printers[] = {
 	[INSN_ADC_IMM_REG] = print_adc_imm_reg,
 	[INSN_ADC_MEMBASE_REG] = print_adc_membase_reg,
 	[INSN_ADC_REG_REG] = print_adc_reg_reg,
-	[INSN_ADDSD_MEMDISP_XMM] = print_addsd_memdisp_reg,
 	[INSN_ADDSD_XMM_XMM] = print_addsd_xmm_xmm,
 	[INSN_ADDSS_XMM_XMM] = print_addss_xmm_xmm,
 	[INSN_ADD_IMM_REG] = print_add_imm_reg,

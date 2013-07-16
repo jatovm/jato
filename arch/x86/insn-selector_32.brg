@@ -1300,10 +1300,11 @@ freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
 	if (src->vm_type == J_INT) {
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, state->left->reg1, state->reg1));
 	} else if (src->vm_type == J_LONG) {
-		struct var_info *ftmp, *tmp;
+		struct var_info *ftmp1, *ftmp2, *tmp;
 
-		ftmp = get_var(s->b_parent, J_DOUBLE);
-		tmp  = get_var(s->b_parent, J_INT);
+		ftmp1	= get_var(s->b_parent, J_DOUBLE);
+		ftmp2	= get_var(s->b_parent, J_DOUBLE);
+		tmp	= get_var(s->b_parent, J_INT);
 
 		select_insn(s, tree, reg_reg_insn(INSN_MOV_REG_REG, state->left->reg1, tmp));
 
@@ -1315,7 +1316,7 @@ freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 0x80000000, tmp));
 
 		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, state->left->reg2, state->reg1));
-		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, tmp, ftmp));
+		select_insn(s, tree, reg_reg_insn(INSN_CONV_GPR_TO_FPU64, tmp, ftmp1));
 
 		/* Multiply higher word value by pow(2, 32) */
 		select_insn(s, tree, memdisp_reg_insn(INSN_MULSD_MEMDISP_XMM, (unsigned long) &xmm_double_constant_0, state->reg1));
@@ -1324,9 +1325,10 @@ freg:	EXPR_CONVERSION_TO_DOUBLE(reg)
 		 * Add 0x80000000 to the lower word value to fix the correction
 		 * introduced at the beginning.
 		 */
-		select_insn(s, tree, memdisp_reg_insn(INSN_ADDSD_MEMDISP_XMM, (unsigned long) &xmm_double_constant_1, ftmp));
+		select_insn(s, tree, memdisp_reg_insn(INSN_MOVSD_MEMDISP_XMM, (unsigned long) &xmm_double_constant_1, ftmp2));
+		select_insn(s, tree, reg_reg_insn(INSN_ADDSD_XMM_XMM, ftmp2, ftmp1));
 
-		select_insn(s, tree, reg_reg_insn(INSN_ADDSD_XMM_XMM, ftmp, state->reg1));
+		select_insn(s, tree, reg_reg_insn(INSN_ADDSD_XMM_XMM, ftmp1, state->reg1));
 	} else {
 		die("EXPR_CONVERSION_TO_DOUBLE: no conversion from %d to %d", src->vm_type, expr->vm_type);
 	}
