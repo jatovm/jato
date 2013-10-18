@@ -14,6 +14,10 @@ TEST_DIR = "test/functional"
 
 CLASSPATH_DIR = os.popen('tools/classpath-config').read().strip()
 
+if not CLASSPATH_DIR:
+  print "GNU Classpath not found on your system, exiting..."
+  sys.exit(1)
+
 RUNTIME = [
   "-bootclasspath",
   TEST_DIR + ":" + CLASSPATH_DIR + "/share/classpath/glibj.zip",
