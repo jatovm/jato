@@ -494,8 +494,8 @@ install: jato
 
 external:
 	cd external/classpath && sh autogen.sh
-	cd external/classpath && ./configure --disable-Werror --disable-plugin
-	cd external/classpath && make
+	cd external/classpath && ./configure --disable-Werror --disable-plugin --prefix=$(PWD)/external/usr/local/classpath/
+	cd external/classpath && make install
 .PHONY: external
 
 tags: FORCE
