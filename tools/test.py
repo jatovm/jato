@@ -14,7 +14,13 @@ TEST_DIR = "test/functional"
 
 CLASSPATH_DIR = os.popen('tools/classpath-config').read().strip()
 
-NO_SYSTEM_CLASSLOADER = [ "-bootclasspath", TEST_DIR + ":" + CLASSPATH_DIR + "/share/classpath/glibj.zip", "-Djava.library.path=" + CLASSPATH_DIR + "/lib/classpath/", "-Xnosystemclassloader" ]
+RUNTIME = [
+  "-bootclasspath",
+  TEST_DIR + ":" + CLASSPATH_DIR + "/share/classpath/glibj.zip",
+  "-Djava.library.path=" + CLASSPATH_DIR + "/lib/classpath/"
+]
+
+NO_SYSTEM_CLASSLOADER = [ "-Xnosystemclassloader" ]
 
 TESTS = [
   #                            Exit
@@ -158,7 +164,7 @@ def main():
     klass, expected_retval, extra_args, archs = t
     fnull = open(os.devnull, "w")
     progress(len(tests) - q.qsize(), len(tests), klass)
-    command = ["./jato", "-cp", TEST_DIR ] + extra_args + [ klass ]
+    command = ["./jato", "-cp", TEST_DIR ] + RUNTIME + extra_args + [ klass ]
     retval = subprocess.call(command, stderr = fnull)
     if retval != expected_retval:
       if not opts.skipped:
