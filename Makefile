@@ -492,6 +492,12 @@ install: jato
 	$(Q) $(INSTALL) tools/ecj-jato/ecj-jato $(INSTALL_PREFIX)/bin
 .PHONY: install
 
+external:
+	cd external/classpath && sh autogen.sh
+	cd external/classpath && ./configure --disable-Werror --disable-plugin
+	cd external/classpath && make
+.PHONY: external
+
 tags: FORCE
 	$(E) "  TAGS"
 	$(Q) rm -f tags
