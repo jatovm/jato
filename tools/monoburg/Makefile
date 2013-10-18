@@ -67,9 +67,9 @@ $(PROGRAM): $(OBJS)
 	$(E) "  CC      " $@
 	$(Q) $(CC) -c $(DEFAULT_CFLAGS) $(CFLAGS) $< -o $@
 
-parser.c: monoburg.y
+%.c: %.y
 	$(E) "  BISON   " $@
-	$(Q) bison monoburg.y -o parser.c
+	$(Q) bison $< -o $@
 
 clean:
 	$(E) "  CLEAN"
