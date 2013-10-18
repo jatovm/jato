@@ -54,9 +54,9 @@ from:
 
 Then install the dependencies that are required to build GNU Classpath.
 
-Fedora 17:
+Fedora 19:
 
-    sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel
+    sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel gettext-devel texinfo
 
 Ubuntu:
 
