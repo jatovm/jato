@@ -32,9 +32,9 @@ system:
 
   - Eclipse Java Compiler
 
-Fedora 15:
+Fedora 19:
 
-    sudo yum install binutils-devel bison glib2-devel libffi-devel
+    sudo yum install binutils-devel bison glib2-devel libffi-devel ecj
 
 Ubuntu 10.10:
 
