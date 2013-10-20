@@ -3,5 +3,4 @@ before_script:
  - sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison
 script: make
 compiler:
-  - clang
   - gcc
