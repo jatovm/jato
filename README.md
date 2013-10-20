@@ -2,49 +2,35 @@
 
 [![Build Status](https://travis-ci.org/jatovm/jato.png?branch=master)](http://travis-ci.org/jatovm/jato)
 
-## About
-
 Jato is an implementation of the Java virtual machine. It includes a VM and a
 JIT compiler for the x86 machine architecture and supports the JNI API. Jato
 uses Boehm GC as its garbage collector and relies on GNU Classpath to provide
 essential Java APIs.
 
-## Compilation and Installation
+## Installation
 
-### Getting the Sources
+### Prerequisites
 
-Fetch the latest sources with:
+* GNU Classpath 0.99 or later (see below how to install)
+* Eclipse Java Compiler
 
-    git clone git://git.kernel.org/pub/scm/java/jato/jato.git
+**Fedora 19**
 
-### Build Requirements
+```
+$ sudo yum install binutils-devel bison glib2-devel libffi-devel ecj
+```
 
-Before installing Jato ensure you have the following software installed on your
-system:
+**Ubuntu 10.10**
 
-  - GNU Classpath 0.99 or later:
+```
+$ sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison
+```
 
-    Release tarball:
+**Archlinux**
 
-    ftp://ftp.gnu.org/pub/gnu/classpath/classpath-0.99.tar.gz
-
-    Git repository:
-
-    git://git.savannah.gnu.org/classpath.git
-
-  - Eclipse Java Compiler
-
-Fedora 19:
-
-    sudo yum install binutils-devel bison glib2-devel libffi-devel ecj
-
-Ubuntu 10.10:
-
-    sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison
-
-Archlinux:
-
-    pacman -S eclipse-ecj classpath libffi
+```
+$ pacman -S eclipse-ecj classpath libffi
+```
 
 ### Building GNU Classpath
 
@@ -56,65 +42,88 @@ from:
 
 Then install the dependencies that are required to build GNU Classpath.
 
-Fedora 19:
+**Fedora 19**
 
-    sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel gettext-devel texinfo
+```
+$ sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel gettext-devel texinfo
+```
 
-Ubuntu:
+**Ubuntu**
 
-    sudo apt-get install openjdk-6-jdk antlr libgconf2-dev libgtk2.0-dev ecj fastjar pccts
+```
+$ sudo apt-get install openjdk-6-jdk antlr libgconf2-dev libgtk2.0-dev ecj fastjar pccts
+```
 
 You can then compile GNU Classpath:
 
-    ./configure --disable-Werror --disable-plugin
-    make
+```
+$ ./configure --disable-Werror --disable-plugin
+$ make
+```
 
-and install it to /usr/local:
+and install it to ``/usr/local``:
 
-    sudo make install
+```
+$ sudo make install
+```
 
 ### Building the Software
 
 Compile the VM:
 
-    make
+```
+$ make
+```
 
 ### Testing and Installation
 
 You can run all Jato unit and regression tests with the command:
 
-    make check
+```
+$ make check
+```
 
 All tests should pass.
 
 In addition, you can download and run bunch of real-world tests with the
 command:
 
-    make torture
+```
+$ make torture
+```
 
 Note! This step is optional and can take a long time.
 
 You can now install Jato with:
 
-    make install
+```
+$ make install
+```
 
-## Using Jato
+## Usage
 
-Jato uses the same command line options as 'java'. You can execute a single
-class with:
+Jato uses the same command line options as ``java``.
 
-    jato <class name>
+To run a class:
 
-To specify classpath use:
+```
+$ jato <class name>
+```
 
-    jato -cp <jar files or directories> <class name>
+To specify classpath, use:
+
+```
+$ jato -cp <jar files or directories> <class name>
+```
 
 You can also execute a Jar file with:
 
-    jato -jar <jar file>
+```
+$ jato -jar <jar file>
+```
 
 Jato also supports variety of command line options for debugging and tracing
-purposes. See the file Documentation/options.txt for details.
+purposes. See the file ``Documentation/options.txt`` for details.
 
 ## Copyright and License
 
