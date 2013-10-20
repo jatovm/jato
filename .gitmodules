@@ -1,3 +1,4 @@
 [submodule "external/classpath"]
 	path = external/classpath
-	url = git@github.com:jatovm/classpath.git
+        url = ../../jatovm/classpath.git
+
