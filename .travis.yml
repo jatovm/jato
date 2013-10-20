@@ -1,2 +1,4 @@
-rvm: 1.9.2
 script: make
+compiler:
+  - clang
+  - gcc
