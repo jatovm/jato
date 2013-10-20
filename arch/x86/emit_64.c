@@ -1401,13 +1401,18 @@ void emit_lock(struct buffer *buf, struct vm_object *obj)
 
 	emit_restore_arg_regs(buf);
 
+	/* 16-byte stack alignment: */
+	__emit64_sub_imm_reg(buf, 0x08, MACH_REG_RSP);
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_exception_test(buf, MACH_REG_RAX);
 	__emit_pop_reg(buf, MACH_REG_RAX);
+	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 }
 
 void emit_unlock(struct buffer *buf, struct vm_object *obj)
 {
+	/* 16-byte stack alignment: */
+	__emit64_sub_imm_reg(buf, 0x08, MACH_REG_RSP);
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_save_arg_regs(buf);
 
@@ -1418,6 +1423,7 @@ void emit_unlock(struct buffer *buf, struct vm_object *obj)
 
 	emit_restore_arg_regs(buf);
 	__emit_pop_reg(buf, MACH_REG_RAX);
+	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 }
 
 void emit_lock_this(struct buffer *buf, unsigned long frame_size)
@@ -1429,9 +1435,12 @@ void emit_lock_this(struct buffer *buf, unsigned long frame_size)
 	__emit_call(buf, vm_object_lock);
 	emit_restore_arg_regs(buf);
 
+	/* 16-byte stack alignment: */
+	__emit64_sub_imm_reg(buf, 0x08, MACH_REG_RSP);
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_exception_test(buf, MACH_REG_RAX);
 	__emit_pop_reg(buf, MACH_REG_RAX);
+	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 }
 
 void emit_unlock_this(struct buffer *buf, unsigned long frame_size)
@@ -1439,6 +1448,8 @@ void emit_unlock_this(struct buffer *buf, unsigned long frame_size)
 	unsigned long this_offset = frame_size + 8 * NR_CALLEE_SAVE_REGS + 8;
 
 	__emit64_mov_membase_reg(buf, MACH_REG_RBP, - this_offset, MACH_REG_RDI);
+	/* 16-byte stack alignment: */
+	__emit64_sub_imm_reg(buf, 0x08, MACH_REG_RSP);
 	__emit_push_reg(buf, MACH_REG_RAX);
 	emit_save_arg_regs(buf);
 	__emit_call(buf, vm_object_unlock);
@@ -1447,6 +1458,7 @@ void emit_unlock_this(struct buffer *buf, unsigned long frame_size)
 
 	emit_restore_arg_regs(buf);
 	__emit_pop_reg(buf, MACH_REG_RAX);
+	__emit_add_imm_reg(buf, 0x08, MACH_REG_RSP);
 }
 
 
