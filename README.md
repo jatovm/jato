@@ -1,5 +1,7 @@
 # Jato VM
 
+[![Build Status](https://travis-ci.org/jatovm/jato.png?branch=master)](http://travis-ci.org/jatovm/jato)
+
 ## About
 
 Jato is an implementation of the Java virtual machine. It includes a VM and a
