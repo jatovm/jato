@@ -97,24 +97,9 @@ signal_bh_trampoline:
 	push %r10
 	push %r11
 
-	/* save FPU registers */
-	sub $128, %rsp
-	movsd %xmm0,     (%rsp)
-	movsd %xmm1,    8(%rsp)
-	movsd %xmm2,   16(%rsp)
-	movsd %xmm3,   24(%rsp)
-	movsd %xmm4,   32(%rsp)
-	movsd %xmm5,   40(%rsp)
-	movsd %xmm6,   48(%rsp)
-	movsd %xmm7,   56(%rsp)
-	movsd %xmm8,   64(%rsp)
-	movsd %xmm9,   72(%rsp)
-	movsd %xmm10,  80(%rsp)
-	movsd %xmm11,  88(%rsp)
-	movsd %xmm12,  96(%rsp)
-	movsd %xmm13, 104(%rsp)
-	movsd %xmm14, 112(%rsp)
-	movsd %xmm15, 120(%rsp)
+	/* save FPU state */
+	sub $512, %rsp
+	fxsave (%rsp)
 
 	/* push signal bottom half handler's argument - address of
 	   faulting instruction. */
@@ -130,24 +115,9 @@ signal_bh_trampoline:
 	/* overwrite return address */
 	movq %rax, 0x10(%rbp)
 
-	/* restore FPU registers */
-	movsd    (%rsp), %xmm0
-	movsd   8(%rsp), %xmm1
-	movsd  16(%rsp), %xmm2
-	movsd  24(%rsp), %xmm3
-	movsd  32(%rsp), %xmm4
-	movsd  40(%rsp), %xmm5
-	movsd  48(%rsp), %xmm6
-	movsd  56(%rsp), %xmm7
-	movsd  64(%rsp), %xmm8
-	movsd  72(%rsp), %xmm9
-	movsd  80(%rsp), %xmm10
-	movsd  88(%rsp), %xmm11
-	movsd  96(%rsp), %xmm12
-	movsd 104(%rsp), %xmm13
-	movsd 112(%rsp), %xmm14
-	movsd 120(%rsp), %xmm15
-	add $128, %rsp
+	/* restore FPU state */
+	fxrstor (%rsp)
+	add $512, %rsp
 
 	/* restore caller saved registers */
 	pop %r11
