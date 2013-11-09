@@ -174,9 +174,10 @@ static unsigned long native_call_gp(struct vm_method *method,
 {
 	int i;
 	size_t reg_count = 0;
+	size_t freg_count = 0;
 	size_t stack_count = 0;
 	struct vm_args_map *map = method->args_map;
-	unsigned long *stack, regs[6];
+	unsigned long *stack, regs[6], fregs[8];
 	unsigned long result;
 	unsigned long stack_size;
 
@@ -187,8 +188,12 @@ static unsigned long native_call_gp(struct vm_method *method,
 	for (i = 0; i < method->args_count; i++) {
 		if (map[i].reg == MACH_REG_UNASSIGNED)
 			stack[stack_count++] = args[i];
-		else
-			regs[reg_count++] = args[i];
+		else {
+			if (map[i].type == J_DOUBLE || map[i].type == J_FLOAT) {
+				fregs[freg_count++] = args[i];
+			} else
+				regs[reg_count++] = args[i];
+		}
 
 		/* Skip duplicate slots. */
 		if (map[i].type == J_LONG || map[i].type == J_DOUBLE)
@@ -197,6 +202,9 @@ static unsigned long native_call_gp(struct vm_method *method,
 
 	while (reg_count < 6)
 		regs[reg_count++] = 0;
+
+	while (freg_count < 8)
+		fregs[freg_count++] = 0;
 
 	stack_size = stack_count * sizeof(unsigned long);
 
@@ -219,11 +227,21 @@ static unsigned long native_call_gp(struct vm_method *method,
 		"	movq 0x20(%[regs]), %%r8	\n"
 		"	movq 0x28(%[regs]), %%r9	\n"
 
+		"	movsd 0x00(%[fregs]), %%xmm0	\n"
+		"	movsd 0x08(%[fregs]), %%xmm1	\n"
+		"	movsd 0x10(%[fregs]), %%xmm2	\n"
+		"	movsd 0x18(%[fregs]), %%xmm3	\n"
+		"	movsd 0x20(%[fregs]), %%xmm4	\n"
+		"	movsd 0x28(%[fregs]), %%xmm5	\n"
+		"	movsd 0x30(%[fregs]), %%xmm6	\n"
+		"	movsd 0x38(%[fregs]), %%xmm7	\n"
+
 		"	call *%[target]			\n"
 		"	addq %[stack_size], %%rsp	\n"
 		: "=a" (result)
 		: [target] "m" (target),
 		  [regs] "r" (regs),
+		  [fregs] "r" (fregs),
 		  [stack] "r" (stack),
 		  [stack_count] "r" (stack_count),
 		  [stack_size] "b" (stack_size)
