@@ -1355,26 +1355,22 @@ stmt:	STMT_BEFORE_ARGS 1
 
 	if (unaligned)
 		select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, X86_STACK_ALIGN - unaligned, stack_ptr));
+
+	select_insn(s, tree, insn(INSN_SAVE_CALLER_REGS));
 }
 
 stmt:	STMT_INVOKE(arg) 1
 {
-	select_insn(s, tree, insn(INSN_SAVE_CALLER_REGS));
-
 	invoke(s, tree);
 }
 
 stmt:	STMT_INVOKEINTERFACE(arg) 1
 {
-	select_insn(s, tree, insn(INSN_SAVE_CALLER_REGS));
-
 	invokeinterface(state, s, tree);
 }
 
 stmt:	STMT_INVOKEVIRTUAL(arg) 1
 {
-	select_insn(s, tree, insn(INSN_SAVE_CALLER_REGS));
-
 	invokevirtual(state, s, tree);
 }
 
