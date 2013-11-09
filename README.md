@@ -27,7 +27,7 @@ $ sudo yum install ecj libffi-devel binutils-devel glib2-devel bison llvm-devel 
 **Ubuntu**
 
 ```
-$ sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison
+$ sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison llvm-dev
 ```
 
 **Archlinux**
