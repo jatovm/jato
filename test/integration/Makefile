@@ -49,7 +49,7 @@ CFLAGS		+= $(LLVM_CFLAGS)
 LDFLAGS		:= -Wl,--wrap -Wl,pthread_create -Wl,--wrap -Wl,pthread_join \
              -Wl,--wrap -Wl,pthread_detach -Wl,--wrap -Wl,pthread_sigmask \
              -Wl,--wrap -Wl,sleep
-LDFLAGS		+= $(LLVM_CFLAGS)
+LDFLAGS		+= $(LLVM_LDFLAGS)
 
 # Output to current directory by default
 O =
