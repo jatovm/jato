@@ -39,7 +39,7 @@ static bool is_dir(const char *path)
 
 int main(int argc, char *argv[])
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < sizeof(install_dirs) / sizeof(*install_dirs); i++) {
 		char glibj[PATH_MAX];
