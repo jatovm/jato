@@ -2767,7 +2767,7 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 	LLVMPositionBuilderAtEnd(ctx->builder, bbr);
 
-	if (method_is_synchronized(vmm)) {
+	if (vm_method_is_synchronized(vmm)) {
 		LLVMValueRef objectref;
 
 		if (vm_method_is_static(vmm))
@@ -2846,7 +2846,7 @@ static int llvm_bc2ir(struct llvm_context *ctx)
 
 	LLVMPositionBuilderAtEnd(ctx->builder, cu->exit_bb->priv);
 
-	if (method_is_synchronized(vmm)) {
+	if (vm_method_is_synchronized(vmm)) {
 		LLVMValueRef objectref;
 
 		if (vm_method_is_static(vmm))
