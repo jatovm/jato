@@ -21,7 +21,7 @@ essential Java APIs.
 **Fedora**
 
 ```
-$ sudo yum install ecj libffi-devel binutils-devel glib2-devel bison
+$ sudo yum install ecj libffi-devel binutils-devel glib2-devel bison llvm-devel llvm-static
 ```
 
 **Ubuntu**
