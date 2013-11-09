@@ -7,20 +7,24 @@ JIT compiler for the x86 machine architecture and supports the JNI API. Jato
 uses Boehm GC as its garbage collector and relies on GNU Classpath to provide
 essential Java APIs.
 
+## Features
+
+* JIT-only execution on x86 architecture
+* Uses GNU Classpath for essential classes
+* Boehm garbage collector
+* Runs on Linux
+
 ## Installation
 
 ### Prerequisites
 
-* GNU Classpath 0.99 or later (see below how to install)
-* Eclipse Java Compiler
-
-**Fedora 19**
+**Fedora**
 
 ```
-$ sudo yum install binutils-devel bison glib2-devel libffi-devel ecj
+$ sudo yum install ecj libffi-devel binutils-devel glib2-devel bison
 ```
 
-**Ubuntu 10.10**
+**Ubuntu**
 
 ```
 $ sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison
@@ -32,17 +36,13 @@ $ sudo apt-get install ecj libffi-dev binutils-dev libglib2.0-dev bison
 $ pacman -S eclipse-ecj classpath libffi
 ```
 
-### Building GNU Classpath
+### GNU Classpath
 
-GNU Classpath is not present in most Linux distributions so you need to
-build and install it yourself to run Jato. First download the sources
-from:
+GNU Classpath needs to be built and installed from sources.
 
-  ftp://ftp.gnu.org/pub/gnu/classpath/classpath-0.99.tar.gz
+First install dependencies that are required to build GNU Classpath:
 
-Then install the dependencies that are required to build GNU Classpath.
-
-**Fedora 19**
+**Fedora**
 
 ```
 $ sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel gettext-devel texinfo
@@ -53,6 +53,10 @@ $ sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel gettext-deve
 ```
 $ sudo apt-get install openjdk-6-jdk antlr libgconf2-dev libgtk2.0-dev ecj fastjar pccts
 ```
+
+Then download the sources from:
+
+  ftp://ftp.gnu.org/pub/gnu/classpath/classpath-0.99.tar.gz
 
 You can then compile GNU Classpath:
 
@@ -67,17 +71,9 @@ and install it to ``/usr/local``:
 $ sudo make install
 ```
 
-### Building the Software
+### Build and Install
 
-Compile the VM:
-
-```
-$ make
-```
-
-### Testing and Installation
-
-You can run all Jato unit and regression tests with the command:
+To compile the VM and run all the tests:
 
 ```
 $ make check
@@ -85,20 +81,13 @@ $ make check
 
 All tests should pass.
 
-In addition, you can download and run bunch of real-world tests with the
-command:
-
-```
-$ make torture
-```
-
-Note! This step is optional and can take a long time.
-
 You can now install Jato with:
 
 ```
 $ make install
 ```
+
+The command installs an executable ``jato`` to ``$HOME/bin``.
 
 ## Usage
 
@@ -125,12 +114,12 @@ $ jato -jar <jar file>
 Jato also supports variety of command line options for debugging and tracing
 purposes. See the file ``Documentation/options.txt`` for details.
 
-## Copyright and License
+## License
 
-Copyright (C) 2005-2012  Pekka Enberg and contributors
+Copyright © 2005-2013 Pekka Enberg and contributors
 
-Jato is available under the GNU General Public License (GPL) version 2 with the
-following clarification and special exception:
+Jato is distributed under the GNU General Public License (GPL) version 2 with
+the following clarification and special exception:
 
     Linking this library statically or dynamically with other modules is making a
     combined work based on this library. Thus, the terms and conditions of the
@@ -146,16 +135,3 @@ following clarification and special exception:
     library, you may extend this exception to your version of the library, but
     you are not obligated to do so. If you do not wish to do so, delete this
     exception statement from your version.
-
-## Thanks and Acknowledgements
-
-I would like to thank the following people and organizations for supporting
-Jato development:
-
-- Google for including Jato in Summer of Code 2008, 2009, and 2011.
-
-- Kernel.org for providing git hosting for Jato.
-
-- Reaktor Innovations Oy for sponsoring initial Jato development back in 2005.
-
-Thank you!
