@@ -459,11 +459,6 @@ check-mbench: monoburg $(CLASSPATH_CONFIG) $(PROGRAMS) compile-mbench-tests
 check: check-unit check-integration check-functional
 .PHONY: check
 
-torture:
-	$(E) "  MAKE"
-	$(Q) $(MAKE) -C torture JAVA=$(JAVA)
-.PHONY: torture
-
 clean:
 	$(E) "  CLEAN"
 	$(Q) - rm -f $(PROGRAMS)
