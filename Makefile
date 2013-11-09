@@ -242,11 +242,7 @@ EXTRA_WARNINGS += -Wcast-align
 
 DEFAULT_CFLAGS += -Wall -Wextra $(EXTRA_WARNINGS)
 
-ifeq ($(uname_M),i386)
 OPTIMIZATION_LEVEL = -O3
-else
-OPTIMIZATION_LEVEL = -Os
-endif
 
 OPTIMIZATIONS	+= $(OPTIMIZATION_LEVEL)
 OPTIMIZATIONS	+= -fno-delete-null-pointer-checks
