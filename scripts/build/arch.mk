@@ -22,12 +22,6 @@ ifeq ($(ARCH),x86_64)
 	MB_DEFINES	+= -DCONFIG_X86_64
 endif
 
-ifeq ($(ARCH),ppc)
-	override ARCH	= ppc
-	ARCH_POSTFIX	= _32
-	MB_DEFINES	+= -DCONFIG_PPC
-endif
-
 ifeq ($(SYS),darwin)
 	DEFAULT_CFLAGS += -D_XOPEN_SOURCE=1
 endif
