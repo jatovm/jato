@@ -155,9 +155,8 @@ void native_call(struct vm_method *method, void *target,
 	case J_FLOAT:
 		do_native_call_xmm(method, target, args, result);
 		break;
-	case J_RETURN_ADDRESS:
-	case VM_TYPE_MAX:
-		die("unexpected type");
+	default:
+		error("unsupported return type: %d", method->return_type.vm_type);
 	}
 }
 
