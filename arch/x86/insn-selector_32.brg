@@ -476,13 +476,12 @@ reg:	OP_REM(reg, reg) 1
 
 freg:	OP_DREM(freg, freg) 1
 {
-	struct var_info *esp, *eax;
 	struct stack_slot *scratch;
+	struct var_info *esp;
 
 	state->reg1 = get_var(s->b_parent, J_DOUBLE);
 
 	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
 	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 16, esp));
 	select_insn(s, tree, reg_membase_insn(INSN_MOVSD_XMM_MEMBASE, state->left->reg1, esp, 0));
@@ -498,13 +497,12 @@ freg:	OP_DREM(freg, freg) 1
 
 freg:	OP_FREM(freg, freg) 1
 {
-	struct var_info *esp, *eax;
 	struct stack_slot *scratch;
+	struct var_info *esp;
 
 	state->reg1 = get_var(s->b_parent, J_FLOAT);
 
 	esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
-	eax = get_fixed_var(s->b_parent, MACH_REG_xAX);
 
 	select_insn(s, tree, imm_reg_insn(INSN_SUB_IMM_REG, 8, esp));
 	select_insn(s, tree, reg_membase_insn(INSN_MOVSS_XMM_MEMBASE, state->left->reg1, esp, 0));
@@ -2558,7 +2556,6 @@ static void save_invoke_result(struct basic_block *s,
 {
 	struct stack_slot *scratch;
 	struct expression *tmp;
-	struct var_info *esp;
 
 	if (opt_trace_invoke_verbose)
 		select_trace_return_value(s, tree, method);
@@ -2570,13 +2567,11 @@ static void save_invoke_result(struct basic_block *s,
 	switch (tmp->vm_type) {
 	case J_FLOAT:
 		scratch = get_scratch_slot(s->b_parent);
-		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 		select_insn(s, tree, memlocal_insn(INSN_FSTP_MEMLOCAL, scratch));
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSS_MEMLOCAL_XMM, scratch, tmp->tmp_low));
 		break;
 	case J_DOUBLE:
 		scratch = get_scratch_slot(s->b_parent);
-		esp = get_fixed_var(s->b_parent, MACH_REG_xSP);
 		select_insn(s, tree, memlocal_insn(INSN_FSTP_64_MEMLOCAL, scratch));
 		select_insn(s, tree, memlocal_reg_insn(INSN_MOVSD_MEMLOCAL_XMM, scratch, tmp->tmp_low));
 		break;
