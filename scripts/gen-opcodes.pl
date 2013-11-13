@@ -2,8 +2,8 @@
 
 # Copyright (C) 2009  Vegard Nossum
 #
-# This file is released under the GPL version 2. Please refer to the file
-# LICENSE for details.
+# This file is released under the 2-clause BSD license. Please refer to the
+# file LICENSE for details.
 #
 
 # Usage: 

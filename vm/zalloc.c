@@ -1,11 +1,8 @@
 /*
  * Copyright © 2007  Pekka Enberg
  *
- * This file is released under the GPL version 2. Please refer to the file
- * LICENSE for details.
- *
- * For more details on the linear scan register allocation algorithm,
- * please refer to the following papers:
+ * This file is released under the 2-clause BSD license. Please refer to the
+ * file LICENSE for details.
  */
 
 #include "vm/stdlib.h"
