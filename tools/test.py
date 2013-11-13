@@ -100,7 +100,6 @@ TESTS = [
 , ( "test.java.lang.ClassTest", 0, [ ], [ "i386", "x86_64" ] )
 , ( "test.java.lang.DoubleTest", 0, [ ], [ "i386", "x86_64" ] )
 , ( "test.java.lang.JNITest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
-, ( "test.java.lang.ref.ReferenceTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "test.java.lang.reflect.FieldAccessorsTest", 0, NO_SYSTEM_CLASSLOADER, [ "i386", "x86_64" ] )
 , ( "test.java.lang.reflect.FieldTest", 0, [ ], [ "i386", "x86_64" ] )
 , ( "test.java.lang.reflect.MethodTest", 0, [ ], [ "i386", "x86_64" ] )

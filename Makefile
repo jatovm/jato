@@ -396,7 +396,6 @@ JAVA_TESTS += test/functional/jvm/VirtualAbstractInterfaceMethodTest.java
 JAVA_TESTS += test/functional/test/java/lang/ClassTest.java
 JAVA_TESTS += test/functional/test/java/lang/DoubleTest.java
 JAVA_TESTS += test/functional/test/java/lang/JNITest.java
-JAVA_TESTS += test/functional/test/java/lang/ref/ReferenceTest.java
 JAVA_TESTS += test/functional/test/java/lang/reflect/FieldAccessorsTest.java
 JAVA_TESTS += test/functional/test/java/lang/reflect/FieldTest.java
 JAVA_TESTS += test/functional/test/java/lang/reflect/MethodTest.java
