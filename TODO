@@ -1,13 +1,14 @@
 Jato ToDo
 =========
-Pekka Enberg <penberg@kernel.org>
-2012-2013
+Pekka Enberg <penberg@ki.fi>
+2014
 :toc:
 
 Introduction
 ------------
-This is a list of things to hack on. It's mostly meant for people who are new
-to Jato and want to find something interesting to hack on.
+This document lists features and improvements to the Jato VM for interested
+hackers to work on.  The ones in the section labeled as "Priority" are
+considered most important.
 
 Priority
 --------
@@ -27,21 +28,6 @@ Required skills::
 Difficulty::
     Medium to Hard
 
-Darwin Port
-~~~~~~~~~~~
-Darwin (a.k.a. Mac OS X) is a popular platform among software developers. The
-goal of this project is to get rid of Linuxism such as:
-
-- Thread-local storage (TLS)
-- Signal handling
-
-and be able to run Jato under Darwin.
-
-Required skills::
-    C, Darwin
-Difficulty::
-    Medium to Hard
-
 Interpreter
 ~~~~~~~~~~~
 Jato supports JIT-only execution which is slow for some applications. For
@@ -53,6 +39,18 @@ only JIT compile methods that are invoked a lot of times.
 
 Required skills::
     C, JVM
+Difficulty::
+    Medium
+
+Support for OpenJDK
+~~~~~~~~~~~~~~~~~~~
+Jato uses GNU Classpath to provide essential Java APIs. Unfortunately the
+development of GNU Classpath seems to have slowed after OpenJDK was released.
+The purpose of this project is to OpenJDK as an alternative for providing
+essential APIs for better Java compatibility.
+
+Required skills::
+    C, Java
 Difficulty::
     Medium
 
@@ -69,19 +67,20 @@ Required skills::
 Difficulty::
     Medium to Hard
 
-Support for OpenJDK
-~~~~~~~~~~~~~~~~~~~
-Jato uses GNU Classpath to provide essential Java APIs. Unfortunately the
-development of GNU Classpath seems to have slowed after OpenJDK was released.
-The purpose of this project is to OpenJDK as an alternative for providing
-essential APIs for better Java compatibility. One possible way to do that is to
-use The OpenJDK Common Virtual Machine Interface
-http://fuseyism.com/openjdk/cvmi/[CVMI] as a starting point.
+Darwin Port
+~~~~~~~~~~~
+Darwin (a.k.a. Mac OS X) is a popular platform among software developers. The
+goal of this project is to get rid of Linuxism such as:
+
+- Thread-local storage (TLS)
+- Signal handling
+
+and be able to run Jato under Darwin.
 
 Required skills::
-    C, Java
+    C, Darwin
 Difficulty::
-    Medium
+    Medium to Hard
 
 Performance
 -----------
@@ -221,6 +220,16 @@ Difficulty::
 
 x86
 ---
+x86-64 support
+~~~~~~~~~~~~~~
+The x86-64 architecture support in native JIT is still buggy.  The purpose of
+this project is to finish the port and make it stable.
+
+Required skills::
+    C, x86-64, ABI, assembly
+Difficulty::
+   Hard
+
 Legacy floating point support (x87)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Add instruction selection and code emission for floating point arithmetic using
@@ -237,23 +246,13 @@ Difficulty::
 
 ARM
 ---
-ARMv5 support
-~~~~~~~~~~~~~
-The JIT compiler has preliminary support for ARMv5 but there's still more work
-to be done to support the full JVM instruction set.
+ARM support
+~~~~~~~~~~~
+The purpose of this project is to port Jato the the ARM architecture.  Possibly
+even the upcoming 64-bit ARM.
 
 Required skills::
-    C, ARM
-Difficulty::
-    Hard
-
-Thumb2 support
-~~~~~~~~~~~~~~
-The Thumb2 instruction set on ARM is more compact than the 32-bit ARM
-instruction set which is important for embedded devices.
-
-Required skills::
-    C, ARM
+    C, ARM, ABI, assembly
 Difficulty::
     Hard
 
