@@ -38,7 +38,7 @@ EXTRA_WARNINGS += -Wstrict-prototypes
 EXTRA_WARNINGS += -Wdeclaration-after-statement
 
 LLVM_CFLAGS     := $(shell llvm-config --cflags | sed -e "s/-DNDEBUG//g")
-LLVM_LIBS       := $(shell llvm-config --libs)
+LLVM_LIBS       := $(shell llvm-config --libs) -lncurses
 LLVM_LDFLAGS    := $(shell llvm-config --ldflags)
 
 # Compile flags
