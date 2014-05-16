@@ -22,7 +22,7 @@ V =
 PROGRAMS = jato
 
 LLVM_CFLAGS	:= $(shell llvm-config --cppflags | sed -e "s/-DNDEBUG//g")
-LLVM_LIBS	:= $(shell llvm-config --libs)
+LLVM_LIBS	:= $(shell llvm-config --libs) -lncurses
 LLVM_LDFLAGS	:= $(shell llvm-config --ldflags)
 
 LIB_FILE	:= libjvm.a
