@@ -54,13 +54,14 @@ $ sudo yum install java-1.7.0-openjdk antlr GConf2-devel gtk2-devel gettext-deve
 $ sudo apt-get install openjdk-6-jdk antlr libgconf2-dev libgtk2.0-dev ecj fastjar pccts
 ```
 
-Then download the sources from:
+Then clone the sources from the git repository (the release 0.99 appears to be broken)
 
-  ftp://ftp.gnu.org/pub/gnu/classpath/classpath-0.99.tar.gz
+  git clone git://git.savannah.gnu.org/classpath.git
 
 You can then compile GNU Classpath:
 
 ```
+$ ./autogen.sh
 $ ./configure --disable-Werror --disable-plugin
 $ make
 ```
