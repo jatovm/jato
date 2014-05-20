@@ -12,6 +12,9 @@ Jato supports the following command line options:
     -Xtrace:asm
       Trace the emitted machine code for each method.
 
+    -Xtracte:bytecode
+      Trace the emitted bytecode for each method
+
     -Xtrace:classloader
       Trace class loading and initialization.
 
@@ -19,4 +22,11 @@ Jato supports the following command line options:
       Trace executed trampolines.
 
     -Xdebug:stack
-      Enable stack smashing debugging.
+      Enables stack smashing debugging.
+
+    -Xperf
+      Enables linux perf support by outputting perf-<pid>.map files in /tmp
+
+    -Xmaps
+      prints the list of loaded object files
+
